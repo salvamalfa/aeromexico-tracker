@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from src.common.quality import log_issue
+from src.common.quality import log_issue, log_issue_once
 
 
 def test_quality_issue_is_appended_with_required_fields(tmp_path: Path) -> None:
@@ -55,3 +55,22 @@ def test_invalid_quality_issue_is_rejected(
             affected_rows,
             issues_path=tmp_path / "issues.jsonl",
         )
+
+
+def test_log_issue_once_is_idempotent(tmp_path: Path) -> None:
+    target = tmp_path / "issues.jsonl"
+    arguments = (
+        "silver",
+        "bmv_sec_reconciliation",
+        "aero.json",
+        "warning",
+        "source_conflict",
+        "Rounded source difference.",
+        1,
+    )
+
+    first = log_issue_once(*arguments, issues_path=target)
+    second = log_issue_once(*arguments, issues_path=target)
+
+    assert first == second
+    assert len(target.read_text(encoding="utf-8").splitlines()) == 1

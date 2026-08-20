@@ -36,3 +36,6 @@ sec-validate:
 
 sec-series:
     uv run python -m src.parse.sec.inspect_series
+
+bmv-validate:
+    uv run python -m src.parse.bmv.validate

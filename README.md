@@ -9,9 +9,10 @@ portfolio analytics project, not an investment recommendation.
 
 ## Current status
 
-Stages 0 and 1 are complete. SEC EDGAR ingestion, filing classification,
-quarterly/monthly parsing, source crosschecks, and offline reconstruction are
-production-ready within the documented coverage. BMV and later sources remain pending.
+Stages 0 through 2 are complete. SEC EDGAR and BMV ingestion, filing/package
+classification, quarterly/monthly parsing, SEC-to-BMV reconciliation, and offline
+reconstruction are production-ready within the documented coverage. Later sources
+remain pending.
 
 ## Setup
 
@@ -39,6 +40,7 @@ so global Python packages are ignored.
 | `just dashboard` | Launch the Streamlit application |
 | `just sec-validate` | Validate SEC anchors, invariants, lineage, and crosschecks |
 | `just sec-series` | Print quarterly load factor, TRASM, and CASM ex-fuel |
+| `just bmv-validate` | Validate BMV anchors, accounting equations, lineage, and SEC reconciliation |
 
 ## Repository layout
 

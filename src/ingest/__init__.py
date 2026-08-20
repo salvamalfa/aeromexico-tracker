@@ -2,7 +2,10 @@
 
 
 def run() -> None:
+    from src.ingest.bmv.download import main as run_bmv_download
     from src.ingest.sec.discover import main as run_sec_discovery
 
     if run_sec_discovery() != 0:
         raise RuntimeError("SEC ingestion failed")
+    if run_bmv_download() != 0:
+        raise RuntimeError("BMV ingestion failed")
