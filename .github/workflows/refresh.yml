@@ -1,0 +1,25 @@
+name: Validate and rebuild
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 8 2 * *"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+          enable-cache: true
+      - name: Install locked dependencies
+        run: uv sync --all-extras --all-groups --locked
+      - name: Run tests
+        run: uv run pytest
+      - name: Verify offline rebuild entry point
+        run: uv run python -m src.rebuild

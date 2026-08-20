@@ -1,0 +1,22 @@
+.env
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+logs/
+
+# Raw and derived data stay local. The two provenance ledgers are the exception.
+data/bronze/*
+!data/bronze/_manifest.jsonl
+!data/bronze/_restatements.jsonl
+data/silver/
+data/gold/
+data/quality/*.jsonl
+data/*.duckdb
+data/*.duckdb.wal
+
+# Local dashboard/runtime state.
+.streamlit/secrets.toml

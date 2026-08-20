@@ -1,0 +1,32 @@
+set shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
+
+default:
+    just --list
+
+setup:
+    uv sync --all-extras --all-groups
+    uv run playwright install chromium
+
+ingest:
+    uv run python -m src.ingest
+
+parse:
+    uv run python -m src.parse
+
+transform:
+    uv run python -m src.transform
+
+test:
+    uv run pytest
+
+rebuild:
+    uv run python -m src.rebuild
+
+dashboard:
+    uv run streamlit run src/dashboard/app.py
+
+smoke-test:
+    uv run python -m src.smoke_test
+
+verify-identities:
+    uv run python -m src.verify_identities

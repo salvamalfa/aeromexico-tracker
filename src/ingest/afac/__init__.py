@@ -1,0 +1,1 @@
+"""AFAC airline-statistics ingestion."""
