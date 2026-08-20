@@ -37,6 +37,24 @@ def _normalize_ext(ext: str) -> str:
     return cleaned
 
 
+def _safe_relative_directory(value: str | Path, *, root: Path) -> Path:
+    relative = Path(value)
+    if relative.is_absolute() or not relative.parts:
+        raise ValueError("relative_dir must be a non-empty relative path")
+    safe_parts: list[str] = []
+    for part in relative.parts:
+        if part in {".", ".."}:
+            raise ValueError("relative_dir cannot contain traversal components")
+        safe_part = _safe_component(part, field="relative_dir component")
+        if safe_part != part:
+            raise ValueError(f"Unsafe relative_dir component: {part!r}")
+        safe_parts.append(safe_part)
+    target = root.joinpath(*safe_parts).resolve()
+    if not target.is_relative_to(root):
+        raise ValueError("relative_dir must remain inside bronze_root")
+    return target
+
+
 def _sha256(content: bytes) -> str:
     return hashlib.sha256(content).hexdigest()
 
@@ -54,6 +72,25 @@ def _iter_jsonl(path: Path) -> Iterable[dict[str, Any]]:
                 raise ValueError(f"Invalid JSONL in {path} at line {line_number}") from exc
             if isinstance(value, dict):
                 yield value
+
+
+def find_bronze_by_source_url(
+    source_url: str, *, bronze_root: Path | None = None
+) -> tuple[Path, dict[str, Any]] | None:
+    """Return the newest existing immutable artifact for one exact source URL."""
+
+    root = (bronze_root or PATHS.bronze).resolve()
+    records = list(_iter_jsonl(root / "_manifest.jsonl"))
+    for record in reversed(records):
+        if record.get("source_url") != source_url:
+            continue
+        source_file = record.get("source_file")
+        if not isinstance(source_file, str):
+            continue
+        path = root / source_file
+        if path.is_file():
+            return path, record
+    return None
 
 
 def _atomic_write(path: Path, content: bytes) -> None:
@@ -102,6 +139,7 @@ def save_bronze(
     http_status: int = 200,
     content_type: str = "application/octet-stream",
     bronze_root: Path | None = None,
+    relative_dir: str | Path | None = None,
     downloaded_at: datetime | None = None,
 ) -> Path:
     """Persist raw bytes exactly once and return their immutable local path.
@@ -130,7 +168,11 @@ def save_bronze(
     digest = _sha256(content)
     root = (bronze_root or PATHS.bronze).resolve()
     root.mkdir(parents=True, exist_ok=True)
-    source_directory = root / safe_source
+    source_directory = (
+        _safe_relative_directory(relative_dir, root=root)
+        if relative_dir is not None
+        else root / safe_source
+    )
     source_directory.mkdir(parents=True, exist_ok=True)
     manifest_path = root / "_manifest.jsonl"
     restatements_path = root / "_restatements.jsonl"
@@ -145,6 +187,25 @@ def save_bronze(
             if isinstance(existing_name, str):
                 existing_path = root / existing_name
                 if existing_path.is_file():
+                    if existing.get("source_url") != source_url:
+                        alias_record: dict[str, Any] = {
+                            "source_system": source_system,
+                            "source_url": source_url,
+                            "downloaded_at": timestamp.isoformat(),
+                            "sha256": digest,
+                            "http_status": http_status,
+                            "content_type": content_type,
+                            "bytes": len(content),
+                            "download_method": download_method,
+                            "notes": notes,
+                            "source_file": existing_name,
+                            "logical_key": logical_key,
+                            "logical_version": 1,
+                            "filename_version": existing.get("filename_version", 1),
+                            "is_content_alias": True,
+                            "alias_of_source_url": existing.get("source_url"),
+                        }
+                        _append_jsonl(manifest_path, alias_record)
                     return existing_path
 
         previous_versions = [

@@ -30,3 +30,9 @@ smoke-test:
 
 verify-identities:
     uv run python -m src.verify_identities
+
+sec-validate:
+    uv run python -m src.parse.sec.validate
+
+sec-series:
+    uv run python -m src.parse.sec.inspect_series

@@ -9,8 +9,9 @@ portfolio analytics project, not an investment recommendation.
 
 ## Current status
 
-Stage 0 (reproducible setup and common infrastructure) is complete. No source
-ingestion pipeline is considered production-ready until its own stage is closed.
+Stages 0 and 1 are complete. SEC EDGAR ingestion, filing classification,
+quarterly/monthly parsing, source crosschecks, and offline reconstruction are
+production-ready within the documented coverage. BMV and later sources remain pending.
 
 ## Setup
 
@@ -36,6 +37,8 @@ so global Python packages are ignored.
 | `just test` | Run the test suite |
 | `just smoke-test` | Probe source accessibility without large downloads |
 | `just dashboard` | Launch the Streamlit application |
+| `just sec-validate` | Validate SEC anchors, invariants, lineage, and crosschecks |
+| `just sec-series` | Print quarterly load factor, TRASM, and CASM ex-fuel |
 
 ## Repository layout
 

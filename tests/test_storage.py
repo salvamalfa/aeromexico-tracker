@@ -3,7 +3,9 @@ import hashlib
 import json
 from pathlib import Path
 
-from src.common.storage import save_bronze
+import pytest
+
+from src.common.storage import find_bronze_by_source_url, save_bronze
 
 
 def _jsonl(path: Path) -> list[dict[str, object]]:
@@ -116,3 +118,97 @@ def test_same_timestamp_with_new_content_uses_filename_suffix(tmp_path: Path) ->
     assert first.name.endswith(".zip")
     assert second.name.endswith("_v2.zip")
     assert first.read_bytes() == b"one"
+
+
+def test_save_bronze_supports_safe_nested_directory(tmp_path: Path) -> None:
+    saved = save_bronze(
+        b"filing",
+        "sec",
+        "document",
+        "2026Q1",
+        "htm",
+        "https://www.sec.gov/example.htm",
+        "httpx",
+        bronze_root=tmp_path,
+        relative_dir="sec/filings/0001193125-26-171463",
+        downloaded_at=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+
+    assert saved.parent.relative_to(tmp_path).as_posix() == (
+        "sec/filings/0001193125-26-171463"
+    )
+
+
+@pytest.mark.parametrize("relative_dir", ["../outside", "sec/../../outside", "/absolute"])
+def test_save_bronze_rejects_unsafe_nested_directory(
+    tmp_path: Path, relative_dir: str
+) -> None:
+    with pytest.raises(ValueError, match="relative_dir"):
+        save_bronze(
+            b"filing",
+            "sec",
+            "document",
+            "2026Q1",
+            "htm",
+            "https://www.sec.gov/example.htm",
+            "httpx",
+            bronze_root=tmp_path,
+            relative_dir=relative_dir,
+            downloaded_at=datetime(2026, 1, 1, tzinfo=UTC),
+        )
+
+
+def test_find_bronze_by_source_url_returns_existing_artifact(tmp_path: Path) -> None:
+    source_url = "https://www.sec.gov/Archives/example.htm"
+    saved = save_bronze(
+        b"filing",
+        "sec",
+        "document",
+        "2026Q1",
+        "htm",
+        source_url,
+        "httpx",
+        bronze_root=tmp_path,
+        downloaded_at=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+
+    found = find_bronze_by_source_url(source_url, bronze_root=tmp_path)
+
+    assert found is not None
+    assert found[0] == saved
+    assert found[1]["sha256"] == hashlib.sha256(b"filing").hexdigest()
+
+
+def test_same_hash_from_different_url_records_alias_without_copy(tmp_path: Path) -> None:
+    timestamp = datetime(2026, 8, 20, 12, 0, tzinfo=UTC)
+    first = save_bronze(
+        b"same exhibit",
+        "sec",
+        "first_document",
+        "filing_a",
+        "htm",
+        "https://www.sec.gov/Archives/a.htm",
+        "httpx",
+        bronze_root=tmp_path,
+        downloaded_at=timestamp,
+    )
+    second = save_bronze(
+        b"same exhibit",
+        "sec",
+        "second_document",
+        "filing_b",
+        "htm",
+        "https://www.sec.gov/Archives/b.htm",
+        "httpx",
+        bronze_root=tmp_path,
+        downloaded_at=timestamp,
+    )
+
+    assert second == first
+    assert len(list(tmp_path.rglob("*.htm"))) == 1
+    manifest = _jsonl(tmp_path / "_manifest.jsonl")
+    assert len(manifest) == 2
+    assert manifest[1]["is_content_alias"] is True
+    assert find_bronze_by_source_url(
+        "https://www.sec.gov/Archives/b.htm", bronze_root=tmp_path
+    ) == (first, manifest[1])

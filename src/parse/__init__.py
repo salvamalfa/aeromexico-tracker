@@ -1,5 +1,8 @@
-"""Bronze-to-silver parsers, implemented in source-specific stages."""
+"""Bronze-to-silver parsers registered by source stage."""
 
 
 def run() -> None:
-    print("No bronze-to-silver parsers are registered at Stage 0.")
+    from src.parse.sec.pipeline import main as run_sec_parser
+
+    if run_sec_parser() != 0:
+        raise RuntimeError("SEC parse failed")

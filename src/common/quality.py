@@ -22,6 +22,7 @@ ISSUE_TYPES: Final[frozenset[str]] = frozenset(
         "unmapped_entity",
         "unit_ambiguity",
         "parse_failure",
+        "source_conflict",
     }
 )
 _APPEND_LOCK = threading.Lock()
