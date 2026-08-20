@@ -39,3 +39,6 @@ sec-series:
 
 bmv-validate:
     uv run python -m src.parse.bmv.validate
+
+afac-validate:
+    uv run python -m src.parse.afac.validate

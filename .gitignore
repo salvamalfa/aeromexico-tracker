@@ -14,7 +14,7 @@ data/bronze/*
 !data/bronze/_restatements.jsonl
 data/silver/
 data/gold/
-data/quality/*.jsonl
+data/quality/
 data/*.duckdb
 data/*.duckdb.wal
 

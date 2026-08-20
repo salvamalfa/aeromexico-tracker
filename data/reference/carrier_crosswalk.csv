@@ -1,0 +1,17 @@
+source_system,source_carrier_name,carrier_key,iata,icao,valid_from,valid_to,notes
+afac,Aeroméxico (Aerovías de México),AEROMEXICO,AM,AMX,1992-01,,Grupo Aeroméxico mainline
+afac,Aeroméxico Connect (Aerolitoral),AEROMEXICO_CONNECT,5D,SLI,2008-01,,Reported separately by AFAC; consolidated with Aeroméxico only in the default analytical view
+afac,Aerolitoral (Servicios Aéreos Litoral S.A. de C.V.),AEROMEXICO_CONNECT,5D,SLI,1992-01,2007-12,Pre-Connect name
+afac,Volaris (Concesionaria Vuela Cia de Aviación),VOLARIS,Y4,VOI,2006-01,,Mexican operating carrier only
+afac,Volaris (Vuela),VOLARIS,Y4,VOI,2006-01,,Short historical AFAC label
+afac,Vivaaerobus (Aeroenlaces),VIVA_AEROBUS,VB,VIV,2006-01,,
+afac,Viva Aerobus,VIVA_AEROBUS,VB,VIV,2006-01,,
+afac,Interjet (ABC Aerolíneas),INTERJET,4O,AIJ,2005-12,2020-12,Ceased operations
+afac,Mexicana (Mexicana de Aviación),MEXICANA_LEGACY,MX,MXA,1992-01,2010-08,Historic carrier; never consolidate with the state-owned carrier
+afac,Mexicana (Aerolínea del Estado Mexicano),MEXICANA_NUEVA,,,2024-01,,State-owned carrier; distinct from legacy Mexicana
+afac,Mexicana de Aviación,MEXICANA_NUEVA,,,2024-01,,Short current label
+afac,Magnicharters (Grupo Aéreo Monterrey),MAGNICHARTERS,UJ,GMT,1994-01,,
+afac,Transportes Aéreos Regionales (TAR),TAR,YQ,LCT,2014-03,,
+afac,Aeromar,AEROMAR,VW,TAO,1987-01,2023-02,Ceased operations
+afac,Aéreo Calafia,AEREO_CALAFIA,,,1993-01,2024-12,,
+afac,Aerus,AERUS,,,2023-04,,
