@@ -50,6 +50,9 @@ RATE_LIMITS: Final[dict[str, float]] = {
     "eia": 2.0,
     "fred": 2.0,
     "market": 1.0,
+    "airports": 1.0,
+    "reference": 1.0,
+    "news": 1.0,
     "default": 1.0,
 }
 

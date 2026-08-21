@@ -13,5 +13,10 @@ afac,Mexicana de Aviación,MEXICANA_NUEVA,,,2024-01,,Short current label
 afac,Magnicharters (Grupo Aéreo Monterrey),MAGNICHARTERS,UJ,GMT,1994-01,,
 afac,Transportes Aéreos Regionales (TAR),TAR,YQ,LCT,2014-03,,
 afac,Aeromar,AEROMAR,VW,TAO,1987-01,2023-02,Ceased operations
-afac,Aéreo Calafia,AEREO_CALAFIA,,,1993-01,2024-12,,
+afac,Aéreo Calafia,AEREO_CALAFIA,,,1993-01,2024-12,
 afac,Aerus,AERUS,,,2023-04,,
+market,Grupo Aeroméxico,AEROMEXICO,AM,AMX,2025-11-06,,Canonical code mapping for market series
+market,Controladora Vuela Compañía de Aviación,VOLARIS,Y4,VOI,2013-09-18,,Canonical code mapping for market series
+market,Ryanair Holdings,RYANAIR,FR,RYR,1997-05-29,,Canonical code mapping for market series
+market,Delta Air Lines,DELTA,DL,DAL,1928-12-03,,Canonical code mapping for market series
+market,International Consolidated Airlines Group,IAG,,,2011-01-21,,Holding company; no airline IATA or ICAO designator
