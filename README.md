@@ -14,6 +14,8 @@ La aplicación tiene diez vistas: resumen, economía unitaria, capacidad y deman
 
 La URL pública definitiva se añadirá aquí después de iniciar sesión y autorizar el último clic de publicación en Streamlit Community Cloud. La aplicación local y el repositorio público están preparados para ese despliegue.
 
+Los valores exactos del formulario y la validación posterior están en [la guía de publicación](docs/deploy-streamlit.md). Es importante seleccionar Python **3.13** en Advanced settings; Community Cloud usa 3.12 por defecto.
+
 ![Resumen ejecutivo](docs/assets/dashboard/resumen-ejecutivo.png)
 
 ![Forecast con backtest y bandas](docs/assets/dashboard/forecast.png)
