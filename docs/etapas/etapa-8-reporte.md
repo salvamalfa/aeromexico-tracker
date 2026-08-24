@@ -75,6 +75,7 @@ La página de resumen abre en el trimestre más reciente (`2026Q2`): ingreso US$
 | Rendimiento | PASS — inicial 0.19–0.60 s; rerun 0.01–0.08 s |
 | Contraste | PASS — texto ≥4.5:1 y marcas gráficas ≥3:1 contra blanco |
 | Navegación real | PASS — navegación y deep link `/forecast` verificados en navegador local |
+| Workflow remoto | PASS — ejecución manual en GitHub Actions, sin issues ni cambios gold |
 
 La inspección visual encontró y corrigió dos defectos que el test programático no veía:
 
