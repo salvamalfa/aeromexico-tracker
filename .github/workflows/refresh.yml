@@ -27,15 +27,15 @@ jobs:
         run: uv sync --all-extras --all-groups --locked
 
       - name: Detect stale manual-source data
-        id: manual-source
+        id: manual_source
         run: uv run python -m src.dashboard.check_manual_freshness --source afac --max-age-days 62
 
       - name: Open AFAC manual-refresh reminder
-        if: steps.manual-source.outputs.is_stale == 'true'
+        if: steps.manual_source.outputs.is_stale == 'true'
         uses: actions/github-script@v7
         with:
           script: |
-            const title = `AFAC requiere actualización manual (datos hasta ${{ steps.manual-source.outputs.last_date }})`;
+            const title = `AFAC requiere actualización manual (datos hasta ${{ steps.manual_source.outputs.last_date }})`;
             const existing = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -46,7 +46,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 title,
-                body: `La fuente manual-source AFAC tiene ${{ steps.manual-source.outputs.age_days }} días de antigüedad. Requiere descarga asistida y reconstrucción local; la ausencia no se interpreta como cero.`
+                body: `La fuente manual-source AFAC tiene ${{ steps.manual_source.outputs.age_days }} días de antigüedad. Requiere descarga asistida y reconstrucción local; la ausencia no se interpreta como cero.`
               });
             }
 
