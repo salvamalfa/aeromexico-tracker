@@ -1,7 +1,9 @@
 # Etapa 8 — Dashboard
 
-Fecha de cierre técnico: 2026-08-24
-Estado: IMPLEMENTACIÓN Y QA COMPLETAS; PUBLICACIÓN EN STREAMLIT PENDIENTE DE CONFIRMACIÓN EXTERNA
+Fecha de cierre: 2026-08-24
+Estado: COMPLETA
+
+Dashboard público: [aeromexico-tracker-djwjbylohwdryhbvnjhwsy.streamlit.app](https://aeromexico-tracker-djwjbylohwdryhbvnjhwsy.streamlit.app/)
 
 ## Qué se construyó
 
@@ -76,6 +78,7 @@ La página de resumen abre en el trimestre más reciente (`2026Q2`): ingreso US$
 | Contraste | PASS — texto ≥4.5:1 y marcas gráficas ≥3:1 contra blanco |
 | Navegación real | PASS — navegación y deep link `/forecast` verificados en navegador local |
 | Workflow remoto | PASS — ejecución manual en GitHub Actions, sin issues ni cambios gold |
+| Despliegue público | PASS — Python 3.13, diez vistas y deep link `/forecast` verificados en Streamlit Community Cloud |
 
 La inspección visual encontró y corrigió dos defectos que el test programático no veía:
 
@@ -115,13 +118,12 @@ Limitación explícita: como bronze no se versiona, GitHub Actions no puede reco
 
 ## Qué no funcionó y por qué
 
-- El repositorio público quedó disponible en `https://github.com/salvamalfa/aeromexico-tracker`. El deploy final en Streamlit Community Cloud no se ejecutó: el flujo llegó al inicio de sesión OAuth de GitHub, pero el navegador integrado no tiene una sesión autenticada. Iniciar sesión y crear una publicación web requieren intervención/confirmación inmediata; el usuario estaba dormido. El entrypoint, gold, lock, README y enlace de deploy quedaron listos.
-- La documentación oficial vigente confirma que el alta y deploy se realizan desde el workspace autenticado, sin CLI/API de creación. `docs/deploy-streamlit.md` deja resueltos repositorio, rama, entrypoint, ausencia de secretos y Python 3.13; este último debe elegirse en Advanced settings porque el default documentado es 3.12.
+- El primer intento quedó detenido en la autenticación de GitHub. Se reanudó después de que el usuario inició sesión y conectó Streamlit; no fue necesario compartir credenciales con el proyecto.
+- El primer arranque público falló porque Streamlit Community Cloud instaló las dependencias principales del `uv.lock`, pero Plotly, Streamlit y ECharts estaban declarados como extra opcional. Se movieron a dependencias de producción, se regeneró el lock y se repitieron 102 pruebas y 18/18 controles antes de publicar el arreglo (`8ac5c97`).
 - No se implementó ingesta cloud completa: contradice la decisión de no versionar bronze y no existe almacenamiento externo autorizado.
 
 ## Riesgos abiertos
 
-- Streamlit Community Cloud debe probarse una vez contra el repositorio público; cualquier diferencia de entorno se resolverá antes de declarar la URL definitiva.
 - AFAC llega a 62 días de antigüedad antes que otras fuentes; el workflow ya lo trata como recordatorio manual, no como dato cero.
 - El tamaño actual de gold (13.96 MiB) es adecuado; si T-100 crece materialmente, habrá que revisar el extracto de rutas.
 
@@ -136,4 +138,4 @@ uv run streamlit run streamlit_app.py
 
 ## Gate final
 
-La implementación, validación, documentación y QA visual de Etapa 8 están cerradas. Falta la confirmación del usuario para publicar externamente en Streamlit Community Cloud y sustituir el texto pendiente del README por la URL pública verificada.
+Etapa 8 cerrada: implementación, validación local, workflow remoto, QA visual, publicación pública y verificación de las diez vistas completadas. No queda ninguna acción pendiente para pasar el gate.

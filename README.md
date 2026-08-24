@@ -10,26 +10,27 @@ La aplicación tiene diez vistas: resumen, economía unitaria, capacidad y deman
 
 [Repositorio público en GitHub](https://github.com/salvamalfa/aeromexico-tracker)
 
-[![Deploy to Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=https://github.com/salvamalfa/aeromexico-tracker&entrypoint=streamlit_app.py)
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://aeromexico-tracker-djwjbylohwdryhbvnjhwsy.streamlit.app/)
 
-La URL pública definitiva se añadirá aquí después de iniciar sesión y autorizar el último clic de publicación en Streamlit Community Cloud. La aplicación local y el repositorio público están preparados para ese despliegue.
+**Dashboard público:** [aeromexico-tracker-djwjbylohwdryhbvnjhwsy.streamlit.app](https://aeromexico-tracker-djwjbylohwdryhbvnjhwsy.streamlit.app/)
 
-Los valores exactos del formulario y la validación posterior están en [la guía de publicación](docs/deploy-streamlit.md). Es importante seleccionar Python **3.13** en Advanced settings; Community Cloud usa 3.12 por defecto.
+Los valores exactos del despliegue y su validación están en [la guía de publicación](docs/deploy-streamlit.md). La aplicación corre con Python **3.13** y no utiliza secretos.
 
-![Resumen ejecutivo](docs/assets/dashboard/resumen-ejecutivo.png)
+![Resumen ejecutivo público](docs/assets/dashboard/public-resumen-ejecutivo.png)
 
-![Forecast con backtest y bandas](docs/assets/dashboard/forecast.png)
+![Forecast público con backtest y bandas](docs/assets/dashboard/public-forecast.png)
 
 Para recorrer el argumento completo, consulta [el recorrido narrado](docs/dashboard-recorrido.md).
 
 ## Estado
 
-Las **Etapas 0 a 8** están implementadas. La Etapa 8 supera sus controles locales; únicamente falta la acción externa de crear el deploy en Streamlit Community Cloud.
+Las **Etapas 0 a 8 están completas**. El dashboard está publicado y la ejecución local, el workflow remoto y el entorno público fueron verificados.
 
 - 25 tablas gold validadas con contratos Pandera.
 - 102 pruebas automatizadas.
 - 18/18 controles específicos del dashboard.
 - 10/10 vistas ejecutadas sin excepciones.
+- 10/10 vistas verificadas en la URL pública, incluido el enlace profundo `/forecast`.
 - Carga medida de 0.19–0.60 s por vista; rerun de 0.01–0.08 s en el entorno local de aceptación.
 - Operación offline: el dashboard solo lee Parquet local mediante DuckDB en memoria.
 
