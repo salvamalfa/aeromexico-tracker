@@ -32,8 +32,13 @@ def warehouse_query(sql: str, parameters: list[Any] | None = None) -> pd.DataFra
 
 def source_fingerprint() -> str:
     digest = hashlib.sha256()
+    downstream_tables = {
+        "fact_route_traffic_summary.parquet",
+        "fact_spread_decomposition.parquet",
+        "fact_dashboard_coverage.parquet",
+    }
     for path in sorted(PATHS.gold.glob("*.parquet")):
-        if path.name.startswith(("fact_forecasts", "dim_model", "fact_report_language", "fact_anomalies", "dim_cluster", "fact_study")):
+        if path.name in downstream_tables or path.name.startswith(("fact_forecasts", "dim_model", "fact_report_language", "fact_anomalies", "dim_cluster", "fact_study")):
             continue
         digest.update(path.name.encode())
         digest.update(hashlib.sha256(path.read_bytes()).digest())
@@ -84,4 +89,3 @@ def write_gold(table_name: str, frame: pd.DataFrame) -> Path:
 def write_json(path: Path, payload: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=False, default=str) + "\n", encoding="utf-8")
-

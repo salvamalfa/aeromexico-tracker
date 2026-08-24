@@ -23,7 +23,10 @@ rebuild:
     uv run python -m src.rebuild
 
 dashboard:
-    uv run streamlit run src/dashboard/app.py
+    uv run streamlit run streamlit_app.py
+
+dashboard-validate:
+    uv run python -m src.dashboard.validate_stage8
 
 smoke-test:
     uv run python -m src.smoke_test

@@ -25,3 +25,6 @@ def run() -> None:
 
         run_stage7()
         validate_stage7()
+        from src.dashboard.prepare import run as prepare_dashboard
+
+        prepare_dashboard()

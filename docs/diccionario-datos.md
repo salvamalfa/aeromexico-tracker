@@ -1,7 +1,7 @@
 # Diccionario de datos
 
 > Archivo generado automáticamente por `python -m src.transform.generate_data_dictionary`.
-> Contrato: `stage7_v1.0.0`. No editar manualmente.
+> Contrato: `stage8_v1.0.0`. No editar manualmente.
 
 ## Tablas gold
 
@@ -489,6 +489,60 @@ Clave primaria declarada: `model_run_id, study_key`.
 | `source_tables` | `string` | no | Linaje de tablas. |
 | `model_run_id` | `string` | no | Corrida determinista. |
 
+### `fact_route_traffic_summary`
+
+Clave primaria declarada: `carrier_key, market_key, period_id`.
+
+| Columna | Tipo | Nulo | Descripción |
+|---|---|---:|---|
+| `carrier_key` | `string` | no | Aerolínea. |
+| `market_key` | `string` | no | Mercado bidireccional. |
+| `period_id` | `string` | no | Mes calendario. |
+| `origin_iata` | `string` | no | Primer extremo canónico. |
+| `dest_iata` | `string` | no | Segundo extremo canónico. |
+| `seats` | `float` | no | Asientos mensuales agregados. |
+| `passengers` | `float` | no | Pasajeros mensuales agregados. |
+| `asm_miles` | `float` | no | ASM mensuales agregados. |
+| `rpm_miles` | `float` | no | RPM mensuales agregados. |
+| `departures` | `float` | no | Salidas realizadas agregadas. |
+| `load_factor` | `float` | sí | RPM dividido entre ASM. |
+| `source_files` | `string` | no | Archivos contribuyentes. |
+| `source_hash` | `string` | no | Hash determinista de linaje. |
+| `ingested_at` | `datetime` | no | Última ingesta contribuyente. |
+
+### `fact_spread_decomposition`
+
+Clave primaria declarada: `period_id, component_key`.
+
+| Columna | Tipo | Nulo | Descripción |
+|---|---|---:|---|
+| `period_id` | `string` | no | Trimestre final de la descomposición. |
+| `comparison_period_id` | `string` | no | Trimestre inicial. |
+| `component_key` | `string` | no | Precio |
+| `component_name_es` | `string` | no | Etiqueta para la visualización. |
+| `contribution` | `float` | sí | Aporte al cambio en centavos por ASK-km. |
+| `display_order` | `int` | no | Orden del waterfall. |
+| `is_identified` | `bool` | no | Distingue estimación de componente no identificable. |
+| `caveat` | `string` | no | Limitación de interpretación. |
+| `source_tables` | `string` | no | Linaje de tablas. |
+
+### `fact_dashboard_coverage`
+
+Clave primaria declarada: `carrier_key, metric_key, period_type, segment`.
+
+| Columna | Tipo | Nulo | Descripción |
+|---|---|---:|---|
+| `carrier_key` | `string` | no | Aerolínea. |
+| `metric_key` | `string` | no | Métrica. |
+| `period_type` | `string` | no | Mes |
+| `segment` | `string` | no | Segmento reportado. |
+| `observations` | `int` | no | Periodos con fila. |
+| `first_period` | `string` | no | Primer periodo. |
+| `last_period` | `string` | no | Último periodo. |
+| `expected_periods` | `int` | no | Periodos calendario entre extremos. |
+| `coverage_pct` | `float` | no | Observaciones sobre periodos esperados. |
+| `null_values` | `int` | no | Filas con valor nulo. |
+
 ## Catálogo de métricas
 
 Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas técnicas no mostradas en el dashboard conservan una descripción de trazabilidad.
@@ -872,9 +926,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Adjusted Ebitdar Company Normalized sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Adjusted Ebitdar Company Normalized baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Adjusted Ebitdar Company Normalized para trazabilidad y análisis especializado.
+- Si sube: Si Adjusted Ebitdar Company Normalized sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Adjusted Ebitdar Company Normalized baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Adjusted Ebitdar Company Normalized ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -883,20 +937,20 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Aircraft Communications Traffic Services sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Aircraft Communications Traffic Services baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Aircraft Communications Traffic Services para trazabilidad y análisis especializado.
+- Si sube: Si Aircraft Communications Traffic Services sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Aircraft Communications Traffic Services baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Aircraft Communications Traffic Services ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
-### `aircraft_leasing_expense` — Aircraft Leasing Expense
+### `aircraft_leasing_expense` — Arrendamiento de aeronaves
 
 - Categoría: `financial`
-- Unidad: `varies`
+- Unidad: `usd`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Aircraft Leasing Expense sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Aircraft Leasing Expense baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Aircraft Leasing Expense para trazabilidad y análisis especializado.
+- Si sube: Si Arrendamiento de aeronaves sube, aumenta la presión financiera; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Arrendamiento de aeronaves baja, puede aliviar la presión financiera; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Arrendamiento de aeronaves ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -905,20 +959,20 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `financial`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Cargo Revenue sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Cargo Revenue baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Cargo Revenue para trazabilidad y análisis especializado.
+- Si sube: Si Cargo Revenue sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Cargo Revenue baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Cargo Revenue ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
-### `cash_and_cash_equivalents` — Cash And Cash Equivalents
+### `cash_and_cash_equivalents` — Efectivo y equivalentes
 
 - Categoría: `operational`
-- Unidad: `varies`
+- Unidad: `usd`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Cash And Cash Equivalents sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Cash And Cash Equivalents baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Cash And Cash Equivalents para trazabilidad y análisis especializado.
+- Si sube: Si Efectivo y equivalentes sube, puede ser favorable; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Efectivo y equivalentes baja, puede presionar el desempeño; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Efectivo y equivalentes ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -927,9 +981,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Cask Derived sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Cask Derived baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Cask Derived para trazabilidad y análisis especializado.
+- Si sube: Si Cask Derived sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Cask Derived baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Cask Derived ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -938,9 +992,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Cask Ex Fuel Derived sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Cask Ex Fuel Derived baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Cask Ex Fuel Derived para trazabilidad y análisis especializado.
+- Si sube: Si Cask Ex Fuel Derived sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Cask Ex Fuel Derived baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Cask Ex Fuel Derived ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -949,20 +1003,20 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Depreciation Amortization sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Depreciation Amortization baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Depreciation Amortization para trazabilidad y análisis especializado.
+- Si sube: Si Depreciation Amortization sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Depreciation Amortization baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Depreciation Amortization ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
-### `ebitdar_margin` — Ebitdar Margin
+### `ebitdar_margin` — Margen EBITDAR ajustado
 
 - Categoría: `financial`
-- Unidad: `varies`
+- Unidad: `fraction`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Ebitdar Margin sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Ebitdar Margin baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Ebitdar Margin para trazabilidad y análisis especializado.
+- Si sube: Si Margen EBITDAR ajustado sube, puede ser favorable; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Margen EBITDAR ajustado baja, puede presionar el desempeño; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Margen EBITDAR ajustado ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -971,9 +1025,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `financial`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Ebitdar Margin Company Normalized sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Ebitdar Margin Company Normalized baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Ebitdar Margin Company Normalized para trazabilidad y análisis especializado.
+- Si sube: Si Ebitdar Margin Company Normalized sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Ebitdar Margin Company Normalized baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Ebitdar Margin Company Normalized ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -982,9 +1036,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Equity Investees Share sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Equity Investees Share baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Equity Investees Share para trazabilidad y análisis especializado.
+- Si sube: Si Equity Investees Share sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Equity Investees Share baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Equity Investees Share ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -993,9 +1047,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Fuel Liters sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Fuel Liters baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Fuel Liters para trazabilidad y análisis especializado.
+- Si sube: Si Fuel Liters sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Fuel Liters baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Fuel Liters ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1004,9 +1058,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Impairment Reversal sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Impairment Reversal baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Impairment Reversal para trazabilidad y análisis especializado.
+- Si sube: Si Impairment Reversal sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Impairment Reversal baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Impairment Reversal ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1015,9 +1069,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `financial`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Income Before Tax sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Income Before Tax baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Income Before Tax para trazabilidad y análisis especializado.
+- Si sube: Si Income Before Tax sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Income Before Tax baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Income Before Tax ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1026,31 +1080,31 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `financial`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Income Tax sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Income Tax baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Income Tax para trazabilidad y análisis especializado.
+- Si sube: Si Income Tax sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Income Tax baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Income Tax ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
-### `jet_fuel_expense` — Jet Fuel Expense
+### `jet_fuel_expense` — Gasto de combustible
 
 - Categoría: `financial`
-- Unidad: `varies`
+- Unidad: `usd`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Jet Fuel Expense sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Jet Fuel Expense baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Jet Fuel Expense para trazabilidad y análisis especializado.
+- Si sube: Si Gasto de combustible sube, aumenta la presión financiera; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Gasto de combustible baja, puede aliviar la presión financiera; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Gasto de combustible ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
-### `maintenance_expense` — Maintenance Expense
+### `maintenance_expense` — Gasto de mantenimiento
 
 - Categoría: `financial`
-- Unidad: `varies`
+- Unidad: `usd`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Maintenance Expense sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Maintenance Expense baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Maintenance Expense para trazabilidad y análisis especializado.
+- Si sube: Si Gasto de mantenimiento sube, aumenta la presión financiera; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Gasto de mantenimiento baja, puede aliviar la presión financiera; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Gasto de mantenimiento ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1059,20 +1113,20 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Net Finance Cost sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Net Finance Cost baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Net Finance Cost para trazabilidad y análisis especializado.
+- Si sube: Si Net Finance Cost sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Net Finance Cost baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Net Finance Cost ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
-### `net_income` — Net Income
+### `net_income` — Utilidad neta
 
 - Categoría: `financial`
-- Unidad: `varies`
+- Unidad: `usd`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Net Income sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Net Income baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Net Income para trazabilidad y análisis especializado.
+- Si sube: Si Utilidad neta sube, puede ser favorable; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Utilidad neta baja, puede presionar el desempeño; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Utilidad neta ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1081,20 +1135,20 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `financial`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Operating Expenses Total sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Operating Expenses Total baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Operating Expenses Total para trazabilidad y análisis especializado.
+- Si sube: Si Operating Expenses Total sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Operating Expenses Total baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Operating Expenses Total ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
-### `operating_income` — Operating Income
+### `operating_income` — Utilidad operativa
 
 - Categoría: `financial`
-- Unidad: `varies`
+- Unidad: `usd`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Operating Income sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Operating Income baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Operating Income para trazabilidad y análisis especializado.
+- Si sube: Si Utilidad operativa sube, puede ser favorable; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Utilidad operativa baja, puede presionar el desempeño; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Utilidad operativa ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1103,9 +1157,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `financial`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Operating Income Company Normalized sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Operating Income Company Normalized baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Operating Income Company Normalized para trazabilidad y análisis especializado.
+- Si sube: Si Operating Income Company Normalized sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Operating Income Company Normalized baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Operating Income Company Normalized ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1114,9 +1168,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `financial`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Operating Margin Company Normalized sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Operating Margin Company Normalized baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Operating Margin Company Normalized para trazabilidad y análisis especializado.
+- Si sube: Si Operating Margin Company Normalized sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Operating Margin Company Normalized baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Operating Margin Company Normalized ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1125,9 +1179,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `financial`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Other Income Loss Net sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Other Income Loss Net baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Other Income Loss Net para trazabilidad y análisis especializado.
+- Si sube: Si Other Income Loss Net sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Other Income Loss Net baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Other Income Loss Net ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1136,9 +1190,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `financial`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Other Revenue sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Other Revenue baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Other Revenue para trazabilidad y análisis especializado.
+- Si sube: Si Other Revenue sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Other Revenue baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Other Revenue ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1147,9 +1201,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `financial`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Passenger Revenue sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Passenger Revenue baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Passenger Revenue para trazabilidad y análisis especializado.
+- Si sube: Si Passenger Revenue sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Passenger Revenue baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Passenger Revenue ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1158,9 +1212,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `financial`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Passenger Services Expense sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Passenger Services Expense baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Passenger Services Expense para trazabilidad y análisis especializado.
+- Si sube: Si Passenger Services Expense sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Passenger Services Expense baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Passenger Services Expense ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1169,9 +1223,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Prask Derived sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Prask Derived baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Prask Derived para trazabilidad y análisis especializado.
+- Si sube: Si Prask Derived sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Prask Derived baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Prask Derived ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1180,9 +1234,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Qoq Growth Adjusted Ebitdar sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Qoq Growth Adjusted Ebitdar baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Qoq Growth Adjusted Ebitdar para trazabilidad y análisis especializado.
+- Si sube: Si Qoq Growth Adjusted Ebitdar sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Qoq Growth Adjusted Ebitdar baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Qoq Growth Adjusted Ebitdar ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1191,9 +1245,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Qoq Growth Asm Total sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Qoq Growth Asm Total baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Qoq Growth Asm Total para trazabilidad y análisis especializado.
+- Si sube: Si Qoq Growth Asm Total sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Qoq Growth Asm Total baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Qoq Growth Asm Total ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1202,9 +1256,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Qoq Growth Cask sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Qoq Growth Cask baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Qoq Growth Cask para trazabilidad y análisis especializado.
+- Si sube: Si Qoq Growth Cask sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Qoq Growth Cask baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Qoq Growth Cask ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1213,9 +1267,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Qoq Growth Load Factor Total sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Qoq Growth Load Factor Total baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Qoq Growth Load Factor Total para trazabilidad y análisis especializado.
+- Si sube: Si Qoq Growth Load Factor Total sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Qoq Growth Load Factor Total baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Qoq Growth Load Factor Total ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1224,9 +1278,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `financial`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Qoq Growth Net Income sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Qoq Growth Net Income baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Qoq Growth Net Income para trazabilidad y análisis especializado.
+- Si sube: Si Qoq Growth Net Income sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Qoq Growth Net Income baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Qoq Growth Net Income ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1235,9 +1289,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `financial`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Qoq Growth Operating Income sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Qoq Growth Operating Income baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Qoq Growth Operating Income para trazabilidad y análisis especializado.
+- Si sube: Si Qoq Growth Operating Income sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Qoq Growth Operating Income baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Qoq Growth Operating Income ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1246,9 +1300,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Qoq Growth Passengers sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Qoq Growth Passengers baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Qoq Growth Passengers para trazabilidad y análisis especializado.
+- Si sube: Si Qoq Growth Passengers sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Qoq Growth Passengers baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Qoq Growth Passengers ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1257,9 +1311,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Qoq Growth Rask sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Qoq Growth Rask baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Qoq Growth Rask para trazabilidad y análisis especializado.
+- Si sube: Si Qoq Growth Rask sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Qoq Growth Rask baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Qoq Growth Rask ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1268,9 +1322,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Qoq Growth Rpm Total sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Qoq Growth Rpm Total baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Qoq Growth Rpm Total para trazabilidad y análisis especializado.
+- Si sube: Si Qoq Growth Rpm Total sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Qoq Growth Rpm Total baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Qoq Growth Rpm Total ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1279,9 +1333,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `financial`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Qoq Growth Total Revenue sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Qoq Growth Total Revenue baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Qoq Growth Total Revenue para trazabilidad y análisis especializado.
+- Si sube: Si Qoq Growth Total Revenue sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Qoq Growth Total Revenue baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Qoq Growth Total Revenue ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1290,9 +1344,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Rask Derived sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Rask Derived baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Rask Derived para trazabilidad y análisis especializado.
+- Si sube: Si Rask Derived sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Rask Derived baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Rask Derived ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1301,64 +1355,64 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `financial`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Revenue Per Passenger sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Revenue Per Passenger baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Revenue Per Passenger para trazabilidad y análisis especializado.
+- Si sube: Si Revenue Per Passenger sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Revenue Per Passenger baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Revenue Per Passenger ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
-### `selling_administrative_expense` — Selling Administrative Expense
+### `selling_administrative_expense` — Gastos de venta y administración
 
 - Categoría: `financial`
-- Unidad: `varies`
+- Unidad: `usd`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Selling Administrative Expense sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Selling Administrative Expense baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Selling Administrative Expense para trazabilidad y análisis especializado.
+- Si sube: Si Gastos de venta y administración sube, aumenta la presión financiera; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Gastos de venta y administración baja, puede aliviar la presión financiera; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Gastos de venta y administración ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
-### `total_assets` — Total Assets
+### `total_assets` — Activos totales
 
 - Categoría: `operational`
-- Unidad: `varies`
+- Unidad: `usd`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Total Assets sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Total Assets baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Total Assets para trazabilidad y análisis especializado.
+- Si sube: Si Activos totales sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Activos totales baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Activos totales ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
-### `total_equity` — Total Equity
+### `total_equity` — Capital contable
 
 - Categoría: `operational`
-- Unidad: `varies`
+- Unidad: `usd`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Total Equity sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Total Equity baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Total Equity para trazabilidad y análisis especializado.
+- Si sube: Si Capital contable sube, puede ser favorable; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Capital contable baja, puede presionar el desempeño; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Capital contable ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
-### `total_liabilities` — Total Liabilities
+### `total_liabilities` — Pasivos totales
 
 - Categoría: `operational`
-- Unidad: `varies`
+- Unidad: `usd`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Total Liabilities sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Total Liabilities baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Total Liabilities para trazabilidad y análisis especializado.
+- Si sube: Si Pasivos totales sube, aumenta la presión financiera; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Pasivos totales baja, puede aliviar la presión financiera; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Pasivos totales ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
-### `total_revenue` — Total Revenue
+### `total_revenue` — Ingreso total
 
 - Categoría: `financial`
-- Unidad: `varies`
+- Unidad: `usd`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Total Revenue sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Total Revenue baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Total Revenue para trazabilidad y análisis especializado.
+- Si sube: Si Ingreso total sube, puede ser favorable; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Ingreso total baja, puede presionar el desempeño; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Ingreso total ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1367,9 +1421,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `financial`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Total Revenue Company Normalized sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Total Revenue Company Normalized baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Total Revenue Company Normalized para trazabilidad y análisis especializado.
+- Si sube: Si Total Revenue Company Normalized sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Total Revenue Company Normalized baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Total Revenue Company Normalized ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1378,9 +1432,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Travel Agent Commissions sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Travel Agent Commissions baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Travel Agent Commissions para trazabilidad y análisis especializado.
+- Si sube: Si Travel Agent Commissions sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Travel Agent Commissions baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Travel Agent Commissions ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1389,9 +1443,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Ttm Adjusted Ebitdar sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Ttm Adjusted Ebitdar baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Ttm Adjusted Ebitdar para trazabilidad y análisis especializado.
+- Si sube: Si Ttm Adjusted Ebitdar sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Ttm Adjusted Ebitdar baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Ttm Adjusted Ebitdar ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1400,9 +1454,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Ttm Asm Total sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Ttm Asm Total baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Ttm Asm Total para trazabilidad y análisis especializado.
+- Si sube: Si Ttm Asm Total sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Ttm Asm Total baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Ttm Asm Total ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1411,9 +1465,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `financial`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Ttm Net Income sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Ttm Net Income baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Ttm Net Income para trazabilidad y análisis especializado.
+- Si sube: Si Ttm Net Income sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Ttm Net Income baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Ttm Net Income ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1422,9 +1476,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `financial`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Ttm Operating Income sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Ttm Operating Income baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Ttm Operating Income para trazabilidad y análisis especializado.
+- Si sube: Si Ttm Operating Income sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Ttm Operating Income baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Ttm Operating Income ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1433,9 +1487,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Ttm Passengers sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Ttm Passengers baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Ttm Passengers para trazabilidad y análisis especializado.
+- Si sube: Si Ttm Passengers sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Ttm Passengers baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Ttm Passengers ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1444,9 +1498,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Ttm Rpm Total sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Ttm Rpm Total baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Ttm Rpm Total para trazabilidad y análisis especializado.
+- Si sube: Si Ttm Rpm Total sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Ttm Rpm Total baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Ttm Rpm Total ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1455,20 +1509,20 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `financial`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Ttm Total Revenue sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Ttm Total Revenue baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Ttm Total Revenue para trazabilidad y análisis especializado.
+- Si sube: Si Ttm Total Revenue sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Ttm Total Revenue baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Ttm Total Revenue ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
-### `wages_salaries_benefits` — Wages Salaries Benefits
+### `wages_salaries_benefits` — Sueldos, salarios y prestaciones
 
 - Categoría: `operational`
-- Unidad: `varies`
+- Unidad: `usd`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Wages Salaries Benefits sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Wages Salaries Benefits baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Wages Salaries Benefits para trazabilidad y análisis especializado.
+- Si sube: Si Sueldos, salarios y prestaciones sube, aumenta la presión financiera; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Sueldos, salarios y prestaciones baja, puede aliviar la presión financiera; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Sueldos, salarios y prestaciones ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1477,9 +1531,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Yoy Growth Adjusted Ebitdar sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Yoy Growth Adjusted Ebitdar baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Yoy Growth Adjusted Ebitdar para trazabilidad y análisis especializado.
+- Si sube: Si Yoy Growth Adjusted Ebitdar sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Yoy Growth Adjusted Ebitdar baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Yoy Growth Adjusted Ebitdar ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1488,9 +1542,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Yoy Growth Asm Total sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Yoy Growth Asm Total baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Yoy Growth Asm Total para trazabilidad y análisis especializado.
+- Si sube: Si Yoy Growth Asm Total sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Yoy Growth Asm Total baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Yoy Growth Asm Total ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1499,9 +1553,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Yoy Growth Cask sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Yoy Growth Cask baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Yoy Growth Cask para trazabilidad y análisis especializado.
+- Si sube: Si Yoy Growth Cask sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Yoy Growth Cask baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Yoy Growth Cask ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1510,9 +1564,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Yoy Growth Load Factor Total sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Yoy Growth Load Factor Total baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Yoy Growth Load Factor Total para trazabilidad y análisis especializado.
+- Si sube: Si Yoy Growth Load Factor Total sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Yoy Growth Load Factor Total baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Yoy Growth Load Factor Total ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1521,9 +1575,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `financial`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Yoy Growth Net Income sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Yoy Growth Net Income baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Yoy Growth Net Income para trazabilidad y análisis especializado.
+- Si sube: Si Yoy Growth Net Income sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Yoy Growth Net Income baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Yoy Growth Net Income ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1532,9 +1586,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `financial`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Yoy Growth Operating Income sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Yoy Growth Operating Income baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Yoy Growth Operating Income para trazabilidad y análisis especializado.
+- Si sube: Si Yoy Growth Operating Income sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Yoy Growth Operating Income baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Yoy Growth Operating Income ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1543,9 +1597,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Yoy Growth Passengers sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Yoy Growth Passengers baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Yoy Growth Passengers para trazabilidad y análisis especializado.
+- Si sube: Si Yoy Growth Passengers sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Yoy Growth Passengers baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Yoy Growth Passengers ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1554,9 +1608,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Yoy Growth Rask sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Yoy Growth Rask baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Yoy Growth Rask para trazabilidad y análisis especializado.
+- Si sube: Si Yoy Growth Rask sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Yoy Growth Rask baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Yoy Growth Rask ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1565,9 +1619,9 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `operational`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Yoy Growth Rpm Total sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Yoy Growth Rpm Total baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Yoy Growth Rpm Total para trazabilidad y análisis especializado.
+- Si sube: Si Yoy Growth Rpm Total sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Yoy Growth Rpm Total baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Yoy Growth Rpm Total ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard
 
@@ -1576,8 +1630,8 @@ Las interpretaciones provienen de `docs/plan/11-glosario-kpis.md`; las métricas
 - Categoría: `financial`
 - Unidad: `varies`
 - Fórmula: No declarada; valor reportado por la fuente.
-- Si sube: Si Yoy Growth Total Revenue sube, valida la definición y sus impulsores antes de concluir.
-- Si baja: Si Yoy Growth Total Revenue baja, valida la definición y sus impulsores antes de concluir.
-- Por qué importa: Conserva el detalle reportado de Yoy Growth Total Revenue para trazabilidad y análisis especializado.
+- Si sube: Si Yoy Growth Total Revenue sube, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Si baja: Si Yoy Growth Total Revenue baja, no es mejor ni peor por sí solo; confirma sus impulsores y el periodo comparable.
+- Por qué importa: Yoy Growth Total Revenue ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.
 - Advertencias: Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.
 - Sección del glosario: métrica técnica fuera del dashboard

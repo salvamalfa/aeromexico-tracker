@@ -63,6 +63,44 @@ GLOSSARY_MAP: dict[str, dict[str, Any]] = {
     "jet_fuel_elasticity": dict(section="Elasticidad al jet fuel", es="Elasticidad al jet fuel", en="Jet Fuel Elasticity", category="unit_cost", unit="ratio", better=False, fmt="0.00"),
 }
 
+SPANISH_FALLBACK_LABELS = {
+    "total_revenue": "Ingreso total",
+    "operating_income": "Utilidad operativa",
+    "net_income": "Utilidad neta",
+    "jet_fuel_expense": "Gasto de combustible",
+    "wages_salaries_benefits": "Sueldos, salarios y prestaciones",
+    "maintenance_expense": "Gasto de mantenimiento",
+    "aircraft_leasing_expense": "Arrendamiento de aeronaves",
+    "selling_administrative_expense": "Gastos de venta y administración",
+    "cash_and_cash_equivalents": "Efectivo y equivalentes",
+    "total_assets": "Activos totales",
+    "total_liabilities": "Pasivos totales",
+    "total_equity": "Capital contable",
+    "ebitdar_margin": "Margen EBITDAR ajustado",
+}
+
+FALLBACK_USD_METRICS = {
+    "total_revenue", "operating_income", "net_income", "jet_fuel_expense",
+    "wages_salaries_benefits", "maintenance_expense", "aircraft_leasing_expense",
+    "selling_administrative_expense", "cash_and_cash_equivalents", "total_assets",
+    "total_liabilities", "total_equity",
+}
+FALLBACK_HIGHER_IS_BETTER = {
+    "total_revenue": True,
+    "operating_income": True,
+    "net_income": True,
+    "jet_fuel_expense": False,
+    "wages_salaries_benefits": False,
+    "maintenance_expense": False,
+    "aircraft_leasing_expense": False,
+    "selling_administrative_expense": False,
+    "cash_and_cash_equivalents": True,
+    "total_assets": None,
+    "total_liabilities": False,
+    "total_equity": True,
+    "ebitdar_margin": True,
+}
+
 
 def gregorian_easter(year: int) -> date:
     """Meeus/Jones/Butcher Gregorian Easter algorithm."""
@@ -315,19 +353,23 @@ def build_dim_metric(metric_keys: set[str]) -> pd.DataFrame:
                 )
             )
         else:
-            label = key.replace("_", " ").strip().title()
+            label = SPANISH_FALLBACK_LABELS.get(key, key.replace("_", " ").strip().title())
+            unit = "usd" if key in FALLBACK_USD_METRICS else ("fraction" if key == "ebitdar_margin" else "varies")
+            higher_is_better = FALLBACK_HIGHER_IS_BETTER.get(key)
+            direction_up = "puede ser favorable" if higher_is_better is True else ("aumenta la presión financiera" if higher_is_better is False else "no es mejor ni peor por sí solo")
+            direction_down = "puede presionar el desempeño" if higher_is_better is True else ("puede aliviar la presión financiera" if higher_is_better is False else "no es mejor ni peor por sí solo")
             rows.append(
                 dict(
                     metric_key=key,
                     metric_name_es=label,
                     metric_name_en=label,
                     metric_category="financial" if any(token in key for token in ("revenue", "income", "expense", "margin", "tax")) else "operational",
-                    unit_normalized="varies",
+                    unit_normalized=unit,
                     formula=None,
-                    higher_is_better=None,
-                    business_interpretation_up=f"Si {label} sube, valida la definición y sus impulsores antes de concluir.",
-                    business_interpretation_down=f"Si {label} baja, valida la definición y sus impulsores antes de concluir.",
-                    why_it_matters=f"Conserva el detalle reportado de {label} para trazabilidad y análisis especializado.",
+                    higher_is_better=higher_is_better,
+                    business_interpretation_up=f"Si {label} sube, {direction_up}; confirma sus impulsores y el periodo comparable.",
+                    business_interpretation_down=f"Si {label} baja, {direction_down}; confirma sus impulsores y el periodo comparable.",
+                    why_it_matters=f"{label} ayuda a leer la escala y la salud financiera reportada; debe interpretarse junto con márgenes, capacidad y caja.",
                     typical_range_network=None,
                     typical_range_ulcc=None,
                     caveats="Métrica de detalle no seleccionada para el dashboard; compara solo definiciones y periodos homogéneos.",

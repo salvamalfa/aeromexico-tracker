@@ -1,12 +1,17 @@
-name: Validate and rebuild
+name: Validate and publish dashboard data
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "17 8 2 * *"
+    - cron: "0 12 5 2,5,8,11 *"
+
+concurrency:
+  group: dashboard-refresh
+  cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
+  issues: write
 
 jobs:
   validate:
@@ -17,9 +22,72 @@ jobs:
         with:
           python-version: "3.13"
           enable-cache: true
+
       - name: Install locked dependencies
         run: uv sync --all-extras --all-groups --locked
-      - name: Run tests
+
+      - name: Detect stale manual-source data
+        id: manual-source
+        run: uv run python -m src.dashboard.check_manual_freshness --source afac --max-age-days 62
+
+      - name: Open AFAC manual-refresh reminder
+        if: steps.manual-source.outputs.is_stale == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `AFAC requiere actualización manual (datos hasta ${{ steps.manual-source.outputs.last_date }})`;
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open'
+            });
+            if (!existing.data.some(issue => issue.title === title)) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body: `La fuente manual-source AFAC tiene ${{ steps.manual-source.outputs.age_days }} días de antigüedad. Requiere descarga asistida y reconstrucción local; la ausencia no se interpreta como cero.`
+              });
+            }
+
+      - name: Run full test suite
+        id: tests
+        continue-on-error: true
         run: uv run pytest
-      - name: Verify offline rebuild entry point
-        run: uv run python -m src.rebuild
+
+      - name: Validate Stage 8 acceptance
+        id: validation
+        if: steps.tests.outcome == 'success'
+        continue-on-error: true
+        run: uv run python -m src.dashboard.validate_stage8
+
+      - name: Open validation-failed issue
+        if: steps.tests.outcome == 'failure' || steps.validation.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `Dashboard validation-failed · ${context.runId}`;
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body: `La validación falló y no se publicaron cambios en gold. Revisa la ejecución: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+            });
+
+      - name: Stop before commit when validation failed
+        if: steps.tests.outcome == 'failure' || steps.validation.outcome == 'failure'
+        run: exit 1
+
+      - name: Commit validated gold updates
+        if: steps.tests.outcome == 'success' && steps.validation.outcome == 'success'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/gold docs/diccionario-datos.md
+          if git diff --cached --quiet; then
+            echo "No validated gold changes to publish."
+          else
+            git commit -m "Refresh validated dashboard gold data"
+            git push
+          fi
