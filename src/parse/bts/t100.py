@@ -144,7 +144,18 @@ def build_t100() -> tuple[pl.DataFrame, pl.DataFrame]:
         }
         for row in identities.iter_rows(named=True)
     ]
-    crosswalk = pl.DataFrame(mapping).sort(["carrier_key", "airline_id"])
+    crosswalk = pl.DataFrame(mapping).sort(
+        [
+            "carrier_key",
+            "airline_id",
+            "carrier_identity",
+            "unique_carrier",
+            "unique_carrier_name",
+            "unique_carrier_entity",
+            "carrier",
+            "carrier_name",
+        ]
+    )
     duplicates = crosswalk.group_by(
         ["carrier_identity"]
     ).agg(pl.col("carrier_key").n_unique().alias("keys")).filter(pl.col("keys") != 1)

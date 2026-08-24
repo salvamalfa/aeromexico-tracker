@@ -1,0 +1,286 @@
+version: stage6_v1.0.0
+tables:
+  dim_carrier:
+    primary_key: [carrier_key]
+    columns:
+      carrier_key: {type: string, nullable: false, description: Clave estable de la entidad aérea.}
+      carrier_name: {type: string, nullable: false, description: Razón o nombre operacional.}
+      carrier_name_short: {type: string, nullable: false, description: Nombre corto para visualización.}
+      iata_code: {type: string, nullable: true, description: Código IATA de dos caracteres.}
+      icao_code: {type: string, nullable: true, description: Código ICAO.}
+      country: {type: string, nullable: true, description: País base de la entidad.}
+      business_model: {type: string, nullable: false, description: Modelo de negocio normalizado.}
+      is_public: {type: bool, nullable: false, description: Indica si cotiza en bolsa.}
+      ticker: {type: string, nullable: true, description: Ticker principal usado por el proyecto.}
+      exchange: {type: string, nullable: true, description: Bolsa principal o combinación de bolsas.}
+      cik: {type: string, nullable: true, description: CIK de SEC, si existe.}
+      reporting_standard: {type: string, nullable: true, description: IFRS o US-GAAP.}
+      reporting_currency: {type: string, nullable: true, description: Moneda funcional de reporte.}
+      unit_system: {type: string, nullable: false, description: Sistema de unidades preferido por la fuente.}
+      fiscal_year_end_month: {type: int, nullable: true, description: Mes de cierre del ejercicio fiscal.}
+      parent_carrier_key: {type: string, nullable: true, description: Clave del grupo consolidante.}
+      is_peer: {type: bool, nullable: false, description: Identifica peers del análisis.}
+      is_focus: {type: bool, nullable: false, description: Identifica la compañía objetivo.}
+      valid_from: {type: date, nullable: false, description: Inicio de vigencia de la identidad.}
+      valid_to: {type: date, nullable: true, description: Fin de vigencia de la identidad.}
+      is_current: {type: bool, nullable: false, description: Versión vigente de la identidad.}
+  dim_period:
+    primary_key: [period_id]
+    columns:
+      period_id: {type: string, nullable: false, description: Clave de mes, trimestre, año o TTM.}
+      period_type: {type: string, nullable: false, description: month, quarter, year o ttm.}
+      period_start_date: {type: date, nullable: false, description: Primer día incluido.}
+      period_end_date: {type: date, nullable: false, description: Último día incluido.}
+      year: {type: int, nullable: false, description: Año calendario de cierre.}
+      quarter: {type: int, nullable: true, description: Trimestre calendario de cierre.}
+      month: {type: int, nullable: true, description: Mes calendario de cierre.}
+      days_in_period: {type: int, nullable: false, description: Días calendario incluidos.}
+      is_covid_period: {type: bool, nullable: false, description: Periodo entre marzo de 2020 y diciembre de 2021.}
+      prior_period_id: {type: string, nullable: true, description: Periodo comparable inmediatamente anterior.}
+      prior_year_period_id: {type: string, nullable: true, description: Mismo periodo del año previo.}
+      fiscal_period_id: {type: string, nullable: false, description: Identificador fiscal por defecto.}
+      calendar_period_id: {type: string, nullable: false, description: Identificador calendario.}
+      easter_date: {type: date, nullable: false, description: Domingo de Pascua del año.}
+      easter_quarter: {type: int, nullable: false, description: Trimestre que contiene Pascua.}
+      easter_days_in_q1: {type: int, nullable: false, description: Días de la ventana Domingo de Ramos a lunes de Pascua que caen en Q1.}
+      easter_days_in_q2: {type: int, nullable: false, description: Días de la ventana Domingo de Ramos a lunes de Pascua que caen en Q2.}
+  dim_metric:
+    primary_key: [metric_key]
+    columns:
+      metric_key: {type: string, nullable: false, description: Clave estable de la métrica.}
+      metric_name_es: {type: string, nullable: false, description: Nombre en español.}
+      metric_name_en: {type: string, nullable: false, description: Nombre en inglés.}
+      metric_category: {type: string, nullable: false, description: Categoría analítica.}
+      unit_normalized: {type: string, nullable: false, description: Unidad normalizada esperada.}
+      formula: {type: string, nullable: true, description: Fórmula literal.}
+      higher_is_better: {type: bool, nullable: true, description: Sentido favorable; nulo cuando depende del contexto.}
+      business_interpretation_up: {type: string, nullable: false, description: Lectura de negocio cuando sube.}
+      business_interpretation_down: {type: string, nullable: false, description: Lectura de negocio cuando baja.}
+      why_it_matters: {type: string, nullable: false, description: Relevancia de negocio.}
+      typical_range_network: {type: string, nullable: true, description: Referencia aproximada para network carriers.}
+      typical_range_ulcc: {type: string, nullable: true, description: Referencia aproximada para ULCC.}
+      caveats: {type: string, nullable: false, description: Advertencias de comparabilidad y definición.}
+      display_format: {type: string, nullable: false, description: Formato de presentación.}
+      display_order: {type: int, nullable: false, description: Orden sugerido en UI.}
+      glossary_section: {type: string, nullable: true, description: Encabezado fuente en el glosario.}
+      is_dashboard_metric: {type: bool, nullable: false, description: Métrica prevista para mostrarse en el dashboard.}
+  dim_route:
+    primary_key: [route_key]
+    columns:
+      route_key: {type: string, nullable: false, description: Ruta direccional origen-destino.}
+      origin_iata: {type: string, nullable: false, description: Aeropuerto de origen.}
+      dest_iata: {type: string, nullable: false, description: Aeropuerto de destino.}
+      origin_country: {type: string, nullable: false, description: País de origen.}
+      dest_country: {type: string, nullable: false, description: País de destino.}
+      distance_km: {type: float, nullable: false, description: Distancia mediana en kilómetros.}
+      distance_miles: {type: float, nullable: false, description: Distancia mediana en millas estatuta.}
+      is_domestic_mx: {type: bool, nullable: false, description: Ambos extremos están en México.}
+      is_transborder_us: {type: bool, nullable: false, description: Ruta México-Estados Unidos.}
+      is_international: {type: bool, nullable: false, description: Cruza una frontera.}
+      market_key: {type: string, nullable: false, description: Mercado bidireccional canónico.}
+  dim_airport:
+    primary_key: [airport_iata]
+    columns:
+      airport_iata: {type: string, nullable: true, description: Código IATA.}
+      airport_icao: {type: string, nullable: true, description: Código ICAO.}
+      name: {type: string, nullable: true, description: Nombre del aeropuerto.}
+      city: {type: string, nullable: true, description: Ciudad.}
+      country: {type: string, nullable: true, description: País.}
+      latitude: {type: float, nullable: true, description: Latitud.}
+      longitude: {type: float, nullable: true, description: Longitud.}
+      elevation: {type: float, nullable: true, description: Elevación publicada.}
+      type: {type: string, nullable: true, description: Tipo de instalación.}
+      operator_group: {type: string, nullable: true, description: Grupo operador mexicano.}
+      source_system: {type: string, nullable: false, description: Sistema fuente.}
+      source_file: {type: string, nullable: false, description: Archivo bronze fuente.}
+      source_hash: {type: string, nullable: false, description: SHA-256 fuente.}
+      ingested_at: {type: datetime, nullable: false, description: Fecha de ingesta.}
+      parser_version: {type: string, nullable: false, description: Versión del parser.}
+  dim_events:
+    primary_key: [event_date, title]
+    columns:
+      event_date: {type: datetime, nullable: false, description: Fecha del evento.}
+      event_type: {type: string, nullable: false, description: Tipo de evento.}
+      event_category: {type: string, nullable: false, description: Categoría analítica.}
+      title: {type: string, nullable: false, description: Título corto.}
+      description: {type: string, nullable: false, description: Descripción.}
+      affected_carriers: {type: string, nullable: false, description: Entidades afectadas.}
+      impact_direction: {type: string, nullable: false, description: Dirección esperada del impacto.}
+      source_url: {type: string, nullable: false, description: Fuente primaria.}
+      confidence: {type: string, nullable: false, description: Confianza cualitativa.}
+      source_system: {type: string, nullable: false, description: Sistema fuente.}
+      source_file: {type: string, nullable: true, description: Archivo bronze fuente.}
+      source_hash: {type: string, nullable: true, description: SHA-256 fuente.}
+      ingested_at: {type: datetime, nullable: false, description: Fecha de ingesta.}
+      parser_version: {type: string, nullable: false, description: Versión del parser.}
+  dim_fx_period:
+    primary_key: [period_id, currency_pair]
+    columns:
+      rate_avg: {type: float, nullable: false, description: Tipo promedio del periodo.}
+      rate_close: {type: float, nullable: false, description: Último tipo disponible del periodo.}
+      rate_min: {type: float, nullable: false, description: Mínimo del periodo.}
+      rate_max: {type: float, nullable: false, description: Máximo del periodo.}
+      period_id: {type: string, nullable: false, description: Periodo calendario.}
+      period_type: {type: string, nullable: false, description: month, quarter o year.}
+      currency_pair: {type: string, nullable: false, description: Par cotizado como moneda local por USD.}
+      pnl_conversion_method: {type: string, nullable: false, description: Método para flujos de P&L.}
+      balance_conversion_method: {type: string, nullable: false, description: Método para saldos.}
+  dim_fuel_period:
+    primary_key: [period_id]
+    columns:
+      price_avg_usd_per_gallon: {type: float, nullable: false, description: Precio promedio.}
+      price_close_usd_per_gallon: {type: float, nullable: false, description: Precio de cierre.}
+      price_min_usd_per_gallon: {type: float, nullable: false, description: Precio mínimo.}
+      price_max_usd_per_gallon: {type: float, nullable: false, description: Precio máximo.}
+      period_id: {type: string, nullable: false, description: Periodo calendario.}
+      period_type: {type: string, nullable: false, description: month o quarter.}
+      price_avg_yoy_pct: {type: float, nullable: true, description: Variación interanual del promedio.}
+  fx_business_calendar:
+    primary_key: [date, currency_pair]
+    columns:
+      date: {type: datetime, nullable: false, description: Día hábil.}
+      rate_close: {type: float, nullable: false, description: Tipo publicado o arrastrado.}
+      is_published: {type: bool, nullable: false, description: El valor fue publicado ese día.}
+      fill_method: {type: string, nullable: false, description: Método de llenado.}
+      currency_pair: {type: string, nullable: false, description: Par de monedas.}
+  fuel_business_calendar:
+    primary_key: [date]
+    columns:
+      date: {type: datetime, nullable: false, description: Día hábil.}
+      price_usd_per_gallon: {type: float, nullable: false, description: Precio publicado o arrastrado.}
+      is_published: {type: bool, nullable: false, description: El valor fue publicado ese día.}
+      fill_method: {type: string, nullable: false, description: Método de llenado.}
+  fact_carrier_metrics:
+    primary_key: [carrier_key, period_id, metric_key, segment, source_system, valid_from]
+    columns:
+      carrier_key: {type: string, nullable: false, description: Aerolínea o grupo.}
+      period_id: {type: string, nullable: false, description: Periodo reportado.}
+      calendar_period_id: {type: string, nullable: false, description: Periodo calendario comparable.}
+      fiscal_period_id: {type: string, nullable: false, description: Periodo fiscal de la fuente.}
+      period_type: {type: string, nullable: false, description: Granularidad temporal.}
+      period_start_date: {type: date, nullable: false, description: Inicio del periodo.}
+      period_end_date: {type: date, nullable: false, description: Fin del periodo.}
+      metric_key: {type: string, nullable: false, description: Métrica.}
+      segment: {type: string, nullable: false, description: total, domestic, international o transborder.}
+      value: {type: float, nullable: true, description: Valor normalizado en la unidad declarada.}
+      value_metric: {type: float, nullable: true, description: Equivalente métrico cuando aplica.}
+      value_imperial: {type: float, nullable: true, description: Equivalente imperial cuando aplica.}
+      value_as_reported: {type: float, nullable: true, description: Valor numérico publicado antes de escala.}
+      unit_as_reported: {type: string, nullable: true, description: Unidad literal publicada.}
+      unit_normalized: {type: string, nullable: false, description: Unidad normalizada de value.}
+      currency: {type: string, nullable: true, description: Moneda original.}
+      value_original_currency: {type: float, nullable: true, description: Valor ya escalado en moneda original.}
+      value_usd: {type: float, nullable: true, description: Equivalente en USD.}
+      fx_rate_used: {type: float, nullable: true, description: Tipo de cambio aplicado.}
+      fx_rate_type: {type: string, nullable: true, description: average o close.}
+      is_derived: {type: bool, nullable: false, description: Valor calculado por el pipeline.}
+      is_preliminary: {type: bool, nullable: false, description: Fuente lo marca preliminar.}
+      is_estimated: {type: bool, nullable: false, description: Valor estimado y etiquetado.}
+      derivation_formula: {type: string, nullable: true, description: Fórmula para valores derivados.}
+      valid_from: {type: datetime, nullable: false, description: Inicio de vigencia SCD2.}
+      valid_to: {type: datetime, nullable: true, description: Fin de vigencia SCD2.}
+      is_current: {type: bool, nullable: false, description: Versión vigente.}
+      restatement_count: {type: int, nullable: false, description: Número de reexpresiones previas.}
+      source_system: {type: string, nullable: false, description: Sistema fuente.}
+      source_file: {type: string, nullable: false, description: Archivo fuente o agregado silver.}
+      source_hash: {type: string, nullable: false, description: SHA-256 de linaje.}
+      ingested_at: {type: datetime, nullable: false, description: Fecha de ingesta.}
+      confidence: {type: float, nullable: false, description: Confianza de 0 a 1.}
+  fact_route_traffic:
+    primary_key: [carrier_key, route_key, period_id, aircraft_type, service_class]
+    columns:
+      carrier_key: {type: string, nullable: false, description: Aerolínea.}
+      route_key: {type: string, nullable: false, description: Ruta direccional.}
+      period_id: {type: string, nullable: false, description: Mes calendario.}
+      calendar_period_id: {type: string, nullable: false, description: Mes calendario comparable.}
+      fiscal_period_id: {type: string, nullable: false, description: Mes fiscal de la fuente; igual al calendario para T-100.}
+      aircraft_type: {type: int, nullable: false, description: Código BTS de aeronave.}
+      service_class: {type: string, nullable: false, description: Clase de servicio BTS.}
+      departures_scheduled: {type: float, nullable: false, description: Salidas programadas.}
+      departures_performed: {type: float, nullable: false, description: Salidas realizadas.}
+      seats: {type: float, nullable: false, description: Asientos ofrecidos.}
+      passengers: {type: float, nullable: false, description: Pasajeros transportados.}
+      freight_kg: {type: float, nullable: false, description: Carga convertida de libras a kg.}
+      mail_kg: {type: float, nullable: false, description: Correo convertido de libras a kg.}
+      asm_miles: {type: float, nullable: false, description: Available seat miles.}
+      ask_km: {type: float, nullable: false, description: Available seat kilometers.}
+      rpm_miles: {type: float, nullable: false, description: Revenue passenger miles.}
+      rpk_km: {type: float, nullable: false, description: Revenue passenger kilometers.}
+      load_factor: {type: float, nullable: true, description: RPM dividido entre ASM.}
+      distance_miles: {type: float, nullable: false, description: Distancia mediana de los segmentos.}
+      distance_km: {type: float, nullable: false, description: Distancia en kilómetros.}
+      source_system: {type: string, nullable: false, description: Sistema fuente.}
+      source_file: {type: string, nullable: false, description: Archivo silver agregado.}
+      source_hash: {type: string, nullable: false, description: Hash determinista del linaje agregado.}
+      ingested_at: {type: datetime, nullable: false, description: Última ingesta contribuyente.}
+  fact_airport_traffic:
+    primary_key: [airport_iata, period_id, operator_group, source_system]
+    columns:
+      airport_iata: {type: string, nullable: false, description: Código IATA o clave de total de grupo.}
+      period_id: {type: string, nullable: false, description: Mes calendario.}
+      calendar_period_id: {type: string, nullable: false, description: Mes calendario comparable.}
+      fiscal_period_id: {type: string, nullable: false, description: Mes fiscal de la fuente; igual al calendario.}
+      passengers_domestic: {type: int, nullable: true, description: Pasajeros domésticos.}
+      passengers_international: {type: int, nullable: true, description: Pasajeros internacionales.}
+      passengers_total: {type: int, nullable: true, description: Pasajeros totales.}
+      cargo_tons: {type: float, nullable: true, description: Carga en toneladas.}
+      operations: {type: int, nullable: true, description: Operaciones aéreas.}
+      operator_group: {type: string, nullable: false, description: Operador o grupo.}
+      country: {type: string, nullable: false, description: País.}
+      is_group_total: {type: bool, nullable: false, description: Fila agregada del grupo.}
+      source_system: {type: string, nullable: false, description: Sistema fuente.}
+      source_file: {type: string, nullable: false, description: Archivo fuente.}
+      source_hash: {type: string, nullable: false, description: SHA-256 fuente.}
+      ingested_at: {type: datetime, nullable: false, description: Fecha de ingesta.}
+  fact_market_data:
+    primary_key: [carrier_key, date]
+    columns:
+      carrier_key: {type: string, nullable: false, description: Emisor.}
+      ticker: {type: string, nullable: false, description: Ticker observado.}
+      date: {type: datetime, nullable: false, description: Sesión de mercado.}
+      calendar_period_id: {type: string, nullable: false, description: Fecha calendario ISO de la sesión.}
+      fiscal_period_id: {type: string, nullable: false, description: Fecha fiscal de referencia; igual a la fecha calendario.}
+      close: {type: float, nullable: false, description: Precio de cierre.}
+      adj_close: {type: float, nullable: false, description: Cierre ajustado.}
+      volume: {type: int, nullable: false, description: Volumen.}
+      currency: {type: string, nullable: false, description: Moneda de cotización.}
+      return_1d: {type: float, nullable: true, description: Rendimiento diario.}
+      return_ytd: {type: float, nullable: true, description: Rendimiento desde inicio de año.}
+      volatility_30d: {type: float, nullable: true, description: Volatilidad anualizada de 30 sesiones.}
+      source_system: {type: string, nullable: false, description: Sistema fuente.}
+      source_file: {type: string, nullable: false, description: Archivo fuente.}
+      source_hash: {type: string, nullable: false, description: SHA-256 fuente.}
+      ingested_at: {type: datetime, nullable: false, description: Fecha de ingesta.}
+  fact_macro:
+    primary_key: [period_id, indicator_key, aggregation]
+    columns:
+      period_id: {type: string, nullable: false, description: Mes o trimestre.}
+      period_type: {type: string, nullable: false, description: month o quarter.}
+      calendar_period_id: {type: string, nullable: false, description: Periodo calendario comparable.}
+      fiscal_period_id: {type: string, nullable: false, description: Periodo fiscal de referencia; igual al calendario.}
+      indicator_key: {type: string, nullable: false, description: Serie exógena.}
+      value: {type: float, nullable: false, description: Valor agregado.}
+      unit: {type: string, nullable: false, description: Unidad.}
+      aggregation: {type: string, nullable: false, description: average o close.}
+      source_system: {type: string, nullable: false, description: Sistema fuente.}
+      source_file: {type: string, nullable: false, description: Archivo silver fuente.}
+      source_hash: {type: string, nullable: false, description: Hash determinista del linaje.}
+      ingested_at: {type: datetime, nullable: false, description: Última ingesta contribuyente.}
+  fact_data_quality_issues:
+    primary_key: [issue_id]
+    columns:
+      issue_id: {type: string, nullable: false, description: Hash estable del issue.}
+      issue_type: {type: string, nullable: false, description: Tipo de problema.}
+      severity: {type: string, nullable: false, description: warning o error.}
+      source_system: {type: string, nullable: false, description: Fuente afectada.}
+      carrier_key: {type: string, nullable: true, description: Aerolínea afectada.}
+      period_id: {type: string, nullable: true, description: Periodo afectado.}
+      calendar_period_id: {type: string, nullable: true, description: Periodo calendario afectado.}
+      fiscal_period_id: {type: string, nullable: true, description: Periodo fiscal afectado.}
+      metric_key: {type: string, nullable: true, description: Métrica afectada.}
+      observed_value: {type: float, nullable: true, description: Valor observado.}
+      expected_value: {type: float, nullable: true, description: Valor de comparación.}
+      difference_pct: {type: float, nullable: true, description: Diferencia relativa.}
+      detail: {type: string, nullable: false, description: Explicación accionable.}
+      source_file: {type: string, nullable: true, description: Archivo involucrado.}
+      detected_at: {type: datetime, nullable: false, description: Fecha reproducible de la evidencia.}

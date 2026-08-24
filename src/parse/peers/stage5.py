@@ -21,7 +21,7 @@ from src.parse.profiles import CarrierProfile, MetricPattern, load_profile
 from src.parse.sec.common import quarter_dates, read_bronze_verified, write_parquet_atomic
 
 
-PARSER_VERSION = "peer_metrics_v1.0.0"
+PARSER_VERSION = "peer_metrics_v1.0.1"
 MONTHS = {name.casefold(): index for index, name in enumerate(calendar.month_name) if name}
 QUARTERS = {"first": 1, "second": 2, "third": 3, "fourth": 4}
 
@@ -64,6 +64,10 @@ def _line_value(text: str, patterns: tuple[str, ...]) -> tuple[str, float] | Non
             if not match:
                 continue
             suffix = normalized[match.end() :]
+            # SEC tables frequently place a note marker such as ``(2)`` between
+            # the row label and the first value. It is metadata, not a negative
+            # number, so remove only that leading marker before tokenization.
+            suffix = re.sub(r"^\s*\(\d+\)\s*", "", suffix)
             values = _numbers(suffix)
             if values:
                 return normalized[: match.end()].strip(), values[0]

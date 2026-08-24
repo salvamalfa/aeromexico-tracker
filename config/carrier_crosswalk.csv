@@ -8,8 +8,8 @@ AIRLINE_ID_19543,19543,CA,Air China,9713A,CA,Air China,BTS_AIRLINE_ID_19543
 AIRLINE_ID_19545,19545,CV,Cargolux Airlines International S.A,9454A,CV,Cargolux Airlines International S.A,BTS_AIRLINE_ID_19545
 AIRLINE_ID_19547,19547,IB,Iberia Air Lines Of Spain,9482B,IB,Iberia Air Lines Of Spain,BTS_AIRLINE_ID_19547
 AIRLINE_ID_19550,19550,KE,Korean Air Lines Co. Ltd.,9778A,KE,Korean Air Lines Co. Ltd.,BTS_AIRLINE_ID_19550
-AIRLINE_ID_19552,19552,LA,LATAM Airlines Group SA dba Lan Airlines,9324B,LA,Lan-Chile Airlines,BTS_AIRLINE_ID_19552
 AIRLINE_ID_19552,19552,LA,LATAM Airlines Group SA dba Lan Airlines,9324B,LA,LATAM Airlines Group SA dba Lan Airlines,BTS_AIRLINE_ID_19552
+AIRLINE_ID_19552,19552,LA,LATAM Airlines Group SA dba Lan Airlines,9324B,LA,Lan-Chile Airlines,BTS_AIRLINE_ID_19552
 AIRLINE_ID_19554,19554,LH,Lufthansa German Airlines,9429D,LH,Lufthansa German Airlines,BTS_AIRLINE_ID_19554
 AIRLINE_ID_19555,19555,LO,Polskie Linie Lotnicze,9467A,LO,Polskie Linie Lotnicze,BTS_AIRLINE_ID_19555
 AIRLINE_ID_19682,19682,VS,Virgin Atlantic Airways,9493K,VS,Virgin Atlantic Airways,BTS_AIRLINE_ID_19682
@@ -19,8 +19,8 @@ AIRLINE_ID_19779,19779,CX,Cathay Pacific Airways Ltd.,9729A,CX,Cathay Pacific Ai
 AIRLINE_ID_19805,19805,AA,American Airlines Inc.,10050,AA,American Airlines Inc.,BTS_AIRLINE_ID_19805
 AIRLINE_ID_19821,19821,TK,Turk Hava Yollari A.O.,9679A,TK,Turk Hava Yollari A.O.,BTS_AIRLINE_ID_19821
 AIRLINE_ID_19830,19830,KZ,Nippon Cargo Airlines,9736D,KZ,Nippon Cargo Airlines,BTS_AIRLINE_ID_19830
-AIRLINE_ID_19917,19917,5X,United Parcel Service,16912,5X,United Parcel Service,BTS_AIRLINE_ID_19917
 AIRLINE_ID_19917,19917,5X,United Parcel Service,16911,5X,United Parcel Service,BTS_AIRLINE_ID_19917
+AIRLINE_ID_19917,19917,5X,United Parcel Service,16912,5X,United Parcel Service,BTS_AIRLINE_ID_19917
 AIRLINE_ID_19930,19930,AS,Alaska Airlines Inc.,16031,AS,Alaska Airlines Inc.,BTS_AIRLINE_ID_19930
 AIRLINE_ID_19953,19953,QT,Transportes Aereos Mercantiles Panamericanos S.A,9327D,QT,Transportes Aereos Mercantiles Panamericanos S.A,BTS_AIRLINE_ID_19953
 AIRLINE_ID_19961,19961,TS,Air Transat,9900C,TS,Air Transat,BTS_AIRLINE_ID_19961
@@ -48,9 +48,9 @@ AIRLINE_ID_20188,20188,LP,Lan Peru Airlines,9368E,LP,Lan Peru Airlines,BTS_AIRLI
 AIRLINE_ID_20195,20195,WI,Sky Lease Cargo,16884,WI,Sky Lease Cargo,BTS_AIRLINE_ID_20195
 AIRLINE_ID_20201,20201,AMQ,Ameristar Air Cargo,16057,AMQ,Ameristar Air Cargo,BTS_AIRLINE_ID_20201
 AIRLINE_ID_20203,20203,FCQ,Falcon Air Express,16400,FCQ,Falcon Air Express,BTS_AIRLINE_ID_20203
-AIRLINE_ID_20207,20207,XP,TEM Enterprises dba  Avelo Airlines,11034,XP,XTRA Airways,BTS_AIRLINE_ID_20207
-AIRLINE_ID_20207,20207,XP,TEM Enterprises dba  Avelo Airlines,06144,XP,XTRA Airways,BTS_AIRLINE_ID_20207
 AIRLINE_ID_20207,20207,XP,TEM Enterprises dba  Avelo Airlines,06144,XP,TEM Enterprises dba  Avelo Airlines,BTS_AIRLINE_ID_20207
+AIRLINE_ID_20207,20207,XP,TEM Enterprises dba  Avelo Airlines,06144,XP,XTRA Airways,BTS_AIRLINE_ID_20207
+AIRLINE_ID_20207,20207,XP,TEM Enterprises dba  Avelo Airlines,11034,XP,XTRA Airways,BTS_AIRLINE_ID_20207
 AIRLINE_ID_20207,20207,XP,TEM Enterprises dba  Avelo Airlines,16144,XP,TEM Enterprises dba  Avelo Airlines,BTS_AIRLINE_ID_20207
 AIRLINE_ID_20222,20222,E7,Estafeta Carga Aereas,9148U,E7,Estafeta Carga Aereas,BTS_AIRLINE_ID_20222
 AIRLINE_ID_20229,20229,WS,Westjet,9900Y,WS,Westjet,BTS_AIRLINE_ID_20229
@@ -65,14 +65,14 @@ AIRLINE_ID_20340,20340,K5,"Seaport Airlines, Inc.",06966,K5,"SeaPort Airlines, I
 AIRLINE_ID_20340,20340,K5,"Seaport Airlines, Inc.",06966,K5,"Seaport Airlines, Inc.",BTS_AIRLINE_ID_20340
 AIRLINE_ID_20348,20348,XL,Lan Ecuador,9337E,XL,Lan Ecuador,BTS_AIRLINE_ID_20348
 AIRLINE_ID_20355,20355,US,US Airways Inc.,12041,US,US Airways Inc.,BTS_AIRLINE_ID_20355
-AIRLINE_ID_20366,20366,EV,ExpressJet Airlines LLC d/b/a aha!,16085,EV,ExpressJet Airlines LLC,BTS_AIRLINE_ID_20366
 AIRLINE_ID_20366,20366,EV,ExpressJet Airlines LLC d/b/a aha!,16085,EV,ExpressJet Airlines Inc.,BTS_AIRLINE_ID_20366
-AIRLINE_ID_20368,20368,G4,Allegiant Air,11024,G4,Allegiant Air,BTS_AIRLINE_ID_20368
+AIRLINE_ID_20366,20366,EV,ExpressJet Airlines LLC d/b/a aha!,16085,EV,ExpressJet Airlines LLC,BTS_AIRLINE_ID_20366
 AIRLINE_ID_20368,20368,G4,Allegiant Air,06035,G4,Allegiant Air,BTS_AIRLINE_ID_20368
-AIRLINE_ID_20370,20370,KAQ,Kalitta Air LLC,16683,KAQ,Kalitta Air LLC,BTS_AIRLINE_ID_20370
+AIRLINE_ID_20368,20368,G4,Allegiant Air,11024,G4,Allegiant Air,BTS_AIRLINE_ID_20368
 AIRLINE_ID_20370,20370,KAQ,Kalitta Air LLC,06683,KAQ,Kalitta Air LLC,BTS_AIRLINE_ID_20370
-AIRLINE_ID_20372,20372,KLQ,Kalitta Charters II,16770,KLQ,Kalitta Charters II,BTS_AIRLINE_ID_20372
+AIRLINE_ID_20370,20370,KAQ,Kalitta Air LLC,16683,KAQ,Kalitta Air LLC,BTS_AIRLINE_ID_20370
 AIRLINE_ID_20372,20372,KLQ,Kalitta Charters II,06774,KLQ,Kalitta Charters II,BTS_AIRLINE_ID_20372
+AIRLINE_ID_20372,20372,KLQ,Kalitta Charters II,16770,KLQ,Kalitta Charters II,BTS_AIRLINE_ID_20372
 AIRLINE_ID_20377,20377,X9,Omni Air International LLC,06738,X9,Omni Air International LLC,BTS_AIRLINE_ID_20377
 AIRLINE_ID_20377,20377,X9,Omni Air International LLC,16736,X9,Omni Air International LLC,BTS_AIRLINE_ID_20377
 AIRLINE_ID_20378,20378,YV,Mesa Airlines Inc.,11022,YV,Mesa Airlines Inc.,BTS_AIRLINE_ID_20378
@@ -81,25 +81,25 @@ AIRLINE_ID_20398,20398,MQ,Envoy Air,16820,MQ,Envoy Air,BTS_AIRLINE_ID_20398
 AIRLINE_ID_20402,20402,GL,Miami Air International,16690,GL,Miami Air International,BTS_AIRLINE_ID_20402
 AIRLINE_ID_20405,20405,N8,National Air Cargo Group Inc d/ba National Airlines,07029,N8,National Air Cargo Group Inc d/ba National Airlines,BTS_AIRLINE_ID_20405
 AIRLINE_ID_20405,20405,N8,National Air Cargo Group Inc d/ba National Airlines,11049,N8,National Air Cargo Group Inc d/ba National Airlines,BTS_AIRLINE_ID_20405
-AIRLINE_ID_20408,20408,5V,Tatonduk Outfitters Limited d/b/a Everts Air Alaska and Everts Air Cargo,11062,5V,Tatonduk Outfitters Limited d/b/a Everts Air Alaska and Everts Air Cargo,BTS_AIRLINE_ID_20408
 AIRLINE_ID_20408,20408,5V,Tatonduk Outfitters Limited d/b/a Everts Air Alaska and Everts Air Cargo,06860,5V,Tatonduk Outfitters Limited d/b/a Everts Air Alaska and Everts Air Cargo,BTS_AIRLINE_ID_20408
+AIRLINE_ID_20408,20408,5V,Tatonduk Outfitters Limited d/b/a Everts Air Alaska and Everts Air Cargo,11062,5V,Tatonduk Outfitters Limited d/b/a Everts Air Alaska and Everts Air Cargo,BTS_AIRLINE_ID_20408
 AIRLINE_ID_20409,20409,B6,JetBlue Airways,16673,B6,JetBlue Airways,BTS_AIRLINE_ID_20409
 AIRLINE_ID_20416,20416,NK,Spirit Air Lines,16831,NK,Spirit Air Lines,BTS_AIRLINE_ID_20416
 AIRLINE_ID_20422,20422,SY,Sun Country Airlines d/b/a MN Airlines,06795,SY,Sun Country Airlines d/b/a MN Airlines,BTS_AIRLINE_ID_20422
 AIRLINE_ID_20422,20422,SY,Sun Country Airlines d/b/a MN Airlines,16795,SY,Sun Country Airlines d/b/a MN Airlines,BTS_AIRLINE_ID_20422
 AIRLINE_ID_20428,20428,VIQ,Volga-Dnepr Airlines,9475B,VIQ,Volga-Dnepr Airlines,BTS_AIRLINE_ID_20428
 AIRLINE_ID_20436,20436,F9,Frontier Airlines Inc.,16461,F9,Frontier Airlines Inc.,BTS_AIRLINE_ID_20436
-AIRLINE_ID_20445,20445,C5,CommuteAir LLC dba CommuteAir,11059,C5,CommuteAir LLC dba CommuteAir,BTS_AIRLINE_ID_20445
 AIRLINE_ID_20445,20445,C5,CommuteAir LLC dba CommuteAir,06944,C5,CommuteAir LLC dba CommuteAir,BTS_AIRLINE_ID_20445
 AIRLINE_ID_20445,20445,C5,CommuteAir LLC dba CommuteAir,11059,C5,"Commutair Aka Champlain Enterprises, Inc.",BTS_AIRLINE_ID_20445
+AIRLINE_ID_20445,20445,C5,CommuteAir LLC dba CommuteAir,11059,C5,CommuteAir LLC dba CommuteAir,BTS_AIRLINE_ID_20445
 AIRLINE_ID_20446,20446,M7,Aerotransportes Mas De Crga,9148I,M7,Aerotransportes Mas De Crga,BTS_AIRLINE_ID_20446
-AIRLINE_ID_20447,20447,U7,USA Jet Airlines Inc.,16917,U7,USA Jet Airlines Inc.,BTS_AIRLINE_ID_20447
 AIRLINE_ID_20447,20447,U7,USA Jet Airlines Inc.,06912,U7,USA Jet Airlines Inc.,BTS_AIRLINE_ID_20447
-AIRLINE_ID_20452,20452,YX,Republic Airline,11029,YX,Republic Airlines,BTS_AIRLINE_ID_20452
+AIRLINE_ID_20447,20447,U7,USA Jet Airlines Inc.,16917,U7,USA Jet Airlines Inc.,BTS_AIRLINE_ID_20447
 AIRLINE_ID_20452,20452,YX,Republic Airline,11029,YX,Republic Airline,BTS_AIRLINE_ID_20452
-AIRLINE_ID_20453,20453,ABX,ABX Air Inc,80006,ABX,ABX Air Inc,BTS_AIRLINE_ID_20453
+AIRLINE_ID_20452,20452,YX,Republic Airline,11029,YX,Republic Airlines,BTS_AIRLINE_ID_20452
 AIRLINE_ID_20453,20453,ABX,ABX Air Inc,11009,ABX,ABX Air Inc,BTS_AIRLINE_ID_20453
 AIRLINE_ID_20453,20453,ABX,ABX Air Inc,11018,ABX,ABX Air Inc,BTS_AIRLINE_ID_20453
+AIRLINE_ID_20453,20453,ABX,ABX Air Inc,80006,ABX,ABX Air Inc,BTS_AIRLINE_ID_20453
 AIRLINE_ID_21035,21035,TIQ,Tyrolean Jet Service,71002,TIQ,Tyrolean Jet Service,BTS_AIRLINE_ID_21035
 AIRLINE_ID_21040,21040,02Q,Titan Airways,71004,02Q,Titan Airways,BTS_AIRLINE_ID_21040
 AIRLINE_ID_21061,21061,6R,Aerounion Aerotransporte de Carga Union SA de CV,71006,6R,Aerounion Aerotransporte de Carga Union SA de CV,BTS_AIRLINE_ID_21061
@@ -147,8 +147,8 @@ AIRLINE_ID_21610,21610,RV,Air Canada rouge LP,71139,RV,Air Canada rouge LP,BTS_A
 AIRLINE_ID_21629,21629,KD,Western Global,11042,KD,Western Global,BTS_AIRLINE_ID_21629
 AIRLINE_ID_21630,21630,1ZQ,Comlux Aruba NV,71144,1ZQ,Comlux Aruba NV,BTS_AIRLINE_ID_21630
 AIRLINE_ID_21631,21631,20Q,Orange Air,01184,20Q,Orange Air,BTS_AIRLINE_ID_21631
-AIRLINE_ID_21635,21635,LF,CFM Inc d/b/a Contour Airlines d/b/a One Jet Shuttle,01189,LF,CFM Inc d/b/a Contour Airlines d/b/a One Jet Shuttle,BTS_AIRLINE_ID_21635
 AIRLINE_ID_21635,21635,LF,CFM Inc d/b/a Contour Airlines d/b/a One Jet Shuttle,01189,LF,CFM Inc d/b/a Contour Airlines,BTS_AIRLINE_ID_21635
+AIRLINE_ID_21635,21635,LF,CFM Inc d/b/a Contour Airlines d/b/a One Jet Shuttle,01189,LF,CFM Inc d/b/a Contour Airlines d/b/a One Jet Shuttle,BTS_AIRLINE_ID_21635
 AIRLINE_ID_21638,21638,AD,Azul Linhas Aereas Brazileiras S A,71145,AD,Azul Linhas Aereas Brazileiras S A,BTS_AIRLINE_ID_21638
 AIRLINE_ID_21645,21645,23Q,Songbird Airways Inc.,01192,23Q,Sky King Inc.,BTS_AIRLINE_ID_21645
 AIRLINE_ID_21645,21645,23Q,Songbird Airways Inc.,01192,23Q,Songbird Airways Inc.,BTS_AIRLINE_ID_21645
@@ -162,8 +162,8 @@ AIRLINE_ID_21652,21652,27Q,"Jet Aviation Flight Services, Inc.",11046,27Q,"Jet A
 AIRLINE_ID_21656,21656,2AQ,ABS JETS A.S,71150,2AQ,ABS JETS A.S,BTS_AIRLINE_ID_21656
 AIRLINE_ID_21693,21693,2GQ,Cavok Air LLC,71165,2GQ,Cavok Air LLC,BTS_AIRLINE_ID_21693
 AIRLINE_ID_21694,21694,7L,Silk Way West Airlines,71166,7L,Silk Way West Airlines,BTS_AIRLINE_ID_21694
-AIRLINE_ID_21718,21718,XE,Delux Public Charters d/b/a JSX,01202,XE,Delux Public Charters d/b/a JSX,BTS_AIRLINE_ID_21718
 AIRLINE_ID_21718,21718,XE,Delux Public Charters d/b/a JSX,01202,2JQ,Delux Public Charter LLC,BTS_AIRLINE_ID_21718
+AIRLINE_ID_21718,21718,XE,Delux Public Charters d/b/a JSX,01202,XE,Delux Public Charters d/b/a JSX,BTS_AIRLINE_ID_21718
 AIRLINE_ID_21735,21735,2KQ,Longtail Aviation Ltd.,71172,2KQ,Longtail Aviation Ltd.,BTS_AIRLINE_ID_21735
 AIRLINE_ID_21743,21743,TI,Tropic Ocean Airways LLC,01203,2LQ,Tropic Ocean Airways LLC,BTS_AIRLINE_ID_21743
 AIRLINE_ID_21760,21760,2RQ,Luxaviation S A,71176,2RQ,Luxaviation S A,BTS_AIRLINE_ID_21760
@@ -191,11 +191,11 @@ AIRLINE_ID_22061,22061,WGT,Volkswagen AirSevice GmbH dba Volkswagon,71222,WGT,Vo
 AIRLINE_ID_22062,22062,HYP,Hyperion Aviation Ltd. dba Hyperion,71223,HYP,Hyperion Aviation Ltd. dba Hyperion,BTS_AIRLINE_ID_22062
 AIRLINE_ID_22074,22074,AOQ,Avcon Jet AG,71241,AOQ,Avcon Jet AG,BTS_AIRLINE_ID_22074
 AIRLINE_ID_22077,22077,HAQ,Hamilton Jetport Limited,71243,HAQ,Hamilton Jetport Limited,BTS_AIRLINE_ID_22077
-AIRLINE_ID_22080,22080,MX,Breeze Aviation Group DBA  Breeze,11066,MX,Breeze Aviation Group DBA  Breeze,BTS_AIRLINE_ID_22080
 AIRLINE_ID_22080,22080,MX,Breeze Aviation Group DBA  Breeze,01268,MX,Breeze Aviation Group DBA  Breeze,BTS_AIRLINE_ID_22080
+AIRLINE_ID_22080,22080,MX,Breeze Aviation Group DBA  Breeze,11066,MX,Breeze Aviation Group DBA  Breeze,BTS_AIRLINE_ID_22080
 AIRLINE_ID_22081,22081,TQ,"Tailwind Air, LLC",01269,TQ,"Tailwind Air, LLC",BTS_AIRLINE_ID_22081
-AIRLINE_ID_22085,22085,GCA,"Global Crossing Airlines, Inc.",19768,GCA,"Global Crossing Airlines, Inc.",BTS_AIRLINE_ID_22085
 AIRLINE_ID_22085,22085,GCA,"Global Crossing Airlines, Inc.",01287,GCA,"Global Crossing Airlines, Inc.",BTS_AIRLINE_ID_22085
+AIRLINE_ID_22085,22085,GCA,"Global Crossing Airlines, Inc.",19768,GCA,"Global Crossing Airlines, Inc.",BTS_AIRLINE_ID_22085
 AIRLINE_ID_22090,22090,4Y,Eurowings Discover GmbH,71256,4Y,Eurowings Discover GmbH,BTS_AIRLINE_ID_22090
 AIRLINE_ID_22097,22097,GJQ,GainJet Ireland Ltd,71263,GJQ,GainJet Ireland Ltd,BTS_AIRLINE_ID_22097
 AIRLINE_ID_22099,22099,PTQ,Pontair Ltd.,71265,PTQ,Pontair Ltd.,BTS_AIRLINE_ID_22099
