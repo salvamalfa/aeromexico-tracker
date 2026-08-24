@@ -1,0 +1,49 @@
+carrier_key: VOLARIS
+cik: "0001520504"
+reporting_currency: USD
+unit_system: imperial
+fiscal_year_end_month: 12
+forms: [6-K, 20-F]
+metric_patterns:
+  asm_total:
+    patterns: ['available seat miles \(asms\) \(millions.*?\)']
+    unit_raw: "ASMs (millions)"
+    unit_normalized: miles
+    scale_multiplier: 1000000
+    table_name: operating
+  rpm_total:
+    patterns: ['revenue passenger miles \(rpms\) \(millions.*?\)']
+    unit_raw: "RPMs (millions)"
+    unit_normalized: miles
+    scale_multiplier: 1000000
+    table_name: operating
+  load_factor_total:
+    patterns: ['load factor(?: \(\d+\))?']
+    unit_raw: "%"
+    unit_normalized: fraction
+    scale_multiplier: 0.01
+    table_name: operating
+  casm:
+    patterns: ['operating expenses per asm \(casm\) \(cents\)(?: \(\d+\))?', '^casm \(cents\)']
+    unit_raw: "USD cents"
+    unit_normalized: usd_cents
+    scale_multiplier: 1
+    table_name: operating
+  casm_ex_fuel:
+    patterns: ['casm ex fuel \(cents\)(?: \(\d+\))?', 'casm ex fuel']
+    unit_raw: "USD cents"
+    unit_normalized: usd_cents
+    scale_multiplier: 1
+    table_name: operating
+  trasm:
+    patterns: ['total operating revenue per asm \(trasm\) \(cents\)(?: \(\d+\))?', 'trasm \(cents\)']
+    unit_raw: "USD cents"
+    unit_normalized: usd_cents
+    scale_multiplier: 1
+    table_name: operating
+  total_revenue:
+    patterns: ['total operating revenues \(millions\)']
+    unit_raw: "USD millions"
+    unit_normalized: usd
+    scale_multiplier: 1000000
+    table_name: financial

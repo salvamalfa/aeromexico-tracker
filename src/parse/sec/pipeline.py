@@ -15,11 +15,25 @@ from src.parse.sec.earnings_release import parse_all_earnings
 from src.parse.sec.traffic_report import parse_all_traffic
 
 
+def _has_stage5_peer_bronze() -> bool:
+    manifest = PATHS.bronze / "_manifest.jsonl"
+    if not manifest.exists():
+        return False
+    return '"source_system": "viva_ir"' in manifest.read_text(encoding="utf-8")
+
+
 def run_sec_parse() -> dict[str, object]:
     discovery = rebuild_discovery_from_bronze()
     quarterly, financial = parse_all_earnings()
     monthly = parse_all_traffic()
-    operating = pl.concat([quarterly, monthly], how="vertical").sort(
+    inputs = [quarterly, monthly]
+    peer_summary: dict[str, object] | None = None
+    if _has_stage5_peer_bronze():
+        from src.parse.peers.stage5 import build_peer_metrics
+
+        peer_summary = build_peer_metrics()
+        inputs.append(pl.read_parquet(PATHS.silver / "peer_operating_metrics.parquet"))
+    operating = pl.concat(inputs, how="diagonal_relaxed").sort(
         ["period_type", "period_id", "metric_key", "segment", "accession_number"]
     )
     write_parquet_atomic(
@@ -41,6 +55,7 @@ def run_sec_parse() -> dict[str, object]:
         "quarterly_period_max": quarterly["period_id"].max(),
         "monthly_period_min": monthly["period_id"].min(),
         "monthly_period_max": monthly["period_id"].max(),
+        "peer_summary": peer_summary,
     }
 
 

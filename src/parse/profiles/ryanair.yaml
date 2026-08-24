@@ -1,0 +1,26 @@
+carrier_key: RYANAIR
+cik: "0001038683"
+reporting_currency: EUR
+unit_system: metric
+fiscal_year_end_month: 3
+forms: [20-F]
+metric_patterns:
+  passengers:
+    patterns: ["passengers", "customers", "guests"]
+    unit_raw: "passengers (millions)"
+    unit_normalized: count
+    scale_multiplier: 1000000
+    table_name: operating
+  load_factor_total:
+    patterns: ["load factor"]
+    unit_raw: "%"
+    unit_normalized: fraction
+    scale_multiplier: 0.01
+    table_name: operating
+  total_revenue:
+    patterns: ["total revenue"]
+    unit_raw: "EUR millions"
+    unit_normalized: eur
+    scale_multiplier: 1000000
+    table_name: financial
+

@@ -21,6 +21,7 @@ from src.parse.sec.common import (
     read_bronze_verified,
     write_parquet_atomic,
 )
+from src.parse.profiles import CarrierProfile
 
 
 PARSER_VERSION = "sec_earnings_v1.0.0"
@@ -82,6 +83,26 @@ FINANCIAL_SPECS = (
     MetricSpec("income_tax", r"^income tax(?: \(benefit\))?$", "financial", "USD millions", 1e6, "usd", None, "income_statement"),
     MetricSpec("net_income", r"^net income (?:\(loss\)|for the period)$", "financial", "USD millions", 1e6, "usd", None, "income_statement"),
 )
+
+
+def specs_from_profile(profile: CarrierProfile) -> tuple[MetricSpec, ...]:
+    """Translate a declarative carrier profile into the generic table parser specs."""
+
+    return tuple(
+        MetricSpec(
+            metric_key=metric.metric_key,
+            label_pattern="(?:" + "|".join(metric.patterns) + ")",
+            table_name=metric.table_name,
+            unit_raw=metric.unit_raw,
+            scale_multiplier=metric.scale_multiplier,
+            unit_normalized=metric.unit_normalized,
+            segment="total" if metric.table_name == "operating" else None,
+            statement_type=(
+                "income_statement" if metric.table_name == "financial" else None
+            ),
+        )
+        for metric in profile.metric_patterns
+    )
 
 
 def _normalize(value: str) -> str:
@@ -277,10 +298,11 @@ def _base_record(
     extraction_confidence: float,
     metric_label_raw: str,
     is_preliminary: bool,
+    carrier_key: str = "AEROMEXICO",
 ) -> dict[str, object]:
     start_date, end_date = quarter_dates(period_id)
     return {
-        "carrier_key": "AEROMEXICO",
+        "carrier_key": carrier_key,
         "accession_number": document["accession_number"],
         "period_id": period_id,
         "period_type": "quarter",
@@ -309,14 +331,16 @@ def _base_record(
 
 
 def parse_earnings_document(
-    document: dict[str, Any]
+    document: dict[str, Any], profile: CarrierProfile | None = None
 ) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
     content = read_bronze_verified(document["source_file"], document["source_hash"])
-    return parse_earnings_content(content, document)
+    return parse_earnings_content(content, document, profile)
 
 
 def parse_earnings_content(
-    content: bytes, document: dict[str, Any]
+    content: bytes,
+    document: dict[str, Any],
+    profile: CarrierProfile | None = None,
 ) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
     """Parse verified exhibit bytes; exposed separately for frozen fixtures."""
 
@@ -326,7 +350,13 @@ def parse_earnings_content(
     is_preliminary = "unaudited" in text.casefold()
     operating: list[dict[str, object]] = []
     financial: list[dict[str, object]] = []
-    for spec in (*OPERATING_SPECS, *FINANCIAL_SPECS):
+    specs = (
+        specs_from_profile(profile)
+        if profile is not None
+        else (*OPERATING_SPECS, *FINANCIAL_SPECS)
+    )
+    carrier_key = profile.carrier_key if profile is not None else "AEROMEXICO"
+    for spec in specs:
         found = _find_metric_values(soup, spec, current_period)
         if found is None:
             continue
@@ -345,6 +375,7 @@ def parse_earnings_content(
                 extraction_confidence=0.98,
                 metric_label_raw=label,
                 is_preliminary=is_preliminary,
+                carrier_key=carrier_key,
             )
             if spec.table_name == "financial":
                 record["statement_type"] = spec.statement_type
@@ -369,6 +400,7 @@ def parse_earnings_content(
                         extraction_confidence=0.98,
                         metric_label_raw=normalized_label,
                         is_preliminary=is_preliminary,
+                        carrier_key=carrier_key,
                     )
                     record["statement_type"] = spec.statement_type
                     financial.append(record)

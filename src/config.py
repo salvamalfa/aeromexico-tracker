@@ -16,9 +16,8 @@ load_dotenv(PROJECT_ROOT / ".env", override=False)
 CIK_AEROMEXICO: Final[str] = "0001561861"
 TICKER_AEROMEXICO: Final[str] = "AERO"
 
-# Peer CIKs marked None must be resolved against SEC company_tickers during
-# Stage 5. The two populated values are revalidated by the Stage 0/1 network
-# checks before being treated as current source metadata.
+# Peer CIKs marked None have no SEC issuer record. Populated values are always
+# revalidated against the SEC company_tickers catalog during Stage 5 ingestion.
 CARRIERS: Final[dict[str, dict[str, str | None]]] = {
     "AEROMEXICO": {
         "iata": "AM",
@@ -33,8 +32,8 @@ CARRIERS: Final[dict[str, dict[str, str | None]]] = {
         "ticker": "VLRS",
     },
     "VIVA_AEROBUS": {"iata": "VB", "icao": "VIV", "cik": None, "ticker": None},
-    "RYANAIR": {"iata": "FR", "icao": "RYR", "cik": None, "ticker": "RYAAY"},
-    "DELTA": {"iata": "DL", "icao": "DAL", "cik": None, "ticker": "DAL"},
+    "RYANAIR": {"iata": "FR", "icao": "RYR", "cik": "0001038683", "ticker": "RYAAY"},
+    "DELTA": {"iata": "DL", "icao": "DAL", "cik": "0000027904", "ticker": "DAL"},
     "IAG": {"iata": None, "icao": None, "cik": None, "ticker": "ICAGY"},
 }
 

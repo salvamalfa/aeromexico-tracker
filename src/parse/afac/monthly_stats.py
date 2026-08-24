@@ -580,7 +580,8 @@ def _sec_reconciliation(facts: pl.DataFrame) -> tuple[pl.DataFrame, dict[str, fl
     sec = (
         pl.read_parquet(PATHS.silver / "sec_operating_metrics.parquet")
         .filter(
-            (pl.col("period_type") == "month")
+            (pl.col("carrier_key") == "AEROMEXICO")
+            & (pl.col("period_type") == "month")
             & (pl.col("metric_key") == "passengers")
             & (pl.col("segment") == "total")
         )

@@ -1,0 +1,43 @@
+carrier_key: DELTA
+cik: "0000027904"
+reporting_currency: USD
+unit_system: imperial
+fiscal_year_end_month: 12
+forms: [10-Q, 10-K]
+metric_patterns:
+  asm_total:
+    patterns: ['available seat miles \(in millions\) \("asm"\)']
+    unit_raw: "ASMs (millions)"
+    unit_normalized: miles
+    scale_multiplier: 1000000
+    table_name: operating
+  rpm_total:
+    patterns: ['revenue passenger miles \(in millions\) \("rpm"\)']
+    unit_raw: "RPMs (millions)"
+    unit_normalized: miles
+    scale_multiplier: 1000000
+    table_name: operating
+  load_factor_total:
+    patterns: ['passenger load factor']
+    unit_raw: "%"
+    unit_normalized: fraction
+    scale_multiplier: 0.01
+    table_name: operating
+  total_revenue:
+    patterns: ["operating revenue", "total operating revenue"]
+    unit_raw: "USD millions"
+    unit_normalized: usd
+    scale_multiplier: 1000000
+    table_name: financial
+  operating_income:
+    patterns: ["operating income"]
+    unit_raw: "USD millions"
+    unit_normalized: usd
+    scale_multiplier: 1000000
+    table_name: financial
+  net_income:
+    patterns: ["net income"]
+    unit_raw: "USD millions"
+    unit_normalized: usd
+    scale_multiplier: 1000000
+    table_name: financial

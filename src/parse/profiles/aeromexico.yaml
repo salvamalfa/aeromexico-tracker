@@ -1,0 +1,26 @@
+carrier_key: AEROMEXICO
+cik: "0001561861"
+reporting_currency: USD
+unit_system: imperial
+fiscal_year_end_month: 12
+forms: [6-K, 20-F]
+metric_patterns:
+  asm_total:
+    patterns: ["total asms", "asms (itinerary + charter"]
+    unit_raw: "ASMs (millions)"
+    unit_normalized: miles
+    scale_multiplier: 1000000
+    table_name: operating
+  load_factor_total:
+    patterns: ["load factor on scheduled flights", "load factor"]
+    unit_raw: "%"
+    unit_normalized: fraction
+    scale_multiplier: 0.01
+    table_name: operating
+  total_revenue:
+    patterns: ["total revenue"]
+    unit_raw: "USD millions"
+    unit_normalized: usd
+    scale_multiplier: 1000000
+    table_name: financial
+

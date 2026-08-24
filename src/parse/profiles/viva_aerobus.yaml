@@ -1,0 +1,49 @@
+carrier_key: VIVA_AEROBUS
+cik: null
+reporting_currency: USD
+unit_system: imperial
+fiscal_year_end_month: 12
+forms: []
+metric_patterns:
+  asm_total:
+    patterns: ['^asms \(millions\)']
+    unit_raw: "ASMs (millions)"
+    unit_normalized: miles
+    scale_multiplier: 1000000
+    table_name: operating
+  rpm_total:
+    patterns: ['^rpms \(millions\)']
+    unit_raw: "RPMs (millions)"
+    unit_normalized: miles
+    scale_multiplier: 1000000
+    table_name: operating
+  load_factor_total:
+    patterns: ['^load factor \(scheduled,']
+    unit_raw: "%"
+    unit_normalized: fraction
+    scale_multiplier: 0.01
+    table_name: operating
+  trasm:
+    patterns: ['^trasm \(us cents\)']
+    unit_raw: "USD cents"
+    unit_normalized: usd_cents
+    scale_multiplier: 1
+    table_name: operating
+  casm:
+    patterns: ['^casm \(us cents\)']
+    unit_raw: "USD cents"
+    unit_normalized: usd_cents
+    scale_multiplier: 1
+    table_name: operating
+  casm_ex_fuel:
+    patterns: ['^casm ex-fuel \(us cents\)']
+    unit_raw: "USD cents"
+    unit_normalized: usd_cents
+    scale_multiplier: 1
+    table_name: operating
+  total_revenue:
+    patterns: ['^total operating revenue']
+    unit_raw: "USD millions"
+    unit_normalized: usd
+    scale_multiplier: 1000000
+    table_name: financial
