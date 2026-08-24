@@ -25,7 +25,7 @@ def build_warehouse(*, max_stage: int = 6) -> list[str]:
                 [path],
             )
         for sql_path in sorted(SQL_DIR.glob("*.sql")):
-            sql_stage = 7 if sql_path.name.startswith("07_") else 6
+            sql_stage = 8 if sql_path.name.startswith("08_") else (7 if sql_path.name.startswith("07_") else 6)
             if sql_stage > max_stage:
                 continue
             connection.execute(sql_path.read_text(encoding="utf-8"))

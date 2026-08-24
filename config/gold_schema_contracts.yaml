@@ -1,4 +1,4 @@
-version: stage7_v1.0.0
+version: stage8_v1.0.0
 tables:
   dim_carrier:
     primary_key: [carrier_key]
@@ -402,3 +402,48 @@ tables:
       caveat: {type: string, nullable: false, description: Limitación material.}
       source_tables: {type: string, nullable: false, description: Linaje de tablas.}
       model_run_id: {type: string, nullable: false, description: Corrida determinista.}
+  fact_route_traffic_summary:
+    stage: 8
+    primary_key: [carrier_key, market_key, period_id]
+    columns:
+      carrier_key: {type: string, nullable: false, description: Aerolínea.}
+      market_key: {type: string, nullable: false, description: Mercado bidireccional.}
+      period_id: {type: string, nullable: false, description: Mes calendario.}
+      origin_iata: {type: string, nullable: false, description: Primer extremo canónico.}
+      dest_iata: {type: string, nullable: false, description: Segundo extremo canónico.}
+      seats: {type: float, nullable: false, description: Asientos mensuales agregados.}
+      passengers: {type: float, nullable: false, description: Pasajeros mensuales agregados.}
+      asm_miles: {type: float, nullable: false, description: ASM mensuales agregados.}
+      rpm_miles: {type: float, nullable: false, description: RPM mensuales agregados.}
+      departures: {type: float, nullable: false, description: Salidas realizadas agregadas.}
+      load_factor: {type: float, nullable: true, description: RPM dividido entre ASM.}
+      source_files: {type: string, nullable: false, description: Archivos contribuyentes.}
+      source_hash: {type: string, nullable: false, description: Hash determinista de linaje.}
+      ingested_at: {type: datetime, nullable: false, description: Última ingesta contribuyente.}
+  fact_spread_decomposition:
+    stage: 8
+    primary_key: [period_id, component_key]
+    columns:
+      period_id: {type: string, nullable: false, description: Trimestre final de la descomposición.}
+      comparison_period_id: {type: string, nullable: false, description: Trimestre inicial.}
+      component_key: {type: string, nullable: false, description: Precio, combustible, residual estructural o FX.}
+      component_name_es: {type: string, nullable: false, description: Etiqueta para la visualización.}
+      contribution: {type: float, nullable: true, description: Aporte al cambio en centavos por ASK-km.}
+      display_order: {type: int, nullable: false, description: Orden del waterfall.}
+      is_identified: {type: bool, nullable: false, description: Distingue estimación de componente no identificable.}
+      caveat: {type: string, nullable: false, description: Limitación de interpretación.}
+      source_tables: {type: string, nullable: false, description: Linaje de tablas.}
+  fact_dashboard_coverage:
+    stage: 8
+    primary_key: [carrier_key, metric_key, period_type, segment]
+    columns:
+      carrier_key: {type: string, nullable: false, description: Aerolínea.}
+      metric_key: {type: string, nullable: false, description: Métrica.}
+      period_type: {type: string, nullable: false, description: Mes, trimestre o año.}
+      segment: {type: string, nullable: false, description: Segmento reportado.}
+      observations: {type: int, nullable: false, description: Periodos con fila.}
+      first_period: {type: string, nullable: false, description: Primer periodo.}
+      last_period: {type: string, nullable: false, description: Último periodo.}
+      expected_periods: {type: int, nullable: false, description: Periodos calendario entre extremos.}
+      coverage_pct: {type: float, nullable: false, description: Observaciones sobre periodos esperados.}
+      null_values: {type: int, nullable: false, description: Filas con valor nulo.}

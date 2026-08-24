@@ -1,0 +1,1 @@
+"""Ten analytical dashboard pages."""

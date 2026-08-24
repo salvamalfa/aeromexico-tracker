@@ -8,12 +8,12 @@ htmlcov/
 .ipynb_checkpoints/
 logs/
 
-# Raw and derived data stay local. The two provenance ledgers are the exception.
+# Raw and intermediate data stay local. The provenance ledgers are the exception.
 data/bronze/*
 !data/bronze/_manifest.jsonl
 !data/bronze/_restatements.jsonl
 data/silver/
-data/gold/
+# Compact, validated gold Parquets are versioned for the public dashboard.
 data/quality/
 data/analytics/
 data/*.duckdb
