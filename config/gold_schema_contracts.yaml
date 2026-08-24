@@ -1,4 +1,4 @@
-version: stage6_v1.0.0
+version: stage7_v1.0.0
 tables:
   dim_carrier:
     primary_key: [carrier_key]
@@ -284,3 +284,121 @@ tables:
       detail: {type: string, nullable: false, description: Explicación accionable.}
       source_file: {type: string, nullable: true, description: Archivo involucrado.}
       detected_at: {type: datetime, nullable: false, description: Fecha reproducible de la evidencia.}
+  fact_forecasts:
+    stage: 7
+    primary_key: [model_run_id, model_name, carrier_key, metric_key, period_id, is_backtest]
+    columns:
+      model_run_id: {type: string, nullable: false, description: Identificador determinista de corrida.}
+      model_name: {type: string, nullable: false, description: Modelo que superó el gate de publicación.}
+      carrier_key: {type: string, nullable: false, description: Aerolínea objetivo.}
+      metric_key: {type: string, nullable: false, description: Métrica pronosticada.}
+      period_id: {type: string, nullable: false, description: Mes de backtest o pronóstico.}
+      forecast_value: {type: float, nullable: false, description: Pronóstico puntual.}
+      lower_80: {type: float, nullable: false, description: Límite inferior al 80 por ciento.}
+      upper_80: {type: float, nullable: false, description: Límite superior al 80 por ciento.}
+      lower_95: {type: float, nullable: false, description: Límite inferior al 95 por ciento.}
+      upper_95: {type: float, nullable: false, description: Límite superior al 95 por ciento.}
+      is_backtest: {type: bool, nullable: false, description: Distingue evaluación histórica de futuro.}
+      actual_value: {type: float, nullable: true, description: Real observado, solo backtest.}
+      error: {type: float, nullable: true, description: Real menos pronóstico.}
+      abs_pct_error: {type: float, nullable: true, description: Error porcentual absoluto.}
+      trained_through_period: {type: string, nullable: false, description: Último periodo visible al entrenar.}
+      features_used: {type: string, nullable: false, description: Variables disponibles al origen.}
+      trained_at: {type: datetime, nullable: false, description: Marca reproducible de la evidencia fuente.}
+  dim_model_performance:
+    stage: 7
+    primary_key: [model_run_id, model_name, carrier_key, metric_key, evaluation_split]
+    columns:
+      model_run_id: {type: string, nullable: false, description: Identificador determinista de corrida.}
+      model_name: {type: string, nullable: false, description: Modelo evaluado.}
+      carrier_key: {type: string, nullable: false, description: Aerolínea objetivo.}
+      metric_key: {type: string, nullable: false, description: Métrica evaluada.}
+      evaluation_split: {type: string, nullable: false, description: Conjunto de evaluación; nunca train.}
+      validation_smape: {type: float, nullable: false, description: sMAPE de validación usado para selección.}
+      mape: {type: float, nullable: false, description: MAPE de test.}
+      smape: {type: float, nullable: false, description: sMAPE de test.}
+      mae: {type: float, nullable: false, description: MAE de test.}
+      rmse: {type: float, nullable: false, description: RMSE de test.}
+      mase: {type: float, nullable: false, description: MASE contra escala estacional.}
+      observations: {type: int, nullable: false, description: Orígenes de test.}
+      is_baseline: {type: bool, nullable: false, description: Identifica baseline.}
+      beats_seasonal_naive: {type: bool, nullable: false, description: Gate de desempeño en test.}
+      is_published: {type: bool, nullable: false, description: Modelo visible en dashboard.}
+      trained_through_period: {type: string, nullable: false, description: Corte de entrenamiento antes del test.}
+  fact_report_language:
+    stage: 7
+    primary_key: [carrier_key, period_id, accession_number, section]
+    columns:
+      carrier_key: {type: string, nullable: false, description: Emisor del reporte.}
+      period_id: {type: string, nullable: false, description: Periodo del reporte.}
+      accession_number: {type: string, nullable: false, description: Accession SEC.}
+      section: {type: string, nullable: false, description: Sección analizada.}
+      report_type: {type: string, nullable: false, description: Resultados o tráfico.}
+      word_count: {type: int, nullable: false, description: Palabras tokenizadas.}
+      readability_score: {type: float, nullable: false, description: Flesch Reading Ease aproximado.}
+      passive_ratio: {type: float, nullable: false, description: Construcciones pasivas aproximadas por oración.}
+      numeric_density: {type: float, nullable: false, description: Tokens numéricos sobre tokens totales.}
+      lm_positive_ratio: {type: float, nullable: false, description: Proporción positiva Loughran-McDonald.}
+      lm_negative_ratio: {type: float, nullable: false, description: Proporción negativa Loughran-McDonald.}
+      lm_uncertainty_ratio: {type: float, nullable: false, description: Proporción de incertidumbre Loughran-McDonald.}
+      lm_litigious_ratio: {type: float, nullable: false, description: Proporción litigiosa Loughran-McDonald.}
+      lm_constraining_ratio: {type: float, nullable: false, description: Proporción de restricción Loughran-McDonald.}
+      top_terms_json: {type: string, nullable: false, description: Términos TF-IDF principales.}
+      new_terms_json: {type: string, nullable: false, description: Vocabulario nuevo frente a reporte comparable previo.}
+      dropped_terms_json: {type: string, nullable: false, description: Vocabulario ausente frente a reporte comparable previo.}
+      source_file: {type: string, nullable: false, description: Archivo SEC fuente.}
+      source_hash: {type: string, nullable: false, description: Hash del archivo fuente.}
+  fact_anomalies:
+    stage: 7
+    primary_key: [anomaly_id]
+    columns:
+      anomaly_id: {type: string, nullable: false, description: Hash estable de anomalía.}
+      anomaly_type: {type: string, nullable: false, description: Familia de detección.}
+      entity_type: {type: string, nullable: false, description: Aerolínea o ruta-año.}
+      entity_key: {type: string, nullable: false, description: Entidad afectada.}
+      period_id: {type: string, nullable: false, description: Periodo observado.}
+      metric_key: {type: string, nullable: false, description: Métrica observada.}
+      observed_value: {type: float, nullable: false, description: Valor observado.}
+      expected_value: {type: float, nullable: false, description: Referencia del detector.}
+      anomaly_score: {type: float, nullable: false, description: Intensidad estandarizada o relativa.}
+      direction: {type: string, nullable: false, description: Por encima o por debajo.}
+      severity: {type: string, nullable: false, description: Severidad analítica.}
+      event_matched: {type: bool, nullable: false, description: Coincidencia temporal con evento conocido.}
+      event_title: {type: string, nullable: true, description: Evento cercano si existe.}
+      event_date: {type: datetime, nullable: true, description: Fecha del evento cercano.}
+      explanation: {type: string, nullable: false, description: Lectura accionable.}
+      source_tables: {type: string, nullable: false, description: Linaje de tablas.}
+      model_run_id: {type: string, nullable: false, description: Corrida determinista.}
+  dim_cluster_assignments:
+    stage: 7
+    primary_key: [model_run_id, exercise, entity_key, period_id]
+    columns:
+      model_run_id: {type: string, nullable: false, description: Corrida determinista.}
+      exercise: {type: string, nullable: false, description: Rutas o trimestres.}
+      entity_type: {type: string, nullable: false, description: Grano del ejercicio.}
+      entity_key: {type: string, nullable: false, description: Ruta o aerolínea.}
+      period_id: {type: string, nullable: false, description: Año o trimestre.}
+      cluster_id: {type: int, nullable: false, description: Etiqueta técnica.}
+      cluster_name: {type: string, nullable: false, description: Nombre de negocio.}
+      k: {type: int, nullable: false, description: Número elegido de clusters.}
+      silhouette: {type: float, nullable: false, description: Silueta global.}
+      stability_ari: {type: float, nullable: false, description: ARI promedio entre semillas.}
+      pca_1: {type: float, nullable: false, description: Primera componente para visualización.}
+      pca_2: {type: float, nullable: false, description: Segunda componente para visualización.}
+      features_json: {type: string, nullable: false, description: Features sin perder escala original.}
+      name_validation_status: {type: string, nullable: false, description: Estado de revisión del nombre.}
+  fact_study_results:
+    stage: 7
+    primary_key: [model_run_id, study_key]
+    columns:
+      study_key: {type: string, nullable: false, description: Estudio de alto valor.}
+      title_es: {type: string, nullable: false, description: Título de negocio.}
+      finding_es: {type: string, nullable: false, description: Hallazgo escrito en español.}
+      estimate: {type: float, nullable: true, description: Estimación principal cuando existe.}
+      unit: {type: string, nullable: false, description: Unidad de la estimación.}
+      period_id: {type: string, nullable: false, description: Ventana o corte analítico.}
+      comparison: {type: string, nullable: false, description: Base de comparación.}
+      confidence: {type: string, nullable: false, description: Confianza cualitativa.}
+      caveat: {type: string, nullable: false, description: Limitación material.}
+      source_tables: {type: string, nullable: false, description: Linaje de tablas.}
+      model_run_id: {type: string, nullable: false, description: Corrida determinista.}

@@ -1,7 +1,7 @@
 # Diccionario de datos
 
 > Archivo generado automáticamente por `python -m src.transform.generate_data_dictionary`.
-> Contrato: `stage6_v1.0.0`. No editar manualmente.
+> Contrato: `stage7_v1.0.0`. No editar manualmente.
 
 ## Tablas gold
 
@@ -352,6 +352,142 @@ Clave primaria declarada: `issue_id`.
 | `detail` | `string` | no | Explicación accionable. |
 | `source_file` | `string` | sí | Archivo involucrado. |
 | `detected_at` | `datetime` | no | Fecha reproducible de la evidencia. |
+
+### `fact_forecasts`
+
+Clave primaria declarada: `model_run_id, model_name, carrier_key, metric_key, period_id, is_backtest`.
+
+| Columna | Tipo | Nulo | Descripción |
+|---|---|---:|---|
+| `model_run_id` | `string` | no | Identificador determinista de corrida. |
+| `model_name` | `string` | no | Modelo que superó el gate de publicación. |
+| `carrier_key` | `string` | no | Aerolínea objetivo. |
+| `metric_key` | `string` | no | Métrica pronosticada. |
+| `period_id` | `string` | no | Mes de backtest o pronóstico. |
+| `forecast_value` | `float` | no | Pronóstico puntual. |
+| `lower_80` | `float` | no | Límite inferior al 80 por ciento. |
+| `upper_80` | `float` | no | Límite superior al 80 por ciento. |
+| `lower_95` | `float` | no | Límite inferior al 95 por ciento. |
+| `upper_95` | `float` | no | Límite superior al 95 por ciento. |
+| `is_backtest` | `bool` | no | Distingue evaluación histórica de futuro. |
+| `actual_value` | `float` | sí | Real observado |
+| `error` | `float` | sí | Real menos pronóstico. |
+| `abs_pct_error` | `float` | sí | Error porcentual absoluto. |
+| `trained_through_period` | `string` | no | Último periodo visible al entrenar. |
+| `features_used` | `string` | no | Variables disponibles al origen. |
+| `trained_at` | `datetime` | no | Marca reproducible de la evidencia fuente. |
+
+### `dim_model_performance`
+
+Clave primaria declarada: `model_run_id, model_name, carrier_key, metric_key, evaluation_split`.
+
+| Columna | Tipo | Nulo | Descripción |
+|---|---|---:|---|
+| `model_run_id` | `string` | no | Identificador determinista de corrida. |
+| `model_name` | `string` | no | Modelo evaluado. |
+| `carrier_key` | `string` | no | Aerolínea objetivo. |
+| `metric_key` | `string` | no | Métrica evaluada. |
+| `evaluation_split` | `string` | no | Conjunto de evaluación; nunca train. |
+| `validation_smape` | `float` | no | sMAPE de validación usado para selección. |
+| `mape` | `float` | no | MAPE de test. |
+| `smape` | `float` | no | sMAPE de test. |
+| `mae` | `float` | no | MAE de test. |
+| `rmse` | `float` | no | RMSE de test. |
+| `mase` | `float` | no | MASE contra escala estacional. |
+| `observations` | `int` | no | Orígenes de test. |
+| `is_baseline` | `bool` | no | Identifica baseline. |
+| `beats_seasonal_naive` | `bool` | no | Gate de desempeño en test. |
+| `is_published` | `bool` | no | Modelo visible en dashboard. |
+| `trained_through_period` | `string` | no | Corte de entrenamiento antes del test. |
+
+### `fact_report_language`
+
+Clave primaria declarada: `carrier_key, period_id, accession_number, section`.
+
+| Columna | Tipo | Nulo | Descripción |
+|---|---|---:|---|
+| `carrier_key` | `string` | no | Emisor del reporte. |
+| `period_id` | `string` | no | Periodo del reporte. |
+| `accession_number` | `string` | no | Accession SEC. |
+| `section` | `string` | no | Sección analizada. |
+| `report_type` | `string` | no | Resultados o tráfico. |
+| `word_count` | `int` | no | Palabras tokenizadas. |
+| `readability_score` | `float` | no | Flesch Reading Ease aproximado. |
+| `passive_ratio` | `float` | no | Construcciones pasivas aproximadas por oración. |
+| `numeric_density` | `float` | no | Tokens numéricos sobre tokens totales. |
+| `lm_positive_ratio` | `float` | no | Proporción positiva Loughran-McDonald. |
+| `lm_negative_ratio` | `float` | no | Proporción negativa Loughran-McDonald. |
+| `lm_uncertainty_ratio` | `float` | no | Proporción de incertidumbre Loughran-McDonald. |
+| `lm_litigious_ratio` | `float` | no | Proporción litigiosa Loughran-McDonald. |
+| `lm_constraining_ratio` | `float` | no | Proporción de restricción Loughran-McDonald. |
+| `top_terms_json` | `string` | no | Términos TF-IDF principales. |
+| `new_terms_json` | `string` | no | Vocabulario nuevo frente a reporte comparable previo. |
+| `dropped_terms_json` | `string` | no | Vocabulario ausente frente a reporte comparable previo. |
+| `source_file` | `string` | no | Archivo SEC fuente. |
+| `source_hash` | `string` | no | Hash del archivo fuente. |
+
+### `fact_anomalies`
+
+Clave primaria declarada: `anomaly_id`.
+
+| Columna | Tipo | Nulo | Descripción |
+|---|---|---:|---|
+| `anomaly_id` | `string` | no | Hash estable de anomalía. |
+| `anomaly_type` | `string` | no | Familia de detección. |
+| `entity_type` | `string` | no | Aerolínea o ruta-año. |
+| `entity_key` | `string` | no | Entidad afectada. |
+| `period_id` | `string` | no | Periodo observado. |
+| `metric_key` | `string` | no | Métrica observada. |
+| `observed_value` | `float` | no | Valor observado. |
+| `expected_value` | `float` | no | Referencia del detector. |
+| `anomaly_score` | `float` | no | Intensidad estandarizada o relativa. |
+| `direction` | `string` | no | Por encima o por debajo. |
+| `severity` | `string` | no | Severidad analítica. |
+| `event_matched` | `bool` | no | Coincidencia temporal con evento conocido. |
+| `event_title` | `string` | sí | Evento cercano si existe. |
+| `event_date` | `datetime` | sí | Fecha del evento cercano. |
+| `explanation` | `string` | no | Lectura accionable. |
+| `source_tables` | `string` | no | Linaje de tablas. |
+| `model_run_id` | `string` | no | Corrida determinista. |
+
+### `dim_cluster_assignments`
+
+Clave primaria declarada: `model_run_id, exercise, entity_key, period_id`.
+
+| Columna | Tipo | Nulo | Descripción |
+|---|---|---:|---|
+| `model_run_id` | `string` | no | Corrida determinista. |
+| `exercise` | `string` | no | Rutas o trimestres. |
+| `entity_type` | `string` | no | Grano del ejercicio. |
+| `entity_key` | `string` | no | Ruta o aerolínea. |
+| `period_id` | `string` | no | Año o trimestre. |
+| `cluster_id` | `int` | no | Etiqueta técnica. |
+| `cluster_name` | `string` | no | Nombre de negocio. |
+| `k` | `int` | no | Número elegido de clusters. |
+| `silhouette` | `float` | no | Silueta global. |
+| `stability_ari` | `float` | no | ARI promedio entre semillas. |
+| `pca_1` | `float` | no | Primera componente para visualización. |
+| `pca_2` | `float` | no | Segunda componente para visualización. |
+| `features_json` | `string` | no | Features sin perder escala original. |
+| `name_validation_status` | `string` | no | Estado de revisión del nombre. |
+
+### `fact_study_results`
+
+Clave primaria declarada: `model_run_id, study_key`.
+
+| Columna | Tipo | Nulo | Descripción |
+|---|---|---:|---|
+| `study_key` | `string` | no | Estudio de alto valor. |
+| `title_es` | `string` | no | Título de negocio. |
+| `finding_es` | `string` | no | Hallazgo escrito en español. |
+| `estimate` | `float` | sí | Estimación principal cuando existe. |
+| `unit` | `string` | no | Unidad de la estimación. |
+| `period_id` | `string` | no | Ventana o corte analítico. |
+| `comparison` | `string` | no | Base de comparación. |
+| `confidence` | `string` | no | Confianza cualitativa. |
+| `caveat` | `string` | no | Limitación material. |
+| `source_tables` | `string` | no | Linaje de tablas. |
+| `model_run_id` | `string` | no | Corrida determinista. |
 
 ## Catálogo de métricas
 

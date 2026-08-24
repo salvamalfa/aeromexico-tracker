@@ -15,8 +15,12 @@ data/bronze/*
 data/silver/
 data/gold/
 data/quality/
+data/analytics/
 data/*.duckdb
 data/*.duckdb.wal
+
+# Serialized estimators stay local; metadata and evaluation receipts are versioned.
+models/*/model.pkl
 
 # Local dashboard/runtime state.
 .streamlit/secrets.toml

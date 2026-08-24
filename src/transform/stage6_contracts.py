@@ -37,6 +37,19 @@ def load_contracts() -> dict[str, Any]:
     return yaml.safe_load(CONTRACT_PATH.read_text(encoding="utf-8"))
 
 
+def table_definitions(*, max_stage: int | None = None) -> dict[str, Any]:
+    """Return declared tables, optionally bounded to a pipeline stage."""
+
+    tables = load_contracts()["tables"]
+    if max_stage is None:
+        return tables
+    return {
+        name: definition
+        for name, definition in tables.items()
+        if int(definition.get("stage", 6)) <= max_stage
+    }
+
+
 def contract_for(table_name: str) -> pa.DataFrameSchema:
     """Create a strict Pandera schema from the versioned YAML declaration."""
 
@@ -63,11 +76,11 @@ def validate_table(table_name: str, frame: pd.DataFrame) -> pd.DataFrame:
     return contract_for(table_name).validate(frame, lazy=True)
 
 
-def validate_all_gold() -> dict[str, int]:
+def validate_all_gold(*, max_stage: int | None = None) -> dict[str, int]:
     """Validate every declared table against its physical Parquet output."""
 
     results: dict[str, int] = {}
-    for table_name in load_contracts()["tables"]:
+    for table_name in table_definitions(max_stage=max_stage):
         path = PATHS.gold / f"{table_name}.parquet"
         if not path.exists():
             raise FileNotFoundError(f"Declared gold table is missing: {path}")
@@ -77,5 +90,8 @@ def validate_all_gold() -> dict[str, int]:
     return results
 
 
-def declared_gold_paths() -> list[Path]:
-    return [PATHS.gold / f"{name}.parquet" for name in load_contracts()["tables"]]
+def declared_gold_paths(*, max_stage: int | None = None) -> list[Path]:
+    return [
+        PATHS.gold / f"{name}.parquet"
+        for name in table_definitions(max_stage=max_stage)
+    ]

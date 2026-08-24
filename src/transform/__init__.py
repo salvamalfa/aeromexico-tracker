@@ -20,3 +20,8 @@ def run() -> None:
         validate_stage5()
         run_stage6()
         validate_stage6()
+        from src.analytics import run as run_stage7
+        from src.analytics.validate_stage7 import validate_stage7
+
+        run_stage7()
+        validate_stage7()

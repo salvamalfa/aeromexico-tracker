@@ -10,7 +10,7 @@ import pandas as pd
 
 from src.config import PATHS
 from src.ingest.stage4_common import write_parquet_atomic
-from src.transform.stage6_contracts import load_contracts, validate_all_gold
+from src.transform.stage6_contracts import table_definitions, validate_all_gold
 from src.transform.stage6_facts import stage_length_adjusted
 
 
@@ -28,8 +28,9 @@ def validate_stage6() -> dict[str, object]:
     def add(name: str, passed: bool, observed: object, expected: object) -> None:
         checks.append(dict(check_name=name, passed=bool(passed), observed=str(observed), expected=str(expected)))
 
-    contract_rows = validate_all_gold()
-    add("all_gold_contracts", len(contract_rows) == len(load_contracts()["tables"]), len(contract_rows), len(load_contracts()["tables"]))
+    contract_rows = validate_all_gold(max_stage=6)
+    stage6_tables = table_definitions(max_stage=6)
+    add("all_gold_contracts", len(contract_rows) == len(stage6_tables), len(contract_rows), len(stage6_tables))
 
     carrier = pd.read_parquet(PATHS.gold / "dim_carrier.parquet")
     period = pd.read_parquet(PATHS.gold / "dim_period.parquet")

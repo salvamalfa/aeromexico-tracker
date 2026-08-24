@@ -1,0 +1,24 @@
+{
+  "model_run_id": "stage7_3e164aa09ada33b1",
+  "code_version": "06ff9af8b7946f24ae006624803050ebfc1a5789",
+  "config": {
+    "target": "AEROMEXICO/passengers_afac/total/month",
+    "validation_periods": 12,
+    "test_periods": 12,
+    "horizon": 12,
+    "candidate_selected_on_validation": "sarima",
+    "seed": 1561861
+  },
+  "published": true,
+  "publication_rule": "candidate selected on validation and published only if test sMAPE beats seasonal naive",
+  "selected_model": "sarima",
+  "test_window": [
+    "2025M07",
+    "2026M06"
+  ],
+  "performance_split": "test",
+  "baseline_test_smape": 0.0336207179645068,
+  "selected_test_smape": 0.025003234952326897,
+  "interval_method": "model standard error with normal 80% and 95% bands",
+  "trained_at": "2026-08-24 03:16:56.016705+00:00"
+}

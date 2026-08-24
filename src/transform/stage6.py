@@ -63,8 +63,8 @@ def run() -> dict[str, object]:
 
     metric_keys = set(carrier_metrics["metric_key"].dropna().astype(str))
     _write("dim_metric", build_dim_metric(metric_keys))
-    contracts = validate_all_gold()
-    views = build_warehouse()
+    contracts = validate_all_gold(max_stage=6)
+    views = build_warehouse(max_stage=6)
     dictionary = generate_dictionary()
     evidence = {
         "parser_version": "stage6_v1.0.0",
