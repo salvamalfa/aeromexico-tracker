@@ -8,9 +8,11 @@ El proyecto transforma fuentes regulatorias, operativas y de mercado en una lect
 
 La aplicación tiene diez vistas: resumen, economía unitaria, capacidad y demanda, competencia, red y rutas, finanzas, forecast, lenguaje de reportes, salud de datos y glosario.
 
+[Repositorio público en GitHub](https://github.com/salvamalfa/aeromexico-tracker)
+
 [![Deploy to Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=https://github.com/salvamalfa/aeromexico-tracker&entrypoint=streamlit_app.py)
 
-La URL pública definitiva se añadirá aquí después de autorizar el último clic de publicación en Streamlit Community Cloud. La aplicación local y el repositorio público están preparados para ese despliegue.
+La URL pública definitiva se añadirá aquí después de iniciar sesión y autorizar el último clic de publicación en Streamlit Community Cloud. La aplicación local y el repositorio público están preparados para ese despliegue.
 
 ![Resumen ejecutivo](docs/assets/dashboard/resumen-ejecutivo.png)
 
