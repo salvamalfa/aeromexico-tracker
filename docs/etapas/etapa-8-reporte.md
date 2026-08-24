@@ -114,7 +114,7 @@ Limitación explícita: como bronze no se versiona, GitHub Actions no puede reco
 
 ## Qué no funcionó y por qué
 
-- El deploy final en Streamlit Community Cloud no se ejecutó. Crear una publicación web es una acción externa representacional que requiere confirmación inmediata antes del último clic; el usuario estaba dormido y pidió detenerse solo ante preguntas. El repositorio, entrypoint, gold, lock, README y enlace de deploy quedaron listos.
+- El repositorio público quedó disponible en `https://github.com/salvamalfa/aeromexico-tracker`. El deploy final en Streamlit Community Cloud no se ejecutó: el flujo llegó al inicio de sesión OAuth de GitHub, pero el navegador integrado no tiene una sesión autenticada. Iniciar sesión y crear una publicación web requieren intervención/confirmación inmediata; el usuario estaba dormido. El entrypoint, gold, lock, README y enlace de deploy quedaron listos.
 - No se implementó ingesta cloud completa: contradice la decisión de no versionar bronze y no existe almacenamiento externo autorizado.
 
 ## Riesgos abiertos
