@@ -72,6 +72,14 @@ def validate_stage8() -> dict[str, object]:
     def add(name: str, passed: bool, observed: object, expected: object) -> None:
         checks.append({"check_name": name, "passed": bool(passed), "observed": str(observed), "expected": str(expected)})
 
+    # Start the Streamlit test runtime separately so the page timings measure
+    # dashboard work, not the one-time AppTest framework bootstrap.  This keeps
+    # the acceptance gate stable in a fresh offline rebuild while preserving a
+    # genuinely cold data/query run for every page.
+    warmup = AppTest.from_string("import streamlit as st\nst.write('ready')", default_timeout=30).run()
+    if warmup.exception:
+        raise AssertionError(f"Streamlit test runtime failed to initialize: {warmup.exception}")
+
     contracts = validate_all_gold(max_stage=8)
     stage8_tables = {name for name, definition in table_definitions(max_stage=8).items() if int(definition.get("stage", 6)) == 8}
     add("stage8_contracts", stage8_tables <= contracts.keys(), sorted(stage8_tables), "all declared Stage 8 tables")
@@ -124,8 +132,9 @@ def validate_stage8() -> dict[str, object]:
     add("forecast_disclosure_visible", disclosure_ok, {"metric_labels": metric_labels, "page_text": forecast_text[:500]}, "MAPE and intervals visible")
 
     issues = pd.read_parquet(PATHS.gold / "fact_data_quality_issues.parquet")
+    open_issue_count = int(issues["status"].eq("open").sum())
     health_text = _visible_text(page_apps["salud_datos"])
-    add("real_data_health", f"Issues abiertos · {len(issues)}" in health_text, len(issues), "visible exact issue count")
+    add("real_data_health", f"Issues abiertos · {open_issue_count}" in health_text, open_issue_count, "visible exact open issue count")
 
     metric_chart_source = (PATHS.root / "src" / "dashboard" / "components" / "metric_chart.py").read_text(encoding="utf-8")
     add("event_annotations", "figure.add_vline" in metric_chart_source and "figure.add_annotation" in metric_chart_source, "vertical line + label", "both")

@@ -1,6 +1,6 @@
 [
   {
-    "model_run_id": "stage7_3e164aa09ada33b1",
+    "model_run_id": "stage7_0c0cf3cf5cbe8226",
     "model_name": "naive",
     "carrier_key": "AEROMEXICO",
     "metric_key": "passengers_afac",
@@ -18,7 +18,7 @@
     "trained_through_period": "2025M06"
   },
   {
-    "model_run_id": "stage7_3e164aa09ada33b1",
+    "model_run_id": "stage7_0c0cf3cf5cbe8226",
     "model_name": "seasonal_naive",
     "carrier_key": "AEROMEXICO",
     "metric_key": "passengers_afac",
@@ -36,7 +36,7 @@
     "trained_through_period": "2025M06"
   },
   {
-    "model_run_id": "stage7_3e164aa09ada33b1",
+    "model_run_id": "stage7_0c0cf3cf5cbe8226",
     "model_name": "drift",
     "carrier_key": "AEROMEXICO",
     "metric_key": "passengers_afac",
@@ -54,7 +54,7 @@
     "trained_through_period": "2025M06"
   },
   {
-    "model_run_id": "stage7_3e164aa09ada33b1",
+    "model_run_id": "stage7_0c0cf3cf5cbe8226",
     "model_name": "ets_damped",
     "carrier_key": "AEROMEXICO",
     "metric_key": "passengers_afac",
@@ -72,7 +72,7 @@
     "trained_through_period": "2025M06"
   },
   {
-    "model_run_id": "stage7_3e164aa09ada33b1",
+    "model_run_id": "stage7_0c0cf3cf5cbe8226",
     "model_name": "sarima",
     "carrier_key": "AEROMEXICO",
     "metric_key": "passengers_afac",

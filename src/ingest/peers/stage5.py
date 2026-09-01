@@ -6,6 +6,7 @@ from collections.abc import Iterable
 from datetime import UTC, datetime
 import json
 from pathlib import Path
+from urllib.parse import unquote
 from typing import Any
 
 import polars as pl
@@ -253,6 +254,160 @@ def ingest_sec_peers() -> dict[str, object]:
     }
 
 
+def rebuild_sec_peers_from_bronze() -> dict[str, object]:
+    """Recreate peer discovery tables from immutable Bronze without network I/O."""
+
+    manifest_path = PATHS.bronze / "_manifest.jsonl"
+    if not manifest_path.is_file():
+        raise FileNotFoundError(f"Bronze manifest is missing: {manifest_path}")
+    manifest = [
+        json.loads(line)
+        for line in manifest_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+
+    def latest_for_url(url: str) -> dict[str, Any]:
+        matches = [
+            record
+            for record in manifest
+            if record.get("source_url") == url
+            and (PATHS.bronze / str(record.get("source_file", ""))).is_file()
+        ]
+        if not matches:
+            raise FileNotFoundError(f"Required peer discovery artifact is missing: {url}")
+        return max(
+            matches,
+            key=lambda record: (
+                int(record.get("logical_version", 0)),
+                str(record.get("downloaded_at", "")),
+            ),
+        )
+
+    catalog_meta = latest_for_url(COMPANY_TICKERS_URL)
+    catalog_path = PATHS.bronze / str(catalog_meta["source_file"])
+    identities = verify_sec_identities(json.loads(catalog_path.read_text(encoding="utf-8")))
+    identity_frame = pl.DataFrame(
+        [
+            {
+                **row,
+                "source_system": "sec_edgar",
+                "source_file": str(catalog_meta["source_file"]),
+                "source_hash": str(catalog_meta["sha256"]),
+                "ingested_at": datetime.fromisoformat(str(catalog_meta["downloaded_at"])),
+                "parser_version": PARSER_VERSION,
+            }
+            for row in identities
+        ]
+    )
+    write_parquet_atomic(identity_frame, PATHS.silver / "sec_peer_identities.parquet")
+
+    index_records: list[dict[str, object]] = []
+    document_records: list[dict[str, object]] = []
+    for carrier_key in ("VOLARIS", "RYANAIR", "DELTA"):
+        cik = str(CARRIERS[carrier_key]["cik"])
+        submissions_meta = latest_for_url(submissions_url(cik))
+        submissions_path = PATHS.bronze / str(submissions_meta["source_file"])
+        submissions = json.loads(submissions_path.read_text(encoding="utf-8"))
+        selected = _select_filings(
+            carrier_key,
+            _rows_from_columnar(submissions["filings"]["recent"]),
+        )
+        for filing in selected:
+            accession = str(filing["accessionNumber"])
+            compact = accession.replace("-", "")
+            archive_prefix = (
+                f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{compact}/"
+            )
+            include_document = _document_filter(
+                carrier_key,
+                str(filing["primaryDocument"]),
+            )
+            candidates_by_url: dict[str, dict[str, Any]] = {}
+            for record in manifest:
+                url = str(record.get("source_url", ""))
+                if not url.startswith(archive_prefix):
+                    continue
+                filename = unquote(url.removeprefix(archive_prefix))
+                if filename != "index.json" and not include_document(filename):
+                    continue
+                source_file = PATHS.bronze / str(record.get("source_file", ""))
+                if not source_file.is_file():
+                    continue
+                existing = candidates_by_url.get(url)
+                candidate_order = (
+                    int(record.get("logical_version", 0)),
+                    str(record.get("downloaded_at", "")),
+                )
+                existing_order = (
+                    int(existing.get("logical_version", 0)),
+                    str(existing.get("downloaded_at", "")),
+                ) if existing else (-1, "")
+                if candidate_order > existing_order:
+                    candidates_by_url[url] = record
+            if not candidates_by_url:
+                raise FileNotFoundError(
+                    f"Peer filing {carrier_key} {accession} has no Bronze documents"
+                )
+            documents = []
+            for url, record in sorted(candidates_by_url.items()):
+                filename = unquote(url.removeprefix(archive_prefix))
+                document = DownloadedDocument(
+                    accession_number=accession,
+                    form_type=str(filing["form"]),
+                    archive_filename=filename,
+                    source_url=url,
+                    source_file=str(record["source_file"]),
+                    source_hash=str(record["sha256"]),
+                    content_type=str(record["content_type"]),
+                    bytes=int(record["bytes"]),
+                    ingested_at=str(record["downloaded_at"]),
+                    is_primary_document=filename.casefold()
+                    == str(filing["primaryDocument"]).casefold(),
+                    download_method=str(record["download_method"]),
+                    carrier_key=carrier_key,
+                    cik=cik,
+                )
+                documents.append(document)
+                document_records.append(document.as_record())
+            index_records.append(
+                {
+                    "carrier_key": carrier_key,
+                    "cik": cik,
+                    "company_name": str(submissions["name"]),
+                    "accession_number": accession,
+                    "form_type": str(filing["form"]),
+                    "filing_date": str(filing["filingDate"]),
+                    "report_date": str(filing.get("reportDate", "")) or None,
+                    "primary_document": str(filing["primaryDocument"]),
+                    "document_count": len(documents),
+                    "source_system": "sec_edgar",
+                    "source_file": str(submissions_meta["source_file"]),
+                    "source_hash": str(submissions_meta["sha256"]),
+                    "ingested_at": datetime.fromisoformat(str(submissions_meta["downloaded_at"])),
+                    "parser_version": PARSER_VERSION,
+                }
+            )
+
+    index_frame = pl.DataFrame(index_records).with_columns(
+        pl.col("filing_date").str.to_date(),
+        pl.col("report_date").str.to_date(),
+    ).sort(["carrier_key", "filing_date", "accession_number"])
+    documents_frame = pl.DataFrame(document_records).sort(
+        ["carrier_key", "accession_number", "archive_filename"]
+    )
+    write_parquet_atomic(index_frame, PATHS.silver / "sec_peer_filings_index.parquet")
+    write_parquet_atomic(
+        documents_frame,
+        PATHS.silver / "sec_peer_filing_documents.parquet",
+    )
+    return {
+        "network_used": False,
+        "verified_identities": identity_frame.height,
+        "filings": index_frame.height,
+        "documents": documents_frame.height,
+    }
+
+
 def ingest_non_sec_peers() -> dict[str, object]:
     """Download Viva quarterly releases and Ryanair monthly key-stat HTML."""
 
@@ -294,4 +449,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import hashlib
 import math
+from pathlib import Path
 from typing import Any, Iterable
 import warnings
 
@@ -13,7 +14,9 @@ import pandas as pd
 from statsmodels.tsa.seasonal import STL
 
 from src.config import PATHS
+from src.transform.scd2 import build_scd2_history
 from src.transform.stage6_dimensions import MILES_TO_KM
+from src.transform.stage9_lineage import build_dim_source_priority
 
 
 PARSER_VERSION = "stage6_v1.0.0"
@@ -41,6 +44,66 @@ FACT_COLUMNS = [
 def stable_hash(values: Iterable[Any]) -> str:
     payload = "|".join("" if pd.isna(value) else str(value) for value in values)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def select_preferred_sources(
+    frame: pd.DataFrame,
+    group_columns: list[str],
+    *,
+    data_domain: str = "carrier_metrics",
+) -> pd.DataFrame:
+    """Select one source per business grain using the catalogued SQL policy.
+
+    The materialized ``dim_source_priority`` and this helper are generated from
+    the same versioned catalog. Unknown sources use the domain's mandatory
+    ``*`` row; they are never assigned an implicit priority in code.
+    """
+
+    required = {*group_columns, "source_system", "is_preliminary", "confidence", "ingested_at"}
+    missing = sorted(required - set(frame.columns))
+    if missing:
+        raise ValueError(f"Source precedence is missing columns: {missing}")
+    policy = build_dim_source_priority()
+    policy = policy[policy["data_domain"].eq(data_domain)].copy()
+    if policy.empty:
+        raise ValueError(f"No source-priority policy declared for {data_domain!r}")
+    defaults = policy[policy["is_default"]]
+    if len(defaults) != 1 or str(defaults.iloc[0]["source_system"]) != "*":
+        raise ValueError(f"{data_domain!r} must have exactly one '*' default priority")
+    expected_order = {
+        "source_priority_order": "asc",
+        "is_preliminary_order": "asc",
+        "confidence_order": "desc",
+        "ingested_at_order": "desc",
+    }
+    for column, expected in expected_order.items():
+        actual = set(policy[column].dropna().astype(str))
+        if actual != {expected}:
+            raise ValueError(f"Unsupported {column} for {data_domain!r}: {sorted(actual)}")
+
+    specific = policy[~policy["is_default"]].set_index("source_system")["priority"]
+    default_priority = int(defaults.iloc[0]["priority"])
+    ranked = frame.copy()
+    ranked["__source_priority"] = (
+        ranked["source_system"].map(specific).fillna(default_priority).astype(int)
+    )
+    ranked["__preliminary_rank"] = ranked["is_preliminary"].fillna(True).astype(bool).astype(int)
+    ranked["__confidence_rank"] = pd.to_numeric(ranked["confidence"], errors="coerce").fillna(float("-inf"))
+    ranked["__ingested_rank"] = pd.to_datetime(ranked["ingested_at"], utc=True, errors="coerce").dt.tz_convert(None)
+    tie_columns = [column for column in ("source_system", "source_file") if column in ranked]
+    ranked = ranked.sort_values(
+        group_columns
+        + ["__source_priority", "__preliminary_rank", "__confidence_rank", "__ingested_rank"]
+        + tie_columns,
+        ascending=[True] * len(group_columns) + [True, True, False, False] + [True] * len(tie_columns),
+        na_position="last",
+        kind="stable",
+    )
+    return (
+        ranked.drop_duplicates(group_columns, keep="first")
+        .drop(columns=["__source_priority", "__preliminary_rank", "__confidence_rank", "__ingested_rank"])
+        .reset_index(drop=True)
+    )
 
 
 def stage_length_adjusted(value: float | None, stage_length_km: float | None) -> float | None:
@@ -101,10 +164,6 @@ def _standard_source(frame: pd.DataFrame) -> pd.DataFrame:
             "is_preliminary": frame.get("is_preliminary", False).fillna(False),
             "is_estimated": False,
             "derivation_formula": None,
-            "valid_from": ingested,
-            "valid_to": pd.NaT,
-            "is_current": True,
-            "restatement_count": 0,
             "source_system": frame["source_system"],
             "source_file": frame["source_file"],
             "source_hash": frame["source_hash"],
@@ -112,12 +171,12 @@ def _standard_source(frame: pd.DataFrame) -> pd.DataFrame:
             "confidence": confidence,
         }
     )
-    return output[FACT_COLUMNS]
-
-
-def _package_order(value: str) -> tuple[int, int]:
-    match = __import__("re").fullmatch(r"(\d{4})(?:Q([1-4]))?", str(value))
-    return (int(match.group(1)), int(match.group(2) or 4)) if match else (0, 0)
+    history = build_scd2_history(
+        output,
+        key_columns=["carrier_key", "period_id", "metric_key", "segment", "source_system"],
+        value_columns=["value", "unit_normalized", "currency", "is_preliminary"],
+    )
+    return history[FACT_COLUMNS]
 
 
 def _fx_lookup() -> dict[tuple[str, str], float]:
@@ -129,8 +188,74 @@ def _fx_lookup() -> dict[tuple[str, str], float]:
     return output
 
 
-def _bmv_rows() -> pd.DataFrame:
-    source = pd.read_parquet(PATHS.silver / "bmv_financials.parquet")
+def _bmv_effective_order(source: pd.DataFrame) -> pd.Series:
+    """Return a stable SCD2 order for BMV backfills and later refreshes.
+
+    BMV packages in the initial archive were downloaded as one short batch in
+    reverse report order.  Raw ``ingested_at`` remains untouched, but versions
+    captured in the same 15-minute batch are ordered by the package period so
+    the most recent filing is the current business state.  Separate refresh
+    batches remain ordered by their real ingestion time.  The effective clock
+    starts only after every artifact in its batch was captured and advances by
+    one microsecond per source version.
+    """
+
+    timestamps = pd.to_datetime(source["ingested_at"], utc=True).dt.tz_convert(None)
+    timeline = pd.DataFrame({"timestamp": sorted(timestamps.drop_duplicates())})
+    timeline["timestamp"] = timeline["timestamp"].astype("datetime64[ns]")
+    timeline["batch_id"] = (
+        timeline["timestamp"].diff().dt.total_seconds().gt(15 * 60).cumsum()
+    )
+    batch_by_timestamp = timeline.set_index("timestamp")["batch_id"]
+    batch_id = timestamps.map(batch_by_timestamp).astype(int)
+    batch_end = timestamps.groupby(batch_id).transform("max")
+    package = source["package_period_id"].astype(str).str.extract(
+        r"^(?P<year>\d{4})(?:Q(?P<quarter>[1-4]))?$"
+    )
+    row_events = pd.DataFrame(
+        {
+            "row_index": source.index,
+            "batch_id": batch_id.to_numpy(),
+            "batch_end": batch_end.to_numpy(),
+            "package_year": pd.to_numeric(package["year"], errors="coerce").fillna(0).astype(int).to_numpy(),
+            "package_quarter": pd.to_numeric(package["quarter"], errors="coerce").fillna(4).astype(int).to_numpy(),
+            "source_file": source["source_file"].astype(str).to_numpy(),
+        }
+    )
+    event_keys = [
+        "batch_id",
+        "package_year",
+        "package_quarter",
+        "source_file",
+    ]
+    ordered = row_events.drop_duplicates(event_keys).sort_values(
+        ["batch_id", "package_year", "package_quarter", "source_file"],
+        kind="stable",
+    )
+    ordered["batch_rank"] = ordered.groupby("batch_id").cumcount()
+    ordered["effective"] = ordered["batch_end"] + pd.to_timedelta(
+        ordered["batch_rank"], unit="us"
+    )
+    effective_by_event = {
+        tuple(getattr(row, column) for column in event_keys): row.effective
+        for row in ordered.itertuples(index=False)
+    }
+    return pd.Series(
+        [
+            effective_by_event[
+                tuple(getattr(row, column) for column in event_keys)
+            ]
+            for row in row_events.itertuples(index=False)
+        ],
+        index=source.index,
+        dtype="datetime64[ns]",
+    )
+
+
+def _bmv_observations(*, silver_dir: Path = PATHS.silver) -> pd.DataFrame:
+    """Normalize every selected BMV package observation before SCD2 collapse."""
+
+    source = pd.read_parquet(silver_dir / "bmv_financials.parquet")
     source = source[
         source["concept"].isin(BMV_CONCEPTS)
         & source["is_consolidated"].fillna(False)
@@ -145,67 +270,155 @@ def _bmv_rows() -> pd.DataFrame:
     )
     balance_valid = source["statement_class"].eq("balance") & pd.to_datetime(source["period_start_date"]).eq(pd.to_datetime(source["period_end_date"]))
     source = source[pnl_valid | balance_valid].copy()
-    source["package_order"] = source["package_period_id"].map(_package_order)
     source["currency_rank"] = source["currency"].map({"USD": 0, "MXN": 1}).fillna(2)
     dedupe = ["carrier_key", "package_period_id", "period_id", "metric_key"]
     source = source.sort_values(dedupe + ["currency_rank", "source_file"]).drop_duplicates(dedupe, keep="first")
+    source["scd2_order_at"] = _bmv_effective_order(source)
     fx = _fx_lookup()
     rows: list[dict[str, Any]] = []
-    for (carrier, period, metric), group in source.groupby(["carrier_key", "period_id", "metric_key"]):
-        group = group.sort_values(["package_order", "source_file"])
-        versions = []
-        previous: tuple[float, str] | None = None
-        for row in group.itertuples(index=False):
-            signature = (float(row.value), str(row.currency))
-            if signature == previous:
-                versions[-1] = row
-            else:
-                versions.append(row)
-            previous = signature
-        for index, row in enumerate(versions):
-            fx_type = "close" if row.statement_class == "balance" else "average"
-            rate = 1.0 if row.currency == "USD" else fx.get((str(row.period_id), fx_type))
-            value_usd = float(row.value) if row.currency == "USD" else (float(row.value) / rate if rate else np.nan)
-            ingested = pd.to_datetime(row.ingested_at, utc=True).tz_convert(None)
-            valid_to = pd.to_datetime(versions[index + 1].ingested_at, utc=True).tz_convert(None) - pd.Timedelta(microseconds=1) if index + 1 < len(versions) else pd.NaT
-            rows.append(
+    for row in source.itertuples(index=False):
+        fx_type = "close" if row.statement_class == "balance" else "average"
+        rate = 1.0 if row.currency == "USD" else fx.get((str(row.period_id), fx_type))
+        value_usd = (
+            float(row.value)
+            if row.currency == "USD"
+            else (float(row.value) / rate if rate else np.nan)
+        )
+        ingested = pd.to_datetime(row.ingested_at, utc=True).tz_convert(None)
+        rows.append(
+            {
+                "carrier_key": row.carrier_key,
+                "period_id": row.period_id,
+                "calendar_period_id": row.period_id,
+                "fiscal_period_id": row.period_id,
+                "period_type": row.period_type,
+                "period_start_date": pd.to_datetime(row.period_start_date).date(),
+                "period_end_date": pd.to_datetime(row.period_end_date).date(),
+                "metric_key": row.metric_key,
+                "segment": "total",
+                "value": value_usd,
+                "value_metric": np.nan,
+                "value_imperial": np.nan,
+                "value_as_reported": float(row.value),
+                "unit_as_reported": row.unit,
+                "unit_normalized": "usd",
+                "currency": row.currency,
+                "value_original_currency": float(row.value),
+                "value_usd": value_usd,
+                "fx_rate_used": rate,
+                "fx_rate_type": fx_type,
+                "is_derived": bool(row.is_derived),
+                "is_preliminary": False,
+                "is_estimated": False,
+                "derivation_formula": row.derivation_formula,
+                "source_system": "bmv_xbrl",
+                "source_file": row.source_file,
+                "source_hash": row.source_hash,
+                "ingested_at": ingested,
+                "scd2_order_at": row.scd2_order_at,
+                "confidence": 1.0,
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def _bmv_rows() -> pd.DataFrame:
+    observations = _bmv_observations()
+    history = build_scd2_history(
+        observations,
+        key_columns=[
+            "carrier_key",
+            "period_id",
+            "metric_key",
+            "segment",
+            "source_system",
+        ],
+        value_columns=["value", "unit_normalized"],
+        timestamp_column="scd2_order_at",
+    )
+    return history[FACT_COLUMNS]
+
+
+def _build_afac_aggregate_history(
+    source: pd.DataFrame,
+    identity_columns: list[str],
+) -> pd.DataFrame:
+    """Aggregate complementary AFAC components while versioning real revisions.
+
+    Scheduled and charter observations may arrive at different times. Their
+    first observations establish one complete baseline and therefore do not
+    inflate ``restatement_count``. Later value changes to an already observed
+    component create a new aggregate version.
+    """
+
+    observation_keys = [*identity_columns, "service_type", "source_file"]
+    components = source.groupby(observation_keys, as_index=False, dropna=False).agg(
+        period_start_date=("period_start_date", "min"),
+        period_end_date=("period_end_date", "max"),
+        value=("value", "sum"),
+        is_preliminary=("is_preliminary", "max"),
+        is_estimated=("is_estimated", "max"),
+        ingested_at=("ingested_at", "max"),
+        source_hash=(
+            "source_hash",
+            lambda values: (
+                sorted(set(values.astype(str)))[0]
+                if len(set(values.astype(str))) == 1
+                else stable_hash(sorted(set(values.astype(str))))
+            ),
+        ),
+    )
+    component_history = build_scd2_history(
+        components,
+        key_columns=[*identity_columns, "service_type"],
+        value_columns=["value", "is_preliminary", "is_estimated"],
+    )
+    snapshots: list[dict[str, Any]] = []
+    groupby_key: str | list[str] = (
+        identity_columns[0] if len(identity_columns) == 1 else identity_columns
+    )
+    for identity, group in component_history.groupby(groupby_key, dropna=False, sort=True):
+        identity_values = (identity,) if len(identity_columns) == 1 else tuple(identity)
+        identity_record = dict(zip(identity_columns, identity_values, strict=True))
+        initial_times = group.groupby("service_type")["valid_from"].min()
+        baseline_time = initial_times.max()
+        revision_times = sorted(
+            set(
+                group.loc[
+                    group["restatement_count"].gt(0)
+                    & group["valid_from"].gt(baseline_time),
+                    "valid_from",
+                ].tolist()
+            )
+        )
+        for timestamp in [baseline_time, *revision_times]:
+            available = group[group["valid_from"].le(timestamp)].copy()
+            current = (
+                available.sort_values(
+                    ["service_type", "valid_from", "source_file"],
+                    kind="stable",
+                )
+                .drop_duplicates("service_type", keep="last")
+            )
+            hashes = sorted(set(current["source_hash"].astype(str)))
+            snapshots.append(
                 {
-                    "carrier_key": carrier,
-                    "period_id": period,
-                    "calendar_period_id": period,
-                    "fiscal_period_id": period,
-                    "period_type": row.period_type,
-                    "period_start_date": pd.to_datetime(row.period_start_date).date(),
-                    "period_end_date": pd.to_datetime(row.period_end_date).date(),
-                    "metric_key": metric,
-                    "segment": "total",
-                    "value": value_usd,
-                    "value_metric": np.nan,
-                    "value_imperial": np.nan,
-                    "value_as_reported": float(row.value),
-                    "unit_as_reported": row.unit,
-                    "unit_normalized": "usd",
-                    "currency": row.currency,
-                    "value_original_currency": float(row.value),
-                    "value_usd": value_usd,
-                    "fx_rate_used": rate,
-                    "fx_rate_type": fx_type,
-                    "is_derived": bool(row.is_derived),
-                    "is_preliminary": False,
-                    "is_estimated": False,
-                    "derivation_formula": row.derivation_formula,
-                    "valid_from": ingested,
-                    "valid_to": valid_to,
-                    "is_current": index == len(versions) - 1,
-                    "restatement_count": index,
-                    "source_system": "bmv_xbrl",
-                    "source_file": row.source_file,
-                    "source_hash": row.source_hash,
-                    "ingested_at": ingested,
-                    "confidence": 1.0,
+                    **identity_record,
+                    "period_start_date": current["period_start_date"].min(),
+                    "period_end_date": current["period_end_date"].max(),
+                    "value": float(current["value"].sum()),
+                    "is_preliminary": bool(current["is_preliminary"].max()),
+                    "is_estimated": bool(current["is_estimated"].max()),
+                    "ingested_at": timestamp,
+                    "source_hash": stable_hash(hashes),
                 }
             )
-    return pd.DataFrame(rows, columns=FACT_COLUMNS)
+    aggregate = pd.DataFrame(snapshots)
+    return build_scd2_history(
+        aggregate,
+        key_columns=identity_columns,
+        value_columns=["value", "is_preliminary", "is_estimated"],
+    )
 
 
 def _afac_rows() -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -215,37 +428,18 @@ def _afac_rows() -> tuple[pd.DataFrame, pd.DataFrame]:
     ).reset_index()
     exceptions["reason"] = "Nombre fuera del alcance del crosswalk de entidades prioritarias; se conserva en silver y participa en el denominador de mercado."
     mapped = source.dropna(subset=["carrier_key"]).copy()
-    dimensions = ["carrier_key", "period_id", "period_start_date", "period_end_date", "market"]
-    aggregate = mapped.groupby(dimensions, as_index=False).agg(
-        value=("value", "sum"),
-        is_preliminary=("is_preliminary", "max"),
-        is_estimated=("is_estimated", "max"),
-        ingested_at=("ingested_at", "max"),
-        source_hash=("source_hash", lambda values: stable_hash(sorted(set(values)))),
+    aggregate = _build_afac_aggregate_history(
+        mapped,
+        ["carrier_key", "period_id", "market"],
     )
-    total = mapped.groupby(["carrier_key", "period_id", "period_start_date", "period_end_date"], as_index=False).agg(
-        value=("value", "sum"),
-        is_preliminary=("is_preliminary", "max"),
-        is_estimated=("is_estimated", "max"),
-        ingested_at=("ingested_at", "max"),
-        source_hash=("source_hash", lambda values: stable_hash(sorted(set(values)))),
+    total = _build_afac_aggregate_history(
+        mapped,
+        ["carrier_key", "period_id"],
     )
     total["market"] = "total"
     aggregate = pd.concat([aggregate, total], ignore_index=True)
-    market = source.groupby(["period_id", "period_start_date", "period_end_date", "market"], as_index=False).agg(
-        value=("value", "sum"),
-        is_preliminary=("is_preliminary", "max"),
-        is_estimated=("is_estimated", "max"),
-        ingested_at=("ingested_at", "max"),
-        source_hash=("source_hash", lambda values: stable_hash(sorted(set(values)))),
-    )
-    market_total = source.groupby(["period_id", "period_start_date", "period_end_date"], as_index=False).agg(
-        value=("value", "sum"),
-        is_preliminary=("is_preliminary", "max"),
-        is_estimated=("is_estimated", "max"),
-        ingested_at=("ingested_at", "max"),
-        source_hash=("source_hash", lambda values: stable_hash(sorted(set(values)))),
-    )
+    market = _build_afac_aggregate_history(source, ["period_id", "market"])
+    market_total = _build_afac_aggregate_history(source, ["period_id"])
     market_total["market"] = "total"
     market = pd.concat([market, market_total], ignore_index=True)
     market["carrier_key"] = "MARKET_TOTAL_MX"
@@ -277,10 +471,6 @@ def _afac_rows() -> tuple[pd.DataFrame, pd.DataFrame]:
             "is_preliminary": aggregate["is_preliminary"],
             "is_estimated": aggregate["is_estimated"],
             "derivation_formula": "SUM(AFAC passengers) across service_type for carrier, period and market",
-            "valid_from": ingested,
-            "valid_to": pd.NaT,
-            "is_current": True,
-            "restatement_count": 0,
             "source_system": "afac",
             "source_file": "silver/afac_monthly_stats.parquet",
             "source_hash": aggregate["source_hash"],
@@ -288,6 +478,12 @@ def _afac_rows() -> tuple[pd.DataFrame, pd.DataFrame]:
             "confidence": 1.0,
         }
     )
+    # The aggregate helper already assigned version intervals. Preserve them
+    # while mapping the source-neutral snapshot to the Gold fact schema.
+    rows["valid_from"] = aggregate["valid_from"].to_numpy()
+    rows["valid_to"] = aggregate["valid_to"].to_numpy()
+    rows["is_current"] = aggregate["is_current"].to_numpy()
+    rows["restatement_count"] = aggregate["restatement_count"].to_numpy()
     return rows[FACT_COLUMNS], exceptions
 
 
@@ -317,9 +513,10 @@ class DerivationResult:
 
 def _derive_metrics(base: pd.DataFrame) -> DerivationResult:
     current = base[base["is_current"] & base["period_type"].eq("quarter") & base["segment"].eq("total") & base["value"].notna()].copy()
-    priority = {"sec_edgar": 0, "sec_filing": 0, "aeromexico_ir": 0, "viva_ir": 1, "peer_profile": 1, "bmv_xbrl": 5}
-    current["priority"] = current["source_system"].map(priority).fillna(2)
-    current = current.sort_values(["carrier_key", "period_id", "metric_key", "priority", "ingested_at"]).drop_duplicates(["carrier_key", "period_id", "metric_key"], keep="first")
+    current = select_preferred_sources(
+        current,
+        ["carrier_key", "period_id", "metric_key"],
+    )
     derived: list[dict[str, Any]] = []
     issues: list[dict[str, Any]] = []
     for (carrier, period), group in current.groupby(["carrier_key", "period_id"]):
@@ -416,8 +613,10 @@ def _quarter_ordinal(period_id: str) -> int | None:
 def _growth_and_ttm(base: pd.DataFrame) -> pd.DataFrame:
     selected = ["total_revenue", "adjusted_ebitdar", "operating_income", "net_income", "passengers", "asm_total", "rpm_total", "rask", "cask", "load_factor_total"]
     current = base[base["is_current"] & base["period_type"].eq("quarter") & base["segment"].eq("total") & base["metric_key"].isin(selected) & base["value"].notna()].copy()
-    current["priority"] = current["source_system"].map({"sec_edgar": 0, "derived_gold": 0, "viva_ir": 1, "bmv_xbrl": 5}).fillna(2)
-    current = current.sort_values(["carrier_key", "metric_key", "period_id", "priority"]).drop_duplicates(["carrier_key", "metric_key", "period_id"], keep="first")
+    current = select_preferred_sources(
+        current,
+        ["carrier_key", "metric_key", "period_id"],
+    )
     output: list[dict[str, Any]] = []
     additive = {"total_revenue", "adjusted_ebitdar", "operating_income", "net_income", "passengers", "asm_total", "rpm_total"}
     for (carrier, metric), group in current.groupby(["carrier_key", "metric_key"]):
@@ -509,12 +708,28 @@ def build_fact_route_traffic() -> pd.DataFrame:
 
 def build_fact_airport_traffic() -> pd.DataFrame:
     source = pd.read_parquet(PATHS.silver / "airport_traffic.parquet")
+    source = source[~source["is_group_total"].fillna(False)].copy()
     output = source.rename(columns={"source": "source_system"}) if "source_system" not in source else source.copy()
     output["source_system"] = source["source_system"]
     output["calendar_period_id"] = output["period_id"]
     output["fiscal_period_id"] = output["period_id"]
-    columns = ["airport_iata", "period_id", "calendar_period_id", "fiscal_period_id", "passengers_domestic", "passengers_international", "passengers_total", "cargo_tons", "operations", "operator_group", "country", "is_group_total", "source_system", "source_file", "source_hash", "ingested_at"]
+    columns = ["airport_iata", "period_id", "calendar_period_id", "fiscal_period_id", "passengers_domestic", "passengers_international", "passengers_total", "cargo_tons", "operations", "operator_group", "country", "source_system", "source_file", "source_hash", "ingested_at"]
     return output[columns].sort_values(["period_id", "operator_group", "airport_iata"]).reset_index(drop=True)
+
+
+def build_fact_airport_group_traffic() -> pd.DataFrame:
+    source = pd.read_parquet(PATHS.silver / "airport_traffic.parquet")
+    output = source[source["is_group_total"].fillna(False)].copy()
+    output["airport_group_key"] = output["operator_group"].astype(str).str.upper()
+    output["calendar_period_id"] = output["period_id"]
+    output["fiscal_period_id"] = output["period_id"]
+    columns = [
+        "airport_group_key", "period_id", "calendar_period_id", "fiscal_period_id",
+        "passengers_domestic", "passengers_international", "passengers_total",
+        "cargo_tons", "operations", "country", "source_system", "source_file",
+        "source_hash", "ingested_at",
+    ]
+    return output[columns].sort_values(["period_id", "airport_group_key", "source_system"]).reset_index(drop=True)
 
 
 def build_fact_market_data() -> pd.DataFrame:

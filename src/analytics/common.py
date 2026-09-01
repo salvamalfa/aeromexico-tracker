@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 from typing import Any
@@ -14,7 +15,7 @@ import pandas as pd
 
 from src.config import PATHS
 from src.ingest.stage4_common import write_parquet_atomic
-from src.transform.stage6_contracts import validate_table
+from src.transform.stage6_contracts import add_record_id, validate_table
 
 
 SEED = 1561861
@@ -47,7 +48,11 @@ def source_fingerprint() -> str:
 
 def model_run_id(config: dict[str, Any]) -> str:
     payload = json.dumps(
-        {"source_fingerprint": source_fingerprint(), "config": config},
+        {
+            "source_fingerprint": source_fingerprint(),
+            "code_version": code_version(),
+            "config": config,
+        },
         sort_keys=True,
         separators=(",", ":"),
     ).encode()
@@ -55,6 +60,9 @@ def model_run_id(config: dict[str, Any]) -> str:
 
 
 def code_version() -> str:
+    override = os.environ.get("AEROMEXICO_CODE_VERSION", "").strip()
+    if override:
+        return override
     result = subprocess.run(
         ["git", "rev-parse", "HEAD"],
         cwd=PATHS.root,
@@ -80,7 +88,8 @@ def reproducible_timestamp() -> datetime:
 
 
 def write_gold(table_name: str, frame: pd.DataFrame) -> Path:
-    validated = validate_table(table_name, frame)
+    identified = add_record_id(table_name, frame)
+    validated = validate_table(table_name, identified)
     path = PATHS.gold / f"{table_name}.parquet"
     write_parquet_atomic(validated, path)
     return path

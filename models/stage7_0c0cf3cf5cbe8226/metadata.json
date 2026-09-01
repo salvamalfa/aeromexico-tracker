@@ -1,6 +1,6 @@
 {
-  "model_run_id": "stage7_e53d19f11118f851",
-  "code_version": "eb9beeb4606ceacc9638dded8388dda51eeec37a",
+  "model_run_id": "stage7_0c0cf3cf5cbe8226",
+  "code_version": "sha256:4fe1b181ce9ae7c7d4f4a09065dd4c21a9ae98d0b30c735ca83f590db6d30323",
   "config": {
     "target": "AEROMEXICO/passengers_afac/total/month",
     "validation_periods": 12,

@@ -1,0 +1,393 @@
+version: 1
+
+# Catálogo público, legible por negocio y reutilizable por el dashboard. Los
+# source_systems son los identificadores literales que aparecen en Bronze,
+# Silver o Gold; source_key agrupa alias técnicos de una misma institución.
+sources:
+  sec_edgar:
+    source_systems: [sec, sec_edgar, sec_filing]
+    display_name: SEC / EDGAR
+    institution: U.S. Securities and Exchange Commission
+    business_description: Estados financieros, reportes trimestrales y métricas operativas publicadas por Aeroméxico y sus comparables.
+    coverage: Aeroméxico y aerolíneas comparables con registro en Estados Unidos.
+    update_frequency: Por evento regulatorio; principalmente trimestral y anual.
+    access_method: API y archivos públicos de EDGAR.
+    official_page_url: https://www.sec.gov/edgar/browse/?CIK=1561861&owner=exclude
+    allowed_hosts: [sec.gov]
+    artifact_link_policy: direct
+    limitations: Los 6-K de Aeroméxico no siempre incluyen XBRL financiero; parte de la información se extrae de anexos.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  bmv:
+    source_systems: [bmv, bmv_xbrl]
+    display_name: Bolsa Mexicana de Valores
+    institution: Bolsa Mexicana de Valores
+    business_description: Estados financieros estructurados bajo IFRS y sus revisiones posteriores.
+    coverage: Emisoras mexicanas y extranjeras con información publicada en BMV.
+    update_frequency: Trimestral y anual.
+    access_method: Paquetes XBRL públicos.
+    official_page_url: https://www.bmv.com.mx/
+    allowed_hosts: [bmv.com.mx]
+    artifact_link_policy: direct
+    limitations: El portal puede bloquear descargas automatizadas y algunos paquetes requieren navegación manual.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  afac:
+    source_systems: [afac, afac_datatur]
+    display_name: AFAC / DATATUR
+    institution: Agencia Federal de Aviación Civil y Secretaría de Turismo
+    business_description: Pasajeros transportados por aerolínea en los mercados nacional e internacional de México.
+    coverage: Aerolíneas mexicanas y extranjeras que operan en México.
+    update_frequency: Mensual, con cifras preliminares sujetas a revisión.
+    access_method: Archivos estadísticos publicados en DATATUR.
+    official_page_url: https://datatur.sectur.gob.mx/SitePages/afac.aspx
+    allowed_hosts: [sectur.gob.mx, gob.mx, archive.org]
+    artifact_link_policy: landing_page_only
+    limitations: El portal puede requerir descarga asistida y las publicaciones pueden ser reexpresadas.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  bts_t100:
+    source_systems: [bts_t100]
+    display_name: BTS T-100
+    institution: U.S. Bureau of Transportation Statistics
+    business_description: Pasajeros, asientos, capacidad y operación por ruta entre México y Estados Unidos.
+    coverage: Segmentos internacionales reportados al gobierno de Estados Unidos.
+    update_frequency: Mensual, con rezago de publicación.
+    access_method: Descarga pública de TranStats.
+    official_page_url: https://www.transtats.bts.gov/
+    allowed_hosts: [transtats.bts.gov]
+    artifact_link_policy: direct
+    limitations: Solo cubre tráfico sujeto a reporte en Estados Unidos y tiene rezago.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  banxico_sie:
+    source_systems: [banxico_sie]
+    display_name: Banxico SIE
+    institution: Banco de México
+    business_description: Tipo de cambio peso-dólar utilizado para contexto macroeconómico y conversiones monetarias.
+    coverage: Series oficiales del Sistema de Información Económica.
+    update_frequency: Diaria.
+    access_method: Consulta y descarga pública del SIE.
+    official_page_url: https://www.banxico.org.mx/SieInternet/consultarDirectorioInternetAction.do?accion=consultarSeries
+    allowed_hosts: [banxico.org.mx]
+    artifact_link_policy: direct
+    limitations: Algunas modalidades de API requieren token gratuito.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  eia:
+    source_systems: [eia]
+    display_name: EIA
+    institution: U.S. Energy Information Administration
+    business_description: Precio de referencia del combustible de aviación para interpretar presión sobre costos.
+    coverage: Precio spot de combustible de aviación en Estados Unidos usado como referencia sectorial.
+    update_frequency: Diaria o semanal, según la serie.
+    access_method: Hoja histórica pública de EIA.
+    official_page_url: https://www.eia.gov/dnav/pet/hist_xls/EER_EPJK_PF4_RGC_DPGd.xls
+    allowed_hosts: [eia.gov]
+    artifact_link_policy: direct
+    limitations: Es una referencia de mercado, no el costo de combustible contratado por Aeroméxico.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  federal_reserve_h10:
+    source_systems: [federal_reserve_h10]
+    display_name: Reserva Federal H.10
+    institution: Board of Governors of the Federal Reserve System
+    business_description: Tipo de cambio de referencia para contrastar y completar el contexto monetario.
+    coverage: Tipos de cambio publicados en la estadística H.10.
+    update_frequency: Diaria.
+    access_method: Descarga pública de series H.10.
+    official_page_url: https://www.federalreserve.gov/releases/h10/
+    allowed_hosts: [federalreserve.gov]
+    artifact_link_policy: direct
+    limitations: Se usa como contraste macroeconómico, no como fuente contable de conversión primaria.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  aicm:
+    source_systems: [aicm]
+    display_name: AICM
+    institution: Aeropuerto Internacional de la Ciudad de México
+    business_description: Pasajeros y operaciones del principal aeropuerto base de Aeroméxico.
+    coverage: Tráfico doméstico e internacional del AICM.
+    update_frequency: Mensual.
+    access_method: Reportes estadísticos públicos en PDF.
+    official_page_url: https://www.aicm.com.mx/acercadelaicm/archivos/files/Estadisticas/EstadisticasJul2026.pdf
+    allowed_hosts: [aicm.com.mx]
+    artifact_link_policy: direct
+    limitations: Mide el aeropuerto completo y no permite atribuir por sí solo el tráfico a Aeroméxico.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  aifa:
+    source_systems: [aifa]
+    display_name: AIFA
+    institution: Aeropuerto Internacional Felipe Ángeles
+    business_description: Pasajeros y operaciones del aeropuerto complementario del Valle de México.
+    coverage: Tráfico doméstico e internacional del AIFA.
+    update_frequency: Mensual.
+    access_method: Numeralia aeroportuaria pública en Excel.
+    official_page_url: https://aifa-repositorio.s3.us-east-1.amazonaws.com/PyE/Numeralia-Aeroportuaria-Jul-2026.xlsx
+    allowed_hosts: [aifa-repositorio.s3.us-east-1.amazonaws.com, aifa.aero]
+    artifact_link_policy: direct
+    limitations: Mide el aeropuerto completo y la estructura del archivo puede cambiar entre publicaciones.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  oma_ir:
+    source_systems: [oma_ir]
+    display_name: OMA
+    institution: Grupo Aeroportuario Centro Norte
+    business_description: Tráfico de pasajeros de los aeropuertos operados por OMA y total del grupo.
+    coverage: Aeropuertos del portafolio de OMA.
+    update_frequency: Mensual.
+    access_method: Reportes de tráfico del portal de inversionistas.
+    official_page_url: https://ir.oma.aero/en/traffic-reports/
+    allowed_hosts: [oma.aero, miranda-newswire.com]
+    artifact_link_policy: direct
+    limitations: Los totales del grupo no representan aeropuertos físicos y deben modelarse por separado.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  ourairports:
+    source_systems: [ourairports]
+    display_name: OurAirports
+    institution: OurAirports
+    business_description: Catálogo geográfico para identificar aeropuertos, ciudades y países de las rutas.
+    coverage: Aeropuertos y aeródromos a nivel mundial.
+    update_frequency: Irregular.
+    access_method: Archivo CSV abierto.
+    official_page_url: https://ourairports.com/data/
+    allowed_hosts: [ourairports.com, davidmegginson.github.io]
+    artifact_link_policy: direct
+    limitations: Es una fuente comunitaria de referencia; no contiene tráfico ni métricas financieras.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  yahoo_finance:
+    source_systems: [yahoo_finance]
+    display_name: Yahoo Finance
+    institution: Yahoo
+    business_description: Precios de mercado y volumen de los tickers utilizados en el comparativo bursátil.
+    coverage: Aeroméxico y aerolíneas comparables con ticker disponible.
+    update_frequency: Diaria en días hábiles de mercado.
+    access_method: Endpoint público consultado por yfinance.
+    official_page_url: https://finance.yahoo.com/quote/AERO/
+    allowed_hosts: [finance.yahoo.com, query1.finance.yahoo.com]
+    artifact_link_policy: direct
+    limitations: Fuente informativa no oficial del mercado; ajustes históricos pueden cambiar.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  faa_iasa:
+    source_systems: [faa_iasa]
+    display_name: FAA IASA
+    institution: U.S. Federal Aviation Administration
+    business_description: Categoría de seguridad operacional de México y contexto regulatorio para rutas hacia Estados Unidos.
+    coverage: Evaluación IASA de autoridades aeronáuticas nacionales.
+    update_frequency: Por evento regulatorio.
+    access_method: Reporte oficial público en PDF.
+    official_page_url: https://www.faa.gov/sites/faa.gov/files/IASAWSR119r.pdf
+    allowed_hosts: [faa.gov]
+    artifact_link_policy: direct
+    limitations: Evalúa la supervisión del país, no la seguridad de una aerolínea individual.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  gdelt:
+    source_systems: [gdelt]
+    display_name: GDELT
+    institution: GDELT Project
+    business_description: Titulares públicos para detectar temas y eventos alrededor de Aeroméxico.
+    coverage: Medios indexados globalmente por GDELT.
+    update_frequency: Continua.
+    access_method: API pública de documentos.
+    official_page_url: https://api.gdeltproject.org/api/v2/doc/doc?query=Aeromexico&mode=artlist&format=json
+    allowed_hosts: [gdeltproject.org]
+    artifact_link_policy: direct
+    limitations: La cobertura depende del índice de medios y no representa sentimiento de clientes.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  google_news:
+    source_systems: [rss]
+    display_name: Google News RSS
+    institution: Google News
+    business_description: Titulares recientes para complementar la lectura de eventos corporativos y sectoriales.
+    coverage: Noticias indexadas que mencionan Aeroméxico.
+    update_frequency: Continua.
+    access_method: Feed RSS público.
+    official_page_url: https://news.google.com/rss/search?q=Aeromexico&hl=es-419&gl=MX&ceid=MX:es-419
+    allowed_hosts: [news.google.com]
+    artifact_link_policy: direct
+    limitations: Puede contener duplicados y su selección depende del agregador.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  news_http_error:
+    source_systems: [news_http_error]
+    display_name: Evidencia de acceso a RSS
+    institution: El Economista
+    business_description: Evidencia preservada de un intento fallido de acceso a una fuente de noticias.
+    coverage: Respuesta del endpoint RSS intentado.
+    update_frequency: Solo cuando se reintenta la fuente.
+    access_method: Respuesta HTTP preservada para auditoría.
+    official_page_url: https://www.eleconomista.com.mx/rss/empresas.xml
+    allowed_hosts: [eleconomista.com.mx, gdeltproject.org]
+    artifact_link_policy: landing_page_only
+    limitations: No se trata como contenido noticioso válido ni como ausencia de noticias.
+    source_kind: error_evidence
+    artifact_expected: true
+    is_active: false
+
+  loughran_mcdonald:
+    source_systems: [loughran_mcdonald]
+    display_name: Diccionario Loughran–McDonald
+    institution: Loughran–McDonald
+    business_description: Vocabulario financiero usado para clasificar el lenguaje de reportes corporativos.
+    coverage: Términos financieros en inglés con categorías de tono.
+    update_frequency: Irregular.
+    access_method: Archivo público de referencia.
+    official_page_url: https://drive.google.com/uc?export=download&id=1iq2RUf8qGFEAk1g8wQntP3habOnR3fXF
+    allowed_hosts: [drive.google.com]
+    artifact_link_policy: direct
+    limitations: Es una referencia lingüística general y no un indicador de desempeño por sí misma.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  viva_ir:
+    source_systems: [viva_ir]
+    display_name: Viva Aerobus IR
+    institution: Viva Aerobus
+    business_description: Resultados financieros y operativos públicos de un competidor mexicano.
+    coverage: Periodos con reportes públicos disponibles de Viva Aerobus.
+    update_frequency: Trimestral cuando existe publicación.
+    access_method: Reportes públicos del portal de inversionistas.
+    official_page_url: https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2023-1T23-en.pdf
+    allowed_hosts: [investorcloud.net]
+    artifact_link_policy: direct
+    limitations: La cobertura histórica es discontinua y el emisor no cotiza públicamente.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  ryanair_ir:
+    source_systems: [ryanair_ir]
+    display_name: Ryanair IR
+    institution: Ryanair Holdings
+    business_description: Estadísticas operativas públicas de un comparable internacional de bajo costo.
+    coverage: Tráfico, capacidad y factores operativos publicados por Ryanair.
+    update_frequency: Mensual y trimestral.
+    access_method: Página pública de estadísticas corporativas.
+    official_page_url: https://corporate.ryanair.com/facts-figures/key-stats/
+    allowed_hosts: [ryanair.com]
+    artifact_link_policy: landing_page_only
+    limitations: El año fiscal y el modelo de negocio no son directamente equivalentes a Aeroméxico.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  aeromexico_ir:
+    source_systems: [aeromexico_ir]
+    display_name: Aeroméxico Relación con Inversionistas
+    institution: Grupo Aeroméxico
+    business_description: Comunicados trimestrales con la explicación operativa y financiera oficial de la compañía.
+    coverage: Reportes corporativos publicados desde el regreso a mercados públicos.
+    update_frequency: Trimestral y por evento relevante.
+    access_method: Portal público de relación con inversionistas.
+    official_page_url: https://ir.aeromexico.com/financial-information/quarterly-results
+    allowed_hosts: [aeromexico.com]
+    artifact_link_policy: landing_page_only
+    limitations: La serie pública reciente es corta y parte del contenido también se archiva en SEC.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  peer_profile:
+    source_systems: [peer_profile]
+    display_name: Perfil comparable curado
+    institution: Aeroméxico Tracker
+    business_description: Atributos estables utilizados para comparar modelos de negocio entre aerolíneas.
+    coverage: Aerolíneas incluidas en el panel competitivo.
+    update_frequency: Cuando cambia el universo de comparables.
+    access_method: Curación documentada a partir de fuentes públicas.
+    official_page_url: null
+    allowed_hosts: []
+    artifact_link_policy: not_applicable
+    limitations: No tiene un archivo público único; debe heredar linaje de las fuentes que sustentan cada atributo.
+    source_kind: curated
+    artifact_expected: false
+    is_active: true
+
+  curated_primary_sources:
+    source_systems: [curated_primary_sources]
+    display_name: Contexto regulatorio curado
+    institution: Aeroméxico Tracker
+    business_description: Eventos regulatorios consolidados para explicar cambios materiales del entorno operativo.
+    coverage: Eventos incluidos explícitamente en el catálogo analítico.
+    update_frequency: Por evento.
+    access_method: Curación documentada a partir de fuentes primarias.
+    official_page_url: null
+    allowed_hosts: []
+    artifact_link_policy: not_applicable
+    limitations: No tiene artefacto propio; cada registro debe declarar sus fuentes contribuyentes o la ausencia documentada.
+    source_kind: curated
+    artifact_expected: false
+    is_active: true
+
+  derived_gold:
+    source_systems: [derived_gold]
+    display_name: Métrica derivada del Tracker
+    institution: Aeroméxico Tracker
+    business_description: Indicadores calculados de forma reproducible a partir de métricas ya trazables.
+    coverage: Métricas con fórmula declarada en la capa Gold.
+    update_frequency: En cada reconstrucción del pipeline.
+    access_method: Transformación interna reproducible.
+    official_page_url: null
+    allowed_hosts: []
+    artifact_link_policy: not_applicable
+    limitations: No existe archivo público directo; el linaje debe apuntar a registros padre o declarar la curación.
+    source_kind: derived
+    artifact_expected: false
+    is_active: true
+
+# La prioridad reproduce la política vigente del modelo largo. Las columnas de
+# desempate forman parte de la misma política para que Python y SQL consuman una
+# sola definición: fuente, dato final, confianza y fecha de ingesta.
+priorities:
+  - {data_domain: carrier_metrics, source_system: sec_edgar, priority: 0, is_default: false, rationale: Publicación regulatoria o corporativa primaria.}
+  - {data_domain: carrier_metrics, source_system: sec_filing, priority: 0, is_default: false, rationale: Publicación regulatoria primaria.}
+  - {data_domain: carrier_metrics, source_system: aeromexico_ir, priority: 0, is_default: false, rationale: Publicación corporativa primaria.}
+  - {data_domain: carrier_metrics, source_system: derived_gold, priority: 0, is_default: false, rationale: Derivación reproducible preferida para la métrica que declara su fórmula.}
+  - {data_domain: carrier_metrics, source_system: viva_ir, priority: 1, is_default: false, rationale: Publicación corporativa del comparable.}
+  - {data_domain: carrier_metrics, source_system: peer_profile, priority: 1, is_default: false, rationale: Perfil comparable curado y documentado.}
+  - {data_domain: carrier_metrics, source_system: afac, priority: 1, is_default: false, rationale: Estadística pública oficial de pasajeros.}
+  - {data_domain: carrier_metrics, source_system: bmv_xbrl, priority: 5, is_default: false, rationale: Respaldo estructurado cuando no existe una publicación preferente.}
+  - {data_domain: carrier_metrics, source_system: "*", priority: 2, is_default: true, rationale: Prioridad explícita para cualquier fuente no listada.}
+
+ranking_rules:
+  source_priority: asc
+  is_preliminary: asc
+  confidence: desc
+  ingested_at: desc

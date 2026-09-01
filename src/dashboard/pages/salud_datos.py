@@ -30,8 +30,9 @@ def render() -> None:
         st.plotly_chart(figure, width="stretch", config={"displayModeBar": False})
 
     issues = load_gold_table("fact_data_quality_issues").sort_values(["severity", "period_id"], na_position="last")
-    st.subheader(f"Issues abiertos · {len(issues)}")
-    st.dataframe(issues[["severity", "issue_type", "source_system", "carrier_key", "period_id", "metric_key", "difference_pct", "detail"]].rename(columns={"severity": "Severidad", "issue_type": "Tipo", "source_system": "Fuente", "carrier_key": "Aerolínea", "period_id": "Periodo", "metric_key": "Métrica", "difference_pct": "Diferencia", "detail": "Detalle"}), hide_index=True, width="stretch")
+    open_issues = issues[issues["status"].eq("open")]
+    st.subheader(f"Issues abiertos · {len(open_issues)}")
+    st.dataframe(open_issues[["severity", "issue_type", "source_system", "carrier_key", "period_id", "metric_key", "difference_pct", "description"]].rename(columns={"severity": "Severidad", "issue_type": "Tipo", "source_system": "Fuente", "carrier_key": "Aerolínea", "period_id": "Periodo", "metric_key": "Métrica", "difference_pct": "Diferencia", "description": "Detalle"}), hide_index=True, width="stretch")
 
     restatements = query_df("SELECT carrier_key, period_id, metric_key, source_system, restatement_count, valid_from, valid_to, is_current FROM v_restatements ORDER BY valid_from DESC")
     st.subheader(f"Restatements registrados · {len(restatements)}")
