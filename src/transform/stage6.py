@@ -9,15 +9,25 @@ import pandas as pd
 from src.config import PATHS
 from src.ingest.stage4_common import write_parquet_atomic
 from src.transform.generate_data_dictionary import generate as generate_dictionary
-from src.transform.stage6_contracts import validate_all_gold, validate_table
-from src.transform.stage6_dimensions import augment_dim_airport, build_dim_carrier, build_dim_metric, build_dim_period, build_dim_route
+from src.transform.stage6_contracts import add_record_id, validate_all_gold, validate_table
+from src.transform.stage6_dimensions import (
+    augment_dim_airport,
+    build_dim_airport_group,
+    build_dim_carrier,
+    build_dim_metric,
+    build_dim_period,
+    build_dim_route,
+)
 from src.transform.stage6_facts import (
     build_fact_airport_traffic,
+    build_fact_airport_group_traffic,
     build_fact_carrier_metrics,
     build_fact_macro,
     build_fact_market_data,
     build_fact_route_traffic,
 )
+from src.transform.stage9_quality import build_canonical_quality_issues
+from src.transform.stage9_lineage import build_dim_source, build_dim_source_priority
 from src.transform.stage6_warehouse import build_warehouse
 
 
@@ -41,7 +51,8 @@ def _extend_fx_years() -> None:
 
 
 def _write(table_name: str, frame: pd.DataFrame) -> None:
-    validated = validate_table(table_name, frame)
+    identified = add_record_id(table_name, frame)
+    validated = validate_table(table_name, identified)
     write_parquet_atomic(validated, PATHS.gold / f"{table_name}.parquet")
 
 
@@ -49,15 +60,20 @@ def run() -> dict[str, object]:
     _extend_fx_years()
     _write("dim_period", build_dim_period())
     _write("dim_carrier", build_dim_carrier())
+    _write("dim_source", build_dim_source())
+    _write("dim_source_priority", build_dim_source_priority())
     _write("dim_airport", augment_dim_airport())
+    _write("dim_airport_group", build_dim_airport_group())
     _write("dim_route", build_dim_route())
 
     carrier_metrics, issues, exceptions = build_fact_carrier_metrics()
     _write("fact_carrier_metrics", carrier_metrics)
-    _write("fact_data_quality_issues", issues)
+    canonical_issues, quality_reconciliation = build_canonical_quality_issues(issues)
+    _write("fact_data_quality_issues", canonical_issues)
     write_parquet_atomic(exceptions, PATHS.quality / "stage6_entity_exceptions.parquet")
     _write("fact_route_traffic", build_fact_route_traffic())
     _write("fact_airport_traffic", build_fact_airport_traffic())
+    _write("fact_airport_group_traffic", build_fact_airport_group_traffic())
     _write("fact_market_data", build_fact_market_data())
     _write("fact_macro", build_fact_macro())
 
@@ -74,6 +90,7 @@ def run() -> dict[str, object]:
         "bigquery_decision": "DuckDB local only; no BigQuery mirror",
         "carrier_scope_default": "consolidated",
         "carrier_scope_available": ["standalone", "consolidated"],
+        "quality_reconciliation": quality_reconciliation,
     }
     (PATHS.quality / "stage6_build.json").write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
     return evidence

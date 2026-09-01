@@ -1,4 +1,4 @@
-"""Generate the Stage 6 data dictionary from contracts and dim_metric."""
+"""Generate the data dictionary from versioned contracts and dimensions."""
 
 from __future__ import annotations
 
@@ -27,15 +27,43 @@ def generate() -> str:
             [
                 f"### `{table_name}`",
                 "",
+                f"Etapa de materialización: `{definition.get('stage', 6)}`.",
+                "",
+                f"Grano declarado: `{', '.join(definition.get('grain', []))}`.",
+                "",
                 f"Clave primaria declarada: `{', '.join(definition.get('primary_key', []))}`.",
                 "",
-                "| Columna | Tipo | Nulo | Descripción |",
-                "|---|---|---:|---|",
+                "| Columna | Tipo | Nulo | Controles | Descripción |",
+                "|---|---|---:|---|---|",
             ]
         )
         for column, properties in definition["columns"].items():
             description = str(properties["description"]).replace("|", "\\|")
-            lines.append(f"| `{column}` | `{properties['type']}` | {'sí' if properties['nullable'] else 'no'} | {description} |")
+            controls = []
+            if properties.get("unique"):
+                controls.append("único")
+            if "allowed_values" in properties:
+                controls.append("dominio: " + ", ".join(map(str, properties["allowed_values"])))
+            if "min" in properties:
+                controls.append(f"mín. {properties['min']}")
+            if "max" in properties:
+                controls.append(f"máx. {properties['max']}")
+            if "regex" in properties:
+                controls.append("patrón declarado")
+            lines.append(
+                f"| `{column}` | `{properties['type']}` | "
+                f"{'sí' if properties['nullable'] else 'no'} | "
+                f"{'; '.join(controls) if controls else '—'} | {description} |"
+            )
+        foreign_keys = definition.get("foreign_keys", [])
+        if foreign_keys:
+            lines.extend(["", "Relaciones declaradas:", ""])
+            for foreign_key in foreign_keys:
+                parent = foreign_key["references"]
+                lines.append(
+                    f"- `{', '.join(foreign_key['columns'])}` → "
+                    f"`{parent['table']}({', '.join(parent['columns'])})`"
+                )
         lines.append("")
 
     metrics = pd.read_parquet(PATHS.gold / "dim_metric.parquet").sort_values("display_order")
@@ -54,6 +82,7 @@ def generate() -> str:
                 "",
                 f"- Categoría: `{row.metric_category}`",
                 f"- Unidad: `{row.unit_normalized}`",
+                f"- Consolidación: `{row.consolidation_method}`",
                 f"- Fórmula: {row.formula if pd.notna(row.formula) else 'No declarada; valor reportado por la fuente.'}",
                 f"- Si sube: {row.business_interpretation_up}",
                 f"- Si baja: {row.business_interpretation_down}",

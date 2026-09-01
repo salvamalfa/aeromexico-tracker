@@ -1,6 +1,7 @@
-version: stage8_v1.0.0
+version: stage9_v1.0.0
 tables:
   dim_carrier:
+    grain: [carrier_key]
     primary_key: [carrier_key]
     columns:
       carrier_key: {type: string, nullable: false, description: Clave estable de la entidad aérea.}
@@ -25,10 +26,11 @@ tables:
       valid_to: {type: date, nullable: true, description: Fin de vigencia de la identidad.}
       is_current: {type: bool, nullable: false, description: Versión vigente de la identidad.}
   dim_period:
+    grain: [period_id]
     primary_key: [period_id]
     columns:
       period_id: {type: string, nullable: false, description: Clave de mes, trimestre, año o TTM.}
-      period_type: {type: string, nullable: false, description: month, quarter, year o ttm.}
+      period_type: {type: string, nullable: false, allowed_values: [month, quarter, year, ttm], description: month, quarter, year o ttm.}
       period_start_date: {type: date, nullable: false, description: Primer día incluido.}
       period_end_date: {type: date, nullable: false, description: Último día incluido.}
       year: {type: int, nullable: false, description: Año calendario de cierre.}
@@ -45,6 +47,7 @@ tables:
       easter_days_in_q1: {type: int, nullable: false, description: Días de la ventana Domingo de Ramos a lunes de Pascua que caen en Q1.}
       easter_days_in_q2: {type: int, nullable: false, description: Días de la ventana Domingo de Ramos a lunes de Pascua que caen en Q2.}
   dim_metric:
+    grain: [metric_key]
     primary_key: [metric_key]
     columns:
       metric_key: {type: string, nullable: false, description: Clave estable de la métrica.}
@@ -52,6 +55,7 @@ tables:
       metric_name_en: {type: string, nullable: false, description: Nombre en inglés.}
       metric_category: {type: string, nullable: false, description: Categoría analítica.}
       unit_normalized: {type: string, nullable: false, description: Unidad normalizada esperada.}
+      consolidation_method: {type: string, nullable: false, allowed_values: [sum, weighted, latest, non_additive], description: Regla explícita para consolidar la métrica entre entidades.}
       formula: {type: string, nullable: true, description: Fórmula literal.}
       higher_is_better: {type: bool, nullable: true, description: Sentido favorable; nulo cuando depende del contexto.}
       business_interpretation_up: {type: string, nullable: false, description: Lectura de negocio cuando sube.}
@@ -65,6 +69,7 @@ tables:
       glossary_section: {type: string, nullable: true, description: Encabezado fuente en el glosario.}
       is_dashboard_metric: {type: bool, nullable: false, description: Métrica prevista para mostrarse en el dashboard.}
   dim_route:
+    grain: [route_key]
     primary_key: [route_key]
     columns:
       route_key: {type: string, nullable: false, description: Ruta direccional origen-destino.}
@@ -79,9 +84,10 @@ tables:
       is_international: {type: bool, nullable: false, description: Cruza una frontera.}
       market_key: {type: string, nullable: false, description: Mercado bidireccional canónico.}
   dim_airport:
+    grain: [airport_iata]
     primary_key: [airport_iata]
     columns:
-      airport_iata: {type: string, nullable: true, description: Código IATA.}
+      airport_iata: {type: string, nullable: false, description: Código IATA de un aeropuerto real.}
       airport_icao: {type: string, nullable: true, description: Código ICAO.}
       name: {type: string, nullable: true, description: Nombre del aeropuerto.}
       city: {type: string, nullable: true, description: Ciudad.}
@@ -96,7 +102,20 @@ tables:
       source_hash: {type: string, nullable: false, description: SHA-256 fuente.}
       ingested_at: {type: datetime, nullable: false, description: Fecha de ingesta.}
       parser_version: {type: string, nullable: false, description: Versión del parser.}
+  dim_airport_group:
+    stage: 6
+    grain: [airport_group_key]
+    primary_key: [airport_group_key]
+    columns:
+      airport_group_key: {type: string, nullable: false, description: Clave estable del grupo aeroportuario.}
+      airport_group_name: {type: string, nullable: false, description: Nombre de negocio del grupo aeroportuario.}
+      country: {type: string, nullable: false, description: País de los aeropuertos incluidos.}
+      source_system: {type: string, nullable: false, description: Sistemas fuente contribuyentes.}
+      source_file: {type: string, nullable: false, description: Archivos fuente contribuyentes.}
+      source_hash: {type: string, nullable: false, regex: '^[0-9a-f]{64}$', description: Fingerprint determinista del linaje agregado.}
+      ingested_at: {type: datetime, nullable: false, description: Última fecha de ingesta contribuyente.}
   dim_events:
+    grain: [event_date, title]
     primary_key: [event_date, title]
     columns:
       event_date: {type: datetime, nullable: false, description: Fecha del evento.}
@@ -114,6 +133,7 @@ tables:
       ingested_at: {type: datetime, nullable: false, description: Fecha de ingesta.}
       parser_version: {type: string, nullable: false, description: Versión del parser.}
   dim_fx_period:
+    grain: [period_id, currency_pair]
     primary_key: [period_id, currency_pair]
     columns:
       rate_avg: {type: float, nullable: false, description: Tipo promedio del periodo.}
@@ -126,6 +146,7 @@ tables:
       pnl_conversion_method: {type: string, nullable: false, description: Método para flujos de P&L.}
       balance_conversion_method: {type: string, nullable: false, description: Método para saldos.}
   dim_fuel_period:
+    grain: [period_id]
     primary_key: [period_id]
     columns:
       price_avg_usd_per_gallon: {type: float, nullable: false, description: Precio promedio.}
@@ -136,6 +157,7 @@ tables:
       period_type: {type: string, nullable: false, description: month o quarter.}
       price_avg_yoy_pct: {type: float, nullable: true, description: Variación interanual del promedio.}
   fx_business_calendar:
+    grain: [date, currency_pair]
     primary_key: [date, currency_pair]
     columns:
       date: {type: datetime, nullable: false, description: Día hábil.}
@@ -144,24 +166,72 @@ tables:
       fill_method: {type: string, nullable: false, description: Método de llenado.}
       currency_pair: {type: string, nullable: false, description: Par de monedas.}
   fuel_business_calendar:
+    grain: [date]
     primary_key: [date]
     columns:
       date: {type: datetime, nullable: false, description: Día hábil.}
       price_usd_per_gallon: {type: float, nullable: false, description: Precio publicado o arrastrado.}
       is_published: {type: bool, nullable: false, description: El valor fue publicado ese día.}
       fill_method: {type: string, nullable: false, description: Método de llenado.}
-  fact_carrier_metrics:
-    primary_key: [carrier_key, period_id, metric_key, segment, source_system, valid_from]
+  dim_source:
+    stage: 6
+    grain: [source_key]
+    primary_key: [source_key]
     columns:
+      source_key: {type: string, nullable: false, regex: '^[a-z][a-z0-9_]*$', description: Clave canónica de la fuente pública o curada.}
+      source_systems: {type: string, nullable: false, description: Lista JSON de identificadores técnicos asociados.}
+      display_name: {type: string, nullable: false, description: Nombre comprensible de la fuente.}
+      institution: {type: string, nullable: false, description: Institución responsable.}
+      business_description: {type: string, nullable: false, description: Información de negocio aportada.}
+      coverage: {type: string, nullable: false, description: Cobertura temporal y geográfica.}
+      update_frequency: {type: string, nullable: false, description: Frecuencia esperada de actualización.}
+      access_method: {type: string, nullable: false, description: Método autorizado de obtención.}
+      official_page_url: {type: string, nullable: true, description: Página HTTPS oficial cuando existe.}
+      artifact_link_policy: {type: string, nullable: false, allowed_values: [direct, landing_page_only, not_applicable], description: Política para exponer enlaces de artefactos.}
+      limitations: {type: string, nullable: false, description: Limitaciones materiales de cobertura o acceso.}
+      source_kind: {type: string, nullable: false, allowed_values: [public, curated, derived, error_evidence], description: Naturaleza de la fuente.}
+      artifact_expected: {type: bool, nullable: false, description: Indica si la fuente debe producir archivos Bronze.}
+      is_active: {type: bool, nullable: false, description: Indica si la fuente sigue activa.}
+  dim_source_priority:
+    stage: 6
+    grain: [data_domain, source_system]
+    primary_key: [data_domain, source_system]
+    columns:
+      data_domain: {type: string, nullable: false, description: Dominio de datos donde aplica la precedencia.}
+      source_system: {type: string, nullable: false, description: Fuente o comodín por defecto.}
+      priority: {type: int, nullable: false, min: 0, description: Prioridad ascendente; menor es preferible.}
+      is_default: {type: bool, nullable: false, description: Identifica la regla de respaldo del dominio.}
+      source_priority_order: {type: string, nullable: false, allowed_values: [asc, desc], description: Orden de la prioridad de fuente.}
+      is_preliminary_order: {type: string, nullable: false, allowed_values: [asc, desc], description: Orden de preferencia para datos preliminares.}
+      confidence_order: {type: string, nullable: false, allowed_values: [asc, desc], description: Orden de preferencia para confianza.}
+      ingested_at_order: {type: string, nullable: false, allowed_values: [asc, desc], description: Orden de desempate por ingesta.}
+      rationale: {type: string, nullable: false, description: Justificación de la precedencia.}
+  fact_carrier_metrics:
+    grain: [carrier_key, period_id, metric_key, segment, source_system, valid_from]
+    primary_key: [record_id]
+    foreign_keys:
+      - columns: [carrier_key]
+        references: {table: dim_carrier, columns: [carrier_key]}
+      - columns: [period_id]
+        references: {table: dim_period, columns: [period_id]}
+      - columns: [metric_key]
+        references: {table: dim_metric, columns: [metric_key]}
+    invariants:
+      - name: homogeneous_scd2_history
+        kind: scd2_history
+        key_columns: [carrier_key, period_id, metric_key, segment, source_system]
+        value_columns: [value]
+    columns:
+      record_id: {type: string, nullable: false, unique: true, regex: '^rec_[0-9a-f]{64}$', description: Identificador estable calculado con la tabla y su grano natural.}
       carrier_key: {type: string, nullable: false, description: Aerolínea o grupo.}
       period_id: {type: string, nullable: false, description: Periodo reportado.}
       calendar_period_id: {type: string, nullable: false, description: Periodo calendario comparable.}
       fiscal_period_id: {type: string, nullable: false, description: Periodo fiscal de la fuente.}
-      period_type: {type: string, nullable: false, description: Granularidad temporal.}
+      period_type: {type: string, nullable: false, allowed_values: [month, quarter, year, ttm], description: Granularidad temporal.}
       period_start_date: {type: date, nullable: false, description: Inicio del periodo.}
       period_end_date: {type: date, nullable: false, description: Fin del periodo.}
       metric_key: {type: string, nullable: false, description: Métrica.}
-      segment: {type: string, nullable: false, description: total, domestic, international o transborder.}
+      segment: {type: string, nullable: false, allowed_values: [total, domestic, international, transborder], description: total, domestic, international o transborder.}
       value: {type: float, nullable: true, description: Valor normalizado en la unidad declarada.}
       value_metric: {type: float, nullable: true, description: Equivalente métrico cuando aplica.}
       value_imperial: {type: float, nullable: true, description: Equivalente imperial cuando aplica.}
@@ -172,7 +242,7 @@ tables:
       value_original_currency: {type: float, nullable: true, description: Valor ya escalado en moneda original.}
       value_usd: {type: float, nullable: true, description: Equivalente en USD.}
       fx_rate_used: {type: float, nullable: true, description: Tipo de cambio aplicado.}
-      fx_rate_type: {type: string, nullable: true, description: average o close.}
+      fx_rate_type: {type: string, nullable: true, allowed_values: [average, close], description: average o close.}
       is_derived: {type: bool, nullable: false, description: Valor calculado por el pipeline.}
       is_preliminary: {type: bool, nullable: false, description: Fuente lo marca preliminar.}
       is_estimated: {type: bool, nullable: false, description: Valor estimado y etiquetado.}
@@ -180,15 +250,24 @@ tables:
       valid_from: {type: datetime, nullable: false, description: Inicio de vigencia SCD2.}
       valid_to: {type: datetime, nullable: true, description: Fin de vigencia SCD2.}
       is_current: {type: bool, nullable: false, description: Versión vigente.}
-      restatement_count: {type: int, nullable: false, description: Número de reexpresiones previas.}
+      restatement_count: {type: int, nullable: false, min: 0, description: Número de reexpresiones previas.}
       source_system: {type: string, nullable: false, description: Sistema fuente.}
       source_file: {type: string, nullable: false, description: Archivo fuente o agregado silver.}
       source_hash: {type: string, nullable: false, description: SHA-256 de linaje.}
       ingested_at: {type: datetime, nullable: false, description: Fecha de ingesta.}
-      confidence: {type: float, nullable: false, description: Confianza de 0 a 1.}
+      confidence: {type: float, nullable: false, min: 0, max: 1, description: Confianza de 0 a 1.}
   fact_route_traffic:
-    primary_key: [carrier_key, route_key, period_id, aircraft_type, service_class]
+    grain: [carrier_key, route_key, period_id, aircraft_type, service_class]
+    primary_key: [record_id]
+    foreign_keys:
+      - columns: [carrier_key]
+        references: {table: dim_carrier, columns: [carrier_key]}
+      - columns: [route_key]
+        references: {table: dim_route, columns: [route_key]}
+      - columns: [period_id]
+        references: {table: dim_period, columns: [period_id]}
     columns:
+      record_id: {type: string, nullable: false, unique: true, regex: '^rec_[0-9a-f]{64}$', description: Identificador estable calculado con la tabla y su grano natural.}
       carrier_key: {type: string, nullable: false, description: Aerolínea.}
       route_key: {type: string, nullable: false, description: Ruta direccional.}
       period_id: {type: string, nullable: false, description: Mes calendario.}
@@ -214,9 +293,16 @@ tables:
       source_hash: {type: string, nullable: false, description: Hash determinista del linaje agregado.}
       ingested_at: {type: datetime, nullable: false, description: Última ingesta contribuyente.}
   fact_airport_traffic:
-    primary_key: [airport_iata, period_id, operator_group, source_system]
+    grain: [airport_iata, period_id, operator_group, source_system]
+    primary_key: [record_id]
+    foreign_keys:
+      - columns: [airport_iata]
+        references: {table: dim_airport, columns: [airport_iata]}
+      - columns: [period_id]
+        references: {table: dim_period, columns: [period_id]}
     columns:
-      airport_iata: {type: string, nullable: false, description: Código IATA o clave de total de grupo.}
+      record_id: {type: string, nullable: false, unique: true, regex: '^rec_[0-9a-f]{64}$', description: Identificador estable calculado con la tabla y su grano natural.}
+      airport_iata: {type: string, nullable: false, description: Código IATA de un aeropuerto real.}
       period_id: {type: string, nullable: false, description: Mes calendario.}
       calendar_period_id: {type: string, nullable: false, description: Mes calendario comparable.}
       fiscal_period_id: {type: string, nullable: false, description: Mes fiscal de la fuente; igual al calendario.}
@@ -227,14 +313,43 @@ tables:
       operations: {type: int, nullable: true, description: Operaciones aéreas.}
       operator_group: {type: string, nullable: false, description: Operador o grupo.}
       country: {type: string, nullable: false, description: País.}
-      is_group_total: {type: bool, nullable: false, description: Fila agregada del grupo.}
+      source_system: {type: string, nullable: false, description: Sistema fuente.}
+      source_file: {type: string, nullable: false, description: Archivo fuente.}
+      source_hash: {type: string, nullable: false, description: SHA-256 fuente.}
+      ingested_at: {type: datetime, nullable: false, description: Fecha de ingesta.}
+  fact_airport_group_traffic:
+    stage: 6
+    grain: [airport_group_key, period_id, source_system]
+    primary_key: [record_id]
+    foreign_keys:
+      - columns: [airport_group_key]
+        references: {table: dim_airport_group, columns: [airport_group_key]}
+      - columns: [period_id]
+        references: {table: dim_period, columns: [period_id]}
+    columns:
+      record_id: {type: string, nullable: false, unique: true, regex: '^rec_[0-9a-f]{64}$', description: Identificador estable calculado con la tabla y su grano natural.}
+      airport_group_key: {type: string, nullable: false, description: Grupo aeroportuario observado.}
+      period_id: {type: string, nullable: false, description: Mes calendario.}
+      calendar_period_id: {type: string, nullable: false, description: Mes calendario comparable.}
+      fiscal_period_id: {type: string, nullable: false, description: Mes fiscal de referencia; igual al calendario.}
+      passengers_domestic: {type: int, nullable: true, description: Pasajeros domésticos del grupo.}
+      passengers_international: {type: int, nullable: true, description: Pasajeros internacionales del grupo.}
+      passengers_total: {type: int, nullable: true, description: Pasajeros totales del grupo.}
+      cargo_tons: {type: float, nullable: true, description: Carga del grupo en toneladas.}
+      operations: {type: int, nullable: true, description: Operaciones aéreas del grupo.}
+      country: {type: string, nullable: false, description: País.}
       source_system: {type: string, nullable: false, description: Sistema fuente.}
       source_file: {type: string, nullable: false, description: Archivo fuente.}
       source_hash: {type: string, nullable: false, description: SHA-256 fuente.}
       ingested_at: {type: datetime, nullable: false, description: Fecha de ingesta.}
   fact_market_data:
-    primary_key: [carrier_key, date]
+    grain: [carrier_key, date]
+    primary_key: [record_id]
+    foreign_keys:
+      - columns: [carrier_key]
+        references: {table: dim_carrier, columns: [carrier_key]}
     columns:
+      record_id: {type: string, nullable: false, unique: true, regex: '^rec_[0-9a-f]{64}$', description: Identificador estable calculado con la tabla y su grano natural.}
       carrier_key: {type: string, nullable: false, description: Emisor.}
       ticker: {type: string, nullable: false, description: Ticker observado.}
       date: {type: datetime, nullable: false, description: Sesión de mercado.}
@@ -252,27 +367,41 @@ tables:
       source_hash: {type: string, nullable: false, description: SHA-256 fuente.}
       ingested_at: {type: datetime, nullable: false, description: Fecha de ingesta.}
   fact_macro:
-    primary_key: [period_id, indicator_key, aggregation]
+    grain: [period_id, indicator_key, aggregation]
+    primary_key: [record_id]
+    foreign_keys:
+      - columns: [period_id]
+        references: {table: dim_period, columns: [period_id]}
     columns:
+      record_id: {type: string, nullable: false, unique: true, regex: '^rec_[0-9a-f]{64}$', description: Identificador estable calculado con la tabla y su grano natural.}
       period_id: {type: string, nullable: false, description: Mes o trimestre.}
-      period_type: {type: string, nullable: false, description: month o quarter.}
+      period_type: {type: string, nullable: false, allowed_values: [month, quarter], description: month o quarter.}
       calendar_period_id: {type: string, nullable: false, description: Periodo calendario comparable.}
       fiscal_period_id: {type: string, nullable: false, description: Periodo fiscal de referencia; igual al calendario.}
       indicator_key: {type: string, nullable: false, description: Serie exógena.}
       value: {type: float, nullable: false, description: Valor agregado.}
       unit: {type: string, nullable: false, description: Unidad.}
-      aggregation: {type: string, nullable: false, description: average o close.}
+      aggregation: {type: string, nullable: false, allowed_values: [average, close], description: average o close.}
       source_system: {type: string, nullable: false, description: Sistema fuente.}
       source_file: {type: string, nullable: false, description: Archivo silver fuente.}
       source_hash: {type: string, nullable: false, description: Hash determinista del linaje.}
       ingested_at: {type: datetime, nullable: false, description: Última ingesta contribuyente.}
   fact_data_quality_issues:
-    primary_key: [issue_id]
+    grain: [issue_signature]
+    primary_key: [record_id]
     columns:
+      record_id: {type: string, nullable: false, unique: true, regex: '^rec_[0-9a-f]{64}$', description: Identificador estable calculado con la tabla y su grano natural.}
       issue_id: {type: string, nullable: false, description: Hash estable del issue.}
+      issue_signature: {type: string, nullable: false, unique: true, regex: '^[0-9a-f]{64}$', description: Firma semántica estable usada para deduplicar incidencias.}
+      issue_origin: {type: string, nullable: false, allowed_values: [operational_ledger, derived_reconciliation], description: Mecanismo que detectó la incidencia.}
       issue_type: {type: string, nullable: false, description: Tipo de problema.}
-      severity: {type: string, nullable: false, description: warning o error.}
+      severity: {type: string, nullable: false, allowed_values: [info, warning, error, critical], description: Severidad normalizada.}
+      status: {type: string, nullable: false, allowed_values: [open, resolved, accepted], description: Estado canónico de la incidencia.}
+      resolved: {type: bool, nullable: false, description: Indica si la incidencia fue resuelta.}
+      layer: {type: string, nullable: false, description: Capa donde se detectó.}
+      dataset_name: {type: string, nullable: false, description: Dataset afectado.}
       source_system: {type: string, nullable: false, description: Fuente afectada.}
+      source_file: {type: string, nullable: true, description: Archivo involucrado.}
       carrier_key: {type: string, nullable: true, description: Aerolínea afectada.}
       period_id: {type: string, nullable: true, description: Periodo afectado.}
       calendar_period_id: {type: string, nullable: true, description: Periodo calendario afectado.}
@@ -281,13 +410,22 @@ tables:
       observed_value: {type: float, nullable: true, description: Valor observado.}
       expected_value: {type: float, nullable: true, description: Valor de comparación.}
       difference_pct: {type: float, nullable: true, description: Diferencia relativa.}
-      detail: {type: string, nullable: false, description: Explicación accionable.}
-      source_file: {type: string, nullable: true, description: Archivo involucrado.}
+      affected_rows: {type: int, nullable: true, min: 0, description: Número de filas afectadas cuando puede determinarse.}
+      description: {type: string, nullable: false, description: Explicación accionable.}
+      evidence: {type: string, nullable: false, description: Evidencia estructurada reproducible.}
       detected_at: {type: datetime, nullable: false, description: Fecha reproducible de la evidencia.}
+      resolved_at: {type: datetime, nullable: true, description: Fecha de resolución cuando existe.}
   fact_forecasts:
     stage: 7
-    primary_key: [model_run_id, model_name, carrier_key, metric_key, period_id, is_backtest]
+    grain: [model_run_id, model_name, carrier_key, metric_key, period_id, is_backtest]
+    primary_key: [record_id]
+    foreign_keys:
+      - columns: [carrier_key]
+        references: {table: dim_carrier, columns: [carrier_key]}
+      - columns: [metric_key]
+        references: {table: dim_metric, columns: [metric_key]}
     columns:
+      record_id: {type: string, nullable: false, unique: true, regex: '^rec_[0-9a-f]{64}$', description: Identificador estable calculado con la tabla y su grano natural.}
       model_run_id: {type: string, nullable: false, description: Identificador determinista de corrida.}
       model_name: {type: string, nullable: false, description: Modelo que superó el gate de publicación.}
       carrier_key: {type: string, nullable: false, description: Aerolínea objetivo.}
@@ -307,13 +445,20 @@ tables:
       trained_at: {type: datetime, nullable: false, description: Marca reproducible de la evidencia fuente.}
   dim_model_performance:
     stage: 7
-    primary_key: [model_run_id, model_name, carrier_key, metric_key, evaluation_split]
+    grain: [model_run_id, model_name, carrier_key, metric_key, evaluation_split]
+    primary_key: [record_id]
+    foreign_keys:
+      - columns: [carrier_key]
+        references: {table: dim_carrier, columns: [carrier_key]}
+      - columns: [metric_key]
+        references: {table: dim_metric, columns: [metric_key]}
     columns:
+      record_id: {type: string, nullable: false, unique: true, regex: '^rec_[0-9a-f]{64}$', description: Identificador estable del resultado de evaluación.}
       model_run_id: {type: string, nullable: false, description: Identificador determinista de corrida.}
       model_name: {type: string, nullable: false, description: Modelo evaluado.}
       carrier_key: {type: string, nullable: false, description: Aerolínea objetivo.}
       metric_key: {type: string, nullable: false, description: Métrica evaluada.}
-      evaluation_split: {type: string, nullable: false, description: Conjunto de evaluación; nunca train.}
+      evaluation_split: {type: string, nullable: false, allowed_values: [validation, test], description: Conjunto de evaluación; nunca train.}
       validation_smape: {type: float, nullable: false, description: sMAPE de validación usado para selección.}
       mape: {type: float, nullable: false, description: MAPE de test.}
       smape: {type: float, nullable: false, description: sMAPE de test.}
@@ -327,8 +472,15 @@ tables:
       trained_through_period: {type: string, nullable: false, description: Corte de entrenamiento antes del test.}
   fact_report_language:
     stage: 7
-    primary_key: [carrier_key, period_id, accession_number, section]
+    grain: [carrier_key, period_id, accession_number, section]
+    primary_key: [record_id]
+    foreign_keys:
+      - columns: [carrier_key]
+        references: {table: dim_carrier, columns: [carrier_key]}
+      - columns: [period_id]
+        references: {table: dim_period, columns: [period_id]}
     columns:
+      record_id: {type: string, nullable: false, unique: true, regex: '^rec_[0-9a-f]{64}$', description: Identificador estable calculado con la tabla y su grano natural.}
       carrier_key: {type: string, nullable: false, description: Emisor del reporte.}
       period_id: {type: string, nullable: false, description: Periodo del reporte.}
       accession_number: {type: string, nullable: false, description: Accession SEC.}
@@ -350,8 +502,10 @@ tables:
       source_hash: {type: string, nullable: false, description: Hash del archivo fuente.}
   fact_anomalies:
     stage: 7
-    primary_key: [anomaly_id]
+    grain: [anomaly_id]
+    primary_key: [record_id]
     columns:
+      record_id: {type: string, nullable: false, unique: true, regex: '^rec_[0-9a-f]{64}$', description: Identificador estable calculado con la tabla y su grano natural.}
       anomaly_id: {type: string, nullable: false, description: Hash estable de anomalía.}
       anomaly_type: {type: string, nullable: false, description: Familia de detección.}
       entity_type: {type: string, nullable: false, description: Aerolínea o ruta-año.}
@@ -361,8 +515,8 @@ tables:
       observed_value: {type: float, nullable: false, description: Valor observado.}
       expected_value: {type: float, nullable: false, description: Referencia del detector.}
       anomaly_score: {type: float, nullable: false, description: Intensidad estandarizada o relativa.}
-      direction: {type: string, nullable: false, description: Por encima o por debajo.}
-      severity: {type: string, nullable: false, description: Severidad analítica.}
+      direction: {type: string, nullable: false, allowed_values: [above, below], description: Por encima o por debajo.}
+      severity: {type: string, nullable: false, allowed_values: [low, medium, high], description: Severidad analítica.}
       event_matched: {type: bool, nullable: false, description: Coincidencia temporal con evento conocido.}
       event_title: {type: string, nullable: true, description: Evento cercano si existe.}
       event_date: {type: datetime, nullable: true, description: Fecha del evento cercano.}
@@ -371,8 +525,10 @@ tables:
       model_run_id: {type: string, nullable: false, description: Corrida determinista.}
   dim_cluster_assignments:
     stage: 7
-    primary_key: [model_run_id, exercise, entity_key, period_id]
+    grain: [model_run_id, exercise, entity_key, period_id]
+    primary_key: [record_id]
     columns:
+      record_id: {type: string, nullable: false, unique: true, regex: '^rec_[0-9a-f]{64}$', description: Identificador estable del resultado de clustering.}
       model_run_id: {type: string, nullable: false, description: Corrida determinista.}
       exercise: {type: string, nullable: false, description: Rutas o trimestres.}
       entity_type: {type: string, nullable: false, description: Grano del ejercicio.}
@@ -389,8 +545,10 @@ tables:
       name_validation_status: {type: string, nullable: false, description: Estado de revisión del nombre.}
   fact_study_results:
     stage: 7
-    primary_key: [model_run_id, study_key]
+    grain: [model_run_id, study_key]
+    primary_key: [record_id]
     columns:
+      record_id: {type: string, nullable: false, unique: true, regex: '^rec_[0-9a-f]{64}$', description: Identificador estable calculado con la tabla y su grano natural.}
       study_key: {type: string, nullable: false, description: Estudio de alto valor.}
       title_es: {type: string, nullable: false, description: Título de negocio.}
       finding_es: {type: string, nullable: false, description: Hallazgo escrito en español.}
@@ -398,14 +556,19 @@ tables:
       unit: {type: string, nullable: false, description: Unidad de la estimación.}
       period_id: {type: string, nullable: false, description: Ventana o corte analítico.}
       comparison: {type: string, nullable: false, description: Base de comparación.}
-      confidence: {type: string, nullable: false, description: Confianza cualitativa.}
+      confidence: {type: string, nullable: false, allowed_values: [alta, media, baja], description: Confianza cualitativa.}
       caveat: {type: string, nullable: false, description: Limitación material.}
       source_tables: {type: string, nullable: false, description: Linaje de tablas.}
       model_run_id: {type: string, nullable: false, description: Corrida determinista.}
   fact_route_traffic_summary:
     stage: 8
-    primary_key: [carrier_key, market_key, period_id]
+    grain: [carrier_key, market_key, period_id]
+    primary_key: [record_id]
+    foreign_keys:
+      - columns: [carrier_key]
+        references: {table: dim_carrier, columns: [carrier_key]}
     columns:
+      record_id: {type: string, nullable: false, unique: true, regex: '^rec_[0-9a-f]{64}$', description: Identificador estable calculado con la tabla y su grano natural.}
       carrier_key: {type: string, nullable: false, description: Aerolínea.}
       market_key: {type: string, nullable: false, description: Mercado bidireccional.}
       period_id: {type: string, nullable: false, description: Mes calendario.}
@@ -422,8 +585,10 @@ tables:
       ingested_at: {type: datetime, nullable: false, description: Última ingesta contribuyente.}
   fact_spread_decomposition:
     stage: 8
-    primary_key: [period_id, component_key]
+    grain: [period_id, component_key]
+    primary_key: [record_id]
     columns:
+      record_id: {type: string, nullable: false, unique: true, regex: '^rec_[0-9a-f]{64}$', description: Identificador estable calculado con la tabla y su grano natural.}
       period_id: {type: string, nullable: false, description: Trimestre final de la descomposición.}
       comparison_period_id: {type: string, nullable: false, description: Trimestre inicial.}
       component_key: {type: string, nullable: false, description: Precio, combustible, residual estructural o FX.}
@@ -435,15 +600,67 @@ tables:
       source_tables: {type: string, nullable: false, description: Linaje de tablas.}
   fact_dashboard_coverage:
     stage: 8
-    primary_key: [carrier_key, metric_key, period_type, segment]
+    grain: [carrier_key, metric_key, period_type, segment]
+    primary_key: [record_id]
+    foreign_keys:
+      - columns: [carrier_key]
+        references: {table: dim_carrier, columns: [carrier_key]}
+      - columns: [metric_key]
+        references: {table: dim_metric, columns: [metric_key]}
     columns:
+      record_id: {type: string, nullable: false, unique: true, regex: '^rec_[0-9a-f]{64}$', description: Identificador estable calculado con la tabla y su grano natural.}
       carrier_key: {type: string, nullable: false, description: Aerolínea.}
       metric_key: {type: string, nullable: false, description: Métrica.}
-      period_type: {type: string, nullable: false, description: Mes, trimestre o año.}
-      segment: {type: string, nullable: false, description: Segmento reportado.}
+      period_type: {type: string, nullable: false, allowed_values: [month, quarter, year], description: Mes, trimestre o año.}
+      segment: {type: string, nullable: false, allowed_values: [total, domestic, international, transborder], description: Segmento reportado.}
       observations: {type: int, nullable: false, description: Periodos con fila.}
       first_period: {type: string, nullable: false, description: Primer periodo.}
       last_period: {type: string, nullable: false, description: Último periodo.}
       expected_periods: {type: int, nullable: false, description: Periodos calendario entre extremos.}
       coverage_pct: {type: float, nullable: false, description: Observaciones sobre periodos esperados.}
       null_values: {type: int, nullable: false, description: Filas con valor nulo.}
+  dim_source_artifact:
+    stage: 9
+    grain: [source_file, artifact_sha256]
+    primary_key: [artifact_id]
+    foreign_keys:
+      - columns: [source_key]
+        references: {table: dim_source, columns: [source_key]}
+    columns:
+      artifact_id: {type: string, nullable: false, unique: true, regex: '^art_[0-9a-f]{64}$', description: Identificador estable del archivo Bronze físico.}
+      source_key: {type: string, nullable: false, description: Fuente canónica propietaria del artefacto.}
+      source_system: {type: string, nullable: false, description: Identificador técnico registrado en el manifiesto.}
+      source_file: {type: string, nullable: false, description: Ruta POSIX relativa dentro de Bronze.}
+      source_url: {type: string, nullable: false, description: URL HTTPS pública registrada en la descarga.}
+      is_direct_public_artifact: {type: bool, nullable: false, description: Indica si la política permite enlazar directamente el archivo.}
+      downloaded_at: {type: datetime, nullable: false, description: Fecha de descarga del artefacto.}
+      artifact_sha256: {type: string, nullable: false, regex: '^[0-9a-f]{64}$', description: SHA-256 de los bytes originales e inmutables.}
+      artifact_format: {type: string, nullable: false, description: Extensión o formato físico normalizado.}
+      content_type: {type: string, nullable: false, description: Tipo MIME declarado sin parámetros.}
+      byte_size: {type: int, nullable: false, min: 0, description: Tamaño físico del archivo.}
+      http_status: {type: int, nullable: false, min: 0, description: Estado HTTP conservado por la descarga.}
+      download_method: {type: string, nullable: false, description: Método utilizado para obtener el artefacto.}
+      logical_key: {type: string, nullable: false, description: Identidad lógica versionada de la descarga.}
+      logical_version: {type: int, nullable: false, min: 1, description: Número monotónico de la versión lógica.}
+      filename_version: {type: int, nullable: false, min: 1, description: Versión incluida en el nombre inmutable.}
+      is_latest_version: {type: bool, nullable: false, description: Indica la última versión conocida de la clave lógica.}
+  bridge_record_lineage:
+    stage: 9
+    grain: [lineage_link_id]
+    primary_key: [lineage_link_id]
+    foreign_keys:
+      - columns: [artifact_id]
+        references: {table: dim_source_artifact, columns: [artifact_id]}
+    columns:
+      lineage_link_id: {type: string, nullable: false, unique: true, regex: '^lnk_[0-9a-f]{64}$', description: Identificador estable de la relación de linaje.}
+      record_id: {type: string, nullable: false, regex: '^rec_[0-9a-f]{64}$', description: Registro Gold o analítico documentado.}
+      table_name: {type: string, nullable: false, regex: '^[a-z][a-z0-9_]*$', description: Tabla propietaria del record_id.}
+      lineage_type: {type: string, nullable: false, allowed_values: [direct_artifact, derived, curated], description: Tipo explícito de linaje.}
+      link_type: {type: string, nullable: false, allowed_values: [artifact, parent_record, declaration], description: Clase de contribuyente representado por la fila.}
+      lineage_status: {type: string, nullable: false, allowed_values: [resolved_to_artifact, resolved_to_parent_record, declared_without_artifact], description: Estado de resolución del enlace.}
+      has_direct_artifact: {type: bool, nullable: false, description: Indica si el registro tiene al menos un archivo directo.}
+      artifact_id: {type: string, nullable: true, regex: '^art_[0-9a-f]{64}$', description: Artefacto contribuyente cuando el enlace es directo.}
+      artifact_sha256: {type: string, nullable: true, regex: '^[0-9a-f]{64}$', description: SHA-256 del archivo original; nunca un hash derivado.}
+      parent_record_id: {type: string, nullable: true, regex: '^rec_[0-9a-f]{64}$', description: Registro padre cuando el resultado es derivado.}
+      lineage_fingerprint: {type: string, nullable: false, regex: '^[0-9a-f]{64}$', description: Fingerprint de la combinación completa de contribuyentes.}
+      lineage_note: {type: string, nullable: true, description: Declaración explícita cuando no existe un artefacto directo.}

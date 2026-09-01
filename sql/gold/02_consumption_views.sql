@@ -81,21 +81,81 @@ FROM v_carrier_default
 WHERE period_type = 'quarter' AND segment = 'total'
 GROUP BY carrier_key, period_id;
 
-CREATE OR REPLACE VIEW v_data_health AS
+CREATE OR REPLACE VIEW v_data_health_core AS
 WITH coverage AS (
-    SELECT source_system, COUNT(*) AS rows, COUNT(DISTINCT carrier_key) AS carriers,
-           MIN(period_start_date) AS first_date, MAX(period_end_date) AS last_date,
-           MAX(ingested_at) AS last_ingested_at
+    SELECT 'fact_carrier_metrics' AS dataset_name, 'carrier_metrics' AS data_domain,
+           source_system, COUNT(*)::BIGINT AS rows,
+           COUNT(DISTINCT carrier_key)::BIGINT AS carriers,
+           MIN(period_start_date)::DATE AS first_date,
+           MAX(period_end_date)::DATE AS last_date,
+           MAX(ingested_at)::TIMESTAMP AS last_ingested_at
     FROM fact_carrier_metrics
     GROUP BY source_system
-), issues AS (
-    SELECT source_system, COUNT(*) AS issue_count
-    FROM fact_data_quality_issues
+    UNION ALL
+    SELECT 'fact_route_traffic', 'routes_bts', f.source_system, COUNT(*)::BIGINT,
+           COUNT(DISTINCT f.carrier_key)::BIGINT,
+           MIN(p.period_start_date)::DATE, MAX(p.period_end_date)::DATE,
+           MAX(f.ingested_at)::TIMESTAMP
+    FROM fact_route_traffic f
+    LEFT JOIN dim_period p USING (period_id)
+    GROUP BY f.source_system
+    UNION ALL
+    SELECT 'fact_airport_traffic', 'airports', f.source_system, COUNT(*)::BIGINT,
+           0::BIGINT, MIN(p.period_start_date)::DATE, MAX(p.period_end_date)::DATE,
+           MAX(f.ingested_at)::TIMESTAMP
+    FROM fact_airport_traffic f
+    LEFT JOIN dim_period p USING (period_id)
+    GROUP BY f.source_system
+    UNION ALL
+    SELECT 'fact_airport_group_traffic', 'airport_groups', f.source_system, COUNT(*)::BIGINT,
+           0::BIGINT, MIN(p.period_start_date)::DATE, MAX(p.period_end_date)::DATE,
+           MAX(f.ingested_at)::TIMESTAMP
+    FROM fact_airport_group_traffic f
+    LEFT JOIN dim_period p USING (period_id)
+    GROUP BY f.source_system
+    UNION ALL
+    SELECT 'fact_market_data', 'market', source_system, COUNT(*)::BIGINT,
+           COUNT(DISTINCT carrier_key)::BIGINT, MIN(CAST(date AS DATE)), MAX(CAST(date AS DATE)),
+           MAX(ingested_at)::TIMESTAMP
+    FROM fact_market_data
     GROUP BY source_system
+    UNION ALL
+    SELECT 'fact_macro', 'macro', f.source_system, COUNT(*)::BIGINT,
+           0::BIGINT, MIN(p.period_start_date)::DATE, MAX(p.period_end_date)::DATE,
+           MAX(f.ingested_at)::TIMESTAMP
+    FROM fact_macro f
+    LEFT JOIN dim_period p USING (period_id)
+    GROUP BY f.source_system
+), normalized_issues AS (
+    SELECT
+        CASE dataset_name
+            WHEN 'afac_monthly_stats' THEN 'fact_carrier_metrics'
+            WHEN 'bmv_sec_reconciliation' THEN 'fact_carrier_metrics'
+            WHEN 'bmv_financials' THEN 'fact_carrier_metrics'
+            WHEN 'sec_operating_metrics' THEN 'fact_carrier_metrics'
+            WHEN 'sec_financials' THEN 'fact_carrier_metrics'
+            WHEN 'bts_t100_segment' THEN 'fact_route_traffic'
+            WHEN 'airport_traffic' THEN 'fact_airport_traffic'
+            WHEN 'market_prices' THEN 'fact_market_data'
+            WHEN 'fx_rates' THEN 'fact_macro'
+            WHEN 'fuel_prices' THEN 'fact_macro'
+            ELSE dataset_name
+        END AS dataset_name,
+        source_system,
+        COUNT(*)::BIGINT AS issue_count
+    FROM fact_data_quality_issues
+    GROUP BY 1, 2
+), issues AS (
+    SELECT dataset_name, source_system, SUM(issue_count)::BIGINT AS issue_count
+    FROM normalized_issues
+    GROUP BY dataset_name, source_system
 )
-SELECT c.*, COALESCE(i.issue_count, 0) AS issue_count
+SELECT c.*, COALESCE(i.issue_count, 0)::BIGINT AS issue_count
 FROM coverage c
-LEFT JOIN issues i USING (source_system);
+LEFT JOIN issues i USING (dataset_name, source_system);
+
+CREATE OR REPLACE VIEW v_data_health AS
+SELECT * FROM v_data_health_core;
 
 CREATE OR REPLACE VIEW v_restatements AS
 SELECT *

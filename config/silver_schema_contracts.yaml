@@ -1,0 +1,183 @@
+version: stage9_v1.0.0
+lineage_policy:
+  direct_artifact_required: [source_file, source_hash, ingested_at, parser_version]
+tables:
+  afac_monthly_stats:
+    grain: [source_file, source_row_number, metric_key, source_region, period_id, carrier_key, service_type, market]
+    primary_key: [source_file, source_row_number, metric_key, source_region, period_id, carrier_key, service_type, market]
+    lineage_type: direct_artifact
+    required_columns: [period_id, period_type, carrier_key, service_type, market, metric_key, value, unit, is_preliminary, source_system, source_file, source_hash, ingested_at, parser_version, source_row_number]
+    columns:
+      period_type: {allowed_values: [month]}
+      service_type: {allowed_values: [scheduled, charter]}
+      market: {allowed_values: [domestic, international]}
+  airport_traffic:
+    grain: [source_file, period_id, airport_iata]
+    primary_key: [source_file, period_id, airport_iata]
+    lineage_type: direct_artifact
+    required_columns: [period_id, airport_iata, airport_name, operator_group, passengers_total, source_system, is_group_total, source_file, source_hash, ingested_at, parser_version]
+  bmv_concepts:
+    grain: [taxonomy_namespace, concept]
+    primary_key: [taxonomy_namespace, concept]
+    lineage_type: reference_catalog
+    required_columns: [concept, concept_name, taxonomy_namespace, fact_count]
+  bmv_financials:
+    grain: [source_file, fact_id]
+    primary_key: [source_file, fact_id]
+    lineage_type: direct_artifact
+    required_columns: [carrier_key, package_period_id, fact_id, period_id, period_type, concept, value, unit, source_system, source_file, source_hash, ingested_at, parser_version]
+  bmv_packages_index:
+    grain: [ticker, package_period_id, member_name]
+    primary_key: [ticker, package_period_id, member_name]
+    lineage_type: direct_artifact
+    required_columns: [ticker, carrier_key, package_period_id, member_name, member_source_file, member_source_hash, ingested_at]
+    lineage_columns: [member_source_file, member_source_hash, ingested_at]
+  bmv_sec_reconciliation:
+    grain: [carrier_key, period_id, concept, sec_metric_key]
+    primary_key: [carrier_key, period_id, concept, sec_metric_key]
+    lineage_type: reconciliation
+    required_columns: [carrier_key, period_id, concept, sec_metric_key, bmv_value_usd, sec_value_usd, is_material, is_explained, bmv_source_file, bmv_source_hash, sec_source_file, sec_source_hash, parser_version]
+    lineage_columns: [bmv_source_file, bmv_source_hash, sec_source_file, sec_source_hash]
+  bmv_validation_checks:
+    grain: [ticker, period_id, check_type, concept]
+    primary_key: [ticker, period_id, check_type, concept]
+    lineage_type: derived_from_silver
+    required_columns: [ticker, period_id, check_type, concept, actual, expected, tolerance, passed]
+  bts_t100_aeromexico_validation:
+    grain: [period_id]
+    primary_key: [period_id]
+    lineage_type: derived_from_silver
+    required_columns: [period_id, reported_months, t100_months, reported_international_asm, t100_us_asm]
+  bts_t100_segment:
+    grain: [source_file, unique_carrier, unique_carrier_entity, origin, dest, aircraft_type, aircraft_config, year, month, class]
+    primary_key: [source_file, unique_carrier, unique_carrier_entity, origin, dest, aircraft_type, aircraft_config, year, month, class]
+    lineage_type: direct_artifact
+    required_columns: [unique_carrier, unique_carrier_entity, origin, dest, aircraft_type, aircraft_config, year, month, class, passengers, seats, asm_miles, rpm_miles, load_factor, source_system, source_file, source_hash, ingested_at, parser_version]
+  delta_companyfacts_reconciliation:
+    grain: [period_id, metric_key, accession_number]
+    primary_key: [period_id, metric_key, accession_number]
+    lineage_type: reconciliation
+    required_columns: [period_id, metric_key, accession_number, parsed_10q_value, companyfacts_value, source_file, source_hash, parser_version]
+    lineage_columns: [source_file, source_hash]
+  fuel_prices:
+    grain: [date, series_id]
+    primary_key: [date, series_id]
+    lineage_type: direct_artifact
+    required_columns: [date, series_id, price_usd_per_gallon, source_system, source_file, source_hash, ingested_at, parser_version]
+    columns:
+      price_usd_per_gallon: {min: 0}
+  fx_rates:
+    grain: [date, currency_pair]
+    primary_key: [date, currency_pair]
+    lineage_type: direct_artifact
+    required_columns: [date, currency_pair, rate_close, source_system, source_file, source_hash, ingested_at, parser_version]
+    columns:
+      rate_close: {min: 0}
+  macro_indicators:
+    grain: [date, series_id, indicator_key]
+    primary_key: [date, series_id, indicator_key]
+    lineage_type: direct_artifact
+    required_columns: [date, series_id, indicator_key, value, source_system, source_file, source_hash, ingested_at, parser_version]
+  market_prices:
+    grain: [date, ticker]
+    primary_key: [date, ticker]
+    lineage_type: direct_artifact
+    required_columns: [date, ticker, carrier_key, open, high, low, close, adj_close, volume, currency, source_system, source_file, source_hash, ingested_at, parser_version]
+    columns:
+      volume: {min: 0}
+  news_headlines:
+    grain: [published_at, url]
+    primary_key: [published_at, url]
+    lineage_type: direct_artifact
+    required_columns: [published_at, source_name, title, url, language, source_system, source_file, source_hash, ingested_at, parser_version]
+  peer_financials:
+    grain: [source_file, carrier_key, accession_number, period_id, metric_key, segment, statement_type]
+    primary_key: [source_file, carrier_key, accession_number, period_id, metric_key, segment, statement_type]
+    lineage_type: direct_artifact
+    required_columns: [carrier_key, accession_number, period_id, metric_key, value_normalized, unit_normalized, extraction_confidence, source_system, source_file, source_hash, ingested_at, parser_version, statement_type]
+    columns:
+      extraction_confidence: {min: 0, max: 1}
+  peer_operating_metrics:
+    grain: [source_file, carrier_key, accession_number, period_id, metric_key, segment]
+    primary_key: [source_file, carrier_key, accession_number, period_id, metric_key, segment]
+    lineage_type: direct_artifact
+    required_columns: [carrier_key, accession_number, period_id, metric_key, value_normalized, unit_normalized, extraction_confidence, source_system, source_file, source_hash, ingested_at, parser_version]
+    columns:
+      extraction_confidence: {min: 0, max: 1}
+  ryanair_fiscal_reconciliation:
+    grain: [fiscal_year]
+    primary_key: [fiscal_year]
+    lineage_type: reconciliation
+    required_columns: [fiscal_year, reported_source_file, reported_source_hash, reported_passengers_millions, reconstructed_passengers_millions, parser_version]
+    lineage_columns: [reported_source_file, reported_source_hash]
+  sec_crosscheck:
+    grain: [metric_key, period_id, source_a, source_b]
+    primary_key: [metric_key, period_id, source_a, source_b]
+    lineage_type: reconciliation
+    required_columns: [metric_key, period_id, source_a, value_a, source_b, value_b, is_material, source_file_a, source_file_b, parser_version]
+    lineage_columns: [source_file_a, source_file_b]
+  sec_filing_documents:
+    grain: [accession_number, archive_filename]
+    primary_key: [accession_number, archive_filename]
+    lineage_type: direct_artifact
+    required_columns: [accession_number, form_type, archive_filename, source_url, source_file, source_hash, ingested_at, carrier_key, cik]
+    lineage_columns: [source_file, source_hash, ingested_at]
+    foreign_keys:
+      - columns: [accession_number]
+        references: {table: sec_filings_index, columns: [accession_number]}
+  sec_filings_index:
+    grain: [accession_number]
+    primary_key: [accession_number]
+    lineage_type: direct_artifact
+    required_columns: [cik, carrier_key, accession_number, form_type, filing_date, source_system, source_file, source_hash, ingested_at, parser_version]
+  sec_financials:
+    grain: [source_file, carrier_key, accession_number, period_id, metric_key, segment, statement_type]
+    primary_key: [source_file, carrier_key, accession_number, period_id, metric_key, segment, statement_type]
+    lineage_type: direct_artifact
+    required_columns: [carrier_key, accession_number, period_id, metric_key, value_normalized, unit_normalized, extraction_confidence, source_system, source_file, source_hash, ingested_at, parser_version, statement_type]
+    columns:
+      extraction_confidence: {min: 0, max: 1}
+    foreign_keys:
+      - columns: [accession_number]
+        references: {table: sec_filings_index, columns: [accession_number]}
+  sec_operating_metrics:
+    grain: [source_file, carrier_key, accession_number, period_id, metric_key, segment]
+    primary_key: [source_file, carrier_key, accession_number, period_id, metric_key, segment]
+    lineage_type: direct_artifact
+    required_columns: [carrier_key, accession_number, period_id, metric_key, value_normalized, unit_normalized, extraction_confidence, source_system, source_file, source_hash, ingested_at, parser_version]
+    columns:
+      extraction_confidence: {min: 0, max: 1}
+    foreign_keys_any_of:
+      - columns: [carrier_key, accession_number]
+        references:
+          - {table: sec_filings_index, columns: [carrier_key, accession_number]}
+          - {table: sec_peer_filings_index, columns: [carrier_key, accession_number]}
+  sec_peer_filing_documents:
+    grain: [carrier_key, accession_number, archive_filename]
+    primary_key: [carrier_key, accession_number, archive_filename]
+    lineage_type: direct_artifact
+    required_columns: [carrier_key, accession_number, form_type, archive_filename, source_url, source_file, source_hash, ingested_at, cik]
+    lineage_columns: [source_file, source_hash, ingested_at]
+    foreign_keys:
+      - columns: [carrier_key, accession_number]
+        references: {table: sec_peer_filings_index, columns: [carrier_key, accession_number]}
+  sec_peer_filings_index:
+    grain: [carrier_key, accession_number]
+    primary_key: [carrier_key, accession_number]
+    lineage_type: direct_artifact
+    required_columns: [carrier_key, cik, accession_number, form_type, filing_date, source_system, source_file, source_hash, ingested_at, parser_version]
+  sec_peer_identities:
+    grain: [carrier_key]
+    primary_key: [carrier_key]
+    lineage_type: direct_artifact
+    required_columns: [carrier_key, ticker, cik, company_name, is_verified, source_system, source_file, source_hash, ingested_at, parser_version]
+  sec_reference_text:
+    grain: [carrier_key, accession_number, document_type, section, formula_key]
+    primary_key: [carrier_key, accession_number, document_type, section, formula_key]
+    lineage_type: direct_artifact
+    required_columns: [carrier_key, accession_number, document_type, section, text, source_system, source_file, source_hash, ingested_at, parser_version]
+  sec_report_text:
+    grain: [carrier_key, accession_number, archive_filename, section]
+    primary_key: [carrier_key, accession_number, archive_filename, section]
+    lineage_type: direct_artifact
+    required_columns: [carrier_key, accession_number, archive_filename, report_type, period_id, section, text, source_system, source_file, source_hash, ingested_at, parser_version]

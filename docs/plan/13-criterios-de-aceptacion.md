@@ -241,6 +241,40 @@ coinciden sin explicación.
 
 ---
 
+## Etapa 9 — Saneamiento del backend
+
+**Obligatorio:**
+- [ ] Registro central cubre ingesta, parsing, transformaciones, analítica y preparación
+      del dashboard; cada paso queda `completed`, `failed` o `not_available` con razón.
+- [ ] Ningún insumo obligatorio se omite silenciosamente.
+- [ ] Rebuild offline desde una copia limpia de Bronze reproduce Silver, Gold,
+      warehouse, analítica y extractos sin reutilizar salidas anteriores.
+- [ ] Dos rebuilds con el mismo Bronze producen Parquet Gold idénticos por hash.
+- [ ] `dim_source`, `dim_source_artifact`, `bridge_record_lineage` y
+      `dim_source_priority` están declaradas, pobladas y validadas.
+- [ ] Cada registro consumido por el dashboard resuelve a uno o más artefactos, o
+      declara explícitamente que es derivado/curado sin archivo público.
+- [ ] `artifact_sha256` y `lineage_fingerprint` tienen semánticas separadas.
+- [ ] Las 264 incidencias del ledger operativo y las 23 discrepancias Gold se
+      reconcilian en un ledger canónico, con deduplicación y estado explícito.
+- [ ] Contratos Silver y Gold validan grano, PK, FK, dominios y rangos estables.
+- [ ] Fixtures de revisión SEC y AFAC demuestran `valid_from`, `valid_to`,
+      `is_current` y `restatement_count` correctos.
+- [ ] Cero claves foráneas huérfanas; los 47 totales `ALL_*` están separados en
+      `dim_airport_group` y `fact_airport_group_traffic`.
+- [ ] La precedencia de fuentes es única y produce la misma selección en SQL y Python.
+- [ ] `dim_metric.consolidation_method` impide sumar ratios, márgenes o factores.
+- [ ] Salud de datos cubre carrier metrics, rutas, aeropuertos, mercado, macro y analítica.
+- [ ] Las cifras ancla de 1Q26 y la apertura 2Q26 del dashboard permanecen sin cambios.
+- [ ] La suite previa permanece verde y las nuevas garantías tienen pruebas específicas.
+- [ ] Auditoría, ADR, diccionario y `docs/etapas/etapa-9-reporte.md` están escritos.
+
+**No se cierra la etapa si:** el rebuild reutiliza salidas anteriores, existe una FK
+huérfana, un registro de dashboard no tiene estado de linaje, cambia una cifra ancla
+sin explicación o la página de salud sigue omitiendo el ledger operativo.
+
+---
+
 ## Checklist transversal (aplica a todas las etapas)
 
 - [ ] Ningún dato inventado, estimado sin marcar, o rellenado para que cuadre

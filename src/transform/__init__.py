@@ -1,30 +1,13 @@
-"""Silver-to-gold transformations registered by stage."""
+"""Silver-to-Gold transformations through the central registry."""
 
 from src.config import PATHS
+from src.pipeline import PipelinePhase, PipelineReport, run_pipeline
 
 
-def run() -> None:
-    from src.transform.stage4 import run as run_stage4
-    from src.transform.validate_stage4 import run as validate_stage4
-
-    run_stage4()
-    validate_stage4()
-    if (
-        (PATHS.silver / "peer_operating_metrics.parquet").exists()
-        and (PATHS.silver / "bts_t100_segment.parquet").exists()
-    ):
-        from src.transform.validate_stage5 import validate_stage5
-        from src.transform.stage6 import run as run_stage6
-        from src.transform.validate_stage6 import validate_stage6
-
-        validate_stage5()
-        run_stage6()
-        validate_stage6()
-        from src.analytics import run as run_stage7
-        from src.analytics.validate_stage7 import validate_stage7
-
-        run_stage7()
-        validate_stage7()
-        from src.dashboard.prepare import run as prepare_dashboard
-
-        prepare_dashboard()
+def run() -> PipelineReport:
+    return run_pipeline(
+        root=PATHS.root,
+        phases=(PipelinePhase.TRANSFORM,),
+        offline=True,
+        include_dependencies=False,
+    )

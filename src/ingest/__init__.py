@@ -1,14 +1,13 @@
-"""Network ingestion pipelines registered by source stage."""
+"""Network ingestion through the project-wide declarative registry."""
+
+from src.config import PATHS
+from src.pipeline import PipelinePhase, PipelineReport, run_pipeline
 
 
-def run() -> None:
-    from src.ingest.afac.download import main as run_afac_download
-    from src.ingest.bmv.download import main as run_bmv_download
-    from src.ingest.sec.discover import main as run_sec_discovery
-
-    if run_sec_discovery() != 0:
-        raise RuntimeError("SEC ingestion failed")
-    if run_bmv_download() != 0:
-        raise RuntimeError("BMV ingestion failed")
-    if run_afac_download() != 0:
-        raise RuntimeError("AFAC ingestion failed")
+def run() -> PipelineReport:
+    return run_pipeline(
+        root=PATHS.root,
+        phases=(PipelinePhase.INGEST,),
+        offline=False,
+        include_dependencies=False,
+    )

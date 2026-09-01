@@ -292,6 +292,38 @@ def augment_dim_airport() -> pd.DataFrame:
     return output
 
 
+def build_dim_airport_group() -> pd.DataFrame:
+    """Build operator groups without pretending their totals are airports."""
+
+    source = pd.read_parquet(PATHS.silver / "airport_traffic.parquet")
+    groups = source[source["is_group_total"].fillna(False)].copy()
+    if groups.empty:
+        return pd.DataFrame(
+            columns=[
+                "airport_group_key", "airport_group_name", "country", "source_system",
+                "source_file", "source_hash", "ingested_at",
+            ]
+        )
+    groups["airport_group_key"] = groups["operator_group"].astype(str).str.upper()
+    rows = []
+    for key, frame in groups.groupby("airport_group_key"):
+        source_systems = sorted(set(frame["source_system"].astype(str)))
+        source_files = sorted(set(frame["source_file"].astype(str)))
+        source_hashes = sorted(set(frame["source_hash"].astype(str)))
+        rows.append(
+            {
+                "airport_group_key": key,
+                "airport_group_name": f"{key} — aeropuertos operados en México",
+                "country": "MX",
+                "source_system": " | ".join(source_systems),
+                "source_file": " | ".join(source_files),
+                "source_hash": hashlib.sha256("|".join(source_hashes).encode("utf-8")).hexdigest(),
+                "ingested_at": pd.to_datetime(frame["ingested_at"], utc=True).max().tz_convert(None),
+            }
+        )
+    return pd.DataFrame(rows).sort_values("airport_group_key").reset_index(drop=True)
+
+
 def _parse_glossary() -> dict[str, dict[str, str]]:
     text = (PATHS.root / "docs" / "plan" / "11-glosario-kpis.md").read_text(encoding="utf-8")
     sections: dict[str, dict[str, str]] = {}
@@ -313,6 +345,107 @@ def _find_section(sections: dict[str, dict[str, str]], needle: str) -> tuple[str
         if needle.lower() in heading.lower():
             return heading, fields
     raise KeyError(f"Glosario section not found: {needle}")
+
+
+_ADDITIVE_METRICS = {
+    "adjusted_ebitdar",
+    "adjusted_ebitdar_company_normalized",
+    "aircraft_communications_traffic_services",
+    "aircraft_leasing_expense",
+    "asm_total",
+    "cargo_revenue",
+    "depreciation_amortization",
+    "equity_investees_share",
+    "fuel_liters",
+    "impairment_reversal",
+    "income_before_tax",
+    "income_tax",
+    "jet_fuel_expense",
+    "maintenance_expense",
+    "net_finance_cost",
+    "net_income",
+    "operating_income_company_normalized",
+    "operating_expenses_total",
+    "operating_income",
+    "other_income_loss_net",
+    "other_revenue",
+    "passenger_revenue",
+    "passenger_services_expense",
+    "passengers",
+    "passengers_afac",
+    "passengers_afac_sa",
+    "rpm_total",
+    "selling_administrative_expense",
+    "total_revenue",
+    "total_revenue_company_normalized",
+    "travel_agent_commissions",
+    "wages_salaries_benefits",
+}
+
+_LATEST_METRICS = {
+    "cash_and_cash_equivalents",
+    "fleet_size",
+    "total_assets",
+    "total_equity",
+    "total_liabilities",
+}
+
+_NON_ADDITIVE_METRICS = {
+    "aircraft_utilization",
+    "ancillary_share",
+    "asm_per_aircraft",
+    "average_stage_length",
+    "break_even_load_factor",
+    "cask",
+    "cask_derived",
+    "cask_ex_fuel",
+    "cask_ex_fuel_derived",
+    "casm",
+    "casm_ex_fuel",
+    "ebitdar_margin",
+    "ebitdar_margin_company_normalized",
+    "fuel_cost_share",
+    "jet_fuel_elasticity",
+    "load_factor_derived",
+    "load_factor_total",
+    "market_share_domestic_mx",
+    "on_time_departure_pct",
+    "operating_margin",
+    "operating_margin_company_normalized",
+    "pask",
+    "prask",
+    "prask_derived",
+    "prasm",
+    "rask",
+    "rask_derived",
+    "revenue_per_passenger",
+    "route_hhi",
+    "sla_cask",
+    "sla_rask",
+    "trasm",
+    "unit_margin",
+    "yield",
+    "yield_derived",
+}
+
+
+def consolidation_method(metric_key: str) -> str:
+    """Return the declared parent/subsidiary aggregation for one metric."""
+
+    if metric_key in _ADDITIVE_METRICS:
+        return "sum"
+    if metric_key in _LATEST_METRICS:
+        return "latest"
+    if metric_key in _NON_ADDITIVE_METRICS:
+        return "non_additive"
+    if metric_key.startswith("ttm_") and metric_key.removeprefix("ttm_") in _ADDITIVE_METRICS:
+        return "sum"
+    if metric_key.startswith(("qoq_growth_", "yoy_growth_")):
+        return "non_additive"
+    raise ValueError(
+        f"Metric {metric_key!r} has no consolidation rule; declare sum, latest, "
+        "non_additive or weighted with an explicit weight."
+    )
 
 
 def build_dim_metric(metric_keys: set[str]) -> pd.DataFrame:
@@ -350,6 +483,7 @@ def build_dim_metric(metric_keys: set[str]) -> pd.DataFrame:
                     display_order=order,
                     glossary_section=heading,
                     is_dashboard_metric=True,
+                    consolidation_method=consolidation_method(key),
                 )
             )
         else:
@@ -377,6 +511,7 @@ def build_dim_metric(metric_keys: set[str]) -> pd.DataFrame:
                     display_order=1000 + order,
                     glossary_section=None,
                     is_dashboard_metric=False,
+                    consolidation_method=consolidation_method(key),
                 )
             )
     return pd.DataFrame(rows)
