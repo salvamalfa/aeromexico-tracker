@@ -55,11 +55,13 @@ jobs:
         continue-on-error: true
         run: uv run pytest
 
-      - name: Validate Stage 8 acceptance
+      - name: Validate dashboard acceptance
         id: validation
         if: steps.tests.outcome == 'success'
         continue-on-error: true
-        run: uv run python -m src.dashboard.validate_stage8
+        run: |
+          uv run python -m src.dashboard.validate_stage10
+          uv run python -m src.dashboard.validate_stage8
 
       - name: Open validation-failed issue
         if: steps.tests.outcome == 'failure' || steps.validation.outcome == 'failure'

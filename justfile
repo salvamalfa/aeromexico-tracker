@@ -26,6 +26,7 @@ dashboard:
     uv run streamlit run streamlit_app.py
 
 dashboard-validate:
+    uv run python -m src.dashboard.validate_stage10
     uv run python -m src.dashboard.validate_stage8
 
 smoke-test:

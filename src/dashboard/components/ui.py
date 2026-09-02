@@ -33,7 +33,7 @@ def unavailable(title: str, reason: str) -> None:
 
 def render_footer() -> None:
     st.markdown(
-        f"<div class='dashboard-footer'><strong>Datos al {data_as_of()}</strong> · "
+        f"<div class='dashboard-footer'><strong>Corte actualizado al {data_as_of()}</strong> · "
         "Proyecto independiente y no oficial. No es consejo de inversión. "
         "Solo usa información pública y gratuita.</div>",
         unsafe_allow_html=True,

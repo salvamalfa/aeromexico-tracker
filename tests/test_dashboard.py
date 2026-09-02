@@ -7,15 +7,20 @@ from streamlit.testing.v1 import AppTest
 
 from src.config import PATHS
 from src.dashboard.check_manual_freshness import check
-from src.dashboard.data import metric_definition, query_df
+from src.dashboard.data import data_as_of, metric_definition, query_df
+from src.dashboard.navigation import PAGE_SPECS
 from src.dashboard.validate_stage8 import DASHBOARD_METRICS, PAGES, contrast
 from src.dashboard.theme import CARRIER_COLORS, INK, MUTED, WHITE
 
 
-def test_dashboard_registers_exactly_ten_pages() -> None:
-    source = (PATHS.root / "src" / "dashboard" / "app.py").read_text(encoding="utf-8")
-    assert len(PAGES) == 10
-    assert source.count("st.Page(") == 10
+def test_dashboard_registers_exactly_eleven_pages_in_business_order() -> None:
+    assert len(PAGES) == 11
+    assert [spec.module_name for spec in PAGE_SPECS] == PAGES
+    assert [(spec.title, spec.url_path) for spec in PAGE_SPECS[-3:]] == [
+        ("Salud de datos", "salud-datos"),
+        ("Estructura de datos", "estructura-datos"),
+        ("Glosario", "glosario"),
+    ]
 
 
 def test_every_dashboard_metric_has_business_interpretation() -> None:
@@ -57,6 +62,19 @@ def test_afac_freshness_uses_real_source_date() -> None:
     assert result["last_date"] == "2026-06-30"
     assert result["age_days"] >= 0
     assert isinstance(result["is_stale"], bool)
+
+
+def test_dashboard_cutoff_uses_latest_preserved_artifact_not_future_period_end() -> None:
+    expected = query_df(
+        "SELECT MAX(CAST(downloaded_at AS DATE)) AS date FROM dim_source_artifact"
+    ).iloc[0, 0]
+    expected_date = pd.to_datetime(expected)
+    months = (
+        "", "ene", "feb", "mar", "abr", "may", "jun",
+        "jul", "ago", "sep", "oct", "nov", "dic",
+    )
+    assert data_as_of() == f"{expected_date.day:02d} {months[expected_date.month]} {expected_date.year}"
+    assert expected_date.date() <= pd.Timestamp.now().date()
 
 
 def test_refresh_workflow_has_failure_and_manual_source_controls() -> None:

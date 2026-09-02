@@ -1,1 +1,1 @@
-"""Ten analytical dashboard pages."""
+"""Eleven analytical dashboard pages."""

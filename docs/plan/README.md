@@ -37,6 +37,7 @@ agente se detiene, presenta entregables y espera aprobación explícita del usua
 | `09-etapa-7-analitica.md` | Etapa 7 — forecast, clustering, análisis de lenguaje de los reportes, detección de anomalías | Etapa 7 |
 | `10-etapa-8-dashboard.md` | Etapa 8 — Streamlit + ECharts, narrativa de negocio, despliegue | Etapa 8 |
 | `14-etapa-9-saneamiento-backend.md` | Etapa 9 — orquestación, linaje, calidad y contratos | Etapa 9 |
+| `15-etapa-10-estructura-datos.md` | Etapa 10 — página interactiva de estructura y linaje | Etapa 10 |
 | `11-glosario-kpis.md` | Glosario completo de KPIs con fórmula, fuente e interpretación de negocio. **Es el insumo de texto del dashboard.** | Etapas 1, 6, 7, 8 |
 | `12-computer-use-playbook.md` | Cómo y cuándo usar computer use, reglas de seguridad, procedimientos por sitio | Etapas 1, 3, 5, 7 |
 | `13-criterios-de-aceptacion.md` | Definition of Done por etapa, checklist de validación, cifras ancla para verificar | Al cerrar cada etapa |
@@ -82,6 +83,7 @@ Si algo de la Etapa 1 queda a medias, no se avanza; se reporta y se pide instruc
 | 7 | Analítica | Forecast, clustering, NLP de reportes | 2-3 sesiones |
 | 8 | Dashboard | Streamlit + ECharts + narrativa | 3-4 sesiones |
 | 9 | Saneamiento backend | Orquestación, linaje, calidad, contratos y modelo Gold | 2-3 sesiones |
+| 10 | Estructura de datos | Embudo interactivo, esquema Gold y trazabilidad comprensible | 1-2 sesiones |
 
 ---
 

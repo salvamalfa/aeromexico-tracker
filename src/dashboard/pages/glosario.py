@@ -10,7 +10,7 @@ from src.dashboard.data import metric_catalog
 
 
 def render() -> None:
-    page_header("Glosario", "¿Qué significa cada KPI, cómo se calcula y qué puede hacer que se interprete mal?", eyebrow="10 · Leer antes de comparar")
+    page_header("Glosario", "¿Qué significa cada KPI, cómo se calcula y qué puede hacer que se interprete mal?", eyebrow="11 · Leer antes de comparar")
     catalog = metric_catalog()
     query = st.text_input("Buscar métrica", placeholder="Ej. CASK, ocupación, ingreso…").strip().lower()
     dashboard_only = st.toggle("Solo métricas usadas en el dashboard", value=True)

@@ -15,11 +15,27 @@ from src.transform.stage6_contracts import table_definitions
 
 
 _QUERY_LOCK = threading.RLock()
+_DASHBOARD_MAX_STAGE = 9
+_MONTH_ABBR_ES = (
+    "",
+    "ene",
+    "feb",
+    "mar",
+    "abr",
+    "may",
+    "jun",
+    "jul",
+    "ago",
+    "sep",
+    "oct",
+    "nov",
+    "dic",
+)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_gold_table(name: str) -> pd.DataFrame:
-    if name not in table_definitions(max_stage=8):
+    if name not in table_definitions(max_stage=_DASHBOARD_MAX_STAGE):
         raise KeyError(f"Undeclared gold table: {name}")
     path = PATHS.gold / f"{name}.parquet"
     if not path.exists():
@@ -31,7 +47,7 @@ def load_gold_table(name: str) -> pd.DataFrame:
 def connection() -> duckdb.DuckDBPyConnection:
     database = duckdb.connect(":memory:")
     available: set[str] = set()
-    for name in table_definitions(max_stage=8):
+    for name in table_definitions(max_stage=_DASHBOARD_MAX_STAGE):
         path = (PATHS.gold / f"{name}.parquet").resolve()
         if not path.exists():
             continue
@@ -77,9 +93,17 @@ def events() -> pd.DataFrame:
 
 
 def data_as_of() -> str:
-    frame = query_df("SELECT MAX(last_date) AS date FROM v_data_health")
+    # A quarter or month can be represented by its period-end date while it is
+    # still in progress.  Using that boundary made the footer claim a future
+    # data date (for example, 30 Sep on 1 Sep).  The latest preserved public
+    # artifact is the honest, reproducible cutoff for the tracker itself.
+    frame = query_df(
+        "SELECT MAX(CAST(downloaded_at AS DATE)) AS date FROM dim_source_artifact"
+    )
     value = pd.to_datetime(frame.iloc[0, 0])
-    return value.strftime("%d %b %Y") if pd.notna(value) else "sin fecha"
+    if pd.isna(value):
+        return "sin fecha"
+    return f"{value.day:02d} {_MONTH_ABBR_ES[value.month]} {value.year}"
 
 
 def table_path(name: str) -> Path:
