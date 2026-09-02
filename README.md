@@ -6,7 +6,7 @@ El proyecto transforma fuentes regulatorias, operativas y de mercado en una lect
 
 ## Dashboard
 
-La candidata local de la Etapa 10 tiene once vistas: resumen, economía unitaria, capacidad y demanda, competencia, red y rutas, finanzas, forecast, lenguaje de reportes, salud de datos, estructura de datos y glosario. La publicación vigente conserva diez vistas hasta recibir aprobación visual explícita para incorporar la nueva página.
+El dashboard publicado tiene once vistas: resumen, economía unitaria, capacidad y demanda, competencia, red y rutas, finanzas, forecast, lenguaje de reportes, salud de datos, estructura de datos y glosario.
 
 [Repositorio público en GitHub](https://github.com/salvamalfa/aeromexico-tracker)
 
@@ -24,14 +24,14 @@ Para recorrer el argumento completo, consulta [el recorrido narrado](docs/dashbo
 
 ## Estado
 
-Las **Etapas 0 a 9 están completas**. La **Etapa 10 está implementada y validada localmente**, pendiente únicamente de aprobación visual, publicación y comprobación del enlace profundo público.
+Las **Etapas 0 a 10 están completas**. La página `Estructura de datos` fue aprobada visualmente, publicada y comprobada mediante su enlace profundo público.
 
 - 31 tablas Gold y 28 datasets Silver validados por contrato.
 - 186 pruebas automatizadas.
 - 15/15 controles específicos de la página `Estructura de datos`.
 - 18/18 controles específicos del dashboard.
 - 11/11 vistas locales ejecutadas sin excepciones; la candidata se verificó en escritorio, 736 px, 360 px y temas claro/oscuro.
-- La versión pública previa mantiene 10/10 vistas verificadas, incluido el enlace profundo `/forecast`.
+- Las 11/11 vistas públicas cargan sin excepciones, incluido el enlace profundo `/estructura-datos`.
 - Carga local de 0.20–0.48 s por vista; rerun de 0.008–0.085 s en el entorno de aceptación actual.
 - Operación offline: el dashboard solo lee Parquet local mediante DuckDB en memoria.
 
