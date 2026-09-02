@@ -12,15 +12,13 @@ from streamlit.testing.v1 import AppTest
 from src.config import PATHS
 from src.dashboard.check_manual_freshness import check as check_freshness
 from src.dashboard.data import query_df
+from src.dashboard.navigation import PAGE_SPECS
 from src.dashboard.theme import AERO_BLUE, CARRIER_COLORS, INK, MAGENTA, MUTED, WHITE
 from src.ingest.stage4_common import write_parquet_atomic
 from src.transform.stage6_contracts import table_definitions, validate_all_gold
 
 
-PAGES = [
-    "resumen", "economia_unitaria", "capacidad_demanda", "competencia", "red_rutas",
-    "finanzas", "forecast", "lenguaje_reportes", "salud_datos", "glosario",
-]
+PAGES = [spec.module_name for spec in PAGE_SPECS]
 DASHBOARD_METRICS = {
     "total_revenue", "adjusted_ebitdar", "ebitdar_margin", "operating_income",
     "operating_margin", "net_income", "load_factor_total", "rask", "cask",
@@ -112,8 +110,14 @@ def validate_stage8() -> dict[str, object]:
     published_mape = performance.loc[performance["is_published"], "mape"].notna().all() and performance["is_published"].any()
     add("forecast_uncertainty_and_test_mape", intervals and published_mape, {"rows": len(forecasts), "mape": performance.loc[performance["is_published"], "mape"].tolist()}, "bands and test MAPE")
 
-    app_source = (PATHS.root / "src" / "dashboard" / "app.py").read_text(encoding="utf-8")
-    add("ten_pages", app_source.count("st.Page(") == 10, app_source.count("st.Page("), 10)
+    navigation_order = [spec.module_name for spec in PAGE_SPECS]
+    expected_tail = ["salud_datos", "estructura_datos", "glosario"]
+    add(
+        "eleven_pages",
+        len(PAGE_SPECS) == 11 and navigation_order[-3:] == expected_tail,
+        navigation_order,
+        "11 pages ending with salud_datos, estructura_datos, glosario",
+    )
     page_results: dict[str, dict[str, float | int]] = {}
     page_apps: dict[str, AppTest] = {}
     for page in PAGES:

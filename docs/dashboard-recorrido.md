@@ -1,6 +1,6 @@
 # Recorrido narrado — Aeroméxico Tracker
 
-Este recorrido está pensado para una conversación de portafolio de 8–10 minutos. El orden no es técnico: empieza por la respuesta, recorre los impulsores y termina mostrando por qué la evidencia es confiable.
+Este recorrido está pensado para una conversación de portafolio de 10–12 minutos. El orden no es técnico: empieza por la respuesta, recorre los impulsores y termina mostrando por qué la evidencia es confiable y cómo se construyó.
 
 ## 1. Resumen ejecutivo — qué pasó
 
@@ -50,10 +50,16 @@ El corpus contiene once documentos de Aeroméxico. Se muestran proporciones posi
 
 Esta es la página de control. Expone fechas por fuente, cobertura, 23 issues abiertos, 66 restatements y la mezcla reportado/derivado. También lista lo que todavía no se conoce: etapa promedio global, textos de peers y guidance estructurado. Una ausencia sigue siendo ausencia.
 
-## 10. Glosario — cómo leer cada KPI
+## 10. Estructura de datos — cómo se construye la evidencia
+
+El embudo sigue la información desde 19 fuentes públicas activas hasta el producto final. Las tarjetas hablan primero de negocio; al abrirlas aparecen responsables, cobertura, frecuencia, archivos preservados, contratos y controles. Los ejemplos de parsing muestran con evidencia real cómo un porcentaje, una moneda o un trimestre publicado se convierten en datos comparables.
+
+La segunda mitad es un esquema estrella interactivo. Al elegir un hecho solo se iluminan las dimensiones, vistas y páginas que sus contratos realmente conectan. Los nombres técnicos permanecen ocultos hasta pedirlos. Así se puede explicar la arquitectura sin presentar 31 tablas amontonadas ni mantener un diagrama manual que envejezca separado del modelo.
+
+## 11. Glosario — cómo leer cada KPI
 
 El glosario renderiza `dim_metric`: definición, fórmula, unidad, interpretación al subir o bajar, rangos cuando existen y advertencias. Es la prueba de que la explicación no vive escondida en código ni depende de un LLM en tiempo de ejecución.
 
 ## Cierre sugerido
 
-El valor del proyecto no es una predicción aislada ni una pantalla bonita. Es la cadena completa: fuente pública preservada, transformación reproducible, contratos, conciliación, analítica con gates y un dashboard que muestra tanto el hallazgo como sus límites.
+El valor del proyecto no es una predicción aislada ni una pantalla bonita. Es la cadena completa y ahora visible: fuente pública preservada, transformación reproducible, contratos, conciliación, analítica con gates y un dashboard que muestra tanto el hallazgo como sus límites.

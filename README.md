@@ -6,7 +6,7 @@ El proyecto transforma fuentes regulatorias, operativas y de mercado en una lect
 
 ## Dashboard
 
-La aplicación tiene diez vistas: resumen, economía unitaria, capacidad y demanda, competencia, red y rutas, finanzas, forecast, lenguaje de reportes, salud de datos y glosario.
+La candidata local de la Etapa 10 tiene once vistas: resumen, economía unitaria, capacidad y demanda, competencia, red y rutas, finanzas, forecast, lenguaje de reportes, salud de datos, estructura de datos y glosario. La publicación vigente conserva diez vistas hasta recibir aprobación visual explícita para incorporar la nueva página.
 
 [Repositorio público en GitHub](https://github.com/salvamalfa/aeromexico-tracker)
 
@@ -24,14 +24,15 @@ Para recorrer el argumento completo, consulta [el recorrido narrado](docs/dashbo
 
 ## Estado
 
-Las **Etapas 0 a 8 están completas**. El dashboard está publicado y la ejecución local, el workflow remoto y el entorno público fueron verificados.
+Las **Etapas 0 a 9 están completas**. La **Etapa 10 está implementada y validada localmente**, pendiente únicamente de aprobación visual, publicación y comprobación del enlace profundo público.
 
-- 25 tablas gold validadas con contratos Pandera.
-- 102 pruebas automatizadas.
+- 31 tablas Gold y 28 datasets Silver validados por contrato.
+- 186 pruebas automatizadas.
+- 15/15 controles específicos de la página `Estructura de datos`.
 - 18/18 controles específicos del dashboard.
-- 10/10 vistas ejecutadas sin excepciones.
-- 10/10 vistas verificadas en la URL pública, incluido el enlace profundo `/forecast`.
-- Carga medida de 0.19–0.60 s por vista; rerun de 0.01–0.08 s en el entorno local de aceptación.
+- 11/11 vistas locales ejecutadas sin excepciones; la candidata se verificó en escritorio, 736 px, 360 px y temas claro/oscuro.
+- La versión pública previa mantiene 10/10 vistas verificadas, incluido el enlace profundo `/forecast`.
+- Carga local de 0.20–0.48 s por vista; rerun de 0.008–0.085 s en el entorno de aceptación actual.
 - Operación offline: el dashboard solo lee Parquet local mediante DuckDB en memoria.
 
 ## Hallazgos principales
@@ -65,7 +66,7 @@ La app abre en `http://localhost:8501`. No necesita internet para consultar las 
 | `just rebuild` | Reconstrucción completa offline desde bronze. |
 | `just test` | Ejecuta la suite. |
 | `just dashboard` | Inicia Streamlit con el entrypoint estable. |
-| `just dashboard-validate` | Ejecuta los 18 controles de aceptación de Etapa 8. |
+| `just dashboard-validate` | Ejecuta los 15 controles de Etapa 10 y los 18 controles de regresión del dashboard. |
 
 ## Arquitectura
 
@@ -79,7 +80,7 @@ data/bronze/     descargas inmutables + SHA-256; no se versionan
 data/silver/     tablas fieles a cada fuente; no se versionan
       │
       ▼
-data/gold/       25 Parquet pequeños, consolidados y versionados
+data/gold/       31 Parquet consolidados y versionados
       │
       ├── data/warehouse.duckdb   vistas analíticas locales
       ├── src/analytics/          estudios y modelos precomputados
