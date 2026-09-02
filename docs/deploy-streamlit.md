@@ -1,6 +1,6 @@
 # Publicación en Streamlit Community Cloud
 
-Estado: **PUBLICADO Y VERIFICADO EL 2026-08-24**
+Estado: **PUBLICADO Y VERIFICADO EL 2026-09-01**
 
 URL pública: [aeromexico-tracker-djwjbylohwdryhbvnjhwsy.streamlit.app](https://aeromexico-tracker-djwjbylohwdryhbvnjhwsy.streamlit.app/)
 
@@ -25,8 +25,9 @@ La aplicación se desplegó sin secretos. Community Cloud requiere una sesión a
 4. Capturar los valores de la tabla anterior.
 5. Abrir **Advanced settings** y seleccionar Python **3.13**. El proyecto declara `>=3.13,<3.14`; el default 3.12 no es compatible.
 6. Dejar Secrets vacío y pulsar **Deploy**.
-7. Esperar a que termine la instalación y comprobar las diez páginas.
-8. Sustituir en `README.md` el texto pendiente y el badge por la URL `streamlit.app` verificada.
+7. Esperar a que termine la instalación y comprobar las once páginas.
+8. Comprobar también el enlace profundo `/estructura-datos`.
+9. Sustituir en `README.md` el texto pendiente y el badge por la URL `streamlit.app` verificada.
 
 ## Verificación posterior completada
 
@@ -35,7 +36,8 @@ La aplicación se desplegó sin secretos. Community Cloud requiere una sesión a
 - PASS — Competencia muestra IFRS/US-GAAP, cierre fiscal de Ryanair y falta de stage length.
 - PASS — Salud de datos muestra 23 issues y 66 restatements para el corte actual.
 - PASS — El pie indica “proyecto independiente y no oficial” y “no es consejo de inversión”.
-- PASS — Las diez vistas cargan sin errores de dependencias, Parquet ni versión de Python.
+- PASS — Las once vistas cargan sin errores de dependencias, Parquet ni versión de Python.
+- PASS — `/estructura-datos` abre directamente el embudo, las relaciones Gold y los enlaces oficiales.
 
 El primer arranque detectó que las dependencias visuales estaban en un extra opcional que Community Cloud no instaló. Se movieron a dependencias principales y el despliegue quedó operativo en el commit `8ac5c97`.
 

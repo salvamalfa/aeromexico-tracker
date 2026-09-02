@@ -278,32 +278,32 @@ sin explicación o la página de salud sigue omitiendo el ledger operativo.
 ## Etapa 10 — Página interactiva “Estructura de datos”
 
 **Obligatorio:**
-- [ ] La navegación contiene once páginas; `Estructura de datos` aparece después de
+- [x] La navegación contiene once páginas; `Estructura de datos` aparece después de
       `Salud de datos` y antes de `Glosario`, con ruta `/estructura-datos`.
-- [ ] La primera vista muestra cinco niveles conectados por flechas permanentes:
+- [x] La primera vista muestra cinco niveles conectados por flechas permanentes:
       fuentes, captura, limpieza, modelo/análisis y producto.
-- [ ] La cara inicial de cada tarjeta usa lenguaje de negocio; rutas, tablas, campos,
+- [x] La cara inicial de cada tarjeta usa lenguaje de negocio; rutas, tablas, campos,
       grano, controles y linaje viven en el detalle.
-- [ ] Hover, foco, clic, cierre, teclado y toque móvil exponen la misma información
+- [x] Hover, foco, clic, cierre, teclado y toque móvil exponen la misma información
       esencial sin depender exclusivamente del color o del puntero.
-- [ ] Las fuentes públicas ofrecen enlaces oficiales seguros; no se presentan rutas
+- [x] Las fuentes públicas ofrecen enlaces oficiales seguros; no se presentan rutas
       locales como enlaces ni se inventan archivos públicos.
-- [ ] Los ejemplos “antes → después” proceden de convenciones o metadata reales y
+- [x] Los ejemplos “antes → después” proceden de convenciones o metadata reales y
       cubren porcentaje, moneda y periodo.
-- [ ] El esquema Gold se genera desde contratos y catálogo vigentes, organiza quién,
+- [x] El esquema Gold se genera desde contratos y catálogo vigentes, organiza quién,
       cuándo, qué, dónde, hechos y consumidores, y muestra flechas de relación.
-- [ ] Al seleccionar una tabla se muestran propósito, entradas, salidas, campos
+- [x] Al seleccionar una tabla se muestran propósito, entradas, salidas, campos
       principales, grano y páginas consumidoras.
-- [ ] La página funciona offline y no hace `fetch`, XHR, WebSocket, imports remotos ni
+- [x] La página funciona offline y no hace `fetch`, XHR, WebSocket, imports remotos ni
       descargas en runtime.
-- [ ] El HTML escapa la metadata y no contiene credenciales, correo SEC, rutas
+- [x] El HTML escapa la metadata y no contiene credenciales, correo SEC, rutas
       absolutas, scripts externos, datos inventados ni URLs no autorizadas.
-- [ ] QA visual y funcional pasa en escritorio, 736 px y 360 px, temas claro/oscuro y
+- [x] QA visual y funcional pasa en escritorio, 736 px y 360 px, temas claro/oscuro y
       movimiento reducido.
-- [ ] Las once páginas cargan sin excepciones y los validadores de navegación,
+- [x] Las once páginas cargan sin excepciones y los validadores de navegación,
       rendimiento y cobertura se actualizaron.
-- [ ] La versión local se presenta para anotaciones antes de cualquier publicación.
-- [ ] `docs/etapas/etapa-10-reporte.md` documenta implementación, pruebas, límites y
+- [x] La versión local se presenta para anotaciones antes de cualquier publicación.
+- [x] `docs/etapas/etapa-10-reporte.md` documenta implementación, pruebas, límites y
       decisiones.
 
 **No se cierra la etapa si:** el diagrama duplica manualmente contratos que pueden

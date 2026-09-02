@@ -1,7 +1,7 @@
 # Etapa 10 — Página interactiva “Estructura de datos”
 
-Fecha de entrega local: 2026-09-01
-Estado: IMPLEMENTACIÓN LOCAL COMPLETA — PENDIENTE DE APROBACIÓN VISUAL Y PUBLICACIÓN
+Fecha de entrega: 2026-09-01
+Estado: COMPLETA — PUBLICADA Y VERIFICADA
 
 ## Resumen ejecutivo
 
@@ -16,9 +16,9 @@ Silver/Gold, el registro central, el SQL semántico y la navegación real. Si es
 no coincide con el recibo validado de Etapa 9, la página falla cerrada y no muestra una
 arquitectura parcial.
 
-No se instalaron dependencias, no se descargaron datos, no se modificaron cifras de
-negocio y no se publicó nada. La versión pública anterior permanece intacta hasta la
-aprobación visual del usuario.
+No se instalaron dependencias, no se descargaron datos ni se modificaron cifras de
+negocio. Tras la aprobación visual se publicó el mismo repositorio y se verificó el
+enlace profundo público.
 
 ## Qué se construyó
 
@@ -155,16 +155,18 @@ todos resueltos antes de este reporte:
 - La página explica el corte materializado; no descarga datos ni entrena modelos al
   abrirse.
 
-## Pendientes y gate humano
+## Publicación y verificación pública
 
-- La candidata local está disponible en `http://localhost:8502/estructura-datos` para
-  anotaciones.
-- La aplicación pública y `docs/deploy-streamlit.md` permanecen deliberadamente en el
-  estado de diez páginas de Etapa 8.
-- No se hará push, despliegue ni verificación del enlace público
-  `/estructura-datos` hasta recibir aprobación visual explícita.
-- Después de esa aprobación se actualizará la guía de despliegue, se publicará el mismo
-  repositorio, se comprobarán las once páginas y se cerrará definitivamente la etapa.
+- La candidata local estuvo disponible en `http://localhost:8502/estructura-datos` para
+  anotaciones antes de publicar.
+- Se publicó el commit de implementación en `master` y Community Cloud se reinició para
+  tomar la nueva versión.
+- La URL pública es
+  `https://aeromexico-tracker-djwjbylohwdryhbvnjhwsy.streamlit.app/`.
+- El enlace profundo verificado es
+  `https://aeromexico-tracker-djwjbylohwdryhbvnjhwsy.streamlit.app/estructura-datos`.
+- La comprobación pública encontró 11 enlaces de navegación, cinco niveles del embudo,
+  cinco relaciones Gold iniciales, cero excepciones y enlaces oficiales HTTPS válidos.
 - La Etapa 11 de rediseño general no se ha iniciado.
 
 ## Comandos para reproducir
@@ -177,9 +179,8 @@ uv run python -m src.dashboard.validate_stage8
 uv run streamlit run streamlit_app.py
 ```
 
-## Gate actual
+## Cierre de etapa
 
 La implementación, seguridad, exactitud de metadata, accesibilidad, responsive, tema,
-regresión y documentación de la entrega local cumplen los criterios técnicos. El único
-gate abierto es humano: revisar la página con anotaciones y decidir si se aprueba su
-publicación. El trabajo se detiene aquí y no avanza al rediseño general.
+regresión, documentación y publicación cumplen los criterios de Etapa 10. El trabajo se
+detiene aquí y no avanza al rediseño general de la Etapa 11.
