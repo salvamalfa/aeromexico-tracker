@@ -37,6 +37,7 @@
   };
 
   const comparisonText = (comparison) => comparison.available ? comparison.display : "No disponible";
+  const signedTwoDecimals = (value) => `${value >= 0 ? "+" : ""}${Number(value).toFixed(2)}`;
 
   function commonLayout(height) {
     return {
@@ -74,12 +75,15 @@
       {
         x: visibleLabels,
         y: visibleRecords.map((record) => record.unit_margin_cents_per_km),
+        text: visibleRecords.map((record) => `${record.period_label}<br>Margen ${signedTwoDecimals(record.unit_margin_cents_per_km)} ¢ USD por ASK-km`),
         name: "Margen unitario",
         type: "bar",
         yaxis: "y2",
+        zorder: 0,
+        opacity: 0.72,
+        textposition: "none",
         marker: {color: marginColors, line: {color: visibleRecords.map((record) => record.unit_margin_cents_per_km >= 0 ? colors.green : colors.red), width: 1}},
-        hovertemplate: "%{x}<br>Margen %{y:+.2f} ¢ USD por ASK-km<extra></extra>",
-        hoverinfo: "text",
+        hovertemplate: "%{text}<extra></extra>",
       },
       {
         x: visibleLabels,
@@ -87,12 +91,12 @@
         name: "RASK",
         type: "scatter",
         mode: "lines+markers",
+        zorder: 10,
         xaxis: "x",
         yaxis: "y",
         line: {color: colors.blue, width: 3},
         marker: {color: "#ffffff", line: {color: colors.blue, width: 2}, size: 7},
         hovertemplate: "%{x}<br>RASK %{y:.2f} ¢ USD por ASK-km<extra></extra>",
-        hoverinfo: "text",
       },
       {
         x: visibleLabels,
@@ -100,12 +104,12 @@
         name: "CASK",
         type: "scatter",
         mode: "lines+markers",
+        zorder: 10,
         xaxis: "x",
         yaxis: "y",
         line: {color: colors.red, width: 2.4, dash: "dash"},
         marker: {color: "#ffffff", line: {color: colors.red, width: 2}, size: 6},
         hovertemplate: "%{x}<br>CASK %{y:.2f} ¢ USD por ASK-km<extra></extra>",
-        hoverinfo: "text",
       },
     ];
     const layout = commonLayout(365);
@@ -196,14 +200,18 @@
         x: yearRecords.map((record) => record.load_factor_reported * 100),
         y: yearRecords.map((record) => record.rask_cents_per_km),
         text: yearRecords.map((record) => record.period_label),
-        customdata: yearRecords.map((record) => [record.ask_km / 1_000_000_000, record.unit_margin_cents_per_km, record.passengers / 1_000_000]),
+        customdata: yearRecords.map((record) => [
+          (record.ask_km / 1_000_000_000).toFixed(2),
+          signedTwoDecimals(record.unit_margin_cents_per_km),
+          (record.passengers / 1_000_000).toFixed(2),
+        ]),
         name: year,
         type: "scatter",
         mode: "markers+text",
         textposition: "top center",
         textfont: {size: 8, color: colors.muted},
         marker: {size: 13, color: yearColors[year], line: {color: "#ffffff", width: 1.2}},
-        hovertemplate: "%{text}<br>Ocupación %{x:.1f}%<br>RASK %{y:.2f} ¢ USD por ASK-km<br>ASK %{customdata[0]:.2f} mil M<br>Margen %{customdata[1]:+.2f} ¢ USD por ASK-km<br>Pasajeros %{customdata[2]:.2f} M<extra></extra>",
+        hovertemplate: "%{text}<br>Ocupación %{x:.1f}%<br>RASK %{y:.2f} ¢ USD por ASK-km<br>ASK %{customdata[0]} mil M<br>Margen %{customdata[1]} ¢ USD por ASK-km<br>Pasajeros %{customdata[2]} M<extra></extra>",
       };
     });
     const selectedTrace = {
@@ -240,7 +248,7 @@
     const container = document.getElementById("narrative-copy");
     container.replaceChildren();
     view.narrative.paragraphs.forEach((paragraph) => {
-      const node = document.createElement("li");
+      const node = document.createElement("p");
       node.textContent = paragraph;
       container.appendChild(node);
     });
