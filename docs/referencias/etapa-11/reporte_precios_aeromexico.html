@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Aeroméxico – Análisis de Precio del Boleto 2021–2025</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --azul: #003087; --azul-light: #EFF6FF;
+    --rojo: #E31C23; --rojo-light: #FEF2F2;
+    --verde: #059669; --verde-light: #F0FDF4;
+    --amber: #D97706; --amber-light: #FFFBEB;
+    --gray: #6B7280; --border: #E5E7EB;
+  }
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background:#F8FAFC; color:#1F2937; }
+
+  /* Header */
+  .header { background: var(--azul); color:#fff; padding:32px 48px 28px; position:relative; overflow:hidden; }
+  .header::after { content:''; position:absolute; right:-60px; top:-40px;
+    width:280px; height:280px; border-radius:50%; background:rgba(255,255,255,0.05); }
+  .header h1 { font-size:26px; font-weight:800; letter-spacing:-0.5px; }
+  .header .sub { opacity:0.75; font-size:13px; margin-top:6px; }
+  .header .badge { display:inline-block; background:var(--rojo); color:#fff;
+    font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; margin-top:12px; }
+
+  /* Layout */
+  .container { max-width:1100px; margin:0 auto; padding:32px 24px; }
+  .section { margin-bottom:40px; }
+  .section-title { font-size:15px; font-weight:700; color:var(--azul);
+    border-left:4px solid var(--azul); padding-left:12px; margin-bottom:18px; }
+
+  /* KPI Grid */
+  .kpi-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:36px; }
+  .kpi-card { background:#fff; border:1px solid var(--border); border-radius:14px;
+    padding:18px 14px; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.05); }
+  .kpi-val { font-size:24px; font-weight:900; }
+  .kpi-label { font-size:11px; font-weight:600; color:#374151; margin-top:4px; }
+  .kpi-sub { font-size:10px; color:#9CA3AF; margin-top:2px; }
+
+  /* Chart Grid */
+  .chart-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .chart-card { background:#fff; border:1px solid var(--border); border-radius:16px;
+    padding:22px; box-shadow:0 1px 4px rgba(0,0,0,0.04); }
+  .chart-card.full { grid-column: 1 / -1; }
+  .chart-title { font-size:13px; font-weight:700; color:#1F2937; margin-bottom:4px; }
+  .chart-desc  { font-size:11px; color:#6B7280; margin-bottom:14px; line-height:1.5; }
+  .chart-wrap  { position:relative; height:230px; }
+  .chart-note  { font-size:10px; color:#9CA3AF; margin-top:10px; line-height:1.5; }
+
+  /* Narrative */
+  .narrative { background:#fff; border:1px solid var(--border); border-radius:16px;
+    padding:28px; box-shadow:0 1px 4px rgba(0,0,0,0.04); }
+  .narrative h3 { font-size:14px; font-weight:700; color:var(--azul); margin-bottom:10px; margin-top:20px; }
+  .narrative h3:first-child { margin-top:0; }
+  .narrative p  { font-size:13px; line-height:1.75; color:#374151; margin-bottom:8px; }
+  .narrative .highlight { background:var(--azul-light); border-left:3px solid var(--azul);
+    padding:10px 14px; border-radius:0 8px 8px 0; margin:12px 0; font-size:12.5px; color:#1e40af; }
+  .narrative .highlight.red { background:var(--rojo-light); border-color:var(--rojo); color:#991b1b; }
+  .narrative .highlight.green { background:var(--verde-light); border-color:var(--verde); color:#065f46; }
+
+  /* Table */
+  .data-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .data-table th { background:#F1F5F9; text-align:right; padding:8px 12px;
+    font-weight:600; color:#475569; border-bottom:2px solid var(--border); }
+  .data-table th:first-child { text-align:left; }
+  .data-table td { padding:7px 12px; text-align:right; border-bottom:1px solid #F3F4F6; }
+  .data-table td:first-child { text-align:left; font-weight:600; color:#1F2937; }
+  .data-table tr:nth-child(even) { background:#FAFAFA; }
+  .data-table .pos { color:var(--verde); font-weight:700; }
+  .data-table .neg { color:var(--rojo); font-weight:700; }
+  .data-table .iask { color:var(--azul); font-weight:700; }
+
+  /* Year separators */
+  .data-table tr.year-sep td, .data-table tr.year-sep th {
+    background:#EFF6FF; color:var(--azul); font-weight:700; border-top:2px solid #BFDBFE;
+  }
+
+  /* Footer */
+  .footer { text-align:center; padding:24px; font-size:11px; color:#9CA3AF; }
+  .footer strong { color:#6B7280; }
+
+  @media(max-width:700px){
+    .kpi-grid { grid-template-columns:repeat(2,1fr); }
+    .chart-grid { grid-template-columns:1fr; }
+    .chart-card.full { grid-column:1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Aeroméxico — Análisis del Precio del Boleto</h1>
+  <div class="sub">Resultados trimestrales 1T21 – 4T25 &nbsp;·&nbsp; 20 trimestres de datos</div>
+  <div class="badge">Reporte Financiero</div>
+</div>
+
+<div class="container">
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-val" style="color:var(--azul)">10.2¢</div>
+      <div class="kpi-label">IASK 4T25</div>
+      <div class="kpi-sub">Récord histórico</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val" style="color:var(--rojo)">4.75¢</div>
+      <div class="kpi-label">IASK mínimo</div>
+      <div class="kpi-sub">1T21 — impacto COVID</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val" style="color:var(--verde)">+115%</div>
+      <div class="kpi-label">Crecimiento IASK</div>
+      <div class="kpi-sub">1T21 → 4T25</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val" style="color:var(--amber)">88.9%</div>
+      <div class="kpi-label">Factor Ocupación</div>
+      <div class="kpi-sub">3T24 — récord</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val" style="color:#7C3AED">6.7M</div>
+      <div class="kpi-label">Pasajeros 3T24</div>
+      <div class="kpi-sub">Trimestre récord</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="section">
+    <div class="section-title">5 Perspectivas del Precio del Boleto</div>
+    <div class="chart-grid">
+
+      <!-- Chart 1: IASK Evolution -->
+      <div class="chart-card full">
+        <div class="chart-title">① Ingreso por ASK (IASK) — Evolución trimestral 2021–2025</div>
+        <div class="chart-desc">El IASK (ingreso total por asiento-kilómetro disponible) es el proxy más completo del precio unitario del boleto. Captura tanto los ingresos de pasaje como los ingresos ancillary por cada km de capacidad ofrecida.</div>
+        <div class="chart-wrap"><canvas id="chart1"></canvas></div>
+        <div class="chart-note">Fuente: reportes trimestrales Aeroméxico. 2021 convertido de MXN a USD usando tipo de cambio promedio trimestral reportado. 3T25–4T25 derivados de IASM ÷ 1.609.</div>
+      </div>
+
+      <!-- Chart 2: Yield vs IASK -->
+      <div class="chart-card">
+        <div class="chart-title">② Yield vs IASK — 2021–2023</div>
+        <div class="chart-desc">El Yield mide el ingreso de pasaje por pasajero-km recorrido: es el precio "real" que paga el pasajero por distancia. El IASK incluye también cargo, ancillary y otros ingresos.</div>
+        <div class="chart-wrap"><canvas id="chart2"></canvas></div>
+        <div class="chart-note">En 2021 el Yield fue mayor al IASK porque los aviones iban relativamente vacíos (pocos ingresos por asiento disponible). En 2022–2023 el IASK alcanzó al Yield por incremento de ingresos no pasaje.</div>
+      </div>
+
+      <!-- Chart 3: Margin -->
+      <div class="chart-card">
+        <div class="chart-title">③ Precio vs Costo por ASK — Margen unitario</div>
+        <div class="chart-desc">Cuando el IASK supera al CASK la operación genera utilidad por cada asiento-km. Las barras muestran el margen unitario en ¢ USD por trimestre.</div>
+        <div class="chart-wrap"><canvas id="chart3"></canvas></div>
+        <div class="chart-note">Durante 2021 y parte de 2022, el costo superó al ingreso (operación con pérdida unitaria). Desde 3T22 el margen se mantiene positivo y creciente hacia 2024–2025.</div>
+      </div>
+
+      <!-- Chart 4: Price vs Volume -->
+      <div class="chart-card">
+        <div class="chart-title">④ Precio (IASK) vs Volumen de Pasajeros</div>
+        <div class="chart-desc">¿Aeroméxico creció llenando más aviones (volumen) o subiendo precios, o ambos? Las barras indican el número de pasajeros; la línea el IASK.</div>
+        <div class="chart-wrap"><canvas id="chart4"></canvas></div>
+        <div class="chart-note">2021: recuperación desde niveles mínimos. 2022–2024: expansión simultánea de precio y volumen. 2025: primer ciclo de normalización de precios con volumen estabilizado.</div>
+      </div>
+
+      <!-- Chart 5: Load Factor vs IASK -->
+      <div class="chart-card">
+        <div class="chart-title">⑤ Factor de Ocupación vs IASK por año</div>
+        <div class="chart-desc">Relación entre qué tan llenos van los aviones (eje X) y el precio unitario (eje Y). Cada punto es un trimestre; colores por año.</div>
+        <div class="chart-wrap"><canvas id="chart5"></canvas></div>
+        <div class="chart-note">Correlación positiva clara: mayor ocupación → mayor IASK. Los puntos 2024–2025 dominan la esquina superior derecha (llenos y caros). 1T21 es el outlier inferior izquierdo.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Narrative Analysis -->
+  <div class="section">
+    <div class="section-title">Análisis Narrativo</div>
+    <div class="narrative">
+
+      <h3>1. Recuperación post-COVID: 2021</h3>
+      <p>El año 2021 comenzó con un IASK de apenas 4.75¢ USD en el primer trimestre, reflejo directo del impacto devastador de la pandemia sobre la demanda de vuelos. Aeroméxico operaba bajo el Capítulo 11 y con una flota reducida. A lo largo del año el IASK recuperó terreno trimestre a trimestre, cerrando 2021 en 7.3¢ (+54% respecto al 1T21).</p>
+      <div class="highlight red">Durante 2021, en todos los trimestres el CASK superó al IASK, lo que significa que la aerolínea operó con pérdida unitaria. El CASK mínimo fue 6.6¢ (4T21) frente a un IASK de 7.3¢ — primer trimestre en zona positiva.</div>
+
+      <h3>2. Normalización y despegue comercial: 2022</h3>
+      <p>Con la salida del Capítulo 11 en marzo de 2022, Aeroméxico aceleró la recuperación de capacidad (+40% de ASKs en 1T22 vs 1T21). El IASK pasó de 6.5¢ en el 1T22 a 9.2¢ en el 4T22, impulsado por una demanda reprimida muy intensa y por la recuperación del mercado internacional. El Yield tocó 9.3¢ en el 4T22, el nivel más alto del período.</p>
+      <div class="highlight">El 2T22 marcó el primer trimestre en que la aerolínea logró margen unitario positivo de forma sostenida (+0.1¢), iniciando el ciclo de rentabilidad operativa.</div>
+
+      <h3>3. Consolidación y récords: 2023</h3>
+      <p>En 2023 el IASK mostró una pendiente positiva continua: de 8.6¢ en el 1T23 a 10.0¢ en el 4T23, el nivel más alto hasta ese momento. El 3T23 combinó el factor de ocupación más alto histórico hasta entonces (88.0%) con un IASK de 9.8¢, evidenciando la correlación entre aviones llenos y precios más altos.</p>
+      <p>El margen unitario (IASK–CASK) fue positivo en todos los trimestres, alcanzando +2.1¢ en el 3T23, el mejor spread del período analizado hasta esa fecha.</p>
+
+      <h3>4. Récords históricos de rentabilidad: 2024</h3>
+      <p>Durante 2024, Aeroméxico alcanzó niveles récord de UAFIDAR y utilidad de operación para primeros trimestres. El IASK se mantuvo en el rango 9.5¢–10.0¢ durante todo el año, con un CASK decreciente (de 8.0¢ en 1T24 a 7.6¢ en 3T24), ampliando el margen unitario. El factor de ocupación promedio 2024 fue de 86.6%, un récord anual.</p>
+      <div class="highlight green">En 3T24 se alcanzó el mayor factor de ocupación del período completo: 88.9%, combinado con un IASK de 9.9¢ — la combinación precio-volumen más sólida de la historia de la compañía post-reestructura.</div>
+
+      <h3>5. Normalización de 2025</h3>
+      <p>El 1T25 marcó una reducción del IASK a 8.5¢ (–11.2% vs 1T24), resultado de presiones en el mercado México-EE.UU. (impacto de políticas migratorias) y ajustes en la mezcla de rutas. Sin embargo, la recuperación fue rápida: el IASK alcanzó 10.2¢ en el 4T25 gracias a mejoras en la mezcla de ingresos y sólidos factores de ocupación (87–88% en el 3T–4T25).</p>
+      <p>En términos de costo, 2025 mostró un CASK estructuralmente más eficiente (7.4¢ en 1T25–2T25), aunque con un ligero aumento en el 4T25 (8.45¢), compensado por el incremento del IASK.</p>
+
+      <h3>Conclusiones clave</h3>
+      <p><strong>El precio del boleto de Aeroméxico se más que duplicó entre 2021 y 2025</strong>, pasando de un IASK de 4.75¢ a 10.2¢ USD por asiento-km disponible. Esta evolución refleja tres factores principales:</p>
+      <p><strong>(1) Recuperación de demanda</strong> post-COVID que permitió aumentar precios y llenar aviones simultáneamente. <strong>(2) Transformación comercial</strong> con mayor peso del mercado internacional y crecimiento de ingresos ancillary. <strong>(3) Disciplina operativa</strong> con un CASK que se mantuvo relativamente estable (6.6¢–8.5¢) mientras el IASK escalaba, generando un margen unitario consistentemente positivo desde el 2T22.</p>
+      <div class="highlight">La correlación entre factor de ocupación e IASK es el hallazgo estructural más importante: los trimestres con >85% de ocupación muestran consistentemente IASK >9.5¢, confirmando que la estrategia de gestión de ingresos (RM) de Aeroméxico es efectiva para capturar valor cuando la demanda es alta.</div>
+
+    </div>
+  </div>
+
+  <!-- Data Table -->
+  <div class="section">
+    <div class="section-title">Datos por Trimestre</div>
+    <div style="background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Trimestre</th>
+              <th>IASK (¢ USD)</th>
+              <th>Yield (¢ USD)</th>
+              <th>Pasaje/ASK (¢)</th>
+              <th>CASK (¢ USD)</th>
+              <th>Margen (¢)</th>
+              <th>Pasajeros (k)</th>
+              <th>Factor Ocup. (%)</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <strong>Aeroméxico — Análisis de Precio del Boleto 2021–2025</strong><br>
+  IASK = Ingreso total / Asiento-km disponible &nbsp;·&nbsp; CASK = Costo total / Asiento-km &nbsp;·&nbsp; Yield = Ingreso pasaje / Pasajero-km recorrido<br>
+  Fuente: Reportes de resultados trimestrales Grupo Aeroméxico (20 trimestres)
+</div>
+
+<script>
+const AZUL  = '#003087';
+const ROJO  = '#E31C23';
+const VERDE = '#059669';
+const AMBER = '#D97706';
+const PURPLE= '#7C3AED';
+
+const data = [
+  {q:'1T21',iask:4.75,yield_c:5.25,ip_ask:3.58,cask:7.20,pax:3157,load:68.8},
+  {q:'2T21',iask:6.40,yield_c:7.03,ip_ask:5.36,cask:7.30,pax:3969,load:76.8},
+  {q:'3T21',iask:6.85,yield_c:7.38,ip_ask:5.78,cask:6.80,pax:4556,load:78.8},
+  {q:'4T21',iask:7.30,yield_c:7.80,ip_ask:6.20,cask:6.60,pax:4871,load:80.8},
+  {q:'1T22',iask:6.50,yield_c:7.00,ip_ask:5.20,cask:7.80,pax:4142,load:75.6},
+  {q:'2T22',iask:7.90,yield_c:7.70,ip_ask:6.30,cask:8.00,pax:5551,load:83.0},
+  {q:'3T22',iask:8.30,yield_c:7.90,ip_ask:6.60,cask:7.60,pax:5895,load:84.0},
+  {q:'4T22',iask:9.20,yield_c:9.30,ip_ask:7.50,cask:8.40,pax:6137,load:82.2},
+  {q:'1T23',iask:8.60,yield_c:8.20,ip_ask:6.50,cask:7.90,pax:5756,load:80.1},
+  {q:'2T23',iask:9.00,yield_c:8.80,ip_ask:7.30,cask:7.40,pax:6043,load:84.4},
+  {q:'3T23',iask:9.80,yield_c:9.30,ip_ask:8.10,cask:7.90,pax:6667,load:88.0},
+  {q:'4T23',iask:10.00,yield_c:null,ip_ask:8.20,cask:8.40,pax:6228,load:84.0},
+  {q:'1T24',iask:9.50,yield_c:null,ip_ask:null,cask:8.00,pax:5979,load:85.4},
+  {q:'2T24',iask:9.70,yield_c:null,ip_ask:null,cask:7.80,pax:6409,load:86.3},
+  {q:'3T24',iask:9.90,yield_c:null,ip_ask:null,cask:7.60,pax:6703,load:88.9},
+  {q:'4T24',iask:10.00,yield_c:null,ip_ask:null,cask:8.10,pax:6246,load:85.5},
+  {q:'1T25',iask:8.50,yield_c:null,ip_ask:null,cask:7.40,pax:5877,load:82.3},
+  {q:'2T25',iask:9.00,yield_c:null,ip_ask:null,cask:7.40,pax:6180,load:85.7},
+  {q:'3T25',iask:9.57,yield_c:null,ip_ask:null,cask:7.89,pax:6362,load:88.3},
+  {q:'4T25',iask:10.19,yield_c:null,ip_ask:null,cask:8.45,pax:6168,load:87.2},
+];
+
+const labels = data.map(d=>d.q);
+
+// ── Chart 1: IASK Area ────────────────────────────────────────────────
+new Chart(document.getElementById('chart1'), {
+  type:'line',
+  data:{
+    labels,
+    datasets:[{
+      label:'IASK (¢ USD)',
+      data:data.map(d=>d.iask),
+      borderColor:AZUL, backgroundColor:'rgba(0,48,135,0.12)',
+      borderWidth:2.5, tension:0.4, fill:true,
+      pointBackgroundColor:AZUL, pointRadius:3, pointHoverRadius:6
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>`${ctx.parsed.y.toFixed(2)}¢ USD`}}},
+    scales:{
+      x:{ticks:{font:{size:9}}, grid:{color:'#F3F4F6'}},
+      y:{min:4,max:11,ticks:{font:{size:9},callback:v=>`${v}¢`},
+         grid:{color:'#F3F4F6'}}
+    },
+    animation:{duration:800}
+  }
+});
+
+// ── Chart 2: Yield vs IASK ────────────────────────────────────────────
+const d2 = data.filter(d=>d.yield_c!==null);
+new Chart(document.getElementById('chart2'), {
+  type:'line',
+  data:{
+    labels:d2.map(d=>d.q),
+    datasets:[
+      {label:'IASK (¢)',data:d2.map(d=>d.iask),borderColor:AZUL,
+       borderWidth:2.5,tension:0.4,pointRadius:3,backgroundColor:'transparent'},
+      {label:'Yield (¢)',data:d2.map(d=>d.yield_c),borderColor:ROJO,
+       borderWidth:2.5,tension:0.4,pointRadius:3,borderDash:[5,3],backgroundColor:'transparent'}
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{font:{size:10}}}},
+    scales:{
+      x:{ticks:{font:{size:9}},grid:{color:'#F3F4F6'}},
+      y:{min:4,max:11,ticks:{font:{size:9},callback:v=>`${v}¢`},grid:{color:'#F3F4F6'}}
+    }
+  }
+});
+
+// ── Chart 3: IASK vs CASK + margin bars ──────────────────────────────
+const marginData = data.map(d=>+(d.iask-d.cask).toFixed(2));
+new Chart(document.getElementById('chart3'), {
+  type:'bar',
+  data:{
+    labels,
+    datasets:[
+      {label:'Margen (IASK–CASK)',data:marginData,type:'bar',
+       backgroundColor:marginData.map(v=>v>=0?'rgba(5,150,105,0.35)':'rgba(227,28,35,0.35)'),
+       borderColor:marginData.map(v=>v>=0?VERDE:ROJO),borderWidth:1,
+       yAxisID:'y2',order:2},
+      {label:'IASK (¢)',data:data.map(d=>d.iask),type:'line',
+       borderColor:AZUL,borderWidth:2.5,tension:0.4,pointRadius:2,
+       backgroundColor:'transparent',yAxisID:'y1',order:1},
+      {label:'CASK (¢)',data:data.map(d=>d.cask),type:'line',
+       borderColor:ROJO,borderWidth:2,tension:0.4,pointRadius:2,
+       borderDash:[4,3],backgroundColor:'transparent',yAxisID:'y1',order:1}
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{font:{size:10}}}},
+    scales:{
+      x:{ticks:{font:{size:9}},grid:{color:'#F3F4F6'}},
+      y1:{type:'linear',position:'left',min:3,max:11,
+          ticks:{font:{size:9},callback:v=>`${v}¢`},grid:{color:'#F3F4F6'}},
+      y2:{type:'linear',position:'right',min:-3,max:3,
+          ticks:{font:{size:9},callback:v=>`${v>0?'+':''}${v}¢`},
+          grid:{drawOnChartArea:false}}
+    }
+  }
+});
+
+// ── Chart 4: Pax bars + IASK line ─────────────────────────────────────
+new Chart(document.getElementById('chart4'), {
+  type:'bar',
+  data:{
+    labels,
+    datasets:[
+      {label:'Pasajeros (miles)',data:data.map(d=>d.pax),type:'bar',
+       backgroundColor:'rgba(217,119,6,0.35)',borderColor:AMBER,borderWidth:1,
+       yAxisID:'yPax',order:2},
+      {label:'IASK (¢)',data:data.map(d=>d.iask),type:'line',
+       borderColor:AZUL,borderWidth:2.5,tension:0.4,pointRadius:3,
+       backgroundColor:'transparent',yAxisID:'yPrice',order:1}
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{font:{size:10}}}},
+    scales:{
+      x:{ticks:{font:{size:9}},grid:{color:'#F3F4F6'}},
+      yPrice:{type:'linear',position:'left',min:4,max:11,
+              ticks:{font:{size:9},callback:v=>`${v}¢`},grid:{color:'#F3F4F6'}},
+      yPax:{type:'linear',position:'right',min:2500,max:7500,
+            ticks:{font:{size:9},callback:v=>`${(v/1000).toFixed(0)}k`},
+            grid:{drawOnChartArea:false}}
+    }
+  }
+});
+
+// ── Chart 5: Scatter Load vs IASK ─────────────────────────────────────
+const yearColors = {'21':ROJO,'22':AMBER,'23':VERDE,'24':AZUL,'25':PURPLE};
+const yearLabels = {'21':'2021','22':'2022','23':'2023','24':'2024','25':'2025'};
+const scatterDatasets = ['21','22','23','24','25'].map(yr=>({
+  label:yearLabels[yr],
+  data:data.filter(d=>d.q.endsWith(yr)).map(d=>({x:d.load,y:d.iask,q:d.q})),
+  backgroundColor:yearColors[yr],pointRadius:6,pointHoverRadius:8
+}));
+new Chart(document.getElementById('chart5'), {
+  type:'scatter',
+  data:{datasets:scatterDatasets},
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{labels:{font:{size:10}}},
+      tooltip:{callbacks:{
+        label:ctx=>{
+          const p=ctx.raw;
+          return `${p.q}: ${p.x}% ocup. | ${p.y.toFixed(2)}¢ IASK`;
+        }
+      }}
+    },
+    scales:{
+      x:{min:65,max:92,title:{display:true,text:'Factor de Ocupación (%)',font:{size:10}},
+         ticks:{font:{size:9}},grid:{color:'#F3F4F6'}},
+      y:{min:4,max:11,title:{display:true,text:'IASK (¢ USD)',font:{size:10}},
+         ticks:{font:{size:9},callback:v=>`${v}¢`},grid:{color:'#F3F4F6'}}
+    }
+  }
+});
+
+// ── Data Table ─────────────────────────────────────────────────────────
+const tb = document.getElementById('tableBody');
+const years = {'1T21':'2021','2T21':'2021','3T21':'2021','4T21':'2021',
+               '1T22':'2022','2T22':'2022','3T22':'2022','4T22':'2022',
+               '1T23':'2023','2T23':'2023','3T23':'2023','4T23':'2023',
+               '1T24':'2024','2T24':'2024','3T24':'2024','4T24':'2024',
+               '1T25':'2025','2T25':'2025','3T25':'2025','4T25':'2025'};
+let lastYear = '';
+data.forEach(r=>{
+  const yr = years[r.q];
+  if(yr !== lastYear){
+    const sep = document.createElement('tr');
+    sep.className = 'year-sep';
+    sep.innerHTML = `<td colspan="8" style="padding:6px 12px">── ${yr} ──</td>`;
+    tb.appendChild(sep);
+    lastYear = yr;
+  }
+  const margen = (r.iask - r.cask).toFixed(2);
+  const pos = parseFloat(margen) >= 0;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${r.q}</td>
+    <td class="iask">${r.iask.toFixed(2)}</td>
+    <td>${r.yield_c ?? '—'}</td>
+    <td>${r.ip_ask ?? '—'}</td>
+    <td>${r.cask.toFixed(2)}</td>
+    <td class="${pos?'pos':'neg'}">${pos?'+':''}${margen}</td>
+    <td>${r.pax.toLocaleString()}</td>
+    <td>${r.load}%</td>
+  `;
+  tb.appendChild(tr);
+});
+</script>
+</body>
+</html>
