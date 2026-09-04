@@ -398,18 +398,11 @@ summary:focus-visible {
   letter-spacing: 0.01em;
 }
 
-.executive-reading-copy {
-  display: grid;
-  gap: 8px;
+.analysis-placeholder {
   margin: 0;
-  padding: 0;
   color: #354258;
   font-size: 12px;
   line-height: 1.55;
-}
-
-.executive-reading-copy p {
-  margin: 0;
 }
 
 .disclosure {
@@ -783,6 +776,11 @@ tbody tr.year-separator td {
 
     </section>
 
+    <section class="narrative-card" aria-labelledby="executive-reading-title">
+      <h2 id="executive-reading-title">Lectura ejecutiva · <span id="narrative-period">—</span></h2>
+      <p class="analysis-placeholder" id="narrative-copy">Contenido por definir. Aquí irá el output del agente de análisis por trimestre.</p>
+    </section>
+
     <section aria-labelledby="unit-heading">
       <div class="section-heading">
         <div>
@@ -821,11 +819,6 @@ tbody tr.year-separator td {
         <p class="chart-subtitle">Cada punto es un trimestre; los colores identifican el año. Mayor ocupación tiende a coincidir con mayor RASK.</p>
         <div class="chart chart-sm" id="load-chart" role="img" aria-label="Relación entre factor de ocupación y RASK"></div>
       </article>
-    </section>
-
-    <section class="narrative-card" aria-labelledby="executive-reading-title">
-      <h2 id="executive-reading-title">Lectura ejecutiva · <span id="narrative-period">—</span></h2>
-      <div class="executive-reading-copy" id="narrative-copy"></div>
     </section>
 
     <details class="disclosure">
@@ -5200,13 +5193,6 @@ return Plotly;
 
   function updateNarrative(view) {
     setText("narrative-period", view.period_label);
-    const container = document.getElementById("narrative-copy");
-    container.replaceChildren();
-    view.narrative.paragraphs.forEach((paragraph) => {
-      const node = document.createElement("p");
-      node.textContent = paragraph;
-      container.appendChild(node);
-    });
   }
 
   function updateKpis(view) {

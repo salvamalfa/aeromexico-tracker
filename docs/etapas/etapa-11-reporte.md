@@ -32,8 +32,8 @@ la navegación de Streamlit, no se publicó el prototipo y no se hizo push.
 - Gráfica principal RASK/CASK con barras de margen unitario sobre doble eje; gráfica
   de precio y volumen; y mapa de ocupación/RASK con color por año.
 - Variaciones KPI positivas en verde y negativas en rojo.
-- Jerarquía revisada: KPIs primero, lectura ejecutiva después de las gráficas y
-  una sola lectura ejecutiva de tres puntos, sin conclusiones duplicadas.
+- Jerarquía revisada: KPI primero, lectura ejecutiva inmediatamente debajo y después
+  las gráficas. El contenido queda marcado como pendiente del agente trimestral.
 - Navegación entre trimestres mediante flechas: abajo retrocede y arriba avanza.
 - Selector de ventana para la gráfica principal: historia completa o últimos 12, 8
   o 4 trimestres, con periodos horizontales.
@@ -41,7 +41,8 @@ la navegación de Streamlit, no se publicó el prototipo y no se hizo push.
   en los tooltips.
 - Encabezado en azul sólido, sin degradado ni ornamentos circulares.
 - Barras de margen al fondo y líneas RASK/CASK sobrepuestas en primer plano.
-- Lectura ejecutiva en una sola columna: título y trimestre arriba, texto debajo.
+- Lectura ejecutiva en una sola columna: título y trimestre arriba y un placeholder
+  explícito debajo; no se presenta texto determinista como análisis terminado.
 - Tabla trimestral desplegable con variación QoQ junto a cada métrica.
 - Separadores oscuros entre años en la tabla y acceso directo a las filas, sin nota
   metodológica visible antes de los datos.

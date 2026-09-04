@@ -331,8 +331,8 @@ visual explícita.
       cero visible.
 - [x] Las gráficas de pasajeros/RASK y ocupación/RASK conservan grano trimestral,
       unidades explícitas y tooltips con periodo.
-- [x] La lectura ejecutiva reúne tres observaciones deterministas y no atribuye
-      causalidad que los datos no demuestran.
+- [x] La lectura ejecutiva se ubica inmediatamente debajo de los KPI y muestra un
+      placeholder explícito hasta que exista output aprobado del agente trimestral.
 - [x] El historial narrativo genérico no se presenta; la tabla trimestral permanece
       desplegable e incorpora variaciones QoQ con signo y color.
 - [x] RASK, CASK y margen identifican explícitamente centavos de USD en tarjetas,

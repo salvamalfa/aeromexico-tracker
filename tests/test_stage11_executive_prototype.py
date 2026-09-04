@@ -148,11 +148,14 @@ def test_annotated_copy_order_and_delta_coloring_are_implemented() -> None:
     sections = [node for node in soup.select_one("main.page-shell").find_all(recursive=False)]
     assert sections.index(soup.select_one(".kpi-grid")) < sections.index(
         soup.select_one(".narrative-card")
-    )
+    ) < sections.index(soup.select_one("#unit-heading").find_parent("section"))
     assert soup.select_one("#narrative-headline") is None
     assert soup.select_one("#insight-list") is None
     assert soup.select_one("#executive-reading-title").get_text(" ", strip=True) == "Lectura ejecutiva · —"
-    assert soup.select_one("#narrative-copy").name == "div"
+    assert soup.select_one("#narrative-copy").name == "p"
+    assert soup.select_one("#narrative-copy").get_text(strip=True) == (
+        "Contenido por definir. Aquí irá el output del agente de análisis por trimestre."
+    )
     assert soup.select_one("#unit-range option[selected]").get_text(strip=True) == "Historia completa"
     assert len(soup.select(".table-metric small")) == 22 * 6
     app_script = soup.select_one("script[data-runtime='executive-prototype']").string
@@ -168,7 +171,7 @@ def test_annotated_copy_order_and_delta_coloring_are_implemented() -> None:
 
     css = (PATHS.root / "src/dashboard/assets/executive_summary.css").read_text(encoding="utf-8")
     assert "background: var(--brand-blue-dark);" in css
-    assert ".executive-reading-copy p" in css
+    assert ".analysis-placeholder" in css
     assert "border-top: 2px solid var(--ink) !important;" in css
 
 

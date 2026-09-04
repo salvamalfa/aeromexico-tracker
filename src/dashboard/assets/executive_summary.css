@@ -391,18 +391,11 @@ summary:focus-visible {
   letter-spacing: 0.01em;
 }
 
-.executive-reading-copy {
-  display: grid;
-  gap: 8px;
+.analysis-placeholder {
   margin: 0;
-  padding: 0;
   color: #354258;
   font-size: 12px;
   line-height: 1.55;
-}
-
-.executive-reading-copy p {
-  margin: 0;
 }
 
 .disclosure {
