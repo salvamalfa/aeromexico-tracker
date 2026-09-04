@@ -44,6 +44,9 @@ cero ni se infiere desde el HTML de referencia.
 6. Una sola lectura ejecutiva de tres puntos para el trimestre seleccionado.
 7. Datos trimestrales dentro de un desplegable, con variación QoQ junto a cada valor.
 
+La tabla marca con una línea oscura cada cambio de año. La metodología histórica se
+conserva en metadata y documentación, pero no ocupa espacio antes de la tabla.
+
 El encabezado usa un azul sólido y la lectura ejecutiva se organiza verticalmente:
 título y trimestre en una línea, seguidos por el texto. En economía unitaria, las
 barras de margen permanecen al fondo y las líneas RASK/CASK se dibujan por encima.

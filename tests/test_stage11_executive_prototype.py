@@ -122,8 +122,8 @@ def test_html_has_expected_charts_narrative_and_disclosures() -> None:
     assert len(soup.select("details.disclosure")) == 1
     assert len(soup.select(".history-item")) == 0
     assert len(soup.select("tbody tr")) == 22
-    assert "RASK vs CASK" in soup.get_text(" ", strip=True)
-    assert "Precio versus volumen de pasajeros" in soup.get_text(" ", strip=True)
+    assert "RASK vs. CASK + Margen unitario" in soup.get_text(" ", strip=True)
+    assert "Precio vs. Volumen de pasajeros" in soup.get_text(" ", strip=True)
 
 
 def test_annotated_copy_order_and_delta_coloring_are_implemented() -> None:
@@ -133,8 +133,13 @@ def test_annotated_copy_order_and_delta_coloring_are_implemented() -> None:
     assert "AERO · NYSE / BMV" not in text
     assert "trimestres comparables" not in text
     assert "Fuente: v_aeromexico_quarterly Grupo Aeroméxico" not in text
-    assert "Precio versus volumen de pasajeros" in text
-    assert "Factor de ocupación vs RASK" in text
+    assert "Precio vs. Volumen de pasajeros" in text
+    assert "Factor de ocupación vs. RASK" in text
+    assert "Correlación positiva clara" not in text
+    assert "Mayor ocupación tiende a coincidir con mayor RASK." in text
+    assert "Las barras muestran el margen unitario en ¢ USD por ASK-km para cada trimestre." in text
+    assert "En 1T21–3T22" not in soup.select_one(".table-wrap").get_text(" ", strip=True)
+    assert len(soup.select("tbody tr.year-separator")) == 5
     assert "Vs. trimestre" not in text
     assert "vs. trimestre anterior" in text
     assert "Conclusiones clave" not in text
