@@ -37,18 +37,20 @@ cero ni se infiere desde el HTML de referencia.
 1. Encabezado compacto “Aeroméxico Tracker” y navegación trimestral mediante flechas.
 2. Cinco tarjetas KPI con valor, QoQ y YoY; las variaciones positivas se distinguen
    en verde y las negativas en rojo.
-3. Gráfica principal RASK vs CASK y barras de margen unitario en doble eje, con
+3. Bloque de lectura ejecutiva con trimestre dinámico y placeholder explícito para
+   el futuro output del agente de análisis.
+4. Gráfica principal RASK vs CASK y barras de margen unitario en doble eje, con
    ventana seleccionable de historia completa, 12, 8 o 4 trimestres.
-4. Gráfica pasajeros vs RASK para leer volumen y monetización.
-5. Scatter factor de ocupación vs RASK, con color por año y trimestre identificado.
-6. Una sola lectura ejecutiva de tres puntos para el trimestre seleccionado.
+5. Gráfica pasajeros vs RASK para leer volumen y monetización.
+6. Scatter factor de ocupación vs RASK, con color por año y trimestre identificado.
 7. Datos trimestrales dentro de un desplegable, con variación QoQ junto a cada valor.
 
 La tabla marca con una línea oscura cada cambio de año. La metodología histórica se
 conserva en metadata y documentación, pero no ocupa espacio antes de la tabla.
 
-El encabezado usa un azul sólido y la lectura ejecutiva se organiza verticalmente:
-título y trimestre en una línea, seguidos por el texto. En economía unitaria, las
+El encabezado usa un azul sólido y la lectura ejecutiva se organiza verticalmente,
+justo debajo de los KPI: título y trimestre en una línea, seguidos por el placeholder
+del agente. En economía unitaria, las
 barras de margen permanecen al fondo y las líneas RASK/CASK se dibujan por encima.
 
 El historial narrativo determinista se retira del prototipo. Un análisis histórico

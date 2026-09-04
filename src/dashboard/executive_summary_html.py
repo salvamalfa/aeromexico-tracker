@@ -135,6 +135,11 @@ def render_executive_html(payload: dict[str, Any]) -> str:
       {_kpi_cards()}
     </section>
 
+    <section class="narrative-card" aria-labelledby="executive-reading-title">
+      <h2 id="executive-reading-title">Lectura ejecutiva · <span id="narrative-period">—</span></h2>
+      <p class="analysis-placeholder" id="narrative-copy">Contenido por definir. Aquí irá el output del agente de análisis por trimestre.</p>
+    </section>
+
     <section aria-labelledby="unit-heading">
       <div class="section-heading">
         <div>
@@ -173,11 +178,6 @@ def render_executive_html(payload: dict[str, Any]) -> str:
         <p class="chart-subtitle">Cada punto es un trimestre; los colores identifican el año. {escape(metadata['load_rask_interpretation'])}</p>
         <div class="chart chart-sm" id="load-chart" role="img" aria-label="Relación entre factor de ocupación y RASK"></div>
       </article>
-    </section>
-
-    <section class="narrative-card" aria-labelledby="executive-reading-title">
-      <h2 id="executive-reading-title">Lectura ejecutiva · <span id="narrative-period">—</span></h2>
-      <div class="executive-reading-copy" id="narrative-copy"></div>
     </section>
 
     <details class="disclosure">

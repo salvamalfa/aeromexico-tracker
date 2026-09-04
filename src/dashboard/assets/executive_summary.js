@@ -245,13 +245,6 @@
 
   function updateNarrative(view) {
     setText("narrative-period", view.period_label);
-    const container = document.getElementById("narrative-copy");
-    container.replaceChildren();
-    view.narrative.paragraphs.forEach((paragraph) => {
-      const node = document.createElement("p");
-      node.textContent = paragraph;
-      container.appendChild(node);
-    });
   }
 
   function updateKpis(view) {
