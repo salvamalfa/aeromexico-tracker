@@ -51,23 +51,39 @@
     };
   }
 
+  function visibleUnitRecords(rangeValue) {
+    if (rangeValue === "all") return records;
+    return records.slice(-Number(rangeValue));
+  }
+
+  function horizontalQuarterTicks(visibleRecords) {
+    const compact = window.innerWidth <= 700;
+    const stride = compact && visibleRecords.length > 12 ? 4 : compact && visibleRecords.length > 8 ? 2 : 1;
+    return visibleRecords.filter((_, index) => index % stride === 0 || index === visibleRecords.length - 1);
+  }
+
   function renderUnitEconomics() {
-    const marginColors = records.map((record) =>
+    const rangeValue = document.getElementById("unit-range").value;
+    const visibleRecords = visibleUnitRecords(rangeValue);
+    const visibleLabels = visibleRecords.map((record) => record.period_label);
+    const tickRecords = horizontalQuarterTicks(visibleRecords);
+    const marginColors = visibleRecords.map((record) =>
       record.unit_margin_cents_per_km >= 0 ? "rgba(8,127,101,0.36)" : "rgba(227,28,35,0.28)"
     );
     const traces = [
       {
-        x: labels,
-        y: records.map((record) => record.unit_margin_cents_per_km),
+        x: visibleLabels,
+        y: visibleRecords.map((record) => record.unit_margin_cents_per_km),
         name: "Margen unitario",
         type: "bar",
         yaxis: "y2",
-        marker: {color: marginColors, line: {color: records.map((record) => record.unit_margin_cents_per_km >= 0 ? colors.green : colors.red), width: 1}},
-        hovertemplate: "%{x}<br>Margen %{y:+.2f} ¢<extra></extra>",
+        marker: {color: marginColors, line: {color: visibleRecords.map((record) => record.unit_margin_cents_per_km >= 0 ? colors.green : colors.red), width: 1}},
+        hovertemplate: "%{x}<br>Margen %{y:+.2f} ¢ USD por ASK-km<extra></extra>",
+        hoverinfo: "text",
       },
       {
-        x: labels,
-        y: records.map((record) => record.rask_cents_per_km),
+        x: visibleLabels,
+        y: visibleRecords.map((record) => record.rask_cents_per_km),
         name: "RASK",
         type: "scatter",
         mode: "lines+markers",
@@ -75,11 +91,12 @@
         yaxis: "y",
         line: {color: colors.blue, width: 3},
         marker: {color: "#ffffff", line: {color: colors.blue, width: 2}, size: 7},
-        hovertemplate: "%{x}<br>RASK %{y:.2f} ¢<extra></extra>",
+        hovertemplate: "%{x}<br>RASK %{y:.2f} ¢ USD por ASK-km<extra></extra>",
+        hoverinfo: "text",
       },
       {
-        x: labels,
-        y: records.map((record) => record.cask_cents_per_km),
+        x: visibleLabels,
+        y: visibleRecords.map((record) => record.cask_cents_per_km),
         name: "CASK",
         type: "scatter",
         mode: "lines+markers",
@@ -87,7 +104,8 @@
         yaxis: "y",
         line: {color: colors.red, width: 2.4, dash: "dash"},
         marker: {color: "#ffffff", line: {color: colors.red, width: 2}, size: 6},
-        hovertemplate: "%{x}<br>CASK %{y:.2f} ¢<extra></extra>",
+        hovertemplate: "%{x}<br>CASK %{y:.2f} ¢ USD por ASK-km<extra></extra>",
+        hoverinfo: "text",
       },
     ];
     const layout = commonLayout(365);
@@ -97,19 +115,22 @@
       barmode: "overlay",
       xaxis: {
         categoryorder: "array",
-        categoryarray: labels,
-        tickangle: -45,
+        categoryarray: visibleLabels,
+        tickmode: "array",
+        tickvals: tickRecords.map((record) => record.period_label),
+        ticktext: tickRecords.map((record) => record.period_label),
+        tickangle: 0,
         tickfont: {size: 8},
         showgrid: false,
       },
       yaxis: {
-        title: {text: "RASK / CASK (¢)", font: {size: 10}},
+        title: {text: "¢ USD por ASK-km", font: {size: 10}},
         gridcolor: colors.grid,
         zeroline: false,
         tickformat: ".1f",
       },
       yaxis2: {
-        title: {text: "Margen ¢", font: {size: 10}},
+        title: {text: "Margen (¢ USD por ASK-km)", font: {size: 10}},
         overlaying: "y",
         side: "right",
         showgrid: false,
@@ -117,6 +138,7 @@
         zerolinecolor: colors.ink,
         zerolinewidth: 1,
         tickformat: "+.1f",
+        hoverformat: "+.2f",
       },
     });
     Plotly.react("unit-chart", traces, layout, plotConfig);
@@ -141,7 +163,7 @@
         yaxis: "y2",
         line: {color: colors.blue, width: 2.6},
         marker: {color: "#ffffff", line: {color: colors.blue, width: 2}, size: 6},
-        hovertemplate: "%{x}<br>RASK %{y:.2f} ¢<extra></extra>",
+        hovertemplate: "%{x}<br>RASK %{y:.2f} ¢ USD por ASK-km<extra></extra>",
       },
     ];
     const layout = commonLayout(315);
@@ -155,7 +177,7 @@
         tickformat: ".1f",
       },
       yaxis2: {
-        title: {text: "RASK ¢", font: {size: 10}},
+        title: {text: "RASK (¢ USD)", font: {size: 10}},
         overlaying: "y",
         side: "right",
         showgrid: false,
@@ -181,13 +203,14 @@
         textposition: "top center",
         textfont: {size: 8, color: colors.muted},
         marker: {size: 13, color: yearColors[year], line: {color: "#ffffff", width: 1.2}},
-        hovertemplate: "%{text}<br>Ocupación %{x:.1f}%<br>RASK %{y:.2f} ¢<br>ASK %{customdata[0]:.2f} mil M<br>Margen %{customdata[1]:+.2f} ¢<br>Pasajeros %{customdata[2]:.2f} M<extra></extra>",
+        hovertemplate: "%{text}<br>Ocupación %{x:.1f}%<br>RASK %{y:.2f} ¢ USD por ASK-km<br>ASK %{customdata[0]:.2f} mil M<br>Margen %{customdata[1]:+.2f} ¢ USD por ASK-km<br>Pasajeros %{customdata[2]:.2f} M<extra></extra>",
       };
     });
     const selectedTrace = {
       x: [current.load_factor_reported * 100],
       y: [current.rask_cents_per_km],
       name: `Seleccionado: ${current.period_label}`,
+      showlegend: false,
       type: "scatter",
       mode: "markers",
       marker: {symbol: "circle-open", size: 27, color: colors.red, line: {color: colors.red, width: 3}},
@@ -203,9 +226,10 @@
         ticksuffix: "%",
       },
       yaxis: {
-        title: {text: "RASK (¢ por ASK-km)", font: {size: 10}},
+        title: {text: "RASK (¢ USD por ASK-km)", font: {size: 10}},
         gridcolor: colors.grid,
         tickformat: ".1f",
+        hoverformat: ".2f",
       },
     });
     Plotly.react("load-chart", [...traces, selectedTrace], layout, plotConfig);
@@ -213,24 +237,12 @@
 
   function updateNarrative(view) {
     setText("narrative-period", view.period_label);
-    setText("narrative-headline", view.narrative.headline);
     const container = document.getElementById("narrative-copy");
     container.replaceChildren();
     view.narrative.paragraphs.forEach((paragraph) => {
-      const node = document.createElement("p");
+      const node = document.createElement("li");
       node.textContent = paragraph;
       container.appendChild(node);
-    });
-  }
-
-  function updateConclusions(view) {
-    setText("insight-period", view.period_label);
-    const list = document.getElementById("insight-list");
-    list.replaceChildren();
-    view.conclusions.forEach((conclusion) => {
-      const item = document.createElement("li");
-      item.textContent = conclusion;
-      list.appendChild(item);
     });
   }
 
@@ -251,16 +263,28 @@
   function render(periodId) {
     const view = views[periodId];
     if (!view) return;
-    updateConclusions(view);
     updateKpis(view);
     updateNarrative(view);
-    renderUnitEconomics();
     renderVolumeMonetization();
     renderLoadMonetization(periodId);
+    setText("period-display", view.period_label);
+    const currentIndex = periodIndex.get(periodId);
+    document.getElementById("period-prev").disabled = currentIndex === 0;
+    document.getElementById("period-next").disabled = currentIndex === records.length - 1;
     document.getElementById("live-status").textContent = `Vista actualizada a ${view.period_label}.`;
   }
 
-  const selector = document.getElementById("period-selector");
-  selector.addEventListener("change", (event) => render(event.target.value));
-  render(payload.metadata.default_period);
+  let activePeriodId = payload.metadata.default_period;
+  const movePeriod = (offset) => {
+    const nextIndex = periodIndex.get(activePeriodId) + offset;
+    if (nextIndex < 0 || nextIndex >= records.length) return;
+    activePeriodId = records[nextIndex].period_id;
+    render(activePeriodId);
+  };
+  document.getElementById("period-prev").addEventListener("click", () => movePeriod(-1));
+  document.getElementById("period-next").addEventListener("click", () => movePeriod(1));
+  document.getElementById("unit-range").addEventListener("change", renderUnitEconomics);
+  window.addEventListener("resize", renderUnitEconomics);
+  renderUnitEconomics();
+  render(activePeriodId);
 })();

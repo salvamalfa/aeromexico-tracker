@@ -33,8 +33,14 @@ la navegación de Streamlit, no se publicó el prototipo y no se hizo push.
   de precio y volumen; y mapa de ocupación/RASK con color por año.
 - Variaciones KPI positivas en verde y negativas en rojo.
 - Jerarquía revisada: KPIs primero, lectura ejecutiva después de las gráficas y
-  conclusiones clave debajo de esa lectura.
-- Historial narrativo y tabla trimestral dentro de desplegables.
+  una sola lectura ejecutiva de tres puntos, sin conclusiones duplicadas.
+- Navegación entre trimestres mediante flechas: abajo retrocede y arriba avanza.
+- Selector de ventana para la gráfica principal: historia completa o últimos 12, 8
+  o 4 trimestres, con periodos horizontales.
+- RASK, CASK y margen identifican explícitamente centavos de USD y usan dos decimales
+  en los tooltips.
+- Tabla trimestral desplegable con variación QoQ junto a cada métrica.
+- El historial narrativo genérico fue retirado.
 - Pruebas enfocadas y un validador de doce controles de aceptación.
 - Comandos `stage11-prototype` y `stage11-validate` en el `justfile`.
 
@@ -81,7 +87,7 @@ ocupación `+0.5 pp / -0.8 pp` y pasajeros `+3.9% / -2.7%`.
 |---|---|---|
 | Suite completa | PASS | 199/199 pruebas |
 | Suite enfocada Etapas 9 y 11 | PASS | 42/42 pruebas |
-| Aceptación Etapa 11 | PASS | 12/12 controles |
+| Aceptación Etapa 11 | PASS | 14/14 controles |
 | Fuente única | PASS | `v_aeromexico_quarterly` |
 | Cobertura | PASS | 22 periodos únicos, 2021Q1–2026Q2 |
 | Reconciliación | PASS | margen y cifras visibles coinciden con el warehouse |
@@ -95,9 +101,10 @@ ocupación `+0.5 pp / -0.8 pp` y pasajeros `+3.9% / -2.7%`.
 | Escritorio | Jerarquía compacta, cinco tarjetas y tres gráficas legibles |
 | Tablet, 736 × 900 | Tarjetas 3+2, gráficas sin colisiones ni overflow |
 | Móvil, 360 × 800 | Tarjetas en dos columnas, gráficas de 297 px y cero overflow horizontal |
-| Selector trimestral | Actualiza toda la lectura y vuelve al estado inicial al recargar |
+| Flechas trimestrales | Retroceden y avanzan; se deshabilitan en los extremos |
+| Selector de ventana | Historia completa, 12, 8 y 4 trimestres funcionan |
 | Primeros periodos | Las comparaciones sin antecedente aparecen como `No disponible` |
-| Desplegables | Tabla visible con 22 filas; historial cerrado por defecto |
+| Desplegable | Tabla visible con 22 filas y 132 variaciones QoQ |
 | Consola del navegador | Cero errores |
 
 ## Qué no funcionó y por qué
@@ -140,6 +147,23 @@ ocupación `+0.5 pp / -0.8 pp` y pasajeros `+3.9% / -2.7%`.
   de métricas ni introducir una segunda fuente de datos.
 - Vigilar que futuras revisiones de comunicados IR entren como nuevas versiones sin
   sobrescribir los artefactos preservados.
+
+## Propuesta para análisis trimestral profundo
+
+El historial automático de frases repetitivas no debe regresar. La alternativa
+propuesta es ejecutar, después de cada cierre trimestral, un agente de análisis que:
+
+1. reciba un paquete de evidencia cerrado con el comunicado, métricas Gold, QoQ, YoY,
+   tráfico, capacidad, mercado y macro disponibles para ese trimestre;
+2. produzca una salida estructurada con desempeño, impulsores observados, riesgos,
+   preguntas abiertas y referencias exactas a artefactos o registros;
+3. valide cada cifra contra Gold y rechace causalidad sin evidencia;
+4. guarde borrador, versión, modelo, fecha y linaje en una tabla dedicada;
+5. publique el texto únicamente después de aprobación humana.
+
+Para el histórico 2021–2026 se ejecutaría un backfill controlado, trimestre por
+trimestre, con la misma estructura y revisión. Esto permite análisis realmente
+distintos sin convertir texto generado en una fuente de datos.
 
 ## Comandos para reproducir
 

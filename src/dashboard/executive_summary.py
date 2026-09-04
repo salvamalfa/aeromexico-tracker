@@ -142,12 +142,12 @@ def _cent_comparison(current: float, previous: float | None) -> Comparison:
     if previous is None:
         return Comparison(False, None, "No disponible", "na")
     value = current - previous
-    return Comparison(True, value, f"{value:+.2f} ¢", _direction(value, tolerance=0.005))
+    return Comparison(True, value, f"{value:+.2f} ¢ USD", _direction(value, tolerance=0.005))
 
 
 def _display_value(value: float, kind: str) -> str:
     if kind == "cents":
-        return f"{value:.2f} ¢"
+        return f"{value:.2f} ¢ USD"
     if kind == "billions":
         return f"{value / 1_000_000_000:.2f} mil M"
     if kind == "millions":
@@ -299,7 +299,7 @@ def _period_view(
 
     conclusions = [
         (
-            f"El margen unitario fue {margin:.2f} ¢ por ASK-km; "
+            f"El margen unitario fue {margin:.2f} ¢ USD por ASK-km; "
             + (
                 f"cambió {margin_qoq.display} frente al trimestre anterior."
                 if margin_qoq.available
@@ -351,8 +351,8 @@ def _period_view(
         "headline": headline,
         "paragraphs": [
             (
-                f"{record['period_label']} registró RASK de {float(record['rask_cents_per_km']):.2f} ¢, "
-                f"CASK de {float(record['cask_cents_per_km']):.2f} ¢ y un margen unitario de {margin:.2f} ¢ por ASK-km."
+                f"{record['period_label']} registró RASK de {float(record['rask_cents_per_km']):.2f} ¢ USD, "
+                f"CASK de {float(record['cask_cents_per_km']):.2f} ¢ USD y un margen unitario de {margin:.2f} ¢ USD por ASK-km."
             ),
             (
                 f"La compañía ofreció {float(record['ask_km']) / 1_000_000_000:.2f} mil millones de ASK, "
@@ -407,7 +407,7 @@ def build_executive_payload(database_path: str | None = None) -> dict[str, Any]:
         correlation_label = "La historia disponible muestra una relación inversa entre ocupación y RASK."
     return {
         "metadata": {
-            "title": "Aeroméxico — Vista ejecutiva trimestral",
+            "title": "Aeroméxico Tracker",
             "default_period": str(records[-1]["period_id"]),
             "first_period": str(records[0]["period_id"]),
             "last_period": str(records[-1]["period_id"]),

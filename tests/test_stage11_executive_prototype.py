@@ -67,8 +67,8 @@ def test_qoq_yoy_and_typed_deltas_are_correct() -> None:
     )
     assert kpis["load_factor_reported"]["qoq"]["display"] == "+0.5 pp"
     assert kpis["load_factor_reported"]["yoy"]["display"] == "-0.8 pp"
-    assert latest["margin_qoq"]["display"] == "-0.68 ¢"
-    assert latest["margin_yoy"]["display"] == "-1.18 ¢"
+    assert latest["margin_qoq"]["display"] == "-0.68 ¢ USD"
+    assert latest["margin_yoy"]["display"] == "-1.18 ¢ USD"
 
 
 def test_missing_comparables_are_explicit_not_zero() -> None:
@@ -95,25 +95,20 @@ def test_html_contains_only_one_executive_view_and_five_kpis() -> None:
     assert len(soup.select("main[data-testid='executive-summary-root']")) == 1
     assert len(soup.select(".kpi-card")) == 5
     assert len(soup.select("nav, [role='tablist'], [role='tab']")) == 0
-    assert "Vista ejecutiva trimestral" in soup.get_text(" ", strip=True)
+    assert "Aeroméxico Tracker" in soup.get_text(" ", strip=True)
     assert "Estructura de datos" not in soup.get_text(" ", strip=True)
 
 
-def test_html_embeds_all_quarters_and_default_selection() -> None:
+def test_html_embeds_all_quarters_and_uses_accessible_period_stepper() -> None:
     document = render_executive_html(build_executive_payload())
     soup = BeautifulSoup(document, "html.parser")
-    options = soup.select("#period-selector option")
-    assert len(options) == 22
-    assert [option["value"] for option in options] == [
-        f"{year}Q{quarter}"
-        for year, quarter in reversed(
-            [(year, quarter) for year in range(2021, 2027) for quarter in range(1, 5)
-             if f"{year}Q{quarter}" <= "2026Q2"]
-        )
-    ]
-    assert soup.select_one("#period-selector option[selected]")["value"] == "2026Q2"
+    assert soup.select_one("#period-selector") is None
+    assert soup.select_one("#period-prev")["aria-label"] == "Ir al trimestre anterior"
+    assert soup.select_one("#period-next")["aria-label"] == "Ir al trimestre siguiente"
+    assert soup.select_one("#period-display") is not None
     embedded = _payload_from_html(document)
     assert embedded == build_executive_payload()
+    assert len(embedded["records"]) == 22
 
 
 def test_html_has_expected_charts_narrative_and_disclosures() -> None:
@@ -124,8 +119,8 @@ def test_html_has_expected_charts_narrative_and_disclosures() -> None:
         "volume-chart",
         "load-chart",
     }
-    assert len(soup.select("details.disclosure")) == 2
-    assert len(soup.select(".history-item")) == 22
+    assert len(soup.select("details.disclosure")) == 1
+    assert len(soup.select(".history-item")) == 0
     assert len(soup.select("tbody tr")) == 22
     assert "RASK vs CASK" in soup.get_text(" ", strip=True)
     assert "Precio versus volumen de pasajeros" in soup.get_text(" ", strip=True)
@@ -140,13 +135,25 @@ def test_annotated_copy_order_and_delta_coloring_are_implemented() -> None:
     assert "Fuente: v_aeromexico_quarterly Grupo Aeroméxico" not in text
     assert "Precio versus volumen de pasajeros" in text
     assert "Factor de ocupación vs RASK" in text
+    assert "Vs. trimestre" not in text
+    assert "vs. trimestre anterior" in text
+    assert "Conclusiones clave" not in text
+    assert "Ver análisis de trimestres anteriores" not in text
+    assert "¢ USD" in text
     sections = [node for node in soup.select_one("main.page-shell").find_all(recursive=False)]
     assert sections.index(soup.select_one(".kpi-grid")) < sections.index(
         soup.select_one(".narrative-card")
-    ) < sections.index(soup.select_one(".executive-insight"))
+    )
+    assert soup.select_one("#narrative-headline") is None
+    assert soup.select_one("#insight-list") is None
+    assert soup.select_one("#unit-range option[selected]").get_text(strip=True) == "Historia completa"
+    assert len(soup.select(".table-metric small")) == 22 * 6
     app_script = soup.select_one("script[data-runtime='executive-prototype']").string
     assert "delta-${comparison.direction}" in app_script
     assert "yearColors" in app_script
+    assert 'showlegend: false' in app_script
+    assert 'tickangle: 0' in app_script
+    assert "Margen %{customdata[1]:+.2f}" in app_script
 
 
 def test_html_is_self_contained_and_has_no_remote_runtime() -> None:

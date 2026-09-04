@@ -44,8 +44,8 @@ def _kpi_cards() -> str:
               <p class="kpi-label">{label}</p>
               <p class="kpi-value" id="kpi-{key}-value">—</p>
               <div class="kpi-comparisons">
-                <div class="comparison-chip"><span>Vs. trimestre anterior</span><strong id="kpi-{key}-qoq">—</strong></div>
-                <div class="comparison-chip"><span>Vs. año anterior</span><strong id="kpi-{key}-yoy">—</strong></div>
+                <div class="comparison-chip"><span>vs. trimestre anterior</span><strong id="kpi-{key}-qoq">—</strong></div>
+                <div class="comparison-chip"><span>vs. año anterior</span><strong id="kpi-{key}-yoy">—</strong></div>
               </div>
             </article>
             """
@@ -53,62 +53,44 @@ def _kpi_cards() -> str:
     return "".join(cards)
 
 
-def _history_cards(payload: dict[str, Any]) -> str:
-    cards: list[str] = []
-    for record in reversed(payload["records"]):
-        view = payload["views"][record["period_id"]]
-        cards.append(
-            """
-            <article class="history-item">
-              <h3>{period}: {headline}</h3>
-              <p>{summary}</p>
-            </article>
-            """.format(
-                period=escape(record["period_label"]),
-                headline=escape(view["narrative"]["headline"]),
-                summary=escape(view["narrative"]["paragraphs"][0]),
-            )
-        )
-    return "".join(cards)
-
-
 def _data_rows(payload: dict[str, Any]) -> str:
     rows: list[str] = []
     for record in reversed(payload["records"]):
+        view = payload["views"][record["period_id"]]
+        kpis = {item["key"]: item for item in view["kpis"]}
+
+        def metric_cell(value: str, comparison: dict[str, Any]) -> str:
+            direction = escape(comparison["direction"], quote=True)
+            delta = comparison["display"] if comparison["available"] else "—"
+            return (
+                '<span class="table-metric">'
+                f'<span>{escape(value)}</span>'
+                f'<small class="delta-{direction}" title="vs. trimestre anterior">{escape(delta)}</small>'
+                "</span>"
+            )
+
         rows.append(
             """
             <tr>
               <td>{period}</td>
-              <td>{rask:.2f}</td>
-              <td>{cask:.2f}</td>
-              <td>{margin:+.2f}</td>
-              <td>{ask:.2f}</td>
-              <td>{load:.1%}</td>
-              <td>{passengers:.3f}</td>
+              <td>{rask}</td>
+              <td>{cask}</td>
+              <td>{margin}</td>
+              <td>{ask}</td>
+              <td>{load}</td>
+              <td>{passengers}</td>
             </tr>
             """.format(
                 period=escape(record["period_label"]),
-                rask=record["rask_cents_per_km"],
-                cask=record["cask_cents_per_km"],
-                margin=record["unit_margin_cents_per_km"],
-                ask=record["ask_km"] / 1_000_000_000,
-                load=record["load_factor_reported"],
-                passengers=record["passengers"] / 1_000_000,
+                rask=metric_cell(f'{record["rask_cents_per_km"]:.2f}', kpis["rask_cents_per_km"]["qoq"]),
+                cask=metric_cell(f'{record["cask_cents_per_km"]:.2f}', kpis["cask_cents_per_km"]["qoq"]),
+                margin=metric_cell(f'{record["unit_margin_cents_per_km"]:+.2f}', view["margin_qoq"]),
+                ask=metric_cell(f'{record["ask_km"] / 1_000_000_000:.2f}', kpis["ask_km"]["qoq"]),
+                load=metric_cell(f'{record["load_factor_reported"]:.1%}', kpis["load_factor_reported"]["qoq"]),
+                passengers=metric_cell(f'{record["passengers"] / 1_000_000:.3f}', kpis["passengers"]["qoq"]),
             )
         )
     return "".join(rows)
-
-
-def _period_options(payload: dict[str, Any]) -> str:
-    default = payload["metadata"]["default_period"]
-    options: list[str] = []
-    for record in reversed(payload["records"]):
-        selected = " selected" if record["period_id"] == default else ""
-        options.append(
-            f'<option value="{escape(record["period_id"], quote=True)}"{selected}>'
-            f'{escape(record["period_label"])}</option>'
-        )
-    return "".join(options)
 
 
 def render_executive_html(payload: dict[str, Any]) -> str:
@@ -134,11 +116,15 @@ def render_executive_html(payload: dict[str, Any]) -> str:
     <header class="hero">
       <div class="hero-grid">
         <div>
-          <h1>Aeroméxico — Vista ejecutiva trimestral</h1>
+          <h1>Aeroméxico Tracker</h1>
         </div>
         <div class="period-control">
-          <label for="period-selector">Trimestre analizado</label>
-          <select id="period-selector" aria-describedby="period-help">{_period_options(payload)}</select>
+          <span class="period-label">Trimestre analizado</span>
+          <div class="period-stepper" role="group" aria-label="Cambiar trimestre analizado">
+            <button type="button" id="period-prev" aria-label="Ir al trimestre anterior" title="Trimestre anterior">▼</button>
+            <output id="period-display" aria-live="polite">—</output>
+            <button type="button" id="period-next" aria-label="Ir al trimestre siguiente" title="Trimestre siguiente">▲</button>
+          </div>
           <span id="period-help" class="sr-only">Actualiza tarjetas, conclusiones, narrativa y trimestre destacado.</span>
         </div>
       </div>
@@ -157,8 +143,20 @@ def render_executive_html(payload: dict[str, Any]) -> str:
         <p class="source-inline">Fuente: {escape(metadata['source_view'])}</p>
       </div>
       <article class="chart-card">
-        <p class="chart-title">RASK vs CASK y margen unitario</p>
-        <p class="chart-subtitle">Cuando RASK supera CASK, la operación genera utilidad por cada asiento-kilómetro.</p>
+        <div class="chart-heading-row">
+          <div>
+            <p class="chart-title">RASK vs CASK y margen unitario</p>
+            <p class="chart-subtitle">Cuando RASK supera CASK, la operación genera utilidad por cada asiento-kilómetro.</p>
+          </div>
+          <label class="chart-range-control" for="unit-range">Periodo
+            <select id="unit-range">
+              <option value="all" selected>Historia completa</option>
+              <option value="12">Últimos 12 trimestres</option>
+              <option value="8">Últimos 8 trimestres</option>
+              <option value="4">Últimos 4 trimestres</option>
+            </select>
+          </label>
+        </div>
         <div class="chart" id="unit-chart" role="img" aria-label="Serie trimestral de RASK, CASK y margen unitario"></div>
       </article>
     </section>
@@ -176,26 +174,13 @@ def render_executive_html(payload: dict[str, Any]) -> str:
       </article>
     </section>
 
-    <section class="narrative-card" aria-labelledby="narrative-headline">
+    <section class="narrative-card" aria-labelledby="executive-reading-title">
       <div>
-        <p class="section-kicker">Lectura ejecutiva · <span id="narrative-period">—</span></p>
-        <h2 id="narrative-headline">—</h2>
+        <p class="section-kicker">Lectura ejecutiva</p>
+        <h2 id="executive-reading-title"><span id="narrative-period">—</span></h2>
       </div>
-      <div class="narrative-copy" id="narrative-copy"></div>
+      <ul class="executive-reading-list" id="narrative-copy"></ul>
     </section>
-
-    <section class="executive-insight" aria-labelledby="insight-title">
-      <div>
-        <p class="section-kicker">Conclusiones clave</p>
-        <h2 id="insight-title"><span id="insight-period">—</span> en tres lecturas</h2>
-      </div>
-      <ul class="insight-list" id="insight-list"></ul>
-    </section>
-
-    <details class="disclosure">
-      <summary>Ver análisis de trimestres anteriores</summary>
-      <div class="disclosure-body history-grid">{_history_cards(payload)}</div>
-    </details>
 
     <details class="disclosure">
       <summary>Ver datos por trimestre</summary>
@@ -204,7 +189,7 @@ def render_executive_html(payload: dict[str, Any]) -> str:
         <table>
           <thead>
             <tr>
-              <th>Trimestre</th><th>RASK (¢)</th><th>CASK (¢)</th><th>Margen (¢)</th>
+              <th>Trimestre</th><th>RASK (¢ USD)</th><th>CASK (¢ USD)</th><th>Margen (¢ USD)</th>
               <th>ASK (mil M)</th><th>Ocupación</th><th>Pasajeros (M)</th>
             </tr>
           </thead>

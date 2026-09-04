@@ -325,16 +325,22 @@ visual explícita.
       comparaciones QoQ y YoY correctamente tipadas.
 - [x] Factor de ocupación usa puntos porcentuales; el margen unitario usa centavos por
       ASK-km y reconcilia con `RASK - CASK`.
-- [x] La selección de trimestre actualiza tarjetas, conclusiones, narrativa y énfasis
-      visual en las gráficas.
+- [x] Las flechas anterior/siguiente actualizan tarjetas, lectura ejecutiva y énfasis
+      visual en las gráficas, y se deshabilitan en los extremos de la serie.
 - [x] La gráfica principal compara RASK y CASK y muestra el margen unitario con línea
       cero visible.
 - [x] Las gráficas de pasajeros/RASK y ocupación/RASK conservan grano trimestral,
       unidades explícitas y tooltips con periodo.
-- [x] Conclusiones y narrativa se generan mediante reglas deterministas y no atribuyen
+- [x] La lectura ejecutiva reúne tres observaciones deterministas y no atribuye
       causalidad que los datos no demuestran.
-- [x] Historial narrativo y tabla trimestral están disponibles como contenido
-      desplegable, no ocupan la primera pantalla.
+- [x] El historial narrativo genérico no se presenta; la tabla trimestral permanece
+      desplegable e incorpora variaciones QoQ con signo y color.
+- [x] RASK, CASK y margen identifican explícitamente centavos de USD en tarjetas,
+      ejes, narrativas y tooltips; los tooltips limitan el margen a dos decimales.
+- [x] La gráfica principal ofrece historia completa y ventanas de 12, 8 o 4
+      trimestres, con etiquetas horizontales y adaptación móvil.
+- [x] El trimestre seleccionado conserva el círculo de énfasis en el scatter sin
+      añadir una serie redundante a la leyenda.
 - [x] El HTML es autocontenido, funciona sin red y no contiene CDN, fetch, XHR,
       WebSocket, rutas absolutas, credenciales ni correo SEC.
 - [x] El resultado pasa QA visual en escritorio, 736 px y 360 px, sin overflow ni

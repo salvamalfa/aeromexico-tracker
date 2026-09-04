@@ -17,12 +17,16 @@ def main() -> None:
         "no_other_pages": not soup.select("nav, [role='tablist'], [role='tab']"),
         "five_kpis": len(soup.select(".kpi-card")) == 5,
         "three_charts": len(soup.select(".chart[id]")) == 3,
-        "all_backend_quarters": len(soup.select("#period-selector option"))
+        "all_backend_quarters": len(payload["records"])
         == payload["metadata"]["quarter_count"],
         "coverage": payload["metadata"]["first_period"] == "2021Q1"
         and payload["metadata"]["last_period"] == "2026Q2",
         "default_latest": payload["metadata"]["default_period"] == "2026Q2",
-        "two_disclosures": len(soup.select("details.disclosure")) == 2,
+        "one_disclosure": len(soup.select("details.disclosure")) == 1,
+        "period_stepper": soup.select_one("#period-prev") is not None
+        and soup.select_one("#period-next") is not None,
+        "merged_reading": soup.select_one("#narrative-copy") is not None
+        and soup.select_one("#insight-list") is None,
         "offline": not soup.select("script[src], link[href], iframe, img[src]"),
         "source_named": payload["metadata"]["source_view"]
         in soup.get_text(" ", strip=True),

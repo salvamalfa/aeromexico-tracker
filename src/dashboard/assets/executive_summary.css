@@ -82,7 +82,7 @@ select {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 28px;
-  align-items: end;
+  align-items: center;
 }
 
 .section-kicker,
@@ -105,7 +105,7 @@ h1 {
   min-width: 170px;
 }
 
-.period-control label {
+.period-label {
   display: block;
   margin-bottom: 6px;
   color: #d8e5f8;
@@ -115,21 +115,65 @@ h1 {
   text-transform: uppercase;
 }
 
-.period-control select {
-  width: 100%;
+.period-stepper {
+  display: grid;
+  grid-template-columns: 38px minmax(74px, 1fr) 38px;
+  align-items: stretch;
+  overflow: hidden;
+  min-height: 42px;
+  color: var(--brand-blue-dark);
+  background: #fff;
+  border-radius: 10px;
+  outline: 2px solid transparent;
+}
+
+.period-stepper output {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.period-stepper button {
+  border: 0;
+  color: var(--brand-blue);
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.period-stepper button:hover:not(:disabled) {
+  background: var(--blue-open);
+}
+
+.period-stepper button:disabled {
+  color: #b4bfd0;
+  cursor: default;
+}
+
+.period-stepper button:focus-visible,
+.chart-range-control select:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 3px solid #f5c518;
+  outline-offset: -3px;
+}
+
+.chart-range-control select {
   appearance: none;
   color: var(--brand-blue-dark);
   background: #fff
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='m1 1 5 5 5-5' fill='none' stroke='%23003087' stroke-width='1.7'/%3E%3C/svg%3E")
     no-repeat right 14px center;
-  border: 0;
-  border-radius: 10px;
-  padding: 11px 38px 11px 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  padding: 7px 32px 7px 10px;
   font-weight: 750;
   outline: 2px solid transparent;
 }
 
-.period-control select:focus-visible,
 summary:focus-visible {
   outline: 3px solid #f5c518;
   outline-offset: 3px;
@@ -304,6 +348,24 @@ summary:focus-visible {
   font-weight: 750;
 }
 
+.chart-heading-row {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.chart-range-control {
+  flex: 0 0 auto;
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .chart-subtitle {
   max-width: 820px;
 }
@@ -333,13 +395,11 @@ summary:focus-visible {
   padding: 21px 23px;
 }
 
-.narrative-copy {
+.executive-reading-list {
   display: grid;
   gap: 8px;
-}
-
-.narrative-copy p {
   margin: 0;
+  padding-left: 18px;
   color: #354258;
   font-size: 12px;
   line-height: 1.55;
@@ -456,6 +516,26 @@ tbody tr:nth-child(even) {
   background: #fafbfd;
 }
 
+.table-metric {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 7px;
+  width: 100%;
+}
+
+.table-metric small {
+  min-width: 51px;
+  font-size: 8.5px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.table-metric .delta-up { color: var(--altitude-green); }
+.table-metric .delta-down { color: var(--brand-red); }
+.table-metric .delta-flat,
+.table-metric .delta-na { color: var(--quiet); }
+
 .footer {
   display: flex;
   justify-content: space-between;
@@ -534,6 +614,16 @@ tbody tr:nth-child(even) {
 
   .section-heading .source-inline {
     text-align: left;
+  }
+
+  .chart-heading-row {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .chart-range-control {
+    width: min(100%, 210px);
   }
 
   .chart-card {
