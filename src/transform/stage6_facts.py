@@ -657,11 +657,14 @@ def _seasonally_adjusted(afac: pd.DataFrame) -> pd.DataFrame:
 
 def build_fact_carrier_metrics() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     operating = _standard_source(pd.read_parquet(PATHS.silver / "sec_operating_metrics.parquet"))
+    aeromexico_ir = _standard_source(
+        pd.read_parquet(PATHS.silver / "aeromexico_ir_quarterly_metrics.parquet")
+    )
     financial = _standard_source(pd.read_parquet(PATHS.silver / "sec_financials.parquet"))
     peers = _standard_source(pd.read_parquet(PATHS.silver / "peer_financials.parquet"))
     bmv = _bmv_rows()
     afac, exceptions = _afac_rows()
-    base = pd.concat([operating, financial, peers, bmv, afac], ignore_index=True)
+    base = pd.concat([operating, aeromexico_ir, financial, peers, bmv, afac], ignore_index=True)
     derivation = _derive_metrics(base)
     # All-NA lineage/conversion columns are intentional for non-monetary metrics.
     # Pandera coerces the declared types immediately after this build.

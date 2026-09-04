@@ -350,7 +350,7 @@ def run() -> dict[str, Any]:
         contracts.get("version") == "stage9_v1.0.0"
         and silver_contracts.get("version") == "stage9_v1.0.0"
         and len(gold_counts) == 31
-        and len(silver_counts) == 28
+        and len(silver_counts) == 29
         and required_new_tables <= set(gold_counts),
         {
             "gold_version": contracts.get("version"),
@@ -363,7 +363,7 @@ def run() -> dict[str, Any]:
             "gold_version": "stage9_v1.0.0",
             "silver_version": "stage9_v1.0.0",
             "gold_tables": 31,
-            "silver_tables": 28,
+            "silver_tables": 29,
             "new_tables": sorted(required_new_tables),
         },
     )
@@ -385,7 +385,7 @@ def run() -> dict[str, Any]:
     add(
         "source_catalog_and_manifest",
         len(sources) == 23
-        and len(artifacts) == 752
+        and len(artifacts) == 774
         and _frames_equal(sources, fresh_sources)
         and _frames_equal(artifacts, fresh_artifacts)
         and len(statuses) == len(sources)
@@ -397,7 +397,7 @@ def run() -> dict[str, Any]:
         },
         {
             "sources": 23,
-            "artifacts": 752,
+            "artifacts": 774,
             "catalog_and_manifest_exact": True,
             "every_source_has_explicit_status": True,
         },
@@ -800,16 +800,16 @@ def run() -> dict[str, Any]:
     resolved_steps = _resolve_registry_callables()
     phase_counts = Counter(step.phase.value for step in PIPELINE_STEPS)
     expected_phase_counts = {
-        "ingest": 13,
-        "parse": 7,
+        "ingest": 14,
+        "parse": 8,
         "transform": 6,
         "analytics": 2,
         "dashboard": 4,
     }
     add(
         "central_registry_complete",
-        len(PIPELINE_STEPS) == 32
-        and len(resolved_steps) == 32
+        len(PIPELINE_STEPS) == 34
+        and len(resolved_steps) == 34
         and dict(phase_counts) == expected_phase_counts
         and PIPELINE_STEPS[-2].step_id == "dashboard.materialize_stage9"
         and PIPELINE_STEPS[-1].step_id == "dashboard.validate_stage9",
@@ -819,7 +819,7 @@ def run() -> dict[str, Any]:
             "phases": dict(phase_counts),
             "last_steps": [step.step_id for step in PIPELINE_STEPS[-2:]],
         },
-        {"steps": 32, "phases": expected_phase_counts, "all_callables_importable": True},
+        {"steps": 34, "phases": expected_phase_counts, "all_callables_importable": True},
     )
 
     checks_frame = pd.DataFrame(checks)

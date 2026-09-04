@@ -85,7 +85,6 @@ select {
   align-items: end;
 }
 
-.eyebrow,
 .section-kicker,
 .kpi-label,
 .chip-label {
@@ -94,24 +93,12 @@ select {
   font-weight: 750;
 }
 
-.eyebrow {
-  margin: 0 0 7px;
-  color: #b8cdf0;
-  font-size: 10px;
-}
-
 h1 {
   margin: 0;
   max-width: 730px;
   font-size: clamp(25px, 3.4vw, 40px);
   line-height: 1.05;
   letter-spacing: -0.035em;
-}
-
-.hero-subtitle {
-  margin: 9px 0 0;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 12px;
 }
 
 .period-control {
@@ -251,6 +238,11 @@ summary:focus-visible {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+
+.comparison-chip strong.delta-up { color: var(--altitude-green); }
+.comparison-chip strong.delta-down { color: var(--brand-red); }
+.comparison-chip strong.delta-flat,
+.comparison-chip strong.delta-na { color: var(--muted); }
 
 .kpi-info {
   position: absolute;
@@ -419,6 +411,13 @@ summary:focus-visible {
 
 .table-wrap {
   overflow-x: auto;
+}
+
+.method-note {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 10.5px;
+  line-height: 1.45;
 }
 
 table {

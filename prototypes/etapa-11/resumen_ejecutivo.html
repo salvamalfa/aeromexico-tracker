@@ -92,7 +92,6 @@ select {
   align-items: end;
 }
 
-.eyebrow,
 .section-kicker,
 .kpi-label,
 .chip-label {
@@ -101,24 +100,12 @@ select {
   font-weight: 750;
 }
 
-.eyebrow {
-  margin: 0 0 7px;
-  color: #b8cdf0;
-  font-size: 10px;
-}
-
 h1 {
   margin: 0;
   max-width: 730px;
   font-size: clamp(25px, 3.4vw, 40px);
   line-height: 1.05;
   letter-spacing: -0.035em;
-}
-
-.hero-subtitle {
-  margin: 9px 0 0;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 12px;
 }
 
 .period-control {
@@ -258,6 +245,11 @@ summary:focus-visible {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+
+.comparison-chip strong.delta-up { color: var(--altitude-green); }
+.comparison-chip strong.delta-down { color: var(--brand-red); }
+.comparison-chip strong.delta-flat,
+.comparison-chip strong.delta-na { color: var(--muted); }
 
 .kpi-info {
   position: absolute;
@@ -426,6 +418,13 @@ summary:focus-visible {
 
 .table-wrap {
   overflow-x: auto;
+}
+
+.method-note {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 10.5px;
+  line-height: 1.45;
 }
 
 table {
@@ -622,25 +621,15 @@ tbody tr:nth-child(even) {
     <header class="hero">
       <div class="hero-grid">
         <div>
-          <p class="eyebrow">AERO · NYSE / BMV · VISTA EJECUTIVA</p>
           <h1>Aeroméxico — Vista ejecutiva trimestral</h1>
-          <p class="hero-subtitle">8 trimestres comparables · 3T24–2T26 · Datos públicos y comparables</p>
         </div>
         <div class="period-control">
           <label for="period-selector">Trimestre analizado</label>
-          <select id="period-selector" aria-describedby="period-help"><option value="2026Q2" selected>2T26</option><option value="2026Q1">1T26</option><option value="2025Q4">4T25</option><option value="2025Q3">3T25</option><option value="2025Q2">2T25</option><option value="2025Q1">1T25</option><option value="2024Q4">4T24</option><option value="2024Q3">3T24</option></select>
+          <select id="period-selector" aria-describedby="period-help"><option value="2026Q2" selected>2T26</option><option value="2026Q1">1T26</option><option value="2025Q4">4T25</option><option value="2025Q3">3T25</option><option value="2025Q2">2T25</option><option value="2025Q1">1T25</option><option value="2024Q4">4T24</option><option value="2024Q3">3T24</option><option value="2024Q2">2T24</option><option value="2024Q1">1T24</option><option value="2023Q4">4T23</option><option value="2023Q3">3T23</option><option value="2023Q2">2T23</option><option value="2023Q1">1T23</option><option value="2022Q4">4T22</option><option value="2022Q3">3T22</option><option value="2022Q2">2T22</option><option value="2022Q1">1T22</option><option value="2021Q4">4T21</option><option value="2021Q3">3T21</option><option value="2021Q2">2T21</option><option value="2021Q1">1T21</option></select>
           <span id="period-help" class="sr-only">Actualiza tarjetas, conclusiones, narrativa y trimestre destacado.</span>
         </div>
       </div>
     </header>
-
-    <section class="executive-insight" aria-labelledby="insight-title">
-      <div>
-        <p class="section-kicker">Conclusiones clave</p>
-        <h2 id="insight-title"><span id="insight-period">—</span> en tres lecturas</h2>
-      </div>
-      <ul class="insight-list" id="insight-list"></ul>
-    </section>
 
     <section class="kpi-grid" aria-label="Indicadores ejecutivos">
 
@@ -701,26 +690,25 @@ tbody tr:nth-child(even) {
         <div>
           <p class="section-kicker">Economía unitaria</p>
           <h2 id="unit-heading">Ingreso, costo y margen por ASK</h2>
-          <p>Cuando RASK supera CASK, la operación conserva margen por cada asiento-kilómetro. Las barras usan la misma unidad y una línea cero visible.</p>
         </div>
-        <p class="source-inline">Fuente: v_aeromexico_quarterly<br>Grupo Aeroméxico · trimestre calendario · segmento total</p>
+        <p class="source-inline">Fuente: v_aeromexico_quarterly</p>
       </div>
       <article class="chart-card">
         <p class="chart-title">RASK vs CASK y margen unitario</p>
-        <p class="chart-subtitle">Centavos de USD por ASK-km; la línea punteada vertical identifica el trimestre seleccionado.</p>
+        <p class="chart-subtitle">Cuando RASK supera CASK, la operación genera utilidad por cada asiento-kilómetro.</p>
         <div class="chart" id="unit-chart" role="img" aria-label="Serie trimestral de RASK, CASK y margen unitario"></div>
       </article>
     </section>
 
     <section class="chart-grid" aria-label="Diagnósticos de volumen y utilización">
       <article class="chart-card">
-        <p class="chart-title">¿Volumen o monetización?</p>
-        <p class="chart-subtitle">Pasajeros transportados frente al ingreso generado por unidad de capacidad; los ejes conservan unidades distintas.</p>
+        <p class="chart-title">Precio versus volumen de pasajeros</p>
+        <p class="chart-subtitle">Las barras indican el número de pasajeros; la línea, el RASK.</p>
         <div class="chart chart-sm" id="volume-chart" role="img" aria-label="Pasajeros y RASK por trimestre"></div>
       </article>
       <article class="chart-card">
-        <p class="chart-title">Utilización y monetización</p>
-        <p class="chart-subtitle">Cada punto es un trimestre. X = ocupación, Y = RASK, tamaño = ASK y tono = margen unitario.</p>
+        <p class="chart-title">Factor de ocupación vs RASK</p>
+        <p class="chart-subtitle">Cada punto es un trimestre; los colores identifican el año. Correlación positiva clara: mayor ocupación tiende a coincidir con mayor RASK.</p>
         <div class="chart chart-sm" id="load-chart" role="img" aria-label="Relación entre factor de ocupación y RASK"></div>
       </article>
     </section>
@@ -731,6 +719,14 @@ tbody tr:nth-child(even) {
         <h2 id="narrative-headline">—</h2>
       </div>
       <div class="narrative-copy" id="narrative-copy"></div>
+    </section>
+
+    <section class="executive-insight" aria-labelledby="insight-title">
+      <div>
+        <p class="section-kicker">Conclusiones clave</p>
+        <h2 id="insight-title"><span id="insight-period">—</span> en tres lecturas</h2>
+      </div>
+      <ul class="insight-list" id="insight-list"></ul>
     </section>
 
     <details class="disclosure">
@@ -772,8 +768,78 @@ tbody tr:nth-child(even) {
             </article>
 
             <article class="history-item">
-              <h3>3T24: Primer trimestre completo de la serie comparable.</h3>
+              <h3>3T24: El margen unitario mejoró frente al trimestre anterior.</h3>
               <p>3T24 registró RASK de 9.88 ¢, CASK de 7.64 ¢ y un margen unitario de 2.24 ¢ por ASK-km.</p>
+            </article>
+
+            <article class="history-item">
+              <h3>2T24: El margen unitario mejoró frente al trimestre anterior.</h3>
+              <p>2T24 registró RASK de 9.70 ¢, CASK de 7.80 ¢ y un margen unitario de 1.90 ¢ por ASK-km.</p>
+            </article>
+
+            <article class="history-item">
+              <h3>1T24: El costo unitario presionó el margen del trimestre.</h3>
+              <p>1T24 registró RASK de 9.50 ¢, CASK de 8.00 ¢ y un margen unitario de 1.50 ¢ por ASK-km.</p>
+            </article>
+
+            <article class="history-item">
+              <h3>4T23: El costo unitario presionó el margen del trimestre.</h3>
+              <p>4T23 registró RASK de 10.00 ¢, CASK de 8.40 ¢ y un margen unitario de 1.60 ¢ por ASK-km.</p>
+            </article>
+
+            <article class="history-item">
+              <h3>3T23: El margen unitario mejoró frente al trimestre anterior.</h3>
+              <p>3T23 registró RASK de 9.80 ¢, CASK de 7.90 ¢ y un margen unitario de 1.90 ¢ por ASK-km.</p>
+            </article>
+
+            <article class="history-item">
+              <h3>2T23: El margen unitario mejoró frente al trimestre anterior.</h3>
+              <p>2T23 registró RASK de 9.00 ¢, CASK de 7.40 ¢ y un margen unitario de 1.60 ¢ por ASK-km.</p>
+            </article>
+
+            <article class="history-item">
+              <h3>1T23: El costo unitario presionó el margen del trimestre.</h3>
+              <p>1T23 registró RASK de 8.60 ¢, CASK de 7.90 ¢ y un margen unitario de 0.70 ¢ por ASK-km.</p>
+            </article>
+
+            <article class="history-item">
+              <h3>4T22: El margen unitario mejoró frente al trimestre anterior.</h3>
+              <p>4T22 registró RASK de 9.20 ¢, CASK de 8.40 ¢ y un margen unitario de 0.80 ¢ por ASK-km.</p>
+            </article>
+
+            <article class="history-item">
+              <h3>3T22: El margen unitario mejoró frente al trimestre anterior.</h3>
+              <p>3T22 registró RASK de 8.31 ¢, CASK de 7.60 ¢ y un margen unitario de 0.71 ¢ por ASK-km.</p>
+            </article>
+
+            <article class="history-item">
+              <h3>2T22: El margen unitario mejoró frente al trimestre anterior.</h3>
+              <p>2T22 registró RASK de 7.87 ¢, CASK de 8.00 ¢ y un margen unitario de -0.13 ¢ por ASK-km.</p>
+            </article>
+
+            <article class="history-item">
+              <h3>1T22: El costo unitario presionó el margen del trimestre.</h3>
+              <p>1T22 registró RASK de 6.31 ¢, CASK de 7.40 ¢ y un margen unitario de -1.09 ¢ por ASK-km.</p>
+            </article>
+
+            <article class="history-item">
+              <h3>4T21: El margen unitario mejoró frente al trimestre anterior.</h3>
+              <p>4T21 registró RASK de 7.24 ¢, CASK de 6.60 ¢ y un margen unitario de 0.64 ¢ por ASK-km.</p>
+            </article>
+
+            <article class="history-item">
+              <h3>3T21: El margen unitario mejoró frente al trimestre anterior.</h3>
+              <p>3T21 registró RASK de 6.85 ¢, CASK de 6.80 ¢ y un margen unitario de 0.05 ¢ por ASK-km.</p>
+            </article>
+
+            <article class="history-item">
+              <h3>2T21: El margen unitario mejoró frente al trimestre anterior.</h3>
+              <p>2T21 registró RASK de 6.40 ¢, CASK de 7.30 ¢ y un margen unitario de -0.90 ¢ por ASK-km.</p>
+            </article>
+
+            <article class="history-item">
+              <h3>1T21: Primer trimestre completo de la serie comparable.</h3>
+              <p>1T21 registró RASK de 4.75 ¢, CASK de 7.20 ¢ y un margen unitario de -2.45 ¢ por ASK-km.</p>
             </article>
             </div>
     </details>
@@ -781,6 +847,7 @@ tbody tr:nth-child(even) {
     <details class="disclosure">
       <summary>Ver datos por trimestre</summary>
       <div class="disclosure-body table-wrap">
+        <p class="method-note">En 1T21–3T22, Aeroméxico publicó el ingreso por ASK en pesos; se convirtió a centavos de USD con el tipo de cambio promedio publicado en el mismo reporte trimestral.</p>
         <table>
           <thead>
             <tr>
@@ -868,6 +935,146 @@ tbody tr:nth-child(even) {
               <td>88.9%</td>
               <td>6.703</td>
             </tr>
+
+            <tr>
+              <td>2T24</td>
+              <td>9.70</td>
+              <td>7.80</td>
+              <td>+1.90</td>
+              <td>14.31</td>
+              <td>86.3%</td>
+              <td>6.409</td>
+            </tr>
+
+            <tr>
+              <td>1T24</td>
+              <td>9.50</td>
+              <td>8.00</td>
+              <td>+1.50</td>
+              <td>13.68</td>
+              <td>85.4%</td>
+              <td>5.979</td>
+            </tr>
+
+            <tr>
+              <td>4T23</td>
+              <td>10.00</td>
+              <td>8.40</td>
+              <td>+1.60</td>
+              <td>13.80</td>
+              <td>84.0%</td>
+              <td>6.228</td>
+            </tr>
+
+            <tr>
+              <td>3T23</td>
+              <td>9.80</td>
+              <td>7.90</td>
+              <td>+1.90</td>
+              <td>13.91</td>
+              <td>88.0%</td>
+              <td>6.667</td>
+            </tr>
+
+            <tr>
+              <td>2T23</td>
+              <td>9.00</td>
+              <td>7.40</td>
+              <td>+1.60</td>
+              <td>12.85</td>
+              <td>84.4%</td>
+              <td>6.043</td>
+            </tr>
+
+            <tr>
+              <td>1T23</td>
+              <td>8.60</td>
+              <td>7.90</td>
+              <td>+0.70</td>
+              <td>12.43</td>
+              <td>80.1%</td>
+              <td>5.756</td>
+            </tr>
+
+            <tr>
+              <td>4T22</td>
+              <td>9.20</td>
+              <td>8.40</td>
+              <td>+0.80</td>
+              <td>12.93</td>
+              <td>82.2%</td>
+              <td>6.137</td>
+            </tr>
+
+            <tr>
+              <td>3T22</td>
+              <td>8.31</td>
+              <td>7.60</td>
+              <td>+0.71</td>
+              <td>12.71</td>
+              <td>84.0%</td>
+              <td>5.895</td>
+            </tr>
+
+            <tr>
+              <td>2T22</td>
+              <td>7.87</td>
+              <td>8.00</td>
+              <td>-0.13</td>
+              <td>12.15</td>
+              <td>83.0%</td>
+              <td>5.551</td>
+            </tr>
+
+            <tr>
+              <td>1T22</td>
+              <td>6.31</td>
+              <td>7.40</td>
+              <td>-1.09</td>
+              <td>9.95</td>
+              <td>75.6%</td>
+              <td>4.142</td>
+            </tr>
+
+            <tr>
+              <td>4T21</td>
+              <td>7.24</td>
+              <td>6.60</td>
+              <td>+0.64</td>
+              <td>10.23</td>
+              <td>80.8%</td>
+              <td>4.871</td>
+            </tr>
+
+            <tr>
+              <td>3T21</td>
+              <td>6.85</td>
+              <td>6.80</td>
+              <td>+0.05</td>
+              <td>9.68</td>
+              <td>78.8%</td>
+              <td>4.556</td>
+            </tr>
+
+            <tr>
+              <td>2T21</td>
+              <td>6.40</td>
+              <td>7.30</td>
+              <td>-0.90</td>
+              <td>7.75</td>
+              <td>76.8%</td>
+              <td>3.969</td>
+            </tr>
+
+            <tr>
+              <td>1T21</td>
+              <td>4.75</td>
+              <td>7.20</td>
+              <td>-2.45</td>
+              <td>7.11</td>
+              <td>68.8%</td>
+              <td>3.157</td>
+            </tr>
             </tbody>
         </table>
       </div>
@@ -875,12 +1082,12 @@ tbody tr:nth-child(even) {
 
     <footer class="footer">
       <span>Fuente: comunicados de resultados consolidados en <strong>v_aeromexico_quarterly</strong>.</span>
-      <span>Corte actualizado al 24 ago 2026 · Proyecto independiente y no oficial · No es consejo de inversión.</span>
+      <span>Corte actualizado al 04 sep 2026 · Proyecto independiente y no oficial · No es consejo de inversión.</span>
     </footer>
     <p class="sr-only" id="live-status" aria-live="polite"></p>
   </main>
 
-  <script type="application/json" id="dashboard-data">{"metadata":{"title":"Aeroméxico — Vista ejecutiva trimestral","default_period":"2026Q2","first_period":"2024Q3","last_period":"2026Q2","quarter_count":8,"coverage_label":"8 trimestres comparables · 3T24–2T26","data_as_of":"24 ago 2026","source_view":"v_aeromexico_quarterly","grain":"Grupo Aeroméxico · trimestre calendario · segmento total"},"records":[{"period_id":"2024Q3","period_label":"3T24","total_revenue":1490000000.0,"passengers":6703000.0,"ask_km":15037710336.000002,"load_factor_reported":0.8890000000000001,"rask_cents_per_km":9.87980195657361,"cask_cents_per_km":7.642865664519208,"unit_margin_cents_per_km":2.236936292054402},{"period_id":"2024Q4","period_label":"4T24","total_revenue":1435000000.0,"passengers":6247000.0,"ask_km":14340864384.000002,"load_factor_reported":0.855,"rask_cents_per_km":10.004076195021078,"cask_cents_per_km":8.07782549908534,"unit_margin_cents_per_km":1.926250695935737},{"period_id":"2025Q1","period_label":"1T25","total_revenue":1184000000.0,"passengers":5877000.0,"ask_km":13996464768.0,"load_factor_reported":0.823,"rask_cents_per_km":8.45064821442774,"cask_cents_per_km":7.394317187624274,"unit_margin_cents_per_km":1.0563310268034662},{"period_id":"2025Q2","period_label":"2T25","total_revenue":1314000000.0,"passengers":6180000.0,"ask_km":14612843520.000002,"load_factor_reported":0.8570000000000001,"rask_cents_per_km":9.009882287441341,"cask_cents_per_km":7.394317187624274,"unit_margin_cents_per_km":1.6155650998170668},{"period_id":"2025Q3","period_label":"3T25","total_revenue":1425000000.0,"passengers":6362000.0,"ask_km":14929884288.000002,"load_factor_reported":0.883,"rask_cents_per_km":9.569116360454943,"cask_cents_per_km":7.89141414141414,"unit_margin_cents_per_km":1.6777022190408033},{"period_id":"2025Q4","period_label":"4T25","total_revenue":1438000000.0,"passengers":6168000.0,"ask_km":14083369344.0,"load_factor_reported":0.872,"rask_cents_per_km":10.190487552692275,"cask_cents_per_km":8.45064821442774,"unit_margin_cents_per_km":1.7398393382645345},{"period_id":"2026Q1","period_label":"1T26","total_revenue":1341000000.0,"passengers":5791000.0,"ask_km":13833921024.0,"load_factor_reported":0.8440000000000001,"rask_cents_per_km":9.69339059890241,"cask_cents_per_km":8.574922452875208,"unit_margin_cents_per_km":1.118468146027201},{"period_id":"2026Q2","period_label":"2T26","total_revenue":1479000000.0,"passengers":6014000.0,"ask_km":14896088064.000002,"load_factor_reported":0.8490000000000001,"rask_cents_per_km":9.941939075797343,"cask_cents_per_km":9.50697924123121,"unit_margin_cents_per_km":0.43495983456613274}],"views":{"2024Q3":{"period_id":"2024Q3","period_label":"3T24","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":9.87980195657361,"display_value":"9.88 ¢","qoq":{"available":false,"raw":null,"display":"No disponible","direction":"na"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":7.642865664519208,"display_value":"7.64 ¢","qoq":{"available":false,"raw":null,"display":"No disponible","direction":"na"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":15037710336.000002,"display_value":"15.04 mil M","qoq":{"available":false,"raw":null,"display":"No disponible","direction":"na"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.8890000000000001,"display_value":"88.9%","qoq":{"available":false,"raw":null,"display":"No disponible","direction":"na"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":6703000.0,"display_value":"6.70 M","qoq":{"available":false,"raw":null,"display":"No disponible","direction":"na"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}}],"conclusions":["El margen unitario fue 2.24 ¢ por ASK-km; no existe un trimestre previo comparable en la serie validada.","La capacidad abre la serie comparable; no hay comparación previa de pasajeros.","El RASK no tiene comparable previo; el CASK no tiene comparable previo."],"narrative":{"headline":"Primer trimestre completo de la serie comparable.","paragraphs":["3T24 registró RASK de 9.88 ¢, CASK de 7.64 ¢ y un margen unitario de 2.24 ¢ por ASK-km.","La compañía ofreció 15.04 mil millones de ASK, transportó 6.70 millones de pasajeros y reportó 88.9% de ocupación.","La comparación interanual todavía no está disponible para este punto de la serie validada."]},"margin_qoq":{"available":false,"raw":null,"display":"No disponible","direction":"na"},"margin_yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},"2024Q4":{"period_id":"2024Q4","period_label":"4T24","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":10.004076195021078,"display_value":"10.00 ¢","qoq":{"available":true,"raw":0.012578616352201255,"display":"+1.3%","direction":"up"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":8.07782549908534,"display_value":"8.08 ¢","qoq":{"available":true,"raw":0.05691056910569081,"display":"+5.7%","direction":"up"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":14340864384.000002,"display_value":"14.34 mil M","qoq":{"available":true,"raw":-0.04633989726027399,"display":"-4.6%","direction":"down"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.855,"display_value":"85.5%","qoq":{"available":true,"raw":-3.400000000000014,"display":"-3.4 pp","direction":"down"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":6247000.0,"display_value":"6.25 M","qoq":{"available":true,"raw":-0.06802924063852012,"display":"-6.8%","direction":"down"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}}],"conclusions":["El margen unitario fue 1.93 ¢ por ASK-km; cambió -0.31 ¢ frente al trimestre anterior.","La capacidad disminuyó 4.6%; los pasajeros disminuyeron 6.8%. La ocupación cambió -3.4 pp.","El RASK aumentó 1.3%; el CASK aumentó 5.7%."],"narrative":{"headline":"El costo unitario presionó el margen del trimestre.","paragraphs":["4T24 registró RASK de 10.00 ¢, CASK de 8.08 ¢ y un margen unitario de 1.93 ¢ por ASK-km.","La compañía ofreció 14.34 mil millones de ASK, transportó 6.25 millones de pasajeros y reportó 85.5% de ocupación.","La comparación interanual todavía no está disponible para este punto de la serie validada."]},"margin_qoq":{"available":true,"raw":-0.310685596118665,"display":"-0.31 ¢","direction":"down"},"margin_yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},"2025Q1":{"period_id":"2025Q1","period_label":"1T25","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":8.45064821442774,"display_value":"8.45 ¢","qoq":{"available":true,"raw":-0.15527950310559024,"display":"-15.5%","direction":"down"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":7.394317187624274,"display_value":"7.39 ¢","qoq":{"available":true,"raw":-0.08461538461538454,"display":"-8.5%","direction":"down"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":13996464768.0,"display_value":"14.00 mil M","qoq":{"available":true,"raw":-0.02401526203568638,"display":"-2.4%","direction":"down"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.823,"display_value":"82.3%","qoq":{"available":true,"raw":-3.200000000000003,"display":"-3.2 pp","direction":"down"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":5877000.0,"display_value":"5.88 M","qoq":{"available":true,"raw":-0.05922842964623021,"display":"-5.9%","direction":"down"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}}],"conclusions":["El margen unitario fue 1.06 ¢ por ASK-km; cambió -0.87 ¢ frente al trimestre anterior.","La capacidad disminuyó 2.4%; los pasajeros disminuyeron 5.9%. La ocupación cambió -3.2 pp.","El RASK disminuyó 15.5%; el CASK disminuyó 8.5%."],"narrative":{"headline":"El costo unitario presionó el margen del trimestre.","paragraphs":["1T25 registró RASK de 8.45 ¢, CASK de 7.39 ¢ y un margen unitario de 1.06 ¢ por ASK-km.","La compañía ofreció 14.00 mil millones de ASK, transportó 5.88 millones de pasajeros y reportó 82.3% de ocupación.","La comparación interanual todavía no está disponible para este punto de la serie validada."]},"margin_qoq":{"available":true,"raw":-0.8699196691322708,"display":"-0.87 ¢","direction":"down"},"margin_yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},"2025Q2":{"period_id":"2025Q2","period_label":"2T25","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":9.009882287441341,"display_value":"9.01 ¢","qoq":{"available":true,"raw":0.06617647058823528,"display":"+6.6%","direction":"up"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":7.394317187624274,"display_value":"7.39 ¢","qoq":{"available":true,"raw":0.0,"display":"+0.0%","direction":"flat"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":14612843520.000002,"display_value":"14.61 mil M","qoq":{"available":true,"raw":0.044038174083017356,"display":"+4.4%","direction":"up"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.8570000000000001,"display_value":"85.7%","qoq":{"available":true,"raw":3.400000000000014,"display":"+3.4 pp","direction":"up"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":6180000.0,"display_value":"6.18 M","qoq":{"available":true,"raw":0.05155691679428287,"display":"+5.2%","direction":"up"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}}],"conclusions":["El margen unitario fue 1.62 ¢ por ASK-km; cambió +0.56 ¢ frente al trimestre anterior.","La capacidad aumentó 4.4%; los pasajeros aumentaron 5.2%. La ocupación cambió +3.4 pp.","El RASK aumentó 6.6%; el CASK se mantuvo estable 0.0%."],"narrative":{"headline":"El margen unitario mejoró frente al trimestre anterior.","paragraphs":["2T25 registró RASK de 9.01 ¢, CASK de 7.39 ¢ y un margen unitario de 1.62 ¢ por ASK-km.","La compañía ofreció 14.61 mil millones de ASK, transportó 6.18 millones de pasajeros y reportó 85.7% de ocupación.","La comparación interanual todavía no está disponible para este punto de la serie validada."]},"margin_qoq":{"available":true,"raw":0.5592340730136005,"display":"+0.56 ¢","direction":"up"},"margin_yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},"2025Q3":{"period_id":"2025Q3","period_label":"3T25","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":9.569116360454943,"display_value":"9.57 ¢","qoq":{"available":true,"raw":0.0620689655172415,"display":"+6.2%","direction":"up"},"yoy":{"available":true,"raw":-0.03144654088050314,"display":"-3.1%","direction":"down"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":7.89141414141414,"display_value":"7.89 ¢","qoq":{"available":true,"raw":0.06722689075630228,"display":"+6.7%","direction":"up"},"yoy":{"available":true,"raw":0.032520325203251765,"display":"+3.3%","direction":"up"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":14929884288.000002,"display_value":"14.93 mil M","qoq":{"available":true,"raw":0.0216960352422908,"display":"+2.2%","direction":"up"},"yoy":{"available":true,"raw":-0.007170376712328785,"display":"-0.7%","direction":"down"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.883,"display_value":"88.3%","qoq":{"available":true,"raw":2.599999999999991,"display":"+2.6 pp","direction":"up"},"yoy":{"available":true,"raw":-0.6000000000000116,"display":"-0.6 pp","direction":"down"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":6362000.0,"display_value":"6.36 M","qoq":{"available":true,"raw":0.029449838187702193,"display":"+2.9%","direction":"up"},"yoy":{"available":true,"raw":-0.050872743547665245,"display":"-5.1%","direction":"down"}}],"conclusions":["El margen unitario fue 1.68 ¢ por ASK-km; cambió +0.06 ¢ frente al trimestre anterior.","La capacidad aumentó 2.2%; los pasajeros aumentaron 2.9%. La ocupación cambió +2.6 pp.","El RASK aumentó 6.2%; el CASK aumentó 6.7%."],"narrative":{"headline":"El margen unitario mejoró frente al trimestre anterior.","paragraphs":["3T25 registró RASK de 9.57 ¢, CASK de 7.89 ¢ y un margen unitario de 1.68 ¢ por ASK-km.","La compañía ofreció 14.93 mil millones de ASK, transportó 6.36 millones de pasajeros y reportó 88.3% de ocupación.","Frente a 3T24, el margen cambió -0.56 ¢, con RASK -3.1% y CASK +3.3%."]},"margin_qoq":{"available":true,"raw":0.06213711922373655,"display":"+0.06 ¢","direction":"up"},"margin_yoy":{"available":true,"raw":-0.5592340730135987,"display":"-0.56 ¢","direction":"down"}},"2025Q4":{"period_id":"2025Q4","period_label":"4T25","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":10.190487552692275,"display_value":"10.19 ¢","qoq":{"available":true,"raw":0.06493506493506462,"display":"+6.5%","direction":"up"},"yoy":{"available":true,"raw":0.01863354037267051,"display":"+1.9%","direction":"up"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":8.45064821442774,"display_value":"8.45 ¢","qoq":{"available":true,"raw":0.07086614173228356,"display":"+7.1%","direction":"up"},"yoy":{"available":true,"raw":0.04615384615384599,"display":"+4.6%","direction":"up"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":14083369344.0,"display_value":"14.08 mil M","qoq":{"available":true,"raw":-0.05669936401854059,"display":"-5.7%","direction":"down"},"yoy":{"available":true,"raw":-0.017955336101447728,"display":"-1.8%","direction":"down"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.872,"display_value":"87.2%","qoq":{"available":true,"raw":-1.100000000000001,"display":"-1.1 pp","direction":"down"},"yoy":{"available":true,"raw":1.7000000000000015,"display":"+1.7 pp","direction":"up"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":6168000.0,"display_value":"6.17 M","qoq":{"available":true,"raw":-0.030493555485696322,"display":"-3.0%","direction":"down"},"yoy":{"available":true,"raw":-0.012646070113654595,"display":"-1.3%","direction":"down"}}],"conclusions":["El margen unitario fue 1.74 ¢ por ASK-km; cambió +0.06 ¢ frente al trimestre anterior.","La capacidad disminuyó 5.7%; los pasajeros disminuyeron 3.0%. La ocupación cambió -1.1 pp.","El RASK aumentó 6.5%; el CASK aumentó 7.1%."],"narrative":{"headline":"El margen unitario mejoró frente al trimestre anterior.","paragraphs":["4T25 registró RASK de 10.19 ¢, CASK de 8.45 ¢ y un margen unitario de 1.74 ¢ por ASK-km.","La compañía ofreció 14.08 mil millones de ASK, transportó 6.17 millones de pasajeros y reportó 87.2% de ocupación.","Frente a 4T24, el margen cambió -0.19 ¢, con RASK +1.9% y CASK +4.6%."]},"margin_qoq":{"available":true,"raw":0.06213711922373122,"display":"+0.06 ¢","direction":"up"},"margin_yoy":{"available":true,"raw":-0.18641135767120254,"display":"-0.19 ¢","direction":"down"}},"2026Q1":{"period_id":"2026Q1","period_label":"1T26","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":9.69339059890241,"display_value":"9.69 ¢","qoq":{"available":true,"raw":-0.04878048780487787,"display":"-4.9%","direction":"down"},"yoy":{"available":true,"raw":0.1470588235294119,"display":"+14.7%","direction":"up"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":8.574922452875208,"display_value":"8.57 ¢","qoq":{"available":true,"raw":0.014705882352941346,"display":"+1.5%","direction":"up"},"yoy":{"available":true,"raw":0.15966386554621836,"display":"+16.0%","direction":"up"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":13833921024.0,"display_value":"13.83 mil M","qoq":{"available":true,"raw":-0.0177122614558336,"display":"-1.8%","direction":"down"},"yoy":{"available":true,"raw":-0.011613199954007114,"display":"-1.2%","direction":"down"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.8440000000000001,"display_value":"84.4%","qoq":{"available":true,"raw":-2.7999999999999914,"display":"-2.8 pp","direction":"down"},"yoy":{"available":true,"raw":2.100000000000013,"display":"+2.1 pp","direction":"up"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":5791000.0,"display_value":"5.79 M","qoq":{"available":true,"raw":-0.06112191958495461,"display":"-6.1%","direction":"down"},"yoy":{"available":true,"raw":-0.014633316317849254,"display":"-1.5%","direction":"down"}}],"conclusions":["El margen unitario fue 1.12 ¢ por ASK-km; cambió -0.62 ¢ frente al trimestre anterior.","La capacidad disminuyó 1.8%; los pasajeros disminuyeron 6.1%. La ocupación cambió -2.8 pp.","El RASK disminuyó 4.9%; el CASK aumentó 1.5%."],"narrative":{"headline":"El costo unitario presionó el margen del trimestre.","paragraphs":["1T26 registró RASK de 9.69 ¢, CASK de 8.57 ¢ y un margen unitario de 1.12 ¢ por ASK-km.","La compañía ofreció 13.83 mil millones de ASK, transportó 5.79 millones de pasajeros y reportó 84.4% de ocupación.","Frente a 1T25, el margen cambió +0.06 ¢, con RASK +14.7% y CASK +16.0%."]},"margin_qoq":{"available":true,"raw":-0.6213711922373335,"display":"-0.62 ¢","direction":"down"},"margin_yoy":{"available":true,"raw":0.06213711922373477,"display":"+0.06 ¢","direction":"up"}},"2026Q2":{"period_id":"2026Q2","period_label":"2T26","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":9.941939075797343,"display_value":"9.94 ¢","qoq":{"available":true,"raw":0.02564102564102555,"display":"+2.6%","direction":"up"},"yoy":{"available":true,"raw":0.10344827586206917,"display":"+10.3%","direction":"up"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":9.50697924123121,"display_value":"9.51 ¢","qoq":{"available":true,"raw":0.10869565217391308,"display":"+10.9%","direction":"up"},"yoy":{"available":true,"raw":0.2857142857142858,"display":"+28.6%","direction":"up"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":14896088064.000002,"display_value":"14.90 mil M","qoq":{"available":true,"raw":0.07677989762680326,"display":"+7.7%","direction":"up"},"yoy":{"available":true,"raw":0.01938325991189438,"display":"+1.9%","direction":"up"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.8490000000000001,"display_value":"84.9%","qoq":{"available":true,"raw":0.5000000000000004,"display":"+0.5 pp","direction":"up"},"yoy":{"available":true,"raw":-0.8000000000000007,"display":"-0.8 pp","direction":"down"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":6014000.0,"display_value":"6.01 M","qoq":{"available":true,"raw":0.03850802970126055,"display":"+3.9%","direction":"up"},"yoy":{"available":true,"raw":-0.02686084142394818,"display":"-2.7%","direction":"down"}}],"conclusions":["El margen unitario fue 0.43 ¢ por ASK-km; cambió -0.68 ¢ frente al trimestre anterior.","La capacidad aumentó 7.7%; los pasajeros aumentaron 3.9%. La ocupación cambió +0.5 pp.","El RASK aumentó 2.6%; el CASK aumentó 10.9%."],"narrative":{"headline":"El costo unitario presionó el margen del trimestre.","paragraphs":["2T26 registró RASK de 9.94 ¢, CASK de 9.51 ¢ y un margen unitario de 0.43 ¢ por ASK-km.","La compañía ofreció 14.90 mil millones de ASK, transportó 6.01 millones de pasajeros y reportó 84.9% de ocupación.","Frente a 2T25, el margen cambió -1.18 ¢, con RASK +10.3% y CASK +28.6%."]},"margin_qoq":{"available":true,"raw":-0.6835083114610683,"display":"-0.68 ¢","direction":"down"},"margin_yoy":{"available":true,"raw":-1.180605265250934,"display":"-1.18 ¢","direction":"down"}}}}</script>
+  <script type="application/json" id="dashboard-data">{"metadata":{"title":"Aeroméxico — Vista ejecutiva trimestral","default_period":"2026Q2","first_period":"2021Q1","last_period":"2026Q2","quarter_count":22,"coverage_label":"22 trimestres comparables · 1T21–2T26","data_as_of":"04 sep 2026","source_view":"v_aeromexico_quarterly","grain":"Grupo Aeroméxico · trimestre calendario · segmento total","load_rask_correlation":0.922366762169748,"load_rask_interpretation":"Correlación positiva clara: mayor ocupación tiende a coincidir con mayor RASK.","method_note":"En 1T21–3T22, Aeroméxico publicó el ingreso por ASK en pesos; se convirtió a centavos de USD con el tipo de cambio promedio publicado en el mismo reporte trimestral."},"records":[{"period_id":"2021Q1","period_label":"1T21","passengers":3157000.0,"ask_km":7111000000.0,"load_factor_reported":0.688,"rask_cents_per_km":4.748520710059171,"cask_cents_per_km":7.199999999999999,"unit_margin_cents_per_km":-2.4514792899408286},{"period_id":"2021Q2","period_label":"2T21","passengers":3969000.0,"ask_km":7754000000.000001,"load_factor_reported":0.768,"rask_cents_per_km":6.400594942984631,"cask_cents_per_km":7.3,"unit_margin_cents_per_km":-0.8994050570153691},{"period_id":"2021Q3","period_label":"3T21","passengers":4556000.0,"ask_km":9675000000.0,"load_factor_reported":0.788,"rask_cents_per_km":6.846846846846848,"cask_cents_per_km":6.800000000000001,"unit_margin_cents_per_km":0.046846846846847257},{"period_id":"2021Q4","period_label":"4T21","passengers":4871000.0,"ask_km":10234000000.000002,"load_factor_reported":0.8079999999999999,"rask_cents_per_km":7.240713941148094,"cask_cents_per_km":6.6000000000000005,"unit_margin_cents_per_km":0.6407139411480935},{"period_id":"2022Q1","period_label":"1T22","passengers":4142000.0,"ask_km":9954000000.0,"load_factor_reported":0.756,"rask_cents_per_km":6.309639727361247,"cask_cents_per_km":7.3999999999999995,"unit_margin_cents_per_km":-1.090360272638753},{"period_id":"2022Q2","period_label":"2T22","passengers":5551000.0,"ask_km":12155000000.0,"load_factor_reported":0.8300000000000001,"rask_cents_per_km":7.874251497005989,"cask_cents_per_km":8.0,"unit_margin_cents_per_km":-0.12574850299401064},{"period_id":"2022Q3","period_label":"3T22","passengers":5895000.0,"ask_km":12711000000.000002,"load_factor_reported":0.84,"rask_cents_per_km":8.311944718657452,"cask_cents_per_km":7.6000000000000005,"unit_margin_cents_per_km":0.7119447186574517},{"period_id":"2022Q4","period_label":"4T22","passengers":6137000.0,"ask_km":12932000000.0,"load_factor_reported":0.8220000000000001,"rask_cents_per_km":9.2,"cask_cents_per_km":8.4,"unit_margin_cents_per_km":0.7999999999999989},{"period_id":"2023Q1","period_label":"1T23","passengers":5756000.0,"ask_km":12428000000.0,"load_factor_reported":0.8009999999999999,"rask_cents_per_km":8.6,"cask_cents_per_km":7.900000000000001,"unit_margin_cents_per_km":0.6999999999999984},{"period_id":"2023Q2","period_label":"2T23","passengers":6043000.0,"ask_km":12845000000.000002,"load_factor_reported":0.8440000000000001,"rask_cents_per_km":9.0,"cask_cents_per_km":7.400000000000001,"unit_margin_cents_per_km":1.5999999999999988},{"period_id":"2023Q3","period_label":"3T23","passengers":6667000.0,"ask_km":13915000000.0,"load_factor_reported":0.88,"rask_cents_per_km":9.8,"cask_cents_per_km":7.900000000000001,"unit_margin_cents_per_km":1.8999999999999995},{"period_id":"2023Q4","period_label":"4T23","passengers":6228000.0,"ask_km":13800000000.000002,"load_factor_reported":0.84,"rask_cents_per_km":10.0,"cask_cents_per_km":8.4,"unit_margin_cents_per_km":1.5999999999999996},{"period_id":"2024Q1","period_label":"1T24","passengers":5979000.0,"ask_km":13675000000.0,"load_factor_reported":0.8540000000000001,"rask_cents_per_km":9.5,"cask_cents_per_km":8.0,"unit_margin_cents_per_km":1.5},{"period_id":"2024Q2","period_label":"2T24","passengers":6409000.0,"ask_km":14307000000.0,"load_factor_reported":0.863,"rask_cents_per_km":9.7,"cask_cents_per_km":7.8,"unit_margin_cents_per_km":1.8999999999999995},{"period_id":"2024Q3","period_label":"3T24","passengers":6703000.0,"ask_km":15037710336.000002,"load_factor_reported":0.8890000000000001,"rask_cents_per_km":9.87980195657361,"cask_cents_per_km":7.642865664519208,"unit_margin_cents_per_km":2.236936292054402},{"period_id":"2024Q4","period_label":"4T24","passengers":6247000.0,"ask_km":14340864384.000002,"load_factor_reported":0.855,"rask_cents_per_km":10.004076195021078,"cask_cents_per_km":8.07782549908534,"unit_margin_cents_per_km":1.926250695935737},{"period_id":"2025Q1","period_label":"1T25","passengers":5877000.0,"ask_km":13996464768.0,"load_factor_reported":0.823,"rask_cents_per_km":8.45064821442774,"cask_cents_per_km":7.394317187624274,"unit_margin_cents_per_km":1.0563310268034662},{"period_id":"2025Q2","period_label":"2T25","passengers":6180000.0,"ask_km":14612843520.000002,"load_factor_reported":0.8570000000000001,"rask_cents_per_km":9.009882287441341,"cask_cents_per_km":7.394317187624274,"unit_margin_cents_per_km":1.6155650998170668},{"period_id":"2025Q3","period_label":"3T25","passengers":6362000.0,"ask_km":14929884288.000002,"load_factor_reported":0.883,"rask_cents_per_km":9.569116360454943,"cask_cents_per_km":7.89141414141414,"unit_margin_cents_per_km":1.6777022190408033},{"period_id":"2025Q4","period_label":"4T25","passengers":6168000.0,"ask_km":14083369344.0,"load_factor_reported":0.872,"rask_cents_per_km":10.190487552692275,"cask_cents_per_km":8.45064821442774,"unit_margin_cents_per_km":1.7398393382645345},{"period_id":"2026Q1","period_label":"1T26","passengers":5791000.0,"ask_km":13833921024.0,"load_factor_reported":0.8440000000000001,"rask_cents_per_km":9.69339059890241,"cask_cents_per_km":8.574922452875208,"unit_margin_cents_per_km":1.118468146027201},{"period_id":"2026Q2","period_label":"2T26","passengers":6014000.0,"ask_km":14896088064.000002,"load_factor_reported":0.8490000000000001,"rask_cents_per_km":9.941939075797343,"cask_cents_per_km":9.50697924123121,"unit_margin_cents_per_km":0.43495983456613274}],"views":{"2021Q1":{"period_id":"2021Q1","period_label":"1T21","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":4.748520710059171,"display_value":"4.75 ¢","qoq":{"available":false,"raw":null,"display":"No disponible","direction":"na"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":7.199999999999999,"display_value":"7.20 ¢","qoq":{"available":false,"raw":null,"display":"No disponible","direction":"na"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":7111000000.0,"display_value":"7.11 mil M","qoq":{"available":false,"raw":null,"display":"No disponible","direction":"na"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.688,"display_value":"68.8%","qoq":{"available":false,"raw":null,"display":"No disponible","direction":"na"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":3157000.0,"display_value":"3.16 M","qoq":{"available":false,"raw":null,"display":"No disponible","direction":"na"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}}],"conclusions":["El margen unitario fue -2.45 ¢ por ASK-km; no existe un trimestre previo comparable en la serie validada.","La capacidad abre la serie comparable; no hay comparación previa de pasajeros.","El RASK no tiene comparable previo; el CASK no tiene comparable previo."],"narrative":{"headline":"Primer trimestre completo de la serie comparable.","paragraphs":["1T21 registró RASK de 4.75 ¢, CASK de 7.20 ¢ y un margen unitario de -2.45 ¢ por ASK-km.","La compañía ofreció 7.11 mil millones de ASK, transportó 3.16 millones de pasajeros y reportó 68.8% de ocupación.","La comparación interanual todavía no está disponible para este punto de la serie validada."]},"margin_qoq":{"available":false,"raw":null,"display":"No disponible","direction":"na"},"margin_yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},"2021Q2":{"period_id":"2021Q2","period_label":"2T21","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":6.400594942984631,"display_value":"6.40 ¢","qoq":{"available":true,"raw":0.34791345216748004,"display":"+34.8%","direction":"up"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":7.3,"display_value":"7.30 ¢","qoq":{"available":true,"raw":0.013888888888889062,"display":"+1.4%","direction":"up"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":7754000000.000001,"display_value":"7.75 mil M","qoq":{"available":true,"raw":0.0904232878638731,"display":"+9.0%","direction":"up"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.768,"display_value":"76.8%","qoq":{"available":true,"raw":8.000000000000007,"display":"+8.0 pp","direction":"up"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":3969000.0,"display_value":"3.97 M","qoq":{"available":true,"raw":0.25720620842572073,"display":"+25.7%","direction":"up"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}}],"conclusions":["El margen unitario fue -0.90 ¢ por ASK-km; cambió +1.55 ¢ frente al trimestre anterior.","La capacidad aumentó 9.0%; los pasajeros aumentaron 25.7%. La ocupación cambió +8.0 pp.","El RASK aumentó 34.8%; el CASK aumentó 1.4%."],"narrative":{"headline":"El margen unitario mejoró frente al trimestre anterior.","paragraphs":["2T21 registró RASK de 6.40 ¢, CASK de 7.30 ¢ y un margen unitario de -0.90 ¢ por ASK-km.","La compañía ofreció 7.75 mil millones de ASK, transportó 3.97 millones de pasajeros y reportó 76.8% de ocupación.","La comparación interanual todavía no está disponible para este punto de la serie validada."]},"margin_qoq":{"available":true,"raw":1.5520742329254595,"display":"+1.55 ¢","direction":"up"},"margin_yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},"2021Q3":{"period_id":"2021Q3","period_label":"3T21","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":6.846846846846848,"display_value":"6.85 ¢","qoq":{"available":true,"raw":0.0697203787831211,"display":"+7.0%","direction":"up"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":6.800000000000001,"display_value":"6.80 ¢","qoq":{"available":true,"raw":-0.06849315068493134,"display":"-6.8%","direction":"down"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":9675000000.0,"display_value":"9.68 mil M","qoq":{"available":true,"raw":0.24774310033531055,"display":"+24.8%","direction":"up"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.788,"display_value":"78.8%","qoq":{"available":true,"raw":2.0000000000000018,"display":"+2.0 pp","direction":"up"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":4556000.0,"display_value":"4.56 M","qoq":{"available":true,"raw":0.14789619551524313,"display":"+14.8%","direction":"up"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}}],"conclusions":["El margen unitario fue 0.05 ¢ por ASK-km; cambió +0.95 ¢ frente al trimestre anterior.","La capacidad aumentó 24.8%; los pasajeros aumentaron 14.8%. La ocupación cambió +2.0 pp.","El RASK aumentó 7.0%; el CASK disminuyó 6.8%."],"narrative":{"headline":"El margen unitario mejoró frente al trimestre anterior.","paragraphs":["3T21 registró RASK de 6.85 ¢, CASK de 6.80 ¢ y un margen unitario de 0.05 ¢ por ASK-km.","La compañía ofreció 9.68 mil millones de ASK, transportó 4.56 millones de pasajeros y reportó 78.8% de ocupación.","La comparación interanual todavía no está disponible para este punto de la serie validada."]},"margin_qoq":{"available":true,"raw":0.9462519038622164,"display":"+0.95 ¢","direction":"up"},"margin_yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},"2021Q4":{"period_id":"2021Q4","period_label":"4T21","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":7.240713941148094,"display_value":"7.24 ¢","qoq":{"available":true,"raw":0.057525325615050305,"display":"+5.8%","direction":"up"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":6.6000000000000005,"display_value":"6.60 ¢","qoq":{"available":true,"raw":-0.02941176470588236,"display":"-2.9%","direction":"down"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":10234000000.000002,"display_value":"10.23 mil M","qoq":{"available":true,"raw":0.05777777777777793,"display":"+5.8%","direction":"up"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.8079999999999999,"display_value":"80.8%","qoq":{"available":true,"raw":1.9999999999999907,"display":"+2.0 pp","direction":"up"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":4871000.0,"display_value":"4.87 M","qoq":{"available":true,"raw":0.0691395961369623,"display":"+6.9%","direction":"up"},"yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}}],"conclusions":["El margen unitario fue 0.64 ¢ por ASK-km; cambió +0.59 ¢ frente al trimestre anterior.","La capacidad aumentó 5.8%; los pasajeros aumentaron 6.9%. La ocupación cambió +2.0 pp.","El RASK aumentó 5.8%; el CASK disminuyó 2.9%."],"narrative":{"headline":"El margen unitario mejoró frente al trimestre anterior.","paragraphs":["4T21 registró RASK de 7.24 ¢, CASK de 6.60 ¢ y un margen unitario de 0.64 ¢ por ASK-km.","La compañía ofreció 10.23 mil millones de ASK, transportó 4.87 millones de pasajeros y reportó 80.8% de ocupación.","La comparación interanual todavía no está disponible para este punto de la serie validada."]},"margin_qoq":{"available":true,"raw":0.5938670943012463,"display":"+0.59 ¢","direction":"up"},"margin_yoy":{"available":false,"raw":null,"display":"No disponible","direction":"na"}},"2022Q1":{"period_id":"2022Q1","period_label":"1T22","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":6.309639727361247,"display_value":"6.31 ¢","qoq":{"available":true,"raw":-0.1285887305249923,"display":"-12.9%","direction":"down"},"yoy":{"available":true,"raw":0.32875902046610705,"display":"+32.9%","direction":"up"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":7.3999999999999995,"display_value":"7.40 ¢","qoq":{"available":true,"raw":0.1212121212121211,"display":"+12.1%","direction":"up"},"yoy":{"available":true,"raw":0.0277777777777779,"display":"+2.8%","direction":"up"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":9954000000.0,"display_value":"9.95 mil M","qoq":{"available":true,"raw":-0.027359781121751192,"display":"-2.7%","direction":"down"},"yoy":{"available":true,"raw":0.3998031219237801,"display":"+40.0%","direction":"up"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.756,"display_value":"75.6%","qoq":{"available":true,"raw":-5.199999999999994,"display":"-5.2 pp","direction":"down"},"yoy":{"available":true,"raw":6.800000000000006,"display":"+6.8 pp","direction":"up"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":4142000.0,"display_value":"4.14 M","qoq":{"available":true,"raw":-0.14966126052145345,"display":"-15.0%","direction":"down"},"yoy":{"available":true,"raw":0.3120050681026292,"display":"+31.2%","direction":"up"}}],"conclusions":["El margen unitario fue -1.09 ¢ por ASK-km; cambió -1.73 ¢ frente al trimestre anterior.","La capacidad disminuyó 2.7%; los pasajeros disminuyeron 15.0%. La ocupación cambió -5.2 pp.","El RASK disminuyó 12.9%; el CASK aumentó 12.1%."],"narrative":{"headline":"El costo unitario presionó el margen del trimestre.","paragraphs":["1T22 registró RASK de 6.31 ¢, CASK de 7.40 ¢ y un margen unitario de -1.09 ¢ por ASK-km.","La compañía ofreció 9.95 mil millones de ASK, transportó 4.14 millones de pasajeros y reportó 75.6% de ocupación.","Frente a 1T21, el margen cambió +1.36 ¢, con RASK +32.9% y CASK +2.8%."]},"margin_qoq":{"available":true,"raw":-1.7310742137868464,"display":"-1.73 ¢","direction":"down"},"margin_yoy":{"available":true,"raw":1.3611190173020757,"display":"+1.36 ¢","direction":"up"}},"2022Q2":{"period_id":"2022Q2","period_label":"2T22","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":7.874251497005989,"display_value":"7.87 ¢","qoq":{"available":true,"raw":0.24797164929400473,"display":"+24.8%","direction":"up"},"yoy":{"available":true,"raw":0.2302374337305253,"display":"+23.0%","direction":"up"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":8.0,"display_value":"8.00 ¢","qoq":{"available":true,"raw":0.08108108108108114,"display":"+8.1%","direction":"up"},"yoy":{"available":true,"raw":0.09589041095890405,"display":"+9.6%","direction":"up"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":12155000000.0,"display_value":"12.15 mil M","qoq":{"available":true,"raw":0.2211171388386579,"display":"+22.1%","direction":"up"},"yoy":{"available":true,"raw":0.5675780242455506,"display":"+56.8%","direction":"up"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.8300000000000001,"display_value":"83.0%","qoq":{"available":true,"raw":7.400000000000007,"display":"+7.4 pp","direction":"up"},"yoy":{"available":true,"raw":6.2000000000000055,"display":"+6.2 pp","direction":"up"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":5551000.0,"display_value":"5.55 M","qoq":{"available":true,"raw":0.34017382906808313,"display":"+34.0%","direction":"up"},"yoy":{"available":true,"raw":0.398589065255732,"display":"+39.9%","direction":"up"}}],"conclusions":["El margen unitario fue -0.13 ¢ por ASK-km; cambió +0.96 ¢ frente al trimestre anterior.","La capacidad aumentó 22.1%; los pasajeros aumentaron 34.0%. La ocupación cambió +7.4 pp.","El RASK aumentó 24.8%; el CASK aumentó 8.1%."],"narrative":{"headline":"El margen unitario mejoró frente al trimestre anterior.","paragraphs":["2T22 registró RASK de 7.87 ¢, CASK de 8.00 ¢ y un margen unitario de -0.13 ¢ por ASK-km.","La compañía ofreció 12.15 mil millones de ASK, transportó 5.55 millones de pasajeros y reportó 83.0% de ocupación.","Frente a 2T21, el margen cambió +0.77 ¢, con RASK +23.0% y CASK +9.6%."]},"margin_qoq":{"available":true,"raw":0.9646117696447423,"display":"+0.96 ¢","direction":"up"},"margin_yoy":{"available":true,"raw":0.7736565540213585,"display":"+0.77 ¢","direction":"up"}},"2022Q3":{"period_id":"2022Q3","period_label":"3T22","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":8.311944718657452,"display_value":"8.31 ¢","qoq":{"available":true,"raw":0.05558537491695392,"display":"+5.6%","direction":"up"},"yoy":{"available":true,"raw":0.21398139969865393,"display":"+21.4%","direction":"up"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":7.6000000000000005,"display_value":"7.60 ¢","qoq":{"available":true,"raw":-0.04999999999999993,"display":"-5.0%","direction":"down"},"yoy":{"available":true,"raw":0.11764705882352944,"display":"+11.8%","direction":"up"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":12711000000.000002,"display_value":"12.71 mil M","qoq":{"available":true,"raw":0.04574249280131659,"display":"+4.6%","direction":"up"},"yoy":{"available":true,"raw":0.31379844961240333,"display":"+31.4%","direction":"up"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.84,"display_value":"84.0%","qoq":{"available":true,"raw":0.9999999999999898,"display":"+1.0 pp","direction":"up"},"yoy":{"available":true,"raw":5.199999999999994,"display":"+5.2 pp","direction":"up"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":5895000.0,"display_value":"5.89 M","qoq":{"available":true,"raw":0.06197081606917676,"display":"+6.2%","direction":"up"},"yoy":{"available":true,"raw":0.2938981562774363,"display":"+29.4%","direction":"up"}}],"conclusions":["El margen unitario fue 0.71 ¢ por ASK-km; cambió +0.84 ¢ frente al trimestre anterior.","La capacidad aumentó 4.6%; los pasajeros aumentaron 6.2%. La ocupación cambió +1.0 pp.","El RASK aumentó 5.6%; el CASK disminuyó 5.0%."],"narrative":{"headline":"El margen unitario mejoró frente al trimestre anterior.","paragraphs":["3T22 registró RASK de 8.31 ¢, CASK de 7.60 ¢ y un margen unitario de 0.71 ¢ por ASK-km.","La compañía ofreció 12.71 mil millones de ASK, transportó 5.89 millones de pasajeros y reportó 84.0% de ocupación.","Frente a 3T21, el margen cambió +0.67 ¢, con RASK +21.4% y CASK +11.8%."]},"margin_qoq":{"available":true,"raw":0.8376932216514623,"display":"+0.84 ¢","direction":"up"},"margin_yoy":{"available":true,"raw":0.6650978718106044,"display":"+0.67 ¢","direction":"up"}},"2022Q4":{"period_id":"2022Q4","period_label":"4T22","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":9.2,"display_value":"9.20 ¢","qoq":{"available":true,"raw":0.10684085510688845,"display":"+10.7%","direction":"up"},"yoy":{"available":true,"raw":0.2705929380413057,"display":"+27.1%","direction":"up"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":8.4,"display_value":"8.40 ¢","qoq":{"available":true,"raw":0.10526315789473673,"display":"+10.5%","direction":"up"},"yoy":{"available":true,"raw":0.2727272727272727,"display":"+27.3%","direction":"up"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":12932000000.0,"display_value":"12.93 mil M","qoq":{"available":true,"raw":0.017386515616395037,"display":"+1.7%","direction":"up"},"yoy":{"available":true,"raw":0.2636310338088721,"display":"+26.4%","direction":"up"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.8220000000000001,"display_value":"82.2%","qoq":{"available":true,"raw":-1.7999999999999905,"display":"-1.8 pp","direction":"down"},"yoy":{"available":true,"raw":1.4000000000000123,"display":"+1.4 pp","direction":"up"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":6137000.0,"display_value":"6.14 M","qoq":{"available":true,"raw":0.04105173876166246,"display":"+4.1%","direction":"up"},"yoy":{"available":true,"raw":0.2599055635393144,"display":"+26.0%","direction":"up"}}],"conclusions":["El margen unitario fue 0.80 ¢ por ASK-km; cambió +0.09 ¢ frente al trimestre anterior.","La capacidad aumentó 1.7%; los pasajeros aumentaron 4.1%. La ocupación cambió -1.8 pp.","El RASK aumentó 10.7%; el CASK aumentó 10.5%."],"narrative":{"headline":"El margen unitario mejoró frente al trimestre anterior.","paragraphs":["4T22 registró RASK de 9.20 ¢, CASK de 8.40 ¢ y un margen unitario de 0.80 ¢ por ASK-km.","La compañía ofreció 12.93 mil millones de ASK, transportó 6.14 millones de pasajeros y reportó 82.2% de ocupación.","Frente a 4T21, el margen cambió +0.16 ¢, con RASK +27.1% y CASK +27.3%."]},"margin_qoq":{"available":true,"raw":0.08805528134254725,"display":"+0.09 ¢","direction":"up"},"margin_yoy":{"available":true,"raw":0.1592860588519054,"display":"+0.16 ¢","direction":"up"}},"2023Q1":{"period_id":"2023Q1","period_label":"1T23","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":8.6,"display_value":"8.60 ¢","qoq":{"available":true,"raw":-0.06521739130434778,"display":"-6.5%","direction":"down"},"yoy":{"available":true,"raw":0.3629938271604938,"display":"+36.3%","direction":"up"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":7.900000000000001,"display_value":"7.90 ¢","qoq":{"available":true,"raw":-0.05952380952380942,"display":"-6.0%","direction":"down"},"yoy":{"available":true,"raw":0.06756756756756777,"display":"+6.8%","direction":"up"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":12428000000.0,"display_value":"12.43 mil M","qoq":{"available":true,"raw":-0.03897309000927929,"display":"-3.9%","direction":"down"},"yoy":{"available":true,"raw":0.24854329917621065,"display":"+24.9%","direction":"up"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.8009999999999999,"display_value":"80.1%","qoq":{"available":true,"raw":-2.100000000000013,"display":"-2.1 pp","direction":"down"},"yoy":{"available":true,"raw":4.499999999999993,"display":"+4.5 pp","direction":"up"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":5756000.0,"display_value":"5.76 M","qoq":{"available":true,"raw":-0.06208245070881535,"display":"-6.2%","direction":"down"},"yoy":{"available":true,"raw":0.38966682761950744,"display":"+39.0%","direction":"up"}}],"conclusions":["El margen unitario fue 0.70 ¢ por ASK-km; cambió -0.10 ¢ frente al trimestre anterior.","La capacidad disminuyó 3.9%; los pasajeros disminuyeron 6.2%. La ocupación cambió -2.1 pp.","El RASK disminuyó 6.5%; el CASK disminuyó 6.0%."],"narrative":{"headline":"El costo unitario presionó el margen del trimestre.","paragraphs":["1T23 registró RASK de 8.60 ¢, CASK de 7.90 ¢ y un margen unitario de 0.70 ¢ por ASK-km.","La compañía ofreció 12.43 mil millones de ASK, transportó 5.76 millones de pasajeros y reportó 80.1% de ocupación.","Frente a 1T22, el margen cambió +1.79 ¢, con RASK +36.3% y CASK +6.8%."]},"margin_qoq":{"available":true,"raw":-0.10000000000000053,"display":"-0.10 ¢","direction":"down"},"margin_yoy":{"available":true,"raw":1.7903602726387513,"display":"+1.79 ¢","direction":"up"}},"2023Q2":{"period_id":"2023Q2","period_label":"2T23","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":9.0,"display_value":"9.00 ¢","qoq":{"available":true,"raw":0.04651162790697683,"display":"+4.7%","direction":"up"},"yoy":{"available":true,"raw":0.1429657794676804,"display":"+14.3%","direction":"up"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":7.400000000000001,"display_value":"7.40 ¢","qoq":{"available":true,"raw":-0.06329113924050633,"display":"-6.3%","direction":"down"},"yoy":{"available":true,"raw":-0.07499999999999984,"display":"-7.5%","direction":"down"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":12845000000.000002,"display_value":"12.85 mil M","qoq":{"available":true,"raw":0.03355326681686521,"display":"+3.4%","direction":"up"},"yoy":{"available":true,"raw":0.05676676264911573,"display":"+5.7%","direction":"up"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.8440000000000001,"display_value":"84.4%","qoq":{"available":true,"raw":4.300000000000015,"display":"+4.3 pp","direction":"up"},"yoy":{"available":true,"raw":1.4000000000000012,"display":"+1.4 pp","direction":"up"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":6043000.0,"display_value":"6.04 M","qoq":{"available":true,"raw":0.0498610145934677,"display":"+5.0%","direction":"up"},"yoy":{"available":true,"raw":0.08863267879661318,"display":"+8.9%","direction":"up"}}],"conclusions":["El margen unitario fue 1.60 ¢ por ASK-km; cambió +0.90 ¢ frente al trimestre anterior.","La capacidad aumentó 3.4%; los pasajeros aumentaron 5.0%. La ocupación cambió +4.3 pp.","El RASK aumentó 4.7%; el CASK disminuyó 6.3%."],"narrative":{"headline":"El margen unitario mejoró frente al trimestre anterior.","paragraphs":["2T23 registró RASK de 9.00 ¢, CASK de 7.40 ¢ y un margen unitario de 1.60 ¢ por ASK-km.","La compañía ofreció 12.85 mil millones de ASK, transportó 6.04 millones de pasajeros y reportó 84.4% de ocupación.","Frente a 2T22, el margen cambió +1.73 ¢, con RASK +14.3% y CASK -7.5%."]},"margin_qoq":{"available":true,"raw":0.9000000000000004,"display":"+0.90 ¢","direction":"up"},"margin_yoy":{"available":true,"raw":1.7257485029940094,"display":"+1.73 ¢","direction":"up"}},"2023Q3":{"period_id":"2023Q3","period_label":"3T23","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":9.8,"display_value":"9.80 ¢","qoq":{"available":true,"raw":0.08888888888888902,"display":"+8.9%","direction":"up"},"yoy":{"available":true,"raw":0.17902612826603348,"display":"+17.9%","direction":"up"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":7.900000000000001,"display_value":"7.90 ¢","qoq":{"available":true,"raw":0.06756756756756754,"display":"+6.8%","direction":"up"},"yoy":{"available":true,"raw":0.03947368421052633,"display":"+3.9%","direction":"up"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":13915000000.0,"display_value":"13.91 mil M","qoq":{"available":true,"raw":0.08330089528999585,"display":"+8.3%","direction":"up"},"yoy":{"available":true,"raw":0.09472110770199027,"display":"+9.5%","direction":"up"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.88,"display_value":"88.0%","qoq":{"available":true,"raw":3.599999999999992,"display":"+3.6 pp","direction":"up"},"yoy":{"available":true,"raw":4.0000000000000036,"display":"+4.0 pp","direction":"up"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":6667000.0,"display_value":"6.67 M","qoq":{"available":true,"raw":0.10325997021347022,"display":"+10.3%","direction":"up"},"yoy":{"available":true,"raw":0.13095843935538598,"display":"+13.1%","direction":"up"}}],"conclusions":["El margen unitario fue 1.90 ¢ por ASK-km; cambió +0.30 ¢ frente al trimestre anterior.","La capacidad aumentó 8.3%; los pasajeros aumentaron 10.3%. La ocupación cambió +3.6 pp.","El RASK aumentó 8.9%; el CASK aumentó 6.8%."],"narrative":{"headline":"El margen unitario mejoró frente al trimestre anterior.","paragraphs":["3T23 registró RASK de 9.80 ¢, CASK de 7.90 ¢ y un margen unitario de 1.90 ¢ por ASK-km.","La compañía ofreció 13.91 mil millones de ASK, transportó 6.67 millones de pasajeros y reportó 88.0% de ocupación.","Frente a 3T22, el margen cambió +1.19 ¢, con RASK +17.9% y CASK +3.9%."]},"margin_qoq":{"available":true,"raw":0.3000000000000007,"display":"+0.30 ¢","direction":"up"},"margin_yoy":{"available":true,"raw":1.1880552813425478,"display":"+1.19 ¢","direction":"up"}},"2023Q4":{"period_id":"2023Q4","period_label":"4T23","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":10.0,"display_value":"10.00 ¢","qoq":{"available":true,"raw":0.020408163265306145,"display":"+2.0%","direction":"up"},"yoy":{"available":true,"raw":0.0869565217391306,"display":"+8.7%","direction":"up"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":8.4,"display_value":"8.40 ¢","qoq":{"available":true,"raw":0.06329113924050622,"display":"+6.3%","direction":"up"},"yoy":{"available":true,"raw":0.0,"display":"+0.0%","direction":"flat"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":13800000000.000002,"display_value":"13.80 mil M","qoq":{"available":true,"raw":-0.008264462809917217,"display":"-0.8%","direction":"down"},"yoy":{"available":true,"raw":0.06712032168264792,"display":"+6.7%","direction":"up"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.84,"display_value":"84.0%","qoq":{"available":true,"raw":-4.0000000000000036,"display":"-4.0 pp","direction":"down"},"yoy":{"available":true,"raw":1.7999999999999905,"display":"+1.8 pp","direction":"up"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":6228000.0,"display_value":"6.23 M","qoq":{"available":true,"raw":-0.06584670766461675,"display":"-6.6%","direction":"down"},"yoy":{"available":true,"raw":0.014828091901580631,"display":"+1.5%","direction":"up"}}],"conclusions":["El margen unitario fue 1.60 ¢ por ASK-km; cambió -0.30 ¢ frente al trimestre anterior.","La capacidad disminuyó 0.8%; los pasajeros disminuyeron 6.6%. La ocupación cambió -4.0 pp.","El RASK aumentó 2.0%; el CASK aumentó 6.3%."],"narrative":{"headline":"El costo unitario presionó el margen del trimestre.","paragraphs":["4T23 registró RASK de 10.00 ¢, CASK de 8.40 ¢ y un margen unitario de 1.60 ¢ por ASK-km.","La compañía ofreció 13.80 mil millones de ASK, transportó 6.23 millones de pasajeros y reportó 84.0% de ocupación.","Frente a 4T22, el margen cambió +0.80 ¢, con RASK +8.7% y CASK +0.0%."]},"margin_qoq":{"available":true,"raw":-0.2999999999999998,"display":"-0.30 ¢","direction":"down"},"margin_yoy":{"available":true,"raw":0.8000000000000007,"display":"+0.80 ¢","direction":"up"}},"2024Q1":{"period_id":"2024Q1","period_label":"1T24","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":9.5,"display_value":"9.50 ¢","qoq":{"available":true,"raw":-0.050000000000000044,"display":"-5.0%","direction":"down"},"yoy":{"available":true,"raw":0.10465116279069764,"display":"+10.5%","direction":"up"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":8.0,"display_value":"8.00 ¢","qoq":{"available":true,"raw":-0.04761904761904767,"display":"-4.8%","direction":"down"},"yoy":{"available":true,"raw":0.012658227848101111,"display":"+1.3%","direction":"up"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":13675000000.0,"display_value":"13.68 mil M","qoq":{"available":true,"raw":-0.009057971014492905,"display":"-0.9%","direction":"down"},"yoy":{"available":true,"raw":0.10033794657225625,"display":"+10.0%","direction":"up"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.8540000000000001,"display_value":"85.4%","qoq":{"available":true,"raw":1.4000000000000123,"display":"+1.4 pp","direction":"up"},"yoy":{"available":true,"raw":5.300000000000016,"display":"+5.3 pp","direction":"up"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":5979000.0,"display_value":"5.98 M","qoq":{"available":true,"raw":-0.039980732177263945,"display":"-4.0%","direction":"down"},"yoy":{"available":true,"raw":0.03874218207088265,"display":"+3.9%","direction":"up"}}],"conclusions":["El margen unitario fue 1.50 ¢ por ASK-km; cambió -0.10 ¢ frente al trimestre anterior.","La capacidad disminuyó 0.9%; los pasajeros disminuyeron 4.0%. La ocupación cambió +1.4 pp.","El RASK disminuyó 5.0%; el CASK disminuyó 4.8%."],"narrative":{"headline":"El costo unitario presionó el margen del trimestre.","paragraphs":["1T24 registró RASK de 9.50 ¢, CASK de 8.00 ¢ y un margen unitario de 1.50 ¢ por ASK-km.","La compañía ofreció 13.68 mil millones de ASK, transportó 5.98 millones de pasajeros y reportó 85.4% de ocupación.","Frente a 1T23, el margen cambió +0.80 ¢, con RASK +10.5% y CASK +1.3%."]},"margin_qoq":{"available":true,"raw":-0.09999999999999964,"display":"-0.10 ¢","direction":"down"},"margin_yoy":{"available":true,"raw":0.8000000000000016,"display":"+0.80 ¢","direction":"up"}},"2024Q2":{"period_id":"2024Q2","period_label":"2T24","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":9.7,"display_value":"9.70 ¢","qoq":{"available":true,"raw":0.021052631578947212,"display":"+2.1%","direction":"up"},"yoy":{"available":true,"raw":0.07777777777777772,"display":"+7.8%","direction":"up"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":7.8,"display_value":"7.80 ¢","qoq":{"available":true,"raw":-0.025000000000000022,"display":"-2.5%","direction":"down"},"yoy":{"available":true,"raw":0.054054054054053946,"display":"+5.4%","direction":"up"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":14307000000.0,"display_value":"14.31 mil M","qoq":{"available":true,"raw":0.046215722120658054,"display":"+4.6%","direction":"up"},"yoy":{"available":true,"raw":0.11381860646165798,"display":"+11.4%","direction":"up"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.863,"display_value":"86.3%","qoq":{"available":true,"raw":0.8999999999999897,"display":"+0.9 pp","direction":"up"},"yoy":{"available":true,"raw":1.8999999999999906,"display":"+1.9 pp","direction":"up"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":6409000.0,"display_value":"6.41 M","qoq":{"available":true,"raw":0.07191838100016734,"display":"+7.2%","direction":"up"},"yoy":{"available":true,"raw":0.06056594406751614,"display":"+6.1%","direction":"up"}}],"conclusions":["El margen unitario fue 1.90 ¢ por ASK-km; cambió +0.40 ¢ frente al trimestre anterior.","La capacidad aumentó 4.6%; los pasajeros aumentaron 7.2%. La ocupación cambió +0.9 pp.","El RASK aumentó 2.1%; el CASK disminuyó 2.5%."],"narrative":{"headline":"El margen unitario mejoró frente al trimestre anterior.","paragraphs":["2T24 registró RASK de 9.70 ¢, CASK de 7.80 ¢ y un margen unitario de 1.90 ¢ por ASK-km.","La compañía ofreció 14.31 mil millones de ASK, transportó 6.41 millones de pasajeros y reportó 86.3% de ocupación.","Frente a 2T23, el margen cambió +0.30 ¢, con RASK +7.8% y CASK +5.4%."]},"margin_qoq":{"available":true,"raw":0.39999999999999947,"display":"+0.40 ¢","direction":"up"},"margin_yoy":{"available":true,"raw":0.3000000000000007,"display":"+0.30 ¢","direction":"up"}},"2024Q3":{"period_id":"2024Q3","period_label":"3T24","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":9.87980195657361,"display_value":"9.88 ¢","qoq":{"available":true,"raw":0.018536284182846474,"display":"+1.9%","direction":"up"},"yoy":{"available":true,"raw":0.008143056793225467,"display":"+0.8%","direction":"up"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":7.642865664519208,"display_value":"7.64 ¢","qoq":{"available":true,"raw":-0.020145427625742562,"display":"-2.0%","direction":"down"},"yoy":{"available":true,"raw":-0.03254865006085983,"display":"-3.3%","direction":"down"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":15037710336.000002,"display_value":"15.04 mil M","qoq":{"available":true,"raw":0.05107362382050762,"display":"+5.1%","direction":"up"},"yoy":{"available":true,"raw":0.0806834592885377,"display":"+8.1%","direction":"up"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.8890000000000001,"display_value":"88.9%","qoq":{"available":true,"raw":2.6000000000000134,"display":"+2.6 pp","direction":"up"},"yoy":{"available":true,"raw":0.9000000000000119,"display":"+0.9 pp","direction":"up"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":6703000.0,"display_value":"6.70 M","qoq":{"available":true,"raw":0.045872991106256755,"display":"+4.6%","direction":"up"},"yoy":{"available":true,"raw":0.00539973001349936,"display":"+0.5%","direction":"up"}}],"conclusions":["El margen unitario fue 2.24 ¢ por ASK-km; cambió +0.34 ¢ frente al trimestre anterior.","La capacidad aumentó 5.1%; los pasajeros aumentaron 4.6%. La ocupación cambió +2.6 pp.","El RASK aumentó 1.9%; el CASK disminuyó 2.0%."],"narrative":{"headline":"El margen unitario mejoró frente al trimestre anterior.","paragraphs":["3T24 registró RASK de 9.88 ¢, CASK de 7.64 ¢ y un margen unitario de 2.24 ¢ por ASK-km.","La compañía ofreció 15.04 mil millones de ASK, transportó 6.70 millones de pasajeros y reportó 88.9% de ocupación.","Frente a 3T23, el margen cambió +0.34 ¢, con RASK +0.8% y CASK -3.3%."]},"margin_qoq":{"available":true,"raw":0.33693629205440256,"display":"+0.34 ¢","direction":"up"},"margin_yoy":{"available":true,"raw":0.33693629205440256,"display":"+0.34 ¢","direction":"up"}},"2024Q4":{"period_id":"2024Q4","period_label":"4T24","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":10.004076195021078,"display_value":"10.00 ¢","qoq":{"available":true,"raw":0.012578616352201255,"display":"+1.3%","direction":"up"},"yoy":{"available":true,"raw":0.000407619502107881,"display":"+0.0%","direction":"up"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":8.07782549908534,"display_value":"8.08 ¢","qoq":{"available":true,"raw":0.05691056910569081,"display":"+5.7%","direction":"up"},"yoy":{"available":true,"raw":-0.03835410725174515,"display":"-3.8%","direction":"down"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":14340864384.000002,"display_value":"14.34 mil M","qoq":{"available":true,"raw":-0.04633989726027399,"display":"-4.6%","direction":"down"},"yoy":{"available":true,"raw":0.03919307130434779,"display":"+3.9%","direction":"up"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.855,"display_value":"85.5%","qoq":{"available":true,"raw":-3.400000000000014,"display":"-3.4 pp","direction":"down"},"yoy":{"available":true,"raw":1.5000000000000013,"display":"+1.5 pp","direction":"up"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":6247000.0,"display_value":"6.25 M","qoq":{"available":true,"raw":-0.06802924063852012,"display":"-6.8%","direction":"down"},"yoy":{"available":true,"raw":0.003050738599871483,"display":"+0.3%","direction":"up"}}],"conclusions":["El margen unitario fue 1.93 ¢ por ASK-km; cambió -0.31 ¢ frente al trimestre anterior.","La capacidad disminuyó 4.6%; los pasajeros disminuyeron 6.8%. La ocupación cambió -3.4 pp.","El RASK aumentó 1.3%; el CASK aumentó 5.7%."],"narrative":{"headline":"El costo unitario presionó el margen del trimestre.","paragraphs":["4T24 registró RASK de 10.00 ¢, CASK de 8.08 ¢ y un margen unitario de 1.93 ¢ por ASK-km.","La compañía ofreció 14.34 mil millones de ASK, transportó 6.25 millones de pasajeros y reportó 85.5% de ocupación.","Frente a 4T23, el margen cambió +0.33 ¢, con RASK +0.0% y CASK -3.8%."]},"margin_qoq":{"available":true,"raw":-0.310685596118665,"display":"-0.31 ¢","direction":"down"},"margin_yoy":{"available":true,"raw":0.3262506959357374,"display":"+0.33 ¢","direction":"up"}},"2025Q1":{"period_id":"2025Q1","period_label":"1T25","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":8.45064821442774,"display_value":"8.45 ¢","qoq":{"available":true,"raw":-0.15527950310559024,"display":"-15.5%","direction":"down"},"yoy":{"available":true,"raw":-0.11045808269181678,"display":"-11.0%","direction":"down"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":7.394317187624274,"display_value":"7.39 ¢","qoq":{"available":true,"raw":-0.08461538461538454,"display":"-8.5%","direction":"down"},"yoy":{"available":true,"raw":-0.0757103515469657,"display":"-7.6%","direction":"down"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":13996464768.0,"display_value":"14.00 mil M","qoq":{"available":true,"raw":-0.02401526203568638,"display":"-2.4%","direction":"down"},"yoy":{"available":true,"raw":0.023507478464350973,"display":"+2.4%","direction":"up"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.823,"display_value":"82.3%","qoq":{"available":true,"raw":-3.200000000000003,"display":"-3.2 pp","direction":"down"},"yoy":{"available":true,"raw":-3.100000000000014,"display":"-3.1 pp","direction":"down"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":5877000.0,"display_value":"5.88 M","qoq":{"available":true,"raw":-0.05922842964623021,"display":"-5.9%","direction":"down"},"yoy":{"available":true,"raw":-0.01705970898143505,"display":"-1.7%","direction":"down"}}],"conclusions":["El margen unitario fue 1.06 ¢ por ASK-km; cambió -0.87 ¢ frente al trimestre anterior.","La capacidad disminuyó 2.4%; los pasajeros disminuyeron 5.9%. La ocupación cambió -3.2 pp.","El RASK disminuyó 15.5%; el CASK disminuyó 8.5%."],"narrative":{"headline":"El costo unitario presionó el margen del trimestre.","paragraphs":["1T25 registró RASK de 8.45 ¢, CASK de 7.39 ¢ y un margen unitario de 1.06 ¢ por ASK-km.","La compañía ofreció 14.00 mil millones de ASK, transportó 5.88 millones de pasajeros y reportó 82.3% de ocupación.","Frente a 1T24, el margen cambió -0.44 ¢, con RASK -11.0% y CASK -7.6%."]},"margin_qoq":{"available":true,"raw":-0.8699196691322708,"display":"-0.87 ¢","direction":"down"},"margin_yoy":{"available":true,"raw":-0.44366897319653376,"display":"-0.44 ¢","direction":"down"}},"2025Q2":{"period_id":"2025Q2","period_label":"2T25","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":9.009882287441341,"display_value":"9.01 ¢","qoq":{"available":true,"raw":0.06617647058823528,"display":"+6.6%","direction":"up"},"yoy":{"available":true,"raw":-0.0711461559338823,"display":"-7.1%","direction":"down"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":7.394317187624274,"display_value":"7.39 ¢","qoq":{"available":true,"raw":0.0,"display":"+0.0%","direction":"flat"},"yoy":{"available":true,"raw":-0.05201061697124687,"display":"-5.2%","direction":"down"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":14612843520.000002,"display_value":"14.61 mil M","qoq":{"available":true,"raw":0.044038174083017356,"display":"+4.4%","direction":"up"},"yoy":{"available":true,"raw":0.021377194380373332,"display":"+2.1%","direction":"up"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.8570000000000001,"display_value":"85.7%","qoq":{"available":true,"raw":3.400000000000014,"display":"+3.4 pp","direction":"up"},"yoy":{"available":true,"raw":-0.5999999999999894,"display":"-0.6 pp","direction":"down"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":6180000.0,"display_value":"6.18 M","qoq":{"available":true,"raw":0.05155691679428287,"display":"+5.2%","direction":"up"},"yoy":{"available":true,"raw":-0.03573100327664225,"display":"-3.6%","direction":"down"}}],"conclusions":["El margen unitario fue 1.62 ¢ por ASK-km; cambió +0.56 ¢ frente al trimestre anterior.","La capacidad aumentó 4.4%; los pasajeros aumentaron 5.2%. La ocupación cambió +3.4 pp.","El RASK aumentó 6.6%; el CASK se mantuvo estable 0.0%."],"narrative":{"headline":"El margen unitario mejoró frente al trimestre anterior.","paragraphs":["2T25 registró RASK de 9.01 ¢, CASK de 7.39 ¢ y un margen unitario de 1.62 ¢ por ASK-km.","La compañía ofreció 14.61 mil millones de ASK, transportó 6.18 millones de pasajeros y reportó 85.7% de ocupación.","Frente a 2T24, el margen cambió -0.28 ¢, con RASK -7.1% y CASK -5.2%."]},"margin_qoq":{"available":true,"raw":0.5592340730136005,"display":"+0.56 ¢","direction":"up"},"margin_yoy":{"available":true,"raw":-0.2844349001829327,"display":"-0.28 ¢","direction":"down"}},"2025Q3":{"period_id":"2025Q3","period_label":"3T25","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":9.569116360454943,"display_value":"9.57 ¢","qoq":{"available":true,"raw":0.0620689655172415,"display":"+6.2%","direction":"up"},"yoy":{"available":true,"raw":-0.03144654088050314,"display":"-3.1%","direction":"down"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":7.89141414141414,"display_value":"7.89 ¢","qoq":{"available":true,"raw":0.06722689075630228,"display":"+6.7%","direction":"up"},"yoy":{"available":true,"raw":0.032520325203251765,"display":"+3.3%","direction":"up"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":14929884288.000002,"display_value":"14.93 mil M","qoq":{"available":true,"raw":0.0216960352422908,"display":"+2.2%","direction":"up"},"yoy":{"available":true,"raw":-0.007170376712328785,"display":"-0.7%","direction":"down"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.883,"display_value":"88.3%","qoq":{"available":true,"raw":2.599999999999991,"display":"+2.6 pp","direction":"up"},"yoy":{"available":true,"raw":-0.6000000000000116,"display":"-0.6 pp","direction":"down"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":6362000.0,"display_value":"6.36 M","qoq":{"available":true,"raw":0.029449838187702193,"display":"+2.9%","direction":"up"},"yoy":{"available":true,"raw":-0.050872743547665245,"display":"-5.1%","direction":"down"}}],"conclusions":["El margen unitario fue 1.68 ¢ por ASK-km; cambió +0.06 ¢ frente al trimestre anterior.","La capacidad aumentó 2.2%; los pasajeros aumentaron 2.9%. La ocupación cambió +2.6 pp.","El RASK aumentó 6.2%; el CASK aumentó 6.7%."],"narrative":{"headline":"El margen unitario mejoró frente al trimestre anterior.","paragraphs":["3T25 registró RASK de 9.57 ¢, CASK de 7.89 ¢ y un margen unitario de 1.68 ¢ por ASK-km.","La compañía ofreció 14.93 mil millones de ASK, transportó 6.36 millones de pasajeros y reportó 88.3% de ocupación.","Frente a 3T24, el margen cambió -0.56 ¢, con RASK -3.1% y CASK +3.3%."]},"margin_qoq":{"available":true,"raw":0.06213711922373655,"display":"+0.06 ¢","direction":"up"},"margin_yoy":{"available":true,"raw":-0.5592340730135987,"display":"-0.56 ¢","direction":"down"}},"2025Q4":{"period_id":"2025Q4","period_label":"4T25","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":10.190487552692275,"display_value":"10.19 ¢","qoq":{"available":true,"raw":0.06493506493506462,"display":"+6.5%","direction":"up"},"yoy":{"available":true,"raw":0.01863354037267051,"display":"+1.9%","direction":"up"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":8.45064821442774,"display_value":"8.45 ¢","qoq":{"available":true,"raw":0.07086614173228356,"display":"+7.1%","direction":"up"},"yoy":{"available":true,"raw":0.04615384615384599,"display":"+4.6%","direction":"up"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":14083369344.0,"display_value":"14.08 mil M","qoq":{"available":true,"raw":-0.05669936401854059,"display":"-5.7%","direction":"down"},"yoy":{"available":true,"raw":-0.017955336101447728,"display":"-1.8%","direction":"down"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.872,"display_value":"87.2%","qoq":{"available":true,"raw":-1.100000000000001,"display":"-1.1 pp","direction":"down"},"yoy":{"available":true,"raw":1.7000000000000015,"display":"+1.7 pp","direction":"up"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":6168000.0,"display_value":"6.17 M","qoq":{"available":true,"raw":-0.030493555485696322,"display":"-3.0%","direction":"down"},"yoy":{"available":true,"raw":-0.012646070113654595,"display":"-1.3%","direction":"down"}}],"conclusions":["El margen unitario fue 1.74 ¢ por ASK-km; cambió +0.06 ¢ frente al trimestre anterior.","La capacidad disminuyó 5.7%; los pasajeros disminuyeron 3.0%. La ocupación cambió -1.1 pp.","El RASK aumentó 6.5%; el CASK aumentó 7.1%."],"narrative":{"headline":"El margen unitario mejoró frente al trimestre anterior.","paragraphs":["4T25 registró RASK de 10.19 ¢, CASK de 8.45 ¢ y un margen unitario de 1.74 ¢ por ASK-km.","La compañía ofreció 14.08 mil millones de ASK, transportó 6.17 millones de pasajeros y reportó 87.2% de ocupación.","Frente a 4T24, el margen cambió -0.19 ¢, con RASK +1.9% y CASK +4.6%."]},"margin_qoq":{"available":true,"raw":0.06213711922373122,"display":"+0.06 ¢","direction":"up"},"margin_yoy":{"available":true,"raw":-0.18641135767120254,"display":"-0.19 ¢","direction":"down"}},"2026Q1":{"period_id":"2026Q1","period_label":"1T26","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":9.69339059890241,"display_value":"9.69 ¢","qoq":{"available":true,"raw":-0.04878048780487787,"display":"-4.9%","direction":"down"},"yoy":{"available":true,"raw":0.1470588235294119,"display":"+14.7%","direction":"up"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":8.574922452875208,"display_value":"8.57 ¢","qoq":{"available":true,"raw":0.014705882352941346,"display":"+1.5%","direction":"up"},"yoy":{"available":true,"raw":0.15966386554621836,"display":"+16.0%","direction":"up"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":13833921024.0,"display_value":"13.83 mil M","qoq":{"available":true,"raw":-0.0177122614558336,"display":"-1.8%","direction":"down"},"yoy":{"available":true,"raw":-0.011613199954007114,"display":"-1.2%","direction":"down"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.8440000000000001,"display_value":"84.4%","qoq":{"available":true,"raw":-2.7999999999999914,"display":"-2.8 pp","direction":"down"},"yoy":{"available":true,"raw":2.100000000000013,"display":"+2.1 pp","direction":"up"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":5791000.0,"display_value":"5.79 M","qoq":{"available":true,"raw":-0.06112191958495461,"display":"-6.1%","direction":"down"},"yoy":{"available":true,"raw":-0.014633316317849254,"display":"-1.5%","direction":"down"}}],"conclusions":["El margen unitario fue 1.12 ¢ por ASK-km; cambió -0.62 ¢ frente al trimestre anterior.","La capacidad disminuyó 1.8%; los pasajeros disminuyeron 6.1%. La ocupación cambió -2.8 pp.","El RASK disminuyó 4.9%; el CASK aumentó 1.5%."],"narrative":{"headline":"El costo unitario presionó el margen del trimestre.","paragraphs":["1T26 registró RASK de 9.69 ¢, CASK de 8.57 ¢ y un margen unitario de 1.12 ¢ por ASK-km.","La compañía ofreció 13.83 mil millones de ASK, transportó 5.79 millones de pasajeros y reportó 84.4% de ocupación.","Frente a 1T25, el margen cambió +0.06 ¢, con RASK +14.7% y CASK +16.0%."]},"margin_qoq":{"available":true,"raw":-0.6213711922373335,"display":"-0.62 ¢","direction":"down"},"margin_yoy":{"available":true,"raw":0.06213711922373477,"display":"+0.06 ¢","direction":"up"}},"2026Q2":{"period_id":"2026Q2","period_label":"2T26","kpis":[{"key":"rask_cents_per_km","label":"RASK","description":"Ingreso total generado por cada asiento-kilómetro disponible.","accent":"blue","format":"cents","value":9.941939075797343,"display_value":"9.94 ¢","qoq":{"available":true,"raw":0.02564102564102555,"display":"+2.6%","direction":"up"},"yoy":{"available":true,"raw":0.10344827586206917,"display":"+10.3%","direction":"up"}},{"key":"cask_cents_per_km","label":"CASK","description":"Costo operativo por cada asiento-kilómetro disponible.","accent":"red","format":"cents","value":9.50697924123121,"display_value":"9.51 ¢","qoq":{"available":true,"raw":0.10869565217391308,"display":"+10.9%","direction":"up"},"yoy":{"available":true,"raw":0.2857142857142858,"display":"+28.6%","direction":"up"}},{"key":"ask_km","label":"ASK","description":"Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.","accent":"gold","format":"billions","value":14896088064.000002,"display_value":"14.90 mil M","qoq":{"available":true,"raw":0.07677989762680326,"display":"+7.7%","direction":"up"},"yoy":{"available":true,"raw":0.01938325991189438,"display":"+1.9%","direction":"up"}},{"key":"load_factor_reported","label":"Factor de ocupación","description":"Porcentaje de la capacidad que fue utilizada por pasajeros.","accent":"amber","format":"percent","value":0.8490000000000001,"display_value":"84.9%","qoq":{"available":true,"raw":0.5000000000000004,"display":"+0.5 pp","direction":"up"},"yoy":{"available":true,"raw":-0.8000000000000007,"display":"-0.8 pp","direction":"down"}},{"key":"passengers","label":"Pasajeros","description":"Pasajeros transportados por Grupo Aeroméxico en el trimestre.","accent":"violet","format":"millions","value":6014000.0,"display_value":"6.01 M","qoq":{"available":true,"raw":0.03850802970126055,"display":"+3.9%","direction":"up"},"yoy":{"available":true,"raw":-0.02686084142394818,"display":"-2.7%","direction":"down"}}],"conclusions":["El margen unitario fue 0.43 ¢ por ASK-km; cambió -0.68 ¢ frente al trimestre anterior.","La capacidad aumentó 7.7%; los pasajeros aumentaron 3.9%. La ocupación cambió +0.5 pp.","El RASK aumentó 2.6%; el CASK aumentó 10.9%."],"narrative":{"headline":"El costo unitario presionó el margen del trimestre.","paragraphs":["2T26 registró RASK de 9.94 ¢, CASK de 9.51 ¢ y un margen unitario de 0.43 ¢ por ASK-km.","La compañía ofreció 14.90 mil millones de ASK, transportó 6.01 millones de pasajeros y reportó 84.9% de ocupación.","Frente a 2T25, el margen cambió -1.18 ¢, con RASK +10.3% y CASK +28.6%."]},"margin_qoq":{"available":true,"raw":-0.6835083114610683,"display":"-0.68 ¢","direction":"down"},"margin_yoy":{"available":true,"raw":-1.180605265250934,"display":"-1.18 ¢","direction":"down"}}}}</script>
   <script data-runtime="plotly-local">/**
 * plotly.js v3.7.0
 * Copyright 2012-2026, Plotly, Inc.
@@ -4816,25 +5023,20 @@ return Plotly;
     };
   }
 
-  function selectedShape(periodId) {
-    const label = records[periodIndex.get(periodId)].period_label;
-    return {
-      type: "line",
-      xref: "x",
-      yref: "paper",
-      x0: label,
-      x1: label,
-      y0: 0,
-      y1: 1,
-      line: {color: colors.violet, width: 1.4, dash: "dot"},
-    };
-  }
-
-  function renderUnitEconomics(periodId) {
+  function renderUnitEconomics() {
     const marginColors = records.map((record) =>
-      record.unit_margin_cents_per_km >= 0 ? "rgba(0,48,135,0.46)" : "rgba(227,28,35,0.48)"
+      record.unit_margin_cents_per_km >= 0 ? "rgba(8,127,101,0.36)" : "rgba(227,28,35,0.28)"
     );
     const traces = [
+      {
+        x: labels,
+        y: records.map((record) => record.unit_margin_cents_per_km),
+        name: "Margen unitario",
+        type: "bar",
+        yaxis: "y2",
+        marker: {color: marginColors, line: {color: records.map((record) => record.unit_margin_cents_per_km >= 0 ? colors.green : colors.red), width: 1}},
+        hovertemplate: "%{x}<br>Margen %{y:+.2f} ¢<extra></extra>",
+      },
       {
         x: labels,
         y: records.map((record) => record.rask_cents_per_km),
@@ -4859,50 +5061,30 @@ return Plotly;
         marker: {color: "#ffffff", line: {color: colors.red, width: 2}, size: 6},
         hovertemplate: "%{x}<br>CASK %{y:.2f} ¢<extra></extra>",
       },
-      {
-        x: labels,
-        y: records.map((record) => record.unit_margin_cents_per_km),
-        name: "Margen unitario",
-        type: "bar",
-        xaxis: "x2",
-        yaxis: "y2",
-        marker: {color: marginColors, line: {color: colors.blue, width: 1}},
-        hovertemplate: "%{x}<br>Margen %{y:+.2f} ¢<extra></extra>",
-      },
     ];
-    const layout = commonLayout(390);
+    const layout = commonLayout(365);
     Object.assign(layout, {
       hovermode: "closest",
-      bargap: 0.38,
-      shapes: [selectedShape(periodId)],
+      bargap: 0.34,
+      barmode: "overlay",
       xaxis: {
-        domain: [0, 1],
-        anchor: "y",
         categoryorder: "array",
         categoryarray: labels,
-        showticklabels: false,
+        tickangle: -45,
+        tickfont: {size: 8},
         showgrid: false,
       },
       yaxis: {
-        domain: [0.38, 1],
-        title: {text: "¢ por ASK-km", font: {size: 10}},
+        title: {text: "RASK / CASK (¢)", font: {size: 10}},
         gridcolor: colors.grid,
         zeroline: false,
         tickformat: ".1f",
       },
-      xaxis2: {
-        domain: [0, 1],
-        anchor: "y2",
-        matches: "x",
-        categoryorder: "array",
-        categoryarray: labels,
-        tickfont: {size: 9},
-        showgrid: false,
-      },
       yaxis2: {
-        domain: [0, 0.23],
         title: {text: "Margen ¢", font: {size: 10}},
-        gridcolor: colors.grid,
+        overlaying: "y",
+        side: "right",
+        showgrid: false,
         zeroline: true,
         zerolinecolor: colors.ink,
         zerolinewidth: 1,
@@ -4912,8 +5094,7 @@ return Plotly;
     Plotly.react("unit-chart", traces, layout, plotConfig);
   }
 
-  function renderVolumeMonetization(periodId) {
-    const selected = records[periodIndex.get(periodId)].period_label;
+  function renderVolumeMonetization() {
     const traces = [
       {
         x: labels,
@@ -4937,12 +5118,8 @@ return Plotly;
     ];
     const layout = commonLayout(315);
     Object.assign(layout, {
-      shapes: [{
-        type: "line", xref: "x", yref: "paper", x0: selected, x1: selected, y0: 0, y1: 1,
-        line: {color: colors.violet, width: 1.3, dash: "dot"},
-      }],
       bargap: 0.42,
-      xaxis: {categoryorder: "array", categoryarray: labels, tickfont: {size: 9}, showgrid: false},
+      xaxis: {categoryorder: "array", categoryarray: labels, tickangle: -45, tickfont: {size: 8}, showgrid: false},
       yaxis: {
         title: {text: "Pasajeros (M)", font: {size: 10}},
         rangemode: "tozero",
@@ -4962,32 +5139,23 @@ return Plotly;
 
   function renderLoadMonetization(periodId) {
     const current = records[periodIndex.get(periodId)];
-    const sizes = records.map((record) => 14 + (record.ask_km / 1_000_000_000 - 13) * 4.5);
-    const trace = {
-      x: records.map((record) => record.load_factor_reported * 100),
-      y: records.map((record) => record.rask_cents_per_km),
-      text: records.map((record) => record.period_label),
-      customdata: records.map((record) => [
-        record.ask_km / 1_000_000_000,
-        record.unit_margin_cents_per_km,
-        record.passengers / 1_000_000,
-      ]),
-      name: "Trimestres",
-      type: "scatter",
-      mode: "markers+text",
-      textposition: "top center",
-      textfont: {size: 9, color: colors.muted},
-      marker: {
-        size: sizes,
-        sizemode: "diameter",
-        color: records.map((record) => record.unit_margin_cents_per_km),
-        colorscale: [[0, "#dbe7f8"], [0.55, "#4f7fbe"], [1, colors.blueDark]],
-        line: {color: "#ffffff", width: 1.4},
-        colorbar: {title: {text: "Margen ¢", font: {size: 9}}, thickness: 8, len: 0.58, tickfont: {size: 8}},
-      },
-      hovertemplate:
-        "%{text}<br>Ocupación %{x:.1f}%<br>RASK %{y:.2f} ¢<br>ASK %{customdata[0]:.2f} mil M<br>Margen %{customdata[1]:.2f} ¢<br>Pasajeros %{customdata[2]:.2f} M<extra></extra>",
-    };
+    const yearColors = {2021: "#e31c23", 2022: "#d66a00", 2023: "#087f65", 2024: "#003087", 2025: "#6d3cc7", 2026: "#2894c7"};
+    const traces = [...new Set(records.map((record) => record.period_id.slice(0, 4)))].map((year) => {
+      const yearRecords = records.filter((record) => record.period_id.startsWith(year));
+      return {
+        x: yearRecords.map((record) => record.load_factor_reported * 100),
+        y: yearRecords.map((record) => record.rask_cents_per_km),
+        text: yearRecords.map((record) => record.period_label),
+        customdata: yearRecords.map((record) => [record.ask_km / 1_000_000_000, record.unit_margin_cents_per_km, record.passengers / 1_000_000]),
+        name: year,
+        type: "scatter",
+        mode: "markers+text",
+        textposition: "top center",
+        textfont: {size: 8, color: colors.muted},
+        marker: {size: 13, color: yearColors[year], line: {color: "#ffffff", width: 1.2}},
+        hovertemplate: "%{text}<br>Ocupación %{x:.1f}%<br>RASK %{y:.2f} ¢<br>ASK %{customdata[0]:.2f} mil M<br>Margen %{customdata[1]:+.2f} ¢<br>Pasajeros %{customdata[2]:.2f} M<extra></extra>",
+      };
+    });
     const selectedTrace = {
       x: [current.load_factor_reported * 100],
       y: [current.rask_cents_per_km],
@@ -5000,7 +5168,7 @@ return Plotly;
     const layout = commonLayout(315);
     Object.assign(layout, {
       hovermode: "closest",
-      showlegend: false,
+      legend: {orientation: "h", x: 0, y: 1.12, font: {size: 9}},
       xaxis: {
         title: {text: "Factor de ocupación (%)", font: {size: 10}},
         gridcolor: colors.grid,
@@ -5012,7 +5180,7 @@ return Plotly;
         tickformat: ".1f",
       },
     });
-    Plotly.react("load-chart", [trace, selectedTrace], layout, plotConfig);
+    Plotly.react("load-chart", [...traces, selectedTrace], layout, plotConfig);
   }
 
   function updateNarrative(view) {
@@ -5043,6 +5211,10 @@ return Plotly;
       setText(`kpi-${kpi.key}-value`, kpi.display_value);
       setText(`kpi-${kpi.key}-qoq`, comparisonText(kpi.qoq));
       setText(`kpi-${kpi.key}-yoy`, comparisonText(kpi.yoy));
+      [["qoq", kpi.qoq], ["yoy", kpi.yoy]].forEach(([suffix, comparison]) => {
+        const node = document.getElementById(`kpi-${kpi.key}-${suffix}`);
+        if (node) node.className = `delta-${comparison.direction}`;
+      });
       const card = document.querySelector(`[data-kpi='${kpi.key}']`);
       if (card) card.setAttribute("aria-label", `${kpi.label}: ${kpi.display_value}`);
     });
@@ -5054,8 +5226,8 @@ return Plotly;
     updateConclusions(view);
     updateKpis(view);
     updateNarrative(view);
-    renderUnitEconomics(periodId);
-    renderVolumeMonetization(periodId);
+    renderUnitEconomics();
+    renderVolumeMonetization();
     renderLoadMonetization(periodId);
     document.getElementById("live-status").textContent = `Vista actualizada a ${view.period_label}.`;
   }
