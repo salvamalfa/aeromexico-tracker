@@ -2,6 +2,16 @@ version: stage9_v1.0.0
 lineage_policy:
   direct_artifact_required: [source_file, source_hash, ingested_at, parser_version]
 tables:
+  aeromexico_ir_quarterly_metrics:
+    grain: [source_file, carrier_key, accession_number, period_id, metric_key, segment]
+    primary_key: [source_file, carrier_key, accession_number, period_id, metric_key, segment]
+    lineage_type: direct_artifact
+    required_columns: [carrier_key, accession_number, period_id, period_type, period_start_date, period_end_date, metric_key, metric_label_raw, segment, value_raw, unit_raw, scale_multiplier, value_normalized, unit_normalized, is_preliminary, is_yoy_comparison, extraction_method, extraction_confidence, source_system, source_file, source_hash, ingested_at, parser_version, calendar_period_id, fiscal_period_id]
+    columns:
+      period_type: {allowed_values: [quarter]}
+      source_system: {allowed_values: [aeromexico_ir]}
+      extraction_confidence: {min: 0, max: 1}
+      metric_key: {allowed_values: [asm_total, passengers, load_factor_total, trasm, casm]}
   afac_monthly_stats:
     grain: [source_file, source_row_number, metric_key, source_region, period_id, carrier_key, service_type, market]
     primary_key: [source_file, source_row_number, metric_key, source_region, period_id, carrier_key, service_type, market]

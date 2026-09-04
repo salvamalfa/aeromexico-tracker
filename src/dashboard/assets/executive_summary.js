@@ -51,25 +51,20 @@
     };
   }
 
-  function selectedShape(periodId) {
-    const label = records[periodIndex.get(periodId)].period_label;
-    return {
-      type: "line",
-      xref: "x",
-      yref: "paper",
-      x0: label,
-      x1: label,
-      y0: 0,
-      y1: 1,
-      line: {color: colors.violet, width: 1.4, dash: "dot"},
-    };
-  }
-
-  function renderUnitEconomics(periodId) {
+  function renderUnitEconomics() {
     const marginColors = records.map((record) =>
-      record.unit_margin_cents_per_km >= 0 ? "rgba(0,48,135,0.46)" : "rgba(227,28,35,0.48)"
+      record.unit_margin_cents_per_km >= 0 ? "rgba(8,127,101,0.36)" : "rgba(227,28,35,0.28)"
     );
     const traces = [
+      {
+        x: labels,
+        y: records.map((record) => record.unit_margin_cents_per_km),
+        name: "Margen unitario",
+        type: "bar",
+        yaxis: "y2",
+        marker: {color: marginColors, line: {color: records.map((record) => record.unit_margin_cents_per_km >= 0 ? colors.green : colors.red), width: 1}},
+        hovertemplate: "%{x}<br>Margen %{y:+.2f} ¢<extra></extra>",
+      },
       {
         x: labels,
         y: records.map((record) => record.rask_cents_per_km),
@@ -94,50 +89,30 @@
         marker: {color: "#ffffff", line: {color: colors.red, width: 2}, size: 6},
         hovertemplate: "%{x}<br>CASK %{y:.2f} ¢<extra></extra>",
       },
-      {
-        x: labels,
-        y: records.map((record) => record.unit_margin_cents_per_km),
-        name: "Margen unitario",
-        type: "bar",
-        xaxis: "x2",
-        yaxis: "y2",
-        marker: {color: marginColors, line: {color: colors.blue, width: 1}},
-        hovertemplate: "%{x}<br>Margen %{y:+.2f} ¢<extra></extra>",
-      },
     ];
-    const layout = commonLayout(390);
+    const layout = commonLayout(365);
     Object.assign(layout, {
       hovermode: "closest",
-      bargap: 0.38,
-      shapes: [selectedShape(periodId)],
+      bargap: 0.34,
+      barmode: "overlay",
       xaxis: {
-        domain: [0, 1],
-        anchor: "y",
         categoryorder: "array",
         categoryarray: labels,
-        showticklabels: false,
+        tickangle: -45,
+        tickfont: {size: 8},
         showgrid: false,
       },
       yaxis: {
-        domain: [0.38, 1],
-        title: {text: "¢ por ASK-km", font: {size: 10}},
+        title: {text: "RASK / CASK (¢)", font: {size: 10}},
         gridcolor: colors.grid,
         zeroline: false,
         tickformat: ".1f",
       },
-      xaxis2: {
-        domain: [0, 1],
-        anchor: "y2",
-        matches: "x",
-        categoryorder: "array",
-        categoryarray: labels,
-        tickfont: {size: 9},
-        showgrid: false,
-      },
       yaxis2: {
-        domain: [0, 0.23],
         title: {text: "Margen ¢", font: {size: 10}},
-        gridcolor: colors.grid,
+        overlaying: "y",
+        side: "right",
+        showgrid: false,
         zeroline: true,
         zerolinecolor: colors.ink,
         zerolinewidth: 1,
@@ -147,8 +122,7 @@
     Plotly.react("unit-chart", traces, layout, plotConfig);
   }
 
-  function renderVolumeMonetization(periodId) {
-    const selected = records[periodIndex.get(periodId)].period_label;
+  function renderVolumeMonetization() {
     const traces = [
       {
         x: labels,
@@ -172,12 +146,8 @@
     ];
     const layout = commonLayout(315);
     Object.assign(layout, {
-      shapes: [{
-        type: "line", xref: "x", yref: "paper", x0: selected, x1: selected, y0: 0, y1: 1,
-        line: {color: colors.violet, width: 1.3, dash: "dot"},
-      }],
       bargap: 0.42,
-      xaxis: {categoryorder: "array", categoryarray: labels, tickfont: {size: 9}, showgrid: false},
+      xaxis: {categoryorder: "array", categoryarray: labels, tickangle: -45, tickfont: {size: 8}, showgrid: false},
       yaxis: {
         title: {text: "Pasajeros (M)", font: {size: 10}},
         rangemode: "tozero",
@@ -197,32 +167,23 @@
 
   function renderLoadMonetization(periodId) {
     const current = records[periodIndex.get(periodId)];
-    const sizes = records.map((record) => 14 + (record.ask_km / 1_000_000_000 - 13) * 4.5);
-    const trace = {
-      x: records.map((record) => record.load_factor_reported * 100),
-      y: records.map((record) => record.rask_cents_per_km),
-      text: records.map((record) => record.period_label),
-      customdata: records.map((record) => [
-        record.ask_km / 1_000_000_000,
-        record.unit_margin_cents_per_km,
-        record.passengers / 1_000_000,
-      ]),
-      name: "Trimestres",
-      type: "scatter",
-      mode: "markers+text",
-      textposition: "top center",
-      textfont: {size: 9, color: colors.muted},
-      marker: {
-        size: sizes,
-        sizemode: "diameter",
-        color: records.map((record) => record.unit_margin_cents_per_km),
-        colorscale: [[0, "#dbe7f8"], [0.55, "#4f7fbe"], [1, colors.blueDark]],
-        line: {color: "#ffffff", width: 1.4},
-        colorbar: {title: {text: "Margen ¢", font: {size: 9}}, thickness: 8, len: 0.58, tickfont: {size: 8}},
-      },
-      hovertemplate:
-        "%{text}<br>Ocupación %{x:.1f}%<br>RASK %{y:.2f} ¢<br>ASK %{customdata[0]:.2f} mil M<br>Margen %{customdata[1]:.2f} ¢<br>Pasajeros %{customdata[2]:.2f} M<extra></extra>",
-    };
+    const yearColors = {2021: "#e31c23", 2022: "#d66a00", 2023: "#087f65", 2024: "#003087", 2025: "#6d3cc7", 2026: "#2894c7"};
+    const traces = [...new Set(records.map((record) => record.period_id.slice(0, 4)))].map((year) => {
+      const yearRecords = records.filter((record) => record.period_id.startsWith(year));
+      return {
+        x: yearRecords.map((record) => record.load_factor_reported * 100),
+        y: yearRecords.map((record) => record.rask_cents_per_km),
+        text: yearRecords.map((record) => record.period_label),
+        customdata: yearRecords.map((record) => [record.ask_km / 1_000_000_000, record.unit_margin_cents_per_km, record.passengers / 1_000_000]),
+        name: year,
+        type: "scatter",
+        mode: "markers+text",
+        textposition: "top center",
+        textfont: {size: 8, color: colors.muted},
+        marker: {size: 13, color: yearColors[year], line: {color: "#ffffff", width: 1.2}},
+        hovertemplate: "%{text}<br>Ocupación %{x:.1f}%<br>RASK %{y:.2f} ¢<br>ASK %{customdata[0]:.2f} mil M<br>Margen %{customdata[1]:+.2f} ¢<br>Pasajeros %{customdata[2]:.2f} M<extra></extra>",
+      };
+    });
     const selectedTrace = {
       x: [current.load_factor_reported * 100],
       y: [current.rask_cents_per_km],
@@ -235,7 +196,7 @@
     const layout = commonLayout(315);
     Object.assign(layout, {
       hovermode: "closest",
-      showlegend: false,
+      legend: {orientation: "h", x: 0, y: 1.12, font: {size: 9}},
       xaxis: {
         title: {text: "Factor de ocupación (%)", font: {size: 10}},
         gridcolor: colors.grid,
@@ -247,7 +208,7 @@
         tickformat: ".1f",
       },
     });
-    Plotly.react("load-chart", [trace, selectedTrace], layout, plotConfig);
+    Plotly.react("load-chart", [...traces, selectedTrace], layout, plotConfig);
   }
 
   function updateNarrative(view) {
@@ -278,6 +239,10 @@
       setText(`kpi-${kpi.key}-value`, kpi.display_value);
       setText(`kpi-${kpi.key}-qoq`, comparisonText(kpi.qoq));
       setText(`kpi-${kpi.key}-yoy`, comparisonText(kpi.yoy));
+      [["qoq", kpi.qoq], ["yoy", kpi.yoy]].forEach(([suffix, comparison]) => {
+        const node = document.getElementById(`kpi-${kpi.key}-${suffix}`);
+        if (node) node.className = `delta-${comparison.direction}`;
+      });
       const card = document.querySelector(`[data-kpi='${kpi.key}']`);
       if (card) card.setAttribute("aria-label", `${kpi.label}: ${kpi.display_value}`);
     });
@@ -289,8 +254,8 @@
     updateConclusions(view);
     updateKpis(view);
     updateNarrative(view);
-    renderUnitEconomics(periodId);
-    renderVolumeMonetization(periodId);
+    renderUnitEconomics();
+    renderVolumeMonetization();
     renderLoadMonetization(periodId);
     document.getElementById("live-status").textContent = `Vista actualizada a ${view.period_label}.`;
   }

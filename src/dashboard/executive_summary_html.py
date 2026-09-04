@@ -134,9 +134,7 @@ def render_executive_html(payload: dict[str, Any]) -> str:
     <header class="hero">
       <div class="hero-grid">
         <div>
-          <p class="eyebrow">AERO · NYSE / BMV · VISTA EJECUTIVA</p>
           <h1>Aeroméxico — Vista ejecutiva trimestral</h1>
-          <p class="hero-subtitle">{escape(metadata['coverage_label'])} · Datos públicos y comparables</p>
         </div>
         <div class="period-control">
           <label for="period-selector">Trimestre analizado</label>
@@ -145,14 +143,6 @@ def render_executive_html(payload: dict[str, Any]) -> str:
         </div>
       </div>
     </header>
-
-    <section class="executive-insight" aria-labelledby="insight-title">
-      <div>
-        <p class="section-kicker">Conclusiones clave</p>
-        <h2 id="insight-title"><span id="insight-period">—</span> en tres lecturas</h2>
-      </div>
-      <ul class="insight-list" id="insight-list"></ul>
-    </section>
 
     <section class="kpi-grid" aria-label="Indicadores ejecutivos">
       {_kpi_cards()}
@@ -163,26 +153,25 @@ def render_executive_html(payload: dict[str, Any]) -> str:
         <div>
           <p class="section-kicker">Economía unitaria</p>
           <h2 id="unit-heading">Ingreso, costo y margen por ASK</h2>
-          <p>Cuando RASK supera CASK, la operación conserva margen por cada asiento-kilómetro. Las barras usan la misma unidad y una línea cero visible.</p>
         </div>
-        <p class="source-inline">Fuente: {escape(metadata['source_view'])}<br>{escape(metadata['grain'])}</p>
+        <p class="source-inline">Fuente: {escape(metadata['source_view'])}</p>
       </div>
       <article class="chart-card">
         <p class="chart-title">RASK vs CASK y margen unitario</p>
-        <p class="chart-subtitle">Centavos de USD por ASK-km; la línea punteada vertical identifica el trimestre seleccionado.</p>
+        <p class="chart-subtitle">Cuando RASK supera CASK, la operación genera utilidad por cada asiento-kilómetro.</p>
         <div class="chart" id="unit-chart" role="img" aria-label="Serie trimestral de RASK, CASK y margen unitario"></div>
       </article>
     </section>
 
     <section class="chart-grid" aria-label="Diagnósticos de volumen y utilización">
       <article class="chart-card">
-        <p class="chart-title">¿Volumen o monetización?</p>
-        <p class="chart-subtitle">Pasajeros transportados frente al ingreso generado por unidad de capacidad; los ejes conservan unidades distintas.</p>
+        <p class="chart-title">Precio versus volumen de pasajeros</p>
+        <p class="chart-subtitle">Las barras indican el número de pasajeros; la línea, el RASK.</p>
         <div class="chart chart-sm" id="volume-chart" role="img" aria-label="Pasajeros y RASK por trimestre"></div>
       </article>
       <article class="chart-card">
-        <p class="chart-title">Utilización y monetización</p>
-        <p class="chart-subtitle">Cada punto es un trimestre. X = ocupación, Y = RASK, tamaño = ASK y tono = margen unitario.</p>
+        <p class="chart-title">Factor de ocupación vs RASK</p>
+        <p class="chart-subtitle">Cada punto es un trimestre; los colores identifican el año. {escape(metadata['load_rask_interpretation'])}</p>
         <div class="chart chart-sm" id="load-chart" role="img" aria-label="Relación entre factor de ocupación y RASK"></div>
       </article>
     </section>
@@ -195,6 +184,14 @@ def render_executive_html(payload: dict[str, Any]) -> str:
       <div class="narrative-copy" id="narrative-copy"></div>
     </section>
 
+    <section class="executive-insight" aria-labelledby="insight-title">
+      <div>
+        <p class="section-kicker">Conclusiones clave</p>
+        <h2 id="insight-title"><span id="insight-period">—</span> en tres lecturas</h2>
+      </div>
+      <ul class="insight-list" id="insight-list"></ul>
+    </section>
+
     <details class="disclosure">
       <summary>Ver análisis de trimestres anteriores</summary>
       <div class="disclosure-body history-grid">{_history_cards(payload)}</div>
@@ -203,6 +200,7 @@ def render_executive_html(payload: dict[str, Any]) -> str:
     <details class="disclosure">
       <summary>Ver datos por trimestre</summary>
       <div class="disclosure-body table-wrap">
+        <p class="method-note">{escape(metadata['method_note'])}</p>
         <table>
           <thead>
             <tr>

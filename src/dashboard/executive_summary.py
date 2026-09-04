@@ -16,7 +16,6 @@ from src.config import PATHS
 EXECUTIVE_QUERY = """
 SELECT
     period_id,
-    total_revenue,
     passengers,
     ask_km,
     load_factor_reported,
@@ -35,7 +34,6 @@ ORDER BY period_id
 
 REQUIRED_COLUMNS = (
     "period_id",
-    "total_revenue",
     "passengers",
     "ask_km",
     "load_factor_reported",
@@ -396,6 +394,17 @@ def build_executive_payload(database_path: str | None = None) -> dict[str, Any]:
         period_id: _period_view(record, records_by_period)
         for period_id, record in records_by_period.items()
     }
+    correlation = float(
+        history["load_factor_reported"].corr(history["rask_cents_per_km"])
+    )
+    if correlation >= 0.7:
+        correlation_label = "Correlación positiva clara: mayor ocupación tiende a coincidir con mayor RASK."
+    elif correlation >= 0.3:
+        correlation_label = "Correlación positiva moderada: mayor ocupación suele coincidir con mayor RASK."
+    elif correlation > -0.3:
+        correlation_label = "La relación entre ocupación y RASK es débil en la historia disponible."
+    else:
+        correlation_label = "La historia disponible muestra una relación inversa entre ocupación y RASK."
     return {
         "metadata": {
             "title": "Aeroméxico — Vista ejecutiva trimestral",
@@ -410,6 +419,13 @@ def build_executive_payload(database_path: str | None = None) -> dict[str, Any]:
             "data_as_of": _data_as_of(database_path),
             "source_view": "v_aeromexico_quarterly",
             "grain": "Grupo Aeroméxico · trimestre calendario · segmento total",
+            "load_rask_correlation": correlation,
+            "load_rask_interpretation": correlation_label,
+            "method_note": (
+                "En 1T21–3T22, Aeroméxico publicó el ingreso por ASK en pesos; "
+                "se convirtió a centavos de USD con el tipo de cambio promedio "
+                "publicado en el mismo reporte trimestral."
+            ),
         },
         "records": records,
         "views": views,

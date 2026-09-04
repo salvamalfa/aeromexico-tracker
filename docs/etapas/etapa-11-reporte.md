@@ -2,7 +2,7 @@
 
 Fecha de entrega: 2026-09-04
 
-Estado: COMPLETA — PROTOTIPO LOCAL PENDIENTE DE APROBACIÓN VISUAL
+Estado: REVISADA — PROTOTIPO LOCAL PENDIENTE DE APROBACIÓN VISUAL
 
 ## Resumen ejecutivo
 
@@ -11,10 +11,10 @@ tracker. El prototipo no copia las cifras del HTML de referencia: consulta la vi
 canónica `v_aeromexico_quarterly`, valida el grano trimestral y genera desde ese mismo
 payload las tarjetas, conclusiones, narrativa, gráficas y tabla de detalle.
 
-La cobertura comparable disponible es `2024Q3–2026Q2`, ocho trimestres completos con
-RASK, CASK, ASK, factor de ocupación y pasajeros. No se rellenó el histórico
-`2021–2024Q2`; cuando no existe un trimestre comparable, la interfaz muestra
-`No disponible`.
+La cobertura comparable disponible es `2021Q1–2026Q2`: 22 trimestres completos con
+RASK, CASK, ASK, factor de ocupación y pasajeros. El histórico se reconstruyó desde
+22 comunicados trimestrales oficiales de Aeroméxico, preservados en Bronze y
+normalizados en Silver; no se copiaron cifras del HTML de referencia.
 
 El resultado permanece en la rama local `stage-11-executive-prototype`. No se cambió
 la navegación de Streamlit, no se publicó el prototipo y no se hizo push.
@@ -25,27 +25,37 @@ la navegación de Streamlit, no se publicó el prototipo y no se hizo push.
 - Generador de HTML autocontenido en `src/dashboard/executive_summary_html.py` y
   comando reproducible en `src/dashboard/build_stage11.py`.
 - Hoja visual y comportamiento interactivo locales, sin CDN ni llamadas de red.
-- Selector para recorrer los ocho trimestres; actualiza tarjetas, conclusiones,
+- Selector para recorrer los 22 trimestres; actualiza tarjetas, conclusiones,
   narrativa y énfasis de las gráficas.
 - Cinco tarjetas: RASK, CASK, ASK, factor de ocupación y pasajeros, cada una con QoQ y
   YoY. El factor de ocupación se compara en puntos porcentuales.
-- Gráfica principal RASK/CASK con margen unitario; gráfica de volumen y monetización;
-  y mapa de ocupación/RASK con ASK representado por tamaño.
+- Gráfica principal RASK/CASK con barras de margen unitario sobre doble eje; gráfica
+  de precio y volumen; y mapa de ocupación/RASK con color por año.
+- Variaciones KPI positivas en verde y negativas en rojo.
+- Jerarquía revisada: KPIs primero, lectura ejecutiva después de las gráficas y
+  conclusiones clave debajo de esa lectura.
 - Historial narrativo y tabla trimestral dentro de desplegables.
-- Doce pruebas enfocadas y un validador de doce controles de aceptación.
+- Pruebas enfocadas y un validador de doce controles de aceptación.
 - Comandos `stage11-prototype` y `stage11-validate` en el `justfile`.
 
 ## Datos utilizados
 
-No se descargaron datos ni se modificaron Bronze, Silver, Gold o el warehouse. El
-prototipo lee el warehouse existente y usa exclusivamente la vista semántica
-`v_aeromexico_quarterly`.
+Se incorporaron los 22 comunicados oficiales disponibles entre 1T21 y 2T26. Los
+archivos originales se preservaron de forma inmutable en Bronze, con URL y SHA-256;
+el parser generó 70 observaciones Silver para los 14 trimestres que faltaban antes
+de 3T24. Gold y el warehouse se reconstruyeron y el prototipo continúa leyendo
+exclusivamente la vista semántica `v_aeromexico_quarterly`.
+
+Los reportes de 1T26 y 2T26 se descargaron agenticamente de la página oficial de
+relación con inversionistas. Sus cifras coinciden con las anclas SEC ya existentes,
+por lo que el backfill amplió la historia sin cambiar los valores actuales.
 
 | Elemento | Resultado |
 |---|---:|
-| Trimestres comparables | 8 |
-| Cobertura | 2024Q3–2026Q2 |
-| Último artefacto preservado | 24 ago 2026 |
+| Trimestres comparables | 22 |
+| Cobertura | 2021Q1–2026Q2 |
+| Comunicados IR preservados | 22 |
+| Observaciones Silver nuevas | 70 |
 | KPIs por trimestre | 5 |
 | Gráficas | 3 |
 | Vistas/pestañas generadas | 1 |
@@ -69,11 +79,11 @@ ocupación `+0.5 pp / -0.8 pp` y pasajeros `+3.9% / -2.7%`.
 
 | Check | Resultado | Evidencia |
 |---|---|---|
-| Suite completa | PASS | 198/198 pruebas |
-| Suite enfocada Etapa 11 | PASS | 12/12 pruebas |
+| Suite completa | PASS | 199/199 pruebas |
+| Suite enfocada Etapas 9 y 11 | PASS | 42/42 pruebas |
 | Aceptación Etapa 11 | PASS | 12/12 controles |
 | Fuente única | PASS | `v_aeromexico_quarterly` |
-| Cobertura | PASS | ocho periodos únicos, 2024Q3–2026Q2 |
+| Cobertura | PASS | 22 periodos únicos, 2021Q1–2026Q2 |
 | Reconciliación | PASS | margen y cifras visibles coinciden con el warehouse |
 | Seguridad | PASS | sin red, CDN, rutas absolutas, credenciales ni correo SEC |
 | Determinismo | PASS | el artefacto regenerado coincide byte por byte |
@@ -86,8 +96,8 @@ ocupación `+0.5 pp / -0.8 pp` y pasajeros `+3.9% / -2.7%`.
 | Tablet, 736 × 900 | Tarjetas 3+2, gráficas sin colisiones ni overflow |
 | Móvil, 360 × 800 | Tarjetas en dos columnas, gráficas de 297 px y cero overflow horizontal |
 | Selector trimestral | Actualiza toda la lectura y vuelve al estado inicial al recargar |
-| Primeros periodos | Las diez comparaciones ausentes aparecen como `No disponible` |
-| Desplegables | Tabla visible con ocho filas; historial cerrado por defecto |
+| Primeros periodos | Las comparaciones sin antecedente aparecen como `No disponible` |
+| Desplegables | Tabla visible con 22 filas; historial cerrado por defecto |
 | Consola del navegador | Cero errores |
 
 ## Qué no funcionó y por qué
@@ -102,6 +112,11 @@ ocupación `+0.5 pp / -0.8 pp` y pasajeros `+3.9% / -2.7%`.
 4. La primera narrativa conjugaba en singular la métrica plural `pasajeros` y mostraba
    un signo negativo después de `disminuyó`. La revisión visual detectó ambos casos y
    se corrigieron antes del cierre.
+5. Los datos completos anteriores a 3T24 no estaban modelados en Gold. Se importaron
+   los comunicados IR oficiales y se creó un parser específico. Para 1T21–3T22, el
+   RASK publicado en MXN por ASK se normalizó a centavos de USD con el tipo de cambio
+   promedio que Aeroméxico publicó en el mismo comunicado; la metodología queda
+   expuesta en el desplegable de datos.
 
 ## Decisiones y supuestos
 
@@ -112,8 +127,8 @@ ocupación `+0.5 pp / -0.8 pp` y pasajeros `+3.9% / -2.7%`.
 - Plotly se incrusta desde la dependencia existente para que el archivo funcione sin
   internet. El peso cercano a 4.9 MB es deliberado en esta versión local.
 - Las conclusiones describen movimientos observados y no atribuyen causalidad.
-- La cobertura comienza en 2024Q3 porque es el primer trimestre en Gold con las cinco
-  métricas comparables. El backfill 2021–2024Q2 queda fuera de esta etapa.
+- La cobertura comienza en 2021Q1, primer comunicado trimestral disponible en el
+  archivo oficial utilizado.
 - La traducción a componentes Streamlit se hará solo después de recibir anotaciones y
   aprobación explícita de esta composición.
 
@@ -123,8 +138,8 @@ ocupación `+0.5 pp / -0.8 pp` y pasajeros `+3.9% / -2.7%`.
   la expectativa antes de trasladarlos a Streamlit.
 - Mantener paridad visual y funcional al convertir el prototipo sin duplicar la lógica
   de métricas ni introducir una segunda fuente de datos.
-- Decidir después si el histórico anterior a 2024Q3 merece una etapa de backfill con
-  nuevas fuentes comparables.
+- Vigilar que futuras revisiones de comunicados IR entren como nuevas versiones sin
+  sobrescribir los artefactos preservados.
 
 ## Comandos para reproducir
 

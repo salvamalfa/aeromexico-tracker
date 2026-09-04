@@ -12,7 +12,8 @@ negocio antes de trasladar el diseño aprobado a Streamlit.
 - Consumir `v_aeromexico_quarterly` como fuente canónica y no copiar datos del HTML de
   referencia.
 - Incluir todos los trimestres comparables que tengan RASK, CASK, ASK, factor de
-  ocupación y pasajeros. En el corte actual la cobertura esperada es `2024Q3–2026Q2`.
+  ocupación y pasajeros. Tras incorporar los comunicados oficiales preservados en
+  Bronze, la cobertura esperada es `2021Q1–2026Q2`.
 - Mantener el resultado local. No modificar la aplicación Streamlit pública, no hacer
   push a `master` y no desplegar.
 - Conservar el diseño de negocio compacto de la referencia y adaptar los tokens del
@@ -34,12 +35,13 @@ cero ni se infiere desde el HTML de referencia.
 ## Estructura visual
 
 1. Encabezado compacto y selector de trimestre.
-2. Conclusiones clave del trimestre seleccionado.
-3. Cinco tarjetas KPI con valor, QoQ y YoY.
-4. Gráfica principal RASK vs CASK y barras de margen unitario.
-5. Gráfica pasajeros vs RASK para leer volumen y monetización.
-6. Scatter factor de ocupación vs RASK; tamaño por ASK y trimestre identificado.
-7. Lectura ejecutiva del trimestre seleccionado.
+2. Cinco tarjetas KPI con valor, QoQ y YoY; las variaciones positivas se distinguen
+   en verde y las negativas en rojo.
+3. Gráfica principal RASK vs CASK y barras de margen unitario en doble eje.
+4. Gráfica pasajeros vs RASK para leer volumen y monetización.
+5. Scatter factor de ocupación vs RASK, con color por año y trimestre identificado.
+6. Lectura ejecutiva del trimestre seleccionado.
+7. Conclusiones clave del trimestre seleccionado.
 8. Historial narrativo y datos trimestrales dentro de desplegables.
 
 ## Tecnología y seguridad

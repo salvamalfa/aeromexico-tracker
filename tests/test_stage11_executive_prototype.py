@@ -30,8 +30,8 @@ def _payload_from_html(document: str) -> dict[str, object]:
 def test_payload_uses_every_complete_comparable_backend_quarter() -> None:
     history = load_executive_history()
     payload = build_executive_payload()
-    assert payload["metadata"]["quarter_count"] == len(history) == 8
-    assert payload["metadata"]["first_period"] == "2024Q3"
+    assert payload["metadata"]["quarter_count"] == len(history) == 22
+    assert payload["metadata"]["first_period"] == "2021Q1"
     assert payload["metadata"]["last_period"] == "2026Q2"
     assert [record["period_id"] for record in payload["records"]] == history[
         "period_id"
@@ -73,7 +73,7 @@ def test_qoq_yoy_and_typed_deltas_are_correct() -> None:
 
 def test_missing_comparables_are_explicit_not_zero() -> None:
     payload = build_executive_payload()
-    first = payload["views"]["2024Q3"]
+    first = payload["views"]["2021Q1"]
     for kpi in first["kpis"]:
         assert kpi["qoq"] == {
             "available": False,
@@ -103,16 +103,13 @@ def test_html_embeds_all_quarters_and_default_selection() -> None:
     document = render_executive_html(build_executive_payload())
     soup = BeautifulSoup(document, "html.parser")
     options = soup.select("#period-selector option")
-    assert len(options) == 8
+    assert len(options) == 22
     assert [option["value"] for option in options] == [
-        "2026Q2",
-        "2026Q1",
-        "2025Q4",
-        "2025Q3",
-        "2025Q2",
-        "2025Q1",
-        "2024Q4",
-        "2024Q3",
+        f"{year}Q{quarter}"
+        for year, quarter in reversed(
+            [(year, quarter) for year in range(2021, 2027) for quarter in range(1, 5)
+             if f"{year}Q{quarter}" <= "2026Q2"]
+        )
     ]
     assert soup.select_one("#period-selector option[selected]")["value"] == "2026Q2"
     embedded = _payload_from_html(document)
@@ -128,10 +125,28 @@ def test_html_has_expected_charts_narrative_and_disclosures() -> None:
         "load-chart",
     }
     assert len(soup.select("details.disclosure")) == 2
-    assert len(soup.select(".history-item")) == 8
-    assert len(soup.select("tbody tr")) == 8
+    assert len(soup.select(".history-item")) == 22
+    assert len(soup.select("tbody tr")) == 22
     assert "RASK vs CASK" in soup.get_text(" ", strip=True)
-    assert "¿Volumen o monetización?" in soup.get_text(" ", strip=True)
+    assert "Precio versus volumen de pasajeros" in soup.get_text(" ", strip=True)
+
+
+def test_annotated_copy_order_and_delta_coloring_are_implemented() -> None:
+    document = render_executive_html(build_executive_payload())
+    soup = BeautifulSoup(document, "html.parser")
+    text = soup.get_text(" ", strip=True)
+    assert "AERO · NYSE / BMV" not in text
+    assert "trimestres comparables" not in text
+    assert "Fuente: v_aeromexico_quarterly Grupo Aeroméxico" not in text
+    assert "Precio versus volumen de pasajeros" in text
+    assert "Factor de ocupación vs RASK" in text
+    sections = [node for node in soup.select_one("main.page-shell").find_all(recursive=False)]
+    assert sections.index(soup.select_one(".kpi-grid")) < sections.index(
+        soup.select_one(".narrative-card")
+    ) < sections.index(soup.select_one(".executive-insight"))
+    app_script = soup.select_one("script[data-runtime='executive-prototype']").string
+    assert "delta-${comparison.direction}" in app_script
+    assert "yearColors" in app_script
 
 
 def test_html_is_self_contained_and_has_no_remote_runtime() -> None:

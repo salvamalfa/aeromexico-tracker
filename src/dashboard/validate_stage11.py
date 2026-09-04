@@ -19,14 +19,14 @@ def main() -> None:
         "three_charts": len(soup.select(".chart[id]")) == 3,
         "all_backend_quarters": len(soup.select("#period-selector option"))
         == payload["metadata"]["quarter_count"],
-        "coverage": payload["metadata"]["first_period"] == "2024Q3"
+        "coverage": payload["metadata"]["first_period"] == "2021Q1"
         and payload["metadata"]["last_period"] == "2026Q2",
         "default_latest": payload["metadata"]["default_period"] == "2026Q2",
         "two_disclosures": len(soup.select("details.disclosure")) == 2,
         "offline": not soup.select("script[src], link[href], iframe, img[src]"),
         "source_named": payload["metadata"]["source_view"]
         in soup.get_text(" ", strip=True),
-        "no_2021_claims": "2021" not in soup.get_text(" ", strip=True),
+        "official_history": payload["metadata"]["quarter_count"] == 22,
         "artifact_bounded": DEFAULT_OUTPUT.stat().st_size < 6_000_000,
     }
     failed = [name for name, passed in checks.items() if not passed]
