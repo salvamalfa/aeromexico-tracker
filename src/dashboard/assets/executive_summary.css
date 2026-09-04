@@ -57,7 +57,7 @@ select {
 .hero {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(118deg, var(--brand-blue-dark), var(--brand-blue) 70%, #164f9c);
+  background: var(--brand-blue-dark);
   color: #fff;
   border-radius: var(--radius-lg);
   padding: 26px 30px 24px;
@@ -65,15 +65,7 @@ select {
 }
 
 .hero::after {
-  position: absolute;
-  content: "";
-  width: 310px;
-  height: 310px;
-  border-radius: 50%;
-  top: -190px;
-  right: -80px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 0 0 34px rgba(255, 255, 255, 0.035), 0 0 0 75px rgba(255, 255, 255, 0.025);
+  content: none;
 }
 
 .hero-grid {
@@ -388,21 +380,29 @@ summary:focus-visible {
 }
 
 .narrative-card {
-  display: grid;
-  grid-template-columns: 235px minmax(0, 1fr);
-  gap: 24px;
+  display: block;
   margin-top: 16px;
   padding: 21px 23px;
 }
 
-.executive-reading-list {
+.narrative-card h2 {
+  margin-bottom: 12px;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+}
+
+.executive-reading-copy {
   display: grid;
   gap: 8px;
   margin: 0;
-  padding-left: 18px;
+  padding: 0;
   color: #354258;
   font-size: 12px;
   line-height: 1.55;
+}
+
+.executive-reading-copy p {
+  margin: 0;
 }
 
 .disclosure {
@@ -569,10 +569,6 @@ tbody tr:nth-child(even) {
     grid-template-columns: 1fr;
   }
 
-  .narrative-card {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
 }
 
 @media (max-width: 700px) {

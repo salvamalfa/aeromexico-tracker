@@ -39,6 +39,9 @@ la navegación de Streamlit, no se publicó el prototipo y no se hizo push.
   o 4 trimestres, con periodos horizontales.
 - RASK, CASK y margen identifican explícitamente centavos de USD y usan dos decimales
   en los tooltips.
+- Encabezado en azul sólido, sin degradado ni ornamentos circulares.
+- Barras de margen al fondo y líneas RASK/CASK sobrepuestas en primer plano.
+- Lectura ejecutiva en una sola columna: título y trimestre arriba, texto debajo.
 - Tabla trimestral desplegable con variación QoQ junto a cada métrica.
 - El historial narrativo genérico fue retirado.
 - Pruebas enfocadas y un validador de doce controles de aceptación.

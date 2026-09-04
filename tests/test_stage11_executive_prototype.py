@@ -146,6 +146,8 @@ def test_annotated_copy_order_and_delta_coloring_are_implemented() -> None:
     )
     assert soup.select_one("#narrative-headline") is None
     assert soup.select_one("#insight-list") is None
+    assert soup.select_one("#executive-reading-title").get_text(" ", strip=True) == "Lectura ejecutiva · —"
+    assert soup.select_one("#narrative-copy").name == "div"
     assert soup.select_one("#unit-range option[selected]").get_text(strip=True) == "Historia completa"
     assert len(soup.select(".table-metric small")) == 22 * 6
     app_script = soup.select_one("script[data-runtime='executive-prototype']").string
@@ -153,7 +155,15 @@ def test_annotated_copy_order_and_delta_coloring_are_implemented() -> None:
     assert "yearColors" in app_script
     assert 'showlegend: false' in app_script
     assert 'tickangle: 0' in app_script
-    assert "Margen %{customdata[1]:+.2f}" in app_script
+    assert "signedTwoDecimals" in app_script
+    assert "Margen %{customdata[1]}" in app_script
+    assert "zorder: 10" in app_script
+    assert "zorder: 0" in app_script
+    assert 'textposition: "none"' in app_script
+
+    css = (PATHS.root / "src/dashboard/assets/executive_summary.css").read_text(encoding="utf-8")
+    assert "background: var(--brand-blue-dark);" in css
+    assert ".executive-reading-copy p" in css
 
 
 def test_html_is_self_contained_and_has_no_remote_runtime() -> None:

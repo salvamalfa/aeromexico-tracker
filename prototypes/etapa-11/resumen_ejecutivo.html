@@ -64,7 +64,7 @@ select {
 .hero {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(118deg, var(--brand-blue-dark), var(--brand-blue) 70%, #164f9c);
+  background: var(--brand-blue-dark);
   color: #fff;
   border-radius: var(--radius-lg);
   padding: 26px 30px 24px;
@@ -72,15 +72,7 @@ select {
 }
 
 .hero::after {
-  position: absolute;
-  content: "";
-  width: 310px;
-  height: 310px;
-  border-radius: 50%;
-  top: -190px;
-  right: -80px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 0 0 34px rgba(255, 255, 255, 0.035), 0 0 0 75px rgba(255, 255, 255, 0.025);
+  content: none;
 }
 
 .hero-grid {
@@ -395,21 +387,29 @@ summary:focus-visible {
 }
 
 .narrative-card {
-  display: grid;
-  grid-template-columns: 235px minmax(0, 1fr);
-  gap: 24px;
+  display: block;
   margin-top: 16px;
   padding: 21px 23px;
 }
 
-.executive-reading-list {
+.narrative-card h2 {
+  margin-bottom: 12px;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+}
+
+.executive-reading-copy {
   display: grid;
   gap: 8px;
   margin: 0;
-  padding-left: 18px;
+  padding: 0;
   color: #354258;
   font-size: 12px;
   line-height: 1.55;
+}
+
+.executive-reading-copy p {
+  margin: 0;
 }
 
 .disclosure {
@@ -576,10 +576,6 @@ tbody tr:nth-child(even) {
     grid-template-columns: 1fr;
   }
 
-  .narrative-card {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
 }
 
 @media (max-width: 700px) {
@@ -820,11 +816,8 @@ tbody tr:nth-child(even) {
     </section>
 
     <section class="narrative-card" aria-labelledby="executive-reading-title">
-      <div>
-        <p class="section-kicker">Lectura ejecutiva</p>
-        <h2 id="executive-reading-title"><span id="narrative-period">—</span></h2>
-      </div>
-      <ul class="executive-reading-list" id="narrative-copy"></ul>
+      <h2 id="executive-reading-title">Lectura ejecutiva · <span id="narrative-period">—</span></h2>
+      <div class="executive-reading-copy" id="narrative-copy"></div>
     </section>
 
     <details class="disclosure">
@@ -4992,6 +4985,7 @@ return Plotly;
   };
 
   const comparisonText = (comparison) => comparison.available ? comparison.display : "No disponible";
+  const signedTwoDecimals = (value) => `${value >= 0 ? "+" : ""}${Number(value).toFixed(2)}`;
 
   function commonLayout(height) {
     return {
@@ -5029,12 +5023,15 @@ return Plotly;
       {
         x: visibleLabels,
         y: visibleRecords.map((record) => record.unit_margin_cents_per_km),
+        text: visibleRecords.map((record) => `${record.period_label}<br>Margen ${signedTwoDecimals(record.unit_margin_cents_per_km)} ¢ USD por ASK-km`),
         name: "Margen unitario",
         type: "bar",
         yaxis: "y2",
+        zorder: 0,
+        opacity: 0.72,
+        textposition: "none",
         marker: {color: marginColors, line: {color: visibleRecords.map((record) => record.unit_margin_cents_per_km >= 0 ? colors.green : colors.red), width: 1}},
-        hovertemplate: "%{x}<br>Margen %{y:+.2f} ¢ USD por ASK-km<extra></extra>",
-        hoverinfo: "text",
+        hovertemplate: "%{text}<extra></extra>",
       },
       {
         x: visibleLabels,
@@ -5042,12 +5039,12 @@ return Plotly;
         name: "RASK",
         type: "scatter",
         mode: "lines+markers",
+        zorder: 10,
         xaxis: "x",
         yaxis: "y",
         line: {color: colors.blue, width: 3},
         marker: {color: "#ffffff", line: {color: colors.blue, width: 2}, size: 7},
         hovertemplate: "%{x}<br>RASK %{y:.2f} ¢ USD por ASK-km<extra></extra>",
-        hoverinfo: "text",
       },
       {
         x: visibleLabels,
@@ -5055,12 +5052,12 @@ return Plotly;
         name: "CASK",
         type: "scatter",
         mode: "lines+markers",
+        zorder: 10,
         xaxis: "x",
         yaxis: "y",
         line: {color: colors.red, width: 2.4, dash: "dash"},
         marker: {color: "#ffffff", line: {color: colors.red, width: 2}, size: 6},
         hovertemplate: "%{x}<br>CASK %{y:.2f} ¢ USD por ASK-km<extra></extra>",
-        hoverinfo: "text",
       },
     ];
     const layout = commonLayout(365);
@@ -5151,14 +5148,18 @@ return Plotly;
         x: yearRecords.map((record) => record.load_factor_reported * 100),
         y: yearRecords.map((record) => record.rask_cents_per_km),
         text: yearRecords.map((record) => record.period_label),
-        customdata: yearRecords.map((record) => [record.ask_km / 1_000_000_000, record.unit_margin_cents_per_km, record.passengers / 1_000_000]),
+        customdata: yearRecords.map((record) => [
+          (record.ask_km / 1_000_000_000).toFixed(2),
+          signedTwoDecimals(record.unit_margin_cents_per_km),
+          (record.passengers / 1_000_000).toFixed(2),
+        ]),
         name: year,
         type: "scatter",
         mode: "markers+text",
         textposition: "top center",
         textfont: {size: 8, color: colors.muted},
         marker: {size: 13, color: yearColors[year], line: {color: "#ffffff", width: 1.2}},
-        hovertemplate: "%{text}<br>Ocupación %{x:.1f}%<br>RASK %{y:.2f} ¢ USD por ASK-km<br>ASK %{customdata[0]:.2f} mil M<br>Margen %{customdata[1]:+.2f} ¢ USD por ASK-km<br>Pasajeros %{customdata[2]:.2f} M<extra></extra>",
+        hovertemplate: "%{text}<br>Ocupación %{x:.1f}%<br>RASK %{y:.2f} ¢ USD por ASK-km<br>ASK %{customdata[0]} mil M<br>Margen %{customdata[1]} ¢ USD por ASK-km<br>Pasajeros %{customdata[2]} M<extra></extra>",
       };
     });
     const selectedTrace = {
@@ -5195,7 +5196,7 @@ return Plotly;
     const container = document.getElementById("narrative-copy");
     container.replaceChildren();
     view.narrative.paragraphs.forEach((paragraph) => {
-      const node = document.createElement("li");
+      const node = document.createElement("p");
       node.textContent = paragraph;
       container.appendChild(node);
     });

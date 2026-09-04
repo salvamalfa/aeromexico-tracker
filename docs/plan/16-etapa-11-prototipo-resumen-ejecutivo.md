@@ -44,6 +44,10 @@ cero ni se infiere desde el HTML de referencia.
 6. Una sola lectura ejecutiva de tres puntos para el trimestre seleccionado.
 7. Datos trimestrales dentro de un desplegable, con variación QoQ junto a cada valor.
 
+El encabezado usa un azul sólido y la lectura ejecutiva se organiza verticalmente:
+título y trimestre en una línea, seguidos por el texto. En economía unitaria, las
+barras de margen permanecen al fondo y las líneas RASK/CASK se dibujan por encima.
+
 El historial narrativo determinista se retira del prototipo. Un análisis histórico
 solo volverá cuando exista un proceso independiente, versionado y trazable que
 produzca contenido específico para cada trimestre.

@@ -175,11 +175,8 @@ def render_executive_html(payload: dict[str, Any]) -> str:
     </section>
 
     <section class="narrative-card" aria-labelledby="executive-reading-title">
-      <div>
-        <p class="section-kicker">Lectura ejecutiva</p>
-        <h2 id="executive-reading-title"><span id="narrative-period">—</span></h2>
-      </div>
-      <ul class="executive-reading-list" id="narrative-copy"></ul>
+      <h2 id="executive-reading-title">Lectura ejecutiva · <span id="narrative-period">—</span></h2>
+      <div class="executive-reading-copy" id="narrative-copy"></div>
     </section>
 
     <details class="disclosure">
