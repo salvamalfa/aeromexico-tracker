@@ -34,15 +34,19 @@ cero ni se infiere desde el HTML de referencia.
 
 ## Estructura visual
 
-1. Encabezado compacto y selector de trimestre.
+1. Encabezado compacto “Aeroméxico Tracker” y navegación trimestral mediante flechas.
 2. Cinco tarjetas KPI con valor, QoQ y YoY; las variaciones positivas se distinguen
    en verde y las negativas en rojo.
-3. Gráfica principal RASK vs CASK y barras de margen unitario en doble eje.
+3. Gráfica principal RASK vs CASK y barras de margen unitario en doble eje, con
+   ventana seleccionable de historia completa, 12, 8 o 4 trimestres.
 4. Gráfica pasajeros vs RASK para leer volumen y monetización.
 5. Scatter factor de ocupación vs RASK, con color por año y trimestre identificado.
-6. Lectura ejecutiva del trimestre seleccionado.
-7. Conclusiones clave del trimestre seleccionado.
-8. Historial narrativo y datos trimestrales dentro de desplegables.
+6. Una sola lectura ejecutiva de tres puntos para el trimestre seleccionado.
+7. Datos trimestrales dentro de un desplegable, con variación QoQ junto a cada valor.
+
+El historial narrativo determinista se retira del prototipo. Un análisis histórico
+solo volverá cuando exista un proceso independiente, versionado y trazable que
+produzca contenido específico para cada trimestre.
 
 ## Tecnología y seguridad
 
