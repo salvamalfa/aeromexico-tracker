@@ -169,6 +169,7 @@ def test_annotated_copy_order_and_delta_coloring_are_implemented() -> None:
     css = (PATHS.root / "src/dashboard/assets/executive_summary.css").read_text(encoding="utf-8")
     assert "background: var(--brand-blue-dark);" in css
     assert ".executive-reading-copy p" in css
+    assert "border-top: 2px solid var(--ink) !important;" in css
 
 
 def test_html_is_self_contained_and_has_no_remote_runtime() -> None:
