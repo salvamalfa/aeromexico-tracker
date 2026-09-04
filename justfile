@@ -29,6 +29,13 @@ dashboard-validate:
     uv run python -m src.dashboard.validate_stage10
     uv run python -m src.dashboard.validate_stage8
 
+stage11-prototype:
+    uv run python -m src.dashboard.build_stage11
+
+stage11-validate:
+    uv run pytest -q tests/test_stage11_executive_prototype.py
+    uv run python -m src.dashboard.validate_stage11
+
 smoke-test:
     uv run python -m src.smoke_test
 

@@ -313,6 +313,43 @@ visual explícita.
 
 ---
 
+## Etapa 11 — Prototipo HTML del resumen ejecutivo
+
+**Obligatorio:**
+- [x] Existe una sola vista ejecutiva; no se generan páginas adicionales.
+- [x] Los datos proceden de `v_aeromexico_quarterly` y el HTML no contiene una segunda
+      serie trimestral mantenida manualmente.
+- [x] Se incluyen todos los trimestres comparables disponibles en Gold, sin rellenar
+      periodos ni comparaciones faltantes.
+- [x] Las cinco tarjetas muestran RASK, CASK, ASK, factor de ocupación y pasajeros, con
+      comparaciones QoQ y YoY correctamente tipadas.
+- [x] Factor de ocupación usa puntos porcentuales; el margen unitario usa centavos por
+      ASK-km y reconcilia con `RASK - CASK`.
+- [x] La selección de trimestre actualiza tarjetas, conclusiones, narrativa y énfasis
+      visual en las gráficas.
+- [x] La gráfica principal compara RASK y CASK y muestra el margen unitario con línea
+      cero visible.
+- [x] Las gráficas de pasajeros/RASK y ocupación/RASK conservan grano trimestral,
+      unidades explícitas y tooltips con periodo.
+- [x] Conclusiones y narrativa se generan mediante reglas deterministas y no atribuyen
+      causalidad que los datos no demuestran.
+- [x] Historial narrativo y tabla trimestral están disponibles como contenido
+      desplegable, no ocupan la primera pantalla.
+- [x] El HTML es autocontenido, funciona sin red y no contiene CDN, fetch, XHR,
+      WebSocket, rutas absolutas, credenciales ni correo SEC.
+- [x] El resultado pasa QA visual en escritorio, 736 px y 360 px, sin overflow ni
+      colisiones.
+- [x] Las cifras visibles reconcilian exactamente con el warehouse y las pruebas
+      anteriores permanecen verdes.
+- [x] `docs/etapas/etapa-11-reporte.md` documenta alcance, validaciones, límites y el
+      gate para Streamlit.
+
+**No se cierra la etapa si:** se copian cifras del HTML de referencia, se presenta ASK
+como precio, se inventa un histórico 2021–2024, una comparación faltante aparece como
+cero, el archivo requiere internet o se modifica/despliega Streamlit.
+
+---
+
 ## Checklist transversal (aplica a todas las etapas)
 
 - [ ] Ningún dato inventado, estimado sin marcar, o rellenado para que cuadre
