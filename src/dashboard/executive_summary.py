@@ -398,7 +398,7 @@ def build_executive_payload(database_path: str | None = None) -> dict[str, Any]:
         history["load_factor_reported"].corr(history["rask_cents_per_km"])
     )
     if correlation >= 0.7:
-        correlation_label = "Correlación positiva clara: mayor ocupación tiende a coincidir con mayor RASK."
+        correlation_label = "Mayor ocupación tiende a coincidir con mayor RASK."
     elif correlation >= 0.3:
         correlation_label = "Correlación positiva moderada: mayor ocupación suele coincidir con mayor RASK."
     elif correlation > -0.3:

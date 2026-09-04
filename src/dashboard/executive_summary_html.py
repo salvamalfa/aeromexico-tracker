@@ -71,7 +71,7 @@ def _data_rows(payload: dict[str, Any]) -> str:
 
         rows.append(
             """
-            <tr>
+            <tr{row_class}>
               <td>{period}</td>
               <td>{rask}</td>
               <td>{cask}</td>
@@ -81,6 +81,7 @@ def _data_rows(payload: dict[str, Any]) -> str:
               <td>{passengers}</td>
             </tr>
             """.format(
+                row_class=' class="year-separator"' if str(record["period_id"]).endswith("Q4") else "",
                 period=escape(record["period_label"]),
                 rask=metric_cell(f'{record["rask_cents_per_km"]:.2f}', kpis["rask_cents_per_km"]["qoq"]),
                 cask=metric_cell(f'{record["cask_cents_per_km"]:.2f}', kpis["cask_cents_per_km"]["qoq"]),
@@ -145,8 +146,8 @@ def render_executive_html(payload: dict[str, Any]) -> str:
       <article class="chart-card">
         <div class="chart-heading-row">
           <div>
-            <p class="chart-title">RASK vs CASK y margen unitario</p>
-            <p class="chart-subtitle">Cuando RASK supera CASK, la operación genera utilidad por cada asiento-kilómetro.</p>
+            <p class="chart-title">RASK vs. CASK + Margen unitario</p>
+            <p class="chart-subtitle">Cuando RASK supera CASK, la operación genera utilidad por cada asiento-kilómetro. Las barras muestran el margen unitario en ¢ USD por ASK-km para cada trimestre.</p>
           </div>
           <label class="chart-range-control" for="unit-range">Periodo
             <select id="unit-range">
@@ -163,12 +164,12 @@ def render_executive_html(payload: dict[str, Any]) -> str:
 
     <section class="chart-grid" aria-label="Diagnósticos de volumen y utilización">
       <article class="chart-card">
-        <p class="chart-title">Precio versus volumen de pasajeros</p>
+        <p class="chart-title">Precio vs. Volumen de pasajeros</p>
         <p class="chart-subtitle">Las barras indican el número de pasajeros; la línea, el RASK.</p>
         <div class="chart chart-sm" id="volume-chart" role="img" aria-label="Pasajeros y RASK por trimestre"></div>
       </article>
       <article class="chart-card">
-        <p class="chart-title">Factor de ocupación vs RASK</p>
+        <p class="chart-title">Factor de ocupación vs. RASK</p>
         <p class="chart-subtitle">Cada punto es un trimestre; los colores identifican el año. {escape(metadata['load_rask_interpretation'])}</p>
         <div class="chart chart-sm" id="load-chart" role="img" aria-label="Relación entre factor de ocupación y RASK"></div>
       </article>
@@ -182,7 +183,6 @@ def render_executive_html(payload: dict[str, Any]) -> str:
     <details class="disclosure">
       <summary>Ver datos por trimestre</summary>
       <div class="disclosure-body table-wrap">
-        <p class="method-note">{escape(metadata['method_note'])}</p>
         <table>
           <thead>
             <tr>

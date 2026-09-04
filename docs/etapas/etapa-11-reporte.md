@@ -43,6 +43,10 @@ la navegación de Streamlit, no se publicó el prototipo y no se hizo push.
 - Barras de margen al fondo y líneas RASK/CASK sobrepuestas en primer plano.
 - Lectura ejecutiva en una sola columna: título y trimestre arriba, texto debajo.
 - Tabla trimestral desplegable con variación QoQ junto a cada métrica.
+- Separadores oscuros entre años en la tabla y acceso directo a las filas, sin nota
+  metodológica visible antes de los datos.
+- Títulos abreviados y consistentes con `vs.`; la gráfica principal se denomina
+  `RASK vs. CASK + Margen unitario`.
 - El historial narrativo genérico fue retirado.
 - Pruebas enfocadas y un validador de doce controles de aceptación.
 - Comandos `stage11-prototype` y `stage11-validate` en el `justfile`.
