@@ -25,7 +25,6 @@ def test_public_html_has_the_approved_three_view_contract() -> None:
 
 def test_public_streamlit_entrypoint_starts_without_exceptions() -> None:
     entrypoint = (ROOT / "streamlit_app.py").read_text(encoding="utf-8")
-    assert '"app/static/aeromexico_tracker.html"' in entrypoint
-    assert '"/app/static/aeromexico_tracker.html"' not in entrypoint
+    assert '"~/+/app/static/aeromexico_tracker.html"' in entrypoint
     app = AppTest.from_file(str(ROOT / "streamlit_app.py"), default_timeout=20).run()
     assert not app.exception
