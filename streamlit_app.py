@@ -25,7 +25,7 @@ def main() -> None:
         unsafe_allow_html=True,
     )
     st.iframe(
-        "/app/static/aeromexico_tracker.html",
+        "app/static/aeromexico_tracker.html",
         height=1800,
         tab_index=0,
     )
