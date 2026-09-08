@@ -759,7 +759,6 @@ tbody tr.year-separator td {
 #panel-flights .delta-down { color: var(--brand-red) !important; }
 #panel-flights .delta-na { color: var(--quiet) !important; }
 #panel-flights .info { position: absolute; top: 11px; right: 11px; display: grid; place-items: center; width: 18px; height: 18px; color: var(--quiet); background: #f3f5f8; border-radius: 50%; font-size: 10px; font-weight: 800; cursor: help; }
-#panel-flights .period-status { margin: 8px 3px 0; color: var(--muted); font-size: 10px; line-height: 1.45; }
 
 #panel-flights .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin: 28px 0 10px; }
 #panel-flights .section-kicker { margin-bottom: 5px; color: var(--brand-red); }
@@ -817,14 +816,18 @@ tbody tr.year-separator td {
 #panel-flights .airport-route-table td { padding: 9px 3px; border-bottom: 1px solid #e5eaf0; font-size: 8.9px; text-align: right; vertical-align: top; font-variant-numeric: tabular-nums; }
 #panel-flights .airport-route-table td:first-child { padding-left: 7px; border-left: 4px solid var(--route-color); text-align: left; }
 #panel-flights .airport-route-table tbody tr:last-child td { border-bottom: 0; }
+#panel-flights .route-expand-toggle { display: inline-flex; align-items: center; gap: 5px; width: 100%; padding: 0; color: var(--brand-blue-dark); background: transparent; border: 0; font: inherit; text-align: left; cursor: pointer; }
+#panel-flights .route-expand-toggle:focus-visible { outline: 2px solid var(--brand-gold); outline-offset: 2px; }
+#panel-flights .route-expand-icon { flex: 0 0 auto; font-size: 11px; font-weight: 850; line-height: 1; transition: transform .16s ease; }
+#panel-flights .route-expand-toggle.is-open .route-expand-icon { transform: rotate(90deg); }
 #panel-flights .route-table-name { display: block; color: var(--brand-blue-dark); font-size: 10px; }
-#panel-flights .route-table-directions { display: grid; gap: 2px; margin-top: 5px; color: var(--muted); font-size: 8px; }
-#panel-flights .route-table-directions span, #panel-flights .route-table-directions em { display: block; min-height: 1.2em; }
-#panel-flights .route-table-directions em { color: var(--quiet); font-style: normal; }
-#panel-flights .route-table-direction-labels { white-space: nowrap; }
-#panel-flights .route-table-direction-values { text-align: right; }
+#panel-flights .route-direction-detail td { padding: 5px 3px 8px 7px; background: #f5f8fc; }
+#panel-flights .route-direction-line { display: grid; grid-template-columns: 31% repeat(4, minmax(0, 1fr)); gap: 0; padding: 2px 3px; color: var(--muted); font-size: 8px; text-align: right; font-variant-numeric: tabular-nums; }
+#panel-flights .route-direction-line span, #panel-flights .route-direction-line em { min-width: 0; font-style: normal; }
+#panel-flights .route-direction-name { text-align: left; white-space: nowrap; }
 #panel-flights .route-table-value { font-weight: 750; white-space: nowrap; }
 #panel-flights .route-table-total { display: flex; align-items: center; justify-content: flex-end; gap: 3px; }
+#panel-flights .route-table-total strong { font-size: 10.9px; }
 #panel-flights .route-change-chip { display: inline-flex; align-items: center; min-height: 13px; padding: 1px 3px; color: var(--quiet); background: #edf0f4; border-radius: 999px; font-size: 6.8px; font-weight: 850; line-height: 1; }
 #panel-flights .route-change-chip.delta-up { background: #e8f6f1; }
 #panel-flights .route-change-chip.delta-down { background: #fff0ef; }
@@ -1231,7 +1234,6 @@ tbody tr.year-separator td {
 </div>
 </article>
 </section>
-<p class="period-status" id="quarter-status" role="status">—</p>
 <section aria-labelledby="network-title">
 <div class="section-heading network-heading">
 <div><p class="section-kicker">Red observada</p><h2 id="network-title">Mercados México–Estados Unidos</h2></div>
@@ -5609,10 +5611,6 @@ return Plotly;
       setDelta(`flight-kpi-${key}-qoq`, deltaDisplay(metric.value, qoq?.metrics[key]?.value, key === "load_factor"));
       setDelta(`flight-kpi-${key}-yoy`, deltaDisplay(metric.value, yoy?.metrics[key]?.value, key === "load_factor"));
     }
-    const eligible = record.period_id === payload.metadata.pilot_period;
-    $("quarter-status").textContent = eligible
-      ? `Periodo trimestral · ${record.metrics.passengers.period_start}–${record.metrics.passengers.period_end} · corte ${record.metrics.passengers.cutoff_date} · elegible como candidato SEC para el Analysis Agent.`
-      : `Periodo trimestral · ${record.metrics.passengers.period_start}–${record.metrics.passengers.period_end} · historial visible; elegibilidad no evaluada para el paquete piloto 2T26.`;
     renderMix(record);
     renderNetworkPeriod(record.period_id);
     $("live-status").textContent = $("forecast-chart")
@@ -5768,17 +5766,25 @@ return Plotly;
         return { origin, destination, direction };
       });
     };
-    const directionLabels = (route) => routeDirections(route).map(({ origin, destination }) =>
-      `<span>${esc(origin)} → ${esc(destination)}</span>`
-    ).join("");
     const metricCell = (route, key) => {
-      const values = routeDirections(route).map(({ direction }) => direction
-        ? `<span>${formatRouteMetric(key, key === "load_factor" && finite(direction.seats) && direction.seats > 0 ? direction.passengers / direction.seats : direction[key])}</span>`
-        : `<em>No disponible</em>`
-      ).join("");
       const chip = routeMetricChangeChip(route, key);
-      return `<td class="route-table-value"><span class="route-table-total"><strong>${formatRouteMetric(key, route[key])}</strong>${chip}</span><span class="route-table-directions route-table-direction-values">${values}</span></td>`;
+      return `<td class="route-table-value"><span class="route-table-total"><strong>${formatRouteMetric(key, route[key])}</strong>${chip}</span></td>`;
     };
+    const directionValue = (direction, key) => {
+      if (!direction) return `<em>No disponible</em>`;
+      const value = key === "load_factor" && finite(direction.seats) && direction.seats > 0
+        ? direction.passengers / direction.seats
+        : direction[key];
+      return `<span>${formatRouteMetric(key, value)}</span>`;
+    };
+    const directionDetails = (route) => routeDirections(route).map(({ origin, destination, direction }) => `
+      <div class="route-direction-line">
+        <span class="route-direction-name">${esc(origin)} → ${esc(destination)}</span>
+        ${directionValue(direction, "passengers")}
+        ${directionValue(direction, "seats")}
+        ${directionValue(direction, "departures")}
+        ${directionValue(direction, "load_factor")}
+      </div>`).join("");
     $("airport-tooltip").innerHTML = `
       <div class="airport-title-row">
         <h3>${esc(title)}</h3>
@@ -5795,15 +5801,24 @@ return Plotly;
       <div class="airport-table-wrap">
         <table class="airport-route-table">
           <thead><tr><th>Ruta</th><th>Pasajeros</th><th>Asientos</th><th>Vuelos</th><th>Ocupación</th></tr></thead>
-          <tbody>${tableRoutes.map((route, index) => `<tr style="--route-color:${airportRouteColor(index)}">
-            <td><strong class="route-table-name">${esc(routeTitle(route))}</strong><span class="route-table-directions route-table-direction-labels">${directionLabels(route)}</span></td>
+          <tbody>${tableRoutes.map((route, index) => `<tr class="route-summary-row" style="--route-color:${airportRouteColor(index)}">
+            <td><button type="button" class="route-expand-toggle" aria-expanded="false" aria-controls="route-directions-${index}"><span class="route-expand-icon" aria-hidden="true">&gt;</span><strong class="route-table-name">${esc(routeTitle(route))}</strong></button></td>
             ${metricCell(route, "passengers")}
             ${metricCell(route, "seats")}
             ${metricCell(route, "departures")}
             ${metricCell(route, "load_factor")}
-          </tr>`).join("")}</tbody>
+          </tr><tr class="route-direction-detail" id="route-directions-${index}" style="--route-color:${airportRouteColor(index)}" hidden><td colspan="5">${directionDetails(route)}</td></tr>`).join("")}</tbody>
         </table>
       </div>`;
+    $("airport-tooltip").querySelectorAll(".route-expand-toggle").forEach((toggle) => {
+      toggle.addEventListener("click", () => {
+        const detail = document.getElementById(toggle.getAttribute("aria-controls"));
+        const expanded = toggle.getAttribute("aria-expanded") === "true";
+        toggle.setAttribute("aria-expanded", String(!expanded));
+        toggle.classList.toggle("is-open", !expanded);
+        detail.hidden = expanded;
+      });
+    });
     bindAirportSearchControls();
   }
 
