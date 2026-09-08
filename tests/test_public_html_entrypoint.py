@@ -19,6 +19,10 @@ def test_public_html_has_the_approved_three_view_contract() -> None:
     assert not soup.select("#panel-reading .kpi-card")
     assert len(soup.select("#panel-economy .kpi-card")) == 4
     assert len(soup.select("#panel-flights .flight-kpi")) == 4
+    assert 'class="route-expand-toggle" aria-expanded="false"' in page
+    assert 'class="route-direction-detail"' in page
+    assert "detail.hidden = expanded" in page
+    assert "#panel-flights .route-table-total strong { font-size: 10.9px; }" in page
     ids = [node["id"] for node in soup.select("[id]")]
     assert len(ids) == len(set(ids))
 
