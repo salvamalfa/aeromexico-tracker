@@ -6,7 +6,7 @@ El proyecto transforma fuentes regulatorias, operativas y de mercado en una lect
 
 ## Dashboard
 
-El dashboard publicado tiene once vistas: resumen, economía unitaria, capacidad y demanda, competencia, red y rutas, finanzas, forecast, lenguaje de reportes, salud de datos, estructura de datos y glosario.
+El dashboard publicado presenta tres vistas integradas: Lectura ejecutiva, Economía unitaria y Vuelos. El HTML aprobado se sirve directamente desde Streamlit para conservar el mismo diseño e interacciones de la versión local.
 
 [Repositorio público en GitHub](https://github.com/salvamalfa/aeromexico-tracker)
 
@@ -16,9 +16,7 @@ El dashboard publicado tiene once vistas: resumen, economía unitaria, capacidad
 
 Los valores exactos del despliegue y su validación están en [la guía de publicación](docs/deploy-streamlit.md). La aplicación corre con Python **3.13** y no utiliza secretos.
 
-![Resumen ejecutivo público](docs/assets/dashboard/public-resumen-ejecutivo.png)
-
-![Forecast público con backtest y bandas](docs/assets/dashboard/public-forecast.png)
+![Dashboard público integrado](docs/assets/dashboard/public-dashboard.png)
 
 Para recorrer el argumento completo, consulta [el recorrido narrado](docs/dashboard-recorrido.md).
 
