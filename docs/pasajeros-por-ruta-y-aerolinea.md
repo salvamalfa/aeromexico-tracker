@@ -6,8 +6,9 @@ pero ninguna fuente pública gratuita lo publica cruzado.** AFAC publica las dos
 `ruta × aerolínea`. Este documento prueba esa afirmación abriendo cada archivo, no
 citándolo de oídas, y entrega las cifras que sí pudieron verificarse.
 
-Periodo trabajado: **2025Q1 (enero–marzo de 2025)**, el trimestre más reciente que
-pudo descargarse completo en este entorno. En la sección
+Cobertura: **17 meses** —2024M01 a 2025M03 y 2026M01 a 2026M02—, que es todo lo
+que pudo descargarse en este entorno. Los casos de ruta se trabajan sobre 2025Q1
+por ser el trimestre completo más reciente. En la sección
 [Qué no logré verificar](#qué-no-logré-verificar) se explica por qué no fue 2026Q2.
 
 ---
@@ -107,7 +108,7 @@ Cadena de comprobación:
 
 1. **Total de la ruta**: primario y exacto, de la hoja `REG NAC` del workbook O-D de AFAC.
 2. **Exclusividad**: Uruapan aparece con una sola ruta nacional con pasajeros en todo
-   el trimestre (`data/reference/afac_od_nacional_regular_2025q1.csv`).
+   el trimestre (`data/reference/afac_od_nacional_regular.csv`).
 3. **Identidad del operador**: Volaris publica la ruta en su propio sitio y los
    agregadores de vuelos reportan un único operador con 100 % de las reservas.
 4. **Consistencia de flota**: 142.6 pasajeros por vuelo encaja con un A320neo de
