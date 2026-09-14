@@ -60,7 +60,8 @@ Propiedades que importan en producción:
   una ruta jamás se le asignan pasajeros.
 - Las rutas de un solo operador salen **exactas** por construcción y se marcan
   con `is_exact`.
-- Las dos marginales no suman igual (46 pasajeros de diferencia en 2025Q1); el
+- Las dos marginales casi siempre suman igual —15 de 17 meses cuadran exacto—
+  pero cuando no, el
   módulo reescala la marginal de columna al total de filas y **reporta** el
   factor en `column_scale` en vez de esconderlo.
 - Si una marginal exige pasajeros donde la semilla no ofrece nada, se levanta
@@ -138,7 +139,7 @@ columna, igual que el proyecto ya separa reportado de derivado.
 `route_key` usa el vocabulario de AFAC, que nombra **ciudades**, no aeropuertos:
 `MEXICO-CANCUN`, `SANTA LUCÍA-TIJUANA`, `DEL BAJIO-MONTERREY`. No hay que
 construir esa traducción: `build_seed_from_flights` la aplica a partir del
-crosswalk de 52 ciudades, y rechaza con `UnmappedSeedError` cualquier aeropuerto
+crosswalk de 58 ciudades, y rechaza con `UnmappedSeedError` cualquier aeropuerto
 que no reconozca, en vez de descartarlo en silencio.
 
 Dos casos que el crosswalk resuelve y que es fácil equivocar: `MEXICO` es Benito
