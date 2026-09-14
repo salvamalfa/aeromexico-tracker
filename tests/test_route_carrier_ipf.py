@@ -6,10 +6,14 @@ import pytest
 
 from src.analytics.route_carrier import (
     InfeasibleMarginsError,
+    UnmappedSeedError,
     backtest_against_t100,
+    build_seed_from_flights,
     estimate_route_carrier,
     fit_ipf,
     load_afac_domestic_margins,
+    load_carrier_crosswalk,
+    load_city_crosswalk,
     load_t100_panel,
 )
 
@@ -318,6 +322,95 @@ def test_domestic_margins_are_ready_to_receive_a_seed() -> None:
 
     assert "MEXICO-CANCUN" in set(route_totals["route_key"])
     assert "TIJUANA-URUAPAN" in set(route_totals["route_key"])
-    assert any("Volaris" in carrier for carrier in carrier_totals["carrier_key"])
+    assert "VOLARIS" in set(carrier_totals["carrier_key"])
     assert (route_totals["passengers"] >= 0).all()
     assert (carrier_totals["passengers"] > 0).all()
+
+
+# --------------------------------------------------------------------------
+# Turning a provider's flight counts into a seed the margins can be fitted to
+# --------------------------------------------------------------------------
+
+def _flights_fixture() -> pd.DataFrame:
+    return pd.DataFrame(
+        [
+            ("2025M01", "MEX", "CUN", "AEROMEXICO", 560),
+            ("2025M01", "MEX", "CUN", "VIVA_AEROBUS", 190),
+            ("2025M01", "MEX", "CUN", "VOLARIS", 137),
+            ("2025M01", "TIJ", "UPN", "VOLARIS", 41),
+            ("2025M01", "NLU", "TIJ", "VIVA_AEROBUS", 60),
+            ("2025M01", "BJX", "MTY", "VOLARIS", 0),
+        ],
+        columns=list(FLIGHT_COLUMNS_FOR_TEST),
+    )
+
+
+FLIGHT_COLUMNS_FOR_TEST = ("period_id", "origin_iata", "dest_iata", "carrier_key", "flights")
+
+
+def test_every_afac_city_has_an_airport_code() -> None:
+    route_totals, _ = load_afac_domestic_margins()
+    cities = load_city_crosswalk()
+
+    named = set()
+    for route_key in route_totals["route_key"]:
+        named.update(route_key.split("-", 1) if route_key.count("-") == 1 else [])
+
+    assert len(cities) == 52
+    assert named <= set(cities.values())
+
+
+def test_the_two_metropolitan_airports_stay_distinct() -> None:
+    """MEXICO is Benito Juárez and SANTA LUCÍA is AIFA; collapsing them is wrong."""
+
+    cities = load_city_crosswalk()
+
+    assert cities["MEX"] == "MEXICO"
+    assert cities["NLU"] == "SANTA LUCÍA"
+    assert cities["BJX"] == "DEL BAJIO"
+
+
+def test_every_afac_carrier_name_maps_to_a_project_key() -> None:
+    crosswalk = load_carrier_crosswalk()
+    margins = pd.read_csv("data/reference/afac_carrier_domestic_2025q1.csv")
+
+    assert set(margins["carrier_name"]) <= set(crosswalk)
+    assert crosswalk["Aeroméxico Connect (Aerolitoral)"] == "AEROMEXICO_CONNECT"
+
+
+def test_seed_is_rekeyed_into_the_afac_city_vocabulary() -> None:
+    seed = build_seed_from_flights(_flights_fixture())
+
+    assert set(seed.columns) == {"period_id", "route_key", "carrier_key", "weight"}
+    assert "MEXICO-CANCUN" in set(seed["route_key"])
+    assert "SANTA LUCÍA-TIJUANA" in set(seed["route_key"])
+
+
+def test_seed_drops_routes_a_carrier_did_not_fly() -> None:
+    seed = build_seed_from_flights(_flights_fixture())
+
+    assert "DEL BAJIO-MONTERREY" not in set(seed["route_key"])
+
+
+def test_seed_rejects_an_airport_it_cannot_place() -> None:
+    flights = _flights_fixture()
+    flights.loc[len(flights)] = ("2025M01", "MEX", "LAX", "AEROMEXICO", 136)
+
+    with pytest.raises(UnmappedSeedError, match="LAX"):
+        build_seed_from_flights(flights)
+
+
+def test_a_provider_seed_plugs_straight_into_the_published_margins() -> None:
+    """End to end: flights in, passengers by route and carrier out."""
+
+    route_totals, carrier_totals = load_afac_domestic_margins()
+    seed = build_seed_from_flights(_flights_fixture())
+
+    estimate, diagnostics = estimate_route_carrier(seed, route_totals, carrier_totals)
+
+    assert diagnostics.loc[0, "converged"]
+    mex_cun = estimate[estimate["route_key"] == "MEXICO-CANCUN"]
+    assert set(mex_cun["carrier_key"]) == {"AEROMEXICO", "VIVA_AEROBUS", "VOLARIS"}
+    # Convergence is relative to the grand total, so a single route may land a
+    # fraction of a passenger away; within one passenger is the meaningful test.
+    assert mex_cun["passengers_estimated"].sum() == pytest.approx(142_919, abs=1.0)
