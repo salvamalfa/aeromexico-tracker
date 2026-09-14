@@ -285,8 +285,8 @@ def _require_columns(frame: pd.DataFrame, columns: tuple[str, ...], name: str) -
 
 # AFAC keys routes by city, not airport: "MEXICO", "SANTA LUCÍA", "DEL BAJIO".
 # A seed adapter must emit route keys in this same vocabulary.
-ROUTE_MARGIN_FILE = "afac_od_nacional_regular_2025q1.csv"
-CARRIER_MARGIN_FILE = "afac_carrier_domestic_2025q1.csv"
+ROUTE_MARGIN_FILE = "afac_od_nacional_regular.csv"
+CARRIER_MARGIN_FILE = "afac_carrier_domestic.csv"
 CITY_CROSSWALK_FILE = "afac_city_iata_crosswalk.csv"
 CARRIER_CROSSWALK_FILE = "afac_carrier_crosswalk.csv"
 
@@ -353,11 +353,6 @@ def build_seed_from_flights(
     )
 
 
-def _period_id(month: str) -> str:
-    year, month_number = str(month).split("-")
-    return f"{year}M{int(month_number):02d}"
-
-
 def load_afac_domestic_margins(
     reference_dir: Path | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -372,7 +367,6 @@ def load_afac_domestic_margins(
     reference = _reference_dir(reference_dir)
 
     routes = pd.read_csv(reference / ROUTE_MARGIN_FILE)
-    routes["period_id"] = routes["mes"].map(_period_id)
     routes["route_key"] = routes["origen"].str.strip() + "-" + routes["destino"].str.strip()
     route_totals = (
         routes.rename(columns={"pasajeros": "passengers"})
@@ -381,7 +375,6 @@ def load_afac_domestic_margins(
     )
 
     carriers = pd.read_csv(reference / CARRIER_MARGIN_FILE)
-    carriers["period_id"] = carriers["mes"].map(_period_id)
     crosswalk = load_carrier_crosswalk(reference_dir)
     unmapped = set(carriers["carrier_name"]) - set(crosswalk)
     if unmapped:

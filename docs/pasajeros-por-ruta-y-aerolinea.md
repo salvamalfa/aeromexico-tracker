@@ -34,22 +34,29 @@ para vuelos nacionales mexicanos.**
 
 ## 2. Prueba de que el cubo sí existe
 
-Las dos publicaciones de AFAC son dos vistas del mismo microdato. Sumando los
-1,581 registros dirigidos de la hoja `REG NAC` de 2025Q1 y comparando contra el
-acumulado enero–marzo del boletín por aerolínea:
+Las dos publicaciones de AFAC son dos vistas del mismo microdato. Comparando mes
+a mes la suma de todas las rutas del servicio regular nacional contra la suma de
+todas las aerolíneas, sobre los 17 meses que pudieron descargarse
+(2024M01–2025M03 y 2026M01–2026M02):
 
-| Agregado 2025Q1 | Pasajeros |
+| Resultado | Meses |
 |---|---:|
-| Suma de rutas (`sase`, hoja `REG NAC`) | 14,799,004 |
-| Suma de aerolíneas (boletín AFAC) | 14,799,050 |
-| Diferencia | **46 (0.0003 %)** |
+| Coinciden **exactamente**, al pasajero | **15 de 17** |
+| Difieren | 2 — 2025M02 por 10 pasajeros, 2025M03 por 36 |
+| Desviación relativa máxima | **0.0007 %** |
 
-Dos publicaciones distintas, construidas por áreas distintas, cuadran a 46 pasajeros
-sobre 14.8 millones. Eso solo ocurre si ambas se derivan de la **misma tabla de
-microdatos que ya tiene las dos llaves**. AFAC tiene el cruce; no lo publica.
+Quince meses de coincidencia exacta entre dos publicaciones distintas, elaboradas
+por áreas distintas y en formatos distintos, no ocurren por casualidad. Solo
+ocurren si ambas se cortan de **la misma tabla, que ya trae juntas la ruta y la
+empresa**. AFAC tiene el cruce; no lo publica.
 
-El respaldo legal coincide: el **artículo 84 de la Ley de Aviación Civil** obliga a
-las concesionarias y permisionarias a entregar *mensualmente* a AFAC «informes,
+Los dos meses que difieren tienen explicación probable de reexpresión: el
+workbook origen-destino de marzo de 2025 se publicó el 28/04/2025, mientras que
+la base larga de DATATUR se actualizó el 27/08/2026, de modo que el lado de
+aerolíneas ya incorpora correcciones que el lado de rutas todavía no refleja.
+
+El respaldo legal coincide: el **artículo 84 de la Ley de Aviación Civil** obliga
+a las concesionarias y permisionarias a entregar *mensualmente* a AFAC «informes,
 bitácoras, estadísticas, reportes […] y todos aquellos datos que permitan
 transparentar su funcionamiento», y añade que AFAC «dará seguimiento a la
 información presentada y **la publicará trimestralmente**».
@@ -111,7 +118,44 @@ El eslabón 3 es el único que **no** proviene de una fuente regulatoria primari
 exclusividad se sostiene en fuentes comerciales actuales, no en un registro oficial
 mes a mes. Se marca como inferido, no como verificado.
 
-### 4.2 Otras rutas de operador único candidato, 2025Q1
+### 4.2 Cruce verificado por cierre — Aéreo Calafia, 2024
+
+Al ampliar el panel a 2024 apareció en el workbook origen-destino una ciudad
+escrita en minúsculas, `Los Cabos`, distinta de `SAN JOSÉ DEL CABO`. Es diminuta
+—6,268 pasajeros en todo 2024—, solo vuela a Mazatlán y Culiacán, y desaparece
+después de julio de 2024.
+
+Ese perfil coincide con el de una sola aerolínea. Contrastando los pasajeros de
+las rutas de `Los Cabos` contra el total nacional de Aéreo Calafia que AFAC
+publica por separado:
+
+| Mes | Rutas `Los Cabos` | Aéreo Calafia (AFAC) | Diferencia |
+|---|---:|---:|---:|
+| 2024M01 | 1,058 | 1,102 | −44 |
+| 2024M02 | 703 | 703 | **0** |
+| 2024M03 | 985 | 985 | **0** |
+| 2024M04 | 1,018 | 1,018 | **0** |
+| 2024M05 | 788 | 820 | −32 |
+| 2024M06 | 744 | 744 | **0** |
+| 2024M07 | 972 | 972 | **0** |
+
+Cinco de siete meses cuadran **exactamente al pasajero**. El faltante de mayo lo
+explica por completo la ruta `CIUDAD JUAREZ–CULIACAN`, activa solo en enero y
+mayo de 2024 con 26 y **32** pasajeros. Quedan 18 pasajeros de enero sin
+asignar; no se forzó ninguna hipótesis para cerrarlos.
+
+De ahí se sigue que `Los Cabos` en la nomenclatura de AFAC es **Cabo San Lucas
+(CSL)**, y que esas rutas son íntegramente de Aéreo Calafia. Es el segundo cruce
+doméstico verificado del proyecto, y el único obtenido **solo con las dos
+publicaciones de AFAC**, sin recurrir a fuentes comerciales: el cierre entre
+marginales identifica al operador cuando una aerolínea es la única en un
+subconjunto aislado de la red.
+
+El método no generaliza —lo intenté con Aerus y produjo dos soluciones distintas
+igualmente válidas, como muestra la sección 3—, pero funciona cuando el
+subconjunto está aislado y el total nacional de la aerolínea es pequeño.
+
+### 4.3 Otras rutas de operador único candidato, 2025Q1
 
 Mismo criterio (ciudad con una sola ruta nacional con pasajeros). Los totales son
 verificados; la atribución a aerolínea queda **sin verificar**.
@@ -128,7 +172,7 @@ Nota importante: incluso en una ruta de «una sola aerolínea», AFAC contabiliz
 permisionarias distintas. Una ruta operada solo por el grupo Aeroméxico puede seguir
 partiéndose en dos filas del lado de la aerolínea.
 
-### 4.3 Ruta troncal competida — México ↔ Cancún, 2025Q1
+### 4.4 Ruta troncal competida — México ↔ Cancún, 2025Q1
 
 La ruta doméstica más grande del país. El total es verificado; **el desglose por
 aerolínea no es obtenible de ninguna fuente pública**.
@@ -148,7 +192,7 @@ periodo Mexicana y Magnicharters) son identificables por horarios publicados, pe
 **sus pasajeros respectivos no lo son**. Cualquier cifra de reparto que circule para
 esta ruta proviene de datos comerciales o de estimación, no de una fuente verificable.
 
-### 4.4 Contraste: la misma tabla sí existe cuando el regulador la publica
+### 4.5 Contraste: la misma tabla sí existe cuando el regulador la publica
 
 Para dimensionar qué se está perdiendo, la misma consulta sobre una ruta
 internacional, con datos del US DOT, sale completa y verificada:
@@ -268,7 +312,10 @@ Se declara explícitamente, sin rellenar huecos.
 
 | Archivo | Contenido |
 |---|---|
-| `data/reference/afac_od_nacional_regular_2025q1.csv` | 1,581 filas `origen, destino, mes, vuelos, pasajeros` del servicio regular nacional 2025Q1, extraídas de la hoja `REG NAC` del workbook O-D de AFAC |
+| `data/reference/afac_od_nacional_regular.csv` | 10,051 filas `period_id, origen, destino, vuelos, pasajeros` del servicio regular nacional, 17 meses (2024M01–2025M03, 2026M01–2026M02), de la hoja `REG NAC` de los workbooks O-D |
+| `data/reference/afac_carrier_domestic.csv` | 143 filas `period_id, carrier_name, pasajeros`, los mismos 17 meses, de la base larga de DATATUR |
+| `data/reference/afac_city_iata_crosswalk.csv` | 58 ciudades AFAC ↔ IATA, verificadas contra `dim_airport` |
+| `data/reference/afac_carrier_crosswalk.csv` | 9 nombres AFAC ↔ `carrier_key` |
 
 ## 8. Fuentes
 

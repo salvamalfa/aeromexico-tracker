@@ -65,11 +65,20 @@ operacional origen-destino / Traffic Statistics by City Pairs", que reporta
 pasajeros por par de ciudades y mes sin desagregar por aerolínea; y el "Resumen
 operacional por aerolínea / Airline Statistics Summary", que reporta pasajeros
 por empresa y mes sin desagregar por ruta. Ambos son agregados marginales de un
-mismo universo. Para el primer trimestre de 2025, la suma de todos los pares de
-ciudades del primer producto asciende a 14,799,004 pasajeros y la suma de todas
-las empresas del segundo a 14,799,050 pasajeros: una diferencia de 46 pasajeros,
-equivalente a 0.0003%. Dos publicaciones independientes solo coinciden en ese
-grado si ambas se construyen a partir de un mismo registro que ya contiene, de
+mismo universo.
+
+Comprobación: comparando mes a mes la suma de todos los pares de ciudades del
+servicio regular nacional del primer producto contra la suma de todas las
+empresas del segundo, sobre diecisiete meses (enero de 2024 a marzo de 2025, y
+enero a febrero de 2026), ambas cifras coinciden EXACTAMENTE, al pasajero, en
+quince de esos diecisiete meses. Los dos meses restantes difieren en 10 y en 36
+pasajeros sobre totales cercanos a cinco millones, lo que es consistente con una
+reexpresión posterior de una de las dos publicaciones. La desviación relativa
+máxima observada es de 0.0007 por ciento.
+
+Dos publicaciones independientes, elaboradas por áreas distintas y en formatos
+distintos, no coinciden en el mismo número entero quince veces por casualidad.
+Solo coinciden así si ambas se cortan de un mismo registro que ya contiene, de
 forma conjunta, la ruta y la empresa. Ese registro es el que se solicita.
 
 Lo anterior es congruente con el artículo 84 de la Ley de Aviación Civil, que

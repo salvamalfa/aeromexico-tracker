@@ -294,25 +294,36 @@ def test_fitting_both_margins_beats_splitting_by_supply_alone() -> None:
 # The domestic margins the estimator will be pointed at
 # --------------------------------------------------------------------------
 
-def test_both_afac_margins_describe_the_same_quarter() -> None:
+def test_both_afac_margins_cover_the_same_periods() -> None:
     route_totals, carrier_totals = load_afac_domestic_margins()
 
-    assert sorted(route_totals["period_id"].unique()) == ["2025M01", "2025M02", "2025M03"]
-    assert sorted(carrier_totals["period_id"].unique()) == ["2025M01", "2025M02", "2025M03"]
+    periods = sorted(route_totals["period_id"].unique())
+    assert periods == sorted(carrier_totals["period_id"].unique())
+    assert len(periods) == 17
+    assert periods[0] == "2024M01" and periods[-1] == "2026M02"
 
 
 def test_the_two_published_margins_agree_and_so_a_joint_table_exists_upstream() -> None:
-    """The premise of the whole estimator: both files are views of one cube."""
+    """The premise of the whole estimator: both files are views of one cube.
+
+    Fifteen of the seventeen months agree to the passenger, and the two that
+    do not are off by 10 and 36 on totals near five million.  Two independently
+    published aggregates cannot land on the same integer fifteen times unless
+    both are cut from one table that already carries route and carrier.
+    """
 
     route_totals, carrier_totals = load_afac_domestic_margins()
+    by_route = route_totals.groupby("period_id")["passengers"].sum()
+    by_carrier = carrier_totals.groupby("period_id")["passengers"].sum()
+    gap = (by_route - by_carrier).abs()
 
-    route_sum = route_totals["passengers"].sum()
-    carrier_sum = carrier_totals["passengers"].sum()
-
-    assert route_sum == 14_799_004
-    assert carrier_sum == 14_799_050
-    assert abs(route_sum - carrier_sum) <= 50
-    assert abs(route_sum - carrier_sum) / carrier_sum < 1e-5
+    assert (gap == 0).sum() == 15
+    assert gap.max() <= 40
+    assert (gap / by_carrier).max() < 1e-5
+    # The quarter the request cites, restated by the carrier side after the
+    # origin-destination workbook was published.
+    assert by_route.loc[["2025M01", "2025M02", "2025M03"]].sum() == 14_799_004
+    assert by_carrier.loc[["2025M01", "2025M02", "2025M03"]].sum() == 14_799_050
 
 
 def test_domestic_margins_are_ready_to_receive_a_seed() -> None:
@@ -322,6 +333,7 @@ def test_domestic_margins_are_ready_to_receive_a_seed() -> None:
 
     assert "MEXICO-CANCUN" in set(route_totals["route_key"])
     assert "TIJUANA-URUAPAN" in set(route_totals["route_key"])
+    assert "SANTA LUCÍA-TIJUANA" in set(route_totals["route_key"])
     assert "VOLARIS" in set(carrier_totals["carrier_key"])
     assert (route_totals["passengers"] >= 0).all()
     assert (carrier_totals["passengers"] > 0).all()
@@ -356,8 +368,10 @@ def test_every_afac_city_has_an_airport_code() -> None:
     for route_key in route_totals["route_key"]:
         named.update(route_key.split("-", 1) if route_key.count("-") == 1 else [])
 
-    assert len(cities) == 52
+    assert len(cities) == 58
     assert named <= set(cities.values())
+    # AFAC labels one airport per city, so no two cities may share a code.
+    assert len(set(cities.values())) == len(cities)
 
 
 def test_the_two_metropolitan_airports_stay_distinct() -> None:
@@ -368,11 +382,16 @@ def test_the_two_metropolitan_airports_stay_distinct() -> None:
     assert cities["MEX"] == "MEXICO"
     assert cities["NLU"] == "SANTA LUCÍA"
     assert cities["BJX"] == "DEL BAJIO"
+    # AFAC names two different airports of the same cape, in two different
+    # letter cases: "SAN JOSÉ DEL CABO" is the big one, "Los Cabos" is Cabo
+    # San Lucas, which only Aéreo Calafia served and only until July 2024.
+    assert cities["SJD"] == "SAN JOSÉ DEL CABO"
+    assert cities["CSL"] == "Los Cabos"
 
 
 def test_every_afac_carrier_name_maps_to_a_project_key() -> None:
     crosswalk = load_carrier_crosswalk()
-    margins = pd.read_csv("data/reference/afac_carrier_domestic_2025q1.csv")
+    margins = pd.read_csv("data/reference/afac_carrier_domestic.csv")
 
     assert set(margins["carrier_name"]) <= set(crosswalk)
     assert crosswalk["Aeroméxico Connect (Aerolitoral)"] == "AEROMEXICO_CONNECT"
@@ -407,10 +426,38 @@ def test_a_provider_seed_plugs_straight_into_the_published_margins() -> None:
     seed = build_seed_from_flights(_flights_fixture())
 
     estimate, diagnostics = estimate_route_carrier(seed, route_totals, carrier_totals)
+    by_period = diagnostics.set_index("period_id")
 
-    assert diagnostics.loc[0, "converged"]
-    mex_cun = estimate[estimate["route_key"] == "MEXICO-CANCUN"]
-    assert set(mex_cun["carrier_key"]) == {"AEROMEXICO", "VIVA_AEROBUS", "VOLARIS"}
-    # Convergence is relative to the grand total, so a single route may land a
-    # fraction of a passenger away; within one passenger is the meaningful test.
-    assert mex_cun["passengers_estimated"].sum() == pytest.approx(142_919, abs=1.0)
+    # Periods the seed says nothing about are reported, not silently fitted.
+    assert by_period.loc["2024M01", "reason"] == "no_seed"
+    assert by_period.loc["2025M01", "converged"]
+
+    fitted = estimate[estimate["period_id"] == "2025M01"]
+    published = route_totals.set_index(["period_id", "route_key"])["passengers"]
+    for route_key, group in fitted.groupby("route_key"):
+        assert group["passengers_estimated"].sum() == pytest.approx(
+            float(published.loc[("2025M01", route_key)]), abs=1.0
+        )
+    assert set(fitted[fitted["route_key"] == "MEXICO-CANCUN"]["carrier_key"]) == {
+        "AEROMEXICO", "VIVA_AEROBUS", "VOLARIS"
+    }
+
+
+def test_column_scale_exposes_a_seed_that_misses_most_of_each_network() -> None:
+    """The guard rail against trusting a split built on a partial seed.
+
+    The carrier marginal is a nationwide total, so a seed holding three routes
+    forces the fit to rescale it to a fraction of itself.  The fit still
+    converges and still honours every route total, but the split across
+    carriers is meaningless — here Volaris outranks Aeroméxico on Mexico City
+    to Cancún, which it does not.  column_scale is what gives that away, so it
+    is reported rather than folded silently into the result.
+    """
+
+    route_totals, carrier_totals = load_afac_domestic_margins()
+    seed = build_seed_from_flights(_flights_fixture())
+
+    _, diagnostics = estimate_route_carrier(seed, route_totals, carrier_totals)
+
+    scale = diagnostics.set_index("period_id").loc["2025M01", "column_scale"]
+    assert scale < 0.05
