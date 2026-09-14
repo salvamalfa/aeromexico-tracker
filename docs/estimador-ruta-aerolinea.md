@@ -15,9 +15,9 @@ Contexto y evidencia de que el cubo existe: [`pasajeros-por-ruta-y-aerolinea.md`
 
 | Insumo | Dónde vive | Papel en el estimador |
 |---|---|---|
-| Pasajeros por ruta y mes (nacional regular) | `data/reference/afac_od_nacional_regular_2025q1.csv` | **Marginal de fila.** 527 pares dirigidos, 2025Q1 |
-| Pasajeros por aerolínea y mes (nacional regular) | `data/reference/afac_carrier_domestic_2025q1.csv` | **Marginal de columna.** 8 permisionarias, 2025Q1 |
-| Ciudad AFAC ↔ código IATA | `data/reference/afac_city_iata_crosswalk.csv` | Traduce la semilla al vocabulario de las marginales. 52 ciudades, verificadas contra `dim_airport` |
+| Pasajeros por ruta y mes (nacional regular) | `data/reference/afac_od_nacional_regular.csv` | **Marginal de fila.** 10,051 filas, 17 meses (2024M01–2025M03, 2026M01–2026M02) |
+| Pasajeros por aerolínea y mes (nacional regular) | `data/reference/afac_carrier_domestic.csv` | **Marginal de columna.** Los mismos 17 meses |
+| Ciudad AFAC ↔ código IATA | `data/reference/afac_city_iata_crosswalk.csv` | Traduce la semilla al vocabulario de las marginales. 58 ciudades, verificadas contra `dim_airport` |
 | Nombre AFAC ↔ `carrier_key` | `data/reference/afac_carrier_crosswalk.csv` | Alinea las aerolíneas de la semilla con las de la marginal |
 | Vuelos por ruta y mes | mismo CSV de rutas, columna `vuelos` | Control de calidad de la semilla, no insumo del ajuste |
 | T-100 por ruta, aerolínea y mes | `data/gold/fact_route_traffic.parquet` | **Arnés de validación.** Verdad publicada para medir el error |
@@ -167,3 +167,21 @@ Cualquiera de las tres primeras entrega una tabla
 `period_id, origin_iata, dest_iata, carrier_key, flights`, que es justo lo que
 `build_seed_from_flights` consume. El adaptador de cada proveedor es lo único
 específico; el resto de la tubería no cambia.
+
+## La semilla tiene que estar completa
+
+Es el error más fácil de cometer y el más difícil de detectar a ojo. La marginal
+de columna es el total **nacional** de cada aerolínea, así que una semilla que
+solo cubra parte de su red le exige a esas pocas rutas más pasajeros de los que
+llevan. El ajuste no falla: converge, respeta todos los totales por ruta y
+devuelve números de aspecto razonable — pero el reparto entre aerolíneas es
+basura.
+
+El delator es `column_scale` en el cuadro de diagnóstico. Es el factor por el que
+hubo que reescalar la marginal de aerolínea para cuadrar los totales; con una
+semilla completa vale prácticamente 1. En la prueba con una semilla de tres rutas
+vale **0.037**, y el resultado pone a Volaris por encima de Aeroméxico en
+México–Cancún, cosa que no ocurre.
+
+Regla de operación: si `column_scale` se aparta de 1 más de unos pocos puntos, la
+semilla está incompleta y el resultado no se publica.
