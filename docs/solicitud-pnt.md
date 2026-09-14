@@ -17,6 +17,23 @@ del tenant, que el buzón solo acepte remitentes internos, o que una regla bloqu
 dominios de correo personal. Exchange Online devuelve el mismo código en los tres
 casos a propósito, para no revelar qué direcciones existen.
 
+## Por qué este paso no se automatiza
+
+Comprobado, para que no se vuelva a intentar:
+
+1. **La PNT exige verificación humana.** Su bundle de producción declara
+   `showCaptcha:!0` junto con `cloudflareCaptcha:{siteKey:"0x4AAAAAAA..."}`:
+   Cloudflare Turnstile activo. Un token de Turnstile solo lo produce un
+   navegador real con una persona detrás. Es un control antiautomatización del
+   sujeto que opera la plataforma, y sortearlo no es una opción por más permisos
+   que tenga quien pide la gestión.
+2. **El envío es una SPA de Angular**, no un formulario HTML. Consume
+   `.../inai3/rest` (SISAI) con sesión autenticada; no hay POST directo que
+   valga sin el token anterior.
+
+El paso de presentar la solicitud lo hace una persona. Todo lo demás —redacción,
+fundamentos, seguimiento, recurso de revisión— sí es automatizable.
+
 ## Datos del formulario
 
 | Campo | Valor |
