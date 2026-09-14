@@ -17,6 +17,8 @@ Contexto y evidencia de que el cubo existe: [`pasajeros-por-ruta-y-aerolinea.md`
 |---|---|---|
 | Pasajeros por ruta y mes (nacional regular) | `data/reference/afac_od_nacional_regular_2025q1.csv` | **Marginal de fila.** 527 pares dirigidos, 2025Q1 |
 | Pasajeros por aerolínea y mes (nacional regular) | `data/reference/afac_carrier_domestic_2025q1.csv` | **Marginal de columna.** 8 permisionarias, 2025Q1 |
+| Ciudad AFAC ↔ código IATA | `data/reference/afac_city_iata_crosswalk.csv` | Traduce la semilla al vocabulario de las marginales. 52 ciudades, verificadas contra `dim_airport` |
+| Nombre AFAC ↔ `carrier_key` | `data/reference/afac_carrier_crosswalk.csv` | Alinea las aerolíneas de la semilla con las de la marginal |
 | Vuelos por ruta y mes | mismo CSV de rutas, columna `vuelos` | Control de calidad de la semilla, no insumo del ajuste |
 | T-100 por ruta, aerolínea y mes | `data/gold/fact_route_traffic.parquet` | **Arnés de validación.** Verdad publicada para medir el error |
 | Identidades de aerolínea | `data/gold/dim_carrier.parquet`, `config/carrier_crosswalk.csv` | Resolución de entidades |
@@ -78,6 +80,27 @@ de 2025, error ponderado por tamaño de ruta:
 |---|---:|---:|
 | Asientos por ruta | 1.40 pp | 4.21 % |
 | Solo conteo de vuelos | 1.98 pp | 5.96 % |
+| Solo presencia (0/1, sin frecuencias) | 13.04 pp | 39.38 % |
+| Participación nacional de cada aerolínea | 100+ pp | 153 % |
+
+Las dos últimas filas son las que deciden el diseño.
+
+**La participación nacional no sirve como semilla.** No es una cuestión de
+calidad: es *matemáticamente idéntica* a una semilla de puros unos, porque el
+ajuste cancela cualquier escalado de columna. Ya está en el modelo, como
+marginal de columna; usarla también de semilla es darle la misma información dos
+veces. Al intentarlo, el 75 % de los pasajeros termina asignado a rutas que la
+aerolínea no vuela.
+
+**Saber solo qué rutas vuela cada aerolínea tampoco alcanza.** Una semilla de
+presencia, sin frecuencias, deja 13 puntos porcentuales de error. Es decir, los
+mapas de rutas públicos y las tablas de destinos por aeropuerto **no** bastan:
+hay que saber *cuántos* vuelos, no solo *si* vuela.
+
+Por la misma razón, los vuelos por ruta que AFAC sí publica no mejoran el ajuste:
+encadenar un IPF sobre vuelos y usar su salida como semilla produce exactamente
+el mismo resultado, porque el IPF solo aplica escalados de fila y columna y el
+segundo ajuste los vuelve a cancelar.
 
 El reparto simple por asientos, sin ajustar a la marginal de aerolínea, queda
 peor: la marginal por aerolínea es lo que absorbe la diferencia sistemática de
@@ -112,20 +135,35 @@ columna, igual que el proyecto ya separa reportado de derivado.
 `estimate_route_carrier` espera un `DataFrame` con
 `period_id, route_key, carrier_key, weight`.
 
-`route_key` debe usar el vocabulario de AFAC, que nombra **ciudades**, no
-aeropuertos: `MEXICO-CANCUN`, `SANTA LUCÍA-TIJUANA`, `DEL BAJIO-MONTERREY`. Un
-adaptador de semilla tiene que traducir de códigos IATA a ese vocabulario; es
-trabajo pendiente y no trivial, porque `MEXICO` y `SANTA LUCÍA` son aeropuertos
-distintos de la misma zona metropolitana.
+`route_key` usa el vocabulario de AFAC, que nombra **ciudades**, no aeropuertos:
+`MEXICO-CANCUN`, `SANTA LUCÍA-TIJUANA`, `DEL BAJIO-MONTERREY`. No hay que
+construir esa traducción: `build_seed_from_flights` la aplica a partir del
+crosswalk de 52 ciudades, y rechaza con `UnmappedSeedError` cualquier aeropuerto
+que no reconozca, en vez de descartarlo en silencio.
+
+Dos casos que el crosswalk resuelve y que es fácil equivocar: `MEXICO` es Benito
+Juárez (`MEX`) y `SANTA LUCÍA` es el AIFA (`NLU`) — misma zona metropolitana,
+aeropuertos distintos que AFAC nunca junta; y `DEL BAJIO` es `BJX`, en Silao, no
+León ni Guanajuato capital.
 
 `weight` puede ser vuelos o asientos; la unidad es indiferente por la
 invariancia de escala. Itinerarios publicados sirven igual que vuelos operados:
 las cancelaciones son escalado de fila y se cancelan.
 
-### Candidatos a fuente de semilla
+### Fuente de semilla: decisión
 
-| Fuente | Costo | Nota |
+La medición de arriba descarta las opciones gratuitas basadas en mapas de rutas.
+La semilla **tiene que traer frecuencias**, así que la elección es entre un feed
+ADS-B propio y un proveedor de itinerarios.
+
+| Fuente | Costo | Veredicto |
 |---|---|---|
-| OpenSky Network | Gratis, uso no comercial | ADS-B histórico; callsign → aerolínea. Cobertura desigual en México, tolerable por la invariancia de fila |
-| AviationStack / Aviation Edge | ~USD 50–200/mes | Itinerarios históricos; la vía de menor esfuerzo |
-| Cirium Diio / OAG | Alto | Mejor calidad; incluye asientos reales por ruta, que bajan el error de 5.96 % a 4.21 % |
+| **AviationStack / Aviation Edge** | ~USD 50–200/mes | **Opción por defecto.** Itinerarios históricos con aerolínea, ruta y fecha; se agregan a frecuencias mensuales. Menor esfuerzo de integración |
+| Cirium Diio / OAG | Alto | Si hay presupuesto. Trae asientos reales por ruta, que bajan el error de 5.96 % a 4.21 % |
+| OpenSky Network | Gratis, uso no comercial | ADS-B histórico. Requiere credenciales OAuth2 desde 2025; la cobertura desigual es tolerable por la invariancia de fila. Viable pero con más trabajo de limpieza de callsigns |
+| Mapas de rutas, Wikipedia, tableros de aeropuerto | Gratis | **Descartado.** Dan presencia, no frecuencia: 13 pp de error |
+
+Cualquiera de las tres primeras entrega una tabla
+`period_id, origin_iata, dest_iata, carrier_key, flights`, que es justo lo que
+`build_seed_from_flights` consume. El adaptador de cada proveedor es lo único
+específico; el resto de la tubería no cambia.

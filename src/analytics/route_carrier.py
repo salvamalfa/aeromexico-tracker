@@ -287,6 +287,70 @@ def _require_columns(frame: pd.DataFrame, columns: tuple[str, ...], name: str) -
 # A seed adapter must emit route keys in this same vocabulary.
 ROUTE_MARGIN_FILE = "afac_od_nacional_regular_2025q1.csv"
 CARRIER_MARGIN_FILE = "afac_carrier_domestic_2025q1.csv"
+CITY_CROSSWALK_FILE = "afac_city_iata_crosswalk.csv"
+CARRIER_CROSSWALK_FILE = "afac_carrier_crosswalk.csv"
+
+# A seed provider hands over flights keyed by airport; the margins are keyed by
+# AFAC city.  These two columns are what a provider table must carry.
+FLIGHT_COLUMNS = ("period_id", "origin_iata", "dest_iata", "carrier_key", "flights")
+
+
+class UnmappedSeedError(ValueError):
+    """A seed row names an airport or carrier absent from the crosswalks."""
+
+
+def _reference_dir(reference_dir: Path | None) -> Path:
+    return reference_dir or (PATHS.data / "reference")
+
+
+def load_city_crosswalk(reference_dir: Path | None = None) -> dict[str, str]:
+    """IATA code to AFAC city name, the vocabulary the margins are keyed by."""
+
+    table = pd.read_csv(_reference_dir(reference_dir) / CITY_CROSSWALK_FILE)
+    return dict(zip(table["airport_iata"], table["afac_city"], strict=True))
+
+
+def load_carrier_crosswalk(reference_dir: Path | None = None) -> dict[str, str]:
+    """AFAC carrier name to the project's carrier_key."""
+
+    table = pd.read_csv(_reference_dir(reference_dir) / CARRIER_CROSSWALK_FILE)
+    return dict(zip(table["afac_carrier_name"], table["carrier_key"], strict=True))
+
+
+def build_seed_from_flights(
+    flights: pd.DataFrame, *, reference_dir: Path | None = None
+) -> pd.DataFrame:
+    """Turn a provider's flight counts into a seed keyed like the AFAC margins.
+
+    Flight counts are all a provider has to supply: the fit is invariant to
+    scaling any row or column, so aircraft gauge and uneven coverage cancel.
+    What cannot be recovered is which carrier flies a route and how often
+    relative to its rivals — that is the whole reason a seed is needed.
+    """
+
+    _require_columns(flights, FLIGHT_COLUMNS, "flights")
+    cities = load_city_crosswalk(reference_dir)
+
+    unmapped = (
+        set(flights["origin_iata"]) | set(flights["dest_iata"])
+    ) - set(cities)
+    if unmapped:
+        raise UnmappedSeedError(
+            "Airport(s) absent from the AFAC city crosswalk: "
+            + ", ".join(sorted(unmapped))
+        )
+
+    seed = flights.copy()
+    seed["route_key"] = (
+        seed["origin_iata"].map(cities) + "-" + seed["dest_iata"].map(cities)
+    )
+    seed = seed.rename(columns={"flights": "weight"})
+    seed = seed[seed["weight"] > 0]
+    return (
+        seed.groupby(["period_id", "route_key", "carrier_key"], as_index=False)["weight"]
+        .sum()
+        .loc[:, list(SEED_COLUMNS)]
+    )
 
 
 def _period_id(month: str) -> str:
@@ -305,7 +369,7 @@ def load_afac_domestic_margins(
     evidence that a joint table exists upstream.
     """
 
-    reference = reference_dir or (PATHS.data / "reference")
+    reference = _reference_dir(reference_dir)
 
     routes = pd.read_csv(reference / ROUTE_MARGIN_FILE)
     routes["period_id"] = routes["mes"].map(_period_id)
@@ -318,8 +382,15 @@ def load_afac_domestic_margins(
 
     carriers = pd.read_csv(reference / CARRIER_MARGIN_FILE)
     carriers["period_id"] = carriers["mes"].map(_period_id)
+    crosswalk = load_carrier_crosswalk(reference_dir)
+    unmapped = set(carriers["carrier_name"]) - set(crosswalk)
+    if unmapped:
+        raise UnmappedSeedError(
+            "AFAC carrier name(s) absent from the crosswalk: " + ", ".join(sorted(unmapped))
+        )
+    carriers["carrier_key"] = carriers["carrier_name"].map(crosswalk)
     carrier_totals = (
-        carriers.rename(columns={"pasajeros": "passengers", "carrier_name": "carrier_key"})
+        carriers.rename(columns={"pasajeros": "passengers"})
         .groupby(["period_id", "carrier_key"], as_index=False)["passengers"]
         .sum()
     )
