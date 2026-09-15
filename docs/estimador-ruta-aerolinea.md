@@ -17,11 +17,19 @@ Contexto y evidencia de que el cubo existe: [`pasajeros-por-ruta-y-aerolinea.md`
 |---|---|---|
 | Pasajeros por ruta y mes (nacional regular) | `data/reference/afac_od_nacional_regular.csv` | **Marginal de fila.** 13,224 filas, 22 meses (2024M01–2025M03, 2026M01–2026M07) |
 | Pasajeros por aerolínea y mes (nacional regular) | `data/reference/afac_carrier_domestic.csv` | **Marginal de columna.** Los mismos 22 meses, de la base larga de DATATUR |
+| Vuelos por aerolínea y mes (nacional regular) | `data/reference/afac_carrier_flights_domestic.csv` | Contraste exacto para la prueba de aceptación. 19 meses, de la hoja `VLOSREG` del resumen operacional |
 | Ciudad AFAC ↔ código IATA | `data/reference/afac_city_iata_crosswalk.csv` | Traduce la semilla al vocabulario de las marginales. 58 ciudades, verificadas contra `dim_airport` |
 | Nombre AFAC ↔ `carrier_key` | `data/reference/afac_carrier_crosswalk.csv` | Alinea las aerolíneas de la semilla con las de la marginal |
 | Vuelos por ruta y mes | mismo CSV de rutas, columna `vuelos` | Control de calidad de la semilla, no insumo del ajuste |
 | T-100 por ruta, aerolínea y mes | `data/gold/fact_route_traffic.parquet` | **Arnés de validación.** Verdad publicada para medir el error |
 | Identidades de aerolínea | `data/gold/dim_carrier.parquet`, `config/carrier_crosswalk.csv` | Resolución de entidades |
+
+Los vuelos por aerolínea no entran al ajuste —son una marginal de la tabla de
+vuelos, no de la de pasajeros— pero convierten la prueba de aceptación en
+aritmética. Un detalle que confunde si no se anticipa: los vuelos por ruta
+superan a los vuelos por aerolínea en un 1.1 % constante, y ese hueco son las
+cargueras, que vuelan regular nacional y llevan cero pasajeros. Por eso los
+pasajeros cuadran exacto y los vuelos no.
 
 Falta **una sola cosa**: la semilla, es decir vuelos o asientos por aerolínea ×
 ruta × mes en el mercado nacional. Es el único insumo que no es público en
@@ -349,7 +357,26 @@ una fuente incompleta de una fuente sesgada.
 
 Ya está automatizado en `src/analytics/seed_acceptance.py`. Dado un mes de
 vuelos de cualquier proveedor devuelve un veredicto y, sobre todo, un **factor
-de cobertura por aerolínea**, normalizado al promedio del mercado:
+de cobertura por aerolínea**, normalizado al promedio del mercado.
+
+Desde que se ingirió la hoja `VLOSREG` del resumen operacional, ese factor es
+una **división, no una inferencia**: AFAC publica vuelos por aerolínea y mes, así
+que basta sumar los de la semilla y dividir. El informe dice cuál de los dos
+caminos usó. La versión inferida queda como respaldo para meses sin esa hoja, y
+es notablemente más optimista —sobre el piloto daba 1.12x donde la medición da
+1.30x—, así que no debe leerse como equivalente.
+
+Dos salvaguardas que la medición necesitó:
+
+- Una aerolínea con menos de mil vuelos al mes **no entra al veredicto**. Aerus
+  vuela 438 y en el martes de muestra se vieron nueve: su factor de 0.64 es
+  ruido, y arrastraba solo él la dispersión de 1.30x a 1.74x.
+- Si la semilla cubre menos de la mitad del mes, el informe advierte que la
+  dispersión **mezcla cobertura con día de la semana**. En el piloto el patrón
+  era exactamente ese: Aeroméxico 1.12 y Connect 1.06 arriba, Viva 0.86 abajo,
+  que es lo que produce un martes en un mercado con aerolíneas de negocio y de
+  placer. Un mes completo separa las dos cosas.
+
 
 ```python
 from src.analytics.seed_acceptance import assess_seed, format_report

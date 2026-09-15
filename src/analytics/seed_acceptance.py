@@ -32,6 +32,7 @@ import pandas as pd
 
 from src.analytics.route_carrier import (
     ROUTE_MARGIN_FILE,
+    load_carrier_crosswalk,
     build_seed_from_flights,
     estimate_route_carrier,
     load_afac_domestic_margins,
@@ -39,7 +40,12 @@ from src.analytics.route_carrier import (
 from src.config import PATHS
 
 
-ACCEPTANCE_VERSION = "seed_acceptance_v1"
+ACCEPTANCE_VERSION = "seed_acceptance_v2"
+
+# Flights per carrier, which AFAC publishes only in the airline summary
+# workbook.  Where it covers the period being judged, the coverage factor is a
+# division rather than an inference.
+CARRIER_FLIGHTS_FILE = "afac_carrier_flights_domestic.csv"
 
 # A source whose carriers differ by less than this factor is usable: the residual
 # it leaves is below the estimator's own measured error of ~2 pp.
@@ -49,6 +55,15 @@ COVERAGE_SPREAD_FAIL = 1.50
 # `column_scale` this far from 1 means the seed misses part of some carrier's
 # network, which silently corrupts the split even when everything else looks fine.
 COLUMN_SCALE_TOLERANCE = 0.05
+# A carrier flying fewer than this many flights a month cannot be judged from a
+# sampled seed: a handful of observations swings its ratio wildly, and one such
+# carrier would otherwise decide the verdict for the whole source.  Aerus flies
+# 438 flights a month; one sampled Tuesday caught nine of them.
+MIN_FLIGHTS_TO_JUDGE = 1_000
+# Below this share of the month, the measured ratio mixes coverage with
+# day-of-week mix: business-heavy carriers over-represent on a weekday and
+# leisure-heavy ones under-represent, which is sampling, not a coverage gap.
+MIN_SAMPLE_FOR_CLEAN_MEASURE = 0.5
 
 _DEBIAS_SWEEPS = 50
 _DEBIAS_TOLERANCE = 1e-10
@@ -66,7 +81,9 @@ class AcceptanceReport:
     missing_carriers: tuple[str, ...]
     carrier_coverage: dict[str, float]
     coverage_spread: float
+    carriers_judged: tuple[str, ...]
     column_scale: float
+    coverage_method: str
     verdict: str
     notes: tuple[str, ...]
 
@@ -88,6 +105,51 @@ def load_afac_route_flights(reference_dir: Path | None = None) -> pd.DataFrame:
         .groupby(["period_id", "route_key"], as_index=False)["flights"]
         .sum()
     )
+
+
+def load_afac_carrier_flights(reference_dir: Path | None = None) -> pd.DataFrame:
+    """Flights per carrier and month, keyed by ``carrier_key``.
+
+    Returns an empty frame when the file is absent: the acceptance test falls
+    back to inferring coverage, which is weaker but needs no extra source.
+    """
+
+    reference = reference_dir or (PATHS.data / "reference")
+    path = reference / CARRIER_FLIGHTS_FILE
+    if not path.exists():
+        return pd.DataFrame(columns=["period_id", "carrier_key", "flights"])
+
+    table = pd.read_csv(path)
+    crosswalk = load_carrier_crosswalk(reference_dir)
+    table["carrier_key"] = table["carrier_name"].map(crosswalk)
+    return (
+        table.dropna(subset=["carrier_key"])
+        .rename(columns={"vuelos": "flights"})
+        .groupby(["period_id", "carrier_key"], as_index=False)["flights"]
+        .sum()
+    )
+
+
+def measure_carrier_coverage(
+    published_flights: pd.Series, candidate: pd.DataFrame
+) -> pd.Series:
+    """Coverage per carrier as a plain ratio, normalised to a mean of one.
+
+    The candidate may cover only part of the month -- a sampled week, say -- so
+    the absolute ratio carries no meaning and only the spread between carriers
+    does.  Normalising by the flight-weighted mean removes the sampling factor,
+    which is a row scaling the fit would cancel anyway.
+    """
+
+    seen = candidate.groupby("carrier_key")["weight"].sum()
+    common = seen.index.intersection(published_flights.index[published_flights > 0])
+    if common.empty:
+        return pd.Series(dtype=float)
+    ratio = seen.loc[common] / published_flights.loc[common]
+    mean = float(np.average(ratio, weights=published_flights.loc[common]))
+    if not np.isfinite(mean) or mean <= 0:
+        return pd.Series(dtype=float)
+    return (ratio / mean).rename("coverage_factor")
 
 
 def estimate_carrier_coverage(
@@ -200,13 +262,27 @@ def assess_seed(
         - set(seed["carrier_key"])
     ))
 
-    coverage = estimate_carrier_coverage(
-        route_flights, seed,
-        weights=flown.set_index("route_key")["passengers"],
-    )
+    # Prefer the division over the inference: where AFAC publishes flights per
+    # carrier for this month, coverage is measured, not modelled.
+    published = load_afac_carrier_flights(reference_dir)
+    published = published[published["period_id"] == period_id].set_index("carrier_key")["flights"]
+    coverage = measure_carrier_coverage(published, seed) if not published.empty else pd.Series(dtype=float)
+    coverage_method = "medida"
+    if coverage.empty:
+        coverage_method = "inferida"
+        coverage = estimate_carrier_coverage(
+            route_flights, seed,
+            weights=flown.set_index("route_key")["passengers"],
+        )
+    # Judge the spread on carriers big enough to measure; report the rest.
+    judged = coverage
+    if coverage_method == "medida" and not published.empty:
+        big = published[published >= MIN_FLIGHTS_TO_JUDGE].index
+        if not coverage.index.intersection(big).empty:
+            judged = coverage.loc[coverage.index.intersection(big)]
     spread = (
-        float(coverage.max() / coverage.min())
-        if not coverage.empty and coverage.min() > 0 else float("inf")
+        float(judged.max() / judged.min())
+        if not judged.empty and judged.min() > 0 else float("inf")
     )
 
     # The fit itself reports whether each carrier's whole network made it in.
@@ -225,6 +301,17 @@ def assess_seed(
         notes.append(
             f"column_scale = {column_scale:.3f}: la semilla no cubre la red completa "
             "de alguna aerolínea"
+        )
+    small = sorted(set(coverage.index) - set(judged.index))
+    if small:
+        notes.append(
+            "Excluidas del veredicto por volumen insuficiente para medirlas: "
+            + ", ".join(small)
+        )
+    if coverage_method == "medida" and flight_coverage < MIN_SAMPLE_FOR_CLEAN_MEASURE:
+        notes.append(
+            f"La semilla cubre {flight_coverage:.1%} del mes, así que la dispersión "
+            "mezcla cobertura con día de la semana; un mes completo la separa"
         )
     if passenger_coverage < 0.95:
         notes.append(
@@ -247,7 +334,9 @@ def assess_seed(
         missing_carriers=missing,
         carrier_coverage=coverage.round(4).to_dict(),
         coverage_spread=spread,
+        carriers_judged=tuple(judged.index),
         column_scale=column_scale,
+        coverage_method=coverage_method,
         verdict=verdict,
         notes=tuple(notes),
     )
@@ -260,7 +349,8 @@ def format_report(report: AcceptanceReport) -> str:
         f"Prueba de aceptación de semilla — {report.period_id}",
         f"  Veredicto: {report.verdict.upper()}",
         f"  Dispersión de cobertura entre aerolíneas: {report.coverage_spread:.2f}x "
-        f"(pasa <{COVERAGE_SPREAD_PASS}, reprueba >={COVERAGE_SPREAD_FAIL})",
+        f"({report.coverage_method} sobre {len(report.carriers_judged)} aerolíneas; "
+        f"pasa <{COVERAGE_SPREAD_PASS}, reprueba >={COVERAGE_SPREAD_FAIL})",
         f"  Rutas cubiertas: {report.covered_routes} de {report.afac_routes} "
         f"({report.passenger_coverage:.1%} de los pasajeros)",
         f"  Vuelos vistos vs AFAC: {report.flight_coverage:.1%}  "
