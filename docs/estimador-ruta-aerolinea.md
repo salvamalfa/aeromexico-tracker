@@ -363,62 +363,45 @@ operadores es exactamente el sesgo irreducible.
 
 #### Prueba de aceptación antes de pagar
 
-El piloto de OpenSky costó 540 créditos y varias horas. La misma conclusión se
-alcanza en una tarde con un mes de prueba de cualquier proveedor, porque AFAC ya
-publica el contraste: **vuelos por ruta**, en la columna `vuelos` del CSV de
-rutas.
+El ajuste tolera mucho más de lo que parece, y eso está **medido**, no supuesto.
+Inyectando un sesgo conocido en el arnés de T-100, donde la verdad sí es pública:
 
-1. Traer un mes de la fuente candidata y agregarlo a vuelos por ruta y
-   aerolínea.
-2. Comparar los vuelos por ruta contra los de AFAC. Un déficit parejo no importa
-   —es escalado de fila y el ajuste lo cancela.
-3. Lo que decide es el **déficit por aerolínea dentro de la misma ruta**. Si la
-   cobertura relativa de dos operadores en una ruta difiere más que unos pocos
-   puntos, la fuente no sirve, por barata que sea. En OpenSky el factor entre
-   Aeroméxico Connect y Viva era de casi tres.
+| Sesgo inyectado en la semilla | 1.30x | 2.00x | 2.80x |
+|---|---:|---:|---:|
+| Por aerolínea, parejo en toda su red | 1.96 pp | 1.96 pp | 1.96 pp |
+| Por ruta, parejo entre sus operadores | 1.96 pp | 1.96 pp | 1.96 pp |
+| Por aerolínea **dentro** de cada ruta | 2.31 pp | 3.77 pp | 5.11 pp |
 
-Este paso no cuesta nada más que el mes de prueba y es el único que distingue
-una fuente incompleta de una fuente sesgada.
+Los dos primeros son escalados de fila y columna, y el ajuste los cancela
+exactamente: una fuente puede ver a una aerolínea tres veces mejor que a otra en
+todo el mapa y el reparto no se mueve un pasajero. Solo sobrevive la
+interacción, y esa **no es identificable desde las marginales**, porque es la
+misma no identificabilidad que el estimador existe para rodear.
 
-Ya está automatizado en `src/analytics/seed_acceptance.py`. Dado un mes de
-vuelos de cualquier proveedor devuelve un veredicto y, sobre todo, un **factor
-de cobertura por aerolínea**, normalizado al promedio del mercado.
+Así que la prueba no finge medir la interacción. Juzga lo que sí rompe un ajuste
+en la práctica, que es la completitud:
 
-Desde que se ingirió la hoja `VLOSREG` del resumen operacional, ese factor es
-una **división, no una inferencia**: AFAC publica vuelos por aerolínea y mes, así
-que basta sumar los de la semilla y dividir. El informe dice cuál de los dos
-caminos usó. La versión inferida queda como respaldo para meses sin esa hoja, y
-es notablemente más optimista —sobre el piloto daba 1.12x donde la medición da
-1.30x—, así que no debe leerse como equivalente.
+- **Una aerolínea ausente**: su total nacional no tiene a dónde ir, y el ajuste
+  o se niega o empuja esos pasajeros a las rutas que queden.
+- **Una ruta ausente**: quien la vuela recibe un cero estructural y sus
+  pasajeros se van a otra parte.
+- **Una red parcial**, que delata `column_scale`.
 
-Dos salvaguardas que la medición necesitó:
+El factor de cobertura por aerolínea se sigue reportando porque dice algo útil
+de una fuente, pero está marcado como **diagnóstico, no veredicto**. Leerlo como
+veredicto fue un error que este módulo cometía: sobre el piloto marcaba 1.30x y
+concluía que no pasaba, cuando un sesgo de esa forma cuesta exactamente cero.
 
-- Una aerolínea con menos de mil vuelos al mes **no entra al veredicto**. Aerus
-  vuela 438 y en el martes de muestra se vieron nueve: su factor de 0.64 es
-  ruido, y arrastraba solo él la dispersión de 1.30x a 1.74x.
-- Si la semilla cubre menos de la mitad del mes, el informe advierte que la
-  dispersión **mezcla cobertura con día de la semana**. En el piloto el patrón
-  era exactamente ese: Aeroméxico 1.12 y Connect 1.06 arriba, Viva 0.86 abajo,
-  que es lo que produce un martes en un mercado con aerolíneas de negocio y de
-  placer. Un mes completo separa las dos cosas.
-
+Se corre así:
 
 ```python
 from src.analytics.seed_acceptance import assess_seed, format_report
-print(format_report(assess_seed(flights, "2026M02")))
+print(format_report(assess_seed(flights, "2026M07")))
 ```
 
-La recuperación de ese factor es lo que hace la prueba honesta. Se apoya en que
-las rutas tienen mezclas de operadores distintas: si el déficit observado en cada
-ruta se explica sistemáticamente por quién la vuela, hay sesgo por aerolínea; si
-no, el déficit es parejo y el ajuste lo cancela. Las pruebas inyectan un sesgo
-conocido —incluido el perfil real medido en OpenSky, 13 %/26 %/29 %/37 %— y
-verifican que vuelva a salir, porque un detector que no recupera un sesgo
-inyectado autorizaría una compra mala.
-
-Umbrales: se acepta por debajo de **1.15x** de dispersión entre la aerolínea
-mejor y la peor cubierta, se rechaza a partir de **1.50x**. OpenSky estaba en
-2.8x.
+Umbrales del veredicto: se rechaza si falta alguna aerolínea, si la semilla no
+alcanza al 95 % de los pasajeros, o si `column_scale` se aparta de 1 más de
+cinco puntos. Entre 95 % y 99 % de cobertura queda en revisión.
 
 Cualquiera de las fuentes de itinerarios entrega una tabla
 `period_id, origin_iata, dest_iata, carrier_key, flights`, que es justo lo que
