@@ -35,8 +35,12 @@ import pandas as pd
 from src.analytics.route_carrier import load_city_crosswalk
 
 
-API_HOST = "aerodatabox.p.rapidapi.com"
-BASE_URL = f"https://{API_HOST}/flights/airports/iata"
+# Two ways in, priced differently: RapidAPI resells the same API, and the
+# direct plans are cheaper per unit.  They differ only in host and auth header,
+# so the caller picks one and nothing else changes.
+RAPIDAPI_HOST = "aerodatabox.p.rapidapi.com"
+RAPIDAPI_URL = f"https://{RAPIDAPI_HOST}/flights/airports/iata"
+DIRECT_URL = "https://aerodatabox.com/api/flights/airports/iata"
 # The Basic plan answers a window longer than this with an empty list.
 MAX_WINDOW_HOURS = 12
 UNITS_PER_CALL = 2
@@ -106,12 +110,40 @@ def _cache_path(cache_dir: Path, iata: str, start: str) -> Path:
     return cache_dir / f"{iata}_{start.replace(':', '')}.json"
 
 
+def api_credentials(
+    api_key: str | None = None, *, direct: bool | None = None
+) -> tuple[str, dict[str, str]]:
+    """Resolve the base URL and auth headers for whichever plan is configured.
+
+    ``AERODATABOX_API_KEY`` selects the direct plans, ``RAPIDAPI_KEY`` the
+    resold ones.  Passing ``api_key`` overrides both, and ``direct`` says which
+    of the two it is.
+    """
+
+    if api_key is not None:
+        if direct is None:
+            raise ValueError("pass direct=True or direct=False with an explicit api_key")
+    elif os.environ.get("AERODATABOX_API_KEY"):
+        api_key, direct = os.environ["AERODATABOX_API_KEY"], True
+    elif os.environ.get("RAPIDAPI_KEY"):
+        api_key, direct = os.environ["RAPIDAPI_KEY"], False
+    else:
+        raise RuntimeError(
+            "Set AERODATABOX_API_KEY (direct plans) or RAPIDAPI_KEY (RapidAPI)"
+        )
+
+    if direct:
+        return DIRECT_URL, {"x-magicapi-key": api_key, "x-api-key": api_key}
+    return RAPIDAPI_URL, {"x-rapidapi-key": api_key, "x-rapidapi-host": RAPIDAPI_HOST}
+
+
 def fetch_window(
     iata: str,
     start: str,
     end: str,
     *,
-    api_key: str,
+    api_key: str | None = None,
+    direct: bool | None = None,
     cache_dir: Path,
     stats: PullStats,
     client: httpx.Client | None = None,
@@ -123,7 +155,7 @@ def fetch_window(
         stats.cached_calls += 1
         return json.loads(path.read_text())
 
-    url = f"{BASE_URL}/{iata}/{start}/{end}"
+    base_url, headers = api_credentials(api_key, direct=direct)
     params = {
         "direction": "Departure",
         # Required: without it a departure record carries no arrival airport
@@ -135,11 +167,10 @@ def fetch_window(
         "withPrivate": "false",
         "withLocation": "false",
     }
-    headers = {"x-rapidapi-key": api_key, "x-rapidapi-host": API_HOST}
     owns_client = client is None
     client = client or httpx.Client(timeout=90.0)
     try:
-        response = client.get(url, params=params, headers=headers)
+        response = client.get(f"{base_url}/{iata}/{start}/{end}", params=params, headers=headers)
     finally:
         if owns_client:
             client.close()
@@ -191,12 +222,23 @@ def _carrier_key(flight: dict, stats: PullStats) -> str | None:
 def normalise(
     raw: dict[str, list[dict]], period_id: str, *, stats: PullStats,
     reference_dir: Path | None = None,
+    day_weights: dict[date, float] | None = None,
 ) -> pd.DataFrame:
-    """Turn cached responses into the ``FLIGHT_COLUMNS`` contract."""
+    """Turn cached responses into the ``FLIGHT_COLUMNS`` contract.
+
+    ``raw`` maps an airport, or an ``(airport, day)`` pair, to its departures.
+    With ``day_weights`` each flight counts as its day's weight instead of one,
+    which is what lets a sampled week stand in for a whole month: a month with
+    five Wednesdays and four Sundays needs the sampled Wednesday counted five
+    times and the Sunday four, or every carrier's mix is read through whichever
+    weekdays happened to be sampled.
+    """
 
     domestic = set(load_city_crosswalk(reference_dir))
-    rows: list[tuple[str, str, str, str, int]] = []
-    for origin, flights in raw.items():
+    rows: list[tuple[str, str, str, str, float]] = []
+    for key, flights in raw.items():
+        origin, day = key if isinstance(key, tuple) else (key, None)
+        weight = 1.0 if day_weights is None else float(day_weights.get(day, 1.0))
         for flight in flights:
             if flight.get("isCargo"):
                 stats.cargo_dropped += 1
@@ -214,7 +256,7 @@ def normalise(
             carrier = _carrier_key(flight, stats)
             if carrier is None:
                 continue
-            rows.append((period_id, origin, dest, carrier, 1))
+            rows.append((period_id, origin, dest, carrier, weight))
 
     frame = pd.DataFrame(
         rows, columns=["period_id", "origin_iata", "dest_iata", "carrier_key", "flights"]
@@ -233,8 +275,10 @@ def pull_days(
     period_id: str,
     cache_dir: Path,
     api_key: str | None = None,
+    direct: bool | None = None,
     unit_budget: int | None = None,
     reference_dir: Path | None = None,
+    day_weights: dict[date, float] | None = None,
 ) -> tuple[pd.DataFrame, PullStats]:
     """Sweep every airport across whole days, in half-day windows.
 
@@ -243,12 +287,11 @@ def pull_days(
     costs the next attempt.
     """
 
-    api_key = api_key or os.environ.get("RAPIDAPI_KEY")
-    if not api_key:
-        raise RuntimeError("RAPIDAPI_KEY is not set")
+    base_url, _ = api_credentials(api_key, direct=direct)   # falla temprano si no hay llave
+    del base_url
 
     stats = PullStats()
-    raw: dict[str, list[dict]] = {}
+    raw: dict[tuple[str, date], list[dict]] = {}
     last_call = 0.0
     with httpx.Client(timeout=90.0) as client:
         for day in days:
@@ -264,16 +307,20 @@ def pull_days(
                         and not _cache_path(cache_dir, iata, start).exists()
                     ):
                         return normalise(
-                            raw, period_id, stats=stats, reference_dir=reference_dir
+                            raw, period_id, stats=stats,
+                            reference_dir=reference_dir, day_weights=day_weights,
                         ), stats
                     wait = MIN_SECONDS_BETWEEN_CALLS - (time.monotonic() - last_call)
                     if wait > 0 and not _cache_path(cache_dir, iata, start).exists():
                         time.sleep(wait)
                     flights = fetch_window(
-                        iata, start, end, api_key=api_key, cache_dir=cache_dir,
-                        stats=stats, client=client,
+                        iata, start, end, api_key=api_key, direct=direct,
+                        cache_dir=cache_dir, stats=stats, client=client,
                     )
                     last_call = time.monotonic()
-                    raw.setdefault(iata, []).extend(flights)
+                    raw.setdefault((iata, day), []).extend(flights)
 
-    return normalise(raw, period_id, stats=stats, reference_dir=reference_dir), stats
+    return normalise(
+        raw, period_id, stats=stats,
+        reference_dir=reference_dir, day_weights=day_weights,
+    ), stats
