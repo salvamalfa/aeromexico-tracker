@@ -787,6 +787,7 @@ tbody tr.year-separator td {
 #panel-flights .domestic-route-summary strong { color: var(--brand-blue-dark); font-size: 21px; font-variant-numeric: tabular-nums; }
 #panel-flights .domestic-route-summary span, #panel-flights .domestic-scope-note { color: var(--muted); font-size: 9px; line-height: 1.45; }
 #panel-flights .domestic-scope-note { margin: 9px 0 0; }
+#panel-flights .route-source-footer { margin: 9px 0 0; color: var(--muted); font-size: 9.5px; line-height: 1.45; }
 #panel-flights .domestic-route-table th:first-child { width: 70%; }
 #panel-flights .domestic-direction-list { display: grid; gap: 5px; }
 #panel-flights .domestic-direction-list > div { display: flex; justify-content: space-between; gap: 8px; }
@@ -913,7 +914,6 @@ tbody tr.year-separator td {
   #panel-flights .airport-search-toggle { display: none; }
 }
 
-#panel-flights .route-source-note { display:block; font-size:9px; line-height:1.35; color:#56657a; white-space:normal; max-width:160px; padding:3px 0 5px; }
 
 #panel-flights .route-network-note { font-size:11px; line-height:1.5; color:#56657a; max-width:850px; }
 
@@ -1281,7 +1281,7 @@ tbody tr.year-separator td {
 <div><p class="section-kicker">Red de vuelos</p><h2 id="network-title">Rutas nacionales</h2><p class="route-network-note" id="route-network-note">Movimientos de slots AICM y mercados adicionales atribuidos a Aeroméxico con fuentes de ruta.</p></div>
 </div>
 <div aria-label="Tipo de red" class="network-mode-switch" role="group">
-<button aria-pressed="true" id="network-mode-domestic" type="button">Nacional · rutas</button>
+<button aria-pressed="true" id="network-mode-domestic" type="button">Nacional</button>
 <button aria-pressed="false" id="network-mode-international" type="button">Internacional</button>
 </div>
 <div class="network-layout">
@@ -5818,6 +5818,28 @@ return Plotly;
       <p class="aena-activity-note">Los meses incluidos se indican en cada tarjeta. Aena agrupa a Aerovías de México por aeropuerto español y compañía. Madrid puede incluir servicios desde Ciudad de México, Guadalajara y Monterrey; estas cifras no se asignan a una ruta concreta. Operaciones = aterrizajes + despegues. <a href="https://www.aena.es/es/estadisticas/consultas-personalizadas.html" target="_blank" rel="noreferrer">Fuente: Aena</a>.</p>`;
   }
 
+  const SOURCE_SHORT_LABELS = {
+    "Estados Unidos · BTS T-100": "BTS T-100",
+    "México · AICM, vuelos AM programados": "AICM",
+    "AICM · vuelos AM programados": "AICM",
+    "Brasil · ANAC": "ANAC",
+    "Colombia · Aerocivil": "Aerocivil",
+    "AIFA · ruta de Aeroméxico identificada; volumen propio sin desglose": "AIFA",
+    "AFAC · mercado con Aeroméxico como único operador identificado": "AFAC",
+    "OMA · rutas documentadas": "OMA",
+    "Reino Unido · CAA": "CAA",
+  };
+
+  function shortSourceLabel(label) {
+    return SOURCE_SHORT_LABELS[label] || label || "";
+  }
+
+  function sourceFooterHtml(tableRoutes) {
+    const labels = [...new Set((tableRoutes || []).map((route) => shortSourceLabel(route.source_label)).filter(Boolean))].sort();
+    if (!labels.length) return "";
+    return `<p class="route-source-footer">${labels.length === 1 ? "Fuente" : "Fuentes"}: ${esc(labels.join(" · "))}</p>`;
+  }
+
   function formatRouteMetric(key, value) {
     if (!finite(value)) return "N/D";
     if (key === "load_factor") return percent.format(value);
@@ -5863,9 +5885,10 @@ return Plotly;
         <div class="domestic-route-summary"><strong>${integer.format(quantifiedMovements)}</strong><span>movimientos cuantificados · ambos sentidos${presenceOnly ? ` · ${presenceOnly} rutas sin desglose propio` : ""}</span></div>
         <div class="airport-table-wrap"><table class="airport-route-table domestic-route-table"><thead><tr><th>Ruta</th><th>Movimientos</th></tr></thead>
           <tbody>${tableRoutes.map((route, index) => `<tr class="route-summary-row" style="--route-color:${airportRouteColor(index)}">
-            <td>${route.directions.length ? `<button type="button" class="route-expand-toggle" aria-expanded="false" aria-controls="route-directions-${index}"><span class="route-expand-icon" aria-hidden="true">&gt;</span><strong class="route-table-name">${esc(routeTitle(route))}</strong></button>` : `<strong class="route-table-name">${esc(routeTitle(route))}</strong>`}<small class="route-source-note">${esc(route.coverage_note)}</small></td>
+            <td>${route.directions.length ? `<button type="button" class="route-expand-toggle" aria-expanded="false" aria-controls="route-directions-${index}"><span class="route-expand-icon" aria-hidden="true">&gt;</span><strong class="route-table-name">${esc(routeTitle(route))}</strong></button>` : `<strong class="route-table-name">${esc(routeTitle(route))}</strong>`}</td>
             <td class="route-table-value"><strong>${finite(route.departures) ? integer.format(route.departures) : "Sin desglose propio"}</strong></td>
           </tr>${route.directions.length ? `<tr class="route-direction-detail" id="route-directions-${index}" style="--route-color:${airportRouteColor(index)}" hidden><td colspan="2"><div class="domestic-direction-list">${route.directions.map((direction) => `<div><span>${esc(direction.origin_iata)} → ${esc(direction.destination_iata)}</span><strong>${integer.format(direction.departures)}</strong></div>`).join("")}</div></td></tr>` : ""}`).join("")}</tbody></table></div>
+        ${sourceFooterHtml(tableRoutes)}
         <p class="domestic-scope-note">AICM identifica slots de vuelos AM; AFAC identifica vuelos por par de ciudades. El <a href="https://expansion.mx/empresas/2026/06/08/aerolineas-aifa-vuelos-nacionales-e-internacionales" target="_blank" rel="noreferrer">listado de aerolíneas del 8 de junio de 2026</a> identifica a Aeroméxico en diez destinos desde AIFA. En Colima y Durango, Aeroméxico es el único operador identificado allí, de modo que su atribución es inferida. Las otras ocho rutas comparten aerolíneas; sus totales AFAC no se asignan a Aeroméxico. Los slots AICM se cuentan como realizados solo en el escenario de cobertura solicitado.</p>`;
       $("airport-tooltip").querySelectorAll(".route-expand-toggle").forEach((toggle) => toggle.addEventListener("click", () => {
         const detail = document.getElementById(toggle.getAttribute("aria-controls"));
@@ -5922,14 +5945,15 @@ return Plotly;
         <table class="airport-route-table">
           <thead><tr><th>Ruta</th><th>Pasajeros</th><th>Asientos</th><th>Vuelos</th><th>Ocupación</th></tr></thead>
           <tbody>${tableRoutes.map((route, index) => `<tr class="route-summary-row" style="--route-color:${airportRouteColor(index)}">
-            <td><button type="button" class="route-expand-toggle" aria-expanded="false" aria-controls="route-directions-${index}"><span class="route-expand-icon" aria-hidden="true">&gt;</span><strong class="route-table-name">${esc(routeTitle(route))}</strong></button><small class="route-source-note">${esc(route.coverage_note || "BTS T-100")}</small></td>
+            <td><button type="button" class="route-expand-toggle" aria-expanded="false" aria-controls="route-directions-${index}"><span class="route-expand-icon" aria-hidden="true">&gt;</span><strong class="route-table-name">${esc(routeTitle(route))}</strong></button></td>
             ${metricCell(route, "passengers")}
             ${metricCell(route, "seats")}
             ${metricCell(route, "departures")}
             ${metricCell(route, "load_factor")}
           </tr><tr class="route-direction-detail" id="route-directions-${index}" style="--route-color:${airportRouteColor(index)}" hidden><td colspan="5">${directionDetails(route)}</td></tr>`).join("")}</tbody>
         </table>
-      </div>`;
+      </div>
+      ${sourceFooterHtml(tableRoutes)}`;
     $("airport-tooltip").querySelectorAll(".route-expand-toggle").forEach((toggle) => {
       toggle.addEventListener("click", () => {
         const detail = document.getElementById(toggle.getAttribute("aria-controls"));
@@ -6037,16 +6061,8 @@ return Plotly;
 
   function renderAirportTooltip(airport, incident, isPinned) {
     const airportData = network.airports.find((item) => item.iata === airport);
-    const routeCount = `${incident.length} ${incident.length === 1 ? "mercado mostrado" : "mercados mostrados"}`;
-    const missingMonths = (network.expected_months || []).filter((month) => !(network.observed_months || []).includes(month));
-    const monthLabel = (month) => new Intl.DateTimeFormat("es-MX", { month: "long", year: "numeric", timeZone: "UTC" })
-      .format(new Date(`${month.slice(0, 4)}-${month.slice(5, 7)}-01T00:00:00Z`));
-    const incidentSources = new Set(incident.map(route => route.source_label));
-    const sourceCoverage = Object.entries(network.coverage_by_source || {}).filter(([label]) => incidentSources.has(label)).map(([label, months]) => `${label}: ${months.map(monthLabel).join(", ")}`).join(" · ");
-    const missingLabel = sourceCoverage ? `${esc(sourceCoverage)} · ` : missingMonths.length
-      ? `<strong class="coverage-gap">${missingMonths.length === 1 ? "Falta" : "Faltan"} ${missingMonths.map(monthLabel).join(", ")}</strong> · `
-      : "";
-    const metaHtml = `${esc(network.period_label)} · ${missingLabel}${esc(routeCount)} · Selecciona el destino para ver el detalle.`;
+    const routeCount = `${incident.length} ${incident.length === 1 ? "ruta" : "rutas"}`;
+    const metaHtml = `${esc(network.period_label)} · ${esc(routeCount)} · Selecciona el destino para ver el detalle.`;
     renderRouteTable(
       `${airport} · ${airportData?.city || "Aeropuerto"}`,
       "",
