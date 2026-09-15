@@ -161,6 +161,40 @@ El residuo que queda es la desviación de la ocupación de cada aerolínea en es
 ruta concreta respecto de su promedio nacional. Es irreducible sin datos de
 ocupación por ruta.
 
+## El día que haya cuota: un solo comando
+
+Todo lo anterior está cableado detrás de una orden. Pega la llave en `.env` como
+`RAPIDAPI_KEY` y corre:
+
+```bash
+uv run python -m src.ingest.aerodatabox 2026M07 --dry-run   # cuánto va a costar
+uv run python -m src.ingest.aerodatabox 2026M07             # el mes completo
+```
+
+Lo que hace, en orden, y por qué ese orden:
+
+1. Barre los 58 aeropuertos en ventanas de 12 horas y **cachea cada respuesta en
+   disco**, así que una corrida interrumpida se reanuda sin volver a gastar
+   unidades.
+2. Arma la semilla y corre la **prueba de aceptación**.
+3. Solo entonces ajusta. Si la prueba rechaza la semilla, **no ajusta**: sale con
+   código 2 y explica por qué. Hay que pedir `--fit-rejected-seed` a propósito
+   para forzarlo, y eso es para diagnóstico, nunca para publicar.
+
+Banderas útiles: `--budget N` frena antes de pasarse de N unidades, y `--days N`
+muestrea N días en vez del mes entero. El muestreo no toma días seguidos ni los
+espacia a ojo: avanza con un paso coprimo con siete, de modo que recorre todos
+los días de la semana. Importa porque la mezcla de aerolíneas se mueve con el
+itinerario semanal, y sobrerrepresentar un día sesga la semilla.
+
+| Alcance | Unidades |
+|---|---:|
+| Mes completo (31 días) | 7,192 |
+| Muestra de una semana | 1,624 |
+
+La salida queda en `data/silver/`: los vuelos crudos normalizados y, si la
+prueba pasó, la estimación con `is_estimated = True`.
+
 ## Operación
 
 Corre el arnés **cada mes**, no una sola vez. Publica las cifras nacionales con
