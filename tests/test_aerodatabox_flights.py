@@ -1,0 +1,114 @@
+"""The adapter's job is to drop the right flights, silently to no one.
+
+Every filter here corresponds to a way the seed can be corrupted: a codeshare
+double-counts one flight under two carriers and moves the within-route
+proportions that are the seed's entire content; a cargo run inflates a route
+that carries no passengers; and a record with no arrival airport belongs to no
+route at all.
+"""
+
+from __future__ import annotations
+
+import pandas as pd
+
+from src.ingest.aerodatabox.flights import PullStats, normalise
+
+
+def _flight(
+    dest: str | None = "GDL",
+    *,
+    iata: str | None = "AM",
+    icao: str | None = "AMX",
+    name: str = "Aeromexico",
+    model: str | None = "Boeing 737-800",
+    cargo: bool = False,
+    codeshare: str = "IsOperator",
+) -> dict:
+    arrival = {"airport": {"iata": dest}} if dest else None
+    return {
+        "airline": {"iata": iata, "icao": icao, "name": name},
+        "arrival": arrival,
+        "aircraft": {"model": model} if model else {},
+        "isCargo": cargo,
+        "codeshareStatus": codeshare,
+    }
+
+
+def _run(flights: list[dict], origin: str = "MEX") -> tuple[pd.DataFrame, PullStats]:
+    stats = PullStats()
+    return normalise({origin: flights}, "2026M02", stats=stats), stats
+
+
+def test_counts_one_flight_per_record() -> None:
+    frame, _ = _run([_flight(), _flight()])
+    assert frame.loc[0, "flights"] == 2
+    assert frame.loc[0, "carrier_key"] == "AEROMEXICO"
+    assert (frame.loc[0, "origin_iata"], frame.loc[0, "dest_iata"]) == ("MEX", "GDL")
+
+
+def test_connect_is_split_from_mainline_by_fleet() -> None:
+    """Both file under AM; AFAC counts them separately, so the fleet decides."""
+
+    frame, _ = _run([_flight(model="Embraer 190"), _flight(model="Boeing 737 MAX 8")])
+    assert set(frame["carrier_key"]) == {"AEROMEXICO_CONNECT", "AEROMEXICO"}
+
+
+def test_aeromexico_without_a_model_stays_mainline_and_is_counted() -> None:
+    frame, stats = _run([_flight(model=None)])
+    assert frame.loc[0, "carrier_key"] == "AEROMEXICO"
+    assert stats.aircraft_model_missing == 1
+
+
+def test_codeshares_are_dropped() -> None:
+    frame, stats = _run([_flight(codeshare="IsCodeshared")])
+    assert frame.empty
+    assert stats.codeshares_dropped == 1
+
+
+def test_cargo_is_dropped() -> None:
+    frame, stats = _run([_flight(cargo=True)])
+    assert frame.empty
+    assert stats.cargo_dropped == 1
+
+
+def test_a_record_without_an_arrival_airport_is_reported_not_silently_lost() -> None:
+    """This is the withLeg trap: no leg, no arrival, no route."""
+
+    frame, stats = _run([_flight(dest=None)])
+    assert frame.empty
+    assert stats.missing_arrival == 1
+
+
+def test_foreign_destinations_are_dropped() -> None:
+    frame, stats = _run([_flight(dest="LAX")])
+    assert frame.empty
+    assert stats.foreign_destinations == 1
+
+
+def test_aerus_resolves_by_name_despite_having_no_iata_code() -> None:
+    frame, stats = _run([_flight(iata=None, icao=None, name="Aerus", model=None)])
+    assert frame.loc[0, "carrier_key"] == "AERUS"
+    assert not stats.unmapped_carriers
+
+
+def test_estafeta_is_dropped_as_freight_not_mistaken_for_aerus() -> None:
+    """E7 is Estafeta, a cargo carrier -- an easy and costly mis-mapping."""
+
+    frame, stats = _run([_flight(iata="E7", icao="ESF", name="Estafeta")])
+    assert frame.empty
+    assert stats.non_scheduled_dropped == 1
+    assert not stats.unmapped_carriers
+
+
+def test_an_unknown_carrier_is_surfaced_rather_than_dropped_quietly() -> None:
+    frame, stats = _run([_flight(iata="ZZ", icao="ZZZ", name="Nueva")])
+    assert frame.empty
+    assert stats.unmapped_carriers["ZZ"] == 1
+
+
+def test_flights_are_aggregated_per_route_and_carrier() -> None:
+    frame, _ = _run(
+        [_flight(dest="GDL"), _flight(dest="GDL"), _flight(dest="CUN")]
+    )
+    counts = dict(zip(frame["dest_iata"], frame["flights"], strict=True))
+    assert counts == {"GDL": 2, "CUN": 1}

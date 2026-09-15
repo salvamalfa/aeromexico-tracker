@@ -174,19 +174,63 @@ receptores, que en el centro y sureste de México es el problema.
 | Mapas de rutas, Wikipedia, OpenFlights, tableros de aeropuerto | Presencia | Gratis | — | **Descartado.** Dan presencia, no frecuencia: 13 pp de error |
 | Boletines de AFAC y de AICM | — | Gratis | — | **Descartado por inspección.** AICM desagrega por terminal, no por aerolínea; la base de DATATUR es aerolínea × mes × región, sin ruta |
 
-El costo corregido importa: no son USD 50–200 al mes, son **USD 7.50**. El
-mercado nacional son 58 aeropuertos y unos 1,100 vuelos diarios, y basta pedir
-**salidas**, porque todo vuelo doméstico sale de un aeropuerto mexicano. Con
-ventanas de 12 horas eso es 58 × 30 × 2 = 3,480 llamadas al mes, dentro del plan
-de 5,000.
+El costo real, medido contra la API y no leído del tarifario: **una llamada FIDS
+cuesta 2 unidades, no 1**, y la ventana máxima es de **12 horas** hasta el plan
+Ultra inclusive. El mercado nacional son 58 aeropuertos, y basta pedir
+**salidas**, porque todo vuelo doméstico sale de un aeropuerto mexicano:
 
-Las 400 unidades gratuitas no alcanzan para un mes completo, pero sí para **tres
-días completos de los 58 aeropuertos** (116 unidades por día), que es
-exactamente lo que la prueba de aceptación necesita.
+    58 aeropuertos × 30 días × 2 ventanas × 2 unidades = 6,960 unidades/mes
+
+Eso descarta el plan Pro de USD 7.50 (5,000 unidades). El plan que cubre el
+trabajo con holgura es el **Starter directo, USD 19/mes por 40,000 unidades**;
+en RapidAPI el equivalente es Ultra a USD 37.50.
+
+Una trampa que cuesta cuota: pedir una ventana de 24 horas **no devuelve error,
+devuelve cero vuelos**. Y `withLeg=true` es obligatorio: sin él el registro de
+salida no trae aeropuerto de llegada, así que la ruta es indeterminable y el
+barrido completo se desperdicia. Ambas quedan fijadas en el adaptador.
 
 Al contratar, conviene pedir el extracto **por aerolínea** cuando el proveedor lo
 permita: garantiza que la red completa de cada operador entre a la semilla, que
 es justo lo que evita la trampa de `column_scale` descrita más abajo.
+
+#### Resultado del piloto con AeroDataBox
+
+Probado con llave real sobre el martes 3 de febrero de 2026, los 40 aeropuertos
+que concentran el 97.7 % de las salidas, dentro del tramo gratuito.
+
+| | AeroDataBox | OpenSky |
+|---|---:|---:|
+| **Dispersión de cobertura entre aerolíneas** | **1.12x** | 2.8x |
+| Vuelos con aerolínea identificada | 100 % | 57 % |
+| Vuelos con aeropuerto de llegada | 99 % | 57 % |
+
+La primera fila es la que decide, y AeroDataBox pasa el umbral de 1.15x. Los
+cuatro operadores que mueven el mercado quedan dentro de un 12 % entre sí:
+
+| Aerolínea | Factor de cobertura |
+|---|---:|
+| Volaris | 0.95 |
+| Vivaaerobus | 0.99 |
+| Aeroméxico Connect | 1.04 |
+| Aeroméxico | 1.07 |
+
+El día de muestra trajo 1,011 vuelos nacionales sobre 321 pares origen-destino,
+el 3.0 % del mes según AFAC, contra un 3.5 % esperado para un día de veintiocho
+cubriendo el 97.7 % de las salidas.
+
+**Lo que el piloto no resuelve.** El veredicto automático sale `REJECT`, y por
+buenas razones que son del alcance de la prueba, no de la fuente: faltan
+Mexicana, TAR y Magnicharters —juntas el 1.2 % de los pasajeros—, la cobertura
+llega al 93.3 % de los pasajeros y `column_scale` queda en 0.944. Las tres cosas
+son consistentes con haber muestreado 40 de 58 aeropuertos en un solo martes.
+Un mes completo las resuelve o las confirma; con el tramo gratuito agotado no se
+puede decidir aquí. **No se publica nada hasta que un mes completo dé
+`ACCEPT`.**
+
+Aeroméxico y Aerolitoral se presentan bajo el mismo código `AM`, que AFAC sí
+separa. El adaptador los divide por flota: los Embraer son Connect. En la
+muestra el modelo de avión venía en el 100 % de los vuelos de AM.
 
 #### Por qué OpenSky no sirve
 
