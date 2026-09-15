@@ -788,11 +788,13 @@ tbody tr.year-separator td {
 #panel-flights .network-volume { display: flex; flex-wrap: wrap; align-items: baseline; gap: 7px; margin: 0 0 11px; padding: 9px 13px; background: var(--blue-open); border: 1px solid var(--line); border-radius: var(--radius-sm); }
 #panel-flights .network-volume strong { color: var(--brand-blue-dark); font-size: 17px; font-weight: 800; }
 #panel-flights .network-volume span { color: var(--muted); font-size: 10px; }
-#panel-flights .route-coverage-dot { display: inline-block; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; vertical-align: middle; }
+#panel-flights .route-coverage-dot { display: inline-block; flex: none; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; vertical-align: middle; }
+#panel-flights .route-expand-toggle > .route-coverage-dot, #panel-flights .route-expand-toggle > .route-scheduled-mark { margin-left: 0; }
 #panel-flights .route-coverage-dot.is-full { background: var(--altitude-green); }
 #panel-flights .route-coverage-dot.is-partial { background: #d9a400; }
 #panel-flights .route-coverage-dot.is-thin { background: var(--brand-red); }
-#panel-flights .route-network-note a { color: var(--brand-blue); }
+#panel-flights .route-scheduled-mark { display: inline-block; flex: none; margin-left: 5px; vertical-align: middle; line-height: 0; }
+#panel-flights .route-scheduled-mark svg { width: 11px; height: 11px; fill: var(--altitude-amber); }
 #panel-flights .domestic-route-summary { display: grid; gap: 2px; margin: 10px 0 8px; padding: 10px 12px; background: #edf4ff; border-radius: 8px; }
 #panel-flights .domestic-route-summary strong { color: var(--brand-blue-dark); font-size: 21px; font-variant-numeric: tabular-nums; }
 #panel-flights .domestic-route-summary span, #panel-flights .domestic-scope-note { color: var(--muted); font-size: 9px; line-height: 1.45; }
@@ -925,7 +927,6 @@ tbody tr.year-separator td {
 }
 
 
-#panel-flights .route-network-note { font-size:11px; line-height:1.5; color:#56657a; max-width:850px; }
 
 #panel-flights .aena-activity { margin-top: 14px; padding: 17px 19px; background: #fff; border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
 #panel-flights .aena-activity[hidden] { display: none; }
@@ -1288,7 +1289,7 @@ tbody tr.year-separator td {
 </section>
 <section aria-labelledby="network-title">
 <div class="section-heading network-heading">
-<div><p class="section-kicker">Red de vuelos</p><h2 id="network-title">Rutas nacionales</h2><p class="route-network-note" id="route-network-note">Movimientos de slots AICM y mercados adicionales atribuidos a Aeroméxico con fuentes de ruta.</p></div>
+<div><p class="section-kicker">Red de vuelos</p><h2 id="network-title">Rutas nacionales</h2></div>
 </div>
 <div aria-label="Tipo de red" class="network-mode-switch" role="group">
 <button aria-pressed="true" id="network-mode-domestic" type="button">Nacional</button>
@@ -5803,9 +5804,6 @@ return Plotly;
     $("network-mode-domestic").setAttribute("aria-pressed", String(networkMode === "domestic"));
     $("network-mode-international").setAttribute("aria-pressed", String(networkMode === "international"));
     $("network-title").textContent = networkMode === "domestic" ? "Rutas nacionales" : "Rutas internacionales";
-    $("route-network-note").innerHTML = networkMode === "domestic"
-      ? `Red nacional identificada para ${esc(network.period_label)}. El AICM aporta slots de vuelos AM; Colima y Durango tienen movimientos atribuidos por inferencia; otras ocho rutas desde AIFA tienen presencia de Aeroméxico identificada en junio, sin desglose de vuelos propios. <a href="${esc(network.source_url)}" target="_blank" rel="noreferrer">Horario AICM</a> · <a href="https://www.gob.mx/cms/uploads/attachment/file/1100280/sase-julio-2026-27082026.xlsx" target="_blank" rel="noreferrer">AFAC origen–destino</a>.`
-      : "Rutas observadas y destinos programados de Aeroméxico. Las filas indican fuente y meses; los slots programados se distinguen de vuelos realizados. Grosor por pasajeros cuando se conoce; N/D indica dato no disponible. Fuentes: <a href='https://www.aicm.com.mx/aicm/negocios/slots/horarios-historicos-para-verano-2026-pdf' target='_blank' rel='noreferrer'>AICM</a> y <a href='https://noticias.oma.aero/news/del-cerro-de-la-silla-a-la-torre-eiffel-y-sin-escalas-inicia-nueva-ruta-directa-monterrey-paris-a6d41-5f19f.html' target='_blank' rel='noreferrer'>OMA</a>.";
     renderRegionSwitch();
     renderNetworkVolume();
     // Con una region elegida, MEX puede quedar fuera del recorte: se abre el
@@ -5908,6 +5906,16 @@ return Plotly;
     if (new RegExp(`\\b(${MONTH_NAMES.join("|")})\\b`).test(lower)) return 1;
     return null;
   }
+  // Los slots del AICM y el anuncio fechado de OMA son programacion: la fuente
+  // dice que el vuelo estaba previsto, no que se realizo. El icono los separa
+  // de lo observado sin gastar una columna ni una linea de texto.
+  const SCHEDULED_STATUSES = ["assigned_slot_not_flown", "scheduled_from_dated_release"];
+  function scheduledIconHtml(route) {
+    if (!SCHEDULED_STATUSES.includes(route.operation_status)) return "";
+    const title = "Vuelos programados: la fuente no confirma que se hayan realizado";
+    return `<span class="route-scheduled-mark" title="${title}" aria-label="${title}" role="img"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 1.6 15 14H1z"></path><rect x="7.2" y="6" width="1.6" height="4" rx=".8"></rect><circle cx="8" cy="11.6" r=".95"></circle></svg></span>`;
+  }
+
   function coverageDotHtml(route) {
     const months = coverageMonths(route);
     if (!months) return "";
@@ -5980,7 +5988,7 @@ return Plotly;
         <p class="airport-meta">${subtitleHtml || esc(subtitle)}</p>
         <div class="airport-table-wrap"><table class="airport-route-table domestic-route-table"><thead><tr><th>Ruta</th><th>Vuelos</th></tr></thead>
           <tbody>${tableRoutes.map((route, index) => `<tr class="route-summary-row" style="--route-color:${airportRouteColor(index)}">
-            <td>${route.directions.length ? `<button type="button" class="route-expand-toggle" aria-expanded="false" aria-controls="route-directions-${index}"><span class="route-expand-icon" aria-hidden="true">&gt;</span><strong class="route-table-name">${esc(routeTitle(route))}</strong>${coverageDotHtml(route)}</button>` : `<strong class="route-table-name">${esc(routeTitle(route))}</strong>${coverageDotHtml(route)}`}</td>
+            <td>${route.directions.length ? `<button type="button" class="route-expand-toggle" aria-expanded="false" aria-controls="route-directions-${index}"><span class="route-expand-icon" aria-hidden="true">&gt;</span><strong class="route-table-name">${esc(routeTitle(route))}</strong>${coverageDotHtml(route)}${scheduledIconHtml(route)}</button>` : `<strong class="route-table-name">${esc(routeTitle(route))}</strong>${coverageDotHtml(route)}${scheduledIconHtml(route)}`}</td>
             <td class="route-table-value"><strong>${finite(route.departures) ? integer.format(route.departures) : "Sin desglose propio"}</strong></td>
           </tr>${route.directions.length ? `<tr class="route-direction-detail" id="route-directions-${index}" style="--route-color:${airportRouteColor(index)}" hidden><td colspan="2"><div class="domestic-direction-list">${route.directions.map((direction) => `<div><span>${esc(direction.origin_iata)} → ${esc(direction.destination_iata)}</span><strong>${integer.format(direction.departures)}</strong></div>`).join("")}</div></td></tr>` : ""}`).join("")}</tbody></table></div>
         ${sourceFooterHtml(tableRoutes)}`;
@@ -6039,7 +6047,7 @@ return Plotly;
         <table class="airport-route-table">
           <thead><tr><th>Ruta</th><th>Pasajeros</th><th>Asientos</th><th>Vuelos</th><th>Ocupación</th></tr></thead>
           <tbody>${tableRoutes.map((route, index) => `<tr class="route-summary-row" style="--route-color:${airportRouteColor(index)}">
-            <td><button type="button" class="route-expand-toggle" aria-expanded="false" aria-controls="route-directions-${index}"><span class="route-expand-icon" aria-hidden="true">&gt;</span><strong class="route-table-name">${esc(routeTitle(route))}</strong>${coverageDotHtml(route)}</button></td>
+            <td><button type="button" class="route-expand-toggle" aria-expanded="false" aria-controls="route-directions-${index}"><span class="route-expand-icon" aria-hidden="true">&gt;</span><strong class="route-table-name">${esc(routeTitle(route))}</strong>${coverageDotHtml(route)}${scheduledIconHtml(route)}</button></td>
             ${metricCell(route, "passengers")}
             ${metricCell(route, "seats")}
             ${metricCell(route, "departures")}
