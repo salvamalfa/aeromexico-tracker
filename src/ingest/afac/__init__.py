@@ -1,1 +1,1 @@
-"""AFAC and official-mirror ingestion."""
+# AFAC margin ingestion.

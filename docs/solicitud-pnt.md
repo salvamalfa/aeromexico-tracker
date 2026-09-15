@@ -69,15 +69,15 @@ mismo universo.
 
 Comprobación: comparando mes a mes la suma de todos los pares de ciudades del
 servicio regular nacional del primer producto contra la suma de todas las
-empresas del segundo, sobre diecisiete meses (enero de 2024 a marzo de 2025, y
-enero a febrero de 2026), ambas cifras coinciden EXACTAMENTE, al pasajero, en
-quince de esos diecisiete meses. Los dos meses restantes difieren en 10 y en 36
+empresas del segundo, sobre veintidós meses (enero de 2024 a marzo de 2025, y
+enero a julio de 2026), ambas cifras coinciden EXACTAMENTE, al pasajero, en
+veinte de esos veintidós meses. Los dos meses restantes difieren en 10 y en 36
 pasajeros sobre totales cercanos a cinco millones, lo que es consistente con una
 reexpresión posterior de una de las dos publicaciones. La desviación relativa
 máxima observada es de 0.0007 por ciento.
 
 Dos publicaciones independientes, elaboradas por áreas distintas y en formatos
-distintos, no coinciden en el mismo número entero quince veces por casualidad.
+distintos, no coinciden en el mismo número entero veinte veces por casualidad.
 Solo coinciden así si ambas se cortan de un mismo registro que ya contiene, de
 forma conjunta, la ruta y la empresa. Ese registro es el que se solicita.
 

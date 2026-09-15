@@ -15,8 +15,8 @@ Contexto y evidencia de que el cubo existe: [`pasajeros-por-ruta-y-aerolinea.md`
 
 | Insumo | Dónde vive | Papel en el estimador |
 |---|---|---|
-| Pasajeros por ruta y mes (nacional regular) | `data/reference/afac_od_nacional_regular.csv` | **Marginal de fila.** 10,051 filas, 17 meses (2024M01–2025M03, 2026M01–2026M02) |
-| Pasajeros por aerolínea y mes (nacional regular) | `data/reference/afac_carrier_domestic.csv` | **Marginal de columna.** Los mismos 17 meses |
+| Pasajeros por ruta y mes (nacional regular) | `data/reference/afac_od_nacional_regular.csv` | **Marginal de fila.** 13,224 filas, 22 meses (2024M01–2025M03, 2026M01–2026M07) |
+| Pasajeros por aerolínea y mes (nacional regular) | `data/reference/afac_carrier_domestic.csv` | **Marginal de columna.** Los mismos 22 meses, de la base larga de DATATUR |
 | Ciudad AFAC ↔ código IATA | `data/reference/afac_city_iata_crosswalk.csv` | Traduce la semilla al vocabulario de las marginales. 58 ciudades, verificadas contra `dim_airport` |
 | Nombre AFAC ↔ `carrier_key` | `data/reference/afac_carrier_crosswalk.csv` | Alinea las aerolíneas de la semilla con las de la marginal |
 | Vuelos por ruta y mes | mismo CSV de rutas, columna `vuelos` | Control de calidad de la semilla, no insumo del ajuste |
@@ -27,6 +27,45 @@ Falta **una sola cosa**: la semilla, es decir vuelos o asientos por aerolínea �
 ruta × mes en el mercado nacional. Es el único insumo que no es público en
 México y hay que traerlo de fuera (ADS-B, itinerarios comerciales o un
 proveedor). Todo lo demás ya está en el repositorio.
+
+### El hueco que queda: abril a diciembre de 2025
+
+Las marginales cubren 22 meses, pero **faltan 2025M04 a 2025M12** en el lado de
+rutas. La marginal de aerolínea sí los tiene: la base larga de DATATUR
+(`DB_AFAC.xlsx`) llega hasta julio de 2026 y no pasa por el bloqueo de gob.mx.
+
+El lado de rutas depende de los workbooks `sase-*.xlsx`, que son acumulados
+anuales: la edición de diciembre de un año trae los doce meses. El de 2024 y el
+de julio de 2026 se consiguieron; el de diciembre de 2025 no.
+
+Por qué no: gob.mx sirve un reto antiautomatización de F5 para todo `.xlsx` —
+devuelve 200 con 1,936 bytes de HTML para cualquier URL, válida o inventada, así
+que ni siquiera se puede confirmar la ruta del archivo probándola. El Internet
+Archive resolvió los otros dos, pero no tiene copia de este y Save Page Now
+ahora exige una cuenta.
+
+**Cómo cerrarlo en un minuto, desde un navegador normal:** entrar a la
+[página de estadísticas de AFAC](https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404)
+y bajar el acumulado de diciembre de 2025. Un navegador real resuelve el reto
+solo. Con ese archivo en disco:
+
+```python
+from src.ingest.afac.margins import build
+routes, carriers, rec = build(
+    {2024: Path("sase2024.xlsx"),
+     2025: Path("sase-diciembre-2025.xlsx"),   # el que falta
+     2026: Path("sase-julio-2026.xlsx")},
+    Path("DB_AFAC.xlsx"),
+)
+```
+
+El módulo reescribe las dos marginales y devuelve la reconciliación mes a mes.
+No hay que tocar nada más.
+
+Nota sobre prioridad: el archivo de AeroDataBox solo llega 365 días atrás, así
+que los meses estimables hoy son de septiembre de 2025 en adelante. De ese
+rango ya están los siete de 2026; el hueco de 2025 pesa sobre cuatro meses
+(septiembre a diciembre), no sobre nueve.
 
 ### Por qué los vuelos por ruta no entran al ajuste
 
@@ -60,7 +99,7 @@ Propiedades que importan en producción:
   una ruta jamás se le asignan pasajeros.
 - Las rutas de un solo operador salen **exactas** por construcción y se marcan
   con `is_exact`.
-- Las dos marginales casi siempre suman igual —15 de 17 meses cuadran exacto—
+- Las dos marginales casi siempre suman igual —20 de 22 meses cuadran exacto—
   pero cuando no, el
   módulo reescala la marginal de columna al total de filas y **reporta** el
   factor en `column_scale` en vez de esconderlo.

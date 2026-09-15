@@ -99,4 +99,4 @@ def test_afac_route_flights_align_with_the_route_margin() -> None:
     flights = load_afac_route_flights()
     assert not flights.empty
     assert flights["flights"].sum() > 0
-    assert flights["period_id"].nunique() == 17
+    assert flights["period_id"].nunique() == 22
