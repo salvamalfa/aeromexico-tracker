@@ -1,25 +1,39 @@
 """Judge a candidate seed source before paying for a subscription to it.
 
-The OpenSky pilot burned 540 API credits and several hours to reach a verdict
-that AFAC's own publications could have delivered in an afternoon.  The reason
-is that the fit tolerates almost everything a cheap data source gets wrong, and
-fails on exactly one thing:
+The fit tolerates far more than it looks like it should, and that was measured
+rather than assumed.  Injecting a known bias into the T-100 harness, where the
+true split is published, gives:
 
-- **Missing flights, evenly.**  Harmless.  A uniform deficit on a route is a row
-  scaling, and iterative proportional fitting is invariant to row scaling.
-- **Wrong units.**  Harmless.  Flights instead of seats is a column scaling.
-- **Missing more flights of one carrier than of its rival, on the same route.**
-  Fatal, and invisible in every summary statistic a provider advertises.
+===================================================  ======  ======  ======
+Bias injected into the seed                           1.30x   2.00x   2.80x
+===================================================  ======  ======  ======
+Per carrier, even across that carrier's whole network  1.96    1.96    1.96
+Per route, even across that route's operators          1.96    1.96    1.96
+Per carrier *within* each route                        2.31    3.77    5.11
+===================================================  ======  ======  ======
 
-So the acceptance test has to measure that last quantity specifically.  It can,
-without any ground truth, because AFAC publishes flights per route alongside
-passengers per route.  If a source covered every carrier equally, the ratio of
-its flight count to AFAC's would be the same constant on every route.  It is not
-— and how it varies across routes with different carrier mixes is what identifies
-a per-carrier coverage factor.
+(weighted share error, in percentage points, against a 1.96 pp baseline)
 
-:func:`estimate_carrier_coverage` recovers those factors; the spread between the
-largest and the smallest is the number that decides whether to buy.
+The first two rows are row and column scalings, and iterative proportional
+fitting cancels them exactly -- a source could see one carrier three times
+better than another across the board and the fitted split would not move.  Only
+the interaction survives, and it is not identifiable from the margins, because
+that is the same non-identifiability the estimator exists to work around.
+
+So this module does not pretend to measure the interaction.  It judges what it
+can, which is what actually breaks a fit in practice:
+
+- **A carrier missing from the seed.**  Its published national total then has
+  nowhere to go, and the fit either refuses or forces those passengers onto
+  whatever routes remain.
+- **A route missing from the seed.**  The carriers that fly it get a structural
+  zero and their passengers are pushed elsewhere.
+- **A partial network**, which `column_scale` exposes: a seed covering part of
+  a carrier's routes demands more passengers from them than they carry.
+
+The per-carrier coverage factor is still reported, because it says something
+useful about a source, but it is *diagnostic, not disqualifying* -- reading it
+as a verdict was a mistake this module used to make.
 """
 
 from __future__ import annotations
@@ -47,14 +61,19 @@ ACCEPTANCE_VERSION = "seed_acceptance_v2"
 # division rather than an inference.
 CARRIER_FLIGHTS_FILE = "afac_carrier_flights_domestic.csv"
 
-# A source whose carriers differ by less than this factor is usable: the residual
-# it leaves is below the estimator's own measured error of ~2 pp.
+# Reference points for reading the reported spread.  They do not decide the
+# verdict: a spread of this shape is a column scaling and the fit cancels it.
+# Kept because a wide spread still says something about a source's behaviour.
 COVERAGE_SPREAD_PASS = 1.15
-# Above this the split is not worth publishing.  OpenSky sat at 2.8.
 COVERAGE_SPREAD_FAIL = 1.50
 # `column_scale` this far from 1 means the seed misses part of some carrier's
 # network, which silently corrupts the split even when everything else looks fine.
 COLUMN_SCALE_TOLERANCE = 0.05
+# Share of published passengers whose route must appear in the seed.  Below the
+# reject line the missing routes are not a rounding matter; between the two the
+# result is worth looking at but not publishing.
+ROUTE_COVERAGE_PASS = 0.99
+ROUTE_COVERAGE_REJECT = 0.95
 # A carrier flying fewer than this many flights a month cannot be judged from a
 # sampled seed: a handful of observations swings its ratio wildly, and one such
 # carrier would otherwise decide the verdict for the whole source.  Aerus flies
@@ -318,9 +337,17 @@ def assess_seed(
             f"La semilla solo alcanza el {passenger_coverage:.1%} de los pasajeros"
         )
 
-    if missing or not np.isfinite(spread) or spread >= COVERAGE_SPREAD_FAIL:
+    # What disqualifies a seed is incompleteness, not the coverage spread: the
+    # spread is a column effect and the fit cancels it.  See the module header.
+    fatal = (
+        bool(missing)
+        or passenger_coverage < ROUTE_COVERAGE_REJECT
+        or (np.isfinite(column_scale) and abs(column_scale - 1.0) > COLUMN_SCALE_TOLERANCE)
+        or not np.isfinite(column_scale)
+    )
+    if fatal:
         verdict = "reject"
-    elif spread > COVERAGE_SPREAD_PASS or notes:
+    elif passenger_coverage < ROUTE_COVERAGE_PASS or notes:
         verdict = "review"
     else:
         verdict = "accept"
@@ -348,19 +375,21 @@ def format_report(report: AcceptanceReport) -> str:
     lines = [
         f"Prueba de aceptación de semilla — {report.period_id}",
         f"  Veredicto: {report.verdict.upper()}",
-        f"  Dispersión de cobertura entre aerolíneas: {report.coverage_spread:.2f}x "
-        f"({report.coverage_method} sobre {len(report.carriers_judged)} aerolíneas; "
-        f"pasa <{COVERAGE_SPREAD_PASS}, reprueba >={COVERAGE_SPREAD_FAIL})",
         f"  Rutas cubiertas: {report.covered_routes} de {report.afac_routes} "
-        f"({report.passenger_coverage:.1%} de los pasajeros)",
-        f"  Vuelos vistos vs AFAC: {report.flight_coverage:.1%}  "
-        f"(un déficit parejo no importa)",
-        f"  column_scale: {report.column_scale:.3f}",
-        "  Factor de cobertura por aerolínea (1.00 = promedio del mercado):",
+        f"({report.passenger_coverage:.1%} de los pasajeros; "
+        f"pasa >{ROUTE_COVERAGE_PASS:.0%}, reprueba <{ROUTE_COVERAGE_REJECT:.0%})",
+        f"  column_scale: {report.column_scale:.3f} "
+        f"(tolerancia ±{COLUMN_SCALE_TOLERANCE:.0%})",
+        "",
+        "  Diagnóstico, no veredicto — el ajuste cancela un sesgo de esta forma:",
+        f"    dispersión entre aerolíneas: {report.coverage_spread:.2f}x "
+        f"({report.coverage_method} sobre {len(report.carriers_judged)})",
+        f"    vuelos vistos vs AFAC: {report.flight_coverage:.1%}",
+        "    factor por aerolínea (1.00 = promedio del mercado):",
     ]
     for carrier, factor in sorted(
         report.carrier_coverage.items(), key=lambda kv: kv[1]
     ):
-        lines.append(f"    {carrier:<24} {factor:.2f}")
+        lines.append(f"      {carrier:<24} {factor:.2f}")
     lines.extend(f"  ! {note}" for note in report.notes)
     return "\n".join(lines)

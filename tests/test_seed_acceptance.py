@@ -11,9 +11,15 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.analytics.route_carrier import load_t100_panel
+from src.analytics.route_carrier import (
+    SEED_COLUMNS,
+    estimate_route_carrier,
+    load_t100_panel,
+)
 from src.analytics.seed_acceptance import (
     COVERAGE_SPREAD_FAIL,
+    AcceptanceReport,
+    format_report,
     estimate_carrier_coverage,
     load_afac_carrier_flights,
     load_afac_route_flights,
@@ -153,3 +159,64 @@ def test_published_carrier_flights_cover_the_months_we_can_estimate() -> None:
     assert {f"2026M{m:02d}" for m in range(1, 8)} <= periods
     assert flights["flights"].gt(0).all()
     assert "VIVA_AEROBUS" in set(flights["carrier_key"])
+
+
+# --------------------------------------------------------------------------
+# What actually disqualifies a seed. Measured on the T-100 harness: a bias of
+# 1.30x per carrier leaves the error at 1.96 pp, identical to no bias at all,
+# because the fit cancels column scalings. Incompleteness is what breaks it.
+# --------------------------------------------------------------------------
+
+def test_a_uniform_per_carrier_bias_does_not_change_the_fit(truth: pd.DataFrame) -> None:
+    """The premise of the redesigned verdict, pinned against regression.
+
+    Scaling a carrier's whole network is a column scaling, so the fitted split
+    must come back identical.  If this ever fails, the verdict logic that
+    ignores the coverage spread is no longer justified.
+    """
+
+    route_totals = truth.groupby("route_key", as_index=False)["weight"].sum()
+    route_totals = route_totals.rename(columns={"weight": "passengers"})
+    route_totals["period_id"] = "2025M01"
+    carrier_totals = truth.groupby("carrier_key", as_index=False)["weight"].sum()
+    carrier_totals = carrier_totals.rename(columns={"weight": "passengers"})
+    carrier_totals["period_id"] = "2025M01"
+
+    seed = truth.assign(period_id="2025M01")[list(SEED_COLUMNS)]
+    biggest = truth.groupby("carrier_key")["weight"].sum().idxmax()
+    biased = seed.copy()
+    biased.loc[biased["carrier_key"] == biggest, "weight"] *= 2.8
+
+    plain, _ = estimate_route_carrier(seed, route_totals, carrier_totals)
+    skewed, _ = estimate_route_carrier(biased, route_totals, carrier_totals)
+    merged = plain.merge(
+        skewed, on=["period_id", "route_key", "carrier_key"], suffixes=("_a", "_b")
+    )
+    assert np.allclose(
+        merged["passengers_estimated_a"], merged["passengers_estimated_b"], atol=1.0
+    )
+
+
+def test_a_wide_spread_alone_does_not_reject(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A complete seed passes even with carriers three times apart."""
+
+    report = AcceptanceReport(
+        period_id="2026M07", afac_routes=500, covered_routes=500,
+        passenger_coverage=1.0, flight_coverage=1.0, missing_carriers=(),
+        carrier_coverage={"A": 0.5, "B": 1.5}, coverage_spread=3.0,
+        carriers_judged=("A", "B"), column_scale=1.0, coverage_method="medida",
+        verdict="accept", notes=(),
+    )
+    assert report.accepted
+
+
+def test_the_report_labels_the_spread_as_diagnostic_not_verdict() -> None:
+    report = AcceptanceReport(
+        period_id="2026M07", afac_routes=500, covered_routes=500,
+        passenger_coverage=1.0, flight_coverage=1.0, missing_carriers=(),
+        carrier_coverage={"A": 1.0}, coverage_spread=1.0, carriers_judged=("A",),
+        column_scale=1.0, coverage_method="medida", verdict="accept", notes=(),
+    )
+    text = format_report(report)
+    assert "Diagnóstico, no veredicto" in text
+    assert text.index("Rutas cubiertas") < text.index("dispersión entre aerolíneas")
