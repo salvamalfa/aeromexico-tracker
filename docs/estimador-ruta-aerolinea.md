@@ -300,6 +300,62 @@ Cualquiera de las fuentes de itinerarios entrega una tabla
 `build_seed_from_flights` consume. El adaptador de cada proveedor es lo único
 específico; el resto de la tubería no cambia.
 
+## No es una suscripción mensual: es una vez al año
+
+La regla medida es que la semilla debe ser **del mismo mes que las marginales**,
+no que haya que pagar todos los meses. Son cosas distintas, y la diferencia
+vale dinero.
+
+Dos hechos, ambos verificados contra las fuentes y no leídos de un tarifario:
+
+- **El archivo histórico de AeroDataBox llega a 365 días.** Una consulta a 379
+  días devolvió cero vuelos. Dentro de esa ventana, cada mes pasado se puede
+  bajar con su propia semilla contemporánea.
+- **AFAC publica con cerca de un mes de retraso.** El Boletín Mensual de julio
+  de 2026 ya reporta julio de 2026. Así que un mes recién publicado cae muy
+  dentro de la ventana de 365 días; el margen es de unos diez meses.
+
+De ahí sale la operación: **se contrata un mes, se baja todo el rezago, se
+cancela.** Y se repite una vez al año, antes de que los meses más viejos se
+caigan de la ventana.
+
+| Qué se baja | Unidades | Costo |
+|---|---:|---:|
+| Un mes de semilla, muestreando los 30 días | 6,960 | — |
+| Un mes de semilla, muestreando una semana completa | 1,624 | — |
+| **Respaldo de 12 meses, 30 días** | 83,520 | 3 meses de Starter = **USD 57** |
+| **Respaldo de 12 meses, una semana por mes** | 19,488 | 1 mes de Starter = **USD 19** |
+
+Contra los USD 19 al mes de una suscripción permanente, el ciclo anual cuesta
+entre **USD 19 y 57 al año**.
+
+### Lo que sí se pierde para siempre
+
+La ventana de 365 días es un plazo, no un inconveniente. Hoy el archivo llega
+hasta septiembre de 2025 hacia atrás; **todo 2024 y el primer semestre de 2025
+ya están fuera y no se recuperan de esta fuente**, por más que se pague después.
+Justo son los meses que cubren las marginales de AFAC que ya tenemos
+(2024M01–2025M03).
+
+Para esos meses las opciones son un proveedor con archivo profundo —Cirium y OAG
+guardan décadas— o quedarse sin estimación. Es el único punto donde el proveedor
+caro se gana su precio, y es solo para el respaldo, no para la operación.
+
+Cada mes que pasa, otro mes se cae de la ventana. El rezago recuperable se
+encoge solo.
+
+### Una optimización que falta medir
+
+La tabla de arriba asume que **una semana completa basta** para fijar la mezcla
+de aerolíneas de un mes. Es plausible —los itinerarios son semanales, y una
+semana entera cubre los siete días de la semana una vez— pero **no está medido**,
+y de eso depende que el ciclo anual cueste 19 o 57 dólares.
+
+Se mide dentro del primer mes pagado, gratis: se baja un mes completo, se arma
+la semilla con la primera semana y con los treinta días, y se comparan las
+participaciones resultantes. Si la diferencia queda debajo del error propio del
+estimador (1.98 pp), el muestreo semanal es legítimo.
+
 ## La semilla tiene que ser del mismo mes
 
 Antes de elegir proveedor conviene saber si la semilla se compra una vez o se
