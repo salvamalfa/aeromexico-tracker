@@ -38,6 +38,14 @@ MONTHS = 12
 
 ROUTE_MARGIN_FILE = "afac_od_nacional_regular.csv"
 CARRIER_MARGIN_FILE = "afac_carrier_domestic.csv"
+CARRIER_FLIGHTS_FILE = "afac_carrier_flights_domestic.csv"
+
+# The airline summary workbook stacks three blocks in every sheet: national
+# carriers on domestic service, the same carriers on international service, and
+# foreign carriers.  Only the first is the domestic universe, and reading past
+# its end silently triples the totals.
+DOMESTIC_BLOCK_MARKER = "REGULAR NACIONAL"
+BLOCK_BOUNDARIES = ("EMPRESAS", "EN SERVICIO")
 
 # Carriers DATATUR lists under scheduled domestic service that carry freight
 # only, or that ceased operating.  They are excluded by the crosswalk rather
@@ -179,3 +187,87 @@ def build(
     routes.to_csv(reference / ROUTE_MARGIN_FILE, index=False)
     carriers.to_csv(reference / CARRIER_MARGIN_FILE, index=False)
     return routes, carriers, reconcile(routes, carriers)
+
+
+def read_summary_domestic_block(path: Path, sheet: str, year: int) -> pd.DataFrame:
+    """Read one sheet of the airline summary, domestic block only.
+
+    ``VLOSREG`` and ``PAXREG`` share a layout: carrier in the first column,
+    twelve month columns, then a total.  The sheet holds three stacked blocks
+    and only the first covers scheduled domestic service, so the read stops at
+    the next block header rather than running to the end of the sheet.
+    """
+
+    workbook = openpyxl.load_workbook(path, read_only=True, data_only=True)
+    try:
+        rows = list(workbook[sheet].iter_rows(values_only=True))
+    finally:
+        workbook.close()
+
+    start = next(
+        (
+            index + 1
+            for index, row in enumerate(rows)
+            if row and row[0] and DOMESTIC_BLOCK_MARKER in str(row[0]).upper()
+        ),
+        None,
+    )
+    if start is None:
+        raise ValueError(f"{path.name}:{sheet} has no domestic block header")
+
+    records: list[dict[str, object]] = []
+    for row in rows[start:]:
+        if not row or row[0] is None:
+            continue
+        name = str(row[0]).strip()
+        upper = name.upper()
+        if upper.startswith(BLOCK_BOUNDARIES):
+            break
+        # Total rows are sometimes letter-spaced ("T  o  t  a  l"), so collapse
+        # whitespace before comparing rather than matching the literal.
+        if "".join(upper.split()).startswith(("TOTAL", "EMPRESA")):
+            continue
+        for month in range(1, MONTHS + 1):
+            value = row[month]
+            if isinstance(value, (int, float)):
+                records.append(
+                    {
+                        "period_id": f"{year}M{month:02d}",
+                        "carrier_name": name,
+                        "value": int(value),
+                    }
+                )
+    return pd.DataFrame(records)
+
+
+def build_carrier_flights(
+    summary_workbooks: dict[int, Path],
+    *,
+    reference_dir: Path | None = None,
+    known_carriers: set[str] | None = None,
+) -> pd.DataFrame:
+    """Flights per carrier and month, which no other AFAC product publishes.
+
+    This is what turns the seed acceptance test from an inference into a
+    division: a candidate source's flight count per carrier can be compared
+    directly against the published one, so coverage that favours one carrier
+    over another shows up without having to be modelled.
+    """
+
+    frames = [
+        read_summary_domestic_block(path, "VLOSREG", year)
+        for year, path in sorted(summary_workbooks.items())
+    ]
+    flights = pd.concat(frames, ignore_index=True)
+    flights = flights[flights["value"] > 0]
+    if known_carriers is not None:
+        flights = flights[flights["carrier_name"].isin(known_carriers)]
+    flights = (
+        flights.rename(columns={"value": "vuelos"})
+        .groupby(["period_id", "carrier_name"], as_index=False)["vuelos"]
+        .sum()
+        .sort_values(["period_id", "carrier_name"], ignore_index=True)
+    )
+    reference = reference_dir or (PATHS.data / "reference")
+    flights.to_csv(reference / CARRIER_FLIGHTS_FILE, index=False)
+    return flights

@@ -15,7 +15,9 @@ from src.analytics.route_carrier import load_t100_panel
 from src.analytics.seed_acceptance import (
     COVERAGE_SPREAD_FAIL,
     estimate_carrier_coverage,
+    load_afac_carrier_flights,
     load_afac_route_flights,
+    measure_carrier_coverage,
 )
 
 
@@ -100,3 +102,54 @@ def test_afac_route_flights_align_with_the_route_margin() -> None:
     assert not flights.empty
     assert flights["flights"].sum() > 0
     assert flights["period_id"].nunique() == 22
+
+
+# --------------------------------------------------------------------------
+# Measured coverage: a division against AFAC's published flights per carrier,
+# which is strictly better than inferring it from route-level deficits.
+# --------------------------------------------------------------------------
+
+def _seed(counts: dict[str, float]) -> pd.DataFrame:
+    return pd.DataFrame(
+        {"carrier_key": list(counts), "weight": list(counts.values())}
+    )
+
+
+def test_a_proportional_sample_shows_every_carrier_at_the_average() -> None:
+    published = pd.Series({"A": 10_000.0, "B": 5_000.0, "C": 1_000.0})
+    coverage = measure_carrier_coverage(published, _seed({"A": 1000, "B": 500, "C": 100}))
+    assert np.allclose(coverage.to_numpy(), 1.0)
+
+
+def test_the_sampling_fraction_cancels_out() -> None:
+    """A week and a month must give the same factors; only the spread means anything."""
+
+    published = pd.Series({"A": 10_000.0, "B": 5_000.0})
+    week = measure_carrier_coverage(published, _seed({"A": 200, "B": 120}))
+    month = measure_carrier_coverage(published, _seed({"A": 800, "B": 480}))
+    assert np.allclose(week.to_numpy(), month.to_numpy())
+
+
+def test_a_carrier_seen_half_as_often_comes_back_at_half() -> None:
+    published = pd.Series({"A": 10_000.0, "B": 10_000.0})
+    coverage = measure_carrier_coverage(published, _seed({"A": 1000, "B": 500}))
+    assert coverage["B"] / coverage["A"] == pytest.approx(0.5)
+
+
+def test_a_carrier_absent_from_the_published_margin_is_skipped() -> None:
+    published = pd.Series({"A": 10_000.0})
+    coverage = measure_carrier_coverage(published, _seed({"A": 1000, "DESCONOCIDA": 50}))
+    assert list(coverage.index) == ["A"]
+
+
+def test_no_overlap_returns_empty_so_the_caller_falls_back() -> None:
+    published = pd.Series({"A": 10_000.0})
+    assert measure_carrier_coverage(published, _seed({"B": 100})).empty
+
+
+def test_published_carrier_flights_cover_the_months_we_can_estimate() -> None:
+    flights = load_afac_carrier_flights()
+    periods = set(flights["period_id"])
+    assert {f"2026M{m:02d}" for m in range(1, 8)} <= periods
+    assert flights["flights"].gt(0).all()
+    assert "VIVA_AEROBUS" in set(flights["carrier_key"])
