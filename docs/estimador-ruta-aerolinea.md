@@ -163,18 +163,30 @@ haya un receptor en tierra, y las cancelaciones son escalado de fila, que el
 ajuste cancela. Los **vuelos rastreados** (ADS-B) dependen de la densidad de
 receptores, que en el centro y sureste de México es el problema.
 
-| Fuente | Familia | Costo | Veredicto |
-|---|---|---|---|
-| **AeroDataBox, AviationStack, Aviation Edge** | Itinerarios | ~USD 20–200/mes | **Opción por defecto.** Cobertura cierta, refrescable cada mes |
-| Cirium Diio / OAG | Itinerarios | Alto | Si hay presupuesto. Trae asientos reales, que bajan el error de 5.96 % a 4.21 % |
-| adsb.lol, airplanes.live, ADSB Exchange | Rastreo | Gratis o bajo | **Apuesta, no descarte.** Otra red de receptores puede cubrir donde OpenSky no. Someterla a la prueba de aceptación antes de invertirle tiempo |
-| OpenSky Network | Rastreo | Gratis | **Descartado por medición.** Ver abajo |
-| Mapas de rutas, Wikipedia, OpenFlights, tableros de aeropuerto | Presencia | Gratis | **Descartado.** Dan presencia, no frecuencia: 13 pp de error |
-| Boletines de AFAC y de AICM | — | Gratis | **Descartado por inspección.** AICM desagrega por terminal, no por aerolínea; la base de DATATUR es aerolínea × mes × región, sin ruta |
+| Fuente | Familia | Costo real | Prueba gratis | Veredicto |
+|---|---|---|---|---|
+| **AeroDataBox** | Itinerarios | **USD 7.50/mes** (plan Pro, 5,000 unidades) | **Sí: 400 unidades/mes, con histórico de ±365 días** | **Con esta se prueba.** Es la única cuyo tramo gratuito incluye lo que hace falta |
+| Aviation Edge | Itinerarios | USD 7 el primer mes (30,000 llamadas), luego tarifa normal | Prueba de pago, no gratuita | Suplente si la calidad de AeroDataBox decepciona |
+| AviationStack | Itinerarios | USD 49.99/mes el plan Basic | Sí, 100 llamadas/mes — **pero el plan gratuito excluye vuelos históricos, itinerarios y rutas de aerolínea** | Descartado para la prueba: lo gratuito no cubre nada de lo que se necesita |
+| Cirium Diio / OAG | Itinerarios | Alto | No | Si hay presupuesto. Trae asientos reales, que bajan el error de 5.96 % a 4.21 % |
+| adsb.lol, airplanes.live, ADSB Exchange | Rastreo | Gratis o bajo | Sí | Apuesta a que sus receptores cubran donde OpenSky no. Someterla a la prueba de aceptación antes de invertirle tiempo |
+| OpenSky Network | Rastreo | Gratis | Sí | **Descartado por medición.** Ver abajo |
+| Mapas de rutas, Wikipedia, OpenFlights, tableros de aeropuerto | Presencia | Gratis | — | **Descartado.** Dan presencia, no frecuencia: 13 pp de error |
+| Boletines de AFAC y de AICM | — | Gratis | — | **Descartado por inspección.** AICM desagrega por terminal, no por aerolínea; la base de DATATUR es aerolínea × mes × región, sin ruta |
 
-Al contratar, conviene pedir el extracto **por aerolínea**, no por aeropuerto:
-garantiza que la red completa de cada operador entre a la semilla, que es
-justo lo que evita la trampa de `column_scale` descrita más abajo.
+El costo corregido importa: no son USD 50–200 al mes, son **USD 7.50**. El
+mercado nacional son 58 aeropuertos y unos 1,100 vuelos diarios, y basta pedir
+**salidas**, porque todo vuelo doméstico sale de un aeropuerto mexicano. Con
+ventanas de 12 horas eso es 58 × 30 × 2 = 3,480 llamadas al mes, dentro del plan
+de 5,000.
+
+Las 400 unidades gratuitas no alcanzan para un mes completo, pero sí para **tres
+días completos de los 58 aeropuertos** (116 unidades por día), que es
+exactamente lo que la prueba de aceptación necesita.
+
+Al contratar, conviene pedir el extracto **por aerolínea** cuando el proveedor lo
+permita: garantiza que la red completa de cada operador entre a la semilla, que
+es justo lo que evita la trampa de `column_scale` descrita más abajo.
 
 #### Por qué OpenSky no sirve
 
@@ -218,7 +230,28 @@ rutas.
 Este paso no cuesta nada más que el mes de prueba y es el único que distingue
 una fuente incompleta de una fuente sesgada.
 
-Cualquiera de las tres primeras entrega una tabla
+Ya está automatizado en `src/analytics/seed_acceptance.py`. Dado un mes de
+vuelos de cualquier proveedor devuelve un veredicto y, sobre todo, un **factor
+de cobertura por aerolínea**, normalizado al promedio del mercado:
+
+```python
+from src.analytics.seed_acceptance import assess_seed, format_report
+print(format_report(assess_seed(flights, "2026M02")))
+```
+
+La recuperación de ese factor es lo que hace la prueba honesta. Se apoya en que
+las rutas tienen mezclas de operadores distintas: si el déficit observado en cada
+ruta se explica sistemáticamente por quién la vuela, hay sesgo por aerolínea; si
+no, el déficit es parejo y el ajuste lo cancela. Las pruebas inyectan un sesgo
+conocido —incluido el perfil real medido en OpenSky, 13 %/26 %/29 %/37 %— y
+verifican que vuelva a salir, porque un detector que no recupera un sesgo
+inyectado autorizaría una compra mala.
+
+Umbrales: se acepta por debajo de **1.15x** de dispersión entre la aerolínea
+mejor y la peor cubierta, se rechaza a partir de **1.50x**. OpenSky estaba en
+2.8x.
+
+Cualquiera de las fuentes de itinerarios entrega una tabla
 `period_id, origin_iata, dest_iata, carrier_key, flights`, que es justo lo que
 `build_seed_from_flights` consume. El adaptador de cada proveedor es lo único
 específico; el resto de la tubería no cambia.
