@@ -40,9 +40,15 @@ from src.analytics.route_carrier import load_city_crosswalk
 # so the caller picks one and nothing else changes.
 RAPIDAPI_HOST = "aerodatabox.p.rapidapi.com"
 RAPIDAPI_URL = f"https://{RAPIDAPI_HOST}/flights/airports/iata"
-DIRECT_URL = "https://aerodatabox.com/api/flights/airports/iata"
+# Host and header taken from the official direct specification
+# (doc.aerodatabox.com/docs/openapi-direct-v1.yaml): server
+# `https://api.aerodatabox.com/`, security scheme `X-Api-Key` in the header.
+DIRECT_URL = "https://api.aerodatabox.com/flights/airports/iata"
 # The Basic plan answers a window longer than this with an empty list.
 MAX_WINDOW_HOURS = 12
+# The specification marks this endpoint TIER 2, and the pricing table puts a
+# tier-2 request at two units on every plan.  Measured against the live API at
+# two units as well, so the direct plans cost the same per call as RapidAPI.
 UNITS_PER_CALL = 2
 # Basic allows one request per second; stay under it.
 MIN_SECONDS_BETWEEN_CALLS = 1.1
@@ -133,7 +139,7 @@ def api_credentials(
         )
 
     if direct:
-        return DIRECT_URL, {"x-magicapi-key": api_key, "x-api-key": api_key}
+        return DIRECT_URL, {"X-Api-Key": api_key}
     return RAPIDAPI_URL, {"x-rapidapi-key": api_key, "x-rapidapi-host": RAPIDAPI_HOST}
 
 
