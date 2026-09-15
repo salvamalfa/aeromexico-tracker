@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import calendar
+from collections import Counter
 from datetime import date
 from pathlib import Path
 import sys
@@ -66,6 +67,30 @@ def month_days(period_id: str, sample: int | None = None) -> list[date]:
     return sorted(result)
 
 
+def day_weights(period_id: str, days: list[date]) -> dict[date, float]:
+    """How many days of the month each sampled day has to stand in for.
+
+    A month is never a whole number of weeks: July 2026 has five Wednesdays and
+    four Sundays.  A seven-day sample that counts both once reads the market
+    through whichever weekdays it happened to catch, and since carrier mix moves
+    with the weekly schedule, that biases every carrier's share.  Weighting each
+    sampled day by its weekday's frequency removes it, so a sampled week scales
+    to the month instead of merely resembling it.
+
+    A full month gives every day a weight of one, which is the identity.
+    """
+
+    year, month = int(period_id[:4]), int(period_id[5:])
+    total = calendar.monthrange(year, month)[1]
+    in_month: Counter[int] = Counter(
+        date(year, month, day).weekday() for day in range(1, total + 1)
+    )
+    sampled: Counter[int] = Counter(day.weekday() for day in days)
+    return {
+        day: in_month[day.weekday()] / sampled[day.weekday()] for day in days
+    }
+
+
 def plan(airports: int, days: int) -> int:
     """API units a sweep will cost, so the operator sees it before spending."""
 
@@ -105,9 +130,15 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     args.cache_dir.mkdir(parents=True, exist_ok=True)
+    weights = day_weights(args.period_id, days)
+    if args.days:
+        print(
+            "ponderacion por dia de la semana: "
+            + ", ".join(f"{d:%a}x{w:.2f}" for d, w in sorted(weights.items()))
+        )
     flights, stats = pull_days(
         airports, days, period_id=args.period_id,
-        cache_dir=args.cache_dir, unit_budget=args.budget,
+        cache_dir=args.cache_dir, unit_budget=args.budget, day_weights=weights,
     )
     print(
         f"llamadas {stats.calls} (cache {stats.cached_calls})  "

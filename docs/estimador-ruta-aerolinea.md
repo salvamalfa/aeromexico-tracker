@@ -200,6 +200,31 @@ itinerario semanal, y sobrerrepresentar un día sesga la semilla.
 | Mes completo (31 días) | 7,192 |
 | Muestra de una semana | 1,624 |
 
+Cada día muestreado se pondera por cuántas veces cae su día de la semana en el
+mes. Julio de 2026 tiene cinco miércoles y cuatro domingos; una semana que los
+cuente igual lee el mercado a través de los días que le tocaron, y como la mezcla
+de aerolíneas se mueve con el itinerario semanal, eso sesga a todas. Con la
+ponderación los pesos suman exactamente los días del mes, así que la semana
+**escala** al mes en vez de solo parecerse. Un mes completo da peso uno a cada
+día, que es la identidad.
+
+### Qué plan comprar
+
+| Plan | Precio | Unidades | USD por 1,000 | ¿Alcanza? |
+|---|---:|---:|---:|---|
+| Pro (RapidAPI) | 7.50 | 5,000 | 1.50 | No: ni un mes completo |
+| **Starter (directo)** | **19** | **40,000** | **0.47** | Sí, con holgura |
+| Ultra (RapidAPI) | 37.50 | 50,000 | 0.75 | Sí |
+
+El plan de trabajo son 16,936 unidades: un mes completo para validar el muestreo
+semanal, más seis semanas. Starter es la opción obvia —la mitad de costo por
+unidad que Ultra— y el adaptador habla con las dos APIs, así que la elección no
+obliga a tocar código. Se configura con `AERODATABOX_API_KEY` para los planes
+directos o `RAPIDAPI_KEY` para los revendidos.
+
+Una salvedad: las 2 unidades por llamada están medidas en RapidAPI, no en el plan
+directo. Aunque allá costara el doble, 40,000 unidades siguen sobrando.
+
 La salida queda en `data/silver/`: los vuelos crudos normalizados y, si la
 prueba pasó, la estimación con `is_estimated = True`.
 

@@ -9,7 +9,10 @@ route at all.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pandas as pd
+import pytest
 
 from src.ingest.aerodatabox.flights import PullStats, normalise
 
@@ -112,3 +115,25 @@ def test_flights_are_aggregated_per_route_and_carrier() -> None:
     )
     counts = dict(zip(frame["dest_iata"], frame["flights"], strict=True))
     assert counts == {"GDL": 2, "CUN": 1}
+
+
+def test_day_weights_scale_a_sampled_day_into_the_month() -> None:
+    """A Wednesday that stands for five Wednesdays counts five times."""
+
+    stats = PullStats()
+    raw = {("MEX", date(2026, 7, 1)): [_flight(), _flight()]}
+    frame = normalise(raw, "2026M02", stats=stats, day_weights={date(2026, 7, 1): 5.0})
+    assert frame.loc[0, "flights"] == pytest.approx(10.0)
+
+
+def test_without_weights_every_flight_counts_once() -> None:
+    stats = PullStats()
+    raw = {("MEX", date(2026, 7, 1)): [_flight()]}
+    assert normalise(raw, "2026M02", stats=stats).loc[0, "flights"] == pytest.approx(1.0)
+
+
+def test_a_plain_airport_key_still_works_unweighted() -> None:
+    """The older shape, an airport with no day, must keep parsing."""
+
+    stats = PullStats()
+    assert normalise({"MEX": [_flight()]}, "2026M02", stats=stats).loc[0, "flights"] == 1.0
