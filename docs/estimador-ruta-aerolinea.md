@@ -153,16 +153,39 @@ las cancelaciones son escalado de fila y se cancelan.
 
 ### Fuente de semilla: decisión
 
-La medición de arriba descarta las opciones gratuitas basadas en mapas de rutas.
-La semilla **tiene que traer frecuencias**, así que la elección es entre un feed
-ADS-B propio y un proveedor de itinerarios.
+La medición descarta las opciones gratuitas basadas en mapas de rutas, porque la
+semilla **tiene que traer frecuencias**. Y un piloto con datos reales descartó
+también la opción gratuita que parecía más prometedora.
 
 | Fuente | Costo | Veredicto |
 |---|---|---|
-| **AviationStack / Aviation Edge** | ~USD 50–200/mes | **Opción por defecto.** Itinerarios históricos con aerolínea, ruta y fecha; se agregan a frecuencias mensuales. Menor esfuerzo de integración |
+| **AviationStack / Aviation Edge** | ~USD 50–200/mes | **Opción por defecto.** Itinerarios históricos con aerolínea, ruta y fecha |
 | Cirium Diio / OAG | Alto | Si hay presupuesto. Trae asientos reales por ruta, que bajan el error de 5.96 % a 4.21 % |
-| OpenSky Network | Gratis, uso no comercial | ADS-B histórico. Requiere credenciales OAuth2 desde 2025; la cobertura desigual es tolerable por la invariancia de fila. Viable pero con más trabajo de limpieza de callsigns |
+| OpenSky Network | Gratis | **Descartado por medición.** Ver abajo |
 | Mapas de rutas, Wikipedia, tableros de aeropuerto | Gratis | **Descartado.** Dan presencia, no frecuencia: 13 pp de error |
+
+#### Por qué OpenSky no sirve
+
+Se probó con credenciales reales sobre febrero de 2026, gastando 540 de los
+4,000 créditos diarios. Hallazgos:
+
+- **Costo**: 30 créditos por llamada, y una ventana de dos días cuesta lo mismo
+  que una de un día. Un mes de los 58 aeropuertos saldría en ~24,000 créditos,
+  es decir seis días de cuota por cada mes de datos.
+- **Cobertura**: de 9,448 salidas de México en el mes, solo 2,117 resuelven a un
+  destino nacional reconocido. El 43 % no trae aeropuerto de llegada estimado.
+- **La cobertura es bimodal por destino**, no degradada de forma pareja:
+  Monterrey 92 %, Tijuana 95 %, Veracruz 92 %, Hermosillo 94 %; pero Guadalajara,
+  Mérida, Puerto Vallarta, Oaxaca y la mayoría de los destinos quedan en **0 %**.
+  Consultar *llegadas* en Guadalajara y Mérida devuelve cero, así que no es un
+  fallo al estimar el destino: no hay receptores ADS-B con cobertura ahí.
+- **Y la cobertura difiere por aerolínea**: Aeroméxico Connect resuelve 13 % de
+  sus vuelos, Viva 37 %, Aeroméxico 26 %, Volaris 29 %.
+
+Esa última línea es la que mata la opción. El ajuste absorbe que a una ruta le
+falten vuelos de forma pareja, pero **no** absorbe que le falten más a una
+aerolínea que a otra dentro de la misma ruta. Un factor de casi tres entre
+operadores es exactamente el sesgo irreducible.
 
 Cualquiera de las tres primeras entrega una tabla
 `period_id, origin_iata, dest_iata, carrier_key, flights`, que es justo lo que
