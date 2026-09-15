@@ -299,16 +299,19 @@ def test_both_afac_margins_cover_the_same_periods() -> None:
 
     periods = sorted(route_totals["period_id"].unique())
     assert periods == sorted(carrier_totals["period_id"].unique())
-    assert len(periods) == 17
-    assert periods[0] == "2024M01" and periods[-1] == "2026M02"
+    assert len(periods) == 22
+    assert periods[0] == "2024M01" and periods[-1] == "2026M07"
+    # 2025M04 to 2025M12 is the one gap: AFAC's cumulative 2025 workbook is
+    # behind an anti-automation challenge and was never retrieved.
+    assert "2025M04" not in periods and "2025M12" not in periods
 
 
 def test_the_two_published_margins_agree_and_so_a_joint_table_exists_upstream() -> None:
     """The premise of the whole estimator: both files are views of one cube.
 
-    Fifteen of the seventeen months agree to the passenger, and the two that
+    Twenty of the twenty-two months agree to the passenger, and the two that
     do not are off by 10 and 36 on totals near five million.  Two independently
-    published aggregates cannot land on the same integer fifteen times unless
+    published aggregates cannot land on the same integer twenty times unless
     both are cut from one table that already carries route and carrier.
     """
 
@@ -317,7 +320,7 @@ def test_the_two_published_margins_agree_and_so_a_joint_table_exists_upstream() 
     by_carrier = carrier_totals.groupby("period_id")["passengers"].sum()
     gap = (by_route - by_carrier).abs()
 
-    assert (gap == 0).sum() == 15
+    assert (gap == 0).sum() == 20
     assert gap.max() <= 40
     assert (gap / by_carrier).max() < 1e-5
     # The quarter the request cites, restated by the carrier side after the

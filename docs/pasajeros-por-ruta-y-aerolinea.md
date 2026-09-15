@@ -6,7 +6,7 @@ pero ninguna fuente pública gratuita lo publica cruzado.** AFAC publica las dos
 `ruta × aerolínea`. Este documento prueba esa afirmación abriendo cada archivo, no
 citándolo de oídas, y entrega las cifras que sí pudieron verificarse.
 
-Cobertura: **17 meses** —2024M01 a 2025M03 y 2026M01 a 2026M02—, que es todo lo
+Cobertura: **22 meses** —2024M01 a 2025M03 y 2026M01 a 2026M07—, que es todo lo
 que pudo descargarse en este entorno. Los casos de ruta se trabajan sobre 2025Q1
 por ser el trimestre completo más reciente. En la sección
 [Qué no logré verificar](#qué-no-logré-verificar) se explica por qué no fue 2026Q2.
@@ -37,12 +37,12 @@ para vuelos nacionales mexicanos.**
 
 Las dos publicaciones de AFAC son dos vistas del mismo microdato. Comparando mes
 a mes la suma de todas las rutas del servicio regular nacional contra la suma de
-todas las aerolíneas, sobre los 17 meses que pudieron descargarse
-(2024M01–2025M03 y 2026M01–2026M02):
+todas las aerolíneas, sobre los 22 meses que pudieron descargarse
+(2024M01–2025M03 y 2026M01–2026M07):
 
 | Resultado | Meses |
 |---|---:|
-| Coinciden **exactamente**, al pasajero | **15 de 17** |
+| Coinciden **exactamente**, al pasajero | **20 de 22** |
 | Difieren | 2 — 2025M02 por 10 pasajeros, 2025M03 por 36 |
 | Desviación relativa máxima | **0.0007 %** |
 
@@ -313,8 +313,8 @@ Se declara explícitamente, sin rellenar huecos.
 
 | Archivo | Contenido |
 |---|---|
-| `data/reference/afac_od_nacional_regular.csv` | 10,051 filas `period_id, origen, destino, vuelos, pasajeros` del servicio regular nacional, 17 meses (2024M01–2025M03, 2026M01–2026M02), de la hoja `REG NAC` de los workbooks O-D |
-| `data/reference/afac_carrier_domestic.csv` | 143 filas `period_id, carrier_name, pasajeros`, los mismos 17 meses, de la base larga de DATATUR |
+| `data/reference/afac_od_nacional_regular.csv` | 13,224 filas `period_id, origen, destino, vuelos, pasajeros` del servicio regular nacional, 22 meses (2024M01–2025M03, 2026M01–2026M07), de la hoja `REG NAC` de los workbooks O-D |
+| `data/reference/afac_carrier_domestic.csv` | 180 filas `period_id, carrier_name, pasajeros`, los mismos 22 meses, de la base larga de DATATUR |
 | `data/reference/afac_city_iata_crosswalk.csv` | 58 ciudades AFAC ↔ IATA, verificadas contra `dim_airport` |
 | `data/reference/afac_carrier_crosswalk.csv` | 9 nombres AFAC ↔ `carrier_key` |
 
