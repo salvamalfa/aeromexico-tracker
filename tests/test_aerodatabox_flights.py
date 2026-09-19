@@ -136,6 +136,22 @@ def test_magnicharter_singular_live_name_resolves() -> None:
     assert not stats.unmapped_carriers
 
 
+def test_mxa_live_name_resolves_without_guessing_an_unknown_code() -> None:
+    frame, stats = _run([
+        _flight(iata=None, icao=None, name="MXA", model=None),
+    ])
+    assert frame.loc[0, "carrier_key"] == "MEXICANA_NUEVA"
+    assert not stats.unmapped_carriers
+
+
+def test_tar_resolves_from_documented_lct_operator_code() -> None:
+    frame, stats = _run([
+        _flight(iata=None, icao="LCT", name="TAR Aerolineas", model=None),
+    ])
+    assert frame.loc[0, "carrier_key"] == "TAR"
+    assert not stats.unmapped_carriers
+
+
 def test_estafeta_is_dropped_as_freight_not_mistaken_for_aerus() -> None:
     """E7 is Estafeta, a cargo carrier -- an easy and costly mis-mapping."""
 

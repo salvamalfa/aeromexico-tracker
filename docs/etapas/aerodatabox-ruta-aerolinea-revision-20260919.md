@@ -268,6 +268,43 @@ El siguiente paso es la muestra de siete días. Si tampoco alcanza 99% de
 pasajeros o sigue sin observar operadores materiales, se detiene el método antes
 del barrido completo.
 
+### Resultado de la muestra de siete días
+
+El workflow privado `35470890247` amplió la prueba a una semana completa.
+Consumió 812 llamadas y 1,624 unidades; la limpieza de contenido del proveedor
+y la retención temporal del log terminaron correctamente. La puerta volvió a
+devolver `REJECT`, por lo que no se ejecutó IPF ni se produjo una estimación:
+
+| Métrica | Resultado |
+|---|---:|
+| Rutas cubiertas | 452 de 539 |
+| Pasajeros AFAC representados | 98.9% |
+| Umbral requerido | 99% |
+| `column_scale` | 0.992 |
+| Vuelos vistos frente a AFAC, escalados | 90.8% |
+
+TAR siguió ausente del soporte aceptado. La revisión posterior identificó su
+código operativo `LCT` en una publicación gubernamental de Baja California Sur
+y lo añadió al crosswalk; `YQ` permanece como su código IATA ya soportado. El
+alias textual exacto `MXA` también se vinculó con Mexicana Nueva. Los operadores
+extranjeros o desconocidos continuaron sin asignarse.
+
+Fuente de verificación de TAR:
+[Secretaría de Finanzas y Administración de Baja California Sur](https://finanzas.bcs.gob.mx/fiscal/vuelos/).
+
+El workflow pagado quedó deshabilitado tras la corrida. Ejecutar abril completo
+costaría hasta 6,960 unidades y requiere una decisión explícita nueva. La puerta
+actual no justifica activar datos ni sustituir `N/D` en el dashboard.
+
+La corrida conservó el log agregado durante siete días, pero el primer diseño
+del workflow eliminó también el Parquet normalizado antes de subir artefactos.
+Por ello la cobertura de 98.9% es evidencia verificable del piloto, pero la
+semilla de siete días no puede reutilizarse para estimar. Fue una retención
+demasiado agresiva: no se repetirá la consulta solo para recuperar esas filas.
+El workflow permanecerá deshabilitado hasta que empaquete primero, en un
+artefacto privado con vencimiento de siete días, los vuelos normalizados, la
+semilla agregada, hashes y metadatos; después podrá borrar el workspace.
+
 No hace falta mantener abierta la sesión externa: sus commits, 89 pruebas,
 fixtures y resultados reproducibles ya fueron recuperados y verificados.
 
