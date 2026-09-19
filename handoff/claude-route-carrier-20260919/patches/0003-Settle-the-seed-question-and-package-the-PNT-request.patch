@@ -1,0 +1,551 @@
+From 82184bbc386d887a1196adff53e4ed7d0d69ee00 Mon Sep 17 00:00:00 2001
+From: salvamalfa <salvamalfas@gmail.com>
+Date: Mon, 14 Sep 2026 04:13:39 +0000
+Subject: [PATCH 03/19] Settle the seed question and package the PNT request
+
+Measured which seeds actually work, then built everything the chosen one
+needs.
+
+Seed findings (backtest against T-100, competitive routes, 2025):
+- seats 1.40 pp / 4.21%, flight counts 1.98 pp / 5.96%
+- presence only, no frequencies: 13.04 pp / 39.38%
+- national market share as seed: 153% error, with 75% of passengers landing
+  on routes the carrier does not fly
+
+National share cannot serve as a seed at all: it is mathematically identical
+to a seed of ones, because the fit cancels any column scaling. It is already
+in the model as the column marginal. Chaining an IPF over AFAC's published
+route flight counts adds nothing for the same reason.
+
+So the seed must carry frequencies, which rules out route maps and airport
+destination tables. Default provider is a schedules API emitting
+period_id, origin_iata, dest_iata, carrier_key, flights.
+
+Adds build_seed_from_flights, which rekeys a provider table into AFAC's city
+vocabulary and raises UnmappedSeedError rather than silently dropping an
+airport it cannot place. Adds two crosswalks: 52 AFAC cities to IATA, each
+verified against dim_airport, and AFAC carrier names to carrier_key.
+load_afac_domestic_margins now emits carrier_key so seed and margins share
+identities.
+
+Adds docs/solicitud-pnt.md: the request text ready to paste, form field
+values, and the articles of the transparency law published 20 March 2025,
+which replaced the 2015 law whose numbering older templates still cite.
+
+The email route bounced: 550 5.4.1 from the AFAC tenant is a recipient-level
+rejection, not a content one. The copy to the SICT transparency unit was
+delivered.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01FYLfAv93wjCxnGdihXYpAm
+---
+ data/reference/afac_carrier_crosswalk.csv   |  10 ++
+ data/reference/afac_city_iata_crosswalk.csv |  53 +++++++++
+ docs/estimador-ruta-aerolinea.md            |  58 ++++++++--
+ docs/solicitud-pnt.md                       | 114 ++++++++++++++++++++
+ src/analytics/route_carrier.py              |  75 ++++++++++++-
+ tests/test_route_carrier_ipf.py             |  95 +++++++++++++++-
+ 6 files changed, 392 insertions(+), 13 deletions(-)
+ create mode 100644 data/reference/afac_carrier_crosswalk.csv
+ create mode 100644 data/reference/afac_city_iata_crosswalk.csv
+ create mode 100644 docs/solicitud-pnt.md
+
+diff --git a/data/reference/afac_carrier_crosswalk.csv b/data/reference/afac_carrier_crosswalk.csv
+new file mode 100644
+index 0000000..8d6082d
+--- /dev/null
++++ b/data/reference/afac_carrier_crosswalk.csv
+@@ -0,0 +1,10 @@
++afac_carrier_name,carrier_key
++Aeroméxico (Aerovías de México),AEROMEXICO
++Aeroméxico Connect (Aerolitoral),AEROMEXICO_CONNECT
++Aerus,AERUS
++Aéreo Calafia,AEREO_CALAFIA
++Magnicharters (Grupo Aéreo Monterrey),MAGNICHARTERS
++Mexicana (Aerolínea del Estado Mexicano),MEXICANA_NUEVA
++Transportes Aéreos Regionales (TAR),TAR
++Vivaaerobus (Aeroenlaces),VIVA_AEROBUS
++Volaris (Concesionaria Vuela Cia de Aviación),VOLARIS
+diff --git a/data/reference/afac_city_iata_crosswalk.csv b/data/reference/afac_city_iata_crosswalk.csv
+new file mode 100644
+index 0000000..cedd93c
+--- /dev/null
++++ b/data/reference/afac_city_iata_crosswalk.csv
+@@ -0,0 +1,53 @@
++afac_city,airport_iata
++ACAPULCO,ACA
++AGUASCALIENTES,AGU
++CAMPECHE,CPE
++CANCUN,CUN
++CHETUMAL,CTM
++CHIHUAHUA,CUU
++CIUDAD DEL CARMEN,CME
++CIUDAD JUAREZ,CJS
++CIUDAD OBREGON,CEN
++COLIMA,CLQ
++COZUMEL,CZM
++CULIACAN,CUL
++DEL BAJIO,BJX
++DURANGO,DGO
++GUADALAJARA,GDL
++HERMOSILLO,HMO
++HUATULCO,HUX
++IXTAPA ZIHUATANEJO,ZIH
++LA PAZ,LAP
++LORETO,LTO
++LOS MOCHIS,LMM
++MANZANILLO,ZLO
++MATAMOROS,MAM
++MAZATLAN,MZT
++MERIDA,MID
++MEXICALI,MXL
++MEXICO,MEX
++MINATITLAN,MTT
++MONTERREY,MTY
++MORELIA,MLM
++NUEVO LAREDO,NLD
++OAXACA,OAX
++PUEBLA,PBC
++PUERTO ESCONDIDO,PXM
++PUERTO VALLARTA,PVR
++QUERETARO,QRO
++REYNOSA,REX
++SAN JOSÉ DEL CABO,SJD
++SAN LUIS POTOSI,SLP
++SANTA LUCÍA,NLU
++TAMPICO,TAM
++TAPACHULA,TAP
++TEPIC,TPQ
++TIJUANA,TIJ
++TOLUCA,TLC
++TORREON,TRC
++TULUM,TQO
++TUXTLA GUTIERREZ,TGZ
++URUAPAN,UPN
++VERACRUZ,VER
++VILLAHERMOSA,VSA
++ZACATECAS,ZCL
+diff --git a/docs/estimador-ruta-aerolinea.md b/docs/estimador-ruta-aerolinea.md
+index c7f055d..0131b03 100644
+--- a/docs/estimador-ruta-aerolinea.md
++++ b/docs/estimador-ruta-aerolinea.md
+@@ -17,6 +17,8 @@ Contexto y evidencia de que el cubo existe: [`pasajeros-por-ruta-y-aerolinea.md`
+ |---|---|---|
+ | Pasajeros por ruta y mes (nacional regular) | `data/reference/afac_od_nacional_regular_2025q1.csv` | **Marginal de fila.** 527 pares dirigidos, 2025Q1 |
+ | Pasajeros por aerolínea y mes (nacional regular) | `data/reference/afac_carrier_domestic_2025q1.csv` | **Marginal de columna.** 8 permisionarias, 2025Q1 |
++| Ciudad AFAC ↔ código IATA | `data/reference/afac_city_iata_crosswalk.csv` | Traduce la semilla al vocabulario de las marginales. 52 ciudades, verificadas contra `dim_airport` |
++| Nombre AFAC ↔ `carrier_key` | `data/reference/afac_carrier_crosswalk.csv` | Alinea las aerolíneas de la semilla con las de la marginal |
+ | Vuelos por ruta y mes | mismo CSV de rutas, columna `vuelos` | Control de calidad de la semilla, no insumo del ajuste |
+ | T-100 por ruta, aerolínea y mes | `data/gold/fact_route_traffic.parquet` | **Arnés de validación.** Verdad publicada para medir el error |
+ | Identidades de aerolínea | `data/gold/dim_carrier.parquet`, `config/carrier_crosswalk.csv` | Resolución de entidades |
+@@ -78,6 +80,27 @@ de 2025, error ponderado por tamaño de ruta:
+ |---|---:|---:|
+ | Asientos por ruta | 1.40 pp | 4.21 % |
+ | Solo conteo de vuelos | 1.98 pp | 5.96 % |
++| Solo presencia (0/1, sin frecuencias) | 13.04 pp | 39.38 % |
++| Participación nacional de cada aerolínea | 100+ pp | 153 % |
++
++Las dos últimas filas son las que deciden el diseño.
++
++**La participación nacional no sirve como semilla.** No es una cuestión de
++calidad: es *matemáticamente idéntica* a una semilla de puros unos, porque el
++ajuste cancela cualquier escalado de columna. Ya está en el modelo, como
++marginal de columna; usarla también de semilla es darle la misma información dos
++veces. Al intentarlo, el 75 % de los pasajeros termina asignado a rutas que la
++aerolínea no vuela.
++
++**Saber solo qué rutas vuela cada aerolínea tampoco alcanza.** Una semilla de
++presencia, sin frecuencias, deja 13 puntos porcentuales de error. Es decir, los
++mapas de rutas públicos y las tablas de destinos por aeropuerto **no** bastan:
++hay que saber *cuántos* vuelos, no solo *si* vuela.
++
++Por la misma razón, los vuelos por ruta que AFAC sí publica no mejoran el ajuste:
++encadenar un IPF sobre vuelos y usar su salida como semilla produce exactamente
++el mismo resultado, porque el IPF solo aplica escalados de fila y columna y el
++segundo ajuste los vuelve a cancelar.
+ 
+ El reparto simple por asientos, sin ajustar a la marginal de aerolínea, queda
+ peor: la marginal por aerolínea es lo que absorbe la diferencia sistemática de
+@@ -112,20 +135,35 @@ columna, igual que el proyecto ya separa reportado de derivado.
+ `estimate_route_carrier` espera un `DataFrame` con
+ `period_id, route_key, carrier_key, weight`.
+ 
+-`route_key` debe usar el vocabulario de AFAC, que nombra **ciudades**, no
+-aeropuertos: `MEXICO-CANCUN`, `SANTA LUCÍA-TIJUANA`, `DEL BAJIO-MONTERREY`. Un
+-adaptador de semilla tiene que traducir de códigos IATA a ese vocabulario; es
+-trabajo pendiente y no trivial, porque `MEXICO` y `SANTA LUCÍA` son aeropuertos
+-distintos de la misma zona metropolitana.
++`route_key` usa el vocabulario de AFAC, que nombra **ciudades**, no aeropuertos:
++`MEXICO-CANCUN`, `SANTA LUCÍA-TIJUANA`, `DEL BAJIO-MONTERREY`. No hay que
++construir esa traducción: `build_seed_from_flights` la aplica a partir del
++crosswalk de 52 ciudades, y rechaza con `UnmappedSeedError` cualquier aeropuerto
++que no reconozca, en vez de descartarlo en silencio.
++
++Dos casos que el crosswalk resuelve y que es fácil equivocar: `MEXICO` es Benito
++Juárez (`MEX`) y `SANTA LUCÍA` es el AIFA (`NLU`) — misma zona metropolitana,
++aeropuertos distintos que AFAC nunca junta; y `DEL BAJIO` es `BJX`, en Silao, no
++León ni Guanajuato capital.
+ 
+ `weight` puede ser vuelos o asientos; la unidad es indiferente por la
+ invariancia de escala. Itinerarios publicados sirven igual que vuelos operados:
+ las cancelaciones son escalado de fila y se cancelan.
+ 
+-### Candidatos a fuente de semilla
++### Fuente de semilla: decisión
++
++La medición de arriba descarta las opciones gratuitas basadas en mapas de rutas.
++La semilla **tiene que traer frecuencias**, así que la elección es entre un feed
++ADS-B propio y un proveedor de itinerarios.
+ 
+-| Fuente | Costo | Nota |
++| Fuente | Costo | Veredicto |
+ |---|---|---|
+-| OpenSky Network | Gratis, uso no comercial | ADS-B histórico; callsign → aerolínea. Cobertura desigual en México, tolerable por la invariancia de fila |
+-| AviationStack / Aviation Edge | ~USD 50–200/mes | Itinerarios históricos; la vía de menor esfuerzo |
+-| Cirium Diio / OAG | Alto | Mejor calidad; incluye asientos reales por ruta, que bajan el error de 5.96 % a 4.21 % |
++| **AviationStack / Aviation Edge** | ~USD 50–200/mes | **Opción por defecto.** Itinerarios históricos con aerolínea, ruta y fecha; se agregan a frecuencias mensuales. Menor esfuerzo de integración |
++| Cirium Diio / OAG | Alto | Si hay presupuesto. Trae asientos reales por ruta, que bajan el error de 5.96 % a 4.21 % |
++| OpenSky Network | Gratis, uso no comercial | ADS-B histórico. Requiere credenciales OAuth2 desde 2025; la cobertura desigual es tolerable por la invariancia de fila. Viable pero con más trabajo de limpieza de callsigns |
++| Mapas de rutas, Wikipedia, tableros de aeropuerto | Gratis | **Descartado.** Dan presencia, no frecuencia: 13 pp de error |
++
++Cualquiera de las tres primeras entrega una tabla
++`period_id, origin_iata, dest_iata, carrier_key, flights`, que es justo lo que
++`build_seed_from_flights` consume. El adaptador de cada proveedor es lo único
++específico; el resto de la tubería no cambia.
+diff --git a/docs/solicitud-pnt.md b/docs/solicitud-pnt.md
+new file mode 100644
+index 0000000..33affe7
+--- /dev/null
++++ b/docs/solicitud-pnt.md
+@@ -0,0 +1,114 @@
++# Solicitud de acceso a la información — paquete listo para la PNT
++
++Todo lo necesario para presentar la solicitud a AFAC en la Plataforma Nacional de
++Transparencia. El texto está redactado para pegarse tal cual.
++
++## Estado
++
++| Vía | Estado |
++|---|---|
++| Correo a `transparencia@afac.gob.mx` | **Rebotado.** `550 5.4.1 Recipient address rejected: Access denied` desde `namprd05.prod.outlook.com`. Rechazo a nivel de destinatario, no de contenido |
++| Copia a `maria.bello@sict.gob.mx` | **Entregada.** Titular de la Unidad de Transparencia de SICT, que funge como la de AFAC. Recibió la solicitud original y su corrección de fundamentos |
++| Plataforma Nacional de Transparencia | **Pendiente.** Es la vía recomendada |
++
++El rebote es `5.4.1`, no `5.7.x`: el servidor rechazó a quién iba dirigido, no lo
++que decía. Las causas posibles son que la dirección ya no exista en el directorio
++del tenant, que el buzón solo acepte remitentes internos, o que una regla bloquee
++dominios de correo personal. Exchange Online devuelve el mismo código en los tres
++casos a propósito, para no revelar qué direcciones existen.
++
++## Datos del formulario
++
++| Campo | Valor |
++|---|---|
++| Sujeto obligado | Agencia Federal de Aviación Civil |
++| Ámbito | Federal |
++| Medio para recibir notificaciones | Correo electrónico registrado en la cuenta |
++| Modalidad de entrega | Entrega por Internet en la Plataforma Nacional |
++| Formato | Archivo electrónico (XLSX o CSV) |
++| Tipo de solicitud | Información pública |
++
++## Texto para pegar en el campo de descripción
++
++```
++Solicito, en formato abierto y procesable por medios electrónicos (XLSX o CSV),
++la estadística operacional de servicio regular nacional desagregada
++SIMULTÁNEAMENTE por: 1) par de ciudades origen-destino, 2) permisionaria o
++concesionaria, y 3) mes. Para cada combinación de esas tres variables solicito
++vuelos realizados, asientos ofrecidos y pasajeros transportados. Periodo: de
++enero de 2024 al mes más reciente disponible.
++
++No se solicita procesamiento ni generación de información nueva, sino el
++registro tal como esa Agencia lo recibe y lo conserva, por lo que no resulta
++aplicable el artículo 131 de la Ley General de Transparencia y Acceso a la
++Información Pública.
++
++Esa Agencia publica dos productos derivados de esa misma base: la "Estadística
++operacional origen-destino / Traffic Statistics by City Pairs", que reporta
++pasajeros por par de ciudades y mes sin desagregar por aerolínea; y el "Resumen
++operacional por aerolínea / Airline Statistics Summary", que reporta pasajeros
++por empresa y mes sin desagregar por ruta. Ambos son agregados marginales de un
++mismo universo. Para el primer trimestre de 2025, la suma de todos los pares de
++ciudades del primer producto asciende a 14,799,004 pasajeros y la suma de todas
++las empresas del segundo a 14,799,050 pasajeros: una diferencia de 46 pasajeros,
++equivalente a 0.0003%. Dos publicaciones independientes solo coinciden en ese
++grado si ambas se construyen a partir de un mismo registro que ya contiene, de
++forma conjunta, la ruta y la empresa. Ese registro es el que se solicita.
++
++Lo anterior es congruente con el artículo 84 de la Ley de Aviación Civil, que
++obliga a las concesionarias, asignatarias, operadoras aéreas y permisionarias
++del servicio de transporte aéreo comercial a entregar mensualmente a esa Agencia
++informes, bitácoras, estadísticas y reportes, y dispone que la Agencia dará
++seguimiento a la información presentada y la publicará trimestralmente.
++
++En caso de que se considere que la información reviste carácter confidencial por
++corresponder a empresas determinadas, solicito subsidiariamente y en este orden
++de preferencia: 1) versión pública en términos del artículo 120 de la Ley
++General de Transparencia y Acceso a la Información Pública; 2) la misma
++desagregación con las empresas agrupadas por grupo aeronáutico; 3) la misma
++desagregación limitada a las rutas en las que operen tres o más permisionarias,
++supuesto en el que no resulta identificable la posición individual de una
++empresa determinada.
++```
++
++## Fundamentos vigentes
++
++Aplica la Ley General de Transparencia y Acceso a la Información Pública
++**publicada en el DOF el 20 de marzo de 2025**, que abrogó la anterior. Las
++citas de la ley de 2015 que circulan en plantillas viejas ya no corresponden.
++
++| Artículo | Contenido |
++|---|---|
++| 124 | Vías de presentación de la solicitud, incluida la Plataforma Nacional |
++| 125 | Folio automático en la Plataforma; si se presenta por otra vía, la Unidad de Transparencia debe registrarla en la Plataforma en cinco días y enviar acuse |
++| 126 | Requisitos máximos exigibles: medio para notificaciones, descripción y modalidad |
++| 131 | Entrega de documentos existentes, sin obligación de elaborar documentos nuevos |
++| 134 | Plazo de respuesta: veinte días, ampliable excepcionalmente diez más |
++| 135 | El acceso se da en la modalidad de entrega elegida |
++| 120 | Versión pública cuando el documento contiene partes clasificadas |
++| 3, fr. XII | Definición de Formatos Abiertos |
++
++## Qué esperar y qué hacer después
++
++1. **Acuse con folio**, inmediato si se presenta por la Plataforma.
++2. **Respuesta en veinte días hábiles**, prorrogables diez.
++3. Si responden remitiendo a las publicaciones ya existentes, **no es una
++   respuesta completa**: esos son los agregados marginales, no el registro
++   solicitado. Procede recurso de revisión señalando ese punto.
++4. Si clasifican la información, revisar que apliquen prueba de daño y pedir la
++   versión pública del artículo 120.
++5. Si no hay respuesta en plazo, procede recurso de revisión por falta de
++   respuesta.
++
++Si llega el acuse, conviene mencionar en el seguimiento que existe una gestión
++previa por correo ante la Unidad de Transparencia de SICT, para que no se abran
++dos expedientes por el mismo asunto.
++
++## Para qué sirve la respuesta
++
++Un trimestre de datos reales convierte en **medición** lo que hoy es un supuesto:
++la exactitud del estimador está medida contra rutas México–Estados Unidos
++(1.98 pp de error en participación con semilla de vuelos), pero el mercado
++doméstico tiene una estructura competitiva distinta. Con la respuesta se calibra
++el residuo real y se puede publicar una banda de error doméstica en vez de una
++extrapolada. Ver [`estimador-ruta-aerolinea.md`](estimador-ruta-aerolinea.md).
+diff --git a/src/analytics/route_carrier.py b/src/analytics/route_carrier.py
+index b125e25..e232328 100644
+--- a/src/analytics/route_carrier.py
++++ b/src/analytics/route_carrier.py
+@@ -287,6 +287,70 @@ def _require_columns(frame: pd.DataFrame, columns: tuple[str, ...], name: str) -
+ # A seed adapter must emit route keys in this same vocabulary.
+ ROUTE_MARGIN_FILE = "afac_od_nacional_regular_2025q1.csv"
+ CARRIER_MARGIN_FILE = "afac_carrier_domestic_2025q1.csv"
++CITY_CROSSWALK_FILE = "afac_city_iata_crosswalk.csv"
++CARRIER_CROSSWALK_FILE = "afac_carrier_crosswalk.csv"
++
++# A seed provider hands over flights keyed by airport; the margins are keyed by
++# AFAC city.  These two columns are what a provider table must carry.
++FLIGHT_COLUMNS = ("period_id", "origin_iata", "dest_iata", "carrier_key", "flights")
++
++
++class UnmappedSeedError(ValueError):
++    """A seed row names an airport or carrier absent from the crosswalks."""
++
++
++def _reference_dir(reference_dir: Path | None) -> Path:
++    return reference_dir or (PATHS.data / "reference")
++
++
++def load_city_crosswalk(reference_dir: Path | None = None) -> dict[str, str]:
++    """IATA code to AFAC city name, the vocabulary the margins are keyed by."""
++
++    table = pd.read_csv(_reference_dir(reference_dir) / CITY_CROSSWALK_FILE)
++    return dict(zip(table["airport_iata"], table["afac_city"], strict=True))
++
++
++def load_carrier_crosswalk(reference_dir: Path | None = None) -> dict[str, str]:
++    """AFAC carrier name to the project's carrier_key."""
++
++    table = pd.read_csv(_reference_dir(reference_dir) / CARRIER_CROSSWALK_FILE)
++    return dict(zip(table["afac_carrier_name"], table["carrier_key"], strict=True))
++
++
++def build_seed_from_flights(
++    flights: pd.DataFrame, *, reference_dir: Path | None = None
++) -> pd.DataFrame:
++    """Turn a provider's flight counts into a seed keyed like the AFAC margins.
++
++    Flight counts are all a provider has to supply: the fit is invariant to
++    scaling any row or column, so aircraft gauge and uneven coverage cancel.
++    What cannot be recovered is which carrier flies a route and how often
++    relative to its rivals — that is the whole reason a seed is needed.
++    """
++
++    _require_columns(flights, FLIGHT_COLUMNS, "flights")
++    cities = load_city_crosswalk(reference_dir)
++
++    unmapped = (
++        set(flights["origin_iata"]) | set(flights["dest_iata"])
++    ) - set(cities)
++    if unmapped:
++        raise UnmappedSeedError(
++            "Airport(s) absent from the AFAC city crosswalk: "
++            + ", ".join(sorted(unmapped))
++        )
++
++    seed = flights.copy()
++    seed["route_key"] = (
++        seed["origin_iata"].map(cities) + "-" + seed["dest_iata"].map(cities)
++    )
++    seed = seed.rename(columns={"flights": "weight"})
++    seed = seed[seed["weight"] > 0]
++    return (
++        seed.groupby(["period_id", "route_key", "carrier_key"], as_index=False)["weight"]
++        .sum()
++        .loc[:, list(SEED_COLUMNS)]
++    )
+ 
+ 
+ def _period_id(month: str) -> str:
+@@ -305,7 +369,7 @@ def load_afac_domestic_margins(
+     evidence that a joint table exists upstream.
+     """
+ 
+-    reference = reference_dir or (PATHS.data / "reference")
++    reference = _reference_dir(reference_dir)
+ 
+     routes = pd.read_csv(reference / ROUTE_MARGIN_FILE)
+     routes["period_id"] = routes["mes"].map(_period_id)
+@@ -318,8 +382,15 @@ def load_afac_domestic_margins(
+ 
+     carriers = pd.read_csv(reference / CARRIER_MARGIN_FILE)
+     carriers["period_id"] = carriers["mes"].map(_period_id)
++    crosswalk = load_carrier_crosswalk(reference_dir)
++    unmapped = set(carriers["carrier_name"]) - set(crosswalk)
++    if unmapped:
++        raise UnmappedSeedError(
++            "AFAC carrier name(s) absent from the crosswalk: " + ", ".join(sorted(unmapped))
++        )
++    carriers["carrier_key"] = carriers["carrier_name"].map(crosswalk)
+     carrier_totals = (
+-        carriers.rename(columns={"pasajeros": "passengers", "carrier_name": "carrier_key"})
++        carriers.rename(columns={"pasajeros": "passengers"})
+         .groupby(["period_id", "carrier_key"], as_index=False)["passengers"]
+         .sum()
+     )
+diff --git a/tests/test_route_carrier_ipf.py b/tests/test_route_carrier_ipf.py
+index 8d6b8e1..2c30519 100644
+--- a/tests/test_route_carrier_ipf.py
++++ b/tests/test_route_carrier_ipf.py
+@@ -6,10 +6,14 @@ import pytest
+ 
+ from src.analytics.route_carrier import (
+     InfeasibleMarginsError,
++    UnmappedSeedError,
+     backtest_against_t100,
++    build_seed_from_flights,
+     estimate_route_carrier,
+     fit_ipf,
+     load_afac_domestic_margins,
++    load_carrier_crosswalk,
++    load_city_crosswalk,
+     load_t100_panel,
+ )
+ 
+@@ -318,6 +322,95 @@ def test_domestic_margins_are_ready_to_receive_a_seed() -> None:
+ 
+     assert "MEXICO-CANCUN" in set(route_totals["route_key"])
+     assert "TIJUANA-URUAPAN" in set(route_totals["route_key"])
+-    assert any("Volaris" in carrier for carrier in carrier_totals["carrier_key"])
++    assert "VOLARIS" in set(carrier_totals["carrier_key"])
+     assert (route_totals["passengers"] >= 0).all()
+     assert (carrier_totals["passengers"] > 0).all()
++
++
++# --------------------------------------------------------------------------
++# Turning a provider's flight counts into a seed the margins can be fitted to
++# --------------------------------------------------------------------------
++
++def _flights_fixture() -> pd.DataFrame:
++    return pd.DataFrame(
++        [
++            ("2025M01", "MEX", "CUN", "AEROMEXICO", 560),
++            ("2025M01", "MEX", "CUN", "VIVA_AEROBUS", 190),
++            ("2025M01", "MEX", "CUN", "VOLARIS", 137),
++            ("2025M01", "TIJ", "UPN", "VOLARIS", 41),
++            ("2025M01", "NLU", "TIJ", "VIVA_AEROBUS", 60),
++            ("2025M01", "BJX", "MTY", "VOLARIS", 0),
++        ],
++        columns=list(FLIGHT_COLUMNS_FOR_TEST),
++    )
++
++
++FLIGHT_COLUMNS_FOR_TEST = ("period_id", "origin_iata", "dest_iata", "carrier_key", "flights")
++
++
++def test_every_afac_city_has_an_airport_code() -> None:
++    route_totals, _ = load_afac_domestic_margins()
++    cities = load_city_crosswalk()
++
++    named = set()
++    for route_key in route_totals["route_key"]:
++        named.update(route_key.split("-", 1) if route_key.count("-") == 1 else [])
++
++    assert len(cities) == 52
++    assert named <= set(cities.values())
++
++
++def test_the_two_metropolitan_airports_stay_distinct() -> None:
++    """MEXICO is Benito Juárez and SANTA LUCÍA is AIFA; collapsing them is wrong."""
++
++    cities = load_city_crosswalk()
++
++    assert cities["MEX"] == "MEXICO"
++    assert cities["NLU"] == "SANTA LUCÍA"
++    assert cities["BJX"] == "DEL BAJIO"
++
++
++def test_every_afac_carrier_name_maps_to_a_project_key() -> None:
++    crosswalk = load_carrier_crosswalk()
++    margins = pd.read_csv("data/reference/afac_carrier_domestic_2025q1.csv")
++
++    assert set(margins["carrier_name"]) <= set(crosswalk)
++    assert crosswalk["Aeroméxico Connect (Aerolitoral)"] == "AEROMEXICO_CONNECT"
++
++
++def test_seed_is_rekeyed_into_the_afac_city_vocabulary() -> None:
++    seed = build_seed_from_flights(_flights_fixture())
++
++    assert set(seed.columns) == {"period_id", "route_key", "carrier_key", "weight"}
++    assert "MEXICO-CANCUN" in set(seed["route_key"])
++    assert "SANTA LUCÍA-TIJUANA" in set(seed["route_key"])
++
++
++def test_seed_drops_routes_a_carrier_did_not_fly() -> None:
++    seed = build_seed_from_flights(_flights_fixture())
++
++    assert "DEL BAJIO-MONTERREY" not in set(seed["route_key"])
++
++
++def test_seed_rejects_an_airport_it_cannot_place() -> None:
++    flights = _flights_fixture()
++    flights.loc[len(flights)] = ("2025M01", "MEX", "LAX", "AEROMEXICO", 136)
++
++    with pytest.raises(UnmappedSeedError, match="LAX"):
++        build_seed_from_flights(flights)
++
++
++def test_a_provider_seed_plugs_straight_into_the_published_margins() -> None:
++    """End to end: flights in, passengers by route and carrier out."""
++
++    route_totals, carrier_totals = load_afac_domestic_margins()
++    seed = build_seed_from_flights(_flights_fixture())
++
++    estimate, diagnostics = estimate_route_carrier(seed, route_totals, carrier_totals)
++
++    assert diagnostics.loc[0, "converged"]
++    mex_cun = estimate[estimate["route_key"] == "MEXICO-CANCUN"]
++    assert set(mex_cun["carrier_key"]) == {"AEROMEXICO", "VIVA_AEROBUS", "VOLARIS"}
++    # Convergence is relative to the grand total, so a single route may land a
++    # fraction of a passenger away; within one passenger is the meaningful test.
++    assert mex_cun["passengers_estimated"].sum() == pytest.approx(142_919, abs=1.0)

@@ -1,0 +1,416 @@
+From 1340fbb4e383de75d1d60f4f81b497fd03e7cc33 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 15 Sep 2026 02:03:09 +0000
+Subject: [PATCH 18/19] Weight sampled days by weekday, and speak to both
+ AeroDataBox plans
+
+A month is never a whole number of weeks. July 2026 has five Wednesdays and
+four Sundays, so a seven-day sample that counts both once reads the market
+through whichever weekdays it caught -- and since carrier mix moves with the
+weekly schedule, that biases every carrier's share. It is the same confound
+that made the pilot's single Tuesday read 1.30x. Weighting each sampled day by
+its weekday's frequency in the month makes the weights sum to the month's
+length exactly, so a sampled week scales to the month rather than resembling
+it. A full month weights every day at one, which is the identity.
+
+That matters for what a plan has to cost: a validated weekly sample is 1,624
+units against 7,192 for a full month. The direct Starter plan is USD 19 for
+40,000 units, half the per-unit cost of RapidAPI's Ultra and ample for one full
+validation month plus six sampled weeks. The adapter now resolves host and auth
+for either, so choosing a plan does not mean touching code.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01FYLfAv93wjCxnGdihXYpAm
+---
+ .env.example                       | 11 +++-
+ docs/estimador-ruta-aerolinea.md   | 25 +++++++++
+ src/ingest/aerodatabox/__main__.py | 33 +++++++++++-
+ src/ingest/aerodatabox/flights.py  | 85 +++++++++++++++++++++++-------
+ tests/test_aerodatabox_cli.py      | 40 +++++++++++++-
+ tests/test_aerodatabox_flights.py  | 25 +++++++++
+ 6 files changed, 196 insertions(+), 23 deletions(-)
+
+diff --git a/.env.example b/.env.example
+index 238e403..a286627 100644
+--- a/.env.example
++++ b/.env.example
+@@ -19,6 +19,13 @@ FRED_API_KEY=""
+ OPENSKY_CLIENT_ID=""
+ OPENSKY_CLIENT_SECRET=""
+ 
+-# AeroDataBox via RapidAPI: the estimator's seed (published schedules).
+-# The free Basic tier gives 400 API units a month; a FIDS call costs 2.
++# The estimator's seed (published schedules), from AeroDataBox. Two ways in,
++# priced differently for the same API; set whichever plan you bought.
++#
++#   Direct plans (aerodatabox.com) — cheapest per unit. Starter is USD 19 for
++#   40,000 units, enough for one full validation month plus six sampled weeks.
++AERODATABOX_API_KEY=
++#
++#   RapidAPI resells the same API. The free Basic tier gives 400 units a month;
++#   a FIDS call costs 2 units and the window caps at 12 hours through Ultra.
+ RAPIDAPI_KEY=
+diff --git a/docs/estimador-ruta-aerolinea.md b/docs/estimador-ruta-aerolinea.md
+index 3078e4e..31b84ec 100644
+--- a/docs/estimador-ruta-aerolinea.md
++++ b/docs/estimador-ruta-aerolinea.md
+@@ -200,6 +200,31 @@ itinerario semanal, y sobrerrepresentar un día sesga la semilla.
+ | Mes completo (31 días) | 7,192 |
+ | Muestra de una semana | 1,624 |
+ 
++Cada día muestreado se pondera por cuántas veces cae su día de la semana en el
++mes. Julio de 2026 tiene cinco miércoles y cuatro domingos; una semana que los
++cuente igual lee el mercado a través de los días que le tocaron, y como la mezcla
++de aerolíneas se mueve con el itinerario semanal, eso sesga a todas. Con la
++ponderación los pesos suman exactamente los días del mes, así que la semana
++**escala** al mes en vez de solo parecerse. Un mes completo da peso uno a cada
++día, que es la identidad.
++
++### Qué plan comprar
++
++| Plan | Precio | Unidades | USD por 1,000 | ¿Alcanza? |
++|---|---:|---:|---:|---|
++| Pro (RapidAPI) | 7.50 | 5,000 | 1.50 | No: ni un mes completo |
++| **Starter (directo)** | **19** | **40,000** | **0.47** | Sí, con holgura |
++| Ultra (RapidAPI) | 37.50 | 50,000 | 0.75 | Sí |
++
++El plan de trabajo son 16,936 unidades: un mes completo para validar el muestreo
++semanal, más seis semanas. Starter es la opción obvia —la mitad de costo por
++unidad que Ultra— y el adaptador habla con las dos APIs, así que la elección no
++obliga a tocar código. Se configura con `AERODATABOX_API_KEY` para los planes
++directos o `RAPIDAPI_KEY` para los revendidos.
++
++Una salvedad: las 2 unidades por llamada están medidas en RapidAPI, no en el plan
++directo. Aunque allá costara el doble, 40,000 unidades siguen sobrando.
++
+ La salida queda en `data/silver/`: los vuelos crudos normalizados y, si la
+ prueba pasó, la estimación con `is_estimated = True`.
+ 
+diff --git a/src/ingest/aerodatabox/__main__.py b/src/ingest/aerodatabox/__main__.py
+index de1e768..db55912 100644
+--- a/src/ingest/aerodatabox/__main__.py
++++ b/src/ingest/aerodatabox/__main__.py
+@@ -17,6 +17,7 @@ from __future__ import annotations
+ 
+ import argparse
+ import calendar
++from collections import Counter
+ from datetime import date
+ from pathlib import Path
+ import sys
+@@ -66,6 +67,30 @@ def month_days(period_id: str, sample: int | None = None) -> list[date]:
+     return sorted(result)
+ 
+ 
++def day_weights(period_id: str, days: list[date]) -> dict[date, float]:
++    """How many days of the month each sampled day has to stand in for.
++
++    A month is never a whole number of weeks: July 2026 has five Wednesdays and
++    four Sundays.  A seven-day sample that counts both once reads the market
++    through whichever weekdays it happened to catch, and since carrier mix moves
++    with the weekly schedule, that biases every carrier's share.  Weighting each
++    sampled day by its weekday's frequency removes it, so a sampled week scales
++    to the month instead of merely resembling it.
++
++    A full month gives every day a weight of one, which is the identity.
++    """
++
++    year, month = int(period_id[:4]), int(period_id[5:])
++    total = calendar.monthrange(year, month)[1]
++    in_month: Counter[int] = Counter(
++        date(year, month, day).weekday() for day in range(1, total + 1)
++    )
++    sampled: Counter[int] = Counter(day.weekday() for day in days)
++    return {
++        day: in_month[day.weekday()] / sampled[day.weekday()] for day in days
++    }
++
++
+ def plan(airports: int, days: int) -> int:
+     """API units a sweep will cost, so the operator sees it before spending."""
+ 
+@@ -105,9 +130,15 @@ def main(argv: list[str] | None = None) -> int:
+         return 0
+ 
+     args.cache_dir.mkdir(parents=True, exist_ok=True)
++    weights = day_weights(args.period_id, days)
++    if args.days:
++        print(
++            "ponderacion por dia de la semana: "
++            + ", ".join(f"{d:%a}x{w:.2f}" for d, w in sorted(weights.items()))
++        )
+     flights, stats = pull_days(
+         airports, days, period_id=args.period_id,
+-        cache_dir=args.cache_dir, unit_budget=args.budget,
++        cache_dir=args.cache_dir, unit_budget=args.budget, day_weights=weights,
+     )
+     print(
+         f"llamadas {stats.calls} (cache {stats.cached_calls})  "
+diff --git a/src/ingest/aerodatabox/flights.py b/src/ingest/aerodatabox/flights.py
+index ac7cc0e..2ea52ac 100644
+--- a/src/ingest/aerodatabox/flights.py
++++ b/src/ingest/aerodatabox/flights.py
+@@ -35,8 +35,12 @@ import pandas as pd
+ from src.analytics.route_carrier import load_city_crosswalk
+ 
+ 
+-API_HOST = "aerodatabox.p.rapidapi.com"
+-BASE_URL = f"https://{API_HOST}/flights/airports/iata"
++# Two ways in, priced differently: RapidAPI resells the same API, and the
++# direct plans are cheaper per unit.  They differ only in host and auth header,
++# so the caller picks one and nothing else changes.
++RAPIDAPI_HOST = "aerodatabox.p.rapidapi.com"
++RAPIDAPI_URL = f"https://{RAPIDAPI_HOST}/flights/airports/iata"
++DIRECT_URL = "https://aerodatabox.com/api/flights/airports/iata"
+ # The Basic plan answers a window longer than this with an empty list.
+ MAX_WINDOW_HOURS = 12
+ UNITS_PER_CALL = 2
+@@ -106,12 +110,40 @@ def _cache_path(cache_dir: Path, iata: str, start: str) -> Path:
+     return cache_dir / f"{iata}_{start.replace(':', '')}.json"
+ 
+ 
++def api_credentials(
++    api_key: str | None = None, *, direct: bool | None = None
++) -> tuple[str, dict[str, str]]:
++    """Resolve the base URL and auth headers for whichever plan is configured.
++
++    ``AERODATABOX_API_KEY`` selects the direct plans, ``RAPIDAPI_KEY`` the
++    resold ones.  Passing ``api_key`` overrides both, and ``direct`` says which
++    of the two it is.
++    """
++
++    if api_key is not None:
++        if direct is None:
++            raise ValueError("pass direct=True or direct=False with an explicit api_key")
++    elif os.environ.get("AERODATABOX_API_KEY"):
++        api_key, direct = os.environ["AERODATABOX_API_KEY"], True
++    elif os.environ.get("RAPIDAPI_KEY"):
++        api_key, direct = os.environ["RAPIDAPI_KEY"], False
++    else:
++        raise RuntimeError(
++            "Set AERODATABOX_API_KEY (direct plans) or RAPIDAPI_KEY (RapidAPI)"
++        )
++
++    if direct:
++        return DIRECT_URL, {"x-magicapi-key": api_key, "x-api-key": api_key}
++    return RAPIDAPI_URL, {"x-rapidapi-key": api_key, "x-rapidapi-host": RAPIDAPI_HOST}
++
++
+ def fetch_window(
+     iata: str,
+     start: str,
+     end: str,
+     *,
+-    api_key: str,
++    api_key: str | None = None,
++    direct: bool | None = None,
+     cache_dir: Path,
+     stats: PullStats,
+     client: httpx.Client | None = None,
+@@ -123,7 +155,7 @@ def fetch_window(
+         stats.cached_calls += 1
+         return json.loads(path.read_text())
+ 
+-    url = f"{BASE_URL}/{iata}/{start}/{end}"
++    base_url, headers = api_credentials(api_key, direct=direct)
+     params = {
+         "direction": "Departure",
+         # Required: without it a departure record carries no arrival airport
+@@ -135,11 +167,10 @@ def fetch_window(
+         "withPrivate": "false",
+         "withLocation": "false",
+     }
+-    headers = {"x-rapidapi-key": api_key, "x-rapidapi-host": API_HOST}
+     owns_client = client is None
+     client = client or httpx.Client(timeout=90.0)
+     try:
+-        response = client.get(url, params=params, headers=headers)
++        response = client.get(f"{base_url}/{iata}/{start}/{end}", params=params, headers=headers)
+     finally:
+         if owns_client:
+             client.close()
+@@ -191,12 +222,23 @@ def _carrier_key(flight: dict, stats: PullStats) -> str | None:
+ def normalise(
+     raw: dict[str, list[dict]], period_id: str, *, stats: PullStats,
+     reference_dir: Path | None = None,
++    day_weights: dict[date, float] | None = None,
+ ) -> pd.DataFrame:
+-    """Turn cached responses into the ``FLIGHT_COLUMNS`` contract."""
++    """Turn cached responses into the ``FLIGHT_COLUMNS`` contract.
++
++    ``raw`` maps an airport, or an ``(airport, day)`` pair, to its departures.
++    With ``day_weights`` each flight counts as its day's weight instead of one,
++    which is what lets a sampled week stand in for a whole month: a month with
++    five Wednesdays and four Sundays needs the sampled Wednesday counted five
++    times and the Sunday four, or every carrier's mix is read through whichever
++    weekdays happened to be sampled.
++    """
+ 
+     domestic = set(load_city_crosswalk(reference_dir))
+-    rows: list[tuple[str, str, str, str, int]] = []
+-    for origin, flights in raw.items():
++    rows: list[tuple[str, str, str, str, float]] = []
++    for key, flights in raw.items():
++        origin, day = key if isinstance(key, tuple) else (key, None)
++        weight = 1.0 if day_weights is None else float(day_weights.get(day, 1.0))
+         for flight in flights:
+             if flight.get("isCargo"):
+                 stats.cargo_dropped += 1
+@@ -214,7 +256,7 @@ def normalise(
+             carrier = _carrier_key(flight, stats)
+             if carrier is None:
+                 continue
+-            rows.append((period_id, origin, dest, carrier, 1))
++            rows.append((period_id, origin, dest, carrier, weight))
+ 
+     frame = pd.DataFrame(
+         rows, columns=["period_id", "origin_iata", "dest_iata", "carrier_key", "flights"]
+@@ -233,8 +275,10 @@ def pull_days(
+     period_id: str,
+     cache_dir: Path,
+     api_key: str | None = None,
++    direct: bool | None = None,
+     unit_budget: int | None = None,
+     reference_dir: Path | None = None,
++    day_weights: dict[date, float] | None = None,
+ ) -> tuple[pd.DataFrame, PullStats]:
+     """Sweep every airport across whole days, in half-day windows.
+ 
+@@ -243,12 +287,11 @@ def pull_days(
+     costs the next attempt.
+     """
+ 
+-    api_key = api_key or os.environ.get("RAPIDAPI_KEY")
+-    if not api_key:
+-        raise RuntimeError("RAPIDAPI_KEY is not set")
++    base_url, _ = api_credentials(api_key, direct=direct)   # falla temprano si no hay llave
++    del base_url
+ 
+     stats = PullStats()
+-    raw: dict[str, list[dict]] = {}
++    raw: dict[tuple[str, date], list[dict]] = {}
+     last_call = 0.0
+     with httpx.Client(timeout=90.0) as client:
+         for day in days:
+@@ -264,16 +307,20 @@ def pull_days(
+                         and not _cache_path(cache_dir, iata, start).exists()
+                     ):
+                         return normalise(
+-                            raw, period_id, stats=stats, reference_dir=reference_dir
++                            raw, period_id, stats=stats,
++                            reference_dir=reference_dir, day_weights=day_weights,
+                         ), stats
+                     wait = MIN_SECONDS_BETWEEN_CALLS - (time.monotonic() - last_call)
+                     if wait > 0 and not _cache_path(cache_dir, iata, start).exists():
+                         time.sleep(wait)
+                     flights = fetch_window(
+-                        iata, start, end, api_key=api_key, cache_dir=cache_dir,
+-                        stats=stats, client=client,
++                        iata, start, end, api_key=api_key, direct=direct,
++                        cache_dir=cache_dir, stats=stats, client=client,
+                     )
+                     last_call = time.monotonic()
+-                    raw.setdefault(iata, []).extend(flights)
++                    raw.setdefault((iata, day), []).extend(flights)
+ 
+-    return normalise(raw, period_id, stats=stats, reference_dir=reference_dir), stats
++    return normalise(
++        raw, period_id, stats=stats,
++        reference_dir=reference_dir, day_weights=day_weights,
++    ), stats
+diff --git a/tests/test_aerodatabox_cli.py b/tests/test_aerodatabox_cli.py
+index 8d31389..bbc240d 100644
+--- a/tests/test_aerodatabox_cli.py
++++ b/tests/test_aerodatabox_cli.py
+@@ -10,7 +10,7 @@ from datetime import date
+ 
+ import pytest
+ 
+-from src.ingest.aerodatabox.__main__ import main, month_days, plan
++from src.ingest.aerodatabox.__main__ import day_weights, main, month_days, plan
+ 
+ 
+ def test_a_whole_month_is_every_day_of_it() -> None:
+@@ -55,3 +55,41 @@ def test_the_plan_matches_the_measured_unit_cost() -> None:
+ def test_dry_run_spends_nothing_and_reports_the_cost(capsys: pytest.CaptureFixture) -> None:
+     assert main(["2026M07", "--dry-run"]) == 0
+     assert "7,192 unidades" in capsys.readouterr().out
++
++
++# --------------------------------------------------------------------------
++# Weekday weighting: what lets a sampled week stand in for a whole month.
++# --------------------------------------------------------------------------
++
++@pytest.mark.parametrize("period_id,length", [("2026M07", 31), ("2026M02", 28),
++                                              ("2024M02", 29), ("2026M04", 30)])
++def test_the_weights_of_a_sampled_week_sum_to_the_whole_month(
++    period_id: str, length: int
++) -> None:
++    """The scaled-up sample has to represent the month, not merely resemble it."""
++
++    days = month_days(period_id, sample=7)
++    assert sum(day_weights(period_id, days).values()) == pytest.approx(length)
++
++
++def test_a_full_month_weights_every_day_at_one() -> None:
++    days = month_days("2026M07")
++    assert set(day_weights("2026M07", days).values()) == {1.0}
++
++
++def test_a_long_month_weights_its_extra_weekdays_more() -> None:
++    """July 2026 starts on a Wednesday, so Wed/Thu/Fri occur five times."""
++
++    days = month_days("2026M07", sample=7)
++    weights = {day.strftime("%a"): w for day, w in day_weights("2026M07", days).items()}
++    assert weights["Wed"] == weights["Thu"] == weights["Fri"] == 5.0
++    assert weights["Sat"] == weights["Sun"] == weights["Mon"] == weights["Tue"] == 4.0
++
++
++def test_weighting_corrects_a_weekday_that_was_sampled_twice() -> None:
++    """Two Mondays must share one Monday's worth of weight, not double it."""
++
++    days = [date(2026, 7, 6), date(2026, 7, 13)]     # ambos lunes
++    weights = day_weights("2026M07", days)
++    assert sum(weights.values()) == pytest.approx(4.0)
++    assert set(weights.values()) == {2.0}
+diff --git a/tests/test_aerodatabox_flights.py b/tests/test_aerodatabox_flights.py
+index 018c13d..d07f89e 100644
+--- a/tests/test_aerodatabox_flights.py
++++ b/tests/test_aerodatabox_flights.py
+@@ -9,7 +9,10 @@ route at all.
+ 
+ from __future__ import annotations
+ 
++from datetime import date
++
+ import pandas as pd
++import pytest
+ 
+ from src.ingest.aerodatabox.flights import PullStats, normalise
+ 
+@@ -112,3 +115,25 @@ def test_flights_are_aggregated_per_route_and_carrier() -> None:
+     )
+     counts = dict(zip(frame["dest_iata"], frame["flights"], strict=True))
+     assert counts == {"GDL": 2, "CUN": 1}
++
++
++def test_day_weights_scale_a_sampled_day_into_the_month() -> None:
++    """A Wednesday that stands for five Wednesdays counts five times."""
++
++    stats = PullStats()
++    raw = {("MEX", date(2026, 7, 1)): [_flight(), _flight()]}
++    frame = normalise(raw, "2026M02", stats=stats, day_weights={date(2026, 7, 1): 5.0})
++    assert frame.loc[0, "flights"] == pytest.approx(10.0)
++
++
++def test_without_weights_every_flight_counts_once() -> None:
++    stats = PullStats()
++    raw = {("MEX", date(2026, 7, 1)): [_flight()]}
++    assert normalise(raw, "2026M02", stats=stats).loc[0, "flights"] == pytest.approx(1.0)
++
++
++def test_a_plain_airport_key_still_works_unweighted() -> None:
++    """The older shape, an airport with no day, must keep parsing."""
++
++    stats = PullStats()
++    assert normalise({"MEX": [_flight()]}, "2026M02", stats=stats).loc[0, "flights"] == 1.0

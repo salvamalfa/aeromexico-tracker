@@ -1,0 +1,501 @@
+From d00f2acd3fb5396e0ca32d849bbf99743ccd6e39 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 15 Sep 2026 00:25:59 +0000
+Subject: [PATCH 12/19] Add the seed acceptance test and correct the provider
+ comparison
+
+The estimator tolerates a source that misses flights evenly and one that
+reports the wrong unit; it fails only when a source misses more of one
+carrier's flights than of its rival's on the same route.  Nothing a provider
+advertises measures that, so measure it here.
+
+AFAC publishes flights per route next to passengers per route, which is the
+free contrast the test needs.  Under even coverage the ratio of a candidate's
+flight count to AFAC's would be one constant on every route; it is not, and
+how it varies across routes with different carrier mixes identifies a
+per-carrier coverage factor.  Alternating weighted least squares recovers it.
+The tests inject a known bias, including the profile measured on OpenSky, and
+check it comes back -- a detector that cannot do that would licence a purchase.
+
+Correct the cost in the doc: AeroDataBox covers the whole national market for
+USD 7.50 a month, not the USD 50-200 previously written, and its free tier is
+the only one that includes historical data, so it is the one to trial.
+AviationStack's free plan excludes historical flights, schedules and routes.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01FYLfAv93wjCxnGdihXYpAm
+---
+ docs/estimador-ruta-aerolinea.md |  59 +++++--
+ src/analytics/seed_acceptance.py | 276 +++++++++++++++++++++++++++++++
+ tests/test_seed_acceptance.py    | 102 ++++++++++++
+ 3 files changed, 424 insertions(+), 13 deletions(-)
+ create mode 100644 src/analytics/seed_acceptance.py
+ create mode 100644 tests/test_seed_acceptance.py
+
+diff --git a/docs/estimador-ruta-aerolinea.md b/docs/estimador-ruta-aerolinea.md
+index 7e613a5..b68a2d9 100644
+--- a/docs/estimador-ruta-aerolinea.md
++++ b/docs/estimador-ruta-aerolinea.md
+@@ -163,18 +163,30 @@ haya un receptor en tierra, y las cancelaciones son escalado de fila, que el
+ ajuste cancela. Los **vuelos rastreados** (ADS-B) dependen de la densidad de
+ receptores, que en el centro y sureste de México es el problema.
+ 
+-| Fuente | Familia | Costo | Veredicto |
+-|---|---|---|---|
+-| **AeroDataBox, AviationStack, Aviation Edge** | Itinerarios | ~USD 20–200/mes | **Opción por defecto.** Cobertura cierta, refrescable cada mes |
+-| Cirium Diio / OAG | Itinerarios | Alto | Si hay presupuesto. Trae asientos reales, que bajan el error de 5.96 % a 4.21 % |
+-| adsb.lol, airplanes.live, ADSB Exchange | Rastreo | Gratis o bajo | **Apuesta, no descarte.** Otra red de receptores puede cubrir donde OpenSky no. Someterla a la prueba de aceptación antes de invertirle tiempo |
+-| OpenSky Network | Rastreo | Gratis | **Descartado por medición.** Ver abajo |
+-| Mapas de rutas, Wikipedia, OpenFlights, tableros de aeropuerto | Presencia | Gratis | **Descartado.** Dan presencia, no frecuencia: 13 pp de error |
+-| Boletines de AFAC y de AICM | — | Gratis | **Descartado por inspección.** AICM desagrega por terminal, no por aerolínea; la base de DATATUR es aerolínea × mes × región, sin ruta |
+-
+-Al contratar, conviene pedir el extracto **por aerolínea**, no por aeropuerto:
+-garantiza que la red completa de cada operador entre a la semilla, que es
+-justo lo que evita la trampa de `column_scale` descrita más abajo.
++| Fuente | Familia | Costo real | Prueba gratis | Veredicto |
++|---|---|---|---|---|
++| **AeroDataBox** | Itinerarios | **USD 7.50/mes** (plan Pro, 5,000 unidades) | **Sí: 400 unidades/mes, con histórico de ±365 días** | **Con esta se prueba.** Es la única cuyo tramo gratuito incluye lo que hace falta |
++| Aviation Edge | Itinerarios | USD 7 el primer mes (30,000 llamadas), luego tarifa normal | Prueba de pago, no gratuita | Suplente si la calidad de AeroDataBox decepciona |
++| AviationStack | Itinerarios | USD 49.99/mes el plan Basic | Sí, 100 llamadas/mes — **pero el plan gratuito excluye vuelos históricos, itinerarios y rutas de aerolínea** | Descartado para la prueba: lo gratuito no cubre nada de lo que se necesita |
++| Cirium Diio / OAG | Itinerarios | Alto | No | Si hay presupuesto. Trae asientos reales, que bajan el error de 5.96 % a 4.21 % |
++| adsb.lol, airplanes.live, ADSB Exchange | Rastreo | Gratis o bajo | Sí | Apuesta a que sus receptores cubran donde OpenSky no. Someterla a la prueba de aceptación antes de invertirle tiempo |
++| OpenSky Network | Rastreo | Gratis | Sí | **Descartado por medición.** Ver abajo |
++| Mapas de rutas, Wikipedia, OpenFlights, tableros de aeropuerto | Presencia | Gratis | — | **Descartado.** Dan presencia, no frecuencia: 13 pp de error |
++| Boletines de AFAC y de AICM | — | Gratis | — | **Descartado por inspección.** AICM desagrega por terminal, no por aerolínea; la base de DATATUR es aerolínea × mes × región, sin ruta |
++
++El costo corregido importa: no son USD 50–200 al mes, son **USD 7.50**. El
++mercado nacional son 58 aeropuertos y unos 1,100 vuelos diarios, y basta pedir
++**salidas**, porque todo vuelo doméstico sale de un aeropuerto mexicano. Con
++ventanas de 12 horas eso es 58 × 30 × 2 = 3,480 llamadas al mes, dentro del plan
++de 5,000.
++
++Las 400 unidades gratuitas no alcanzan para un mes completo, pero sí para **tres
++días completos de los 58 aeropuertos** (116 unidades por día), que es
++exactamente lo que la prueba de aceptación necesita.
++
++Al contratar, conviene pedir el extracto **por aerolínea** cuando el proveedor lo
++permita: garantiza que la red completa de cada operador entre a la semilla, que
++es justo lo que evita la trampa de `column_scale` descrita más abajo.
+ 
+ #### Por qué OpenSky no sirve
+ 
+@@ -218,7 +230,28 @@ rutas.
+ Este paso no cuesta nada más que el mes de prueba y es el único que distingue
+ una fuente incompleta de una fuente sesgada.
+ 
+-Cualquiera de las tres primeras entrega una tabla
++Ya está automatizado en `src/analytics/seed_acceptance.py`. Dado un mes de
++vuelos de cualquier proveedor devuelve un veredicto y, sobre todo, un **factor
++de cobertura por aerolínea**, normalizado al promedio del mercado:
++
++```python
++from src.analytics.seed_acceptance import assess_seed, format_report
++print(format_report(assess_seed(flights, "2026M02")))
++```
++
++La recuperación de ese factor es lo que hace la prueba honesta. Se apoya en que
++las rutas tienen mezclas de operadores distintas: si el déficit observado en cada
++ruta se explica sistemáticamente por quién la vuela, hay sesgo por aerolínea; si
++no, el déficit es parejo y el ajuste lo cancela. Las pruebas inyectan un sesgo
++conocido —incluido el perfil real medido en OpenSky, 13 %/26 %/29 %/37 %— y
++verifican que vuelva a salir, porque un detector que no recupera un sesgo
++inyectado autorizaría una compra mala.
++
++Umbrales: se acepta por debajo de **1.15x** de dispersión entre la aerolínea
++mejor y la peor cubierta, se rechaza a partir de **1.50x**. OpenSky estaba en
++2.8x.
++
++Cualquiera de las fuentes de itinerarios entrega una tabla
+ `period_id, origin_iata, dest_iata, carrier_key, flights`, que es justo lo que
+ `build_seed_from_flights` consume. El adaptador de cada proveedor es lo único
+ específico; el resto de la tubería no cambia.
+diff --git a/src/analytics/seed_acceptance.py b/src/analytics/seed_acceptance.py
+new file mode 100644
+index 0000000..56a2b5f
+--- /dev/null
++++ b/src/analytics/seed_acceptance.py
+@@ -0,0 +1,276 @@
++"""Judge a candidate seed source before paying for a subscription to it.
++
++The OpenSky pilot burned 540 API credits and several hours to reach a verdict
++that AFAC's own publications could have delivered in an afternoon.  The reason
++is that the fit tolerates almost everything a cheap data source gets wrong, and
++fails on exactly one thing:
++
++- **Missing flights, evenly.**  Harmless.  A uniform deficit on a route is a row
++  scaling, and iterative proportional fitting is invariant to row scaling.
++- **Wrong units.**  Harmless.  Flights instead of seats is a column scaling.
++- **Missing more flights of one carrier than of its rival, on the same route.**
++  Fatal, and invisible in every summary statistic a provider advertises.
++
++So the acceptance test has to measure that last quantity specifically.  It can,
++without any ground truth, because AFAC publishes flights per route alongside
++passengers per route.  If a source covered every carrier equally, the ratio of
++its flight count to AFAC's would be the same constant on every route.  It is not
++— and how it varies across routes with different carrier mixes is what identifies
++a per-carrier coverage factor.
++
++:func:`estimate_carrier_coverage` recovers those factors; the spread between the
++largest and the smallest is the number that decides whether to buy.
++"""
++
++from __future__ import annotations
++
++from dataclasses import dataclass
++from pathlib import Path
++
++import numpy as np
++import pandas as pd
++
++from src.analytics.route_carrier import (
++    ROUTE_MARGIN_FILE,
++    build_seed_from_flights,
++    estimate_route_carrier,
++    load_afac_domestic_margins,
++)
++from src.config import PATHS
++
++
++ACCEPTANCE_VERSION = "seed_acceptance_v1"
++
++# A source whose carriers differ by less than this factor is usable: the residual
++# it leaves is below the estimator's own measured error of ~2 pp.
++COVERAGE_SPREAD_PASS = 1.15
++# Above this the split is not worth publishing.  OpenSky sat at 2.8.
++COVERAGE_SPREAD_FAIL = 1.50
++# `column_scale` this far from 1 means the seed misses part of some carrier's
++# network, which silently corrupts the split even when everything else looks fine.
++COLUMN_SCALE_TOLERANCE = 0.05
++
++_DEBIAS_SWEEPS = 50
++_DEBIAS_TOLERANCE = 1e-10
++
++
++@dataclass(frozen=True, slots=True)
++class AcceptanceReport:
++    """Everything needed to accept or reject a seed source, and why."""
++
++    period_id: str
++    afac_routes: int
++    covered_routes: int
++    passenger_coverage: float
++    flight_coverage: float
++    missing_carriers: tuple[str, ...]
++    carrier_coverage: dict[str, float]
++    coverage_spread: float
++    column_scale: float
++    verdict: str
++    notes: tuple[str, ...]
++
++    @property
++    def accepted(self) -> bool:
++        return self.verdict == "accept"
++
++
++def load_afac_route_flights(reference_dir: Path | None = None) -> pd.DataFrame:
++    """Flights per route and month, the free contrast the whole test rests on."""
++
++    reference = reference_dir or (PATHS.data / "reference")
++    routes = pd.read_csv(reference / ROUTE_MARGIN_FILE)
++    routes["route_key"] = (
++        routes["origen"].str.strip() + "-" + routes["destino"].str.strip()
++    )
++    return (
++        routes.rename(columns={"vuelos": "flights"})
++        .groupby(["period_id", "route_key"], as_index=False)["flights"]
++        .sum()
++    )
++
++
++def estimate_carrier_coverage(
++    route_flights: pd.DataFrame,
++    candidate: pd.DataFrame,
++    *,
++    weights: pd.Series | None = None,
++) -> pd.Series:
++    """Recover each carrier's coverage factor relative to the market average.
++
++    The candidate reports ``c[i,k] = f[k] * t[i,k]`` where ``t`` is the true
++    flight count and ``f[k]`` the fraction of carrier *k*'s flights the source
++    sees.  Only the route sums of ``t`` are known, from AFAC.  Writing the
++    observed ratio on route *i* as
++
++        r[i] = sum_k c[i,k] / sum_k t[i,k] = sum_k f[k] * s[i,k]
++
++    with ``s`` the *true* share of carrier *k* on route *i*, gives a linear
++    system in ``f`` — except that ``s`` is unknown too.  It is recovered by
++    alternating: hold the shares, solve for ``f`` by weighted least squares;
++    hold ``f``, divide it out of the observed shares to de-bias them.  Routes
++    with different carrier mixes are what make the system identifiable, and a
++    real network has plenty of those.
++
++    The result is normalised to a passenger-weighted mean of 1, because only
++    ratios between carriers are identifiable — a factor common to every carrier
++    is a global scaling the fit cancels anyway.
++    """
++
++    observed = candidate.pivot_table(
++        index="route_key", columns="carrier_key", values="weight",
++        aggfunc="sum", fill_value=0.0,
++    )
++    truth = route_flights.set_index("route_key")["flights"]
++    common = observed.index.intersection(truth.index[truth > 0])
++    observed = observed.loc[common]
++    truth = truth.loc[common]
++    if observed.empty or observed.shape[1] == 0:
++        return pd.Series(dtype=float)
++
++    carriers = list(observed.columns)
++    obs = observed.to_numpy(dtype=float)
++    totals = truth.to_numpy(dtype=float)
++    ratio = obs.sum(axis=1) / totals
++
++    if weights is None:
++        w = totals.copy()
++    else:
++        w = weights.reindex(common).fillna(0.0).to_numpy(dtype=float)
++    w = np.where(np.isfinite(w) & (w > 0), w, 0.0)
++    if not w.any():
++        w = np.ones_like(totals)
++
++    factors = np.ones(len(carriers))
++    for _ in range(_DEBIAS_SWEEPS):
++        # De-bias the observed mix into an estimate of the true share matrix.
++        unbiased = obs / factors
++        row_sums = unbiased.sum(axis=1)
++        shares = np.divide(
++            unbiased, row_sums[:, None],
++            out=np.zeros_like(unbiased), where=row_sums[:, None] > 0,
++        )
++        # Weighted least squares for the coverage factors, clipped at zero: a
++        # negative coverage is not a thing the data can mean.
++        sw = shares * np.sqrt(w)[:, None]
++        solution, *_ = np.linalg.lstsq(sw, ratio * np.sqrt(w), rcond=None)
++        solution = np.clip(solution, 1e-9, None)
++        if np.max(np.abs(solution - factors)) <= _DEBIAS_TOLERANCE:
++            factors = solution
++            break
++        factors = solution
++
++    # Normalise: only the ratios between carriers carry meaning.
++    exposure = (obs / factors).sum(axis=0)
++    mean = float(np.average(factors, weights=exposure)) if exposure.sum() > 0 else 1.0
++    return pd.Series(factors / mean, index=carriers, name="coverage_factor")
++
++
++def assess_seed(
++    flights: pd.DataFrame,
++    period_id: str,
++    *,
++    reference_dir: Path | None = None,
++) -> AcceptanceReport:
++    """Score one month of a candidate source against what AFAC already publishes."""
++
++    seed = build_seed_from_flights(flights, reference_dir=reference_dir)
++    seed = seed[seed["period_id"] == period_id]
++    if seed.empty:
++        raise ValueError(f"The candidate carries no flights for {period_id}")
++
++    route_totals, carrier_totals = load_afac_domestic_margins(reference_dir)
++    route_totals = route_totals[route_totals["period_id"] == period_id]
++    carrier_totals = carrier_totals[carrier_totals["period_id"] == period_id]
++    route_flights = load_afac_route_flights(reference_dir)
++    route_flights = route_flights[route_flights["period_id"] == period_id]
++
++    flown = route_totals[route_totals["passengers"] > 0]
++    covered = flown["route_key"].isin(set(seed["route_key"]))
++    passenger_coverage = (
++        float(flown.loc[covered, "passengers"].sum() / flown["passengers"].sum())
++        if flown["passengers"].sum() > 0 else 0.0
++    )
++
++    afac_flights = float(route_flights["flights"].sum())
++    flight_coverage = float(seed["weight"].sum() / afac_flights) if afac_flights else 0.0
++
++    missing = tuple(sorted(
++        set(carrier_totals.loc[carrier_totals["passengers"] > 0, "carrier_key"])
++        - set(seed["carrier_key"])
++    ))
++
++    coverage = estimate_carrier_coverage(
++        route_flights, seed,
++        weights=flown.set_index("route_key")["passengers"],
++    )
++    spread = (
++        float(coverage.max() / coverage.min())
++        if not coverage.empty and coverage.min() > 0 else float("inf")
++    )
++
++    # The fit itself reports whether each carrier's whole network made it in.
++    column_scale = float("nan")
++    notes: list[str] = []
++    try:
++        _, diagnostics = estimate_route_carrier(seed, route_totals, carrier_totals)
++        if not diagnostics.empty:
++            column_scale = float(diagnostics["column_scale"].iloc[0])
++    except Exception as exc:  # noqa: BLE001 - a refused fit is itself a verdict
++        notes.append(f"El ajuste no corre con esta semilla: {type(exc).__name__}: {exc}")
++
++    if missing:
++        notes.append(f"Aerolíneas ausentes de la semilla: {', '.join(missing)}")
++    if np.isfinite(column_scale) and abs(column_scale - 1.0) > COLUMN_SCALE_TOLERANCE:
++        notes.append(
++            f"column_scale = {column_scale:.3f}: la semilla no cubre la red completa "
++            "de alguna aerolínea"
++        )
++    if passenger_coverage < 0.95:
++        notes.append(
++            f"La semilla solo alcanza el {passenger_coverage:.1%} de los pasajeros"
++        )
++
++    if missing or not np.isfinite(spread) or spread >= COVERAGE_SPREAD_FAIL:
++        verdict = "reject"
++    elif spread > COVERAGE_SPREAD_PASS or notes:
++        verdict = "review"
++    else:
++        verdict = "accept"
++
++    return AcceptanceReport(
++        period_id=period_id,
++        afac_routes=int(len(flown)),
++        covered_routes=int(covered.sum()),
++        passenger_coverage=passenger_coverage,
++        flight_coverage=flight_coverage,
++        missing_carriers=missing,
++        carrier_coverage=coverage.round(4).to_dict(),
++        coverage_spread=spread,
++        column_scale=column_scale,
++        verdict=verdict,
++        notes=tuple(notes),
++    )
++
++
++def format_report(report: AcceptanceReport) -> str:
++    """Render the report the way it should be read: the spread first."""
++
++    lines = [
++        f"Prueba de aceptación de semilla — {report.period_id}",
++        f"  Veredicto: {report.verdict.upper()}",
++        f"  Dispersión de cobertura entre aerolíneas: {report.coverage_spread:.2f}x "
++        f"(pasa <{COVERAGE_SPREAD_PASS}, reprueba >={COVERAGE_SPREAD_FAIL})",
++        f"  Rutas cubiertas: {report.covered_routes} de {report.afac_routes} "
++        f"({report.passenger_coverage:.1%} de los pasajeros)",
++        f"  Vuelos vistos vs AFAC: {report.flight_coverage:.1%}  "
++        f"(un déficit parejo no importa)",
++        f"  column_scale: {report.column_scale:.3f}",
++        "  Factor de cobertura por aerolínea (1.00 = promedio del mercado):",
++    ]
++    for carrier, factor in sorted(
++        report.carrier_coverage.items(), key=lambda kv: kv[1]
++    ):
++        lines.append(f"    {carrier:<24} {factor:.2f}")
++    lines.extend(f"  ! {note}" for note in report.notes)
++    return "\n".join(lines)
+diff --git a/tests/test_seed_acceptance.py b/tests/test_seed_acceptance.py
+new file mode 100644
+index 0000000..b08c259
+--- /dev/null
++++ b/tests/test_seed_acceptance.py
+@@ -0,0 +1,102 @@
++"""The acceptance test has to catch the one bias the estimator cannot absorb.
++
++These tests degrade a known-good flight table by a known per-carrier factor and
++check the factor comes back, because a detector that cannot recover an injected
++bias is worse than none: it would licence a purchase.
++"""
++
++from __future__ import annotations
++
++import numpy as np
++import pandas as pd
++import pytest
++
++from src.analytics.route_carrier import load_t100_panel
++from src.analytics.seed_acceptance import (
++    COVERAGE_SPREAD_FAIL,
++    estimate_carrier_coverage,
++    load_afac_route_flights,
++)
++
++
++@pytest.fixture(scope="module")
++def truth() -> pd.DataFrame:
++    """Real route structure with a real carrier mix, used as a stand-in truth."""
++
++    panel = load_t100_panel(period_prefix="2025")
++    month = panel[panel["period_id"] == sorted(panel["period_id"].unique())[0]]
++    table = month.rename(columns={"departures": "weight"})[
++        ["route_key", "carrier_key", "weight"]
++    ]
++    return table[table["weight"] > 0].reset_index(drop=True)
++
++
++def _route_flights(truth: pd.DataFrame) -> pd.DataFrame:
++    totals = truth.groupby("route_key", as_index=False)["weight"].sum()
++    return totals.rename(columns={"weight": "flights"})
++
++
++def _degrade(truth: pd.DataFrame, factors: dict[str, float]) -> pd.DataFrame:
++    seen = truth.copy()
++    seen["weight"] = seen["weight"] * seen["carrier_key"].map(factors).fillna(1.0)
++    return seen
++
++
++def test_uniform_coverage_reports_no_spread(truth: pd.DataFrame) -> None:
++    """Losing 40 % of every flight is a row scaling; it must look like no bias."""
++
++    seen = truth.assign(weight=truth["weight"] * 0.6)
++    coverage = estimate_carrier_coverage(_route_flights(truth), seen)
++    assert coverage.max() / coverage.min() == pytest.approx(1.0, abs=0.02)
++
++
++def test_recovers_an_injected_per_carrier_bias(truth: pd.DataFrame) -> None:
++    """A carrier seen half as often as the rest must come back at about half."""
++
++    biggest = truth.groupby("carrier_key")["weight"].sum().idxmax()
++    coverage = estimate_carrier_coverage(
++        _route_flights(truth), _degrade(truth, {biggest: 0.5})
++    )
++    others = coverage.drop(biggest)
++    assert coverage[biggest] / others.median() == pytest.approx(0.5, rel=0.15)
++
++
++def test_injected_bias_is_recovered_across_a_range(truth: pd.DataFrame) -> None:
++    carrier = truth.groupby("carrier_key")["weight"].sum().nlargest(3).index[-1]
++    for injected in (0.25, 0.5, 2.0):
++        coverage = estimate_carrier_coverage(
++            _route_flights(truth), _degrade(truth, {carrier: injected})
++        )
++        recovered = coverage[carrier] / coverage.drop(carrier).median()
++        assert recovered == pytest.approx(injected, rel=0.25), (
++            f"inyectado {injected}, recuperado {recovered:.3f}"
++        )
++
++
++def test_opensky_style_bias_is_rejected(truth: pd.DataFrame) -> None:
++    """The measured OpenSky profile must land beyond the fail threshold."""
++
++    carriers = truth.groupby("carrier_key")["weight"].sum().nlargest(4).index
++    # 13 %, 26 %, 29 %, 37 % — the resolution rates measured on real data.
++    profile = dict(zip(carriers, (0.13, 0.26, 0.29, 0.37), strict=True))
++    coverage = estimate_carrier_coverage(
++        _route_flights(truth), _degrade(truth, profile)
++    )
++    observed = coverage[list(carriers)]
++    assert observed.max() / observed.min() >= COVERAGE_SPREAD_FAIL
++
++
++def test_a_faithful_source_passes(truth: pd.DataFrame) -> None:
++    """An exact copy of the truth must show every carrier at the market average."""
++
++    coverage = estimate_carrier_coverage(_route_flights(truth), truth)
++    assert np.allclose(coverage.to_numpy(), 1.0, atol=0.02)
++
++
++def test_afac_route_flights_align_with_the_route_margin() -> None:
++    """The contrast the test rests on must exist for every month of margins."""
++
++    flights = load_afac_route_flights()
++    assert not flights.empty
++    assert flights["flights"].sum() > 0
++    assert flights["period_id"].nunique() == 17

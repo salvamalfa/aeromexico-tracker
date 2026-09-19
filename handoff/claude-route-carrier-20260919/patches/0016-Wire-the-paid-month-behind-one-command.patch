@@ -1,0 +1,295 @@
+From a61f8c72cf1e45b6a62a8f4f686127ce3e21b7f8 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 15 Sep 2026 01:09:04 +0000
+Subject: [PATCH 16/19] Wire the paid month behind one command
+
+Everything needed to turn API quota into estimates existed in pieces; this
+puts them in the order that matters. The sweep caches every response, so an
+interrupted run resumes without spending units again, and the acceptance test
+runs before the fit rather than after: a seed it rejects is not fitted at all
+unless the operator asks for that explicitly, which is the difference between
+a cheap data source and a published number that is quietly wrong.
+
+Day sampling is weekday-balanced rather than evenly spaced. Seven days spread
+across thirty-one lands on a step of four and happens to work, but a step that
+is a multiple of seven would hit the same weekday every time; stepping by a
+number coprime with seven walks every weekday in turn. Carrier mix moves with
+the weekly schedule, so over-representing a weekday biases the seed.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01FYLfAv93wjCxnGdihXYpAm
+---
+ docs/estimador-ruta-aerolinea.md   |  34 +++++++
+ src/ingest/aerodatabox/__main__.py | 153 +++++++++++++++++++++++++++++
+ tests/test_aerodatabox_cli.py      |  57 +++++++++++
+ 3 files changed, 244 insertions(+)
+ create mode 100644 src/ingest/aerodatabox/__main__.py
+ create mode 100644 tests/test_aerodatabox_cli.py
+
+diff --git a/docs/estimador-ruta-aerolinea.md b/docs/estimador-ruta-aerolinea.md
+index 1ddc875..86902b1 100644
+--- a/docs/estimador-ruta-aerolinea.md
++++ b/docs/estimador-ruta-aerolinea.md
+@@ -161,6 +161,40 @@ El residuo que queda es la desviación de la ocupación de cada aerolínea en es
+ ruta concreta respecto de su promedio nacional. Es irreducible sin datos de
+ ocupación por ruta.
+ 
++## El día que haya cuota: un solo comando
++
++Todo lo anterior está cableado detrás de una orden. Pega la llave en `.env` como
++`RAPIDAPI_KEY` y corre:
++
++```bash
++uv run python -m src.ingest.aerodatabox 2026M07 --dry-run   # cuánto va a costar
++uv run python -m src.ingest.aerodatabox 2026M07             # el mes completo
++```
++
++Lo que hace, en orden, y por qué ese orden:
++
++1. Barre los 58 aeropuertos en ventanas de 12 horas y **cachea cada respuesta en
++   disco**, así que una corrida interrumpida se reanuda sin volver a gastar
++   unidades.
++2. Arma la semilla y corre la **prueba de aceptación**.
++3. Solo entonces ajusta. Si la prueba rechaza la semilla, **no ajusta**: sale con
++   código 2 y explica por qué. Hay que pedir `--fit-rejected-seed` a propósito
++   para forzarlo, y eso es para diagnóstico, nunca para publicar.
++
++Banderas útiles: `--budget N` frena antes de pasarse de N unidades, y `--days N`
++muestrea N días en vez del mes entero. El muestreo no toma días seguidos ni los
++espacia a ojo: avanza con un paso coprimo con siete, de modo que recorre todos
++los días de la semana. Importa porque la mezcla de aerolíneas se mueve con el
++itinerario semanal, y sobrerrepresentar un día sesga la semilla.
++
++| Alcance | Unidades |
++|---|---:|
++| Mes completo (31 días) | 7,192 |
++| Muestra de una semana | 1,624 |
++
++La salida queda en `data/silver/`: los vuelos crudos normalizados y, si la
++prueba pasó, la estimación con `is_estimated = True`.
++
+ ## Operación
+ 
+ Corre el arnés **cada mes**, no una sola vez. Publica las cifras nacionales con
+diff --git a/src/ingest/aerodatabox/__main__.py b/src/ingest/aerodatabox/__main__.py
+new file mode 100644
+index 0000000..de1e768
+--- /dev/null
++++ b/src/ingest/aerodatabox/__main__.py
+@@ -0,0 +1,153 @@
++"""One command to turn a paid month of API quota into published estimates.
++
++    uv run python -m src.ingest.aerodatabox 2026M07
++
++Pulls every Mexican airport across the whole month, shapes the result into a
++seed, runs the acceptance test, and only then fits the estimate.  The order
++matters: the acceptance test is what stands between a cheap data source and a
++published number that is quietly wrong, so it is not optional and its verdict
++is not advisory -- a seed it rejects does not get fitted unless the operator
++says so explicitly and knowingly.
++
++Responses are cached on disk, so an interrupted run resumes without spending
++API units again.
++"""
++
++from __future__ import annotations
++
++import argparse
++import calendar
++from datetime import date
++from pathlib import Path
++import sys
++
++from src.analytics.route_carrier import (
++    build_seed_from_flights,
++    estimate_route_carrier,
++    load_afac_domestic_margins,
++    load_city_crosswalk,
++)
++from src.analytics.seed_acceptance import assess_seed, format_report
++from src.config import PATHS
++from src.ingest.aerodatabox.flights import UNITS_PER_CALL, pull_days
++
++
++WINDOWS_PER_DAY = 2
++
++
++def month_days(period_id: str, sample: int | None = None) -> list[date]:
++    """Every day of the month, or a sample of whole days that is weekday-balanced.
++
++    Carrier mix moves with the weekly schedule, so a sample that over-represents
++    a weekday biases the seed.  Even spacing does not fix this on its own: seven
++    days spread over thirty-one lands on a step of four, but a step that is a
++    multiple of seven would hit the same weekday every time.  Stepping by a
++    number coprime with seven walks every weekday in turn.
++    """
++
++    year, month = int(period_id[:4]), int(period_id[5:])
++    total = calendar.monthrange(year, month)[1]
++    days = [date(year, month, day) for day in range(1, total + 1)]
++    if sample is None or sample >= total:
++        return days
++
++    step = max(1, total // sample)
++    if step % 7 == 0:
++        step += 1
++    picked = [days[(index * step) % total] for index in range(sample)]
++    # A step that wraps can repeat a day; fall back to the nearest unused one.
++    seen: set[date] = set()
++    result: list[date] = []
++    for day in picked:
++        while day in seen:
++            day = days[(days.index(day) + 1) % total]
++        seen.add(day)
++        result.append(day)
++    return sorted(result)
++
++
++def plan(airports: int, days: int) -> int:
++    """API units a sweep will cost, so the operator sees it before spending."""
++
++    return airports * days * WINDOWS_PER_DAY * UNITS_PER_CALL
++
++
++def main(argv: list[str] | None = None) -> int:
++    parser = argparse.ArgumentParser(prog="python -m src.ingest.aerodatabox")
++    parser.add_argument("period_id", help="month to estimate, e.g. 2026M07")
++    parser.add_argument(
++        "--days", type=int, default=None,
++        help="sample this many whole days instead of the entire month",
++    )
++    parser.add_argument(
++        "--budget", type=int, default=None,
++        help="stop before spending more than this many API units",
++    )
++    parser.add_argument(
++        "--dry-run", action="store_true",
++        help="print the call plan and its cost without spending anything",
++    )
++    parser.add_argument(
++        "--fit-rejected-seed", action="store_true",
++        help="fit even if the acceptance test rejects the seed (not for publication)",
++    )
++    parser.add_argument("--cache-dir", type=Path, default=PATHS.data / "cache" / "aerodatabox")
++    args = parser.parse_args(argv)
++
++    airports = sorted(load_city_crosswalk())
++    days = month_days(args.period_id, args.days)
++    cost = plan(len(airports), len(days))
++    print(
++        f"{len(airports)} aeropuertos x {len(days)} dias x {WINDOWS_PER_DAY} ventanas "
++        f"= {cost:,} unidades"
++    )
++    if args.dry_run:
++        return 0
++
++    args.cache_dir.mkdir(parents=True, exist_ok=True)
++    flights, stats = pull_days(
++        airports, days, period_id=args.period_id,
++        cache_dir=args.cache_dir, unit_budget=args.budget,
++    )
++    print(
++        f"llamadas {stats.calls} (cache {stats.cached_calls})  "
++        f"unidades gastadas {stats.units_spent}"
++    )
++    if stats.unmapped_carriers:
++        print(f"aerolineas sin mapear: {stats.unmapped_carriers.most_common(8)}")
++    if flights.empty:
++        print("La fuente no devolvio vuelos nacionales; nada que ajustar.", file=sys.stderr)
++        return 1
++
++    out = PATHS.data / "silver"
++    out.mkdir(parents=True, exist_ok=True)
++    flights.to_parquet(out / f"aerodatabox_flights_{args.period_id}.parquet")
++
++    report = assess_seed(flights, args.period_id)
++    print()
++    print(format_report(report))
++
++    if not report.accepted and not args.fit_rejected_seed:
++        print(
++            "\nLa semilla no pasa la prueba de aceptacion, asi que no se ajusta.\n"
++            "Repite con --fit-rejected-seed solo para diagnostico, nunca para publicar.",
++            file=sys.stderr,
++        )
++        return 2
++
++    seed = build_seed_from_flights(flights)
++    route_totals, carrier_totals = load_afac_domestic_margins()
++    estimate, diagnostics = estimate_route_carrier(
++        seed,
++        route_totals[route_totals["period_id"] == args.period_id],
++        carrier_totals[carrier_totals["period_id"] == args.period_id],
++    )
++    estimate["is_estimated"] = True
++    estimate.to_parquet(out / f"route_carrier_estimate_{args.period_id}.parquet")
++    print(f"\nestimacion: {len(estimate):,} celdas ruta x aerolinea")
++    print(diagnostics.to_string(index=False))
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/tests/test_aerodatabox_cli.py b/tests/test_aerodatabox_cli.py
+new file mode 100644
+index 0000000..8d31389
+--- /dev/null
++++ b/tests/test_aerodatabox_cli.py
+@@ -0,0 +1,57 @@
++"""The sampling plan decides both the bill and whether the seed is any good.
++
++A sample spread across the month covers every day of the week; a run of
++consecutive days does not, and carrier mix moves with the weekly schedule.
++"""
++
++from __future__ import annotations
++
++from datetime import date
++
++import pytest
++
++from src.ingest.aerodatabox.__main__ import main, month_days, plan
++
++
++def test_a_whole_month_is_every_day_of_it() -> None:
++    days = month_days("2026M07")
++    assert len(days) == 31
++    assert days[0] == date(2026, 7, 1) and days[-1] == date(2026, 7, 31)
++
++
++def test_february_length_follows_the_calendar() -> None:
++    assert len(month_days("2026M02")) == 28
++    assert len(month_days("2024M02")) == 29
++
++
++@pytest.mark.parametrize("period_id", ["2026M07", "2026M02", "2026M04", "2024M02"])
++def test_a_seven_day_sample_covers_every_weekday_once(period_id: str) -> None:
++    """The whole point of sampling days: no weekday may be over-represented."""
++
++    days = month_days(period_id, sample=7)
++    assert len(days) == len(set(days)) == 7
++    assert len({day.weekday() for day in days}) == 7
++    assert days == sorted(days)
++
++
++@pytest.mark.parametrize("sample", [4, 7, 10, 14])
++def test_a_sample_is_spread_across_the_month_not_consecutive(sample: int) -> None:
++    days = month_days("2026M07", sample=sample)
++    assert len(days) == len(set(days)) == sample
++    assert max(days).day - min(days).day > sample, "concentrado en días seguidos"
++
++
++def test_a_sample_larger_than_the_month_is_just_the_month() -> None:
++    assert month_days("2026M02", sample=60) == month_days("2026M02")
++
++
++def test_the_plan_matches_the_measured_unit_cost() -> None:
++    """Two windows a day at two units a call -- both measured against the API."""
++
++    assert plan(airports=58, days=30) == 6_960
++    assert plan(airports=58, days=7) == 1_624
++
++
++def test_dry_run_spends_nothing_and_reports_the_cost(capsys: pytest.CaptureFixture) -> None:
++    assert main(["2026M07", "--dry-run"]) == 0
++    assert "7,192 unidades" in capsys.readouterr().out

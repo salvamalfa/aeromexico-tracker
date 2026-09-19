@@ -1,0 +1,53 @@
+{
+  "generado_utc": "2026-09-19T14:14:33+00:00",
+  "estimator_version": "route_carrier_ipf_v1",
+  "commit": "dc55d07c2170d9a4f24c43681f2947df30fd9cab",
+  "python": "3.13.12",
+  "numpy": "2.5.2",
+  "pandas": "2.3.3",
+  "parametros": {
+    "max_iterations": 5000,
+    "tolerance_relativa_al_total": 1e-08,
+    "min_carriers": 2,
+    "period_prefix": "2025"
+  },
+  "universo": {
+    "fuente": "BTS T-100 Segment (All Carriers), ya ingerido en data/gold/fact_route_traffic.parquet",
+    "descripcion": "Segmentos que tocan Estados Unidos. NO es el mercado domestico mexicano.",
+    "periodos": [
+      "2025M01",
+      "2025M02",
+      "2025M03",
+      "2025M04",
+      "2025M05",
+      "2025M06",
+      "2025M07",
+      "2025M08",
+      "2025M09",
+      "2025M10",
+      "2025M11",
+      "2025M12"
+    ],
+    "filas_panel": 10354,
+    "rutas_distintas": 1020,
+    "aerolineas_distintas": 58,
+    "criterio_rutas_evaluadas": "solo rutas con >=2 aerolineas; las monopolicas salen exactas por construccion y inflarian el promedio"
+  },
+  "metodo": "Se esconde el desglose por aerolinea, se derivan las dos marginales que AFAC publicaria, se reconstruye por IPF y se compara contra la verdad publicada.",
+  "resultados_medidos": {
+    "seats": {
+      "share_mae_pp_ponderado": 1.3873610937965177,
+      "passenger_error_pct_ponderado": 4.184151012710589,
+      "meses": 12,
+      "rutas_evaluadas_max": 239,
+      "observaciones_totales": 6118
+    },
+    "departures": {
+      "share_mae_pp_ponderado": 1.9737013348214878,
+      "passenger_error_pct_ponderado": 5.95291458338835,
+      "meses": 12,
+      "rutas_evaluadas_max": 239,
+      "observaciones_totales": 6118
+    }
+  }
+}

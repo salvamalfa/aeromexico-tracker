@@ -1,0 +1,36 @@
+From d0f271de0a8efe7f74e1d89ac21cd3cf6368091c Mon Sep 17 00:00:00 2001
+From: salvamalfa <salvamalfas@gmail.com>
+Date: Mon, 14 Sep 2026 23:46:01 +0000
+Subject: [PATCH 09/19] Drop the OpenSky basic-auth fallback from the env
+ template
+
+The published API docs say OpenSky now uses OAuth2 client credentials
+exclusively and that username/password no longer authenticates, so the
+fallback slots were misleading. Only the client pair remains, with a note
+that token refresh needs nothing else stored.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01FYLfAv93wjCxnGdihXYpAm
+---
+ .env.example | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/.env.example b/.env.example
+index eadab51..2db7e71 100644
+--- a/.env.example
++++ b/.env.example
+@@ -12,10 +12,9 @@ FRED_API_KEY=""
+ # Optional. Seed source for the route-carrier estimator (flights per carrier per
+ # route per month). Free for non-commercial use; the account has to be created
+ # by hand because registration is behind a CAPTCHA.
+-# Create the account at opensky-network.org, then generate an API client from
+-# the account page and paste the pair here.
++# OpenSky moved to OAuth2 client credentials exclusively — username/password no
++# longer authenticates. Generate an API client from the account settings page at
++# opensky-network.org and paste the pair here. Tokens expire every 30 minutes
++# and are refreshed by the client, so nothing else needs storing.
+ OPENSKY_CLIENT_ID=""
+ OPENSKY_CLIENT_SECRET=""
+-# Fallback if the account page offers no API client and only basic auth works.
+-OPENSKY_USERNAME=""
+-OPENSKY_PASSWORD=""

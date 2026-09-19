@@ -1,0 +1,1032 @@
+From 34d32bd3b49e64ac28284fb4b3d0ad75b8d11302 Mon Sep 17 00:00:00 2001
+From: salvamalfa <salvamalfas@gmail.com>
+Date: Mon, 14 Sep 2026 03:46:14 +0000
+Subject: [PATCH 02/19] Add IPF route-carrier estimator with a measured
+ validation harness
+
+AFAC publishes passengers per route and passengers per carrier, never the
+cell. This fits a supply seed to both published marginals so the split can
+be estimated, and measures the result instead of asserting it.
+
+Estimator (src/analytics/route_carrier.py):
+- fit_ipf preserves structural zeros, reconciles marginals that disagree
+  (the two AFAC files differ by 46 passengers over 2025Q1) and reports the
+  scale factor rather than hiding it, raises InfeasibleMarginsError when a
+  marginal demands passengers where no carrier flies, and returns
+  convergence diagnostics alongside the matrix.
+- estimate_route_carrier returns the tidy estimate together with per-period
+  diagnostics, flagging single-carrier routes as exact.
+- load_afac_domestic_margins wires both published marginals from reference.
+
+Validation harness: backtest_against_t100 hides the carrier split of the
+T-100 panel already in gold, rebuilds it from the two derived marginals and
+reports passenger-weighted error on competitive routes. Measured over 2025:
+1.40 pp / 4.21% with seats as seed, 1.98 pp / 5.96% with flight counts only.
+
+Convergence needed relative tolerance, not absolute: a threshold in whole
+passengers sits below float64 resolution on marginals of tens of millions.
+The transborder panel also needs ~1,500 sweeps, so the iteration cap is
+5,000.
+
+Tests cover exact recovery, reproduction of both marginals, the row- and
+column-scaling invariances that let flight counts substitute for seats,
+structural zeros, infeasible marginals, marginal reconciliation, that
+fitting both marginals beats splitting by supply alone, and an accuracy
+envelope that guards the headline numbers against regressions.
+
+Adds monthly domestic carrier marginals for 2025Q1, reconciled to the AFAC
+bulletin at 14,799,050, and documents the seed contract that remains the
+one missing input.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01FYLfAv93wjCxnGdihXYpAm
+---
+ .../afac_carrier_domestic_2025q1.csv          |  25 +
+ docs/estimador-ruta-aerolinea.md              | 131 +++++
+ src/analytics/route_carrier.py                | 476 ++++++++++++++++++
+ tests/test_route_carrier_ipf.py               | 323 ++++++++++++
+ 4 files changed, 955 insertions(+)
+ create mode 100644 data/reference/afac_carrier_domestic_2025q1.csv
+ create mode 100644 docs/estimador-ruta-aerolinea.md
+ create mode 100644 src/analytics/route_carrier.py
+ create mode 100644 tests/test_route_carrier_ipf.py
+
+diff --git a/data/reference/afac_carrier_domestic_2025q1.csv b/data/reference/afac_carrier_domestic_2025q1.csv
+new file mode 100644
+index 0000000..e76998b
+--- /dev/null
++++ b/data/reference/afac_carrier_domestic_2025q1.csv
+@@ -0,0 +1,25 @@
++carrier_name,mes,pasajeros
++Aeroméxico (Aerovías de México),2025-01,1001252
++Aeroméxico (Aerovías de México),2025-02,884567
++Aeroméxico (Aerovías de México),2025-03,1015074
++Aeroméxico Connect (Aerolitoral),2025-01,336680
++Aeroméxico Connect (Aerolitoral),2025-02,295594
++Aeroméxico Connect (Aerolitoral),2025-03,327589
++Aerus,2025-01,2079
++Aerus,2025-02,1631
++Aerus,2025-03,2171
++Magnicharters (Grupo Aéreo Monterrey),2025-01,11376
++Magnicharters (Grupo Aéreo Monterrey),2025-02,7942
++Magnicharters (Grupo Aéreo Monterrey),2025-03,12552
++Mexicana (Aerolínea del Estado Mexicano),2025-01,33325
++Mexicana (Aerolínea del Estado Mexicano),2025-02,19987
++Mexicana (Aerolínea del Estado Mexicano),2025-03,27996
++Transportes Aéreos Regionales (TAR),2025-01,15081
++Transportes Aéreos Regionales (TAR),2025-02,13617
++Transportes Aéreos Regionales (TAR),2025-03,17392
++Vivaaerobus (Aeroenlaces),2025-01,1940649
++Vivaaerobus (Aeroenlaces),2025-02,1714594
++Vivaaerobus (Aeroenlaces),2025-03,2025222
++Volaris (Concesionaria Vuela Cia de Aviación),2025-01,1733172
++Volaris (Concesionaria Vuela Cia de Aviación),2025-02,1543236
++Volaris (Concesionaria Vuela Cia de Aviación),2025-03,1816272
+diff --git a/docs/estimador-ruta-aerolinea.md b/docs/estimador-ruta-aerolinea.md
+new file mode 100644
+index 0000000..c7f055d
+--- /dev/null
++++ b/docs/estimador-ruta-aerolinea.md
+@@ -0,0 +1,131 @@
++# Estimador de pasajeros por ruta y aerolínea
++
++AFAC publica dos marginales del mismo cubo y nunca la celda. Este módulo
++reconstruye la celda ajustando una matriz semilla de oferta a ambas marginales,
++y **mide** su exactitud contra un mercado donde la respuesta correcta sí es
++pública.
++
++Contexto y evidencia de que el cubo existe: [`pasajeros-por-ruta-y-aerolinea.md`](pasajeros-por-ruta-y-aerolinea.md).
++
++- Código: `src/analytics/route_carrier.py`
++- Pruebas: `tests/test_route_carrier_ipf.py`
++- Ejecutar la medición: `uv run python -m src.analytics.route_carrier`
++
++## Qué insumos ya tenemos
++
++| Insumo | Dónde vive | Papel en el estimador |
++|---|---|---|
++| Pasajeros por ruta y mes (nacional regular) | `data/reference/afac_od_nacional_regular_2025q1.csv` | **Marginal de fila.** 527 pares dirigidos, 2025Q1 |
++| Pasajeros por aerolínea y mes (nacional regular) | `data/reference/afac_carrier_domestic_2025q1.csv` | **Marginal de columna.** 8 permisionarias, 2025Q1 |
++| Vuelos por ruta y mes | mismo CSV de rutas, columna `vuelos` | Control de calidad de la semilla, no insumo del ajuste |
++| T-100 por ruta, aerolínea y mes | `data/gold/fact_route_traffic.parquet` | **Arnés de validación.** Verdad publicada para medir el error |
++| Identidades de aerolínea | `data/gold/dim_carrier.parquet`, `config/carrier_crosswalk.csv` | Resolución de entidades |
++
++Falta **una sola cosa**: la semilla, es decir vuelos o asientos por aerolínea ×
++ruta × mes en el mercado nacional. Es el único insumo que no es público en
++México y hay que traerlo de fuera (ADS-B, itinerarios comerciales o un
++proveedor). Todo lo demás ya está en el repositorio.
++
++### Por qué los vuelos por ruta no entran al ajuste
++
++Es la sorpresa del método. El IPF es invariante a escalar una fila o una
++columna completa de la semilla, así que:
++
++- el **calibre medio** de cada aerolínea (escalado de columna) se cancela — por
++  eso contar vuelos rinde casi igual que conocer asientos;
++- la **cobertura incompleta** de una ruta (escalado de fila) se cancela — por
++  eso una fuente ADS-B que pierda vuelos no rompe el resultado, mientras los
++  pierda parejo entre aerolíneas.
++
++Conocer los vuelos totales de la ruta por AFAC no añade información al ajuste,
++porque el ajuste ya fuerza la fila al total de pasajeros. Sirve para otra cosa,
++que es igual de importante: **auditar la semilla**. Si los vuelos de la semilla
++en una ruta se apartan de los de AFAC más allá de una tolerancia, es señal de
++cobertura desigual entre operadores, que es justo el único sesgo que el método
++no absorbe. También delata rutas de carga con muchos vuelos y casi cero
++pasajeros, que deben excluirse.
++
++## El método
++
++1. Semilla `S[ruta, aerolínea]` con la oferta del mes (vuelos o asientos).
++2. Marginal de fila: pasajeros por ruta de AFAC.
++3. Marginal de columna: pasajeros por aerolínea de AFAC.
++4. Ajuste iterativo proporcional hasta que ambas marginales cuadren.
++
++Propiedades que importan en producción:
++
++- Los ceros de la semilla son **estructurales**: a una aerolínea que no opera
++  una ruta jamás se le asignan pasajeros.
++- Las rutas de un solo operador salen **exactas** por construcción y se marcan
++  con `is_exact`.
++- Las dos marginales no suman igual (46 pasajeros de diferencia en 2025Q1); el
++  módulo reescala la marginal de columna al total de filas y **reporta** el
++  factor en `column_scale` en vez de esconderlo.
++- Si una marginal exige pasajeros donde la semilla no ofrece nada, se levanta
++  `InfeasibleMarginsError` en lugar de repartir a ciegas.
++- `estimate_route_carrier` devuelve la estimación **y** un cuadro de
++  diagnóstico. Una estimación cuyo ajuste no convergió no debe leerse como
++  número.
++
++## Exactitud medida
++
++No es una afirmación, es una medición. Se esconde el desglose por aerolínea del
++T-100, se derivan las dos marginales que AFAC publicaría, se reconstruye el
++reparto y se compara contra la verdad. Rutas México–EE. UU. competidas, 12 meses
++de 2025, error ponderado por tamaño de ruta:
++
++| Semilla | Error en participación | Error en pasajeros |
++|---|---:|---:|
++| Asientos por ruta | 1.40 pp | 4.21 % |
++| Solo conteo de vuelos | 1.98 pp | 5.96 % |
++
++El reparto simple por asientos, sin ajustar a la marginal de aerolínea, queda
++peor: la marginal por aerolínea es lo que absorbe la diferencia sistemática de
++ocupación entre bajo costo y servicio completo. Hay una prueba que lo fija.
++
++Las rutas monopólicas se excluyen del cálculo del error porque salen exactas y
++inflarían el promedio. Sobre el mapa completo, el error mezclado es menor.
++
++### Dos salvedades
++
++El banco de pruebas es **transfronterizo**, donde compiten aerolíneas de red
++estadounidenses con perfiles de ocupación más dispares que los tres operadores
++nacionales. Es razonable esperar que el doméstico salga mejor, pero **eso es un
++supuesto, no una medición**. Convertirlo en medición requiere un trimestre de
++verdad doméstica, vía solicitud de transparencia.
++
++El residuo que queda es la desviación de la ocupación de cada aerolínea en esa
++ruta concreta respecto de su promedio nacional. Es irreducible sin datos de
++ocupación por ruta.
++
++## Operación
++
++Corre el arnés **cada mes**, no una sola vez. Publica las cifras nacionales con
++la barra de error medida ese mismo mes, no con una afirmada una vez. El T-100
++que ya se ingiere sirve de termómetro permanente y gratuito.
++
++Etiqueta siempre con `is_estimated`; no mezcles estimado y reportado en la misma
++columna, igual que el proyecto ya separa reportado de derivado.
++
++## Contrato de la semilla
++
++`estimate_route_carrier` espera un `DataFrame` con
++`period_id, route_key, carrier_key, weight`.
++
++`route_key` debe usar el vocabulario de AFAC, que nombra **ciudades**, no
++aeropuertos: `MEXICO-CANCUN`, `SANTA LUCÍA-TIJUANA`, `DEL BAJIO-MONTERREY`. Un
++adaptador de semilla tiene que traducir de códigos IATA a ese vocabulario; es
++trabajo pendiente y no trivial, porque `MEXICO` y `SANTA LUCÍA` son aeropuertos
++distintos de la misma zona metropolitana.
++
++`weight` puede ser vuelos o asientos; la unidad es indiferente por la
++invariancia de escala. Itinerarios publicados sirven igual que vuelos operados:
++las cancelaciones son escalado de fila y se cancelan.
++
++### Candidatos a fuente de semilla
++
++| Fuente | Costo | Nota |
++|---|---|---|
++| OpenSky Network | Gratis, uso no comercial | ADS-B histórico; callsign → aerolínea. Cobertura desigual en México, tolerable por la invariancia de fila |
++| AviationStack / Aviation Edge | ~USD 50–200/mes | Itinerarios históricos; la vía de menor esfuerzo |
++| Cirium Diio / OAG | Alto | Mejor calidad; incluye asientos reales por ruta, que bajan el error de 5.96 % a 4.21 % |
+diff --git a/src/analytics/route_carrier.py b/src/analytics/route_carrier.py
+new file mode 100644
+index 0000000..b125e25
+--- /dev/null
++++ b/src/analytics/route_carrier.py
+@@ -0,0 +1,476 @@
++"""Estimate passengers by route and carrier through iterative proportional fitting.
++
++AFAC publishes two marginals of the same microdata cube and never the cell:
++the origin-destination workbook gives passengers per route, the airline
++workbook gives passengers per carrier.  Neither identifies the joint
++distribution on its own, so the split has to be estimated from a seed matrix
++that carries the *structure* of supply (flights or seats per route and
++carrier) and is then fitted to both published marginals.
++
++Iterative proportional fitting is the right tool because of what it ignores.
++Scaling a whole row or a whole column of the seed leaves the fitted result
++unchanged, so a carrier's average gauge and a route's ADS-B coverage gap both
++cancel out; only the *relative* structure within a route survives.  The fit is
++the maximum-entropy estimate consistent with both marginals.
++
++Accuracy is measured, not asserted: :func:`backtest_against_t100` hides the
++carrier split of the US DOT T-100 data already in gold, rebuilds it from the
++two marginals alone, and reports the error.
++"""
++
++from __future__ import annotations
++
++from dataclasses import dataclass
++from pathlib import Path
++
++import duckdb
++import numpy as np
++import pandas as pd
++
++from src.config import PATHS
++
++
++ESTIMATOR_VERSION = "route_carrier_ipf_v1"
++# Sparse seeds make the fit converge slowly: a carrier whose network barely
++# overlaps the rest of the market propagates its correction a few routes per
++# sweep, and the transborder panel needs ~1,500 sweeps.  The cap is set well
++# above that because each sweep is two vectorised scalings.
++DEFAULT_MAX_ITERATIONS = 5_000
++# Tolerance is relative to the grand total: an absolute passenger threshold
++# would sit below float64 resolution on margins of tens of millions.  1e-8 of
++# a three-million-passenger market is three hundredths of one passenger.
++DEFAULT_TOLERANCE = 1e-8
++
++# Columns a seed table must carry.  A seed row says "this carrier offered this
++# much supply on this route in this period"; the unit is irrelevant because IPF
++# is invariant to per-row and per-column scaling.
++SEED_COLUMNS = ("period_id", "route_key", "carrier_key", "weight")
++
++
++class InfeasibleMarginsError(ValueError):
++    """A marginal demands passengers where the seed offers no supply at all."""
++
++
++@dataclass(frozen=True, slots=True)
++class IpfResult:
++    """A fitted matrix plus everything needed to judge whether to trust it."""
++
++    matrix: np.ndarray
++    iterations: int
++    converged: bool
++    max_row_deviation: float
++    max_col_deviation: float
++    column_scale: float
++
++    @property
++    def is_usable(self) -> bool:
++        return self.converged
++
++
++def fit_ipf(
++    seed: np.ndarray,
++    row_targets: np.ndarray,
++    column_targets: np.ndarray,
++    *,
++    max_iterations: int = DEFAULT_MAX_ITERATIONS,
++    tolerance: float = DEFAULT_TOLERANCE,
++) -> IpfResult:
++    """Fit ``seed`` to both marginals, preserving its zeros and its structure.
++
++    Zeros in the seed are structural: a carrier that offered nothing on a route
++    is never handed passengers.  The two marginals rarely sum to the same total
++    (AFAC's own publications differ by a few dozen passengers per quarter), so
++    the column targets are rescaled to the row total and the factor is reported
++    rather than hidden.
++    """
++
++    seed = np.asarray(seed, dtype=float)
++    row_targets = np.asarray(row_targets, dtype=float)
++    column_targets = np.asarray(column_targets, dtype=float)
++
++    if seed.ndim != 2:
++        raise ValueError(f"Seed must be two-dimensional, got shape {seed.shape}")
++    if seed.shape != (row_targets.size, column_targets.size):
++        raise ValueError(
++            f"Seed shape {seed.shape} does not match margins "
++            f"({row_targets.size}, {column_targets.size})"
++        )
++    if np.any(seed < 0) or np.any(row_targets < 0) or np.any(column_targets < 0):
++        raise ValueError("Seed and margins must be non-negative")
++    if not np.isfinite(seed).all():
++        raise ValueError("Seed contains non-finite values")
++
++    row_total = float(row_targets.sum())
++    column_total = float(column_targets.sum())
++    if row_total <= 0 or column_total <= 0:
++        raise ValueError("Both margins must carry a positive total")
++
++    column_scale = row_total / column_total
++    column_targets = column_targets * column_scale
++
++    _assert_feasible(seed, row_targets, column_targets)
++
++    matrix = np.where(seed > 0, seed, 0.0)
++    # Rows and columns whose target is zero carry no passengers at all.
++    matrix[row_targets == 0, :] = 0.0
++    matrix[:, column_targets == 0] = 0.0
++
++    iterations = 0
++    row_deviation = column_deviation = float("inf")
++    for iterations in range(1, max_iterations + 1):
++        matrix = _scale_axis(matrix, row_targets, axis=1)
++        matrix = _scale_axis(matrix, column_targets, axis=0)
++        row_deviation = float(np.max(np.abs(matrix.sum(axis=1) - row_targets)))
++        column_deviation = float(np.max(np.abs(matrix.sum(axis=0) - column_targets)))
++        if max(row_deviation, column_deviation) / row_total <= tolerance:
++            break
++
++    return IpfResult(
++        matrix=matrix,
++        iterations=iterations,
++        converged=max(row_deviation, column_deviation) / row_total <= tolerance,
++        max_row_deviation=row_deviation,
++        max_col_deviation=column_deviation,
++        column_scale=column_scale,
++    )
++
++
++def _scale_axis(matrix: np.ndarray, targets: np.ndarray, *, axis: int) -> np.ndarray:
++    """Scale each line along ``axis`` so it sums to its target."""
++
++    sums = matrix.sum(axis=axis)
++    factors = np.divide(targets, sums, out=np.zeros_like(targets), where=sums > 0)
++    return matrix * (factors[:, None] if axis == 1 else factors[None, :])
++
++
++def _assert_feasible(
++    seed: np.ndarray, row_targets: np.ndarray, column_targets: np.ndarray
++) -> None:
++    empty_rows = np.flatnonzero((seed.sum(axis=1) == 0) & (row_targets > 0))
++    if empty_rows.size:
++        raise InfeasibleMarginsError(
++            f"{empty_rows.size} route(s) expect passengers but no carrier offers "
++            f"supply; first offending index {int(empty_rows[0])}"
++        )
++    empty_columns = np.flatnonzero((seed.sum(axis=0) == 0) & (column_targets > 0))
++    if empty_columns.size:
++        raise InfeasibleMarginsError(
++            f"{empty_columns.size} carrier(s) expect passengers but appear on no "
++            f"route; first offending index {int(empty_columns[0])}"
++        )
++
++
++def estimate_route_carrier(
++    seed: pd.DataFrame,
++    route_totals: pd.DataFrame,
++    carrier_totals: pd.DataFrame,
++    *,
++    max_iterations: int = DEFAULT_MAX_ITERATIONS,
++    tolerance: float = DEFAULT_TOLERANCE,
++) -> tuple[pd.DataFrame, pd.DataFrame]:
++    """Split each period's route totals across carriers.
++
++    ``seed`` carries :data:`SEED_COLUMNS`; ``route_totals`` carries
++    ``period_id, route_key, passengers``; ``carrier_totals`` carries
++    ``period_id, carrier_key, passengers``.  Returns the tidy estimate and a
++    per-period diagnostics frame — never one without the other, because an
++    estimate whose fit did not converge must not be read as a number.
++    """
++
++    _require_columns(seed, SEED_COLUMNS, "seed")
++    _require_columns(route_totals, ("period_id", "route_key", "passengers"), "route_totals")
++    _require_columns(carrier_totals, ("period_id", "carrier_key", "passengers"), "carrier_totals")
++
++    estimates: list[pd.DataFrame] = []
++    diagnostics: list[dict[str, object]] = []
++
++    for period_id in sorted(set(route_totals["period_id"]) & set(carrier_totals["period_id"])):
++        period_seed = seed[seed["period_id"] == period_id]
++        if period_seed.empty:
++            diagnostics.append(_diagnostic_row(period_id, reason="no_seed"))
++            continue
++
++        rows = route_totals[route_totals["period_id"] == period_id]
++        columns = carrier_totals[carrier_totals["period_id"] == period_id]
++        # Only routes and carriers present in the seed can receive passengers.
++        rows = rows[rows["route_key"].isin(period_seed["route_key"])]
++        columns = columns[columns["carrier_key"].isin(period_seed["carrier_key"])]
++        if rows.empty or columns.empty:
++            diagnostics.append(_diagnostic_row(period_id, reason="no_overlap"))
++            continue
++
++        route_index = pd.Index(sorted(rows["route_key"].unique()), name="route_key")
++        carrier_index = pd.Index(sorted(columns["carrier_key"].unique()), name="carrier_key")
++        matrix_seed = (
++            period_seed.pivot_table(
++                index="route_key", columns="carrier_key", values="weight", aggfunc="sum",
++                fill_value=0.0,
++            )
++            .reindex(index=route_index, columns=carrier_index)
++            .fillna(0.0)
++        )
++        row_targets = rows.groupby("route_key")["passengers"].sum().reindex(route_index).fillna(0.0)
++        column_targets = (
++            columns.groupby("carrier_key")["passengers"].sum().reindex(carrier_index).fillna(0.0)
++        )
++
++        result = fit_ipf(
++            matrix_seed.to_numpy(),
++            row_targets.to_numpy(),
++            column_targets.to_numpy(),
++            max_iterations=max_iterations,
++            tolerance=tolerance,
++        )
++        # A route served by a single carrier needs no estimation: the published
++        # route total *is* that carrier's figure.
++        carriers_per_route = (matrix_seed > 0).sum(axis=1)
++
++        tidy = (
++            pd.DataFrame(result.matrix, index=route_index, columns=carrier_index)
++            .stack()
++            .rename("passengers_estimated")
++            .reset_index()
++        )
++        tidy = tidy[tidy["passengers_estimated"] > 0].copy()
++        tidy["period_id"] = period_id
++        tidy["is_exact"] = tidy["route_key"].map(carriers_per_route).eq(1)
++        tidy["estimator_version"] = ESTIMATOR_VERSION
++        estimates.append(tidy)
++
++        diagnostics.append(
++            _diagnostic_row(
++                period_id,
++                routes=int(route_index.size),
++                carriers=int(carrier_index.size),
++                competitive_routes=int((carriers_per_route >= 2).sum()),
++                iterations=result.iterations,
++                converged=result.converged,
++                max_row_deviation=result.max_row_deviation,
++                max_col_deviation=result.max_col_deviation,
++                column_scale=result.column_scale,
++            )
++        )
++
++    columns = [
++        "period_id", "route_key", "carrier_key", "passengers_estimated",
++        "is_exact", "estimator_version",
++    ]
++    estimate_frame = (
++        pd.concat(estimates, ignore_index=True)[columns]
++        if estimates
++        else pd.DataFrame(columns=columns)
++    )
++    return estimate_frame, pd.DataFrame(diagnostics)
++
++
++def _diagnostic_row(period_id: str, **fields: object) -> dict[str, object]:
++    row: dict[str, object] = {
++        "period_id": period_id, "routes": 0, "carriers": 0, "competitive_routes": 0,
++        "iterations": 0, "converged": False, "max_row_deviation": float("nan"),
++        "max_col_deviation": float("nan"), "column_scale": float("nan"), "reason": "",
++    }
++    row.update(fields)
++    return row
++
++
++def _require_columns(frame: pd.DataFrame, columns: tuple[str, ...], name: str) -> None:
++    missing = [column for column in columns if column not in frame.columns]
++    if missing:
++        raise ValueError(f"{name} is missing required column(s): {', '.join(missing)}")
++
++
++# --------------------------------------------------------------------------
++# Domestic margins, ready for a seed
++# --------------------------------------------------------------------------
++
++# AFAC keys routes by city, not airport: "MEXICO", "SANTA LUCÍA", "DEL BAJIO".
++# A seed adapter must emit route keys in this same vocabulary.
++ROUTE_MARGIN_FILE = "afac_od_nacional_regular_2025q1.csv"
++CARRIER_MARGIN_FILE = "afac_carrier_domestic_2025q1.csv"
++
++
++def _period_id(month: str) -> str:
++    year, month_number = str(month).split("-")
++    return f"{year}M{int(month_number):02d}"
++
++
++def load_afac_domestic_margins(
++    reference_dir: Path | None = None,
++) -> tuple[pd.DataFrame, pd.DataFrame]:
++    """Load the two AFAC marginals for scheduled domestic service.
++
++    Route totals come from the origin-destination workbook, carrier totals from
++    the airline statistics.  The two are published separately and never
++    crossed; that they agree to a few dozen passengers per quarter is the
++    evidence that a joint table exists upstream.
++    """
++
++    reference = reference_dir or (PATHS.data / "reference")
++
++    routes = pd.read_csv(reference / ROUTE_MARGIN_FILE)
++    routes["period_id"] = routes["mes"].map(_period_id)
++    routes["route_key"] = routes["origen"].str.strip() + "-" + routes["destino"].str.strip()
++    route_totals = (
++        routes.rename(columns={"pasajeros": "passengers"})
++        .groupby(["period_id", "route_key"], as_index=False)["passengers"]
++        .sum()
++    )
++
++    carriers = pd.read_csv(reference / CARRIER_MARGIN_FILE)
++    carriers["period_id"] = carriers["mes"].map(_period_id)
++    carrier_totals = (
++        carriers.rename(columns={"pasajeros": "passengers", "carrier_name": "carrier_key"})
++        .groupby(["period_id", "carrier_key"], as_index=False)["passengers"]
++        .sum()
++    )
++    return route_totals, carrier_totals
++
++
++# --------------------------------------------------------------------------
++# Validation harness
++# --------------------------------------------------------------------------
++
++T100_SEED_METRICS = {"seats", "departures"}
++
++
++def load_t100_panel(
++    period_prefix: str = "2025", gold_dir: Path | None = None
++) -> pd.DataFrame:
++    """Read the transborder T-100 panel already materialised in gold."""
++
++    gold = gold_dir or PATHS.gold
++    query = """
++        SELECT f.period_id,
++               r.origin_iata || '-' || r.dest_iata AS route_key,
++               f.carrier_key,
++               SUM(f.passengers)            AS passengers,
++               SUM(f.seats)                 AS seats,
++               SUM(f.departures_performed)  AS departures
++        FROM read_parquet(?) f
++        JOIN read_parquet(?) r USING (route_key)
++        WHERE f.period_id LIKE ?
++          AND r.is_transborder_us
++          AND f.seats > 0
++          AND f.departures_performed > 0
++        GROUP BY 1, 2, 3
++        HAVING SUM(f.passengers) > 0
++    """
++    connection = duckdb.connect()
++    try:
++        return connection.execute(
++            query,
++            [
++                str(gold / "fact_route_traffic.parquet"),
++                str(gold / "dim_route.parquet"),
++                f"{period_prefix}%",
++            ],
++        ).df()
++    finally:
++        connection.close()
++
++
++def backtest_against_t100(
++    *,
++    period_prefix: str = "2025",
++    seed_metric: str = "departures",
++    min_carriers: int = 2,
++    gold_dir: Path | None = None,
++) -> pd.DataFrame:
++    """Measure the estimator against a market where the true split is published.
++
++    The carrier split is hidden, the two marginals AFAC would publish are
++    derived from it, the split is rebuilt from the seed, and the rebuilt figures
++    are compared against the truth.  Error is reported on competitive routes
++    only: a single-carrier route is recovered exactly by construction and would
++    flatter the average.
++    """
++
++    if seed_metric not in T100_SEED_METRICS:
++        raise ValueError(f"seed_metric must be one of {sorted(T100_SEED_METRICS)}")
++
++    panel = load_t100_panel(period_prefix=period_prefix, gold_dir=gold_dir)
++    if panel.empty:
++        raise ValueError(f"No T-100 rows found for period prefix {period_prefix!r}")
++
++    seed = panel.rename(columns={seed_metric: "weight"})[list(SEED_COLUMNS)]
++    route_totals = (
++        panel.groupby(["period_id", "route_key"], as_index=False)["passengers"].sum()
++    )
++    carrier_totals = (
++        panel.groupby(["period_id", "carrier_key"], as_index=False)["passengers"].sum()
++    )
++
++    estimate, diagnostics = estimate_route_carrier(seed, route_totals, carrier_totals)
++    if not diagnostics.empty and not diagnostics["converged"].all():
++        unconverged = diagnostics.loc[~diagnostics["converged"], "period_id"].tolist()
++        raise RuntimeError(f"IPF did not converge for period(s): {unconverged}")
++
++    merged = panel.merge(
++        estimate, on=["period_id", "route_key", "carrier_key"], how="left"
++    )
++    merged["passengers_estimated"] = merged["passengers_estimated"].fillna(0.0)
++    merged = merged.merge(
++        route_totals.rename(columns={"passengers": "route_passengers"}),
++        on=["period_id", "route_key"],
++    )
++
++    carriers_on_route = (
++        panel.groupby(["period_id", "route_key"])["carrier_key"].nunique()
++        .rename("carriers_on_route").reset_index()
++    )
++    merged = merged.merge(carriers_on_route, on=["period_id", "route_key"])
++    competitive = merged[merged["carriers_on_route"] >= min_carriers].copy()
++    if competitive.empty:
++        raise ValueError("No competitive routes available for the backtest")
++
++    competitive["true_share"] = competitive["passengers"] / competitive["route_passengers"]
++    competitive["estimated_share"] = (
++        competitive["passengers_estimated"] / competitive["route_passengers"]
++    )
++    competitive["share_error"] = (competitive["true_share"] - competitive["estimated_share"]).abs()
++    competitive["passenger_error"] = (
++        competitive["passengers"] - competitive["passengers_estimated"]
++    ).abs()
++
++    def _summarise(group: pd.DataFrame) -> pd.Series:
++        weights = group["route_passengers"]
++        return pd.Series(
++            {
++                "routes": int(group["route_key"].nunique()),
++                "observations": int(len(group)),
++                "share_mae_pp": float(
++                    100 * np.average(group["share_error"], weights=weights)
++                ),
++                "passenger_error_pct": float(
++                    100 * group["passenger_error"].sum() / group["passengers"].sum()
++                ),
++            }
++        )
++
++    summary = (
++        competitive.groupby("period_id")[
++            ["route_key", "share_error", "passenger_error", "passengers", "route_passengers"]
++        ]
++        .apply(_summarise, include_groups=False)
++        .reset_index()
++    )
++    summary.insert(1, "seed_metric", seed_metric)
++    return summary
++
++
++def main() -> int:
++    """Print the measured accuracy of the estimator for each seed quality."""
++
++    for seed_metric in ("seats", "departures"):
++        summary = backtest_against_t100(seed_metric=seed_metric)
++        print(
++            f"seed={seed_metric:10s} "
++            f"share_mae={summary['share_mae_pp'].mean():5.2f} pp  "
++            f"passenger_error={summary['passenger_error_pct'].mean():5.2f} %  "
++            f"({int(summary['routes'].mean())} competitive routes/month)"
++        )
++    return 0
++
++
++if __name__ == "__main__":  # pragma: no cover - manual entry point
++    raise SystemExit(main())
+diff --git a/tests/test_route_carrier_ipf.py b/tests/test_route_carrier_ipf.py
+new file mode 100644
+index 0000000..8d6b8e1
+--- /dev/null
++++ b/tests/test_route_carrier_ipf.py
+@@ -0,0 +1,323 @@
++from __future__ import annotations
++
++import numpy as np
++import pandas as pd
++import pytest
++
++from src.analytics.route_carrier import (
++    InfeasibleMarginsError,
++    backtest_against_t100,
++    estimate_route_carrier,
++    fit_ipf,
++    load_afac_domestic_margins,
++    load_t100_panel,
++)
++
++
++TRUTH = np.array(
++    [
++        [900.0, 300.0, 0.0],
++        [200.0, 500.0, 150.0],
++        [0.0, 0.0, 400.0],
++    ]
++)
++
++
++def _margins(matrix: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
++    return matrix.sum(axis=1), matrix.sum(axis=0)
++
++
++def test_fit_recovers_the_matrix_when_the_seed_already_is_the_answer() -> None:
++    rows, columns = _margins(TRUTH)
++
++    result = fit_ipf(TRUTH, rows, columns)
++
++    assert result.converged
++    assert np.allclose(result.matrix, TRUTH)
++
++
++def test_fit_reproduces_both_published_margins() -> None:
++    seed = np.array([[5.0, 4.0, 0.0], [3.0, 3.0, 1.0], [0.0, 0.0, 2.0]])
++    rows, columns = _margins(TRUTH)
++
++    result = fit_ipf(seed, rows, columns)
++
++    assert result.converged
++    assert np.allclose(result.matrix.sum(axis=1), rows)
++    assert np.allclose(result.matrix.sum(axis=0), columns)
++
++
++def test_fit_ignores_per_carrier_gauge_because_a_column_scaling_cancels() -> None:
++    """This is why flight counts work as well as seats: gauge is column scaling."""
++
++    seed = np.array([[5.0, 4.0, 0.0], [3.0, 3.0, 1.0], [0.0, 0.0, 2.0]])
++    rows, columns = _margins(TRUTH)
++    rescaled = seed * np.array([180.0, 220.0, 99.0])[None, :]
++
++    baseline = fit_ipf(seed, rows, columns)
++    scaled = fit_ipf(rescaled, rows, columns)
++
++    assert np.allclose(baseline.matrix, scaled.matrix)
++
++
++def test_fit_ignores_per_route_coverage_because_a_row_scaling_cancels() -> None:
++    """This is why an ADS-B feed may miss flights, as long as it misses evenly."""
++
++    seed = np.array([[5.0, 4.0, 0.0], [3.0, 3.0, 1.0], [0.0, 0.0, 2.0]])
++    rows, columns = _margins(TRUTH)
++    thinned = seed * np.array([0.7, 1.0, 0.35])[:, None]
++
++    baseline = fit_ipf(seed, rows, columns)
++    partial = fit_ipf(thinned, rows, columns)
++
++    assert np.allclose(baseline.matrix, partial.matrix)
++
++
++def test_fit_never_invents_service_a_carrier_does_not_offer() -> None:
++    seed = np.array([[5.0, 4.0, 0.0], [3.0, 3.0, 1.0], [0.0, 0.0, 2.0]])
++    rows, columns = _margins(TRUTH)
++
++    result = fit_ipf(seed, rows, columns)
++
++    assert result.matrix[0, 2] == 0.0
++    assert result.matrix[2, 0] == 0.0
++    assert result.matrix[2, 1] == 0.0
++
++
++def test_single_carrier_route_is_recovered_exactly() -> None:
++    seed = np.array([[5.0, 4.0, 0.0], [3.0, 3.0, 1.0], [0.0, 0.0, 2.0]])
++    rows, columns = _margins(TRUTH)
++
++    result = fit_ipf(seed, rows, columns)
++
++    assert result.matrix[2, 2] == pytest.approx(TRUTH[2, 2])
++
++
++def test_margins_that_disagree_are_reconciled_onto_the_route_total() -> None:
++    """AFAC's two publications differ by a few dozen passengers per quarter."""
++
++    seed = np.ones((2, 2))
++    rows = np.array([100.0, 100.0])
++    columns = np.array([90.0, 90.0])
++
++    result = fit_ipf(seed, rows, columns)
++
++    assert result.column_scale == pytest.approx(200.0 / 180.0)
++    assert result.matrix.sum() == pytest.approx(200.0)
++    assert np.allclose(result.matrix.sum(axis=1), rows)
++
++
++def test_a_route_with_no_supply_at_all_is_reported_not_silently_split() -> None:
++    seed = np.array([[1.0, 1.0], [0.0, 0.0]])
++    rows = np.array([50.0, 50.0])
++    columns = np.array([50.0, 50.0])
++
++    with pytest.raises(InfeasibleMarginsError, match="route"):
++        fit_ipf(seed, rows, columns)
++
++
++def test_a_carrier_that_appears_on_no_route_is_reported() -> None:
++    seed = np.array([[1.0, 0.0], [1.0, 0.0]])
++    rows = np.array([50.0, 50.0])
++    columns = np.array([50.0, 50.0])
++
++    with pytest.raises(InfeasibleMarginsError, match="carrier"):
++        fit_ipf(seed, rows, columns)
++
++
++def test_zero_targets_leave_empty_lines() -> None:
++    seed = np.array([[1.0, 1.0], [1.0, 1.0]])
++    rows = np.array([100.0, 0.0])
++    columns = np.array([60.0, 40.0])
++
++    result = fit_ipf(seed, rows, columns)
++
++    assert result.converged
++    assert np.allclose(result.matrix[1], 0.0)
++
++
++@pytest.mark.parametrize(
++    ("seed", "rows", "columns"),
++    [
++        (np.ones((2, 2)), np.array([1.0]), np.array([1.0, 1.0])),
++        (np.ones(4), np.array([1.0, 1.0]), np.array([1.0, 1.0])),
++        (np.array([[-1.0, 1.0], [1.0, 1.0]]), np.array([1.0, 1.0]), np.array([1.0, 1.0])),
++    ],
++)
++def test_malformed_inputs_raise_before_fitting(
++    seed: np.ndarray, rows: np.ndarray, columns: np.ndarray
++) -> None:
++    with pytest.raises(ValueError):
++        fit_ipf(seed, rows, columns)
++
++
++def _tidy_fixture() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
++    seed = pd.DataFrame(
++        [
++            ("2025M01", "MEX-CUN", "AEROMEXICO", 5.0),
++            ("2025M01", "MEX-CUN", "VOLARIS", 4.0),
++            ("2025M01", "MEX-MTY", "AEROMEXICO", 3.0),
++            ("2025M01", "TIJ-UPN", "VOLARIS", 2.0),
++        ],
++        columns=["period_id", "route_key", "carrier_key", "weight"],
++    )
++    route_totals = pd.DataFrame(
++        [
++            ("2025M01", "MEX-CUN", 1000.0),
++            ("2025M01", "MEX-MTY", 400.0),
++            ("2025M01", "TIJ-UPN", 300.0),
++        ],
++        columns=["period_id", "route_key", "passengers"],
++    )
++    carrier_totals = pd.DataFrame(
++        [
++            ("2025M01", "AEROMEXICO", 1000.0),
++            ("2025M01", "VOLARIS", 700.0),
++        ],
++        columns=["period_id", "carrier_key", "passengers"],
++    )
++    return seed, route_totals, carrier_totals
++
++
++def test_estimate_returns_tidy_rows_that_honour_the_route_totals() -> None:
++    seed, route_totals, carrier_totals = _tidy_fixture()
++
++    estimate, diagnostics = estimate_route_carrier(seed, route_totals, carrier_totals)
++
++    per_route = estimate.groupby("route_key")["passengers_estimated"].sum()
++    assert per_route["MEX-CUN"] == pytest.approx(1000.0)
++    assert per_route["MEX-MTY"] == pytest.approx(400.0)
++    assert per_route["TIJ-UPN"] == pytest.approx(300.0)
++    assert diagnostics.loc[0, "converged"]
++    assert diagnostics.loc[0, "competitive_routes"] == 1
++
++
++def test_estimate_flags_single_carrier_routes_as_exact() -> None:
++    seed, route_totals, carrier_totals = _tidy_fixture()
++
++    estimate, _ = estimate_route_carrier(seed, route_totals, carrier_totals)
++
++    exact = estimate.set_index("route_key")["is_exact"]
++    assert bool(exact["TIJ-UPN"]) is True
++    assert bool(exact["MEX-MTY"]) is True
++    assert not exact["MEX-CUN"].any()
++
++
++def test_estimate_never_reports_a_carrier_outside_its_own_network() -> None:
++    seed, route_totals, carrier_totals = _tidy_fixture()
++
++    estimate, _ = estimate_route_carrier(seed, route_totals, carrier_totals)
++
++    pairs = set(zip(estimate["route_key"], estimate["carrier_key"], strict=True))
++    assert ("TIJ-UPN", "AEROMEXICO") not in pairs
++    assert ("MEX-MTY", "VOLARIS") not in pairs
++
++
++def test_estimate_requires_the_documented_seed_columns() -> None:
++    _, route_totals, carrier_totals = _tidy_fixture()
++    seed = pd.DataFrame({"period_id": ["2025M01"], "route_key": ["MEX-CUN"]})
++
++    with pytest.raises(ValueError, match="carrier_key"):
++        estimate_route_carrier(seed, route_totals, carrier_totals)
++
++
++# --------------------------------------------------------------------------
++# Measured accuracy against a market where the true split is published
++# --------------------------------------------------------------------------
++
++def test_transborder_panel_is_available_for_validation() -> None:
++    panel = load_t100_panel(period_prefix="2025")
++
++    assert not panel.empty
++    assert panel["period_id"].nunique() == 12
++    assert {"passengers", "seats", "departures"} <= set(panel.columns)
++
++
++@pytest.mark.parametrize(
++    ("seed_metric", "share_ceiling", "passenger_ceiling"),
++    [("seats", 2.0, 6.0), ("departures", 2.5, 7.5)],
++)
++def test_estimator_stays_within_its_measured_accuracy_envelope(
++    seed_metric: str, share_ceiling: float, passenger_ceiling: float
++) -> None:
++    """Guards the headline accuracy claim against silent regressions.
++
++    Ceilings sit above the September 2026 measurement (seats 1.40 pp / 4.21 %,
++    departures 1.98 pp / 5.96 %) with room for T-100 restatements, and well
++    below the naive seat-share split the estimator has to beat.
++    """
++
++    summary = backtest_against_t100(seed_metric=seed_metric)
++
++    assert len(summary) == 12
++    assert summary["share_mae_pp"].mean() < share_ceiling
++    assert summary["passenger_error_pct"].mean() < passenger_ceiling
++
++
++def test_fitting_both_margins_beats_splitting_by_supply_alone() -> None:
++    """The airline marginal is what absorbs the load-factor gap between carriers."""
++
++    panel = load_t100_panel(period_prefix="2025")
++    panel = panel[panel["period_id"] == "2025M01"]
++    seats = panel.pivot_table(
++        index="route_key", columns="carrier_key", values="seats", aggfunc="sum", fill_value=0.0
++    )
++    truth = (
++        panel.pivot_table(
++            index="route_key", columns="carrier_key", values="passengers", aggfunc="sum",
++            fill_value=0.0,
++        )
++        .reindex(index=seats.index, columns=seats.columns)
++        .fillna(0.0)
++    )
++    truth_values = truth.to_numpy()
++    seat_values = seats.to_numpy()
++    rows, columns = _margins(truth_values)
++
++    supply_only = seat_values * np.divide(
++        rows, seat_values.sum(axis=1), out=np.zeros_like(rows), where=seat_values.sum(axis=1) > 0
++    )[:, None]
++    fitted = fit_ipf(seat_values, rows, columns).matrix
++
++    competitive = (seat_values > 0).sum(axis=1) >= 2
++    naive_error = np.abs(truth_values - supply_only)[competitive].sum()
++    fitted_error = np.abs(truth_values - fitted)[competitive].sum()
++
++    assert fitted_error < naive_error
++
++
++# --------------------------------------------------------------------------
++# The domestic margins the estimator will be pointed at
++# --------------------------------------------------------------------------
++
++def test_both_afac_margins_describe_the_same_quarter() -> None:
++    route_totals, carrier_totals = load_afac_domestic_margins()
++
++    assert sorted(route_totals["period_id"].unique()) == ["2025M01", "2025M02", "2025M03"]
++    assert sorted(carrier_totals["period_id"].unique()) == ["2025M01", "2025M02", "2025M03"]
++
++
++def test_the_two_published_margins_agree_and_so_a_joint_table_exists_upstream() -> None:
++    """The premise of the whole estimator: both files are views of one cube."""
++
++    route_totals, carrier_totals = load_afac_domestic_margins()
++
++    route_sum = route_totals["passengers"].sum()
++    carrier_sum = carrier_totals["passengers"].sum()
++
++    assert route_sum == 14_799_004
++    assert carrier_sum == 14_799_050
++    assert abs(route_sum - carrier_sum) <= 50
++    assert abs(route_sum - carrier_sum) / carrier_sum < 1e-5
++
++
++def test_domestic_margins_are_ready_to_receive_a_seed() -> None:
++    """Everything but the seed is in place; this pins the contract it must meet."""
++
++    route_totals, carrier_totals = load_afac_domestic_margins()
++
++    assert "MEXICO-CANCUN" in set(route_totals["route_key"])
++    assert "TIJUANA-URUAPAN" in set(route_totals["route_key"])
++    assert any("Volaris" in carrier for carrier in carrier_totals["carrier_key"])
++    assert (route_totals["passengers"] >= 0).all()
++    assert (carrier_totals["passengers"] > 0).all()

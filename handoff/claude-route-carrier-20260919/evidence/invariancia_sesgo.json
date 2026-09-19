@@ -1,0 +1,26 @@
+{
+  "pregunta": "Que tipo de sesgo de cobertura en la semilla sobrevive al ajuste IPF",
+  "metodo": "Se inyecta un sesgo log-uniforme de la dispersion indicada en la semilla del panel T-100 y se remide el error contra la verdad publicada. Promedio de 3 semillas aleatorias.",
+  "baseline_sin_sesgo_pp": 1.96,
+  "resultados": {
+    "columna": {
+      "1.00x": 1.96,
+      "1.30x": 1.96,
+      "2.00x": 1.96,
+      "2.80x": 1.96
+    },
+    "fila": {
+      "1.00x": 1.96,
+      "1.30x": 1.96,
+      "2.00x": 1.96,
+      "2.80x": 1.96
+    },
+    "interaccion": {
+      "1.00x": 1.96,
+      "1.30x": 2.33,
+      "2.00x": 3.83,
+      "2.80x": 5.21
+    }
+  },
+  "lectura": "Un factor por aerolinea parejo en su red (columna) y uno por ruta parejo entre operadores (fila) son escalados que el IPF cancela exactamente: el error no se mueve. Solo la interaccion ruta x aerolinea degrada el resultado. Por eso la prueba de aceptacion juzga completitud y no dispersion."
+}

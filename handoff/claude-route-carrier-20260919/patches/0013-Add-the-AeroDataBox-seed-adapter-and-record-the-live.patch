@@ -1,0 +1,541 @@
+From d5d18dd00a8da7d26cb7fc36adb36113c7f1eb9d Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 15 Sep 2026 00:42:50 +0000
+Subject: [PATCH 13/19] Add the AeroDataBox seed adapter and record the live
+ pilot
+
+Tried against the real API on a free tier, which settled several things the
+pricing page gets wrong or omits.  A FIDS call costs 2 units, not 1, and the
+12-hour window persists through the Ultra plan, so a full month of the 58
+Mexican airports is 6,960 units -- past the 5,000 of the cheap plan.  A window
+longer than 12 hours returns an empty list rather than an error, and withLeg
+must be set or a departure record carries no arrival airport and the route
+cannot be recovered at all.  Both traps are now encoded rather than left to
+the caller.
+
+On the acceptance test the source passes the measure that matters: coverage
+differs between carriers by 1.12x, against a 1.15x threshold and OpenSky's
+2.8x.  Every flight carries an identified airline and 99% an arrival airport.
+The automatic verdict is still REJECT because three small carriers are absent
+and passenger coverage reaches 93.3%, both consistent with having sampled 40
+of 58 airports on a single Tuesday; a full month resolves it.  Nothing is
+published until a complete month returns ACCEPT.
+
+Aeromexico and Aerolitoral share the AM code but are separate carriers in the
+AFAC margin, so they are split by fleet.  Codeshares, freight operators and
+foreign destinations are dropped by name rather than silently.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01FYLfAv93wjCxnGdihXYpAm
+---
+ .env.example                       |   4 +
+ docs/estimador-ruta-aerolinea.md   |  60 ++++++-
+ src/ingest/aerodatabox/__init__.py |   1 +
+ src/ingest/aerodatabox/flights.py  | 279 +++++++++++++++++++++++++++++
+ tests/test_aerodatabox_flights.py  | 114 ++++++++++++
+ 5 files changed, 450 insertions(+), 8 deletions(-)
+ create mode 100644 src/ingest/aerodatabox/__init__.py
+ create mode 100644 src/ingest/aerodatabox/flights.py
+ create mode 100644 tests/test_aerodatabox_flights.py
+
+diff --git a/.env.example b/.env.example
+index 2db7e71..238e403 100644
+--- a/.env.example
++++ b/.env.example
+@@ -18,3 +18,7 @@ FRED_API_KEY=""
+ # and are refreshed by the client, so nothing else needs storing.
+ OPENSKY_CLIENT_ID=""
+ OPENSKY_CLIENT_SECRET=""
++
++# AeroDataBox via RapidAPI: the estimator's seed (published schedules).
++# The free Basic tier gives 400 API units a month; a FIDS call costs 2.
++RAPIDAPI_KEY=
+diff --git a/docs/estimador-ruta-aerolinea.md b/docs/estimador-ruta-aerolinea.md
+index b68a2d9..885ae68 100644
+--- a/docs/estimador-ruta-aerolinea.md
++++ b/docs/estimador-ruta-aerolinea.md
+@@ -174,20 +174,64 @@ receptores, que en el centro y sureste de México es el problema.
+ | Mapas de rutas, Wikipedia, OpenFlights, tableros de aeropuerto | Presencia | Gratis | — | **Descartado.** Dan presencia, no frecuencia: 13 pp de error |
+ | Boletines de AFAC y de AICM | — | Gratis | — | **Descartado por inspección.** AICM desagrega por terminal, no por aerolínea; la base de DATATUR es aerolínea × mes × región, sin ruta |
+ 
+-El costo corregido importa: no son USD 50–200 al mes, son **USD 7.50**. El
+-mercado nacional son 58 aeropuertos y unos 1,100 vuelos diarios, y basta pedir
+-**salidas**, porque todo vuelo doméstico sale de un aeropuerto mexicano. Con
+-ventanas de 12 horas eso es 58 × 30 × 2 = 3,480 llamadas al mes, dentro del plan
+-de 5,000.
++El costo real, medido contra la API y no leído del tarifario: **una llamada FIDS
++cuesta 2 unidades, no 1**, y la ventana máxima es de **12 horas** hasta el plan
++Ultra inclusive. El mercado nacional son 58 aeropuertos, y basta pedir
++**salidas**, porque todo vuelo doméstico sale de un aeropuerto mexicano:
+ 
+-Las 400 unidades gratuitas no alcanzan para un mes completo, pero sí para **tres
+-días completos de los 58 aeropuertos** (116 unidades por día), que es
+-exactamente lo que la prueba de aceptación necesita.
++    58 aeropuertos × 30 días × 2 ventanas × 2 unidades = 6,960 unidades/mes
++
++Eso descarta el plan Pro de USD 7.50 (5,000 unidades). El plan que cubre el
++trabajo con holgura es el **Starter directo, USD 19/mes por 40,000 unidades**;
++en RapidAPI el equivalente es Ultra a USD 37.50.
++
++Una trampa que cuesta cuota: pedir una ventana de 24 horas **no devuelve error,
++devuelve cero vuelos**. Y `withLeg=true` es obligatorio: sin él el registro de
++salida no trae aeropuerto de llegada, así que la ruta es indeterminable y el
++barrido completo se desperdicia. Ambas quedan fijadas en el adaptador.
+ 
+ Al contratar, conviene pedir el extracto **por aerolínea** cuando el proveedor lo
+ permita: garantiza que la red completa de cada operador entre a la semilla, que
+ es justo lo que evita la trampa de `column_scale` descrita más abajo.
+ 
++#### Resultado del piloto con AeroDataBox
++
++Probado con llave real sobre el martes 3 de febrero de 2026, los 40 aeropuertos
++que concentran el 97.7 % de las salidas, dentro del tramo gratuito.
++
++| | AeroDataBox | OpenSky |
++|---|---:|---:|
++| **Dispersión de cobertura entre aerolíneas** | **1.12x** | 2.8x |
++| Vuelos con aerolínea identificada | 100 % | 57 % |
++| Vuelos con aeropuerto de llegada | 99 % | 57 % |
++
++La primera fila es la que decide, y AeroDataBox pasa el umbral de 1.15x. Los
++cuatro operadores que mueven el mercado quedan dentro de un 12 % entre sí:
++
++| Aerolínea | Factor de cobertura |
++|---|---:|
++| Volaris | 0.95 |
++| Vivaaerobus | 0.99 |
++| Aeroméxico Connect | 1.04 |
++| Aeroméxico | 1.07 |
++
++El día de muestra trajo 1,011 vuelos nacionales sobre 321 pares origen-destino,
++el 3.0 % del mes según AFAC, contra un 3.5 % esperado para un día de veintiocho
++cubriendo el 97.7 % de las salidas.
++
++**Lo que el piloto no resuelve.** El veredicto automático sale `REJECT`, y por
++buenas razones que son del alcance de la prueba, no de la fuente: faltan
++Mexicana, TAR y Magnicharters —juntas el 1.2 % de los pasajeros—, la cobertura
++llega al 93.3 % de los pasajeros y `column_scale` queda en 0.944. Las tres cosas
++son consistentes con haber muestreado 40 de 58 aeropuertos en un solo martes.
++Un mes completo las resuelve o las confirma; con el tramo gratuito agotado no se
++puede decidir aquí. **No se publica nada hasta que un mes completo dé
++`ACCEPT`.**
++
++Aeroméxico y Aerolitoral se presentan bajo el mismo código `AM`, que AFAC sí
++separa. El adaptador los divide por flota: los Embraer son Connect. En la
++muestra el modelo de avión venía en el 100 % de los vuelos de AM.
++
+ #### Por qué OpenSky no sirve
+ 
+ Se probó con credenciales reales sobre febrero de 2026, gastando 540 de los
+diff --git a/src/ingest/aerodatabox/__init__.py b/src/ingest/aerodatabox/__init__.py
+new file mode 100644
+index 0000000..cbe7371
+--- /dev/null
++++ b/src/ingest/aerodatabox/__init__.py
+@@ -0,0 +1 @@
++"""AeroDataBox: published schedules used as the estimator's seed."""
+diff --git a/src/ingest/aerodatabox/flights.py b/src/ingest/aerodatabox/flights.py
+new file mode 100644
+index 0000000..ac7cc0e
+--- /dev/null
++++ b/src/ingest/aerodatabox/flights.py
+@@ -0,0 +1,279 @@
++"""Pull departures from AeroDataBox and shape them into an estimator seed.
++
++The seed only needs the *relative* structure of supply within a route, so this
++module stays deliberately small: count departures per route and carrier, and let
++iterative proportional fitting handle the rest.
++
++Two traps are encoded here rather than left to the caller:
++
++- The free tier caps a query at **12 hours** and answers a longer window with an
++  empty list instead of an error, so a naive one-call-per-day pull silently
++  returns nothing.  Windows are therefore built as half-days and a full-day slot
++  that comes back empty is reported, not swallowed.
++- Codeshares would double-count a flight under two carriers and wreck exactly
++  the within-route proportions the seed exists to carry, so only the operating
++  carrier is kept.
++
++Every response is cached on disk keyed by airport and window.  API units are
++spent once; re-running the pull is free.
++"""
++
++from __future__ import annotations
++
++from collections import Counter
++from dataclasses import dataclass, field
++from datetime import date, timedelta
++import json
++import os
++from pathlib import Path
++import re
++import time
++
++import httpx
++import pandas as pd
++
++from src.analytics.route_carrier import load_city_crosswalk
++
++
++API_HOST = "aerodatabox.p.rapidapi.com"
++BASE_URL = f"https://{API_HOST}/flights/airports/iata"
++# The Basic plan answers a window longer than this with an empty list.
++MAX_WINDOW_HOURS = 12
++UNITS_PER_CALL = 2
++# Basic allows one request per second; stay under it.
++MIN_SECONDS_BETWEEN_CALLS = 1.1
++
++# IATA code to the project's carrier_key.  Mexico's scheduled domestic carriers
++# only; anything else is foreign or charter and is dropped with a count.
++CARRIER_BY_IATA: dict[str, str] = {
++    "AM": "AEROMEXICO",          # split from Connect below, by fleet
++    "Y4": "VOLARIS",
++    "VB": "VIVA_AEROBUS",
++    "YQ": "TAR",
++    "UJ": "MAGNICHARTERS",
++    "A7": "AEREO_CALAFIA",
++}
++# Aerus files without an IATA code, so it has to be matched on identity fields
++# the feed does carry.  Mexicana likewise publishes under codes that vary.
++CARRIER_BY_ICAO: dict[str, str] = {
++    "AMX": "AEROMEXICO",
++    "VOI": "VOLARIS",
++    "VIV": "VIVA_AEROBUS",
++    "TQR": "TAR",
++    "GMT": "MAGNICHARTERS",
++    "CFV": "AEREO_CALAFIA",
++    "MXA": "MEXICANA_NUEVA",
++}
++CARRIER_BY_NAME: dict[str, str] = {
++    "aerus": "AERUS",
++    "mexicana": "MEXICANA_NUEVA",
++}
++# Cargo and charter operators that fly domestic legs but are outside AFAC's
++# scheduled-passenger universe.  Named explicitly so they are dropped knowingly
++# rather than surfacing as "unmapped" noise on every run.  E7 is Estafeta, a
++# freight carrier -- not Aerus, which files with no IATA code at all.
++NON_SCHEDULED_ICAO: frozenset[str] = frozenset(
++    {"ESF", "XAR", "VTM", "MNU", "AJT"}
++)
++
++# Aeroméxico and Aerolitoral file under one IATA code but are separate carriers
++# in the AFAC margin.  Aerolitoral is the Embraer operator.
++CONNECT_FLEET = re.compile(r"embraer", re.IGNORECASE)
++
++
++class WindowTooLongError(ValueError):
++    """A window longer than the plan allows would return an empty list."""
++
++
++@dataclass
++class PullStats:
++    """What the pull cost and what it had to throw away."""
++
++    calls: int = 0
++    units_spent: int = 0
++    cached_calls: int = 0
++    empty_windows: list[str] = field(default_factory=list)
++    unmapped_carriers: Counter = field(default_factory=Counter)
++    foreign_destinations: int = 0
++    codeshares_dropped: int = 0
++    cargo_dropped: int = 0
++    missing_arrival: int = 0
++    non_scheduled_dropped: int = 0
++    aircraft_model_missing: int = 0
++
++
++def _cache_path(cache_dir: Path, iata: str, start: str) -> Path:
++    return cache_dir / f"{iata}_{start.replace(':', '')}.json"
++
++
++def fetch_window(
++    iata: str,
++    start: str,
++    end: str,
++    *,
++    api_key: str,
++    cache_dir: Path,
++    stats: PullStats,
++    client: httpx.Client | None = None,
++) -> list[dict]:
++    """One airport, one window of at most 12 hours, cached on disk."""
++
++    path = _cache_path(cache_dir, iata, start)
++    if path.exists():
++        stats.cached_calls += 1
++        return json.loads(path.read_text())
++
++    url = f"{BASE_URL}/{iata}/{start}/{end}"
++    params = {
++        "direction": "Departure",
++        # Required: without it a departure record carries no arrival airport
++        # at all, so the route is unknowable and the pull is wasted.
++        "withLeg": "true",
++        "withCancelled": "true",
++        "withCodeshared": "false",
++        "withCargo": "false",
++        "withPrivate": "false",
++        "withLocation": "false",
++    }
++    headers = {"x-rapidapi-key": api_key, "x-rapidapi-host": API_HOST}
++    owns_client = client is None
++    client = client or httpx.Client(timeout=90.0)
++    try:
++        response = client.get(url, params=params, headers=headers)
++    finally:
++        if owns_client:
++            client.close()
++
++    stats.calls += 1
++    stats.units_spent += UNITS_PER_CALL
++    if response.status_code == 204:
++        departures: list[dict] = []
++    else:
++        response.raise_for_status()
++        departures = response.json().get("departures", []) or []
++
++    path.parent.mkdir(parents=True, exist_ok=True)
++    path.write_text(json.dumps(departures))
++    if not departures:
++        stats.empty_windows.append(f"{iata} {start}")
++    return departures
++
++
++def _carrier_key(flight: dict, stats: PullStats) -> str | None:
++    """Resolve the operating carrier, or None if it is outside AFAC's universe."""
++
++    airline = flight.get("airline") or {}
++    icao = (airline.get("icao") or "").upper()
++    if icao in NON_SCHEDULED_ICAO:
++        stats.non_scheduled_dropped += 1
++        return None
++
++    key = (
++        CARRIER_BY_IATA.get(airline.get("iata") or "")
++        or CARRIER_BY_ICAO.get(icao)
++        or CARRIER_BY_NAME.get((airline.get("name") or "").strip().lower())
++    )
++    if key is None:
++        stats.unmapped_carriers[
++            airline.get("iata") or icao or airline.get("name") or "?"
++        ] += 1
++        return None
++    if key != "AEROMEXICO":
++        return key
++
++    model = (flight.get("aircraft") or {}).get("model")
++    if not model:
++        stats.aircraft_model_missing += 1
++        return key
++    return "AEROMEXICO_CONNECT" if CONNECT_FLEET.search(model) else key
++
++
++def normalise(
++    raw: dict[str, list[dict]], period_id: str, *, stats: PullStats,
++    reference_dir: Path | None = None,
++) -> pd.DataFrame:
++    """Turn cached responses into the ``FLIGHT_COLUMNS`` contract."""
++
++    domestic = set(load_city_crosswalk(reference_dir))
++    rows: list[tuple[str, str, str, str, int]] = []
++    for origin, flights in raw.items():
++        for flight in flights:
++            if flight.get("isCargo"):
++                stats.cargo_dropped += 1
++                continue
++            if flight.get("codeshareStatus") == "IsCodeshared":
++                stats.codeshares_dropped += 1
++                continue
++            dest = ((flight.get("arrival") or {}).get("airport") or {}).get("iata")
++            if not dest:
++                stats.missing_arrival += 1
++                continue
++            if dest not in domestic:
++                stats.foreign_destinations += 1
++                continue
++            carrier = _carrier_key(flight, stats)
++            if carrier is None:
++                continue
++            rows.append((period_id, origin, dest, carrier, 1))
++
++    frame = pd.DataFrame(
++        rows, columns=["period_id", "origin_iata", "dest_iata", "carrier_key", "flights"]
++    )
++    if frame.empty:
++        return frame
++    return frame.groupby(
++        ["period_id", "origin_iata", "dest_iata", "carrier_key"], as_index=False
++    )["flights"].sum()
++
++
++def pull_days(
++    airports: list[str],
++    days: list[date],
++    *,
++    period_id: str,
++    cache_dir: Path,
++    api_key: str | None = None,
++    unit_budget: int | None = None,
++    reference_dir: Path | None = None,
++) -> tuple[pd.DataFrame, PullStats]:
++    """Sweep every airport across whole days, in half-day windows.
++
++    ``unit_budget`` is a hard stop: the pull returns what it has rather than
++    spending past it, because the free tier is small enough that overrunning
++    costs the next attempt.
++    """
++
++    api_key = api_key or os.environ.get("RAPIDAPI_KEY")
++    if not api_key:
++        raise RuntimeError("RAPIDAPI_KEY is not set")
++
++    stats = PullStats()
++    raw: dict[str, list[dict]] = {}
++    last_call = 0.0
++    with httpx.Client(timeout=90.0) as client:
++        for day in days:
++            halves = [
++                (f"{day}T00:00", f"{day}T12:00"),
++                (f"{day}T12:00", f"{day + timedelta(days=1)}T00:00"),
++            ]
++            for start, end in halves:
++                for iata in airports:
++                    if (
++                        unit_budget is not None
++                        and stats.units_spent + UNITS_PER_CALL > unit_budget
++                        and not _cache_path(cache_dir, iata, start).exists()
++                    ):
++                        return normalise(
++                            raw, period_id, stats=stats, reference_dir=reference_dir
++                        ), stats
++                    wait = MIN_SECONDS_BETWEEN_CALLS - (time.monotonic() - last_call)
++                    if wait > 0 and not _cache_path(cache_dir, iata, start).exists():
++                        time.sleep(wait)
++                    flights = fetch_window(
++                        iata, start, end, api_key=api_key, cache_dir=cache_dir,
++                        stats=stats, client=client,
++                    )
++                    last_call = time.monotonic()
++                    raw.setdefault(iata, []).extend(flights)
++
++    return normalise(raw, period_id, stats=stats, reference_dir=reference_dir), stats
+diff --git a/tests/test_aerodatabox_flights.py b/tests/test_aerodatabox_flights.py
+new file mode 100644
+index 0000000..018c13d
+--- /dev/null
++++ b/tests/test_aerodatabox_flights.py
+@@ -0,0 +1,114 @@
++"""The adapter's job is to drop the right flights, silently to no one.
++
++Every filter here corresponds to a way the seed can be corrupted: a codeshare
++double-counts one flight under two carriers and moves the within-route
++proportions that are the seed's entire content; a cargo run inflates a route
++that carries no passengers; and a record with no arrival airport belongs to no
++route at all.
++"""
++
++from __future__ import annotations
++
++import pandas as pd
++
++from src.ingest.aerodatabox.flights import PullStats, normalise
++
++
++def _flight(
++    dest: str | None = "GDL",
++    *,
++    iata: str | None = "AM",
++    icao: str | None = "AMX",
++    name: str = "Aeromexico",
++    model: str | None = "Boeing 737-800",
++    cargo: bool = False,
++    codeshare: str = "IsOperator",
++) -> dict:
++    arrival = {"airport": {"iata": dest}} if dest else None
++    return {
++        "airline": {"iata": iata, "icao": icao, "name": name},
++        "arrival": arrival,
++        "aircraft": {"model": model} if model else {},
++        "isCargo": cargo,
++        "codeshareStatus": codeshare,
++    }
++
++
++def _run(flights: list[dict], origin: str = "MEX") -> tuple[pd.DataFrame, PullStats]:
++    stats = PullStats()
++    return normalise({origin: flights}, "2026M02", stats=stats), stats
++
++
++def test_counts_one_flight_per_record() -> None:
++    frame, _ = _run([_flight(), _flight()])
++    assert frame.loc[0, "flights"] == 2
++    assert frame.loc[0, "carrier_key"] == "AEROMEXICO"
++    assert (frame.loc[0, "origin_iata"], frame.loc[0, "dest_iata"]) == ("MEX", "GDL")
++
++
++def test_connect_is_split_from_mainline_by_fleet() -> None:
++    """Both file under AM; AFAC counts them separately, so the fleet decides."""
++
++    frame, _ = _run([_flight(model="Embraer 190"), _flight(model="Boeing 737 MAX 8")])
++    assert set(frame["carrier_key"]) == {"AEROMEXICO_CONNECT", "AEROMEXICO"}
++
++
++def test_aeromexico_without_a_model_stays_mainline_and_is_counted() -> None:
++    frame, stats = _run([_flight(model=None)])
++    assert frame.loc[0, "carrier_key"] == "AEROMEXICO"
++    assert stats.aircraft_model_missing == 1
++
++
++def test_codeshares_are_dropped() -> None:
++    frame, stats = _run([_flight(codeshare="IsCodeshared")])
++    assert frame.empty
++    assert stats.codeshares_dropped == 1
++
++
++def test_cargo_is_dropped() -> None:
++    frame, stats = _run([_flight(cargo=True)])
++    assert frame.empty
++    assert stats.cargo_dropped == 1
++
++
++def test_a_record_without_an_arrival_airport_is_reported_not_silently_lost() -> None:
++    """This is the withLeg trap: no leg, no arrival, no route."""
++
++    frame, stats = _run([_flight(dest=None)])
++    assert frame.empty
++    assert stats.missing_arrival == 1
++
++
++def test_foreign_destinations_are_dropped() -> None:
++    frame, stats = _run([_flight(dest="LAX")])
++    assert frame.empty
++    assert stats.foreign_destinations == 1
++
++
++def test_aerus_resolves_by_name_despite_having_no_iata_code() -> None:
++    frame, stats = _run([_flight(iata=None, icao=None, name="Aerus", model=None)])
++    assert frame.loc[0, "carrier_key"] == "AERUS"
++    assert not stats.unmapped_carriers
++
++
++def test_estafeta_is_dropped_as_freight_not_mistaken_for_aerus() -> None:
++    """E7 is Estafeta, a cargo carrier -- an easy and costly mis-mapping."""
++
++    frame, stats = _run([_flight(iata="E7", icao="ESF", name="Estafeta")])
++    assert frame.empty
++    assert stats.non_scheduled_dropped == 1
++    assert not stats.unmapped_carriers
++
++
++def test_an_unknown_carrier_is_surfaced_rather_than_dropped_quietly() -> None:
++    frame, stats = _run([_flight(iata="ZZ", icao="ZZZ", name="Nueva")])
++    assert frame.empty
++    assert stats.unmapped_carriers["ZZ"] == 1
++
++
++def test_flights_are_aggregated_per_route_and_carrier() -> None:
++    frame, _ = _run(
++        [_flight(dest="GDL"), _flight(dest="GDL"), _flight(dest="CUN")]
++    )
++    counts = dict(zip(frame["dest_iata"], frame["flights"], strict=True))
++    assert counts == {"GDL": 2, "CUN": 1}

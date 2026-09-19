@@ -1,0 +1,675 @@
+From b841a62fd1cf9136abb8f60d72b590881136bceb Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 15 Sep 2026 01:56:13 +0000
+Subject: [PATCH 17/19] Measure seed coverage against published flights instead
+ of inferring it
+
+AFAC publishes flights per carrier in the VLOSREG sheet of the airline summary
+workbook, which nothing else in the pipeline carries. With it the acceptance
+test's central number stops being a model: sum the candidate's flights per
+carrier, divide by the published count, normalise. The report now says which
+path it took.
+
+The measurement contradicts the inference it replaces. On the pilot the
+inferred spread was 1.12x and the measured one is 1.30x, so the earlier reading
+that the source comfortably passed does not hold. Two safeguards were needed to
+get even that far: a carrier flying under a thousand flights a month is excluded
+from the verdict, because Aerus flies 438 and the sampled Tuesday caught nine of
+them, whose 0.64 alone stretched the spread to 1.74x; and a seed covering less
+than half the month is flagged, because the spread then mixes coverage with
+day-of-week mix. The pilot's pattern is exactly that shape -- Aeromexico 1.12
+and Connect 1.06 high, Viva 0.86 low -- which is what a Tuesday does to a market
+split between business and leisure carriers. Only a full month separates them.
+
+Route flights exceed carrier flights by a steady 1.1%; the gap is the freight
+airlines, which fly scheduled domestic legs and carry no passengers. Pinned by
+a test so it is never mistaken for a parsing error.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01FYLfAv93wjCxnGdihXYpAm
+---
+ .../afac_carrier_flights_domestic.csv         | 146 ++++++++++++++++++
+ docs/estimador-ruta-aerolinea.md              |  29 +++-
+ src/analytics/seed_acceptance.py              | 106 ++++++++++++-
+ src/ingest/afac/margins.py                    |  92 +++++++++++
+ tests/test_afac_margins.py                    |  64 +++++++-
+ tests/test_seed_acceptance.py                 |  53 +++++++
+ 6 files changed, 480 insertions(+), 10 deletions(-)
+ create mode 100644 data/reference/afac_carrier_flights_domestic.csv
+
+diff --git a/data/reference/afac_carrier_flights_domestic.csv b/data/reference/afac_carrier_flights_domestic.csv
+new file mode 100644
+index 0000000..920d2c7
+--- /dev/null
++++ b/data/reference/afac_carrier_flights_domestic.csv
+@@ -0,0 +1,146 @@
++period_id,carrier_name,vuelos
++2025M01,Aeroméxico (Aerovías de México),7185
++2025M01,Aeroméxico Connect (Aerolitoral),4191
++2025M01,Aerus,456
++2025M01,Magnicharters (Grupo Aéreo Monterrey),129
++2025M01,Mexicana (Aerolínea del Estado Mexicano),316
++2025M01,Transportes Aéreos Regionales (TAR),709
++2025M01,Vivaaerobus (Aeroenlaces),13074
++2025M01,Volaris (Concesionaria Vuela Cia de Aviación),10861
++2025M02,Aeroméxico (Aerovías de México),6626
++2025M02,Aeroméxico Connect (Aerolitoral),3728
++2025M02,Aerus,348
++2025M02,Magnicharters (Grupo Aéreo Monterrey),120
++2025M02,Mexicana (Aerolínea del Estado Mexicano),266
++2025M02,Transportes Aéreos Regionales (TAR),691
++2025M02,Vivaaerobus (Aeroenlaces),11519
++2025M02,Volaris (Concesionaria Vuela Cia de Aviación),9389
++2025M03,Aeroméxico (Aerovías de México),7353
++2025M03,Aeroméxico Connect (Aerolitoral),4001
++2025M03,Aerus,428
++2025M03,Magnicharters (Grupo Aéreo Monterrey),152
++2025M03,Mexicana (Aerolínea del Estado Mexicano),320
++2025M03,Transportes Aéreos Regionales (TAR),767
++2025M03,Vivaaerobus (Aeroenlaces),13014
++2025M03,Volaris (Concesionaria Vuela Cia de Aviación),10963
++2025M04,Aeroméxico (Aerovías de México),7100
++2025M04,Aeroméxico Connect (Aerolitoral),4037
++2025M04,Aerus,471
++2025M04,Magnicharters (Grupo Aéreo Monterrey),182
++2025M04,Mexicana (Aerolínea del Estado Mexicano),376
++2025M04,Transportes Aéreos Regionales (TAR),841
++2025M04,Vivaaerobus (Aeroenlaces),13674
++2025M04,Volaris (Concesionaria Vuela Cia de Aviación),11504
++2025M05,Aeroméxico (Aerovías de México),7424
++2025M05,Aeroméxico Connect (Aerolitoral),4092
++2025M05,Aerus,476
++2025M05,Magnicharters (Grupo Aéreo Monterrey),183
++2025M05,Mexicana (Aerolínea del Estado Mexicano),366
++2025M05,Transportes Aéreos Regionales (TAR),669
++2025M05,Vivaaerobus (Aeroenlaces),14078
++2025M05,Volaris (Concesionaria Vuela Cia de Aviación),11251
++2025M06,Aeroméxico (Aerovías de México),7158
++2025M06,Aeroméxico Connect (Aerolitoral),3853
++2025M06,Aerus,563
++2025M06,Magnicharters (Grupo Aéreo Monterrey),207
++2025M06,Mexicana (Aerolínea del Estado Mexicano),386
++2025M06,Transportes Aéreos Regionales (TAR),547
++2025M06,Vivaaerobus (Aeroenlaces),13748
++2025M06,Volaris (Concesionaria Vuela Cia de Aviación),10655
++2025M07,Aeroméxico (Aerovías de México),7636
++2025M07,Aeroméxico Connect (Aerolitoral),3260
++2025M07,Aerus,739
++2025M07,Magnicharters (Grupo Aéreo Monterrey),199
++2025M07,Mexicana (Aerolínea del Estado Mexicano),436
++2025M07,Transportes Aéreos Regionales (TAR),680
++2025M07,Vivaaerobus (Aeroenlaces),14845
++2025M07,Volaris (Concesionaria Vuela Cia de Aviación),11683
++2025M08,Aeroméxico (Aerovías de México),6984
++2025M08,Aeroméxico Connect (Aerolitoral),3751
++2025M08,Aerus,716
++2025M08,Magnicharters (Grupo Aéreo Monterrey),202
++2025M08,Mexicana (Aerolínea del Estado Mexicano),448
++2025M08,Transportes Aéreos Regionales (TAR),640
++2025M08,Vivaaerobus (Aeroenlaces),14450
++2025M08,Volaris (Concesionaria Vuela Cia de Aviación),11448
++2025M09,Aeroméxico (Aerovías de México),6821
++2025M09,Aeroméxico Connect (Aerolitoral),3348
++2025M09,Aerus,576
++2025M09,Magnicharters (Grupo Aéreo Monterrey),180
++2025M09,Mexicana (Aerolínea del Estado Mexicano),428
++2025M09,Transportes Aéreos Regionales (TAR),655
++2025M09,Vivaaerobus (Aeroenlaces),13207
++2025M09,Volaris (Concesionaria Vuela Cia de Aviación),10334
++2025M10,Aeroméxico (Aerovías de México),7168
++2025M10,Aeroméxico Connect (Aerolitoral),3701
++2025M10,Aerus,592
++2025M10,Magnicharters (Grupo Aéreo Monterrey),142
++2025M10,Mexicana (Aerolínea del Estado Mexicano),442
++2025M10,Transportes Aéreos Regionales (TAR),631
++2025M10,Vivaaerobus (Aeroenlaces),13772
++2025M10,Volaris (Concesionaria Vuela Cia de Aviación),10650
++2025M11,Aeroméxico (Aerovías de México),6800
++2025M11,Aeroméxico Connect (Aerolitoral),4196
++2025M11,Aerus,535
++2025M11,Magnicharters (Grupo Aéreo Monterrey),171
++2025M11,Mexicana (Aerolínea del Estado Mexicano),428
++2025M11,Transportes Aéreos Regionales (TAR),639
++2025M11,Vivaaerobus (Aeroenlaces),14506
++2025M11,Volaris (Concesionaria Vuela Cia de Aviación),11234
++2025M12,Aeroméxico (Aerovías de México),7017
++2025M12,Aeroméxico Connect (Aerolitoral),3871
++2025M12,Aerus,528
++2025M12,Magnicharters (Grupo Aéreo Monterrey),166
++2025M12,Mexicana (Aerolínea del Estado Mexicano),504
++2025M12,Transportes Aéreos Regionales (TAR),814
++2025M12,Vivaaerobus (Aeroenlaces),15109
++2025M12,Volaris (Concesionaria Vuela Cia de Aviación),12281
++2026M01,Aeroméxico (Aerovías de México),6925
++2026M01,Aeroméxico Connect (Aerolitoral),4038
++2026M01,Aerus,457
++2026M01,Mexicana (Aerolínea del Estado Mexicano),630
++2026M01,Transportes Aéreos Regionales (TAR),728
++2026M01,Vivaaerobus (Aeroenlaces),13939
++2026M01,Volaris (Concesionaria Vuela Cia de Aviación),11367
++2026M02,Aeroméxico (Aerovías de México),6157
++2026M02,Aeroméxico Connect (Aerolitoral),3874
++2026M02,Aerus,438
++2026M02,Mexicana (Aerolínea del Estado Mexicano),613
++2026M02,Transportes Aéreos Regionales (TAR),563
++2026M02,Vivaaerobus (Aeroenlaces),11712
++2026M02,Volaris (Concesionaria Vuela Cia de Aviación),9486
++2026M03,Aeroméxico (Aerovías de México),7036
++2026M03,Aeroméxico Connect (Aerolitoral),4114
++2026M03,Aerus,534
++2026M03,Mexicana (Aerolínea del Estado Mexicano),687
++2026M03,Transportes Aéreos Regionales (TAR),586
++2026M03,Vivaaerobus (Aeroenlaces),13265
++2026M03,Volaris (Concesionaria Vuela Cia de Aviación),11057
++2026M04,Aeroméxico (Aerovías de México),7251
++2026M04,Aeroméxico Connect (Aerolitoral),3716
++2026M04,Aerus,531
++2026M04,Mexicana (Aerolínea del Estado Mexicano),654
++2026M04,Transportes Aéreos Regionales (TAR),519
++2026M04,Vivaaerobus (Aeroenlaces),13502
++2026M04,Volaris (Concesionaria Vuela Cia de Aviación),11446
++2026M05,Aeroméxico (Aerovías de México),7402
++2026M05,Aeroméxico Connect (Aerolitoral),3817
++2026M05,Aerus,496
++2026M05,Mexicana (Aerolínea del Estado Mexicano),682
++2026M05,Transportes Aéreos Regionales (TAR),510
++2026M05,Vivaaerobus (Aeroenlaces),13625
++2026M05,Volaris (Concesionaria Vuela Cia de Aviación),11343
++2026M06,Aeroméxico (Aerovías de México),6233
++2026M06,Aeroméxico Connect (Aerolitoral),3775
++2026M06,Aerus,506
++2026M06,Mexicana (Aerolínea del Estado Mexicano),694
++2026M06,Transportes Aéreos Regionales (TAR),449
++2026M06,Vivaaerobus (Aeroenlaces),13303
++2026M06,Volaris (Concesionaria Vuela Cia de Aviación),11712
++2026M07,Aeroméxico (Aerovías de México),7092
++2026M07,Aeroméxico Connect (Aerolitoral),3376
++2026M07,Aerus,507
++2026M07,Mexicana (Aerolínea del Estado Mexicano),848
++2026M07,Transportes Aéreos Regionales (TAR),510
++2026M07,Vivaaerobus (Aeroenlaces),14677
++2026M07,Volaris (Concesionaria Vuela Cia de Aviación),13928
+diff --git a/docs/estimador-ruta-aerolinea.md b/docs/estimador-ruta-aerolinea.md
+index 86902b1..3078e4e 100644
+--- a/docs/estimador-ruta-aerolinea.md
++++ b/docs/estimador-ruta-aerolinea.md
+@@ -17,12 +17,20 @@ Contexto y evidencia de que el cubo existe: [`pasajeros-por-ruta-y-aerolinea.md`
+ |---|---|---|
+ | Pasajeros por ruta y mes (nacional regular) | `data/reference/afac_od_nacional_regular.csv` | **Marginal de fila.** 13,224 filas, 22 meses (2024M01–2025M03, 2026M01–2026M07) |
+ | Pasajeros por aerolínea y mes (nacional regular) | `data/reference/afac_carrier_domestic.csv` | **Marginal de columna.** Los mismos 22 meses, de la base larga de DATATUR |
++| Vuelos por aerolínea y mes (nacional regular) | `data/reference/afac_carrier_flights_domestic.csv` | Contraste exacto para la prueba de aceptación. 19 meses, de la hoja `VLOSREG` del resumen operacional |
+ | Ciudad AFAC ↔ código IATA | `data/reference/afac_city_iata_crosswalk.csv` | Traduce la semilla al vocabulario de las marginales. 58 ciudades, verificadas contra `dim_airport` |
+ | Nombre AFAC ↔ `carrier_key` | `data/reference/afac_carrier_crosswalk.csv` | Alinea las aerolíneas de la semilla con las de la marginal |
+ | Vuelos por ruta y mes | mismo CSV de rutas, columna `vuelos` | Control de calidad de la semilla, no insumo del ajuste |
+ | T-100 por ruta, aerolínea y mes | `data/gold/fact_route_traffic.parquet` | **Arnés de validación.** Verdad publicada para medir el error |
+ | Identidades de aerolínea | `data/gold/dim_carrier.parquet`, `config/carrier_crosswalk.csv` | Resolución de entidades |
+ 
++Los vuelos por aerolínea no entran al ajuste —son una marginal de la tabla de
++vuelos, no de la de pasajeros— pero convierten la prueba de aceptación en
++aritmética. Un detalle que confunde si no se anticipa: los vuelos por ruta
++superan a los vuelos por aerolínea en un 1.1 % constante, y ese hueco son las
++cargueras, que vuelan regular nacional y llevan cero pasajeros. Por eso los
++pasajeros cuadran exacto y los vuelos no.
++
+ Falta **una sola cosa**: la semilla, es decir vuelos o asientos por aerolínea ×
+ ruta × mes en el mercado nacional. Es el único insumo que no es público en
+ México y hay que traerlo de fuera (ADS-B, itinerarios comerciales o un
+@@ -349,7 +357,26 @@ una fuente incompleta de una fuente sesgada.
+ 
+ Ya está automatizado en `src/analytics/seed_acceptance.py`. Dado un mes de
+ vuelos de cualquier proveedor devuelve un veredicto y, sobre todo, un **factor
+-de cobertura por aerolínea**, normalizado al promedio del mercado:
++de cobertura por aerolínea**, normalizado al promedio del mercado.
++
++Desde que se ingirió la hoja `VLOSREG` del resumen operacional, ese factor es
++una **división, no una inferencia**: AFAC publica vuelos por aerolínea y mes, así
++que basta sumar los de la semilla y dividir. El informe dice cuál de los dos
++caminos usó. La versión inferida queda como respaldo para meses sin esa hoja, y
++es notablemente más optimista —sobre el piloto daba 1.12x donde la medición da
++1.30x—, así que no debe leerse como equivalente.
++
++Dos salvaguardas que la medición necesitó:
++
++- Una aerolínea con menos de mil vuelos al mes **no entra al veredicto**. Aerus
++  vuela 438 y en el martes de muestra se vieron nueve: su factor de 0.64 es
++  ruido, y arrastraba solo él la dispersión de 1.30x a 1.74x.
++- Si la semilla cubre menos de la mitad del mes, el informe advierte que la
++  dispersión **mezcla cobertura con día de la semana**. En el piloto el patrón
++  era exactamente ese: Aeroméxico 1.12 y Connect 1.06 arriba, Viva 0.86 abajo,
++  que es lo que produce un martes en un mercado con aerolíneas de negocio y de
++  placer. Un mes completo separa las dos cosas.
++
+ 
+ ```python
+ from src.analytics.seed_acceptance import assess_seed, format_report
+diff --git a/src/analytics/seed_acceptance.py b/src/analytics/seed_acceptance.py
+index 56a2b5f..6864eb3 100644
+--- a/src/analytics/seed_acceptance.py
++++ b/src/analytics/seed_acceptance.py
+@@ -32,6 +32,7 @@ import pandas as pd
+ 
+ from src.analytics.route_carrier import (
+     ROUTE_MARGIN_FILE,
++    load_carrier_crosswalk,
+     build_seed_from_flights,
+     estimate_route_carrier,
+     load_afac_domestic_margins,
+@@ -39,7 +40,12 @@ from src.analytics.route_carrier import (
+ from src.config import PATHS
+ 
+ 
+-ACCEPTANCE_VERSION = "seed_acceptance_v1"
++ACCEPTANCE_VERSION = "seed_acceptance_v2"
++
++# Flights per carrier, which AFAC publishes only in the airline summary
++# workbook.  Where it covers the period being judged, the coverage factor is a
++# division rather than an inference.
++CARRIER_FLIGHTS_FILE = "afac_carrier_flights_domestic.csv"
+ 
+ # A source whose carriers differ by less than this factor is usable: the residual
+ # it leaves is below the estimator's own measured error of ~2 pp.
+@@ -49,6 +55,15 @@ COVERAGE_SPREAD_FAIL = 1.50
+ # `column_scale` this far from 1 means the seed misses part of some carrier's
+ # network, which silently corrupts the split even when everything else looks fine.
+ COLUMN_SCALE_TOLERANCE = 0.05
++# A carrier flying fewer than this many flights a month cannot be judged from a
++# sampled seed: a handful of observations swings its ratio wildly, and one such
++# carrier would otherwise decide the verdict for the whole source.  Aerus flies
++# 438 flights a month; one sampled Tuesday caught nine of them.
++MIN_FLIGHTS_TO_JUDGE = 1_000
++# Below this share of the month, the measured ratio mixes coverage with
++# day-of-week mix: business-heavy carriers over-represent on a weekday and
++# leisure-heavy ones under-represent, which is sampling, not a coverage gap.
++MIN_SAMPLE_FOR_CLEAN_MEASURE = 0.5
+ 
+ _DEBIAS_SWEEPS = 50
+ _DEBIAS_TOLERANCE = 1e-10
+@@ -66,7 +81,9 @@ class AcceptanceReport:
+     missing_carriers: tuple[str, ...]
+     carrier_coverage: dict[str, float]
+     coverage_spread: float
++    carriers_judged: tuple[str, ...]
+     column_scale: float
++    coverage_method: str
+     verdict: str
+     notes: tuple[str, ...]
+ 
+@@ -90,6 +107,51 @@ def load_afac_route_flights(reference_dir: Path | None = None) -> pd.DataFrame:
+     )
+ 
+ 
++def load_afac_carrier_flights(reference_dir: Path | None = None) -> pd.DataFrame:
++    """Flights per carrier and month, keyed by ``carrier_key``.
++
++    Returns an empty frame when the file is absent: the acceptance test falls
++    back to inferring coverage, which is weaker but needs no extra source.
++    """
++
++    reference = reference_dir or (PATHS.data / "reference")
++    path = reference / CARRIER_FLIGHTS_FILE
++    if not path.exists():
++        return pd.DataFrame(columns=["period_id", "carrier_key", "flights"])
++
++    table = pd.read_csv(path)
++    crosswalk = load_carrier_crosswalk(reference_dir)
++    table["carrier_key"] = table["carrier_name"].map(crosswalk)
++    return (
++        table.dropna(subset=["carrier_key"])
++        .rename(columns={"vuelos": "flights"})
++        .groupby(["period_id", "carrier_key"], as_index=False)["flights"]
++        .sum()
++    )
++
++
++def measure_carrier_coverage(
++    published_flights: pd.Series, candidate: pd.DataFrame
++) -> pd.Series:
++    """Coverage per carrier as a plain ratio, normalised to a mean of one.
++
++    The candidate may cover only part of the month -- a sampled week, say -- so
++    the absolute ratio carries no meaning and only the spread between carriers
++    does.  Normalising by the flight-weighted mean removes the sampling factor,
++    which is a row scaling the fit would cancel anyway.
++    """
++
++    seen = candidate.groupby("carrier_key")["weight"].sum()
++    common = seen.index.intersection(published_flights.index[published_flights > 0])
++    if common.empty:
++        return pd.Series(dtype=float)
++    ratio = seen.loc[common] / published_flights.loc[common]
++    mean = float(np.average(ratio, weights=published_flights.loc[common]))
++    if not np.isfinite(mean) or mean <= 0:
++        return pd.Series(dtype=float)
++    return (ratio / mean).rename("coverage_factor")
++
++
+ def estimate_carrier_coverage(
+     route_flights: pd.DataFrame,
+     candidate: pd.DataFrame,
+@@ -200,13 +262,27 @@ def assess_seed(
+         - set(seed["carrier_key"])
+     ))
+ 
+-    coverage = estimate_carrier_coverage(
+-        route_flights, seed,
+-        weights=flown.set_index("route_key")["passengers"],
+-    )
++    # Prefer the division over the inference: where AFAC publishes flights per
++    # carrier for this month, coverage is measured, not modelled.
++    published = load_afac_carrier_flights(reference_dir)
++    published = published[published["period_id"] == period_id].set_index("carrier_key")["flights"]
++    coverage = measure_carrier_coverage(published, seed) if not published.empty else pd.Series(dtype=float)
++    coverage_method = "medida"
++    if coverage.empty:
++        coverage_method = "inferida"
++        coverage = estimate_carrier_coverage(
++            route_flights, seed,
++            weights=flown.set_index("route_key")["passengers"],
++        )
++    # Judge the spread on carriers big enough to measure; report the rest.
++    judged = coverage
++    if coverage_method == "medida" and not published.empty:
++        big = published[published >= MIN_FLIGHTS_TO_JUDGE].index
++        if not coverage.index.intersection(big).empty:
++            judged = coverage.loc[coverage.index.intersection(big)]
+     spread = (
+-        float(coverage.max() / coverage.min())
+-        if not coverage.empty and coverage.min() > 0 else float("inf")
++        float(judged.max() / judged.min())
++        if not judged.empty and judged.min() > 0 else float("inf")
+     )
+ 
+     # The fit itself reports whether each carrier's whole network made it in.
+@@ -226,6 +302,17 @@ def assess_seed(
+             f"column_scale = {column_scale:.3f}: la semilla no cubre la red completa "
+             "de alguna aerolínea"
+         )
++    small = sorted(set(coverage.index) - set(judged.index))
++    if small:
++        notes.append(
++            "Excluidas del veredicto por volumen insuficiente para medirlas: "
++            + ", ".join(small)
++        )
++    if coverage_method == "medida" and flight_coverage < MIN_SAMPLE_FOR_CLEAN_MEASURE:
++        notes.append(
++            f"La semilla cubre {flight_coverage:.1%} del mes, así que la dispersión "
++            "mezcla cobertura con día de la semana; un mes completo la separa"
++        )
+     if passenger_coverage < 0.95:
+         notes.append(
+             f"La semilla solo alcanza el {passenger_coverage:.1%} de los pasajeros"
+@@ -247,7 +334,9 @@ def assess_seed(
+         missing_carriers=missing,
+         carrier_coverage=coverage.round(4).to_dict(),
+         coverage_spread=spread,
++        carriers_judged=tuple(judged.index),
+         column_scale=column_scale,
++        coverage_method=coverage_method,
+         verdict=verdict,
+         notes=tuple(notes),
+     )
+@@ -260,7 +349,8 @@ def format_report(report: AcceptanceReport) -> str:
+         f"Prueba de aceptación de semilla — {report.period_id}",
+         f"  Veredicto: {report.verdict.upper()}",
+         f"  Dispersión de cobertura entre aerolíneas: {report.coverage_spread:.2f}x "
+-        f"(pasa <{COVERAGE_SPREAD_PASS}, reprueba >={COVERAGE_SPREAD_FAIL})",
++        f"({report.coverage_method} sobre {len(report.carriers_judged)} aerolíneas; "
++        f"pasa <{COVERAGE_SPREAD_PASS}, reprueba >={COVERAGE_SPREAD_FAIL})",
+         f"  Rutas cubiertas: {report.covered_routes} de {report.afac_routes} "
+         f"({report.passenger_coverage:.1%} de los pasajeros)",
+         f"  Vuelos vistos vs AFAC: {report.flight_coverage:.1%}  "
+diff --git a/src/ingest/afac/margins.py b/src/ingest/afac/margins.py
+index f9e98c0..0733721 100644
+--- a/src/ingest/afac/margins.py
++++ b/src/ingest/afac/margins.py
+@@ -38,6 +38,14 @@ MONTHS = 12
+ 
+ ROUTE_MARGIN_FILE = "afac_od_nacional_regular.csv"
+ CARRIER_MARGIN_FILE = "afac_carrier_domestic.csv"
++CARRIER_FLIGHTS_FILE = "afac_carrier_flights_domestic.csv"
++
++# The airline summary workbook stacks three blocks in every sheet: national
++# carriers on domestic service, the same carriers on international service, and
++# foreign carriers.  Only the first is the domestic universe, and reading past
++# its end silently triples the totals.
++DOMESTIC_BLOCK_MARKER = "REGULAR NACIONAL"
++BLOCK_BOUNDARIES = ("EMPRESAS", "EN SERVICIO")
+ 
+ # Carriers DATATUR lists under scheduled domestic service that carry freight
+ # only, or that ceased operating.  They are excluded by the crosswalk rather
+@@ -179,3 +187,87 @@ def build(
+     routes.to_csv(reference / ROUTE_MARGIN_FILE, index=False)
+     carriers.to_csv(reference / CARRIER_MARGIN_FILE, index=False)
+     return routes, carriers, reconcile(routes, carriers)
++
++
++def read_summary_domestic_block(path: Path, sheet: str, year: int) -> pd.DataFrame:
++    """Read one sheet of the airline summary, domestic block only.
++
++    ``VLOSREG`` and ``PAXREG`` share a layout: carrier in the first column,
++    twelve month columns, then a total.  The sheet holds three stacked blocks
++    and only the first covers scheduled domestic service, so the read stops at
++    the next block header rather than running to the end of the sheet.
++    """
++
++    workbook = openpyxl.load_workbook(path, read_only=True, data_only=True)
++    try:
++        rows = list(workbook[sheet].iter_rows(values_only=True))
++    finally:
++        workbook.close()
++
++    start = next(
++        (
++            index + 1
++            for index, row in enumerate(rows)
++            if row and row[0] and DOMESTIC_BLOCK_MARKER in str(row[0]).upper()
++        ),
++        None,
++    )
++    if start is None:
++        raise ValueError(f"{path.name}:{sheet} has no domestic block header")
++
++    records: list[dict[str, object]] = []
++    for row in rows[start:]:
++        if not row or row[0] is None:
++            continue
++        name = str(row[0]).strip()
++        upper = name.upper()
++        if upper.startswith(BLOCK_BOUNDARIES):
++            break
++        # Total rows are sometimes letter-spaced ("T  o  t  a  l"), so collapse
++        # whitespace before comparing rather than matching the literal.
++        if "".join(upper.split()).startswith(("TOTAL", "EMPRESA")):
++            continue
++        for month in range(1, MONTHS + 1):
++            value = row[month]
++            if isinstance(value, (int, float)):
++                records.append(
++                    {
++                        "period_id": f"{year}M{month:02d}",
++                        "carrier_name": name,
++                        "value": int(value),
++                    }
++                )
++    return pd.DataFrame(records)
++
++
++def build_carrier_flights(
++    summary_workbooks: dict[int, Path],
++    *,
++    reference_dir: Path | None = None,
++    known_carriers: set[str] | None = None,
++) -> pd.DataFrame:
++    """Flights per carrier and month, which no other AFAC product publishes.
++
++    This is what turns the seed acceptance test from an inference into a
++    division: a candidate source's flight count per carrier can be compared
++    directly against the published one, so coverage that favours one carrier
++    over another shows up without having to be modelled.
++    """
++
++    frames = [
++        read_summary_domestic_block(path, "VLOSREG", year)
++        for year, path in sorted(summary_workbooks.items())
++    ]
++    flights = pd.concat(frames, ignore_index=True)
++    flights = flights[flights["value"] > 0]
++    if known_carriers is not None:
++        flights = flights[flights["carrier_name"].isin(known_carriers)]
++    flights = (
++        flights.rename(columns={"value": "vuelos"})
++        .groupby(["period_id", "carrier_name"], as_index=False)["vuelos"]
++        .sum()
++        .sort_values(["period_id", "carrier_name"], ignore_index=True)
++    )
++    reference = reference_dir or (PATHS.data / "reference")
++    flights.to_csv(reference / CARRIER_FLIGHTS_FILE, index=False)
++    return flights
+diff --git a/tests/test_afac_margins.py b/tests/test_afac_margins.py
+index 435caf5..b1eecc1 100644
+--- a/tests/test_afac_margins.py
++++ b/tests/test_afac_margins.py
+@@ -13,7 +13,12 @@ from pathlib import Path
+ import pandas as pd
+ import pytest
+ 
+-from src.ingest.afac.margins import Reconciliation, read_carrier_base, reconcile
++from src.ingest.afac.margins import (
++    Reconciliation,
++    read_carrier_base,
++    read_summary_domestic_block,
++    reconcile,
++)
+ 
+ 
+ def test_reconciliation_reports_the_gap_in_both_absolute_and_relative_terms() -> None:
+@@ -78,3 +83,60 @@ def test_carrier_base_pads_the_month_so_periods_sort(tmp_path: Path) -> None:
+     path = tmp_path / "DB_AFAC.xlsx"
+     source.to_excel(path, sheet_name="AFAC", index=False)
+     assert read_carrier_base(path).loc[0, "period_id"] == "2026M09"
++
++
++# --------------------------------------------------------------------------
++# The airline summary workbook, which is the only place flights per carrier
++# are published.
++# --------------------------------------------------------------------------
++
++def test_the_domestic_block_stops_before_the_international_one(tmp_path: Path) -> None:
++    """Reading past the block boundary triples the totals without any error."""
++
++    rows = [[None] * 14 for _ in range(9)]
++    rows[5] = ["EMPRESAS NACIONALES / DOMESTIC AIR CARRIERS"] + [None] * 13
++    rows[6] = ["EN SERVICIO REGULAR NACIONAL / SCHEDULED DOMESTIC"] + [None] * 13
++    body = [
++        ["Volaris", 100, 110] + [None] * 11,
++        ["T     o     t     a     l", 100, 110] + [None] * 11,
++        ["EMPRESAS NACIONALES / DOMESTIC AIR CARRIERS"] + [None] * 13,
++        ["EN SERVICIO REGULAR INTERNACIONAL"] + [None] * 13,
++        ["Volaris", 999, 999] + [None] * 11,
++    ]
++    frame = pd.DataFrame(rows + body)
++    path = tmp_path / "resumen.xlsx"
++    frame.to_excel(path, sheet_name="VLOSREG", index=False, header=False)
++
++    result = read_summary_domestic_block(path, "VLOSREG", 2026)
++    assert set(result["carrier_name"]) == {"Volaris"}
++    assert sorted(result["value"]) == [100, 110], "se coló el bloque internacional"
++
++
++def test_a_sheet_without_a_domestic_block_raises(tmp_path: Path) -> None:
++    path = tmp_path / "resumen.xlsx"
++    pd.DataFrame([["EMPRESAS EXTRANJERAS"] + [None] * 13]).to_excel(
++        path, sheet_name="VLOSREG", index=False, header=False
++    )
++    with pytest.raises(ValueError, match="domestic block"):
++        read_summary_domestic_block(path, "VLOSREG", 2026)
++
++
++def test_published_flights_fall_short_of_route_flights_by_the_cargo_carriers() -> None:
++    """Freight airlines fly scheduled domestic legs and carry no passengers.
++
++    Their flights are counted in the origin-destination workbook but they are
++    absent from the passenger margin, so flights miss by about one per cent
++    while passengers reconcile exactly.  Pinned so the gap is never mistaken
++    for a parsing error.
++    """
++
++    routes = pd.read_csv("data/reference/afac_od_nacional_regular.csv")
++    flights = pd.read_csv("data/reference/afac_carrier_flights_domestic.csv")
++    by_route = routes.groupby("period_id")["vuelos"].sum()
++    by_carrier = flights.groupby("period_id")["vuelos"].sum()
++    shared = sorted(set(by_route.index) & set(by_carrier.index))
++    assert len(shared) >= 10
++
++    gap = ((by_route[shared] - by_carrier[shared]) / by_carrier[shared]).abs()
++    assert gap.max() < 0.02, "el hueco crecio: revisar si entro otra aerolinea"
++    assert gap.min() > 0.005, "el hueco desaparecio: revisar si se colaron las cargueras"
+diff --git a/tests/test_seed_acceptance.py b/tests/test_seed_acceptance.py
+index 073bcd6..588804e 100644
+--- a/tests/test_seed_acceptance.py
++++ b/tests/test_seed_acceptance.py
+@@ -15,7 +15,9 @@ from src.analytics.route_carrier import load_t100_panel
+ from src.analytics.seed_acceptance import (
+     COVERAGE_SPREAD_FAIL,
+     estimate_carrier_coverage,
++    load_afac_carrier_flights,
+     load_afac_route_flights,
++    measure_carrier_coverage,
+ )
+ 
+ 
+@@ -100,3 +102,54 @@ def test_afac_route_flights_align_with_the_route_margin() -> None:
+     assert not flights.empty
+     assert flights["flights"].sum() > 0
+     assert flights["period_id"].nunique() == 22
++
++
++# --------------------------------------------------------------------------
++# Measured coverage: a division against AFAC's published flights per carrier,
++# which is strictly better than inferring it from route-level deficits.
++# --------------------------------------------------------------------------
++
++def _seed(counts: dict[str, float]) -> pd.DataFrame:
++    return pd.DataFrame(
++        {"carrier_key": list(counts), "weight": list(counts.values())}
++    )
++
++
++def test_a_proportional_sample_shows_every_carrier_at_the_average() -> None:
++    published = pd.Series({"A": 10_000.0, "B": 5_000.0, "C": 1_000.0})
++    coverage = measure_carrier_coverage(published, _seed({"A": 1000, "B": 500, "C": 100}))
++    assert np.allclose(coverage.to_numpy(), 1.0)
++
++
++def test_the_sampling_fraction_cancels_out() -> None:
++    """A week and a month must give the same factors; only the spread means anything."""
++
++    published = pd.Series({"A": 10_000.0, "B": 5_000.0})
++    week = measure_carrier_coverage(published, _seed({"A": 200, "B": 120}))
++    month = measure_carrier_coverage(published, _seed({"A": 800, "B": 480}))
++    assert np.allclose(week.to_numpy(), month.to_numpy())
++
++
++def test_a_carrier_seen_half_as_often_comes_back_at_half() -> None:
++    published = pd.Series({"A": 10_000.0, "B": 10_000.0})
++    coverage = measure_carrier_coverage(published, _seed({"A": 1000, "B": 500}))
++    assert coverage["B"] / coverage["A"] == pytest.approx(0.5)
++
++
++def test_a_carrier_absent_from_the_published_margin_is_skipped() -> None:
++    published = pd.Series({"A": 10_000.0})
++    coverage = measure_carrier_coverage(published, _seed({"A": 1000, "DESCONOCIDA": 50}))
++    assert list(coverage.index) == ["A"]
++
++
++def test_no_overlap_returns_empty_so_the_caller_falls_back() -> None:
++    published = pd.Series({"A": 10_000.0})
++    assert measure_carrier_coverage(published, _seed({"B": 100})).empty
++
++
++def test_published_carrier_flights_cover_the_months_we_can_estimate() -> None:
++    flights = load_afac_carrier_flights()
++    periods = set(flights["period_id"])
++    assert {f"2026M{m:02d}" for m in range(1, 8)} <= periods
++    assert flights["flights"].gt(0).all()
++    assert "VIVA_AEROBUS" in set(flights["carrier_key"])

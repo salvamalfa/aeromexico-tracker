@@ -1,0 +1,117 @@
+From 481f209f3651a3b2f2b641285f27753f1e88b9ca Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 15 Sep 2026 00:13:55 +0000
+Subject: [PATCH 11/19] Measure seed staleness and widen the seed-source
+ options
+
+Estimating month t from the supply observed in month t-k doubles the share
+error at one month of lag (1.96 -> 4.04 pp) and the fit refuses to run in 8
+of 11 months, because a median of 25 competitive routes per month did not
+exist the month before.  The seed is a subscription, not a purchase.
+
+Split the source table into published schedules and tracked flights, since
+they fail for different reasons: schedules do not depend on ADS-B receiver
+density, and cancellations are row scaling that the fit cancels.  Record that
+the AICM bulletin and the DATATUR base were opened and carry no carrier-by-
+route breakdown.
+
+Add the acceptance test that would have ruled out OpenSky in one afternoon:
+compare a trial month against the flights-per-route AFAC already publishes,
+and look for coverage that differs between carriers within a route.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01FYLfAv93wjCxnGdihXYpAm
+---
+ docs/estimador-ruta-aerolinea.md | 67 +++++++++++++++++++++++++++++---
+ 1 file changed, 61 insertions(+), 6 deletions(-)
+
+diff --git a/docs/estimador-ruta-aerolinea.md b/docs/estimador-ruta-aerolinea.md
+index 7937d4b..7e613a5 100644
+--- a/docs/estimador-ruta-aerolinea.md
++++ b/docs/estimador-ruta-aerolinea.md
+@@ -157,12 +157,24 @@ La medición descarta las opciones gratuitas basadas en mapas de rutas, porque l
+ semilla **tiene que traer frecuencias**. Y un piloto con datos reales descartó
+ también la opción gratuita que parecía más prometedora.
+ 
+-| Fuente | Costo | Veredicto |
+-|---|---|---|
+-| **AviationStack / Aviation Edge** | ~USD 50–200/mes | **Opción por defecto.** Itinerarios históricos con aerolínea, ruta y fecha |
+-| Cirium Diio / OAG | Alto | Si hay presupuesto. Trae asientos reales por ruta, que bajan el error de 5.96 % a 4.21 % |
+-| OpenSky Network | Gratis | **Descartado por medición.** Ver abajo |
+-| Mapas de rutas, Wikipedia, tableros de aeropuerto | Gratis | **Descartado.** Dan presencia, no frecuencia: 13 pp de error |
++Hay que separar dos familias, porque fallan por razones distintas. Los
++**itinerarios publicados** son lo que la aerolínea programó: no dependen de que
++haya un receptor en tierra, y las cancelaciones son escalado de fila, que el
++ajuste cancela. Los **vuelos rastreados** (ADS-B) dependen de la densidad de
++receptores, que en el centro y sureste de México es el problema.
++
++| Fuente | Familia | Costo | Veredicto |
++|---|---|---|---|
++| **AeroDataBox, AviationStack, Aviation Edge** | Itinerarios | ~USD 20–200/mes | **Opción por defecto.** Cobertura cierta, refrescable cada mes |
++| Cirium Diio / OAG | Itinerarios | Alto | Si hay presupuesto. Trae asientos reales, que bajan el error de 5.96 % a 4.21 % |
++| adsb.lol, airplanes.live, ADSB Exchange | Rastreo | Gratis o bajo | **Apuesta, no descarte.** Otra red de receptores puede cubrir donde OpenSky no. Someterla a la prueba de aceptación antes de invertirle tiempo |
++| OpenSky Network | Rastreo | Gratis | **Descartado por medición.** Ver abajo |
++| Mapas de rutas, Wikipedia, OpenFlights, tableros de aeropuerto | Presencia | Gratis | **Descartado.** Dan presencia, no frecuencia: 13 pp de error |
++| Boletines de AFAC y de AICM | — | Gratis | **Descartado por inspección.** AICM desagrega por terminal, no por aerolínea; la base de DATATUR es aerolínea × mes × región, sin ruta |
++
++Al contratar, conviene pedir el extracto **por aerolínea**, no por aeropuerto:
++garantiza que la red completa de cada operador entre a la semilla, que es
++justo lo que evita la trampa de `column_scale` descrita más abajo.
+ 
+ #### Por qué OpenSky no sirve
+ 
+@@ -187,11 +199,54 @@ falten vuelos de forma pareja, pero **no** absorbe que le falten más a una
+ aerolínea que a otra dentro de la misma ruta. Un factor de casi tres entre
+ operadores es exactamente el sesgo irreducible.
+ 
++#### Prueba de aceptación antes de pagar
++
++El piloto de OpenSky costó 540 créditos y varias horas. La misma conclusión se
++alcanza en una tarde con un mes de prueba de cualquier proveedor, porque AFAC ya
++publica el contraste: **vuelos por ruta**, en la columna `vuelos` del CSV de
++rutas.
++
++1. Traer un mes de la fuente candidata y agregarlo a vuelos por ruta y
++   aerolínea.
++2. Comparar los vuelos por ruta contra los de AFAC. Un déficit parejo no importa
++   —es escalado de fila y el ajuste lo cancela.
++3. Lo que decide es el **déficit por aerolínea dentro de la misma ruta**. Si la
++   cobertura relativa de dos operadores en una ruta difiere más que unos pocos
++   puntos, la fuente no sirve, por barata que sea. En OpenSky el factor entre
++   Aeroméxico Connect y Viva era de casi tres.
++
++Este paso no cuesta nada más que el mes de prueba y es el único que distingue
++una fuente incompleta de una fuente sesgada.
++
+ Cualquiera de las tres primeras entrega una tabla
+ `period_id, origin_iata, dest_iata, carrier_key, flights`, que es justo lo que
+ `build_seed_from_flights` consume. El adaptador de cada proveedor es lo único
+ específico; el resto de la tubería no cambia.
+ 
++## La semilla tiene que ser del mismo mes
++
++Antes de elegir proveedor conviene saber si la semilla se compra una vez o se
++paga cada mes. Es una pregunta medible: se corre el mismo arnés, pero
++estimando el mes *t* con la oferta observada en el mes *t−k*.
++
++| Antigüedad de la semilla | Error en participación | Error en pasajeros | Meses estimables |
++|---|---:|---:|---:|
++| Mismo mes | 1.96 pp | 5.92 % | 12 de 12 |
++| Un mes | 4.04 pp | 11.99 % | 3 de 11 |
++| Dos meses | 6.49 pp | 19.01 % | 2 de 10 |
++| Seis meses | 7.35 pp | 20.38 % | 1 de 6 |
++
++Dos cosas se rompen a la vez. El error **se duplica** con un solo mes de
++desfase, porque la participación dentro de una ruta se mueve 4.60 pp de un mes
++al siguiente en promedio —más que el error propio del estimador, así que una
++semilla vieja domina el presupuesto de error. Y en 8 de 11 meses el ajuste ni
++siquiera corre: levanta `InfeasibleMarginsError` porque aparecen rutas y
++aerolíneas que la semilla del mes anterior no conoce. La mediana es de 25 rutas
++competidas nuevas por mes sobre unas 198.
++
++Conclusión operativa: **la semilla es una suscripción, no una compra**. Hay que
++refrescarla todos los meses, contra el mes que se va a estimar.
++
+ ## La semilla tiene que estar completa
+ 
+ Es el error más fácil de cometer y el más difícil de detectar a ojo. La marginal

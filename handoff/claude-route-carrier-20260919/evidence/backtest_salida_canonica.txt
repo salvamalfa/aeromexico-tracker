@@ -1,0 +1,2 @@
+seed=seats      share_mae= 1.40 pp  passenger_error= 4.21 %  (198 competitive routes/month)
+seed=departures share_mae= 1.98 pp  passenger_error= 5.96 %  (198 competitive routes/month)
