@@ -275,6 +275,10 @@ Consumió 812 llamadas y 1,624 unidades; la limpieza de contenido del proveedor
 y la retención temporal del log terminaron correctamente. La puerta volvió a
 devolver `REJECT`, por lo que no se ejecutó IPF ni se produjo una estimación:
 
+El consumo acumulado de las dos corridas pagadas es **2,088 unidades**: 464 de
+la muestra de dos días y 1,624 de la muestra de siete días. Preparar y validar
+el mecanismo de retención posterior no consumió unidades adicionales.
+
 | Métrica | Resultado |
 |---|---:|
 | Rutas cubiertas | 452 de 539 |
@@ -301,9 +305,14 @@ del workflow eliminó también el Parquet normalizado antes de subir artefactos.
 Por ello la cobertura de 98.9% es evidencia verificable del piloto, pero la
 semilla de siete días no puede reutilizarse para estimar. Fue una retención
 demasiado agresiva: no se repetirá la consulta solo para recuperar esas filas.
-El workflow permanecerá deshabilitado hasta que empaquete primero, en un
-artefacto privado con vencimiento de siete días, los vuelos normalizados, la
-semilla agregada, hashes y metadatos; después podrá borrar el workspace.
+
+El commit privado `bc463db` corrigió el orden para las corridas futuras. Antes
+de limpiar el runner, el workflow ahora sube un artefacto privado con
+vencimiento de siete días que contiene vuelos normalizados, semilla agregada,
+caché de auditoría, log, metadatos y hashes. El workflow sigue deshabilitado
+hasta revisar la cuota disponible y decidir el siguiente barrido pagado. La
+captura histórica de la corrida `35470890247` no se puede reconstruir sin una
+nueva consulta y permanece únicamente como evidencia agregada en el log.
 
 No hace falta mantener abierta la sesión externa: sus commits, 89 pruebas,
 fixtures y resultados reproducibles ya fueron recuperados y verificados.
