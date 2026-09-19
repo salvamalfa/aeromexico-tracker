@@ -74,6 +74,7 @@ CARRIER_BY_ICAO: dict[str, str] = {
     "VOI": "VOLARIS",
     "VIV": "VIVA_AEROBUS",
     "TQR": "TAR",
+    "LCT": "TAR",
     "GMT": "MAGNICHARTERS",
     "CFV": "AEREO_CALAFIA",
     "MXA": "MEXICANA_NUEVA",
@@ -84,6 +85,7 @@ CARRIER_BY_NAME: dict[str, str] = {
     "aerolitoral": "AEROMEXICO_CONNECT",
     "magnicharter": "MAGNICHARTERS",
     "magnicharters": "MAGNICHARTERS",
+    "mxa": "MEXICANA_NUEVA",
     "mexicana": "MEXICANA_NUEVA",
 }
 # Cargo and charter operators that fly domestic legs but are outside AFAC's
