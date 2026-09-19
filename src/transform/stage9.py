@@ -179,6 +179,7 @@ def _scd2_attestation_artifacts(
         return {}
     silver_frames: list[pd.DataFrame] = []
     for name in (
+        "aeromexico_ir_quarterly_metrics",
         "sec_financials",
         "sec_operating_metrics",
         "peer_financials",

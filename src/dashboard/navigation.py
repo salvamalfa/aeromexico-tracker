@@ -19,6 +19,21 @@ class PageSpec:
     default: bool = False
 
 
+@dataclass(frozen=True, slots=True)
+class ReaderTabSpec:
+    """Navigation metadata for one tab in the portable business dashboard."""
+
+    key: str
+    title: str
+
+
+READER_TAB_SPECS: tuple[ReaderTabSpec, ...] = (
+    ReaderTabSpec("reading", "Lectura ejecutiva"),
+    ReaderTabSpec("economy", "Economía unitaria"),
+    ReaderTabSpec("flights", "Vuelos"),
+)
+
+
 PAGE_SPECS: tuple[PageSpec, ...] = (
     PageSpec("resumen", "Resumen ejecutivo", "🏠", "resumen", "¿Cómo le fue este trimestre?", True),
     PageSpec("economia_unitaria", "Economía unitaria", "↔️", "economia-unitaria", "¿Gana o pierde por unidad de capacidad?"),
@@ -56,6 +71,10 @@ def validate_navigation() -> None:
         for value in (spec.title, spec.url_path, spec.business_question)
     ):
         raise ValueError("Dashboard page metadata cannot be blank")
+    if len({spec.key for spec in READER_TAB_SPECS}) != len(READER_TAB_SPECS):
+        raise ValueError("Portable dashboard tab keys must be unique")
+    if any(not value.strip() for spec in READER_TAB_SPECS for value in (spec.key, spec.title)):
+        raise ValueError("Portable dashboard tab metadata cannot be blank")
 
 
 validate_navigation()
