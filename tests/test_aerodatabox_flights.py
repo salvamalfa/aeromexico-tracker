@@ -10,11 +10,21 @@ route at all.
 from __future__ import annotations
 
 from datetime import date
+import json
+import os
+import time
 
+import httpx
 import pandas as pd
 import pytest
 
-from src.ingest.aerodatabox.flights import PullStats, normalise
+from src.ingest.aerodatabox.flights import (
+    MAX_CACHE_AGE_SECONDS,
+    PullStats,
+    fetch_window,
+    normalise,
+    purge_expired_cache,
+)
 
 
 def _flight(
@@ -56,10 +66,26 @@ def test_connect_is_split_from_mainline_by_fleet() -> None:
     assert set(frame["carrier_key"]) == {"AEROMEXICO_CONNECT", "AEROMEXICO"}
 
 
-def test_aeromexico_without_a_model_stays_mainline_and_is_counted() -> None:
+def test_aeromexico_without_a_model_is_not_guessed_as_mainline() -> None:
     frame, stats = _run([_flight(model=None)])
-    assert frame.loc[0, "carrier_key"] == "AEROMEXICO"
+    assert frame.empty
     assert stats.aircraft_model_missing == 1
+    assert stats.unmapped_carriers["AM:aircraft_model_missing"] == 1
+
+
+def test_connect_resolves_from_its_own_operator_codes() -> None:
+    frame, _ = _run([
+        _flight(iata="5D", icao="SLI", name="Aeromexico Connect", model=None),
+    ])
+    assert frame.loc[0, "carrier_key"] == "AEROMEXICO_CONNECT"
+
+
+def test_cancelled_flights_are_dropped_defensively() -> None:
+    flight = _flight()
+    flight["status"] = "Canceled"
+    frame, stats = _run([flight])
+    assert frame.empty
+    assert stats.cancelled_dropped == 1
 
 
 def test_codeshares_are_dropped() -> None:
@@ -137,3 +163,30 @@ def test_a_plain_airport_key_still_works_unweighted() -> None:
 
     stats = PullStats()
     assert normalise({"MEX": [_flight()]}, "2026M02", stats=stats).loc[0, "flights"] == 1.0
+
+
+def test_fetch_excludes_cancelled_flights_at_the_api(tmp_path) -> None:
+    seen: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.update(dict(request.url.params))
+        return httpx.Response(200, json={"departures": []})
+
+    stats = PullStats()
+    with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+        fetch_window(
+            "MEX", "2026-07-01T00:00", "2026-07-01T12:00",
+            api_key="test", direct=True, cache_dir=tmp_path, stats=stats, client=client,
+        )
+
+    assert seen["withCancelled"] == "false"
+
+
+def test_expired_raw_cache_is_removed(tmp_path) -> None:
+    path = tmp_path / "MEX_2026-07-01T0000.json"
+    path.write_text(json.dumps([{"flight": "old"}]))
+    old = time.time() - MAX_CACHE_AGE_SECONDS - 1
+    os.utime(path, (old, old))
+
+    assert purge_expired_cache(tmp_path) == 1
+    assert not path.exists()

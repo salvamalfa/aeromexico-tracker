@@ -782,11 +782,24 @@ tbody tr.year-separator td {
 #panel-flights .network-mode-switch button { min-height: 32px; padding: 7px 12px; color: var(--brand-blue-dark); background: transparent; border: 0; border-radius: 7px; font-size: 10px; font-weight: 750; cursor: pointer; }
 #panel-flights .network-mode-switch button[aria-pressed="true"] { color: #fff; background: var(--brand-blue); box-shadow: 0 2px 6px rgba(0,48,135,.18); }
 #panel-flights .network-mode-switch button:disabled { color: #8a96a6; cursor: default; }
-#panel-flights .route-network-note a { color: var(--brand-blue); }
+#panel-flights .network-region-switch { display: inline-flex; flex-wrap: wrap; gap: 4px; margin-left: 6px; padding-left: 8px; border-left: 1px solid #c8d5e6; }
+#panel-flights .network-region-switch button { min-height: 32px; padding: 7px 11px; color: var(--brand-blue-dark); background: transparent; border: 0; border-radius: 7px; font-size: 10px; font-weight: 700; cursor: pointer; }
+#panel-flights .network-region-switch button[aria-pressed="true"] { color: #fff; background: var(--brand-blue-dark); }
+#panel-flights .network-volume { display: flex; flex-wrap: wrap; align-items: baseline; gap: 7px; margin: 0 0 11px; padding: 9px 13px; background: var(--blue-open); border: 1px solid var(--line); border-radius: var(--radius-sm); }
+#panel-flights .network-volume strong { color: var(--brand-blue-dark); font-size: 17px; font-weight: 800; }
+#panel-flights .network-volume span { color: var(--muted); font-size: 10px; }
+#panel-flights .route-coverage-dot { display: inline-block; flex: none; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; vertical-align: middle; }
+#panel-flights .route-expand-toggle > .route-coverage-dot, #panel-flights .route-expand-toggle > .route-scheduled-mark { margin-left: 0; }
+#panel-flights .route-coverage-dot.is-full { background: var(--altitude-green); }
+#panel-flights .route-coverage-dot.is-partial { background: #d9a400; }
+#panel-flights .route-coverage-dot.is-thin { background: var(--brand-red); }
+#panel-flights .route-scheduled-mark { display: inline-block; flex: none; margin-left: 5px; vertical-align: middle; line-height: 0; }
+#panel-flights .route-scheduled-mark svg { width: 11px; height: 11px; fill: var(--altitude-amber); }
 #panel-flights .domestic-route-summary { display: grid; gap: 2px; margin: 10px 0 8px; padding: 10px 12px; background: #edf4ff; border-radius: 8px; }
 #panel-flights .domestic-route-summary strong { color: var(--brand-blue-dark); font-size: 21px; font-variant-numeric: tabular-nums; }
 #panel-flights .domestic-route-summary span, #panel-flights .domestic-scope-note { color: var(--muted); font-size: 9px; line-height: 1.45; }
 #panel-flights .domestic-scope-note { margin: 9px 0 0; }
+#panel-flights .route-source-footer { margin: 9px 0 0; color: var(--muted); font-size: 9.5px; line-height: 1.45; }
 #panel-flights .domestic-route-table th:first-child { width: 70%; }
 #panel-flights .domestic-direction-list { display: grid; gap: 5px; }
 #panel-flights .domestic-direction-list > div { display: flex; justify-content: space-between; gap: 8px; }
@@ -912,10 +925,6 @@ tbody tr.year-separator td {
   #panel-flights .panel, #panel-flights .methodology, #panel-flights .flight-kpi, #panel-flights .flights-hero { box-shadow: none; }
   #panel-flights .airport-search-toggle { display: none; }
 }
-
-#panel-flights .route-source-note { display:block; font-size:9px; line-height:1.35; color:#56657a; white-space:normal; max-width:160px; padding:3px 0 5px; }
-
-#panel-flights .route-network-note { font-size:11px; line-height:1.5; color:#56657a; max-width:850px; }
 
 #panel-flights .aena-activity { margin-top: 14px; padding: 17px 19px; background: #fff; border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
 #panel-flights .aena-activity[hidden] { display: none; }
@@ -1278,12 +1287,14 @@ tbody tr.year-separator td {
 </section>
 <section aria-labelledby="network-title">
 <div class="section-heading network-heading">
-<div><p class="section-kicker">Red de vuelos</p><h2 id="network-title">Rutas nacionales</h2><p class="route-network-note" id="route-network-note">Movimientos de slots AICM y mercados adicionales atribuidos a Aeroméxico con fuentes de ruta.</p></div>
+<div><p class="section-kicker">Red de vuelos</p><h2 id="network-title">Rutas nacionales</h2></div>
 </div>
 <div aria-label="Tipo de red" class="network-mode-switch" role="group">
-<button aria-pressed="true" id="network-mode-domestic" type="button">Nacional · rutas</button>
+<button aria-pressed="true" id="network-mode-domestic" type="button">Nacional</button>
 <button aria-pressed="false" id="network-mode-international" type="button">Internacional</button>
+<div aria-label="Región internacional" class="network-region-switch" hidden="" id="network-region-switch" role="group"></div>
 </div>
+<div class="network-volume" hidden="" id="network-volume"></div>
 <div class="network-layout">
 <article class="panel flow-map-panel" id="map-panel">
 <div class="map-detail-layout">
@@ -1294,7 +1305,6 @@ tbody tr.year-separator td {
 </div>
 </article>
 </div>
-<div aria-live="polite" class="aena-activity" id="aena-airport-activity"></div>
 </section>
 <section aria-labelledby="mix-title">
 <div class="section-heading">
@@ -5777,17 +5787,38 @@ return Plotly;
     if (networkMode === "domestic" && !domesticAvailable) networkMode = "international";
     const periodNetwork = networkMode === "domestic" ? domesticPeriods[periodId] : (networkPeriods?.[periodId] || payload.route_network);
     network = { ...periodNetwork, world_geometry: worldGeometry };
-    routes = network.routes;
+    if (networkMode !== "international") selectedRegion = null;
+    // Sin vuelos propios no hay registro que mostrar: son rutas donde la fuente
+    // solo confirma presencia de Aeromexico, sin volumen atribuible.
+    const quantified = (network.routes || []).filter((route) => finite(route.departures));
+    network.routes = quantified;
+    routes = regionRoutes(quantified);
+    if (selectedRegion) {
+      const shownAirports = new Set(routes.flatMap((route) => [route.origin.iata, route.destination.iata]));
+      network.airports = (network.airports || []).filter((airport) => shownAirports.has(airport.iata));
+    }
     $("network-mode-domestic").disabled = !domesticAvailable;
     $("network-mode-domestic").setAttribute("aria-pressed", String(networkMode === "domestic"));
     $("network-mode-international").setAttribute("aria-pressed", String(networkMode === "international"));
     $("network-title").textContent = networkMode === "domestic" ? "Rutas nacionales" : "Rutas internacionales";
-    $("route-network-note").innerHTML = networkMode === "domestic"
-      ? `Red nacional identificada para ${esc(network.period_label)}. El AICM aporta slots de vuelos AM; Colima y Durango tienen movimientos atribuidos por inferencia; otras ocho rutas desde AIFA tienen presencia de Aeroméxico identificada en junio, sin desglose de vuelos propios. <a href="${esc(network.source_url)}" target="_blank" rel="noreferrer">Horario AICM</a> · <a href="https://www.gob.mx/cms/uploads/attachment/file/1100280/sase-julio-2026-27082026.xlsx" target="_blank" rel="noreferrer">AFAC origen–destino</a>.`
-      : "Rutas observadas y destinos programados de Aeroméxico. Las filas indican fuente y meses; los slots programados se distinguen de vuelos realizados. Grosor por pasajeros cuando se conoce; N/D indica dato no disponible. Fuentes: <a href='https://www.aicm.com.mx/aicm/negocios/slots/horarios-historicos-para-verano-2026-pdf' target='_blank' rel='noreferrer'>AICM</a> y <a href='https://noticias.oma.aero/news/del-cerro-de-la-silla-a-la-torre-eiffel-y-sin-escalas-inicia-nueva-ruta-directa-monterrey-paris-a6d41-5f19f.html' target='_blank' rel='noreferrer'>OMA</a>.";
-    renderAenaAirportActivity();
-    const defaultIncident = routesForAirport(defaultAirport);
-    pinnedAirport = defaultIncident.length ? defaultAirport : null;
+    renderRegionSwitch();
+    renderNetworkVolume();
+    // Con una region elegida, MEX puede quedar fuera del recorte: se abre el
+    // aeropuerto de la region con mas rutas para que el detalle nunca salga vacio.
+    const regionFallback = () => {
+      const counts = new Map();
+      routes.forEach((route) => [route.origin.iata, route.destination.iata]
+        .filter((iata) => (network.airports || []).some((airport) => airport.iata === iata))
+        .forEach((iata) => counts.set(iata, (counts.get(iata) || 0) + 1)));
+      return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] || null;
+    };
+    let focusAirportIata = defaultAirport;
+    let defaultIncident = routesForAirport(focusAirportIata);
+    if (!defaultIncident.length) {
+      focusAirportIata = regionFallback();
+      defaultIncident = focusAirportIata ? routesForAirport(focusAirportIata) : [];
+    }
+    pinnedAirport = defaultIncident.length ? focusAirportIata : null;
     hoveredAirport = pinnedAirport;
     hoveredAirportAt = 0;
     selectedMarket = defaultIncident[0]?.market_key || null;
@@ -5796,25 +5827,120 @@ return Plotly;
     if (flowMapRendered) renderFlowMap();
   }
 
-  function renderAenaAirportActivity() {
-    const host = $("aena-airport-activity");
+  function regionRoutes(allRoutes) {
+    if (networkMode !== "international" || !selectedRegion) return allRoutes;
+    return allRoutes.filter((route) => routeRegion(route) === selectedRegion);
+  }
+
+  function renderRegionSwitch() {
+    const host = $("network-region-switch");
     if (!host) return;
-    const items = networkPeriods?.[quarters[periodIndex].period_id]?.aena_airport_activity || [];
-    host.hidden = items.length === 0;
-    if (!items.length) { host.innerHTML = ""; return; }
-    const incomplete = items.some((item) => item.coverage_status !== "complete");
-    const cards = items.sort((a, b) => (b.passengers || 0) - (a.passengers || 0)).map((item) => {
-      const city = item.airport_iata === "MAD" ? "Madrid" : "Barcelona";
-      const months = (item.observed_months || []).map((month) => dateLabel(`${month.slice(0, 4)}-${month.slice(5)}-01`)).join(", ");
-      return `<div class="aena-activity-card"><div class="aena-activity-city"><strong>${city}</strong><span>${esc(item.airport_iata)}</span></div>
-        <div class="aena-activity-metrics"><div><strong>${formatRouteMetric("passengers", item.passengers)}</strong><span>pasajeros</span></div>
-        <div><strong>${formatRouteMetric("operations", item.operations)}</strong><span>operaciones</span></div></div>
-        <small class="aena-activity-months">${esc(months)}${item.coverage_status !== "complete" ? " · cobertura parcial" : ""}</small></div>`;
-    }).join("");
-    host.innerHTML = `<div class="aena-activity-heading"><div><p class="section-kicker">España · Aena</p><h3>Actividad de Aeroméxico en aeropuertos españoles</h3></div>
-      <span>${esc(network.period_label)}${incomplete ? " · periodo parcial" : ""}</span></div>
-      <div class="aena-activity-grid">${cards}</div>
-      <p class="aena-activity-note">Los meses incluidos se indican en cada tarjeta. Aena agrupa a Aerovías de México por aeropuerto español y compañía. Madrid puede incluir servicios desde Ciudad de México, Guadalajara y Monterrey; estas cifras no se asignan a una ruta concreta. Operaciones = aterrizajes + despegues. <a href="https://www.aena.es/es/estadisticas/consultas-personalizadas.html" target="_blank" rel="noreferrer">Fuente: Aena</a>.</p>`;
+    host.hidden = networkMode !== "international";
+    if (host.hidden) { host.innerHTML = ""; return; }
+    const available = REGIONS.filter((region) => (network.routes || []).some((route) => routeRegion(route) === region.id));
+    host.innerHTML = available.map((region) => `<button type="button" data-region="${region.id}" aria-pressed="${String(selectedRegion === region.id)}">${esc(region.label)}</button>`).join("");
+    host.querySelectorAll("button").forEach((button) => button.addEventListener("click", () => {
+      const id = button.dataset.region;
+      selectedRegion = selectedRegion === id ? null : id;
+      renderNetworkPeriod(quarters[periodIndex].period_id);
+    }));
+  }
+
+  function renderNetworkVolume() {
+    const host = $("network-volume");
+    if (!host) return;
+    const shown = routes || [];
+    const flights = shown.reduce((sum, route) => sum + (finite(route.departures) ? route.departures : 0), 0);
+    const noBreakdown = shown.filter((route) => !finite(route.departures)).length;
+    host.hidden = shown.length === 0;
+    if (host.hidden) { host.innerHTML = ""; return; }
+    const scope = networkMode === "domestic"
+      ? "en la red nacional"
+      : selectedRegion
+        ? `hacia ${REGIONS.find((region) => region.id === selectedRegion)?.label || ""}`
+        : "en la red internacional";
+    host.innerHTML = `<strong>${integer.format(flights)}</strong><span>vuelos ${esc(scope)} · ${esc(network.period_label)}${noBreakdown ? ` · ${noBreakdown} ${noBreakdown === 1 ? "ruta" : "rutas"} sin desglose propio` : ""}</span>`;
+  }
+
+  const REGION_MEMBERS = {
+    asia: ["ICN", "NRT"],
+    europa: ["AMS", "BCN", "CDG", "FCO", "LHR", "MAD"],
+    sudamerica: ["BOG", "CLO", "CTG", "EZE", "GRU", "LIM", "MDE", "UIO"],
+  };
+  const REGIONS = [
+    { id: "norteamerica", label: "Norteam\u00e9rica", lat: [8, 62], lon: [-170, -52], dtick: 15 },
+    { id: "sudamerica", label: "Sudam\u00e9rica", lat: [-56, 16], lon: [-84, -33], dtick: 15 },
+    { id: "europa", label: "Europa", lat: [34, 60], lon: [-12, 22], dtick: 10 },
+    { id: "asia", label: "Asia", lat: [24, 44], lon: [122, 142], dtick: 5 },
+  ];
+  let selectedRegion = null;
+
+  function airportRegion(iata) {
+    for (const [id, members] of Object.entries(REGION_MEMBERS)) if (members.includes(iata)) return id;
+    return "norteamerica";
+  }
+  function isMexican(airport) {
+    return airport.lat >= 14 && airport.lat <= 33 && airport.lon >= -118 && airport.lon <= -86;
+  }
+  function routeRegion(route) {
+    if (isMexican(route.origin)) return airportRegion(route.destination.iata);
+    if (isMexican(route.destination)) return airportRegion(route.origin.iata);
+    return airportRegion(route.destination.iata);
+  }
+
+  // Cuenta los meses del trimestre que la fuente report\u00f3 para esta ruta.
+  // Solo las notas con desglose mensual ("Meses: 04, 05") lo declaran; las
+  // fuentes de programaci\u00f3n trimestral no traen el dato y no llevan punto.
+  const MONTH_ABBR = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+  const MONTH_NAMES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+  function coverageMonths(route) {
+    const note = route.coverage_note || "";
+    const listed = /^Meses:\s*([\d,\s]+)/.exec(note);
+    if (listed) return listed[1].split(",").map((part) => part.trim()).filter(Boolean).length || null;
+    const lower = note.toLowerCase();
+    const span = new RegExp(String.raw`\b(${MONTH_ABBR.join("|")})[\u2013\u2014-](${MONTH_ABBR.join("|")})\b`).exec(lower);
+    if (span) return ((MONTH_ABBR.indexOf(span[2]) - MONTH_ABBR.indexOf(span[1])) % 12 + 12) % 12 + 1;
+    if (new RegExp(String.raw`\b(${MONTH_NAMES.join("|")})\b`).test(lower)) return 1;
+    return null;
+  }
+  // Los slots del AICM y el anuncio fechado de OMA son programacion: la fuente
+  // dice que el vuelo estaba previsto, no que se realizo. El icono los separa
+  // de lo observado sin gastar una columna ni una linea de texto.
+  const SCHEDULED_STATUSES = ["assigned_slot_not_flown", "scheduled_from_dated_release"];
+  function scheduledIconHtml(route) {
+    if (!SCHEDULED_STATUSES.includes(route.operation_status)) return "";
+    const title = "Vuelos programados: la fuente no confirma que se hayan realizado";
+    return `<span class="route-scheduled-mark" title="${title}" aria-label="${title}" role="img"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 1.6 15 14H1z"></path><rect x="7.2" y="6" width="1.6" height="4" rx=".8"></rect><circle cx="8" cy="11.6" r=".95"></circle></svg></span>`;
+  }
+
+  function coverageDotHtml(route) {
+    const months = coverageMonths(route);
+    if (!months) return "";
+    const variant = months >= 3 ? "is-full" : months === 2 ? "is-partial" : "is-thin";
+    const title = `${months} de 3 meses del trimestre con datos de la fuente`;
+    return `<span class="route-coverage-dot ${variant}" title="${title}" aria-label="${title}"></span>`;
+  }
+
+  const SOURCE_SHORT_LABELS = {
+    "Estados Unidos · BTS T-100": "BTS T-100",
+    "México · AICM, vuelos AM programados": "AICM",
+    "AICM · vuelos AM programados": "AICM",
+    "Brasil · ANAC": "ANAC",
+    "Colombia · Aerocivil": "Aerocivil",
+    "AIFA · ruta de Aeroméxico identificada; volumen propio sin desglose": "AIFA",
+    "AFAC · mercado con Aeroméxico como único operador identificado": "AFAC",
+    "OMA · rutas documentadas": "OMA",
+    "Reino Unido · CAA": "CAA",
+  };
+
+  function shortSourceLabel(label) {
+    return SOURCE_SHORT_LABELS[label] || label || "";
+  }
+
+  function sourceFooterHtml(tableRoutes) {
+    const labels = [...new Set((tableRoutes || []).map((route) => shortSourceLabel(route.source_label)).filter(Boolean))].sort();
+    if (!labels.length) return "";
+    return `<p class="route-source-footer">${labels.length === 1 ? "Fuente" : "Fuentes"}: ${esc(labels.join(" · "))}</p>`;
   }
 
   function formatRouteMetric(key, value) {
@@ -5844,8 +5970,6 @@ return Plotly;
 
   function renderRouteTable(title, subtitle, tableRoutes, subtitleHtml = null) {
     if (network.mode === "scheduled_domestic") {
-      const quantifiedMovements = tableRoutes.reduce((sum, route) => sum + (finite(route.departures) ? route.departures : 0), 0);
-      const presenceOnly = tableRoutes.filter((route) => !finite(route.departures)).length;
       $("airport-tooltip").innerHTML = `
         <div class="airport-title-row">
           <h3>${esc(title)}</h3>
@@ -5859,13 +5983,12 @@ return Plotly;
           <div class="airport-search-results" id="airport-search-results" role="listbox" aria-label="Aeropuertos encontrados"></div>
         </div>
         <p class="airport-meta">${subtitleHtml || esc(subtitle)}</p>
-        <div class="domestic-route-summary"><strong>${integer.format(quantifiedMovements)}</strong><span>movimientos cuantificados · ambos sentidos${presenceOnly ? ` · ${presenceOnly} rutas sin desglose propio` : ""}</span></div>
-        <div class="airport-table-wrap"><table class="airport-route-table domestic-route-table"><thead><tr><th>Ruta</th><th>Movimientos</th></tr></thead>
+        <div class="airport-table-wrap"><table class="airport-route-table domestic-route-table"><thead><tr><th>Ruta</th><th>Vuelos</th></tr></thead>
           <tbody>${tableRoutes.map((route, index) => `<tr class="route-summary-row" style="--route-color:${airportRouteColor(index)}">
-            <td>${route.directions.length ? `<button type="button" class="route-expand-toggle" aria-expanded="false" aria-controls="route-directions-${index}"><span class="route-expand-icon" aria-hidden="true">&gt;</span><strong class="route-table-name">${esc(routeTitle(route))}</strong></button>` : `<strong class="route-table-name">${esc(routeTitle(route))}</strong>`}<small class="route-source-note">${esc(route.coverage_note)}</small></td>
+            <td>${route.directions.length ? `<button type="button" class="route-expand-toggle" aria-expanded="false" aria-controls="route-directions-${index}"><span class="route-expand-icon" aria-hidden="true">&gt;</span><strong class="route-table-name">${esc(routeTitle(route))}</strong>${coverageDotHtml(route)}${scheduledIconHtml(route)}</button>` : `<strong class="route-table-name">${esc(routeTitle(route))}</strong>${coverageDotHtml(route)}${scheduledIconHtml(route)}`}</td>
             <td class="route-table-value"><strong>${finite(route.departures) ? integer.format(route.departures) : "Sin desglose propio"}</strong></td>
           </tr>${route.directions.length ? `<tr class="route-direction-detail" id="route-directions-${index}" style="--route-color:${airportRouteColor(index)}" hidden><td colspan="2"><div class="domestic-direction-list">${route.directions.map((direction) => `<div><span>${esc(direction.origin_iata)} → ${esc(direction.destination_iata)}</span><strong>${integer.format(direction.departures)}</strong></div>`).join("")}</div></td></tr>` : ""}`).join("")}</tbody></table></div>
-        <p class="domestic-scope-note">AICM identifica slots de vuelos AM; AFAC identifica vuelos por par de ciudades. El <a href="https://expansion.mx/empresas/2026/06/08/aerolineas-aifa-vuelos-nacionales-e-internacionales" target="_blank" rel="noreferrer">listado de aerolíneas del 8 de junio de 2026</a> identifica a Aeroméxico en diez destinos desde AIFA. En Colima y Durango, Aeroméxico es el único operador identificado allí, de modo que su atribución es inferida. Las otras ocho rutas comparten aerolíneas; sus totales AFAC no se asignan a Aeroméxico. Los slots AICM se cuentan como realizados solo en el escenario de cobertura solicitado.</p>`;
+        ${sourceFooterHtml(tableRoutes)}`;
       $("airport-tooltip").querySelectorAll(".route-expand-toggle").forEach((toggle) => toggle.addEventListener("click", () => {
         const detail = document.getElementById(toggle.getAttribute("aria-controls"));
         const expanded = toggle.getAttribute("aria-expanded") === "true";
@@ -5921,14 +6044,15 @@ return Plotly;
         <table class="airport-route-table">
           <thead><tr><th>Ruta</th><th>Pasajeros</th><th>Asientos</th><th>Vuelos</th><th>Ocupación</th></tr></thead>
           <tbody>${tableRoutes.map((route, index) => `<tr class="route-summary-row" style="--route-color:${airportRouteColor(index)}">
-            <td><button type="button" class="route-expand-toggle" aria-expanded="false" aria-controls="route-directions-${index}"><span class="route-expand-icon" aria-hidden="true">&gt;</span><strong class="route-table-name">${esc(routeTitle(route))}</strong></button><small class="route-source-note">${esc(route.coverage_note || "BTS T-100")}</small></td>
+            <td><button type="button" class="route-expand-toggle" aria-expanded="false" aria-controls="route-directions-${index}"><span class="route-expand-icon" aria-hidden="true">&gt;</span><strong class="route-table-name">${esc(routeTitle(route))}</strong>${coverageDotHtml(route)}${scheduledIconHtml(route)}</button></td>
             ${metricCell(route, "passengers")}
             ${metricCell(route, "seats")}
             ${metricCell(route, "departures")}
             ${metricCell(route, "load_factor")}
           </tr><tr class="route-direction-detail" id="route-directions-${index}" style="--route-color:${airportRouteColor(index)}" hidden><td colspan="5">${directionDetails(route)}</td></tr>`).join("")}</tbody>
         </table>
-      </div>`;
+      </div>
+      ${sourceFooterHtml(tableRoutes)}`;
     $("airport-tooltip").querySelectorAll(".route-expand-toggle").forEach((toggle) => {
       toggle.addEventListener("click", () => {
         const detail = document.getElementById(toggle.getAttribute("aria-controls"));
@@ -6036,16 +6160,8 @@ return Plotly;
 
   function renderAirportTooltip(airport, incident, isPinned) {
     const airportData = network.airports.find((item) => item.iata === airport);
-    const routeCount = `${incident.length} ${incident.length === 1 ? "mercado mostrado" : "mercados mostrados"}`;
-    const missingMonths = (network.expected_months || []).filter((month) => !(network.observed_months || []).includes(month));
-    const monthLabel = (month) => new Intl.DateTimeFormat("es-MX", { month: "long", year: "numeric", timeZone: "UTC" })
-      .format(new Date(`${month.slice(0, 4)}-${month.slice(5, 7)}-01T00:00:00Z`));
-    const incidentSources = new Set(incident.map(route => route.source_label));
-    const sourceCoverage = Object.entries(network.coverage_by_source || {}).filter(([label]) => incidentSources.has(label)).map(([label, months]) => `${label}: ${months.map(monthLabel).join(", ")}`).join(" · ");
-    const missingLabel = sourceCoverage ? `${esc(sourceCoverage)} · ` : missingMonths.length
-      ? `<strong class="coverage-gap">${missingMonths.length === 1 ? "Falta" : "Faltan"} ${missingMonths.map(monthLabel).join(", ")}</strong> · `
-      : "";
-    const metaHtml = `${esc(network.period_label)} · ${missingLabel}${esc(routeCount)} · Selecciona el destino para ver el detalle.`;
+    const routeCount = `${incident.length} ${incident.length === 1 ? "ruta" : "rutas"}`;
+    const metaHtml = `${esc(network.period_label)} · ${esc(routeCount)} · Selecciona el destino para ver el detalle.`;
     renderRouteTable(
       `${airport} · ${airportData?.city || "Aeropuerto"}`,
       "",
@@ -6054,27 +6170,59 @@ return Plotly;
     );
   }
 
+  // El alto del panel sigue al contenedor del mapa, no al <g class="geo"> de
+  // Plotly: ese grupo es el mundo entero a escala, de modo que al acercarse a
+  // una region crecia a miles de pixeles y arrastraba consigo el panel.
   function alignRouteDetailToGeo() {
     const panel = $("airport-tooltip");
     const map = $("route-flow-map");
-    const geo = map.querySelector(".geo");
-    if (!panel) return;
-    if (!geo || window.matchMedia("(max-width: 900px)").matches) {
+    if (!panel || !map) return;
+    if (window.matchMedia("(max-width: 900px)").matches) {
       panel.style.marginTop = "";
       panel.style.height = "";
       panel.style.maxHeight = "";
       return;
     }
-    const mapRect = map.getBoundingClientRect();
-    const geoRect = geo.getBoundingClientRect();
-    const visibleHeight = Math.round(geoRect.height * 100) / 100;
-    panel.style.marginTop = `${Math.max(0, geoRect.top - mapRect.top)}px`;
-    panel.style.height = `${visibleHeight}px`;
-    panel.style.maxHeight = `${visibleHeight}px`;
+    const height = map.clientHeight || 570;
+    panel.style.marginTop = "0px";
+    panel.style.height = `${height}px`;
+    panel.style.maxHeight = `${height}px`;
+  }
+
+  // Estira el recorte al mismo aspecto que el lienzo, de modo que el mapa
+  // dibujado ocupe siempre el alto completo: sin esto, cada region cambiaba
+  // el alto del mapa y, con el, el del panel de detalle.
+  function fitViewToCanvas(lat, lon) {
+    const canvas = $("route-flow-map");
+    const ratio = (canvas?.clientWidth || 700) / (canvas?.clientHeight || 570);
+    let [lat0, lat1] = lat;
+    let [lon0, lon1] = lon;
+    const spanLat = lat1 - lat0;
+    const spanLon = lon1 - lon0;
+    if (spanLon / spanLat < ratio) {
+      const want = spanLat * ratio;
+      const mid = (lon0 + lon1) / 2;
+      lon0 = mid - want / 2;
+      lon1 = mid + want / 2;
+    } else {
+      const want = spanLon / ratio;
+      const mid = (lat0 + lat1) / 2;
+      lat0 = Math.max(-85, mid - want / 2);
+      lat1 = Math.min(85, mid + want / 2);
+    }
+    return { lat: [lat0, lat1], lon: [lon0, lon1] };
   }
 
   function renderFlowMap() {
     const ordered = orderedRoutes();
+    const activeRegion = networkMode === "international" && selectedRegion
+      ? REGIONS.find((region) => region.id === selectedRegion)
+      : null;
+    const mapView = activeRegion
+      ? { ...fitViewToCanvas(activeRegion.lat, activeRegion.lon), latDtick: activeRegion.dtick, lonDtick: activeRegion.dtick }
+      : network.mode === "scheduled_domestic"
+        ? { ...fitViewToCanvas([13, 34], [-119, -86]), latDtick: 5, lonDtick: 5 }
+        : { lat: [-60, 85], lon: [-180, 180], latDtick: 30, lonDtick: 45 };
     const maxValue = Math.max(...ordered.map(routeValue), 1);
     const contextMarkets = new Set(ordered.slice(0, 12).map((route) => route.market_key));
     const geometry = network.world_geometry.geojson;
@@ -6112,8 +6260,8 @@ return Plotly;
         projection: { type: "equirectangular" },
         bgcolor: "rgba(0,0,0,0)", showframe: true, framecolor: "#9fb2c8", framewidth: 1,
         showcoastlines: false, showcountries: false, showland: false, showocean: true,
-        oceancolor: "#f6f9fd", lataxis: { range: network.mode === "scheduled_domestic" ? [13, 34] : [-60, 85], showgrid: true, gridcolor: "#d9e2ee", dtick: network.mode === "scheduled_domestic" ? 5 : 30 },
-        lonaxis: { range: network.mode === "scheduled_domestic" ? [-119, -86] : [-180, 180], showgrid: true, gridcolor: "#d9e2ee", dtick: network.mode === "scheduled_domestic" ? 5 : 45 },
+        oceancolor: "#f6f9fd", lataxis: { range: mapView.lat, showgrid: true, gridcolor: "#d9e2ee", dtick: mapView.latDtick },
+        lonaxis: { range: mapView.lon, showgrid: true, gridcolor: "#d9e2ee", dtick: mapView.lonDtick },
       },
       dragmode: false,
     }, { displayModeBar: false, responsive: true, scrollZoom: false });
@@ -6180,6 +6328,15 @@ return Plotly;
     $("route-flow-map").removeAllListeners?.("plotly_click");
     $("route-flow-map").removeAllListeners?.("plotly_hover");
     $("route-flow-map").removeAllListeners?.("plotly_unhover");
+    $("route-flow-map").on("plotly_click", (event) => {
+      const point = (event.points || []).find((item) => item.curveNumber === ordered.length + 1);
+      const iata = String(point?.customdata || "");
+      if (!iata) return;
+      pinnedAirport = iata;
+      hoveredAirport = iata;
+      hoveredAirportAt = Date.now();
+      focusAirport(iata, true);
+    });
     $("route-flow-map").on("plotly_hover", (event) => {
       const point = (event.points || []).find((item) => item.curveNumber === ordered.length + 1);
       if (point?.curveNumber === ordered.length + 1) {

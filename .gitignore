@@ -15,6 +15,7 @@ data/bronze/*
 !data/bronze/_manifest.jsonl
 !data/bronze/_restatements.jsonl
 data/silver/
+data/cache/
 # Compact, validated gold Parquets are versioned for the public dashboard.
 data/quality/
 data/analytics/

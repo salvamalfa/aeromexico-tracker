@@ -78,11 +78,24 @@ h1 { margin: 0; font-size: clamp(25px, 3.4vw, 40px); line-height: 1.05; letter-s
 .network-mode-switch button { min-height: 32px; padding: 7px 12px; color: var(--brand-blue-dark); background: transparent; border: 0; border-radius: 7px; font-size: 10px; font-weight: 750; cursor: pointer; }
 .network-mode-switch button[aria-pressed="true"] { color: #fff; background: var(--brand-blue); box-shadow: 0 2px 6px rgba(0,48,135,.18); }
 .network-mode-switch button:disabled { color: #8a96a6; cursor: default; }
-.route-network-note a { color: var(--brand-blue); }
+.network-region-switch { display: inline-flex; flex-wrap: wrap; gap: 4px; margin-left: 6px; padding-left: 8px; border-left: 1px solid #c8d5e6; }
+.network-region-switch button { min-height: 32px; padding: 7px 11px; color: var(--brand-blue-dark); background: transparent; border: 0; border-radius: 7px; font-size: 10px; font-weight: 700; cursor: pointer; }
+.network-region-switch button[aria-pressed="true"] { color: #fff; background: var(--brand-blue-dark); }
+.network-volume { display: flex; flex-wrap: wrap; align-items: baseline; gap: 7px; margin: 0 0 11px; padding: 9px 13px; background: var(--blue-open); border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.network-volume strong { color: var(--brand-blue-dark); font-size: 17px; font-weight: 800; }
+.network-volume span { color: var(--muted); font-size: 10px; }
+.route-coverage-dot { display: inline-block; flex: none; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; vertical-align: middle; }
+.route-expand-toggle > .route-coverage-dot, .route-expand-toggle > .route-scheduled-mark { margin-left: 0; }
+.route-coverage-dot.is-full { background: var(--altitude-green); }
+.route-coverage-dot.is-partial { background: #d9a400; }
+.route-coverage-dot.is-thin { background: var(--brand-red); }
+.route-scheduled-mark { display: inline-block; flex: none; margin-left: 5px; vertical-align: middle; line-height: 0; }
+.route-scheduled-mark svg { width: 11px; height: 11px; fill: var(--altitude-amber); }
 .domestic-route-summary { display: grid; gap: 2px; margin: 10px 0 8px; padding: 10px 12px; background: #edf4ff; border-radius: 8px; }
 .domestic-route-summary strong { color: var(--brand-blue-dark); font-size: 21px; font-variant-numeric: tabular-nums; }
 .domestic-route-summary span, .domestic-scope-note { color: var(--muted); font-size: 9px; line-height: 1.45; }
 .domestic-scope-note { margin: 9px 0 0; }
+.route-source-footer { margin: 9px 0 0; color: var(--muted); font-size: 9.5px; line-height: 1.45; }
 .domestic-route-table th:first-child { width: 70%; }
 .domestic-direction-list { display: grid; gap: 5px; }
 .domestic-direction-list > div { display: flex; justify-content: space-between; gap: 8px; }
@@ -208,10 +221,6 @@ footer { display: flex; justify-content: space-between; gap: 20px; margin-top: 1
   .panel, .methodology, .flight-kpi, .flights-hero { box-shadow: none; }
   .airport-search-toggle { display: none; }
 }
-
-.route-source-note { display:block; font-size:9px; line-height:1.35; color:#56657a; white-space:normal; max-width:160px; padding:3px 0 5px; }
-
-.route-network-note { font-size:11px; line-height:1.5; color:#56657a; max-width:850px; }
 
 .aena-activity { margin-top: 14px; padding: 17px 19px; background: #fff; border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
 .aena-activity[hidden] { display: none; }
