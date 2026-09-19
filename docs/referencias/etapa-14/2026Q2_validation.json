@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "package_id": "2026Q2_808256bfb7420d221a3f2f2383c4b95d9889110ad1545fd85f24df8d442a9ff1",
+  "metrics": 299,
+  "versions": 299,
+  "excerpts": 157,
+  "sources": 4,
+  "readiness": "limited",
+  "path": "analysis_runs\\evidence\\2026Q2_808256bfb7420d221a3f2f2383c4b95d9889110ad1545fd85f24df8d442a9ff1.json"
+}

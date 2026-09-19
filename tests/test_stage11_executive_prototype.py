@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 
 from bs4 import BeautifulSoup
+import pytest
 
 from src.config import PATHS
 from src.dashboard.executive_summary import (
@@ -244,6 +245,27 @@ def test_responsive_and_reduced_motion_rules_are_present() -> None:
 
 def test_generated_artifact_matches_current_renderer() -> None:
     assert DEFAULT_OUTPUT.exists()
-    expected = render_executive_html(build_executive_payload())
+    existing=DEFAULT_OUTPUT.read_text(encoding='utf-8')
+    manifest=BeautifulSoup(existing,'html.parser').find(id='analysis-manifest')
+    if manifest:
+        from src.analysis_agent import lifecycle as flow
+        from src.analysis_agent.stage18 import consumer_html
+        from src.config import PATHS
+        entries=[]
+        for item in json.loads(manifest.string):
+            record_path=PATHS.root/'analysis_runs/drafts'/item['period_id']/(item['version']+'.json')
+            if not record_path.exists():
+                pytest.skip(
+                    'Exact integrated-artifact regeneration requires the private '
+                    'authorized analysis ledger.'
+                )
+            record=json.loads(record_path.read_bytes())
+            authorized=flow.consumer_payload(record)
+            package,calculations,checks=flow.verified_inputs(record)
+            entries.append((record,authorized,package,calculations,checks))
+        expected=consumer_html(build_executive_payload(),entries)
+    else:
+        expected = render_executive_html(build_executive_payload())
     assert DEFAULT_OUTPUT.read_text(encoding="utf-8") == expected
-    assert DEFAULT_OUTPUT.stat().st_size < 6_000_000
+    # International routes include a pinned local topology instead of CDN calls.
+    assert DEFAULT_OUTPUT.stat().st_size < 6_500_000

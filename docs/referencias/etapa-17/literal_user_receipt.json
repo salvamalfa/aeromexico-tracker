@@ -1,0 +1,40 @@
+{
+  "record": "analysis_runs\\editorial_overrides\\dca2600fa81c556911a1a2abe495bcfc71ba6f7344fb6632519908fb3c9db3a7.json",
+  "content_hash": "dca2600fa81c556911a1a2abe495bcfc71ba6f7344fb6632519908fb3c9db3a7",
+  "proposal": "prototypes\\etapa-17\\propuesta_texto_usuario.html",
+  "original_dashboard_unchanged": true,
+  "state": "visual_proposal_pending_review",
+  "exact_title": "Aeroméxico vendió mejor, pero le costó más caro vender",
+  "browser_checks": [
+    {
+      "width": 360,
+      "exact_text": true,
+      "bold_spans": 5,
+      "white_background": true,
+      "modals": true,
+      "focus_return": true,
+      "quarter_sync": true,
+      "errors": []
+    },
+    {
+      "width": 736,
+      "exact_text": true,
+      "bold_spans": 5,
+      "white_background": true,
+      "modals": true,
+      "focus_return": true,
+      "quarter_sync": true,
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "exact_text": true,
+      "bold_spans": 5,
+      "white_background": true,
+      "modals": true,
+      "focus_return": true,
+      "quarter_sync": true,
+      "errors": []
+    }
+  ]
+}

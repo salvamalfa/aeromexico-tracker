@@ -1,0 +1,67 @@
+{
+  "states": {
+    "8b5dcd5b599e7a0647dbaab1466b0c0eda7c9364292142187aad2342e2d3f118": "draft",
+    "efa01d1304aeca7348887b0c34a2f89687c4ec3c11be29746538c509313128cc": "validated"
+  },
+  "version": "efa01d1304aeca7348887b0c34a2f89687c4ec3c11be29746538c509313128cc",
+  "content_hash": "7bc64fb4d1b86c7cc5dd2ae4f4261f68180b149c6cd46e5733719822cbb8c663",
+  "approval": "absent",
+  "publication": "not_started",
+  "content_audit": "pass",
+  "semantic_adversarial_cases": 4,
+  "tests": {
+    "passed": 289,
+    "stage17": 22
+  },
+  "events": 3,
+  "consumer_denials": [
+    "Publication blocked: exact analysis version has no human approval",
+    "Publication blocked: exact analysis version has no human approval"
+  ],
+  "protected_hashes": {
+    "analysis_runs\\evidence\\2026Q2_808256bfb7420d221a3f2f2383c4b95d9889110ad1545fd85f24df8d442a9ff1.json": "9d16e895497bd12d8d74b7d097c9cfbff25b1ac7377f94b9822c0a45ae17e9d4",
+    "analysis_runs\\quantitative\\cf95b2ac44a26aa0fb08a1fe589ea5c522e8c9a01d12ffa740b6dc1b0c8eb4e0.json": "1096064ffe4e5e3bfb3a29dd4479eecdfc8a58d6d38b8aca7ef5a4b02dfffc59",
+    "prototypes\\etapa-11\\resumen_ejecutivo.html": "8632bcc4c6806a73cf392486eda37b655de04f29c9f08861d199850b0ba0d5d1",
+    "data\\gold\\bridge_record_lineage.parquet": "643b16040daf26be7acc2a502dd699a4ee315a99643fa5d163ef99f682b3bf6f",
+    "data\\gold\\dim_airport.parquet": "399956e276e4d314c2867951ce085c931aec5b3981fec23f7fbbeca108d841f6",
+    "data\\gold\\dim_airport_group.parquet": "8292c9119ff6f2da2aff28c49e7710e2db252b141749637323e0925950b490da",
+    "data\\gold\\dim_carrier.parquet": "3f7565fff104d466a05479ae8e0a50f612b92c3155965fec9cd4dface9a6671b",
+    "data\\gold\\dim_cluster_assignments.parquet": "6e4530ae7130744400046975aa366cfdfa0b42ca96362cce94e5b25ea53e34f1",
+    "data\\gold\\dim_events.parquet": "3ba9ad524782cb3e83dc099a4537b19ce66e0afac0452dbc0fa6dc7e832c9d52",
+    "data\\gold\\dim_fuel_period.parquet": "bf9ca38cf632e1469524c1577ec4266e4123b23f53dbc8c189bbce95560f587c",
+    "data\\gold\\dim_fx_period.parquet": "57317e965b60d574e5257a7187c4cfa8ffdd18b4ba1b32e3857bff760954161e",
+    "data\\gold\\dim_metric.parquet": "ae73a0fdcbd8debc5eb92d39dc3454440ddbae94313a28952cd634ba85ee85e2",
+    "data\\gold\\dim_model_performance.parquet": "71735eed12038902a6da2ba8d3ce9580fb868b4b5481a8326520646a15975d71",
+    "data\\gold\\dim_period.parquet": "f18e4625bb318b8a0972b85809a4f59a05e685f51fad3de88e47952ef00591b4",
+    "data\\gold\\dim_route.parquet": "322cbb16bb6c2212da85afcab22714e710cdebc73b9d8f31f4e9301b2d1fc8e8",
+    "data\\gold\\dim_source.parquet": "2a4cb0fbd319dc0816e43e5cbbc9807ce83f49fec8f24c3f17e2b3ce6ce57a0f",
+    "data\\gold\\dim_source_artifact.parquet": "7e39810b44a48eabb90d4818f513272bb95ec8ba58773b34cdfdc9cfb6625828",
+    "data\\gold\\dim_source_priority.parquet": "ca7b81cd97eb976250dc8ddef3cb478ce9428aa24f68a6993393ae4009de9f79",
+    "data\\gold\\fact_airport_group_traffic.parquet": "b7283dc461447b4ed330865836ede3309bdd50f8a88e352c39ec104681da2012",
+    "data\\gold\\fact_airport_traffic.parquet": "3ef160749527e9a7588c83870683cca1c6a292e0ef1729473e26d8322e2cc340",
+    "data\\gold\\fact_anomalies.parquet": "733df0fb85401187c5ed171e730d176c96d74c7fc1c130330912625dad0f8b3c",
+    "data\\gold\\fact_carrier_metrics.parquet": "7384db0d53be8cadb909ff9852288608b36cebf6714c300aa2966da810ee3c76",
+    "data\\gold\\fact_dashboard_coverage.parquet": "f48d0cd2c149e7c5ca1fe9d79b170ca3a916a29a33a5aac4fccfcd6305263ba6",
+    "data\\gold\\fact_data_quality_issues.parquet": "9bbc54f98e5a8d0a2de9df0db60b73b92d2c204e3ce975ce49a9f5524176dbf8",
+    "data\\gold\\fact_forecasts.parquet": "7178295ecc3478a5709780925c9baaa32ab14b10a9fdfc74ef5a9503248be6ca",
+    "data\\gold\\fact_macro.parquet": "7d5a34bd184111cd4188bb8004f08c0e2216273d4edb118cd5ff7c389ff09392",
+    "data\\gold\\fact_market_data.parquet": "7e985d72fca2c0c9ed482530fb6bbe0e1e9c8a8eb27958c62aaa93966374df83",
+    "data\\gold\\fact_report_language.parquet": "f58a5ce85d954b44cad0c96e7e3f6fd84637e9baa77dd835ab6ad00455e98b74",
+    "data\\gold\\fact_route_traffic.parquet": "af3be17f8ffa1fa0d0c4d3eda2583173e7ad0c6023639048131fe325f019ff51",
+    "data\\gold\\fact_route_traffic_summary.parquet": "97576a82b5833c5f9b3193b1e9346808c7b4306b772542f78f8f0a2d78ae8330",
+    "data\\gold\\fact_spread_decomposition.parquet": "18ce7b2dbd420a4135eeebd7c74b956b2abf167d5b95a6b96bebdcfa57901d55",
+    "data\\gold\\fact_study_results.parquet": "506ee892f3cbc7e346d328eb01d5df034fa717a475f424ba67ee698101a57317",
+    "data\\gold\\fuel_business_calendar.parquet": "0a19245aa4153f942a0675ecf284d07c09764b2a05e4fbba39c0df146d9277a4",
+    "data\\gold\\fx_business_calendar.parquet": "71e1676c5d8a03bbba93631223cf04c840ca64f0bcb3bcc2831e22ee59507b5c"
+  },
+  "protected_inputs_and_dashboard_unchanged_since_stage16": true,
+  "private_projection": "analysis_runs\\lifecycle\\analysis.sqlite",
+  "ledger_survives_projection_rebuild": true,
+  "report_hashes": {
+    "initial_review.json": "cab700199dbfe683218e03aa82053924f5cad94a0bffdb569cf158058e6e7b46",
+    "final_review.json": "c85c581c62c6410330cb7e3341fb6571b162d908f8f03c3b61b69cc9094d6324",
+    "adversarial_review.json": "0b52ab777a2edbd2130903d203924e4c42bfaef0efab78610808ef1ff3e51f2e",
+    "technical_review.json": "70196c5cf8961eaaa7c58e0a9f26fa0c594eeaa9853ff3072c5d812ede3eef1f"
+  },
+  "html_hash": "230ccdaefac82586e8d19ba40d4d9da35fa820b51f62d59946dc0a7d9ea7ea8c"
+}

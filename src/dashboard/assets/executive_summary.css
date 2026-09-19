@@ -330,6 +330,7 @@ summary:focus-visible {
 }
 
 .chart-card {
+  min-width: 0;
   padding: 18px 18px 10px;
 }
 
