@@ -105,8 +105,10 @@ Propiedades que importan en producción:
 
 - Los ceros de la semilla son **estructurales**: a una aerolínea que no opera
   una ruta jamás se le asignan pasajeros.
-- Las rutas de un solo operador salen **exactas** por construcción y se marcan
-  con `is_exact`.
+- Las rutas con un solo operador observado en la semilla se marcan con
+  `is_single_operator_seed`. Siguen siendo estimaciones (`is_exact = false`):
+  la fuente de itinerarios no prueba por sí sola que ningún otro operador haya
+  volado la ruta durante todo el periodo.
 - Las dos marginales casi siempre suman igual —20 de 22 meses cuadran exacto—
   pero cuando no, el
   módulo reescala la marginal de columna al total de filas y **reporta** el

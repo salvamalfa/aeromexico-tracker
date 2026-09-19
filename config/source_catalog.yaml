@@ -4,6 +4,36 @@ version: 1
 # source_systems son los identificadores literales que aparecen en Bronze,
 # Silver o Gold; source_key agrupa alias técnicos de una misma institución.
 sources:
+  international_route_authorities:
+    source_systems: [international_routes, afac_research, route_research, anac_research, route_authority_research, anac, aerocivil, caa]
+    display_name: Autoridades de tráfico aéreo internacional
+    institution: ANAC Brasil / Aerocivil Colombia / CAA Reino Unido y fuentes de investigación
+    business_description: Originales públicos y consultas de tráfico por operador y ruta; las fuentes de investigación permanecen separadas de la selección validada.
+    coverage: Cobertura geográfica y mensual específica de cada artefacto.
+    update_frequency: Mensual según autoridad; actualización manual explícita.
+    access_method: Archivos y consultas públicas HTTP con originales versionados.
+    official_page_url: https://www.caa.co.uk/data-and-analysis/
+    allowed_hosts: [gob.mx, anac.gov.br, datos.gob.ar, datos.gob.cl, caa.co.uk, datos.gov.co]
+    artifact_link_policy: direct
+    limitations: Las descargas actuales no demuestran disponibilidad histórica. Los fragmentos y errores de investigación no alimentan Silver ni Gold. Métricas y definiciones difieren por fuente.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+  aena_spain:
+    source_systems: [aena]
+    display_name: Aena España
+    institution: Aena S.M.E., S.A.
+    business_description: Exportaciones autenticadas de actividad por compañía y aeropuerto, y de mercado por aeropuertos; son granos separados.
+    coverage: Enero a julio de 2026 en los cuatro originales seleccionados.
+    update_frequency: Consulta manual por periodo.
+    access_method: Consulta personalizada autenticada con descarga CSV mediante navegador.
+    official_page_url: https://www.aena.es/es/estadisticas/consultas-personalizadas.html
+    allowed_hosts: [aena.es]
+    artifact_link_policy: landing_page_only
+    limitations: La URL conduce a la consulta, no al CSV exportado. No hay cruce compañía y ambos extremos de la ruta. Fecha de publicación histórica no verificada.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
   sec_edgar:
     source_systems: [sec, sec_edgar, sec_filing]
     display_name: SEC / EDGAR
@@ -120,14 +150,14 @@ sources:
     source_systems: [aicm]
     display_name: AICM
     institution: Aeropuerto Internacional de la Ciudad de México
-    business_description: Pasajeros y operaciones del principal aeropuerto base de Aeroméxico.
-    coverage: Tráfico doméstico e internacional del AICM.
-    update_frequency: Mensual.
-    access_method: Reportes estadísticos públicos en PDF.
+    business_description: Estadísticas agregadas del AICM y horarios históricos de slots asignados por aerolínea y vuelo.
+    coverage: Tráfico doméstico e internacional del aeropuerto y programación de rutas desde o hacia el AICM.
+    update_frequency: Mensual para estadísticas y estacional para horarios.
+    access_method: Reportes estadísticos y horarios públicos en PDF.
     official_page_url: https://www.aicm.com.mx/acercadelaicm/archivos/files/Estadisticas/EstadisticasJul2026.pdf
     allowed_hosts: [aicm.com.mx]
     artifact_link_policy: direct
-    limitations: Mide el aeropuerto completo y no permite atribuir por sí solo el tráfico a Aeroméxico.
+    limitations: Las estadísticas de tráfico miden el aeropuerto completo; los slots por aerolínea identifican programación, no vuelos realizados ni pasajeros.
     source_kind: public
     artifact_expected: true
     is_active: true
@@ -148,6 +178,54 @@ sources:
     artifact_expected: true
     is_active: true
 
+  aeromexico_route_press:
+    source_systems: [aeromexico_press]
+    display_name: Aeroméxico · comunicados de rutas
+    institution: Grupo Aeroméxico
+    business_description: Comunicados de la aerolínea sobre presencia y frecuencias anunciadas.
+    coverage: Rutas concretas y fechas del comunicado.
+    update_frequency: Por comunicado.
+    access_method: Copia pública del comunicado original de Aeroméxico.
+    official_page_url: https://www.globenewswire.com/news-release/2023/09/07/2738937/0/en/AEROMEXICO-INCREASES-OPERATIONS-AT-AIFA-BY-UP-TO-40-IT-WILL-INCREASE-TO-MORE-THAN-1-000-FLIGHTS-PER-MONTH.html
+    allowed_hosts: [globenewswire.com]
+    artifact_link_policy: direct
+    limitations: Una frecuencia anunciada en 2023 no demuestra la frecuencia efectiva de 2026.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  colima_route_statement:
+    source_systems: [colima_subsectur_mirror]
+    display_name: Colima · comunicado de ruta republicado
+    institution: Subsecretaría de Turismo de Colima, según la republicación
+    business_description: Fecha de traslado de la ruta de Aeroméxico Colima-CDMX desde AIFA al AICM.
+    coverage: Ruta Colima-CDMX en junio de 2026.
+    update_frequency: Por comunicado.
+    access_method: Republicación pública del comunicado estatal.
+    official_page_url: https://colimapm.com/Inicio/Noticia/216987
+    allowed_hosts: [colimapm.com]
+    artifact_link_policy: direct
+    limitations: Republicación atribuida a la autoridad estatal; no se localizó el original institucional.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  expansion_aifa_roster:
+    source_systems: [expansion]
+    display_name: Expansión · rutas AIFA por aerolínea
+    institution: Grupo Expansión
+    business_description: Lista fechada de compañías y destinos nacionales desde AIFA.
+    coverage: Fotografía de rutas publicada el 8 de junio de 2026.
+    update_frequency: Por artículo.
+    access_method: Página pública AMP.
+    official_page_url: https://expansion.mx/empresas/2026/06/08/aerolineas-aifa-vuelos-nacionales-e-internacionales?_amp=true
+    allowed_hosts: [expansion.mx]
+    artifact_link_policy: direct
+    limitations: Fuente periodística secundaria; la exclusividad observada en la lista es una inferencia para el mercado y no un desglose por aerolínea del AFAC.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
   oma_ir:
     source_systems: [oma_ir]
     display_name: OMA
@@ -160,6 +238,22 @@ sources:
     allowed_hosts: [oma.aero, miranda-newswire.com]
     artifact_link_policy: direct
     limitations: Los totales del grupo no representan aeropuertos físicos y deben modelarse por separado.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  oma_route_newsroom:
+    source_systems: [oma]
+    display_name: OMA · rutas
+    institution: Grupo Aeroportuario del Centro Norte
+    business_description: Comunicados oficiales que identifican aerolínea, ruta, fecha de inicio y frecuencia programada cuando se publica.
+    coverage: Rutas específicas de los aeropuertos operados por OMA.
+    update_frequency: Por comunicado.
+    access_method: PDF público descargado desde la sala de prensa de OMA.
+    official_page_url: https://noticias.oma.aero/
+    allowed_hosts: [oma.aero]
+    artifact_link_policy: direct
+    limitations: Una frecuencia anunciada permite calcular movimientos programados; no confirma todos los vuelos realizados ni pasajeros.
     source_kind: public
     artifact_expected: true
     is_active: true

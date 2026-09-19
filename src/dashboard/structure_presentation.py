@@ -52,6 +52,19 @@ SOURCE_GROUPS: tuple[dict[str, object], ...] = (
         "source_keys": ("aicm", "aifa", "oma_ir", "ourairports"),
     },
     {
+        "group_key": "route_evidence",
+        "label": "Cobertura y evidencia de rutas",
+        "summary": "Autoridades, aeropuertos y publicaciones fechadas que documentan rutas nacionales e internacionales.",
+        "source_keys": (
+            "international_route_authorities",
+            "aena_spain",
+            "aeromexico_route_press",
+            "colima_route_statement",
+            "expansion_aifa_roster",
+            "oma_route_newsroom",
+        ),
+    },
+    {
         "group_key": "market",
         "label": "Mercado bursátil",
         "summary": "Precio y volumen de AERO y de los comparables con ticker disponible.",

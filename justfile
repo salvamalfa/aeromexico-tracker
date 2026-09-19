@@ -29,6 +29,19 @@ dashboard-validate:
     uv run python -m src.dashboard.validate_stage10
     uv run python -m src.dashboard.validate_stage8
 
+stage11-prototype:
+    uv run python -m src.dashboard.build_stage11
+
+stage11-validate:
+    uv run pytest -q tests/test_stage11_executive_prototype.py
+    uv run python -m src.dashboard.validate_stage11
+
+stage12-prototype:
+    uv run python -m src.analysis_agent.stage12
+
+stage12-validate:
+    uv run pytest -q tests/test_stage12_diagnosis.py tests/test_stage11_executive_prototype.py
+
 smoke-test:
     uv run python -m src.smoke_test
 
@@ -46,3 +59,33 @@ bmv-validate:
 
 afac-validate:
     uv run python -m src.parse.afac.validate
+
+stage13-extract:
+    uv run python -m src.analysis_agent.stage13
+
+stage13-review:
+    uv run python -m src.analysis_agent.stage13_report
+
+stage13-html tools_dir:
+    uv run python -m src.analysis_agent.stage13_html --tools-dir "{{tools_dir}}"
+
+stage13-validate:
+    uv run pytest -q tests/test_stage13_financial_history.py tests/test_stage9_silver_contracts.py tests/test_pipeline_orchestration.py
+
+stage14-prepare quarter:
+    uv run python -m src.analysis_agent.evidence prepare "{{quarter}}"
+
+stage14-prototype:
+    uv run python -m src.analysis_agent.stage14_html
+
+stage14-validate:
+    uv run pytest -q tests/test_stage14_evidence.py
+
+stage15-calculate package:
+    uv run python -m src.analysis_agent.quantitative "{{package}}"
+
+stage15-prototype:
+    uv run python -m src.analysis_agent.stage15_html
+
+stage15-validate:
+    uv run pytest -q tests/test_stage15_quantitative.py

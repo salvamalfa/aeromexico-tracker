@@ -1,0 +1,41 @@
+{
+  "version": "26bc91353505dd8b0ec7df38af8dd9d715d92c36ef6a2cbcde8d9e97c2a0aaf1",
+  "checks": [
+    {
+      "width": 360,
+      "exact_text": true,
+      "emphasis": 5,
+      "white": true,
+      "context": true,
+      "modals": true,
+      "focus": true,
+      "quarter_sync": true,
+      "network_requests": [],
+      "errors": []
+    },
+    {
+      "width": 736,
+      "exact_text": true,
+      "emphasis": 5,
+      "white": true,
+      "context": true,
+      "modals": true,
+      "focus": true,
+      "quarter_sync": true,
+      "network_requests": [],
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "exact_text": true,
+      "emphasis": 5,
+      "white": true,
+      "context": true,
+      "modals": true,
+      "focus": true,
+      "quarter_sync": true,
+      "network_requests": [],
+      "errors": []
+    }
+  ]
+}

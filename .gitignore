@@ -7,12 +7,15 @@ __pycache__/
 htmlcov/
 .ipynb_checkpoints/
 logs/
+tmp/
+*.verification-failure.png
 
 # Raw and intermediate data stay local. The provenance ledgers are the exception.
 data/bronze/*
 !data/bronze/_manifest.jsonl
 !data/bronze/_restatements.jsonl
 data/silver/
+data/cache/
 # Compact, validated gold Parquets are versioned for the public dashboard.
 data/quality/
 data/analytics/
@@ -24,3 +27,6 @@ models/*/model.pkl
 
 # Local dashboard/runtime state.
 .streamlit/secrets.toml
+
+# Authoritative local analysis runs; never published as dashboard data.
+analysis_runs/

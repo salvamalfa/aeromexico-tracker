@@ -196,15 +196,16 @@ def test_estimate_returns_tidy_rows_that_honour_the_route_totals() -> None:
     assert diagnostics.loc[0, "competitive_routes"] == 1
 
 
-def test_estimate_flags_single_carrier_routes_as_exact() -> None:
+def test_estimate_marks_single_operator_seed_without_claiming_exactness() -> None:
     seed, route_totals, carrier_totals = _tidy_fixture()
 
     estimate, _ = estimate_route_carrier(seed, route_totals, carrier_totals)
 
-    exact = estimate.set_index("route_key")["is_exact"]
-    assert bool(exact["TIJ-UPN"]) is True
-    assert bool(exact["MEX-MTY"]) is True
-    assert not exact["MEX-CUN"].any()
+    indexed = estimate.set_index("route_key")
+    assert bool(indexed.loc["TIJ-UPN", "is_single_operator_seed"]) is True
+    assert bool(indexed.loc["MEX-MTY", "is_single_operator_seed"]) is True
+    assert not indexed.loc[["MEX-CUN"], "is_single_operator_seed"].any()
+    assert not estimate["is_exact"].any()
 
 
 def test_estimate_never_reports_a_carrier_outside_its_own_network() -> None:

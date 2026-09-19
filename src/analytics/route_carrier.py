@@ -221,8 +221,8 @@ def estimate_route_carrier(
             max_iterations=max_iterations,
             tolerance=tolerance,
         )
-        # A route served by a single carrier needs no estimation: the published
-        # route total *is* that carrier's figure.
+        # A single operator in the seed is useful support, but it is not proof
+        # that no other carrier operated the route during the period.
         carriers_per_route = (matrix_seed > 0).sum(axis=1)
 
         tidy = (
@@ -233,7 +233,8 @@ def estimate_route_carrier(
         )
         tidy = tidy[tidy["passengers_estimated"] > 0].copy()
         tidy["period_id"] = period_id
-        tidy["is_exact"] = tidy["route_key"].map(carriers_per_route).eq(1)
+        tidy["is_single_operator_seed"] = tidy["route_key"].map(carriers_per_route).eq(1)
+        tidy["is_exact"] = False
         tidy["estimator_version"] = ESTIMATOR_VERSION
         estimates.append(tidy)
 
@@ -253,7 +254,7 @@ def estimate_route_carrier(
 
     columns = [
         "period_id", "route_key", "carrier_key", "passengers_estimated",
-        "is_exact", "estimator_version",
+        "is_exact", "is_single_operator_seed", "estimator_version",
     ]
     estimate_frame = (
         pd.concat(estimates, ignore_index=True)[columns]

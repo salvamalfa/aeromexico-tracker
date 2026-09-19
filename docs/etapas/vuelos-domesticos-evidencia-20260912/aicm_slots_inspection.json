@@ -1,0 +1,115 @@
+{
+  "source": "data/bronze/domestic_routes_research/aicm_aeromexico_summer_slots_2026S26_20260913T004629Z.pdf",
+  "scope": "AICM scheduled slot assignments; Aeromexico AM flight numbers",
+  "quarter": "2026-04-01/2026-06-30",
+  "pages": 61,
+  "rows": 2836,
+  "row_reconciliation_failures": [],
+  "pilot_routes": {
+    "CUN": {
+      "A_to_MEX": 1359,
+      "D_from_MEX": 1345,
+      "total_AICM_movements": 2704,
+      "unique_flight_day_A_to_MEX": 1359,
+      "unique_flight_day_D_from_MEX": 1345,
+      "duplicate_flight_day_keys": 0,
+      "duplicate_examples": [],
+      "equipment": {
+        "7M9": 2704
+      },
+      "source_pages_first_10": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ]
+    },
+    "GDL": {
+      "A_to_MEX": 1041,
+      "D_from_MEX": 989,
+      "total_AICM_movements": 2030,
+      "unique_flight_day_A_to_MEX": 1041,
+      "unique_flight_day_D_from_MEX": 986,
+      "duplicate_flight_day_keys": 3,
+      "duplicate_examples": [
+        {
+          "movement": "D",
+          "flight": "733",
+          "day": "2026-04-05",
+          "occurrences": 2
+        },
+        {
+          "movement": "D",
+          "flight": "733",
+          "day": "2026-06-28",
+          "occurrences": 2
+        },
+        {
+          "movement": "D",
+          "flight": "248",
+          "day": "2026-06-28",
+          "occurrences": 2
+        }
+      ],
+      "equipment": {
+        "7M9": 2030
+      },
+      "source_pages_first_10": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        8,
+        9,
+        10,
+        11,
+        12
+      ]
+    },
+    "MTY": {
+      "A_to_MEX": 1173,
+      "D_from_MEX": 1337,
+      "total_AICM_movements": 2510,
+      "unique_flight_day_A_to_MEX": 1173,
+      "unique_flight_day_D_from_MEX": 1335,
+      "duplicate_flight_day_keys": 2,
+      "duplicate_examples": [
+        {
+          "movement": "D",
+          "flight": "734",
+          "day": "2026-04-05",
+          "occurrences": 2
+        },
+        {
+          "movement": "D",
+          "flight": "734",
+          "day": "2026-06-28",
+          "occurrences": 2
+        }
+      ],
+      "equipment": {
+        "7M9": 2146,
+        "789": 364
+      },
+      "source_pages_first_10": [
+        2,
+        3,
+        4,
+        5,
+        7,
+        8,
+        9,
+        11,
+        12,
+        13
+      ]
+    }
+  }
+}

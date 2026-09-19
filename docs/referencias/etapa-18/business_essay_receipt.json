@@ -1,0 +1,31 @@
+{
+  "version": "186ba823aea28830be12cb0293c5bb2890a433b173addc473c26aa8f89cab26f",
+  "state": "validated",
+  "summary_words": 218,
+  "summary_growth_percent": 16.577540106951872,
+  "detail_visible_words": 817,
+  "audit": "pass",
+  "approval": null,
+  "publication": null,
+  "summary_to_detail": {
+    "summary_business": [
+      "operations_level",
+      "company_drivers"
+    ],
+    "summary_unit": [
+      "spread_bridge",
+      "spread_sequence",
+      "fuel_identity"
+    ],
+    "summary_finance": [
+      "finance_levels",
+      "finance_definition"
+    ],
+    "summary_outlook": [
+      "risks_outlook"
+    ],
+    "summary_activity": [
+      "operations_sequence"
+    ]
+  }
+}
