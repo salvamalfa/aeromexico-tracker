@@ -1,0 +1,25 @@
+{
+  "ok": true,
+  "counts": {
+    "blocks": 50,
+    "charts": 1,
+    "html": 0,
+    "metrics": 0,
+    "tables": 21
+  },
+  "html": "prototypes/etapa-13/financial_history.html",
+  "sourceDialog": "passed",
+  "sourceInteraction": "keyboard_menu_semantic_click",
+  "timings": {
+    "browserRunMs": 1418.4,
+    "readerReadyMs": 83.8,
+    "contentChecksMs": 32.1,
+    "sourceDialogMs": 31.9,
+    "responsiveChecksMs": 31.9,
+    "totalMs": 1439.5
+  },
+  "viewports": [
+    1440,
+    390
+  ]
+}

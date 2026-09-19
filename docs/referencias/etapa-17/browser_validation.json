@@ -1,0 +1,29 @@
+[
+  {
+    "width": 360,
+    "overflow": false,
+    "comparison": true,
+    "nested_modal_escape": true,
+    "focus_return": true,
+    "network_requests": [],
+    "errors": []
+  },
+  {
+    "width": 736,
+    "overflow": false,
+    "comparison": true,
+    "nested_modal_escape": true,
+    "focus_return": true,
+    "network_requests": [],
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "overflow": false,
+    "comparison": true,
+    "nested_modal_escape": true,
+    "focus_return": true,
+    "network_requests": [],
+    "errors": []
+  }
+]

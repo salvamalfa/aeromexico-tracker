@@ -8,7 +8,7 @@ from streamlit.testing.v1 import AppTest
 from src.config import PATHS
 from src.dashboard.check_manual_freshness import check
 from src.dashboard.data import data_as_of, metric_definition, query_df
-from src.dashboard.navigation import PAGE_SPECS
+from src.dashboard.navigation import PAGE_SPECS, READER_TAB_SPECS
 from src.dashboard.validate_stage8 import DASHBOARD_METRICS, PAGES, contrast
 from src.dashboard.theme import CARRIER_COLORS, INK, MUTED, WHITE
 
@@ -20,6 +20,14 @@ def test_dashboard_registers_exactly_eleven_pages_in_business_order() -> None:
         ("Salud de datos", "salud-datos"),
         ("Estructura de datos", "estructura-datos"),
         ("Glosario", "glosario"),
+    ]
+
+
+def test_portable_dashboard_registers_flights_as_the_third_tab() -> None:
+    assert [(spec.key, spec.title) for spec in READER_TAB_SPECS] == [
+        ("reading", "Lectura ejecutiva"),
+        ("economy", "Economía unitaria"),
+        ("flights", "Vuelos"),
     ]
 
 

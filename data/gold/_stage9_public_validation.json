@@ -1,15 +1,15 @@
 {
-  "artifact_catalog_sha256": "23a8f10d3e7048d6d4aa125104fbb74698fac14bae2093b9f631b69a60559460",
-  "artifact_count": 752,
-  "bridge_rows": 412139,
-  "bridge_sha256": "38bc2285d4e00cd89cd2dc66337cb3da2c0127b614bf26cb0427e9a700336448",
+  "artifact_catalog_sha256": "e7f089e082770d8afe10a54641d5cc4d9def4faa4614574b12fd50feb014417c",
+  "artifact_count": 810,
+  "bridge_rows": 413035,
+  "bridge_sha256": "643b16040daf26be7acc2a502dd699a4ee315a99643fa5d163ef99f682b3bf6f",
   "contract_version": "stage9_v1.0.0",
   "declared_without_exact_link_records": 467,
   "gold_contract_sha256": "38e86aef316afa673978a73d7e645fc89887e5ae58fa1370d8a3b7dce053f0c3",
   "lineage_coverage": 1.0,
-  "lineage_records_declared": 277805,
-  "lineage_records_expected": 277805,
-  "pipeline_registry_sha256": "be4edac58847847ef3391ac3b4a72ae2c5185047fb86c7b9a427532725d2a857",
+  "lineage_records_declared": 278127,
+  "lineage_records_expected": 278127,
+  "pipeline_registry_sha256": "2486f5b69222ded372e9a11fd1c20c812069fa931cd23c84938eafa7ede42d1d",
   "quality_issue_count": 287,
   "quality_ledger_sha256": "9bbc54f98e5a8d0a2de9df0db60b73b92d2c204e3ce975ce49a9f5524176dbf8",
   "record_table_rows": {
@@ -18,7 +18,7 @@
     "fact_airport_group_traffic": 47,
     "fact_airport_traffic": 566,
     "fact_anomalies": 23,
-    "fact_carrier_metrics": 6207,
+    "fact_carrier_metrics": 6529,
     "fact_dashboard_coverage": 247,
     "fact_data_quality_issues": 287,
     "fact_forecasts": 24,
@@ -31,15 +31,15 @@
     "fact_study_results": 7
   },
   "schema_version": "stage10_public_validation_v1",
-  "silver_contract_sha256": "8f4da27604792db8989df9adb8c8770e475f7b9bebbe05aff9bcf0baff545082",
+  "silver_contract_sha256": "5f16b723e73338676009a07837b5d490cbc8d50a6a16a63524c0ab21430014af",
   "silver_contract_version": "stage9_v1.0.0",
-  "source_catalog_sha256": "96b263946c0e09c078f0082af6c7b1d830eb2652e417b02128768ec953f26301",
-  "source_count": 23,
+  "source_catalog_sha256": "9f99c1983ee3e75a0ba70f232ace548cbade9afd3d9a79829ecdbd3d04856f89",
+  "source_count": 29,
   "unknown_artifact_records": 0,
   "unknown_parent_records": 0,
   "upstream_receipt_sha256": {
-    "stage9_acceptance": "036371e1a621de7a999c3ce78888e49ac03f4753a33a33775240e95e0aa31c1d",
-    "stage9_lineage": "fd3a56ecd9d6283f9b08508a23fa6a1e92f463b3e79d3bf81fb312bce203b6c4"
+    "stage9_acceptance": "eda732430d6e022ed2633be0c7b481f4d44de992bb1eeaf6cee57794401a1253",
+    "stage9_lineage": "204bf4b6d000a4038ad3223f9edd5d6a774b539eafc75ba146a7073594992094"
   },
   "validation_status": "passed"
 }

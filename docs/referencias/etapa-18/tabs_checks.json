@@ -1,0 +1,26 @@
+[
+  {
+    "width": 360,
+    "tabs": true,
+    "shared_period": true,
+    "superscripts": true,
+    "no_technical_evidence": true,
+    "errors": []
+  },
+  {
+    "width": 736,
+    "tabs": true,
+    "shared_period": true,
+    "superscripts": true,
+    "no_technical_evidence": true,
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "tabs": true,
+    "shared_period": true,
+    "superscripts": true,
+    "no_technical_evidence": true,
+    "errors": []
+  }
+]

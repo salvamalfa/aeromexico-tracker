@@ -1,0 +1,13 @@
+{
+  "html_sha256": "674b0297331ba33f4b0c2b11ca1843589f96efb9dacd6c446024c69eb1dbf2f1",
+  "output": "C:\\Users\\salva\\Documents\\Codex\\AMEX\\Aeromexico Tracker\\prototypes\\etapa-11\\resumen_ejecutivo.html",
+  "versions": [
+    "186ba823aea28830be12cb0293c5bb2890a433b173addc473c26aa8f89cab26f"
+  ],
+  "approval_events": [
+    "85cc3fd9541695992576871f732eeaa94a535d89e15060496d8f208fda78b6bd"
+  ],
+  "tests_passed": 40,
+  "new_records": 298,
+  "quarter_markets": 46
+}
