@@ -120,6 +120,22 @@ def test_aerus_resolves_by_name_despite_having_no_iata_code() -> None:
     assert not stats.unmapped_carriers
 
 
+def test_reviewed_icao_code_resolves_when_feed_places_it_in_iata_field() -> None:
+    frame, stats = _run([
+        _flight(iata="MXA", icao=None, name="Mexicana", model=None),
+    ])
+    assert frame.loc[0, "carrier_key"] == "MEXICANA_NUEVA"
+    assert not stats.unmapped_carriers
+
+
+def test_magnicharter_singular_live_name_resolves() -> None:
+    frame, stats = _run([
+        _flight(iata=None, icao=None, name="Magnicharter", model=None),
+    ])
+    assert frame.loc[0, "carrier_key"] == "MAGNICHARTERS"
+    assert not stats.unmapped_carriers
+
+
 def test_estafeta_is_dropped_as_freight_not_mistaken_for_aerus() -> None:
     """E7 is Estafeta, a cargo carrier -- an easy and costly mis-mapping."""
 
