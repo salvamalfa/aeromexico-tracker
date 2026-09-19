@@ -1,0 +1,55 @@
+{
+  "checks": [
+    {
+      "heading": "1T21",
+      "kpis": "RASK4.75 ¢ USDQoQ No disponibleYoY No disponibleCASK7.20 ¢ USDQoQ No disponibleYoY No disponibleASK7.11 mil MQoQ No disponibleYoY No disponibleFactor de ocupación68.8%QoQ No disponibleYoY No disponiblePasajeros3.16 MQoQ No disponibleYoY No disponible",
+      "previousDisabled": true,
+      "scenario": "first-quarter"
+    },
+    {
+      "detailHidden": true,
+      "scenario": "pending",
+      "visible": true
+    },
+    {
+      "scenario": "blocked",
+      "visible": true
+    },
+    {
+      "counts": "22/22Operación completa8/22Finanzas completas22/22PDF íntegro en Bronze0/22Cortes acreditados",
+      "rows": 22,
+      "scenario": "coverage"
+    },
+    {
+      "evidenceOpen": true,
+      "heading": "3T24",
+      "scenario": "later-comparative-detail",
+      "sources": "Comunicado oficial de 3T24PDF local: hash verificado · Publicación y versión al corte: por verificar.SHA-256 9c040f8f523a5dd53197112ebd3709aa45c65b0dbc04aa47a26f788b3f315152Fuente SEC del ingreso actualPeriodo del reporte: 2025Q3 · Filing: 2025-11-12. La fecha no se ha adoptado como corte del análisis.El ingreso aparece como comparativo en un reporte posterior. Revisar el comunicado contemporáneo."
+    },
+    {
+      "bodyWidth": 721,
+      "cardColumns": "219px 219px 219px",
+      "scenario": "tablet",
+      "width": 736
+    },
+    {
+      "bodyWidth": 345,
+      "cardColumns": "156.5px 156.5px",
+      "scenario": "mobile",
+      "width": 360
+    },
+    {
+      "bodyWidth": 345,
+      "containerWidth": 319,
+      "scenario": "mobile-matrix",
+      "tableWidth": 438,
+      "width": 360
+    },
+    {
+      "focused": "mock-tab",
+      "scenario": "keyboard-tab",
+      "selected": "true"
+    }
+  ],
+  "console": []
+}

@@ -1,0 +1,29 @@
+[
+  {
+    "width": 360,
+    "client": 345,
+    "scroll": 345,
+    "dialog_and_lineage": "passed",
+    "search": "passed",
+    "errors": [],
+    "external_requests": []
+  },
+  {
+    "width": 736,
+    "client": 721,
+    "scroll": 721,
+    "dialog_and_lineage": "passed",
+    "search": "passed",
+    "errors": [],
+    "external_requests": []
+  },
+  {
+    "width": 1440,
+    "client": 1425,
+    "scroll": 1425,
+    "dialog_and_lineage": "passed",
+    "search": "passed",
+    "errors": [],
+    "external_requests": []
+  }
+]

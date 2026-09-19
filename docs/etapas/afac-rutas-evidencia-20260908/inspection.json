@@ -1,0 +1,1120 @@
+{
+  "scope": "research_only",
+  "historical_cutoff": "2026-07-13",
+  "artifacts": [
+    {
+      "path": "data/bronze/afac_research/afac_research_airline_summary_2026M07_20260908T182133Z.xlsx",
+      "bytes": 249236,
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "download_method": "httpx",
+      "downloaded_at": "2026-09-08T18:21:33.419201+00:00",
+      "filename_version": 1,
+      "http_status": 200,
+      "logical_key": "afac_research|airline_summary|2026M07|xlsx",
+      "logical_version": 1,
+      "notes": "Research only; historical cutoff unverified",
+      "sha256": "479df73d3565cfda19d7445e17233478acf89c75a098cc75ea6269b2e9214bba",
+      "source_file": "afac_research/afac_research_airline_summary_2026M07_20260908T182133Z.xlsx",
+      "source_system": "afac_research",
+      "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1100279/resumen-julio-2026-27082026.xlsx",
+      "hash_verified": true
+    },
+    {
+      "path": "data/bronze/afac_research/afac_research_city_pairs_2026M07_20260908T182059Z.xlsx",
+      "bytes": 629664,
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "download_method": "httpx",
+      "downloaded_at": "2026-09-08T18:20:59.480453+00:00",
+      "filename_version": 1,
+      "http_status": 200,
+      "logical_key": "afac_research|city_pairs|2026M07|xlsx",
+      "logical_version": 1,
+      "notes": "Investigacion de rutas; sin integracion en Silver/Gold; disponibilidad al corte no verificada.",
+      "sha256": "6f81b242fcb84ec04fa74236b7fd52b91c6e99b64eab7945d9eed299a86cf9fd",
+      "source_file": "afac_research/afac_research_city_pairs_2026M07_20260908T182059Z.xlsx",
+      "source_system": "afac_research",
+      "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1100280/sase-julio-2026-27082026.xlsx",
+      "hash_verified": true
+    },
+    {
+      "path": "data/bronze/afac_research/afac_research_city_pairs_historical_2025_20260908T182713Z.xlsx",
+      "bytes": 706403,
+      "content_type": "application/octet-stream",
+      "download_method": "httpx",
+      "downloaded_at": "2026-09-08T18:27:13.931919+00:00",
+      "filename_version": 1,
+      "http_status": 200,
+      "logical_key": "afac_research|city_pairs_historical|2025|xlsx",
+      "logical_version": 1,
+      "notes": "Research only; historical version availability not established",
+      "sha256": "abc035a7d6768c900575aaeecf7c088e96b7e463c01e2b8e74b34757aba672e2",
+      "source_file": "afac_research/afac_research_city_pairs_historical_2025_20260908T182713Z.xlsx",
+      "source_system": "afac_research",
+      "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1055167/sase-diciembre-2025-05022026h.xlsx",
+      "hash_verified": true
+    },
+    {
+      "path": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "bytes": 2084412,
+      "content_type": "application/pdf",
+      "download_method": "httpx",
+      "downloaded_at": "2026-09-08T18:21:36.538484+00:00",
+      "filename_version": 1,
+      "http_status": 200,
+      "logical_key": "afac_research|country_bulletin|2026M07|pdf",
+      "logical_version": 1,
+      "notes": "Research only; historical cutoff unverified",
+      "sha256": "c3ccfd9589b3a7a770d20a6c00a214825094a8405ea8b7a91bdf88eddbac10eb",
+      "source_file": "afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "source_system": "afac_research",
+      "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1100282/stats-por-pais-es-jul2026-27082026.pdf",
+      "hash_verified": true
+    },
+    {
+      "path": "data/bronze/afac_research/afac_research_historical_catalog_20260908_20260908T182717Z.html",
+      "bytes": 62294,
+      "content_type": "application/octet-stream",
+      "download_method": "httpx",
+      "downloaded_at": "2026-09-08T18:27:17.184372+00:00",
+      "filename_version": 1,
+      "http_status": 200,
+      "logical_key": "afac_research|historical_catalog|20260908|html",
+      "logical_version": 1,
+      "notes": "Research only; historical version availability not established",
+      "sha256": "c2387668ccef1ab8f8d42e542d357a6e288830f407b23886c769d0e1f84e70c7",
+      "source_file": "afac_research/afac_research_historical_catalog_20260908_20260908T182717Z.html",
+      "source_system": "afac_research",
+      "source_url": "https://www.gob.mx/afac/acciones-y-programas/estadistica-mensual-operativa-monthly-traffic-statistics",
+      "hash_verified": true
+    },
+    {
+      "path": "data/bronze/afac_research/afac_research_methodology_2023_20260908T182255Z.pdf",
+      "bytes": 256600,
+      "content_type": "application/octet-stream",
+      "download_method": "httpx",
+      "downloaded_at": "2026-09-08T18:22:55.132693+00:00",
+      "filename_version": 1,
+      "http_status": 200,
+      "logical_key": "afac_research|methodology|2023|pdf",
+      "logical_version": 1,
+      "notes": "Official definitions; research only",
+      "sha256": "71bd17da49b0b1d29b44b74b388cc07b58b8549c0c40715c0e1181eb864649a4",
+      "source_file": "afac_research/afac_research_methodology_2023_20260908T182255Z.pdf",
+      "source_system": "afac_research",
+      "source_url": "https://www.gob.mx/cms/uploads/attachment/file/843705/descripcion-variables-metodologia-24072023.pdf",
+      "hash_verified": true
+    },
+    {
+      "path": "data/bronze/route_research/route_research_afac_catalog_20260908_20260908T182449Z.html",
+      "bytes": 60426,
+      "content_type": "text/html; charset=utf-8",
+      "download_method": "httpx",
+      "downloaded_at": "2026-09-08T18:24:49.732054+00:00",
+      "filename_version": 1,
+      "http_status": 200,
+      "logical_key": "route_research|afac_catalog|20260908|html",
+      "logical_version": 1,
+      "notes": "Research discovery snapshot; historical availability unverified",
+      "sha256": "3886e19f5aab1b416603101a50259173e6f32681b4c982580c80135bb5e8af3a",
+      "source_file": "route_research/route_research_afac_catalog_20260908_20260908T182449Z.html",
+      "source_system": "route_research",
+      "source_url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404",
+      "hash_verified": true
+    },
+    {
+      "path": "data/bronze/route_research/route_research_anac_catalog_20260908_20260908T182441Z.html",
+      "bytes": 977,
+      "content_type": "text/html; charset=utf-8",
+      "download_method": "httpx",
+      "downloaded_at": "2026-09-08T18:24:41.692626+00:00",
+      "filename_version": 1,
+      "http_status": 200,
+      "logical_key": "route_research|anac_catalog|20260908|html",
+      "logical_version": 1,
+      "notes": "Research discovery snapshot; historical availability unverified",
+      "sha256": "b5efa55fb095ecf65007c0a2c16ff772e0dec88f5c60495ba6f3bb1c9365aefb",
+      "source_file": "route_research/route_research_anac_catalog_20260908_20260908T182441Z.html",
+      "source_system": "route_research",
+      "source_url": "https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Dados%20Estat%C3%ADsticos%20do%20Transporte%20A%C3%A9reo/",
+      "hash_verified": true
+    },
+    {
+      "path": "data/bronze/route_research/route_research_anac_metadata_20260908_20260908T182446Z.html",
+      "bytes": 69909,
+      "content_type": "text/html;charset=utf-8",
+      "download_method": "httpx",
+      "downloaded_at": "2026-09-08T18:24:46.418999+00:00",
+      "filename_version": 1,
+      "http_status": 200,
+      "logical_key": "route_research|anac_metadata|20260908|html",
+      "logical_version": 1,
+      "notes": "Research discovery snapshot; historical availability unverified",
+      "sha256": "e75d3ff5836fb902ca679e8d145d45e2605472969a2bb71bd0512de26b3e04bd",
+      "source_file": "route_research/route_research_anac_metadata_20260908_20260908T182446Z.html",
+      "source_system": "route_research",
+      "source_url": "https://www.anac.gov.br/acesso-a-informacao/dados-abertos/areas-de-atuacao/voos-e-operacoes-aereas/dados-estatisticos-do-transporte-aereo/48-dados-estatisticos-do-transporte-aereo",
+      "hash_verified": true
+    },
+    {
+      "path": "data/bronze/anac_research/anac_research_partial_prefix_2021_2030_20260908T182839Z.txt",
+      "bytes": 1048576,
+      "content_type": "application/json",
+      "download_method": "httpx",
+      "downloaded_at": "2026-09-08T18:28:39.764971+00:00",
+      "filename_version": 1,
+      "http_status": 206,
+      "logical_key": "anac_research|partial_prefix|2021_2030|txt",
+      "logical_version": 1,
+      "notes": "PARTIAL PREFIX ONLY, maximum 1 MiB; not a complete JSON file or period. Full 209 MB download stopped after >4 min without completion. Range request status recorded.",
+      "sha256": "7eb30cc9540209d229b9ee06eb6800bd517868a6572094885f7c724d4a61def8",
+      "source_file": "anac_research/anac_research_partial_prefix_2021_2030_20260908T182839Z.txt",
+      "source_system": "anac_research",
+      "source_url": "https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Dados%20Estat%C3%ADsticos%20do%20Transporte%20A%C3%A9reo/Dados_Estatisticos_2021_a_2030.json",
+      "hash_verified": true
+    },
+    {
+      "path": "data/bronze/anac_research/anac_research_partial_suffix_2021_2030_20260908T182948Z.txt",
+      "bytes": 8388608,
+      "content_type": "application/octet-stream",
+      "download_method": "httpx",
+      "downloaded_at": "2026-09-08T18:29:48.266303+00:00",
+      "filename_version": 1,
+      "http_status": 206,
+      "logical_key": "anac_research|partial_suffix|2021_2030|txt",
+      "logical_version": 1,
+      "notes": "PARTIAL SUFFIX ONLY. bytes 200456190-208844797/208844798. Research sample; does not establish completeness of a month.",
+      "sha256": "956cbf05786f91e2c7383ef608f32642b373ab5dafc8e6d7446f49713c7fa6d4",
+      "source_file": "anac_research/anac_research_partial_suffix_2021_2030_20260908T182948Z.txt",
+      "source_system": "anac_research",
+      "source_url": "https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Dados%20Estat%C3%ADsticos%20do%20Transporte%20A%C3%A9reo/Dados_Estatisticos_2021_a_2030.json",
+      "hash_verified": true
+    }
+  ],
+  "city_pairs": {
+    "sheets": [
+      {
+        "name": "Top Ten O-D Reg",
+        "state": "visible",
+        "rows": 53,
+        "columns": 24
+      },
+      {
+        "name": "REG NAC",
+        "state": "visible",
+        "rows": 619,
+        "columns": 41
+      },
+      {
+        "name": "REG INT",
+        "state": "visible",
+        "rows": 989,
+        "columns": 43
+      },
+      {
+        "name": "FLET NAC",
+        "state": "visible",
+        "rows": 249,
+        "columns": 41
+      },
+      {
+        "name": "FLET INT",
+        "state": "visible",
+        "rows": 428,
+        "columns": 43
+      }
+    ],
+    "REG NAC": {
+      "rows": 609,
+      "countries": [
+        "Mexico"
+      ],
+      "duplicate_keys": [],
+      "max_total_difference": 5.587935447692871e-09,
+      "monthly_total_differences": {
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0,
+        "9": 0,
+        "10": 0,
+        "11": 0,
+        "12": 0,
+        "13": 0,
+        "14": 0,
+        "15": 0,
+        "16": 0,
+        "17": 0,
+        "18": 0,
+        "19": 0,
+        "20": 0,
+        "21": 0,
+        "22": 0,
+        "23": 0,
+        "24": 0,
+        "25": 0,
+        "26": 0,
+        "27": 0,
+        "28": 0,
+        "29": -5.587935447692871e-09,
+        "30": -1.862645149230957e-09,
+        "31": -1.862645149230957e-09,
+        "32": -3.725290298461914e-09,
+        "33": 3.725290298461914e-09,
+        "34": 3.725290298461914e-09,
+        "35": 0.0,
+        "36": 0,
+        "37": 0,
+        "38": 0,
+        "39": 0,
+        "40": 0,
+        "41": 0.0
+      },
+      "operator_column": false,
+      "seats_column": false,
+      "valid_months": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "future_zero_columns_must_be_missing": [
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "header_locator": "REG NAC!A5:AO6"
+    },
+    "REG INT": {
+      "rows": 979,
+      "countries": [
+        "Alemania",
+        "Argentina",
+        "Belgica",
+        "Belice",
+        "Brasil",
+        "COREA DEL SUR",
+        "Canada",
+        "Chile",
+        "China",
+        "Colombia",
+        "Costa Rica",
+        "Cuba",
+        "Ecuador",
+        "El Salvador",
+        "Emiratos Arabes",
+        "España",
+        "Estados Unidos",
+        "Francia",
+        "Guatemala",
+        "HONG KONG ",
+        "Honduras",
+        "Irlanda",
+        "Italia",
+        "Japon",
+        "Luxemburgo",
+        "Mexico",
+        "Nicaragua",
+        "Paises Bajos",
+        "Panama",
+        "Peru",
+        "Portugal",
+        "Qatar",
+        "Reino Unido",
+        "Republica Dominicana",
+        "Suiza",
+        "Turquia",
+        "Venezuela"
+      ],
+      "duplicate_keys": [],
+      "max_total_difference": 1.7881393432617188e-07,
+      "monthly_total_differences": {
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0,
+        "9": 0,
+        "10": 0,
+        "11": 0,
+        "12": 0,
+        "13": 0,
+        "14": 0,
+        "15": 0,
+        "16": 0,
+        "17": 0,
+        "18": 0,
+        "19": 0,
+        "20": 0,
+        "21": 0,
+        "22": 0,
+        "23": 0,
+        "24": 0,
+        "25": 0,
+        "26": 0,
+        "27": 0,
+        "28": 0,
+        "29": 0,
+        "30": 0,
+        "31": 0.0,
+        "32": 0.0,
+        "33": 7.450580596923828e-09,
+        "34": 7.450580596923828e-09,
+        "35": 0.0,
+        "36": -1.4901161193847656e-08,
+        "37": 0.0,
+        "38": 0,
+        "39": 0,
+        "40": 0,
+        "41": 0,
+        "42": 0,
+        "43": 1.7881393432617188e-07
+      },
+      "operator_column": false,
+      "seats_column": false,
+      "valid_months": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "future_zero_columns_must_be_missing": [
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "header_locator": "REG INT!A5:AQ6"
+    },
+    "FLET NAC": {
+      "rows": 239,
+      "countries": [
+        "Mexico"
+      ],
+      "duplicate_keys": [],
+      "max_total_difference": 0,
+      "monthly_total_differences": {
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0,
+        "9": 0,
+        "10": 0,
+        "11": 0,
+        "12": 0,
+        "13": 0,
+        "14": 0,
+        "15": 0,
+        "16": 0,
+        "17": 0,
+        "18": 0,
+        "19": 0,
+        "20": 0,
+        "21": 0,
+        "22": 0,
+        "23": 0,
+        "24": 0,
+        "25": 0,
+        "26": 0,
+        "27": 0,
+        "28": 0,
+        "29": 0,
+        "30": 0,
+        "31": 0,
+        "32": 0,
+        "33": 0,
+        "34": 0,
+        "35": 0,
+        "36": 0,
+        "37": 0,
+        "38": 0,
+        "39": 0,
+        "40": 0,
+        "41": 0
+      },
+      "operator_column": false,
+      "seats_column": false,
+      "valid_months": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "future_zero_columns_must_be_missing": [
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "header_locator": "FLET NAC!A5:AO6"
+    },
+    "FLET INT": {
+      "rows": 418,
+      "countries": [
+        "Alemania",
+        "Argentina",
+        "Bahamas",
+        "Belice",
+        "Brasil",
+        "Bulgaria",
+        "COREA DEL SUR",
+        "Cabo Verde",
+        "Canada",
+        "Chile",
+        "China",
+        "Colombia",
+        "Costa Rica",
+        "Cuba",
+        "Dinamarca",
+        "Ecuador",
+        "El Salvador",
+        "España",
+        "Estados Unidos",
+        "Guatemala",
+        "HONG KONG ",
+        "Honduras",
+        "Islandia",
+        "Jamaica",
+        "Mexico",
+        "Nicaragua",
+        "Nigeria",
+        "Panama",
+        "Peru",
+        "Polonia",
+        "Portugal",
+        "Republica Dominicana",
+        "Saint Kitts and Nevis",
+        "Suecia",
+        "Taiwan"
+      ],
+      "duplicate_keys": [],
+      "max_total_difference": 0,
+      "monthly_total_differences": {
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0,
+        "9": 0,
+        "10": 0,
+        "11": 0,
+        "12": 0,
+        "13": 0,
+        "14": 0,
+        "15": 0,
+        "16": 0,
+        "17": 0,
+        "18": 0,
+        "19": 0,
+        "20": 0,
+        "21": 0,
+        "22": 0,
+        "23": 0,
+        "24": 0,
+        "25": 0,
+        "26": 0,
+        "27": 0,
+        "28": 0,
+        "29": 0,
+        "30": 0,
+        "31": 0,
+        "32": 0,
+        "33": 0,
+        "34": 0,
+        "35": 0,
+        "36": 0,
+        "37": 0,
+        "38": 0,
+        "39": 0,
+        "40": 0,
+        "41": 0,
+        "42": 0,
+        "43": 0
+      },
+      "operator_column": false,
+      "seats_column": false,
+      "valid_months": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "future_zero_columns_must_be_missing": [
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "header_locator": "FLET INT!A5:AQ6"
+    }
+  },
+  "examples": [
+    {
+      "sheet": "REG NAC",
+      "row": 282,
+      "origin": "MEXICO",
+      "destination": "MONTERREY",
+      "period": "2026Q2",
+      "scope": "all_carriers_market_OFOD",
+      "passengers": 414835,
+      "flights": 2680,
+      "passenger_cells": "S282:U282",
+      "flight_cells": "F282:H282",
+      "formula": "sum April, May, June; no airline attribution"
+    },
+    {
+      "sheet": "REG NAC",
+      "row": 323,
+      "origin": "MONTERREY",
+      "destination": "MEXICO",
+      "period": "2026Q2",
+      "scope": "all_carriers_market_OFOD",
+      "passengers": 398496,
+      "flights": 2505,
+      "passenger_cells": "S323:U323",
+      "flight_cells": "F323:H323",
+      "formula": "sum April, May, June; no airline attribution"
+    },
+    {
+      "sheet": "REG INT",
+      "row": 493,
+      "origin": "MEXICO",
+      "destination": "BOGOTA",
+      "period": "2026Q2",
+      "scope": "all_carriers_market_OFOD",
+      "passengers": 89400,
+      "flights": 637,
+      "passenger_cells": "U493:W493",
+      "flight_cells": "H493:J493",
+      "formula": "sum April, May, June; no airline attribution"
+    },
+    {
+      "sheet": "REG INT",
+      "row": 516,
+      "origin": "MEXICO",
+      "destination": "MADRID",
+      "period": "2026Q2",
+      "scope": "all_carriers_market_OFOD",
+      "passengers": 141526,
+      "flights": 581,
+      "passenger_cells": "U516:W516",
+      "flight_cells": "H516:J516",
+      "formula": "sum April, May, June; no airline attribution"
+    },
+    {
+      "sheet": "REG INT",
+      "row": 528,
+      "origin": "MEXICO",
+      "destination": "PARIS",
+      "period": "2026Q2",
+      "scope": "all_carriers_market_OFOD",
+      "passengers": 73807,
+      "flights": 269,
+      "passenger_cells": "U528:W528",
+      "flight_cells": "H528:J528",
+      "formula": "sum April, May, June; no airline attribution"
+    },
+    {
+      "sheet": "REG INT",
+      "row": 544,
+      "origin": "MEXICO",
+      "destination": "SAO PAULO",
+      "period": "2026Q2",
+      "scope": "all_carriers_market_OFOD",
+      "passengers": 37979,
+      "flights": 180,
+      "passenger_cells": "U544:W544",
+      "flight_cells": "H544:J544",
+      "formula": "sum April, May, June; no airline attribution"
+    },
+    {
+      "sheet": "REG INT",
+      "row": 549,
+      "origin": "MEXICO",
+      "destination": "TOKYO",
+      "period": "2026Q2",
+      "scope": "all_carriers_market_OFOD",
+      "passengers": 29013,
+      "flights": 181,
+      "passenger_cells": "U549:W549",
+      "flight_cells": "H549:J549",
+      "formula": "sum April, May, June; no airline attribution"
+    },
+    {
+      "sheet": "REG INT",
+      "row": 550,
+      "origin": "MEXICO",
+      "destination": "TORONTO",
+      "period": "2026Q2",
+      "scope": "all_carriers_market_OFOD",
+      "passengers": 45409,
+      "flights": 313,
+      "passenger_cells": "U550:W550",
+      "flight_cells": "H550:J550",
+      "formula": "sum April, May, June; no airline attribution"
+    }
+  ],
+  "pdf_excerpts": [
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 1,
+      "text": "Boletín de Estadística \nOperacional por País\nJulio 2026",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 2,
+      "text": "© GeoNames, Microsoft, TomTom\nCon tecnología de Bing\n6.72% 15.67%\n93.28% 84.33%\nCanadá\nEstados Unidos\nJulio 2026 Enero-Julio 2026\nPorcentaje de participación de la Región en el Total de\nPasajeros transportados en Operaciones Regulares Internacionales\n76.77% 78.57%Norteamérica\nJulio 2026 Enero-Julio 2026\nPorcentaje de participación dentro de la Región\nPasajeros transportados en Operaciones Regulares Internacionales\nNORTEAMÉRICA",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 3,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Canadá en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Canadá\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Canadá en servicio regular\nJulio 2026\nWest Jet\n34.8%\nAir Canada\n31.7%\nAir Transat\n11.4%\nAeroméxico\n11.1%\nFlair\n8.3%\nPorter\n2.7%\nFactor de Ocupación de Pasajeros (PLF) entre México y Canadá\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Canadá en servicio regular\nJulio 2026\nToronto\n41.7%\nMontreal\n26.6%\nVancouver\n16.2%\nCalgary\n11.3%\nOtras\n2.5%\nJulio 2026 2\n4,291,849\n3,945,051\n▲8.8%\n2026\n2025\nVariación\n26,854\n23,550\n▲14.0%\n2026\n2025\nVariación\n851 816 869\n644\n291\n230\n244 237 202\n292\n665\n834\n951 892 937\n708\n316\n228\n259\n0\n200\n400\n600\n800\n1,000\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n3.2\n3.9\n4.4\n4.8\n2.1\n0.8\n3.2\n4.8\n5.3\n6.2\n4.3\n21.3\n25.6\n29.1 31.0\n13.7\n5.8\n21.2\n29.8\n33.0\n37.6\n26.9\n0\n5\n10\n15\n20\n25\n30\n35\n40\n0\n1\n2\n3\n4\n5\n6\n7\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Vuelos\nMillones de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n85.4\n89.7\n85.8\n82.4\n88.2\n84.3\n90.4\n91.6\n82.1\n79.0\n83.2 83.1\n87.0\n88.6\n80.3 80.6\n83.3\n81.4\n88.6\n70\n75\n80\n85\n90\n95\n100\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nCANADÁ\nQuebec\n1.6%",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 4,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Estados Unidos en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Estados Unidos\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Estados Unidos en servicio regular\nJulio 2026\nVolaris\n20.0% American \nAirlines\n17.1%\nUnited Airlines\n14.8%\nAeroméxico\n11.6%Delta Airlines\n8.0%\nSouthwest \nAirlines\n7.5%\nViva\n7.1%\nFrontier\n2.7%\nJet Blue\n2.4%\nAlaska Airlines\n2.4%\nOtras\n6.5%\nFactor de Ocupación de Pasajeros (PLF) entre México y Estados Unidos\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Estados Unidos en servicio regular\nJulio 2026\nDallas/Fort \nWorth\n13.2%\nHouston\n12.9%\nLos Angeles\n11.4%\nChicago\n8.2%\nAtlanta\n4.7%\nOtras\n49.5%\nJulio 2026 3\n23,096,554\n24,512,656\n▼5.8%\n2026\n2025\nVariación\n177,572\n186,421\n▼4.7%\n2026\n2025\nVariación\n3.73\n3.15\n3.90\n3.38\n3.14\n3.42\n3.80\n3.15\n2.32\n2.87\n3.22\n3.92\n3.69\n3.15\n3.45\n3.07 2.93\n3.22\n3.59\n1\n2\n3\n4\n5\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMillones de Pasajeros\n2024 2025 2026\n27.4\n29.9\n31.0\n30.7\n14.4\n29.2\n35.0\n37.4\n40.1\n40.0\n23.1\n256.6 270.6 279.1 265.2\n150.8\n252.8 269.5 272.1\n296.4 307.1\n177.6\n0\n50\n100\n150\n200\n250\n300\n350\n0\n5\n10\n15\n20\n25\n30\n35\n40\n45\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Vuelos\nMillones de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n81.9\n79.1 80.4\n78.9 80.3\n82.8\n84.1 82.8\n77.1\n80.5\n78.8 78.880.1 79.0\n72.9\n77.1\n79.8\n81.7\n86.1\n70\n75\n80\n85\n90\n95\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nESTADOS UNIDOS",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 5,
+      "text": "© GeoNames, Microsoft, TomTom\nCon tecnología de Bing\n8.81% 10.34%Alemania\nJulio 2026 Enero-Julio 2026\nPorcentaje de participación de la Región en el Total de\nPasajeros transportados en Operaciones Regulares Internacionales\n10.03% 8.86%Europa\nJulio 2026 Enero-Julio 2026\nPorcentaje de participación dentro de la Región\nPasajeros transportados en Operaciones Regulares Internacionales\n42.38%\n14.72%\n3.43%\n7.14%\n16.55%\n1.12%\n4.67%\nEspaña\nFrancia\nItalia\nPaíses Bajos\nReino Unido\nPortugal\nTurquía\n37.99%\n16.32%\n3.33%\n7.99%\n16.63%\n1.02%\n5.09%\n0.80% 1.19%\nEUROPA\nSuiza",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 6,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Alemania en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Alemania\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Alemania en servicio regular\nJulio 2026\nLufthansa\n64.5%\nCondor\n35.5%\nFactor de Ocupación de Pasajeros (PLF) entre México y Alemania\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Alemania en servicio regular\nJulio 2026\nFrankfurt\n84.3%\nJulio 2026 5\n319,047\n336,939\n▼5.3%\n2026\n2025\nVariación\n1,101\n1,248\n▼11.8%\n2026\n2025\nVariación\n59.9\n53.5 54.3 53.5\n38.0 36.4\n41.4 41.2 38.7\n44.2\n56.9\n61.159.0\n51.1 49.5\n39.4\n39.4\n36.4\n44.3\n20\n30\n40\n50\n60\n70\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n404\n402\n368\n420\n144\n356\n507\n541\n570\n579\n319\n2.1 2.2 2.3 2.2\n1.2\n1.5\n1.9 1.9 2.0 2.1\n1.1\n0.0\n0.5\n1.0\n1.5\n2.0\n2.5\n0\n100\n200\n300\n400\n500\n600\n700\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Vuelos\nMiles de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n80.9 81.5\n77.4\n82.0\n79.8\n86.0 92.1 93.1\n91.4\n88.8 89.9 91.2\n89.1 89.3 88.3\n84.1 83.9\n83.5\n93.4\n70\n75\n80\n85\n90\n95\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nMúnich\n15.7%\nALEMANIA",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 7,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Bélgica en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Bélgica\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Bélgica en servicio regular\nJulio 2026\nFactor de Ocupación de Pasajeros (PLF) entre México y Bélgica\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Bélgica en servicio regular\nJulio 2026\nJulio 2026 6\n0\n32,610\n▼100.0%\n2026\n2025\nVariación\n0\n122\n▼100.0%\n2026\n2025\nVariación\n5.6\n4.5\n3.9\n5.2\n4.4\n3.8\n5.2 5.2\n4.2\n5.3\n2\n4\n6\n8\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n51.5\n68.9\n67.4\n85.3\n21.1\n6.0\n88.1\n67.0\n65.5\n47.4\n0.0\n292 316\n273\n390\n94\n24\n354\n292\n264\n176\n0\n0\n100\n200\n300\n400\n0\n20\n40\n60\n80\n100\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n85.0\n93.3\n82.1\n96.7\n81.3\n78.3\n94.5 95.2\n86.5 87.7\n50\n60\n70\n80\n90\n100\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nBÉLGICA\nSin operaciones\nJulio 2026\nSin operaciones\nJulio 2026",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 8,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde España en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y España\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y España en servicio regular\nJulio 2026\nAeroméxico\n39.3%\nIberia\n30.0%\nWorld 2 Fly\n10.6%\nEvelop Airlines\n8.8%\nAir Europa\n5.8%\nEmirates\n5.5%\nFactor de Ocupación de Pasajeros (PLF) entre México y España\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y España en servicio regular\nJulio 2026\nMadrid\n87.6%\nJulio 2026 7\n1,172,755\n1,107,867\n▲5.9%\n2026\n2025\nVariación\n4,520\n4,213\n▲7.3%\n2026\n2025\nVariación\n149.0\n124.8\n141.9\n160.2 164.0 168.2\n199.7 205.0\n175.4 166.8\n149.9 156.3\n159.7\n133.7\n155.3\n168.5 173.4 169.1\n213.1\n60\n100\n140\n180\n220\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n0.90\n0.99\n1.09\n1.27\n0.36\n0.71\n1.51\n1.79\n1.94\n1.96\n1.17\n3.2 3.6 4.0\n4.6\n2.0\n3.0\n5.7\n6.8\n7.3 7.3\n4.5\n0\n1\n2\n3\n4\n5\n6\n7\n8\n0.0\n0.5\n1.0\n1.5\n2.0\n2.5\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Vuelos\nMillones de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n82.2\n77.7 79.6\n82.4 83.2 83.0\n83.1\n85.4\n83.1 84.7\n87.3\n84.7\n85.4\n80.4 81.9\n82.4 82.7\n77.1\n83.9\n55\n65\n75\n85\n95\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nBarcelona\n12.4%\nESPAÑA",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 9,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Francia en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Francia\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Francia en servicio regular\nJulio 2026\nAir France\n63.8%\nAeroméxico\n27.7%\nAir Caraïbes\n8.4%\nFactor de Ocupación de Pasajeros (PLF) entre México y Francia\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Francia en servicio regular\nJulio 2026\nParís\n100.0%\nJulio 2026 8\n503,697\n444,484\n▲13.3%\n2026\n2025\nVariación\n1,751\n1,627\n▲7.6%\n2026\n2025\nVariación\n67.1\n57.3\n70.9\n63.0 59.4\n53.3\n73.5 71.0\n47.7\n53.8 58.1\n77.3\n85.9\n74.6 75.9\n67.7 64.5 60.9\n74.0\n20\n40\n60\n80\n100\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n504\n533\n552\n603\n256\n398\n738\n799\n824\n752\n504\n1.9 1.9 2.0\n2.2\n1.6\n1.9\n2.6 2.8 2.9 2.7\n1.8\n0\n1\n2\n3\n4\n0\n200\n400\n600\n800\n1,000\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Vuelos\nMiles de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n92.7 91.9\n87.0\n89.2\n85.2\n87.6\n90.1\n90.0\n87.6 86.5\n94.5\n89.4\n92.5 91.3\n84.7\n87.9\n84.0 84.0\n88.7\n75\n80\n85\n90\n95\n100\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nFRANCIA",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 10,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Italia en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Italia\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Italia en servicio regular\nJulio 2026\nAeroméxico\n80.7%\nNeos Air\n19.3%\nFactor de Ocupación de Pasajeros (PLF) entre México y Italia\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Italia en servicio regular\nJulio 2026\nRoma\n100.0%\nJulio 2026 9\n102,899\n103,108\n▼0.2%\n2026\n2025\nVariación\n433\n443\n▼2.3%\n2026\n2025\nVariación\n11.8\n9.7\n12.4\n17.7\n16.8 16.4\n18.3\n18.1\n15.5 15.3\n10.0\n11.6\n12.3\n10.1\n13.4\n18.3\n16.3 15.3\n17.2\n0\n5\n10\n15\n20\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n87.6\n164.2\n173.7\n150.5\n15.8\n4.0\n28.6\n132.2\n167.5\n173.7\n102.9\n472\n1,061\n808\n629\n86 46 164\n670\n774 750\n433\n0\n400\n800\n1,200\n0\n40\n80\n120\n160\n200\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n85.8\n82.7 81.5\n85.5 85.2\n86.1\n84.7 84.3 84.2\n88.7 89.8\n82.8\n87.5 86.5 85.9 86.6 87.3\n85.6\n88.7\n50\n60\n70\n80\n90\n100\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nITALIA",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 11,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Países Bajos en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Países Bajos\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Países Bajos en servicio regular\nJulio 2026\nKLM\n47.1%\nAeroméxico \n40.9%\nTUI Nederland\n11.9%\nFactor de Ocupación de Pasajeros (PLF) entre México y Países Bajos\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Países Bajos en servicio regular\nJulio 2026\nAmsterdam\n100.0%\nJulio 2026 10\n246,571\n237,293\n▲3.9%\n2026\n2025\nVariación\n1,031\n1,008\n▲2.3%\n2026\n2025\nVariación\n40.8\n35.7\n31.2 31.1\n32.9\n32.7\n32.9 33.9\n29.3 29.3\n40.7\n39.338.7\n35.7\n39.3\n32.4 33.1\n31.5\n35.9\n25\n35\n45\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n299\n364\n388\n403\n159\n246\n460\n446\n436\n410\n247\n1.38\n1.72 1.81 1.78\n1.06\n1.40\n1.86 1.92 1.83 1.73\n1.03\n0.0\n0.5\n1.0\n1.5\n2.0\n2.5\n0\n100\n200\n300\n400\n500\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Vuelos\nMiles de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n83.5\n82.3\n78.8\n83.7\n86.0\n88.0\n87.2\n90.8\n87.5\n83.8\n92.0\n88.0\n85.3 85.0 86.1\n87.6\n84.4 84.9\n91.2\n75\n80\n85\n90\n95\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nPAISES BAJOS",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 12,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Portugal en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Portugal\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Portugal en servicio regular\nJulio 2026\nOrbest\n100.0%\nFactor de Ocupación de Pasajeros (PLF) entre México y Portugal\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Portugal en servicio regular\nJulio 2026\nJulio 2026 11\n31,463\n28,368\n▲10.9%\n2026\n2025\nVariación\n121\n106\n▲14.2%\n2026\n2025\nVariación\n8.0 7.3\n2.7 2.8\n3.4\n4.2\n6.5\n3.3 3.0\n8.1 7.4\n5.7 6.6\n4.7\n2.9 2.8\n3.2\n5.6\n0\n3\n6\n9\n12\n15\n18\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n19.4\n35.4\n36.7\n33.7\n0.0\n66.4\n139.6\n139.0\n66.3\n56.7\n31.5\n54\n99 102 99\n0\n266\n556 584\n267\n208\n121\n0\n100\n200\n300\n400\n500\n600\n700\n0\n30\n60\n90\n120\n150\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n81.2\n83.1\n86.8 89.8\n87.5\n90.0\n92.5\n85.8\n95.5\n84.5 83.0\n85.5\n78.5\n74.8\n92.0 89.9\n58.0\n90.6\n50\n60\n70\n80\n90\n100\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nLisboa\n100.0%\nPORTUGAL",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 13,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Reino Unido en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Reino Unido\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Reino Unido en servicio regular\nJulio 2026\nTUI Airways\n44.8%\nBritish Airways\n37.6%\nAeroméxico\n17.6%\nFactor de Ocupación de Pasajeros (PLF) entre México y Reino Unido\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Reino Unido en servicio regular\nJulio 2026\nJulio 2026 12\n513,300\n543,055\n▼5.5%\n2026\n2025\nVariación\n1,935\n2,063\n▼6.2%\n2026\n2025\nVariación\n68.5\n58.1\n65.3\n75.9\n90.3 88.3\n96.7\n100.8\n88.4 89.3\n71.8 69.568.2\n60.3\n69.5\n76.4\n82.2\n73.5\n83.2\n30\n50\n70\n90\n110\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n0.69\n1.17\n1.17\n1.12\n0.19\n0.16\n1.06\n0.99\n0.96\n0.96\n0.51\n2.6\n4.2 4.3 4.2\n1.0 1.0\n3.9 3.7 3.6 3.6\n1.9\n0\n1\n2\n3\n4\n5\n0.0\n0.2\n0.4\n0.6\n0.8\n1.0\n1.2\n1.4\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Vuelos\nMillones de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n90.6\n86.2\n87.9\n92.0\n87.5\n88.3 93.6\n94.9\n89.3\n87.8\n95.6\n92.5\n93.0\n90.2\n91.8\n93.5\n91.3\n84.8\n93.8\n80\n85\n90\n95\n100\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nLondres\n68.9%\nManchester\n11.8%\nGlasgow\n8.5%\nBirmi\nngha\nm\n4.9%\nNewcastle\n3.5%\nREINO UNIDO\nOtras\n2.4%",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 14,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Suiza en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Suiza\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Suiza en servicio regular\nJulio 2026\nEdelweiss\n100.0%\nFactor de Ocupación de Pasajeros (PLF) entre México y Suiza\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Suiza en servicio regular\nJulio 2026\nZúrich\n100.0%\nJulio 2026 13\n36,732\n39,025\n▼5.9%\n2026\n2025\nVariación\n133\n140\n▼5.0%\n2026\n2025\nVariación\n6.7\n5.8\n7.0\n7.6\n4.7\n2.2\n5.1\n4.2\n2.8\n5.7\n7.6 7.6\n7.2\n6.8\n5.8\n7.7\n2.7\n2.6 4.0\n1\n2\n3\n4\n5\n6\n7\n8\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n37.2\n69.0\n78.6\n25.9\n49.9\n76.9\n76.4\n66.3\n66.9\n36.7\n148\n264\n290\n104\n230\n286 274\n241 234\n133\n0\n50\n100\n150\n200\n250\n300\n350\n0\n30\n60\n90\n2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n89.4\n92.1\n86.7\n93.3\n82.8\n88.6\n91.1 96.7\n90.7 90.2\n94.1\n87.0\n79.3\n83.8 85.2\n93.7\n86.3\n83.2\n74.270\n75\n80\n85\n90\n95\n100\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nSUIZA",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 15,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Turquía en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Turquía\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Turquía en servicio regular\nJulio 2026\nTurkish Airlines\n100.0%\nFactor de Ocupación de Pasajeros (PLF) entre México y Turquía\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Turquía en servicio regular\nJulio 2026\nEstambul\n100.0%\nJulio 2026 14\n157,241\n183,917\n▼14.5%\n2026\n2025\nVariación\n1,013\n1,215\n▼16.6%\n2026\n2025\nVariación\n23.7\n21.8\n22.3\n27.5\n29.3\n27.3\n32.0\n25.6 25.2\n27.2\n20.6\n26.8\n21.7\n20.2\n23.0\n23.6 24.5\n20.9\n23.5\n15\n20\n25\n30\n35\n40\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n34.2\n28.1\n153.6\n278.5\n362.1\n346.9\n309.4\n157.2\n228 202\n955\n1,551\n2,085\n2,226\n1,964\n1,013\n0\n400\n800\n1,200\n1,600\n2,000\n2,400\n0\n60\n120\n180\n240\n300\n360\n420\n2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n47.2 47.1\n43.7\n52.7\n50.7\n56.3\n61.5\n53.9\n57.6 58.7\n56.2\n58.6\n47.4 47.3 48.6\n55.3\n57.8 57.0\n66.1\n35\n40\n45\n50\n55\n60\n65\n70\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nTURQUÍA",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 16,
+      "text": "© Microsoft, TomTom\nCon tecnología de Bing\n5.96% 8.01%\n10.31% 10.01%\nArgentina\nBrasil\nJulio 2026 Enero-Julio 2026\nPorcentaje de participación de la Región en el Total de\nPasajeros transportados en Operaciones Regulares Internacionales\n5.96% 5.74%Sudamérica\nJulio 2026 Enero-Julio 2026\nPorcentaje de participación dentro de la Región\nPasajeros transportados en Operaciones Regulares Internacionales\n5.05%\n58.90%\n17.93%\nChile\nColombia\nPerú\n6.42%\n55.77%\n18.25%\n0.46% 0.77%\nSUDAMÉRICA\nVenezuela\nEcuador 1.47% 0.77%",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 17,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Argentina en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Argentina\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Argentina en servicio regular\nJulio 2026\nAeroméxico\n84.4%\nAerolíneas \nArgentinas\n15.6%\nFactor de Ocupación de Pasajeros (PLF) entre México y Argentina\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Argentina en servicio regular\nJulio 2026\nBuenos Aires\n100.0%\nJulio 2026 16\n160,326\n188,698\n▼15.0%\n2026\n2025\nVariación\n722\n809\n▼10.8%\n2026\n2025\nVariación\n29.0\n25.5\n30.8 30.9\n25.5\n21.2\n25.8\n22.2 21.3\n23.1\n29.7 29.5\n31.8\n25.0\n28.8\n21.6 21.0\n14.3\n17.8\n10\n15\n20\n25\n30\n35\n40\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n312\n310\n324\n322\n103\n70\n236\n269\n329\n315\n160\n1.35 1.29\n1.43 1.41\n0.49\n0.39\n1.10\n1.20\n1.45 1.37\n0.72\n0.0\n0.4\n0.8\n1.2\n1.6\n0\n100\n200\n300\n400\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Vuelos\nMiles de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n87.1\n90.2\n85.6\n85.6\n87.2\n83.8\n87.2\n81.4\n83.9 84.3 86.2\n81.2\n87.0 88.4\n80.5\n87.7\n85.6\n69.8\n82.8\n65\n75\n85\n95\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nARGENTINA",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 18,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Brasil en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Brasil\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Brasil en servicio regular\nJulio 2026\nAeroméxico\n45.2%\nTAM Linhas \nAéreas\n42.5%\nGOL\n12.3%\nFactor de Ocupación de Pasajeros (PLF) entre México y Brasil\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Brasil en servicio regular\nJulio 2026\nSão Paulo\n87.7%\nJulio 2026 17\n200,294\n195,391\n▲2.5%\n2026\n2025\nVariación\n962\n980\n▼1.8%\n2026\n2025\nVariación\n29.6\n23.9\n26.1\n26.7\n28.4\n27.7\n32.9\n30.9\n27.5\n31.7 31.1 29.8\n34.3\n28.8 27.7\n26.6\n28.9\n23.1\n30.8\n15\n20\n25\n30\n35\n40\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n321\n312\n326\n346\n147\n238\n310\n273\n298\n346\n200\n1.6 1.5\n1.6\n1.8\n0.9\n1.5\n1.9\n1.4 1.5\n1.7\n1.0\n0.0\n0.5\n1.0\n1.5\n2.0\n0\n100\n200\n300\n400\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Vuelos\nMiles de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n77.5\n68.4 67.4\n71.3\n74.6\n74.6\n83.1\n82.1\n75.5\n84.7 82.7\n75.2\n82.5\n77.3\n72.3\n79.8 81.2\n65.5\n78.7\n50\n60\n70\n80\n90\n100\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nBRASIL\nBrasilia\n12.3%",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 19,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Chile en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Chile\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Chile en servicio regular\nJulio 2026\nLAN Chile\n100.0%\nFactor de Ocupación de Pasajeros (PLF) entre México y Chile\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Chile en servicio regular\nJulio 2026\nSantiago\n100.0%\nJulio 2026 18\n128,436\n133,931\n▼4.1%\n2026\n2025\nVariación\n637\n642\n▼0.8%\n2026\n2025\nVariación\n27.6\n25.0\n23.0\n14.6 13.9 13.5\n16.3\n15.2 14.2\n19.3\n24.9 25.6\n28.9\n26.7\n22.5\n12.4 11.9 11.0\n15.1\n0\n10\n20\n30\n40\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n277\n337\n325\n327\n77\n87\n247\n226\n226\n233\n128\n1.44\n1.59 1.59 1.60\n0.38\n0.58\n1.26\n1.10 1.12 1.12\n0.64\n0.0\n0.6\n1.2\n1.8\n0\n100\n200\n300\n400\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Vuelos\nMiles de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n72.5\n73.9\n67.8 68.6\n63.2\n61.6\n77.7\n70.3 69.7\n75.6\n68.0\n76.4\n75.6\n72.8\n63.0 64.6\n64.5\n56.4\n68.8\n50\n60\n70\n80\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nCHILE",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 20,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Colombia en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Colombia\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Colombia en servicio regular\nJulio 2026\nAvianca\n49.6%\nAeroméxico\n27.6%\nViva\n18.0%\nVolaris\n4.4%\nAerorepública\n0.4%\nFactor de Ocupación de Pasajeros (PLF) entre México y Colombia\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Colombia en servicio regular\nJulio 2026\nBogotá\n71.9%\nMedellín\n18.1%\nCartagena \nde Indias\n7.4%\nJulio 2026 19\n1,115,917\n1,044,275\n▲6.9%\n2026\n2025\nVariación\n7,894\n7,570\n▲4.3%\n2026\n2025\nVariación\n152.9\n125.7\n139.9 145.5 145.6\n157.9\n176.7\n171.8\n159.2\n170.4 173.8 176.3\n173.8\n140.6\n158.2 154.1 154.4 158.7\n176.0\n80\n100\n120\n140\n160\n180\n200\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n1.09\n1.21\n1.38\n1.51\n0.43\n0.87\n2.02\n1.94\n1.89\n1.90\n1.12\n9.7 9.9 10.5\n11.4\n3.9\n6.2\n14.8\n13.4 12.6 13.3\n7.9\n0\n4\n8\n12\n16\n0.0\n0.4\n0.8\n1.2\n1.6\n2.0\n2.4\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Vuelos\nMillones de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n77.5\n73.1 72.1\n76.3 75.0\n83.3 82.1\n83.5\n81.9 83.2 84.2\n80.7\n82.9\n76.8\n78.2\n80.1\n78.4\n74.6\n81.3\n65\n70\n75\n80\n85\n90\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nCOLOMBIA\nCali\n2.6%",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 21,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Perú en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Perú\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Perú en servicio regular\nJulio 2026\nLAN Perú\n63.7%\nVolaris\n18.5%\nAeroméxico\n17.8%\nFactor de Ocupación de Pasajeros (PLF) entre México y Perú\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Perú en servicio regular\nJulio 2026\nLima\n100.0%\nJulio 2026 20\n365,214\n433,555\n▼15.8%\n2026\n2025\nVariación\n2,524\n2,983\n▼15.4%\n2026\n2025\nVariación\n61.0 58.8 59.4\n61.8\n65.5\n58.9\n68.0\n63.6\n52.2\n56.8\n52.7 54.9\n60.8\n55.2 55.8\n46.7\n51.3 41.7\n53.6\n40\n50\n60\n70\n80\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n0.70\n0.84\n1.03\n1.15\n0.25\n0.28\n0.79\n0.85\n0.76\n0.71\n0.37\n5.0\n6.0\n7.1\n8.2\n1.8 2.1\n5.3 5.6\n5.1 4.9\n2.5\n0\n3\n6\n9\n0.0\n0.5\n1.0\n1.5\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Vuelos\nMillones de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n79.6 80.7 79.8\n75.7\n77.1\n78.0\n83.8\n83.9\n77.9\n81.9\n78.1\n82.1\n78.2\n76.3 75.4\n78.1\n80.3\n76.1\n82.8\n70\n75\n80\n85\n90\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nPERÚ",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 22,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Venezuela en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Venezuela\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Venezuela en servicio regular\nJulio 2026\nConviasa\n100.0%\nFactor de Ocupación de Pasajeros (PLF) entre México y Venezuela\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Venezuela en servicio regular\nJulio 2026\nValencia\n100.0%\nJulio 2026 21\n15,392\n29,874\n▼48.5%\n2026\n2025\nVariación\n126\n182\n▼30.8%\n2026\n2025\nVariación\n5.8\n3.5 3.9\n5.1\n3.8 3.7 4.1\n4.9\n3.9\n2.7 2.7\n5.0\n4.0\n1.5\n2.2 2.3 2.2 2.0\n1.10\n1\n2\n3\n4\n5\n6\n7\n8\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n9.3\n24.6\n27.3\n33.6\n41.8\n48.9\n15.4\n121\n332 338\n371\n318 312\n126\n0\n100\n200\n300\n400\n0\n10\n20\n30\n40\n50\n60\n2020 2021 2022 2023 2024 2025 2026\nMies de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n72.9 73.8 74.3\n82.4 84.7\n61.9\n72.0 72.1\n62.4 64.9 66.0 66.0\n64.0\n35.1\n52.7\n69.6\n63.1\n65.4\n55.1\n30\n40\n50\n60\n70\n80\n90\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nVENEZUELA",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 23,
+      "text": "© GeoNames, Microsoft, TomTom\nCon tecnología de Bing\n0.20% 0.23%\n22.48% 20.80%\nBelice\nCosta Rica\nJulio 2026 Enero-Julio 2026\nPorcentaje de participación de la Región en el Total de\nPasajeros transportados en Operaciones Regulares Internacionales\n5.02% 4.86%Centroamérica\nJulio 2026 Enero-Julio 2026\nPorcentaje de participación dentro de la Región\nPasajeros transportados en Operaciones Regulares Internacionales\n8.35%\n15.70%\n1.96%\n0.71%\n50.61%\nEl Salvador\nGuatemala\nHonduras\nNicaragua\nPanamá\n7.64%\n16.65%\n1.45%\n0.71%\n52.51%\nCENTROAMÉRICA",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 24,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Belice en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Belice\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Belice en servicio regular\nJulio 2026\nTropic Air\n100.0%\nFactor de Ocupación de Pasajeros (PLF) entre México y Belice\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Belice en servicio regular\nJulio 2026\nBelice\n100.0%\nJulio 2026 23\n3,856\n3,837\n▲0.5%\n2026\n2025\nVariación\n419\n427\n▼1.9%\n2026\n2025\nVariación\n0.59\n0.66 0.61\n0.54 0.49 0.44 0.49 0.45 0.40 0.45 0.48\n0.610.59 0.59 0.59\n0.55 0.57\n0.47 0.49\n0.0\n0.5\n1.0\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n7.7\n6.0\n6.4\n9.8\n2.1\n8.0\n8.5\n8.4\n6.3\n6.2\n3.9\n1.41\n1.05\n0.85\n1.07\n0.30\n0.74\n0.83 0.80 0.71 0.73\n0.42\n0.0\n0.4\n0.8\n1.2\n1.6\n0\n3\n6\n9\n12\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Vuelos\nMiles de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n79.6\n86.3\n79.8\n79.4\n68.3\n63.8 65.9\n62.6\n54.6 56.9\n80.0 77.3\n87.4 86.5 85.2\n76.3\n69.9\n65.4\n68.6\n40\n50\n60\n70\n80\n90\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nBELICE",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 25,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Costa Rica en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Costa Rica\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Costa Rica en servicio regular\nJulio 2026\nAeroméxico\n35.1%\nLACSA\n28.4%\nVolaris Costa \nRica\n26.3%\nVolaris\n5.5%\nViva\n4.6%\nFactor de Ocupación de Pasajeros (PLF) entre México y Costa Rica\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Costa Rica en servicio regular\nJulio 2026\nSan José\n100.0%\nJulio 2026 24\n352,648\n367,638\n▼4.1%\n2026\n2025\nVariación\n2,800\n2,965\n▼5.6%\n2026\n2025\nVariación\n62.7\n50.0\n52.9 54.3\n45.7\n43.6\n58.5\n51.4\n48.0 47.5\n55.9\n61.0\n60.6\n45.8\n49.5 51.6\n47.4\n41.2\n56.6\n25\n35\n45\n55\n65\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n422\n519\n575\n586\n140\n278\n479\n637\n612\n632\n353\n4.1\n4.6 4.6 4.5\n1.1\n2.6\n4.1\n5.0 4.8 5.1\n2.8\n0\n1\n2\n3\n4\n5\n6\n0\n200\n400\n600\n800\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Vuelos\nMiles de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n84.3\n70.3\n71.6\n75.5\n63.1\n62.2 75.2\n69.7 68.9\n65.7\n74.2\n79.0\n82.5 72.2\n68.0\n72.6\n66.4\n59.3\n75.9\n50\n60\n70\n80\n90\n100\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nCOSTA RICA",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 26,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde El Salvador en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y El Salvador\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y El Salvador en servicio regular\nJulio 2026\nTaca\n58.5%\nAeroméxico\n36.2%\nVolaris \nEl Salvador\n5.3%\nFactor de Ocupación de Pasajeros (PLF) entre México y El Salvador\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y El Salvador en servicio regular\nJulio 2026\nSan Salvador\n100.0%\nJulio 2026 25\n129,586\n110,896\n▲16.9%\n2026\n2025\nVariación\n1,054\n909\n▲16.0%\n2026\n2025\nVariación\n15.6\n13.6\n14.9\n16.8\n15.2\n16.0\n18.8\n17.8\n15.5 16.1\n22.1 22.3\n20.8\n16.5\n20.3\n17.4\n16.1\n17.5\n21.0\n10\n12\n14\n16\n18\n20\n22\n24\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n182\n226\n216\n313\n73\n96\n217\n258\n196\n205\n130\n2.2\n2.8\n2.6\n3.3\n0.8\n1.2\n2.4 2.5\n1.7 1.6\n1.1\n0\n1\n2\n3\n0\n100\n200\n300\n400\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Vuelos\nMiles de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n79.2 79.4\n77.7\n74.1\n66.2\n71.9\n81.8 87.5\n83.9\n79.5\n82.3\n76.7\n72.9\n67.1\n73.6\n83.0\n75.7\n70.1\n75.3\n60\n65\n70\n75\n80\n85\n90\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nEL SALVADOR",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 27,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Guatemala en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Guatemala\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Guatemala en servicio regular\nJulio 2026\nAeroméxico\n43.7%\nVolaris\n36.4%\nVolaris \nCosta Rica\n19.9%\nFactor de Ocupación de Pasajeros (PLF) entre México y Guatemala\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Guatemala en servicio regular\nJulio 2026\nGuatemala\n100.0%\nJulio 2026 26\n282,322\n270,283\n▲4.5%\n2026\n2025\nVariación\n2,163\n2,243\n▼3.6%\n2026\n2025\nVariación\n42.6\n37.0\n41.6\n41.2\n35.6 36.8 35.6 36.1\n33.8\n37.3\n48.0 49.142.8\n36.6\n42.4\n40.7\n39.9 40.5 39.5\n20\n30\n40\n50\n60\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n396\n468\n517\n521\n127\n223\n422\n506\n496\n474\n282\n5.1 5.5 5.7 5.6\n1.8\n3.1\n5.7 5.5\n4.6\n3.8\n2.2\n0\n2\n4\n6\n0\n200\n400\n600\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Vuelos\nMiles de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n76.4\n71.3\n73.7\n79.7\n68.1\n71.4 70.1 71.6 72.7\n76.3\n85.7 84.5\n75.3\n71.3\n75.2\n76.3\n72.3\n75.3\n70.5\n50\n60\n70\n80\n90\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nGUATEMALA",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 28,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Honduras en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Honduras\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Honduras en servicio regular\nJulio 2026\nAeroméxico \nConnect\n100.0%\nFactor de Ocupación de Pasajeros (PLF) entre México y Honduras\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Honduras en servicio regular\nJulio 2026\nSan Pedro Sula\n54.1%\nComayagua\n45.9%\nJulio 2026 27\n24,579\n15,543\n▲58.1%\n2026\n2025\nVariación\n392\n222\n▲76.6%\n2026\n2025\nVariación\n2.0 1.8 1.6\n1.9 1.8\n2.2\n4.2\n3.4\n2.2 2.1 2.1 2.1\n2.4\n2.1\n3.3\n4.0 3.8\n4.1\n4.9\n1\n2\n3\n4\n5\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n43.0\n73.8\n54.9\n50.3\n9.4\n26.1\n53.7\n57.6\n31.3\n27.4\n24.6\n0.73\n1.41\n0.76 0.73\n0.15\n0.51\n0.94 0.94\n0.41 0.37 0.39\n0.0\n0.4\n0.8\n1.2\n1.6\n0\n20\n40\n60\n80\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Vuelos\nMiles de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n76.2 73.7\n63.7\n72.8\n65.8\n75.7\n69.2\n78.5\n85.9\n80.8 80.6 79.7\n74.4\n66.8\n64.3\n60.2\n53.2\n60.3\n70.9\n40\n50\n60\n70\n80\n90\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nHONDURAS",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 29,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Nicaragua en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Nicaragua\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Nicaragua en servicio regular\nJulio 2026\nAeroméxico \nConnect\n100.0%\nFactor de Ocupación de Pasajeros (PLF) entre México y Nicaragua\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Nicaragua en servicio regular\nJulio 2026\nManagua\n100.0%\nJulio 2026 28\n12,082\n14,961\n▼19.2%\n2026\n2025\nVariación\n186\n274\n▼32.1%\n2026\n2025\nVariación\n2.5 2.2 2.0 1.9 1.7 1.9\n2.8 2.8\n2.0 2.1\n2.6 2.9\n2.2\n1.6 1.8 1.5 1.6 1.6 1.8\n0\n2\n4\n6\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n51.6\n84.0\n48.4\n33.5\n11.0\n10.6\n43.5\n41.5\n31.4\n27.4\n12.1\n0.72\n1.37\n0.87\n0.49\n0.15 0.19\n0.72 0.80\n0.49 0.46\n0.19\n0.0\n0.4\n0.8\n1.2\n1.6\n0\n30\n60\n90\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Vuelos\nMiles de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n69.8\n68.3\n57.2 57.3\n49.8 46.9 45.8\n58.9 60.4 58.2\n77.5\n82.0\n73.7\n67.6\n68.5\n60.1\n63.5 60.7\n64.2\n30\n40\n50\n60\n70\n80\n90\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nNICARAGUA",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 30,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Panamá en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Panamá\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Panamá en servicio regular\nJulio 2026\nCopa Airlines\n96.5%\nAeroméxico\nConnect\n3.5%\nFactor de Ocupación de Pasajeros (PLF) entre México y Panamá\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Panamá en servicio regular\nJulio 2026\nPanamá\n100.0%\nJulio 2026 29\n890,202\n757,806\n▲17.5%\n2026\n2025\nVariación\n6,496\n5,551\n▲17.0%\n2026\n2025\nVariación\n114.1\n100.8\n106.5 104.8 103.6\n108.3\n119.8\n113.7\n110.9\n120.3 122.3\n128.0\n138.0\n119.4\n123.1 125.0\n131.8\n125.5 127.5\n90\n100\n110\n120\n130\n140\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n1.10\n1.21\n1.24\n1.31\n0.38\n1.05\n1.31\n1.32\n1.31\n1.35\n0.89\n9.9 9.9 10.3 10.6\n3.2\n8.2\n10.0 10.0 9.7 10.0\n6.5\n0\n4\n8\n12\n0.0\n0.4\n0.8\n1.2\n1.6\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Vuelos\nMillones de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n86.7 86.5\n83.0\n85.3\n82.7 82.4\n85.8 86.3\n87.8\n86.6 86.9\n85.184.6 84.2\n86.0 85.7\n86.6\n82.9\n86.3\n75\n80\n85\n90\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nPANAMÁ",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 31,
+      "text": "© GeoNames, Microsoft, TomTom\nCon tecnología de Bing\n34.64% 35.81%\n65.36% 64.19%\nCuba\nRepública Dominicana\nJulio 2026 Enero-Julio 2026\nPorcentaje de participación de la Región en el Total de\nPasajeros transportados en Operaciones Regulares Internacionales\n1.30% 1.11%El Caribe\nJulio 2026 Enero-Julio 2026\nPorcentaje de participación dentro de la Región\nPasajeros transportados en Operaciones Regulares Internacionales\nEL CARIBE",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 32,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Cuba en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Cuba\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Cuba en servicio regular\nJulio 2026\nViva\n70.2%\nAeroméxico\n29.8%\nFactor de Ocupación de Pasajeros (PLF) entre México y Cuba\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Cuba en servicio regular\nJulio 2026\nLa Habana\n95.4%\nJulio 2026 31\n138,403\n157,044\n▼11.9%\n2026\n2025\nVariación\n1,351\n1,356\n▼0.4%\n2026\n2025\nVariación\n22.2 20.3\n22.0\n24.9\n23.3\n20.0\n24.5\n25.6\n21.9 21.3\n22.4\n23.6\n22.5\n16.2\n16.5\n21.0\n20.2\n19.4\n22.7\n15\n17\n19\n21\n23\n25\n27\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n767\n782\n901\n923\n194\n30\n186\n290\n258\n272\n138\n7.5 7.2 7.1\n7.7\n1.4\n0.2\n2.0\n3.1\n2.2 2.3\n1.4\n0\n3\n6\n9\n0\n200\n400\n600\n800\n1,000\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Vuelos\nMiles de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n71.9\n68.8\n61.1\n65.9\n62.2\n55.2\n64.1\n67.3 66.6\n60.8\n67.7\n70.1\n66.8\n52.3\n46.5\n55.8\n52.9 52.3\n58.9\n40\n50\n60\n70\n80\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nCamagüey\n4.6%\nCUBA",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 33,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde República Dominicana en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y República Dominicana\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y República Dominicana en servicio regular\nJulio 2026\nArajet\n53.3%\nAeroméxico\n43.4%\nAerolíneas \nArgentinas\n3.3%\nFactor de Ocupación de Pasajeros (PLF) entre México y República Dominicana\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y República Dominicana en servicio regular\nJulio 2026\nPunta Cana\n68.6%\nSanto Domingo\n31.4%\nJulio 2026 32\n248,108\n180,600\n▲37.4%\n2026\n2025\nVariación\n1,897\n1,507\n▲25.9%\n2026\n2025\nVariación\n27.4\n21.1 22.6\n26.0\n24.3\n21.8\n37.4 36.7\n30.3\n33.2 33.8 34.6\n33.7\n29.8\n33.5\n36.1\n38.3\n33.9\n42.8\n15\n20\n25\n30\n35\n40\n45\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n46.3\n70.5\n67.8\n25.2\n47.5\n73.4\n156.0\n268.0\n349.2\n248.1\n0.59\n0.77 0.83\n0.36\n0.72\n0.94\n1.71\n2.28\n2.79\n1.90\n0.0\n0.5\n1.0\n1.5\n2.0\n2.5\n3.0\n0\n60\n120\n180\n240\n300\n360\n420\n2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Vuelos\nMiles de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n66.6\n63.1\n60.3\n70.1 68.8\n63.6\n78.3 77.3\n70.4\n74.7\n78.6 77.0\n72.6\n67.0\n71.8\n76.8\n80.6\n66.5\n78.6\n50\n60\n70\n80\n90\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nREPÚBLICA DOMINICANA",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 34,
+      "text": "© GeoNames, Microsoft, Navinfo, TomTom, Wikipedia\nCon tecnología de Bing\n10.96%\n29.40%\n51.24%\n8.40%\n9.85%\n27.66%\n54.79%\n7.70%\nEmiratos Árabes Unidos\nJulio 2026 Enero-Julio 2026\nPorcentaje de participación de la Región en el Total de\nPasajeros transportados en Operaciones Regulares Internacionales\n0.92% 0.87%Asia\nJulio 2026 Enero-Julio 2026\nPorcentaje de participación dentro de la Región\nPasajeros transportados en Operaciones Regulares Internacionales\nJapón\nRepública de Corea\nASIA\nChina",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 35,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde EAU en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y EAU\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y EAU en servicio regular\nJulio 2026\nEmirates\n100.0%\nFactor de Ocupación de Pasajeros (PLF) entre México y EAU\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y EAU en servicio regular\nJulio 2026\nDubái\n100.0%\nJulio 2026 34\n29,747\n35,770\n▼16.8%\n2026\n2025\nVariación\n416\n424\n▼1.9%\n2026\n2025\nVariación\n5.4\n4.3\n5.3 5.4 5.6\n4.7\n5.1\n4.2 4.0\n5.8\n6.8\n6.1\n5.7\n4.9\n2.0\n3.4\n4.3 4.4\n5.0\n2\n3\n4\n5\n6\n7\n8\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n27.0\n21.4\n65.2\n70.2\n69.5\n62.7\n29.7\n251 240\n646\n727 732 730\n416\n0\n200\n400\n600\n800\n0\n10\n20\n30\n40\n50\n60\n70\n80\n2020 2021 2022 2023 2024 2025 2026\nMiles de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n28.8\n25.3\n28.5 29.9 29.7\n25.8 27.3\n22.3 22.3\n31.2\n37.6\n32.430.3 29.5\n13.3\n20.7\n25.2\n26.5\n29.4\n10\n20\n30\n40\n50\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nEMIRATOS ÁRABES UNIDOS",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 36,
+      "text": "Pasajeros transportados por empresas nacionales y extranjeras\nhacia y desde Japón en servicio regular\nFuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.\nVuelos realizados y pasajeros transportados entre México y Japón\npor empresas nacionales y extranjeras en servicio regular\nParticipación de mercado en la transportación de pasajeros\nentre México y Japón en servicio regular\nJulio 2026\nAeroméxico\n57.4%\nAll Nippon \nAirways\n42.6%\nFactor de Ocupación de Pasajeros (PLF) entre México y Japón\npara empresas nacionales y extranjeras en servicio regular\nPrincipales ciudades atendidas en la transportación de pasajeros\nentre México y Japón en servicio regular\nJulio 2026\nTokio\n100.0%\nJulio 2026 35\n165,539\n146,445\n▲13.0%\n2026\n2025\nVariación\n1,057\n967\n▲9.3%\n2026\n2025\nVariación\n19.8\n18.0\n20.9 20.4\n21.6 21.7\n24.1\n22.2 22.7\n25.2\n24.4\n23.6\n24.6\n21.5\n25.1\n24.3 24.7\n21.9\n23.5\n15\n17\n19\n21\n23\n25\n27\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nMiles de Pasajeros\n2024 2025 2026\n101.8\n201.2\n219.2\n233.7\n69.1\n28.9\n71.0\n215.3\n257.0\n264.7\n165.5\n0.48\n1.07\n1.46 1.45\n0.78 0.73 0.73\n1.29\n1.50\n1.73\n1.06\n0.0\n0.4\n0.8\n1.2\n1.6\n2.0\n0\n50\n100\n150\n200\n250\n300\n2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2026\nMiles de Vuelos\nMiles de Pasajeros\nPasajeros Vuelos\nComparativo\nAcumulado a Julio\nPasajeros\nVuelos\n74.8\n78.2 79.6\n61.2 61.3 63.4\n65.9\n62.0\n64.8\n69.0 69.4\n64.8\n67.4\n64.9\n68.8\n69.1 68.2\n64.1\n67.1\n50\n60\n70\n80\n90\nEne Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic\nPorcentaje\n2024 2025 2026\nJAPÓN",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+      "pdf_page": 37,
+      "text": "SCAN ME\nMás estadísticas disponibles en:\nhttps://www.gob.mx/afac/acciones-y-programas/estadisticas-280404",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_methodology_2023_20260908T182255Z.pdf",
+      "pdf_page": 1,
+      "text": " \n \n \n \n \n \nDESCRIPCIÓN DE VARIABLES \nY METODOLOGÍA \n(extraído del “Manual sobre reglamentación del transporte aéreo \ninternacional”, 2da. Edición, 2004 de la Organización de Aviación Civil \nInternacional) \n  ",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_methodology_2023_20260908T182255Z.pdf",
+      "pdf_page": 2,
+      "text": "Capítulo 5.0 \nINTRODUCCIÓN A LA TERMINOLOGÍA GENERAL \nEn las primeras cuatro partes del manual se han presentado y definido muchos \ntérminos, cada uno en su contexto particular en relación con el contenido, los \nprocedimientos y la estructura de la reglamentación nacional, bilateral y \nmultilateral del transporte aéreo internacional. En la parte 5 figura la terminología \ngeneral que es común a todas las partes del manual o tiene carácter \ncomplementario. \nA diferencia de la enumeración alfabética habitual en un glosario, se han reunido \naquí los términos en c uatro grupos genéricos: Capítulo 5.1 — Transportistas \naéreos; Capítulo 5.2 — Aeronaves; Capítulo 5.3 — Servicios aéreos y, por último, \nCapítulo 5.4 — Aeropuertos. La mayoría de los términos definidos o descritos se \nutilizan corrientemente en relación con l a reglamentación económica del \ntransporte aéreo. Algunos se utilizan frecuentemente en otros contextos, pero \ncomo pertenecen a grupos genéricos, se han incluido en esta parte para que los \ndatos sean completos y a fin de proporcionar información útil adicional. \nLa terminología en estos cuatro capítulos proviene de una variedad de fuentes y \nno se pretende que sea exhaustiva (las numerosas  publicaciones de la OACI, \nprincipalmente los manuales en otras disciplinas constituyen fuentes en las que \npuede hallarse terminología propia de la aviación). Las definiciones de  algunos \ntérminos son aceptadas de manera generalizada, como aquéllas preparadas por \nla OACI o las que figuran en el Convenio  sobre Aviación Civil Intern acional. No \nobstante, la mayor parte de las definiciones o descripciones que figuran aquí no \ntiene carácter oficial. Algunas han sido elaboradas y aplicadas por los Estados en \ncontextos particulares, como la reglamentación  bilateral. Algunos términos \ntienen sentidos distintos, según  los contextos, mientras que otros son de uso \ncomún y aparecen a  menudo en los medios de difusión. Algunas definiciones \ntienen carácter relativo y su sentido puede evolucionar, a medida que  avanza la \ntecnología, y seguir los cambios en los regímenes de reglamentación aplicables. \nPor regla general, a medida que va  evolucionando el transporte aéreo, también \nlo hace su terminología  y el correspondiente uso. Al elaborar esta parte del \nmanual se han tenido en cuenta todas estas consideraciones \n \n  ",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_methodology_2023_20260908T182255Z.pdf",
+      "pdf_page": 3,
+      "text": "Capítulo 5.1 \nTRANSPORTISTAS AÉREOS \nUn transportista aéreo es una empresa que presta servicios de transporte por \naeronave, efectuados por remuneración o alquiler. \nExisten varias clases de transportistas aéreos según la  categoría de operaciones \nque llevan a cabo: \n• un transportista aéreo regular o línea aérea regular es una empresa \nque presta principalmente servicios regulares (a pesar de que también \npuede realizar algunos vuelos no regulares). (Véase en la Parte 1 del Doc \n9587 y en el Capítulo 5.3 del presente manual la definición de servicios \nregulares y no regulares); \n• un transportista aéreo no regular es aquél cuya actividad principal \nconsiste en operaciones no regulares;  \n• un transportista chárter es un transportista aéreo no regular que lleva a \ncabo exclusivamente vuelos chárter. \nUn transportista internacional es aquél que presta servicios  de transporte \naéreo por rutas entre dos o más Estados, y que también puede explotar servicios \naéreos del interior. \nUn transportista internacional regular es un transportista  autorizado para \nexplotar servicios aéreos internacionales  regulares, mientras que un \ntransportista internacional no regular es aquél que ha recibido autorización \npara explotar vuelos internacionales no regulares. \nUn transportista del interior es aquél que explota principalmente servicios de \ntransporte aéreo enteramente en el territorio de su Estado nacional. \nSegún la reglamentación nacional del transporte aéreo, un transportista titular \nde licencia (llamado también a veces transportista autorizado) es aquél que \nha recibido una autorización oficial, de una autoridad constituida, para explotar \nservicios de transporte aéreo. En algunos Estados se otorgan  licencias a \ntransportistas nacionales y permisos a l os extranjeros, mientras que en otros se \notorgan licencias para servicios regulares y permisos para vuelos chárter. \nUn transportista nacional es un transportista aéreo,  establecido de \nconformidad con las leyes nacionales de un  Estado, que es generalmente el \ntransportista aéreo principal o  único de dicho Estado para proporcionar \nservicios de transporte aéreo, incluidos los internacionales, y que se  considera \ncomo instrumento nacional de transporte aéreo. ",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_methodology_2023_20260908T182255Z.pdf",
+      "pdf_page": 4,
+      "text": "La expresión transportista de bandera se utiliza a menudo  con el mismo \nsentido que “transportista nacional”, pero más  desde un punto de vista \ninternacional porque sus aeronaves  suelen ostentar la bandera nacional del \nEstado al proporcionar  servicios aéreos internacionales. Cabe señalar, sin \nembargo, que  en el Artículo 20 (Ostentación de las marcas) del Convenio de  \nChicago sólo se exige que las aeronaves empleadas en la  navegación aérea \ninternacional lleven las correspondientes  marcas de nacionalidad y matrícula \n(por lo general, los Estados utilizan para ello letras y números). Por consiguiente, \nen virtud  de las leyes internacionales no existe obligación jurídica de que  un \ntransportista aéreo nacional que explote servicios aéreos internacionales ostente \nla bandera nacional. \nTransportista designado significa un transportista aéreo  designado por un \nEstado en virtud de un acuerdo de servicios aéreos para explotar servicios aéreos \nautorizados en el marco  de dicho acuerdo. En la mayoría de los casos, el \ntransportista designado es el transportista naciona l o de bandera del Estado  \ndesignante, pero a veces puede tratarse de un transportista aéreo de otro Estado \ncuando esto se permita en virtud del acuerdo de  servicios aéreos \ncorrespondiente (p. ej., en el caso de una  disposición relativa a “comunidad de \nintereses”. Véase el Capítulo 4.4). \nLos transportistas pueden dividirse en categorías según lo que transportan: \n• un transportista aéreo de pasajeros explota principalmente servicios de \ntransporte de pasajeros por aeronave (aunque las aeronaves puedan \ntambién transportar carga); \n• un transportista aéreo de carga transporta principalmente  carga y \ncorreo por aeronave. \nLos transportistas aéreos se describen a menudo según la  función que \ndesempeñan en el mercado nacional o internacional o según la importancia de \nsus operaciones: \n• un transportista aéreo importante es, generalmente, aquél que presta \nservicios aéreos regulares por rutas principales del interior o por rutas \ninternacionales, normalmente con un nivel relativamente importante de \noperaciones por una amplia red de rutas; \n• un transportista regional ofrece servicios regulares de corta distancia de \npasajeros y carga, principalmente mediante aeronaves con \nturborreactores o pequeñas aeronaves de reacción y enlaza ciudades \npequeñas o medianas con ciu dades grandes o grandes centros  \naeroportuarios; \n ",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_methodology_2023_20260908T182255Z.pdf",
+      "pdf_page": 5,
+      "text": "• un transportista aéreo tributario explota servicios de corta distancia que \ncomunican puntos pequeños y regionales con un centro aeroportuario , \ngeneralmente utilizando aeronaves pequeñas o medianas; \n• un transportista aéreo complementario explota servicios tributarios o \nregionales, a menudo de tipo  punto a punto, generalmente con \naeronaves de menos de  30 plazas ; este límite de capacidad ha ido \naumentando con los años y puede referirse ahora a aeronaves de hasta 50 \nplazas; \n• un megatransportista es un transportista cuya escala de operaciones o \nred de rutas es muy grande. El transportista puede haber alcanzado esta \ncategoría como consecuencia de su crecimiento propio, de adquisiciones \no inversiones en el capital social de otros transportistas, o de ciertas formas \nde alianzas.  \nAlgunas definiciones relativas a los transportistas aéreos se  basan en \nconsideraciones de comercialización o de índole económica: \n• un transportista especializado se concentra en determinadas rutas o en \ndeterminados segmentos del mercado; \n• un transportista principiante es aquél que acaba de establecerse; \n• un nuevo transportista participante es aquél, recientemente  \nestablecido o no, que trata de entrar en un mercado en el que ya prestan \nservicio otros transportistas. \nOtras definiciones se basan en las características de sus modelos de negocios: \n• un transportista con plenos servicios es un transportista  aéreo, \ngeneralmente un transportista tradicional  nacional o importante que \nefectúa operaciones por una red de rutas relativamente amplia (por lo \nque también se llama transportista explotador de red ) y proporciona  \nuna gama completa de servicios, incluidas diferentes clases de asientos, \ndistracciones a bordo, comidas y bebidas, tiendecita de a bordo, así como \ninstalaciones en tierra tales como salones de espera para los pasajeros de \nlas clases superiores o los miembros de los  programas para viajeros \nhabituales; \n• un transportista con servicios mínimos es el transportista aéreo que, a \ndiferencia de l transportista con  plenos servicios, se concentra en \nproporcionar a los pasajeros un servicio de transporte aéreo a bajo costo, \ncon servicios sencillos o limitados en vuelo; ",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_methodology_2023_20260908T182255Z.pdf",
+      "pdf_page": 6,
+      "text": "• un transportista económico es generalmente aquél que cuenta con una \nestructura relativamente barata,  respecto a otros transportistas \ncomparables y ofrece  tarifas económicas de pasajeros y carga. Puede \ntratarse de un transportista independiente, una filial o división de  un \ntransportista importante o, en algunos casos, la antigua división chárter \nde un grupo de líneas aéreas. \nLos transportistas aéreos pueden también identificarse por su asociación \nprofesional como, por ejemplo, un transportista afiliado a la IATA, o sea, un \ntransportista miembro de la Asociación del Transporte Aéreo Internacional; en \ncambio, un transportista no afiliado a la IATA es aquél que no es miembro de \ndicha asociación. \nSe clasifica también a los transportistas según criterios de propiedad y control: \n• un transportista de propiedad estatal  es aqu él cuyo  capital social \npertenece, total o mayoritariamente, al  Estado (organismo \ngubernamental, sociedad de inversiones paraestatal, etc.); \n• un transportista privado es una empresa cuyo capital social pertenece, \ntotal o mayoritariamente, a intereses privados; \n• un transportista de empresa conjunta  es aquél que  pertenece \nconjuntamente a dos o más entidades de inversión, que pueden ser de un \nmismo país o de varios; \n• un transportista comunitario es un transportista aéreo  que pertenece \nmayoritariamente a un Estado miembro  de la Comunidad Europea, \nllamada ahora Unión Europea. \nEn lo que atañe a la responsabilidad de las líneas aéreas, la expresión \nempresa de transporte público  significa un transportista que ofrece sus \nservicios para transportar pasajeros y carga a cualquier cliente que desee \nalquilar sus servicios y esté dispuesto a pagar los derechos correspondientes. \nSe utilizan comúnmente algunas expresiones, en relación con  los \ntransportistas aéreos, para indicar la capacidad y el rendimiento de las líneas \naéreas y determinar la posición que ocupan de acuerdo con el tráfico que \ntransportan: \n• Asientos-kilómetros disponibles (ASK), que equivalen a la suma de los \nproductos obtenidos al multiplicar el número de asientos disponibles en \ncada etapa de vuelo para la venta a pasajeros, por la distancia de la \netapa; (se dispone de un asiento -kilómetro cuando un asiento vuela un \nkilómetro). ",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_methodology_2023_20260908T182255Z.pdf",
+      "pdf_page": 7,
+      "text": "• Pasajero de pago  es un término que para las est adísticas de la OACI \n(véase el Doc 9703) se refiere a los pasajeros para cuyo transporte una \nlínea aérea recibe remuneración comercial. Figuran entre dichos \npasajeros, por ejemplo, aquéllos que viajan: a) en el marco de ofertas de \npromoción accesibles al p úblico (p. ej., “dos por uno”) o programas de \nfidelidad (p. ej., utilización de puntos de viajeros frecuentes); b) como \ncompensación por embarque denegado; c) con rebajas concedidas a las \nempresas; d) con tarifas preferenciales (funcionarios gubernamentale s, \nmarinos, militares, jóvenes, estudiantes, etc.), pero con exclusión de: a) las \npersonas que viajan gratuitamente; b) las personas que viajan con una \ntarifa o una rebaja de la que sólo pueden disfrutar los empleados de las \nlíneas aéreas o sus agentes o únicamente en el caso de viajes de negocios \npara los transportistas; y c) los párvulos que no ocupan un asiento. \n• Pasajeros-kilómetros de pago (RPK)  es la suma de los productos \nobtenidos multiplicando el número de pasajeros de pago transportados \nen cada etapa de vuelo por la distancia de la etapa. La cifra resultante es \nigual al número de kilómetros recorridos por todos los pasajeros de pago.  \n• Tonelada-kilómetro de pago (RTK) que se efectúa cuando una tonelada \nmétrica de carga de pago recorre un kilómetro. Cu ando esa carga \ncomprende a pasajeros, el número de éstos se convierte en carga de peso, \nmultiplicando por lo general esa cifra por 90 kg (para incluir el equipaje). \nEl total de toneladas-kilómetros efectuadas (TPK) equivale a la suma de \nlos productos obten idos multiplicando las cargas de pasajeros, \nmercancías y correo de cada etapa de vuelo por la distancia de dicha \netapa (una TPK es una tonelada métrica de carga de pago que recorre \nun kilómetro). \n• Toneladas-kilómetros de pasajeros efectuadas  que se calculan \naplicando un peso normalizado por pasajero a los pasajeros -kilómetros \nefectuados. (Véase también más arriba tonelada-kilómetro de pago.) \n• Toneladas-kilómetros disponibles (ATK), que equivalen a la suma de los \nproductos obtenidos al multipli car el número de toneladas disponibles \npara el transporte de carga de pago (pasajeros, carga y correo) en cada \netapa de vuelo por la distancia de la etapa (una ATK significa espacio \ndisponible para una tonelada métrica de carga de pago que vuela un \nkilómetro). \n \n  ",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_methodology_2023_20260908T182255Z.pdf",
+      "pdf_page": 8,
+      "text": "Capítulo 5.2 \nAERONAVES \nEl término genérico aeronave se aplica a todo aerodino. Un avión (o aeronave \nde alas fijas ) es un aerodino propulsado  por motor, que debe su sustentación \nen vuelo principalmente a reacciones aerodinámicas ejercidas sobre superficies \nque permanecen fijas. Un helicóptero (o aeronave de alas giratorias ) es un \naerodino que se mantiene en vuelo principalmente en virtud de la reacción del \naire sobre uno o más rotores propulsados por motor, que giran alrededor de ejes \nverticales o casi verticales (véase el Doc 9569). Una aeronave STOL (aeronave de \ndespegue y aterrizaje cortos) es aquélla cuyo  diseño le permite despegar y \naterrizar en pistas cortas. En la práctica, el término “aeronave” suele referirse al \n“avión”, a menudo utilizándose ambos indistintamente. \nLa nacionalidad de la aeronave  se refiere al Estado en el  que está \nmatriculada la misma ( véase el Artículo 17 del Convenio sobre Aviación Civil \nInternacional). \nLas aeronaves de transporte  son aquéllas que se han diseñado para \ntransportar personas y carga.  Las aeronaves de transporte comercial son \naquéllas que se utilizan por remuneración o alquiler. \nLas aeronaves estatales comprenden aquéllas que se utilizan  en servicios \nmilitares, de aduana, de policía u otros servicios de aplicación de las leyes de un \nEstado (véase el Artículo 3 del Convenio sobre Aviación Civil Internacional). \nLas aeronaves privadas son aquéllas que no son estatales y se utilizan para \nfines no comerciales. \nEn el contexto de la reglamentación e conómica, a menudo se clasifican las \naeronaves según lo que transportan: \n• una aeronave de pasajeros  es aquélla cuyo diseño y configuración \ntienen por objeto principal el transporte  de personas y su equipaje \nacompañado; \n• una aeronave exclusivamente de carga  (o avión de carga ) es aquélla \ndestinada únicamente al transporte de mercancías ( aunque pueden \ntambién transportarse personas que acompañan ciertas categorías de \ncarga, como ganado o equipo de exploración petrolera); \n• una aeronave mixta  (llamada a menudo aeronave “combi” por las \nlíneas aéreas) es una aeronave de  transporte que puede llevar tanto a \npasajeros como  carga en la cubierta principal, a menudo en diversas  \nconfiguraciones. \n  ",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_methodology_2023_20260908T182255Z.pdf",
+      "pdf_page": 9,
+      "text": "Las aeronaves pueden describirse según sus dimensiones: \n• una aeronave de fuselaje ancho es una gran aeronave de transporte con \nuna anchura interna de la cabina que  permite instalar normalmente a \nlos pasajeros en tres grupos axiales de asientos separados por dos pasillos \n[en la práctica esto representa no menos de 4,72 m(15,6 ft)]; \n• una aeronave de fuselaje estrecho tiene un solo pasillo que separa dos \ngrupos axiales de asientos en la cabina.  \nSi bien estas dos expresiones se utilizan sobre todo para la comercialización, \nalgunos Estados las utilizan también en  relación con la reglamentación de la \ncapacidad. \n• La expresión avión de reacción “jumbo” tiene origen popular y se aplica \na las aeronaves grandes de fuselaje ancho como el Boeing 747. \nLa expresión “ae ronave grande” puede tener varias definiciones según sus \naplicaciones concretas (p. ej., para fijar derechos de aterrizaje en los aeropuertos \no reglamentar la  capacidad). En las estadísticas de la OACI, una aeronave \ngrande es aquélla cuya masa máxima certificada de despegue  es de 9 \ntoneladas (unas 20 000 lb) o más; en el contexto de la  reglamentación técnica, \nse trata de una aeronave cuya masa  máxima certificada de despegue es de 5 \n700 kg (unas 12 550 lb). \nExisten otros términos relativos a las dimensiones de las aeronaves: \n• una aeronave pequeña  o ligera es aquélla cuya masa máxima \ncertificada de despegue es inferior a 5 700 kg (unas 12 550 lb); \n• una aeronave ultra ligera es aquélla cuya masa máxima certificada de \ndespegue no excede 454 kg (1 000 lb), que generalmente no se utiliza para \ntransporte público. \nPara fines de análisis (planificación de flotas, pronósticos),  las aeronaves \npueden clasificarse según su capacidad en materia de plazas: \n• una aeronave de gran capacidad es, por regla general, aquélla cuya \ncapacidad se sitúa entre 350 y 500 plazas; \n• una aeronave de transporte de capacidad ultra grande o una aeronave \nmuy grande de transporte comercial pertenece a un tipo de aeronave \nque están diseñando algunos fabricantes de aeronaves y que se supone \ntendrá más de 600 plazas. ",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_methodology_2023_20260908T182255Z.pdf",
+      "pdf_page": 10,
+      "text": "El arrendamiento constituye un método muy generalizado  entre los \ntransportistas aéreos para obtener equipo o aumentar la  capacidad de sus \nflotas: \n• una aeronave arrendada  es aquélla que se utiliz a en  virtud de un \narrendamiento; \n• aeronave arrendada con tripulación \n• aeronave arrendada sin tripulación; \n• la expresión aeronave arrendada únicamente con tripulantes técnicos \nse utiliza a veces respecto a aeronaves arrendadas con tripulantes del \npuesto de pilotaje, pero sin personal auxiliar de a bordo. \nEn este contexto, el arrendador es la parte que da las  aeronaves en arriendo y \nel arrendatario es la parte que toma las aeronaves en arriendo. \nLas aeronaves se clasifican también según otros criterios,  como el tipo de su \nmotor: \n• una aeronave con motor de émbolo, poco utilizada actualmente para el \ntransporte aéreo comercial, es una aeronave propulsada por motores de \némbolo; \n• una aeronave de turbohélice es una aeronave propulsada por motores \nde turbohélice; \n• una aeronave de turborreactor, o sencillamente aeronave de reacción, \nes una aeronave propulsada por turborreactores; \n• una aeronave de turbofán  es aquélla que tiene  turborreactores con \nsoplante \nA veces se describen las aeronaves según el número de sus motores: \n• un birreactor es una aeronave de reacción con dos motores; y \n• un trirreactor es una aeronave con tres motores. \nMuchas aeronaves bimotores de transporte comercial han  recibido \nautorización para operaciones a grandes distancias, que reciben el nombre de \nETOPS (vuelos a grandes distancias de aviones bimotores). \n  ",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_methodology_2023_20260908T182255Z.pdf",
+      "pdf_page": 11,
+      "text": "Las aeronaves pueden distinguirse por las velocidades a las  que pueden \nvolar: \n• una aeronave subsónica es aquélla que es incapaz de mantener el vuelo \nhorizontal a velocidades superiores a  Mach 1 (o sea, la velocidad del \nsonido); \n• una aeronave supersónica  es aquélla que puede volar a  velocidades \nsuperiores a la del sonido; \n• una aeronave hipersónica  es aquélla que puede volar a  velocidades \nsuperiores a Mach 5; \n• la expresión aeronave de transporte civil de alta  velocidad suele \nutilizarse respecto a varias aeronaves  supersónicas de transporte \ncomercial del futuro que están bajo estudio. \nLas aeronaves pueden también definirse por las distancias que pueden recorrer: \n• una aeronave de autonomía de vuelo limitada es aquélla cuyo alcance \nde vuelo sin escala suele ser inferior a 2 224 km (1 200 millas marinas) con \nplena carga de pago en condiciones normales de crucero; \n• una aeronave de autonomía de vuelo media es aquélla que suele ser \ncapaz de recorrer entre 2 224 y 5 556 km (1 200 y 3 000 millas marinas) con \nplena carga de pago en condiciones normales de crucero; y \n• una aeronave de gran autonomía  de vuelo  es aquélla que puede \nrecorrer más de 5 556 km (3 000 millas marinas) con plena carga de pago \nen condiciones normales de crucero. \nLas aeronaves de transporte aéreo complementario y las aeronaves \nregionales son aquéllas que se utilizan para la explotación de servicios aéreos \ncomplementarios o regionales y cuya capacidad (entre 10 y 70 plazas) y carga \nde pago suelen ser relativamente pequeñas. Un avión de reacción regional es \nuna aeronave de transporte aéreo complementario o aeronave regional \npropulsada por reactores. \nEn el contexto de la reglamentación del ruido de las aeronaves: \n• una aeronave del Capítulo 2  es aquélla que satisface las normas de \nhomologación en cuanto al ruido que figuran en el Capítulo 2, Volumen 1, \ndel Anexo 16 al Convenio sobre Aviación Civil Internacional; y \n• una aeronave del Capítulo 3  es aquélla que satisface las normas de \nhomologación en cuanto al ruido que figuran en el Capítulo 3, Volumen 1, ",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_methodology_2023_20260908T182255Z.pdf",
+      "pdf_page": 12,
+      "text": "del Anexo 16 al Convenio sobre Aviación Civil Internacional (más severas \nque las del Capítulo 2). \nEn los Estados Unidos se utilizan las expresiones aeronave de etapa 2 y \naeronave de etapa 3, que tienen fundamentalmente el mismo significado que \n“aeronave del Capítulo 2” y “aeronave del Capítulo 3”, respectivamente. \n \n  ",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_methodology_2023_20260908T182255Z.pdf",
+      "pdf_page": 13,
+      "text": "Capítulo 5.3 \nSERVICIOS AÉREOS \nEn su sentido más amplio, servicio aéreo incluye todo  transporte público, \nregular o no, realizado por aeronave. Sin  embargo, para los fines de la \nreglamentación, esta expresión  siempre ha tenido el sentido preciso que se \ndefine en el apartado a) del Artículo 96 del Convenio de Chicago y que se usa en \nla mayoría de los acuerdos bilaterales de transporte aéreo  entre los Estados, o \nsea, todo servicio aéreo regular realizado  por aeronaves de transporte público \nde pasajeros, correo o carga. \nServicio aéreo  comercial significa todo transporte aéreo  realizado por \naeronave de transporte público de pasajeros, correo o carga por remuneración \no alquiler. \nLos servicios aéreos pueden clasificarse según las áreas geográficas a las que \nprestan servicio, por ejemplo: \n• servicio aéreo del interior es el servicio aéreo explotado exclusivamente \ndentro del territorio de un Estado; \n• servicio aéreo internacional es el servicio aéreo que pasa por el espacio \naéreo sobre el territorio de más de un Estado; \n• servicio aéreo regional, es el servicio ofrecido en rutas  entre ciudades \npequeñas dentro de una región o entre  las regiones de un Estado; o el \nservicio aéreo ofrecido  en rutas secundarias entre ciudades pequeñas \ndentro de  un área regional que abarca los territorios de má s de un  \nEstado; \n• servicio transfronterizo  es un servicio aéreo  internacional de corta \ndistancia que atraviesa la frontera de dos Estados contiguos. \nEn la reglamentación económica, los servicios aéreos se  dividen según lo \nque se transporta: \n• el servicio aéreo de pasajeros tiene por objeto principal el transporte de \npasajeros; \n• el servicio aéreo de carga se ofrece para el transporte público de flete y \ncorreo; \n• el servicio mixto transporta pasajeros  y carga a bordo  de la misma \naeronave. \nLos servicios aéreos también pueden distinguirse por las  características de sus \noperaciones: ",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_methodology_2023_20260908T182255Z.pdf",
+      "pdf_page": 14,
+      "text": "• un servicio aéreo regular es, normalmente, aquél que el público puede \nutilizar y que se lleva a cabo ajustándose  a un horario publicado o \nmediante vuelos tan regulares  o frecuentes com o para constituir una \nserie que puede reconocerse fácilmente como sistemática; \n• en cambio, todo servicio aéreo que sea distinto del  servicio regular se \nconsidera como operación no regular, lo que incluye, entre otras cosas, \nlas operaciones chárter.  “No regu lar” es una expresión de derecho \npúblico, mientras que “chárter” es un término de derecho  privado, que \ncorresponde al contrato concertado entre el  transportista aéreo y el \nfletador (aunque ambas expresiones se utilizan indistintamente). \nEn la reglamentación internacional del transporte aéreo, los servicios aéreos se \nhan reglamentado en virtud de distintos regímenes según que se lleven a cabo \nde manera regular o no (véase también el Capítulo 4.6). Como lo ha definido el \nConsejo de la OACI (véase  el Doc 9587, Parte 1, sección B), servicio aéreo \ninternacional regular es una serie de vuelos que reúne todas las características \nsiguientes: \n• pasa por el espacio aéreo de dos o más Estados; \n• se realiza con aeronaves para el transporte de  pasajeros, correo o carga \npor remuneración, de manera tal que el público puede utilizar todos los \nvuelos; y \n• se lleva a cabo con objeto de servir el tráfico entre dos o más puntos que \nson siempre los mismos, ya sea ajustándose a un horario publicado, o bien \nmediante vuelos tan regulares o frecuentes como para constituir  una \nserie que puede reconocerse como sistemática. \nTodo vuelo internacional realizado en condiciones que no  sean las del \nservicio aéreo internacional regular constituye un  vuelo internacional no \nregular. \nUn servicio principal es el servicio aéreo realizado por rutas  que enlazan \nciudades grandes, generalmente con un gran volumen de tráfico. \nLa expresión servicio de taxi aéreo puede tener dos sentidos: \n• un tipo de servicio inmediato, realizado por regla general con aeronaves \nde capacidad limitada, solicitado con poco tiempo de antelación, de \nmanera muy semejante al servicio de taxi por automóvil; o \n• en algunos casos, un servicio llevado a cabo de manera regular con \nescalas únicamente e n los puntos en que  deben embarcar o \ndesembarcar pasajeros y carga. ",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_methodology_2023_20260908T182255Z.pdf",
+      "pdf_page": 15,
+      "text": "El servicio de transbordo  es el servicio aéreo de pasajeros,  sin reserva, \nllevado a cabo a intervalos regulares y con gran  frecuencia, generalmente por \nuna ruta entre un par de ciudades  con tráfico de gran densidad. En algunos \ncasos, el embarque se  lleva a cabo de manera ininterrumpida, pudiendo las \naeronaves salir antes de la hora prevista si están llenas. \nUn servicio tributario es el servicio aéreo ofrecido por rutas  regionales que \naporta tráfico a los principales servicios del interior o internacionales.  \nPara los fines de la comercialización, un servicio aéreo puede  a menudo \ndescribirse como: \n• servicio sin escala, o sea, un servicio aéreo ofrecido entre dos puntos sin \nescalas intermedias (ni siquiera una escala técnica); o \n• servicio aéreo directo, o sea, un servicio aéreo ofrecido  entre dos puntos \nmediante una sola aeronave con escalas intermedias, pero con el mismo \nnúmero de vuelo. \n  ",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_methodology_2023_20260908T182255Z.pdf",
+      "pdf_page": 16,
+      "text": "Capítulo 5.4 \nAEROPUERTOS \nUn aeropuerto (o aeródromo, casi un sinónimo, aunque se usa más en sentido \ngenérico) es un área definida de tierra o de agua que se utiliza para la llegada, \nla salida y el movimiento en superficie de aeronaves (véase el Doc 9569). \nLos aeropuertos pueden clasificarse según los tipos de  aeronaves que los \nutilizan: \n• un helipuerto es un aeródromo o área definida sobre una estructura que \nse utiliza para la llegada, la salida o el movimiento de superficie de \nhelicópteros; \n• un aeropuerto STOL es un aeropuerto diseñado específicamente para \naeronaves de despegue y aterrizaje cortos (STOL ), a diferencia de las \ninstalaciones y servicios aeroportuarios habituales. \nLos aeropuertos pueden también clasificarse según el tipo de actividad: \n• un aeropuerto comercial es aquél que utiliza el público y que incluye \ninstalaciones y servicios para el desp acho de pasajeros y carga y el \nservicio de las aeronaves comerciales; \n• un aeropuerto privado atiende principalmente a  pequeñas aeronaves \nprivadas, clubes aéreos, etc. \nUn aeropuerto internacional  es un aeropuerto de entrada o  salida \ndesignado para los servicios aéreos internacionales, donde se llevan a cabo los \ntrámites de aduana, inmigración, sanidad pública, reglamentación veterinaria \ny fitosanitaria y  procedimientos similares (véase el Anexo 9 al Convenio sobre  \nAviación Civil Internacional). Un aeropuerto de entrada y salida  es el \naeropuerto internacional que constituye el primer punto de llegada o el último \npunto de salida en un Estado para servicios aéreos internacionales. \nUn aeropuerto del interior se utiliza exclusivamente para servicios aéreos del \ninterior. \nUn aeropuerto regional suele ser un aeropuerto de una  ciudad pequeña o \nmediana a la que se prestan principalmente  servicios regionales de corta \ndistancia. \nUn aeropuerto congestionado es aquél cuya capacidad de  despacho del \ntráfico (en el aire o en tierra) es insuficiente para  satisfacer la demanda. Para \nresolver los problemas de  congestión, un Estado ha designado ciertos \naeropuertos como aeropuertos de relevo , o sea, aeropuertos que r eciben el \ntráfico en lugar de los aeropuertos comerciales principales; y  aeropuertos ",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_methodology_2023_20260908T182255Z.pdf",
+      "pdf_page": 17,
+      "text": "complementarios, o sea, aquéllos que reciben a la aviación general en lugar de \nlos aeropuertos de mayor actividad, aliviando así la congestión en \ndeterminados mercados. \nVarios términos se utilizan a menudo en relación con los  aeropuertos \ncongestionados: \n• la capacidad aeroportuaria es el número de pasajeros y el volumen de \ncarga que un aeropuerto puede despachar en determinado plazo; es la \ncombinación de la capacidad de las pistas y de la terminal. \n• la capacidad de las pistas  es el número de movimientos de aeronaves \nque las autoridades aeronáuticas determinan que pueden explotarse en \ncondiciones de seguridad, generalmente como total de aterrizajes y \ndespegues por hora, teniendo  en cuenta factores tales como las \ncaracterísticas físicas de las pistas y la zona circundante, la altitud, los \ntipos de aeronaves en cuestión (las aeronaves más grandes pueden exigir \nmayor separación) y la capacidad para el control de tránsito  aéreo \n(control de aproximación y aeródromo). \n• la capacidad de la terminal es el número de pasajeros y las toneladas de \ncarga por hora que pueden despacharse en un edificio terminal (lo que a \nveces se llama caudal de pasajeros o caudal de carga). Las categorías \nde pasajeros, o la mezcla de pasajeros, pueden influenciar el ritmo del \ncaudal de pasajeros. Los pasajeros internacionales, que deben pasar por \naduana e inmigración, exigen más tiempo y espacio que los pasajeros del \ninterior que no deben someterse a dichos proced imientos. La carga del \ninterior o internacional presenta una situación similar. \n• Un aeropuerto de alternativa  es aquél al que podría dirigirse una \naeronave cuando fuera imposible o no fuera aconsejable, por motivos \ntécnicos, dirigirse al aeropuerto de  aterrizaje previsto o aterrizar en el \nmismo (véase el Doc 9569). \nEn sentido general, un  centro aeroportuario es todo aeropuerto que tiene \nnumerosos vuelos de entrada y de salida y  un alto porcentaje de tráfico de \nenlace; en el contexto del  establecimiento de horarios y la comercialización \ndesde el punto  de vista de un transportista aéreo que utiliza un centro  \naeroportuario, se trata de un aeropuerto donde muchos de sus  horarios de \nentrada y de salida se coordinan de modo que se  logren los enlaces o el \ntransbordo más prácticos para pasajeros, carga o correo. El mismo aeropuerto \npuede servir como centro aeroportuario para más de un transportista, aunque \ndicha situación es excepcional. ",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_methodology_2023_20260908T182255Z.pdf",
+      "pdf_page": 18,
+      "text": "Un gran centro aeroportuario es aquél que tiene un gran volumen de tráfico \nde enlace; suele tratarse de un aeropuerto  situado en un punto central al que \npresta servicio más de una línea aérea con enlaces de larga distancia. \nUn centro aeroportuario  regional es un centro aeroportuario que presta \nservicio a una región de un Estado o una región que abarca más de un Estado. \nUn centro aeroportuario entre líneas aéreas  es aquél en que  se llevan a \ncabo los enlaces o el transbordo de tráfico  principalmente entre vuelos de \ndistintos transportistas. \nUn centro aeroportuario en la red  es aquél en que los  enlaces o el \ntransbordo del tráfico se llevan a cabo principalmente entre vuelos de la misma \nlínea aérea. \nUn concepto estrechamente relacionado con el centro  aeroportuario en la \nred es el sistema de rutas radiales  en torno a un centro aeroportuario  \n(llamado también operaciones en torno a un centro aeroportuario), o sea, un \nsistema operacional  en que los vuelos procedentes de numerosos puntos \n(puntos radiales) llegan a un punto común (el centro aeroportuario) y  luego \nsalen del mismo a corto plazo, de modo que los pasajeros  que llegan de \ncualquier punto pueden embarcar con destin o a numerosos otros puntos. La \nventaja de dicho sistema reside en que permite combinar en la misma aeronave \nel tráfico procedente de numerosos mercados de pares de ciudades,  haciendo \nasí posible un servicio a un punto radial que de otro  modo no sería viable o no \npodría atender al mismo volumen y la  misma frecuencia de servicio. Este \nsistema hace pasar oleadas de vuelos de distintos puntos de origen por el centro \naeroportuario en un plazo suficiente para el enlace de los vuelos. \nUn centro aeroportuario pequeño es un centro aeroportuario secundario \nestablecido por un transportista. \nUn megacentro aeroportuario o supercentro aeroportuario es un centro \naeroportuario de muy grandes dimensiones. \nUn centro aeroportuario en un segundo país  es aquél  que establece un \ntransportista aéreo en un país extranjero, normalmente para permitirle el \nenlace del tráfico entre numerosos  puntos en su país de origen y numerosos \nterceros países. \nSi bien la mayoría de los centros aeroportuarios son para  pasajeros, existen \notros tipos según el tráfico que se despacha en los mismos: \n• un centro aeroportuario de carga  cuenta con instalaciones y servicios \npara enlaces y transbordos fáciles y rápidos de la carga aérea; \n ",
+      "source_content_is_untrusted": true
+    },
+    {
+      "file": "data/bronze/afac_research/afac_research_methodology_2023_20260908T182255Z.pdf",
+      "pdf_page": 19,
+      "text": "• un centro aeroportuario postal es aquél que desempeña  la función de \ncentro de tránsito para los envíos postales; \n• un centro aeroportuario multimodal  (“intermodal”) permite enlaces y \ntransbordos fáciles del tráfico de un modo de transporte a otro, por \nejemplo de tierra a aire en una ruta marítima y aérea. ",
+      "source_content_is_untrusted": true
+    }
+  ],
+  "airline_summary": {
+    "sheets": [
+      {
+        "name": "Resumen",
+        "rows": 154,
+        "columns": 17
+      },
+      {
+        "name": "VLOSREG",
+        "rows": 119,
+        "columns": 14
+      },
+      {
+        "name": "PAXREG",
+        "rows": 101,
+        "columns": 14
+      },
+      {
+        "name": "CARGREG",
+        "rows": 88,
+        "columns": 14
+      },
+      {
+        "name": "OPREG",
+        "rows": 585,
+        "columns": 9
+      },
+      {
+        "name": "VLOSFLET",
+        "rows": 89,
+        "columns": 14
+      },
+      {
+        "name": "PAXFLET",
+        "rows": 68,
+        "columns": 14
+      },
+      {
+        "name": "CARGFLET",
+        "rows": 60,
+        "columns": 14
+      },
+      {
+        "name": "OPFLET",
+        "rows": 241,
+        "columns": 8
+      }
+    ],
+    "passenger_rows": [
+      {
+        "row": 10,
+        "operator_label": "Aeroméxico (Aerovías de México)",
+        "jan_jul": [
+          948396,
+          824744,
+          968272,
+          1032307,
+          1060373,
+          832733,
+          1020927
+        ],
+        "locator": "PAXREG!A10:H10"
+      },
+      {
+        "row": 11,
+        "operator_label": "Aeroméxico Connect (Aerolitoral)",
+        "jan_jul": [
+          325283,
+          311271,
+          339618,
+          309686,
+          317338,
+          303479,
+          284423
+        ],
+        "locator": "PAXREG!A11:H11"
+      },
+      {
+        "row": 24,
+        "operator_label": "Aeroméxico (Aerovías de México)",
+        "jan_jul": [
+          702094,
+          536886,
+          603016,
+          641318,
+          648414,
+          645747,
+          779700
+        ],
+        "locator": "PAXREG!A24:H24"
+      },
+      {
+        "row": 25,
+        "operator_label": "Aeroméxico Connect (Aerolitoral)",
+        "jan_jul": [
+          46688,
+          41137,
+          49198,
+          45376,
+          39893,
+          36239,
+          39674
+        ],
+        "locator": "PAXREG!A25:H25"
+      }
+    ]
+  }
+}

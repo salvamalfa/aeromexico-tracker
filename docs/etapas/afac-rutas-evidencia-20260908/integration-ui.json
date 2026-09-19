@@ -1,0 +1,20 @@
+{
+  "viewports": [
+    {
+      "width": 1440,
+      "horizontal_overflow": false
+    },
+    {
+      "width": 736,
+      "horizontal_overflow": false
+    },
+    {
+      "width": 360,
+      "horizontal_overflow": false
+    }
+  ],
+  "errors": [],
+  "remote_requests": [],
+  "lhr_source_visible": true,
+  "direction_toggle": true
+}

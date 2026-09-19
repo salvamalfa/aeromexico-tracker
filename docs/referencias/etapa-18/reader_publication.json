@@ -1,0 +1,26 @@
+{
+  "outputs": [
+    {
+      "html_sha256": "6368d2ee5857f9f229ff8a16a881e3c5f5b222619290f4774c9fd9588d9070c6",
+      "output": "C:\\Users\\salva\\Documents\\Codex\\AMEX\\Aeromexico Tracker\\prototypes\\etapa-11\\resumen_ejecutivo.html",
+      "versions": [
+        "26bc91353505dd8b0ec7df38af8dd9d715d92c36ef6a2cbcde8d9e97c2a0aaf1"
+      ],
+      "approval_events": [
+        "af6a96f4a2046a5b6cff08a4df3d11042bf4c3c6acafd8a95ca6218de371ad90"
+      ]
+    },
+    {
+      "html_sha256": "6368d2ee5857f9f229ff8a16a881e3c5f5b222619290f4774c9fd9588d9070c6",
+      "output": "C:\\Users\\salva\\Documents\\Codex\\AMEX\\Aeromexico Tracker\\prototypes\\etapa-18\\resumen_ejecutivo.html",
+      "versions": [
+        "26bc91353505dd8b0ec7df38af8dd9d715d92c36ef6a2cbcde8d9e97c2a0aaf1"
+      ],
+      "approval_events": [
+        "af6a96f4a2046a5b6cff08a4df3d11042bf4c3c6acafd8a95ca6218de371ad90"
+      ]
+    }
+  ],
+  "evidence_archive": "analysis_runs\\quarterly_evidence\\2026Q2\\26bc91353505dd8b0ec7df38af8dd9d715d92c36ef6a2cbcde8d9e97c2a0aaf1",
+  "live_highlight": "SEC blocked automated browser; fragment URLs verified against archived source rows"
+}

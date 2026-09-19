@@ -39,6 +39,46 @@
   const comparisonText = (comparison) => comparison.available ? comparison.display : "No disponible";
   const signedTwoDecimals = (value) => `${value >= 0 ? "+" : ""}${Number(value).toFixed(2)}`;
 
+  function selectedHover(id) {
+    const graph = document.getElementById(id);
+    if (!graph || !graph.data || !graph.getBoundingClientRect().width) return;
+    const label = records[periodIndex.get(activePeriodId)].period_label;
+    const point = graph.data[0].x.indexOf(label);
+    if (point < 0) { Plotly.Fx.unhover(graph); return; }
+    Plotly.Fx.hover(graph, [{curveNumber: 1, pointNumber: point}]);
+  }
+
+  function marginLegend() {
+    const graph = document.getElementById('unit-chart');
+    const svg = graph.querySelector('svg.main-svg');
+    if (!svg) return;
+    let gradient = svg.querySelector('#margin-legend-gradient');
+    if (!gradient) {
+      const ns = 'http://www.w3.org/2000/svg';
+      gradient = document.createElementNS(ns, 'linearGradient');
+      gradient.id = 'margin-legend-gradient';
+      [['0%', colors.green], ['50%', colors.green], ['50%', colors.red], ['100%', colors.red]].forEach(([offset,color]) => {
+        const stop = document.createElementNS(ns,'stop'); stop.setAttribute('offset',offset);stop.setAttribute('stop-color',color);gradient.appendChild(stop);
+      });
+      svg.querySelector('defs').appendChild(gradient);
+    }
+    graph.querySelectorAll('.legend .traces').forEach(row => {
+      if (row.querySelector('.legendtext')?.textContent !== 'Margen unitario') return;
+      row.querySelectorAll('.legendpoints path').forEach(path => {path.style.fill='url(#margin-legend-gradient)';path.style.fillOpacity='1';});
+    });
+  }
+
+  function bindDefaultHover(id) {
+    const graph = document.getElementById(id);
+    if (graph.dataset.defaultHover) return;
+    graph.dataset.defaultHover = 'true';
+    graph.addEventListener('mouseleave', () => selectedHover(id));
+    if (id === 'unit-chart') graph.on('plotly_afterplot', marginLegend);
+  }
+  window.addEventListener('reader-tab-visible', () => {
+    selectedHover('unit-chart');selectedHover('volume-chart');marginLegend();
+  });
+
   function commonLayout(height) {
     return {
       height,
@@ -112,6 +152,10 @@
         hovertemplate: "%{x}<br>CASK %{y:.2f} ¢ USD por ASK-km<extra></extra>",
       },
     ];
+    traces.forEach(trace => {
+      trace.customdata=visibleRecords.map(r=>[r.rask_cents_per_km,r.cask_cents_per_km,signedTwoDecimals(r.unit_margin_cents_per_km)]);
+      trace.hovertemplate='<b>%{x}</b><br>RASK %{customdata[0]:.2f}<br>CASK %{customdata[1]:.2f}<br>Margen unitario %{customdata[2]}<br>¢ USD por asiento-kilómetro<extra></extra>';
+    });
     const layout = commonLayout(365);
     Object.assign(layout, {
       hovermode: "closest",
@@ -145,7 +189,7 @@
         hoverformat: "+.2f",
       },
     });
-    Plotly.react("unit-chart", traces, layout, plotConfig);
+    Plotly.react("unit-chart", traces, layout, plotConfig).then(()=>{bindDefaultHover('unit-chart');marginLegend();selectedHover('unit-chart');});
   }
 
   function renderVolumeMonetization() {
@@ -170,9 +214,14 @@
         hovertemplate: "%{x}<br>RASK %{y:.2f} ¢ USD por ASK-km<extra></extra>",
       },
     ];
+    traces.forEach(trace=>{
+      trace.customdata=records.map(r=>[r.passengers/1e6,r.rask_cents_per_km]);
+      trace.hovertemplate='<b>%{x}</b><br>Pasajeros %{customdata[0]:.2f} M<br>RASK %{customdata[1]:.2f} ¢ USD por asiento-kilómetro<extra></extra>';
+    });
     const layout = commonLayout(315);
     Object.assign(layout, {
       bargap: 0.42,
+      hovermode: 'closest',
       xaxis: {categoryorder: "array", categoryarray: labels, tickangle: -45, tickfont: {size: 8}, showgrid: false},
       yaxis: {
         title: {text: "Pasajeros (M)", font: {size: 10}},
@@ -188,7 +237,7 @@
         tickformat: ".1f",
       },
     });
-    Plotly.react("volume-chart", traces, layout, plotConfig);
+    Plotly.react("volume-chart", traces, layout, plotConfig).then(()=>{bindDefaultHover('volume-chart');selectedHover('volume-chart');});
   }
 
   function renderLoadMonetization(periodId) {
@@ -259,6 +308,19 @@
       const card = document.querySelector(`[data-kpi='${kpi.key}']`);
       if (card) card.setAttribute("aria-label", `${kpi.label}: ${kpi.display_value}`);
     });
+    const record = records[periodIndex.get(view.period_id)];
+    if (record) {
+      const value = `${signedTwoDecimals(record.unit_margin_cents_per_km)} ¢ USD`;
+      setText("kpi-unit_margin_cents_per_km-value", value);
+      setText("kpi-unit_margin_cents_per_km-qoq", comparisonText(view.margin_qoq));
+      setText("kpi-unit_margin_cents_per_km-yoy", comparisonText(view.margin_yoy));
+      [["qoq", view.margin_qoq], ["yoy", view.margin_yoy]].forEach(([suffix, comparison]) => {
+        const node = document.getElementById(`kpi-unit_margin_cents_per_km-${suffix}`);
+        if (node) node.className = `delta-${comparison.direction}`;
+      });
+      const card = document.querySelector("[data-kpi='unit_margin_cents_per_km']");
+      if (card) card.setAttribute("aria-label", `Margen unitario: ${value}`);
+    }
   }
 
   function render(periodId) {
@@ -266,6 +328,9 @@
     if (!view) return;
     updateKpis(view);
     updateNarrative(view);
+    const range = document.getElementById('unit-range');
+    if (!visibleUnitRecords(range.value).some(r=>r.period_id===periodId)) {range.value='all';renderUnitEconomics();}
+    else selectedHover('unit-chart');
     renderVolumeMonetization();
     renderLoadMonetization(periodId);
     setText("period-display", view.period_label);
