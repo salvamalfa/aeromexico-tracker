@@ -244,6 +244,30 @@ Si la puerta de aceptación rechaza esos dos días, no se fuerza el ajuste: se
 amplía a siete días (`--days 7 --budget 1624`) y se vuelven a revisar cobertura,
 operadores y filas no mapeadas antes de decidir el barrido completo.
 
+### Resultado del piloto de dos días
+
+El workflow privado `35470311745` ejecutó el piloto sobre 58 aeropuertos y dos
+días de abril. Consumió 232 llamadas, 464 unidades, y eliminó el contenido del
+proveedor al terminar. La puerta devolvió `REJECT` y no ejecutó el ajuste:
+
+| Métrica | Resultado |
+|---|---:|
+| Rutas cubiertas | 428 de 539 |
+| Pasajeros AFAC representados | 98.1% |
+| Umbral requerido | 99% |
+| `column_scale` | 0.985 |
+| Vuelos vistos frente a AFAC, escalados | 30.4% |
+
+La muestra no observó Magnicharters ni TAR dentro del soporte aceptado. El feed
+también mostró `MXA` en el campo reservado para IATA y `Magnicharter` en
+singular; ambos valores se incorporaron únicamente porque corresponden a
+identidades ya documentadas en el crosswalk. `RFD`, `HU`, `TK` y `CZ`
+permanecen sin mapear: no se les asignará una aerolínea mexicana sin evidencia.
+
+El siguiente paso es la muestra de siete días. Si tampoco alcanza 99% de
+pasajeros o sigue sin observar operadores materiales, se detiene el método antes
+del barrido completo.
+
 No hace falta mantener abierta la sesión externa: sus commits, 89 pruebas,
 fixtures y resultados reproducibles ya fueron recuperados y verificados.
 

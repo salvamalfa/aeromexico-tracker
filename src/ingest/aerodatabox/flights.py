@@ -82,6 +82,8 @@ CARRIER_BY_NAME: dict[str, str] = {
     "aerus": "AERUS",
     "aeromexico connect": "AEROMEXICO_CONNECT",
     "aerolitoral": "AEROMEXICO_CONNECT",
+    "magnicharter": "MAGNICHARTERS",
+    "magnicharters": "MAGNICHARTERS",
     "mexicana": "MEXICANA_NUEVA",
 }
 # Cargo and charter operators that fly domestic legs but are outside AFAC's
@@ -231,14 +233,20 @@ def _carrier_key(flight: dict, stats: PullStats) -> str | None:
     """Resolve the operating carrier, or None if it is outside AFAC's universe."""
 
     airline = flight.get("airline") or {}
+    iata = (airline.get("iata") or "").upper()
     icao = (airline.get("icao") or "").upper()
-    if icao in NON_SCHEDULED_ICAO:
+    if icao in NON_SCHEDULED_ICAO or iata in NON_SCHEDULED_ICAO:
         stats.non_scheduled_dropped += 1
         return None
 
     key = (
-        CARRIER_BY_IATA.get(airline.get("iata") or "")
+        CARRIER_BY_IATA.get(iata)
         or CARRIER_BY_ICAO.get(icao)
+        # The live feed occasionally places a three-letter ICAO code in the
+        # IATA field (MXA was observed this way). Resolve only codes already in
+        # the reviewed crosswalk; never infer an unknown carrier.
+        or CARRIER_BY_ICAO.get(iata)
+        or CARRIER_BY_IATA.get(icao)
         or CARRIER_BY_NAME.get((airline.get("name") or "").strip().lower())
     )
     if key is None:
