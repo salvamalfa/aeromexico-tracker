@@ -90,10 +90,10 @@ El tarifario vigente ofrece Starter por USD 19 al mes, 40,000 unidades, cinco
 solicitudes por segundo, ventanas FIDS de 12 horas y hasta 180 días de histórico.
 El endpoint Tier 2 consume dos unidades.
 
-Con 58 aeropuertos, dos ventanas diarias y 92 días del trimestre, el máximo
+Con 58 aeropuertos, dos ventanas diarias y 91 días del trimestre, el máximo
 teórico es:
 
-`58 × 2 × 92 × 2 = 21,344 unidades`.
+`58 × 2 × 91 × 2 = 21,112 unidades`.
 
 Cabe en Starter. El plan externo cita 6,960 unidades por mes, cifra consistente
 con 58 aeropuertos, no con el piloto declarado de 40. Es necesario generar el
@@ -210,15 +210,39 @@ formar parte de la implementación.
 
 ## Preparación para continuar
 
-El repositorio local ya permite implementar la arquitectura y el piloto. Antes
-de consumir unidades o publicar resultados hacen falta:
+El repositorio público y su respaldo privado ya permiten ejecutar el piloto.
+El código externo fue integrado y las puertas previas de caché, cancelaciones,
+operadores e identificación de estimaciones están resueltas. Antes de consumir
+unidades o publicar resultados hacen falta:
 
-1. recuperar los commits/patch del código que el plan afirma haber construido;
-2. una clave de AeroDataBox guardada como secreto, después de elegir el plan;
-3. confirmación del proveedor sobre publicación del agregado mensual ruta ×
+1. contratar el plan y guardar `AERODATABOX_API_KEY` como secreto del entorno;
+2. ejecutar primero los tres `--dry-run` de 2T26 y después una muestra de dos
+   días de abril con presupuesto máximo explícito;
+3. confirmar con el proveedor la publicación del agregado mensual ruta ×
    operador, si se pretende versionarlo;
 4. aceptar explícitamente que el producto será una estimación y no pasajeros
    observados por celda.
+
+El barrido completo de 2T26 cabe en 21,112 unidades:
+
+```powershell
+.venv\Scripts\python.exe -m src.ingest.aerodatabox 2026M04 --dry-run  # 6,960
+.venv\Scripts\python.exe -m src.ingest.aerodatabox 2026M05 --dry-run  # 7,192
+.venv\Scripts\python.exe -m src.ingest.aerodatabox 2026M06 --dry-run  # 6,960
+```
+
+Abril debe capturarse primero: el 1 de abril rebasa la ventana histórica
+documentada de 180 días el 28 de septiembre de 2026.
+
+Después de configurar la clave, la primera llamada deliberada será:
+
+```powershell
+.venv\Scripts\python.exe -m src.ingest.aerodatabox 2026M04 --days 2 --budget 464
+```
+
+Si la puerta de aceptación rechaza esos dos días, no se fuerza el ajuste: se
+amplía a siete días (`--days 7 --budget 1624`) y se vuelven a revisar cobertura,
+operadores y filas no mapeadas antes de decidir el barrido completo.
 
 No hace falta mantener abierta la sesión externa: sus commits, 89 pruebas,
 fixtures y resultados reproducibles ya fueron recuperados y verificados.
@@ -239,22 +263,22 @@ Comprobaciones independientes realizadas:
 - el `--dry-run` calcula 7,192 unidades para 58 aeropuertos y julio completo;
 - la entrega no contiene una llave de API.
 
-La entrega está preservada y la sesión externa ya no es necesaria. Antes de
-usar una cuota pagada hay cuatro reparaciones locales:
+La entrega está preservada y la sesión externa ya no es necesaria. Las cuatro
+reparaciones identificadas durante la revisión ya están en `master`:
 
-1. La caché guarda respuestas crudas sin vencimiento en `data/cache/`, ruta que
-   tampoco está ignorada. Debe excluirse de Git y aplicar borrado máximo a siete
-   días para Starter.
-2. La consulta pide `withCancelled=true` y el normalizador no identifica ni
-   excluye cancelaciones. Debe conservar la distinción entre operación realizada
-   y programación.
-3. El adaptador no reconoce todavía los códigos propios `5D`/`SLI` de
-   Aeroméxico Connect, aunque el crosswalk general del proyecto sí los conoce;
-   tampoco puede tratar silenciosamente un modelo de aeronave faltante como
+1. `data/cache/` está ignorado y las respuestas crudas vencen y se purgan a los
+   siete días.
+2. La consulta pide `withCancelled=false` y el normalizador descarta además una
+   cancelación que llegue de forma defensiva, registrando el conteo.
+3. El adaptador reconoce `5D` y `SLI` como Aeroméxico Connect; un vuelo `AM` sin
+   modelo de aeronave queda sin mapear y nunca se asigna silenciosamente a
    Aerovías de México.
-4. `is_exact` no debe derivarse solo de que la semilla muestre un operador. Esa
-   condición depende también de cobertura completa y del mismo universo AFAC;
-   hasta demostrarlo, todas las celdas del IPF permanecen estimadas.
+4. `is_exact` permanece falso y la salida del CLI fija `is_estimated = True`
+   hasta que exista evidencia suficiente de cobertura y universo compatibles.
+
+La validación final ejecutó 85 pruebas focalizadas del adaptador, IPF y puerta
+de aceptación, además de la suite completa: 429 aprobadas. Los `--dry-run` de
+abril, mayo y junio confirmaron 6,960, 7,192 y 6,960 unidades respectivamente.
 
 El manifiesto SHA-256 del handoff tiene dos discrepancias en las copias de los
 crosswalks por normalización LF/CRLF. Los contenidos coinciden con los archivos
