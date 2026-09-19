@@ -5,10 +5,11 @@ Fecha de revisión: 2026-09-19.
 ## Decisión
 
 Sí es correcto usar GitHub como fuente común para que un agente de nube pueda
-inspeccionar y modificar el proyecto cuando la PC local esté apagada. El
-repositorio ya tiene un remoto público; el problema actual es que una parte
-importante del trabajo de Vuelos y Analysis Agent sigue sin commit en la rama
-local.
+inspeccionar y modificar el proyecto cuando la PC local esté apagada. El código,
+los contratos, Gold y artefactos públicos están integrados en `master` por el
+PR #10, commit `652172dd8c5836849345bb980f797c47186b5de8`. Los insumos privados
+están respaldados por separado en el repositorio privado
+[`salvamalfa/aeromexico-tracker-data`](https://github.com/salvamalfa/aeromexico-tracker-data).
 
 GitHub debe contener código, contratos, documentación, Gold públicos y
 artefactos generados aprobados. No debe convertirse en copia de secretos,
@@ -30,37 +31,26 @@ regenerables demasiado grandes.
 | `analysis_runs/` | No | Es el expediente autoritativo local de aprobación y publicación |
 | caché/respuestas crudas de APIs pagadas | No | La licencia puede limitar retención y redistribución |
 
-## Estado actual que hay que resolver antes de subir
+## Estado confirmado al 2026-09-19
 
-La rama local `stage-11-executive-prototype` parte de una historia anterior y,
-después de actualizar `origin/master` el 2026-09-19, está ocho commits por
-delante y 33 por detrás. El remoto ya contiene los cinco PRs del estimador de
-Claude y cuatro PRs posteriores que modifican únicamente el HTML estático de
-Vuelos. El checkout local conserva además un conjunto grande de archivos
-modificados y no rastreados que abarca los generadores de Vuelos y las etapas
-12–18.
+- El checkout público está limpio y `master` coincide con `origin/master` en
+  `652172dd8c5836849345bb980f797c47186b5de8`.
+- La suite integrada terminó con 429 pruebas aprobadas antes de la entrega.
+- El repositorio privado contiene 1,879 archivos y 1,278,880,052 bytes bajo Git
+  LFS, con manifiesto SHA-256.
+- Un clon nuevo del respaldo pasó `git lfs fsck`, verificó los 1,879 hashes y
+  restauró todos los archivos sin incluir `.env`.
+- La copia de `warehouse.duckdb` se recreó lógicamente: conserva 43 tablas, 21
+  vistas y los conteos por tabla del original, y omite páginas físicas obsoletas.
+- La alerta de secret scanning del Parquet Gold fue revisada y cerrada como
+  falso positivo; no había coincidencia en ninguna celda lógica.
 
-No conviene hacer push directo de este árbol a `master`. La secuencia segura es:
-
-1. Guardar el estado actual en uno o más commits temáticos sin mezclar secretos
-   ni temporales.
-2. Actualizar la referencia remota y crear una rama de integración desde el
-   `origin/master` vigente.
-3. Integrar los commits locales, resolver los archivos generados desde su
-   generador y ejecutar toda la suite.
-4. Abrir un PR que muestre por separado código/pipeline, Gold públicos,
-   documentación y el artefacto estático.
-5. Publicar únicamente después de revisión humana.
-
-El repositorio contiene aproximadamente 148 MiB de objetos sueltos en este
-checkout. `data/gold/bridge_record_lineage.parquet` ronda 59 MiB: queda debajo
-del límite duro de 100 MiB por archivo de GitHub, pero supera el umbral donde
-GitHub suele advertir. Antes del PR conviene compactar la historia local y
-evaluar si ese puente puede particionarse o reducirse sin perder trazabilidad.
+El detalle reproducible está en
+[`docs/etapas/entrega-github-datos-privados-20260919.md`](etapas/entrega-github-datos-privados-20260919.md).
 
 ## Qué podrá hacer un agente de nube
 
-Con el estado pendiente ya versionado, podrá:
+Con acceso únicamente al repositorio público, un agente podrá:
 
 - entender la arquitectura y ejecutar la suite sobre Gold públicos;
 - modificar ingestas, transformaciones, contratos y generadores;
@@ -68,7 +58,7 @@ Con el estado pendiente ya versionado, podrá:
 - preparar un adaptador y un `--dry-run` para una API;
 - trabajar mediante PRs comparables y auditables.
 
-No podrá, por diseño:
+Sin acceso al respaldo privado no podrá:
 
 - reconstruir Bronze o Silver de fuentes manuales que no estén disponibles;
 - usar una API pagada sin una clave configurada como secreto del entorno;
@@ -76,11 +66,30 @@ No podrá, por diseño:
 - aprobar o republicar Analysis Agent sin el expediente autorizado de
   `analysis_runs/`.
 
-Esta última frontera no deja al agente ciego respecto al código o al dashboard;
-impide que una copia pública suplante una aprobación privada. Si se necesita
-regeneración completa en nube, debe diseñarse un paquete público y sanitizado de
-entradas de publicación, separado del ledger autoritativo. No debe resolverse
-subiendo `analysis_runs/` completo.
+Un agente autorizado para ambos repositorios puede restaurar Bronze, Silver,
+quality, analytics, warehouse, modelos y `analysis_runs/`. Esa disponibilidad
+no cambia su licencia ni el significado de las aprobaciones: el contenido
+privado no debe copiarse al repositorio público y una restauración no autoriza
+publicación.
+
+## Restauración del respaldo privado
+
+En Windows, usa una ruta corta y habilita rutas largas para el clon:
+
+```powershell
+git -c core.longpaths=true clone https://github.com/salvamalfa/aeromexico-tracker-data.git C:\amx-data
+git -C C:\amx-data config core.longpaths true
+git -C C:\amx-data lfs pull
+Set-Location C:\amx-data
+python verify_snapshot.py
+python restore_snapshot.py --target "C:\ruta\al\Aeromexico Tracker"
+```
+
+El repositorio privado excluye `.env`, secretos de Streamlit, cachés, logs,
+temporales y entornos virtuales. Las claves deben configurarse en los secretos
+del entorno nuevo. Cada actualización del snapshot debe volver a revisar
+licencias, credenciales, manifiesto y restauración; Git LFS contabiliza cada
+versión nueva de un objeto.
 
 ## Proveedores pagados y GitHub
 
