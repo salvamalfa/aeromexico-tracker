@@ -48,6 +48,14 @@ ventanas, unidades estimadas y destinos de escritura.
 - `prototypes/`: artefactos HTML generados para revisión.
 - `docs/etapas/`: decisiones, resultados, limitaciones y evidencia de cada etapa.
 
+Los insumos privados y regenerables tienen un respaldo separado en
+[`salvamalfa/aeromexico-tracker-data`](https://github.com/salvamalfa/aeromexico-tracker-data).
+Ese repositorio debe permanecer privado y requiere Git LFS. Un agente con acceso
+explícito puede clonarlo, ejecutar `verify_snapshot.py` y restaurarlo sobre un
+checkout público con `restore_snapshot.py`. Nunca copies su contenido a un PR
+del repositorio público ni asumas que acceso al código implica acceso a los
+datos o autorización para publicarlos.
+
 Edita el generador, no solo el HTML generado. El dashboard integrado principal
 se produce con `src/analysis_agent/stage18.py::consumer_html` y
 `src/analysis_agent/reader_ui.py`; `build_stage11.py` por sí solo no reproduce
@@ -101,12 +109,12 @@ frontera actual.
 
 ## Analysis Agent y aprobación
 
-`analysis_runs/` contiene el estado local autoritativo de borradores,
-aprobaciones y publicaciones, y está ignorado deliberadamente. No fabriques una
-aprobación a partir del HTML ni cambies el estado del Analysis Agent para hacer
-pasar una prueba. Un clon de nube puede inspeccionar y modificar el código, los
-Gold y los artefactos públicos, pero no puede aprobar o republicar un análisis
-sin un expediente autorizado.
+`analysis_runs/` contiene el estado autoritativo de borradores, aprobaciones y
+publicaciones, y está ignorado en el repositorio público. Existe una copia en el
+respaldo privado para continuidad y recuperación. No fabriques una aprobación a
+partir del HTML ni cambies el estado del Analysis Agent para hacer pasar una
+prueba. Restaurar el expediente permite reproducir su estado; no concede por sí
+solo autorización para aprobar o republicar un análisis.
 
 No publiques el dashboard, no hagas push a `master`, no actives evidencia y no
 consumas una API pagada salvo que el usuario lo haya pedido explícitamente.
