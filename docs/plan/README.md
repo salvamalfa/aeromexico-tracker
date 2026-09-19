@@ -38,6 +38,9 @@ agente se detiene, presenta entregables y espera aprobación explícita del usua
 | `10-etapa-8-dashboard.md` | Etapa 8 — Streamlit + ECharts, narrativa de negocio, despliegue | Etapa 8 |
 | `14-etapa-9-saneamiento-backend.md` | Etapa 9 — orquestación, linaje, calidad y contratos | Etapa 9 |
 | `15-etapa-10-estructura-datos.md` | Etapa 10 — página interactiva de estructura y linaje | Etapa 10 |
+| `16-etapa-11-prototipo-resumen-ejecutivo.md` | Etapa 11 — prototipo HTML funcional del resumen ejecutivo | Etapa 11 |
+| `17-analysis-agent-plan.md` | Analysis Agent — plan acordado y aprobaciones de Etapas 12–20 | Antes de desarrollar el agente |
+| `18-etapa-12-especificacion-diagnostico.md` | Etapa 12 — contratos, diagnóstico de 22 trimestres y maqueta local | Etapa 12 |
 | `11-glosario-kpis.md` | Glosario completo de KPIs con fórmula, fuente e interpretación de negocio. **Es el insumo de texto del dashboard.** | Etapas 1, 6, 7, 8 |
 | `12-computer-use-playbook.md` | Cómo y cuándo usar computer use, reglas de seguridad, procedimientos por sitio | Etapas 1, 3, 5, 7 |
 | `13-criterios-de-aceptacion.md` | Definition of Done por etapa, checklist de validación, cifras ancla para verificar | Al cerrar cada etapa |
@@ -84,6 +87,10 @@ Si algo de la Etapa 1 queda a medias, no se avanza; se reporta y se pide instruc
 | 8 | Dashboard | Streamlit + ECharts + narrativa | 3-4 sesiones |
 | 9 | Saneamiento backend | Orquestación, linaje, calidad, contratos y modelo Gold | 2-3 sesiones |
 | 10 | Estructura de datos | Embudo interactivo, esquema Gold y trazabilidad comprensible | 1-2 sesiones |
+| 11 | Prototipo resumen ejecutivo | HTML local, compacto y conectado al backend validado | 1-2 sesiones |
+| 12 | Especificación y diagnóstico del agente | Contratos documentales, cobertura y maqueta para revisión | Según revisión humana |
+| 13 | Cobertura financiera histórica | Extracción verificable, conciliaciones y fichas de reportes | Pendiente de revisión humana |
+| 14–20 | Analysis Agent | Extracción, evidencia, cálculos, analista, auditor, integración, histórico y operación | Una etapa a la vez; ver plan acordado |
 
 ---
 
@@ -93,3 +100,13 @@ Toda cifra que este plan cita como "ancla de validación" proviene de una invest
 previa y **debe reverificarse contra la fuente primaria** durante la ejecución. Si una
 cifra ancla no coincide con lo que el agente descarga, eso es una señal de que la fuente
 cambió, no de que el agente deba forzar el resultado. Reportarlo, no ajustarlo.
+
+- [Etapa 13 — Cobertura financiera histórica](19-etapa-13-cobertura-financiera.md)
+
+- [Etapa 14 — Evidencia temporal](20-etapa-14-evidencia-temporal.md)
+
+- [Etapa 15 — Motor cuantitativo](21-etapa-15-motor-cuantitativo.md)
+
+- [Etapa 16 — Analista en Codex](22-etapa-16-analista-codex.md)
+
+- [Etapa 17 — Auditoría y aprobación versionada](23-etapa-17-auditoria-aprobacion.md)

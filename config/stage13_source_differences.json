@@ -1,0 +1,44 @@
+[
+  {
+    "period_id": "2024Q3",
+    "metric_key": "fuel_liters",
+    "ir_value": 461976000.0,
+    "current_value": 461394000.0,
+    "ir_source_hash": "9c040f8f523a5dd53197112ebd3709aa45c65b0dbc04aa47a26f788b3f315152",
+    "current_source_hash": "942c6005d9a1b38a021fab446d950398bb227d38072646779be012f69eb19ce6",
+    "current_source": "sec/filings/0001193125-25-276200/sec_0001193125-25-276200_d39921dex992_0001193125-25-276200_20260820T184058Z.htm",
+    "current_excerpt": [
+      "Total liters of fuel (‘000) 453,547 461,394 (1.7 )% 1,319,298 1,314,963 0.3 %"
+    ],
+    "resolution": "preserve_separate_source_versions",
+    "explanation": "Diferencia confirmada entre el reporte IR 3T24 y el comparativo SEC 3T25. El documento posterior no identifica la causa del cambio en litros; mantener versiones separadas y no sustituir evidencia al corte."
+  },
+  {
+    "period_id": "2024Q3",
+    "metric_key": "net_income",
+    "ir_value": 195000000.0,
+    "current_value": 211000000.0,
+    "ir_source_hash": "9c040f8f523a5dd53197112ebd3709aa45c65b0dbc04aa47a26f788b3f315152",
+    "current_source_hash": "942c6005d9a1b38a021fab446d950398bb227d38072646779be012f69eb19ce6",
+    "current_source": "sec/filings/0001193125-25-276200/sec_0001193125-25-276200_d39921dex992_0001193125-25-276200_20260820T184058Z.htm",
+    "current_excerpt": [
+      "Net income for the period 97 211 -54.0 % 187 557 -66.5 %"
+    ],
+    "resolution": "preserve_separate_source_versions",
+    "explanation": "Diferencia confirmada entre IR 3T24 y el comparativo SEC 3T25. A precisión de millones publicados: resultado antes de impuestos 254→255 e impuesto 59→44; el neto cambia 195→211. La identidad explica 16 millones; el motivo de la revisión no está explicitado en el comunicado posterior."
+  },
+  {
+    "period_id": "2024Q3",
+    "metric_key": "income_tax",
+    "ir_value": 59000000.0,
+    "current_value": 44000000.0,
+    "ir_source_hash": "9c040f8f523a5dd53197112ebd3709aa45c65b0dbc04aa47a26f788b3f315152",
+    "current_source_hash": "942c6005d9a1b38a021fab446d950398bb227d38072646779be012f69eb19ce6",
+    "current_source": "sec/filings/0001193125-25-276200/sec_0001193125-25-276200_d39921dex992_0001193125-25-276200_20260820T184058Z.htm",
+    "current_excerpt": [
+      "Income tax 24 44 -44.7 % 47 62 -24.6 %"
+    ],
+    "resolution": "preserve_separate_source_versions",
+    "explanation": "Diferencia confirmada entre IR 3T24 y el comparativo SEC 3T25. A precisión de millones publicados: resultado antes de impuestos 254→255 e impuesto 59→44; el neto cambia 195→211. La identidad explica 16 millones; el motivo de la revisión no está explicitado en el comunicado posterior."
+  }
+]

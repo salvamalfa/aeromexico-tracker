@@ -29,6 +29,30 @@ def build_warehouse(*, max_stage: int = 6) -> list[str]:
             if sql_stage > max_stage:
                 continue
             connection.execute(sql_path.read_text(encoding="utf-8"))
+        # Optional validated route extensions survive every warehouse reconstruction.
+        # They intentionally remain outside the Stage 9 core contract, but the
+        # Vuelos payload and their focused lineage tests consume them from DuckDB.
+        route_extensions = (
+            "fact_aicm_international_scheduled_route_movements",
+            "bridge_aicm_international_slot_lineage",
+            "fact_aifa_shared_route_presence",
+            "bridge_aifa_shared_route_presence_lineage",
+            "fact_domestic_exclusive_market_inferences",
+            "bridge_domestic_exclusive_market_lineage",
+            "fact_domestic_scheduled_route_movements",
+            "bridge_domestic_slot_lineage",
+            "fact_international_route_observations",
+            "bridge_international_route_lineage",
+            "fact_oma_documented_routes",
+            "bridge_oma_documented_route_lineage",
+        )
+        for name in route_extensions:
+            path = PATHS.gold / f"{name}.parquet"
+            if path.exists():
+                connection.execute(
+                    f"CREATE TABLE {name} AS SELECT * FROM read_parquet(?)",
+                    [str(path)],
+                )
         views = [row[0] for row in connection.execute(
             "SELECT table_name FROM information_schema.views WHERE table_schema = 'main' ORDER BY table_name"
         ).fetchall()]

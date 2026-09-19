@@ -1,0 +1,26 @@
+[
+  {
+    "width": 360,
+    "bullets": 5,
+    "detail_font_px": 13,
+    "emphasis": 9,
+    "technical_sections_removed": true,
+    "errors": []
+  },
+  {
+    "width": 736,
+    "bullets": 5,
+    "detail_font_px": 13,
+    "emphasis": 9,
+    "technical_sections_removed": true,
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "bullets": 5,
+    "detail_font_px": 13,
+    "emphasis": 9,
+    "technical_sections_removed": true,
+    "errors": []
+  }
+]

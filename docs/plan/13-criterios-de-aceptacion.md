@@ -313,6 +313,68 @@ visual explícita.
 
 ---
 
+## Etapa 11 — Prototipo HTML del resumen ejecutivo
+
+**Obligatorio:**
+- [x] Existe una sola vista ejecutiva; no se generan páginas adicionales.
+- [x] Los datos proceden de `v_aeromexico_quarterly` y el HTML no contiene una segunda
+      serie trimestral mantenida manualmente.
+- [x] Se incluyen todos los trimestres comparables disponibles en Gold, sin rellenar
+      periodos ni comparaciones faltantes.
+- [x] Las cinco tarjetas muestran RASK, CASK, ASK, factor de ocupación y pasajeros, con
+      comparaciones QoQ y YoY correctamente tipadas.
+- [x] Factor de ocupación usa puntos porcentuales; el margen unitario usa centavos por
+      ASK-km y reconcilia con `RASK - CASK`.
+- [x] Las flechas anterior/siguiente actualizan tarjetas, lectura ejecutiva y énfasis
+      visual en las gráficas, y se deshabilitan en los extremos de la serie.
+- [x] La gráfica principal compara RASK y CASK y muestra el margen unitario con línea
+      cero visible.
+- [x] Las gráficas de pasajeros/RASK y ocupación/RASK conservan grano trimestral,
+      unidades explícitas y tooltips con periodo.
+- [x] La lectura ejecutiva se ubica inmediatamente debajo de los KPI y muestra un
+      placeholder explícito hasta que exista output aprobado del agente trimestral.
+- [x] El historial narrativo genérico no se presenta; la tabla trimestral permanece
+      desplegable e incorpora variaciones QoQ con signo y color.
+- [x] RASK, CASK y margen identifican explícitamente centavos de USD en tarjetas,
+      ejes, narrativas y tooltips; los tooltips limitan el margen a dos decimales.
+- [x] La gráfica principal ofrece historia completa y ventanas de 12, 8 o 4
+      trimestres, con etiquetas horizontales y adaptación móvil.
+- [x] El trimestre seleccionado conserva el círculo de énfasis en el scatter sin
+      añadir una serie redundante a la leyenda.
+- [x] El HTML es autocontenido, funciona sin red y no contiene CDN, fetch, XHR,
+      WebSocket, rutas absolutas, credenciales ni correo SEC.
+- [x] El resultado pasa QA visual en escritorio, 736 px y 360 px, sin overflow ni
+      colisiones.
+- [x] Las cifras visibles reconcilian exactamente con el warehouse y las pruebas
+      anteriores permanecen verdes.
+- [x] `docs/etapas/etapa-11-reporte.md` documenta alcance, validaciones, límites y el
+      gate para Streamlit.
+
+**No se cierra la etapa si:** se copian cifras del HTML de referencia, se presenta ASK
+como precio, se inventa un histórico 2021–2024, una comparación faltante aparece como
+cero, el archivo requiere internet o se modifica/despliega Streamlit.
+
+---
+
+## Etapa 12 — Especificación y diagnóstico del Analysis Agent
+
+- [x] Plan 12–20 y contratos documentales guardados con límites y aprobaciones.
+- [x] Matriz de 22 trimestres reconciliada con el warehouse y exportada a JSON/CSV.
+- [x] Presencia de datos, integridad de artefactos y elegibilidad temporal separadas.
+- [x] Comparativos de reportes posteriores identificados, sin adoptar filing como corte IR.
+- [x] 22 comunicados locales comprobados por SHA-256; sin nuevas descargas.
+- [x] Maqueta local de resumen/detalle/fuentes, explícitamente ilustrativa.
+- [x] Navegación trimestral, estados simulados y matriz funcionales.
+- [x] Pruebas enfocadas y regresión verdes; originales sin modificación.
+- [x] QA escritorio, 736 px y 360 px; teclado y consola comprobados.
+- [x] Reporte con brechas, decisiones y límites entregado.
+- [x] Usuario acepta alcance, formato y criterios; autoriza Etapa 13 el 2026-09-05.
+
+**No cerrar formalmente ni avanzar a Etapa 13** sin aceptación humana. Esta etapa
+no acredita cortes históricos, genera análisis ni aprueba contenido trimestral.
+
+---
+
 ## Checklist transversal (aplica a todas las etapas)
 
 - [ ] Ningún dato inventado, estimado sin marcar, o rellenado para que cuadre
@@ -322,3 +384,35 @@ visual explícita.
 - [ ] El código nuevo tiene tests
 - [ ] `git commit` con mensaje descriptivo al cerrar la etapa
 - [ ] El reporte de etapa está escrito **antes** de presentar al usuario
+
+## Etapa 13 — Cobertura financiera histórica
+
+- [x] 18 reportes verificados por hash, 299 registros originales con localizadores.
+- [x] 252 campos objetivo: 214 extraídos; 38 ausencias o variantes documentadas.
+- [x] Moneda original, conversiones, signos, precisión y definiciones conservados.
+- [x] 94 conciliaciones correctas y 64 comparaciones contra el estado previo.
+- [x] Tres diferencias documentales de 3T24 identificadas; causa pendiente explícita.
+- [x] Extracción idempotente, contrato Silver y pipeline integrados.
+- [x] 217 pruebas pasan; HTML portátil verificado y cuaderno reproducible entregado.
+- [x] Usuario acepta Etapa 13, faltantes históricos y elección documental de 3T24 (2026-09-05).
+- [x] Usuario autoriza expresamente Etapa 14 (2026-09-05).
+
+## Etapa 14 — Evidencia temporal
+
+- [x] Registro de publicación/versiones separado de ingesta, con pruebas localizables.
+- [x] Paquetes cerrados por corte, sin fuentes posteriores ni versiones no verificadas.
+- [x] 2T26 elegible con contexto acotado; 1T21 bloqueado de forma explícita.
+- [x] Valores, escala, referencias, fragmentos y anexo SEC comprobados contra originales.
+- [x] Paquetes inmutables fuera de directorios regenerados, escritura atómica e idempotencia.
+- [x] Dossier local, pruebas y cuaderno reproducible entregados.
+- [x] Usuario acepta Etapa 14 y autoriza Etapa 15.
+
+## Etapa 15 — Motor cuantitativo
+
+- [x] Conversiones, comparaciones calendario y cambios absolutos/porcentuales/pp.
+- [x] Puentes de spread, ingresos y gasto de combustible con referencias.
+- [x] Tolerancias y diferencias de alcance visibles, sin forzar identidades.
+- [x] Evidencia original intacta, resultados versionados y cuaderno ejecutado.
+- [x] 250 pruebas pasan y HTML local verificado en tres anchos.
+- [ ] Usuario acepta las cinco diferencias de costo/ASK y las restricciones asociadas.
+- [ ] Usuario acepta Etapa 15 y autoriza Etapa 16.

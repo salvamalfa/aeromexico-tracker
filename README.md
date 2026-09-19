@@ -16,16 +16,24 @@ El dashboard publicado presenta tres vistas integradas: Lectura ejecutiva, Econo
 
 Los valores exactos del despliegue y su validación están en [la guía de publicación](docs/deploy-streamlit.md). La aplicación corre con Python **3.13** y no utiliza secretos.
 
+Para trabajar desde un clon local o con agentes de nube, consulta
+[`AGENTS.md`](AGENTS.md) y la [guía de desarrollo desde GitHub](docs/cloud-development.md).
+
 ![Dashboard público integrado](docs/assets/dashboard/public-dashboard.png)
 
 Para recorrer el argumento completo, consulta [el recorrido narrado](docs/dashboard-recorrido.md).
 
 ## Estado
 
+**Analysis Agent:** Etapas 12–14 aceptadas. La [Etapa 15](docs/etapas/etapa-15-reporte.md)
+está implementada y pendiente de revisión humana: [cálculos, puentes y fuentes](prototypes/etapa-15/quantitative_review.html).
+El motor utiliza evidencia congelada de 2T26 y conserva las diferencias de alcance pendientes.
+Todavía no se redactan ni publican análisis trimestrales.
+
 Las **Etapas 0 a 10 están completas**. La página `Estructura de datos` fue aprobada visualmente, publicada y comprobada mediante su enlace profundo público.
 
-- 31 tablas Gold y 28 datasets Silver validados por contrato.
-- 186 pruebas automatizadas.
+- 31 tablas Gold y 30 datasets Silver validados por contrato.
+- 334 pruebas automatizadas.
 - 15/15 controles específicos de la página `Estructura de datos`.
 - 18/18 controles específicos del dashboard.
 - 11/11 vistas locales ejecutadas sin excepciones; la candidata se verificó en escritorio, 736 px, 360 px y temas claro/oscuro.
@@ -88,6 +96,11 @@ data/gold/       31 Parquet consolidados y versionados
 Las tablas gold sí se versionan porque son los extractos públicos y compactos que consume el deploy. Bronze y silver siguen fuera de Git. Los hashes, URL y metadata de cada descarga viven en `data/bronze/_manifest.jsonl`; los cambios de contenido se registran en `_restatements.jsonl`.
 
 ## Datos y documentación
+
+El Analysis Agent tiene una [lectura de 2T26 auditada para revisión local](prototypes/etapa-17/audited_analysis.html),
+una [skill del proyecto](.agents/skills/aeromexico-tracker-analysis/SKILL.md) y
+[comandos de autoría](docs/analysis-agent/analista-v1.md). Etapa 17 pendiente de
+aceptación; el análisis está validado, pero todavía no aprobado ni integrado al dashboard.
 
 - [Diccionario de tablas y columnas](docs/diccionario-datos.md)
 - [Diccionario de conceptos XBRL](docs/diccionario-conceptos-xbrl.md)

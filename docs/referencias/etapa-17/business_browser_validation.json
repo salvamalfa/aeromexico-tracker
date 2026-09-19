@@ -1,0 +1,32 @@
+[
+  {
+    "width": 360,
+    "bullets": 4,
+    "bold_leads": 4,
+    "overflow": false,
+    "modals": true,
+    "comparison": true,
+    "network_requests": [],
+    "errors": []
+  },
+  {
+    "width": 736,
+    "bullets": 4,
+    "bold_leads": 4,
+    "overflow": false,
+    "modals": true,
+    "comparison": true,
+    "network_requests": [],
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "bullets": 4,
+    "bold_leads": 4,
+    "overflow": false,
+    "modals": true,
+    "comparison": true,
+    "network_requests": [],
+    "errors": []
+  }
+]

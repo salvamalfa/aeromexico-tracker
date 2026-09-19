@@ -8,7 +8,7 @@ from src.config import PATHS
 
 
 def test_every_physical_silver_dataset_is_declared() -> None:
-    assert len(validate_all_silver()) == 28
+    assert len(validate_all_silver()) == 30
 
 
 def test_every_silver_contract_declares_grain_and_lineage_type() -> None:
