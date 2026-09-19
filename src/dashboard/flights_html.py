@@ -58,12 +58,14 @@ def render_flights_panel(payload: dict[str, Any]) -> str:
       </section>
       <section aria-labelledby="network-title">
         <div class="section-heading network-heading">
-          <div><p class="section-kicker">Red de vuelos</p><h2 id="network-title">Rutas nacionales</h2><p class="route-network-note" id="route-network-note">Movimientos de slots AICM y mercados adicionales atribuidos a Aeroméxico con fuentes de ruta.</p></div>
+          <div><p class="section-kicker">Red de vuelos</p><h2 id="network-title">Rutas nacionales</h2></div>
         </div>
         <div class="network-mode-switch" role="group" aria-label="Tipo de red">
-          <button type="button" id="network-mode-domestic" aria-pressed="true">Nacional · rutas</button>
+          <button type="button" id="network-mode-domestic" aria-pressed="true">Nacional</button>
           <button type="button" id="network-mode-international" aria-pressed="false">Internacional</button>
+          <div class="network-region-switch" id="network-region-switch" role="group" aria-label="Región internacional" hidden></div>
         </div>
+        <div class="network-volume" id="network-volume" hidden></div>
         <div class="network-layout">
           <article class="panel flow-map-panel" id="map-panel">
             <div class="map-detail-layout">
@@ -74,7 +76,6 @@ def render_flights_panel(payload: dict[str, Any]) -> str:
             </div>
           </article>
         </div>
-        <div class="aena-activity" id="aena-airport-activity" aria-live="polite"></div>
       </section>
 
       <section aria-labelledby="mix-title">
@@ -243,12 +244,14 @@ def render_flights_html(payload: dict[str, Any]) -> str:
     </section>
     <section aria-labelledby="network-title">
       <div class="section-heading network-heading">
-        <div><p class="section-kicker">Red de vuelos</p><h2 id="network-title">Rutas nacionales</h2><p class="route-network-note" id="route-network-note">Movimientos de slots AICM y mercados adicionales atribuidos a Aeroméxico con fuentes de ruta.</p></div>
+        <div><p class="section-kicker">Red de vuelos</p><h2 id="network-title">Rutas nacionales</h2></div>
       </div>
       <div class="network-mode-switch" role="group" aria-label="Tipo de red">
-        <button type="button" id="network-mode-domestic" aria-pressed="true">Nacional · rutas</button>
+        <button type="button" id="network-mode-domestic" aria-pressed="true">Nacional</button>
         <button type="button" id="network-mode-international" aria-pressed="false">Internacional</button>
+        <div class="network-region-switch" id="network-region-switch" role="group" aria-label="Región internacional" hidden></div>
       </div>
+      <div class="network-volume" id="network-volume" hidden></div>
       <div class="network-layout">
         <article class="panel flow-map-panel" id="map-panel">
           <div class="map-detail-layout">
@@ -259,7 +262,6 @@ def render_flights_html(payload: dict[str, Any]) -> str:
           </div>
         </article>
       </div>
-      <div class="aena-activity" id="aena-airport-activity" aria-live="polite"></div>
     </section>
 
     <section aria-labelledby="mix-title">

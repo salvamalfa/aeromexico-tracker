@@ -14,8 +14,8 @@ Two traps are encoded here rather than left to the caller:
   the within-route proportions the seed exists to carry, so only the operating
   carrier is kept.
 
-Every response is cached on disk keyed by airport and window.  API units are
-spent once; re-running the pull is free.
+Every response is cached on disk keyed by airport and window.  Provider terms
+limit raw-response retention, so cache files expire after seven days.
 """
 
 from __future__ import annotations
@@ -52,11 +52,14 @@ MAX_WINDOW_HOURS = 12
 UNITS_PER_CALL = 2
 # Basic allows one request per second; stay under it.
 MIN_SECONDS_BETWEEN_CALLS = 1.1
+# AeroDataBox permits raw API contents to be cached for at most seven days.
+MAX_CACHE_AGE_SECONDS = 7 * 24 * 60 * 60
 
 # IATA code to the project's carrier_key.  Mexico's scheduled domestic carriers
 # only; anything else is foreign or charter and is dropped with a count.
 CARRIER_BY_IATA: dict[str, str] = {
     "AM": "AEROMEXICO",          # split from Connect below, by fleet
+    "5D": "AEROMEXICO_CONNECT",
     "Y4": "VOLARIS",
     "VB": "VIVA_AEROBUS",
     "YQ": "TAR",
@@ -67,6 +70,7 @@ CARRIER_BY_IATA: dict[str, str] = {
 # the feed does carry.  Mexicana likewise publishes under codes that vary.
 CARRIER_BY_ICAO: dict[str, str] = {
     "AMX": "AEROMEXICO",
+    "SLI": "AEROMEXICO_CONNECT",
     "VOI": "VOLARIS",
     "VIV": "VIVA_AEROBUS",
     "TQR": "TAR",
@@ -76,6 +80,8 @@ CARRIER_BY_ICAO: dict[str, str] = {
 }
 CARRIER_BY_NAME: dict[str, str] = {
     "aerus": "AERUS",
+    "aeromexico connect": "AEROMEXICO_CONNECT",
+    "aerolitoral": "AEROMEXICO_CONNECT",
     "mexicana": "MEXICANA_NUEVA",
 }
 # Cargo and charter operators that fly domestic legs but are outside AFAC's
@@ -110,10 +116,32 @@ class PullStats:
     missing_arrival: int = 0
     non_scheduled_dropped: int = 0
     aircraft_model_missing: int = 0
+    cancelled_dropped: int = 0
+    expired_cache_files: int = 0
 
 
 def _cache_path(cache_dir: Path, iata: str, start: str) -> Path:
     return cache_dir / f"{iata}_{start.replace(':', '')}.json"
+
+
+def _cache_is_fresh(path: Path, *, now: float | None = None) -> bool:
+    if not path.exists():
+        return False
+    current = time.time() if now is None else now
+    return current - path.stat().st_mtime <= MAX_CACHE_AGE_SECONDS
+
+
+def purge_expired_cache(cache_dir: Path, *, now: float | None = None) -> int:
+    """Delete raw responses older than the provider's seven-day limit."""
+
+    if not cache_dir.exists():
+        return 0
+    removed = 0
+    for path in cache_dir.glob("*.json"):
+        if not _cache_is_fresh(path, now=now):
+            path.unlink()
+            removed += 1
+    return removed
 
 
 def api_credentials(
@@ -157,9 +185,12 @@ def fetch_window(
     """One airport, one window of at most 12 hours, cached on disk."""
 
     path = _cache_path(cache_dir, iata, start)
-    if path.exists():
+    if _cache_is_fresh(path):
         stats.cached_calls += 1
         return json.loads(path.read_text())
+    if path.exists():
+        path.unlink()
+        stats.expired_cache_files += 1
 
     base_url, headers = api_credentials(api_key, direct=direct)
     params = {
@@ -167,7 +198,7 @@ def fetch_window(
         # Required: without it a departure record carries no arrival airport
         # at all, so the route is unknowable and the pull is wasted.
         "withLeg": "true",
-        "withCancelled": "true",
+        "withCancelled": "false",
         "withCodeshared": "false",
         "withCargo": "false",
         "withPrivate": "false",
@@ -221,7 +252,8 @@ def _carrier_key(flight: dict, stats: PullStats) -> str | None:
     model = (flight.get("aircraft") or {}).get("model")
     if not model:
         stats.aircraft_model_missing += 1
-        return key
+        stats.unmapped_carriers["AM:aircraft_model_missing"] += 1
+        return None
     return "AEROMEXICO_CONNECT" if CONNECT_FLEET.search(model) else key
 
 
@@ -246,6 +278,9 @@ def normalise(
         origin, day = key if isinstance(key, tuple) else (key, None)
         weight = 1.0 if day_weights is None else float(day_weights.get(day, 1.0))
         for flight in flights:
+            if str(flight.get("status") or "").strip().lower() in {"canceled", "cancelled"}:
+                stats.cancelled_dropped += 1
+                continue
             if flight.get("isCargo"):
                 stats.cargo_dropped += 1
                 continue
@@ -297,6 +332,7 @@ def pull_days(
     del base_url
 
     stats = PullStats()
+    stats.expired_cache_files = purge_expired_cache(cache_dir)
     raw: dict[tuple[str, date], list[dict]] = {}
     last_call = 0.0
     with httpx.Client(timeout=90.0) as client:

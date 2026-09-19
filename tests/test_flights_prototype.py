@@ -205,11 +205,11 @@ def test_review_html_is_self_contained_accessible_and_responsive() -> None:
     assert embedded == standalone_flight_payload(_payload())
     text = soup.get_text(" ", strip=True)
     assert "Rutas nacionales" in text
-    assert "Nacional · rutas" in text
+    assert "Nacional" in text
     assert "Internacional" in text
     assert "Pasajeros y contribución por segmento" in text
     assert text.index("Rutas nacionales") < text.index("Mezcla nacional e internacional")
-    assert "Movimientos de slots AICM" in text
+    assert "Movimientos de slots AICM" not in text
     assert "fuera del paquete histórico 2T26" in text
     app_script = soup.select_one("script[data-runtime='flights-review']").string.lower()
     assert 'name: "total"' in app_script
@@ -225,7 +225,7 @@ def test_review_html_is_self_contained_accessible_and_responsive() -> None:
     assert 'ordered.slice(0, 12)' in app_script
     assert "route_networks" in app_script
     assert 'hoverinfo: "skip"' in app_script
-    assert '.on("plotly_click"' not in app_script
+    assert '.on("plotly_click"' in app_script
     assert 'const importance = "passengers"' in app_script
     assert "pinnedairport" in app_script
     assert "renderairporttooltip" in app_script
@@ -248,8 +248,8 @@ def test_review_html_is_self_contained_accessible_and_responsive() -> None:
     assert "selectairportfromsearch" in app_script
     assert "setnetworkview" not in app_script
     assert "renderroutelist" not in app_script
-    assert "coverage-gap" in app_script
-    assert "falta" in app_script and "missingmonths" in app_script
+    assert "coveragedothtml" in app_script
+    assert "coveragemonths" in app_script
     assert "%{customdata[4]:.1%}" in app_script
     assert "%{customdata[5]:.1%}" in app_script
     assert "no disponible" in app_script

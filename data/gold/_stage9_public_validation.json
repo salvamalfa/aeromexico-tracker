@@ -9,7 +9,7 @@
   "lineage_coverage": 1.0,
   "lineage_records_declared": 278127,
   "lineage_records_expected": 278127,
-  "pipeline_registry_sha256": "80104f12fc357f6cf2170e753c058f95309d79cc3c2d66905825ab58ca36ea32",
+  "pipeline_registry_sha256": "2486f5b69222ded372e9a11fd1c20c812069fa931cd23c84938eafa7ede42d1d",
   "quality_issue_count": 287,
   "quality_ledger_sha256": "9bbc54f98e5a8d0a2de9df0db60b73b92d2c204e3ce975ce49a9f5524176dbf8",
   "record_table_rows": {

@@ -203,9 +203,9 @@ def write_outputs(diagnosis: dict[str, Any], output: Path = OUTPUT,
     output.mkdir(parents=True, exist_ok=True)
     html_output.parent.mkdir(parents=True, exist_ok=True)
     (output / "diagnostico.json").write_text(json.dumps(diagnosis, ensure_ascii=False,
-        sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+        sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8", newline="\n")
     with (output / "cobertura.csv").open("w", newline="", encoding="utf-8-sig") as stream:
-        writer = csv.writer(stream)
+        writer = csv.writer(stream, lineterminator="\n")
         writer.writerow(["period_id", "operating", "financial", "costs", "verified_releases",
                          "fx_months", "fuel_months", "afac_months", "airport_months_with_any_data",
                          "airport_group_months_with_any_data", "any_peer_revenue", "cutoff_date",
@@ -217,7 +217,7 @@ def write_outputs(diagnosis: dict[str, Any], output: Path = OUTPUT,
                     "airport_months_with_any_data", "airport_group_months_with_any_data")],
                 row["context"]["any_peer_revenue"], "", row["temporal_status"],
                 ";".join(c["filing_date"] or "" for c in row["sec_candidates"]), ";".join(row["gaps"])])
-    html_output.write_text(render_html(diagnosis), encoding="utf-8")
+    html_output.write_text(render_html(diagnosis), encoding="utf-8", newline="\n")
 
 
 def main() -> None:
