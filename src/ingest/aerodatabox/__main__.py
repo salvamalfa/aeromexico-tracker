@@ -158,7 +158,7 @@ def main(argv: list[str] | None = None) -> int:
     print()
     print(format_report(report))
 
-    if not report.accepted and not args.fit_rejected_seed:
+    if not report.usable and not args.fit_rejected_seed:
         print(
             "\nLa semilla no pasa la prueba de aceptacion, asi que no se ajusta.\n"
             "Repite con --fit-rejected-seed solo para diagnostico, nunca para publicar.",
@@ -174,6 +174,12 @@ def main(argv: list[str] | None = None) -> int:
         carrier_totals[carrier_totals["period_id"] == args.period_id],
     )
     estimate["is_estimated"] = True
+    estimate["seed_acceptance_verdict"] = report.verdict
+    estimate["seed_passenger_coverage"] = report.passenger_coverage
+    estimate["seed_missing_carriers"] = "|".join(report.missing_carriers)
+    estimate["seed_missing_carrier_passenger_share"] = (
+        report.missing_carrier_passenger_share
+    )
     estimate.to_parquet(out / f"route_carrier_estimate_{args.period_id}.parquet")
     print(f"\nestimacion: {len(estimate):,} celdas ruta x aerolinea")
     print(diagnostics.to_string(index=False))
