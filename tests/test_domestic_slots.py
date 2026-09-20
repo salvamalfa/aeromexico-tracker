@@ -40,13 +40,18 @@ def test_domestic_map_shows_reconciled_estimates_for_every_queried_month():
     assert len(network["routes"]) == 56
     assert network["represented_passengers"] == pytest.approx(3_831_996.712046853)
     assert network["represented_movements"] is None
+    assert network["represented_departures_estimated"] > 0
     assert network["availability"] == "complete"
     assert set(payload["domestic_monthly_networks"]) == {
         "2026M03", "2026M04", "2026M05", "2026M06", "2026M07",
     }
     assert all(route["passengers_estimated"] for route in network["routes"])
     assert all(route["passengers"] > 0 for route in network["routes"])
-    assert all(route["departures"] is route["seats"] is route["load_factor"] is None
+    assert network["capacity_complete_route_count"] > 0
+    assert network["load_factor_route_count"] > 0
+    assert any(route["departures"] is not None and route["seats"] is not None
+               for route in network["routes"])
+    assert all(route["load_factor"] is None or 0 <= route["load_factor"] <= 1
                for route in network["routes"])
     dual_operator = next(route for route in network["routes"] if route["market_key"] == "MEX<>MTY")
     assert {item["carrier_label"] for item in dual_operator["monthly"]} == {

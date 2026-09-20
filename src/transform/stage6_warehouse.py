@@ -40,6 +40,7 @@ def build_warehouse(*, max_stage: int = 6) -> list[str]:
             "fact_domestic_exclusive_market_inferences",
             "bridge_domestic_exclusive_market_lineage",
             "fact_route_carrier_domestic_estimate",
+            "fact_aeromexico_domestic_capacity_estimate",
             "fact_domestic_scheduled_route_movements",
             "bridge_domestic_slot_lineage",
             "fact_international_route_observations",

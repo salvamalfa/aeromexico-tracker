@@ -76,7 +76,11 @@ def test_domestic_passenger_estimates_are_monthly_retrospective_and_bounded() ->
         assert all(route["passengers_estimated"] for route in network["routes"])
         assert all(route["passengers_low"] <= route["passengers"] <= route["passengers_high"]
                    for route in network["routes"])
-        assert all(route["departures"] is None for route in network["routes"])
+        assert any(route["departures"] is not None for route in network["routes"])
+        assert all(route["departures_estimated"] == route["capacity_complete"]
+                   for route in network["routes"])
+        assert all(route["load_factor"] is None or 0 <= route["load_factor"] <= 1
+                   for route in network["routes"])
     assert monthly["2026M03"]["routes"][0]["support_repair_applied"] is True
     assert any(not item["support_observed_in_period"]
                for route in monthly["2026M07"]["routes"] for item in route["monthly"])

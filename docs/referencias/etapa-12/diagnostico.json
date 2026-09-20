@@ -40,7 +40,7 @@
     "sec_filing_documents.parquet": "ecb38f9968f26cce20ecbbdab272142aa021f479fb98e32cf6f8113fd5a1b7f7",
     "sec_filings_index.parquet": "65dc9086b736021680bffd78e2127101f3a025d64315940223e4a8d9bae68029",
     "sec_report_text.parquet": "e6495c12b0b9cc98e89501a7feca1b3a9788ce4b0bfafac4f0bb33648a2c041d",
-    "warehouse": "b310ea1419289d38859d278412d9f7b82fb220b5e7f1dfd0001789a25aef6072"
+    "warehouse": "492d4dbf12fe6bfb50a84f80a52e8c9dce16d6dff531b694bbce8c44910651cd"
   },
   "publication_fields_in_artifact_catalog": [],
   "purpose": "diagnosis_not_analysis",
