@@ -64,6 +64,24 @@ def test_monthly_passenger_chart_uses_complete_afac_gold_and_sums_segments() -> 
     assert not any(item["agent_eligible"] for item in series["records"])
 
 
+def test_domestic_passenger_estimates_are_monthly_retrospective_and_bounded() -> None:
+    payload = _payload()
+    monthly = payload["domestic_monthly_networks"]
+    assert list(monthly) == ["2026M03", "2026M04", "2026M05", "2026M06", "2026M07"]
+    for period_id, network in monthly.items():
+        assert network["period_id"] == period_id
+        assert network["mode"] == "estimated_domestic"
+        assert network["agent_eligible"] is False
+        assert network["observed_months"] == [period_id]
+        assert all(route["passengers_estimated"] for route in network["routes"])
+        assert all(route["passengers_low"] <= route["passengers"] <= route["passengers_high"]
+                   for route in network["routes"])
+        assert all(route["departures"] is None for route in network["routes"])
+    assert monthly["2026M03"]["routes"][0]["support_repair_applied"] is True
+    assert any(not item["support_observed_in_period"]
+               for route in monthly["2026M07"]["routes"] for item in route["monthly"])
+
+
 def test_t100_network_is_bounded_and_never_claims_global_coverage() -> None:
     payload = _payload()
     network = payload["route_network"]
@@ -192,6 +210,7 @@ def test_review_html_is_self_contained_accessible_and_responsive() -> None:
     assert soup.select_one("#network-summary") is None
     assert soup.select_one(".scope-banner") is None
     assert soup.select_one("#quarter-status") is None
+    assert soup.select_one("#network-month-switch")["aria-label"] == "Mes nacional"
     assert soup.select_one("#airport-tooltip")["role"] == "region"
     assert soup.select_one("#route-profile") is None
     assert soup.select_one("#concentration") is None
@@ -236,7 +255,10 @@ def test_review_html_is_self_contained_accessible_and_responsive() -> None:
     assert "route-direction-detail" in app_script
     assert 'aria-expanded="false"' in app_script
     assert "detail.hidden = expanded" in app_script
-    assert "pasajeros</th><th>asientos</th><th>vuelos</th><th>ocupación" in app_script
+    assert "pasajeros estimados" in app_script
+    assert "domestic_monthly_networks" in app_script
+    assert "rango de sensibilidad" in app_script
+    assert "aeroméxico connect" in document.lower()
     assert 'const defaultairport = "mex"' in app_script
     assert 'key === "load_factor"' in app_script
     assert "direction.passengers / direction.seats" in app_script
@@ -265,6 +287,8 @@ def test_review_html_is_self_contained_accessible_and_responsive() -> None:
     assert "#map-panel { display: none; }" not in css
     assert ".route-change-chip" in css
     assert ".route-table-total strong { font-size: 10.9px; }" in css
+    assert ".network-month-switch" in css
+    assert ".route-estimate-total" in css
 
 
 def test_html_contains_no_machine_path_or_project_secret() -> None:
@@ -279,7 +303,7 @@ def test_generated_review_matches_current_renderer() -> None:
     assert DEFAULT_OUTPUT.exists()
     assert DEFAULT_OUTPUT.read_text(encoding="utf-8") == render_flights_html(_payload())
     # Includes the pinned 285 KB Plotly topology so file:// never calls a CDN.
-    assert DEFAULT_OUTPUT.stat().st_size < 6_500_000
+    assert DEFAULT_OUTPUT.stat().st_size < 7_500_000
     main = PATHS.root / "prototypes" / "etapa-11" / "resumen_ejecutivo.html"
     assert main.exists()
     assert DEFAULT_OUTPUT.resolve() != main.resolve()

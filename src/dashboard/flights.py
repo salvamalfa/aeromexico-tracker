@@ -577,9 +577,13 @@ def build_flight_payload(database_path: str | Path | None = None) -> dict[str, A
             for record in quarters
         }
         from src.dashboard.international_routes import extend_networks
-        from src.dashboard.domestic_routes import load_domestic_networks
+        from src.dashboard.domestic_routes import (
+            load_domestic_monthly_networks,
+            load_domestic_networks,
+        )
         international_networks = extend_networks(connection, route_networks)
         domestic_networks = load_domestic_networks(connection, quarters)
+        domestic_monthly_networks = load_domestic_monthly_networks(connection)
         route_network = {
             **route_networks[PILOT_PERIOD],
             "world_geometry": _load_world_geometry(),
@@ -623,6 +627,13 @@ def build_flight_payload(database_path: str | Path | None = None) -> dict[str, A
             "source_id": "afac-gold-current",
             "name": "AFAC Gold consolidado · pasajeros mensuales",
             "source_system": "AFAC / Gold local",
+            "available_at_cutoff": False,
+        },
+        {
+            "source_id": "afac-aerodatabox-route-carrier-estimate",
+            "name": "AFAC + AeroDataBox · pasajeros nacionales estimados por ruta y operador",
+            "source_system": "AFAC / AeroDataBox via RapidAPI / modelo IPF temporal",
+            "source_url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404",
             "available_at_cutoff": False,
         },
         {
@@ -670,6 +681,7 @@ def build_flight_payload(database_path: str | Path | None = None) -> dict[str, A
         "route_networks": route_networks,
         "international_networks": international_networks,
         "domestic_networks": domestic_networks,
+        "domestic_monthly_networks": domestic_monthly_networks,
         "forecast": forecast,
         "sources": sources,
         "agent_eligibility": {
@@ -680,6 +692,7 @@ def build_flight_payload(database_path: str | Path | None = None) -> dict[str, A
                 "international_routes": "ANAC, Aerocivil y CAA: las versiones actuales no acreditan disponibilidad al corte histórico.",
                 "aicm_slots": "El PDF descargado hoy conserva una fecha interna anterior al corte, pero no acredita que esta versión exacta estuviera publicada el 13 de julio de 2026; además son slots programados.",
                 "afac": "No hay versión certificada disponible al corte dentro de este paquete.",
+                "domestic_route_carrier_estimate": "Estimación retrospectiva AFAC + AeroDataBox; no existía ni estaba aprobada al corte histórico y permanece fuera del Analysis Agent.",
                 "forecast": forecast.get("eligibility_reason", "No disponible."),
                 "announced_routes": "No existe una fuente estructurada, versionada y fechada.",
                 "marketing_carrier": "T-100 identifica al operador/reportante, no al comercializador.",
