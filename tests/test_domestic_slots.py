@@ -7,6 +7,7 @@ import json
 
 import duckdb
 import pandas as pd
+import pytest
 
 from src.config import PATHS
 from src.dashboard.flights import build_flight_payload
@@ -31,27 +32,28 @@ def test_aicm_bronze_silver_gold_reconcile_and_preserve_scope():
         assert connection.execute("SELECT count(*) FROM dim_source_artifact WHERE artifact_sha256 = ?", [source_hash]).fetchone()[0] == 1
 
 
-def test_domestic_map_contains_routes_without_fabricating_passengers():
+def test_domestic_map_shows_reconciled_estimates_for_every_queried_month():
     payload = build_flight_payload()
     network = payload["domestic_networks"]["2026Q2"]
-    assert network["mode"] == "scheduled_domestic"
+    assert network["mode"] == "estimated_domestic"
     assert network["agent_eligible"] is False
     assert len(network["routes"]) == 56
-    assert network["scheduled_movements"] == 31_098
-    assert network["attributed_market_movements"] == 364
-    assert network["presence_only_route_count"] == 8
-    assert network["represented_movements"] == 31_462
-    by_destination = {route["destination"]["iata"]: route for route in network["routes"]
-                      if route["origin"]["iata"] == "MEX"}
-    assert {code: by_destination[code]["departures"] for code in ("CUN", "MTY", "GDL")} == {
-        "CUN": 2_704, "MTY": 2_510, "GDL": 2_030,
+    assert network["represented_passengers"] == pytest.approx(3_831_996.712046853)
+    assert network["represented_movements"] is None
+    assert network["availability"] == "complete"
+    assert set(payload["domestic_monthly_networks"]) == {
+        "2026M03", "2026M04", "2026M05", "2026M06", "2026M07",
     }
-    scheduled = [route for route in network["routes"] if route["operation_status"] == "assigned_slot_not_flown"]
-    assert len(scheduled) == 45
-    for route in scheduled:
-        assert route["operation_status"] == "assigned_slot_not_flown"
-        assert route["passengers"] is route["seats"] is route["load_factor"] is None
-        assert sum(direction["departures"] for direction in route["directions"]) == route["departures"]
+    assert all(route["passengers_estimated"] for route in network["routes"])
+    assert all(route["passengers"] > 0 for route in network["routes"])
+    assert all(route["departures"] is route["seats"] is route["load_factor"] is None
+               for route in network["routes"])
+    dual_operator = next(route for route in network["routes"] if route["market_key"] == "MEX<>MTY")
+    assert {item["carrier_label"] for item in dual_operator["monthly"]} == {
+        "Aerovías de México", "Aeroméxico Connect",
+    }
     consumer = integration_flight_payload(payload)
-    assert len(consumer["domestic_networks"]["2026Q2"]["routes"]) == 56
+    assert consumer["domestic_networks"] == {}
+    assert set(consumer["domestic_monthly_networks"]) == set(payload["domestic_monthly_networks"])
+    assert consumer["domestic_monthly_networks"]["2026M07"]["routes"][0]["passengers_estimated"] is True
     assert {item["airport_iata"] for item in consumer["route_networks"]["2026Q2"]["aena_airport_activity"]} == {"MAD", "BCN"}

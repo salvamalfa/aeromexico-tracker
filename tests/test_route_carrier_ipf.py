@@ -9,7 +9,9 @@ from src.analytics.route_carrier import (
     UnmappedSeedError,
     backtest_against_t100,
     build_seed_from_flights,
+    augment_seed_with_temporal_support,
     estimate_route_carrier,
+    estimate_route_carrier_with_temporal_support,
     fit_ipf,
     load_afac_domestic_margins,
     load_carrier_crosswalk,
@@ -224,6 +226,99 @@ def test_estimate_requires_the_documented_seed_columns() -> None:
 
     with pytest.raises(ValueError, match="carrier_key"):
         estimate_route_carrier(seed, route_totals, carrier_totals)
+
+
+def _temporal_support_fixture(source_period: str = "2025M02") -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    seed = pd.DataFrame(
+        [
+            ("2025M01", "R1", "A", 10.0),
+            ("2025M01", "R2", "B", 10.0),
+            (source_period, "R1", "B", 8.0),
+        ],
+        columns=["period_id", "route_key", "carrier_key", "weight"],
+    )
+    route_totals = pd.DataFrame(
+        [("2025M01", "R1", 100.0), ("2025M01", "R2", 100.0)],
+        columns=["period_id", "route_key", "passengers"],
+    )
+    carrier_totals = pd.DataFrame(
+        [("2025M01", "A", 50.0), ("2025M01", "B", 150.0)],
+        columns=["period_id", "carrier_key", "passengers"],
+    )
+    return seed, route_totals, carrier_totals
+
+
+def test_temporal_support_is_borrowed_from_the_nearest_observed_month() -> None:
+    seed, route_totals, carrier_totals = _temporal_support_fixture()
+
+    repaired = augment_seed_with_temporal_support(
+        seed, "2025M01", route_totals, carrier_totals,
+        max_month_gap=1, borrowed_weight_multiplier=0.1,
+    )
+
+    borrowed = repaired[
+        repaired["route_key"].eq("R1") & repaired["carrier_key"].eq("B")
+    ].iloc[0]
+    assert borrowed["weight"] == pytest.approx(0.8)
+    assert not bool(borrowed["support_observed_in_period"])
+    assert borrowed["support_source_periods"] == "2025M02"
+    assert borrowed["support_month_gap"] == 1
+
+
+def test_temporal_fit_repairs_incompatible_sample_support_and_reconciles() -> None:
+    seed, route_totals, carrier_totals = _temporal_support_fixture()
+
+    estimate, diagnostics, support = estimate_route_carrier_with_temporal_support(
+        seed, route_totals, carrier_totals, "2025M01"
+    )
+
+    assert bool(diagnostics.loc[0, "converged"])
+    assert bool(diagnostics.loc[0, "support_repair_applied"])
+    assert diagnostics.loc[0, "support_max_month_gap"] == 1
+    assert diagnostics.loc[0, "support_imputed_cells"] == 1
+    assert (~support["support_observed_in_period"]).sum() == 1
+    assert estimate.groupby("route_key")["passengers_estimated"].sum().to_dict() == pytest.approx(
+        {"R1": 100.0, "R2": 100.0}
+    )
+    assert estimate.groupby("carrier_key")["passengers_estimated"].sum().to_dict() == pytest.approx(
+        {"A": 50.0, "B": 150.0}
+    )
+    assert (estimate["passengers_estimated_low"] <= estimate["passengers_estimated"]).all()
+    assert (estimate["passengers_estimated"] <= estimate["passengers_estimated_high"]).all()
+
+
+def test_temporal_fit_uses_two_month_support_only_when_one_month_is_insufficient() -> None:
+    seed, route_totals, carrier_totals = _temporal_support_fixture("2025M03")
+
+    with pytest.raises(InfeasibleMarginsError, match="through 1 month"):
+        estimate_route_carrier_with_temporal_support(
+            seed, route_totals, carrier_totals, "2025M01", max_month_gap=1
+        )
+
+    _, diagnostics, _ = estimate_route_carrier_with_temporal_support(
+        seed, route_totals, carrier_totals, "2025M01", max_month_gap=2
+    )
+    assert bool(diagnostics.loc[0, "converged"])
+    assert diagnostics.loc[0, "support_max_month_gap"] == 2
+
+
+def test_temporal_fit_leaves_an_already_convergent_month_unmodified() -> None:
+    seed, route_totals, carrier_totals = _tidy_fixture()
+
+    estimate, diagnostics, support = estimate_route_carrier_with_temporal_support(
+        seed, route_totals, carrier_totals, "2025M01"
+    )
+
+    assert bool(diagnostics.loc[0, "converged"])
+    assert not bool(diagnostics.loc[0, "support_repair_applied"])
+    assert diagnostics.loc[0, "support_imputed_cells"] == 0
+    assert support["support_observed_in_period"].all()
+    assert np.allclose(
+        estimate["passengers_estimated"], estimate["passengers_estimated_low"]
+    )
+    assert np.allclose(
+        estimate["passengers_estimated"], estimate["passengers_estimated_high"]
+    )
 
 
 # --------------------------------------------------------------------------
