@@ -414,6 +414,67 @@ antes de considerarlo portable. La salida de la suite y los propios parches
 también contienen espacios finales; es higiene documental, no un fallo del
 estimador.
 
+## Corridas ampliadas de 2026 y cierre de consumo
+
+El 20 de septiembre de 2026 se ejecutó el lote autorizado en el orden solicitado:
+mayo, junio, enero, febrero y marzo. Mayo, junio y marzo completaron 812 llamadas
+cada uno. Enero y febrero fueron rechazados por el endpoint en la primera ventana
+de ACA con HTTP 400 y no se reintentaron. Después se consultó julio como el
+siguiente mes de 2026 con marginales AFAC disponibles. El workflow privado quedó
+de nuevo en estado `disabled_manually`.
+
+| Periodo | Cobertura de rutas AFAC | Cobertura de pasajeros | Ajuste IPF | Uso permitido |
+|---|---:|---:|---|---|
+| 2026M01 | No disponible | No disponible | No ejecutado | Fuera de la ventana histórica observada |
+| 2026M02 | No disponible | No disponible | No ejecutado | Fuera de la ventana histórica observada |
+| 2026M03 | 438 de 539 | 98.9% | No convergió en 5,000 iteraciones | Semilla y conteos reutilizables; estimación solo diagnóstica |
+| 2026M04 | 453 de 539 | 98.948% | Convergió en 25 iteraciones | Estimación parcial utilizable bajo el umbral aprobado de 95% |
+| 2026M05 | 449 de 526 | 99.1% | Convergió en 33 iteraciones | Estimación parcial utilizable bajo el umbral aprobado de 95% |
+| 2026M06 | 498 de 568 | 98.9% | No convergió en 5,000 iteraciones | Semilla y conteos reutilizables; estimación solo diagnóstica |
+| 2026M07 | 494 de 558 | 98.9% | No convergió en 5,000 iteraciones | Semilla y conteos reutilizables; estimación solo diagnóstica |
+
+La cobertura superior a 95% permite conservar la semilla como evidencia útil,
+pero no corrige por sí sola un ajuste que no converge. Por eso marzo, junio y
+julio conservan su estimación para diagnóstico sin declararla apta para el
+dashboard. Abril y mayo sí cumplen conjuntamente cobertura y convergencia. Esto
+todavía no basta para formar un trimestre 2T26 publicable: junio requiere reparar
+y volver a validar el ajuste sin volver a comprar los datos crudos.
+
+El rechazo de enero y febrero con la misma consulta que funciona desde marzo es
+evidencia empírica de la frontera histórica disponible el día de la captura. Todo
+2025 queda antes de esa frontera, por lo que no se gastaron unidades en sondearlo.
+
+Los paquetes derivados permanentes de marzo a julio están en el repositorio
+privado. Incluyen conteos agregados ruta × operador, semilla, estimación,
+diagnósticos, linaje y manifiestos; no contienen respuestas JSON ni filas de
+vuelo. Se verificaron tamaño y SHA-256 de los 35 archivos versionados. El
+[PR privado 9](https://github.com/salvamalfa/aeromexico-tracker-data/pull/9)
+corrigió el único hash obsoleto, correspondiente al `lineage.json` de abril. Las
+respuestas y tablas normalizadas vuelo por vuelo permanecen solo en
+artefactos transitorios de siete días.
+
+El conteo reproducible de consumo es:
+
+| Corrida | Llamadas HTTP | Unidades |
+|---|---:|---:|
+| Abril, muestra de dos días | 232 | 464 |
+| Abril, primera muestra de siete días | 812 | 1,624 |
+| Abril, repetición retenida de siete días | 812 | 1,624 |
+| Marzo, mayo, junio y julio | 3,248 | 6,496 |
+| Enero y febrero rechazados | 2 | 0 a 4 |
+| **Total** | **5,106** | **10,208 a 10,212** |
+
+El cliente cuenta dos unidades por cada intento una vez que recibe respuesta,
+incluidos los dos HTTP 400, así que su libro interno marca **10,212 unidades**.
+El portal de RapidAPI no estaba autenticado en el entorno de revisión y no se
+pudo comprobar si esos dos errores fueron facturados; por eso el consumo de la
+cuenta se conserva como un rango de cuatro unidades. Sobre una cuota de 50,000,
+quedan entre 39,788 y 39,792 unidades.
+
+Estas corridas solo amplían evidencia retrospectiva. No modifican la elegibilidad
+histórica al corte del 13 de julio de 2026, no sustituyen `N/D`, no activan
+`flight_evidence_v1` y no cambian el dashboard ni el Analysis Agent.
+
 ## Fuentes del proveedor revisadas
 
 - [API Pricing](https://aerodatabox.com/pricing/)
