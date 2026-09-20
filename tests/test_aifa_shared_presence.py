@@ -37,5 +37,9 @@ def test_aifa_routes_are_estimated_without_reusing_all_carrier_movements():
     assert network["represented_movements"] is None
     for key in expected:
         assert routes[key]["passengers"] > 0
-        assert routes[key]["departures"] is None
+        assert routes[key]["capacity_estimated"] == (routes[key]["departures"] is not None)
+        if routes[key]["departures"] is not None:
+            assert routes[key]["departures_estimated"] is True
+            assert routes[key]["seats"] > 0
+        assert "AeroDataBox" in routes[key]["source_label"]
         assert routes[key]["operation_status"] == "estimated_from_afac_margins_and_temporal_support"

@@ -112,22 +112,53 @@ def integration_flight_payload(payload: dict[str, Any]) -> dict[str, Any]:
     def endpoint(value: dict[str, Any]) -> dict[str, Any]:
         return {key: value[key] for key in endpoint_keys}
 
+    def compact_number(value: Any, digits: int = 1) -> Any:
+        return round(float(value), digits) if value is not None else None
+
+    def monthly_item(item: dict[str, Any], estimated: bool) -> dict[str, Any]:
+        keys = (
+            "period_id", "carrier_key", "carrier_label", "origin_iata",
+            "destination_iata", "support_observed_in_period",
+            "support_source_periods", "support_month_gap",
+        )
+        result = {key: item.get(key) for key in keys}
+        for key in ("passengers", "passengers_low", "passengers_high", "seats", "departures"):
+            result[key] = compact_number(item.get(key)) if estimated else item.get(key)
+        result["load_factor"] = compact_number(item.get("load_factor"), 4) if estimated else item.get("load_factor")
+        result["capacity_estimated"] = item.get("capacity_estimated", False)
+        return result
+
     def route(value: dict[str, Any]) -> dict[str, Any]:
+        estimated = value.get("passengers_estimated", False)
+        metrics = {key: value[key] for key in metric_keys}
+        if estimated:
+            metrics = {
+                "passengers": compact_number(value.get("passengers")),
+                "seats": compact_number(value.get("seats")),
+                "departures": compact_number(value.get("departures")),
+                "load_factor": compact_number(value.get("load_factor"), 4),
+            }
         return {
             "market_key": value["market_key"],
             "coverage_note": value.get("coverage_note", ""),
             "source_label": value.get("source_label", "BTS T-100"),
             "operation_status": value.get("operation_status", "operated_observed"),
             "context": value.get("context"),
-            "passengers_low": value.get("passengers_low"),
-            "passengers_high": value.get("passengers_high"),
-            "passengers_estimated": value.get("passengers_estimated", False),
+            "passengers_low": compact_number(value.get("passengers_low")) if estimated else value.get("passengers_low"),
+            "passengers_high": compact_number(value.get("passengers_high")) if estimated else value.get("passengers_high"),
+            "passengers_estimated": estimated,
+            "capacity_estimated": value.get("capacity_estimated", False),
+            "seats_low": compact_number(value.get("seats_low")) if estimated else value.get("seats_low"),
+            "seats_high": compact_number(value.get("seats_high")) if estimated else value.get("seats_high"),
+            "load_factor_low": compact_number(value.get("load_factor_low"), 4) if estimated else value.get("load_factor_low"),
+            "load_factor_high": compact_number(value.get("load_factor_high"), 4) if estimated else value.get("load_factor_high"),
+            "load_factor_status": value.get("load_factor_status"),
             "support_repair_applied": value.get("support_repair_applied", False),
             "origin": endpoint(value["origin"]),
             "destination": endpoint(value["destination"]),
-            **{key: value[key] for key in metric_keys},
+            **metrics,
             "previous": {key: value["previous"].get(key) for key in metric_keys},
-            "directions": [
+            "directions": [] if estimated else [
                 {
                     key: direction.get(key)
                     for key in (
@@ -142,18 +173,7 @@ def integration_flight_payload(payload: dict[str, Any]) -> dict[str, Any]:
                 }
                 for direction in value.get("directions", [])
             ],
-            "monthly": [
-                {
-                    key: item.get(key)
-                    for key in (
-                        "period_id", "carrier_key", "carrier_label", "origin_iata",
-                        "destination_iata", "passengers", "passengers_low",
-                        "passengers_high", "support_observed_in_period",
-                        "support_source_periods", "support_month_gap",
-                    )
-                }
-                for item in value.get("monthly", [])
-            ],
+            "monthly": [monthly_item(item, estimated) for item in value.get("monthly", [])],
         }
 
     def network(value: dict[str, Any]) -> dict[str, Any]:
