@@ -96,22 +96,34 @@ versión nueva de un objeto.
 Los términos vigentes de AeroDataBox distinguen `Contents` de `Derived Works`.
 Una respuesta de API, una selección de campos o una tabla ligeramente
 reformateada sigue siendo contenido del proveedor y no puede republicarse como
-dataset. En Starter, la retención estándar es de siete días. Una obra derivada
-debe combinar múltiples observaciones o datos externos mediante un proceso no
+dataset. La retención estándar es de siete días. AeroDataBox anuncia retención
+extendida mientras la suscripción permanezca activa para RapidAPI Mega,
+API.Market Ultra 2 y Mega, y el plan directo Growth; otros planes directos
+pueden permitir un periodo posterior a la cancelación. Una obra derivada debe
+combinar múltiples observaciones o datos externos mediante un proceso no
 trivial y no permitir reconstruir registros individuales; las obras derivadas
 están exceptuadas de la restricción de caché, aunque siguen sujetas al resto de
 los términos.
 
 Para este proyecto, la implementación conservadora es:
 
-1. Guardar respuestas crudas cifradas o locales solo durante la ventana
-   permitida y nunca incluirlas en Git.
+1. Guardar respuestas crudas en `data/bronze/aerodatabox/` solo durante la
+   ventana permitida por el plan documentado en la captura y nunca incluirlas
+   en Git. Es Bronze temporal y también funciona como caché de reanudación;
+   mientras la captura esté sujeta a retención estándar no forma parte del
+   snapshot permanente.
 2. Derivar conteos mensuales de vuelos por ruta y operador, agregados a un nivel
    que no permita reconstruir un vuelo individual.
 3. Combinar esos conteos con marginales AFAC mediante un estimador versionado.
 4. Versionar solo diagnósticos, metadatos y resultados que cumplan la definición
    contractual de obra derivada.
 5. Registrar la versión de términos y del plan aplicable en cada captura.
+
+Bronze describe el estado crudo del dato, no su plazo de conservación. Si una
+captura se realiza con un plan que autoriza retención extendida, puede
+conservarse en almacenamiento privado durante ese plazo, con acceso restringido
+y una fecha de revisión ligada a la suscripción. Ese derecho adicional no
+permite subir las respuestas crudas a Git ni compartirlas con terceros.
 
 La clasificación contractual final debe confirmarse con AeroDataBox si se desea
 publicar en GitHub el cubo de conteos de vuelos. El hecho de agregar por mes no
@@ -121,6 +133,7 @@ Fuentes vigentes revisadas:
 
 - [AeroDataBox API Pricing](https://aerodatabox.com/pricing/)
 - [AeroDataBox Terms of Use](https://aerodatabox.com/terms)
+- [Terms and marketplace plan update, 2026-09-07](https://aerodatabox.com/2026-09-terms-update)
 - [Direct API access announcement](https://aerodatabox.com/direct-subscriptions)
 
 ## Configuración mínima de un entorno de nube

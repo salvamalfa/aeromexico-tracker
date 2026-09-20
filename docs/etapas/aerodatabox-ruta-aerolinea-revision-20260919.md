@@ -107,15 +107,20 @@ el proyecto; se trata como comportamiento no garantizado.
 
 ## Restricción de licencia que cambia la arquitectura
 
-Starter permite retener contenido crudo solo siete días. Los términos prohíben
-redistribuir respuestas, selecciones de campos o tablas apenas reformateadas.
+La retención estándar permite conservar contenido crudo solo siete días. Los
+términos prohíben redistribuir respuestas, selecciones de campos o tablas apenas
+reformateadas. RapidAPI Mega, API.Market Ultra 2 y Mega, y ciertos planes
+directos amplían el plazo de retención, pero no autorizan publicar el crudo.
 Definen una obra derivada como procesamiento no trivial de múltiples
 observaciones o combinación con datos externos que no permita reconstruir un
 registro individual; esa obra derivada queda fuera de la restricción de caché.
 
 Por tanto:
 
-- no se debe crear un Bronze permanente versionado con respuestas AeroDataBox;
+- para una captura sujeta a retención estándar no se debe crear un Bronze
+  permanente versionado con respuestas AeroDataBox; un plan con retención
+  extendida permitiría un Bronze privado durante el plazo autorizado, nunca su
+  publicación en Git;
 - no se deben subir respuestas ni una tabla vuelo por vuelo a GitHub;
 - un agregado mensual ruta × operador más el resultado IPF podría calificar
   como obra derivada, pero conviene confirmarlo con el proveedor antes de
@@ -125,8 +130,9 @@ Por tanto:
 - la ingesta debe borrar el crudo al completar el propósito o al vencer siete
   días, lo que ocurra primero.
 
-Los términos revisados fueron actualizados el mismo 2026-09-19. Deben congelarse
-la URL, fecha y un hash o PDF de la versión aceptada al contratar.
+Los términos y planes se revisaron el 2026-09-19; el anuncio aplicable fue
+publicado el 2026-09-07 y actualizado el 2026-09-08. Deben congelarse la URL,
+fecha y un hash o PDF de la versión aceptada al contratar.
 
 ## Diseño recomendado
 
@@ -386,8 +392,9 @@ Comprobaciones independientes realizadas:
 La entrega está preservada y la sesión externa ya no es necesaria. Las cuatro
 reparaciones identificadas durante la revisión ya están en `master`:
 
-1. `data/cache/` está ignorado y las respuestas crudas vencen y se purgan a los
-   siete días.
+1. `data/bronze/aerodatabox/` es Bronze temporal ignorado por Git; las
+   respuestas crudas vencen y se purgan a los siete días. La misma carpeta
+   funciona como caché de reanudación sin cambiar la clasificación de la capa.
 2. La consulta pide `withCancelled=false` y el normalizador descarta además una
    cancelación que llegue de forma defensiva, registrando el conteo.
 3. El adaptador reconoce `5D` y `SLI` como Aeroméxico Connect; un vuelo `AM` sin

@@ -14,8 +14,10 @@ Two traps are encoded here rather than left to the caller:
   the within-route proportions the seed exists to carry, so only the operating
   carrier is kept.
 
-Every response is cached on disk keyed by airport and window.  Provider terms
-limit raw-response retention, so cache files expire after seven days.
+Every raw response is written to transient Bronze keyed by airport and window.
+It also acts as the resume cache. This implementation uses the standard
+seven-day retention period; plans with documented extended retention can adopt
+a longer private lifecycle separately. Raw responses never enter Git.
 """
 
 from __future__ import annotations
@@ -52,7 +54,7 @@ MAX_WINDOW_HOURS = 12
 UNITS_PER_CALL = 2
 # Basic allows one request per second; stay under it.
 MIN_SECONDS_BETWEEN_CALLS = 1.1
-# AeroDataBox permits raw API contents to be cached for at most seven days.
+# Conservative default for plans with standard AeroDataBox data retention.
 MAX_CACHE_AGE_SECONDS = 7 * 24 * 60 * 60
 
 # IATA code to the project's carrier_key.  Mexico's scheduled domestic carriers
@@ -136,7 +138,7 @@ def _cache_is_fresh(path: Path, *, now: float | None = None) -> bool:
 
 
 def purge_expired_cache(cache_dir: Path, *, now: float | None = None) -> int:
-    """Delete raw responses older than the provider's seven-day limit."""
+    """Delete raw Bronze older than this implementation's seven-day policy."""
 
     if not cache_dir.exists():
         return 0
