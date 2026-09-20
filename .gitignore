@@ -20,6 +20,7 @@ data/cache/
 # The paid-provider route-carrier cube stays in the private data repository;
 # only its bounded Aeromexico display extract is embedded in generated HTML.
 data/gold/fact_route_carrier_domestic_estimate.parquet
+data/gold/fact_aeromexico_domestic_capacity_estimate.parquet
 data/quality/
 data/analytics/
 data/*.duckdb

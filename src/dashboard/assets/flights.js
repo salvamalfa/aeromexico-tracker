@@ -365,7 +365,7 @@
     "Colombia · Aerocivil": "Aerocivil",
     "AIFA · ruta de Aeroméxico identificada; volumen propio sin desglose": "AIFA",
     "AFAC · mercado con Aeroméxico como único operador identificado": "AFAC",
-    "AFAC + AeroDataBox · pasajeros estimados": "AFAC + AeroDataBox (estimación)",
+    "AFAC + AeroDataBox + flota Aeroméxico · estimaciones": "AFAC + AeroDataBox + flota (estimación)",
     "OMA · rutas documentadas": "OMA",
     "Reino Unido · CAA": "CAA",
   };
@@ -452,6 +452,25 @@
         const title = `Estimación; rango de sensibilidad ${integer.format(low)}–${integer.format(high)} pasajeros`;
         return `<td class="route-table-value"><span class="route-table-total route-estimate-total" title="${esc(title)}"><strong>≈${integer.format(route.passengers)}</strong><small>${integer.format(low)}–${integer.format(high)}</small></span></td>`;
       }
+      if (route.capacity_estimated && ["seats", "departures", "load_factor"].includes(key)) {
+        if (key === "load_factor" && !finite(route.load_factor)) {
+          const title = route.load_factor_status === "inconsistent_inputs"
+            ? "No se muestra: pasajeros y capacidad estimados producen una ocupación superior a 100%"
+            : "No disponible";
+          return `<td class="route-table-value"><span class="route-table-total" title="${esc(title)}"><strong>N/D</strong></span></td>`;
+        }
+        const low = key === "seats" ? route.seats_low : key === "load_factor" ? route.load_factor_low : null;
+        const high = key === "seats" ? route.seats_high : key === "load_factor" ? route.load_factor_high : null;
+        const range = finite(low) && finite(high)
+          ? `<small>${formatRouteMetric(key, low)}–${formatRouteMetric(key, high)}</small>`
+          : "";
+        const title = key === "departures"
+          ? "Estimación mensual basada en siete días distribuidos y ponderados por día de la semana"
+          : key === "seats"
+            ? "Capacidad estimada con el modelo de aeronave y la configuración de Aeroméxico"
+            : "Pasajeros estimados divididos entre asientos estimados";
+        return `<td class="route-table-value"><span class="route-table-total route-estimate-total" title="${esc(title)}"><strong>≈${formatRouteMetric(key, route[key])}</strong>${range}</span></td>`;
+      }
       const chip = routeMetricChangeChip(route, key);
       return `<td class="route-table-value"><span class="route-table-total"><strong>${formatRouteMetric(key, route[key])}</strong>${chip}</span></td>`;
     };
@@ -467,11 +486,16 @@
       const low = finite(item.passengers_low) ? item.passengers_low : item.passengers;
       const high = finite(item.passengers_high) ? item.passengers_high : item.passengers;
       const borrowed = item.support_observed_in_period ? "" : `<small class="route-support-borrowed" title="Soporte de ruta observado en ${esc(item.support_source_periods)}; no es un vuelo observado del mes mostrado">soporte ${esc(item.support_source_periods)}</small>`;
+      const seats = item.capacity_estimated ? `≈${formatRouteMetric("seats", item.seats)}` : "N/D";
+      const departures = item.capacity_estimated ? `≈${formatRouteMetric("departures", item.departures)}` : "N/D";
+      const loadFactor = item.capacity_estimated && finite(item.load_factor)
+        ? `≈${formatRouteMetric("load_factor", item.load_factor)}`
+        : "N/D";
       return `
       <div class="route-direction-line route-estimate-line">
         <span class="route-direction-name"><strong>${esc(item.carrier_label)}</strong><br>${esc(item.origin_iata)} → ${esc(item.destination_iata)}${borrowed}</span>
         <span title="Rango de sensibilidad ${integer.format(low)}–${integer.format(high)}">≈${integer.format(item.passengers)}<small>${integer.format(low)}–${integer.format(high)}</small></span>
-        <span>N/D</span><span>N/D</span><span>N/D</span>
+        <span>${seats}</span><span>${departures}</span><span>${loadFactor}</span>
       </div>`;
     }).join("");
     const directionDetails = (route) => route.passengers_estimated && (route.monthly || []).length
