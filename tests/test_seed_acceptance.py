@@ -19,6 +19,7 @@ from src.analytics.route_carrier import (
 from src.analytics.seed_acceptance import (
     COVERAGE_SPREAD_FAIL,
     AcceptanceReport,
+    classify_seed,
     format_report,
     estimate_carrier_coverage,
     load_afac_carrier_flights,
@@ -208,6 +209,44 @@ def test_a_wide_spread_alone_does_not_reject(monkeypatch: pytest.MonkeyPatch) ->
         verdict="accept", notes=(),
     )
     assert report.accepted
+
+
+def test_95_percent_partial_coverage_is_usable_for_review() -> None:
+    verdict = classify_seed(
+        passenger_coverage=0.95,
+        missing_carrier_passenger_share=0.05,
+        column_scale=1.05,
+        has_notes=True,
+    )
+    report = AcceptanceReport(
+        period_id="2026M04", afac_routes=500, covered_routes=450,
+        passenger_coverage=0.95, flight_coverage=0.90, missing_carriers=("TAR",),
+        carrier_coverage={"A": 1.0}, coverage_spread=1.0, carriers_judged=("A",),
+        column_scale=1.05, coverage_method="medida", verdict=verdict,
+        notes=("Cobertura parcial",),
+    )
+    assert verdict == "review"
+    assert report.usable
+    assert not report.accepted
+
+
+@pytest.mark.parametrize(
+    ("coverage", "missing_share", "column_scale"),
+    [
+        (0.9499, 0.0, 1.0),
+        (0.99, 0.0501, 1.0),
+        (0.99, 0.0, 1.051),
+    ],
+)
+def test_materially_incomplete_seed_is_rejected(
+    coverage: float, missing_share: float, column_scale: float
+) -> None:
+    assert classify_seed(
+        passenger_coverage=coverage,
+        missing_carrier_passenger_share=missing_share,
+        column_scale=column_scale,
+        has_notes=False,
+    ) == "reject"
 
 
 def test_the_report_labels_the_spread_as_diagnostic_not_verdict() -> None:
