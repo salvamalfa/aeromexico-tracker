@@ -145,8 +145,9 @@ recuperarse.
    duplicados.
 4. Separar vuelo operativo de codeshare, carga, charter y cancelación.
 5. Medir rutas y aerolíneas no mapeadas por conteo y por pasajeros AFAC.
-6. Rechazar la fuente si no representa al menos 99% de pasajeros y todos los
-   operadores materiales, o si exige crear soporte no observado.
+6. Permitir uso parcial si representa al menos 95% de pasajeros, los operadores
+   ausentes no superan 5% de pasajeros AFAC y `column_scale` queda dentro de
+   ±5%. Las exclusiones permanecen visibles y nunca se crea soporte no observado.
 
 ### Puerta C: estimación auditable
 
@@ -313,6 +314,55 @@ caché de auditoría, log, metadatos y hashes. El workflow sigue deshabilitado
 hasta revisar la cuota disponible y decidir el siguiente barrido pagado. La
 captura histórica de la corrida `35470890247` no se puede reconstruir sin una
 nueva consulta y permanece únicamente como evidencia agregada en el log.
+
+### Repetición retenida y criterio de uso parcial
+
+Con autorización explícita se repitió una sola vez la muestra de siete días en
+el workflow privado `35477575908`. Consumió 812 llamadas y 1,624 unidades. El
+gasto acumulado de las tres corridas pagadas quedó en **3,712 unidades**. El
+workflow volvió a `disabled_manually` inmediatamente después de iniciar y no
+puede repetirse por accidente.
+
+Esta vez la retención terminó correctamente. El artefacto privado contiene 816
+archivos y 9,060,485 bytes: 812 respuestas temporales del proveedor, 713 filas
+normalizadas, 713 filas de semilla, log, metadatos y manifiesto. Se recalcularon
+todos los SHA-256 y no hubo fallas. El contenido del proveedor vence a los siete
+días; la salida derivada se procesó inmediatamente.
+
+| Métrica | Repetición retenida |
+|---|---:|
+| Rutas AFAC cubiertas | 453 de 539 |
+| Pasajeros AFAC representados | 98.948% |
+| Vuelos vistos frente a AFAC | 91.0% |
+| `column_scale` | 0.992558 |
+| Aerolínea ausente | TAR |
+| Pasajeros AFAC de TAR | 0.310% |
+| Operadores representados | 7 |
+
+El criterio aprobado después de la corrida permite utilizar una semilla con
+**cobertura de pasajeros ≥95%** como estimación parcial. `seed_acceptance_v3`
+mantiene tres estados: `ACCEPT` para cobertura completa, `REVIEW` para una
+estimación parcial dentro de los límites y `REJECT` para cobertura menor a 95%,
+operadores ausentes por más de 5% o `column_scale` fuera de ±5%. Solo `ACCEPT` y
+`REVIEW` pueden ajustarse; ambos continúan marcados como estimación.
+
+Aplicado a la captura retenida, el resultado es `REVIEW` utilizable. El IPF
+generó 713 celdas direccionales ruta × aerolínea en 453 rutas y siete
+operadores. Convergió en 25 iteraciones, reconcilió 5,252,726 pasajeros y dejó
+desviaciones máximas de 0.041 pasajeros por ruta y menos de 0.000001 por
+aerolínea. Ninguna celda es observada o exacta.
+
+Para Aerovías de México y Aeroméxico Connect se obtuvieron 143 celdas en 107
+rutas direccionales. Al llevarlas a los mercados bidireccionales que ya muestra
+el dashboard, abril tiene soporte para **55 de los 56 mercados nacionales**:
+16 solo con Aerovías, 18 solo con Connect y 21 con ambos. `CLQ<>MEX` permanece
+sin soporte y conserva `N/D`.
+
+Este resultado todavía no completa 2T26: abril no se extrapola a mayo ni junio.
+Antes de sustituir valores `N/D` trimestrales hacen falta semillas retenidas de
+esos dos meses y revisión humana del cubo completo. Tampoco cambia la
+elegibilidad histórica al corte del 13 de julio de 2026 ni activa el dashboard
+o el Analysis Agent.
 
 No hace falta mantener abierta la sesión externa: sus commits, 89 pruebas,
 fixtures y resultados reproducibles ya fueron recuperados y verificados.
