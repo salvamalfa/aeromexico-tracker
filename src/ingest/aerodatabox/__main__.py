@@ -9,8 +9,9 @@ published number that is quietly wrong, so it is not optional and its verdict
 is not advisory -- a seed it rejects does not get fitted unless the operator
 says so explicitly and knowingly.
 
-Responses are cached on disk, so an interrupted run resumes without spending
-API units again.
+Raw responses are retained in transient Bronze, so an interrupted run resumes
+without spending API units again. This command applies the conservative
+seven-day retention policy used by the current plan.
 """
 
 from __future__ import annotations
@@ -116,7 +117,11 @@ def main(argv: list[str] | None = None) -> int:
         "--fit-rejected-seed", action="store_true",
         help="fit even if the acceptance test rejects the seed (not for publication)",
     )
-    parser.add_argument("--cache-dir", type=Path, default=PATHS.data / "cache" / "aerodatabox")
+    parser.add_argument(
+        "--bronze-dir", "--cache-dir", dest="bronze_dir", type=Path,
+        default=PATHS.bronze / "aerodatabox",
+        help="temporary raw-response Bronze (the --cache-dir alias is retained)",
+    )
     args = parser.parse_args(argv)
 
     airports = sorted(load_city_crosswalk())
@@ -129,7 +134,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.dry_run:
         return 0
 
-    args.cache_dir.mkdir(parents=True, exist_ok=True)
+    args.bronze_dir.mkdir(parents=True, exist_ok=True)
     weights = day_weights(args.period_id, days)
     if args.days:
         print(
@@ -138,7 +143,7 @@ def main(argv: list[str] | None = None) -> int:
         )
     flights, stats = pull_days(
         airports, days, period_id=args.period_id,
-        cache_dir=args.cache_dir, unit_budget=args.budget, day_weights=weights,
+        cache_dir=args.bronze_dir, unit_budget=args.budget, day_weights=weights,
     )
     print(
         f"llamadas {stats.calls} (cache {stats.cached_calls})  "
