@@ -65,6 +65,7 @@ def render_flights_panel(payload: dict[str, Any]) -> str:
           <button type="button" id="network-mode-international" aria-pressed="false">Internacional</button>
           <div class="network-region-switch" id="network-region-switch" role="group" aria-label="Región internacional" hidden></div>
         </div>
+        <div class="network-month-switch" id="network-month-switch" role="group" aria-label="Mes nacional"></div>
         <div class="network-volume" id="network-volume" hidden></div>
         <div class="network-layout">
           <article class="panel flow-map-panel" id="map-panel">
@@ -118,6 +119,10 @@ def integration_flight_payload(payload: dict[str, Any]) -> dict[str, Any]:
             "source_label": value.get("source_label", "BTS T-100"),
             "operation_status": value.get("operation_status", "operated_observed"),
             "context": value.get("context"),
+            "passengers_low": value.get("passengers_low"),
+            "passengers_high": value.get("passengers_high"),
+            "passengers_estimated": value.get("passengers_estimated", False),
+            "support_repair_applied": value.get("support_repair_applied", False),
             "origin": endpoint(value["origin"]),
             "destination": endpoint(value["destination"]),
             **{key: value[key] for key in metric_keys},
@@ -129,11 +134,25 @@ def integration_flight_payload(payload: dict[str, Any]) -> dict[str, Any]:
                         "origin_iata",
                         "destination_iata",
                         "passengers",
+                        "passengers_low",
+                        "passengers_high",
                         "seats",
                         "departures",
                     )
                 }
                 for direction in value.get("directions", [])
+            ],
+            "monthly": [
+                {
+                    key: item.get(key)
+                    for key in (
+                        "period_id", "carrier_key", "carrier_label", "origin_iata",
+                        "destination_iata", "passengers", "passengers_low",
+                        "passengers_high", "support_observed_in_period",
+                        "support_source_periods", "support_month_gap",
+                    )
+                }
+                for item in value.get("monthly", [])
             ],
         }
 
@@ -147,6 +166,11 @@ def integration_flight_payload(payload: dict[str, Any]) -> dict[str, Any]:
             "coverage_by_source": value.get("coverage_by_source", {}),
             "mode": value.get("mode", "observed_international"),
             "source_url": value.get("source_url"),
+            "availability": value.get("availability"),
+            "agent_eligible": value.get("agent_eligible", False),
+            "eligibility_reason": value.get("eligibility_reason"),
+            "represented_passengers": value.get("represented_passengers"),
+            "represented_movements": value.get("represented_movements"),
             "aena_airport_activity": [
                 {key: item[key] for key in (
                     "airport_iata", "passengers", "operations", "observed_months",
@@ -156,6 +180,10 @@ def integration_flight_payload(payload: dict[str, Any]) -> dict[str, Any]:
             ],
         }
 
+    monthly_domestic = {
+        period_id: network(value)
+        for period_id, value in payload.get("domestic_monthly_networks", {}).items()
+    }
     return {
         "schema_version": payload["schema_version"],
         "metadata": payload["metadata"],
@@ -169,7 +197,8 @@ def integration_flight_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "domestic_networks": {
             period_id: network(value)
             for period_id, value in payload.get("domestic_networks", {}).items()
-        },
+        } if not monthly_domestic else {},
+        "domestic_monthly_networks": monthly_domestic,
     }
 
 
@@ -251,6 +280,7 @@ def render_flights_html(payload: dict[str, Any]) -> str:
         <button type="button" id="network-mode-international" aria-pressed="false">Internacional</button>
         <div class="network-region-switch" id="network-region-switch" role="group" aria-label="Región internacional" hidden></div>
       </div>
+      <div class="network-month-switch" id="network-month-switch" role="group" aria-label="Mes nacional"></div>
       <div class="network-volume" id="network-volume" hidden></div>
       <div class="network-layout">
         <article class="panel flow-map-panel" id="map-panel">

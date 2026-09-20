@@ -31,6 +31,7 @@ from src.config import PATHS
 
 
 ESTIMATOR_VERSION = "route_carrier_ipf_v1"
+TEMPORAL_ESTIMATOR_VERSION = "route_carrier_temporal_ipf_v1"
 # Sparse seeds make the fit converge slowly: a carrier whose network barely
 # overlaps the rest of the market propagates its correction a few routes per
 # sweep, and the transborder panel needs ~1,500 sweeps.  The cap is set well
@@ -262,6 +263,247 @@ def estimate_route_carrier(
         else pd.DataFrame(columns=columns)
     )
     return estimate_frame, pd.DataFrame(diagnostics)
+
+
+def _period_ordinal(period_id: str) -> int:
+    """Return a sortable month ordinal for the project's ``YYYYMmm`` keys."""
+
+    if len(period_id) != 7 or period_id[4] != "M":
+        raise ValueError(f"Invalid monthly period_id: {period_id!r}")
+    year = int(period_id[:4])
+    month = int(period_id[5:])
+    if not 1 <= month <= 12:
+        raise ValueError(f"Invalid monthly period_id: {period_id!r}")
+    return year * 12 + month
+
+
+def augment_seed_with_temporal_support(
+    seed_panel: pd.DataFrame,
+    period_id: str,
+    route_totals: pd.DataFrame,
+    carrier_totals: pd.DataFrame,
+    *,
+    max_month_gap: int,
+    borrowed_weight_multiplier: float = 0.1,
+) -> pd.DataFrame:
+    """Add nearby observed carrier-route pairs as explicitly imputed support.
+
+    A seven-day balanced sample can miss an infrequent route even when AFAC's
+    monthly carrier total proves that the airline carried more passengers than
+    the observed support can hold.  This function borrows only a route-carrier
+    pair that was observed in another retained month, keeps the nearest month(s)
+    within ``max_month_gap``, and marks every borrowed cell.  It never converts
+    temporal support into an observed flight for the target month.
+    """
+
+    _require_columns(seed_panel, SEED_COLUMNS, "seed_panel")
+    if max_month_gap < 1:
+        raise ValueError("max_month_gap must be at least one")
+    if not np.isfinite(borrowed_weight_multiplier) or borrowed_weight_multiplier <= 0:
+        raise ValueError("borrowed_weight_multiplier must be positive and finite")
+
+    current = seed_panel[seed_panel["period_id"] == period_id].copy()
+    if current.empty:
+        raise ValueError(f"The seed panel carries no rows for {period_id}")
+    current = (
+        current.groupby(["period_id", "route_key", "carrier_key"], as_index=False)["weight"]
+        .sum()
+    )
+    current["support_observed_in_period"] = True
+    current["support_source_periods"] = period_id
+    current["support_month_gap"] = 0
+    current["support_weight_multiplier"] = 1.0
+
+    valid_routes = set(
+        route_totals.loc[route_totals["period_id"] == period_id, "route_key"]
+    )
+    valid_carriers = set(
+        carrier_totals.loc[carrier_totals["period_id"] == period_id, "carrier_key"]
+    )
+    observed = pd.MultiIndex.from_frame(current[["route_key", "carrier_key"]])
+    candidates = seed_panel[
+        seed_panel["period_id"].ne(period_id)
+        & seed_panel["route_key"].isin(valid_routes)
+        & seed_panel["carrier_key"].isin(valid_carriers)
+    ].copy()
+    if candidates.empty:
+        return current
+    target_ordinal = _period_ordinal(period_id)
+    candidates["support_month_gap"] = candidates["period_id"].map(
+        lambda value: abs(_period_ordinal(str(value)) - target_ordinal)
+    )
+    candidates = candidates[candidates["support_month_gap"] <= max_month_gap]
+    candidate_index = pd.MultiIndex.from_frame(candidates[["route_key", "carrier_key"]])
+    candidates = candidates[~candidate_index.isin(observed)]
+    if candidates.empty:
+        return current
+
+    nearest = candidates.groupby(["route_key", "carrier_key"])["support_month_gap"].transform("min")
+    candidates = candidates[candidates["support_month_gap"].eq(nearest)].copy()
+    borrowed = (
+        candidates.groupby(["route_key", "carrier_key"], as_index=False)
+        .agg(
+            weight=("weight", "mean"),
+            support_month_gap=("support_month_gap", "first"),
+            support_source_periods=(
+                "period_id",
+                lambda values: "|".join(sorted(set(str(value) for value in values))),
+            ),
+        )
+    )
+    borrowed["period_id"] = period_id
+    borrowed["weight"] *= borrowed_weight_multiplier
+    borrowed["support_observed_in_period"] = False
+    borrowed["support_weight_multiplier"] = borrowed_weight_multiplier
+    return pd.concat([current, borrowed[current.columns]], ignore_index=True).sort_values(
+        ["route_key", "carrier_key"]
+    ).reset_index(drop=True)
+
+
+def estimate_route_carrier_with_temporal_support(
+    seed_panel: pd.DataFrame,
+    route_totals: pd.DataFrame,
+    carrier_totals: pd.DataFrame,
+    period_id: str,
+    *,
+    max_month_gap: int = 2,
+    borrowed_weight_multiplier: float = 0.1,
+    sensitivity_multipliers: tuple[float, float] = (0.01, 1.0),
+    max_iterations: int = DEFAULT_MAX_ITERATIONS,
+    tolerance: float = DEFAULT_TOLERANCE,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Fit one month, repairing sparse support only when the observed fit fails.
+
+    The observed monthly seed remains authoritative whenever it converges.  If
+    it does not, the function tries one-month and then wider temporal support up
+    to ``max_month_gap``.  The first convergent support is retained.  Low/high
+    estimates rerun the same support with conservative prior multipliers so the
+    interaction introduced by borrowing remains visible rather than hidden.
+    """
+
+    _require_columns(seed_panel, SEED_COLUMNS, "seed_panel")
+    period_routes = route_totals[route_totals["period_id"] == period_id]
+    period_carriers = carrier_totals[carrier_totals["period_id"] == period_id]
+    current = seed_panel[seed_panel["period_id"] == period_id].copy()
+    if current.empty or period_routes.empty or period_carriers.empty:
+        raise ValueError(f"Missing seed or AFAC margins for {period_id}")
+
+    estimate, diagnostics = estimate_route_carrier(
+        current,
+        period_routes,
+        period_carriers,
+        max_iterations=max_iterations,
+        tolerance=tolerance,
+    )
+    converged = bool(diagnostics.loc[0, "converged"])
+    chosen_gap = 0
+    augmented = current.copy()
+    augmented["support_observed_in_period"] = True
+    augmented["support_source_periods"] = period_id
+    augmented["support_month_gap"] = 0
+    augmented["support_weight_multiplier"] = 1.0
+
+    if not converged:
+        for gap in range(1, max_month_gap + 1):
+            candidate = augment_seed_with_temporal_support(
+                seed_panel,
+                period_id,
+                route_totals,
+                carrier_totals,
+                max_month_gap=gap,
+                borrowed_weight_multiplier=borrowed_weight_multiplier,
+            )
+            candidate_estimate, candidate_diagnostics = estimate_route_carrier(
+                candidate,
+                period_routes,
+                period_carriers,
+                max_iterations=max_iterations,
+                tolerance=tolerance,
+            )
+            if bool(candidate_diagnostics.loc[0, "converged"]):
+                augmented = candidate
+                estimate = candidate_estimate
+                diagnostics = candidate_diagnostics
+                chosen_gap = gap
+                converged = True
+                break
+    if not converged:
+        raise InfeasibleMarginsError(
+            f"Temporal support through {max_month_gap} month(s) did not produce "
+            f"a convergent fit for {period_id}"
+        )
+
+    support = augmented[
+        [
+            "period_id",
+            "route_key",
+            "carrier_key",
+            "weight",
+            "support_observed_in_period",
+            "support_source_periods",
+            "support_month_gap",
+            "support_weight_multiplier",
+        ]
+    ].rename(columns={"weight": "seed_weight"})
+    estimate = estimate.merge(
+        support,
+        on=["period_id", "route_key", "carrier_key"],
+        how="left",
+        validate="one_to_one",
+    )
+    estimate["support_repair_applied"] = chosen_gap > 0
+    estimate["estimator_version"] = TEMPORAL_ESTIMATOR_VERSION
+
+    if chosen_gap == 0:
+        estimate["passengers_estimated_low"] = estimate["passengers_estimated"]
+        estimate["passengers_estimated_high"] = estimate["passengers_estimated"]
+    else:
+        scenarios = [estimate[["period_id", "route_key", "carrier_key", "passengers_estimated"]]]
+        for multiplier in sensitivity_multipliers:
+            scenario_seed = augment_seed_with_temporal_support(
+                seed_panel,
+                period_id,
+                route_totals,
+                carrier_totals,
+                max_month_gap=chosen_gap,
+                borrowed_weight_multiplier=multiplier,
+            )
+            scenario, scenario_diagnostics = estimate_route_carrier(
+                scenario_seed,
+                period_routes,
+                period_carriers,
+                max_iterations=max_iterations,
+                tolerance=tolerance,
+            )
+            if not bool(scenario_diagnostics.loc[0, "converged"]):
+                raise InfeasibleMarginsError(
+                    f"Sensitivity fit at multiplier {multiplier} did not converge for {period_id}"
+                )
+            scenarios.append(
+                scenario[["period_id", "route_key", "carrier_key", "passengers_estimated"]]
+            )
+        scenario_values = pd.concat(scenarios, ignore_index=True)
+        bounds = (
+            scenario_values.groupby(["period_id", "route_key", "carrier_key"])["passengers_estimated"]
+            .agg(passengers_estimated_low="min", passengers_estimated_high="max")
+            .reset_index()
+        )
+        estimate = estimate.merge(
+            bounds,
+            on=["period_id", "route_key", "carrier_key"],
+            how="left",
+            validate="one_to_one",
+        )
+
+    diagnostics = diagnostics.copy()
+    diagnostics["support_repair_applied"] = chosen_gap > 0
+    diagnostics["support_max_month_gap"] = chosen_gap
+    diagnostics["support_imputed_cells"] = int((~support["support_observed_in_period"]).sum())
+    diagnostics["borrowed_weight_multiplier"] = (
+        borrowed_weight_multiplier if chosen_gap > 0 else np.nan
+    )
+    diagnostics["estimator_version"] = TEMPORAL_ESTIMATOR_VERSION
+    return estimate, diagnostics, support
 
 
 def _diagnostic_row(period_id: str, **fields: object) -> dict[str, object]:

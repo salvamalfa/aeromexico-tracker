@@ -32,11 +32,12 @@ def test_exclusive_market_rows_reconcile_to_afac_and_lineage():
         assert connection.execute("SELECT count(*) FROM fact_domestic_scheduled_route_movements WHERE origin_iata = 'CLQ' OR dest_iata = 'CLQ'").fetchone()[0] == 0
 
 
-def test_domestic_consumer_shows_distinct_aifa_and_aicm_colima_markets():
+def test_domestic_consumer_replaces_inference_with_disclosed_passenger_estimates():
     network = build_flight_payload()["domestic_networks"]["2026Q2"]
-    inferred = {route["market_key"]: route for route in network["routes"] if route["operation_status"] == "carrier_inferred_market_observed"}
-    assert set(inferred) == {"CLQ<>MEX", "CLQ<>NLU", "DGO<>NLU"}
-    assert {key: route["departures"] for key, route in inferred.items()} == {"CLQ<>MEX": 12, "CLQ<>NLU": 170, "DGO<>NLU": 182}
-    for route in inferred.values():
-        assert route["passengers"] is route["seats"] is route["load_factor"] is None
-        assert sum(direction["departures"] for direction in route["directions"]) == route["departures"]
+    routes = {route["market_key"]: route for route in network["routes"]}
+    assert {"CLQ<>MEX", "CLQ<>NLU", "DGO<>NLU"}.issubset(routes)
+    for key in ("CLQ<>MEX", "CLQ<>NLU", "DGO<>NLU"):
+        route = routes[key]
+        assert route["operation_status"] == "estimated_from_afac_margins_and_temporal_support"
+        assert route["passengers"] > 0
+        assert route["departures"] is route["seats"] is route["load_factor"] is None
