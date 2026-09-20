@@ -40,4 +40,8 @@ def test_domestic_consumer_replaces_inference_with_disclosed_passenger_estimates
         route = routes[key]
         assert route["operation_status"] == "estimated_from_afac_margins_and_temporal_support"
         assert route["passengers"] > 0
-        assert route["departures"] is route["seats"] is route["load_factor"] is None
+        assert route["capacity_estimated"] == (route["departures"] is not None)
+        if route["capacity_estimated"]:
+            assert route["departures_estimated"] is True
+            assert route["seats"] > 0
+            assert route["load_factor"] is None or 0 <= route["load_factor"] <= 1
