@@ -3,8 +3,8 @@
 Fecha: 2026-09-19  
 Alcance: mercado nacional mexicano, 2T26 y posible ampliación a todas las
 aerolíneas.  
-Estado: evaluación; ningún dato del proveedor está activado en el dashboard ni
-en Analysis Agent.
+Estado: estimaciones retrospectivas de marzo–julio activadas en el dashboard;
+Analysis Agent inactivo y elegibilidad histórica al corte sin cambios.
 
 ## Veredicto
 
@@ -471,9 +471,60 @@ pudo comprobar si esos dos errores fueron facturados; por eso el consumo de la
 cuenta se conserva como un rango de cuatro unidades. Sobre una cuota de 50,000,
 quedan entre 39,788 y 39,792 unidades.
 
-Estas corridas solo amplían evidencia retrospectiva. No modifican la elegibilidad
-histórica al corte del 13 de julio de 2026, no sustituyen `N/D`, no activan
-`flight_evidence_v1` y no cambian el dashboard ni el Analysis Agent.
+En ese punto las corridas solo ampliaban evidencia retrospectiva: aún no
+sustituían `N/D`, no activaban `flight_evidence_v1` y no cambiaban el dashboard
+ni el Analysis Agent. La reparación e integración posteriores se documentan a
+continuación; la elegibilidad histórica al corte del 13 de julio de 2026 sigue
+sin cambios.
+
+## Reparación del soporte e integración retrospectiva
+
+La revisión posterior demostró que elevar el límite de iteraciones no resolvía
+marzo, junio o julio. El bloqueo era estructural: la muestra mensual no contenía
+algunas combinaciones ruta × operador necesarias para satisfacer simultáneamente
+las marginales AFAC de ruta y aerolínea. Se probó el mismo ajuste hasta 200,000
+iteraciones antes de descartar un problema de tolerancia o de límite de cómputo.
+
+La reparación `route_carrier_temporal_ipf_v1` conserva la semilla mensual cuando
+ya converge. Solo para un mes incompatible incorpora soporte de una combinación
+ruta × operador que sí fue observada en otro mes retenido, tomando primero el
+mes más cercano y ampliando hasta dos meses únicamente si hace falta. La celda
+prestada queda marcada con periodo de origen y distancia; no se convierte en un
+vuelo observado del mes objetivo. El peso base prestado es 0.1 del observado y
+se recalcula el ajuste con 0.01 y 1.0 para formar un rango de sensibilidad. Ese
+rango mide la dependencia del resultado respecto al peso del soporte añadido;
+no es un intervalo estadístico de confianza.
+
+| Periodo | Reparación | Soporte añadido | Iteraciones | Mercados AM/Connect | Pasajeros estimados AM/Connect |
+|---|---|---:|---:|---:|---:|
+| 2026M03 | mes contiguo | 36 celdas de soporte | 29 | 55 | 1,300,154 |
+| 2026M04 | no requerida | 0 | 25 | 55 | 1,332,006 |
+| 2026M05 | no requerida | 0 | 33 | 55 | 1,368,693 |
+| 2026M06 | mes contiguo | 40 celdas de soporte | 43 | 56 | 1,131,298 |
+| 2026M07 | hasta dos meses | 51 celdas de soporte | 75 | 55 | 1,299,088 |
+
+Los cinco ajustes convergen, no tienen valores negativos ni duplicados y
+reconcilian las marginales: la desviación máxima por ruta queda entre 0.038 y
+0.060 pasajeros según el mes, y la desviación por aerolínea es numéricamente
+cero. El Gold privado combinado contiene 3,721 celdas direccionales para todas
+las aerolíneas. El dashboard público no recibe ese cubo: el generador filtra
+solo `AEROMEXICO` y `AEROMEXICO_CONNECT` y embebe un extracto de visualización.
+
+En Vuelos, la red nacional abre en junio de 2026 y ofrece selectores para marzo,
+abril, mayo, junio y julio. Cada mercado muestra `≈ pasajeros`, el rango de
+sensibilidad y, al desplegarlo, el desglose separado de Aerovías de México y
+Aeroméxico Connect por sentido. Asientos, vuelos y ocupación siguen en `N/D`
+porque la frecuencia de la muestra no representa un total mensual observado.
+Marzo, junio y julio indican visiblemente que se completó soporte con meses
+cercanos. Abril y mayo conservan exclusivamente el soporte de su propio mes.
+
+Esta activación es retrospectiva y exclusiva del dashboard. Todas las filas
+mantienen `is_estimated = true`, `historically_eligible_at_2026_07_13 = false`
+y `agent_eligible = false`. No se activó `flight_evidence_v1`, no se añadió el
+cubo al paquete histórico y el Analysis Agent permanece inactivo. Las respuestas
+JSON y las tablas vuelo por vuelo siguen sujetas a eliminación a los siete días;
+las semillas, estimaciones, auditorías, linaje y manifiestos derivados se
+conservan en el repositorio privado.
 
 ## Fuentes del proveedor revisadas
 

@@ -268,4 +268,4 @@ def test_generated_artifact_matches_current_renderer() -> None:
         expected = render_executive_html(build_executive_payload())
     assert DEFAULT_OUTPUT.read_text(encoding="utf-8") == expected
     # International routes include a pinned local topology instead of CDN calls.
-    assert DEFAULT_OUTPUT.stat().st_size < 6_500_000
+    assert DEFAULT_OUTPUT.stat().st_size < 7_500_000

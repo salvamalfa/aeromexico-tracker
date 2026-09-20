@@ -28,12 +28,14 @@ def test_shared_markets_preserve_carrier_volume_boundary():
         assert connection.execute("SELECT count(*) FROM bridge_aifa_shared_route_presence_lineage").fetchone()[0] == 16
 
 
-def test_aifa_presence_is_visible_without_inflating_coverage_numerator():
+def test_aifa_routes_are_estimated_without_reusing_all_carrier_movements():
     network = build_flight_payload()["domestic_networks"]["2026Q2"]
-    presence = {route["market_key"]: route for route in network["routes"]
-                if route["operation_status"] == "carrier_route_present_volume_unresolved"}
-    assert set(presence) == {"<>".join(sorted(("NLU", airport))) for airport in DESTINATIONS.values()}
+    routes = {route["market_key"]: route for route in network["routes"]}
+    expected = {"<>".join(sorted(("NLU", airport))) for airport in DESTINATIONS.values()}
+    assert expected.issubset(routes)
     assert len(network["routes"]) == 56
-    assert network["represented_movements"] == 31_462
-    assert network["presence_only_route_count"] == 8
-    assert all(route["departures"] is None and not route["directions"] for route in presence.values())
+    assert network["represented_movements"] is None
+    for key in expected:
+        assert routes[key]["passengers"] > 0
+        assert routes[key]["departures"] is None
+        assert routes[key]["operation_status"] == "estimated_from_afac_margins_and_temporal_support"

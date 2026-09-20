@@ -8,7 +8,14 @@
   const importance = "passengers";
   const networkPeriods = payload.international_networks || payload.route_networks;
   const domesticPeriods = payload.domestic_networks || {};
-  let networkMode = domesticPeriods[quarters[periodIndex].period_id] ? "domestic" : "international";
+  const domesticMonthlyPeriods = payload.domestic_monthly_networks || {};
+  const domesticMonthIds = Object.keys(domesticMonthlyPeriods).sort();
+  const defaultQuarterId = quarters[periodIndex].period_id;
+  const defaultDomesticMonths = domesticMonthIds.filter((periodId) =>
+    `${periodId.slice(0, 4)}Q${Math.floor((Number(periodId.slice(5, 7)) - 1) / 3) + 1}` === defaultQuarterId
+  );
+  let selectedDomesticMonth = defaultDomesticMonths.at(-1) || domesticMonthIds.at(-1) || null;
+  let networkMode = domesticMonthIds.length || domesticPeriods[quarters[periodIndex].period_id] ? "domestic" : "international";
   const defaultAirport = "MEX";
   let passengerPeriod = "quarter";
   let selectedMarket = null;
@@ -173,7 +180,7 @@
   const worldGeometry = payload.route_network.world_geometry;
   window.PlotlyGeoAssets = window.PlotlyGeoAssets || { topojson: {} };
   window.PlotlyGeoAssets.topojson.world_110m = worldGeometry.topojson;
-  let network = { ...(networkMode === "domestic" ? domesticPeriods[quarters[periodIndex].period_id] : networkPeriods?.[quarters[periodIndex].period_id]) || payload.route_network, world_geometry: worldGeometry };
+  let network = { ...(networkMode === "domestic" ? (domesticMonthlyPeriods[selectedDomesticMonth] || domesticPeriods[quarters[periodIndex].period_id]) : networkPeriods?.[quarters[periodIndex].period_id]) || payload.route_network, world_geometry: worldGeometry };
   let routes = network.routes;
   function routeValue(route) {
     const key = network.mode === "scheduled_domestic" ? "departures" : importance;
@@ -183,14 +190,18 @@
   function routeTitle(route) { return `${route.origin.iata} ↔ ${route.destination.iata}`; }
 
   function renderNetworkPeriod(periodId) {
-    const domesticAvailable = Boolean(domesticPeriods[periodId]);
+    const domesticAvailable = domesticMonthIds.length > 0 || Boolean(domesticPeriods[periodId]);
     if (networkMode === "domestic" && !domesticAvailable) networkMode = "international";
-    const periodNetwork = networkMode === "domestic" ? domesticPeriods[periodId] : (networkPeriods?.[periodId] || payload.route_network);
+    const periodNetwork = networkMode === "domestic"
+      ? (domesticMonthlyPeriods[selectedDomesticMonth] || domesticPeriods[periodId])
+      : (networkPeriods?.[periodId] || payload.route_network);
     network = { ...periodNetwork, world_geometry: worldGeometry };
     if (networkMode !== "international") selectedRegion = null;
     // Sin vuelos propios no hay registro que mostrar: son rutas donde la fuente
     // solo confirma presencia de Aeromexico, sin volumen atribuible.
-    const quantified = (network.routes || []).filter((route) => finite(route.departures));
+    const quantified = (network.routes || []).filter((route) =>
+      network.mode === "estimated_domestic" ? finite(route.passengers) : finite(route.departures)
+    );
     network.routes = quantified;
     routes = regionRoutes(quantified);
     if (selectedRegion) {
@@ -201,6 +212,7 @@
     $("network-mode-domestic").setAttribute("aria-pressed", String(networkMode === "domestic"));
     $("network-mode-international").setAttribute("aria-pressed", String(networkMode === "international"));
     $("network-title").textContent = networkMode === "domestic" ? "Rutas nacionales" : "Rutas internacionales";
+    renderMonthSwitch();
     renderRegionSwitch();
     renderNetworkVolume();
     // Con una region elegida, MEX puede quedar fuera del recorte: se abre el
@@ -227,6 +239,21 @@
     if (flowMapRendered) renderFlowMap();
   }
 
+  function renderMonthSwitch() {
+    const host = $("network-month-switch");
+    if (!host) return;
+    host.hidden = networkMode !== "domestic" || domesticMonthIds.length === 0;
+    if (host.hidden) { host.innerHTML = ""; return; }
+    host.innerHTML = domesticMonthIds.map((periodId) => {
+      const label = domesticMonthlyPeriods[periodId]?.period_label || periodId;
+      return `<button type="button" data-domestic-month="${esc(periodId)}" aria-pressed="${String(selectedDomesticMonth === periodId)}">${esc(label)}</button>`;
+    }).join("");
+    host.querySelectorAll("button").forEach((button) => button.addEventListener("click", () => {
+      selectedDomesticMonth = button.dataset.domesticMonth;
+      renderNetworkPeriod(quarters[periodIndex].period_id);
+    }));
+  }
+
   function regionRoutes(allRoutes) {
     if (networkMode !== "international" || !selectedRegion) return allRoutes;
     return allRoutes.filter((route) => routeRegion(route) === selectedRegion);
@@ -251,6 +278,9 @@
     if (!host) return;
     const shown = routes || [];
     const flights = shown.reduce((sum, route) => sum + (finite(route.departures) ? route.departures : 0), 0);
+    const passengers = shown.reduce((sum, route) => sum + (finite(route.passengers) ? route.passengers : 0), 0);
+    const passengersLow = shown.reduce((sum, route) => sum + (finite(route.passengers_low) ? route.passengers_low : 0), 0);
+    const passengersHigh = shown.reduce((sum, route) => sum + (finite(route.passengers_high) ? route.passengers_high : 0), 0);
     const noBreakdown = shown.filter((route) => !finite(route.departures)).length;
     host.hidden = shown.length === 0;
     if (host.hidden) { host.innerHTML = ""; return; }
@@ -259,6 +289,11 @@
       : selectedRegion
         ? `hacia ${REGIONS.find((region) => region.id === selectedRegion)?.label || ""}`
         : "en la red internacional";
+    if (network.mode === "estimated_domestic") {
+      const repaired = shown.some((route) => route.support_repair_applied);
+      host.innerHTML = `<strong>≈${integer.format(passengers)}</strong><span>pasajeros estimados de Aerovías de México + Aeroméxico Connect ${esc(scope)} · ${esc(network.period_label)} · sensibilidad ${integer.format(passengersLow)}–${integer.format(passengersHigh)}${repaired ? " · soporte de rutas completado con meses cercanos" : ""}</span>`;
+      return;
+    }
     host.innerHTML = `<strong>${integer.format(flights)}</strong><span>vuelos ${esc(scope)} · ${esc(network.period_label)}${noBreakdown ? ` · ${noBreakdown} ${noBreakdown === 1 ? "ruta" : "rutas"} sin desglose propio` : ""}</span>`;
   }
 
@@ -314,6 +349,7 @@
   }
 
   function coverageDotHtml(route) {
+    if (route.passengers_estimated) return "";
     const months = coverageMonths(route);
     if (!months) return "";
     const variant = months >= 3 ? "is-full" : months === 2 ? "is-partial" : "is-thin";
@@ -329,6 +365,7 @@
     "Colombia · Aerocivil": "Aerocivil",
     "AIFA · ruta de Aeroméxico identificada; volumen propio sin desglose": "AIFA",
     "AFAC · mercado con Aeroméxico como único operador identificado": "AFAC",
+    "AFAC + AeroDataBox · pasajeros estimados": "AFAC + AeroDataBox (estimación)",
     "OMA · rutas documentadas": "OMA",
     "Reino Unido · CAA": "CAA",
   };
@@ -358,6 +395,7 @@
   }
 
   function routeMetricChangeChip(route, key) {
+    if (route.passengers_estimated) return "";
     const previous = route.previous || {};
     const previousValue = key === "load_factor"
       ? (finite(previous.passengers) && finite(previous.seats) && previous.seats > 0 ? previous.passengers / previous.seats : null)
@@ -408,6 +446,12 @@
       });
     };
     const metricCell = (route, key) => {
+      if (key === "passengers" && route.passengers_estimated) {
+        const low = finite(route.passengers_low) ? route.passengers_low : route.passengers;
+        const high = finite(route.passengers_high) ? route.passengers_high : route.passengers;
+        const title = `Estimación; rango de sensibilidad ${integer.format(low)}–${integer.format(high)} pasajeros`;
+        return `<td class="route-table-value"><span class="route-table-total route-estimate-total" title="${esc(title)}"><strong>≈${integer.format(route.passengers)}</strong><small>${integer.format(low)}–${integer.format(high)}</small></span></td>`;
+      }
       const chip = routeMetricChangeChip(route, key);
       return `<td class="route-table-value"><span class="route-table-total"><strong>${formatRouteMetric(key, route[key])}</strong>${chip}</span></td>`;
     };
@@ -419,7 +463,20 @@
         : direction[key];
       return `<span>${formatRouteMetric(key, value)}</span>`;
     };
-    const directionDetails = (route) => routeDirections(route).map(({ origin, destination, direction }) => `
+    const estimateDetails = (route) => (route.monthly || []).map((item) => {
+      const low = finite(item.passengers_low) ? item.passengers_low : item.passengers;
+      const high = finite(item.passengers_high) ? item.passengers_high : item.passengers;
+      const borrowed = item.support_observed_in_period ? "" : `<small class="route-support-borrowed" title="Soporte de ruta observado en ${esc(item.support_source_periods)}; no es un vuelo observado del mes mostrado">soporte ${esc(item.support_source_periods)}</small>`;
+      return `
+      <div class="route-direction-line route-estimate-line">
+        <span class="route-direction-name"><strong>${esc(item.carrier_label)}</strong><br>${esc(item.origin_iata)} → ${esc(item.destination_iata)}${borrowed}</span>
+        <span title="Rango de sensibilidad ${integer.format(low)}–${integer.format(high)}">≈${integer.format(item.passengers)}<small>${integer.format(low)}–${integer.format(high)}</small></span>
+        <span>N/D</span><span>N/D</span><span>N/D</span>
+      </div>`;
+    }).join("");
+    const directionDetails = (route) => route.passengers_estimated && (route.monthly || []).length
+      ? estimateDetails(route)
+      : routeDirections(route).map(({ origin, destination, direction }) => `
       <div class="route-direction-line">
         <span class="route-direction-name">${esc(origin)} → ${esc(destination)}</span>
         ${directionValue(direction, "passengers", route)}
@@ -442,7 +499,7 @@
       <p class="airport-meta">${subtitleHtml || esc(subtitle)}</p>
       <div class="airport-table-wrap">
         <table class="airport-route-table">
-          <thead><tr><th>Ruta</th><th>Pasajeros</th><th>Asientos</th><th>Vuelos</th><th>Ocupación</th></tr></thead>
+          <thead><tr><th>Ruta</th><th>${network.mode === "estimated_domestic" ? "Pasajeros estimados" : "Pasajeros"}</th><th>Asientos</th><th>Vuelos</th><th>Ocupación</th></tr></thead>
           <tbody>${tableRoutes.map((route, index) => `<tr class="route-summary-row" style="--route-color:${airportRouteColor(index)}">
             <td><button type="button" class="route-expand-toggle" aria-expanded="false" aria-controls="route-directions-${index}"><span class="route-expand-icon" aria-hidden="true">&gt;</span><strong class="route-table-name">${esc(routeTitle(route))}</strong>${coverageDotHtml(route)}${scheduledIconHtml(route)}</button></td>
             ${metricCell(route, "passengers")}
