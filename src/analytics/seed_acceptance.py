@@ -54,7 +54,7 @@ from src.analytics.route_carrier import (
 from src.config import PATHS
 
 
-ACCEPTANCE_VERSION = "seed_acceptance_v2"
+ACCEPTANCE_VERSION = "seed_acceptance_v3"
 
 # Flights per carrier, which AFAC publishes only in the airline summary
 # workbook.  Where it covers the period being judged, the coverage factor is a
@@ -69,11 +69,14 @@ COVERAGE_SPREAD_FAIL = 1.50
 # `column_scale` this far from 1 means the seed misses part of some carrier's
 # network, which silently corrupts the split even when everything else looks fine.
 COLUMN_SCALE_TOLERANCE = 0.05
-# Share of published passengers whose route must appear in the seed.  Below the
-# reject line the missing routes are not a rounding matter; between the two the
-# result is worth looking at but not publishing.
-ROUTE_COVERAGE_PASS = 0.99
+# Share of published passengers whose route must appear in the seed. A result
+# at or above 95% is usable as a partial estimate when its uncovered universe
+# remains explicit; it is not promoted to observed data or called complete.
+ROUTE_COVERAGE_PASS = 0.95
 ROUTE_COVERAGE_REJECT = 0.95
+# A missing carrier remains outside the estimate. Permit partial use only while
+# its published AFAC passengers fit inside the same uncovered-universe budget.
+MISSING_CARRIER_SHARE_TOLERANCE = 0.05
 # A carrier flying fewer than this many flights a month cannot be judged from a
 # sampled seed: a handful of observations swings its ratio wildly, and one such
 # carrier would otherwise decide the verdict for the whole source.  Aerus flies
@@ -105,10 +108,44 @@ class AcceptanceReport:
     coverage_method: str
     verdict: str
     notes: tuple[str, ...]
+    missing_carrier_passenger_share: float = 0.0
 
     @property
     def accepted(self) -> bool:
         return self.verdict == "accept"
+
+    @property
+    def usable(self) -> bool:
+        """Whether the seed may be fitted, including a disclosed partial fit."""
+
+        return self.verdict in {"accept", "review"}
+
+
+def classify_seed(
+    *,
+    passenger_coverage: float,
+    missing_carrier_passenger_share: float,
+    column_scale: float,
+    has_notes: bool,
+) -> str:
+    """Return accept, review, or reject under the approved 95% partial-use rule."""
+
+    fatal = (
+        passenger_coverage < ROUTE_COVERAGE_REJECT
+        or missing_carrier_passenger_share
+        > MISSING_CARRIER_SHARE_TOLERANCE + 1e-12
+        or not np.isfinite(column_scale)
+        or abs(column_scale - 1.0) > COLUMN_SCALE_TOLERANCE + 1e-12
+    )
+    if fatal:
+        return "reject"
+    if (
+        passenger_coverage < 1.0
+        or missing_carrier_passenger_share > 0
+        or has_notes
+    ):
+        return "review"
+    return "accept"
 
 
 def load_afac_route_flights(reference_dir: Path | None = None) -> pd.DataFrame:
@@ -280,6 +317,17 @@ def assess_seed(
         set(carrier_totals.loc[carrier_totals["passengers"] > 0, "carrier_key"])
         - set(seed["carrier_key"])
     ))
+    carrier_passengers = float(carrier_totals["passengers"].sum())
+    missing_carrier_passenger_share = (
+        float(
+            carrier_totals.loc[
+                carrier_totals["carrier_key"].isin(missing), "passengers"
+            ].sum()
+            / carrier_passengers
+        )
+        if carrier_passengers > 0
+        else 0.0
+    )
 
     # Prefer the division over the inference: where AFAC publishes flights per
     # carrier for this month, coverage is measured, not modelled.
@@ -315,7 +363,10 @@ def assess_seed(
         notes.append(f"El ajuste no corre con esta semilla: {type(exc).__name__}: {exc}")
 
     if missing:
-        notes.append(f"Aerolíneas ausentes de la semilla: {', '.join(missing)}")
+        notes.append(
+            f"Aerolíneas ausentes de la semilla: {', '.join(missing)} "
+            f"({missing_carrier_passenger_share:.1%} de pasajeros AFAC)"
+        )
     if np.isfinite(column_scale) and abs(column_scale - 1.0) > COLUMN_SCALE_TOLERANCE:
         notes.append(
             f"column_scale = {column_scale:.3f}: la semilla no cubre la red completa "
@@ -337,20 +388,15 @@ def assess_seed(
             f"La semilla solo alcanza el {passenger_coverage:.1%} de los pasajeros"
         )
 
-    # What disqualifies a seed is incompleteness, not the coverage spread: the
-    # spread is a column effect and the fit cancels it.  See the module header.
-    fatal = (
-        bool(missing)
-        or passenger_coverage < ROUTE_COVERAGE_REJECT
-        or (np.isfinite(column_scale) and abs(column_scale - 1.0) > COLUMN_SCALE_TOLERANCE)
-        or not np.isfinite(column_scale)
+    # What disqualifies a seed is material incompleteness, not the coverage
+    # spread: the spread is a column effect and the fit cancels it. A partial
+    # result inside the 5% budget remains REVIEW and carries its exclusions.
+    verdict = classify_seed(
+        passenger_coverage=passenger_coverage,
+        missing_carrier_passenger_share=missing_carrier_passenger_share,
+        column_scale=column_scale,
+        has_notes=bool(notes),
     )
-    if fatal:
-        verdict = "reject"
-    elif passenger_coverage < ROUTE_COVERAGE_PASS or notes:
-        verdict = "review"
-    else:
-        verdict = "accept"
 
     return AcceptanceReport(
         period_id=period_id,
@@ -366,6 +412,7 @@ def assess_seed(
         coverage_method=coverage_method,
         verdict=verdict,
         notes=tuple(notes),
+        missing_carrier_passenger_share=missing_carrier_passenger_share,
     )
 
 
@@ -377,7 +424,7 @@ def format_report(report: AcceptanceReport) -> str:
         f"  Veredicto: {report.verdict.upper()}",
         f"  Rutas cubiertas: {report.covered_routes} de {report.afac_routes} "
         f"({report.passenger_coverage:.1%} de los pasajeros; "
-        f"pasa >{ROUTE_COVERAGE_PASS:.0%}, reprueba <{ROUTE_COVERAGE_REJECT:.0%})",
+        f"utilizable ≥{ROUTE_COVERAGE_PASS:.0%}, reprueba <{ROUTE_COVERAGE_REJECT:.0%})",
         f"  column_scale: {report.column_scale:.3f} "
         f"(tolerancia ±{COLUMN_SCALE_TOLERANCE:.0%})",
         "",
