@@ -228,6 +228,8 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
                     }
                 )
             route_metrics = capacity_metrics(group)
+            route_months_covered = int(group["period_id"].nunique())
+            route_months_selected = len(months)
             routes.append(
                 {
                     "market_key": str(market_key),
@@ -240,11 +242,21 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
                     **route_metrics,
                     "capacity_estimated": route_metrics["capacity_complete"],
                     "departures_estimated": route_metrics["capacity_complete"],
+                    # A market with fewer months of estimate rows than the
+                    # quarter expects (e.g. a route only priced from June
+                    # onward) must never look like a full-quarter figure:
+                    # expose exactly how many of the quarter's months it
+                    # actually covers, even when its own capacity math is
+                    # internally consistent for those months.
+                    "months_covered": route_months_covered,
+                    "months_selected": route_months_selected,
                     "previous": {"passengers": None, "seats": None, "departures": None},
                     "directions": directions,
                     "monthly": monthly,
                     "source_label": ESTIMATED_LABEL,
-                    "coverage_note": coverage_note + " · pasajeros, vuelos y capacidad estimados",
+                    "coverage_note": coverage_note + " · pasajeros, vuelos y capacidad estimados"
+                        + (f" · cobertura parcial: {route_months_covered} de {route_months_selected} meses"
+                           if route_months_covered < route_months_selected else ""),
                     "operation_status": "estimated_from_afac_margins_and_temporal_support",
                     "carrier_role": "operating_carrier_estimated",
                     "agent_eligible": False,
