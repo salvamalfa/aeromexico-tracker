@@ -101,12 +101,6 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
         frame["carrier_label"] = frame["carrier_key"].map(ESTIMATED_CARRIERS)
         if frame["carrier_label"].isna().any():
             raise ValueError("Domestic estimate contains an unsupported Aeromexico carrier key")
-        capacity_columns = [
-            "period_id", "market_key", "origin_iata", "destination_iata", "carrier_key",
-            "departures_estimated", "seats_estimated", "seats_estimated_low",
-            "seats_estimated_high", "aircraft_model_coverage", "capacity_usable",
-            "sample_days", "capacity_method",
-        ]
         direction_keys = [
             "period_id", "market_key", "origin_iata", "destination_iata",
         ]
@@ -118,9 +112,11 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
             capacity_by_direction = pd.DataFrame(
                 columns=direction_keys + direction_metric_columns
             )
-            for column in capacity_columns[5:]:
-                frame[column] = None
         else:
+            # Group Aeroméxico capacity is the sum of whatever carriers AeroDataBox
+            # actually observed for a route/direction/month. A carrier missing from
+            # this table (no observation) contributes nothing to the sum, but never
+            # blocks the group total that the other carrier's evidence supports.
             capacity_by_direction = (
                 capacity[capacity["period_id"].isin(months)]
                 .groupby(direction_keys, as_index=False)
@@ -133,26 +129,18 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
                     capacity_usable=("capacity_usable", "all"),
                 )
             )
-            frame = frame.merge(
-                capacity[capacity_columns],
-                on=capacity_columns[:5],
-                how="left",
-                validate="one_to_one",
-            )
 
-        def capacity_metrics(part: pd.DataFrame, *, route_scope: bool = False) -> dict:
-            capacity_part = part
-            if route_scope:
-                capacity_part = (
-                    part[direction_keys]
-                    .drop_duplicates()
-                    .merge(
-                        capacity_by_direction,
-                        on=direction_keys,
-                        how="left",
-                        validate="one_to_one",
-                    )
+        def capacity_metrics(part: pd.DataFrame) -> dict:
+            capacity_part = (
+                part[direction_keys]
+                .drop_duplicates()
+                .merge(
+                    capacity_by_direction,
+                    on=direction_keys,
+                    how="left",
+                    validate="one_to_one",
                 )
+            )
             complete = bool(
                 len(capacity_part)
                 and capacity_part["capacity_usable"].eq(True).all()
@@ -201,7 +189,7 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
             for (origin, destination), part in group.groupby(
                 ["origin_iata", "destination_iata"]
             ):
-                metrics = capacity_metrics(part, route_scope=True)
+                metrics = capacity_metrics(part)
                 directions.append(
                     {
                         "origin_iata": str(origin),
@@ -217,7 +205,7 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
             for (period_id, origin, destination), part in group.groupby(
                 ["period_id", "origin_iata", "destination_iata"], sort=True
             ):
-                metrics = capacity_metrics(part, route_scope=True)
+                metrics = capacity_metrics(part)
                 monthly.append(
                     {
                         "period_id": str(period_id),
@@ -239,7 +227,7 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
                         "support_month_gap": int(part["support_month_gap"].min()),
                     }
                 )
-            route_metrics = capacity_metrics(group, route_scope=True)
+            route_metrics = capacity_metrics(group)
             routes.append(
                 {
                     "market_key": str(market_key),
