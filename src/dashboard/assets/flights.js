@@ -713,7 +713,7 @@
       <p class="airport-meta">${subtitleHtml || esc(subtitle)}</p>
       <div class="airport-table-wrap">
         <table class="airport-route-table">
-          <thead><tr><th>Ruta</th><th class="${network.mode === "estimated_domestic" ? "th-with-badge" : ""}">${network.mode === "estimated_domestic" ? `Pasajeros<span class="estimate-info-badge" title="${esc(ESTIMATE_INFO_TITLE)}" aria-label="${esc(ESTIMATE_INFO_TITLE)}" role="img">i</span>` : "Pasajeros"}</th><th>Asientos</th><th>Vuelos</th><th>Ocupación</th></tr></thead>
+          <thead><tr><th>Ruta</th><th class="${network.mode === "estimated_domestic" ? "th-with-badge" : ""}">${network.mode === "estimated_domestic" ? `Pasajeros<span class="estimate-info-badge" title="${esc(ESTIMATE_INFO_TITLE)}" aria-label="${esc(ESTIMATE_INFO_TITLE)}" role="img"><svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="2.6" r="1.15"></circle><rect x="4.1" y="4.35" width="1.8" height="4.35" rx="0.9"></rect></svg></span>` : "Pasajeros"}</th><th>Asientos</th><th>Vuelos</th><th>Ocupación</th></tr></thead>
           <tbody>${tableRoutes.map((route, index) => `<tr class="route-summary-row" style="--route-color:${airportRouteColor(index)}">
             <td><button type="button" class="route-expand-toggle" aria-expanded="false" aria-controls="route-directions-${index}"><span class="route-expand-icon" aria-hidden="true">&gt;</span><strong class="route-table-name">${esc(routeTitle(route))}</strong>${coverageDotHtml(route)}${scheduledIconHtml(route)}</button></td>
             ${metricCell(route, "passengers")}
