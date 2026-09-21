@@ -240,6 +240,91 @@ consolidada si su alcance real es más estrecho").
   interfaz: la pestaña Vuelos sigue exclusivamente sobre Grupo Aeroméxico o,
   en Internacional, sobre Aerovías de México como operador.
 
+## 4. Pulido de interfaz (seguimiento, retroalimentación directa del usuario)
+
+Tras revisar capturas de la pestaña Vuelos ya con las correcciones
+anteriores publicadas, el usuario pidió seis ajustes puntuales de
+presentación:
+
+1. **Detalle expandido de cada ruta, redundante.** Antes, cada línea del
+   desglose por mes repetía "Grupo Aeroméxico" y el nombre del mes (p. ej.
+   tres veces "Grupo Aeroméxico · abril" para las dos direcciones de un solo
+   mes). Ahora la caja de detalle declara "Grupo Aeroméxico" una sola vez
+   arriba y agrupa las líneas de ida/vuelta bajo un rótulo de mes sutil
+   (`abril`, `mayo`, `junio`), con un separador ligero entre grupos
+   (`.route-estimate-month`, borde superior de 1px). Con un solo mes
+   seleccionado no se repite el rótulo de mes en absoluto, ya que el
+   contexto ya está claro por el trimestre/mes mostrado arriba.
+2. **Símbolo "≈" eliminado** de toda la pestaña (franja de volumen, celdas
+   de la tabla y detalle expandido). El rango de sensibilidad y la
+   explicación de que es una estimación ya quedan disponibles en el `title`
+   de cada celda y en el subtexto `<small>` con el rango, así que el
+   símbolo era redundante.
+3. **"Pasajeros estimados de Grupo Aeroméxico" → "pasajeros de Grupo
+   Aeroméxico" + insignia de información.** La palabra "estimados" se quitó
+   del texto visible; en su lugar aparece una insignia circular ámbar
+   (`.estimate-info-badge`, reutiliza `--amber`) con un `title` que explica
+   que es una estimación AFAC + AeroDataBox con rango de sensibilidad,
+   siguiendo el mismo patrón que el ícono "i" ya usado en las tarjetas KPI
+   (`_kpi_card`), pero en color distinto para diferenciarlo visualmente.
+4. **Puntos de cobertura verde/amarillo/rojo, corregidos.** El código nuevo
+   de `coverageDotHtml` para el agregado nacional multi-mes tenía un error:
+   cuando la cobertura era completa (3 de 3 meses) devolvía cadena vacía en
+   vez de un punto verde, así que en la práctica nunca se veía verde, solo
+   rojo en las pocas rutas incompletas. Además el punto se calculaba contra
+   los meses *seleccionados* (variable según lo que el usuario tuviera
+   marcado) en vez de contra los tres meses de calendario del trimestre
+   completo, que es como ya funciona Internacional. Se corrigieron ambos
+   problemas: `aggregateDomesticMonths` ahora calcula la cobertura de cada
+   ruta recorriendo siempre los meses de calendario del trimestre
+   (`monthsInQuarter(domesticMonthsQuarterId)`), no la selección manual
+   vigente, así el punto no cambia de color solo porque el usuario
+   deselecciona un mes; y `coverageDotHtml` ya no oculta el punto cuando la
+   cobertura es completa (`is-full`, verde), reproduciendo exactamente la
+   semántica de Internacional (verde 3/3, amarillo 2/3, rojo 1/3). Con los
+   datos reales de 2T26: 45 rutas quedan en verde y 1 (`CLQ↔MEX`, con datos
+   solo de junio) en rojo.
+5. **Mapa nacional con zoom a México.** El mapa nacional usaba el mismo
+   encuadre mundial que Internacional sin región seleccionada
+   (`lat: [-60, 85], lon: [-180, 180]`), heredado de una rama de código que
+   solo aplicaba el zoom a México para el modo `scheduled_domestic`
+   (trimestres previos a las estimaciones AeroDataBox). Como el modo vigente
+   es `estimated_domestic`, nunca entraba a esa rama. Se generalizó la
+   condición a `networkMode === "domestic"` (cualquier modo nacional), así
+   que ahora siempre hace zoom a México (`fitViewToCanvas([13, 34], [-119,
+   -86])`), igual que Internacional hace zoom a Norteamérica/Sudamérica/
+   Europa/Asia cuando se elige una región.
+6. **Internacional: "Grupo Aeroméxico" en el detalle expandido.** Antes de
+   aplicar este cambio se le señaló al usuario la tensión con la auditoría
+   de la sesión anterior (las fuentes internacionales retenidas son 100%
+   Aerovías de México, cero Aeroméxico Connect) y se le preguntó cómo
+   resolverlo. Eligió mantener "Grupo Aeroméxico" como marca general en el
+   detalle por ruta, ya que Connect simplemente no tiene rutas
+   internacionales en la evidencia retenida (no es una afirmación falsa,
+   solo menos precisa que "Aerovías de México"). La nota de alcance
+   (`#network-scope-note`) y la franja de volumen superior en Internacional
+   **no cambiaron**: siguen diciendo explícitamente "Aerovías de México
+   (operador reportante) · no incluye Aeroméxico Connect", que es donde
+   vive la precisión técnica de la auditoría. Solo el detalle expandido por
+   ruta, que antes no mencionaba ninguna aerolínea, ahora dice "Grupo
+   Aeroméxico" una vez por caja, igual que en Nacional.
+
+### Pruebas nuevas de este seguimiento
+
+Seis pruebas nuevas en `tests/test_flights_frontend_interactions.py` (con
+Chromium real sobre la página autónoma regenerada, total 12/12 en el
+archivo): el detalle nacional nombra "Grupo Aeroméxico" exactamente una vez
+y agrupa las tres líneas de mes bajo su rótulo (`abril`/`mayo`/`junio`);
+ningún texto de la pestaña nacional contiene el símbolo "≈"; al menos un
+punto de cobertura nacional es verde (`is-full`); el mapa nacional usa un
+encuadre de longitud/latitud mucho más angosto que el mundial
+(verificado leyendo `_fullLayout.geo.lonaxis.range`/`lataxis.range` del
+gráfico Plotly ya renderizado); y el detalle expandido internacional
+también nombra "Grupo Aeroméxico" una vez. Se actualizó además una
+aserción existente en `tests/test_flights_prototype.py` que buscaba la
+cadena literal "pasajeros estimados" en el código fuente (ya no existe,
+sustituida por la insignia) por una que busca `estimate-info-badge`.
+
 ## Diferencia de granularidad Nacional (mensual) vs. Internacional (trimestral)
 
 Nacional ahora navega por mes (con agregación al trimestre cuando el
@@ -424,6 +509,39 @@ de nuevo.
   el cambio.
 - `docs/etapas/vuelos-selector-trimestre-nacional-internacional-20260921.md`:
   este reporte.
+
+### Seguimiento (pulido de interfaz, sección 4)
+
+- `src/dashboard/assets/flights.js`: `aggregateDomesticMonths` calcula
+  `quarterCoverage` sobre los tres meses del trimestre (no solo los
+  seleccionados), corrigiendo el punto de cobertura para que muestre verde
+  cuando una ruta tiene datos en los tres meses; `coverageDotHtml` ya no
+  oculta el punto cuando la cobertura está completa; `renderFlowMap` aplica
+  el zoom a México también en modo `estimated_domestic`; `renderNetworkVolume`
+  quita "≈" y la palabra "estimados", añade el ícono informativo
+  `.estimate-info-badge`; el detalle expandido de ruta (nacional e
+  internacional) ahora indica "Grupo Aeroméxico" una sola vez por caja y
+  agrupa las líneas nacionales por mes cuando hay más de uno seleccionado.
+- `src/dashboard/assets/flights.css`: reglas nuevas
+  `.route-estimate-carrier`, `.route-estimate-month`,
+  `.route-estimate-month-label`, `.estimate-info-badge`; se eliminaron las
+  reglas muertas `.route-month-label` y
+  `.route-estimate-line .route-direction-name strong`.
+- `tests/test_flights_prototype.py`: la aserción sobre el texto del banner
+  (`"pasajeros estimados"`) se actualizó a `"estimate-info-badge"` tras el
+  rediseño del banner.
+- `tests/test_flights_frontend_interactions.py`: seis pruebas nuevas —
+  agrupación por mes y mención única de "Grupo Aeroméxico" en el detalle
+  nacional, ausencia de "≈" en las cifras, punto de cobertura verde con
+  cobertura completa del trimestre, zoom del mapa nacional a México, y
+  mención de "Grupo Aeroméxico" en el detalle internacional.
+- `prototypes/vuelos/vuelos_revision.html`: regenerado desde el generador
+  para reflejar los cambios anteriores.
+- `prototypes/etapa-11/resumen_ejecutivo.html`, `static/aeromexico_tracker.html`:
+  **no se tocaron en este seguimiento.** La publicación al dashboard
+  integrado requiere una autorización explícita de "publica esto" cada vez
+  (como se manejó en la ronda anterior); estos cambios quedan solo en el
+  generador/prototipo hasta recibir esa instrucción.
 
 ## Limitaciones restantes
 
