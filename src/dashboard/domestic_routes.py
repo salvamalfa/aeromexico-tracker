@@ -8,7 +8,7 @@ import pandas as pd
 SOURCE_LABEL = "México · AICM, vuelos AM programados"
 EXCLUSIVE_LABEL = "AFAC · mercado con Aeroméxico como único operador identificado"
 SHARED_LABEL = "AIFA · ruta de Aeroméxico identificada; volumen propio sin desglose"
-ESTIMATED_LABEL = "AFAC + AeroDataBox + flota Aeroméxico · estimaciones"
+ESTIMATED_LABEL = "AFAC + AeroDataBox + flota · Grupo Aeroméxico estimado"
 ESTIMATED_CARRIERS = {
     "AEROMEXICO": "Aerovías de México",
     "AEROMEXICO_CONNECT": "Aeroméxico Connect",
@@ -107,10 +107,32 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
             "seats_estimated_high", "aircraft_model_coverage", "capacity_usable",
             "sample_days", "capacity_method",
         ]
+        direction_keys = [
+            "period_id", "market_key", "origin_iata", "destination_iata",
+        ]
+        direction_metric_columns = [
+            "departures_estimated", "seats_estimated", "seats_estimated_low",
+            "seats_estimated_high", "aircraft_model_coverage", "capacity_usable",
+        ]
         if capacity.empty:
+            capacity_by_direction = pd.DataFrame(
+                columns=direction_keys + direction_metric_columns
+            )
             for column in capacity_columns[5:]:
                 frame[column] = None
         else:
+            capacity_by_direction = (
+                capacity[capacity["period_id"].isin(months)]
+                .groupby(direction_keys, as_index=False)
+                .agg(
+                    departures_estimated=("departures_estimated", "sum"),
+                    seats_estimated=("seats_estimated", "sum"),
+                    seats_estimated_low=("seats_estimated_low", "sum"),
+                    seats_estimated_high=("seats_estimated_high", "sum"),
+                    aircraft_model_coverage=("aircraft_model_coverage", "min"),
+                    capacity_usable=("capacity_usable", "all"),
+                )
+            )
             frame = frame.merge(
                 capacity[capacity_columns],
                 on=capacity_columns[:5],
@@ -118,12 +140,24 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
                 validate="one_to_one",
             )
 
-        def capacity_metrics(part: pd.DataFrame) -> dict:
+        def capacity_metrics(part: pd.DataFrame, *, route_scope: bool = False) -> dict:
+            capacity_part = part
+            if route_scope:
+                capacity_part = (
+                    part[direction_keys]
+                    .drop_duplicates()
+                    .merge(
+                        capacity_by_direction,
+                        on=direction_keys,
+                        how="left",
+                        validate="one_to_one",
+                    )
+                )
             complete = bool(
-                len(part)
-                and part["capacity_usable"].eq(True).all()
-                and part[["departures_estimated", "seats_estimated", "seats_estimated_low",
-                          "seats_estimated_high"]].notna().all().all()
+                len(capacity_part)
+                and capacity_part["capacity_usable"].eq(True).all()
+                and capacity_part[["departures_estimated", "seats_estimated", "seats_estimated_low",
+                                   "seats_estimated_high"]].notna().all().all()
             )
             if not complete:
                 return {
@@ -136,13 +170,13 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
             passengers = float(part["passengers_estimated"].sum())
             passengers_low = float(part["passengers_estimated_low"].sum())
             passengers_high = float(part["passengers_estimated_high"].sum())
-            seats = float(part["seats_estimated"].sum())
-            seats_low = float(part["seats_estimated_low"].sum())
-            seats_high = float(part["seats_estimated_high"].sum())
+            seats = float(capacity_part["seats_estimated"].sum())
+            seats_low = float(capacity_part["seats_estimated_low"].sum())
+            seats_high = float(capacity_part["seats_estimated_high"].sum())
             load_factor = passengers / seats if seats > 0 else None
             plausible = load_factor is not None and 0 <= load_factor <= 1
             return {
-                "departures": float(part["departures_estimated"].sum()),
+                "departures": float(capacity_part["departures_estimated"].sum()),
                 "seats": seats,
                 "seats_low": seats_low,
                 "seats_high": seats_high,
@@ -151,43 +185,9 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
                 "load_factor_high": passengers_high / seats_low if plausible and seats_low > 0 else None,
                 "capacity_complete": True,
                 "load_factor_status": "estimated" if plausible else "inconsistent_inputs",
-                "aircraft_model_coverage": float(part["aircraft_model_coverage"].min()),
+                "aircraft_model_coverage": float(capacity_part["aircraft_model_coverage"].min()),
             }
 
-        def row_capacity_metrics(row) -> dict:
-            fields = (
-                row.departures_estimated, row.seats_estimated,
-                row.seats_estimated_low, row.seats_estimated_high,
-                row.aircraft_model_coverage,
-            )
-            complete = bool(row.capacity_usable is True or row.capacity_usable == True) and all(
-                pd.notna(value) for value in fields
-            )
-            if not complete:
-                return {
-                    "departures": None, "seats": None, "seats_low": None,
-                    "seats_high": None, "load_factor": None, "load_factor_low": None,
-                    "load_factor_high": None, "capacity_complete": False,
-                    "load_factor_status": "capacity_incomplete",
-                    "aircraft_model_coverage": None,
-                }
-            seats = float(row.seats_estimated)
-            seats_low = float(row.seats_estimated_low)
-            seats_high = float(row.seats_estimated_high)
-            load_factor = float(row.passengers_estimated) / seats if seats > 0 else None
-            plausible = load_factor is not None and 0 <= load_factor <= 1
-            return {
-                "departures": float(row.departures_estimated),
-                "seats": seats,
-                "seats_low": seats_low,
-                "seats_high": seats_high,
-                "load_factor": load_factor if plausible else None,
-                "load_factor_low": float(row.passengers_estimated_low) / seats_high if plausible and seats_high > 0 else None,
-                "load_factor_high": float(row.passengers_estimated_high) / seats_low if plausible and seats_low > 0 else None,
-                "capacity_complete": True,
-                "load_factor_status": "estimated" if plausible else "inconsistent_inputs",
-                "aircraft_model_coverage": float(row.aircraft_model_coverage),
-            }
         routes = []
         airport_codes: set[str] = set()
         observed_months = sorted(frame["period_id"].astype(str).unique().tolist())
@@ -201,7 +201,7 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
             for (origin, destination), part in group.groupby(
                 ["origin_iata", "destination_iata"]
             ):
-                metrics = capacity_metrics(part)
+                metrics = capacity_metrics(part, route_scope=True)
                 directions.append(
                     {
                         "origin_iata": str(origin),
@@ -214,28 +214,32 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
                     }
                 )
             monthly = []
-            for row in group.sort_values(
-                ["period_id", "carrier_key", "origin_iata", "destination_iata"]
-            ).itertuples(index=False):
-                metrics = row_capacity_metrics(row)
+            for (period_id, origin, destination), part in group.groupby(
+                ["period_id", "origin_iata", "destination_iata"], sort=True
+            ):
+                metrics = capacity_metrics(part, route_scope=True)
                 monthly.append(
                     {
-                        "period_id": str(row.period_id),
-                        "carrier_key": str(row.carrier_key),
-                        "carrier_label": str(row.carrier_label),
-                        "origin_iata": str(row.origin_iata),
-                        "destination_iata": str(row.destination_iata),
-                        "passengers": float(row.passengers_estimated),
-                        "passengers_low": float(row.passengers_estimated_low),
-                        "passengers_high": float(row.passengers_estimated_high),
+                        "period_id": str(period_id),
+                        "carrier_key": "AEROMEXICO_GROUP",
+                        "carrier_label": "Grupo Aeroméxico",
+                        "origin_iata": str(origin),
+                        "destination_iata": str(destination),
+                        "passengers": float(part["passengers_estimated"].sum()),
+                        "passengers_low": float(part["passengers_estimated_low"].sum()),
+                        "passengers_high": float(part["passengers_estimated_high"].sum()),
                         **metrics,
                         "capacity_estimated": metrics["capacity_complete"],
-                        "support_observed_in_period": bool(row.support_observed_in_period),
-                        "support_source_periods": str(row.support_source_periods),
-                        "support_month_gap": int(row.support_month_gap),
+                        "support_observed_in_period": bool(
+                            part["support_observed_in_period"].any()
+                        ),
+                        "support_source_periods": "|".join(sorted(set(
+                            part["support_source_periods"].astype(str)
+                        ))),
+                        "support_month_gap": int(part["support_month_gap"].min()),
                     }
                 )
-            route_metrics = capacity_metrics(group)
+            route_metrics = capacity_metrics(group, route_scope=True)
             routes.append(
                 {
                     "market_key": str(market_key),
