@@ -1,10 +1,20 @@
 # Estimación de pasajeros por ruta y aerolínea · método canónico
 
-Fecha: 21 de septiembre de 2026.
+Fecha: 21 de septiembre de 2026 (revisado el mismo día con las verificaciones
+de `REG INT`, T-100 celda a celda y el sondeo de 8 unidades).
 Estado: documento canónico del método. Describe lo que **ya está en producción**
 para el mercado nacional y fija las condiciones exactas que deben cumplirse
 antes de extenderlo al mercado internacional. No autoriza por sí solo ninguna
 publicación, activación de evidencia ni consumo de API.
+
+**Veredicto sobre la extensión internacional: viable en su condición
+bloqueante.** Las dos marginales internacionales de AFAC describen el mismo
+universo —cero pasajeros de diferencia en los siete meses de 2026 leídos de la
+misma edición (§9.3)— y la semilla existe y fue observada en vivo (§9.6). Lo
+que falta no es evidencia de factibilidad sino construcción: el parser de
+`REG INT`, dos crosswalks revisados a mano y una captura mensual. El riesgo
+abierto y cuantificado es el 17.6 % de registros con estado de código
+compartido desconocido (§9.6).
 
 Este documento es la referencia que debe leer cualquier agente o persona antes
 de tocar el estimador. Sustituye la reconstrucción del método a partir de
@@ -163,11 +173,48 @@ nacionales no solo se parecen: coinciden al pasajero.
 | 22 (2024M01–2026M07) | 19 de 22 | 36 pasajeros | 0.0007 % |
 
 Reproducible comparando `afac_od_nacional_regular.csv` contra
-`afac_carrier_domestic.csv` agrupados por `period_id`. Esa coincidencia es la
-evidencia de que existe una tabla conjunta aguas arriba y de que **el conteo
-O-D de AFAC es por tramo, no por itinerario**: si la tabla de pares de ciudades
-contara itinerarios mientras la de empresa cuenta tramos, la diferencia sería
-el tráfico de conexión del hub de México, que no es cero.
+`afac_carrier_domestic.csv` agrupados por `period_id`. Esa coincidencia
+demuestra que existe una tabla conjunta aguas arriba y que ambas marginales
+comparten universo.
+
+### Qué mide realmente OFOD
+
+El encabezado de las hojas dice *«ESTADISTICA OPERACIONAL ORIGEN-DESTINO /
+AVIATION STATISTICS BY **OFOD**»*. **La coincidencia de las dos marginales no
+demuestra, por sí sola, que OFOD cuente pasajeros por tramo**: dos tablas
+construidas ambas por itinerario también coincidirían. Hacía falta evidencia
+directa y se buscó.
+
+El documento metodológico que AFAC enlaza
+(`afac_research_methodology_2023_*.pdf`, 19 páginas) es un extracto del glosario
+del *Manual sobre reglamentación del transporte aéreo internacional* de la OACI
+y **no define OFOD ni la base de conteo de pasajeros**. Se revisaron las 19
+páginas buscando «OFOD», «origen-destino», «etapa», «tramo», «escala»,
+«embarque» y «desembarque»: no hay definición aplicable. En la terminología de
+la OACI, OFOD es *on-flight origin and destination*: el par de embarque y
+desembarque **dentro de un mismo número de vuelo**, que coincide con el tramo
+salvo en servicios con escala intermedia bajo un solo número de vuelo. No es el
+origen y destino final del itinerario del pasajero.
+
+A falta de definición publicada, la base de conteo se estableció
+empíricamente, con dos pruebas:
+
+1. **Ninguna fila con pasajeros y sin vuelos.** De las 11,748 filas
+   mes × par de `REG INT`, **cero** tienen `pasajeros > 0` con `vuelos = 0`.
+   Una tabla de itinerarios verdaderos contendría pares que nadie vuela sin
+   escala (por ejemplo Mérida–Madrid vía México); esta no los contiene.
+2. **Coincidencia con una fuente estrictamente de tramo.** BTS T-100 cuenta
+   segmentos sin escala. Comparando los pares México–Estados Unidos de
+   `REG INT` contra T-100 agregado a ciudad, mes a mes (enero–mayo 2026):
+   2,208 celdas emparejadas, razón de sumas **0.9999**, diferencia relativa
+   **mediana de 0.53 %**, p90 de 5.69 %, y 75.7 % de las celdas dentro de ±2 %.
+
+Conclusión: **para este mercado OFOD se comporta como tramo sin escala**. El
+residuo de medio punto porcentual es donde vivirían los servicios con escala
+intermedia bajo un mismo número de vuelo, que es exactamente la diferencia que
+la definición de la OACI predice entre OFOD y tramo. No se afirma que OFOD
+*sea* idéntico al tramo por definición; se afirma que, medido, la diferencia
+es de ese orden.
 
 ---
 
@@ -390,139 +437,196 @@ de `PAXREG!A24:H24` del resumen por empresa de julio de 2026 registrado en
 `docs/etapas/afac-rutas-evidencia-20260908/inspection.json`. Las dos vías de
 publicación coinciden.
 
-### 9.2 Marginal de ruta internacional — **disponible, sin parsear**
+### 9.2 Marginal de ruta internacional — **disponible y verificada en el archivo**
 
-La hoja `REG INT` del mismo libro O-D. Estructura verificada a partir de la
-evidencia versionada (`inspection.json`), **sin haber abierto el archivo en esta
-sesión**:
+La hoja `REG INT` del mismo libro O-D, abierta y parseada el 2026-09-21 desde
+`snapshot/data/bronze/afac_research/afac_research_city_pairs_2026M07_20260908T182059Z.xlsx`
+del respaldo privado.
+
+Encabezado real, filas 4 y 5 (índices base cero):
+
+```
+fila 1: ESTADISTICA OPERACIONAL ORIGEN-DESTINO / AVIATION STATISTICS BY OFOD
+fila 2: EN SERVICIO REGULAR INTERNACIONAL, 2026 / SCHEDULED INTERNATIONAL SERVICE, 2026
+fila 4: PAR DE CIUDADES / CITY PAIR | VUELOS / FLIGHTS | PASAJEROS / PASSENGERS | CARGA (kg)
+fila 5: ORIGEN / FROM | PAÍS ORIGEN | DESTINO / TO | PAÍS DESTINO | Ene..Dic + Total (x3)
+pie   : FUENTE: SICT, AFAC, DREE. Información proporcionada por las aerolíneas.
+```
+
+Layout confirmado, índices base cero:
+
+```
+0–3    ORIGEN, PAÍS ORIGEN, DESTINO, PAÍS DESTINO
+4–15   vuelos, enero a diciembre        16  total de vuelos
+17–28  pasajeros, enero a diciembre     29  total de pasajeros
+30–41  carga (kg)                       42  total de carga
+```
+
+Contra `REG NAC`, que tiene 41 columnas y offsets 2 y 15: las dos columnas
+extra son las de país y desplazan ambos offsets en dos. Datos desde la fila 6.
 
 | Propiedad | `REG NAC` | `REG INT` |
 |---|---|---|
-| Filas de datos | 609 | **979** |
+| Filas de datos | 609 | **979 pares direccionales** |
+| Filas mes × par parseadas | — | **11,748** |
 | Columnas | 41 | **43** |
-| Localizador del encabezado | `REG NAC!A5:AO6` | `REG INT!A5:AQ6` |
-| Etiquetas de país | solo `Mexico` | **37**, incluido `Mexico` |
+| Países | solo `Mexico` | **37 etiquetas** (36 destino, 37 origen) |
 | Columna de operador | no | **no** |
 | Columna de asientos | no | **no** |
-| Meses válidos (edición julio 2026) | 1–7 | 1–7 |
+| Meses con datos (edición julio 2026) | 1–7 | 1–7 |
 
-Layout derivado de los localizadores de celda publicados en la evidencia
-(vuelos abr–jun en `H:J`, pasajeros abr–jun en `U:W`), índices base cero:
+### 9.3 La prueba de universo compartido — **ejecutada y superada**
 
-```
-0–3    claves: ciudad origen, país origen, ciudad destino, país destino
-       (el orden exacto debe confirmarse contra el encabezado del archivo)
-4–15   vuelos, enero a diciembre
-16     total de vuelos
-17–28  pasajeros, enero a diciembre
-29     total de pasajeros
-30–41  carga
-42     total de carga
-```
+Comparando `REG INT` contra la marginal por aerolínea de la **misma edición**
+del resumen por empresa (`PAXREG`, bloque «EMPRESAS NACIONALES · SERVICIO
+REGULAR INTERNACIONAL» fila 28 más el total de «EMPRESAS EXTRANJERAS» fila 96,
+excluyendo los subtotales regionales para no contar doble):
 
-Las dos columnas extra respecto de `REG NAC` son las de país. El offset de
-vuelos es 4 y el de pasajeros 17, contra 2 y 15 del parser nacional.
-
-Filas de ejemplo verificadas (2026Q2, una dirección, todas las aerolíneas):
-
-| Ruta | Pasajeros | Vuelos | Localizador |
-|---|---:|---:|---|
-| MEXICO → MADRID | 141,526 | 581 | `REG INT!U516:W516` |
-| MEXICO → BOGOTA | 89,400 | 637 | `REG INT!U493:W493` |
-| MEXICO → PARIS | 73,807 | 269 | `REG INT!U528:W528` |
-| MEXICO → TORONTO | 45,409 | 313 | `REG INT!U550:W550` |
-| MEXICO → SAO PAULO | 37,979 | 180 | `REG INT!U544:W544` |
-| MEXICO → TOKYO | 29,013 | 181 | `REG INT!U549:W549` |
-
-**Dónde está el archivo.** En el respaldo privado, bajo el nombre lógico del
-proyecto, no con el nombre de gob.mx:
-
-```
-snapshot/data/bronze/afac_research/afac_research_city_pairs_2026M07_20260908T182059Z.xlsx
-snapshot/data/bronze/afac_research/afac_research_city_pairs_historical_2025_20260908T182713Z.xlsx
-snapshot/data/bronze/afac/routes_research/2026M02/afac_afac_city_pairs_archive_snapshot_2026M02_20260908T162422Z.xlsx
-```
-
-Se recuperan con Git LFS desde `salvamalfa/aeromexico-tracker-data`
-(`git lfs pull --include=...`). Origen público del libro de julio de 2026:
-`https://www.gob.mx/cms/uploads/attachment/file/1100280/sase-julio-2026-27082026.xlsx`.
-
-No debe sustituirse por otra fuente. El boletín por país, Aerocivil, ANAC o CAA
-describen universos distintos y mezclarlos cambiaría el significado de la
-marginal sin avisar.
-
-### 9.3 La prueba de universo que **todavía no pasa**
-
-Para lo nacional la prueba fue concluyente (sección 3): las dos marginales
-coinciden al pasajero. La prueba equivalente para internacional
-—`Σ REG INT pasajeros` contra `Σ` marginal internacional por aerolínea, mes a
-mes— **no se ha ejecutado** porque exige parsear `REG INT`. Es la primera
-puerta y no cuesta ninguna unidad de API.
-
-Mientras tanto, la comprobación agregada que sí se pudo hacer **no confirma**
-equivalencia con T-100:
-
-| Mes | AFAC internacional, todas las aerolíneas | T-100 México–EE. UU. | T-100 / AFAC |
+| Mes | `REG INT` (ruta) | Marginal por aerolínea | Diferencia |
 |---|---:|---:|---:|
-| 2026M01 | 5,796,013 | 3,692,167 | 63.7 % |
-| 2026M02 | 5,028,616 | 3,160,192 | 62.8 % |
-| 2026M03 | 5,449,478 | 3,461,494 | 63.5 % |
-| 2026M04 | 4,827,573 | 3,077,528 | 63.7 % |
-| 2026M05 | 4,268,203 | 2,944,985 | 69.0 % |
+| 2026M01 | 5,796,018 | 5,796,018 | **0** |
+| 2026M02 | 5,028,616 | 5,028,616 | **0** |
+| 2026M03 | 5,449,478 | 5,449,478 | **0** |
+| 2026M04 | 4,828,119 | 4,828,119 | **0** |
+| 2026M05 | 4,304,645 | 4,304,645 | **0** |
+| 2026M06 | 4,438,858 | 4,438,858 | **0** |
+| 2026M07 | 5,014,324 | 5,014,324 | **0** |
 
-El boletín por país de AFAC implica, para julio de 2026, que Estados Unidos es
-≈ 71.6 % del total internacional (Norteamérica 76.77 % del total; dentro de
-Norteamérica, Estados Unidos 93.28 %). El promedio calculado aquí para
-enero–mayo es 64.4 %. La brecha de entre 3 y 8 puntos **no está explicada**:
-puede ser estacionalidad, cobertura incompleta de T-100, o una diferencia real
-de universo. No debe asumirse resuelta.
+**Cero pasajeros de diferencia en los siete meses.** La marginal internacional
+se descompone además en nacionales (1.29–1.88 M/mes) y extranjeras
+(2.81–4.12 M/mes), ambas dentro del mismo total.
 
-Hay además una discrepancia de entidad documentada: T-100 no tiene **ninguna**
-fila `AEROMEXICO_CONNECT` en el tráfico transfronterizo de 2026, mientras AFAC
-le atribuye a Connect entre 36,239 y 49,198 pasajeros internacionales al mes.
-Y la participación de Aeroméxico difiere según la fuente: 11.6 % en el boletín
-(julio 2026) contra 9.24 % en T-100 (enero–mayo 2026).
+**La comparación debe hacerse por edición.** Contrastar `REG INT` de la edición
+de julio contra la marginal por aerolínea capturada de boletines DATATUR
+anteriores (`is_preliminary = True` en Silver) produce diferencias que crecen
+hacia los meses recientes —0 en enero–marzo, 546 en abril, 36,442 en mayo,
+5,077 en junio—, que son **revisiones**, no una brecha de universo. Mezclar
+ediciones es el error que hay que evitar, no la fuente.
 
-**Consecuencia de diseño.** El plan de restar el subcubo estadounidense de ambas
-marginales —propuesto en el reporte del 2026-09-21— **queda descartado como
-diseño primario**. Restar exige demostrar igualdad de definiciones, cobertura,
-meses y universos, y la comprobación disponible la contradice.
+**Corrección explícita.** Una versión anterior de este documento decía que el
+IPF internacional «no hace falta demostrar igualdad de universos para producir
+la estimación». Eso era incorrecto: el IPF **sí requiere** que ambas marginales
+describan el mismo universo, porque ajusta una matriz a las dos simultáneamente
+y `column_scale` solo absorbe una diferencia de escala global, no una
+diferencia de cobertura. La condición se exige y, para internacional, está
+probada arriba.
 
-### 9.4 Diseño recomendado: cubo internacional completo, T-100 solo como validación
+### 9.4 Cómo se usa T-100: subconjunto observado, no insumo del ajuste
 
-```
-filas     = todos los pares de ciudades de REG INT, incluidos los de EE. UU.
-columnas  = todas las aerolíneas de la marginal internacional de AFAC
-semilla   = vuelos por ruta direccional × operador de AeroDataBox
-```
+**Corrección de una evaluación previa.** Este documento afirmaba que la
+comprobación agregada «no confirma» que T-100 comparta universo con AFAC. Esa
+comparación estaba mal planteada: contrastaba T-100 México–Estados Unidos
+contra el total internacional de AFAC **de todos los países**, y luego contra un
+porcentaje regional de un mes distinto. Que T-100 represente ~64 % del
+internacional de AFAC no es una discrepancia: es que el resto son Canadá,
+Europa, Asia y Latinoamérica.
 
-T-100 **no entra como insumo**. Entra después, como contraste: donde T-100
-publica la celda observada, se compara contra la celda ajustada y se reporta el
-error. Así:
+La comparación correcta es celda a celda, restringida a los pares
+México–Estados Unidos, agregando T-100 a **ciudad** porque AFAC publica
+ciudades y no aeropuertos. Ejecutada para enero–mayo de 2026:
 
-- no hay doble conteo, porque T-100 nunca se suma ni se resta;
-- no hace falta demostrar igualdad de universos para producir la estimación,
-  solo para interpretar el contraste;
-- donde T-100 observa la celda, **el dashboard publica T-100**, no el ajuste. La
-  estimación es para las rutas donde no hay observación.
+| Métrica | Resultado |
+|---|---:|
+| Pasajeros AFAC en pares México–EE. UU. | 16,289,260 |
+| Pasajeros T-100 transfronterizo | 16,336,366 |
+| Celdas mes × par emparejadas automáticamente | 2,208 |
+| Cobertura de la comparación | 93.99 % del lado AFAC, 93.73 % del lado T-100 |
+| **Razón de sumas en celdas emparejadas** | **0.9999** |
+| Diferencia relativa mediana por celda | **0.53 %** |
+| p90 de la diferencia relativa | 5.69 % |
+| Celdas dentro de ±2 % / ±5 % | 75.7 % / 87.4 % |
 
-### 9.5 Piezas nuevas que hay que construir, y que no existen
+El 6 % sin emparejar **no es cobertura faltante**: es nomenclatura de ciudad.
+`DEL BAJIO` es `Silao` (15,411 contra 15,229 pasajeros), `SAN JOSE, CALIFORNIA`
+es `San Jose` (14,352 contra 14,293), `WASHINGTON` es `Dulles` (11,909 contra
+11,910). Un crosswalk de ciudades revisado a mano cierra esa brecha.
+
+**T-100 es, por lo tanto, un subconjunto observado y comparable del universo
+internacional de AFAC.** Eso le da tres papeles legítimos y uno prohibido.
+
+| Papel | Cómo |
+|---|---|
+| **Verdad publicable** | Donde T-100 observa la celda ruta × operador, el dashboard publica T-100 y marca la celda `observado`. El ajuste no la sustituye |
+| **Validación del estimador** | Con una semilla real de AeroDataBox, el subcubo estadounidense da el error medido del estimador internacional sobre el cubo que se va a publicar, no sobre un panel sintético |
+| **Control de cobertura de la semilla** | `REG INT` publica `vuelos` por par y mes; la semilla capturada debe reproducir ese conteo dentro de tolerancia, igual que `seed_acceptance` hace en nacional |
+| **Prohibido: insumo del ajuste** | T-100 no entra como fila, columna ni peso. Sumarlo o restarlo de las marginales de AFAC introduce doble conteo y rompe la reconciliación |
+
+**Cómo se evita la contradicción con los totales del IPF.** El ajuste se corre
+sobre el cubo internacional completo —todas las filas de `REG INT`, incluidas
+las de Estados Unidos, y todas las columnas de la marginal por aerolínea— y
+reconcilia ambas marginales exactamente. La celda ajustada de una ruta
+estadounidense **diferirá** de la celda observada de T-100, y esa diferencia es
+el error medido del estimador, no un conflicto de datos. La regla de
+presentación es explícita:
+
+1. se publica T-100 donde existe, etiquetado `observado`;
+2. la celda ajustada de esa misma ruta se conserva solo como diagnóstico, con
+   su diferencia contra T-100 como métrica de calidad;
+3. **nunca se suman** una celda observada y una estimada en el mismo total;
+4. los totales por ruta y por aerolínea que se muestren junto a celdas mixtas
+   declaran qué parte es observada y qué parte estimada.
+
+**La resta del subcubo estadounidense** —restar T-100 de ambas marginales y
+ajustar solo el residuo no estadounidense— ya no está descartada por el
+universo: la comparación celda a celda la respalda. Sigue bloqueada por la
+**identidad del operador**: T-100 no tiene ninguna fila `AEROMEXICO_CONNECT` en
+el tráfico transfronterizo de 2026, mientras AFAC le atribuye a Connect entre
+36,239 y 49,198 pasajeros internacionales al mes, y el sondeo del 2026-09-10
+observó 14 tramos internacionales operados por Connect. Restar sin resolver esa
+correspondencia dejaría tráfico de Connect dentro del residuo no estadounidense
+donde no pertenece. Es una optimización, no un requisito: el cubo completo no
+la necesita.
+
+### 9.5 Piezas nuevas que hay que construir
 
 | Pieza | Análogo nacional | Estado |
 |---|---|---|
-| Parser de `REG INT` | `read_route_workbook` en `src/ingest/afac/margins.py` | **no existe** |
-| Crosswalk ciudad AFAC internacional ↔ IATA | `afac_city_iata_crosswalk.csv` (58 aeropuertos) | **no existe**; 37 países, ciudades con varios aeropuertos en ambos extremos |
-| Crosswalk aerolínea AFAC internacional ↔ IATA/ICAO | `afac_carrier_crosswalk.csv` (2 filas) | **no existe**; 66–103 nombres |
-| Puerta de aceptación internacional | `seed_acceptance_v3` | reutilizable, umbrales por revalidar |
-| Semilla internacional | `flights.py` | **existe**: `src/ingest/aerodatabox/international.py` |
+| Parser de `REG INT` | `read_route_workbook` en `src/ingest/afac/margins.py` | layout verificado (offsets 4 y 17); **falta el parser productivo y sus pruebas** |
+| Crosswalk ciudad AFAC internacional ↔ IATA | `afac_city_iata_crosswalk.csv` (58 aeropuertos) | **no existe**; 37 países y ciudades con varios aeropuertos en ambos extremos. El emparejamiento automático contra T-100 alcanzó 94 % y el 6 % restante es nomenclatura resoluble a mano |
+| Crosswalk aerolínea AFAC internacional ↔ IATA/ICAO | `afac_carrier_crosswalk.csv` (2 filas) | **no existe**; el resumen por empresa lista 5 nacionales y ~45 extranjeras con subtotales regionales que **no deben contarse** |
+| Puerta de aceptación internacional | `seed_acceptance_v3` | reutilizable **y con mejor insumo**: `REG INT` publica `vuelos` por par y mes, así que la cobertura de la semilla se mide por división directa y no por inferencia |
+| Semilla internacional | `flights.py` | **existe y está probada en vivo**: `src/ingest/aerodatabox/international.py` |
 
-Los dos crosswalks son artefactos de revisión humana. La equivalencia
-ciudad ↔ aeropuerto es más frágil que en el caso nacional: `MEXICO` no es
-automáticamente `MMMX`, `LONDRES` no es automáticamente `LHR`, y una ciudad con
-varios aeropuertos en el extremo extranjero no puede resolverse por
-proximidad.
+### 9.6 El sondeo del 2026-09-10: qué se compró y qué se aprendió
 
----
+Un día local en MEX y MTY, ambos sentidos. **4 llamadas, 8 unidades**, cero en
+caché, ninguna ventana vacía. El contenido crudo del proveedor se eliminó al
+extraer los diagnósticos.
+
+| Métrica | Resultado |
+|---|---:|
+| Registros devueltos | 1,081 (545 salidas, 536 llegadas) |
+| Tramos nacionales descartados en ambos extremos | 672 |
+| Tramos internacionales conservados | 366 |
+| Mercados internacionales distintos | 79 |
+| Operadores distintos | 26 |
+| **Mercados de Grupo Aeroméxico** | **54** |
+| Registros sin aeropuerto opuesto | 43 (4.0 %) |
+| Vuelos `AM` sin modelo de aeronave | 0 |
+
+Los 54 mercados de Grupo Aeroméxico incluyen **30 de los 32 que hoy muestran
+`N/D`** en el dashboard: MAD, CDG, AMS, FCO, BCN, LHR, ICN, NRT, YYZ, YUL, YVR,
+BOG, MDE, CLO, CTG, LIM, UIO, EZE, GUA, SAL, SAP, SJO, PTY, SDQ, PUJ, HAV, XPL,
+RDU, y los dos de Monterrey (MAD y CDG) que hoy solo conocemos por un
+comunicado de OMA. Faltaron `MEX<>MGA` y `MEX<>SNA`, que no operaron ese día.
+Apareció además `ICN<>MTY`, que no está en la red del dashboard.
+
+**El riesgo medido, y es el hallazgo importante.** De los 1,081 registros,
+**190 (17.6 %) llegan con `codeshareStatus = Unknown`**; entre los de AM y
+Connect, 92 de 476 (**19.3 %**). La especificación advierte que en aeropuertos
+sin información de código compartido se aplica «complex filtering … caution:
+false results are possible». Como la consulta pide `withCodeshared=false`, esos
+190 registros sobrevivieron por una **heurística del proveedor**, no por un
+estado declarado. Casi una quinta parte de la semilla descansa en una
+clasificación no verificada, y la clasificación de codeshare afecta
+precisamente las proporciones dentro de la ruta, que son el único contenido de
+la semilla.
+
+Eso no invalida el método, pero obliga a tres cosas: medir y publicar este
+porcentaje en **cada** captura; contrastar el conteo de vuelos de la semilla
+contra la columna `vuelos` de `REG INT`, que es una verificación independiente
+y gratuita; y tratar una ruta con alta proporción de `Unknown` como candidata a
+`N/D` aunque el ajuste converja.
 
 ## 10. Qué tan bueno es el estimador, medido
 
@@ -530,6 +634,23 @@ proximidad.
 lo reconstruye desde las dos marginales y reporta el error por varios cortes.
 Rutas de un solo operador excluidas: el ajuste las recupera por construcción y
 aplanarían todos los promedios.
+
+> **Qué es y qué no es este experimento.** La semilla sale del **mismo panel
+> observado** que produce las marginales: son los vuelos o asientos que T-100
+> publica para esas mismas celdas. Es decir, la semilla tiene cobertura
+> perfecta, sin muestreo, sin error de clasificación de codeshare, sin
+> operadores ausentes y sin desajuste de crosswalk. Por eso el resultado es
+> **una prueba favorable del método bajo condiciones ideales**: mide cuánto
+> error queda por la no identificabilidad del IPF cuando todo lo demás está
+> bien.
+>
+> **No es** la precisión esperable de una captura real de AeroDataBox, que
+> añade muestreo de siete días, ~18 % de registros con `codeshareStatus`
+> desconocido (medido en el sondeo), operadores sin mapear y equivalencias
+> ciudad ↔ aeropuerto. **Tampoco es** la precisión esperable en MAD, BOG o NRT:
+> son mercados fuera del panel, con frecuencias semanales bajas y estructuras
+> de competencia distintas. Las cifras de abajo son una **cota inferior del
+> error**, no una predicción.
 
 ### Resultado global (rutas competidas)
 
@@ -579,6 +700,12 @@ El error se **duplica largo** entre el cuartil más grande y el más pequeño.
 MEX–MAD son ≈ 9,050 km y MEX–NRT ≈ 11,300 km: ninguna ruta de T-100 se
 aproxima. La distancia no está midiendo lo que importaría en Europa o Asia
 —frecuencia semanal baja, un solo operador dominante, estacionalidad marcada—.
+
+**La medición que sí valdría** es el mismo experimento con una semilla real de
+AeroDataBox sobre el cubo internacional: ahí el subcubo estadounidense da el
+error del estimador **con** el ruido de captura incluido, sobre las mismas
+celdas que se van a publicar. Esa medición requiere una captura y todavía no
+existe.
 
 ### Aeroméxico en particular
 
@@ -727,19 +854,19 @@ Límites que permanecen aunque todo lo demás salga bien:
 
 En este orden. Ninguna etapa autoriza la siguiente por sí sola.
 
-1. **Sin API.** Parsear `REG INT` y ejecutar la prueba de universo compartido
-   contra la marginal internacional por aerolínea, mes a mes, como se hizo en la
-   sección 3 para lo nacional. Si no coinciden al pasajero, documentar la brecha
-   antes de seguir.
-2. **Sin API.** Construir y revisar a mano los dos crosswalks de la
-   sección 9.5, con conteo explícito de rutas, pasajeros y aerolíneas sin
-   correspondencia.
-3. **API mínima.** Sondeo acotado para medir el riesgo de clasificación de
-   codeshare y confirmar que el feed trae la red internacional con operador y
-   aeropuerto opuesto.
-4. **API.** Captura de la semilla en los meses que la ventana histórica todavía
-   permita.
-5. **Sin API.** Puerta de aceptación internacional, ajuste, backtest contra el
-   subcubo observado de T-100 con los cortes de la sección 10.
-6. **Revisión humana.** Vista separada de revisión antes de tocar el mapa
-   principal, con las tres capas distinguibles sin depender de un tooltip.
+| # | Etapa | Estado |
+|---|---|---|
+| 1 | Probar universo compartido de las dos marginales internacionales | **hecho** (§9.3, cero diferencia en 7 meses) |
+| 2 | Establecer la base de conteo de OFOD con evidencia | **hecho** (§3: sin definición publicada; evidencia empírica de comportamiento por tramo) |
+| 3 | Evaluar T-100 celda a celda y fijar su papel | **hecho** (§9.4: subconjunto observado comparable, 0.9999, mediana 0.53 %) |
+| 4 | Confirmar que el proveedor trae la red internacional | **hecho** (§9.6: 54 mercados de Grupo Aeroméxico por 8 unidades) |
+| 5 | Parser productivo de `REG INT` con pruebas | pendiente, sin API |
+| 6 | Crosswalks de ciudad y de aerolínea, revisados a mano, con conteo de no mapeados por rutas, pasajeros y aerolíneas | pendiente, sin API |
+| 7 | Puerta de aceptación internacional, usando `vuelos` de `REG INT` como contraste | pendiente, sin API |
+| 8 | Captura mensual de la semilla en los meses que la ventana permita | pendiente, **con API** |
+| 9 | Ajuste, y backtest del subcubo estadounidense con la semilla real | pendiente |
+| 10 | Vista separada de revisión humana antes de tocar el mapa principal | pendiente |
+
+Las etapas 5 a 7 no consumen unidades y son las que faltan para que la etapa 8
+tenga sentido: capturar una semilla sin crosswalk ni puerta produce filas que no
+se pueden fitear.
