@@ -262,7 +262,8 @@ def test_review_html_is_self_contained_accessible_and_responsive() -> None:
     assert "pasajeros estimados" in app_script
     assert "domestic_monthly_networks" in app_script
     assert "rango de sensibilidad" in app_script
-    assert "aeroméxico connect" in document.lower()
+    assert "grupo aeroméxico" in document.lower()
+    assert "aeroméxico connect" not in document.lower()
     assert 'const defaultairport = "mex"' in app_script
     assert 'key === "load_factor"' in app_script
     assert "direction.passengers / direction.seats" in app_script
