@@ -161,9 +161,12 @@ input[type="search"] { width: 100%; padding: 8px 10px; }
 .route-estimate-total small, .route-estimate-line > span > small { display: block; color: var(--quiet); font-size: 6.8px; font-weight: 650; line-height: 1.25; white-space: nowrap; }
 .route-estimate-line { align-items: start; }
 .route-estimate-line .route-direction-name { white-space: normal; }
-.route-estimate-line .route-direction-name strong { color: var(--brand-blue-dark); font-size: 7.7px; }
 .route-support-borrowed { margin-top: 2px; color: var(--amber) !important; white-space: normal !important; }
-.route-month-label { color: var(--muted) !important; font-weight: 600; text-transform: capitalize; }
+.route-estimate-carrier { margin: 2px 3px 4px; color: var(--brand-blue-dark); font-size: 7.7px; font-weight: 750; }
+.route-estimate-month { margin: 3px 0; padding-top: 4px; border-top: 1px solid #dde6f0; }
+.route-estimate-month:first-of-type { padding-top: 0; border-top: 0; }
+.route-estimate-month-label { margin: 0 3px 2px; color: var(--muted); font-size: 6.8px; font-weight: 700; text-transform: capitalize; letter-spacing: .02em; }
+.estimate-info-badge { display: inline-grid; place-items: center; width: 13px; height: 13px; margin-left: 3px; color: #fff; background: var(--amber); border-radius: 50%; font-size: 9px; font-weight: 800; font-style: normal; line-height: 1; cursor: help; vertical-align: middle; }
 .route-change-chip { display: inline-flex; align-items: center; min-height: 13px; padding: 1px 3px; color: var(--quiet); background: #edf0f4; border-radius: 999px; font-size: 6.8px; font-weight: 850; line-height: 1; }
 .route-change-chip.delta-up { background: #e8f6f1; }
 .route-change-chip.delta-down { background: #fff0ef; }

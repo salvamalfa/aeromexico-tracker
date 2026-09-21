@@ -328,6 +328,20 @@
     const sorted = [...monthIds].sort();
     const monthNetworks = sorted.map((id) => domesticMonthlyPeriods[id]).filter(Boolean);
     if (!monthNetworks.length) return null;
+    // El punto de cobertura por ruta siempre se mide contra los meses de
+    // calendario del trimestre completo (igual que en Internacional), no
+    // contra la selección manual actual: así no cambia de color solo
+    // porque el usuario deselecciona un mes.
+    const quarterMonths = monthsInQuarter(domesticMonthsQuarterId);
+    const quarterCoverage = new Map();
+    for (const monthId of quarterMonths) {
+      const monthNetwork = domesticMonthlyPeriods[monthId];
+      if (!monthNetwork) continue;
+      for (const route of monthNetwork.routes || []) {
+        if (!finite(route.passengers)) continue;
+        quarterCoverage.set(route.market_key, (quarterCoverage.get(route.market_key) || 0) + 1);
+      }
+    }
     const byMarket = new Map();
     const airportsByIata = new Map();
     for (const monthNetwork of monthNetworks) {
@@ -357,7 +371,6 @@
         agg.monthly.push(...(route.monthly || []));
       }
     }
-    const monthsSelected = sorted.length;
     const routes = [...byMarket.values()].map((agg) => {
       const capacityComplete = agg.capacityMonthsCovered > 0 && agg.capacityMonthsCovered === agg.monthsCovered;
       const loadFactor = capacityComplete && agg.seats > 0 ? agg.passengers / agg.seats : null;
@@ -372,7 +385,7 @@
         capacity_estimated: capacityComplete,
         load_factor: plausible ? loadFactor : null,
         load_factor_status: !capacityComplete ? "capacity_incomplete" : (plausible ? "estimated" : "inconsistent_inputs"),
-        months_covered: agg.monthsCovered, months_selected: monthsSelected,
+        months_covered: quarterCoverage.get(agg.market_key) || 0, months_selected: quarterMonths.length,
         capacity_months_covered: agg.capacityMonthsCovered,
         support_repair_applied: agg.repaired,
         source_label: agg.source_label,
@@ -429,7 +442,8 @@
         : "en la red internacional";
     if (network.mode === "estimated_domestic") {
       const repaired = shown.some((route) => route.support_repair_applied);
-      host.innerHTML = `<strong>≈${integer.format(passengers)}</strong><span>pasajeros estimados de Grupo Aeroméxico ${esc(scope)} · ${esc(network.period_label)} · sensibilidad ${integer.format(passengersLow)}–${integer.format(passengersHigh)}${repaired ? " · soporte de rutas completado con meses cercanos" : ""}</span>`;
+      const estimateTitle = "Estimación AFAC + AeroDataBox; conserva rango de sensibilidad";
+      host.innerHTML = `<strong>${integer.format(passengers)}</strong><span>pasajeros<span class="estimate-info-badge" title="${esc(estimateTitle)}" aria-label="${esc(estimateTitle)}" role="img">i</span> de Grupo Aeroméxico ${esc(scope)} · ${esc(network.period_label)} · sensibilidad ${integer.format(passengersLow)}–${integer.format(passengersHigh)}${repaired ? " · soporte de rutas completado con meses cercanos" : ""}</span>`;
       return;
     }
     // Las fuentes internacionales (BTS T-100, ANAC, Aerocivil, CAA, Aena)
@@ -491,12 +505,13 @@
   }
 
   function coverageDotHtml(route) {
-    if (finite(route.months_covered) && finite(route.months_selected)) {
-      // Agregado nacional multi-mes: indica cuántos de los meses
-      // seleccionados aportaron datos a esta ruta, nunca un promedio.
-      if (route.months_covered >= route.months_selected) return "";
-      const variant = route.months_covered / route.months_selected >= 0.67 ? "is-partial" : "is-thin";
-      const title = `${route.months_covered} de ${route.months_selected} meses seleccionados con datos de esta ruta`;
+    if (finite(route.months_covered) && finite(route.months_selected) && route.months_selected > 0) {
+      // Agregado nacional multi-mes: mismo criterio que Internacional
+      // (verde/amarillo/rojo según cuántos meses de calendario del
+      // trimestre completo tienen datos de esta ruta), no un promedio.
+      const ratio = route.months_covered / route.months_selected;
+      const variant = ratio >= 1 ? "is-full" : ratio >= 0.5 ? "is-partial" : "is-thin";
+      const title = `${route.months_covered} de ${route.months_selected} meses del trimestre con datos de esta ruta`;
       return `<span class="route-coverage-dot ${variant}" title="${title}" aria-label="${title}"></span>`;
     }
     if (route.passengers_estimated) return "";
@@ -600,7 +615,7 @@
         const low = finite(route.passengers_low) ? route.passengers_low : route.passengers;
         const high = finite(route.passengers_high) ? route.passengers_high : route.passengers;
         const title = `Estimación; rango de sensibilidad ${integer.format(low)}–${integer.format(high)} pasajeros`;
-        return `<td class="route-table-value"><span class="route-table-total route-estimate-total" title="${esc(title)}"><strong>≈${integer.format(route.passengers)}</strong><small>${integer.format(low)}–${integer.format(high)}</small></span></td>`;
+        return `<td class="route-table-value"><span class="route-table-total route-estimate-total" title="${esc(title)}"><strong>${integer.format(route.passengers)}</strong><small>${integer.format(low)}–${integer.format(high)}</small></span></td>`;
       }
       if (route.capacity_estimated && ["seats", "departures", "load_factor"].includes(key)) {
         if (key === "load_factor" && !finite(route.load_factor)) {
@@ -619,7 +634,7 @@
           : key === "seats"
             ? "Capacidad estimada con el modelo de aeronave y la configuración de Aeroméxico"
             : "Pasajeros estimados divididos entre asientos estimados";
-        return `<td class="route-table-value"><span class="route-table-total route-estimate-total" title="${esc(title)}"><strong>≈${formatRouteMetric(key, route[key])}</strong>${range}</span></td>`;
+        return `<td class="route-table-value"><span class="route-table-total route-estimate-total" title="${esc(title)}"><strong>${formatRouteMetric(key, route[key])}</strong>${range}</span></td>`;
       }
       const chip = routeMetricChangeChip(route, key);
       return `<td class="route-table-value"><span class="route-table-total"><strong>${formatRouteMetric(key, route[key])}</strong>${chip}</span></td>`;
@@ -632,35 +647,50 @@
         : direction[key];
       return `<span>${formatRouteMetric(key, value)}</span>`;
     };
-    const estimateDetails = (route) => {
-      const items = route.monthly || [];
-      // Con más de un mes agregado, cada línea necesita decir a qué mes
-      // pertenece: sin esto, dos o tres meses de un mismo sentido se verían
-      // idénticos salvo por la cifra.
-      const spansMonths = new Set(items.map((item) => item.period_id)).size > 1;
-      return items.map((item) => {
-        const low = finite(item.passengers_low) ? item.passengers_low : item.passengers;
-        const high = finite(item.passengers_high) ? item.passengers_high : item.passengers;
-        const borrowed = item.support_observed_in_period ? "" : `<small class="route-support-borrowed" title="Soporte de ruta observado en ${esc(item.support_source_periods)}; no es un vuelo observado del mes mostrado">soporte ${esc(item.support_source_periods)}</small>`;
-        const seats = item.capacity_estimated ? `≈${formatRouteMetric("seats", item.seats)}` : "N/D";
-        const departures = item.capacity_estimated ? `≈${formatRouteMetric("departures", item.departures)}` : "N/D";
-        const loadFactor = item.capacity_estimated && finite(item.load_factor)
-          ? `≈${formatRouteMetric("load_factor", item.load_factor)}`
-          : "N/D";
-        const monthLabel = spansMonths && item.period_id
-          ? ` <small class="route-month-label">${esc(DOMESTIC_MONTH_NAMES[Number(item.period_id.slice(5, 7)) - 1] || item.period_id)}</small>`
-          : "";
-        return `
+    // "Grupo Aeroméxico" se declara una sola vez por caja de detalle, no en
+    // cada línea de sentido/mes: repetirlo ahí no añade información, ya lo
+    // dice arriba la nota de alcance y, aquí, este encabezado.
+    const carrierHeaderHtml = () => `<p class="route-estimate-carrier">Grupo Aeroméxico</p>`;
+    const estimateDirectionLine = (item) => {
+      const low = finite(item.passengers_low) ? item.passengers_low : item.passengers;
+      const high = finite(item.passengers_high) ? item.passengers_high : item.passengers;
+      const borrowed = item.support_observed_in_period ? "" : `<small class="route-support-borrowed" title="Soporte de ruta observado en ${esc(item.support_source_periods)}; no es un vuelo observado del mes mostrado">soporte ${esc(item.support_source_periods)}</small>`;
+      const seats = item.capacity_estimated ? formatRouteMetric("seats", item.seats) : "N/D";
+      const departures = item.capacity_estimated ? formatRouteMetric("departures", item.departures) : "N/D";
+      const loadFactor = item.capacity_estimated && finite(item.load_factor)
+        ? formatRouteMetric("load_factor", item.load_factor)
+        : "N/D";
+      return `
       <div class="route-direction-line route-estimate-line">
-        <span class="route-direction-name"><strong>${esc(item.carrier_label)}</strong>${monthLabel}<br>${esc(item.origin_iata)} → ${esc(item.destination_iata)}${borrowed}</span>
-        <span title="Rango de sensibilidad ${integer.format(low)}–${integer.format(high)}">≈${integer.format(item.passengers)}<small>${integer.format(low)}–${integer.format(high)}</small></span>
+        <span class="route-direction-name">${esc(item.origin_iata)} → ${esc(item.destination_iata)}${borrowed}</span>
+        <span title="Rango de sensibilidad ${integer.format(low)}–${integer.format(high)}">${integer.format(item.passengers)}<small>${integer.format(low)}–${integer.format(high)}</small></span>
         <span>${seats}</span><span>${departures}</span><span>${loadFactor}</span>
       </div>`;
+    };
+    // Agrupa por mes en vez de repetir "Grupo Aeroméxico" y el nombre del
+    // mes en cada una de las líneas de ida/vuelta; el mes queda como un
+    // rótulo sutil una sola vez por grupo, con un separador ligero entre
+    // meses.
+    const estimateDetails = (route) => {
+      const items = route.monthly || [];
+      const byMonth = new Map();
+      for (const item of items) {
+        if (!byMonth.has(item.period_id)) byMonth.set(item.period_id, []);
+        byMonth.get(item.period_id).push(item);
+      }
+      const monthIds = [...byMonth.keys()].sort();
+      const spansMonths = monthIds.length > 1;
+      const body = monthIds.map((periodId) => {
+        const lines = byMonth.get(periodId).map(estimateDirectionLine).join("");
+        if (!spansMonths) return lines;
+        const monthName = DOMESTIC_MONTH_NAMES[Number(periodId.slice(5, 7)) - 1] || periodId;
+        return `<div class="route-estimate-month"><p class="route-estimate-month-label">${esc(monthName)}</p>${lines}</div>`;
       }).join("");
+      return carrierHeaderHtml() + body;
     };
     const directionDetails = (route) => route.passengers_estimated && (route.monthly || []).length
       ? estimateDetails(route)
-      : routeDirections(route).map(({ origin, destination, direction }) => `
+      : carrierHeaderHtml() + routeDirections(route).map(({ origin, destination, direction }) => `
       <div class="route-direction-line">
         <span class="route-direction-name">${esc(origin)} → ${esc(destination)}</span>
         ${directionValue(direction, "passengers", route)}
@@ -861,7 +891,7 @@
       : null;
     const mapView = activeRegion
       ? { ...fitViewToCanvas(activeRegion.lat, activeRegion.lon), latDtick: activeRegion.dtick, lonDtick: activeRegion.dtick }
-      : network.mode === "scheduled_domestic"
+      : networkMode === "domestic"
         ? { ...fitViewToCanvas([13, 34], [-119, -86]), latDtick: 5, lonDtick: 5 }
         : { lat: [-60, 85], lon: [-180, 180], latDtick: 30, lonDtick: 45 };
     const maxValue = Math.max(...ordered.map(routeValue), 1);
