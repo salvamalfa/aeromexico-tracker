@@ -18,13 +18,30 @@ dashboard y no se tocó el Analysis Agent.
 
 ## 0. Erratas verificadas
 
+> **Tercera revisión, 2026-09-21.** Con el libro O-D ya descargado y abierto, y
+> con el sondeo de 8 unidades ejecutado, se cerraron las verificaciones
+> pendientes. Los resultados están en el documento canónico
+> [`docs/estimacion-pasajeros-ruta-aerolinea.md`](../estimacion-pasajeros-ruta-aerolinea.md):
+>
+> - las dos marginales internacionales de AFAC concilian con **cero pasajeros
+>   de diferencia** en los siete meses de 2026 leídos de la misma edición (§9.3);
+> - **T-100 sí es un subconjunto observado comparable** del universo
+>   internacional de AFAC: 2,208 celdas mes × par, razón de sumas 0.9999,
+>   diferencia mediana 0.53 % (§9.4). La evaluación agregada de este reporte
+>   estaba mal planteada y queda corregida;
+> - el sondeo observó **54 mercados de Grupo Aeroméxico** y midió el riesgo
+>   real: **17.6 % de los registros llegan con `codeshareStatus = Unknown`**
+>   (§9.6).
+
+
+
 | Afirmación original | Qué se verificó | Dónde |
 |---|---|---|
 | Los mercados de Colombia y Reino Unido salen `N/D` por la regla de completitud bidireccional | Falso. Las 147 filas de Aerocivil y las 2 de CAA en `fact_international_route_observations` tienen `passengers` **nulo**; es un hueco de fuente | §1 |
 | «El plan contratado es RapidAPI Ultra… 210 días» | Sigue siendo la hipótesis mejor respaldada, pero **no está probada**: un HTTP 400 no demuestra su causa. Etiquetada como hipótesis | §3 |
 | «Quedan entre 39,788 y 39,792 unidades» | Es una **estimación** derivada del libro interno del cliente, no una lectura del portal de RapidAPI | §4 |
 | «La hoja `REG INT` no está en el respaldo privado» | Falso. El libro O-D **sí está**, bajo el nombre lógico `afac_research_city_pairs_*` | §6, §10 |
-| Diseño por resta del subcubo T-100 de ambas marginales | **Descartado como diseño primario**: la comprobación agregada no confirma igualdad de universos (brecha de 3 a 8 puntos) | §6 |
+| Diseño por resta del subcubo T-100 de ambas marginales | **Descartado como diseño primario**, pero no por el motivo que decía esta tabla: la comprobación agregada estaba mal planteada (comparaba T-100 de EE. UU. contra el internacional de **todos** los países). Celda a celda, T-100 sí es comparable. Sigue descartado por la identidad del operador: T-100 no tiene filas de Aeroméxico Connect | §6 y canónico §9.4 |
 
 ## Veredicto en una página
 
