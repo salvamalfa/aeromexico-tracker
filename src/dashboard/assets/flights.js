@@ -291,7 +291,7 @@
         : "en la red internacional";
     if (network.mode === "estimated_domestic") {
       const repaired = shown.some((route) => route.support_repair_applied);
-      host.innerHTML = `<strong>≈${integer.format(passengers)}</strong><span>pasajeros estimados de Aerovías de México + Aeroméxico Connect ${esc(scope)} · ${esc(network.period_label)} · sensibilidad ${integer.format(passengersLow)}–${integer.format(passengersHigh)}${repaired ? " · soporte de rutas completado con meses cercanos" : ""}</span>`;
+      host.innerHTML = `<strong>≈${integer.format(passengers)}</strong><span>pasajeros estimados de Grupo Aeroméxico ${esc(scope)} · ${esc(network.period_label)} · sensibilidad ${integer.format(passengersLow)}–${integer.format(passengersHigh)}${repaired ? " · soporte de rutas completado con meses cercanos" : ""}</span>`;
       return;
     }
     host.innerHTML = `<strong>${integer.format(flights)}</strong><span>vuelos ${esc(scope)} · ${esc(network.period_label)}${noBreakdown ? ` · ${noBreakdown} ${noBreakdown === 1 ? "ruta" : "rutas"} sin desglose propio` : ""}</span>`;

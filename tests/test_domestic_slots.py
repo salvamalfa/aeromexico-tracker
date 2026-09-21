@@ -55,8 +55,17 @@ def test_domestic_map_shows_reconciled_estimates_for_every_queried_month():
                for route in network["routes"])
     dual_operator = next(route for route in network["routes"] if route["market_key"] == "MEX<>MTY")
     assert {item["carrier_label"] for item in dual_operator["monthly"]} == {
-        "Aerovías de México", "Aeroméxico Connect",
+        "Grupo Aeroméxico",
     }
+    june = payload["domestic_monthly_networks"]["2026M06"]
+    gdl = next(route for route in june["routes"] if route["market_key"] == "GDL<>MEX")
+    assert gdl["departures"] == pytest.approx(745.0)
+    assert gdl["seats"] == pytest.approx(131_925.8)
+    assert gdl["load_factor"] == pytest.approx(gdl["passengers"] / gdl["seats"])
+    assert {item["carrier_label"] for item in gdl["monthly"]} == {
+        "Grupo Aeroméxico",
+    }
+    assert all(item["capacity_complete"] for item in gdl["monthly"])
     consumer = integration_flight_payload(payload)
     assert consumer["domestic_networks"] == {}
     assert set(consumer["domestic_monthly_networks"]) == set(payload["domestic_monthly_networks"])
