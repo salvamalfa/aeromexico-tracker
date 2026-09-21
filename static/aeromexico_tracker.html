@@ -822,7 +822,7 @@ tbody tr.year-separator td {
 #panel-flights .flow-map { height: 570px; }
 #panel-flights .map-detail-layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(410px, .9fr); gap: 14px; align-items: stretch; }
 #panel-flights .map-canvas-column { min-width: 0; }
-#panel-flights .airport-tooltip { position: relative; box-sizing: border-box; min-width: 0; height: 570px; max-height: 570px; overflow: auto; padding: 14px; color: var(--ink); background: #f8fafc; border: 1px solid var(--line-strong); border-radius: 10px; }
+#panel-flights .airport-tooltip { position: relative; box-sizing: border-box; min-width: 0; padding: 14px; color: var(--ink); background: #f8fafc; border: 1px solid var(--line-strong); border-radius: 10px; }
 #panel-flights .airport-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 #panel-flights .airport-tooltip h3 { margin: 0; color: var(--brand-blue-dark); font-size: 14px; }
 #panel-flights .airport-search-toggle { flex: 0 0 auto; display: grid; place-items: center; width: 27px; height: 27px; padding: 0; color: var(--brand-blue); background: #fff; border: 1px solid var(--line-strong); border-radius: 7px; cursor: pointer; }
@@ -842,7 +842,7 @@ tbody tr.year-separator td {
 #panel-flights .airport-tooltip-empty strong { display: block; margin-bottom: 5px; color: var(--brand-blue-dark); font-size: 13px; }
 #panel-flights .airport-table-wrap { overflow-x: auto; }
 #panel-flights .airport-route-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-#panel-flights .airport-route-table th { position: sticky; top: -14px; z-index: 1; padding: 8px 3px; color: var(--muted); background: #f8fafc; border-bottom: 1px solid var(--line-strong); font-size: 7.2px; letter-spacing: .025em; text-align: right; text-transform: uppercase; }
+#panel-flights .airport-route-table th { padding: 8px 3px; color: var(--muted); background: #f8fafc; border-bottom: 1px solid var(--line-strong); font-size: 7.2px; letter-spacing: .025em; text-align: right; text-transform: uppercase; }
 #panel-flights .airport-route-table th:first-child { width: 31%; text-align: left; }
 #panel-flights .airport-route-table th.th-with-badge { white-space: nowrap; }
 #panel-flights .airport-route-table td { padding: 9px 3px; border-bottom: 1px solid #e5eaf0; font-size: 8.9px; text-align: right; vertical-align: top; font-variant-numeric: tabular-nums; }
@@ -871,7 +871,8 @@ tbody tr.year-separator td {
 #panel-flights .route-estimate-month { margin: 3px 0; padding-top: 4px; border-top: 1px solid #dde6f0; }
 #panel-flights .route-estimate-month:first-of-type { padding-top: 0; border-top: 0; }
 #panel-flights .route-estimate-month-label { margin: 0 3px 2px; color: var(--muted); font-size: 6.8px; font-weight: 700; text-transform: capitalize; letter-spacing: .02em; }
-#panel-flights .estimate-info-badge { display: inline-grid; place-items: center; width: 13px; height: 13px; margin-left: 3px; color: #fff; background: var(--amber); border-radius: 50%; font-size: 9px; font-weight: 800; font-style: normal; line-height: 1; cursor: help; vertical-align: middle; }
+#panel-flights .estimate-info-badge { display: inline-grid; place-items: center; width: 9px; height: 9px; margin-left: 2px; color: #fff; background: var(--amber); border-radius: 50%; cursor: help; vertical-align: middle; }
+#panel-flights .estimate-info-badge svg { width: 6px; height: 6px; fill: currentColor; }
 #panel-flights .route-change-chip { display: inline-flex; align-items: center; min-height: 13px; padding: 1px 3px; color: var(--quiet); background: #edf0f4; border-radius: 999px; font-size: 6.8px; font-weight: 850; line-height: 1; }
 #panel-flights .route-change-chip.delta-up { background: #e8f6f1; }
 #panel-flights .route-change-chip.delta-down { background: #fff0ef; }
@@ -898,7 +899,6 @@ tbody tr.year-separator td {
   #panel-flights .map-canvas-column { overflow-x: auto; overscroll-behavior-inline: contain; contain: paint; }
   #panel-flights .flow-map { min-width: 700px; }
   #panel-flights .flow-map { height: 500px; }
-  #panel-flights .airport-tooltip { height: 500px; max-height: 500px; }
 }
 
 @media (max-width: 736px) {
@@ -6339,7 +6339,7 @@ return Plotly;
       <p class="airport-meta">${subtitleHtml || esc(subtitle)}</p>
       <div class="airport-table-wrap">
         <table class="airport-route-table">
-          <thead><tr><th>Ruta</th><th class="${network.mode === "estimated_domestic" ? "th-with-badge" : ""}">${network.mode === "estimated_domestic" ? `Pasajeros<span class="estimate-info-badge" title="${esc(ESTIMATE_INFO_TITLE)}" aria-label="${esc(ESTIMATE_INFO_TITLE)}" role="img">i</span>` : "Pasajeros"}</th><th>Asientos</th><th>Vuelos</th><th>Ocupación</th></tr></thead>
+          <thead><tr><th>Ruta</th><th class="${network.mode === "estimated_domestic" ? "th-with-badge" : ""}">${network.mode === "estimated_domestic" ? `Pasajeros<span class="estimate-info-badge" title="${esc(ESTIMATE_INFO_TITLE)}" aria-label="${esc(ESTIMATE_INFO_TITLE)}" role="img"><svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="2.6" r="1.15"></circle><rect x="4.1" y="4.35" width="1.8" height="4.35" rx="0.9"></rect></svg></span>` : "Pasajeros"}</th><th>Asientos</th><th>Vuelos</th><th>Ocupación</th></tr></thead>
           <tbody>${tableRoutes.map((route, index) => `<tr class="route-summary-row" style="--route-color:${airportRouteColor(index)}">
             <td><button type="button" class="route-expand-toggle" aria-expanded="false" aria-controls="route-directions-${index}"><span class="route-expand-icon" aria-hidden="true">&gt;</span><strong class="route-table-name">${esc(routeTitle(route))}</strong>${coverageDotHtml(route)}${scheduledIconHtml(route)}</button></td>
             ${metricCell(route, "passengers")}
