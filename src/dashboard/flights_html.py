@@ -58,14 +58,14 @@ def render_flights_panel(payload: dict[str, Any]) -> str:
       </section>
       <section aria-labelledby="network-title">
         <div class="section-heading network-heading">
-          <div><p class="section-kicker">Red de vuelos</p><h2 id="network-title">Rutas nacionales</h2></div>
+          <div><p class="section-kicker">Red de vuelos</p><h2 id="network-title">Rutas nacionales</h2><p class="network-scope-note" id="network-scope-note"></p></div>
         </div>
-        <div class="network-mode-switch" role="group" aria-label="Tipo de red">
-          <button type="button" id="network-mode-domestic" aria-pressed="true">Nacional</button>
-          <button type="button" id="network-mode-international" aria-pressed="false">Internacional</button>
+        <div class="network-mode-switch" role="radiogroup" aria-label="Tipo de red">
+          <button type="button" id="network-mode-domestic" role="radio" aria-checked="true" aria-pressed="true">Nacional</button>
+          <button type="button" id="network-mode-international" role="radio" aria-checked="false" aria-pressed="false">Internacional</button>
           <div class="network-region-switch" id="network-region-switch" role="group" aria-label="Región internacional" hidden></div>
         </div>
-        <div class="network-month-switch" id="network-month-switch" role="group" aria-label="Mes nacional"></div>
+        <div class="network-month-switch" id="network-month-switch" role="group" aria-label="Meses nacionales (selección múltiple)"></div>
         <div class="network-volume" id="network-volume" hidden></div>
         <div class="network-layout">
           <article class="panel flow-map-panel" id="map-panel">
@@ -154,6 +154,8 @@ def integration_flight_payload(payload: dict[str, Any]) -> dict[str, Any]:
             "load_factor_high": compact_number(value.get("load_factor_high"), 4) if estimated else value.get("load_factor_high"),
             "load_factor_status": value.get("load_factor_status"),
             "support_repair_applied": value.get("support_repair_applied", False),
+            "months_covered": value.get("months_covered"),
+            "months_selected": value.get("months_selected"),
             "origin": endpoint(value["origin"]),
             "destination": endpoint(value["destination"]),
             **metrics,
@@ -293,14 +295,14 @@ def render_flights_html(payload: dict[str, Any]) -> str:
     </section>
     <section aria-labelledby="network-title">
       <div class="section-heading network-heading">
-        <div><p class="section-kicker">Red de vuelos</p><h2 id="network-title">Rutas nacionales</h2></div>
+        <div><p class="section-kicker">Red de vuelos</p><h2 id="network-title">Rutas nacionales</h2><p class="network-scope-note" id="network-scope-note"></p></div>
       </div>
-      <div class="network-mode-switch" role="group" aria-label="Tipo de red">
-        <button type="button" id="network-mode-domestic" aria-pressed="true">Nacional</button>
-        <button type="button" id="network-mode-international" aria-pressed="false">Internacional</button>
+      <div class="network-mode-switch" role="radiogroup" aria-label="Tipo de red">
+        <button type="button" id="network-mode-domestic" role="radio" aria-checked="true" aria-pressed="true">Nacional</button>
+        <button type="button" id="network-mode-international" role="radio" aria-checked="false" aria-pressed="false">Internacional</button>
         <div class="network-region-switch" id="network-region-switch" role="group" aria-label="Región internacional" hidden></div>
       </div>
-      <div class="network-month-switch" id="network-month-switch" role="group" aria-label="Mes nacional"></div>
+      <div class="network-month-switch" id="network-month-switch" role="group" aria-label="Meses nacionales (selección múltiple)"></div>
       <div class="network-volume" id="network-volume" hidden></div>
       <div class="network-layout">
         <article class="panel flow-map-panel" id="map-panel">
