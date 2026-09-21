@@ -4,9 +4,11 @@ Fecha: 21 de septiembre de 2026.
 Alcance: inventario completo de la API, identificación del plan contratado,
 factibilidad de cubrir las rutas internacionales sin Estados Unidos, presupuesto
 de unidades y un sondeo acotado listo para despacho.
-Estado: **no se consumió ninguna unidad de la API.** El sondeo queda preparado
-y requiere un despacho humano explícito. No se activó evidencia, no se cambió el
-dashboard y no se tocó el Analysis Agent.
+Estado: **se gastaron 8 unidades** en el sondeo autorizado del 2026-09-10
+(4 llamadas, MEX y MTY, ambos sentidos); el contenido crudo del proveedor se
+eliminó al extraer los diagnósticos. No se ejecutó el censo ni ningún barrido
+mensual. No se activó evidencia, no se cambió el dashboard y no se tocó el
+Analysis Agent.
 
 > **Fe de erratas del 2026-09-21 (segunda revisión).** Cuatro afirmaciones de
 > este reporte se verificaron después y resultaron incorrectas o insuficientemente
@@ -60,19 +62,21 @@ dashboard y no se tocó el Analysis Agent.
    unidades. Un barrido de aeropuertos mexicanos así observa los dos sentidos
    de cada mercado internacional sin pagar un barrido en aeropuertos
    extranjeros.
-4. **El plan contratado es RapidAPI Ultra**, no el Starter directo que asumía
-   la documentación previa: 50,000 unidades, 4 solicitudes por segundo y
-   **210 días** de histórico. La evidencia está abajo.
-5. **La ventana histórica es lo urgente.** Con 210 días, la frontera de hoy es
-   el **23 de febrero de 2026**, y **marzo empieza a salirse el 27 de
-   septiembre**, dentro de seis días. Abril aguanta hasta el 28 de octubre.
+4. **Hipótesis, no hecho verificado:** el plan sería RapidAPI Ultra —50,000
+   unidades, 4 solicitudes por segundo y **210 días** de histórico— y no el
+   Starter directo que asumía la documentación previa. Es la lectura que mejor
+   explica la evidencia disponible; falta leerlo en el panel de la suscripción.
+5. **Si esa hipótesis se sostiene**, la ventana histórica es lo urgente: la
+   frontera estaría en el **23 de febrero de 2026** y **marzo empezaría a
+   salirse el 27 de septiembre**. Abril aguantaría hasta el 28 de octubre.
 6. **Los pasajeros no salen de esta API, salen de AFAC**, y las dos marginales
    internacionales existen: la hoja `REG INT` del libro origen–destino y el
    bloque internacional del resumen por empresa. El método es el mismo que ya
    está en producción para lo nacional, con una ventaja que lo nacional no
    tuvo: **T-100 permite medir el error del estimador internacional**, porque
    las rutas México–Estados Unidos entran al mismo cubo con su respuesta
-   observada.
+   observada. Verificado después celda a celda: razón de sumas 0.9999 y
+   diferencia mediana de 0.53 % sobre 2,208 celdas (canónico §9.4).
 
 Lo que esto **no** resuelve: una celda internacional seguirá siendo
 `passengers_estimated`, no pasajeros observados de Aeroméxico, salvo en las
