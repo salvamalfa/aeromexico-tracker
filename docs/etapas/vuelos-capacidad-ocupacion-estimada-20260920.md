@@ -16,8 +16,9 @@ por lo que el gasto adicional de API fue **0 unidades**.
 
 ## Qué mide cada columna
 
-- **Pasajeros**: estimación AFAC + IPF por ruta, sentido y operador. Distingue
-  Aerovías de México de Aeroméxico Connect y conserva su rango de sensibilidad.
+- **Pasajeros**: estimación AFAC + IPF por ruta, sentido y operador. La tabla
+  interna distingue Aerovías de México de Aeroméxico Connect, pero la interfaz
+  suma ambas como **Grupo Aeroméxico** y conserva su rango de sensibilidad.
 - **Vuelos**: siete días distribuidos dentro del mes, uno por día de la semana,
   expandidos con la frecuencia real de cada día de la semana en el calendario.
   Es una estimación mensual de programación observada en AeroDataBox; no prueba
@@ -51,15 +52,15 @@ menos 95% de cobertura de modelo.
 
 | Mes | Mercados con pasajeros | Vuelos y asientos completos | Ocupación utilizable | Ocupación inconsistente |
 |---|---:|---:|---:|---:|
-| 2026M03 | 55 | 46 | 37 | 9 |
+| 2026M03 | 55 | 54 | 41 | 13 |
 | 2026M04 | 55 | 53 | 42 | 11 |
 | 2026M05 | 55 | 54 | 41 | 13 |
-| 2026M06 | 56 | 43 | 34 | 9 |
-| 2026M07 | 55 | 38 | 31 | 7 |
-| **Total mercado–mes** | **276** | **234** | **185** | **49** |
+| 2026M06 | 56 | 51 | 39 | 12 |
+| 2026M07 | 55 | 51 | 40 | 11 |
+| **Total mercado–mes** | **276** | **263** | **203** | **60** |
 
-Las 42 combinaciones sin capacidad completa dependen de soporte de rutas tomado
-de meses cercanos o de una celda que no superó la puerta. Los 49 casos
+Las 13 combinaciones sin capacidad completa dependen de soporte de rutas tomado
+de meses cercanos o de una celda que no superó la puerta. Los 60 casos
 inconsistentes sí conservan vuelos y asientos, pero no muestran ocupación: el
 punto estimado supera 100%. Se explica en el `title` de la celda. No se añadió
 ni redistribuyó ningún vuelo para forzar el cociente por debajo de 100%.
@@ -73,7 +74,7 @@ número de vuelo ni conteo de modelos por ruta. Se conserva indefinidamente en
 el repositorio privado `aeromexico-tracker-data` junto con un recibo de calidad.
 El parquet local usado para reconstruir el dashboard está ignorado en el
 repositorio público y no se publica como dataset; el HTML expone únicamente el
-extracto de Aerovías de México y Aeroméxico Connect que necesita la interfaz.
+extracto agregado de Grupo Aeroméxico que necesita la interfaz.
 
 Los JSON y las tablas de proveedor por vuelo permanecen sujetos a siete días de
 retención. Se eliminaron de la copia de trabajo después de generar y verificar
@@ -92,8 +93,7 @@ integración no activa `flight_evidence_v1`, no cambia el expediente aprobado de
 - Cobertura de modelo: mayor a 99.4% en cada mes.
 - Integridad: 708 filas únicas por periodo, origen, destino y operador.
 - UI: junio muestra, por ejemplo, CUN–MEX con ≈796 vuelos, ≈142,862 asientos y
-  ≈79.2% de ocupación; MEX–MTY se expande por operador y sentido.
+  ≈79.2% de ocupación; el detalle presenta Grupo Aeroméxico por sentido.
 - Las ocupaciones publicadas están acotadas entre 0% y 100%; las inconsistentes
   quedan en N/D.
 - El dashboard autónomo y el integrado se regeneraron desde sus generadores.
-
