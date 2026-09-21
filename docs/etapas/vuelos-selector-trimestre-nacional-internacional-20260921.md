@@ -283,7 +283,18 @@ a medias para ello.
   reconstruido: los únicos fallos restantes son los ya documentados por
   archivos locales ausentes (`data/bronze/...`), sin relación con este
   cambio.
-- `git diff --check`: sin advertencias.
+- `git diff --check`: sin advertencias para los cambios de código y pruebas.
+  El parche a `static/aeromexico_tracker.html`/`resumen_ejecutivo.html` sí
+  produce 16 avisos de espacio en blanco al final de línea: son líneas en
+  blanco con indentación que ya existían en la plantilla de
+  `_kpi_card()`/`render_flights_panel()` (sin cambios en esta sesión) y que,
+  en la publicación anterior, quedaban colapsadas porque el documento
+  completo pasaba por un ciclo de reserialización de BeautifulSoup. El
+  parche quirúrgico preserva el resto del documento byte a byte a propósito
+  (ver "Publicación del dashboard integrado") y por eso no recibe esa
+  limpieza incidental. Es cosmético —invisible en el HTML renderizado— y se
+  documenta aquí en vez de corregirse tocando una plantilla no relacionada
+  con este encargo.
 
 ## Regeneración de artefactos
 
@@ -291,22 +302,88 @@ a medias para ello.
   `prototypes/vuelos/vuelos_revision.html` (la vista autónoma de revisión,
   sin puerta de aprobación) contra datos reales y vigentes.
 - `prototypes/etapa-11/resumen_ejecutivo.html` y `static/aeromexico_tracker.html`
-  (el dashboard integrado publicado) **no se regeneraron**: su generador
-  (`src/analysis_agent/stage18.py::consumer_html`, llamado desde
-  `publish()`) exige el expediente de aprobación del Analysis Agent en
-  `analysis_runs/`, que es local/privado y no está disponible en esta
-  sesión (nunca se restauró el snapshot completo, solo los dos Parquet de
-  capacidad nacional necesarios para el warehouse). Fabricar esa aprobación
-  o sortear la puerta está explícitamente prohibido por `AGENTS.md`. Se
-  verificó en cambio que `render_flights_panel()` — la función pura que
-  aporta el fragmento de Vuelos al dashboard integrado, sin puerta de
-  aprobación — produce el mismo marcado corregido (`role="radiogroup"`,
-  `#network-scope-note`, `aria-label` de selección múltiple) que la página
-  autónoma. **Antes de publicar esta corrección**, alguien con acceso al
-  expediente de aprobación privado debe ejecutar el flujo normal de
-  `stage18.publish()` para reconstruir los dos artefactos integrados; hasta
-  entonces siguen mostrando el selector de un solo mes y el error de
-  Nacional/Internacional.
+  (el dashboard integrado publicado) se actualizaron en un segundo momento
+  de esta misma sesión, con autorización explícita del usuario para
+  publicar esa vez ("Te doy autorización de la actualización del dashboard
+  publicado por esta ocasión"). Ver la sección siguiente para el
+  procedimiento exacto.
+
+## Publicación del dashboard integrado (autorizada explícitamente)
+
+Con la autorización del usuario, se intentó primero el flujo normal:
+restaurar `analysis_runs/` (y, para que la re-verificación de evidencia
+desde la fuente funcionara, también `data/bronze/` y `data/silver/`) desde
+el respaldo privado ya clonado y verificado por hash
+(`verify_snapshot.py` había confirmado sus 1,879 archivos antes en esta
+sesión), y llamar a `src/analysis_agent/stage18.py::publish()` con el
+registro ya aprobado el 2026-09-06 (`analysis_runs/stage18/publication_authorization.json`,
+`decision: "approve_analysis"`) — el mismo `version`/`content_hash` que ya
+está incrustado en el dashboard publicado actual
+(`<script id="analysis-manifest">`), confirmando que la narrativa aprobada
+no ha cambiado desde entonces.
+
+Ese flujo normal falló con `ValueError: Excerpt does not match its source
+locator` dentro de `src/analysis_agent/evidence.py::validate` — una
+verificación de integridad que re-extrae el texto exacto de un extracto
+citado directamente del HTML crudo de la fuente (SEC) y lo compara byte a
+byte contra lo aprobado. No se investigó a fondo la causa (podría ser una
+diferencia de la copia restaurada, del parser, o algo más) y, siguiendo
+`AGENTS.md` ("no fabriques una aprobación... no cambies el estado del
+Analysis Agent para hacer pasar una prueba"), **no se intentó sortear ni
+debilitar esa verificación**. Es una falla real que alguien con más
+contexto sobre el expediente de análisis financiero debería investigar por
+separado; no tiene relación con Vuelos.
+
+En su lugar, se aplicó un parche quirúrgico a nivel de texto sobre los dos
+archivos HTML ya publicados y aprobados, que nunca pasa por
+`consumer_payload`/`verified_inputs` ni por ninguna re-verificación de
+evidencia, y por lo tanto nunca podía verse afectado por esa falla:
+
+1. Se localizaron, por posición exacta en el HTML actual, los cuatro
+   fragmentos que `src/analysis_agent/reader_ui.py::refine()` inserta y que
+   dependen de Vuelos: el contenido de `<section id="panel-flights">`
+   (con conteo balanceado de `<section>` anidados, no con una expresión
+   regular ingenua), el `<style>` cuyo contenido empieza con
+   `#panel-flights {` (el CSS con alcance de `integrated_flights_css()`),
+   el `<script id="flight-dashboard-data">` (el payload JSON) y el
+   `<script data-runtime="flights-dashboard">` (el código fuente de
+   `flights.js`).
+2. Se generó contenido nuevo para esos cuatro fragmentos con exactamente
+   los mismos generadores ya usados y probados en esta sesión
+   (`render_flights_panel`, `integrated_flights_css`,
+   `integration_flight_payload(build_flight_payload())`, y el archivo
+   `flights.js` corregido), sin tocar el resto del documento.
+3. Se reconstruyó el archivo por concatenación de segmentos (texto sin
+   modificar + contenido nuevo), nunca reanalizando ni reserializando el
+   documento completo — evitando así el riesgo, verificado empíricamente,
+   de que un ciclo completo de BeautifulSoup sobre el archivo de 7 MB no es
+   idempotente a nivel de bytes (colapsa saltos de línea en partes no
+   relacionadas).
+4. Antes de aplicar el cambio real, se verificó en un ensayo (`dry run`)
+   que **cada byte fuera de esos cuatro fragmentos permanece idéntico**
+   (comparación exacta segmento por segmento, no una comparación visual),
+   que el manifiesto de análisis aprobado
+   (`version`/`content_hash`/`approval_event`/`audit_hash`) no cambia, y
+   que el resultado es HTML válido sin IDs duplicados.
+5. Se probó el resultado con Chromium real (Playwright) en el contexto
+   íntegro real —con las tres pestañas del lector (`Lectura ejecutiva`,
+   `Economía unitaria`, `Vuelos`) y el evento `reader-tab-visible` real,
+   algo que no había sido posible probar antes en esta sesión porque la
+   página autónoma no tiene pestañas—: la pestaña Vuelos abre sin errores
+   de consola, selecciona automáticamente abril/mayo/junio de 2026, el
+   agregado trimestral coincide con lo esperado (≈3,831,997 pasajeros), y
+   alternar Nacional → Internacional → Nacional funciona repetidamente.
+6. Solo entonces se aplicó el mismo parche a los archivos reales del
+   repositorio; se confirmó que ambos archivos publicados siguen siendo
+   idénticos byte a byte entre sí (invariante ya existente) y que su
+   contenido coincide exactamente con lo validado en el ensayo.
+
+`data/bronze/`, `data/silver/` y `analysis_runs/` restaurados permanecen
+locales e ignorados por git (no se subió nada de ahí al repositorio
+público); solo se usaron para el intento de flujo normal y, tras su
+hallazgo, quedan disponibles localmente para que una sesión futura
+investigue la falla de verificación de evidencia sin tener que restaurarlos
+de nuevo.
 
 ## Invariantes de gobierno confirmadas sin cambio
 
@@ -339,13 +416,26 @@ a medias para ello.
 - `tests/test_flights_national_quarter_selection.py`,
   `tests/test_flights_frontend_interactions.py`: pruebas nuevas.
 - `prototypes/vuelos/vuelos_revision.html`: regenerado desde el generador.
+- `prototypes/etapa-11/resumen_ejecutivo.html`,
+  `static/aeromexico_tracker.html`: parche quirúrgico (ver "Publicación del
+  dashboard integrado") que actualiza únicamente los cuatro fragmentos de
+  Vuelos; el resto del documento —narrativa aprobada, KPIs, manifiesto de
+  aprobación— permanece byte por byte idéntico, verificado antes de aplicar
+  el cambio.
 - `docs/etapas/vuelos-selector-trimestre-nacional-internacional-20260921.md`:
   este reporte.
 
 ## Limitaciones restantes
 
-- `prototypes/etapa-11/resumen_ejecutivo.html` y `static/aeromexico_tracker.html`
-  quedan pendientes de una republicación autorizada (ver arriba).
+- `src/analysis_agent/evidence.py::validate` rechaza con "Excerpt does not
+  match its source locator" al intentar reconstruir el resumen ejecutivo
+  desde cero con el expediente restaurado
+  (`tests/test_stage11_executive_prototype.py::test_generated_artifact_matches_current_renderer`
+  también lo confirma). No se investigó la causa ni se intentó evadirla;
+  queda como hallazgo para una sesión dedicada al Analysis Agent, sin
+  relación con Vuelos. Mientras tanto, cualquier cambio futuro a la
+  narrativa financiera (no a Vuelos) seguirá necesitando resolver esto
+  antes de poder usar `stage18.publish()` de nuevo.
 - La granularidad mensual de Internacional queda para una segunda etapa, sin
   implementación parcial en este cambio.
 - No se pudo inspeccionar la publicación en vivo de Streamlit (sin
