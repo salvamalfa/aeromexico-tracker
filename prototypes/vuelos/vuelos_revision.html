@@ -125,7 +125,11 @@ input[type="search"] { width: 100%; padding: 8px 10px; }
 .flow-map { height: 570px; }
 .map-detail-layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(410px, .9fr); gap: 14px; align-items: stretch; }
 .map-canvas-column { min-width: 0; }
-.airport-tooltip { position: relative; box-sizing: border-box; min-width: 0; height: 570px; max-height: 570px; overflow: auto; padding: 14px; color: var(--ink); background: #f8fafc; border: 1px solid var(--line-strong); border-radius: 10px; }
+.airport-tooltip { position: relative; box-sizing: border-box; min-width: 0; height: 570px; max-height: 570px; overflow: auto; padding: 14px; color: var(--ink); background: #f8fafc; border: 1px solid var(--line-strong); border-radius: 10px; scrollbar-width: thin; scrollbar-color: #b7c4d6 transparent; }
+.airport-tooltip::-webkit-scrollbar { width: 7px; }
+.airport-tooltip::-webkit-scrollbar-track { background: transparent; }
+.airport-tooltip::-webkit-scrollbar-thumb { background: #b7c4d6; border-radius: 999px; }
+.airport-tooltip::-webkit-scrollbar-button { display: none; height: 0; width: 0; }
 .airport-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .airport-tooltip h3 { margin: 0; color: var(--brand-blue-dark); font-size: 14px; }
 .airport-search-toggle { flex: 0 0 auto; display: grid; place-items: center; width: 27px; height: 27px; padding: 0; color: var(--brand-blue); background: #fff; border: 1px solid var(--line-strong); border-radius: 7px; cursor: pointer; }
@@ -199,7 +203,7 @@ footer { display: flex; justify-content: space-between; gap: 20px; margin-top: 1
 
 @media (max-width: 900px) {
   .map-detail-layout { grid-template-columns: minmax(0, 1fr); }
-  .map-canvas-column { overflow-x: auto; overscroll-behavior-inline: contain; contain: paint; }
+  .map-canvas-column { overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain; contain: paint; }
   .flow-map { min-width: 700px; }
   .flow-map { height: 500px; }
   .airport-tooltip { height: 500px; max-height: 500px; }
