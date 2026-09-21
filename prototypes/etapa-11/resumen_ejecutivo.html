@@ -844,6 +844,7 @@ tbody tr.year-separator td {
 #panel-flights .airport-route-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 #panel-flights .airport-route-table th { position: sticky; top: -14px; z-index: 1; padding: 8px 3px; color: var(--muted); background: #f8fafc; border-bottom: 1px solid var(--line-strong); font-size: 7.2px; letter-spacing: .025em; text-align: right; text-transform: uppercase; }
 #panel-flights .airport-route-table th:first-child { width: 31%; text-align: left; }
+#panel-flights .airport-route-table th.th-with-badge { white-space: nowrap; }
 #panel-flights .airport-route-table td { padding: 9px 3px; border-bottom: 1px solid #e5eaf0; font-size: 8.9px; text-align: right; vertical-align: top; font-variant-numeric: tabular-nums; }
 #panel-flights .airport-route-table td:first-child { padding-left: 7px; border-left: 4px solid var(--route-color); text-align: left; }
 #panel-flights .airport-route-table tbody tr:last-child td { border-bottom: 0; }
@@ -6338,7 +6339,7 @@ return Plotly;
       <p class="airport-meta">${subtitleHtml || esc(subtitle)}</p>
       <div class="airport-table-wrap">
         <table class="airport-route-table">
-          <thead><tr><th>Ruta</th><th>${network.mode === "estimated_domestic" ? `Pasajeros estimados<span class="estimate-info-badge" title="${esc(ESTIMATE_INFO_TITLE)}" aria-label="${esc(ESTIMATE_INFO_TITLE)}" role="img">i</span>` : "Pasajeros"}</th><th>Asientos</th><th>Vuelos</th><th>Ocupación</th></tr></thead>
+          <thead><tr><th>Ruta</th><th class="${network.mode === "estimated_domestic" ? "th-with-badge" : ""}">${network.mode === "estimated_domestic" ? `Pasajeros<span class="estimate-info-badge" title="${esc(ESTIMATE_INFO_TITLE)}" aria-label="${esc(ESTIMATE_INFO_TITLE)}" role="img">i</span>` : "Pasajeros"}</th><th>Asientos</th><th>Vuelos</th><th>Ocupación</th></tr></thead>
           <tbody>${tableRoutes.map((route, index) => `<tr class="route-summary-row" style="--route-color:${airportRouteColor(index)}">
             <td><button type="button" class="route-expand-toggle" aria-expanded="false" aria-controls="route-directions-${index}"><span class="route-expand-icon" aria-hidden="true">&gt;</span><strong class="route-table-name">${esc(routeTitle(route))}</strong>${coverageDotHtml(route)}${scheduledIconHtml(route)}</button></td>
             ${metricCell(route, "passengers")}
