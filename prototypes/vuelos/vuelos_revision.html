@@ -5126,23 +5126,23 @@ return Plotly;
     );
   }
 
-  // El alto del panel sigue al contenedor del mapa, no al <g class="geo"> de
-  // Plotly: ese grupo es el mundo entero a escala, de modo que al acercarse a
-  // una region crecia a miles de pixeles y arrastraba consigo el panel.
+  // El panel nunca debe quedar más bajo que el mapa (para que no se vea un
+  // hueco junto a un mapa alto con pocas rutas), pero tampoco debe recortar
+  // su contenido cuando hay muchas rutas: por eso solo se fija un alto
+  // mínimo, nunca un alto máximo -- un máximo obligaría a un scroll interno
+  // propio o, sin él, a que el contenido se salga visualmente del panel.
   function alignRouteDetailToGeo() {
     const panel = $("airport-tooltip");
     const map = $("route-flow-map");
     if (!panel || !map) return;
     if (window.matchMedia("(max-width: 900px)").matches) {
       panel.style.marginTop = "";
-      panel.style.height = "";
-      panel.style.maxHeight = "";
+      panel.style.minHeight = "";
       return;
     }
     const height = map.clientHeight || 570;
     panel.style.marginTop = "0px";
-    panel.style.height = `${height}px`;
-    panel.style.maxHeight = `${height}px`;
+    panel.style.minHeight = `${height}px`;
   }
 
   // Estira el recorte al mismo aspecto que el lienzo, de modo que el mapa
