@@ -4,10 +4,27 @@ Fecha: 21 de septiembre de 2026.
 Alcance: inventario completo de la API, identificación del plan contratado,
 factibilidad de cubrir las rutas internacionales sin Estados Unidos, presupuesto
 de unidades y un sondeo acotado listo para despacho.
-Estado: **no se consumió ninguna unidad de la API en esta sesión.** No hay clave
-configurada en el entorno de nube; el sondeo queda preparado y requiere un
-despacho humano explícito. No se activó evidencia, no se cambió el dashboard y
-no se tocó el Analysis Agent.
+Estado: **no se consumió ninguna unidad de la API.** El sondeo queda preparado
+y requiere un despacho humano explícito. No se activó evidencia, no se cambió el
+dashboard y no se tocó el Analysis Agent.
+
+> **Fe de erratas del 2026-09-21 (segunda revisión).** Cuatro afirmaciones de
+> este reporte se verificaron después y resultaron incorrectas o insuficientemente
+> fundadas; están corregidas en el cuerpo y resumidas en la sección 0. El método
+> completo y verificado vive ahora en
+> [`docs/estimacion-pasajeros-ruta-aerolinea.md`](../estimacion-pasajeros-ruta-aerolinea.md),
+> que es el documento canónico. Este reporte queda como registro de la
+> investigación de la API, no como especificación del método.
+
+## 0. Erratas verificadas
+
+| Afirmación original | Qué se verificó | Dónde |
+|---|---|---|
+| Los mercados de Colombia y Reino Unido salen `N/D` por la regla de completitud bidireccional | Falso. Las 147 filas de Aerocivil y las 2 de CAA en `fact_international_route_observations` tienen `passengers` **nulo**; es un hueco de fuente | §1 |
+| «El plan contratado es RapidAPI Ultra… 210 días» | Sigue siendo la hipótesis mejor respaldada, pero **no está probada**: un HTTP 400 no demuestra su causa. Etiquetada como hipótesis | §3 |
+| «Quedan entre 39,788 y 39,792 unidades» | Es una **estimación** derivada del libro interno del cliente, no una lectura del portal de RapidAPI | §4 |
+| «La hoja `REG INT` no está en el respaldo privado» | Falso. El libro O-D **sí está**, bajo el nombre lógico `afac_research_city_pairs_*` | §6, §10 |
+| Diseño por resta del subcubo T-100 de ambas marginales | **Descartado como diseño primario**: la comprobación agregada no confirma igualdad de universos (brecha de 3 a 8 puntos) | §6 |
 
 ## Veredicto en una página
 
@@ -75,10 +92,15 @@ Los 32 mercados sin pasajeros son exactamente los que el encargo describe:
   observación T-100 en el trimestre).
 
 Cuatro de ellos (los de Colombia) y el de Reino Unido sí tienen vuelos
-observados y sin embargo muestran `N/D` en pasajeros: la regla de
-`international_routes.py` exige ambos sentidos completos en todos los meses
-antes de presentar un total bidireccional. No es un hueco de fuente sino de
-completitud, y se resuelve distinto que los demás.
+observados y aun así muestran `N/D` en pasajeros. **Corregido respecto de la
+primera versión de este reporte:** no es la regla de completitud bidireccional
+de `international_routes.py`, es un hueco de fuente. En
+`data/gold/fact_international_route_observations.parquet` las **147 filas de
+Aerocivil y las 2 de CAA tienen `passengers` nulo** y solo traen `departures`;
+ANAC sí publica pasajeros (148 de 149 filas). Reverificado el 2026-09-21 sobre
+el payload vigente: 73 mercados, 32 sin pasajeros, de los cuales 25 son slots
+AICM programados (`assigned_slot_not_flown`), 5 son observados sin la métrica y
+2 son rutas documentadas por OMA.
 
 ## 2. Inventario completo de la API
 
@@ -122,8 +144,13 @@ tendrá que venir de AFAC y ser declarada estimación, igual que la nacional.
 
 ## 3. Qué plan tenemos, y por qué importa
 
-El tarifario vigente y la evidencia de nuestras propias corridas coinciden en
-un solo plan: **RapidAPI Ultra, USD 40 al mes, 50,000 unidades, 4 solicitudes
+**Esto es una hipótesis, no un hecho verificado.** Un HTTP 400 no demuestra su
+causa y no se ha leído el portal de RapidAPI. Es la lectura que mejor explica la
+evidencia disponible, y debe confirmarse contra la suscripción antes de
+planear gasto sobre ella.
+
+El tarifario vigente y la evidencia de nuestras propias corridas son compatibles
+con un solo plan: **RapidAPI Ultra, USD 40 al mes, 50,000 unidades, 4 solicitudes
 por segundo, 210 días de histórico, rango de historial de vuelo de 14 días.**
 
 La evidencia:
@@ -158,11 +185,15 @@ Tres consecuencias que corrigen supuestos documentados antes:
 
 ## 4. Consumo y saldo
 
-Del reporte del 19 de septiembre, el libro interno del cliente marca **10,212
-unidades** gastadas en cinco corridas (el rango de 4 unidades por dos HTTP 400
-no pudo confirmarse en el portal). Sobre 50,000, quedan **entre 39,788 y 39,792
-unidades** en el ciclo vigente. La cuota es mensual y se renueva, así que el
-presupuesto de abajo puede además repartirse entre ciclos si conviene.
+**Saldo estimado, no verificado.** Del reporte del 19 de septiembre, el libro
+interno del cliente marca **10,212 unidades** gastadas en cinco corridas (el
+rango de 4 unidades por dos HTTP 400 no pudo confirmarse en el portal). Si la
+cuota del ciclo es de 50,000, quedarían **entre 39,788 y 39,792 unidades**. Esa
+cifra es aritmética sobre nuestro propio conteo de llamadas: **no es una lectura
+del portal de RapidAPI** y no debe tratarse como saldo confirmado. Antes de
+comprometer un presupuesto grande hay que leer el consumo en el panel de la
+suscripción. La cuota es mensual y se renueva, así que el presupuesto de abajo
+puede además repartirse entre ciclos.
 
 ## 5. Calendario: lo que caduca y cuándo
 
@@ -201,21 +232,23 @@ partir de una inspección directa de los libros:
 
 Eso habilita un diseño que lo nacional no pudo tener:
 
-**Descomposición con residual T-100.** El cubo internacional completo incluye
-las rutas México–Estados Unidos, donde T-100 publica la celda observada. Por lo
-tanto:
+**Descomposición con residual T-100 — descartada como diseño primario.** La
+propuesta original era restar el subcubo estadounidense de ambas marginales y
+ajustar el residual no estadounidense. La comprobación agregada ejecutada
+después **no confirma** que los universos coincidan: T-100 representa entre
+62.8 % y 69.0 % del total internacional de AFAC (enero–mayo 2026), mientras el
+boletín por país implica ≈ 71.6 % para julio. La brecha de 3 a 8 puntos no está
+explicada, y T-100 no tiene ninguna fila `AEROMEXICO_CONNECT` en el tráfico
+transfronterizo de 2026 aunque AFAC le atribuya a Connect 36–49 mil pasajeros
+internacionales al mes.
 
-- filas = pares `REG INT` **menos** los pares hacia Estados Unidos, cuyos
-  pasajeros por operador ya están observados;
-- columnas = pasajeros internacionales por aerolínea **menos** lo que T-100 ya
-  le atribuye a esa aerolínea en México–EE. UU.;
-- semilla = vuelos por ruta × operador de AeroDataBox en las rutas no
-  estadounidenses;
-- y el subcubo estadounidense sirve de **backtest real del estimador
-  internacional**, no de referencia prestada: se esconde el split observado, se
-  reconstruye desde las dos marginales y se mide el error por aerolínea, ruta y
-  región. El 1.98 pp del backtest nacional es una referencia transfronteriza;
-  esto sería medición directa sobre el mismo cubo que se va a publicar.
+El diseño recomendado es el **cubo internacional completo** —filas de `REG INT`
+incluidas las de Estados Unidos, columnas de todas las aerolíneas
+internacionales de AFAC, semilla de AeroDataBox— con **T-100 usado solo como
+validación**, nunca como insumo. Así no hay doble conteo y no hace falta
+demostrar igualdad de universos para producir la estimación. Donde T-100 observa
+la celda, el dashboard publica T-100, no el ajuste. El detalle está en
+[`docs/estimacion-pasajeros-ruta-aerolinea.md`](../estimacion-pasajeros-ruta-aerolinea.md).
 
 ### La condición que hay que probar antes de gastar nada
 
@@ -368,9 +401,12 @@ Lo que el sondeo tiene que contestar, y que no se puede contestar sin gastar:
   Los conteos agregados mensuales de ruta × operador **podrían** calificar como
   obra derivada, pero eso no está confirmado con AeroDataBox y no deben
   publicarse como dataset hasta que lo esté.
-- La hoja `REG INT` no está en el respaldo privado. Un agente de nube puede
-  preparar el parser y las pruebas, pero la captura del libro origen–destino
-  ocurre donde estén los archivos o hay que volver a descargarlos de gob.mx.
+- **Corregido:** la hoja `REG INT` **sí está** en el respaldo privado, bajo el
+  nombre lógico del proyecto y no el de gob.mx:
+  `snapshot/data/bronze/afac_research/afac_research_city_pairs_2026M07_*.xlsx`
+  (más el libro histórico de 2025 y una copia de archivo de 2026M02). Se
+  recupera con `git lfs pull --include=...`. Falta parsearla: no existe un
+  equivalente internacional de `read_route_workbook`.
 - La equivalencia ciudad ↔ aeropuerto es más frágil en internacional que en
   nacional: hay ciudades con varios aeropuertos en los dos extremos. Ninguna
   conversión automática debe entrar sin revisión humana.

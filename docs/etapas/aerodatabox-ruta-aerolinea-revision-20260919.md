@@ -1,5 +1,10 @@
 # Revisión del plan AeroDataBox + AFAC para pasajeros por ruta y aerolínea
 
+> **Método canónico:** el procedimiento completo y verificado de estimación
+> de pasajeros por ruta y aerolínea está en
+> [`../estimacion-pasajeros-ruta-aerolinea.md`](../estimacion-pasajeros-ruta-aerolinea.md).
+> Este documento es un reporte de su etapa, no la especificación.
+
 Fecha: 2026-09-19  
 Alcance: mercado nacional mexicano, 2T26 y posible ampliación a todas las
 aerolíneas.  
