@@ -822,7 +822,11 @@ tbody tr.year-separator td {
 #panel-flights .flow-map { height: 570px; }
 #panel-flights .map-detail-layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(410px, .9fr); gap: 14px; align-items: stretch; }
 #panel-flights .map-canvas-column { min-width: 0; }
-#panel-flights .airport-tooltip { position: relative; box-sizing: border-box; min-width: 0; height: 570px; max-height: 570px; overflow: auto; padding: 14px; color: var(--ink); background: #f8fafc; border: 1px solid var(--line-strong); border-radius: 10px; }
+#panel-flights .airport-tooltip { position: relative; box-sizing: border-box; min-width: 0; height: 570px; max-height: 570px; overflow: auto; padding: 14px; color: var(--ink); background: #f8fafc; border: 1px solid var(--line-strong); border-radius: 10px; scrollbar-width: thin; scrollbar-color: #b7c4d6 transparent; }
+#panel-flights .airport-tooltip::-webkit-scrollbar { width: 7px; }
+#panel-flights .airport-tooltip::-webkit-scrollbar-track { background: transparent; }
+#panel-flights .airport-tooltip::-webkit-scrollbar-thumb { background: #b7c4d6; border-radius: 999px; }
+#panel-flights .airport-tooltip::-webkit-scrollbar-button { display: none; height: 0; width: 0; }
 #panel-flights .airport-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 #panel-flights .airport-tooltip h3 { margin: 0; color: var(--brand-blue-dark); font-size: 14px; }
 #panel-flights .airport-search-toggle { flex: 0 0 auto; display: grid; place-items: center; width: 27px; height: 27px; padding: 0; color: var(--brand-blue); background: #fff; border: 1px solid var(--line-strong); border-radius: 7px; cursor: pointer; }
@@ -896,7 +900,7 @@ tbody tr.year-separator td {
 
 @media (max-width: 900px) {
   #panel-flights .map-detail-layout { grid-template-columns: minmax(0, 1fr); }
-  #panel-flights .map-canvas-column { overflow-x: auto; overscroll-behavior-inline: contain; contain: paint; }
+  #panel-flights .map-canvas-column { overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain; contain: paint; }
   #panel-flights .flow-map { min-width: 700px; }
   #panel-flights .flow-map { height: 500px; }
   #panel-flights .airport-tooltip { height: 500px; max-height: 500px; }
