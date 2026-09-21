@@ -155,3 +155,69 @@ def test_international_scope_note_names_its_real_narrower_scope(flights_page) ->
     assert "Grupo Aeroméxico" not in volume_text
     flights_page.click("#network-mode-domestic")
     flights_page.wait_for_timeout(50)
+
+
+def _expand_first_route(page):
+    toggle = page.query_selector(".route-expand-toggle")
+    toggle.click()
+    page.wait_for_timeout(150)
+    return page.query_selector(".route-direction-detail:not([hidden])")
+
+
+def test_national_route_detail_states_carrier_once_and_groups_by_month(flights_page) -> None:
+    """The expanded per-route detail must name Grupo Aeroméxico exactly once
+    (not once per month/direction line) and, with more than one month
+    selected, group the direction lines under a subtle per-month label
+    instead of repeating the carrier and month on every line."""
+
+    assert flights_page.get_attribute("#network-mode-domestic", "aria-pressed") == "true"
+    assert _pressed_months(flights_page) == {"2026M04", "2026M05", "2026M06"}
+    detail = _expand_first_route(flights_page)
+    carrier_labels = detail.query_selector_all(".route-estimate-carrier")
+    assert len(carrier_labels) == 1
+    assert carrier_labels[0].inner_text() == "Grupo Aeroméxico"
+    month_groups = detail.query_selector_all(".route-estimate-month")
+    assert len(month_groups) == 3
+    # text-transform: capitalize renders "abril" as "Abril"; compare case-insensitively.
+    month_labels = [g.query_selector(".route-estimate-month-label").inner_text().lower() for g in month_groups]
+    assert month_labels == ["abril", "mayo", "junio"]
+    detail_text = detail.inner_text()
+    assert detail_text.count("Grupo Aeroméxico") == 1
+
+
+def test_national_figures_never_show_the_approx_symbol(flights_page) -> None:
+    assert "≈" not in flights_page.inner_text("#network-volume")
+    assert "≈" not in flights_page.inner_text("#airport-tooltip")
+
+
+def test_national_route_coverage_dot_is_green_for_full_quarter_coverage(flights_page) -> None:
+    """A route with data in all three of the quarter's calendar months must
+    show the same green/yellow/red coverage indicator used in Internacional,
+    not a blank space, once its coverage is complete."""
+
+    dots = flights_page.query_selector_all(".route-coverage-dot")
+    assert dots, "expected at least one coverage dot in the national route table"
+    variants = {dot.get_attribute("class") for dot in dots}
+    assert "route-coverage-dot is-full" in variants
+
+
+def test_national_map_zooms_to_mexico_not_the_world(flights_page) -> None:
+    lon_range = flights_page.evaluate(
+        "document.getElementById('route-flow-map')._fullLayout.geo.lonaxis.range"
+    )
+    lat_range = flights_page.evaluate(
+        "document.getElementById('route-flow-map')._fullLayout.geo.lataxis.range"
+    )
+    assert lon_range[1] - lon_range[0] < 60
+    assert lat_range[1] - lat_range[0] < 40
+
+
+def test_international_route_detail_states_grupo_aeromexico(flights_page) -> None:
+    flights_page.click("#network-mode-international")
+    flights_page.wait_for_timeout(300)
+    detail = _expand_first_route(flights_page)
+    carrier_labels = detail.query_selector_all(".route-estimate-carrier")
+    assert len(carrier_labels) == 1
+    assert carrier_labels[0].inner_text() == "Grupo Aeroméxico"
+    flights_page.click("#network-mode-domestic")
+    flights_page.wait_for_timeout(300)
