@@ -259,7 +259,7 @@ def test_review_html_is_self_contained_accessible_and_responsive() -> None:
     assert "route-direction-detail" in app_script
     assert 'aria-expanded="false"' in app_script
     assert "detail.hidden = expanded" in app_script
-    assert "pasajeros estimados" in app_script
+    assert "estimate-info-badge" in app_script
     assert "domestic_monthly_networks" in app_script
     assert "rango de sensibilidad" in app_script
     assert "grupo aeroméxico" in document.lower()
