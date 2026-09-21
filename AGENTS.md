@@ -85,6 +85,16 @@ de interpretar una prueba de igualdad como regresión.
 
 ## Vuelos y estimaciones por ruta y aerolínea
 
+**Antes de tocar el estimador, lee
+[`docs/estimacion-pasajeros-ruta-aerolinea.md`](docs/estimacion-pasajeros-ruta-aerolinea.md).**
+Es el documento canónico del método: problema estadístico, ecuaciones del IPF,
+grano y definiciones de ambas marginales, aceptación de la semilla, ceros, no
+convergencia, soporte temporal, sensibilidad, separación Aerovías/Connect y
+agregación visible como Grupo Aeroméxico, error medido por operador,
+competencia, tamaño y distancia, y las condiciones exactas para extenderlo al
+mercado internacional. No reconstruyas el método desde reportes de etapa sueltos
+ni desde una conversación.
+
 Una semilla de frecuencias puede revelar la estructura ruta por aerolínea, pero
 no observa pasajeros. Un ajuste a marginales AFAC debe publicarse como
 `passengers_estimated`, incluso cuando reconcilie exactamente totales de ruta y

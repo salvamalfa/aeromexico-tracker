@@ -34,8 +34,10 @@ the data rather than chosen:
   by ``dim_airport.country`` and the crosswalk is only a fallback.
 
 The module produces flight counts, never passengers: AeroDataBox publishes no
-passenger figure of any kind.  What a count can become is documented in
-``docs/etapas/aerodatabox-internacional-investigacion-20260921.md``.
+passenger figure of any kind.  A count becomes a passenger figure only through
+the AFAC margins and the fit documented in
+``docs/estimacion-pasajeros-ruta-aerolinea.md``, which is the canonical method
+and states the conditions this seed has to meet before it is fitted at all.
 
 Raw responses go to transient Bronze under a distinct ``_both`` file name so a
 two-direction payload can never be read back as the one-direction list the

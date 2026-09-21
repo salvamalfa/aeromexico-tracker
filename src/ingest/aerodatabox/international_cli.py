@@ -18,7 +18,7 @@ Nothing here fits an estimator or publishes anything.  A flight count is not a
 passenger, and the margins that would turn one into the other are AFAC's, not
 this provider's; the gates that have to close before a count becomes a
 published passenger figure are in
-``docs/etapas/aerodatabox-internacional-investigacion-20260921.md``.
+``docs/estimacion-pasajeros-ruta-aerolinea.md``.
 
 Raw responses are provider content held in transient Bronze as a resume cache
 and expire with the plan's retention.  They never enter Git.

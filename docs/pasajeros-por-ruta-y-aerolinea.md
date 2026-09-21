@@ -1,5 +1,10 @@
 # ¿Se puede obtener pasajeros por aerolínea y ruta nacional en México?
 
+> **Método canónico:** el procedimiento completo y verificado de estimación
+> de pasajeros por ruta y aerolínea está en
+> [`estimacion-pasajeros-ruta-aerolinea.md`](estimacion-pasajeros-ruta-aerolinea.md).
+> Este documento es un reporte de su etapa, no la especificación.
+
 **Respuesta corta: el dato existe, se produce cada mes y la ley obliga a publicarlo,
 pero ninguna fuente pública gratuita lo publica cruzado.** AFAC publica las dos
 *marginales* del cubo —pasajeros por ruta y pasajeros por aerolínea— nunca la celda
