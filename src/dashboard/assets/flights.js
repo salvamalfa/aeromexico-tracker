@@ -10,12 +10,28 @@
   const domesticPeriods = payload.domestic_networks || {};
   const domesticMonthlyPeriods = payload.domestic_monthly_networks || {};
   const domesticMonthIds = Object.keys(domesticMonthlyPeriods).sort();
-  const defaultQuarterId = quarters[periodIndex].period_id;
-  const defaultDomesticMonths = domesticMonthIds.filter((periodId) =>
-    `${periodId.slice(0, 4)}Q${Math.floor((Number(periodId.slice(5, 7)) - 1) / 3) + 1}` === defaultQuarterId
-  );
-  let selectedDomesticMonth = defaultDomesticMonths.at(-1) || domesticMonthIds.at(-1) || null;
-  let networkMode = domesticMonthIds.length || domesticPeriods[quarters[periodIndex].period_id] ? "domestic" : "international";
+  // Los meses nacionales siguen al selector global de trimestre: cada
+  // trimestre solo ofrece los meses que le pertenecen por calendario, nunca
+  // meses de otro trimestre.
+  function monthsInQuarter(quarterId) {
+    return domesticMonthIds.filter((periodId) =>
+      `${periodId.slice(0, 4)}Q${Math.floor((Number(periodId.slice(5, 7)) - 1) / 3) + 1}` === quarterId
+    );
+  }
+  function domesticAvailableForQuarter(quarterId) {
+    return monthsInQuarter(quarterId).length > 0 || Boolean(domesticPeriods[quarterId]);
+  }
+  // Selección múltiple de meses nacionales para el trimestre actualmente
+  // mostrado por el selector global. Se reinicia solo cuando ese trimestre
+  // cambia (ver renderQuarter); una selección manual dentro del mismo
+  // trimestre nunca se sobrescribe.
+  let selectedDomesticMonths = new Set(monthsInQuarter(quarters[periodIndex].period_id));
+  let domesticMonthsQuarterId = quarters[periodIndex].period_id;
+  let networkMode = domesticAvailableForQuarter(quarters[periodIndex].period_id) ? "domestic" : "international";
+  const DOMESTIC_MONTH_NAMES = [
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+  ];
   const defaultAirport = "MEX";
   let passengerPeriod = "quarter";
   let selectedMarket = null;
@@ -66,6 +82,13 @@
 
   function renderQuarter() {
     const record = quarters[periodIndex];
+    if (record.period_id !== domesticMonthsQuarterId) {
+      // Cambio de trimestre global: descarta cualquier selección manual de
+      // meses y vuelve a seleccionar automáticamente los meses del nuevo
+      // trimestre (puede ser un subconjunto si el trimestre está incompleto).
+      selectedDomesticMonths = new Set(monthsInQuarter(record.period_id));
+      domesticMonthsQuarterId = record.period_id;
+    }
     $("period-display").textContent = record.period_label;
     $("period-prev").disabled = periodIndex === 0;
     $("period-next").disabled = periodIndex === quarters.length - 1;
@@ -180,7 +203,7 @@
   const worldGeometry = payload.route_network.world_geometry;
   window.PlotlyGeoAssets = window.PlotlyGeoAssets || { topojson: {} };
   window.PlotlyGeoAssets.topojson.world_110m = worldGeometry.topojson;
-  let network = { ...(networkMode === "domestic" ? (domesticMonthlyPeriods[selectedDomesticMonth] || domesticPeriods[quarters[periodIndex].period_id]) : networkPeriods?.[quarters[periodIndex].period_id]) || payload.route_network, world_geometry: worldGeometry };
+  let network = { ...(networkMode === "domestic" ? (aggregateDomesticMonths([...selectedDomesticMonths]) || domesticPeriods[quarters[periodIndex].period_id]) : networkPeriods?.[quarters[periodIndex].period_id]) || payload.route_network, world_geometry: worldGeometry };
   let routes = network.routes;
   function routeValue(route) {
     const key = network.mode === "scheduled_domestic" ? "departures" : importance;
@@ -190,10 +213,10 @@
   function routeTitle(route) { return `${route.origin.iata} ↔ ${route.destination.iata}`; }
 
   function renderNetworkPeriod(periodId) {
-    const domesticAvailable = domesticMonthIds.length > 0 || Boolean(domesticPeriods[periodId]);
+    const domesticAvailable = domesticAvailableForQuarter(periodId);
     if (networkMode === "domestic" && !domesticAvailable) networkMode = "international";
     const periodNetwork = networkMode === "domestic"
-      ? (domesticMonthlyPeriods[selectedDomesticMonth] || domesticPeriods[periodId])
+      ? (aggregateDomesticMonths([...selectedDomesticMonths]) || domesticPeriods[periodId])
       : (networkPeriods?.[periodId] || payload.route_network);
     network = { ...periodNetwork, world_geometry: worldGeometry };
     if (networkMode !== "international") selectedRegion = null;
@@ -208,10 +231,26 @@
       const shownAirports = new Set(routes.flatMap((route) => [route.origin.iata, route.destination.iata]));
       network.airports = (network.airports || []).filter((airport) => shownAirports.has(airport.iata));
     }
+    // Nacional/Internacional es una elección mutuamente excluyente (role="radio"):
+    // siempre hay exactamente una vista activa y ambos botones permanecen
+    // clicables para poder alternar en cualquier sentido, cuantas veces sea.
     $("network-mode-domestic").disabled = !domesticAvailable;
     $("network-mode-domestic").setAttribute("aria-pressed", String(networkMode === "domestic"));
+    $("network-mode-domestic").setAttribute("aria-checked", String(networkMode === "domestic"));
     $("network-mode-international").setAttribute("aria-pressed", String(networkMode === "international"));
+    $("network-mode-international").setAttribute("aria-checked", String(networkMode === "international"));
     $("network-title").textContent = networkMode === "domestic" ? "Rutas nacionales" : "Rutas internacionales";
+    const scopeNote = $("network-scope-note");
+    if (scopeNote) {
+      // La etiqueta de alcance nunca dice "Grupo Aeroméxico" salvo cuando el
+      // dato realmente combina Aerovías de México y Aeroméxico Connect
+      // (nacional). Internacional solo tiene evidencia retenida de Aerovías
+      // de México como operador; decirlo explícitamente evita presentar una
+      // cifra más angosta como si fuera consolidada.
+      scopeNote.textContent = networkMode === "domestic"
+        ? "Grupo Aeroméxico · combina Aerovías de México y Aeroméxico Connect"
+        : "Aerovías de México (operador reportante) · no incluye Aeroméxico Connect";
+    }
     renderMonthSwitch();
     renderRegionSwitch();
     renderNetworkVolume();
@@ -242,16 +281,115 @@
   function renderMonthSwitch() {
     const host = $("network-month-switch");
     if (!host) return;
-    host.hidden = networkMode !== "domestic" || domesticMonthIds.length === 0;
+    const monthsHere = monthsInQuarter(domesticMonthsQuarterId);
+    host.hidden = networkMode !== "domestic" || monthsHere.length === 0;
     if (host.hidden) { host.innerHTML = ""; return; }
-    host.innerHTML = domesticMonthIds.map((periodId) => {
+    host.innerHTML = monthsHere.map((periodId) => {
       const label = domesticMonthlyPeriods[periodId]?.period_label || periodId;
-      return `<button type="button" data-domestic-month="${esc(periodId)}" aria-pressed="${String(selectedDomesticMonth === periodId)}">${esc(label)}</button>`;
+      return `<button type="button" data-domestic-month="${esc(periodId)}" aria-pressed="${String(selectedDomesticMonths.has(periodId))}">${esc(label)}</button>`;
     }).join("");
     host.querySelectorAll("button").forEach((button) => button.addEventListener("click", () => {
-      selectedDomesticMonth = button.dataset.domesticMonth;
+      const id = button.dataset.domesticMonth;
+      if (selectedDomesticMonths.has(id)) {
+        if (selectedDomesticMonths.size === 1) return; // conserva al menos un mes seleccionado
+        selectedDomesticMonths.delete(id);
+      } else {
+        selectedDomesticMonths.add(id);
+      }
       renderNetworkPeriod(quarters[periodIndex].period_id);
     }));
+  }
+
+  // Describe el periodo nacional mostrado, p. ej. "abril–junio 2026 ·
+  // 3 meses seleccionados" o, si el trimestre solo tiene datos para parte de
+  // sus meses de calendario, agrega "· cobertura parcial: 2 de 3 meses".
+  function domesticPeriodLabel(monthIds, quarterId) {
+    const sorted = [...monthIds].sort();
+    const n = sorted.length;
+    const monthName = (id) => DOMESTIC_MONTH_NAMES[Number(id.slice(5, 7)) - 1];
+    let base;
+    if (n === 0) base = "Sin meses con datos";
+    else if (n === 1) base = `${monthName(sorted[0])} ${sorted[0].slice(0, 4)}`;
+    else base = `${monthName(sorted[0])}–${monthName(sorted[n - 1])} ${sorted[0].slice(0, 4)}`;
+    const noun = n === 1 ? "mes seleccionado" : "meses seleccionados";
+    let label = `${base} · ${n} ${noun}`;
+    const available = monthsInQuarter(quarterId).length;
+    if (available > 0 && available < 3) label += ` · cobertura parcial: ${available} de 3 meses`;
+    return label;
+  }
+
+  // Combina los meses nacionales seleccionados en un agregado de Grupo
+  // Aeroméxico: pasajeros, vuelos y asientos suman; la ocupación se calcula
+  // con los totales (nunca promediando porcentajes mensuales); una ruta sin
+  // datos en alguno de los meses conserva los que sí tiene sin rellenar con
+  // cero, y su ocupación solo se muestra cuando la cobertura de pasajeros y
+  // de capacidad coincide exactamente en los mismos meses.
+  function aggregateDomesticMonths(monthIds) {
+    const sorted = [...monthIds].sort();
+    const monthNetworks = sorted.map((id) => domesticMonthlyPeriods[id]).filter(Boolean);
+    if (!monthNetworks.length) return null;
+    const byMarket = new Map();
+    const airportsByIata = new Map();
+    for (const monthNetwork of monthNetworks) {
+      for (const airport of monthNetwork.airports || []) airportsByIata.set(airport.iata, airport);
+      for (const route of monthNetwork.routes || []) {
+        if (!finite(route.passengers)) continue;
+        let agg = byMarket.get(route.market_key);
+        if (!agg) {
+          agg = {
+            market_key: route.market_key, origin: route.origin, destination: route.destination,
+            passengers: 0, passengers_low: 0, passengers_high: 0, monthsCovered: 0,
+            seats: 0, departures: 0, capacityMonthsCovered: 0,
+            source_label: route.source_label, monthly: [], repaired: false,
+          };
+          byMarket.set(route.market_key, agg);
+        }
+        agg.passengers += route.passengers;
+        agg.passengers_low += finite(route.passengers_low) ? route.passengers_low : route.passengers;
+        agg.passengers_high += finite(route.passengers_high) ? route.passengers_high : route.passengers;
+        agg.monthsCovered += 1;
+        agg.repaired = agg.repaired || Boolean(route.support_repair_applied);
+        if (route.capacity_estimated && finite(route.seats) && finite(route.departures)) {
+          agg.seats += route.seats;
+          agg.departures += route.departures;
+          agg.capacityMonthsCovered += 1;
+        }
+        agg.monthly.push(...(route.monthly || []));
+      }
+    }
+    const monthsSelected = sorted.length;
+    const routes = [...byMarket.values()].map((agg) => {
+      const capacityComplete = agg.capacityMonthsCovered > 0 && agg.capacityMonthsCovered === agg.monthsCovered;
+      const loadFactor = capacityComplete && agg.seats > 0 ? agg.passengers / agg.seats : null;
+      const plausible = finite(loadFactor) && loadFactor <= 1;
+      agg.monthly.sort((a, b) => a.period_id.localeCompare(b.period_id) || a.origin_iata.localeCompare(b.origin_iata));
+      return {
+        market_key: agg.market_key, origin: agg.origin, destination: agg.destination,
+        passengers: agg.passengers, passengers_low: agg.passengers_low, passengers_high: agg.passengers_high,
+        passengers_estimated: true,
+        seats: capacityComplete ? agg.seats : null,
+        departures: capacityComplete ? agg.departures : null,
+        capacity_estimated: capacityComplete,
+        load_factor: plausible ? loadFactor : null,
+        load_factor_status: !capacityComplete ? "capacity_incomplete" : (plausible ? "estimated" : "inconsistent_inputs"),
+        months_covered: agg.monthsCovered, months_selected: monthsSelected,
+        capacity_months_covered: agg.capacityMonthsCovered,
+        support_repair_applied: agg.repaired,
+        source_label: agg.source_label,
+        monthly: agg.monthly,
+        previous: { passengers: null, seats: null, departures: null },
+        directions: [],
+      };
+    }).sort((a, b) => b.passengers - a.passengers || a.market_key.localeCompare(b.market_key));
+    return {
+      mode: "estimated_domestic",
+      period_label: domesticPeriodLabel(sorted, domesticMonthsQuarterId),
+      expected_months: sorted,
+      observed_months: sorted,
+      routes,
+      airports: [...airportsByIata.values()].sort((a, b) => a.iata.localeCompare(b.iata)),
+      agent_eligible: false,
+    };
   }
 
   function regionRoutes(allRoutes) {
@@ -294,7 +432,11 @@
       host.innerHTML = `<strong>≈${integer.format(passengers)}</strong><span>pasajeros estimados de Grupo Aeroméxico ${esc(scope)} · ${esc(network.period_label)} · sensibilidad ${integer.format(passengersLow)}–${integer.format(passengersHigh)}${repaired ? " · soporte de rutas completado con meses cercanos" : ""}</span>`;
       return;
     }
-    host.innerHTML = `<strong>${integer.format(flights)}</strong><span>vuelos ${esc(scope)} · ${esc(network.period_label)}${noBreakdown ? ` · ${noBreakdown} ${noBreakdown === 1 ? "ruta" : "rutas"} sin desglose propio` : ""}</span>`;
+    // Las fuentes internacionales (BTS T-100, ANAC, Aerocivil, CAA, Aena)
+    // solo reportan al operador Aerovías de México (AMX). Aeroméxico Connect
+    // no aparece en ninguna de ellas para estos periodos, así que esta cifra
+    // nunca se presenta como Grupo Aeroméxico.
+    host.innerHTML = `<strong>${integer.format(flights)}</strong><span>vuelos operados por Aerovías de México (no incluye Aeroméxico Connect) ${esc(scope)} · ${esc(network.period_label)}${noBreakdown ? ` · ${noBreakdown} ${noBreakdown === 1 ? "ruta" : "rutas"} sin desglose propio` : ""}</span>`;
   }
 
   const REGION_MEMBERS = {
@@ -349,6 +491,14 @@
   }
 
   function coverageDotHtml(route) {
+    if (finite(route.months_covered) && finite(route.months_selected)) {
+      // Agregado nacional multi-mes: indica cuántos de los meses
+      // seleccionados aportaron datos a esta ruta, nunca un promedio.
+      if (route.months_covered >= route.months_selected) return "";
+      const variant = route.months_covered / route.months_selected >= 0.67 ? "is-partial" : "is-thin";
+      const title = `${route.months_covered} de ${route.months_selected} meses seleccionados con datos de esta ruta`;
+      return `<span class="route-coverage-dot ${variant}" title="${title}" aria-label="${title}"></span>`;
+    }
     if (route.passengers_estimated) return "";
     const months = coverageMonths(route);
     if (!months) return "";
@@ -482,22 +632,32 @@
         : direction[key];
       return `<span>${formatRouteMetric(key, value)}</span>`;
     };
-    const estimateDetails = (route) => (route.monthly || []).map((item) => {
-      const low = finite(item.passengers_low) ? item.passengers_low : item.passengers;
-      const high = finite(item.passengers_high) ? item.passengers_high : item.passengers;
-      const borrowed = item.support_observed_in_period ? "" : `<small class="route-support-borrowed" title="Soporte de ruta observado en ${esc(item.support_source_periods)}; no es un vuelo observado del mes mostrado">soporte ${esc(item.support_source_periods)}</small>`;
-      const seats = item.capacity_estimated ? `≈${formatRouteMetric("seats", item.seats)}` : "N/D";
-      const departures = item.capacity_estimated ? `≈${formatRouteMetric("departures", item.departures)}` : "N/D";
-      const loadFactor = item.capacity_estimated && finite(item.load_factor)
-        ? `≈${formatRouteMetric("load_factor", item.load_factor)}`
-        : "N/D";
-      return `
+    const estimateDetails = (route) => {
+      const items = route.monthly || [];
+      // Con más de un mes agregado, cada línea necesita decir a qué mes
+      // pertenece: sin esto, dos o tres meses de un mismo sentido se verían
+      // idénticos salvo por la cifra.
+      const spansMonths = new Set(items.map((item) => item.period_id)).size > 1;
+      return items.map((item) => {
+        const low = finite(item.passengers_low) ? item.passengers_low : item.passengers;
+        const high = finite(item.passengers_high) ? item.passengers_high : item.passengers;
+        const borrowed = item.support_observed_in_period ? "" : `<small class="route-support-borrowed" title="Soporte de ruta observado en ${esc(item.support_source_periods)}; no es un vuelo observado del mes mostrado">soporte ${esc(item.support_source_periods)}</small>`;
+        const seats = item.capacity_estimated ? `≈${formatRouteMetric("seats", item.seats)}` : "N/D";
+        const departures = item.capacity_estimated ? `≈${formatRouteMetric("departures", item.departures)}` : "N/D";
+        const loadFactor = item.capacity_estimated && finite(item.load_factor)
+          ? `≈${formatRouteMetric("load_factor", item.load_factor)}`
+          : "N/D";
+        const monthLabel = spansMonths && item.period_id
+          ? ` <small class="route-month-label">${esc(DOMESTIC_MONTH_NAMES[Number(item.period_id.slice(5, 7)) - 1] || item.period_id)}</small>`
+          : "";
+        return `
       <div class="route-direction-line route-estimate-line">
-        <span class="route-direction-name"><strong>${esc(item.carrier_label)}</strong><br>${esc(item.origin_iata)} → ${esc(item.destination_iata)}${borrowed}</span>
+        <span class="route-direction-name"><strong>${esc(item.carrier_label)}</strong>${monthLabel}<br>${esc(item.origin_iata)} → ${esc(item.destination_iata)}${borrowed}</span>
         <span title="Rango de sensibilidad ${integer.format(low)}–${integer.format(high)}">≈${integer.format(item.passengers)}<small>${integer.format(low)}–${integer.format(high)}</small></span>
         <span>${seats}</span><span>${departures}</span><span>${loadFactor}</span>
       </div>`;
-    }).join("");
+      }).join("");
+    };
     const directionDetails = (route) => route.passengers_estimated && (route.monthly || []).length
       ? estimateDetails(route)
       : routeDirections(route).map(({ origin, destination, direction }) => `
@@ -874,7 +1034,9 @@
 
   $("period-prev").addEventListener("click", () => { if (periodIndex > 0) { periodIndex -= 1; renderQuarter(); } });
   $("period-next").addEventListener("click", () => { if (periodIndex < quarters.length - 1) { periodIndex += 1; renderQuarter(); } });
-  $("network-mode-domestic").addEventListener("click", () => { if (domesticPeriods[quarters[periodIndex].period_id]) { networkMode = "domestic"; renderNetworkPeriod(quarters[periodIndex].period_id); } });
+  $("network-mode-domestic").addEventListener("click", () => {
+    if (domesticAvailableForQuarter(quarters[periodIndex].period_id)) { networkMode = "domestic"; renderNetworkPeriod(quarters[periodIndex].period_id); }
+  });
   $("network-mode-international").addEventListener("click", () => { networkMode = "international"; renderNetworkPeriod(quarters[periodIndex].period_id); });
   $("passenger-period").addEventListener("change", (event) => { passengerPeriod = event.target.value; renderMix(quarters[periodIndex]); });
   window.addEventListener("resize", () => window.requestAnimationFrame(alignRouteDetailToGeo));
