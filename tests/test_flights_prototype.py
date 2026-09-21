@@ -214,7 +214,7 @@ def test_review_html_is_self_contained_accessible_and_responsive() -> None:
     assert soup.select_one("#network-summary") is None
     assert soup.select_one(".scope-banner") is None
     assert soup.select_one("#quarter-status") is None
-    assert soup.select_one("#network-month-switch")["aria-label"] == "Mes nacional"
+    assert soup.select_one("#network-month-switch")["aria-label"] == "Meses nacionales (selección múltiple)"
     assert soup.select_one("#airport-tooltip")["role"] == "region"
     assert soup.select_one("#route-profile") is None
     assert soup.select_one("#concentration") is None
@@ -263,7 +263,19 @@ def test_review_html_is_self_contained_accessible_and_responsive() -> None:
     assert "domestic_monthly_networks" in app_script
     assert "rango de sensibilidad" in app_script
     assert "grupo aeroméxico" in document.lower()
-    assert "aeroméxico connect" not in document.lower()
+    # The domestic payload itself must never attribute a figure to a single
+    # filial: every carrier_key/carrier_label the client receives is the
+    # constant "AEROMEXICO_GROUP"/"Grupo Aeroméxico" (see domestic_routes.py).
+    payload_text = soup.select_one("#flight-dashboard-data").string.lower()
+    assert "aeroméxico connect" not in payload_text
+    assert "aerovías de méxico" not in payload_text
+    # The static page text (i.e. what get_text() sees without running the
+    # embedded script) must not show the filiales either -- the JS source
+    # legitimately names them once, inside network-scope-note's runtime
+    # composition/scope text (see test_flights_frontend_interactions.py for
+    # the live-DOM check of exactly where that text may appear).
+    assert "aeroméxico connect" not in text.lower()
+    assert "aerovías de méxico" not in text.lower()
     assert 'const defaultairport = "mex"' in app_script
     assert 'key === "load_factor"' in app_script
     assert "direction.passengers / direction.seats" in app_script
