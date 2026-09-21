@@ -1,12 +1,11 @@
 """Public entrypoint for the approved Aeromexico Tracker HTML dashboard."""
 
+from pathlib import Path
+
 import streamlit as st
 
 
-DASHBOARD_URL = (
-    "https://aeromexico-tracker-djwjbylohwdryhbvnjhwsy.streamlit.app/"
-    "~/+/app/static/aeromexico_tracker.html"
-)
+DASHBOARD_PATH = Path(__file__).parent / "static" / "aeromexico_tracker.html"
 
 
 def main() -> None:
@@ -31,8 +30,8 @@ def main() -> None:
         unsafe_allow_html=True,
     )
     st.iframe(
-        DASHBOARD_URL,
-        height=1800,
+        DASHBOARD_PATH,
+        height="content",
         tab_index=0,
     )
 
