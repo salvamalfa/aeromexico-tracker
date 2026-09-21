@@ -311,6 +311,23 @@ Decisiones que quedan explícitas en el código:
   `data/reference/aeromexico_aircraft_seat_capacity.csv`, y `ruta × operador`,
   que es el grano del estimador.
 
+## 8b. Validación ejecutada
+
+- `pytest tests/test_aerodatabox_international.py`: **19 aprobadas**.
+- `pytest tests/test_aerodatabox_flights.py tests/test_aerodatabox_cli.py`:
+  **42 aprobadas**; el adaptador nacional no se tocó.
+- `python -m src.ingest.aerodatabox.international_cli plan 2026M05 --days 7`:
+  1,624 unidades sobre 58 aeropuertos, el mismo costo que el barrido nacional.
+- `... probe --dry-run` con MEX y MTY: 8 unidades. Con seis aeropuertos el
+  mismo tope de 20 unidades hace que el comando se niegue a correr, con
+  código de salida 2.
+- Suite completa en este clon de nube: **399 aprobadas, 47 fallidas, 29
+  errores**. Esa es la línea base del entorno, no una regresión: las fallas son
+  de `stage9`, `stage14`, `stage16` y `stage18`, que exigen `data/silver/`,
+  `data/bronze/` y `analysis_runs/`, ignorados en el repositorio público
+  justo como advierte `docs/cloud-development.md`. Los archivos de esta entrega
+  son todos nuevos; ningún módulo existente fue modificado.
+
 ## 9. El sondeo, listo para despacho
 
 No hay `RAPIDAPI_KEY` en este entorno de nube, así que **esta sesión no gastó
