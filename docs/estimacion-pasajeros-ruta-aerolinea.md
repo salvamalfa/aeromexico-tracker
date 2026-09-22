@@ -1,20 +1,24 @@
 # Estimación de pasajeros por ruta y aerolínea · método canónico
 
-Fecha: 21 de septiembre de 2026 (revisado el mismo día con las verificaciones
-de `REG INT`, T-100 celda a celda y el sondeo de 8 unidades).
+Fecha: 21 de septiembre de 2026, ampliado el 22 de septiembre de 2026 con los
+dos crosswalks, la puerta de aceptación internacional, el adaptador al
+contrato del IPF y el plan de captura.
 Estado: documento canónico del método. Describe lo que **ya está en producción**
-para el mercado nacional y fija las condiciones exactas que deben cumplirse
-antes de extenderlo al mercado internacional. No autoriza por sí solo ninguna
-publicación, activación de evidencia ni consumo de API.
+para el mercado nacional y **todo el trabajo preparatorio internacional que no
+requiere gastar unidades de API**, ya completado. No autoriza por sí solo
+ninguna publicación, activación de evidencia ni consumo de API.
 
-**Veredicto sobre la extensión internacional: viable en su condición
-bloqueante.** Las dos marginales internacionales de AFAC describen el mismo
-universo —cero pasajeros de diferencia en los siete meses de 2026 leídos de la
-misma edición (§9.3)— y la semilla existe y fue observada en vivo (§9.6). Lo
-que falta no es evidencia de factibilidad sino construcción: el parser de
-`REG INT`, dos crosswalks revisados a mano y una captura mensual. El riesgo
-abierto y cuantificado es el 17.6 % de registros con estado de código
-compartido desconocido (§9.6).
+**Veredicto sobre la extensión internacional: todo el trabajo preparatorio
+está terminado; solo falta la primera captura mensual, con presupuesto y
+comandos ya preparados (§9.10) y sin despachar.** Las dos marginales
+internacionales de AFAC describen el mismo universo —cero pasajeros de
+diferencia en los siete meses de 2026 leídos de la misma edición (§9.3)—, la
+semilla fue observada en vivo (§9.6), los dos crosswalks cubren **100 % de las
+rutas y 99.7–99.9 % de las aerolíneas** por pasajeros (§9.5), y la puerta de
+aceptación internacional está escrita, probada y ensayada contra datos reales
+(§9.8). El riesgo abierto y cuantificado sigue siendo el 17.6 % de registros
+con `codeshareStatus` desconocido, medido en vivo el 2026-09-10 (§9.6) y ahora
+con un umbral de rechazo explícito en la puerta (§9.8).
 
 Este documento es la referencia que debe leer cualquier agente o persona antes
 de tocar el estimador. Sustituye la reconstrucción del método a partir de
@@ -577,15 +581,60 @@ correspondencia dejaría tráfico de Connect dentro del residuo no estadounidens
 donde no pertenece. Es una optimización, no un requisito: el cubo completo no
 la necesita.
 
-### 9.5 Piezas nuevas que hay que construir
+### 9.5 Piezas nuevas — estado tras la ronda de construcción del 2026-09-22
 
 | Pieza | Análogo nacional | Estado |
 |---|---|---|
-| Parser de `REG INT` | `read_route_workbook` en `src/ingest/afac/margins.py` | **hecho**: `src/ingest/afac/international_margins.py`, 14 pruebas. Produce `data/reference/afac_od_internacional_regular.csv` (6,853 filas, 979 pares) y `afac_carrier_international.csv` (434 filas, 62 empresas: 5 nacionales + 57 extranjeras), y reconcilia en cada reconstrucción |
-| Crosswalk ciudad AFAC internacional ↔ IATA | `afac_city_iata_crosswalk.csv` (58 aeropuertos) | **no existe**; 37 países y ciudades con varios aeropuertos en ambos extremos. El emparejamiento automático contra T-100 alcanzó 94 % y el 6 % restante es nomenclatura resoluble a mano |
-| Crosswalk aerolínea AFAC internacional ↔ IATA/ICAO | `afac_carrier_crosswalk.csv` (2 filas) | **no existe**; el resumen por empresa lista 5 nacionales y ~45 extranjeras con subtotales regionales que **no deben contarse** |
-| Puerta de aceptación internacional | `seed_acceptance_v3` | reutilizable **y con mejor insumo**: `REG INT` publica `vuelos` por par y mes, así que la cobertura de la semilla se mide por división directa y no por inferencia |
-| Semilla internacional | `flights.py` | **existe y está probada en vivo**: `src/ingest/aerodatabox/international.py` |
+| Parser de `REG INT` | `read_route_workbook` en `src/ingest/afac/margins.py` | **hecho**: `src/ingest/afac/international_margins.py`, 14 pruebas. Produce `afac_od_internacional_regular.csv` (6,853 filas, 979 pares) y `afac_carrier_international.csv` (434 filas, 62 empresas), reconcilia en cada reconstrucción |
+| Crosswalk ciudad AFAC internacional ↔ IATA | `afac_city_iata_crosswalk.csv` (58 aeropuertos) | **hecho**: `src/ingest/afac/international_crosswalks.py` + `afac_international_city_overrides.csv` (54 reglas revisadas a mano) → `afac_international_city_iata_crosswalk.csv`, **178 etiquetas de ciudad, 241 aeropuertos, 0 sin resolver, 100 % de pasajeros cubiertos** en los 7 meses. 10 pruebas |
+| Crosswalk aerolínea AFAC internacional ↔ IATA/ICAO | `afac_carrier_crosswalk.csv` (2 filas) | **hecho**: `afac_international_carrier_crosswalk.csv`, 62 aerolíneas con tres niveles de confianza (`resolved`/`probable`/`unresolved`, ver §9.5.1), **99.7–99.9 % de pasajeros cubiertos** por mes |
+| Puerta de aceptación internacional | `seed_acceptance_v3` | **hecho**: `src/analytics/international_route_carrier.py`, `international_seed_acceptance_v1`, 9 comprobaciones, 20 pruebas + ensayo sobre datos reales (§9.6.1) |
+| Semilla internacional | `flights.py` | **existe y está probada en vivo**: `src/ingest/aerodatabox/international.py`, ahora con dos diagnósticos adicionales (`codeshare_unknown`, `status_incomplete`) que la puerta consume |
+| Adaptador semilla → contrato IPF | — | **hecho**: `build_international_seed`, `build_international_margins`, mismo grano mensual y direccional que `src/analytics/route_carrier.py` |
+| Agregación Grupo Aeroméxico post-ajuste | — | **hecho**: `group_aeromexico()`, suma solo después del ajuste, conserva el linaje de cada filial |
+| Exclusión de doble conteo con T-100 | — | **hecho**: `observed_cells_to_exclude()`, marca `display_source` sin sumar nunca observado + estimado |
+| Verificación offline de captura (`preflight`) | — | **hecho**: subcomando `preflight` en `international_cli.py`, 8 pruebas cubren credencial, reanudación, retención y tope duro |
+
+#### 9.5.1 Los tres niveles de confianza del crosswalk de aerolínea
+
+Ninguna aerolínea se mapea por parecido de nombre. Cada fila del crosswalk
+declara su nivel:
+
+- **`resolved`** (34 aerolíneas, cubren la inmensa mayoría de los pasajeros):
+  el código IATA/ICAO está confirmado por un artefacto de este repositorio
+  —`config/carrier_crosswalk.csv`, el crosswalk nacional, o el propio sondeo
+  del 2026-09-10, que observó el código en vivo (`IATA:UA`, `IATA:AA`,
+  `IATA:DL`, `IATA:CM`, `IATA:AV`, `IATA:AC`, `IATA:MQ`, `IATA:IB`, `IATA:AF`,
+  `IATA:Q6`, `IATA:LA`)—.
+- **`probable`** (23 aerolíneas): identidad documentada externamente (una sola
+  aerolínea de ese nombre opera hacia México, denominación social inequívoca
+  en la etiqueta de AFAC) pero **sin confirmar todavía dentro de este
+  repositorio**. Cuentan para la cobertura porque negarles una identidad
+  conocida sería peor que usarla con la etiqueta correcta; la primera captura
+  real that muestre su código en el sondeo los sube a `resolved` o revela que
+  el código supuesto no aparece.
+- **`unresolved`** (5 aerolíneas, ≤0.07 % de pasajeros cada una): identidad
+  genuinamente incierta — `Aerus` opera sin código IATA publicado, `SKY
+  Airline Perú` y `Volaris El Salvador` son filiales regionales sin código
+  confirmado, `Breeze Airways` tiene un código que podría chocar con el
+  prefijo histórico de Mexicana, `Orbest` no se verificó. **Nunca entran a la
+  semilla**; sus pasajeros AFAC quedan fuera de la marginal de aerolínea y se
+  reportan como brecha de cobertura, no se reparten entre vecinos.
+
+Un código que dos aerolíneas `resolved`/`probable` reclamaran a la vez
+—`ambiguous_operator_codes()`— tampoco se resuelve por preferencia: se
+reporta y bloquea el ajuste hasta que la revisión humana lo deshaga.
+
+**Corrección durante la construcción**: la primera pasada tenía la etiqueta
+`United Airlines` en el crosswalk contra `United Airlines, Inc.` en la
+marginal, un desajuste de escritura que descartaba en silencio el 9.5 % de los
+pasajeros internacionales. El nuevo guardia `carriers_missing_from_crosswalk()`
+compara los nombres del margen contra los del crosswalk y lo reporta como
+fallo ruidoso en vez de dejarlo pasar como cobertura baja sin explicación; ya
+tiene una prueba dedicada. También apareció y se corrigió `LIÈGE` (con acento
+grave en la fuente AFAC) escrita sin acento en el override, que dejaba sin
+resolver una etiqueta y bajaba la cobertura de rutas a 99.90 %; corregida,
+la cobertura de rutas es **100 % en los 7 meses**.
 
 ### 9.6 El sondeo del 2026-09-10: qué se compró y qué se aprendió
 
@@ -671,8 +720,90 @@ ambos libros sean de la **misma edición**: ese es el error que produce las
 diferencias de §9.3, y el parser lo convierte en un fallo visible en vez de un
 dato silenciosamente revisado.
 
-Estos dos CSV todavía **no los consume nada**. Son el insumo de las piezas que
-siguen: los dos crosswalks y la puerta de aceptación internacional.
+Estos dos CSV alimentan ahora los crosswalks (§9.5) y la puerta de aceptación
+(§9.8): dejaron de ser insumo huérfano.
+
+### 9.8 La puerta de aceptación internacional
+
+`src/analytics/international_route_carrier.py`, versión
+`international_seed_acceptance_v1`, 20 pruebas. Recibe una captura cruda de
+`src/ingest/aerodatabox/international.py`, la pasa por los dos crosswalks
+(§9.5) y produce `(seed, rejected)` en el contrato exacto que
+`src/analytics/route_carrier.py::estimate_route_carrier()` espera
+(`period_id, route_key, carrier_key, weight`, con `route_key` en vocabulario
+de ciudades AFAC, nunca IATA), más dos columnas de diagnóstico
+(`codeshare_unknown`, `status_incomplete`) que solo la puerta consume.
+
+Nueve comprobaciones, cada una reportada como un `Finding` con severidad
+propia (`reject` bloquea el ajuste, `review` lo permite con aviso, `note` es
+informativo) para que quede claro **cuál** propiedad falló:
+
+| # | Comprobación | Qué detecta | Severidad |
+|---|---|---|---|
+| 1 | Duplicados | dos filas repiten periodo, ruta y operador | reject |
+| 2 | Direcciones perdidas | un mercado capturado solo en un sentido (una ruta internacional se ve como salida en un extremo y como llegada en el otro; puede faltar uno) | review |
+| 3 | Operadores ambiguos | un código IATA/ICAO reclamado por dos aerolíneas revisadas | reject |
+| 3b | Aeroméxico sin separar | vuelos `AM` sin modelo de aeronave, no repartibles entre Aerovías/Connect | review, contado y excluido |
+| 3c | Operadores sin revisar | código que no aparece en el crosswalk (§9.5) | review, contado y excluido |
+| 4 | Codeshare sin resolver | proporción de la semilla con `codeshareStatus=Unknown`; >25 % rechaza, 5–25 % avisa (medido en vivo: 17.6 %, §9.6) | reject / review |
+| 5 | Cobertura de rutas | % de pasajeros AFAC dentro de rutas que la semilla cubre; <95 % rechaza | reject / review |
+| 5b | Cobertura de aerolíneas | igual, por aerolínea | reject / review |
+| 6 | Márgenes incompatibles | `column_scale` fuera de ±5 % | reject |
+| 7 | Soporte estructural inviable | una ruta o aerolínea con pasajeros AFAC y sin ninguna fila de oferta en la semilla (lo que el IPF lanzaría como `InfeasibleMarginsError`, detectado antes de ajustar) | reject |
+| 8 | Vuelos por encima de AFAC | rutas donde la semilla ve más vuelos que los que `REG INT` publica: señal de programación en vez de operación | review |
+| 8b | Razón semilla/AFAC | razón global de vuelos semilla ÷ AFAC, informativa | note |
+| 9 | Estado no operado | % de la semilla sin un `status` que confirme vuelo completado | note |
+
+Umbrales calcados de `seed_acceptance_v3` (nacional) para que ambos veredictos
+signifiquen lo mismo: cobertura ≥95 %, `column_scale` ±5 %.
+
+#### 9.8.1 Ensayo con datos reales, sin capturar nada
+
+`python -m src.analytics.international_route_carrier --periods <meses>`
+sustituye la semilla real (todavía inexistente) por T-100 reconstruido con la
+misma forma —vuelos por ruta y operador— para ejercitar todo el tubo sobre
+datos reales sin gastar una unidad: crosswalks, grano, contratos, hallazgos.
+T-100 solo cubre México–Estados Unidos, así que **se espera que la puerta lo
+rechace por cobertura**; eso es lo que se verifica, no una simulación de la
+captura completa:
+
+```
+$ uv run python -m src.analytics.international_route_carrier --periods 2026M04,2026M05
+
+2026M04  veredicto: REJECT  (international_seed_acceptance_v1)
+  cobertura rutas       62.92%
+  cobertura aerolineas  84.16%
+  column_scale          0.7489
+  REJECT cobertura_rutas: 62.92% ... umbral 95%
+  REJECT cobertura_aerolineas: 84.16% ... umbral 95%
+  REJECT margenes_incompatibles: column_scale 0.7489 fuera de ±5%
+  NOTE   razon_vuelos_semilla_afac: la semilla contiene 0.99 veces los
+         vuelos que AFAC publica en las rutas comparables
+```
+
+El `REJECT` es el resultado correcto — confirma que la puerta distingue una
+semilla parcial de una completa — y la razón semilla/AFAC de 0.99 confirma que
+el adaptador reproduce fielmente el volumen de vuelos donde sí tiene datos.
+Esto **no sustituye una captura real** de AeroDataBox: mide la plomería, no la
+semilla.
+
+### 9.9 Agregación Grupo Aeroméxico y exclusión de doble conteo con T-100
+
+Dos funciones, aplicadas **después** del ajuste, nunca antes:
+
+- `group_aeromexico(estimate)`: suma `AEROMEXICO` + `AEROMEXICO_CONNECT` en una
+  fila `AEROMEXICO_GROUP` / *Grupo Aeroméxico*, conservando las dos filas
+  originales para que el linaje interno no se pierda. Cada filial ya fue
+  ajustada por separado contra su propio total publicado por AFAC (§8); sumar
+  antes de ajustar les regalaría pasajeros de otras aerolíneas.
+- `observed_cells_to_exclude(estimate, observed)`: marca cada celda ajustada
+  con `display_source = "observed_t100"` o `"estimated"`. T-100 nunca entra al
+  ajuste como fila, columna ni peso (§9.4); esta función es la única vía por
+  la que puede tocar el resultado, y solo para decidir **qué se muestra**, no
+  para modificar la cifra ajustada. Una celda con `display_source
+  = observed_t100` se publica desde T-100; su valor ajustado se conserva como
+  diagnóstico y su diferencia contra T-100 es la métrica de calidad del
+  estimador en esa celda. Las dos fuentes nunca se suman en el mismo total.
 
 ## 10. Qué tan bueno es el estimador, medido
 
@@ -851,8 +982,11 @@ Límites que permanecen aunque todo lo demás salga bien:
 | `src/analytics/route_carrier_backtest.py` | backtest estratificado por operador, competencia, tamaño y distancia |
 | `src/ingest/afac/margins.py` | parser de `REG NAC` y de la base larga DATATUR |
 | `src/ingest/aerodatabox/flights.py` | adaptador nacional de la semilla |
-| `src/ingest/aerodatabox/international.py` | adaptador internacional de la semilla |
-| `src/ingest/aerodatabox/international_cli.py` | `plan`, `probe`, `sweep` |
+| `src/ingest/aerodatabox/international.py` | adaptador internacional de la semilla, con diagnósticos `codeshare_unknown`/`status_incomplete` |
+| `src/ingest/aerodatabox/international_cli.py` | `plan`, `probe`, `sweep` (con `--tag`), `preflight` |
+| `src/ingest/afac/international_margins.py` | parser de `REG INT` y del resumen internacional por empresa, con conciliación |
+| `src/ingest/afac/international_crosswalks.py` | los dos crosswalks internacionales, cobertura por mes, casos sin resolver |
+| `src/analytics/international_route_carrier.py` | puerta de aceptación internacional, adaptador al contrato IPF, `group_aeromexico`, `observed_cells_to_exclude` |
 | `src/dashboard/international_routes.py` | composición de la red internacional del dashboard |
 
 ### Datos
@@ -864,10 +998,16 @@ Límites que permanecen aunque todo lo demás salga bien:
 | `data/reference/afac_city_iata_crosswalk.csv` | 58 aeropuertos nacionales ↔ ciudad AFAC |
 | `data/reference/afac_carrier_crosswalk.csv` | nombre AFAC ↔ `carrier_key` |
 | `data/reference/aeromexico_aircraft_seat_capacity.csv` | modelo ↔ asientos, con rango |
+| `data/reference/afac_od_internacional_regular.csv` | marginal de ruta internacional (`REG INT`), 6,853 filas |
+| `data/reference/afac_carrier_international.csv` | marginal de aerolínea internacional, 434 filas, 62 empresas |
+| `data/reference/afac_international_city_overrides.csv` | 54 reglas de crosswalk de ciudad revisadas a mano, con motivo |
+| `data/reference/afac_international_city_iata_crosswalk.csv` | 178 etiquetas de ciudad → 241 aeropuertos, generado |
+| `data/reference/afac_international_carrier_crosswalk.csv` | 62 aerolíneas → IATA/ICAO/`carrier_key`, tres niveles de confianza |
 | `data/gold/fact_route_traffic.parquet` + `dim_route.parquet` | T-100 |
 | `data/gold/fact_international_route_observations.parquet` | observaciones internacionales retenidas |
 | `data/silver/afac_monthly_stats.parquet` (respaldo privado) | marginal de aerolínea, nacional e internacional |
 | `snapshot/data/bronze/afac_research/afac_research_city_pairs_*.xlsx` (respaldo privado) | libros O-D con `REG INT` |
+| `snapshot/data/bronze/afac_research/afac_research_airline_summary_*.xlsx` (respaldo privado) | resumen por empresa, bloques internacionales |
 
 ### Reportes de etapa relacionados
 
@@ -907,12 +1047,152 @@ En este orden. Ninguna etapa autoriza la siguiente por sí sola.
 | 3 | Evaluar T-100 celda a celda y fijar su papel | **hecho** (§9.4: subconjunto observado comparable, 0.9999, mediana 0.53 %) |
 | 4 | Confirmar que el proveedor trae la red internacional | **hecho** (§9.6: 54 mercados de Grupo Aeroméxico por 8 unidades) |
 | 5 | Parser productivo de `REG INT` con pruebas | **hecho**, sin API (§9.7) |
-| 6 | Crosswalks de ciudad y de aerolínea, revisados a mano, con conteo de no mapeados por rutas, pasajeros y aerolíneas | pendiente, sin API |
-| 7 | Puerta de aceptación internacional, usando `vuelos` de `REG INT` como contraste | pendiente, sin API |
-| 8 | Captura mensual de la semilla en los meses que la ventana permita | pendiente, **con API** |
+| 6 | Crosswalks de ciudad y de aerolínea, revisados a mano | **hecho**, sin API (§9.5, §9.5.1): 100 % de rutas, 99.7–99.9 % de aerolíneas por pasajeros |
+| 7 | Puerta de aceptación internacional, usando `vuelos` de `REG INT` como contraste | **hecho**, sin API (§9.8): ensayado sobre T-100 real (§9.8.1) |
+| 7b | Adaptador semilla → contrato IPF, agregación Grupo Aeroméxico y exclusión de doble conteo con T-100 | **hecho**, sin API (§9.9) |
+| 7c | Verificación offline de la captura (credencial, reanudación, retención, tope duro) | **hecho**, sin API (§9.10.2) |
+| 8 | Captura mensual de la semilla en los meses que la ventana permita | **pendiente — próximo paso, con API** (§9.10) |
 | 9 | Ajuste, y backtest del subcubo estadounidense con la semilla real | pendiente |
 | 10 | Vista separada de revisión humana antes de tocar el mapa principal | pendiente |
 
-Las etapas 5 a 7 no consumen unidades y son las que faltan para que la etapa 8
-tenga sentido: capturar una semilla sin crosswalk ni puerta produce filas que no
-se pueden fitear.
+Las etapas 1 a 7c no consumen unidades y ya están cerradas. La 8 es la única
+que gasta presupuesto y es la que este documento deja **preparada, no
+ejecutada** (§9.10): el operador decide el mes y despacha.
+
+### 9.10 Plan de captura, listo para ejecutar
+
+#### 9.10.1 Qué aeropuertos y meses
+
+`data/reference/afac_international_city_iata_crosswalk.csv` da 37 aeropuertos
+mexicanos con tráfico internacional. Priorizados por pasajeros internacionales
+AFAC acumulados (ene–jul 2026), **6 aeropuertos concentran el 88.6 %**:
+
+| Grupo | Aeropuertos | Pasajeros internacionales | Acumulado |
+|---|---|---:|---:|
+| **Núcleo** | CUN, MEX, GDL, SJD, PVR, MTY | 30.9 M | 88.6 % |
+| Resto (31) | ACA, AGU, BJX, CUL, CUU, CZM, DGO, HMO, HUX, LAP, LTO, MID, MLM, MZT, NLU, OAX, PBC, PXM, QRO, SLP, TAM, TIJ, TLC, TPQ, TQO, TRC, UPN, VER, ZCL, ZIH, ZLO | 4.0 M | 11.4 % |
+
+Diseño híbrido: **núcleo en mes completo** (concentra casi 9 de cada 10
+pasajeros y justifica el gasto por ruta) y **resto en muestra ponderada de
+siete días** (mismo mecanismo de ponderación por día de semana que el barrido
+nacional, §3 del documento nacional). Todas las aerolíneas de una misma ruta
+quedan medidas en la misma ventana porque cada ruta internacional tiene
+exactamente un extremo mexicano — la condición que el IPF necesita (§9.10 nota
+al pie de §7).
+
+Meses candidatos y su margen en la ventana histórica (hipótesis de 210 días,
+**no confirmada**, hoy 2026-09-22):
+
+| Mes | Costo núcleo (mes completo) | Costo resto (7 días) | Total | Margen en la ventana |
+|---|---:|---:|---:|---|
+| 2026M03 | 744 | 868 | **1,612** | **5 días** — se sale el 27-sep-2026 |
+| 2026M04 | 720 | 868 | **1,588** | 36 días |
+| 2026M05 | 744 | 868 | **1,612** | 67 días |
+| 2026M06 | 720 | 868 | **1,588** | 98 días |
+| 2026M07 | 744 | 868 | **1,612** | 128 días |
+
+**Recomendación: 2026M04**, no marzo. Marzo tiene solo 5 días de margen bajo
+una hipótesis de ventana **no verificada** contra el panel de la suscripción;
+si la ventana real fuera más corta, marzo podría fallar a mitad de captura. Un
+mes con margen amplio permite reintentar sin presión si la puerta lo rechaza
+y hay que ampliar la muestra.
+
+#### 9.10.2 Verificación offline, ejecutada
+
+`uv run python -m src.ingest.aerodatabox.international_cli preflight` — nuevo
+subcomando, 8 pruebas — comprueba cuatro propiedades sin emitir una sola
+solicitud HTTP:
+
+```
+$ uv run python -m src.ingest.aerodatabox.international_cli preflight
+credencial     OK   proveedor RapidAPI, cabeceras ['x-rapidapi-host', 'x-rapidapi-key']
+reanudacion    OK   una ventana en cache no se vuelve a comprar
+retencion      OK   contenido del proveedor de mas de 7 dias eliminado (1 archivo(s))
+tope duro      OK   un plan de 24 unidades con tope 8 se rechaza
+
+Todo listo. Ninguna unidad consumida en esta comprobacion.
+```
+
+- **Credencial**: `RAPIDAPI_KEY` presente, `AERODATABOX_API_KEY` ausente (si
+  ambas existieran, la directa tendría prioridad y elegiría el host
+  equivocado); el adaptador resuelve a RapidAPI. Ningún valor se imprime,
+  registra ni compara — solo el nombre del proveedor elegido.
+- **Reanudación**: una ventana ya en caché no se vuelve a comprar
+  (`test_a_resumed_sweep_buys_nothing_it_already_has`).
+- **Retención**: contenido de más de 7 días se elimina y no se reutiliza
+  (`test_expired_provider_content_is_deleted_and_not_reused`).
+- **Tope duro**: un plan que excede el presupuesto se rechaza antes de la
+  primera llamada, código de salida 2
+  (`test_the_budget_refuses_before_the_first_call_not_after`).
+- **Deduplicación**: no es una propiedad de arranque — se verifica por
+  construcción del `groupby` en `normalise()`/`routes_by_operator()`
+  (`src/ingest/aerodatabox/international.py`) y por la comprobación 1
+  (`duplicados`) de la puerta (§9.8), que rechaza cualquier fila repetida que
+  se hubiera colado.
+- **Dos capturas del mismo mes no se pisan**: `--tag` en el subcomando
+  `sweep` escribe `aerodatabox_international_seed_<mes>_<tag>.parquet`, para
+  que la captura del núcleo y la del resto convivan
+  (`test_two_sweeps_of_one_month_do_not_overwrite_each_other`).
+
+#### 9.10.3 Comandos preparados, no ejecutados
+
+Dos pasadas para el mes recomendado, cada una con su propio tope duro y su
+propia etiqueta de Silver:
+
+```
+uv run python -m src.ingest.aerodatabox.international_cli sweep 2026M04 \
+    --airports CUN,GDL,MEX,MTY,PVR,SJD \
+    --budget 720 --tag nucleo
+
+uv run python -m src.ingest.aerodatabox.international_cli sweep 2026M04 --days 7 \
+    --airports ACA,AGU,BJX,CUL,CUU,CZM,DGO,HMO,HUX,LAP,LTO,MID,MLM,MZT,NLU,OAX,PBC,PXM,QRO,SLP,TAM,TIJ,TLC,TPQ,TQO,TRC,UPN,VER,ZCL,ZIH,ZLO \
+    --budget 868 --tag resto
+```
+
+Costo máximo combinado: **1,588 unidades** para 2026M04. El workflow
+equivalente y auditable en el repositorio privado es
+`.github/workflows/aerodatabox-international-sweep.yml`
+(`salvamalfa/aeromexico-tracker-data`), que ejecuta el mismo `preflight` y las
+mismas dos pasadas por despacho manual, con el `ref` del commit revisado
+escrito en el resumen de la corrida y el contenido crudo borrado al terminar
+en un paso `if: always()`.
+
+**Ninguno de los dos se ha despachado.**
+
+#### 9.10.4 Qué hace el pipeline automáticamente después de capturar
+
+Sin intervención adicional una vez que exista la semilla real:
+
+1. **`build_international_seed()`** mapea la captura a `(seed, rejected)` con
+   los dos crosswalks (§9.5), contando cada fila que no pudo colocar.
+2. **`build_international_margins()`** construye `route_totals` y
+   `carrier_totals` desde los CSV de §9.7, al mismo grano mensual y
+   direccional.
+3. **`assess_international_seed()`** corre las nueve comprobaciones de §9.8 y
+   devuelve un veredicto `accept`/`review`/`reject` con hallazgos explícitos.
+   Solo `accept` o `review` continúan.
+4. **`estimate_route_carrier()`** (el IPF ya en producción, §2) ajusta cada
+   aerolínea contra su propio total publicado — Aerovías y Connect por
+   separado, nunca como un bloque contra un total de ruta que pertenece a
+   todas las aerolíneas (§8).
+5. **`group_aeromexico()`** suma Aerovías + Connect en Grupo Aeroméxico
+   **después** del ajuste, conservando el linaje de cada filial (§9.9).
+6. **`observed_cells_to_exclude()`** marca cada celda con
+   `display_source = observed_t100` o `estimated` contra el subcubo
+   México–Estados Unidos de T-100, sin sumarlos nunca (§9.9).
+7. **Reconciliación y sensibilidad**: los mismos diagnósticos que ya produce
+   el ajuste nacional — `column_scale`, `max_row_deviation`,
+   `max_col_deviation`, `iterations`, `converged` — y, si hace falta soporte
+   temporal entre meses capturados, el mismo mecanismo de
+   `augment_seed_with_temporal_support()` con `passengers_estimated_low/high`
+   (§5).
+8. **Backtest** del subcubo estadounidense con la semilla real (no la
+   sustituta de §9.8.1), que da la primera medición del error del estimador
+   **con** el ruido real de captura incluido — muestreo, codeshare ambiguo,
+   crosswalk — en vez de la cota inferior de §10.
+
+Lo que el pipeline **no** hace solo: la revisión humana. Ningún resultado toca
+`prototypes/vuelos/` ni el generador integrado (`stage18.py`), no se activa
+`flight_evidence_v1`, no cambia `historically_eligible_at_2026_07_13` y el
+Analysis Agent permanece inactivo, hasta una instrucción explícita separada de
+la captura misma.

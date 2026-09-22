@@ -1,0 +1,53 @@
+afac_city,afac_country,action,dim_city,airport_iata,note
+"NUEVA YORK",Estados Unidos,map_city,"New York",,Exonimo espanol de New York
+"LONDRES",Reino Unido,map_city,"London",,Exonimo espanol de London
+"ROMA",Italia,map_city,"Rome",,Exonimo espanol de Rome
+"LA HABANA",Cuba,map_city,"Havana",,Exonimo espanol de Havana
+"LA HABANA",Cuba,exclude,,UPB,Base militar San Antonio de los Banos sin servicio comercial
+"NUEVA ORLEANS",Estados Unidos,map_city,"New Orleans",,Exonimo espanol de New Orleans
+"LUXEMBURGO",Luxemburgo,map_city,"Luxembourg",,Exonimo espanol de Luxembourg
+"BELICE",Belice,map_city,"Belize City",,Etiqueta de pais usada como ciudad; la unica ciudad con servicio es Belize City
+"GUATEMALA",Guatemala,map_city,"Guatemala City",,Etiqueta de pais usada como ciudad
+"PANAMA",Panama,map_airport,,PTY,"dim_airport registra la ciudad como Tocumen, no Panama"
+"CARACAS",Venezuela,map_airport,,CCS,"dim_airport registra la ciudad como Maiquetia"
+"MILAN",Italia,map_airport,,MXP,"dim_airport registra Ferno (VA); Malpensa es el aeropuerto intercontinental de Milan"
+"MILAN",Italia,map_airport,,LIN,"dim_airport registra Segrate (MI); Linate es el segundo aeropuerto de Milan"
+"COMAYAGUA",Honduras,map_airport,,XPL,"dim_airport registra Palmerola; XPL sustituyo a TGU en 2021"
+"KITCHENER",Canada,map_airport,,YKF,"dim_airport registra Breslau; YKF sirve a Kitchener-Waterloo"
+"LIÈGE",Belgica,map_airport,,LGG,"dim_airport registra Grace-Hollogne; etiqueta AFAC con acento grave"
+"COVINGTON",Estados Unidos,map_airport,,CVG,"dim_airport registra Cincinnati / Covington"
+"ESTAMBUL (ARNAVUTKOY)",Turquia,map_airport,,IST,"La etiqueta nombra Arnavutkoy, distrito del nuevo aeropuerto IST; excluye SAW (Pendik) e ISL (Bakirkoy)"
+"FRANKFURT",Alemania,map_airport,,FRA,"dim_airport registra Frankfurt am Main; HHN (Hahn) es otra ciudad y no se incluye"
+"SANTIAGO DE CHILE",Chile,map_city,"Santiago",,Etiqueta desambiguada por pais
+"BARCELONA, España",España,map_city,"Barcelona",,Etiqueta desambiguada por pais
+"SANTO DOMINGO,REP DOM",Republica Dominicana,map_city,"Santo Domingo",,Etiqueta desambiguada por pais
+"CARTAGENA DE INDIAS",Colombia,map_city,"Cartagena",,Nombre historico completo de Cartagena
+"SAN JOSE, COSTA RICA",Costa Rica,map_city,"San José (Alajuela)",,Etiqueta desambiguada por pais
+"SAN JOSE, COSTA RICA",Costa Rica,map_airport,,SYQ,"Tobias Bolanos, segundo aeropuerto de San Jose"
+"SAN JOSE, CALIFORNIA",Estados Unidos,map_airport,,SJC,Etiqueta desambiguada por estado
+"SANTA ANA, CALIFORNIA",Estados Unidos,map_airport,,SNA,Etiqueta desambiguada por estado
+"PORTLAND, OREGON",Estados Unidos,map_airport,,PDX,"Etiqueta desambiguada por estado; PWM (Portland, Maine) queda fuera"
+"COLUMBUS, Ohio",Estados Unidos,map_airport,,CMH,"Etiqueta desambiguada por estado; hay siete Columbus en dim_airport"
+"COLUMBUS, Ohio",Estados Unidos,map_airport,,LCK,"Rickenbacker, segundo aeropuerto de Columbus, Ohio"
+"Charleston, Sur de Carolina",Estados Unidos,map_airport,,CHS,"Etiqueta desambiguada por estado; CRW es Charleston, West Virginia"
+"LOUISVILLE, KENTUCKY",Estados Unidos,map_city,"Louisville",,Etiqueta desambiguada por estado
+"HARLINGEN TEXAS",Estados Unidos,map_city,"Harlingen",,Etiqueta desambiguada por estado
+"MC ALLEN",Estados Unidos,map_city,"McAllen",,Diferencia de espaciado frente a dim_airport
+"Providence, Rhode Island",Estados Unidos,map_city,"Providence/Warwick",,dim_airport usa el nombre del area metropolitana
+"MANCHESTER",Reino Unido,map_city,"Manchester, Greater Manchester",,dim_airport usa ciudad y condado
+"BIRMINGHAM, INGLATERRA",Reino Unido,map_city,"Birmingham, West Midlands",,dim_airport usa ciudad y condado
+"NEWCASTLE",Reino Unido,map_city,"Newcastle upon Tyne, Tyne and Wear",,dim_airport usa ciudad y condado
+"Cardiff, Glamorgan",Reino Unido,map_city,"Cardiff",,dim_airport usa solo la ciudad
+"LONDON, ONTARIO",Canada,map_airport,,YXU,Etiqueta desambiguada por provincia
+"VICTORIA, COLUMBIA",Canada,map_city,"Victoria",,"Etiqueta abreviada de Victoria, British Columbia"
+"REGINA, Canada",Canada,map_city,"Regina",,Etiqueta con sufijo de pais
+"Fredericton, Canada",Canada,map_city,"Fredericton",,Etiqueta con sufijo de pais
+"GANDER, Canadá",Canada,map_city,"Gander",,Etiqueta con sufijo de pais
+"VALENCIA, Venezuela",Venezuela,map_city,"Valencia",,Etiqueta desambiguada por pais
+"ZARAGOZA, ES",España,map_city,"Zaragoza",,Etiqueta con sufijo de pais
+"SHANGHAI",China,map_city,"Shanghai (Pudong)",,Aeropuerto intercontinental de Shanghai
+"SHANGHAI",China,map_airport,,SHA,"Hongqiao, segundo aeropuerto de Shanghai"
+"HANGZHOU, China",China,map_airport,,HGH,Etiqueta con sufijo de pais
+"JEBEL ALI",Emiratos Arabes,map_airport,,DWC,"dim_airport registra Dubai(Jebel Ali); Al Maktoum, carga"
+"LAS VEGAS",Estados Unidos,exclude,,LVS,"Homonimo: Las Vegas, New Mexico, a 907 km"
+"NORFOLK",Estados Unidos,exclude,,OFK,"Homonimo: Norfolk, Nebraska, a 1903 km"

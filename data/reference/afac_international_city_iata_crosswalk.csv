@@ -1,0 +1,242 @@
+afac_city,afac_country,airport_iata,match_method,city_spread_km
+FRANKFURT,Alemania,FRA,override_airport,0.0
+MUNICH,Alemania,MUC,city_exact,0.0
+BUENOS AIRES,Argentina,AEP,city_exact,0.0
+LIÈGE,Belgica,LGG,override_airport,0.0
+BELICE,Belice,BZE,override_city,11.7
+BELICE,Belice,TZA,override_city,11.7
+BRASILIA,Brasil,BSB,city_exact,0.0
+CAMPINAS,Brasil,VCP,city_exact,0.0
+SAO PAULO,Brasil,CGH,city_exact,28.8
+SAO PAULO,Brasil,GRU,city_exact,28.8
+SAO PAULO,Brasil,RTE,city_exact,28.8
+Seoul,COREA DEL SUR,GMP,city_exact,31.6
+Seoul,COREA DEL SUR,ICN,city_exact,31.6
+ABBOTSFORD,Canada,YXX,city_exact,0.0
+CALGARY,Canada,YYC,city_exact,0.0
+CHARLOTTETOWN,Canada,YYG,city_exact,0.0
+COMOX,Canada,YQQ,city_exact,0.0
+DEER LAKE,Canada,YDF,city_exact,0.0
+EDMONTON,Canada,YEG,city_exact,0.0
+"Fredericton, Canada",Canada,YFC,override_city,0.0
+"GANDER, Canadá",Canada,YQX,override_city,0.0
+HALIFAX,Canada,YHZ,city_exact,0.0
+HAMILTON,Canada,YHM,city_exact,0.0
+KELOWNA,Canada,YLW,city_exact,0.0
+KITCHENER,Canada,YKF,override_airport,0.0
+"LONDON, ONTARIO",Canada,YXU,override_airport,0.0
+MONCTON,Canada,YQM,city_exact,0.0
+MONTREAL,Canada,YHU,city_exact,51.6
+MONTREAL,Canada,YMX,city_exact,51.6
+MONTREAL,Canada,YUL,city_exact,51.6
+OTTAWA,Canada,YOW,city_exact,15.5
+OTTAWA,Canada,YRO,city_exact,15.5
+PRINCE GEORGE,Canada,YXS,city_exact,0.0
+QUEBEC,Canada,YQB,city_exact,0.0
+"REGINA, Canada",Canada,YQR,override_city,0.0
+SASKATOON,Canada,YXE,city_exact,0.0
+ST. JOHN'S,Canada,YYT,city_exact,0.0
+THUNDER BAY,Canada,YQT,city_exact,0.0
+TORONTO,Canada,YTZ,city_exact,19.6
+TORONTO,Canada,YYZ,city_exact,19.6
+VANCOUVER,Canada,YVR,city_exact,0.0
+"VICTORIA, COLUMBIA",Canada,YYJ,override_city,0.0
+WINDSOR,Canada,YQG,city_exact,0.0
+WINNIPEG,Canada,YWG,city_exact,0.0
+SANTIAGO DE CHILE,Chile,SCL,override_city,0.0
+"HANGZHOU, China",China,HGH,override_airport,0.0
+SHANGHAI,China,PVG,override_city,45.2
+SHANGHAI,China,SHA,override_airport,45.2
+SHENZHEN,China,SZX,city_exact,0.0
+WUXI,China,WUX,city_exact,0.0
+BOGOTA,Colombia,BOG,city_exact,0.0
+CALI,Colombia,CLO,city_exact,0.0
+CARTAGENA DE INDIAS,Colombia,CTG,override_city,0.0
+MEDELLIN,Colombia,EOH,city_exact,19.5
+MEDELLIN,Colombia,MDE,city_exact,19.5
+"SAN JOSE, COSTA RICA",Costa Rica,SJO,override_city,8.6
+"SAN JOSE, COSTA RICA",Costa Rica,SYQ,override_airport,8.6
+CAMAGUEY,Cuba,CMW,city_exact,0.0
+LA HABANA,Cuba,HAV,override_city,0.0
+QUITO,Ecuador,UIO,city_exact,0.0
+SAN SALVADOR,El Salvador,ILS,city_exact,0.0
+DUBAI,Emiratos Arabes,DXB,city_exact,24.8
+DUBAI,Emiratos Arabes,NHD,city_exact,24.8
+JEBEL ALI,Emiratos Arabes,DWC,override_airport,0.0
+"BARCELONA, España",España,BCN,override_city,0.0
+MADRID,España,MAD,city_exact,9.8
+MADRID,España,TOJ,city_exact,9.8
+"ZARAGOZA, ES",España,ZAZ,override_city,0.0
+ATLANTA,Estados Unidos,ATL,city_exact,29.1
+ATLANTA,Estados Unidos,FTY,city_exact,29.1
+ATLANTA,Estados Unidos,PDK,city_exact,29.1
+AUSTIN,Estados Unidos,AUS,city_exact,0.0
+BALTIMORE,Estados Unidos,BWI,city_exact,27.6
+BALTIMORE,Estados Unidos,MTN,city_exact,27.6
+BOSTON,Estados Unidos,BOS,city_exact,0.0
+BROWNSVILLE,Estados Unidos,BRO,city_exact,0.0
+CHARLOTTE,Estados Unidos,CLT,city_exact,0.0
+CHICAGO,Estados Unidos,MDW,city_exact,24.9
+CHICAGO,Estados Unidos,ORD,city_exact,24.9
+CLEVELAND,Estados Unidos,BKL,city_exact,34.7
+CLEVELAND,Estados Unidos,CGF,city_exact,34.7
+CLEVELAND,Estados Unidos,CLE,city_exact,34.7
+COLORADO SPRINGS,Estados Unidos,COS,city_exact,0.0
+"COLUMBUS, Ohio",Estados Unidos,CMH,override_airport,20.7
+"COLUMBUS, Ohio",Estados Unidos,LCK,override_airport,20.7
+COVINGTON,Estados Unidos,CVG,override_airport,0.0
+"Charleston, Sur de Carolina",Estados Unidos,CHS,override_airport,0.0
+DALLAS-FORT WORTH,Estados Unidos,DFW,city_exact,0.0
+DENVER,Estados Unidos,APA,city_exact,44.1
+DENVER,Estados Unidos,BJC,city_exact,44.1
+DENVER,Estados Unidos,DEN,city_exact,44.1
+DETROIT,Estados Unidos,DET,city_exact,46.8
+DETROIT,Estados Unidos,DTW,city_exact,46.8
+DETROIT,Estados Unidos,YIP,city_exact,46.8
+FORT LAUDERDALE,Estados Unidos,FLL,city_exact,14.0
+FORT LAUDERDALE,Estados Unidos,FXE,city_exact,14.0
+FRESNO,Estados Unidos,FAT,city_exact,0.0
+HARLINGEN TEXAS,Estados Unidos,HRL,override_city,0.0
+HOUSTON,Estados Unidos,CXO,city_exact,86.4
+HOUSTON,Estados Unidos,EFD,city_exact,86.4
+HOUSTON,Estados Unidos,HOU,city_exact,86.4
+HOUSTON,Estados Unidos,IAH,city_exact,86.4
+HOUSTON,Estados Unidos,SGR,city_exact,86.4
+INDIANAPOLIS,Estados Unidos,IND,city_exact,0.0
+KANSAS CITY,Estados Unidos,MCI,city_exact,22.4
+KANSAS CITY,Estados Unidos,MKC,city_exact,22.4
+LAREDO,Estados Unidos,LRD,city_exact,0.0
+LAS VEGAS,Estados Unidos,LAS,city_exact,20.0
+LAS VEGAS,Estados Unidos,LSV,city_exact,20.0
+LAS VEGAS,Estados Unidos,VGT,city_exact,20.0
+LOS ANGELES,Estados Unidos,LAX,city_exact,0.0
+"LOUISVILLE, KENTUCKY",Estados Unidos,LOU,override_city,8.9
+"LOUISVILLE, KENTUCKY",Estados Unidos,SDF,override_city,8.9
+MC ALLEN,Estados Unidos,MFE,override_city,0.0
+MEMPHIS,Estados Unidos,MEM,city_exact,0.0
+MIAMI,Estados Unidos,MIA,city_exact,32.7
+MIAMI,Estados Unidos,OPF,city_exact,32.7
+MIAMI,Estados Unidos,TMB,city_exact,32.7
+MILWAUKEE,Estados Unidos,MKE,city_exact,0.0
+MINNEAPOLIS,Estados Unidos,MSP,city_exact,0.0
+NASHVILLE,Estados Unidos,BNA,city_exact,0.0
+NEWARK,Estados Unidos,EWR,city_exact,0.0
+NORFOLK,Estados Unidos,NGU,city_exact,9.1
+NORFOLK,Estados Unidos,ORF,city_exact,9.1
+NUEVA ORLEANS,Estados Unidos,MSY,override_city,29.0
+NUEVA ORLEANS,Estados Unidos,NBG,override_city,29.0
+NUEVA ORLEANS,Estados Unidos,NEW,override_city,29.0
+NUEVA YORK,Estados Unidos,JFK,override_city,17.2
+NUEVA YORK,Estados Unidos,LGA,override_city,17.2
+OAKLAND,Estados Unidos,OAK,city_exact,0.0
+ONTARIO,Estados Unidos,ONT,city_exact,0.0
+ORLANDO,Estados Unidos,ISM,city_exact,57.4
+ORLANDO,Estados Unidos,MCO,city_exact,57.4
+ORLANDO,Estados Unidos,ORL,city_exact,57.4
+ORLANDO,Estados Unidos,SFB,city_exact,57.4
+PHILADELPHIA,Estados Unidos,PHL,city_exact,30.6
+PHILADELPHIA,Estados Unidos,PNE,city_exact,30.6
+PHOENIX,Estados Unidos,PHX,city_exact,0.0
+PITTSBURGH,Estados Unidos,AGC,city_exact,29.8
+PITTSBURGH,Estados Unidos,PIT,city_exact,29.8
+"PORTLAND, OREGON",Estados Unidos,PDX,override_airport,0.0
+"Providence, Rhode Island",Estados Unidos,PVD,override_city,0.0
+RALEIGH/DURHAM,Estados Unidos,RDU,city_exact,0.0
+RENO,Estados Unidos,RNO,city_exact,0.0
+SACRAMENTO,Estados Unidos,MCC,city_exact,29.9
+SACRAMENTO,Estados Unidos,MHR,city_exact,29.9
+SACRAMENTO,Estados Unidos,SAC,city_exact,29.9
+SACRAMENTO,Estados Unidos,SMF,city_exact,29.9
+SALT LAKE CITY,Estados Unidos,SLC,city_exact,0.0
+SAN ANTONIO,Estados Unidos,SAT,city_exact,21.9
+SAN ANTONIO,Estados Unidos,SKF,city_exact,21.9
+SAN ANTONIO,Estados Unidos,SSF,city_exact,21.9
+SAN DIEGO,Estados Unidos,NKX,city_exact,36.2
+SAN DIEGO,Estados Unidos,NZY,city_exact,36.2
+SAN DIEGO,Estados Unidos,SAN,city_exact,36.2
+SAN DIEGO,Estados Unidos,SDM,city_exact,36.2
+SAN FRANCISCO,Estados Unidos,SFO,city_exact,0.0
+"SAN JOSE, CALIFORNIA",Estados Unidos,SJC,override_airport,0.0
+"SANTA ANA, CALIFORNIA",Estados Unidos,SNA,override_airport,0.0
+SEATTLE,Estados Unidos,BFI,city_exact,8.8
+SEATTLE,Estados Unidos,SEA,city_exact,8.8
+ST. LOUIS,Estados Unidos,STL,city_exact,26.3
+ST. LOUIS,Estados Unidos,SUS,city_exact,26.3
+TAMPA,Estados Unidos,MCF,city_exact,14.1
+TAMPA,Estados Unidos,TPA,city_exact,14.1
+TULSA,Estados Unidos,RVS,city_exact,19.6
+TULSA,Estados Unidos,TUL,city_exact,19.6
+WASHINGTON,Estados Unidos,DCA,city_exact,0.0
+PARIS,Francia,LBG,city_exact,0.0
+GUATEMALA,Guatemala,GUA,override_city,0.0
+HONG KONG,HONG KONG,HKG,city_exact,0.0
+COMAYAGUA,Honduras,XPL,override_airport,0.0
+SAN PEDRO SULA,Honduras,SAP,city_exact,0.0
+DUBLIN,Irlanda,DUB,city_exact,0.0
+MILAN,Italia,LIN,override_airport,47.4
+MILAN,Italia,MXP,override_airport,47.4
+ROMA,Italia,CIA,override_city,28.5
+ROMA,Italia,FCO,override_city,28.5
+TOKYO,Japon,HND,city_exact,0.0
+LUXEMBURGO,Luxemburgo,LUX,override_city,0.0
+ACAPULCO,Mexico,ACA,domestic_crosswalk,0.0
+AGUASCALIENTES,Mexico,AGU,domestic_crosswalk,0.0
+CANCUN,Mexico,CUN,domestic_crosswalk,0.0
+CHIHUAHUA,Mexico,CUU,domestic_crosswalk,0.0
+COZUMEL,Mexico,CZM,domestic_crosswalk,0.0
+CULIACAN,Mexico,CUL,domestic_crosswalk,0.0
+DEL BAJIO,Mexico,BJX,domestic_crosswalk,0.0
+DURANGO,Mexico,DGO,domestic_crosswalk,0.0
+GUADALAJARA,Mexico,GDL,domestic_crosswalk,0.0
+HERMOSILLO,Mexico,HMO,domestic_crosswalk,0.0
+HUATULCO,Mexico,HUX,domestic_crosswalk,0.0
+IXTAPA ZIHUATANEJO,Mexico,ZIH,domestic_crosswalk,0.0
+LA PAZ,Mexico,LAP,domestic_crosswalk,0.0
+LORETO,Mexico,LTO,domestic_crosswalk,0.0
+MANZANILLO,Mexico,ZLO,domestic_crosswalk,0.0
+MAZATLAN,Mexico,MZT,domestic_crosswalk,0.0
+MERIDA,Mexico,MID,domestic_crosswalk,0.0
+MEXICO,Mexico,MEX,domestic_crosswalk,0.0
+MONTERREY,Mexico,MTY,domestic_crosswalk,0.0
+MORELIA,Mexico,MLM,domestic_crosswalk,0.0
+OAXACA,Mexico,OAX,domestic_crosswalk,0.0
+PUEBLA,Mexico,PBC,domestic_crosswalk,0.0
+PUERTO ESCONDIDO,Mexico,PXM,domestic_crosswalk,0.0
+PUERTO VALLARTA,Mexico,PVR,domestic_crosswalk,0.0
+QUERETARO,Mexico,QRO,domestic_crosswalk,0.0
+SAN JOSÉ DEL CABO,Mexico,SJD,domestic_crosswalk,0.0
+SAN LUIS POTOSI,Mexico,SLP,domestic_crosswalk,0.0
+SANTA LUCÍA,Mexico,NLU,domestic_crosswalk,0.0
+TAMPICO,Mexico,TAM,domestic_crosswalk,0.0
+TEPIC,Mexico,TPQ,domestic_crosswalk,0.0
+TIJUANA,Mexico,TIJ,domestic_crosswalk,0.0
+TOLUCA,Mexico,TLC,domestic_crosswalk,0.0
+TORREON,Mexico,TRC,domestic_crosswalk,0.0
+TULUM,Mexico,TQO,domestic_crosswalk,0.0
+URUAPAN,Mexico,UPN,domestic_crosswalk,0.0
+VERACRUZ,Mexico,VER,domestic_crosswalk,0.0
+ZACATECAS,Mexico,ZCL,domestic_crosswalk,0.0
+MANAGUA,Nicaragua,MGA,city_exact,0.0
+AMSTERDAM,Paises Bajos,AMS,city_exact,0.0
+PANAMA,Panama,PTY,override_airport,0.0
+LIMA,Peru,LIM,city_exact,0.0
+LISBON,Portugal,LIS,city_exact,0.0
+DOHA,Qatar,DIA,city_exact,4.5
+DOHA,Qatar,DOH,city_exact,4.5
+BELFAST,Reino Unido,BFS,city_exact,22.5
+BELFAST,Reino Unido,BHD,city_exact,22.5
+"BIRMINGHAM, INGLATERRA",Reino Unido,BHX,override_city,0.0
+"Cardiff, Glamorgan",Reino Unido,CWL,override_city,0.0
+GLASGOW,Reino Unido,GLA,city_exact,0.0
+LONDRES,Reino Unido,BQH,override_city,43.0
+LONDRES,Reino Unido,LCY,override_city,43.0
+LONDRES,Reino Unido,LGW,override_city,43.0
+LONDRES,Reino Unido,LHR,override_city,43.0
+MANCHESTER,Reino Unido,MAN,override_city,0.0
+NEWCASTLE,Reino Unido,NCL,override_city,0.0
+PUNTA CANA,Republica Dominicana,PUJ,city_exact,0.0
+"SANTO DOMINGO,REP DOM",Republica Dominicana,SDQ,override_city,0.0
+ZURICH,Suiza,ZRH,city_exact,0.0
+ESTAMBUL (ARNAVUTKOY),Turquia,IST,override_airport,0.0
+CARACAS,Venezuela,CCS,override_airport,0.0
+"VALENCIA, Venezuela",Venezuela,VLN,override_city,0.0
