@@ -1,0 +1,435 @@
+period_id,carrier_name,carrier_block,pasajeros
+2026M01,Aerolíneas Argentinas,foreign,13361
+2026M01,Aerorepública,foreign,4740
+2026M01,Air Canada,foreign,236779
+2026M01,Air Caraïbes,foreign,9163
+2026M01,Air Europa (Air España),foreign,10509
+2026M01,Air France (Société Air France),foreign,61064
+2026M01,Air Transat (Transat A. T.),foreign,118820
+2026M01,Alaska Airlines,foreign,210483
+2026M01,All Nippon Airways LTD,foreign,9717
+2026M01,American Airlines,foreign,679048
+2026M01,Arajet,foreign,18004
+2026M01,Avianca (Aerovías del Continente Americano),foreign,90277
+2026M01,Breeze Airways,foreign,731
+2026M01,British Airways,foreign,28138
+2026M01,China Southern Airlines,foreign,3587
+2026M01,CommutAir,foreign,4704
+2026M01,Condor,foreign,22305
+2026M01,Conviasa,foreign,3971
+2026M01,Copa (Compañía Panameña de Aviación),foreign,132506
+2026M01,Delta Airlines,foreign,463643
+2026M01,Edelweiss (Edelweiss Air Ag) Air Ag,foreign,7220
+2026M01,Emirates Arabes,foreign,18355
+2026M01,"Envoy Air, Inc",foreign,74660
+2026M01,Eurowings Discover,foreign,8948
+2026M01,Evelop Airlines,foreign,10420
+2026M01,Flair Airlines,foreign,60705
+2026M01,Frontier,foreign,53393
+2026M01,GOL Linhas Aéreas,foreign,5673
+2026M01,Iberia (Iberia Líneas Aéreas de España),foreign,59378
+2026M01,Jet Blue Air (Jet Blue Airways Corporation),foreign,87629
+2026M01,K L M (Royal Dutch Airlines),foreign,21603
+2026M01,Lacsa (Líneas Aéreas Costarricences),foreign,17495
+2026M01,Lan Chile Airlines (Línea Aérea Nacional De Chile),foreign,17528
+2026M01,Lanperu,foreign,35048
+2026M01,Lufthansa (Deutsche Lufthansa AG),foreign,27710
+2026M01,"Mesa Airlines (Mesa Airlines, Inc.)",foreign,42173
+2026M01,Neos Air (Neos S.P.A.),foreign,5845
+2026M01,Orbest,foreign,0
+2026M01,Porter Airlines,foreign,32114
+2026M01,SKY Airline Perú,foreign,9691
+2026M01,Skywest Airlines,foreign,43860
+2026M01,Southwest Airlines,foreign,154798
+2026M01,Spirit Airlines,foreign,50324
+2026M01,Sun Country,foreign,42294
+2026M01,TAM Linhas Aereas,foreign,14163
+2026M01,TAP Air Portugal,foreign,5717
+2026M01,TUI Airways,foreign,26387
+2026M01,Taca (Taca International Airlines),foreign,12374
+2026M01,Transportes Aéreos Guatemaltecos (TAG),foreign,189
+2026M01,Tropic Air Limited,foreign,587
+2026M01,Tui Nederland,foreign,3949
+2026M01,Turkish Airlines,foreign,21667
+2026M01,"United Airlines, Inc.",foreign,518477
+2026M01,Volaris Costa Rica,foreign,24932
+2026M01,Volaris El Salvador,foreign,5576
+2026M01,West Jet (Westjet Airlines Ltd),foreign,468492
+2026M01,World 2 Fly,foreign,11786
+2026M01,Aeroméxico (Aerovías de México),national,702094
+2026M01,Aeroméxico Connect (Aerolitoral),national,46688
+2026M01,Aerus,national,289
+2026M01,Vivaaerobus (Aeroenlaces),national,265892
+2026M01,Volaris (Concesionaria Vuela Cia de Aviación),national,658345
+2026M02,Aerolíneas Argentinas,foreign,11572
+2026M02,Aerorepública,foreign,0
+2026M02,Air Canada,foreign,222249
+2026M02,Air Caraïbes,foreign,8950
+2026M02,Air Europa (Air España),foreign,9178
+2026M02,Air France (Société Air France),foreign,52293
+2026M02,Air Transat (Transat A. T.),foreign,114787
+2026M02,Alaska Airlines,foreign,178109
+2026M02,All Nippon Airways LTD,foreign,8302
+2026M02,American Airlines,foreign,605724
+2026M02,Arajet,foreign,15961
+2026M02,Avianca (Aerovías del Continente Americano),foreign,79249
+2026M02,Breeze Airways,foreign,1879
+2026M02,British Airways,foreign,25542
+2026M02,China Southern Airlines,foreign,1558
+2026M02,CommutAir,foreign,4458
+2026M02,Condor,foreign,19800
+2026M02,Conviasa,foreign,1501
+2026M02,Copa (Compañía Panameña de Aviación),foreign,115617
+2026M02,Delta Airlines,foreign,417741
+2026M02,Edelweiss (Edelweiss Air Ag) Air Ag,foreign,6779
+2026M02,Emirates Arabes,foreign,15132
+2026M02,"Envoy Air, Inc",foreign,65559
+2026M02,Eurowings Discover,foreign,7272
+2026M02,Evelop Airlines,foreign,9683
+2026M02,Flair Airlines,foreign,56604
+2026M02,Frontier,foreign,62209
+2026M02,GOL Linhas Aéreas,foreign,4625
+2026M02,Iberia (Iberia Líneas Aéreas de España),foreign,50631
+2026M02,Jet Blue Air (Jet Blue Airways Corporation),foreign,87039
+2026M02,K L M (Royal Dutch Airlines),foreign,20033
+2026M02,Lacsa (Líneas Aéreas Costarricences),foreign,13058
+2026M02,Lan Chile Airlines (Línea Aérea Nacional De Chile),foreign,15421
+2026M02,Lanperu,foreign,33110
+2026M02,Lufthansa (Deutsche Lufthansa AG),foreign,24038
+2026M02,"Mesa Airlines (Mesa Airlines, Inc.)",foreign,36976
+2026M02,Neos Air (Neos S.P.A.),foreign,5258
+2026M02,Orbest,foreign,0
+2026M02,Porter Airlines,foreign,33654
+2026M02,SKY Airline Perú,foreign,9095
+2026M02,Skywest Airlines,foreign,39252
+2026M02,Southwest Airlines,foreign,151259
+2026M02,Spirit Airlines,foreign,56486
+2026M02,Sun Country,foreign,56021
+2026M02,TAM Linhas Aereas,foreign,12878
+2026M02,TAP Air Portugal,foreign,6611
+2026M02,TUI Airways,foreign,23660
+2026M02,Taca (Taca International Airlines),foreign,9803
+2026M02,Transportes Aéreos Guatemaltecos (TAG),foreign,0
+2026M02,Tropic Air Limited,foreign,592
+2026M02,Tui Nederland,foreign,3665
+2026M02,Turkish Airlines,foreign,20184
+2026M02,"United Airlines, Inc.",foreign,435460
+2026M02,Volaris Costa Rica,foreign,19781
+2026M02,Volaris El Salvador,foreign,5058
+2026M02,West Jet (Westjet Airlines Ltd),foreign,433883
+2026M02,World 2 Fly,foreign,9749
+2026M02,Aeroméxico (Aerovías de México),national,536886
+2026M02,Aeroméxico Connect (Aerolitoral),national,41137
+2026M02,Aerus,national,281
+2026M02,Vivaaerobus (Aeroenlaces),national,191868
+2026M02,Volaris (Concesionaria Vuela Cia de Aviación),national,523456
+2026M03,Aerolíneas Argentinas,foreign,10964
+2026M03,Aerorepública,foreign,0
+2026M03,Air Canada,foreign,229528
+2026M03,Air Caraïbes,foreign,9240
+2026M03,Air Europa (Air España),foreign,10776
+2026M03,Air France (Société Air France),foreign,51705
+2026M03,Air Transat (Transat A. T.),foreign,122430
+2026M03,Alaska Airlines,foreign,158730
+2026M03,All Nippon Airways LTD,foreign,10064
+2026M03,American Airlines,foreign,643949
+2026M03,Arajet,foreign,16677
+2026M03,Avianca (Aerovías del Continente Americano),foreign,84309
+2026M03,Breeze Airways,foreign,2445
+2026M03,British Airways,foreign,27785
+2026M03,China Southern Airlines,foreign,3723
+2026M03,CommutAir,foreign,4476
+2026M03,Condor,foreign,23077
+2026M03,Conviasa,foreign,2162
+2026M03,Copa (Compañía Panameña de Aviación),foreign,118344
+2026M03,Delta Airlines,foreign,428367
+2026M03,Edelweiss (Edelweiss Air Ag) Air Ag,foreign,5779
+2026M03,Emirates Arabes,foreign,11382
+2026M03,"Envoy Air, Inc",foreign,67479
+2026M03,Eurowings Discover,foreign,0
+2026M03,Evelop Airlines,foreign,10013
+2026M03,Flair Airlines,foreign,60253
+2026M03,Frontier,foreign,110779
+2026M03,GOL Linhas Aéreas,foreign,2168
+2026M03,Iberia (Iberia Líneas Aéreas de España),foreign,57253
+2026M03,Jet Blue Air (Jet Blue Airways Corporation),foreign,91253
+2026M03,K L M (Royal Dutch Airlines),foreign,21471
+2026M03,Lacsa (Líneas Aéreas Costarricences),foreign,13917
+2026M03,Lan Chile Airlines (Línea Aérea Nacional De Chile),foreign,14705
+2026M03,Lanperu,foreign,33720
+2026M03,Lufthansa (Deutsche Lufthansa AG),foreign,26385
+2026M03,"Mesa Airlines (Mesa Airlines, Inc.)",foreign,38938
+2026M03,Neos Air (Neos S.P.A.),foreign,6060
+2026M03,Orbest,foreign,1239
+2026M03,Porter Airlines,foreign,32799
+2026M03,SKY Airline Perú,foreign,5163
+2026M03,Skywest Airlines,foreign,43205
+2026M03,Southwest Airlines,foreign,191401
+2026M03,Spirit Airlines,foreign,59685
+2026M03,Sun Country,foreign,68803
+2026M03,TAM Linhas Aereas,foreign,12278
+2026M03,TAP Air Portugal,foreign,3472
+2026M03,TUI Airways,foreign,28549
+2026M03,Taca (Taca International Airlines),foreign,11759
+2026M03,Transportes Aéreos Guatemaltecos (TAG),foreign,0
+2026M03,Tropic Air Limited,foreign,593
+2026M03,Tui Nederland,foreign,4407
+2026M03,Turkish Airlines,foreign,23036
+2026M03,"United Airlines, Inc.",foreign,473691
+2026M03,Volaris Costa Rica,foreign,22294
+2026M03,Volaris El Salvador,foreign,5374
+2026M03,West Jet (Westjet Airlines Ltd),foreign,459033
+2026M03,World 2 Fly,foreign,9247
+2026M03,Aeroméxico (Aerovías de México),national,603016
+2026M03,Aeroméxico Connect (Aerolitoral),national,49198
+2026M03,Aerus,national,423
+2026M03,Vivaaerobus (Aeroenlaces),national,224530
+2026M03,Volaris (Concesionaria Vuela Cia de Aviación),national,585977
+2026M04,Aerolíneas Argentinas,foreign,8083
+2026M04,Aerorepública,foreign,0
+2026M04,Air Canada,foreign,187539
+2026M04,Air Caraïbes,foreign,8755
+2026M04,Air Europa (Air España),foreign,10538
+2026M04,Air France (Société Air France),foreign,39733
+2026M04,Air Transat (Transat A. T.),foreign,108703
+2026M04,Alaska Airlines,foreign,157405
+2026M04,All Nippon Airways LTD,foreign,9642
+2026M04,American Airlines,foreign,548795
+2026M04,Arajet,foreign,19197
+2026M04,Avianca (Aerovías del Continente Americano),foreign,81456
+2026M04,Breeze Airways,foreign,2237
+2026M04,British Airways,foreign,31022
+2026M04,China Southern Airlines,foreign,3688
+2026M04,CommutAir,foreign,2495
+2026M04,Condor,foreign,18586
+2026M04,Conviasa,foreign,2349
+2026M04,Copa (Compañía Panameña de Aviación),foreign,120600
+2026M04,Delta Airlines,foreign,355965
+2026M04,Edelweiss (Edelweiss Air Ag) Air Ag,foreign,7653
+2026M04,Emirates Arabes,foreign,13602
+2026M04,"Envoy Air, Inc",foreign,68815
+2026M04,Eurowings Discover,foreign,0
+2026M04,Evelop Airlines,foreign,10199
+2026M04,Flair Airlines,foreign,33685
+2026M04,Frontier,foreign,73335
+2026M04,GOL Linhas Aéreas,foreign,0
+2026M04,Iberia (Iberia Líneas Aéreas de España),foreign,55387
+2026M04,Jet Blue Air (Jet Blue Airways Corporation),foreign,94898
+2026M04,K L M (Royal Dutch Airlines),foreign,14606
+2026M04,Lacsa (Líneas Aéreas Costarricences),foreign,14166
+2026M04,Lan Chile Airlines (Línea Aérea Nacional De Chile),foreign,12414
+2026M04,Lanperu,foreign,29982
+2026M04,Lufthansa (Deutsche Lufthansa AG),foreign,20837
+2026M04,"Mesa Airlines (Mesa Airlines, Inc.)",foreign,36469
+2026M04,Neos Air (Neos S.P.A.),foreign,5790
+2026M04,Orbest,foreign,2856
+2026M04,Porter Airlines,foreign,18687
+2026M04,SKY Airline Perú,foreign,0
+2026M04,Skywest Airlines,foreign,47850
+2026M04,Southwest Airlines,foreign,176074
+2026M04,Spirit Airlines,foreign,34656
+2026M04,Sun Country,foreign,16609
+2026M04,TAM Linhas Aereas,foreign,12999
+2026M04,TAP Air Portugal,foreign,0
+2026M04,TUI Airways,foreign,31770
+2026M04,Taca (Taca International Airlines),foreign,8617
+2026M04,Transportes Aéreos Guatemaltecos (TAG),foreign,0
+2026M04,Tropic Air Limited,foreign,549
+2026M04,Tui Nederland,foreign,3977
+2026M04,Turkish Airlines,foreign,23556
+2026M04,"United Airlines, Inc.",foreign,408525
+2026M04,Volaris Costa Rica,foreign,22163
+2026M04,Volaris El Salvador,foreign,2835
+2026M04,West Jet (Westjet Airlines Ltd),foreign,331745
+2026M04,World 2 Fly,foreign,10158
+2026M04,Aeroméxico (Aerovías de México),national,641318
+2026M04,Aeroméxico Connect (Aerolitoral),national,45376
+2026M04,Aerus,national,479
+2026M04,Vivaaerobus (Aeroenlaces),national,207042
+2026M04,Volaris (Concesionaria Vuela Cia de Aviación),national,571652
+2026M05,Aerolíneas Argentinas,foreign,7069
+2026M05,Aerorepública,foreign,361
+2026M05,Air Canada,foreign,88141
+2026M05,Air Caraïbes,foreign,5349
+2026M05,Air Europa (Air España),foreign,10671
+2026M05,Air France (Société Air France),foreign,39904
+2026M05,Air Transat (Transat A. T.),foreign,30817
+2026M05,Alaska Airlines,foreign,98029
+2026M05,All Nippon Airways LTD,foreign,9977
+2026M05,American Airlines,foreign,545974
+2026M05,Arajet,foreign,21084
+2026M05,Avianca (Aerovías del Continente Americano),foreign,84210
+2026M05,Breeze Airways,foreign,2292
+2026M05,British Airways,foreign,30274
+2026M05,China Southern Airlines,foreign,3816
+2026M05,CommutAir,foreign,2646
+2026M05,Condor,foreign,14661
+2026M05,Conviasa,foreign,2237
+2026M05,Copa (Compañía Panameña de Aviación),foreign,127359
+2026M05,Delta Airlines,foreign,290750
+2026M05,Edelweiss (Edelweiss Air Ag) Air Ag,foreign,2710
+2026M05,Emirates Arabes,foreign,15061
+2026M05,"Envoy Air, Inc",foreign,72858
+2026M05,Eurowings Discover,foreign,0
+2026M05,Evelop Airlines,foreign,10702
+2026M05,Flair Airlines,foreign,19082
+2026M05,Frontier,foreign,53536
+2026M05,GOL Linhas Aéreas,foreign,0
+2026M05,Iberia (Iberia Líneas Aéreas de España),foreign,58591
+2026M05,Jet Blue Air (Jet Blue Airways Corporation),foreign,88882
+2026M05,K L M (Royal Dutch Airlines),foreign,14669
+2026M05,Lacsa (Líneas Aéreas Costarricences),foreign,12671
+2026M05,Lan Chile Airlines (Línea Aérea Nacional De Chile),foreign,11925
+2026M05,Lanperu,foreign,32803
+2026M05,Lufthansa (Deutsche Lufthansa AG),foreign,24744
+2026M05,"Mesa Airlines (Mesa Airlines, Inc.)",foreign,32960
+2026M05,Neos Air (Neos S.P.A.),foreign,2857
+2026M05,Orbest,foreign,2790
+2026M05,Porter Airlines,foreign,10076
+2026M05,SKY Airline Perú,foreign,0
+2026M05,Skywest Airlines,foreign,43397
+2026M05,Southwest Airlines,foreign,187051
+2026M05,Spirit Airlines,foreign,0
+2026M05,Sun Country,foreign,14004
+2026M05,TAM Linhas Aereas,foreign,13975
+2026M05,TAP Air Portugal,foreign,0
+2026M05,TUI Airways,foreign,37855
+2026M05,Taca (Taca International Airlines),foreign,8133
+2026M05,Transportes Aéreos Guatemaltecos (TAG),foreign,0
+2026M05,Tropic Air Limited,foreign,570
+2026M05,Tui Nederland,foreign,4285
+2026M05,Turkish Airlines,foreign,24482
+2026M05,"United Airlines, Inc.",foreign,425661
+2026M05,Volaris Costa Rica,foreign,21689
+2026M05,Volaris El Salvador,foreign,605
+2026M05,West Jet (Westjet Airlines Ltd),foreign,141296
+2026M05,World 2 Fly,foreign,8169
+2026M05,Aeroméxico (Aerovías de México),national,648414
+2026M05,Aeroméxico Connect (Aerolitoral),national,39893
+2026M05,Aerus,national,336
+2026M05,Vivaaerobus (Aeroenlaces),national,197565
+2026M05,Volaris (Concesionaria Vuela Cia de Aviación),national,604727
+2026M06,Aerolíneas Argentinas,foreign,2826
+2026M06,Aerorepública,foreign,2527
+2026M06,Air Canada,foreign,74708
+2026M06,Air Caraïbes,foreign,855
+2026M06,Air Europa (Air España),foreign,10235
+2026M06,Air France (Société Air France),foreign,40171
+2026M06,Air Transat (Transat A. T.),foreign,22754
+2026M06,Alaska Airlines,foreign,83122
+2026M06,All Nippon Airways LTD,foreign,9190
+2026M06,American Airlines,foreign,562360
+2026M06,Arajet,foreign,17777
+2026M06,Avianca (Aerovías del Continente Americano),foreign,73471
+2026M06,Breeze Airways,foreign,3385
+2026M06,British Airways,foreign,24094
+2026M06,China Southern Airlines,foreign,3030
+2026M06,CommutAir,foreign,2609
+2026M06,Condor,foreign,11960
+2026M06,Conviasa,foreign,2026
+2026M06,Copa (Compañía Panameña de Aviación),foreign,121417
+2026M06,Delta Airlines,foreign,270974
+2026M06,Edelweiss (Edelweiss Air Ag) Air Ag,foreign,2566
+2026M06,Emirates Arabes,foreign,14262
+2026M06,"Envoy Air, Inc",foreign,76228
+2026M06,Eurowings Discover,foreign,0
+2026M06,Evelop Airlines,foreign,14749
+2026M06,Flair Airlines,foreign,17005
+2026M06,Frontier,foreign,90825
+2026M06,GOL Linhas Aéreas,foreign,1129
+2026M06,Iberia (Iberia Líneas Aéreas de España),foreign,52893
+2026M06,Jet Blue Air (Jet Blue Airways Corporation),foreign,87028
+2026M06,K L M (Royal Dutch Airlines),foreign,14174
+2026M06,Lacsa (Líneas Aéreas Costarricences),foreign,12196
+2026M06,Lan Chile Airlines (Línea Aérea Nacional De Chile),foreign,10970
+2026M06,Lanperu,foreign,24776
+2026M06,Lufthansa (Deutsche Lufthansa AG),foreign,24434
+2026M06,"Mesa Airlines (Mesa Airlines, Inc.)",foreign,30187
+2026M06,Neos Air (Neos S.P.A.),foreign,2338
+2026M06,Orbest,foreign,3152
+2026M06,Porter Airlines,foreign,6584
+2026M06,SKY Airline Perú,foreign,0
+2026M06,Skywest Airlines,foreign,34147
+2026M06,Southwest Airlines,foreign,273732
+2026M06,Spirit Airlines,foreign,0
+2026M06,Sun Country,foreign,37186
+2026M06,TAM Linhas Aereas,foreign,9806
+2026M06,TAP Air Portugal,foreign,0
+2026M06,TUI Airways,foreign,37683
+2026M06,Taca (Taca International Airlines),foreign,9636
+2026M06,Transportes Aéreos Guatemaltecos (TAG),foreign,0
+2026M06,Tropic Air Limited,foreign,471
+2026M06,Tui Nederland,foreign,3814
+2026M06,Turkish Airlines,foreign,20858
+2026M06,"United Airlines, Inc.",foreign,522004
+2026M06,Volaris Costa Rica,foreign,19013
+2026M06,Volaris El Salvador,foreign,863
+2026M06,West Jet (Westjet Airlines Ltd),foreign,80412
+2026M06,World 2 Fly,foreign,11525
+2026M06,Aeroméxico (Aerovías de México),national,645747
+2026M06,Aeroméxico Connect (Aerolitoral),national,36239
+2026M06,Aerus,national,340
+2026M06,Vivaaerobus (Aeroenlaces),national,250733
+2026M06,Volaris (Concesionaria Vuela Cia de Aviación),national,619662
+2026M07,Aerolíneas Argentinas,foreign,4179
+2026M07,Aerorepública,foreign,772
+2026M07,Air Canada,foreign,81934
+2026M07,Air Caraïbes,foreign,6255
+2026M07,Air Europa (Air España),foreign,12442
+2026M07,Air France (Société Air France),foreign,47232
+2026M07,Air Transat (Transat A. T.),foreign,29492
+2026M07,Alaska Airlines,foreign,84915
+2026M07,All Nippon Airways LTD,foreign,10031
+2026M07,American Airlines,foreign,613710
+2026M07,Arajet,foreign,22802
+2026M07,Avianca (Aerovías del Continente Americano),foreign,87310
+2026M07,Breeze Airways,foreign,3939
+2026M07,British Airways,foreign,31312
+2026M07,China Southern Airlines,foreign,3858
+2026M07,CommutAir,foreign,2754
+2026M07,Condor,foreign,15723
+2026M07,Conviasa,foreign,1146
+2026M07,Copa (Compañía Panameña de Aviación),foreign,123002
+2026M07,Delta Airlines,foreign,287040
+2026M07,Edelweiss (Edelweiss Air Ag) Air Ag,foreign,4025
+2026M07,Emirates Arabes,foreign,16664
+2026M07,"Envoy Air, Inc",foreign,82330
+2026M07,Eurowings Discover,foreign,0
+2026M07,Evelop Airlines,foreign,18706
+2026M07,Flair Airlines,foreign,21465
+2026M07,Frontier,foreign,95172
+2026M07,GOL Linhas Aéreas,foreign,3792
+2026M07,Iberia (Iberia Líneas Aéreas de España),foreign,63857
+2026M07,Jet Blue Air (Jet Blue Airways Corporation),foreign,87497
+2026M07,K L M (Royal Dutch Airlines),foreign,16923
+2026M07,Lacsa (Líneas Aéreas Costarricences),foreign,16085
+2026M07,Lan Chile Airlines (Línea Aérea Nacional De Chile),foreign,15076
+2026M07,Lanperu,foreign,34111
+2026M07,Lufthansa (Deutsche Lufthansa AG),foreign,28567
+2026M07,"Mesa Airlines (Mesa Airlines, Inc.)",foreign,37527
+2026M07,Neos Air (Neos S.P.A.),foreign,3336
+2026M07,Orbest,foreign,5626
+2026M07,Porter Airlines,foreign,7051
+2026M07,SKY Airline Perú,foreign,0
+2026M07,Skywest Airlines,foreign,37237
+2026M07,Southwest Airlines,foreign,270710
+2026M07,Spirit Airlines,foreign,0
+2026M07,Sun Country,foreign,39733
+2026M07,TAM Linhas Aereas,foreign,13084
+2026M07,TAP Air Portugal,foreign,0
+2026M07,TUI Airways,foreign,39228
+2026M07,Taca (Taca International Airlines),foreign,12315
+2026M07,Transportes Aéreos Guatemaltecos (TAG),foreign,0
+2026M07,Tropic Air Limited,foreign,494
+2026M07,Tui Nederland,foreign,4285
+2026M07,Turkish Airlines,foreign,23458
+2026M07,"United Airlines, Inc.",foreign,531573
+2026M07,Volaris Costa Rica,foreign,22755
+2026M07,Volaris El Salvador,foreign,1106
+2026M07,West Jet (Westjet Airlines Ltd),foreign,90024
+2026M07,World 2 Fly,foreign,22643
+2026M07,Aeroméxico (Aerovías de México),national,779700
+2026M07,Aeroméxico Connect (Aerolitoral),national,39674
+2026M07,Aerus,national,376
+2026M07,Vivaaerobus (Aeroenlaces),national,304045
+2026M07,Volaris (Concesionaria Vuela Cia de Aviación),national,754226

@@ -581,7 +581,7 @@ la necesita.
 
 | Pieza | Análogo nacional | Estado |
 |---|---|---|
-| Parser de `REG INT` | `read_route_workbook` en `src/ingest/afac/margins.py` | layout verificado (offsets 4 y 17); **falta el parser productivo y sus pruebas** |
+| Parser de `REG INT` | `read_route_workbook` en `src/ingest/afac/margins.py` | **hecho**: `src/ingest/afac/international_margins.py`, 14 pruebas. Produce `data/reference/afac_od_internacional_regular.csv` (6,853 filas, 979 pares) y `afac_carrier_international.csv` (434 filas, 62 empresas: 5 nacionales + 57 extranjeras), y reconcilia en cada reconstrucción |
 | Crosswalk ciudad AFAC internacional ↔ IATA | `afac_city_iata_crosswalk.csv` (58 aeropuertos) | **no existe**; 37 países y ciudades con varios aeropuertos en ambos extremos. El emparejamiento automático contra T-100 alcanzó 94 % y el 6 % restante es nomenclatura resoluble a mano |
 | Crosswalk aerolínea AFAC internacional ↔ IATA/ICAO | `afac_carrier_crosswalk.csv` (2 filas) | **no existe**; el resumen por empresa lista 5 nacionales y ~45 extranjeras con subtotales regionales que **no deben contarse** |
 | Puerta de aceptación internacional | `seed_acceptance_v3` | reutilizable **y con mejor insumo**: `REG INT` publica `vuelos` por par y mes, así que la cobertura de la semilla se mide por división directa y no por inferencia |
@@ -627,6 +627,52 @@ porcentaje en **cada** captura; contrastar el conteo de vuelos de la semilla
 contra la columna `vuelos` de `REG INT`, que es una verificación independiente
 y gratuita; y tratar una ruta con alta proporción de `Unknown` como candidata a
 `N/D` aunque el ajuste converja.
+
+### 9.7 El parser de las marginales internacionales
+
+`src/ingest/afac/international_margins.py` construye las dos marginales desde
+los libros de AFAC y **reconcilia en cada reconstrucción**. No estima nada.
+
+```
+uv run python -m src.ingest.afac.international_margins \
+    --year 2026 --routes <libro O-D> --carriers <resumen por empresa> [--dry-run]
+```
+
+Salida sobre la edición de julio de 2026:
+
+| Artefacto | Contenido |
+|---|---|
+| `data/reference/afac_od_internacional_regular.csv` | 6,853 filas mes × par, **979 pares direccionales**, con ciudad y país de ambos extremos, vuelos y pasajeros |
+| `data/reference/afac_carrier_international.csv` | 434 filas mes × empresa, **62 empresas**: 5 nacionales y 57 extranjeras, etiquetadas con su bloque |
+
+Las dos decisiones que el parser toma y que, de hacerse mal, producirían una
+tabla completa de cifras equivocadas en vez de un error:
+
+1. **Offsets propios.** `REG INT` tiene cuatro columnas clave, no dos, así que
+   los bloques de vuelos y pasajeros empiezan en 4 y 17 en lugar de 2 y 15.
+   Leerla con los offsets domésticos devuelve **kilogramos de carga** donde
+   deberían ir pasajeros. El parser valida el encabezado y se niega a leer un
+   libro con layout doméstico.
+2. **Subtotales regionales excluidos.** El bloque de empresas extranjeras
+   intercala `Total Estadounidenses`, `Total Europeas`, `Total Asiáticas`…
+   entre las aerolíneas. Sumar el bloque sin quitarlos **duplica cada pasajero
+   extranjero**. Se excluyen por forma, no por número de fila, porque los
+   números de fila cambian con cada edición.
+
+El total del bloque (`T     o     t     a     l`, con espaciado tipográfico) se
+distingue de un subtotal regional quitando todos los espacios: solo el primero
+colapsa exactamente a `TOTAL`. Las marcas de nota al pie (`Spirit Airlines**`)
+se retiran del nombre para que una misma aerolínea no se bifurque en dos
+identidades entre meses.
+
+`--dry-run` parsea y reconcilia sin escribir. Si algún mes queda fuera de
+tolerancia el comando termina con código 1 y avisa que hay que comprobar que
+ambos libros sean de la **misma edición**: ese es el error que produce las
+diferencias de §9.3, y el parser lo convierte en un fallo visible en vez de un
+dato silenciosamente revisado.
+
+Estos dos CSV todavía **no los consume nada**. Son el insumo de las piezas que
+siguen: los dos crosswalks y la puerta de aceptación internacional.
 
 ## 10. Qué tan bueno es el estimador, medido
 
@@ -860,7 +906,7 @@ En este orden. Ninguna etapa autoriza la siguiente por sí sola.
 | 2 | Establecer la base de conteo de OFOD con evidencia | **hecho** (§3: sin definición publicada; evidencia empírica de comportamiento por tramo) |
 | 3 | Evaluar T-100 celda a celda y fijar su papel | **hecho** (§9.4: subconjunto observado comparable, 0.9999, mediana 0.53 %) |
 | 4 | Confirmar que el proveedor trae la red internacional | **hecho** (§9.6: 54 mercados de Grupo Aeroméxico por 8 unidades) |
-| 5 | Parser productivo de `REG INT` con pruebas | pendiente, sin API |
+| 5 | Parser productivo de `REG INT` con pruebas | **hecho**, sin API (§9.7) |
 | 6 | Crosswalks de ciudad y de aerolínea, revisados a mano, con conteo de no mapeados por rutas, pasajeros y aerolíneas | pendiente, sin API |
 | 7 | Puerta de aceptación internacional, usando `vuelos` de `REG INT` como contraste | pendiente, sin API |
 | 8 | Captura mensual de la semilla en los meses que la ventana permita | pendiente, **con API** |
