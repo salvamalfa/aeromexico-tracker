@@ -1,5 +1,10 @@
 # Investigación de cobertura de rutas AFAC
 
+> **Método canónico:** el procedimiento completo y verificado de estimación
+> de pasajeros por ruta y aerolínea está en
+> [`../estimacion-pasajeros-ruta-aerolinea.md`](../estimacion-pasajeros-ruta-aerolinea.md).
+> Este documento es un reporte de su etapa, no la especificación.
+
 Fecha: 8 de septiembre de 2026. Alcance: investigación y preservación de fuentes. No se integraron datos en Silver/Gold, no se cambió la UI ni se activó evidencia del Analysis Agent.
 
 ## Resultado
