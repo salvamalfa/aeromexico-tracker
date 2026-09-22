@@ -1,5 +1,10 @@
 # Vuelos, capacidad y ocupación nacional estimados · 20 sep 2026
 
+> **Método canónico:** el procedimiento completo y verificado de estimación
+> de pasajeros por ruta y aerolínea está en
+> [`../estimacion-pasajeros-ruta-aerolinea.md`](../estimacion-pasajeros-ruta-aerolinea.md).
+> Este documento es un reporte de su etapa, no la especificación.
+
 ## Resultado integrado
 
 La vista nacional de `Vuelos` muestra para marzo–julio de 2026 cuatro métricas
