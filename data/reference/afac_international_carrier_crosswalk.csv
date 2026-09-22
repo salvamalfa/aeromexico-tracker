@@ -1,0 +1,63 @@
+afac_carrier_name,carrier_block,carrier_key,iata,icao,confidence,evidence
+Aeroméxico (Aerovías de México),national,AEROMEXICO,AM,AMX,resolved,config/carrier_crosswalk.csv
+Aeroméxico Connect (Aerolitoral),national,AEROMEXICO_CONNECT,5D,SLI,resolved,config/carrier_crosswalk.csv
+Volaris (Concesionaria Vuela Cia de Aviación),national,VOLARIS,Y4,VOI,resolved,src/ingest/aerodatabox/flights.py CARRIER_BY_IATA
+Vivaaerobus (Aeroenlaces),national,VIVA_AEROBUS,VB,VIV,resolved,src/ingest/aerodatabox/flights.py CARRIER_BY_IATA
+Aerus,national,AERUS,,,unresolved,Opera sin codigo IATA publicado; el adaptador nacional la resuelve por nombre
+American Airlines,foreign,AMERICAN,AA,AAL,resolved,Observada como IATA:AA en el sondeo 2026-09-10
+"United Airlines, Inc.",foreign,UNITED,UA,UAL,resolved,Observada como IATA:UA en el sondeo 2026-09-10
+Delta Airlines,foreign,DELTA,DL,DAL,resolved,Observada como IATA:DL en el sondeo 2026-09-10
+Copa (Compañía Panameña de Aviación),foreign,COPA,CM,CMP,resolved,Observada como IATA:CM en el sondeo 2026-09-10
+Avianca (Aerovías del Continente Americano),foreign,AVIANCA,AV,AVA,resolved,Observada como IATA:AV en el sondeo 2026-09-10
+Air Canada,foreign,AIR_CANADA,AC,ACA,resolved,Observada como IATA:AC en el sondeo 2026-09-10
+"Envoy Air, Inc",foreign,ENVOY,MQ,ENY,resolved,Observada como IATA:MQ en el sondeo 2026-09-10
+Iberia (Iberia Líneas Aéreas de España),foreign,IBERIA,IB,IBE,resolved,Observada como IATA:IB en el sondeo 2026-09-10
+Air France (Société Air France),foreign,AIR_FRANCE,AF,AFR,resolved,Observada como IATA:AF en el sondeo 2026-09-10
+Volaris Costa Rica,foreign,VOLARIS_COSTA_RICA,Q6,VOC,resolved,Observada como IATA:Q6 en el sondeo 2026-09-10
+Southwest Airlines,foreign,BTS_AIRLINE_ID_19393,WN,SWA,resolved,config/carrier_crosswalk.csv airline_id 19393
+Alaska Airlines,foreign,ALASKA,AS,ASA,probable,Virgin America se fusiono con Alaska en 2018; el parentesis de AFAC es historico
+Jet Blue Air (Jet Blue Airways Corporation),foreign,JETBLUE,B6,JBU,resolved,Denominacion social completa en la etiqueta AFAC
+Frontier,foreign,FRONTIER,F9,FFT,resolved,Unica aerolinea de ese nombre con servicio a Mexico
+Spirit Airlines,foreign,SPIRIT,NK,NKS,resolved,Unica aerolinea de ese nombre con servicio a Mexico
+Sun Country,foreign,SUN_COUNTRY,SY,SCX,resolved,Unica aerolinea de ese nombre con servicio a Mexico
+Skywest Airlines,foreign,SKYWEST,OO,SKW,resolved,Unica aerolinea de ese nombre con servicio a Mexico
+"Mesa Airlines (Mesa Airlines, Inc.)",foreign,MESA,YV,ASH,resolved,Denominacion social completa en la etiqueta AFAC
+Breeze Airways,foreign,BREEZE,MX,MXY,unresolved,El codigo IATA MX coincide con el prefijo historico de Mexicana; verificar antes de usar
+CommutAir,foreign,COMMUTAIR,C5,UCA,probable,Opera como United Express; el proveedor puede reportarla bajo UA
+British Airways,foreign,BRITISH_AIRWAYS,BA,BAW,resolved,Unica aerolinea de ese nombre
+K L M (Royal Dutch Airlines),foreign,KLM,KL,KLM,resolved,Denominacion social completa en la etiqueta AFAC
+Lufthansa (Deutsche Lufthansa AG),foreign,LUFTHANSA,LH,DLH,resolved,Denominacion social completa en la etiqueta AFAC
+Turkish Airlines,foreign,TURKISH,TK,THY,resolved,Unica aerolinea de ese nombre
+TAP Air Portugal,foreign,TAP,TP,TAP,resolved,Unica aerolinea de ese nombre
+Air Europa (Air España),foreign,AIR_EUROPA,UX,AEA,resolved,Denominacion social completa en la etiqueta AFAC
+Condor,foreign,CONDOR,DE,CFG,resolved,Unica aerolinea de ese nombre con servicio a Mexico
+All Nippon Airways LTD,foreign,ANA,NH,ANA,resolved,Denominacion social completa en la etiqueta AFAC
+China Southern Airlines,foreign,CHINA_SOUTHERN,CZ,CSN,resolved,Unica aerolinea de ese nombre
+West Jet (Westjet Airlines Ltd),foreign,WESTJET,WS,WJA,resolved,Denominacion social completa en la etiqueta AFAC
+Air Transat (Transat A. T.),foreign,AIR_TRANSAT,TS,TSC,resolved,Denominacion social completa en la etiqueta AFAC
+Aerolíneas Argentinas,foreign,AEROLINEAS_ARGENTINAS,AR,ARG,resolved,Unica aerolinea de ese nombre
+GOL Linhas Aéreas,foreign,GOL,G3,GLO,resolved,Denominacion social completa en la etiqueta AFAC
+Emirates Arabes,foreign,EMIRATES,EK,UAE,probable,Unica aerolinea llamada Emirates con servicio a Mexico
+TAM Linhas Aereas,foreign,LATAM_BRASIL,JJ,TAM,probable,"Filial brasilena de LATAM, codigo propio distinto de LA"
+Lan Chile Airlines (Línea Aérea Nacional De Chile),foreign,LATAM_CHILE,LA,LAN,probable,Filial chilena de LATAM; coincide con el IATA:LA del sondeo
+Lanperu,foreign,LATAM_PERU,LP,LPE,probable,"Filial peruana de LATAM, codigo propio distinto de LA"
+Taca (Taca International Airlines),foreign,TACA,TA,TAI,probable,"Codigo historico de TACA, hoy dentro del grupo Avianca"
+Lacsa (Líneas Aéreas Costarricences),foreign,LACSA,LR,LRC,probable,Filial costarricense del grupo Avianca
+Aerorepública,foreign,AEROREPUBLICA,P5,RPB,probable,Opero despues como Wingo conservando el codigo
+Volaris El Salvador,foreign,VOLARIS_EL_SALVADOR,,,unresolved,Filial salvadorena de Volaris; no confundir con Q6 (Costa Rica)
+SKY Airline Perú,foreign,SKY_PERU,,,unresolved,Filial peruana de SKY Airline; codigo por verificar
+Arajet,foreign,ARAJET,DM,DMJ,probable,Unica aerolinea dominicana de ese nombre
+Conviasa,foreign,CONVIASA,V0,VCV,probable,Unica aerolinea venezolana de ese nombre
+Transportes Aéreos Guatemaltecos (TAG),foreign,TAG,5U,TGU,probable,Unica aerolinea guatemalteca de ese nombre
+Tropic Air Limited,foreign,TROPIC_AIR,9N,TOS,probable,Unica aerolinea belicena de ese nombre
+Flair Airlines,foreign,FLAIR,F8,FLE,probable,Unica aerolinea canadiense de ese nombre
+Porter Airlines,foreign,PORTER,PD,POE,probable,Unica aerolinea canadiense de ese nombre
+Air Caraïbes,foreign,AIR_CARAIBES,TX,FWI,probable,Unica aerolinea francesa de ese nombre
+Edelweiss (Edelweiss Air Ag) Air Ag,foreign,EDELWEISS,WK,EDW,probable,Unica aerolinea suiza de ese nombre
+Eurowings Discover,foreign,EUROWINGS_DISCOVER,4Y,OCN,probable,Renombrada Discover Airlines; AFAC conserva la denominacion anterior
+Evelop Airlines,foreign,EVELOP,E9,EVE,probable,Renombrada Iberojet; AFAC conserva la denominacion anterior
+Orbest,foreign,ORBEST,,,unresolved,Codigo por verificar
+World 2 Fly,foreign,WORLD2FLY,2W,WFL,probable,Unica aerolinea espanola de ese nombre
+Neos Air (Neos S.P.A.),foreign,NEOS,NO,NOS,probable,Unica aerolinea italiana de ese nombre
+TUI Airways,foreign,TUI_AIRWAYS,BY,TOM,probable,AOC britanico del grupo TUI
+Tui Nederland,foreign,TUI_NEDERLAND,OR,TFL,probable,"AOC neerlandes del grupo TUI, distinto del britanico"

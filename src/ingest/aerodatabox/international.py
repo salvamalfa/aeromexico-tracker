@@ -94,7 +94,22 @@ FLIGHT_COLUMNS = (
     "operator_name",
     "aircraft_model",
     "flights",
+    # Two diagnostics the acceptance gate needs and that cannot be recovered
+    # later: once the provider's raw responses expire, nothing else records how
+    # much of the seed rests on a guess.
+    "codeshare_unknown",
+    "status_incomplete",
 )
+
+# The provider filters code-shares when asked, but for airports with no
+# code-share information it applies a heuristic and warns that "false results
+# are possible".  A record that arrives ``Unknown`` therefore survived a guess,
+# not a declaration, and its weight belongs in the seed so the gate can price
+# it.  The probe of 2026-09-10 measured 17.6% of records in this state.
+UNKNOWN_CODESHARE = "Unknown"
+# A status that does not say the flight actually operated.  Scheduled is not
+# flown, and AFAC counts flights performed.
+COMPLETED_STATUSES = frozenset({"departed", "arrived", "landed", "enroute"})
 
 
 class NoAirportUniverseError(RuntimeError):
@@ -326,7 +341,7 @@ def normalise(
     month is worth its units where the window still allows one.
     """
 
-    rows: list[tuple[str, str, str, str, str, str, str, str, float]] = []
+    rows: list[tuple[str, str, str, str, str, str, str, str, float, float, float]] = []
     for key, payload in raw.items():
         swept, day = key if isinstance(key, tuple) else (key, None)
         swept = str(swept).strip().upper()
@@ -361,6 +376,11 @@ def normalise(
                     continue
                 operator_key, iata, icao, name = operator
                 model = (flight.get("aircraft") or {}).get("model") or ""
+                unknown_codeshare = (
+                    weight if flight.get("codeshareStatus") == UNKNOWN_CODESHARE else 0.0
+                )
+                status = str(flight.get("status") or "").strip().lower()
+                incomplete = weight if status not in COMPLETED_STATUSES else 0.0
                 rows.append(
                     (
                         period_id,
@@ -372,14 +392,17 @@ def normalise(
                         name,
                         str(model),
                         weight,
+                        unknown_codeshare,
+                        incomplete,
                     )
                 )
 
     frame = pd.DataFrame(rows, columns=list(FLIGHT_COLUMNS))
     if frame.empty:
         return frame
-    group = [column for column in FLIGHT_COLUMNS if column != "flights"]
-    return frame.groupby(group, as_index=False)["flights"].sum()
+    measures = ["flights", "codeshare_unknown", "status_incomplete"]
+    group = [column for column in FLIGHT_COLUMNS if column not in measures]
+    return frame.groupby(group, as_index=False)[measures].sum()
 
 
 def plan_units(airports: int, days: int) -> int:
@@ -457,7 +480,8 @@ def routes_by_operator(flights: pd.DataFrame) -> pd.DataFrame:
     if flights.empty:
         return flights
     group = ["period_id", "origin_iata", "dest_iata", "operator_key"]
-    return flights.groupby(group, as_index=False)["flights"].sum()
+    measures = ["flights", "codeshare_unknown", "status_incomplete"]
+    return flights.groupby(group, as_index=False)[measures].sum()
 
 
 def market_key(origin: str, destination: str) -> str:

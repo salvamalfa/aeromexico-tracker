@@ -29,6 +29,7 @@ from __future__ import annotations
 import argparse
 from datetime import date, datetime
 import json
+import os
 from pathlib import Path
 import sys
 
@@ -95,6 +96,88 @@ def _report(stats, flights) -> None:
         print("La fuente no devolvio tramos internacionales.", file=sys.stderr)
 
 
+def _preflight(bronze_dir: Path) -> int:
+    """Check everything a capture depends on, spending nothing.
+
+    Four properties decide whether a paid sweep is safe to start, and all four
+    can be checked offline: that a credential resolves to the provider we
+    think we are buying from, that a resumed window is served from disk
+    instead of bought again, that expired provider content is deleted rather
+    than reused, and that the budget refuses before the first call rather than
+    after it.  Nothing here issues an HTTP request.
+    """
+
+    import time
+
+    from src.ingest.aerodatabox.flights import (
+        MAX_CACHE_AGE_SECONDS,
+        api_credentials,
+        purge_expired_cache,
+    )
+    from src.ingest.aerodatabox.international import (
+        InternationalPullStats,
+        _cache_path,
+        fetch_window_both,
+    )
+
+    failures: list[str] = []
+
+    try:
+        base_url, headers = api_credentials()
+        provider = "RapidAPI" if "rapidapi" in base_url else "directo (api.aerodatabox.com)"
+        print(f"credencial     OK   proveedor {provider}, cabeceras {sorted(headers)}")
+    except RuntimeError as error:
+        failures.append(f"credencial: {error}")
+        print(f"credencial     FALLA  {error}")
+
+    bronze_dir.mkdir(parents=True, exist_ok=True)
+    fresh = _cache_path(bronze_dir, "PREFLIGHT", "2026-01-01T00:00")
+    fresh.write_text(json.dumps({"departures": [], "arrivals": []}))
+    stats = InternationalPullStats()
+    try:
+        fetch_window_both(
+            "PREFLIGHT", "2026-01-01T00:00", "2026-01-01T12:00",
+            api_key="preflight", direct=True, cache_dir=bronze_dir, stats=stats,
+        )
+        if stats.units_spent == 0 and stats.cached_calls == 1:
+            print("reanudacion    OK   una ventana en cache no se vuelve a comprar")
+        else:
+            failures.append("reanudacion: una ventana en cache genero gasto")
+            print("reanudacion    FALLA  la ventana en cache genero gasto")
+    finally:
+        fresh.unlink(missing_ok=True)
+
+    stale = _cache_path(bronze_dir, "PREFLIGHT", "2026-01-02T00:00")
+    stale.write_text(json.dumps({"departures": [], "arrivals": []}))
+    old_enough = time.time() - MAX_CACHE_AGE_SECONDS - 60
+    os.utime(stale, (old_enough, old_enough))
+    removed = purge_expired_cache(bronze_dir)
+    if removed >= 1 and not stale.exists():
+        print(
+            f"retencion      OK   contenido del proveedor de mas de "
+            f"{MAX_CACHE_AGE_SECONDS // 86400} dias eliminado ({removed} archivo(s))"
+        )
+    else:
+        failures.append("retencion: el contenido vencido no se elimino")
+        print("retencion      FALLA  el contenido vencido no se elimino")
+
+    cost = plan_units(6, 1)
+    refused = main(["probe", "--date", "2026-09-10", "--airports",
+                    "MEX,MTY,GDL,CUN,SJD,PVR", "--budget", "8", "--dry-run"])
+    if refused == 2:
+        print(f"tope duro      OK   un plan de {cost} unidades con tope 8 se rechaza")
+    else:
+        failures.append("tope duro: un plan por encima del tope no se rechazo")
+        print("tope duro      FALLA  un plan por encima del tope no se rechazo")
+
+    print()
+    if failures:
+        print(f"{len(failures)} comprobacion(es) fallaron; no inicies una captura.")
+        return 1
+    print("Todo listo. Ninguna unidad consumida en esta comprobacion.")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="python -m src.ingest.aerodatabox.international_cli"
@@ -128,9 +211,22 @@ def main(argv: list[str] | None = None) -> int:
     sweep_parser.add_argument("--airports", default=None)
     sweep_parser.add_argument("--budget", type=int, default=None)
     sweep_parser.add_argument("--bronze-dir", type=Path, default=DEFAULT_BRONZE)
+    sweep_parser.add_argument(
+        "--tag", default=None,
+        help="suffix for the Silver file, so two sweeps of the same month "
+             "(different airports or windows) do not overwrite each other",
+    )
     sweep_parser.add_argument("--dry-run", action="store_true")
 
+    preflight_parser = sub.add_parser(
+        "preflight",
+        help="check credentials, budget refusal, resume and retention without any call",
+    )
+    preflight_parser.add_argument("--bronze-dir", type=Path, default=DEFAULT_BRONZE)
+
     args = parser.parse_args(argv)
+    if args.command == "preflight":
+        return _preflight(args.bronze_dir)
     airports = _airports(getattr(args, "airports", None))
 
     if args.command == "plan":
@@ -196,8 +292,9 @@ def main(argv: list[str] | None = None) -> int:
 
     out = PATHS.data / "silver"
     out.mkdir(parents=True, exist_ok=True)
-    detail = out / f"aerodatabox_international_flights_{args.period_id}.parquet"
-    seed = out / f"aerodatabox_international_seed_{args.period_id}.parquet"
+    tag = f"_{args.tag}" if args.tag else ""
+    detail = out / f"aerodatabox_international_flights_{args.period_id}{tag}.parquet"
+    seed = out / f"aerodatabox_international_seed_{args.period_id}{tag}.parquet"
     flights.to_parquet(detail)
     routes_by_operator(flights).to_parquet(seed)
     print(f"\n{len(flights):,} filas ruta x operador x modelo -> {detail}")
