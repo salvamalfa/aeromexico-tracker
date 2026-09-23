@@ -12,7 +12,8 @@ def _frames():
         [
             ("2026M04", "MEXICO-MADRID", "AEROMEXICO", 19_000.0, True, False),
             ("2026M04", "MEXICO-MADRID", "AEROMEXICO_GROUP", 19_000.0, None, None),
-            ("2026M04", "MEXICO-MADRID", "SIN_ASIGNAR", 12.0, True, False),
+            ("2026M04", "MEXICO-MADRID", "SIN_ASIGNAR", 400.0, True, False),
+            ("2026M04", "MEXICO-<b>X</b>", "SIN_ASIGNAR", 2.0, False, False),
             ("2026M04", "MEXICO-<b>X</b>", "AEROMEXICO", 500.0, False, False),
             ("2026M04", "MEXICO-<b>X</b>", "IBERIA", 500.0, False, False),
             ("2026M04", "MEXICO-<b>X</b>", "AEROMEXICO_GROUP", 500.0, None, None),
