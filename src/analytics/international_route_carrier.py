@@ -668,6 +668,107 @@ def _pool(frame: pd.DataFrame, families: pd.DataFrame) -> pd.DataFrame:
     return frame.assign(carrier_key=frame["carrier_key"].map(lambda key: mapping.get(key, key)))
 
 
+def _max_flow(
+    support: np.ndarray, route_caps: np.ndarray, carrier_caps: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
+    """Dinic's max flow on source -> carrier -> route -> sink.
+
+    Returns each carrier's placed flow and a mask of the carriers still
+    reachable from the source in the residual graph: the set whose demand
+    the routes it can reach cannot jointly absorb.
+    """
+
+    routes, carriers = support.shape
+    source, sink = 0, 1 + carriers + routes
+    graph: list[list[int]] = [[] for _ in range(sink + 1)]
+    head: list[int] = []
+    cap: list[float] = []
+
+    def add(u: int, v: int, c: float) -> None:
+        graph[u].append(len(head)); head.append(v); cap.append(c)
+        graph[v].append(len(head)); head.append(u); cap.append(0.0)
+
+    for k in range(carriers):
+        add(source, 1 + k, float(carrier_caps[k]))
+    infinite = float(route_caps.sum()) + 1.0
+    for i, k in zip(*np.nonzero(support > 0)):
+        add(1 + k, 1 + carriers + i, infinite)
+    for i in range(routes):
+        add(1 + carriers + i, sink, float(route_caps[i]))
+
+    eps = 1e-9 * max(1.0, float(route_caps.sum()))
+    while True:
+        level = [-1] * (sink + 1)
+        level[source] = 0
+        queue = [source]
+        for u in queue:
+            for e in graph[u]:
+                if cap[e] > eps and level[head[e]] < 0:
+                    level[head[e]] = level[u] + 1
+                    queue.append(head[e])
+        if level[sink] < 0:
+            break
+        pointer = [0] * (sink + 1)
+
+        def push(u: int, pushed: float) -> float:
+            if u == sink:
+                return pushed
+            while pointer[u] < len(graph[u]):
+                e = graph[u][pointer[u]]
+                v = head[e]
+                if cap[e] > eps and level[v] == level[u] + 1:
+                    moved = push(v, min(pushed, cap[e]))
+                    if moved > eps:
+                        cap[e] -= moved
+                        cap[e ^ 1] += moved
+                        return moved
+                pointer[u] += 1
+            return 0.0
+
+        while push(source, float("inf")) > eps:
+            pass
+
+    placed = np.array([carrier_caps[k] - cap[graph[source][k]] for k in range(carriers)])
+    reached = [False] * (sink + 1)
+    reached[source] = True
+    stack = [source]
+    while stack:
+        u = stack.pop()
+        for e in graph[u]:
+            if cap[e] > eps and not reached[head[e]]:
+                reached[head[e]] = True
+                stack.append(head[e])
+    return placed, np.array(reached[1:1 + carriers])
+
+
+def joint_feasible_targets(
+    support: np.ndarray, route_targets: np.ndarray, carrier_targets: np.ndarray,
+    *, max_rounds: int = 50,
+) -> np.ndarray:
+    """Carrier targets the routes can hold together, shrinking only who must.
+
+    A carrier alone may fit its routes while a *group* of carriers sharing
+    them does not (World2Fly, Air Europa and Evelop on Madrid-Cancún in July
+    2026).  Max flow finds the group whose demand its routes cannot absorb;
+    that group is scaled down proportionally, and the check repeats until
+    every carrier can be placed.  The one-carrier capacity cap is the special
+    case of a group of one.
+    """
+
+    targets = carrier_targets.astype(float).copy()
+    for _ in range(max_rounds):
+        placed, deficient = _max_flow(support, route_targets, targets)
+        shortfall = targets - placed
+        if shortfall.sum() <= 1e-6 * max(1.0, float(targets.sum())):
+            return targets
+        group = deficient & (targets > 0)
+        demand = float(targets[group].sum())
+        if demand <= 0:
+            return np.minimum(targets, placed)
+        targets[group] *= float(placed[group].sum()) / demand
+    return np.minimum(targets, placed)
+
+
 def fit_international(
     seed: pd.DataFrame,
     route_totals: pd.DataFrame,
@@ -726,18 +827,22 @@ def fit_international(
         published = (
             columns.groupby("carrier_key")["passengers"].sum().reindex(carrier_index).to_numpy()
         )
-        capacity = np.array(
-            [route_targets[matrix[:, j] > 0].sum() for j in range(matrix.shape[1])]
-        )
-        is_capped = published > capacity * CAPACITY_CAP_SHARE
-        carrier_targets = np.where(is_capped, capacity * CAPACITY_CAP_SHARE, published)
-        capped = pd.Series(published - carrier_targets, index=carrier_index)
+        # Carriers also carry passengers on routes the seed does not cover, so
+        # their margin can exceed the covered routes' total.  That global
+        # excess is removed proportionally first; only what is left after it is
+        # a structural conflict between carriers and the routes they are seen on.
+        rows_total = float(route_targets.sum())
+        global_balance = min(1.0, rows_total / float(published.sum()))
+        balanced = published * global_balance
+        feasible = joint_feasible_targets(matrix, route_targets, balanced)
+        is_capped = feasible < balanced * (1 - 1e-6)
+        carrier_targets = np.where(is_capped, feasible * CAPACITY_CAP_SHARE, balanced)
+        capped = pd.Series(balanced - carrier_targets, index=carrier_index)
         # The room a capped carrier leaves on its own routes can only be taken
         # by the unallocated column, so it is reserved there.  Any balancing
         # between the two margins falls on the uncapped carriers alone: scaling
         # a capped one would reopen the gap it was capped to close.
-        rows_total = float(route_targets.sum())
-        reserve = float((capacity - carrier_targets)[is_capped].sum())
+        reserve = float((feasible - carrier_targets)[is_capped].sum())
         unallocated = max(rows_total - float(carrier_targets.sum()), reserve)
         uncapped_total = float(carrier_targets[~is_capped].sum())
         balance = (
@@ -782,6 +887,7 @@ def fit_international(
                 "max_row_deviation": result.max_row_deviation,
                 "max_col_deviation": result.max_col_deviation,
                 "column_scale": result.column_scale,
+                "global_balance": global_balance,
                 "uncapped_balance": balance,
                 "passengers_capped": float(capped.sum()),
                 "capped_carriers": ", ".join(

@@ -515,8 +515,11 @@ def test_a_margin_larger_than_its_routes_is_capped_and_reported_not_spread() -> 
     estimate, diagnostics = fit_international(seed, routes, carriers, FAMILIES)
     row = diagnostics.iloc[0]
 
-    # MADRID holds only 30,000, and the cap stays just inside that bound.
-    assert row["passengers_capped"] == pytest.approx(40_000 - 30_000 * 0.995)
+    # Margins total 46,000 against 42,000 on the routes, so every carrier is
+    # first balanced by 42/46; MADRID then holds only 30,000 of Iberia's
+    # balanced 36,522, and the cap stays just inside that bound.
+    assert row["global_balance"] == pytest.approx(42_000 / 46_000)
+    assert row["passengers_capped"] == pytest.approx(40_000 * 42_000 / 46_000 - 30_000 * 0.995)
     assert bool(row["converged"])
     assert "IBERIA" in row["capped_carriers"]
     assert estimate.groupby("route_key")["passengers_estimated"].sum().to_dict() == pytest.approx(
@@ -561,3 +564,37 @@ def test_a_hyphenated_city_label_is_reversed_correctly() -> None:
     assert reverse_route_key("CANCUN-DALLAS-FORT WORTH", known) == "DALLAS-FORT WORTH-CANCUN"
     assert reverse_route_key("DALLAS-FORT WORTH-CANCUN", known) == "CANCUN-DALLAS-FORT WORTH"
     assert reverse_route_key("CANCUN-MADRID", known) is None
+
+
+def test_a_group_that_cannot_share_its_routes_is_shrunk_together() -> None:
+    """Each carrier fits alone; together they need 150 on a route of 100."""
+
+    import numpy as np
+
+    from src.analytics.international_route_carrier import joint_feasible_targets
+
+    support = np.array([[1.0, 1.0], [1.0, 0.0]])
+    routes = np.array([100.0, 1_000.0])
+    carriers = np.array([60.0, 90.0])  # the second carrier is only on route 0
+
+    feasible = joint_feasible_targets(support, routes, carriers)
+
+    assert feasible[1] <= 100.0 + 1e-6
+    assert feasible[0] == pytest.approx(60.0)  # it can use route 1, so it is not shrunk
+    assert feasible.sum() <= routes.sum()
+
+
+def test_joint_feasibility_shrinks_proportionally_inside_the_violating_group() -> None:
+    import numpy as np
+
+    from src.analytics.international_route_carrier import joint_feasible_targets
+
+    support = np.array([[1.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+    routes = np.array([100.0, 500.0])
+    carriers = np.array([90.0, 60.0, 400.0])
+
+    feasible = joint_feasible_targets(support, routes, carriers)
+
+    assert feasible[:2].sum() == pytest.approx(100.0, rel=1e-6)
+    assert feasible[0] / feasible[1] == pytest.approx(90 / 60, rel=1e-6)
+    assert feasible[2] == pytest.approx(400.0)
