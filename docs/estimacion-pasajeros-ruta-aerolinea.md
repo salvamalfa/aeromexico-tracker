@@ -12,8 +12,10 @@ publicación, activación de evidencia ni consumo de API.
 **Veredicto sobre la extensión internacional: la primera captura mensual
 (2026M04, 1,588 unidades) pasó la puerta con veredicto `review`, el ajuste
 convergió y el contraste fuera de muestra contra T-100 da 6.3 % de error
-ponderado por celda (6.9 % para Aerovías + Connect) (§9.11).** Nada se ha
-publicado: el resultado espera revisión humana antes de tocar el dashboard.
+ponderado por celda (6.9 % para Aerovías + Connect) (§9.11).** Mayo, junio y
+julio se capturaron después (4,812 unidades) y los cuatro meses convergen
+(§9.12). Nada se ha publicado: el resultado espera revisión humana antes de
+tocar el dashboard.
 Las dos marginales internacionales de AFAC describen el mismo universo —cero
 pasajeros de diferencia en los siete meses de 2026 leídos de la misma edición
 (§9.3)—. La captura real destapó y corrigió cuatro problemas que ningún ensayo
@@ -1058,7 +1060,7 @@ En este orden. Ninguna etapa autoriza la siguiente por sí sola.
 | 8 | Captura mensual de la semilla en los meses que la ventana permita | **hecho para 2026M04** (§9.11): 1,588 unidades |
 | 9 | Ajuste, y backtest del subcubo estadounidense con la semilla real | **hecho para 2026M04** (§9.11): convergió; 6.3 % de error ponderado contra T-100 |
 | 10 | Vista separada de revisión humana antes de tocar el mapa principal | **vista generada** (§9.11.5); **revisión y aprobación humana pendientes** |
-| 11 | Más meses (mayo–julio) para estabilidad y soporte temporal | pendiente, con API (≈1,600 unidades por mes) |
+| 11 | Más meses (mayo–julio) para estabilidad y soporte temporal | **hecho** (§9.12): 4,812 unidades; los cuatro meses convergen |
 
 Las etapas 1 a 9 están cerradas para abril. Ninguna activa nada en el
 dashboard ni en el Analysis Agent: la etapa 10 requiere una instrucción
@@ -1309,24 +1311,37 @@ registros mueve el total de Grupo Aeroméxico en 0.00 %.
 |---|---:|
 | Rutas × columnas ajustadas | 792 × 44 |
 | Rutas competidas | 269 |
-| Iteraciones / convergencia | 4,088 / **sí** |
+| Iteraciones / convergencia | 652 / **sí** |
 | Desviación máxima de fila | 4.8 pasajeros |
-| Pasajeros topados por capacidad visible | 7,856 (0.16 %) — TUI Airways 6,946, Aerus 339, resto < 120 |
-| Pasajeros `SIN_ASIGNAR` | 697 (0.015 %) |
-| Equilibrio aplicado a aerolíneas sin tope | 0.9957 |
+| Equilibrio global de las marginales de aerolínea | 0.9944 |
+| Pasajeros topados por factibilidad conjunta | 7,333 (0.15 %) — TUI Airways 6,997, Aerus 336 |
+| Pasajeros `SIN_ASIGNAR` | 7,333 (0.15 %) |
 
-- **Tope por capacidad visible.** Una aerolínea cuya marginal excede a todos
-  los pasajeros de las rutas en que la semilla la ve se topa al 99.5 % de esa
-  capacidad; el excedente se reporta por aerolínea y no se reparte. TUI
-  Airways es el caso dominante: el proveedor ve solo 8 de sus vuelos en
-  abril, un límite de cobertura de la fuente, no del crosswalk.
-- **`SIN_ASIGNAR`.** Los pasajeros de rutas cubiertas que ninguna aerolínea
-  cubierta puede llevar van a una columna explícita, con soporte en todas
-  las rutas, en vez de inflar uniformemente a todas las aerolíneas.
-- **Tolerancia.** `INTERNATIONAL_TOLERANCE = 1e-6` del total mensual
-  (≈ 5 pasajeros en abril) en vez del 1e-8 nacional: el cubo internacional
-  tiene muchas rutas de un solo operador en su frontera, donde el IPF solo
-  se acerca asintóticamente.
+El orden importa y es este:
+
+1. **Equilibrio global.** Las marginales de aerolínea incluyen pasajeros en
+   rutas que la semilla no cubre, así que suman un poco más que las rutas
+   cubiertas (0.57 % en abril). Ese excedente se retira primero,
+   proporcionalmente a todas las aerolíneas (`global_balance`).
+2. **Factibilidad conjunta.** Un flujo máximo aerolínea → ruta sobre el
+   soporte de la semilla (`joint_feasible_targets()`) encuentra el grupo de
+   aerolíneas cuya demanda no cabe en las rutas en que se les ve y lo
+   reduce proporcionalmente, repitiendo hasta que todo cabe. El tope
+   individual por capacidad es el caso de un grupo de una sola aerolínea;
+   el conjunto hace falta porque julio tuvo un conflicto entre World2Fly,
+   Air Europa y Evelop en Madrid–Cancún que ningún tope individual veía
+   (§9.12). Las aerolíneas reducidas quedan al 99.5 % de su valor factible
+   para que la solución no quede en la frontera, y ese 0.5 % se reserva.
+3. **`SIN_ASIGNAR`.** Lo que las aerolíneas reducidas dejan en sus rutas va a
+   una columna explícita con soporte en todas las rutas, en vez de inflar a
+   las demás aerolíneas. Es igual a lo topado: nada se reparte en silencio.
+4. **Tolerancia.** `INTERNATIONAL_TOLERANCE = 1e-6` del total mensual
+   (≈ 5 pasajeros) en vez del 1e-8 nacional: el cubo internacional tiene
+   muchas rutas de un solo operador cerca de su frontera.
+
+TUI Airways domina los topes todos los meses: el proveedor ve una fracción
+de sus vuelos (8 en abril), un límite de cobertura de la fuente, no del
+crosswalk.
 
 #### 9.11.4 Contraste fuera de muestra contra T-100
 
@@ -1335,8 +1350,8 @@ familias contra su familia), sobre las celdas México–Estados Unidos:
 
 | Conjunto | Celdas | Suma estimada / observada | Error absoluto ponderado | Mediana del error por celda |
 |---|---:|---:|---:|---:|
-| Todas | 785 | 0.997 | **6.3 %** | 3.8 % |
-| Aerovías + Connect | 79 | 1.023 | **6.9 %** | 5.4 % |
+| Todas | 785 | 0.995 | **6.3 %** | 3.8 % |
+| Aerovías + Connect | 79 | 1.020 | **6.9 %** | 5.7 % |
 
 62 celdas observadas por T-100 no reciben estimación (10 de ellas de
 Aerovías o Connect): celdas que la semilla no ve y que la marca
@@ -1344,9 +1359,9 @@ Aerovías o Connect): celdas que la semilla no ve y que la marca
 medición del error **con** el ruido real de captura; la cota de §10 era sin
 él.
 
-Grupo Aeroméxico: 683,752 pasajeros estimados en 136 rutas dirigidas
+Grupo Aeroméxico: 682,823 pasajeros estimados en 136 rutas dirigidas
 (AFAC publica 686,694 para Aerovías + Connect en abril; la diferencia es la
-parte en rutas no cubiertas y el equilibrio de columnas).
+parte en rutas no cubiertas y el equilibrio global).
 
 #### 9.11.5 Qué falta antes de publicar
 
@@ -1365,3 +1380,38 @@ parte en rutas no cubiertas y el equilibrio de columnas).
   ventana, a ≈ 1,600 unidades cada uno con el mismo workflow.
 - Nada de esto toca `prototypes/vuelos/`, `stage18.py`, `flight_evidence_v1`
   ni el Analysis Agent.
+
+### 9.12 Mayo a julio de 2026
+
+Capturados el 23 de septiembre de 2026 con autorización explícita, con el
+mismo diseño que abril: mayo 1,612, junio 1,588 y julio 1,612 unidades,
+**4,812 en total**, exactamente lo presupuestado. La pasada del resto de
+julio se cortó por un 502 del proveedor en su penúltima ventana y se
+reanudó desde la caché con un tope de 76 unidades, las 38 ventanas que
+faltaban, sin recomprar ninguna.
+
+| Mes | Puerta | Cobertura rutas / aerolíneas | Codeshare desconocido | Sentidos faltantes | Iteraciones | Topados = `SIN_ASIGNAR` | Grupo Aeroméxico (rutas) | AFAC Aerovías + Connect | T-100 todas / Aerovías + Connect |
+|---|---|---|---:|---:|---:|---|---:|---:|---|
+| 2026M04 | `review` | 99.38 % / 98.74 % | 1.09 % | 14 | 652 | 7,333 (0.15 %) | 682,823 (136) | 686,694 | 6.3 % / 6.9 % |
+| 2026M05 | `review` | 99.36 % / 98.64 % | 1.22 % | 13 | 500 | 12,975 (0.30 %) | 684,480 (131) | 688,307 | 5.7 % / 6.3 % |
+| 2026M06 | `review` | 99.45 % / 98.75 % | 1.14 % | 7 | 628 | 9,558 (0.22 %) | 679,144 (133) | 681,986 | sin T-100 |
+| 2026M07 | `review` | 99.41 % / 97.90 % | 1.14 % | 11 | 641 | 11,570 (0.23 %) | 815,888 (133) | 819,374 | sin T-100 |
+
+Los cuatro meses convergen, con desviación máxima de fila entre 4.3 y 5.0
+pasajeros. T-100 llega hasta mayo, así que junio y julio no tienen contraste
+fuera de muestra todavía. En mayo, el contraste mejora frente a abril: 5.7 %
+de error ponderado y mediana de 2.4 %; Aerovías + Connect 6.3 %, con
+mediana de 4.7 %.
+
+**Julio y la factibilidad conjunta.** Con el tope individual, julio no
+convergía: World2Fly solo aparece en el sentido Madrid→Cancún y su marginal
+AFAC es grande, así que el tope por aerolínea la dejaba tomar 22,058 de los
+22,169 pasajeros de la ruta, sin lugar para Air Europa ni Evelop. Es un
+conflicto de grupo, no individual; el flujo máximo de §9.11.3 lo resuelve y
+los cuatro meses se reajustaron con él.
+
+Derivados: `derived/aerodatabox_international/2026M05/`, `2026M06/` y
+`2026M07/` en el repositorio privado, cada uno con su vista de revisión
+(`international_review_<mes>.html`: 94, 89 y 84 rutas de Grupo Aeroméxico
+con al menos una bandera, respectivamente). Ninguno se integra al
+dashboard.
