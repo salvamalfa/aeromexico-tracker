@@ -99,3 +99,11 @@ El artefacto sube solo agregados derivados.
    dashboard.
 2. Mayo–julio con el mismo workflow, ≈ 1,600 unidades por mes, para
    estabilidad y soporte temporal entre meses.
+
+## Nota posterior (mismo día)
+
+El ajuste de abril se rehízo con la factibilidad conjunta introducida para
+julio (ver [`aerodatabox-internacional-mayo-julio-20260923.md`](aerodatabox-internacional-mayo-julio-20260923.md)):
+652 iteraciones, 7,333 pasajeros topados y otros tantos en `SIN_ASIGNAR`
+(0.15 %), Grupo Aeroméxico 682,823, contraste contra T-100 6.3 % (Aerovías
++ Connect 6.9 %). Las cifras vigentes están en el documento canónico §9.11.

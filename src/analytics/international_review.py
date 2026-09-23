@@ -26,6 +26,9 @@ from src.analytics.international_route_carrier import reverse_route_key
 GROUP = "AEROMEXICO_GROUP"
 OWN = ("AEROMEXICO", "AEROMEXICO_CONNECT")
 UNALLOCATED = "SIN_ASIGNAR"
+# The unallocated column is seeded on every route, so it always holds a
+# sliver; only a share that moves the route is worth a reviewer's look.
+UNALLOCATED_FLAG_SHARE = 0.01
 
 
 def route_review(
@@ -78,7 +81,8 @@ def route_review(
         if route_key in capped_routes:
             flags.append("aerolinea topada en la ruta")
         unallocated = float(by_carrier[UNALLOCATED].get(route_key, 0.0)) if UNALLOCATED in by_carrier else 0.0
-        if unallocated >= 1:
+        route_total = float(totals.get(route_key, 0.0))
+        if route_total and unallocated / route_total >= UNALLOCATED_FLAG_SHARE:
             flags.append("pasajeros sin asignar")
         if route_key in pooled_routes:
             flags.append("compite con una familia agrupada")
