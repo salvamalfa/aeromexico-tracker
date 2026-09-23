@@ -187,6 +187,21 @@ def ambiguous_operator_codes(carrier_crosswalk: pd.DataFrame) -> dict[str, set[s
     return {code: keys for code, keys in claims.items() if len(keys) > 1}
 
 
+def reverse_route_key(route_key: str, known: set[str]) -> str | None:
+    """The opposite direction of ``route_key`` if it is among ``known`` routes.
+
+    City labels can contain hyphens (``DALLAS-FORT WORTH``), so every hyphen
+    is tried as the split point and only a reverse that exists is returned.
+    """
+
+    for index, char in enumerate(route_key):
+        if char == "-":
+            reverse = f"{route_key[index + 1:]}-{route_key[:index]}"
+            if reverse in known:
+                return reverse
+    return None
+
+
 def build_international_seed(
     capture: pd.DataFrame,
     city_crosswalk: pd.DataFrame,
@@ -344,12 +359,10 @@ def assess_international_seed(
     # ends, so one can go missing without anything else looking wrong.
     seed_pairs = set(period_seed["route_key"])
     margin_pairs = set(period_routes["route_key"])
-    def _reverse(key: str) -> str:
-        origin, _, destination = key.partition("-")
-        return f"{destination}-{origin}"
     one_way = sorted(
         key for key in seed_pairs
-        if _reverse(key) in margin_pairs and _reverse(key) not in seed_pairs
+        if (reverse := reverse_route_key(key, margin_pairs)) is not None
+        and reverse not in seed_pairs
     )
     if one_way:
         findings.append(

@@ -551,3 +551,13 @@ def test_one_pair_from_two_passes_is_fine_when_one_side_is_a_through_flight() ->
 
     assert "duplicados" not in {f.code for f in fine.findings}
     assert "duplicados" in {f.code for f in twice.findings}
+
+
+def test_a_hyphenated_city_label_is_reversed_correctly() -> None:
+    from src.analytics.international_route_carrier import reverse_route_key
+
+    known = {"DALLAS-FORT WORTH-CANCUN", "CANCUN-DALLAS-FORT WORTH"}
+
+    assert reverse_route_key("CANCUN-DALLAS-FORT WORTH", known) == "DALLAS-FORT WORTH-CANCUN"
+    assert reverse_route_key("DALLAS-FORT WORTH-CANCUN", known) == "CANCUN-DALLAS-FORT WORTH"
+    assert reverse_route_key("CANCUN-MADRID", known) is None

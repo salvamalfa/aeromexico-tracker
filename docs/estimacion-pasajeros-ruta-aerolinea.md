@@ -1057,7 +1057,7 @@ En este orden. Ninguna etapa autoriza la siguiente por sí sola.
 | 7c | Verificación offline de la captura (credencial, reanudación, retención, tope duro) | **hecho**, sin API (§9.10.2) |
 | 8 | Captura mensual de la semilla en los meses que la ventana permita | **hecho para 2026M04** (§9.11): 1,588 unidades |
 | 9 | Ajuste, y backtest del subcubo estadounidense con la semilla real | **hecho para 2026M04** (§9.11): convergió; 6.3 % de error ponderado contra T-100 |
-| 10 | Vista separada de revisión humana antes de tocar el mapa principal | **pendiente — próximo paso** |
+| 10 | Vista separada de revisión humana antes de tocar el mapa principal | **vista generada** (§9.11.5); **revisión y aprobación humana pendientes** |
 | 11 | Más meses (mayo–julio) para estabilidad y soporte temporal | pendiente, con API (≈1,600 unidades por mes) |
 
 Las etapas 1 a 9 están cerradas para abril. Ninguna activa nada en el
@@ -1242,8 +1242,9 @@ fuente.)
 | Vuelos semilla / vuelos AFAC en rutas comparables | 0.977 |
 | Semilla | 840 rutas × 52 operadores |
 
-Hallazgos de revisión (ninguno de rechazo): 12 rutas con un solo sentido en
-la semilla; 693 vuelos de operadores sin entrada revisada, casi todos
+Hallazgos de revisión (ninguno de rechazo): 14 rutas con un solo sentido en
+la semilla (12 antes de corregir la inversión de etiquetas con guion, como
+`DALLAS-FORT WORTH`, que la comprobación partía en el primer guion); 693 vuelos de operadores sin entrada revisada, casi todos
 aviación ejecutiva (Flexjet, VistaJet), carga (AeroUnion 6R, MasAir M7) o
 aerolíneas sin marginal regular en abril (Aer Lingus, Virgin Atlantic,
 Allegiant), que AFAC tampoco cuenta; 32 vuelos de aerolíneas revisadas
@@ -1349,9 +1350,16 @@ parte en rutas no cubiertas y el equilibrio de columnas).
 
 #### 9.11.5 Qué falta antes de publicar
 
-- Revisión humana de la vista separada (etapa 10 de §14): rutas de un solo
-  operador, las 12 rutas con un solo sentido, las familias agrupadas y los
-  topes.
+- Revisión humana de la vista separada (etapa 10 de §14). La vista existe:
+  `uv run python -m src.analytics.international_review 2026M04 --out <ruta>`
+  genera una página HTML autocontenida con los indicadores de la puerta y
+  del ajuste, las 136 rutas de Grupo Aeroméxico con sus banderas (un solo
+  operador, sentido opuesto sin semilla, aerolínea topada, sin asignar,
+  competencia con una familia agrupada; 99 rutas con al menos una), las
+  rutas vistas en un solo sentido, los topes, las familias, las celdas de
+  Aerovías/Connect que más fallan contra T-100 y una lista de verificación.
+  Se guarda en el repositorio privado junto a los derivados
+  (`international_review_2026M04.html`), no en este.
 - Más meses para estabilidad: un mes deja a las rutas de baja frecuencia
   con semilla de una sola semana en el resto; mayo–julio siguen en la
   ventana, a ≈ 1,600 unidades cada uno con el mismo workflow.
