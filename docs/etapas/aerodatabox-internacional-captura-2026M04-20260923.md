@@ -92,7 +92,9 @@ El artefacto sube solo agregados derivados.
 
 ## Qué sigue
 
-1. Revisión humana de la vista separada (rutas de un solo operador, rutas
+1. Revisión humana de la vista separada, ya generada con
+   `python -m src.analytics.international_review` y guardada en el
+   repositorio privado (rutas de un solo operador, rutas
    con un solo sentido, familias, topes) antes de cualquier cambio al
    dashboard.
 2. Mayo–julio con el mismo workflow, ≈ 1,600 unidades por mes, para
