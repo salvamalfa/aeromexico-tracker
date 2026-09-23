@@ -78,7 +78,9 @@ def _report(stats, flights) -> None:
     )
     print(
         f"salidas vistas {stats.departures_seen}  llegadas vistas {stats.arrivals_seen}  "
-        f"tramos nacionales descartados {stats.domestic_legs_dropped}"
+        f"tramos nacionales descartados {stats.domestic_legs_dropped}  "
+        f"vuelos con escala en Mexico reconstruidos {stats.through_legs} "
+        f"(omitidos por ya estar directos: {stats.through_already_direct})"
     )
     if stats.unmapped_operators:
         print(
@@ -217,6 +219,10 @@ def main(argv: list[str] | None = None) -> int:
              "(different airports or windows) do not overwrite each other",
     )
     sweep_parser.add_argument("--dry-run", action="store_true")
+    sweep_parser.add_argument(
+        "--offline", action="store_true",
+        help="rebuild Silver from the cache only; refuse to buy any window",
+    )
 
     preflight_parser = sub.add_parser(
         "preflight",
@@ -285,6 +291,7 @@ def main(argv: list[str] | None = None) -> int:
     flights, stats = pull_days(
         airports, days, period_id=args.period_id,
         cache_dir=args.bronze_dir, unit_budget=args.budget, day_weights=weights,
+        offline=args.offline,
     )
     _report(stats, flights)
     if flights.empty:

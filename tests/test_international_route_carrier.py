@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from src.analytics.route_carrier import SEED_COLUMNS
 from src.analytics.international_route_carrier import (
     UNSPLIT_AEROMEXICO,
     VERDICT_ACCEPT,
@@ -348,3 +349,205 @@ def test_an_empty_capture_is_refused_rather_than_fitted() -> None:
 
     assert report.verdict == VERDICT_REJECT
     assert any(f.code == "sin_semilla" for f in report.findings)
+
+
+def test_a_major_airport_the_city_crosswalk_misses_is_refused() -> None:
+    """Paris once resolved to Le Bourget, so CDG's flights fell out of the seed."""
+
+    capture, routes, carriers = _balanced()
+    missing = _capture([
+        ("2026M05", "MEX", "TOJ", "AEROMEXICO", "AM", "AMX", 10.0, 0.0, 0.0),
+    ])
+    seed, report = _run(pd.concat([capture, missing], ignore_index=True), routes, carriers)
+
+    finding = next(f for f in report.findings if f.code == "aeropuertos_sin_ciudad")
+    assert finding.severity == "reject"
+    assert "TOJ" in finding.detail and "MEX" not in finding.detail.split(":")[-1]
+    assert report.verdict == VERDICT_REJECT
+
+
+def test_the_sweep_seed_file_is_read_into_the_capture_contract() -> None:
+    from src.analytics.international_route_carrier import capture_from_sweep
+
+    sweep = pd.DataFrame(
+        [
+            ("2026M04", "MEX", "MAD", "AEROMEXICO", 5.0, 0.0, 0.0),
+            ("2026M04", "MEX", "MAD", "IATA:IB", 5.0, 0.0, 0.0),
+            ("2026M04", "MEX", "IST", "ICAO:THY", 5.0, 0.0, 0.0),
+        ],
+        columns=["period_id", "origin_iata", "dest_iata", "operator_key",
+                 "flights", "codeshare_unknown", "status_incomplete"],
+    )
+
+    capture = capture_from_sweep([sweep])
+
+    assert list(capture["operator_iata"]) == ["", "IB", ""]
+    assert list(capture["operator_icao"]) == ["", "", "THY"]
+
+
+def test_the_backtest_counts_an_observed_cell_the_fit_left_empty_as_error() -> None:
+    from src.analytics.international_route_carrier import summarise_backtest, t100_backtest
+
+    estimate = pd.DataFrame(
+        [
+            ("2026M04", "MEXICO-MADRID", "AEROMEXICO", 900.0),
+            ("2026M04", "MEXICO-MADRID", "AEROMEXICO_GROUP", 900.0),
+        ],
+        columns=["period_id", "route_key", "carrier_key", "passengers_estimated"],
+    )
+    observed = pd.DataFrame(
+        [
+            ("2026M04", "MEXICO-MADRID", "AEROMEXICO", 1_000.0),
+            ("2026M04", "MEXICO-MADRID", "IBERIA", 500.0),
+        ],
+        columns=["period_id", "route_key", "carrier_key", "passengers_observed"],
+    )
+
+    cells = t100_backtest(estimate, observed)
+    summary = summarise_backtest(cells)
+
+    assert len(cells) == 2  # the group row is never compared with an observation
+    assert summary["cells_missing_from_fit"] == 1
+    assert summary["weighted_abs_error"] == pytest.approx((100 + 500) / 1_500)
+
+
+def test_sensitivity_refits_without_guessed_operating_status() -> None:
+    from src.analytics.international_route_carrier import codeshare_sensitivity
+
+    capture, routes, carriers = _balanced()
+    capture.loc[capture["operator_key"] == "IATA:IB", "codeshare_unknown"] = 20.0
+    seed, _ = build_international_seed(capture, CITIES, CARRIERS)
+    route_totals, carrier_totals = build_international_margins(routes, carriers, CARRIERS)
+
+    no_families = pd.DataFrame(columns=["carrier_key", "fit_key", "fit_label", "reason"])
+    compared = codeshare_sensitivity(seed, route_totals, carrier_totals, no_families)
+
+    assert {"passengers_estimated", "passengers_estimated_declared_only"} <= set(compared.columns)
+    total = compared.groupby("period_id")[
+        ["passengers_estimated", "passengers_estimated_declared_only"]
+    ].sum()
+    assert total.iloc[0, 0] == pytest.approx(60_000)
+    assert total.iloc[0, 1] == pytest.approx(60_000)
+
+
+def test_an_unresolved_carrier_key_from_the_adapter_never_enters_the_seed() -> None:
+    """Aerus reached the seed through the adapter's key while its margin was
+    withheld as unresolved, leaving MONTERREY-BROWNSVILLE with no feasible fit."""
+
+    capture, _, _ = _balanced()
+    orbest = _capture([("2026M05", "MEX", "BOG", "ORBEST", "", "", 4.0, 0.0, 0.0)])
+    seed, rejected = build_international_seed(
+        pd.concat([capture, orbest], ignore_index=True), CITIES, CARRIERS
+    )
+
+    assert "ORBEST" not in set(seed["carrier_key"])
+    assert list(rejected["rejection_reason"]) == ["operador sin carrier_key revisado"]
+
+
+def test_a_route_served_only_by_a_carrier_without_margin_is_caught_before_the_fit() -> None:
+    capture, routes, carriers = _balanced()
+    capture = pd.concat([capture, _capture([
+        ("2026M05", "MEX", "BOG", "IATA:AV", "AV", "AVA", 10.0, 0.0, 0.0),
+        ("2026M05", "BOG", "MEX", "IATA:AV", "AV", "AVA", 10.0, 0.0, 0.0),
+    ])], ignore_index=True)
+    routes = pd.concat([routes, pd.DataFrame(
+        [("2026M05", "MEXICO", "Mexico", "BOGOTA", "Colombia", 10, 300),
+         ("2026M05", "BOGOTA", "Colombia", "MEXICO", "Mexico", 10, 300)],
+        columns=routes.columns,
+    )], ignore_index=True)
+
+    _, report = _run(capture, routes, carriers)  # Avianca publishes no passengers
+
+    finding = next(f for f in report.findings if f.code == "soporte_inviable_rutas")
+    assert finding.severity == "reject" and "MEXICO-BOGOTA" in finding.detail
+
+
+FAMILIES = pd.DataFrame(
+    [("AVIANCA", "AVIANCA_GROUP", "Grupo Avianca", "codigo AV"),
+     ("LACSA", "AVIANCA_GROUP", "Grupo Avianca", "codigo AV")],
+    columns=["carrier_key", "fit_key", "fit_label", "reason"],
+)
+
+
+def _fit_frames():
+    seed = pd.DataFrame(
+        [
+            ("2026M04", "MEXICO-MADRID", "AEROMEXICO", 60.0),
+            ("2026M04", "MEXICO-MADRID", "IBERIA", 40.0),
+            ("2026M04", "MEXICO-BOGOTA", "AVIANCA", 30.0),
+            ("2026M04", "MEXICO-BOGOTA", "AEROMEXICO", 30.0),
+        ],
+        columns=list(SEED_COLUMNS),
+    )
+    routes = pd.DataFrame(
+        [("2026M04", "MEXICO-MADRID", 30_000.0), ("2026M04", "MEXICO-BOGOTA", 12_000.0)],
+        columns=["period_id", "route_key", "passengers"],
+    )
+    carriers = pd.DataFrame(
+        [("2026M04", "AEROMEXICO", 24_000.0), ("2026M04", "IBERIA", 12_000.0),
+         ("2026M04", "AVIANCA", 3_000.0), ("2026M04", "LACSA", 3_000.0)],
+        columns=["period_id", "carrier_key", "passengers"],
+    )
+    return seed, routes, carriers
+
+
+def test_carriers_the_seed_cannot_separate_are_fitted_as_their_family() -> None:
+    """Lacsa flies under AV: alone it has no supply, pooled it has Avianca's."""
+
+    from src.analytics.international_route_carrier import fit_international
+
+    estimate, diagnostics = fit_international(*_fit_frames(), FAMILIES)
+
+    assert "LACSA" not in set(estimate["carrier_key"])
+    pooled = estimate[estimate["carrier_key"] == "AVIANCA_GROUP"]
+    assert pooled["passengers_estimated"].sum() == pytest.approx(6_000, rel=1e-4)
+    assert pooled["is_pooled_family"].all()
+    assert bool(diagnostics["converged"].iloc[0])
+
+
+def test_a_margin_larger_than_its_routes_is_capped_and_reported_not_spread() -> None:
+    from src.analytics.international_route_carrier import UNALLOCATED, fit_international
+
+    seed, routes, carriers = _fit_frames()
+    carriers.loc[carriers["carrier_key"] == "IBERIA", "passengers"] = 40_000.0
+    carriers = carriers[carriers["carrier_key"] != "AEROMEXICO"]
+
+    estimate, diagnostics = fit_international(seed, routes, carriers, FAMILIES)
+    row = diagnostics.iloc[0]
+
+    # MADRID holds only 30,000, and the cap stays just inside that bound.
+    assert row["passengers_capped"] == pytest.approx(40_000 - 30_000 * 0.995)
+    assert bool(row["converged"])
+    assert "IBERIA" in row["capped_carriers"]
+    assert estimate.groupby("route_key")["passengers_estimated"].sum().to_dict() == pytest.approx(
+        {"MEXICO-MADRID": 30_000, "MEXICO-BOGOTA": 12_000}, rel=1e-4
+    )
+    assert UNALLOCATED in set(estimate["carrier_key"])
+
+
+def test_aeromexico_is_never_pooled() -> None:
+    from src.analytics.international_route_carrier import load_carrier_families
+
+    families = load_carrier_families()
+
+    assert not set(families["carrier_key"]) & {"AEROMEXICO", "AEROMEXICO_CONNECT"}
+    assert not families["carrier_key"].duplicated().any()
+
+
+def test_one_pair_from_two_passes_is_fine_when_one_side_is_a_through_flight() -> None:
+    from src.analytics.international_route_carrier import capture_from_sweep
+
+    columns = ["period_id", "origin_iata", "dest_iata", "operator_key", "flights",
+               "codeshare_unknown", "status_incomplete", "through_flights"]
+    direct = pd.DataFrame([("2026M05", "MEX", "MAD", "AEROMEXICO", 60.0, 0.0, 0.0, 0.0),
+                           ("2026M05", "MAD", "MEX", "AEROMEXICO", 60.0, 0.0, 0.0, 0.0),
+                           ("2026M05", "MEX", "MAD", "IATA:IB", 40.0, 0.0, 0.0, 0.0),
+                           ("2026M05", "MAD", "MEX", "IATA:IB", 40.0, 0.0, 0.0, 0.0)], columns=columns)
+    through = pd.DataFrame([("2026M05", "MEX", "MAD", "AEROMEXICO", 5.0, 0.0, 0.0, 5.0)], columns=columns)
+    _, routes, carriers = _balanced()
+
+    _, fine = _run(capture_from_sweep([direct, through]), routes, carriers)
+    _, twice = _run(capture_from_sweep([direct, direct]), routes, carriers)
+
+    assert "duplicados" not in {f.code for f in fine.findings}
+    assert "duplicados" in {f.code for f in twice.findings}

@@ -213,3 +213,89 @@ def test_two_sweeps_of_one_month_do_not_overwrite_each_other(tmp_path, monkeypat
         "aerodatabox_international_seed_2026M05_nucleo.parquet",
         "aerodatabox_international_seed_2026M05_resto.parquet",
     ]
+
+
+def _leg(number: str, *, frm: str | None, to: str | None, dep: str | None, arr: str | None) -> dict:
+    return {
+        "number": number,
+        "airline": {"iata": "AM", "icao": "AMX", "name": "Aeromexico"},
+        "aircraft": {"model": "Boeing 787-9"},
+        "codeshareStatus": "IsOperator",
+        "status": "Departed",
+        "departure": {"airport": {"iata": frm} if frm else {}, "scheduledTime": {"utc": dep} if dep else {}},
+        "arrival": {"airport": {"iata": to} if to else {}, "scheduledTime": {"utc": arr} if arr else {}},
+    }
+
+
+def test_a_flight_through_a_mexican_stop_counts_for_its_first_origin_too() -> None:
+    """AM 58 is MEX-MTY-NRT: Mexico City's board only shows the domestic leg."""
+
+    stats = InternationalPullStats()
+    raw = {
+        ("MTY", date(2026, 4, 1)): {
+            "arrivals": [_leg("AM 58", frm="MEX", to=None, dep="2026-04-01 04:10Z", arr="2026-04-01 06:05Z")],
+            "departures": [_leg("AM 58", frm=None, to="NRT", dep="2026-04-01 07:35Z", arr="2026-04-01 21:30Z")],
+        },
+    }
+
+    frame = normalise(raw, "2026M04", stats=stats, mexican=MEXICAN)
+    legs = routes_by_operator(frame).set_index(["origin_iata", "dest_iata"])["flights"].to_dict()
+
+    assert legs == {("MTY", "NRT"): 1.0, ("MEX", "NRT"): 1.0}
+    assert stats.through_legs == 1
+    assert set(frame.loc[frame["via_iata"] != "", "via_iata"]) == {"MTY"}
+
+
+def test_a_same_number_hours_apart_is_not_a_through_flight() -> None:
+    stats = InternationalPullStats()
+    raw = {
+        ("MTY", date(2026, 4, 1)): {
+            "arrivals": [_leg("AM 58", frm="MEX", to=None, dep="2026-04-01 04:10Z", arr="2026-04-01 06:05Z")],
+            "departures": [_leg("AM 58", frm=None, to="NRT", dep="2026-04-01 20:00Z", arr="2026-04-02 10:00Z")],
+        },
+    }
+
+    frame = normalise(raw, "2026M04", stats=stats, mexican=MEXICAN)
+
+    assert stats.through_legs == 0
+    assert set(zip(frame["origin_iata"], frame["dest_iata"])) == {("MTY", "NRT")}
+
+
+def test_the_inbound_direction_is_rebuilt_as_well() -> None:
+    stats = InternationalPullStats()
+    raw = {
+        ("MTY", date(2026, 4, 1)): {
+            "arrivals": [_leg("AM 57", frm="NRT", to=None, dep="2026-04-01 01:00Z", arr="2026-04-01 13:00Z")],
+            "departures": [_leg("AM 57", frm=None, to="MEX", dep="2026-04-01 14:30Z", arr="2026-04-01 16:10Z")],
+        },
+    }
+
+    frame = normalise(raw, "2026M04", stats=stats, mexican=MEXICAN)
+
+    assert ("NRT", "MEX") in set(zip(frame["origin_iata"], frame["dest_iata"]))
+
+
+def test_offline_refuses_to_buy_a_missing_window(tmp_path) -> None:
+    with pytest.raises(RuntimeError, match="offline"):
+        pull_days(
+            ["MEX"], [date(2026, 4, 1)], period_id="2026M04", cache_dir=tmp_path,
+            api_key="test", direct=True, mexican=MEXICAN, offline=True,
+        )
+
+
+def test_a_through_flight_the_first_board_already_shows_direct_is_not_rebuilt() -> None:
+    """BJX lists Viva's BJX-MTY-IAH flight as BJX-IAH; rebuilding it at MTY would count it twice."""
+
+    stats = InternationalPullStats()
+    raw = {
+        ("MTY", date(2026, 4, 1)): {
+            "arrivals": [_leg("VB 1", frm="GDL", to=None, dep="2026-04-01 04:10Z", arr="2026-04-01 06:05Z")],
+            "departures": [_leg("VB 1", frm=None, to="IAH", dep="2026-04-01 07:35Z", arr="2026-04-01 09:30Z")],
+        },
+    }
+    boards = {"GDL": {"out": {"VB1": {"IAH"}}, "in": {}}}
+
+    frame = normalise(raw, "2026M04", stats=stats, mexican=MEXICAN, boards=boards)
+
+    assert stats.through_legs == 0 and stats.through_already_direct == 1
+    assert set(zip(frame["origin_iata"], frame["dest_iata"])) == {("MTY", "IAH")}
