@@ -2,23 +2,26 @@
 
 Fecha: 21 de septiembre de 2026, ampliado el 22 de septiembre de 2026 con los
 dos crosswalks, la puerta de aceptación internacional, el adaptador al
-contrato del IPF y el plan de captura.
+contrato del IPF y el plan de captura, y el 23 de septiembre de 2026 con la
+primera captura internacional real (2026M04) y su ajuste.
 Estado: documento canónico del método. Describe lo que **ya está en producción**
-para el mercado nacional y **todo el trabajo preparatorio internacional que no
-requiere gastar unidades de API**, ya completado. No autoriza por sí solo
-ninguna publicación, activación de evidencia ni consumo de API.
+para el mercado nacional y el estimador internacional **ajustado sobre una
+captura real, pendiente de revisión humana**. No autoriza por sí solo ninguna
+publicación, activación de evidencia ni consumo de API.
 
-**Veredicto sobre la extensión internacional: todo el trabajo preparatorio
-está terminado; solo falta la primera captura mensual, con presupuesto y
-comandos ya preparados (§9.10) y sin despachar.** Las dos marginales
-internacionales de AFAC describen el mismo universo —cero pasajeros de
-diferencia en los siete meses de 2026 leídos de la misma edición (§9.3)—, la
-semilla fue observada en vivo (§9.6), los dos crosswalks cubren **100 % de las
-rutas y 99.7–99.9 % de las aerolíneas** por pasajeros (§9.5), y la puerta de
-aceptación internacional está escrita, probada y ensayada contra datos reales
-(§9.8). El riesgo abierto y cuantificado sigue siendo el 17.6 % de registros
-con `codeshareStatus` desconocido, medido en vivo el 2026-09-10 (§9.6) y ahora
-con un umbral de rechazo explícito en la puerta (§9.8).
+**Veredicto sobre la extensión internacional: la primera captura mensual
+(2026M04, 1,588 unidades) pasó la puerta con veredicto `review`, el ajuste
+convergió y el contraste fuera de muestra contra T-100 da 6.3 % de error
+ponderado por celda (6.9 % para Aerovías + Connect) (§9.11).** Nada se ha
+publicado: el resultado espera revisión humana antes de tocar el dashboard.
+Las dos marginales internacionales de AFAC describen el mismo universo —cero
+pasajeros de diferencia en los siete meses de 2026 leídos de la misma edición
+(§9.3)—. La captura real destapó y corrigió cuatro problemas que ningún ensayo
+sin datos podía ver: aeropuertos principales mal mapeados, vuelos con escala
+en México, aerolíneas regionales reportadas bajo la marca, y marginales
+mayores que la capacidad visible de sus rutas (§9.11.2). El `codeshareStatus`
+desconocido resultó ser 1.1 % en la captura mensual, no el 17.6 % del sondeo
+de un día (§9.11.1).
 
 Este documento es la referencia que debe leer cualquier agente o persona antes
 de tocar el estimador. Sustituye la reconstrucción del método a partir de
@@ -1003,6 +1006,7 @@ Límites que permanecen aunque todo lo demás salga bien:
 | `data/reference/afac_international_city_overrides.csv` | 54 reglas de crosswalk de ciudad revisadas a mano, con motivo |
 | `data/reference/afac_international_city_iata_crosswalk.csv` | 178 etiquetas de ciudad → 241 aeropuertos, generado |
 | `data/reference/afac_international_carrier_crosswalk.csv` | 62 aerolíneas → IATA/ICAO/`carrier_key`, tres niveles de confianza |
+| `data/reference/afac_international_carrier_families.csv` | Familias revisadas que se ajustan como una columna (`US_NETWORK`, `AVIANCA_GROUP`, `LATAM_GROUP`), con motivo por fila (§9.11.2) |
 | `data/gold/fact_route_traffic.parquet` + `dim_route.parquet` | T-100 |
 | `data/gold/fact_international_route_observations.parquet` | observaciones internacionales retenidas |
 | `data/silver/afac_monthly_stats.parquet` (respaldo privado) | marginal de aerolínea, nacional e internacional |
@@ -1051,13 +1055,14 @@ En este orden. Ninguna etapa autoriza la siguiente por sí sola.
 | 7 | Puerta de aceptación internacional, usando `vuelos` de `REG INT` como contraste | **hecho**, sin API (§9.8): ensayado sobre T-100 real (§9.8.1) |
 | 7b | Adaptador semilla → contrato IPF, agregación Grupo Aeroméxico y exclusión de doble conteo con T-100 | **hecho**, sin API (§9.9) |
 | 7c | Verificación offline de la captura (credencial, reanudación, retención, tope duro) | **hecho**, sin API (§9.10.2) |
-| 8 | Captura mensual de la semilla en los meses que la ventana permita | **pendiente — próximo paso, con API** (§9.10) |
-| 9 | Ajuste, y backtest del subcubo estadounidense con la semilla real | pendiente |
-| 10 | Vista separada de revisión humana antes de tocar el mapa principal | pendiente |
+| 8 | Captura mensual de la semilla en los meses que la ventana permita | **hecho para 2026M04** (§9.11): 1,588 unidades |
+| 9 | Ajuste, y backtest del subcubo estadounidense con la semilla real | **hecho para 2026M04** (§9.11): convergió; 6.3 % de error ponderado contra T-100 |
+| 10 | Vista separada de revisión humana antes de tocar el mapa principal | **pendiente — próximo paso** |
+| 11 | Más meses (mayo–julio) para estabilidad y soporte temporal | pendiente, con API (≈1,600 unidades por mes) |
 
-Las etapas 1 a 7c no consumen unidades y ya están cerradas. La 8 es la única
-que gasta presupuesto y es la que este documento deja **preparada, no
-ejecutada** (§9.10): el operador decide el mes y despacha.
+Las etapas 1 a 9 están cerradas para abril. Ninguna activa nada en el
+dashboard ni en el Analysis Agent: la etapa 10 requiere una instrucción
+explícita separada.
 
 ### 9.10 Plan de captura, listo para ejecutar
 
@@ -1157,7 +1162,13 @@ mismas dos pasadas por despacho manual, con el `ref` del commit revisado
 escrito en el resumen de la corrida y el contenido crudo borrado al terminar
 en un paso `if: always()`.
 
-**Ninguno de los dos se ha despachado.**
+**Ejecutados el 22–23 de septiembre de 2026 desde la sesión**, con
+autorización explícita del operador, tras un canario de 4 unidades (MEX, 1 de
+abril) que confirmó que abril sigue dentro de la ventana histórica: 716 + 868
+unidades, **1,588 en total incluido el canario**, exactamente lo presupuestado.
+Resultados en §9.11. Para repetirlos sin gastar, ambos comandos aceptan
+`--offline`, que reconstruye Silver desde la caché y se niega a comprar
+cualquier ventana ausente.
 
 #### 9.10.4 Qué hace el pipeline automáticamente después de capturar
 
@@ -1171,10 +1182,13 @@ Sin intervención adicional una vez que exista la semilla real:
 3. **`assess_international_seed()`** corre las nueve comprobaciones de §9.8 y
    devuelve un veredicto `accept`/`review`/`reject` con hallazgos explícitos.
    Solo `accept` o `review` continúan.
-4. **`estimate_route_carrier()`** (el IPF ya en producción, §2) ajusta cada
-   aerolínea contra su propio total publicado — Aerovías y Connect por
-   separado, nunca como un bloque contra un total de ruta que pertenece a
-   todas las aerolíneas (§8).
+4. **`fit_international()`** usa el mismo `fit_ipf()` en producción (§2) y
+   ajusta cada aerolínea contra su propio total publicado — Aerovías y Connect
+   por separado, nunca como un bloque contra un total de ruta que pertenece a
+   todas las aerolíneas (§8) —, con tres diferencias explícitas frente al
+   ajuste nacional, cada una reportada por mes (§9.11.3): familias revisadas
+   de aerolíneas que la semilla no separa, tope de una marginal a la
+   capacidad visible de sus rutas, y una columna explícita `SIN_ASIGNAR`.
 5. **`group_aeromexico()`** suma Aerovías + Connect en Grupo Aeroméxico
    **después** del ajuste, conservando el linaje de cada filial (§9.9).
 6. **`observed_cells_to_exclude()`** marca cada celda con
@@ -1196,3 +1210,150 @@ Lo que el pipeline **no** hace solo: la revisión humana. Ningún resultado toca
 `flight_evidence_v1`, no cambia `historically_eligible_at_2026_07_13` y el
 Analysis Agent permanece inactivo, hasta una instrucción explícita separada de
 la captura misma.
+
+### 9.11 Primera captura real: 2026M04
+
+Derivados sin contenido del proveedor, retenidos en el repositorio privado
+bajo `derived/aerodatabox_international/2026M04/` (semilla ruta × operador,
+descartes agregados, estimación, diagnósticos, contraste y sensibilidad, con
+manifiesto SHA-256 y linaje). Para regenerarlos desde la caché, sin gastar:
+
+```
+uv run python -m src.ingest.aerodatabox.international_cli sweep 2026M04 \
+    --airports CUN,GDL,MEX,MTY,PVR,SJD --tag nucleo --offline
+uv run python -m src.ingest.aerodatabox.international_cli sweep 2026M04 --days 7 \
+    --airports ACA,AGU,...,ZLO --tag resto --offline
+uv run python -m src.analytics.international_route_carrier --capture \
+    data/silver/aerodatabox_international_seed_2026M04_nucleo.parquet \
+    data/silver/aerodatabox_international_seed_2026M04_resto.parquet
+```
+
+(La caché cruda solo existe siete días; después, los derivados privados son la
+fuente.)
+
+#### 9.11.1 Puerta: `review`, sin rechazos
+
+| Medida | Valor |
+|---|---:|
+| Cobertura de rutas (pasajeros AFAC) | 99.38 % |
+| Cobertura de aerolíneas (pasajeros AFAC) | 98.74 % |
+| `column_scale` entre las dos marginales cubiertas | 1.0070 |
+| `codeshareStatus = Unknown` | **1.09 %** |
+| Vuelos semilla / vuelos AFAC en rutas comparables | 0.977 |
+| Semilla | 840 rutas × 52 operadores |
+
+Hallazgos de revisión (ninguno de rechazo): 12 rutas con un solo sentido en
+la semilla; 693 vuelos de operadores sin entrada revisada, casi todos
+aviación ejecutiva (Flexjet, VistaJet), carga (AeroUnion 6R, MasAir M7) o
+aerolíneas sin marginal regular en abril (Aer Lingus, Virgin Atlantic,
+Allegiant), que AFAC tampoco cuenta; 32 vuelos de aerolíneas revisadas
+(0.09 %) en aeropuertos sin etiqueta AFAC; 64 rutas con más vuelos en la
+semilla que en AFAC (programación contra operación).
+
+El 17.6 % de codeshare desconocido del sondeo era un artefacto de un solo día
+en dos aeropuertos: en el mes completo es 1.1 %, y la sensibilidad sin esos
+registros mueve el total de Grupo Aeroméxico en 0.00 %.
+
+#### 9.11.2 Lo que la captura real destapó y cómo se corrigió
+
+1. **Aeropuertos principales mal mapeados.** La coincidencia exacta por
+   nombre de ciudad había tomado Le Bourget (LBG) por PARIS, Ilopango (ILS)
+   por SAN SALVADOR, solo DCA por WASHINGTON, solo AEP por BUENOS AIRES y
+   solo HND por TOKYO, porque `dim_airport` registra CDG como Roissy, SAL como
+   San Luis Talpa, IAD como Dulles, EZE como Ezeiza y NRT como Narita. El
+   "100 % de cobertura" de §9.5 medía que cada etiqueta tuviera *algún*
+   aeropuerto, no el correcto. Corregido con once reglas revisadas basadas
+   en los códigos IATA de área metropolitana (PAR, SAL, WAS, BUE, TYO, DFW),
+   y con una comprobación nueva en la puerta, `aeropuertos_sin_ciudad`, que
+   mide los vuelos de aerolíneas revisadas en aeropuertos que el crosswalk no
+   coloca y rechaza por encima del 1 %.
+2. **Vuelos con escala en México.** El vuelo de Aeroméxico a Tokio opera
+   MEX→MTY→NRT con el mismo número; el tablero de MEX solo muestra el tramo
+   nacional, pero AFAC cuenta el vuelo en MEXICO-TOKYO. Lo mismo ocurre con
+   Turkish (MEX–CUN–IST), Hainan y China Southern (vía PVR y SJD) y Viva
+   (vía MTY). El adaptador reconstruye ahora esos pares en el aeropuerto de
+   la escala, emparejando llegada nacional y salida internacional con el
+   mismo número dentro de 8 horas (`THROUGH_CONNECTION_HOURS`), y los omite
+   cuando el tablero del primer aeropuerto ya lista el vuelo hasta su
+   destino final (el proveedor a veces muestra el destino final y no la
+   siguiente escala). 297 vuelos reconstruidos, 9 omitidos por ya estar
+   directos. Columna nueva `via_iata` en el detalle y `through_flights` en la
+   semilla; la comprobación de duplicados admite que un mismo par llegue de
+   dos pasadas solo cuando una de ellas es puramente de escala.
+3. **Regionales reportadas bajo la marca.** AFAC atribuye los pasajeros al
+   operador; el proveedor reporta a SkyWest, Envoy, Mesa y CommutAir bajo
+   United, American, Delta o Alaska, a Lacsa y Taca bajo Avianca, y a las
+   filiales de LATAM bajo LA. SkyWest pedía 789 pasajeros por vuelo visible
+   y Lacsa 4,750, y el IPF no convergía. Esas aerolíneas se ajustan ahora
+   como **familias revisadas** (`data/reference/afac_international_carrier_families.csv`,
+   con motivo por fila): `US_NETWORK`, `AVIANCA_GROUP` y `LATAM_GROUP`, y se
+   publican como la familia. Aerovías y Connect nunca se agrupan (el
+   cargador lo rechaza).
+4. **Crosswalk de aerolínea confirmado con la captura.** Breeze (IATA MX,
+   red CUN–Charleston/Nueva Orleans/Norfolk/Providence), Volaris El Salvador
+   (IATA N3, rutas con San Salvador) y Aerus (sin código IATA, identificada
+   por nombre exacto en el adaptador nacional revisado, observada en
+   MTY–BRO) pasan a `resolved` con esa evidencia. Quedan sin resolver SKY
+   Airline Perú y Orbest (0.11 % de pasajeros). Además, una clave de
+   aerolínea `unresolved` asignada por el adaptador ya no entra a la semilla,
+   y la comprobación de soporte estructural simula ahora la matriz real del
+   ajuste (antes comparaba la semilla consigo misma y no veía una ruta
+   servida solo por una aerolínea sin marginal).
+
+#### 9.11.3 Ajuste: convergió, con tres compromisos visibles
+
+`fit_international()` (`src/analytics/international_route_carrier.py`):
+
+| Medida | 2026M04 |
+|---|---:|
+| Rutas × columnas ajustadas | 792 × 44 |
+| Rutas competidas | 269 |
+| Iteraciones / convergencia | 4,088 / **sí** |
+| Desviación máxima de fila | 4.8 pasajeros |
+| Pasajeros topados por capacidad visible | 7,856 (0.16 %) — TUI Airways 6,946, Aerus 339, resto < 120 |
+| Pasajeros `SIN_ASIGNAR` | 697 (0.015 %) |
+| Equilibrio aplicado a aerolíneas sin tope | 0.9957 |
+
+- **Tope por capacidad visible.** Una aerolínea cuya marginal excede a todos
+  los pasajeros de las rutas en que la semilla la ve se topa al 99.5 % de esa
+  capacidad; el excedente se reporta por aerolínea y no se reparte. TUI
+  Airways es el caso dominante: el proveedor ve solo 8 de sus vuelos en
+  abril, un límite de cobertura de la fuente, no del crosswalk.
+- **`SIN_ASIGNAR`.** Los pasajeros de rutas cubiertas que ninguna aerolínea
+  cubierta puede llevar van a una columna explícita, con soporte en todas
+  las rutas, en vez de inflar uniformemente a todas las aerolíneas.
+- **Tolerancia.** `INTERNATIONAL_TOLERANCE = 1e-6` del total mensual
+  (≈ 5 pasajeros en abril) en vez del 1e-8 nacional: el cubo internacional
+  tiene muchas rutas de un solo operador en su frontera, donde el IPF solo
+  se acerca asintóticamente.
+
+#### 9.11.4 Contraste fuera de muestra contra T-100
+
+T-100 nunca entra al ajuste; se compara después, al grano del ajuste (las
+familias contra su familia), sobre las celdas México–Estados Unidos:
+
+| Conjunto | Celdas | Suma estimada / observada | Error absoluto ponderado | Mediana del error por celda |
+|---|---:|---:|---:|---:|
+| Todas | 785 | 0.997 | **6.3 %** | 3.8 % |
+| Aerovías + Connect | 79 | 1.023 | **6.9 %** | 5.4 % |
+
+62 celdas observadas por T-100 no reciben estimación (10 de ellas de
+Aerovías o Connect): celdas que la semilla no ve y que la marca
+`display_source = observed_t100` cubre con la observación. Es la primera
+medición del error **con** el ruido real de captura; la cota de §10 era sin
+él.
+
+Grupo Aeroméxico: 683,752 pasajeros estimados en 136 rutas dirigidas
+(AFAC publica 686,694 para Aerovías + Connect en abril; la diferencia es la
+parte en rutas no cubiertas y el equilibrio de columnas).
+
+#### 9.11.5 Qué falta antes de publicar
+
+- Revisión humana de la vista separada (etapa 10 de §14): rutas de un solo
+  operador, las 12 rutas con un solo sentido, las familias agrupadas y los
+  topes.
+- Más meses para estabilidad: un mes deja a las rutas de baja frecuencia
+  con semilla de una sola semana en el resto; mayo–julio siguen en la
+  ventana, a ≈ 1,600 unidades cada uno con el mismo workflow.
+- Nada de esto toca `prototypes/vuelos/`, `stage18.py`, `flight_evidence_v1`
+  ni el Analysis Agent.

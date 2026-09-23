@@ -34,6 +34,7 @@ and the gates that follow are in
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import json
 from pathlib import Path
 
 import numpy as np
@@ -59,6 +60,8 @@ UNKNOWN_CODESHARE_REVIEW = 0.05
 # A route seen far more often than AFAC reports is the diagnostic that matters:
 # it means schedule, not operation.
 FLIGHT_RATIO_REVIEW = 1.20
+# Share of captured flights at airports the city crosswalk does not place.
+AIRPORT_UNPLACED_REJECT = 0.01
 
 VERDICT_ACCEPT = "accept"
 VERDICT_REVIEW = "review"
@@ -209,7 +212,13 @@ def build_international_seed(
     )
     # A project carrier_key already assigned by the adapter wins: it encodes the
     # fleet split between Aerovías and Connect that no code can express.
-    known_keys = set(carrier_crosswalk["carrier_key"])
+    # Only reviewed carriers: an unresolved one has no column in the carrier
+    # margin, so a route it alone serves would have no feasible fit.
+    known_keys = set(
+        carrier_crosswalk.loc[
+            carrier_crosswalk["confidence"].isin(USABLE_CONFIDENCE), "carrier_key"
+        ]
+    )
     frame["carrier_key"] = np.where(
         frame["operator_key"].isin(known_keys),
         frame["operator_key"],
@@ -311,8 +320,17 @@ def assess_international_seed(
         )
 
     # 1. Duplicates.  Two rows for one leg double its weight inside its route.
+    # Two passes may both reach one pair legitimately: a direct flight on the
+    # first airport's board and a different flight through a Mexican stop
+    # rebuilt on the stop's board.  Anything else seen twice is one leg twice.
     keys = ["period_id", "origin_iata", "dest_iata", "operator_key"]
-    duplicated = int(period_capture.duplicated(subset=keys).sum())
+    through = (
+        period_capture["through_flights"]
+        if "through_flights" in period_capture
+        else pd.Series(0.0, index=period_capture.index)
+    )
+    direct_rows = period_capture[~np.isclose(through, period_capture["flights"])]
+    duplicated = int(direct_rows.duplicated(subset=keys).sum())
     if duplicated:
         findings.append(
             Finding(
@@ -379,6 +397,35 @@ def assess_international_seed(
                 "operadores_sin_revisar", "review",
                 f"{unmapped:,.0f} vuelos de operadores sin entrada revisada en el crosswalk",
                 unmapped,
+            )
+        )
+
+    # A captured airport the city crosswalk does not place.  Coverage cannot
+    # see this when the city has another, mapped airport: the route keeps
+    # passengers but loses part of its supply, and its proportions tilt.
+    period_rejected = rejected[rejected["period_id"] == period_id]
+    # Only reviewed carriers count: a private jet to Van Nuys is outside AFAC's
+    # scheduled universe whether or not its airport is placed.
+    placeless = period_rejected[
+        (period_rejected["rejection_reason"] == "aeropuerto sin ciudad AFAC")
+        & period_rejected["carrier_key"].notna()
+        & (period_rejected["carrier_key"].astype(str) != "")
+    ]
+    placeless_flights = float(placeless["flights"].sum())
+    captured_flights = float(period_seed["weight"].sum()) + placeless_flights
+    if placeless_flights and captured_flights:
+        share = placeless_flights / captured_flights
+        unplaced = set(placeless.loc[placeless["origin_city"].isna(), "origin_iata"]) | set(
+            placeless.loc[placeless["dest_city"].isna(), "dest_iata"]
+        )
+        airports = ", ".join(sorted(unplaced))
+        findings.append(
+            Finding(
+                "aeropuertos_sin_ciudad",
+                "reject" if share > AIRPORT_UNPLACED_REJECT else "review",
+                f"{placeless_flights:,.0f} vuelos de aerolineas revisadas ({share:.2%}) "
+                f"en aeropuertos sin ciudad AFAC: {airports}",
+                share,
             )
         )
 
@@ -469,24 +516,27 @@ def assess_international_seed(
         )
 
     # 8. Structural support, checked before the fit rather than by its failure.
-    supply_by_route = period_seed.groupby("route_key")["weight"].sum()
-    starved_routes = sorted(
-        set(covered_routes.loc[covered_routes["passengers"] > 0, "route_key"])
-        - set(supply_by_route[supply_by_route > 0].index)
-    )
+    # The fit keeps only the routes and carriers that carry a margin, so the
+    # supply that counts is the supply between those two sets -- not the seed.
+    margin_routes = set(covered_routes.loc[covered_routes["passengers"] > 0, "route_key"])
+    margin_carriers = set(covered_carriers.loc[covered_carriers["passengers"] > 0, "carrier_key"])
+    fitted = period_seed[
+        period_seed["route_key"].isin(margin_routes)
+        & period_seed["carrier_key"].isin(margin_carriers)
+    ]
+    supply_by_route = fitted.groupby("route_key")["weight"].sum()
+    starved_routes = sorted(margin_routes - set(supply_by_route[supply_by_route > 0].index))
     if starved_routes:
         findings.append(
             Finding(
                 "soporte_inviable_rutas", "reject",
-                f"{len(starved_routes)} rutas con pasajeros y sin oferta en la semilla",
+                f"{len(starved_routes)} rutas con pasajeros y sin oferta de una aerolinea "
+                f"con marginal: {', '.join(starved_routes[:5])}",
                 float(len(starved_routes)),
             )
         )
-    supply_by_carrier = period_seed.groupby("carrier_key")["weight"].sum()
-    starved_carriers = sorted(
-        set(covered_carriers.loc[covered_carriers["passengers"] > 0, "carrier_key"])
-        - set(supply_by_carrier[supply_by_carrier > 0].index)
-    )
+    supply_by_carrier = fitted.groupby("carrier_key")["weight"].sum()
+    starved_carriers = sorted(margin_carriers - set(supply_by_carrier[supply_by_carrier > 0].index))
     if starved_carriers:
         findings.append(
             Finding(
@@ -565,6 +615,179 @@ def group_aeromexico(estimate: pd.DataFrame) -> pd.DataFrame:
     return pd.concat([estimate, grouped], ignore_index=True)
 
 
+FAMILY_FILE = "afac_international_carrier_families.csv"
+UNALLOCATED = "SIN_ASIGNAR"
+UNALLOCATED_SEED_SHARE = 0.01
+# A cap exactly at capacity leaves the solution on its boundary, which IPF
+# only approaches asymptotically; half a per cent keeps it interior.
+CAPACITY_CAP_SHARE = 0.995
+# The international cube has many single-carrier routes sitting at their bound,
+# where IPF approaches the solution only asymptotically.  One millionth of the
+# month (about five passengers in April 2026) is immaterial and reachable; the
+# domestic 1e-8 (a twentieth of a passenger) is not.
+INTERNATIONAL_TOLERANCE = 1e-6
+PROTECTED_FROM_POOLING = frozenset({"AEROMEXICO", "AEROMEXICO_CONNECT"})
+
+
+def load_carrier_families(reference_dir: Path | None = None) -> pd.DataFrame:
+    """Reviewed pools of carriers the seed cannot tell apart.
+
+    AFAC attributes passengers to the operating carrier; the provider reports
+    many regional flights under the marketing brand.  Where the two cannot be
+    reconciled from the seed, the carriers are fitted as one column and
+    published as that family.  Aerovías and Connect are never pooled.
+    """
+
+    from src.config import PATHS
+
+    reference = reference_dir or PATHS.data / "reference"
+    families = pd.read_csv(reference / FAMILY_FILE)
+    pooled = set(families["carrier_key"]) & PROTECTED_FROM_POOLING
+    if pooled:
+        raise ValueError(f"these carriers are never pooled: {sorted(pooled)}")
+    if families["carrier_key"].duplicated().any():
+        raise ValueError("a carrier belongs to two families")
+    return families
+
+
+def _pool(frame: pd.DataFrame, families: pd.DataFrame) -> pd.DataFrame:
+    mapping = dict(zip(families["carrier_key"], families["fit_key"]))
+    return frame.assign(carrier_key=frame["carrier_key"].map(lambda key: mapping.get(key, key)))
+
+
+def fit_international(
+    seed: pd.DataFrame,
+    route_totals: pd.DataFrame,
+    carrier_totals: pd.DataFrame,
+    families: pd.DataFrame,
+    *,
+    tolerance: float = INTERNATIONAL_TOLERANCE,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Fit each month's international cube, keeping every compromise visible.
+
+    Three departures from the domestic fit, each reported per month:
+
+    - carriers the seed cannot separate are pooled into their reviewed family;
+    - a carrier whose margin exceeds every passenger on the routes it is seen
+      on is capped at that capacity, and the excess is reported, not spread;
+    - passengers on covered routes that no covered carrier can carry go to an
+      explicit ``SIN_ASIGNAR`` column instead of inflating every carrier.
+    """
+
+    from src.analytics.route_carrier import ESTIMATOR_VERSION, fit_ipf
+
+    pooled_seed = _pool(seed, families)
+    pooled_totals = _pool(carrier_totals, families)
+    labels = dict(zip(families["fit_key"], families["fit_label"]))
+
+    estimates: list[pd.DataFrame] = []
+    diagnostics: list[dict[str, object]] = []
+    for period_id in sorted(set(pooled_seed["period_id"])):
+        period_seed = pooled_seed[pooled_seed["period_id"] == period_id]
+        rows = route_totals[
+            (route_totals["period_id"] == period_id)
+            & route_totals["route_key"].isin(period_seed["route_key"])
+            & (route_totals["passengers"] > 0)
+        ]
+        columns = pooled_totals[
+            (pooled_totals["period_id"] == period_id)
+            & pooled_totals["carrier_key"].isin(period_seed["carrier_key"])
+            & (pooled_totals["passengers"] > 0)
+        ]
+        if rows.empty or columns.empty:
+            diagnostics.append({"period_id": period_id, "reason": "no_overlap"})
+            continue
+
+        route_index = pd.Index(sorted(rows["route_key"].unique()), name="route_key")
+        carrier_index = pd.Index(sorted(columns["carrier_key"].unique()), name="carrier_key")
+        matrix = (
+            period_seed.pivot_table(
+                index="route_key", columns="carrier_key", values="weight",
+                aggfunc="sum", fill_value=0.0,
+            )
+            .reindex(index=route_index, columns=carrier_index)
+            .fillna(0.0)
+            .to_numpy()
+        )
+        route_targets = rows.groupby("route_key")["passengers"].sum().reindex(route_index).to_numpy()
+        published = (
+            columns.groupby("carrier_key")["passengers"].sum().reindex(carrier_index).to_numpy()
+        )
+        capacity = np.array(
+            [route_targets[matrix[:, j] > 0].sum() for j in range(matrix.shape[1])]
+        )
+        is_capped = published > capacity * CAPACITY_CAP_SHARE
+        carrier_targets = np.where(is_capped, capacity * CAPACITY_CAP_SHARE, published)
+        capped = pd.Series(published - carrier_targets, index=carrier_index)
+        # The room a capped carrier leaves on its own routes can only be taken
+        # by the unallocated column, so it is reserved there.  Any balancing
+        # between the two margins falls on the uncapped carriers alone: scaling
+        # a capped one would reopen the gap it was capped to close.
+        rows_total = float(route_targets.sum())
+        reserve = float((capacity - carrier_targets)[is_capped].sum())
+        unallocated = max(rows_total - float(carrier_targets.sum()), reserve)
+        uncapped_total = float(carrier_targets[~is_capped].sum())
+        balance = (
+            (rows_total - unallocated - float(carrier_targets[is_capped].sum())) / uncapped_total
+            if uncapped_total
+            else 1.0
+        )
+        carrier_targets = np.where(is_capped, carrier_targets, carrier_targets * balance)
+
+        full_seed = np.column_stack([matrix, matrix.sum(axis=1) * UNALLOCATED_SEED_SHARE])
+        full_targets = np.append(carrier_targets, unallocated)
+        result = fit_ipf(full_seed, route_targets, full_targets, tolerance=tolerance)
+
+        keys = [*carrier_index, UNALLOCATED]
+        tidy = (
+            pd.DataFrame(result.matrix, index=route_index, columns=keys)
+            .stack()
+            .rename("passengers_estimated")
+            .reset_index()
+            .rename(columns={"level_1": "carrier_key"})
+        )
+        tidy = tidy[tidy["passengers_estimated"] > 0.5].copy()
+        carriers_per_route = (matrix > 0).sum(axis=1)
+        tidy["period_id"] = period_id
+        tidy["is_single_operator_seed"] = tidy["route_key"].map(
+            dict(zip(route_index, carriers_per_route == 1))
+        )
+        tidy["is_pooled_family"] = tidy["carrier_key"].isin(set(families["fit_key"]))
+        tidy["carrier_label"] = tidy["carrier_key"].map(labels)
+        tidy["is_exact"] = False
+        tidy["estimator_version"] = f"{ESTIMATOR_VERSION}+international_families_v1"
+        estimates.append(tidy)
+
+        diagnostics.append(
+            {
+                "period_id": period_id,
+                "routes": int(route_index.size),
+                "carriers": int(carrier_index.size),
+                "competitive_routes": int((carriers_per_route >= 2).sum()),
+                "iterations": result.iterations,
+                "converged": result.converged,
+                "max_row_deviation": result.max_row_deviation,
+                "max_col_deviation": result.max_col_deviation,
+                "column_scale": result.column_scale,
+                "uncapped_balance": balance,
+                "passengers_capped": float(capped.sum()),
+                "capped_carriers": ", ".join(
+                    f"{key} {value:,.0f}" for key, value in capped[capped > 0.5].sort_values(ascending=False).items()
+                ),
+                "passengers_unallocated": unallocated,
+                "unallocated_share": unallocated / float(route_targets.sum()),
+                "reason": "",
+            }
+        )
+
+    columns = [
+        "period_id", "route_key", "carrier_key", "carrier_label", "passengers_estimated",
+        "is_exact", "is_single_operator_seed", "is_pooled_family", "estimator_version",
+    ]
+    estimate = pd.concat(estimates, ignore_index=True)[columns] if estimates else pd.DataFrame(columns=columns)
+    return estimate, pd.DataFrame(diagnostics)
+
+
 def observed_cells_to_exclude(
     estimate: pd.DataFrame, observed: pd.DataFrame
 ) -> pd.DataFrame:
@@ -610,8 +833,32 @@ def format_report(report: AcceptanceReport) -> str:
 # A rehearsal on real data, with no capture and no API units
 # --------------------------------------------------------------------------
 
+def capture_from_sweep(frames: list[pd.DataFrame]) -> pd.DataFrame:
+    """Read the sweep's seed files into the capture contract.
+
+    The sweep keeps an unreviewed operator under its published identity as
+    ``IATA:XX`` or ``ICAO:XXX``; the code is recovered from that key so the
+    crosswalk, not the adapter, decides which carrier it is.
+    """
+
+    frame = pd.concat(
+        [part.assign(capture_pass=number) for number, part in enumerate(frames)],
+        ignore_index=True,
+    )
+    if "through_flights" not in frame:
+        frame["through_flights"] = 0.0
+    frame["through_flights"] = frame["through_flights"].fillna(0.0)
+    key = frame["operator_key"].astype(str)
+    frame["operator_iata"] = key.str.extract(r"^IATA:(.+)$")[0].fillna("")
+    frame["operator_icao"] = key.str.extract(r"^ICAO:(.+)$")[0].fillna("")
+    return frame
+
+
 def t100_substitute_capture(
-    period_ids: tuple[str, ...], *, gold_dir: Path | None = None
+    period_ids: tuple[str, ...],
+    *,
+    gold_dir: Path | None = None,
+    measure: str = "departures_performed",
 ) -> pd.DataFrame:
     """Shape T-100 into the capture contract, as a stand-in for a real seed.
 
@@ -630,6 +877,8 @@ def t100_substitute_capture(
 
     from src.config import PATHS
 
+    if measure not in {"departures_performed", "passengers"}:
+        raise ValueError(f"unsupported T-100 measure: {measure!r}")
     gold = gold_dir or PATHS.gold
     placeholders = ", ".join("?" for _ in period_ids)
     query = f"""
@@ -637,12 +886,12 @@ def t100_substitute_capture(
                r.origin_iata,
                r.dest_iata,
                f.carrier_key AS operator_key,
-               SUM(f.departures_performed) AS flights
+               SUM(f.{measure}) AS flights
         FROM read_parquet(?) f
         JOIN read_parquet(?) r USING (route_key)
         WHERE r.is_transborder_us
           AND f.period_id IN ({placeholders})
-          AND f.departures_performed > 0
+          AND f.{measure} > 0
         GROUP BY 1, 2, 3, 4
     """
     connection = duckdb.connect()
@@ -674,6 +923,133 @@ def t100_substitute_capture(
     return frame
 
 
+def t100_backtest(estimate: pd.DataFrame, observed: pd.DataFrame) -> pd.DataFrame:
+    """Compare fitted cells with the cells T-100 observes, one row per cell.
+
+    ``observed`` carries ``period_id, route_key, carrier_key,
+    passengers_observed``.  A cell T-100 observes and the fit left empty is
+    kept with a zero estimate: missing supply is an error, not an exclusion.
+    """
+
+    fitted = estimate[~estimate["carrier_key"].isin({"AEROMEXICO_GROUP", UNALLOCATED})]
+    keys = ["period_id", "route_key", "carrier_key"]
+    joined = observed.merge(
+        fitted[[*keys, "passengers_estimated"]], on=keys, how="left"
+    )
+    joined["passengers_estimated"] = joined["passengers_estimated"].fillna(0.0)
+    joined["error"] = joined["passengers_estimated"] - joined["passengers_observed"]
+    return joined
+
+
+def summarise_backtest(cells: pd.DataFrame) -> dict[str, float]:
+    """Weighted error measures; cells are weighted by what T-100 observed."""
+
+    observed = float(cells["passengers_observed"].sum())
+    if observed <= 0:
+        return {"cells": 0, "observed": 0.0}
+    absolute = cells["error"].abs()
+    relative = absolute / cells["passengers_observed"]
+    return {
+        "cells": int(len(cells)),
+        "observed": observed,
+        "estimated": float(cells["passengers_estimated"].sum()),
+        "sum_ratio": float(cells["passengers_estimated"].sum()) / observed,
+        "weighted_abs_error": float(absolute.sum()) / observed,
+        "median_abs_pct_error": float(relative.median()),
+        "cells_missing_from_fit": int((cells["passengers_estimated"] == 0).sum()),
+    }
+
+
+def codeshare_sensitivity(
+    seed: pd.DataFrame,
+    route_totals: pd.DataFrame,
+    carrier_totals: pd.DataFrame,
+    families: pd.DataFrame,
+) -> pd.DataFrame:
+    """Refit without the flights whose operating status the provider guessed.
+
+    The gap between the two fits, route by route, is how much of the answer
+    rests on ``codeshareStatus = Unknown`` rather than on a declared operator.
+    """
+
+    base, _ = fit_international(seed, route_totals, carrier_totals, families)
+    declared = seed.assign(weight=seed["weight"] - seed["codeshare_unknown"])
+    declared = declared[declared["weight"] > 0]
+    alternative, _ = fit_international(declared, route_totals, carrier_totals, families)
+    keys = ["period_id", "route_key", "carrier_key"]
+    compared = base.merge(
+        alternative[[*keys, "passengers_estimated"]],
+        on=keys, how="outer", suffixes=("", "_declared_only"),
+    ).fillna({"passengers_estimated": 0.0, "passengers_estimated_declared_only": 0.0})
+    return compared
+
+
+def run_capture(
+    capture: pd.DataFrame,
+    *,
+    routes: pd.DataFrame,
+    carrier_margin: pd.DataFrame,
+    cities: pd.DataFrame,
+    carriers: pd.DataFrame,
+    observed_capture: pd.DataFrame | None,
+    families: pd.DataFrame,
+) -> dict[str, object]:
+    """Gate, fit, group and diagnose one real capture; publish nothing.
+
+    The fit runs only for months the gate does not refuse.  T-100 enters after
+    the fit, as the observation the estimate is measured against and as the
+    source that will be displayed where it exists -- never as seed or margin.
+    """
+
+    seed, rejected = build_international_seed(capture, cities, carriers)
+    route_totals, carrier_totals = build_international_margins(routes, carrier_margin, carriers)
+    flights = afac_route_flights(routes)
+
+    reports = {
+        period_id: assess_international_seed(
+            capture, seed, rejected, route_totals, carrier_totals, flights, carriers,
+            period_id=period_id,
+        )
+        for period_id in sorted(capture["period_id"].unique())
+    }
+    usable = [period_id for period_id, report in reports.items() if report.usable]
+    fit_seed = seed[seed["period_id"].isin(usable)]
+    estimate, diagnostics = fit_international(fit_seed, route_totals, carrier_totals, families)
+
+    observed = pd.DataFrame(
+        columns=["period_id", "route_key", "carrier_key", "passengers_observed"]
+    )
+    if observed_capture is not None and not observed_capture.empty:
+        observed_seed, _ = build_international_seed(observed_capture, cities, carriers)
+        observed = observed_seed.rename(columns={"weight": "passengers_observed"})[
+            ["period_id", "route_key", "carrier_key", "passengers_observed"]
+        ]
+        observed = observed[observed["period_id"].isin(usable)]
+        # Compared at the fit's own grain: a pooled family against its pool.
+        observed = (
+            _pool(observed, families)
+            .groupby(["period_id", "route_key", "carrier_key"], as_index=False)["passengers_observed"]
+            .sum()
+        )
+
+    grouped = observed_cells_to_exclude(group_aeromexico(estimate), observed)
+    backtest = t100_backtest(estimate, observed) if not observed.empty else pd.DataFrame()
+    sensitivity = (
+        codeshare_sensitivity(fit_seed, route_totals, carrier_totals, families)
+        if not fit_seed.empty
+        else pd.DataFrame()
+    )
+    return {
+        "seed": seed,
+        "rejected": rejected,
+        "reports": reports,
+        "estimate": grouped,
+        "diagnostics": diagnostics,
+        "backtest": backtest,
+        "sensitivity": sensitivity,
+    }
+
+
 def main(argv: list[str] | None = None) -> int:  # pragma: no cover - manual entry
     import argparse
 
@@ -690,6 +1066,15 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - manual ent
         "--periods", default="2026M01,2026M02,2026M03,2026M04,2026M05",
         help="months to rehearse; only months T-100 already covers",
     )
+    parser.add_argument(
+        "--capture", nargs="+", type=Path, default=None,
+        help="seed parquet files written by the international sweep; one month's "
+        "passes together (e.g. the nucleo and resto files)",
+    )
+    parser.add_argument(
+        "--out", type=Path, default=None,
+        help="directory for the local, unpublished outputs of --capture",
+    )
     args = parser.parse_args(argv)
     periods = tuple(period.strip() for period in args.periods.split(",") if period.strip())
 
@@ -698,6 +1083,9 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - manual ent
     carrier_margin = pd.read_csv(reference / CARRIER_MARGIN_FILE)
     cities = pd.read_csv(reference / CITY_CROSSWALK_FILE)
     carriers = pd.read_csv(reference / CARRIER_CROSSWALK_FILE).fillna("")
+
+    if args.capture:
+        return _main_capture(args, routes, carrier_margin, cities, carriers)
 
     capture = t100_substitute_capture(periods)
     seed, rejected = build_international_seed(capture, cities, carriers)
@@ -722,6 +1110,139 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - manual ent
         )
         print(format_report(report))
         print()
+    return 0
+
+
+def _main_capture(args, routes, carrier_margin, cities, carriers) -> int:  # pragma: no cover
+    from src.config import PATHS
+
+    capture = capture_from_sweep([pd.read_parquet(path) for path in args.capture])
+    periods = tuple(sorted(capture["period_id"].unique()))
+    try:
+        observed_capture = t100_substitute_capture(periods, measure="passengers")
+    except Exception as error:  # T-100 Gold may be absent in a cloud clone
+        print(f"T-100 no disponible para el contraste: {error}")
+        observed_capture = None
+
+    result = run_capture(
+        capture, routes=routes, carrier_margin=carrier_margin, cities=cities,
+        carriers=carriers, observed_capture=observed_capture,
+        families=load_carrier_families(),
+    )
+    seed, rejected = result["seed"], result["rejected"]
+    print("CAPTURA REAL de AeroDataBox. Nada se publica ni se activa.\n")
+    print(
+        f"capture: {len(capture):,} filas  ->  seed: {len(seed):,} filas, "
+        f"{len(rejected):,} descartadas"
+    )
+    if not rejected.empty:
+        weight = rejected.groupby("rejection_reason")["flights"].sum().round(1)
+        print("  vuelos descartados por motivo: " + str(weight.to_dict()))
+        unmapped = rejected[rejected["rejection_reason"] == "operador sin carrier_key revisado"]
+        if not unmapped.empty:
+            top = unmapped.groupby("operator_key")["flights"].sum().sort_values(ascending=False)
+            print("  operadores sin revisar: " + str(top.head(15).round(1).to_dict()))
+    print()
+    for report in result["reports"].values():
+        print(format_report(report))
+        print()
+
+    diagnostics = result["diagnostics"]
+    if not diagnostics.empty:
+        print("IPF:")
+        print(diagnostics.to_string(index=False))
+        print()
+
+    estimate = result["estimate"]
+    group = estimate[estimate["carrier_key"] == "AEROMEXICO_GROUP"]
+    if not group.empty:
+        print(
+            f"Grupo Aeromexico: {group['passengers_estimated'].sum():,.0f} pasajeros "
+            f"estimados en {group['route_key'].nunique()} rutas"
+        )
+        shown = estimate[estimate["carrier_key"] != "AEROMEXICO_GROUP"]
+        print(
+            "  celdas por fuente a mostrar: "
+            + str(shown["display_source"].value_counts().to_dict())
+        )
+        print()
+
+    backtest = result["backtest"]
+    if not backtest.empty:
+        print("Contraste con T-100 (celdas Mexico-EE. UU., fuera del ajuste):")
+        for key, value in summarise_backtest(backtest).items():
+            print(f"  {key:24s} {value:,.4f}" if isinstance(value, float) else f"  {key:24s} {value:,}")
+        own = backtest[backtest["carrier_key"].isin({"AEROMEXICO", "AEROMEXICO_CONNECT"})]
+        if not own.empty:
+            print("  solo Aerovias + Connect:")
+            for key, value in summarise_backtest(own).items():
+                print(f"    {key:22s} {value:,.4f}" if isinstance(value, float) else f"    {key:22s} {value:,}")
+        print()
+
+    sensitivity = result["sensitivity"]
+    if not sensitivity.empty:
+        own = sensitivity[sensitivity["carrier_key"].isin({"AEROMEXICO", "AEROMEXICO_CONNECT"})]
+        base = float(own["passengers_estimated"].sum())
+        alt = float(own["passengers_estimated_declared_only"].sum())
+        routes_changed = (
+            own.groupby("route_key")[["passengers_estimated", "passengers_estimated_declared_only"]]
+            .sum()
+        )
+        shift = (
+            (routes_changed.iloc[:, 1] - routes_changed.iloc[:, 0]).abs()
+            / routes_changed.iloc[:, 0].where(routes_changed.iloc[:, 0] > 0)
+        )
+        print("Sensibilidad (sin registros con codeshareStatus=Unknown):")
+        print(f"  Grupo Aeromexico total   {base:,.0f} -> {alt:,.0f} ({alt / base - 1:+.2%})")
+        print(f"  cambio mediano por ruta  {shift.median():.2%}")
+        print(f"  rutas con cambio >10%    {int((shift > 0.10).sum())} de {int(shift.notna().sum())}")
+        print()
+
+    out = args.out or PATHS.silver / "international_route_carrier"
+    out.mkdir(parents=True, exist_ok=True)
+    stem = "_".join(periods)
+    estimate.to_parquet(out / f"estimate_{stem}.parquet", index=False)
+    diagnostics.to_parquet(out / f"diagnostics_{stem}.parquet", index=False)
+    rejected.to_parquet(out / f"rejected_{stem}.parquet", index=False)
+    if not backtest.empty:
+        backtest.to_parquet(out / f"t100_backtest_{stem}.parquet", index=False)
+    if not sensitivity.empty:
+        sensitivity.to_parquet(out / f"sensitivity_{stem}.parquet", index=False)
+    seed.to_parquet(out / f"seed_{stem}.parquet", index=False)
+    capture.to_parquet(out / f"capture_{stem}.parquet", index=False)
+    summary = {
+        "acceptance": {
+            period_id: {
+                "verdict": report.verdict,
+                "acceptance_version": report.acceptance_version,
+                "route_passenger_coverage": report.route_passenger_coverage,
+                "carrier_passenger_coverage": report.carrier_passenger_coverage,
+                "column_scale": report.column_scale,
+                "unknown_codeshare_share": report.unknown_codeshare_share,
+                "status_incomplete_share": report.status_incomplete_share,
+                "seed_routes": report.seed_routes,
+                "seed_carriers": report.seed_carriers,
+                "findings": [
+                    {"code": f.code, "severity": f.severity, "detail": f.detail, "value": f.value}
+                    for f in report.findings
+                ],
+            }
+            for period_id, report in result["reports"].items()
+        },
+        "fit": diagnostics.to_dict(orient="records"),
+        "t100_backtest": summarise_backtest(backtest) if not backtest.empty else None,
+        "t100_backtest_aeromexico": (
+            summarise_backtest(
+                backtest[backtest["carrier_key"].isin({"AEROMEXICO", "AEROMEXICO_CONNECT"})]
+            )
+            if not backtest.empty
+            else None
+        ),
+    }
+    (out / f"summary_{stem}.json").write_text(
+        json.dumps(summary, indent=2, ensure_ascii=False, default=float)
+    )
+    print(f"Salidas locales, sin publicar: {out}")
     return 0
 
 

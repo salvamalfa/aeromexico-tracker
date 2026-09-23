@@ -49,7 +49,7 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import json
 from pathlib import Path
 import time
@@ -93,6 +93,10 @@ FLIGHT_COLUMNS = (
     "operator_icao",
     "operator_name",
     "aircraft_model",
+    # The Mexican airport a through flight stops at, or empty for a direct
+    # leg.  AFAC counts a flight MEX-MTY-NRT on MEXICO-TOKYO as well as on
+    # MONTERREY-TOKYO, so the seed has to carry both.
+    "via_iata",
     "flights",
     # Two diagnostics the acceptance gate needs and that cannot be recovered
     # later: once the provider's raw responses expire, nothing else records how
@@ -131,6 +135,8 @@ class InternationalPullStats(PullStats):
     aeromexico_unsplit: int = 0
     arrivals_seen: int = 0
     departures_seen: int = 0
+    through_legs: int = 0
+    through_already_direct: int = 0
 
 
 def _strip_accents(text: str) -> str:
@@ -316,6 +322,147 @@ def _keep(flight: dict, stats: InternationalPullStats) -> bool:
     return True
 
 
+# A domestic leg and an international leg with one flight number form one
+# through flight only if the aircraft turns around within this window.
+THROUGH_CONNECTION_HOURS = 8
+
+
+def _utc(movement: dict | None) -> datetime | None:
+    stamp = (((movement or {}).get("scheduledTime")) or {}).get("utc")
+    if not stamp:
+        return None
+    try:
+        return datetime.strptime(stamp, "%Y-%m-%d %H:%MZ")
+    except ValueError:
+        return None
+
+
+def _number(flight: dict) -> str:
+    return str(flight.get("number") or "").replace(" ", "").upper()
+
+
+def board_index(cache_dir: Path, period_id: str) -> dict[str, dict[str, dict[str, set[str]]]]:
+    """What every cached board of the month says each flight number connects to.
+
+    ``index[airport]["out"][number]`` is the set of destinations the airport's
+    departure board lists for that number, ``["in"]`` the origins its arrival
+    board lists.  The provider sometimes lists a through flight's final
+    endpoint rather than its next stop, and when it does the flight is already
+    counted directly and must not be rebuilt a second time.
+    """
+
+    year, month = int(period_id[:4]), int(period_id[5:])
+    prefix = f"{year:04d}-{month:02d}-"
+    index: dict[str, dict[str, dict[str, set[str]]]] = {}
+    for path in sorted(cache_dir.glob("*_both.json")):
+        airport, start, _ = path.stem.split("_", 2)
+        if not start.startswith(prefix):
+            continue
+        payload = json.loads(path.read_text())
+        entry = index.setdefault(airport, {"out": {}, "in": {}})
+        for flight in payload.get("departures") or []:
+            other = _endpoint(flight.get("arrival"))
+            if other and _number(flight):
+                entry["out"].setdefault(_number(flight), set()).add(other)
+        for flight in payload.get("arrivals") or []:
+            other = _endpoint(flight.get("departure"))
+            if other and _number(flight):
+                entry["in"].setdefault(_number(flight), set()).add(other)
+    return index
+
+
+def _through_rows(
+    raw: dict,
+    period_id: str,
+    *,
+    stats: InternationalPullStats,
+    mexican: frozenset[str],
+    day_weights: dict[date, float] | None,
+    boards: dict[str, dict[str, dict[str, set[str]]]] | None = None,
+) -> list[tuple]:
+    """International origin-destination pairs flown through a Mexican stop.
+
+    Aeroméxico's Tokyo flight leaves Mexico City as a domestic leg to
+    Monterrey and continues to Narita under the same number.  Mexico City's
+    board shows only MEX-MTY, which is dropped as domestic, yet AFAC counts
+    the flight on MEXICO-TOKYO.  Both legs are visible at the stop itself --
+    the domestic arrival and the international departure, or the reverse --
+    so the pair is rebuilt there, from the stop's own records, and weighted
+    like the international leg it continues.
+    """
+
+    by_airport: dict[str, list[tuple[str, dict, float]]] = {}
+    for key, payload in raw.items():
+        swept, day = key if isinstance(key, tuple) else (key, None)
+        weight = 1.0 if day_weights is None else float(day_weights.get(day, 1.0))
+        bucket = by_airport.setdefault(str(swept).strip().upper(), [])
+        bucket.extend(("departure", f, weight) for f in payload.get("departures") or [])
+        bucket.extend(("arrival", f, weight) for f in payload.get("arrivals") or [])
+
+    window = timedelta(hours=THROUGH_CONNECTION_HOURS)
+    rows: list[tuple] = []
+    for stop, records in by_airport.items():
+        if stop not in mexican:
+            continue
+        domestic_in: dict[str, list[tuple[datetime, str]]] = {}
+        domestic_out: dict[str, list[tuple[datetime, str]]] = {}
+        for arrow, flight, _ in records:
+            if arrow == "arrival":
+                other, when = _endpoint(flight.get("departure")), _utc(flight.get("arrival"))
+                bucket = domestic_in
+            else:
+                other, when = _endpoint(flight.get("arrival")), _utc(flight.get("departure"))
+                bucket = domestic_out
+            if other in mexican and other != stop and when is not None and _number(flight):
+                bucket.setdefault(_number(flight), []).append((when, other))
+
+        for arrow, flight, weight in records:
+            if arrow == "departure":
+                foreign, when = _endpoint(flight.get("arrival")), _utc(flight.get("departure"))
+                candidates = domestic_in.get(_number(flight), [])
+                matches = [a for t, a in candidates if when and timedelta(0) < when - t <= window]
+            else:
+                foreign, when = _endpoint(flight.get("departure")), _utc(flight.get("arrival"))
+                candidates = domestic_out.get(_number(flight), [])
+                matches = [a for t, a in candidates if when and timedelta(0) < t - when <= window]
+            if foreign is None or foreign in mexican or not matches:
+                continue
+            if not _keep(flight, stats):
+                continue
+            operator = _operator(flight, stats)
+            if operator is None:
+                continue
+            operator_key, iata, icao, name = operator
+            mexican_end = matches[0]
+            side = "out" if arrow == "departure" else "in"
+            listed = ((boards or {}).get(mexican_end, {}).get(side, {})).get(_number(flight), set())
+            if foreign in listed:
+                # The first airport's own board already shows this flight to
+                # its final endpoint, so it was counted there directly.
+                stats.through_already_direct += 1
+                continue
+            origin, dest = (mexican_end, foreign) if arrow == "departure" else (foreign, mexican_end)
+            status = str(flight.get("status") or "").strip().lower()
+            stats.through_legs += 1
+            rows.append(
+                (
+                    period_id,
+                    origin,
+                    dest,
+                    operator_key,
+                    iata,
+                    icao,
+                    name,
+                    str((flight.get("aircraft") or {}).get("model") or ""),
+                    stop,
+                    weight,
+                    weight if flight.get("codeshareStatus") == UNKNOWN_CODESHARE else 0.0,
+                    weight if status not in COMPLETED_STATUSES else 0.0,
+                )
+            )
+    return rows
+
+
 def normalise(
     raw: dict,
     period_id: str,
@@ -323,6 +470,7 @@ def normalise(
     stats: InternationalPullStats,
     mexican: frozenset[str],
     day_weights: dict[date, float] | None = None,
+    boards: dict[str, dict[str, dict[str, set[str]]]] | None = None,
 ) -> pd.DataFrame:
     """Turn cached both-direction payloads into international route counts.
 
@@ -341,7 +489,7 @@ def normalise(
     month is worth its units where the window still allows one.
     """
 
-    rows: list[tuple[str, str, str, str, str, str, str, str, float, float, float]] = []
+    rows: list[tuple] = []
     for key, payload in raw.items():
         swept, day = key if isinstance(key, tuple) else (key, None)
         swept = str(swept).strip().upper()
@@ -391,12 +539,19 @@ def normalise(
                         icao,
                         name,
                         str(model),
+                        "",
                         weight,
                         unknown_codeshare,
                         incomplete,
                     )
                 )
 
+    rows.extend(
+        _through_rows(
+            raw, period_id, stats=stats, mexican=mexican, day_weights=day_weights,
+            boards=boards,
+        )
+    )
     frame = pd.DataFrame(rows, columns=list(FLIGHT_COLUMNS))
     if frame.empty:
         return frame
@@ -423,8 +578,11 @@ def pull_days(
     reference_dir: Path | None = None,
     day_weights: dict[date, float] | None = None,
     mexican: frozenset[str] | None = None,
+    offline: bool = False,
 ) -> tuple[pd.DataFrame, InternationalPullStats]:
     """Sweep every airport across whole days, in half-day windows, both ways.
+
+    ``offline`` rebuilds from the cache and refuses to buy a single window.
 
     ``unit_budget`` is a hard stop: the sweep returns what it already has
     rather than spending past it.  A cached window is free, so the budget is
@@ -448,6 +606,11 @@ def pull_days(
             for start, end in halves:
                 for iata in airports:
                     cached = _cache_path(cache_dir, iata, start).exists()
+                    if offline and not cached:
+                        raise RuntimeError(
+                            f"--offline: la ventana {iata} {start} no esta en cache; "
+                            "no se compra nada"
+                        )
                     if (
                         unit_budget is not None
                         and stats.units_spent + UNITS_PER_CALL > unit_budget
@@ -471,6 +634,7 @@ def pull_days(
 
     return normalise(
         raw, period_id, stats=stats, mexican=universe, day_weights=day_weights,
+        boards=board_index(cache_dir, period_id),
     ), stats
 
 
@@ -480,7 +644,9 @@ def routes_by_operator(flights: pd.DataFrame) -> pd.DataFrame:
     if flights.empty:
         return flights
     group = ["period_id", "origin_iata", "dest_iata", "operator_key"]
-    measures = ["flights", "codeshare_unknown", "status_incomplete"]
+    measures = ["flights", "codeshare_unknown", "status_incomplete", "through_flights"]
+    through = flights["via_iata"].fillna("").ne("") if "via_iata" in flights else False
+    flights = flights.assign(through_flights=flights["flights"].where(through, 0.0))
     return flights.groupby(group, as_index=False)[measures].sum()
 
 
