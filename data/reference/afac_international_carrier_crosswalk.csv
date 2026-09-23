@@ -3,7 +3,7 @@ Aeroméxico (Aerovías de México),national,AEROMEXICO,AM,AMX,resolved,config/ca
 Aeroméxico Connect (Aerolitoral),national,AEROMEXICO_CONNECT,5D,SLI,resolved,config/carrier_crosswalk.csv
 Volaris (Concesionaria Vuela Cia de Aviación),national,VOLARIS,Y4,VOI,resolved,src/ingest/aerodatabox/flights.py CARRIER_BY_IATA
 Vivaaerobus (Aeroenlaces),national,VIVA_AEROBUS,VB,VIV,resolved,src/ingest/aerodatabox/flights.py CARRIER_BY_IATA
-Aerus,national,AERUS,,,unresolved,Opera sin codigo IATA publicado; el adaptador nacional la resuelve por nombre
+Aerus,national,AERUS,,,resolved,"Sin codigo IATA; identificada por nombre exacto en el adaptador domestico revisado (src/ingest/aerodatabox/flights.py, CARRIER_BY_NAME). Observada en MTY-BRO en la captura 2026M04"
 American Airlines,foreign,AMERICAN,AA,AAL,resolved,Observada como IATA:AA en el sondeo 2026-09-10
 "United Airlines, Inc.",foreign,UNITED,UA,UAL,resolved,Observada como IATA:UA en el sondeo 2026-09-10
 Delta Airlines,foreign,DELTA,DL,DAL,resolved,Observada como IATA:DL en el sondeo 2026-09-10
@@ -22,7 +22,7 @@ Spirit Airlines,foreign,SPIRIT,NK,NKS,resolved,Unica aerolinea de ese nombre con
 Sun Country,foreign,SUN_COUNTRY,SY,SCX,resolved,Unica aerolinea de ese nombre con servicio a Mexico
 Skywest Airlines,foreign,SKYWEST,OO,SKW,resolved,Unica aerolinea de ese nombre con servicio a Mexico
 "Mesa Airlines (Mesa Airlines, Inc.)",foreign,MESA,YV,ASH,resolved,Denominacion social completa en la etiqueta AFAC
-Breeze Airways,foreign,BREEZE,MX,MXY,unresolved,El codigo IATA MX coincide con el prefijo historico de Mexicana; verificar antes de usar
+Breeze Airways,foreign,BREEZE,MX,MXY,resolved,"Observada como IATA:MX en la captura 2026M04: CUN con Charleston, Nueva Orleans, Norfolk y Providence, red de Breeze; la nueva Mexicana no opera esas rutas"
 CommutAir,foreign,COMMUTAIR,C5,UCA,probable,Opera como United Express; el proveedor puede reportarla bajo UA
 British Airways,foreign,BRITISH_AIRWAYS,BA,BAW,resolved,Unica aerolinea de ese nombre
 K L M (Royal Dutch Airlines),foreign,KLM,KL,KLM,resolved,Denominacion social completa en la etiqueta AFAC
@@ -44,7 +44,7 @@ Lanperu,foreign,LATAM_PERU,LP,LPE,probable,"Filial peruana de LATAM, codigo prop
 Taca (Taca International Airlines),foreign,TACA,TA,TAI,probable,"Codigo historico de TACA, hoy dentro del grupo Avianca"
 Lacsa (Líneas Aéreas Costarricences),foreign,LACSA,LR,LRC,probable,Filial costarricense del grupo Avianca
 Aerorepública,foreign,AEROREPUBLICA,P5,RPB,probable,Opero despues como Wingo conservando el codigo
-Volaris El Salvador,foreign,VOLARIS_EL_SALVADOR,,,unresolved,Filial salvadorena de Volaris; no confundir con Q6 (Costa Rica)
+Volaris El Salvador,foreign,VOLARIS_EL_SALVADOR,N3,,resolved,Observada como IATA:N3 en la captura 2026M04 en rutas con San Salvador; no confundir con Q6 (Costa Rica)
 SKY Airline Perú,foreign,SKY_PERU,,,unresolved,Filial peruana de SKY Airline; codigo por verificar
 Arajet,foreign,ARAJET,DM,DMJ,probable,Unica aerolinea dominicana de ese nombre
 Conviasa,foreign,CONVIASA,V0,VCV,probable,Unica aerolinea venezolana de ese nombre

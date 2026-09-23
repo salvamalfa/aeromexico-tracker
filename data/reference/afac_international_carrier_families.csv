@@ -1,0 +1,15 @@
+carrier_key,fit_key,fit_label,reason
+UNITED,US_NETWORK,"United, American, Delta, Alaska y sus regionales","SkyWest opera para United, Delta, American y Alaska bajo el codigo de la marca; el proveedor reporta esos vuelos como la marca y AFAC atribuye los pasajeros al operador (captura 2026M04: SkyWest pedia 789 pasajeros por vuelo visible)"
+AMERICAN,US_NETWORK,"United, American, Delta, Alaska y sus regionales",Ver UNITED
+DELTA,US_NETWORK,"United, American, Delta, Alaska y sus regionales",Ver UNITED
+ALASKA,US_NETWORK,"United, American, Delta, Alaska y sus regionales",Ver UNITED
+SKYWEST,US_NETWORK,"United, American, Delta, Alaska y sus regionales",Regional multimarca; no se puede separar de sus marcas con la semilla
+ENVOY,US_NETWORK,"United, American, Delta, Alaska y sus regionales",Regional de American (American Eagle)
+MESA,US_NETWORK,"United, American, Delta, Alaska y sus regionales",Regional de United (United Express)
+COMMUTAIR,US_NETWORK,"United, American, Delta, Alaska y sus regionales",Regional de United (United Express)
+AVIANCA,AVIANCA_GROUP,Grupo Avianca (Avianca Lacsa Taca),"Lacsa y Taca operan con el codigo AV; captura 2026M04: Lacsa pedia 4,750 pasajeros por vuelo visible"
+LACSA,AVIANCA_GROUP,Grupo Avianca (Avianca Lacsa Taca),Ver AVIANCA
+TACA,AVIANCA_GROUP,Grupo Avianca (Avianca Lacsa Taca),Ver AVIANCA
+LATAM_CHILE,LATAM_GROUP,Grupo LATAM,"Las filiales de LATAM se comercializan con el codigo LA; captura 2026M04: LATAM Peru pedia 1.34 veces la capacidad de sus rutas visibles"
+LATAM_PERU,LATAM_GROUP,Grupo LATAM,Ver LATAM_CHILE
+LATAM_BRASIL,LATAM_GROUP,Grupo LATAM,Ver LATAM_CHILE

@@ -1,7 +1,8 @@
 afac_city,afac_country,airport_iata,match_method,city_spread_km
 FRANKFURT,Alemania,FRA,override_airport,0.0
 MUNICH,Alemania,MUC,city_exact,0.0
-BUENOS AIRES,Argentina,AEP,city_exact,0.0
+BUENOS AIRES,Argentina,AEP,override_airport,31.2
+BUENOS AIRES,Argentina,EZE,override_airport,31.2
 LIÈGE,Belgica,LGG,override_airport,0.0
 BELICE,Belice,BZE,override_city,11.7
 BELICE,Belice,TZA,override_city,11.7
@@ -59,7 +60,7 @@ MEDELLIN,Colombia,MDE,city_exact,19.5
 CAMAGUEY,Cuba,CMW,city_exact,0.0
 LA HABANA,Cuba,HAV,override_city,0.0
 QUITO,Ecuador,UIO,city_exact,0.0
-SAN SALVADOR,El Salvador,ILS,city_exact,0.0
+SAN SALVADOR,El Salvador,SAL,override_airport,0.0
 DUBAI,Emiratos Arabes,DXB,city_exact,24.8
 DUBAI,Emiratos Arabes,NHD,city_exact,24.8
 JEBEL ALI,Emiratos Arabes,DWC,override_airport,0.0
@@ -86,7 +87,8 @@ COLORADO SPRINGS,Estados Unidos,COS,city_exact,0.0
 "COLUMBUS, Ohio",Estados Unidos,LCK,override_airport,20.7
 COVINGTON,Estados Unidos,CVG,override_airport,0.0
 "Charleston, Sur de Carolina",Estados Unidos,CHS,override_airport,0.0
-DALLAS-FORT WORTH,Estados Unidos,DFW,city_exact,0.0
+DALLAS-FORT WORTH,Estados Unidos,DAL,override_airport,18.7
+DALLAS-FORT WORTH,Estados Unidos,DFW,override_airport,18.7
 DENVER,Estados Unidos,APA,city_exact,44.1
 DENVER,Estados Unidos,BJC,city_exact,44.1
 DENVER,Estados Unidos,DEN,city_exact,44.1
@@ -166,8 +168,10 @@ TAMPA,Estados Unidos,MCF,city_exact,14.1
 TAMPA,Estados Unidos,TPA,city_exact,14.1
 TULSA,Estados Unidos,RVS,city_exact,19.6
 TULSA,Estados Unidos,TUL,city_exact,19.6
-WASHINGTON,Estados Unidos,DCA,city_exact,0.0
-PARIS,Francia,LBG,city_exact,0.0
+WASHINGTON,Estados Unidos,DCA,override_airport,37.6
+WASHINGTON,Estados Unidos,IAD,override_airport,37.6
+PARIS,Francia,CDG,override_airport,34.2
+PARIS,Francia,ORY,override_airport,34.2
 GUATEMALA,Guatemala,GUA,override_city,0.0
 HONG KONG,HONG KONG,HKG,city_exact,0.0
 COMAYAGUA,Honduras,XPL,override_airport,0.0
@@ -177,7 +181,8 @@ MILAN,Italia,LIN,override_airport,47.4
 MILAN,Italia,MXP,override_airport,47.4
 ROMA,Italia,CIA,override_city,28.5
 ROMA,Italia,FCO,override_city,28.5
-TOKYO,Japon,HND,city_exact,0.0
+TOKYO,Japon,HND,override_airport,59.6
+TOKYO,Japon,NRT,override_airport,59.6
 LUXEMBURGO,Luxemburgo,LUX,override_city,0.0
 ACAPULCO,Mexico,ACA,domestic_crosswalk,0.0
 AGUASCALIENTES,Mexico,AGU,domestic_crosswalk,0.0
