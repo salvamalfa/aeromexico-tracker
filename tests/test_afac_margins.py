@@ -18,6 +18,7 @@ from src.ingest.afac.margins import (
     read_carrier_base,
     read_summary_domestic_block,
     reconcile,
+    refresh_year,
 )
 
 
@@ -140,3 +141,56 @@ def test_published_flights_fall_short_of_route_flights_by_the_cargo_carriers() -
     gap = ((by_route[shared] - by_carrier[shared]) / by_carrier[shared]).abs()
     assert gap.max() < 0.02, "el hueco crecio: revisar si entro otra aerolinea"
     assert gap.min() > 0.005, "el hueco desaparecio: revisar si se colaron las cargueras"
+
+
+def _summary_sheet(values: dict[str, list[int]]) -> pd.DataFrame:
+    rows = [[None] * 14 for _ in range(6)]
+    rows.append(["EN SERVICIO REGULAR NACIONAL"] + [None] * 13)
+    for name, months in values.items():
+        rows.append([name] + months + [None] * (13 - len(months)))
+    rows.append(["EN SERVICIO REGULAR INTERNACIONAL"] + [None] * 13)
+    return pd.DataFrame(rows)
+
+
+def test_a_new_edition_replaces_its_whole_year_and_nothing_else(tmp_path: Path) -> None:
+    """August's edition restates January-July too; mixing editions is the error."""
+
+    header = [None] * 27
+    header[0], header[1] = "ORIGEN", "DESTINO"
+    route = [None] * 27
+    route[0], route[1] = "MEXICO", "CANCUN"
+    route[2:14] = [10, 12] + [0] * 10
+    route[15:27] = [1000, 1300] + [0] * 10
+    sase = tmp_path / "sase-agosto-2026.xlsx"
+    pd.DataFrame([[None] * 27] * 5 + [header, route]).to_excel(
+        sase, sheet_name="REG NAC", index=False, header=False
+    )
+    resumen = tmp_path / "resumen-agosto-2026.xlsx"
+    with pd.ExcelWriter(resumen) as writer:
+        _summary_sheet({"Volaris*": [900, 1200], "Aeroméxico": [100, 100],
+                        "Carguera": [0, 0], "Nueva": [5, 5]}).to_excel(
+            writer, sheet_name="PAXREG", index=False, header=False)
+        _summary_sheet({"Volaris*": [9, 11], "Aeroméxico": [1, 1]}).to_excel(
+            writer, sheet_name="VLOSREG", index=False, header=False)
+
+    pd.DataFrame({"period_id": ["2025M12", "2026M01"], "origen": ["MEXICO"] * 2,
+                  "destino": ["CANCUN"] * 2, "vuelos": [8, 1], "pasajeros": [800, 1]}
+                 ).to_csv(tmp_path / "afac_od_nacional_regular.csv", index=False)
+    pd.DataFrame({"period_id": ["2025M12", "2026M01", "2026M01"],
+                  "carrier_name": ["Volaris", "Volaris", "Aeroméxico"],
+                  "pasajeros": [800, 1, 0]}
+                 ).to_csv(tmp_path / "afac_carrier_domestic.csv", index=False)
+    pd.DataFrame({"period_id": ["2025M12"], "carrier_name": ["Volaris*"], "vuelos": [8]}
+                 ).to_csv(tmp_path / "afac_carrier_flights_domestic.csv", index=False)
+
+    routes, carriers, checks = refresh_year(2026, sase, resumen, reference_dir=tmp_path)
+
+    assert routes["period_id"].tolist() == ["2025M12", "2026M01", "2026M02"]
+    assert routes["pasajeros"].tolist() == [800, 1000, 1300]
+    assert set(carriers["carrier_name"]) == {"Volaris", "Aeroméxico"}, "asterisco o nueva"
+    assert carriers.loc[carriers["period_id"] == "2025M12", "pasajeros"].tolist() == [800]
+    assert [(c.period_id, c.difference) for c in checks] == [
+        ("2025M12", 0), ("2026M01", 0), ("2026M02", 0)
+    ]
+    written = pd.read_csv(tmp_path / "afac_carrier_flights_domestic.csv")
+    assert written["period_id"].tolist() == ["2025M12", "2026M01", "2026M02"]

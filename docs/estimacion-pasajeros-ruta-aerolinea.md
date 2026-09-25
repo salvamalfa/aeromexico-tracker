@@ -1474,3 +1474,97 @@ El dashboard integrado (`prototypes/etapa-11/resumen_ejecutivo.html`,
 explícita, por el flujo normal de `stage18`, tras corregir la dependencia de
 plataforma que hacía fallar `evidence.validate`
 (`docs/etapas/analysis-agent-portabilidad-publicacion-20260925.md`).
+
+### 9.14 Asientos y ocupación internacionales
+
+Con la misma autorización, la ruta internacional estimada gana asientos y
+ocupación por el mismo camino que la nacional
+(`docs/etapas/vuelos-capacidad-ocupacion-estimada-20260920.md`): un modelo de
+aeronave por vuelo capturado, mapeado a la configuración versionada de
+Aeroméxico, nunca una proporción inventada.
+
+**Módulo.** `src/analytics/international_capacity.py`
+(`python -m src.analytics.international_capacity 2026M04,2026M05,2026M06,2026M07`)
+produce el Gold `fact_aeromexico_international_capacity_estimate` (ignorado
+en este repositorio, igual que su hermano de pasajeros): una fila por mes ×
+origen × destino × operador (`AEROMEXICO`, `AEROMEXICO_CONNECT`), con
+`departures_estimated`, `seats_estimated(_low/_high)`,
+`aircraft_model_coverage` y `capacity_usable` (cobertura ≥ 95 %), sin ningún
+conteo de modelo por ruta. La entrada es la misma captura transitoria que
+`fact_route_carrier_international_estimate` (§9.13): el módulo reutiliza
+`capture_from_sweep` y `add_foreign_through_support` de
+`international_route_carrier` sin duplicar su lógica, y conserva exactamente
+el mismo filtro de tramo — origen y destino deben mapear a una ciudad AFAC —
+para que sus vuelos reconcilien con los de Gold en las celdas de Aerovías y
+Connect. La cobertura de la referencia
+(`data/reference/aeromexico_aircraft_seat_capacity.csv`) es al vuelo, no por
+matrícula: la captura internacional no trae matrícula, así que la
+desambiguación por registro del script nacional no aplica; la fila de mezcla
+de flota "Boeing 737" sí, sin cambios.
+
+**Mezcla de modelos y cobertura, abril–julio 2026.** Solo un modelo no
+mapea: `Beechcraft 350 Super King Air` bajo `AEROMEXICO`, un vuelo cada mes en
+abril, mayo y junio (peso 1.0 de ~4,800–5,400 vuelos candidatos mensuales),
+ausente en julio. Es un jet privado, no parte de la flota operativa que
+reporta el 20-F; se excluye igual que "King Air" en el estimador nacional, en
+vez de inventarle asientos. No se agregó ningún alias nuevo a la referencia:
+todo el resto de la mezcla — 737-800, 737 MAX 8, 737 MAX 9, 737-900, 787-8,
+787-9, 787-900 y Embraer 190 — ya tenía fila propia. Cobertura de modelo:
+99.98 % (abr), 99.98 % (may), 99.98 % (jun), 100.00 % (jul); 567 celdas
+mensuales mes × dirección × operador, todas utilizables (`capacity_usable`).
+
+Un pequeño número de tramos con AEROMEXICO como operador cae fuera del
+universo de ciudades AFAC — sobre todo destinos australianos (SYD, MEB, AVV,
+PQQ, BNE, TSV, ROK) con aeronaves King Air o un 737 aislado — y se excluye
+tanto del candidato como del mapa, igual que excluiría a la semilla de
+pasajeros: es ruido del proveedor, Aeroméxico no vuela México–Sídney. Por la
+misma razón, la reconciliación con `departures_estimated` de Gold no es
+exacta al vuelo: Gold colapsa una ruta-ciudad AFAC a su par de aeropuertos
+dominante, mientras esta tabla publica cada par de aeropuertos capturado
+directamente, así que un par de baja frecuencia (México–San Diego en abril,
+32 vuelos) puede aparecer aquí sin traer una celda de pasajeros. En abril,
+sobre 142 celdas de Aerovías/Connect, 140 reconciliaron exactamente y 2
+(México–San Diego, ambos sentidos) no tuvieron contraparte en Gold.
+
+**Dashboard.** `src/dashboard/international_routes.py::_estimated_routes` y
+la rama de enriquecimiento de `extend_networks` calculan asientos y ocupación
+celda por celda (mes × dirección), con la misma regla de completitud que
+nacional: solo cuando la capacidad es utilizable en **todos** los meses y
+sentidos que cubre la cifra de pasajeros mostrada; si falta uno, esa cifra
+(ruta, dirección o mes) queda en `N/D` con `load_factor_status =
+"capacity_incomplete"`. Una ocupación implausible (fuera de 0–100 %, como
+Lima con 113–121 % en 2T26) también se oculta con
+`load_factor_status = "inconsistent_inputs"`, igual que hace nacional; no hay
+una cota inferior de 30 % en el nacional existente, así que tampoco se agregó
+aquí. La ruta con pasajeros observados por T-100, ANAC o Aerocivil que ya
+trae asientos propios (T-100, o el "assentos" de ANAC) nunca se sobrescribe:
+la capacidad estimada solo llena una ruta o una dirección que ya recibía
+pasajeros estimados. `flights.js` no necesitó cambios: ya interpreta
+`route.seats`, `route.seats_low/high`, `route.load_factor(_low/high)`,
+`route.capacity_estimated` y las mismas claves por mes en `route.monthly`
+para nacional, así que la vista de Vuelos las reutiliza sin tocarlas.
+
+**Resultado en 2T26 (abril–junio), rutas de muestra:**
+
+| Ruta | Mes | Pasajeros | Asientos | Ocupación |
+|---|---|---:|---:|---:|
+| MEX–MAD | abr | 38,370 | 47,382 | 81.0 % |
+| MEX–MAD | may | 38,927 | 49,843 | 78.1 % |
+| MEX–MAD | jun | 38,092 | 46,710 | 81.5 % |
+| MEX–BOG | abr | 24,363 | 31,023 | 78.5 % |
+| MEX–BOG | may | 25,131 | 31,790 | 79.1 % |
+| MEX–BOG | jun | 25,035 | 31,618 | 79.2 % |
+| MEX–LIM | abr–jun | 11,155 / 11,837 / 11,006 | 9,850 / 9,753 / 9,427 | N/D (113–121 %, `inconsistent_inputs`) |
+| GDL–MAD (nueva) | abr | 12,848 | 13,452 | 95.5 % |
+| GDL–MAD (nueva) | jun | 11,912 | 12,992 | 91.7 % |
+
+MEX–LIM ilustra el control de plausibilidad: el ajuste produce más pasajeros
+que asientos con cobertura de modelo perfecta, así que la ocupación se oculta
+en vez de mostrarse por encima de 100 %.
+
+**Pruebas.** `tests/test_international_capacity.py` (mapeo por
+`(raw_model, carrier_key)`, puerta de cobertura, reconciliación de
+`departures_estimated` con la captura, sin columnas de modelo en la salida) y
+`tests/test_international_routes.py` (asientos y ocupación en una ruta nueva
+y en una enriquecida — Reino Unido·CAA en Londres–México —, con la misma
+regla de completitud y de plausibilidad que nacional).
