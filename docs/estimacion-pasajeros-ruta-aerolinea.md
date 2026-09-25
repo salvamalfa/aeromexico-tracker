@@ -1059,7 +1059,8 @@ En este orden. Ninguna etapa autoriza la siguiente por sí sola.
 | 7c | Verificación offline de la captura (credencial, reanudación, retención, tope duro) | **hecho**, sin API (§9.10.2) |
 | 8 | Captura mensual de la semilla en los meses que la ventana permita | **hecho para 2026M04** (§9.11): 1,588 unidades |
 | 9 | Ajuste, y backtest del subcubo estadounidense con la semilla real | **hecho para 2026M04** (§9.11): convergió; 6.3 % de error ponderado contra T-100 |
-| 10 | Vista separada de revisión humana antes de tocar el mapa principal | **vista generada** (§9.11.5); **revisión y aprobación humana pendientes** |
+| 10 | Vista separada de revisión humana antes de tocar el mapa principal | **hecho**: vistas generadas (§9.11.5) y aprobación del operador para integrar (2026-09-25) |
+| 12 | Integración a Vuelos (generador y vista de revisión) | **hecho** (§9.13); el dashboard integrado publicado requiere su propia autorización |
 | 11 | Más meses (mayo–julio) para estabilidad y soporte temporal | **hecho** (§9.12): 4,812 unidades; los cuatro meses convergen |
 
 Las etapas 1 a 9 están cerradas para abril. Ninguna activa nada en el
@@ -1415,3 +1416,60 @@ Derivados: `derived/aerodatabox_international/2026M05/`, `2026M06/` y
 (`international_review_<mes>.html`: 94, 89 y 84 rutas de Grupo Aeroméxico
 con al menos una bandera, respectivamente). Ninguno se integra al
 dashboard.
+
+### 9.13 Integración al mapa de Vuelos
+
+Con aprobación del operador (2026-09-25), la estimación entra al generador de
+Vuelos por el mismo camino que la nacional:
+
+1. `python -m src.analytics.international_gold 2026M04,2026M05,2026M06,2026M07`
+   construye `fact_route_carrier_international_estimate` (Gold, ignorado en
+   este repositorio; el cubo completo vive en el repositorio privado bajo
+   `derived/aerodatabox_international/`). Traduce cada ruta AFAC por ciudad
+   al par de aeropuertos donde la captura vio volar a esa aerolínea
+   (`MADRID-MEXICO` → `MAD<>MEX`; `MEXICO-TOKYO` → `MEX<>NRT` aunque el
+   vuelo haga escala en MTY), y agrega un rango de sensibilidad de ±16 %:
+   el 80 % de las 136 celdas de Aerovías/Connect contrastadas contra T-100
+   en abril–mayo quedó dentro de ese error.
+2. `build_warehouse` la carga como extensión opcional de ruta.
+3. `src/dashboard/international_routes.py::extend_networks` la aplica a cada
+   trimestre **completo** (hoy 2T26; julio solo no completa 3T26), con esta
+   precedencia:
+   - un mercado con pasajeros observados (T-100, ANAC) conserva su
+     observación y no recibe estimación;
+   - todo mercado con extremo en Estados Unidos se deja a T-100, incluso si
+     la estimación lo cubre;
+   - un mercado con vuelos pero sin pasajeros (slots AICM, Aerocivil, CAA,
+     OMA) recibe pasajeros estimados **solo para los meses que su propia
+     fuente cubre** (CAA reporta junio: solo junio), por sentido, de modo
+     que los sentidos suman el total;
+   - un mercado que ninguna fuente cuantificó se agrega con la etiqueta
+     `AFAC + AeroDataBox · Grupo Aeroméxico estimado` y los vuelos de la
+     semilla de AeroDataBox, que no entran al conteo de vuelos operados de
+     Aerovías.
+4. El frontal muestra esas rutas con el rango, el desglose mensual y una
+   línea aparte en el resumen: "pasajeros estimados de Aerovías de México y
+   Aeroméxico Connect en N rutas sin pasajeros observados". Nunca se suman a
+   los vuelos ni a los pasajeros observados.
+
+Resultado en 2T26: 34 rutas internacionales con pasajeros estimados
+(912,954 pasajeros), de las cuales 30 mostraban `N/D` (23 slots AICM, 4
+Aerocivil, 2 OMA, 1 CAA) y 4 no aparecían en el mapa (Guadalajara–Madrid,
+Monterrey–Seúl, Monterrey–Tokio y Ciudad de México–Santiago, esta con 2 de
+3 meses).
+
+Emirates (Dubái–Barcelona–México) se acredita también a DUBAI-MEXICO con
+una regla revisada de escala extranjera
+(`data/reference/afac_international_foreign_through_flights.csv`), porque el
+tablero de MEX solo muestra Barcelona y AFAC cuenta el vuelo en
+DUBAI-MEXICO con exactamente los mismos vuelos.
+
+Cifras vigentes tras esa regla: cobertura de rutas 99.45 % (abr), 99.46 %
+(may), 99.54 % (jun), 99.52 % (jul); contraste contra T-100 de 6.3 % (abr) y
+5.7 % (may), y para Aerovías + Connect de 6.8 % y 6.0 %.
+
+`prototypes/vuelos/vuelos_revision.html` se regeneró con todo lo anterior.
+El dashboard integrado publicado (`prototypes/etapa-11/resumen_ejecutivo.html`,
+`static/aeromexico_tracker.html`) **no** se tocó: su publicación requiere una
+autorización explícita propia y su reconstrucción completa sigue bloqueada
+por la falla conocida de `evidence.validate` del Analysis Agent.

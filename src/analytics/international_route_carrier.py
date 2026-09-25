@@ -187,6 +187,36 @@ def ambiguous_operator_codes(carrier_crosswalk: pd.DataFrame) -> dict[str, set[s
     return {code: keys for code, keys in claims.items() if len(keys) > 1}
 
 
+FOREIGN_THROUGH_FILE = "afac_international_foreign_through_flights.csv"
+
+
+def add_foreign_through_support(capture: pd.DataFrame, rules: pd.DataFrame) -> pd.DataFrame:
+    """Credit reviewed flights through a *foreign* stop to their first endpoint.
+
+    A Mexican board shows only the adjacent stop, so Emirates' Dubai flight
+    reaches Mexico City as Barcelona-Mexico, while AFAC counts it on
+    DUBAI-MEXICO.  Unlike a Mexican stop, the foreign stop's board is never
+    captured, so this cannot be rebuilt from the data; each case is a reviewed
+    rule naming the operator, the stop and the first airport.  The rows are
+    marked as through flights so the duplicate check accepts them.
+    """
+
+    if rules.empty or capture.empty:
+        return capture
+    added = []
+    for rule in rules.itertuples(index=False):
+        mine = capture["operator_key"] == rule.operator_key
+        inbound = capture[mine & (capture["origin_iata"] == rule.stop_iata)]
+        outbound = capture[mine & (capture["dest_iata"] == rule.stop_iata)]
+        added.append(inbound.assign(origin_iata=rule.first_iata))
+        added.append(outbound.assign(dest_iata=rule.first_iata))
+    extra = pd.concat(added, ignore_index=True)
+    if extra.empty:
+        return capture
+    extra = extra.assign(through_flights=extra["flights"])
+    return pd.concat([capture, extra], ignore_index=True)
+
+
 def reverse_route_key(route_key: str, known: set[str]) -> str | None:
     """The opposite direction of ``route_key`` if it is among ``known`` routes.
 
@@ -1112,6 +1142,7 @@ def run_capture(
     carriers: pd.DataFrame,
     observed_capture: pd.DataFrame | None,
     families: pd.DataFrame,
+    foreign_through: pd.DataFrame | None = None,
 ) -> dict[str, object]:
     """Gate, fit, group and diagnose one real capture; publish nothing.
 
@@ -1120,6 +1151,8 @@ def run_capture(
     source that will be displayed where it exists -- never as seed or margin.
     """
 
+    if foreign_through is not None:
+        capture = add_foreign_through_support(capture, foreign_through)
     seed, rejected = build_international_seed(capture, cities, carriers)
     route_totals, carrier_totals = build_international_margins(routes, carrier_margin, carriers)
     flights = afac_route_flights(routes)
@@ -1159,6 +1192,7 @@ def run_capture(
         else pd.DataFrame()
     )
     return {
+        "capture": capture,
         "seed": seed,
         "rejected": rejected,
         "reports": reports,
@@ -1247,6 +1281,7 @@ def _main_capture(args, routes, carrier_margin, cities, carriers) -> int:  # pra
         capture, routes=routes, carrier_margin=carrier_margin, cities=cities,
         carriers=carriers, observed_capture=observed_capture,
         families=load_carrier_families(),
+        foreign_through=pd.read_csv(PATHS.data / "reference" / FOREIGN_THROUGH_FILE),
     )
     seed, rejected = result["seed"], result["rejected"]
     print("CAPTURA REAL de AeroDataBox. Nada se publica ni se activa.\n")
@@ -1328,7 +1363,7 @@ def _main_capture(args, routes, carrier_margin, cities, carriers) -> int:  # pra
     if not sensitivity.empty:
         sensitivity.to_parquet(out / f"sensitivity_{stem}.parquet", index=False)
     seed.to_parquet(out / f"seed_{stem}.parquet", index=False)
-    capture.to_parquet(out / f"capture_{stem}.parquet", index=False)
+    result["capture"].to_parquet(out / f"capture_{stem}.parquet", index=False)
     summary = {
         "acceptance": {
             period_id: {

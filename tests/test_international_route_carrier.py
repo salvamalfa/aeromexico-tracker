@@ -598,3 +598,25 @@ def test_joint_feasibility_shrinks_proportionally_inside_the_violating_group() -
     assert feasible[:2].sum() == pytest.approx(100.0, rel=1e-6)
     assert feasible[0] / feasible[1] == pytest.approx(90 / 60, rel=1e-6)
     assert feasible[2] == pytest.approx(400.0)
+
+
+def test_a_reviewed_foreign_stop_credits_the_first_endpoint_too() -> None:
+    """Emirates' Dubai flight reaches Mexico City's board as Barcelona-Mexico."""
+
+    from src.analytics.international_route_carrier import add_foreign_through_support
+
+    capture = _capture([
+        ("2026M04", "BCN", "MEX", "IATA:EK", "EK", "", 30.0, 0.0, 0.0),
+        ("2026M04", "MEX", "BCN", "IATA:EK", "EK", "", 30.0, 0.0, 0.0),
+        ("2026M04", "BCN", "MEX", "AEROMEXICO", "AM", "AMX", 30.0, 0.0, 0.0),
+    ])
+    rules = pd.DataFrame([("IATA:EK", "BCN", "DXB", "cola de Dubai")],
+                         columns=["operator_key", "stop_iata", "first_iata", "reason"])
+
+    out = add_foreign_through_support(capture, rules)
+    pairs = set(zip(out["origin_iata"], out["dest_iata"], out["operator_key"]))
+
+    assert {("DXB", "MEX", "IATA:EK"), ("MEX", "DXB", "IATA:EK")} <= pairs
+    assert ("DXB", "MEX", "AEROMEXICO") not in pairs
+    added = out[out["origin_iata"].eq("DXB") | out["dest_iata"].eq("DXB")]
+    assert (added["through_flights"] == added["flights"]).all()

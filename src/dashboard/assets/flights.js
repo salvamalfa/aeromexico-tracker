@@ -224,7 +224,9 @@
     // Sin vuelos propios no hay registro que mostrar: son rutas donde la fuente
     // solo confirma presencia de Aeromexico, sin volumen atribuible.
     const quantified = (network.routes || []).filter((route) =>
-      network.mode === "estimated_domestic" ? finite(route.passengers) : finite(route.departures)
+      network.mode === "estimated_domestic"
+        ? finite(route.passengers)
+        : finite(route.departures) || (route.passengers_estimated && finite(route.passengers))
     );
     network.routes = quantified;
     routes = regionRoutes(quantified);
@@ -429,7 +431,10 @@
     const host = $("network-volume");
     if (!host) return;
     const shown = routes || [];
-    const flights = shown.reduce((sum, route) => sum + (finite(route.departures) ? route.departures : 0), 0);
+    // Vuelos estimados de AeroDataBox (Grupo Aeroméxico) no son vuelos
+    // operados observados de Aerovías: no entran a ese conteo.
+    const observedFlights = (route) => route.operation_status !== "estimated_from_afac_margins_and_aerodatabox_seed";
+    const flights = shown.reduce((sum, route) => sum + (observedFlights(route) && finite(route.departures) ? route.departures : 0), 0);
     const passengers = shown.reduce((sum, route) => sum + (finite(route.passengers) ? route.passengers : 0), 0);
     const passengersLow = shown.reduce((sum, route) => sum + (finite(route.passengers_low) ? route.passengers_low : 0), 0);
     const passengersHigh = shown.reduce((sum, route) => sum + (finite(route.passengers_high) ? route.passengers_high : 0), 0);
@@ -450,13 +455,21 @@
     // solo reportan al operador Aerovías de México (AMX). Aeroméxico Connect
     // no aparece en ninguna de ellas para estos periodos, así que esta cifra
     // nunca se presenta como Grupo Aeroméxico.
-    host.innerHTML = `<strong>${integer.format(flights)}</strong><span>vuelos operados por Aerovías de México (no incluye Aeroméxico Connect) ${esc(scope)} · ${esc(network.period_label)}${noBreakdown ? ` · ${noBreakdown} ${noBreakdown === 1 ? "ruta" : "rutas"} sin desglose propio` : ""}</span>`;
+    // Los pasajeros estimados (AFAC + AeroDataBox) suman Aerovías y Connect y
+    // cubren solo rutas sin pasajeros observados: se reportan en una línea
+    // aparte y nunca se suman a los vuelos observados de Aerovías.
+    const estimated = shown.filter((route) => route.passengers_estimated && finite(route.passengers));
+    const estimatedPassengers = estimated.reduce((sum, route) => sum + route.passengers, 0);
+    const estimatedLine = estimated.length
+      ? `<span class="network-estimate-note">${integer.format(estimatedPassengers)} pasajeros estimados de Aerovías de México y Aeroméxico Connect en ${estimated.length} ${estimated.length === 1 ? "ruta" : "rutas"} sin pasajeros observados (AFAC + AeroDataBox)</span>`
+      : "";
+    host.innerHTML = `<strong>${integer.format(flights)}</strong><span>vuelos operados por Aerovías de México (no incluye Aeroméxico Connect) ${esc(scope)} · ${esc(network.period_label)}${noBreakdown ? ` · ${noBreakdown} ${noBreakdown === 1 ? "ruta" : "rutas"} sin desglose propio` : ""}</span>${estimatedLine}`;
   }
 
   const REGION_MEMBERS = {
     asia: ["ICN", "NRT"],
     europa: ["AMS", "BCN", "CDG", "FCO", "LHR", "MAD"],
-    sudamerica: ["BOG", "CLO", "CTG", "EZE", "GRU", "LIM", "MDE", "UIO"],
+    sudamerica: ["BOG", "CLO", "CTG", "EZE", "GRU", "LIM", "MDE", "SCL", "UIO"],
   };
   const REGIONS = [
     { id: "norteamerica", label: "Norteam\u00e9rica", lat: [8, 62], lon: [-170, -52], dtick: 15 },
@@ -532,6 +545,7 @@
     "AFAC · mercado con Aeroméxico como único operador identificado": "AFAC",
     "AFAC + AeroDataBox + flota Aeroméxico · estimaciones": "AFAC + AeroDataBox + flota (estimación)",
     "OMA · rutas documentadas": "OMA",
+    "AFAC + AeroDataBox · Grupo Aeroméxico estimado": "AFAC + AeroDataBox (estimación)",
     "Reino Unido · CAA": "CAA",
   };
 
