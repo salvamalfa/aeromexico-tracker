@@ -43,13 +43,19 @@ def test_international_map_adds_scheduled_destinations_with_observed_precedence(
     for market in ("MEX<>NRT", "ICN<>MEX", "MEX<>YYZ", "MAD<>MEX", "BCN<>MEX", "EZE<>MEX"):
         route = by_market[market]
         assert route["operation_status"] == "assigned_slot_not_flown"
-        assert route["seats"] is route["load_factor"] is None
-        # Slots carry flights, never passengers; where the private estimate is
-        # present, passengers come from it and are labelled as estimated.
+        # Slots carry flights, never passengers or seats; where the private
+        # estimate is present, passengers and seats come from it and are
+        # labelled as estimated.
         if estimate_available:
             assert route["passengers_estimated"] is True and route["passengers"] > 0
+            if route["capacity_estimated"]:
+                assert route["seats"] > 0
+                assert route["load_factor"] is None or 0 < route["load_factor"] <= 1
+            else:
+                assert route["seats"] is route["load_factor"] is None
         else:
             assert route["passengers"] is None
+            assert route["seats"] is route["load_factor"] is None
         assert sum(direction["departures"] for direction in route["directions"]) == route["departures"]
     observed = by_market["LAX<>MEX"]
     assert observed["operation_status"] == "operated_observed"
