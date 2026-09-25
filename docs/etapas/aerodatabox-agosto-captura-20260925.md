@@ -34,6 +34,11 @@ faltantes.
   agosto dentro de `derived/aerodatabox_international/fact_aeromexico_international_capacity_estimate.parquet`.
   Las semillas son todo lo que el ajuste necesita; los Silver con modelo de
   avión son transitorios y caducan a los 7 días.
+  Núcleo: 952 filas ruta × operador, 146 vuelos con escala en México
+  reconstruidos. Resto: 344 filas, 9 ventanas vacías (aeropuertos sin vuelos
+  internacionales en esa franja). Capacidad internacional de agosto: 99.94 %
+  de cobertura de modelo, 142 de 143 celdas utilizables (3 vuelos en Pilatus
+  PC-12, fuera de la flota comercial, sin mapear).
 
 La prueba de aceptación nacional de agosto dio `REJECT` con 0 % de cobertura.
 Es lo esperado mientras no existan marginales de agosto: no hay contra qué
