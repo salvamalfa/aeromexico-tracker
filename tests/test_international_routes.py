@@ -63,7 +63,12 @@ def test_gold_consumption_and_month_windows():
             if route[metric] is not None: assert sum(d[metric] for d in route['directions'])==route[metric]
     uk=next(r for r in additions if 'CAA' in r['source_label'])
     assert uk['observed_months']==['2026M06'] and uk['departures']==60
-    assert uk['passengers'] is None and uk['previous']['departures'] is None
+    assert uk['previous']['departures'] is None
+    # CAA publishes flights, not passengers. When the private estimate is
+    # present it fills passengers for June alone, the month CAA covers.
+    if uk['passengers'] is not None:
+        assert uk['passengers_estimated'] is True and uk['months_covered']==1
+        assert {m['period_id'] for m in uk['monthly']}=={'2026M06'}
     assert payload['route_network']['route_count']==40  # Original BTS scope preserved.
     assert {r['market_key'] for r in network['routes'] if r['source_label']=='AICM · vuelos AM programados'} >= {'MAD<>MEX','BCN<>MEX'}
     assert not any(r.get('operation_status')=='carrier_presence_and_market_observed' for r in network['routes'])
