@@ -297,7 +297,10 @@ def main(argv: list[str] | None = None) -> int:
     if flights.empty:
         return 1
 
-    out = PATHS.data / "silver"
+    # A subdirectory, like the other route extensions: the Stage 9 catalog
+    # governs only root-level Silver datasets, and a capture is local and
+    # period-by-period, not a contracted table.
+    out = PATHS.data / "silver" / "aerodatabox_international"
     out.mkdir(parents=True, exist_ok=True)
     tag = f"_{args.tag}" if args.tag else ""
     detail = out / f"aerodatabox_international_flights_{args.period_id}{tag}.parquet"
