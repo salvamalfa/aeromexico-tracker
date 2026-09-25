@@ -1227,8 +1227,8 @@ uv run python -m src.ingest.aerodatabox.international_cli sweep 2026M04 \
 uv run python -m src.ingest.aerodatabox.international_cli sweep 2026M04 --days 7 \
     --airports ACA,AGU,...,ZLO --tag resto --offline
 uv run python -m src.analytics.international_route_carrier --capture \
-    data/silver/aerodatabox_international_seed_2026M04_nucleo.parquet \
-    data/silver/aerodatabox_international_seed_2026M04_resto.parquet
+    data/silver/aerodatabox_international/aerodatabox_international_seed_2026M04_nucleo.parquet \
+    data/silver/aerodatabox_international/aerodatabox_international_seed_2026M04_resto.parquet
 ```
 
 (La caché cruda solo existe siete días; después, los derivados privados son la
@@ -1469,7 +1469,8 @@ Cifras vigentes tras esa regla: cobertura de rutas 99.45 % (abr), 99.46 %
 5.7 % (may), y para Aerovías + Connect de 6.8 % y 6.0 %.
 
 `prototypes/vuelos/vuelos_revision.html` se regeneró con todo lo anterior.
-El dashboard integrado publicado (`prototypes/etapa-11/resumen_ejecutivo.html`,
-`static/aeromexico_tracker.html`) **no** se tocó: su publicación requiere una
-autorización explícita propia y su reconstrucción completa sigue bloqueada
-por la falla conocida de `evidence.validate` del Analysis Agent.
+El dashboard integrado (`prototypes/etapa-11/resumen_ejecutivo.html`,
+`static/aeromexico_tracker.html`) se publicó el 2026-09-25 con autorización
+explícita, por el flujo normal de `stage18`, tras corregir la dependencia de
+plataforma que hacía fallar `evidence.validate`
+(`docs/etapas/analysis-agent-portabilidad-publicacion-20260925.md`).

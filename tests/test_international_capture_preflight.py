@@ -190,7 +190,7 @@ def test_two_sweeps_of_one_month_do_not_overwrite_each_other(tmp_path, monkeypat
     monkeypatch.setattr(
         "src.ingest.aerodatabox.international_cli.PATHS", ProjectPaths(root=tmp_path)
     )
-    silver = tmp_path / "data" / "silver"
+    silver = tmp_path / "data" / "silver" / "aerodatabox_international"
 
     def serve(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json={"departures": [_flight("MAD")], "arrivals": []})
