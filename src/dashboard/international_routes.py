@@ -9,17 +9,109 @@ OMA_LABEL='OMA · rutas documentadas'
 ESTIMATED_LABEL='AFAC + AeroDataBox · Grupo Aeroméxico estimado'
 ESTIMATED_CARRIERS=('AEROMEXICO','AEROMEXICO_CONNECT')
 ESTIMATE_TABLE='fact_route_carrier_international_estimate'
+CAPACITY_TABLE='fact_aeromexico_international_capacity_estimate'
+CAPACITY_ROUTE_KEYS=('seats','seats_low','seats_high','load_factor','load_factor_low',
+    'load_factor_high','capacity_estimated','load_factor_status','aircraft_model_coverage')
+ROUTE_PAYLOAD_KEYS=('passengers','passengers_low','passengers_high','passengers_estimated',
+    'months_covered','months_selected','monthly','estimator_version')+CAPACITY_ROUTE_KEYS
 
 
-def _estimated_routes(estimates, months, endpoint):
+def _capacity_by_direction(capacity, months):
+    """Grupo Aeroméxico capacity per period x direction, summed across carriers.
+
+    Mirrors the domestic dashboard's ``capacity_by_direction``: a carrier the
+    capacity table does not cover contributes nothing, but never blocks the
+    group total the other carrier's evidence supports.
+    """
+    keys=['period_id','origin_iata','destination_iata']
+    if capacity.empty:
+        return pd.DataFrame(columns=keys+['departures_estimated','seats_estimated',
+            'seats_estimated_low','seats_estimated_high','aircraft_model_coverage','capacity_usable'])
+    subset=capacity[capacity.period_id.isin(months)]
+    return subset.groupby(keys,as_index=False).agg(
+        departures_estimated=('departures_estimated','sum'),
+        seats_estimated=('seats_estimated','sum'),
+        seats_estimated_low=('seats_estimated_low','sum'),
+        seats_estimated_high=('seats_estimated_high','sum'),
+        aircraft_model_coverage=('aircraft_model_coverage','min'),
+        capacity_usable=('capacity_usable','all'))
+
+
+def _capacity_cell(capacity_by_direction, period, origin, dest):
+    """The usable capacity for one period/direction cell, or ``None``."""
+    match=capacity_by_direction[(capacity_by_direction.period_id==period)
+        & (capacity_by_direction.origin_iata==origin) & (capacity_by_direction.destination_iata==dest)]
+    if match.empty or not bool(match.iloc[0].capacity_usable):
+        return None
+    row=match.iloc[0]
+    return dict(departures=float(row.departures_estimated),seats=float(row.seats_estimated),
+        seats_low=float(row.seats_estimated_low),seats_high=float(row.seats_estimated_high),
+        aircraft_model_coverage=float(row.aircraft_model_coverage))
+
+
+def _item_capacity_metrics(cell, passengers, passengers_low, passengers_high):
+    """Per period/direction seats and occupancy, gated by usable capacity.
+
+    Same plausibility rule as domestic: an occupancy above 100% is not shown,
+    only flagged as inconsistent inputs; there is no lower-bound flag.
+    """
+    if cell is None:
+        return dict(capacity_estimated=False,seats=None,seats_low=None,seats_high=None,
+            departures=None,load_factor=None,load_factor_status='capacity_incomplete',
+            aircraft_model_coverage=None)
+    seats=cell['seats']
+    load_factor=passengers/seats if seats>0 else None
+    plausible=load_factor is not None and 0<=load_factor<=1
+    return dict(capacity_estimated=True,seats=seats,seats_low=cell['seats_low'],seats_high=cell['seats_high'],
+        departures=cell['departures'],load_factor=load_factor if plausible else None,
+        load_factor_status='estimated' if plausible else 'inconsistent_inputs',
+        aircraft_model_coverage=cell['aircraft_model_coverage'])
+
+
+def _route_capacity_metrics(items):
+    """Aggregate seats/occupancy over a set of period/direction items.
+
+    Complete only when every item in ``items`` has usable capacity, exactly
+    the domestic completeness rule: a route with one incomplete month or
+    direction shows N/D at this grain, even though other months or
+    directions may show a number of their own (each item carries its own
+    ``capacity_estimated``).
+    """
+    complete=bool(items) and all(item['capacity_estimated'] for item in items)
+    if not complete:
+        return dict(seats=None,seats_low=None,seats_high=None,load_factor=None,
+            load_factor_low=None,load_factor_high=None,capacity_estimated=False,
+            load_factor_status='capacity_incomplete',aircraft_model_coverage=None)
+    seats=sum(item['seats'] for item in items)
+    seats_low=sum(item['seats_low'] for item in items)
+    seats_high=sum(item['seats_high'] for item in items)
+    passengers=sum(item['passengers'] for item in items)
+    passengers_low=sum(item['passengers_low'] for item in items)
+    passengers_high=sum(item['passengers_high'] for item in items)
+    load_factor=passengers/seats if seats>0 else None
+    plausible=load_factor is not None and 0<=load_factor<=1
+    return dict(seats=seats,seats_low=seats_low,seats_high=seats_high,
+        load_factor=load_factor if plausible else None,
+        load_factor_low=passengers_low/seats_high if plausible and seats_high>0 else None,
+        load_factor_high=passengers_high/seats_low if plausible and seats_low>0 else None,
+        capacity_estimated=True,
+        load_factor_status='estimated' if plausible else 'inconsistent_inputs',
+        aircraft_model_coverage=min(item['aircraft_model_coverage'] for item in items))
+
+
+def _estimated_routes(estimates, capacity, months, endpoint):
     """Grupo Aeroméxico routes estimated from AFAC margins, one per airport market.
 
     Only a quarter whose every month was fitted is used: a partial quarter
-    would read as a full one on the map.
+    would read as a full one on the map. Seats and occupancy come from the
+    AFAC+AeroDataBox+flota seat-capacity estimate, gated cell by cell: a
+    period/direction with usable capacity shows a number, one without stays
+    N/D, the same completeness rule as domestic.
     """
     if estimates.empty or not set(months) <= set(estimates.period_id):
         return {}
     frame=estimates[estimates.period_id.isin(months)]
+    capacity_by_direction=_capacity_by_direction(capacity,months)
     routes={}
     for market,group in frame.groupby('market_key'):
         a,b=market.split('<>')
@@ -30,20 +122,24 @@ def _estimated_routes(estimates, months, endpoint):
             continue
         monthly=[]
         for (period,origin,dest),part in group.groupby(['period_id','origin_iata','destination_iata'],sort=True):
-            monthly.append(dict(period_id=str(period),carrier_key='AEROMEXICO_GROUP',carrier_label='Grupo Aeroméxico',
+            passengers=float(part.passengers_estimated.sum())
+            passengers_low=float(part.passengers_estimated_low.sum())
+            passengers_high=float(part.passengers_estimated_high.sum())
+            cell=_capacity_cell(capacity_by_direction,str(period),str(origin),str(dest))
+            item=dict(period_id=str(period),carrier_key='AEROMEXICO_GROUP',carrier_label='Grupo Aeroméxico',
                 origin_iata=str(origin),destination_iata=str(dest),
-                passengers=float(part.passengers_estimated.sum()),
-                passengers_low=float(part.passengers_estimated_low.sum()),
-                passengers_high=float(part.passengers_estimated_high.sum()),
-                seats=None,departures=None,load_factor=None,capacity_estimated=False,
-                support_observed_in_period=True,support_source_periods=str(period),support_month_gap=0))
+                passengers=passengers,passengers_low=passengers_low,passengers_high=passengers_high,
+                support_observed_in_period=True,support_source_periods=str(period),support_month_gap=0)
+            item.update(_item_capacity_metrics(cell,passengers,passengers_low,passengers_high))
+            monthly.append(item)
+        route_capacity=_route_capacity_metrics(monthly)
         covered=int(group.period_id.nunique())
         routes[market]=dict(
             market_key=market,origin=endpoint(a),destination=endpoint(b),
             passengers=float(group.passengers_estimated.sum()),
             passengers_low=float(group.passengers_estimated_low.sum()),
             passengers_high=float(group.passengers_estimated_high.sum()),
-            passengers_estimated=True,capacity_estimated=False,
+            passengers_estimated=True,**route_capacity,
             departures_estimated_seed=float(group.departures_estimated.sum()),
             months_covered=covered,months_selected=len(months),monthly=monthly,
             estimator_version=sorted(group.estimator_version.unique())[0])
@@ -62,6 +158,8 @@ def extend_networks(connection, networks):
     oma=connection.execute("SELECT * FROM fact_oma_documented_routes").df() if has_oma else pd.DataFrame()
     has_estimate=connection.execute(f"SELECT count(*) FROM information_schema.tables WHERE table_name='{ESTIMATE_TABLE}'").fetchone()[0]
     estimates=connection.execute(f"SELECT * FROM {ESTIMATE_TABLE} WHERE carrier_key IN {ESTIMATED_CARRIERS}").df() if has_estimate else pd.DataFrame()
+    has_capacity=connection.execute(f"SELECT count(*) FROM information_schema.tables WHERE table_name='{CAPACITY_TABLE}'").fetchone()[0]
+    capacity=connection.execute(f"SELECT * FROM {CAPACITY_TABLE} WHERE carrier_key IN {ESTIMATED_CARRIERS}").df() if has_capacity else pd.DataFrame()
     airports=connection.execute('SELECT * FROM dim_airport').df().set_index('airport_iata').to_dict('index')
     def endpoint(code):
         a=airports[code]
@@ -167,14 +265,13 @@ def extend_networks(connection, networks):
         # market keeps its observation; a market with flights but no
         # passengers gains the estimate beside its own flights; a market no
         # source quantified is added, labelled as an estimate throughout.
-        for market,estimate in _estimated_routes(estimates,months,endpoint).items():
+        for market,estimate in _estimated_routes(estimates,capacity,months,endpoint).items():
             matching=next((r for r in network['routes'] if r['market_key']==market),None)
             months_text=', '.join(sorted({m['period_id'][5:] for m in estimate['monthly']}))
             note=f"Pasajeros estimados de Grupo Aeroméxico (AFAC + AeroDataBox) · meses {months_text}"
             if matching is not None and matching.get('passengers') is not None:
                 continue
-            payload={k:estimate[k] for k in ('passengers','passengers_low','passengers_high','passengers_estimated',
-                'capacity_estimated','months_covered','months_selected','monthly','estimator_version')}
+            payload={k:estimate[k] for k in ROUTE_PAYLOAD_KEYS}
             if matching is not None:
                 # The estimate covers only the months the route's own source
                 # covers, so passengers and flights describe the same window
@@ -186,16 +283,29 @@ def extend_networks(connection, networks):
                     continue
                 payload['monthly']=monthly
                 payload['months_covered']=len({item['period_id'] for item in monthly})
+                # Seats and occupancy are recomputed from just this route's own
+                # months: a route only priced from June onward must not read
+                # its completeness off the whole quarter's estimate.
+                for key,value in _route_capacity_metrics(monthly).items():
+                    payload[key]=value
                 # Each measured direction takes its own estimate, so the
-                # directions still add up to the route they belong to.
+                # directions still add up to the route they belong to
+                # (passengers always; seats and occupancy whenever this
+                # route's own months make that direction's capacity usable).
                 by_direction={}
+                by_direction_items={}
                 for item in monthly:
                     key=(item['origin_iata'],item['destination_iata'])
+                    by_direction_items.setdefault(key,[]).append(item)
                     sums=by_direction.setdefault(key,dict(passengers=0.0,passengers_low=0.0,passengers_high=0.0))
                     for metric in sums: sums[metric]+=item[metric]
                 for direction in matching['directions']:
-                    direction.update(by_direction.get((direction['origin_iata'],direction['destination_iata']),
+                    key=(direction['origin_iata'],direction['destination_iata'])
+                    direction.update(by_direction.get(key,
                                                       dict(passengers=0.0,passengers_low=0.0,passengers_high=0.0)))
+                    direction_capacity=_route_capacity_metrics(by_direction_items.get(key,[]))
+                    for metric in ('seats','seats_low','seats_high','load_factor','load_factor_low','load_factor_high'):
+                        direction[metric]=direction_capacity[metric]
                 matching.update(payload)
                 for metric in ('passengers','passengers_low','passengers_high'):
                     matching[metric]=float(sum(d[metric] for d in matching['directions']))
@@ -203,7 +313,7 @@ def extend_networks(connection, networks):
                 continue
             network['routes'].append(dict(
                 market_key=market,origin=estimate['origin'],destination=estimate['destination'],
-                **payload,seats=None,departures=round(estimate['departures_estimated_seed']),load_factor=None,
+                **payload,departures=round(estimate['departures_estimated_seed']),
                 previous={k:None for k in ('passengers','seats','departures')},
                 directions=[],source_label=ESTIMATED_LABEL,
                 observed_months=[],estimated_months=sorted({m['period_id'] for m in estimate['monthly']}),

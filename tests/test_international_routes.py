@@ -58,9 +58,20 @@ def test_gold_consumption_and_month_windows():
     assert {r['source_label'] for r in additions}=={'Brasil · ANAC','Colombia · Aerocivil','Reino Unido · CAA'}
     for route in additions:
         assert set(route['observed_months'])<=set(network['expected_months'])
-        assert route['load_factor'] is None
+        if route.get('passengers_estimated'):
+            # AFAC + AeroDataBox capacity fills load_factor only for a route
+            # whose own months are all capacity-usable, and only with a
+            # plausible (0-100%) value; otherwise it stays N/D, same as
+            # domestic. It is never hardcoded None just because the
+            # passengers themselves came from the estimate.
+            assert route['load_factor'] is None or 0<=route['load_factor']<=1
+        else:
+            # A route ANAC/Aerocivil/CAA measured with real passengers of its
+            # own never gets Aeroméxico's estimated occupancy grafted on.
+            assert route['load_factor'] is None
         for metric in ('passengers','seats','departures'):
-            if route[metric] is not None: assert sum(d[metric] for d in route['directions'])==route[metric]
+            if route[metric] is not None:
+                assert sum(d[metric] for d in route['directions'])==pytest.approx(route[metric])
     uk=next(r for r in additions if 'CAA' in r['source_label'])
     assert uk['observed_months']==['2026M06'] and uk['departures']==60
     assert uk['previous']['departures'] is None
@@ -69,6 +80,19 @@ def test_gold_consumption_and_month_windows():
     if uk['passengers'] is not None:
         assert uk['passengers_estimated'] is True and uk['months_covered']==1
         assert {m['period_id'] for m in uk['monthly']}=={'2026M06'}
+        # Seats and occupancy come from the AFAC + AeroDataBox + flota seat
+        # estimate, gated by the same completeness rule as domestic: usable
+        # for every direction of the one month CAA covers, so the route
+        # shows a number instead of N/D.
+        if uk['capacity_estimated']:
+            assert uk['seats']==pytest.approx(sum(m['seats'] for m in uk['monthly']))
+            assert uk['load_factor'] is None or 0<=uk['load_factor']<=1
+            assert all(item['capacity_estimated'] for item in uk['monthly'])
+            for direction in uk['directions']:
+                assert direction['seats'] is None or direction['seats']>0
+        else:
+            assert uk['seats'] is None and uk['load_factor'] is None
+            assert uk['load_factor_status']=='capacity_incomplete'
     assert payload['route_network']['route_count']==40  # Original BTS scope preserved.
     assert {r['market_key'] for r in network['routes'] if r['source_label']=='AICM · vuelos AM programados'} >= {'MAD<>MEX','BCN<>MEX'}
     assert not any(r.get('operation_status')=='carrier_presence_and_market_observed' for r in network['routes'])

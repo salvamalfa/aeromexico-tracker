@@ -271,3 +271,94 @@ def build_carrier_flights(
     reference = reference_dir or (PATHS.data / "reference")
     flights.to_csv(reference / CARRIER_FLIGHTS_FILE, index=False)
     return flights
+
+
+def refresh_year(
+    year: int,
+    route_workbook: Path,
+    summary_workbook: Path,
+    *,
+    reference_dir: Path | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame, list[Reconciliation]]:
+    """Replace one year of the three domestic margin files from one AFAC edition.
+
+    A new monthly edition (``sase-agosto-2026-*.xlsx`` with its companion
+    ``resumen-agosto-2026-*.xlsx``) restates every month of its year, so the
+    whole year is swapped at once and never mixed with an older edition.  The
+    carrier side is read from the summary's ``PAXREG`` domestic block instead
+    of the DATATUR long table, which lags the monthly release; its names are
+    the ones the files already use, and a carrier absent from them is kept
+    out of the fit and listed.
+    """
+
+    reference = reference_dir or (PATHS.data / "reference")
+    prefix = f"{year}M"
+    routes = read_route_workbook(route_workbook, year)
+    carriers = read_summary_domestic_block(summary_workbook, "PAXREG", year)
+    flights = read_summary_domestic_block(summary_workbook, "VLOSREG", year)
+    carriers = carriers[carriers["value"] > 0].rename(columns={"value": "pasajeros"})
+    # The summary marks some carriers with a footnote asterisk that the
+    # DATATUR names in the passenger file never carry.  The flight file was
+    # built from the summary itself, so its names are left as published.
+    carriers["carrier_name"] = carriers["carrier_name"].str.rstrip("* ").str.strip()
+    flights = flights[flights["value"] > 0].rename(columns={"value": "vuelos"})
+    months = set(routes["period_id"])
+    carriers = carriers[carriers["period_id"].isin(months)]
+    flights = flights[flights["period_id"].isin(months)]
+
+    existing_carriers = pd.read_csv(reference / CARRIER_MARGIN_FILE)
+    known = set(existing_carriers["carrier_name"])
+    excluded = carriers[~carriers["carrier_name"].isin(known)]
+    if not excluded.empty:
+        # Same exclusion ``build`` applies through ``known_carriers``: charter
+        # and freight operators the crosswalk leaves out.  A genuinely new
+        # carrier also lands here, so it is printed, and the reconciliation
+        # below shows whether the route side carries its passengers.
+        totals = excluded.groupby("carrier_name")["pasajeros"].sum()
+        print("aerolineas fuera de la marginal: " + ", ".join(
+            f"{name} ({int(value):,})" for name, value in totals.items()
+        ))
+    carriers = carriers[carriers["carrier_name"].isin(known)]
+    flights = flights[flights["carrier_name"].isin(known)]
+
+    def swap(existing: pd.DataFrame, fresh: pd.DataFrame, keys: list[str]) -> pd.DataFrame:
+        kept = existing[~existing["period_id"].astype(str).str.startswith(prefix)]
+        merged = pd.concat([kept, fresh.loc[:, list(existing.columns)]], ignore_index=True)
+        return merged.sort_values(keys, ignore_index=True)
+
+    routes_out = swap(
+        pd.read_csv(reference / ROUTE_MARGIN_FILE), routes, ["period_id", "origen", "destino"]
+    )
+    carriers_out = swap(existing_carriers, carriers, ["period_id", "carrier_name"])
+    flights_out = swap(
+        pd.read_csv(reference / CARRIER_FLIGHTS_FILE), flights, ["period_id", "carrier_name"]
+    )
+    routes_out.to_csv(reference / ROUTE_MARGIN_FILE, index=False)
+    carriers_out.to_csv(reference / CARRIER_MARGIN_FILE, index=False)
+    flights_out.to_csv(reference / CARRIER_FLIGHTS_FILE, index=False)
+    return routes_out, carriers_out, reconcile(routes_out, carriers_out)
+
+
+def main(argv: list[str] | None = None) -> int:  # pragma: no cover - manual entry
+    import argparse
+
+    parser = argparse.ArgumentParser(prog="python -m src.ingest.afac.margins")
+    parser.add_argument("--year", type=int, required=True)
+    parser.add_argument("--routes", type=Path, required=True, help="sase-<mes>-<año>-*.xlsx")
+    parser.add_argument("--carriers", type=Path, required=True, help="resumen-<mes>-<año>-*.xlsx")
+    parser.add_argument("--reference-dir", type=Path, default=None)
+    args = parser.parse_args(argv)
+    _, _, checks = refresh_year(
+        args.year, args.routes, args.carriers, reference_dir=args.reference_dir
+    )
+    for check in checks:
+        if check.period_id.startswith(f"{args.year}M"):
+            print(
+                f"{check.period_id}: rutas {check.route_passengers:,} "
+                f"aerolineas {check.carrier_passengers:,} diferencia {check.difference:,}"
+            )
+    return 0
+
+
+if __name__ == "__main__":  # pragma: no cover
+    raise SystemExit(main())
