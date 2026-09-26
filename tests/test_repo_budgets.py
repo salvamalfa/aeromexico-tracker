@@ -1,9 +1,10 @@
-"""Repo hygiene budget: no Python module grows past its size limit.
+"""Repo hygiene budget: no Python module grows past its size limit, and (as
+of P4a) no web/ JS module either.
 
 See docs/arquitectura/auditoria-arquitectura-20260926.md §4.3: modulo
-Python <= 600 lineas, con una lista explicita de excepciones vigentes
-que solo puede reducirse, nunca crecer. No hay presupuesto de TypeScript
-todavia (llega con P4/P5 de la migracion).
+Python <= 600 lineas, modulo JS (web/src/**/*.js) <= 400 lineas, con una
+lista explicita de excepciones vigentes que solo puede reducirse, nunca
+crecer.
 """
 
 from __future__ import annotations
@@ -11,6 +12,7 @@ from __future__ import annotations
 from pathlib import Path
 
 BUDGET = 600
+JS_BUDGET = 400
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -94,4 +96,26 @@ def test_allowlisted_files_have_not_grown():
         "Archivos de la lista de excepciones que crecieron; redúcelos o, si "
         "el crecimiento es intencional y justificado, actualiza el conteo "
         "registrado en ALLOWLIST junto con la justificación:\n" + "\n".join(grown)
+    )
+
+
+def _tracked_js_files() -> list[Path]:
+    files = []
+    for path in (REPO_ROOT / "web" / "src").rglob("*.js"):
+        relative = path.relative_to(REPO_ROOT)
+        if EXCLUDED_DIR_NAMES & set(relative.parts):
+            continue
+        files.append(relative)
+    return sorted(files)
+
+
+def test_no_js_module_exceeds_the_line_budget():
+    violations = [
+        f"{relative.as_posix()}: {lines} lineas (limite {JS_BUDGET})"
+        for relative in _tracked_js_files()
+        if (lines := _line_count(REPO_ROOT / relative)) > JS_BUDGET
+    ]
+    assert not violations, (
+        "Modulos web/src/**/*.js que exceden el presupuesto de "
+        f"{JS_BUDGET} lineas; divide el modulo (ver web/README.md):\n" + "\n".join(violations)
     )
