@@ -177,12 +177,32 @@ def test_economy_tab_kpis_match_the_underlying_payload_for_every_quarter(
             site_page.click("#period-prev")
 
 
+def _with_citation_labels(text: str, citations: list[dict]) -> str:
+    """Port of narrative.ts::applyCitations' text-splicing, in plain text:
+    each citation's label is inserted right after the first (in reading
+    order) occurrence of its ``value`` -- the same substring the DOM ends
+    up with once the <sup><a> citation marker is spliced in."""
+
+    result: list[str] = []
+    cursor = 0
+    for citation in citations:
+        index = text.find(citation["value"], cursor)
+        if index == -1:
+            continue
+        end = index + len(citation["value"])
+        result.append(text[cursor:end])
+        result.append(citation["label"])
+        cursor = end
+    result.append(text[cursor:])
+    return "".join(result)
+
+
 @browser_test
 def test_reading_tab_narrative_matches_the_approved_analysis(site_page) -> None:
     """For every period the local ledger currently has approved/published,
     the reading tab's narrative text contains that exact approved thesis
-    and every summary item -- read straight from the ledger, not from a
-    second render."""
+    and every summary item, citation markers included -- read straight from
+    the ledger, not from a second render."""
 
     manifest = discover_approved_manifest(flow.ROOT)
     if not manifest:
@@ -202,10 +222,12 @@ def test_reading_tab_narrative_matches_the_approved_analysis(site_page) -> None:
         period_id = site_page.evaluate("document.getElementById('narrative-copy').dataset.period")
         if period_id in expected:
             analysis = expected[period_id]
+            citations_by_claim = {claim["claim_id"]: claim["citations"] for claim in analysis["claims"]}
             text = _text(site_page, "#narrative-copy")
             assert analysis["thesis"] in text, period_id
             for item in analysis["summary_items"]:
-                assert item["text"] in text, (period_id, item["claim_id"])
+                expected_text = _with_citation_labels(item["text"], citations_by_claim.get(item["claim_id"], []))
+                assert expected_text in text, (period_id, item["claim_id"])
             checked.add(period_id)
         if not site_page.is_enabled("#period-prev"):
             break
