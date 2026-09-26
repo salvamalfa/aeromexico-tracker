@@ -22,11 +22,13 @@
   "sections": [
     {
       "title": "Fixture section one",
-      "paragraphs": ["Fixture paragraph for section one."]
+      "paragraphs": ["Fixture paragraph for section one."],
+      "claim_ids": ["section_one_claim"]
     },
     {
       "title": "Fixture section two",
-      "paragraphs": ["Fixture paragraph for section two.", "A second paragraph."]
+      "paragraphs": ["Fixture paragraph for section two.", "A second paragraph."],
+      "claim_ids": ["section_two_claim_a", "section_two_claim_b"]
     }
   ],
   "claims": [
@@ -35,7 +37,15 @@
       "type": "observed_fact",
       "text": "Fixture lead sentence. This is a fixture claim used only by tests/fixtures/web.",
       "calculation_ids": [],
-      "evidence_ids": []
+      "evidence_ids": [],
+      "citations": [
+        {
+          "label": "1",
+          "href": "https://www.sec.gov/example#:~:text=Fixture",
+          "title": "Reporte original · Fixture cell",
+          "value": "fixture"
+        }
+      ]
     }
   ],
   "evidence_fingerprint": "fixture-evidence-fingerprint",

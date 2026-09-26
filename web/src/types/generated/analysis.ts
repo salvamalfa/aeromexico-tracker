@@ -2,7 +2,7 @@
 // Do not edit by hand; run `npm run gen:types` after changing a schema.
 
 /**
- * Describes web/public/data/v1/analysis/<period_id>.json: exactly the fields src.analysis_agent.lifecycle.consumer_payload(record) authorizes for a currently-approved analysis version, minus any reader-private section (see src/web_export/analysis.py). No calculation lineage, evidence excerpts or source URLs — those stay private; the citations the published HTML overlays on top of this text are out of scope for this export. See docs/arquitectura/auditoria-arquitectura-20260926.md Fase 3 and contracts/web/README.md.
+ * Describes web/public/data/v1/analysis/<period_id>.json: exactly the fields src.analysis_agent.lifecycle.consumer_payload(record) authorizes for a currently-approved analysis version, minus any reader-private section (see src/web_export/analysis.py). Each claim also carries the citation(s) the published page overlays on that claim's text, ported from src.analysis_agent.reader_ui.cite() — only the public source URL, the visible tooltip text and the substring to wrap ever leave this file; no excerpt/source/calculation object, lineage or provider identifier. See docs/arquitectura/auditoria-arquitectura-20260926.md Fase 3 and contracts/web/README.md.
  */
 export interface AnalisisDelAnalysisAgentParaLaLecturaEjecutivaV1 {
   period_id: string;
@@ -30,6 +30,7 @@ export interface SummaryItem {
 export interface Section {
   title: string;
   paragraphs: string[];
+  claim_ids: string[];
 }
 export interface Claim {
   claim_id: string;
@@ -37,4 +38,11 @@ export interface Claim {
   text: string;
   calculation_ids: string[];
   evidence_ids: string[];
+  citations: Citation[];
+}
+export interface Citation {
+  label: string;
+  href: string;
+  title: string;
+  value: string;
 }

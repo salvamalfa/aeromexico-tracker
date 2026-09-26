@@ -115,18 +115,27 @@ payload both quarter lists have the same 22 quarters in the same order,
 so both stay in lockstep either way — but the *order* the listeners
 attach in is part of what parity tests check, not just the end state.
 
-### Known, accepted parity gap: citations
+### Citations (closed gap, P6a)
 
 The published reading tab adds a superscript citation link
 (`<sup><a class="source-note">`) next to some numbers in the analysis text
-— see `src/analysis_agent/reader_ui.py::cite`. Building that link needs
-the private evidence/calculation data from `verified_inputs()`
-(excerpts, source URLs, calculation lineage), which
-`src/web_export/analysis.py` never reads or exports — only
-`lifecycle.consumer_payload(record)`'s already-rendered claim text. This
-view shows the same text without that citation link.
-`tests/test_web_page_parity.py` strips `<sup>` from both sides before
-comparing prose, so it still proves the visible words match exactly.
+— see `src/analysis_agent/reader_ui.py::cite`. P4b/P5 shipped without it:
+building that link needs `verified_inputs()` (excerpts, source URLs,
+calculation lineage), which `src/web_export/analysis.py` did not read.
+P6a closed this gap: `src/web_export/analysis.py` now also calls
+`flow.verified_inputs(record)` (the same fail-closed call `stage18`
+makes) and, per claim, exports a `citations` array — a port of
+`cite()`'s selection logic that emits *only* what `cite()` itself already
+puts on the public page: the public source URL (still restricted to
+`www.sec.gov`/`sec.gov`/`ir.aeromexico.com`, both in code and in
+`contracts/web/analysis.schema.json`'s `citation.href` pattern), the
+visible tooltip text, and the exact substring of the already-rendered
+claim text to wrap — no excerpt/source/calculation object or lineage ever
+leaves the file. `web/src/views/executive/narrative.ts::applyCitations`
+ports `cite()`'s DOM-splicing step (same markup, classes, attributes,
+numbering) against the rendered text. `tests/test_web_page_parity.py`
+compares the full `innerText` (superscripts included) on both sides, so
+parity is 100%, citations included.
 
 ## Entradas / salidas
 

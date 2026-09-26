@@ -5,14 +5,11 @@ economy tab's KPIs and chart data, over the full quarter matrix.
 
 Both pages render output derived from the same generators
 (``src.dashboard.executive_summary.build_executive_payload()`` and, for the
-reading tab, ``src.analysis_agent.lifecycle.consumer_payload()`` via
-``src.web_export.analysis``); this test proves the ES-module split changed
-nothing visible, with one accepted, documented exception: the published
-page adds a superscript citation link next to some numbers (built from
-private evidence data — see ``src/analysis_agent/reader_ui.py::cite`` — that
-``consumer_payload`` does not export). Every text comparison below strips
-those ``<sup>`` citation markers from the published side before comparing,
-so this test still proves 100% parity of the visible prose itself.
+reading tab, ``src.analysis_agent.lifecycle.consumer_payload()`` plus the
+citations ``src.web_export.analysis`` also exports as of P6a — see
+``web/README.md``); this test proves the ES-module split changed nothing
+visible, citations included: every text comparison below reads the full
+``innerText`` (superscript citation markers and all) on both sides.
 
 Marked ``browser`` and ``local_data``: needs the real warehouse-backed
 ``executive_payload``/``flight_payload`` and the local approval ledger (via
@@ -96,21 +93,20 @@ def browsers(web_server):
 # Extraction helpers
 # ---------------------------------------------------------------------------
 
-_STRIP_SUP_JS = """(selector) => {
+_TEXT_JS = """(selector) => {
   const el = document.querySelector(selector);
   if (!el) return null;
   // innerText (not textContent) so hidden siblings — the published page
   // keeps every period's analysis block in the DOM and only toggles
   // [hidden], see src/analysis_agent/stage18.py's SCRIPT — are excluded,
-  // same as what a person actually sees. Removing <sup> mutates the live
-  // page, which is fine here: each period's block is only ever read once.
-  el.querySelectorAll('sup').forEach((node) => node.remove());
+  // same as what a person actually sees. Citation <sup> markers are kept:
+  // as of P6a both pages render them identically (see web/README.md).
   return el.innerText.replace(/\\s+/g, ' ').trim();
 }"""
 
 
-def _text_without_citations(page, selector: str) -> str | None:
-    return page.evaluate(_STRIP_SUP_JS, selector)
+def _text(page, selector: str) -> str | None:
+    return page.evaluate(_TEXT_JS, selector)
 
 
 def _kpis(page) -> dict[str, tuple[str, str, str]]:
@@ -171,8 +167,8 @@ def test_reading_tab_matches_every_quarter(browsers, executive_payload) -> None:
             "(id) => document.getElementById('narrative-copy').dataset.period === id", arg=period_id
         )
         assert published.inner_text("#narrative-period") == web.inner_text("#narrative-period")
-        published_text = _text_without_citations(published, "#narrative-copy")
-        web_text = _text_without_citations(web, "#narrative-copy")
+        published_text = _text(published, "#narrative-copy")
+        web_text = _text(web, "#narrative-copy")
         assert published_text == web_text, f"narrative mismatch at {web.inner_text('#narrative-period')}"
 
 
@@ -191,8 +187,8 @@ def test_reading_tab_full_dialog_matches_for_the_one_approved_quarter(browsers, 
     open_button.first.click()
     web.click("#analysis-open-full")
     published_dialog = published.query_selector(".analysis-dialog[open]")
-    published_text = _text_without_citations(published, f"#{published_dialog.get_attribute('id')} .modal-content")
-    web_text = _text_without_citations(web, "#analysis-full .modal-content")
+    published_text = _text(published, f"#{published_dialog.get_attribute('id')} .modal-content")
+    web_text = _text(web, "#analysis-full .modal-content")
     published.keyboard.press("Escape")
     web.keyboard.press("Escape")
     assert published_text == web_text
