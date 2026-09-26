@@ -457,6 +457,6 @@ Lo que el sondeo tiene que contestar, y que no se puede contestar sin gastar:
 - AeroDataBox, términos de uso: <https://aerodatabox.com/terms>
 - `docs/etapas/aerodatabox-ruta-aerolinea-revision-20260919.md`
 - `docs/etapas/afac-rutas-investigacion-20260908.md`
-- `docs/pasajeros-por-ruta-y-aerolinea.md`
+- `docs/etapas/pasajeros-por-ruta-y-aerolinea.md`
 - `docs/cloud-development.md`
 - `prototypes/vuelos/vuelos_revision.html` (payload `#flight-dashboard-data`)

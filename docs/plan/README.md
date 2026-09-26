@@ -1,5 +1,10 @@
 # Plan de Implementación — Dashboard Analítico de Grupo Aeroméxico
 
+> **Histórico.** Este directorio describe las etapas 0–17, ya cerradas, y el plan
+> original que las guió. No refleja el estado actual del repositorio ni sus reglas
+> vigentes. Para "cómo funciona hoy", consulta [`REPO_MAP.md`](../../REPO_MAP.md),
+> `CLAUDE.md` y `AGENTS.md`; para el estado y resultado de cada etapa, `docs/etapas/`.
+
 Este directorio contiene el plan completo de implementación de un dashboard analítico
 trimestral sobre Grupo Aeroméxico (ticker **AERO**, NYSE + BMV), pensado para ser
 ejecutado por un agente de código (Claude Code) con acceso a terminal, sistema de
