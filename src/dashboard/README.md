@@ -1,41 +1,49 @@
 # `src/dashboard`
 
-Payloads y generadores del dashboard: la lectura ejecutiva, Vuelos, y la app
-Streamlit heredada (que se retira; ver `docs/arquitectura/migracion-estado.md`,
-paquete P7).
+Payloads que `src/web_export`/`src/publish` consumen: la lectura ejecutiva y
+Vuelos. The Streamlit multipage app and every module that rendered its own
+HTML (`app.py`, `pages/`, `components/`, `theme.py`, `structure_*.py`,
+`validate_stage10.py`, `validate_stage11.py`, `build_stage11.py`,
+`executive_summary_html.py`, and the HTML-rendering half of
+`flights_html.py`/`build_flights.py`) were retired in P7 (see
+`docs/arquitectura/migracion-estado.md`); `web/` is now the only rendered
+view.
 
 ## Responsabilidad
 
-- **Lectura ejecutiva / economía unitaria:** `executive_summary.py` (payload)
-  + `executive_summary_html.py` (render); `build_stage11.py` genera el
-  prototipo aislado (no reproduce el integrado, ver abajo).
+- **Lectura ejecutiva / economía unitaria:** `executive_summary.py` builds
+  the payload `src/web_export/executive.py` exports and `src/publish/gate.py`
+  consumes.
 - **Vuelos:** `flights.py` (payload: red doméstica/internacional, capacidad,
-  ocupación), `flights_html.py` (maquetado y `integration_flight_payload`, la
-  lista blanca de columnas que entran al HTML), `domestic_routes.py`,
-  `international_routes.py` (tablas de ruta por red), `build_flights.py`
-  (reconstruye el payload tras cambiar fuentes).
-- **Estructura de datos:** `structure_metadata.py`, `structure_presentation.py`,
-  `structure_html.py`, con sus validadores `validate_stage8.py`,
-  `validate_stage10.py`, `validate_stage11.py`.
-- **App Streamlit heredada** (`app.py`, `navigation.py`, `pages/`,
-  `components/`, `data.py`, `prepare.py`, `theme.py`): sirve el HTML publicado
-  vía `st.iframe`; no genera el HTML integrado.
+  ocupación), `flights_html.py::integration_flight_payload` (the column
+  whitelist that reaches the exported JSON — a column not added there is
+  silently dropped), `domestic_routes.py`, `international_routes.py` (tablas
+  de ruta por red), `build_flights.py` (rebuilds the payload and its
+  candidate flight evidence after a source or Vuelos change).
+- **Datos y calidad, sin UI:** `data.py` (consultas al warehouse en memoria,
+  DuckDB sobre Parquet — sin Streamlit, ver `check_manual_freshness.py`
+  usado por `.github/workflows/refresh.yml`), `validate_stage8.py` (los
+  controles de datos del DAG en `src/pipeline/registry.py`: contratos,
+  interpretaciones de métricas, anclas trimestrales, incertidumbre del
+  forecast, salud de datos, frescura AFAC — sin los controles Streamlit
+  `AppTest`/tema/componentes que existían antes de P7), `navigation.py`
+  (`READER_TAB_SPECS`, el orden de las tres pestañas que `web/` reproduce),
+  `prepare.py` (paso `dashboard.prepare` del pipeline).
 
-El HTML integrado que se publica **no** sale de `build_stage11.py` solo: lo
-ensambla `src/analysis_agent/stage18.py::consumer_html`. Ver `REPO_MAP.md`
-para el flujo completo y las recetas de columna/UI.
+Editar el generador, nunca un HTML producido. Ver `REPO_MAP.md` para el flujo
+completo (payload → `src/web_export` → `src/publish/gate.py` → `site/`) y las
+recetas de columna/UI.
 
 ## Entradas / salidas
 
 - **Entradas:** `data/gold/*.parquet`, `data/warehouse.duckdb` (local).
-- **Salidas:** payloads Python consumidos por `stage18.py`; prototipos HTML en
-  `prototypes/` para revisión.
+- **Salidas:** payloads Python consumidos por `src/web_export`.
 
 ## Puntos de entrada
 
-- `python -m src.dashboard.build_flights` — reconstruye Vuelos.
-- `just dashboard` — Streamlit local (heredado).
-- `just dashboard-validate` — controles de Etapa 8/10.
+- `python -m src.dashboard.build_flights` — reconstruye Vuelos y su evidencia
+  candidata.
+- `just dashboard-validate` — corre `validate_stage8`.
 
 ## Comando de prueba focalizada
 

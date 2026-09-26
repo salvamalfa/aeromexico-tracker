@@ -6,15 +6,20 @@ El proyecto transforma fuentes regulatorias, operativas y de mercado en una lect
 
 ## Dashboard
 
-El dashboard publicado presenta tres vistas integradas: Lectura ejecutiva, Economía unitaria y Vuelos. El HTML aprobado se sirve directamente desde Streamlit para conservar el mismo diseño e interacciones de la versión local.
+El dashboard publicado presenta tres vistas integradas: Lectura ejecutiva, Economía unitaria y Vuelos, construidas como una página real en `web/` (Vite + TypeScript) y servidas por GitHub Pages. Streamlit se retiró en P7 (ver `docs/arquitectura/migracion-estado.md`); el último commit de `master` con la app Streamlit y la ruta HTML heredada es `e645d3e`.
 
 [Repositorio público en GitHub](https://github.com/salvamalfa/aeromexico-tracker)
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://aeromexico-tracker-djwjbylohwdryhbvnjhwsy.streamlit.app/)
+**Dashboard público:** <https://salvamalfa.github.io/aeromexico-tracker/>
 
-**Dashboard público:** [aeromexico-tracker-djwjbylohwdryhbvnjhwsy.streamlit.app](https://aeromexico-tracker-djwjbylohwdryhbvnjhwsy.streamlit.app/)
+Publicar una nueva versión requiere una instrucción explícita del dueño:
 
-Los valores exactos del despliegue y su validación están en [la guía de publicación](docs/deploy-streamlit.md). La aplicación corre con Python **3.13** y no utiliza secretos.
+```
+uv run python -m src.publish --record analysis_runs/drafts/<periodo>/<version>.json --out site/
+uv run python -m src.publish.verify site/
+```
+
+Ver `src/publish/README.md` y `REPO_MAP.md` ("Publicación en GitHub Pages") para el flujo completo. La aplicación corre con Python **3.13** y no utiliza secretos.
 
 Para trabajar desde un clon local o con agentes de nube, consulta
 [`AGENTS.md`](AGENTS.md) y la [guía de desarrollo desde GitHub](docs/cloud-development.md).
@@ -30,13 +35,11 @@ está implementada y pendiente de revisión humana: [cálculos, puentes y fuente
 El motor utiliza evidencia congelada de 2T26 y conserva las diferencias de alcance pendientes.
 Todavía no se redactan ni publican análisis trimestrales.
 
-Las **Etapas 0 a 10 están completas**. La página `Estructura de datos` fue aprobada visualmente, publicada y comprobada mediante su enlace profundo público.
+Las **Etapas 0 a 10 están completas**. La página `Estructura de datos` de la app Streamlit heredada fue aprobada visualmente, publicada y comprobada mediante su enlace profundo público en su momento; la app Streamlit se retiró en P7 (ver `docs/arquitectura/migracion-estado.md`), así que hoy solo queda como referencia histórica.
 
 Conteos de tablas Gold y pruebas cambian con cada etapa; la cuenta vigente y
 el comando para reproducirla están en [`REPO_MAP.md`](REPO_MAP.md), no aquí.
 
-- 15/15 controles específicos de la página `Estructura de datos`.
-- 18/18 controles específicos del dashboard.
 - Operación offline: el dashboard solo lee Parquet local mediante DuckDB en memoria.
 
 ## Hallazgos principales
@@ -56,10 +59,11 @@ Copy-Item .env.example .env
 # Completar SEC_USER_AGENT con un correo real y monitoreado.
 just setup
 just test
-just dashboard
+uv run python -m src.web_export --out web/public/data/v1 --allow-missing-analysis
+cd web && npm ci && npm run dev
 ```
 
-La app abre en `http://localhost:8501`. No necesita internet para consultar las tablas ya construidas.
+`npm run dev` imprime la URL local (`http://127.0.0.1:5173/` por defecto). No necesita internet para consultar las tablas ya construidas. Ver `web/README.md` para el detalle completo (build, preview, pruebas).
 
 | Comando | Propósito |
 |---|---|
@@ -69,7 +73,6 @@ La app abre en `http://localhost:8501`. No necesita internet para consultar las 
 | `just transform` | Construye gold desde silver. |
 | `just rebuild` | Reconstrucción completa offline desde bronze. |
 | `just test` | Ejecuta la suite. |
-| `just dashboard` | Inicia Streamlit con el entrypoint estable. |
 | `just dashboard-validate` | Ejecuta los 15 controles de Etapa 10 y los 18 controles de regresión del dashboard. |
 
 ## Arquitectura

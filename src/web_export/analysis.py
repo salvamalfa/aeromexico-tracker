@@ -1,28 +1,32 @@
 """Export the reading tab's approved analysis, one file per period.
 
 Read-only use of the existing approval flow: for every ``{period_id,
-version}`` listed in the *published* page's ``#analysis-manifest`` (the
-receipt ``src.analysis_agent.stage18.consumer_html`` already writes), this
-loads the matching ``analysis_runs/drafts/<period_id>/<version>.json``
-record and calls ``src.analysis_agent.lifecycle.consumer_payload(record)`` —
-the same fail-closed handoff ``stage18`` uses before anything reaches an
+version}`` the local ledger currently has approved or published (see
+``discover_approved_manifest`` -- P7 retired the ``static/
+aeromexico_tracker.html`` page this used to scrape for its
+``#analysis-manifest``), this loads the matching ``analysis_runs/drafts/
+<period_id>/<version>.json`` record and calls
+``src.analysis_agent.lifecycle.consumer_payload(record)`` — the same
+fail-closed handoff the retired ``stage18`` used before anything reached an
 HTML page — and exports exactly what it authorizes, plus a filter that
 drops any section the draft itself marks reader-private (the same sections
-``analysis_agent.reader_ui.refine`` strips from the published dialog).
+the retired ``analysis_agent.reader_ui.refine`` used to strip from the
+published dialog; ``web/`` now applies the same filter client-side).
 
-Never writes to the ledger, never approves or revokes anything, never
-touches ``static/aeromexico_tracker.html``. See ``src/web_export/README.md``
-and ``docs/arquitectura/auditoria-arquitectura-20260926.md`` Fase 3.
+Never writes to the ledger, never approves or revokes anything. See
+``src/web_export/README.md`` and
+``docs/arquitectura/auditoria-arquitectura-20260926.md`` Fase 3.
 
 Citations: each claim in ``consumer_payload``'s ``claims`` list also gets a
-``citations`` array — a port of ``src.analysis_agent.reader_ui.cite()``'s
-selection logic (see ``_claim_citations``/``_citations_by_claim`` below),
-run against ``verified_inputs()``'s ``package``/``calculations`` under the
-same fail-closed call ``stage18`` makes, but exporting *only* the fields
-``cite()`` itself already puts on the public page: the public source URL,
-the visible tooltip text, and the exact substring of the already-rendered
-claim text to wrap. No excerpt/source/calculation object, no lineage, no
-provider identifier ever leaves this module — see ``contracts/web/
+``citations`` array — a port of the retired ``src.analysis_agent.
+reader_ui.cite()``'s selection logic (see ``_claim_citations``/
+``_citations_by_claim`` below), run against ``verified_inputs()``'s
+``package``/``calculations`` under the same fail-closed call
+``consumer_payload`` makes, but exporting *only* the fields ``cite()``
+itself used to put on the public page: the public source URL, the visible
+tooltip text, and the exact substring of the already-rendered claim text to
+wrap. No excerpt/source/calculation object, no lineage, no provider
+identifier ever leaves this module — see ``contracts/web/
 analysis.schema.json`` (``additionalProperties: false`` on ``citation``)
 and ``contracts/web/privacy.yaml``.
 """
@@ -31,7 +35,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -46,33 +49,44 @@ from src.web_export.privacy import check_privacy, load_privacy_rules
 from src.web_export.schemas import ANALYSIS_SCHEMA
 from src.web_export.writer import write_json
 
-# Same allow-list src.analysis_agent.reader_ui.cite() checks before it will
-# ever put a source URL on the published page. Duplicated here (rather than
-# imported) because reader_ui pulls in the flights HTML generator; keep the
-# two lists in sync — tests/test_web_export.py checks that they match.
+# The only hosts a citation's public source URL may point to (see
+# contracts/web/analysis.schema.json's citation.href pattern, which must
+# stay in sync with this list).
 ALLOWED_CITATION_HOSTS = ("www.sec.gov", "sec.gov", "ir.aeromexico.com")
 
-DEFAULT_PUBLISHED_HTML = PATHS.root / "static" / "aeromexico_tracker.html"
 DRAFTS_ROOT = PATHS.root / "analysis_runs" / "drafts"
-
-_MANIFEST_RE = re.compile(
-    r'<script id="analysis-manifest" type="application/json">(.*?)</script>', re.DOTALL
-)
 
 
 class MissingAnalysisInput(RuntimeError):
     """A record or the approval ledger this exporter needs is not present locally."""
 
 
-def read_manifest(published_html: Path = DEFAULT_PUBLISHED_HTML) -> list[dict[str, str]]:
-    """Return the {period_id, version, ...} entries the published page lists."""
+def discover_approved_manifest(root: Path = flow.ROOT) -> list[dict[str, str]]:
+    """Return {period_id, version} for every draft the local ledger currently
+    has approved or published, sorted by period_id then version.
 
-    if not published_html.is_file():
-        raise MissingAnalysisInput(f"{published_html} is not present; cannot read its analysis manifest")
-    match = _MANIFEST_RE.search(published_html.read_text(encoding="utf-8"))
-    if not match:
-        raise MissingAnalysisInput(f"{published_html} has no #analysis-manifest script tag")
-    return json.loads(match.group(1))
+    P7 retired ``static/aeromexico_tracker.html`` and the
+    ``#analysis-manifest`` script tag it used to carry (the old
+    ``read_manifest`` scraped that file). This reads the same ledger
+    ``lifecycle.consumer_payload`` itself checks instead: a draft that is
+    not exactly, currently approved is silently skipped here, exactly as it
+    would be refused there -- no fabricated approval, and a clean checkout
+    with no local ``analysis_runs/`` simply yields an empty manifest.
+    """
+
+    manifest: list[dict[str, str]] = []
+    if not DRAFTS_ROOT.is_dir():
+        return manifest
+    for period_dir in sorted(p for p in DRAFTS_ROOT.iterdir() if p.is_dir()):
+        for version_path in sorted(period_dir.glob("*.json")):
+            record = json.loads(version_path.read_text(encoding="utf-8"))
+            try:
+                current = flow.state(record, root)
+            except ValueError:
+                continue
+            if current["state"] in ("approved", "published"):
+                manifest.append({"period_id": record["draft"]["period_id"], "version": record["version"]})
+    return manifest
 
 
 def _load_record(period_id: str, version: str) -> dict[str, Any]:
@@ -207,18 +221,18 @@ def export_period(period_id: str, version: str, *, root: Path = flow.ROOT) -> di
 def export_analysis(
     out_dir: Path,
     *,
-    published_html: Path = DEFAULT_PUBLISHED_HTML,
     root: Path = flow.ROOT,
     allow_missing: bool = False,
 ) -> list[Path]:
-    """Write out_dir/analysis/<period_id>.json for every manifest entry.
+    """Write out_dir/analysis/<period_id>.json for every currently approved
+    or published draft under ``root`` (see ``discover_approved_manifest``).
 
     With ``allow_missing`` (dev only), a period whose record or approval is
     not present locally is skipped with a stderr note instead of failing
     the whole export — a clean public clone has neither.
     """
 
-    manifest = read_manifest(published_html)
+    manifest = discover_approved_manifest(root)
     validator = Draft202012Validator(ANALYSIS_SCHEMA)
     rules = load_privacy_rules()
     written: list[Path] = []
@@ -242,7 +256,6 @@ def export_analysis(
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, default=PATHS.root / "web" / "public" / "data" / "v1")
-    parser.add_argument("--published-html", type=Path, default=DEFAULT_PUBLISHED_HTML)
     parser.add_argument(
         "--allow-missing-analysis",
         action="store_true",
@@ -253,7 +266,6 @@ def main(argv: list[str] | None = None) -> int:
     try:
         written = export_analysis(
             args.out,
-            published_html=args.published_html,
             allow_missing=args.allow_missing,
         )
     except MissingAnalysisInput as error:

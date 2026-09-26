@@ -163,15 +163,3 @@ def test_export_period_attaches_citations_and_section_claim_ids(monkeypatch) -> 
     assert citations_by_claim["summary_claim"][0]["label"] == "1"
     assert citations_by_claim["public_claim"][0]["label"] == "2"
     assert citations_by_claim["private_claim"] == []
-
-
-def test_allowed_citation_hosts_matches_reader_ui_cite() -> None:
-    """Keep the duplicated allow-list in sync (see analysis.py's comment)."""
-
-    import inspect
-
-    from src.analysis_agent import reader_ui
-
-    source = inspect.getsource(reader_ui.refine)
-    for host in web_analysis.ALLOWED_CITATION_HOSTS:
-        assert f'"{host}"' in source
