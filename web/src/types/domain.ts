@@ -86,6 +86,8 @@ export interface WorldGeometry {
     type: string;
     features: Array<{ id: string; [key: string]: unknown }>;
   };
+  /** Pinned Natural Earth topology Plotly uses for the base map (no CDN fetch). */
+  topojson?: object;
 }
 
 export interface MetricValue {
