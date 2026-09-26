@@ -9,16 +9,22 @@ Fase 5, and `web/README.md`.
 ## Responsabilidad
 
 - `gate.py`: given one or more `analysis_runs/drafts/<period>/<version>.json`
-  records, re-verifies each through the exact functions `stage18.publish`
-  uses (`src.analysis_agent.lifecycle.consumer_payload`/`verified_inputs`,
-  under the ledger's writer lock) and refuses (raises `PublicationRefused`,
-  CLI exit 1) if any record is not exactly, currently approved — nothing is
+  records, verifies each through the exact functions `stage18.publish` used
+  (`src.analysis_agent.lifecycle.consumer_payload`/`verified_inputs`, under
+  the ledger's writer lock) and refuses (raises `PublicationRefused`, CLI
+  exit 1) if any record is not exactly, currently approved — nothing is
   written. On success it runs `src.web_export` into a temp directory
   (flights and executive for every period, analysis only for the given,
   now-verified records), copies that into `web/public/data/v1` (local,
-  gitignored dev scratch — see `.gitignore`), runs `npm ci && npm run
-  build` in `web/`, and assembles `site/` from the built `web/dist/` (Vite
-  already copies `public/` into `dist/`, so this *is* "dist + data").
+  gitignored dev scratch — see `.gitignore`), and runs `npm ci && npm run
+  build` in `web/`, all with the ledger lock released (an `npm run build`
+  is slow; a human's approval/revocation should not block on it). Records
+  are then **re-verified a second time**, under a fresh ledger lock held
+  through the swap itself, immediately before `site/` is replaced — closing
+  the window where a revocation could otherwise land between the first
+  check and the swap. Only after that second check passes does it assemble
+  `site/` from the built `web/dist/` (Vite already copies `public/` into
+  `dist/`, so this *is* "dist + data").
 - `manifest.py`: builds and (de)serializes `publication_manifest.json` —
   the code commit (`git rev-parse HEAD`), each `contracts/web/*` file's own
   SHA-256 (its "version"), every other file under `site/` with its
