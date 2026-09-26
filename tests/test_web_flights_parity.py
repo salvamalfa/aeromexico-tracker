@@ -164,6 +164,61 @@ def _goto_both(published, web, current: int, target: int) -> int:
 # ---------------------------------------------------------------------------
 
 
+def _period_ids(flight_payload) -> list[str]:
+    from src.dashboard.flights_html import integration_flight_payload
+
+    return [q["period_id"] for q in integration_flight_payload(flight_payload)["quarters"]]
+
+
+def test_switching_quarters_before_opening_flights_survives_the_lazy_mount(web_server, flight_payload) -> None:
+    """P6a: web/ defers mounting Vuelos (and quarters.json/network
+    fetches) until its tab is first opened — see web/README.md "Estado de
+    trimestre compartido y carga diferida de Vuelos". This uses its own
+    fresh pages, and must run before the module ``browsers`` fixture below
+    is ever instantiated (its own ``sync_playwright()`` context stays open
+    for the rest of this module, and nesting a second one raises "already
+    running loop") — so the web page's Vuelos view genuinely mounts here
+    for the first time, *after* quarters were already switched on the
+    reading tab — proving the shared quarter store
+    (web/src/state/period.ts), not test ordering, is what keeps both pages
+    in sync."""
+
+    embedded_period_ids = _period_ids(flight_payload)
+    last_index = len(embedded_period_ids) - 1
+    if last_index < 2:
+        pytest.skip("Needs at least three quarters to switch before and after opening Vuelos")
+    target = last_index - 2
+
+    published_html = Path(__file__).resolve().parent.parent / "static" / "aeromexico_tracker.html"
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(executable_path=_chromium_executable())
+        pages = []
+        for target_url in (published_html.as_uri(), web_server):
+            page = browser.new_page()
+            page.route("**/favicon.ico", lambda route: route.fulfill(status=204, body=""))
+            page.goto(target_url)
+            page.wait_for_function("document.getElementById('period-display').textContent !== '—'")
+            pages.append(page)
+        published, web = pages
+
+        for page in (published, web):
+            for _ in range(last_index - target):
+                page.click("#period-prev")
+            page.wait_for_timeout(30)
+
+        for page in (published, web):
+            page.click("#tab-flights")
+            page.wait_for_selector("#network-volume:not([hidden])")
+        _assert_parity(
+            published, web, label=f"Vuelos opened after switching to {embedded_period_ids[target]} on the reading tab"
+        )
+
+        current = _goto_both(published, web, target, target + 1)
+        _assert_parity(published, web, label=f"switched again after Vuelos was already open: {embedded_period_ids[current]}")
+
+        browser.close()
+
+
 def test_every_quarter_matches_in_its_default_mode(browsers, flight_payload) -> None:
     published, web = browsers
     from src.dashboard.flights_html import integration_flight_payload
