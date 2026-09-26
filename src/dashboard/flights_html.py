@@ -66,14 +66,16 @@ def render_flights_panel(payload: dict[str, Any]) -> str:
           <div class="network-region-switch" id="network-region-switch" role="group" aria-label="Región internacional" hidden></div>
         </div>
         <div class="network-month-switch" id="network-month-switch" role="group" aria-label="Meses nacionales (selección múltiple)"></div>
-        <div class="network-volume" id="network-volume" hidden></div>
         <div class="network-layout">
           <article class="panel flow-map-panel" id="map-panel">
             <div class="map-detail-layout">
               <div class="map-canvas-column">
                 <div class="chart flow-map" id="route-flow-map" role="img" aria-label="Mapa de rutas por fuente y tipo de observación"></div>
               </div>
-              <aside class="airport-tooltip" id="airport-tooltip" role="region" aria-label="Detalle de rutas por aeropuerto"></aside>
+              <div class="route-detail-column" id="route-detail-column">
+                <div class="network-volume" id="network-volume" hidden></div>
+                <aside class="airport-tooltip" id="airport-tooltip" role="region" aria-label="Detalle de rutas por aeropuerto"></aside>
+              </div>
             </div>
           </article>
         </div>
@@ -303,14 +305,16 @@ def render_flights_html(payload: dict[str, Any]) -> str:
         <div class="network-region-switch" id="network-region-switch" role="group" aria-label="Región internacional" hidden></div>
       </div>
       <div class="network-month-switch" id="network-month-switch" role="group" aria-label="Meses nacionales (selección múltiple)"></div>
-      <div class="network-volume" id="network-volume" hidden></div>
       <div class="network-layout">
         <article class="panel flow-map-panel" id="map-panel">
           <div class="map-detail-layout">
             <div class="map-canvas-column">
               <div class="chart flow-map" id="route-flow-map" role="img" aria-label="Mapa de rutas por fuente y tipo de observación"></div>
             </div>
-            <aside class="airport-tooltip" id="airport-tooltip" role="region" aria-label="Detalle de rutas por aeropuerto"></aside>
+            <div class="route-detail-column" id="route-detail-column">
+              <div class="network-volume" id="network-volume" hidden></div>
+              <aside class="airport-tooltip" id="airport-tooltip" role="region" aria-label="Detalle de rutas por aeropuerto"></aside>
+            </div>
           </div>
         </article>
       </div>

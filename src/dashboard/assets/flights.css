@@ -89,6 +89,7 @@ h1 { margin: 0; font-size: clamp(25px, 3.4vw, 40px); line-height: 1.05; letter-s
 .network-volume { display: flex; flex-wrap: wrap; align-items: baseline; gap: 7px; margin: 0 0 11px; padding: 9px 13px; background: var(--blue-open); border: 1px solid var(--line); border-radius: var(--radius-sm); }
 .network-volume strong { color: var(--brand-blue-dark); font-size: 17px; font-weight: 800; }
 .network-volume span { color: var(--muted); font-size: 10px; }
+.network-volume[hidden] { display: none; }
 .route-coverage-dot { display: inline-block; flex: none; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; vertical-align: middle; }
 .route-expand-toggle > .route-coverage-dot, .route-expand-toggle > .route-scheduled-mark { margin-left: 0; }
 .route-coverage-dot.is-full { background: var(--altitude-green); }
@@ -119,6 +120,11 @@ input[type="search"] { width: 100%; padding: 8px 10px; }
 .map-detail-layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(410px, .9fr); gap: 14px; align-items: stretch; }
 .map-canvas-column { min-width: 0; }
 .airport-tooltip { position: relative; box-sizing: border-box; min-width: 0; height: 570px; max-height: 570px; overflow: auto; padding: 14px; color: var(--ink); background: #f8fafc; border: 1px solid var(--line-strong); border-radius: 10px; scrollbar-width: thin; scrollbar-color: #b7c4d6 transparent; }
+/* El total de la red encabeza el panel de detalle: la columna lleva el marco y
+   el alto; la tabla de rutas desplaza su contenido debajo del total. */
+.route-detail-column { display: flex; flex-direction: column; box-sizing: border-box; min-width: 0; height: 570px; max-height: 570px; overflow: hidden; background: #f8fafc; border: 1px solid var(--line-strong); border-radius: 10px; }
+.route-detail-column > .network-volume { flex: 0 0 auto; margin: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; }
+.route-detail-column > .airport-tooltip { flex: 1 1 auto; min-height: 0; height: auto; max-height: none; border: 0; border-radius: 0; background: transparent; }
 .airport-tooltip::-webkit-scrollbar { width: 7px; }
 .airport-tooltip::-webkit-scrollbar-track { background: transparent; }
 .airport-tooltip::-webkit-scrollbar-thumb { background: #b7c4d6; border-radius: 999px; }
@@ -200,6 +206,7 @@ footer { display: flex; justify-content: space-between; gap: 20px; margin-top: 1
   .flow-map { min-width: 700px; }
   .flow-map { height: 500px; }
   .airport-tooltip { height: 500px; max-height: 500px; }
+  .route-detail-column { height: 500px; max-height: 500px; }
 }
 
 @media (max-width: 736px) {
