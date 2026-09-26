@@ -46,7 +46,7 @@ se reinicia desde `master`.
 | P5 | Vite + TypeScript (fase 4) | fusionado | #52 | — |
 | P6a | Citas del análisis exportadas y Vuelos cargado al abrir su pestaña (estado de trimestre único) | fusionado | #53 | — |
 | P6b | Gate de publicación sobre `site/`, `verify.py` y workflow de GitHub Pages (fase 5) | fusionado | #54 | — (Pages activo: https://salvamalfa.github.io/aeromexico-tracker/) |
-| P7 | Retiro de Streamlit y de la ruta HTML heredada | fusionado | #55 | el dueño borra la app en share.streamlit.io |
+| P7 | Retiro de Streamlit y de la ruta HTML heredada | fusionado | #55 | hecho: el dueño borró la app en share.streamlit.io (confirmado 2026-09-26) |
 | P8a | Aligerar el árbol: `bridge_record_lineage.parquet` con zstd y escritores alineados | fusionado | #56 | — |
 | P8b | Reescritura del historial con `git filter-repo` y push forzado (coordinador) | completado | — | — |
 
@@ -89,8 +89,8 @@ migración completa). Cada paquete lo ejecuta el subagente `migrador`.
 | R1 | Barreras de publicación (A2, A3, A7, A10) | fusionado (#58) |
 | R2 | Exportación de análisis (A4–A6) | fusionado (#59) |
 | R3 | Trazabilidad y documentación (A8, A11, A12) | fusionado (#60) |
-| R4 | Dependencias web (A9) | en curso |
-| R5 | Limpieza histórica (opcional, decisión del dueño) | pendiente |
+| R4 | Dependencias web (A9) | fusionado (#61) |
+| R5 | Limpieza histórica (opcional, decisión del dueño) | en curso |
 
 A1 (protección de rama) es una acción del dueño, no de un agente.
 
@@ -130,6 +130,23 @@ A1 (protección de rama) es una acción del dueño, no de un agente.
   seguridad" en `web/README.md` para el detalle y la comparación con
   `site/assets/` (CSS idéntico, JS con hash distinto solo por un comentario
   de licencia que el nuevo esbuild omite, sin cambio de comportamiento).
+- 26-sep-2026: R4 fusionado (#61). R5 iniciado (rama
+  `claude/upbeat-brahmagupta-g1orp2`): retirados del árbol
+  `prototypes/archive/Aeromexico Tracker anterior.html`,
+  `prototypes/etapa-18/*.html` (5 archivos),
+  `prototypes/etapa-17/propuesta_texto_usuario.html`,
+  `src/analysis_agent/stage18_preview.py` (su único consumidor) y
+  `src/dashboard/navigation.py` (duplicado sin más uso que su propia
+  prueba; ver `web/` para el equivalente vigente) junto con la prueba que
+  solo lo ejercitaba; ~30.2 MB retirados del árbol de trabajo (medido con
+  `du`/tamaños de blob antes del borrado), recuperables del historial git
+  en el commit 14836f2 (`git show 14836f2:<ruta> > archivo`). Referencias en
+  docs actualizadas con nota de retiro
+  (`docs/analysis-agent/analista-v1.md`, `docs/etapas/etapa-18-reporte.md`,
+  `src/dashboard/README.md`). Además, el dueño confirmó el 2026-09-26 que la
+  app de Streamlit en share.streamlit.io ya fue borrada y que no hay
+  credenciales históricas que revocar (ambos eran pendientes fuera del
+  repo señalados por la auditoría); fila de P7 arriba actualizada a "hecho".
 
 ### Mapeo de commits tras la reescritura (P8b)
 

@@ -26,9 +26,8 @@ view.
   controles de datos del DAG en `src/pipeline/registry.py`: contratos,
   interpretaciones de métricas, anclas trimestrales, incertidumbre del
   forecast, salud de datos, frescura AFAC — sin los controles Streamlit
-  `AppTest`/tema/componentes que existían antes de P7), `navigation.py`
-  (`READER_TAB_SPECS`, el orden de las tres pestañas que `web/` reproduce),
-  `prepare.py` (paso `dashboard.prepare` del pipeline).
+  `AppTest`/tema/componentes que existían antes de P7), `prepare.py` (paso
+  `dashboard.prepare` del pipeline).
 
 Editar el generador, nunca un HTML producido. Ver `REPO_MAP.md` para el flujo
 completo (payload → `src/web_export` → `src/publish/gate.py` → `site/`) y las

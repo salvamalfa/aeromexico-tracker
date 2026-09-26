@@ -45,12 +45,16 @@ original. Todos estos campos forman parte del hash de la nueva versión.
 ## Texto literal de 2T26 solicitado posteriormente
 
 El usuario pidió conservar exactamente su redacción para este trimestre. La
-propuesta vigente de texto está en `prototypes/etapa-17/propuesta_texto_usuario.html`,
-con original y huella en `docs/referencias/etapa-17/literal_user_receipt.json` y
-`analysis_runs/editorial_overrides`. Tiene prioridad editorial sobre la reescritura
-de negocio anterior. Es una propuesta visual de autoría del usuario pendiente de
-revisión; no importar auditorías de versiones anteriores ni conceder aprobación.
-No reformular ese texto durante la siguiente etapa sin petición del usuario.
+propuesta de texto (`prototypes/etapa-17/propuesta_texto_usuario.html`) se
+retiró en R5 junto con su único consumidor (`stage18_preview.py`); recuperable
+del historial git en el commit 14836f2 con
+`git show 14836f2:prototypes/etapa-17/propuesta_texto_usuario.html > propuesta_texto_usuario.html`.
+El original y su huella siguen en
+`docs/referencias/etapa-17/literal_user_receipt.json` y
+`analysis_runs/editorial_overrides`. Tenía prioridad editorial sobre la
+reescritura de negocio anterior. Era una propuesta visual de autoría del
+usuario pendiente de revisión; no importar auditorías de versiones anteriores
+ni conceder aprobación. No reformular ese texto sin petición del usuario.
 
 También se prohíben las construcciones retóricas «no es X, es Y» y «es Y, no X»
 en toda redacción del agente. Expresar el hecho o límite directamente.

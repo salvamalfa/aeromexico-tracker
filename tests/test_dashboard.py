@@ -5,15 +5,6 @@ import pandas as pd
 from src.config import PATHS
 from src.dashboard.check_manual_freshness import check
 from src.dashboard.data import data_as_of, query_df
-from src.dashboard.navigation import READER_TAB_SPECS
-
-
-def test_portable_dashboard_registers_flights_as_the_third_tab() -> None:
-    assert [(spec.key, spec.title) for spec in READER_TAB_SPECS] == [
-        ("reading", "Lectura ejecutiva"),
-        ("economy", "Economía unitaria"),
-        ("flights", "Vuelos"),
-    ]
 
 
 def test_afac_freshness_uses_real_source_date() -> None:
