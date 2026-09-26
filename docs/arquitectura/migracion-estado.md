@@ -30,7 +30,7 @@ se reinicia desde `master`.
 | Paquete | Alcance | Estado | PR | Siguiente paso |
 |---|---|---|---|---|
 | P0 | Fusionar #46, republicar el integrado con el total en el panel, tracker y agente | fusionado | #46 | — |
-| P1 | Pruebas y CI (auditoría fase 0) | en curso | | subagente migrador trabajando |
+| P1 | Pruebas y CI (auditoría fase 0) | PR abierto | #47 | revisar CI y fusionar |
 | P2 | Higiene y mapa del repo (fase 1) | pendiente | | |
 | P3 | Contratos de datos y privacidad (fase 2) | pendiente | | |
 | P4 | Front-end en archivos reales, ES modules (fase 3) | pendiente | | |
@@ -43,3 +43,4 @@ se reinicia desde `master`.
 
 - 2026-09-26 · P0 iniciado.
 - 2026-09-26 · P0 fusionado (#46). P1 iniciado.
+- 2026-09-26 · P1 listo: CI pública 494 pruebas en 34 s sin datos locales; suite local 449 s → 152 s; `build_flight_payload()` 10.5 s → 2.4 s (diferencias de 1 ULP en ocupación por orden de suma). Falla previa: `test_stage12_diagnosis`.
