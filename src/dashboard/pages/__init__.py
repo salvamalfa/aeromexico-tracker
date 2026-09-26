@@ -1,1 +1,0 @@
-"""Eleven analytical dashboard pages."""
