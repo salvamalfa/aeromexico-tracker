@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://aeromexico-tracker/contracts/web/analysis.schema.json",
   "title": "Análisis del Analysis Agent para la lectura ejecutiva (v1)",
-  "description": "Describes web/public/data/v1/analysis/<period_id>.json: exactly the fields src.analysis_agent.lifecycle.consumer_payload(record) authorizes for a currently-approved analysis version, minus any reader-private section (see src/web_export/analysis.py). No calculation lineage, evidence excerpts or source URLs — those stay private; the citations the published HTML overlays on top of this text are out of scope for this export. See docs/arquitectura/auditoria-arquitectura-20260926.md Fase 3 and contracts/web/README.md.",
+  "description": "Describes web/public/data/v1/analysis/<period_id>.json: exactly the fields src.analysis_agent.lifecycle.consumer_payload(record) authorizes for a currently-approved analysis version, minus any reader-private section (see src/web_export/analysis.py). Each claim also carries the citation(s) the published page overlays on that claim's text, ported from src.analysis_agent.reader_ui.cite() — only the public source URL, the visible tooltip text and the substring to wrap ever leave this file; no excerpt/source/calculation object, lineage or provider identifier. See docs/arquitectura/auditoria-arquitectura-20260926.md Fase 3 and contracts/web/README.md.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -43,22 +43,38 @@
     "section": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["title", "paragraphs"],
+      "required": ["title", "paragraphs", "claim_ids"],
       "properties": {
         "title": { "type": "string" },
-        "paragraphs": { "type": "array", "items": { "type": "string" } }
+        "paragraphs": { "type": "array", "items": { "type": "string" } },
+        "claim_ids": { "type": "array", "items": { "type": "string" } }
       }
     },
     "claim": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["claim_id", "type", "text", "calculation_ids", "evidence_ids"],
+      "required": ["claim_id", "type", "text", "calculation_ids", "evidence_ids", "citations"],
       "properties": {
         "claim_id": { "type": "string" },
         "type": { "type": "string" },
         "text": { "type": "string" },
         "calculation_ids": { "type": "array", "items": { "type": "string" } },
-        "evidence_ids": { "type": "array", "items": { "type": "string" } }
+        "evidence_ids": { "type": "array", "items": { "type": "string" } },
+        "citations": { "type": "array", "items": { "$ref": "#/$defs/citation" } }
+      }
+    },
+    "citation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "href", "title", "value"],
+      "properties": {
+        "label": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+        "href": {
+          "type": "string",
+          "pattern": "^https://(www\\.sec\\.gov|sec\\.gov|ir\\.aeromexico\\.com)/"
+        },
+        "title": { "type": "string" },
+        "value": { "type": "string" }
       }
     }
   }

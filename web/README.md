@@ -98,35 +98,80 @@ keeps the same Plotly 3.x major version so rendering stays identical (see
 `npm audit` findings in the `plotly.js` dependency tree at this pin, via
 `maplibre-gl` — not reachable at runtime through this partial import).
 
-### Mount order matters for parity
+### Estado de trimestre compartido y carga diferida de Vuelos (P6a)
 
-The published page loads `executive_summary.js` before
-`src/dashboard/assets/flights.js`; both attach their own, independent
-click listener to the *same* `#period-prev`/`#period-next` buttons (there
-is only one stepper in the DOM), so on every click both listeners fire,
-in attachment order. `web/src/main.ts` mounts `views/executive` before
-`views/flights` for the same reason, so the two stay in the same relative
-order the published page has — `views/flights/bootstrap.ts` is loaded
-through a dynamic `import()` (see "Tamaño del bundle" below) purely to
-put it in its own build chunk; it still runs immediately after
-`views/executive` finishes on every page load, never deferred to a tab
-click, so this ordering guarantee is unaffected. In the current, real
-payload both quarter lists have the same 22 quarters in the same order,
-so both stay in lockstep either way — but the *order* the listeners
-attach in is part of what parity tests check, not just the end state.
+The published page's own `#period-prev`/`#period-next` are shared by two
+independent scripts: `executive_summary.js` attaches its own click
+listener, then `src/dashboard/assets/flights.js` attaches a second,
+independent one to the same buttons (there is only one stepper in the
+DOM) — every click fires both, in attachment order, each keeping its own
+`periodIndex`. P4a/P4b/P5 ported that structure as-is: `views/executive`
+and `views/flights` each kept their own `periodIndex` and their own
+listeners on the same buttons, and `web/src/main.ts` mounted
+`views/flights` right after `views/executive` on every page load so the
+two stayed in lockstep — this only worked because both quarter lists
+happen to hold the same 22 quarters in the same order (see the P5 tracker
+entry in `docs/arquitectura/migracion-estado.md`), and it meant
+`views/flights`' data (`quarters.json`, world geometry, network files)
+always loaded even for a reader who never opens the Vuelos tab.
 
-### Known, accepted parity gap: citations
+P6a replaced that with one shared store, `web/src/state/period.ts`: it
+owns the selected index and the *single* pair of click listeners on
+`#period-prev`/`#period-next` (`wireStepper()`, wired once by
+`views/executive/bootstrap.ts`, since the executive view always mounts
+first). `views/executive/bootstrap.ts` and `views/flights/bootstrap.ts`
+each `subscribe()` to it instead of keeping their own listeners; a
+subscriber is notified in subscription order on every move, so the
+executive view still renders before Vuelos on each click — the same
+attachment-order guarantee the published page's two independent
+listeners gave, now expressed as subscriber order instead. Each view
+still keeps its own `periodIndex` field (`views/executive/state.ts`,
+`views/flights/state.ts`) pointing into its *own* records/quarters array
+— `views/{executive,flights}/bootstrap.ts` re-derive it by `period_id`
+lookup every time the shared store moves, rather than assuming the two
+arrays share one index space.
+
+Because the store keeps the selected `period_id`, not just an index,
+`views/flights/bootstrap.ts` (mounted lazily, see next) can join *after*
+several quarter switches on the reading tab and immediately pick up
+`currentPeriodId()` — this is exactly what
+`test_switching_quarters_before_opening_flights_survives_the_lazy_mount`
+in `tests/test_web_flights_parity.py` checks against the published page:
+switch quarters on the reading tab, *then* open Vuelos for the first
+time, then switch again.
+
+**Carga inicial de Vuelos**: `web/src/main.ts` no longer mounts
+`views/flights` unconditionally on load. It listens for the same
+`reader-tab-visible` `CustomEvent` `views/shell/tabs.ts` already
+dispatches on every tab switch (`views/flights/bootstrap.ts` itself used
+it to resize Plotly graphs) and mounts Vuelos — `import()`, `loadQuarters()`
+and all — the first time `panel-flights` becomes visible; a reader who
+never opens that tab never fetches `quarters.json`, the world geometry or
+any network file, and never even downloads the `bootstrap-*.js` chunk.
+See "Tamaño del bundle" below for what this drops from the initial
+transfer.
+
+### Citations (closed gap, P6a)
 
 The published reading tab adds a superscript citation link
 (`<sup><a class="source-note">`) next to some numbers in the analysis text
-— see `src/analysis_agent/reader_ui.py::cite`. Building that link needs
-the private evidence/calculation data from `verified_inputs()`
-(excerpts, source URLs, calculation lineage), which
-`src/web_export/analysis.py` never reads or exports — only
-`lifecycle.consumer_payload(record)`'s already-rendered claim text. This
-view shows the same text without that citation link.
-`tests/test_web_page_parity.py` strips `<sup>` from both sides before
-comparing prose, so it still proves the visible words match exactly.
+— see `src/analysis_agent/reader_ui.py::cite`. P4b/P5 shipped without it:
+building that link needs `verified_inputs()` (excerpts, source URLs,
+calculation lineage), which `src/web_export/analysis.py` did not read.
+P6a closed this gap: `src/web_export/analysis.py` now also calls
+`flow.verified_inputs(record)` (the same fail-closed call `stage18`
+makes) and, per claim, exports a `citations` array — a port of
+`cite()`'s selection logic that emits *only* what `cite()` itself already
+puts on the public page: the public source URL (still restricted to
+`www.sec.gov`/`sec.gov`/`ir.aeromexico.com`, both in code and in
+`contracts/web/analysis.schema.json`'s `citation.href` pattern), the
+visible tooltip text, and the exact substring of the already-rendered
+claim text to wrap — no excerpt/source/calculation object or lineage ever
+leaves the file. `web/src/views/executive/narrative.ts::applyCitations`
+ports `cite()`'s DOM-splicing step (same markup, classes, attributes,
+numbering) against the rendered text. `tests/test_web_page_parity.py`
+compares the full `innerText` (superscripts included) on both sides, so
+parity is 100%, citations included.
 
 ## Entradas / salidas
 
@@ -211,49 +256,43 @@ uv run pytest --require-local-data -m "browser and local_data" -q tests/test_web
 
 Medido con `npm run build` (commit actual) más un export real desde el
 warehouse local (`uv run python -m src.web_export --out web/public/data/v1
---allow-missing-analysis`), trimestre por defecto `2026Q2`:
+--allow-missing-analysis`), trimestre por defecto `2026Q2`, cargando la
+página con Playwright y sumando el tamaño real de cada respuesta HTTP (ver
+la metodología en `tests/test_web_page_smoke.py`/`test_web_flights_parity.py`;
+las cifras de esta sección se tomaron con un script de un solo uso, no
+parte de la suite).
+
+**Carga inicial (pestaña de lectura, Vuelos sin abrir)** — desde P6a,
+`main.ts` ya no importa ni monta `views/flights` al cargar la página (ver
+"Estado de trimestre compartido y carga diferida de Vuelos" arriba), así
+que esta es toda la transferencia hasta que alguien abre esa pestaña:
 
 | Archivo | Sin comprimir | gzip |
 |---|---|---|
 | `dist/index.html` | 14.4 KB | 3.2 KB |
 | `dist/assets/index-*.css` | 99.3 KB | 15.4 KB |
-| `dist/assets/index-*.js` (chunk inicial: tabs, executive, economy, Plotly core+bar+scatter) | 1,302.7 KB | 454.5 KB |
-| `dist/assets/bootstrap-*.js` (chunk de Vuelos: scattergeo/choropleth + módulos de `views/flights/`, cargado con `import()` dinámico — ver "Mount order") | 35.8 KB | 11.7 KB |
-| **Subtotal de código** | **1,452.2 KB (≈1.42 MB)** | **484.8 KB (≈0.47 MB)** |
-
-Frente a los 4.85 MB de Plotly completo que vendorizaba P4 (67% de la
-página publicada de 7.2 MB), el bundle de código de P5 es **≈1.42 MB sin
-comprimir**, bien por debajo del objetivo de ≤ 2 MB de la Fase 4 — el
-Plotly parcial (`lib/plotly.ts`) es la mayor parte de esa reducción.
-
-**Transferencia total de la vista por defecto** (código + los JSON que
-`main.ts` pide en la carga inicial — ver "Entradas/salidas"; Vuelos monta
-siempre, sin esperar a que su pestaña sea visible, ver "Mount order"):
-
-| Dato | Sin comprimir | gzip |
-|---|---|---|
-| `data/v1/flights/quarters.json` (incluye la geometría mundial TopoJSON) | 634.0 KB | 212.9 KB |
+| `dist/assets/index-*.js` (tabs, executive, economy, Plotly core+bar+scatter — ya no incluye nada de `views/flights`) | 1,304.2 KB | 455.1 KB |
 | `data/v1/executive.json` | 68.2 KB | 8.4 KB |
-| `data/v1/analysis/2026Q2.json` | 23.5 KB | 5.8 KB |
-| `data/v1/flights/domestic/2026M0{4,5,6}.json` (los 3 meses del trimestre por defecto) | 310.4 KB | 31.7 KB |
-| **Subtotal de datos** | **1,036.1 KB (≈1.01 MB)** | **258.8 KB (≈0.25 MB)** |
-| **Total (código + datos)** | **≈2.49 MB** | **≈0.73 MB** |
+| `data/v1/analysis/2026Q2.json` (incluye las citas de P6a) | 26.6 KB | 6.5 KB |
+| **Total de la carga inicial** | **1,512.6 KB (≈1.51 MB)** | **488.6 KB (≈0.49 MB)** |
 
-El total con datos queda **por encima** del objetivo de ≤ 2 MB sin
-comprimir (≈24% más), enteramente por los datos, no por el código: el
-código por sí solo (1.42 MB) ya cumple el objetivo. La causa es
-arquitectónica y anterior a P5 (P4a): `main.ts` monta Vuelos —y por tanto
-pide `quarters.json` y los meses nacionales del trimestre— siempre, en
-cada carga de página, sin esperar a que su pestaña sea visible (ver
-"Mount order matters for parity" arriba). Diferir ese *fetch* hasta que
-`panel-flights` se muestre por primera vez reduciría la carga por defecto
-a ≈1.55 MB, pero también diferiría cuándo se adjuntan los listeners de
-`#period-prev`/`#period-next` de Vuelos — y el estado de trimestre de
-Vuelos no está sincronizado con el de Lectura ejecutiva/Economía (son dos
-`periodIndex` independientes que hoy se mantienen en paso porque ambos
-listeners están siempre activos desde la carga; ver "Mount order" arriba),
-así que diferir el montaje completo cambiaría comportamiento visible, no
-solo tiempos de carga. Este paquete (P5) se limita a partir el *chunk* de
-JavaScript de Vuelos (visto arriba); dejar pendiente para un paquete
-posterior, con instrucción explícita, decidir si vale la pena sincronizar
-ambos `periodIndex` para poder diferir también el *fetch* de datos.
+**≈1.51 MB sin comprimir**, por debajo del objetivo de ≤ 2 MB de la Fase
+4 — y ya sin el ≈24% que la versión P5 (con Vuelos montado siempre) tenía
+por encima de ese objetivo (≈2.49 MB). `dist/assets/bootstrap-*.js`
+(35.8 KB / 11.8 KB gzip, el chunk de Vuelos) tampoco se descarga hasta
+que se abre esa pestaña.
+
+**Al abrir la pestaña Vuelos por primera vez** (el resto de la
+transferencia, cargado bajo demanda, con `state/period.ts` ya
+sincronizado en el trimestre que estuviera seleccionado):
+
+| Archivo | Sin comprimir | gzip |
+|---|---|---|
+| `dist/assets/bootstrap-*.js` (chunk de Vuelos, `import()` dinámico) | 35.8 KB | 11.8 KB |
+| `data/v1/flights/quarters.json` (incluye la geometría mundial TopoJSON) | 634.0 KB | 212.9 KB |
+| `data/v1/flights/domestic/2026M0{4,5,6}.json` (los 3 meses del trimestre por defecto) | 310.4 KB | 31.7 KB |
+| **Subtotal al abrir Vuelos** | **980.1 KB (≈0.96 MB)** | **256.4 KB (≈0.25 MB)** |
+
+Quien nunca abre Vuelos nunca paga esos ≈0.96 MB; quien la abre acaba
+transfiriendo ≈2.49 MB en total — la misma cifra que P5 ya cargaba
+siempre, ahora repartida en el tiempo en vez de al inicio.

@@ -4,8 +4,12 @@
 // src/web_export/executive.py — exactly like the published page's single
 // executive_summary.js drives both panels from one `views` object.
 
+import { initPeriods } from "../../state/period";
 import type { ExecutiveDocument, ExecutiveMetadata, ExecutiveRecord, ExecutiveView } from "../../types/domain";
 
+// periodIndex mirrors the shared quarter store (../../state/period.ts) —
+// views/executive/bootstrap.ts keeps it in sync on every period change;
+// see that store for why the index itself is no longer this module's own.
 export interface ExecutiveState {
   dataRoot: string;
   metadata: ExecutiveMetadata | null;
@@ -38,6 +42,7 @@ export async function loadExecutive(dataRoot?: string): Promise<ExecutiveDocumen
     0,
     state.records.findIndex((record) => record.period_id === state.metadata?.default_period)
   );
+  initPeriods(state.records.map((record) => record.period_id), state.metadata?.default_period);
   return payload;
 }
 

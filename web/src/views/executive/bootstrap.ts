@@ -3,13 +3,16 @@
 // src/dashboard/assets/executive_summary.js (render(), movePeriod(),
 // the period-prev/next listeners and the unit-range/resize listeners).
 //
-// Order matters for parity: this attaches its #period-prev/#period-next
-// listeners before views/flights/bootstrap.ts does, exactly like the
-// published page loads executive_summary.js before
-// src/dashboard/assets/flights.js — see web/README.md.
+// The executive view always mounts first (see src/main.ts), so it is the
+// one that wires the shared #period-prev/#period-next listeners
+// (../../state/period.ts::wireStepper) — views/flights/bootstrap.ts
+// (mounted lazily, only once its tab is first opened) subscribes to the
+// same store instead of attaching its own listeners; see web/README.md
+// "Estado de trimestre compartido".
 
 import { $ } from "../flights/dom";
-import { currentView, loadExecutive, state } from "./state";
+import { currentIndex, currentPeriodId, periodCount, subscribe, wireStepper } from "../../state/period";
+import { loadExecutive, state } from "./state";
 import { renderNarrative } from "./narrative";
 import { updateKpis } from "../economy/kpis";
 import { renderLoadMonetization, renderUnitEconomics, renderVolumeMonetization } from "../economy/charts";
@@ -18,6 +21,7 @@ import { renderQuarterTable } from "../economy/table";
 async function render(periodId: string): Promise<void> {
   const view = state.views[periodId];
   if (!view) return;
+  state.periodIndex = state.records.findIndex((record) => record.period_id === periodId);
   updateKpis(view);
   await renderNarrative(view);
   const range = $("unit-range") as HTMLSelectElement;
@@ -29,27 +33,19 @@ async function render(periodId: string): Promise<void> {
   renderVolumeMonetization();
   renderLoadMonetization(periodId);
   $("period-display")!.textContent = view.period_label;
-  ($("period-prev") as HTMLButtonElement).disabled = state.periodIndex === 0;
-  ($("period-next") as HTMLButtonElement).disabled = state.periodIndex === state.records.length - 1;
+  ($("period-prev") as HTMLButtonElement).disabled = currentIndex() === 0;
+  ($("period-next") as HTMLButtonElement).disabled = currentIndex() === periodCount() - 1;
   $("live-status")!.textContent = `Vista actualizada a ${view.period_label}.`;
-}
-
-function movePeriod(offset: number): Promise<void> | undefined {
-  const nextIndex = state.periodIndex + offset;
-  if (nextIndex < 0 || nextIndex >= state.records.length) return undefined;
-  state.periodIndex = nextIndex;
-  const view = currentView();
-  return view ? render(view.period_id) : undefined;
 }
 
 export async function mountExecutive(dataRoot = "data/v1"): Promise<void> {
   await loadExecutive(dataRoot);
-  $("period-prev")!.addEventListener("click", () => movePeriod(-1));
-  $("period-next")!.addEventListener("click", () => movePeriod(1));
+  wireStepper();
+  subscribe((periodId) => void render(periodId));
   $("unit-range")!.addEventListener("change", renderUnitEconomics);
   window.addEventListener("resize", renderUnitEconomics);
   renderQuarterTable();
   renderUnitEconomics();
-  const view = currentView();
-  if (view) await render(view.period_id);
+  const periodId = currentPeriodId();
+  if (periodId) await render(periodId);
 }

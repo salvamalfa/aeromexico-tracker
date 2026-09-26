@@ -21,15 +21,21 @@ de recibirlos embebidos en el HTML. Ver
   restaurarlo desde el repo privado. Nunca omite una sección en silencio.
 - Escribe JSON determinista (`sort_keys=True`, separadores compactos, sin
   `NaN`): dos ejecuciones sobre el mismo warehouse producen bytes idénticos.
-- `analysis.py` (P4b) es distinto de los otros dos: no llama a un
-  generador de `src/dashboard/`, sino que lee el `#analysis-manifest` que
-  ya trae la página publicada (`static/aeromexico_tracker.html`), carga el
-  registro correspondiente en `analysis_runs/drafts/` y llama a
+- `analysis.py` (P4b, citas en P6a) es distinto de los otros dos: no llama
+  a un generador de `src/dashboard/`, sino que lee el
+  `#analysis-manifest` que ya trae la página publicada
+  (`static/aeromexico_tracker.html`), carga el registro correspondiente
+  en `analysis_runs/drafts/` y llama a
   `src.analysis_agent.lifecycle.consumer_payload(record)` — el mismo paso
-  de entrega fail-closed que usa `stage18`, en modo solo lectura. Nunca
-  escribe en el ledger ni aprueba/revoca nada. Si el registro o el ledger
-  no están (clon público sin `analysis_runs/`), falla con mensaje claro
-  salvo `--allow-missing-analysis` (solo para desarrollo, salta ese
+  de entrega fail-closed que usa `stage18`, en modo solo lectura. También
+  llama a `flow.verified_inputs(record)` (mismo llamado fail-closed) para
+  construir, por afirmación, el `citations` que exporta — un port de
+  `src.analysis_agent.reader_ui.py::cite()` que solo emite lo que `cite()`
+  ya pone en la página pública (URL de la fuente, texto del tooltip,
+  subcadena a envolver); nunca un objeto de evidencia/cálculo ni linaje.
+  Nunca escribe en el ledger ni aprueba/revoca nada. Si el registro o el
+  ledger no están (clon público sin `analysis_runs/`), falla con mensaje
+  claro salvo `--allow-missing-analysis` (solo para desarrollo, salta ese
   periodo en vez de fallar todo el export).
 
 **No publica nada.** No toca `stage18`, ni las aprobaciones del Analysis
