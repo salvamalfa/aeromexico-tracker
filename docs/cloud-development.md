@@ -85,7 +85,7 @@ python verify_snapshot.py
 python restore_snapshot.py --target "C:\ruta\al\Aeromexico Tracker"
 ```
 
-El repositorio privado excluye `.env`, secretos de Streamlit, cachés, logs,
+El repositorio privado excluye `.env`, secretos locales, cachés, logs,
 temporales y entornos virtuales. Las claves deben configurarse en los secretos
 del entorno nuevo. Cada actualización del snapshot debe volver a revisar
 licencias, credenciales, manifiesto y restauración; Git LFS contabiliza cada
