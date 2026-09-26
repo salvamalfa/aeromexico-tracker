@@ -1,0 +1,42 @@
+# Public/private boundary for anything the front-end publishes (contracts/web/,
+# web/public/data/, site/). See docs/arquitectura/auditoria-arquitectura-20260926.md
+# §4.2.2 and contracts/web/README.md.
+#
+# tests/test_web_privacy.py enforces every rule below against the real embedded
+# payload (marked local_data) and against tests/fixtures/web/*.json (CI).
+
+schema_version: 1
+
+# Carriers allowed to appear as `carrier_key` inside any cell that is flagged
+# as estimated (a monthly item under a route whose `passengers_estimated` is
+# true, or that itself carries `passengers_estimated`/`capacity_estimated`).
+# Anything else (a third-party carrier, an internal code) must never surface
+# in an estimated cell.
+allowed_estimated_carriers:
+  - AEROMEXICO
+  - AEROMEXICO_CONNECT
+  - AEROMEXICO_GROUP
+
+# Field names that must never appear anywhere in an exported/embedded
+# payload, at any nesting level, regardless of value. These are provider
+# identifiers, raw operational detail, or anything that could re-identify a
+# specific flight/tail rather than a route-level aggregate.
+forbidden_fields:
+  - registration
+  - reg
+  - flight_number
+  - number
+  - aircraft_model
+  - aircraft_model_coverage
+  - via_iata
+  - scheduledTime
+  - scheduled_time
+  - scheduled_departure
+  - scheduled_arrival
+  - actual_departure
+  - actual_arrival
+  - source_file
+  - source_files
+
+# Maximum size, in bytes, of any single exported/embedded JSON file.
+max_file_size_bytes: 8000000
