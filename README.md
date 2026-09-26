@@ -6,7 +6,7 @@ El proyecto transforma fuentes regulatorias, operativas y de mercado en una lect
 
 ## Dashboard
 
-El dashboard publicado presenta tres vistas integradas: Lectura ejecutiva, Economía unitaria y Vuelos, construidas como una página real en `web/` (Vite + TypeScript) y servidas por GitHub Pages. Streamlit se retiró en P7 (ver `docs/arquitectura/migracion-estado.md`); el último commit de `master` con la app Streamlit y la ruta HTML heredada es `3b9f1cc` (equivalente tras la reescritura de historial de P8b; el `e645d3e` original ya no existe).
+El dashboard publicado presenta tres vistas integradas: Lectura ejecutiva, Economía unitaria y Vuelos, construidas como una página real en `web/` (Vite + TypeScript) y servidas por GitHub Pages.
 
 [Repositorio público en GitHub](https://github.com/salvamalfa/aeromexico-tracker)
 
@@ -23,6 +23,8 @@ Ver `src/publish/README.md` y `REPO_MAP.md` ("Publicación en GitHub Pages") par
 
 Para trabajar desde un clon local o con agentes de nube, consulta
 [`AGENTS.md`](AGENTS.md) y la [guía de desarrollo desde GitHub](docs/cloud-development.md).
+Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
+[`ROADMAP.md`](ROADMAP.md). Mapa del árbol: [`REPO_MAP.md`](REPO_MAP.md).
 
 ![Dashboard público integrado](docs/assets/dashboard/public-dashboard.png)
 
@@ -30,14 +32,14 @@ Para recorrer el argumento completo, consulta [el recorrido narrado](docs/dashbo
 
 ## Estado
 
-**Analysis Agent:** Etapas 12–14 aceptadas. La [Etapa 15](docs/etapas/etapa-15-reporte.md)
+**Analysis Agent:** Etapas 12–14 aceptadas. La [Etapa 15](docs/archivo/etapas/etapa-15-reporte.md)
 está implementada y pendiente de revisión humana: [cálculos, puentes y fuentes](prototypes/etapa-15/quantitative_review.html).
 El motor utiliza evidencia congelada de 2T26 y conserva las diferencias de alcance pendientes.
 El expediente aprobado de 2T26 sí está publicado en el dashboard público (pestaña Lectura
 ejecutiva y `data/v1/analysis/2026Q2.json`); lo que sigue pendiente es la redacción y
 publicación de análisis de trimestres posteriores.
 
-Las **Etapas 0 a 10 están completas**. La página `Estructura de datos` de la app Streamlit heredada fue aprobada visualmente, publicada y comprobada mediante su enlace profundo público en su momento; la app Streamlit se retiró en P7 (ver `docs/arquitectura/migracion-estado.md`), así que hoy solo queda como referencia histórica.
+Las **Etapas 0 a 10 están completas**.
 
 Conteos de tablas Gold y pruebas cambian con cada etapa; la cuenta vigente y
 el comando para reproducirla están en [`REPO_MAP.md`](REPO_MAP.md), no aquí.
@@ -114,8 +116,8 @@ aceptación; el análisis está validado, pero todavía no aprobado ni integrado
 - [Diccionario de tablas y columnas](docs/diccionario-datos.md)
 - [Diccionario de conceptos XBRL](docs/diccionario-conceptos-xbrl.md)
 - [Hallazgos analíticos](docs/analytics/hallazgos.md)
-- [Reportes de cierre por etapa](docs/etapas/)
-- [Plan y criterios](docs/plan/README.md)
+- [Reportes de etapa vigentes](docs/etapas/) (histórico 0–18 en `docs/archivo/etapas/`)
+- [Plan original (histórico)](docs/archivo/plan-original/README.md)
 
 Fuentes principales: SEC EDGAR, BMV XBRL, AFAC, BTS T-100, Banxico, EIA, datos públicos de mercado, reportes de aerolíneas, grupos aeroportuarios y fuentes regulatorias abiertas. Las limitaciones y bloqueos de cada fuente están documentados en los reportes de etapa.
 

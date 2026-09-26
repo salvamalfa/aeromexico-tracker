@@ -14,8 +14,7 @@ the retired ``analysis_agent.reader_ui.refine`` used to strip from the
 published dialog; ``web/`` now applies the same filter client-side).
 
 Never writes to the ledger, never approves or revokes anything. See
-``src/web_export/README.md`` and
-``docs/arquitectura/auditoria-arquitectura-20260926.md`` Fase 3.
+``src/web_export/README.md``.
 
 Citations: each claim in ``consumer_payload``'s ``claims`` list also gets a
 ``citations`` array — a port of the retired ``src.analysis_agent.

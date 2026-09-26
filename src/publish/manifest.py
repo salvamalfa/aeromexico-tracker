@@ -1,7 +1,6 @@
 """Build and load ``site/publication_manifest.json``.
 
-The manifest is the signed object described in
-``docs/arquitectura/auditoria-arquitectura-20260926.md`` §4.2 punto 5: the
+The manifest is the signed object for ``site/``: the
 code commit, each ``contracts/web/`` file's own SHA-256 (its "version"),
 every other file under ``site/`` with its SHA-256 and byte size, and the
 analysis-manifest entries (``period_id``, ``version``, ``content_hash``,

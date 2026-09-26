@@ -4,22 +4,15 @@ Vite + TypeScript front-end for the whole published page — shared header,
 period stepper, and the reader-tabs shell around three views (Lectura
 ejecutiva, Economía unitaria, Vuelos) — loading the v1 payload split by
 `src/web_export/` via `fetch`. See
-`docs/arquitectura/auditoria-arquitectura-20260926.md` §4.2–4.3 and Fase 3–4,
-and `docs/etapas/vuelos-pasajeros-traspaso-20260913.md` for Vuelos' history.
-P4a/P4b built this as plain ES modules (`.js`); P5 converted every module to
-strict TypeScript and put Vite in front of it (`package.json`, `vite.config.ts`,
-`tsconfig.json`) — no visible behaviour changed, see "Paridad" below.
+`docs/etapas/vuelos-pasajeros-traspaso-20260913.md` for Vuelos' history.
+Built with Vite and strict TypeScript (`package.json`, `vite.config.ts`,
+`tsconfig.json`).
 
 ## Responsabilidad
 
-- The **only** implementation of each view since P7 (see
-  `docs/arquitectura/migracion-estado.md`): real `.html`/`.ts`/`.css` files a
-  human or an agent can edit directly. P7 retired the legacy generators
-  this page used to have to match byte-for-byte (`src/dashboard/
-  flights_html.py`'s HTML renderer, `executive_summary_html.py`,
-  `src/analysis_agent/stage18.py`/`reader_ui.py`, the Streamlit app, and the
-  served copy at `static/aeromexico_tracker.html`) — this is now the single
-  source of truth, not a port kept in parity with something else.
+- The **only** implementation of each view: real `.html`/`.ts`/`.css` files a
+  human or an agent can edit directly — the single source of truth, not a
+  port kept in parity with anything else.
 - `index.html` is the whole page: the shared `<header>`/period stepper, the
   `.reader-tabs` shell (`#tab-reading`/`#tab-economy`/`#tab-flights` and
   their `role=tabpanel` sections), and each view's markup. Its entry script
@@ -104,17 +97,16 @@ independent scripts: `executive_summary.js` attaches its own click
 listener, then `src/dashboard/assets/flights.js` attaches a second,
 independent one to the same buttons (there is only one stepper in the
 DOM) — every click fires both, in attachment order, each keeping its own
-`periodIndex`. P4a/P4b/P5 ported that structure as-is: `views/executive`
-and `views/flights` each kept their own `periodIndex` and their own
-listeners on the same buttons, and `web/src/main.ts` mounted
+`periodIndex`. An earlier version of `web/` ported that structure as-is:
+`views/executive` and `views/flights` each kept their own `periodIndex` and
+their own listeners on the same buttons, and `web/src/main.ts` mounted
 `views/flights` right after `views/executive` on every page load so the
 two stayed in lockstep — this only worked because both quarter lists
-happen to hold the same 22 quarters in the same order (see the P5 tracker
-entry in `docs/arquitectura/migracion-estado.md`), and it meant
+happen to hold the same 22 quarters in the same order, and it meant
 `views/flights`' data (`quarters.json`, world geometry, network files)
 always loaded even for a reader who never opens the Vuelos tab.
 
-P6a replaced that with one shared store, `web/src/state/period.ts`: it
+That version was replaced with one shared store, `web/src/state/period.ts`: it
 owns the selected index and the *single* pair of click listeners on
 `#period-prev`/`#period-next` (`wireStepper()`, wired once by
 `views/executive/bootstrap.ts`, since the executive view always mounts
@@ -135,13 +127,11 @@ Because the store keeps the selected `period_id`, not just an index,
 several quarter switches on the reading tab and immediately pick up
 `currentPeriodId()` — this is the behaviour
 `test_switching_quarters_before_opening_flights_survives_the_lazy_mount`
-in the retired `tests/test_web_flights_parity.py` (P7, see
-`docs/arquitectura/migracion-estado.md`) used to check against the
-published page: switch quarters on the reading tab, *then* open Vuelos
-for the first time, then switch again. Nothing in `web/src/state/
-period.ts` changed in P7; the coverage of this specific sequence is a
-residual gap until a multi-quarter synthetic fixture replaces it (see
-that package's report).
+in the now-removed `tests/test_web_flights_parity.py` used to check against
+the previously published page: switch quarters on the reading tab, *then*
+open Vuelos for the first time, then switch again. The coverage of this
+specific sequence is a residual gap until a multi-quarter synthetic fixture
+replaces it.
 
 **Carga inicial de Vuelos**: `web/src/main.ts` no longer mounts
 `views/flights` unconditionally on load. It listens for the same
@@ -258,7 +248,7 @@ uv run pytest --require-local-data -m "browser and local_data" -q tests/test_sit
   (see `.github/workflows/ci.yml` and `REPO_MAP.md`).
 - `test_site_parity.py` (P7; also `local_data`) checks the already-assembled
   `site/` against its own sources of truth instead of a second render — see
-  its module docstring and `docs/etapas/migracion-p7-retiro-streamlit-20260926.md`.
+  its module docstring and `docs/archivo/etapas/migracion-p7-retiro-streamlit-20260926.md`.
   A local-data-only sub-test also snapshot-compares `site/`'s committed
   `data/v1/` against a fresh `src.web_export` run.
 

@@ -1,8 +1,7 @@
 # Mapa del repositorio
 
 Qué vive dónde, comandos clave y recetas paso a paso para los cambios más
-comunes. Ver también `CLAUDE.md`, `AGENTS.md` y, para la migración en curso,
-`docs/arquitectura/migracion-estado.md`.
+comunes. Ver también `CLAUDE.md`, `AGENTS.md`, `CHANGELOG.md` y `ROADMAP.md`.
 
 ## Qué vive dónde
 
@@ -12,12 +11,12 @@ comunes. Ver también `CLAUDE.md`, `AGENTS.md` y, para la migración en curso,
 | Parseo | `src/parse/` | Normaliza bronze a `data/silver/` (local), fiel a cada fuente. |
 | Transformación | `src/transform/` | Construye `data/gold/` (43 Parquet versionados, extractos públicos) desde silver. |
 | Analítica | `src/analytics/` | Estudios y modelos precomputados sobre gold (forecast, estimación ruta×aerolínea, etc.). |
-| Dashboard | `src/dashboard/` | Payloads que `src/web_export`/`src/publish` consumen: lectura ejecutiva (`executive_summary.py`), Vuelos (`flights.py`, `flights_html.py::integration_flight_payload` — la lista blanca de columnas, `domestic_routes.py`, `international_routes.py`), más `data.py`/`check_manual_freshness.py`/`validate_stage8.py` (consultas al warehouse y controles de calidad de datos, sin UI). La app Streamlit heredada y todo generador de HTML propio se retiraron en P7 (ver `docs/arquitectura/migracion-estado.md`); `web/` es la única vista. |
-| Analysis Agent | `src/analysis_agent/` | Evidencia, cálculo, revisión y **publicación controlada** del análisis narrativo por trimestre (etapas 12–17; el consumidor HTML de la etapa 18, `stage18.py`/`reader_ui.py`, se retiró en P7 junto con la ruta que consumía). |
+| Dashboard | `src/dashboard/` | Payloads que `src/web_export`/`src/publish` consumen: lectura ejecutiva (`executive_summary.py`), Vuelos (`flights.py`, `flights_html.py::integration_flight_payload` — la lista blanca de columnas, `domestic_routes.py`, `international_routes.py`), más `data.py`/`check_manual_freshness.py`/`validate_stage8.py` (consultas al warehouse y controles de calidad de datos, sin UI). `web/` es la única vista publicada. |
+| Analysis Agent | `src/analysis_agent/` | Evidencia, cálculo, revisión y **publicación controlada** del análisis narrativo por trimestre (etapas 12–17). |
 | Contratos web | `contracts/web/` | Esquemas JSON (draft 2020-12) del payload **v1** tal cual lo consume `web/` (Vuelos, ejecutivo y análisis) + `privacy.yaml` (frontera pública/privada). Fuente de verdad; no aspiracional. |
-| Exportadores web | `src/web_export/` | Divide esos mismos payloads en JSON por periodo bajo `web/public/data/v1/` (local, no versionado), validados contra `contracts/web/` y `config/web_inputs.yaml` antes de escribir. `flights/quarters.json` incluye además `available_periods` (P4a): el manifiesto de qué archivos por periodo existen, para que `web/` sepa qué pedir con `fetch()` sin listar el directorio. `analysis.py` exporta, para cada periodo que el ledger local (`analysis_runs/`) tiene actualmente aprobado o publicado (`discover_approved_manifest`, P7 — antes leía el `#analysis-manifest` del HTML publicado, retirado), exactamente lo que `analysis_agent.lifecycle.consumer_payload(record)` autoriza — lectura del flujo de aprobación existente, nunca escritura; falla si falta el expediente local salvo `--allow-missing-analysis` (dev). |
+| Exportadores web | `src/web_export/` | Divide esos mismos payloads en JSON por periodo bajo `web/public/data/v1/` (local, no versionado), validados contra `contracts/web/` y `config/web_inputs.yaml` antes de escribir. `flights/quarters.json` incluye además `available_periods`: el manifiesto de qué archivos por periodo existen, para que `web/` sepa qué pedir con `fetch()` sin listar el directorio. `analysis.py` exporta, para cada periodo que el ledger local (`analysis_runs/`) tiene actualmente aprobado o publicado (`discover_approved_manifest`), exactamente lo que `analysis_agent.lifecycle.consumer_payload(record)` autoriza — lectura del flujo de aprobación existente, nunca escritura; falla si falta el expediente local salvo `--allow-missing-analysis` (dev). |
 | Gate de publicación (`site/`) | `src/publish/` | El único objeto firmado y publicado: dado uno o más registros de `analysis_runs/drafts/` ya aprobados, re-verifica cada uno con las funciones de `lifecycle.py`, exporta el payload v1 (Vuelos/ejecutivo completos, análisis solo de los periodos dados), compila `web/` con Vite y ensambla+firma `site/` (`publication_manifest.json`: commit, hash de cada contrato, SHA-256/tamaño de cada archivo, entradas del `analysis-manifest`). `src/publish/verify.py` revisa ese manifiesto sin datos privados (lo ejecuta `.github/workflows/pages.yml` antes de desplegar). Recibo intent/published en `analysis_runs/publications/` (local). Ver `src/publish/README.md` y §4.2 punto 5/Fase 5 de la auditoría. |
-| Front-end en archivos reales | `web/` | La página completa (Vite + TypeScript desde P5), y desde P7 la **única** implementación publicada de las tres vistas (Lectura ejecutiva, Economía unitaria, Vuelos): HTML/CSS/TS reales (ES modules, `web/src/views/{flights,executive,economy,shell}/*.ts`, ≤ 400 líneas cada uno; tipos generados en `web/src/types/generated/` desde `contracts/web/*.schema.json` vía `npm run gen:types`) que consume `web/public/data/v1/` con `fetch()`. Plotly se importa parcial (`plotly.js/lib/core` + `bar`/`scatter`/`scattergeo`/`choropleth`, ver `web/src/lib/plotly.ts`). Ver `web/README.md`. |
+| Front-end en archivos reales | `web/` | La página completa (Vite + TypeScript), **única** implementación publicada de las tres vistas (Lectura ejecutiva, Economía unitaria, Vuelos): HTML/CSS/TS reales (ES modules, `web/src/views/{flights,executive,economy,shell}/*.ts`, ≤ 400 líneas cada uno; tipos generados en `web/src/types/generated/` desde `contracts/web/*.schema.json` vía `npm run gen:types`) que consume `web/public/data/v1/` con `fetch()`. Plotly se importa parcial (`plotly.js/lib/core` + `bar`/`scatter`/`scattergeo`/`choropleth`, ver `web/src/lib/plotly.ts`). Ver `web/README.md`. |
 | Pruebas | `tests/` | `uv run pytest`; marcadores `local_data` (necesita `data/bronze|silver`/warehouse local) y `browser` (Playwright) se excluyen en CI. |
 
 **Gold tables:** 43 Parquet en `data/gold/` versionados en git (ver
@@ -52,24 +51,6 @@ ejecutes por iniciativa propia:
 uv run python -m src.publish --record analysis_runs/drafts/<periodo>/<version>.json --out site/
 uv run python -m src.publish.verify site/
 ```
-
-**Streamlit y la ruta HTML heredada (retirados en P7):** hasta el commit
-`3b9f1cc` de `master` (equivalente al `e645d3e` original tras la reescritura
-de historial de P8b; ver nota abajo), el dashboard también se servía como un único archivo
-HTML (`src/analysis_agent/stage18.py::consumer_html` + `reader_ui.py`,
-`src/dashboard/flights_html.py`/`executive_summary_html.py`, la app
-Streamlit multipágina en `src/dashboard/{app,pages,components,theme,
-structure_*,validate_stage10,validate_stage11,build_stage11}.py` y su copia
-servida `static/aeromexico_tracker.html`). P7 (`docs/arquitectura/
-migracion-estado.md`, `docs/etapas/migracion-p7-retiro-streamlit-20260926.md`)
-retiró todo eso: `web/` es la única implementación de cada vista y `site/`
-la única ruta de publicación. `3b9f1cc` queda como punto de archivo; el
-dueño todavía debe borrar manualmente la app en share.streamlit.io. La
-reescritura de historial de P8b (`git filter-repo --strip-blobs-with-ids`,
-ver `docs/arquitectura/migracion-estado.md`) quitó los blobs de más de 1 MB
-del árbol de `master`, incluidos HTML generados grandes; ese commit de
-archivo puede no incluir esas HTML viejas aunque el árbol y el hash del
-commit cambiaron a `3b9f1cc`.
 
 **Repo de datos privado:** insumos regenerables y privados
 (`data/bronze`, `data/silver`, warehouse, `analysis_runs/`) tienen respaldo en
@@ -146,21 +127,11 @@ Sigue `docs/etapas/aerodatabox-agosto-captura-20260925.md` paso a paso
 Vuelos → publicación). Ese documento es la referencia operativa; no la
 dupliques aquí.
 
-### d) Retomar la remediación de la auditoría
+### d) Retomar trabajo pendiente
 
-La migración P0–P8 está cerrada (`fusionado`/`completado` son estados
-terminales, ver `docs/arquitectura/migracion-estado.md`) y no se retoma. El
-único trabajo abierto es la tabla "Remediación de la auditoría" (R1–R5) al
-final de ese mismo documento.
-
-1. Lee `docs/arquitectura/migracion-estado.md` — en la tabla de remediación,
-   el primer paquete marcado **pendiente** o **en curso** es el que sigue.
-2. Lee `docs/arquitectura/auditoria-arquitectura-20260926.md` §4–§5 para el
-   alcance exacto de ese paquete.
-3. Si tiene rama/PR abierto, continúa desde su último commit; si no, créala
-   desde `master`.
-4. Ejecuta el trabajo con el subagente `migrador` (`.claude/agents/migrador.md`).
-5. Verifica los criterios de salida del paquete (pruebas, comandos listados
-   en la fila de la tabla).
-6. Actualiza `docs/arquitectura/migracion-estado.md` (tabla + bitácora) en el
-   mismo commit final del paquete.
+El trabajo abierto vive en `ROADMAP.md` ("Ahora"/"Siguiente"). Un paquete de
+varios pasos delegado por la sesión coordinadora lo ejecuta el subagente
+`implementador` (`.claude/agents/implementador.md`), en su propia rama,
+commiteando y subiendo tras cada tarea. La migración a Vite + TypeScript /
+GitHub Pages (P0–P8) y su remediación posterior (R1–R5) ya cerraron; su
+bitácora completa vive en `docs/archivo/migracion-2026-09/` y no se retoma.

@@ -13,8 +13,7 @@ no autoriza por sí sola a publicar datos nuevos.
 2. Lee `README.md`, este archivo y el reporte de etapa relacionado en
    `docs/etapas/`. Para trabajo de Vuelos, empieza por
    `docs/etapas/vuelos-pasajeros-traspaso-20260913.md` y sigue sus enlaces.
-   [`REPO_MAP.md`](REPO_MAP.md) da el mapa del árbol, comandos y recetas para
-   los cambios típicos.
+   [`REPO_MAP.md`](REPO_MAP.md) da el mapa del árbol, comandos y recetas.
 3. Comprueba la rama y su relación con `origin/master`. No publiques desde una
    rama divergente sin integrar primero la historia remota mediante un PR
    revisable.
@@ -22,18 +21,25 @@ no autoriza por sí sola a publicar datos nuevos.
    instrucciones del usuario y los contratos de datos prevalecen sobre
    sugerencias de implementación.
 
+### Dónde mirar
+
+`README.md`: estado actual. `CHANGELOG.md`: cambios recientes. `ROADMAP.md`:
+lo que sigue (propuesta, el dueño decide prioridades). `REPO_MAP.md`: mapa del
+árbol y recetas paso a paso. `docs/archivo/`: historia (migración a
+Vite/Pages, plan original, auditorías, reportes de etapa 0–18 de la app
+retirada) — no la leas salvo que la tarea lo requiera explícitamente; está
+fuera de las búsquedas de agentes (`.ignore`).
+
 ## Entorno y comandos
 
-- Windows y PowerShell son el entorno de referencia.
-- Python soportado: 3.13. Usa `.venv\Scripts\python.exe` si el entorno ya está
-  creado; `uv run` y `just` son las interfaces documentadas.
-- Preparación: `just setup`.
-- Suite: `just test` o `.venv\Scripts\python.exe -m pytest`.
-- Validación de datos del dashboard: `just dashboard-validate`.
-- Reconstrucción: `just transform`; para todo el pipeline offline, `just rebuild`.
-- Dashboard local: exporta los datos y sirve `web/` (ver `web/README.md`):
-  `uv run python -m src.web_export --out web/public/data/v1 --allow-missing-analysis`
-  y luego `cd web && npm ci && npm run dev`.
+Windows/PowerShell es el entorno de referencia; Python 3.13
+(`.venv\Scripts\python.exe`); `uv run` y `just` son las interfaces
+documentadas. `just setup` prepara el entorno; `just test` corre la suite;
+`just dashboard-validate` valida los datos del dashboard; `just transform`
+reconstruye gold, `just rebuild` todo el pipeline offline. Dashboard local:
+`uv run python -m src.web_export --out web/public/data/v1
+--allow-missing-analysis` y luego `cd web && npm ci && npm run dev` (ver
+`web/README.md`).
 
 Los comandos con red, cuotas, suscripciones o APIs pagadas requieren una
 ejecución deliberada. Implementa primero un `--dry-run` que muestre llamadas,
@@ -41,16 +47,13 @@ ventanas, unidades estimadas y destinos de escritura.
 
 ## Arquitectura y artefactos autoritativos
 
-- `data/bronze/`: respuestas crudas inmutables y locales. Git solo conserva los
-  manifiestos y restatements.
-- `data/silver/`: normalización fiel a la fuente, local y regenerable.
-- `data/gold/`: extractos públicos y validados que consume el dashboard.
-- `data/warehouse.duckdb`: warehouse local regenerable; no se versiona.
-- `src/ingest/`, `src/parse/`, `src/transform/`: pipeline de procedencia.
-- `src/dashboard/`: payloads, vistas y generadores del dashboard.
-- `src/analysis_agent/`: evidencia, cálculo, revisión y publicación controlada.
-- `prototypes/`: artefactos HTML generados para revisión.
-- `docs/etapas/`: decisiones, resultados, limitaciones y evidencia de cada etapa.
+Bronze/silver/warehouse son locales y regenerables (no versionados); gold son
+extractos públicos versionados. `src/ingest/`, `src/parse/`, `src/transform/`
+son el pipeline de procedencia; `src/dashboard/` construye los payloads del
+dashboard; `src/analysis_agent/` es evidencia, cálculo, revisión y
+publicación controlada; `prototypes/` son artefactos HTML para revisión;
+`docs/etapas/` documenta decisiones, resultados y límites por etapa. Detalle
+completo (qué vive dónde, comandos, recetas) en `REPO_MAP.md`.
 
 Los insumos privados y regenerables tienen un respaldo separado en
 [`salvamalfa/aeromexico-tracker-data`](https://github.com/salvamalfa/aeromexico-tracker-data).
@@ -62,9 +65,7 @@ datos o autorización para publicarlos.
 
 Edita el generador, no solo el HTML generado. El dashboard publicado es la
 página real en `web/` (Vite + TypeScript) — única implementación de cada
-vista desde P7 (se retiró la app Streamlit y el consumidor HTML de
-`stage18.py`/`reader_ui.py`; ver `docs/arquitectura/migracion-estado.md`) —
-alimentada por `src/web_export/` a partir de los payloads de
+vista — alimentada por `src/web_export/` a partir de los payloads de
 `src/dashboard/executive_summary.py` y `src/dashboard/flights.py` +
 `flights_html.py::integration_flight_payload`, y publicada como `site/` por
 `src/publish/gate.py`. Si cambian fuentes o Vuelos, regenera primero
@@ -146,16 +147,14 @@ hace falta volver a pedirla en cada sesión:
 
 - **Suscribirte a la actividad de tus PRs** (CI, reviews, comentarios) sin
   preguntar, y dar seguimiento hasta que se fusionen o cierren.
-- **Fusionar tus propios PRs** a `master` cuando se cumplan todas estas
-  condiciones sobre el último commit:
-  1. Los checks obligatorios `test` y `web` de `ci.yml` están en verde (el
-     ruleset `Master` los exige; no intentes saltarlo con el bypass de admin).
-  2. No hay conflicto con `master`.
-  3. Todos los hilos de revisión, incluidos los de bots como Codex, están
-     atendidos: corregidos con un push o respondidos explicando por qué no
-     aplican, y resueltos. Da unos minutos tras marcar el PR como listo para
-     que llegue la revisión automática antes de fusionar.
-  4. El PR se abrió como borrador y se marcó como listo tras cumplir lo anterior.
+- **Fusionar tus propios PRs** a `master` cuando, sobre el último commit: (1)
+  los checks obligatorios `test` y `web` de `ci.yml` están en verde (el
+  ruleset `Master` los exige; no saltarlo con el bypass de admin); (2) no hay
+  conflicto con `master`; (3) todos los hilos de revisión, incluidos los de
+  bots como Codex, están atendidos (corregidos con un push o respondidos
+  explicando por qué no aplican) y resueltos — da unos minutos tras marcar el
+  PR como listo para que llegue la revisión automática antes de fusionar; (4)
+  el PR se abrió como borrador y se marcó como listo tras cumplir lo anterior.
 - Método: merge commit (como el historial existente). Nunca force-push a
   `master`, nunca push directo a `master`.
 - **Auto-merge** (habilitado en el repo): puedes activarlo en tu PR en vez de

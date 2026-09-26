@@ -4,11 +4,9 @@ Evidencia, cálculo, revisión humana y **publicación controlada** del análisi
 narrativo trimestral (etapas 12–17). Es el único camino autorizado para que
 un análisis entre a `site/` (via `src/publish/gate.py`).
 
-P7 retired `stage18.py`/`reader_ui.py`, the module pair that used to assemble
-the legacy single-file integrated HTML (`consumer_html`) and its consumer
-publish path — see `docs/arquitectura/migracion-estado.md`. The ledger and
-its approval semantics (`lifecycle.py`) are unchanged and unaffected;
-`src/publish/gate.py` re-verifies against the exact same functions.
+The ledger and its approval semantics (`lifecycle.py`) are the single
+authority for what may reach `site/`; `src/publish/gate.py` re-verifies
+against those same functions before exporting or publishing anything.
 
 ## Responsabilidad
 

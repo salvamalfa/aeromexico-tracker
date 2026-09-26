@@ -1,12 +1,8 @@
 """Whitelist the Vuelos payload fields exported to the published page.
 
-The HTML renderers this module used to hold (``render_flights_html``,
-``render_flights_panel``, ``integrated_flights_css``, ``standalone_flight_
-payload``) were retired in P7 (see ``docs/arquitectura/migracion-estado.md``)
-along with the legacy Streamlit/single-file HTML path. ``web/`` is now the
-only rendered view. ``integration_flight_payload`` survives because
-``src/web_export/flights.py`` still uses it as the single, tested source of
-truth for which Vuelos fields are public.
+``web/`` is the only rendered view. ``integration_flight_payload`` is the
+single, tested source of truth for which Vuelos fields are public;
+``src/web_export/flights.py`` uses it directly.
 """
 
 from __future__ import annotations

@@ -1,10 +1,8 @@
 # `src/publish`
 
-The publication gate for `site/`: replaces `stage18.consumer_html`/
-`stage18.publish` as the *signed object* the dashboard ships as — a
-directory instead of one 7 MB HTML file. See
-`docs/arquitectura/auditoria-arquitectura-20260926.md` §4.2 punto 5 and
-Fase 5, and `web/README.md`.
+The publication gate for `site/`: the *signed object* the dashboard ships
+as — a directory built from `web/` plus the exported v1 payloads. See
+`web/README.md`.
 
 ## Responsabilidad
 
@@ -49,10 +47,8 @@ Fase 5, and `web/README.md`.
   bytes, since the manifest already lists every file's own hash.
 
 Never writes to the approval ledger, never approves/revokes/records
-anything. `stage18.py`/`reader_ui.py` and the served
-`static/aeromexico_tracker.html` this package replaced were deleted in P7
-(see `docs/arquitectura/migracion-estado.md`); `web/` is now the only
-implementation of each view, this gate its only publication path. Running
+anything. `web/` is the only implementation of each view, this gate its
+only publication path. Running
 this gate for real (not just its tests) needs an explicit instruction from
 the owner — see `REPO_MAP.md`.
 

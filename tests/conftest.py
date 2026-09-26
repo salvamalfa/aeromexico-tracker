@@ -1,8 +1,5 @@
 """Shared fixtures and marker configuration for the test suite.
 
-See ``docs/arquitectura/auditoria-arquitectura-20260926.md`` §2.5 and §5
-("Fase 0") for the audit that motivated this file.
-
 Markers
 -------
 ``local_data``
@@ -138,8 +135,7 @@ def executive_payload() -> dict[str, Any]:
 def web_dist_dir() -> Path:
     """Build web/ once per session with Vite and return web/dist/.
 
-    P5 (see docs/arquitectura/auditoria-arquitectura-20260926.md Fase 4):
-    the smoke/parity tests below serve the BUILT site, not raw src/, so
+    The smoke/parity tests below serve the BUILT site, not raw src/, so
     they exercise the same bundling the published GitHub Pages build will
     use. Skips (not fails) with a clear reason when node/npm are missing
     or `npm ci` has not been run, since this checkout might not have

@@ -1,8 +1,7 @@
 """Repo hygiene budget: no Python module grows past its size limit, and (as
 of P4a, converted to TypeScript in P5) no web/ JS/TS module either.
 
-See docs/arquitectura/auditoria-arquitectura-20260926.md §4.3: modulo
-Python <= 600 lineas, modulo JS/TS (web/src/**/*.{js,ts}) <= 400 lineas, con
+Modulo Python <= 600 lineas, modulo JS/TS (web/src/**/*.{js,ts}) <= 400 lineas, con
 una lista explicita de excepciones vigentes que solo puede reducirse, nunca
 crecer. Los tipos generados (web/src/types/generated/) y los archivos de
 prueba (*.test.ts) no cuentan: no se editan a mano.

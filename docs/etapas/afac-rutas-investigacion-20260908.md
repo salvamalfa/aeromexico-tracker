@@ -15,7 +15,7 @@ El boletín por país aporta otra dimensión útil: participación de aerolínea
 
 ## Investigación previa y acceso
 
-Se revisaron `docs/etapas/vuelos-reporte.md`, `docs/afac-inventario.md`, `docs/decisiones/decision-005-acceso-afac.md`, el descargador AFAC y las convenciones de `src/common/storage.py`. No se encontraron AGENTS.md en la raíz de AMEX ni en el proyecto mediante la búsqueda realizada. Hay cambios anteriores de otras sesiones; se conservaron.
+Se revisaron `docs/archivo/etapas/vuelos-reporte.md`, `docs/afac-inventario.md`, `docs/decisiones/decision-005-acceso-afac.md`, el descargador AFAC y las convenciones de `src/common/storage.py`. No se encontraron AGENTS.md en la raíz de AMEX ni en el proyecto mediante la búsqueda realizada. Hay cambios anteriores de otras sesiones; se conservaron.
 
 La investigación previa documentaba únicamente la ausencia de rutas en el AFAC integrado. En esta entrega se abrió el catálogo oficial con Computer Use y se observaron los enlaces vigentes. Se intentó un clic normal sobre el Excel de origen–destino; no se confirmó un archivo en Descargas. Después, HTTP directo a las URL observadas entregó archivos válidos (200, firmas ZIP/XLSX y PDF correctas). Los artefactos se registraron como `httpx`, sin atribuirles una descarga por Computer Use. No hubo CAPTCHA ni elusión de controles. Los 403 de consultas anteriores no se interpretaron como ausencia de datos.
 

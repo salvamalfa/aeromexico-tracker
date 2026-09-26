@@ -1,7 +1,6 @@
 """Exporters that split the v1 web payloads into files under web/public/data/v1/.
 
-See ``README.md`` in this package and
-``docs/arquitectura/auditoria-arquitectura-20260926.md`` Fase 2. Nothing here
+See ``README.md`` in this package. Nothing here
 changes ``src/dashboard/`` or the published HTML; it reads the same payloads
 those generators already build and writes a validated, privacy-checked copy
 split by period. Publication itself is out of scope for this package

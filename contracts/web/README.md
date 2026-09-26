@@ -1,8 +1,7 @@
 # `contracts/web`
 
 JSON Schemas (draft 2020-12) and the privacy boundary for everything the
-front-end publishes. Fuente única de verdad de la forma pública de los datos;
-ver `docs/arquitectura/auditoria-arquitectura-20260926.md` §4.2 y Fase 2.
+front-end publishes. Fuente única de verdad de la forma pública de los datos.
 
 ## Responsabilidad
 

@@ -1,7 +1,13 @@
 # Decisión 008 — Saneamiento del backend y trazabilidad
 
 Fecha: 2026-09-01
-Estado: aceptada
+
+**Estado:** reemplazada — parcialmente; la sección "Conservar la arquitectura
+base" citaba a Streamlit como producto de consumo. Streamlit se retiró en
+2026-09-26 y `web/` (Vite + TypeScript) más `site/`/GitHub Pages son hoy la
+única vista y ruta de publicación (ver `docs/archivo/migracion-2026-09/`). El
+resto de la decisión (Bronze/Silver/Gold, Parquet, DuckDB, contratos, SCD2,
+calidad, gate de promoción) sigue vigente.
 
 ## Contexto
 

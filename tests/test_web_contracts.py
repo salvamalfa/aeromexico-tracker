@@ -1,7 +1,6 @@
 """Validate the current embedded web payloads against contracts/web/*.schema.json.
 
-See docs/arquitectura/auditoria-arquitectura-20260926.md Fase 2 and
-contracts/web/README.md. The schemas describe the payload the published
+See contracts/web/README.md. The schemas describe the payload the published
 HTML embeds *today* (v1); they are not aspirational.
 """
 
