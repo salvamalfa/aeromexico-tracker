@@ -3,10 +3,18 @@
 Fuente única de verdad del avance. Plan técnico:
 [`auditoria-arquitectura-20260926.md`](auditoria-arquitectura-20260926.md) §4–§5.
 
+**La migración P0–P8 está cerrada y completa (ver bitácora, 26-sep-2026,
+"Migración completa"). No debe resumirse ni reabrirse**: `fusionado` y
+`completado` son estados terminales. El único trabajo abierto es la tabla
+["Remediación de la auditoría"](#remediación-de-la-auditoría-26-sep-2026) al
+final de este documento (paquetes R1–R5).
+
 ## Cómo retomar
 
-1. `git fetch origin` y revisar la tabla: el primer paquete que no esté en
-   **fusionado** es el que sigue.
+1. `git fetch origin` y abrir la tabla "Remediación de la auditoría" (al final
+   de este documento): el primer paquete marcado **pendiente** o **en curso**
+   es el que sigue. Ignora la tabla de paquetes P0–P8: todos están en un
+   estado terminal (**fusionado** o **completado**) y ninguno se retoma.
 2. Si tiene PR abierto, leer el PR y su último commit; si está **en curso**,
    continuar desde el último commit de la rama.
 3. La sesión principal coordina; cada paquete lo ejecuta el subagente
@@ -79,8 +87,8 @@ migración completa). Cada paquete lo ejecuta el subagente `migrador`.
 | Paquete | Alcance | Estado |
 |---|---|---|
 | R1 | Barreras de publicación (A2, A3, A7, A10) | fusionado (#58) |
-| R2 | Exportación de análisis (A4–A6) | en curso |
-| R3 | Trazabilidad y documentación (A8, A11, A12) | pendiente |
+| R2 | Exportación de análisis (A4–A6) | fusionado (#59) |
+| R3 | Trazabilidad y documentación (A8, A11, A12) | en curso |
 | R4 | Dependencias web (A9) | pendiente |
 | R5 | Limpieza histórica (opcional, decisión del dueño) | pendiente |
 
@@ -98,3 +106,11 @@ A1 (protección de rama) es una acción del dueño, no de un agente.
   `out_dir/analysis` y lo intercambia atómicamente al final, así que una
   revocación (o un manifiesto vacío) no deja archivos de periodos previos.
   Pruebas nuevas en `tests/test_web_export_analysis_isolation.py`.
+- 26-sep-2026: R2 fusionado (#59). R3 iniciado (rama
+  `claude/upbeat-brahmagupta-g1orp2`): A11, la "Migración completa" P0–P8 se
+  marca cerrada arriba (estados `fusionado`/`completado` terminales); A8, el
+  commit de archivo de Streamlit se corrige de `e645d3e` (no sobrevivió a la
+  reescritura de P8b) a su equivalente `3b9f1cc` tras la reescritura; A12,
+  README y REPO_MAP.md se corrigen para reflejar el conteo real de tablas
+  Gold y la ruta de publicación vigente (`src.publish` → `site/` →
+  `pages.yml`).
