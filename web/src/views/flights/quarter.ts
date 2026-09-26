@@ -3,6 +3,7 @@
 // src/dashboard/assets/flights.js::renderQuarter.
 
 import { $, deltaDisplay, metricDisplay, priorPeriod, setDelta } from "./dom";
+import { currentIndex, periodCount } from "../../state/period";
 import { monthsInQuarter, state } from "./state";
 import { renderMix } from "./mix";
 import { renderNetworkPeriod } from "./network";
@@ -19,8 +20,8 @@ export async function renderQuarter(): Promise<void> {
     state.domesticMonthsQuarterId = record.period_id;
   }
   $("period-display")!.textContent = record.period_label;
-  ($("period-prev") as HTMLButtonElement).disabled = state.periodIndex === 0;
-  ($("period-next") as HTMLButtonElement).disabled = state.periodIndex === state.quarters.length - 1;
+  ($("period-prev") as HTMLButtonElement).disabled = currentIndex() === 0;
+  ($("period-next") as HTMLButtonElement).disabled = currentIndex() === periodCount() - 1;
   const qoq = state.byPeriod.get(priorPeriod(record.period_id));
   const yoy = state.byPeriod.get(priorPeriod(record.period_id, 1));
   for (const key of KPI_KEYS) {

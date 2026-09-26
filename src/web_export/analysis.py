@@ -14,11 +14,17 @@ Never writes to the ledger, never approves or revokes anything, never
 touches ``static/aeromexico_tracker.html``. See ``src/web_export/README.md``
 and ``docs/arquitectura/auditoria-arquitectura-20260926.md`` Fase 3.
 
-Citations (the superscript source links the published page overlays on top
-of this text) are out of scope: they come from ``verified_inputs()``
-(calculations, excerpts, source URLs), not from ``consumer_payload``, and
-this exporter never reads that private evidence. See ``web/README.md`` for
-the resulting, accepted parity gap.
+Citations: each claim in ``consumer_payload``'s ``claims`` list also gets a
+``citations`` array — a port of ``src.analysis_agent.reader_ui.cite()``'s
+selection logic (see ``_claim_citations``/``_citations_by_claim`` below),
+run against ``verified_inputs()``'s ``package``/``calculations`` under the
+same fail-closed call ``stage18`` makes, but exporting *only* the fields
+``cite()`` itself already puts on the public page: the public source URL,
+the visible tooltip text, and the exact substring of the already-rendered
+claim text to wrap. No excerpt/source/calculation object, no lineage, no
+provider identifier ever leaves this module — see ``contracts/web/
+analysis.schema.json`` (``additionalProperties: false`` on ``citation``)
+and ``contracts/web/privacy.yaml``.
 """
 
 from __future__ import annotations
@@ -29,14 +35,22 @@ import re
 import sys
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote, urlparse
 
 from jsonschema import Draft202012Validator
 
 from src.analysis_agent import lifecycle as flow
+from src.analysis_agent.analyst import formatted, lineage
 from src.config import PATHS
 from src.web_export.privacy import check_privacy, load_privacy_rules
 from src.web_export.schemas import ANALYSIS_SCHEMA
 from src.web_export.writer import write_json
+
+# Same allow-list src.analysis_agent.reader_ui.cite() checks before it will
+# ever put a source URL on the published page. Duplicated here (rather than
+# imported) because reader_ui pulls in the flights HTML generator; keep the
+# two lists in sync — tests/test_web_export.py checks that they match.
+ALLOWED_CITATION_HOSTS = ("www.sec.gov", "sec.gov", "ir.aeromexico.com")
 
 DEFAULT_PUBLISHED_HTML = PATHS.root / "static" / "aeromexico_tracker.html"
 DRAFTS_ROOT = PATHS.root / "analysis_runs" / "drafts"
@@ -72,12 +86,103 @@ def _load_record(period_id: str, version: str) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _claim_citations(
+    claim: dict[str, Any],
+    package: dict[str, Any],
+    calculations: dict[str, Any],
+    numbers: dict[str, int],
+) -> list[dict[str, Any]]:
+    """Port of src.analysis_agent.reader_ui.cite()'s selection and href/title
+    construction for one claim, minus the DOM text-splicing (the front-end
+    does that itself against the already-rendered claim text — see
+    web/src/views/executive/narrative.ts). ``numbers`` is the href->label
+    map, shared and mutated across every claim in one record so citation
+    numbering matches the published page (first-seen href wins the next
+    number, in the same summary-then-sections document order — see
+    ``_citations_by_claim``)."""
+
+    nodes = {n["calculation_id"]: n for n in calculations["nodes"]}
+    excerpts = {e["excerpt_id"]: e for e in package["excerpts"]}
+    sources = {s["artifact_id"]: s for s in package["sources"]}
+    citations: list[dict[str, Any]] = []
+    for binding in claim.get("bindings", {}).values():
+        node = nodes[binding["calculation_id"]]
+        if node["period_id"] != package["period_id"] or binding.get("presentation") == "period_label":
+            continue
+        if not (node["formula"].startswith("Reported normalized") or node["key"] == "ask"):
+            continue
+        leaves = lineage(node["calculation_id"], package, calculations)
+        if len(leaves) != 1:
+            continue
+        metric = leaves[0]
+        excerpt = excerpts[metric["excerpt_id"]]
+        source = sources[metric["artifact_id"]]
+        url = source["source_url"]
+        if urlparse(url).scheme != "https" or urlparse(url).hostname not in ALLOWED_CITATION_HOSTS:
+            continue
+        cells = [c.strip() for c in excerpt["text"].split("|") if c.strip()]
+        # Range directive spans table cells, whose separators are parser-only.
+        fragment = quote(cells[0], safe="").replace("-", "%2D")
+        if len(cells) > 1:
+            fragment += "," + quote(cells[1], safe="").replace("-", "%2D")
+        href = url.split("#")[0] + "#:~:text=" + fragment
+        label = str(numbers.setdefault(href, len(numbers) + 1))
+        value = formatted(node, business=True)
+        title = (
+            "Reporte original · "
+            + cells[0]
+            + (": " + cells[1] if len(cells) > 1 else "")
+            + (
+                " millones de asientos-milla; convertido a asientos-kilómetro."
+                if node["key"] == "ask"
+                else ""
+            )
+        )
+        citations.append({"label": label, "href": href, "title": title, "value": value})
+    return citations
+
+
+def _citations_by_claim(
+    record: dict[str, Any], package: dict[str, Any], calculations: dict[str, Any]
+) -> dict[str, list[dict[str, Any]]]:
+    """claim_id -> citations, numbered in the same document order
+    src.analysis_agent.reader_ui.refine walks: the summary list first
+    (``summary_claim_ids``), then every non reader-private section's
+    paragraphs in order (``sections[*].claim_ids``) — thesis and context
+    asides are never cited on the published page either."""
+
+    d = record["draft"]
+    claims = {c["claim_id"]: c for c in d["claims"]}
+    private_keys = set(d.get("reader_private_section_keys", []))
+    ordered_claim_ids = list(d["summary_claim_ids"])
+    for section in d["sections"]:
+        if section["key"] in private_keys:
+            continue
+        ordered_claim_ids.extend(section["claim_ids"])
+    numbers: dict[str, int] = {}
+    result: dict[str, list[dict[str, Any]]] = {}
+    for claim_id in ordered_claim_ids:
+        if claim_id in result:
+            continue
+        result[claim_id] = _claim_citations(claims[claim_id], package, calculations, numbers)
+    return result
+
+
 def _drop_private_sections(authorized: dict[str, Any], record: dict[str, Any]) -> dict[str, Any]:
+    """Drop reader-private sections and attach each kept section's
+    claim_ids (needed by the front-end to look up citations per
+    paragraph, see _citations_by_claim). consumer_payload builds one
+    authorized section per record["draft"]["sections"] entry, in the same
+    order, so zipping by index (rather than matching titles) is correct
+    even when two sections share a title."""
+
     private_keys = set(record["draft"].get("reader_private_section_keys", []))
-    private_titles = {
-        section["title"] for section in record["draft"]["sections"] if section["key"] in private_keys
-    }
-    authorized["sections"] = [s for s in authorized["sections"] if s["title"] not in private_titles]
+    draft_sections = record["draft"]["sections"]
+    authorized["sections"] = [
+        {"title": rendered["title"], "paragraphs": rendered["paragraphs"], "claim_ids": draft["claim_ids"]}
+        for draft, rendered in zip(draft_sections, authorized["sections"])
+        if draft["key"] not in private_keys
+    ]
     return authorized
 
 
@@ -87,11 +192,16 @@ def export_period(period_id: str, version: str, *, root: Path = flow.ROOT) -> di
     record = _load_record(period_id, version)
     try:
         authorized = flow.consumer_payload(record, root)
+        package, calculations, _ = flow.verified_inputs(record)
     except ValueError as error:
         raise MissingAnalysisInput(
             f"{period_id}/{version} has no current human approval under {root}: {error}"
         ) from error
-    return _drop_private_sections(authorized, record)
+    authorized = _drop_private_sections(authorized, record)
+    citations = _citations_by_claim(record, package, calculations)
+    for claim in authorized["claims"]:
+        claim["citations"] = citations.get(claim["claim_id"], [])
+    return authorized
 
 
 def export_analysis(

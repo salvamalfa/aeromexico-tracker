@@ -196,15 +196,29 @@ export interface ExecutiveDocument {
   views: Record<string, ExecutiveView>;
 }
 
+export interface AnalysisCitation {
+  label: string;
+  href: string;
+  title: string;
+  value: string;
+}
+
 export interface AnalysisSummaryItem {
+  claim_id: string;
   text: string;
-  lead?: string;
+  lead?: string | null;
   emphasis?: string[];
 }
 
 export interface AnalysisSection {
   title: string;
   paragraphs: string[];
+  claim_ids: string[];
+}
+
+export interface AnalysisClaim {
+  claim_id: string;
+  citations: AnalysisCitation[];
 }
 
 export interface AnalysisDocument {
@@ -213,4 +227,5 @@ export interface AnalysisDocument {
   summary_items: AnalysisSummaryItem[];
   context: string[];
   sections: AnalysisSection[];
+  claims: AnalysisClaim[];
 }

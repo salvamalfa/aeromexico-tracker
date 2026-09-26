@@ -1,31 +1,34 @@
-// Mounts the Vuelos view: wires its controls to the shared #period-prev/
-// #period-next (added after views/executive's own listeners on the same
-// buttons — same DOM/script order as the published page, where
-// executive_summary.js runs before src/dashboard/assets/flights.js; see
-// web/README.md) and reacts to 'reader-tab-visible' the same way
+// Mounts the Vuelos view, lazily (see src/main.ts — this module is only
+// ever import()ed once the Vuelos tab is first opened, so its data
+// fetches — quarters.json, world geometry, network files — never load
+// for a reader who stays on the reading/economy tabs, see web/README.md
+// "Carga inicial de Vuelos"). Wires its own controls, and subscribes to
+// the shared quarter store (../../state/period.ts) instead of attaching
+// its own #period-prev/#period-next listeners — currentPeriodId() picks
+// up whatever quarter was already selected on the reading tab before
+// Vuelos ever mounted. Reacts to 'reader-tab-visible' the same way
 // src/dashboard/assets/flights.js does: resize its Plotly graphs and
 // realign the route detail column once panel-flights becomes visible.
 
 import Plotly from "../../lib/plotly";
 import { $ } from "./dom";
+import { currentPeriodId, subscribe } from "../../state/period";
 import { domesticAvailableForQuarter, loadQuarters, state } from "./state";
 import { renderQuarter } from "./quarter";
 import { renderMix } from "./mix";
 import { renderNetworkPeriod } from "./network";
 import { alignRouteDetailToGeo, renderFlowMap } from "./map";
 
+function syncPeriodIndex(periodId: string): boolean {
+  const index = state.quarters.findIndex((quarter) => quarter.period_id === periodId);
+  if (index < 0) return false;
+  state.periodIndex = index;
+  return true;
+}
+
 function wireControls(): void {
-  $("period-prev")!.addEventListener("click", async () => {
-    if (state.periodIndex > 0) {
-      state.periodIndex -= 1;
-      await renderQuarter();
-    }
-  });
-  $("period-next")!.addEventListener("click", async () => {
-    if (state.periodIndex < state.quarters.length - 1) {
-      state.periodIndex += 1;
-      await renderQuarter();
-    }
+  subscribe((periodId) => {
+    if (syncPeriodIndex(periodId)) void renderQuarter();
   });
   $("network-mode-domestic")!.addEventListener("click", async () => {
     if (domesticAvailableForQuarter(state.quarters[state.periodIndex]!.period_id)) {
@@ -59,6 +62,8 @@ function wireControls(): void {
 export async function mountFlights(dataRoot = "data/v1"): Promise<void> {
   await loadQuarters(dataRoot);
   wireControls();
+  const periodId = currentPeriodId();
+  if (periodId) syncPeriodIndex(periodId);
   await renderQuarter();
   const panel = $("panel-flights");
   if (!panel || !panel.hidden) window.requestAnimationFrame(renderFlowMap);
