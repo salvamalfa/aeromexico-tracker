@@ -90,7 +90,7 @@ migración completa). Cada paquete lo ejecuta el subagente `migrador`.
 | R2 | Exportación de análisis (A4–A6) | fusionado (#59) |
 | R3 | Trazabilidad y documentación (A8, A11, A12) | fusionado (#60) |
 | R4 | Dependencias web (A9) | fusionado (#61) |
-| R5 | Limpieza histórica (opcional, decisión del dueño) | en curso |
+| R5 | Limpieza histórica (opcional, decisión del dueño) | fusionado (#62) |
 
 A1 (protección de rama) es una acción del dueño, no de un agente.
 
@@ -147,6 +147,38 @@ A1 (protección de rama) es una acción del dueño, no de un agente.
   app de Streamlit en share.streamlit.io ya fue borrada y que no hay
   credenciales históricas que revocar (ambos eran pendientes fuera del
   repo señalados por la auditoría); fila de P7 arriba actualizada a "hecho".
+- 26-sep-2026: R5 fusionado (#62). Con esto, **A8 y A10 quedan cerrados**: el
+  código de ambos ya estaba fusionado (R3 #60, R1 #58), y lo que faltaba —
+  republicar `site/` con un `code_commit` resoluble contra `master` post-P8b
+  y correr la validación estricta con datos privados (`pytest
+  --require-local-data`, `validate_stage8`) — se hizo en esta sesión desde un
+  checkout local reorganizado en `Aeromexico Tracker\aeromexico-tracker\`
+  (ver `docs/cloud-development.md`). El checkout venía desactualizado
+  (basado en el `master` previo a la reescritura de P8b, 78 commits sin
+  equivalente exacto pero con el mismo árbol salvo blobs grandes); se
+  respaldó en la rama `backup/pre-rewrite-master` y el tag
+  `backup-pre-rewrite-20260926` antes de alinearlo a `origin/master` con
+  `git checkout -B master origin/master`.
+- 26-sep-2026: decisión del dueño (salvamalfa): se revoca la versión
+  aprobada `26bc9135…` de 2026Q2 (aprobada 2026-09-06 14:55) y se publica en
+  su lugar `186ba823…` (aprobada 2026-09-06 15:44, agrega el claim
+  `summary_activity` y explicita cifras en `operations_level` y
+  `finance_definition`). Revocación registrada con
+  `src.analysis_agent.lifecycle revoke` y
+  `analysis_runs/REVOCACION-2026Q2-26bc9135.json`. Al republicar `site/` se
+  descubrió que `src/web_export/writer.py` y `src/publish/manifest.py`
+  escribían el JSON con `path.write_text(... + "\n")` sin `newline="\n"`:
+  en Windows Python traduce ese salto de línea final a `\r\n`, así que
+  `publication_manifest.json` quedaba 1 byte más grande por archivo que el
+  blob que `.gitattributes` (`* text=auto eol=lf`) realmente commitea —
+  `src.publish.verify` pasaba en Windows pero la CI (Linux) fallaba. Corregido
+  en salvamalfa/aeromexico-tracker#65 (fusionado, `beadd46`). `site/`
+  republicado con `python -m src.publish --record
+  analysis_runs/drafts/2026Q2/186ba823….json --out site/` sobre ese commit;
+  `code_commit` del manifiesto = `beadd46e41fb14a8d865d84da0daa44a29e2cc05`,
+  verificado con `git cat-file -t` y confirmado en vivo en
+  https://salvamalfa.github.io/aeromexico-tracker/publication_manifest.json.
+  PR de solo `site/`: salvamalfa/aeromexico-tracker#64 (fusionado, `bc5e5dc`).
 
 ### Mapeo de commits tras la reescritura (P8b)
 
@@ -160,8 +192,10 @@ quitar blobs > 1 MB. Correspondencia conocida:
   `src/dashboard/app.py` verificados presentes), pero la reescritura pudo
   haber quitado HTML generado grande de ese árbol; no asumir que las HTML
   viejas siguen accesibles ahí.
-- El `code_commit` del manifiesto publicado vigente
-  (`site/publication_manifest.json`, `28935219de5c586d39ddd6f3e500dcb33f3f9b0e`)
-  es anterior a la reescritura de P8b y no corresponde a un commit de
-  `master` post-reescritura. Esto se corrige en la próxima publicación
-  autorizada por el dueño (no se edita el manifiesto para forzarlo).
+- El `code_commit` del manifiesto publicado (`site/publication_manifest.json`)
+  era `28935219de5c586d39ddd6f3e500dcb33f3f9b0e`, anterior a la reescritura de
+  P8b y sin commit correspondiente en `master` post-reescritura. **Corregido**
+  en la publicación autorizada por el dueño del 26-sep-2026 (ver bitácora de
+  R5 arriba): `code_commit` ahora es `beadd46e41fb14a8d865d84da0daa44a29e2cc05`,
+  HEAD de `master` en el momento de publicar, ya con el fix de CRLF/LF de
+  #65 aplicado (A8/A10 cerrados).
