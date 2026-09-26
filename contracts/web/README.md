@@ -17,14 +17,18 @@ ver `docs/arquitectura/auditoria-arquitectura-20260926.md` §4.2 y Fase 2.
 - `executive.schema.json` describe la salida de
   `src.dashboard.executive_summary.build_executive_payload()`, embebida sin
   transformación adicional.
-- `analysis.schema.json` (P4b) describe exactamente lo que
+- `analysis.schema.json` (P4b; citas en P6a) describe exactamente lo que
   `src.analysis_agent.lifecycle.consumer_payload(record)` autoriza para un
   periodo con aprobación vigente — el mismo contrato de entrega que
   `stage18` usa antes de tocar el HTML — menos cualquier sección que el
   propio borrador marque como privada para lectores
-  (`reader_private_section_keys`). No incluye citas ni datos de evidencia
-  privados (excerpts, URLs de fuente, linaje de cálculo): eso nunca sale
-  de `verified_inputs()`. Ver `src/web_export/analysis.py`.
+  (`reader_private_section_keys`). Cada `claim` también trae `citations`
+  (`label`/`href`/`title`/`value`): un port de
+  `src.analysis_agent.reader_ui.py::cite()` sobre `verified_inputs()` que
+  exporta únicamente lo que `cite()` ya hace público (URL de la fuente —
+  restringida por patrón a `www.sec.gov`/`sec.gov`/`ir.aeromexico.com` —
+  y el texto visible del tooltip). Nunca sale un excerpt, una fuente
+  completa, un nodo de cálculo ni linaje. Ver `src/web_export/analysis.py`.
 - `privacy.yaml` fija la frontera pública/privada: aerolíneas permitidas en
   `carrier_key` (`AEROMEXICO`, `AEROMEXICO_CONNECT`, `AEROMEXICO_GROUP`),
   nombres de campo prohibidos en cualquier nivel del payload, y el tamaño

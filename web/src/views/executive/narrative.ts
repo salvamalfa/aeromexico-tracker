@@ -1,20 +1,62 @@
 // Renders panel-reading's narrative-copy for the active period from
 // web/public/data/v1/analysis/<period_id>.json — the export of
-// src.analysis_agent.lifecycle.consumer_payload(record) (see
-// src/web_export/analysis.py) — one fetch per period, cached afterwards.
-// A period with no exported file (draft/unapproved, or a dev build run
-// with --allow-missing-analysis) shows the same fallback text the
-// published page shows for a quarter pending approval.
+// src.analysis_agent.lifecycle.consumer_payload(record) plus per-claim
+// citations (see src/web_export/analysis.py) — one fetch per period,
+// cached afterwards. A period with no exported file (draft/unapproved, or
+// a dev build run with --allow-missing-analysis) shows the same fallback
+// text the published page shows for a quarter pending approval.
 //
-// Known, accepted gap (see web/README.md): the published page also adds a
-// superscript citation next to some numbers, built from private
-// evidence/calculation data (src/analysis_agent/reader_ui.py::cite) that
-// consumer_payload does not authorize for export. This view shows the
-// same claim text without that citation link.
+// Citations: applyCitations below is a port of
+// src/analysis_agent/reader_ui.py::cite()'s DOM-splicing step (same
+// <sup><a class="source-note"> markup/attributes, same "first text node
+// containing the value, skip if already inside <a>/<sup>" rule) run
+// against each already-rendered claim's own container — the numbering and
+// href/title themselves are computed once, ahead of time, by
+// src/web_export/analysis.py.
 
 import { $ } from "../flights/dom";
 import { state } from "./state";
-import type { AnalysisDocument, ExecutiveView } from "../../types/domain";
+import type { AnalysisCitation, AnalysisDocument, ExecutiveView } from "../../types/domain";
+
+export function citationsByClaim(analysis: AnalysisDocument): Map<string, AnalysisCitation[]> {
+  return new Map(analysis.claims.map((claim) => [claim.claim_id, claim.citations]));
+}
+
+// Port of reader_ui.py::cite()'s inner text-node walk and <sup><a> splice.
+export function applyCitations(container: Element, citations: AnalysisCitation[]): void {
+  for (const citation of citations) {
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+    let node = walker.nextNode() as Text | null;
+    while (node) {
+      const parentName = node.parentElement?.nodeName;
+      if (parentName === "A" || parentName === "SUP") {
+        node = walker.nextNode() as Text | null;
+        continue;
+      }
+      const text = node.textContent ?? "";
+      const index = text.indexOf(citation.value);
+      if (index === -1) {
+        node = walker.nextNode() as Text | null;
+        continue;
+      }
+      const before = text.slice(0, index + citation.value.length);
+      const after = text.slice(index + citation.value.length);
+      const sup = document.createElement("sup");
+      const a = document.createElement("a");
+      a.href = citation.href;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.className = "source-note";
+      a.setAttribute("aria-label", `Fuente ${citation.label}: abrir dato original`);
+      a.title = citation.title;
+      a.textContent = citation.label;
+      sup.appendChild(a);
+      node.textContent = before;
+      node.after(sup, document.createTextNode(after));
+      break;
+    }
+  }
+}
 
 const cache = new Map<string, AnalysisDocument | null>(); // period_id -> payload | null (no export for this period)
 let dialogPeriodLabel = "";
@@ -67,6 +109,13 @@ function renderDialog(analysis: AnalysisDocument, periodLabel: string): void {
         "</section>"
     )
     .join("");
+  const citations = citationsByClaim(analysis);
+  const paragraphs = [...content.querySelectorAll("section p")];
+  const claimIds = analysis.sections.flatMap((section) => section.claim_ids);
+  paragraphs.forEach((paragraph, index) => {
+    const claimId = claimIds[index];
+    if (claimId) applyCitations(paragraph, citations.get(claimId) ?? []);
+  });
 }
 
 function wireDialogButton(analysis: AnalysisDocument, periodLabel: string): void {
@@ -96,6 +145,11 @@ export async function renderNarrative(view: ExecutiveView): Promise<void> {
     `<div><h3>${escapeHtml(analysis.thesis)}</h3>` +
     `<ul class="analysis-summary">${items}</ul>${context}` +
     '<div class="analysis-actions"><button type="button" id="analysis-open-full">▸ Leer análisis completo</button></div></div>';
+  const citations = citationsByClaim(analysis);
+  [...copy.querySelectorAll(".analysis-summary li")].forEach((li, index) => {
+    const claimId = analysis.summary_items[index]?.claim_id;
+    if (claimId) applyCitations(li, citations.get(claimId) ?? []);
+  });
   copy.dataset.period = view.period_id;
   wireDialogButton(analysis, view.period_label);
 }
