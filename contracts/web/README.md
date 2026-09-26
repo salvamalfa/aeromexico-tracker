@@ -17,6 +17,14 @@ ver `docs/arquitectura/auditoria-arquitectura-20260926.md` §4.2 y Fase 2.
 - `executive.schema.json` describe la salida de
   `src.dashboard.executive_summary.build_executive_payload()`, embebida sin
   transformación adicional.
+- `analysis.schema.json` (P4b) describe exactamente lo que
+  `src.analysis_agent.lifecycle.consumer_payload(record)` autoriza para un
+  periodo con aprobación vigente — el mismo contrato de entrega que
+  `stage18` usa antes de tocar el HTML — menos cualquier sección que el
+  propio borrador marque como privada para lectores
+  (`reader_private_section_keys`). No incluye citas ni datos de evidencia
+  privados (excerpts, URLs de fuente, linaje de cálculo): eso nunca sale
+  de `verified_inputs()`. Ver `src/web_export/analysis.py`.
 - `privacy.yaml` fija la frontera pública/privada: aerolíneas permitidas en
   `carrier_key` (`AEROMEXICO`, `AEROMEXICO_CONNECT`, `AEROMEXICO_GROUP`),
   nombres de campo prohibidos en cualquier nivel del payload, y el tamaño
