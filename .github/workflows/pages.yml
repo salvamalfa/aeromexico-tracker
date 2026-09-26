@@ -6,7 +6,9 @@ name: Pages
 # Fase 5. src.publish.verify needs no private data: it checks
 # publication_manifest.json's own schema, every listed file's hash/size,
 # that no unlisted file is present, and every data/v1/**/*.json file
-# against contracts/web/*.schema.json + privacy.yaml.
+# against contracts/web/*.schema.json + privacy.yaml. deploy also depends
+# on ci.yml (called here via workflow_call) so a push to master never
+# ships a site/ built from code whose own tests/web checks are failing.
 
 on:
   push:
@@ -41,8 +43,15 @@ jobs:
       - name: Verify site/ (no private data, no rebuild)
         run: uv run python -m src.publish.verify site/
 
+  # Deploying site/ should never ship ahead of the same checks a PR into
+  # master already had to pass: this reuses ci.yml itself (as a
+  # workflow_call) rather than duplicating its two jobs, so there is one
+  # place that defines "the public test subset and web/ checks pass".
+  ci:
+    uses: ./.github/workflows/ci.yml
+
   deploy:
-    needs: verify
+    needs: [verify, ci]
     runs-on: ubuntu-latest
     environment:
       name: github-pages
