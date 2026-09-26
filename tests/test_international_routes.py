@@ -48,9 +48,9 @@ def test_caa_excludes_cancelled_and_rejects_unmatched():
     assert row['passengers'] is None
     with pytest.raises(ValueError,match='unmatched'):normalize('caa',[{**r,'actual_flights_unmatched':'1'}],ARTIFACT,AIRPORTS)
 
-def test_gold_consumption_and_month_windows():
-    from src.dashboard.flights import build_flight_payload
-    payload=build_flight_payload()
+@pytest.mark.local_data
+def test_gold_consumption_and_month_windows(flight_payload):
+    payload=flight_payload
     network=payload['international_networks']['2026Q2']
     assert network['totals']==dict(passengers=None,seats=None,departures=None)
     assert network['agent_eligible'] is False

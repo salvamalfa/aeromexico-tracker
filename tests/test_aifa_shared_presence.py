@@ -5,10 +5,12 @@ from __future__ import annotations
 import duckdb
 import openpyxl
 import pandas as pd
+import pytest
 
 from src.config import PATHS
-from src.dashboard.flights import build_flight_payload
 from src.transform.aifa_shared_presence import AFAC, DESTINATIONS, GOLD, SILVER
+
+pytestmark = pytest.mark.local_data
 
 
 def test_shared_markets_preserve_carrier_volume_boundary():
@@ -28,8 +30,8 @@ def test_shared_markets_preserve_carrier_volume_boundary():
         assert connection.execute("SELECT count(*) FROM bridge_aifa_shared_route_presence_lineage").fetchone()[0] == 16
 
 
-def test_aifa_routes_are_estimated_without_reusing_all_carrier_movements():
-    network = build_flight_payload()["domestic_networks"]["2026Q2"]
+def test_aifa_routes_are_estimated_without_reusing_all_carrier_movements(flight_payload):
+    network = flight_payload["domestic_networks"]["2026Q2"]
     routes = {route["market_key"]: route for route in network["routes"]}
     expected = {"<>".join(sorted(("NLU", airport))) for airport in DESTINATIONS.values()}
     assert expected.issubset(routes)

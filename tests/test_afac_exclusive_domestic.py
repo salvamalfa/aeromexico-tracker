@@ -5,10 +5,12 @@ from __future__ import annotations
 import duckdb
 import openpyxl
 import pandas as pd
+import pytest
 
 from src.config import PATHS
-from src.dashboard.flights import build_flight_payload
 from src.transform.afac_exclusive_domestic import AFAC, GOLD, SILVER, _roster
+
+pytestmark = pytest.mark.local_data
 
 
 def test_exclusive_market_rows_reconcile_to_afac_and_lineage():
@@ -32,8 +34,8 @@ def test_exclusive_market_rows_reconcile_to_afac_and_lineage():
         assert connection.execute("SELECT count(*) FROM fact_domestic_scheduled_route_movements WHERE origin_iata = 'CLQ' OR dest_iata = 'CLQ'").fetchone()[0] == 0
 
 
-def test_domestic_consumer_replaces_inference_with_disclosed_passenger_estimates():
-    network = build_flight_payload()["domestic_networks"]["2026Q2"]
+def test_domestic_consumer_replaces_inference_with_disclosed_passenger_estimates(flight_payload):
+    network = flight_payload["domestic_networks"]["2026Q2"]
     routes = {route["market_key"]: route for route in network["routes"]}
     assert {"CLQ<>MEX", "CLQ<>NLU", "DGO<>NLU"}.issubset(routes)
     for key in ("CLQ<>MEX", "CLQ<>NLU", "DGO<>NLU"):

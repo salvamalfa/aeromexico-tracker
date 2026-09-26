@@ -4,10 +4,12 @@ import hashlib
 
 import duckdb
 import pandas as pd
+import pytest
 
 from src.config import PATHS
-from src.dashboard.flights import build_flight_payload
 from src.transform.oma_documented_routes import GOLD, SILVER, SOURCE
+
+pytestmark = pytest.mark.local_data
 
 
 def test_oma_route_document_bronze_silver_gold_lineage():
@@ -25,8 +27,8 @@ def test_oma_route_document_bronze_silver_gold_lineage():
         ).fetchone()[0] == 3
 
 
-def test_oma_routes_appear_without_invented_madrid_volume():
-    network = build_flight_payload()["international_networks"]["2026Q2"]
+def test_oma_routes_appear_without_invented_madrid_volume(flight_payload):
+    network = flight_payload["international_networks"]["2026Q2"]
     by_market = {route["market_key"]: route for route in network["routes"]}
     paris = by_market["CDG<>MTY"]
     assert paris["departures"] == 68
