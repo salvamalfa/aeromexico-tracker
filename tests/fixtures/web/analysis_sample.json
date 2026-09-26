@@ -1,0 +1,47 @@
+{
+  "period_id": "2026Q2",
+  "version": "fixture-version",
+  "content_hash": "fixture-content-hash",
+  "thesis": "Fixture: Aeroméxico vendió mejor, pero le costó más caro vender",
+  "summary": ["Fixture summary paragraph one.", "Fixture summary paragraph two."],
+  "summary_format": "paragraphs",
+  "summary_items": [
+    {
+      "claim_id": "thesis",
+      "lead": "Fixture lead sentence.",
+      "emphasis": ["fixture"],
+      "text": "Fixture lead sentence. This is a fixture claim used only by tests/fixtures/web."
+    },
+    {
+      "claim_id": "summary_unit",
+      "lead": null,
+      "emphasis": [],
+      "text": "A second fixture claim with no emphasis, for the smoke and parity tests."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Fixture section one",
+      "paragraphs": ["Fixture paragraph for section one."]
+    },
+    {
+      "title": "Fixture section two",
+      "paragraphs": ["Fixture paragraph for section two.", "A second paragraph."]
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "thesis",
+      "type": "observed_fact",
+      "text": "Fixture lead sentence. This is a fixture claim used only by tests/fixtures/web.",
+      "calculation_ids": [],
+      "evidence_ids": []
+    }
+  ],
+  "evidence_fingerprint": "fixture-evidence-fingerprint",
+  "package_id": "fixture-package-id",
+  "approval_event": "fixture-approval-event",
+  "audit_hash": "fixture-audit-hash",
+  "version_event_head": "fixture-version-event-head",
+  "context": ["Fixture context sentence."]
+}

@@ -36,6 +36,30 @@
           "accent": "blue", "format": "cents", "value": 5.0, "display_value": "5.00 ¢ USD",
           "qoq": {"available": false, "raw": null, "display": "No disponible", "direction": "na"},
           "yoy": {"available": false, "raw": null, "display": "No disponible", "direction": "na"}
+        },
+        {
+          "key": "cask_cents_per_km", "label": "CASK", "description": "fixture",
+          "accent": "red", "format": "cents", "value": 4.5, "display_value": "4.50 ¢ USD",
+          "qoq": {"available": false, "raw": null, "display": "No disponible", "direction": "na"},
+          "yoy": {"available": false, "raw": null, "display": "No disponible", "direction": "na"}
+        },
+        {
+          "key": "ask_km", "label": "ASK", "description": "fixture",
+          "accent": "gold", "format": "billions", "value": 8000000000.0, "display_value": "8.00 mil M",
+          "qoq": {"available": false, "raw": null, "display": "No disponible", "direction": "na"},
+          "yoy": {"available": false, "raw": null, "display": "No disponible", "direction": "na"}
+        },
+        {
+          "key": "load_factor_reported", "label": "Factor de ocupación", "description": "fixture",
+          "accent": "amber", "format": "percent", "value": 0.8, "display_value": "80.0%",
+          "qoq": {"available": false, "raw": null, "display": "No disponible", "direction": "na"},
+          "yoy": {"available": false, "raw": null, "display": "No disponible", "direction": "na"}
+        },
+        {
+          "key": "passengers", "label": "Pasajeros", "description": "fixture",
+          "accent": "violet", "format": "millions", "value": 5000000.0, "display_value": "5.000 M",
+          "qoq": {"available": false, "raw": null, "display": "No disponible", "direction": "na"},
+          "yoy": {"available": false, "raw": null, "display": "No disponible", "direction": "na"}
         }
       ],
       "conclusions": ["fixture"],
@@ -50,6 +74,30 @@
           "key": "rask_cents_per_km", "label": "RASK", "description": "fixture",
           "accent": "blue", "format": "cents", "value": 5.1, "display_value": "5.10 ¢ USD",
           "qoq": {"available": true, "raw": 0.02, "display": "+2.0%", "direction": "up"},
+          "yoy": {"available": false, "raw": null, "display": "No disponible", "direction": "na"}
+        },
+        {
+          "key": "cask_cents_per_km", "label": "CASK", "description": "fixture",
+          "accent": "red", "format": "cents", "value": 4.4, "display_value": "4.40 ¢ USD",
+          "qoq": {"available": true, "raw": -0.02, "display": "-2.2%", "direction": "down"},
+          "yoy": {"available": false, "raw": null, "display": "No disponible", "direction": "na"}
+        },
+        {
+          "key": "ask_km", "label": "ASK", "description": "fixture",
+          "accent": "gold", "format": "billions", "value": 8200000000.0, "display_value": "8.20 mil M",
+          "qoq": {"available": true, "raw": 0.025, "display": "+2.5%", "direction": "up"},
+          "yoy": {"available": false, "raw": null, "display": "No disponible", "direction": "na"}
+        },
+        {
+          "key": "load_factor_reported", "label": "Factor de ocupación", "description": "fixture",
+          "accent": "amber", "format": "percent", "value": 0.82, "display_value": "82.0%",
+          "qoq": {"available": true, "raw": 0.02, "display": "+2.0 pp", "direction": "up"},
+          "yoy": {"available": false, "raw": null, "display": "No disponible", "direction": "na"}
+        },
+        {
+          "key": "passengers", "label": "Pasajeros", "description": "fixture",
+          "accent": "violet", "format": "millions", "value": 5200000.0, "display_value": "5.200 M",
+          "qoq": {"available": true, "raw": 0.04, "display": "+4.0%", "direction": "up"},
           "yoy": {"available": false, "raw": null, "display": "No disponible", "direction": "na"}
         }
       ],
