@@ -35,7 +35,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote, urlparse
@@ -61,6 +63,20 @@ class MissingAnalysisInput(RuntimeError):
     """A record or the approval ledger this exporter needs is not present locally."""
 
 
+def _drafts_root_for(root: Path) -> Path:
+    """The drafts directory that belongs to a given ledger ``root``.
+
+    ``DRAFTS_ROOT`` (``analysis_runs/drafts``) and ``flow.ROOT``
+    (``analysis_runs/lifecycle``) are siblings under ``analysis_runs``; an
+    alternate ``root`` (e.g. an isolated ledger under ``tmp_path`` in tests)
+    keeps that same relationship, so its drafts live at ``root.parent /
+    "drafts"``. For the real ``flow.ROOT`` this resolves to ``DRAFTS_ROOT``
+    unchanged.
+    """
+
+    return Path(root).parent / "drafts"
+
+
 def discover_approved_manifest(root: Path = flow.ROOT) -> list[dict[str, str]]:
     """Return {period_id, version} for every draft the local ledger currently
     has approved or published, sorted by period_id then version.
@@ -72,12 +88,17 @@ def discover_approved_manifest(root: Path = flow.ROOT) -> list[dict[str, str]]:
     not exactly, currently approved is silently skipped here, exactly as it
     would be refused there -- no fabricated approval, and a clean checkout
     with no local ``analysis_runs/`` simply yields an empty manifest.
+
+    Raises ``ValueError`` (A5) if more than one version of the same
+    ``period_id`` is currently approved/published -- ambiguous, since
+    ``export_analysis`` writes one ``analysis/<period_id>.json`` per period.
     """
 
+    drafts_root = _drafts_root_for(root)
     manifest: list[dict[str, str]] = []
-    if not DRAFTS_ROOT.is_dir():
+    if not drafts_root.is_dir():
         return manifest
-    for period_dir in sorted(p for p in DRAFTS_ROOT.iterdir() if p.is_dir()):
+    for period_dir in sorted(p for p in drafts_root.iterdir() if p.is_dir()):
         for version_path in sorted(period_dir.glob("*.json")):
             record = json.loads(version_path.read_text(encoding="utf-8"))
             try:
@@ -86,11 +107,21 @@ def discover_approved_manifest(root: Path = flow.ROOT) -> list[dict[str, str]]:
                 continue
             if current["state"] in ("approved", "published"):
                 manifest.append({"period_id": record["draft"]["period_id"], "version": record["version"]})
+    by_period: dict[str, list[str]] = {}
+    for entry in manifest:
+        by_period.setdefault(entry["period_id"], []).append(entry["version"])
+    for period_id, versions in sorted(by_period.items()):
+        if len(versions) > 1:
+            versions_str = ", ".join(sorted(versions))
+            raise ValueError(
+                f"Multiple approved versions for period {period_id}: {versions_str} — "
+                "revoke one or select explicitly"
+            )
     return manifest
 
 
-def _load_record(period_id: str, version: str) -> dict[str, Any]:
-    path = DRAFTS_ROOT / period_id / f"{version}.json"
+def _load_record(period_id: str, version: str, root: Path = flow.ROOT) -> dict[str, Any]:
+    path = _drafts_root_for(root) / period_id / f"{version}.json"
     if not path.is_file():
         raise MissingAnalysisInput(
             f"analysis record for {period_id}/{version} is not present at {path}. "
@@ -203,7 +234,7 @@ def _drop_private_sections(authorized: dict[str, Any], record: dict[str, Any]) -
 def export_period(period_id: str, version: str, *, root: Path = flow.ROOT) -> dict[str, Any]:
     """Load one record and return exactly what consumer_payload() authorizes."""
 
-    record = _load_record(period_id, version)
+    record = _load_record(period_id, version, root)
     try:
         authorized = flow.consumer_payload(record, root)
         package, calculations, _ = flow.verified_inputs(record)
@@ -230,27 +261,55 @@ def export_analysis(
     With ``allow_missing`` (dev only), a period whose record or approval is
     not present locally is skipped with a stderr note instead of failing
     the whole export — a clean public clone has neither.
+
+    Never leaves stale files behind (A4): every period file is built under a
+    fresh temporary directory next to ``out_dir/analysis`` and the whole
+    directory is swapped in atomically only once every period has exported
+    and validated cleanly, so a revoked period (or, with an empty approved
+    manifest, every period) does not linger from an earlier export.
     """
 
     manifest = discover_approved_manifest(root)
     validator = Draft202012Validator(ANALYSIS_SCHEMA)
     rules = load_privacy_rules()
-    written: list[Path] = []
-    for entry in manifest:
-        period_id, version = entry["period_id"], entry["version"]
+    analysis_dir = out_dir / "analysis"
+    analysis_dir.parent.mkdir(parents=True, exist_ok=True)
+    tmp_dir = Path(tempfile.mkdtemp(dir=analysis_dir.parent, prefix=analysis_dir.name + ".tmp-"))
+    written_names: list[str] = []
+    try:
+        for entry in manifest:
+            period_id, version = entry["period_id"], entry["version"]
+            try:
+                payload = export_period(period_id, version, root=root)
+            except MissingAnalysisInput as error:
+                if not allow_missing:
+                    raise
+                print(f"web_export.analysis: skipping {period_id} ({error})", file=sys.stderr)
+                continue
+            errors = [f"{list(e.path)}: {e.message}" for e in validator.iter_errors(payload)]
+            if errors:
+                raise ValueError(f"analysis/{period_id}.json does not match its schema: {errors[:5]}")
+            check_privacy(payload, rules)
+            write_json(tmp_dir / f"{period_id}.json", payload)
+            written_names.append(f"{period_id}.json")
+
+        previous = None
+        if analysis_dir.exists():
+            previous = tmp_dir.with_name(analysis_dir.name + ".prev-" + tmp_dir.name.rsplit("-", 1)[-1])
+            analysis_dir.rename(previous)
         try:
-            payload = export_period(period_id, version, root=root)
-        except MissingAnalysisInput as error:
-            if not allow_missing:
-                raise
-            print(f"web_export.analysis: skipping {period_id} ({error})", file=sys.stderr)
-            continue
-        errors = [f"{list(e.path)}: {e.message}" for e in validator.iter_errors(payload)]
-        if errors:
-            raise ValueError(f"analysis/{period_id}.json does not match its schema: {errors[:5]}")
-        check_privacy(payload, rules)
-        written.append(write_json(out_dir / "analysis" / f"{period_id}.json", payload))
-    return written
+            tmp_dir.rename(analysis_dir)
+        except OSError:
+            if previous is not None:
+                previous.rename(analysis_dir)
+            raise
+        if previous is not None:
+            shutil.rmtree(previous, ignore_errors=True)
+    finally:
+        if tmp_dir.exists():
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+
+    return [analysis_dir / name for name in sorted(written_names)]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -268,7 +327,7 @@ def main(argv: list[str] | None = None) -> int:
             args.out,
             allow_missing=args.allow_missing,
         )
-    except MissingAnalysisInput as error:
+    except (MissingAnalysisInput, ValueError) as error:
         print(f"web_export.analysis: {error}", file=sys.stderr)
         return 1
     for path in sorted(written):

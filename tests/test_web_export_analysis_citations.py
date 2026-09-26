@@ -151,7 +151,7 @@ def test_export_period_attaches_citations_and_section_claim_ids(monkeypatch) -> 
             {"title": "Privado", "paragraphs": ["p"]},
         ],
     }
-    monkeypatch.setattr(web_analysis, "_load_record", lambda period_id, version: record)
+    monkeypatch.setattr(web_analysis, "_load_record", lambda period_id, version, root=web_analysis.flow.ROOT: record)
     monkeypatch.setattr(web_analysis.flow, "consumer_payload", lambda r, root: authorized)
     monkeypatch.setattr(web_analysis.flow, "verified_inputs", lambda r: (package, calculations, {}))
 

@@ -89,7 +89,26 @@ def load_records(record_paths: list[Path]) -> list[dict[str, Any]]:
     records = []
     for path in record_paths:
         records.append(json.loads(Path(path).read_text(encoding="utf-8")))
+    _reject_duplicate_periods(records)
     return records
+
+
+def _reject_duplicate_periods(records: list[dict[str, Any]]) -> None:
+    """A5: two --record for the same period_id is ambiguous -- which one
+    ends up in analysis/<period_id>.json is not something this gate should
+    guess. Refuse before any verification/export/build work happens."""
+
+    by_period: dict[str, list[str]] = {}
+    for record in records:
+        period_id = record["draft"]["period_id"]
+        by_period.setdefault(period_id, []).append(record.get("version", "?"))
+    for period_id, versions in sorted(by_period.items()):
+        if len(versions) > 1:
+            versions_str = ", ".join(sorted(versions))
+            raise PublicationRefused(
+                f"Multiple approved versions for period {period_id}: {versions_str} — "
+                "revoke one or select explicitly"
+            )
 
 
 def _verify_under_lock(records: list[dict[str, Any]], root: Path) -> list[tuple[Any, Any, Any, Any]]:

@@ -78,10 +78,23 @@ migración completa). Cada paquete lo ejecuta el subagente `migrador`.
 
 | Paquete | Alcance | Estado |
 |---|---|---|
-| R1 | Barreras de publicación (A2, A3, A7, A10) | en curso |
-| R2 | Exportación de análisis (A4–A6) | pendiente |
+| R1 | Barreras de publicación (A2, A3, A7, A10) | fusionado (#58) |
+| R2 | Exportación de análisis (A4–A6) | en curso |
 | R3 | Trazabilidad y documentación (A8, A11, A12) | pendiente |
 | R4 | Dependencias web (A9) | pendiente |
 | R5 | Limpieza histórica (opcional, decisión del dueño) | pendiente |
 
 A1 (protección de rama) es una acción del dueño, no de un agente.
+
+- 26-sep-2026: R2 en curso (rama `claude/upbeat-brahmagupta-g1orp2`). A6:
+  `discover_approved_manifest`/`_load_record`/`export_period`/`export_analysis`
+  derivan el directorio de drafts de `root` (`root.parent / "drafts"`) en vez
+  de leer el `DRAFTS_ROOT` de módulo; el comportamiento por defecto
+  (`flow.ROOT`) no cambia. A5: `discover_approved_manifest` rechaza más de
+  una versión aprobada/publicada del mismo `period_id` con un error claro, y
+  `src/publish/gate.py::load_records` rechaza dos `--record` del mismo
+  `period_id` antes de cualquier trabajo. A4: `export_analysis` construye
+  cada `analysis/<period_id>.json` en un directorio temporal junto a
+  `out_dir/analysis` y lo intercambia atómicamente al final, así que una
+  revocación (o un manifiesto vacío) no deja archivos de periodos previos.
+  Pruebas nuevas en `tests/test_web_export_analysis_isolation.py`.
