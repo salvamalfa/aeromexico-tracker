@@ -1,5 +1,13 @@
 # Etapa 18 — Integración local para revisión
 
+> **Nota R5 (limpieza histórica):** los HTML de `prototypes/etapa-18/`
+> (`analisis_final_revision.html`, `lectura_negocio_revision.html`,
+> `reader_preview.html`, `resumen_ejecutivo.html`,
+> `resumen_ejecutivo_revision.html`) y `src/analysis_agent/stage18_preview.py`
+> se retiraron en R5; recuperables del historial git en el commit 14836f2,
+> por ejemplo `git show 14836f2:prototypes/etapa-18/resumen_ejecutivo.html >
+> resumen_ejecutivo.html`. Este reporte queda como registro histórico.
+
 ## Ajuste de lectura solicitado después de la publicación
 
 La versión pública tiene dos pestañas: Lectura ejecutiva (KPI y resumen) y
