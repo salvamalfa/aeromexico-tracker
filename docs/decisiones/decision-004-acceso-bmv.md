@@ -55,7 +55,7 @@ del plan. Esta diferencia se conserva como limitación de fuente.
 ## Fallback
 
 Si BMV deja de entregar el catálogo o los ZIP por HTTP, se escalará según
-`docs/plan/12-computer-use-playbook.md`: primero Playwright sin interfaz y después
+`docs/archivo/plan-original/12-computer-use-playbook.md`: primero Playwright sin interfaz y después
 computer use con aviso previo al usuario. Los archivos obtenidos por ese medio deben
 entrar al mismo manifiesto bronze y cumplir los mismos hashes y contratos.
 

@@ -1,7 +1,6 @@
-"""Unit tests for the P6a citation export in ``src.web_export.analysis``.
+"""Unit tests for the citation export in ``src.web_export.analysis``.
 
-``_claim_citations``/``_citations_by_claim`` are a pure-function port of
-``src.analysis_agent.reader_ui.py::cite()``'s selection and href/title
+``_claim_citations``/``_citations_by_claim`` are pure functions for citation selection and href/title
 construction (see ``web/README.md`` "Citations"). These tests build their
 own tiny, synthetic package/calculations/draft — no local warehouse or
 ``analysis_runs/`` ledger needed — and assert the same filters, numbering

@@ -4,22 +4,15 @@ Vite + TypeScript front-end for the whole published page — shared header,
 period stepper, and the reader-tabs shell around three views (Lectura
 ejecutiva, Economía unitaria, Vuelos) — loading the v1 payload split by
 `src/web_export/` via `fetch`. See
-`docs/arquitectura/auditoria-arquitectura-20260926.md` §4.2–4.3 and Fase 3–4,
-and `docs/etapas/vuelos-pasajeros-traspaso-20260913.md` for Vuelos' history.
-P4a/P4b built this as plain ES modules (`.js`); P5 converted every module to
-strict TypeScript and put Vite in front of it (`package.json`, `vite.config.ts`,
-`tsconfig.json`) — no visible behaviour changed, see "Paridad" below.
+`docs/etapas/vuelos-pasajeros-traspaso-20260913.md` for Vuelos' history.
+Built with Vite and strict TypeScript (`package.json`, `vite.config.ts`,
+`tsconfig.json`).
 
 ## Responsabilidad
 
-- The **only** implementation of each view since P7 (see
-  `docs/arquitectura/migracion-estado.md`): real `.html`/`.ts`/`.css` files a
-  human or an agent can edit directly. P7 retired the legacy generators
-  this page used to have to match byte-for-byte (`src/dashboard/
-  flights_html.py`'s HTML renderer, `executive_summary_html.py`,
-  `src/analysis_agent/stage18.py`/`reader_ui.py`, the Streamlit app, and the
-  served copy at `static/aeromexico_tracker.html`) — this is now the single
-  source of truth, not a port kept in parity with something else.
+- The **only** implementation of each view: real `.html`/`.ts`/`.css` files a
+  human or an agent can edit directly — the single source of truth, not a
+  port kept in parity with anything else.
 - `index.html` is the whole page: the shared `<header>`/period stepper, the
   `.reader-tabs` shell (`#tab-reading`/`#tab-economy`/`#tab-flights` and
   their `role=tabpanel` sections), and each view's markup. Its entry script
@@ -29,28 +22,22 @@ strict TypeScript and put Vite in front of it (`package.json`, `vite.config.ts`,
   `tests/test_repo_budgets.py`), `strict: true` (`tsconfig.json`):
   - `shell/tabs.ts`: the tab controller (click + arrow/Home/End keys,
     dispatches `reader-tab-visible` after resizing any Plotly graph the
-    now-visible panel holds), ported from the inline `<script>`
-    `src/analysis_agent/reader_ui.py::refine` appends.
+    now-visible panel holds).
   - `executive/{state,narrative,bootstrap}.ts`: fetch
     `data/v1/executive.json` (records + views, shared by the
-    reading *and* economy tabs, exactly like the published page's one
-    `executive_summary.js` drives both) and, per period,
+    reading *and* economy tabs) and, per period,
     `data/v1/analysis/<period_id>.json` — the export of
     `src/web_export/analysis.py` — to render the approved-analysis summary
     and the full-analysis dialog (`#analysis-full`, re-filled per period
-    rather than one `<dialog>` per period like the published page, since
-    this view fetches lazily). A period with no exported file (no
+    because this view fetches lazily). A period with no exported file (no
     approved analysis, or a dev build run with `--allow-missing-analysis`)
     shows the same "Análisis pendiente de aprobación" placeholder text.
   - `economy/{kpis,charts,table}.ts`: the 4 KPI cards (RASK, CASK, ASK,
     Margen unitario — `load_factor_reported`/`passengers` are in the
-    payload but never rendered here either, matching what
-    `reader_ui.py::refine` drops from the published page), the three
+    payload but not rendered), the three
     Plotly charts (unit economics, volume vs. RASK, load factor vs. RASK)
-    and the by-quarter disclosure table, ported from
-    `src/dashboard/assets/executive_summary.js`.
-  - `flights/*.ts` (unchanged behaviour from P4a, converted to TypeScript
-    in P5): `state.ts` (mutable state + lazy per-period fetch/cache),
+    and the by-quarter disclosure table.
+  - `flights/*.ts`: `state.ts` (mutable state + lazy per-period fetch/cache),
     `dom.ts` (formatting), `domestic.ts`/`regions.ts` (mode switches),
     `coverage.ts` (route coverage dots/icons), `volume.ts` (network volume
     line), `table.ts` (route table + airport tooltip), `search.ts`
@@ -75,15 +62,11 @@ strict TypeScript and put Vite in front of it (`package.json`, `vite.config.ts`,
   `.hero`/period-stepper/`.reader-tabs` the published page's shared header
   and tab shell use), `views/executive/executive.css` (narrative card,
   analysis summary/dialog), `views/economy/economy.css` (KPI grid, chart
-  cards, disclosure table) and `views/flights/flights.css` (unchanged from
-  P4a, scoped under `.flights-view`).
+  cards, disclosure table) and `views/flights/flights.css` (scoped under `.flights-view`).
 
 ### Plotly
 
-P4a/P4b vendored the full Plotly bundle at `vendor/plotly-3.7.0.min.js`
-(MIT, 4.7 MB, matching the version the published page embeds via
-`plotly.offline.get_plotlyjs()` — see `src/analysis_agent/reader_ui.py`).
-P5 deleted that vendored file. `src/lib/plotly.ts` now imports
+`src/lib/plotly.ts` imports
 `plotly.js/lib/core` plus only the trace types these views actually use —
 `bar`/`scatter` (economy charts, the passenger-mix chart) and
 `scattergeo`/`choropleth` (the Vuelos flow map) — and `Plotly.register()`s
@@ -97,24 +80,23 @@ keeps the same Plotly 3.x major version so rendering stays identical (see
 `npm audit` findings in the `plotly.js` dependency tree at this pin, via
 `maplibre-gl` — not reachable at runtime through this partial import).
 
-### Estado de trimestre compartido y carga diferida de Vuelos (P6a)
+### Estado de trimestre compartido y carga diferida de Vuelos
 
 The published page's own `#period-prev`/`#period-next` are shared by two
 independent scripts: `executive_summary.js` attaches its own click
 listener, then `src/dashboard/assets/flights.js` attaches a second,
 independent one to the same buttons (there is only one stepper in the
 DOM) — every click fires both, in attachment order, each keeping its own
-`periodIndex`. P4a/P4b/P5 ported that structure as-is: `views/executive`
-and `views/flights` each kept their own `periodIndex` and their own
-listeners on the same buttons, and `web/src/main.ts` mounted
+`periodIndex`. An earlier version of `web/` ported that structure as-is:
+`views/executive` and `views/flights` each kept their own `periodIndex` and
+their own listeners on the same buttons, and `web/src/main.ts` mounted
 `views/flights` right after `views/executive` on every page load so the
 two stayed in lockstep — this only worked because both quarter lists
-happen to hold the same 22 quarters in the same order (see the P5 tracker
-entry in `docs/arquitectura/migracion-estado.md`), and it meant
+happen to hold the same 22 quarters in the same order, and it meant
 `views/flights`' data (`quarters.json`, world geometry, network files)
 always loaded even for a reader who never opens the Vuelos tab.
 
-P6a replaced that with one shared store, `web/src/state/period.ts`: it
+That version was replaced with one shared store, `web/src/state/period.ts`: it
 owns the selected index and the *single* pair of click listeners on
 `#period-prev`/`#period-next` (`wireStepper()`, wired once by
 `views/executive/bootstrap.ts`, since the executive view always mounts
@@ -135,13 +117,11 @@ Because the store keeps the selected `period_id`, not just an index,
 several quarter switches on the reading tab and immediately pick up
 `currentPeriodId()` — this is the behaviour
 `test_switching_quarters_before_opening_flights_survives_the_lazy_mount`
-in the retired `tests/test_web_flights_parity.py` (P7, see
-`docs/arquitectura/migracion-estado.md`) used to check against the
-published page: switch quarters on the reading tab, *then* open Vuelos
-for the first time, then switch again. Nothing in `web/src/state/
-period.ts` changed in P7; the coverage of this specific sequence is a
-residual gap until a multi-quarter synthetic fixture replaces it (see
-that package's report).
+in the now-removed `tests/test_web_flights_parity.py` used to check against
+the previously published page: switch quarters on the reading tab, *then*
+open Vuelos for the first time, then switch again. The coverage of this
+specific sequence is a residual gap until a multi-quarter synthetic fixture
+replaces it.
 
 **Carga inicial de Vuelos**: `web/src/main.ts` no longer mounts
 `views/flights` unconditionally on load. It listens for the same
@@ -154,27 +134,20 @@ any network file, and never even downloads the `bootstrap-*.js` chunk.
 See "Tamaño del bundle" below for what this drops from the initial
 transfer.
 
-### Citations (closed gap, P6a)
+### Citations
 
-The published reading tab adds a superscript citation link
-(`<sup><a class="source-note">`) next to some numbers in the analysis text
-— see `src/analysis_agent/reader_ui.py::cite`. P4b/P5 shipped without it:
-building that link needs `verified_inputs()` (excerpts, source URLs,
-calculation lineage), which `src/web_export/analysis.py` did not read.
-P6a closed this gap: `src/web_export/analysis.py` now also calls
-`flow.verified_inputs(record)` (the same fail-closed call `stage18`
-makes) and, per claim, exports a `citations` array — a port of
-`cite()`'s selection logic that emits *only* what `cite()` itself already
-puts on the public page: the public source URL (still restricted to
+The reading tab adds a superscript citation link (`<sup><a class="source-note">`)
+next to some numbers in the analysis text. `src/web_export/analysis.py` calls
+`flow.verified_inputs(record)` (fail-closed) and, per claim, exports a
+`citations` array with *only* public fields: the source URL (restricted to
 `www.sec.gov`/`sec.gov`/`ir.aeromexico.com`, both in code and in
-`contracts/web/analysis.schema.json`'s `citation.href` pattern), the
-visible tooltip text, and the exact substring of the already-rendered
-claim text to wrap — no excerpt/source/calculation object or lineage ever
-leaves the file. `web/src/views/executive/narrative.ts::applyCitations`
-ports `cite()`'s DOM-splicing step (same markup, classes, attributes,
-numbering) against the rendered text. `tests/test_site_parity.py`
-(P7) checks the rendered `#narrative-copy` against the ledger's own
-`consumer_payload`/citation export directly, superscripts included.
+`contracts/web/analysis.schema.json`'s `citation.href` pattern), the visible
+tooltip text, and the exact substring of the rendered claim text to wrap — no
+excerpt/source/calculation object or lineage leaves the file.
+`web/src/views/executive/narrative.ts::applyCitations` splices them into the
+rendered text. `tests/test_site_parity.py` checks the rendered
+`#narrative-copy` against the ledger's `consumer_payload`/citation export,
+superscripts included.
 
 ## Entradas / salidas
 
@@ -195,7 +168,7 @@ numbering) against the rendered text. `tests/test_site_parity.py`
     for that period — see `src/web_export/analysis.py`.
 - **Salidas:** none; this is a read-only page.
 
-## Publicación (P6b)
+## Publicación
 
 Esta página, ya compilada con Vite, es exactamente lo que
 `.github/workflows/pages.yml` despliega en
@@ -250,15 +223,15 @@ uv run pytest --require-local-data -m "browser and local_data" -q tests/test_sit
 ```
 
 - `test_web_flights_smoke.py` / `test_web_page_smoke.py` are `browser`
-  only — since P5 they build `web/` with Vite once per pytest session
+  only — they build `web/` with Vite once per pytest session
   (`web_dist_dir` in `tests/conftest.py`, skipped with a clear reason if
   `npm`/Node are missing) and serve the **built** `web/dist/` with the
   synthetic fixtures at `tests/fixtures/web/`, then check each tab renders
   with no console errors — so they are the ones enabled in CI's `web` job
   (see `.github/workflows/ci.yml` and `REPO_MAP.md`).
-- `test_site_parity.py` (P7; also `local_data`) checks the already-assembled
+- `test_site_parity.py` (also `local_data`) checks the already-assembled
   `site/` against its own sources of truth instead of a second render — see
-  its module docstring and `docs/etapas/migracion-p7-retiro-streamlit-20260926.md`.
+  its module docstring.
   A local-data-only sub-test also snapshot-compares `site/`'s committed
   `data/v1/` against a fresh `src.web_export` run.
 
@@ -272,8 +245,7 @@ la metodología en `tests/test_web_page_smoke.py`/`test_web_flights_parity.py`;
 las cifras de esta sección se tomaron con un script de un solo uso, no
 parte de la suite).
 
-**Carga inicial (pestaña de lectura, Vuelos sin abrir)** — desde P6a,
-`main.ts` ya no importa ni monta `views/flights` al cargar la página (ver
+**Carga inicial (pestaña de lectura, Vuelos sin abrir)** — `main.ts` no importa ni monta `views/flights` al cargar la página (ver
 "Estado de trimestre compartido y carga diferida de Vuelos" arriba), así
 que esta es toda la transferencia hasta que alguien abre esa pestaña:
 
@@ -283,12 +255,10 @@ que esta es toda la transferencia hasta que alguien abre esa pestaña:
 | `dist/assets/index-*.css` | 99.3 KB | 15.4 KB |
 | `dist/assets/index-*.js` (tabs, executive, economy, Plotly core+bar+scatter — ya no incluye nada de `views/flights`) | 1,304.2 KB | 455.1 KB |
 | `data/v1/executive.json` | 68.2 KB | 8.4 KB |
-| `data/v1/analysis/2026Q2.json` (incluye las citas de P6a) | 26.6 KB | 6.5 KB |
+| `data/v1/analysis/2026Q2.json` (incluye las citas) | 26.6 KB | 6.5 KB |
 | **Total de la carga inicial** | **1,512.6 KB (≈1.51 MB)** | **488.6 KB (≈0.49 MB)** |
 
-**≈1.51 MB sin comprimir**, por debajo del objetivo de ≤ 2 MB de la Fase
-4 — y ya sin el ≈24% que la versión P5 (con Vuelos montado siempre) tenía
-por encima de ese objetivo (≈2.49 MB). `dist/assets/bootstrap-*.js`
+**≈1.51 MB sin comprimir**, por debajo del objetivo de ≤ 2 MB. `dist/assets/bootstrap-*.js`
 (35.8 KB / 11.8 KB gzip, el chunk de Vuelos) tampoco se descarga hasta
 que se abre esa pestaña.
 
@@ -304,10 +274,9 @@ sincronizado en el trimestre que estuviera seleccionado):
 | **Subtotal al abrir Vuelos** | **980.1 KB (≈0.96 MB)** | **256.4 KB (≈0.25 MB)** |
 
 Quien nunca abre Vuelos nunca paga esos ≈0.96 MB; quien la abre acaba
-transfiriendo ≈2.49 MB en total — la misma cifra que P5 ya cargaba
-siempre, ahora repartida en el tiempo en vez de al inicio.
+transfiriendo ≈2.49 MB en total, repartidos en el tiempo en vez de al inicio.
 
-## Dependencias y avisos de seguridad (R4, A9)
+## Dependencias y avisos de seguridad
 
 `npm audit` en `web/` (26-sep-2026, antes de este cambio) reportaba 5
 avisos: Vite 7.1.12 (alto, servidor de desarrollo — path traversal /
@@ -330,8 +299,8 @@ mismos hashes de archivo en `dist/assets/`) siguen en verde.
   breaking); no existe una versión `3.2.x` que lo corrija. `vitest` es
   una `devDependency` que solo corre en `vitest run`/`vitest --watch`
   contra este repo: no se empaqueta ni se sirve en `dist/` ni en
-  `site/`, así que no llega a Pages. Reevaluar al planear una migración
-  a Vitest 5 (fuera de alcance de R4).
+  `site/`, así que no llega a Pages. Reevaluar al planear una actualización
+  a Vitest 5.
 - **`maplibre-gl` (crítico, GHSA-jrc7-96c5-q579), vía `plotly.js`**:
   `plotly.js` sigue en `3.7.0` (la última `3.x`; el arreglo del
   advisory exige `plotly.js@4.1.1`, major breaking, según

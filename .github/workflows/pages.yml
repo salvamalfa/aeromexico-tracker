@@ -1,9 +1,8 @@
 name: Pages
 
 # Deploys site/ as it already is in master — never rebuilds it, never
-# touches analysis_runs/ or any secret. See src/publish/README.md and
-# docs/arquitectura/auditoria-arquitectura-20260926.md §4.2 punto 6 and
-# Fase 5. src.publish.verify needs no private data: it checks
+# touches analysis_runs/ or any secret. See src/publish/README.md.
+# src.publish.verify needs no private data: it checks
 # publication_manifest.json's own schema, every listed file's hash/size,
 # that no unlisted file is present, and every data/v1/**/*.json file
 # against contracts/web/*.schema.json + privacy.yaml. deploy also depends

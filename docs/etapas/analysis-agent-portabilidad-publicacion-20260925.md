@@ -12,7 +12,7 @@ aprobación se creó, cambió ni reinterpretó.
 Desde el 21 de septiembre, reconstruir el resumen ejecutivo fuera de la
 máquina original fallaba con `Excerpt does not match its source locator`
 (documentado como limitación en
-[`vuelos-selector-trimestre-nacional-internacional-20260921.md`](vuelos-selector-trimestre-nacional-internacional-20260921.md)).
+[`vuelos-selector-trimestre-nacional-internacional-20260921.md`](../archivo/etapas/vuelos-selector-trimestre-nacional-internacional-20260921.md)).
 
 **Causa.** Los comunicados de resultados de la SEC escriben la viñeta como
 referencia numérica `&#149;`, un punto de control C1. HTML5 la reinterpreta

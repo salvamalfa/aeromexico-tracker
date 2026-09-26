@@ -2,28 +2,20 @@
 
 Read-only use of the existing approval flow: for every ``{period_id,
 version}`` the local ledger currently has approved or published (see
-``discover_approved_manifest`` -- P7 retired the ``static/
-aeromexico_tracker.html`` page this used to scrape for its
-``#analysis-manifest``), this loads the matching ``analysis_runs/drafts/
+``discover_approved_manifest``), this loads the matching ``analysis_runs/drafts/
 <period_id>/<version>.json`` record and calls
-``src.analysis_agent.lifecycle.consumer_payload(record)`` — the same
-fail-closed handoff the retired ``stage18`` used before anything reached an
-HTML page — and exports exactly what it authorizes, plus a filter that
-drops any section the draft itself marks reader-private (the same sections
-the retired ``analysis_agent.reader_ui.refine`` used to strip from the
-published dialog; ``web/`` now applies the same filter client-side).
+``src.analysis_agent.lifecycle.consumer_payload(record)`` — the
+fail-closed handoff that gates every publication — and exports exactly what
+it authorizes, plus a filter that drops any section the draft itself marks
+reader-private (``web/`` applies the same filter client-side).
 
 Never writes to the ledger, never approves or revokes anything. See
-``src/web_export/README.md`` and
-``docs/arquitectura/auditoria-arquitectura-20260926.md`` Fase 3.
+``src/web_export/README.md``.
 
 Citations: each claim in ``consumer_payload``'s ``claims`` list also gets a
-``citations`` array — a port of the retired ``src.analysis_agent.
-reader_ui.cite()``'s selection logic (see ``_claim_citations``/
-``_citations_by_claim`` below), run against ``verified_inputs()``'s
+``citations`` array — built by ``_claim_citations``/``_citations_by_claim`` below, run against ``verified_inputs()``'s
 ``package``/``calculations`` under the same fail-closed call
-``consumer_payload`` makes, but exporting *only* the fields ``cite()``
-itself used to put on the public page: the public source URL, the visible
+``consumer_payload`` makes, but exporting *only* the public fields: the public source URL, the visible
 tooltip text, and the exact substring of the already-rendered claim text to
 wrap. No excerpt/source/calculation object, no lineage, no provider
 identifier ever leaves this module — see ``contracts/web/
@@ -81,15 +73,13 @@ def discover_approved_manifest(root: Path = flow.ROOT) -> list[dict[str, str]]:
     """Return {period_id, version} for every draft the local ledger currently
     has approved or published, sorted by period_id then version.
 
-    P7 retired ``static/aeromexico_tracker.html`` and the
-    ``#analysis-manifest`` script tag it used to carry (the old
-    ``read_manifest`` scraped that file). This reads the same ledger
+    Reads the same ledger
     ``lifecycle.consumer_payload`` itself checks instead: a draft that is
     not exactly, currently approved is silently skipped here, exactly as it
     would be refused there -- no fabricated approval, and a clean checkout
     with no local ``analysis_runs/`` simply yields an empty manifest.
 
-    Raises ``ValueError`` (A5) if more than one version of the same
+    Raises ``ValueError`` if more than one version of the same
     ``period_id`` is currently approved/published -- ambiguous, since
     ``export_analysis`` writes one ``analysis/<period_id>.json`` per period.
     """
@@ -137,8 +127,7 @@ def _claim_citations(
     calculations: dict[str, Any],
     numbers: dict[str, int],
 ) -> list[dict[str, Any]]:
-    """Port of src.analysis_agent.reader_ui.cite()'s selection and href/title
-    construction for one claim, minus the DOM text-splicing (the front-end
+    """Citation selection and href/title construction for one claim, minus the DOM text-splicing (the front-end
     does that itself against the already-rendered claim text — see
     web/src/views/executive/narrative.ts). ``numbers`` is the href->label
     map, shared and mutated across every claim in one record so citation
@@ -190,8 +179,7 @@ def _claim_citations(
 def _citations_by_claim(
     record: dict[str, Any], package: dict[str, Any], calculations: dict[str, Any]
 ) -> dict[str, list[dict[str, Any]]]:
-    """claim_id -> citations, numbered in the same document order
-    src.analysis_agent.reader_ui.refine walks: the summary list first
+    """claim_id -> citations, numbered in document order: the summary list first
     (``summary_claim_ids``), then every non reader-private section's
     paragraphs in order (``sections[*].claim_ids``) — thesis and context
     asides are never cited on the published page either."""
@@ -262,7 +250,7 @@ def export_analysis(
     not present locally is skipped with a stderr note instead of failing
     the whole export — a clean public clone has neither.
 
-    Never leaves stale files behind (A4): every period file is built under a
+    Never leaves stale files behind: every period file is built under a
     fresh temporary directory next to ``out_dir/analysis`` and the whole
     directory is swapped in atomically only once every period has exported
     and validated cleanly, so a revoked period (or, with an empty approved

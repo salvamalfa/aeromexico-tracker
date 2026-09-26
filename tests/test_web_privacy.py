@@ -1,7 +1,6 @@
 """Enforce contracts/web/privacy.yaml against real and synthetic payloads.
 
-See docs/arquitectura/auditoria-arquitectura-20260926.md §4.2.2 and
-contracts/web/README.md.
+See contracts/web/README.md.
 """
 
 from __future__ import annotations

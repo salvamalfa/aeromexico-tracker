@@ -6,7 +6,7 @@ aprueba el contenido para consumo.
 
 ## Entrega
 
-[Abrir lectura local](../../prototypes/etapa-16/quarterly_analysis.html).
+[Abrir lectura local](../../../prototypes/etapa-16/quarterly_analysis.html).
 
 El piloto de 2T26 tiene una tesis sobre crecimiento del ingreso por capacidad y
 mayor presión del costo unitario. Contiene 194 palabras de resumen, 709 de detalle
@@ -36,7 +36,7 @@ otra. No hay aprobación implícita ni comandos de publicación.
   360, 736 y 1440 px; cero solicitudes de red al abrir, cero errores del navegador.
 - Inspección visual de escritorio y detalle móvil realizada sobre capturas.
 
-[Comprobantes](../referencias/etapa-16/README.md).
+[Comprobantes](../../referencias/etapa-16/README.md).
 
 ## Límites que siguen vigentes
 

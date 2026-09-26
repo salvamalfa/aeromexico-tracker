@@ -1,13 +1,8 @@
 # `src/dashboard`
 
 Payloads que `src/web_export`/`src/publish` consumen: la lectura ejecutiva y
-Vuelos. The Streamlit multipage app and every module that rendered its own
-HTML (`app.py`, `pages/`, `components/`, `theme.py`, `structure_*.py`,
-`validate_stage10.py`, `validate_stage11.py`, `build_stage11.py`,
-`executive_summary_html.py`, and the HTML-rendering half of
-`flights_html.py`/`build_flights.py`) were retired in P7 (see
-`docs/arquitectura/migracion-estado.md`); `web/` is now the only rendered
-view.
+Vuelos. `web/` (Vite + TypeScript) is the only rendered view; the modules
+here build data payloads, never HTML.
 
 ## Responsabilidad
 
@@ -21,12 +16,10 @@ view.
   de ruta por red), `build_flights.py` (rebuilds the payload and its
   candidate flight evidence after a source or Vuelos change).
 - **Datos y calidad, sin UI:** `data.py` (consultas al warehouse en memoria,
-  DuckDB sobre Parquet — sin Streamlit, ver `check_manual_freshness.py`
-  usado por `.github/workflows/refresh.yml`), `validate_stage8.py` (los
+  DuckDB sobre Parquet; `check_manual_freshness.py` lo usa `.github/workflows/refresh.yml`), `validate_stage8.py` (los
   controles de datos del DAG en `src/pipeline/registry.py`: contratos,
   interpretaciones de métricas, anclas trimestrales, incertidumbre del
-  forecast, salud de datos, frescura AFAC — sin los controles Streamlit
-  `AppTest`/tema/componentes que existían antes de P7), `prepare.py` (paso
+  forecast, salud de datos, frescura AFAC), `prepare.py` (paso
   `dashboard.prepare` del pipeline).
 
 Editar el generador, nunca un HTML producido. Ver `REPO_MAP.md` para el flujo

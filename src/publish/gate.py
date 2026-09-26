@@ -1,17 +1,15 @@
 """The publication gate: ``analysis_runs`` records -> a verified ``site/``.
 
-Replaces ``stage18.consumer_html``/``stage18.publish`` as the *signed
-object* (§4.2 punto 5 of the migration audit): instead of one 7 MB HTML
-file, the gate assembles a ``site/`` directory (the built ``web/`` plus its
+The gate assembles a ``site/`` directory (the built ``web/`` plus its
 ``data/v1/`` payload) and signs it with ``publication_manifest.json`` — a
 list of every file's SHA-256/size, the code commit, each contract's own
 hash, and the current analysis-manifest entries.
 
-Every step below reuses the same functions ``stage18`` and ``src/web_export``
-already use and never reimplements approval, verification or export logic:
+Every step below reuses existing functions (the Analysis Agent lifecycle and
+``src/web_export``) and never reimplements approval, verification or export logic:
 
 1. ``src.analysis_agent.lifecycle.consumer_payload``/``verified_inputs`` —
-   the same fail-closed handoff ``stage18.publish`` calls — verify each
+   the fail-closed handoff — verify each
    given record is exactly, currently approved. Anything else raises and the
    CLI exits non-zero; nothing is written.
 2. ``src.web_export.flights.export_flights`` / ``executive.export_executive``
@@ -31,15 +29,12 @@ already use and never reimplements approval, verification or export logic:
    what actually closes it, not the first.
 5. The manifest (``src/publish/manifest.py``) is written into a fresh
    ``site.tmp-*`` directory (a unique ``tempfile.mkdtemp`` per run), which
-   then atomically swaps for ``site/`` (rename, mirroring
-   ``stage18.publish``'s tempfile+``os.replace`` for the HTML file,
-   extended to a directory) while the lock from step 4 is still held.
+   then atomically swaps for ``site/`` (tempfile + rename) while the lock from step 4 is still held.
 6. An intent/published receipt, hashing the manifest, is written to
-   ``analysis_runs/publications/`` (local, gitignored, same style as
-   ``stage18``'s receipts under ``analysis_runs/lifecycle/publications/``).
+   ``analysis_runs/publications/`` (local, gitignored).
 
 Never writes to the approval ledger, never approves/revokes/records
-anything, never touches ``static/aeromexico_tracker.html`` or ``stage18``.
+anything.
 """
 
 from __future__ import annotations
@@ -94,7 +89,7 @@ def load_records(record_paths: list[Path]) -> list[dict[str, Any]]:
 
 
 def _reject_duplicate_periods(records: list[dict[str, Any]]) -> None:
-    """A5: two --record for the same period_id is ambiguous -- which one
+    """Two --record for the same period_id is ambiguous -- which one
     ends up in analysis/<period_id>.json is not something this gate should
     guess. Refuse before any verification/export/build work happens."""
 
@@ -129,8 +124,7 @@ def _verify_under_lock(records: list[dict[str, Any]], root: Path) -> list[tuple[
 
 def verify_records(records: list[dict[str, Any]], root: Path = flow.ROOT) -> list[dict[str, Any]]:
     """Return, per record, (authorized, package, calculations) under the
-    ledger's writer lock — the same fail-closed calls stage18.publish makes
-    before it would replace content. Raises PublicationRefused if any record
+    ledger's writer lock — the fail-closed lifecycle calls. Raises PublicationRefused if any record
     is not exactly, currently approved.
 
     This on its own does **not** close the publish-time race: ``publish()``

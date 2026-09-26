@@ -1,11 +1,10 @@
 """CI-runnable smoke test for the full web/ page: builds it with Vite
-(``web_dist_dir`` in tests/conftest.py, P5) and serves web/dist/ with
+(``web_dist_dir`` in tests/conftest.py) and serves web/dist/ with
 small, synthetic public fixtures (no warehouse, no analysis_runs/), then
 checks every tab — Lectura ejecutiva, Economía unitaria, Vuelos — renders
 with no console errors. Marked ``browser`` only (not ``local_data``), same
 as ``test_web_flights_smoke.py``, so it is CI-capable once Playwright is
-enabled there — see docs/arquitectura/auditoria-arquitectura-20260926.md
-§2.5 and web/README.md.
+enabled there — see web/README.md.
 """
 
 from __future__ import annotations

@@ -33,13 +33,11 @@ jobs:
       # marked `local_data` (tests/conftest.py) and skip with an explicit
       # reason here. `browser` (Playwright) tests are excluded too: full
       # local validation, with the data restored, stays a local/manual step
-      # (see docs/arquitectura/auditoria-arquitectura-20260926.md §2.5/§5).
       - name: Run the public test subset
         run: uv run pytest -m "not local_data and not browser" -q
 
-      # Only these modules are ruff-formatted so far (see REPO_MAP.md and
-      # docs/arquitectura/auditoria-arquitectura-20260926.md §5 fase 1); the
-      # rest of the tree is not yet covered.
+      # Only these modules are ruff-formatted so far (see REPO_MAP.md);
+      # the rest of the tree is not yet covered.
       - name: Check ruff format on migrated modules
         run: >-
           uv run ruff format --check

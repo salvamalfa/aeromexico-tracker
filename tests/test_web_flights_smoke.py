@@ -1,8 +1,7 @@
 """CI-runnable smoke test for web/: serves it with a synthetic, public
 fixture (no warehouse) and checks the Vuelos view renders with no console
 errors. Marked ``browser`` only (not ``local_data``) so it is the one test
-in this package that could run once CI enables Playwright — see
-docs/arquitectura/auditoria-arquitectura-20260926.md §2.5 and web/README.md.
+in this package that could run once CI enables Playwright — see web/README.md.
 """
 
 from __future__ import annotations

@@ -1,8 +1,7 @@
 """Tests for src/web_export: per-file schema validation, determinism,
 loud failure on a missing declared input, and lossless split/recombine.
 
-See docs/arquitectura/auditoria-arquitectura-20260926.md Fase 2 and
-src/web_export/README.md.
+See src/web_export/README.md.
 """
 
 from __future__ import annotations

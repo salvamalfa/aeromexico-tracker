@@ -9,7 +9,7 @@ por separado; no dispensa la comprobación temporal.
 
 ## Entrega visible
 
-[Abrir dossier navegable](../../prototypes/etapa-14/evidence_dossier.html).
+[Abrir dossier navegable](../../../prototypes/etapa-14/evidence_dossier.html).
 Selector 2T26/1T21, estado, corte, cobertura, búsqueda de cifras, fuentes y pruebas
 en ventanas cerrables. Es una UI de comprobación: ninguna sección se publica en el dashboard.
 
@@ -88,7 +88,7 @@ del motor cuantitativo, sin forzar identidades con redondeos distintos.
 No hay agente redactor, aprobación de análisis, cálculos QoQ/YoY, despliegue ni servicio
 de generación instalado. La Etapa 15 requiere aceptación humana de esta entrega.
 
-[Expediente reproducible](../referencias/etapa-14/README.md).
+[Expediente reproducible](../../referencias/etapa-14/README.md).
 
 ## Aceptación humana
 

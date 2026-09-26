@@ -4,7 +4,7 @@ Replaces the silent ``if path.exists()`` pattern in
 ``src/transform/stage6_warehouse.py`` and ``src/dashboard/*_routes.py`` *for
 the exporter only*: those keep tolerating a missing estimate table so the
 existing HTML build still works in a fresh clone without the private data
-repo (see docs/arquitectura/auditoria-arquitectura-20260926.md §4.2.7). The
+repo. The
 exporter instead refuses to publish an incomplete view.
 """
 

@@ -55,10 +55,7 @@ jobs:
         continue-on-error: true
         run: uv run pytest
 
-      # P7 (see docs/arquitectura/migracion-estado.md) retired
-      # `src.dashboard.validate_stage10` (the Streamlit-era data structure
-      # page) entirely -- there is no replacement to run for it. Stage 8's
-      # own data-only checks (`src.dashboard.validate_stage8`) are not run by
+      # Stage 8's data-only checks (`src.dashboard.validate_stage8`) are not run by
       # anything else, so this workflow runs them explicitly, fail-closed,
       # against the Gold this run is about to commit: it needs only the
       # public, versioned `data/gold/*.parquet` (via

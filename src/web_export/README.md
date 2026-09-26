@@ -1,9 +1,8 @@
 # `src/web_export`
 
 Exportadores que dividen los payloads v1 (`contracts/web/`) en archivos por
-periodo, para que el futuro front-end (P4/P5) los cargue con `fetch` en vez
-de recibirlos embebidos en el HTML. Ver
-`docs/arquitectura/auditoria-arquitectura-20260926.md` Fase 2.
+periodo, para que `web/` (Vite + TypeScript) los cargue con `fetch` en vez
+de recibirlos embebidos en el HTML.
 
 ## Responsabilidad
 
@@ -22,17 +21,14 @@ de recibirlos embebidos en el HTML. Ver
   `NaN`): dos ejecuciones sobre el mismo warehouse producen bytes idénticos.
 - `analysis.py` es distinto de los otros dos: no llama a un generador de
   `src/dashboard/`, sino que descubre qué periodos el ledger local tiene
-  actualmente aprobados o publicados (`discover_approved_manifest`, P7 —
-  antes leía el `#analysis-manifest` de la página Streamlit publicada,
-  retirada; ver `docs/arquitectura/migracion-estado.md`), carga el registro
-  correspondiente en `analysis_runs/drafts/` y llama a
+  actualmente aprobados o publicados (`discover_approved_manifest`), carga el
+  registro correspondiente en `analysis_runs/drafts/` y llama a
   `src.analysis_agent.lifecycle.consumer_payload(record)` — el mismo paso
-  de entrega fail-closed que usaba el retirado `stage18`, en modo solo
+  de entrega fail-closed que usa `src/publish/gate.py`, en modo solo
   lectura. También llama a `flow.verified_inputs(record)` (mismo llamado
-  fail-closed) para construir, por afirmación, el `citations` que exporta —
-  un port de lo que hacía `src.analysis_agent.reader_ui.py::cite()` (también
-  retirado), que solo emite lo que `cite()` ya ponía en la página pública
-  (URL de la fuente, texto del tooltip, subcadena a envolver); nunca un
+  fail-closed) para construir, por afirmación, el `citations` que exporta,
+  que solo emite lo que la página pública ya muestra (URL de la fuente,
+  texto del tooltip, subcadena a envolver); nunca un
   objeto de evidencia/cálculo ni linaje. Nunca escribe en el ledger ni
   aprueba/revoca nada. Si el registro o el ledger no están (clon público
   sin `analysis_runs/`), el manifiesto descubierto queda vacío o, con
@@ -40,7 +36,7 @@ de recibirlos embebidos en el HTML. Ver
   vez de fallar todo el export.
 
 **No publica nada.** No toca las aprobaciones del Analysis Agent. `web/` es
-la única implementación de cada vista desde P7; `src/publish/gate.py` es
+la única implementación de cada vista; `src/publish/gate.py` es
 quien compila `web/` y ensambla `site/` a partir de lo que este paquete
 exporta.
 
