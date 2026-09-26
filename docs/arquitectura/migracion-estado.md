@@ -32,7 +32,7 @@ se reinicia desde `master`.
 | P0 | Fusionar #46, republicar el integrado con el total en el panel, tracker y agente | fusionado | #46 | — |
 | P1 | Pruebas y CI (auditoría fase 0) | fusionado | #47 | — |
 | P2 | Higiene y mapa del repo (fase 1) | fusionado | #48 | — |
-| P3 | Contratos de datos y privacidad (fase 2) | en curso | | subagente migrador trabajando |
+| P3 | Contratos de datos y privacidad (fase 2) | PR abierto | #49 | revisar CI y fusionar |
 | P4 | Front-end en archivos reales, ES modules (fase 3) | pendiente | | |
 | P5 | Vite + TypeScript (fase 4) | pendiente | | |
 | P6 | Gate de publicación sobre `site/` y GitHub Pages (fase 5) | pendiente | | |
@@ -47,3 +47,4 @@ se reinicia desde `master`.
 - 2026-09-26 · P1 fusionado (#47, CI verde en 61 s). P2 iniciado.
 - 2026-09-26 · P2 listo: REPO_MAP.md, README por paquete, ruff en 4 módulos, presupuesto de 600 líneas (13 excepciones), docs de etapa movidos. CI pública 501 pruebas.
 - 2026-09-26 · P2 fusionado (#48, CI verde). P3 iniciado.
+- 2026-09-26 · P3 listo: esquemas v1 (flights, executive), privacy.yaml con prueba negativa, exportador `src/web_export` (29 archivos, máx. 634 KB), insumos requeridos en `config/web_inputs.yaml`. CI pública 517 pruebas.
