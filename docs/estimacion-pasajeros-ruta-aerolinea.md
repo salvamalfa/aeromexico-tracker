@@ -1021,8 +1021,8 @@ Límites que permanecen aunque todo lo demás salga bien:
 - `docs/etapas/vuelos-capacidad-ocupacion-estimada-20260920.md`
 - `docs/etapas/afac-rutas-investigacion-20260908.md`
 - `docs/etapas/aerodatabox-internacional-investigacion-20260921.md`
-- `docs/pasajeros-por-ruta-y-aerolinea.md`
-- `docs/estimador-ruta-aerolinea.md`
+- `docs/etapas/pasajeros-por-ruta-y-aerolinea.md`
+- `docs/etapas/estimador-ruta-aerolinea.md`
 - `docs/cloud-development.md` (frontera de licencia del proveedor)
 
 ### Evidencia externa

@@ -2,7 +2,7 @@
 
 > **Método canónico:** el procedimiento completo y verificado de estimación
 > de pasajeros por ruta y aerolínea está en
-> [`estimacion-pasajeros-ruta-aerolinea.md`](estimacion-pasajeros-ruta-aerolinea.md).
+> [`estimacion-pasajeros-ruta-aerolinea.md`](../estimacion-pasajeros-ruta-aerolinea.md).
 > Este documento es un reporte de su etapa, no la especificación.
 
 AFAC publica dos marginales del mismo cubo y nunca la celda. Este módulo
