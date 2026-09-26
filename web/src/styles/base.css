@@ -1,0 +1,39 @@
+/* Shared design tokens and global resets for the standalone front-end.
+ * Ported from the :root block and page-wide resets in
+ * src/dashboard/assets/flights.css, plus the two tokens
+ * (--altitude-green, --altitude-amber, --radius-sm) that the integrated
+ * page only ever defines once, in
+ * src/dashboard/assets/executive_summary.css (P4b brings that view's own
+ * CSS; until then flights.css alone needs them, so they live here). */
+
+:root {
+  --brand-blue: #003087;
+  --brand-blue-dark: #001f5b;
+  --brand-red: #e31c23;
+  --gold: #c99400;
+  --amber: #b96700;
+  --violet: #6d3cc7;
+  --green: #087f65;
+  --altitude-green: #087f65;
+  --altitude-amber: #b96700;
+  --ink: #182233;
+  --muted: #5e6a7d;
+  --quiet: #8792a4;
+  --paper: #f4f7fb;
+  --card: #fff;
+  --line: #dce3ed;
+  --line-strong: #bdc9d8;
+  --blue-open: #edf4ff;
+  --gold-open: #fff8e6;
+  --amber-open: #fff4e8;
+  --violet-open: #f5f0ff;
+  --shadow: 0 8px 24px rgba(18, 39, 75, .07);
+  --radius-sm: 8px;
+}
+
+* { box-sizing: border-box; }
+html { color: var(--ink); background: var(--paper); font-family: Inter, "Segoe UI", system-ui, sans-serif; scroll-behavior: smooth; }
+body { min-width: 320px; margin: 0; background: radial-gradient(circle at 92% -5%, rgba(29, 91, 175, .12), transparent 28rem), var(--paper); }
+button, select, input { font: inherit; }
+button, select, input, [role="option"] { outline: 2px solid transparent; outline-offset: 2px; }
+button:focus-visible, select:focus-visible, input:focus-visible, [role="option"]:focus-visible, summary:focus-visible { outline: 3px solid #f5c518; outline-offset: 2px; }
