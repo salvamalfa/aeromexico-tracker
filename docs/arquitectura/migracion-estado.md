@@ -70,3 +70,18 @@ se reinicia desde `master`.
 - 2026-09-26 · P8a fusionado (#56, CI verde; hallazgo de Codex sobre escritores Gold internacionales corregido).
 - 2026-09-26 · P8b completado: `git filter-repo --strip-blobs-with-ids` quitó los 49 blobs > 1 MB que ya no están en el árbol de `master` (HTML generados, versiones viejas de Parquet, Plotly vendorizado). Árbol final de `master` idéntico (`9981a6d…`). Push forzado de `master` y de las 7 ramas `claude/*`. Clon nuevo: `.git` 173 MB → 76 MB. No se alcanzó la meta de < 40 MB: el árbol vigente ya pesa ~74 MB empaquetado (Gold 51 MB, prototipos del Analysis Agent ~25 MB); bajarlo más exige sacar `bridge_record_lineage.parquet` del árbol público (decisión del dueño). Los clones anteriores deben volver a clonarse. Pages redesplegado; los 34 archivos servidos coinciden con el manifiesto.
 - 2026-09-26 · **Migración completa.** Sitio: https://salvamalfa.github.io/aeromexico-tracker/. Publicar: `python -m src.publish --record <expediente aprobado> --out site/` con instrucción explícita del dueño; CI verifica y despliega.
+
+## Remediación de la auditoría (26-sep-2026)
+
+Fuente: `auditoria-arquitectura-20260926.md` §4–§5 (revisión posterior a la
+migración completa). Cada paquete lo ejecuta el subagente `migrador`.
+
+| Paquete | Alcance | Estado |
+|---|---|---|
+| R1 | Barreras de publicación (A2, A3, A7, A10) | en curso |
+| R2 | Exportación de análisis (A4–A6) | pendiente |
+| R3 | Trazabilidad y documentación (A8, A11, A12) | pendiente |
+| R4 | Dependencias web (A9) | pendiente |
+| R5 | Limpieza histórica (opcional, decisión del dueño) | pendiente |
+
+A1 (protección de rama) es una acción del dueño, no de un agente.

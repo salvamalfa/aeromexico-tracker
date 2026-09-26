@@ -5,16 +5,36 @@ exiting non-zero, so one run names everything wrong):
 
 1. ``publication_manifest.json`` exists and matches
    ``contracts/web/publication_manifest.schema.json``.
-2. Every file the manifest lists exists under ``site/`` with the exact
+2. The manifest's own structure is trustworthy: every listed ``contracts/
+   web/*`` hash matches ``src.publish.manifest.contract_hashes()`` computed
+   fresh from this checkout, ``files`` includes ``index.html`` and at least
+   one other asset, ``analysis_manifest`` is non-empty, and neither list
+   contains a duplicate key (``path`` for ``files``, ``period_id`` for
+   ``analysis_manifest``).
+3. Every file the manifest lists exists under ``site/`` with the exact
    SHA-256 and byte size recorded.
-3. No file exists under ``site/`` that the manifest does not list (besides
+4. No file exists under ``site/`` that the manifest does not list (besides
    the manifest itself).
-4. Every ``data/v1/**/*.json`` file validates against its
+5. Every ``data/v1/**/*.json`` file validates against its
    ``contracts/web/*.schema.json`` sub-schema (see
    ``src/web_export/schemas.py``) and against
-   ``contracts/web/privacy.yaml`` (forbidden fields, disallowed carriers).
-5. Every ``analysis_manifest`` entry has the required string fields
-   (schema already enforces this; this only adds the readable message).
+   ``contracts/web/privacy.yaml`` (forbidden fields, disallowed carriers,
+   and the same ``max_file_size_bytes`` cap ``check_file_size`` enforces at
+   export time). A ``data/v1/**/*.json`` file for which
+   ``_data_schema_for()`` finds no sub-schema (i.e. it is not one of the
+   files ``src/web_export`` is contracted to produce) is itself an error:
+   the public data boundary is exactly what the contracts declare, nothing
+   more.
+6. Every ``analysis_manifest`` entry has the required string fields
+   (schema already enforces this; this only adds the readable message) and
+   matches, field for field, its own ``data/v1/analysis/<period_id>.json``
+   file — the same fields ``src.publish.gate`` copies from
+   ``consumer_payload``'s authorized output into both places, so a
+   manifest entry that was edited independently of the file it claims to
+   describe is caught here rather than trusted on the strength of the
+   overall SHA-256/size check alone (which only proves the *file* wasn't
+   altered after signing, not that the *manifest entry* was ever
+   consistent with it).
 
 Only reads what is public and versioned: ``site/`` itself and
 ``contracts/web/``. Never touches ``analysis_runs/``, ``data/gold`` or any
@@ -32,7 +52,13 @@ from typing import Any
 from jsonschema import Draft202012Validator
 
 from src.config import PATHS
-from src.web_export.privacy import find_disallowed_carriers, find_forbidden_fields, load_privacy_rules
+from src.web_export.privacy import (
+    PrivacyViolation,
+    check_file_size,
+    find_disallowed_carriers,
+    find_forbidden_fields,
+    load_privacy_rules,
+)
 from src.web_export.schemas import ANALYSIS_SCHEMA, EXECUTIVE_SCHEMA, NETWORK_FILE_SCHEMA, QUARTERS_FILE_SCHEMA
 
 from . import manifest as manifest_mod
@@ -92,7 +118,57 @@ def verify_site(site_dir: Path) -> list[str]:
         # the per-file checks below (e.g. "files" might not even be a list).
         return schema_errors
 
+    # --- (2) the manifest's own structure is trustworthy -------------------
+
+    seen_file_paths: set[str] = set()
+    duplicate_file_paths: set[str] = set()
+    for entry in manifest["files"]:
+        path_str = entry["path"]
+        if path_str in seen_file_paths:
+            duplicate_file_paths.add(path_str)
+        seen_file_paths.add(path_str)
+    for path_str in sorted(duplicate_file_paths):
+        problems.append(f"manifest 'files' lists {path_str!r} more than once")
+
+    seen_period_ids: set[str] = set()
+    duplicate_period_ids: set[str] = set()
+    for entry in manifest["analysis_manifest"]:
+        period_id = entry.get("period_id")
+        if period_id in seen_period_ids:
+            duplicate_period_ids.add(period_id)
+        seen_period_ids.add(period_id)
+    for period_id in sorted(pid for pid in duplicate_period_ids if pid is not None):
+        problems.append(f"manifest 'analysis_manifest' lists period_id {period_id!r} more than once")
+
     listed_paths = {entry["path"]: entry for entry in manifest["files"]}
+
+    if not manifest["files"]:
+        problems.append("manifest 'files' is empty; expected index.html and at least one other asset")
+    else:
+        if "index.html" not in listed_paths:
+            problems.append("manifest 'files' does not include index.html")
+        if len(listed_paths) < 2:
+            problems.append("manifest 'files' lists no asset besides index.html")
+    if not manifest["analysis_manifest"]:
+        problems.append("manifest 'analysis_manifest' is empty")
+
+    try:
+        expected_contracts = manifest_mod.contract_hashes()
+    except FileNotFoundError as error:
+        problems.append(f"cannot verify manifest 'contracts': {error}")
+        expected_contracts = None
+    if expected_contracts is not None:
+        manifest_contracts = manifest.get("contracts", {})
+        for name, expected_hash in sorted(expected_contracts.items()):
+            actual_hash = manifest_contracts.get(name)
+            if actual_hash != expected_hash:
+                problems.append(
+                    f"contracts[{name!r}]: manifest says {actual_hash!r}, but "
+                    f"contracts/web/{name} in this checkout hashes to {expected_hash!r}"
+                )
+        for name in sorted(manifest_contracts):
+            if name not in expected_contracts:
+                problems.append(f"contracts[{name!r}]: not a contract file this checkout expects")
 
     actual_paths = set()
     for path in sorted(p for p in site_dir.rglob("*") if p.is_file()):
@@ -116,12 +192,24 @@ def verify_site(site_dir: Path) -> list[str]:
         if rel not in actual_paths:
             problems.append(f"manifest lists {rel}, which is missing on disk")
 
+    analysis_payloads_by_period: dict[str, dict[str, Any]] = {}
     rules = load_privacy_rules()
     for rel in sorted(actual_paths):
+        parts = rel.split("/")
+        is_data_file = parts[:2] == ["data", "v1"] and rel.endswith(".json")
         schema = _data_schema_for(rel)
         if schema is None:
+            if is_data_file:
+                problems.append(
+                    f"{rel}: not one of the data/v1 files contracts/web declares "
+                    "(src.publish.verify._data_schema_for found no sub-schema for it)"
+                )
             continue
         path = site_dir / rel
+        try:
+            check_file_size(path, rules)
+        except PrivacyViolation as error:
+            problems.append(f"{rel}: {error}")
         try:
             payload = json.loads(path.read_text(encoding="utf-8"))
         except json.JSONDecodeError as error:
@@ -136,12 +224,33 @@ def verify_site(site_dir: Path) -> list[str]:
             problems.append(f"{rel}: forbidden field present: {field}")
         for carrier in carriers:
             problems.append(f"{rel}: disallowed carrier_key: {carrier}")
+        if schema is ANALYSIS_SCHEMA and isinstance(payload.get("period_id"), str):
+            analysis_payloads_by_period[payload["period_id"]] = payload
 
+    analysis_fields = (
+        "period_id", "version", "content_hash", "evidence_fingerprint", "approval_event", "audit_hash",
+    )
     for index, entry in enumerate(manifest["analysis_manifest"]):
-        for field in ("period_id", "version", "content_hash", "evidence_fingerprint", "approval_event", "audit_hash"):
+        for field in analysis_fields:
             value = entry.get(field)
             if not isinstance(value, str) or not value:
                 problems.append(f"analysis_manifest[{index}]: {field!r} is missing or not a non-empty string")
+                break
+        else:
+            period_id = entry["period_id"]
+            payload = analysis_payloads_by_period.get(period_id)
+            if payload is None:
+                problems.append(
+                    f"analysis_manifest[{index}]: no readable data/v1/analysis/{period_id}.json "
+                    "to cross-check against"
+                )
+                continue
+            for field in analysis_fields:
+                if payload.get(field) != entry[field]:
+                    problems.append(
+                        f"analysis_manifest[{index}] ({field!r}): manifest says {entry[field]!r}, but "
+                        f"data/v1/analysis/{period_id}.json's own {field!r} is {payload.get(field)!r}"
+                    )
 
     return problems
 

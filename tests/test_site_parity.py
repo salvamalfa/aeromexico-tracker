@@ -46,20 +46,34 @@ DATA_DIR = SITE_DIR / "data" / "v1"
 READER_KPI_KEYS = ("rask_cents_per_km", "cask_cents_per_km", "ask_km")
 
 
-def _require_site() -> None:
+def _skip_or_fail(config: pytest.Config, message: str) -> None:
+    """A missing/invalid site/ is a skip normally, but a failure under
+    --require-local-data (tests/conftest.py) -- that flag means "this
+    checkout is expected to have local data and an approved, gate-signed
+    site/ ready to verify against it; do not silently let that go missing".
+    """
+
+    if config.getoption("--require-local-data"):
+        pytest.fail(message, pytrace=False)
+    pytest.skip(message)
+
+
+def _require_site(request: pytest.FixtureRequest) -> None:
     if not SITE_DIR.is_dir():
-        pytest.skip(f"{SITE_DIR} does not exist; run `python -m src.publish --record ... --out site/` first")
+        _skip_or_fail(
+            request.config, f"{SITE_DIR} does not exist; run `python -m src.publish --record ... --out site/` first"
+        )
     problems = verify_site(SITE_DIR)
     if problems:
-        pytest.skip(f"{SITE_DIR} fails src.publish.verify: {problems[:3]}")
+        _skip_or_fail(request.config, f"{SITE_DIR} fails src.publish.verify: {problems[:3]}")
 
 
 def test_site_flights_and_executive_data_match_a_fresh_export(
-    tmp_path: Path, flight_payload: dict, executive_payload: dict
+    request: pytest.FixtureRequest, tmp_path: Path, flight_payload: dict, executive_payload: dict
 ) -> None:
     """``site/data/v1`` is exactly what exporting the current warehouse gives."""
 
-    _require_site()
+    _require_site(request)
     out_dir = tmp_path / "data" / "v1"
     export_flights(flight_payload, out_dir, skip_input_check=True)
     export_executive(executive_payload, out_dir, skip_input_check=True)
@@ -75,7 +89,12 @@ def test_site_flights_and_executive_data_match_a_fresh_export(
         try:
             fresh_analysis = export_period(period_id, site_analysis["version"], root=flow.ROOT)
         except MissingAnalysisInput as error:
-            pytest.skip(f"{period_id}/{site_analysis['version']} no longer approved locally: {error}")
+            # _skip_or_fail always raises (Skipped or Failed), so this loop
+            # iteration never reaches the assert below in that case.
+            _skip_or_fail(
+                request.config, f"{period_id}/{site_analysis['version']} no longer approved locally: {error}"
+            )
+            continue
         assert fresh_analysis == site_analysis
 
 
@@ -95,8 +114,8 @@ def _chromium_executable() -> str | None:
 
 
 @pytest.fixture(scope="module")
-def site_server():
-    _require_site()
+def site_server(request: pytest.FixtureRequest):
+    _require_site(request)
     handler = partial(SimpleHTTPRequestHandler, directory=str(SITE_DIR))
     server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -198,7 +217,7 @@ def _with_citation_labels(text: str, citations: list[dict]) -> str:
 
 
 @browser_test
-def test_reading_tab_narrative_matches_the_approved_analysis(site_page) -> None:
+def test_reading_tab_narrative_matches_the_approved_analysis(request: pytest.FixtureRequest, site_page) -> None:
     """For every period the local ledger currently has approved/published,
     the reading tab's narrative text contains that exact approved thesis
     and every summary item, citation markers included -- read straight from
@@ -206,13 +225,20 @@ def test_reading_tab_narrative_matches_the_approved_analysis(site_page) -> None:
 
     manifest = discover_approved_manifest(flow.ROOT)
     if not manifest:
+        # Missing data (nothing approved at all), not a race: stays a skip
+        # even under --require-local-data.
         pytest.skip("No period is currently approved/published in this checkout's local analysis_runs/")
     expected = {}
     for entry in manifest:
         try:
             expected[entry["period_id"]] = export_period(entry["period_id"], entry["version"], root=flow.ROOT)
         except MissingAnalysisInput as error:
-            pytest.skip(f"{entry}: {error}")
+            # discover_approved_manifest() just said entry was approved; if
+            # export_period() now disagrees, the approval was revoked (or
+            # the record went missing) between those two calls -- "no
+            # longer approved locally" -- which --require-local-data should
+            # catch rather than silently skip.
+            _skip_or_fail(request.config, f"{entry}: {error}")
 
     site_page.click("#tab-reading")
     while site_page.is_enabled("#period-next"):

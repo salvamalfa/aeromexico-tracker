@@ -22,11 +22,19 @@ already use and never reimplements approval, verification or export logic:
 3. ``npm ci && npm run build`` in ``web/`` (Vite copies the temp payload
    under ``web/public/data/v1`` into ``dist/`` — see ``web/README.md``
    "Entradas/salidas"), producing the built site.
-4. The manifest (``src/publish/manifest.py``) is written into a fresh
-   ``site.tmp-*`` directory, which then atomically swaps for ``site/``
-   (rename, mirroring ``stage18.publish``'s tempfile+``os.replace`` for the
-   HTML file, extended to a directory).
-5. An intent/published receipt, hashing the manifest, is written to
+4. Immediately before the swap, every record is re-verified a second time
+   under the ledger's writer lock, and the lock is held through the swap
+   itself (see ``verify_records``/``_verify_under_lock`` and ``publish()``):
+   step 1's initial check runs *outside* any lock the export/npm-build
+   steps hold, so a revocation racing those (slow, I/O-bound) steps is a
+   real possibility, not a theoretical one; this second, locked check is
+   what actually closes it, not the first.
+5. The manifest (``src/publish/manifest.py``) is written into a fresh
+   ``site.tmp-*`` directory (a unique ``tempfile.mkdtemp`` per run), which
+   then atomically swaps for ``site/`` (rename, mirroring
+   ``stage18.publish``'s tempfile+``os.replace`` for the HTML file,
+   extended to a directory) while the lock from step 4 is still held.
+6. An intent/published receipt, hashing the manifest, is written to
    ``analysis_runs/publications/`` (local, gitignored, same style as
    ``stage18``'s receipts under ``analysis_runs/lifecycle/publications/``).
 
@@ -84,22 +92,41 @@ def load_records(record_paths: list[Path]) -> list[dict[str, Any]]:
     return records
 
 
+def _verify_under_lock(records: list[dict[str, Any]], root: Path) -> list[tuple[Any, Any, Any, Any]]:
+    """The actual (record, authorized, package, calculations) check, assuming
+    the caller already holds ``flow.writer(root)``. Not exported: callers use
+    ``verify_records`` (acquires its own lock) for a standalone check, or
+    ``publish()``'s second call (already inside its own ``flow.writer``
+    block) for the pre-swap re-check — never both at once, since
+    ``flow.writer`` is not reentrant."""
+
+    entries = []
+    for record in records:
+        authorized = flow.consumer_payload(record, root)
+        package, calculations, _ = flow.verified_inputs(record)
+        entries.append((record, authorized, package, calculations))
+    return entries
+
+
 def verify_records(records: list[dict[str, Any]], root: Path = flow.ROOT) -> list[dict[str, Any]]:
     """Return, per record, (authorized, package, calculations) under the
     ledger's writer lock — the same fail-closed calls stage18.publish makes
-    before it would replace content, so a concurrent approval/revocation
-    cannot race the gate. Raises PublicationRefused if any record is not
-    exactly, currently approved."""
+    before it would replace content. Raises PublicationRefused if any record
+    is not exactly, currently approved.
+
+    This on its own does **not** close the publish-time race: ``publish()``
+    calls this once up front, then spends real wall-clock time on
+    ``export_data``/``build_web`` (schema/privacy checks, an ``npm run
+    build``) with the lock released, during which a human can revoke the
+    approval this call just confirmed. ``publish()`` calls
+    ``_verify_under_lock`` a second time, under a fresh lock held through the
+    swap, immediately before replacing ``out_dir`` -- that second call, not
+    this one, is what actually makes the race impossible."""
 
     root = Path(root)
     try:
         with flow.writer(root):
-            entries = []
-            for record in records:
-                authorized = flow.consumer_payload(record, root)
-                package, calculations, _ = flow.verified_inputs(record)
-                entries.append((record, authorized, package, calculations))
-            return entries
+            return _verify_under_lock(records, root)
     except ValueError as error:
         raise PublicationRefused(f"record failed verification/approval: {error}") from error
 
@@ -223,16 +250,18 @@ def publish(
     web_dir: Path = WEB_DIR,
     web_data_v1: Path = WEB_DATA_V1,
 ) -> dict[str, Any]:
-    """Verify every record, export v1 data, build web/, assemble and swap in
+    """Verify every record, export v1 data, build web/, re-verify and swap in
     site/, and write the publications receipt. Raises PublicationRefused
-    (nothing written to out_dir) on any failure."""
+    (nothing written to out_dir) on any failure -- including a revocation
+    discovered by the second, pre-swap verification below, after export/build
+    already ran."""
 
+    root = Path(root)
     records = load_records(record_paths)
     if not records:
         raise PublicationRefused("no --record given; refuse to publish an empty analysis manifest")
 
     entries = verify_records(records, root=root)
-    authorized = [e[1] for e in entries]
 
     with tempfile.TemporaryDirectory(prefix="publish-data-") as tmp:
         export_data(entries, Path(tmp))
@@ -244,8 +273,33 @@ def publish(
         shutil.copytree(tmp, web_data_v1)
 
     dist_dir = build_web(web_dir)
+
+    # Re-verify every record immediately before the swap, under the same
+    # ledger lock held through the swap itself: export_data/build_web above
+    # ran with the lock released (an npm build is slow; holding a ledger
+    # writer lock across it would block approvals/revocations for no
+    # reason), so a revocation could have landed since the first check.
+    # This second check, not the first, is what makes the race impossible --
+    # see verify_records' docstring.
+    # The built payload came from the first check's authorizations, so the
+    # manifest must too; a revoke-and-re-approve during the build would pass
+    # the second check with a new approval_event/audit_hash that no longer
+    # matches what dist_dir contains, so any change aborts instead.
+    authorized = [e[1] for e in entries]
     analysis_manifest = [{k: e[k] for k in ANALYSIS_MANIFEST_FIELDS} for e in authorized]
-    manifest = assemble_site(dist_dir, analysis_manifest, out_dir)
+    try:
+        with flow.writer(root):
+            current = [
+                {k: e[1][k] for k in ANALYSIS_MANIFEST_FIELDS} for e in _verify_under_lock(records, root)
+            ]
+            if current != analysis_manifest:
+                raise ValueError("approval changed while the site was being built; rerun the publication")
+            manifest = assemble_site(dist_dir, analysis_manifest, out_dir)
+    except ValueError as error:
+        raise PublicationRefused(
+            f"record failed verification/approval just before publish (nothing swapped in): {error}"
+        ) from error
+
     receipt = write_receipt(manifest, authorized, out_dir)
     return {"manifest": manifest, "receipt": receipt}
 

@@ -2,7 +2,12 @@
 
 Lee primero [`AGENTS.md`](AGENTS.md) y
 [`docs/cloud-development.md`](docs/cloud-development.md). Son las instrucciones
-operativas y de procedencia del proyecto.
+operativas y de procedencia del proyecto. `AGENTS.md` es la fuente única de
+reglas compartidas con otros agentes (incluida la autorización permanente para
+suscribirte a tus PRs y fusionarlos); se importa aquí para que Claude Code la
+cargue siempre:
+
+@AGENTS.md
 
 Para orientarte en el árbol antes de editar, usa [`REPO_MAP.md`](REPO_MAP.md):
 qué vive dónde, comandos y recetas paso a paso para los cambios típicos.
