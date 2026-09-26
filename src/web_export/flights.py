@@ -47,22 +47,33 @@ def export_flights(
     written: list[Path] = []
     base = out_dir / "flights"
 
+    domestic_periods = {**embedded["domestic_networks"], **embedded["domestic_monthly_networks"]}
+    international_periods = embedded["route_networks"]
+
     quarters_doc = {
         "schema_version": embedded["schema_version"],
         "metadata": embedded["metadata"],
         "quarters": embedded["quarters"],
         "monthly_passengers": embedded["monthly_passengers"],
         "route_network": embedded["route_network"],
+        # Front-end manifest (web/): fetch() has no directory listing, so the
+        # front-end needs to know which per-period files exist before asking
+        # for them. Domestic quarter ids ("…Q…") and month ids ("…M…") are
+        # told apart the same way recombine_flights() does below.
+        "available_periods": {
+            "domestic": sorted(p for p in domestic_periods if "Q" in p),
+            "domestic_monthly": sorted(p for p in domestic_periods if "M" in p),
+            "international": sorted(international_periods),
+        },
     }
     _validate(QUARTERS_FILE_SCHEMA, quarters_doc, what="flights/quarters.json")
     written.append(write_json(base / "quarters.json", quarters_doc))
 
-    domestic_periods = {**embedded["domestic_networks"], **embedded["domestic_monthly_networks"]}
     for period_id, network in domestic_periods.items():
         _validate(NETWORK_FILE_SCHEMA, network, what=f"flights/domestic/{period_id}.json")
         written.append(write_json(base / "domestic" / f"{period_id}.json", network))
 
-    for period_id, network in embedded["route_networks"].items():
+    for period_id, network in international_periods.items():
         _validate(NETWORK_FILE_SCHEMA, network, what=f"flights/international/{period_id}.json")
         written.append(write_json(base / "international" / f"{period_id}.json", network))
 

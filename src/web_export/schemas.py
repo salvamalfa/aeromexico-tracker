@@ -28,13 +28,28 @@ QUARTERS_FILE_SCHEMA: dict[str, Any] = {
     "$defs": FLIGHTS_SCHEMA["$defs"],
     "type": "object",
     "additionalProperties": False,
-    "required": ["schema_version", "metadata", "quarters", "monthly_passengers", "route_network"],
+    "required": [
+        "schema_version", "metadata", "quarters", "monthly_passengers",
+        "route_network", "available_periods",
+    ],
     "properties": {
         "schema_version": FLIGHTS_SCHEMA["properties"]["schema_version"],
         "metadata": FLIGHTS_SCHEMA["properties"]["metadata"],
         "quarters": FLIGHTS_SCHEMA["properties"]["quarters"],
         "monthly_passengers": {"$ref": "#/$defs/monthly_passengers"},
         "route_network": FLIGHTS_SCHEMA["properties"]["route_network"],
+        # web/ front-end manifest: which per-period files export_flights()
+        # wrote, so fetch() knows what to ask for (see src/web_export/flights.py).
+        "available_periods": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["domestic", "domestic_monthly", "international"],
+            "properties": {
+                "domestic": {"type": "array", "items": {"type": "string"}},
+                "domestic_monthly": {"type": "array", "items": {"type": "string"}},
+                "international": {"type": "array", "items": {"type": "string"}},
+            },
+        },
     },
 }
 
