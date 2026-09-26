@@ -35,7 +35,7 @@ se reinicia desde `master`.
 | P3 | Contratos de datos y privacidad (fase 2) | fusionado | #49 | — |
 | P4a | Front-end en archivos reales: vista Vuelos en `web/` con ES modules y paridad (fase 3) | fusionado | #50 | — |
 | P4b | Front-end en archivos reales: lectura ejecutiva y demás pestañas (fase 3) | fusionado | #51 | — |
-| P5 | Vite + TypeScript (fase 4) | en curso | | subagente migrador trabajando |
+| P5 | Vite + TypeScript (fase 4) | PR abierto | #52 | revisar CI y fusionar |
 | P6 | Gate de publicación sobre `site/` y GitHub Pages (fase 5) | pendiente | | |
 | P7 | Retiro de Streamlit | pendiente | | |
 | P8 | Peso de git y reescritura de historia (fase 6) | pendiente | | |
@@ -55,3 +55,4 @@ se reinicia desde `master`.
 - 2026-09-26 · P4b listo: página completa en `web/` (pestañas, lectura ejecutiva, economía, Vuelos), exportador de análisis de solo lectura vía `consumer_payload`. Paridad 100 % en texto, KPIs y gráficas, salvo las citas en superíndice.
   **Pendiente obligatorio para P6:** las citas (`<sup><a class="source-note">`) salen de `verified_inputs()` y aún no se exportan; P6 debe exportarlas (solo metadatos de fuentes públicas autorizadas) antes del corte a Pages para no perderlas.
 - 2026-09-26 · P4b fusionado (#51, CI verde). P5 iniciado.
+- 2026-09-26 · P5 listo: `web/` en Vite 7 + TypeScript estricto, tipos generados de los contratos, Plotly parcial (se borró el vendorizado de 4.7 MB), 43 pruebas Vitest, build determinista, job `web` en CI. Carga inicial: código 1.42 MB (0.47 MB gzip); con datos, 2.49 MB (0.73 MB gzip) contra 7.2 MB del publicado. **Pendiente menor para P6:** unificar el estado de trimestre de ejecutivo y Vuelos para cargar Vuelos solo al abrir su pestaña (bajaría la carga inicial a menos de 2 MB).
