@@ -1,0 +1,57 @@
+name: Pages
+
+# Deploys site/ as it already is in master — never rebuilds it, never
+# touches analysis_runs/ or any secret. See src/publish/README.md and
+# docs/arquitectura/auditoria-arquitectura-20260926.md §4.2 punto 6 and
+# Fase 5. src.publish.verify needs no private data: it checks
+# publication_manifest.json's own schema, every listed file's hash/size,
+# that no unlisted file is present, and every data/v1/**/*.json file
+# against contracts/web/*.schema.json + privacy.yaml.
+
+on:
+  push:
+    branches: [master]
+    paths: ["site/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: "3.13"
+          enable-cache: true
+      # Only jsonschema/PyYAML (src.publish.verify's own imports) are
+      # needed here, but the project has one locked environment; this
+      # never installs the "analytics" extra's heavier deps for nothing
+      # since uv resolves from the same lockfile CI already trusts.
+      - name: Install locked dependencies
+        run: uv sync --locked --no-group dev
+      - name: Verify site/ (no private data, no rebuild)
+        run: uv run python -m src.publish.verify site/
+
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -36,8 +36,8 @@ se reinicia desde `master`.
 | P4a | Front-end en archivos reales: vista Vuelos en `web/` con ES modules y paridad (fase 3) | fusionado | #50 | — |
 | P4b | Front-end en archivos reales: lectura ejecutiva y demás pestañas (fase 3) | fusionado | #51 | — |
 | P5 | Vite + TypeScript (fase 4) | fusionado | #52 | — |
-| P6a | Citas del análisis exportadas y Vuelos cargado al abrir su pestaña (estado de trimestre único) | PR abierto | #53 | revisar CI y fusionar |
-| P6b | Gate de publicación sobre `site/`, `verify.py` y workflow de GitHub Pages (fase 5) | pendiente | | |
+| P6a | Citas del análisis exportadas y Vuelos cargado al abrir su pestaña (estado de trimestre único) | fusionado | #53 | — |
+| P6b | Gate de publicación sobre `site/`, `verify.py` y workflow de GitHub Pages (fase 5) | PR abierto | #54 | fusionar; el dueño activa Pages (Settings → Pages → Source: GitHub Actions) |
 | P7 | Retiro de Streamlit | pendiente | | |
 | P8 | Peso de git y reescritura de historia (fase 6) | pendiente | | |
 
@@ -59,3 +59,5 @@ se reinicia desde `master`.
 - 2026-09-26 · P5 listo: `web/` en Vite 7 + TypeScript estricto, tipos generados de los contratos, Plotly parcial (se borró el vendorizado de 4.7 MB), 43 pruebas Vitest, build determinista, job `web` en CI. Carga inicial: código 1.42 MB (0.47 MB gzip); con datos, 2.49 MB (0.73 MB gzip) contra 7.2 MB del publicado. **Pendiente menor para P6:** unificar el estado de trimestre de ejecutivo y Vuelos para cargar Vuelos solo al abrir su pestaña (bajaría la carga inicial a menos de 2 MB).
 - 2026-09-26 · P5 fusionado (#52, CI `test` y `web` verdes). P6 dividido en P6a (citas y carga diferida de Vuelos) y P6b (gate y Pages). P6a iniciado.
 - 2026-09-26 · P6a listo: citas exportadas por la misma vía verificada que stage18, paridad 100 % sin excepciones; estado de trimestre único; Vuelos carga al abrir su pestaña. Carga inicial 1.51 MB (0.49 MB gzip).
+- 2026-09-26 · P6a fusionado (#53, CI `test` y `web` verdes). P6b iniciado.
+- 2026-09-26 · P6b listo: `src/publish` (gate con la misma verificación que stage18, manifiesto SHA-256, recibo), `verify.py` con 6 pruebas negativas, workflow `pages.yml`, `site/` generado del expediente aprobado 2T26 (34 archivos, ~3.7 MB), paridad con el publicado.
