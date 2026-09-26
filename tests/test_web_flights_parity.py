@@ -27,6 +27,7 @@ import pytest
 playwright_sync_api = pytest.importorskip("playwright.sync_api")
 sync_playwright = playwright_sync_api.sync_playwright
 
+from src.web_export.executive import export_executive  # noqa: E402
 from src.web_export.flights import export_flights  # noqa: E402
 from web.serve import WEB_ROOT, SimpleHTTPRequestHandler  # noqa: E402
 
@@ -41,15 +42,19 @@ def _chromium_executable() -> str | None:
 
 
 @pytest.fixture(scope="module")
-def web_server(tmp_path_factory, flight_payload):
+def web_server(tmp_path_factory, flight_payload, executive_payload):
     """Serve a temp copy of web/ whose public/data/v1 holds the real,
     warehouse-backed payload (the same one integration_flight_payload()
-    reduces the published page's data to)."""
+    reduces the published page's data to). Since P4b, web/index.html
+    mounts the reading/economy tabs too (see views/executive/bootstrap.js),
+    so this needs executive.json even though this file only checks
+    panel-flights."""
 
     root = tmp_path_factory.mktemp("web_parity")
     for name in ("index.html", "src", "vendor"):
         os.symlink(WEB_ROOT / name, root / name)
     export_flights(flight_payload, root / "public" / "data" / "v1", skip_input_check=True)
+    export_executive(executive_payload, root / "public" / "data" / "v1", skip_input_check=True)
 
     handler = partial(SimpleHTTPRequestHandler, directory=str(root))
     server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
@@ -76,6 +81,7 @@ def browsers(web_server):
         web = browser.new_page()
         web.route("**/favicon.ico", lambda route: route.fulfill(status=204, body=""))
         web.goto(web_server)
+        web.click("#tab-flights")
 
         for page in (published, web):
             page.wait_for_selector("#network-volume:not([hidden])")
