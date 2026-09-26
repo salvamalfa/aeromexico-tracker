@@ -114,7 +114,10 @@ export function renderFlowMap(): void {
   // as the legacy page did: the site makes no third-party requests.
   const geoAssets = window as unknown as { PlotlyGeoAssets?: { topojson: Record<string, unknown> } };
   geoAssets.PlotlyGeoAssets = geoAssets.PlotlyGeoAssets || { topojson: {} };
-  if (worldGeometry.topojson) geoAssets.PlotlyGeoAssets.topojson.world_110m = worldGeometry.topojson;
+  // Only a complete topology (with the base-map layers Plotly draws) is pinned;
+  // the synthetic public fixtures carry an empty one.
+  const topology = worldGeometry.topojson as { objects?: Record<string, unknown> } | undefined;
+  if (topology?.objects?.land) geoAssets.PlotlyGeoAssets.topojson.world_110m = topology;
   const traces: Data[] = [
     {
       type: "choropleth", geojson: geometry as unknown as object, featureidkey: "id",
