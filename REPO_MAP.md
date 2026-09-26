@@ -16,6 +16,7 @@ comunes. Ver también `CLAUDE.md`, `AGENTS.md` y, para la migración en curso,
 | Analysis Agent | `src/analysis_agent/` | Evidencia, cálculo, revisión y **publicación controlada** del análisis narrativo por trimestre (etapas 12–18). |
 | Contratos web | `contracts/web/` | Esquemas JSON (draft 2020-12) del payload **v1** tal cual se embebe hoy en el HTML publicado (Vuelos, ejecutivo y análisis) + `privacy.yaml` (frontera pública/privada). Fuente de verdad; no aspiracional. |
 | Exportadores web | `src/web_export/` | Divide esos mismos payloads en JSON por periodo bajo `web/public/data/v1/` (local, no versionado), validados contra `contracts/web/` y `config/web_inputs.yaml` antes de escribir. No publica ni toca `stage18`; el HTML publicado sigue viniendo de ahí sin cambios (fase 2 de la migración). `flights/quarters.json` incluye además `available_periods` (P4a): el manifiesto de qué archivos por periodo existen, para que `web/` sepa qué pedir con `fetch()` sin listar el directorio. `analysis.py` (P4b) exporta, por periodo listado en el `#analysis-manifest` del HTML publicado, exactamente lo que `analysis_agent.lifecycle.consumer_payload(record)` autoriza — lectura del flujo de aprobación existente, nunca escritura; falla si falta el expediente local salvo `--allow-missing-analysis` (dev). |
+| Gate de publicación (`site/`) | `src/publish/` | Reemplaza a `stage18` como el objeto firmado: dado uno o más registros de `analysis_runs/drafts/` ya aprobados, re-verifica cada uno con las mismas funciones de `lifecycle.py` que usa `stage18`, exporta el payload v1 (Vuelos/ejecutivo completos, análisis solo de los periodos dados), compila `web/` con Vite y ensambla+firma `site/` (`publication_manifest.json`: commit, hash de cada contrato, SHA-256/tamaño de cada archivo, entradas del `analysis-manifest`). `src/publish/verify.py` revisa ese manifiesto sin datos privados (lo ejecuta `.github/workflows/pages.yml` antes de desplegar). Recibo intent/published en `analysis_runs/publications/` (local). Ver `src/publish/README.md` y §4.2 punto 5/Fase 5 de la auditoría. |
 | Front-end en archivos reales | `web/` | La página completa (Vite + TypeScript desde P5) como HTML/CSS/TS reales (ES modules, `web/src/views/{flights,executive,economy,shell}/*.ts`, ≤ 400 líneas cada uno; tipos generados en `web/src/types/generated/` desde `contracts/web/*.schema.json` vía `npm run gen:types`) que consume `web/public/data/v1/` con `fetch()`: cabecera + selector de trimestre compartidos, y las tres pestañas del HTML integrado publicado (Lectura ejecutiva, Economía unitaria, Vuelos — P4a trajo Vuelos, P4b las otras dos, P5 las convirtió a TypeScript y las empaquetó con Vite). Una sola implementación de cada vista, la misma que muestra el HTML integrado publicado. Plotly se importa parcial (`plotly.js/lib/core` + `bar`/`scatter`/`scattergeo`/`choropleth`, ver `web/src/lib/plotly.ts`) en vez del bundle completo vendorizado que usaba P4. El HTML/CSS/JS publicados (`static/`, `src/dashboard/assets/*.js`, `*_html.py`) no cambian; ver `web/README.md`. |
 | Pruebas | `tests/` | `uv run pytest`; marcadores `local_data` (necesita `data/bronze|silver`/warehouse local) y `browser` (Playwright) se excluyen en CI. |
 
@@ -63,6 +64,22 @@ comportamiento debe aplicarse en los dos lugares hasta que P5/una fase
 posterior retire los generadores Python en favor de `web/` como única
 implementación (ver auditoría §4.2 punto 4).
 
+**Publicación en GitHub Pages (`site/`, P6b):** `site/` es el sitio ya
+ensamblado y firmado que `.github/workflows/pages.yml` despliega tal cual —
+en `master`, sin secretos ni reconstrucción de datos — a
+<https://salvamalfa.github.io/aeromexico-tracker/>. Publicar una nueva
+versión de `site/` requiere **instrucción explícita del dueño** (igual que
+`stage18 publish`); no lo ejecutes por iniciativa propia:
+
+```
+uv run python -m src.publish --record analysis_runs/drafts/<periodo>/<version>.json --out site/
+uv run python -m src.publish.verify site/
+```
+
+Mientras tanto Streamlit sigue sirviendo `static/aeromexico_tracker.html`
+sin cambios (se retira en P7, §7 de la auditoría); ambos muestran el mismo
+contenido aprobado durante la convivencia.
+
 **Repo de datos privado:** insumos regenerables y privados
 (`data/bronze`, `data/silver`, warehouse, `analysis_runs/`) tienen respaldo en
 [`salvamalfa/aeromexico-tracker-data`](https://github.com/salvamalfa/aeromexico-tracker-data)
@@ -87,6 +104,8 @@ autorización para publicarlos. Ver "Datos y documentación" en `README.md`.
 | `cd web && npm run check` | `tsc --noEmit`: chequeo de tipos estricto sin emitir archivos. |
 | `cd web && npm run test` | `vitest run`: pruebas unitarias de funciones puras (formato, agregación, clasificación de región…) y la prueba de tipos generados al día. |
 | `cd web && npm run gen:types` | Regenera `web/src/types/generated/*.ts` desde `contracts/web/*.schema.json`; ejecútalo tras editar un esquema. |
+| `uv run python -m src.publish --record … --out site/` | Publica `site/` (verifica el registro, exporta v1, compila `web/`, ensambla y firma). **Requiere instrucción explícita del dueño**; no lo ejecutes por iniciativa propia. |
+| `uv run python -m src.publish.verify site/` | Revisa `site/` contra su manifiesto, los esquemas y `privacy.yaml` — sin datos privados; lo mismo que corre `.github/workflows/pages.yml` antes de desplegar. |
 
 ## Recetas
 

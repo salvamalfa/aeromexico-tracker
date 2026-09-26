@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aeromexico-tracker/contracts/web/publication_manifest.schema.json",
+  "title": "Manifiesto de publicación de site/ (v1)",
+  "description": "Describes site/publication_manifest.json, written by src.publish.gate. Lists the code commit, each contracts/web/ file's own SHA-256 (its 'version'), every other file under site/ with its SHA-256 and byte size (sorted by path, the manifest file itself excluded), and the analysis-manifest entries the currently published page also carries (period_id, version, content_hash, evidence_fingerprint, approval_event, audit_hash) — see docs/arquitectura/auditoria-arquitectura-20260926.md §4.2 punto 5 and src/publish/README.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "code_commit", "generated_at", "contracts", "files", "analysis_manifest"],
+  "properties": {
+    "schema_version": { "const": "publication_manifest_v1" },
+    "code_commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "contracts": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+      "propertyNames": { "type": "string", "minLength": 1 }
+    },
+    "files": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/file_entry" }
+    },
+    "analysis_manifest": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/analysis_entry" }
+    }
+  },
+  "$defs": {
+    "file_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "bytes"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "bytes": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "analysis_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "period_id", "version", "content_hash", "evidence_fingerprint",
+        "approval_event", "audit_hash"
+      ],
+      "properties": {
+        "period_id": { "type": "string", "pattern": "^\\d{4}Q[1-4]$" },
+        "version": { "type": "string" },
+        "content_hash": { "type": "string" },
+        "evidence_fingerprint": { "type": "string" },
+        "approval_event": { "type": "string" },
+        "audit_hash": { "type": "string" }
+      }
+    }
+  }
+}

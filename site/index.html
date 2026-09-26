@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Aeroméxico Tracker</title>
+  <script type="module" crossorigin src="./assets/index-CCQV93dN.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-Bj_lyPsi.css">
+</head>
+<body>
+  <main class="page-shell" data-testid="executive-summary-root">
+    <header class="hero">
+      <div class="hero-grid">
+        <div>
+          <h1>Aeroméxico Tracker</h1>
+        </div>
+        <div class="period-control">
+          <span class="period-label">Trimestre analizado</span>
+          <div class="period-stepper" role="group" aria-label="Cambiar trimestre analizado">
+            <button type="button" id="period-prev" aria-label="Ir al trimestre anterior" title="Trimestre anterior">▼</button>
+            <output id="period-display" aria-live="polite">—</output>
+            <button type="button" id="period-next" aria-label="Ir al trimestre siguiente" title="Trimestre siguiente">▲</button>
+          </div>
+          <span id="period-help" class="sr-only">Actualiza tarjetas, conclusiones, narrativa y trimestre destacado.</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="reader-tabs" role="tablist" aria-label="Vistas del dashboard">
+      <button type="button" id="tab-reading" role="tab" aria-selected="true" aria-controls="panel-reading">Lectura ejecutiva</button>
+      <button type="button" id="tab-economy" role="tab" aria-selected="false" aria-controls="panel-economy" tabindex="-1">Economía unitaria</button>
+      <button type="button" id="tab-flights" role="tab" aria-selected="false" aria-controls="panel-flights" tabindex="-1">Vuelos</button>
+    </div>
+
+    <section id="panel-reading" role="tabpanel" aria-labelledby="tab-reading">
+      <section class="narrative-card" aria-labelledby="executive-reading-title">
+        <h2 id="executive-reading-title">Lectura ejecutiva · <span id="narrative-period">—</span></h2>
+        <div id="narrative-copy">
+          <p class="analysis-placeholder" id="analysis-empty">Análisis pendiente de aprobación para este trimestre.</p>
+        </div>
+      </section>
+    </section>
+
+    <section id="panel-economy" role="tabpanel" aria-labelledby="tab-economy" hidden>
+      <section class="kpi-grid reader-economy-kpis" aria-label="Indicadores de economía unitaria">
+        <article class="kpi-card" data-accent="blue" data-kpi="rask_cents_per_km">
+          <span class="kpi-info" title="Ingreso total generado por cada asiento-kilómetro disponible." aria-label="Ingreso total generado por cada asiento-kilómetro disponible.">i</span>
+          <p class="kpi-label">RASK</p>
+          <p class="kpi-value" id="kpi-rask_cents_per_km-value">—</p>
+          <div class="kpi-comparisons">
+            <div class="comparison-chip"><span>vs. trimestre anterior</span><strong id="kpi-rask_cents_per_km-qoq">—</strong></div>
+            <div class="comparison-chip"><span>vs. año anterior</span><strong id="kpi-rask_cents_per_km-yoy">—</strong></div>
+          </div>
+        </article>
+        <article class="kpi-card" data-accent="red" data-kpi="cask_cents_per_km">
+          <span class="kpi-info" title="Costo operativo por cada asiento-kilómetro disponible." aria-label="Costo operativo por cada asiento-kilómetro disponible.">i</span>
+          <p class="kpi-label">CASK</p>
+          <p class="kpi-value" id="kpi-cask_cents_per_km-value">—</p>
+          <div class="kpi-comparisons">
+            <div class="comparison-chip"><span>vs. trimestre anterior</span><strong id="kpi-cask_cents_per_km-qoq">—</strong></div>
+            <div class="comparison-chip"><span>vs. año anterior</span><strong id="kpi-cask_cents_per_km-yoy">—</strong></div>
+          </div>
+        </article>
+        <article class="kpi-card" data-accent="gold" data-kpi="ask_km">
+          <span class="kpi-info" title="Capacidad ofrecida: asientos disponibles multiplicados por kilómetros." aria-label="Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.">i</span>
+          <p class="kpi-label">ASK</p>
+          <p class="kpi-value" id="kpi-ask_km-value">—</p>
+          <div class="kpi-comparisons">
+            <div class="comparison-chip"><span>vs. trimestre anterior</span><strong id="kpi-ask_km-qoq">—</strong></div>
+            <div class="comparison-chip"><span>vs. año anterior</span><strong id="kpi-ask_km-yoy">—</strong></div>
+          </div>
+        </article>
+        <article class="kpi-card" data-accent="green" data-kpi="unit_margin_cents_per_km">
+          <span class="kpi-info" title="Diferencia entre RASK y CASK por asiento-kilómetro ofrecido." aria-label="Diferencia entre RASK y CASK por asiento-kilómetro ofrecido.">i</span>
+          <p class="kpi-label">Margen unitario</p>
+          <p class="kpi-value" id="kpi-unit_margin_cents_per_km-value">—</p>
+          <div class="kpi-comparisons">
+            <div class="comparison-chip"><span>vs. trimestre anterior</span><strong id="kpi-unit_margin_cents_per_km-qoq">—</strong></div>
+            <div class="comparison-chip"><span>vs. año anterior</span><strong id="kpi-unit_margin_cents_per_km-yoy">—</strong></div>
+          </div>
+        </article>
+      </section>
+
+      <section aria-labelledby="unit-heading">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">Economía unitaria</p>
+            <h2 id="unit-heading">Ingreso, costo y margen por ASK</h2>
+          </div>
+          <p class="source-inline" id="economy-source-inline">Fuente: v_aeromexico_quarterly</p>
+        </div>
+        <article class="chart-card">
+          <div class="chart-heading-row">
+            <div>
+              <p class="chart-title">RASK vs. CASK + Margen unitario</p>
+              <p class="chart-subtitle">Cuando RASK supera CASK, la operación genera utilidad por cada asiento-kilómetro. Las barras muestran el margen unitario en ¢ USD por ASK-km para cada trimestre.</p>
+            </div>
+            <label class="chart-range-control" for="unit-range">Periodo
+              <select id="unit-range">
+                <option value="all" selected>Historia completa</option>
+                <option value="12">Últimos 12 trimestres</option>
+                <option value="8">Últimos 8 trimestres</option>
+                <option value="4">Últimos 4 trimestres</option>
+              </select>
+            </label>
+          </div>
+          <div class="chart" id="unit-chart" role="img" aria-label="Serie trimestral de RASK, CASK y margen unitario"></div>
+        </article>
+      </section>
+
+      <section class="chart-grid" aria-label="Diagnósticos de volumen y utilización">
+        <article class="chart-card">
+          <p class="chart-title">Precio vs. Volumen de pasajeros</p>
+          <p class="chart-subtitle">Las barras indican el número de pasajeros; la línea, el RASK.</p>
+          <div class="chart chart-sm" id="volume-chart" role="img" aria-label="Pasajeros y RASK por trimestre"></div>
+        </article>
+        <article class="chart-card">
+          <p class="chart-title">Factor de ocupación vs. RASK</p>
+          <p class="chart-subtitle">Cada punto es un trimestre; los colores identifican el año.</p>
+          <div class="chart chart-sm" id="load-chart" role="img" aria-label="Relación entre factor de ocupación y RASK"></div>
+        </article>
+      </section>
+
+      <details class="disclosure">
+        <summary>Ver datos por trimestre</summary>
+        <div class="disclosure-body table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Trimestre</th><th>RASK (¢ USD)</th><th>CASK (¢ USD)</th><th>Margen (¢ USD)</th>
+                <th>ASK (mil M)</th><th>Ocupación</th><th>Pasajeros (M)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <section id="panel-flights" role="tabpanel" aria-labelledby="tab-flights" hidden>
+      <div class="flights-view">
+        <div class="flights-shell flights-integrated" data-testid="flights-dashboard-root">
+          <section class="flight-kpi-grid" aria-label="Capacidad y demanda trimestral">
+            <article class="flight-kpi" data-accent="blue">
+              <span class="info" title="Pasajeros transportados por Grupo Aeroméxico durante el trimestre." aria-label="Pasajeros transportados por Grupo Aeroméxico durante el trimestre.">i</span>
+              <p class="kpi-label">Pasajeros</p>
+              <p class="kpi-value" id="flight-kpi-passengers">—</p>
+              <div class="kpi-deltas">
+                <span>vs. trimestre anterior <strong id="flight-kpi-passengers-qoq">—</strong></span>
+                <span>vs. año anterior <strong id="flight-kpi-passengers-yoy">—</strong></span>
+              </div>
+            </article>
+            <article class="flight-kpi" data-accent="gold">
+              <span class="info" title="Asientos disponibles multiplicados por millas voladas." aria-label="Asientos disponibles multiplicados por millas voladas.">i</span>
+              <p class="kpi-label">ASM</p>
+              <p class="kpi-value" id="flight-kpi-asm_miles">—</p>
+              <div class="kpi-deltas">
+                <span>vs. trimestre anterior <strong id="flight-kpi-asm_miles-qoq">—</strong></span>
+                <span>vs. año anterior <strong id="flight-kpi-asm_miles-yoy">—</strong></span>
+              </div>
+            </article>
+            <article class="flight-kpi" data-accent="violet">
+              <span class="info" title="Pasajeros transportados multiplicados por millas voladas." aria-label="Pasajeros transportados multiplicados por millas voladas.">i</span>
+              <p class="kpi-label">RPM</p>
+              <p class="kpi-value" id="flight-kpi-rpm_miles">—</p>
+              <div class="kpi-deltas">
+                <span>vs. trimestre anterior <strong id="flight-kpi-rpm_miles-qoq">—</strong></span>
+                <span>vs. año anterior <strong id="flight-kpi-rpm_miles-yoy">—</strong></span>
+              </div>
+            </article>
+            <article class="flight-kpi" data-accent="amber">
+              <span class="info" title="RPM dividido entre ASM; porcentaje de capacidad utilizada." aria-label="RPM dividido entre ASM; porcentaje de capacidad utilizada.">i</span>
+              <p class="kpi-label">Ocupación</p>
+              <p class="kpi-value" id="flight-kpi-load_factor">—</p>
+              <div class="kpi-deltas">
+                <span>vs. trimestre anterior <strong id="flight-kpi-load_factor-qoq">—</strong></span>
+                <span>vs. año anterior <strong id="flight-kpi-load_factor-yoy">—</strong></span>
+              </div>
+            </article>
+          </section>
+
+          <section aria-labelledby="network-title">
+            <div class="section-heading network-heading">
+              <div><p class="section-kicker">Red de vuelos</p><h2 id="network-title">Rutas nacionales</h2><p class="network-scope-note" id="network-scope-note"></p></div>
+            </div>
+            <div class="network-mode-switch" role="radiogroup" aria-label="Tipo de red">
+              <button type="button" id="network-mode-domestic" role="radio" aria-checked="true" aria-pressed="true">Nacional</button>
+              <button type="button" id="network-mode-international" role="radio" aria-checked="false" aria-pressed="false">Internacional</button>
+              <div class="network-region-switch" id="network-region-switch" role="group" aria-label="Región internacional" hidden></div>
+            </div>
+            <div class="network-month-switch" id="network-month-switch" role="group" aria-label="Meses nacionales (selección múltiple)"></div>
+            <div class="network-layout">
+              <article class="panel flow-map-panel" id="map-panel">
+                <div class="map-detail-layout">
+                  <div class="map-canvas-column">
+                    <div class="chart flow-map" id="route-flow-map" role="img" aria-label="Mapa de rutas por fuente y tipo de observación"></div>
+                  </div>
+                  <div class="route-detail-column" id="route-detail-column">
+                    <div class="network-volume" id="network-volume" hidden></div>
+                    <aside class="airport-tooltip" id="airport-tooltip" role="region" aria-label="Detalle de rutas por aeropuerto"></aside>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section aria-labelledby="mix-title">
+            <div class="section-heading">
+              <div><p class="section-kicker">Capacidad y demanda</p><h2 id="mix-title">Mezcla nacional e internacional</h2></div>
+              <p class="source-inline">AFAC Gold · serie mensual consolidada</p>
+            </div>
+            <article class="panel chart-panel">
+              <div class="panel-heading chart-heading">
+                <div><p class="panel-title">Pasajeros y contribución por segmento</p></div>
+                <label class="chart-range-control" for="passenger-period">Periodo
+                  <select id="passenger-period">
+                    <option value="quarter" selected>Trimestral</option>
+                    <option value="month">Mensual</option>
+                  </select>
+                </label>
+              </div>
+              <div class="chart chart-mix" id="mix-chart" role="img" aria-label="Pasajeros por periodo: barras apiladas nacional e internacional y línea del total calculado"></div>
+            </article>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <p class="sr-only" id="live-status" aria-live="polite"></p>
+  </main>
+
+  <dialog id="analysis-full" class="analysis-dialog" aria-labelledby="analysis-full-title">
+    <div class="bar"><h2 id="analysis-full-title">Análisis completo</h2><button type="button" class="close" data-close>Cerrar ✕</button></div>
+    <div class="modal-content"></div>
+  </dialog>
+
+  <script>
+    document.querySelector('.analysis-dialog .close').addEventListener('click', (event) => event.target.closest('dialog').close());
+  </script>
+</body>
+</html>
