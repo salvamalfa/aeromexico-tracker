@@ -15,10 +15,10 @@ real data currently published, not a synthetic fixture.
 
 from __future__ import annotations
 
-import os
+import shutil
 import threading
 from functools import partial
-from http.server import ThreadingHTTPServer
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
@@ -29,7 +29,6 @@ sync_playwright = playwright_sync_api.sync_playwright
 
 from src.web_export.executive import export_executive  # noqa: E402
 from src.web_export.flights import export_flights  # noqa: E402
-from web.serve import WEB_ROOT, SimpleHTTPRequestHandler  # noqa: E402
 
 pytestmark = [pytest.mark.browser, pytest.mark.local_data]
 
@@ -42,19 +41,20 @@ def _chromium_executable() -> str | None:
 
 
 @pytest.fixture(scope="module")
-def web_server(tmp_path_factory, flight_payload, executive_payload):
-    """Serve a temp copy of web/ whose public/data/v1 holds the real,
-    warehouse-backed payload (the same one integration_flight_payload()
-    reduces the published page's data to). Since P4b, web/index.html
-    mounts the reading/economy tabs too (see views/executive/bootstrap.js),
-    so this needs executive.json even though this file only checks
-    panel-flights."""
+def web_server(tmp_path_factory, web_dist_dir, flight_payload, executive_payload):
+    """Serve a temp copy of web/dist/ (the built site) whose data/v1
+    holds the real, warehouse-backed payload (the same one
+    integration_flight_payload() reduces the published page's data to).
+    Since P4b, the built page mounts the reading/economy tabs too (see
+    views/executive/bootstrap.ts), so this needs executive.json even
+    though this file only checks panel-flights. See
+    test_web_page_smoke.py's web_server for why data/v1 (not
+    public/data/v1) is the right path against the built site."""
 
     root = tmp_path_factory.mktemp("web_parity")
-    for name in ("index.html", "src", "vendor"):
-        os.symlink(WEB_ROOT / name, root / name)
-    export_flights(flight_payload, root / "public" / "data" / "v1", skip_input_check=True)
-    export_executive(executive_payload, root / "public" / "data" / "v1", skip_input_check=True)
+    shutil.copytree(web_dist_dir, root, dirs_exist_ok=True)
+    export_flights(flight_payload, root / "data" / "v1", skip_input_check=True)
+    export_executive(executive_payload, root / "data" / "v1", skip_input_check=True)
 
     handler = partial(SimpleHTTPRequestHandler, directory=str(root))
     server = ThreadingHTTPServer(("127.0.0.1", 0), handler)

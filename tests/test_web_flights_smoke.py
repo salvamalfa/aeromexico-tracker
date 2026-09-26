@@ -8,10 +8,10 @@ docs/arquitectura/auditoria-arquitectura-20260926.md §2.5 and web/README.md.
 from __future__ import annotations
 
 import json
-import os
+import shutil
 import threading
 from functools import partial
-from http.server import ThreadingHTTPServer
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
@@ -24,7 +24,6 @@ sync_playwright = playwright_sync_api.sync_playwright
 from src.web_export.executive import export_executive  # noqa: E402
 from src.web_export.flights import export_flights  # noqa: E402
 from src.web_export.writer import write_json  # noqa: E402
-from web.serve import WEB_ROOT, SimpleHTTPRequestHandler  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -40,15 +39,16 @@ def _load_fixture(name: str) -> dict[str, Any]:
 
 
 @pytest.fixture(scope="module")
-def web_server(tmp_path_factory):
-    """Serve a temp copy of web/ whose public/data/v1 holds only the
-    synthetic fixture, over HTTP (fetch() needs http:, not file:)."""
+def web_server(tmp_path_factory, web_dist_dir):
+    """Serve a temp copy of web/dist/ (the built site) whose data/v1
+    holds only the synthetic fixture, over HTTP (fetch() needs http:, not
+    file:). See test_web_page_smoke.py's web_server for why data/v1 (not
+    public/data/v1) is the right path against the built site."""
 
     root = tmp_path_factory.mktemp("web_smoke")
-    for name in ("index.html", "src", "vendor"):
-        os.symlink(WEB_ROOT / name, root / name)
+    shutil.copytree(web_dist_dir, root, dirs_exist_ok=True)
 
-    out_dir = root / "public" / "data" / "v1"
+    out_dir = root / "data" / "v1"
     fixture = _load_fixture("flights_sample.json")
     payload = {**fixture, "international_networks": fixture["route_networks"]}
     export_flights(payload, out_dir, skip_input_check=True)

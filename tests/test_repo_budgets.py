@@ -1,10 +1,11 @@
 """Repo hygiene budget: no Python module grows past its size limit, and (as
-of P4a) no web/ JS module either.
+of P4a, converted to TypeScript in P5) no web/ JS/TS module either.
 
 See docs/arquitectura/auditoria-arquitectura-20260926.md §4.3: modulo
-Python <= 600 lineas, modulo JS (web/src/**/*.js) <= 400 lineas, con una
-lista explicita de excepciones vigentes que solo puede reducirse, nunca
-crecer.
+Python <= 600 lineas, modulo JS/TS (web/src/**/*.{js,ts}) <= 400 lineas, con
+una lista explicita de excepciones vigentes que solo puede reducirse, nunca
+crecer. Los tipos generados (web/src/types/generated/) y los archivos de
+prueba (*.test.ts) no cuentan: no se editan a mano.
 """
 
 from __future__ import annotations
@@ -101,11 +102,23 @@ def test_allowlisted_files_have_not_grown():
 
 def _tracked_js_files() -> list[Path]:
     files = []
-    for path in (REPO_ROOT / "web" / "src").rglob("*.js"):
-        relative = path.relative_to(REPO_ROOT)
-        if EXCLUDED_DIR_NAMES & set(relative.parts):
-            continue
-        files.append(relative)
+    for pattern in ("*.js", "*.ts"):
+        for path in (REPO_ROOT / "web" / "src").rglob(pattern):
+            relative = path.relative_to(REPO_ROOT)
+            if EXCLUDED_DIR_NAMES & set(relative.parts):
+                continue
+            # Generated types (web/src/types/generated/, from
+            # contracts/web/*.schema.json via `npm run gen:types`) are not
+            # hand-edited, so the module budget below does not apply to
+            # them — see web/scripts/gen-types.mjs.
+            if "generated" in relative.parts:
+                continue
+            # *.test.ts files (vitest, P5) are test code, not view modules;
+            # excluded the same way tests/test_*.py are excluded from the
+            # Python budget above.
+            if relative.name.endswith(".test.ts"):
+                continue
+            files.append(relative)
     return sorted(files)
 
 
@@ -116,6 +129,6 @@ def test_no_js_module_exceeds_the_line_budget():
         if (lines := _line_count(REPO_ROOT / relative)) > JS_BUDGET
     ]
     assert not violations, (
-        "Modulos web/src/**/*.js que exceden el presupuesto de "
+        "Modulos web/src/**/*.{js,ts} que exceden el presupuesto de "
         f"{JS_BUDGET} lineas; divide el modulo (ver web/README.md):\n" + "\n".join(violations)
     )
