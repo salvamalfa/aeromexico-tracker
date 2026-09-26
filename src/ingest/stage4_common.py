@@ -102,7 +102,7 @@ def write_parquet_atomic(frame: pd.DataFrame, path: Path) -> None:
     with tempfile.NamedTemporaryFile(suffix=".parquet", dir=path.parent, delete=False) as tmp:
         temporary = Path(tmp.name)
     try:
-        frame.to_parquet(temporary, index=False)
+        frame.to_parquet(temporary, index=False, compression="zstd")
         temporary.replace(path)
     finally:
         temporary.unlink(missing_ok=True)
