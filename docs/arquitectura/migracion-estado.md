@@ -37,8 +37,8 @@ se reinicia desde `master`.
 | P4b | Front-end en archivos reales: lectura ejecutiva y demás pestañas (fase 3) | fusionado | #51 | — |
 | P5 | Vite + TypeScript (fase 4) | fusionado | #52 | — |
 | P6a | Citas del análisis exportadas y Vuelos cargado al abrir su pestaña (estado de trimestre único) | fusionado | #53 | — |
-| P6b | Gate de publicación sobre `site/`, `verify.py` y workflow de GitHub Pages (fase 5) | PR abierto | #54 | fusionar; el dueño activa Pages (Settings → Pages → Source: GitHub Actions) |
-| P7 | Retiro de Streamlit | pendiente | | |
+| P6b | Gate de publicación sobre `site/`, `verify.py` y workflow de GitHub Pages (fase 5) | fusionado | #54 | el dueño activa Pages (Settings → Pages → Source: GitHub Actions) y se relanza `pages.yml` |
+| P7 | Retiro de Streamlit y de la ruta HTML heredada | en curso | | subagente migrador trabajando |
 | P8 | Peso de git y reescritura de historia (fase 6) | pendiente | | |
 
 ## Bitácora
@@ -61,3 +61,4 @@ se reinicia desde `master`.
 - 2026-09-26 · P6a listo: citas exportadas por la misma vía verificada que stage18, paridad 100 % sin excepciones; estado de trimestre único; Vuelos carga al abrir su pestaña. Carga inicial 1.51 MB (0.49 MB gzip).
 - 2026-09-26 · P6a fusionado (#53, CI `test` y `web` verdes). P6b iniciado.
 - 2026-09-26 · P6b listo: `src/publish` (gate con la misma verificación que stage18, manifiesto SHA-256, recibo), `verify.py` con 6 pruebas negativas, workflow `pages.yml`, `site/` generado del expediente aprobado 2T26 (34 archivos, ~3.7 MB), paridad con el publicado.
+- 2026-09-26 · P6b fusionado (#54, CI verde). P7 iniciado.
