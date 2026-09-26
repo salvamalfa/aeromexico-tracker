@@ -5,7 +5,7 @@ Autorización: «Adelante», tras aceptar Etapa 12. Fecha de entrega: 2026-09-05
 
 ## Resultado visible
 
-[Abrir el reporte financiero](../../prototypes/etapa-13/financial_history.html).
+[Abrir el reporte financiero](../../../prototypes/etapa-13/financial_history.html).
 Incluye cobertura antes/después de los 22 trimestres, faltantes, diferencias entre
 fuentes y 18 fichas con cifras originales, unidades, página y enlace oficial.
 Es una entrega de comprobación del desarrollo, no contenido del dashboard.
@@ -59,8 +59,8 @@ USD funcional. Los apéndices redondeados a millones limitan la precisión recup
 
 ## Expediente y reproducción
 
-[Índice de evidencia y comandos](../referencias/etapa-13/README.md).
-[Cuaderno ejecutado](../referencias/etapa-13/verification.ipynb).
+[Índice de evidencia y comandos](../../referencias/etapa-13/README.md).
+[Cuaderno ejecutado](../../referencias/etapa-13/verification.ipynb).
 
 Etapa 13 permanece abierta para comentarios. No se inicia Etapa 14 sin autorización
 explícita; tampoco se ha generado ni aprobado un análisis trimestral.

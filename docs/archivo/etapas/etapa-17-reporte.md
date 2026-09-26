@@ -17,7 +17,7 @@ de Etapa 18.
 
 ## Resultado visible
 
-[Abrir análisis auditado](../../prototypes/etapa-17/audited_analysis.html).
+[Abrir análisis auditado](../../../prototypes/etapa-17/audited_analysis.html).
 
 El auditor independiente revisó las dieciséis afirmaciones de 2T26 contra el paquete
 cerrado, reprodujo los cálculos y recalculó independientemente 252 nodos derivados.
@@ -64,7 +64,7 @@ su escritura atómica. No se implementó ni ejecutó publicación en esta etapa.
 - Vista local comprobada a 360, 736 y 1440 px: comparación, modales, Escape, foco,
   ausencia de desbordamiento y cero solicitudes de red al abrir.
 
-[Comprobantes](../referencias/etapa-17/README.md).
+[Comprobantes](../../referencias/etapa-17/README.md).
 
 ## Limitaciones y siguiente decisión
 

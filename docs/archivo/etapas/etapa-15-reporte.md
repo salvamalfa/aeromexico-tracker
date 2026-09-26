@@ -5,7 +5,7 @@ Etapa 15 autorizada con «Continua». Fecha: 2026-09-05.
 
 ## Entrega
 
-[Abrir cálculos y fuentes](../../prototypes/etapa-15/quantitative_review.html).
+[Abrir cálculos y fuentes](../../../prototypes/etapa-15/quantitative_review.html).
 Cada cálculo permite abrir la fórmula, recorrer sus insumos y consultar el documento
 original. Es una UI de comprobación; no se incorpora al dashboard.
 
@@ -67,7 +67,7 @@ ajuste incompatible y un comparable ausente producen indisponibilidad explícita
 
 Los resultados inmutables se conservan en `analysis_runs/quantitative`, separados
 de Gold y de las carpetas regeneradas. El JSON de revisión puede reconstruirse.
-[Expediente y comandos](../referencias/etapa-15/README.md).
+[Expediente y comandos](../../referencias/etapa-15/README.md).
 
 No hay redacción del agente, auditor ni aprobación de contenido. No se ha publicado
 ni cambiado el dashboard. Etapa 16 requiere autorización humana posterior a esta revisión.

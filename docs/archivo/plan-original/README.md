@@ -2,7 +2,7 @@
 
 > **Histórico.** Este directorio describe las etapas 0–17, ya cerradas, y el plan
 > original que las guió. No refleja el estado actual del repositorio ni sus reglas
-> vigentes. Para "cómo funciona hoy", consulta [`REPO_MAP.md`](../../REPO_MAP.md),
+> vigentes. Para "cómo funciona hoy", consulta [`REPO_MAP.md`](../../../REPO_MAP.md),
 > `CLAUDE.md` y `AGENTS.md`; para el estado y resultado de cada etapa, `docs/etapas/`.
 
 Este directorio contiene el plan completo de implementación de un dashboard analítico
