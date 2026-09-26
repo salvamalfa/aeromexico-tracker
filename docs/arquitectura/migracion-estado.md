@@ -1,0 +1,44 @@
+# Estado de la migración a Vite + TypeScript y GitHub Pages
+
+Fuente única de verdad del avance. Plan técnico:
+[`auditoria-arquitectura-20260926.md`](auditoria-arquitectura-20260926.md) §4–§5.
+
+## Cómo retomar
+
+1. `git fetch origin` y revisar la tabla: el primer paquete que no esté en
+   **fusionado** es el que sigue.
+2. Si tiene PR abierto, leer el PR y su último commit; si está **en curso**,
+   continuar desde el último commit de la rama.
+3. La sesión principal coordina; cada paquete lo ejecuta el subagente
+   `migrador` (`.claude/agents/migrador.md`, Sonnet, esfuerzo medio).
+4. Al cambiar de estado, actualizar esta tabla y subirla en el mismo commit.
+
+Rama de trabajo: `claude/aerodata-box-international-7en30g`. Tras cada fusión
+se reinicia desde `master`.
+
+## Decisiones del dueño (26 de septiembre de 2026)
+
+- Vite + TypeScript aprobado; Node forma parte del proyecto.
+- GitHub Pages reemplaza a Streamlit; la app de Streamlit se retira completa.
+- Se reescribe la historia de git para quitar peso (último paquete).
+- Subagentes Sonnet en esfuerzo medio; nunca Opus para la ejecución.
+- Pasos manuales del dueño: activar Pages (Settings → Pages → Source: GitHub
+  Actions) en P6 y borrar la app en share.streamlit.io en P7.
+
+## Paquetes
+
+| Paquete | Alcance | Estado | PR | Siguiente paso |
+|---|---|---|---|---|
+| P0 | Fusionar #46, republicar el integrado con el total en el panel, tracker y agente | en curso | #46 | fusionar #46 |
+| P1 | Pruebas y CI (auditoría fase 0) | pendiente | | |
+| P2 | Higiene y mapa del repo (fase 1) | pendiente | | |
+| P3 | Contratos de datos y privacidad (fase 2) | pendiente | | |
+| P4 | Front-end en archivos reales, ES modules (fase 3) | pendiente | | |
+| P5 | Vite + TypeScript (fase 4) | pendiente | | |
+| P6 | Gate de publicación sobre `site/` y GitHub Pages (fase 5) | pendiente | | |
+| P7 | Retiro de Streamlit | pendiente | | |
+| P8 | Peso de git y reescritura de historia (fase 6) | pendiente | | |
+
+## Bitácora
+
+- 2026-09-26 · P0 iniciado.
