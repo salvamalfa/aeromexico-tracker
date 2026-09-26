@@ -88,8 +88,8 @@ migración completa). Cada paquete lo ejecuta el subagente `migrador`.
 |---|---|---|
 | R1 | Barreras de publicación (A2, A3, A7, A10) | fusionado (#58) |
 | R2 | Exportación de análisis (A4–A6) | fusionado (#59) |
-| R3 | Trazabilidad y documentación (A8, A11, A12) | en curso |
-| R4 | Dependencias web (A9) | pendiente |
+| R3 | Trazabilidad y documentación (A8, A11, A12) | fusionado (#60) |
+| R4 | Dependencias web (A9) | en curso |
 | R5 | Limpieza histórica (opcional, decisión del dueño) | pendiente |
 
 A1 (protección de rama) es una acción del dueño, no de un agente.
@@ -114,6 +114,22 @@ A1 (protección de rama) es una acción del dueño, no de un agente.
   README y REPO_MAP.md se corrigen para reflejar el conteo real de tablas
   Gold y la ruta de publicación vigente (`src.publish` → `site/` →
   `pages.yml`).
+- 26-sep-2026: R3 fusionado (#60). R4 iniciado (rama
+  `claude/upbeat-brahmagupta-g1orp2`): A9, `npm audit` en `web/` pasa de 5
+  avisos (Vite 7.1.12 alto, Vitest 3.2.4/`@vitest/mocker` moderado,
+  `maplibre-gl` vía `plotly.js` crítico) a 2 (`@vitest/mocker` moderado y
+  `maplibre-gl` crítico) tras actualizar `vite` → 7.3.6 y `vitest` → 3.2.7
+  (parches dentro del mismo major). Los dos avisos restantes solo tienen
+  arreglo con un major breaking (`vitest@5.0.2`, `plotly.js@4.1.1`) y no
+  llegan al bundle publicado: `vitest` es `devDependency` (no se sirve en
+  `site/`) y `web/src/lib/plotly.ts` no registra las trazas
+  `choroplethmapbox`/`scattermapbox` que importan `maplibre-gl` — verificado
+  con `grep maplibre dist/assets/*.js` (0 coincidencias) tras `npm run
+  build`. `npm run check`, `npm test` (51 tests) y dos `npm run build`
+  consecutivos (mismos hashes) en verde; ver "Dependencias y avisos de
+  seguridad" en `web/README.md` para el detalle y la comparación con
+  `site/assets/` (CSS idéntico, JS con hash distinto solo por un comentario
+  de licencia que el nuevo esbuild omite, sin cambio de comportamiento).
 
 ### Mapeo de commits tras la reescritura (P8b)
 

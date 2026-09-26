@@ -306,3 +306,52 @@ sincronizado en el trimestre que estuviera seleccionado):
 Quien nunca abre Vuelos nunca paga esos ≈0.96 MB; quien la abre acaba
 transfiriendo ≈2.49 MB en total — la misma cifra que P5 ya cargaba
 siempre, ahora repartida en el tiempo en vez de al inicio.
+
+## Dependencias y avisos de seguridad (R4, A9)
+
+`npm audit` en `web/` (26-sep-2026, antes de este cambio) reportaba 5
+avisos: Vite 7.1.12 (alto, servidor de desarrollo — path traversal /
+lectura arbitraria vía WebSocket / bypass de `server.fs.deny`), Vitest
+3.2.4 vía `@vitest/mocker` (moderado — path traversal en el mock
+redirect) y `maplibre-gl` (crítico, XSS en `DOM.sanitize()`) arrastrado
+por `plotly.js`.
+
+**Actualizado**: `vite` 7.1.12 → **7.3.6** y `vitest` 3.2.4 →
+**3.2.7** (con sus `vite-node`/`@vitest/mocker` internos), ambos parches
+dentro del mismo major (`npm install -D vite@7.3.6 vitest@3.2.7`, sin
+tocar `package.json` más allá del pin). Esto resuelve el aviso de Vite.
+`npm run check`, `npm test` (51 tests) y `npm run build` (dos veces,
+mismos hashes de archivo en `dist/assets/`) siguen en verde.
+
+**Pendiente, sin exposición al bundle publicado:**
+
+- **`@vitest/mocker` (moderado, GHSA-82fw-gwwq-j7x9)**: el propio
+  `npm audit` solo ofrece arreglo instalando `vitest@5.0.2` (major
+  breaking); no existe una versión `3.2.x` que lo corrija. `vitest` es
+  una `devDependency` que solo corre en `vitest run`/`vitest --watch`
+  contra este repo: no se empaqueta ni se sirve en `dist/` ni en
+  `site/`, así que no llega a Pages. Reevaluar al planear una migración
+  a Vitest 5 (fuera de alcance de R4).
+- **`maplibre-gl` (crítico, GHSA-jrc7-96c5-q579), vía `plotly.js`**:
+  `plotly.js` sigue en `3.7.0` (la última `3.x`; el arreglo del
+  advisory exige `plotly.js@4.1.1`, major breaking, según
+  `npm audit`). Sin embargo `web/src/lib/plotly.ts` solo registra
+  `plotly.js/lib/core` + `bar`/`scatter`/`scattergeo`/`choropleth` —
+  deliberadamente **no** registra `choroplethmapbox`/`scattermapbox`,
+  las únicas trazas que importan `maplibre-gl`. Verificado en
+  `dist/assets/*.js` tras `npm run build`: `grep -c maplibre
+  dist/assets/*.js` da `0` en ambos archivos — el identificador no
+  aparece en el bundle de producción. El aviso crítico está en el
+  árbol de `node_modules` pero no llega al código que se publica en
+  `site/`.
+
+Comparación de `dist/assets/` (con las versiones nuevas) contra
+`site/assets/` (build previo, Vite 7.1.12): `index-*.css` es
+byte-idéntico; los dos `*.js` cambian de hash porque el minificador de
+esbuild empaquetado con Vite 7.3.6 trata de forma distinta un
+comentario de licencia de una dependencia transitiva (deja de imprimir
+el banner `/*! Native Promise Only ... */`), no por un cambio de
+comportamiento — el resto del archivo, y los 51 tests unitarios más
+`npm run check`, no cambian. No se copió nada a mano en `site/`:
+Pages sigue sirviendo el `site/` ya committeado; republicar (correr
+`src.publish`) queda a decisión del dueño del repo.
