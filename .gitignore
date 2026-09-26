@@ -47,3 +47,8 @@ web/public/data/
 # build output, gated into site/ separately in P6.
 web/node_modules/
 web/dist/
+
+# src/publish.gate builds site/ via an atomic tempdir swap (site.tmp-*
+# next to site/, then os.replace). A crash mid-publish can leave this
+# behind; it must never be committed.
+site.tmp-*/
