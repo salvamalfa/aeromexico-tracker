@@ -145,7 +145,7 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - manual ent
         ))
     gold = pd.concat(parts, ignore_index=True)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    gold.to_parquet(args.output, index=False)
+    gold.to_parquet(args.output, index=False, compression="zstd")
     own = gold[gold["carrier_key"].isin({"AEROMEXICO", "AEROMEXICO_CONNECT"})]
     print(
         f"{len(gold):,} celdas ({len(own):,} de Aerovias/Connect en "
