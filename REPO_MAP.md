@@ -14,6 +14,8 @@ comunes. Ver también `CLAUDE.md`, `AGENTS.md` y, para la migración en curso,
 | Analítica | `src/analytics/` | Estudios y modelos precomputados sobre gold (forecast, estimación ruta×aerolínea, etc.). |
 | Dashboard | `src/dashboard/` | Payloads y generadores HTML: lectura ejecutiva (`executive_summary*.py`), Vuelos (`flights.py`, `flights_html.py`, `domestic_routes.py`, `international_routes.py`), la app Streamlit heredada (`app.py`, `pages/`, `components/`, `data.py`, `navigation.py`). |
 | Analysis Agent | `src/analysis_agent/` | Evidencia, cálculo, revisión y **publicación controlada** del análisis narrativo por trimestre (etapas 12–18). |
+| Contratos web | `contracts/web/` | Esquemas JSON (draft 2020-12) del payload **v1** tal cual se embebe hoy en el HTML publicado (Vuelos y ejecutivo) + `privacy.yaml` (frontera pública/privada). Fuente de verdad; no aspiracional. |
+| Exportadores web | `src/web_export/` | Divide esos mismos payloads en JSON por periodo bajo `web/public/data/v1/` (local, no versionado), validados contra `contracts/web/` y `config/web_inputs.yaml` antes de escribir. No publica ni toca `stage18`; el HTML publicado sigue viniendo de ahí sin cambios (fase 2 de la migración; el front-end aún no los consume, eso llega en P4/P5). |
 | Pruebas | `tests/` | `uv run pytest`; marcadores `local_data` (necesita `data/bronze|silver`/warehouse local) y `browser` (Playwright) se excluyen en CI. |
 
 **Gold tables:** 43 Parquet en `data/gold/` versionados en git (ver
@@ -60,6 +62,7 @@ autorización para publicarlos. Ver "Datos y documentación" en `README.md`.
 | `python -m src.dashboard.build_flights` | Reconstruye el payload de Vuelos tras cambiar fuentes o Vuelos, antes de regenerar el integrado. |
 | `python -m src.analysis_agent.stage18 --record … --output …` | Publica el HTML integrado. **Requiere instrucción explícita del dueño**; no lo ejecutes por iniciativa propia. |
 | `just dashboard` | Streamlit local (heredado; se retira en P7). |
+| `uv run python -m src.web_export --out web/public/data/v1` | Exporta los payloads v1 divididos por periodo (local, no publica nada; falla con mensaje claro si falta un insumo Gold requerido en `config/web_inputs.yaml`). |
 
 ## Recetas
 

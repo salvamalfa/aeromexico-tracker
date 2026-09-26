@@ -1,0 +1,43 @@
+# Declares, per exported view, which local Gold inputs src/web_export needs.
+# See docs/arquitectura/auditoria-arquitectura-20260926.md §4.2.7 and §5 Fase 2,
+# and REPO_MAP.md "Repo de datos privado".
+#
+# required_for_publish: the exporter refuses to write that view's files if any
+#   of these parquet files (relative to the repo root) is missing from
+#   data/gold/ — see src/web_export/inputs.py::require_inputs. Missing one
+#   must never silently produce an incomplete section (the bug this file
+#   replaces: `if path.exists()` in stage6_warehouse.py and
+#   src/dashboard/{domestic,international}_routes.py, left untouched by this
+#   package — those keep the historical dev-friendly behaviour on purpose).
+# optional_for_development: known to be absent in a fresh public clone
+#   without the private data repo; the existing HTML build (src/dashboard/)
+#   tolerates their absence and still produces a smaller, valid payload.
+#   Listed here only so an agent can tell "known optional" from "unexpectedly
+#   missing".
+#
+# Restore each missing file from the private data repo
+# (github.com/salvamalfa/aeromexico-tracker-data, Git LFS):
+# `derived/aerodatabox/<file>.parquet` for the domestic estimate/capacity
+# pair, `derived/aerodatabox_international/<file>.parquet` for the
+# international pair. See docs/etapas/aerodatabox-agosto-captura-20260925.md
+# for the end-to-end recipe.
+
+schema_version: 1
+
+views:
+  flights:
+    required_for_publish:
+      - data/gold/fact_route_carrier_domestic_estimate.parquet
+      - data/gold/fact_aeromexico_domestic_capacity_estimate.parquet
+      - data/gold/fact_route_carrier_international_estimate.parquet
+      - data/gold/fact_aeromexico_international_capacity_estimate.parquet
+    optional_for_development:
+      - data/gold/fact_domestic_scheduled_route_movements.parquet
+      - data/gold/fact_domestic_exclusive_market_inferences.parquet
+      - data/gold/fact_aifa_shared_route_presence.parquet
+      - data/gold/fact_aicm_international_scheduled_route_movements.parquet
+      - data/gold/fact_international_route_observations.parquet
+      - data/gold/fact_oma_documented_routes.parquet
+  executive:
+    required_for_publish: []
+    optional_for_development: []

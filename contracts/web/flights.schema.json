@@ -1,0 +1,394 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aeromexico-tracker/contracts/web/flights.schema.json",
+  "title": "Vuelos · payload integrado (v1)",
+  "description": "Describes the flight payload actually embedded in the published integrated HTML: the output of src.dashboard.flights_html.integration_flight_payload(build_flight_payload()) as it is today. See docs/arquitectura/auditoria-arquitectura-20260926.md Fase 2 and contracts/web/README.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "metadata",
+    "quarters",
+    "monthly_passengers",
+    "route_network",
+    "route_networks",
+    "domestic_networks",
+    "domestic_monthly_networks"
+  ],
+  "properties": {
+    "schema_version": { "const": "flight_dashboard_payload_v1" },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title", "pilot_period", "default_period", "cutoff_date",
+        "approved_evidence_fingerprint", "review_status", "scope"
+      ],
+      "properties": {
+        "title": { "type": "string" },
+        "pilot_period": { "type": "string" },
+        "default_period": { "type": "string" },
+        "cutoff_date": { "type": "string" },
+        "approved_evidence_fingerprint": { "type": "string" },
+        "review_status": { "type": "string" },
+        "scope": { "type": "string" }
+      }
+    },
+    "quarters": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/quarter" }
+    },
+    "monthly_passengers": { "$ref": "#/$defs/monthly_passengers" },
+    "route_network": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["world_geometry"],
+      "properties": {
+        "world_geometry": { "$ref": "#/$defs/world_geometry" }
+      }
+    },
+    "route_networks": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/network" }
+    },
+    "domestic_networks": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/network" }
+    },
+    "domestic_monthly_networks": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/network" }
+    }
+  },
+  "$defs": {
+    "nullable_number": { "type": ["number", "null"] },
+    "nullable_string": { "type": ["string", "null"] },
+    "nullable_integer": { "type": ["integer", "null"] },
+
+    "metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key", "value", "unit", "period_id", "period_type", "period_start",
+        "period_end", "source_id", "cutoff_date", "agent_eligible",
+        "eligibility_reason"
+      ],
+      "properties": {
+        "key": { "type": "string" },
+        "value": { "$ref": "#/$defs/nullable_number" },
+        "unit": { "type": "string" },
+        "period_id": { "type": "string" },
+        "period_type": { "type": "string" },
+        "period_start": { "type": "string" },
+        "period_end": { "type": "string" },
+        "source_id": { "type": "string" },
+        "cutoff_date": { "$ref": "#/$defs/nullable_string" },
+        "agent_eligible": { "type": "boolean" },
+        "eligibility_reason": { "type": "string" }
+      }
+    },
+
+    "quarter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["period_id", "period_label", "metrics", "passenger_mix"],
+      "properties": {
+        "period_id": { "type": "string" },
+        "period_label": { "type": "string" },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["passengers", "asm_miles", "rpm_miles", "load_factor"],
+          "properties": {
+            "passengers": { "$ref": "#/$defs/metric" },
+            "asm_miles": { "$ref": "#/$defs/metric" },
+            "rpm_miles": { "$ref": "#/$defs/metric" },
+            "load_factor": { "$ref": "#/$defs/metric" }
+          }
+        },
+        "passenger_mix": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/passenger_mix" }
+          ]
+        }
+      }
+    },
+
+    "passenger_mix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "period_id", "period_type", "period_start", "period_end",
+        "cutoff_date", "source_id", "agent_eligible", "eligibility_reason",
+        "months", "passengers", "asm_miles", "rpm_miles", "source_hashes"
+      ],
+      "properties": {
+        "period_id": { "type": "string" },
+        "period_type": { "type": "string" },
+        "period_start": { "type": "string" },
+        "period_end": { "type": "string" },
+        "cutoff_date": { "$ref": "#/$defs/nullable_string" },
+        "source_id": { "type": "string" },
+        "agent_eligible": { "type": "boolean" },
+        "eligibility_reason": { "type": "string" },
+        "months": { "type": "array", "items": { "type": "string" } },
+        "passengers": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["domestic", "international", "total", "domestic_share", "international_share"],
+          "properties": {
+            "domestic": { "type": "number" },
+            "international": { "type": "number" },
+            "total": { "type": "number" },
+            "domestic_share": { "type": "number" },
+            "international_share": { "type": "number" }
+          }
+        },
+        "asm_miles": { "$ref": "#/$defs/segment_totals" },
+        "rpm_miles": { "$ref": "#/$defs/segment_totals" },
+        "source_hashes": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "segment_totals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["domestic", "international", "total"],
+      "properties": {
+        "domestic": { "type": "number" },
+        "international": { "type": "number" },
+        "total": { "type": "number" }
+      }
+    },
+
+    "monthly_passengers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "period_type", "period_start", "period_end", "source_id",
+        "observed_months", "calendar_months", "as_of", "agent_eligible",
+        "eligibility_reason", "records"
+      ],
+      "properties": {
+        "period_type": { "const": "month" },
+        "period_start": { "type": "string" },
+        "period_end": { "type": "string" },
+        "source_id": { "type": "string" },
+        "observed_months": { "type": "integer" },
+        "calendar_months": { "type": "integer" },
+        "as_of": { "type": "string" },
+        "agent_eligible": { "type": "boolean" },
+        "eligibility_reason": { "type": "string" },
+        "records": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/monthly_passenger_record" }
+        }
+      }
+    },
+
+    "monthly_passenger_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "period_id", "date", "period_type", "domestic", "international",
+        "total_segment_sum", "reported_total", "reconciliation_delta",
+        "source_id", "source_hash", "cutoff_date", "agent_eligible",
+        "availability"
+      ],
+      "properties": {
+        "period_id": { "type": "string" },
+        "date": { "type": "string" },
+        "period_type": { "const": "month" },
+        "domestic": { "type": "number" },
+        "international": { "type": "number" },
+        "total_segment_sum": { "type": "number" },
+        "reported_total": { "type": "number" },
+        "reconciliation_delta": { "type": "number" },
+        "source_id": { "type": "string" },
+        "source_hash": { "type": "string" },
+        "cutoff_date": { "$ref": "#/$defs/nullable_string" },
+        "agent_eligible": { "type": "boolean" },
+        "availability": { "type": "string" }
+      }
+    },
+
+    "world_geometry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["geojson", "topojson", "source_url", "version", "license", "sha256"],
+      "properties": {
+        "geojson": { "type": "object" },
+        "topojson": { "type": "object" },
+        "source_url": { "type": "string" },
+        "version": { "type": "string" },
+        "license": { "type": "string" },
+        "sha256": { "type": "string" }
+      }
+    },
+
+    "endpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["iata", "city", "name", "lat", "lon"],
+      "properties": {
+        "iata": { "type": "string" },
+        "city": { "type": "string" },
+        "name": { "type": "string" },
+        "lat": { "$ref": "#/$defs/nullable_number" },
+        "lon": { "$ref": "#/$defs/nullable_number" }
+      }
+    },
+
+    "direction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin_iata", "destination_iata", "passengers", "passengers_low", "passengers_high", "seats", "departures"],
+      "properties": {
+        "origin_iata": { "type": "string" },
+        "destination_iata": { "type": "string" },
+        "passengers": { "$ref": "#/$defs/nullable_number" },
+        "passengers_low": { "$ref": "#/$defs/nullable_number" },
+        "passengers_high": { "$ref": "#/$defs/nullable_number" },
+        "seats": { "$ref": "#/$defs/nullable_number" },
+        "departures": { "$ref": "#/$defs/nullable_number" }
+      }
+    },
+
+    "monthly_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "period_id", "carrier_key", "carrier_label", "origin_iata",
+        "destination_iata", "support_observed_in_period",
+        "support_source_periods", "support_month_gap", "passengers",
+        "passengers_low", "passengers_high", "seats", "departures",
+        "load_factor", "capacity_estimated"
+      ],
+      "properties": {
+        "period_id": { "$ref": "#/$defs/nullable_string" },
+        "carrier_key": {
+          "enum": ["AEROMEXICO", "AEROMEXICO_CONNECT", "AEROMEXICO_GROUP", null]
+        },
+        "carrier_label": { "$ref": "#/$defs/nullable_string" },
+        "origin_iata": { "$ref": "#/$defs/nullable_string" },
+        "destination_iata": { "$ref": "#/$defs/nullable_string" },
+        "support_observed_in_period": { "type": ["boolean", "null"] },
+        "support_source_periods": { "$ref": "#/$defs/nullable_string" },
+        "support_month_gap": { "$ref": "#/$defs/nullable_integer" },
+        "passengers": { "$ref": "#/$defs/nullable_number" },
+        "passengers_low": { "$ref": "#/$defs/nullable_number" },
+        "passengers_high": { "$ref": "#/$defs/nullable_number" },
+        "seats": { "$ref": "#/$defs/nullable_number" },
+        "departures": { "$ref": "#/$defs/nullable_number" },
+        "load_factor": { "$ref": "#/$defs/nullable_number" },
+        "capacity_estimated": { "type": "boolean" }
+      }
+    },
+
+    "route_previous": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["passengers", "seats", "departures", "load_factor"],
+      "properties": {
+        "passengers": { "$ref": "#/$defs/nullable_number" },
+        "seats": { "$ref": "#/$defs/nullable_number" },
+        "departures": { "$ref": "#/$defs/nullable_number" },
+        "load_factor": { "$ref": "#/$defs/nullable_number" }
+      }
+    },
+
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "market_key", "coverage_note", "source_label", "operation_status",
+        "context", "passengers_low", "passengers_high", "passengers_estimated",
+        "capacity_estimated", "seats_low", "seats_high", "load_factor_low",
+        "load_factor_high", "load_factor_status", "support_repair_applied",
+        "months_covered", "months_selected", "origin", "destination",
+        "passengers", "seats", "departures", "load_factor", "previous",
+        "directions", "monthly"
+      ],
+      "properties": {
+        "market_key": { "type": "string" },
+        "coverage_note": { "type": "string" },
+        "source_label": { "type": "string" },
+        "operation_status": { "type": "string" },
+        "context": { "$ref": "#/$defs/nullable_string" },
+        "passengers_low": { "$ref": "#/$defs/nullable_number" },
+        "passengers_high": { "$ref": "#/$defs/nullable_number" },
+        "passengers_estimated": { "type": "boolean" },
+        "capacity_estimated": { "type": "boolean" },
+        "seats_low": { "$ref": "#/$defs/nullable_number" },
+        "seats_high": { "$ref": "#/$defs/nullable_number" },
+        "load_factor_low": { "$ref": "#/$defs/nullable_number" },
+        "load_factor_high": { "$ref": "#/$defs/nullable_number" },
+        "load_factor_status": { "$ref": "#/$defs/nullable_string" },
+        "support_repair_applied": { "type": "boolean" },
+        "months_covered": { "$ref": "#/$defs/nullable_integer" },
+        "months_selected": { "$ref": "#/$defs/nullable_integer" },
+        "origin": { "$ref": "#/$defs/endpoint" },
+        "destination": { "$ref": "#/$defs/endpoint" },
+        "passengers": { "$ref": "#/$defs/nullable_number" },
+        "seats": { "$ref": "#/$defs/nullable_number" },
+        "departures": { "$ref": "#/$defs/nullable_number" },
+        "load_factor": { "$ref": "#/$defs/nullable_number" },
+        "previous": { "$ref": "#/$defs/route_previous" },
+        "directions": { "type": "array", "items": { "$ref": "#/$defs/direction" } },
+        "monthly": { "type": "array", "items": { "$ref": "#/$defs/monthly_item" } }
+      }
+    },
+
+    "aena_airport_activity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "airport_iata", "passengers", "operations", "observed_months",
+        "expected_months", "coverage_status"
+      ],
+      "properties": {
+        "airport_iata": { "type": "string" },
+        "passengers": { "$ref": "#/$defs/nullable_number" },
+        "operations": { "$ref": "#/$defs/nullable_number" },
+        "observed_months": { "type": "array", "items": { "type": "string" } },
+        "expected_months": { "type": "array", "items": { "type": "string" } },
+        "coverage_status": { "type": "string" }
+      }
+    },
+
+    "network": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "period_label", "expected_months", "observed_months", "routes",
+        "airports", "coverage_by_source", "mode", "source_url",
+        "availability", "agent_eligible", "eligibility_reason",
+        "represented_passengers", "represented_movements",
+        "aena_airport_activity"
+      ],
+      "properties": {
+        "period_label": { "type": "string" },
+        "expected_months": { "type": "array", "items": { "type": "string" } },
+        "observed_months": { "type": "array", "items": { "type": "string" } },
+        "routes": { "type": "array", "items": { "$ref": "#/$defs/route" } },
+        "airports": { "type": "array", "items": { "$ref": "#/$defs/endpoint" } },
+        "coverage_by_source": {
+          "type": "object",
+          "additionalProperties": { "type": "array", "items": { "type": "string" } }
+        },
+        "mode": { "type": "string" },
+        "source_url": { "$ref": "#/$defs/nullable_string" },
+        "availability": { "type": "string" },
+        "agent_eligible": { "type": "boolean" },
+        "eligibility_reason": { "type": "string" },
+        "represented_passengers": { "$ref": "#/$defs/nullable_number" },
+        "represented_movements": { "$ref": "#/$defs/nullable_number" },
+        "aena_airport_activity": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/aena_airport_activity" }
+        }
+      }
+    }
+  }
+}

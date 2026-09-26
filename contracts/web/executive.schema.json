@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aeromexico-tracker/contracts/web/executive.schema.json",
+  "title": "Lectura ejecutiva · payload (v1)",
+  "description": "Describes the payload embedded in the published integrated HTML for the executive tab: the output of src.dashboard.executive_summary.build_executive_payload() as it is today. See docs/arquitectura/auditoria-arquitectura-20260926.md Fase 2 and contracts/web/README.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["metadata", "records", "views"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title", "default_period", "first_period", "last_period",
+        "quarter_count", "coverage_label", "data_as_of", "source_view",
+        "grain", "load_rask_correlation", "load_rask_interpretation",
+        "method_note"
+      ],
+      "properties": {
+        "title": { "type": "string" },
+        "default_period": { "type": "string" },
+        "first_period": { "type": "string" },
+        "last_period": { "type": "string" },
+        "quarter_count": { "type": "integer" },
+        "coverage_label": { "type": "string" },
+        "data_as_of": { "type": "string" },
+        "source_view": { "type": "string" },
+        "grain": { "type": "string" },
+        "load_rask_correlation": { "type": "number" },
+        "load_rask_interpretation": { "type": "string" },
+        "method_note": { "type": "string" }
+      }
+    },
+    "records": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/record" }
+    },
+    "views": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/view" }
+    }
+  },
+  "$defs": {
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "period_id", "period_label", "passengers", "ask_km",
+        "load_factor_reported", "rask_cents_per_km", "cask_cents_per_km",
+        "unit_margin_cents_per_km"
+      ],
+      "properties": {
+        "period_id": { "type": "string" },
+        "period_label": { "type": "string" },
+        "passengers": { "type": "number" },
+        "ask_km": { "type": "number" },
+        "load_factor_reported": { "type": "number" },
+        "rask_cents_per_km": { "type": "number" },
+        "cask_cents_per_km": { "type": "number" },
+        "unit_margin_cents_per_km": { "type": "number" }
+      }
+    },
+    "comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["available", "raw", "display", "direction"],
+      "properties": {
+        "available": { "type": "boolean" },
+        "raw": { "type": ["number", "null"] },
+        "display": { "type": "string" },
+        "direction": { "enum": ["up", "down", "flat", "na"] }
+      }
+    },
+    "kpi": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key", "label", "description", "accent", "format", "value",
+        "display_value", "qoq", "yoy"
+      ],
+      "properties": {
+        "key": { "type": "string" },
+        "label": { "type": "string" },
+        "description": { "type": "string" },
+        "accent": { "type": "string" },
+        "format": { "type": "string" },
+        "value": { "type": "number" },
+        "display_value": { "type": "string" },
+        "qoq": { "$ref": "#/$defs/comparison" },
+        "yoy": { "$ref": "#/$defs/comparison" }
+      }
+    },
+    "narrative": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["headline", "paragraphs"],
+      "properties": {
+        "headline": { "type": "string" },
+        "paragraphs": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "view": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "period_id", "period_label", "kpis", "conclusions", "narrative",
+        "margin_qoq", "margin_yoy"
+      ],
+      "properties": {
+        "period_id": { "type": "string" },
+        "period_label": { "type": "string" },
+        "kpis": { "type": "array", "items": { "$ref": "#/$defs/kpi" } },
+        "conclusions": { "type": "array", "items": { "type": "string" } },
+        "narrative": { "$ref": "#/$defs/narrative" },
+        "margin_qoq": { "$ref": "#/$defs/comparison" },
+        "margin_yoy": { "$ref": "#/$defs/comparison" }
+      }
+    }
+  }
+}
