@@ -276,6 +276,14 @@ def publish(
     already ran."""
 
     root = Path(root)
+    # Deliberately not `root` (that's the analysis ledger root, which tests
+    # and CI point at an unrelated tmp directory): the build-inputs check
+    # always looks at the actual code checkout, PATHS.root.
+    try:
+        manifest_mod.refuse_if_build_inputs_dirty()
+    except RuntimeError as error:
+        raise PublicationRefused(str(error)) from error
+
     records = load_records(record_paths)
     if not records:
         raise PublicationRefused("no --record given; refuse to publish an empty analysis manifest")

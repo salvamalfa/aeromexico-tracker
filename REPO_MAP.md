@@ -54,7 +54,8 @@ uv run python -m src.publish.verify site/
 ```
 
 **Streamlit y la ruta HTML heredada (retirados en P7):** hasta el commit
-`e645d3e` de `master`, el dashboard también se servía como un único archivo
+`3b9f1cc` de `master` (equivalente al `e645d3e` original tras la reescritura
+de historial de P8b; ver nota abajo), el dashboard también se servía como un único archivo
 HTML (`src/analysis_agent/stage18.py::consumer_html` + `reader_ui.py`,
 `src/dashboard/flights_html.py`/`executive_summary_html.py`, la app
 Streamlit multipágina en `src/dashboard/{app,pages,components,theme,
@@ -62,8 +63,13 @@ structure_*,validate_stage10,validate_stage11,build_stage11}.py` y su copia
 servida `static/aeromexico_tracker.html`). P7 (`docs/arquitectura/
 migracion-estado.md`, `docs/etapas/migracion-p7-retiro-streamlit-20260926.md`)
 retiró todo eso: `web/` es la única implementación de cada vista y `site/`
-la única ruta de publicación. `e645d3e` queda como punto de archivo; el
-dueño todavía debe borrar manualmente la app en share.streamlit.io.
+la única ruta de publicación. `3b9f1cc` queda como punto de archivo; el
+dueño todavía debe borrar manualmente la app en share.streamlit.io. La
+reescritura de historial de P8b (`git filter-repo --strip-blobs-with-ids`,
+ver `docs/arquitectura/migracion-estado.md`) quitó los blobs de más de 1 MB
+del árbol de `master`, incluidos HTML generados grandes; ese commit de
+archivo puede no incluir esas HTML viejas aunque el árbol y el hash del
+commit cambiaron a `3b9f1cc`.
 
 **Repo de datos privado:** insumos regenerables y privados
 (`data/bronze`, `data/silver`, warehouse, `analysis_runs/`) tienen respaldo en
@@ -94,32 +100,44 @@ autorización para publicarlos. Ver "Datos y documentación" en `README.md`.
 
 ### a) Mover o agregar un elemento de UI en Vuelos
 
+Nada de esto genera HTML: `src/dashboard/` y `src/web_export/` son
+constructores de payloads JSON; el único maquetado/interacción vive en
+`web/src/views/`.
+
 1. Lee `docs/etapas/vuelos-pasajeros-traspaso-20260913.md` (traspaso canónico de Vuelos).
 2. Edita el payload en `src/dashboard/flights.py` (datos) y/o la lista blanca en
    `src/dashboard/flights_html.py::integration_flight_payload` (qué campos
-   llegan al JSON exportado).
-3. Edita el maquetado/interacción en `web/src/views/flights/*.ts` (la única
+   llegan al JSON exportado vía `src/web_export/flights.py`).
+3. Si el campo es nuevo, agrégalo al contrato en `contracts/web/flights.schema.json`.
+4. Edita el maquetado/interacción en `web/src/views/flights/*.ts` (la única
    vista publicada desde P7).
-4. Regenera: `python -m src.dashboard.build_flights`, luego
+5. Regenera: `python -m src.dashboard.build_flights`, luego
    `uv run python -m src.web_export --out web/public/data/v1`.
-5. Corre `uv run pytest -q tests/test_flights_prototype.py tests/test_international_routes.py`
+6. Corre `uv run pytest -q tests/test_flights_prototype.py tests/test_international_routes.py`
    y, en `web/`, `npm run check && npm run test`.
-6. Si el cambio debe publicarse, pide instrucción explícita del dueño para
+7. Si el cambio debe publicarse, pide instrucción explícita del dueño para
    `python -m src.publish` (ver arriba).
 
 ### b) Agregar una columna a la tabla de rutas
+
+Igual que en (a): `src/dashboard/*_routes.py` y `flights_html.py` construyen
+un payload JSON, no HTML/CSS; el maquetado vivía ahí antes de P7 y hoy vive
+solo en `web/src/views/flights/table.ts`.
 
 1. Añade la columna en `src/dashboard/domestic_routes.py` y/o
    `src/dashboard/international_routes.py` (donde se construyen las filas).
 2. Agrégala a la lista blanca en
    `src/dashboard/flights_html.py::integration_flight_payload` — si se omite
    este paso, la columna se descarta en silencio sin error.
-3. Actualiza el maquetado/estilos en `flights_html.py` (HTML) y las reglas de
-   `src/dashboard/flights.py` si hay CSS embebido en el mismo módulo.
-4. Regenera: `python -m src.dashboard.build_flights`.
-5. Corre `uv run pytest -q tests/test_international_routes.py tests/test_aicm_international_slots.py`.
-6. Actualiza `docs/diccionario-datos.md` si la columna es nueva en el
-   contrato de datos.
+3. Añade la columna al contrato público en `contracts/web/flights.schema.json`
+   (si no está ahí, `uv run python -m src.web_export` la rechaza en la
+   validación de esquema) y a `docs/diccionario-datos.md`.
+4. Agrega la columna a la tabla renderizada en `web/src/views/flights/table.ts`
+   (o al módulo de `web/src/views/flights/` que corresponda a esa columna).
+5. Regenera: `python -m src.dashboard.build_flights`, luego
+   `uv run python -m src.web_export --out web/public/data/v1`.
+6. Corre `uv run pytest -q tests/test_international_routes.py tests/test_aicm_international_slots.py`
+   y, en `web/`, `npm run check && npm run test`.
 
 ### c) Agregar un nuevo mes de datos
 
@@ -128,10 +146,15 @@ Sigue `docs/etapas/aerodatabox-agosto-captura-20260925.md` paso a paso
 Vuelos → publicación). Ese documento es la referencia operativa; no la
 dupliques aquí.
 
-### d) Retomar la migración de arquitectura
+### d) Retomar la remediación de la auditoría
 
-1. Lee `docs/arquitectura/migracion-estado.md` — la tabla de paquetes indica
-   el primer no fusionado.
+La migración P0–P8 está cerrada (`fusionado`/`completado` son estados
+terminales, ver `docs/arquitectura/migracion-estado.md`) y no se retoma. El
+único trabajo abierto es la tabla "Remediación de la auditoría" (R1–R5) al
+final de ese mismo documento.
+
+1. Lee `docs/arquitectura/migracion-estado.md` — en la tabla de remediación,
+   el primer paquete marcado **pendiente** o **en curso** es el que sigue.
 2. Lee `docs/arquitectura/auditoria-arquitectura-20260926.md` §4–§5 para el
    alcance exacto de ese paquete.
 3. Si tiene rama/PR abierto, continúa desde su último commit; si no, créala

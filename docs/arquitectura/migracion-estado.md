@@ -3,10 +3,18 @@
 Fuente única de verdad del avance. Plan técnico:
 [`auditoria-arquitectura-20260926.md`](auditoria-arquitectura-20260926.md) §4–§5.
 
+**La migración P0–P8 está cerrada y completa (ver bitácora, 26-sep-2026,
+"Migración completa"). No debe resumirse ni reabrirse**: `fusionado` y
+`completado` son estados terminales. El único trabajo abierto es la tabla
+["Remediación de la auditoría"](#remediación-de-la-auditoría-26-sep-2026) al
+final de este documento (paquetes R1–R5).
+
 ## Cómo retomar
 
-1. `git fetch origin` y revisar la tabla: el primer paquete que no esté en
-   **fusionado** es el que sigue.
+1. `git fetch origin` y abrir la tabla "Remediación de la auditoría" (al final
+   de este documento): el primer paquete marcado **pendiente** o **en curso**
+   es el que sigue. Ignora la tabla de paquetes P0–P8: todos están en un
+   estado terminal (**fusionado** o **completado**) y ninguno se retoma.
 2. Si tiene PR abierto, leer el PR y su último commit; si está **en curso**,
    continuar desde el último commit de la rama.
 3. La sesión principal coordina; cada paquete lo ejecuta el subagente
@@ -63,7 +71,7 @@ se reinicia desde `master`.
 - 2026-09-26 · P6a fusionado (#53, CI `test` y `web` verdes). P6b iniciado.
 - 2026-09-26 · P6b listo: `src/publish` (gate con la misma verificación que stage18, manifiesto SHA-256, recibo), `verify.py` con 6 pruebas negativas, workflow `pages.yml`, `site/` generado del expediente aprobado 2T26 (34 archivos, ~3.7 MB), paridad con el publicado.
 - 2026-09-26 · P6b fusionado (#54, CI verde). P7 iniciado.
-- 2026-09-26 · P7 listo: ~28,000 líneas retiradas (app Streamlit, `static/`, `stage18`/`reader_ui`, HTML heredado y sus pruebas, 17 dependencias). Una sola implementación de cada vista (`web/`) y una sola ruta de publicación (`src/publish`). Commit de archivo con Streamlit: `e645d3e` (no se pudo subir etiqueta desde este entorno). CI pública 487 pruebas; locales 62 + 8 de navegador.
+- 2026-09-26 · P7 listo: ~28,000 líneas retiradas (app Streamlit, `static/`, `stage18`/`reader_ui`, HTML heredado y sus pruebas, 17 dependencias). Una sola implementación de cada vista (`web/`) y una sola ruta de publicación (`src/publish`). Commit de archivo con Streamlit: `e645d3e` (no se pudo subir etiqueta desde este entorno; tras P8b este commit ya no existe, ver "Mapeo de commits tras la reescritura" abajo). CI pública 487 pruebas; locales 62 + 8 de navegador.
 - 2026-09-26 · P7 fusionado (#55, CI verde). P8 dividido: P8a (árbol más ligero, PR normal) y P8b (reescritura del historial). P8a iniciado.
 - 2026-09-26 · Pages activado por el dueño; despliegue manual correcto; los 34 archivos servidos coinciden byte a byte con el manifiesto.
 - 2026-09-26 · P8a listo: todos los Gold se escriben con zstd (`write_parquet_atomic`), 43 tablas reescritas con contenido idéntico comprobado; `data/gold` 92.9 → 51 MB (linaje 61.8 → 32.1 MB). Corregida regresión del mapa (topología fijada, sin peticiones a cdn.plot.ly) y `site/` republicado con el mismo expediente aprobado.
@@ -79,8 +87,8 @@ migración completa). Cada paquete lo ejecuta el subagente `migrador`.
 | Paquete | Alcance | Estado |
 |---|---|---|
 | R1 | Barreras de publicación (A2, A3, A7, A10) | fusionado (#58) |
-| R2 | Exportación de análisis (A4–A6) | en curso |
-| R3 | Trazabilidad y documentación (A8, A11, A12) | pendiente |
+| R2 | Exportación de análisis (A4–A6) | fusionado (#59) |
+| R3 | Trazabilidad y documentación (A8, A11, A12) | en curso |
 | R4 | Dependencias web (A9) | pendiente |
 | R5 | Limpieza histórica (opcional, decisión del dueño) | pendiente |
 
@@ -98,3 +106,29 @@ A1 (protección de rama) es una acción del dueño, no de un agente.
   `out_dir/analysis` y lo intercambia atómicamente al final, así que una
   revocación (o un manifiesto vacío) no deja archivos de periodos previos.
   Pruebas nuevas en `tests/test_web_export_analysis_isolation.py`.
+- 26-sep-2026: R2 fusionado (#59). R3 iniciado (rama
+  `claude/upbeat-brahmagupta-g1orp2`): A11, la "Migración completa" P0–P8 se
+  marca cerrada arriba (estados `fusionado`/`completado` terminales); A8, el
+  commit de archivo de Streamlit se corrige de `e645d3e` (no sobrevivió a la
+  reescritura de P8b) a su equivalente `3b9f1cc` tras la reescritura; A12,
+  README y REPO_MAP.md se corrigen para reflejar el conteo real de tablas
+  Gold y la ruta de publicación vigente (`src.publish` → `site/` →
+  `pages.yml`).
+
+### Mapeo de commits tras la reescritura (P8b)
+
+La reescritura de historial de P8b (`git filter-repo
+--strip-blobs-with-ids`) cambió el hash de todo el historial de `master` al
+quitar blobs > 1 MB. Correspondencia conocida:
+
+- `e645d3e` (commit de archivo de P7, app Streamlit y ruta HTML heredada,
+  ver bitácora de P7 arriba) → `3b9f1ccb843ec2c8ee5c98c6949b77976a1e7bcf`
+  (`3b9f1cc`). Mismo árbol de código relevante (`streamlit_app.py`,
+  `src/dashboard/app.py` verificados presentes), pero la reescritura pudo
+  haber quitado HTML generado grande de ese árbol; no asumir que las HTML
+  viejas siguen accesibles ahí.
+- El `code_commit` del manifiesto publicado vigente
+  (`site/publication_manifest.json`, `28935219de5c586d39ddd6f3e500dcb33f3f9b0e`)
+  es anterior a la reescritura de P8b y no corresponde a un commit de
+  `master` post-reescritura. Esto se corrige en la próxima publicación
+  autorizada por el dueño (no se edita el manifiesto para forzarlo).
