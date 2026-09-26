@@ -7,7 +7,7 @@ as — a directory built from `web/` plus the exported v1 payloads. See
 ## Responsabilidad
 
 - `gate.py`: given one or more `analysis_runs/drafts/<period>/<version>.json`
-  records, verifies each through the exact functions `stage18.publish` used
+  records, verifies each through
   (`src.analysis_agent.lifecycle.consumer_payload`/`verified_inputs`, under
   the ledger's writer lock) and refuses (raises `PublicationRefused`, CLI
   exit 1) if any record is not exactly, currently approved — nothing is
@@ -40,8 +40,7 @@ as — a directory built from `web/` plus the exported v1 payloads. See
 - `site/` itself is *not* gitignored: an approved run's output is committed
   like any other file, then deployed as-is by CI (`.github/workflows/
   pages.yml` never rebuilds it, never touches `analysis_runs/`).
-- The `intent`/`published` receipt (same style as `stage18`'s under
-  `analysis_runs/lifecycle/publications/`) goes to
+- The `intent`/`published` receipt goes to
   `analysis_runs/publications/` (local, gitignored — see `.gitignore`'s
   `analysis_runs/` rule) and hashes the *manifest*, not the raw `site/`
   bytes, since the manifest already lists every file's own hash.

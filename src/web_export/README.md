@@ -36,7 +36,7 @@ de recibirlos embebidos en el HTML.
   vez de fallar todo el export.
 
 **No publica nada.** No toca las aprobaciones del Analysis Agent. `web/` es
-la única implementación de cada vista desde P7; `src/publish/gate.py` es
+la única implementación de cada vista; `src/publish/gate.py` es
 quien compila `web/` y ensambla `site/` a partir de lo que este paquete
 exporta.
 

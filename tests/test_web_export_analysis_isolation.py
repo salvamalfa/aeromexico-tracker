@@ -1,4 +1,4 @@
-"""R2 (A4/A5/A6): src.web_export.analysis reads an alternate ``root``'s own
+"""src.web_export.analysis reads an alternate ``root``'s own
 drafts/ledger, never leaves stale ``analysis/<period_id>.json`` files behind
 after a revocation, and refuses an ambiguous multi-version manifest instead
 of guessing. src.publish.gate rejects two --record for the same period_id

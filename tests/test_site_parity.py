@@ -1,18 +1,10 @@
-"""Checks that the already-assembled, gate-signed ``site/`` (P6b) still
-matches its own sources of truth.
-
-P7 retired ``static/aeromexico_tracker.html`` (the Streamlit-served copy of
-the legacy integrated HTML) and, with it, the whole "compare two rendered
-pages" style this file and ``tests/test_web_page_parity.py``/
-``tests/test_web_flights_parity.py`` used before -- there is no second page
-left to compare against. This now checks ``site/`` against its own inputs
-instead:
+"""Checks that the already-assembled, gate-signed ``site/`` still
+matches its own sources of truth (its inputs, not a second rendered page):
 
 - ``test_site_flights_and_executive_data_match_a_fresh_export`` (no
   browser): the Vuelos/executive data already committed under
   ``site/data/v1/`` equals a fresh ``src.web_export`` run over the current
-  warehouse -- the snapshot-equality check the P7 package asked for in
-  place of the old cross-page comparison.
+  warehouse (snapshot equality).
 - The Playwright tests below render ``site/`` alone and check what it shows
   against the real payloads directly (``executive_payload``/the local
   ledger's approved analysis), not against a second render.

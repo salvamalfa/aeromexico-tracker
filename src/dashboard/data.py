@@ -1,4 +1,4 @@
-"""Offline-only dashboard data access (warehouse queries, no Streamlit)."""
+"""Offline-only dashboard data access (warehouse queries)."""
 
 from __future__ import annotations
 

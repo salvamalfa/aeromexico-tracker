@@ -4,7 +4,7 @@ See ``README.md`` in this package. Nothing here
 changes ``src/dashboard/`` or the published HTML; it reads the same payloads
 those generators already build and writes a validated, privacy-checked copy
 split by period. Publication itself is out of scope for this package
-(P3/P6): running this CLI never touches ``stage18`` or Analysis Agent
+(see ``src/publish``): running this CLI never touches Analysis Agent
 approvals.
 """
 

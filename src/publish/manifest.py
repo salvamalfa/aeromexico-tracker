@@ -4,9 +4,8 @@ The manifest is the signed object for ``site/``: the
 code commit, each ``contracts/web/`` file's own SHA-256 (its "version"),
 every other file under ``site/`` with its SHA-256 and byte size, and the
 analysis-manifest entries (``period_id``, ``version``, ``content_hash``,
-``evidence_fingerprint``, ``approval_event``, ``audit_hash``) the currently
-published page also carries (``stage18.consumer_html``'s
-``#analysis-manifest``). See ``src/publish/README.md``.
+``evidence_fingerprint``, ``approval_event``, ``audit_hash``) of the published
+analysis. See ``src/publish/README.md``.
 """
 
 from __future__ import annotations

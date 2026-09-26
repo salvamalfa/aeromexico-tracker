@@ -16,12 +16,10 @@ here build data payloads, never HTML.
   de ruta por red), `build_flights.py` (rebuilds the payload and its
   candidate flight evidence after a source or Vuelos change).
 - **Datos y calidad, sin UI:** `data.py` (consultas al warehouse en memoria,
-  DuckDB sobre Parquet — sin Streamlit, ver `check_manual_freshness.py`
-  usado por `.github/workflows/refresh.yml`), `validate_stage8.py` (los
+  DuckDB sobre Parquet; `check_manual_freshness.py` lo usa `.github/workflows/refresh.yml`), `validate_stage8.py` (los
   controles de datos del DAG en `src/pipeline/registry.py`: contratos,
   interpretaciones de métricas, anclas trimestrales, incertidumbre del
-  forecast, salud de datos, frescura AFAC — sin los controles Streamlit
-  `AppTest`/tema/componentes que existían antes de P7), `prepare.py` (paso
+  forecast, salud de datos, frescura AFAC), `prepare.py` (paso
   `dashboard.prepare` del pipeline).
 
 Editar el generador, nunca un HTML producido. Ver `REPO_MAP.md` para el flujo

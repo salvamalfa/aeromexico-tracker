@@ -1,8 +1,8 @@
 """src.publish.gate's verification step against the real local ledger, plus
-a pure unit test of the A7 pre-swap re-verification (no local data needed).
+a pure unit test of the pre-swap re-verification (no local data needed).
 
 Most tests here are marked local_data (individually, not module-wide, since
-the A7 race test below needs none of it): they need analysis_runs/ (the
+the race test below needs none of it): they need analysis_runs/ (the
 local approval ledger) and the real warehouse (src/dashboard/ generators
 export_data calls into). None of them run `npm ci && npm run build` (see
 tests/test_publish_manifest.py for pure manifest coverage and
@@ -10,8 +10,7 @@ tests/test_site_parity.py for a full, built-site parity check against the
 currently committed site/) — this file is about the refusal paths: a
 record that fails verification must produce PublicationRefused and write
 nothing, whether caught by the first check (task 1(a)) or, after
-export/build already ran, by the second one immediately before the swap
-(task A7).
+export/build already ran, by the second one immediately before the swap.
 """
 
 from __future__ import annotations
@@ -97,7 +96,7 @@ def test_export_data_writes_only_the_given_records_analysis_periods(tmp_path: Pa
 
 
 # ---------------------------------------------------------------------------
-# A7: publish() must re-verify under the ledger lock immediately before the
+# publish() must re-verify under the ledger lock immediately before the
 # swap, and hold the lock through it -- a revocation landing after
 # export_data/build_web (both run with the lock released) but before the
 # swap must abort with nothing written to out_dir. Pure unit test: every
@@ -142,6 +141,8 @@ def test_publish_reverifies_under_the_lock_before_the_swap_and_aborts_on_revocat
     monkeypatch.setattr(gate, "load_records", lambda paths: [fake_record])
     monkeypatch.setattr(gate, "export_data", lambda entries, out_dir: None)
     monkeypatch.setattr(gate, "build_web", lambda web_dir: dist_dir)
+    # The dirty-tree guard is covered in test_publish_manifest.py; isolate it here.
+    monkeypatch.setattr(gate.manifest_mod, "refuse_if_build_inputs_dirty", lambda *a, **k: None)
 
     with pytest.raises(gate.PublicationRefused, match="just before publish"):
         gate.publish(
@@ -178,6 +179,8 @@ def test_publish_aborts_when_the_approval_changes_during_the_build(
     monkeypatch.setattr(gate, "load_records", lambda paths: [fake_record])
     monkeypatch.setattr(gate, "export_data", lambda entries, out_dir: None)
     monkeypatch.setattr(gate, "build_web", lambda web_dir: dist_dir)
+    # The dirty-tree guard is covered in test_publish_manifest.py; isolate it here.
+    monkeypatch.setattr(gate.manifest_mod, "refuse_if_build_inputs_dirty", lambda *a, **k: None)
 
     with pytest.raises(gate.PublicationRefused, match="approval changed"):
         gate.publish(

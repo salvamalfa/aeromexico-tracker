@@ -55,9 +55,7 @@ jobs:
         continue-on-error: true
         run: uv run pytest
 
-      # There is no `validate_stage10` (data-structure page) to run: that
-      # page was retired with the Streamlit app. Stage 8's
-      # own data-only checks (`src.dashboard.validate_stage8`) are not run by
+      # Stage 8's data-only checks (`src.dashboard.validate_stage8`) are not run by
       # anything else, so this workflow runs them explicitly, fail-closed,
       # against the Gold this run is about to commit: it needs only the
       # public, versioned `data/gold/*.parquet` (via

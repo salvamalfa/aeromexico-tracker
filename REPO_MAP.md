@@ -40,7 +40,7 @@ compilar `web/` y ensamblar+firmar `site/` (manifiesto SHA-256, recibo
 `.published.json`). Nunca lo ejecutes de verdad ni cambies un registro de
 aprobación salvo instrucción explícita del dueño.
 
-**Publicación en GitHub Pages (`site/`, P6b):** `site/` es el sitio ya
+**Publicación en GitHub Pages (`site/`):** `site/` es el sitio ya
 ensamblado y firmado que `.github/workflows/pages.yml` despliega tal cual —
 en `master`, sin secretos ni reconstrucción de datos — a
 <https://salvamalfa.github.io/aeromexico-tracker/>. Publicar una nueva
@@ -91,7 +91,7 @@ constructores de payloads JSON; el único maquetado/interacción vive en
    llegan al JSON exportado vía `src/web_export/flights.py`).
 3. Si el campo es nuevo, agrégalo al contrato en `contracts/web/flights.schema.json`.
 4. Edita el maquetado/interacción en `web/src/views/flights/*.ts` (la única
-   vista publicada desde P7).
+   implementación de la vista).
 5. Regenera: `python -m src.dashboard.build_flights`, luego
    `uv run python -m src.web_export --out web/public/data/v1`.
 6. Corre `uv run pytest -q tests/test_flights_prototype.py tests/test_international_routes.py`
@@ -102,8 +102,7 @@ constructores de payloads JSON; el único maquetado/interacción vive en
 ### b) Agregar una columna a la tabla de rutas
 
 Igual que en (a): `src/dashboard/*_routes.py` y `flights_html.py` construyen
-un payload JSON, no HTML/CSS; el maquetado vivía ahí antes de P7 y hoy vive
-solo en `web/src/views/flights/table.ts`.
+un payload JSON, no HTML/CSS; el maquetado vive solo en `web/src/views/flights/table.ts`.
 
 1. Añade la columna en `src/dashboard/domestic_routes.py` y/o
    `src/dashboard/international_routes.py` (donde se construyen las filas).
@@ -132,6 +131,5 @@ dupliques aquí.
 El trabajo abierto vive en `ROADMAP.md` ("Ahora"/"Siguiente"). Un paquete de
 varios pasos delegado por la sesión coordinadora lo ejecuta el subagente
 `implementador` (`.claude/agents/implementador.md`), en su propia rama,
-commiteando y subiendo tras cada tarea. La migración a Vite + TypeScript /
-GitHub Pages (P0–P8) y su remediación posterior (R1–R5) ya cerraron; su
-bitácora completa vive en `docs/archivo/migracion-2026-09/` y no se retoma.
+commiteando y subiendo tras cada tarea. La historia de proyectos cerrados vive
+en `docs/archivo/` y no se retoma.

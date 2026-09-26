@@ -1,5 +1,5 @@
 """CI-runnable smoke test for the full web/ page: builds it with Vite
-(``web_dist_dir`` in tests/conftest.py, P5) and serves web/dist/ with
+(``web_dist_dir`` in tests/conftest.py) and serves web/dist/ with
 small, synthetic public fixtures (no warehouse, no analysis_runs/), then
 checks every tab — Lectura ejecutiva, Economía unitaria, Vuelos — renders
 with no console errors. Marked ``browser`` only (not ``local_data``), same

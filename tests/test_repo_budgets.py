@@ -1,5 +1,5 @@
-"""Repo hygiene budget: no Python module grows past its size limit, and (as
-of P4a, converted to TypeScript in P5) no web/ JS/TS module either.
+"""Repo hygiene budget: no Python module grows past its size limit, and no
+web/ JS/TS module either.
 
 Modulo Python <= 600 lineas, modulo JS/TS (web/src/**/*.{js,ts}) <= 400 lineas, con
 una lista explicita de excepciones vigentes que solo puede reducirse, nunca
@@ -111,7 +111,7 @@ def _tracked_js_files() -> list[Path]:
             # them — see web/scripts/gen-types.mjs.
             if "generated" in relative.parts:
                 continue
-            # *.test.ts files (vitest, P5) are test code, not view modules;
+            # *.test.ts files (vitest) are test code, not view modules;
             # excluded the same way tests/test_*.py are excluded from the
             # Python budget above.
             if relative.name.endswith(".test.ts"):

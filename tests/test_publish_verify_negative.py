@@ -1,5 +1,4 @@
-"""Negative coverage for the hardened ``verify_site()`` checks (package R1,
-task A2): each mutation below must turn the real, committed ``site/`` (copied
+"""Negative coverage for the hardened ``verify_site()`` checks: each mutation below must turn the real, committed ``site/`` (copied
 to ``tmp_path`` so nothing here ever writes to the real tree) from passing
 into failing. See ``src/publish/verify.py``.
 

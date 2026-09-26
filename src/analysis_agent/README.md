@@ -17,8 +17,8 @@ against those same functions before exporting or publishing anything.
   `stage17_html.py`).
 - **Ledger de aprobación** (`lifecycle.py`): registro local de solo apéndice
   en `analysis_runs/` (local, no versionado) que autoriza qué versión de un
-  análisis puede publicarse — `consumer_payload(record)` is the fail-closed
-  handoff both the retired `stage18` and today's `src/publish/gate.py` use.
+  análisis puede publicarse — `consumer_payload(record)` es el paso fail-closed
+  que usa `src/publish/gate.py`.
 
 No cambies un registro de `lifecycle.py` sin una instrucción explícita del
 dueño (ver `CLAUDE.md`, `AGENTS.md`). Publicar de verdad es

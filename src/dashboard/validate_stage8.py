@@ -1,10 +1,8 @@
 """Executable Definition of Done for the Stage 8 dashboard data (no UI).
 
-P7 retired the Streamlit multipage app and its `AppTest`-driven checks (page
-rendering, timings, WCAG contrast on `theme.py`, component source greps).
-This module keeps only the checks that verify Stage 8 *data* is correct and
-complete, independent of any renderer -- the same data `web/` and
-`src/web_export` also depend on.
+Checks that the Stage 8 dashboard *data* is correct and complete,
+independent of any renderer -- the same data `web/` and `src/web_export`
+depend on.
 """
 
 from __future__ import annotations

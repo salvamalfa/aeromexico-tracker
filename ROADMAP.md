@@ -39,9 +39,7 @@ Propuesta — el dueño decide prioridades.
 
 ## Fuera de alcance
 
-- Reabrir la migración a Vite + TypeScript / GitHub Pages (P0–P8): está
-  cerrada; su bitácora vive en `docs/archivo/migracion-2026-09/`.
-- Reintroducir Streamlit o cualquier consumidor HTML de una sola página:
-  `web/` es la única vista soportada.
+- Otra implementación del dashboard fuera de `web/`: es la única vista
+  soportada.
 - Reemplazar DuckDB/Parquet por un warehouse externo (BigQuery, dbt): ver
   `docs/decisiones/decision-007-warehouse-bigquery.md`.
