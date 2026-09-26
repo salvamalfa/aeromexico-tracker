@@ -77,7 +77,6 @@ def create_clean_checkout(
                     ".git",
                     ".venv",
                     ".env",
-                    ".streamlit",
                     "data",
                     "logs",
                     "models",
