@@ -68,7 +68,7 @@ def test_deterministic_writer_is_stable_across_two_runs(tmp_path: Path) -> None:
 def test_export_flights_writes_schema_valid_split_files(tmp_path: Path) -> None:
     payload = _build_synthetic_raw_flight_payload()
     written = export_flights(payload, tmp_path, skip_input_check=True)
-    names = {str(path.relative_to(tmp_path)) for path in written}
+    names = {path.relative_to(tmp_path).as_posix() for path in written}
     assert "flights/quarters.json" in names
     assert any(name.startswith("flights/international/") for name in names)
 
