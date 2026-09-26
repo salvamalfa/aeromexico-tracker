@@ -15,3 +15,7 @@ suficientes para inspección y cambios reproducibles dentro de sus límites.
 
 No subas claves ni respuestas crudas de proveedores. No publiques, actives
 evidencia o cambies aprobaciones humanas sin una instrucción explícita.
+
+Si hay una migración de arquitectura en curso, lee
+[`docs/arquitectura/migracion-estado.md`](docs/arquitectura/migracion-estado.md)
+y continúa el primer paquete no fusionado con el subagente `migrador`.

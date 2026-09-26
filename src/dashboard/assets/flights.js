@@ -859,7 +859,7 @@
   // Plotly: ese grupo es el mundo entero a escala, de modo que al acercarse a
   // una region crecia a miles de pixeles y arrastraba consigo el panel.
   function alignRouteDetailToGeo() {
-    const panel = $("airport-tooltip");
+    const panel = $("route-detail-column") || $("airport-tooltip");
     const map = $("route-flow-map");
     if (!panel || !map) return;
     if (window.matchMedia("(max-width: 900px)").matches) {
