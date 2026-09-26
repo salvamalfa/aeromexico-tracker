@@ -23,7 +23,6 @@ import yaml
 
 from src.config import PATHS
 
-
 PRIVACY_PATH = PATHS.root / "contracts" / "web" / "privacy.yaml"
 
 

@@ -36,3 +36,8 @@ models/*/model.pkl
 
 # Authoritative local analysis runs; never published as dashboard data.
 analysis_runs/
+
+# src/web_export output (P3, migración de arquitectura). Split JSON is
+# regenerated from data/warehouse.duckdb; it is versioned only inside the
+# approved site/ build in P6, not as loose files here.
+web/public/data/

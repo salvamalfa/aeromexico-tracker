@@ -8,15 +8,13 @@ HTML embeds *today* (v1); they are not aspirational.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from typing import Any
 
-from jsonschema import Draft202012Validator
 import pytest
+from jsonschema import Draft202012Validator
 
 from src.config import PATHS
 from src.dashboard.flights_html import integration_flight_payload
-
 
 CONTRACTS_DIR = PATHS.root / "contracts" / "web"
 FIXTURES_DIR = PATHS.root / "tests" / "fixtures" / "web"
