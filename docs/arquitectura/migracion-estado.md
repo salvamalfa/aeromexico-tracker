@@ -34,8 +34,8 @@ se reinicia desde `master`.
 | P2 | Higiene y mapa del repo (fase 1) | fusionado | #48 | — |
 | P3 | Contratos de datos y privacidad (fase 2) | fusionado | #49 | — |
 | P4a | Front-end en archivos reales: vista Vuelos en `web/` con ES modules y paridad (fase 3) | fusionado | #50 | — |
-| P4b | Front-end en archivos reales: lectura ejecutiva y demás pestañas (fase 3) | PR abierto | #51 | revisar CI y fusionar |
-| P5 | Vite + TypeScript (fase 4) | pendiente | | |
+| P4b | Front-end en archivos reales: lectura ejecutiva y demás pestañas (fase 3) | fusionado | #51 | — |
+| P5 | Vite + TypeScript (fase 4) | en curso | | subagente migrador trabajando |
 | P6 | Gate de publicación sobre `site/` y GitHub Pages (fase 5) | pendiente | | |
 | P7 | Retiro de Streamlit | pendiente | | |
 | P8 | Peso de git y reescritura de historia (fase 6) | pendiente | | |
@@ -54,3 +54,4 @@ se reinicia desde `master`.
 - 2026-09-26 · P4a fusionado (#50, CI verde). P4b iniciado.
 - 2026-09-26 · P4b listo: página completa en `web/` (pestañas, lectura ejecutiva, economía, Vuelos), exportador de análisis de solo lectura vía `consumer_payload`. Paridad 100 % en texto, KPIs y gráficas, salvo las citas en superíndice.
   **Pendiente obligatorio para P6:** las citas (`<sup><a class="source-note">`) salen de `verified_inputs()` y aún no se exportan; P6 debe exportarlas (solo metadatos de fuentes públicas autorizadas) antes del corte a Pages para no perderlas.
+- 2026-09-26 · P4b fusionado (#51, CI verde). P5 iniciado.
