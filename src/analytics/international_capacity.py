@@ -246,7 +246,7 @@ def main(argv: list[str] | None = None) -> int:
 
     frame, reports = derive(periods, silver_dir=args.silver, reference_dir=args.reference)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    frame.to_parquet(args.output, index=False)
+    frame.to_parquet(args.output, index=False, compression="zstd")
 
     own = frame[frame["carrier_key"].isin(SUPPORTED_CARRIERS)]
     print(
