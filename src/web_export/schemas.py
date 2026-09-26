@@ -23,6 +23,7 @@ def _load(name: str) -> dict[str, Any]:
 
 FLIGHTS_SCHEMA = _load("flights.schema.json")
 EXECUTIVE_SCHEMA = _load("executive.schema.json")
+ANALYSIS_SCHEMA = _load("analysis.schema.json")
 
 QUARTERS_FILE_SCHEMA: dict[str, Any] = {
     "$defs": FLIGHTS_SCHEMA["$defs"],

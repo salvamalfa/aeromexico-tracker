@@ -14,9 +14,9 @@ comunes. Ver también `CLAUDE.md`, `AGENTS.md` y, para la migración en curso,
 | Analítica | `src/analytics/` | Estudios y modelos precomputados sobre gold (forecast, estimación ruta×aerolínea, etc.). |
 | Dashboard | `src/dashboard/` | Payloads y generadores HTML: lectura ejecutiva (`executive_summary*.py`), Vuelos (`flights.py`, `flights_html.py`, `domestic_routes.py`, `international_routes.py`), la app Streamlit heredada (`app.py`, `pages/`, `components/`, `data.py`, `navigation.py`). |
 | Analysis Agent | `src/analysis_agent/` | Evidencia, cálculo, revisión y **publicación controlada** del análisis narrativo por trimestre (etapas 12–18). |
-| Contratos web | `contracts/web/` | Esquemas JSON (draft 2020-12) del payload **v1** tal cual se embebe hoy en el HTML publicado (Vuelos y ejecutivo) + `privacy.yaml` (frontera pública/privada). Fuente de verdad; no aspiracional. |
-| Exportadores web | `src/web_export/` | Divide esos mismos payloads en JSON por periodo bajo `web/public/data/v1/` (local, no versionado), validados contra `contracts/web/` y `config/web_inputs.yaml` antes de escribir. No publica ni toca `stage18`; el HTML publicado sigue viniendo de ahí sin cambios (fase 2 de la migración). `flights/quarters.json` incluye además `available_periods` (P4a): el manifiesto de qué archivos por periodo existen, para que `web/` sepa qué pedir con `fetch()` sin listar el directorio. |
-| Front-end en archivos reales | `web/` | Vista de Vuelos como HTML/CSS/JS reales (ES modules, `web/src/views/flights/*.js`, ≤ 400 líneas cada uno) que consume `web/public/data/v1/` con `fetch()`. Una sola implementación del panel de Vuelos, la misma que muestra el HTML integrado publicado (P4a). El HTML/CSS/JS publicados (`static/`, `src/dashboard/assets/flights.js`, `flights_html.py`) no cambian; ver `web/README.md`. La lectura ejecutiva y las demás pestañas llegan en P4b; Vite + TypeScript en P5. |
+| Contratos web | `contracts/web/` | Esquemas JSON (draft 2020-12) del payload **v1** tal cual se embebe hoy en el HTML publicado (Vuelos, ejecutivo y análisis) + `privacy.yaml` (frontera pública/privada). Fuente de verdad; no aspiracional. |
+| Exportadores web | `src/web_export/` | Divide esos mismos payloads en JSON por periodo bajo `web/public/data/v1/` (local, no versionado), validados contra `contracts/web/` y `config/web_inputs.yaml` antes de escribir. No publica ni toca `stage18`; el HTML publicado sigue viniendo de ahí sin cambios (fase 2 de la migración). `flights/quarters.json` incluye además `available_periods` (P4a): el manifiesto de qué archivos por periodo existen, para que `web/` sepa qué pedir con `fetch()` sin listar el directorio. `analysis.py` (P4b) exporta, por periodo listado en el `#analysis-manifest` del HTML publicado, exactamente lo que `analysis_agent.lifecycle.consumer_payload(record)` autoriza — lectura del flujo de aprobación existente, nunca escritura; falla si falta el expediente local salvo `--allow-missing-analysis` (dev). |
+| Front-end en archivos reales | `web/` | La página completa como HTML/CSS/JS reales (ES modules, `web/src/views/{flights,executive,economy,shell}/*.js`, ≤ 400 líneas cada uno) que consume `web/public/data/v1/` con `fetch()`: cabecera + selector de trimestre compartidos, y las tres pestañas del HTML integrado publicado (Lectura ejecutiva, Economía unitaria, Vuelos — P4a trajo Vuelos, P4b las otras dos). Una sola implementación de cada vista, la misma que muestra el HTML integrado publicado. El HTML/CSS/JS publicados (`static/`, `src/dashboard/assets/*.js`, `*_html.py`) no cambian; ver `web/README.md`. Vite + TypeScript en P5. |
 | Pruebas | `tests/` | `uv run pytest`; marcadores `local_data` (necesita `data/bronze|silver`/warehouse local) y `browser` (Playwright) se excluyen en CI. |
 
 **Gold tables:** 43 Parquet en `data/gold/` versionados en git (ver
@@ -47,14 +47,20 @@ cambies un registro de aprobación salvo instrucción explícita del dueño.
 sirve con `st.iframe`. Streamlit se retira en P7; hasta entonces ambos
 archivos deben coincidir.
 
-**Segundo duplicado, temporal (P4a→P5):** la lógica de Vuelos vive por
-ahora tanto en `src/dashboard/assets/flights.js` (lo que generan
-`flights_html.py`/`stage18` para el HTML publicado) como, línea por línea,
-en los módulos ES de `web/src/views/flights/*.js` (la vista independiente
-de `web/`). `tests/test_web_flights_parity.py` prueba que ambas coinciden
-hoy; un cambio de comportamiento en Vuelos debe aplicarse en los dos
-lugares hasta que P5/una fase posterior retire `flights.js` en favor de
-`web/` como única implementación (ver auditoría §4.2 punto 4).
+**Segundo duplicado, temporal (P4→P5):** la lógica de las tres pestañas
+vive por ahora tanto en `src/dashboard/assets/{flights,executive_summary}.js`
++ `src/analysis_agent/reader_ui.py` (lo que generan `flights_html.py`,
+`executive_summary_html.py` y `stage18`/`reader_ui` para el HTML publicado)
+como, línea por línea, en los módulos ES de `web/src/views/{flights,
+executive,economy,shell}/*.js` (la página completa de `web/`).
+`tests/test_web_flights_parity.py` y `tests/test_web_page_parity.py`
+prueban que ambas coinciden hoy — con una excepción documentada y aceptada:
+la cita en superíndice que el HTML publicado agrega a algunas cifras (dato
+de evidencia privado que `consumer_payload()` no exporta, ver
+`src/web_export/analysis.py`) no existe en `web/`. Un cambio de
+comportamiento debe aplicarse en los dos lugares hasta que P5/una fase
+posterior retire los generadores Python en favor de `web/` como única
+implementación (ver auditoría §4.2 punto 4).
 
 **Repo de datos privado:** insumos regenerables y privados
 (`data/bronze`, `data/silver`, warehouse, `analysis_runs/`) tienen respaldo en
@@ -72,8 +78,8 @@ autorización para publicarlos. Ver "Datos y documentación" en `README.md`.
 | `python -m src.dashboard.build_flights` | Reconstruye el payload de Vuelos tras cambiar fuentes o Vuelos, antes de regenerar el integrado. |
 | `python -m src.analysis_agent.stage18 --record … --output …` | Publica el HTML integrado. **Requiere instrucción explícita del dueño**; no lo ejecutes por iniciativa propia. |
 | `just dashboard` | Streamlit local (heredado; se retira en P7). |
-| `uv run python -m src.web_export --out web/public/data/v1` | Exporta los payloads v1 divididos por periodo (local, no publica nada; falla con mensaje claro si falta un insumo Gold requerido en `config/web_inputs.yaml`). |
-| `uv run python -m src.web_export --out web/public/data/v1 && uv run python web/serve.py` | Exporta y sirve `web/` localmente (equivalente a `python -m http.server -d web`); abre `http://127.0.0.1:8000/` para ver la vista de Vuelos. |
+| `uv run python -m src.web_export --out web/public/data/v1` | Exporta los payloads v1 divididos por periodo (local, no publica nada; falla con mensaje claro si falta un insumo Gold o el expediente de análisis, salvo `--allow-missing-analysis`). |
+| `uv run python -m src.web_export --out web/public/data/v1 && uv run python web/serve.py` | Exporta y sirve `web/` localmente (equivalente a `python -m http.server -d web`); abre `http://127.0.0.1:8000/` para ver la página completa (Lectura ejecutiva / Economía unitaria / Vuelos). |
 
 ## Recetas
 

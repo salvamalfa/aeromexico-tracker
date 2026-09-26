@@ -1,0 +1,32 @@
+/* Lectura ejecutiva (panel-reading): narrative card + approved-analysis
+ * summary/dialog. Ported from src/dashboard/assets/executive_summary.css
+ * (.narrative-card, .analysis-placeholder) and the inline STYLE/analysis
+ * rules src/analysis_agent/stage18.py and reader_ui.py add to the
+ * published page. Design tokens live in web/src/styles/base.css. */
+
+.narrative-card { display: block; margin-top: 16px; padding: 21px 23px; background: #fff; border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+.narrative-card h2 { margin: 0 0 12px; color: var(--brand-blue-dark); font-size: 15px; line-height: 1.25; letter-spacing: .01em; }
+.narrative-card h3 { font-size: 21px; margin: 0 0 12px; color: var(--brand-blue-dark); }
+.analysis-placeholder { margin: 0; color: #354258; font-size: 12px; line-height: 1.55; }
+
+.analysis-summary { padding-left: 22px; font-size: 13px; line-height: 1.65; }
+.analysis-summary li { margin: 16px 0; }
+.analysis-context { font-size: 12px; line-height: 1.7; border-left: 3px solid #a8bbd0; padding: 12px 16px; margin-top: 20px; background: #fafbfc; }
+.analysis-actions { display: flex; flex-wrap: wrap; gap: 24px; margin-top: 20px; }
+.analysis-actions button { background: none; border: 0; color: #073576; font: inherit; cursor: pointer; text-decoration: underline; padding: 6px 0; }
+.analysis-actions button:focus-visible { outline: 3px solid #b98505; outline-offset: 3px; }
+
+.analysis-dialog { background: #fff; color: #092654; border: 1px solid #c5d4e7; border-radius: 16px; padding: 0; width: min(940px, calc(100% - 24px)); max-height: 88dvh; }
+.analysis-dialog::backdrop { background: #062046aa; }
+.analysis-dialog .bar { position: sticky; top: 0; background: #fff; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 22px; border-bottom: 1px solid #d7e2f0; }
+.analysis-dialog .bar h2 { font-size: 20px; margin: 0; }
+.analysis-dialog .close { background: white; border: 1px solid #b4cae5; border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+.analysis-dialog .close:focus-visible { outline: 3px solid #b98505; outline-offset: 3px; }
+.analysis-dialog .modal-content { padding: 16px 24px; line-height: 1.75; }
+.analysis-dialog .modal-content p { font-size: 13px; line-height: 1.7; margin: 12px 0 18px; }
+.analysis-dialog .modal-content h3 { font-size: 17px; line-height: 1.4; margin: 24px 0 10px; }
+.analysis-dialog .modal-content strong { font-weight: 700; color: #082a56; }
+
+.source-note { color: #2463a4; text-decoration: none; padding: 0 3px; font-size: 10px; }
+.source-note:hover { text-decoration: underline; }
+.source-note:focus-visible { outline: 2px solid #b98505; outline-offset: 3px; }
