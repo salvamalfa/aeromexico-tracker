@@ -192,6 +192,17 @@ parity is 100%, citations included.
     for that period — see `src/web_export/analysis.py`.
 - **Salidas:** none; this is a read-only page.
 
+## Publicación (P6b)
+
+Esta página, ya compilada con Vite, es exactamente lo que
+`.github/workflows/pages.yml` despliega en
+<https://salvamalfa.github.io/aeromexico-tracker/> — `web/dist/` más
+`data/v1/` (Vite copia `web/public/` a la raíz de `dist/`), ensamblado y
+firmado como `site/` por `src/publish/gate.py`. Ver `src/publish/README.md`
+y `REPO_MAP.md` ("Publicación en GitHub Pages"); publicar requiere
+instrucción explícita del dueño. `web/` en sí no cambia para publicar: el
+gate solo compila lo que ya está aquí.
+
 ## Ejecutar localmente
 
 ```
