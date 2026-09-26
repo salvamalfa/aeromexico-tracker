@@ -21,7 +21,6 @@ from src.web_export.privacy import (
     load_privacy_rules,
 )
 
-
 FIXTURES_DIR = PATHS.root / "tests" / "fixtures" / "web"
 RULES = load_privacy_rules()
 
