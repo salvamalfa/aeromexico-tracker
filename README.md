@@ -6,7 +6,7 @@ El proyecto transforma fuentes regulatorias, operativas y de mercado en una lect
 
 ## Dashboard
 
-El dashboard publicado presenta tres vistas integradas: Lectura ejecutiva, Economía unitaria y Vuelos, construidas como una página real en `web/` (Vite + TypeScript) y servidas por GitHub Pages. Streamlit se retiró en P7 (ver `docs/arquitectura/migracion-estado.md`); el último commit de `master` con la app Streamlit y la ruta HTML heredada es `e645d3e`.
+El dashboard publicado presenta tres vistas integradas: Lectura ejecutiva, Economía unitaria y Vuelos, construidas como una página real en `web/` (Vite + TypeScript) y servidas por GitHub Pages. Streamlit se retiró en P7 (ver `docs/arquitectura/migracion-estado.md`); el último commit de `master` con la app Streamlit y la ruta HTML heredada es `3b9f1cc` (equivalente tras la reescritura de historial de P8b; el `e645d3e` original ya no existe).
 
 [Repositorio público en GitHub](https://github.com/salvamalfa/aeromexico-tracker)
 

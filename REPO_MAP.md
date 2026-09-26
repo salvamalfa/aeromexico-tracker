@@ -54,7 +54,8 @@ uv run python -m src.publish.verify site/
 ```
 
 **Streamlit y la ruta HTML heredada (retirados en P7):** hasta el commit
-`e645d3e` de `master`, el dashboard también se servía como un único archivo
+`3b9f1cc` de `master` (equivalente al `e645d3e` original tras la reescritura
+de historial de P8b; ver nota abajo), el dashboard también se servía como un único archivo
 HTML (`src/analysis_agent/stage18.py::consumer_html` + `reader_ui.py`,
 `src/dashboard/flights_html.py`/`executive_summary_html.py`, la app
 Streamlit multipágina en `src/dashboard/{app,pages,components,theme,
@@ -62,8 +63,13 @@ structure_*,validate_stage10,validate_stage11,build_stage11}.py` y su copia
 servida `static/aeromexico_tracker.html`). P7 (`docs/arquitectura/
 migracion-estado.md`, `docs/etapas/migracion-p7-retiro-streamlit-20260926.md`)
 retiró todo eso: `web/` es la única implementación de cada vista y `site/`
-la única ruta de publicación. `e645d3e` queda como punto de archivo; el
-dueño todavía debe borrar manualmente la app en share.streamlit.io.
+la única ruta de publicación. `3b9f1cc` queda como punto de archivo; el
+dueño todavía debe borrar manualmente la app en share.streamlit.io. La
+reescritura de historial de P8b (`git filter-repo --strip-blobs-with-ids`,
+ver `docs/arquitectura/migracion-estado.md`) quitó los blobs de más de 1 MB
+del árbol de `master`, incluidos HTML generados grandes; ese commit de
+archivo puede no incluir esas HTML viejas aunque el árbol y el hash del
+commit cambiaron a `3b9f1cc`.
 
 **Repo de datos privado:** insumos regenerables y privados
 (`data/bronze`, `data/silver`, warehouse, `analysis_runs/`) tienen respaldo en

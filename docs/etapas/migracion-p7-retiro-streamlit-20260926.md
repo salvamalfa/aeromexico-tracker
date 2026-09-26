@@ -8,8 +8,13 @@ la única implementación de cada vista y `src/publish`/`site/` como la única
 ruta de publicación. Decisión del dueño: Streamlit se retira por completo;
 GitHub Pages (`site/`, `.github/workflows/pages.yml`) es el único sitio
 publicado desde ahora. **El último commit de `master` que aún contiene la
-app Streamlit y la ruta HTML heredada es `e645d3e`** — referencia de archivo,
-ya que no se pudo empujar una etiqueta git desde este entorno.
+app Streamlit y la ruta HTML heredada es `3b9f1cc`** (equivalente al
+`e645d3e` original: la reescritura de historial de P8b
+(`docs/arquitectura/migracion-estado.md`) cambió los hashes de todo el
+historial al quitar blobs grandes, así que `e645d3e` ya no existe; `3b9f1cc`
+tiene el mismo árbol de código pero puede carecer de las HTML generadas
+grandes que esa reescritura eliminó) — referencia de archivo, ya que no se
+pudo empujar una etiqueta git desde este entorno.
 
 ## Inventario retirado
 
