@@ -33,8 +33,8 @@ se reinicia desde `master`.
 | P1 | Pruebas y CI (auditoría fase 0) | fusionado | #47 | — |
 | P2 | Higiene y mapa del repo (fase 1) | fusionado | #48 | — |
 | P3 | Contratos de datos y privacidad (fase 2) | fusionado | #49 | — |
-| P4a | Front-end en archivos reales: vista Vuelos en `web/` con ES modules y paridad (fase 3) | PR abierto | #50 | revisar CI y fusionar |
-| P4b | Front-end en archivos reales: lectura ejecutiva y demás pestañas (fase 3) | pendiente | | |
+| P4a | Front-end en archivos reales: vista Vuelos en `web/` con ES modules y paridad (fase 3) | fusionado | #50 | — |
+| P4b | Front-end en archivos reales: lectura ejecutiva y demás pestañas (fase 3) | PR abierto | #51 | revisar CI y fusionar |
 | P5 | Vite + TypeScript (fase 4) | pendiente | | |
 | P6 | Gate de publicación sobre `site/` y GitHub Pages (fase 5) | pendiente | | |
 | P7 | Retiro de Streamlit | pendiente | | |
@@ -51,3 +51,6 @@ se reinicia desde `master`.
 - 2026-09-26 · P3 listo: esquemas v1 (flights, executive), privacy.yaml con prueba negativa, exportador `src/web_export` (29 archivos, máx. 634 KB), insumos requeridos en `config/web_inputs.yaml`. CI pública 517 pruebas.
 - 2026-09-26 · P3 fusionado (#49, CI verde). P4 dividido en P4a (Vuelos) y P4b (ejecutivo y demás pestañas) para sesiones más cortas. P4a iniciado.
 - 2026-09-26 · P4a listo: `web/` con Vuelos en 12 módulos ES (≤ 228 líneas), datos por `fetch`, paridad 100 % contra el publicado (22 trimestres, 4 regiones, MEX/CUN, meses). Implementación duplicada con `flights.js` hasta P5. Plotly 3.7.0 vendorizado temporalmente (4.7 MB).
+- 2026-09-26 · P4a fusionado (#50, CI verde). P4b iniciado.
+- 2026-09-26 · P4b listo: página completa en `web/` (pestañas, lectura ejecutiva, economía, Vuelos), exportador de análisis de solo lectura vía `consumer_payload`. Paridad 100 % en texto, KPIs y gráficas, salvo las citas en superíndice.
+  **Pendiente obligatorio para P6:** las citas (`<sup><a class="source-note">`) salen de `verified_inputs()` y aún no se exportan; P6 debe exportarlas (solo metadatos de fuentes públicas autorizadas) antes del corte a Pages para no perderlas.

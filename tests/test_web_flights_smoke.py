@@ -21,7 +21,9 @@ playwright_sync_api = pytest.importorskip("playwright.sync_api")
 sync_playwright = playwright_sync_api.sync_playwright
 
 # noqa: E402 below — these imports come after pytest.importorskip on purpose.
+from src.web_export.executive import export_executive  # noqa: E402
 from src.web_export.flights import export_flights  # noqa: E402
+from src.web_export.writer import write_json  # noqa: E402
 from web.serve import WEB_ROOT, SimpleHTTPRequestHandler  # noqa: E402
 
 pytestmark = pytest.mark.browser
@@ -46,9 +48,16 @@ def web_server(tmp_path_factory):
     for name in ("index.html", "src", "vendor"):
         os.symlink(WEB_ROOT / name, root / name)
 
+    out_dir = root / "public" / "data" / "v1"
     fixture = _load_fixture("flights_sample.json")
     payload = {**fixture, "international_networks": fixture["route_networks"]}
-    export_flights(payload, root / "public" / "data" / "v1", skip_input_check=True)
+    export_flights(payload, out_dir, skip_input_check=True)
+    # main.js now mounts the executive/economy tabs too (see web/index.html),
+    # so this page needs their payload even though this test only exercises
+    # panel-flights (now behind the "Vuelos" tab, see mountTabs()).
+    export_executive(_load_fixture("executive_sample.json"), out_dir, skip_input_check=True)
+    analysis = _load_fixture("analysis_sample.json")
+    write_json(out_dir / "analysis" / f"{analysis['period_id']}.json", analysis)
 
     handler = partial(SimpleHTTPRequestHandler, directory=str(root))
     server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
@@ -75,6 +84,7 @@ def test_flights_view_renders_the_synthetic_fixture_without_console_errors(web_s
         page.on("console", on_console_error)
         page.on("pageerror", lambda error: console_errors.append(str(error)))
         page.goto(web_server)
+        page.click("#tab-flights")
         page.wait_for_selector("#network-volume:not([hidden])")
         assert page.inner_text("#period-display") == "2T26"
         assert page.inner_text("#flight-kpi-passengers") != "—"
