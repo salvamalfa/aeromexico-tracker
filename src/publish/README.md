@@ -43,9 +43,12 @@ Fase 5, and `web/README.md`.
   bytes, since the manifest already lists every file's own hash.
 
 Never writes to the approval ledger, never approves/revokes/records
-anything, never touches `static/aeromexico_tracker.html` or `stage18`.
-Running this gate for real (not just its tests) needs an explicit
-instruction from the owner — see `REPO_MAP.md`.
+anything. `stage18.py`/`reader_ui.py` and the served
+`static/aeromexico_tracker.html` this package replaced were deleted in P7
+(see `docs/arquitectura/migracion-estado.md`); `web/` is now the only
+implementation of each view, this gate its only publication path. Running
+this gate for real (not just its tests) needs an explicit instruction from
+the owner — see `REPO_MAP.md`.
 
 ## Entradas / salidas
 

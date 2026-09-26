@@ -33,7 +33,6 @@ EXCLUDED_DIR_NAMES = {
 # BUDGET by more than what is already on record.
 ALLOWLIST: dict[str, int] = {
     "src/analytics/international_route_carrier.py": 1404,
-    "src/dashboard/structure_metadata.py": 957,
     "src/transform/stage9_lineage.py": 950,
     "src/transform/validate_stage9.py": 867,
     "src/transform/stage9.py": 812,

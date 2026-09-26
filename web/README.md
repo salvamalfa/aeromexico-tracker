@@ -12,20 +12,19 @@ strict TypeScript and put Vite in front of it (`package.json`, `vite.config.ts`,
 
 ## Responsabilidad
 
-- One implementation of each view — the same ones the currently published
-  `static/aeromexico_tracker.html` shows in its integrated mode — as real
-  `.html`/`.ts`/`.css` files instead of Python f-strings, so a human or an
-  agent can edit them directly. `src/dashboard/flights_html.py`,
-  `src/dashboard/executive_summary_html.py`, `src/analysis_agent/
-  reader_ui.py` and their JS assets still generate that published page
-  unchanged; this package does not touch them or `static/`.
-- `index.html` is the whole page: the shared `<header>`/period stepper,
-  the `.reader-tabs` shell (`#tab-reading`/`#tab-economy`/`#tab-flights`
-  and their `role=tabpanel` sections), and each view's markup, copied from
-  the *published* integrated page's DOM (inspect
-  `static/aeromexico_tracker.html`, not the Python f-strings). Its entry
-  script is `<script type="module" src="src/main.ts">`; Vite compiles that
-  graph, there is no separate build step invoked by hand.
+- The **only** implementation of each view since P7 (see
+  `docs/arquitectura/migracion-estado.md`): real `.html`/`.ts`/`.css` files a
+  human or an agent can edit directly. P7 retired the legacy generators
+  this page used to have to match byte-for-byte (`src/dashboard/
+  flights_html.py`'s HTML renderer, `executive_summary_html.py`,
+  `src/analysis_agent/stage18.py`/`reader_ui.py`, the Streamlit app, and the
+  served copy at `static/aeromexico_tracker.html`) — this is now the single
+  source of truth, not a port kept in parity with something else.
+- `index.html` is the whole page: the shared `<header>`/period stepper, the
+  `.reader-tabs` shell (`#tab-reading`/`#tab-economy`/`#tab-flights` and
+  their `role=tabpanel` sections), and each view's markup. Its entry script
+  is `<script type="module" src="src/main.ts">`; Vite compiles that graph,
+  there is no separate build step invoked by hand.
 - TypeScript ES modules under `src/views/<view>/*.ts` (≤ 400 lines each, see
   `tests/test_repo_budgets.py`), `strict: true` (`tsconfig.json`):
   - `shell/tabs.ts`: the tab controller (click + arrow/Home/End keys,
@@ -134,11 +133,15 @@ arrays share one index space.
 Because the store keeps the selected `period_id`, not just an index,
 `views/flights/bootstrap.ts` (mounted lazily, see next) can join *after*
 several quarter switches on the reading tab and immediately pick up
-`currentPeriodId()` — this is exactly what
+`currentPeriodId()` — this is the behaviour
 `test_switching_quarters_before_opening_flights_survives_the_lazy_mount`
-in `tests/test_web_flights_parity.py` checks against the published page:
-switch quarters on the reading tab, *then* open Vuelos for the first
-time, then switch again.
+in the retired `tests/test_web_flights_parity.py` (P7, see
+`docs/arquitectura/migracion-estado.md`) used to check against the
+published page: switch quarters on the reading tab, *then* open Vuelos
+for the first time, then switch again. Nothing in `web/src/state/
+period.ts` changed in P7; the coverage of this specific sequence is a
+residual gap until a multi-quarter synthetic fixture replaces it (see
+that package's report).
 
 **Carga inicial de Vuelos**: `web/src/main.ts` no longer mounts
 `views/flights` unconditionally on load. It listens for the same
@@ -169,9 +172,9 @@ visible tooltip text, and the exact substring of the already-rendered
 claim text to wrap — no excerpt/source/calculation object or lineage ever
 leaves the file. `web/src/views/executive/narrative.ts::applyCitations`
 ports `cite()`'s DOM-splicing step (same markup, classes, attributes,
-numbering) against the rendered text. `tests/test_web_page_parity.py`
-compares the full `innerText` (superscripts included) on both sides, so
-parity is 100%, citations included.
+numbering) against the rendered text. `tests/test_site_parity.py`
+(P7) checks the rendered `#narrative-copy` against the ledger's own
+`consumer_payload`/citation export directly, superscripts included.
 
 ## Entradas / salidas
 
@@ -243,7 +246,7 @@ than going through `npm run preview`.
 ```
 cd web && npm run check && npm run test && npm run build
 uv run pytest -m browser -q tests/test_web_flights_smoke.py tests/test_web_page_smoke.py
-uv run pytest --require-local-data -m "browser and local_data" -q tests/test_web_flights_parity.py tests/test_web_page_parity.py
+uv run pytest --require-local-data -m "browser and local_data" -q tests/test_site_parity.py
 ```
 
 - `test_web_flights_smoke.py` / `test_web_page_smoke.py` are `browser`
@@ -253,15 +256,11 @@ uv run pytest --require-local-data -m "browser and local_data" -q tests/test_web
   synthetic fixtures at `tests/fixtures/web/`, then check each tab renders
   with no console errors — so they are the ones enabled in CI's `web` job
   (see `.github/workflows/ci.yml` and `REPO_MAP.md`).
-- `test_web_flights_parity.py` / `test_web_page_parity.py` are also
-  `local_data` (they need the real warehouse-backed payloads and, for the
-  reading tab, whatever this checkout's local `analysis_runs/` ledger
-  currently has approved) to compare against; they also serve the built
-  `web/dist/` and open it beside the published
-  `static/aeromexico_tracker.html` across the full quarter matrix,
-  comparing the visible numbers/text/chart data. Parity against the built
-  site stayed 100% (same documented citation exception, see above) after
-  the P5 conversion.
+- `test_site_parity.py` (P7; also `local_data`) checks the already-assembled
+  `site/` against its own sources of truth instead of a second render — see
+  its module docstring and `docs/etapas/migracion-p7-retiro-streamlit-20260926.md`.
+  A local-data-only sub-test also snapshot-compares `site/`'s committed
+  `data/v1/` against a fresh `src.web_export` run.
 
 ## Tamaño del bundle
 

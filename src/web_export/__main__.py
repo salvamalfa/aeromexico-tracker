@@ -16,7 +16,7 @@ from pathlib import Path
 from src.config import PATHS
 from src.dashboard.executive_summary import build_executive_payload
 from src.dashboard.flights import build_flight_payload
-from src.web_export.analysis import DEFAULT_PUBLISHED_HTML, MissingAnalysisInput, export_analysis
+from src.web_export.analysis import MissingAnalysisInput, export_analysis
 from src.web_export.executive import export_executive
 from src.web_export.flights import export_flights
 from src.web_export.inputs import MissingWebInput
@@ -29,12 +29,6 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         default=PATHS.root / "web" / "public" / "data" / "v1",
         help="Output directory (default: web/public/data/v1).",
-    )
-    parser.add_argument(
-        "--published-html",
-        type=Path,
-        default=DEFAULT_PUBLISHED_HTML,
-        help="Published page to read the analysis manifest from (default: static/aeromexico_tracker.html).",
     )
     parser.add_argument(
         "--allow-missing-analysis",
@@ -50,7 +44,6 @@ def main(argv: list[str] | None = None) -> int:
         written += export_executive(executive_payload, args.out)
         written += export_analysis(
             args.out,
-            published_html=args.published_html,
             allow_missing=args.allow_missing_analysis,
         )
     except (MissingWebInput, MissingAnalysisInput) as error:
