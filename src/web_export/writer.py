@@ -23,5 +23,5 @@ def write_json(path: Path, payload: Any) -> Path:
     """Write payload as deterministic JSON, creating parent directories."""
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(dumps_deterministic(payload) + "\n", encoding="utf-8")
+    path.write_text(dumps_deterministic(payload) + "\n", encoding="utf-8", newline="\n")
     return path

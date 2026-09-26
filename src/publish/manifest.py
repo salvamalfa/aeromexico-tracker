@@ -169,7 +169,7 @@ def manifest_hash(manifest: dict[str, Any]) -> str:
 
 def write_manifest(site_dir: Path, manifest: dict[str, Any]) -> Path:
     path = site_dir / MANIFEST_NAME
-    path.write_text(dumps_deterministic(manifest) + "\n", encoding="utf-8")
+    path.write_text(dumps_deterministic(manifest) + "\n", encoding="utf-8", newline="\n")
     return path
 
 
