@@ -37,9 +37,10 @@ se reinicia desde `master`.
 | P4b | Front-end en archivos reales: lectura ejecutiva y demás pestañas (fase 3) | fusionado | #51 | — |
 | P5 | Vite + TypeScript (fase 4) | fusionado | #52 | — |
 | P6a | Citas del análisis exportadas y Vuelos cargado al abrir su pestaña (estado de trimestre único) | fusionado | #53 | — |
-| P6b | Gate de publicación sobre `site/`, `verify.py` y workflow de GitHub Pages (fase 5) | fusionado | #54 | el dueño activa Pages (Settings → Pages → Source: GitHub Actions) y se relanza `pages.yml` |
-| P7 | Retiro de Streamlit y de la ruta HTML heredada | PR abierto | #55 | fusionar; el dueño borra la app en share.streamlit.io |
-| P8 | Peso de git y reescritura de historia (fase 6) | pendiente | | |
+| P6b | Gate de publicación sobre `site/`, `verify.py` y workflow de GitHub Pages (fase 5) | fusionado | #54 | — (Pages activo: https://salvamalfa.github.io/aeromexico-tracker/) |
+| P7 | Retiro de Streamlit y de la ruta HTML heredada | fusionado | #55 | el dueño borra la app en share.streamlit.io |
+| P8a | Aligerar el árbol: `bridge_record_lineage.parquet` con zstd y escritores alineados | PR abierto | #56 | revisar CI y fusionar |
+| P8b | Reescritura del historial con `git filter-repo` y push forzado (coordinador) | pendiente | | ensayado en espejo; requiere push forzado a `master` |
 
 ## Bitácora
 
@@ -63,3 +64,6 @@ se reinicia desde `master`.
 - 2026-09-26 · P6b listo: `src/publish` (gate con la misma verificación que stage18, manifiesto SHA-256, recibo), `verify.py` con 6 pruebas negativas, workflow `pages.yml`, `site/` generado del expediente aprobado 2T26 (34 archivos, ~3.7 MB), paridad con el publicado.
 - 2026-09-26 · P6b fusionado (#54, CI verde). P7 iniciado.
 - 2026-09-26 · P7 listo: ~28,000 líneas retiradas (app Streamlit, `static/`, `stage18`/`reader_ui`, HTML heredado y sus pruebas, 17 dependencias). Una sola implementación de cada vista (`web/`) y una sola ruta de publicación (`src/publish`). Commit de archivo con Streamlit: `e645d3e` (no se pudo subir etiqueta desde este entorno). CI pública 487 pruebas; locales 62 + 8 de navegador.
+- 2026-09-26 · P7 fusionado (#55, CI verde). P8 dividido: P8a (árbol más ligero, PR normal) y P8b (reescritura del historial). P8a iniciado.
+- 2026-09-26 · Pages activado por el dueño; despliegue manual correcto; los 34 archivos servidos coinciden byte a byte con el manifiesto.
+- 2026-09-26 · P8a listo: todos los Gold se escriben con zstd (`write_parquet_atomic`), 43 tablas reescritas con contenido idéntico comprobado; `data/gold` 92.9 → 51 MB (linaje 61.8 → 32.1 MB). Corregida regresión del mapa (topología fijada, sin peticiones a cdn.plot.ly) y `site/` republicado con el mismo expediente aprobado.
