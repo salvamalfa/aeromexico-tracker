@@ -29,9 +29,11 @@ no autoriza por sí sola a publicar datos nuevos.
   creado; `uv run` y `just` son las interfaces documentadas.
 - Preparación: `just setup`.
 - Suite: `just test` o `.venv\Scripts\python.exe -m pytest`.
-- Validación de estructura: `just dashboard-validate`.
+- Validación de datos del dashboard: `just dashboard-validate`.
 - Reconstrucción: `just transform`; para todo el pipeline offline, `just rebuild`.
-- Dashboard local: `just dashboard`.
+- Dashboard local: exporta los datos y sirve `web/` (ver `web/README.md`):
+  `uv run python -m src.web_export --out web/public/data/v1 --allow-missing-analysis`
+  y luego `cd web && npm ci && npm run dev`.
 
 Los comandos con red, cuotas, suscripciones o APIs pagadas requieren una
 ejecución deliberada. Implementa primero un `--dry-run` que muestre llamadas,
@@ -58,12 +60,17 @@ checkout público con `restore_snapshot.py`. Nunca copies su contenido a un PR
 del repositorio público ni asumas que acceso al código implica acceso a los
 datos o autorización para publicarlos.
 
-Edita el generador, no solo el HTML generado. El dashboard integrado principal
-se produce con `src/analysis_agent/stage18.py::consumer_html` y
-`src/analysis_agent/reader_ui.py`; `build_stage11.py` por sí solo no reproduce
-la versión integrada. Si cambian fuentes o Vuelos, regenera primero
-`python -m src.dashboard.build_flights` y después el artefacto integrado antes
-de interpretar una prueba de igualdad como regresión.
+Edita el generador, no solo el HTML generado. El dashboard publicado es la
+página real en `web/` (Vite + TypeScript) — única implementación de cada
+vista desde P7 (se retiró la app Streamlit y el consumidor HTML de
+`stage18.py`/`reader_ui.py`; ver `docs/arquitectura/migracion-estado.md`) —
+alimentada por `src/web_export/` a partir de los payloads de
+`src/dashboard/executive_summary.py` y `src/dashboard/flights.py` +
+`flights_html.py::integration_flight_payload`, y publicada como `site/` por
+`src/publish/gate.py`. Si cambian fuentes o Vuelos, regenera primero
+`python -m src.dashboard.build_flights` y después
+`uv run python -m src.web_export --out web/public/data/v1` antes de
+interpretar una prueba de igualdad como regresión.
 
 ## Reglas de significado de datos
 

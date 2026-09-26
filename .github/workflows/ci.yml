@@ -43,8 +43,6 @@ jobs:
         run: >-
           uv run ruff format --check
           src/dashboard/international_routes.py
-          src/analysis_agent/stage18.py
-          src/analysis_agent/reader_ui.py
           src/analysis_agent/lifecycle.py
 
   web:

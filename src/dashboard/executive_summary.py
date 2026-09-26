@@ -385,7 +385,7 @@ def _period_view(
 
 
 def build_executive_payload(database_path: str | None = None) -> dict[str, Any]:
-    """Build the complete deterministic payload used by HTML and future Streamlit."""
+    """Build the complete deterministic payload web/ (via src.web_export) consumes."""
 
     history = load_executive_history(database_path)
     records = [_record_dict(row) for _, row in history.iterrows()]
