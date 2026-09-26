@@ -154,3 +154,38 @@ def test_publish_reverifies_under_the_lock_before_the_swap_and_aborts_on_revocat
 
     assert calls["n"] == 2, "expected one verify from verify_records() and one under the pre-swap lock"
     assert not out_dir.exists(), "site/ must be untouched when the pre-swap re-check fails"
+
+
+def test_publish_aborts_when_the_approval_changes_during_the_build(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Revoke-and-re-approve during the build passes the second check with a
+    new approval_event; the built payload no longer matches, so abort."""
+
+    import src.publish.gate as gate
+
+    out_dir = tmp_path / "site"
+    dist_dir = tmp_path / "dist"
+    dist_dir.mkdir()
+    (dist_dir / "index.html").write_text("<html></html>\n", encoding="utf-8")
+
+    fake_record = {"draft": {"period_id": "2026Q2"}, "version": "v1", "content_hash": "c" * 64}
+    first = {k: k[0] * 64 for k in gate.ANALYSIS_MANIFEST_FIELDS} | {"period_id": "2026Q2", "version": "v1"}
+    second = first | {"approval_event": "b" * 64, "audit_hash": "i" * 64}
+    answers = iter([[(fake_record, first, object(), object())], [(fake_record, second, object(), object())]])
+
+    monkeypatch.setattr(gate, "_verify_under_lock", lambda records, root: next(answers))
+    monkeypatch.setattr(gate, "load_records", lambda paths: [fake_record])
+    monkeypatch.setattr(gate, "export_data", lambda entries, out_dir: None)
+    monkeypatch.setattr(gate, "build_web", lambda web_dir: dist_dir)
+
+    with pytest.raises(gate.PublicationRefused, match="approval changed"):
+        gate.publish(
+            [Path("unused.json")],
+            out_dir,
+            root=tmp_path / "ledger",
+            web_dir=tmp_path / "web",
+            web_data_v1=tmp_path / "web_data_v1",
+        )
+
+    assert not out_dir.exists()

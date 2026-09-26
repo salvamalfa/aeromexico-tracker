@@ -281,11 +281,19 @@ def publish(
     # reason), so a revocation could have landed since the first check.
     # This second check, not the first, is what makes the race impossible --
     # see verify_records' docstring.
+    # The built payload came from the first check's authorizations, so the
+    # manifest must too; a revoke-and-re-approve during the build would pass
+    # the second check with a new approval_event/audit_hash that no longer
+    # matches what dist_dir contains, so any change aborts instead.
+    authorized = [e[1] for e in entries]
+    analysis_manifest = [{k: e[k] for k in ANALYSIS_MANIFEST_FIELDS} for e in authorized]
     try:
         with flow.writer(root):
-            entries = _verify_under_lock(records, root)
-            authorized = [e[1] for e in entries]
-            analysis_manifest = [{k: e[k] for k in ANALYSIS_MANIFEST_FIELDS} for e in authorized]
+            current = [
+                {k: e[1][k] for k in ANALYSIS_MANIFEST_FIELDS} for e in _verify_under_lock(records, root)
+            ]
+            if current != analysis_manifest:
+                raise ValueError("approval changed while the site was being built; rerun the publication")
             manifest = assemble_site(dist_dir, analysis_manifest, out_dir)
     except ValueError as error:
         raise PublicationRefused(
