@@ -15,8 +15,9 @@ import pytest
 playwright_sync_api = pytest.importorskip("playwright.sync_api")
 sync_playwright = playwright_sync_api.sync_playwright
 
-from src.dashboard.flights import build_flight_payload
 from src.dashboard.flights_html import render_flights_html
+
+pytestmark = [pytest.mark.browser, pytest.mark.local_data]
 
 
 def _chromium_executable() -> str | None:
@@ -25,9 +26,8 @@ def _chromium_executable() -> str | None:
 
 
 @pytest.fixture(scope="module")
-def flights_page(tmp_path_factory):
-    payload = build_flight_payload()
-    html = render_flights_html(payload)
+def flights_page(tmp_path_factory, flight_payload):
+    html = render_flights_html(flight_payload)
     path = tmp_path_factory.mktemp("flights") / "vuelos.html"
     path.write_text(html, encoding="utf-8")
     with sync_playwright() as playwright:

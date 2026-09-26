@@ -6,15 +6,11 @@ from __future__ import annotations
 
 import pytest
 
-from src.dashboard.flights import build_flight_payload
+pytestmark = pytest.mark.local_data
 
 
-def _payload() -> dict:
-    return build_flight_payload()
-
-
-def test_2026q2_offers_exactly_its_three_calendar_months() -> None:
-    payload = _payload()
+def test_2026q2_offers_exactly_its_three_calendar_months(flight_payload) -> None:
+    payload = flight_payload
     months = sorted(
         month for month in payload["domestic_monthly_networks"]
         if month in ("2026M04", "2026M05", "2026M06")
@@ -22,13 +18,13 @@ def test_2026q2_offers_exactly_its_three_calendar_months() -> None:
     assert months == ["2026M04", "2026M05", "2026M06"]
 
 
-def test_quarterly_aggregate_equals_sum_of_the_three_monthly_payloads() -> None:
+def test_quarterly_aggregate_equals_sum_of_the_three_monthly_payloads(flight_payload) -> None:
     """The server's own 2026Q2 quarter aggregate (load_domestic_networks) must
     equal, route by route, an independent sum of the three monthly payloads
     computed here -- the exact rule the national month selector's client-side
     aggregation also follows."""
 
-    payload = _payload()
+    payload = flight_payload
     quarter = payload["domestic_networks"]["2026Q2"]
     monthly = payload["domestic_monthly_networks"]
     by_market: dict[str, dict[str, float]] = {}
@@ -72,8 +68,8 @@ def test_quarterly_aggregate_equals_sum_of_the_three_monthly_payloads() -> None:
             assert route["capacity_complete"] is False
 
 
-def test_group_occupancy_uses_summed_totals_not_averaged_percentages() -> None:
-    payload = _payload()
+def test_group_occupancy_uses_summed_totals_not_averaged_percentages(flight_payload) -> None:
+    payload = flight_payload
     monthly = payload["domestic_monthly_networks"]
     quarter = payload["domestic_networks"]["2026Q2"]
     gdl = next(r for r in quarter["routes"] if r["market_key"] == "GDL<>MEX")
@@ -89,8 +85,8 @@ def test_group_occupancy_uses_summed_totals_not_averaged_percentages() -> None:
     assert gdl["load_factor"] != pytest.approx(averaged, rel=1e-6)
 
 
-def test_partial_quarter_2026q1_is_marked_partial_and_keeps_its_one_month() -> None:
-    payload = _payload()
+def test_partial_quarter_2026q1_is_marked_partial_and_keeps_its_one_month(flight_payload) -> None:
+    payload = flight_payload
     q1 = payload["domestic_networks"].get("2026Q1")
     assert q1 is not None
     assert q1["availability"] == "partial"
@@ -100,8 +96,8 @@ def test_partial_quarter_2026q1_is_marked_partial_and_keeps_its_one_month() -> N
     assert all(route["passengers"] > 0 for route in q1["routes"])
 
 
-def test_gdl_mex_june_matches_known_result() -> None:
-    payload = _payload()
+def test_gdl_mex_june_matches_known_result(flight_payload) -> None:
+    payload = flight_payload
     june = payload["domestic_monthly_networks"]["2026M06"]
     gdl = next(r for r in june["routes"] if r["market_key"] == "GDL<>MEX")
     assert gdl["passengers"] == pytest.approx(108_975, rel=0.001)

@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: "3.13"
+          enable-cache: true
+
+      # Several modules the non-local-data suite imports at collection time
+      # (src/analytics/*, src/transform/stage6_facts.py) depend on the
+      # "analytics" extra (statsmodels, scikit-learn, spaCy, statsforecast),
+      # so this mirrors refresh.yml's install rather than a bare `uv sync`.
+      - name: Install locked dependencies
+        run: uv sync --all-extras --all-groups --locked
+
+      # data/warehouse.duckdb, data/silver, data/bronze raw captures, private
+      # Gold cubes and analysis_runs/ are gitignored and local-only (see
+      # AGENTS.md); this runner never has them. Tests that need them are
+      # marked `local_data` (tests/conftest.py) and skip with an explicit
+      # reason here. `browser` (Playwright) tests are excluded too: full
+      # local validation, with the data restored, stays a local/manual step
+      # (see docs/arquitectura/auditoria-arquitectura-20260926.md §2.5/§5).
+      - name: Run the public test subset
+        run: uv run pytest -m "not local_data and not browser" -q

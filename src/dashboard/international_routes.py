@@ -37,13 +37,28 @@ def _capacity_by_direction(capacity, months):
         capacity_usable=('capacity_usable','all'))
 
 
-def _capacity_cell(capacity_by_direction, period, origin, dest):
+def _capacity_cell_index(capacity_by_direction):
+    """Index ``capacity_by_direction`` once for O(1) per-cell lookup.
+
+    ``_capacity_cell`` used to re-filter the whole (period, origin,
+    destination) frame with a boolean mask on every call -- one linear scan
+    per estimated route cell. Building this index once per
+    ``_estimated_routes`` call and doing a hash lookup per cell instead
+    reads the exact same stored values, so it changes nothing about the
+    output, only how many times the same data gets scanned.
+    """
+    keys=['period_id','origin_iata','destination_iata']
+    return capacity_by_direction.set_index(keys)
+
+
+def _capacity_cell(capacity_index, period, origin, dest):
     """The usable capacity for one period/direction cell, or ``None``."""
-    match=capacity_by_direction[(capacity_by_direction.period_id==period)
-        & (capacity_by_direction.origin_iata==origin) & (capacity_by_direction.destination_iata==dest)]
-    if match.empty or not bool(match.iloc[0].capacity_usable):
+    try:
+        row=capacity_index.loc[(period,origin,dest)]
+    except KeyError:
         return None
-    row=match.iloc[0]
+    if not bool(row.capacity_usable):
+        return None
     return dict(departures=float(row.departures_estimated),seats=float(row.seats_estimated),
         seats_low=float(row.seats_estimated_low),seats_high=float(row.seats_estimated_high),
         aircraft_model_coverage=float(row.aircraft_model_coverage))
@@ -111,7 +126,7 @@ def _estimated_routes(estimates, capacity, months, endpoint):
     if estimates.empty or not set(months) <= set(estimates.period_id):
         return {}
     frame=estimates[estimates.period_id.isin(months)]
-    capacity_by_direction=_capacity_by_direction(capacity,months)
+    capacity_index=_capacity_cell_index(_capacity_by_direction(capacity,months))
     routes={}
     for market,group in frame.groupby('market_key'):
         a,b=market.split('<>')
@@ -125,7 +140,7 @@ def _estimated_routes(estimates, capacity, months, endpoint):
             passengers=float(part.passengers_estimated.sum())
             passengers_low=float(part.passengers_estimated_low.sum())
             passengers_high=float(part.passengers_estimated_high.sum())
-            cell=_capacity_cell(capacity_by_direction,str(period),str(origin),str(dest))
+            cell=_capacity_cell(capacity_index,str(period),str(origin),str(dest))
             item=dict(period_id=str(period),carrier_key='AEROMEXICO_GROUP',carrier_label='Grupo Aeroméxico',
                 origin_iata=str(origin),destination_iata=str(dest),
                 passengers=passengers,passengers_low=passengers_low,passengers_high=passengers_high,

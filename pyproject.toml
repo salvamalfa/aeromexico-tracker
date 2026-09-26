@@ -51,3 +51,8 @@ package = false
 addopts = "-ra --strict-config --strict-markers"
 pythonpath = ["."]
 testpaths = ["tests"]
+markers = [
+  "local_data: needs locally-restored data ignored by git (data/warehouse.duckdb, data/silver, data/bronze raw captures, private Gold cubes, analysis_runs/); skipped with a reason when absent unless --require-local-data is passed.",
+  "slow: takes more than about 5 seconds to run.",
+  "browser: drives a real browser through Playwright.",
+]

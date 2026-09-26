@@ -4,6 +4,7 @@ import hashlib
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from src.transform.stage9 import build_record_lineage_specs
 from src.transform.stage6_contracts import validate_table
@@ -269,6 +270,8 @@ def test_derived_carrier_metric_uses_metric_parents_not_template_artifact(
     assert links["artifact_id"].isna().all()
 
 
+@pytest.mark.local_data
+@pytest.mark.slow
 def test_materialized_stage9_acceptance_gate_passes() -> None:
     result = validate_stage9()
 
