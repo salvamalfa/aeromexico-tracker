@@ -33,7 +33,9 @@ Para recorrer el argumento completo, consulta [el recorrido narrado](docs/dashbo
 **Analysis Agent:** Etapas 12–14 aceptadas. La [Etapa 15](docs/etapas/etapa-15-reporte.md)
 está implementada y pendiente de revisión humana: [cálculos, puentes y fuentes](prototypes/etapa-15/quantitative_review.html).
 El motor utiliza evidencia congelada de 2T26 y conserva las diferencias de alcance pendientes.
-Todavía no se redactan ni publican análisis trimestrales.
+El expediente aprobado de 2T26 sí está publicado en el dashboard público (pestaña Lectura
+ejecutiva y `data/v1/analysis/2026Q2.json`); lo que sigue pendiente es la redacción y
+publicación de análisis de trimestres posteriores.
 
 Las **Etapas 0 a 10 están completas**. La página `Estructura de datos` de la app Streamlit heredada fue aprobada visualmente, publicada y comprobada mediante su enlace profundo público en su momento; la app Streamlit se retiró en P7 (ver `docs/arquitectura/migracion-estado.md`), así que hoy solo queda como referencia histórica.
 
@@ -87,15 +89,18 @@ data/bronze/     descargas inmutables + SHA-256; no se versionan
 data/silver/     tablas fieles a cada fuente; no se versionan
       │
       ▼
-data/gold/       31 Parquet consolidados y versionados
+data/gold/       43 Parquet consolidados y versionados
       │
       ├── data/warehouse.duckdb   vistas analíticas locales
       ├── src/analytics/          estudios y modelos precomputados
-      └── src/dashboard/ + src/analysis_agent/   generadores del HTML publicado
+      └── src/dashboard/ + src/web_export/   payloads de contrato para web/
+            │
+            ▼
+      web/ (Vite + TS)  ──build──▶  src.publish  ──▶  site/  ──▶  pages.yml (GitHub Pages)
 ```
 
 Ver [`REPO_MAP.md`](REPO_MAP.md) para el detalle de qué genera cada módulo y
-cómo se ensambla el HTML integrado.
+cómo se ensambla `web/` y se publica en `site/`.
 
 Las tablas gold sí se versionan porque son los extractos públicos y compactos que consume el deploy. Bronze y silver siguen fuera de Git. Los hashes, URL y metadata de cada descarga viven en `data/bronze/_manifest.jsonl`; los cambios de contenido se registran en `_restatements.jsonl`.
 
