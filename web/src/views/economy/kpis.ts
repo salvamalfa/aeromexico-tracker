@@ -5,31 +5,32 @@
 // removes those two cards from the published page, so this view never
 // renders them either — see web/index.html's panel-economy markup.
 
-import { $ } from "../flights/dom.js";
-import { state } from "../executive/state.js";
+import { $ } from "../flights/dom";
+import { state } from "../executive/state";
+import type { Comparison, ExecutiveView } from "../../types/domain";
 
-const READER_KPI_KEYS = ["rask_cents_per_km", "cask_cents_per_km", "ask_km"];
+const READER_KPI_KEYS = ["rask_cents_per_km", "cask_cents_per_km", "ask_km"] as const;
 
-function setText(id, value) {
+function setText(id: string, value: string): void {
   const node = document.getElementById(id);
   if (node) node.textContent = value;
 }
 
-function comparisonText(comparison) {
+function comparisonText(comparison: Comparison): string {
   return comparison.available ? comparison.display : "No disponible";
 }
 
-function signedTwoDecimals(value) {
+function signedTwoDecimals(value: number): string {
   return `${value >= 0 ? "+" : ""}${Number(value).toFixed(2)}`;
 }
 
-function setComparison(key, suffix, comparison) {
+function setComparison(key: string, suffix: string, comparison: Comparison): void {
   setText(`kpi-${key}-${suffix}`, comparisonText(comparison));
   const node = $(`kpi-${key}-${suffix}`);
   if (node) node.className = `delta-${comparison.direction}`;
 }
 
-export function updateKpis(view) {
+export function updateKpis(view: ExecutiveView): void {
   const kpisByKey = new Map(view.kpis.map((kpi) => [kpi.key, kpi]));
   for (const key of READER_KPI_KEYS) {
     const kpi = kpisByKey.get(key);
