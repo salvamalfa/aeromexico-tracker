@@ -1,0 +1,16 @@
+{
+  "note": "Not a valid payload; only used by the negative case in tests/test_web_privacy.py to prove the checker catches real violations.",
+  "route_networks": {
+    "2026Q2": {
+      "routes": [
+        {
+          "market_key": "AAA<>BBB",
+          "registration": "XA-FAKE",
+          "monthly": [
+            {"carrier_key": "COMPETITOR_AIRLINE", "passengers": 10.0}
+          ]
+        }
+      ]
+    }
+  }
+}
