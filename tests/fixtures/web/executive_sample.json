@@ -1,0 +1,62 @@
+{
+  "metadata": {
+    "title": "Aeroméxico Tracker (fixture)",
+    "default_period": "2026Q2",
+    "first_period": "2026Q1",
+    "last_period": "2026Q2",
+    "quarter_count": 2,
+    "coverage_label": "2 trimestres comparables · 1T26–2T26",
+    "data_as_of": "01 ago 2026",
+    "source_view": "v_aeromexico_quarterly",
+    "grain": "Grupo Aeroméxico · trimestre calendario · segmento total",
+    "load_rask_correlation": 0.5,
+    "load_rask_interpretation": "fixture",
+    "method_note": "fixture"
+  },
+  "records": [
+    {
+      "period_id": "2026Q1", "period_label": "1T26",
+      "passengers": 5000000.0, "ask_km": 8000000000.0,
+      "load_factor_reported": 0.8, "rask_cents_per_km": 5.0,
+      "cask_cents_per_km": 4.5, "unit_margin_cents_per_km": 0.5
+    },
+    {
+      "period_id": "2026Q2", "period_label": "2T26",
+      "passengers": 5200000.0, "ask_km": 8200000000.0,
+      "load_factor_reported": 0.82, "rask_cents_per_km": 5.1,
+      "cask_cents_per_km": 4.4, "unit_margin_cents_per_km": 0.7
+    }
+  ],
+  "views": {
+    "2026Q1": {
+      "period_id": "2026Q1", "period_label": "1T26",
+      "kpis": [
+        {
+          "key": "rask_cents_per_km", "label": "RASK", "description": "fixture",
+          "accent": "blue", "format": "cents", "value": 5.0, "display_value": "5.00 ¢ USD",
+          "qoq": {"available": false, "raw": null, "display": "No disponible", "direction": "na"},
+          "yoy": {"available": false, "raw": null, "display": "No disponible", "direction": "na"}
+        }
+      ],
+      "conclusions": ["fixture"],
+      "narrative": {"headline": "fixture", "paragraphs": ["fixture"]},
+      "margin_qoq": {"available": false, "raw": null, "display": "No disponible", "direction": "na"},
+      "margin_yoy": {"available": false, "raw": null, "display": "No disponible", "direction": "na"}
+    },
+    "2026Q2": {
+      "period_id": "2026Q2", "period_label": "2T26",
+      "kpis": [
+        {
+          "key": "rask_cents_per_km", "label": "RASK", "description": "fixture",
+          "accent": "blue", "format": "cents", "value": 5.1, "display_value": "5.10 ¢ USD",
+          "qoq": {"available": true, "raw": 0.02, "display": "+2.0%", "direction": "up"},
+          "yoy": {"available": false, "raw": null, "display": "No disponible", "direction": "na"}
+        }
+      ],
+      "conclusions": ["fixture"],
+      "narrative": {"headline": "fixture", "paragraphs": ["fixture"]},
+      "margin_qoq": {"available": true, "raw": 0.2, "display": "+0.20 ¢ USD", "direction": "up"},
+      "margin_yoy": {"available": false, "raw": null, "display": "No disponible", "direction": "na"}
+    }
+  }
+}

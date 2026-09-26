@@ -1,0 +1,150 @@
+{
+  "schema_version": "flight_dashboard_payload_v1",
+  "metadata": {
+    "title": "Aeroméxico Tracker · Vuelos (fixture)",
+    "pilot_period": "2026Q2",
+    "default_period": "2026Q2",
+    "cutoff_date": "2026-07-13",
+    "approved_evidence_fingerprint": "0000000000000000000000000000000000000000000000000000000000000",
+    "review_status": "first_increment_unapproved",
+    "scope": "Fixture sintética pública, sin datos privados."
+  },
+  "quarters": [
+    {
+      "period_id": "2026Q2",
+      "period_label": "2T26",
+      "metrics": {
+        "passengers": {
+          "key": "passengers", "value": 6000000.0, "unit": "count",
+          "period_id": "2026Q2", "period_type": "quarter",
+          "period_start": "2026-04-01", "period_end": "2026-06-30",
+          "source_id": "sec-quarterly", "cutoff_date": "2026-07-13",
+          "agent_eligible": true, "eligibility_reason": "fixture"
+        },
+        "asm_miles": {
+          "key": "asm_miles", "value": 9000000000.0, "unit": "seat_miles",
+          "period_id": "2026Q2", "period_type": "quarter",
+          "period_start": "2026-04-01", "period_end": "2026-06-30",
+          "source_id": "sec-quarterly", "cutoff_date": "2026-07-13",
+          "agent_eligible": true, "eligibility_reason": "fixture"
+        },
+        "rpm_miles": {
+          "key": "rpm_miles", "value": 7500000000.0, "unit": "passenger_miles",
+          "period_id": "2026Q2", "period_type": "quarter",
+          "period_start": "2026-04-01", "period_end": "2026-06-30",
+          "source_id": "sec-quarterly", "cutoff_date": "2026-07-13",
+          "agent_eligible": true, "eligibility_reason": "fixture"
+        },
+        "load_factor": {
+          "key": "load_factor", "value": 0.8333, "unit": "fraction",
+          "period_id": "2026Q2", "period_type": "quarter",
+          "period_start": "2026-04-01", "period_end": "2026-06-30",
+          "source_id": "sec-quarterly", "cutoff_date": "2026-07-13",
+          "agent_eligible": true, "eligibility_reason": "fixture"
+        }
+      },
+      "passenger_mix": null
+    }
+  ],
+  "monthly_passengers": {
+    "period_type": "month",
+    "period_start": "2026-04-01",
+    "period_end": "2026-06-30",
+    "source_id": "afac-gold-current",
+    "observed_months": 1,
+    "calendar_months": 1,
+    "as_of": "2026-08-01T00:00:00",
+    "agent_eligible": false,
+    "eligibility_reason": "fixture",
+    "records": [
+      {
+        "period_id": "2026M06", "date": "2026-06-01", "period_type": "month",
+        "domestic": 900000.0, "international": 500000.0,
+        "total_segment_sum": 1400000.0, "reported_total": 1400000.0,
+        "reconciliation_delta": 0.0, "source_id": "afac-gold-current",
+        "source_hash": "fixturehash", "cutoff_date": null,
+        "agent_eligible": false, "availability": "observed"
+      }
+    ]
+  },
+  "route_network": {
+    "world_geometry": {
+      "geojson": {"type": "FeatureCollection", "features": []},
+      "topojson": {"type": "Topology", "objects": {}},
+      "source_url": "https://example.invalid/natural-earth",
+      "version": "fixture",
+      "license": "public domain",
+      "sha256": "fixturehash"
+    }
+  },
+  "route_networks": {
+    "2026Q2": {
+      "period_label": "2T26",
+      "expected_months": ["2026M04", "2026M05", "2026M06"],
+      "observed_months": ["2026M04", "2026M05", "2026M06"],
+      "routes": [
+        {
+          "market_key": "AAA<>BBB",
+          "coverage_note": "fixture", "source_label": "fixture",
+          "operation_status": "operated_observed", "context": null,
+          "passengers_low": null, "passengers_high": null,
+          "passengers_estimated": false, "capacity_estimated": false,
+          "seats_low": null, "seats_high": null,
+          "load_factor_low": null, "load_factor_high": null,
+          "load_factor_status": null, "support_repair_applied": false,
+          "months_covered": null, "months_selected": null,
+          "origin": {"iata": "AAA", "city": "Ciudad A", "name": "Aeropuerto A", "lat": 1.0, "lon": 2.0},
+          "destination": {"iata": "BBB", "city": "Ciudad B", "name": "Aeropuerto B", "lat": 3.0, "lon": 4.0},
+          "passengers": 1000.0, "seats": 1200.0, "departures": 10.0, "load_factor": 0.83,
+          "previous": {"passengers": 900.0, "seats": 1100.0, "departures": 9.0, "load_factor": null},
+          "directions": [
+            {"origin_iata": "AAA", "destination_iata": "BBB", "passengers": 500.0, "passengers_low": null, "passengers_high": null, "seats": 600.0, "departures": 5.0}
+          ],
+          "monthly": []
+        },
+        {
+          "market_key": "CCC<>DDD",
+          "coverage_note": "fixture estimada", "source_label": "AFAC + AeroDataBox · Grupo Aeroméxico estimado",
+          "operation_status": "estimated_from_afac_margins_and_temporal_support", "context": null,
+          "passengers_low": 190.0, "passengers_high": 210.0,
+          "passengers_estimated": true, "capacity_estimated": true,
+          "seats_low": 230.0, "seats_high": 260.0,
+          "load_factor_low": 0.7, "load_factor_high": 0.9,
+          "load_factor_status": "estimated", "support_repair_applied": true,
+          "months_covered": 1, "months_selected": 1,
+          "origin": {"iata": "CCC", "city": "Ciudad C", "name": "Aeropuerto C", "lat": 5.0, "lon": 6.0},
+          "destination": {"iata": "DDD", "city": "Ciudad D", "name": "Aeropuerto D", "lat": 7.0, "lon": 8.0},
+          "passengers": 200.0, "seats": 245.0, "departures": 3.0, "load_factor": 0.816,
+          "previous": {"passengers": null, "seats": null, "departures": null, "load_factor": null},
+          "directions": [],
+          "monthly": [
+            {
+              "period_id": "2026M06", "carrier_key": "AEROMEXICO_GROUP", "carrier_label": "Grupo Aeroméxico",
+              "origin_iata": "CCC", "destination_iata": "DDD",
+              "support_observed_in_period": true, "support_source_periods": "2026M06", "support_month_gap": 0,
+              "passengers": 200.0, "passengers_low": 190.0, "passengers_high": 210.0,
+              "seats": 245.0, "departures": 3.0, "load_factor": 0.816, "capacity_estimated": true
+            }
+          ]
+        }
+      ],
+      "airports": [
+        {"iata": "AAA", "city": "Ciudad A", "name": "Aeropuerto A", "lat": 1.0, "lon": 2.0},
+        {"iata": "BBB", "city": "Ciudad B", "name": "Aeropuerto B", "lat": 3.0, "lon": 4.0},
+        {"iata": "CCC", "city": "Ciudad C", "name": "Aeropuerto C", "lat": 5.0, "lon": 6.0},
+        {"iata": "DDD", "city": "Ciudad D", "name": "Aeropuerto D", "lat": 7.0, "lon": 8.0}
+      ],
+      "coverage_by_source": {"Fixture · fuente": ["2026M04", "2026M05", "2026M06"]},
+      "mode": "observed_international",
+      "source_url": null,
+      "availability": "complete",
+      "agent_eligible": false,
+      "eligibility_reason": "fixture",
+      "represented_passengers": null,
+      "represented_movements": null,
+      "aena_airport_activity": []
+    }
+  },
+  "domestic_networks": {},
+  "domestic_monthly_networks": {}
+}
