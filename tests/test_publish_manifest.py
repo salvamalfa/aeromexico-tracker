@@ -3,9 +3,26 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 
+import pytest
+
 from src.publish import manifest as manifest_mod
+
+
+def _init_repo(root: Path) -> None:
+    for args in (
+        ["init", "-q"],
+        ["config", "user.email", "test@example.com"],
+        ["config", "user.name", "Test"],
+    ):
+        subprocess.run(["git", *args], cwd=root, check=True, capture_output=True)
+
+
+def _commit_all(root: Path, message: str) -> None:
+    subprocess.run(["git", "add", "-A"], cwd=root, check=True, capture_output=True)
+    subprocess.run(["git", "commit", "-q", "-m", message], cwd=root, check=True, capture_output=True)
 
 
 def _write(path: Path, content: str) -> None:
@@ -71,3 +88,55 @@ def test_manifest_hash_changes_when_a_file_entry_changes() -> None:
     other = json.loads(json.dumps(base))
     other["files"][0]["sha256"] = "y"
     assert manifest_mod.manifest_hash(base) != manifest_mod.manifest_hash(other)
+
+
+def test_refuse_if_build_inputs_dirty_passes_on_a_clean_tree(tmp_path: Path) -> None:
+    _init_repo(tmp_path)
+    _write(tmp_path / "src" / "a.py", "x = 1\n")
+    _commit_all(tmp_path, "initial")
+
+    manifest_mod.refuse_if_build_inputs_dirty(tmp_path)  # must not raise
+
+
+def test_refuse_if_build_inputs_dirty_raises_on_an_uncommitted_src_change(tmp_path: Path) -> None:
+    _init_repo(tmp_path)
+    _write(tmp_path / "src" / "a.py", "x = 1\n")
+    _commit_all(tmp_path, "initial")
+
+    _write(tmp_path / "src" / "a.py", "x = 2\n")
+
+    with pytest.raises(RuntimeError, match="uncommitted changes"):
+        manifest_mod.refuse_if_build_inputs_dirty(tmp_path)
+
+
+def test_refuse_if_build_inputs_dirty_raises_on_an_untracked_new_file(tmp_path: Path) -> None:
+    _init_repo(tmp_path)
+    _write(tmp_path / "src" / "a.py", "x = 1\n")
+    _commit_all(tmp_path, "initial")
+
+    _write(tmp_path / "contracts" / "new.json", "{}")
+
+    with pytest.raises(RuntimeError, match="uncommitted changes"):
+        manifest_mod.refuse_if_build_inputs_dirty(tmp_path)
+
+
+def test_refuse_if_build_inputs_dirty_ignores_excluded_generated_paths(tmp_path: Path) -> None:
+    _init_repo(tmp_path)
+    _write(tmp_path / "src" / "a.py", "x = 1\n")
+    _write(tmp_path / ".gitignore", "web/public/data/\nweb/dist/\n")
+    _commit_all(tmp_path, "initial")
+
+    _write(tmp_path / "web" / "public" / "data" / "v1" / "flights.json", "{}")
+    _write(tmp_path / "web" / "dist" / "index.html", "<html></html>")
+
+    manifest_mod.refuse_if_build_inputs_dirty(tmp_path)  # must not raise: generated/ignored
+
+
+def test_refuse_if_build_inputs_dirty_ignores_paths_outside_build_inputs(tmp_path: Path) -> None:
+    _init_repo(tmp_path)
+    _write(tmp_path / "src" / "a.py", "x = 1\n")
+    _commit_all(tmp_path, "initial")
+
+    _write(tmp_path / "docs" / "notes.md", "scratch\n")
+
+    manifest_mod.refuse_if_build_inputs_dirty(tmp_path)  # must not raise: docs/ isn't a build input
