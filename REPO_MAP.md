@@ -16,7 +16,7 @@ comunes. Ver también `CLAUDE.md`, `AGENTS.md` y, para la migración en curso,
 | Analysis Agent | `src/analysis_agent/` | Evidencia, cálculo, revisión y **publicación controlada** del análisis narrativo por trimestre (etapas 12–18). |
 | Contratos web | `contracts/web/` | Esquemas JSON (draft 2020-12) del payload **v1** tal cual se embebe hoy en el HTML publicado (Vuelos, ejecutivo y análisis) + `privacy.yaml` (frontera pública/privada). Fuente de verdad; no aspiracional. |
 | Exportadores web | `src/web_export/` | Divide esos mismos payloads en JSON por periodo bajo `web/public/data/v1/` (local, no versionado), validados contra `contracts/web/` y `config/web_inputs.yaml` antes de escribir. No publica ni toca `stage18`; el HTML publicado sigue viniendo de ahí sin cambios (fase 2 de la migración). `flights/quarters.json` incluye además `available_periods` (P4a): el manifiesto de qué archivos por periodo existen, para que `web/` sepa qué pedir con `fetch()` sin listar el directorio. `analysis.py` (P4b) exporta, por periodo listado en el `#analysis-manifest` del HTML publicado, exactamente lo que `analysis_agent.lifecycle.consumer_payload(record)` autoriza — lectura del flujo de aprobación existente, nunca escritura; falla si falta el expediente local salvo `--allow-missing-analysis` (dev). |
-| Front-end en archivos reales | `web/` | La página completa como HTML/CSS/JS reales (ES modules, `web/src/views/{flights,executive,economy,shell}/*.js`, ≤ 400 líneas cada uno) que consume `web/public/data/v1/` con `fetch()`: cabecera + selector de trimestre compartidos, y las tres pestañas del HTML integrado publicado (Lectura ejecutiva, Economía unitaria, Vuelos — P4a trajo Vuelos, P4b las otras dos). Una sola implementación de cada vista, la misma que muestra el HTML integrado publicado. El HTML/CSS/JS publicados (`static/`, `src/dashboard/assets/*.js`, `*_html.py`) no cambian; ver `web/README.md`. Vite + TypeScript en P5. |
+| Front-end en archivos reales | `web/` | La página completa (Vite + TypeScript desde P5) como HTML/CSS/TS reales (ES modules, `web/src/views/{flights,executive,economy,shell}/*.ts`, ≤ 400 líneas cada uno; tipos generados en `web/src/types/generated/` desde `contracts/web/*.schema.json` vía `npm run gen:types`) que consume `web/public/data/v1/` con `fetch()`: cabecera + selector de trimestre compartidos, y las tres pestañas del HTML integrado publicado (Lectura ejecutiva, Economía unitaria, Vuelos — P4a trajo Vuelos, P4b las otras dos, P5 las convirtió a TypeScript y las empaquetó con Vite). Una sola implementación de cada vista, la misma que muestra el HTML integrado publicado. Plotly se importa parcial (`plotly.js/lib/core` + `bar`/`scatter`/`scattergeo`/`choropleth`, ver `web/src/lib/plotly.ts`) en vez del bundle completo vendorizado que usaba P4. El HTML/CSS/JS publicados (`static/`, `src/dashboard/assets/*.js`, `*_html.py`) no cambian; ver `web/README.md`. |
 | Pruebas | `tests/` | `uv run pytest`; marcadores `local_data` (necesita `data/bronze|silver`/warehouse local) y `browser` (Playwright) se excluyen en CI. |
 
 **Gold tables:** 43 Parquet en `data/gold/` versionados en git (ver
@@ -51,8 +51,9 @@ archivos deben coincidir.
 vive por ahora tanto en `src/dashboard/assets/{flights,executive_summary}.js`
 + `src/analysis_agent/reader_ui.py` (lo que generan `flights_html.py`,
 `executive_summary_html.py` y `stage18`/`reader_ui` para el HTML publicado)
-como, línea por línea, en los módulos ES de `web/src/views/{flights,
-executive,economy,shell}/*.js` (la página completa de `web/`).
+como, línea por línea, en los módulos TypeScript de `web/src/views/{flights,
+executive,economy,shell}/*.ts` (la página completa de `web/`, convertida de
+`.js` a `.ts` en P5).
 `tests/test_web_flights_parity.py` y `tests/test_web_page_parity.py`
 prueban que ambas coinciden hoy — con una excepción documentada y aceptada:
 la cita en superíndice que el HTML publicado agrega a algunas cifras (dato
@@ -78,8 +79,14 @@ autorización para publicarlos. Ver "Datos y documentación" en `README.md`.
 | `python -m src.dashboard.build_flights` | Reconstruye el payload de Vuelos tras cambiar fuentes o Vuelos, antes de regenerar el integrado. |
 | `python -m src.analysis_agent.stage18 --record … --output …` | Publica el HTML integrado. **Requiere instrucción explícita del dueño**; no lo ejecutes por iniciativa propia. |
 | `just dashboard` | Streamlit local (heredado; se retira en P7). |
-| `uv run python -m src.web_export --out web/public/data/v1` | Exporta los payloads v1 divididos por periodo (local, no publica nada; falla con mensaje claro si falta un insumo Gold o el expediente de análisis, salvo `--allow-missing-analysis`). |
-| `uv run python -m src.web_export --out web/public/data/v1 && uv run python web/serve.py` | Exporta y sirve `web/` localmente (equivalente a `python -m http.server -d web`); abre `http://127.0.0.1:8000/` para ver la página completa (Lectura ejecutiva / Economía unitaria / Vuelos). |
+| `uv run python -m src.web_export --out web/public/data/v1` | Exporta los payloads v1 divididos por periodo bajo `web/public/data/v1/` (local, gitignored, no publica nada; falla con mensaje claro si falta un insumo Gold o el expediente de análisis, salvo `--allow-missing-analysis`). Vite (`npm run dev`/`build`) copia el contenido de `web/public/` a la raíz del sitio servido/`dist/` (convención de Vite: `web/public/data/v1/x.json` queda accesible en `data/v1/x.json`, no en `public/data/v1/x.json`; ver `web/src/views/{flights,executive}/state.ts`). |
+| `cd web && npm ci` | Instala node_modules desde `web/package-lock.json` (versiones fijas; Node 22 + npm 10). |
+| `cd web && npm run dev` | Sirve `web/` con el servidor de desarrollo de Vite (recarga en caliente) en `http://127.0.0.1:5173/`; necesita los datos exportados arriba primero. |
+| `cd web && npm run build` | Compila el sitio a `web/dist/` (determinista: dos builds seguidos producen los mismos hashes de archivo). |
+| `cd web && npm run preview` | Sirve `web/dist/` (el build) para revisión antes de publicar. |
+| `cd web && npm run check` | `tsc --noEmit`: chequeo de tipos estricto sin emitir archivos. |
+| `cd web && npm run test` | `vitest run`: pruebas unitarias de funciones puras (formato, agregación, clasificación de región…) y la prueba de tipos generados al día. |
+| `cd web && npm run gen:types` | Regenera `web/src/types/generated/*.ts` desde `contracts/web/*.schema.json`; ejecútalo tras editar un esquema. |
 
 ## Recetas
 

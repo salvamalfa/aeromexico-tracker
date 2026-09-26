@@ -41,3 +41,9 @@ analysis_runs/
 # regenerated from data/warehouse.duckdb; it is versioned only inside the
 # approved site/ build in P6, not as loose files here.
 web/public/data/
+
+# web/ Vite + TypeScript toolchain (P5, migración de arquitectura):
+# node_modules is reinstalled from web/package-lock.json; dist/ is the
+# build output, gated into site/ separately in P6.
+web/node_modules/
+web/dist/

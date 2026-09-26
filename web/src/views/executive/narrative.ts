@@ -12,24 +12,25 @@
 // consumer_payload does not authorize for export. This view shows the
 // same claim text without that citation link.
 
-import { $ } from "../flights/dom.js";
-import { state } from "./state.js";
+import { $ } from "../flights/dom";
+import { state } from "./state";
+import type { AnalysisDocument, ExecutiveView } from "../../types/domain";
 
-const cache = new Map(); // period_id -> payload | null (no export for this period)
+const cache = new Map<string, AnalysisDocument | null>(); // period_id -> payload | null (no export for this period)
 let dialogPeriodLabel = "";
 
-async function fetchAnalysis(periodId) {
-  if (cache.has(periodId)) return cache.get(periodId);
+async function fetchAnalysis(periodId: string): Promise<AnalysisDocument | null> {
+  if (cache.has(periodId)) return cache.get(periodId) ?? null;
   const response = await fetch(`${state.dataRoot}/analysis/${periodId}.json`);
-  const payload = response.ok ? await response.json() : null;
+  const payload = response.ok ? ((await response.json()) as AnalysisDocument) : null;
   cache.set(periodId, payload);
   return payload;
 }
 
 // Port of src/analysis_agent/analyst.py::emphasized: wraps the lead
 // sentence and any emphasis phrase in <strong>, escaping everything else.
-function emphasized(text, lead, phrases = []) {
-  const spans = [];
+function emphasized(text: string, lead: string, phrases: string[] = []): string {
+  const spans: Array<[number, number]> = [];
   for (const phrase of [lead, ...phrases]) {
     if (!phrase || !text.includes(phrase)) continue;
     const start = text.indexOf(phrase);
@@ -38,10 +39,9 @@ function emphasized(text, lead, phrases = []) {
     spans.push([start, end]);
   }
   spans.sort((a, b) => a[0] - b[0]);
-  const escape = (value) =>
-    value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const escape = (value: string) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   let cursor = 0;
-  const parts = [];
+  const parts: string[] = [];
   for (const [start, end] of spans) {
     parts.push(escape(text.slice(cursor, start)), "<strong>", escape(text.slice(start, end)), "</strong>");
     cursor = end;
@@ -50,15 +50,15 @@ function emphasized(text, lead, phrases = []) {
   return parts.join("");
 }
 
-function escapeHtml(value) {
+function escapeHtml(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-function renderDialog(analysis, periodLabel) {
+function renderDialog(analysis: AnalysisDocument, periodLabel: string): void {
   const dialog = $("analysis-full");
   if (!dialog) return;
-  dialog.querySelector(".bar h2").textContent = `Análisis completo · ${periodLabel}`;
-  const content = dialog.querySelector(".modal-content");
+  dialog.querySelector(".bar h2")!.textContent = `Análisis completo · ${periodLabel}`;
+  const content = dialog.querySelector(".modal-content")!;
   content.innerHTML = analysis.sections
     .map(
       (section) =>
@@ -69,20 +69,20 @@ function renderDialog(analysis, periodLabel) {
     .join("");
 }
 
-function wireDialogButton(analysis, periodLabel) {
+function wireDialogButton(analysis: AnalysisDocument, periodLabel: string): void {
   const button = $("analysis-open-full");
   if (!button) return;
   button.onclick = () => {
     dialogPeriodLabel = periodLabel;
     renderDialog(analysis, dialogPeriodLabel);
-    $("analysis-full").showModal();
+    ($("analysis-full") as HTMLDialogElement).showModal();
   };
 }
 
-export async function renderNarrative(view) {
-  $("narrative-period").textContent = view.period_label;
+export async function renderNarrative(view: ExecutiveView): Promise<void> {
+  $("narrative-period")!.textContent = view.period_label;
   const analysis = await fetchAnalysis(view.period_id);
-  const copy = $("narrative-copy");
+  const copy = $("narrative-copy")!;
   if (!analysis) {
     copy.innerHTML = '<p class="analysis-placeholder" id="analysis-empty">Análisis pendiente de aprobación para este trimestre.</p>';
     copy.dataset.period = view.period_id;
@@ -91,9 +91,7 @@ export async function renderNarrative(view) {
   const items = analysis.summary_items
     .map((item) => `<li>${emphasized(item.text, item.lead ?? "", item.emphasis)}</li>`)
     .join("");
-  const context = analysis.context
-    .map((text) => `<aside class="analysis-context">${escapeHtml(text)}</aside>`)
-    .join("");
+  const context = analysis.context.map((text) => `<aside class="analysis-context">${escapeHtml(text)}</aside>`).join("");
   copy.innerHTML =
     `<div><h3>${escapeHtml(analysis.thesis)}</h3>` +
     `<ul class="analysis-summary">${items}</ul>${context}` +

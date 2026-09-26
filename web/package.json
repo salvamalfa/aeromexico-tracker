@@ -1,0 +1,27 @@
+{
+  "name": "aeromexico-tracker-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Vite + TypeScript front-end for the published Aeromexico tracker page (P5). See web/README.md.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "gen:types": "node scripts/gen-types.mjs"
+  },
+  "dependencies": {
+    "plotly.js": "3.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.4",
+    "@types/plotly.js": "3.0.14",
+    "json-schema-to-typescript": "15.0.4",
+    "jsdom": "25.0.1",
+    "typescript": "5.9.3",
+    "vite": "7.1.12",
+    "vitest": "3.2.4"
+  }
+}

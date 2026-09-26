@@ -23,10 +23,10 @@ analysis in a given checkout) — see ``tests/conftest.py`` and
 
 from __future__ import annotations
 
-import os
+import shutil
 import threading
 from functools import partial
-from http.server import ThreadingHTTPServer
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
@@ -38,7 +38,6 @@ sync_playwright = playwright_sync_api.sync_playwright
 from src.web_export.analysis import export_analysis  # noqa: E402
 from src.web_export.executive import export_executive  # noqa: E402
 from src.web_export.flights import export_flights  # noqa: E402
-from web.serve import WEB_ROOT, SimpleHTTPRequestHandler  # noqa: E402
 
 pytestmark = [pytest.mark.browser, pytest.mark.local_data]
 
@@ -52,14 +51,16 @@ def _chromium_executable() -> str | None:
 
 
 @pytest.fixture(scope="module")
-def web_server(tmp_path_factory, flight_payload, executive_payload):
-    """Serve a temp copy of web/ with the real, warehouse-backed payloads
-    plus every analysis export the published page's own manifest lists."""
+def web_server(tmp_path_factory, web_dist_dir, flight_payload, executive_payload):
+    """Serve a temp copy of web/dist/ (the built site) with the real,
+    warehouse-backed payloads plus every analysis export the published
+    page's own manifest lists. See test_web_page_smoke.py's web_server
+    for why data/v1 (not public/data/v1) is the right path against the
+    built site."""
 
     root = tmp_path_factory.mktemp("web_page_parity")
-    for name in ("index.html", "src", "vendor"):
-        os.symlink(WEB_ROOT / name, root / name)
-    out_dir = root / "public" / "data" / "v1"
+    shutil.copytree(web_dist_dir, root, dirs_exist_ok=True)
+    out_dir = root / "data" / "v1"
     export_flights(flight_payload, out_dir, skip_input_check=True)
     export_executive(executive_payload, out_dir, skip_input_check=True)
     export_analysis(out_dir, published_html=PUBLISHED_HTML, allow_missing=True)
