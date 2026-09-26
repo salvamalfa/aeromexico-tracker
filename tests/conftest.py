@@ -31,12 +31,17 @@ Fixtures
 
 from __future__ import annotations
 
+import shutil
+import subprocess
 from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 import pytest
 
 from src.config import PATHS
+
+WEB_ROOT = PATHS.root / "web"
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -127,3 +132,31 @@ def executive_payload() -> dict[str, Any]:
     from src.dashboard.executive_summary import build_executive_payload
 
     return build_executive_payload()
+
+
+@pytest.fixture(scope="session")
+def web_dist_dir() -> Path:
+    """Build web/ once per session with Vite and return web/dist/.
+
+    P5 (see docs/arquitectura/auditoria-arquitectura-20260926.md Fase 4):
+    the smoke/parity tests below serve the BUILT site, not raw src/, so
+    they exercise the same bundling the published GitHub Pages build will
+    use. Skips (not fails) with a clear reason when node/npm are missing
+    or `npm ci` has not been run, since this checkout might not have
+    Node installed at all; `npm run build` itself is deterministic (two
+    consecutive runs produce byte-identical dist/), so building once per
+    session and reusing dist/ for every test in it is safe.
+    """
+    npm = shutil.which("npm")
+    if npm is None:
+        pytest.skip("web_dist_dir: npm is not on PATH; install Node 22 + npm 10 to run the web/ browser tests.")
+    if not (WEB_ROOT / "node_modules").exists():
+        result = subprocess.run([npm, "ci"], cwd=WEB_ROOT, capture_output=True, text=True)
+        if result.returncode != 0:
+            pytest.skip(f"web_dist_dir: `npm ci` failed in {WEB_ROOT}:\n{result.stdout}\n{result.stderr}")
+    result = subprocess.run([npm, "run", "build"], cwd=WEB_ROOT, capture_output=True, text=True)
+    if result.returncode != 0:
+        pytest.fail(f"web_dist_dir: `npm run build` failed in {WEB_ROOT}:\n{result.stdout}\n{result.stderr}", pytrace=False)
+    dist = WEB_ROOT / "dist"
+    assert (dist / "index.html").exists(), f"web_dist_dir: {dist}/index.html missing after a successful build"
+    return dist

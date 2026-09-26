@@ -1,8 +1,9 @@
-"""CI-runnable smoke test for the full web/ page: serves it with small,
-synthetic public fixtures (no warehouse, no analysis_runs/) and checks
-every tab — Lectura ejecutiva, Economía unitaria, Vuelos — renders with no
-console errors. Marked ``browser`` only (not ``local_data``), same as
-``test_web_flights_smoke.py``, so it is CI-capable once Playwright is
+"""CI-runnable smoke test for the full web/ page: builds it with Vite
+(``web_dist_dir`` in tests/conftest.py, P5) and serves web/dist/ with
+small, synthetic public fixtures (no warehouse, no analysis_runs/), then
+checks every tab — Lectura ejecutiva, Economía unitaria, Vuelos — renders
+with no console errors. Marked ``browser`` only (not ``local_data``), same
+as ``test_web_flights_smoke.py``, so it is CI-capable once Playwright is
 enabled there — see docs/arquitectura/auditoria-arquitectura-20260926.md
 §2.5 and web/README.md.
 """
@@ -10,10 +11,10 @@ enabled there — see docs/arquitectura/auditoria-arquitectura-20260926.md
 from __future__ import annotations
 
 import json
-import os
+import shutil
 import threading
 from functools import partial
-from http.server import ThreadingHTTPServer
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
@@ -26,7 +27,6 @@ sync_playwright = playwright_sync_api.sync_playwright
 from src.web_export.executive import export_executive  # noqa: E402
 from src.web_export.flights import export_flights  # noqa: E402
 from src.web_export.writer import write_json  # noqa: E402
-from web.serve import WEB_ROOT, SimpleHTTPRequestHandler  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -42,15 +42,18 @@ def _load_fixture(name: str) -> dict[str, Any]:
 
 
 @pytest.fixture(scope="module")
-def web_server(tmp_path_factory):
-    """Serve a temp copy of web/ whose public/data/v1 holds only the
-    synthetic, public fixtures — no local warehouse or analysis_runs/."""
+def web_server(tmp_path_factory, web_dist_dir):
+    """Serve a temp copy of web/dist/ (the built site) whose data/v1
+    holds only the synthetic, public fixtures — no local warehouse or
+    analysis_runs/. Vite copies web/public/* to the root of dist/ (not
+    under a public/ subdirectory), so the exported payload goes at
+    <root>/data/v1, matching the runtime dataRoot the built page fetches
+    from (see web/src/views/{flights,executive}/state.ts)."""
 
     root = tmp_path_factory.mktemp("web_page_smoke")
-    for name in ("index.html", "src", "vendor"):
-        os.symlink(WEB_ROOT / name, root / name)
+    shutil.copytree(web_dist_dir, root, dirs_exist_ok=True)
 
-    out_dir = root / "public" / "data" / "v1"
+    out_dir = root / "data" / "v1"
     flights_fixture = _load_fixture("flights_sample.json")
     flights_payload = {**flights_fixture, "international_networks": flights_fixture["route_networks"]}
     export_flights(flights_payload, out_dir, skip_input_check=True)
