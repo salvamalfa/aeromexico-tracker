@@ -85,6 +85,7 @@ export async function renderNarrative(view) {
   const copy = $("narrative-copy");
   if (!analysis) {
     copy.innerHTML = '<p class="analysis-placeholder" id="analysis-empty">Análisis pendiente de aprobación para este trimestre.</p>';
+    copy.dataset.period = view.period_id;
     return;
   }
   const items = analysis.summary_items
@@ -97,5 +98,6 @@ export async function renderNarrative(view) {
     `<div><h3>${escapeHtml(analysis.thesis)}</h3>` +
     `<ul class="analysis-summary">${items}</ul>${context}` +
     '<div class="analysis-actions"><button type="button" id="analysis-open-full">▸ Leer análisis completo</button></div></div>';
+  copy.dataset.period = view.period_id;
   wireDialogButton(analysis, view.period_label);
 }
