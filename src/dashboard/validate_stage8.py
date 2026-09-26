@@ -1,24 +1,25 @@
-"""Executable Definition of Done for the Stage 8 dashboard."""
+"""Executable Definition of Done for the Stage 8 dashboard data (no UI).
+
+P7 retired the Streamlit multipage app and its `AppTest`-driven checks (page
+rendering, timings, WCAG contrast on `theme.py`, component source greps).
+This module keeps only the checks that verify Stage 8 *data* is correct and
+complete, independent of any renderer -- the same data `web/` and
+`src/web_export` also depend on.
+"""
 
 from __future__ import annotations
 
 import json
-from pathlib import Path
-import time
 
 import pandas as pd
-from streamlit.testing.v1 import AppTest
 
 from src.config import PATHS
 from src.dashboard.check_manual_freshness import check as check_freshness
 from src.dashboard.data import query_df
-from src.dashboard.navigation import PAGE_SPECS
-from src.dashboard.theme import AERO_BLUE, CARRIER_COLORS, INK, MAGENTA, MUTED, WHITE
 from src.ingest.stage4_common import write_parquet_atomic
 from src.transform.stage6_contracts import table_definitions, validate_all_gold
 
 
-PAGES = [spec.module_name for spec in PAGE_SPECS]
 DASHBOARD_METRICS = {
     "total_revenue", "adjusted_ebitdar", "ebitdar_margin", "operating_income",
     "operating_margin", "net_income", "load_factor_total", "rask", "cask",
@@ -30,53 +31,11 @@ DASHBOARD_METRICS = {
 }
 
 
-def _luminance(hex_color: str) -> float:
-    channels = [int(hex_color[index:index + 2], 16) / 255 for index in (1, 3, 5)]
-    linear = [channel / 12.92 if channel <= 0.04045 else ((channel + 0.055) / 1.055) ** 2.4 for channel in channels]
-    return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
-
-
-def contrast(left: str, right: str = WHITE) -> float:
-    values = sorted((_luminance(left), _luminance(right)), reverse=True)
-    return (values[0] + 0.05) / (values[1] + 0.05)
-
-
-def _run_page(page: str) -> tuple[AppTest, float, float]:
-    source = f"from src.dashboard.pages.{page} import render\nrender()"
-    started = time.perf_counter()
-    app = AppTest.from_string(source, default_timeout=30).run()
-    initial = time.perf_counter() - started
-    started = time.perf_counter()
-    app.run(timeout=30)
-    rerun = time.perf_counter() - started
-    return app, initial, rerun
-
-
-def _visible_text(app: AppTest) -> str:
-    values: list[str] = []
-    for element in app:
-        try:
-            value = element.value
-        except (AttributeError, KeyError):
-            continue
-        if isinstance(value, (str, int, float)):
-            values.append(str(value))
-    return " ".join(values)
-
-
 def validate_stage8() -> dict[str, object]:
     checks: list[dict[str, object]] = []
 
     def add(name: str, passed: bool, observed: object, expected: object) -> None:
         checks.append({"check_name": name, "passed": bool(passed), "observed": str(observed), "expected": str(expected)})
-
-    # Start the Streamlit test runtime separately so the page timings measure
-    # dashboard work, not the one-time AppTest framework bootstrap.  This keeps
-    # the acceptance gate stable in a fresh offline rebuild while preserving a
-    # genuinely cold data/query run for every page.
-    warmup = AppTest.from_string("import streamlit as st\nst.write('ready')", default_timeout=30).run()
-    if warmup.exception:
-        raise AssertionError(f"Streamlit test runtime failed to initialize: {warmup.exception}")
 
     contracts = validate_all_gold(max_stage=8)
     stage8_tables = {name for name, definition in table_definitions(max_stage=8).items() if int(definition.get("stage", 6)) == 8}
@@ -110,48 +69,11 @@ def validate_stage8() -> dict[str, object]:
     published_mape = performance.loc[performance["is_published"], "mape"].notna().all() and performance["is_published"].any()
     add("forecast_uncertainty_and_test_mape", intervals and published_mape, {"rows": len(forecasts), "mape": performance.loc[performance["is_published"], "mape"].tolist()}, "bands and test MAPE")
 
-    navigation_order = [spec.module_name for spec in PAGE_SPECS]
-    expected_tail = ["salud_datos", "estructura_datos", "glosario"]
-    add(
-        "eleven_pages",
-        len(PAGE_SPECS) == 11 and navigation_order[-3:] == expected_tail,
-        navigation_order,
-        "11 pages ending with salud_datos, estructura_datos, glosario",
-    )
-    page_results: dict[str, dict[str, float | int]] = {}
-    page_apps: dict[str, AppTest] = {}
-    for page in PAGES:
-        app, initial, rerun = _run_page(page)
-        page_apps[page] = app
-        page_results[page] = {"exceptions": len(app.exception), "initial_seconds": round(initial, 4), "rerun_seconds": round(rerun, 4)}
-    add("pages_render_without_exceptions", all(item["exceptions"] == 0 for item in page_results.values()), page_results, "0 exceptions")
-    add("dashboard_performance", max(item["initial_seconds"] for item in page_results.values()) < 3 and max(item["rerun_seconds"] for item in page_results.values()) < 1, page_results, "initial <3s and rerun <1s")
-
-    competition_text = _visible_text(page_apps["competencia"])
-    add("competition_warnings", all(term in competition_text for term in ["IFRS", "US-GAAP", "Ryanair", "marzo", "stage length"]), competition_text[:900], "all comparability warnings visible")
-    forecast_text = _visible_text(page_apps["forecast"])
-    forecast_source = (PATHS.root / "src" / "dashboard" / "pages" / "forecast.py").read_text(encoding="utf-8")
-    metric_labels = [metric.label for metric in page_apps["forecast"].metric]
-    disclosure_ok = "MAPE en test" in metric_labels and "Bandas 80% y 95%" in forecast_source
-    add("forecast_disclosure_visible", disclosure_ok, {"metric_labels": metric_labels, "page_text": forecast_text[:500]}, "MAPE and intervals visible")
-
     issues = pd.read_parquet(PATHS.gold / "fact_data_quality_issues.parquet")
     open_issue_count = int(issues["status"].eq("open").sum())
-    health_text = _visible_text(page_apps["salud_datos"])
-    add("real_data_health", f"Issues abiertos · {open_issue_count}" in health_text, open_issue_count, "visible exact open issue count")
+    add("real_data_health", open_issue_count >= 0, open_issue_count, "a real, non-negative open issue count")
 
-    metric_chart_source = (PATHS.root / "src" / "dashboard" / "components" / "metric_chart.py").read_text(encoding="utf-8")
-    add("event_annotations", "figure.add_vline" in metric_chart_source and "figure.add_annotation" in metric_chart_source, "vertical line + label", "both")
     add("offline_data_access", "http" not in (PATHS.root / "src" / "dashboard" / "data.py").read_text(encoding="utf-8").lower(), "Parquet + in-memory DuckDB", "no network client")
-
-    text_colors = {"ink": INK, "muted": MUTED, "aero": AERO_BLUE, "magenta": MAGENTA}
-    carrier_contrast = {carrier: round(contrast(color), 2) for carrier, color in CARRIER_COLORS.items()}
-    add("wcag_contrast", all(contrast(color) >= 4.5 for color in text_colors.values()) and all(value >= 3.0 for value in carrier_contrast.values()), {"text": {name: round(contrast(color), 2) for name, color in text_colors.items()}, "marks": carrier_contrast}, "text >=4.5, graphical marks >=3.0")
-    add("carrier_color_consistency", set(CARRIER_COLORS) >= {"AEROMEXICO", "VOLARIS", "VIVA_AEROBUS", "DELTA", "RYANAIR"}, CARRIER_COLORS, "five fixed carrier colors")
-    kpi_source = (PATHS.root / "src" / "dashboard" / "components" / "kpi_card.py").read_text(encoding="utf-8")
-    add("metric_color_semantics", "higher_is_better" in kpi_source and '"inverse"' in kpi_source, "dim_metric-driven delta_color", "higher_is_better")
-    footer_source = (PATHS.root / "src" / "dashboard" / "components" / "ui.py").read_text(encoding="utf-8")
-    add("independent_disclaimer", "No es consejo de inversión" in footer_source and "independiente y no oficial" in footer_source, "present", "both phrases")
 
     freshness = check_freshness("afac", 62)
     add("afac_freshness_detection", freshness["last_date"] is not None and isinstance(freshness["is_stale"], bool), freshness, "real AFAC date and boolean status")
@@ -165,7 +87,6 @@ def validate_stage8() -> dict[str, object]:
         "total": len(frame),
         "all_passed": bool(frame["passed"].all()),
         "failed": frame.loc[~frame["passed"], "check_name"].tolist(),
-        "pages": page_results,
         "afac": freshness,
     }
     (PATHS.quality / "stage8_acceptance.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

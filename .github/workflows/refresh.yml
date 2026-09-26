@@ -55,16 +55,15 @@ jobs:
         continue-on-error: true
         run: uv run pytest
 
-      - name: Validate dashboard acceptance
-        id: validation
-        if: steps.tests.outcome == 'success'
-        continue-on-error: true
-        run: |
-          uv run python -m src.dashboard.validate_stage10
-          uv run python -m src.dashboard.validate_stage8
+      # P7 (see docs/arquitectura/migracion-estado.md) retired this step's
+      # two calls: `src.dashboard.validate_stage10` (the Streamlit-era data
+      # structure page, deleted) and `src.dashboard.validate_stage8` (its
+      # Streamlit `AppTest` checks, deleted; the module's data-only checks
+      # now run inside `src.rebuild`'s pipeline DAG, not here). The full test
+      # suite above is this workflow's acceptance gate before committing.
 
       - name: Open validation-failed issue
-        if: steps.tests.outcome == 'failure' || steps.validation.outcome == 'failure'
+        if: steps.tests.outcome == 'failure'
         uses: actions/github-script@v7
         with:
           script: |
@@ -77,11 +76,11 @@ jobs:
             });
 
       - name: Stop before commit when validation failed
-        if: steps.tests.outcome == 'failure' || steps.validation.outcome == 'failure'
+        if: steps.tests.outcome == 'failure'
         run: exit 1
 
       - name: Commit validated gold updates
-        if: steps.tests.outcome == 'success' && steps.validation.outcome == 'success'
+        if: steps.tests.outcome == 'success'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
