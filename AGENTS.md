@@ -138,6 +138,33 @@ solo autorización para aprobar o republicar un análisis.
 No publiques el dashboard, no hagas push a `master`, no actives evidencia y no
 consumas una API pagada salvo que el usuario lo haya pedido explícitamente.
 
+## Pull requests: autorización permanente del dueño
+
+Autorización dada por el dueño (salvamalfa) el 26 de septiembre de 2026 para
+todo este proyecto y para cualquier agente (Claude, ChatGPT/Codex u otro); no
+hace falta volver a pedirla en cada sesión:
+
+- **Suscribirte a la actividad de tus PRs** (CI, reviews, comentarios) sin
+  preguntar, y dar seguimiento hasta que se fusionen o cierren.
+- **Fusionar tus propios PRs** a `master` cuando se cumplan todas estas
+  condiciones sobre el último commit:
+  1. Los checks obligatorios `test` y `web` de `ci.yml` están en verde (el
+     ruleset `Master` los exige; no intentes saltarlo con el bypass de admin).
+  2. No hay conflicto con `master`.
+  3. Todos los hilos de revisión, incluidos los de bots como Codex, están
+     atendidos: corregidos con un push o respondidos explicando por qué no
+     aplican, y resueltos. Da unos minutos tras marcar el PR como listo para
+     que llegue la revisión automática antes de fusionar.
+  4. El PR se abrió como borrador y se marcó como listo tras cumplir lo anterior.
+- Método: merge commit (como el historial existente). Nunca force-push a
+  `master`, nunca push directo a `master`.
+
+Esta autorización cubre código, pruebas, workflows y documentación. **No**
+cubre por sí sola lo que la sección anterior reserva al dueño: un PR que cambia
+`site/` (publicación), aprobaciones del Analysis Agent, activación de evidencia
+o llamadas a APIs pagadas sigue necesitando su instrucción explícita. Si dudas,
+deja el PR listo y pregunta.
+
 ## Criterio de cierre
 
 Antes de entregar:
