@@ -35,3 +35,14 @@ jobs:
       # (see docs/arquitectura/auditoria-arquitectura-20260926.md §2.5/§5).
       - name: Run the public test subset
         run: uv run pytest -m "not local_data and not browser" -q
+
+      # Only these modules are ruff-formatted so far (see REPO_MAP.md and
+      # docs/arquitectura/auditoria-arquitectura-20260926.md §5 fase 1); the
+      # rest of the tree is not yet covered.
+      - name: Check ruff format on migrated modules
+        run: >-
+          uv run ruff format --check
+          src/dashboard/international_routes.py
+          src/analysis_agent/stage18.py
+          src/analysis_agent/reader_ui.py
+          src/analysis_agent/lifecycle.py
