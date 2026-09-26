@@ -227,7 +227,9 @@ def verify_site(site_dir: Path) -> list[str]:
         if schema is ANALYSIS_SCHEMA and isinstance(payload.get("period_id"), str):
             analysis_payloads_by_period[payload["period_id"]] = payload
 
-    analysis_fields = ("period_id", "version", "content_hash", "evidence_fingerprint", "approval_event", "audit_hash")
+    analysis_fields = (
+        "period_id", "version", "content_hash", "evidence_fingerprint", "approval_event", "audit_hash",
+    )
     for index, entry in enumerate(manifest["analysis_manifest"]):
         for field in analysis_fields:
             value = entry.get(field)
@@ -239,7 +241,8 @@ def verify_site(site_dir: Path) -> list[str]:
             payload = analysis_payloads_by_period.get(period_id)
             if payload is None:
                 problems.append(
-                    f"analysis_manifest[{index}]: no readable data/v1/analysis/{period_id}.json to cross-check against"
+                    f"analysis_manifest[{index}]: no readable data/v1/analysis/{period_id}.json "
+                    "to cross-check against"
                 )
                 continue
             for field in analysis_fields:
