@@ -7,6 +7,7 @@ from src.transform.silver_contracts import load_silver_contracts, validate_all_s
 from src.config import PATHS
 
 
+@pytest.mark.local_data
 def test_every_physical_silver_dataset_is_declared() -> None:
     assert len(validate_all_silver()) == 30
 
@@ -17,6 +18,7 @@ def test_every_silver_contract_declares_grain_and_lineage_type() -> None:
     assert all(definition["lineage_type"] for definition in definitions.values())
 
 
+@pytest.mark.local_data
 def test_bts_grain_distinguishes_carrier_entities_and_aircraft_configurations() -> None:
     definition = load_silver_contracts()["tables"]["bts_t100_segment"]
     assert "allow_duplicate_grain" not in definition

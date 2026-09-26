@@ -11,7 +11,6 @@ import pytest
 
 from src.config import PATHS
 from src.dashboard.domestic_routes import load_domestic_networks
-from src.dashboard.flights import build_flight_payload
 from src.dashboard.flights_html import integration_flight_payload
 from src.transform.domestic_slots import GOLD, SILVER, SOURCE
 
@@ -168,6 +167,7 @@ def test_load_factor_above_100_percent_is_nd_but_keeps_flights_and_seats():
     assert route["load_factor_status"] == "inconsistent_inputs"
 
 
+@pytest.mark.local_data
 def test_aicm_bronze_silver_gold_reconcile_and_preserve_scope():
     source_hash = hashlib.sha256(SOURCE.read_bytes()).hexdigest()
     metadata = json.loads(SOURCE.with_name(SOURCE.name + ".meta.json").read_text(encoding="utf-8"))
@@ -185,8 +185,9 @@ def test_aicm_bronze_silver_gold_reconcile_and_preserve_scope():
         assert connection.execute("SELECT count(*) FROM dim_source_artifact WHERE artifact_sha256 = ?", [source_hash]).fetchone()[0] == 1
 
 
-def test_domestic_map_shows_reconciled_estimates_for_every_queried_month():
-    payload = build_flight_payload()
+@pytest.mark.local_data
+def test_domestic_map_shows_reconciled_estimates_for_every_queried_month(flight_payload):
+    payload = flight_payload
     network = payload["domestic_networks"]["2026Q2"]
     assert network["mode"] == "estimated_domestic"
     assert network["agent_eligible"] is False

@@ -110,6 +110,7 @@ def test_unknown_format_and_number_are_rejected():
     assert parser.number("(1,234.5)") == -1234.5
 
 
+@pytest.mark.local_data
 def test_all_targets_accounted_for_and_references_resolve():
     result = build()
     assert not result["unexplained"]

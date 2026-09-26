@@ -6,26 +6,26 @@ from test_stage16_analyst import inputs
 from test_stage17_lifecycle import case, fresh
 from src.analysis_agent import lifecycle as flow
 from src.analysis_agent import stage18
-from src.dashboard.executive_summary import build_executive_payload
-from src.dashboard.flights import build_flight_payload
 from src.dashboard.flights_html import integrated_flights_css, integration_flight_payload
 
+pytestmark = pytest.mark.local_data
 
-def test_unapproved_cannot_replace_existing_dashboard(case,tmp_path):
+
+def test_unapproved_cannot_replace_existing_dashboard(case,tmp_path,executive_payload):
     record,audit,auth,root=case
     out=tmp_path/'dashboard.html';out.write_text('existing')
     with pytest.raises(ValueError,match='Publication blocked'):
-        stage18.publish([record],out,build_executive_payload(),root)
+        stage18.publish([record],out,executive_payload,root)
     assert out.read_text()=='existing'
     assert not (root/'publications').exists()
 
 
-def test_publish_retries_and_excludes_private_comments(case,tmp_path):
+def test_publish_retries_and_excludes_private_comments(case,tmp_path,executive_payload,flight_payload):
     record,audit,auth,root=case
     flow.record_audit(record,audit,root)
     flow.comment(record,'PRIVATE DISCUSSION NOT FOR HTML','TEST',root)
     flow.approve(record,fresh(auth),root)
-    out=tmp_path/'dashboard.html';dashboard=build_executive_payload()
+    out=tmp_path/'dashboard.html';dashboard=executive_payload
     first=stage18.publish([record],out,dashboard,root)
     assert flow.state(record,root)['state']=='published'
     assert stage18.publish([record],out,dashboard,root)==first
@@ -59,7 +59,7 @@ def test_publish_retries_and_excludes_private_comments(case,tmp_path):
     assert soup.select_one('#forecast-chart') is None
     assert soup.select_one('#passenger-period option[selected]').get_text(strip=True)=='Trimestral'
     embedded_flights=json.loads(soup.select_one('#flight-dashboard-data').string)
-    assert embedded_flights==integration_flight_payload(build_flight_payload())
+    assert embedded_flights==integration_flight_payload(flight_payload)
     assert not {'forecast','sources','agent_eligibility'} & embedded_flights.keys()
     tab_script=soup.find_all('script')[-1].string
     assert '(i+1)%tabs.length' in tab_script
@@ -73,16 +73,16 @@ def test_publish_retries_and_excludes_private_comments(case,tmp_path):
     with pytest.raises(ValueError,match='Publication blocked'):stage18.publish([record],out,dashboard,root)
 
 
-def test_interrupted_replacement_preserves_old_html_and_retry(case,tmp_path,monkeypatch):
+def test_interrupted_replacement_preserves_old_html_and_retry(case,tmp_path,monkeypatch,executive_payload):
     record,audit,auth,root=case
     flow.record_audit(record,audit,root);flow.approve(record,fresh(auth),root)
     out=tmp_path/'dashboard.html';out.write_text('old')
     original=stage18.os.replace
     with monkeypatch.context() as patch:
         patch.setattr(stage18.os,'replace',lambda *a:(_ for _ in ()).throw(OSError('interrupted')))
-        with pytest.raises(OSError):stage18.publish([record],out,build_executive_payload(),root)
+        with pytest.raises(OSError):stage18.publish([record],out,executive_payload,root)
     assert out.read_text()=='old'
     assert not list((root/'publications').glob('*.published.json'))
-    stage18.publish([record],out,build_executive_payload(),root)
+    stage18.publish([record],out,executive_payload,root)
     assert len(list((root/'publications').glob('*.published.json')))==1
 

@@ -52,12 +52,14 @@ def calculation():
     return p,build(p)
 
 
+@pytest.mark.local_data
 def test_frozen_package_is_not_mutated_and_results_repeat(calculation):
     p,result=calculation
     original=deepcopy(p)
     assert build(p)==result and p==original
 
 
+@pytest.mark.local_data
 def test_conversion_and_bridge_closure(calculation):
     p,result=calculation
     lookup={(n['period_id'],n['key']):n for n in result['nodes']}
@@ -69,6 +71,7 @@ def test_conversion_and_bridge_closure(calculation):
     assert all(b['status']=='passed' for b in result['identity_bridges'])
 
 
+@pytest.mark.local_data
 def test_lineage_graph_has_resolved_acyclic_references(calculation):
     p,result=calculation
     known={m['metric_id'] for m in p['metrics']}
@@ -78,6 +81,7 @@ def test_lineage_graph_has_resolved_acyclic_references(calculation):
         known.add(node['calculation_id'])
 
 
+@pytest.mark.local_data
 def test_cost_differences_are_not_hidden_as_success(calculation):
     p,result=calculation
     differences=[c for c in result['checks'] if c['status']=='not_reconciled']

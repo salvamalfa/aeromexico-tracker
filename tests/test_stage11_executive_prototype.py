@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -12,7 +13,6 @@ import pytest
 from src.config import PATHS
 from src.dashboard.executive_summary import (
     EXECUTIVE_QUERY,
-    build_executive_payload,
     load_executive_history,
 )
 from src.dashboard.executive_summary_html import (
@@ -28,9 +28,10 @@ def _payload_from_html(document: str) -> dict[str, object]:
     return json.loads(node.string)
 
 
-def test_payload_uses_every_complete_comparable_backend_quarter() -> None:
+@pytest.mark.local_data
+def test_payload_uses_every_complete_comparable_backend_quarter(executive_payload) -> None:
     history = load_executive_history()
-    payload = build_executive_payload()
+    payload = executive_payload
     assert payload["metadata"]["quarter_count"] == len(history) == 22
     assert payload["metadata"]["first_period"] == "2021Q1"
     assert payload["metadata"]["last_period"] == "2026Q2"
@@ -40,8 +41,9 @@ def test_payload_uses_every_complete_comparable_backend_quarter() -> None:
     assert "v_aeromexico_quarterly" in EXECUTIVE_QUERY
 
 
-def test_payload_reconciles_latest_anchor_and_margin_formula() -> None:
-    payload = build_executive_payload()
+@pytest.mark.local_data
+def test_payload_reconciles_latest_anchor_and_margin_formula(executive_payload) -> None:
+    payload = executive_payload
     latest = payload["records"][-1]
     assert latest["period_id"] == "2026Q2"
     assert latest["passengers"] == 6_014_000.0
@@ -56,8 +58,9 @@ def test_payload_reconciles_latest_anchor_and_margin_formula() -> None:
     )
 
 
-def test_qoq_yoy_and_typed_deltas_are_correct() -> None:
-    payload = build_executive_payload()
+@pytest.mark.local_data
+def test_qoq_yoy_and_typed_deltas_are_correct(executive_payload) -> None:
+    payload = executive_payload
     latest = payload["views"]["2026Q2"]
     kpis = {item["key"]: item for item in latest["kpis"]}
     assert math.isclose(
@@ -72,8 +75,9 @@ def test_qoq_yoy_and_typed_deltas_are_correct() -> None:
     assert latest["margin_yoy"]["display"] == "-1.18 ¢ USD"
 
 
-def test_missing_comparables_are_explicit_not_zero() -> None:
-    payload = build_executive_payload()
+@pytest.mark.local_data
+def test_missing_comparables_are_explicit_not_zero(executive_payload) -> None:
+    payload = executive_payload
     first = payload["views"]["2021Q1"]
     for kpi in first["kpis"]:
         assert kpi["qoq"] == {
@@ -90,8 +94,9 @@ def test_missing_comparables_are_explicit_not_zero() -> None:
         }
 
 
-def test_html_contains_only_one_executive_view_and_five_kpis() -> None:
-    document = render_executive_html(build_executive_payload())
+@pytest.mark.local_data
+def test_html_contains_only_one_executive_view_and_five_kpis(executive_payload) -> None:
+    document = render_executive_html(executive_payload)
     soup = BeautifulSoup(document, "html.parser")
     assert len(soup.select("main[data-testid='executive-summary-root']")) == 1
     assert len(soup.select(".kpi-card")) == 5
@@ -100,20 +105,22 @@ def test_html_contains_only_one_executive_view_and_five_kpis() -> None:
     assert "Estructura de datos" not in soup.get_text(" ", strip=True)
 
 
-def test_html_embeds_all_quarters_and_uses_accessible_period_stepper() -> None:
-    document = render_executive_html(build_executive_payload())
+@pytest.mark.local_data
+def test_html_embeds_all_quarters_and_uses_accessible_period_stepper(executive_payload) -> None:
+    document = render_executive_html(executive_payload)
     soup = BeautifulSoup(document, "html.parser")
     assert soup.select_one("#period-selector") is None
     assert soup.select_one("#period-prev")["aria-label"] == "Ir al trimestre anterior"
     assert soup.select_one("#period-next")["aria-label"] == "Ir al trimestre siguiente"
     assert soup.select_one("#period-display") is not None
     embedded = _payload_from_html(document)
-    assert embedded == build_executive_payload()
+    assert embedded == executive_payload
     assert len(embedded["records"]) == 22
 
 
-def test_html_has_expected_charts_narrative_and_disclosures() -> None:
-    document = render_executive_html(build_executive_payload())
+@pytest.mark.local_data
+def test_html_has_expected_charts_narrative_and_disclosures(executive_payload) -> None:
+    document = render_executive_html(executive_payload)
     soup = BeautifulSoup(document, "html.parser")
     assert {node["id"] for node in soup.select(".chart[id]")} == {
         "unit-chart",
@@ -127,8 +134,9 @@ def test_html_has_expected_charts_narrative_and_disclosures() -> None:
     assert "Precio vs. Volumen de pasajeros" in soup.get_text(" ", strip=True)
 
 
-def test_annotated_copy_order_and_delta_coloring_are_implemented() -> None:
-    document = render_executive_html(build_executive_payload())
+@pytest.mark.local_data
+def test_annotated_copy_order_and_delta_coloring_are_implemented(executive_payload) -> None:
+    document = render_executive_html(executive_payload)
     soup = BeautifulSoup(document, "html.parser")
     text = soup.get_text(" ", strip=True)
     assert "AERO · NYSE / BMV" not in text
@@ -176,8 +184,9 @@ def test_annotated_copy_order_and_delta_coloring_are_implemented() -> None:
     assert "border-top: 2px solid var(--ink) !important;" in css
 
 
-def test_html_is_self_contained_and_has_no_remote_runtime() -> None:
-    document = render_executive_html(build_executive_payload())
+@pytest.mark.local_data
+def test_html_is_self_contained_and_has_no_remote_runtime(executive_payload) -> None:
+    document = render_executive_html(executive_payload)
     soup = BeautifulSoup(document, "html.parser")
     assert not soup.select(
         "script[src], link[href], iframe, img[src], video[src], audio[src], source[src]"
@@ -196,8 +205,9 @@ def test_html_is_self_contained_and_has_no_remote_runtime() -> None:
         assert primitive not in app_script
 
 
-def test_html_contains_no_secret_email_or_absolute_machine_path() -> None:
-    document = render_executive_html(build_executive_payload())
+@pytest.mark.local_data
+def test_html_contains_no_secret_email_or_absolute_machine_path(executive_payload) -> None:
+    document = render_executive_html(executive_payload)
     soup = BeautifulSoup(document, "html.parser")
     # Vendored Plotly preserves third-party license notices, including author
     # contacts. Project data and application code must remain free of contact
@@ -219,8 +229,9 @@ def test_html_contains_no_secret_email_or_absolute_machine_path() -> None:
     )
 
 
-def test_adversarial_payload_is_escaped_in_html_and_json() -> None:
-    payload = copy.deepcopy(build_executive_payload())
+@pytest.mark.local_data
+def test_adversarial_payload_is_escaped_in_html_and_json(executive_payload) -> None:
+    payload = copy.deepcopy(executive_payload)
     payload["metadata"]["title"] = "</title><script id='pwn'>alert(1)</script>"
     payload["metadata"]["coverage_label"] = "<img src=x onerror=alert(1)>"
     payload["views"]["2026Q2"]["conclusions"][0] = "</script><script id='json-pwn'>x</script>"
@@ -243,7 +254,8 @@ def test_responsive_and_reduced_motion_rules_are_present() -> None:
     assert "grid-template-columns: repeat(5" in css
 
 
-def test_generated_artifact_matches_current_renderer() -> None:
+@pytest.mark.local_data
+def test_generated_artifact_matches_current_renderer(executive_payload) -> None:
     assert DEFAULT_OUTPUT.exists()
     existing=DEFAULT_OUTPUT.read_text(encoding='utf-8')
     manifest=BeautifulSoup(existing,'html.parser').find(id='analysis-manifest')
@@ -263,9 +275,22 @@ def test_generated_artifact_matches_current_renderer() -> None:
             authorized=flow.consumer_payload(record)
             package,calculations,checks=flow.verified_inputs(record)
             entries.append((record,authorized,package,calculations,checks))
-        expected=consumer_html(build_executive_payload(),entries)
+        expected=consumer_html(executive_payload,entries)
     else:
-        expected = render_executive_html(build_executive_payload())
-    assert DEFAULT_OUTPUT.read_text(encoding="utf-8") == expected
+        expected = render_executive_html(executive_payload)
+    if existing != expected:
+        offset = next(
+            (i for i, (a, b) in enumerate(zip(existing, expected)) if a != b),
+            min(len(existing), len(expected)),
+        )
+        start = max(0, offset - 200)
+        raise AssertionError(
+            "Generated integrated artifact does not match the current renderer's "
+            f"output (existing sha256={hashlib.sha256(existing.encode()).hexdigest()}, "
+            f"expected sha256={hashlib.sha256(expected.encode()).hexdigest()}, "
+            f"first differing offset={offset}).\n"
+            f"existing[{start}:{offset + 200}]={existing[start:offset + 200]!r}\n"
+            f"expected[{start}:{offset + 200}]={expected[start:offset + 200]!r}"
+        )
     # International routes include a pinned local topology instead of CDN calls.
     assert DEFAULT_OUTPUT.stat().st_size < 7_500_000
