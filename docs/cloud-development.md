@@ -77,13 +77,20 @@ publicación.
 En Windows, usa una ruta corta y habilita rutas largas para el clon:
 
 ```powershell
-git -c core.longpaths=true clone https://github.com/salvamalfa/aeromexico-tracker-data.git C:\amx-data
-git -C C:\amx-data config core.longpaths true
-git -C C:\amx-data lfs pull
-Set-Location C:\amx-data
+git -c core.longpaths=true clone https://github.com/salvamalfa/aeromexico-tracker-data.git "C:\ruta\a\Aeromexico Tracker\aeromexico-tracker-data"
+git -C "C:\ruta\a\Aeromexico Tracker\aeromexico-tracker-data" config core.longpaths true
+git -C "C:\ruta\a\Aeromexico Tracker\aeromexico-tracker-data" lfs pull
+Set-Location "C:\ruta\a\Aeromexico Tracker\aeromexico-tracker-data"
 python verify_snapshot.py
-python restore_snapshot.py --target "C:\ruta\al\Aeromexico Tracker"
+python restore_snapshot.py --target "C:\ruta\a\Aeromexico Tracker\aeromexico-tracker"
 ```
+
+El repo público y el privado viven como carpetas hermanas dentro de una
+carpeta contenedora local (no versionada) `Aeromexico Tracker\`:
+`aeromexico-tracker\` (público) y `aeromexico-tracker-data\` (privado); el
+código resuelve el privado con la ruta relativa `../aeromexico-tracker-data`
+desde el checkout público. Ver `LEEME.md` en esa carpeta contenedora para el
+resto de la estructura (worktrees, temporales).
 
 El repositorio privado excluye `.env`, secretos locales, cachés, logs,
 temporales y entornos virtuales. Las claves deben configurarse en los secretos
