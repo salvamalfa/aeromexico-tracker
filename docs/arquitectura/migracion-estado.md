@@ -39,8 +39,8 @@ se reinicia desde `master`.
 | P6a | Citas del análisis exportadas y Vuelos cargado al abrir su pestaña (estado de trimestre único) | fusionado | #53 | — |
 | P6b | Gate de publicación sobre `site/`, `verify.py` y workflow de GitHub Pages (fase 5) | fusionado | #54 | — (Pages activo: https://salvamalfa.github.io/aeromexico-tracker/) |
 | P7 | Retiro de Streamlit y de la ruta HTML heredada | fusionado | #55 | el dueño borra la app en share.streamlit.io |
-| P8a | Aligerar el árbol: `bridge_record_lineage.parquet` con zstd y escritores alineados | PR abierto | #56 | revisar CI y fusionar |
-| P8b | Reescritura del historial con `git filter-repo` y push forzado (coordinador) | pendiente | | ensayado en espejo; requiere push forzado a `master` |
+| P8a | Aligerar el árbol: `bridge_record_lineage.parquet` con zstd y escritores alineados | fusionado | #56 | — |
+| P8b | Reescritura del historial con `git filter-repo` y push forzado (coordinador) | completado | — | — |
 
 ## Bitácora
 
@@ -67,3 +67,6 @@ se reinicia desde `master`.
 - 2026-09-26 · P7 fusionado (#55, CI verde). P8 dividido: P8a (árbol más ligero, PR normal) y P8b (reescritura del historial). P8a iniciado.
 - 2026-09-26 · Pages activado por el dueño; despliegue manual correcto; los 34 archivos servidos coinciden byte a byte con el manifiesto.
 - 2026-09-26 · P8a listo: todos los Gold se escriben con zstd (`write_parquet_atomic`), 43 tablas reescritas con contenido idéntico comprobado; `data/gold` 92.9 → 51 MB (linaje 61.8 → 32.1 MB). Corregida regresión del mapa (topología fijada, sin peticiones a cdn.plot.ly) y `site/` republicado con el mismo expediente aprobado.
+- 2026-09-26 · P8a fusionado (#56, CI verde; hallazgo de Codex sobre escritores Gold internacionales corregido).
+- 2026-09-26 · P8b completado: `git filter-repo --strip-blobs-with-ids` quitó los 49 blobs > 1 MB que ya no están en el árbol de `master` (HTML generados, versiones viejas de Parquet, Plotly vendorizado). Árbol final de `master` idéntico (`9981a6d…`). Push forzado de `master` y de las 7 ramas `claude/*`. Clon nuevo: `.git` 173 MB → 76 MB. No se alcanzó la meta de < 40 MB: el árbol vigente ya pesa ~74 MB empaquetado (Gold 51 MB, prototipos del Analysis Agent ~25 MB); bajarlo más exige sacar `bridge_record_lineage.parquet` del árbol público (decisión del dueño). Los clones anteriores deben volver a clonarse. Pages redesplegado; los 34 archivos servidos coinciden con el manifiesto.
+- 2026-09-26 · **Migración completa.** Sitio: https://salvamalfa.github.io/aeromexico-tracker/. Publicar: `python -m src.publish --record <expediente aprobado> --out site/` con instrucción explícita del dueño; CI verifica y despliega.
