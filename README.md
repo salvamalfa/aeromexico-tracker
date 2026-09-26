@@ -32,13 +32,11 @@ Todavía no se redactan ni publican análisis trimestrales.
 
 Las **Etapas 0 a 10 están completas**. La página `Estructura de datos` fue aprobada visualmente, publicada y comprobada mediante su enlace profundo público.
 
-- 31 tablas Gold y 30 datasets Silver validados por contrato.
-- 334 pruebas automatizadas.
+Conteos de tablas Gold y pruebas cambian con cada etapa; la cuenta vigente y
+el comando para reproducirla están en [`REPO_MAP.md`](REPO_MAP.md), no aquí.
+
 - 15/15 controles específicos de la página `Estructura de datos`.
 - 18/18 controles específicos del dashboard.
-- 11/11 vistas locales ejecutadas sin excepciones; la candidata se verificó en escritorio, 736 px, 360 px y temas claro/oscuro.
-- Las 11/11 vistas públicas cargan sin excepciones, incluido el enlace profundo `/estructura-datos`.
-- Carga local de 0.20–0.48 s por vista; rerun de 0.008–0.085 s en el entorno de aceptación actual.
 - Operación offline: el dashboard solo lee Parquet local mediante DuckDB en memoria.
 
 ## Hallazgos principales
@@ -90,8 +88,11 @@ data/gold/       31 Parquet consolidados y versionados
       │
       ├── data/warehouse.duckdb   vistas analíticas locales
       ├── src/analytics/          estudios y modelos precomputados
-      └── src/dashboard/          Streamlit + Plotly + ECharts
+      └── src/dashboard/ + src/analysis_agent/   generadores del HTML publicado
 ```
+
+Ver [`REPO_MAP.md`](REPO_MAP.md) para el detalle de qué genera cada módulo y
+cómo se ensambla el HTML integrado.
 
 Las tablas gold sí se versionan porque son los extractos públicos y compactos que consume el deploy. Bronze y silver siguen fuera de Git. Los hashes, URL y metadata de cada descarga viven en `data/bronze/_manifest.jsonl`; los cambios de contenido se registran en `_restatements.jsonl`.
 

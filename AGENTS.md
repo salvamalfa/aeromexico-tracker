@@ -13,6 +13,8 @@ no autoriza por sí sola a publicar datos nuevos.
 2. Lee `README.md`, este archivo y el reporte de etapa relacionado en
    `docs/etapas/`. Para trabajo de Vuelos, empieza por
    `docs/etapas/vuelos-pasajeros-traspaso-20260913.md` y sigue sus enlaces.
+   [`REPO_MAP.md`](REPO_MAP.md) da el mapa del árbol, comandos y recetas para
+   los cambios típicos.
 3. Comprueba la rama y su relación con `origin/master`. No publiques desde una
    rama divergente sin integrar primero la historia remota mediante un PR
    revisable.

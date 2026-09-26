@@ -4,6 +4,9 @@ Lee primero [`AGENTS.md`](AGENTS.md) y
 [`docs/cloud-development.md`](docs/cloud-development.md). Son las instrucciones
 operativas y de procedencia del proyecto.
 
+Para orientarte en el árbol antes de editar, usa [`REPO_MAP.md`](REPO_MAP.md):
+qué vive dónde, comandos y recetas paso a paso para los cambios típicos.
+
 Antes de proponer o editar código, ejecuta `git status --short --branch`, revisa
 la historia reciente y abre el reporte de etapa relacionado. Conserva los
 cambios existentes y edita generadores en vez de HTML generado.
