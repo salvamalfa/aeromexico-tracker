@@ -4,11 +4,13 @@ import hashlib
 
 import duckdb
 import pandas as pd
+import pytest
 
 from src.config import PATHS
-from src.dashboard.flights import build_flight_payload
 from src.dashboard.international_routes import ESTIMATED_LABEL
 from src.transform.aicm_international_slots import GOLD, SILVER, SOURCE
+
+pytestmark = pytest.mark.local_data
 
 
 def test_international_aicm_bronze_silver_gold_and_lineage():
@@ -33,8 +35,8 @@ def test_international_aicm_bronze_silver_gold_and_lineage():
         ).fetchone()[0] == len(gold)
 
 
-def test_international_map_adds_scheduled_destinations_with_observed_precedence():
-    network = build_flight_payload()["international_networks"]["2026Q2"]
+def test_international_map_adds_scheduled_destinations_with_observed_precedence(flight_payload):
+    network = flight_payload["international_networks"]["2026Q2"]
     by_market = {route["market_key"]: route for route in network["routes"]}
     assert len(by_market) == len(network["routes"])
     sourced = [r for r in network["routes"] if r["source_label"] != ESTIMATED_LABEL]

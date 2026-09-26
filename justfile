@@ -1,4 +1,5 @@
-set shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
+set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
+set shell := ["bash", "-cu"]
 
 default:
     just --list

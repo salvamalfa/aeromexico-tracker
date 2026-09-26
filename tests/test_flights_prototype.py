@@ -1,24 +1,23 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 from pathlib import Path
 import re
 
 from bs4 import BeautifulSoup
+import pytest
 
 from src.analysis_agent.flight_evidence import build_flight_evidence
 from src.config import PATHS
-from src.dashboard.flights import build_flight_payload
 from src.dashboard.flights_html import DEFAULT_OUTPUT, render_flights_html, standalone_flight_payload
 
-
-def _payload() -> dict:
-    return build_flight_payload()
+pytestmark = pytest.mark.local_data
 
 
-def test_flight_payload_contract_and_pilot_metrics() -> None:
-    payload = _payload()
+def test_flight_payload_contract_and_pilot_metrics(flight_payload) -> None:
+    payload = flight_payload
     assert payload["schema_version"] == "flight_dashboard_payload_v1"
     assert payload["metadata"]["pilot_period"] == "2026Q2"
     quarter = next(item for item in payload["quarters"] if item["period_id"] == "2026Q2")
@@ -38,8 +37,8 @@ def test_flight_payload_contract_and_pilot_metrics() -> None:
         assert metric["agent_eligible"] is True
 
 
-def test_monthly_sec_mix_is_complete_only_when_three_months_exist() -> None:
-    payload = _payload()
+def test_monthly_sec_mix_is_complete_only_when_three_months_exist(flight_payload) -> None:
+    payload = flight_payload
     mixes = {item["period_id"]: item["passenger_mix"] for item in payload["quarters"]}
     assert {period for period, mix in mixes.items() if mix} == {
         "2025Q1", "2025Q2", "2026Q1", "2026Q2"
@@ -51,8 +50,8 @@ def test_monthly_sec_mix_is_complete_only_when_three_months_exist() -> None:
     assert mixes["2025Q4"] is None
 
 
-def test_monthly_passenger_chart_uses_complete_afac_gold_and_sums_segments() -> None:
-    series = _payload()["monthly_passengers"]
+def test_monthly_passenger_chart_uses_complete_afac_gold_and_sums_segments(flight_payload) -> None:
+    series = flight_payload["monthly_passengers"]
     assert series["period_start"] == "2015-01-01"
     assert series["period_end"] == "2026-06-30"
     assert series["source_id"] == "afac-gold-current"
@@ -64,8 +63,8 @@ def test_monthly_passenger_chart_uses_complete_afac_gold_and_sums_segments() -> 
     assert not any(item["agent_eligible"] for item in series["records"])
 
 
-def test_domestic_passenger_estimates_are_monthly_retrospective_and_bounded() -> None:
-    payload = _payload()
+def test_domestic_passenger_estimates_are_monthly_retrospective_and_bounded(flight_payload) -> None:
+    payload = flight_payload
     monthly = payload["domestic_monthly_networks"]
     assert list(monthly) == ["2026M03", "2026M04", "2026M05", "2026M06", "2026M07"]
     for period_id, network in monthly.items():
@@ -86,8 +85,8 @@ def test_domestic_passenger_estimates_are_monthly_retrospective_and_bounded() ->
                for route in monthly["2026M07"]["routes"] for item in route["monthly"])
 
 
-def test_t100_network_is_bounded_and_never_claims_global_coverage() -> None:
-    payload = _payload()
+def test_t100_network_is_bounded_and_never_claims_global_coverage(flight_payload) -> None:
+    payload = flight_payload
     network = payload["route_network"]
     assert network["period_id"] == "2026Q2"
     assert network["period_type"] == "quarter_to_date"
@@ -168,8 +167,8 @@ def test_t100_network_is_bounded_and_never_claims_global_coverage() -> None:
         )
 
 
-def test_forecast_is_secondary_current_perspective() -> None:
-    forecast = _payload()["forecast"]
+def test_forecast_is_secondary_current_perspective(flight_payload) -> None:
+    forecast = flight_payload["forecast"]
     assert forecast["available"] is True
     assert forecast["agent_eligible"] is False
     assert forecast["trained_at"].startswith("2026-08-24")
@@ -181,8 +180,8 @@ def test_forecast_is_secondary_current_perspective() -> None:
         assert point["forecast"] <= point["upper_80"] <= point["upper_95"]
 
 
-def test_candidate_evidence_is_sec_only_and_does_not_modify_parent() -> None:
-    package = build_flight_evidence(_payload())
+def test_candidate_evidence_is_sec_only_and_does_not_modify_parent(flight_payload) -> None:
+    package = build_flight_evidence(flight_payload)
     assert package["schema_version"] == "flight_evidence_v1"
     assert package["status"] == "candidate_unapproved"
     assert package["parent_evidence"]["evidence_fingerprint"] == (
@@ -195,8 +194,8 @@ def test_candidate_evidence_is_sec_only_and_does_not_modify_parent() -> None:
     assert not any("route" in metric["key"] for metric in package["metrics"])
 
 
-def test_review_html_is_self_contained_accessible_and_responsive() -> None:
-    document = render_flights_html(_payload())
+def test_review_html_is_self_contained_accessible_and_responsive(flight_payload) -> None:
+    document = render_flights_html(flight_payload)
     soup = BeautifulSoup(document, "html.parser")
     assert soup.select_one("[data-testid='flights-review-root']") is not None
     assert soup.select_one("#period-prev")["aria-label"] == "Ir al trimestre anterior"
@@ -225,7 +224,7 @@ def test_review_html_is_self_contained_accessible_and_responsive() -> None:
     assert not soup.select("script[src], link[href], iframe, img[src], video[src], audio[src], source[src]")
     assert len(soup.select("script[data-runtime='plotly-local']")) == 1
     embedded = json.loads(soup.select_one("#flight-dashboard-data").string)
-    assert embedded == standalone_flight_payload(_payload())
+    assert embedded == standalone_flight_payload(flight_payload)
     text = soup.get_text(" ", strip=True)
     assert "Rutas nacionales" in text
     assert "Nacional" in text
@@ -308,17 +307,32 @@ def test_review_html_is_self_contained_accessible_and_responsive() -> None:
     assert ".route-estimate-total" in css
 
 
-def test_html_contains_no_machine_path_or_project_secret() -> None:
-    soup = BeautifulSoup(render_flights_html(_payload()), "html.parser")
+def test_html_contains_no_machine_path_or_project_secret(flight_payload) -> None:
+    soup = BeautifulSoup(render_flights_html(flight_payload), "html.parser")
     soup.select_one("script[data-runtime='plotly-local']").extract()
     project_document = str(soup)
     assert not re.search(r"(?:(?<![A-Za-z])[A-Za-z]:[\\/]|file://|\\\\|/(?:home|Users)/)", project_document, re.I)
     assert not re.search(r"(?:SEC_USER_AGENT|BANXICO_TOKEN|EIA_API_KEY|sk-[A-Za-z0-9]{20,})", project_document, re.I)
 
 
-def test_generated_review_matches_current_renderer() -> None:
+def test_generated_review_matches_current_renderer(flight_payload) -> None:
     assert DEFAULT_OUTPUT.exists()
-    assert DEFAULT_OUTPUT.read_text(encoding="utf-8") == render_flights_html(_payload())
+    existing = DEFAULT_OUTPUT.read_text(encoding="utf-8")
+    expected = render_flights_html(flight_payload)
+    if existing != expected:
+        offset = next(
+            (i for i, (a, b) in enumerate(zip(existing, expected)) if a != b),
+            min(len(existing), len(expected)),
+        )
+        start = max(0, offset - 200)
+        raise AssertionError(
+            "Generated Vuelos review does not match the current renderer's "
+            f"output (existing sha256={hashlib.sha256(existing.encode()).hexdigest()}, "
+            f"expected sha256={hashlib.sha256(expected.encode()).hexdigest()}, "
+            f"first differing offset={offset}).\n"
+            f"existing[{start}:{offset + 200}]={existing[start:offset + 200]!r}\n"
+            f"expected[{start}:{offset + 200}]={expected[start:offset + 200]!r}"
+        )
     # Includes the pinned 285 KB Plotly topology so file:// never calls a CDN.
     assert DEFAULT_OUTPUT.stat().st_size < 7_500_000
     main = PATHS.root / "prototypes" / "etapa-11" / "resumen_ejecutivo.html"

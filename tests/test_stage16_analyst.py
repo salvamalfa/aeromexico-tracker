@@ -106,6 +106,7 @@ def test_formatter_uses_units_and_percentage_scaling():
     assert formatted(dict(value=28.5714,unit='percent_change'))=='28.6%'
 
 
+@pytest.mark.local_data
 def test_frozen_inputs_replay_and_tampering_rejected(tmp_path):
     root=Path(__file__).resolve().parents[1]
     review=json.loads((root/'docs/referencias/etapa-14/2026Q2_review.json').read_bytes())

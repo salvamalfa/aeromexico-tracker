@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 from bs4 import BeautifulSoup
 import duckdb
@@ -18,6 +19,7 @@ def diagnosis():
     return build_diagnosis()
 
 
+@pytest.mark.local_data
 def test_coverage_reconciles_independent_source_query(diagnosis):
     rows = diagnosis["rows"]
     assert [r["period_id"] for r in rows] == [
@@ -44,6 +46,7 @@ def test_duplicate_metric_is_rejected_and_null_is_not_zero():
     assert result["missing"] == ["x", "z"]
 
 
+@pytest.mark.local_data
 def test_calendar_and_month_counts_do_not_mix_aggregations(diagnosis):
     assert quarter_months("2021Q4") == ["2021M10", "2021M11", "2021M12"]
     with pytest.raises(ValueError):
@@ -57,6 +60,7 @@ def test_calendar_and_month_counts_do_not_mix_aggregations(diagnosis):
     assert diagnosis["rows"][-1]["context"]["fx_months"] == ["2026M04", "2026M05", "2026M06"]
 
 
+@pytest.mark.local_data
 def test_later_comparatives_are_flagged_without_certifying_cutoffs(diagnosis):
     later = [r["period_id"] for r in diagnosis["rows"]
              if "financial_values_from_later_comparative" in r["gaps"]]
@@ -83,6 +87,7 @@ def test_artifact_hash_missing_file_and_path_escape(tmp_path):
         verify_artifact(artifact | {"source_file": "../outside.pdf"}, tmp_path)
 
 
+@pytest.mark.local_data
 def test_rendering_escapes_content_and_rejects_untrusted_links(diagnosis):
     altered = copy.deepcopy(diagnosis)
     altered["rows"][0]["label"] = "</script><script id='injected'>alert(1)</script>"
@@ -94,6 +99,7 @@ def test_rendering_escapes_content_and_rejects_untrusted_links(diagnosis):
         render_html(altered)
 
 
+@pytest.mark.local_data
 def test_mock_has_explicit_illustration_and_no_remote_or_approval_runtime(diagnosis):
     document = render_html(diagnosis)
     soup = BeautifulSoup(document, "html.parser")
@@ -109,6 +115,7 @@ def test_mock_has_explicit_illustration_and_no_remote_or_approval_runtime(diagno
     assert "C:\\Users" not in document and "file://" not in document
 
 
+@pytest.mark.local_data
 def test_outputs_match_snapshot_and_are_reproducible(diagnosis, tmp_path):
     tracked = [PATHS.warehouse, PATHS.root / "prototypes/etapa-11/resumen_ejecutivo.html",
                *sorted(PATHS.gold.glob("*"))]
@@ -116,7 +123,22 @@ def test_outputs_match_snapshot_and_are_reproducible(diagnosis, tmp_path):
     fresh = build_diagnosis()
     assert fresh == diagnosis
     write_outputs(fresh, tmp_path / "diagnosis", tmp_path / "review.html")
-    assert (tmp_path / "review.html").read_bytes() == HTML_OUTPUT.read_bytes()
+    generated = (tmp_path / "review.html").read_bytes()
+    expected = HTML_OUTPUT.read_bytes()
+    if generated != expected:
+        offset = next(
+            (i for i, (a, b) in enumerate(zip(generated, expected)) if a != b),
+            min(len(generated), len(expected)),
+        )
+        start = max(0, offset - 200)
+        raise AssertionError(
+            "Regenerated diagnosis review does not match the checked-in HTML "
+            f"(generated sha256={hashlib.sha256(generated).hexdigest()}, "
+            f"expected sha256={hashlib.sha256(expected).hexdigest()}, "
+            f"first differing offset={offset}).\n"
+            f"generated[{start}:{offset + 200}]={generated[start:offset + 200]!r}\n"
+            f"expected[{start}:{offset + 200}]={expected[start:offset + 200]!r}"
+        )
     assert (tmp_path / "diagnosis/diagnostico.json").read_bytes() == (OUTPUT / "diagnostico.json").read_bytes()
     assert (tmp_path / "diagnosis/cobertura.csv").read_bytes() == (OUTPUT / "cobertura.csv").read_bytes()
     assert before == {str(p): file_hash(p) for p in tracked if p.is_file()}

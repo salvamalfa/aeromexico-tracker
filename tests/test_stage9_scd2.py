@@ -162,6 +162,7 @@ def test_output_is_deterministic_for_unsorted_input() -> None:
     assert result["restatement_count"].tolist() == [0, 1, 2]
 
 
+@pytest.mark.local_data
 def test_real_bmv_history_uses_one_effective_time_per_artifact_and_valid_intervals() -> None:
     history = _bmv_rows()
     keys = ["carrier_key", "period_id", "metric_key", "segment", "source_system"]
