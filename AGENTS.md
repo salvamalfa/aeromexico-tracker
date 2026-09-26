@@ -158,6 +158,16 @@ hace falta volver a pedirla en cada sesión:
   4. El PR se abrió como borrador y se marcó como listo tras cumplir lo anterior.
 - Método: merge commit (como el historial existente). Nunca force-push a
   `master`, nunca push directo a `master`.
+- **Auto-merge** (habilitado en el repo): puedes activarlo en tu PR en vez de
+  esperar a que termine la CI, pero solo después de marcarlo como listo y de que
+  llegue la revisión automática (o el aviso de que no habrá revisión, p. ej. el
+  límite de uso de Codex) con todos sus hilos atendidos. Auto-merge solo espera a
+  los checks; no espera revisiones que aún no llegan. Si un push posterior abre
+  hilos nuevos, desactívalo hasta atenderlos. Nunca actives auto-merge en un PR
+  que cambie `site/` sin la instrucción explícita del dueño.
+- GitHub borra la rama del PR al fusionarlo ("Automatically delete head
+  branches"); no hace falta limpiarla. Si reutilizas el nombre, recréala desde
+  `master`.
 
 Esta autorización cubre código, pruebas, workflows y documentación. **No**
 cubre por sí sola lo que la sección anterior reserva al dueño: un PR que cambia
