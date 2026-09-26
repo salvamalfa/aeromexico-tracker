@@ -108,7 +108,13 @@ export function renderFlowMap(): void {
       : { lat: [-60, 85] as [number, number], lon: [-180, 180] as [number, number], latDtick: 30, lonDtick: 45 };
   const maxValue = Math.max(...ordered.map(routeValue), 1);
   const contextMarkets = new Set(ordered.slice(0, 12).map((route) => route.market_key));
-  const geometry = state.network!.world_geometry!.geojson;
+  const worldGeometry = state.network!.world_geometry!;
+  const geometry = worldGeometry.geojson;
+  // Pin the base-map topology Plotly would otherwise fetch from cdn.plot.ly,
+  // as the legacy page did: the site makes no third-party requests.
+  const geoAssets = window as unknown as { PlotlyGeoAssets?: { topojson: Record<string, unknown> } };
+  geoAssets.PlotlyGeoAssets = geoAssets.PlotlyGeoAssets || { topojson: {} };
+  if (worldGeometry.topojson) geoAssets.PlotlyGeoAssets.topojson.world_110m = worldGeometry.topojson;
   const traces: Data[] = [
     {
       type: "choropleth", geojson: geometry as unknown as object, featureidkey: "id",
