@@ -6,7 +6,12 @@ import type { Airport, PeriodNetworkDocument } from "../../types/domain";
 const MEX: Airport = { iata: "MEX", city: "Ciudad de México", lat: 19.4, lon: -99.1 };
 const CUN: Airport = { iata: "CUN", city: "Cancún", lat: 21.0, lon: -86.8 };
 
-function monthNetwork(passengers: number, seats: number | null, departures: number | null): PeriodNetworkDocument {
+function monthNetwork(
+  passengers: number,
+  seats: number | null,
+  departures: number | null,
+  bounds?: { low: number | null; high: number | null }
+): PeriodNetworkDocument {
   return {
     mode: "scheduled_domestic",
     period_label: "mes",
@@ -17,6 +22,8 @@ function monthNetwork(passengers: number, seats: number | null, departures: numb
         origin: MEX,
         destination: CUN,
         passengers,
+        passengers_low: bounds ? bounds.low : undefined,
+        passengers_high: bounds ? bounds.high : undefined,
         seats: seats ?? undefined,
         departures: departures ?? undefined,
         capacity_estimated: seats !== null && departures !== null,
@@ -98,5 +105,37 @@ describe("aggregateDomesticMonths", () => {
     const route = network.routes[0]!;
     expect(route.load_factor).toBeNull();
     expect(route.load_factor_status).toBe("inconsistent_inputs");
+  });
+
+  it("sums the sensitivity range when every month carries one", () => {
+    state.domesticMonthlyNetworks.set(
+      "2026-04",
+      monthNetwork(100_000, null, null, { low: 90_000, high: 110_000 })
+    );
+    state.domesticMonthlyNetworks.set(
+      "2026-05",
+      monthNetwork(110_000, null, null, { low: 95_000, high: 125_000 })
+    );
+
+    const network = aggregateDomesticMonths(["2026-04", "2026-05"])!;
+    const route = network.routes[0]!;
+    expect(route.passengers_low).toBe(185_000);
+    expect(route.passengers_high).toBe(235_000);
+  });
+
+  it("withholds the aggregate sensitivity range when any month lacks one, without fabricating a bound", () => {
+    state.domesticMonthlyNetworks.set(
+      "2026-04",
+      monthNetwork(100_000, null, null, { low: 90_000, high: 110_000 })
+    );
+    // A repaired cell whose Gold record carries no scenario identity: no
+    // passengers_low/high at all for this month.
+    state.domesticMonthlyNetworks.set("2026-05", monthNetwork(110_000, null, null));
+
+    const network = aggregateDomesticMonths(["2026-04", "2026-05"])!;
+    const route = network.routes[0]!;
+    expect(route.passengers).toBe(210_000);
+    expect(route.passengers_low).toBeNull();
+    expect(route.passengers_high).toBeNull();
   });
 });
