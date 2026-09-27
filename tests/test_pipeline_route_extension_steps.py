@@ -57,6 +57,10 @@ def test_every_route_extension_generator_step_is_registered_and_optional():
             "must not fail the rebuild"
         )
         assert step.depends_on == ("transform.stage6",)
+        assert step.fail_if_inputs_present, (
+            f"{step_id} must fail `just transform` when its bronze is present "
+            "but the generator crashes"
+        )
 
 
 def test_route_extension_steps_run_after_stage6_and_before_stage9_materialize():

@@ -136,9 +136,21 @@ inicial de `transform.stage6` pasa `False`. Las reconstrucciones posteriores
 (Stage 7, 8 y 9) siguen exigiendo la guarda. Dos pruebas nuevas en
 `tests/test_stage6_warehouse_route_extensions.py` lo cubren.
 
+**9. Un generador de rutas que fallaba no hacía fallar `just transform`
+(hallazgo P1 de Codex sobre #69).** Los seis pasos son `OPTIONAL`, así que una
+excepción quedaba registrada como fallo opcional y `just transform` (que solo
+corre la fase TRANSFORM, antes de las reconstrucciones de Stage 7–9 que
+aplican la guarda) terminaba en éxito con Gold faltante u obsoleto.
+`PipelineStep` ganó `fail_if_inputs_present`: si todos sus insumos están
+presentes y el paso falla al ejecutarse, el recibo lo registra como requerido
+y la corrida falla. Sin esos insumos el paso sigue quedando `NOT_AVAILABLE`.
+Los seis generadores activan esa opción. Hay pruebas nuevas en
+`tests/test_pipeline_orchestration.py` y en
+`tests/test_pipeline_route_extension_steps.py`.
+
 ## Cómo se validó
 
-- `uv run pytest -q -m "not local_data and not browser"` → 525 passed, 5
+- `uv run pytest -q -m "not local_data and not browser"` → 527 passed, 5
   skipped (los 5 omitidos son artefactos locales de Stage 4 intencionalmente
   no versionados).
 - `uv run pytest -q tests/test_stage6_warehouse_route_extensions.py
@@ -213,3 +225,4 @@ inicial de `transform.stage6` pasa `False`. Las reconstrucciones posteriores
 - `1074ed8` — la construcción inicial de `transform.stage6` no aplica la
   guarda; Stage 7–9 sí.
 - `89f51fe` — contrato `local_data` de Vuelos acepta límites retenidos.
+- Este commit — fallo de un generador con Bronze presente hace fallar la corrida.

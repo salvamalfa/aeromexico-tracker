@@ -54,6 +54,10 @@ class PipelineStep:
     depends_on: tuple[str, ...] = ()
     network_required: bool = False
     validate_outputs: bool = True
+    # An OPTIONAL step whose inputs are all present but that fails while
+    # running is reported as a required failure: absence is tolerated,
+    # breakage is not.
+    fail_if_inputs_present: bool = False
 
     def __post_init__(self) -> None:
         if ":" not in self.callable_ref:
