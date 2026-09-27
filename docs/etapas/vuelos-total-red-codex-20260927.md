@@ -35,8 +35,9 @@ el periodo no tiene rutas de esa región.
 **4. El recorte del mapa no se recalculaba al redimensionar (#8).**
 `fitViewToCanvas` fija rangos de latitud y longitud según el aspecto del
 lienzo, pero el `resize` solo realineaba el detalle. Ahora, si cambia el
-ancho del lienzo con la pestaña de Vuelos visible, `bootstrap.ts` vuelve a
-dibujar el mapa, a lo más una vez por cuadro.
+ancho o el alto del lienzo con la pestaña de Vuelos visible, `bootstrap.ts`
+vuelve a dibujar el mapa, a lo más una vez por cuadro. Codex señaló que con
+el ancho fijo en su mínimo de 700px, el corte de 420px solo cambia el alto.
 
 ## Hallazgos que ya no aplican
 
@@ -61,11 +62,12 @@ dibujar el mapa, a lo más una vez por cuadro.
   las rutas solo de presencia) y dos en `regions.test.ts`
   (normalización de la región).
 - `uv run pytest -q -m browser tests/test_web_flights_smoke.py
-  tests/test_web_page_smoke.py` → 6 passed. Incluye la prueba nueva
-  `test_region_map_refits_its_bounds_when_the_canvas_resizes`, que abre una
-  región, reduce el ancho del viewport y exige que cambien los rangos del
-  mapa. Sin la corrección de `bootstrap.ts` esa prueba falla por timeout; con
-  ella, pasa. Es una prueba `browser`, así que CI no la corre.
+  tests/test_web_page_smoke.py` → 7 passed. Incluye dos pruebas nuevas:
+  `test_region_map_refits_its_bounds_when_the_canvas_resizes`, que cambia el
+  ancho, y `test_region_map_refits_when_only_the_canvas_height_changes`, que
+  cruza el corte de 420px. Ambas abren una región y exigen que cambien los
+  rangos del mapa. Cada una falla sin su corrección en `bootstrap.ts` y pasa
+  con ella. Es una prueba `browser`, así que CI no la corre.
 - Sin cambios en Python ni en `site/`.
 
 ## Límites

@@ -117,3 +117,38 @@ def test_region_map_refits_its_bounds_when_the_canvas_resizes(web_server) -> Non
         narrow = page.evaluate(read_map_bounds)
         browser.close()
     assert narrow != wide
+
+
+def test_region_map_refits_when_only_the_canvas_height_changes(web_server) -> None:
+    # Below 700px the map keeps a 700px min-width while its height drops at
+    # the 420px breakpoint: the refit must track height, not only width.
+    read_map_bounds = (
+        "() => { const g = document.getElementById('route-flow-map');"
+        " if (!g || !g.layout) return null;"
+        " return JSON.stringify([g.layout.geo.lataxis.range, g.layout.geo.lonaxis.range]); }"
+    )
+    read_size = (
+        "() => { const c = document.getElementById('route-flow-map');"
+        " return [c.clientWidth, c.clientHeight]; }"
+    )
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(executable_path=_chromium_executable())
+        page = browser.new_page(viewport={"width": 600, "height": 900})
+        page.route("**/favicon.ico", lambda route: route.fulfill(status=204, body=""))
+        page.goto(web_server)
+        page.click("#tab-flights")
+        page.wait_for_selector("#network-volume:not([hidden])")
+        page.click("#network-region-switch button")
+        page.wait_for_function(f"({read_map_bounds})() !== null")
+        # Record the pre-breakpoint size through a resize event first.
+        page.set_viewport_size({"width": 599, "height": 900})
+        page.wait_for_timeout(300)
+        before_size = page.evaluate(read_size)
+        before = page.evaluate(read_map_bounds)
+        page.set_viewport_size({"width": 400, "height": 900})
+        after_size = page.evaluate(read_size)
+        if after_size[0] != before_size[0] or after_size[1] == before_size[1]:
+            browser.close()
+            pytest.skip(f"layout did not isolate a height-only change: {before_size} -> {after_size}")
+        page.wait_for_function(f"({read_map_bounds})() !== {json.dumps(before)}", timeout=5000)
+        browser.close()

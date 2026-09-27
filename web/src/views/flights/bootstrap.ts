@@ -45,8 +45,10 @@ function wireControls(): void {
     renderMix(state.quarters[state.periodIndex]!);
   });
   // El recorte del mapa (fitViewToCanvas) depende del aspecto del lienzo:
-  // si cambia el ancho hay que recalcularlo, no solo realinear el detalle.
-  let lastMapWidth = 0;
+  // si cambia el ancho o el alto hay que recalcularlo, no solo realinear el
+  // detalle (el alto cambia solo, p. ej., en el corte de 420px con el ancho
+  // fijo en su mínimo).
+  let lastMapSize = "";
   let resizeQueued = false;
   window.addEventListener("resize", () => {
     if (resizeQueued) return;
@@ -56,8 +58,9 @@ function wireControls(): void {
       const panel = $("panel-flights");
       const canvas = $("route-flow-map");
       const width = canvas?.clientWidth ?? 0;
-      if (state.network && panel && !panel.hidden && width && width !== lastMapWidth) {
-        lastMapWidth = width;
+      const size = `${width}x${canvas?.clientHeight ?? 0}`;
+      if (state.network && panel && !panel.hidden && width && size !== lastMapSize) {
+        lastMapSize = size;
         renderFlowMap();
       }
       alignRouteDetailToGeo();
