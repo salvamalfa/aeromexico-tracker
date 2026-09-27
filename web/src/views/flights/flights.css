@@ -55,11 +55,13 @@
   .unavailable { padding: 18px; color: var(--muted); background: #f8fafc; border: 1px dashed var(--line-strong); border-radius: 10px; font-size: 11px; }
 
   .network-heading { align-items: start; }
-  .network-mode-switch { display: inline-flex; gap: 4px; margin: 3px 0 11px; padding: 4px; background: #eaf0f8; border-radius: 10px; }
-  .network-mode-switch button { min-height: 32px; padding: 7px 12px; color: var(--brand-blue-dark); background: transparent; border: 0; border-radius: 7px; font-size: 10px; font-weight: 750; cursor: pointer; }
-  .network-mode-switch button[aria-pressed="true"] { color: #fff; background: var(--brand-blue); box-shadow: 0 2px 6px rgba(0,48,135,.18); }
+  .network-mode-switch { display: inline-flex; align-items: center; gap: 3px; margin: 3px 0 11px; padding: 3px; background: #eef3fa; border: 1px solid #dbe5f1; border-radius: 9px; }
+  .network-mode-switch button { min-height: 32px; padding: 7px 13px; color: var(--brand-blue-dark); background: transparent; border: 0; border-radius: 6px; font-size: 10px; font-weight: 750; cursor: pointer; }
+  .network-mode-switch button:hover:not([aria-pressed="true"]):not(:disabled) { background: #dfe9f6; }
+  .network-mode-switch button[aria-pressed="true"] { color: #fff; background: var(--brand-blue); box-shadow: 0 1px 4px rgba(0,48,135,.18); }
   .network-mode-switch button:disabled { color: #8a96a6; cursor: default; }
-  .network-region-switch { display: inline-flex; flex-wrap: wrap; gap: 4px; margin-left: 6px; padding-left: 8px; border-left: 1px solid #c8d5e6; }
+  .network-region-switch { display: inline-flex; flex-wrap: wrap; gap: 4px; margin-left: 5px; padding-left: 7px; border-left: 1px solid #c8d5e6; }
+  .network-region-switch[hidden] { display: none; }
   .network-region-switch button { min-height: 32px; padding: 7px 11px; color: var(--brand-blue-dark); background: transparent; border: 0; border-radius: 7px; font-size: 10px; font-weight: 700; cursor: pointer; }
   .network-region-switch button[aria-pressed="true"] { color: #fff; background: var(--brand-blue-dark); }
   .network-volume { display: flex; flex-wrap: wrap; align-items: baseline; gap: 7px; margin: 0 0 11px; padding: 9px 13px; background: var(--blue-open); border: 1px solid var(--line); border-radius: var(--radius-sm); }
@@ -109,12 +111,16 @@
      el alto; la tabla de rutas desplaza su contenido debajo del total. */
   .route-detail-column { display: flex; flex-direction: column; box-sizing: border-box; min-width: 0; height: 570px; max-height: 570px; overflow: hidden; background: #f8fafc; border: 1px solid var(--line-strong); border-radius: 10px; }
   .route-detail-column > .network-volume { flex: 0 0 auto; margin: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; }
-  .route-detail-column > .network-volume { display: grid; gap: 5px; padding: 12px 14px; }
-  .network-volume-main { display: grid; gap: 3px; }
-  .network-volume-main small { color: var(--muted); font-size: 8px; font-weight: 750; letter-spacing: .05em; text-transform: uppercase; }
-  .network-volume-main strong { font-size: 19px; }
-  .network-volume-inline { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-  .network-volume-inline span { white-space: nowrap; }
+  .route-detail-column > .network-volume { display: grid; gap: 7px; padding: 9px 10px 10px; }
+  .route-detail-column > .network-volume[hidden] { display: none; }
+  .network-mini-heading { display: flex; justify-content: space-between; color: var(--muted); font-size: 9px; font-weight: 750; text-transform: uppercase; letter-spacing: .04em; }
+  .network-mini-kpi-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .network-mini-kpi { display: grid; align-content: start; gap: 4px; min-width: 0; padding: 9px 7px; background: #fff; border: 1px solid #dce5f0; border-top: 2px solid var(--brand-blue); border-radius: 7px; }
+  .network-mini-kpi:nth-child(2) { border-top-color: var(--brand-gold); }
+  .network-mini-kpi:nth-child(3) { border-top-color: #0b806d; }
+  .network-mini-kpi small { color: var(--muted); font-size: 8px; font-weight: 750; letter-spacing: .035em; text-transform: uppercase; }
+  .network-mini-kpi strong { min-width: 0; color: var(--brand-blue-dark); font-size: clamp(13px, 1.05vw, 17px); font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .network-mini-kpi span { min-width: 0; color: var(--muted); font-size: 8px; line-height: 1.2; }
   .route-detail-column > .airport-tooltip { flex: 1 1 auto; min-height: 0; height: auto; max-height: none; border: 0; border-radius: 0; background: transparent; }
   .airport-tooltip::-webkit-scrollbar { width: 7px; }
   .airport-tooltip::-webkit-scrollbar-track { background: transparent; }
@@ -141,7 +147,7 @@
   .executive-route-group { padding: 9px 2px 5px; color: var(--brand-blue-dark); font-size: 9px; font-weight: 800; text-transform: uppercase; }
   .executive-route-rank { display: grid; place-items: center; width: 19px; height: 19px; color: var(--brand-blue-dark); background: #e5eefb; border-radius: 6px; font-size: 9px; font-weight: 800; }
   .executive-route-copy { display: grid; gap: 3px; min-width: 0; }
-  .executive-route-copy strong { color: var(--brand-blue-dark); font-size: 10px; white-space: nowrap; }
+  .executive-route-copy strong { color: var(--brand-blue-dark); font-size: 10px; line-height: 1.25; overflow-wrap: anywhere; }
   .executive-route-trend { font-size: 8px; font-weight: 800; }
   .executive-route-trend.delta-up { color: #08745a; }
   .executive-route-trend.delta-down { color: #bb3333; }

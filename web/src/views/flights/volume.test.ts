@@ -14,25 +14,31 @@ function domesticRoute(overrides: Partial<Route>): Route {
   } as unknown as Route;
 }
 
-describe("renderNetworkVolume (concise quarterly national total)", () => {
+describe("renderNetworkVolume (quarterly network indicators)", () => {
   beforeEach(() => {
     document.body.innerHTML = `<div id="network-volume"></div>`;
     state.networkMode = "domestic";
     state.network = { mode: "estimated_domestic", period_label: "abril 2026" } as unknown as typeof state.network;
+    state.quarters = [{ period_id: "2026Q2", period_label: "2T26" }] as typeof state.quarters;
+    state.periodIndex = 0;
+    state.monthlyPassengers = { records: [
+      { date: "2026-04-01", domestic: 50_000, international: 20_000, total_segment_sum: 70_000 },
+      { date: "2026-05-01", domestic: 50_000, international: 20_000, total_segment_sum: 70_000 },
+      { date: "2026-06-01", domestic: 50_000, international: 20_000, total_segment_sum: 70_000 },
+    ] };
   });
 
   it("shows the sum as estimated passengers with the selected quarter", () => {
-    state.quarters = [{ period_id: "2026Q2", period_label: "2T26" }] as typeof state.quarters;
-    state.periodIndex = 0;
     state.routes = [
       domesticRoute({ passengers: 100_000, passengers_low: 90_000, passengers_high: 110_000 }),
       domesticRoute({ passengers: 50_000, passengers_low: 45_000, passengers_high: 55_000 }),
     ];
     renderNetworkVolume();
     const html = document.getElementById("network-volume")!.innerHTML;
-    expect(html).toContain("Total pasajeros");
+    expect(html).toContain("PASAJEROS");
     expect(html).toContain("<strong>150,000</strong>");
-    expect(html).toContain("estimados · 2T26");
+    expect(html).toContain("RED NACIONAL");
+    expect(html).toContain("AFAC · Grupo");
   });
 
   it("does not add method text to the compact total", () => {
@@ -55,6 +61,13 @@ describe("renderNetworkVolume (observed vs scheduled vs inferred flights)", () =
     state.selectedRegion = null;
     state.presenceOnlyRouteCount = 0;
     state.network = { mode: "international", period_label: "2T26" } as unknown as typeof state.network;
+    state.quarters = [{ period_id: "2026Q2", period_label: "2T26" }] as typeof state.quarters;
+    state.periodIndex = 0;
+    state.monthlyPassengers = { records: [
+      { date: "2026-04-01", domestic: 50_000, international: 20_000, total_segment_sum: 70_000 },
+      { date: "2026-05-01", domestic: 50_000, international: 20_000, total_segment_sum: 70_000 },
+      { date: "2026-06-01", domestic: 50_000, international: 20_000, total_segment_sum: 70_000 },
+    ] };
   });
 
   it("counts only observed flights in the headline", () => {
@@ -68,8 +81,8 @@ describe("renderNetworkVolume (observed vs scheduled vs inferred flights)", () =
     const html = document.getElementById("network-volume")!.innerHTML;
     expect(html).toContain("<strong>1,000</strong>");
     expect(html).not.toContain("1,370");
-    expect(html).toContain("Total vuelos");
-    expect(html).toContain("observados · 2T26");
+    expect(html).toContain("VUELOS");
+    expect(html).toContain("obs. · 1/4 rutas");
   });
 
   it("does not add presence-only routes to the observed total", () => {
@@ -103,6 +116,7 @@ describe("renderNetworkVolume (observed vs scheduled vs inferred flights)", () =
   it("stays hidden when there is nothing to report", () => {
     state.presenceOnlyRouteCount = 0;
     state.routes = [];
+    state.monthlyPassengers = null;
     renderNetworkVolume();
     expect(document.getElementById("network-volume")!.hidden).toBe(true);
   });

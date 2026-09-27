@@ -83,7 +83,12 @@ export function renderRouteMode(): void {
 }
 
 export function routeTitle(route: Route): string {
-  return `${route.origin.iata} ↔ ${route.destination.iata}`;
+  const city = (name: string): string => ({
+    "Mexico City": "Ciudad de México",
+    "Los Angeles": "Los Ángeles",
+    "New York": "Nueva York",
+  })[name] || name;
+  return `${city(route.origin.city || route.origin.iata)} ↔ ${city(route.destination.city || route.destination.iata)}`;
 }
 
 function domesticPeriodNetwork(periodId: string): PeriodNetworkDocument | undefined {

@@ -25,7 +25,7 @@ function routeRows(routes: Route[]): string {
     const changeText = change === null ? "" : `<small class="executive-route-trend ${change >= 0 ? "delta-up" : "delta-down"}">${change >= 0 ? "+" : ""}${change.toFixed(1)}% interanual</small>`;
     return `${group}<li class="executive-route-row">
       <span class="executive-route-rank">${index + 1}</span>
-      <div class="executive-route-copy"><strong>${esc(routeTitle(route))}${coverageDotHtml(route)}${scheduledIconHtml(route)}${sourceBadge}</strong>${changeText}</div>
+      <div class="executive-route-copy"><strong title="${esc(route.origin.iata)} ↔ ${esc(route.destination.iata)}">${esc(routeTitle(route))}${coverageDotHtml(route)}${scheduledIconHtml(route)}${sourceBadge}</strong>${changeText}</div>
       <div class="executive-route-value" title="Pasajeros ${route.passengers_estimated ? "estimados" : "observados"}">${finite(route.passengers) ? integer.format(route.passengers) : "N/D"}</div>
       <div class="executive-route-value" title="Vuelos ${flightKind}">${flights}</div>
       <div class="executive-route-value">${esc(occupancy)}</div>
