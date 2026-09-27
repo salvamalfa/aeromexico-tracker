@@ -75,8 +75,8 @@ en `completed`. `just dashboard-validate` dio 8/8, y `pytest
 - `test_domestic_passenger_estimates_are_monthly_retrospective_and_bounded`:
   el límite y el punto son sumas de punto flotante distintas sobre las mismas
   celdas, y una difería en el último bit (38481.65409295874 contra
-  38481.654092958735). La prueba ahora admite solo ese redondeo, con una
-  holgura relativa de 1e-9.
+  38481.654092958735, a un ULP). La prueba ahora admite solo ese redondeo:
+  una holgura de 16 ULP (~1.2e-10 en ese valor).
 - `test_forecast_is_secondary_current_perspective`,
   `test_outputs_match_snapshot_and_are_reproducible` (etapa 12) y
   `test_site_flights_and_executive_data_match_a_fresh_export` comparan contra
