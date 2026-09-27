@@ -106,6 +106,11 @@ def test_warehouse_content_hash_changes_with_the_content(tmp_path):
 
     assert warehouse_content_hash(base) != warehouse_content_hash(changed_value)
     assert warehouse_content_hash(base) != warehouse_content_hash(extra_row)
+    changed_view = _warehouse(tmp_path / "d.duckdb", [("2026Q1", 1.5)])
+    with duckdb.connect(str(changed_view)) as connection:
+        connection.execute("CREATE OR REPLACE VIEW v_facts AS SELECT * FROM facts WHERE value > 2")
+    # Same tables, different view: the diagnosis reads views, so it must differ.
+    assert warehouse_content_hash(base) != warehouse_content_hash(changed_view)
 
 
 def test_artifact_hash_missing_file_and_path_escape(tmp_path):

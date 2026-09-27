@@ -97,7 +97,8 @@ privado guarda una copia lógica (`EXPORT`/`IMPORT DATABASE`), así que el
 hash nunca coincidía en otra máquina aunque los datos fueran idénticos.
 `warehouse_content_hash` (`src/analysis_agent/stage12.py`) calcula el hash
 por tabla: columnas, tipos, número de filas y una suma de hashes de fila
-independiente del orden. El insumo del diagnóstico pasa de `warehouse` a
+independiente del orden, más la definición normalizada de cada vista (el
+diagnóstico lee `v_carrier_default`; hallazgo de Codex sobre #74). El insumo del diagnóstico pasa de `warehouse` a
 `warehouse_content`. Dos pruebas nuevas, que sí corren en CI, verifican que
 el hash no cambia con el orden de filas ni con una exportación e importación,
 y que sí cambia con el contenido. `docs/referencias/etapa-12/diagnostico.json`

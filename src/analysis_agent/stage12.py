@@ -48,7 +48,9 @@ def warehouse_content_hash(database: Path) -> str:
     private snapshot stores the warehouse as a logical copy (EXPORT/IMPORT),
     so a restored warehouse with identical tables never matched. This hashes,
     per base table in name order, its column names and types, its row count
-    and an order-independent sum of DuckDB row hashes.
+    and an order-independent sum of DuckDB row hashes, plus every view's
+    normalized definition (the diagnosis reads views such as
+    `v_carrier_default`), which EXPORT/IMPORT preserves verbatim.
     """
 
     manifest = []
@@ -67,7 +69,14 @@ def warehouse_content_hash(database: Path) -> str:
                 f'SELECT count(*), sum(hash(t)) FROM "{table}" AS t'
             ).fetchone()
             manifest.append([table, [list(column) for column in columns], count, str(row_hash_sum)])
-    payload = json.dumps(manifest, ensure_ascii=False, separators=(",", ":"))
+        views = connection.execute(
+            "SELECT view_name, sql FROM duckdb_views() "
+            "WHERE NOT internal AND schema_name = 'main' ORDER BY view_name"
+        ).fetchall()
+    payload = json.dumps(
+        {"tables": manifest, "views": [list(view) for view in views]},
+        ensure_ascii=False, separators=(",", ":"),
+    )
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 

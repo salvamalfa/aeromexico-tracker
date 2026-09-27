@@ -7,7 +7,8 @@ Snapshot generado desde el warehouse local mediante
   comprobados, candidato de filing SEC y hashes de insumos.
   El insumo `warehouse_content` es un SHA-256 del contenido lógico del
   warehouse: por tabla, columnas y tipos, número de filas y una suma de
-  hashes de fila que no depende del orden. No es el hash de los bytes de
+  hashes de fila que no depende del orden, más la definición normalizada de
+  cada vista. No es el hash de los bytes de
   `warehouse.duckdb`: el respaldo privado restaura el warehouse como copia
   lógica (`EXPORT`/`IMPORT DATABASE`), con los mismos datos pero bytes
   distintos.
