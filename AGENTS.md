@@ -158,11 +158,15 @@ limita la tarea a diagnóstico, borrador o revisión, respeta ese límite.
 
 1. Confirma alcance, estado Git, fuentes y datos afectados. Conserva cambios
    ajenos y trabaja en una rama desde el `master` vigente.
-2. Implementa y valida. Regenera los artefactos afectados desde las fuentes.
-   Si el cambio debe verse en Pages, ejecuta `src.publish` con un registro que
-   el gate verifique como ya aprobado, luego `src.publish.verify site/`; incluye
-   `site/` en el mismo PR. Para cambios solo de interfaz, comprueba que el
-   `analysis_manifest` y los hashes de `site/data/v1/` no cambien.
+2. Implementa y valida. Confirma primero en Git los cambios de entrada de
+   compilación bajo `src/`, `web/`, `contracts/` y `config/`: el gate rechaza
+   esos archivos si tienen cambios sin commit, porque el manifiesto registra
+   el commit del código. Después regenera los artefactos afectados desde las
+   fuentes. Si el cambio debe verse en Pages, ejecuta `src.publish` con un
+   registro que el gate verifique como ya aprobado, luego
+   `src.publish.verify site/`; incluye `site/` en un segundo commit del mismo
+   PR. Para cambios solo de interfaz, comprueba que el `analysis_manifest` y
+   los hashes de `site/data/v1/` no cambien.
 3. Abre el PR como borrador. Espera los checks obligatorios `test` y `web` del
    último commit; atiende comentarios e hilos y márcalo listo para revisión.
    Da unos minutos a la revisión automática antes de integrar.

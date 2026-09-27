@@ -16,8 +16,10 @@ la incorpora para Claude.
 - Usar una rama y PR revisable; nunca push directo a `master`, force-push o
   bypass del ruleset. Abrir en borrador, esperar checks `test` y `web`, atender
   hilos y fusionar con merge commit.
-- Generar `site/` con `src.publish` desde un expediente actualmente aprobado;
-  verificarlo con `src.publish.verify` y comprobar el deploy de Pages. En una
+- Confirmar en Git los cambios de entrada de compilación antes de publicar:
+  `src.publish` rechaza cambios sin commit bajo `src/`, `web/`, `contracts/` y
+  `config/`. Generar `site/` con `src.publish` desde un expediente actualmente
+  aprobado; verificarlo con `src.publish.verify` y comprobar el deploy de Pages. En una
   corrección solo de interfaz, conservar los hashes de `site/data/v1/` y el
   `analysis_manifest`.
 - Pedir autorización específica antes de aprobar análisis nuevos, activar
@@ -33,6 +35,7 @@ la aprobación con una reconstrucción simulada.
 ## Archivos actualizados y comprobación
 
 Se armonizaron `AGENTS.md`, `CLAUDE.md`, la guía del subagente implementador,
-`README.md`, `REPO_MAP.md` y `src/publish/README.md`. Se revisaron las
-restricciones activas de publicación para evitar instrucciones contradictorias.
+`README.md`, `web/README.md`, `REPO_MAP.md` y `src/publish/README.md`. Se
+revisaron las restricciones activas de publicación para evitar instrucciones
+contradictorias.
 El cambio es documental: no modifica datos, código del dashboard ni `site/`.
