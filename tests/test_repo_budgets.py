@@ -39,7 +39,7 @@ ALLOWLIST: dict[str, int] = {
     "src/analytics/route_carrier.py": 783,
     "src/transform/stage6_facts.py": 772,
     "src/ingest/aerodatabox/international.py": 715,
-    "src/dashboard/flights.py": 701,
+    "src/dashboard/flights.py": 712,
     "src/dashboard/international_routes.py": 638,
     "src/parse/peers/stage5.py": 625,
     "tests/test_international_route_carrier.py": 622,

@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import duckdb
+import numpy as np
 import pandas as pd
 
 from src.config import PATHS
@@ -208,10 +209,20 @@ def _load_mix(connection: duckdb.DuckDBPyConnection) -> dict[str, dict[str, Any]
             segments: dict[str, float] = {}
             for segment in ("domestic", "international", "total"):
                 rows = metric_rows[metric_rows["segment"].eq(segment)]
-                if rows["period_id"].nunique() != 3:
+                # `Series.sum()` skips nulls by default (and returns 0.0 when
+                # every value is null), which would silently understate a
+                # quarter with a missing month, or even publish a fabricated
+                # zero, while still marking the quarter complete. Require all
+                # three months to be present AND finite before summing.
+                values = rows.set_index("period_id")["value"]
+                if (
+                    rows["period_id"].nunique() != 3
+                    or values.isna().any()
+                    or not np.isfinite(values.to_numpy()).all()
+                ):
                     complete = False
                     break
-                segments[segment] = float(rows["value"].sum())
+                segments[segment] = float(values.sum())
             metrics[metric_key] = segments
         if not complete:
             continue

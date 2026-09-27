@@ -4,6 +4,21 @@ Cambios notables del proyecto, para humanos. Formato inspirado en
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); no se usa
 versión semántica, las entradas van por fecha.
 
+## 2026-09-27
+
+### Fixed
+
+- Cinco hallazgos abiertos de Codex (PRs #10, #19, #20): capacidad "Boeing
+  737" genérica corregida a su punto medio real (175.1, no 175.7); rango de
+  sensibilidad de ocupación acotado a [0, 100%] en vez de publicar valores
+  como 103.41%; suma de mínimos/máximos de pasajeros a través de celdas con
+  distintos escenarios de sensibilidad del IPF ya no infla el rango por
+  ruta/red — se retiene solo cuando ningún componente requirió reparación
+  temporal; la mezcla trimestral de pasajeros/ASM/RPM exige los tres meses
+  no nulos y finitos en vez de sumar con `NaN` silencioso; y
+  `build_warehouse` falla en vez de omitir en silencio el Gold de extensión
+  de rutas cuando su bronce fuente está presente pero el generador no corrió.
+
 ## 2026-09-26
 
 ### Changed
