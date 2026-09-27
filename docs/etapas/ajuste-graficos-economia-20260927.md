@@ -24,8 +24,14 @@ contenedores.
 - `pytest tests/test_web_page_smoke.py -q`: 4 pruebas aprobadas; el smoke test
   comprueba que los tres SVG ocupen el ancho de sus contenedores al mostrar la
   pestaña.
-- `npm run check` y `npm run build`: aprobados.
+- Suite pública de CI: 543 pruebas aprobadas, 74 excluidas por ser locales o de
+  navegador.
+- Suite web: 68 pruebas aprobadas; `npm run check` y `npm run build` aprobados.
+- Smoke tests de navegador de CI: 8 pruebas aprobadas.
 - `git diff --check`: aprobado.
+- `src.publish` generó `site/` con el registro aprobado ya publicado de 2T26;
+  `src.publish.verify site/` aprobó. El deploy de Pages ocurre después de
+  integrar el PR.
 
-La corrección modifica el código fuente y no publica una nueva versión de
-GitHub Pages; la publicación sigue sujeta a instrucción explícita del dueño.
+La publicación conserva el registro y el payload aprobado de 2T26; el cambio es
+el código de visualización y sus assets compilados.
