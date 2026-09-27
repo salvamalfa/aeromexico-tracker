@@ -40,7 +40,7 @@ ALLOWLIST: dict[str, int] = {
     "src/transform/stage6_facts.py": 772,
     "src/ingest/aerodatabox/international.py": 715,
     "src/dashboard/flights.py": 712,
-    "src/dashboard/international_routes.py": 638,
+    "src/dashboard/international_routes.py": 643,  # +5: withhold out-of-range load-factor bounds (Codex #20)
     "src/parse/peers/stage5.py": 625,
     "tests/test_international_route_carrier.py": 622,
 }

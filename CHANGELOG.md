@@ -8,6 +8,8 @@ versión semántica, las entradas van por fecha.
 
 ### Fixed
 
+- Rutas internacionales: las bandas de ocupación fuera de [0, 100%] se omiten igual que en las nacionales.
+
 - Cinco hallazgos abiertos de Codex (PRs #10, #19, #20): capacidad "Boeing
   737" genérica corregida a su punto medio real (175.1, no 175.7); rango de
   sensibilidad de ocupación acotado a [0, 100%] en vez de publicar valores

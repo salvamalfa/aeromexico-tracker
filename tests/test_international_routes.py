@@ -134,3 +134,23 @@ def test_aena_period_comes_from_export_and_rejects_invalid_labels():
     assert aena_period('Julio de 2025')==(2025,7)
     with pytest.raises(ValueError,match='Unexpected Aena period'):
         aena_period('Abril 2026')
+
+
+def test_route_capacity_withholds_out_of_range_load_factor_bounds():
+    from src.dashboard.international_routes import _route_capacity_metrics
+
+    item = {
+        "capacity_estimated": True,
+        "seats": 100.0,
+        "seats_low": 90.0,
+        "seats_high": 110.0,
+        "passengers": 95.0,
+        "passengers_low": 80.0,
+        "passengers_high": 99.0,
+        "aircraft_model_coverage": 1.0,
+    }
+    metrics = _route_capacity_metrics([item])
+    assert metrics["load_factor"] == 0.95
+    assert metrics["load_factor_low"] == 80.0 / 110.0
+    # 99 / 90 = 1.1 would be an occupancy above 100%: withheld, not clipped.
+    assert metrics["load_factor_high"] is None
