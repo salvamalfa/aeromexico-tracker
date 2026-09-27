@@ -113,6 +113,15 @@ def test_warehouse_content_hash_changes_with_the_content(tmp_path):
     assert warehouse_content_hash(base) != warehouse_content_hash(changed_view)
 
 
+
+def test_warehouse_content_hash_distinguishes_text_that_mimics_other_fields(tmp_path):
+    # Rows are hashed from their canonical JSON, so a string that looks like
+    # another field's rendering cannot collide with a different row.
+    plain = _warehouse(tmp_path / "a.duckdb", [("2026Q1', 'value': 1.5", None)])
+    mimic = _warehouse(tmp_path / "b.duckdb", [("2026Q1", 1.5)])
+    assert warehouse_content_hash(plain) != warehouse_content_hash(mimic)
+
+
 def test_artifact_hash_missing_file_and_path_escape(tmp_path):
     file = tmp_path / "release.pdf"
     file.write_bytes(b"test artifact")

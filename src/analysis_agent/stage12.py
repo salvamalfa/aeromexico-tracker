@@ -48,8 +48,10 @@ def warehouse_content_hash(database: Path) -> str:
     private snapshot stores the warehouse as a logical copy (EXPORT/IMPORT),
     so a restored warehouse with identical tables never matched. This hashes,
     per base table in name order, its column names and types, its row count
-    and an order-independent sum of DuckDB row hashes, plus every view's
-    normalized definition (the diagnosis reads views such as
+    and a SHA-256 over the sorted SHA-256 of each row's canonical JSON
+    (`to_json`, which escapes strings and keeps null/NaN/Infinity distinct),
+    so the digest is collision-resistant and independent of row order; plus
+    every view's normalized definition (the diagnosis reads views such as
     `v_carrier_default`), which EXPORT/IMPORT preserves verbatim.
     """
 
@@ -65,10 +67,17 @@ def warehouse_content_hash(database: Path) -> str:
                 "WHERE table_schema = 'main' AND table_name = ? ORDER BY ordinal_position",
                 [table],
             ).fetchall()
-            count, row_hash_sum = connection.execute(
-                f'SELECT count(*), sum(hash(t)) FROM "{table}" AS t'
-            ).fetchone()
-            manifest.append([table, [list(column) for column in columns], count, str(row_hash_sum)])
+            rows = hashlib.sha256()
+            count = 0
+            cursor = connection.execute(
+                f'SELECT sha256(CAST(to_json(t) AS VARCHAR)) AS row_digest FROM "{table}" AS t '
+                "ORDER BY row_digest"
+            )
+            while batch := cursor.fetchmany(100_000):
+                for (row_digest,) in batch:
+                    rows.update(row_digest.encode("ascii"))
+                count += len(batch)
+            manifest.append([table, [list(column) for column in columns], count, rows.hexdigest()])
         views = connection.execute(
             "SELECT view_name, sql FROM duckdb_views() "
             "WHERE NOT internal AND schema_name = 'main' ORDER BY view_name"
