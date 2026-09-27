@@ -60,8 +60,12 @@ dibujar el mapa, a lo más una vez por cuadro.
   excluye programados e inferidos, que se listan aparte, y la línea declara
   las rutas solo de presencia) y dos en `regions.test.ts`
   (normalización de la región).
-- El redimensionado del mapa no tiene prueba automática: depende del
-  tamaño real del lienzo en el navegador.
+- `uv run pytest -q -m browser tests/test_web_flights_smoke.py
+  tests/test_web_page_smoke.py` → 6 passed. Incluye la prueba nueva
+  `test_region_map_refits_its_bounds_when_the_canvas_resizes`, que abre una
+  región, reduce el ancho del viewport y exige que cambien los rangos del
+  mapa. Sin la corrección de `bootstrap.ts` esa prueba falla por timeout; con
+  ella, pasa. Es una prueba `browser`, así que CI no la corre.
 - Sin cambios en Python ni en `site/`.
 
 ## Límites
