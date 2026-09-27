@@ -95,7 +95,22 @@ export function fitViewToCanvas(
   return { lat: [lat0, lat1], lon: [lon0, lon1] };
 }
 
+// Tamaño del lienzo con el que se dibujó el mapa por última vez, sin importar
+// quién lo dibujó (periodo, región, pestaña visible o resize): el resize solo
+// redibuja si el tamaño actual difiere de este.
+let fittedCanvasSize = "";
+
+export function canvasSize(): string {
+  const canvas = $("route-flow-map");
+  return `${canvas?.clientWidth ?? 0}x${canvas?.clientHeight ?? 0}`;
+}
+
+export function mapFittedCanvasSize(): string {
+  return fittedCanvasSize;
+}
+
 export function renderFlowMap(): void {
+  fittedCanvasSize = canvasSize();
   const ordered = orderedRoutes();
   const activeRegion =
     state.networkMode === "international" && state.selectedRegion

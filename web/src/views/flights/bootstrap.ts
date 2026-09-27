@@ -17,7 +17,7 @@ import { domesticAvailableForQuarter, loadQuarters, state } from "./state";
 import { renderQuarter } from "./quarter";
 import { renderMix } from "./mix";
 import { renderNetworkPeriod } from "./network";
-import { alignRouteDetailToGeo, renderFlowMap } from "./map";
+import { alignRouteDetailToGeo, canvasSize, mapFittedCanvasSize, renderFlowMap } from "./map";
 
 function syncPeriodIndex(periodId: string): boolean {
   const index = state.quarters.findIndex((quarter) => quarter.period_id === periodId);
@@ -48,7 +48,6 @@ function wireControls(): void {
   // si cambia el ancho o el alto hay que recalcularlo, no solo realinear el
   // detalle (el alto cambia solo, p. ej., en el corte de 420px con el ancho
   // fijo en su mínimo).
-  let lastMapSize = "";
   let resizeQueued = false;
   window.addEventListener("resize", () => {
     if (resizeQueued) return;
@@ -56,11 +55,8 @@ function wireControls(): void {
     window.requestAnimationFrame(() => {
       resizeQueued = false;
       const panel = $("panel-flights");
-      const canvas = $("route-flow-map");
-      const width = canvas?.clientWidth ?? 0;
-      const size = `${width}x${canvas?.clientHeight ?? 0}`;
-      if (state.network && panel && !panel.hidden && width && size !== lastMapSize) {
-        lastMapSize = size;
+      const width = $("route-flow-map")?.clientWidth ?? 0;
+      if (state.network && panel && !panel.hidden && width && canvasSize() !== mapFittedCanvasSize()) {
         renderFlowMap();
       }
       alignRouteDetailToGeo();

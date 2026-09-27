@@ -48,6 +48,10 @@ lienzo, pero el `resize` solo realineaba el detalle. Ahora, si cambia el
 ancho o el alto del lienzo con la pestaña de Vuelos visible, `bootstrap.ts`
 vuelve a dibujar el mapa, a lo más una vez por cuadro. Codex señaló que con
 el ancho fijo en su mínimo de 700px, el corte de 420px solo cambia el alto.
+`renderFlowMap` guarda el tamaño del lienzo para el que se dibujó, sin
+importar qué lo disparó (periodo, región, pestaña visible o resize), y el
+`resize` compara contra ese tamaño. Así un redibujo al volver a la pestaña
+no deja el resize desincronizado (hallazgo de Codex sobre #70).
 
 ## Hallazgos que ya no aplican
 
@@ -73,10 +77,11 @@ el ancho fijo en su mínimo de 700px, el corte de 420px solo cambia el alto.
   rutas; y la línea oculta cuando no hay nada que reportar) y cuatro en `regions.test.ts`
   (normalización de la región y selector con regiones solo de presencia).
 - `uv run pytest -q -m browser tests/test_web_flights_smoke.py
-  tests/test_web_page_smoke.py` → 7 passed. Incluye dos pruebas nuevas:
+  tests/test_web_page_smoke.py` → 8 passed. Incluye tres pruebas nuevas:
   `test_region_map_refits_its_bounds_when_the_canvas_resizes`, que cambia el
   ancho, y `test_region_map_refits_when_only_the_canvas_height_changes`, que
-  cruza el corte de 420px. Ambas abren una región y exigen que cambien los
+  cruza el corte de 420px, y `test_region_map_refits_after_a_hidden_tab_redraw`,
+  que redimensiona con la pestaña oculta y la vuelve a abrir. Las tres abren una región y exigen que cambien los
   rangos del mapa. Cada una falla sin su corrección en `bootstrap.ts` y pasa
   con ella. Es una prueba `browser`, así que CI no la corre.
 - Sin cambios en Python ni en `site/`.

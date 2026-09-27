@@ -152,3 +152,34 @@ def test_region_map_refits_when_only_the_canvas_height_changes(web_server) -> No
             pytest.skip(f"layout did not isolate a height-only change: {before_size} -> {after_size}")
         page.wait_for_function(f"({read_map_bounds})() !== {json.dumps(before)}", timeout=5000)
         browser.close()
+
+
+def test_region_map_refits_after_a_hidden_tab_redraw(web_server) -> None:
+    # Resize A->B visibly, B->A while Vuelos is hidden, reopen (redraw at A),
+    # then resize to B again: the resize guard must compare against the size
+    # of the latest draw, not the last resize it saw (Codex finding on #70).
+    read_map_bounds = (
+        "() => { const g = document.getElementById('route-flow-map');"
+        " if (!g || !g.layout) return null;"
+        " return JSON.stringify([g.layout.geo.lataxis.range, g.layout.geo.lonaxis.range]); }"
+    )
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(executable_path=_chromium_executable())
+        page = browser.new_page(viewport={"width": 1400, "height": 900})
+        page.route("**/favicon.ico", lambda route: route.fulfill(status=204, body=""))
+        page.goto(web_server)
+        page.click("#tab-flights")
+        page.wait_for_selector("#network-volume:not([hidden])")
+        page.click("#network-region-switch button")
+        page.wait_for_function(f"({read_map_bounds})() !== null")
+        at_a = page.evaluate(read_map_bounds)
+        page.set_viewport_size({"width": 1000, "height": 900})
+        page.wait_for_function(f"({read_map_bounds})() !== {json.dumps(at_a)}", timeout=5000)
+        page.click("#tab-reading")
+        page.set_viewport_size({"width": 1400, "height": 900})
+        page.wait_for_timeout(300)
+        page.click("#tab-flights")
+        page.wait_for_function(f"({read_map_bounds})() === {json.dumps(at_a)}", timeout=5000)
+        page.set_viewport_size({"width": 1000, "height": 900})
+        page.wait_for_function(f"({read_map_bounds})() !== {json.dumps(at_a)}", timeout=5000)
+        browser.close()
