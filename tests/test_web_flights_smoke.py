@@ -94,9 +94,10 @@ def test_flights_view_renders_the_synthetic_fixture_without_console_errors(web_s
 def test_region_map_refits_its_bounds_when_the_canvas_resizes(web_server) -> None:
     # fitViewToCanvas freezes lat/lon ranges to the canvas aspect; a resize
     # that changes the canvas width must recompute them (Codex finding #8).
-    read_lon_range = (
+    read_map_bounds = (
         "() => { const g = document.getElementById('route-flow-map');"
-        " return g && g.layout ? JSON.stringify([g.layout.geo.lataxis.range, g.layout.geo.lonaxis.range]) : null; }"
+        " if (!g || !g.layout) return null;"
+        " return JSON.stringify([g.layout.geo.lataxis.range, g.layout.geo.lonaxis.range]); }"
     )
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(executable_path=_chromium_executable())
@@ -107,12 +108,12 @@ def test_region_map_refits_its_bounds_when_the_canvas_resizes(web_server) -> Non
         page.wait_for_selector("#network-volume:not([hidden])")
         # A region view uses fitViewToCanvas (the world view does not).
         page.click("#network-region-switch button")
-        page.wait_for_function(f"({read_lon_range})() !== null")
-        wide = page.evaluate(read_lon_range)
+        page.wait_for_function(f"({read_map_bounds})() !== null")
+        wide = page.evaluate(read_map_bounds)
         page.set_viewport_size({"width": 700, "height": 900})
         page.wait_for_function(
-            f"({read_lon_range})() !== {json.dumps(wide)}", timeout=5000
+            f"({read_map_bounds})() !== {json.dumps(wide)}", timeout=5000
         )
-        narrow = page.evaluate(read_lon_range)
+        narrow = page.evaluate(read_map_bounds)
         browser.close()
     assert narrow != wide
