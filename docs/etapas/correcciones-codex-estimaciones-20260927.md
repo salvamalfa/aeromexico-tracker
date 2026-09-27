@@ -173,6 +173,12 @@ inicial de `transform.stage6` pasa `False`. Las reconstrucciones posteriores
 - `site/` no se tocó ni se republicó en esta rama; los cambios de esta rama
   no llegan al dashboard público hasta que el dueño ejecute la
   regeneración y publicación explícitas.
+- Pendiente en local, con el snapshot privado restaurado: `just rebuild`
+  completo (confirma que `transform.stage6` ya no dispara la guarda y que los
+  seis generadores regeneran su Gold antes de Stage 9) y la suite completa
+  con `local_data` (`uv run pytest -q --require-local-data`). La nube no tiene
+  esos datos; `tests/test_flights_prototype.py` ya acepta límites retenidos
+  (`None`) en meses reparados.
 
 ## Cifras publicadas que cambiarán al regenerar
 
@@ -204,3 +210,6 @@ inicial de `transform.stage6` pasa `False`. Las reconstrucciones posteriores
 - `1d4bc6e` — guarda de fuente propia para la presencia compartida en AIFA.
 - `51a7437` — registro de los seis generadores de extensión de rutas en
   `PIPELINE_STEPS` para que `just rebuild` no falle contra su propia guarda.
+- `1074ed8` — la construcción inicial de `transform.stage6` no aplica la
+  guarda; Stage 7–9 sí.
+- `89f51fe` — contrato `local_data` de Vuelos acepta límites retenidos.
