@@ -3,12 +3,12 @@
 // the map, region/month switches, volume line and route detail panel.
 // Ported from src/dashboard/assets/flights.js::renderNetworkPeriod.
 
-import { $, finite } from "./dom";
+import { $, finite, priorPeriod } from "./dom";
 import {
   domesticAvailableForQuarter, ensureDomesticMonths, ensureDomesticQuarter,
   ensureInternational, monthsInQuarter, state,
 } from "./state";
-import { aggregateDomesticMonths, renderMonthSwitch } from "./domestic";
+import { aggregateDomesticMonths } from "./domestic";
 import { normalizeSelectedRegion, regionRoutes, renderRegionSwitch } from "./regions";
 import { renderNetworkVolume } from "./volume";
 import { renderRouteOverview } from "./table";
@@ -25,12 +25,37 @@ export function orderedRoutes(): Route[] {
   return [...state.routes].sort((a, b) => routeValue(b) - routeValue(a) || a.market_key.localeCompare(b.market_key));
 }
 
+// The international payload's `previous` field is the same available months
+// one year earlier. A small-market floor keeps near-zero bases from dominating
+// a percentage ranking; it never changes the underlying route totals.
+export function routeChangePercent(route: Route): number | null {
+  const current = route.passengers;
+  const previous = route.previous?.passengers;
+  if (state.networkMode !== "international" || route.passengers_estimated ||
+      !finite(current) || !finite(previous) || previous <= 0 ||
+      Math.max(current, previous) < 5_000) return null;
+  return (current / previous - 1) * 100;
+}
+
+function changingRoutes(): Route[] {
+  const comparable = state.routes.filter((route) => routeChangePercent(route) !== null);
+  const rising = comparable.filter((route) => routeChangePercent(route)! > 0)
+    .sort((a, b) => routeChangePercent(b)! - routeChangePercent(a)!).slice(0, 6);
+  const falling = comparable.filter((route) => routeChangePercent(route)! < 0)
+    .sort((a, b) => routeChangePercent(a)! - routeChangePercent(b)!).slice(0, 6);
+  return [...rising, ...falling];
+}
+
 export function visibleRoutes(): Route[] {
   const routes = orderedRoutes();
-  return state.showAllRoutes ? routes : routes.slice(0, 12);
+  if (state.routeView === "all") return routes;
+  if (state.routeView === "change") return changingRoutes();
+  return routes.slice(0, 12);
 }
 
 export function renderRouteMode(): void {
+  const canShowChange = changingRoutes().length > 0;
+  if (state.routeView === "change" && !canShowChange) state.routeView = "volume";
   const visible = visibleRoutes();
   const all = orderedRoutes();
   const totalPassengers = all.reduce((sum, route) => sum + (finite(route.passengers) ? route.passengers : 0), 0);
@@ -39,9 +64,21 @@ export function renderRouteMode(): void {
     ? ` · ${Math.round(shownPassengers / totalPassengers * 100)}% de los pasajeros estimados de la red` : "";
   const presence = state.presenceOnlyRouteCount > 0
     ? ` · ${state.presenceOnlyRouteCount} sin volumen atribuible` : "";
-  $("map-route-summary")!.textContent = `${visible.length} de ${all.length} rutas con volumen visible${state.showAllRoutes ? "" : share}${presence}`;
-  $("map-routes-featured")!.setAttribute("aria-pressed", String(!state.showAllRoutes));
-  $("map-routes-all")!.setAttribute("aria-pressed", String(state.showAllRoutes));
+  const periodId = state.quarters[state.periodIndex]?.period_id ?? "";
+  const previousLabel = state.byPeriod.get(priorPeriod(periodId, 1))?.period_label ?? "el año anterior";
+  $("map-route-title")!.textContent = state.routeView === "change"
+    ? "Rutas con mayores cambios" : "Destinos que concentran el volumen";
+  $("map-route-summary")!.textContent = state.routeView === "change"
+    ? `${visible.filter((route) => routeChangePercent(route)! > 0).length} aumentos · ${visible.filter((route) => routeChangePercent(route)! < 0).length} caídas vs. ${previousLabel} · mismos meses disponibles`
+    : `${visible.length} de ${all.length} rutas con volumen visible${state.routeView === "volume" ? share : ""}${presence}`;
+  for (const [id, view] of [["map-routes-featured", "volume"], ["map-routes-change", "change"], ["map-routes-all", "all"]] as const) {
+    $(id)!.setAttribute("aria-pressed", String(state.routeView === view));
+  }
+  const changeButton = $("map-routes-change") as HTMLButtonElement;
+  changeButton.disabled = !canShowChange;
+  changeButton.title = canShowChange
+    ? "Cambio de pasajeros por ruta frente a los mismos meses del año anterior; mínimo 5 mil pasajeros en uno de los periodos"
+    : "Sin comparación de pasajeros por ruta con cobertura equivalente";
   renderRouteOverview(visible);
 }
 
@@ -119,7 +156,6 @@ export async function renderNetworkPeriod(periodId: string): Promise<void> {
         ? "Grupo Aeroméxico · combina Aerovías de México y Aeroméxico Connect"
         : "Observado: Aerovías de México · estimaciones por ruta: Grupo Aeroméxico";
   }
-  renderMonthSwitch();
   renderRegionSwitch();
   renderNetworkVolume();
   state.pinnedAirport = null;

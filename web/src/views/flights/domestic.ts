@@ -1,9 +1,8 @@
-// National multi-month aggregation and the month multi-select switch.
+// National month-to-quarter aggregation.
 // Ported from src/dashboard/assets/flights.js.
 
-import { $, esc, finite } from "./dom";
+import { finite } from "./dom";
 import { DOMESTIC_MONTH_NAMES, monthsInQuarter, state } from "./state";
-import { renderNetworkPeriod } from "./network";
 import type { Airport, PeriodNetworkDocument, Route, RouteDirection } from "../../types/domain";
 
 // Describe el periodo nacional mostrado, p. ej. "abril–junio 2026 ·
@@ -138,33 +137,4 @@ export function aggregateDomesticMonths(monthIds: string[]): PeriodNetworkDocume
     airports: [...airportsByIata.values()].sort((a, b) => a.iata.localeCompare(b.iata)),
     agent_eligible: false,
   };
-}
-
-export function renderMonthSwitch(): void {
-  const host = $("network-month-switch");
-  if (!host) return;
-  const monthsHere = monthsInQuarter(state.domesticMonthsQuarterId);
-  host.hidden = state.networkMode !== "domestic" || monthsHere.length === 0;
-  if (host.hidden) {
-    host.innerHTML = "";
-    return;
-  }
-  host.innerHTML = monthsHere
-    .map((periodId) => {
-      const label = state.domesticMonthlyNetworks.get(periodId)?.period_label || periodId;
-      return `<button type="button" data-domestic-month="${esc(periodId)}" aria-pressed="${String(state.selectedDomesticMonths.has(periodId))}">${esc(label)}</button>`;
-    })
-    .join("");
-  host.querySelectorAll("button").forEach((button) =>
-    button.addEventListener("click", async () => {
-      const id = (button as HTMLElement).dataset.domesticMonth!;
-      if (state.selectedDomesticMonths.has(id)) {
-        if (state.selectedDomesticMonths.size === 1) return; // conserva al menos un mes seleccionado
-        state.selectedDomesticMonths.delete(id);
-      } else {
-        state.selectedDomesticMonths.add(id);
-      }
-      await renderNetworkPeriod(state.quarters[state.periodIndex]!.period_id);
-    })
-  );
 }

@@ -1,41 +1,34 @@
-// Compact, quarter-level route reading for the executive map preview.
+// Concise quarterly route ranking beside the map.
 
-import { $, deltaDisplay, esc, finite, formatRouteMetric, integer } from "./dom";
+import { $, esc, finite, formatRouteMetric, integer } from "./dom";
 import { state } from "./state";
 import { coverageDotHtml, scheduledIconHtml, sourceFooterHtml, SCHEDULED_STATUSES } from "./coverage";
 import { bindAirportSearchControls } from "./search";
-import { routeTitle } from "./network";
+import { routeChangePercent, routeTitle } from "./network";
 import type { Route } from "../../types/domain";
 
-function routeStatus(route: Route): string {
-  if (route.passengers_estimated) return "Estimación";
-  if (route.operation_status && SCHEDULED_STATUSES.includes(route.operation_status)) return "Programado";
-  if (route.operation_status === "carrier_inferred_market_observed") return "Inferido";
-  return "Observado";
-}
-
-function routeCaveat(route: Route): string {
-  if (route.passengers_estimated) return "";
-  if (route.operation_status && SCHEDULED_STATUSES.includes(route.operation_status)) return "Vuelos previstos; operación no confirmada";
-  return "";
-}
-
 function routeRows(routes: Route[]): string {
+  let downStarted = false;
   return routes.map((route, index) => {
-    const flights = finite(route.departures) ? `${integer.format(route.departures)} ${route.operation_status && SCHEDULED_STATUSES.includes(route.operation_status) ? "programados" : route.capacity_estimated ? "estimados" : "observados"}` : "N/D";
+    const change = state.routeView === "change" ? routeChangePercent(route) : null;
+    const isDown = change !== null && change < 0;
+    const group = state.routeView !== "change" ? ""
+      : index === 0 ? '<li class="executive-route-group">Aumentan</li>'
+      : isDown && !downStarted ? '<li class="executive-route-group">Caen</li>' : "";
+    if (isDown) downStarted = true;
+    const flights = finite(route.departures) ? integer.format(route.departures) : "N/D";
+    const flightKind = route.operation_status && SCHEDULED_STATUSES.includes(route.operation_status)
+      ? "programados" : route.capacity_estimated ? "estimados" : "observados";
     const occupancy = finite(route.load_factor) ? formatRouteMetric("load_factor", route.load_factor) : "N/D";
-    const caveat = routeCaveat(route);
-    const previousPassengers = route.previous?.passengers;
-    const change = !route.passengers_estimated && finite(previousPassengers)
-      ? deltaDisplay(route.passengers, previousPassengers) : null;
-    return `<li class="executive-route-row">
+    const sourceBadge = route.passengers_estimated && state.networkMode === "international"
+      ? '<span class="route-evidence-badge">estim.</span>' : "";
+    const changeText = change === null ? "" : `<small class="executive-route-trend ${change >= 0 ? "delta-up" : "delta-down"}">${change >= 0 ? "+" : ""}${change.toFixed(1)}% interanual</small>`;
+    return `${group}<li class="executive-route-row">
       <span class="executive-route-rank">${index + 1}</span>
-      <div class="executive-route-copy">
-        <strong>${esc(routeTitle(route))}${coverageDotHtml(route)}${scheduledIconHtml(route)}</strong>
-        <span>${esc(routeStatus(route))}${caveat ? ` · ${esc(caveat)}` : ""}</span>
-        <small>Vuelos: ${esc(flights)} · ocupación ${esc(occupancy)}</small>
-      </div>
-      <div class="executive-route-value"><strong>${finite(route.passengers) ? integer.format(route.passengers) : "N/D"}</strong><span>pasajeros</span>${change && change.text !== "No disponible" ? `<small class="${change.className}" title="Frente a los mismos meses disponibles del año anterior">${esc(change.text)} interanual</small>` : ""}</div>
+      <div class="executive-route-copy"><strong>${esc(routeTitle(route))}${coverageDotHtml(route)}${scheduledIconHtml(route)}${sourceBadge}</strong>${changeText}</div>
+      <div class="executive-route-value" title="Pasajeros ${route.passengers_estimated ? "estimados" : "observados"}">${finite(route.passengers) ? integer.format(route.passengers) : "N/D"}</div>
+      <div class="executive-route-value" title="Vuelos ${flightKind}">${flights}</div>
+      <div class="executive-route-value">${esc(occupancy)}</div>
     </li>`;
   }).join("");
 }
@@ -54,12 +47,12 @@ function searchBox(): string {
   </div>`;
 }
 
-function render(title: string, subtitle: string, routes: Route[], airportSelected: boolean): void {
+function render(title: string, routes: Route[], airportSelected: boolean): void {
   const host = $("airport-tooltip")!;
-  host.innerHTML = `<div class="airport-title-row"><div><h3>${esc(title)}</h3><p class="airport-meta">${esc(subtitle)}</p></div>${searchButton()}</div>
+  host.innerHTML = `<div class="airport-title-row"><h3>${esc(title)}</h3>${searchButton()}</div>
     ${searchBox()}
     ${airportSelected ? '<button type="button" class="route-overview-back" id="route-overview-back">← Toda la red</button>' : ""}
-    ${routes.length ? `<ol class="executive-route-list">${routeRows(routes)}</ol>` : '<p class="airport-tooltip-empty">No hay rutas con volumen atribuible en esta selección.</p>'}
+    ${routes.length ? `<div class="executive-route-columns"><span>Ruta</span><span>Pasajeros</span><span>Vuelos</span><span>Ocupación</span></div><ol class="executive-route-list">${routeRows(routes)}</ol>` : '<p class="airport-tooltip-empty">No hay rutas con volumen atribuible en esta selección.</p>'}
     ${sourceFooterHtml(routes)}`;
   bindAirportSearchControls();
   $("route-overview-back")?.addEventListener("click", () => {
@@ -70,13 +63,12 @@ function render(title: string, subtitle: string, routes: Route[], airportSelecte
 }
 
 export function renderRouteOverview(routes: Route[]): void {
-  const scope = state.networkMode === "domestic" ? "red nacional" : "red internacional";
-  const label = state.showAllRoutes ? "Todas las rutas" : "Rutas destacadas";
-  const period = state.network?.period_label || "";
-  render(label, `${scope} · ${period} · ordenadas por pasajeros disponibles${state.networkMode === "international" ? " · variación vs. mismos meses disponibles" : ""}`, routes, false);
+  const label = state.routeView === "all" ? "Todas las rutas"
+    : state.routeView === "change" ? "Mayores cambios" : "Rutas destacadas";
+  render(label, routes, false);
 }
 
 export function renderAirportTooltip(airport: string, incident: Route[], _isPinned?: boolean): void {
   const city = state.network?.airports.find((item) => item.iata === airport)?.city || "Aeropuerto";
-  render(`${airport} · ${city}`, `${incident.length} ${incident.length === 1 ? "ruta visible" : "rutas visibles"} · ${state.network?.period_label || ""}`, incident, true);
+  render(`${airport} · ${city}`, incident, true);
 }

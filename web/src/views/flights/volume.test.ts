@@ -14,24 +14,28 @@ function domesticRoute(overrides: Partial<Route>): Route {
   } as unknown as Route;
 }
 
-describe("renderNetworkVolume (estimated_domestic aggregate range)", () => {
+describe("renderNetworkVolume (concise quarterly national total)", () => {
   beforeEach(() => {
     document.body.innerHTML = `<div id="network-volume"></div>`;
     state.networkMode = "domestic";
     state.network = { mode: "estimated_domestic", period_label: "abril 2026" } as unknown as typeof state.network;
   });
 
-  it("shows the summed sensitivity range when every shown route has one", () => {
+  it("shows the sum as estimated passengers with the selected quarter", () => {
+    state.quarters = [{ period_id: "2026Q2", period_label: "2T26" }] as typeof state.quarters;
+    state.periodIndex = 0;
     state.routes = [
       domesticRoute({ passengers: 100_000, passengers_low: 90_000, passengers_high: 110_000 }),
       domesticRoute({ passengers: 50_000, passengers_low: 45_000, passengers_high: 55_000 }),
     ];
     renderNetworkVolume();
     const html = document.getElementById("network-volume")!.innerHTML;
-    expect(html).toContain("135,000–165,000");
+    expect(html).toContain("Total pasajeros");
+    expect(html).toContain("<strong>150,000</strong>");
+    expect(html).toContain("estimados · 2T26");
   });
 
-  it("withholds the aggregate range (never fabricates a zero-based one) when any shown route lacks a bound", () => {
+  it("does not add method text to the compact total", () => {
     state.routes = [
       domesticRoute({ passengers: 100_000, passengers_low: 90_000, passengers_high: 110_000 }),
       // A repaired route whose Gold record carries no scenario identity.
@@ -39,9 +43,8 @@ describe("renderNetworkVolume (estimated_domestic aggregate range)", () => {
     ];
     renderNetworkVolume();
     const html = document.getElementById("network-volume")!.innerHTML;
-    expect(html).not.toContain("90,000");
-    expect(html).not.toContain("–110,000");
-    expect(html).toContain("rango de sensibilidad no disponible");
+    expect(html).not.toContain("Alcance y método");
+    expect(html).not.toContain("meses seleccionados");
   });
 });
 
@@ -54,7 +57,7 @@ describe("renderNetworkVolume (observed vs scheduled vs inferred flights)", () =
     state.network = { mode: "international", period_label: "2T26" } as unknown as typeof state.network;
   });
 
-  it("counts only observed flights in the headline and lists scheduled and inferred apart", () => {
+  it("counts only observed flights in the headline", () => {
     state.routes = [
       domesticRoute({ passengers_estimated: false, departures: 1_000, operation_status: "operated_observed" }),
       domesticRoute({ passengers_estimated: false, departures: 300, operation_status: "assigned_slot_not_flown" }),
@@ -65,16 +68,16 @@ describe("renderNetworkVolume (observed vs scheduled vs inferred flights)", () =
     const html = document.getElementById("network-volume")!.innerHTML;
     expect(html).toContain("<strong>1,000</strong>");
     expect(html).not.toContain("1,370");
-    expect(html).toContain("320 vuelos programados en 2 rutas");
-    expect(html).toContain("50 vuelos de mercado AFAC atribuidos por exclusividad en 1 ruta");
+    expect(html).toContain("Total vuelos");
+    expect(html).toContain("observados · 2T26");
   });
 
-  it("discloses presence-only routes instead of silently dropping them", () => {
+  it("does not add presence-only routes to the observed total", () => {
     state.presenceOnlyRouteCount = 9;
     state.routes = [domesticRoute({ passengers_estimated: false, departures: 10, operation_status: "operated_observed" })];
     renderNetworkVolume();
     const html = document.getElementById("network-volume")!.innerHTML;
-    expect(html).toContain("9 rutas con presencia documentada de Aeroméxico sin volumen atribuible (N/D)");
+    expect(html).toContain("<strong>10</strong>");
   });
 
   it("shows N/D, not zero, when no shown route has observed flights", () => {
@@ -88,13 +91,12 @@ describe("renderNetworkVolume (observed vs scheduled vs inferred flights)", () =
     expect(host.innerHTML).not.toContain("<strong>0</strong>");
   });
 
-  it("renders the presence-only disclosure even when no route is quantified", () => {
+  it("shows N/D when only presence-only routes are documented", () => {
     state.presenceOnlyRouteCount = 8;
     state.routes = [];
     renderNetworkVolume();
     const host = document.getElementById("network-volume")!;
     expect(host.hidden).toBe(false);
-    expect(host.innerHTML).toContain("8 rutas con presencia documentada");
     expect(host.innerHTML).toContain("<strong>N/D</strong>");
   });
 

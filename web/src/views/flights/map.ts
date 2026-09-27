@@ -7,7 +7,7 @@ import Plotly, { type PlotlyHTMLElement } from "../../lib/plotly";
 import { $ } from "./dom";
 import { state } from "./state";
 import { REGIONS } from "./regions";
-import { visibleRoutes, routeValue } from "./network";
+import { visibleRoutes, routeChangePercent, routeValue } from "./network";
 import { renderAirportTooltip, renderRouteOverview } from "./table";
 import type { Route } from "../../types/domain";
 
@@ -112,13 +112,24 @@ export function mapFittedCanvasSize(): string {
 export function renderFlowMap(): void {
   fittedCanvasSize = canvasSize();
   const ordered = visibleRoutes();
+  const routeColor = (route: Route) => state.routeView === "change"
+    ? (routeChangePercent(route) ?? 0) >= 0 ? "#08745a" : "#bb3333"
+    : "#003087";
+  const shownPoints = ordered.flatMap((route) => [route.origin, route.destination]);
+  const focusedView = shownPoints.length && state.networkMode === "international" && state.routeView !== "all"
+    ? fitViewToCanvas(
+      [Math.max(-80, Math.min(...shownPoints.map((airport) => airport.lat)) - 8), Math.min(80, Math.max(...shownPoints.map((airport) => airport.lat)) + 8)],
+      [Math.max(-180, Math.min(...shownPoints.map((airport) => airport.lon)) - 12), Math.min(180, Math.max(...shownPoints.map((airport) => airport.lon)) + 12)]
+    ) : null;
   const activeRegion =
     state.networkMode === "international" && state.selectedRegion
       ? REGIONS.find((region) => region.id === state.selectedRegion)
       : null;
   const mapView = activeRegion
     ? { ...fitViewToCanvas(activeRegion.lat, activeRegion.lon), latDtick: activeRegion.dtick, lonDtick: activeRegion.dtick }
-    : state.networkMode === "domestic"
+    : focusedView
+      ? { ...focusedView, latDtick: 10, lonDtick: 10 }
+      : state.networkMode === "domestic"
       ? { ...fitViewToCanvas([13, 34], [-119, -86]), latDtick: 5, lonDtick: 5 }
       : { lat: [-60, 85] as [number, number], lon: [-180, 180] as [number, number], latDtick: 30, lonDtick: 45 };
   const maxValue = Math.max(...ordered.map(routeValue), 1);
@@ -146,7 +157,7 @@ export function renderFlowMap(): void {
     traces.push({
       type: "scattergeo", mode: "lines", ...arc, name: route.market_key,
       customdata: arc.lat.map(() => route.market_key),
-      line: { color: selected ? "#e31c23" : "#003087", width: selected ? 5 : 1.1 + 3 * Math.sqrt(routeValue(route) / maxValue) },
+      line: { color: selected ? "#e31c23" : routeColor(route), width: selected ? 5 : 1.1 + 3 * Math.sqrt(routeValue(route) / maxValue) },
       opacity: selected ? 1 : 0.68,
       hoverinfo: "skip",
       showlegend: false,
@@ -188,7 +199,7 @@ export function renderFlowMap(): void {
       "route-flow-map",
       {
         opacity: ordered.map((route) => (incidentMarkets.has(route.market_key) ? 0.9 : 0.045)),
-        "line.color": ordered.map((route) => incidentMarkets.has(route.market_key) ? "#003087" : "#d7dee8"),
+        "line.color": ordered.map((route) => incidentMarkets.has(route.market_key) ? routeColor(route) : "#d7dee8"),
         "line.width": ordered.map((route) =>
           incidentMarkets.has(route.market_key) ? 1.5 + 3.5 * Math.sqrt(routeValue(route) / maxValue) : 0.45
         ),
@@ -213,7 +224,7 @@ export function renderFlowMap(): void {
       "route-flow-map",
       {
         opacity: ordered.map((route) => (route.market_key === state.selectedMarket ? 1 : 0.68)),
-        "line.color": ordered.map((route) => (route.market_key === state.selectedMarket ? "#e31c23" : "#003087")),
+        "line.color": ordered.map((route) => (route.market_key === state.selectedMarket ? "#e31c23" : routeColor(route))),
         "line.width": ordered.map((route) =>
           route.market_key === state.selectedMarket ? 6 : 0.8 + 3.8 * Math.sqrt(routeValue(route) / maxValue)
         ),

@@ -4,22 +4,29 @@ Fecha: 2026-09-27. Estado: **vista previa para comentarios del dueño**.
 
 ## Alcance
 
-Se conservan las tarjetas de Vuelos, el selector de meses existente y el
-gráfico inferior. Solo cambia el módulo del mapa y su panel derecho.
+Se conservan las tarjetas de Vuelos y el gráfico inferior. El mapa toma todos
+los meses disponibles del trimestre global, sin selector mensual propio. Si
+faltan meses, el total nacional muestra la fracción cubierta (p. ej. 1/3).
 
 - El mapa abre con las 12 rutas de mayor volumen de pasajeros disponible en el
-  ámbito seleccionado. El control «Todas las rutas» devuelve el universo
-  cuantificado, sin convertir rutas con presencia sin volumen en ceros.
+  ámbito seleccionado. «Todas las rutas» devuelve el universo cuantificado,
+  sin convertir rutas con presencia sin volumen en ceros.
+- «Mayores cambios» muestra hasta seis aumentos y seis caídas porcentuales
+  interanuales de rutas internacionales observadas. Compara los mismos meses
+  disponibles con el año anterior y exige al menos 5 mil pasajeros en alguno
+  de los dos periodos para evitar porcentajes dominados por bases diminutas.
+  No se presenta como cambio frente al trimestre inmediato anterior. La opción
+  se desactiva en nacional: de 1T26 solo está marzo y no existe una base
+  trimestral comparable con abril–junio.
 - El panel derecho abre con el ranking de la red, no con las rutas de MEX.
   Seleccionar un aeropuerto filtra las rutas visibles y «Toda la red» restaura
-  el ranking. Cada ruta muestra total trimestral de pasajeros, vuelos y
-  ocupación cuando existen; se eliminó el desglose mensual y por sentido de
-  este panel. Los asientos dejan de aparecer en él.
-- Las variaciones interanuales de pasajeros solo se muestran cuando la ruta
-  conserva un periodo anterior comparable. Las marcas de cobertura, el estado
-  observado/estimado/programado y las fuentes permanecen disponibles.
-- El total de la red queda separado del ranking y los detalles de método se
-  consultan al desplegar «Alcance y método».
+  el ranking. La ruta queda a la izquierda y pasajeros, vuelos y ocupación
+  aparecen en tres columnas. No se muestran asientos, desglose mensual ni por
+  sentido. El total de la red se expresa en una línea con el trimestre.
+- Las variaciones interanuales aparecen solo en la vista de cambios. Las
+  marcas de cobertura y las fuentes permanecen disponibles. En internacional,
+  los pasajeros estimados por ruta llevan una marca discreta para distinguirlos
+  de los observados.
 
 ## Límites de interpretación
 

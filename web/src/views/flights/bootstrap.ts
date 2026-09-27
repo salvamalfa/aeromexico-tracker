@@ -44,9 +44,9 @@ function wireControls(): void {
     state.passengerPeriod = (event.target as HTMLSelectElement).value as "quarter" | "month";
     renderMix(state.quarters[state.periodIndex]!);
   });
-  for (const [id, showAll] of [["map-routes-featured", false], ["map-routes-all", true]] as const) {
+  for (const [id, view] of [["map-routes-featured", "volume"], ["map-routes-change", "change"], ["map-routes-all", "all"]] as const) {
     $(id)!.addEventListener("click", () => {
-      state.showAllRoutes = showAll;
+      state.routeView = view;
       state.pinnedAirport = null;
       state.selectedMarket = null;
       renderRouteMode();
