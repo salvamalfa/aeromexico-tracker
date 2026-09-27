@@ -8,6 +8,13 @@ versión semántica, las entradas van por fecha.
 
 ### Fixed
 
+- Vuelos: el total de vuelos de la red cuenta solo vuelos observados; los
+  programados (slots del AICM, anuncio fechado de OMA) y los inferidos de
+  mercado AFAC van en líneas aparte. Las rutas con presencia documentada sin
+  volumen atribuible se declaran como N/D en vez de desaparecer en silencio.
+  Detalle en
+  [`docs/etapas/vuelos-total-red-codex-20260927.md`](docs/etapas/vuelos-total-red-codex-20260927.md).
+
 - Rutas internacionales: las bandas de ocupación fuera de [0, 100%] se omiten igual que en las nacionales.
 
 - Cinco hallazgos abiertos de Codex (PRs #10, #19, #20): capacidad "Boeing
