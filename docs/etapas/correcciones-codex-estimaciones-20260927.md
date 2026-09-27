@@ -189,10 +189,15 @@ declara `runs_after` los seis generadores. Hay pruebas nuevas en
   identidad del escenario por celda. Mientras eso no cambie, esas
   celdas/agregados se publican y se muestran sin banda, nunca con una
   aproximada.
-- `fact_aeromexico_international_capacity_estimate` (y la derivación
-  doméstica equivalente) no son Gold pública comprometida; requieren que el
-  dueño las regenere desde los insumos privados de AeroDataBox para que la
-  corrección de 175.1 se refleje en cifras publicadas.
+- `fact_aeromexico_international_capacity_estimate` y su equivalente
+  nacional no son Gold pública versionada. Además, **no pueden regenerarse**
+  con la corrección de 175.1: según el README de
+  `salvamalfa/aeromexico-tracker-data`, la derivación usa artefactos
+  transitorios con modelo de avión que vencen a los siete días, y las
+  salidas actuales conservan solo agregados. La corrección aplica a la
+  próxima captura. Las cifras ya publicadas conservan el punto medio de
+  175.7 para vuelos del 737 genérico, un sesgo de ~0.3 % en esos asientos,
+  salvo que el dueño aún tenga esos insumos en local.
 - `site/` no se tocó ni se republicó en esta rama; los cambios de esta rama
   no llegan al dashboard público hasta que el dueño ejecute la
   regeneración y publicación explícitas.
@@ -205,9 +210,9 @@ declara `runs_after` los seis generadores. Hay pruebas nuevas en
 
 ## Cifras publicadas que cambiarán al regenerar
 
-- Cualquier cifra de capacidad/ocupación internacional derivada del punto
-  medio "Boeing 737" (175.7 → 175.1), tras regenerar
-  `fact_aeromexico_international_capacity_estimate` con AeroDataBox.
+- Capacidad y ocupación derivadas del punto medio "Boeing 737" (175.7 →
+  175.1): solo en capturas nuevas de AeroDataBox (ver Límites); las actuales
+  no se pueden recalcular.
 - Bandas de ocupación (`load_factor_low/high`) de rutas nacionales e
   internacionales que antes mostraban un valor fuera de [0, 100%]: ahora
   aparecerán como no disponibles (`None`) en vez de ese valor implausible.
