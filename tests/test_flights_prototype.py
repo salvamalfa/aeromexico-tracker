@@ -68,11 +68,15 @@ def test_domestic_passenger_estimates_are_monthly_retrospective_and_bounded(flig
         assert all(route["passengers_estimated"] for route in network["routes"])
         # Bounds may be withheld (None) when a cell of the route needed a
         # support repair; when both are present they must bracket the point.
+        # The bounds and the point are separate float sums over the same
+        # cells, so equality can differ in the last bits (e.g.
+        # 38481.65409295874 vs 38481.654092958735): allow that rounding only.
         for route in network["routes"]:
             low, high = route["passengers_low"], route["passengers_high"]
             assert (low is None) == (high is None)
             if low is not None:
-                assert low <= route["passengers"] <= high
+                slack = 1e-9 * max(1.0, abs(route["passengers"]))
+                assert low - slack <= route["passengers"] <= high + slack
         assert any(route["departures"] is not None for route in network["routes"])
         assert all(route["departures_estimated"] == route["capacity_complete"]
                    for route in network["routes"])
