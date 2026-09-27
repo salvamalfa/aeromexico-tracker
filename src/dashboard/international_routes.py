@@ -158,13 +158,18 @@ def _route_capacity_metrics(items):
     passengers_high = sum(item["passengers_high"] for item in items)
     load_factor = passengers / seats if seats > 0 else None
     plausible = load_factor is not None and 0 <= load_factor <= 1
+    # A bound can leave [0, 1] even when the point estimate is plausible; an
+    # out-of-range bound is withheld rather than clipped (same rule as the
+    # domestic routes).
+    low = passengers_low / seats_high if plausible and seats_high > 0 else None
+    high = passengers_high / seats_low if plausible and seats_low > 0 else None
     return dict(
         seats=seats,
         seats_low=seats_low,
         seats_high=seats_high,
         load_factor=load_factor if plausible else None,
-        load_factor_low=passengers_low / seats_high if plausible and seats_high > 0 else None,
-        load_factor_high=passengers_high / seats_low if plausible and seats_low > 0 else None,
+        load_factor_low=low if low is not None and 0 <= low <= 1 else None,
+        load_factor_high=high if high is not None and 0 <= high <= 1 else None,
         capacity_estimated=True,
         load_factor_status="estimated" if plausible else "inconsistent_inputs",
         aircraft_model_coverage=min(item["aircraft_model_coverage"] for item in items),

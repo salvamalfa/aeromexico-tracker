@@ -103,7 +103,7 @@ def _selected_with_dependencies(
         changed = False
         for step in steps:
             if step.step_id in selected:
-                for dependency in step.depends_on:
+                for dependency in (*step.depends_on, *step.runs_after):
                     if dependency not in selected:
                         selected.add(dependency)
                         changed = True
@@ -147,6 +147,7 @@ def run_pipeline(
             timer = time.perf_counter()
             status = PipelineStatus.COMPLETED
             reason = "completed"
+            result_requirement = step.requirement
             details: dict[str, Any] = {}
 
             blocked = [
@@ -201,12 +202,14 @@ def run_pipeline(
                     except Exception as exc:  # receipt captures source exception without hiding it
                         status = PipelineStatus.FAILED
                         reason = f"{type(exc).__name__}: {exc}"
+                        if step.fail_if_inputs_present:
+                            result_requirement = RequirementLevel.REQUIRED
 
             finished = datetime.now(UTC)
             result = StepResult(
                 step.step_id,
                 step.phase.value,
-                step.requirement.value,
+                result_requirement.value,
                 status.value,
                 started.isoformat(),
                 finished.isoformat(),

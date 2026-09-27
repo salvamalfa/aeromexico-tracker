@@ -79,3 +79,11 @@ export function formatRouteMetric(key: string, value: unknown): string {
   if (key === "load_factor") return percent.format(value);
   return integer.format(value);
 }
+
+// Un rango de sensibilidad solo existe cuando ambos extremos son finitos.
+// Nunca se sustituye el extremo faltante por el punto central ni por cero:
+// eso fabricaría un ancho de rango (o un rango basado en cero) que la fuente
+// no respalda. Ver docs/etapas/correcciones-codex-estimaciones-20260927.md.
+export function sensitivityRange(low: unknown, high: unknown): { low: number; high: number } | null {
+  return finite(low) && finite(high) ? { low, high } : null;
+}

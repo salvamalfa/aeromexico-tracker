@@ -1,10 +1,27 @@
 // Network volume summary line above the route table. Ported from
 // src/dashboard/assets/flights.js::renderNetworkVolume.
 
-import { $, esc, finite, integer } from "./dom";
+import { $, esc, finite, integer, sensitivityRange } from "./dom";
 import { state } from "./state";
 import { REGIONS } from "./regions";
 import type { Route } from "../../types/domain";
+
+// Suma un extremo del rango de sensibilidad sobre las rutas contadas en el
+// total de pasajeros. Si a cualquiera de esas rutas le falta ese extremo, el
+// agregado completo queda sin rango (null) en vez de sustituir el faltante
+// por cero: eso fabricaría un rango basado en cero que la fuente no respalda.
+function sumSensitivityBound(routes: Route[], key: "passengers_low" | "passengers_high"): number | null {
+  let total = 0;
+  let counted = false;
+  for (const route of routes) {
+    if (!finite(route.passengers)) continue;
+    counted = true;
+    const value = route[key];
+    if (!finite(value)) return null;
+    total += value;
+  }
+  return counted ? total : null;
+}
 
 export function renderNetworkVolume(): void {
   const host = $("network-volume");
@@ -15,8 +32,8 @@ export function renderNetworkVolume(): void {
   const observedFlights = (route: Route) => route.operation_status !== "estimated_from_afac_margins_and_aerodatabox_seed";
   const flights = shown.reduce((sum, route) => sum + (observedFlights(route) && finite(route.departures) ? route.departures : 0), 0);
   const passengers = shown.reduce((sum, route) => sum + (finite(route.passengers) ? route.passengers : 0), 0);
-  const passengersLow = shown.reduce((sum, route) => sum + (finite(route.passengers_low) ? route.passengers_low : 0), 0);
-  const passengersHigh = shown.reduce((sum, route) => sum + (finite(route.passengers_high) ? route.passengers_high : 0), 0);
+  const passengersLow = sumSensitivityBound(shown, "passengers_low");
+  const passengersHigh = sumSensitivityBound(shown, "passengers_high");
   const noBreakdown = shown.filter((route) => !finite(route.departures)).length;
   host.hidden = shown.length === 0;
   if (host.hidden) {
@@ -31,7 +48,11 @@ export function renderNetworkVolume(): void {
         : "en la red internacional";
   if (state.network?.mode === "estimated_domestic") {
     const repaired = shown.some((route) => route.support_repair_applied);
-    host.innerHTML = `<strong>${integer.format(passengers)}</strong><span>pasajeros estimados de Grupo Aeroméxico ${esc(scope)} · ${esc(state.network.period_label)} · sensibilidad ${integer.format(passengersLow)}–${integer.format(passengersHigh)}${repaired ? " · soporte de rutas completado con meses cercanos" : ""}</span>`;
+    const range = sensitivityRange(passengersLow, passengersHigh);
+    const rangeText = range
+      ? ` · sensibilidad ${integer.format(range.low)}–${integer.format(range.high)}`
+      : " · rango de sensibilidad no disponible";
+    host.innerHTML = `<strong>${integer.format(passengers)}</strong><span>pasajeros estimados de Grupo Aeroméxico ${esc(scope)} · ${esc(state.network.period_label)}${rangeText}${repaired ? " · soporte de rutas completado con meses cercanos" : ""}</span>`;
     return;
   }
   // Las fuentes internacionales (BTS T-100, ANAC, Aerocivil, CAA, Aena)

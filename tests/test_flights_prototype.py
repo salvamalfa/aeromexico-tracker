@@ -66,8 +66,13 @@ def test_domestic_passenger_estimates_are_monthly_retrospective_and_bounded(flig
         assert network["agent_eligible"] is False
         assert network["observed_months"] == [period_id]
         assert all(route["passengers_estimated"] for route in network["routes"])
-        assert all(route["passengers_low"] <= route["passengers"] <= route["passengers_high"]
-                   for route in network["routes"])
+        # Bounds may be withheld (None) when a cell of the route needed a
+        # support repair; when both are present they must bracket the point.
+        for route in network["routes"]:
+            low, high = route["passengers_low"], route["passengers_high"]
+            assert (low is None) == (high is None)
+            if low is not None:
+                assert low <= route["passengers"] <= high
         assert any(route["departures"] is not None for route in network["routes"])
         assert all(route["departures_estimated"] == route["capacity_complete"]
                    for route in network["routes"])

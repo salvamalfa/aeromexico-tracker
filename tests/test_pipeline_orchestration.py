@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 import socket
 
@@ -153,6 +154,64 @@ def test_optional_action_failure_is_receipted_without_hiding_later_work(tmp_path
     assert report.steps[0].status == "failed"
     assert "synthetic action failure" in report.steps[0].reason
     assert report.steps[1].status == "completed"
+
+
+def test_optional_step_failing_with_inputs_present_fails_the_run_when_flagged(
+    tmp_path: Path,
+) -> None:
+    # Route-extension generators are optional (a snapshot may lack their
+    # Bronze), but once their inputs exist a crash must not be hidden.
+    global ACTION_ROOT
+    ACTION_ROOT = tmp_path
+    (tmp_path / "present.json").write_text("{}", encoding="utf-8")
+    failing = replace(
+        _step(
+            "parse.flagged_failure",
+            requirement=RequirementLevel.OPTIONAL,
+            inputs=(InputRequirement("present fixture", ("present.json",)),),
+            callable_name="fail_test_action",
+        ),
+        fail_if_inputs_present=True,
+    )
+    succeeding = _step("parse.after_flagged")
+
+    with pytest.raises(PipelineRunError) as captured:
+        run_pipeline(
+            root=tmp_path,
+            steps=(failing, succeeding),
+            phases=(PipelinePhase.PARSE,),
+            include_dependencies=False,
+        )
+
+    report = captured.value.report
+    assert report.steps[0].status == "failed"
+    assert report.steps[0].requirement == "required"
+    assert report.steps[1].status == "completed"
+
+
+def test_flagged_optional_step_without_inputs_is_still_not_available(tmp_path: Path) -> None:
+    global ACTION_ROOT
+    ACTION_ROOT = tmp_path
+    absent = replace(
+        _step(
+            "parse.flagged_absent",
+            requirement=RequirementLevel.OPTIONAL,
+            inputs=(InputRequirement("absent fixture", ("missing/*.json",)),),
+            callable_name="fail_test_action",
+        ),
+        fail_if_inputs_present=True,
+    )
+
+    report = run_pipeline(
+        root=tmp_path,
+        steps=(absent,),
+        phases=(PipelinePhase.PARSE,),
+        include_dependencies=False,
+    )
+
+    assert report.steps[0].status == PipelineStatus.NOT_AVAILABLE.value
+    assert report.steps[0].requirement == "optional"
+    assert report.status == "completed"
 
 
 def test_offline_mode_marks_network_steps_without_executing_them(tmp_path: Path) -> None:
@@ -326,3 +385,27 @@ def test_publish_rolls_back_every_target_when_a_staged_move_fails(
             assert old.read_bytes() == b"stale"
         else:
             assert (old / "marker.txt").read_text(encoding="utf-8") == "stale"
+
+
+def test_runs_after_selects_and_orders_without_blocking(tmp_path: Path) -> None:
+    global ACTION_ROOT
+    ACTION_ROOT = tmp_path
+    absent = _step(
+        "parse.soft_absent",
+        requirement=RequirementLevel.OPTIONAL,
+        inputs=(InputRequirement("absent fixture", ("missing/*.json",)),),
+    )
+    downstream = replace(
+        _step("transform.after_soft"),
+        phase=PipelinePhase.TRANSFORM,
+        runs_after=(absent.step_id,),
+    )
+
+    report = run_pipeline(
+        root=tmp_path,
+        steps=(absent, downstream),
+        phases=(PipelinePhase.TRANSFORM,),
+    )
+
+    assert [item.step_id for item in report.steps] == ["parse.soft_absent", "transform.after_soft"]
+    assert [item.status for item in report.steps] == ["not_available", "completed"]

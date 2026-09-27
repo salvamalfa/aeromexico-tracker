@@ -32,11 +32,21 @@ def test_quarterly_aggregate_equals_sum_of_the_three_monthly_payloads(flight_pay
         for route in monthly[month_id]["routes"]:
             agg = by_market.setdefault(route["market_key"], {
                 "passengers": 0.0, "passengers_low": 0.0, "passengers_high": 0.0,
+                "bounds_available": True,
                 "seats": 0.0, "departures": 0.0, "capacity_months": 0, "months": 0,
             })
             agg["passengers"] += route["passengers"]
-            agg["passengers_low"] += route["passengers_low"]
-            agg["passengers_high"] += route["passengers_high"]
+            # A market whose seed needed temporal repair in any contributing
+            # month has its sensitivity bound withheld (None) rather than
+            # summed across mismatched scenarios (see
+            # test_route_sensitivity_bounds_do_not_sum_mismatched_scenarios
+            # in tests/test_domestic_slots.py). Once any month is withheld,
+            # the whole market's summed bound is meaningless too.
+            if route["passengers_low"] is None or route["passengers_high"] is None:
+                agg["bounds_available"] = False
+            else:
+                agg["passengers_low"] += route["passengers_low"]
+                agg["passengers_high"] += route["passengers_high"]
             agg["months"] += 1
             if route["capacity_complete"]:
                 agg["seats"] += route["seats"]
@@ -47,8 +57,12 @@ def test_quarterly_aggregate_equals_sum_of_the_three_monthly_payloads(flight_pay
     for route in quarter["routes"]:
         summed = by_market[route["market_key"]]
         assert route["passengers"] == pytest.approx(summed["passengers"])
-        assert route["passengers_low"] == pytest.approx(summed["passengers_low"])
-        assert route["passengers_high"] == pytest.approx(summed["passengers_high"])
+        if summed["bounds_available"]:
+            assert route["passengers_low"] == pytest.approx(summed["passengers_low"])
+            assert route["passengers_high"] == pytest.approx(summed["passengers_high"])
+        else:
+            assert route["passengers_low"] is None
+            assert route["passengers_high"] is None
         # A market present in fewer of the quarter's months than expected
         # (e.g. a route only estimated from June onward) must say so, never
         # silently pass as a full three-month figure.

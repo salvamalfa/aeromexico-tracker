@@ -166,14 +166,41 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
         capacity_by_route_direction = capacity_agg(["market_key", "origin_iata", "destination_iata"])
         capacity_by_route_month = capacity_agg(["market_key", "period_id", "origin_iata", "destination_iata"])
 
-        def passenger_agg(keys: list[str]) -> pd.DataFrame:
-            return frame.groupby(keys).agg(
+        def passenger_sensitivity_bounds(keys: list[str]) -> pd.DataFrame:
+            """Sum the point estimate; only sum the low/high bounds when safe.
+
+            The IPF fixes each period's carrier marginals, so
+            ``passengers_estimated_low``/``_high`` only diverge from the point
+            estimate for a cell whose seed needed temporal repair -- and each
+            such cell's bound is picked independently, from whichever of
+            several re-fitted scenarios minimises or maximises that single
+            cell. Gold does not retain which scenario produced each cell's
+            bound, so summing bounds across cells that may come from
+            different, mutually exclusive scenarios produces a spread the
+            estimator never actually produced (see
+            docs/estimacion-pasajeros-ruta-aerolinea.md). Summing is exact,
+            and therefore safe, only when every cell in the group is
+            unrepaired (low == high == the point estimate there); otherwise
+            the bound is withheld (None) rather than published as a
+            fabricated range.
+            """
+
+            grouped = frame.groupby(keys)
+            bounds = grouped.agg(
                 passengers=("passengers_estimated", "sum"),
                 passengers_low=("passengers_estimated_low", "sum"),
                 passengers_high=("passengers_estimated_high", "sum"),
+                _any_repaired=("support_repair_applied", "any"),
             )
+            safe = ~bounds["_any_repaired"]
+            bounds.loc[~safe, "passengers_low"] = None
+            bounds.loc[~safe, "passengers_high"] = None
+            return bounds.drop(columns="_any_repaired")
 
-        passenger_by_route_direction = passenger_agg(["market_key", "origin_iata", "destination_iata"])
+        passenger_by_route_key = passenger_sensitivity_bounds(["market_key"])
+        passenger_by_route_direction = passenger_sensitivity_bounds(
+            ["market_key", "origin_iata", "destination_iata"]
+        )
         passenger_by_route_month = frame.groupby(
             ["market_key", "period_id", "origin_iata", "destination_iata"]
         ).agg(
@@ -186,7 +213,12 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
                 lambda s: "|".join(sorted(set(s.astype(str)))),
             ),
             support_month_gap=("support_month_gap", "min"),
+            _any_repaired=("support_repair_applied", "any"),
         )
+        _month_safe = ~passenger_by_route_month["_any_repaired"]
+        passenger_by_route_month.loc[~_month_safe, "passengers_low"] = None
+        passenger_by_route_month.loc[~_month_safe, "passengers_high"] = None
+        passenger_by_route_month = passenger_by_route_month.drop(columns="_any_repaired")
 
         def capacity_result(row) -> dict:
             if not bool(row["complete"]):
@@ -205,18 +237,45 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
             seats_high = float(row["seats_estimated_high"])
             load_factor = passengers / seats if seats > 0 else None
             plausible = load_factor is not None and 0 <= load_factor <= 1
+            # The point estimate being plausible does not guarantee the
+            # sensitivity bounds are: the low/high scenarios recombine
+            # independent passenger and seat ranges, so a bound can still
+            # fall outside [0, 1] even when the point load factor does not
+            # (e.g. a route whose passenger sensitivity is wide relative to
+            # its seat sensitivity). Publishing such a bound would show an
+            # occupancy above 100% the model never actually produced, so an
+            # out-of-range bound is withheld (None) rather than clipped.
+            load_factor_low_raw = (
+                passengers_low / seats_high if plausible and seats_high > 0 else None
+            )
+            load_factor_high_raw = (
+                passengers_high / seats_low if plausible and seats_low > 0 else None
+            )
+            load_factor_low = (
+                load_factor_low_raw
+                if load_factor_low_raw is not None and 0 <= load_factor_low_raw <= 1
+                else None
+            )
+            load_factor_high = (
+                load_factor_high_raw
+                if load_factor_high_raw is not None and 0 <= load_factor_high_raw <= 1
+                else None
+            )
             return {
                 "departures": float(row["departures_estimated"]),
                 "seats": seats,
                 "seats_low": seats_low,
                 "seats_high": seats_high,
                 "load_factor": load_factor if plausible else None,
-                "load_factor_low": passengers_low / seats_high if plausible and seats_high > 0 else None,
-                "load_factor_high": passengers_high / seats_low if plausible and seats_low > 0 else None,
+                "load_factor_low": load_factor_low,
+                "load_factor_high": load_factor_high,
                 "capacity_complete": True,
                 "load_factor_status": "estimated" if plausible else "inconsistent_inputs",
                 "aircraft_model_coverage": float(row["aircraft_model_coverage"]),
             }
+
+        def optional_float(value) -> float | None:
+            return float(value) if pd.notna(value) else None
 
         routes = []
         airport_codes: set[str] = set()
@@ -244,8 +303,8 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
                         "origin_iata": str(origin),
                         "destination_iata": str(destination),
                         "passengers": float(passenger_row["passengers"]),
-                        "passengers_low": float(passenger_row["passengers_low"]),
-                        "passengers_high": float(passenger_row["passengers_high"]),
+                        "passengers_low": optional_float(passenger_row["passengers_low"]),
+                        "passengers_high": optional_float(passenger_row["passengers_high"]),
                         **metrics,
                         "capacity_estimated": metrics["capacity_complete"],
                     }
@@ -269,8 +328,8 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
                         "origin_iata": str(origin),
                         "destination_iata": str(destination),
                         "passengers": float(passenger_row["passengers"]),
-                        "passengers_low": float(passenger_row["passengers_low"]),
-                        "passengers_high": float(passenger_row["passengers_high"]),
+                        "passengers_low": optional_float(passenger_row["passengers_low"]),
+                        "passengers_high": optional_float(passenger_row["passengers_high"]),
                         **metrics,
                         "capacity_estimated": metrics["capacity_complete"],
                         "support_observed_in_period": bool(passenger_row["support_observed_in_period"]),
@@ -278,12 +337,15 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
                         "support_month_gap": int(passenger_row["support_month_gap"]),
                     }
                 )
+            route_key_bounds = passenger_by_route_key.loc[market_key]
+            route_passengers_low = route_key_bounds["passengers_low"]
+            route_passengers_high = route_key_bounds["passengers_high"]
             route_metrics = capacity_result(
                 pd.concat([
                     pd.Series({
                         "passengers": float(group["passengers_estimated"].sum()),
-                        "passengers_low": float(group["passengers_estimated_low"].sum()),
-                        "passengers_high": float(group["passengers_estimated_high"].sum()),
+                        "passengers_low": route_passengers_low,
+                        "passengers_high": route_passengers_high,
                     }),
                     capacity_by_route_key.loc[market_key],
                 ])
@@ -296,8 +358,8 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
                     "origin": endpoint(endpoints[0]),
                     "destination": endpoint(endpoints[1]),
                     "passengers": float(group["passengers_estimated"].sum()),
-                    "passengers_low": float(group["passengers_estimated_low"].sum()),
-                    "passengers_high": float(group["passengers_estimated_high"].sum()),
+                    "passengers_low": optional_float(route_passengers_low),
+                    "passengers_high": optional_float(route_passengers_high),
                     "passengers_estimated": True,
                     **route_metrics,
                     "capacity_estimated": route_metrics["capacity_complete"],

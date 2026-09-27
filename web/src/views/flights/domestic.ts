@@ -29,8 +29,8 @@ interface DomesticAggregate {
   origin: Airport;
   destination: Airport;
   passengers: number;
-  passengers_low: number;
-  passengers_high: number;
+  passengers_low: number | null;
+  passengers_high: number | null;
   monthsCovered: number;
   seats: number;
   departures: number;
@@ -83,8 +83,15 @@ export function aggregateDomesticMonths(monthIds: string[]): PeriodNetworkDocume
         byMarket.set(route.market_key, agg);
       }
       agg.passengers += route.passengers;
-      agg.passengers_low += finite(route.passengers_low) ? route.passengers_low : route.passengers;
-      agg.passengers_high += finite(route.passengers_high) ? route.passengers_high : route.passengers;
+      // Un mes sin rango de sensibilidad (p. ej. una celda reparada por IPF,
+      // que pierde la identidad del escenario) invalida el rango agregado
+      // completo: no se sustituye por el punto central ni se ignora el mes,
+      // porque cualquiera de las dos fabricaría un ancho que la fuente no
+      // respalda. Ver dom.ts::sensitivityRange.
+      agg.passengers_low =
+        finite(agg.passengers_low) && finite(route.passengers_low) ? agg.passengers_low! + route.passengers_low! : null;
+      agg.passengers_high =
+        finite(agg.passengers_high) && finite(route.passengers_high) ? agg.passengers_high! + route.passengers_high! : null;
       agg.monthsCovered += 1;
       agg.repaired = agg.repaired || Boolean(route.support_repair_applied);
       if (route.capacity_estimated && finite(route.seats) && finite(route.departures)) {

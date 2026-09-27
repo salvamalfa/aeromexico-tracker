@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deltaDisplay, esc, finite, formatRouteMetric, metricDisplay, priorPeriod } from "./dom";
+import { deltaDisplay, esc, finite, formatRouteMetric, metricDisplay, priorPeriod, sensitivityRange } from "./dom";
 
 describe("finite", () => {
   it("accepts only finite numbers", () => {
@@ -48,6 +48,21 @@ describe("formatRouteMetric", () => {
   });
   it("formats other metrics as an integer", () => {
     expect(formatRouteMetric("seats", 1234.6)).toBe("1,235");
+  });
+});
+
+describe("sensitivityRange", () => {
+  it("returns both bounds when both are finite", () => {
+    expect(sensitivityRange(90, 110)).toEqual({ low: 90, high: 110 });
+  });
+  it("returns null when the low bound is missing, never substituting the high bound or zero", () => {
+    expect(sensitivityRange(null, 110)).toBeNull();
+  });
+  it("returns null when the high bound is missing", () => {
+    expect(sensitivityRange(90, null)).toBeNull();
+  });
+  it("returns null when both bounds are missing", () => {
+    expect(sensitivityRange(null, undefined)).toBeNull();
   });
 });
 

@@ -2,7 +2,7 @@
 // (full metrics) table, and the airport tooltip wrapper around both.
 // Ported from src/dashboard/assets/flights.js.
 
-import { $, deltaDisplay, esc, finite, formatRouteMetric, integer } from "./dom";
+import { $, deltaDisplay, esc, finite, formatRouteMetric, integer, sensitivityRange } from "./dom";
 import { DOMESTIC_MONTH_NAMES, ESTIMATE_INFO_TITLE, state } from "./state";
 import { coverageDotHtml, scheduledIconHtml, sourceFooterHtml } from "./coverage";
 import { bindAirportSearchControls } from "./search";
@@ -84,10 +84,12 @@ function renderDomesticRouteTable(title: string, subtitle: string, tableRoutes: 
 function metricCell(route: Route, key: string): string {
   const record = route as unknown as AnyRecord;
   if (key === "passengers" && route.passengers_estimated) {
-    const low = finite(route.passengers_low) ? route.passengers_low : route.passengers!;
-    const high = finite(route.passengers_high) ? route.passengers_high : route.passengers!;
-    const title = `Estimación; rango de sensibilidad ${integer.format(low)}–${integer.format(high)} pasajeros`;
-    return `<td class="route-table-value"><span class="route-table-total route-estimate-total" title="${esc(title)}"><strong>${integer.format(route.passengers!)}</strong><small>${integer.format(low)}–${integer.format(high)}</small></span></td>`;
+    const range = sensitivityRange(route.passengers_low, route.passengers_high);
+    const title = range
+      ? `Estimación; rango de sensibilidad ${integer.format(range.low)}–${integer.format(range.high)} pasajeros`
+      : "Estimación; rango de sensibilidad no disponible";
+    const small = range ? `<small>${integer.format(range.low)}–${integer.format(range.high)}</small>` : "";
+    return `<td class="route-table-value"><span class="route-table-total route-estimate-total" title="${esc(title)}"><strong>${integer.format(route.passengers!)}</strong>${small}</span></td>`;
   }
   if (route.capacity_estimated && ["seats", "departures", "load_factor"].includes(key)) {
     if (key === "load_factor" && !finite(route.load_factor)) {
@@ -146,18 +148,21 @@ function directionValue(direction: RouteDirection | undefined, key: string, rout
 const carrierHeaderHtml = (): string => `<p class="route-estimate-carrier">Grupo Aeroméxico</p>`;
 
 function estimateDirectionLine(item: RouteDirection): string {
-  const low = finite(item.passengers_low) ? item.passengers_low! : item.passengers!;
-  const high = finite(item.passengers_high) ? item.passengers_high! : item.passengers!;
+  const range = sensitivityRange(item.passengers_low, item.passengers_high);
   const borrowed = item.support_observed_in_period
     ? ""
     : `<small class="route-support-borrowed" title="Soporte de ruta observado en ${esc(item.support_source_periods)}; no es un vuelo observado del mes mostrado">soporte ${esc(item.support_source_periods)}</small>`;
   const seats = item.capacity_estimated ? formatRouteMetric("seats", item.seats) : "N/D";
   const departures = item.capacity_estimated ? formatRouteMetric("departures", item.departures) : "N/D";
   const loadFactor = item.capacity_estimated && finite(item.load_factor) ? formatRouteMetric("load_factor", item.load_factor) : "N/D";
+  const rangeTitle = range
+    ? `Rango de sensibilidad ${integer.format(range.low)}–${integer.format(range.high)}`
+    : "Rango de sensibilidad no disponible";
+  const rangeSmall = range ? `<small>${integer.format(range.low)}–${integer.format(range.high)}</small>` : "";
   return `
   <div class="route-direction-line route-estimate-line">
     <span class="route-direction-name">${esc(item.origin_iata)} → ${esc(item.destination_iata)}${borrowed}</span>
-    <span title="Rango de sensibilidad ${integer.format(low)}–${integer.format(high)}">${integer.format(item.passengers!)}<small>${integer.format(low)}–${integer.format(high)}</small></span>
+    <span title="${esc(rangeTitle)}">${integer.format(item.passengers!)}${rangeSmall}</span>
     <span>${seats}</span><span>${departures}</span><span>${loadFactor}</span>
   </div>`;
 }

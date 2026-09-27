@@ -147,6 +147,11 @@ hace falta volver a pedirla en cada sesión:
 
 - **Suscribirte a la actividad de tus PRs** (CI, reviews, comentarios) sin
   preguntar, y dar seguimiento hasta que se fusionen o cierren.
+- **Suscripciones y triggers** (ampliado el 27 de septiembre de 2026): puedes
+  suscribirte o desuscribirte de cualquier PR de este proyecto, y crear,
+  modificar, disparar o eliminar triggers y recordatorios programados
+  (`send_later`, `create_trigger`, etc.) para dar seguimiento a tu trabajo, sin
+  preguntar. `.claude/settings.json` los preaprueba.
 - **Fusionar tus propios PRs** a `master` cuando, sobre el último commit: (1)
   los checks obligatorios `test` y `web` de `ci.yml` están en verde (el
   ruleset `Master` los exige; no saltarlo con el bypass de admin); (2) no hay
