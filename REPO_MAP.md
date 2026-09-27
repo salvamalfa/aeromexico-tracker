@@ -37,15 +37,17 @@ generado.
 aprobados, `gate.py` re-verifica cada uno contra el ledger de aprobación
 (`src/analysis_agent/lifecycle.py`, `analysis_runs/` local) antes de exportar,
 compilar `web/` y ensamblar+firmar `site/` (manifiesto SHA-256, recibo
-`.published.json`). Nunca lo ejecutes de verdad ni cambies un registro de
-aprobación salvo instrucción explícita del dueño.
+`.published.json`). La autorización permanente de `AGENTS.md` permite ejecutar
+el gate para publicar cambios rutinarios solicitados sobre datos ya aprobados.
+Nunca cambies un registro de aprobación sin autorización específica del dueño.
 
 **Publicación en GitHub Pages (`site/`):** `site/` es el sitio ya
 ensamblado y firmado que `.github/workflows/pages.yml` despliega tal cual —
 en `master`, sin secretos ni reconstrucción de datos — a
-<https://salvamalfa.github.io/aeromexico-tracker/>. Publicar una nueva
-versión de `site/` requiere **instrucción explícita del dueño**; no lo
-ejecutes por iniciativa propia:
+<https://salvamalfa.github.io/aeromexico-tracker/>. Si el cambio solicitado
+afecta al dashboard público, regenera `site/`, inclúyelo en el PR y sigue el
+deploy de Pages conforme a `AGENTS.md`, sin pedir permiso adicional para una
+publicación rutinaria:
 
 ```
 uv run python -m src.publish --record analysis_runs/drafts/<periodo>/<version>.json --out site/
@@ -74,7 +76,7 @@ autorización para publicarlos. Ver "Datos y documentación" en `README.md`.
 | `cd web && npm run check` | `tsc --noEmit`: chequeo de tipos estricto sin emitir archivos. |
 | `cd web && npm run test` | `vitest run`: pruebas unitarias de funciones puras (formato, agregación, clasificación de región…) y la prueba de tipos generados al día. |
 | `cd web && npm run gen:types` | Regenera `web/src/types/generated/*.ts` desde `contracts/web/*.schema.json`; ejecútalo tras editar un esquema. |
-| `uv run python -m src.publish --record … --out site/` | Publica `site/` (verifica el registro, exporta v1, compila `web/`, ensambla y firma). **Requiere instrucción explícita del dueño**; no lo ejecutes por iniciativa propia. |
+| `uv run python -m src.publish --record … --out site/` | Publica `site/` (verifica el registro ya aprobado, exporta v1, compila `web/`, ensambla y firma). Autorizado para cambios rutinarios solicitados según `AGENTS.md`. |
 | `uv run python -m src.publish.verify site/` | Revisa `site/` contra su manifiesto, los esquemas y `privacy.yaml` — sin datos privados; lo mismo que corre `.github/workflows/pages.yml` antes de desplegar. |
 
 ## Recetas
@@ -96,8 +98,9 @@ constructores de payloads JSON; el único maquetado/interacción vive en
    `uv run python -m src.web_export --out web/public/data/v1`.
 6. Corre `uv run pytest -q tests/test_flights_prototype.py tests/test_international_routes.py`
    y, en `web/`, `npm run check && npm run test`.
-7. Si el cambio debe publicarse, pide instrucción explícita del dueño para
-   `python -m src.publish` (ver arriba).
+7. Si el cambio debe verse en Pages y usa datos ya aprobados, ejecuta
+   `python -m src.publish`, verifica `site/`, incluye el artefacto en el PR y
+   sigue el deploy y la comprobación pública (ver `AGENTS.md`).
 
 ### b) Agregar una columna a la tabla de rutas
 

@@ -12,7 +12,11 @@ El dashboard publicado presenta tres vistas integradas: Lectura ejecutiva, Econo
 
 **Dashboard público:** <https://salvamalfa.github.io/aeromexico-tracker/>
 
-Publicar una nueva versión requiere una instrucción explícita del dueño:
+La autorización permanente de [`AGENTS.md`](AGENTS.md) permite a los agentes
+publicar de principio a fin los cambios rutinarios que el dueño solicite,
+incluidos PR, merge y despliegue en Pages, sin pedir permiso para cada paso.
+Si el cambio afecta al dashboard público y usa datos y análisis ya aprobados,
+se publica mediante el gate:
 
 ```
 uv run python -m src.publish --record analysis_runs/drafts/<periodo>/<version>.json --out site/

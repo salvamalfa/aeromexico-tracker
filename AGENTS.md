@@ -136,14 +136,49 @@ partir del HTML ni cambies el estado del Analysis Agent para hacer pasar una
 prueba. Restaurar el expediente permite reproducir su estado; no concede por sí
 solo autorización para aprobar o republicar un análisis.
 
-No publiques el dashboard, no hagas push a `master`, no actives evidencia y no
-consumas una API pagada salvo que el usuario lo haya pedido explícitamente.
+La autorización permanente de la sección siguiente permite publicar cambios
+rutinarios del dashboard con el gate y el PR del proyecto. No hagas push directo
+a `master`, no actives evidencia, no cambies aprobaciones humanas y no consumas
+una API pagada sin autorización específica para esa acción.
 
-## Pull requests: autorización permanente del dueño
+## Cambios de principio a fin: autorización permanente del dueño
 
 Autorización dada por el dueño (salvamalfa) el 26 de septiembre de 2026 para
-todo este proyecto y para cualquier agente (Claude, ChatGPT/Codex u otro); no
-hace falta volver a pedirla en cada sesión:
+PRs y ampliada el 27 de septiembre de 2026 al ciclo completo de cambios
+rutinarios. Aplica a cualquier agente (Claude, ChatGPT/Codex u otro), en esta y
+futuras sesiones. Una petición como «cambia esto» autoriza realizar lo
+necesario para entregar ese cambio: investigar, editar, regenerar, verificar,
+crear rama, hacer commits y push a esa rama, abrir y actualizar un PR, atender
+CI y revisiones, integrarlo y, si afecta al dashboard público, desplegarlo en
+GitHub Pages y verificar el resultado. No pidas permiso separado para cada paso
+ni para ejecutar el gate de publicación de un cambio rutinario. Si el usuario
+limita la tarea a diagnóstico, borrador o revisión, respeta ese límite.
+
+### Flujo de entrega
+
+1. Confirma alcance, estado Git, fuentes y datos afectados. Conserva cambios
+   ajenos y trabaja en una rama desde el `master` vigente.
+2. Implementa y valida. Regenera los artefactos afectados desde las fuentes.
+   Si el cambio debe verse en Pages, ejecuta `src.publish` con un registro que
+   el gate verifique como ya aprobado, luego `src.publish.verify site/`; incluye
+   `site/` en el mismo PR. Para cambios solo de interfaz, comprueba que el
+   `analysis_manifest` y los hashes de `site/data/v1/` no cambien.
+3. Abre el PR como borrador. Espera los checks obligatorios `test` y `web` del
+   último commit; atiende comentarios e hilos y márcalo listo para revisión.
+   Da unos minutos a la revisión automática antes de integrar.
+4. Fusiona con merge commit cuando los checks estén verdes, no haya conflicto
+   con `master` y todos los hilos estén atendidos y resueltos. Nunca uses el
+   bypass de administrador, force-push ni push directo a `master`.
+5. Si cambió `site/`, sigue `.github/workflows/pages.yml` hasta que verificación,
+   CI y deploy terminen correctamente; abre el dashboard público para confirmar
+   el cambio. Informa el PR, el estado de publicación y cualquier límite real.
+
+Si el entorno carece del warehouse o del expediente privado necesario para el
+gate, no reconstruyas ni simules aprobaciones. Prepara el cambio revisable y
+usa un entorno autorizado que sí tenga esos insumos para terminar la
+publicación. Explica un bloqueo técnico concreto si no hay acceso a él.
+
+### PRs y seguimiento
 
 - **Suscribirte a la actividad de tus PRs** (CI, reviews, comentarios) sin
   preguntar, y dar seguimiento hasta que se fusionen o cierren.
@@ -152,32 +187,31 @@ hace falta volver a pedirla en cada sesión:
   modificar, disparar o eliminar triggers y recordatorios programados
   (`send_later`, `create_trigger`, etc.) para dar seguimiento a tu trabajo, sin
   preguntar. `.claude/settings.json` los preaprueba.
-- **Fusionar tus propios PRs** a `master` cuando, sobre el último commit: (1)
-  los checks obligatorios `test` y `web` de `ci.yml` están en verde (el
-  ruleset `Master` los exige; no saltarlo con el bypass de admin); (2) no hay
-  conflicto con `master`; (3) todos los hilos de revisión, incluidos los de
-  bots como Codex, están atendidos (corregidos con un push o respondidos
-  explicando por qué no aplican) y resueltos — da unos minutos tras marcar el
-  PR como listo para que llegue la revisión automática antes de fusionar; (4)
-  el PR se abrió como borrador y se marcó como listo tras cumplir lo anterior.
-- Método: merge commit (como el historial existente). Nunca force-push a
-  `master`, nunca push directo a `master`.
+- **Fusionar tus propios PRs** cuando se cumplan las condiciones del flujo de
+  entrega, incluidos los hilos de bots como Codex: corrige sus hallazgos con
+  un push o responde por qué no aplican y resuélvelos antes del merge.
 - **Auto-merge** (habilitado en el repo): puedes activarlo en tu PR en vez de
   esperar a que termine la CI, pero solo después de marcarlo como listo y de que
   llegue la revisión automática (o el aviso de que no habrá revisión, p. ej. el
   límite de uso de Codex) con todos sus hilos atendidos. Auto-merge solo espera a
   los checks; no espera revisiones que aún no llegan. Si un push posterior abre
-  hilos nuevos, desactívalo hasta atenderlos. Nunca actives auto-merge en un PR
-  que cambie `site/` sin la instrucción explícita del dueño.
+  hilos nuevos, desactívalo hasta atenderlos. Esto también aplica a PRs que
+  cambien `site/` por una publicación rutinaria autorizada arriba.
 - GitHub borra la rama del PR al fusionarlo ("Automatically delete head
   branches"); no hace falta limpiarla. Si reutilizas el nombre, recréala desde
   `master`.
 
-Esta autorización cubre código, pruebas, workflows y documentación. **No**
-cubre por sí sola lo que la sección anterior reserva al dueño: un PR que cambia
-`site/` (publicación), aprobaciones del Analysis Agent, activación de evidencia
-o llamadas a APIs pagadas sigue necesitando su instrucción explícita. Si dudas,
-deja el PR listo y pregunta.
+Esta autorización cubre código, pruebas, workflows, documentación y
+publicación rutinaria del sitio. **Pide autorización específica antes de una
+acción de mayor riesgo:** aprobar o revocar un análisis; activar
+`flight_evidence_v1` u otra evidencia candidata; publicar un periodo nuevo o
+cifras cuyo significado, cobertura o elegibilidad cambió y aún requiere
+aprobación humana; consumir una API pagada o contratar un servicio; exponer
+datos privados o licenciados, secretos o permisos de acceso; borrar datos de
+forma irreversible; o saltar controles de GitHub y del gate. Puedes preparar
+el código y un PR revisable mientras llega esa decisión. La autorización para
+publicar una corrección de interfaz con datos ya aprobados no equivale a
+aprobar datos nuevos.
 
 ## Criterio de cierre
 
