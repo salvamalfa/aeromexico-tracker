@@ -127,9 +127,18 @@ declaradas coinciden con `ROUTE_EXTENSION_GENERATOR_STEPS`; y la guarda sigue
 fallando en cierre si el Gold de un generador registrado falta en el momento
 de cargar el warehouse.
 
+**8. La guarda abortaba el propio `transform.stage6` (hallazgo P1 de Codex
+sobre #69).** Con Gold limpio y Bronze presente, `transform.stage6` llama a
+`build_warehouse(max_stage=6)` antes de que los generadores (que dependen de
+ese paso) puedan correr, así que la guarda fallaba ahí mismo. `build_warehouse`
+ganó `enforce_route_extensions` (por omisión `True`); solo la construcción
+inicial de `transform.stage6` pasa `False`. Las reconstrucciones posteriores
+(Stage 7, 8 y 9) siguen exigiendo la guarda. Dos pruebas nuevas en
+`tests/test_stage6_warehouse_route_extensions.py` lo cubren.
+
 ## Cómo se validó
 
-- `uv run pytest -q -m "not local_data and not browser"` → 523 passed, 5
+- `uv run pytest -q -m "not local_data and not browser"` → 525 passed, 5
   skipped (los 5 omitidos son artefactos locales de Stage 4 intencionalmente
   no versionados).
 - `uv run pytest -q tests/test_stage6_warehouse_route_extensions.py

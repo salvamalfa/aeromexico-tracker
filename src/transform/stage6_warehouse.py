@@ -109,7 +109,14 @@ class RouteExtensionMissingError(RuntimeError):
     """A route-extension Gold table is missing although its bronze source exists."""
 
 
-def build_warehouse(*, max_stage: int = 6) -> list[str]:
+def build_warehouse(*, max_stage: int = 6, enforce_route_extensions: bool = True) -> list[str]:
+    """Rebuild DuckDB from Gold.
+
+    `enforce_route_extensions=False` is only for the initial core build in
+    `transform.stage6`: the route-extension generators depend on that step, so
+    their Gold cannot exist yet. Every later rebuild (Stage 7, 8, 9) enforces
+    the guard and fails if a generator did not run.
+    """
     temporary = PATHS.data / "warehouse.stage6.tmp.duckdb"
     temporary.unlink(missing_ok=True)
     connection = duckdb.connect(str(temporary))
@@ -135,7 +142,11 @@ def build_warehouse(*, max_stage: int = 6) -> list[str]:
                     f"CREATE TABLE {name} AS SELECT * FROM read_parquet(?)",
                     [str(path)],
                 )
-            elif bronze_sources is not None and all(source.exists() for source in bronze_sources):
+            elif (
+                enforce_route_extensions
+                and bronze_sources is not None
+                and all(source.exists() for source in bronze_sources)
+            ):
                 raise RouteExtensionMissingError(
                     f"{name}.parquet is missing from data/gold, but its bronze source "
                     f"({', '.join(str(source) for source in bronze_sources)}) is present. "

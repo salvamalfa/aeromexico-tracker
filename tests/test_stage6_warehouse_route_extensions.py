@@ -121,3 +121,31 @@ def test_present_gold_still_loads_into_warehouse(tmp_path, monkeypatch):
 
     with duckdb.connect(str(tmp_path / "warehouse.duckdb")) as connection:
         assert connection.execute("select count(*) from fact_oma_documented_routes").fetchone()[0] == 1
+
+
+def test_initial_stage6_build_defers_the_guard_to_later_rebuilds(tmp_path, monkeypatch):
+    # `transform.stage6` builds the core warehouse before the route-extension
+    # generators (which depend on it) can run, so a clean Gold with present
+    # bronze must not abort that first build; the Stage 9 rebuild still does.
+    name = "fact_oma_documented_routes"
+    fake_bronze = tmp_path / "bronze"
+    fake_bronze.mkdir()
+    (fake_bronze / "present.pdf").write_bytes(b"stub")
+    monkeypatch.setattr(
+        warehouse,
+        "ROUTE_EXTENSION_BRONZE_SOURCES",
+        {**warehouse.ROUTE_EXTENSION_BRONZE_SOURCES, name: (fake_bronze / "present.pdf",)},
+    )
+    _patch_paths(monkeypatch, tmp_path, bronze_dir=fake_bronze)
+
+    warehouse.build_warehouse(max_stage=6, enforce_route_extensions=False)
+    with pytest.raises(warehouse.RouteExtensionMissingError, match=name):
+        warehouse.build_warehouse(max_stage=9)
+
+
+def test_transform_stage6_calls_the_warehouse_without_the_guard():
+    import inspect
+
+    from src.transform import stage6
+
+    assert "build_warehouse(max_stage=6, enforce_route_extensions=False)" in inspect.getsource(stage6.run)
