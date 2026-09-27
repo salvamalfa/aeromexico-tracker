@@ -385,3 +385,27 @@ def test_publish_rolls_back_every_target_when_a_staged_move_fails(
             assert old.read_bytes() == b"stale"
         else:
             assert (old / "marker.txt").read_text(encoding="utf-8") == "stale"
+
+
+def test_runs_after_selects_and_orders_without_blocking(tmp_path: Path) -> None:
+    global ACTION_ROOT
+    ACTION_ROOT = tmp_path
+    absent = _step(
+        "parse.soft_absent",
+        requirement=RequirementLevel.OPTIONAL,
+        inputs=(InputRequirement("absent fixture", ("missing/*.json",)),),
+    )
+    downstream = replace(
+        _step("transform.after_soft"),
+        phase=PipelinePhase.TRANSFORM,
+        runs_after=(absent.step_id,),
+    )
+
+    report = run_pipeline(
+        root=tmp_path,
+        steps=(absent, downstream),
+        phases=(PipelinePhase.TRANSFORM,),
+    )
+
+    assert [item.step_id for item in report.steps] == ["parse.soft_absent", "transform.after_soft"]
+    assert [item.status for item in report.steps] == ["not_available", "completed"]

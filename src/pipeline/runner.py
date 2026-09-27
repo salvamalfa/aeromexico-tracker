@@ -103,7 +103,7 @@ def _selected_with_dependencies(
         changed = False
         for step in steps:
             if step.step_id in selected:
-                for dependency in step.depends_on:
+                for dependency in (*step.depends_on, *step.runs_after):
                     if dependency not in selected:
                         selected.add(dependency)
                         changed = True

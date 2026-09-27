@@ -148,9 +148,20 @@ Los seis generadores activan esa opción. Hay pruebas nuevas en
 `tests/test_pipeline_orchestration.py` y en
 `tests/test_pipeline_route_extension_steps.py`.
 
+**10. Seleccionar solo analytics o dashboard no incluía los generadores
+(hallazgo P2 de Codex sobre #69).** La expansión de dependencias seguía
+`analytics.stage7 → transform.validate_stage6 → transform.stage6` sin pasar
+por los seis generadores hermanos, así que el primer `build_warehouse` de
+Stage 7+ fallaba con Bronze presente. `PipelineStep` ganó `runs_after`: son
+dependencias suaves que entran en la selección y se ordenan antes, pero cuyo
+estado `NOT_AVAILABLE`/`FAILED` no bloquea el paso. `transform.validate_stage6`
+declara `runs_after` los seis generadores. Hay pruebas nuevas en
+`tests/test_pipeline_orchestration.py` y en
+`tests/test_pipeline_route_extension_steps.py`.
+
 ## Cómo se validó
 
-- `uv run pytest -q -m "not local_data and not browser"` → 527 passed, 5
+- `uv run pytest -q -m "not local_data and not browser"` → 529 passed, 5
   skipped (los 5 omitidos son artefactos locales de Stage 4 intencionalmente
   no versionados).
 - `uv run pytest -q tests/test_stage6_warehouse_route_extensions.py
@@ -225,4 +236,5 @@ Los seis generadores activan esa opción. Hay pruebas nuevas en
 - `1074ed8` — la construcción inicial de `transform.stage6` no aplica la
   guarda; Stage 7–9 sí.
 - `89f51fe` — contrato `local_data` de Vuelos acepta límites retenidos.
-- Este commit — fallo de un generador con Bronze presente hace fallar la corrida.
+- `06c6799` — fallo de un generador con Bronze presente hace fallar la corrida.
+- Este commit — `runs_after` incluye los generadores al seleccionar fases posteriores.

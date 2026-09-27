@@ -36,6 +36,14 @@ _AFAC_BRONZE = "data/bronze/afac_research/afac_research_city_pairs_2026M07_20260
 _AIFA_ROSTER_BRONZE = "data/bronze/domestic_routes_research/expansion_aifa_airline_destinations_2026M06_20260913T200713Z.html"
 _COLIMA_TRANSFER_BRONZE = "data/bronze/domestic_routes_research/colima_subsectur_mirror_colima_aicm_transfer_2026M05_20260913T200338Z.html"
 _INTERNATIONAL_ROUTES_BRONZE = "data/bronze/international_routes/selection.json"
+_ROUTE_EXTENSION_STEP_IDS = (
+    "transform.domestic_slots",
+    "transform.aicm_international_slots",
+    "transform.oma_documented_routes",
+    "transform.international_routes",
+    "transform.aifa_shared_presence",
+    "transform.afac_exclusive_domestic",
+)
 
 
 PIPELINE_STEPS: tuple[PipelineStep, ...] = (
@@ -99,6 +107,9 @@ PIPELINE_STEPS: tuple[PipelineStep, ...] = (
     # Every one reads `dim_airport` from the warehouse `transform.stage6`
     # just built, and writes its Gold table straight back into that same
     # warehouse file itself, so no separate "load" step is needed.
+    # validate_stage6 `runs_after` these generators so an analytics/dashboard
+    # phase selection pulls them in too (Stage 7+ enforces the route guard);
+    # their absence (NOT_AVAILABLE) does not block validation.
     PipelineStep("transform.domestic_slots", PipelinePhase.TRANSFORM, "AICM Aeromexico domestic summer-slot assignments into Gold", "src.transform.domestic_slots:run", OPTIONAL, (files("Domestic slots bronze research", _DOMESTIC_SLOTS_BRONZE),), ("data/gold/fact_domestic_scheduled_route_movements.parquet", "data/gold/bridge_domestic_slot_lineage.parquet"), depends_on=("transform.stage6",), fail_if_inputs_present=True),
     PipelineStep("transform.aicm_international_slots", PipelinePhase.TRANSFORM, "AICM Aeromexico international slot assignments into Gold", "src.transform.aicm_international_slots:run", OPTIONAL, (files("International slots bronze research", _DOMESTIC_SLOTS_BRONZE),), ("data/gold/fact_aicm_international_scheduled_route_movements.parquet", "data/gold/bridge_aicm_international_slot_lineage.parquet"), depends_on=("transform.stage6",), fail_if_inputs_present=True),
     PipelineStep("transform.oma_documented_routes", PipelinePhase.TRANSFORM, "OMA-documented MTY-CDG route launch into Gold", "src.transform.oma_documented_routes:run", OPTIONAL, (files("OMA route-launch bronze research", _OMA_ROUTES_BRONZE),), ("data/gold/fact_oma_documented_routes.parquet", "data/gold/bridge_oma_documented_route_lineage.parquet"), depends_on=("transform.stage6",), fail_if_inputs_present=True),
@@ -106,7 +117,7 @@ PIPELINE_STEPS: tuple[PipelineStep, ...] = (
     PipelineStep("transform.aifa_shared_presence", PipelinePhase.TRANSFORM, "AFAC + AIFA airline roster shared route presence into Gold", "src.transform.aifa_shared_presence:run", OPTIONAL, (files("AIFA shared-presence bronze research", _AFAC_BRONZE, _AIFA_ROSTER_BRONZE),), ("data/gold/fact_aifa_shared_route_presence.parquet", "data/gold/bridge_aifa_shared_route_presence_lineage.parquet"), depends_on=("transform.stage6",), fail_if_inputs_present=True),
     PipelineStep("transform.afac_exclusive_domestic", PipelinePhase.TRANSFORM, "AFAC exclusive-market domestic route inferences into Gold", "src.transform.afac_exclusive_domestic:run", OPTIONAL, (files("Exclusive-market bronze research", _AFAC_BRONZE, _AIFA_ROSTER_BRONZE, _COLIMA_TRANSFER_BRONZE),), ("data/gold/fact_domestic_exclusive_market_inferences.parquet", "data/gold/bridge_domestic_exclusive_market_lineage.parquet"), depends_on=("transform.stage6",), fail_if_inputs_present=True),
 
-    PipelineStep("transform.validate_stage6", PipelinePhase.TRANSFORM, "Validate Gold contracts, relationships, and business anchors", "src.transform.validate_stage6:validate_stage6", REQUIRED, (files("Stage 6 model", "data/gold/fact_carrier_metrics.parquet", "data/warehouse.duckdb"),), ("data/quality/stage6_acceptance.json",), depends_on=("transform.stage6",)),
+    PipelineStep("transform.validate_stage6", PipelinePhase.TRANSFORM, "Validate Gold contracts, relationships, and business anchors", "src.transform.validate_stage6:validate_stage6", REQUIRED, (files("Stage 6 model", "data/gold/fact_carrier_metrics.parquet", "data/warehouse.duckdb"),), ("data/quality/stage6_acceptance.json",), depends_on=("transform.stage6",), runs_after=_ROUTE_EXTENSION_STEP_IDS),
 
     PipelineStep("analytics.stage7", PipelinePhase.ANALYTICS, "Forecasts, clusters, anomalies, NLP, and business studies", "src.analytics:run", REQUIRED, (files("Validated Gold model", "data/gold/fact_carrier_metrics.parquet", "data/warehouse.duckdb"),), ("data/gold/fact_forecasts.parquet", "data/gold/fact_anomalies.parquet", "data/analytics/stage7_build.json"), depends_on=("transform.validate_stage6",)),
     PipelineStep("analytics.validate_stage7", PipelinePhase.ANALYTICS, "Validate analytical reproducibility and published models", "src.analytics.validate_stage7:validate_stage7", REQUIRED, (files("Analytical outputs", "data/analytics/stage7_build.json", "data/gold/fact_forecasts.parquet"),), ("data/quality/stage7_acceptance.json",), depends_on=("analytics.stage7",)),
@@ -187,7 +198,7 @@ def validate_registry(steps: Iterable[PipelineStep] = PIPELINE_STEPS) -> None:
         raise ValueError("Pipeline step identifiers must be unique")
     known: set[str] = set()
     for step in ordered:
-        missing = sorted(set(step.depends_on) - known)
+        missing = sorted(set(step.depends_on) - known | set(step.runs_after) - known)
         if missing:
             raise ValueError(f"{step.step_id} has forward or unknown dependencies: {missing}")
         known.add(step.step_id)

@@ -148,3 +148,20 @@ def test_guard_still_raises_when_a_registered_generators_output_is_missing(tmp_p
 
     with pytest.raises(warehouse.RouteExtensionMissingError, match=name):
         warehouse.build_warehouse(max_stage=9)
+
+
+def test_downstream_phase_selection_pulls_in_route_generators():
+    # Selecting only analytics (or dashboard) expands to transform.stage6 via
+    # depends_on; runs_after on validate_stage6 must also select the six
+    # generators, or the first Stage 7+ build_warehouse raises on a clean
+    # snapshot with their bronze present.
+    from src.pipeline.model import PipelinePhase
+    from src.pipeline.registry import PIPELINE_STEPS
+    from src.pipeline.runner import _selected_with_dependencies
+
+    for phase in (PipelinePhase.ANALYTICS, PipelinePhase.DASHBOARD):
+        selected = {step.step_id for step in _selected_with_dependencies(PIPELINE_STEPS, (phase,))}
+        assert set(ROUTE_EXTENSION_STEP_IDS) <= selected, phase
+    assert set(_step("transform.validate_stage6").runs_after) == set(ROUTE_EXTENSION_STEP_IDS)
+    # Soft ordering only: validate_stage6 must not be blocked by an absent generator.
+    assert not set(_step("transform.validate_stage6").depends_on) & set(ROUTE_EXTENSION_STEP_IDS)

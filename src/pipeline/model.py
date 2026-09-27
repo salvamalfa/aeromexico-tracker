@@ -52,6 +52,9 @@ class PipelineStep:
     inputs: tuple[InputRequirement, ...]
     outputs: tuple[str, ...]
     depends_on: tuple[str, ...] = ()
+    # Steps pulled into a phase selection and ordered before this one, but
+    # whose NOT_AVAILABLE/FAILED status does not block it (unlike depends_on).
+    runs_after: tuple[str, ...] = ()
     network_required: bool = False
     validate_outputs: bool = True
     # An OPTIONAL step whose inputs are all present but that fails while
