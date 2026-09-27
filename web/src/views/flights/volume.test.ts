@@ -44,3 +44,36 @@ describe("renderNetworkVolume (estimated_domestic aggregate range)", () => {
     expect(html).toContain("rango de sensibilidad no disponible");
   });
 });
+
+describe("renderNetworkVolume (observed vs scheduled vs inferred flights)", () => {
+  beforeEach(() => {
+    document.body.innerHTML = `<div id="network-volume"></div>`;
+    state.networkMode = "international";
+    state.selectedRegion = null;
+    state.presenceOnlyRouteCount = 0;
+    state.network = { mode: "international", period_label: "2T26" } as unknown as typeof state.network;
+  });
+
+  it("counts only observed flights in the headline and lists scheduled and inferred apart", () => {
+    state.routes = [
+      domesticRoute({ passengers_estimated: false, departures: 1_000, operation_status: "operated_observed" }),
+      domesticRoute({ passengers_estimated: false, departures: 300, operation_status: "assigned_slot_not_flown" }),
+      domesticRoute({ passengers_estimated: false, departures: 20, operation_status: "scheduled_from_dated_release" }),
+      domesticRoute({ passengers_estimated: false, departures: 50, operation_status: "carrier_inferred_market_observed" }),
+    ];
+    renderNetworkVolume();
+    const html = document.getElementById("network-volume")!.innerHTML;
+    expect(html).toContain("<strong>1,000</strong>");
+    expect(html).not.toContain("1,370");
+    expect(html).toContain("320 vuelos programados en 2 rutas");
+    expect(html).toContain("50 vuelos de mercado AFAC atribuidos por exclusividad en 1 ruta");
+  });
+
+  it("discloses presence-only routes instead of silently dropping them", () => {
+    state.presenceOnlyRouteCount = 9;
+    state.routes = [domesticRoute({ passengers_estimated: false, departures: 10, operation_status: "operated_observed" })];
+    renderNetworkVolume();
+    const html = document.getElementById("network-volume")!.innerHTML;
+    expect(html).toContain("9 rutas con presencia documentada de Aeroméxico sin volumen atribuible (N/D)");
+  });
+});

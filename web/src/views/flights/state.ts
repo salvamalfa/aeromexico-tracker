@@ -52,6 +52,9 @@ export interface FlightsState {
   // network / routes currently on screen (recomputed by renderNetworkPeriod).
   network: Network | null;
   routes: Route[];
+  // Routes with documented Aeroméxico presence but no attributable volume;
+  // they are not drawn, so the volume line discloses how many were left out.
+  presenceOnlyRouteCount: number;
 
   // period_id -> network JSON, filled in on demand by ensure*().
   domesticNetworks: Map<string, PeriodNetworkDocument>;
@@ -84,6 +87,7 @@ export const state: FlightsState = {
 
   network: null,
   routes: [],
+  presenceOnlyRouteCount: 0,
 
   domesticNetworks: new Map(),
   domesticMonthlyNetworks: new Map(),

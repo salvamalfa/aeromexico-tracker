@@ -62,6 +62,7 @@ export async function renderNetworkPeriod(periodId: string): Promise<void> {
       ? finite(route.passengers)
       : finite(route.departures) || (route.passengers_estimated && finite(route.passengers))
   );
+  state.presenceOnlyRouteCount = regionRoutes(state.network.routes || []).length - regionRoutes(quantified).length;
   state.network.routes = quantified;
   state.routes = regionRoutes(quantified);
   if (state.selectedRegion) {
