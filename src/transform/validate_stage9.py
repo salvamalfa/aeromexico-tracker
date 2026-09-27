@@ -222,6 +222,12 @@ def _frames_equal(left: pd.DataFrame, right: pd.DataFrame) -> bool:
     return True
 
 
+# Registry contract for `central_registry_complete`; kept in sync with the DAG in CI
+# by tests/test_stage9_registry_contract.py (this validator needs local data).
+EXPECTED_REGISTRY_PHASE_COUNTS = {"ingest": 14, "parse": 9, "transform": 12, "analytics": 2, "dashboard": 4}
+EXPECTED_REGISTRY_STEPS = sum(EXPECTED_REGISTRY_PHASE_COUNTS.values())
+
+
 def _resolve_registry_callables() -> list[str]:
     resolved: list[str] = []
     for step in PIPELINE_STEPS:
@@ -801,17 +807,11 @@ def run() -> dict[str, Any]:
     validate_registry()
     resolved_steps = _resolve_registry_callables()
     phase_counts = Counter(step.phase.value for step in PIPELINE_STEPS)
-    expected_phase_counts = {
-        "ingest": 14,
-        "parse": 9,
-        "transform": 6,
-        "analytics": 2,
-        "dashboard": 4,
-    }
+    expected_phase_counts = EXPECTED_REGISTRY_PHASE_COUNTS
     add(
         "central_registry_complete",
-        len(PIPELINE_STEPS) == 35
-        and len(resolved_steps) == 35
+        len(PIPELINE_STEPS) == EXPECTED_REGISTRY_STEPS
+        and len(resolved_steps) == EXPECTED_REGISTRY_STEPS
         and dict(phase_counts) == expected_phase_counts
         and PIPELINE_STEPS[-2].step_id == "dashboard.materialize_stage9"
         and PIPELINE_STEPS[-1].step_id == "dashboard.validate_stage9",
@@ -821,7 +821,7 @@ def run() -> dict[str, Any]:
             "phases": dict(phase_counts),
             "last_steps": [step.step_id for step in PIPELINE_STEPS[-2:]],
         },
-        {"steps": 35, "phases": expected_phase_counts, "all_callables_importable": True},
+        {"steps": EXPECTED_REGISTRY_STEPS, "phases": expected_phase_counts, "all_callables_importable": True},
     )
 
     checks_frame = pd.DataFrame(checks)

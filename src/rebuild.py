@@ -25,6 +25,22 @@ CORE_OUTPUTS = (
     "data/analytics",
     "data/warehouse.duckdb",
 )
+# Gold estimates derived from private/paid inputs (AeroDataBox) that a public
+# rebuild cannot regenerate. They are inputs to the rebuild, not outputs: the
+# clean checkout receives the local copies so every warehouse build loads them,
+# and publishing the rebuilt data/gold keeps them instead of deleting them.
+# They record no Bronze lineage, so they are only carried when the rebuild
+# uses the project's own Bronze (the snapshot restored together with them);
+# a different --bronze-source rebuilds without them. The result records the
+# SHA-256 of every carried file.
+# Must match the `None` entries of ROUTE_EXTENSION_BRONZE_SOURCES
+# (tests/test_pipeline_orchestration.py checks it).
+PRIVATE_GOLD_INPUTS = (
+    "fact_route_carrier_domestic_estimate.parquet",
+    "fact_aeromexico_domestic_capacity_estimate.parquet",
+    "fact_route_carrier_international_estimate.parquet",
+    "fact_aeromexico_international_capacity_estimate.parquet",
+)
 GENERATED_OUTPUTS = CORE_OUTPUTS + (
     "models",
     "docs/analytics",
@@ -49,12 +65,15 @@ class RebuildResult:
     published: bool
     report: dict[str, object]
     gold_sha256: dict[str, str]
+    private_gold_sha256: dict[str, str]
 
 
 def create_clean_checkout(
     project_root: Path,
     bronze_source: Path,
     workspace_root: Path,
+    *,
+    carry_private_gold: bool = True,
 ) -> Path:
     """Copy code/config plus Bronze, explicitly excluding every prior derived output."""
 
@@ -113,6 +132,12 @@ def create_clean_checkout(
         target = checkout / relative
         if target.exists():
             raise RebuildError(f"Clean checkout unexpectedly contains derived output: {target}")
+    for name in PRIVATE_GOLD_INPUTS if carry_private_gold else ():
+        private = project_root / "data" / "gold" / name
+        if private.is_file():
+            target = checkout / "data" / "gold" / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(private, target)
     return checkout
 
 
@@ -197,6 +222,12 @@ def publish_outputs(project_root: Path, checkout: Path) -> list[str]:
     return copied
 
 
+def carries_private_gold(project_root: Path, bronze_source: Path) -> bool:
+    """Carry the private estimates only when rebuilding from the project's own Bronze."""
+
+    return bronze_source.resolve() == (project_root / "data" / "bronze").resolve()
+
+
 def rebuild_offline(
     *,
     project_root: Path = PATHS.root,
@@ -213,7 +244,17 @@ def rebuild_offline(
     if workspace is None:
         # mkdtemp creates the directory, while create_clean_checkout requires an absent target.
         workspace_path.rmdir()
-    checkout = create_clean_checkout(project_root, source, workspace_path)
+    # Private estimates are only consistent with the Bronze they were used
+    # with, which is the project's own snapshot (see PRIVATE_GOLD_INPUTS).
+    carry_private = carries_private_gold(project_root, source)
+    checkout = create_clean_checkout(
+        project_root, source, workspace_path, carry_private_gold=carry_private
+    )
+    private_hashes = {
+        name: hashlib.sha256((checkout / "data" / "gold" / name).read_bytes()).hexdigest()
+        for name in PRIVATE_GOLD_INPUTS
+        if (checkout / "data" / "gold" / name).is_file()
+    }
     code_version = _code_fingerprint(checkout)
     report_relative = Path("data/quality/pipeline_runs/offline-rebuild.json")
     command = [
@@ -261,7 +302,7 @@ def rebuild_offline(
             publish_outputs(project_root, checkout)
         succeeded = True
         return RebuildResult(
-            "completed", str(source), str(checkout), code_version, publish, report, hashes
+            "completed", str(source), str(checkout), code_version, publish, report, hashes, private_hashes
         )
     finally:
         if succeeded and publish and not keep_workspace and checkout.exists():

@@ -8,6 +8,13 @@ versión semántica, las entradas van por fecha.
 
 ### Fixed
 
+- `just rebuild` ya no borra los cuatro derivados privados de AeroDataBox: los
+  lleva al checkout limpio como insumos, así que el warehouse reconstruido
+  conserva la red nacional estimada. `validate_stage9` acepta el registro de
+  41 pasos. Las pruebas de la guarda de rutas ya no dependen del Bronze local.
+  Detalle en
+  [`docs/etapas/rebuild-datos-privados-20260927.md`](docs/etapas/rebuild-datos-privados-20260927.md).
+
 - Vuelos: el total de vuelos de la red cuenta solo vuelos observados; los
   programados (slots del AICM, anuncio fechado de OMA) y los inferidos de
   mercado AFAC van en líneas aparte. Las rutas con presencia documentada sin
