@@ -4,6 +4,7 @@
 import { $, esc, finite, integer, sensitivityRange } from "./dom";
 import { state } from "./state";
 import { REGIONS } from "./regions";
+import { SCHEDULED_STATUSES } from "./coverage";
 import type { Route } from "../../types/domain";
 
 // Suma un extremo del rango de sensibilidad sobre las rutas contadas en el
@@ -29,13 +30,28 @@ export function renderNetworkVolume(): void {
   const shown: Route[] = state.routes || [];
   // Vuelos estimados de AeroDataBox (Grupo Aeroméxico) no son vuelos
   // operados observados de Aerovías: no entran a ese conteo.
-  const observedFlights = (route: Route) => route.operation_status !== "estimated_from_afac_margins_and_aerodatabox_seed";
-  const flights = shown.reduce((sum, route) => sum + (observedFlights(route) && finite(route.departures) ? route.departures : 0), 0);
+  // Programados (slots AICM, anuncio fechado de OMA) e inferidos de mercado
+  // AFAC tampoco son vuelos observados: van en líneas aparte, nunca sumados.
+  const flightKind = (route: Route): "observed" | "scheduled" | "inferred" | "estimated" => {
+    const status = route.operation_status ?? "";
+    if (status === "estimated_from_afac_margins_and_aerodatabox_seed") return "estimated";
+    if (SCHEDULED_STATUSES.includes(status)) return "scheduled";
+    if (status === "carrier_inferred_market_observed") return "inferred";
+    return "observed";
+  };
+  const departuresOf = (kind: ReturnType<typeof flightKind>) => {
+    const routes = shown.filter((route) => flightKind(route) === kind && finite(route.departures));
+    return { routes: routes.length, total: routes.reduce((sum, route) => sum + (route.departures ?? 0), 0) };
+  };
+  const observed = departuresOf("observed");
+  const scheduled = departuresOf("scheduled");
+  const inferred = departuresOf("inferred");
+  const presenceOnly = state.presenceOnlyRouteCount || 0;
   const passengers = shown.reduce((sum, route) => sum + (finite(route.passengers) ? route.passengers : 0), 0);
   const passengersLow = sumSensitivityBound(shown, "passengers_low");
   const passengersHigh = sumSensitivityBound(shown, "passengers_high");
   const noBreakdown = shown.filter((route) => !finite(route.departures)).length;
-  host.hidden = shown.length === 0;
+  host.hidden = shown.length === 0 && presenceOnly === 0;
   if (host.hidden) {
     host.innerHTML = "";
     return;
@@ -46,13 +62,23 @@ export function renderNetworkVolume(): void {
       : state.selectedRegion
         ? `hacia ${REGIONS.find((region) => region.id === state.selectedRegion)?.label || ""}`
         : "en la red internacional";
+  const routesWord = (count: number) => `${count} ${count === 1 ? "ruta" : "rutas"}`;
+  const presenceLine = presenceOnly
+    ? `<span class="network-estimate-note">${routesWord(presenceOnly)} con presencia documentada de Aeroméxico sin volumen atribuible (N/D), no ${presenceOnly === 1 ? "dibujada" : "dibujadas"} en el mapa ni en la tabla</span>`
+    : "";
+  // Solo rutas con presencia y sin volumen: no hay cifra que encabezar, pero
+  // la nota N/D debe verse (ocultarla haría desaparecer la red en silencio).
+  if (shown.length === 0) {
+    host.innerHTML = `<strong>N/D</strong><span>sin volumen atribuible ${esc(scope)} · ${esc(state.network?.period_label ?? "")}</span>${presenceLine}`;
+    return;
+  }
   if (state.network?.mode === "estimated_domestic") {
     const repaired = shown.some((route) => route.support_repair_applied);
     const range = sensitivityRange(passengersLow, passengersHigh);
     const rangeText = range
       ? ` · sensibilidad ${integer.format(range.low)}–${integer.format(range.high)}`
       : " · rango de sensibilidad no disponible";
-    host.innerHTML = `<strong>${integer.format(passengers)}</strong><span>pasajeros estimados de Grupo Aeroméxico ${esc(scope)} · ${esc(state.network.period_label)}${rangeText}${repaired ? " · soporte de rutas completado con meses cercanos" : ""}</span>`;
+    host.innerHTML = `<strong>${integer.format(passengers)}</strong><span>pasajeros estimados de Grupo Aeroméxico ${esc(scope)} · ${esc(state.network.period_label)}${rangeText}${repaired ? " · soporte de rutas completado con meses cercanos" : ""}</span>${presenceLine}`;
     return;
   }
   // Las fuentes internacionales (BTS T-100, ANAC, Aerocivil, CAA, Aena)
@@ -67,5 +93,14 @@ export function renderNetworkVolume(): void {
   const estimatedLine = estimated.length
     ? `<span class="network-estimate-note">${integer.format(estimatedPassengers)} pasajeros estimados de Aerovías de México y Aeroméxico Connect en ${estimated.length} ${estimated.length === 1 ? "ruta" : "rutas"} sin pasajeros observados (AFAC + AeroDataBox)</span>`
     : "";
-  host.innerHTML = `<strong>${integer.format(flights)}</strong><span>vuelos operados por Aerovías de México (no incluye Aeroméxico Connect) ${esc(scope)} · ${esc(state.network?.period_label ?? "")}${noBreakdown ? ` · ${noBreakdown} ${noBreakdown === 1 ? "ruta" : "rutas"} sin desglose propio` : ""}</span>${estimatedLine}`;
+  const scheduledLine = scheduled.routes
+    ? `<span class="network-estimate-note">${integer.format(scheduled.total)} vuelos programados en ${routesWord(scheduled.routes)} (slots del AICM o anuncio fechado de OMA; la fuente no confirma que se realizaran), no incluidos arriba</span>`
+    : "";
+  const inferredLine = inferred.routes
+    ? `<span class="network-estimate-note">${integer.format(inferred.total)} vuelos de mercado AFAC atribuidos por exclusividad en ${routesWord(inferred.routes)}, no incluidos arriba</span>`
+    : "";
+  // Sin rutas observadas (p. ej. una red nacional solo con slots e
+  // inferencias) el total observado no existe: N/D, nunca "0 vuelos".
+  const headline = observed.routes ? integer.format(observed.total) : "N/D";
+  host.innerHTML = `<strong>${headline}</strong><span>vuelos operados por Aerovías de México (no incluye Aeroméxico Connect) ${esc(scope)} · ${esc(state.network?.period_label ?? "")}${noBreakdown ? ` · ${routesWord(noBreakdown)} sin desglose propio` : ""}</span>${estimatedLine}${scheduledLine}${inferredLine}${presenceLine}`;
 }

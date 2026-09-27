@@ -9,7 +9,7 @@ import {
   ensureInternational, monthsInQuarter, state,
 } from "./state";
 import { aggregateDomesticMonths, renderMonthSwitch } from "./domestic";
-import { regionRoutes, renderRegionSwitch } from "./regions";
+import { normalizeSelectedRegion, regionRoutes, renderRegionSwitch } from "./regions";
 import { renderNetworkVolume } from "./volume";
 import { renderAirportTooltip, renderRouteDetailPlaceholder } from "./table";
 import { renderFlowMap, routesForAirport } from "./map";
@@ -62,6 +62,14 @@ export async function renderNetworkPeriod(periodId: string): Promise<void> {
       ? finite(route.passengers)
       : finite(route.departures) || (route.passengers_estimated && finite(route.passengers))
   );
+  // Una región elegida en otro periodo puede no existir en este (p. ej.
+  // Europa antes de 2T26): sin normalizar, el mapa y la tabla quedarían
+  // vacíos y el botón activo ni siquiera se mostraría.
+  // Se evalúa contra todas las rutas: una región solo con rutas de presencia
+  // sigue existiendo y debe poder mostrar su nota N/D.
+  state.networkAllRoutes = state.network.routes || [];
+  normalizeSelectedRegion(state.networkAllRoutes);
+  state.presenceOnlyRouteCount = regionRoutes(state.networkAllRoutes).length - regionRoutes(quantified).length;
   state.network.routes = quantified;
   state.routes = regionRoutes(quantified);
   if (state.selectedRegion) {

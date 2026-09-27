@@ -24,7 +24,7 @@ export function coverageMonths(route: Route): number | null {
 // Los slots del AICM y el anuncio fechado de OMA son programación: la fuente
 // dice que el vuelo estaba previsto, no que se realizó. El icono los separa
 // de lo observado sin gastar una columna ni una línea de texto.
-const SCHEDULED_STATUSES = ["assigned_slot_not_flown", "scheduled_from_dated_release"];
+export const SCHEDULED_STATUSES = ["assigned_slot_not_flown", "scheduled_from_dated_release"];
 
 export function scheduledIconHtml(route: Route): string {
   if (!route.operation_status || !SCHEDULED_STATUSES.includes(route.operation_status)) return "";

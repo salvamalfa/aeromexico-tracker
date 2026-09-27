@@ -17,7 +17,7 @@ import { domesticAvailableForQuarter, loadQuarters, state } from "./state";
 import { renderQuarter } from "./quarter";
 import { renderMix } from "./mix";
 import { renderNetworkPeriod } from "./network";
-import { alignRouteDetailToGeo, renderFlowMap } from "./map";
+import { alignRouteDetailToGeo, canvasSize, mapFittedCanvasSize, renderFlowMap } from "./map";
 
 function syncPeriodIndex(periodId: string): boolean {
   const index = state.quarters.findIndex((quarter) => quarter.period_id === periodId);
@@ -44,7 +44,24 @@ function wireControls(): void {
     state.passengerPeriod = (event.target as HTMLSelectElement).value as "quarter" | "month";
     renderMix(state.quarters[state.periodIndex]!);
   });
-  window.addEventListener("resize", () => window.requestAnimationFrame(alignRouteDetailToGeo));
+  // El recorte del mapa (fitViewToCanvas) depende del aspecto del lienzo:
+  // si cambia el ancho o el alto hay que recalcularlo, no solo realinear el
+  // detalle (el alto cambia solo, p. ej., en el corte de 420px con el ancho
+  // fijo en su mínimo).
+  let resizeQueued = false;
+  window.addEventListener("resize", () => {
+    if (resizeQueued) return;
+    resizeQueued = true;
+    window.requestAnimationFrame(() => {
+      resizeQueued = false;
+      const panel = $("panel-flights");
+      const width = $("route-flow-map")?.clientWidth ?? 0;
+      if (state.network && panel && !panel.hidden && width && canvasSize() !== mapFittedCanvasSize()) {
+        renderFlowMap();
+      }
+      alignRouteDetailToGeo();
+    });
+  });
   window.addEventListener("reader-tab-visible", () => {
     const panel = $("panel-flights");
     if (!panel || panel.hidden) return;
