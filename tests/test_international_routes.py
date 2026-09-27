@@ -19,7 +19,7 @@ def test_extension_survives_warehouse_rebuild(tmp_path,monkeypatch):
     gold=tmp_path/'gold';gold.mkdir();sql=tmp_path/'sql';sql.mkdir()
     for name in ('fact_international_route_observations','bridge_international_route_lineage'):
         pd.DataFrame({'record_id':['rec_test']}).to_parquet(gold/f'{name}.parquet',index=False)
-    monkeypatch.setattr(warehouse,'PATHS',SimpleNamespace(data=tmp_path,gold=gold,warehouse=tmp_path/'warehouse.duckdb'))
+    monkeypatch.setattr(warehouse,'PATHS',SimpleNamespace(data=tmp_path,gold=gold,bronze=tmp_path/'bronze',warehouse=tmp_path/'warehouse.duckdb'))
     monkeypatch.setattr(warehouse,'SQL_DIR',sql)
     monkeypatch.setattr(warehouse,'table_definitions',lambda **kwargs:{})
     warehouse.build_warehouse(max_stage=9)

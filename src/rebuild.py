@@ -25,6 +25,18 @@ CORE_OUTPUTS = (
     "data/analytics",
     "data/warehouse.duckdb",
 )
+# Gold estimates derived from private/paid inputs (AeroDataBox) that a public
+# rebuild cannot regenerate. They are inputs to the rebuild, not outputs: the
+# clean checkout receives the local copies so every warehouse build loads them,
+# and publishing the rebuilt data/gold keeps them instead of deleting them.
+# Must match the `None` entries of ROUTE_EXTENSION_BRONZE_SOURCES
+# (tests/test_pipeline_orchestration.py checks it).
+PRIVATE_GOLD_INPUTS = (
+    "fact_route_carrier_domestic_estimate.parquet",
+    "fact_aeromexico_domestic_capacity_estimate.parquet",
+    "fact_route_carrier_international_estimate.parquet",
+    "fact_aeromexico_international_capacity_estimate.parquet",
+)
 GENERATED_OUTPUTS = CORE_OUTPUTS + (
     "models",
     "docs/analytics",
@@ -113,6 +125,12 @@ def create_clean_checkout(
         target = checkout / relative
         if target.exists():
             raise RebuildError(f"Clean checkout unexpectedly contains derived output: {target}")
+    for name in PRIVATE_GOLD_INPUTS:
+        private = project_root / "data" / "gold" / name
+        if private.is_file():
+            target = checkout / "data" / "gold" / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(private, target)
     return checkout
 
 

@@ -149,3 +149,27 @@ def test_transform_stage6_calls_the_warehouse_without_the_guard():
     from src.transform import stage6
 
     assert "build_warehouse(max_stage=6, enforce_route_extensions=False)" in inspect.getsource(stage6.run)
+
+
+def test_guard_resolves_bronze_against_the_active_paths_not_import_time(tmp_path, monkeypatch):
+    # Locally the real Bronze exists; a test (or rebuild workspace) that points
+    # PATHS at an empty Bronze must not be judged against it. Before this fix
+    # the sources were absolute paths frozen at import, so every hermetic
+    # warehouse test raised RouteExtensionMissingError on a machine with data.
+    assert all(
+        sources is None or all(not source.is_absolute() for source in sources)
+        for sources in warehouse.ROUTE_EXTENSION_BRONZE_SOURCES.values()
+    )
+    real_like_bronze = tmp_path / "real_bronze"
+    for sources in warehouse.ROUTE_EXTENSION_BRONZE_SOURCES.values():
+        for source in sources or ():
+            (real_like_bronze / source).parent.mkdir(parents=True, exist_ok=True)
+            (real_like_bronze / source).write_bytes(b"stub")
+    empty_bronze = tmp_path / "bronze"
+    empty_bronze.mkdir()
+    _patch_paths(monkeypatch, tmp_path, bronze_dir=empty_bronze)
+    warehouse.build_warehouse(max_stage=9)
+
+    monkeypatch.setattr(warehouse.PATHS, "bronze", real_like_bronze)
+    with pytest.raises(warehouse.RouteExtensionMissingError):
+        warehouse.build_warehouse(max_stage=9)
