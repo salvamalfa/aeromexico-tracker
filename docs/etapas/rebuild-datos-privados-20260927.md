@@ -65,3 +65,25 @@ ejecutar `build_warehouse`.
   los cuatro parquets privados en `data/gold/` antes de reconstruir.
 - La capacidad publicada conserva el punto medio de 175.7: los insumos
   transitorios no existen en local, como confirmó el agente local.
+
+## Segunda corrida local (después de #71)
+
+`just rebuild` terminó con código 0 y los seis generadores de rutas quedaron
+en `completed`. `just dashboard-validate` dio 8/8, y `pytest
+--require-local-data`, 610 passed y 4 failed:
+
+- `test_domestic_passenger_estimates_are_monthly_retrospective_and_bounded`:
+  el límite y el punto son sumas de punto flotante distintas sobre las mismas
+  celdas, y una difería en el último bit (38481.65409295874 contra
+  38481.654092958735, a un ULP). La prueba ahora admite solo ese redondeo:
+  una holgura de 16 ULP (~1.2e-10 en ese valor).
+- `test_forecast_is_secondary_current_perspective`,
+  `test_outputs_match_snapshot_and_are_reproducible` (etapa 12) y
+  `test_site_flights_and_executive_data_match_a_fresh_export` comparan contra
+  artefactos fijados: el modelo entrenado el 2026-08-24, el hash en bytes del
+  warehouse con el que se generó el diagnóstico de etapa 12, y `site/`. Un
+  rebuild completo reentrena el modelo y reescribe el warehouse, así que estas
+  pruebas solo pasan sobre el estado del snapshot, y la de `site/`, después de
+  republicar. No son defectos de código. Tampoco conviene publicar desde las
+  salidas del rebuild: publicaría un modelo reentrenado, y AGENTS.md prohíbe
+  recalcular o publicar modelos automáticamente.
