@@ -17,11 +17,15 @@ Working rules:
 - Keep behaviour identical unless the package says otherwise. Prove it: hash or
   field-by-field equality of payloads, targeted tests, Playwright parity where
   the package asks for it.
-- Edit generators, never generated HTML by hand. Do not publish `site/`, do
-  not change Analysis Agent approvals or records, do not activate
-  `flight_evidence_v1`, unless your package explicitly says so.
+- Edit generators, never generated HTML by hand. `AGENTS.md` permanently
+  authorizes routine `site/` publication through the verified gate when the
+  requested change needs it; coordinate the PR and deploy with the coordinator
+  so they happen once. Analysis Agent approvals, candidate evidence such as
+  `flight_evidence_v1`, and the other higher-risk actions listed there still
+  require specific owner authorization.
 - Never read, print or log API keys (RAPIDAPI_KEY, AERODATABOX_API_KEY or any
-  secret). Never make paid API calls. Never commit raw provider responses or
+  secret). Make paid API calls only with specific owner authorization and the
+  required dry-run. Never commit raw provider responses or
   full private cubes; only the bounded Aerovías/Connect extracts are public.
 - Do not assume ignored local data exists (`data/bronze`, `data/silver`,
   warehouse, `analysis_runs/`); tests that need it must be marked `local_data`.

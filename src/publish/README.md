@@ -47,9 +47,11 @@ as — a directory built from `web/` plus the exported v1 payloads. See
 
 Never writes to the approval ledger, never approves/revokes/records
 anything. `web/` is the only implementation of each view, this gate its
-only publication path. Running
-this gate for real (not just its tests) needs an explicit instruction from
-the owner — see `REPO_MAP.md`.
+only publication path. `AGENTS.md` permanently authorizes agents to run this
+gate for a requested routine site change using an already approved record, to
+commit `site/` in a PR, and to follow the Pages deploy through live
+verification. A new approval, changed data meaning, or another higher-risk
+action still needs the owner's specific authorization. See `REPO_MAP.md`.
 
 ## Entradas / salidas
 

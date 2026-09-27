@@ -174,10 +174,13 @@ Esta página, ya compilada con Vite, es exactamente lo que
 `.github/workflows/pages.yml` despliega en
 <https://salvamalfa.github.io/aeromexico-tracker/> — `web/dist/` más
 `data/v1/` (Vite copia `web/public/` a la raíz de `dist/`), ensamblado y
-firmado como `site/` por `src/publish/gate.py`. Ver `src/publish/README.md`
-y `REPO_MAP.md` ("Publicación en GitHub Pages"); publicar requiere
-instrucción explícita del dueño. `web/` en sí no cambia para publicar: el
-gate solo compila lo que ya está aquí.
+firmado como `site/` por `src/publish/gate.py`. Ver `src/publish/README.md`,
+`REPO_MAP.md` ("Publicación en GitHub Pages") y `AGENTS.md`: una petición
+de cambio rutinario del dueño autoriza al agente a publicar y verificar el
+resultado, usando un expediente ya aprobado. Confirma en Git los cambios de
+`web/` antes de ejecutar el gate; este rechaza entradas de compilación sin
+commit. `web/` en sí no cambia para publicar: el gate solo compila lo que ya
+está aquí.
 
 ## Ejecutar localmente
 
@@ -322,5 +325,7 @@ comentario de licencia de una dependencia transitiva (deja de imprimir
 el banner `/*! Native Promise Only ... */`), no por un cambio de
 comportamiento — el resto del archivo, y los 51 tests unitarios más
 `npm run check`, no cambian. No se copió nada a mano en `site/`:
-Pages sigue sirviendo el `site/` ya committeado; republicar (correr
-`src.publish`) queda a decisión del dueño del repo.
+Pages sigue sirviendo el `site/` ya committeado. En ese trabajo histórico no
+se pidió publicar el cambio de dependencias; para una petición futura de
+cambio rutinario visible, el agente ejecuta `src.publish`, incorpora `site/`
+al PR y comprueba Pages según `AGENTS.md`.

@@ -6,6 +6,14 @@ versión semántica, las entradas van por fecha.
 
 ## 2026-09-27
 
+### Changed
+
+- Los agentes del proyecto tienen autorización permanente para completar
+  cambios rutinarios solicitados: implementación, PR, merge, publicación en
+  Pages y verificación final. `AGENTS.md` define las puertas y las acciones de
+  mayor riesgo que siguen requiriendo autorización específica. Detalle en
+  [`docs/etapas/flujo-agentes-punta-a-punta-20260927.md`](docs/etapas/flujo-agentes-punta-a-punta-20260927.md).
+
 ### Fixed
 
 - Los gráficos de Economía unitaria ahora se ajustan al abrir la pestaña. El
