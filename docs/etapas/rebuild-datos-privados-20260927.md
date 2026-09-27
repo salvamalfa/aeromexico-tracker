@@ -87,3 +87,21 @@ en `completed`. `just dashboard-validate` dio 8/8, y `pytest
   republicar. No son defectos de código. Tampoco conviene publicar desde las
   salidas del rebuild: publicaría un modelo reentrenado, y AGENTS.md prohíbe
   recalcular o publicar modelos automáticamente.
+
+## Diagnóstico de etapa 12 ligado al contenido del warehouse
+
+Con el snapshot restaurado, la única diferencia en
+`test_outputs_match_snapshot_and_are_reproducible` era el hash del warehouse.
+El diagnóstico fijaba los bytes de `warehouse.duckdb`, pero el snapshot
+privado guarda una copia lógica (`EXPORT`/`IMPORT DATABASE`), así que el
+hash nunca coincidía en otra máquina aunque los datos fueran idénticos.
+`warehouse_content_hash` (`src/analysis_agent/stage12.py`) calcula el hash
+por tabla: columnas, tipos, número de filas y un SHA-256 sobre el SHA-256
+ordenado de cada fila en JSON canónico (independiente del orden y resistente
+a colisiones, a diferencia de sumar hashes de 64 bits; hallazgo de Codex), más la definición normalizada de cada vista (el
+diagnóstico lee `v_carrier_default`; hallazgo de Codex sobre #74). El insumo del diagnóstico pasa de `warehouse` a
+`warehouse_content`. Dos pruebas nuevas, que sí corren en CI, verifican que
+el hash no cambia con el orden de filas ni con una exportación e importación,
+y que sí cambia con el contenido. `docs/referencias/etapa-12/diagnostico.json`
+y `prototypes/etapa-12/analysis_agent.html` se regeneran en local con
+`python -m src.analysis_agent.stage12`, porque requieren el warehouse privado.

@@ -5,6 +5,13 @@ Snapshot generado desde el warehouse local mediante
 
 - `diagnostico.json`: detalle de grupos, métricas faltantes, contexto, artefactos IR
   comprobados, candidato de filing SEC y hashes de insumos.
+  El insumo `warehouse_content` es un SHA-256 del contenido lógico del
+  warehouse: por tabla, columnas y tipos, número de filas y un SHA-256 sobre
+  el SHA-256 ordenado de cada fila en JSON canónico (no depende del orden y
+  resiste colisiones), más la definición normalizada de cada vista. No es el hash de los bytes de
+  `warehouse.duckdb`: el respaldo privado restaura el warehouse como copia
+  lógica (`EXPORT`/`IMPORT DATABASE`), con los mismos datos pero bytes
+  distintos.
 - `cobertura.csv`: matriz resumida; fechas de corte vacías deliberadamente.
 - La maqueta está en `prototypes/etapa-12/analysis_agent.html`.
 

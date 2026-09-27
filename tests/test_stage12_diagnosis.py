@@ -9,7 +9,7 @@ import pytest
 
 from src.analysis_agent.stage12 import (
     GROUPS, HTML_OUTPUT, OUTPUT, build_diagnosis, coverage, file_hash,
-    quarter_months, render_html, verify_artifact, write_outputs,
+    quarter_months, render_html, verify_artifact, warehouse_content_hash, write_outputs,
 )
 from src.config import PATHS
 
@@ -71,6 +71,55 @@ def test_later_comparatives_are_flagged_without_certifying_cutoffs(diagnosis):
         for candidate in row["sec_candidates"]:
             assert candidate["filing_date"] is not None
         assert all(a["publication_date"] is None for a in row["artifacts"])
+
+
+def _warehouse(path, rows):
+    with duckdb.connect(str(path)) as connection:
+        connection.execute("CREATE TABLE facts(period_id VARCHAR, value DOUBLE)")
+        connection.executemany("INSERT INTO facts VALUES (?, ?)", rows)
+        connection.execute("CREATE VIEW v_facts AS SELECT * FROM facts")
+    return path
+
+
+def test_warehouse_content_hash_ignores_file_bytes_and_row_order(tmp_path):
+    # The private snapshot restores the warehouse as a logical copy
+    # (EXPORT/IMPORT DATABASE): identical tables, different file bytes. The
+    # diagnosis must pin the content, not the physical file.
+    original = _warehouse(tmp_path / "a.duckdb", [("2026Q1", 1.5), ("2026Q2", None)])
+    reordered = _warehouse(tmp_path / "b.duckdb", [("2026Q2", None), ("2026Q1", 1.5)])
+    export = tmp_path / "export"
+    with duckdb.connect(str(original), read_only=True) as connection:
+        connection.execute(f"EXPORT DATABASE '{export.as_posix()}' (FORMAT parquet)")
+    imported = tmp_path / "imported.duckdb"
+    with duckdb.connect(str(imported)) as connection:
+        connection.execute(f"IMPORT DATABASE '{export.as_posix()}'")
+
+    assert file_hash(original) != file_hash(imported)
+    assert warehouse_content_hash(original) == warehouse_content_hash(reordered)
+    assert warehouse_content_hash(original) == warehouse_content_hash(imported)
+
+
+def test_warehouse_content_hash_changes_with_the_content(tmp_path):
+    base = _warehouse(tmp_path / "a.duckdb", [("2026Q1", 1.5)])
+    changed_value = _warehouse(tmp_path / "b.duckdb", [("2026Q1", 1.6)])
+    extra_row = _warehouse(tmp_path / "c.duckdb", [("2026Q1", 1.5), ("2026Q1", 1.5)])
+
+    assert warehouse_content_hash(base) != warehouse_content_hash(changed_value)
+    assert warehouse_content_hash(base) != warehouse_content_hash(extra_row)
+    changed_view = _warehouse(tmp_path / "d.duckdb", [("2026Q1", 1.5)])
+    with duckdb.connect(str(changed_view)) as connection:
+        connection.execute("CREATE OR REPLACE VIEW v_facts AS SELECT * FROM facts WHERE value > 2")
+    # Same tables, different view: the diagnosis reads views, so it must differ.
+    assert warehouse_content_hash(base) != warehouse_content_hash(changed_view)
+
+
+
+def test_warehouse_content_hash_distinguishes_text_that_mimics_other_fields(tmp_path):
+    # Rows are hashed from their canonical JSON, so a string that looks like
+    # another field's rendering cannot collide with a different row.
+    plain = _warehouse(tmp_path / "a.duckdb", [("2026Q1', 'value': 1.5", None)])
+    mimic = _warehouse(tmp_path / "b.duckdb", [("2026Q1", 1.5)])
+    assert warehouse_content_hash(plain) != warehouse_content_hash(mimic)
 
 
 def test_artifact_hash_missing_file_and_path_escape(tmp_path):

@@ -41,6 +41,54 @@ def file_hash(path: Path) -> str:
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
+def warehouse_content_hash(database: Path) -> str:
+    """SHA-256 of the warehouse's logical content, independent of file bytes.
+
+    Hashing the DuckDB file pinned the diagnosis to one physical file: the
+    private snapshot stores the warehouse as a logical copy (EXPORT/IMPORT),
+    so a restored warehouse with identical tables never matched. This hashes,
+    per base table in name order, its column names and types, its row count
+    and a SHA-256 over the sorted SHA-256 of each row's canonical JSON
+    (`to_json`, which escapes strings and keeps null/NaN/Infinity distinct),
+    so the digest is collision-resistant and independent of row order; plus
+    every view's normalized definition (the diagnosis reads views such as
+    `v_carrier_default`), which EXPORT/IMPORT preserves verbatim.
+    """
+
+    manifest = []
+    with duckdb.connect(str(database), read_only=True) as connection:
+        tables = [row[0] for row in connection.execute(
+            "SELECT table_name FROM information_schema.tables "
+            "WHERE table_schema = 'main' AND table_type = 'BASE TABLE' ORDER BY table_name"
+        ).fetchall()]
+        for table in tables:
+            columns = connection.execute(
+                "SELECT column_name, data_type FROM information_schema.columns "
+                "WHERE table_schema = 'main' AND table_name = ? ORDER BY ordinal_position",
+                [table],
+            ).fetchall()
+            rows = hashlib.sha256()
+            count = 0
+            cursor = connection.execute(
+                f'SELECT sha256(CAST(to_json(t) AS VARCHAR)) AS row_digest FROM "{table}" AS t '
+                "ORDER BY row_digest"
+            )
+            while batch := cursor.fetchmany(100_000):
+                for (row_digest,) in batch:
+                    rows.update(row_digest.encode("ascii"))
+                count += len(batch)
+            manifest.append([table, [list(column) for column in columns], count, rows.hexdigest()])
+        views = connection.execute(
+            "SELECT view_name, sql FROM duckdb_views() "
+            "WHERE NOT internal AND schema_name = 'main' ORDER BY view_name"
+        ).fetchall()
+    payload = json.dumps(
+        {"tables": manifest, "views": [list(view) for view in views]},
+        ensure_ascii=False, separators=(",", ":"),
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
 def quarter_months(period: str) -> list[str]:
     if not re.fullmatch(r"\d{4}Q[1-4]", period):
         raise ValueError(f"Invalid quarter: {period}")
@@ -168,7 +216,7 @@ def build_diagnosis(database: Path = PATHS.warehouse, bronze: Path = PATHS.bronz
             "context": contextual, "gaps": gaps, "cutoff_date": None,
             "temporal_status": "not_verified", "analysis_status": "not_started",
             "kpis": presentation["views"][period]["kpis"]})
-    dependencies = {"warehouse": file_hash(database)}
+    dependencies = {"warehouse_content": warehouse_content_hash(database)}
     dependencies.update({p.name: file_hash(p) for p in sec_paths if p.is_file()})
     return {"schema_version": "stage12.diagnosis.v1", "purpose": "diagnosis_not_analysis",
         "baseline": "current_warehouse_not_point_in_time", "input_sha256": dependencies,
