@@ -82,14 +82,61 @@ no disponible" en el título) y `volume.ts::renderNetworkVolume` (suma
 extremos solo entre rutas que sí contribuyen al total de pasajeros y da
 `null`, no 0, en cuanto una de ellas carece de un extremo).
 
+**7. `RouteExtensionMissingError` rompía `just rebuild` porque nadie
+regeneraba el Gold antes de que la guarda lo exigiera (esta sesión, hallazgo
+P1 de Codex sobre #69).** El punto 5 dejó la guarda en cierre correcto, pero
+`src/rebuild.py` reconstruye desde un checkout limpio sin `data/gold`;
+`transform.stage6` construye el warehouse antes de que cualquier generador de
+extensión de rutas pudiera correr; y esos seis generadores seguían sin estar
+en `src.pipeline.registry.PIPELINE_STEPS` (necesitan el warehouse de
+`transform.stage6`, en particular `dim_airport`, para poder producir su
+propio Gold). Resultado: cualquier `just rebuild` con un snapshot Bronze
+normal (que incluye las seis investigaciones manuales, copiadas como Bronze
+ordinario) abortaba en `dashboard.materialize_stage9`.
+
+Se investigó cada generador (`src/transform/domestic_slots.py`,
+`aicm_international_slots.py`, `oma_documented_routes.py`,
+`international_routes.py`, `aifa_shared_presence.py`,
+`afac_exclusive_domestic.py`): los seis leen únicamente su(s) documento(s)
+Bronze de investigación y `dim_airport` desde el warehouse ya construido por
+`transform.stage6`; ninguno depende de insumos pagados o privados
+irreproducibles, y cada uno escribe su Gold y lo carga de vuelta al mismo
+warehouse él mismo (`CREATE OR REPLACE TABLE ... FROM read_parquet`).
+
+Se eligió la opción preferida (registrar los generadores en el DAG, no copiar
+Gold comprometido como atajo): se agregaron seis pasos `transform.*`
+opcionales en `PIPELINE_STEPS`, cada uno con `depends_on=("transform.stage6",)`
+y con requisito de entrada exactamente los mismos archivos Bronze que ya
+declaraba `ROUTE_EXTENSION_BRONZE_SOURCES` (duplicados como literales en
+`src/pipeline/registry.py` porque importar `src.transform.stage6_warehouse`
+desde el registro sería una importación circular — `src.transform.__init__`
+importa `src.pipeline`, que carga el registro primero). Al ser opcionales, un
+snapshot sin esa investigación Bronze los omite (`NOT_AVAILABLE`) sin fallar
+el rebuild, y la guarda tampoco se dispara porque el mismo Bronze está
+ausente. `src/transform/stage6_warehouse.py` ganó
+`ROUTE_EXTENSION_GENERATOR_STEPS` (tabla → step_id) para que las pruebas
+puedan verificar que cada paso registrado produce exactamente la tabla que la
+guarda exige, sin duplicar de memoria esa relación.
+
+`tests/test_pipeline_route_extension_steps.py` (nuevo) cubre: los seis pasos
+existen, son opcionales y dependen de `transform.stage6`; se ejecutan después
+de `transform.stage6` y antes de `dashboard.materialize_stage9` (donde
+`build_warehouse` vuelve a exigir la guarda); sus patrones Bronze
+coinciden exactamente con `ROUTE_EXTENSION_BRONZE_SOURCES`; sus salidas
+declaradas coinciden con `ROUTE_EXTENSION_GENERATOR_STEPS`; y la guarda sigue
+fallando en cierre si el Gold de un generador registrado falta en el momento
+de cargar el warehouse.
+
 ## Cómo se validó
 
-- `uv run pytest -q -m "not local_data and not browser"` → 513 passed, 5
+- `uv run pytest -q -m "not local_data and not browser"` → 523 passed, 5
   skipped (los 5 omitidos son artefactos locales de Stage 4 intencionalmente
   no versionados).
-- `uv run pytest -q tests/test_stage6_warehouse_route_extensions.py` → 6
-  passed (2 nuevos: la guarda de AIFA excluye Colima; `build_warehouse`
-  falla en cierre con solo los dos insumos propios de AIFA presentes).
+- `uv run pytest -q tests/test_stage6_warehouse_route_extensions.py
+  tests/test_pipeline_route_extension_steps.py tests/test_pipeline_orchestration.py`
+  → 27 passed (nuevo: `test_pipeline_route_extension_steps.py`, 6 pruebas que
+  verifican registro, orden en el DAG, correspondencia de insumos/salidas con
+  la guarda, y que la guarda sigue fallando en cierre).
 - `cd web && npm run check && npm test && npm run build` → tsc sin errores;
   59 tests Vitest (nuevos: `sensitivityRange` en `dom.test.ts`, dos casos de
   agregación nula en `domestic.test.ts`, `volume.test.ts` nuevo con los dos
