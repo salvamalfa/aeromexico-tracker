@@ -7,8 +7,8 @@ import Plotly, { type PlotlyHTMLElement } from "../../lib/plotly";
 import { $ } from "./dom";
 import { state } from "./state";
 import { REGIONS } from "./regions";
-import { orderedRoutes, routeValue } from "./network";
-import { renderAirportTooltip, renderRouteDetailPlaceholder, airportRouteColor } from "./table";
+import { visibleRoutes, routeValue } from "./network";
+import { renderAirportTooltip, renderRouteOverview } from "./table";
 import type { Route } from "../../types/domain";
 
 interface FlowMapElement extends PlotlyHTMLElement {
@@ -44,7 +44,7 @@ export function arcPoints(route: Route): { lat: number[]; lon: number[] } {
   return { lat, lon };
 }
 
-export function routesForAirport(airport: string | null, ordered: Route[] = orderedRoutes()): Route[] {
+export function routesForAirport(airport: string | null, ordered: Route[] = visibleRoutes()): Route[] {
   if (!airport) return [];
   return ordered.filter((route) => route.origin.iata === airport || route.destination.iata === airport);
 }
@@ -111,7 +111,7 @@ export function mapFittedCanvasSize(): string {
 
 export function renderFlowMap(): void {
   fittedCanvasSize = canvasSize();
-  const ordered = orderedRoutes();
+  const ordered = visibleRoutes();
   const activeRegion =
     state.networkMode === "international" && state.selectedRegion
       ? REGIONS.find((region) => region.id === state.selectedRegion)
@@ -122,7 +122,6 @@ export function renderFlowMap(): void {
       ? { ...fitViewToCanvas([13, 34], [-119, -86]), latDtick: 5, lonDtick: 5 }
       : { lat: [-60, 85] as [number, number], lon: [-180, 180] as [number, number], latDtick: 30, lonDtick: 45 };
   const maxValue = Math.max(...ordered.map(routeValue), 1);
-  const contextMarkets = new Set(ordered.slice(0, 12).map((route) => route.market_key));
   const worldGeometry = state.network!.world_geometry!;
   const geometry = worldGeometry.geojson;
   // Pin the base-map topology Plotly would otherwise fetch from cdn.plot.ly,
@@ -144,17 +143,17 @@ export function renderFlowMap(): void {
   ordered.forEach((route) => {
     const arc = arcPoints(route);
     const selected = route.market_key === state.selectedMarket;
-    const context = contextMarkets.has(route.market_key);
     traces.push({
       type: "scattergeo", mode: "lines", ...arc, name: route.market_key,
       customdata: arc.lat.map(() => route.market_key),
-      line: { color: selected ? "#e31c23" : "#003087", width: selected ? 6 : 0.8 + 3.8 * Math.sqrt(routeValue(route) / maxValue) },
-      opacity: selected ? 1 : context ? 0.24 : 0.025,
+      line: { color: selected ? "#e31c23" : "#003087", width: selected ? 5 : 1.1 + 3 * Math.sqrt(routeValue(route) / maxValue) },
+      opacity: selected ? 1 : 0.68,
       hoverinfo: "skip",
       showlegend: false,
     } as Data);
   });
-  const airports = state.network!.airports;
+  const visibleAirports = new Set(ordered.flatMap((route) => [route.origin.iata, route.destination.iata]));
+  const airports = state.network!.airports.filter((airport) => visibleAirports.has(airport.iata));
   traces.push({
     type: "scattergeo", mode: "markers", name: "Aeropuertos",
     lat: airports.map((airport) => airport.lat), lon: airports.map((airport) => airport.lon),
@@ -184,15 +183,14 @@ export function renderFlowMap(): void {
   function focusAirport(airport: string, isPinned = false): void {
     const incident = routesForAirport(airport, ordered);
     const incidentMarkets = new Set(incident.map((route) => route.market_key));
-    const colors = new Map(incident.map((route, index) => [route.market_key, airportRouteColor(index)]));
     const traceIndexes = ordered.map((_, index) => index + 1);
     void Plotly.restyle(
       "route-flow-map",
       {
-        opacity: ordered.map((route) => (incidentMarkets.has(route.market_key) ? 1 : 0.012)),
-        "line.color": ordered.map((route) => colors.get(route.market_key) || "#d7dee8"),
+        opacity: ordered.map((route) => (incidentMarkets.has(route.market_key) ? 0.9 : 0.045)),
+        "line.color": ordered.map((route) => incidentMarkets.has(route.market_key) ? "#003087" : "#d7dee8"),
         "line.width": ordered.map((route) =>
-          incidentMarkets.has(route.market_key) ? 2.2 + 4.8 * Math.sqrt(routeValue(route) / maxValue) : 0.45
+          incidentMarkets.has(route.market_key) ? 1.5 + 3.5 * Math.sqrt(routeValue(route) / maxValue) : 0.45
         ),
       } as unknown as Data,
       traceIndexes
@@ -214,7 +212,7 @@ export function renderFlowMap(): void {
     void Plotly.restyle(
       "route-flow-map",
       {
-        opacity: ordered.map((route) => (route.market_key === state.selectedMarket ? 1 : contextMarkets.has(route.market_key) ? 0.24 : 0.025)),
+        opacity: ordered.map((route) => (route.market_key === state.selectedMarket ? 1 : 0.68)),
         "line.color": ordered.map((route) => (route.market_key === state.selectedMarket ? "#e31c23" : "#003087")),
         "line.width": ordered.map((route) =>
           route.market_key === state.selectedMarket ? 6 : 0.8 + 3.8 * Math.sqrt(routeValue(route) / maxValue)
@@ -227,7 +225,7 @@ export function renderFlowMap(): void {
       { "marker.color": [airports.map(() => "#c99400")], "marker.size": [airports.map(() => 4.5)] } as unknown as Data,
       [ordered.length + 1]
     );
-    renderRouteDetailPlaceholder();
+    renderRouteOverview(ordered);
   }
   function pinAirportSelection(airport: string): void {
     const incident = routesForAirport(airport, ordered);
@@ -235,7 +233,7 @@ export function renderFlowMap(): void {
     state.pinnedAirport = airport;
     state.hoveredAirport = airport;
     state.hoveredAirportAt = Date.now();
-    state.selectedMarket = incident[0]!.market_key;
+    state.selectedMarket = null;
     focusAirport(airport, true);
     $("live-status")!.textContent =
       `${airport}: ${incident.length} mercados fijados en la tabla; ${incident[0]!.market_key} encabeza la métrica disponible.`;
@@ -289,5 +287,6 @@ export function renderFlowMap(): void {
     else restoreRouteContext();
   });
   if (state.pinnedAirport) focusAirport(state.pinnedAirport, true);
+  else renderRouteOverview(ordered);
   window.requestAnimationFrame(alignRouteDetailToGeo);
 }

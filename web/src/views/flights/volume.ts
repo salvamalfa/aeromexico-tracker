@@ -78,7 +78,8 @@ export function renderNetworkVolume(): void {
     const rangeText = range
       ? ` · sensibilidad ${integer.format(range.low)}–${integer.format(range.high)}`
       : " · rango de sensibilidad no disponible";
-    host.innerHTML = `<strong>${integer.format(passengers)}</strong><span>pasajeros estimados de Grupo Aeroméxico ${esc(scope)} · ${esc(state.network.period_label)}${rangeText}${repaired ? " · soporte de rutas completado con meses cercanos" : ""}</span>${presenceLine}`;
+    host.innerHTML = `<div class="network-volume-main"><small>Total de la red</small><strong>${integer.format(passengers)}</strong><span>pasajeros estimados · ${esc(state.network.period_label)}</span></div>
+      <details><summary>Alcance y método</summary><p>Grupo Aeroméxico ${esc(scope)}${rangeText}${repaired ? " · soporte de rutas completado con meses cercanos" : ""}.</p>${presenceLine}</details>`;
     return;
   }
   // Las fuentes internacionales (BTS T-100, ANAC, Aerocivil, CAA, Aena)
@@ -102,5 +103,6 @@ export function renderNetworkVolume(): void {
   // Sin rutas observadas (p. ej. una red nacional solo con slots e
   // inferencias) el total observado no existe: N/D, nunca "0 vuelos".
   const headline = observed.routes ? integer.format(observed.total) : "N/D";
-  host.innerHTML = `<strong>${headline}</strong><span>vuelos operados por Aerovías de México (no incluye Aeroméxico Connect) ${esc(scope)} · ${esc(state.network?.period_label ?? "")}${noBreakdown ? ` · ${routesWord(noBreakdown)} sin desglose propio` : ""}</span>${estimatedLine}${scheduledLine}${inferredLine}${presenceLine}`;
+  host.innerHTML = `<div class="network-volume-main"><small>Total observado de la red</small><strong>${headline}</strong><span>vuelos operados · ${esc(state.network?.period_label ?? "")}</span></div>
+    <details><summary>Alcance y otras evidencias</summary><p>Aerovías de México (no incluye Aeroméxico Connect) ${esc(scope)}${noBreakdown ? ` · ${routesWord(noBreakdown)} sin desglose propio` : ""}.</p>${estimatedLine}${scheduledLine}${inferredLine}${presenceLine}</details>`;
 }

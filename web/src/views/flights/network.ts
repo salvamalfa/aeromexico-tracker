@@ -5,14 +5,14 @@
 
 import { $, finite } from "./dom";
 import {
-  DEFAULT_AIRPORT, domesticAvailableForQuarter, ensureDomesticMonths, ensureDomesticQuarter,
+  domesticAvailableForQuarter, ensureDomesticMonths, ensureDomesticQuarter,
   ensureInternational, monthsInQuarter, state,
 } from "./state";
 import { aggregateDomesticMonths, renderMonthSwitch } from "./domestic";
 import { normalizeSelectedRegion, regionRoutes, renderRegionSwitch } from "./regions";
 import { renderNetworkVolume } from "./volume";
-import { renderAirportTooltip, renderRouteDetailPlaceholder } from "./table";
-import { renderFlowMap, routesForAirport } from "./map";
+import { renderRouteOverview } from "./table";
+import { renderFlowMap } from "./map";
 import type { AnyRecord, Network, PeriodNetworkDocument, Route } from "../../types/domain";
 
 export function routeValue(route: Route): number {
@@ -23,6 +23,26 @@ export function routeValue(route: Route): number {
 
 export function orderedRoutes(): Route[] {
   return [...state.routes].sort((a, b) => routeValue(b) - routeValue(a) || a.market_key.localeCompare(b.market_key));
+}
+
+export function visibleRoutes(): Route[] {
+  const routes = orderedRoutes();
+  return state.showAllRoutes ? routes : routes.slice(0, 12);
+}
+
+export function renderRouteMode(): void {
+  const visible = visibleRoutes();
+  const all = orderedRoutes();
+  const totalPassengers = all.reduce((sum, route) => sum + (finite(route.passengers) ? route.passengers : 0), 0);
+  const shownPassengers = visible.reduce((sum, route) => sum + (finite(route.passengers) ? route.passengers : 0), 0);
+  const share = totalPassengers > 0 && state.networkMode === "domestic"
+    ? ` · ${Math.round(shownPassengers / totalPassengers * 100)}% de los pasajeros estimados de la red` : "";
+  const presence = state.presenceOnlyRouteCount > 0
+    ? ` · ${state.presenceOnlyRouteCount} sin volumen atribuible` : "";
+  $("map-route-summary")!.textContent = `${visible.length} de ${all.length} rutas con volumen visible${state.showAllRoutes ? "" : share}${presence}`;
+  $("map-routes-featured")!.setAttribute("aria-pressed", String(!state.showAllRoutes));
+  $("map-routes-all")!.setAttribute("aria-pressed", String(state.showAllRoutes));
+  renderRouteOverview(visible);
 }
 
 export function routeTitle(route: Route): string {
@@ -97,33 +117,15 @@ export async function renderNetworkPeriod(periodId: string): Promise<void> {
     scopeNote.textContent =
       state.networkMode === "domestic"
         ? "Grupo Aeroméxico · combina Aerovías de México y Aeroméxico Connect"
-        : "Aerovías de México (operador reportante) · no incluye Aeroméxico Connect";
+        : "Observado: Aerovías de México · estimaciones por ruta: Grupo Aeroméxico";
   }
   renderMonthSwitch();
   renderRegionSwitch();
   renderNetworkVolume();
-  // Con una region elegida, MEX puede quedar fuera del recorte: se abre el
-  // aeropuerto de la region con mas rutas para que el detalle nunca salga vacio.
-  const regionFallback = (): string | null => {
-    const counts = new Map<string, number>();
-    state.routes.forEach((route) =>
-      [route.origin.iata, route.destination.iata]
-        .filter((iata) => (state.network!.airports || []).some((airport) => airport.iata === iata))
-        .forEach((iata) => counts.set(iata, (counts.get(iata) || 0) + 1))
-    );
-    return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] || null;
-  };
-  let focusAirportIata: string | null = DEFAULT_AIRPORT;
-  let defaultIncident = routesForAirport(focusAirportIata);
-  if (!defaultIncident.length) {
-    focusAirportIata = regionFallback();
-    defaultIncident = focusAirportIata ? routesForAirport(focusAirportIata) : [];
-  }
-  state.pinnedAirport = defaultIncident.length ? focusAirportIata : null;
-  state.hoveredAirport = state.pinnedAirport;
+  state.pinnedAirport = null;
+  state.hoveredAirport = null;
   state.hoveredAirportAt = 0;
-  state.selectedMarket = defaultIncident[0]?.market_key || null;
-  if (state.pinnedAirport) renderAirportTooltip(state.pinnedAirport, defaultIncident, true);
-  else renderRouteDetailPlaceholder();
+  state.selectedMarket = null;
+  renderRouteMode();
   if (state.flowMapRendered) renderFlowMap();
 }
