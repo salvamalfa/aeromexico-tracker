@@ -21,6 +21,13 @@ versión semántica, las entradas van por fecha.
   `build_warehouse` falla en vez de omitir en silencio el Gold de extensión
   de rutas cuando su bronce fuente está presente pero el generador no corrió.
 
+- Tres hallazgos de Codex sobre el PR anterior: el cliente web ya no
+  fabricaba una banda de sensibilidad cuando `passengers_low/high` o
+  `load_factor_low/high` llegaban como `null` (sustituía el punto o cero);
+  la guarda de bronce de `fact_aifa_shared_route_presence` incluía un
+  documento que ese generador no lee. Detalle y validación en
+  [`docs/etapas/correcciones-codex-estimaciones-20260927.md`](docs/etapas/correcciones-codex-estimaciones-20260927.md).
+
 ## 2026-09-26
 
 ### Changed
