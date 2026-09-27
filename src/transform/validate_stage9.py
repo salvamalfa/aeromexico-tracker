@@ -821,7 +821,7 @@ def run() -> dict[str, Any]:
             "phases": dict(phase_counts),
             "last_steps": [step.step_id for step in PIPELINE_STEPS[-2:]],
         },
-        {"steps": 35, "phases": expected_phase_counts, "all_callables_importable": True},
+        {"steps": EXPECTED_REGISTRY_STEPS, "phases": expected_phase_counts, "all_callables_importable": True},
     )
 
     checks_frame = pd.DataFrame(checks)

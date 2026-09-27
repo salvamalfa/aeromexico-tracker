@@ -23,6 +23,7 @@ from src.rebuild import (
     PRIVATE_GOLD_INPUTS,
     GENERATED_OUTPUTS,
     RebuildError,
+    carries_private_gold,
     create_clean_checkout,
     publish_outputs,
 )
@@ -318,6 +319,29 @@ def test_clean_checkout_carries_private_gold_estimates_but_no_other_gold(tmp_pat
     assert (checkout / "data" / "gold" / PRIVATE_GOLD_INPUTS[0]).read_bytes() == b"private"
     assert not (checkout / "data" / "gold" / "stale.parquet").exists()
     assert sorted(path.name for path in (checkout / "data" / "gold").iterdir()) == [PRIVATE_GOLD_INPUTS[0]]
+
+
+def test_clean_checkout_skips_private_gold_for_another_bronze_snapshot(tmp_path: Path) -> None:
+    # The private estimates carry no Bronze lineage: a rebuild from a
+    # different snapshot must not pair them with it.
+    project = tmp_path / "project"
+    (project / "src").mkdir(parents=True)
+    other_bronze = tmp_path / "other_bronze"
+    other_bronze.mkdir()
+    (other_bronze / "_manifest.jsonl").write_text("{}\n", encoding="utf-8")
+    (project / "data" / "gold").mkdir(parents=True)
+    (project / "data" / "gold" / PRIVATE_GOLD_INPUTS[0]).write_bytes(b"private")
+
+    checkout = create_clean_checkout(project, other_bronze, tmp_path / "checkout", carry_private_gold=False)
+
+    assert not (checkout / "data" / "gold").exists()
+
+
+def test_private_gold_is_carried_only_for_the_projects_own_bronze(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    (project / "data" / "bronze").mkdir(parents=True)
+    assert carries_private_gold(project, project / "data" / "bronze")
+    assert not carries_private_gold(project, tmp_path / "other_bronze")
 
 
 def test_private_gold_inputs_match_the_unguarded_route_extensions() -> None:

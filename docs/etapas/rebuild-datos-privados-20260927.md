@@ -10,7 +10,8 @@ CI no tiene Bronze, warehouse ni los derivados de AeroDataBox.
 `dashboard.validate_stage9` exigía 35 pasos y 6 en TRANSFORM. #69 registró
 los seis generadores de rutas (41 pasos y 12 en TRANSFORM), así que el
 rebuild fallaba al final. Las cifras esperadas pasan a
-`EXPECTED_REGISTRY_PHASE_COUNTS` y `EXPECTED_REGISTRY_STEPS`, y la prueba
+`EXPECTED_REGISTRY_PHASE_COUNTS` y `EXPECTED_REGISTRY_STEPS`, que también
+se registran como valor esperado en la evidencia de aceptación. La prueba
 nueva `tests/test_stage9_registry_contract.py` las compara con
 `PIPELINE_STEPS` en CI.
 
@@ -27,6 +28,13 @@ ahí venían los fallos de `domestic_networks/2026Q2`: no los causaron #69 ni
 comprueba que coinciden con las entradas sin Bronze de
 `ROUTE_EXTENSION_BRONZE_SOURCES`.
 
+Esos parquets no registran contra qué snapshot de Bronze se ajustaron: sus
+marginales vienen de `data/reference`. Por eso solo se transfieren cuando el
+rebuild usa el Bronze propio del proyecto (`data/bronze`), que se restaura
+junto con ellos desde el repo privado (`carries_private_gold`). Con otro
+`--bronze-source` se reconstruye sin ellos. `RebuildResult.private_gold_sha256`
+registra el SHA-256 de cada archivo transferido (hallazgo de Codex sobre #71).
+
 **3. Pruebas de la guarda no herméticas.** `ROUTE_EXTENSION_BRONZE_SOURCES`
 guardaba rutas absolutas calculadas al importar. Las pruebas que apuntaban
 `PATHS` a un directorio temporal se seguían evaluando contra el Bronze real.
@@ -36,7 +44,7 @@ ejecutar `build_warehouse`.
 
 ## Cómo se validó
 
-- `uv run pytest -q -m "not local_data and not browser"` → 533 passed, 5
+- `uv run pytest -q -m "not local_data and not browser"` → 535 passed, 5
   skipped.
 - Reproducción del fallo 3 en la nube: se crearon archivos stub en las rutas
   reales de Bronze de la guarda. Con el código anterior,
@@ -46,6 +54,8 @@ ejecutar `build_warehouse`.
   pasan. Los stubs se borraron después.
 - Pruebas nuevas: `test_stage9_registry_contract.py`,
   `test_clean_checkout_carries_private_gold_estimates_but_no_other_gold`,
+  `test_clean_checkout_skips_private_gold_for_another_bronze_snapshot`,
+  `test_private_gold_is_carried_only_for_the_projects_own_bronze`,
   `test_private_gold_inputs_match_the_unguarded_route_extensions` y
   `test_guard_resolves_bronze_against_the_active_paths_not_import_time`.
 
