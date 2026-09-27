@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { airportRegion, isMexican, routeRegion } from "./regions";
+import { airportRegion, isMexican, normalizeSelectedRegion, routeRegion } from "./regions";
+import { state } from "./state";
 import type { Airport, Route } from "../../types/domain";
 
 const airport = (iata: string, lat: number, lon: number): Airport => ({ iata, city: iata, lat, lon });
@@ -32,5 +33,21 @@ describe("routeRegion", () => {
   it("classifies by the non-Mexican endpoint when destination is Mexican", () => {
     const route = { origin: airport("GRU", -23.4, -46.5), destination: airport("MEX", 19.4, -99.1) } as Route;
     expect(routeRegion(route)).toBe("sudamerica");
+  });
+});
+
+describe("normalizeSelectedRegion", () => {
+  const toMadrid = { origin: airport("MEX", 19.4, -99.1), destination: airport("MAD", 40.5, -3.6) } as Route;
+  const toNewYork = { origin: airport("MEX", 19.4, -99.1), destination: airport("JFK", 40.6, -73.8) } as Route;
+
+  it("clears a region that has no routes in the new period", () => {
+    state.selectedRegion = "europa";
+    normalizeSelectedRegion([toNewYork]);
+    expect(state.selectedRegion).toBeNull();
+  });
+  it("keeps a region that still has routes", () => {
+    state.selectedRegion = "europa";
+    normalizeSelectedRegion([toNewYork, toMadrid]);
+    expect(state.selectedRegion).toBe("europa");
   });
 });

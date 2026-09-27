@@ -43,6 +43,12 @@ export function routeRegion(route: Route): string {
   return airportRegion(route.destination.iata);
 }
 
+export function normalizeSelectedRegion(routes: Route[]): void {
+  if (state.selectedRegion && !routes.some((route) => routeRegion(route) === state.selectedRegion)) {
+    state.selectedRegion = null;
+  }
+}
+
 export function regionRoutes(allRoutes: Route[]): Route[] {
   if (state.networkMode !== "international" || !state.selectedRegion) return allRoutes;
   return allRoutes.filter((route) => routeRegion(route) === state.selectedRegion);

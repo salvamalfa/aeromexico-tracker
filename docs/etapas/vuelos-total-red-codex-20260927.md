@@ -25,10 +25,26 @@ cuenta cuántas quedaron fuera, respetando la región seleccionada, y la línea
 de volumen lo declara: "N rutas con presencia documentada de Aeroméxico sin
 volumen atribuible (N/D), no dibujadas en el mapa ni en la tabla".
 
+**3. Una región elegida en otro trimestre dejaba la vista vacía (#7).** Al
+pasar de 2T26 con Europa o Asia seleccionada a un trimestre sin rutas de esa
+región, `selectedRegion` seguía activo: el mapa, la tabla y la línea de
+volumen quedaban vacíos, y el botón activo ni siquiera se mostraba. La nueva
+función `normalizeSelectedRegion` (`regions.ts`) limpia la selección cuando
+el periodo no tiene rutas de esa región.
+
+**4. El recorte del mapa no se recalculaba al redimensionar (#8).**
+`fitViewToCanvas` fija rangos de latitud y longitud según el aspecto del
+lienzo, pero el `resize` solo realineaba el detalle. Ahora, si cambia el
+ancho del lienzo con la pestaña de Vuelos visible, `bootstrap.ts` vuelve a
+dibujar el mapa, a lo más una vez por cuadro.
+
 ## Hallazgos que ya no aplican
 
-- **#6, #7, #8** (`static/aeromexico_tracker.html`): ese HTML estático ya no
-  existe; la única implementación es `web/`.
+- **#6** (`static/aeromexico_tracker.html`, texto que prometía fuente,
+  meses y estado por fila): ese HTML ya no existe. En `web/` cada fila lleva
+  su punto de cobertura (`coverageDotHtml`) y el icono de programado
+  (`scheduledIconHtml`), así que no queda un texto que prometa detalle
+  ausente.
 - **#19, botón Nacional que no reabría la vista**: en `web/` la carga inicial
   y el clic usan la misma función, `domesticAvailableForQuarter`, así que el
   botón alterna en ambos sentidos.
@@ -40,9 +56,12 @@ volumen atribuible (N/D), no dibujadas en el mapa ni en la tabla".
 ## Cómo se validó
 
 - `cd web && npm run check && npx vitest run && npm run build` → tsc sin
-  errores; 61 pruebas Vitest, dos nuevas en `volume.test.ts`: el titular
+  errores; 63 pruebas Vitest; dos nuevas en `volume.test.ts` (el titular
   excluye programados e inferidos, que se listan aparte, y la línea declara
-  las rutas solo de presencia.
+  las rutas solo de presencia) y dos en `regions.test.ts`
+  (normalización de la región).
+- El redimensionado del mapa no tiene prueba automática: depende del
+  tamaño real del lienzo en el navegador.
 - Sin cambios en Python ni en `site/`.
 
 ## Límites

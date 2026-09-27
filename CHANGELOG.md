@@ -12,6 +12,8 @@ versión semántica, las entradas van por fecha.
   programados (slots del AICM, anuncio fechado de OMA) y los inferidos de
   mercado AFAC van en líneas aparte. Las rutas con presencia documentada sin
   volumen atribuible se declaran como N/D en vez de desaparecer en silencio.
+  Además, la región seleccionada se limpia al pasar a un trimestre sin rutas
+  de esa región, y el mapa recalcula su recorte al redimensionar la ventana.
   Detalle en
   [`docs/etapas/vuelos-total-red-codex-20260927.md`](docs/etapas/vuelos-total-red-codex-20260927.md).
 
