@@ -8,6 +8,10 @@ versión semántica, las entradas van por fecha.
 
 ### Fixed
 
+- El diagnóstico de etapa 12 registra un hash del contenido lógico del
+  warehouse en vez de los bytes del archivo, así que un warehouse restaurado
+  del respaldo privado ya no falla la prueba de reproducibilidad.
+
 - `just rebuild` ya no borra los cuatro derivados privados de AeroDataBox: los
   lleva al checkout limpio como insumos, así que el warehouse reconstruido
   conserva la red nacional estimada. `validate_stage9` acepta el registro de
