@@ -31,10 +31,25 @@ _DOMESTIC_SLOTS_SOURCE = (
 _OMA_ROUTES_SOURCE = (
     PATHS.bronze / "international_routes" / "oma_mty_cdg_route_launch_2026Q2_20260913T143058Z.pdf",
 )
+_AFAC_SOURCE = PATHS.bronze / "afac_research" / "afac_research_city_pairs_2026M07_20260908T182059Z.xlsx"
+_AIFA_ROSTER_SOURCE = (
+    PATHS.bronze / "domestic_routes_research" / "expansion_aifa_airline_destinations_2026M06_20260913T200713Z.html"
+)
+# src.transform.afac_exclusive_domestic reads all three of these (AFAC, the
+# AIFA airline roster, and the Colima transfer document).
 _EXCLUSIVE_MARKET_SOURCES = (
-    PATHS.bronze / "afac_research" / "afac_research_city_pairs_2026M07_20260908T182059Z.xlsx",
-    PATHS.bronze / "domestic_routes_research" / "expansion_aifa_airline_destinations_2026M06_20260913T200713Z.html",
+    _AFAC_SOURCE,
+    _AIFA_ROSTER_SOURCE,
     PATHS.bronze / "domestic_routes_research" / "colima_subsectur_mirror_colima_aicm_transfer_2026M05_20260913T200338Z.html",
+)
+# src.transform.aifa_shared_presence reads only AFAC and the AIFA roster; the
+# Colima transfer document is unrelated to it. Giving it its own tuple (not
+# _EXCLUSIVE_MARKET_SOURCES) means a snapshot that carries the workbook and
+# the roster but not the Colima document still fails closed when this Gold is
+# missing, instead of silently skipping it.
+_AIFA_SHARED_PRESENCE_SOURCES = (
+    _AFAC_SOURCE,
+    _AIFA_ROSTER_SOURCE,
 )
 _INTERNATIONAL_ROUTES_SOURCE = (
     PATHS.bronze / "international_routes" / "selection.json",
@@ -43,8 +58,8 @@ _INTERNATIONAL_ROUTES_SOURCE = (
 ROUTE_EXTENSION_BRONZE_SOURCES: dict[str, tuple[Path, ...] | None] = {
     "fact_aicm_international_scheduled_route_movements": _DOMESTIC_SLOTS_SOURCE,
     "bridge_aicm_international_slot_lineage": _DOMESTIC_SLOTS_SOURCE,
-    "fact_aifa_shared_route_presence": _EXCLUSIVE_MARKET_SOURCES,
-    "bridge_aifa_shared_route_presence_lineage": _EXCLUSIVE_MARKET_SOURCES,
+    "fact_aifa_shared_route_presence": _AIFA_SHARED_PRESENCE_SOURCES,
+    "bridge_aifa_shared_route_presence_lineage": _AIFA_SHARED_PRESENCE_SOURCES,
     "fact_domestic_exclusive_market_inferences": _EXCLUSIVE_MARKET_SOURCES,
     "bridge_domestic_exclusive_market_lineage": _EXCLUSIVE_MARKET_SOURCES,
     "fact_route_carrier_domestic_estimate": None,

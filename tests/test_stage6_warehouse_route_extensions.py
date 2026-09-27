@@ -72,6 +72,43 @@ def test_paid_derived_tables_are_never_gated_on_bronze(tmp_path, monkeypatch):
         assert warehouse.ROUTE_EXTENSION_BRONZE_SOURCES[name] is None
 
 
+def test_aifa_shared_presence_source_excludes_the_unrelated_colima_document():
+    # src.transform.aifa_shared_presence only reads the AFAC workbook and the
+    # AIFA airline roster (see its `_verified(AFAC)` / `_verified(ROSTER)`
+    # calls); it never touches the Colima transfer document, which belongs to
+    # the separate fact_domestic_exclusive_market_inferences generator. Each
+    # table's guard must list exactly the inputs its own generator reads, or
+    # a snapshot with the workbook+roster but no Colima document would not
+    # fail closed when this Gold is missing.
+    for name in ("fact_aifa_shared_route_presence", "bridge_aifa_shared_route_presence_lineage"):
+        sources = warehouse.ROUTE_EXTENSION_BRONZE_SOURCES[name]
+        assert sources is not None
+        assert len(sources) == 2
+        assert not any("colima" in str(source).lower() for source in sources)
+
+
+def test_aifa_shared_presence_gold_missing_with_only_its_own_sources_fails_loudly(tmp_path, monkeypatch):
+    name = "fact_aifa_shared_route_presence"
+    fake_bronze = tmp_path / "bronze"
+    afac_dir = fake_bronze / "afac_research"
+    roster_dir = fake_bronze / "domestic_routes_research"
+    afac_dir.mkdir(parents=True)
+    roster_dir.mkdir(parents=True)
+    afac = afac_dir / "afac.xlsx"
+    roster = roster_dir / "roster.html"
+    afac.write_bytes(b"stub")
+    roster.write_bytes(b"stub")
+    monkeypatch.setattr(
+        warehouse,
+        "ROUTE_EXTENSION_BRONZE_SOURCES",
+        {**warehouse.ROUTE_EXTENSION_BRONZE_SOURCES, name: (afac, roster)},
+    )
+
+    gold = _patch_paths(monkeypatch, tmp_path, bronze_dir=fake_bronze)
+    with pytest.raises(warehouse.RouteExtensionMissingError, match=name):
+        warehouse.build_warehouse(max_stage=9)
+
+
 def test_present_gold_still_loads_into_warehouse(tmp_path, monkeypatch):
     fake_bronze = tmp_path / "bronze"
     fake_bronze.mkdir()
