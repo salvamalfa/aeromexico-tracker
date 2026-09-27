@@ -193,3 +193,5 @@ de cargar el warehouse.
 
 - `d785c16` — bandas de sensibilidad ausentes preservadas en el cliente web.
 - `1d4bc6e` — guarda de fuente propia para la presencia compartida en AIFA.
+- `51a7437` — registro de los seis generadores de extensión de rutas en
+  `PIPELINE_STEPS` para que `just rebuild` no falle contra su propia guarda.
