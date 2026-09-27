@@ -8,6 +8,11 @@ versión semántica, las entradas van por fecha.
 
 ### Fixed
 
+- Los gráficos de Economía unitaria ahora se ajustan al abrir la pestaña. El
+  cambio usa la instancia local de Plotly, corrige gráficos estrechos o
+  desbordados y valida que cada SVG ocupe el ancho de su contenedor. Detalle en
+  [`docs/etapas/ajuste-graficos-economia-20260927.md`](docs/etapas/ajuste-graficos-economia-20260927.md).
+
 - El diagnóstico de etapa 12 registra un hash del contenido lógico del
   warehouse en vez de los bytes del archivo, así que un warehouse restaurado
   del respaldo privado ya no falla la prueba de reproducibilidad.

@@ -109,6 +109,10 @@ def test_economy_tab_renders_kpis_and_charts(page_with_console_capture) -> None:
     assert page.inner_text("#kpi-rask_cents_per_km-value") != "—"
     for chart_id in ("unit-chart", "volume-chart", "load-chart"):
         page.wait_for_selector(f"#{chart_id} .js-plotly-plot, #{chart_id}.js-plotly-plot")
+    page.wait_for_function(
+        "[...document.querySelectorAll('#unit-chart, #volume-chart, #load-chart')].every("
+        "chart => Math.abs(chart.clientWidth - chart.querySelector('svg.main-svg').getBoundingClientRect().width) < 2)"
+    )
     assert console_errors == []
 
 

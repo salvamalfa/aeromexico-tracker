@@ -6,11 +6,10 @@
 // so each view's own listener (see views/economy/charts.ts and
 // views/flights/network.ts) can re-hover/re-align once visible.
 
-import type { PlotlyHTMLElement } from "../../lib/plotly";
+import Plotly from "../../lib/plotly";
 
 declare global {
   interface Window {
-    Plotly?: { Plots: { resize(root: HTMLElement): Promise<PlotlyHTMLElement> } };
     __pageNoAutoMount?: boolean;
   }
 }
@@ -32,7 +31,7 @@ export function mountTabs(root: Document | Element = document): { activate: (tab
     if (!panel) return;
     window.requestAnimationFrame(() => {
       const graphs = [...panel.querySelectorAll(".js-plotly-plot")] as HTMLElement[];
-      Promise.all(graphs.map((graph) => window.Plotly?.Plots.resize(graph))).then(() => {
+      Promise.all(graphs.map((graph) => Plotly.Plots.resize(graph))).then(() => {
         window.dispatchEvent(new CustomEvent("reader-tab-visible", { detail: { panelId: panel.id } }));
       });
     });
