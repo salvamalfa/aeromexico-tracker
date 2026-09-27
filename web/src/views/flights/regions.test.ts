@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { airportRegion, isMexican, normalizeSelectedRegion, routeRegion } from "./regions";
+import { airportRegion, isMexican, normalizeSelectedRegion, renderRegionSwitch, routeRegion } from "./regions";
 import { state } from "./state";
 import type { Airport, Route } from "../../types/domain";
 
@@ -49,5 +49,25 @@ describe("normalizeSelectedRegion", () => {
     state.selectedRegion = "europa";
     normalizeSelectedRegion([toNewYork, toMadrid]);
     expect(state.selectedRegion).toBe("europa");
+  });
+  it("keeps a region whose only routes are presence-only when judged on all routes", () => {
+    const presenceOnly = { ...toMadrid, departures: null, operation_status: "carrier_route_present_volume_unresolved" } as unknown as Route;
+    state.selectedRegion = "europa";
+    normalizeSelectedRegion([toNewYork, presenceOnly]);
+    expect(state.selectedRegion).toBe("europa");
+  });
+});
+
+describe("renderRegionSwitch", () => {
+  it("offers a region whose only routes are presence-only", () => {
+    document.body.innerHTML = `<div id="network-region-switch"></div>`;
+    const toNewYork = { origin: airport("MEX", 19.4, -99.1), destination: airport("JFK", 40.6, -73.8), departures: 10 } as unknown as Route;
+    const presenceToMadrid = { origin: airport("MTY", 25.8, -100.1), destination: airport("MAD", 40.5, -3.6), departures: null } as unknown as Route;
+    state.networkMode = "international";
+    state.selectedRegion = null;
+    state.networkAllRoutes = [toNewYork, presenceToMadrid];
+    state.network = { mode: "international", routes: [toNewYork] } as unknown as typeof state.network;
+    renderRegionSwitch();
+    expect(document.querySelector('[data-region="europa"]')).not.toBeNull();
   });
 });

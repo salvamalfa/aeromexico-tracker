@@ -55,6 +55,10 @@ export interface FlightsState {
   // Routes with documented Aeroméxico presence but no attributable volume;
   // they are not drawn, so the volume line discloses how many were left out.
   presenceOnlyRouteCount: number;
+  // Every route of the period network, before dropping presence-only ones;
+  // region availability is judged on these so a region whose routes are all
+  // presence-only can still be selected and show its N/D disclosure.
+  networkAllRoutes: Route[];
 
   // period_id -> network JSON, filled in on demand by ensure*().
   domesticNetworks: Map<string, PeriodNetworkDocument>;
@@ -88,6 +92,7 @@ export const state: FlightsState = {
   network: null,
   routes: [],
   presenceOnlyRouteCount: 0,
+  networkAllRoutes: [],
 
   domesticNetworks: new Map(),
   domesticMonthlyNetworks: new Map(),

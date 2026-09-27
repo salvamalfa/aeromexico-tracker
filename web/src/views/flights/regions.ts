@@ -62,7 +62,7 @@ export function renderRegionSwitch(): void {
     host.innerHTML = "";
     return;
   }
-  const routes = state.network?.routes ?? [];
+  const routes = state.networkAllRoutes.length ? state.networkAllRoutes : state.network?.routes ?? [];
   const available = REGIONS.filter((region) => routes.some((route) => routeRegion(route) === region.id));
   host.innerHTML = available
     .map(

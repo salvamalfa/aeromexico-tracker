@@ -65,8 +65,11 @@ export async function renderNetworkPeriod(periodId: string): Promise<void> {
   // Una región elegida en otro periodo puede no existir en este (p. ej.
   // Europa antes de 2T26): sin normalizar, el mapa y la tabla quedarían
   // vacíos y el botón activo ni siquiera se mostraría.
-  normalizeSelectedRegion(quantified);
-  state.presenceOnlyRouteCount = regionRoutes(state.network.routes || []).length - regionRoutes(quantified).length;
+  // Se evalúa contra todas las rutas: una región solo con rutas de presencia
+  // sigue existiendo y debe poder mostrar su nota N/D.
+  state.networkAllRoutes = state.network.routes || [];
+  normalizeSelectedRegion(state.networkAllRoutes);
+  state.presenceOnlyRouteCount = regionRoutes(state.networkAllRoutes).length - regionRoutes(quantified).length;
   state.network.routes = quantified;
   state.routes = regionRoutes(quantified);
   if (state.selectedRegion) {

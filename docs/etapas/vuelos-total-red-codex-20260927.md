@@ -37,7 +37,10 @@ pasar de 2T26 con Europa o Asia seleccionada a un trimestre sin rutas de esa
 región, `selectedRegion` seguía activo: el mapa, la tabla y la línea de
 volumen quedaban vacíos, y el botón activo ni siquiera se mostraba. La nueva
 función `normalizeSelectedRegion` (`regions.ts`) limpia la selección cuando
-el periodo no tiene rutas de esa región.
+el periodo no tiene rutas de esa región. La disponibilidad se juzga sobre
+todas las rutas del periodo, incluidas las solo de presencia: una región
+que solo tiene rutas de presencia sigue en el selector y muestra su nota
+N/D (hallazgo de Codex sobre #70).
 
 **4. El recorte del mapa no se recalculaba al redimensionar (#8).**
 `fitViewToCanvas` fija rangos de latitud y longitud según el aspecto del
@@ -64,11 +67,11 @@ el ancho fijo en su mínimo de 700px, el corte de 420px solo cambia el alto.
 ## Cómo se validó
 
 - `cd web && npm run check && npx vitest run && npm run build` → tsc sin
-  errores; 66 pruebas Vitest; cinco nuevas en `volume.test.ts` (el titular
+  errores; 68 pruebas Vitest; cinco nuevas en `volume.test.ts` (el titular
   excluye programados e inferidos, que se listan aparte; N/D sin vuelos
   observados; la nota de rutas solo de presencia, también cuando no hay otras
-  rutas; y la línea oculta cuando no hay nada que reportar) y dos en `regions.test.ts`
-  (normalización de la región).
+  rutas; y la línea oculta cuando no hay nada que reportar) y cuatro en `regions.test.ts`
+  (normalización de la región y selector con regiones solo de presencia).
 - `uv run pytest -q -m browser tests/test_web_flights_smoke.py
   tests/test_web_page_smoke.py` → 7 passed. Incluye dos pruebas nuevas:
   `test_region_map_refits_its_bounds_when_the_canvas_resizes`, que cambia el
