@@ -76,4 +76,32 @@ describe("renderNetworkVolume (observed vs scheduled vs inferred flights)", () =
     const html = document.getElementById("network-volume")!.innerHTML;
     expect(html).toContain("9 rutas con presencia documentada de Aeroméxico sin volumen atribuible (N/D)");
   });
+
+  it("shows N/D, not zero, when no shown route has observed flights", () => {
+    state.routes = [
+      domesticRoute({ passengers_estimated: false, departures: 300, operation_status: "assigned_slot_not_flown" }),
+      domesticRoute({ passengers_estimated: false, departures: 50, operation_status: "carrier_inferred_market_observed" }),
+    ];
+    renderNetworkVolume();
+    const host = document.getElementById("network-volume")!;
+    expect(host.innerHTML).toContain("<strong>N/D</strong>");
+    expect(host.innerHTML).not.toContain("<strong>0</strong>");
+  });
+
+  it("renders the presence-only disclosure even when no route is quantified", () => {
+    state.presenceOnlyRouteCount = 8;
+    state.routes = [];
+    renderNetworkVolume();
+    const host = document.getElementById("network-volume")!;
+    expect(host.hidden).toBe(false);
+    expect(host.innerHTML).toContain("8 rutas con presencia documentada");
+    expect(host.innerHTML).toContain("<strong>N/D</strong>");
+  });
+
+  it("stays hidden when there is nothing to report", () => {
+    state.presenceOnlyRouteCount = 0;
+    state.routes = [];
+    renderNetworkVolume();
+    expect(document.getElementById("network-volume")!.hidden).toBe(true);
+  });
 });

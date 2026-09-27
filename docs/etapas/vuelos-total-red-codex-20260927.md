@@ -16,6 +16,10 @@ mercado AFAC atribuidos por exclusividad (`carrier_inferred_market_observed`),
 que son inferencia. Ahora el titular cuenta solo vuelos observados. Los
 programados y los inferidos aparecen en líneas propias, con su número de
 rutas, y se aclara que no se incluyen arriba.
+Si ninguna ruta mostrada tiene vuelos observados (por ejemplo, una red
+nacional solo con slots e inferencias), el titular muestra N/D y no "0
+vuelos": la fuente no reporta vuelos realizados, lo que no significa que
+no haya habido (hallazgo de Codex sobre #70).
 
 **2. Las rutas con presencia pero sin volumen desaparecían sin aviso
 (#10).** `network.ts` filtra, a propósito, las rutas sin volumen propio (por
@@ -24,6 +28,9 @@ porque no hay magnitud que dibujar. El filtro se conserva, pero ahora se
 cuenta cuántas quedaron fuera, respetando la región seleccionada, y la línea
 de volumen lo declara: "N rutas con presencia documentada de Aeroméxico sin
 volumen atribuible (N/D), no dibujadas en el mapa ni en la tabla".
+La nota también aparece cuando la red solo tiene rutas de presencia; antes
+la línea se ocultaba por no tener rutas cuantificadas (hallazgo de Codex
+sobre #70).
 
 **3. Una región elegida en otro trimestre dejaba la vista vacía (#7).** Al
 pasar de 2T26 con Europa o Asia seleccionada a un trimestre sin rutas de esa
@@ -57,9 +64,10 @@ el ancho fijo en su mínimo de 700px, el corte de 420px solo cambia el alto.
 ## Cómo se validó
 
 - `cd web && npm run check && npx vitest run && npm run build` → tsc sin
-  errores; 63 pruebas Vitest; dos nuevas en `volume.test.ts` (el titular
-  excluye programados e inferidos, que se listan aparte, y la línea declara
-  las rutas solo de presencia) y dos en `regions.test.ts`
+  errores; 66 pruebas Vitest; cinco nuevas en `volume.test.ts` (el titular
+  excluye programados e inferidos, que se listan aparte; N/D sin vuelos
+  observados; la nota de rutas solo de presencia, también cuando no hay otras
+  rutas; y la línea oculta cuando no hay nada que reportar) y dos en `regions.test.ts`
   (normalización de la región).
 - `uv run pytest -q -m browser tests/test_web_flights_smoke.py
   tests/test_web_page_smoke.py` → 7 passed. Incluye dos pruebas nuevas:

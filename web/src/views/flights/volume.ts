@@ -43,7 +43,7 @@ export function renderNetworkVolume(): void {
     const routes = shown.filter((route) => flightKind(route) === kind && finite(route.departures));
     return { routes: routes.length, total: routes.reduce((sum, route) => sum + (route.departures ?? 0), 0) };
   };
-  const flights = departuresOf("observed").total;
+  const observed = departuresOf("observed");
   const scheduled = departuresOf("scheduled");
   const inferred = departuresOf("inferred");
   const presenceOnly = state.presenceOnlyRouteCount || 0;
@@ -51,7 +51,7 @@ export function renderNetworkVolume(): void {
   const passengersLow = sumSensitivityBound(shown, "passengers_low");
   const passengersHigh = sumSensitivityBound(shown, "passengers_high");
   const noBreakdown = shown.filter((route) => !finite(route.departures)).length;
-  host.hidden = shown.length === 0;
+  host.hidden = shown.length === 0 && presenceOnly === 0;
   if (host.hidden) {
     host.innerHTML = "";
     return;
@@ -66,6 +66,12 @@ export function renderNetworkVolume(): void {
   const presenceLine = presenceOnly
     ? `<span class="network-estimate-note">${routesWord(presenceOnly)} con presencia documentada de Aeroméxico sin volumen atribuible (N/D), no ${presenceOnly === 1 ? "dibujada" : "dibujadas"} en el mapa ni en la tabla</span>`
     : "";
+  // Solo rutas con presencia y sin volumen: no hay cifra que encabezar, pero
+  // la nota N/D debe verse (ocultarla haría desaparecer la red en silencio).
+  if (shown.length === 0) {
+    host.innerHTML = `<strong>N/D</strong><span>sin volumen atribuible ${esc(scope)} · ${esc(state.network?.period_label ?? "")}</span>${presenceLine}`;
+    return;
+  }
   if (state.network?.mode === "estimated_domestic") {
     const repaired = shown.some((route) => route.support_repair_applied);
     const range = sensitivityRange(passengersLow, passengersHigh);
@@ -93,5 +99,8 @@ export function renderNetworkVolume(): void {
   const inferredLine = inferred.routes
     ? `<span class="network-estimate-note">${integer.format(inferred.total)} vuelos de mercado AFAC atribuidos por exclusividad en ${routesWord(inferred.routes)}, no incluidos arriba</span>`
     : "";
-  host.innerHTML = `<strong>${integer.format(flights)}</strong><span>vuelos operados por Aerovías de México (no incluye Aeroméxico Connect) ${esc(scope)} · ${esc(state.network?.period_label ?? "")}${noBreakdown ? ` · ${routesWord(noBreakdown)} sin desglose propio` : ""}</span>${estimatedLine}${scheduledLine}${inferredLine}${presenceLine}`;
+  // Sin rutas observadas (p. ej. una red nacional solo con slots e
+  // inferencias) el total observado no existe: N/D, nunca "0 vuelos".
+  const headline = observed.routes ? integer.format(observed.total) : "N/D";
+  host.innerHTML = `<strong>${headline}</strong><span>vuelos operados por Aerovías de México (no incluye Aeroméxico Connect) ${esc(scope)} · ${esc(state.network?.period_label ?? "")}${noBreakdown ? ` · ${routesWord(noBreakdown)} sin desglose propio` : ""}</span>${estimatedLine}${scheduledLine}${inferredLine}${presenceLine}`;
 }
