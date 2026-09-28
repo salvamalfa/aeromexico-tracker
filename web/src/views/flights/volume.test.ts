@@ -35,9 +35,9 @@ describe("renderNetworkVolume (quarterly network indicators)", () => {
     ];
     renderNetworkVolume();
     const html = document.getElementById("network-volume")!.innerHTML;
-    expect(html).toContain("PASAJEROS");
+    expect(html).toContain("<small>Pasajeros</small>");
     expect(html).toContain("<strong>150,000</strong>");
-    expect(html).toContain("RED NACIONAL");
+    expect(html).toContain("Red nacional");
     expect(html).toContain("AFAC · Grupo");
   });
 
@@ -81,7 +81,7 @@ describe("renderNetworkVolume (observed vs scheduled vs inferred flights)", () =
     const html = document.getElementById("network-volume")!.innerHTML;
     expect(html).toContain("<strong>1,000</strong>");
     expect(html).not.toContain("1,370");
-    expect(html).toContain("VUELOS");
+    expect(html).toContain("<small>Vuelos</small>");
     expect(html).toContain("obs. · 1/4 rutas");
   });
 
