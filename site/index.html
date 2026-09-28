@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <title>Aeroméxico Tracker</title>
-  <script type="module" crossorigin src="./assets/index-CAUwsjog.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-Bj_lyPsi.css">
+  <script type="module" crossorigin src="./assets/index-B9EcCcYp.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-CgYCXe00.css">
 </head>
 <body>
   <main class="page-shell" data-testid="executive-summary-root">
@@ -189,16 +189,23 @@
               <button type="button" id="network-mode-international" role="radio" aria-checked="false" aria-pressed="false">Internacional</button>
               <div class="network-region-switch" id="network-region-switch" role="group" aria-label="Región internacional" hidden></div>
             </div>
-            <div class="network-month-switch" id="network-month-switch" role="group" aria-label="Meses nacionales (selección múltiple)"></div>
             <div class="network-layout">
               <article class="panel flow-map-panel" id="map-panel">
+                <div class="map-route-toolbar">
+                  <div><strong id="map-route-title">Destinos que concentran el volumen</strong><span id="map-route-summary"></span></div>
+                  <div class="map-route-switch" role="group" aria-label="Rutas visibles en el mapa">
+                    <button type="button" id="map-routes-featured" aria-pressed="true">Más pasajeros</button>
+                    <button type="button" id="map-routes-change" aria-pressed="false">Mayores cambios</button>
+                    <button type="button" id="map-routes-all" aria-pressed="false">Todas las rutas</button>
+                  </div>
+                </div>
                 <div class="map-detail-layout">
                   <div class="map-canvas-column">
                     <div class="chart flow-map" id="route-flow-map" role="img" aria-label="Mapa de rutas por fuente y tipo de observación"></div>
                   </div>
                   <div class="route-detail-column" id="route-detail-column">
                     <div class="network-volume" id="network-volume" hidden></div>
-                    <aside class="airport-tooltip" id="airport-tooltip" role="region" aria-label="Detalle de rutas por aeropuerto"></aside>
+                    <aside class="airport-tooltip" id="airport-tooltip" role="region" aria-label="Resumen trimestral de rutas"></aside>
                   </div>
                 </div>
               </article>

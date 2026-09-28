@@ -16,7 +16,7 @@ import { currentPeriodId, subscribe } from "../../state/period";
 import { domesticAvailableForQuarter, loadQuarters, state } from "./state";
 import { renderQuarter } from "./quarter";
 import { renderMix } from "./mix";
-import { renderNetworkPeriod } from "./network";
+import { renderNetworkPeriod, renderRouteMode } from "./network";
 import { alignRouteDetailToGeo, canvasSize, mapFittedCanvasSize, renderFlowMap } from "./map";
 
 function syncPeriodIndex(periodId: string): boolean {
@@ -44,6 +44,16 @@ function wireControls(): void {
     state.passengerPeriod = (event.target as HTMLSelectElement).value as "quarter" | "month";
     renderMix(state.quarters[state.periodIndex]!);
   });
+  for (const [id, view] of [["map-routes-featured", "volume"], ["map-routes-change", "change"], ["map-routes-all", "all"]] as const) {
+    $(id)!.addEventListener("click", () => {
+      state.routeView = view;
+      state.pinnedAirport = null;
+      state.selectedMarket = null;
+      renderRouteMode();
+      renderFlowMap();
+    });
+  }
+  window.addEventListener("flight-route-overview", () => renderFlowMap());
   // El recorte del mapa (fitViewToCanvas) depende del aspecto del lienzo:
   // si cambia el ancho o el alto hay que recalcularlo, no solo realinear el
   // detalle (el alto cambia solo, p. ej., en el corte de 420px con el ancho
