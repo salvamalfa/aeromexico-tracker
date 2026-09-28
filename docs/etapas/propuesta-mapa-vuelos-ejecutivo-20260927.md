@@ -21,8 +21,9 @@ los meses disponibles del trimestre global, sin selector mensual propio.
   Seleccionar un aeropuerto filtra las rutas visibles y «Toda la red» restaura
   el ranking. La ruta queda a la izquierda y pasajeros, vuelos y ocupación
   aparecen en tres columnas. No se muestran asientos, desglose mensual ni por
-  sentido. Las rutas se nombran por ciudad; el código IATA queda en el título
-  de consulta. Encima del ranking hay tres indicadores compactos por trimestre:
+  sentido. Las rutas se nombran por ciudad (CDMX para Ciudad de México); el
+  código IATA queda en el título de consulta. Encima del ranking hay tres
+  indicadores compactos por trimestre:
   pasajeros, vuelos y ocupación.
 - Las variaciones interanuales aparecen solo en la vista de cambios. Las
   marcas de cobertura y las fuentes permanecen disponibles. En internacional,
@@ -48,6 +49,29 @@ nacionales y 2,060,171 internacionales. La suma nacional por ruta estimada es
 653,731 (68.3% menos). La diferencia internacional es de cobertura y fuente,
 no un error que se pueda ajustar legítimamente a 5–10%. El total SEC de
 pasajeros del trimestre también tiene un alcance diferente.
+
+### Por qué siguen los N/D internacionales en esta vista
+
+El JSON servido por `web/public/data/v1/flights/international/2026Q2.json` y
+el de `site/data/v1/` son idénticos. Conservan 73 mercados: 40 de Estados
+Unidos con pasajeros BTS T-100, uno de Brasil con pasajeros ANAC, y 32 sin
+pasajeros (25 slots AICM programados, cuatro Colombia y uno Reino Unido con
+vuelos observados pero sin pasajeros en esas fuentes, dos OMA documentados).
+Norteamérica agrupa también Centroamérica y el Caribe; T-100 solo abarca
+tramos que tocan EE. UU. y no llena Canadá ni esos otros mercados. Los 40
+mercados estadounidenses BTS sí tienen pasajeros en el payload de 2T26.
+Brasil tiene pasajeros y asientos ANAC, pero el generador conserva su
+`load_factor` como no disponible: no aplica automáticamente una división
+entre campos cuya equivalencia de alcance no se ha aprobado.
+
+Las estimaciones retrospectivas AFAC + AeroDataBox para otras 34 rutas
+internacionales y su capacidad derivada existen en dos Gold locales ignorados
+por Git. La copia local de `data/warehouse.duckdb` que alimentó el export web
+no contiene ninguna de esas dos tablas opcionales. Por eso la vista previa no
+las incorpora; no indica que la API haya proporcionado pasajeros observados.
+AeroDataBox aporta vuelos, operador y aeronave; los pasajeros proceden de un
+modelo ajustado a marginales AFAC. Integrar y publicar esos resultados sería
+un cambio de datos con aprobación separada, no una corrección de interfaz.
 
 ## Presentación y decisión pendiente
 

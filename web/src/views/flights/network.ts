@@ -82,13 +82,17 @@ export function renderRouteMode(): void {
   renderRouteOverview(visible);
 }
 
-export function routeTitle(route: Route): string {
-  const city = (name: string): string => ({
-    "Mexico City": "Ciudad de México",
+export function cityLabel(name: string): string {
+  return ({
+    "Mexico City": "CDMX",
+    "Ciudad de México": "CDMX",
     "Los Angeles": "Los Ángeles",
     "New York": "Nueva York",
   })[name] || name;
-  return `${city(route.origin.city || route.origin.iata)} ↔ ${city(route.destination.city || route.destination.iata)}`;
+}
+
+export function routeTitle(route: Route): string {
+  return `${cityLabel(route.origin.city || route.origin.iata)} ↔ ${cityLabel(route.destination.city || route.destination.iata)}`;
 }
 
 function domesticPeriodNetwork(periodId: string): PeriodNetworkDocument | undefined {

@@ -4,7 +4,7 @@ import { $, esc, finite, formatRouteMetric, integer } from "./dom";
 import { state } from "./state";
 import { coverageDotHtml, scheduledIconHtml, sourceFooterHtml, SCHEDULED_STATUSES } from "./coverage";
 import { bindAirportSearchControls } from "./search";
-import { routeChangePercent, routeTitle } from "./network";
+import { cityLabel, routeChangePercent, routeTitle } from "./network";
 import type { Route } from "../../types/domain";
 
 function routeRows(routes: Route[]): string {
@@ -70,5 +70,5 @@ export function renderRouteOverview(routes: Route[]): void {
 
 export function renderAirportTooltip(airport: string, incident: Route[], _isPinned?: boolean): void {
   const city = state.network?.airports.find((item) => item.iata === airport)?.city || "Aeropuerto";
-  render(`${airport} · ${city}`, incident, true);
+  render(`${airport} · ${cityLabel(city)}`, incident, true);
 }
