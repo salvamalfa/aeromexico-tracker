@@ -11,11 +11,13 @@ approvals.
 from src.web_export.executive import export_executive
 from src.web_export.flights import export_flights, recombine_flights
 from src.web_export.inputs import MissingWebInput, require_inputs
+from src.web_export.market import export_market
 from src.web_export.privacy import PrivacyViolation, check_privacy
 
 __all__ = [
     "export_executive",
     "export_flights",
+    "export_market",
     "recombine_flights",
     "require_inputs",
     "MissingWebInput",

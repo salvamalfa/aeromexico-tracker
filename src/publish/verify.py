@@ -59,7 +59,13 @@ from src.web_export.privacy import (
     find_forbidden_fields,
     load_privacy_rules,
 )
-from src.web_export.schemas import ANALYSIS_SCHEMA, EXECUTIVE_SCHEMA, NETWORK_FILE_SCHEMA, QUARTERS_FILE_SCHEMA
+from src.web_export.schemas import (
+    ANALYSIS_SCHEMA,
+    EXECUTIVE_SCHEMA,
+    MARKET_SCHEMA,
+    NETWORK_FILE_SCHEMA,
+    QUARTERS_FILE_SCHEMA,
+)
 
 from . import manifest as manifest_mod
 
@@ -85,6 +91,8 @@ def _data_schema_for(rel_path: str) -> dict[str, Any] | None:
         return None
     if parts[2:] == ["executive.json"]:
         return EXECUTIVE_SCHEMA
+    if parts[2:] == ["market.json"]:
+        return MARKET_SCHEMA
     if parts[2:3] == ["flights"] and parts[3:] == ["quarters.json"]:
         return QUARTERS_FILE_SCHEMA
     if parts[2:3] == ["flights"] and parts[3:4] in (["domestic"], ["international"]) and len(parts) == 5:

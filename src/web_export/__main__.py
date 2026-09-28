@@ -16,10 +16,12 @@ from pathlib import Path
 from src.config import PATHS
 from src.dashboard.executive_summary import build_executive_payload
 from src.dashboard.flights import build_flight_payload
+from src.dashboard.market import build_market_payload
 from src.web_export.analysis import MissingAnalysisInput, export_analysis
 from src.web_export.executive import export_executive
 from src.web_export.flights import export_flights
 from src.web_export.inputs import MissingWebInput
+from src.web_export.market import export_market
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -42,6 +44,7 @@ def main(argv: list[str] | None = None) -> int:
         written = export_flights(flight_payload, args.out)
         executive_payload = build_executive_payload()
         written += export_executive(executive_payload, args.out)
+        written += export_market(build_market_payload(), args.out)
         written += export_analysis(
             args.out,
             allow_missing=args.allow_missing_analysis,

@@ -2,7 +2,7 @@
 // Do not edit by hand; run `npm run gen:types` after changing a schema.
 
 /**
- * Describes the payload embedded in the published integrated HTML for the executive tab: the output of src.dashboard.executive_summary.build_executive_payload() as it is today. See docs/arquitectura/auditoria-arquitectura-20260926.md Fase 2 and contracts/web/README.md.
+ * Describes the payload embedded in the published integrated HTML for the executive tab: the output of src.dashboard.executive_summary.build_executive_payload() as it is today. See docs/arquitectura/auditoria-arquitectura-20260926.md Fase 2 and contracts/web/README.md. v2 adds the optional per-entity block (Industria + each carrier) behind the airline selector; top-level records/views stay Grupo Aeroméxico for compatibility.
  */
 export interface LecturaEjecutivaPayloadV1 {
   metadata: {
@@ -23,6 +23,16 @@ export interface LecturaEjecutivaPayloadV1 {
   views: {
     [k: string]: View;
   };
+  /**
+   * Per-entity quarters and views keyed by entity key (INDUSTRY, AEROMEXICO, VOLARIS, VIVA_AEROBUS). Built by src.dashboard.executive_summary.build_entity_payloads().
+   */
+  entities?: {
+    [k: string]: Entity;
+  };
+  /**
+   * Selector order and labels; Industria first (src.dashboard.entities).
+   */
+  entity_list?: EntityMeta[];
 }
 export interface Record {
   period_id: string;
@@ -42,6 +52,7 @@ export interface View {
   narrative: Narrative;
   margin_qoq: Comparison;
   margin_yoy: Comparison;
+  margin_vs_industry?: Comparison;
 }
 export interface Kpi {
   key: string;
@@ -53,6 +64,7 @@ export interface Kpi {
   display_value: string;
   qoq: Comparison;
   yoy: Comparison;
+  vs_industry?: Comparison;
 }
 export interface Comparison {
   available: boolean;
@@ -63,4 +75,35 @@ export interface Comparison {
 export interface Narrative {
   headline: string;
   paragraphs: string[];
+}
+export interface Entity {
+  key: string;
+  label: string;
+  note: string;
+  first_period: string;
+  last_period: string;
+  quarter_count: number;
+  records: EntityRecord[];
+  views: {
+    [k: string]: View;
+  };
+}
+export interface EntityRecord {
+  period_id: string;
+  period_label: string;
+  passengers: number;
+  ask_km: number;
+  load_factor: number;
+  load_factor_basis: "reported" | "calculated";
+  rask_cents_per_km: number;
+  cask_cents_per_km: number;
+  unit_margin_cents_per_km: number;
+  cask_ex_fuel_cents_per_km: number | null;
+}
+export interface EntityMeta {
+  key: string;
+  label: string;
+  is_aggregate: boolean;
+  carriers: string[];
+  note: string;
 }

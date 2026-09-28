@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://aeromexico-tracker/contracts/web/executive.schema.json",
   "title": "Lectura ejecutiva · payload (v1)",
-  "description": "Describes the payload embedded in the published integrated HTML for the executive tab: the output of src.dashboard.executive_summary.build_executive_payload() as it is today. See docs/arquitectura/auditoria-arquitectura-20260926.md Fase 2 and contracts/web/README.md.",
+  "description": "Describes the payload embedded in the published integrated HTML for the executive tab: the output of src.dashboard.executive_summary.build_executive_payload() as it is today. See docs/arquitectura/auditoria-arquitectura-20260926.md Fase 2 and contracts/web/README.md. v2 adds the optional per-entity block (Industria + each carrier) behind the airline selector; top-level records/views stay Grupo Aeroméxico for compatibility.",
   "type": "object",
   "additionalProperties": false,
   "required": ["metadata", "records", "views"],
@@ -38,6 +38,16 @@
     "views": {
       "type": "object",
       "additionalProperties": { "$ref": "#/$defs/view" }
+    },
+    "entities": {
+      "type": "object",
+      "description": "Per-entity quarters and views keyed by entity key (INDUSTRY, AEROMEXICO, VOLARIS, VIVA_AEROBUS). Built by src.dashboard.executive_summary.build_entity_payloads().",
+      "additionalProperties": { "$ref": "#/$defs/entity" }
+    },
+    "entity_list": {
+      "type": "array",
+      "description": "Selector order and labels; Industria first (src.dashboard.entities).",
+      "items": { "$ref": "#/$defs/entity_meta" }
     }
   },
   "$defs": {
@@ -87,7 +97,8 @@
         "value": { "type": "number" },
         "display_value": { "type": "string" },
         "qoq": { "$ref": "#/$defs/comparison" },
-        "yoy": { "$ref": "#/$defs/comparison" }
+        "yoy": { "$ref": "#/$defs/comparison" },
+        "vs_industry": { "$ref": "#/$defs/comparison" }
       }
     },
     "narrative": {
@@ -113,7 +124,62 @@
         "conclusions": { "type": "array", "items": { "type": "string" } },
         "narrative": { "$ref": "#/$defs/narrative" },
         "margin_qoq": { "$ref": "#/$defs/comparison" },
-        "margin_yoy": { "$ref": "#/$defs/comparison" }
+        "margin_yoy": { "$ref": "#/$defs/comparison" },
+        "margin_vs_industry": { "$ref": "#/$defs/comparison" }
+      }
+    },
+    "entity_meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "label", "is_aggregate", "carriers", "note"],
+      "properties": {
+        "key": { "type": "string" },
+        "label": { "type": "string" },
+        "is_aggregate": { "type": "boolean" },
+        "carriers": { "type": "array", "items": { "type": "string" } },
+        "note": { "type": "string" }
+      }
+    },
+    "entity_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "period_id", "period_label", "passengers", "ask_km", "load_factor",
+        "load_factor_basis", "rask_cents_per_km", "cask_cents_per_km",
+        "unit_margin_cents_per_km", "cask_ex_fuel_cents_per_km"
+      ],
+      "properties": {
+        "period_id": { "type": "string" },
+        "period_label": { "type": "string" },
+        "passengers": { "type": "number" },
+        "ask_km": { "type": "number" },
+        "load_factor": { "type": "number" },
+        "load_factor_basis": { "enum": ["reported", "calculated"] },
+        "rask_cents_per_km": { "type": "number" },
+        "cask_cents_per_km": { "type": "number" },
+        "unit_margin_cents_per_km": { "type": "number" },
+        "cask_ex_fuel_cents_per_km": { "type": ["number", "null"] }
+      }
+    },
+    "entity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key", "label", "note", "first_period", "last_period",
+        "quarter_count", "records", "views"
+      ],
+      "properties": {
+        "key": { "type": "string" },
+        "label": { "type": "string" },
+        "note": { "type": "string" },
+        "first_period": { "type": "string" },
+        "last_period": { "type": "string" },
+        "quarter_count": { "type": "integer" },
+        "records": { "type": "array", "items": { "$ref": "#/$defs/entity_record" } },
+        "views": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/view" }
+        }
       }
     }
   }
