@@ -30,6 +30,19 @@ los meses disponibles del trimestre global, sin selector mensual propio.
   los pasajeros estimados por ruta llevan una marca discreta para distinguirlos
   de los observados.
 
+### Ajuste de presentación de cobertura
+
+El estado de cobertura trimestral colorea el número de orden de cada ruta:
+verde para cobertura completa, amarillo para cobertura parcial y rojo para
+cobertura limitada. La explicación exacta de meses permanece al consultar el
+número y en su etiqueta accesible. Las rutas sin meses verificables conservan
+el número azul neutro. Se elimina el punto de color junto al nombre; los
+indicadores de vuelos programados y de pasajeros estimados mantienen su
+significado propio.
+La compilación web terminó correctamente y la vista previa mostró el fondo
+verde del número en rutas nacionales de cobertura completa, sin el punto junto
+al nombre. No se alteraron métricas ni archivos de datos.
+
 ## Límites de interpretación
 
 La selección por volumen es una propuesta de lectura, no una clasificación de

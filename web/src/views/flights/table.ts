@@ -2,7 +2,7 @@
 
 import { $, esc, finite, formatRouteMetric, integer } from "./dom";
 import { state } from "./state";
-import { coverageDotHtml, scheduledIconHtml, sourceFooterHtml, SCHEDULED_STATUSES } from "./coverage";
+import { coverageIndicator, scheduledIconHtml, sourceFooterHtml, SCHEDULED_STATUSES } from "./coverage";
 import { bindAirportSearchControls } from "./search";
 import { cityLabel, routeChangePercent, routeTitle } from "./network";
 import type { Route } from "../../types/domain";
@@ -23,9 +23,11 @@ function routeRows(routes: Route[]): string {
     const sourceBadge = route.passengers_estimated && state.networkMode === "international"
       ? '<span class="route-evidence-badge">estim.</span>' : "";
     const changeText = change === null ? "" : `<small class="executive-route-trend ${change >= 0 ? "delta-up" : "delta-down"}">${change >= 0 ? "+" : ""}${change.toFixed(1)}% interanual</small>`;
+    const coverage = coverageIndicator(route);
+    const coverageLabel = coverage ? ` title="${esc(coverage.title)}" aria-label="Ruta ${index + 1}: ${esc(coverage.title)}"` : "";
     return `${group}<li class="executive-route-row">
-      <span class="executive-route-rank">${index + 1}</span>
-      <div class="executive-route-copy"><strong title="${esc(route.origin.iata)} ↔ ${esc(route.destination.iata)}">${esc(routeTitle(route))}${coverageDotHtml(route)}${scheduledIconHtml(route)}${sourceBadge}</strong>${changeText}</div>
+      <span class="executive-route-rank${coverage ? ` ${coverage.variant}` : ""}"${coverageLabel}>${index + 1}</span>
+      <div class="executive-route-copy"><strong title="${esc(route.origin.iata)} ↔ ${esc(route.destination.iata)}">${esc(routeTitle(route))}${scheduledIconHtml(route)}${sourceBadge}</strong>${changeText}</div>
       <div class="executive-route-value" title="Pasajeros ${route.passengers_estimated ? "estimados" : "observados"}">${finite(route.passengers) ? integer.format(route.passengers) : "N/D"}</div>
       <div class="executive-route-value" title="Vuelos ${flightKind}">${flights}</div>
       <div class="executive-route-value">${esc(occupancy)}</div>
