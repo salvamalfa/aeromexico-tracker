@@ -68,11 +68,7 @@
   .network-volume strong { color: var(--brand-blue-dark); font-size: 17px; font-weight: 800; }
   .network-volume span { color: var(--muted); font-size: 10px; }
   .network-volume[hidden] { display: none; }
-  .route-coverage-dot { display: inline-block; flex: none; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; vertical-align: middle; }
-  .route-expand-toggle > .route-coverage-dot, .route-expand-toggle > .route-scheduled-mark { margin-left: 0; }
-  .route-coverage-dot.is-full { background: var(--altitude-green); }
-  .route-coverage-dot.is-partial { background: #d9a400; }
-  .route-coverage-dot.is-thin { background: var(--brand-red); }
+  .route-expand-toggle > .route-scheduled-mark { margin-left: 0; }
   .route-scheduled-mark { display: inline-block; flex: none; margin-left: 5px; vertical-align: middle; line-height: 0; }
   .route-scheduled-mark svg { width: 11px; height: 11px; fill: var(--altitude-amber); }
   .domestic-route-summary { display: grid; gap: 2px; margin: 10px 0 8px; padding: 10px 12px; background: #edf4ff; border-radius: 8px; }
@@ -146,6 +142,9 @@
   .executive-route-row { padding: 10px 2px; border-top: 1px solid #e1e8f0; }
   .executive-route-group { padding: 9px 2px 5px; color: var(--brand-blue-dark); font-size: 9px; font-weight: 800; text-transform: uppercase; }
   .executive-route-rank { display: grid; place-items: center; width: 19px; height: 19px; color: var(--brand-blue-dark); background: #e5eefb; border-radius: 6px; font-size: 9px; font-weight: 800; }
+  .executive-route-rank.is-full { color: #fff; background: var(--altitude-green); }
+  .executive-route-rank.is-partial { color: #302500; background: #e9b617; }
+  .executive-route-rank.is-thin { color: #fff; background: var(--brand-red); }
   .executive-route-copy { display: grid; gap: 3px; min-width: 0; }
   .executive-route-copy strong { color: var(--brand-blue-dark); font-size: 10px; line-height: 1.25; overflow-wrap: anywhere; }
   .executive-route-trend { font-size: 8px; font-weight: 800; }

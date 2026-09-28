@@ -1,4 +1,4 @@
-// Route coverage indicators (dots, scheduled-flight icon) and source
+// Route coverage indicators (rank colors, scheduled-flight icon) and source
 // footers. Ported from src/dashboard/assets/flights.js.
 
 import { esc, finite } from "./dom";
@@ -32,7 +32,7 @@ export function scheduledIconHtml(route: Route): string {
   return `<span class="route-scheduled-mark" title="${title}" aria-label="${title}" role="img"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 1.6 15 14H1z"></path><rect x="7.2" y="6" width="1.6" height="4" rx=".8"></rect><circle cx="8" cy="11.6" r=".95"></circle></svg></span>`;
 }
 
-export function coverageDotHtml(route: Route): string {
+export function coverageIndicator(route: Route): { variant: string; title: string } | null {
   if (finite(route.months_covered) && finite(route.months_selected) && route.months_selected > 0) {
     // Agregado nacional multi-mes: mismo criterio que Internacional
     // (verde/amarillo/rojo según cuántos meses de calendario del
@@ -40,14 +40,14 @@ export function coverageDotHtml(route: Route): string {
     const ratio = route.months_covered / route.months_selected;
     const variant = ratio >= 1 ? "is-full" : ratio >= 0.5 ? "is-partial" : "is-thin";
     const title = `${route.months_covered} de ${route.months_selected} meses del trimestre con datos de esta ruta`;
-    return `<span class="route-coverage-dot ${variant}" title="${title}" aria-label="${title}"></span>`;
+    return { variant, title };
   }
-  if (route.passengers_estimated) return "";
+  if (route.passengers_estimated) return null;
   const months = coverageMonths(route);
-  if (!months) return "";
+  if (!months) return null;
   const variant = months >= 3 ? "is-full" : months === 2 ? "is-partial" : "is-thin";
   const title = `${months} de 3 meses del trimestre con datos de la fuente`;
-  return `<span class="route-coverage-dot ${variant}" title="${title}" aria-label="${title}"></span>`;
+  return { variant, title };
 }
 
 const SOURCE_SHORT_LABELS: Record<string, string> = {
