@@ -173,7 +173,8 @@ def run():
     airports={r['airport_icao']:r for r in airport_rows if r['airport_icao']}
     all_rows=[]
     for source,relative in selection['artifacts'].items():
-        path=PATHS.bronze/relative;content=path.read_bytes();meta=json.loads(Path(str(path)+'.meta.json').read_text(encoding='utf-8'))
+        # Selections written on Windows store '\\' separators; Bronze is immutable, so normalize here.
+        path=PATHS.bronze/str(relative).replace('\\','/');content=path.read_bytes();meta=json.loads(Path(str(path)+'.meta.json').read_text(encoding='utf-8'))
         sha=hashlib.sha256(content).hexdigest()
         if sha != meta['sha256']: raise ValueError('Bronze hash mismatch')
         artifact={'file':meta['source_file'],'sha256':sha,'url':meta['source_url'],'downloaded_at':meta['downloaded_at']}

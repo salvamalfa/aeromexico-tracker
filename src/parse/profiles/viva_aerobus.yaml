@@ -17,6 +17,12 @@ metric_patterns:
     unit_normalized: miles
     scale_multiplier: 1000000
     table_name: operating
+  passengers:
+    patterns: ['^booked passengers \(thousands\)']
+    unit_raw: "passengers (thousands)"
+    unit_normalized: count
+    scale_multiplier: 1000
+    table_name: operating
   load_factor_total:
     patterns: ['^load factor \(scheduled,']
     unit_raw: "%"
