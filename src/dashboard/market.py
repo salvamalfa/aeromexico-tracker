@@ -8,7 +8,16 @@ the fase-0 report documents that difference
 (docs/etapas/dashboard-v2-fase0-datos-20260928.md).
 
 A carrier row AFAC does not publish for a month is missing, not zero: that
-carrier's share and the industry total are ``None`` for that month.
+carrier's share and the industry total are ``None`` for that month. When any
+of the three Industria carriers (~99 % of the universe) is missing, the
+denominator itself is incomplete, so it and every share of that cell are
+``None`` rather than computed over a partial total.
+
+The 2019–2020 AFAC workbooks this project parses carry almost no
+international passengers by Mexican carrier (Aeroméxico 0 in 2019, the whole
+set a few thousand a month against ~565 thousand in 2021M01), so the
+international and total segments start in ``INTERNATIONAL_FIRST_MONTH``;
+before it they are not published. Domestic keeps its 2019 baseline.
 """
 
 from __future__ import annotations
@@ -26,6 +35,7 @@ SCHEMA_VERSION = "market_payload_v1"
 # Enough history for the pre-pandemic baseline and every year-over-year
 # comparison the card shows, without shipping 2015–2018 to the browser.
 FIRST_MONTH = "2019M01"
+INTERNATIONAL_FIRST_MONTH = "2021M01"
 SEGMENTS = ("total", "domestic", "international")
 MONTHS_ES = ("ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic")
 
@@ -63,24 +73,36 @@ def _previous_year(period_id: str) -> str:
     return f"{int(period_id[:4]) - 1}{period_id[4:]}"
 
 
-def _segment_block(values: dict[str, float], denominator: float) -> dict[str, Any]:
+def _segment_block(values: dict[str, float], denominator: float | None) -> dict[str, Any]:
+    members = [values.get(key) for key in INDUSTRY.carriers]
+    complete = all(value is not None for value in members)
+    if not complete or denominator is None or denominator <= 0:
+        # A missing Industria carrier shrinks the total as if it had zero
+        # passengers; never compute shares over that partial denominator.
+        denominator = None
     carriers: dict[str, Any] = {}
     for entity in CARRIER_ENTITIES:
         passengers = values.get(entity.key)
         carriers[entity.key] = {
             "passengers": passengers,
-            "share": None if passengers is None or denominator <= 0 else passengers / denominator,
+            "share": None if passengers is None or denominator is None else passengers / denominator,
         }
-    members = [values.get(key) for key in INDUSTRY.carriers]
-    industry = None if any(value is None for value in members) else float(sum(members))
+    industry = float(sum(members)) if complete else None
     return {
         "mexican_carriers_passengers": denominator,
         "carriers": carriers,
         "industry": {
             "passengers": industry,
-            "share": None if industry is None or denominator <= 0 else industry / denominator,
+            "share": None if industry is None or denominator is None else industry / denominator,
         },
     }
+
+
+def _published(cells: dict[tuple[str, str], dict[str, float]], period_id: str, segment: str) -> dict[str, float]:
+    """The carrier rows of one month and segment, or none before the series starts."""
+    if segment != "domestic" and period_id < INTERNATIONAL_FIRST_MONTH:
+        return {}
+    return cells.get((period_id, segment), {})
 
 
 def _change_pp(current: float | None, previous: float | None) -> float | None:
@@ -111,8 +133,8 @@ def build_market_payload(database_path: str | None = None) -> dict[str, Any]:
     for period_id in months:
         segments = {}
         for segment in SEGMENTS:
-            values = cells.get((period_id, segment), {})
-            segments[segment] = _segment_block(values, float(sum(values.values())))
+            values = _published(cells, period_id, segment)
+            segments[segment] = _segment_block(values, float(sum(values.values())) if values else None)
         month_rows.append({"period_id": period_id, "period_label": _month_label(period_id), "segments": segments})
 
     # Quarters only from complete three-month windows; a carrier missing in
@@ -127,17 +149,12 @@ def build_market_payload(database_path: str | None = None) -> dict[str, Any]:
         segments = {}
         for segment in SEGMENTS:
             totals: dict[str, float] = {}
-            carriers_present = set.intersection(
-                *(set(cells.get((month, segment), {})) for month in quarter_months)
-            )
-            all_carriers = set().union(*(set(cells.get((month, segment), {})) for month in quarter_months))
-            for carrier in all_carriers:
-                if carrier in carriers_present:
-                    totals[carrier] = sum(cells[(month, segment)][carrier] for month in quarter_months)
-            denominator = float(
-                sum(sum(cells.get((month, segment), {}).values()) for month in quarter_months)
-            )
-            segments[segment] = _segment_block(totals, denominator)
+            month_values = [_published(cells, month, segment) for month in quarter_months]
+            carriers_present = set.intersection(*(set(values) for values in month_values))
+            for carrier in carriers_present:
+                totals[carrier] = sum(values[carrier] for values in month_values)
+            denominator = float(sum(sum(values.values()) for values in month_values))
+            segments[segment] = _segment_block(totals, denominator if all(month_values) else None)
         quarter_blocks[quarter_id] = {
             "period_id": quarter_id,
             "period_label": _quarter_label(quarter_id),
@@ -181,7 +198,10 @@ def build_market_payload(database_path: str | None = None) -> dict[str, Any]:
                 "La participación divide los pasajeros de cada aerolínea entre los de todas "
                 "las aerolíneas mexicanas del mismo mes y segmento. Aeroméxico incluye a "
                 "Aeroméxico Connect. Las aerolíneas extranjeras quedan fuera porque AFAC "
-                "no las publica por aerolínea."
+                "no las publica por aerolínea. Internacional y total empiezan en 2021: los "
+                "libros AFAC de 2019–2020 casi no traen pasajeros internacionales por "
+                "aerolínea mexicana. Si falta una de las tres aerolíneas, la participación "
+                "de ese periodo queda N/D."
             ),
         },
         "carriers": [entity.key for entity in CARRIER_ENTITIES],

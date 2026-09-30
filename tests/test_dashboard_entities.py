@@ -70,7 +70,8 @@ def _metric_rows() -> list[tuple]:
 def _afac_rows() -> list[tuple]:
     rows = []
     shares = {"AEROMEXICO": 290, "VOLARIS": 370, "VIVA_AEROBUS": 330, "TAR": 10}
-    for month in ("2025M10", "2025M11", "2025M12", "2026M01", "2026M02", "2026M03"):
+    # 2020M12: before INTERNATIONAL_FIRST_MONTH, only domestic may be published.
+    for month in ("2020M12", "2025M10", "2025M11", "2025M12", "2026M01", "2026M02", "2026M03"):
         for carrier, value in shares.items():
             for segment, factor in (("total", 1.0), ("domestic", 0.8), ("international", 0.2)):
                 if carrier == "TAR" and segment == "international":
@@ -164,11 +165,27 @@ def test_market_payload_shares_are_over_mexican_carriers_and_missing_stays_null(
     assert missing["carriers"]["VIVA_AEROBUS"]["passengers"] is None
     assert missing["carriers"]["VIVA_AEROBUS"]["share"] is None
     assert missing["industry"]["share"] is None
+    # Without Viva the Mexican-carrier total is partial: no share is computed
+    # over it (the others would be overstated), though passengers stay.
+    assert missing["mexican_carriers_passengers"] is None
+    assert missing["carriers"]["VOLARIS"]["share"] is None
+    assert missing["carriers"]["VOLARIS"]["passengers"] == pytest.approx(74_000)
+
+    # Before 2021 AFAC barely publishes international passengers by Mexican
+    # carrier: international and total are not published, domestic is.
+    early = month["2020M12"]["segments"]
+    for segment in ("international", "total"):
+        assert early[segment]["mexican_carriers_passengers"] is None
+        assert early[segment]["carriers"]["AEROMEXICO"]["passengers"] is None
+        assert early[segment]["industry"]["share"] is None
+    assert early["domestic"]["carriers"]["VOLARIS"]["share"] == pytest.approx(0.37)
 
     quarters = {q["period_id"]: q for q in payload["quarters"]}
     assert set(quarters) == {"2025Q4", "2026Q1"}
     # The quarter with a missing Viva month keeps Viva missing, not a two-month sum.
     assert quarters["2026Q1"]["segments"]["international"]["carriers"]["VIVA_AEROBUS"]["share"] is None
+    assert quarters["2026Q1"]["segments"]["international"]["carriers"]["AEROMEXICO"]["share"] is None
+    assert quarters["2026Q1"]["segments"]["international"]["mexican_carriers_passengers"] is None
     change = quarters["2026Q1"]["segments"]["total"]["carriers"]["AEROMEXICO"]["share_change_qoq_pp"]
     assert change == pytest.approx(0.0)
     assert payload["metadata"]["industry_note"].startswith("Industria = Aeroméxico, Volaris y Viva · 99%")

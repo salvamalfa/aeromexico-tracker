@@ -55,7 +55,7 @@
       "additionalProperties": false,
       "required": ["mexican_carriers_passengers", "carriers", "industry"],
       "properties": {
-        "mexican_carriers_passengers": { "type": "number", "minimum": 0 },
+        "mexican_carriers_passengers": { "type": ["number", "null"], "minimum": 0 },
         "carriers": {
           "type": "object",
           "additionalProperties": { "$ref": "#/$defs/share" }

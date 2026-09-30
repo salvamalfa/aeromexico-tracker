@@ -32,7 +32,7 @@ export interface Segments {
   international: Segment;
 }
 export interface Segment {
-  mexican_carriers_passengers: number;
+  mexican_carriers_passengers: number | null;
   carriers: {
     [k: string]: Share;
   };

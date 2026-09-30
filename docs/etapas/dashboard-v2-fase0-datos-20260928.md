@@ -149,3 +149,24 @@ Aeroméxico.
   tests/test_verify_identities.py`.
 - Suite completa sin navegador sobre los datos restaurados.
 - Los resultados se registran en el PR.
+
+## Corrección de la participación AFAC (30 sep 2026, revisión de Codex en el PR #77)
+
+- **Denominador incompleto:** si falta cualquiera de las tres aerolíneas de Industria
+  en un mes o trimestre y segmento, el total de aerolíneas mexicanas se trata como
+  incompleto. En ese caso `mexican_carriers_passengers` y todas las participaciones de
+  esa celda quedan en `null`. Antes se sumaba solo lo publicado, lo que inflaba la
+  participación de las demás; por ejemplo, Volaris internacional falta en 2020.
+- **Ruptura de 2021:** los libros AFAC de 2019–2020 que parsea el proyecto casi no
+  traen pasajeros internacionales por aerolínea mexicana.
+
+  | | 2019 (internacional) | 2021M01 (internacional) |
+  |---|---|---|
+  | Aeroméxico | 0 | 237 mil |
+  | Suma de aerolíneas mexicanas | unos pocos miles al mes | 565 mil |
+
+  Por eso `src/dashboard/market.py` publica internacional y total solo desde `2021M01`
+  (`INTERNATIONAL_FIRST_MONTH`). Nacional conserva su serie desde 2019.
+- **Contrato:** `market.schema.json` admite `null` en `mexican_carriers_passengers`.
+- **Efecto:** de 2021 en adelante los meses no cambian. Los trimestres de 2021 solo
+  pierden la comparación anual contra 2020.
