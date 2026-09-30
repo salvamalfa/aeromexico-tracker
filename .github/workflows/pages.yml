@@ -12,17 +12,18 @@ name: Pages
 on:
   push:
     branches: [master]
-    paths: ["site/**"]
+    paths: ["site/**", ".github/pages-preview.json"]
   workflow_dispatch:
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
+# Read-only by default: only deploy gets the Pages/OIDC credentials, so no
+# job that runs code (ci, and the preview verifier, which runs the pinned
+# commit's own code) can use them.
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 jobs:
   verify:
@@ -49,17 +50,110 @@ jobs:
   ci:
     uses: ./.github/workflows/ci.yml
 
-  deploy:
-    needs: [verify, ci]
+  preview:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: read
+    outputs:
+      path: ${{ steps.read.outputs.path }}
+      ref: ${{ steps.read.outputs.ref }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: read
+        name: Read .github/pages-preview.json
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, pathlib, re
+          config = pathlib.Path(".github/pages-preview.json")
+          if config.is_file():
+              data = json.loads(config.read_text(encoding="utf-8"))
+              path, ref = data["path"], data["ref"]
+              if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", path) or path in {"assets", "data"}:
+                  raise SystemExit(f"invalid preview path: {path!r}")
+              if not re.fullmatch(r"[0-9a-f]{40}", ref):
+                  raise SystemExit(f"preview ref must be a full commit SHA: {ref!r}")
+              if pathlib.Path("site", path).exists():
+                  raise SystemExit(f"site/{path} already exists in master")
+              print(f"path={path}")
+              print(f"ref={ref}")
+          PY
+      # master's ci job tests master's code, not the pinned commit's: the
+      # pinned commit must already have passed the required checks itself.
+      - if: steps.read.outputs.ref != ''
+        name: Require green test and web checks on the pinned commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REF: ${{ steps.read.outputs.ref }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/commits/${REF}/check-runs?per_page=100" > checks.json
+          python3 - <<'PY'
+          import json
+          runs = json.load(open("checks.json"))["check_runs"]
+          problems = []
+          for name in ("test", "web"):
+              own = [r for r in runs if r["name"] == name and r["status"] == "completed"]
+              if not own:
+                  problems.append(f"{name}: no completed run")
+                  continue
+              latest = max(own, key=lambda r: r["completed_at"])
+              if latest["conclusion"] != "success":
+                  problems.append(f"{name}: {latest['conclusion']}")
+          if problems:
+              raise SystemExit("pinned commit is not green: " + "; ".join(problems))
+          print("test and web are green on the pinned commit")
+          PY
+      - if: steps.read.outputs.ref != ''
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.read.outputs.ref }}
+          path: _preview
+      - if: steps.read.outputs.ref != ''
+        uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: "3.13"
+          enable-cache: true
+      # The preview's site/ is signed against its own commit's contracts,
+      # so it is verified with that commit's own code, not master's.
+      - if: steps.read.outputs.ref != ''
+        name: Verify the preview's site/ with its own verifier
+        working-directory: _preview
+        run: |
+          uv sync --locked --no-group dev
+          uv run python -m src.publish.verify site/
+
+  deploy:
+    needs: [verify, preview, ci]
+    runs-on: ubuntu-latest
+    # Only copies files (never runs the preview's code) and publishes them.
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
+      - if: needs.preview.outputs.ref != ''
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.preview.outputs.ref }}
+          path: _preview
+      - name: Assemble master's site/ plus the pinned preview
+        env:
+          PREVIEW_PATH: ${{ needs.preview.outputs.path }}
+          PREVIEW_REF: ${{ needs.preview.outputs.ref }}
+        run: |
+          mkdir _pages
+          cp -a site/. _pages/
+          if [ -n "$PREVIEW_REF" ]; then
+            cp -a _preview/site "_pages/$PREVIEW_PATH"
+            echo "Preview $PREVIEW_REF served under /$PREVIEW_PATH/"
+          fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: _pages
       - id: deployment
         uses: actions/deploy-pages@v4
