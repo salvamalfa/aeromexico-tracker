@@ -31,7 +31,7 @@ function airportSearchMatches(query: string): AirportMatch[] {
       exact: normalizedSearch(airport.iata) === needle,
       haystack: normalizedSearch(`${airport.iata} ${airport.city} ${airport.name ?? ""}`),
     }))
-    .filter((item) => item.haystack.includes(needle))
+    .filter((item) => item.incident.length > 0 && item.haystack.includes(needle))
     .sort(
       (a, b) =>
         Number(b.exact) - Number(a.exact) ||

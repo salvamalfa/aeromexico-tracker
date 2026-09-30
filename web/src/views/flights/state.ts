@@ -37,6 +37,7 @@ export interface FlightsState {
 
   periodIndex: number;
   importance: string;
+  routeView: "volume" | "change" | "all";
   selectedDomesticMonths: Set<string>;
   domesticMonthsQuarterId: string | null;
   networkMode: "domestic" | "international";
@@ -77,6 +78,7 @@ export const state: FlightsState = {
 
   periodIndex: 0,
   importance: "passengers",
+  routeView: "volume",
   selectedDomesticMonths: new Set(),
   domesticMonthsQuarterId: null,
   networkMode: "domestic",
