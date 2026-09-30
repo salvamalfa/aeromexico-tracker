@@ -146,7 +146,7 @@
       "required": [
         "period_id", "period_label", "passengers", "ask_km", "load_factor",
         "load_factor_basis", "rask_cents_per_km", "cask_cents_per_km",
-        "unit_margin_cents_per_km", "cask_ex_fuel_cents_per_km"
+        "unit_margin_cents_per_km", "cask_ex_fuel_cents_per_km", "rpk_km"
       ],
       "properties": {
         "period_id": { "type": "string" },
@@ -158,7 +158,8 @@
         "rask_cents_per_km": { "type": "number" },
         "cask_cents_per_km": { "type": "number" },
         "unit_margin_cents_per_km": { "type": "number" },
-        "cask_ex_fuel_cents_per_km": { "type": ["number", "null"] }
+        "cask_ex_fuel_cents_per_km": { "type": ["number", "null"] },
+        "rpk_km": { "type": ["number", "null"] }
       }
     },
     "entity": {

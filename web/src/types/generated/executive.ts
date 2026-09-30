@@ -99,6 +99,7 @@ export interface EntityRecord {
   cask_cents_per_km: number;
   unit_margin_cents_per_km: number;
   cask_ex_fuel_cents_per_km: number | null;
+  rpk_km: number | null;
 }
 export interface EntityMeta {
   key: string;

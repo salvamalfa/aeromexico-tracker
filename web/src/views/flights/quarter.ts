@@ -7,6 +7,8 @@ import { currentIndex, periodCount } from "../../state/period";
 import { monthsInQuarter, state } from "./state";
 import { renderMix } from "./mix";
 import { renderNetworkPeriod } from "./network";
+import { renderEntityKpis } from "./carriers";
+import { selection } from "../shell/carriers";
 
 const KPI_KEYS = ["passengers", "asm_miles", "rpm_miles", "load_factor"] as const;
 
@@ -24,7 +26,9 @@ export async function renderQuarter(): Promise<void> {
   ($("period-next") as HTMLButtonElement).disabled = currentIndex() === periodCount() - 1;
   const qoq = state.byPeriod.get(priorPeriod(record.period_id));
   const yoy = state.byPeriod.get(priorPeriod(record.period_id, 1));
-  for (const key of KPI_KEYS) {
+  const kpiEntity = selection("flight-kpis")[0];
+  if (kpiEntity && kpiEntity !== "AEROMEXICO") renderEntityKpis(kpiEntity, record.period_id);
+  else for (const key of KPI_KEYS) {
     const metric = record.metrics[key] as { value: number | null };
     $(`flight-kpi-${key}`)!.textContent = metricDisplay(key, metric.value);
     setDelta(

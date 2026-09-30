@@ -1,70 +1,21 @@
 // The three panel-economy Plotly charts (unit economics, volume vs. RASK,
 // load factor vs. RASK). Direct port of src/dashboard/assets/
 // executive_summary.js's renderUnitEconomics/renderVolumeMonetization/
-// renderLoadMonetization, kept in one module since the published page
-// shares their color palette, layout helper and hover/legend behavior.
+// renderLoadMonetization for one airline; the multi-airline modes of
+// Dashboard v2 live in ./compare.ts and the shared helpers in ./chart-common.ts.
 
-import type { Data, Layout } from "plotly.js";
-import Plotly, { type PlotlyHTMLElement } from "../../lib/plotly";
+import type { Data } from "plotly.js";
+import Plotly from "../../lib/plotly";
 import { $ } from "../flights/dom";
-import { state } from "../executive/state";
+import { entityLabel, entityRecords } from "../executive/entities";
+import type { EntityKey } from "../shell/carriers";
+import {
+  UNIT_SUBTITLE, bindDefaultHover, colors, commonLayout, horizontalQuarterTicks, marginLegend,
+  plotConfig, selectedHover, setSubtitle, signedTwoDecimals, visibleUnitRecords,
+} from "./chart-common";
+import { renderIndustryVolume, renderLoadComparison, renderUnitComparison, renderVolumeComparison } from "./compare";
 
-const colors = {
-  blue: "#003087", blueDark: "#001f5b", red: "#e31c23", gold: "#c99400",
-  amber: "#b96700", violet: "#6d3cc7", green: "#087f65", grid: "#e8edf4",
-  muted: "#657188", ink: "#182233",
-};
-const plotConfig = { displayModeBar: false, responsive: true, scrollZoom: false, staticPlot: false };
-const signedTwoDecimals = (value: number): string => `${value >= 0 ? "+" : ""}${Number(value).toFixed(2)}`;
-
-function selectedHover(id: string): void {
-  const graph = $(id) as PlotlyHTMLElement | null;
-  if (!graph || !graph.data || !graph.getBoundingClientRect().width) return;
-  const record = state.records[state.periodIndex];
-  if (!record) return;
-  const label = record.period_label;
-  const firstTrace = graph.data[0] as { x?: unknown[] } | undefined;
-  const point = (firstTrace?.x ?? []).indexOf(label);
-  if (point < 0) {
-    Plotly.Fx.unhover(graph);
-    return;
-  }
-  Plotly.Fx.hover(graph, [{ curveNumber: 1, pointNumber: point }]);
-}
-
-function marginLegend(): void {
-  const graph = $("unit-chart");
-  const svg = graph?.querySelector("svg.main-svg");
-  if (!svg) return;
-  let gradient = svg.querySelector("#margin-legend-gradient");
-  if (!gradient) {
-    const ns = "http://www.w3.org/2000/svg";
-    gradient = document.createElementNS(ns, "linearGradient");
-    gradient.setAttribute("id", "margin-legend-gradient");
-    for (const [offset, color] of [["0%", colors.green], ["50%", colors.green], ["50%", colors.red], ["100%", colors.red]]) {
-      const stop = document.createElementNS(ns, "stop");
-      stop.setAttribute("offset", offset!);
-      stop.setAttribute("stop-color", color!);
-      gradient.appendChild(stop);
-    }
-    svg.querySelector("defs")!.appendChild(gradient);
-  }
-  graph!.querySelectorAll(".legend .traces").forEach((row) => {
-    if (row.querySelector(".legendtext")?.textContent !== "Margen unitario") return;
-    row.querySelectorAll<HTMLElement>(".legendpoints path").forEach((path) => {
-      path.style.fill = "url(#margin-legend-gradient)";
-      path.style.fillOpacity = "1";
-    });
-  });
-}
-
-function bindDefaultHover(id: string): void {
-  const graph = $(id) as PlotlyHTMLElement;
-  if (graph.dataset.defaultHover) return;
-  graph.dataset.defaultHover = "true";
-  graph.addEventListener("mouseleave", () => selectedHover(id));
-  if (id === "unit-chart") graph.on("plotly_afterplot", marginLegend);
-}
+const VOLUME_SUBTITLE = "Las barras indican el número de pasajeros; la línea, el RASK.";
 
 window.addEventListener("reader-tab-visible", () => {
   selectedHover("unit-chart");
@@ -72,33 +23,24 @@ window.addEventListener("reader-tab-visible", () => {
   marginLegend();
 });
 
-function commonLayout(height: number): Partial<Layout> {
-  return {
-    height,
-    paper_bgcolor: "rgba(0,0,0,0)",
-    plot_bgcolor: "rgba(0,0,0,0)",
-    font: { family: 'Inter, "Segoe UI", system-ui, sans-serif', color: colors.ink, size: 10 },
-    hoverlabel: { bgcolor: "#ffffff", bordercolor: "#cbd5e1", font: { color: colors.ink, size: 11 } },
-    legend: { orientation: "h", x: 0, y: 1.08, font: { size: 10 } },
-    margin: { l: 52, r: 24, t: 30, b: 42 },
-    hovermode: "x unified",
-  };
-}
+let unitEntities: EntityKey[] = ["AEROMEXICO"];
 
-function visibleUnitRecords(rangeValue: string) {
-  if (rangeValue === "all") return state.records;
-  return state.records.slice(-Number(rangeValue));
-}
-
-function horizontalQuarterTicks<T>(visibleRecords: T[]): T[] {
-  const compact = window.innerWidth <= 700;
-  const stride = compact && visibleRecords.length > 12 ? 4 : compact && visibleRecords.length > 8 ? 2 : 1;
-  return visibleRecords.filter((_, index) => index % stride === 0 || index === visibleRecords.length - 1);
+export function setUnitEntities(entities: EntityKey[]): void {
+  unitEntities = entities;
 }
 
 export function renderUnitEconomics(): void {
   const rangeValue = ($("unit-range") as HTMLSelectElement).value;
-  const visibleRecords = visibleUnitRecords(rangeValue);
+  const metricControl = $("unit-metric-control");
+  if (metricControl) metricControl.hidden = unitEntities.length < 2;
+  if (unitEntities.length > 1) {
+    renderUnitComparison(unitEntities, rangeValue);
+    return;
+  }
+  const entity = unitEntities[0]!;
+  setSubtitle("unit-title", entity === "AEROMEXICO" ? "RASK vs. CASK + Margen unitario" : `RASK vs. CASK + Margen unitario · ${entityLabel(entity)}`);
+  setSubtitle("unit-subtitle", UNIT_SUBTITLE);
+  const visibleRecords = visibleUnitRecords(rangeValue, entityRecords(entity));
   const visibleLabels = visibleRecords.map((record) => record.period_label);
   const tickRecords = horizontalQuarterTicks(visibleRecords);
   const marginColors = visibleRecords.map((record) =>
@@ -171,19 +113,35 @@ export function renderUnitEconomics(): void {
   });
 }
 
+let volumeEntities: EntityKey[] = ["AEROMEXICO"];
+
+export function setVolumeEntities(entities: EntityKey[]): void {
+  volumeEntities = entities;
+}
+
 export function renderVolumeMonetization(): void {
-  const labels = state.records.map((record) => record.period_label);
+  if (volumeEntities.length > 1) {
+    renderVolumeComparison(volumeEntities);
+    return;
+  }
+  if (volumeEntities[0] === "INDUSTRY") {
+    renderIndustryVolume();
+    return;
+  }
+  setSubtitle("volume-subtitle", VOLUME_SUBTITLE);
+  const records = entityRecords(volumeEntities[0]!);
+  const labels = records.map((record) => record.period_label);
   const traces: Data[] = [
     {
       x: labels,
-      y: state.records.map((record) => record.passengers / 1_000_000),
+      y: records.map((record) => record.passengers / 1_000_000),
       name: "Pasajeros",
       type: "bar",
       marker: { color: "rgba(185,103,0,0.34)", line: { color: colors.amber, width: 1 } },
     },
     {
       x: labels,
-      y: state.records.map((record) => record.rask_cents_per_km),
+      y: records.map((record) => record.rask_cents_per_km),
       name: "RASK",
       type: "scatter",
       mode: "lines+markers",
@@ -193,7 +151,7 @@ export function renderVolumeMonetization(): void {
     },
   ];
   for (const trace of traces) {
-    (trace as Record<string, unknown>).customdata = state.records.map((r) => [r.passengers / 1e6, r.rask_cents_per_km]);
+    (trace as Record<string, unknown>).customdata = records.map((r) => [r.passengers / 1e6, r.rask_cents_per_km]);
     (trace as Record<string, unknown>).hovertemplate =
       "<b>%{x}</b><br>Pasajeros %{customdata[0]:.2f} M<br>RASK %{customdata[1]:.2f} ¢ USD por asiento-kilómetro<extra></extra>";
   }
@@ -215,11 +173,23 @@ const YEAR_COLORS: Record<string, string> = {
   "2021": "#e31c23", "2022": "#d66a00", "2023": "#087f65", "2024": "#003087", "2025": "#6d3cc7", "2026": "#2894c7",
 };
 
-export function renderLoadMonetization(_periodId: string): void {
-  const current = state.records[state.periodIndex]!;
-  const years = [...new Set(state.records.map((record) => record.period_id.slice(0, 4)))];
+let loadEntities: EntityKey[] = ["AEROMEXICO"];
+
+export function setLoadEntities(entities: EntityKey[]): void {
+  loadEntities = entities;
+}
+
+export function renderLoadMonetization(periodId: string): void {
+  if (loadEntities.length > 1) {
+    renderLoadComparison(periodId, loadEntities);
+    return;
+  }
+  setSubtitle("load-subtitle", "Cada punto es un trimestre; los colores identifican el año.");
+  const records = entityRecords(loadEntities[0]!);
+  const current = records.find((record) => record.period_id === periodId);
+  const years = [...new Set(records.map((record) => record.period_id.slice(0, 4)))];
   const traces: Data[] = years.map((year) => {
-    const yearRecords = state.records.filter((record) => record.period_id.startsWith(year));
+    const yearRecords = records.filter((record) => record.period_id.startsWith(year));
     return {
       x: yearRecords.map((record) => record.load_factor_reported * 100),
       y: yearRecords.map((record) => record.rask_cents_per_km),
@@ -240,9 +210,9 @@ export function renderLoadMonetization(_periodId: string): void {
     } as Data;
   });
   const selectedTrace: Data = {
-    x: [current.load_factor_reported * 100],
-    y: [current.rask_cents_per_km],
-    name: `Seleccionado: ${current.period_label}`,
+    x: current ? [current.load_factor_reported * 100] : [],
+    y: current ? [current.rask_cents_per_km] : [],
+    name: `Seleccionado: ${current?.period_label ?? ""}`,
     showlegend: false,
     type: "scatter",
     mode: "markers",

@@ -5,7 +5,14 @@
 // executive_summary.js drives both panels from one `views` object.
 
 import { initPeriods } from "../../state/period";
-import type { ExecutiveDocument, ExecutiveMetadata, ExecutiveRecord, ExecutiveView } from "../../types/domain";
+import type {
+  EntityBlock,
+  EntityMeta,
+  ExecutiveDocument,
+  ExecutiveMetadata,
+  ExecutiveRecord,
+  ExecutiveView,
+} from "../../types/domain";
 
 // periodIndex mirrors the shared quarter store (../../state/period.ts) —
 // views/executive/bootstrap.ts keeps it in sync on every period change;
@@ -15,6 +22,9 @@ export interface ExecutiveState {
   metadata: ExecutiveMetadata | null;
   records: ExecutiveRecord[];
   views: Record<string, ExecutiveView>;
+  // Dashboard v2: Industria + each carrier (see ./entities.ts).
+  entities: Record<string, EntityBlock> | null;
+  entityList: EntityMeta[] | null;
   periodIndex: number;
 }
 
@@ -23,6 +33,8 @@ export const state: ExecutiveState = {
   metadata: null,
   records: [],
   views: {},
+  entities: null,
+  entityList: null,
   periodIndex: 0,
 };
 
@@ -38,6 +50,8 @@ export async function loadExecutive(dataRoot?: string): Promise<ExecutiveDocumen
   state.metadata = payload.metadata;
   state.records = payload.records;
   state.views = payload.views;
+  state.entities = payload.entities ?? null;
+  state.entityList = payload.entity_list ?? null;
   state.periodIndex = Math.max(
     0,
     state.records.findIndex((record) => record.period_id === state.metadata?.default_period)

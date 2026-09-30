@@ -18,6 +18,8 @@ import { renderQuarter } from "./quarter";
 import { renderMix } from "./mix";
 import { renderNetworkPeriod, renderRouteMode } from "./network";
 import { alignRouteDetailToGeo, canvasSize, mapFittedCanvasSize, renderFlowMap } from "./map";
+import { mountPicker } from "../shell/carriers";
+import { state as executiveState } from "../executive/state";
 
 function syncPeriodIndex(periodId: string): boolean {
   const index = state.quarters.findIndex((quarter) => quarter.period_id === periodId);
@@ -26,7 +28,22 @@ function syncPeriodIndex(periodId: string): boolean {
   return true;
 }
 
+// Dashboard v2: KPI cards (one airline) and the segment mix (one or more).
+// Only when executive.json carries the entity block; otherwise v1 as-is.
+function mountFlightPickers(): void {
+  if (!executiveState.entities) return;
+  const kpiHost = $("pick-flight-kpis") as HTMLElement | null;
+  if (kpiHost) {
+    mountPicker(kpiHost, { card: "flight-kpis", multi: false, defaults: ["INDUSTRY"] }, () => void renderQuarter());
+  }
+  const mixHost = $("pick-mix") as HTMLElement | null;
+  if (mixHost) {
+    mountPicker(mixHost, { card: "mix", multi: true, defaults: ["INDUSTRY"] }, () => renderMix(state.quarters[state.periodIndex]!));
+  }
+}
+
 function wireControls(): void {
+  mountFlightPickers();
   subscribe((periodId) => {
     if (syncPeriodIndex(periodId)) void renderQuarter();
   });

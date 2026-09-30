@@ -6,6 +6,8 @@ import Plotly from "../../lib/plotly";
 import { $, dateLabel } from "./dom";
 import { state } from "./state";
 import type { MonthlyPassengerPoint, QuarterRecord } from "../../types/domain";
+import { renderEntityMix } from "./carriers";
+import { selection } from "../shell/carriers";
 
 function quarterForDate(iso: string): string {
   const year = iso.slice(0, 4);
@@ -23,6 +25,15 @@ interface QuarterPoint {
 }
 
 export function renderMix(record: QuarterRecord): void {
+  // Dashboard v2: anything but Aeroméxico alone reads AFAC by airline.
+  const entities = selection("mix");
+  const source = $("mix-source-inline");
+  if (entities.length && !(entities.length === 1 && entities[0] === "AEROMEXICO")) {
+    if (source) source.textContent = "AFAC · pasajeros por aerolínea (regular y fletamento)";
+    renderEntityMix(entities, record, state.passengerPeriod);
+    return;
+  }
+  if (source) source.textContent = "AFAC Gold · serie mensual consolidada";
   const series = state.monthlyPassengers!;
   const monthlyPoints = series.records.map((point) => ({ ...point, period_label: dateLabel(point.date) }));
   const quarterGroups = new Map<string, QuarterPoint>();

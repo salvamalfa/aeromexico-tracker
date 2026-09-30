@@ -270,12 +270,12 @@ def _industry_comparison(metric_key: str, value: float, industry_value: float) -
     if metric_key in {"load_factor", "load_factor_reported"}:
         difference = (value - industry_value) * 100
         return Comparison(
-            True, difference, f"{difference:+.1f} pp vs. industria",
+            True, difference, f"{difference:+.1f} pp",
             _direction(difference, tolerance=0.005),
         )
     difference = value - industry_value
     return Comparison(
-        True, difference, f"{difference:+.2f} ¢ USD vs. industria",
+        True, difference, f"{difference:+.2f} ¢ USD",
         _direction(difference, tolerance=0.005),
     )
 
@@ -477,6 +477,7 @@ def _entity_record(row: Any) -> dict[str, Any]:
         "cask_cents_per_km": _finite(row["cask_cents_per_km"]),
         "unit_margin_cents_per_km": _finite(row["unit_margin_cents_per_km"]),
         "cask_ex_fuel_cents_per_km": None if ex_fuel is None or pd.isna(ex_fuel) else _finite(ex_fuel),
+        "rpk_km": None if row["rpk_km"] is None or pd.isna(row["rpk_km"]) else _finite(row["rpk_km"]),
     }
 
 

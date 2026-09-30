@@ -165,6 +165,7 @@ export interface Kpi {
   display_value: string;
   qoq: Comparison;
   yoy: Comparison;
+  vs_industry?: Comparison;
 }
 
 export interface ExecutiveRecord {
@@ -185,6 +186,7 @@ export interface ExecutiveView {
   kpis: Kpi[];
   margin_qoq: Comparison;
   margin_yoy: Comparison;
+  margin_vs_industry?: Comparison;
 }
 
 export interface ExecutiveMetadata {
@@ -192,10 +194,77 @@ export interface ExecutiveMetadata {
   [key: string]: unknown;
 }
 
+export interface EntityMeta {
+  key: string;
+  label: string;
+  is_aggregate: boolean;
+  carriers: string[];
+  note: string;
+}
+
+export interface EntityRecord extends ExecutiveRecord {
+  load_factor: number;
+  load_factor_basis: "reported" | "calculated";
+  cask_ex_fuel_cents_per_km: number | null;
+  rpk_km: number | null;
+}
+
+export interface EntityBlock {
+  key: string;
+  label: string;
+  note: string;
+  first_period: string;
+  last_period: string;
+  quarter_count: number;
+  records: EntityRecord[];
+  views: Record<string, ExecutiveView>;
+}
+
 export interface ExecutiveDocument {
   metadata: ExecutiveMetadata;
   records: ExecutiveRecord[];
   views: Record<string, ExecutiveView>;
+  entities?: Record<string, EntityBlock>;
+  entity_list?: EntityMeta[];
+}
+
+// -- Market (market.json, src/dashboard/market.py) --------------------
+
+export interface MarketShare {
+  passengers: number | null;
+  share: number | null;
+  share_change_qoq_pp?: number | null;
+  share_change_yoy_pp?: number | null;
+}
+
+export interface MarketSegment {
+  mexican_carriers_passengers: number;
+  carriers: Record<string, MarketShare>;
+  industry: MarketShare;
+}
+
+export type MarketSegmentKey = "total" | "domestic" | "international";
+
+export interface MarketPeriod {
+  period_id: string;
+  period_label: string;
+  segments: Record<MarketSegmentKey, MarketSegment>;
+}
+
+export interface MarketDocument {
+  schema_version: string;
+  metadata: {
+    first_period: string;
+    last_period: string;
+    default_quarter: string;
+    industry_note: string;
+    industry_share_latest: number | null;
+    method_note: string;
+    [key: string]: unknown;
+  };
+  carriers: string[];
+  months: MarketPeriod[];
+  quarters: MarketPeriod[];
 }
 
 export interface AnalysisCitation {

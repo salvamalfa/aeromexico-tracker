@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
-  <title>Aeroméxico Tracker</title>
+  <title>Aerolíneas MX Tracker</title>
   <link rel="stylesheet" href="src/styles/base.css">
   <link rel="stylesheet" href="src/views/executive/executive.css">
   <link rel="stylesheet" href="src/views/economy/economy.css">
@@ -15,7 +15,8 @@
     <header class="hero">
       <div class="hero-grid">
         <div>
-          <h1>Aeroméxico Tracker</h1>
+          <h1>Aerolíneas MX Tracker</h1>
+          <p class="hero-note" id="industry-note">Industria = Aeroméxico, Volaris y Viva</p>
         </div>
         <div class="period-control">
           <span class="period-label">Trimestre analizado</span>
@@ -37,14 +38,37 @@
 
     <section id="panel-reading" role="tabpanel" aria-labelledby="tab-reading">
       <section class="narrative-card" aria-labelledby="executive-reading-title">
-        <h2 id="executive-reading-title">Lectura ejecutiva · <span id="narrative-period">—</span></h2>
+        <div class="card-head-row">
+          <h2 id="executive-reading-title">Lectura ejecutiva · <span id="narrative-entity">Aeroméxico</span> · <span id="narrative-period">—</span></h2>
+          <div id="pick-reading"></div>
+        </div>
         <div id="narrative-copy">
           <p class="analysis-placeholder" id="analysis-empty">Análisis pendiente de aprobación para este trimestre.</p>
         </div>
       </section>
+      <article class="chart-card market-card">
+        <div class="chart-heading-row">
+          <div>
+            <p class="chart-title">Participación de pasajeros (AFAC)</p>
+            <p class="chart-subtitle" id="market-subtitle">Pasajeros de cada aerolínea entre los de todas las aerolíneas mexicanas, por mes.</p>
+          </div>
+          <div class="chart-controls">
+            <label class="chart-range-control" for="market-segment">Segmento
+              <select id="market-segment">
+                <option value="total" selected>Total</option>
+                <option value="domestic">Nacional</option>
+                <option value="international">Internacional</option>
+              </select>
+            </label>
+            <div id="pick-market"></div>
+          </div>
+        </div>
+        <div class="chart" id="market-chart" role="img" aria-label="Participación mensual de pasajeros por aerolínea"></div>
+      </article>
     </section>
 
     <section id="panel-economy" role="tabpanel" aria-labelledby="tab-economy" hidden>
+      <div class="card-picker-row"><div id="pick-kpis"></div></div>
       <section class="kpi-grid reader-economy-kpis" aria-label="Indicadores de economía unitaria">
         <article class="kpi-card" data-accent="blue" data-kpi="rask_cents_per_km">
           <span class="kpi-info" title="Ingreso total generado por cada asiento-kilómetro disponible." aria-label="Ingreso total generado por cada asiento-kilómetro disponible.">i</span>
@@ -53,6 +77,7 @@
           <div class="kpi-comparisons">
             <div class="comparison-chip"><span>vs. trimestre anterior</span><strong id="kpi-rask_cents_per_km-qoq">—</strong></div>
             <div class="comparison-chip"><span>vs. año anterior</span><strong id="kpi-rask_cents_per_km-yoy">—</strong></div>
+            <div class="comparison-chip vs-industry" hidden><span>vs. industria</span><strong id="kpi-rask_cents_per_km-vsi">—</strong></div>
           </div>
         </article>
         <article class="kpi-card" data-accent="red" data-kpi="cask_cents_per_km">
@@ -62,6 +87,7 @@
           <div class="kpi-comparisons">
             <div class="comparison-chip"><span>vs. trimestre anterior</span><strong id="kpi-cask_cents_per_km-qoq">—</strong></div>
             <div class="comparison-chip"><span>vs. año anterior</span><strong id="kpi-cask_cents_per_km-yoy">—</strong></div>
+            <div class="comparison-chip vs-industry" hidden><span>vs. industria</span><strong id="kpi-cask_cents_per_km-vsi">—</strong></div>
           </div>
         </article>
         <article class="kpi-card" data-accent="gold" data-kpi="ask_km">
@@ -71,6 +97,7 @@
           <div class="kpi-comparisons">
             <div class="comparison-chip"><span>vs. trimestre anterior</span><strong id="kpi-ask_km-qoq">—</strong></div>
             <div class="comparison-chip"><span>vs. año anterior</span><strong id="kpi-ask_km-yoy">—</strong></div>
+            <div class="comparison-chip vs-industry" hidden><span>vs. industria</span><strong id="kpi-ask_km-vsi">—</strong></div>
           </div>
         </article>
         <article class="kpi-card" data-accent="green" data-kpi="unit_margin_cents_per_km">
@@ -80,6 +107,7 @@
           <div class="kpi-comparisons">
             <div class="comparison-chip"><span>vs. trimestre anterior</span><strong id="kpi-unit_margin_cents_per_km-qoq">—</strong></div>
             <div class="comparison-chip"><span>vs. año anterior</span><strong id="kpi-unit_margin_cents_per_km-yoy">—</strong></div>
+            <div class="comparison-chip vs-industry" hidden><span>vs. industria</span><strong id="kpi-unit_margin_cents_per_km-vsi">—</strong></div>
           </div>
         </article>
       </section>
@@ -95,17 +123,28 @@
         <article class="chart-card">
           <div class="chart-heading-row">
             <div>
-              <p class="chart-title">RASK vs. CASK + Margen unitario</p>
-              <p class="chart-subtitle">Cuando RASK supera CASK, la operación genera utilidad por cada asiento-kilómetro. Las barras muestran el margen unitario en ¢ USD por ASK-km para cada trimestre.</p>
+              <p class="chart-title" id="unit-title">RASK vs. CASK + Margen unitario</p>
+              <p class="chart-subtitle" id="unit-subtitle">Cuando RASK supera CASK, la operación genera utilidad por cada asiento-kilómetro. Las barras muestran el margen unitario en ¢ USD por ASK-km para cada trimestre.</p>
             </div>
-            <label class="chart-range-control" for="unit-range">Periodo
-              <select id="unit-range">
-                <option value="all" selected>Historia completa</option>
-                <option value="12">Últimos 12 trimestres</option>
-                <option value="8">Últimos 8 trimestres</option>
-                <option value="4">Últimos 4 trimestres</option>
-              </select>
-            </label>
+            <div class="chart-controls">
+              <label class="chart-range-control" for="unit-metric" id="unit-metric-control" hidden>Métrica
+                <select id="unit-metric">
+                  <option value="rask_cents_per_km" selected>RASK</option>
+                  <option value="cask_cents_per_km">CASK</option>
+                  <option value="cask_ex_fuel_cents_per_km">CASK ex-fuel</option>
+                  <option value="unit_margin_cents_per_km">Margen unitario</option>
+                </select>
+              </label>
+              <label class="chart-range-control" for="unit-range">Periodo
+                <select id="unit-range">
+                  <option value="all" selected>Historia completa</option>
+                  <option value="12">Últimos 12 trimestres</option>
+                  <option value="8">Últimos 8 trimestres</option>
+                  <option value="4">Últimos 4 trimestres</option>
+                </select>
+              </label>
+              <div id="pick-unit"></div>
+            </div>
           </div>
           <div class="chart" id="unit-chart" role="img" aria-label="Serie trimestral de RASK, CASK y margen unitario"></div>
         </article>
@@ -113,13 +152,23 @@
 
       <section class="chart-grid" aria-label="Diagnósticos de volumen y utilización">
         <article class="chart-card">
-          <p class="chart-title">Precio vs. Volumen de pasajeros</p>
-          <p class="chart-subtitle">Las barras indican el número de pasajeros; la línea, el RASK.</p>
+          <div class="chart-heading-row">
+            <div>
+              <p class="chart-title">Precio vs. Volumen de pasajeros</p>
+              <p class="chart-subtitle" id="volume-subtitle">Las barras indican el número de pasajeros; la línea, el RASK.</p>
+            </div>
+            <div id="pick-volume"></div>
+          </div>
           <div class="chart chart-sm" id="volume-chart" role="img" aria-label="Pasajeros y RASK por trimestre"></div>
         </article>
         <article class="chart-card">
-          <p class="chart-title">Factor de ocupación vs. RASK</p>
-          <p class="chart-subtitle">Cada punto es un trimestre; los colores identifican el año.</p>
+          <div class="chart-heading-row">
+            <div>
+              <p class="chart-title">Factor de ocupación vs. RASK</p>
+              <p class="chart-subtitle" id="load-subtitle">Cada punto es un trimestre; los colores identifican el año.</p>
+            </div>
+            <div id="pick-load"></div>
+          </div>
           <div class="chart chart-sm" id="load-chart" role="img" aria-label="Relación entre factor de ocupación y RASK"></div>
         </article>
       </section>
@@ -143,6 +192,7 @@
     <section id="panel-flights" role="tabpanel" aria-labelledby="tab-flights" hidden>
       <div class="flights-view">
         <div class="flights-shell flights-integrated" data-testid="flights-dashboard-root">
+          <div class="card-picker-row"><div id="pick-flight-kpis"></div></div>
           <section class="flight-kpi-grid" aria-label="Capacidad y demanda trimestral">
             <article class="flight-kpi" data-accent="blue">
               <span class="info" title="Pasajeros transportados por Grupo Aeroméxico durante el trimestre." aria-label="Pasajeros transportados por Grupo Aeroméxico durante el trimestre.">i</span>
@@ -217,17 +267,20 @@
           <section aria-labelledby="mix-title">
             <div class="section-heading">
               <div><p class="section-kicker">Capacidad y demanda</p><h2 id="mix-title">Mezcla nacional e internacional</h2></div>
-              <p class="source-inline">AFAC Gold · serie mensual consolidada</p>
+              <p class="source-inline" id="mix-source-inline">AFAC Gold · serie mensual consolidada</p>
             </div>
             <article class="panel chart-panel">
               <div class="panel-heading chart-heading">
                 <div><p class="panel-title">Pasajeros y contribución por segmento</p></div>
-                <label class="chart-range-control" for="passenger-period">Periodo
-                  <select id="passenger-period">
-                    <option value="quarter" selected>Trimestral</option>
-                    <option value="month">Mensual</option>
-                  </select>
-                </label>
+                <div class="chart-controls">
+                  <label class="chart-range-control" for="passenger-period">Periodo
+                    <select id="passenger-period">
+                      <option value="quarter" selected>Trimestral</option>
+                      <option value="month">Mensual</option>
+                    </select>
+                  </label>
+                  <div id="pick-mix"></div>
+                </div>
               </div>
               <div class="chart chart-mix" id="mix-chart" role="img" aria-label="Pasajeros por periodo: barras apiladas nacional e internacional y línea del total calculado"></div>
             </article>

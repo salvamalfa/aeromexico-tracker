@@ -137,7 +137,7 @@ def test_industry_only_exists_on_the_constant_three_carrier_panel() -> None:
             {"carrier_key": carrier, "period_id": period, "passengers": 1.0, "ask_km": 1.0,
              "load_factor": 0.8, "rask_cents_per_km": 5.0, "cask_cents_per_km": 4.0,
              "unit_margin_cents_per_km": 1.0, "load_factor_basis": "reported",
-             "cask_ex_fuel_cents_per_km": None}
+             "cask_ex_fuel_cents_per_km": None, "rpk_km": None}
             for carrier, period in [
                 ("AEROMEXICO", "2022Q4"), ("VOLARIS", "2022Q4"),
                 ("AEROMEXICO", "2023Q1"), ("VOLARIS", "2023Q1"), ("VIVA_AEROBUS", "2023Q1"),

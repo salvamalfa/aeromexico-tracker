@@ -93,6 +93,7 @@ SELECT
     MAX(value) FILTER (WHERE metric_key = 'rask') AS rask_cents_per_km,
     MAX(value) FILTER (WHERE metric_key = 'cask') AS cask_cents_per_km,
     MAX(value) FILTER (WHERE metric_key = 'cask_ex_fuel') AS cask_ex_fuel_cents_per_km,
+    MAX(value_metric) FILTER (WHERE metric_key = 'rpm_total') AS rpk_km,
     MAX(value) FILTER (WHERE metric_key = 'unit_margin') AS unit_margin_cents_per_km
 FROM v_carrier_default
 WHERE carrier_key IN ({carriers})
@@ -149,7 +150,9 @@ def load_carrier_quarters(connection: duckdb.DuckDBPyConnection) -> pd.DataFrame
     margin = complete["rask_cents_per_km"] - complete["cask_cents_per_km"]
     if not (margin - complete["unit_margin_cents_per_km"]).abs().le(1e-9).all():
         raise ValueError("Carrier unit margin does not reconcile to RASK - CASK")
-    columns = ["carrier_key", "period_id", *CORE_COLUMNS, "load_factor_basis", "cask_ex_fuel_cents_per_km"]
+    columns = [
+        "carrier_key", "period_id", *CORE_COLUMNS, "load_factor_basis", "cask_ex_fuel_cents_per_km", "rpk_km",
+    ]
     return complete[columns].sort_values(["carrier_key", "period_id"]).reset_index(drop=True)
 
 
@@ -167,6 +170,7 @@ def aggregate_industry(carrier_quarters: pd.DataFrame) -> pd.DataFrame:
         rask = float((group["rask_cents_per_km"] * ask).sum() / total_ask)
         cask = float((group["cask_cents_per_km"] * ask).sum() / total_ask)
         ex_fuel = group["cask_ex_fuel_cents_per_km"]
+        rpk = group["rpk_km"]
         rows.append(
             {
                 "carrier_key": INDUSTRY.key,
@@ -180,6 +184,7 @@ def aggregate_industry(carrier_quarters: pd.DataFrame) -> pd.DataFrame:
                 "load_factor_basis": (
                     "reported" if (group["load_factor_basis"] == "reported").all() else "calculated"
                 ),
+                "rpk_km": float(rpk.sum()) if rpk.notna().all() else None,
                 "cask_ex_fuel_cents_per_km": (
                     float((ex_fuel * ask).sum() / total_ask) if ex_fuel.notna().all() else None
                 ),

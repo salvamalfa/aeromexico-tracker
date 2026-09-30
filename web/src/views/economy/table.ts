@@ -4,7 +4,8 @@
 // web/public/data/v1/executive.json loads, since every quarter's row is
 // shown at once regardless of the active period).
 
-import { state } from "../executive/state";
+import { entityRecords, entityView } from "../executive/entities";
+import type { EntityKey } from "../shell/carriers";
 import type { Comparison } from "../../types/domain";
 
 function metricCell(value: string, comparison: Comparison): string {
@@ -21,12 +22,15 @@ function signedTwoDecimals(value: number): string {
   return `${value >= 0 ? "+" : ""}${Number(value).toFixed(2)}`;
 }
 
-export function renderQuarterTable(): void {
+// Rows follow the entity chosen for the KPI cards (Dashboard v2); entity
+// views name the occupancy KPI `load_factor`, v1 views `load_factor_reported`.
+export function renderQuarterTable(entity: EntityKey = "AEROMEXICO"): void {
   const body = document.querySelector(".disclosure-body tbody");
   if (!body) return;
-  const rows = [...state.records].reverse().map((record) => {
-    const view = state.views[record.period_id]!;
-    const kpis = new Map(view.kpis.map((item) => [item.key, item]));
+  const records = entityRecords(entity).filter((record) => entityView(entity, record.period_id));
+  const rows = [...records].reverse().map((record) => {
+    const view = entityView(entity, record.period_id)!;
+    const kpis = new Map(view.kpis.map((item) => [item.key === "load_factor" ? "load_factor_reported" : item.key, item]));
     const rowClass = String(record.period_id).endsWith("Q4") ? ' class="year-separator"' : "";
     return (
       `<tr${rowClass}>` +

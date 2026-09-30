@@ -128,9 +128,14 @@ function wireDialogButton(analysis: AnalysisDocument, periodLabel: string): void
   };
 }
 
-export async function renderNarrative(view: ExecutiveView): Promise<void> {
+// Only Aeroméxico has an approved analysis today (Analysis Agent); the
+// industry and the other airlines show the same pending text until their
+// own theses are approved (Dashboard v2, fase 5).
+export async function renderNarrative(view: ExecutiveView, entityKey = "AEROMEXICO", entityName = "Aeroméxico"): Promise<void> {
   $("narrative-period")!.textContent = view.period_label;
-  const analysis = await fetchAnalysis(view.period_id);
+  const entityNode = $("narrative-entity");
+  if (entityNode) entityNode.textContent = entityName;
+  const analysis = entityKey === "AEROMEXICO" ? await fetchAnalysis(view.period_id) : null;
   const copy = $("narrative-copy")!;
   if (!analysis) {
     copy.innerHTML = '<p class="analysis-placeholder" id="analysis-empty">Análisis pendiente de aprobación para este trimestre.</p>';
