@@ -159,13 +159,27 @@ def test_reader_tabs_switch_panels_on_the_site(site_page) -> None:
 
 @browser_test
 def test_economy_tab_kpis_match_the_underlying_payload_for_every_quarter(
-    site_page, executive_payload: dict
+    site_page, site_server, executive_payload: dict
 ) -> None:
     """The economy tab's KPI cards show exactly the payload's own display
     values -- rask/cask/ask are pre-formatted server-side
     (``executive_summary.py``'s ``_display_value``); the margin card is the
-    one KPI computed client-side, from the same record's raw field."""
+    one KPI computed client-side, from the same record's raw field.
 
+    ``records``/``views`` are Grupo Aeroméxico's, while the Dashboard v2 KPI
+    cards open on Industria, so the page is loaded with Aeroméxico selected
+    (``?sel_kpis=AEROMEXICO``) and restored afterwards for the other tests."""
+
+    site_page.goto(f"{site_server}?sel_kpis=AEROMEXICO")
+    site_page.wait_for_function("document.getElementById('period-display').textContent !== '—'")
+    try:
+        _check_economy_kpis(site_page, executive_payload)
+    finally:
+        site_page.goto(site_server)
+        site_page.wait_for_function("document.getElementById('period-display').textContent !== '—'")
+
+
+def _check_economy_kpis(site_page, executive_payload: dict) -> None:
     site_page.click("#tab-economy")
     while site_page.is_enabled("#period-next"):
         site_page.click("#period-next")
