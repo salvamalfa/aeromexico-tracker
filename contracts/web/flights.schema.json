@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://aeromexico-tracker/contracts/web/flights.schema.json",
   "title": "Vuelos · payload integrado (v1)",
-  "description": "Describes the flight payload actually embedded in the published integrated HTML: the output of src.dashboard.flights_html.integration_flight_payload(build_flight_payload()) as it is today. See docs/arquitectura/auditoria-arquitectura-20260926.md Fase 2 and contracts/web/README.md.",
+  "description": "Describes the flight payload actually embedded in the published integrated HTML: the output of src.dashboard.flights_html.integration_flight_payload(build_flight_payload()) as it is today. See docs/arquitectura/auditoria-arquitectura-20260926.md Fase 2 and contracts/web/README.md. Dashboard v2 adds the optional entity_networks (Industria, Volaris, Viva) and a per-route carrier_breakdown for Industria.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -58,6 +58,20 @@
     "domestic_monthly_networks": {
       "type": "object",
       "additionalProperties": { "$ref": "#/$defs/network" }
+    },
+    "entity_networks": {
+      "type": "object",
+      "description": "Dashboard v2: the same map for Industria, Volaris and Viva, keyed by entity.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "route_networks", "domestic_monthly_networks"],
+        "properties": {
+          "label": { "type": "string" },
+          "route_networks": { "type": "object", "additionalProperties": { "$ref": "#/$defs/network" } },
+          "domestic_monthly_networks": { "type": "object", "additionalProperties": { "$ref": "#/$defs/network" } }
+        }
+      }
     }
   },
   "$defs": {
@@ -268,7 +282,7 @@
       "properties": {
         "period_id": { "$ref": "#/$defs/nullable_string" },
         "carrier_key": {
-          "enum": ["AEROMEXICO", "AEROMEXICO_CONNECT", "AEROMEXICO_GROUP", null]
+          "enum": ["AEROMEXICO", "AEROMEXICO_CONNECT", "AEROMEXICO_GROUP", "VOLARIS", "VIVA_AEROBUS", "INDUSTRY", null]
         },
         "carrier_label": { "$ref": "#/$defs/nullable_string" },
         "origin_iata": { "$ref": "#/$defs/nullable_string" },
@@ -336,7 +350,12 @@
         "load_factor": { "$ref": "#/$defs/nullable_number" },
         "previous": { "$ref": "#/$defs/route_previous" },
         "directions": { "type": "array", "items": { "$ref": "#/$defs/direction" } },
-        "monthly": { "type": "array", "items": { "$ref": "#/$defs/monthly_item" } }
+        "monthly": { "type": "array", "items": { "$ref": "#/$defs/monthly_item" } },
+        "carrier_breakdown": {
+          "type": "object",
+          "description": "Industria only: passengers of each airline (dashboard entity key) on this route.",
+          "additionalProperties": { "type": "number" }
+        }
       }
     },
 

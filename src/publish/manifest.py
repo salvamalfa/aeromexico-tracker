@@ -30,6 +30,7 @@ MANIFEST_NAME = "publication_manifest.json"
 CONTRACT_FILES = (
     "flights.schema.json",
     "executive.schema.json",
+    "market.schema.json",
     "analysis.schema.json",
     "publication_manifest.schema.json",
     "privacy.yaml",

@@ -54,3 +54,13 @@ Fecha: 30 de septiembre de 2026.
   a `master` que cambia `ref`.
 - **Cuándo retirarla:** al fusionar la v2, se borra el archivo y `/v2/` desaparece en
   el siguiente deploy.
+
+## Cierre (30 sep 2026)
+
+- **La v2 pasa a la raíz:** el dueño aprobó que la v2 sea la versión principal y el
+  PR #77 se fusiona a `master`.
+- **Pin retirado:** en ese mismo PR se borra `.github/pages-preview.json`, así que
+  `/v2/` deja de publicarse.
+- **Mecanismo conservado:** el mecanismo de `pages.yml` sigue disponible. Sin pin, el
+  job `preview` no hace nada y `tests/test_pages_preview.py` omite la validación del
+  pin.

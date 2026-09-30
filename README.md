@@ -1,12 +1,12 @@
-# Aeroméxico Tracker
+# Aerolíneas MX Tracker
 
-Sistema reproducible de ingesta, consolidación, análisis y visualización de información pública de **Grupo Aeroméxico S.A.B. de C.V.** (`AERO`, NYSE/BMV; CIK SEC `0001561861`).
+Sistema reproducible de ingesta, consolidación, análisis y visualización de información pública de la **industria aérea mexicana**: **Grupo Aeroméxico S.A.B. de C.V.** (`AERO`, NYSE/BMV; CIK SEC `0001561861`), **Volaris** y **Viva**. "Industria" es la suma de las tres, ~99 % de los pasajeros de aerolíneas mexicanas (AFAC), con razones ponderadas por ASK y nunca promedios simples. El repositorio conserva el nombre `aeromexico-tracker` para no romper la URL de Pages.
 
 El proyecto transforma fuentes regulatorias, operativas y de mercado en una lectura trimestral de negocio. Conserva los datos crudos con hash, separa cifras reportadas de derivadas, explicita faltantes y nunca rellena una ausencia como cero. Es un proyecto independiente de portafolio; **no es oficial ni constituye consejo de inversión**.
 
 ## Dashboard
 
-El dashboard publicado presenta tres vistas integradas: Lectura ejecutiva, Economía unitaria y Vuelos, construidas como una página real en `web/` (Vite + TypeScript) y servidas por GitHub Pages.
+El dashboard publicado presenta tres vistas integradas: Lectura ejecutiva, Economía unitaria y Vuelos, construidas como una página real en `web/` (Vite + TypeScript) y servidas por GitHub Pages. Desde el Dashboard v2 (30 sep 2026), cada tarjeta tiene un selector de aerolínea: Industria, Aeroméxico, Volaris o Viva. Las fases están documentadas en `docs/etapas/dashboard-v2-*.md`.
 
 [Repositorio público en GitHub](https://github.com/salvamalfa/aeromexico-tracker)
 

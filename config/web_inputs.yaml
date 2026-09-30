@@ -41,3 +41,6 @@ views:
   executive:
     required_for_publish: []
     optional_for_development: []
+  market:
+    required_for_publish: []
+    optional_for_development: []

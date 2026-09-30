@@ -78,3 +78,38 @@ h1 { margin: 0; max-width: 730px; font-size: clamp(25px, 3.4vw, 40px); line-heig
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .001ms !important; animation-duration: .001ms !important; }
 }
+
+/* Dashboard v2 · airline selection (views/shell/carriers.ts). Same visual
+ * language as the existing "Periodo" control (.chart-range-control), so a
+ * card only gains one more compact control at its top-right. */
+.hero-note { margin: 8px 0 0; color: #c9d8ef; font-size: 12px; font-weight: 600; }
+.card-head-row { display: flex; align-items: start; justify-content: space-between; gap: 18px; }
+.card-head-row h2 { margin-bottom: 12px; }
+.card-picker-row { display: flex; justify-content: flex-end; margin: 4px 0 10px; }
+.chart-controls { display: flex; flex-wrap: wrap; align-items: end; justify-content: flex-end; gap: 10px; }
+.carrier-control { position: relative; }
+.carrier-control select, .carrier-picker summary {
+  appearance: none; min-width: 150px; color: var(--brand-blue-dark); background: #fff
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='m1 1 5 5 5-5' fill='none' stroke='%23003087' stroke-width='1.7'/%3E%3C/svg%3E")
+    no-repeat right 14px center;
+  border: 1px solid var(--line-strong); border-radius: 8px; padding: 7px 32px 7px 10px; font: inherit; font-size: 11px;
+  font-weight: 750; letter-spacing: 0; text-transform: none; cursor: pointer;
+}
+.carrier-picker summary { list-style: none; }
+.carrier-picker summary::-webkit-details-marker { display: none; }
+.carrier-picker summary:focus-visible, .carrier-control select:focus-visible { outline: 3px solid #f5c518; outline-offset: -3px; }
+.carrier-menu { position: absolute; right: 0; z-index: 20; display: grid; gap: 2px; min-width: 180px; margin-top: 4px; padding: 6px;
+  background: #fff; border: 1px solid var(--line-strong); border-radius: 8px; box-shadow: var(--shadow); }
+.carrier-menu label { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; color: var(--ink);
+  font-size: 12px; font-weight: 650; letter-spacing: 0; text-transform: none; cursor: pointer; }
+.carrier-menu label:hover { background: var(--blue-open); }
+.carrier-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--dot); }
+.market-card { margin-top: 16px; }
+
+@media (max-width: 700px) {
+  .card-head-row { flex-direction: column; gap: 6px; }
+  .card-picker-row, .chart-controls { justify-content: flex-start; }
+  .carrier-menu { left: 0; right: auto; }
+}
+/* `hidden` must win over the display rules of the controls/chips it toggles. */
+.comparison-chip[hidden], .chart-range-control[hidden] { display: none !important; }

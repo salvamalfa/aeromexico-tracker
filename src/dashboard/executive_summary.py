@@ -11,6 +11,13 @@ import duckdb
 import pandas as pd
 
 from src.config import PATHS
+from src.dashboard.entities import (
+    ENTITIES,
+    INDUSTRY,
+    Entity,
+    entity_metadata,
+    load_entity_quarters,
+)
 
 
 EXECUTIVE_QUERY = """
@@ -242,16 +249,53 @@ def _record_dict(row: pd.Series) -> dict[str, float | str]:
     }
 
 
+def _comparison_dict(comparison: Comparison) -> dict[str, Any]:
+    return {
+        "available": comparison.available,
+        "raw": comparison.raw,
+        "display": comparison.display,
+        "direction": comparison.direction,
+    }
+
+
+def _industry_comparison(metric_key: str, value: float, industry_value: float) -> Comparison:
+    """How one carrier stands against the industry in the same quarter.
+
+    Volumes are a share of the industry; ratios are a difference (¢ or pp).
+    """
+
+    if metric_key in {"passengers", "ask_km"}:
+        share = value / industry_value
+        return Comparison(True, share, f"{share:.1%} de la industria", "flat")
+    if metric_key in {"load_factor", "load_factor_reported"}:
+        difference = (value - industry_value) * 100
+        return Comparison(
+            True, difference, f"{difference:+.1f} pp",
+            _direction(difference, tolerance=0.005),
+        )
+    difference = value - industry_value
+    return Comparison(
+        True, difference, f"{difference:+.2f} ¢ USD",
+        _direction(difference, tolerance=0.005),
+    )
+
+
 def _period_view(
     record: dict[str, float | str],
     records_by_period: dict[str, dict[str, float | str]],
+    *,
+    definitions: tuple[dict[str, str], ...] = KPI_DEFINITIONS,
+    load_key: str = "load_factor_reported",
+    subject: str = "La compañía",
+    load_verb: str = "reportó",
+    industry: dict[str, float | str] | None = None,
 ) -> dict[str, Any]:
     period_id = str(record["period_id"])
     prior = records_by_period.get(_previous_quarter(period_id))
     prior_year = records_by_period.get(_previous_year(period_id))
 
     kpis: list[dict[str, Any]] = []
-    for definition in KPI_DEFINITIONS:
+    for definition in definitions:
         key = definition["key"]
         current_value = float(record[key])
         qoq = _comparison_for(
@@ -283,6 +327,10 @@ def _period_view(
                 },
             }
         )
+        if industry is not None:
+            kpis[-1]["vs_industry"] = _comparison_dict(
+                _industry_comparison(key, current_value, float(industry[key]))
+            )
 
     margin = float(record["unit_margin_cents_per_km"])
     previous_margin = None if prior is None else float(prior["unit_margin_cents_per_km"])
@@ -293,7 +341,7 @@ def _period_view(
     by_key = {item["key"]: item for item in kpis}
     capacity_qoq = Comparison(**by_key["ask_km"]["qoq"])
     passengers_qoq = Comparison(**by_key["passengers"]["qoq"])
-    load_qoq = Comparison(**by_key["load_factor_reported"]["qoq"])
+    load_qoq = Comparison(**by_key[load_key]["qoq"])
     rask_qoq = Comparison(**by_key["rask_cents_per_km"]["qoq"])
     cask_qoq = Comparison(**by_key["cask_cents_per_km"]["qoq"])
 
@@ -355,15 +403,15 @@ def _period_view(
                 f"CASK de {float(record['cask_cents_per_km']):.2f} ¢ USD y un margen unitario de {margin:.2f} ¢ USD por ASK-km."
             ),
             (
-                f"La compañía ofreció {float(record['ask_km']) / 1_000_000_000:.2f} mil millones de ASK, "
-                f"transportó {float(record['passengers']) / 1_000_000:.2f} millones de pasajeros y reportó "
-                f"{float(record['load_factor_reported']):.1%} de ocupación."
+                f"{subject} ofreció {float(record['ask_km']) / 1_000_000_000:.2f} mil millones de ASK, "
+                f"transportó {float(record['passengers']) / 1_000_000:.2f} millones de pasajeros y {load_verb} "
+                f"{float(record[load_key]):.1%} de ocupación."
             ),
             year_context,
         ],
     }
 
-    return {
+    view = {
         "period_id": period_id,
         "period_label": record["period_label"],
         "kpis": kpis,
@@ -382,6 +430,96 @@ def _period_view(
             "direction": margin_yoy.direction,
         },
     }
+    if industry is not None:
+        view["margin_vs_industry"] = _comparison_dict(
+            _industry_comparison(
+                "unit_margin_cents_per_km", margin, float(industry["unit_margin_cents_per_km"])
+            )
+        )
+    return view
+
+
+ENTITY_KPI_KEYS = (
+    ("rask_cents_per_km", "RASK", "Ingreso total por cada asiento-kilómetro disponible.", "blue", "cents"),
+    ("cask_cents_per_km", "CASK", "Costo operativo por cada asiento-kilómetro disponible.", "red", "cents"),
+    ("ask_km", "ASK", "Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.", "gold", "billions"),
+    ("load_factor", "Factor de ocupación", "Porcentaje de la capacidad que fue utilizada por pasajeros.", "amber", "percent"),
+    ("passengers", "Pasajeros", "Pasajeros transportados en el trimestre.", "violet", "millions"),
+)
+
+
+def _entity_kpi_definitions(entity: Entity, basis: str) -> tuple[dict[str, str], ...]:
+    definitions = []
+    for key, label, description, accent, kind in ENTITY_KPI_KEYS:
+        if key == "passengers" and entity.is_aggregate:
+            description = "Pasajeros de Aeroméxico, Volaris y Viva en el trimestre, según el reporte de cada una."
+        if key == "load_factor" and basis == "calculated":
+            description += " Calculado como RPM/ASM."
+        if entity.is_aggregate and key in {"rask_cents_per_km", "cask_cents_per_km", "load_factor"}:
+            description += " Industria ponderada por ASK."
+        definitions.append(
+            {"key": key, "label": label, "description": description, "accent": accent, "format": kind}
+        )
+    return tuple(definitions)
+
+
+def _entity_record(row: Any) -> dict[str, Any]:
+    period_id = str(row["period_id"])
+    ex_fuel = row["cask_ex_fuel_cents_per_km"]
+    return {
+        "period_id": period_id,
+        "period_label": _period_label(period_id),
+        "passengers": _finite(row["passengers"]),
+        "ask_km": _finite(row["ask_km"]),
+        "load_factor": _finite(row["load_factor"]),
+        "load_factor_basis": str(row["load_factor_basis"]),
+        "rask_cents_per_km": _finite(row["rask_cents_per_km"]),
+        "cask_cents_per_km": _finite(row["cask_cents_per_km"]),
+        "unit_margin_cents_per_km": _finite(row["unit_margin_cents_per_km"]),
+        "cask_ex_fuel_cents_per_km": None if ex_fuel is None or pd.isna(ex_fuel) else _finite(ex_fuel),
+        "rpk_km": None if row["rpk_km"] is None or pd.isna(row["rpk_km"]) else _finite(row["rpk_km"]),
+    }
+
+
+def build_entity_payloads(database_path: str | None = None) -> dict[str, dict[str, Any]]:
+    """Per-entity records and quarter views: Industria first, then each carrier."""
+
+    path = str(PATHS.warehouse if database_path is None else database_path)
+    with duckdb.connect(path, read_only=True) as connection:
+        quarters = load_entity_quarters(connection)
+    industry_records = {
+        record["period_id"]: record
+        for record in (_entity_record(row) for _, row in quarters[INDUSTRY.key].iterrows())
+    }
+    result: dict[str, dict[str, Any]] = {}
+    for entity in ENTITIES:
+        records = [_entity_record(row) for _, row in quarters[entity.key].iterrows()]
+        if not records:
+            raise ValueError(f"Entity {entity.key} has no complete quarter")
+        by_period = {record["period_id"]: record for record in records}
+        views = {}
+        for period_id, record in by_period.items():
+            basis = str(record["load_factor_basis"])
+            views[period_id] = _period_view(
+                record,
+                by_period,
+                definitions=_entity_kpi_definitions(entity, basis),
+                load_key="load_factor",
+                subject=entity.subject,
+                load_verb="reportó" if basis == "reported" else "registró",
+                industry=None if entity.is_aggregate else industry_records.get(period_id),
+            )
+        result[entity.key] = {
+            "key": entity.key,
+            "label": entity.label,
+            "note": entity.note,
+            "first_period": records[0]["period_id"],
+            "last_period": records[-1]["period_id"],
+            "quarter_count": len(records),
+            "records": records,
+            "views": views,
+        }
+    return result
 
 
 def build_executive_payload(database_path: str | None = None) -> dict[str, Any]:
@@ -429,4 +567,6 @@ def build_executive_payload(database_path: str | None = None) -> dict[str, Any]:
         },
         "records": records,
         "views": views,
+        "entities": build_entity_payloads(database_path),
+        "entity_list": entity_metadata(),
     }

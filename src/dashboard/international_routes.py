@@ -4,6 +4,8 @@ from __future__ import annotations
 from copy import deepcopy
 import pandas as pd
 
+from src.dashboard.route_entities import AEROMEXICO_ROUTES, RouteEntity, breakdown_totals
+
 LABELS = {"anac": "Brasil · ANAC", "aerocivil": "Colombia · Aerocivil", "caa": "Reino Unido · CAA"}
 AICM_LABEL = "AICM · vuelos AM programados"
 OMA_LABEL = "OMA · rutas documentadas"
@@ -176,7 +178,7 @@ def _route_capacity_metrics(items):
     )
 
 
-def _estimated_routes(estimates, capacity, months, endpoint):
+def _estimated_routes(estimates, capacity, months, endpoint, entity: RouteEntity = AEROMEXICO_ROUTES):
     """Grupo Aeroméxico routes estimated from AFAC margins, one per airport market.
 
     Only a quarter whose every month was fitted is used: a partial quarter
@@ -207,8 +209,8 @@ def _estimated_routes(estimates, capacity, months, endpoint):
             cell = _capacity_cell(capacity_index, str(period), str(origin), str(dest))
             item = dict(
                 period_id=str(period),
-                carrier_key="AEROMEXICO_GROUP",
-                carrier_label="Grupo Aeroméxico",
+                carrier_key=entity.group_key,
+                carrier_label=entity.group_label,
                 origin_iata=str(origin),
                 destination_iata=str(dest),
                 passengers=passengers,
@@ -237,6 +239,10 @@ def _estimated_routes(estimates, capacity, months, endpoint):
             monthly=monthly,
             estimator_version=sorted(group.estimator_version.unique())[0],
         )
+        if entity.breakdown:
+            routes[market]["carrier_breakdown"] = breakdown_totals(
+                entity, list(group.groupby("carrier_key")["passengers_estimated"].sum().items())
+            )
     return routes
 
 

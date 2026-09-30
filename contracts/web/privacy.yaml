@@ -16,6 +16,12 @@ allowed_estimated_carriers:
   - AEROMEXICO
   - AEROMEXICO_CONNECT
   - AEROMEXICO_GROUP
+  # Dashboard v2 (fase 3): owner decision of 30 Sep 2026 to publish the
+  # estimated route maps of Volaris, Viva and Industria (the three together),
+  # always labelled "estimado". See docs/etapas/dashboard-v2-fase3-mapa-20260930.md.
+  - VOLARIS
+  - VIVA_AEROBUS
+  - INDUSTRY
 
 # Field names that must never appear anywhere in an exported/embedded
 # payload, at any nesting level, regardless of value. These are provider

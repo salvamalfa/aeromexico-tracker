@@ -61,6 +61,11 @@ export interface FlightsState {
   // presence-only can still be selected and show its N/D disclosure.
   networkAllRoutes: Route[];
 
+  // Dashboard v2 (fase 3): whose map is shown. Grupo Aeroméxico reads the
+  // historical files; any other entity reads flights/entities/<KEY>/….
+  mapEntity: string;
+  baseAvailablePeriods: AvailablePeriods | null;
+
   // period_id -> network JSON, filled in on demand by ensure*().
   domesticNetworks: Map<string, PeriodNetworkDocument>;
   domesticMonthlyNetworks: Map<string, PeriodNetworkDocument>;
@@ -96,10 +101,35 @@ export const state: FlightsState = {
   presenceOnlyRouteCount: 0,
   networkAllRoutes: [],
 
+  mapEntity: "AEROMEXICO",
+  baseAvailablePeriods: null,
+
   domesticNetworks: new Map(),
   domesticMonthlyNetworks: new Map(),
   internationalNetworks: new Map(),
 };
+
+function networkPath(kind: "domestic" | "international", periodId: string): string {
+  const folder = state.mapEntity === "AEROMEXICO" ? `flights/${kind}` : `flights/entities/${state.mapEntity}/${kind}`;
+  return `${state.dataRoot}/${folder}/${periodId}.json`;
+}
+
+// Switch the map to another entity: its own period listing, empty caches.
+// Returns false when the export has no files for that entity.
+export function setMapEntity(key: string): boolean {
+  const base = state.baseAvailablePeriods ?? state.availablePeriods;
+  state.baseAvailablePeriods = base;
+  if (key !== "AEROMEXICO" && !base.entities?.[key]) return false;
+  state.mapEntity = key;
+  const listing = key === "AEROMEXICO" ? null : base.entities![key]!;
+  state.availablePeriods = listing
+    ? { domestic: [], domestic_monthly: listing.domestic_monthly, international: listing.international, entities: base.entities }
+    : base;
+  state.domesticNetworks.clear();
+  state.domesticMonthlyNetworks.clear();
+  state.internationalNetworks.clear();
+  return true;
+}
 
 async function fetchJson<T>(path: string): Promise<T> {
   const response = await fetch(path);
@@ -139,14 +169,23 @@ export function domesticAvailableForQuarter(quarterId: string): boolean {
   return monthsInQuarter(quarterId).length > 0 || state.availablePeriods.domestic.includes(quarterId);
 }
 
+// A fetch that resolves after the map switched entity must not land in the
+// new entity's cache: every loader drops a result for a stale entity.
+async function loadNetwork(
+  cache: Map<string, PeriodNetworkDocument>,
+  kind: "domestic" | "international",
+  periodId: string
+): Promise<void> {
+  const entity = state.mapEntity;
+  const document = await fetchJson<PeriodNetworkDocument>(networkPath(kind, periodId));
+  if (state.mapEntity === entity) cache.set(periodId, document);
+}
+
 export async function ensureDomesticMonths(monthIds: string[]): Promise<void> {
   await Promise.all(
     monthIds.map(async (id) => {
       if (state.domesticMonthlyNetworks.has(id)) return;
-      state.domesticMonthlyNetworks.set(
-        id,
-        await fetchJson<PeriodNetworkDocument>(`${state.dataRoot}/flights/domestic/${id}.json`)
-      );
+      await loadNetwork(state.domesticMonthlyNetworks, "domestic", id);
     })
   );
 }
@@ -154,19 +193,13 @@ export async function ensureDomesticMonths(monthIds: string[]): Promise<void> {
 export async function ensureDomesticQuarter(periodId: string): Promise<void> {
   if (state.domesticNetworks.has(periodId)) return;
   if (!state.availablePeriods.domestic.includes(periodId)) return;
-  state.domesticNetworks.set(
-    periodId,
-    await fetchJson<PeriodNetworkDocument>(`${state.dataRoot}/flights/domestic/${periodId}.json`)
-  );
+  await loadNetwork(state.domesticNetworks, "domestic", periodId);
 }
 
 export async function ensureInternational(periodId: string): Promise<void> {
   if (state.internationalNetworks.has(periodId)) return;
   if (!state.availablePeriods.international.includes(periodId)) return;
-  state.internationalNetworks.set(
-    periodId,
-    await fetchJson<PeriodNetworkDocument>(`${state.dataRoot}/flights/international/${periodId}.json`)
-  );
+  await loadNetwork(state.internationalNetworks, "international", periodId);
 }
 
 export async function loadQuarters(dataRoot?: string): Promise<void> {

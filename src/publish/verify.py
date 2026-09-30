@@ -52,6 +52,7 @@ from typing import Any
 from jsonschema import Draft202012Validator
 
 from src.config import PATHS
+from src.dashboard.route_entities import EXTRA_ROUTE_ENTITIES
 from src.web_export.privacy import (
     PrivacyViolation,
     check_file_size,
@@ -59,9 +60,17 @@ from src.web_export.privacy import (
     find_forbidden_fields,
     load_privacy_rules,
 )
-from src.web_export.schemas import ANALYSIS_SCHEMA, EXECUTIVE_SCHEMA, NETWORK_FILE_SCHEMA, QUARTERS_FILE_SCHEMA
+from src.web_export.schemas import (
+    ANALYSIS_SCHEMA,
+    EXECUTIVE_SCHEMA,
+    MARKET_SCHEMA,
+    NETWORK_FILE_SCHEMA,
+    QUARTERS_FILE_SCHEMA,
+)
 
 from . import manifest as manifest_mod
+
+ENTITY_KEYS = frozenset(entity.key for entity in EXTRA_ROUTE_ENTITIES)
 
 CONTRACTS_DIR = PATHS.root / "contracts" / "web"
 MANIFEST_SCHEMA_PATH = CONTRACTS_DIR / "publication_manifest.schema.json"
@@ -85,9 +94,20 @@ def _data_schema_for(rel_path: str) -> dict[str, Any] | None:
         return None
     if parts[2:] == ["executive.json"]:
         return EXECUTIVE_SCHEMA
+    if parts[2:] == ["market.json"]:
+        return MARKET_SCHEMA
     if parts[2:3] == ["flights"] and parts[3:] == ["quarters.json"]:
         return QUARTERS_FILE_SCHEMA
     if parts[2:3] == ["flights"] and parts[3:4] in (["domestic"], ["international"]) and len(parts) == 5:
+        return NETWORK_FILE_SCHEMA
+    # Dashboard v2: flights/entities/<KEY>/{domestic,international}/<period>.json,
+    # only for the map entities src.web_export.flights writes.
+    if (
+        parts[2:4] == ["flights", "entities"]
+        and len(parts) == 7
+        and parts[4] in ENTITY_KEYS
+        and parts[5] in ("domestic", "international")
+    ):
         return NETWORK_FILE_SCHEMA
     if parts[2:3] == ["analysis"] and len(parts) == 4:
         return ANALYSIS_SCHEMA

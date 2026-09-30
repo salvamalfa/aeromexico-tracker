@@ -1568,3 +1568,43 @@ en vez de mostrarse por encima de 100 %.
 `tests/test_international_routes.py` (asientos y ocupación en una ruta nueva
 y en una enriquecida — Reino Unido·CAA en Londres–México —, con la misma
 regla de completitud y de plausibilidad que nacional).
+
+### 9.15 Asientos de Volaris y Viva por promedio de flota (Dashboard v2)
+
+Las capturas temporales que traían el modelo de aeronave ya no existen, y solo
+se conservaron vuelos mensuales por ruta × aerolínea. Por eso, desde el 30 de
+septiembre de 2026 y por decisión del dueño, Volaris y Viva usan
+`src/analytics/fleet_capacity.py`:
+
+- **Asientos:** asientos = vuelos × asientos por salida del T-100 propio de
+  cada aerolínea en los 12 meses anteriores al periodo. Nunca se usa el periodo
+  mismo.
+- **Rango:** p10–p90 del tamaño de avión por ruta.
+- **Vuelos:**
+  - En nacional son el peso de la semilla, pero solo si la ruta se observó en
+    el mes. Una semilla prestada de otro mes deja la celda sin capacidad.
+  - En internacional son `departures_estimated`.
+
+Grupo Aeroméxico conserva su método por modelo. Industria combina ambos
+métodos y bloquea la ocupación donde una celda de Aeroméxico tiene pasajeros
+pero no tiene capacidad (`src/dashboard/route_capacity.py`). Las reglas de
+completitud y de ocupación por encima de 100 % son las mismas de §9.14.
+
+**Error medido fuera de muestra**, contra T-100 en rutas México–EE. UU. en
+abril y mayo de 2026:
+
+| Métrica | Volaris | Viva |
+|---|---|---|
+| Asientos por ruta (WAPE) | 9 % | 10–12 % |
+| Ocupación por ruta, error absoluto ponderado | 8–9 pp | 9–11 pp |
+
+La ocupación agregada del 2T26 cuadra con la reportada:
+
+| Aerolínea | Estimada nacional | Reportada total |
+|---|---|---|
+| Volaris | 84.5 % | 84.8 % |
+| Viva | 86.0 % | 85.9 % |
+
+**Límite:** en rutas densas que operan aviones más grandes que el promedio,
+como GDL–TIJ, algún mes supera 100 % y la ocupación de esa ruta queda en
+`N/D`. Detalle: `docs/etapas/dashboard-v2-fase4-capacidad-20260930.md`.

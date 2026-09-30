@@ -22,6 +22,7 @@ sync_playwright = playwright_sync_api.sync_playwright
 # noqa: E402 below — these imports come after pytest.importorskip on purpose.
 from src.web_export.executive import export_executive  # noqa: E402
 from src.web_export.flights import export_flights  # noqa: E402
+from src.web_export.market import export_market  # noqa: E402
 from src.web_export.writer import write_json  # noqa: E402
 
 pytestmark = pytest.mark.browser
@@ -55,6 +56,7 @@ def web_server(tmp_path_factory, web_dist_dir):
     # so this page needs their payload even though this test only exercises
     # panel-flights (now behind the "Vuelos" tab, see mountTabs()).
     export_executive(_load_fixture("executive_sample.json"), out_dir, skip_input_check=True)
+    export_market(_load_fixture("market_sample.json"), out_dir, skip_input_check=True)
     analysis = _load_fixture("analysis_sample.json")
     write_json(out_dir / "analysis" / f"{analysis['period_id']}.json", analysis)
 

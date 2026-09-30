@@ -4,8 +4,22 @@ import { $, esc, finite, integer } from "./dom";
 import { state } from "./state";
 import { SCHEDULED_STATUSES } from "./coverage";
 import type { Route } from "../../types/domain";
+import { entityState } from "../executive/entities";
+import { ENTITY_LABELS, type EntityKey } from "../shell/carriers";
+
+// Dashboard v2: for Industria/Volaris/Viva the quarter's AFAC segment total
+// comes from market.json (same source as the mix chart); Grupo Aeroméxico
+// keeps its historical monthly series.
+function entitySegmentPassengers(periodId: string): number | null {
+  const quarter = entityState.market?.quarters.find((item) => item.period_id === periodId);
+  if (!quarter) return null;
+  const segment = quarter.segments[state.networkMode === "domestic" ? "domestic" : "international"];
+  const item = state.mapEntity === "INDUSTRY" ? segment.industry : segment.carriers[state.mapEntity];
+  return item?.passengers ?? null;
+}
 
 function segmentPassengers(periodId: string): number | null {
+  if (state.mapEntity !== "AEROMEXICO") return entitySegmentPassengers(periodId);
   const quarter = Number(periodId.slice(-1));
   const year = Number(periodId.slice(0, 4));
   if (!year || quarter < 1 || quarter > 4 || !state.monthlyPassengers) return null;
@@ -58,8 +72,8 @@ export function renderNetworkVolume(): void {
   const networkLabel = domestic ? "nacional" : "internacional";
   host.innerHTML = `<div class="network-mini-heading"><span>Red ${networkLabel}</span><span>${esc(period)}</span></div>
     <div class="network-mini-kpi-grid">
-      ${miniCard("Pasajeros", passengers === null ? "N/D" : integer.format(passengers), "AFAC · Grupo", `Total trimestral ${networkLabel} de AFAC; coincide con Mezcla nacional e internacional. El detalle por ruta tiene otra cobertura.`)}
-      ${miniCard("Vuelos", flightRoutes.length ? integer.format(flights) : "N/D", `${domestic ? "est." : "obs."} · ${flightRoutes.length}/${routes.length} rutas`, `${domestic ? "Estimación" : "Vuelos observados de Aerovías de México"} en ${flightRoutes.length} rutas con dato; no representa necesariamente toda la red.`)}
+      ${miniCard("Pasajeros", passengers === null ? "N/D" : integer.format(passengers), `AFAC · ${state.mapEntity === "AEROMEXICO" ? "Grupo" : ENTITY_LABELS[state.mapEntity as EntityKey] ?? state.mapEntity}`, `Total trimestral ${networkLabel} de AFAC; coincide con Mezcla nacional e internacional. El detalle por ruta tiene otra cobertura.`)}
+      ${miniCard("Vuelos", flightRoutes.length ? integer.format(flights) : "N/D", `${domestic ? "est." : "obs."} · ${flightRoutes.length}/${routes.length} rutas`, `${domestic ? "Estimación" : state.mapEntity === "AEROMEXICO" ? "Vuelos observados de Aerovías de México" : "Vuelos observados por BTS T-100"} en ${flightRoutes.length} rutas con dato; no representa necesariamente toda la red.`)}
       ${miniCard("Ocupación", occupancy, `${domestic ? "est." : "obs."} · ${occupancyRoutes.length}/${routes.length} rutas`, `Pasajeros ÷ asientos en ${occupancyRoutes.length} rutas con ambos datos compatibles. No es la ocupación de toda la red.`)}
     </div>`;
 }

@@ -33,6 +33,7 @@ from pathlib import Path
 
 from src.web_export.executive import export_executive
 from src.web_export.flights import export_flights
+from src.web_export.market import export_market
 from src.web_export.writer import write_json
 from src.publish import manifest as manifest_mod
 
@@ -43,6 +44,7 @@ OUT = Path(__file__).resolve().parent
 FLIGHTS_PAYLOAD = json.loads((WEB_FIXTURES / "flights_sample.json").read_text(encoding="utf-8"))
 EXECUTIVE_PAYLOAD = json.loads((WEB_FIXTURES / "executive_sample.json").read_text(encoding="utf-8"))
 ANALYSIS_PAYLOAD = json.loads((WEB_FIXTURES / "analysis_sample.json").read_text(encoding="utf-8"))
+MARKET_PAYLOAD = json.loads((WEB_FIXTURES / "market_sample.json").read_text(encoding="utf-8"))
 CODE_COMMIT = "a" * 40
 GENERATED_AT = "2026-09-26T00:00:00+00:00"
 
@@ -69,6 +71,7 @@ def build_valid_dist(dist_dir: Path, *, flights_payload: dict | None = None) -> 
     data_dir = dist_dir / "data" / "v1"
     export_flights(flights_payload if flights_payload is not None else FLIGHTS_PAYLOAD, data_dir, skip_input_check=True)
     export_executive(EXECUTIVE_PAYLOAD, data_dir, skip_input_check=True)
+    export_market(MARKET_PAYLOAD, data_dir, skip_input_check=True)
     write_json(data_dir / "analysis" / f"{ANALYSIS_PAYLOAD['period_id']}.json", ANALYSIS_PAYLOAD)
 
 
@@ -146,6 +149,7 @@ def main() -> None:
     for period_id, network in international_periods.items():
         write_json(data_dir / "flights" / "international" / f"{period_id}.json", network)
     export_executive(EXECUTIVE_PAYLOAD, data_dir, skip_input_check=True)
+    export_market(MARKET_PAYLOAD, data_dir, skip_input_check=True)
     write_json(data_dir / "analysis" / f"{ANALYSIS_PAYLOAD['period_id']}.json", ANALYSIS_PAYLOAD)
     sign(carrier)
 

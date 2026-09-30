@@ -8,7 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from src.publish.verify import verify_site
+from src.publish.verify import _data_schema_for, verify_site
+from src.web_export.schemas import NETWORK_FILE_SCHEMA
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "site"
 
@@ -54,3 +55,28 @@ def test_cli_exits_zero_on_the_valid_fixture(capsys: pytest.CaptureFixture[str])
 
     code = main([str(FIXTURES / "valid")])
     assert code == 0
+
+
+@pytest.mark.parametrize(
+    "rel_path",
+    [
+        "data/v1/flights/entities/VOLARIS/international/2026Q2.json",
+        "data/v1/flights/entities/INDUSTRY/domestic/2026M06.json",
+        "data/v1/flights/entities/VIVA_AEROBUS/domestic/2026M04.json",
+    ],
+)
+def test_entity_network_files_are_declared(rel_path: str) -> None:
+    assert _data_schema_for(rel_path) is NETWORK_FILE_SCHEMA
+
+
+@pytest.mark.parametrize(
+    "rel_path",
+    [
+        "data/v1/flights/entities/DELTA/international/2026Q2.json",
+        "data/v1/flights/entities/VOLARIS/monthly/2026M06.json",
+        "data/v1/flights/entities/VOLARIS/2026Q2.json",
+        "data/v1/flights/entities/VOLARIS/domestic/extra/2026M06.json",
+    ],
+)
+def test_unknown_entity_paths_stay_undeclared(rel_path: str) -> None:
+    assert _data_schema_for(rel_path) is None

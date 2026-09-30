@@ -4,6 +4,32 @@ Cambios notables del proyecto, para humanos. Formato inspirado en
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); no se usa
 versión semántica, las entradas van por fecha.
 
+## 2026-09-30
+
+### Added
+
+- **Dashboard v2: Aerolíneas MX Tracker.** El dashboard pasa de Grupo Aeroméxico a
+  la industria mexicana: Aeroméxico, Volaris, Viva e Industria (la suma de las
+  tres).
+  - **Selector de aerolínea** por tarjeta, con la selección guardada en la URL.
+  - **Participación AFAC:** una tarjeta nueva de participación de pasajeros.
+  - **Economía unitaria:** "vs. industria" y comparación de varias aerolíneas.
+  - **Mapa de rutas por aerolínea:** nacional estimado, México–EE. UU. con T-100 y
+    resto internacional estimado.
+  - **Capacidad por ruta:** asientos y ocupación de Volaris y Viva por promedio de
+    flota.
+  - **Documentación por fase:** `docs/etapas/dashboard-v2-fase{0,2,3,4}-*.md`.
+
+### Changed
+
+- **Estimación internacional publicada:** la estimación internacional de pasajeros
+  por ruta queda publicada para las tres aerolíneas, siempre como "estimado", por
+  decisión del dueño.
+- **Vista previa `/v2/` retirada:** la v2 pasa a la raíz del sitio. El mecanismo de
+  vista previa de `pages.yml` se conserva.
+- **Tesis por aerolínea (fase 5):** quedan para un cambio posterior. Mientras tanto,
+  solo Aeroméxico muestra una tesis aprobada.
+
 ## 2026-09-27
 
 ### Changed

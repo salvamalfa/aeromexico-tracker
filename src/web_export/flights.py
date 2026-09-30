@@ -66,6 +66,18 @@ def export_flights(
             "international": sorted(international_periods),
         },
     }
+    # Dashboard v2 (fase 3): Industria, Volaris and Viva maps under
+    # flights/entities/<KEY>/…, listed here so web/ knows what to fetch.
+    entity_networks = embedded.get("entity_networks", {})
+    if entity_networks:
+        quarters_doc["available_periods"]["entities"] = {
+            key: {
+                "label": value["label"],
+                "domestic_monthly": sorted(value["domestic_monthly_networks"]),
+                "international": sorted(value["route_networks"]),
+            }
+            for key, value in entity_networks.items()
+        }
     _validate(QUARTERS_FILE_SCHEMA, quarters_doc, what="flights/quarters.json")
     written.append(write_json(base / "quarters.json", quarters_doc))
 
@@ -76,6 +88,13 @@ def export_flights(
     for period_id, network in international_periods.items():
         _validate(NETWORK_FILE_SCHEMA, network, what=f"flights/international/{period_id}.json")
         written.append(write_json(base / "international" / f"{period_id}.json", network))
+
+    for key, value in entity_networks.items():
+        entity_base = base / "entities" / key
+        for folder, networks in (("domestic", value["domestic_monthly_networks"]), ("international", value["route_networks"])):
+            for period_id, network in networks.items():
+                _validate(NETWORK_FILE_SCHEMA, network, what=f"flights/entities/{key}/{folder}/{period_id}.json")
+                written.append(write_json(entity_base / folder / f"{period_id}.json", network))
 
     return written
 
@@ -112,6 +131,21 @@ def recombine_flights(out_dir: Path) -> dict[str, Any]:
         for path in sorted(international_dir.glob("*.json")):
             route_networks[path.stem] = json.loads(path.read_text(encoding="utf-8"))
 
+    entity_networks: dict[str, Any] = {}
+    for key, listing in quarters_doc["available_periods"].get("entities", {}).items():
+        entity_base = base / "entities" / key
+        entity_networks[key] = {
+            "label": listing["label"],
+            "route_networks": {
+                period_id: json.loads((entity_base / "international" / f"{period_id}.json").read_text(encoding="utf-8"))
+                for period_id in listing["international"]
+            },
+            "domestic_monthly_networks": {
+                period_id: json.loads((entity_base / "domestic" / f"{period_id}.json").read_text(encoding="utf-8"))
+                for period_id in listing["domestic_monthly"]
+            },
+        }
+
     return {
         "schema_version": quarters_doc["schema_version"],
         "metadata": quarters_doc["metadata"],
@@ -121,4 +155,5 @@ def recombine_flights(out_dir: Path) -> dict[str, Any]:
         "route_networks": route_networks,
         "domestic_networks": domestic_networks,
         "domestic_monthly_networks": domestic_monthly_networks,
+        **({"entity_networks": entity_networks} if entity_networks else {}),
     }

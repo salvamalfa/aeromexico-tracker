@@ -53,9 +53,11 @@ from jsonschema import Draft202012Validator
 from src.analysis_agent import lifecycle as flow
 from src.config import PATHS
 from src.dashboard.executive_summary import build_executive_payload
+from src.dashboard.market import build_market_payload
 from src.dashboard.flights import build_flight_payload
 from src.web_export import analysis as analysis_export
 from src.web_export.executive import export_executive
+from src.web_export.market import export_market
 from src.web_export.flights import export_flights
 from src.web_export.inputs import MissingWebInput
 from src.web_export.privacy import PrivacyViolation, check_privacy, load_privacy_rules
@@ -157,12 +159,13 @@ def _analysis_payload(record: dict[str, Any], authorized: dict[str, Any], packag
 
 
 def export_data(entries: list[tuple[Any, Any, Any, Any]], out_dir: Path) -> None:
-    """Write flights/executive (every period) and analysis (only the given,
+    """Write flights/executive/market (every period) and analysis (only the given,
     approved periods) v1 payloads under out_dir."""
 
     try:
         export_flights(build_flight_payload(), out_dir)
         export_executive(build_executive_payload(), out_dir)
+        export_market(build_market_payload(), out_dir)
     except MissingWebInput as error:
         raise PublicationRefused(str(error)) from error
 

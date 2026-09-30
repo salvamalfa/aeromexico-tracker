@@ -6,6 +6,19 @@ import { coverageIndicator, scheduledIconHtml, sourceFooterHtml, SCHEDULED_STATU
 import { bindAirportSearchControls } from "./search";
 import { cityLabel, routeChangePercent, routeTitle } from "./network";
 import type { Route } from "../../types/domain";
+import { ENTITY_LABELS, type EntityKey } from "../shell/carriers";
+
+// Industria: who carries the route (share of the route's passengers).
+export function breakdownText(route: Route): string {
+  const breakdown = route.carrier_breakdown;
+  const total = route.passengers;
+  if (!breakdown || !finite(total) || total <= 0) return "";
+  return Object.entries(breakdown)
+    .filter(([, value]) => value > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([key, value]) => `${ENTITY_LABELS[key as EntityKey] ?? key} ${Math.round((value / total) * 100)}%`)
+    .join(" · ");
+}
 
 function routeRows(routes: Route[]): string {
   let downStarted = false;
@@ -22,7 +35,9 @@ function routeRows(routes: Route[]): string {
     const occupancy = finite(route.load_factor) ? formatRouteMetric("load_factor", route.load_factor) : "N/D";
     const sourceBadge = route.passengers_estimated && state.networkMode === "international"
       ? '<span class="route-evidence-badge">estim.</span>' : "";
-    const changeText = change === null ? "" : `<small class="executive-route-trend ${change >= 0 ? "delta-up" : "delta-down"}">${change >= 0 ? "+" : ""}${change.toFixed(1)}% interanual</small>`;
+    const breakdown = breakdownText(route);
+    const changeText = (change === null ? "" : `<small class="executive-route-trend ${change >= 0 ? "delta-up" : "delta-down"}">${change >= 0 ? "+" : ""}${change.toFixed(1)}% interanual</small>`)
+      + (breakdown ? `<small class="executive-route-trend route-breakdown">${esc(breakdown)}</small>` : "");
     const coverage = coverageIndicator(route);
     const coverageLabel = coverage ? ` title="${esc(coverage.title)}" aria-label="Ruta ${index + 1}: ${esc(coverage.title)}"` : "";
     return `${group}<li class="executive-route-row">
