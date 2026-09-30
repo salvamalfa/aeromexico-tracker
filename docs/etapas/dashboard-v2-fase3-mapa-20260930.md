@@ -99,6 +99,28 @@ Fecha: 30 de septiembre de 2026. Rama `claude/aerolineas-tracker-redesign-zqk94j
 
   No hubo errores de consola.
 
+## Verificador de `site/` (corrección posterior, 30 sep)
+
+- **Fallo en local:** la primera re-firma en local falló en `src.publish.verify` con 81
+  errores. `_data_schema_for` no reconocía
+  `data/v1/flights/entities/<KEY>/{domestic,international}/<periodo>.json` y los
+  rechazaba como archivos no declarados.
+- **Arreglo:** el verificador ahora los valida contra `NETWORK_FILE_SCHEMA`, solo para
+  INDUSTRY, VOLARIS y VIVA_AEROBUS.
+- **Prueba nueva:** `tests/test_web_export.py` exige que cada archivo que escribe
+  `export_flights` esté declarado en el verificador, para que el export y el gate no se
+  vuelvan a desalinear.
+- **Warehouse en un checkout local limpio**, receta comprobada en la máquina del dueño:
+  1. `src.parse`
+  2. `src.transform`
+  3. `src.dashboard.prepare`
+  4. `src.dashboard.validate_stage8`
+  5. `src.transform.stage9`
+  6. `src.transform.validate_stage9`
+
+  No se corre la etapa 7, que reentrena modelos. Sin `src.parse`, `src.transform`
+  regenera `fact_carrier_metrics` sin las filas de la fase 0.
+
 ## Pendiente
 
 - **Re-firmar `site/`** con el gate sobre el warehouse completo, ya que la estimación

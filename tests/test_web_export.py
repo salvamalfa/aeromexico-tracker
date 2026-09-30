@@ -72,6 +72,28 @@ def test_export_flights_writes_schema_valid_split_files(tmp_path: Path) -> None:
     assert any(name.startswith("flights/international/") for name in names)
 
 
+def test_every_exported_flight_file_is_one_the_publish_verifier_declares(tmp_path: Path) -> None:
+    # export_flights and src.publish.verify._data_schema_for must agree on the
+    # public file set; otherwise the gate signs files its own verifier rejects.
+    from copy import deepcopy
+
+    from src.publish.verify import _data_schema_for
+
+    payload = _build_synthetic_raw_flight_payload()
+    payload["entity_networks"] = {
+        key: {
+            "label": key,
+            "route_networks": deepcopy(payload["international_networks"]),
+            "domestic_monthly_networks": deepcopy(payload.get("domestic_monthly_networks", {})),
+        }
+        for key in ("INDUSTRY", "VOLARIS", "VIVA_AEROBUS")
+    }
+    written = export_flights(payload, tmp_path, skip_input_check=True)
+    names = [f"data/v1/{path.relative_to(tmp_path).as_posix()}" for path in written]
+    assert any("/entities/" in name for name in names)
+    assert [name for name in names if _data_schema_for(name) is None] == []
+
+
 def test_export_flights_split_recombines_to_the_same_payload(tmp_path: Path) -> None:
     payload = _build_synthetic_raw_flight_payload()
     export_flights(payload, tmp_path, skip_input_check=True)
