@@ -20,6 +20,14 @@ Fecha: 30 de septiembre de 2026.
 - **Verificación del `site/`:** el job hace checkout de ese commit y corre
   `src.publish.verify site/` con el código y los contratos del propio commit. Su
   `site/` está firmado contra esos contratos, no contra los de `master`.
+- **Checks del commit fijado:** antes de verificar, `preview` exige que ese commit ya
+  tenga `test` y `web` en verde (check runs de la API de GitHub, el más reciente de
+  cada uno). El job `ci` de este workflow prueba el código de `master`, no el del
+  commit fijado.
+- **Permisos:** el workflow es de solo lectura. Solo `deploy` recibe `pages: write` e
+  `id-token: write`, y ese job solo copia archivos. `preview`, que ejecuta código del
+  commit fijado, no recibe credenciales de despliegue (hallazgos de Codex en el PR
+  #80).
 - **Despliegue:** `deploy` depende de `verify` (el `site/` de `master`), `preview` y
   `ci`. Arma `_pages/` con el `site/` de `master` en la raíz y el `site/` fijado en
   `_pages/v2/`, y publica eso. Si una verificación falla, no se publica nada.

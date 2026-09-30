@@ -19,10 +19,11 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+# Read-only by default: only deploy gets the Pages/OIDC credentials, so no
+# job that runs code (ci, and the preview verifier, which runs the pinned
+# commit's own code) can use them.
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 jobs:
   verify:
@@ -51,6 +52,9 @@ jobs:
 
   preview:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: read
     outputs:
       path: ${{ steps.read.outputs.path }}
       ref: ${{ steps.read.outputs.ref }}
@@ -74,6 +78,31 @@ jobs:
               print(f"path={path}")
               print(f"ref={ref}")
           PY
+      # master's ci job tests master's code, not the pinned commit's: the
+      # pinned commit must already have passed the required checks itself.
+      - if: steps.read.outputs.ref != ''
+        name: Require green test and web checks on the pinned commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REF: ${{ steps.read.outputs.ref }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/commits/${REF}/check-runs?per_page=100" > checks.json
+          python3 - <<'PY'
+          import json
+          runs = json.load(open("checks.json"))["check_runs"]
+          problems = []
+          for name in ("test", "web"):
+              own = [r for r in runs if r["name"] == name and r["status"] == "completed"]
+              if not own:
+                  problems.append(f"{name}: no completed run")
+                  continue
+              latest = max(own, key=lambda r: r["completed_at"])
+              if latest["conclusion"] != "success":
+                  problems.append(f"{name}: {latest['conclusion']}")
+          if problems:
+              raise SystemExit("pinned commit is not green: " + "; ".join(problems))
+          print("test and web are green on the pinned commit")
+          PY
       - if: steps.read.outputs.ref != ''
         uses: actions/checkout@v7
         with:
@@ -96,6 +125,11 @@ jobs:
   deploy:
     needs: [verify, preview, ci]
     runs-on: ubuntu-latest
+    # Only copies files (never runs the preview's code) and publishes them.
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

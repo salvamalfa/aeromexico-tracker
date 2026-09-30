@@ -30,3 +30,20 @@ def test_pages_workflow_serves_the_preview() -> None:
     workflow = (ROOT / ".github" / "workflows" / "pages.yml").read_text(encoding="utf-8")
     assert ".github/pages-preview.json" in workflow
     assert "path: _pages" in workflow
+
+
+def test_only_deploy_holds_pages_credentials() -> None:
+    import yaml
+
+    workflow = yaml.safe_load((ROOT / ".github" / "workflows" / "pages.yml").read_text(encoding="utf-8"))
+    assert workflow["permissions"] == {"contents": "read"}
+    jobs = workflow["jobs"]
+    for name, job in jobs.items():
+        granted = job.get("permissions", {})
+        if name == "deploy":
+            assert granted.get("pages") == "write" and granted.get("id-token") == "write"
+        else:
+            assert "pages" not in granted and "id-token" not in granted, name
+    # The pinned commit must have passed test and web itself.
+    steps = " ".join(str(step) for step in jobs["preview"]["steps"])
+    assert "check-runs" in steps and '"test", "web"' in steps
