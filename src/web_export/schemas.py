@@ -50,6 +50,20 @@ QUARTERS_FILE_SCHEMA: dict[str, Any] = {
                 "domestic": {"type": "array", "items": {"type": "string"}},
                 "domestic_monthly": {"type": "array", "items": {"type": "string"}},
                 "international": {"type": "array", "items": {"type": "string"}},
+                # Dashboard v2: per-entity map files (flights/entities/<KEY>/…).
+                "entities": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "required": ["label", "domestic_monthly", "international"],
+                        "properties": {
+                            "label": {"type": "string"},
+                            "domestic_monthly": {"type": "array", "items": {"type": "string"}},
+                            "international": {"type": "array", "items": {"type": "string"}},
+                        },
+                    },
+                },
             },
         },
     },

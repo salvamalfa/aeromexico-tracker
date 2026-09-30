@@ -41,6 +41,8 @@ export interface Route {
   market_key: string;
   origin: Airport;
   destination: Airport;
+  // Industria only: passengers of each airline on this route.
+  carrier_breakdown?: Record<string, number>;
   passengers?: number | null;
   passengers_low?: number | null;
   passengers_high?: number | null;
@@ -106,10 +108,18 @@ export interface QuarterRecord {
   };
 }
 
+export interface EntityPeriods {
+  label: string;
+  domestic_monthly: string[];
+  international: string[];
+}
+
 export interface AvailablePeriods {
   domestic: string[];
   domestic_monthly: string[];
   international: string[];
+  // Dashboard v2 (fase 3): Industria/Volaris/Viva map files.
+  entities?: Record<string, EntityPeriods>;
 }
 
 export interface FlightsMetadata {

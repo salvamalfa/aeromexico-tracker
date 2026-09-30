@@ -37,6 +37,7 @@ interface DomesticAggregate {
   source_label?: string;
   monthly: RouteDirection[];
   repaired: boolean;
+  breakdown: Record<string, number> | null;
 }
 
 // Combina los meses nacionales seleccionados en un agregado de Grupo
@@ -78,6 +79,7 @@ export function aggregateDomesticMonths(monthIds: string[]): PeriodNetworkDocume
           passengers: 0, passengers_low: 0, passengers_high: 0, monthsCovered: 0,
           seats: 0, departures: 0, capacityMonthsCovered: 0,
           source_label: route.source_label, monthly: [], repaired: false,
+          breakdown: route.carrier_breakdown ? {} : null,
         };
         byMarket.set(route.market_key, agg);
       }
@@ -99,6 +101,12 @@ export function aggregateDomesticMonths(monthIds: string[]): PeriodNetworkDocume
         agg.capacityMonthsCovered += 1;
       }
       agg.monthly.push(...(route.monthly || []));
+      // Industria: each airline's passengers add up across the months too.
+      if (agg.breakdown && route.carrier_breakdown) {
+        for (const [key, value] of Object.entries(route.carrier_breakdown)) {
+          agg.breakdown[key] = (agg.breakdown[key] ?? 0) + value;
+        }
+      }
     }
   }
   const routes: Route[] = [...byMarket.values()]
@@ -123,6 +131,7 @@ export function aggregateDomesticMonths(monthIds: string[]): PeriodNetworkDocume
         support_repair_applied: agg.repaired,
         source_label: agg.source_label,
         monthly: agg.monthly,
+        ...(agg.breakdown ? { carrier_breakdown: agg.breakdown } : {}),
         previous: { passengers: null, seats: null, departures: null },
         directions: [],
       };

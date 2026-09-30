@@ -46,5 +46,10 @@ Detalle técnico vigente: documento canónico §9.13.
 - Publicar al dashboard integrado: requiere autorización explícita de
   publicación y, para la ruta normal, resolver la falla conocida de
   `evidence.validate` del Analysis Agent (no relacionada con Vuelos).
+  **Actualización 30 sep 2026:** el dueño autorizó publicar la estimación
+  internacional (Aeroméxico, Volaris, Viva e Industria, siempre como
+  “estimado”) como parte del Dashboard v2; ver
+  [`dashboard-v2-fase3-mapa-20260930.md`](dashboard-v2-fase3-mapa-20260930.md).
+  La re-firma de `site/` sigue pendiente.
 - SKY Airline Perú y Orbest siguen sin resolver: no aparecen con ningún
   código en las cuatro capturas, así que no hay evidencia para mapearlas.

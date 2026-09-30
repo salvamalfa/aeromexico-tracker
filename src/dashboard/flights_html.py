@@ -38,6 +38,13 @@ def integration_flight_payload(payload: dict[str, Any]) -> dict[str, Any]:
         return result
 
     def route(value: dict[str, Any]) -> dict[str, Any]:
+        result = _route(value)
+        # Dashboard v2: Industria keeps each airline's passengers per route.
+        if value.get("carrier_breakdown") is not None:
+            result["carrier_breakdown"] = value["carrier_breakdown"]
+        return result
+
+    def _route(value: dict[str, Any]) -> dict[str, Any]:
         estimated = value.get("passengers_estimated", False)
         metrics = {key: value[key] for key in metric_keys}
         if estimated:
@@ -115,6 +122,19 @@ def integration_flight_payload(payload: dict[str, Any]) -> dict[str, Any]:
         period_id: network(value)
         for period_id, value in payload.get("domestic_monthly_networks", {}).items()
     }
+    entity_networks = {
+        key: {
+            "label": value["label"],
+            "route_networks": {
+                period_id: network(item) for period_id, item in value["route_networks"].items()
+            },
+            "domestic_monthly_networks": {
+                period_id: network(item)
+                for period_id, item in value["domestic_monthly_networks"].items()
+            },
+        }
+        for key, value in payload.get("entity_networks", {}).items()
+    }
     return {
         "schema_version": payload["schema_version"],
         "metadata": payload["metadata"],
@@ -130,4 +150,5 @@ def integration_flight_payload(payload: dict[str, Any]) -> dict[str, Any]:
             for period_id, value in payload.get("domestic_networks", {}).items()
         } if not monthly_domestic else {},
         "domestic_monthly_networks": monthly_domestic,
+        **({"entity_networks": entity_networks} if entity_networks else {}),
     }

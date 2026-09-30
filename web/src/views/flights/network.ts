@@ -3,6 +3,7 @@
 // the map, region/month switches, volume line and route detail panel.
 // Ported from src/dashboard/assets/flights.js::renderNetworkPeriod.
 
+import { ENTITY_LABELS, type EntityKey } from "../shell/carriers";
 import { $, finite, priorPeriod } from "./dom";
 import {
   domesticAvailableForQuarter, ensureDomesticMonths, ensureDomesticQuarter,
@@ -110,6 +111,23 @@ function internationalPeriodNetwork(periodId: string): PeriodNetworkDocument {
   );
 }
 
+// Dashboard v2 (fase 3): what the map shows for each entity.
+function entityScopeNote(entity: string, domestic: boolean): string {
+  if (entity === "AEROMEXICO") {
+    return domestic
+      ? "Grupo Aeroméxico · combina Aerovías de México y Aeroméxico Connect"
+      : "Observado: Aerovías de México · estimaciones por ruta: Grupo Aeroméxico";
+  }
+  const label = ENTITY_LABELS[entity as EntityKey] ?? entity;
+  const who = entity === "INDUSTRY" ? "Industria · Aeroméxico, Volaris y Viva sumadas por ruta" : label;
+  const caveat = entity === "VIVA_AEROBUS" && !domestic
+    ? " · estimación internacional con mayor incertidumbre (≈15 % de error medido)"
+    : "";
+  return domestic
+    ? `${who} · pasajeros estimados (AFAC + AeroDataBox); asientos y ocupación N/D`
+    : `${who} · EE. UU.: observado (BTS T-100) · resto: estimado${caveat}`;
+}
+
 export async function renderNetworkPeriod(periodId: string): Promise<void> {
   await ensureDomesticMonths(monthsInQuarter(state.domesticMonthsQuarterId));
   const domesticAvailable = domesticAvailableForQuarter(periodId);
@@ -160,10 +178,7 @@ export async function renderNetworkPeriod(periodId: string): Promise<void> {
     // (nacional). Internacional solo tiene evidencia retenida de Aerovías
     // de México como operador; decirlo explícitamente evita presentar una
     // cifra más angosta como si fuera consolidada.
-    scopeNote.textContent =
-      state.networkMode === "domestic"
-        ? "Grupo Aeroméxico · combina Aerovías de México y Aeroméxico Connect"
-        : "Observado: Aerovías de México · estimaciones por ruta: Grupo Aeroméxico";
+    scopeNote.textContent = entityScopeNote(state.mapEntity, state.networkMode === "domestic");
   }
   renderRegionSwitch();
   renderNetworkVolume();

@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 
 from src.config import PATHS
+from src.dashboard.route_entities import AEROMEXICO_ROUTES, RouteEntity
 
 
 SCHEMA_VERSION = "flight_dashboard_payload_v1"
@@ -341,13 +342,15 @@ def _quarter_months(period_id: str) -> list[str]:
     return [f"{year}M{month:02d}" for month in range(first_month, first_month + 3)]
 
 
-def _load_routes(connection: duckdb.DuckDBPyConnection, period_id: str) -> dict[str, Any]:
+def _load_routes(connection: duckdb.DuckDBPyConnection, period_id: str, entity: RouteEntity = AEROMEXICO_ROUTES) -> dict[str, Any]:
+    # Another map entity reads its own T-100 carriers (see entity_routes.py).
+    carriers_sql = ", ".join(f"'{key}'" for key in entity.t100_carriers)
     expected_months = _quarter_months(period_id)
     available_months = {
         str(row[0])
         for row in connection.execute(
-            """SELECT DISTINCT period_id FROM fact_route_traffic_summary
-               WHERE carrier_key = 'AEROMEXICO'"""
+            f"""SELECT DISTINCT period_id FROM fact_route_traffic_summary
+               WHERE carrier_key IN ({carriers_sql})"""
         ).fetchall()
     }
     current_months = [month for month in expected_months if month in available_months]
@@ -378,7 +381,7 @@ def _load_routes(connection: duckdb.DuckDBPyConnection, period_id: str) -> dict[
                  SUM(departures) AS departures,
                  CASE WHEN SUM(seats) > 0 THEN SUM(passengers) / SUM(seats) END AS load_factor
           FROM fact_route_traffic_summary
-          WHERE carrier_key = 'AEROMEXICO' AND period_id IN ({current_placeholders})
+          WHERE carrier_key IN ({carriers_sql}) AND period_id IN ({current_placeholders})
           GROUP BY market_key
         )
         SELECT r.*, ao.name AS origin_name, ao.city AS origin_city,
@@ -405,7 +408,7 @@ def _load_routes(connection: duckdb.DuckDBPyConnection, period_id: str) -> dict[
         SELECT market_key, SUM(seats) AS seats, SUM(passengers) AS passengers,
                SUM(departures) AS departures
         FROM fact_route_traffic_summary
-        WHERE carrier_key = 'AEROMEXICO' AND period_id IN ({placeholders})
+        WHERE carrier_key IN ({carriers_sql}) AND period_id IN ({placeholders})
         GROUP BY market_key
         """,
         prior_months,
@@ -419,7 +422,7 @@ def _load_routes(connection: duckdb.DuckDBPyConnection, period_id: str) -> dict[
                SUM(f.departures_performed) AS departures
         FROM fact_route_traffic f
         JOIN dim_route d ON f.route_key = d.route_key
-        WHERE f.carrier_key = 'AEROMEXICO'
+        WHERE f.carrier_key IN ({carriers_sql})
           AND f.period_id IN ({current_placeholders})
           AND f.departures_performed > 0
         GROUP BY d.market_key, d.origin_iata, d.dest_iata
@@ -486,7 +489,7 @@ def _load_routes(connection: duckdb.DuckDBPyConnection, period_id: str) -> dict[
     source_rows = connection.execute(
         f"""SELECT DISTINCT source_hash, source_files, ingested_at
             FROM fact_route_traffic_summary
-            WHERE carrier_key = 'AEROMEXICO' AND period_id IN ({current_placeholders})
+            WHERE carrier_key IN ({carriers_sql}) AND period_id IN ({current_placeholders})
             ORDER BY source_hash""",
         current_months,
     ).df()
@@ -592,9 +595,12 @@ def build_flight_payload(database_path: str | Path | None = None) -> dict[str, A
             load_domestic_monthly_networks,
             load_domestic_networks,
         )
+        from src.dashboard.entity_routes import build_entity_networks
         international_networks = extend_networks(connection, route_networks)
         domestic_networks = load_domestic_networks(connection, quarters)
         domestic_monthly_networks = load_domestic_monthly_networks(connection)
+        # Dashboard v2 (fase 3): the same map for Industria, Volaris and Viva.
+        entity_networks = build_entity_networks(connection, quarters, _load_routes)
         route_network = {
             **route_networks[PILOT_PERIOD],
             "world_geometry": _load_world_geometry(),
@@ -693,6 +699,7 @@ def build_flight_payload(database_path: str | Path | None = None) -> dict[str, A
         "international_networks": international_networks,
         "domestic_networks": domestic_networks,
         "domestic_monthly_networks": domestic_monthly_networks,
+        "entity_networks": entity_networks,
         "forecast": forecast,
         "sources": sources,
         "agent_eligibility": {

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import pandas as pd
 
+from src.dashboard.route_entities import AEROMEXICO_ROUTES, RouteEntity, breakdown_totals
+
 
 SOURCE_LABEL = "México · AICM, vuelos AM programados"
 EXCLUSIVE_LABEL = "AFAC · mercado con Aeroméxico como único operador identificado"
@@ -19,7 +21,7 @@ MONTH_NAMES = (
 )
 
 
-def load_domestic_monthly_networks(connection) -> dict[str, dict]:
+def load_domestic_monthly_networks(connection, entity: RouteEntity = AEROMEXICO_ROUTES) -> dict[str, dict]:
     """Expose every retained estimate month independently from financial quarters."""
 
     exists = connection.execute(
@@ -43,17 +45,20 @@ def load_domestic_monthly_networks(connection) -> dict[str, dict]:
         }
         for period in periods
     ]
-    return load_domestic_networks(connection, records)
+    return load_domestic_networks(connection, records, entity=entity)
 
 
-def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
+def load_domestic_networks(
+    connection, quarters: list[dict], *, entity: RouteEntity = AEROMEXICO_ROUTES
+) -> dict[str, dict]:
+    carrier_list = ", ".join(f"'{key}'" for key in entity.estimate_carriers)
     estimate_exists = connection.execute(
         "SELECT count(*) FROM information_schema.tables "
         "WHERE table_name = 'fact_route_carrier_domestic_estimate'"
     ).fetchone()[0]
     estimates = connection.execute(
         "SELECT * FROM fact_route_carrier_domestic_estimate "
-        "WHERE carrier_key IN ('AEROMEXICO', 'AEROMEXICO_CONNECT')"
+        f"WHERE carrier_key IN ({carrier_list})"
     ).df() if estimate_exists else pd.DataFrame()
     capacity_exists = connection.execute(
         "SELECT count(*) FROM information_schema.tables "
@@ -61,25 +66,28 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
     ).fetchone()[0]
     capacity = connection.execute(
         "SELECT * FROM fact_aeromexico_domestic_capacity_estimate"
-    ).df() if capacity_exists else pd.DataFrame()
+    ).df() if capacity_exists and entity.capacity else pd.DataFrame()
     exists = connection.execute(
         "SELECT count(*) FROM information_schema.tables WHERE table_name = 'fact_domestic_scheduled_route_movements'"
     ).fetchone()[0]
+    # AICM slots, AIFA single-operator markets and AIFA presence describe
+    # Grupo Aeroméxico only; other entities never inherit them.
+    am_layers = entity.aeromexico_layers
     observations = connection.execute(
         "SELECT * FROM fact_domestic_scheduled_route_movements WHERE observation_status = 'assigned_slot_not_flown'"
-    ).df() if exists else pd.DataFrame()
+    ).df() if exists and am_layers else pd.DataFrame()
     exclusive_exists = connection.execute(
         "SELECT count(*) FROM information_schema.tables WHERE table_name = 'fact_domestic_exclusive_market_inferences'"
     ).fetchone()[0]
     exclusive = connection.execute(
         "SELECT * FROM fact_domestic_exclusive_market_inferences WHERE attribution_status = 'inferred_exclusive_carrier_market'"
-    ).df() if exclusive_exists else pd.DataFrame()
+    ).df() if exclusive_exists and am_layers else pd.DataFrame()
     shared_exists = connection.execute(
         "SELECT count(*) FROM information_schema.tables WHERE table_name = 'fact_aifa_shared_route_presence'"
     ).fetchone()[0]
     shared = connection.execute(
         "SELECT * FROM fact_aifa_shared_route_presence WHERE attribution_status = 'carrier_route_present_volume_unresolved'"
-    ).df() if shared_exists else pd.DataFrame()
+    ).df() if shared_exists and am_layers else pd.DataFrame()
     if estimates.empty and observations.empty and exclusive.empty and shared.empty:
         return {}
     airports = connection.execute("SELECT * FROM dim_airport").df().set_index("airport_iata")
@@ -98,9 +106,10 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
 
     def estimated_network(quarter: dict, frame: pd.DataFrame, months: list[str]) -> dict:
         frame = frame.copy()
-        frame["carrier_label"] = frame["carrier_key"].map(ESTIMATED_CARRIERS)
+        frame["carrier_label"] = frame["carrier_key"].map(entity.estimate_carriers)
         if frame["carrier_label"].isna().any():
-            raise ValueError("Domestic estimate contains an unsupported Aeromexico carrier key")
+            raise ValueError(f"Domestic estimate contains a carrier key outside {entity.key}")
+        estimated_label = entity.domestic_estimated_label
         direction_keys = [
             "period_id", "market_key", "origin_iata", "destination_iata",
         ]
@@ -323,8 +332,8 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
                 monthly.append(
                     {
                         "period_id": str(period_id),
-                        "carrier_key": "AEROMEXICO_GROUP",
-                        "carrier_label": "Grupo Aeroméxico",
+                        "carrier_key": entity.group_key,
+                        "carrier_label": entity.group_label,
                         "origin_iata": str(origin),
                         "destination_iata": str(destination),
                         "passengers": float(passenger_row["passengers"]),
@@ -375,8 +384,15 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
                     "previous": {"passengers": None, "seats": None, "departures": None},
                     "directions": directions,
                     "monthly": monthly,
-                    "source_label": ESTIMATED_LABEL,
-                    "coverage_note": coverage_note + " · pasajeros, vuelos y capacidad estimados"
+                    "source_label": estimated_label,
+                    "carrier_breakdown": breakdown_totals(
+                        entity,
+                        list(group.groupby("carrier_key")["passengers_estimated"].sum().items()),
+                    ),
+                    "coverage_note": coverage_note + (
+                        " · pasajeros, vuelos y capacidad estimados" if entity.capacity
+                        else " · pasajeros estimados; asientos y ocupación N/D"
+                    )
                         + (f" · cobertura parcial: {route_months_covered} de {route_months_selected} meses"
                            if route_months_covered < route_months_selected else ""),
                     "operation_status": "estimated_from_afac_margins_and_temporal_support",
@@ -395,7 +411,7 @@ def load_domestic_networks(connection, quarters: list[dict]) -> dict[str, dict]:
             "availability": "complete" if set(observed_months) == set(months) else "partial",
             "routes": routes,
             "airports": [endpoint(code) for code in sorted(airport_codes)],
-            "coverage_by_source": {ESTIMATED_LABEL: observed_months},
+            "coverage_by_source": {estimated_label: observed_months},
             "source_url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404",
             "route_count": len(routes),
             "represented_passengers": float(sum(route["passengers"] for route in routes)),

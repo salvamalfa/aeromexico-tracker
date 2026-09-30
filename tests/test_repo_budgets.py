@@ -39,8 +39,8 @@ ALLOWLIST: dict[str, int] = {
     "src/analytics/route_carrier.py": 783,
     "src/transform/stage6_facts.py": 772,
     "src/ingest/aerodatabox/international.py": 715,
-    "src/dashboard/flights.py": 712,
-    "src/dashboard/international_routes.py": 643,  # +5: withhold out-of-range load-factor bounds (Codex #20)
+    "src/dashboard/flights.py": 719,  # +7: T-100 routes per map entity (Dashboard v2 fase 3; rest in entity_routes.py)
+    "src/dashboard/international_routes.py": 649,  # +5: withhold out-of-range load-factor bounds (Codex #20); +6: estimate per map entity + Industria breakdown (Dashboard v2 fase 3)
     "src/parse/peers/stage5.py": 625,
     "tests/test_international_route_carrier.py": 622,
 }

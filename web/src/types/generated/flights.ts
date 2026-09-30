@@ -6,7 +6,7 @@ export type NullableString = string | null;
 export type NullableInteger = number | null;
 
 /**
- * Describes the flight payload actually embedded in the published integrated HTML: the output of src.dashboard.flights_html.integration_flight_payload(build_flight_payload()) as it is today. See docs/arquitectura/auditoria-arquitectura-20260926.md Fase 2 and contracts/web/README.md.
+ * Describes the flight payload actually embedded in the published integrated HTML: the output of src.dashboard.flights_html.integration_flight_payload(build_flight_payload()) as it is today. See docs/arquitectura/auditoria-arquitectura-20260926.md Fase 2 and contracts/web/README.md. Dashboard v2 adds the optional entity_networks (Industria, Volaris, Viva) and a per-route carrier_breakdown for Industria.
  */
 export interface VuelosPayloadIntegradoV1 {
   schema_version: "flight_dashboard_payload_v1";
@@ -32,6 +32,20 @@ export interface VuelosPayloadIntegradoV1 {
   };
   domestic_monthly_networks: {
     [k: string]: Network;
+  };
+  /**
+   * Dashboard v2: the same map for Industria, Volaris and Viva, keyed by entity.
+   */
+  entity_networks?: {
+    [k: string]: {
+      label: string;
+      route_networks: {
+        [k: string]: Network;
+      };
+      domestic_monthly_networks: {
+        [k: string]: Network;
+      };
+    };
   };
 }
 export interface Quarter {
@@ -164,6 +178,12 @@ export interface Route {
   previous: RoutePrevious;
   directions: Direction[];
   monthly: MonthlyItem[];
+  /**
+   * Industria only: passengers of each airline (dashboard entity key) on this route.
+   */
+  carrier_breakdown?: {
+    [k: string]: number;
+  };
 }
 export interface Endpoint {
   iata: string;
@@ -189,7 +209,8 @@ export interface Direction {
 }
 export interface MonthlyItem {
   period_id: NullableString;
-  carrier_key: "AEROMEXICO" | "AEROMEXICO_CONNECT" | "AEROMEXICO_GROUP" | null;
+  carrier_key:
+    "AEROMEXICO" | "AEROMEXICO_CONNECT" | "AEROMEXICO_GROUP" | "VOLARIS" | "VIVA_AEROBUS" | "INDUSTRY" | null;
   carrier_label: NullableString;
   origin_iata: NullableString;
   destination_iata: NullableString;
