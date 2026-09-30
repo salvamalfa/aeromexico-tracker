@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+from src.dashboard.route_capacity import load_route_capacity
 from src.dashboard.route_entities import AEROMEXICO_ROUTES, RouteEntity, breakdown_totals
 
 
@@ -60,13 +61,7 @@ def load_domestic_networks(
         "SELECT * FROM fact_route_carrier_domestic_estimate "
         f"WHERE carrier_key IN ({carrier_list})"
     ).df() if estimate_exists else pd.DataFrame()
-    capacity_exists = connection.execute(
-        "SELECT count(*) FROM information_schema.tables "
-        "WHERE table_name = 'fact_aeromexico_domestic_capacity_estimate'"
-    ).fetchone()[0]
-    capacity = connection.execute(
-        "SELECT * FROM fact_aeromexico_domestic_capacity_estimate"
-    ).df() if capacity_exists and entity.capacity else pd.DataFrame()
+    capacity = load_route_capacity(connection, entity, "domestic")
     exists = connection.execute(
         "SELECT count(*) FROM information_schema.tables WHERE table_name = 'fact_domestic_scheduled_route_movements'"
     ).fetchone()[0]
@@ -390,8 +385,9 @@ def load_domestic_networks(
                         list(group.groupby("carrier_key")["passengers_estimated"].sum().items()),
                     ),
                     "coverage_note": coverage_note + (
-                        " · pasajeros, vuelos y capacidad estimados" if entity.capacity
-                        else " · pasajeros estimados; asientos y ocupación N/D"
+                        (" · pasajeros y vuelos estimados; asientos por promedio de flota (T-100)"
+                         if entity.fleet_capacity_carriers else " · pasajeros, vuelos y capacidad estimados")
+                        if entity.capacity else " · pasajeros estimados; asientos y ocupación N/D"
                     )
                         + (f" · cobertura parcial: {route_months_covered} de {route_months_selected} meses"
                            if route_months_covered < route_months_selected else ""),

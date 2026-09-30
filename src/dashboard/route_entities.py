@@ -6,7 +6,8 @@ decision of 30 Sep 2026: domestic routes estimated from AFAC + AeroDataBox
 (IPF), Mexico–United States observed by BTS T-100, and the rest of the
 international network estimated. They carry no Aeroméxico-only layer
 (AICM slots, AIFA single-operator markets, OMA releases, ANAC/Aerocivil/
-CAA/Aena authority observations) and no seat capacity yet (fase 4).
+CAA/Aena authority observations). Their seat capacity (fase 4) is the
+fleet-average estimate of ``src.analytics.fleet_capacity``.
 """
 
 from __future__ import annotations
@@ -29,6 +30,9 @@ class RouteEntity:
     # Estimate/T-100 carrier key -> dashboard entity, for the per-route
     # breakdown Industria shows. Empty for a single airline.
     breakdown: dict[str, str] = field(default_factory=dict)
+    # Carriers whose seats come from the T-100 fleet gauge instead of the
+    # aircraft-model configuration (Dashboard v2 fase 4).
+    fleet_capacity_carriers: tuple[str, ...] = ()
 
     @property
     def domestic_estimated_label(self) -> str:
@@ -59,7 +63,8 @@ VOLARIS_ROUTES = RouteEntity(
     group_key="VOLARIS",
     group_label="Volaris",
     aeromexico_layers=False,
-    capacity=False,
+    capacity=True,
+    fleet_capacity_carriers=("VOLARIS",),
 )
 
 VIVA_ROUTES = RouteEntity(
@@ -70,7 +75,8 @@ VIVA_ROUTES = RouteEntity(
     group_key="VIVA_AEROBUS",
     group_label="Viva",
     aeromexico_layers=False,
-    capacity=False,
+    capacity=True,
+    fleet_capacity_carriers=("VIVA_AEROBUS",),
 )
 
 INDUSTRY_ROUTES = RouteEntity(
@@ -85,7 +91,8 @@ INDUSTRY_ROUTES = RouteEntity(
     group_key="INDUSTRY",
     group_label="Industria",
     aeromexico_layers=False,
-    capacity=False,
+    capacity=True,
+    fleet_capacity_carriers=("VOLARIS", "VIVA_AEROBUS"),
     breakdown={
         "AEROMEXICO": "AEROMEXICO",
         "AEROMEXICO_CONNECT": "AEROMEXICO",

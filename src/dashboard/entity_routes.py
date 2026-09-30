@@ -16,6 +16,7 @@ import pandas as pd
 
 from src.dashboard.domestic_routes import load_domestic_monthly_networks
 from src.dashboard.international_routes import ESTIMATE_TABLE, ROUTE_PAYLOAD_KEYS, _estimated_routes
+from src.dashboard.route_capacity import load_route_capacity
 from src.dashboard.route_entities import EXTRA_ROUTE_ENTITIES, RouteEntity, breakdown_totals
 
 
@@ -26,7 +27,7 @@ def entity_international_networks(connection, networks, entity: RouteEntity):
     (``networks``, built by ``flights._load_routes`` for the entity); every
     other market is the AFAC + AeroDataBox estimate, labelled as such. None
     of Grupo Aeroméxico's own layers (authority observations, AICM, OMA,
-    Aena) apply, and there is no seat capacity for these carriers yet.
+    Aena) apply; seats come from ``route_capacity`` (fleet gauge, fase 4).
     """
     if entity.aeromexico_layers:
         raise ValueError("Grupo Aeroméxico keeps extend_networks()")
@@ -54,6 +55,7 @@ def entity_international_networks(connection, networks, entity: RouteEntity):
         )
 
     label = entity.international_estimated_label
+    capacity = load_route_capacity(connection, entity, "international")
     result = deepcopy(networks)
     for network in result.values():
         months = network["expected_months"]
@@ -62,7 +64,7 @@ def entity_international_networks(connection, networks, entity: RouteEntity):
             route["source_label"] = "Estados Unidos · BTS T-100"
             route["observed_months"] = original_months
             route["coverage_note"] = "Meses: " + ", ".join(m[5:] for m in original_months) + " · BTS T-100"
-        for market, estimate in _estimated_routes(estimates, pd.DataFrame(), months, endpoint, entity).items():
+        for market, estimate in _estimated_routes(estimates, capacity, months, endpoint, entity).items():
             if any(r["market_key"] == market for r in network["routes"]):
                 continue
             months_text = ", ".join(sorted({m["period_id"][5:] for m in estimate["monthly"]}))
@@ -79,7 +81,7 @@ def entity_international_networks(connection, networks, entity: RouteEntity):
                 estimated_months=sorted({m["period_id"] for m in estimate["monthly"]}),
                 coverage_note=(
                     f"Pasajeros estimados de {entity.group_label} (AFAC + AeroDataBox) · meses {months_text}"
-                    " · vuelos: frecuencias de AeroDataBox · asientos y ocupación N/D"
+                    " · vuelos: frecuencias de AeroDataBox · asientos por promedio de flota (T-100)"
                 ),
                 operation_status="estimated_from_afac_margins_and_aerodatabox_seed",
                 carrier_role="operating_carrier_estimated",

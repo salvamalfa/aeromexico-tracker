@@ -123,9 +123,11 @@ function entityScopeNote(entity: string, domestic: boolean): string {
   const caveat = entity === "VIVA_AEROBUS" && !domestic
     ? " · estimación internacional con mayor incertidumbre (≈15 % de error medido)"
     : "";
+  // Fase 4: Volaris/Viva seats = flights × T-100 seats per departure.
+  const seats = " · asientos por promedio de flota (ocupación por ruta ±9 pp)";
   return domestic
-    ? `${who} · pasajeros estimados (AFAC + AeroDataBox); asientos y ocupación N/D`
-    : `${who} · EE. UU.: observado (BTS T-100) · resto: estimado${caveat}`;
+    ? `${who} · pasajeros y vuelos estimados (AFAC + AeroDataBox)${seats}`
+    : `${who} · EE. UU.: observado (BTS T-100) · resto: estimado${caveat}${seats}`;
 }
 
 export async function renderNetworkPeriod(periodId: string): Promise<void> {

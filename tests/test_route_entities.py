@@ -62,3 +62,14 @@ def test_entity_maps_have_no_aeromexico_layers_and_industry_sums(flight_payload)
     # Aeroméxico's own map keeps its historical layers.
     am_labels = {r["source_label"] for n in flight_payload["international_networks"].values() for r in n["routes"]}
     assert "Estados Unidos · BTS T-100" in am_labels
+
+
+@pytest.mark.local_data
+def test_fleet_capacity_fills_occupancy_for_volaris_and_viva(flight_payload) -> None:
+    for key in ("VOLARIS", "VIVA_AEROBUS"):
+        networks = flight_payload["entity_networks"][key]["domestic_monthly_networks"].values()
+        routes = [route for network in networks for route in network["routes"]]
+        shown = [route for route in routes if route.get("load_factor") is not None]
+        assert len(shown) > 0.6 * len(routes), key
+        assert all(0 < route["load_factor"] <= 1 for route in shown)
+        assert all(route["seats_low"] <= route["seats"] <= route["seats_high"] for route in shown)
