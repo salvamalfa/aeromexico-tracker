@@ -54,6 +54,14 @@ uv run python -m src.publish --record analysis_runs/drafts/<periodo>/<version>.j
 uv run python -m src.publish.verify site/
 ```
 
+**Vista previa en `/v2/`.** `.github/pages-preview.json` puede fijar el commit
+de una rama sin fusionar cuyo `site/` ya firmado se sirve en
+`…/aeromexico-tracker/<path>/`, junto al sitio de `master`, que sigue en la raíz.
+`pages.yml` verifica ese `site/` con el verificador y los contratos de su propio
+commit, y si falla no despliega nada. Para actualizarla o retirarla, hace falta
+un PR a `master` que cambie el commit fijado o borre el archivo. Ver
+`docs/etapas/pages-preview-v2-20260930.md`.
+
 **Repo de datos privado:** insumos regenerables y privados
 (`data/bronze`, `data/silver`, warehouse, `analysis_runs/`) tienen respaldo en
 [`salvamalfa/aeromexico-tracker-data`](https://github.com/salvamalfa/aeromexico-tracker-data)
