@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from ._storage_auth import AuthSessionMixin
 from ._storage_common import AdmissionDenied, ChatError, Conflict, NotFound, utcnow
 from ._storage_tools import ToolResultMixin
 from ._storage_usage import UsageRetentionMixin
@@ -18,7 +19,7 @@ from ._storage_usage import UsageRetentionMixin
 __all__ = ["AdmissionDenied", "ChatError", "ChatStore", "Conflict", "NotFound", "utcnow"]
 
 
-class ChatStore(ToolResultMixin, UsageRetentionMixin):
+class ChatStore(ToolResultMixin, UsageRetentionMixin, AuthSessionMixin):
     """SQLite store. Every operation opens its own connection for thread safety."""
 
     def __init__(self, path: str | Path):
@@ -166,6 +167,7 @@ class ChatStore(ToolResultMixin, UsageRetentionMixin):
                 columns = {row[1] for row in db.execute(f"PRAGMA table_info({table})")}
                 if "provider_turn_id" not in columns:
                     db.execute(f"ALTER TABLE {table} ADD COLUMN provider_turn_id TEXT NOT NULL DEFAULT ''")
+            self._initialize_auth(db)
 
     @staticmethod
     def _dump(obj: Any) -> str:
@@ -501,6 +503,23 @@ class ChatStore(ToolResultMixin, UsageRetentionMixin):
             }
             for r in rows
         ]
+
+    def events_and_status(
+        self, owner_id: str, turn_id: str, after: int = 0
+    ) -> tuple[list[dict[str, Any]], str]:
+        """Read new events and the turn status in one connection for SSE polling."""
+        with self._connect() as db:
+            turn = db.execute(
+                "SELECT status FROM turns WHERE id=? AND owner_id=?", (turn_id, owner_id)
+            ).fetchone()
+            if not turn:
+                raise NotFound("turn not found")
+            rows = db.execute(
+                "SELECT seq,event_type,payload_json FROM turn_events WHERE turn_id=? AND seq>? ORDER BY seq",
+                (turn_id, after),
+            ).fetchall()
+        events = [{"seq": r[0], "type": r[1], "data": json.loads(r[2])} for r in rows]
+        return events, turn["status"]
 
     def get_turn(self, owner_id: str, turn_id: str) -> dict[str, Any]:
         with self._connect() as db:

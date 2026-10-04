@@ -200,3 +200,16 @@ def test_peer_references_do_not_claim_aeromexico_filing() -> None:
         "query_metrics", {"metric_ids": ["load_factor"], "entity_ids": ["VOLARIS"], "periods": ["2026Q2"]}
     )["rows"][0]
     assert not any("sec.gov" in ref["url"] for ref in row["source_references"])
+
+
+def test_compare_orders_periods_chronologically_and_rejects_duplicates() -> None:
+    registry = ToolRegistry(Snapshot(FIXTURE))
+    args = {"metric_id": "load_factor", "entity_id": "AEROMEXICO"}
+    forward = registry.invoke("compare_metrics", {**args, "periods": ["2026Q1", "2026Q2"]})
+    backward = registry.invoke("compare_metrics", {**args, "periods": ["2026Q2", "2026Q1"]})
+    assert backward["comparison"] == forward["comparison"]
+    assert forward["comparison"]["previous"]["period"] == "2026Q1"
+    assert forward["comparison"]["current"]["period"] == "2026Q2"
+    for periods in (["2026Q2", "2026Q2"], ["2026Q2", "2026M06"]):
+        with pytest.raises(PlanValidationError):
+            registry.invoke("compare_metrics", {**args, "periods": periods})

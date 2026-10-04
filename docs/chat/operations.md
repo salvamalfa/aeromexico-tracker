@@ -29,9 +29,33 @@ origen necesita proxy HTTPS, CORS limitado al origen publicado y una prueba de
 autenticación del navegador. CORS no autentica usuarios.
 
 En local, usar `CHAT_AUTH_MODE=local` solamente con una instancia no expuesta a
-la red. El modo `bearer` debe resolver un token a un usuario; el servidor guarda
-hashes SHA-256 de tokens, no los tokens en claro. No incluir secretos en Vite,
-logs, commits, fixtures o reportes.
+la red. El servidor rechaza en modo local cualquier petición con cabeceras de
+proxy (`Forwarded`, `X-Forwarded-*`, `X-Real-IP`), y no arranca con
+`CHAT_PROVIDER=openai` en modo local salvo `CHAT_ALLOW_LOCAL_OPENAI=true` en la
+máquina del dueño. No incluir secretos en Vite, logs, commits, fixtures o
+reportes.
+
+### Contraseña
+
+El piloto usa `CHAT_AUTH_MODE=password` con **una sola contraseña**, del dueño
+(`user_id` `owner`), hasta que se decida dar acceso a más personas:
+
+1. Generar la contraseña y su hash, en la máquina del dueño:
+   `uv run --all-extras python -m src.conversational_analytics hash-password --generate`.
+   Imprime una vez `password:` y `password_hash:`. Guardar la contraseña en un
+   gestor de contraseñas. Sin `--generate`, el comando pide una contraseña
+   propia (mínimo 12 caracteres) sin eco e imprime solo el hash.
+2. En el entorno del servidor, fuera del repositorio:
+   `CHAT_PASSWORDS_JSON=[{"user_id":"owner","password_hash":"scrypt$15$8$1$…"}]`,
+   `CHAT_ALLOWED_ORIGINS=https://salvamalfa.github.io` y, si hay proxy TLS en el
+   mismo host, `CHAT_TRUSTED_PROXY=127.0.0.1`.
+3. Rotar: generar otro hash, reemplazarlo y reiniciar. Las sesiones emitidas
+   con el hash anterior dejan de valer.
+
+Nunca escribir la contraseña ni su hash en Git, en el PR, en comentarios, logs
+o fixtures. El panel pide la contraseña al abrirse; la sesión (12 h) vive solo
+en memoria del navegador, así que recargar la página la vuelve a pedir. Tras 5
+intentos fallidos desde un mismo cliente en 15 minutos el login responde 429.
 
 ## Diseño viable para un piloto de una instancia
 
@@ -56,9 +80,10 @@ público.
 
 ### Identidad, cuotas, retención y proveedor
 
-- Dar un bearer distinto por persona o piloto y mapearlo a un `user_id` estable.
-  Rotar o revocar el token reemplazando su hash configurado. No usar una key
-  compartida en frontend.
+- Una contraseña por persona si se abre a más usuarios, cada una mapeada a un
+  `user_id` estable en `CHAT_PASSWORDS_JSON`; las cuotas por usuario aplican a
+  ese `user_id`. Rotar o revocar reemplazando o quitando su hash. No usar una
+  key compartida en frontend.
 - Conservar los límites configurables por usuario y globales de tokens/costo,
   concurrencia, tamaño, llamadas de herramienta y tiempo del turno. Rechazar un
   segundo turno activo de la misma conversación con un estado visible.

@@ -17,7 +17,7 @@ describe("normalizeApiUrl", () => {
 });
 
 describe("ChatTransport", () => {
-  it("sends the structured context and bearer token only in the request", async () => {
+  it("sends the structured context and the login session only in the request", async () => {
     const fetcher = vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) => new Response(JSON.stringify({ turn_id: "turn-1", status: "queued" }), {
       status: 200, headers: { "Content-Type": "application/json" },
     }));
@@ -54,5 +54,32 @@ describe("ChatTransport", () => {
     const fetcher = async () => new Response(source, { status: 200, headers: { "Content-Type": "text/event-stream" } });
     const api = new ChatTransport("/api/chat", undefined, fetcher as typeof fetch);
     await expect(api.streamEvents("turn", 0, new AbortController().signal, () => undefined)).rejects.toBeInstanceOf(ChatApiError);
+  });
+
+  it("logs in with the password in the body and surfaces Retry-After on throttling", async () => {
+    const fetcher = vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body)) as { password: string };
+      if (body.password === "correct-horse-battery") return new Response(JSON.stringify({ session: "s-1", expires_at: "2026-10-05T00:00:00Z" }), { status: 200 });
+      return new Response(JSON.stringify({ detail: "too many failed attempts" }), { status: 429, headers: { "Retry-After": "420" } });
+    });
+    const api = new ChatTransport("/api/chat", undefined, fetcher as typeof fetch);
+    await expect(api.login("correct-horse-battery")).resolves.toEqual({ session: "s-1", expires_at: "2026-10-05T00:00:00Z" });
+    const [url, init] = fetcher.mock.calls[0]!;
+    expect(url).toBe("/api/chat/login");
+    expect(new Headers(init?.headers).get("Authorization")).toBeNull();
+    const error = await api.login("wrong").catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(ChatApiError);
+    expect((error as ChatApiError).status).toBe(429);
+    expect((error as ChatApiError).retryAfterSeconds).toBe(420);
+  });
+
+  it("uses the SSE id and event fields even when the payload has its own type or seq", async () => {
+    const source = "id: 3\nevent: message.completed\ndata: {\"type\":\"turn.completed\",\"seq\":99,\"content\":\"ok\"}\n\n";
+    const fetcher = async () => new Response(source, { status: 200, headers: { "Content-Type": "text/event-stream" } });
+    const api = new ChatTransport("/api/chat", undefined, fetcher as typeof fetch);
+    const seen: Array<[string, number | undefined]> = [];
+    const last = await api.streamEvents("turn", 0, new AbortController().signal, (event) => seen.push([event.type, event.seq]));
+    expect(seen).toEqual([["message.completed", 3]]);
+    expect(last).toBe(3);
   });
 });

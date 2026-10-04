@@ -1,5 +1,12 @@
 # Continuación para Claude — chat de Airline Tracker
 
+> **Estado al 4 oct 2026:** Claude corrigió los hallazgos de la auditoría,
+> cambió la autenticación a contraseña y restauró `site/` al de master (holdout
+> re-fijado). La sonda y el holdout siguen sin ejecutarse porque
+> `OPENAI_API_KEY` no está en el entorno de Claude; el presupuesto autorizado
+> está intacto. Ver
+> [`docs/etapas/airline-tracker-remediacion-20261004.md`](../etapas/airline-tracker-remediacion-20261004.md).
+
 Traspaso del 3 de octubre de 2026, zona America/Mexico_City. Continúa la
 implementación existente; no empieces de cero. Esta nota registra el estado y
 la autorización del usuario, sin aprobar análisis ni sustituir `AGENTS.md`.
@@ -113,7 +120,7 @@ uv run --all-extras python -c "import os; print('OPENAI_API_KEY disponible:', bo
 
 El snapshot auditado debe coincidir con `expected_versions` del holdout:
 
-- datos: `388d3437aad47fb088f72b17580489fbe78f2cc6265339f5e724b10ec8f4c210`;
+- datos: `de3c4d404837b8c19d306c301cd5647cc955d26215a45bc0c8f8b7bed00db668` (re-fijado el 4 oct 2026 al manifiesto publicado en master; antes `388d3437…`, ver `docs/etapas/airline-tracker-implementacion-20261003.md`);
 - semántica: `d43faaad53a352cbbfea194c6ffa978ebef8bce6a4d403cc52553158fcb11b2a`.
 
 Las tarifas ingresadas arriba son referencias del 3 oct 2026, USD por millón

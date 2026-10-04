@@ -6,7 +6,7 @@ paid OpenAI provider is opt-in and requires an explicit model name.
 
 from __future__ import annotations
 
-import hashlib
+import ipaddress
 import json
 import math
 import os
@@ -19,7 +19,14 @@ from urllib.parse import urlsplit
 class ChatConfig:
     state_path: Path = Path.home() / ".local/state/airline-tracker/chat.sqlite3"
     auth_mode: str = "local"
-    bearer_users: dict[str, str] = field(default_factory=dict)
+    # user_id -> scrypt hash (see auth.hash_password). Only hashes are configured.
+    password_users: dict[str, str] = field(default_factory=dict)
+    session_ttl_hours: int = 12
+    trusted_proxies: tuple[str, ...] = ()
+    login_max_failures_per_client: int = 5
+    login_client_window_minutes: int = 15
+    login_max_failures_global: int = 50
+    login_global_window_minutes: int = 60
     allowed_origins: tuple[str, ...] = ()
     provider: str = "mock"
     model: str | None = None
@@ -29,6 +36,8 @@ class ChatConfig:
     max_tool_calls: int = 4
     max_tool_result_bytes: int = 16_000
     max_turn_seconds: int = 90
+    # Pending plus running turns admitted across all users. One worker thread
+    # executes them sequentially; this is a queue bound, not parallelism.
     max_concurrent_global: int = 2
     max_active_per_user: int = 1
     daily_token_budget_user: int = 100_000
@@ -47,25 +56,11 @@ class ChatConfig:
             os.environ.get("CHAT_STATE_PATH", str(Path.home() / ".local/state/airline-tracker/chat.sqlite3"))
         )
         auth_mode = os.environ.get("CHAT_AUTH_MODE", "local").lower()
-        if auth_mode not in {"local", "bearer"}:
-            raise ValueError("CHAT_AUTH_MODE must be 'local' or 'bearer'")
-        users: dict[str, str] = {}
-        raw_users = os.environ.get("CHAT_USERS_JSON", "")
-        if raw_users:
-            try:
-                entries = json.loads(raw_users)
-                if not isinstance(entries, list):
-                    raise ValueError
-                for entry in entries:
-                    user_id, token_hash = entry["user_id"], entry["token_sha256"]
-                    if not isinstance(user_id, str) or not user_id or len(token_hash) != 64:
-                        raise ValueError
-                    bytes.fromhex(token_hash)
-                    users[token_hash.lower()] = user_id
-            except (ValueError, TypeError, KeyError, json.JSONDecodeError) as exc:
-                raise ValueError("CHAT_USERS_JSON must contain user_id and token_sha256 entries") from exc
-        if auth_mode == "bearer" and not users:
-            raise ValueError("bearer mode requires CHAT_USERS_JSON with SHA-256 token hashes")
+        if auth_mode not in {"local", "password"}:
+            raise ValueError("CHAT_AUTH_MODE must be 'local' or 'password'")
+        users = _password_users(os.environ.get("CHAT_PASSWORDS_JSON", ""))
+        if auth_mode == "password" and not users:
+            raise ValueError("password mode requires CHAT_PASSWORDS_JSON with scrypt password hashes")
         allowed_origins = tuple(
             v.strip().rstrip("/") for v in os.environ.get("CHAT_ALLOWED_ORIGINS", "").split(",") if v.strip()
         )
@@ -81,8 +76,13 @@ class ChatConfig:
                 or parsed_origin.password
             ):
                 raise ValueError("CHAT_ALLOWED_ORIGINS must contain HTTPS origins without paths")
-        if auth_mode == "bearer" and not allowed_origins:
-            raise ValueError("bearer mode requires explicit CHAT_ALLOWED_ORIGINS")
+        if auth_mode == "password" and not allowed_origins:
+            raise ValueError("password mode requires explicit CHAT_ALLOWED_ORIGINS")
+        trusted_proxies = tuple(
+            str(ipaddress.ip_address(v.strip()))
+            for v in os.environ.get("CHAT_TRUSTED_PROXY", "").split(",")
+            if v.strip()
+        )
         provider = os.environ.get("CHAT_PROVIDER", "mock").lower()
         if provider not in {"mock", "openai"}:
             raise ValueError("CHAT_PROVIDER must be 'mock' or 'openai'")
@@ -90,6 +90,16 @@ class ChatConfig:
         openai_enabled = os.environ.get("CHAT_OPENAI_ENABLED", "false").lower() in {"1", "true", "yes"}
         if provider == "openai" and (not openai_enabled or not model):
             raise ValueError("OpenAI mode requires CHAT_OPENAI_ENABLED=true and an explicit CHAT_MODEL")
+        allow_local_openai = os.environ.get("CHAT_ALLOW_LOCAL_OPENAI", "false").lower() in {
+            "1",
+            "true",
+            "yes",
+        }
+        if provider == "openai" and auth_mode == "local" and not allow_local_openai:
+            raise ValueError(
+                "OpenAI mode requires CHAT_AUTH_MODE=password "
+                "(CHAT_ALLOW_LOCAL_OPENAI=true only on the owner's machine)"
+            )
         if (
             provider == "openai"
             and not {"CHAT_INPUT_COST_PER_MILLION", "CHAT_OUTPUT_COST_PER_MILLION"} <= os.environ.keys()
@@ -100,7 +110,9 @@ class ChatConfig:
         return cls(
             state_path=state_path,
             auth_mode=auth_mode,
-            bearer_users=users,
+            password_users=users,
+            session_ttl_hours=_env_int("CHAT_SESSION_TTL_HOURS", 12),
+            trusted_proxies=trusted_proxies,
             allowed_origins=allowed_origins,
             provider=provider,
             model=model,
@@ -135,16 +147,32 @@ class ChatConfig:
             if not math.isfinite(value) or value <= 0:
                 raise ValueError(f"{name} must be finite and positive")
 
-    def owner_for_token(self, token: str) -> str | None:
-        """Resolve a configured bearer token without storing or logging it."""
-        digest = hashlib.sha256(token.encode("utf-8")).hexdigest()
-        # Compare every configured digest in constant time.
-        import hmac
+    def password_fingerprints(self) -> dict[str, str]:
+        """Fingerprint per configured user; sessions die when a hash rotates."""
+        from .auth import hash_fingerprint
 
-        for configured_hash, user_id in self.bearer_users.items():
-            if hmac.compare_digest(configured_hash, digest):
-                return user_id
-        return None
+        return {user_id: hash_fingerprint(encoded) for user_id, encoded in self.password_users.items()}
+
+
+def _password_users(raw: str) -> dict[str, str]:
+    from .auth import parse_password_hash
+
+    if not raw:
+        return {}
+    users: dict[str, str] = {}
+    try:
+        entries = json.loads(raw)
+        if not isinstance(entries, list):
+            raise ValueError
+        for entry in entries:
+            user_id, encoded = entry["user_id"], entry["password_hash"]
+            if not isinstance(user_id, str) or not user_id or len(user_id) > 64 or user_id in users:
+                raise ValueError
+            parse_password_hash(encoded)
+            users[user_id] = encoded
+    except (ValueError, TypeError, KeyError, json.JSONDecodeError) as exc:
+        raise ValueError("CHAT_PASSWORDS_JSON must contain user_id and scrypt password_hash entries") from exc
+    return users
 
 
 def _env_int(name: str, default: int) -> int:

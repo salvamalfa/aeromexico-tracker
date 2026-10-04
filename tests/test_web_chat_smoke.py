@@ -110,12 +110,40 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
                 pytest.skip(f"Chromium no pudo iniciarse: {error}")
             page = browser.new_page(viewport={"width": 1280, "height": 900})
             sent_context: list[dict[str, object]] = []
+            password = "correct-horse-battery-1"
+            api_state = {"resume_pending": False, "expired": False, "logins": 0}
+            seen_events: list[str] = []
+
+            def sse(turn_id: str, text: str) -> str:
+                return (
+                    f'id: 1\nevent: turn.started\ndata: {{"turn_id":"{turn_id}"}}\n\n'
+                    f'id: 2\nevent: message.delta\ndata: {{"turn_id":"{turn_id}","text":"{text}"}}\n\n'
+                    "id: 3\nevent: message.completed\ndata: "
+                    f'{{"turn_id":"{turn_id}","content":"{text}",'
+                    '"references":[{"label":"Fuente",'
+                    '"url":"https://www.gob.mx/afac/estadisticas"}],"chart":null}\n\n'
+                    f'id: 4\nevent: turn.completed\ndata: {{"turn_id":"{turn_id}"}}\n\n'
+                )
 
             def fake_api(route: object) -> None:
                 request = route.request  # type: ignore[attr-defined]
                 path = urlsplit(request.url).path.split("/api/chat", 1)[-1]
                 if path == "/health":
-                    route.fulfill(json={"status": "ok", "snapshot_version": "snapshot-smoke"})  # type: ignore[attr-defined]
+                    route.fulfill(
+                        json={"status": "ok", "snapshot_version": "snapshot-smoke", "auth": "password"}
+                    )  # type: ignore[attr-defined]
+                    return
+                if path == "/login":
+                    if request.post_data_json.get("password") == password:
+                        api_state["logins"] += 1
+                        api_state["expired"] = False
+                        route.fulfill(json={"session": f"session-{api_state['logins']}", "expires_at": "x"})  # type: ignore[attr-defined]
+                    else:
+                        route.fulfill(status=401, json={"detail": "invalid password"})  # type: ignore[attr-defined]
+                    return
+                authorized = (request.headers.get("authorization") or "").startswith("Bearer session-")
+                if not authorized or api_state["expired"]:
+                    route.fulfill(status=401, json={"detail": "login required"})  # type: ignore[attr-defined]
                 elif path == "/conversations" and request.method == "POST":
                     route.fulfill(
                         json={
@@ -124,21 +152,33 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
                             "created_at": "2026-10-04T00:00:00Z",
                         }
                     )  # type: ignore[attr-defined]
+                elif path == "/conversations/conversation-smoke" and request.method == "GET":
+                    pending = api_state["resume_pending"]
+                    route.fulfill(
+                        json={
+                            "id": "conversation-smoke",
+                            "snapshot_version": "snapshot-smoke",
+                            "messages": [
+                                {
+                                    "id": "m1",
+                                    "role": "user",
+                                    "content": "Pregunta en cola",
+                                    "turn_id": "turn-pending",
+                                }
+                            ],
+                            "turns": [
+                                {"id": "turn-pending", "status": "pending" if pending else "completed"}
+                            ],
+                        }
+                    )  # type: ignore[attr-defined]
                 elif path.endswith("/messages") and request.method == "POST":
                     sent_context.append(request.post_data_json["context"])
-                    route.fulfill(json={"turn_id": "turn-smoke", "status": "queued"})  # type: ignore[attr-defined]
+                    route.fulfill(json={"turn_id": "turn-smoke", "status": "pending"})  # type: ignore[attr-defined]
                 elif path.endswith("/events"):
-                    body = (
-                        'id: 1\nevent: turn.started\ndata: {"turn_id":"turn-smoke"}\n\n'
-                        "id: 2\nevent: message.delta\ndata: "
-                        '{"turn_id":"turn-smoke","text":"Respuesta **segura**."}\n\n'
-                        "id: 3\nevent: message.completed\ndata: "
-                        '{"turn_id":"turn-smoke","content":"Respuesta **segura**.",'
-                        '"references":[{"label":"Fuente",'
-                        '"url":"https://www.gob.mx/afac/estadisticas"}],"chart":null}\n\n'
-                        'id: 4\nevent: turn.completed\ndata: {"turn_id":"turn-smoke"}\n\n'
-                    )
-                    route.fulfill(status=200, content_type="text/event-stream", body=body)  # type: ignore[attr-defined]
+                    turn_id = path.split("/")[2]
+                    seen_events.append(turn_id)
+                    text = "Respuesta retomada." if turn_id == "turn-pending" else "Respuesta **segura**."
+                    route.fulfill(status=200, content_type="text/event-stream", body=sse(turn_id, text))  # type: ignore[attr-defined]
                 else:
                     route.fulfill(status=404, json={"detail": f"No mock for {path}"})  # type: ignore[attr-defined]
 
@@ -157,6 +197,17 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
             launcher = page.get_by_role("button", name="Abrir Airline Tracker chat analítico")
             launcher.wait_for(state="visible", timeout=20_000)
             launcher.click()
+            # The panel asks for the password before any conversation exists.
+            password_field = page.get_by_label("Contraseña", exact=True)
+            password_field.wait_for(state="visible", timeout=10_000)
+            password_field.fill("wrong-password-123")
+            page.get_by_role("button", name="Entrar").click()
+            page.get_by_text("Contraseña incorrecta.").wait_for(timeout=10_000)
+            password_field.fill(password)
+            page.get_by_role("button", name="Entrar").click()
+            password_field.wait_for(state="hidden", timeout=10_000)
+            assert password not in page.content()
+            assert password not in page.evaluate("JSON.stringify(Object.assign({}, localStorage))")
             page.get_by_label("Pregunta sobre los datos publicados").fill("¿Cómo cambió la ocupación?")
             page.get_by_role("button", name="Enviar").click()
             page.get_by_text("Respuesta segura.").wait_for(timeout=10_000)
@@ -187,6 +238,25 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
             market_index = len(sent_context) - 1
             assert sent_context[market_index]["card_id"] == "market-chart"
             assert sent_context[market_index]["filters"]["segment"] == "total"  # type: ignore[index]
+            page.keyboard.press("Escape")
+
+            # A reload asks for the password again and resumes a queued turn
+            # from its stored events instead of resending the question.
+            api_state["resume_pending"] = True
+            page.reload(wait_until="domcontentloaded")
+            launcher.wait_for(state="visible", timeout=20_000)
+            launcher.click()
+            password_field.wait_for(state="visible", timeout=10_000)
+            password_field.fill(password)
+            page.get_by_role("button", name="Entrar").click()
+            page.get_by_text("Respuesta retomada.").wait_for(timeout=10_000)
+            assert "turn-pending" in seen_events
+            assert len(sent_context) == 3
+
+            # An expired session brings the password form back.
+            api_state["expired"] = True
+            page.get_by_role("button", name="Nueva conversación").click()
+            password_field.wait_for(state="visible", timeout=10_000)
             page.keyboard.press("Escape")
 
             page.set_viewport_size({"width": 390, "height": 844})

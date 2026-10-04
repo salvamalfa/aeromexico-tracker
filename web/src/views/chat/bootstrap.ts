@@ -1,15 +1,16 @@
-import type { ChatChart, ChatConversation, ChatContext, ChatEvent, ChatMessage } from "../../types/chat";
-import { renderSafeChart } from "./chart";
+import type { ChatChart, ChatConversation, ChatEvent, ChatMessage } from "../../types/chat";
 import { buildChatContext, describeChatContext } from "./context";
-import { messageFromPayload, renderSafeMarkdown, safeReferences } from "./markdown";
+import { messageFromPayload, safeReferences } from "./markdown";
 import { mountPanelControls, resizeDashboardCharts } from "./panel-controls";
+import { renderMessages } from "./render";
+import { MAX_INPUT, PANEL_HTML } from "./template";
 import { ChatApiError, ChatTransport } from "./transport";
 import "./chat.css";
 
-const MAX_INPUT = 4000;
 const MAX_ANSWER = 20_000;
 const STORAGE_KEY = "airline-tracker.chat.conversation-id";
 const API_URL = import.meta.env.VITE_CHAT_API_URL ?? "/api/chat";
+const TERMINAL = new Set(["completed", "failed", "cancelled"]);
 
 interface ChatUiState {
   conversationId?: string;
@@ -29,9 +30,15 @@ function randomId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
+function storage(action: (store: Storage) => string | null | void): string | null {
+  try { return action(window.localStorage) ?? null; } catch { return null; }
+}
+
 export function mountChat(): void {
-  let bearerToken: string | undefined;
-  const transport = new ChatTransport(API_URL, () => bearerToken);
+  // The login session lives only in memory: a reload asks for the password again.
+  let session: string | undefined;
+  let authMode: "local" | "password" | undefined;
+  const transport = new ChatTransport(API_URL, () => session);
   const state: ChatUiState = { messages: [], lastSequence: 0 };
   const launcher = document.createElement("button");
   launcher.type = "button";
@@ -46,29 +53,7 @@ export function mountChat(): void {
   panel.className = "chat-panel";
   panel.hidden = true;
   panel.setAttribute("aria-label", "Airline Tracker chat analítico");
-  panel.innerHTML = `
-    <div class="chat-resizer" role="separator" tabindex="0" aria-label="Ajustar ancho del panel de chat" aria-orientation="vertical" aria-valuemin="340" aria-valuemax="620"></div>
-    <header class="chat-header">
-      <div><p class="chat-kicker">Airline Tracker</p><h2>Chat analítico</h2><p class="chat-context" data-chat-context>Contexto: vista actual</p></div>
-      <button type="button" class="chat-icon-button" data-chat-close aria-label="Cerrar chat">×</button>
-    </header>
-    <div class="chat-toolbar">
-      <span class="chat-version" data-chat-version title="Versión completa del snapshot">Datos: —</span>
-      <div><button type="button" data-chat-new>Nueva conversación</button><button type="button" data-chat-delete>Eliminar</button></div>
-    </div>
-    <p class="chat-notice" data-chat-notice role="status" aria-live="polite"></p>
-    <form class="chat-access" data-chat-access hidden>
-      <label for="chat-access-token">Token de acceso (solo esta sesión)</label>
-      <input id="chat-access-token" type="password" autocomplete="off" spellcheck="false">
-      <button type="submit">Conectar</button>
-    </form>
-    <ol class="chat-messages" data-chat-messages aria-label="Mensajes de la conversación" aria-live="polite"></ol>
-    <div class="chat-status" data-chat-status role="status" aria-live="polite"></div>
-    <form class="chat-composer" data-chat-form>
-      <label for="chat-input">Pregunta sobre los datos publicados</label>
-      <textarea id="chat-input" maxlength="4000" rows="3" placeholder="Ej. Compara el factor de ocupación de este trimestre" required></textarea>
-      <div class="chat-composer-foot"><span data-chat-count>0 / 4000</span><button type="submit" data-chat-send>Enviar</button><button type="button" data-chat-cancel hidden>Cancelar turno</button></div>
-    </form>`;
+  panel.innerHTML = PANEL_HTML;
   document.body.append(launcher, panel);
 
   const query = <T extends HTMLElement>(selector: string) => panel.querySelector<T>(selector)!;
@@ -82,61 +67,18 @@ export function mountChat(): void {
   const closeButton = query<HTMLButtonElement>("[data-chat-close]");
   const resizer = query<HTMLElement>(".chat-resizer");
   const accessForm = query<HTMLFormElement>("[data-chat-access]");
+  const passwordInput = query<HTMLInputElement>("#chat-password");
+  const accessError = query<HTMLElement>("[data-chat-access-error]");
+  const logoutButton = query<HTMLButtonElement>("[data-chat-logout]");
 
-  const paintMessages = () => {
-    messagesNode.replaceChildren();
-    for (const message of state.messages) {
-      const item = document.createElement("li");
-      item.className = `chat-message chat-message-${message.role}${message.pending ? " is-pending" : ""}`;
-      item.dataset.messageId = message.id;
-      const label = document.createElement("span");
-      label.className = "chat-message-label";
-      label.textContent = message.role === "user" ? "Tú" : "Airline Tracker";
-      item.append(label);
-      const body = document.createElement("div");
-      body.className = "chat-message-body";
-      const trustedReferenceUrls = safeReferences(message.references).flatMap((reference) => reference.url ? [reference.url] : []);
-      renderSafeMarkdown(body, message.content, trustedReferenceUrls);
-      item.append(body);
-      if (message.chart) {
-        const chartHost = document.createElement("div");
-        chartHost.className = "chat-answer-chart";
-        chartHost.setAttribute("role", "img");
-        chartHost.setAttribute("aria-label", message.chart.title ?? "Gráfica de respuesta");
-        item.append(chartHost);
-        if (!renderSafeChart(chartHost, message.chart)) chartHost.remove();
-      }
-      if (message.references?.length) {
-        const refs = document.createElement("ul");
-        refs.className = "chat-references";
-        refs.setAttribute("aria-label", "Fuentes");
-        for (const reference of safeReferences(message.references)) {
-          const li = document.createElement("li");
-          if (reference.url) {
-            const anchor = document.createElement("a"); anchor.href = reference.url; anchor.target = "_blank"; anchor.rel = "noopener noreferrer";
-            anchor.textContent = reference.label; li.append(anchor);
-          } else {
-            const title = document.createElement("span"); title.textContent = reference.label; li.append(title);
-          }
-          if (reference.detail) { const detail = document.createElement("small"); detail.textContent = reference.detail; li.append(detail); }
-          refs.append(li);
-        }
-        item.append(refs);
-      }
-      if (message.role === "assistant" && !message.pending && (message.retryMessageId || (message.turn_id && ["failed", "cancelled"].includes(statusForTurn(message.turn_id) ?? "")))) {
-        const retry = document.createElement("button"); retry.type = "button"; retry.className = "chat-retry"; retry.textContent = "Reintentar";
-        retry.addEventListener("click", () => {
-          const prior = [...state.messages].slice(0, state.messages.indexOf(message)).reverse().find((candidate) => candidate.role === "user");
-          if (prior) void submitMessage(prior.content);
-        });
-        item.append(retry);
-      }
-      messagesNode.append(item);
-    }
-    messagesNode.scrollTop = messagesNode.scrollHeight;
-  };
   const turns = new Map<string, string>();
-  function statusForTurn(turnId: string): string | undefined { return turns.get(turnId); }
+  const paintMessages = () => renderMessages(messagesNode, state.messages, {
+    canRetry: (message) => Boolean(message.retryMessageId || (message.turn_id && ["failed", "cancelled"].includes(turns.get(message.turn_id) ?? ""))),
+    onRetry: (message) => {
+      const prior = state.messages.slice(0, state.messages.indexOf(message)).reverse().find((candidate) => candidate.role === "user");
+      if (prior) void submitMessage(prior.content);
+    },
+  });
 
   const setBusy = (busy: boolean) => {
     state.activeTurn = busy ? state.activeTurn : undefined;
@@ -147,23 +89,39 @@ export function mountChat(): void {
   };
 
   const setContextLabel = () => {
-    const context = buildChatContext(state.focusedCard);
-    const entity = Array.isArray(context.entity) ? context.entity.join(", ") : context.entity;
-    query<HTMLElement>("[data-chat-context]").textContent = `Contexto: ${describeChatContext(context)}`;
+    query<HTMLElement>("[data-chat-context]").textContent = `Contexto: ${describeChatContext(buildChatContext(state.focusedCard))}`;
+  };
+
+  const requireLogin = (message = "Ingresa la contraseña para preguntar.") => {
+    session = undefined;
+    logoutButton.hidden = true;
+    accessForm.hidden = false;
+    statusNode.textContent = message;
+    passwordInput.focus();
+  };
+
+  // Returns true when the error was an expired or missing login.
+  const handleAuthError = (error: unknown): boolean => {
+    if (error instanceof ChatApiError && error.status === 401 && authMode !== "local") {
+      requireLogin("Tu sesión terminó. Ingresa la contraseña de nuevo.");
+      return true;
+    }
+    return false;
   };
 
   function renderTurnEvent(event: ChatEvent): void {
     const turnId = typeof event.turn_id === "string" ? event.turn_id : state.activeTurn;
+    const assistantFor = () => state.messages.find((candidate) => candidate.turn_id === turnId && candidate.role === "assistant");
     if (event.type === "turn.queued" || event.type === "turn.started") {
       statusNode.textContent = event.type === "turn.queued" ? "Pregunta en cola…" : "Analizando datos publicados…";
       if (turnId) turns.set(turnId, "running");
     } else if (event.type === "message.delta") {
-      const text = typeof event.text === "string" ? event.text.slice(0, Math.max(0, MAX_ANSWER - (state.messages.find((candidate) => candidate.turn_id === turnId && candidate.role === "assistant")?.content.length ?? 0))) : "";
-      let message = state.messages.find((candidate) => candidate.turn_id === turnId && candidate.role === "assistant");
+      let message = assistantFor();
       if (!message) {
         message = { id: randomId(), role: "assistant", content: "", turn_id: turnId, pending: true };
         state.messages.push(message);
       }
+      const text = typeof event.text === "string" ? event.text.slice(0, Math.max(0, MAX_ANSWER - message.content.length)) : "";
       message.content += text;
       paintMessages();
     } else if (event.type === "tool.started") {
@@ -171,16 +129,15 @@ export function mountChat(): void {
     } else if (event.type === "tool.completed") {
       statusNode.textContent = "Consulta completada; preparando respuesta…";
     } else if (event.type === "message.completed") {
-      const partial = messageFromPayload(event);
-      let message = state.messages.find((candidate) => candidate.turn_id === turnId && candidate.role === "assistant");
+      let message = assistantFor();
       if (!message) { message = { id: randomId(), role: "assistant", content: "", turn_id: turnId }; state.messages.push(message); }
-      Object.assign(message, partial, { pending: false });
+      Object.assign(message, messageFromPayload(event), { pending: false });
       paintMessages();
     } else if (event.type === "turn.completed" || event.type === "turn.cancelled" || event.type === "turn.failed") {
       const outcome = event.type === "turn.completed" ? "completed" : event.type === "turn.cancelled" ? "cancelled" : "failed";
       if (turnId) {
         turns.set(turnId, outcome);
-        const message = state.messages.find((candidate) => candidate.turn_id === turnId && candidate.role === "assistant");
+        const message = assistantFor();
         if (message) message.pending = false;
       }
       statusNode.textContent = event.type === "turn.completed" ? "Respuesta completa." : event.type === "turn.cancelled" ? "Turno cancelado." : "No se pudo completar la respuesta. Puedes reintentar.";
@@ -189,91 +146,109 @@ export function mountChat(): void {
     }
   }
 
+  function loadConversation(conversation: ChatConversation): void {
+    state.conversationId = conversation.id;
+    state.snapshotVersion = conversation.snapshot_version;
+    state.messages = conversation.messages.map((message) => ({
+      ...message,
+      references: safeReferences(message.references ?? (message as ChatMessage & { payload?: { references?: unknown } }).payload?.references),
+      chart: (message as ChatMessage & { payload?: { chart?: unknown } }).payload?.chart as ChatChart | undefined ?? message.chart,
+    }));
+    for (const turn of conversation.turns) turns.set(turn.id, turn.status);
+    const active = [...conversation.turns].reverse().find((turn) => turn.status === "pending" || turn.status === "running");
+    if (!active) return;
+    state.activeTurn = active.id;
+    state.lastSequence = 0;
+    const partial = state.messages.find((message) => message.role === "assistant" && message.turn_id === active.id);
+    if (partial) { partial.content = ""; partial.pending = true; }
+    else state.messages.push({ id: randomId(), role: "assistant", content: "", turn_id: active.id, pending: true });
+    setBusy(true);
+    statusNode.textContent = "Retomando respuesta sin reenviar la pregunta…";
+    void listen(active.id);
+  }
+
   async function ensureConversation(): Promise<void> {
     noticeNode.textContent = "";
     statusNode.textContent = "Conectando con el servicio…";
     try {
-      const health = await transport.health() as { status?: string; snapshot_version?: string };
-      const currentVersion = health.snapshot_version;
+      const health = await transport.health();
+      authMode = health.auth;
+      if (authMode === "password" && !session) { requireLogin(); return; }
       let conversation: ChatConversation | undefined;
-      const previousId = localStorage.getItem(STORAGE_KEY);
+      const previousId = storage((store) => store.getItem(STORAGE_KEY));
       if (previousId) {
         try { conversation = await transport.conversation(previousId); }
         catch (error) {
           if (!(error instanceof ChatApiError) || error.status !== 404) throw error;
-          localStorage.removeItem(STORAGE_KEY);
+          storage((store) => store.removeItem(STORAGE_KEY));
         }
       }
-      if (!conversation) {
+      if (conversation) loadConversation(conversation);
+      else {
         const created = await transport.createConversation();
         state.conversationId = created.id;
         state.snapshotVersion = created.snapshot_version;
-        localStorage.setItem(STORAGE_KEY, created.id);
+        storage((store) => store.setItem(STORAGE_KEY, created.id));
         state.messages = [];
-      } else {
-        state.conversationId = conversation.id;
-        state.snapshotVersion = conversation.snapshot_version;
-        state.messages = conversation.messages.map((message) => ({
-          ...message,
-          references: safeReferences(message.references ?? (message as ChatMessage & { payload?: { references?: unknown } }).payload?.references),
-          chart: (message as ChatMessage & { payload?: { chart?: unknown } }).payload?.chart as ChatChart | undefined ?? message.chart,
-        }));
-        const active = [...conversation.turns].reverse().find((turn) => turn.status === "queued" || turn.status === "running" || turn.status === "in_progress");
-        if (active) {
-          state.activeTurn = active.id;
-          state.lastSequence = 0;
-          const partial = state.messages.find((message) => message.role === "assistant" && message.turn_id === active.id);
-          if (partial) { partial.content = ""; partial.pending = true; }
-          else state.messages.push({ id: randomId(), role: "assistant", content: "", turn_id: active.id, pending: true });
-          setBusy(true);
-          statusNode.textContent = "Retomando respuesta sin reenviar la pregunta…";
-          void listen(active.id);
-        }
       }
       const versionNode = query<HTMLElement>("[data-chat-version]");
       versionNode.textContent = `Datos: ${state.snapshotVersion?.slice(0, 8) ?? "—"}`;
       versionNode.title = state.snapshotVersion ? `Versión completa: ${state.snapshotVersion}` : "Versión del snapshot no disponible";
-      if (currentVersion && state.snapshotVersion && currentVersion !== state.snapshotVersion) {
-        noticeNode.textContent = `Los datos cambiaron desde esta conversación (${state.snapshotVersion} → ${currentVersion}). Inicia una conversación nueva para consultar la versión actual.`;
+      if (health.snapshot_version && state.snapshotVersion && health.snapshot_version !== state.snapshotVersion) {
+        noticeNode.textContent = `Los datos cambiaron desde esta conversación (${state.snapshotVersion} → ${health.snapshot_version}). Inicia una conversación nueva para consultar la versión actual.`;
       }
       paintMessages();
-      statusNode.textContent = "Puedes preguntar sobre las métricas y fuentes disponibles.";
+      if (!state.activeTurn) statusNode.textContent = "Puedes preguntar sobre las métricas y fuentes disponibles.";
     } catch (error) {
       statusNode.textContent = "";
-      if (error instanceof ChatApiError && (error.status === 401 || error.status === 403)) accessForm.hidden = false;
+      if (handleAuthError(error)) return;
       noticeNode.textContent = `No se pudo conectar con Airline Tracker: ${errorText(error)}`;
     }
   }
 
+  // A stream that ends without a terminal event is settled from the stored
+  // turn state, so the composer is never left locked.
+  async function settleTurn(turnId: string, reason: string): Promise<void> {
+    let status: string | undefined;
+    try {
+      const conversation = state.conversationId ? await transport.conversation(state.conversationId) : undefined;
+      status = conversation?.turns.find((turn) => turn.id === turnId)?.status;
+      if (conversation && status && TERMINAL.has(status)) { loadConversation(conversation); turns.set(turnId, status); }
+    } catch (error) { if (handleAuthError(error)) status = undefined; }
+    if (state.activeTurn !== turnId) return;
+    const assistant = state.messages.find((message) => message.turn_id === turnId && message.role === "assistant");
+    if (assistant) assistant.pending = false;
+    if (!status || !TERMINAL.has(status)) {
+      turns.set(turnId, "failed");
+      statusNode.textContent = `Se perdió la conexión con el flujo: ${reason}. La pregunta no se reenvió; puedes reintentar.`;
+    } else statusNode.textContent = status === "completed" ? "Respuesta completa." : "No se pudo completar la respuesta. Puedes reintentar.";
+    setBusy(false);
+    paintMessages();
+  }
+
   async function listen(turnId: string): Promise<void> {
-    state.abort = new AbortController();
+    const abort = new AbortController();
+    state.abort = abort;
     let attempts = 0;
-    while (!state.abort.signal.aborted && attempts < 5) {
+    let lastError = "el servidor cerró la conexión";
+    while (!abort.signal.aborted && state.activeTurn === turnId && attempts < 5) {
       try {
-        const next = await transport.streamEvents(turnId, state.lastSequence, state.abort.signal, (event) => {
+        const next = await transport.streamEvents(turnId, state.lastSequence, abort.signal, (event) => {
+          attempts = 0; // progress resets the reconnect budget
           if (typeof event.seq === "number") state.lastSequence = Math.max(state.lastSequence, event.seq);
           renderTurnEvent(event);
         });
         state.lastSequence = Math.max(state.lastSequence, next);
-        // Event streams may close between replay windows. Reconnect from the
-        // last sequence; duplicate frames are discarded by transport.
-        if (!state.abort.signal.aborted && state.activeTurn) {
-          attempts += 1;
-          await new Promise((resolve) => window.setTimeout(resolve, Math.min(250 * attempts, 1200)));
-        }
       } catch (error) {
-        if (state.abort.signal.aborted) return;
-        attempts += 1;
-        if (attempts >= 5) {
-          statusNode.textContent = `Se perdió la conexión con el flujo: ${errorText(error)}. Puedes reintentar la pregunta.`;
-          const assistant = state.messages.find((message) => message.turn_id === turnId && message.role === "assistant");
-          if (assistant) assistant.pending = false;
-          turns.set(turnId, "failed");
-          setBusy(false);
-          paintMessages();
-        } else await new Promise((resolve) => window.setTimeout(resolve, Math.min(250 * attempts, 1200)));
+        if (abort.signal.aborted) return;
+        if (handleAuthError(error)) { setBusy(false); return; }
+        lastError = errorText(error);
       }
+      if (abort.signal.aborted || state.activeTurn !== turnId) return;
+      attempts += 1;
+      await new Promise((resolve) => window.setTimeout(resolve, Math.min(250 * attempts, 1200)));
     }
+    if (!abort.signal.aborted && state.activeTurn === turnId) await settleTurn(turnId, lastError);
   }
 
   async function submitMessage(raw: string): Promise<void> {
@@ -289,26 +264,51 @@ export function mountChat(): void {
     setBusy(true);
     statusNode.textContent = "Enviando pregunta…";
     try {
-      const context: ChatContext = buildChatContext(state.focusedCard);
-      const result = await transport.sendMessage(state.conversationId, content, context, randomId());
+      const result = await transport.sendMessage(state.conversationId, content, buildChatContext(state.focusedCard), randomId());
       state.activeTurn = result.turn_id;
       state.lastSequence = 0;
       await listen(result.turn_id);
     } catch (error) {
-      if (error instanceof ChatApiError && (error.status === 401 || error.status === 403)) accessForm.hidden = false;
-      state.messages.push({ id: randomId(), role: "assistant", content: `No se pudo enviar la pregunta: ${errorText(error)}`, turn_id: state.activeTurn, pending: false, retryMessageId: userMessage.id });
-      statusNode.textContent = "La pregunta no se envió. Puedes intentarlo de nuevo.";
       setBusy(false);
+      if (handleAuthError(error)) { input.value = content; state.messages.pop(); paintMessages(); return; }
+      state.messages.push({ id: randomId(), role: "assistant", content: `No se pudo enviar la pregunta: ${errorText(error)}`, pending: false, retryMessageId: userMessage.id });
+      statusNode.textContent = "La pregunta no se envió. Puedes intentarlo de nuevo.";
       paintMessages();
     }
   }
 
-  accessForm.addEventListener("submit", (event) => {
+  function resetConversation(): void {
+    state.abort?.abort();
+    setBusy(false);
+    state.conversationId = undefined; state.snapshotVersion = undefined; state.messages = []; state.activeTurn = undefined; state.lastSequence = 0;
+    storage((store) => store.removeItem(STORAGE_KEY)); turns.clear(); paintMessages();
+  }
+
+  accessForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    bearerToken = query<HTMLInputElement>("#chat-access-token").value.trim() || undefined;
-    query<HTMLInputElement>("#chat-access-token").value = "";
-    accessForm.hidden = true;
-    void ensureConversation();
+    const password = passwordInput.value;
+    passwordInput.value = "";
+    accessError.textContent = "";
+    if (!password) return;
+    try {
+      session = (await transport.login(password)).session;
+      accessForm.hidden = true;
+      logoutButton.hidden = false;
+      await ensureConversation();
+      input.focus();
+    } catch (error) {
+      if (error instanceof ChatApiError && error.status === 429) {
+        const minutes = Math.max(1, Math.ceil((error.retryAfterSeconds ?? 60) / 60));
+        accessError.textContent = `Demasiados intentos. Espera ${minutes} min.`;
+      } else accessError.textContent = error instanceof ChatApiError && error.status === 401 ? "Contraseña incorrecta." : `No se pudo entrar: ${errorText(error)}`;
+      passwordInput.focus();
+    }
+  });
+
+  logoutButton.addEventListener("click", async () => {
+    try { await transport.logout(); } catch { /* the in-memory session is dropped anyway */ }
+    resetConversation();
+    requireLogin("Sesión cerrada.");
   });
 
   async function openChat(card?: Element): Promise<void> {
@@ -319,7 +319,7 @@ export function mountChat(): void {
     setContextLabel();
     resizeDashboardCharts();
     if (!state.conversationId) await ensureConversation();
-    input.focus();
+    if (accessForm.hidden) input.focus();
   }
   function closeChat(): void {
     panel.hidden = true;
@@ -339,27 +339,22 @@ export function mountChat(): void {
   cancelButton.addEventListener("click", async () => {
     if (!state.activeTurn) return;
     try { await transport.cancel(state.activeTurn); statusNode.textContent = "Solicitando cancelación…"; }
-    catch (error) { statusNode.textContent = `No se pudo cancelar el turno: ${errorText(error)}`; }
+    catch (error) { if (!handleAuthError(error)) statusNode.textContent = `No se pudo cancelar el turno: ${errorText(error)}`; }
   });
   query<HTMLButtonElement>("[data-chat-new]").addEventListener("click", async () => {
-    if (state.activeTurn) {
-      state.abort?.abort();
-      try { await transport.cancel(state.activeTurn); } catch { /* new session may still proceed */ }
-    }
-    setBusy(false);
-    state.conversationId = undefined; state.snapshotVersion = undefined; state.messages = []; state.activeTurn = undefined; state.lastSequence = 0;
-    localStorage.removeItem(STORAGE_KEY); turns.clear(); paintMessages(); await ensureConversation(); input.focus();
+    if (state.activeTurn) { try { await transport.cancel(state.activeTurn); } catch { /* new session may still proceed */ } }
+    resetConversation();
+    await ensureConversation();
+    if (accessForm.hidden) input.focus();
   });
   query<HTMLButtonElement>("[data-chat-delete]").addEventListener("click", async () => {
     if (!state.conversationId) { state.messages = []; paintMessages(); return; }
     if (state.activeTurn) { state.abort?.abort(); try { await transport.cancel(state.activeTurn); } catch { /* deletion will settle ownership */ } }
     try {
       await transport.deleteConversation(state.conversationId);
-      setBusy(false);
-      localStorage.removeItem(STORAGE_KEY);
-      state.conversationId = undefined; state.snapshotVersion = undefined; state.messages = []; state.activeTurn = undefined;
-      paintMessages(); statusNode.textContent = "Conversación eliminada.";
-    } catch (error) { noticeNode.textContent = `No se pudo eliminar la conversación: ${errorText(error)}`; }
+      resetConversation();
+      statusNode.textContent = "Conversación eliminada.";
+    } catch (error) { if (!handleAuthError(error)) noticeNode.textContent = `No se pudo eliminar la conversación: ${errorText(error)}`; }
   });
 
   const cardButton = (card: HTMLElement, label: string) => {
@@ -381,12 +376,14 @@ export function mountChat(): void {
   const observer = new MutationObserver(bindCardActions);
   observer.observe(document.querySelector(".page-shell") ?? document.body, { childList: true, subtree: true });
   window.addEventListener("reader-tab-visible", bindCardActions);
+  // Context follows an explicit click or keyboard focus on a card, never hover:
+  // moving the pointer toward the panel must not change the question's context.
   const cardListener = (event: Event) => {
     if (panel.contains(event.target as Node) || launcher.contains(event.target as Node)) return;
     const card = (event.target as Element | null)?.closest?.(".chart-card, .flights-shell, .kpi-card");
     if (card) { state.focusedCard = card; setContextLabel(); }
   };
-  document.addEventListener("pointerover", cardListener, true);
+  document.addEventListener("click", cardListener, true);
   document.addEventListener("focusin", cardListener, true);
 
   mountPanelControls(panel, resizer, closeChat);

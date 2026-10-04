@@ -1,5 +1,5 @@
 export type ChatRole = "user" | "assistant";
-export type ChatTurnStatus = "queued" | "running" | "in_progress" | "completed" | "failed" | "cancelled";
+export type ChatTurnStatus = "pending" | "running" | "completed" | "failed" | "cancelled";
 
 export interface ChatReference {
   label: string;

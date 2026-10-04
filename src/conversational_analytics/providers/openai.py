@@ -19,19 +19,34 @@ from ._openai_helpers import (
     ALLOWED_TOOL_NAMES,
     SYSTEM_INSTRUCTIONS,
     chart_from_results,
+    close_stream,
+    event_call_id,
+    event_session_id,
+    event_turn_id,
     field,
     int_or_zero,
     parse_usage,
+    prior_history,
+    question_envelope,
     references_from_results,
     required_string,
     result_from_recovered,
     to_dict,
+    usage_from_event,
 )
 from .base import ProviderResult, ToolCall
 
 
 class OpenAIProviderError(RuntimeError):
-    """Sanitized adapter failure safe to surface to the local API."""
+    """Sanitized adapter failure safe to surface to the local API.
+
+    ``usage`` carries provider-reported (input, output) tokens when known, so
+    failed turns are still booked against the quota.
+    """
+
+    def __init__(self, message: str, usage: tuple[int, int] | None = None) -> None:
+        super().__init__(message)
+        self.usage = usage
 
 
 class OpenAIProvider:
@@ -68,7 +83,6 @@ class OpenAIProvider:
             # streams; the turn loop also enforces the overall wall-clock limit.
             client = OpenAI(timeout=self.max_turn_seconds, max_retries=0)
         self.client = client
-        self._active_sessions: set[str] = set()
 
     def run_turn(
         self,
@@ -86,11 +100,15 @@ class OpenAIProvider:
         tools = self._validate_tool_specs(tool_specs)
         instructions = self._instructions()
         app_turn_id = self._app_turn_id(messages)
-        request_input = self._message_input(context, message)
+        # A new provider session for a conversation with prior turns (after a
+        # worker restart or remote deletion) receives a bounded history.
+        history = prior_history(messages) if session_id is None else []
+        request_input = self._message_input(context, message, history)
+        tracked_sessions: set[str] = set()
         started_at = time.monotonic()
         stream_manager = None
         stream_iter = None
-        content_parts: dict[tuple[int, int, int], str] = {}
+        content_parts: dict[tuple[int, int, str], str] = {}
         tool_outputs: list[dict[str, Any]] = []
         processed_actions: set[tuple[str, str]] = set()
         turn_id: str | None = None
@@ -145,11 +163,18 @@ class OpenAIProvider:
                 # The dispatcher owns durable result storage. If it raises, do
                 # not tell the provider that an unpersisted result is final.
                 raise OpenAIProviderError(safe_error) from None
-            tool_outputs.append(result)
             emit(
                 "tool.completed",
                 {"name": name, "result": result},
             )
+            error = result.get("error") if set(result) == {"error"} else None
+            if isinstance(error, dict):
+                # Rejected arguments go back as a failed call so the model can retry.
+                self._send_tool_result(
+                    session_id, action_turn_id, call_id, success=False, error=str(error.get("message", ""))
+                )
+                return
+            tool_outputs.append(result)
             self._send_tool_result(session_id, action_turn_id, call_id, success=True, output=encoded)
 
         def is_current_root_turn(event_data: dict[str, Any]) -> bool:
@@ -179,7 +204,7 @@ class OpenAIProvider:
                     stream_manager.__enter__() if hasattr(stream_manager, "__enter__") else stream_manager
                 )
             else:
-                self._track_session(session_id, persist_session)
+                self._track_session(session_id, persist_session, tracked_sessions)
                 prior_turn_id = self._latest_provider_turn_id(session_id)
                 stream_manager = self.client.beta.agents.sessions.events.stream(session_id)
                 stream_iter = (
@@ -192,7 +217,7 @@ class OpenAIProvider:
                     events=[{"type": "agent.session.input.message", "input": request_input}],
                 )
 
-            self._track_session(session_id, persist_session)
+            self._track_session(session_id, persist_session, tracked_sessions)
             if stream_iter is None:
                 raise OpenAIProviderError("El SDK no abrió el stream de la sesión")
             for event in stream_iter:
@@ -202,7 +227,7 @@ class OpenAIProvider:
                 discovered_session = self._event_session_id(event_data)
                 if discovered_session and discovered_session != session_id:
                     session_id = discovered_session
-                    self._track_session(session_id, persist_session)
+                    self._track_session(session_id, persist_session, tracked_sessions)
                 is_current_turn = is_current_root_turn(event_data)
                 event_id = event_data.get("event_id")
                 if event_type in {
@@ -226,7 +251,7 @@ class OpenAIProvider:
                     key = (
                         int_or_zero(event_data.get("output_index")),
                         int_or_zero(event_data.get("content_index")),
-                        int_or_zero(event_data.get("item_id_index")),
+                        str(event_data.get("item_id") or ""),
                     )
                     delta = event_data.get("delta")
                     if isinstance(delta, str):
@@ -239,7 +264,7 @@ class OpenAIProvider:
                     key = (
                         int_or_zero(event_data.get("output_index")),
                         int_or_zero(event_data.get("content_index")),
-                        int_or_zero(event_data.get("item_id_index")),
+                        str(event_data.get("item_id") or ""),
                     )
                     text = event_data.get("text")
                     if isinstance(text, str):
@@ -258,11 +283,15 @@ class OpenAIProvider:
                 elif event_type == "agent.session.turn.failed":
                     if is_current_turn:
                         terminal = "failed"
-                        raise OpenAIProviderError("El proveedor marcó el turno como fallido")
+                        raise OpenAIProviderError(
+                            "El proveedor marcó el turno como fallido", usage_from_event(event_data)
+                        )
                 elif event_type == "agent.session.turn.cancelled":
                     if is_current_turn:
                         terminal = "cancelled"
-                        raise InterruptedError("turn cancelled")
+                        cancelled = InterruptedError("turn cancelled")
+                        cancelled.usage = usage_from_event(event_data)  # type: ignore[attr-defined]
+                        raise cancelled
                 elif event_type in {"agent.session.failed", "agent.session.environment.failed", "error"}:
                     raise OpenAIProviderError("El ciclo del agente falló antes de completar el turno")
             if terminal != "completed":
@@ -276,7 +305,7 @@ class OpenAIProvider:
                     if recovered_status == "completed":
                         terminal = "completed"
                         if content:
-                            content_parts[(0, 0, 0)] = content
+                            content_parts[(0, 0, "")] = content
                         turn_id = recovered_turn_id or turn_id
                         input_tokens, output_tokens, usage_complete = parse_usage(usage)
                 if terminal != "completed":
@@ -510,83 +539,39 @@ class OpenAIProvider:
         return SYSTEM_INSTRUCTIONS
 
     @staticmethod
-    def _message_input(context: dict[str, Any], message: str) -> list[dict[str, Any]]:
-        if not isinstance(context, dict):
-            raise OpenAIProviderError("El contexto del dashboard debe ser un objeto")
+    def _message_input(
+        context: dict[str, Any], message: str, history: list[dict[str, str]] | None = None
+    ) -> list[dict[str, Any]]:
         try:
-            envelope = json.dumps(
-                {"dashboard_context": context, "question": message},
-                ensure_ascii=False,
-                allow_nan=False,
-                sort_keys=True,
-                separators=(",", ":"),
+            envelope = question_envelope(context, message)
+            if history:
+                envelope["conversation_history"] = history
+            text = json.dumps(
+                envelope, ensure_ascii=False, allow_nan=False, sort_keys=True, separators=(",", ":")
             )
-        except (TypeError, ValueError):
-            raise OpenAIProviderError("El mensaje o contexto no es JSON válido") from None
-        if len(envelope.encode("utf-8")) > 12_000:
-            raise OpenAIProviderError("El mensaje y contexto exceden el límite permitido")
-        return [{"role": "user", "content": [{"type": "input_text", "text": envelope}]}]
+        except (TypeError, ValueError) as exc:
+            raise OpenAIProviderError(
+                str(exc)
+                if isinstance(exc, ValueError) and str(exc)
+                else "El mensaje o contexto no es JSON válido"
+            ) from None
+        return [{"role": "user", "content": [{"type": "input_text", "text": text}]}]
 
     @staticmethod
     def _check_cancel(cancel_event: threading.Event) -> None:
         if cancel_event.is_set():
             raise InterruptedError("turn cancelled")
 
-    @staticmethod
-    def _event_session_id(event: dict[str, Any]) -> str | None:
-        session = event.get("session")
-        if isinstance(session, dict) and isinstance(session.get("id"), str):
-            return session["id"]
-        value = event.get("session_id")
-        return value if isinstance(value, str) and value else None
+    _event_session_id = staticmethod(event_session_id)
+    _event_turn_id = staticmethod(event_turn_id)
+    _event_call_id = staticmethod(event_call_id)
+    _close_stream = staticmethod(close_stream)
 
     @staticmethod
-    def _event_turn_id(event: dict[str, Any]) -> str | None:
-        value = event.get("turn_id")
-        if isinstance(value, str) and value:
-            return value
-        turn = event.get("turn")
-        if isinstance(turn, dict) and isinstance(turn.get("id"), str):
-            return turn["id"]
-        session = event.get("session")
-        if isinstance(session, dict) and isinstance(session.get("required_actions"), list):
-            for action in session["required_actions"]:
-                action_data = to_dict(action)
-                action_turn_id = action_data.get("turn_id")
-                if isinstance(action_turn_id, str) and action_turn_id:
-                    return action_turn_id
-        return None
-
-    @staticmethod
-    def _event_call_id(event: dict[str, Any]) -> str | None:
-        session = event.get("session")
-        if isinstance(session, dict):
-            actions = session.get("required_actions")
-            if isinstance(actions, list):
-                for action in actions:
-                    data = to_dict(action)
-                    call_id = data.get("call_id")
-                    if isinstance(call_id, str):
-                        return call_id
-        call_id = event.get("call_id")
-        return call_id if isinstance(call_id, str) else None
-
-    def _track_session(self, session_id: str | None, persist_session) -> None:
-        if session_id and session_id not in self._active_sessions:
+    def _track_session(session_id: str | None, persist_session, tracked: set[str]) -> None:
+        if session_id and session_id not in tracked:
             persist_session(session_id)
-            self._active_sessions.add(session_id)
-
-    @staticmethod
-    def _close_stream(stream: Any) -> None:
-        try:
-            if hasattr(stream, "__exit__"):
-                stream.__exit__(None, None, None)
-            else:
-                close = getattr(stream, "close", None)
-                if callable(close):
-                    close()
-        except Exception:
-            return
+            tracked.add(session_id)
 
 
 __all__ = ["OpenAIProvider", "OpenAIProviderError"]

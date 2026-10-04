@@ -8,6 +8,7 @@ import re
 from typing import Any
 
 from .config import ChatConfig
+from .providers._openai_helpers import question_envelope
 from .semantic.context import validate_context as _validate_semantic_context
 from .semantic.plan import PlanValidationError
 from .storage import AdmissionDenied, ChatStore, Conflict
@@ -99,6 +100,11 @@ class ChatService:
         ):
             raise InvalidRequest("client_message_id inválido")
         validated_context = validate_context(context)
+        try:
+            # Same envelope limit the provider enforces, checked before admission.
+            question_envelope(validated_context, content)
+        except ValueError as exc:
+            raise InvalidRequest(str(exc)) from exc
         existing = self.store.find_deduplicated_turn(owner_id, conversation_id, client_message_id)
         if existing:
             if (

@@ -118,3 +118,60 @@ def test_worker_does_not_call_provider_for_cancelled_claim(tmp_path: Path):
     worker = TurnWorker(store, ChatConfig(state_path=tmp_path / "chat.sqlite3"), provider, Snapshot())
     worker._execute_turn(claim)
     assert provider.calls == 0
+
+
+class RejectingRegistry:
+    def tool_specs(self):
+        return [{"name": "compare_metrics", "parameters": {}}]
+
+    def invoke(self, name, arguments, context=None):
+        raise ValueError("not enough values to unpack")
+
+
+class ToolErrorProvider(DeterministicProvider):
+    def run_turn(self, **kwargs):
+        self.calls += 1
+        self.result = kwargs["call_tool"]("provider-turn-1", "call-1", "compare_metrics", {"periods": ["x"]})
+        return ProviderResult("Necesito otro periodo.", input_tokens=4, output_tokens=2, usage_complete=True)
+
+
+class FailingProvider(DeterministicProvider):
+    def run_turn(self, **kwargs):
+        self.calls += 1
+        error = RuntimeError("provider failed")
+        error.usage = (900, 40)
+        raise error
+
+
+def _claimed(store: ChatStore, reserved_tokens: int = 100):
+    conv = store.create_conversation("alice", "snapshot-v1", "semantic-v1")
+    turn, _ = store.submit_turn(
+        "alice", conv["id"], "ask", "client-1", {}, reserved_tokens=reserved_tokens, reserved_cost_usd=0.01
+    )
+    return turn, store.claim_turn()
+
+
+def test_tool_argument_errors_reach_the_model_instead_of_failing_the_turn(tmp_path: Path):
+    store = ChatStore(tmp_path / "chat.sqlite3")
+    turn, claim = _claimed(store)
+    provider = ToolErrorProvider()
+    worker = TurnWorker(store, ChatConfig(state_path=tmp_path / "chat.sqlite3"), provider, Snapshot())
+    worker._registry = RejectingRegistry()
+    worker._execute_turn(claim)
+    assert provider.result["error"]["code"] == "tool_rejected"
+    assert store.get_turn("alice", turn["id"])["status"] == "completed"
+
+
+def test_failed_turn_books_reported_usage_and_releases_its_hold(tmp_path: Path):
+    store = ChatStore(tmp_path / "chat.sqlite3")
+    turn, claim = _claimed(store, reserved_tokens=50_000)
+    config = ChatConfig(state_path=tmp_path / "chat.sqlite3")
+    worker = TurnWorker(store, config, FailingProvider(), Snapshot())
+    worker._registry = Registry()
+    worker._execute_turn(claim)
+    record = store.get_turn("alice", turn["id"])
+    assert record["status"] == "failed"
+    assert (record["usage_complete"], record["reserved_tokens"]) == (1, 0)
+    usage = store.usage("alice")
+    assert (usage["input_tokens"], usage["output_tokens"]) == (900, 40)
+    assert usage["estimated_cost_usd"] > 0

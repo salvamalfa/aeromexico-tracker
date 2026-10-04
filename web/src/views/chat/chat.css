@@ -29,6 +29,8 @@
 .chat-access label { grid-column: 1 / -1; color: #854d00; font-size: 11px; font-weight: 700; }
 .chat-access input { min-width: 0; border: 1px solid var(--line-strong); border-radius: 7px; padding: 7px 9px; }
 .chat-access button { border: 1px solid var(--brand-blue); border-radius: 7px; padding: 7px 11px; color: #fff; background: var(--brand-blue); font-size: 11px; font-weight: 700; cursor: pointer; }
+.chat-access-error { grid-column: 1 / -1; margin: 0; min-height: 0; color: #b42318; font-size: 11px; }
+.chat-access-error:empty { display: none; }
 .chat-access[hidden] { display: none; }
 .chat-messages { display: flex; flex: 1; flex-direction: column; gap: 14px; overflow-y: auto; margin: 0; padding: 18px 16px; list-style: none; overscroll-behavior: contain; }
 .chat-message { max-width: 94%; min-width: 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 13px; background: #fff; box-shadow: 0 2px 8px rgba(18,39,75,.04); overflow-wrap: anywhere; }

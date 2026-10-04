@@ -62,7 +62,9 @@ class UsageRetentionMixin:
             db.execute("COMMIT")
         return True
 
-    def fail_turn(self, turn_id: str, code: str, message: str) -> None:
+    def fail_turn(
+        self, turn_id: str, code: str, message: str, usage: tuple[int, int, float] | None = None
+    ) -> None:
         with self._connect() as db:
             db.execute("BEGIN IMMEDIATE")
             row = db.execute("SELECT status FROM turns WHERE id=?", (turn_id,)).fetchone()
@@ -72,6 +74,24 @@ class UsageRetentionMixin:
                     (utcnow(), code, message[:500], turn_id),
                 )
                 self._append_event_db(db, turn_id, "turn.failed", {"code": code, "message": message[:500]})
+            db.execute("COMMIT")
+        if usage is not None:
+            self.record_terminal_usage(turn_id, *usage)
+
+    def record_terminal_usage(self, turn_id: str, input_tokens: int, output_tokens: int, cost: float) -> None:
+        """Book provider-reported usage of a failed or cancelled turn and release its hold once."""
+        with self._connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute(
+                "SELECT owner_id,status,usage_complete FROM turns WHERE id=?", (turn_id,)
+            ).fetchone()
+            if row is not None and row["status"] in {"failed", "cancelled"} and not row["usage_complete"]:
+                self._add_usage_db(db, row["owner_id"], input_tokens, output_tokens, cost)
+                db.execute(
+                    "UPDATE turns SET usage_complete=1,reserved_tokens=0,reserved_cost_usd=0,"
+                    "estimated_input_tokens=?,estimated_output_tokens=?,estimated_cost_usd=? WHERE id=?",
+                    (input_tokens, output_tokens, cost, turn_id),
+                )
             db.execute("COMMIT")
 
     def usage(self, owner_id: str | None = None) -> dict[str, float | int]:
@@ -124,18 +144,19 @@ class UsageRetentionMixin:
         cutoff = (datetime.now(UTC) - timedelta(days=retention_days)).isoformat(timespec="milliseconds")
         with self._connect() as db:
             db.execute("BEGIN IMMEDIATE")
+            # Same predicate for both statements: never queue remote deletion
+            # for a conversation that is kept because it still has a live turn.
+            expired = (
+                "updated_at < ? AND NOT EXISTS (SELECT 1 FROM turns WHERE "
+                "turns.conversation_id=conversations.id AND turns.status IN ('pending','running'))"
+            )
             db.execute(
                 "INSERT OR IGNORE INTO provider_deletions(session_id,queued_at) "
-                "SELECT provider_session_id,? FROM conversations "
-                "WHERE updated_at < ? AND provider_session_id IS NOT NULL",
+                f"SELECT provider_session_id,? FROM conversations WHERE {expired} "
+                "AND provider_session_id IS NOT NULL",
                 (utcnow(), cutoff),
             )
-            cur = db.execute(
-                "DELETE FROM conversations WHERE updated_at < ? AND NOT EXISTS "
-                "(SELECT 1 FROM turns WHERE turns.conversation_id=conversations.id "
-                "AND turns.status IN ('pending','running'))",
-                (cutoff,),
-            )
+            cur = db.execute(f"DELETE FROM conversations WHERE {expired}", (cutoff,))
             db.execute("COMMIT")
             return cur.rowcount
 

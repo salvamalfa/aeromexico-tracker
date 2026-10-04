@@ -1,7 +1,7 @@
 import type { ChatConversation, ChatContext, ChatEvent } from "../../types/chat";
 
 export class ChatApiError extends Error {
-  constructor(message: string, readonly status?: number) {
+  constructor(message: string, readonly status?: number, readonly retryAfterSeconds?: number) {
     super(message);
     this.name = "ChatApiError";
   }
@@ -30,7 +30,8 @@ async function parseResponse<T>(response: Response): Promise<T> {
       if (typeof body.detail === "string") message = body.detail;
       else if (typeof body.message === "string") message = body.message;
     } catch { /* use the status message */ }
-    throw new ChatApiError(message, response.status);
+    const retryAfter = Number(response.headers.get("Retry-After"));
+    throw new ChatApiError(message, response.status, Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : undefined);
   }
   return response.json() as Promise<T>;
 }
@@ -60,7 +61,14 @@ export class ChatTransport {
     }));
   }
 
-  health(): Promise<{ status?: string }> { return this.json("/health"); }
+  health(): Promise<{ status?: string; snapshot_version?: string; auth?: "local" | "password" }> { return this.json("/health"); }
+  login(password: string): Promise<{ session: string; expires_at: string }> {
+    return this.json("/login", { method: "POST", body: JSON.stringify({ password }) });
+  }
+  async logout(): Promise<void> {
+    const response = await this.fetcher(`${this.baseUrl}/logout`, { method: "POST", body: "{}", headers: this.headers({ "Content-Type": "application/json" }) });
+    if (!response.ok) await parseResponse(response);
+  }
   createConversation(): Promise<{ id: string; snapshot_version: string; created_at: string }> {
     return this.json("/conversations", { method: "POST", body: "{}" });
   }
@@ -112,10 +120,12 @@ export class ChatTransport {
         payload = parsed as Record<string, unknown>;
       }
       catch { throw new ChatApiError("El servidor envió un evento inválido."); }
-      const seq = typeof payload.seq === "number" ? payload.seq : id;
+      // The SSE frame's own id/event fields are authoritative; payload keys
+      // with the same names are data and must not override them.
+      const seq = id ?? (typeof payload.seq === "number" ? payload.seq : undefined);
       if (seq !== undefined && seq <= lastSeq) return;
       if (seq !== undefined) lastSeq = seq;
-      const type = typeof payload.type === "string" ? payload.type : eventName;
+      const type = eventName !== "message" ? eventName : typeof payload.type === "string" ? payload.type : eventName;
       onEvent({ ...payload, ...(seq === undefined ? {} : { seq }), type } as ChatEvent);
     };
     while (true) {

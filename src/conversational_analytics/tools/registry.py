@@ -367,8 +367,15 @@ class ToolRegistry:
     def _compare(
         self, metric_id: str, entity_id: str, periods: list[str], segment: str | None
     ) -> dict[str, Any]:
-        if not isinstance(periods, list) or len(periods) != 2:
+        if not isinstance(periods, list) or len(periods) != 2 or not all(isinstance(p, str) for p in periods):
             raise PlanValidationError("compare_metrics requiere exactamente dos periodos")
+        if periods[0] == periods[1]:
+            raise PlanValidationError("compare_metrics requiere dos periodos distintos")
+        if ("M" in periods[0]) != ("M" in periods[1]):
+            raise PlanValidationError("compare_metrics no mezcla meses y trimestres")
+        # YYYYQn and YYYYMmm sort chronologically as text; the earlier period is
+        # always the base, whatever order the model used.
+        periods = sorted(periods)
         data = self._query([metric_id], [entity_id], periods, segment, 2)
         previous, current = data["rows"]
         delta = (

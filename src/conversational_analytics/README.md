@@ -15,7 +15,9 @@ stay in the server environment. The default has no paid provider calls.
 ## HTTP contract
 
 - `GET /api/chat/health` reports service, worker, provider name, admission flag,
-  and snapshot version. It does not report secret readiness.
+  auth mode (`local` or `password`) and snapshot version. It is public in
+  password mode and does not report secret readiness.
+- `POST /api/chat/login` / `POST /api/chat/logout`: see password mode below.
 - `POST /api/chat/conversations` returns `{id,snapshot_version,semantic_version,created_at}`.
 - `GET /api/chat/conversations/{id}` returns the pinned versions, visible
   messages, and turn states. Ownership is checked on every request.
@@ -35,13 +37,35 @@ Events include `turn.queued`, `turn.started`, `message.delta`,
 `tool.completed`, and one of `turn.completed`, `turn.failed`, or
 `turn.cancelled`. Provider IDs never enter the public event stream.
 
-Local mode trusts only loopback peers and loopback origins; run behind a local
-same-origin proxy for the dashboard. A deployed backend uses
-`CHAT_AUTH_MODE=bearer`, `CHAT_USERS_JSON` entries with `user_id` and the
-SHA-256 hash of each bearer token, and explicit comma-separated
-`CHAT_ALLOWED_ORIGINS`. It does not use cookies. Configure daily token/cost
-budgets, message/tool limits, global concurrency, admission, and retention with
-the corresponding `CHAT_*` environment variables.
+Local mode trusts only loopback peers, loopback `Host` and loopback origins,
+and rejects any request carrying `Forwarded`, `X-Forwarded-*` or `X-Real-IP`:
+behind a reverse proxy every client would look like loopback. It cannot be
+combined with `CHAT_PROVIDER=openai` unless `CHAT_ALLOW_LOCAL_OPENAI=true` is
+set on the owner's own machine.
+
+A deployed backend uses `CHAT_AUTH_MODE=password`:
+
+- `CHAT_PASSWORDS_JSON` is a list of `{"user_id", "password_hash"}` entries.
+  Hashes come from `python -m src.conversational_analytics hash-password`
+  (scrypt, salted; `--generate` creates a random password and prints it once
+  with its hash). Passwords and hashes never go to Git.
+- `POST /api/chat/login` with `{"password"}` returns `{session, expires_at}`.
+  Only the SHA-256 of the session is stored; it expires after
+  `CHAT_SESSION_TTL_HOURS` (12) and dies when that user's hash is rotated.
+  `POST /api/chat/logout` revokes it. Every other route except
+  `GET /api/chat/health` requires `Authorization: Bearer <session>`.
+- Failed logins are throttled (5 per client per 15 min, 50 global per hour)
+  with `429` and `Retry-After`. The client address comes from
+  `X-Forwarded-For` only when the peer is listed in `CHAT_TRUSTED_PROXY`.
+- `CHAT_ALLOWED_ORIGINS` (HTTPS, no paths) is mandatory. No cookies are used:
+  Pages and the API are cross-site, so the session travels in the header and
+  the browser keeps it only in memory.
+
+POST bodies must declare `Content-Length` (chunked uploads get `411`), and the
+login body is limited to 1 KB. Configure daily token/cost budgets,
+message/tool limits, queue bound (`CHAT_MAX_CONCURRENT_GLOBAL` counts pending
+plus running turns; a single worker thread runs them in order), admission, and
+retention with the corresponding `CHAT_*` environment variables.
 
 Conversations are pinned to data and semantic versions. If either changes,
 existing conversations remain readable but new turns fail with a clear version

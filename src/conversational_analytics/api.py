@@ -12,10 +12,12 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from fastapi import FastAPI, Header, Request
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 
+from .auth import client_address, hash_fingerprint, new_session_token, token_digest, verify_password
 from .config import ChatConfig
 from .providers import MockProvider
 from .service import ChatService, InvalidRequest
@@ -30,6 +32,16 @@ class UnavailableSnapshot:
 
     def catalog(self):
         return {}
+
+
+FORWARDING_HEADERS = ("forwarded", "x-forwarded-for", "x-forwarded-host", "x-real-ip")
+PUBLIC_PATHS = {"/api/chat/health", "/api/chat/login"}
+LOGIN_BODY_LIMIT = 1_024
+
+
+class LoginBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    password: str = Field(min_length=1, max_length=256)
 
 
 class MessageBody(BaseModel):
@@ -97,10 +109,32 @@ def create_app(
     app.state.chat_worker = worker
     app.state.snapshot_available = getattr(snapshot, "version", "unavailable") != "unavailable"
 
+    fingerprints = config.password_fingerprints()
+
+    def bearer_digest(request: Request) -> str | None:
+        scheme, _, token = request.headers.get("authorization", "").partition(" ")
+        return token_digest(token.strip()) if scheme.lower() == "bearer" and token.strip() else None
+
     @app.middleware("http")
     async def local_boundary_and_auth(request: Request, call_next):
         origin = request.headers.get("origin")
         peer = request.client.host if request.client else ""
+        if request.method in {"POST", "PUT", "PATCH"}:
+            # Bodies must declare their size; chunked uploads would bypass the limit.
+            content_length = request.headers.get("content-length")
+            if request.headers.get("transfer-encoding") or content_length is None:
+                return JSONResponse({"detail": "content-length required"}, status_code=411)
+            try:
+                size = int(content_length)
+            except ValueError:
+                return JSONResponse({"detail": "invalid content length"}, status_code=400)
+            limit = (
+                LOGIN_BODY_LIMIT
+                if request.url.path == "/api/chat/login"
+                else max(16_384, config.max_message_chars * 8 + 4_096)
+            )
+            if size > limit:
+                return JSONResponse({"detail": "request body too large"}, status_code=413)
         if config.auth_mode == "local":
             try:
                 peer_local = ipaddress.ip_address(peer).is_loopback
@@ -109,6 +143,9 @@ def create_app(
             host = request.headers.get("host", "")
             if not peer_local or not _loopback_host(host):
                 return JSONResponse({"detail": "local loopback access required"}, status_code=403)
+            if any(request.headers.get(name) for name in FORWARDING_HEADERS):
+                # A reverse proxy makes every client look like loopback.
+                return JSONResponse({"detail": "local mode cannot run behind a proxy"}, status_code=403)
             if origin:
                 parsed = urlsplit(origin)
                 if (
@@ -118,35 +155,23 @@ def create_app(
                 ):
                     return JSONResponse({"detail": "non-local origin rejected"}, status_code=403)
             request.state.owner_id = "local"
-        else:
-            if origin and config.allowed_origins and origin.rstrip("/") not in config.allowed_origins:
-                return JSONResponse({"detail": "origin not allowed"}, status_code=403)
-            if origin and not config.allowed_origins:
-                return JSONResponse({"detail": "CHAT_ALLOWED_ORIGINS must be configured"}, status_code=403)
-            if request.method == "OPTIONS":
-                return await call_next(request)
-            auth = request.headers.get("authorization", "")
-            scheme, _, token = auth.partition(" ")
-            owner = config.owner_for_token(token) if scheme.lower() == "bearer" and token else None
-            if not owner:
-                return JSONResponse(
-                    {"detail": "bearer authentication required"},
-                    status_code=401,
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
-            request.state.owner_id = owner
-        content_length = request.headers.get("content-length")
-        if content_length and request.method in {"POST", "PUT", "PATCH"}:
-            try:
-                too_large = int(content_length) > max(16_384, config.max_message_chars * 8 + 4_096)
-            except ValueError:
-                return JSONResponse({"detail": "invalid content length"}, status_code=400)
-            if too_large:
-                return JSONResponse({"detail": "request body too large"}, status_code=413)
+            return await call_next(request)
+        if origin and origin.rstrip("/") not in config.allowed_origins:
+            return JSONResponse({"detail": "origin not allowed"}, status_code=403)
+        if request.method == "OPTIONS" or request.url.path in PUBLIC_PATHS:
+            return await call_next(request)
+        digest = bearer_digest(request)
+        owner = await run_in_threadpool(store.session_owner, digest, fingerprints) if digest else None
+        if not owner:
+            return JSONResponse(
+                {"detail": "login required"}, status_code=401, headers={"WWW-Authenticate": "Bearer"}
+            )
+        request.state.owner_id = owner
         return await call_next(request)
 
     # Add CORS after the auth middleware so it wraps even 401/403 responses.
-    # No cookies are accepted; only explicit origins and the bearer header.
+    # No cookies: GitHub Pages and the API are cross-site, so third-party
+    # cookies would be blocked. The login session travels in Authorization.
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(config.allowed_origins),
@@ -156,7 +181,7 @@ def create_app(
         allow_credentials=False,
         allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type", "Last-Event-ID"],
-        expose_headers=["Content-Type"],
+        expose_headers=["Content-Type", "Retry-After"],
         max_age=600,
     )
 
@@ -177,8 +202,8 @@ def create_app(
         return JSONResponse({"detail": str(exc)}, status_code=422)
 
     @app.get("/api/chat/health")
-    async def health():
-        data = service.health()
+    def health():
+        data = {**service.health(), "auth": config.auth_mode}
         if not app.state.snapshot_available:
             return JSONResponse(
                 {**data, "status": "unavailable", "reason": "published_snapshot_unavailable"}, status_code=503
@@ -189,23 +214,67 @@ def create_app(
             )
         return data
 
+    @app.post("/api/chat/login")
+    def login(body: LoginBody, request: Request):
+        if config.auth_mode != "password":
+            return JSONResponse({"detail": "login is not used in local mode"}, status_code=400)
+        peer = request.client.host if request.client else ""
+        client = client_address(peer, request.headers.get("x-forwarded-for"), config.trusted_proxies)
+        retry_after = store.login_retry_after(
+            client,
+            max_per_client=config.login_max_failures_per_client,
+            client_window_minutes=config.login_client_window_minutes,
+            max_global=config.login_max_failures_global,
+            global_window_minutes=config.login_global_window_minutes,
+        )
+        if retry_after:
+            return JSONResponse(
+                {"detail": "too many failed attempts", "retry_after_seconds": retry_after},
+                status_code=429,
+                headers={"Retry-After": str(retry_after)},
+            )
+        # Check every configured hash so timing does not reveal which matched.
+        matched = [
+            user for user, encoded in config.password_users.items() if verify_password(body.password, encoded)
+        ]
+        if len(matched) != 1:
+            store.record_login_failure(client)
+            LOG.warning("Failed chat login attempt")
+            return JSONResponse({"detail": "invalid password"}, status_code=401)
+        owner = matched[0]
+        token = new_session_token()
+        expires_at = store.create_session(
+            token_digest(token),
+            owner,
+            hash_fingerprint(config.password_users[owner]),
+            config.session_ttl_hours,
+        )
+        return {"session": token, "expires_at": expires_at}
+
+    @app.post("/api/chat/logout", status_code=204)
+    def logout(request: Request):
+        digest = bearer_digest(request)
+        if digest:
+            store.revoke_session(digest)
+        return JSONResponse(status_code=204, content=None)
+
     @app.post("/api/chat/conversations", status_code=201)
-    async def create_conversation(request: Request):
+    def create_conversation(request: Request):
         if not app.state.snapshot_available:
             return JSONResponse({"detail": "published snapshot unavailable"}, status_code=503)
         return service.create_conversation(request.state.owner_id)
 
     @app.get("/api/chat/conversations/{conversation_id}")
-    async def get_conversation(conversation_id: str, request: Request):
+    def get_conversation(conversation_id: str, request: Request):
         return store.get_conversation(request.state.owner_id, conversation_id)
 
     @app.delete("/api/chat/conversations/{conversation_id}", status_code=204)
-    async def delete_conversation(conversation_id: str, request: Request):
+    def delete_conversation(conversation_id: str, request: Request):
         service.delete_conversation(request.state.owner_id, conversation_id)
         return JSONResponse(status_code=204, content=None)
 
     @app.post("/api/chat/conversations/{conversation_id}/messages", status_code=202)
-    async def submit_message(conversation_id: str, body: MessageBody, request: Request):
+    def submit_message(conversation_id: str, body: MessageBody, request: Request):
         if not app.state.snapshot_available:
             return JSONResponse({"detail": "published snapshot unavailable"}, status_code=503)
         service.ensure_current_snapshot(request.state.owner_id, conversation_id)
@@ -230,23 +299,27 @@ def create_app(
             except ValueError:
                 return JSONResponse({"detail": "Last-Event-ID must be an integer"}, status_code=422)
         owner = request.state.owner_id
-        store.get_turn(owner, turn_id)
+        await run_in_threadpool(store.get_turn, owner, turn_id)
+        loop = asyncio.get_running_loop()
+        # Bound each connection; the client reconnects with the last sequence.
+        stream_deadline = loop.time() + config.max_turn_seconds + 30
 
         async def stream():
             cursor = after
-            last_ping = asyncio.get_running_loop().time()
+            last_ping = loop.time()
             while True:
-                rows = store.list_events(owner, turn_id, cursor)
+                # Status is read before events, so a terminal status implies its
+                # final events are already visible in the same read.
+                rows, status = await run_in_threadpool(store.events_and_status, owner, turn_id, cursor)
                 for event in rows:
                     cursor = event["seq"]
                     data = json.dumps(event["data"], ensure_ascii=False, separators=(",", ":"))
                     yield f"id: {event['seq']}\nevent: {event['type']}\ndata: {data}\n\n"
-                turn = store.get_turn(owner, turn_id)
-                if turn["status"] in {"completed", "failed", "cancelled"} and not store.list_events(
-                    owner, turn_id, cursor
-                ):
+                if status in {"completed", "failed", "cancelled"}:
                     break
-                now = asyncio.get_running_loop().time()
+                now = loop.time()
+                if now >= stream_deadline:
+                    break
                 if now - last_ping > 15:
                     yield ": keep-alive\n\n"
                     last_ping = now
@@ -261,7 +334,7 @@ def create_app(
         )
 
     @app.post("/api/chat/turns/{turn_id}/cancel")
-    async def cancel_turn(turn_id: str, request: Request):
+    def cancel_turn(turn_id: str, request: Request):
         status = store.request_cancel(request.state.owner_id, turn_id)
         if worker:
             worker.cancel(turn_id)

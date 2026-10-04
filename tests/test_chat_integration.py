@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import re
 import threading
@@ -168,32 +167,33 @@ def test_default_mock_chat_uses_public_snapshot_and_replays_grounded_sse(
         assert len([message for message in conversation["messages"] if message["role"] == "user"]) == 1
 
 
-def test_bearer_users_cannot_read_each_others_conversations(tmp_path: Path) -> None:
+def test_password_users_cannot_read_each_others_conversations(tmp_path: Path) -> None:
     from src.conversational_analytics.api import create_app
+    from src.conversational_analytics.auth import generate_password, hash_password
 
-    token_a, token_b = "offline-user-a-token", "offline-user-b-token"
+    password_a, password_b = generate_password(), generate_password()
     config = _config(
-        tmp_path / "bearer.sqlite3",
-        auth_mode="bearer",
-        bearer_users={
-            hashlib.sha256(token_a.encode()).hexdigest(): "user-a",
-            hashlib.sha256(token_b.encode()).hexdigest(): "user-b",
-        },
+        tmp_path / "password.sqlite3",
+        auth_mode="password",
+        password_users={"user-a": hash_password(password_a), "user-b": hash_password(password_b)},
+        allowed_origins=("https://dashboard.example",),
     )
     app = create_app(config=config, snapshot=_snapshot(), start_worker=False)
     with TestClient(app, base_url="http://testserver") as client:
-        created = client.post("/api/chat/conversations", headers={"Authorization": f"Bearer {token_a}"})
+        session_a = client.post("/api/chat/login", json={"password": password_a}).json()["session"]
+        session_b = client.post("/api/chat/login", json={"password": password_b}).json()["session"]
+        created = client.post("/api/chat/conversations", headers={"Authorization": f"Bearer {session_a}"})
         assert created.status_code == 201, created.text
         conversation_id = created.json()["id"]
         assert (
             client.get(
-                f"/api/chat/conversations/{conversation_id}", headers={"Authorization": f"Bearer {token_a}"}
+                f"/api/chat/conversations/{conversation_id}", headers={"Authorization": f"Bearer {session_a}"}
             ).status_code
             == 200
         )
         assert (
             client.get(
-                f"/api/chat/conversations/{conversation_id}", headers={"Authorization": f"Bearer {token_b}"}
+                f"/api/chat/conversations/{conversation_id}", headers={"Authorization": f"Bearer {session_b}"}
             ).status_code
             == 404
         )

@@ -14,8 +14,9 @@ confirmó que `OPENAI_API_KEY` estaba disponible, sin mostrarla.
   dimensiones y versiones; los cálculos y referencias proceden de Python.
 - API FastAPI con historial SQLite, cola persistente, SSE con replay,
   idempotencia, cancelación, cuotas y borrado del proveedor con reintentos.
-  El modo local exige loopback; el piloto remoto requiere bearer por usuario y
-  CORS explícito. No se abre el warehouse desde el chat.
+  El modo local exige loopback; el piloto remoto requería bearer por usuario y
+  CORS explícito (sustituido el 4 oct por contraseña: ver
+  [`airline-tracker-remediacion-20261004.md`](airline-tracker-remediacion-20261004.md)). No se abre el warehouse desde el chat.
 - Panel TypeScript lateral y móvil, contexto de pestaña/tarjeta, fuentes,
   Markdown seguro y gráficas acotadas. Está desactivado por defecto y no guarda
   tokens de autenticación en el navegador.
@@ -73,7 +74,10 @@ idénticos. Cambió la versión del manifiesto al fijar el nuevo commit de códi
 el holdout se volvió a fijar a ese manifiesto, sin cambiar valores esperados.
 Esta preparación en la rama no equivale a un despliegue del piloto.
 
-Versión del snapshot auditado: `388d3437aad47fb088f72b17580489fbe78f2cc6265339f5e724b10ec8f4c210`.
+Versión del snapshot auditado: `388d3437aad47fb088f72b17580489fbe78f2cc6265339f5e724b10ec8f4c210`
+(el 4 oct `site/` volvió a ser el de master y el holdout se re-fijó a
+`de3c4d404837b8c19d306c301cd5647cc955d26215a45bc0c8f8b7bed00db668`; ver el
+informe de remediación).
 Versión semántica: `d43faaad53a352cbbfea194c6ffa978ebef8bce6a4d403cc52553158fcb11b2a`.
 No inferir resultados de API o calidad conversacional desde pruebas offline.
 

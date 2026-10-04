@@ -141,6 +141,7 @@ class TurnWorker:
     def _sweep_retention(self) -> None:
         if time.monotonic() - self._last_retention_sweep >= 3600:
             self.store.cleanup_expired(self.config.retention_days)
+            self.store.cleanup_auth()
             self._last_retention_sweep = time.monotonic()
 
     def _execute_turn(self, turn: dict[str, Any]) -> None:
@@ -250,13 +251,17 @@ class TurnWorker:
                 raise ValueError("tool call limit exceeded")
             try:
                 result = registry.invoke(name, args, context=turn["context"])
-            except PlanValidationError:
-                result = {
-                    "error": {
-                        "code": "tool_rejected",
-                        "message": "La consulta no pasó la validación semántica.",
-                    }
-                }
+            except (PlanValidationError, ValueError, KeyError, TypeError) as exc:
+                # Bad model arguments are answered to the model as a persisted
+                # tool error so it can correct itself; storage failures below
+                # still fail the turn.
+                LOG.info("Tool %s rejected arguments (%s)", name, type(exc).__name__)
+                message = (
+                    str(exc)[:300]
+                    if isinstance(exc, PlanValidationError)
+                    else "La consulta no pasó la validación semántica."
+                )
+                result = {"error": {"code": "tool_rejected", "message": message}}
             if cancel_event.is_set() or not self.store.is_running(turn_id):
                 raise InterruptedError("turn no longer active")
             encoded = json.dumps(result, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode(
@@ -310,9 +315,12 @@ class TurnWorker:
             self.store.complete_turn(
                 turn_id, content, payload, input_tokens, output_tokens, cost, result.usage_complete
             )
-        except InterruptedError:
+        except InterruptedError as exc:
             if not self.store.is_cancelled(turn_id):
                 self.store.fail_turn(turn_id, "cancelled", "El turno fue cancelado.")
+            usage = self._reported_usage(exc)
+            if usage is not None:
+                self.store.record_terminal_usage(turn_id, *usage)
         except TimeoutError:
             cancel_event.set()
             if session_id:
@@ -325,12 +333,27 @@ class TurnWorker:
             # Keep details in internal logs with redaction; clients get a stable message.
             LOG.error("Turn %s failed (%s)", turn_id, type(exc).__name__)
             self.store.fail_turn(
-                turn_id, "provider_error", "No fue posible completar el turno. Inténtalo de nuevo."
+                turn_id,
+                "provider_error",
+                "No fue posible completar el turno. Inténtalo de nuevo.",
+                usage=self._reported_usage(exc),
             )
         finally:
             timer.cancel()
             with self._guard:
                 self._active.pop(turn_id, None)
+
+    def _reported_usage(self, exc: BaseException) -> tuple[int, int, float] | None:
+        """Provider usage attached to a failure, priced like a completed turn."""
+        usage = getattr(exc, "usage", None)
+        if not usage:
+            return None
+        input_tokens, output_tokens = usage
+        cost = (
+            input_tokens * self.config.estimated_input_cost_per_million
+            + output_tokens * self.config.estimated_output_cost_per_million
+        ) / 1_000_000
+        return input_tokens, output_tokens, cost
 
 
 __all__ = ["TurnWorker"]

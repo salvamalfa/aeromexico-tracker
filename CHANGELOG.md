@@ -4,6 +4,19 @@ Cambios notables del proyecto, para humanos. Formato inspirado en
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); no se usa
 versión semántica, las entradas van por fecha.
 
+## 2026-10-04
+
+### Changed
+
+- **Chat analítico — contraseña y correcciones de auditoría.** El piloto se
+  protege con una contraseña (hash scrypt, sesiones de 12 h, límite de
+  intentos) en lugar de tokens. Se corrigen la exposición del modo local
+  detrás de un proxy, el signo de `compare_metrics`, la reanudación de turnos
+  en cola, la pérdida de historial al recrear la sesión del proveedor, el uso
+  de turnos fallidos y bloqueos del servidor. El sitio publicado no cambia y el
+  chat sigue apagado; la evaluación con modelos sigue pendiente de la clave de
+  API. Detalle en `docs/etapas/airline-tracker-remediacion-20261004.md`.
+
 ## 2026-10-03
 
 ### Added

@@ -106,3 +106,17 @@ def test_remote_session_deletion_retries_use_durable_backoff(tmp_path: Path):
     assert store.pending_provider_deletions() == ["provider-session"]
     store.failed_provider_deletion("provider-session")
     assert store.pending_provider_deletions() == []
+
+
+def test_retention_never_queues_remote_deletion_for_a_kept_conversation(tmp_path: Path):
+    store = ChatStore(tmp_path / "chat.sqlite3")
+    kept = store.create_conversation("alice", "v1")
+    gone = store.create_conversation("alice", "v1")
+    store.set_provider_session(kept["id"], "session-kept")
+    store.set_provider_session(gone["id"], "session-gone")
+    store.submit_turn("alice", kept["id"], "ask", "k1", {})
+    with store._connect() as db:
+        db.execute("UPDATE conversations SET updated_at='2000-01-01T00:00:00.000+00:00'")
+    assert store.cleanup_expired(30) == 1
+    assert store.pending_provider_deletions() == ["session-gone"]
+    assert store.get_conversation("alice", kept["id"])["id"] == kept["id"]
