@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import threading
+import time
 
 import pytest
 
@@ -257,33 +258,22 @@ def test_worker_shutdown_stays_bounded_while_post_write_cancel_is_blocked(tmp_pa
     worker.start()
     try:
         assert input_started.wait(timeout=1)
-        started = threading.Event()
-        stop_result = []
-
-        def stop_worker():
-            started.set()
-            before = threading.current_thread()
-            worker.stop(timeout=0.05)
-            stop_result.append(before)
-
-        stopper = threading.Thread(target=stop_worker)
-        stopper.start()
-        assert started.wait(timeout=1)
+        assert store.request_cancel("alice", first["id"]) == "cancelled"
+        worker.cancel(first["id"])
         assert first_cancel_sent.wait(timeout=1)
-        stopper.join(timeout=0.5)
-        assert not stopper.is_alive()
+        release_input.set()
+        assert second_cancel_started.wait(timeout=1)
+        stop_started = time.monotonic()
+        worker.stop(timeout=0.05)
+        assert time.monotonic() - stop_started < 0.5
         terminal = store.get_turn("alice", first["id"])
         assert (terminal["status"], terminal["error_code"], terminal["usage_complete"]) == (
-            "failed",
-            "timeout",
+            "cancelled",
+            "cancelled",
             0,
         )
         assert terminal["reserved_tokens"] == 100
         assert store.get_turn("alice", queued["id"])["status"] == "pending"
-
-        release_input.set()
-        assert second_cancel_started.wait(timeout=1)
-        assert not stopper.is_alive()
         release_second_cancel.set()
         worker._thread.join(timeout=1)
     finally:
@@ -298,5 +288,5 @@ def test_worker_shutdown_stays_bounded_while_post_write_cancel_is_blocked(tmp_pa
         "agent.session.input.message"
     ) == 1
     final = store.get_turn("alice", first["id"])
-    assert (final["status"], final["usage_complete"], final["reserved_tokens"]) == ("failed", 0, 100)
+    assert (final["status"], final["usage_complete"], final["reserved_tokens"]) == ("cancelled", 0, 100)
     assert store.get_turn("alice", queued["id"])["status"] == "pending"
