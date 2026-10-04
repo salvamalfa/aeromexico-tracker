@@ -11,7 +11,10 @@ La continuación prepara un build Docker explícito para la API con el perfil
 bloqueado `chat-runtime`, el snapshot publicado y un arranque que escucha el
 puerto de la plataforma. El CLI local conserva su restricción a loopback. La
 instancia hospedada exige contraseña, conserva SQLite en un volumen persistente
-y empieza con proveedor simulado y admisión desactivada.
+y empieza con proveedor simulado y admisión desactivada. La documentación oficial
+de Railway establece que los servicios nuevos no pueden usar Config as Code;
+se elimina `railway.json` y la selección del Dockerfile/opciones de deploy se
+configura en el servicio.
 
 El dueño acordó **30 días de retención del historial en el backend**. Esto no
 modifica las condiciones de retención de OpenAI o Data Sharing. La contabilidad
@@ -55,9 +58,17 @@ local se montó como secreto temporal de BuildKit solo durante ese paso; TLS
 permaneció validado y la CA no se copió a ninguna capa. El build normal de
 Railway no depende de esa CA opcional.
 
-La configuración `railway.json` valida contra el esquema oficial. Las ocho
-pruebas focales del launcher pasaron, al igual que Ruff, formato y comprobación
-del diff. El smoke del contenedor completo verificó: arranque con `PORT`
+El `railway.json` anterior validaba contra el esquema publicado, pero eso no
+demostraba que Railway lo aplicase a un servicio nuevo; Config as Code está
+deprecado y no está disponible para servicios nuevos. El agente Railway dejó
+preparados los ajustes soportados de servicio: `RAILWAY_DOCKERFILE_PATH` para
+`Dockerfile.chat`, healthcheck `/api/chat/health` con timeout 300 s, una réplica,
+región SFO, Serverless activo, overlap 0 s, draining 100 s, restart `On Failure`
+con tres reintentos y volumen persistente de 500 MB en `/data`. El root debe
+verificar esos ajustes remotos; no se ha aplicado ni declarado un deploy real.
+
+Las ocho pruebas focales del launcher pasaron, al igual que Ruff, formato y
+comprobación del diff. El smoke del contenedor completo verificó: arranque con `PORT`
 dinámico, snapshot y worker disponibles, rechazo `401` sin autenticar, login
 correcto, admisión deshabilitada, volumen con permisos `0700`, base SQLite y
 sidecars con `0600`, ausencia de secretos incluidos y persistencia de una
