@@ -225,7 +225,6 @@ class OpenAIProvider:
             if stream_iter is None:
                 raise OpenAIProviderError("El SDK no abrió el stream de la sesión")
             for event in stream_iter:
-                check_limits()
                 event_data = to_dict(event)
                 event_type = event_data.get("type")
                 discovered_session = event_session_id(event_data)
@@ -251,6 +250,10 @@ class OpenAIProvider:
                             "provider_event_type": event_type,
                         },
                     )
+                # Capture provider session/turn IDs before honoring cancellation
+                # or timeout. This lets the worker cancel a session created while
+                # the local request was already being cancelled.
+                check_limits()
                 if event_type == "agent.session.turn.output_text.delta" and is_current_turn:
                     key = (
                         int_or_zero(event_data.get("output_index")),

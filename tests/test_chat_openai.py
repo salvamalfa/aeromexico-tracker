@@ -345,6 +345,37 @@ def test_creates_none_session_with_explicit_model_tools_and_live_context_envelop
     assert fake._create_stream.read_count == 5
 
 
+def test_cancel_during_session_creation_persists_first_discovered_session_before_interrupt():
+    cancel_event = threading.Event()
+
+    class CancellingSessions(FakeSessions):
+        def create(self, **kwargs):
+            stream = super().create(**kwargs)
+            cancel_event.set()
+            return stream
+
+    fake = CancellingSessions(create_stream=FakeStream([_session_created()]))
+    provider = _provider(FakeClient(fake))
+    saved_sessions = []
+    emissions = []
+
+    with pytest.raises(InterruptedError, match="turn cancelled"):
+        provider.run_turn(
+            session_id=None,
+            messages=[{"role": "user", "content": "Pregunta", "turn_id": "app-turn"}],
+            context={"period": "2026Q2"},
+            tool_specs=_specs(),
+            call_tool=lambda *_: pytest.fail("cancelled turn dispatched a tool"),
+            emit=lambda kind, payload: emissions.append((kind, payload)),
+            persist_session=saved_sessions.append,
+            cancel_event=cancel_event,
+        )
+
+    assert saved_sessions == ["sess_fixture"]
+    assert any(payload.get("provider_event_type") == "agent.session.created" for _, payload in emissions)
+    assert fake._create_stream.read_count == 1
+
+
 def test_function_call_uses_official_required_action_shape_and_persists_provider_turn_call_ids():
     action = RequiredActionSessionRequiredActionResourceFunctionCall.model_validate(
         {

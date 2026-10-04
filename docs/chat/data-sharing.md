@@ -53,6 +53,24 @@ tráfico elegible y crédito efectivamente aplicado. Las lecturas de Platform y
 los expedientes locales permiten reconciliar el uso sin publicar información
 de cuenta. Una consulta del saldo gratuito no sustituye el registro total.
 
+El almacenamiento del chat conserva reservas con uso desconocido a través de
+los cambios de día UTC. Si se borra un turno terminal o vence su conversación,
+transfiere la reserva a un registro contable independiente del contenido. Ese
+registro no contiene prompts, respuestas, contexto ni identificadores del
+proveedor. Cuando se reconcilia uso confirmado, lo contabiliza una vez y libera
+la reserva, incluso si el turno ya no existe. Antes de borrar el contenido o
+solicitar el borrado remoto, reconcilia el turno del proveedor cuando sea
+posible. No hay una consulta automática posterior para resolver tombstones; sin
+evidencia confirmada, la reserva permanece retenida y no se reinicia por UTC ni
+por retención. Si falla el borrado remoto, la solicitud queda en una cola
+durable de reintentos. El uso confirmado se contabiliza en la fecha UTC de
+confirmación, como estimación operativa; esa fecha puede diferir de la fecha de
+solicitud o de la facturación del proveedor.
+
+Este mecanismo conserva la contabilidad; no adopta la propuesta de 200,000
+tokens diarios ni la reserva estimada de 150,000 tokens por turno/caso. Los
+límites y valores predeterminados actuales no cambian por esta documentación.
+
 **Propuesta para el piloto, aún no adoptada:** presupuesto de 200,000 tokens
 por día tanto para el owner como para el total global; usar **150,000 tokens
 como reserva estimada por turno/caso**, con margen sobre los turnos de más de

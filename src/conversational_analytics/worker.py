@@ -8,14 +8,24 @@ import logging
 import os
 import threading
 import time
+from dataclasses import dataclass
 from typing import Any
 
 from .config import ChatConfig
 from .providers.base import Provider, ProviderResult
 from .semantic.plan import PlanValidationError
-from .storage import ChatStore
+from .storage import ChatStore, NotFound
 
 LOG = logging.getLogger("conversational_analytics.worker")
+
+
+@dataclass
+class _ActiveTurn:
+    cancel_event: threading.Event
+    provider_session_id: str | None
+    cancel_drained: threading.Event
+    owner_id: str
+    provider_cancel_started: bool = False
 
 
 class TurnWorker:
@@ -24,7 +34,7 @@ class TurnWorker:
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
         self._guard = threading.Lock()
-        self._active: dict[str, tuple[threading.Event, str | None]] = {}
+        self._active: dict[str, _ActiveTurn] = {}
         self._registry = None
         self._last_retention_sweep = 0.0
 
@@ -47,16 +57,56 @@ class TurnWorker:
             thread.join(timeout=timeout)
 
     def cancel(self, turn_id: str) -> None:
+        self._cancel_terminal_session(turn_id)
+
+    def _cancel_terminal_session(self, turn_id: str) -> None:
+        """Cancel a known session for a cancelled or timed-out turn exactly once."""
         with self._guard:
             active = self._active.get(turn_id)
-        if active:
-            cancel_event, session_id = active
-            cancel_event.set()
-            if session_id:
-                try:
-                    self.provider.cancel(session_id)
-                except Exception:  # Provider cancellation is best effort; do not expose SDK errors.
-                    LOG.warning("Provider cancellation failed for turn %s", turn_id)
+            if active is None:
+                return
+        # Terminal status prevents late cancellation from reaching a reused session.
+        try:
+            record = self.store.get_turn(active.owner_id, turn_id)
+        except NotFound:
+            # Conversation deletion can precede the first session-created event.
+            # Only an already-signalled cancellation authorizes cleanup of this
+            # newly discovered remote session.
+            orphaned_cancel = active.cancel_event.is_set()
+            if not orphaned_cancel:
+                return
+        else:
+            orphaned_cancel = False
+        if (
+            not orphaned_cancel
+            and record["status"] != "cancelled"
+            and not (record["status"] == "failed" and record.get("error_code") == "timeout")
+        ):
+            return
+        with self._guard:
+            if self._active.get(turn_id) is not active:
+                return
+            active.cancel_event.set()
+            session_id = active.provider_session_id
+            if not session_id:
+                return
+            if orphaned_cancel:
+                self.store.queue_provider_deletion(session_id)
+            owns_cancel = not active.provider_cancel_started
+            if owns_cancel:
+                active.provider_cancel_started = True
+                active.cancel_drained.clear()
+            should_wait = not active.cancel_drained.is_set()
+        if not owns_cancel:
+            if should_wait:
+                active.cancel_drained.wait()
+            return
+        try:
+            self.provider.cancel(session_id)
+        except Exception:  # Provider cancellation is best effort; do not expose SDK errors.
+            LOG.warning("Provider cancellation failed for turn %s", turn_id)
+        finally:
+            active.cancel_drained.set()
 
     def _get_registry(self):
         if self._registry is None:
@@ -147,9 +197,12 @@ class TurnWorker:
     def _execute_turn(self, turn: dict[str, Any]) -> None:
         turn_id, conversation_id = turn["id"], turn["conversation_id"]
         cancel_event = threading.Event()
+        cancel_drained = threading.Event()
+        cancel_drained.set()
         session_id = turn.get("provider_session_id")
+        active = _ActiveTurn(cancel_event, session_id, cancel_drained, owner_id=turn["owner_id"])
         with self._guard:
-            self._active[turn_id] = (cancel_event, session_id)
+            self._active[turn_id] = active
         if not self.store.is_running(turn_id):
             cancel_event.set()
             with self._guard:
@@ -191,18 +244,7 @@ class TurnWorker:
             # Otherwise it can raise InterruptedError on the event and win the
             # race, recording a user cancellation instead of this timeout.
             self.store.fail_turn(turn_id, "timeout", "El turno excedió el tiempo máximo configurado.")
-            terminal = self.store.get_turn(turn["owner_id"], turn_id)
-            if terminal["status"] != "failed" or terminal.get("error_code") != "timeout":
-                return
-            cancel_event.set()
-            with self._guard:
-                active = self._active.get(turn_id)
-                provider_session = active[1] if active else session_id
-            if provider_session:
-                try:
-                    self.provider.cancel(provider_session)
-                except Exception:
-                    LOG.warning("Provider cancellation failed after timeout for turn %s", turn_id)
+            self._cancel_terminal_session(turn_id)
 
         timer = threading.Timer(self.config.max_turn_seconds, timeout_turn)
         timer.daemon = True
@@ -210,8 +252,6 @@ class TurnWorker:
 
         def emit(event_type: str, payload: dict[str, Any]) -> None:
             nonlocal emitted_chars
-            if not self.store.is_running(turn_id):
-                return
             if event_type == "provider.metadata":
                 self.store.set_provider_turn(
                     turn_id,
@@ -219,6 +259,8 @@ class TurnWorker:
                     str(payload.get("provider_event_id", "")) or None,
                     str(payload.get("provider_event_type", "")) or None,
                 )
+                return
+            if not self.store.is_running(turn_id):
                 return
             payload = {k: v for k, v in payload.items() if k not in {"provider_turn_id", "turn_id"}}
             if event_type == "message.delta":
@@ -238,7 +280,7 @@ class TurnWorker:
             session_id = provider_session_id
             with self._guard:
                 if turn_id in self._active:
-                    self._active[turn_id] = (cancel_event, session_id)
+                    self._active[turn_id].provider_session_id = session_id
 
         def call_tool(provider_turn_id: str, call_id: str, name: str, args: dict[str, Any]) -> dict[str, Any]:
             nonlocal call_counter
@@ -332,12 +374,6 @@ class TurnWorker:
             if usage is not None:
                 self.store.record_terminal_usage(turn_id, *usage)
         except TimeoutError as exc:
-            cancel_event.set()
-            if session_id:
-                try:
-                    self.provider.cancel(session_id)
-                except Exception:
-                    LOG.warning("Provider cancellation failed after timeout for turn %s", turn_id)
             self.store.fail_turn(turn_id, "timeout", "El turno excedió el tiempo máximo configurado.")
             if result is not None:
                 self._record_result_usage(turn_id, result)
@@ -361,8 +397,12 @@ class TurnWorker:
             # session. This also prevents cancellation from outliving a completed turn.
             if timer.ident != threading.get_ident():
                 timer.join()
+            # Drain explicit cancellation or timeout after the provider has
+            # surfaced any just-discovered session ID.
+            self._cancel_terminal_session(turn_id)
             with self._guard:
-                self._active.pop(turn_id, None)
+                if self._active.get(turn_id) is active:
+                    self._active.pop(turn_id, None)
 
     def _reported_usage(self, exc: BaseException) -> tuple[int, int, float] | None:
         """Provider usage attached to a failure, priced like a completed turn."""

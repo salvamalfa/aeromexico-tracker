@@ -30,6 +30,10 @@ versión semántica, las entradas van por fecha.
   El timeout se registra antes de despertar al proveedor; el worker espera a
   que termine su cancelación antes del siguiente turno y contabiliza uso
   conocido de respuestas tardías sin cambiar el estado terminal.
+  La cancelación explícita conserva la sesión creada tarde y espera su cierre;
+  borrar una conversación durante la creación mantiene la limpieza remota
+  durable. Las reservas de uso desconocido sobreviven cambios de día UTC,
+  borrado y retención, con contabilización única cuando se confirma el uso.
 
 ## 2026-10-03
 

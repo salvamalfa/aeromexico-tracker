@@ -7,10 +7,23 @@ from pathlib import Path
 import pytest
 
 from src.conversational_analytics.data.snapshot import Snapshot, SnapshotError
+from src.conversational_analytics.evaluation import load_cases
 from src.conversational_analytics.semantic.context import validate_context
 from src.conversational_analytics.semantic.plan import PlanValidationError, QueryPlan, validate_plan
 
 FIXTURE = Path(__file__).parent / "fixtures/chat/site"
+
+
+def test_supported_holdout_contexts_pass_production_validation() -> None:
+    supported_contexts = [
+        case["context"]
+        for case in load_cases()
+        if case["expected"]["status"] == "supported" and "context" in case
+    ]
+
+    assert supported_contexts
+    for context in supported_contexts:
+        assert validate_context(context) == context
 
 
 def test_catalog_and_context_are_versioned_and_allowlisted() -> None:

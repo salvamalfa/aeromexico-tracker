@@ -49,84 +49,52 @@ hasta diez, llamadas planeadas, tokens de entrada/salida aproximados, precios
 ingresados y destinos. El CLI acepta el precio sin caché con
 `--model-price MODEL=INPUT:OUTPUT` (USD por millón); no aplica una tarifa de un
 candidato a los demás. Sin precio registrado el costo queda `null`; la tabla
-debe volver a comprobarse el día de una prueba live. La proyección de tokens es
-orientativa e incluye contexto/herramientas, respuesta y hasta una consulta de
-herramienta por caso soportado. Reintentos, contexto acumulado, más
-herramientas, descuentos de caché y formato alteran el uso real.
+debe volver a comprobarse el día de una prueba live. Una proyección de tokens
+es solo orientativa, no una tarifa por pregunta: una pregunta enviada puede
+originar varios turnos del modelo, llamadas de herramientas y contexto
+acumulado. Consulta el [reporte de validación con mediciones reales](../etapas/airline-tracker-validacion-real-20261004.md)
+para revisar consumo por pregunta; el cálculo suma todos sus turnos, incluidos
+los que terminan con error, cancelación o sin respuesta útil. Las escrituras de
+caché, créditos y otros ajustes de factura pueden ser desconocidos; no se les
+atribuye costo cero.
 
 El destino live configurado es `.state/outputs/chat-evaluations/`, dentro de
 datos locales ignorados por Git. El dry-run informa esa ruta como destino
 hipotético y confirma que no escribe nada.
 
-Escenario de planificación con el supuesto actual de 1 200 tokens de entrada y
-350 de salida **sumados entre todas las llamadas de cada pregunta**, tarifas
-estándar cortas sin caché y hosting excluido:
-
-| Modelo | 100 preguntas | 1 000 preguntas | 10 000 preguntas |
-|---|---:|---:|---:|
-| `gpt-6-luna` | US$0.03 | US$0.30 | US$2.95 |
-| `gpt-6.1-sol` | US$0.59 | US$5.90 | US$59.00 |
-| `gpt-6-astra` | US$2.95 | US$29.50 | US$295.00 |
-
-Son importes ilustrativos, no sustituyen mediciones de tokens/latencia ni una
-cotización. Iteraciones del agente, respuestas largas, historial, caché y
-tarifas de contexto largo los pueden cambiar.
+No se publica una proyección multiplicando un tamaño fijo de pregunta: el
+número de turnos y tokens varía entre casos, incluso cuando fallan. El reporte
+de la etapa registra el costo estimado a tarifas normales según el uso
+recuperado y separa cualquier uso desconocido. El hosting del backend es un
+costo aparte, no incluido en los precios por tokens.
 
 ## Ejecución live y continuidad
 
-El bridge usa el `OpenAIProvider` de producción con un `ToolRegistry` real,
-sesión nueva por pregunta y callbacks que capturan plan, filas, referencias e
-IDs de proveedor. El modo de sonda admite un candidato; el holdout exige 2–3.
-`--run` requiere `--budget-usd` positivo (máximo US$10 de umbral operativo),
-`--models`, `--model-price` por candidato y `--opt-in`. El mismo permiso del
-experimento puede cubrir una sonda y luego la comparación si la sonda resulta
-válida. Se ejecutan como fases separadas para inspeccionar el reporte de la
-sonda; cada proceso empieza su contador de presupuesto en cero. El dueño ya
-autorizó US$10 acumulados para sonda y holdout. Se ejecutó una sonda correcta
-y se inició el holdout; su primer caso falló y se conservó para reconciliación.
+El harness live usa el adaptador de producción y un registro real de
+herramientas sobre el snapshot público. La continuidad por fases conserva un
+presupuesto acumulado compartido. Cada pregunta crea su propia sesión, y su
+consumo totaliza todas las llamadas internas a modelo, no solo la respuesta
+final. Esto incluye contexto acumulado, iteraciones de herramientas,
+aclaraciones y turnos fallidos o cancelados cuyo uso se recupere.
+El SDK deshabilita reintentos automáticos y no se repiten preguntas ya enviadas.
+Una respuesta fallida sigue siendo consumo facturable. El comando
+offline `--dry-run` planifica sin llamadas; no reproduce las fases live.
 
-Ejemplo de comando para una sonda autorizada (no repetir la ya ejecutada):
+El permiso de esta evaluación cubre únicamente las fases autorizadas hasta el
+umbral operativo acumulado de US$10; el saldo no se reinicia al pasar de una
+fase a otra. Para revisar uso y estado, consulta el reporte de la etapa enlazado
+arriba. Si el uso de un turno no se confirma, su costo permanece desconocido:
+no se vuelve a enviar la pregunta para reconstruirlo ni se presenta un subtotal
+conocido como total.
 
-```bash
-uv run python -m src.conversational_analytics.evaluation --run --probe-only \
-  --budget-usd 10 --models gpt-6-luna --model-price gpt-6-luna=0.10:0.50 --opt-in
-```
-
-Antes de la segunda fase, revisar el reporte de la sonda: detenerse si
-`models[0].spent_unknown` es verdadero, si los totales de tokens son nulos o si
-`token_totals.usage_complete_case_count` no coincide con `token_totals.turn_count`.
-Con uso completo, fijar `REMAINING_USD` a **10 menos
-`models[0].estimated_cost_usd`**, descontando también cualquier otro intento
-ya consumido, y continuar solo si es positivo. No reiniciar
-el presupuesto a US$10 para la comparación. Mantener los mismos precios al
-calcular el saldo; la caché no observada puede alterar la factura.
-
-```bash
-uv run python -m src.conversational_analytics.evaluation --run \
-  --budget-usd "$REMAINING_USD" --models gpt-6-luna gpt-6.1-sol gpt-6-astra \
-  --model-price gpt-6-luna=0.10:0.50 \
-  --model-price gpt-6.1-sol=2:10 \
-  --model-price gpt-6-astra=10:50 --opt-in
-```
-
-La variable de entorno
-`OPENAI_API_KEY` está presente en el entorno de esta sesión; su valor no fue
-mostrado ni copiado y el acceso a Agents API quedó confirmado por la sonda.
-
-Cada corrida escribe un reporte local en `.state/outputs/chat-evaluations/`;
-Git ignora ese directorio porque puede contener texto del proveedor. El informe
-guarda plan, filas, respuesta, referencias, `call_id`, sesión, turno y eventos.
-Los archivos son privados (0600 en directorio 0700). Un sidecar de progreso
-atómico conserva IDs, estado y consumo sin copiar prompts ni respuestas; el
-estado `completed` solo se escribe después del informe final. Un error guarda
-únicamente tipos permitidos y estado HTTP, nunca excepciones crudas. Las
-sesiones con uso desconocido quedan disponibles para reconciliación.
-Los tokens totales de un turno quedan `null` si el proveedor no confirma uso
-completo; conteo HTTP interno del SDK y caché quedan `unknown` hasta que el
-adaptador los devuelva. Costo es una estimación con precios ingresados, no
-factura. Una reserva operativa aproximada frena el siguiente caso cuando no
-alcanza el saldo, pero no limita los tokens de una llamada ya iniciada ni
-garantiza un tope exacto. La evaluación no inventa los resultados faltantes.
+Los reportes live detallados y checkpoints se conservan localmente, fuera de
+Git y con permisos privados. Los tokens totales de un turno son desconocidos si
+el proveedor no confirma su uso completo. Las métricas del SDK o caché que no
+se hayan recuperado también se mantienen como desconocidas. El costo reportado
+es una estimación con las tarifas ingresadas, no una factura. La reserva
+operativa puede detener casos posteriores, pero no limita los tokens de una
+llamada ya iniciada ni garantiza un techo exacto. No se inventan resultados ni
+costos faltantes.
 
 Usar el mismo holdout, snapshot, semántica, prompt de sistema, límites y
 configuración de herramienta por modelo. No incluir la pregunta y su respuesta
@@ -146,22 +114,14 @@ declarar la limitación; las ambigüedades materiales deben pedir precisión. Un
 modelo que no alcance estos gates no se elige por tener menor costo o menor
 latencia.
 
-El experimento que se presentará al dueño cubre una sonda de una consulta con un
-candidato y, si la sonda funciona, las 40 preguntas con tres candidatos (120
-casos de modelo). El umbral operativo propuesto es US$10 para el alcance
-completo, con reservas conservadoras y pausa entre casos cuando el saldo
-estimado no cubra el siguiente. La autorización de ese alcance puede cubrir la
-sonda y el holdout sin pedir otra confirmación entre ambas fases. El umbral no
-garantiza factura máxima: el uso del proveedor puede llegar tarde y un turno ya
-iniciado puede exceder el saldo.
-
-El reporte H4 comparará 2–3 candidatos y expresará p50/p95 de latencia, calidad
-con intervalo/denominador, tokens de todas las llamadas, tasas de error y costo
-medido con precios vigentes y supuestos de caché. Incluir escenarios de 100,
-1 000 y 10 000 preguntas al mes; separar tokens de entrada/salida, llamadas de
-herramientas y costos de hosting. Uso reportado por la API puede estar atrasado
-o incompleto, por lo que ni las estimaciones ni un presupuesto propio prometen
-un tope de factura. No se eligió un modelo ni objetivo mensual. El presupuesto
-del experimento es US$10 acumulados a tarifa normal; el incentivo Data Sharing
-no lo sustituye. Ver [cobertura y propuesta de límites](data-sharing.md) antes
-de atribuir costo cero a una llamada.
+El [reporte final de validación real](../etapas/airline-tracker-validacion-real-20261004.md)
+es la fuente de mediciones por pregunta y candidato: latencia, resultado de
+calidad con denominador, tokens de todos los turnos, errores y costo estimado
+a tarifas vigentes. Sus escenarios mensuales deben partir del uso medido y
+declarar sus supuestos; el hosting se presenta por separado. Ni la estimación
+del harness ni un presupuesto propio prometen un tope de factura. No se eligió
+un modelo ni un objetivo mensual. La autorización live existente tiene un
+umbral acumulado a tarifas normales; un incentivo o una escritura de caché
+no se contabiliza como crédito confirmado. Ver
+[cobertura y propuesta de límites](data-sharing.md)
+antes de atribuir costo cero a una llamada.

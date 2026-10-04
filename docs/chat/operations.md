@@ -95,11 +95,30 @@ público.
   local, la sesión administrada y sus referencias del proveedor según las
   capacidades y los términos vigentes; documentar cualquier estado que el
   proveedor no permita borrar.
+- Las reservas cuyo uso aún se desconoce se mantienen en el control de cuotas
+  aunque cruce la medianoche UTC. Al borrar una conversación manualmente o por
+  retención, el almacenamiento transfiere cualquier reserva terminal sin
+  conciliación a un registro contable mínimo e independiente del historial.
+  Guarda propietario, fecha de reserva, cantidad reservada y estado; cuando
+  llega una notificación de uso confirmado, registra tokens y costo una sola
+  vez y libera la reserva, incluso si ya se borró el turno. Antes de borrar el
+  contenido o solicitar el borrado remoto, reconcilia el turno del proveedor
+  cuando sea posible. No hay una consulta automática posterior que resuelva
+  tombstones; sin evidencia confirmada, la reserva permanece retenida y no se
+  reinicia por UTC ni por retención. No conserva prompts, respuestas, contexto,
+  eventos ni identificadores del proveedor en ese registro. Las reservas de
+  turnos activos siguen asociadas a sus turnos mientras estos sigan activos.
+- El borrado por retención conserva ese registro mínimo antes de eliminar el
+  historial local. Si falla la eliminación remota, su solicitud se agrega a
+  una cola durable separada y se reintenta; una falla temporal no revierte el
+  borrado local ni elimina la reserva contable pendiente.
 - Registrar el `provider_session_id`, el uso reportado por cada llamada, costo
   estimado, latencia, errores y caché si el proveedor lo informa. El consumo
   reportado puede llegar tarde o estar incompleto y no garantiza un techo de
   factura. El backend debe admitir límites propios y pausar turnos si exceden
-  el presupuesto operativo.
+  el presupuesto operativo. El día UTC en que se confirma el uso es una fecha
+  contable estimada; no necesariamente coincide con la fecha de solicitud o
+  facturación del proveedor.
 - No asumir que `environment.type="none"` elimina almacenamiento del proveedor
   o equivale a Zero Data Retention. Confirmar condiciones de retención,
   residencia, borrado y acceso vigentes antes de habilitar datos de usuarios.

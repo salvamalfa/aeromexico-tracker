@@ -511,7 +511,7 @@
         "tab": "economy",
         "period": "2026Q2",
         "entity": "VOLARIS",
-        "card_id": "load_factor"
+        "card_id": "kpi-load_factor"
       },
       "expected": {
         "status": "supported",
@@ -548,7 +548,7 @@
         "tab": "economy",
         "period": "2026Q2",
         "entity": "VIVA_AEROBUS",
-        "card_id": "unit_margin"
+        "card_id": "kpi-unit_margin_cents_per_km"
       },
       "expected": {
         "status": "supported",

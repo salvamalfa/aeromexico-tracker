@@ -166,6 +166,43 @@ class SlowCancelProvider(ToolCallingProvider):
         self.cancel_finished.set()
 
 
+class LateSessionDiscoveryProvider(ToolCallingProvider):
+    def __init__(self):
+        super().__init__([])
+        self.started = threading.Event()
+        self.allow_discovery = threading.Event()
+        self.cancel_started = threading.Event()
+        self.cancel_release = threading.Event()
+        self.cancel_finished = threading.Event()
+        self.calls = 0
+
+    def run_turn(self, **kwargs):
+        self.calls += 1
+        if self.calls == 1:
+            self.started.set()
+            assert self.allow_discovery.wait(timeout=2)
+            kwargs["persist_session"]("late-provider-session")
+            kwargs["emit"](
+                "provider.metadata",
+                {
+                    "provider_turn_id": "late-provider-turn",
+                    "provider_event_id": "late-event",
+                    "provider_event_type": "agent.session.created",
+                },
+            )
+            kwargs["emit"]("message.delta", {"text": "contenido posterior al terminal"})
+            raise InterruptedError("cancelled")
+        assert kwargs["session_id"] == "late-provider-session"
+        assert self.cancel_finished.is_set()
+        return ProviderResult("segunda consulta", input_tokens=10, output_tokens=2, usage_complete=True)
+
+    def cancel(self, session_id):
+        self.cancelled.append(session_id)
+        self.cancel_started.set()
+        assert self.cancel_release.wait(timeout=2)
+        self.cancel_finished.set()
+
+
 def test_worker_timeout_cancels_provider_and_writes_one_terminal_failure(tmp_path: Path):
     db = tmp_path / "chat.sqlite3"
     store = ChatStore(db)
@@ -255,6 +292,41 @@ def test_next_turn_waits_for_timeout_provider_cancel_to_drain(tmp_path: Path):
     assert store.get_turn("alice", second_claim["id"])["status"] == "completed"
 
 
+def test_next_turn_waits_for_explicit_provider_cancel_to_drain(tmp_path: Path):
+    db = tmp_path / "chat.sqlite3"
+    store = ChatStore(db)
+    conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1")
+    store.submit_turn("alice", conversation["id"], "primera", "client-1", {})
+    first_claim = store.claim_turn()
+    provider = SlowCancelProvider()
+    worker = _worker(store, db, provider, max_seconds=2)
+    worker._registry = Registry({"rows": []})
+    first_thread = threading.Thread(target=worker._execute_turn, args=(first_claim,))
+    first_thread.start()
+
+    assert provider.started.wait(timeout=1)
+    assert store.request_cancel("alice", first_claim["id"]) == "cancelled"
+    cancel_thread = threading.Thread(target=worker.cancel, args=(first_claim["id"],))
+    cancel_thread.start()
+    assert provider.cancel_started.wait(timeout=1)
+    first_thread.join(timeout=0.1)
+    assert first_thread.is_alive()
+
+    store.submit_turn("alice", conversation["id"], "segunda", "client-2", {})
+    provider.cancel_release.set()
+    cancel_thread.join(timeout=1)
+    first_thread.join(timeout=1)
+    assert not cancel_thread.is_alive()
+    assert not first_thread.is_alive()
+    second_claim = store.claim_turn()
+    assert second_claim is not None
+    worker._execute_turn(second_claim)
+
+    assert provider.cancel_finished.is_set()
+    assert provider.calls == 2
+    assert store.get_turn("alice", second_claim["id"])["status"] == "completed"
+
+
 def test_watchdog_does_not_cancel_session_after_turn_completed(tmp_path: Path):
     db = tmp_path / "chat.sqlite3"
     store = ChatStore(db)
@@ -282,6 +354,132 @@ def test_watchdog_does_not_cancel_session_after_turn_completed(tmp_path: Path):
 
     assert store.get_turn("alice", turn["id"])["status"] == "completed"
     assert provider.cancelled == []
+
+
+def test_late_explicit_cancel_does_not_cancel_completed_session(tmp_path: Path):
+    db = tmp_path / "chat.sqlite3"
+    store = ChatStore(db)
+    _, turn, claim = _claimed_turn(store)
+    provider = ToolCallingProvider([])
+    worker = _worker(store, db, provider, max_seconds=2)
+    worker._registry = Registry({"rows": []})
+    completed = threading.Event()
+    allow_return = threading.Event()
+    original_complete_turn = store.complete_turn
+
+    def hold_after_completion(*args, **kwargs):
+        result = original_complete_turn(*args, **kwargs)
+        completed.set()
+        assert allow_return.wait(timeout=1)
+        return result
+
+    store.complete_turn = hold_after_completion
+    thread = threading.Thread(target=worker._execute_turn, args=(claim,))
+    thread.start()
+    assert completed.wait(timeout=1)
+
+    worker.cancel(turn["id"])
+    allow_return.set()
+    thread.join(timeout=1)
+
+    assert not thread.is_alive()
+    assert store.get_turn("alice", turn["id"])["status"] == "completed"
+    assert provider.cancelled == []
+
+
+@pytest.mark.parametrize("terminal_status", ["cancelled", "timeout"])
+def test_terminal_during_session_creation_cancels_late_session_and_drains(
+    tmp_path: Path, terminal_status: str
+):
+    db = tmp_path / f"late-session-{terminal_status}.sqlite3"
+    store = ChatStore(db)
+    conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1")
+    store.submit_turn("alice", conversation["id"], "primera", "client-1", {})
+    first_claim = store.claim_turn()
+    provider = LateSessionDiscoveryProvider()
+    worker = _worker(store, db, provider, max_seconds=0.05 if terminal_status == "timeout" else 2)
+    worker._registry = Registry({"rows": []})
+    timeout_written = threading.Event()
+    original_fail_turn = store.fail_turn
+
+    def observe_timeout(turn_id, code, message, usage=None):
+        result = original_fail_turn(turn_id, code, message, usage)
+        if code == "timeout":
+            timeout_written.set()
+        return result
+
+    store.fail_turn = observe_timeout
+    first_thread = threading.Thread(target=worker._execute_turn, args=(first_claim,))
+    first_thread.start()
+    assert provider.started.wait(timeout=1)
+
+    if terminal_status == "cancelled":
+        assert store.request_cancel("alice", first_claim["id"]) == "cancelled"
+        worker.cancel(first_claim["id"])
+    else:
+        assert timeout_written.wait(timeout=1)
+    provider.allow_discovery.set()
+    assert provider.cancel_started.wait(timeout=1)
+    first_thread.join(timeout=0.1)
+    assert first_thread.is_alive()
+
+    first_record = store.get_turn("alice", first_claim["id"])
+    assert first_record["status"] == ("cancelled" if terminal_status == "cancelled" else "failed")
+    assert first_record["error_code"] == terminal_status
+    assert first_record["provider_turn_id"] == "late-provider-turn"
+    assert first_record["provider_event_id"] == "late-event"
+    assert store.usage("alice")["usage_incomplete_turns"] == 1
+    event_types = [event["type"] for event in store.list_events("alice", first_claim["id"])]
+    assert "message.delta" not in event_types
+    assert "provider.metadata" not in event_types
+
+    store.submit_turn("alice", conversation["id"], "segunda", "client-2", {})
+    provider.cancel_release.set()
+    first_thread.join(timeout=1)
+    assert not first_thread.is_alive()
+    assert provider.cancelled == ["late-provider-session"]
+    second_claim = store.claim_turn()
+    assert second_claim is not None
+    worker._execute_turn(second_claim)
+
+    assert provider.calls == 2
+    assert store.get_turn("alice", second_claim["id"])["status"] == "completed"
+
+
+def test_conversation_delete_during_session_creation_queues_late_remote_session(tmp_path: Path):
+    db = tmp_path / "deleted-late-session.sqlite3"
+    store = ChatStore(db)
+    snapshot = Snapshot()
+    provider = LateSessionDiscoveryProvider()
+    config = ChatConfig(state_path=db, max_turn_seconds=2)
+    service = ChatService(store, config, snapshot, provider=provider)
+    conversation = service.create_conversation("alice")
+    store.submit_turn("alice", conversation["id"], "consulta", "client-1", {})
+    claim = store.claim_turn()
+    worker = TurnWorker(store, config, provider, snapshot)
+    worker._registry = Registry({"rows": []})
+    service.worker = worker
+    thread = threading.Thread(target=worker._execute_turn, args=(claim,))
+    thread.start()
+    assert provider.started.wait(timeout=1)
+
+    service.delete_conversation("alice", conversation["id"])
+    with store._connect() as db_conn:
+        assert db_conn.execute("SELECT COUNT(*) FROM conversations").fetchone()[0] == 0
+    provider.allow_discovery.set()
+    assert provider.cancel_started.wait(timeout=1)
+    thread.join(timeout=0.1)
+    assert thread.is_alive()
+    assert provider.cancelled == ["late-provider-session"]
+    assert store.pending_provider_deletions() == ["late-provider-session"]
+
+    provider.cancel_release.set()
+    thread.join(timeout=1)
+    assert not thread.is_alive()
+    worker._drain_provider_deletions()
+
+    assert provider.deleted == ["late-provider-session"]
+    assert store.pending_provider_deletions() == []
 
 
 class RetryDeleteProvider:

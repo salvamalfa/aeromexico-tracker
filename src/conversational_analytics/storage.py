@@ -168,6 +168,7 @@ class ChatStore(ToolResultMixin, UsageRetentionMixin, AuthSessionMixin):
                 if "provider_turn_id" not in columns:
                     db.execute(f"ALTER TABLE {table} ADD COLUMN provider_turn_id TEXT NOT NULL DEFAULT ''")
             self._initialize_auth(db)
+            self._initialize_usage_tombstones(db)
 
     @staticmethod
     def _dump(obj: Any) -> str:
@@ -229,11 +230,14 @@ class ChatStore(ToolResultMixin, UsageRetentionMixin, AuthSessionMixin):
 
     def delete_conversation(self, owner_id: str, conversation_id: str) -> None:
         with self._connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            self._preserve_usage_tombstones_db(db, conversation_id=conversation_id, owner_id=owner_id)
             cur = db.execute(
                 "DELETE FROM conversations WHERE id=? AND owner_id=?", (conversation_id, owner_id)
             )
             if cur.rowcount == 0:
                 raise NotFound("conversation not found")
+            db.execute("COMMIT")
 
     def owned_conversation(self, owner_id: str, conversation_id: str) -> dict[str, Any]:
         with self._connect() as db:
@@ -309,18 +313,8 @@ class ChatStore(ToolResultMixin, UsageRetentionMixin, AuthSessionMixin):
                 "COALESCE(SUM(estimated_cost_usd),0) FROM usage_daily WHERE usage_date=?",
                 (usage_day,),
             ).fetchone()
-            user_holds = db.execute(
-                "SELECT COALESCE(SUM(reserved_tokens),0),COALESCE(SUM(reserved_cost_usd),0) "
-                "FROM turns WHERE owner_id=? AND reserved_usage_date=? "
-                "AND (status IN ('pending','running') OR usage_complete=0)",
-                (owner_id, usage_day),
-            ).fetchone()
-            global_holds = db.execute(
-                "SELECT COALESCE(SUM(reserved_tokens),0),COALESCE(SUM(reserved_cost_usd),0) "
-                "FROM turns WHERE reserved_usage_date=? "
-                "AND (status IN ('pending','running') OR usage_complete=0)",
-                (usage_day,),
-            ).fetchone()
+            user_holds = self._usage_hold_totals_db(db, owner_id)
+            global_holds = self._usage_hold_totals_db(db)
             if (
                 user_usage[0] + user_holds[0] + reserved_tokens > user_token_budget
                 or global_usage[0] + global_holds[0] + reserved_tokens > global_token_budget
@@ -434,8 +428,7 @@ class ChatStore(ToolResultMixin, UsageRetentionMixin, AuthSessionMixin):
             return
         with self._connect() as db:
             db.execute(
-                "UPDATE turns SET provider_turn_id=?,provider_event_id=?,provider_event_type=? "
-                "WHERE id=? AND status='running'",
+                "UPDATE turns SET provider_turn_id=?,provider_event_id=?,provider_event_type=? WHERE id=?",
                 (provider_turn_id, (event_id or "")[:300] or None, (event_type or "")[:120] or None, turn_id),
             )
 
