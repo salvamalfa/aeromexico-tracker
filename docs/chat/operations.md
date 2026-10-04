@@ -79,6 +79,13 @@ sus archivos WAL residen juntos bajo `/var/lib/airline-tracker-chat/`; respaldar
 según política acordada y comprobar permisos de lectura exclusivos del usuario
 del servicio.
 
+En el launcher Railway, Uvicorn detiene los nuevos claims antes de esperar las
+conexiones SSE y les da hasta 5 segundos para cerrar. Luego el worker drena el
+turno activo durante hasta 90 segundos, dentro del margen de 100 segundos de
+Railway. Al agotar el límite, la cancelación remota se intenta en segundo plano
+y puede no confirmarse; el turno no se reproduce y cualquier uso no confirmado
+permanece como desconocido con su reserva.
+
 Poner un proxy TLS delante del servidor ASGI con certificados renovables,
 HSTS, límite de cuerpo, timeouts compatibles con SSE y forwarding de IP solo
 desde el proxy confiable. Publicar solamente la API, no el puerto de SQLite.
@@ -215,3 +222,17 @@ Esta es una receta de destino revisable, no una infraestructura creada o
 validada. H5 seguirá pendiente hasta disponer de un host administrado, acordar la
 retención y superar las pruebas HTTPS desde Pages. El acceso inicial será
 únicamente para el dueño, con la contraseña preparada fuera de Git.
+
+### Cierre ordenado del worker
+
+Al cerrar el proceso, el worker deja de reclamar turnos nuevos y espera hasta
+`CHAT_MAX_TURN_SECONDS + 5` segundos a que termine el turno activo (95 segundos
+con el valor predeterminado de 90). Si vence ese plazo, registra el turno como
+fallido por timeout antes de solicitar la cancelación remota; la reserva de uso
+permanece retenida hasta que llegue uso confirmado. Una respuesta tardía puede
+conciliar esa reserva sin completar el turno ni volver a ejecutarlo. La llamada
+de cancelación remota es de mejor esfuerzo y no prolonga el cierre. El límite de
+gracia del servidor ASGI o del host debe permitir completar ese plazo para que
+el cierre ordenado tenga oportunidad de finalizar. Si el plazo vence después de
+reclamar un turno pero antes de iniciar entrada al proveedor, se registra cero
+uso confirmado y se libera su reserva porque no hubo solicitud remota.

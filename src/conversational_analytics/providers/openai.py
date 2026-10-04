@@ -9,6 +9,7 @@ import time
 import uuid
 from typing import Any
 
+from ._input_authorization import InputAuthorizer, send_tool_result
 from ._openai_helpers import (
     ALLOWED_TOOL_NAMES,
     SYSTEM_INSTRUCTIONS,
@@ -44,6 +45,8 @@ class OpenAIProvider:
     from ``OPENAI_API_KEY`` only when a call is made.
     """
 
+    supports_input_authorization = True
+
     def __init__(
         self,
         config: Any,
@@ -65,9 +68,7 @@ class OpenAIProvider:
                 from openai import OpenAI
             except ImportError as exc:  # pragma: no cover - exercised in base-only installs
                 raise OpenAIProviderError("Instala el extra opcional `chat` para usar OpenAI") from exc
-            # Disabling SDK retries prevents an ambiguous input submission from
-            # being silently replayed. The per-request timeout bounds stalled
-            # streams; the turn loop also enforces the overall wall-clock limit.
+            # No SDK retries prevent replay; request timeout and turn loop bound runtime.
             client = OpenAI(timeout=self.max_turn_seconds, max_retries=0)
         self.client = client
 
@@ -82,13 +83,13 @@ class OpenAIProvider:
         emit,
         persist_session,
         cancel_event: threading.Event,
+        authorize_input: InputAuthorizer | None = None,
     ) -> ProviderResult:
         message = self._latest_user_message(messages)
         tools = self._validate_tool_specs(tool_specs)
         instructions = self._instructions()
         app_turn_id = self._app_turn_id(messages)
-        # A new provider session for a conversation with prior turns (after a
-        # worker restart or remote deletion) receives a bounded history.
+        # Recreated sessions receive bounded history after worker restart or remote deletion.
         history = prior_history(messages) if session_id is None else []
         request_input = self._message_input(context, message, history)
         tracked_sessions: set[str] = set()
@@ -105,14 +106,18 @@ class OpenAIProvider:
         terminal: str | None = None
         session_was_created = session_id is None
         prior_turn_id: str | None = None
+        authorize = authorize_input or (lambda: None)
+
+        def limit_error(message: str, reason: str, current_turn: str | None) -> OpenAIProviderError:
+            return OpenAIProviderError(
+                message, reason_code=reason, session_id=session_id, turn_id=current_turn
+            )
 
         def check_limits() -> None:
             if cancel_event.is_set():
                 raise InterruptedError("turn cancelled")
             if time.monotonic() - started_at >= self.max_turn_seconds:
-                raise OpenAIProviderError(
-                    "El turno excedió el límite de tiempo configurado", reason_code="turn_timeout"
-                )
+                raise limit_error("El turno excedió el límite de tiempo configurado", "turn_timeout", turn_id)
 
         def close_active_stream() -> None:
             nonlocal stream_closed
@@ -142,9 +147,10 @@ class OpenAIProvider:
             if action_key in processed_actions:
                 return
             if len(processed_actions) >= self.max_tool_calls:
-                raise OpenAIProviderError(
+                raise limit_error(
                     "El turno alcanzó el máximo de llamadas de herramientas",
-                    reason_code="tool_call_limit",
+                    "tool_call_limit",
+                    action_turn_id,
                 )
             check_limits()
             processed_actions.add(action_key)
@@ -159,7 +165,7 @@ class OpenAIProvider:
             except ToolResultLimitExceeded:
                 safe_error = "La herramienta no pudo completar una consulta validada."
                 emit("tool.completed", {"name": name, "error": safe_error})
-                raise OpenAIProviderError(safe_error, reason_code="tool_result_limit") from None
+                raise limit_error(safe_error, "tool_result_limit", action_turn_id) from None
             except Exception:
                 safe_error = "La herramienta no pudo completar una consulta validada."
                 emit("tool.completed", {"name": name, "error": safe_error})
@@ -173,12 +179,26 @@ class OpenAIProvider:
             error = result.get("error") if set(result) == {"error"} else None
             if isinstance(error, dict):
                 # Rejected arguments go back as a failed call so the model can retry.
-                self._send_tool_result(
-                    session_id, action_turn_id, call_id, success=False, error=str(error.get("message", ""))
+                send_tool_result(
+                    self.client,
+                    session_id,
+                    action_turn_id,
+                    call_id,
+                    success=False,
+                    error=str(error.get("message", "")),
+                    authorize_input=authorize,
                 )
                 return
             tool_outputs.append(result)
-            self._send_tool_result(session_id, action_turn_id, call_id, success=True, output=encoded)
+            send_tool_result(
+                self.client,
+                session_id,
+                action_turn_id,
+                call_id,
+                success=True,
+                output=encoded,
+                authorize_input=authorize,
+            )
 
         def is_current_root_turn(event_data: dict[str, Any]) -> bool:
             nonlocal turn_id
@@ -196,6 +216,7 @@ class OpenAIProvider:
             if cancel_event.is_set():
                 raise InterruptedError("turn cancelled")
             if session_was_created:
+                authorize()
                 stream_manager = self.client.beta.agents.sessions.create(
                     agent={"model": self.model, "instructions": instructions, "tools": tools},
                     environment={"type": "none"},
@@ -215,12 +236,18 @@ class OpenAIProvider:
                     stream_manager.__enter__() if hasattr(stream_manager, "__enter__") else stream_manager
                 )
                 # The event stream is attached before the user message is sent.
-                self.client.beta.agents.sessions.events.create(
-                    session_id,
-                    idempotency_key=f"airline-tracker-turn-{app_turn_id}",
-                    events=[{"type": "agent.session.input.message", "input": request_input}],
-                )
-
+                authorize()
+                try:
+                    self.client.beta.agents.sessions.events.create(
+                        session_id,
+                        idempotency_key=f"airline-tracker-turn-{app_turn_id}",
+                        events=[{"type": "agent.session.input.message", "input": request_input}],
+                    )
+                finally:
+                    if cancel_event.is_set():
+                        self.cancel(session_id)
+                if cancel_event.is_set():
+                    raise InterruptedError("turn cancelled")
             self._track_session(session_id, persist_session, tracked_sessions)
             if stream_iter is None:
                 raise OpenAIProviderError("El SDK no abrió el stream de la sesión")
@@ -250,9 +277,7 @@ class OpenAIProvider:
                             "provider_event_type": event_type,
                         },
                     )
-                # Capture provider session/turn IDs before honoring cancellation
-                # or timeout. This lets the worker cancel a session created while
-                # the local request was already being cancelled.
+                # Capture IDs before cancellation so the worker can stop a just-created remote session.
                 check_limits()
                 if event_type == "agent.session.turn.output_text.delta" and is_current_turn:
                     key = (
@@ -404,32 +429,6 @@ class OpenAIProvider:
             self.client.beta.agents.sessions.delete(session_id)
         except Exception:
             raise OpenAIProviderError("No se pudo borrar la sesión del proveedor") from None
-
-    def _send_tool_result(
-        self,
-        session_id: str,
-        turn_id: str,
-        call_id: str,
-        *,
-        success: bool,
-        output: str | None = None,
-        error: str | None = None,
-    ) -> None:
-        payload: dict[str, Any] = {
-            "type": "agent.session.input.tool_result",
-            "turn_id": turn_id,
-            "call_id": call_id,
-            "success": success,
-        }
-        if success:
-            payload["output"] = output or "{}"
-        else:
-            payload["error"] = error or "La herramienta no pudo completar la consulta."
-        self.client.beta.agents.sessions.events.create(
-            session_id,
-            idempotency_key=f"airline-tracker-tool-{turn_id}-{call_id}",
-            events=[payload],
-        )
 
     def _required_actions(self, event: dict[str, Any], session_id: str | None) -> list[dict[str, Any]]:
         session = event.get("session")

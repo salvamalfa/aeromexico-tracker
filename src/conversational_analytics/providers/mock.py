@@ -6,7 +6,7 @@ import re
 import threading
 from typing import Any
 
-from .base import ProviderResult, ToolCall
+from .base import InputAuthorizer, ProviderResult, ToolCall
 
 ENTITY_ALIASES = {
     "AEROMEXICO": ("aeroméxico", "aeromexico", "grupo aeroméxico"),
@@ -24,6 +24,8 @@ ENTITY_ALIASES = {
 class MockProvider:
     """A narrow test/demo router, never a fabricated LLM response."""
 
+    supports_input_authorization = True
+
     def __init__(self, snapshot: Any = None):
         self.snapshot = snapshot
 
@@ -38,9 +40,12 @@ class MockProvider:
         emit,
         persist_session,
         cancel_event: threading.Event,
+        authorize_input: InputAuthorizer | None = None,
     ) -> ProviderResult:
         if cancel_event.is_set():
             raise InterruptedError("cancelled")
+        if authorize_input is not None:
+            authorize_input()
         session_id = session_id or "mock:offline"
         last = next((m for m in reversed(messages) if m.get("role") == "user"), {})
         user_text = last.get("content", "")

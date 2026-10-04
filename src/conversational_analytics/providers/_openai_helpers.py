@@ -60,6 +60,9 @@ MAX_HISTORY_MESSAGE_CHARS = 2_000
 USAGE_POLL_MAX_ATTEMPTS = 5
 USAGE_POLL_INTERVAL_SECONDS = 2.0
 PROVIDER_REASON_CODES = frozenset({"tool_call_limit", "turn_timeout", "tool_result_limit"})
+POST_CANCEL_USAGE_TIMEOUT_SECONDS = 30.0
+POST_CANCEL_USAGE_ATTEMPTS = 6
+POST_CANCEL_USAGE_POLL_INTERVAL_SECONDS = 5.0
 
 
 class OpenAIProviderError(RuntimeError):
@@ -71,12 +74,16 @@ class OpenAIProviderError(RuntimeError):
         usage: tuple[int, int] | None = None,
         *,
         reason_code: str | None = None,
+        session_id: str | None = None,
+        turn_id: str | None = None,
     ) -> None:
         super().__init__(message)
         self.usage = usage
         self.reason_code = (
             reason_code if isinstance(reason_code, str) and reason_code in PROVIDER_REASON_CODES else None
         )
+        self.session_id = session_id if isinstance(session_id, str) and session_id else None
+        self.turn_id = turn_id if isinstance(turn_id, str) and turn_id else None
 
 
 class ToolResultLimitExceeded(Exception):
@@ -218,6 +225,80 @@ def read_completed_turn_usage(
     )
     if cancel_event.is_set():
         raise InterruptedError("turn cancelled")
+    return usage
+
+
+def read_terminal_turn_usage_after_cancel(
+    client: Any, session_id: str, turn_id: str, *, timeout_seconds: float = POST_CANCEL_USAGE_TIMEOUT_SECONDS
+) -> tuple[int, int] | None:
+    """Read usage from this exact terminal root turn after its cancel event."""
+    if not session_id or not turn_id or not 0 < timeout_seconds <= POST_CANCEL_USAGE_TIMEOUT_SECONDS:
+        return None
+    deadline = time.monotonic() + timeout_seconds
+    for attempt in range(POST_CANCEL_USAGE_ATTEMPTS):
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            break
+        try:
+            turn = client.beta.agents.sessions.turns.retrieve(
+                turn_id,
+                session_id=session_id,
+                timeout=min(POST_CANCEL_USAGE_POLL_INTERVAL_SECONDS, remaining),
+            )
+        except Exception:
+            turn = None
+        data = to_dict(turn) if turn is not None else {}
+        returned_session = data.get("session_id")
+        if (
+            data.get("id") not in (None, turn_id)
+            or returned_session not in (None, session_id)
+            or data.get("subagent_id") is not None
+        ):
+            return None
+        if data.get("id") == turn_id and data.get("status") in {"completed", "failed", "cancelled"}:
+            usage = data.get("usage")
+            if not isinstance(usage, Mapping):
+                usage = to_dict(usage)
+            input_tokens, output_tokens, complete = parse_usage(usage)
+            if complete:
+                return input_tokens, output_tokens
+        if attempt + 1 < POST_CANCEL_USAGE_ATTEMPTS:
+            remaining = deadline - time.monotonic()
+            if remaining > 0:
+                time.sleep(min(POST_CANCEL_USAGE_POLL_INTERVAL_SECONDS, remaining))
+    return None
+
+
+def recover_usage_after_cancel(
+    provider: Any, error: BaseException, session_id: str
+) -> tuple[tuple[int, int] | None, str]:
+    """Reconcile only the failed root turn explicitly identified by the exception."""
+    if getattr(error, "reason_code", None) not in PROVIDER_REASON_CODES:
+        return None, "not_attempted"
+    turn_id = getattr(error, "turn_id", None)
+    if getattr(error, "session_id", None) != session_id or not isinstance(turn_id, str):
+        return None, "not_attempted"
+    client = getattr(provider, "client", None)
+    if client is None:
+        return None, "not_available"
+    usage = read_terminal_turn_usage_after_cancel(client, session_id, turn_id)
+    return usage, "complete" if usage is not None else "unknown"
+
+
+def reconcile_case_usage_after_cancel(
+    case_record: dict[str, Any],
+    usage: tuple[int, int] | None,
+    provider: Any,
+    error: BaseException,
+    session_id: str | None,
+) -> tuple[int, int] | None:
+    state = "not_attempted"
+    if usage is None and session_id and provider is not None:
+        usage, state = recover_usage_after_cancel(provider, error, session_id)
+    case_record["post_cancel_usage_reconciliation"] = state
+    if usage is not None:
+        case_record["input_tokens"], case_record["output_tokens"] = usage
+        case_record["usage_complete"] = True
     return usage
 
 

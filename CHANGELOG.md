@@ -4,6 +4,25 @@ Cambios notables del proyecto, para humanos. Formato inspirado en
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); no se usa
 versión semántica, las entradas van por fecha.
 
+## 2026-10-04 · Recuperación segura de turnos del chat
+
+- El cierre bloquea claims de turnos nuevos. En Railway, Uvicorn da hasta 5 s a
+  conexiones SSE y luego el worker drena hasta 90 s, dentro del límite de 100 s;
+  en otros despliegues locales el timeout del worker es `max_turn_seconds + 5`.
+  La autorización de entrada al SDK se coordina con el cierre y conserva
+  compatibilidad con proveedores legados.
+- En una sesión reutilizada, si la cancelación llega durante la escritura
+  síncrona del mensaje al SDK, se intenta cancelar la sesión al terminar esa
+  escritura; el mensaje no se vuelve a enviar. Una prueba integrada verifica que
+  el cierre sigue acotado aun si esa segunda cancelación se bloquea.
+- Los errores terminales usan códigos permitidos; el evaluador de comparación
+  reconcilia uso tras cancelar durante hasta 30 segundos y seis lecturas. Sin
+  confirmación, conserva el uso como desconocido y la reserva, sin reproducir
+  entradas ni convertir el valor a cero. Esto no aprueba calidad ni habilita
+  el proveedor.
+- Contexto de recuperación en
+  `docs/etapas/airline-tracker-evaluation-recovery-20261004.md`.
+
 ## 2026-10-04 · Arranque del backend en Railway
 
 - Build Docker explícito con dependencias del grupo `chat-runtime`, snapshot

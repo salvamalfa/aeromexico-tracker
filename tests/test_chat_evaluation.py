@@ -222,65 +222,70 @@ def test_live_provider_error_writes_private_report_and_stops_without_retry(monke
     assert "response" not in progress
 
 
-def test_live_unknown_usage_keeps_provider_session_for_reconciliation(monkeypatch, tmp_path) -> None:
-    from src.conversational_analytics.providers.base import ProviderResult
+def test_post_cancel_terminal_usage_is_counted_without_scoring_or_continuing(monkeypatch, tmp_path) -> None:
+    from types import SimpleNamespace
 
-    class UnknownUsageProvider:
+    from src.conversational_analytics.providers.openai import OpenAIProviderError
+
+    events = []
+
+    class Turns:
+        def retrieve(self, turn_id, *, session_id, timeout):
+            events.append(("get", turn_id, session_id))
+            return {
+                "id": turn_id,
+                "session_id": session_id,
+                "status": "cancelled",
+                "usage": {"input_tokens": 35_573, "output_tokens": 208, "total_tokens": 35_781},
+            }
+
+    class FailingProvider:
         calls = 0
-        delete_calls = 0
 
         def __init__(self, config):
             self.config = config
+            self.client = SimpleNamespace(
+                beta=SimpleNamespace(agents=SimpleNamespace(sessions=SimpleNamespace(turns=Turns())))
+            )
 
-        def run_turn(self, *, call_tool, persist_session, **kwargs):
+        def run_turn(self, *, persist_session, **kwargs):
             type(self).calls += 1
-            persist_session("session-to-reconcile")
-            call_tool(
-                "provider-turn",
-                "query-call",
-                "query_metrics",
-                {
-                    "metric_ids": ["load_factor"],
-                    "entity_ids": ["AEROMEXICO"],
-                    "periods": ["2026Q2"],
-                },
+            persist_session("session-exact")
+            raise OpenAIProviderError(
+                "limited", reason_code="tool_call_limit", session_id="session-exact", turn_id="turn-exact"
             )
-            return ProviderResult(
-                content="El factor fue 84,9 % en 2T26.",
-                provider_session_id="session-to-reconcile",
-                usage_complete=False,
-            )
+
+        def cancel(self, session_id):
+            events.append(("cancel", session_id))
 
         def delete(self, _session_id):
-            type(self).delete_calls += 1
+            raise AssertionError("failed provider session must remain available for audit")
 
-    monkeypatch.setattr("src.conversational_analytics.providers.openai.OpenAIProvider", UnknownUsageProvider)
+    monkeypatch.setattr("src.conversational_analytics.providers.openai.OpenAIProvider", FailingProvider)
+    cases = [case for case in load_cases() if case["expected"]["status"] == "supported"][:2]
     report = _live_provider_run(
-        cases=load_cases(),
+        cases=cases,
         models=["gpt-6-luna"],
         budget_usd=10.0,
         snapshot_root=Path("site"),
         prices={"gpt-6-luna": (0.10, 0.50)},
-        probe_only=True,
-        output_dir=tmp_path / "unknown-usage",
+        probe_only=False,
+        output_dir=tmp_path / "private-reconciled-run",
     )
-
-    case = report["models"][0]["cases"][0]
-    assert UnknownUsageProvider.calls == 1
-    assert UnknownUsageProvider.delete_calls == 0
-    assert case["quality"]["passed"] is True
-    assert case["provider_session_delete"] == "deferred_usage_unknown"
-    assert case["session_id"] == "session-to-reconcile"
-    assert report["models"][0]["spent_unknown"] is True
-    assert report["models"][0]["estimated_cost_usd"] is None
-    assert report["models"][0]["known_estimated_cost_usd"] == 0
-    assert report["estimated_cost_usd"] is None
-    assert report["known_estimated_cost_usd"] == 0
-    progress = json.loads(Path(report["progress_path"]).read_text(encoding="utf-8"))
-    assert progress["session_to_reconcile"] == "session-to-reconcile"
-    assert progress["estimated_spend_usd"] is None
-    assert progress["known_estimated_spend_usd"] == 0
-    assert progress["remaining_estimated_budget_usd"] is None
+    model = report["models"][0]
+    case = model["cases"][0]
+    assert events == [("cancel", "session-exact"), ("get", "turn-exact", "session-exact")]
+    assert FailingProvider.calls == 1
+    assert len(model["cases"]) == 1
+    assert case["status"] == "provider_error"
+    assert case["model_turn_completed"] is False
+    assert case["quality"] == {"scored": False, "not_scored_reason": "provider_error"}
+    assert case["error_metadata"]["reason_code"] == "tool_call_limit"
+    assert case["input_tokens"] == 35_573
+    assert case["output_tokens"] == 208
+    assert case["estimated_cost_usd"] == pytest.approx(0.0036613)
+    assert case["post_cancel_usage_reconciliation"] == "complete"
+    assert model["spent_unknown"] is False
 
 
 def test_live_tool_validation_error_is_returned_to_provider_like_worker(monkeypatch, tmp_path) -> None:

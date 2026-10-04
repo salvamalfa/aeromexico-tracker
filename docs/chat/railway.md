@@ -39,31 +39,79 @@ En **Settings** del servicio configura el perfil del piloto:
 | Restart policy | `On Failure` |
 | Restart retries | `3` |
 
+Al iniciar Uvicorn su cierre, el launcher detiene inmediatamente los nuevos
+claims antes de esperar conexiones SSE existentes. Uvicorn espera como máximo
+5 segundos por ellas; después el lifespan da al worker hasta 90 segundos para
+terminar el turno activo y reserva 5 segundos dentro del drenaje Railway de 100
+para completar el cierre. La cancelación del proveedor al vencer es best effort,
+asíncrona y no garantiza que el remoto la acepte; el turno queda terminal y el
+uso no confirmado conserva su reserva. El presupuesto del proceso tiene margen,
+pero el comportamiento real de drenaje debe comprobarse en el host antes de
+confiar en él.
+
 Adjunta un volumen persistente de **500 MB** montado en `/data`. La base SQLite
 queda en `/data/chat.sqlite3`; el launcher restringe
 los permisos del volumen a `0700` y valida que sea escribible antes de iniciar.
 El contenedor necesita privilegios para ajustar permisos del volumen Railway.
 No escales a múltiples réplicas: SQLite y la cola en memoria pertenecen a una instancia.
 El build aislado instala el lock congelado solo para `chat-runtime`; CI valida
-el lock completo con `uv sync --locked`. En entornos locales detrás de un proxy
-TLS, se puede suministrar una CA pública al paso de build como secreto BuildKit
-opcional (`--secret id=proxy_ca,src=/etc/ssl/certs/ca-certificates.crt`). Se
-monta solo durante `uv sync`; no se copia a la imagen y TLS permanece validado.
+el lock completo con `uv sync --locked`. El Dockerfile de producción usa una
+instrucción `RUN` estándar sin sintaxis experimental ni montaje BuildKit.
+Si un build local necesita confiar en una CA de un proxy TLS, se puede derivar
+una variante temporal por stdin, sin crear ni guardar otro Dockerfile. El
+comando requiere que `SSL_CERT_FILE` señale el bundle de CA pública que se
+quiere confiar. Solo monta ese archivo como secreto durante `uv sync`; TLS
+permanece validado y la CA no se copia a ninguna capa:
+
+```sh
+set -o pipefail
+: "${SSL_CERT_FILE:?set SSL_CERT_FILE to the trusted CA bundle path}"
+python - <<'PY' | DOCKER_BUILDKIT=1 docker build --secret id=proxy_ca,src="$SSL_CERT_FILE" -f- -t chat-runtime:local-proxy-ca .
+from pathlib import Path
+
+source = Path("Dockerfile.chat").read_text(encoding="utf-8")
+plain = "RUN uv sync --frozen --only-group chat-runtime --no-install-project"
+secret = '''RUN --mount=type=secret,id=proxy_ca,required=false \\
+    if [ -f /run/secrets/proxy_ca ]; then \\
+        SSL_CERT_FILE=/run/secrets/proxy_ca uv sync --frozen --only-group chat-runtime --no-install-project; \\
+    else \\
+        uv sync --frozen --only-group chat-runtime --no-install-project; \\
+    fi'''
+if source.count(plain) != 1:
+    raise SystemExit("Dockerfile.chat runtime install instruction changed")
+print("# syntax=docker/dockerfile:1\n" + source.replace(plain, secret), end="")
+PY
+```
+
+Esta variante sirve solo para builds locales; no la selecciones en Railway. El
+intento remoto anterior falló antes de construir la imagen y no identificó la
+causa.
 El endpoint `/api/chat/health` sirve como healthcheck de arranque; Railway lo
 usa para aceptar el deploy nuevo, pero no monitoriza salud después. No se usa
 un monitor externo que despierte la app durante el periodo de inactividad.
-Uvicorn conserva `proxy_headers=False`; solo el límite de intentos de login
-resuelve la IP del cliente. El edge de Railway es la única entrada al contenedor
-y llega desde el espacio compartido `100.64.0.0/10` (RFC 6598); Railway reemplaza
-el `X-Forwarded-For` que envía el cliente. Sin confiar en ese edge, todos los
-clientes comparten su dirección y cinco contraseñas erróneas de cualquier
-persona bloquearían el login del dueño durante 15 minutos. Por eso el launcher
-fija `CHAT_TRUSTED_PROXY=100.64.0.0/10` por defecto: la API recorre
-`X-Forwarded-For` desde la derecha, omite saltos dentro de esa red y usa la
-primera dirección restante. `CHAT_TRUSTED_PROXY` acepta IPs sueltas o redes
-CIDR solo dentro de rangos loopback, privados o compartidos; rechaza rangos
-públicos. Si se activa la CDN de Railway, verifica en los logs que el límite
-siga viendo IPs de clientes y no de la CDN.
+Uvicorn conserva `proxy_headers=False`; la aplicación solo usa
+`X-Forwarded-For` para el límite de intentos de login cuando el peer directo es
+confiable. El launcher fija `CHAT_TRUSTED_PROXY=100.64.0.0/10`, basado en el
+rango compartido RFC 6598, pero todavía no se ha confirmado desde un deploy sano
+que Railway conecte el contenedor desde ese rango ni cómo forma o reemplaza la
+cadena `X-Forwarded-For`. Mientras no se verifique, esto es una hipótesis de
+configuración, no un contrato observado.
+
+Después del primer deploy sano, comprueba el peer ASGI (`request.client.host`)
+desde el log de acceso de Uvicorn o una lectura temporal que emita solo el
+resultado booleano `peer_in_trusted_cidr`; nunca registres el valor de IP. Los
+logs HTTP de Railway tienen un campo `srcIp`, pero su esquema no garantiza que
+sea el peer directo que ve ASGI, así que no lo uses como prueba del CIDR. Si no
+hay una lectura ASGI segura disponible, deja el peer como no verificado. Para
+comprobar la selección del cliente reenviado, usa un entorno o base de prueba y
+confirma que el `client` guardado por un único fallo de login queda fuera de
+`100.64.0.0/10`; muestra solo un booleano, nunca la IP ni el encabezado
+completo. No consumas intentos fallidos en el login real para esta prueba. Si
+se activa una CDN, repite ambas comprobaciones en aislamiento y no amplíes los
+rangos confiables sin evidencia del peer.
+
+`CHAT_TRUSTED_PROXY` acepta IPs sueltas o redes CIDR solo dentro de rangos
+loopback, privados o compartidos; rechaza rangos públicos.
 
 Añade estas variables de entorno en el panel de Railway, nunca en Git:
 

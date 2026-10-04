@@ -344,7 +344,124 @@ def test_tool_call_limit_has_reason_code_after_first_validated_action():
         run()
 
     assert caught.value.reason_code == "tool_call_limit"
+    assert caught.value.session_id == "sess_fixture"
+    assert caught.value.turn_id == "turn_provider"
     assert len(tool_events) == 1
+
+
+def test_post_cancel_usage_reads_only_exact_terminal_root_turn():
+    from types import SimpleNamespace
+
+    calls = []
+
+    class Turns:
+        def retrieve(self, turn_id, *, session_id, timeout):
+            calls.append((turn_id, session_id, timeout))
+            return SimpleNamespace(
+                id=turn_id,
+                session_id=session_id,
+                status="cancelled",
+                subagent_id=None,
+                usage=SimpleNamespace(input_tokens=35_573, output_tokens=208, total_tokens=35_781),
+            )
+
+    client = SimpleNamespace(
+        beta=SimpleNamespace(agents=SimpleNamespace(sessions=SimpleNamespace(turns=Turns())))
+    )
+    assert helpers.read_terminal_turn_usage_after_cancel(client, "sess_fixture", "turn_fixture") == (
+        35_573,
+        208,
+    )
+    assert len(calls) == 1
+    assert calls[0][:2] == ("turn_fixture", "sess_fixture")
+    assert 0 < calls[0][2] <= 5
+
+
+def test_post_cancel_usage_recovers_after_four_fast_unavailable_reads(monkeypatch):
+    clock = [0.0]
+    monkeypatch.setattr(helpers.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(helpers.time, "sleep", lambda seconds: clock.__setitem__(0, clock[0] + seconds))
+    calls = []
+
+    class Turns:
+        def retrieve(self, turn_id, *, session_id, timeout):
+            calls.append((turn_id, session_id, timeout))
+            if len(calls) < 5:
+                return {"id": turn_id, "session_id": session_id, "status": "cancelled", "usage": None}
+            return {
+                "id": turn_id,
+                "session_id": session_id,
+                "status": "cancelled",
+                "usage": {"input_tokens": 35_573, "output_tokens": 208},
+            }
+
+    client = SimpleNamespace(
+        beta=SimpleNamespace(agents=SimpleNamespace(sessions=SimpleNamespace(turns=Turns())))
+    )
+    assert helpers.read_terminal_turn_usage_after_cancel(client, "sess_fixture", "turn_fixture") == (
+        35_573,
+        208,
+    )
+    assert len(calls) == 5
+    assert all(0 < call[2] <= 5 for call in calls)
+    assert clock[0] == 20
+
+
+def test_post_cancel_usage_stays_unknown_at_deadline(monkeypatch):
+    clock = [0.0]
+    monkeypatch.setattr(helpers.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(helpers.time, "sleep", lambda seconds: clock.__setitem__(0, clock[0] + seconds))
+    calls = []
+
+    class Turns:
+        def retrieve(self, turn_id, *, session_id, timeout):
+            calls.append((turn_id, session_id, timeout))
+            clock[0] += min(4.0, timeout)
+            return {"id": turn_id, "session_id": session_id, "status": "cancelled", "usage": None}
+
+    client = SimpleNamespace(
+        beta=SimpleNamespace(agents=SimpleNamespace(sessions=SimpleNamespace(turns=Turns())))
+    )
+    assert helpers.read_terminal_turn_usage_after_cancel(client, "sess_fixture", "turn_fixture") is None
+    assert len(calls) == 4
+    assert clock[0] == helpers.POST_CANCEL_USAGE_TIMEOUT_SECONDS
+    assert all(0 < call[2] <= 5 for call in calls)
+
+
+@pytest.mark.parametrize(
+    "turn_data",
+    [
+        {"id": "other", "status": "cancelled", "usage": {"input_tokens": 4, "output_tokens": 2}},
+        {
+            "id": "turn_fixture",
+            "session_id": "other",
+            "status": "cancelled",
+            "usage": {"input_tokens": 4, "output_tokens": 2},
+        },
+        {
+            "id": "turn_fixture",
+            "status": "cancelled",
+            "subagent_id": "sub",
+            "usage": {"input_tokens": 4, "output_tokens": 2},
+        },
+        {"id": "turn_fixture", "status": "cancelled", "usage": {"input_tokens": None, "output_tokens": 2}},
+    ],
+)
+def test_post_cancel_usage_rejects_unverified_or_incomplete_turn(turn_data, monkeypatch):
+    from types import SimpleNamespace
+
+    clock = [0.0]
+    monkeypatch.setattr(helpers.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(helpers.time, "sleep", lambda seconds: clock.__setitem__(0, clock[0] + seconds))
+
+    class Turns:
+        def retrieve(self, *_args, **_kwargs):
+            return turn_data
+
+    client = SimpleNamespace(
+        beta=SimpleNamespace(agents=SimpleNamespace(sessions=SimpleNamespace(turns=Turns())))
+    )
+    assert helpers.read_terminal_turn_usage_after_cancel(client, "sess_fixture", "turn_fixture") is None
 
 
 def test_tool_result_limit_has_reason_code_for_locally_verified_oversize():

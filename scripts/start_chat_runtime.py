@@ -10,6 +10,28 @@ from pathlib import Path
 from src.conversational_analytics.config import ChatConfig
 
 RAILWAY_EDGE_NETWORK = "100.64.0.0/10"
+RAILWAY_DRAIN_SECONDS = 100
+UVICORN_CONNECTION_DRAIN_SECONDS = 5
+WORKER_DRAIN_SECONDS = 90
+RAILWAY_SHUTDOWN_MARGIN_SECONDS = 5
+
+
+def create_shutdown_aware_server(uvicorn, app, *, host: str, port: int):
+    """Start claim draining on SIGTERM, before Uvicorn waits on SSE requests."""
+    config = uvicorn.Config(
+        app,
+        host=host,
+        port=port,
+        proxy_headers=False,
+        timeout_graceful_shutdown=UVICORN_CONNECTION_DRAIN_SECONDS,
+    )
+
+    class ShutdownAwareServer(uvicorn.Server):
+        async def shutdown(self, sockets=None):
+            app.state.begin_shutdown()
+            await super().shutdown(sockets=sockets)
+
+    return ShutdownAwareServer(config)
 
 
 def runtime_config(*, volume_path: Path = Path("/data")) -> tuple[ChatConfig, int]:
@@ -78,8 +100,12 @@ def main() -> None:
     # SQLite database, journal, and WAL files contain private chat state.
     os.umask(0o077)
     secure_existing_sqlite_files(config.state_path)
-    app = create_app(config)
-    uvicorn.run(app, host="0.0.0.0", port=port, proxy_headers=False)
+    app = create_app(
+        config,
+        worker_shutdown_timeout_seconds=min(WORKER_DRAIN_SECONDS, config.max_turn_seconds),
+    )
+    server = create_shutdown_aware_server(uvicorn, app, host="0.0.0.0", port=port)
+    server.run()
 
 
 if __name__ == "__main__":

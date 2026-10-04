@@ -6,6 +6,8 @@ import threading
 from dataclasses import dataclass, field
 from typing import Any, Callable, Protocol
 
+from ._input_authorization import InputAuthorizer
+
 
 @dataclass(frozen=True)
 class ProviderResult:
@@ -37,6 +39,7 @@ class Provider(Protocol):
         emit: EventSink,
         persist_session: SessionSink,
         cancel_event: threading.Event,
+        authorize_input: InputAuthorizer | None = None,
     ) -> ProviderResult: ...
 
     def cancel(self, session_id: str) -> None: ...
@@ -44,4 +47,4 @@ class Provider(Protocol):
     def delete(self, session_id: str) -> None: ...
 
 
-__all__ = ["EventSink", "Provider", "ProviderResult", "SessionSink", "ToolCall"]
+__all__ = ["EventSink", "InputAuthorizer", "Provider", "ProviderResult", "SessionSink", "ToolCall"]
