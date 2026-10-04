@@ -11,6 +11,10 @@ versión semántica, las entradas van por fecha.
   en otros despliegues locales el timeout del worker es `max_turn_seconds + 5`.
   La autorización de entrada al SDK se coordina con el cierre y conserva
   compatibilidad con proveedores legados.
+- En una sesión reutilizada, si la cancelación llega durante la escritura
+  síncrona del mensaje al SDK, se intenta cancelar la sesión al terminar esa
+  escritura; el mensaje no se vuelve a enviar. Una prueba integrada verifica que
+  el cierre sigue acotado aun si esa segunda cancelación se bloquea.
 - Los errores terminales usan códigos permitidos; el evaluador de comparación
   reconcilia uso tras cancelar durante hasta 30 segundos y seis lecturas. Sin
   confirmación, conserva el uso como desconocido y la reserva, sin reproducir

@@ -237,11 +237,17 @@ class OpenAIProvider:
                 )
                 # The event stream is attached before the user message is sent.
                 authorize()
-                self.client.beta.agents.sessions.events.create(
-                    session_id,
-                    idempotency_key=f"airline-tracker-turn-{app_turn_id}",
-                    events=[{"type": "agent.session.input.message", "input": request_input}],
-                )
+                try:
+                    self.client.beta.agents.sessions.events.create(
+                        session_id,
+                        idempotency_key=f"airline-tracker-turn-{app_turn_id}",
+                        events=[{"type": "agent.session.input.message", "input": request_input}],
+                    )
+                finally:
+                    if cancel_event.is_set():
+                        self.cancel(session_id)
+                if cancel_event.is_set():
+                    raise InterruptedError("turn cancelled")
             self._track_session(session_id, persist_session, tracked_sessions)
             if stream_iter is None:
                 raise OpenAIProviderError("El SDK no abrió el stream de la sesión")
