@@ -36,6 +36,17 @@ jobs:
       - name: Run the public test subset
         run: uv run pytest -m "not local_data and not browser" -q
 
+      # A second, isolated venv proves the owner-facing API can install and
+      # start without the pipeline, analytics, test, or browser dependencies.
+      - name: Install isolated chat runtime profile
+        env:
+          UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/chat-runtime-venv
+        run: uv sync --locked --only-group chat-runtime
+      - name: Smoke test isolated chat runtime
+        env:
+          UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/chat-runtime-venv
+        run: uv run --locked --only-group chat-runtime python -m scripts.check_chat_runtime
+
       # Only these modules are ruff-formatted so far (see REPO_MAP.md);
       # the rest of the tree is not yet covered.
       - name: Check ruff format on migrated modules

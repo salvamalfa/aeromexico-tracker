@@ -44,6 +44,10 @@ def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     if argv[:1] == ["hash-password"]:
         return hash_password_main(argv[1:])
+    if argv[:1] == ["import-usage"]:
+        from .usage_import import import_main
+
+        return import_main(argv[1:])
     parser = argparse.ArgumentParser(description="Airline Tracker local chat service")
     parser.add_argument("--host", default="127.0.0.1", help="local bind address; must be loopback")
     parser.add_argument("--port", type=int, default=8765)

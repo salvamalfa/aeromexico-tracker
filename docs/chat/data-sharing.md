@@ -67,23 +67,41 @@ durable de reintentos. El uso confirmado se contabiliza en la fecha UTC de
 confirmación, como estimación operativa; esa fecha puede diferir de la fecha de
 solicitud o de la facturación del proveedor.
 
-Este mecanismo conserva la contabilidad; no adopta la propuesta de 200,000
-tokens diarios ni la reserva estimada de 150,000 tokens por turno/caso. Los
-límites y valores predeterminados actuales no cambian por esta documentación.
+**Política implementada para el piloto:** los valores predeterminados son
+200,000 tokens por día tanto por usuario como para el total global. Cada turno
+OpenAI reserva **al menos 150,000 tokens**; conserva una estimación mayor cuando
+el historial y los límites de herramientas la requieren. Quedan 50 mil de
+margen respecto al cupo principal. La reserva no es un máximo duro de API ni
+una garantía de gratuidad. El proveedor simulado conserva su estimación local
+para permitir la demo sin consumo OpenAI.
 
-**Propuesta para el piloto, aún no adoptada:** presupuesto de 200,000 tokens
-por día tanto para el owner como para el total global; usar **150,000 tokens
-como reserva estimada por turno/caso**, con margen sobre los turnos de más de
-100 mil tokens observados en la integración. Quedan 50 mil de margen respecto
-al cupo principal. Esta reserva no es un máximo duro de API; debe ajustarse con
-el historial y las mediciones. El backend del chat aún no aplica esta política;
-el evaluador usa un piso de reserva de 140 mil de entrada y 10 mil de salida.
-El control propuesto rechaza un turno cuando consumo organizacional más
-reservas pendientes más la nueva reserva superen el límite diario, incluso si
-el presupuesto monetario todavía permite pagarlo. Con uso desconocido, pausa
-y reconcilia. Al cambiar de día, conserva la reserva de turnos en curso hasta
-resolver a qué ventana corresponde el uso. La comparación ya autorizada usa
-su presupuesto monetario separado; esta propuesta es para el piloto.
+Los límites se configuran con `CHAT_DAILY_TOKEN_BUDGET_USER`,
+`CHAT_DAILY_TOKEN_BUDGET_GLOBAL` y `CHAT_MINIMUM_TURN_RESERVATION_TOKENS`.
+La admisión suma consumo confirmado del día UTC, reservas pendientes y la
+reserva nueva, además de verificar los límites monetarios a tarifas normales.
+Las reservas desconocidas no se liberan por cambiar de día.
+
+La configuración del servicio valida que la reserva mínima pueda entrar en
+los presupuestos monetarios de usuario y global. Si no cabe, rechaza el arranque
+con un error de configuración, en vez de aceptar una instalación que deniegue
+todos los envíos. Usa los precios normales del modelo elegido: no aumentes
+presupuestos automáticamente ni configures precios cero por Data Sharing.
+
+La organización solo consume este proyecto por ahora, pero el evaluador y el
+chat son procesos separados. Antes de abrir el piloto, importa el consumo de
+evaluaciones en la misma base SQLite mediante el [importador contable](operations.md#consumo-de-evaluaciones-y-otros-procesos).
+Sus registros conocidos suman tokens de entrada y salida a las cuotas del día;
+cualquier registro externo con uso desconocido bloquea nuevas admisiones para
+todos los usuarios hasta conciliarse. Los registros sobreviven a la retención
+del historial. La base solo conoce el uso registrado: el importador no consulta
+Platform ni descubre automáticamente otros proyectos de la organización.
+
+No ejecutes procesos externos sin registrar su consumo/reserva y suspender la
+admisión del chat mientras se actualiza su expediente. Si aparecen otros
+proyectos, también deberán compartir este registro antes de considerar el
+límite global como representativo de toda la organización. La comparación ya
+autorizada conserva su presupuesto acumulado separado; el límite diario de
+200,000 es una política del piloto, no una autorización para repetir sus casos.
 
 La autorización ya vigente de hasta **US$10 para la comparación pagada** se
 mantiene bajo las tarifas API normales, sin depender del incentivo y sin pedir

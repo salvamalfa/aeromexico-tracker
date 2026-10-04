@@ -2,6 +2,13 @@
 
 ## Instalación local
 
+Para ejecutar solo el backend, sin instalar el pipeline ni herramientas de
+desarrollo, usa `uv sync --locked --only-group chat-runtime`. En ese entorno,
+ejecuta el CLI con `.venv/bin/python -m src.conversational_analytics` (Windows:
+`.venv\Scripts\python.exe`). Para desarrollar y correr pytest, conserva la
+instalación completa de abajo. No alternes perfiles sobre un entorno que otra
+corrida esté usando; asigna `UV_PROJECT_ENVIRONMENT` a un directorio separado.
+
 La instalación bloqueada que se documenta para el chat es:
 
 ```bash
@@ -80,6 +87,70 @@ de habilitarlo desde Pages, probar preflight CORS y una sesión real desde el
 origen exacto, además de rechazos para origen/token no autorizados. Si no se
 puede autenticar a los usuarios del dashboard, mantener desactivado el panel
 público.
+
+### Consumo de evaluaciones y otros procesos
+
+El chat aplica por defecto 200,000 tokens diarios por usuario y globales,
+sumando entrada y salida. Antes de cada turno OpenAI reserva al menos 150,000
+tokens, o la estimación dinámica si es mayor; mantiene los controles monetarios
+a tarifas normales. La demo `mock` conserva su estimación local habitual.
+Estos controles no sustituyen la factura ni verifican créditos de Data Sharing.
+El servicio rechaza al arrancar una configuración OpenAI cuya reserva mínima
+no quepa en el presupuesto monetario por usuario o global. Configura las tarifas
+normales del modelo elegido; los límites monetarios no se ajustan solos.
+
+Para incluir evaluaciones u otro proceso del proyecto, prepara un JSON privado
+con contadores confirmados y un identificador contable estable por intento o
+agregado **sin solapamiento**. No incluyas prompts, respuestas, contexto ni IDs
+del proveedor. Nunca importes nuevamente un turno que ya contabiliza esta base.
+Ejemplo de formato con valores ilustrativos:
+
+```json
+{
+  "version": 1,
+  "entries": [
+    {"accounting_id": "eval-0001", "owner_id": "owner",
+     "usage_date": "2026-10-04", "status": "known",
+     "input_tokens": 40000, "output_tokens": 500,
+     "estimated_cost_usd": 0.00425},
+    {"accounting_id": "eval-0002", "owner_id": "owner",
+     "usage_date": "2026-10-04", "status": "unknown",
+     "reserved_tokens": 150000, "reserved_cost_usd": 0.38}
+  ]
+}
+```
+
+Usa fechas UTC de la evidencia contable. Primero valida el archivo sin abrir ni
+modificar SQLite; este paso muestra la propuesta, sin comprobar conflictos con
+registros que ya existan. Después aplica a la **misma base** usada por el chat:
+
+```bash
+python -m src.conversational_analytics import-usage \
+  --file /ruta/privada/consumo.json --state-path /ruta/privada/chat.sqlite3
+python -m src.conversational_analytics import-usage \
+  --file /ruta/privada/consumo.json --state-path /ruta/privada/chat.sqlite3 --apply
+```
+
+La aplicación valida conflictos y escribe el lote en una transacción.
+La validación incluye los totales existentes y resultantes por día, sumados
+entre propietarios, y las reservas de todos los días: rechaza desbordamientos
+de enteros o costos antes de confirmar un lote.
+Repetir un registro idéntico no suma consumo otra vez; un registro conocido no admite
+reescritura ni vuelve a desconocido. Para conciliar un registro `unknown`, usa
+su mismo ID, propietario y fecha con `status: known`, contadores y costo
+confirmados. Un lote inválido no aplica parcialmente. Los registros conocidos
+suman a las cuotas de su fecha UTC; un desconocido bloquea globalmente la
+admisión, aun si su fecha es anterior, y permanece hasta su conciliación.
+También pausa el inicio de turnos que ya estuvieran en cola; no reenvía ni
+reconstruye turnos que el proveedor ya haya recibido.
+
+El importador no recupera Usage de OpenAI ni detecta cargas externas. Mantén
+`CHAT_ADMISSION_ENABLED=false` mientras un proceso separado esté activo y
+actualiza su registro antes de reabrir el chat. El dueño indicó que por ahora
+la organización solo usa este proyecto; si eso cambia, incorpora también el
+consumo de los nuevos proyectos. Conserva el expediente acumulado de la
+comparación y sus archivos originales; importar contadores no reanuda el
+experimento ni autoriza nuevas llamadas.
 
 ### Identidad, cuotas, retención y proveedor
 

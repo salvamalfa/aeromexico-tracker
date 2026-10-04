@@ -284,6 +284,8 @@ def test_app_factory_guards_direct_openai_local_config(tmp_path: Path, monkeypat
         state_path=tmp_path / "chat.sqlite3",
         provider="openai",
         auth_mode="local",
+        estimated_input_cost_per_million=0.1,
+        estimated_output_cost_per_million=0.5,
     )
     with pytest.raises(ValueError, match="password authentication"):
         create_app(config, snapshot=Snapshot(), provider=object(), start_worker=False)

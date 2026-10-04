@@ -41,8 +41,9 @@ class ChatConfig:
     # executes them sequentially; this is a queue bound, not parallelism.
     max_concurrent_global: int = 2
     max_active_per_user: int = 1
-    daily_token_budget_user: int = 100_000
-    daily_token_budget_global: int = 500_000
+    daily_token_budget_user: int = 200_000
+    daily_token_budget_global: int = 200_000
+    minimum_turn_reservation_tokens: int = 150_000
     daily_cost_budget_user_usd: float = 2.0
     daily_cost_budget_global_usd: float = 10.0
     estimated_input_cost_per_million: float = 5.0
@@ -126,8 +127,9 @@ class ChatConfig:
             max_turn_seconds=_env_int("CHAT_MAX_TURN_SECONDS", 90),
             max_concurrent_global=_env_int("CHAT_MAX_CONCURRENT_GLOBAL", 2),
             max_active_per_user=_env_int("CHAT_MAX_ACTIVE_PER_USER", 1),
-            daily_token_budget_user=_env_int("CHAT_DAILY_TOKEN_BUDGET_USER", 100_000),
-            daily_token_budget_global=_env_int("CHAT_DAILY_TOKEN_BUDGET_GLOBAL", 500_000),
+            daily_token_budget_user=_env_int("CHAT_DAILY_TOKEN_BUDGET_USER", 200_000),
+            daily_token_budget_global=_env_int("CHAT_DAILY_TOKEN_BUDGET_GLOBAL", 200_000),
+            minimum_turn_reservation_tokens=_env_int("CHAT_MINIMUM_TURN_RESERVATION_TOKENS", 150_000),
             daily_cost_budget_user_usd=_env_float("CHAT_DAILY_COST_BUDGET_USER_USD", 2.0),
             daily_cost_budget_global_usd=_env_float("CHAT_DAILY_COST_BUDGET_GLOBAL_USD", 10.0),
             estimated_input_cost_per_million=_env_float("CHAT_INPUT_COST_PER_MILLION", 5.0),
@@ -147,6 +149,26 @@ class ChatConfig:
             value = getattr(self, name)
             if not math.isfinite(value) or value <= 0:
                 raise ValueError(f"{name} must be finite and positive")
+
+    def validate_admission_budgets(self) -> None:
+        """Fail early if one minimum paid turn cannot fit the chat cost quotas."""
+        if self.provider != "openai":
+            return
+        reserve_cost = (
+            self.minimum_turn_reservation_tokens
+            * max(self.estimated_input_cost_per_million, self.estimated_output_cost_per_million)
+            / 1_000_000
+        )
+        for setting, budget in (
+            ("CHAT_DAILY_COST_BUDGET_USER_USD", self.daily_cost_budget_user_usd),
+            ("CHAT_DAILY_COST_BUDGET_GLOBAL_USD", self.daily_cost_budget_global_usd),
+        ):
+            if reserve_cost > budget:
+                raise ValueError(
+                    f"minimum OpenAI turn reservation is estimated at ${reserve_cost:.4f}, "
+                    f"above {setting}=${budget:.4f}; use the selected model's verified normal prices "
+                    "and configure the chat cost quota to cover this reservation before starting"
+                )
 
     def password_fingerprints(self) -> dict[str, str]:
         """Fingerprint per configured user; sessions die when a hash rotates."""
