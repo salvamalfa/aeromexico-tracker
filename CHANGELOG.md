@@ -8,6 +8,13 @@ versión semántica, las entradas van por fecha.
 
 ### Changed
 
+- **Cuotas del piloto y hosting intermitente.** El chat aplica 200.000 tokens
+  diarios por usuario y globales, reservando al menos 150.000 por turno OpenAI.
+  Un importador privado incorpora consumo de evaluaciones sin duplicarlo y
+  bloquea admisión ante registros desconocidos. Se evalúan Railway Free/Hobby
+  para un único usuario con suspensión; el perfil `chat-runtime` evita instalar
+  las dependencias del pipeline en el backend. No se contrató ni publicó nada.
+
 - **Chat analítico — contraseña y correcciones de auditoría.** El piloto se
   protege con una contraseña (hash scrypt, sesiones de 12 h, límite de
   intentos) en lugar de tokens. Se corrigen la exposición del modo local

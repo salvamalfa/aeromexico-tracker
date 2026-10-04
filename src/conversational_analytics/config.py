@@ -41,8 +41,9 @@ class ChatConfig:
     # executes them sequentially; this is a queue bound, not parallelism.
     max_concurrent_global: int = 2
     max_active_per_user: int = 1
-    daily_token_budget_user: int = 100_000
-    daily_token_budget_global: int = 500_000
+    daily_token_budget_user: int = 200_000
+    daily_token_budget_global: int = 200_000
+    minimum_turn_reservation_tokens: int = 150_000
     daily_cost_budget_user_usd: float = 2.0
     daily_cost_budget_global_usd: float = 10.0
     estimated_input_cost_per_million: float = 5.0
@@ -126,8 +127,9 @@ class ChatConfig:
             max_turn_seconds=_env_int("CHAT_MAX_TURN_SECONDS", 90),
             max_concurrent_global=_env_int("CHAT_MAX_CONCURRENT_GLOBAL", 2),
             max_active_per_user=_env_int("CHAT_MAX_ACTIVE_PER_USER", 1),
-            daily_token_budget_user=_env_int("CHAT_DAILY_TOKEN_BUDGET_USER", 100_000),
-            daily_token_budget_global=_env_int("CHAT_DAILY_TOKEN_BUDGET_GLOBAL", 500_000),
+            daily_token_budget_user=_env_int("CHAT_DAILY_TOKEN_BUDGET_USER", 200_000),
+            daily_token_budget_global=_env_int("CHAT_DAILY_TOKEN_BUDGET_GLOBAL", 200_000),
+            minimum_turn_reservation_tokens=_env_int("CHAT_MINIMUM_TURN_RESERVATION_TOKENS", 150_000),
             daily_cost_budget_user_usd=_env_float("CHAT_DAILY_COST_BUDGET_USER_USD", 2.0),
             daily_cost_budget_global_usd=_env_float("CHAT_DAILY_COST_BUDGET_GLOBAL_USD", 10.0),
             estimated_input_cost_per_million=_env_float("CHAT_INPUT_COST_PER_MILLION", 5.0),

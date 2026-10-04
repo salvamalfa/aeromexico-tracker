@@ -13,13 +13,14 @@ from typing import Any
 
 from ._storage_auth import AuthSessionMixin
 from ._storage_common import AdmissionDenied, ChatError, Conflict, NotFound, utcnow
+from ._storage_external_usage import ExternalUsageMixin
 from ._storage_tools import ToolResultMixin
 from ._storage_usage import UsageRetentionMixin
 
 __all__ = ["AdmissionDenied", "ChatError", "ChatStore", "Conflict", "NotFound", "utcnow"]
 
 
-class ChatStore(ToolResultMixin, UsageRetentionMixin, AuthSessionMixin):
+class ChatStore(ToolResultMixin, UsageRetentionMixin, ExternalUsageMixin, AuthSessionMixin):
     """SQLite store. Every operation opens its own connection for thread safety."""
 
     def __init__(self, path: str | Path):
@@ -169,6 +170,7 @@ class ChatStore(ToolResultMixin, UsageRetentionMixin, AuthSessionMixin):
                     db.execute(f"ALTER TABLE {table} ADD COLUMN provider_turn_id TEXT NOT NULL DEFAULT ''")
             self._initialize_auth(db)
             self._initialize_usage_tombstones(db)
+            self._initialize_external_usage(db)
 
     @staticmethod
     def _dump(obj: Any) -> str:
@@ -292,6 +294,8 @@ class ChatStore(ToolResultMixin, UsageRetentionMixin, AuthSessionMixin):
                     raise Conflict("client_message_id was already used with different content or context")
                 db.execute("COMMIT")
                 return {key: existing[key] for key in ("id", "status", "created_at")}, True
+            if self._external_unknown_count_db(db):
+                raise AdmissionDenied("external usage reconciliation is incomplete")
             active_user = db.execute(
                 "SELECT COUNT(*) FROM turns WHERE owner_id=? AND status IN ('pending','running')", (owner_id,)
             ).fetchone()[0]
@@ -313,6 +317,13 @@ class ChatStore(ToolResultMixin, UsageRetentionMixin, AuthSessionMixin):
                 "COALESCE(SUM(estimated_cost_usd),0) FROM usage_daily WHERE usage_date=?",
                 (usage_day,),
             ).fetchone()
+            ext_user = self._external_usage_totals_db(db, usage_day, owner_id)
+            ext_global = self._external_usage_totals_db(db, usage_day)
+            user_usage = (user_usage[0] + ext_user[0] + ext_user[1], user_usage[1] + ext_user[2])
+            global_usage = (
+                global_usage[0] + ext_global[0] + ext_global[1],
+                global_usage[1] + ext_global[2],
+            )
             user_holds = self._usage_hold_totals_db(db, owner_id)
             global_holds = self._usage_hold_totals_db(db)
             if (
@@ -364,6 +375,9 @@ class ChatStore(ToolResultMixin, UsageRetentionMixin, AuthSessionMixin):
         now = utcnow()
         with self._connect() as db:
             db.execute("BEGIN IMMEDIATE")
+            if self._external_unknown_count_db(db):
+                db.execute("COMMIT")
+                return None
             row = db.execute(
                 "SELECT t.*,c.provider_session_id,c.snapshot_version,c.semantic_version FROM turns t "
                 "JOIN conversations c ON c.id=t.conversation_id WHERE t.status='pending' "

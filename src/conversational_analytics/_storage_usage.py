@@ -77,6 +77,10 @@ class UsageRetentionMixin:
                 "SELECT COALESCE(SUM(reserved_tokens),0),COALESCE(SUM(reserved_cost_usd),0) "
                 "FROM usage_tombstones WHERE status='unknown'"
             ).fetchone()
+            external = db.execute(
+                "SELECT COALESCE(SUM(reserved_tokens),0),COALESCE(SUM(reserved_cost_usd),0) "
+                "FROM external_usage WHERE status='unknown'"
+            ).fetchone()
         else:
             turns = db.execute(
                 "SELECT COALESCE(SUM(reserved_tokens),0),COALESCE(SUM(reserved_cost_usd),0) "
@@ -88,7 +92,12 @@ class UsageRetentionMixin:
                 "FROM usage_tombstones WHERE owner_id=? AND status='unknown'",
                 (owner_id,),
             ).fetchone()
-        return int(turns[0] + tombstones[0]), float(turns[1] + tombstones[1])
+            external = db.execute(
+                "SELECT COALESCE(SUM(reserved_tokens),0),COALESCE(SUM(reserved_cost_usd),0) "
+                "FROM external_usage WHERE owner_id=? AND status='unknown'",
+                (owner_id,),
+            ).fetchone()
+        return int(turns[0] + tombstones[0] + external[0]), float(turns[1] + tombstones[1] + external[1])
 
     @staticmethod
     def _usage_incomplete_count_db(db: sqlite3.Connection, owner_id: str | None = None) -> int:
@@ -97,6 +106,7 @@ class UsageRetentionMixin:
             tombstones = db.execute(
                 "SELECT COUNT(*) FROM usage_tombstones WHERE status='unknown'"
             ).fetchone()[0]
+            external = db.execute("SELECT COUNT(*) FROM external_usage WHERE status='unknown'").fetchone()[0]
         else:
             turns = db.execute(
                 "SELECT COUNT(*) FROM turns WHERE owner_id=? AND usage_complete=0", (owner_id,)
@@ -104,7 +114,10 @@ class UsageRetentionMixin:
             tombstones = db.execute(
                 "SELECT COUNT(*) FROM usage_tombstones WHERE owner_id=? AND status='unknown'", (owner_id,)
             ).fetchone()[0]
-        return int(turns + tombstones)
+            external = db.execute(
+                "SELECT COUNT(*) FROM external_usage WHERE owner_id=? AND status='unknown'", (owner_id,)
+            ).fetchone()[0]
+        return int(turns + tombstones + external)
 
     def complete_turn(
         self,
@@ -224,6 +237,7 @@ class UsageRetentionMixin:
                     "FROM usage_daily WHERE usage_date=? AND owner_id=?",
                     (today, owner_id),
                 ).fetchone()
+                external = self._external_usage_totals_db(db, today, owner_id)
                 incomplete = self._usage_incomplete_count_db(db, owner_id)
             else:
                 row = db.execute(
@@ -232,11 +246,12 @@ class UsageRetentionMixin:
                     "FROM usage_daily WHERE usage_date=?",
                     (today,),
                 ).fetchone()
+                external = self._external_usage_totals_db(db, today)
                 incomplete = self._usage_incomplete_count_db(db)
         return {
-            "input_tokens": row[0],
-            "output_tokens": row[1],
-            "estimated_cost_usd": row[2],
+            "input_tokens": row[0] + external[0],
+            "output_tokens": row[1] + external[1],
+            "estimated_cost_usd": row[2] + external[2],
             "turn_count": row[3],
             "usage_incomplete_turns": incomplete,
         }

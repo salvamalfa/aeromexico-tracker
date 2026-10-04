@@ -43,7 +43,9 @@ consulta [operaciones](operations.md). Los ejemplos de prompt no son el holdout:
 estáticos verificados contra el snapshot publicado.
 
 Para el hosting actual, consulta la [guía de VPS Hostinger](hostinger-vps.md).
+Para el uso intermitente de un único usuario, consulta la
+[comparación de Railway Free, Hobby y VPS](hosting-options.md).
 
 La [validación real](../etapas/airline-tracker-validacion-real-20261004.md) y la
 [guía de Data Sharing](data-sharing.md) detallan resultados, cobertura y
-límites diarios propuestos.
+límites diarios y la importación del consumo de evaluaciones.

@@ -134,3 +134,8 @@ Por la decisión explícita de **no versionar bronze**, una reconstrucción con 
 ## Chat analítico
 
 El chat consulta el snapshot público con una capa semántica versionada; no abre el warehouse ni convierte ausencias en cero. El servicio usa un proveedor simulado por defecto. La integración real con Agents API ya se verificó dentro de la comparación autorizada. La comparación está pausada por un turno cuyo consumo no pudo confirmarse; todavía no hay un modelo elegido. La [documentación del chat](docs/chat/README.md) incluye instalación, operación y holdout, y la [validación real](docs/etapas/airline-tracker-validacion-real-20261004.md) registra la cobertura y los costos medidos. H4 requiere conciliación y gates de calidad; H5 requiere un servidor persistente con HTTPS y aprobación semántica. El chat público permanece desactivado.
+
+El perfil `chat-runtime` instala solo las dependencias del backend. El chat
+aplica cuotas de tokens y admite un registro contable privado del consumo de
+evaluaciones; la [continuación de cuotas y hosting](docs/etapas/airline-tracker-cuotas-hosting-20261004.md)
+documenta estas verificaciones y la opción Railway Free/Hobby para uso intermitente.

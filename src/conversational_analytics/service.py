@@ -128,6 +128,11 @@ class ChatService:
         reserve_tokens = max(
             2_000, (fixed + 2 * self.config.max_tool_calls * self.config.max_tool_result_bytes) // 4 + 4_096
         )
+        # The pilot floor applies to paid provider calls. Mock mode stays usable
+        # under the existing conservative cost budgets without pretending to
+        # consume the OpenAI token allowance.
+        if self.config.provider == "openai":
+            reserve_tokens = max(reserve_tokens, self.config.minimum_turn_reservation_tokens)
         reserve_cost = (
             reserve_tokens
             * max(self.config.estimated_input_cost_per_million, self.config.estimated_output_cost_per_million)

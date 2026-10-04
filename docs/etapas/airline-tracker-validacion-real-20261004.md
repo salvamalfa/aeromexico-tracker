@@ -203,12 +203,15 @@ carecen de puntuación y Astra no tiene muestra. Luna queda por debajo del gate
 con la rúbrica conservada. La evidencia actual no permite declarar ganador ni
 prometer calidad del piloto.
 
-La [política propuesta de Data Sharing](../chat/data-sharing.md), **aún no
-adoptada**, limita el proyecto y al dueño a 200.000 tokens diarios con una reserva
-estimada de 150.000 por turno. Suma entrada y salida, incluida caché, chat,
-evaluaciones y reservas de toda la organización. El cupo principal se reinicia
-a las 00:00 UTC, 18:00 de Ciudad de México; no aumenta RPM/TPM. Los límites
-predeterminados actuales no se cambian por esa propuesta.
+La [política de tokens del piloto](../chat/data-sharing.md) se implementó en la
+continuación posterior al PR #81: valores predeterminados de 200.000 tokens
+diarios por usuario y globales, con reserva mínima estimada de 150.000 por turno
+OpenAI. Suma entrada y salida, incluida caché, más reservas; el consumo externo
+de evaluaciones debe importarse en la misma base del chat. No consulta
+automáticamente Usage ni otros proyectos. Un registro externo desconocido
+mantiene la admisión pausada hasta conciliarse. El cupo principal reinicia a las
+00:00 UTC, 18:00 de Ciudad de México; no aumenta RPM/TPM ni se presume crédito
+para Agents API con herramientas.
 
 Hostinger **Hosting Web Empresarial / Business** no aloja este backend Python.
 La [guía de VPS](../chat/hostinger-vps.md) prepara systemd, SQLite persistente,

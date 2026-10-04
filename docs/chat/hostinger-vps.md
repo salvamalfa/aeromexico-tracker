@@ -10,8 +10,8 @@ configura DNS ni despliega nada.
 ## Requisitos concretos
 
 - Ubuntu 24.04 LTS con SSH/root, una IP pública y puertos 80/443 disponibles.
-- Python 3.13 (`>=3.13,<3.14`), instalado por `uv`, y dependencias del extra
-  `chat` instaladas desde `uv.lock`.
+- Python 3.13 (`>=3.13,<3.14`), instalado por `uv`, y dependencias del grupo
+  ligero `chat-runtime` instaladas desde `uv.lock`.
 - Una sola instancia del CLI del proyecto. Este arranca Uvicorn y su worker en
   el mismo proceso; no iniciar varios workers/procesos.
 - El checkout fijado incluye el snapshot público completo `site/`. El proceso
@@ -65,7 +65,7 @@ sudo -u airline-chat -H sh -lc '
   uv python install 3.13
   cd /opt/airline-tracker/current
   UV_PROJECT_ENVIRONMENT=/var/lib/airline-tracker-chat/venv \
-    uv sync --locked --no-dev --extra chat
+    uv sync --locked --only-group chat-runtime
 '
 ```
 
