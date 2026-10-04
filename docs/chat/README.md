@@ -33,7 +33,7 @@ sesiones del proveedor aisladas tras el adaptador.
 | H1 — semántica revisada | Conciliación técnica completa y 12 referencias estáticas verificadas; la revisión del dueño queda pendiente explícitamente. |
 | H2 — demo sin consumo | Backend, 11 métricas, siete herramientas, SSE y panel implementados y verificados. El fallo preexistente del diagnóstico de etapa 12 sigue documentado aparte. |
 | H3 — chat real local | Acceso confirmado con una sonda y consultas reales con herramientas y fuentes. El uso se recupera por lecturas oficiales; los errores y su consumo quedan registrados en la validación real. |
-| H4 — modelo elegido | Comparación live autorizada en curso; requiere revisar los resultados de los candidatos y superar el gate de calidad. No hay modelo elegido. |
+| H4 — modelo elegido | Comparación parcial pausada por un turno fallido sin uso confirmado. Luna 7/9 y Sol 8/8 soportados puntuados; Astra sin muestra. Faltan conciliación, cobertura y gates de calidad. No hay modelo elegido. |
 | H5 — piloto publicado | Una contraseña del dueño preparada fuera de Git. Hostinger Business no admite este backend Python; requiere un servidor separado, retención y validación HTTPS desde Pages. |
 
 Para evaluación, cobertura, gates y límites, consulta [evaluaciones y presupuesto](evaluaciones-presupuesto.md).

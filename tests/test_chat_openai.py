@@ -549,6 +549,29 @@ def test_idle_without_new_terminal_turn_is_not_success():
         _run(provider, session_id="sess_fixture")
 
 
+@pytest.mark.parametrize(
+    ("status", "error_type"),
+    [("failed", OpenAIProviderError), ("cancelled", InterruptedError)],
+)
+def test_recovered_terminal_failure_or_cancel_preserves_reported_usage(status, error_type):
+    recovered_turn = _turn("turn_recovered", status=status, usage=_usage())
+    fake = FakeSessions(
+        event_stream=FakeStream(
+            [
+                _turn_created("turn_recovered"),
+                AgentSessionIdleEvent.model_construct(
+                    type="agent.session.idle", session={"id": "sess_fixture"}
+                ),
+            ]
+        ),
+        prior_turns=[_turn("turn_old", status="completed")],
+        recovery={"id": "sess_fixture", "status": "idle", "required_actions": [], "turns": [recovered_turn]},
+    )
+    with pytest.raises(error_type) as caught:
+        _run(_provider(FakeClient(fake)), session_id="sess_fixture")
+    assert caught.value.usage == (31, 19)
+
+
 def test_cancel_and_delete_use_documented_events_and_session_endpoint():
     fake = FakeSessions()
     provider = _provider(FakeClient(fake))

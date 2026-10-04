@@ -315,10 +315,13 @@ class OpenAIProvider:
                 recovered = self._recover(session_id, turn_id, prior_turn_id)
                 if recovered is not None:
                     content, recovered_status, recovered_turn_id, usage = recovered
+                    recovered_usage = usage_from_event({"usage": usage})
                     if recovered_status == "failed":
-                        raise OpenAIProviderError("El proveedor marcó el turno como fallido")
+                        raise OpenAIProviderError("El proveedor marcó el turno como fallido", recovered_usage)
                     if recovered_status == "cancelled":
-                        raise InterruptedError("turn cancelled")
+                        cancelled = InterruptedError("turn cancelled")
+                        cancelled.usage = recovered_usage  # type: ignore[attr-defined]
+                        raise cancelled
                     if recovered_status == "completed":
                         terminal = "completed"
                         if content:

@@ -34,6 +34,13 @@ versión semántica, las entradas van por fecha.
   borrar una conversación durante la creación mantiene la limpieza remota
   durable. Las reservas de uso desconocido sobreviven cambios de día UTC,
   borrado y retención, con contabilización única cuando se confirma el uso.
+  La comparación real conserva errores y contadores entre fases: Luna tiene
+  7/9 consultas soportadas correctas y Sol 8/8, con cobertura parcial. Un turno
+  fallido sin uso confirmado pausó la continuación antes de admitir Astra.
+  El reporte separa mediciones, revisión automática y aprobaciones pendientes.
+  La revisión del PR también conserva consumo recuperado de turnos fallidos o
+  cancelados, protege reintentos de envíos HTTP inciertos con la misma clave
+  y corrige la precedencia de entidades y el denominador AFAC en modo simulado.
 
 ## 2026-10-03
 

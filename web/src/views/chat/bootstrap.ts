@@ -5,6 +5,9 @@ import { messageFromPayload, safeReferences } from "./markdown";
 import { mountChatModal } from "./modal-controls";
 import { mountPanelControls, resizeDashboardCharts } from "./panel-controls";
 import { renderMessages } from "./render";
+import { createTurnSettler } from "./settle-turn";
+import { ChatSubmissionLedger } from "./submission-ledger";
+import { createSubmitController } from "./submit-controller";
 import { MAX_INPUT, PANEL_HTML } from "./template";
 import { ChatApiError, ChatTransport } from "./transport";
 import { errorText, randomId, storage } from "./util";
@@ -56,6 +59,7 @@ export function mountChat(): () => void {
   const form = query<HTMLFormElement>("[data-chat-form]");
   const sendButton = query<HTMLButtonElement>("[data-chat-send]");
   const cancelButton = query<HTMLButtonElement>("[data-chat-cancel]");
+  const newConversationButton = query<HTMLButtonElement>("[data-chat-new]");
   const closeButton = query<HTMLButtonElement>("[data-chat-close]");
   const resizer = query<HTMLElement>(".chat-resizer");
   const accessForm = query<HTMLFormElement>("[data-chat-access]");
@@ -64,18 +68,22 @@ export function mountChat(): () => void {
   const logoutButton = query<HTMLButtonElement>("[data-chat-logout]");
 
   const turns = new Map<string, string>();
+  const submissions = new ChatSubmissionLedger();
   const paintMessages = () => renderMessages(messagesNode, state.messages, {
     canRetry: (message) => Boolean(message.retryMessageId || (message.turn_id && ["failed", "cancelled"].includes(turns.get(message.turn_id) ?? ""))),
     onRetry: (message) => {
+      const submission = message.retryMessageId ? submissions.get(message.retryMessageId) : undefined;
+      if (submission) { void submitMessage(submission.message.content, submission.message.id); return; }
       const prior = state.messages.slice(0, state.messages.indexOf(message)).reverse().find((candidate) => candidate.role === "user");
-      if (prior) void submitMessage(prior.content);
+      if (prior) void submitMessage(prior.content, prior.id);
     },
   });
 
   const setBusy = (busy: boolean) => {
     state.activeTurn = busy ? state.activeTurn : undefined;
-    sendButton.disabled = busy;
-    input.disabled = busy;
+    sendButton.disabled = busy || submissions.hasUnresolved;
+    input.disabled = busy || submissions.hasUnresolved;
+    newConversationButton.disabled = submissions.hasUnresolved;
     cancelButton.hidden = !busy;
     sendButton.textContent = busy ? "En proceso" : "Enviar";
   };
@@ -127,6 +135,7 @@ export function mountChat(): () => void {
       paintMessages();
     } else if (event.type === "turn.completed" || event.type === "turn.cancelled" || event.type === "turn.failed") {
       const outcome = event.type === "turn.completed" ? "completed" : event.type === "turn.cancelled" ? "cancelled" : "failed";
+      if (turnId) submissions.settleTurn(turnId);
       if (turnId) {
         turns.set(turnId, outcome);
         const message = assistantFor();
@@ -148,9 +157,30 @@ export function mountChat(): () => void {
       references: safeReferences(message.references ?? (message as ChatMessage & { payload?: { references?: unknown } }).payload?.references),
       chart: (message as ChatMessage & { payload?: { chart?: unknown } }).payload?.chart as ChatChart | undefined ?? message.chart,
     }));
+    const unresolved = submissions.unresolved;
+    if (unresolved?.conversationId === conversation.id) {
+      const exactTurn = unresolved.turnId && conversation.turns.find((turn) => turn.id === unresolved.turnId);
+      if (exactTurn && TERMINAL.has(exactTurn.status)) submissions.settleTurn(exactTurn.id);
+      else if (exactTurn && (exactTurn.status === "pending" || exactTurn.status === "running")) {
+        submissions.markAccepted(unresolved.message.id, exactTurn.id);
+      } else {
+        const alreadyVisible = conversation.messages.some((message) =>
+          message.role === "user" && message.content === unresolved.message.content
+        );
+        if (!alreadyVisible) state.messages.push(unresolved.message);
+        state.messages.push({
+          id: randomId(), role: "assistant",
+          content: "No se pudo confirmar el envío anterior. Reintentar consultará el mismo identificador.",
+          retryMessageId: unresolved.message.id,
+        });
+      }
+    }
     for (const turn of conversation.turns) turns.set(turn.id, turn.status);
     const active = [...conversation.turns].reverse().find((turn) => turn.status === "pending" || turn.status === "running");
-    if (!active) return;
+    if (!active) {
+      if (!state.activeTurn) setBusy(false);
+      return;
+    }
     state.activeTurn = active.id;
     state.lastSequence = 0;
     const partial = state.messages.find((message) => message.role === "assistant" && message.turn_id === active.id);
@@ -208,25 +238,10 @@ export function mountChat(): () => void {
     }
   }
 
-  // A stream that ends without a terminal event is settled from the stored
-  // turn state, so the composer is never left locked.
-  async function settleTurn(turnId: string, reason: string): Promise<void> {
-    let status: string | undefined;
-    try {
-      const conversation = state.conversationId ? await transport.conversation(state.conversationId) : undefined;
-      status = conversation?.turns.find((turn) => turn.id === turnId)?.status;
-      if (conversation && status && TERMINAL.has(status)) { loadConversation(conversation); turns.set(turnId, status); }
-    } catch (error) { if (handleAuthError(error)) status = undefined; }
-    if (state.activeTurn !== turnId) return;
-    const assistant = state.messages.find((message) => message.turn_id === turnId && message.role === "assistant");
-    if (assistant) assistant.pending = false;
-    if (!status || !TERMINAL.has(status)) {
-      turns.set(turnId, "failed");
-      statusNode.textContent = `Se perdió la conexión con el flujo: ${reason}. La pregunta no se reenvió; puedes reintentar.`;
-    } else statusNode.textContent = status === "completed" ? "Respuesta completa." : "No se pudo completar la respuesta. Puedes reintentar.";
-    setBusy(false);
-    paintMessages();
-  }
+  const settleTurn = createTurnSettler({
+    state, submissions, terminal: TERMINAL, getConversation: (id) => transport.conversation(id),
+    loadConversation, handleAuthError, status: statusNode, setBusy, paint: paintMessages,
+  });
 
   async function listen(turnId: string): Promise<void> {
     state.abort?.abort(); // one stream per panel: a resumed listener replaces the old one
@@ -245,7 +260,10 @@ export function mountChat(): () => void {
         state.lastSequence = Math.max(state.lastSequence, next);
       } catch (error) {
         if (abort.signal.aborted) return;
-        if (handleAuthError(error)) { setBusy(false); return; }
+        if (handleAuthError(error)) {
+          await settleTurn(turnId, "la sesión requiere validación");
+          return;
+        }
         lastError = errorText(error);
       }
       if (abort.signal.aborted || state.activeTurn !== turnId) return;
@@ -255,36 +273,18 @@ export function mountChat(): () => void {
     if (!abort.signal.aborted && state.activeTurn === turnId) await settleTurn(turnId, lastError);
   }
 
-  async function submitMessage(raw: string): Promise<void> {
-    const content = raw.trim();
-    if (!content || content.length > MAX_INPUT || state.activeTurn) return;
-    if (!state.conversationId) await ensureConversation();
-    if (!state.conversationId) return;
-    const userMessage: ChatMessage = { id: randomId(), role: "user", content, created_at: new Date().toISOString() };
-    state.messages.push(userMessage);
-    paintMessages();
-    input.value = "";
-    query<HTMLElement>("[data-chat-count]").textContent = `0 / ${MAX_INPUT}`;
-    setBusy(true);
-    statusNode.textContent = "Enviando pregunta…";
-    try {
-      const result = await transport.sendMessage(state.conversationId, content, buildChatContext(state.focusedCard), randomId());
-      state.activeTurn = result.turn_id;
-      state.lastSequence = 0;
-      await listen(result.turn_id);
-    } catch (error) {
-      setBusy(false);
-      if (handleAuthError(error)) { input.value = content; state.messages.pop(); paintMessages(); return; }
-      state.messages.push({ id: randomId(), role: "assistant", content: `No se pudo enviar la pregunta: ${errorText(error)}`, pending: false, retryMessageId: userMessage.id });
-      statusNode.textContent = "La pregunta no se envió. Puedes intentarlo de nuevo.";
-      paintMessages();
-    }
-  }
+  const submitMessage = createSubmitController({
+    state, input, count: query<HTMLElement>("[data-chat-count]"), status: statusNode,
+    ledger: submissions, send: (id, content, context, key) => transport.sendMessage(id, content, context, key),
+    context: buildChatContext, ensureConversation, listen, setBusy,
+    handleAuthError, paint: paintMessages,
+  });
 
-  function resetConversation(forgetStored = true): void {
+  function resetConversation(forgetStored = true, preserveUnresolved = false): void {
     state.abort?.abort();
     setBusy(false);
     state.conversationId = undefined; state.snapshotVersion = undefined; state.messages = []; state.activeTurn = undefined; state.lastSequence = 0;
+    if (!preserveUnresolved) submissions.clear();
     if (forgetStored) storage((store) => store.removeItem(STORAGE_KEY));
     turns.clear(); paintMessages();
   }
@@ -312,7 +312,7 @@ export function mountChat(): () => void {
 
   logoutButton.addEventListener("click", async () => {
     try { await transport.logout(); } catch { /* the in-memory session is dropped anyway */ }
-    resetConversation(false); // the conversation stays reachable after logging in again
+    resetConversation(false, true); // the conversation and any unresolved idempotency key survive re-login
     requireLogin("Sesión cerrada.");
   });
 
@@ -340,14 +340,15 @@ export function mountChat(): () => void {
   form.addEventListener("submit", (event) => { event.preventDefault(); void submitMessage(input.value); });
   input.addEventListener("input", () => {
     query<HTMLElement>("[data-chat-count]").textContent = `${input.value.length} / ${MAX_INPUT}`;
-    sendButton.disabled = input.value.trim().length === 0 || input.value.length > MAX_INPUT || Boolean(state.activeTurn);
+    sendButton.disabled = input.value.trim().length === 0 || input.value.length > MAX_INPUT || Boolean(state.activeTurn) || submissions.hasUnresolved;
   });
   cancelButton.addEventListener("click", async () => {
     if (!state.activeTurn) return;
     try { await transport.cancel(state.activeTurn); statusNode.textContent = "Solicitando cancelación…"; }
     catch (error) { if (!handleAuthError(error)) statusNode.textContent = `No se pudo cancelar el turno: ${errorText(error)}`; }
   });
-  query<HTMLButtonElement>("[data-chat-new]").addEventListener("click", async () => {
+  newConversationButton.addEventListener("click", async () => {
+    if (submissions.hasUnresolved) return;
     if (state.activeTurn) { try { await transport.cancel(state.activeTurn); } catch { /* new session may still proceed */ } }
     resetConversation();
     await ensureConversation();

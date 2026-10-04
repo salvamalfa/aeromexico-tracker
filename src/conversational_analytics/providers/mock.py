@@ -12,7 +12,12 @@ ENTITY_ALIASES = {
     "AEROMEXICO": ("aeroméxico", "aeromexico", "grupo aeroméxico"),
     "VOLARIS": ("volaris",),
     "VIVA_AEROBUS": ("viva aerobus", "viva", "viva aéreo", "viva aerolínea"),
-    "INDUSTRY": ("industria", "mercado total", "todas las aerolíneas"),
+    "INDUSTRY": ("industria", "mercado total"),
+    "MEXICAN_CARRIERS": (
+        "pasajeros de todas las aerolíneas mexicanas",
+        "todas las aerolíneas mexicanas",
+        "todas las aerolineas mexicanas",
+    ),
 }
 
 
@@ -102,22 +107,17 @@ class MockProvider:
             segment = next((s for s in ("domestic", "international", "total") if s in lowered), None)
             if not segment:
                 return None, "Esta métrica requiere indicar el segmento: total, domestic o international."
-        ids = []
+        ids = [
+            entity for entity, aliases in ENTITY_ALIASES.items() if any(alias in lowered for alias in aliases)
+        ]
+        ids = list(dict.fromkeys(ids))
         contextual = context.get("entity")
-        if isinstance(contextual, list):
-            ids = [e for e in contextual if e in ENTITY_ALIASES]
-        elif isinstance(contextual, str) and contextual in ENTITY_ALIASES:
-            ids = [contextual]
         if not ids:
-            ids = [
-                entity
-                for entity, aliases in ENTITY_ALIASES.items()
-                if any(alias in lowered for alias in aliases)
-            ]
-        if any(
-            phrase in lowered
-            for phrase in ("tres aerolíneas", "tres aerolineas", "las tres", "todas las aerolíneas")
-        ):
+            if isinstance(contextual, list):
+                ids = [e for e in contextual if e in ENTITY_ALIASES]
+            elif isinstance(contextual, str) and contextual in ENTITY_ALIASES:
+                ids = [contextual]
+        if any(phrase in lowered for phrase in ("tres aerolíneas", "tres aerolineas", "las tres")):
             ids = ["AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"]
         ids = list(dict.fromkeys(ids))
         if not ids:

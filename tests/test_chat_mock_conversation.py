@@ -25,9 +25,17 @@ class _RecordingMockProvider:
     def __init__(self, snapshot: Snapshot):
         self.delegate = MockProvider(snapshot)
         self.message_histories: list[list[dict[str, Any]]] = []
+        self.tool_calls: list[tuple[str, dict[str, Any]]] = []
 
     def run_turn(self, **kwargs: Any):
         self.message_histories.append([dict(message) for message in kwargs["messages"]])
+        call_tool = kwargs["call_tool"]
+
+        def record_tool_call(turn_id: str, call_id: str, name: str, arguments: dict[str, Any]):
+            self.tool_calls.append((name, dict(arguments)))
+            return call_tool(turn_id, call_id, name, arguments)
+
+        kwargs["call_tool"] = record_tool_call
         return self.delegate.run_turn(**kwargs)
 
     def cancel(self, session_id: str) -> None:
@@ -172,3 +180,59 @@ def test_conversation_series_keeps_missing_values_null_and_uses_source_reference
         assert message_event["references"] == result["references"]
         assert message_event["content"].count("sin dato publicado") == 3
         assert "0 pasajeros" not in message_event["content"]
+
+
+def test_explicit_entity_overrides_dashboard_context_and_all_carriers_uses_afac_denominator(
+    tmp_path: Path,
+) -> None:
+    snapshot = Snapshot(ROOT / "site")
+    provider = _RecordingMockProvider(snapshot)
+    app = _app(tmp_path, snapshot, provider)
+    context = {
+        "tab": "economy",
+        "period": "2026Q2",
+        "entity": "AEROMEXICO",
+    }
+
+    with TestClient(app, base_url="http://127.0.0.1", client=("127.0.0.1", 50000)) as client:
+        conversation = client.post("/api/chat/conversations")
+        assert conversation.status_code == 201
+        conversation_id = conversation.json()["id"]
+
+        volaris_turn = _new_turn(
+            client,
+            conversation_id,
+            "¿Cuál fue el factor de ocupación de Volaris en 2026Q2?",
+            context,
+        )
+        volaris_events = _completed_events(client, volaris_turn)
+        volaris_tool = next(event for event in volaris_events if event["type"] == "tool.completed")
+        assert provider.tool_calls[-1] == (
+            "query_metrics",
+            {"metric_ids": ["load_factor"], "entity_ids": ["VOLARIS"], "periods": ["2026Q2"]},
+        )
+        assert volaris_tool["result"]["rows"][0]["entity_id"] == "VOLARIS"
+        assert volaris_tool["result"]["rows"][0]["display_value"] is not None
+
+        denominator_turn = _new_turn(
+            client,
+            conversation_id,
+            "Compara pasajeros de todas las aerolíneas mexicanas, segmento total, entre 2026Q1 y 2026Q2.",
+            context,
+        )
+        denominator_events = _completed_events(client, denominator_turn)
+        denominator_tool = next(event for event in denominator_events if event["type"] == "tool.completed")
+        assert provider.tool_calls[-1] == (
+            "compare_metrics",
+            {
+                "metric_id": "afac_market_passengers",
+                "entity_id": "MEXICAN_CARRIERS",
+                "periods": ["2026Q1", "2026Q2"],
+                "segment": "total",
+            },
+        )
+        comparison = denominator_tool["result"]["comparison"]
+        assert comparison["previous"]["entity_id"] == "MEXICAN_CARRIERS"
+        assert comparison["current"]["entity_id"] == "MEXICAN_CARRIERS"
+        assert comparison["previous"]["value"] == 19_319_636
+        assert comparison["current"]["value"] == 20_361_241

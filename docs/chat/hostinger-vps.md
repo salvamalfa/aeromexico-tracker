@@ -268,7 +268,13 @@ página local con otro origin. Espera health 200, login 200, creación 201,
 borrado 204 y logout 204. Si falla, mantén el flag del chat apagado. `CHAT_ALLOWED_ORIGINS`
 permite exactamente el origin Pages (sin path); CORS no sustituye el login.
 
-Solo después de pasar esa prueba se habilita el frontend en el build aprobado
+Antes de habilitar el panel público también deben cumplirse la revisión
+semántica del dueño (H1), la selección de modelo con los gates de calidad (H4)
+y la retención y prueba del piloto desde teléfono con la computadora apagada
+(H5). La prueba técnica anterior no concede ninguna de esas aprobaciones.
+Mantén `VITE_CHAT_ENABLED=false` mientras quede un gate pendiente.
+
+Una vez cumplidos esos requisitos se habilita el frontend en el build aprobado
 con `VITE_CHAT_ENABLED=true` y `VITE_CHAT_API_URL=https://api.ejemplo.com/api/chat`.
 El gate de publicación compila `web/` y vuelve a generar `site/`; usa el
 expediente aprobado requerido por el proceso:
