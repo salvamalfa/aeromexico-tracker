@@ -1,0 +1,46 @@
+# syntax=docker/dockerfile:1
+FROM ghcr.io/astral-sh/uv:0.12.19 AS uv
+
+FROM python:3.13-slim AS build
+COPY --from=uv /uv /uvx /bin/
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
+WORKDIR /app
+COPY pyproject.toml uv.lock ./
+# The lockfile is validated with --locked in CI. --frozen keeps this isolated
+# runtime install from resolving metadata for unrelated project extras.
+RUN --mount=type=secret,id=proxy_ca,required=false \
+    if [ -f /run/secrets/proxy_ca ]; then \
+        SSL_CERT_FILE=/run/secrets/proxy_ca uv sync --frozen --only-group chat-runtime --no-install-project; \
+    else \
+        uv sync --frozen --only-group chat-runtime --no-install-project; \
+    fi
+
+FROM python:3.13-slim AS runtime
+ENV PATH="/opt/venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    CHAT_PROVIDER=mock \
+    CHAT_ADMISSION_ENABLED=false \
+    CHAT_RETENTION_DAYS=30 \
+    CHAT_STATE_PATH=/data/chat.sqlite3
+WORKDIR /app
+COPY --from=build /opt/venv /opt/venv
+
+# These explicit copies are the complete import and data closure for the API.
+# In particular, no private warehouse, analysis_runs, .env, or tests enter the image.
+COPY src/__init__.py src/config.py ./src/
+COPY src/conversational_analytics/ ./src/conversational_analytics/
+COPY src/web_export/ ./src/web_export/
+COPY src/dashboard/__init__.py src/dashboard/flights_html.py ./src/dashboard/
+COPY config/chat/*.yaml ./config/chat/
+COPY contracts/chat/semantic.schema.json ./contracts/chat/
+COPY contracts/web/*.json contracts/web/privacy.yaml ./contracts/web/
+COPY site/publication_manifest.json ./site/
+COPY site/data/v1/ ./site/data/v1/
+COPY scripts/start_chat_runtime.py ./scripts/start_chat_runtime.py
+
+RUN mkdir -p /data && chmod 0700 /data
+EXPOSE 8080
+CMD ["python", "-m", "scripts.start_chat_runtime"]

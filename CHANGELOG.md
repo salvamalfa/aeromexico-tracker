@@ -4,6 +4,14 @@ Cambios notables del proyecto, para humanos. Formato inspirado en
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); no se usa
 versión semántica, las entradas van por fecha.
 
+## 2026-10-04 · Arranque del backend en Railway
+
+- Build Docker explícito con dependencias del grupo `chat-runtime`, snapshot
+  público y arranque en el puerto de Railway; conserva el CLI local en loopback.
+- Piloto con contraseña, una instancia, volumen persistente, permisos privados,
+  proveedor simulado y admisión apagada hasta completar los gates.
+- Historial del backend con retención de 30 días acordada por el dueño.
+
 ## 2026-10-04
 
 ### Changed
