@@ -54,7 +54,7 @@ del snapshot:
 | `pytest -q tests/test_chat_*.py tests/test_repo_budgets.py` | 43 passed: 40 del chat y 3 de límites del repositorio. |
 | `pytest -m 'not local_data and not browser' -q` | 604 passed, 1 skipped; subconjunto público del proyecto. |
 | `npm run check`, `npm test`, `npm run build` | Typecheck y build pasan; 81 Vitest pasan. El build conserva el aviso previo de tamaño de Plotly. |
-| Smoke del chat y revisión visual | Un smoke con API falsa pasa; flujo local con servidor mock real, bearer, CORS y capturas desktop/móvil verificados. No prueban acceso a OpenAI. |
+| `pytest -m browser -q tests/test_web_flights_smoke.py tests/test_web_page_smoke.py tests/test_web_chat_smoke.py` | 9 passed, incluido el smoke del chat con API falsa. Flujo local con servidor mock real, bearer, CORS y capturas desktop/móvil verificados. No prueban acceso a OpenAI. |
 | Ruff check/format de todos los módulos y pruebas nuevos + `git diff --check` | Limpios; todos los módulos cumplen los límites del repositorio. |
 
 La ejecución completa inicial tuvo 663 pruebas exitosas, 1 omitida y 12
@@ -64,6 +64,13 @@ warehouse: el generador, la prueba y el HTML son idénticos a `origin/master`, y
 el diagnóstico regenerado coincide por completo salvo `input_sha256.warehouse_content`
 (`a5213d…` esperado, `116acd…` local). No se alteró el diagnóstico histórico ni
 el warehouse para ocultar ese fallo. La suite completa no se declara verde.
+
+`site/` se regeneró mediante el gate con el expediente ya aprobado de 2026Q2
+y `VITE_CHAT_ENABLED=false`. Se verificó el manifiesto y se compararon los
+112 hashes de `site/data/v1/` y `analysis_manifest` antes y después: permanecen
+idénticos. Cambió la versión del manifiesto al fijar el nuevo commit de código;
+el holdout se volvió a fijar a ese manifiesto, sin cambiar valores esperados.
+Esta preparación en la rama no equivale a un despliegue del piloto.
 
 Versión del snapshot auditado: `de3c4d404837b8c19d306c301cd5647cc955d26215a45bc0c8f8b7bed00db668`.
 Versión semántica: `d43faaad53a352cbbfea194c6ffa978ebef8bce6a4d403cc52553158fcb11b2a`.
