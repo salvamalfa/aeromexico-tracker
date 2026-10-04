@@ -200,6 +200,27 @@ def test_client_address_trusts_forwarded_for_only_from_configured_proxy():
     assert client_address("10.0.0.5", "garbage", ("10.0.0.5",)) == "10.0.0.5"
 
 
+def test_client_address_skips_trusted_hops_inside_a_proxy_network():
+    edge = ("100.64.0.0/10",)
+    # Shared edge addresses no longer pool every client into one login bucket.
+    assert client_address("100.64.0.1", "203.0.113.9", edge) == "203.0.113.9"
+    assert client_address("100.64.0.2", "198.51.100.7", edge) == "198.51.100.7"
+    # Trusted hops on the right are skipped; spoofed entries further left are ignored.
+    assert client_address("100.64.0.1", "6.6.6.6, 203.0.113.9, 100.64.0.9", edge) == "203.0.113.9"
+    assert client_address("100.64.0.1", "100.64.0.9", edge) == "100.64.0.1"
+    assert client_address("100.64.0.1", "203.0.113.9, garbage", edge) == "100.64.0.1"
+    assert client_address("203.0.113.1", "198.51.100.7", edge) == "203.0.113.1"
+
+
+def test_config_accepts_proxy_networks_only_in_non_public_ranges(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("CHAT_TRUSTED_PROXY", "127.0.0.1, 100.64.0.0/10, fd12::/16, 203.0.113.5")
+    assert ChatConfig.from_env().trusted_proxies == ("127.0.0.1", "100.64.0.0/10", "fd12::/16", "203.0.113.5")
+    for value in ("0.0.0.0/0", "203.0.113.0/24", "100.0.0.0/8", "10.0.0.1/8", "not-an-ip"):
+        monkeypatch.setenv("CHAT_TRUSTED_PROXY", value)
+        with pytest.raises(ValueError, match="CHAT_TRUSTED_PROXY"):
+            ChatConfig.from_env()
+
+
 def test_local_mode_rejects_non_loopback_origin_host_and_proxies(tmp_path: Path):
     config = ChatConfig(state_path=tmp_path / "chat.sqlite3")
     app = create_app(config, snapshot=Snapshot(), provider=object(), start_worker=False)
