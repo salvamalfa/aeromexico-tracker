@@ -4,7 +4,10 @@ from pathlib import Path
 
 import pytest
 
+from src.conversational_analytics.api import create_app
+from src.conversational_analytics.auth import hash_password
 from src.conversational_analytics.config import ChatConfig
+from src.conversational_analytics.providers import openai as openai_provider_module
 from src.conversational_analytics.service import ChatService
 from src.conversational_analytics.storage import AdmissionDenied, ChatStore
 
@@ -23,6 +26,8 @@ class FakeOpenAIProvider:
 
 def _service(tmp_path: Path, **overrides) -> tuple[ChatService, ChatStore]:
     store = ChatStore(tmp_path / "chat.sqlite3")
+    overrides.setdefault("estimated_input_cost_per_million", 0.1)
+    overrides.setdefault("estimated_output_cost_per_million", 0.5)
     overrides.setdefault("daily_cost_budget_user_usd", 100)
     overrides.setdefault("daily_cost_budget_global_usd", 100)
     config = ChatConfig(
@@ -44,7 +49,7 @@ def test_pilot_defaults_set_owner_and_global_daily_tokens_and_reservation_floor(
     assert config.minimum_turn_reservation_tokens == 150_000
 
 
-def test_paid_turn_reserves_at_least_floor_and_keeps_price_based_cost_reservation(tmp_path: Path):
+def test_paid_turn_reservation_fits_default_cost_quotas_at_explicit_luna_prices(tmp_path: Path):
     service, store = _service(tmp_path)
     conversation = service.create_conversation("owner")
 
@@ -52,7 +57,40 @@ def test_paid_turn_reserves_at_least_floor_and_keeps_price_based_cost_reservatio
     turn = store.get_turn("owner", submitted["turn_id"])
 
     assert turn["reserved_tokens"] == 150_000
-    assert turn["reserved_cost_usd"] == pytest.approx(2.25)
+    assert turn["reserved_cost_usd"] == pytest.approx(0.075)
+
+
+@pytest.mark.parametrize(
+    ("user_budget", "global_budget", "expected_setting"),
+    [(2.0, 10.0, "CHAT_DAILY_COST_BUDGET_USER_USD"), (100.0, 2.0, "CHAT_DAILY_COST_BUDGET_GLOBAL_USD")],
+)
+def test_app_rejects_openai_reservation_cost_before_provider_creation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    user_budget: float,
+    global_budget: float,
+    expected_setting: str,
+):
+    monkeypatch.setattr(
+        openai_provider_module,
+        "OpenAIProvider",
+        lambda _: pytest.fail("provider construction must follow cost-quota validation"),
+    )
+    config = ChatConfig(
+        state_path=tmp_path / "chat.sqlite3",
+        provider="openai",
+        model="test-model",
+        openai_enabled=True,
+        auth_mode="password",
+        password_users={"owner": hash_password("runtime-only-strong-password")},
+        allowed_origins=("https://dashboard.example",),
+        daily_cost_budget_user_usd=user_budget,
+        daily_cost_budget_global_usd=global_budget,
+    )
+
+    with pytest.raises(ValueError, match=expected_setting):
+        create_app(config, snapshot=Snapshot(), start_worker=False)
+    assert not config.state_path.exists()
 
 
 def test_paid_turn_keeps_dynamic_reservation_when_it_exceeds_floor(tmp_path: Path):

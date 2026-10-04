@@ -12,10 +12,10 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
+from ._storage_external_usage import MAX_SQLITE_INTEGER
 from .storage import ChatStore
 
 MAX_LEDGER_BYTES = 2_000_000
-MAX_SQLITE_INTEGER = (1 << 63) - 1
 ROOT_KEYS = {"version", "entries"}
 COMMON_KEYS = {"accounting_id", "owner_id", "usage_date", "status"}
 KNOWN_KEYS = COMMON_KEYS | {"input_tokens", "output_tokens", "estimated_cost_usd"}
@@ -99,7 +99,13 @@ def validate_ledger(raw: Any, *, today: date | None = None) -> list[dict[str, An
                 raise LedgerError("invalid token count")
             if not _finite_nonnegative(item["estimated_cost_usd"]):
                 raise LedgerError("invalid estimated cost")
-            entry.update({k: item[k] for k in ("input_tokens", "output_tokens", "estimated_cost_usd")})
+            entry.update(
+                {
+                    "input_tokens": item["input_tokens"],
+                    "output_tokens": item["output_tokens"],
+                    "estimated_cost_usd": float(item["estimated_cost_usd"]),
+                }
+            )
         else:
             for key in ("input_tokens", "output_tokens", "estimated_cost_usd"):
                 if key in item and item[key] is not None:
@@ -110,7 +116,32 @@ def validate_ledger(raw: Any, *, today: date | None = None) -> list[dict[str, An
                 raise LedgerError("invalid unknown usage reservation")
             entry.update({"reserved_tokens": tokens, "reserved_cost_usd": float(cost)})
         validated.append(entry)
+    _validate_batch_aggregates(validated)
     return validated
+
+
+def _validate_batch_aggregates(entries: list[dict[str, Any]]) -> None:
+    days: dict[str, list[int | float]] = {}
+    hold_tokens = 0
+    hold_cost = 0.0
+    for entry in entries:
+        if entry["status"] == "known":
+            values = days.setdefault(entry["usage_date"], [0, 0, 0.0])
+            values[0] += entry["input_tokens"]
+            values[1] += entry["output_tokens"]
+            values[2] += entry["estimated_cost_usd"]
+            if (
+                values[0] > MAX_SQLITE_INTEGER
+                or values[1] > MAX_SQLITE_INTEGER
+                or values[0] + values[1] > MAX_SQLITE_INTEGER
+                or not _finite_nonnegative(values[2])
+            ):
+                raise LedgerError("aggregate daily usage exceeds safe numeric range")
+        else:
+            hold_tokens += entry["reserved_tokens"]
+            hold_cost += entry["reserved_cost_usd"]
+            if hold_tokens > MAX_SQLITE_INTEGER or not _finite_nonnegative(hold_cost):
+                raise LedgerError("aggregate usage holds exceed safe numeric range")
 
 
 def read_ledger(path: str | Path) -> list[dict[str, Any]]:

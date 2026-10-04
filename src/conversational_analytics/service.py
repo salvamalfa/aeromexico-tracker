@@ -29,6 +29,7 @@ class ChatService:
     def __init__(
         self, store: ChatStore, config: ChatConfig, snapshot: Any, worker: Any = None, provider: Any = None
     ):
+        config.validate_admission_budgets()
         self.store, self.config, self.snapshot, self.worker, self.provider = (
             store,
             config,

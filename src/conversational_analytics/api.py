@@ -80,6 +80,7 @@ def create_app(
             "OpenAI mode requires password authentication "
             "(CHAT_ALLOW_LOCAL_OPENAI=true only on the owner's machine)"
         )
+    config.validate_admission_budgets()
     if snapshot is None:
         try:
             from .data.snapshot import Snapshot

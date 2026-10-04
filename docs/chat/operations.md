@@ -95,6 +95,9 @@ sumando entrada y salida. Antes de cada turno OpenAI reserva al menos 150,000
 tokens, o la estimación dinámica si es mayor; mantiene los controles monetarios
 a tarifas normales. La demo `mock` conserva su estimación local habitual.
 Estos controles no sustituyen la factura ni verifican créditos de Data Sharing.
+El servicio rechaza al arrancar una configuración OpenAI cuya reserva mínima
+no quepa en el presupuesto monetario por usuario o global. Configura las tarifas
+normales del modelo elegido; los límites monetarios no se ajustan solos.
 
 Para incluir evaluaciones u otro proceso del proyecto, prepara un JSON privado
 con contadores confirmados y un identificador contable estable por intento o
@@ -128,8 +131,11 @@ python -m src.conversational_analytics import-usage \
   --file /ruta/privada/consumo.json --state-path /ruta/privada/chat.sqlite3 --apply
 ```
 
-La aplicación valida conflictos y escribe el lote en una transacción. Repetir
-un registro idéntico no suma consumo otra vez; un registro conocido no admite
+La aplicación valida conflictos y escribe el lote en una transacción.
+La validación incluye los totales existentes y resultantes por día, sumados
+entre propietarios, y las reservas de todos los días: rechaza desbordamientos
+de enteros o costos antes de confirmar un lote.
+Repetir un registro idéntico no suma consumo otra vez; un registro conocido no admite
 reescritura ni vuelve a desconocido. Para conciliar un registro `unknown`, usa
 su mismo ID, propietario y fecha con `status: known`, contadores y costo
 confirmados. Un lote inválido no aplica parcialmente. Los registros conocidos

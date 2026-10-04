@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import math
 import sqlite3
 from typing import Any
+
+MAX_SQLITE_INTEGER = (1 << 63) - 1
 
 
 class ExternalUsageMixin:
@@ -58,6 +61,7 @@ class ExternalUsageMixin:
                     stats["unchanged"] += 1
                 else:
                     stats["reconciled"] += 1
+            self._validate_external_usage_projection_db(db, entries)
             if apply:
                 for entry in entries:
                     old = db.execute(
@@ -99,6 +103,74 @@ class ExternalUsageMixin:
         return stats
 
     @staticmethod
+    def _validate_external_usage_projection_db(db: sqlite3.Connection, entries: list[dict[str, Any]]) -> None:
+        """Check post-import day totals and all-date holds using Python integers."""
+        external = {
+            row["accounting_id"]: dict(row) for row in db.execute("SELECT * FROM external_usage").fetchall()
+        }
+        for entry in entries:
+            previous = external.get(entry["accounting_id"])
+            if previous is None or (previous["status"] == "unknown" and entry["status"] == "known"):
+                external[entry["accounting_id"]] = entry
+
+        days: dict[str, list[int | float]] = {}
+
+        def add_day(day: str, inp: int, out: int, cost: float) -> None:
+            if not isinstance(inp, int) or not isinstance(out, int) or inp < 0 or out < 0:
+                raise ValueError("invalid persisted usage totals")
+            if not _finite_cost(cost):
+                raise ValueError("invalid persisted usage cost")
+            values = days.setdefault(day, [0, 0, 0.0])
+            values[0] += inp
+            values[1] += out
+            values[2] += cost
+            if (
+                values[0] > MAX_SQLITE_INTEGER
+                or values[1] > MAX_SQLITE_INTEGER
+                or values[0] + values[1] > MAX_SQLITE_INTEGER
+                or not _finite_cost(values[2])
+            ):
+                raise ValueError("aggregate daily usage exceeds safe numeric range")
+
+        for row in db.execute(
+            "SELECT usage_date,input_tokens,output_tokens,estimated_cost_usd FROM usage_daily"
+        ).fetchall():
+            add_day(row[0], row[1], row[2], row[3])
+        for row in external.values():
+            if row["status"] == "known":
+                add_day(
+                    row["usage_date"],
+                    row["input_tokens"],
+                    row["output_tokens"],
+                    row["estimated_cost_usd"],
+                )
+
+        hold_tokens = 0
+        hold_cost = 0.0
+
+        def add_hold(tokens: int, cost: float) -> None:
+            nonlocal hold_tokens, hold_cost
+            if not isinstance(tokens, int) or tokens < 0 or not _finite_cost(cost):
+                raise ValueError("invalid persisted usage hold")
+            hold_tokens += tokens
+            hold_cost += cost
+            if hold_tokens > MAX_SQLITE_INTEGER or not _finite_cost(hold_cost):
+                raise ValueError("aggregate usage holds exceed safe numeric range")
+
+        for row in db.execute(
+            "SELECT reserved_tokens,reserved_cost_usd FROM turns "
+            "WHERE status IN ('pending','running') OR usage_complete=0"
+        ).fetchall():
+            add_hold(row[0], row[1])
+        for row in db.execute(
+            "SELECT reserved_tokens,reserved_cost_usd FROM usage_tombstones WHERE status='unknown'"
+        ).fetchall():
+            add_hold(row[0], row[1])
+        for row in external.values():
+            if row["status"] == "unknown":
+                add_hold(row["reserved_tokens"], row["reserved_cost_usd"])
+
+    @staticmethod
     def _external_usage_totals_db(
         db: sqlite3.Connection, usage_date: str, owner_id: str | None = None
     ) -> tuple[int, int, float]:
@@ -117,3 +189,12 @@ class ExternalUsageMixin:
     @staticmethod
     def _external_unknown_count_db(db: sqlite3.Connection) -> int:
         return int(db.execute("SELECT COUNT(*) FROM external_usage WHERE status='unknown'").fetchone()[0])
+
+
+def _finite_cost(value: Any) -> bool:
+    if not isinstance(value, (int, float)) or isinstance(value, bool) or value < 0:
+        return False
+    try:
+        return math.isfinite(value)
+    except (OverflowError, TypeError, ValueError):
+        return False

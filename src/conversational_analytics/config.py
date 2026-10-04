@@ -150,6 +150,26 @@ class ChatConfig:
             if not math.isfinite(value) or value <= 0:
                 raise ValueError(f"{name} must be finite and positive")
 
+    def validate_admission_budgets(self) -> None:
+        """Fail early if one minimum paid turn cannot fit the chat cost quotas."""
+        if self.provider != "openai":
+            return
+        reserve_cost = (
+            self.minimum_turn_reservation_tokens
+            * max(self.estimated_input_cost_per_million, self.estimated_output_cost_per_million)
+            / 1_000_000
+        )
+        for setting, budget in (
+            ("CHAT_DAILY_COST_BUDGET_USER_USD", self.daily_cost_budget_user_usd),
+            ("CHAT_DAILY_COST_BUDGET_GLOBAL_USD", self.daily_cost_budget_global_usd),
+        ):
+            if reserve_cost > budget:
+                raise ValueError(
+                    f"minimum OpenAI turn reservation is estimated at ${reserve_cost:.4f}, "
+                    f"above {setting}=${budget:.4f}; use the selected model's verified normal prices "
+                    "and configure the chat cost quota to cover this reservation before starting"
+                )
+
     def password_fingerprints(self) -> dict[str, str]:
         """Fingerprint per configured user; sessions die when a hash rotates."""
         from .auth import hash_fingerprint

@@ -8,7 +8,12 @@ from pathlib import Path
 import pytest
 
 from src.conversational_analytics.storage import AdmissionDenied, ChatStore
-from src.conversational_analytics.usage_import import LedgerError, import_main, validate_ledger
+from src.conversational_analytics.usage_import import (
+    MAX_SQLITE_INTEGER,
+    LedgerError,
+    import_main,
+    validate_ledger,
+)
 
 
 def known(identity: str = "org-workload-1", owner: str = "alice", day: str | None = None) -> dict:
@@ -64,6 +69,9 @@ def test_unknown_blocks_all_new_admission_and_reconciles_once(tmp_path: Path) ->
     store.external_usage_import([reconciled], apply=True)
     assert store.external_usage_import([reconciled], apply=True)["unchanged"] == 1
     assert store.usage()["usage_incomplete_turns"] == 0
+    with store._connect() as db:
+        assert store._usage_hold_totals_db(db) == (0, 0.0)
+        assert store._external_usage_totals_db(db, "2026-10-03", "alice") == (100, 20, 0.5)
 
 
 def test_worker_claim_pauses_pending_turn_on_late_unknown_import_then_claims_same_turn(
@@ -144,6 +152,116 @@ def test_sqlite_integer_bounds_and_huge_cost_are_rejected_before_database_mutati
             row[0] for row in db.execute("SELECT accounting_id FROM external_usage ORDER BY accounting_id")
         ]
     assert ids == ["already-present"]
+
+
+def test_batch_known_totals_reject_individually_valid_rows_before_db_creation(tmp_path: Path) -> None:
+    source = tmp_path / "same-day-overflow.json"
+    half_plus_one = MAX_SQLITE_INTEGER // 2 + 1
+    first = known("owner-a-near-limit", "alice", "2026-10-03")
+    second = known("owner-b-near-limit", "bob", "2026-10-03")
+    first.update(input_tokens=half_plus_one, output_tokens=0, estimated_cost_usd=0.0)
+    second.update(input_tokens=half_plus_one, output_tokens=0, estimated_cost_usd=0.0)
+    assert first["input_tokens"] <= MAX_SQLITE_INTEGER
+    assert second["input_tokens"] <= MAX_SQLITE_INTEGER
+    source.write_text(json.dumps(ledger(first, second)))
+    state = tmp_path / "untouched" / "chat.sqlite3"
+    assert import_main(["--file", str(source), "--state-path", str(state), "--apply"]) == 2
+    assert not state.exists()
+
+    combined = [
+        known("owner-c-combined", "carol", "2026-10-03"),
+        known("owner-d-combined", "dave", "2026-10-03"),
+    ]
+    for item in combined:
+        item.update(
+            input_tokens=MAX_SQLITE_INTEGER // 2,
+            output_tokens=MAX_SQLITE_INTEGER // 2,
+            estimated_cost_usd=0.0,
+        )
+    with pytest.raises(LedgerError):
+        validate_ledger(ledger(*combined))
+
+
+def test_persisted_historical_usage_daily_and_external_totals_are_checked_atomically(
+    tmp_path: Path,
+) -> None:
+    store = ChatStore(tmp_path / "state.sqlite3")
+    day = "2026-10-03"
+    prior = known("prior-near-limit", "alice", day)
+    prior.update(input_tokens=MAX_SQLITE_INTEGER - 200, output_tokens=0, estimated_cost_usd=0.2)
+    store.external_usage_import([prior], apply=True)
+    with store._connect() as db:
+        db.execute(
+            "INSERT INTO usage_daily(usage_date,owner_id,input_tokens,output_tokens,"
+            "estimated_cost_usd,turn_count) "
+            "VALUES(?,?,?,?,?,1)",
+            (day, "bob", 100, 0, 0.1),
+        )
+    first_new = known("would-fit-by-itself", "carol", day)
+    first_new.update(input_tokens=50, output_tokens=0, estimated_cost_usd=0.1)
+    second_new = known("would-overflow-historical-day", "dave", day)
+    second_new.update(input_tokens=51, output_tokens=0, estimated_cost_usd=0.1)
+    with pytest.raises(ValueError, match="safe numeric range"):
+        store.external_usage_import([first_new, second_new], apply=True)
+    with store._connect() as db:
+        rows = db.execute("SELECT accounting_id FROM external_usage ORDER BY accounting_id").fetchall()
+        assert [row[0] for row in rows] == ["prior-near-limit"]
+
+
+def test_known_and_unknown_aggregate_costs_must_remain_finite(tmp_path: Path) -> None:
+    same_day = [known("huge-a", "alice", "2026-10-03"), known("huge-b", "bob", "2026-10-03")]
+    for item in same_day:
+        item.update(input_tokens=0, output_tokens=0, estimated_cost_usd=1e308)
+    with pytest.raises(LedgerError):
+        validate_ledger(ledger(*same_day))
+
+    store = ChatStore(tmp_path / "known-cost-state.sqlite3")
+    day = "2026-10-03"
+    with store._connect() as db:
+        db.execute(
+            "INSERT INTO usage_daily(usage_date,owner_id,input_tokens,output_tokens,"
+            "estimated_cost_usd,turn_count) "
+            "VALUES(?,?,?,?,?,1)",
+            (day, "alice", 0, 0, 1e308),
+        )
+    incoming_cost = known("known-cost-overflow", "bob", day)
+    incoming_cost.update(input_tokens=0, output_tokens=0, estimated_cost_usd=1e308)
+    with pytest.raises(ValueError, match="safe numeric range"):
+        store.external_usage_import([incoming_cost], apply=True)
+    with store._connect() as db:
+        assert db.execute("SELECT COUNT(*) FROM external_usage").fetchone()[0] == 0
+
+    holds = [unknown("hold-a", "alice"), unknown("hold-b", "bob")]
+    for item in holds:
+        item["reserved_tokens"] = 150_000
+        item["reserved_cost_usd"] = 1e308
+    with pytest.raises(LedgerError):
+        validate_ledger(ledger(*holds))
+
+
+def test_unknown_holds_sum_across_turns_and_external_rows_before_commit(tmp_path: Path) -> None:
+    store = ChatStore(tmp_path / "state.sqlite3")
+    conversation = store.create_conversation("alice", "v1")
+    store.submit_turn(
+        "alice", conversation["id"], "ask", "reserved-local", {}, reserved_tokens=200, reserved_cost_usd=0.2
+    )
+    first = unknown("external-near-limit")
+    first.update(reserved_tokens=MAX_SQLITE_INTEGER - 200, reserved_cost_usd=0.1)
+    store.external_usage_import([first], apply=True)
+    extra = unknown("external-overflow")
+    with pytest.raises(ValueError, match="safe numeric range"):
+        store.external_usage_import([extra], apply=True)
+    with store._connect() as db:
+        assert db.execute("SELECT COUNT(*) FROM external_usage").fetchone()[0] == 1
+
+    cost_store = ChatStore(tmp_path / "cost-state.sqlite3")
+    first_cost = unknown("hold-cost-a")
+    first_cost["reserved_cost_usd"] = 1e308
+    cost_store.external_usage_import([first_cost], apply=True)
+    second_cost = unknown("hold-cost-b", "bob")
+    second_cost["reserved_cost_usd"] = 1e308
+    with pytest.raises(ValueError, match="safe numeric range"):
+        cost_store.external_usage_import([second_cost], apply=True)
 
 
 def test_unknown_requires_absent_or_null_confirmed_usage_and_minimum_hold() -> None:

@@ -21,6 +21,8 @@ propietario, fecha UTC y contadores/costo o reservas. Rechaza datos crudos,
 fechas futuras, duplicados, booleanos como tokens y valores fuera de rango.
 
 Los registros idénticos son idempotentes; los conocidos no se reescriben.
+La validación transaccional también considera las sumas existentes por día y
+las reservas de todos los días para evitar desbordamientos de SQLite o de costo.
 Conciliar un desconocido reemplaza su reserva una vez. El uso conocido se suma
 a las cuotas de su día y los desconocidos bloquean admisiones globalmente,
 incluso después del cambio de día o la retención del historial. Un desconocido
@@ -48,6 +50,11 @@ worker, SSE y una comparación simulada con datos publicados.
   turnos reales ni asegura los límites de Railway Free.
 - Ruff y comprobación de diff sin errores. La entrega requiere `test` y `web`
   del último commit y seguimiento de las revisiones según AGENTS.md.
+- Las dos observaciones de revisión tienen correcciones y regresiones:
+  configuración monetaria incompatible rechazada antes de crear proveedor o
+  SQLite, y sumas del lote/estado existente validadas antes de confirmar.
+  La verificación posterior de API, cuotas, importación, almacenamiento, worker
+  y límites aprobó **67 pruebas**, además del smoke del perfil aislado.
 
 ## Límites pendientes
 

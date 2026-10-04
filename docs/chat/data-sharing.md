@@ -81,6 +81,12 @@ La admisión suma consumo confirmado del día UTC, reservas pendientes y la
 reserva nueva, además de verificar los límites monetarios a tarifas normales.
 Las reservas desconocidas no se liberan por cambiar de día.
 
+La configuración del servicio valida que la reserva mínima pueda entrar en
+los presupuestos monetarios de usuario y global. Si no cabe, rechaza el arranque
+con un error de configuración, en vez de aceptar una instalación que deniegue
+todos los envíos. Usa los precios normales del modelo elegido: no aumentes
+presupuestos automáticamente ni configures precios cero por Data Sharing.
+
 La organización solo consume este proyecto por ahora, pero el evaluador y el
 chat son procesos separados. Antes de abrir el piloto, importa el consumo de
 evaluaciones en la misma base SQLite mediante el [importador contable](operations.md#consumo-de-evaluaciones-y-otros-procesos).
