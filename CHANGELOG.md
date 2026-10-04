@@ -6,10 +6,11 @@ versión semántica, las entradas van por fecha.
 
 ## 2026-10-04 · Recuperación segura de turnos del chat
 
-- El apagado detiene la admisión en el proceso y el claim de turnos nuevos, y
-  drena el turno activo hasta un límite de 95 segundos. La autorización de
-  entrada al SDK se coordina con ese cierre y conserva compatibilidad con
-  proveedores legados.
+- El cierre bloquea claims de turnos nuevos. En Railway, Uvicorn da hasta 5 s a
+  conexiones SSE y luego el worker drena hasta 90 s, dentro del límite de 100 s;
+  en otros despliegues locales el timeout del worker es `max_turn_seconds + 5`.
+  La autorización de entrada al SDK se coordina con el cierre y conserva
+  compatibilidad con proveedores legados.
 - Los errores terminales usan códigos permitidos; el evaluador de comparación
   reconcilia uso tras cancelar durante hasta 30 segundos y seis lecturas. Sin
   confirmación, conserva el uso como desconocido y la reserva, sin reproducir

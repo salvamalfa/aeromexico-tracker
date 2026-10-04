@@ -57,8 +57,8 @@ class TurnWorker:
         """Stop claiming work, drain the current turn, then time it out if needed."""
         if timeout is None:
             timeout = self.config.max_turn_seconds + 5
+        self.begin_shutdown()
         with self._guard:
-            self._stop.set()
             thread = self._thread
         if not thread:
             return
@@ -72,14 +72,23 @@ class TurnWorker:
             self._shutdown_expired = True
             active = list(self._active.items())
         for turn_id, active_turn in active:
-            self.store.fail_turn(
-                turn_id,
-                "timeout",
-                "El cierre del servicio excedió el tiempo de espera del turno.",
-                usage=None if active_turn.provider_input_started else (0, 0, 0.0),
-            )
-            if active_turn.provider_input_started:
+            with self._guard:
+                if self._active.get(turn_id) is not active_turn:
+                    continue
+                input_started = active_turn.provider_input_started
+                self.store.fail_turn(
+                    turn_id,
+                    "timeout",
+                    "El cierre del servicio excedió el tiempo de espera del turno.",
+                    usage=None if input_started else (0, 0, 0.0),
+                )
+            if input_started:
                 self._cancel_terminal_session(turn_id, wait_for_cancel=False, asynchronous=True)
+
+    def begin_shutdown(self) -> None:
+        """Fence new claims immediately when the ASGI server receives shutdown."""
+        with self._guard:
+            self._stop.set()
 
     def cancel(self, turn_id: str) -> None:
         self._cancel_terminal_session(turn_id)
@@ -299,15 +308,17 @@ class TurnWorker:
         def timeout_turn() -> None:
             # Commit the authoritative terminal state before waking the provider.
             # Otherwise it can raise InterruptedError on the event and win the
-            # race, recording a user cancellation instead of this timeout.
+            # race, recording a user cancellation instead of this timeout. Keep
+            # input authorization and this terminal write in the same fence so
+            # an accepted SDK input cannot be booked as zero.
             with self._guard:
                 input_started = active.provider_input_started
-            self.store.fail_turn(
-                turn_id,
-                "timeout",
-                "El turno excedió el tiempo máximo configurado.",
-                usage=None if input_started else (0, 0, 0.0),
-            )
+                self.store.fail_turn(
+                    turn_id,
+                    "timeout",
+                    "El turno excedió el tiempo máximo configurado.",
+                    usage=None if input_started else (0, 0, 0.0),
+                )
             self._cancel_terminal_session(turn_id)
 
         timer = threading.Timer(self.config.max_turn_seconds, timeout_turn)
@@ -397,23 +408,27 @@ class TurnWorker:
             messages = self.store.turn_messages(turn["owner_id"], conversation_id)
             if messages:
                 messages[-1]["turn_id"] = turn_id
-            with self._guard:
-                may_invoke_provider = not self._shutdown_expired and not cancel_event.is_set()
-            if not may_invoke_provider:
-                if self.store.is_running(turn_id):
-                    self.store.fail_turn(
-                        turn_id,
-                        "timeout",
-                        "El cierre del servicio venció antes de iniciar la solicitud al proveedor.",
-                        usage=(0, 0, 0.0),
-                    )
-                return
             supports_input_authorization = getattr(self.provider, "supports_input_authorization", False)
-            if not supports_input_authorization:
-                # Preserve the legacy contract for providers without the input
-                # boundary hook; first-party providers use the atomic callback.
-                with self._guard:
+            with self._guard:
+                may_invoke_provider = (
+                    not self._shutdown_expired
+                    and not cancel_event.is_set()
+                    and self.store.is_running(turn_id)
+                )
+                if may_invoke_provider and not supports_input_authorization:
+                    # Legacy providers expose no callback before SDK input, so
+                    # entering run_turn is their conservative authorization point.
                     active.provider_input_started = True
+            if not may_invoke_provider:
+                with self._guard:
+                    if self.store.is_running(turn_id):
+                        self.store.fail_turn(
+                            turn_id,
+                            "timeout",
+                            "El cierre del servicio venció antes de iniciar la solicitud al proveedor.",
+                            usage=(0, 0, 0.0),
+                        )
+                return
             provider_arguments = {
                 "session_id": session_id,
                 "messages": messages,

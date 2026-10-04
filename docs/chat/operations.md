@@ -79,6 +79,13 @@ sus archivos WAL residen juntos bajo `/var/lib/airline-tracker-chat/`; respaldar
 según política acordada y comprobar permisos de lectura exclusivos del usuario
 del servicio.
 
+En el launcher Railway, Uvicorn detiene los nuevos claims antes de esperar las
+conexiones SSE y les da hasta 5 segundos para cerrar. Luego el worker drena el
+turno activo durante hasta 90 segundos, dentro del margen de 100 segundos de
+Railway. Al agotar el límite, la cancelación remota se intenta en segundo plano
+y puede no confirmarse; el turno no se reproduce y cualquier uso no confirmado
+permanece como desconocido con su reserva.
+
 Poner un proxy TLS delante del servidor ASGI con certificados renovables,
 HSTS, límite de cuerpo, timeouts compatibles con SSE y forwarding de IP solo
 desde el proxy confiable. Publicar solamente la API, no el puerto de SQLite.

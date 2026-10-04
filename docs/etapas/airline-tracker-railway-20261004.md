@@ -92,11 +92,21 @@ completos con la variante BuildKit y CA temporal para el proxy terminaron
 correctamente; esa evidencia cubre el entorno local, no el builder remoto. La
 prueba completa del `RUN` de producción simplificado y su aceptación remota
 siguen pendientes. No hay un despliegue Railway saludable ni aceptación remota
-confirmada. La validación TLS del build local se mantiene. Para resolver certificados de un
-proxy TLS solo en builds locales, se conserva una variante BuildKit privada con
-permisos `0700` para el directorio y `0600` para el archivo bajo
-`.state/outputs/railway-docker-compatibility/`; no es el Dockerfile de producción
-ni se copia a la imagen.
+confirmada. La validación TLS del build local se mantiene. La variante local
+BuildKit se deriva por stdin del Dockerfile de producción usando el comando
+reproducible de `docs/chat/railway.md`; no queda un Dockerfile privado dentro del
+repositorio y no es el Dockerfile de producción.
+
+Tras integrar el PR #85, la lectura remota de solo estado todavía muestra como
+último deploy el commit `ea9d2a7` del PR #83, en estado `FAILED`; no aparece un
+deploy nuevo que incluya el PR #85. Los logs disponibles de ese deploy solo
+indican que el builder Metal programó el build y no contienen logs de deploy, así
+que no aclaran la causa. El servicio continúa sin instancia sana. Por tanto,
+todavía no se puede confirmar que el peer directo de Railway esté en
+`100.64.0.0/10` ni el comportamiento real del encabezado `X-Forwarded-For`. La
+guía deja ambas cuestiones pendientes: Railway HTTP `srcIp` no demuestra el
+peer ASGI, y la verificación futura debe mostrar solo booleanos sin guardar IPs
+ni el encabezado completo.
 
 El smoke completo de runtime descrito arriba pasó con la variante local CA;
 todavía falta repetirlo con el `RUN` de producción simplificado y obtener

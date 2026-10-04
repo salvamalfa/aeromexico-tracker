@@ -68,6 +68,7 @@ def create_app(
     snapshot=None,
     provider=None,
     start_worker: bool = True,
+    worker_shutdown_timeout_seconds: float | None = None,
 ) -> FastAPI:
     config = config or ChatConfig.from_env()
     allow_local_openai = os.environ.get("CHAT_ALLOW_LOCAL_OPENAI", "false").lower() in {
@@ -112,7 +113,12 @@ def create_app(
             worker.start()
         yield
         if worker:
-            await asyncio.to_thread(worker.stop, config.max_turn_seconds + 5)
+            timeout = (
+                config.max_turn_seconds + 5
+                if worker_shutdown_timeout_seconds is None
+                else worker_shutdown_timeout_seconds
+            )
+            await asyncio.to_thread(worker.stop, timeout)
 
     app = FastAPI(title="Airline Tracker Chat API", docs_url=None, redoc_url=None, lifespan=lifespan)
     app.state.chat_service = service
@@ -120,6 +126,7 @@ def create_app(
     app.state.chat_provider = provider
     app.state.chat_worker = worker
     app.state.snapshot_available = getattr(snapshot, "version", "unavailable") != "unavailable"
+    app.state.begin_shutdown = worker.begin_shutdown if worker else (lambda: None)
 
     fingerprints = config.password_fingerprints()
     login_slots = threading.BoundedSemaphore(2)
