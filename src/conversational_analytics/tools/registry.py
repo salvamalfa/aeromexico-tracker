@@ -29,6 +29,23 @@ TOOL_NAMES = (
 )
 
 
+def _reference_label(hostname: str, path: str) -> str:
+    """Name the publisher of an allowed reference by its host, never by default.
+
+    Only AFAC pages under gob.mx are cited as AFAC; a SEC filing or the
+    project repository keeps its own provenance.
+    """
+    if hostname == "salvamalfa.github.io":
+        return "Datos publicados del dashboard"
+    if hostname in {"gob.mx", "www.gob.mx"}:
+        return "Fuente pública AFAC" if path.startswith("/afac/") else "Fuente pública del Gobierno de México"
+    if hostname in {"sec.gov", "www.sec.gov"}:
+        return "Documento público en SEC EDGAR"
+    if hostname == "github.com":
+        return "Repositorio público del proyecto"
+    raise PlanValidationError("La referencia no pertenece a la lista pública permitida")
+
+
 def _schema(properties: dict[str, Any], required: list[str]) -> dict[str, Any]:
     return {"type": "object", "properties": properties, "required": required, "additionalProperties": False}
 
@@ -97,7 +114,10 @@ class ToolRegistry:
             {
                 "type": "function",
                 "name": "get_time_series",
-                "description": "Serie ordenada en periodos publicados y dentro del límite de filas.",
+                "description": (
+                    "Serie ordenada en periodos publicados. Si el intervalo excede el límite de "
+                    "filas, devuelve los periodos más recientes e indica cuántos anteriores omitió."
+                ),
                 "parameters": _schema(
                     {
                         "metric_id": qstr,
@@ -192,12 +212,7 @@ class ToolRegistry:
             parsed = urlparse(url)
             if parsed.scheme != "https" or parsed.hostname not in ALLOWED_HOSTS:
                 raise PlanValidationError("La referencia no pertenece a la lista pública permitida")
-            label = (
-                "Datos publicados del dashboard"
-                if parsed.hostname == "salvamalfa.github.io"
-                else "Fuente pública AFAC"
-            )
-            refs.append({"label": label, "url": url})
+            refs.append({"label": _reference_label(parsed.hostname, parsed.path), "url": url})
         # This filing supports only Aeroméxico's 2026Q2 report. Do not cite it
         # for peer carriers, other periods, or unrelated AFAC metrics.
         if (
@@ -483,19 +498,30 @@ class ToolRegistry:
                 raise PlanValidationError("Intervalo de periodos inválido")
             if start[4] != end[4]:
                 raise PlanValidationError("No se pueden mezclar meses y trimestres")
+            limit = arguments.get("limit", 20)
+            if not isinstance(limit, int) or isinstance(limit, bool) or not 1 <= limit <= 20:
+                raise PlanValidationError("limit debe estar entre 1 y 20")
             metric_id = arguments["metric_id"]
             periods = self._periods(metric_id, arguments["entity_id"], start, end)
             if not periods:
-                periods = [start, end] if start == end else [start, end]
+                # Nothing published in range: query the bounds so they read as missing.
+                periods = [start] if start == end else [start, end]
+            # A long range keeps its most recent periods; truncating from the
+            # end would silently drop the latest published data.
+            selected = periods[-limit:]
+            omitted = len(periods) - len(selected)
             segment = arguments.get("segment")
             if segment is None and "segment" in self._metrics[metric_id]["dimensions"]:
                 segment = clean_context.get("filters", {}).get("segment")
-            result = self._query(
-                [metric_id], [arguments["entity_id"]], periods, segment, arguments.get("limit", 20)
-            )
+            result = self._query([metric_id], [arguments["entity_id"]], selected, segment, limit)
+            result["truncated"] = result["truncated"] or omitted > 0
+            result["omitted_earlier_periods"] = omitted
+            title = self._metrics[metric_id]["label"]
+            if omitted:
+                title = f"{title} (últimos {len(selected)} de {len(periods)} periodos)"
             result["chart"] = {
                 "type": "line",
-                "title": self._metrics[metric_id]["label"],
+                "title": title,
                 "x": [row["period_label"] for row in result["rows"]],
                 "series": [
                     {

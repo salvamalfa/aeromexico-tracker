@@ -52,10 +52,18 @@ monta solo durante `uv sync`; no se copia a la imagen y TLS permanece validado.
 El endpoint `/api/chat/health` sirve como healthcheck de arranque; Railway lo
 usa para aceptar el deploy nuevo, pero no monitoriza salud después. No se usa
 un monitor externo que despierte la app durante el periodo de inactividad.
-Uvicorn ignora cabeceras reenviadas para resolver IPs porque la lista exacta de
-proxies confiables no está configurada. Detrás del proxy de Railway, el límite
-de intentos de login puede agrupar conexiones bajo la IP del proxy; no configures
-`CHAT_TRUSTED_PROXY` con rangos amplios para evitarlo.
+Uvicorn conserva `proxy_headers=False`; solo el límite de intentos de login
+resuelve la IP del cliente. El edge de Railway es la única entrada al contenedor
+y llega desde el espacio compartido `100.64.0.0/10` (RFC 6598); Railway reemplaza
+el `X-Forwarded-For` que envía el cliente. Sin confiar en ese edge, todos los
+clientes comparten su dirección y cinco contraseñas erróneas de cualquier
+persona bloquearían el login del dueño durante 15 minutos. Por eso el launcher
+fija `CHAT_TRUSTED_PROXY=100.64.0.0/10` por defecto: la API recorre
+`X-Forwarded-For` desde la derecha, omite saltos dentro de esa red y usa la
+primera dirección restante. `CHAT_TRUSTED_PROXY` acepta IPs sueltas o redes
+CIDR solo dentro de rangos loopback, privados o compartidos; rechaza rangos
+públicos. Si se activa la CDN de Railway, verifica en los logs que el límite
+siga viendo IPs de clientes y no de la CDN.
 
 Añade estas variables de entorno en el panel de Railway, nunca en Git:
 

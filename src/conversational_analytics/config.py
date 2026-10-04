@@ -6,7 +6,6 @@ paid OpenAI provider is opt-in and requires an explicit model name.
 
 from __future__ import annotations
 
-import ipaddress
 import json
 import math
 import os
@@ -80,11 +79,15 @@ class ChatConfig:
                 raise ValueError("CHAT_ALLOWED_ORIGINS must contain HTTPS origins without paths")
         if auth_mode == "password" and not allowed_origins:
             raise ValueError("password mode requires explicit CHAT_ALLOWED_ORIGINS")
-        trusted_proxies = tuple(
-            str(ipaddress.ip_address(v.strip()))
-            for v in os.environ.get("CHAT_TRUSTED_PROXY", "").split(",")
-            if v.strip()
-        )
+        from .auth import parse_trusted_proxy
+
+        try:
+            raw_proxies = os.environ.get("CHAT_TRUSTED_PROXY", "").split(",")
+            trusted_proxies = tuple(parse_trusted_proxy(v) for v in raw_proxies if v.strip())
+        except ValueError as exc:
+            raise ValueError(
+                "CHAT_TRUSTED_PROXY must list proxy IPs or loopback/private/shared-address CIDR networks"
+            ) from exc
         provider = os.environ.get("CHAT_PROVIDER", "mock").lower()
         if provider not in {"mock", "openai"}:
             raise ValueError("CHAT_PROVIDER must be 'mock' or 'openai'")

@@ -57,7 +57,10 @@ A deployed backend uses `CHAT_AUTH_MODE=password`:
 - Failed logins are throttled at 5 per client per 15 minutes with `429` and
   `Retry-After`. Fifty failures globally within an hour trigger an operator
   alert; they do not block logins. The client address comes from
-  `X-Forwarded-For` only when the peer is listed in `CHAT_TRUSTED_PROXY`.
+  `X-Forwarded-For` only when the peer is in `CHAT_TRUSTED_PROXY` (IPs, or
+  CIDR networks inside loopback/private/shared-address ranges); the header is
+  read from the right, skipping trusted hops. The Railway launcher defaults it
+  to the edge network `100.64.0.0/10`.
 - `CHAT_ALLOWED_ORIGINS` (HTTPS, no paths) is mandatory. No cookies are used:
   Pages and the API are cross-site, so the session travels in the header and
   the browser keeps it only in memory.

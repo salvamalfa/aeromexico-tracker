@@ -12,6 +12,21 @@ versión semántica, las entradas van por fecha.
   proveedor simulado y admisión apagada hasta completar los gates.
 - Historial del backend con retención de 30 días acordada por el dueño.
 
+## 2026-10-04 · Correcciones de la auditoría del chat (PRs #81–#83)
+
+- El límite de intentos de login ya no agrupa a todos los clientes bajo la IP
+  del edge de Railway: `CHAT_TRUSTED_PROXY` acepta redes privadas o compartidas
+  y el launcher confía en `100.64.0.0/10`. Un tercero ya no puede bloquear el
+  login del dueño con cinco contraseñas erróneas.
+- `get_time_series` conserva los periodos más recientes cuando el intervalo
+  excede el límite, informa cuántos omitió y lo indica en el título de la
+  gráfica; antes perdía los últimos meses sin aviso o fallaba con más de 32.
+- Las referencias se etiquetan por su host; ya no se rotula como AFAC un
+  documento de SEC o del repositorio.
+- Se documenta la capacidad efectiva de la política de tokens (unas dos
+  preguntas al día). Detalle en
+  `docs/etapas/airline-tracker-auditoria-chat-20261004.md`.
+
 ## 2026-10-04
 
 ### Changed
