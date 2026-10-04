@@ -45,10 +45,14 @@ los permisos del volumen a `0700` y valida que sea escribible antes de iniciar.
 El contenedor necesita privilegios para ajustar permisos del volumen Railway.
 No escales a múltiples réplicas: SQLite y la cola en memoria pertenecen a una instancia.
 El build aislado instala el lock congelado solo para `chat-runtime`; CI valida
-el lock completo con `uv sync --locked`. En entornos locales detrás de un proxy
-TLS, se puede suministrar una CA pública al paso de build como secreto BuildKit
-opcional (`--secret id=proxy_ca,src=/etc/ssl/certs/ca-certificates.crt`). Se
-monta solo durante `uv sync`; no se copia a la imagen y TLS permanece validado.
+el lock completo con `uv sync --locked`. El Dockerfile de producción usa una
+instrucción `RUN` estándar sin sintaxis experimental ni montaje BuildKit.
+Para builds locales detrás de un proxy TLS, el archivo privado
+`.state/outputs/railway-docker-compatibility/Dockerfile.chat.buildkit-local`
+conserva una variante con montaje opcional de CA pública como secreto temporal
+(`--secret id=proxy_ca,src=/etc/ssl/certs/ca-certificates.crt`). Esa CA solo se
+monta durante `uv sync`, no se copia a la imagen y TLS permanece validado. No
+selecciones esa variante como Dockerfile de Railway.
 El endpoint `/api/chat/health` sirve como healthcheck de arranque; Railway lo
 usa para aceptar el deploy nuevo, pero no monitoriza salud después. No se usa
 un monitor externo que despierte la app durante el periodo de inactividad.

@@ -4,6 +4,20 @@ Cambios notables del proyecto, para humanos. Formato inspirado en
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); no se usa
 versión semántica, las entradas van por fecha.
 
+## 2026-10-04 · Recuperación segura de turnos del chat
+
+- El apagado detiene la admisión en el proceso y el claim de turnos nuevos, y
+  drena el turno activo hasta un límite de 95 segundos. La autorización de
+  entrada al SDK se coordina con ese cierre y conserva compatibilidad con
+  proveedores legados.
+- Los errores terminales usan códigos permitidos; el evaluador de comparación
+  reconcilia uso tras cancelar durante hasta 30 segundos y seis lecturas. Sin
+  confirmación, conserva el uso como desconocido y la reserva, sin reproducir
+  entradas ni convertir el valor a cero. Esto no aprueba calidad ni habilita
+  el proveedor.
+- Contexto de recuperación en
+  `docs/etapas/airline-tracker-evaluation-recovery-20261004.md`.
+
 ## 2026-10-04 · Arranque del backend en Railway
 
 - Build Docker explícito con dependencias del grupo `chat-runtime`, snapshot

@@ -16,6 +16,7 @@ from typing import Any
 from .data.snapshot import Snapshot
 from .evaluation import load_fixture, verify_observation
 from .evaluation_observation import observation_from_tool_calls
+from .providers._openai_helpers import reconcile_case_usage_after_cancel
 from .semantic.plan import PlanValidationError
 
 _SAFE_EXCEPTION_TYPES = frozenset(
@@ -71,10 +72,8 @@ def _error_metadata(exc: BaseException) -> dict[str, Any]:
             reason_code = candidate_reason
         current = current.__cause__ or current.__context__
     result: dict[str, Any] = {"exception_types": names or ["unknown"]}
-    if status is not None:
-        result["http_status"] = status
-    if reason_code is not None:
-        result["reason_code"] = reason_code
+    result.update({"http_status": status} if status is not None else {})
+    result.update({"reason_code": reason_code} if reason_code is not None else {})
     return result
 
 
@@ -329,7 +328,6 @@ def _live_provider_run(
                     }
                 )
                 continue
-
             progress_state.update(
                 status="running",
                 current_model=model,
@@ -509,6 +507,9 @@ def _live_provider_run(
                         case_record["provider_cancel"] = "failed"
                 else:
                     case_record["provider_cancel"] = "not_available"
+                failure_usage = reconcile_case_usage_after_cancel(
+                    case_record, failure_usage, provider, exc, session[-1] if session else None
+                )
                 if failure_usage is not None:
                     cost = (failure_usage[0] * input_rate + failure_usage[1] * output_rate) / 1_000_000
                     case_record["estimated_cost_usd"] = cost
@@ -535,7 +536,7 @@ def _live_provider_run(
                     ),
                     last_error_metadata=error_metadata,
                 )
-                if session:
+                if session and failure_usage is None:
                     progress_state["session_to_reconcile"] = session[-1]
                 checkpoint()
                 if session and provider is not None:

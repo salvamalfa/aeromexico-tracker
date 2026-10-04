@@ -215,3 +215,17 @@ Esta es una receta de destino revisable, no una infraestructura creada o
 validada. H5 seguirá pendiente hasta disponer de un host administrado, acordar la
 retención y superar las pruebas HTTPS desde Pages. El acceso inicial será
 únicamente para el dueño, con la contraseña preparada fuera de Git.
+
+### Cierre ordenado del worker
+
+Al cerrar el proceso, el worker deja de reclamar turnos nuevos y espera hasta
+`CHAT_MAX_TURN_SECONDS + 5` segundos a que termine el turno activo (95 segundos
+con el valor predeterminado de 90). Si vence ese plazo, registra el turno como
+fallido por timeout antes de solicitar la cancelación remota; la reserva de uso
+permanece retenida hasta que llegue uso confirmado. Una respuesta tardía puede
+conciliar esa reserva sin completar el turno ni volver a ejecutarlo. La llamada
+de cancelación remota es de mejor esfuerzo y no prolonga el cierre. El límite de
+gracia del servidor ASGI o del host debe permitir completar ese plazo para que
+el cierre ordenado tenga oportunidad de finalizar. Si el plazo vence después de
+reclamar un turno pero antes de iniciar entrada al proveedor, se registra cero
+uso confirmado y se libera su reserva porque no hubo solicitud remota.

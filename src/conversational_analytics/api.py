@@ -112,7 +112,7 @@ def create_app(
             worker.start()
         yield
         if worker:
-            worker.stop()
+            await asyncio.to_thread(worker.stop, config.max_turn_seconds + 5)
 
     app = FastAPI(title="Airline Tracker Chat API", docs_url=None, redoc_url=None, lifespan=lifespan)
     app.state.chat_service = service
