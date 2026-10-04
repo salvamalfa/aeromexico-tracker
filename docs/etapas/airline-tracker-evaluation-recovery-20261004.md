@@ -72,7 +72,7 @@ omitida y 77 no seleccionadas); sus checks `test` y `web` quedaron verdes. Esa
 CI corresponde a ese commit inicial. La revisión `04d0afe` también aprobó CI:
 742 pruebas Python, 6 omitidas y 77 no seleccionadas, 95 Vitest y 9 de navegador.
 La corrección posterior de cancelación durante la escritura en sesiones
-reutilizadas aprobó 41 pruebas del adaptador y de límites de módulos. Incluye una
+reutilizadas aprobó 40 pruebas del adaptador y de límites de módulos. Incluye una
 prueba integrada de cierre con la segunda cancelación bloqueada, uso desconocido
 y reserva conservada. Sus checks de CI se siguen antes de integrar. El smoke completo de runtime con la
 variante local CA verificó healthcheck, `PORT`, autenticación, rechazo de
