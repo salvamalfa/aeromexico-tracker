@@ -1,0 +1,35 @@
+{
+  "analysis_manifest": [
+    {
+      "approval_event": "85cc3fd9541695992576871f732eeaa94a535d89e15060496d8f208fda78b6bd",
+      "audit_hash": "a5b624c21d2c849fcbf913c1f4fb7042c13cb7f408772d00768062f80223678e",
+      "content_hash": "10898ecf005d18b05629db99ab896843bc25a2888aac62eaee175d0e08845965",
+      "evidence_fingerprint": "808256bfb7420d221a3f2f2383c4b95d9889110ad1545fd85f24df8d442a9ff1",
+      "period_id": "2026Q2",
+      "version": "186ba823aea28830be12cb0293c5bb2890a433b173addc473c26aa8f89cab26f"
+    }
+  ],
+  "code_commit": "bcd1e7ed182a55ce9b176f9efc999f7612512131",
+  "contracts": {
+    "analysis.schema.json": "e0ed7c269ee463ec716b287ce4136152e316130072619bf7789fc24339ad2430",
+    "executive.schema.json": "355ff5f4496dafe2a4bb1d590207635ac4c716fbe3e610e780f9fd6417aa4ee6",
+    "flights.schema.json": "17fb7e131da94435190bea925fe9733e298754d04e9b9c5e76fbbea8bef119a7",
+    "market.schema.json": "3ac4a80fbeadea2b6c4eea6ee6d906acf24b1cf1202b295bde0b86b32b2d0008",
+    "privacy.yaml": "8342974dc8009396bc33f189b3010d88c2ec5b59f73664c134ab5f84eccd88fd",
+    "publication_manifest.schema.json": "c3e932f08ff426ea6ba717320876b8779f964c48b0cb866c91feda87dba07cb5"
+  },
+  "files": [
+    {
+      "bytes": 7930,
+      "path": "data/v1/executive.json",
+      "sha256": "d11411877c9727b441765ba277c883a4fe3cf298dca0bf137f0037e6b58b67be"
+    },
+    {
+      "bytes": 9649,
+      "path": "data/v1/market.json",
+      "sha256": "fb3997b3ae7d80058adef7722cda54232d9a236ac0d777c3d7d2ad1aa137c6cc"
+    }
+  ],
+  "generated_at": "2026-09-30T17:45:14.362653+00:00",
+  "schema_version": "publication_manifest_v1"
+}

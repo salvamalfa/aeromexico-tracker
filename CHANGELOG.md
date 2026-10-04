@@ -4,6 +4,54 @@ Cambios notables del proyecto, para humanos. Formato inspirado en
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); no se usa
 versión semántica, las entradas van por fecha.
 
+## 2026-10-04
+
+### Changed
+
+- **Chat analítico — contraseña y correcciones de auditoría.** El piloto se
+  protege con una contraseña (hash scrypt, sesiones de 12 h, límite de
+  intentos) en lugar de tokens. Se corrigen la exposición del modo local
+  detrás de un proxy, el signo de `compare_metrics`, la reanudación de turnos
+  en cola, la pérdida de historial al recrear la sesión del proveedor, el uso
+  de turnos fallidos y bloqueos del servidor. El sitio publicado no cambia y el
+  chat sigue apagado. Detalle en
+  `docs/etapas/airline-tracker-remediacion-20261004.md`.
+
+### Fixed
+
+- **Revisión del PR e integración real.** El modo local rechaza todas las
+  cabeceras `X-Forwarded-*` y la fábrica de API aplica la exigencia de contraseña
+  para OpenAI. El evaluador conserva checkpoints privados, representa consumo
+  desconocido como tal, mantiene sesiones para reconciliación y acepta formatos
+  numéricos regionales equivalentes. El adaptador consulta el uso del turno si
+  falta en el evento final; el panel libera observers y listeners al desmontar.
+  Una sonda real confirmó acceso y respuesta correcta. El hosting Business
+  actual requiere un VPS separado para la API Python; el piloto sigue pendiente.
+  El timeout se registra antes de despertar al proveedor; el worker espera a
+  que termine su cancelación antes del siguiente turno y contabiliza uso
+  conocido de respuestas tardías sin cambiar el estado terminal.
+  La cancelación explícita conserva la sesión creada tarde y espera su cierre;
+  borrar una conversación durante la creación mantiene la limpieza remota
+  durable. Las reservas de uso desconocido sobreviven cambios de día UTC,
+  borrado y retención, con contabilización única cuando se confirma el uso.
+  La comparación real conserva errores y contadores entre fases: Luna tiene
+  7/9 consultas soportadas correctas y Sol 8/8, con cobertura parcial. Un turno
+  fallido sin uso confirmado pausó la continuación antes de admitir Astra.
+  El reporte separa mediciones, revisión automática y aprobaciones pendientes.
+  La revisión del PR también conserva consumo recuperado de turnos fallidos o
+  cancelados, protege reintentos de envíos HTTP inciertos con la misma clave
+  y corrige la precedencia de entidades y el denominador AFAC en modo simulado.
+
+## 2026-10-03
+
+### Added
+
+- **Chat analítico — base offline lista.** Se entregan auditoría offline
+  del snapshot público, un holdout de 40 preguntas bilingües separado de los
+  ejemplos de prompt, gate de dry-run y documentación de operación, presupuesto
+  y evaluación. La integración live, elección de modelo y piloto alojado siguen
+  pendientes; no se hicieron llamadas pagadas.
+
 ## 2026-09-30
 
 ### Added

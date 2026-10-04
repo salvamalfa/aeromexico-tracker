@@ -36,6 +36,10 @@ function ensureFlightsMounted(dataRoot: string): Promise<void> {
 export async function mount(dataRoot = "data/v1"): Promise<void> {
   mountTabs();
   await mountExecutive(dataRoot);
+  if (import.meta.env.VITE_CHAT_ENABLED === "true") {
+    const { mountChat } = await import("./views/chat/bootstrap");
+    mountChat();
+  }
   window.addEventListener("reader-tab-visible", (event) => {
     const panelId = (event as CustomEvent<{ panelId: string }>).detail?.panelId;
     if (panelId === "panel-flights") void ensureFlightsMounted(dataRoot);

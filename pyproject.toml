@@ -34,6 +34,11 @@ analytics = [
   "statsforecast==2.1.1",
   "statsmodels==0.14.6",
 ]
+chat = [
+  "fastapi==0.116.1",
+  "openai==3.13.0",
+  "uvicorn==0.35.0",
+]
 
 [dependency-groups]
 dev = [

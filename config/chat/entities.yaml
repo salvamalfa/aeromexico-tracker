@@ -1,0 +1,39 @@
+metadata: {catalog_version: chat_entities_v1, owner: Airline Tracker product definition, review_status: agent_reconciled_owner_review_pending, effective_from: '2026-10-04'}
+entities:
+  - id: AEROMEXICO
+    label: Aeroméxico
+    aliases: [Grupo Aeroméxico, Aeroméxico, Aeromexico, AM]
+    grain: Grupo Aeroméxico, trimestre calendario, segmento total para economía unitaria; incluye Aeroméxico Connect.
+    definition: Grupo consolidado tal como se publica en los informes trimestrales. No equivale a la operación de Aerovías aislada.
+    availability: {executive_quarters: '2021Q1–2026Q2', market_months: '2019M01–2026M06'}
+  - id: AEROMEXICO_CONNECT
+    label: Aeroméxico Connect
+    aliases: [Aeroméxico Connect, Aeromexico Connect, Connect]
+    grain: Aerolínea operadora separada de Grupo Aeroméxico; puede venir separada en ciertas fuentes operativas.
+    definition: No está disponible como serie independiente en el payload ejecutivo/mercado chat; no atribuirle cifras de Grupo Aeroméxico.
+    availability: {executive_quarters: none, market_months: none, chat_enabled: false}
+  - id: VOLARIS
+    label: Volaris
+    aliases: [Volaris, Controladora Vuela Compañía de Aviación]
+    grain: Compañía, trimestre calendario para economía unitaria; pasajeros AFAC por mes o trimestre.
+    definition: Volaris según la entidad publicada en cada fuente.
+    availability: {executive_quarters: '2022Q4–2026Q2', market_months: '2019M01–2026M06'}
+  - id: VIVA_AEROBUS
+    label: Viva
+    aliases: [Viva, Viva Aerobus, Viva Aerobús, IAMSA]
+    grain: Compañía, trimestre calendario para economía unitaria; pasajeros AFAC por mes o trimestre.
+    definition: Viva Aerobus según la entidad publicada en cada fuente.
+    availability: {executive_quarters: '2023Q1–2026Q2', market_months: '2019M01–2026M06'}
+  - id: INDUSTRY
+    label: Industria
+    aliases: [Industria, industria aérea mexicana, las tres aerolíneas]
+    members: [AEROMEXICO, VOLARIS, VIVA_AEROBUS]
+    grain: Suma de las tres empresas para volúmenes; razón agregada usa la ponderación definida para cada métrica.
+    definition: Suma de Aeroméxico, Volaris y Viva (aprox. 99% de pasajeros AFAC en 2T26); no incluye otras empresas. Razones no se promedian.
+    availability: {executive_quarters: '2023Q1–2026Q2', market_months: '2019M01–2026M06'}
+  - id: MEXICAN_CARRIERS
+    label: Todas las aerolíneas mexicanas (denominador AFAC)
+    aliases: [todas las aerolíneas mexicanas, mercado mexicano AFAC, denominador AFAC]
+    grain: Total de pasajeros de aerolíneas mexicanas reportado por AFAC × mes/trimestre × segmento.
+    definition: Universo denominador que usa AFAC para participación. Incluye aerolíneas fuera del grupo Industria del proyecto; no es una aerolínea ni una suma de solo tres entidades.
+    availability: {market_months: '2019M01–2026M06', market_quarters: '2019Q1–2026Q2'}
