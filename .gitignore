@@ -1,4 +1,5 @@
 .env
+.env.local
 __pycache__/
 *.py[cod]
 .venv/
@@ -33,6 +34,9 @@ models/*/model.pkl
 
 # Local dashboard/runtime state.
 .streamlit/secrets.toml
+
+# Chat histories and live evaluation outputs can contain user text and are local-only.
+.state/
 
 # Authoritative local analysis runs; never published as dashboard data.
 analysis_runs/

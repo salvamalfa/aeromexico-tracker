@@ -67,11 +67,9 @@ jobs:
         run: npm run build
 
       # The browser smoke tests (test_web_flights_smoke.py,
-      # test_web_page_smoke.py) serve web/dist/ with the synthetic, public
-      # fixtures at tests/fixtures/web/ — no warehouse, no analysis_runs/ —
-      # so they are the only web/ browser tests that can run here; the
-      # Playwright parity tests need the real, locally-restored warehouse
-      # (`local_data`, see tests/conftest.py) and stay a local/manual step.
+      # test_web_page_smoke.py) use synthetic public fixtures; the chat smoke
+      # uses a fake API. None needs a warehouse or analysis_runs/. Playwright
+      # parity tests still need the locally-restored warehouse (`local_data`).
       - uses: astral-sh/setup-uv@v10.0.1
         with:
           python-version: "3.13"
@@ -81,4 +79,8 @@ jobs:
       - name: Install Playwright's chromium
         run: uv run playwright install --with-deps chromium
       - name: Browser smoke tests against the built site
-        run: uv run pytest -m browser -q tests/test_web_flights_smoke.py tests/test_web_page_smoke.py
+        run: >-
+          uv run pytest -m browser -q
+          tests/test_web_flights_smoke.py
+          tests/test_web_page_smoke.py
+          tests/test_web_chat_smoke.py

@@ -23,7 +23,7 @@ uv run python -m src.publish --record analysis_runs/drafts/<periodo>/<version>.j
 uv run python -m src.publish.verify site/
 ```
 
-Ver `src/publish/README.md` y `REPO_MAP.md` ("Publicación en GitHub Pages") para el flujo completo. La aplicación corre con Python **3.13** y no utiliza secretos.
+Ver `src/publish/README.md` y `REPO_MAP.md` ("Publicación en GitHub Pages") para el flujo completo. El pipeline y dashboard estático usan Python **3.13** y no requieren secretos. El backend de chat es un extra opcional; solo su modo OpenAI lee `OPENAI_API_KEY` desde el entorno privado del servidor.
 
 Para trabajar desde un clon local o con agentes de nube, consulta
 [`AGENTS.md`](AGENTS.md) y la [guía de desarrollo desde GitHub](docs/cloud-development.md).
@@ -130,3 +130,7 @@ Fuentes principales: SEC EDGAR, BMV XBRL, AFAC, BTS T-100, Banxico, EIA, datos p
 `.github/workflows/refresh.yml` se ejecuta trimestralmente y también de forma manual. Solo monitorea frescura y valida/confirma (commit) el gold ya reconstruido en el runner — no publica el sitio: eso es `.github/workflows/pages.yml`, sobre `site/`. Corre la suite completa y `src.dashboard.validate_stage8` (definición de terminado de Stage 8, sobre el gold público versionado); si algo falla abre un issue y no hace commit. También revisa la fecha de AFAC y abre un recordatorio cuando la fuente manual rebasa 62 días.
 
 Por la decisión explícita de **no versionar bronze**, una reconstrucción con nuevas descargas sigue ejecutándose localmente, donde existen los crudos. El workflow remoto valida y confirma (commit) el gold ya reconstruido; no finge poder recrear fuentes manuales ausentes ni publica el sitio.
+
+## Chat analítico
+
+El chat consulta el snapshot público con una capa semántica versionada; no abre el warehouse ni convierte ausencias en cero. El servicio usa un proveedor simulado por defecto. El modelo del dashboard no está decidido y no se han hecho llamadas pagadas. La [documentación del chat](docs/chat/README.md) incluye instalación, operación y el holdout de evaluación; H3 (integración real), H4 (comparación de modelos) y H5 (piloto alojado) permanecen pendientes de sus autorizaciones y decisiones operativas.

@@ -4,6 +4,16 @@ Cambios notables del proyecto, para humanos. Formato inspirado en
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); no se usa
 versión semántica, las entradas van por fecha.
 
+## 2026-10-03
+
+### Added
+
+- **Chat analítico — base offline lista.** Se entregan auditoría offline
+  del snapshot público, un holdout de 40 preguntas bilingües separado de los
+  ejemplos de prompt, gate de dry-run y documentación de operación, presupuesto
+  y evaluación. La integración live, elección de modelo y piloto alojado siguen
+  pendientes; no se hicieron llamadas pagadas.
+
 ## 2026-09-30
 
 ### Added

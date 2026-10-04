@@ -5,6 +5,9 @@ import { defineConfig } from "vite";
 // docs/arquitectura/auditoria-arquitectura-20260926.md Fase 4/5.
 export default defineConfig({
   base: "./",
+  // plotly.js' has-hover dependency expects the Node-style `global` name;
+  // Vite does not install that browser alias automatically.
+  define: { global: "globalThis" },
   build: {
     outDir: "dist",
     assetsDir: "assets",

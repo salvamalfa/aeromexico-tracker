@@ -1,0 +1,253 @@
+periods:
+  scale_semantics: "unit.scale multiplies the stored number to produce display_value; tool value remains unscaled."
+  formats: {quarter: 'YYYYQ[1-4]', month: 'YYYYMmm'}
+  aliases: {este trimestre: context.default_period, trimestre actual: context.default_period, último trimestre: latest_available_for_metric_and_entity, mismo trimestre del año anterior: same quarter in prior calendar year}
+  resolution: Resolve relative periods only from validated dashboard context or each source's published latest period. Never use wall-clock current period. Require exact period IDs when context does not disambiguate.
+  market_segments: [total, domestic, international]
+  limitations: {market_quarter: 'Complete AFAC quarters only', market_month: 'Monthly AFAC coverage', economic_quarter: 'Quarterly reports', flight_period: 'Published flight payloads are not enabled for chat in H1; review scope before adding tools.'}
+inventory_not_enabled:
+  - id: flight_passengers
+    label: Pasajeros reportados de Vuelos
+    field: flights/quarters.json · quarters[].metrics.passengers.value
+    unit: {storage: count, display: pasajeros, scale: 1}
+    grain: Grupo Aeroméxico × trimestre calendario; published series maps to `sec-quarterly`.
+    coverage: {periods: '2021Q1–2026Q2'}
+    why_not_enabled: Separate published payload and contract; include only after per-period mapping review. T-100 scope applies to some route rows, not this SEC quarterly field. Preserve separation from company_passengers and AFAC.
+  - id: flight_asm_miles
+    label: ASM
+    field: flights/quarters.json · quarters[].metrics.asm_miles.value
+    unit: {storage: seat_miles, display: ASM, scale: 0.000000001}
+    grain: Grupo Aeroméxico × trimestre; SEC quarterly seat-miles, distinct from ASK-km.
+    coverage: {periods: '2021Q1–2026Q2'}
+    why_not_enabled: Distinct unit and source scope; no automatic miles-to-kilometres conversion.
+  - id: flight_rpm_miles
+    label: RPM
+    field: flights/quarters.json · quarters[].metrics.rpm_miles.value
+    unit: {storage: passenger_miles, display: RPM, scale: 0.000000001}
+    grain: Grupo Aeroméxico × trimestre, SEC quarterly series.
+    coverage: {periods: '2021Q1–2026Q2; explicit null periods remain unavailable'}
+    why_not_enabled: Distinct source series; only enable after completeness and comparability review.
+  - id: flight_load_factor
+    label: Factor de ocupación de Vuelos
+    field: flights/quarters.json · quarters[].metrics.load_factor.value
+    unit: {storage: fraction, display: '%', scale: 100}
+    grain: Grupo Aeroméxico × trimestre, SEC quarterly series.
+    coverage: {periods: '2021Q1–2026Q2'}
+    why_not_enabled: A separate reported series from the executive load factor; preserve its source and basis if enabled.
+  - id: route_passengers
+    label: Pasajeros por ruta
+    field: flights/{domestic,international}/<period>.json · routes[].passengers
+    unit: {storage: count, display: pasajeros, scale: 1}
+    grain: Entity × origin × destination × month or quarter; route direction is an additional subgrain.
+    coverage: {domestic_months: '2026M03–2026M07', international_quarters: '2021Q1–2026Q2'}
+    why_not_enabled: A route row may be observed or estimated; future tools need explicit mode, region, carrier breakdown and quality rules before aggregation.
+  - id: route_departures
+    label: Vuelos por ruta
+    field: flights/{domestic,international}/<period>.json · routes[].departures
+    unit: {storage: count, display: vuelos/salidas, scale: 1}
+    grain: Entity × origin × destination × month or quarter; scope/status varies by route.
+    coverage: {domestic_months: '2026M03–2026M07', international_quarters: '2021Q1–2026Q2'}
+    why_not_enabled: Observed operations, scheduled operations, assigned slots, and inferred carrier presence have different meanings; aggregate only after status-specific rules.
+  - id: route_load_factor
+    label: Ocupación por ruta
+    field: flights/{domestic,international}/<period>.json · routes[].load_factor
+    unit: {storage: fraction, display: '%', scale: 100}
+    grain: Entity × origin × destination × month or quarter; may be estimated and carry sensitivity bounds.
+    coverage: {domestic_months: '2026M03–2026M07', international_quarters: '2021Q1–2026Q2'}
+    why_not_enabled: Never average route percentages; aggregation needs compatible passenger/seat bases and explicit estimate labels/ranges.
+  - id: route_seats
+    label: Asientos por ruta
+    field: flights/{domestic,international}/<period>.json · routes[].seats
+    unit: {storage: count, display: asientos, scale: 1}
+    grain: Entity × origin × destination × month or quarter.
+    coverage: {domestic_months: '2026M03–2026M07', international_quarters: '2021Q1–2026Q2'}
+    why_not_enabled: Some route capacity is estimated or absent; no route extrapolation or allocation is allowed by the chat layer.
+metadata: {catalog_version: chat_semantics_v1, owner: Airline Tracker product definition, review_status: agent_reconciled_owner_review_pending, effective_from: '2026-10-04'}
+metrics:
+  - id: company_passengers
+    label: Pasajeros reportados por compañía
+    description: Pasajeros transportados en el trimestre reportado en la serie de economía unitaria.
+    aliases: [pasajeros, viajeros, pasajeros transportados, traffic]
+    unit: {storage: passengers, display: pasajeros, scale: 1, rounding: 0}
+    grain: Entidad × trimestre, segmento total.
+    source: [executive.entities.records]
+    field: executive.entities[entity].records[].passengers
+    calculation: Campo trimestral publicado por la compañía. No es la misma observación que el conteo AFAC; Industria suma las tres empresas donde está publicado.
+    aggregation: sum
+    weighting: Suma de conteos. No distribuir trimestral por meses ni mensual por rutas.
+    dimensions: [entity, period]
+    period_grains: [quarter]
+    coverage: {quarters: 'Aeroméxico 2021Q1–2026Q2; Volaris 2022Q4–2026Q2; Viva e Industria 2023Q1–2026Q2'}
+    absence: null es faltante/no publicado; cero solo si viene explícitamente como cero.
+    quality: Reportado por compañía en la serie trimestral de economía unitaria.
+    references: [https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json]
+  - id: afac_passengers
+    label: Pasajeros AFAC
+    description: Pasajeros mensuales o trimestrales publicados por AFAC para una aerolínea y segmento.
+    aliases: [pasajeros AFAC, tráfico AFAC, pasajeros nacionales, pasajeros internacionales]
+    unit: {storage: passengers, display: pasajeros, scale: 1, rounding: 0}
+    grain: Entidad × periodo AFAC × segmento (total/domestic/international).
+    source: [market.months, market.quarters]
+    field: segments[segment].carriers[entity].passengers; INDUSTRY uses segments[segment].industry.passengers
+    calculation: Campo de AFAC. No es equivalente al pasajero reportado por la compañía y no debe mezclarse con company_passengers.
+    aggregation: sum
+    weighting: Conteos reportados; INDUSTRY suma solo las tres compañías y no es el denominador AFAC de todas las aerolíneas mexicanas.
+    dimensions: [entity, period, segment]
+    period_grains: [month, quarter]
+    coverage: {months: '2019M01–2026M06', quarters: '2019Q1–2026Q2', segments: [total, domestic, international]}
+    absence: null es dato no publicado, nunca cero; Internacional/total 2019–2020 tienen cobertura incompleta.
+    quality: Reportado AFAC.
+    references: [https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404]
+  - id: afac_market_passengers
+    label: Pasajeros de todas las aerolíneas mexicanas AFAC
+    description: Conteo total AFAC que funciona como denominador para participación de aerolíneas mexicanas.
+    aliases: [pasajeros de todas las aerolíneas mexicanas, mercado total AFAC, denominador AFAC]
+    unit: {storage: passengers, display: pasajeros, scale: 1, rounding: 0}
+    grain: Todas las aerolíneas mexicanas × periodo AFAC × segmento.
+    source: [market.months, market.quarters]
+    field: segments[segment].mexican_carriers_passengers
+    calculation: Campo de pasajeros del universo mexicano AFAC; incluye empresas fuera de las tres del grupo Industria.
+    aggregation: sum
+    weighting: Suma de conteos AFAC. No dividir entre tres ni sustituir por pasajeros de INDUSTRY.
+    dimensions: [entity, period, segment]
+    period_grains: [month, quarter]
+    coverage: {months: '2019M01–2026M06', quarters: '2019Q1–2026Q2', segments: [total, domestic, international]}
+    absence: null es dato no publicado, nunca cero; internacional/total 2019–2020 tiene faltantes.
+    quality: Reportado AFAC.
+    references: [https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404]
+  - id: ask_km
+    label: ASK
+    description: Asientos disponibles multiplicados por kilómetros volados; capacidad ofrecida.
+    aliases: [ASK, ASKs, capacidad, asientos kilómetro disponibles, available seat kilometers]
+    unit: {storage: seat_kilometers, display: mil millones de ASK-km, scale: 0.000000001, rounding: 2}
+    grain: Entidad × trimestre, segmento total.
+    source: [executive.entities.records]
+    field: entities[entity].records[].ask_km
+    calculation: Campo trimestral publicado; no convertir automáticamente entre millas y kilómetros.
+    aggregation: sum
+    weighting: Suma para volúmenes. Ratio derivado que use ASK debe usar suma de numeradores y denominadores.
+    dimensions: [entity, period]
+    period_grains: [quarter]
+    coverage: {quarters: 'Aeroméxico 2021Q1–2026Q2; Volaris 2022Q4–2026Q2; Viva e Industria 2023Q1–2026Q2'}
+    absence: Ausencia de fila o valor significa sin cobertura publicada, no cero.
+    quality: Calculado/consolidado por el dashboard desde fuentes reportadas; conserva el valor publicado.
+    references: [https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json]
+  - id: load_factor
+    label: Factor de ocupación
+    description: Proporción de capacidad utilizada; la base se mantiene como reportada/calculada por entidad.
+    aliases: [ocupación, factor de ocupación, load factor, porcentaje de asientos ocupados]
+    unit: {storage: fraction, display: '%', scale: 100, rounding: 1}
+    grain: Entidad × trimestre, segmento total.
+    source: [executive.entities.records]
+    field: entities[entity].records[].load_factor; companion field load_factor_basis
+    calculation: Campo publicado. Aeroméxico reporta base de Grupo; Volaris y Viva conservan base publicada. No recalcular salvo en una definición distinta.
+    aggregation: weighted_ratio
+    weighting: INDUSTRY preserva la razón agregada publicada; si se construye desde componentes, razón de sumas con RPK-km / ASK-km. Nunca promedio simple de ratios.
+    dimensions: [entity, period]
+    period_grains: [quarter]
+    coverage: {quarters: 'Aeroméxico 2021Q1–2026Q2; Volaris 2022Q4–2026Q2; Viva e Industria 2023Q1–2026Q2', bases: [reported, calculated]}
+    absence: null/fila ausente indica sin cobertura; cero es válido si el origen lo publica.
+    quality: Reportado o calculado; incluir load_factor_basis.
+    references: [https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json]
+  - id: rask_cents_per_km
+    label: RASK
+    description: Ingreso operativo por ASK-km disponible.
+    aliases: [RASK, ingreso por ASK, ingreso unitario, revenue per available seat kilometer]
+    unit: {storage: USD_cents_per_ASK_km, display: '¢ USD / ASK-km', scale: 1, rounding: 2}
+    grain: Entidad × trimestre, segmento total.
+    source: [executive.entities.records]
+    field: entities[entity].records[].rask_cents_per_km
+    calculation: Campo publicado. Parte de la historia de Aeroméxico convirtió ingreso por ASK reportado en pesos a centavos de USD con tipo de cambio promedio del mismo reporte.
+    aggregation: weighted_ratio
+    weighting: Agregado INDUSTRY usa total ingreso / total ASK; nunca promedio simple de RASK.
+    dimensions: [entity, period]
+    period_grains: [quarter]
+    coverage: {quarters: 'Aeroméxico 2021Q1–2026Q2; Volaris 2022Q4–2026Q2; Viva e Industria 2023Q1–2026Q2'}
+    absence: null/fila ausente es falta de cobertura; no interpolar.
+    quality: Reportado o consolidado por entidad; particularidad histórica de moneda documentada en method_note.
+    references: [https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json]
+  - id: cask_cents_per_km
+    label: CASK
+    description: Costo operativo por ASK-km.
+    aliases: [CASK, costo por ASK, costo unitario, cost per available seat kilometer]
+    unit: {storage: USD_cents_per_ASK_km, display: '¢ USD / ASK-km', scale: 1, rounding: 2}
+    grain: Entidad × trimestre, segmento total.
+    source: [executive.entities.records]
+    field: entities[entity].records[].cask_cents_per_km
+    calculation: Campo publicado; no inferir costo total ni utilidad.
+    aggregation: weighted_ratio
+    weighting: Agregado INDUSTRY usa suma de costos / suma de ASK; nunca promedio simple de CASK.
+    dimensions: [entity, period]
+    period_grains: [quarter]
+    coverage: {quarters: 'Aeroméxico 2021Q1–2026Q2; Volaris 2022Q4–2026Q2; Viva e Industria 2023Q1–2026Q2'}
+    absence: null/fila ausente es falta de cobertura; no interpolar.
+    quality: Reportado/consolidado por la fuente trimestral.
+    references: [https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json]
+  - id: unit_margin_cents_per_km
+    label: Margen unitario RASK−CASK
+    description: Spread de ingreso y costo por ASK-km; no equivale a rentabilidad total.
+    aliases: [margen unitario, spread, RASK menos CASK, unit margin, margen por ASK]
+    unit: {storage: USD_cents_per_ASK_km, display: '¢ USD / ASK-km', scale: 1, rounding: 2}
+    grain: Entidad × trimestre, segmento total.
+    source: [executive.entities.records]
+    field: entities[entity].records[].unit_margin_cents_per_km
+    calculation: RASK − CASK, coincide con el campo publicado.
+    aggregation: weighted_ratio
+    weighting: diferencia entre RASK y CASK agregados; no promediar spreads por compañía.
+    dimensions: [entity, period]
+    period_grains: [quarter]
+    coverage: {quarters: 'Aeroméxico 2021Q1–2026Q2; Volaris 2022Q4–2026Q2; Viva e Industria 2023Q1–2026Q2'}
+    absence: Si falta RASK o CASK, resultado no disponible.
+    quality: Calculado determinísticamente a partir de dos métricas publicadas.
+    references: [https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json]
+  - id: market_share
+    label: Participación de pasajeros AFAC
+    description: Pasajeros de la entidad divididos entre pasajeros de todas las aerolíneas mexicanas en el mismo periodo y segmento.
+    aliases: [participación, cuota de mercado, market share, share, participación AFAC]
+    unit: {storage: fraction, display: '%', scale: 100, rounding: 1}
+    grain: Entidad × mes/trimestre AFAC × segmento (total/domestic/international).
+    source: [market.months, market.quarters]
+    field: segments[segment].carriers[entity].share; INDUSTRY uses segments[segment].industry.share
+    calculation: Campo publicado = pasajeros de compañía / pasajeros de todas las compañías mexicanas. Industria suma solo Aeroméxico, Volaris y Viva sobre denominador AFAC.
+    aggregation: ratio_of_sums
+    weighting: Recalcular solo como pasajeros sumados / denominador sumado; no promediar porcentajes mensuales o empresariales.
+    dimensions: [entity, period, segment]
+    period_grains: [month, quarter]
+    coverage: {months: '2019M01–2026M06', complete_quarters: '2019Q1–2026Q2', segments: [total, domestic, international]}
+    absence: N/D o null representa dato no publicado/no comparable, no cero. Internacional/total 2019–2020 tienen vacíos AFAC.
+    quality: Reportado AFAC, razón determinista. No representa participación mundial; excluye aerolíneas extranjeras porque AFAC no las publica por aerolínea.
+    references: [https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404]
+  - id: market_share_change_qoq_pp
+    label: Cambio de participación trimestral
+    description: Cambio de participación de pasajeros frente al trimestre anterior en puntos porcentuales.
+    aliases: [cambio trimestral de participación, pp trimestrales, share change QoQ]
+    unit: {storage: percentage_points, display: pp, scale: 1, rounding: 1}
+    grain: Entidad × trimestre AFAC × segmento.
+    source: [market.quarters]
+    field: segments[segment].carriers[entity].share_change_qoq_pp; INDUSTRY uses industry.share_change_qoq_pp
+    calculation: Diferencia entre participaciones, expresada en puntos porcentuales.
+    aggregation: difference
+    weighting: Comparación de shares calculados por separado; no sumar cambios de empresas para obtener Industria.
+    dimensions: [entity, period, segment]
+    period_grains: [quarter]
+    coverage: {complete_quarters: '2019Q1–2026Q2', segments: [total, domestic, international]}
+    absence: null indica que falta un periodo comparable.
+    quality: Derivación publicada; unidad pp, distinta de variación relativa.
+    references: [https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404]
+  - id: market_share_change_yoy_pp
+    label: Cambio interanual de participación
+    description: Cambio de participación frente al mismo trimestre del año anterior en puntos porcentuales.
+    aliases: [cambio interanual de participación, pp interanuales, share change YoY]
+    unit: {storage: percentage_points, display: pp, scale: 1, rounding: 1}
+    grain: Entidad × trimestre AFAC × segmento.
+    source: [market.quarters]
+    field: segments[segment].carriers[entity].share_change_yoy_pp; INDUSTRY uses industry.share_change_yoy_pp
+    calculation: Diferencia de shares interanuales expresada en puntos porcentuales.
+    aggregation: difference
+    weighting: Comparación de shares calculados por separado; no sumar cambios de empresas para obtener Industria.
+    dimensions: [entity, period, segment]
+    period_grains: [quarter]
+    coverage: {complete_quarters: '2019Q1–2026Q2', segments: [total, domestic, international]}
+    absence: null indica que falta un periodo comparable.
+    quality: Derivación publicada; no es variación relativa porcentual.
+    references: [https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404]

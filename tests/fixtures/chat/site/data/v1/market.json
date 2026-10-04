@@ -1,0 +1,278 @@
+{
+  "carriers": [
+    "AEROMEXICO",
+    "VOLARIS",
+    "VIVA_AEROBUS"
+  ],
+  "metadata": {
+    "data_as_of": "2026-09-13",
+    "default_quarter": "2026Q2",
+    "denominator": "Pasajeros de todas las aerolíneas mexicanas que publica AFAC",
+    "first_period": "2026M06",
+    "industry_note": "Industria = Aeroméxico, Volaris y Viva · 99% de los pasajeros de aerolíneas mexicanas en 2T26 (AFAC).",
+    "industry_share_latest": 0.9904551986787052,
+    "last_period": "2026M06",
+    "method_note": "La participación divide los pasajeros de cada aerolínea entre los de todas las aerolíneas mexicanas del mismo mes y segmento. Aeroméxico incluye a Aeroméxico Connect. Las aerolíneas extranjeras quedan fuera porque AFAC no las publica por aerolínea. Internacional y total empiezan en 2021: los libros AFAC de 2019–2020 casi no traen pasajeros internacionales por aerolínea mexicana. Si falta una de las tres aerolíneas, la participación de ese periodo queda N/D.",
+    "source": "AFAC · pasajeros por aerolínea (servicio regular y de fletamento)"
+  },
+  "months": [
+    {
+      "period_id": "2026M06",
+      "period_label": "jun 26",
+      "segments": {
+        "domestic": {
+          "carriers": {
+            "AEROMEXICO": {
+              "passengers": 1136925.0,
+              "share": 0.22401990736352947
+            },
+            "VIVA_AEROBUS": {
+              "passengers": 2006790.0,
+              "share": 0.39541826408783104
+            },
+            "VOLARIS": {
+              "passengers": 1873678.0,
+              "share": 0.36918985156372075
+            }
+          },
+          "industry": {
+            "passengers": 5017393.0,
+            "share": 0.9886280230150812
+          },
+          "mexican_carriers_passengers": 5075107.0
+        },
+        "international": {
+          "carriers": {
+            "AEROMEXICO": {
+              "passengers": 684270.0,
+              "share": 0.44003680960290775
+            },
+            "VIVA_AEROBUS": {
+              "passengers": 250757.0,
+              "share": 0.16125551356276957
+            },
+            "VOLARIS": {
+              "passengers": 619662.0,
+              "share": 0.39848903139426983
+            }
+          },
+          "industry": {
+            "passengers": 1554689.0,
+            "share": 0.9997813545599471
+          },
+          "mexican_carriers_passengers": 1555029.0
+        },
+        "total": {
+          "carriers": {
+            "AEROMEXICO": {
+              "passengers": 1821195.0,
+              "share": 0.2746844106968545
+            },
+            "VIVA_AEROBUS": {
+              "passengers": 2257547.0,
+              "share": 0.3404978419748856
+            },
+            "VOLARIS": {
+              "passengers": 2493340.0,
+              "share": 0.3760616675133059
+            }
+          },
+          "industry": {
+            "passengers": 6572082.0,
+            "share": 0.9912439201850459
+          },
+          "mexican_carriers_passengers": 6630136.0
+        }
+      }
+    }
+  ],
+  "quarters": [
+    {
+      "period_id": "2026Q1",
+      "period_label": "1T26",
+      "segments": {
+        "domestic": {
+          "carriers": {
+            "AEROMEXICO": {
+              "passengers": 3717998.0,
+              "share": 0.24997512349503867,
+              "share_change_qoq_pp": 0.5892831796723647,
+              "share_change_yoy_pp": -1.06524872180995
+            },
+            "VIVA_AEROBUS": {
+              "passengers": 5779875.0,
+              "share": 0.38860294354942815,
+              "share_change_qoq_pp": -1.198712208269881,
+              "share_change_yoy_pp": 0.5012262867152784
+            },
+            "VOLARIS": {
+              "passengers": 5167960.0,
+              "share": 0.3474615745402284,
+              "share_change_qoq_pp": 0.7163956168064756,
+              "share_change_yoy_pp": 0.36651149845120523
+            }
+          },
+          "industry": {
+            "passengers": 14665833.0,
+            "share": 0.9860396415846953,
+            "share_change_qoq_pp": 0.10696658820895655,
+            "share_change_yoy_pp": -0.19751093664346353
+          },
+          "mexican_carriers_passengers": 14873472.0
+        },
+        "international": {
+          "carriers": {
+            "AEROMEXICO": {
+              "passengers": 1980420.0,
+              "share": 0.44542216616391117,
+              "share_change_qoq_pp": 0.8392317964554474,
+              "share_change_yoy_pp": -0.674107372390137
+            },
+            "VIVA_AEROBUS": {
+              "passengers": 683163.0,
+              "share": 0.15365222695339173,
+              "share_change_qoq_pp": -1.7518623070728212,
+              "share_change_yoy_pp": -1.638201958225041
+            },
+            "VOLARIS": {
+              "passengers": 1767912.0,
+              "share": 0.39762635836194976,
+              "share_change_qoq_pp": 0.9549354238883367,
+              "share_change_yoy_pp": 2.348452145762697
+            }
+          },
+          "industry": {
+            "passengers": 4431495.0,
+            "share": 0.9967007514792526,
+            "share_change_qoq_pp": 0.042304913270962974,
+            "share_change_yoy_pp": 0.03614281514752182
+          },
+          "mexican_carriers_passengers": 4446164.0
+        },
+        "total": {
+          "carriers": {
+            "AEROMEXICO": {
+              "passengers": 5698418.0,
+              "share": 0.294954728960732,
+              "share_change_qoq_pp": 0.7585231015275307,
+              "share_change_yoy_pp": -0.886393207287911
+            },
+            "VIVA_AEROBUS": {
+              "passengers": 6463038.0,
+              "share": 0.33453207917581884,
+              "share_change_qoq_pp": -1.4588472754393733,
+              "share_change_yoy_pp": -0.09018865744463422
+            },
+            "VOLARIS": {
+              "passengers": 6935872.0,
+              "share": 0.3590063498090751,
+              "share_change_qoq_pp": 0.7989569386523399,
+              "share_change_yoy_pp": 0.8367044743596508
+            }
+          },
+          "industry": {
+            "passengers": 19097328.0,
+            "share": 0.9884931579456259,
+            "share_change_qoq_pp": 0.09863276474049165,
+            "share_change_yoy_pp": -0.13987739037290003
+          },
+          "mexican_carriers_passengers": 19319636.0
+        }
+      }
+    },
+    {
+      "period_id": "2026Q2",
+      "period_label": "2T26",
+      "segments": {
+        "domestic": {
+          "carriers": {
+            "AEROMEXICO": {
+              "passengers": 3856840.0,
+              "share": 0.24337659436582212,
+              "share_change_qoq_pp": -0.6598529129216546,
+              "share_change_yoy_pp": -1.0120110325169325
+            },
+            "VIVA_AEROBUS": {
+              "passengers": 6129418.0,
+              "share": 0.38678215282059114,
+              "share_change_qoq_pp": -0.18207907288370073,
+              "share_change_yoy_pp": -0.7427478153744782
+            },
+            "VOLARIS": {
+              "passengers": 5668366.0,
+              "share": 0.357688577358412,
+              "share_change_qoq_pp": 1.0227002818183561,
+              "share_change_yoy_pp": 1.9359392836794942
+            }
+          },
+          "industry": {
+            "passengers": 15654624.0,
+            "share": 0.9878473245448253,
+            "share_change_qoq_pp": 0.18076829601300082,
+            "share_change_yoy_pp": 0.1811804357880864
+          },
+          "mexican_carriers_passengers": 15847210.0
+        },
+        "international": {
+          "carriers": {
+            "AEROMEXICO": {
+              "passengers": 2060171.0,
+              "share": 0.4563927451982496,
+              "share_change_qoq_pp": 1.0970579034338457,
+              "share_change_yoy_pp": -1.6086661922635637
+            },
+            "VIVA_AEROBUS": {
+              "passengers": 655715.0,
+              "share": 0.1452615190281148,
+              "share_change_qoq_pp": -0.8390707925276936,
+              "share_change_yoy_pp": -3.3677750854629207
+            },
+            "VOLARIS": {
+              "passengers": 1796387.0,
+              "share": 0.3979562834194094,
+              "share_change_qoq_pp": 0.03299250574596568,
+              "share_change_yoy_pp": 5.312501872546599
+            }
+          },
+          "industry": {
+            "passengers": 4512273.0,
+            "share": 0.9996105476457738,
+            "share_change_qoq_pp": 0.2909796166521206,
+            "share_change_yoy_pp": 0.33606059482010897
+          },
+          "mexican_carriers_passengers": 4514031.0
+        },
+        "total": {
+          "carriers": {
+            "AEROMEXICO": {
+              "passengers": 5917011.0,
+              "share": 0.2906016877851404,
+              "share_change_qoq_pp": -0.4353041175591599,
+              "share_change_yoy_pp": -0.9689186770717395
+            },
+            "VIVA_AEROBUS": {
+              "passengers": 6785133.0,
+              "share": 0.3332376941071519,
+              "share_change_qoq_pp": -0.12943850686669145,
+              "share_change_yoy_pp": -1.497105308954405
+            },
+            "VOLARIS": {
+              "passengers": 7464753.0,
+              "share": 0.366615816786413,
+              "share_change_qoq_pp": 0.7609466977337886,
+              "share_change_yoy_pp": 2.6897209992248095
+            }
+          },
+          "industry": {
+            "passengers": 20166897.0,
+            "share": 0.9904551986787052,
+            "share_change_qoq_pp": 0.19620407330793732,
+            "share_change_yoy_pp": 0.22369701319866486
+          },
+          "mexican_carriers_passengers": 20361241.0
+        }
+      }
+    }
+  ],
+  "schema_version": "market_payload_v1"
+}

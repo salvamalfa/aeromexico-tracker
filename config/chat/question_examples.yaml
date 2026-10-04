@@ -1,0 +1,22 @@
+examples:
+  - question: Compara el factor de ocupación de las tres aerolíneas en 2026Q2.
+    metric_ids: [load_factor]
+    operation: query_metrics por AEROMEXICO, VOLARIS y VIVA_AEROBUS en 2026Q2; conservar calidad de base por entidad.
+    verified: true
+  - question: ¿Cómo cambió el margen unitario de Aeroméxico contra el mismo trimestre del año anterior?
+    metric_ids: [unit_margin_cents_per_km]
+    operation: compare_metrics entre 2025Q2 y 2026Q2; reportar diferencia absoluta en ¢ USD / ASK-km y cambio relativo si el denominador no es cero.
+    verified: true
+  - question: ¿Cuál fue la participación internacional de Viva en 2026Q2?
+    metric_ids: [market_share]
+    operation: query_metrics para VIVA_AEROBUS, segmento international, periodo 2026Q2.
+    verified: true
+  - question: ¿Cómo evolucionó el RASK de Aeroméxico desde 2025Q1 hasta 2026Q2?
+    metric_ids: [rask_cents_per_km]
+    operation: get_time_series con periodos trimestrales dentro del rango exacto disponible.
+    verified: true
+  - question: ¿Cuántos pasajeros de Viva hubo en todas sus rutas nacionales en 2026Q2?
+    metric_ids: [company_passengers]
+    operation: clarification_required
+    verified: true
+    note: El chat tiene pasajeros AFAC por segmento de mercado y conteos trimestrales de compañía, no pasajeros desglosados por ruta.

@@ -1,0 +1,229 @@
+{
+  "entities": {
+    "AEROMEXICO": {
+      "first_period": "2026Q1",
+      "key": "AEROMEXICO",
+      "label": "Aeroméxico",
+      "last_period": "2026Q2",
+      "note": "Grupo Aeroméxico (Aerovías de México + Aeroméxico Connect), reporte trimestral consolidado.",
+      "quarter_count": 2,
+      "records": [
+        {
+          "ask_km": 13833921024.0,
+          "cask_cents_per_km": 8.574922452875208,
+          "cask_ex_fuel_cents_per_km": 6.3379861608208055,
+          "load_factor": 0.8440000000000001,
+          "load_factor_basis": "reported",
+          "passengers": 5791000.0,
+          "period_id": "2026Q1",
+          "period_label": "1T26",
+          "rask_cents_per_km": 9.69339059890241,
+          "rpk_km": 11675790720.0,
+          "unit_margin_cents_per_km": 1.118468146027201
+        },
+        {
+          "ask_km": 14896088064.000002,
+          "cask_cents_per_km": 9.50697924123121,
+          "cask_ex_fuel_cents_per_km": 6.2137119223733395,
+          "load_factor": 0.8490000000000001,
+          "load_factor_basis": "reported",
+          "passengers": 6014000.0,
+          "period_id": "2026Q2",
+          "period_label": "2T26",
+          "rask_cents_per_km": 9.941939075797343,
+          "rpk_km": 12634959744.0,
+          "unit_margin_cents_per_km": 0.43495983456613274
+        }
+      ],
+      "views": {}
+    },
+    "INDUSTRY": {
+      "first_period": "2026Q1",
+      "key": "INDUSTRY",
+      "label": "Industria",
+      "last_period": "2026Q2",
+      "note": "Industria = Aeroméxico, Volaris y Viva. Pasajeros y ASK se suman; RASK, CASK y ocupación se ponderan por ASK (cociente de sumas). Solo trimestres en que reportan las tres.",
+      "quarter_count": 2,
+      "records": [
+        {
+          "ask_km": 37417248000.0,
+          "cask_cents_per_km": 6.853165149932994,
+          "cask_ex_fuel_cents_per_km": 4.9042430913144655,
+          "load_factor": 0.8458155698924732,
+          "load_factor_basis": "reported",
+          "passengers": 20464000.0,
+          "period_id": "2026Q1",
+          "period_label": "1T26",
+          "rask_cents_per_km": 7.055967878770774,
+          "rpk_km": 31620390912.0,
+          "unit_margin_cents_per_km": 0.2028027288377805
+        },
+        {
+          "ask_km": 38791627776.0,
+          "cask_cents_per_km": 7.789877799017165,
+          "cask_ex_fuel_cents_per_km": 5.026440785777868,
+          "load_factor": 0.851025846332559,
+          "load_factor_basis": "reported",
+          "passengers": 21286000.0,
+          "period_id": "2026Q2",
+          "period_label": "2T26",
+          "rask_cents_per_km": 7.603862145287255,
+          "rpk_km": 32964193152.0,
+          "unit_margin_cents_per_km": -0.18601565372991047
+        }
+      ],
+      "views": {}
+    },
+    "VIVA_AEROBUS": {
+      "first_period": "2026Q1",
+      "key": "VIVA_AEROBUS",
+      "label": "Viva",
+      "last_period": "2026Q2",
+      "note": "Viva Aerobus, reporte trimestral oficial; pasajeros reservados (booked).",
+      "quarter_count": 2,
+      "records": [
+        {
+          "ask_km": 9195791616.0,
+          "cask_cents_per_km": 6.381482144277419,
+          "cask_ex_fuel_cents_per_km": 4.5484371271772845,
+          "load_factor": 0.8420000000000001,
+          "load_factor_basis": "reported",
+          "passengers": 6923000.0,
+          "period_id": "2026Q1",
+          "period_label": "1T26",
+          "rask_cents_per_km": 5.7476835281953385,
+          "rpk_km": 7711976448.000001,
+          "unit_margin_cents_per_km": -0.633798616082081
+        },
+        {
+          "ask_km": 9316492416.0,
+          "cask_cents_per_km": 6.946929929213393,
+          "cask_ex_fuel_cents_per_km": 4.430376600652191,
+          "load_factor": 0.8590000000000001,
+          "load_factor_basis": "reported",
+          "passengers": 7208000.0,
+          "period_id": "2026Q2",
+          "period_label": "2T26",
+          "rask_cents_per_km": 6.536824942336753,
+          "rpk_km": 7971080832.000001,
+          "unit_margin_cents_per_km": -0.41010498687664043
+        }
+      ],
+      "views": {}
+    },
+    "VOLARIS": {
+      "first_period": "2026Q1",
+      "key": "VOLARIS",
+      "label": "Volaris",
+      "last_period": "2026Q2",
+      "note": "Controladora Vuela (Volaris), release trimestral 6-K; consolida sus operaciones de Costa Rica y El Salvador.",
+      "quarter_count": 2,
+      "records": [
+        {
+          "ask_km": 14387535360.000002,
+          "cask_cents_per_km": 5.499135051300405,
+          "cask_ex_fuel_cents_per_km": 3.753082001113497,
+          "load_factor": 0.85,
+          "load_factor_basis": "reported",
+          "passengers": 7750000.0,
+          "period_id": "2026Q1",
+          "period_label": "1T26",
+          "rask_cents_per_km": 5.356219677085818,
+          "rpk_km": 12232623744.0,
+          "unit_margin_cents_per_km": -0.14291537421458678
+        },
+        {
+          "ask_km": 14579047296.000002,
+          "cask_cents_per_km": 6.574107213870993,
+          "cask_ex_fuel_cents_per_km": 4.194255547602004,
+          "load_factor": 0.848,
+          "load_factor_basis": "reported",
+          "passengers": 8064000.0,
+          "period_id": "2026Q2",
+          "period_label": "2T26",
+          "rask_cents_per_km": 5.896812614332299,
+          "rpk_km": 12358152576.0,
+          "unit_margin_cents_per_km": -0.6772945995386932
+        }
+      ],
+      "views": {}
+    }
+  },
+  "entity_list": [
+    {
+      "carriers": [
+        "AEROMEXICO",
+        "VOLARIS",
+        "VIVA_AEROBUS"
+      ],
+      "is_aggregate": true,
+      "key": "INDUSTRY",
+      "label": "Industria",
+      "note": "Industria = Aeroméxico, Volaris y Viva. Pasajeros y ASK se suman; RASK, CASK y ocupación se ponderan por ASK (cociente de sumas). Solo trimestres en que reportan las tres."
+    },
+    {
+      "carriers": [
+        "AEROMEXICO"
+      ],
+      "is_aggregate": false,
+      "key": "AEROMEXICO",
+      "label": "Aeroméxico",
+      "note": "Grupo Aeroméxico (Aerovías de México + Aeroméxico Connect), reporte trimestral consolidado."
+    },
+    {
+      "carriers": [
+        "VOLARIS"
+      ],
+      "is_aggregate": false,
+      "key": "VOLARIS",
+      "label": "Volaris",
+      "note": "Controladora Vuela (Volaris), release trimestral 6-K; consolida sus operaciones de Costa Rica y El Salvador."
+    },
+    {
+      "carriers": [
+        "VIVA_AEROBUS"
+      ],
+      "is_aggregate": false,
+      "key": "VIVA_AEROBUS",
+      "label": "Viva",
+      "note": "Viva Aerobus, reporte trimestral oficial; pasajeros reservados (booked)."
+    }
+  ],
+  "metadata": {
+    "coverage_label": "2 trimestres · 1T26–2T26",
+    "data_as_of": "13 sep 2026",
+    "default_period": "2026Q2",
+    "first_period": "2026Q1",
+    "grain": "Grupo Aeroméxico · trimestre calendario · segmento total",
+    "last_period": "2026Q2",
+    "load_rask_correlation": 0.922366762169748,
+    "load_rask_interpretation": "Mayor ocupación tiende a coincidir con mayor RASK.",
+    "method_note": "En 1T21–3T22, Aeroméxico publicó el ingreso por ASK en pesos; se convirtió a centavos de USD con el tipo de cambio promedio publicado en el mismo reporte trimestral.",
+    "quarter_count": 2,
+    "source_view": "v_aeromexico_quarterly",
+    "title": "Aeroméxico Tracker"
+  },
+  "records": [
+    {
+      "ask_km": 13833921024.0,
+      "cask_cents_per_km": 8.574922452875208,
+      "load_factor_reported": 0.8440000000000001,
+      "passengers": 5791000.0,
+      "period_id": "2026Q1",
+      "period_label": "1T26",
+      "rask_cents_per_km": 9.69339059890241,
+      "unit_margin_cents_per_km": 1.118468146027201
+    },
+    {
+      "ask_km": 14896088064.000002,
+      "cask_cents_per_km": 9.50697924123121,
+      "load_factor_reported": 0.8490000000000001,
+      "passengers": 6014000.0,
+      "period_id": "2026Q2",
+      "period_label": "2T26",
+      "rask_cents_per_km": 9.941939075797343,
+      "unit_margin_cents_per_km": 0.43495983456613274
+    }
+  ],
+  "views": {}
+}
