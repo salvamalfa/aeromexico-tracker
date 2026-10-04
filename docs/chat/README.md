@@ -33,8 +33,8 @@ sesiones del proveedor aisladas tras el adaptador.
 | H1 — semántica revisada | Conciliación técnica completa y 12 referencias estáticas verificadas; la revisión del dueño queda pendiente explícitamente. |
 | H2 — demo sin consumo | Backend, 11 métricas, siete herramientas, SSE y panel implementados y verificados. El fallo preexistente del diagnóstico de etapa 12 sigue documentado aparte. |
 | H3 — chat real local | Acceso confirmado con una sonda y consultas reales con herramientas y fuentes. El uso se recupera por lecturas oficiales; los errores y su consumo quedan registrados en la validación real. |
-| H4 — modelo elegido | Comparación parcial pausada por un turno fallido sin uso confirmado. Luna 7/9 y Sol 8/8 soportados puntuados; Astra sin muestra. Faltan conciliación, cobertura y gates de calidad. No hay modelo elegido. |
-| H5 — piloto publicado | Una contraseña del dueño preparada fuera de Git. Hostinger Business no admite este backend Python; requiere un servidor separado, retención y validación HTTPS desde Pages. |
+| H4 — modelo elegido | Comparación en continuación autorizada para casos nuevos. El fallo anterior conserva uso desconocido y un supuesto de costo cero del dueño solo para el presupuesto del experimento. Cobertura, calificación y gates de calidad siguen pendientes; no hay modelo elegido. |
+| H5 — piloto publicado | Una contraseña del dueño preparada fuera de Git y retención de 30 días acordada. La cuenta Railway ya está creada; build y despliegue del backend en preparación, con validación HTTPS desde Pages pendiente. |
 
 Para evaluación, cobertura, gates y límites, consulta [evaluaciones y presupuesto](evaluaciones-presupuesto.md).
 Para instalación, operación y el diseño propuesto de una instancia persistente,
@@ -42,7 +42,8 @@ consulta [operaciones](operations.md). Los ejemplos de prompt no son el holdout:
 `tests/fixtures/chat_evals/holdout.json` tiene preguntas reservadas y valores
 estáticos verificados contra el snapshot publicado.
 
-Para el hosting actual, consulta la [guía de VPS Hostinger](hostinger-vps.md).
+Para el piloto en Railway, consulta la [guía de configuración del backend](railway.md).
+Como alternativa, consulta la [guía de VPS Hostinger](hostinger-vps.md).
 Para el uso intermitente de un único usuario, consulta la
 [comparación de Railway Free, Hobby y VPS](hosting-options.md).
 

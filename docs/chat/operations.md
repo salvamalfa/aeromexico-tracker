@@ -161,8 +161,8 @@ experimento ni autoriza nuevas llamadas.
 - Conservar los límites configurables por usuario y globales de tokens/costo,
   concurrencia, tamaño, llamadas de herramienta y tiempo del turno. Rechazar un
   segundo turno activo de la misma conversación con un estado visible.
-- Definir retención de conversaciones antes del piloto. El valor de ejemplo es
-  30 días, no una decisión de política. El borrado debe eliminar el historial
+- El dueño acordó el 4 de octubre de 2026 una retención de **30 días** para las
+  conversaciones del backend. El borrado debe eliminar el historial
   local, la sesión administrada y sus referencias del proveedor según las
   capacidades y los términos vigentes; documentar cualquier estado que el
   proveedor no permita borrar.

@@ -1,0 +1,40 @@
+# Build a deliberately small public runtime image. Add an explicit negation
+# below only when the chat backend needs another tracked, non-secret file.
+**
+!Dockerfile.chat
+!pyproject.toml
+!uv.lock
+!scripts/
+!scripts/start_chat_runtime.py
+
+!src/
+!src/__init__.py
+!src/config.py
+!src/conversational_analytics/
+!src/conversational_analytics/**
+!src/web_export/
+!src/web_export/**
+!src/dashboard/
+!src/dashboard/__init__.py
+!src/dashboard/flights_html.py
+
+!config/
+!config/chat/
+!config/chat/*.yaml
+!contracts/
+!contracts/chat/
+!contracts/chat/semantic.schema.json
+!contracts/web/
+!contracts/web/*.json
+!contracts/web/privacy.yaml
+
+!site/
+!site/publication_manifest.json
+!site/data/
+!site/data/v1/
+!site/data/v1/**
+
+# Keep local interpreter caches out even inside the explicitly allowed packages.
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
