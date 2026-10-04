@@ -19,6 +19,7 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from .auth import client_address, hash_fingerprint, new_session_token, token_digest, verify_password
+from .body_limit import BoundedBodyMiddleware
 from .config import ChatConfig
 from .providers import MockProvider
 from .service import ChatService, InvalidRequest
@@ -139,22 +140,6 @@ def create_app(
     async def local_boundary_and_auth(request: Request, call_next):
         origin = request.headers.get("origin")
         peer = request.client.host if request.client else ""
-        if request.method in {"POST", "PUT", "PATCH"}:
-            # Bodies must declare their size; chunked uploads would bypass the limit.
-            content_length = request.headers.get("content-length")
-            if request.headers.get("transfer-encoding") or content_length is None:
-                return JSONResponse({"detail": "content-length required"}, status_code=411)
-            try:
-                size = int(content_length)
-            except ValueError:
-                return JSONResponse({"detail": "invalid content length"}, status_code=400)
-            limit = (
-                LOGIN_BODY_LIMIT
-                if request.url.path == "/api/chat/login"
-                else max(16_384, config.max_message_chars * 8 + 4_096)
-            )
-            if size > limit:
-                return JSONResponse({"detail": "request body too large"}, status_code=413)
         if config.auth_mode == "local":
             try:
                 peer_local = ipaddress.ip_address(peer).is_loopback
@@ -191,6 +176,13 @@ def create_app(
             )
         request.state.owner_id = owner
         return await call_next(request)
+
+    app.add_middleware(
+        BoundedBodyMiddleware,
+        limit_for_path=lambda path: LOGIN_BODY_LIMIT
+        if path == "/api/chat/login"
+        else max(16_384, config.max_message_chars * 8 + 4_096),
+    )
 
     # Add CORS after the auth middleware so it wraps even 401/403 responses.
     # No cookies: GitHub Pages and the API are cross-site, so third-party

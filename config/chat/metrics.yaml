@@ -62,7 +62,7 @@ inventory_not_enabled:
     grain: Entity × origin × destination × month or quarter.
     coverage: {domestic_months: '2026M03–2026M07', international_quarters: '2021Q1–2026Q2'}
     why_not_enabled: Some route capacity is estimated or absent; no route extrapolation or allocation is allowed by the chat layer.
-metadata: {catalog_version: chat_semantics_v1, owner: Airline Tracker product definition, review_status: agent_reconciled_owner_review_pending, effective_from: '2026-10-04'}
+metadata: {catalog_version: chat_semantics_v1, owner: Airline Tracker product definition, review_status: owner_approved_mvp, effective_from: '2026-10-04'}
 metrics:
   - id: company_passengers
     label: Pasajeros reportados por compañía

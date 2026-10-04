@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Revisión local y privada de respuestas anónimas del chat analítico.">
+  <title>Revisión de respuestas · Aerolíneas MX Tracker</title>
+  <link rel="stylesheet" href="src/review/review.css">
+</head>
+<body>
+  <main class="review-shell">
+    <header class="review-header">
+      <div>
+        <p class="eyebrow">Revisión privada</p>
+        <h1>Califica las respuestas</h1>
+        <p class="intro">Carga el archivo JSON que te compartieron. Las respuestas se quedan en este navegador y no se envían a ningún servidor.</p>
+      </div>
+      <a class="dashboard-link" href="./">Volver al dashboard</a>
+    </header>
+
+    <section class="privacy-note" aria-labelledby="privacy-title">
+      <h2 id="privacy-title">Privacidad y guardado</h2>
+      <p>Este sitio no contiene el conjunto de respuestas. El archivo que cargues y tus calificaciones se procesan localmente; las calificaciones se guardan en el almacenamiento de este navegador, asociadas al hash del archivo. Antes de cambiar de navegador o dispositivo, exporta tus calificaciones. Ese archivo exportado incluye el hash, las decisiones y las notas, pero no las respuestas.</p>
+    </section>
+
+    <section class="file-panel" aria-labelledby="load-title">
+      <h2 id="load-title">Abrir conjunto de revisión</h2>
+      <label class="file-label" for="dataset-file">Archivo de respuestas JSON</label>
+      <input id="dataset-file" type="file" accept="application/json,.json">
+      <p id="load-status" class="status-message" role="status" aria-live="polite">Aún no has cargado un archivo.</p>
+      <div class="file-actions">
+        <button id="import-button" type="button" disabled>Importar calificaciones</button>
+        <input id="ratings-file" type="file" accept="application/json,.json" hidden>
+        <button id="export-button" type="button" disabled>Exportar calificaciones</button>
+      </div>
+    </section>
+
+    <section id="review-workspace" class="workspace" hidden aria-label="Revisión de respuestas">
+      <aside class="progress-panel" aria-label="Progreso de revisión">
+        <div class="progress-heading">
+          <h2>Progreso</h2>
+          <output id="progress-count" aria-live="polite">0 / 74</output>
+        </div>
+        <progress id="review-progress" max="74" value="0" aria-label="Respuestas calificadas de las disponibles">0 de 74</progress>
+        <p id="progress-detail" class="muted"></p>
+        <ul class="status-counts" aria-label="Estado de calificaciones">
+          <li>Correctas <strong id="count-correct">0</strong></li>
+          <li>Con problemas <strong id="count-problem">0</strong></li>
+          <li>No evaluables <strong id="count-not-evaluable">0</strong></li>
+          <li>Pendientes <strong id="count-unreviewed">0</strong></li>
+        </ul>
+        <nav aria-label="Preguntas">
+          <h2>Preguntas</h2>
+          <label class="filter-label" for="question-filter">Mostrar</label>
+          <select id="question-filter">
+            <option value="all">Todas</option>
+            <option value="pending">Pendientes</option>
+            <option value="reviewed">Revisadas</option>
+            <option value="problems">Con problemas</option>
+          </select>
+          <p class="filter-help">“Revisadas” incluye preguntas donde todas las respuestas disponibles ya tienen decisión. Usa flechas para recorrer la lista.</p>
+          <ol id="question-nav" class="question-nav"></ol>
+          <p id="filter-empty" class="muted" hidden>No hay preguntas en este filtro.</p>
+        </nav>
+      </aside>
+      <section class="question-panel" aria-label="Pregunta seleccionada">
+        <div id="question-content">
+          <p id="selection-filter-note" class="muted" role="status" hidden>Esta pregunta ya no coincide con el filtro. Puedes terminar sus notas; usa “Siguiente pregunta” para continuar con las preguntas visibles.</p>
+          <p id="question-position" class="eyebrow"></p>
+          <h2 id="question-text"></h2>
+          <p id="question-language" class="muted"></p>
+          <div class="expected-card">
+            <h3>Respuesta esperada</h3>
+            <div id="expected-summary"></div>
+            <details>
+              <summary>Ver detalle de evaluación</summary>
+              <pre id="expected-answer"></pre>
+            </details>
+          </div>
+          <div id="candidate-list" class="candidate-list"></div>
+          <div class="question-actions">
+            <button id="previous-question" type="button">Pregunta anterior</button>
+            <button id="next-question" type="button">Siguiente pregunta</button>
+          </div>
+        </div>
+        <p id="question-empty" class="muted" role="status" hidden>No hay preguntas en este filtro.</p>
+      </section>
+    </section>
+  </main>
+  <script type="module" src="src/review/main.ts"></script>
+</body>
+</html>
