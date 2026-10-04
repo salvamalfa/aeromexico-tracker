@@ -57,8 +57,9 @@ del snapshot:
 | `pytest -m browser -q --require-local-data` | 12 passed, incluidos smoke del chat y paridad del sitio. Flujo local con servidor mock real, bearer, CORS y capturas desktop/móvil verificados. No prueban acceso a OpenAI. |
 | Ruff check/format de todos los módulos y pruebas nuevos + `git diff --check` | Limpios; todos los módulos cumplen los límites del repositorio. |
 
-La ejecución completa inicial tuvo 663 pruebas exitosas, 1 omitida y 12
-deseleccionadas. Los dos fallos de tamaño se corrigieron dividiendo módulos.
+La repetición final de `pytest -m 'not browser' -q --require-local-data` tuvo
+669 pruebas exitosas, 1 omitida y 12 deseleccionadas, con un solo fallo.
+Los fallos iniciales de tamaño se corrigieron dividiendo módulos.
 El diagnóstico de etapa 12 conserva una discrepancia preexistente de hash del
 warehouse: el generador, la prueba y el HTML son idénticos a `origin/master`, y
 el diagnóstico regenerado coincide por completo salvo `input_sha256.warehouse_content`
