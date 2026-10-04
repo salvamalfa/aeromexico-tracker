@@ -27,6 +27,9 @@ versión semántica, las entradas van por fecha.
   falta en el evento final; el panel libera observers y listeners al desmontar.
   Una sonda real confirmó acceso y respuesta correcta. El hosting Business
   actual requiere un VPS separado para la API Python; el piloto sigue pendiente.
+  El timeout se registra antes de despertar al proveedor; el worker espera a
+  que termine su cancelación antes del siguiente turno y contabiliza uso
+  conocido de respuestas tardías sin cambiar el estado terminal.
 
 ## 2026-10-03
 

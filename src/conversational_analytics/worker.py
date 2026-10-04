@@ -187,6 +187,13 @@ class TurnWorker:
         emitted_chars = 0
 
         def timeout_turn() -> None:
+            # Commit the authoritative terminal state before waking the provider.
+            # Otherwise it can raise InterruptedError on the event and win the
+            # race, recording a user cancellation instead of this timeout.
+            self.store.fail_turn(turn_id, "timeout", "El turno excedió el tiempo máximo configurado.")
+            terminal = self.store.get_turn(turn["owner_id"], turn_id)
+            if terminal["status"] != "failed" or terminal.get("error_code") != "timeout":
+                return
             cancel_event.set()
             with self._guard:
                 active = self._active.get(turn_id)
@@ -196,7 +203,6 @@ class TurnWorker:
                     self.provider.cancel(provider_session)
                 except Exception:
                     LOG.warning("Provider cancellation failed after timeout for turn %s", turn_id)
-            self.store.fail_turn(turn_id, "timeout", "El turno excedió el tiempo máximo configurado.")
 
         timer = threading.Timer(self.config.max_turn_seconds, timeout_turn)
         timer.daemon = True
@@ -273,6 +279,7 @@ class TurnWorker:
             # call_id after reconnect/reconciliation is served from this row.
             return self.store.save_tool_result(turn_id, call_id, name, args, result, provider_turn_id)
 
+        result: ProviderResult | None = None
         try:
             messages = self.store.turn_messages(turn["owner_id"], conversation_id)
             if messages:
@@ -292,6 +299,7 @@ class TurnWorker:
             if result.provider_session_id:
                 persist_session(result.provider_session_id)
             if cancel_event.is_set() or not self.store.is_running(turn_id):
+                self._record_result_usage(turn_id, result)
                 return
             if time.monotonic() > deadline:
                 raise TimeoutError("turn deadline exceeded")
@@ -312,16 +320,18 @@ class TurnWorker:
                 else 0.0
             )
             payload = {"references": result.references, "chart": result.chart}
-            self.store.complete_turn(
+            completed = self.store.complete_turn(
                 turn_id, content, payload, input_tokens, output_tokens, cost, result.usage_complete
             )
+            if not completed:
+                self._record_result_usage(turn_id, result)
         except InterruptedError as exc:
             if not self.store.is_cancelled(turn_id):
                 self.store.fail_turn(turn_id, "cancelled", "El turno fue cancelado.")
             usage = self._reported_usage(exc)
             if usage is not None:
                 self.store.record_terminal_usage(turn_id, *usage)
-        except TimeoutError:
+        except TimeoutError as exc:
             cancel_event.set()
             if session_id:
                 try:
@@ -329,6 +339,12 @@ class TurnWorker:
                 except Exception:
                     LOG.warning("Provider cancellation failed after timeout for turn %s", turn_id)
             self.store.fail_turn(turn_id, "timeout", "El turno excedió el tiempo máximo configurado.")
+            if result is not None:
+                self._record_result_usage(turn_id, result)
+            else:
+                usage = self._reported_usage(exc)
+                if usage is not None:
+                    self.store.record_terminal_usage(turn_id, *usage)
         except Exception as exc:
             # Keep details in internal logs with redaction; clients get a stable message.
             LOG.error("Turn %s failed (%s)", turn_id, type(exc).__name__)
@@ -340,6 +356,11 @@ class TurnWorker:
             )
         finally:
             timer.cancel()
+            # The timeout callback may still be cancelling a provider session.
+            # Drain it before the worker loop can claim the next turn on that
+            # session. This also prevents cancellation from outliving a completed turn.
+            if timer.ident != threading.get_ident():
+                timer.join()
             with self._guard:
                 self._active.pop(turn_id, None)
 
@@ -354,6 +375,15 @@ class TurnWorker:
             + output_tokens * self.config.estimated_output_cost_per_million
         ) / 1_000_000
         return input_tokens, output_tokens, cost
+
+    def _record_result_usage(self, turn_id: str, result: ProviderResult) -> None:
+        if not result.usage_complete:
+            return
+        cost = (
+            result.input_tokens * self.config.estimated_input_cost_per_million
+            + result.output_tokens * self.config.estimated_output_cost_per_million
+        ) / 1_000_000
+        self.store.record_terminal_usage(turn_id, result.input_tokens, result.output_tokens, cost)
 
 
 __all__ = ["TurnWorker"]

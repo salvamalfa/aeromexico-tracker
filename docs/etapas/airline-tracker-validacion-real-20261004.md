@@ -30,6 +30,11 @@ Los cambios de programación y la revisión se delegaron a GPT-6 Luna.
   consistente con la sonda y el holdout. El contexto descarta tarjetas de otra
   pestaña y el diálogo móvil declara su modalidad, aísla el fondo y devuelve
   el foco al CTA que lo abrió, incluso sin autofocus del navegador.
+- La CI detectó una carrera entre timeout y cancelación. El worker registra
+  primero el timeout, espera a que termine la cancelación del proveedor antes
+  del siguiente turno y conserva el consumo conocido de respuestas tardías.
+  Los eventos terminales siguen siendo únicos; una respuesta tardía no
+  transforma un turno fallido o cancelado en completado.
 
 ## Evidencia de la integración
 
