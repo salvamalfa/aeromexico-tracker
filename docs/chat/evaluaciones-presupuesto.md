@@ -80,15 +80,28 @@ IDs de proveedor. El modo de sonda admite un candidato; el holdout exige 2–3.
 `--run` requiere `--budget-usd` positivo (máximo US$10 de umbral operativo),
 `--models`, `--model-price` por candidato y `--opt-in`. El mismo permiso del
 experimento puede cubrir una sonda y luego la comparación si la sonda resulta
-válida; el CLI pausa entre esas fases para inspección. No se ejecutó `--run`.
+válida. Se ejecutan como fases separadas para inspeccionar el reporte de la
+sonda; cada proceso empieza su contador de presupuesto en cero. No se ejecutó
+`--run`.
 
 Comandos previstos solo después de autorización específica:
 
 ```bash
 uv run python -m src.conversational_analytics.evaluation --run --probe-only \
   --budget-usd 10 --models gpt-6-luna --model-price gpt-6-luna=0.10:0.50 --opt-in
+```
+
+Antes de la segunda fase, revisar el reporte de la sonda: detenerse si
+`models[0].spent_unknown` es verdadero, si los totales de tokens son nulos o si
+`token_totals.usage_complete_case_count` no coincide con `token_totals.turn_count`.
+Con uso completo, fijar `REMAINING_USD` a **10 menos
+`models[0].estimated_cost_usd`** y continuar solo si es positivo. No reiniciar
+el presupuesto a US$10 para la comparación. Mantener los mismos precios al
+calcular el saldo; la caché no observada puede alterar la factura.
+
+```bash
 uv run python -m src.conversational_analytics.evaluation --run \
-  --budget-usd 10 --models gpt-6-luna gpt-6.1-sol gpt-6-astra \
+  --budget-usd "$REMAINING_USD" --models gpt-6-luna gpt-6.1-sol gpt-6-astra \
   --model-price gpt-6-luna=0.10:0.50 \
   --model-price gpt-6.1-sol=2:10 \
   --model-price gpt-6-astra=10:50 --opt-in

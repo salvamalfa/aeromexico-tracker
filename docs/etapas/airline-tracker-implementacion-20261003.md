@@ -54,7 +54,7 @@ del snapshot:
 | `pytest -q tests/test_chat_*.py tests/test_repo_budgets.py` | 43 passed: 40 del chat y 3 de límites del repositorio. |
 | `pytest -m 'not local_data and not browser' -q` | 604 passed, 1 skipped; subconjunto público del proyecto. |
 | `npm run check`, `npm test`, `npm run build` | Typecheck y build pasan; 81 Vitest pasan. El build conserva el aviso previo de tamaño de Plotly. |
-| `pytest -m browser -q tests/test_web_flights_smoke.py tests/test_web_page_smoke.py tests/test_web_chat_smoke.py` | 9 passed, incluido el smoke del chat con API falsa. Flujo local con servidor mock real, bearer, CORS y capturas desktop/móvil verificados. No prueban acceso a OpenAI. |
+| `pytest -m browser -q --require-local-data` | 12 passed, incluidos smoke del chat y paridad del sitio. Flujo local con servidor mock real, bearer, CORS y capturas desktop/móvil verificados. No prueban acceso a OpenAI. |
 | Ruff check/format de todos los módulos y pruebas nuevos + `git diff --check` | Limpios; todos los módulos cumplen los límites del repositorio. |
 
 La ejecución completa inicial tuvo 663 pruebas exitosas, 1 omitida y 12
