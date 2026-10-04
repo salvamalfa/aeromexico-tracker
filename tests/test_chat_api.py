@@ -137,6 +137,63 @@ def test_failed_logins_are_throttled_per_client(tmp_path: Path):
     assert _login(client, password, **{"X-Forwarded-For": "198.51.100.7"}).status_code == 200
 
 
+def test_failures_from_many_addresses_never_lock_out_the_owner(tmp_path: Path):
+    password = generate_password()
+    _, client = _password_app(
+        tmp_path,
+        {"owner": hash_password(password)},
+        trusted_proxies=("127.0.0.1",),
+        login_max_failures_global=5,
+    )
+    for index in range(8):
+        response = _login(client, "wrong-password-123", **{"X-Forwarded-For": f"203.0.113.{index}"})
+        assert response.status_code == 401
+    assert _login(client, password, **{"X-Forwarded-For": "198.51.100.7"}).status_code == 200
+
+
+def test_concurrent_wrong_logins_cannot_exceed_the_per_client_limit(tmp_path: Path):
+    from concurrent.futures import ThreadPoolExecutor
+
+    password = generate_password()
+    _, client = _password_app(
+        tmp_path,
+        {"owner": hash_password(password)},
+        trusted_proxies=("127.0.0.1",),
+        login_max_failures_per_client=3,
+    )
+    attacker = {"X-Forwarded-For": "203.0.113.9"}
+    with ThreadPoolExecutor(max_workers=12) as pool:
+        codes = list(
+            pool.map(lambda _: _login(client, "wrong-password-123", **attacker).status_code, range(12))
+        )
+    assert codes.count(401) == 3 and codes.count(429) == 9
+
+
+def test_successful_login_does_not_consume_the_failure_budget(tmp_path: Path):
+    password = generate_password()
+    _, client = _password_app(
+        tmp_path,
+        {"owner": hash_password(password)},
+        trusted_proxies=("127.0.0.1",),
+        login_max_failures_per_client=2,
+    )
+    owner = {"X-Forwarded-For": "198.51.100.7"}
+    for _ in range(4):
+        assert _login(client, password, **owner).status_code == 200
+
+
+def test_no_content_responses_have_no_body(tmp_path: Path):
+    password = generate_password()
+    _, client = _password_app(tmp_path, {"owner": hash_password(password)})
+    auth = {"Authorization": f"Bearer {_login(client, password).json()['session']}", "Origin": ORIGIN}
+    conversation_id = client.post("/api/chat/conversations", headers=auth).json()["id"]
+    deleted = client.delete(f"/api/chat/conversations/{conversation_id}", headers=auth)
+    assert deleted.status_code == 204 and deleted.content == b""
+    assert deleted.headers.get("content-length", "0") == "0"
+    logout = client.post("/api/chat/logout", headers=auth)
+    assert logout.status_code == 204 and logout.content == b""
+
+
 def test_client_address_trusts_forwarded_for_only_from_configured_proxy():
     assert client_address("10.0.0.5", "203.0.113.9", ()) == "10.0.0.5"
     assert client_address("10.0.0.5", "1.1.1.1, 203.0.113.9", ("10.0.0.5",)) == "203.0.113.9"

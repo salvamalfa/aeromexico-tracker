@@ -130,16 +130,22 @@ export class ChatTransport {
     };
     while (true) {
       const { value, done } = await reader.read();
+      // A replaced or closed listener must never render: stop even if the
+      // underlying stream ignores the abort signal.
+      if (signal.aborted) { await reader.cancel().catch(() => undefined); return lastSeq; }
       buffer += decoder.decode(value, { stream: !done });
-      if (buffer.length > 128_000) throw new ChatApiError("El servidor envió un evento demasiado grande.");
       let boundary = buffer.search(/\r?\n\r?\n/);
       while (boundary >= 0) {
         const frame = buffer.slice(0, boundary);
         const delimiter = buffer.slice(boundary).match(/^\r?\n\r?\n/)?.[0] ?? "\n\n";
         buffer = buffer.slice(boundary + delimiter.length);
+        if (signal.aborted) return lastSeq;
         dispatch(frame);
         boundary = buffer.search(/\r?\n\r?\n/);
       }
+      // Only an incomplete frame is bounded: a replay may deliver many small
+      // complete frames in one network chunk.
+      if (buffer.length > 128_000) throw new ChatApiError("El servidor envió un evento demasiado grande.");
       if (done) break;
     }
     return lastSeq;

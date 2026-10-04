@@ -25,6 +25,7 @@ class ChatConfig:
     trusted_proxies: tuple[str, ...] = ()
     login_max_failures_per_client: int = 5
     login_client_window_minutes: int = 15
+    # Alert threshold only (logged as an error), never a lockout.
     login_max_failures_global: int = 50
     login_global_window_minutes: int = 60
     allowed_origins: tuple[str, ...] = ()

@@ -82,4 +82,15 @@ describe("ChatTransport", () => {
     expect(seen).toEqual([["message.completed", 3]]);
     expect(last).toBe(3);
   });
+
+  it("accepts one network chunk carrying many small frames", async () => {
+    let body = "";
+    for (let i = 1; i <= 3000; i++) body += `id: ${i}\nevent: message.delta\ndata: {"text":"abc "}\n\n`;
+    expect(body.length).toBeGreaterThan(128_000);
+    const fetcher = (async () => new Response(new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode(body)); c.close(); } }), { status: 200 })) as typeof fetch;
+    const api = new ChatTransport("/api/chat", undefined, fetcher);
+    let count = 0;
+    await expect(api.streamEvents("t1", 0, new AbortController().signal, () => { count += 1; })).resolves.toBe(3000);
+    expect(count).toBe(3000);
+  });
 });

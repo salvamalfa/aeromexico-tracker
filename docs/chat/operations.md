@@ -55,7 +55,10 @@ El piloto usa `CHAT_AUTH_MODE=password` con **una sola contraseña**, del dueño
 Nunca escribir la contraseña ni su hash en Git, en el PR, en comentarios, logs
 o fixtures. El panel pide la contraseña al abrirse; la sesión (12 h) vive solo
 en memoria del navegador, así que recargar la página la vuelve a pedir. Tras 5
-intentos fallidos desde un mismo cliente en 15 minutos el login responde 429.
+intentos fallidos desde un mismo cliente en 15 minutos el login responde 429. Por
+encima de 50 fallos globales por hora el servidor registra un error para
+alertar, pero no bloquea a nadie: un bloqueo global permitiría a cualquiera
+dejar fuera al dueño.
 
 ## Diseño viable para un piloto de una instancia
 

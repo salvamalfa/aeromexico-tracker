@@ -59,43 +59,46 @@ class AuthSessionMixin:
         with self._connect() as db:
             db.execute("DELETE FROM chat_sessions WHERE token_sha256=?", (token_sha256,))
 
-    def record_login_failure(self, client: str) -> None:
-        with self._connect() as db:
-            db.execute("INSERT INTO login_failures(client,attempted_at) VALUES(?,?)", (client[:64], utcnow()))
+    def begin_login_attempt(
+        self, client: str, *, max_per_client: int, window_minutes: int
+    ) -> tuple[int, int | None]:
+        """Atomically check the per-client limit and count this attempt as a failure.
 
-    def login_retry_after(
-        self,
-        client: str,
-        *,
-        max_per_client: int,
-        client_window_minutes: int,
-        max_global: int,
-        global_window_minutes: int,
-    ) -> int:
-        """Seconds until another attempt is allowed, or 0 when the client may try now."""
+        Returns ``(retry_after_seconds, None)`` when the client is blocked, else
+        ``(0, attempt_id)``. The attempt is recorded before the password is
+        verified, so concurrent requests cannot all pass the check; a
+        successful login removes it with :meth:`forget_login_attempt`.
+        """
         now = datetime.now(UTC)
-        client_since = _iso(now - timedelta(minutes=client_window_minutes))
-        global_since = _iso(now - timedelta(minutes=global_window_minutes))
+        since = _iso(now - timedelta(minutes=window_minutes))
         with self._connect() as db:
-            client_rows = db.execute(
+            db.execute("BEGIN IMMEDIATE")
+            rows = db.execute(
                 "SELECT attempted_at FROM login_failures WHERE client=? AND attempted_at>? "
                 "ORDER BY attempted_at",
-                (client[:64], client_since),
+                (client[:64], since),
             ).fetchall()
-            global_rows = db.execute(
-                "SELECT attempted_at FROM login_failures WHERE attempted_at>? ORDER BY attempted_at",
-                (global_since,),
-            ).fetchall()
-        waits = []
-        if len(client_rows) >= max_per_client:
-            oldest = datetime.fromisoformat(client_rows[-max_per_client][0])
-            waits.append(oldest + timedelta(minutes=client_window_minutes) - now)
-        if len(global_rows) >= max_global:
-            oldest = datetime.fromisoformat(global_rows[-max_global][0])
-            waits.append(oldest + timedelta(minutes=global_window_minutes) - now)
-        if not waits:
-            return 0
-        return max(1, int(max(waits).total_seconds()) + 1)
+            if len(rows) >= max_per_client:
+                db.execute("COMMIT")
+                oldest = datetime.fromisoformat(rows[-max_per_client][0])
+                wait = oldest + timedelta(minutes=window_minutes) - now
+                return max(1, int(wait.total_seconds()) + 1), None
+            cur = db.execute(
+                "INSERT INTO login_failures(client,attempted_at) VALUES(?,?)", (client[:64], _iso(now))
+            )
+            db.execute("COMMIT")
+            return 0, cur.lastrowid
+
+    def forget_login_attempt(self, attempt_id: int) -> None:
+        with self._connect() as db:
+            db.execute("DELETE FROM login_failures WHERE id=?", (attempt_id,))
+
+    def recent_login_failures(self, window_minutes: int) -> int:
+        since = _iso(datetime.now(UTC) - timedelta(minutes=window_minutes))
+        with self._connect() as db:
+            return int(
+                db.execute("SELECT COUNT(*) FROM login_failures WHERE attempted_at>?", (since,)).fetchone()[0]
+            )
 
     def cleanup_auth(self) -> None:
         cutoff = _iso(datetime.now(UTC) - timedelta(days=1))

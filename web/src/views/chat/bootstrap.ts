@@ -5,6 +5,7 @@ import { mountPanelControls, resizeDashboardCharts } from "./panel-controls";
 import { renderMessages } from "./render";
 import { MAX_INPUT, PANEL_HTML } from "./template";
 import { ChatApiError, ChatTransport } from "./transport";
+import { errorText, randomId, storage } from "./util";
 import "./chat.css";
 
 const MAX_ANSWER = 20_000;
@@ -20,18 +21,6 @@ interface ChatUiState {
   abort?: AbortController;
   lastSequence: number;
   focusedCard?: Element;
-}
-
-function errorText(error: unknown): string {
-  return error instanceof Error ? error.message : "Ocurrió un error inesperado.";
-}
-
-function randomId(): string {
-  return typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
-
-function storage(action: (store: Storage) => string | null | void): string | null {
-  try { return action(window.localStorage) ?? null; } catch { return null; }
 }
 
 export function mountChat(): void {
@@ -139,6 +128,8 @@ export function mountChat(): void {
         turns.set(turnId, outcome);
         const message = assistantFor();
         if (message) message.pending = false;
+        // A turn that ended without text still gets a bubble for "Reintentar".
+        else if (outcome !== "completed") state.messages.push({ id: randomId(), role: "assistant", content: outcome === "cancelled" ? "Turno cancelado." : "No se pudo completar la respuesta.", turn_id: turnId });
       }
       statusNode.textContent = event.type === "turn.completed" ? "Respuesta completa." : event.type === "turn.cancelled" ? "Turno cancelado." : "No se pudo completar la respuesta. Puedes reintentar.";
       paintMessages();
@@ -167,7 +158,15 @@ export function mountChat(): void {
     void listen(active.id);
   }
 
-  async function ensureConversation(): Promise<void> {
+  // Single-flight: a double click, a card button during login or a re-login
+  // must not open two conversations or two event streams.
+  let ensuring: Promise<void> | undefined;
+  function ensureConversation(): Promise<void> {
+    ensuring ??= connectConversation().finally(() => { ensuring = undefined; });
+    return ensuring;
+  }
+
+  async function connectConversation(): Promise<void> {
     noticeNode.textContent = "";
     statusNode.textContent = "Conectando con el servicio…";
     try {
@@ -227,6 +226,7 @@ export function mountChat(): void {
   }
 
   async function listen(turnId: string): Promise<void> {
+    state.abort?.abort(); // one stream per panel: a resumed listener replaces the old one
     const abort = new AbortController();
     state.abort = abort;
     let attempts = 0;
@@ -234,6 +234,7 @@ export function mountChat(): void {
     while (!abort.signal.aborted && state.activeTurn === turnId && attempts < 5) {
       try {
         const next = await transport.streamEvents(turnId, state.lastSequence, abort.signal, (event) => {
+          if (abort.signal.aborted) return;
           attempts = 0; // progress resets the reconnect budget
           if (typeof event.seq === "number") state.lastSequence = Math.max(state.lastSequence, event.seq);
           renderTurnEvent(event);
@@ -277,11 +278,12 @@ export function mountChat(): void {
     }
   }
 
-  function resetConversation(): void {
+  function resetConversation(forgetStored = true): void {
     state.abort?.abort();
     setBusy(false);
     state.conversationId = undefined; state.snapshotVersion = undefined; state.messages = []; state.activeTurn = undefined; state.lastSequence = 0;
-    storage((store) => store.removeItem(STORAGE_KEY)); turns.clear(); paintMessages();
+    if (forgetStored) storage((store) => store.removeItem(STORAGE_KEY));
+    turns.clear(); paintMessages();
   }
 
   accessForm.addEventListener("submit", async (event) => {
@@ -307,7 +309,7 @@ export function mountChat(): void {
 
   logoutButton.addEventListener("click", async () => {
     try { await transport.logout(); } catch { /* the in-memory session is dropped anyway */ }
-    resetConversation();
+    resetConversation(false); // the conversation stays reachable after logging in again
     requireLogin("Sesión cerrada.");
   });
 
@@ -349,12 +351,19 @@ export function mountChat(): void {
   });
   query<HTMLButtonElement>("[data-chat-delete]").addEventListener("click", async () => {
     if (!state.conversationId) { state.messages = []; paintMessages(); return; }
-    if (state.activeTurn) { state.abort?.abort(); try { await transport.cancel(state.activeTurn); } catch { /* deletion will settle ownership */ } }
+    // Keep listening until the deletion succeeds; a failed DELETE must not
+    // leave the composer locked without a stream.
+    const turnId = state.activeTurn;
+    let cancelled = false;
+    if (turnId) { try { cancelled = (await transport.cancel(turnId)).status === "cancelled"; } catch { /* deletion will settle ownership */ } }
     try {
       await transport.deleteConversation(state.conversationId);
       resetConversation();
       statusNode.textContent = "Conversación eliminada.";
-    } catch (error) { if (!handleAuthError(error)) noticeNode.textContent = `No se pudo eliminar la conversación: ${errorText(error)}`; }
+    } catch (error) {
+      if (!handleAuthError(error)) noticeNode.textContent = `No se pudo eliminar la conversación: ${errorText(error)}`;
+      if (turnId && cancelled && state.activeTurn === turnId) { state.abort?.abort(); void settleTurn(turnId, "la conversación no se eliminó"); }
+    }
   });
 
   const cardButton = (card: HTMLElement, label: string) => {

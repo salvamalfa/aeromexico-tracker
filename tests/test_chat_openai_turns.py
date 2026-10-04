@@ -14,6 +14,7 @@ from openai.types.beta.agent_session import (
     AgentSession,
     RequiredActionSessionRequiredActionResourceFunctionCall,
 )
+from openai.types.beta.agent_session_idle_event import AgentSessionIdleEvent
 from openai.types.beta.agent_session_requires_action_event import AgentSessionRequiresActionEvent
 from openai.types.beta.agent_session_turn_failed_event import AgentSessionTurnFailedEvent
 
@@ -26,6 +27,7 @@ from test_chat_openai import (
     _provider,
     _run,
     _session_created,
+    _text_delta,
     _text_done,
     _turn,
     _turn_created,
@@ -132,3 +134,37 @@ def test_oversized_question_envelope_is_rejected_before_any_call():
     with pytest.raises(OpenAIProviderError, match="exceden"):
         _run(_provider(FakeClient(fake)), messages=[{"role": "user", "content": "á" * 7_000}])
     assert fake.created == []
+
+
+def test_recovered_answer_replaces_partial_deltas_instead_of_appending():
+    completed_turn = _turn("turn_new", status="completed", usage=_usage()).model_dump()
+    recovery = {
+        "id": "sess_fixture",
+        "status": "idle",
+        "required_actions": [],
+        "turns": [completed_turn],
+        "items": [
+            {
+                "id": "item_assistant",
+                "type": "message",
+                "role": "assistant",
+                "turn_id": "turn_new",
+                "content": [{"type": "output_text", "text": "El factor fue 87.1%."}],
+            }
+        ],
+    }
+    fake = FakeSessions(
+        event_stream=FakeStream(
+            [
+                _turn_created("turn_new"),
+                _text_delta("turn_new", "El factor fue"),
+                AgentSessionIdleEvent.model_construct(
+                    type="agent.session.idle", session={"id": "sess_fixture"}
+                ),
+            ]
+        ),
+        prior_turns=[_turn("turn_old", status="completed")],
+        recovery=recovery,
+    )
+    result, _, _ = _run(_provider(FakeClient(fake)), session_id="sess_fixture")
+    assert result.content == "El factor fue 87.1%."

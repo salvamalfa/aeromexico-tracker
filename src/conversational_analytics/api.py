@@ -7,6 +7,7 @@ import ipaddress
 import json
 import logging
 import os
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -14,7 +15,7 @@ from urllib.parse import urlsplit
 from fastapi import FastAPI, Header, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from .auth import client_address, hash_fingerprint, new_session_token, token_digest, verify_password
@@ -110,6 +111,7 @@ def create_app(
     app.state.snapshot_available = getattr(snapshot, "version", "unavailable") != "unavailable"
 
     fingerprints = config.password_fingerprints()
+    login_slots = threading.BoundedSemaphore(2)
 
     def bearer_digest(request: Request) -> str | None:
         scheme, _, token = request.headers.get("authorization", "").partition(" ")
@@ -220,12 +222,10 @@ def create_app(
             return JSONResponse({"detail": "login is not used in local mode"}, status_code=400)
         peer = request.client.host if request.client else ""
         client = client_address(peer, request.headers.get("x-forwarded-for"), config.trusted_proxies)
-        retry_after = store.login_retry_after(
+        retry_after, attempt_id = store.begin_login_attempt(
             client,
             max_per_client=config.login_max_failures_per_client,
-            client_window_minutes=config.login_client_window_minutes,
-            max_global=config.login_max_failures_global,
-            global_window_minutes=config.login_global_window_minutes,
+            window_minutes=config.login_client_window_minutes,
         )
         if retry_after:
             return JSONResponse(
@@ -233,14 +233,34 @@ def create_app(
                 status_code=429,
                 headers={"Retry-After": str(retry_after)},
             )
-        # Check every configured hash so timing does not reveal which matched.
-        matched = [
-            user for user, encoded in config.password_users.items() if verify_password(body.password, encoded)
-        ]
+        # scrypt takes 32 MiB per hash; bound concurrent verifications so a
+        # burst of logins cannot exhaust memory or the worker threadpool.
+        if not login_slots.acquire(timeout=10):
+            return JSONResponse(
+                {"detail": "login busy, retry"}, status_code=503, headers={"Retry-After": "2"}
+            )
+        try:
+            # Check every configured hash so timing does not reveal which matched.
+            matched = [
+                user
+                for user, encoded in config.password_users.items()
+                if verify_password(body.password, encoded)
+            ]
+        finally:
+            login_slots.release()
         if len(matched) != 1:
-            store.record_login_failure(client)
-            LOG.warning("Failed chat login attempt")
+            # The attempt already counts as a failure. The global count only
+            # raises an alert: a hard global cap would let anyone lock the
+            # owner out with wrong passwords from many addresses.
+            if (
+                store.recent_login_failures(config.login_global_window_minutes)
+                >= config.login_max_failures_global
+            ):
+                LOG.error("Chat login failures above the global alert threshold")
+            else:
+                LOG.warning("Failed chat login attempt")
             return JSONResponse({"detail": "invalid password"}, status_code=401)
+        store.forget_login_attempt(attempt_id)
         owner = matched[0]
         token = new_session_token()
         expires_at = store.create_session(
@@ -256,7 +276,7 @@ def create_app(
         digest = bearer_digest(request)
         if digest:
             store.revoke_session(digest)
-        return JSONResponse(status_code=204, content=None)
+        return Response(status_code=204)
 
     @app.post("/api/chat/conversations", status_code=201)
     def create_conversation(request: Request):
@@ -271,7 +291,8 @@ def create_app(
     @app.delete("/api/chat/conversations/{conversation_id}", status_code=204)
     def delete_conversation(conversation_id: str, request: Request):
         service.delete_conversation(request.state.owner_id, conversation_id)
-        return JSONResponse(status_code=204, content=None)
+        # No body: a 204 carrying "null" breaks HTTP/1.1 keep-alive under uvicorn.
+        return Response(status_code=204)
 
     @app.post("/api/chat/conversations/{conversation_id}/messages", status_code=202)
     def submit_message(conversation_id: str, body: MessageBody, request: Request):

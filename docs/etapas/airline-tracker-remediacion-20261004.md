@@ -48,13 +48,35 @@ fijar a la del manifiesto publicado:
 Los 112 archivos de `site/data/v1/` y el `analysis_manifest` son los de master;
 no se ejecutó el gate ni se tocó ninguna aprobación.
 
+## Segunda auditoría (agente independiente)
+
+Un agente nuevo, sin el contexto de esta sesión, auditó los cambios anteriores
+y reprodujo siete defectos. Todos se corrigieron. Cada prueba nueva falla con
+el código previo y pasa con el corregido.
+
+| Defecto | Corrección | Prueba |
+|---|---|---|
+| El límite global de intentos fallidos se revisaba antes de verificar la contraseña: 50 contraseñas erróneas por hora desde cualquier IP bloqueaban al dueño con la contraseña correcta. | Solo el límite por cliente bloquea; el global queda como umbral de alerta (log de error). | `test_failures_from_many_addresses_never_lock_out_the_owner` |
+| Logins concurrentes se saltaban el límite por cliente, y cada scrypt usa 32 MiB. | El intento se registra como fallo en una transacción `BEGIN IMMEDIATE` antes de verificar y se borra si acierta; un semáforo limita a 2 verificaciones simultáneas (503 si espera > 10 s). | `test_concurrent_wrong_logins_cannot_exceed_the_per_client_limit`, `test_successful_login_does_not_consume_the_failure_budget` |
+| Una respuesta recuperada tras un stream cortado se guardaba duplicada (texto completo + delta parcial), regresión de la clave `item_id`. | La recuperación descarta los deltas parciales. | `test_recovered_answer_replaces_partial_deltas_instead_of_appending` |
+| El panel podía abrir dos streams del mismo turno (401 al cancelar y nuevo login, doble clic en el lanzador): el texto salía duplicado. | `listen()` aborta el stream anterior; el transporte deja de despachar en cuanto la señal se aborta; `ensureConversation` es de un solo vuelo. | `bootstrap.test.ts` |
+| Si borrar la conversación fallaba durante un turno, el compositor quedaba bloqueado. | El stream sigue hasta que el borrado tiene éxito; si falla con el turno ya cancelado, se liquida desde el estado del servidor. | `bootstrap.test.ts` |
+| `logout` y `DELETE` respondían 204 con cuerpo `null`, lo que rompe keep-alive con uvicorn (h11). | `Response(status_code=204)` sin cuerpo. Verificado además contra uvicorn real. | `test_no_content_responses_have_no_body` |
+| El cliente SSE rechazaba un replay válido si llegaba en un solo bloque de más de 128 000 caracteres. | El límite se aplica solo al fragmento incompleto tras despachar los eventos completos. | `transport.test.ts` |
+
+También se corrigieron tres puntos menores que señaló: el cierre de sesión ya
+no olvida la conversación guardada, y un turno fallido sin texto muestra una
+burbuja con "Reintentar". El tercero queda documentado: si dos usuarios se
+configuran con la misma contraseña, ninguno puede entrar (identidad ambigua);
+con una sola contraseña del dueño no aplica.
+
 ## Validación
 
 | Comando | Resultado |
 |---|---|
-| `pytest -q tests/test_chat_*.py tests/test_repo_budgets.py` | 59 passed. |
-| `pytest -m "not local_data and not browser" -q` (CI `test`) | 616 passed, 6 skipped. |
-| `npm run check`, `npm run test`, `npm run build` (CI `web`) | Limpios; 83 Vitest. Build idéntico a `site/assets/`. |
+| `pytest -q tests/test_chat_*.py tests/test_repo_budgets.py` | 64 passed tras la segunda auditoría. |
+| `pytest -m "not local_data and not browser" -q` (CI `test`) | 621 passed, 6 skipped. |
+| `npm run check`, `npm run test`, `npm run build` (CI `web`) | Limpios; 89 Vitest. Build idéntico a `site/assets/`. |
 | Smokes de navegador (chat, página, vuelos) | 9 passed con el Chromium preinstalado. El smoke del chat cubre contraseña incorrecta/correcta, que la contraseña no queda en el DOM ni en `localStorage`, reanudación de un turno `pending` tras recargar y sesión vencida. |
 | `evaluation --audit-snapshot` | 12/12 con la versión re-fijada. |
 | `ruff check` / `ruff format --check` del paquete y pruebas del chat | Limpios. Módulos ≤ 600 líneas Python y ≤ 400 TypeScript. |
@@ -71,9 +93,9 @@ no se ejecutó el gate ni se tocó ninguna aprobación.
 
 - La contraseña real no se generó en este cambio: debe generarse con
   `hash-password --generate` y entregarse solo al dueño, nunca en Git ni en el PR.
-- Con un solo usuario, el límite global de intentos fallidos puede bloquear
-  también al dueño durante un ataque de fuerza bruta; es una compensación
-  aceptada para un piloto de una persona.
+- Un atacante con muchas direcciones IP puede probar 5 contraseñas por IP cada
+  15 minutos; el umbral global solo alerta. La contraseña generada (24
+  caracteres aleatorios, ~144 bits) hace inviable la fuerza bruta.
 - El texto previo a una llamada de herramienta ("voy a consultar…") sigue
   concatenado a la respuesta final; se evaluará con la sonda real antes de
   cambiar la extracción.

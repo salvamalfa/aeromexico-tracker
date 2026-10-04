@@ -305,6 +305,8 @@ class OpenAIProvider:
                     if recovered_status == "completed":
                         terminal = "completed"
                         if content:
+                            # The saved turn is authoritative: drop partial deltas.
+                            content_parts.clear()
                             content_parts[(0, 0, "")] = content
                         turn_id = recovered_turn_id or turn_id
                         input_tokens, output_tokens, usage_complete = parse_usage(usage)
