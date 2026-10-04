@@ -14,8 +14,19 @@ versión semántica, las entradas van por fecha.
   detrás de un proxy, el signo de `compare_metrics`, la reanudación de turnos
   en cola, la pérdida de historial al recrear la sesión del proveedor, el uso
   de turnos fallidos y bloqueos del servidor. El sitio publicado no cambia y el
-  chat sigue apagado; la evaluación con modelos sigue pendiente de la clave de
-  API. Detalle en `docs/etapas/airline-tracker-remediacion-20261004.md`.
+  chat sigue apagado. Detalle en
+  `docs/etapas/airline-tracker-remediacion-20261004.md`.
+
+### Fixed
+
+- **Revisión del PR e integración real.** El modo local rechaza todas las
+  cabeceras `X-Forwarded-*` y la fábrica de API aplica la exigencia de contraseña
+  para OpenAI. El evaluador conserva checkpoints privados, representa consumo
+  desconocido como tal, mantiene sesiones para reconciliación y acepta formatos
+  numéricos regionales equivalentes. El adaptador consulta el uso del turno si
+  falta en el evento final; el panel libera observers y listeners al desmontar.
+  Una sonda real confirmó acceso y respuesta correcta. El hosting Business
+  actual requiere un VPS separado para la API Python; el piloto sigue pendiente.
 
 ## 2026-10-03
 

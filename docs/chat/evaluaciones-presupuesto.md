@@ -72,7 +72,7 @@ Son importes ilustrativos, no sustituyen mediciones de tokens/latencia ni una
 cotización. Iteraciones del agente, respuestas largas, historial, caché y
 tarifas de contexto largo los pueden cambiar.
 
-## Comparación live futura
+## Ejecución live y continuidad
 
 El bridge usa el `OpenAIProvider` de producción con un `ToolRegistry` real,
 sesión nueva por pregunta y callbacks que capturan plan, filas, referencias e
@@ -81,10 +81,11 @@ IDs de proveedor. El modo de sonda admite un candidato; el holdout exige 2–3.
 `--models`, `--model-price` por candidato y `--opt-in`. El mismo permiso del
 experimento puede cubrir una sonda y luego la comparación si la sonda resulta
 válida. Se ejecutan como fases separadas para inspeccionar el reporte de la
-sonda; cada proceso empieza su contador de presupuesto en cero. No se ejecutó
-`--run`.
+sonda; cada proceso empieza su contador de presupuesto en cero. El dueño ya
+autorizó US$10 acumulados para sonda y holdout. Se ejecutó una sonda correcta
+y se inició el holdout; su primer caso falló y se conservó para reconciliación.
 
-Comandos previstos solo después de autorización específica:
+Ejemplo de comando para una sonda autorizada (no repetir la ya ejecutada):
 
 ```bash
 uv run python -m src.conversational_analytics.evaluation --run --probe-only \
@@ -95,7 +96,8 @@ Antes de la segunda fase, revisar el reporte de la sonda: detenerse si
 `models[0].spent_unknown` es verdadero, si los totales de tokens son nulos o si
 `token_totals.usage_complete_case_count` no coincide con `token_totals.turn_count`.
 Con uso completo, fijar `REMAINING_USD` a **10 menos
-`models[0].estimated_cost_usd`** y continuar solo si es positivo. No reiniciar
+`models[0].estimated_cost_usd`**, descontando también cualquier otro intento
+ya consumido, y continuar solo si es positivo. No reiniciar
 el presupuesto a US$10 para la comparación. Mantener los mismos precios al
 calcular el saldo; la caché no observada puede alterar la factura.
 
@@ -109,11 +111,16 @@ uv run python -m src.conversational_analytics.evaluation --run \
 
 La variable de entorno
 `OPENAI_API_KEY` está presente en el entorno de esta sesión; su valor no fue
-leído ni reportado y acceso a Agents API sigue sin verificar.
+mostrado ni copiado y el acceso a Agents API quedó confirmado por la sonda.
 
 Cada corrida escribe un reporte local en `.state/outputs/chat-evaluations/`;
 Git ignora ese directorio porque puede contener texto del proveedor. El informe
 guarda plan, filas, respuesta, referencias, `call_id`, sesión, turno y eventos.
+Los archivos son privados (0600 en directorio 0700). Un sidecar de progreso
+atómico conserva IDs, estado y consumo sin copiar prompts ni respuestas; el
+estado `completed` solo se escribe después del informe final. Un error guarda
+únicamente tipos permitidos y estado HTTP, nunca excepciones crudas. Las
+sesiones con uso desconocido quedan disponibles para reconciliación.
 Los tokens totales de un turno quedan `null` si el proveedor no confirma uso
 completo; conteo HTTP interno del SDK y caché quedan `unknown` hasta que el
 adaptador los devuelva. Costo es una estimación con precios ingresados, no
@@ -154,5 +161,7 @@ medido con precios vigentes y supuestos de caché. Incluir escenarios de 100,
 1 000 y 10 000 preguntas al mes; separar tokens de entrada/salida, llamadas de
 herramientas y costos de hosting. Uso reportado por la API puede estar atrasado
 o incompleto, por lo que ni las estimaciones ni un presupuesto propio prometen
-un tope de factura. No se eligió un modelo, objetivo mensual, precio del
-proveedor ni presupuesto para live evaluation.
+un tope de factura. No se eligió un modelo ni objetivo mensual. El presupuesto
+del experimento es US$10 acumulados a tarifa normal; el incentivo Data Sharing
+no lo sustituye. Ver [cobertura y propuesta de límites](data-sharing.md) antes
+de atribuir costo cero a una llamada.

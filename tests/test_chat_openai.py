@@ -119,6 +119,18 @@ def _completed(turn_id: str = "turn_provider", usage=None):
     )
 
 
+def _completed_without_usage(turn_id: str = "turn_provider"):
+    return AgentSessionTurnCompletedEvent.model_validate(
+        {
+            "event_id": "evt_turn_completed",
+            "session_id": "sess_fixture",
+            "turn_id": turn_id,
+            "type": "agent.session.turn.completed",
+            "turn": _turn(turn_id, status="completed").model_dump(),
+        }
+    )
+
+
 def _failed(turn_id: str = "turn_provider"):
     return AgentSessionTurnFailedEvent.model_validate(
         {
@@ -193,7 +205,15 @@ class FakeEvents:
 
 
 class FakeSessions:
-    def __init__(self, *, create_stream=None, event_stream=None, prior_turns=None, recovery=None):
+    def __init__(
+        self,
+        *,
+        create_stream=None,
+        event_stream=None,
+        prior_turns=None,
+        recovery=None,
+        retrieved_turn=None,
+    ):
         self._create_stream = create_stream or FakeStream([])
         self.events = FakeEvents(lambda: event_stream or FakeStream([]))
         self._prior_turns = list(prior_turns or [])
@@ -202,7 +222,11 @@ class FakeSessions:
         self.deleted = []
         self.retrieve_calls = 0
         self.turn_list_calls = 0
-        self.turns = SimpleNamespace(list=self._list_turns)
+        self.retrieved_turn = retrieved_turn
+        self._retrieved_turns = list(retrieved_turn) if isinstance(retrieved_turn, list) else None
+        self.turn_retrieve_calls = []
+        self.stream_closed_at_turn_retrieve = []
+        self.turns = SimpleNamespace(list=self._list_turns, retrieve=self._retrieve_turn)
         self.items = SimpleNamespace(list=self._list_items)
 
     def create(self, **kwargs):
@@ -233,6 +257,13 @@ class FakeSessions:
     def _list_items(self, session_id, **kwargs):
         assert session_id == "sess_fixture"
         return SimpleNamespace(data=self._recovery.get("items", []) if self._recovery else [])
+
+    def _retrieve_turn(self, turn_id, *, session_id, timeout):
+        self.turn_retrieve_calls.append((turn_id, session_id, timeout))
+        self.stream_closed_at_turn_retrieve.append(self._create_stream.closed)
+        if self._retrieved_turns is not None:
+            return self._retrieved_turns.pop(0) if self._retrieved_turns else None
+        return self.retrieved_turn
 
 
 class FakeClient:

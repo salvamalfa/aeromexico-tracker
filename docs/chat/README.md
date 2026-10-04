@@ -31,13 +31,19 @@ sesiones del proveedor aisladas tras el adaptador.
 | Hito | Estado al 4 oct 2026 |
 |---|---|
 | H1 — semántica revisada | Conciliación técnica completa y 12 referencias estáticas verificadas; la revisión del dueño queda pendiente explícitamente. |
-| H2 — demo sin consumo | Backend, 11 métricas, siete herramientas, SSE y panel implementados. Pasan 40 pruebas del chat, 81 Vitest y los límites de tamaño. Un fallo preexistente del diagnóstico de etapa 12 está documentado en el reporte de entrega. No se llamó a OpenAI. |
-| H3 — chat real local | Pendiente de autorización del experimento (sonda + holdout) y verificar acceso. La variable de credencial está presente; acceso a Agents API no comprobado. |
-| H4 — modelo elegido | Pendiente de la sonda y evaluación live de 40 casos con 2–3 candidatos; no hay modelo elegido. |
-| H5 — piloto publicado | Pendiente de host persistente, identidad de usuarios, retención y validación desde el origen publicado. |
+| H2 — demo sin consumo | Backend, 11 métricas, siete herramientas, SSE y panel implementados y verificados. El fallo preexistente del diagnóstico de etapa 12 sigue documentado aparte. |
+| H3 — chat real local | Acceso confirmado con una sonda y consultas reales con herramientas y fuentes. El uso se recupera por lecturas oficiales; los errores y su consumo quedan registrados en la validación real. |
+| H4 — modelo elegido | Comparación live autorizada en curso; requiere revisar los resultados de los candidatos y superar el gate de calidad. No hay modelo elegido. |
+| H5 — piloto publicado | Una contraseña del dueño preparada fuera de Git. Hostinger Business no admite este backend Python; requiere un servidor separado, retención y validación HTTPS desde Pages. |
 
 Para evaluación, cobertura, gates y límites, consulta [evaluaciones y presupuesto](evaluaciones-presupuesto.md).
 Para instalación, operación y el diseño propuesto de una instancia persistente,
 consulta [operaciones](operations.md). Los ejemplos de prompt no son el holdout:
 `tests/fixtures/chat_evals/holdout.json` tiene preguntas reservadas y valores
 estáticos verificados contra el snapshot publicado.
+
+Para el hosting actual, consulta la [guía de VPS Hostinger](hostinger-vps.md).
+
+La [validación real](../etapas/airline-tracker-validacion-real-20261004.md) y la
+[guía de Data Sharing](data-sharing.md) detallan resultados, cobertura y
+límites diarios propuestos.

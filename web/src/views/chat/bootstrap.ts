@@ -1,6 +1,8 @@
 import type { ChatChart, ChatConversation, ChatEvent, ChatMessage } from "../../types/chat";
+import { mountChatCardActions } from "./card-actions";
 import { buildChatContext, describeChatContext } from "./context";
 import { messageFromPayload, safeReferences } from "./markdown";
+import { mountChatModal } from "./modal-controls";
 import { mountPanelControls, resizeDashboardCharts } from "./panel-controls";
 import { renderMessages } from "./render";
 import { MAX_INPUT, PANEL_HTML } from "./template";
@@ -23,7 +25,7 @@ interface ChatUiState {
   focusedCard?: Element;
 }
 
-export function mountChat(): void {
+export function mountChat(): () => void {
   // The login session lives only in memory: a reload asks for the password again.
   let session: string | undefined;
   let authMode: "local" | "password" | undefined;
@@ -44,6 +46,7 @@ export function mountChat(): void {
   panel.setAttribute("aria-label", "Airline Tracker chat analítico");
   panel.innerHTML = PANEL_HTML;
   document.body.append(launcher, panel);
+  const modal = mountChatModal(panel, launcher, document.querySelector<HTMLElement>(".page-shell"));
 
   const query = <T extends HTMLElement>(selector: string) => panel.querySelector<T>(selector)!;
   const messagesNode = query<HTMLOListElement>("[data-chat-messages]");
@@ -313,8 +316,9 @@ export function mountChat(): void {
     requireLogin("Sesión cerrada.");
   });
 
-  async function openChat(card?: Element): Promise<void> {
+  async function openChat(card?: Element, opener?: HTMLElement): Promise<void> {
     if (card) state.focusedCard = card;
+    modal.open(opener);
     panel.hidden = false;
     launcher.setAttribute("aria-expanded", "true");
     document.body.classList.add("chat-open");
@@ -328,10 +332,10 @@ export function mountChat(): void {
     launcher.setAttribute("aria-expanded", "false");
     document.body.classList.remove("chat-open");
     resizeDashboardCharts();
-    launcher.focus();
+    modal.close();
   }
 
-  launcher.addEventListener("click", () => void openChat());
+  launcher.addEventListener("click", () => void openChat(undefined, launcher));
   closeButton.addEventListener("click", closeChat);
   form.addEventListener("submit", (event) => { event.preventDefault(); void submitMessage(input.value); });
   input.addEventListener("input", () => {
@@ -366,35 +370,22 @@ export function mountChat(): void {
     }
   });
 
-  const cardButton = (card: HTMLElement, label: string) => {
-    if (card.querySelector(":scope > .chat-card-action")) return;
-    card.classList.add("chat-card-host");
-    const button = document.createElement("button"); button.type = "button"; button.className = "chat-card-action";
-    button.textContent = "Preguntar a Airline Tracker"; button.setAttribute("aria-label", `Preguntar sobre ${label}`);
-    button.addEventListener("click", () => void openChat(card));
-    card.append(button);
-  };
-  const bindCardActions = () => {
-    document.querySelectorAll<HTMLElement>(".chart-card, .kpi-card, .flight-kpi, .narrative-card").forEach((card) => {
-      const title = card.querySelector<HTMLElement>(".chart-title")?.textContent?.trim() ?? "esta gráfica";
-      cardButton(card, title);
-    });
-    document.querySelectorAll<HTMLElement>(".flights-shell").forEach((card) => cardButton(card, "la vista de vuelos"));
-  };
-  bindCardActions();
-  const observer = new MutationObserver(bindCardActions);
-  observer.observe(document.querySelector(".page-shell") ?? document.body, { childList: true, subtree: true });
-  window.addEventListener("reader-tab-visible", bindCardActions);
   // Context follows an explicit click or keyboard focus on a card, never hover:
   // moving the pointer toward the panel must not change the question's context.
-  const cardListener = (event: Event) => {
-    if (panel.contains(event.target as Node) || launcher.contains(event.target as Node)) return;
-    const card = (event.target as Element | null)?.closest?.(".chart-card, .flights-shell, .kpi-card");
-    if (card) { state.focusedCard = card; setContextLabel(); }
-  };
-  document.addEventListener("click", cardListener, true);
-  document.addEventListener("focusin", cardListener, true);
-
-  mountPanelControls(panel, resizer, closeChat);
+  const disposeCardActions = mountChatCardActions((card, opener) => void openChat(card, opener), (card) => {
+    if (panel.contains(card) || launcher.contains(card)) return;
+    state.focusedCard = card;
+    setContextLabel();
+  });
+  const disposePanelControls = mountPanelControls(panel, resizer, closeChat);
   setContextLabel();
+  return () => {
+    state.abort?.abort();
+    modal.dispose();
+    disposeCardActions();
+    disposePanelControls();
+    panel.remove();
+    launcher.remove();
+    document.body.classList.remove("chat-open");
+  };
 }

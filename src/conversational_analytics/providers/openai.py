@@ -1,10 +1,4 @@
-"""Official OpenAI Agents API adapter for the local chat service.
-
-The adapter uses ``environment.type = none`` and application-owned function
-tools. It deliberately does not retry a submitted user input after an
-ambiguous network failure: the saved session is reconciled first, and the
-application can decide whether a new user submission is appropriate.
-"""
+"""Official Agents API provider for local chat, without replaying inputs."""
 
 from __future__ import annotations
 
@@ -18,35 +12,28 @@ from typing import Any
 from ._openai_helpers import (
     ALLOWED_TOOL_NAMES,
     SYSTEM_INSTRUCTIONS,
+    OpenAIProviderError,
+    ToolResultLimitExceeded,
     chart_from_results,
     close_stream,
     event_call_id,
     event_session_id,
-    event_turn_id,
     field,
     int_or_zero,
     parse_usage,
     prior_history,
     question_envelope,
+    read_completed_turn_usage,
     references_from_results,
     required_string,
     result_from_recovered,
     to_dict,
     usage_from_event,
 )
+from ._openai_helpers import (
+    event_turn_id as get_event_turn_id,
+)
 from .base import ProviderResult, ToolCall
-
-
-class OpenAIProviderError(RuntimeError):
-    """Sanitized adapter failure safe to surface to the local API.
-
-    ``usage`` carries provider-reported (input, output) tokens when known, so
-    failed turns are still booked against the quota.
-    """
-
-    def __init__(self, message: str, usage: tuple[int, int] | None = None) -> None:
-        super().__init__(message)
-        self.usage = usage
 
 
 class OpenAIProvider:
@@ -108,6 +95,7 @@ class OpenAIProvider:
         started_at = time.monotonic()
         stream_manager = None
         stream_iter = None
+        stream_closed = False
         content_parts: dict[tuple[int, int, str], str] = {}
         tool_outputs: list[dict[str, Any]] = []
         processed_actions: set[tuple[str, str]] = set()
@@ -122,7 +110,15 @@ class OpenAIProvider:
             if cancel_event.is_set():
                 raise InterruptedError("turn cancelled")
             if time.monotonic() - started_at >= self.max_turn_seconds:
-                raise OpenAIProviderError("El turno excedió el límite de tiempo configurado")
+                raise OpenAIProviderError(
+                    "El turno excedió el límite de tiempo configurado", reason_code="turn_timeout"
+                )
+
+        def close_active_stream() -> None:
+            nonlocal stream_closed
+            if stream_manager is not None and not stream_closed:
+                close_stream(stream_manager)
+                stream_closed = True
 
         def handle_action(action: Any) -> None:
             nonlocal turn_id
@@ -146,7 +142,10 @@ class OpenAIProvider:
             if action_key in processed_actions:
                 return
             if len(processed_actions) >= self.max_tool_calls:
-                raise OpenAIProviderError("El turno alcanzó el máximo de llamadas de herramientas")
+                raise OpenAIProviderError(
+                    "El turno alcanzó el máximo de llamadas de herramientas",
+                    reason_code="tool_call_limit",
+                )
             check_limits()
             processed_actions.add(action_key)
             emit("tool.started", {"name": name})
@@ -156,7 +155,11 @@ class OpenAIProvider:
                     raise TypeError("tool result must be a JSON object")
                 encoded = json.dumps(result, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
                 if len(encoded.encode("utf-8")) > self.max_tool_result_bytes:
-                    raise ValueError("tool result exceeds configured limit")
+                    raise ToolResultLimitExceeded
+            except ToolResultLimitExceeded:
+                safe_error = "La herramienta no pudo completar una consulta validada."
+                emit("tool.completed", {"name": name, "error": safe_error})
+                raise OpenAIProviderError(safe_error, reason_code="tool_result_limit") from None
             except Exception:
                 safe_error = "La herramienta no pudo completar una consulta validada."
                 emit("tool.completed", {"name": name, "error": safe_error})
@@ -182,7 +185,7 @@ class OpenAIProvider:
             turn = event_data.get("turn")
             if isinstance(turn, dict) and turn.get("subagent_id") is not None:
                 return False
-            event_turn_id = self._event_turn_id(event_data)
+            event_turn_id = get_event_turn_id(event_data)
             if not event_turn_id or (prior_turn_id and event_turn_id == prior_turn_id):
                 return False
             if turn_id is None:
@@ -190,7 +193,8 @@ class OpenAIProvider:
             return event_turn_id == turn_id
 
         try:
-            self._check_cancel(cancel_event)
+            if cancel_event.is_set():
+                raise InterruptedError("turn cancelled")
             if session_was_created:
                 stream_manager = self.client.beta.agents.sessions.create(
                     agent={"model": self.model, "instructions": instructions, "tools": tools},
@@ -224,7 +228,7 @@ class OpenAIProvider:
                 check_limits()
                 event_data = to_dict(event)
                 event_type = event_data.get("type")
-                discovered_session = self._event_session_id(event_data)
+                discovered_session = event_session_id(event_data)
                 if discovered_session and discovered_session != session_id:
                     session_id = discovered_session
                     self._track_session(session_id, persist_session, tracked_sessions)
@@ -242,7 +246,7 @@ class OpenAIProvider:
                         "provider.metadata",
                         {
                             "provider_turn_id": turn_id,
-                            "provider_call_id": self._event_call_id(event_data),
+                            "provider_call_id": event_call_id(event_data),
                             "provider_event_id": event_id,
                             "provider_event_type": event_type,
                         },
@@ -276,9 +280,19 @@ class OpenAIProvider:
                 elif event_type == "agent.session.turn.completed":
                     if is_current_turn:
                         terminal = "completed"
-                        turn = event_data.get("turn")
-                        usage = event_data.get("usage") or (turn or {}).get("usage")
-                        input_tokens, output_tokens, usage_complete = parse_usage(usage)
+                        usage = usage_from_event(event_data)
+                        if usage is None and session_id and turn_id:
+                            usage = read_completed_turn_usage(
+                                self.client,
+                                session_id,
+                                turn_id,
+                                cancel_event=cancel_event,
+                                deadline=started_at + self.max_turn_seconds,
+                                close_stream=close_active_stream,
+                            )
+                        if usage is not None:
+                            input_tokens, output_tokens = usage
+                            usage_complete = True
                         break
                 elif event_type == "agent.session.turn.failed":
                     if is_current_turn:
@@ -310,6 +324,18 @@ class OpenAIProvider:
                             content_parts[(0, 0, "")] = content
                         turn_id = recovered_turn_id or turn_id
                         input_tokens, output_tokens, usage_complete = parse_usage(usage)
+                        if not usage_complete and session_id and turn_id:
+                            usage = read_completed_turn_usage(
+                                self.client,
+                                session_id,
+                                turn_id,
+                                cancel_event=cancel_event,
+                                deadline=started_at + self.max_turn_seconds,
+                                close_stream=close_active_stream,
+                            )
+                            if usage is not None:
+                                input_tokens, output_tokens = usage
+                                usage_complete = True
                 if terminal != "completed":
                     # Idle or EOF is not proof that this user's turn succeeded.
                     raise OpenAIProviderError(
@@ -348,8 +374,7 @@ class OpenAIProvider:
                 "No se pudo completar el turno de Agents API; no se reenviará el mensaje automáticamente"
             ) from None
         finally:
-            if stream_manager is not None:
-                self._close_stream(stream_manager)
+            close_active_stream()
 
     def cancel(self, session_id: str) -> None:
         """Request cancellation through the documented session event API."""
@@ -558,16 +583,6 @@ class OpenAIProvider:
                 else "El mensaje o contexto no es JSON válido"
             ) from None
         return [{"role": "user", "content": [{"type": "input_text", "text": text}]}]
-
-    @staticmethod
-    def _check_cancel(cancel_event: threading.Event) -> None:
-        if cancel_event.is_set():
-            raise InterruptedError("turn cancelled")
-
-    _event_session_id = staticmethod(event_session_id)
-    _event_turn_id = staticmethod(event_turn_id)
-    _event_call_id = staticmethod(event_call_id)
-    _close_stream = staticmethod(close_stream)
 
     @staticmethod
     def _track_session(session_id: str | None, persist_session, tracked: set[str]) -> None:

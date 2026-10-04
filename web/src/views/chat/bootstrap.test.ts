@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../lib/plotly", () => ({ default: { newPlot: () => Promise.resolve(), Plots: { resize: () => Promise.resolve() } } }));
 
@@ -10,6 +10,7 @@ let conversationTurnStatus = "running";
 let cancelStatus = 401;
 let deleteStatus = 204;
 let terminalEvent: string | undefined;
+let disposeChat: (() => void) | undefined;
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 const frame = (seq: number, type: string, data: object) => enc.encode(`id: ${seq}\nevent: ${type}\ndata: ${JSON.stringify(data)}\n\n`);
 
@@ -37,6 +38,12 @@ function installFetch(auth: "password" | "local") {
 }
 
 describe("chat bootstrap audit", () => {
+  afterEach(() => {
+    disposeChat?.();
+    disposeChat = undefined;
+    vi.unstubAllGlobals();
+  });
+
   beforeEach(() => {
     document.body.innerHTML = ""; streams.length = 0; localStorage.clear(); vi.resetModules();
     conversationTurnStatus = "running"; cancelStatus = 401; deleteStatus = 204; terminalEvent = undefined;
@@ -45,7 +52,7 @@ describe("chat bootstrap audit", () => {
   it("does not run two listeners after a 401 on cancel and re-login", async () => {
     installFetch("password"); cancelStatus = 401;
     const { mountChat } = await import("./bootstrap");
-    mountChat();
+    disposeChat = mountChat();
     const panel = document.getElementById("airline-chat-panel")!;
     (document.querySelector(".chat-launcher") as HTMLButtonElement).click(); await flush();
     const access = panel.querySelector("[data-chat-access]") as HTMLFormElement;
@@ -66,7 +73,7 @@ describe("chat bootstrap audit", () => {
   it("does not stay busy when deleting a conversation fails during an active turn", async () => {
     installFetch("local"); cancelStatus = 200; deleteStatus = 500;
     const { mountChat } = await import("./bootstrap");
-    mountChat();
+    disposeChat = mountChat();
     const panel = document.getElementById("airline-chat-panel")!;
     (document.querySelector(".chat-launcher") as HTMLButtonElement).click(); await flush();
     const input = panel.querySelector("#chat-input") as HTMLTextAreaElement;
@@ -80,7 +87,7 @@ describe("chat bootstrap audit", () => {
     installFetch("local"); conversationTurnStatus = "running";
     localStorage.setItem("airline-tracker.chat.conversation-id", "c1");
     const { mountChat } = await import("./bootstrap");
-    mountChat();
+    disposeChat = mountChat();
     const launcher = document.querySelector(".chat-launcher") as HTMLButtonElement;
     launcher.click(); launcher.click(); await flush(50);
     expect(streams.length).toBe(1);
@@ -89,7 +96,7 @@ describe("chat bootstrap audit", () => {
   it("a failed turn without text still offers Reintentar", async () => {
     installFetch("local"); terminalEvent = "turn.failed";
     const { mountChat } = await import("./bootstrap");
-    mountChat();
+    disposeChat = mountChat();
     const panel = document.getElementById("airline-chat-panel")!;
     (document.querySelector(".chat-launcher") as HTMLButtonElement).click(); await flush();
     const input = panel.querySelector("#chat-input") as HTMLTextAreaElement;
@@ -101,7 +108,7 @@ describe("chat bootstrap audit", () => {
   it("logout keeps the stored conversation for the next login", async () => {
     installFetch("password");
     const { mountChat } = await import("./bootstrap");
-    mountChat();
+    disposeChat = mountChat();
     const panel = document.getElementById("airline-chat-panel")!;
     (document.querySelector(".chat-launcher") as HTMLButtonElement).click(); await flush();
     const pw = panel.querySelector("#chat-password") as HTMLInputElement;
@@ -110,5 +117,35 @@ describe("chat bootstrap audit", () => {
     (panel.querySelector("[data-chat-logout]") as HTMLButtonElement).click(); await flush();
     expect(localStorage.getItem("airline-tracker.chat.conversation-id")).toBe("c1");
     expect((panel.querySelector("[data-chat-access]") as HTMLFormElement).hidden).toBe(false);
+  });
+
+  it("uses a mobile modal and returns focus to the card opener", async () => {
+    installFetch("local");
+    vi.stubGlobal("matchMedia", () => ({ matches: true }));
+    const pageShell = document.createElement("main");
+    pageShell.className = "page-shell";
+    const card = document.createElement("section");
+    card.className = "chart-card";
+    pageShell.append(card);
+    document.body.append(pageShell);
+
+    const { mountChat } = await import("./bootstrap");
+    disposeChat = mountChat();
+    const opener = card.querySelector<HTMLButtonElement>(".chat-card-action")!;
+    opener.click();
+    await flush();
+
+    const panel = document.getElementById("airline-chat-panel")!;
+    const launcher = document.querySelector<HTMLButtonElement>(".chat-launcher")!;
+    expect(panel.getAttribute("role")).toBe("dialog");
+    expect(panel.getAttribute("aria-modal")).toBe("true");
+    expect(pageShell.inert).toBe(true);
+    expect(launcher.inert).toBe(true);
+
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    expect(panel.hidden).toBe(true);
+    expect(pageShell.inert).toBe(false);
+    expect(launcher.inert).toBe(false);
+    expect(document.activeElement).toBe(opener);
   });
 });

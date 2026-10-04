@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable, Mapping
+import threading
+import time
+from collections.abc import Callable, Iterable, Mapping
 from typing import Any
 from urllib.parse import urlparse
 
@@ -55,6 +57,30 @@ MAX_ENVELOPE_BYTES = 12_000
 MAX_HISTORY_CHARS = 8_000
 MAX_HISTORY_MESSAGES = 8
 MAX_HISTORY_MESSAGE_CHARS = 2_000
+USAGE_POLL_MAX_ATTEMPTS = 5
+USAGE_POLL_INTERVAL_SECONDS = 2.0
+PROVIDER_REASON_CODES = frozenset({"tool_call_limit", "turn_timeout", "tool_result_limit"})
+
+
+class OpenAIProviderError(RuntimeError):
+    """Sanitized provider error with optional reported usage and bounded reason code."""
+
+    def __init__(
+        self,
+        message: str,
+        usage: tuple[int, int] | None = None,
+        *,
+        reason_code: str | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.usage = usage
+        self.reason_code = (
+            reason_code if isinstance(reason_code, str) and reason_code in PROVIDER_REASON_CODES else None
+        )
+
+
+class ToolResultLimitExceeded(Exception):
+    """Internal marker for a locally verified oversized tool response."""
 
 
 def question_envelope(context: Any, question: str) -> dict[str, Any]:
@@ -130,11 +156,77 @@ def usage_from_event(event_data: dict[str, Any]) -> tuple[int, int] | None:
     return (input_tokens, output_tokens) if complete else None
 
 
+def poll_turn_usage(
+    client: Any,
+    session_id: str,
+    turn_id: str,
+    *,
+    cancel_event: threading.Event,
+    deadline: float,
+    max_attempts: int = USAGE_POLL_MAX_ATTEMPTS,
+    wait_seconds: float = USAGE_POLL_INTERVAL_SECONDS,
+) -> tuple[int, int] | None:
+    """Poll only the completed turn's read endpoint for delayed usage data."""
+    for attempt in range(max_attempts):
+        if cancel_event.is_set():
+            return None
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return None
+        try:
+            turn = client.beta.agents.sessions.turns.retrieve(
+                turn_id, session_id=session_id, timeout=remaining
+            )
+        except Exception:
+            turn = None
+        if turn is not None:
+            usage = field(turn, "usage")
+            if not isinstance(usage, Mapping):
+                usage = to_dict(usage)
+            input_tokens, output_tokens, complete = parse_usage(dict(usage))
+            if complete:
+                return input_tokens, output_tokens
+        if attempt + 1 < max_attempts:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0 or cancel_event.wait(min(wait_seconds, remaining)):
+                return None
+    return None
+
+
+def read_completed_turn_usage(
+    client: Any,
+    session_id: str,
+    turn_id: str,
+    *,
+    cancel_event: threading.Event,
+    deadline: float,
+    close_stream: Callable[[], None],
+    wait_seconds: float | None = None,
+) -> tuple[int, int] | None:
+    """Release the event stream, then poll the read-only usage endpoint."""
+    close_stream()
+    if wait_seconds is None:
+        wait_seconds = USAGE_POLL_INTERVAL_SECONDS
+    usage = poll_turn_usage(
+        client,
+        session_id,
+        turn_id,
+        cancel_event=cancel_event,
+        deadline=deadline,
+        max_attempts=USAGE_POLL_MAX_ATTEMPTS,
+        wait_seconds=wait_seconds,
+    )
+    if cancel_event.is_set():
+        raise InterruptedError("turn cancelled")
+    return usage
+
+
 def parse_usage(value: Any) -> tuple[int, int, bool]:
     """Parse the turn aggregate only when both token totals are present."""
-    if not isinstance(value, dict):
+    if not isinstance(value, Mapping):
         return 0, 0, False
     input_tokens, output_tokens = value.get("input_tokens"), value.get("output_tokens")
+    total_tokens = value.get("total_tokens")
     if (
         isinstance(input_tokens, int)
         and not isinstance(input_tokens, bool)
@@ -142,6 +234,14 @@ def parse_usage(value: Any) -> tuple[int, int, bool]:
         and isinstance(output_tokens, int)
         and not isinstance(output_tokens, bool)
         and output_tokens >= 0
+        and (
+            total_tokens is None
+            or (
+                isinstance(total_tokens, int)
+                and not isinstance(total_tokens, bool)
+                and total_tokens == input_tokens + output_tokens
+            )
+        )
     ):
         return input_tokens, output_tokens, True
     return 0, 0, False

@@ -122,5 +122,6 @@ comprobar migraciones antes del despliegue. Probar restauración y borrado antes
 de abrir el piloto.
 
 Esta es una receta de destino revisable, no una infraestructura creada o
-validada. H5 seguirá pendiente hasta decidir quién administra el host, quiénes
-son usuarios, retención y acceso autorizado a la API.
+validada. H5 seguirá pendiente hasta disponer de un host administrado, acordar la
+retención y superar las pruebas HTTPS desde Pages. El acceso inicial será
+únicamente para el dueño, con la contraseña preparada fuera de Git.

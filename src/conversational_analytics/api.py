@@ -35,7 +35,7 @@ class UnavailableSnapshot:
         return {}
 
 
-FORWARDING_HEADERS = ("forwarded", "x-forwarded-for", "x-forwarded-host", "x-real-ip")
+FORWARDING_HEADERS = {"forwarded", "x-real-ip"}
 PUBLIC_PATHS = {"/api/chat/health", "/api/chat/login"}
 LOGIN_BODY_LIMIT = 1_024
 
@@ -70,6 +70,16 @@ def create_app(
     start_worker: bool = True,
 ) -> FastAPI:
     config = config or ChatConfig.from_env()
+    allow_local_openai = os.environ.get("CHAT_ALLOW_LOCAL_OPENAI", "false").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+    if config.provider == "openai" and config.auth_mode == "local" and not allow_local_openai:
+        raise ValueError(
+            "OpenAI mode requires password authentication "
+            "(CHAT_ALLOW_LOCAL_OPENAI=true only on the owner's machine)"
+        )
     if snapshot is None:
         try:
             from .data.snapshot import Snapshot
@@ -145,7 +155,10 @@ def create_app(
             host = request.headers.get("host", "")
             if not peer_local or not _loopback_host(host):
                 return JSONResponse({"detail": "local loopback access required"}, status_code=403)
-            if any(request.headers.get(name) for name in FORWARDING_HEADERS):
+            has_forwarding_headers = any(
+                name in FORWARDING_HEADERS or name.startswith("x-forwarded-") for name in request.headers
+            )
+            if has_forwarding_headers:
                 # A reverse proxy makes every client look like loopback.
                 return JSONResponse({"detail": "local mode cannot run behind a proxy"}, status_code=403)
             if origin:

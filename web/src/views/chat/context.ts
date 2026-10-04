@@ -25,6 +25,12 @@ function activeTab(): "reading" | "economy" | "flights" {
   return tab === "economy" || tab === "flights" ? tab : "reading";
 }
 
+function tabForCard(card: Element | null): "reading" | "economy" | "flights" | undefined {
+  const panelId = card?.closest<HTMLElement>('[role="tabpanel"]')?.id;
+  const tab = panelId?.replace("panel-", "");
+  return tab === "reading" || tab === "economy" || tab === "flights" ? tab : undefined;
+}
+
 function cardIdFrom(node: Element | null): string | undefined {
   if (!node) return undefined;
   const card = node.closest<HTMLElement>(".chart-card, .flights-shell, .kpi-card, .flight-kpi, .narrative-card");
@@ -60,7 +66,9 @@ function selectedEntities(cardId?: string): string | string[] {
 
 export function buildChatContext(cardElement?: Element | null): ChatContext {
   const tab = activeTab();
-  const cardId = cardIdFrom(cardElement ?? document.activeElement);
+  const focusedCard = cardElement ?? document.activeElement;
+  const cardTab = tabForCard(focusedCard);
+  const cardId = cardTab && cardTab !== tab ? undefined : cardIdFrom(focusedCard);
   const period = tab === "flights" && flightState.quarters[flightState.periodIndex]
     ? flightState.quarters[flightState.periodIndex]!.period_id
     : currentPeriodId() ?? "";

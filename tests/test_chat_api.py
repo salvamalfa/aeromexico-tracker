@@ -213,6 +213,31 @@ def test_local_mode_rejects_non_loopback_origin_host_and_proxies(tmp_path: Path)
     assert proxied.post("/api/chat/conversations").status_code == 201
 
 
+@pytest.mark.parametrize(
+    "header",
+    [
+        {"X-Forwarded-Proto": "https"},
+        {"X-Forwarded-Port": "443"},
+        {"X-Forwarded-Prefix": "/api"},
+        {"X-Forwarded-Proto": ""},
+        {"Forwarded": "for=203.0.113.9;proto=https"},
+        {"X-Real-IP": "203.0.113.9"},
+    ],
+)
+def test_local_mode_rejects_all_forwarding_headers_with_loopback_peer_and_host(
+    tmp_path: Path, header: dict[str, str]
+):
+    app = create_app(
+        ChatConfig(state_path=tmp_path / "chat.sqlite3"),
+        snapshot=Snapshot(),
+        provider=object(),
+        start_worker=False,
+    )
+    client = TestClient(app, base_url="http://127.0.0.1:8765", client=("127.0.0.1", 50000))
+    response = client.get("/api/chat/health", headers=header)
+    assert response.status_code == 403
+
+
 def test_post_bodies_must_declare_their_length(tmp_path: Path):
     config = ChatConfig(state_path=tmp_path / "chat.sqlite3")
     app = create_app(config, snapshot=Snapshot(), provider=object(), start_worker=False)
@@ -251,3 +276,18 @@ def test_config_requires_password_mode_for_openai(monkeypatch: pytest.MonkeyPatc
     monkeypatch.setenv("CHAT_ALLOWED_ORIGINS", ORIGIN)
     config = ChatConfig.from_env()
     assert config.password_users == {"owner": encoded}
+
+
+def test_app_factory_guards_direct_openai_local_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.delenv("CHAT_ALLOW_LOCAL_OPENAI", raising=False)
+    config = ChatConfig(
+        state_path=tmp_path / "chat.sqlite3",
+        provider="openai",
+        auth_mode="local",
+    )
+    with pytest.raises(ValueError, match="password authentication"):
+        create_app(config, snapshot=Snapshot(), provider=object(), start_worker=False)
+
+    monkeypatch.setenv("CHAT_ALLOW_LOCAL_OPENAI", "true")
+    app = create_app(config, snapshot=Snapshot(), provider=object(), start_worker=False)
+    assert app.state.chat_provider is not None

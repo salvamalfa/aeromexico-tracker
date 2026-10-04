@@ -13,7 +13,9 @@ import json
 import math
 import re
 import sys
+from collections import Counter
 from dataclasses import dataclass
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -62,6 +64,61 @@ def extract_numbers(text: str) -> list[float]:
     return [float(token.replace(",", ".")) for token in re.findall(r"(?<!\w)-?\d+(?:[.,]\d+)?", text)]
 
 
+def _quarter_parts(term: str) -> tuple[int, int] | None:
+    match = re.fullmatch(r"\s*(20\d{2})\s*[-–—_/ ]?\s*[qQ]\s*([1-4])\s*", term)
+    if match:
+        return int(match.group(1)), int(match.group(2))
+    match = re.fullmatch(r"\s*[qQ]\s*([1-4])\s*[-–—_/ ]+\s*(20\d{2})\s*", term)
+    if match:
+        return int(match.group(2)), int(match.group(1))
+    match = re.fullmatch(r"\s*([1-4])\s*[tT]\s*(20\d{2}|\d{2})\s*", term)
+    if match:
+        year = int(match.group(2))
+        return (year if year > 99 else 2000 + year), int(match.group(1))
+    return None
+
+
+def _quarter_alias_present(year: int, quarter: int, response: str) -> bool:
+    yy = str(year)[-2:]
+    names_es = ("primer", "segundo", "tercer", "cuarto")
+    names_en = ("first", "second", "third", "fourth")
+    patterns = (
+        rf"\b{year}\s*[-–—_/ ]?\s*[qQ]\s*{quarter}\b",
+        rf"\b[qQ]\s*{quarter}\s*[-–—_/ ]+\s*{year}\b",
+        rf"\b{quarter}\s*[tT]\s*{yy}\b",
+        rf"\b{quarter}\s*[tT]\s*{year}\b",
+        rf"\b[tT]\s*{quarter}\s*[-–—_/ ]+\s*{year}\b",
+        rf"\b{names_es[quarter - 1]}\s+trimestre\s+(?:de\s+)?{year}\b",
+        rf"\b{names_en[quarter - 1]}\s+quarter\s+(?:of\s+)?{year}\b",
+    )
+    return any(re.search(pattern, response, re.IGNORECASE) for pattern in patterns)
+
+
+def _response_term_present(term: str, response: str) -> bool:
+    """Match exact terms plus common decimal and bilingual quarter formatting."""
+    percent = re.fullmatch(r"\s*(\d+(?:[.,]\d+)?)\s*%\s*", term)
+    if percent:
+        try:
+            expected = Decimal(percent.group(1).replace(",", "."))
+        except InvalidOperation:
+            return False
+        for match in re.finditer(
+            r"(?<![\w.])([+-]?\d+(?:[.,]\d+)?)\s*(?:%|por\s+ciento|percent)(?!\w)",
+            response,
+            re.IGNORECASE,
+        ):
+            try:
+                if Decimal(match.group(1).replace(",", ".")) == expected:
+                    return True
+            except InvalidOperation:
+                continue
+        return False
+    quarter = _quarter_parts(term)
+    if quarter:
+        return _quarter_alias_present(quarter[0], quarter[1], response)
+    return term.casefold() in response.casefold()
+
+
 def verify_observation(
     case: dict[str, Any],
     observation: dict[str, Any],
@@ -87,7 +144,18 @@ def verify_observation(
     expected_plan = case["expected"].get("plan")
     actual_plan = observation.get("plan") or {}
     if expected_plan is not None and check_plan:
-        mismatches = [key for key, value in expected_plan.items() if actual_plan.get(key) != value]
+        unordered = {"metric_ids", "entity_ids", "periods"}
+        mismatches = []
+        for key, value in expected_plan.items():
+            actual = actual_plan.get(key)
+            if key in unordered:
+                matches = (
+                    isinstance(value, list) and isinstance(actual, list) and Counter(value) == Counter(actual)
+                )
+            else:
+                matches = actual == value
+            if not matches:
+                mismatches.append(key)
         if mismatches:
             failures.append(f"plan: campos distintos {', '.join(mismatches)}")
         else:
@@ -136,7 +204,7 @@ def verify_observation(
                 checks.append(f"referencia:{expected_row['metric_id']}")
         if check_response:
             required_terms = case["expected"].get("response_terms", [])
-            missing_terms = [term for term in required_terms if term.casefold() not in response.casefold()]
+            missing_terms = [term for term in required_terms if not _response_term_present(term, response)]
             if missing_terms:
                 failures.append(f"respuesta sin términos requeridos: {', '.join(missing_terms)}")
             elif required_terms:
@@ -298,7 +366,14 @@ def _parse_prices(
         try:
             model, amounts = item.split("=", 1)
             input_price, output_price = (float(value) for value in amounts.split(":", 1))
-            if not model or input_price <= 0 or output_price <= 0 or model in prices:
+            if (
+                not model
+                or not math.isfinite(input_price)
+                or not math.isfinite(output_price)
+                or input_price <= 0
+                or output_price <= 0
+                or model in prices
+            ):
                 raise ValueError
             prices[model] = (input_price, output_price)
         except ValueError:
@@ -364,7 +439,13 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 0
 
-    if not args.opt_in or args.budget_usd is None or args.budget_usd <= 0 or not args.models:
+    if (
+        not args.opt_in
+        or args.budget_usd is None
+        or not math.isfinite(args.budget_usd)
+        or args.budget_usd <= 0
+        or not args.models
+    ):
         parser.error("--run exige --budget-usd positivo, --models y --opt-in explícitos")
     if args.budget_usd > 10:
         parser.error("el umbral operativo de este harness no puede superar US$10")
