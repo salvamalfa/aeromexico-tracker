@@ -205,7 +205,8 @@ excepciones al presupuesto para evitar dividir responsabilidades.
 Los 112 hashes de `site/data/v1/` y `analysis_manifest` se conservaron al
 regenerar el sitio; solo cambió el manifiesto de código. El gate usó el expediente
 ya aprobado `analysis_runs/drafts/2026Q2/186ba823aea28830be12cb0293c5bb2890a433b173addc473c26aa8f89cab26f.json`.
-Para futura regeneración, confirma primero en Git los inputs `src/web/contracts/config`,
+Para futura regeneración, confirma primero en Git los inputs bajo `src/`, `web/`,
+`contracts/` y `config/`,
 y usa el gate y verificador del repo. No fabriques aprobaciones si faltan datos
 privados: el respaldo separado es `salvamalfa/aeromexico-tracker-data`.
 
