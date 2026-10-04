@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Comprueba el acceso privado al chat de Aerolíneas MX Tracker.">
+  <title>Comprobar acceso · Aerolíneas MX Tracker</title>
+  <script type="module" crossorigin src="./assets/access-CLnF2Tsb.js"></script>
+  <link rel="modulepreload" crossorigin href="./assets/modulepreload-polyfill-B5Qt9EMX.js">
+  <link rel="stylesheet" crossorigin href="./assets/access-Dmf_I1Nf.css">
+</head>
+<body>
+  <main class="access-shell">
+    <header class="access-header">
+      <div>
+        <p class="eyebrow">Acceso privado</p>
+        <h1>Comprobar acceso</h1>
+        <p class="intro">Verifica tu contraseña para este servicio.</p>
+      </div>
+      <nav aria-label="Otras páginas">
+        <a href="./">Dashboard</a>
+        <a href="review.html">Revisión</a>
+      </nav>
+    </header>
+
+    <section class="service-card" aria-labelledby="service-title">
+      <p class="service-state"><span aria-hidden="true"></span> Servicio protegido</p>
+      <h2 id="service-title">Chat todavía pendiente de evaluación</h2>
+      <p>Esta página solo comprueba el acceso. No inicia conversaciones ni envía preguntas.</p>
+      <button id="health-button" class="quiet-button" type="button">Comprobar estado del servicio</button>
+      <p id="health-status" class="small-status" role="status" aria-live="polite">Estado sin consultar.</p>
+    </section>
+
+    <section class="login-card" aria-labelledby="login-title">
+      <h2 id="login-title">Verificar contraseña</h2>
+      <form id="login-form">
+        <label for="password">Contraseña de acceso</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required maxlength="256">
+        <button id="login-button" type="submit">Verificar acceso</button>
+      </form>
+      <p id="access-status" class="access-status" role="status" aria-live="polite">Aún no se ha comprobado el acceso.</p>
+      <button id="logout-button" class="quiet-button" type="button" hidden>Cerrar sesión</button>
+    </section>
+  </main>
+</body>
+</html>
