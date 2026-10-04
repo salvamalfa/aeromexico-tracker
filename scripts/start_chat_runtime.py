@@ -9,12 +9,18 @@ from pathlib import Path
 
 from src.conversational_analytics.config import ChatConfig
 
+RAILWAY_EDGE_NETWORK = "100.64.0.0/10"
+
 
 def runtime_config(*, volume_path: Path = Path("/data")) -> tuple[ChatConfig, int]:
     os.environ.setdefault("CHAT_STATE_PATH", "/data/chat.sqlite3")
     os.environ.setdefault("CHAT_PROVIDER", "mock")
     os.environ.setdefault("CHAT_ADMISSION_ENABLED", "false")
     os.environ.setdefault("CHAT_RETENTION_DAYS", "30")
+    # Railway's edge reaches the container from the shared address space
+    # (RFC 6598) and is its only ingress. Without trusting it, every client
+    # shares the edge address and five wrong passwords lock out the owner.
+    os.environ.setdefault("CHAT_TRUSTED_PROXY", RAILWAY_EDGE_NETWORK)
 
     port_raw = os.environ.get("PORT", "8080")
     try:

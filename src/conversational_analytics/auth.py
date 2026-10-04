@@ -8,6 +8,7 @@ value written to SQLite. Uses the standard library only.
 from __future__ import annotations
 
 import base64
+import functools
 import hashlib
 import hmac
 import ipaddress
@@ -83,14 +84,70 @@ def generate_password() -> str:
     return secrets.token_urlsafe(18)
 
 
+# Ranges a trusted-proxy network may fall in: loopback, private, and the
+# shared address space (RFC 6598) that PaaS edges such as Railway's use. A
+# network spanning public addresses would let anyone choose their own key.
+_PROXY_NETWORK_RANGES = tuple(
+    ipaddress.ip_network(value)
+    for value in (
+        "127.0.0.0/8",
+        "10.0.0.0/8",
+        "172.16.0.0/12",
+        "192.168.0.0/16",
+        "100.64.0.0/10",
+        "::1/128",
+        "fc00::/7",
+    )
+)
+
+
+def parse_trusted_proxy(value: str) -> str:
+    """Normalize one proxy address or CIDR network; raises ``ValueError``.
+
+    A single address may be any IP. A network must lie inside a loopback,
+    private or shared-address range.
+    """
+    network = ipaddress.ip_network(value.strip(), strict=True)
+    if network.num_addresses > 1 and not any(
+        network.version == allowed.version and network.subnet_of(allowed) for allowed in _PROXY_NETWORK_RANGES
+    ):
+        raise ValueError("trusted proxy networks must be loopback, private or shared-address ranges")
+    return str(network.network_address) if network.num_addresses == 1 else str(network)
+
+
+_Networks = tuple[ipaddress.IPv4Network | ipaddress.IPv6Network, ...]
+
+
+@functools.lru_cache(maxsize=8)
+def _proxy_networks(trusted_proxies: tuple[str, ...]) -> _Networks:
+    return tuple(ipaddress.ip_network(value) for value in trusted_proxies)
+
+
+def _is_trusted(address: str, networks: _Networks) -> bool:
+    try:
+        ip = ipaddress.ip_address(address.strip())
+    except ValueError:
+        return False
+    return any(ip in network for network in networks)
+
+
 def client_address(peer: str, forwarded_for: str | None, trusted_proxies: tuple[str, ...]) -> str:
-    """Use ``X-Forwarded-For`` only when the direct peer is a configured proxy."""
-    if forwarded_for and peer in trusted_proxies:
-        candidate = forwarded_for.split(",")[-1].strip()
+    """Use ``X-Forwarded-For`` only when the direct peer is a configured proxy.
+
+    ``trusted_proxies`` holds addresses or networks. Walking the header from
+    the right, trusted hops are skipped and the first other address is the
+    client; entries to its left were supplied by that client and are ignored.
+    """
+    networks = _proxy_networks(trusted_proxies)
+    if not forwarded_for or not _is_trusted(peer, networks):
+        return peer
+    for raw in reversed(forwarded_for.split(",")):
         try:
-            return str(ipaddress.ip_address(candidate))
+            candidate = str(ipaddress.ip_address(raw.strip()))
         except ValueError:
             return peer
+        if not _is_trusted(candidate, networks):
+            return candidate
     return peer
 
 
@@ -102,6 +159,7 @@ __all__ = [
     "hash_password",
     "new_session_token",
     "parse_password_hash",
+    "parse_trusted_proxy",
     "token_digest",
     "verify_password",
 ]

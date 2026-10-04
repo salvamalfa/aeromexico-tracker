@@ -7,7 +7,8 @@ comprobación separada del saldo bonificado. No modifica ajustes de cuenta.
 ## Cuotas y modelos
 
 OpenAI cuenta tokens de entrada **y** salida. La oferta confirmada agrupa los
-modelos así para los niveles 1–2:
+modelos así para los niveles de uso 1–2 (los niveles 3–5 reciben 1 millón /
+10 millones; este piloto presupuesta con el valor de niveles 1–2):
 
 | Grupo | Cuota diaria compartida | IDs usados/relevantes |
 | --- | ---: | --- |
@@ -74,6 +75,20 @@ el historial y los límites de herramientas la requieren. Quedan 50 mil de
 margen respecto al cupo principal. La reserva no es un máximo duro de API ni
 una garantía de gratuidad. El proveedor simulado conserva su estimación local
 para permitir la demo sin consumo OpenAI.
+
+**Capacidad efectiva con los valores predeterminados.** La admisión exige que
+consumo del día + reservas pendientes + reserva nueva no rebase 200,000. Con la
+media medida de ~40,000 tokens por pregunta de un turno
+([validación real](../etapas/airline-tracker-validacion-real-20261004.md)), la
+primera pregunta entra (0 + 150,000) y la segunda también (40,000 + 150,000).
+La tercera se rechaza (80,000 + 150,000 > 200,000) aunque el consumo real
+habría sido ~120,000. El piloto admite así **unas dos preguntas al día**, o
+una si el historial encarece los turnos. Esto protege el tope de 200,000 frente
+al peor caso de un turno, pero deja sin usar la mayor parte del cupo de
+Data Sharing. Subir el número de preguntas exige bajar
+`CHAT_MINIMUM_TURN_RESERVATION_TOKENS` con evidencia del peor turno observado,
+o aceptar que el consumo pueda rebasar el cupo bonificado. Es una decisión del
+dueño, no un ajuste automático.
 
 Los límites se configuran con `CHAT_DAILY_TOKEN_BUDGET_USER`,
 `CHAT_DAILY_TOKEN_BUDGET_GLOBAL` y `CHAT_MINIMUM_TURN_RESERVATION_TOKENS`.

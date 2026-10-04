@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from scripts.start_chat_runtime import runtime_config, secure_existing_sqlite_files
-from src.conversational_analytics.auth import hash_password
+from scripts.start_chat_runtime import RAILWAY_EDGE_NETWORK, runtime_config, secure_existing_sqlite_files
+from src.conversational_analytics.auth import client_address, hash_password
 
 
 def _configure(monkeypatch, volume: Path) -> None:
@@ -26,6 +26,8 @@ def _configure(monkeypatch, volume: Path) -> None:
     }
     for name, value in values.items():
         monkeypatch.setenv(name, value)
+    # runtime_config fills this default into os.environ; undo it after each test.
+    monkeypatch.delenv("CHAT_TRUSTED_PROXY", raising=False)
 
 
 def test_runtime_config_accepts_single_owner_and_writable_volume(monkeypatch, tmp_path):
@@ -40,6 +42,29 @@ def test_runtime_config_accepts_single_owner_and_writable_volume(monkeypatch, tm
     assert config.retention_days == 30
     assert config.state_path == (tmp_path / "chat.sqlite3").resolve()
     assert not list(tmp_path.glob(".chat-write-check-*"))
+    assert config.trusted_proxies == (RAILWAY_EDGE_NETWORK,)
+
+
+def test_railway_edge_default_keys_login_limits_by_client(monkeypatch, tmp_path):
+    _configure(monkeypatch, tmp_path)
+
+    config, _ = runtime_config(volume_path=tmp_path)
+
+    # Peers from the edge pool resolve to the forwarded client, including an
+    # internal hop Railway may append after it.
+    assert client_address("100.64.0.2", "203.0.113.9", config.trusted_proxies) == "203.0.113.9"
+    assert client_address("100.64.0.7", "198.51.100.4, 100.64.0.3", config.trusted_proxies) == "198.51.100.4"
+    # Anything outside that pool keeps its own address and cannot pick a key.
+    assert client_address("203.0.113.50", "198.51.100.4", config.trusted_proxies) == "203.0.113.50"
+
+
+def test_runtime_config_keeps_an_explicit_trusted_proxy(monkeypatch, tmp_path):
+    _configure(monkeypatch, tmp_path)
+    monkeypatch.setenv("CHAT_TRUSTED_PROXY", "10.1.2.3")
+
+    config, _ = runtime_config(volume_path=tmp_path)
+
+    assert config.trusted_proxies == ("10.1.2.3",)
 
 
 @pytest.mark.parametrize(

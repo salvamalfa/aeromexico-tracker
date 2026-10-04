@@ -213,3 +213,49 @@ def test_compare_orders_periods_chronologically_and_rejects_duplicates() -> None
     for periods in (["2026Q2", "2026Q2"], ["2026Q2", "2026M06"]):
         with pytest.raises(PlanValidationError):
             registry.invoke("compare_metrics", {**args, "periods": periods})
+
+
+def test_long_time_series_keeps_the_latest_periods_and_says_so() -> None:
+    registry = ToolRegistry(Snapshot(Path("site")))
+    args = {"metric_id": "market_share", "entity_id": "AEROMEXICO", "segment": "total"}
+    months = registry.catalog()["periods"]["market_months"]
+    in_range = [month for month in months if "2024M01" <= month <= months[-1]]
+    assert len(in_range) > 20
+
+    series = registry.invoke("get_time_series", {**args, "start_period": "2024M01", "end_period": months[-1]})
+    assert [row["period"] for row in series["rows"]] == in_range[-20:]
+    assert series["truncated"] is True
+    assert series["omitted_earlier_periods"] == len(in_range) - 20
+    assert series["chart"]["title"].endswith(f"(últimos 20 de {len(in_range)} periodos)")
+    assert series["chart"]["x"][-1] == series["rows"][-1]["period_label"]
+
+    # Ranges past the 32-period plan cap return the most recent rows instead of failing.
+    full = registry.invoke(
+        "get_time_series", {**args, "start_period": months[0], "end_period": months[-1], "limit": 6}
+    )
+    assert [row["period"] for row in full["rows"]] == months[-6:]
+    assert full["omitted_earlier_periods"] == len(months) - 6
+
+    short = registry.invoke("get_time_series", {**args, "start_period": months[-3], "end_period": months[-1]})
+    assert short["truncated"] is False and short["omitted_earlier_periods"] == 0
+    assert "últimos" not in short["chart"]["title"]
+    with pytest.raises(PlanValidationError):
+        registry.invoke(
+            "get_time_series", {**args, "start_period": months[-3], "end_period": months[-1], "limit": 0}
+        )
+
+
+def test_reference_labels_follow_the_publishing_host() -> None:
+    from src.conversational_analytics.tools.registry import _reference_label
+
+    assert _reference_label("salvamalfa.github.io", "/aeromexico-tracker/data/v1/x.json") == (
+        "Datos publicados del dashboard"
+    )
+    assert _reference_label("www.gob.mx", "/afac/acciones-y-programas/estadisticas-280404") == (
+        "Fuente pública AFAC"
+    )
+    assert "AFAC" not in _reference_label("www.gob.mx", "/sct/documentos/otro")
+    assert "AFAC" not in _reference_label("www.sec.gov", "/Archives/edgar/data/1561861/x.htm")
+    assert "AFAC" not in _reference_label("github.com", "/salvamalfa/aeromexico-tracker")
+    with pytest.raises(PlanValidationError):
+        _reference_label("example.com", "/")
