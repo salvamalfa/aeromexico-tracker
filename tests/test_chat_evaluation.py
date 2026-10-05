@@ -350,7 +350,7 @@ def test_live_tool_validation_error_is_returned_to_provider_like_worker(
     assert CorrectingProvider.tool_error["error"]["code"] == "tool_rejected"
     assert case["tool_calls"][0]["result"]["error"]["code"] == "tool_rejected"
     assert case["status"] == "ungraded"
-    assert case["quality"]["passed"] is False
+    assert case["quality"] == {"scored": False, "not_scored_reason": "no_successful_row_evidence"}
     assert case["model_turn_completed"] is True
 
 

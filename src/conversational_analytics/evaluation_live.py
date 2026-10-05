@@ -14,8 +14,8 @@ from pathlib import Path
 from typing import Any
 
 from .data.snapshot import Snapshot
-from .evaluation import load_fixture, verify_observation
-from .evaluation_observation import observation_from_tool_calls
+from .evaluation import load_fixture
+from .evaluation_live_scoring import score_live_case
 from .providers._openai_helpers import reconcile_case_usage_after_cancel
 from .semantic.plan import PlanValidationError
 
@@ -209,6 +209,9 @@ def _live_provider_run(
             "El snapshot o catálogo semántico no coincide con las versiones fijadas en el holdout"
         )
     registry = ToolRegistry(snapshot)
+    metric_dimensions = {
+        metric["id"]: metric["dimensions"] for metric in registry.catalog()["metrics"]
+    }
     selected = [next(case for case in cases if case["id"] == "es_am_lf_q2")] if probe_only else cases
     output_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
     os.chmod(output_dir, 0o700)
@@ -360,6 +363,7 @@ def _live_provider_run(
                         "call_id": call_id,
                         "name": name,
                         "arguments": args,
+                        "scope": context,
                         "result": result,
                     }
                 )
@@ -378,22 +382,18 @@ def _live_provider_run(
                     persist_session=persist_session,
                     cancel_event=threading.Event(),
                 )
-                observation = observation_from_tool_calls(called_tools, result.content)
+                observation, grade = score_live_case(
+                    case,
+                    called_tools,
+                    result.content,
+                    expected_versions={
+                        "data_version": snapshot.version,
+                        "semantic_version": snapshot.semantic_version,
+                    },
+                    scope=context,
+                    metric_dimensions=metric_dimensions,
+                )
                 actual_plan = observation["plan"]
-                if case["expected"]["status"] == "supported":
-                    scored = verify_observation(case, observation)
-                    grade = {
-                        "scored": True,
-                        "passed": scored.passed,
-                        "checks": scored.checks,
-                        "failures": scored.failures,
-                    }
-                else:
-                    grade = {
-                        "scored": False,
-                        "requires_blinded_human_rubric": True,
-                        "expected_outcome_for_grader": case["expected"]["status"],
-                    }
                 case_record = {
                     "case_id": case["id"],
                     "status": observation["status"],
