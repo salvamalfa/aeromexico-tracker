@@ -360,6 +360,7 @@ def _live_provider_run(
                         "call_id": call_id,
                         "name": name,
                         "arguments": args,
+                        "scope": context,
                         "result": result,
                     }
                 )
@@ -378,15 +379,28 @@ def _live_provider_run(
                     persist_session=persist_session,
                     cancel_event=threading.Event(),
                 )
-                observation = observation_from_tool_calls(called_tools, result.content)
+                observation = observation_from_tool_calls(
+                    called_tools,
+                    result.content,
+                    expected_versions={
+                        "data_version": snapshot.version,
+                        "semantic_version": snapshot.semantic_version,
+                    },
+                    scope=context,
+                )
                 actual_plan = observation["plan"]
-                if case["expected"]["status"] == "supported":
+                if case["expected"]["status"] == "supported" and observation["status"] == "supported":
                     scored = verify_observation(case, observation)
                     grade = {
                         "scored": True,
                         "passed": scored.passed,
                         "checks": scored.checks,
                         "failures": scored.failures,
+                    }
+                elif case["expected"]["status"] == "supported":
+                    grade = {
+                        "scored": False,
+                        "not_scored_reason": observation["not_scored_reason"],
                     }
                 else:
                     grade = {
