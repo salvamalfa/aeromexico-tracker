@@ -7,16 +7,18 @@ import os
 import threading
 import time
 import uuid
-from typing import Any
+from typing import Any, Callable
 
 from ._input_authorization import InputAuthorizer, send_tool_result
 from ._openai_helpers import (
     ALLOWED_TOOL_NAMES,
     SYSTEM_INSTRUCTIONS,
+    TERMINAL_USAGE_RECONCILIATION_SECONDS,
     OpenAIProviderError,
     ToolResultLimitExceeded,
     chart_from_results,
     close_stream,
+    completion_guards,
     event_call_id,
     event_session_id,
     field,
@@ -28,12 +30,11 @@ from ._openai_helpers import (
     references_from_results,
     required_string,
     result_from_recovered,
+    terminal_event_usage,
     to_dict,
     usage_from_event,
 )
-from ._openai_helpers import (
-    event_turn_id as get_event_turn_id,
-)
+from ._openai_helpers import event_turn_id as get_event_turn_id
 from .base import ProviderResult, ToolCall
 
 
@@ -46,6 +47,7 @@ class OpenAIProvider:
     """
 
     supports_input_authorization = True
+    supports_terminal_usage_reconciliation = True
 
     def __init__(
         self,
@@ -58,7 +60,7 @@ class OpenAIProvider:
         self.model = str(config.model)
         self.max_tool_calls = int(getattr(config, "max_tool_calls", 8))
         self.max_tool_result_bytes = int(getattr(config, "max_tool_result_bytes", 64_000))
-        self.max_turn_seconds = int(getattr(config, "max_turn_seconds", 90))
+        self.max_turn_seconds = int(getattr(config, "max_turn_seconds", 180))
         if min(self.max_tool_calls, self.max_tool_result_bytes, self.max_turn_seconds) <= 0:
             raise OpenAIProviderError("Los límites del proveedor OpenAI deben ser positivos")
         if client is None:
@@ -84,16 +86,18 @@ class OpenAIProvider:
         persist_session,
         cancel_event: threading.Event,
         authorize_input: InputAuthorizer | None = None,
+        mark_terminal_completed: Callable[[tuple[int, int] | None], None] | None = None,
     ) -> ProviderResult:
+        mark_terminal_completed = mark_terminal_completed or (lambda _usage=None: None)
         message = self._latest_user_message(messages)
         tools = self._validate_tool_specs(tool_specs)
         instructions = self._instructions()
         app_turn_id = self._app_turn_id(messages)
-        # Recreated sessions receive bounded history after worker restart or remote deletion.
         history = prior_history(messages) if session_id is None else []
         request_input = self._message_input(context, message, history)
         tracked_sessions: set[str] = set()
         started_at = time.monotonic()
+        usage_deadline = started_at + self.max_turn_seconds + TERMINAL_USAGE_RECONCILIATION_SECONDS
         stream_manager = None
         stream_iter = None
         stream_closed = False
@@ -113,11 +117,13 @@ class OpenAIProvider:
                 message, reason_code=reason, session_id=session_id, turn_id=current_turn
             )
 
-        def check_limits() -> None:
-            if cancel_event.is_set():
-                raise InterruptedError("turn cancelled")
-            if time.monotonic() - started_at >= self.max_turn_seconds:
-                raise limit_error("El turno excedió el límite de tiempo configurado", "turn_timeout", turn_id)
+        check_limits, accept_completed = completion_guards(
+            cancel_event,
+            started_at,
+            self.max_turn_seconds,
+            mark_terminal_completed,
+            lambda: limit_error("El turno excedió el límite de tiempo configurado", "turn_timeout", turn_id),
+        )
 
         def close_active_stream() -> None:
             nonlocal stream_closed
@@ -169,8 +175,7 @@ class OpenAIProvider:
             except Exception:
                 safe_error = "La herramienta no pudo completar una consulta validada."
                 emit("tool.completed", {"name": name, "error": safe_error})
-                # The dispatcher owns durable result storage. If it raises, do
-                # not tell the provider that an unpersisted result is final.
+                # Do not mark a tool call final before durable result storage.
                 raise OpenAIProviderError(safe_error) from None
             emit(
                 "tool.completed",
@@ -178,7 +183,6 @@ class OpenAIProvider:
             )
             error = result.get("error") if set(result) == {"error"} else None
             if isinstance(error, dict):
-                # Rejected arguments go back as a failed call so the model can retry.
                 send_tool_result(
                     self.client,
                     session_id,
@@ -278,7 +282,8 @@ class OpenAIProvider:
                         },
                     )
                 # Capture IDs before cancellation so the worker can stop a just-created remote session.
-                check_limits()
+                event_usage = terminal_event_usage(event_type, is_current_turn, event_data)
+                check_limits(event_usage)
                 if event_type == "agent.session.turn.output_text.delta" and is_current_turn:
                     key = (
                         int_or_zero(event_data.get("output_index")),
@@ -307,15 +312,16 @@ class OpenAIProvider:
                         handle_action(action)
                 elif event_type == "agent.session.turn.completed":
                     if is_current_turn:
+                        usage = event_usage
+                        accept_completed(usage)
                         terminal = "completed"
-                        usage = usage_from_event(event_data)
                         if usage is None and session_id and turn_id:
                             usage = read_completed_turn_usage(
                                 self.client,
                                 session_id,
                                 turn_id,
                                 cancel_event=cancel_event,
-                                deadline=started_at + self.max_turn_seconds,
+                                deadline=usage_deadline,
                                 close_stream=close_active_stream,
                             )
                         if usage is not None:
@@ -348,11 +354,10 @@ class OpenAIProvider:
                         cancelled.usage = recovered_usage  # type: ignore[attr-defined]
                         raise cancelled
                     if recovered_status == "completed":
+                        accept_completed(recovered_usage)
                         terminal = "completed"
                         if content:
-                            # The saved turn is authoritative: drop partial deltas.
-                            content_parts.clear()
-                            content_parts[(0, 0, "")] = content
+                            content_parts = {(0, 0, ""): content}
                         turn_id = recovered_turn_id or turn_id
                         input_tokens, output_tokens, usage_complete = parse_usage(usage)
                         if not usage_complete and session_id and turn_id:
@@ -361,7 +366,7 @@ class OpenAIProvider:
                                 session_id,
                                 turn_id,
                                 cancel_event=cancel_event,
-                                deadline=started_at + self.max_turn_seconds,
+                                deadline=usage_deadline,
                                 close_stream=close_active_stream,
                             )
                             if usage is not None:
@@ -398,9 +403,9 @@ class OpenAIProvider:
         except Exception:
             recovered = self._recover(session_id, turn_id, prior_turn_id) if session_id else None
             if recovered and recovered[1] == "completed" and recovered[0]:
+                usage = usage_from_event({"usage": recovered[3]})
+                accept_completed(usage)
                 return result_from_recovered(recovered[0], recovered[3], session_id, tool_outputs)
-            # SDK exception strings can contain request details; keep the public
-            # error deliberately generic and do not log the exception object.
             raise OpenAIProviderError(
                 "No se pudo completar el turno de Agents API; no se reenviará el mensaje automáticamente"
             ) from None
@@ -417,8 +422,6 @@ class OpenAIProvider:
                 events=[{"type": "agent.session.input.cancel"}],
             )
         except Exception:
-            # Cancellation is best effort; the turn state remains owned by the
-            # worker and will be reconciled on its next event or recovery read.
             return
 
     def delete(self, session_id: str) -> None:
@@ -454,8 +457,7 @@ class OpenAIProvider:
                 for action in actions:
                     data = to_dict(action)
                     if data.get("type") == "function_call":
-                        # The same durable dispatcher key makes re-running this
-                        # pending action safe after a worker interruption.
+                        # The dispatcher key makes pending-action recovery safe.
                         raise OpenAIProviderError("Hay una acción pendiente para recuperar")
             turns_page = self.client.beta.agents.sessions.turns.list(session_id, limit=100, order="desc")
             turns = list(getattr(turns_page, "data", []))
@@ -487,8 +489,7 @@ class OpenAIProvider:
                 value = field(turns[0], "id")
                 return value if isinstance(value, str) and value else None
         except Exception:
-            # This lookup is only a recovery guard; it is read-only and no input
-            # has been submitted yet. If it fails, avoid guessing from old turns.
+            # Read history only before input; do not guess if that lookup fails.
             raise OpenAIProviderError(
                 "No se pudo verificar el historial antes del siguiente mensaje"
             ) from None

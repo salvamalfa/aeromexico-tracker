@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .config import ChatConfig
+from .providers._openai_helpers import TERMINAL_USAGE_RECONCILIATION_SECONDS
 from .providers.base import Provider, ProviderResult
 from .semantic.plan import PlanValidationError
 from .storage import ChatStore, NotFound
@@ -27,6 +28,7 @@ class _ActiveTurn:
     owner_id: str
     provider_cancel_started: bool = False
     provider_input_started: bool = False
+    provider_terminal_completed: bool = False
 
 
 class TurnWorker:
@@ -305,13 +307,17 @@ class TurnWorker:
         call_counter = 0
         emitted_chars = 0
 
-        def timeout_turn() -> None:
+        def timeout_turn(*, finalization_deadline: bool = False) -> None:
             # Commit the authoritative terminal state before waking the provider.
             # Otherwise it can raise InterruptedError on the event and win the
             # race, recording a user cancellation instead of this timeout. Keep
             # input authorization and this terminal write in the same fence so
             # an accepted SDK input cannot be booked as zero.
             with self._guard:
+                if active.provider_terminal_completed and not finalization_deadline:
+                    return
+                if not self.store.is_running(turn_id):
+                    return
                 input_started = active.provider_input_started
                 self.store.fail_turn(
                     turn_id,
@@ -321,9 +327,30 @@ class TurnWorker:
                 )
             self._cancel_terminal_session(turn_id)
 
-        timer = threading.Timer(self.config.max_turn_seconds, timeout_turn)
-        timer.daemon = True
-        timer.start()
+        execution_timer = threading.Timer(self.config.max_turn_seconds, timeout_turn)
+        execution_timer.daemon = True
+        execution_timer.start()
+        finalization_timer = threading.Timer(
+            self.config.max_turn_seconds + TERMINAL_USAGE_RECONCILIATION_SECONDS,
+            lambda: timeout_turn(finalization_deadline=True),
+        )
+        finalization_timer.daemon = True
+        finalization_timer.start()
+
+        def mark_terminal_completed(usage: tuple[int, int] | None = None) -> None:
+            """Yield the execution watchdog only after provider completion."""
+            with self._guard:
+                if cancel_event.is_set() or not self.store.is_running(turn_id):
+                    error = InterruptedError("turn was cancelled before terminal usage reconciliation")
+                    if usage is not None:
+                        error.usage = usage  # type: ignore[attr-defined]
+                    raise error
+                if time.monotonic() > deadline:
+                    error = TimeoutError("turn deadline exceeded")
+                    if usage is not None:
+                        error.usage = usage  # type: ignore[attr-defined]
+                    raise error
+                active.provider_terminal_completed = True
 
         def emit(event_type: str, payload: dict[str, Any]) -> None:
             nonlocal emitted_chars
@@ -360,8 +387,15 @@ class TurnWorker:
         def authorize_provider_input() -> None:
             """Linearize each provider input against cancellation and shutdown."""
             with self._guard:
-                if self._shutdown_expired or cancel_event.is_set() or not self.store.is_running(turn_id):
+                if (
+                    self._shutdown_expired
+                    or active.provider_terminal_completed
+                    or cancel_event.is_set()
+                    or not self.store.is_running(turn_id)
+                ):
                     raise InterruptedError("provider input was not authorized")
+                if time.monotonic() > deadline:
+                    raise TimeoutError("turn deadline exceeded")
                 active.provider_input_started = True
 
         def call_tool(provider_turn_id: str, call_id: str, name: str, args: dict[str, Any]) -> dict[str, Any]:
@@ -441,6 +475,8 @@ class TurnWorker:
             }
             if supports_input_authorization:
                 provider_arguments["authorize_input"] = authorize_provider_input
+            if getattr(self.provider, "supports_terminal_usage_reconciliation", False):
+                provider_arguments["mark_terminal_completed"] = mark_terminal_completed
             result = self.provider.run_turn(**provider_arguments)
             if not isinstance(result, ProviderResult):
                 raise TypeError("provider returned an invalid result")
@@ -449,7 +485,7 @@ class TurnWorker:
             if cancel_event.is_set() or not self.store.is_running(turn_id):
                 self._record_result_usage(turn_id, result)
                 return
-            if time.monotonic() > deadline:
+            if time.monotonic() > deadline and not active.provider_terminal_completed:
                 raise TimeoutError("turn deadline exceeded")
             content = result.content
             if len(content) > self.config.max_message_chars * 4:
@@ -497,12 +533,15 @@ class TurnWorker:
                 usage=self._reported_usage(exc),
             )
         finally:
-            timer.cancel()
+            execution_timer.cancel()
+            finalization_timer.cancel()
             # The timeout callback may still be cancelling a provider session.
             # Drain it before the worker loop can claim the next turn on that
             # session. This also prevents cancellation from outliving a completed turn.
-            if timer.ident != threading.get_ident():
-                timer.join()
+            if execution_timer.ident != threading.get_ident():
+                execution_timer.join()
+            if finalization_timer.ident != threading.get_ident():
+                finalization_timer.join()
             # Drain explicit cancellation or timeout after the provider has
             # surfaced any just-discovered session ID.
             self._cancel_terminal_session(turn_id)
