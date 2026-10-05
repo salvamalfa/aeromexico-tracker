@@ -81,6 +81,29 @@ def synthetic_worksheet() -> str:
 
 
 class ReviewDatasetExportTests(unittest.TestCase):
+    def test_windows_platform_accepts_documented_native_file_modes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "worksheet.md"
+            source.write_text(synthetic_worksheet(), encoding="utf-8")
+            os.chmod(source, 0o666)
+            dataset = exporter.build_dataset(source, platform="nt")
+            self.assertEqual(dataset["available_count"], 74)
+
+            directory = Path(temporary) / "export"
+            directory.mkdir()
+            output = directory / "dataset.json"
+            digest = exporter.secure_write(dataset, output, platform="nt")
+            os.chmod(output, 0o666)
+            self.assertEqual(exporter.verify_existing(dataset, output, platform="nt"), digest)
+
+    def test_posix_source_mode_remains_strict(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "worksheet.md"
+            source.write_text(synthetic_worksheet(), encoding="utf-8")
+            os.chmod(source, 0o644)
+            with self.assertRaisesRegex(exporter.ExportError, "mode 0600"):
+                exporter.build_dataset(source, platform="posix")
+
     def test_variable_fences_and_exact_40_74_120_contract(self):
         text = synthetic_worksheet()
         dataset = exporter.parse_worksheet(text, "a" * 64)
@@ -183,7 +206,8 @@ class ReviewDatasetExportTests(unittest.TestCase):
             with self.assertRaises(exporter.ExportError):
                 exporter.verify_existing(changed, output)
             self.assertEqual(hashlib.sha256(output.read_bytes()).hexdigest(), digest)
-            self.assertEqual(stat.S_IMODE(output.stat().st_mode), 0o600)
+            if exporter.uses_posix_modes():
+                self.assertEqual(stat.S_IMODE(output.stat().st_mode), 0o600)
 
 
 if __name__ == "__main__":

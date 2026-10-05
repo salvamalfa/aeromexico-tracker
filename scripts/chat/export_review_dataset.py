@@ -52,6 +52,11 @@ class ExportError(ValueError):
     """Raised when the worksheet violates the frozen export contract."""
 
 
+def uses_posix_modes(platform: str | None = None) -> bool:
+    """Whether this platform exposes enforceable POSIX permission bits."""
+    return (os.name if platform is None else platform) == "posix"
+
+
 def fail_if_identifier(value: str, context: str) -> None:
     if PROVIDER_ID.search(value) or CASE_ID.search(value) or UUID.search(value):
         raise ExportError(f"identifier found in {context}")
@@ -214,10 +219,10 @@ def parse_worksheet(text: str, worksheet_sha256: str) -> dict[str, Any]:
     }
 
 
-def build_dataset(source: Path = SOURCE) -> dict[str, Any]:
+def build_dataset(source: Path = SOURCE, *, platform: str | None = None) -> dict[str, Any]:
     if not source.is_file():
         raise ExportError("frozen terminal worksheet is missing")
-    if stat.S_IMODE(source.stat().st_mode) != 0o600:
+    if uses_posix_modes(platform) and stat.S_IMODE(source.stat().st_mode) != 0o600:
         raise ExportError("frozen worksheet must remain mode 0600")
     raw = source.read_bytes()
     try:
@@ -227,9 +232,10 @@ def build_dataset(source: Path = SOURCE) -> dict[str, Any]:
     return parse_worksheet(text, hashlib.sha256(raw).hexdigest())
 
 
-def secure_write(dataset: dict[str, Any], output: Path = OUTPUT) -> str:
+def secure_write(dataset: dict[str, Any], output: Path = OUTPUT, *, platform: str | None = None) -> str:
     output.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-    os.chmod(output.parent, 0o700)
+    if uses_posix_modes(platform):
+        os.chmod(output.parent, 0o700)
     encoded = (json.dumps(dataset, ensure_ascii=False, indent=2, allow_nan=False) + "\n").encode("utf-8")
     fd = os.open(output, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     try:
@@ -240,13 +246,17 @@ def secure_write(dataset: dict[str, Any], output: Path = OUTPUT) -> str:
     except BaseException:
         output.unlink(missing_ok=True)
         raise
-    os.chmod(output, 0o600)
+    if uses_posix_modes(platform):
+        os.chmod(output, 0o600)
     return hashlib.sha256(encoded).hexdigest()
 
 
-def verify_existing(dataset: dict[str, Any], output: Path = OUTPUT) -> str:
+def verify_existing(dataset: dict[str, Any], output: Path = OUTPUT, *, platform: str | None = None) -> str:
     """Accept an identical prior export without rewriting it; reject any drift."""
-    if stat.S_IMODE(output.stat().st_mode) != 0o600 or stat.S_IMODE(output.parent.stat().st_mode) != 0o700:
+    if uses_posix_modes(platform) and (
+        stat.S_IMODE(output.stat().st_mode) != 0o600
+        or stat.S_IMODE(output.parent.stat().st_mode) != 0o700
+    ):
         raise ExportError("existing dataset or private directory permissions changed")
     expected = (json.dumps(dataset, ensure_ascii=False, indent=2, allow_nan=False) + "\n").encode("utf-8")
     actual = output.read_bytes()

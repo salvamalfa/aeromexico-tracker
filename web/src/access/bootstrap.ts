@@ -34,7 +34,7 @@ form?.addEventListener("submit", async (event) => {
     passwordField.value = "";
     show(accessStatus, errorText(error), "error");
   } finally {
-    loginButton.disabled = false;
+    loginButton.disabled = !client.canLogin;
   }
 });
 
@@ -43,10 +43,15 @@ logoutButton?.addEventListener("click", async () => {
   try {
     await client.logout();
     show(accessStatus, "Sesión cerrada.");
+    if (logoutButton) logoutButton.hidden = true;
+    if (loginButton) loginButton.disabled = false;
   } catch (error) {
     show(accessStatus, errorText(error), "error");
+    if (!client.hasActiveSession) {
+      if (logoutButton) logoutButton.hidden = true;
+      if (loginButton) loginButton.disabled = false;
+    }
   } finally {
-    logoutButton.hidden = true;
     logoutButton.disabled = false;
   }
 });

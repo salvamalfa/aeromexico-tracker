@@ -43,6 +43,12 @@ archivos y escribe el JSON en un directorio privado. No reproduce preguntas ni
 modifica snapshots, reportes, rúbricas originales o contabilidad. La
 [guía de revisión](../chat/revision-respuestas.md) describe el flujo.
 
+El exportador conserva los controles Unix de permisos en Linux/macOS. En
+Windows nativo no interpreta `st_mode` como una ACL ni exige los bits `0600`;
+el dueño debe usar una carpeta con acceso privado en su cuenta de Windows.
+La escritura exclusiva y la comprobación del contenido se mantienen en ambas
+plataformas, sin sobrescribir el corte existente.
+
 ## Acceso y calidad
 
 `access.html` permite comprobar el estado, verificar la contraseña y cerrar la
@@ -52,6 +58,11 @@ hash. La sesión del navegador permanece en memoria. El bundle público incluye
 la dirección `https://aeromexico-tracker-production.up.railway.app`: la API es
 accesible por HTTPS y exige contraseña en sus rutas protegidas. Publicar esta
 página permite comprobar el acceso, pero no habilita inferencia.
+
+La revisión automática también detectó que repetir el login podía reemplazar
+el único token local sin cerrar la sesión anterior. El cliente ahora impide un
+segundo login mientras existe una sesión o una solicitud en curso. Un fallo al
+cerrar sesión conserva el token en memoria para poder confirmar el cierre.
 
 La comprobación remota descubrió que el middleware anterior devolvía HTTP 411
 a solicitudes legítimas del login detrás de Railway. El límite ahora se aplica

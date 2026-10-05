@@ -51,17 +51,63 @@ describe("AccessClient", () => {
     await expect(malformed.logout()).resolves.toBeUndefined();
   });
 
-  it("clears memory before a failed logout and never retries using a retained token", async () => {
+  it("blocks repeat and concurrent logins while preserving the active token until logout", async () => {
+    let resolveLogin!: (response: Response) => void;
+    const pending = new Promise<Response>((resolve) => { resolveLogin = resolve; });
+    const fetcher = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json({ session: "original-token", expires_at: expires }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockImplementationOnce(() => pending);
+    const client = new AccessClient(fetcher);
+
+    await client.login("first-password");
+    await expect(client.login("second-password")).rejects.toThrow("Cierra la sesión");
+    expect(fetcher).toHaveBeenCalledTimes(1);
+
+    await client.logout();
+    expect(new Headers(fetcher.mock.calls[1]?.[1]?.headers).get("Authorization")).toBe("Bearer original-token");
+    expect(client.hasActiveSession).toBe(false);
+
+    const login = client.login("after-logout-password");
+    await expect(client.login("concurrent-password")).rejects.toThrow("Cierra la sesión");
+    expect(fetcher).toHaveBeenCalledTimes(3);
+    resolveLogin(json({ session: "new-token", expires_at: expires }));
+    await expect(login).resolves.toBe(expires);
+  });
+
+  it("retains the session handle after failed logout and retries the same bearer", async () => {
     const fetcher = vi.fn<typeof fetch>()
       .mockResolvedValueOnce(json({ session: "temporary-token", expires_at: expires }))
-      .mockRejectedValueOnce(new TypeError("offline"));
+      .mockRejectedValueOnce(new TypeError("offline"))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
     const client = new AccessClient(fetcher);
     await client.login("password");
-    await expect(client.logout()).rejects.toThrow("sesión local se cerró");
-    await expect(client.logout()).resolves.toBeUndefined();
-    expect(fetcher).toHaveBeenCalledTimes(2);
+    await expect(client.logout()).rejects.toThrow("sesión sigue activa");
+    expect(client.hasActiveSession).toBe(true);
+    await client.logout();
+    expect(fetcher).toHaveBeenCalledTimes(3);
+    expect(new Headers(fetcher.mock.calls[1]?.[1]?.headers).get("Authorization")).toBe("Bearer temporary-token");
+    expect(new Headers(fetcher.mock.calls[2]?.[1]?.headers).get("Authorization")).toBe("Bearer temporary-token");
+    expect(client.hasActiveSession).toBe(false);
     expect(localStorage.length).toBe(0);
     expect(sessionStorage.length).toBe(0);
+  });
+
+  it("releases an already-invalid session on 401 but retains it on server errors", async () => {
+    const fetcher = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json({ session: "expired-token", expires_at: expires }))
+      .mockResolvedValueOnce(json({ detail: "invalid session" }, 401))
+      .mockResolvedValueOnce(json({ session: "replacement-token", expires_at: expires }))
+      .mockResolvedValueOnce(json({ detail: "unavailable" }, 503));
+    const client = new AccessClient(fetcher);
+
+    await client.login("first-password");
+    await expect(client.logout()).rejects.toMatchObject({ status: 401 });
+    expect(client.hasActiveSession).toBe(false);
+    await client.login("second-password");
+    await expect(client.logout()).rejects.toMatchObject({ status: 503 });
+    expect(client.hasActiveSession).toBe(true);
+    expect(new Headers(fetcher.mock.calls[3]?.[1]?.headers).get("Authorization")).toBe("Bearer replacement-token");
   });
 
   it("turns network and malformed health responses into safe errors", async () => {

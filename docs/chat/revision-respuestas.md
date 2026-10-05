@@ -41,8 +41,16 @@ no vuelve a ejecutar preguntas ni modifica resultados, facturas o contadores:
 uv run python -m scripts.chat.export_review_dataset --help
 ```
 
-La salida pertenece a `.state/`, con permisos privados y escritura exclusiva.
-Nunca debe copiarse a `web/public/`, `site/`, un commit o un comentario del PR.
+La salida pertenece a `.state/` y se crea con escritura exclusiva. En POSIX,
+el exportador exige que la hoja fuente tenga modo `0600`, fija el directorio de
+salida en `0700` y el JSON en `0600`, y comprueba esos modos al verificar una
+salida existente. Windows no ofrece esos bits POSIX como control de ACL: el
+exportador no puede garantizar que el archivo o directorio sea privado allí.
+Windows conserva la protección ACL heredada del usuario y del directorio; usa
+una ubicación con ACL restringida al usuario actual para la hoja y la salida.
+La escritura exclusiva evita reemplazar un archivo existente, pero no restringe
+quién puede leerlo. Nunca debe copiarse a `web/public/`, `site/`, un commit o un
+comentario del PR.
 
 ## Acceso al piloto
 
