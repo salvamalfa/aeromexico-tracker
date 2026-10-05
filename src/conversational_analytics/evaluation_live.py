@@ -14,8 +14,8 @@ from pathlib import Path
 from typing import Any
 
 from .data.snapshot import Snapshot
-from .evaluation import load_fixture, verify_observation
-from .evaluation_observation import observation_from_tool_calls
+from .evaluation import load_fixture
+from .evaluation_live_scoring import score_live_case
 from .providers._openai_helpers import reconcile_case_usage_after_cancel
 from .semantic.plan import PlanValidationError
 
@@ -379,7 +379,8 @@ def _live_provider_run(
                     persist_session=persist_session,
                     cancel_event=threading.Event(),
                 )
-                observation = observation_from_tool_calls(
+                observation, grade = score_live_case(
+                    case,
                     called_tools,
                     result.content,
                     expected_versions={
@@ -389,25 +390,6 @@ def _live_provider_run(
                     scope=context,
                 )
                 actual_plan = observation["plan"]
-                if case["expected"]["status"] == "supported" and observation["status"] == "supported":
-                    scored = verify_observation(case, observation)
-                    grade = {
-                        "scored": True,
-                        "passed": scored.passed,
-                        "checks": scored.checks,
-                        "failures": scored.failures,
-                    }
-                elif case["expected"]["status"] == "supported":
-                    grade = {
-                        "scored": False,
-                        "not_scored_reason": observation["not_scored_reason"],
-                    }
-                else:
-                    grade = {
-                        "scored": False,
-                        "requires_blinded_human_rubric": True,
-                        "expected_outcome_for_grader": case["expected"]["status"],
-                    }
                 case_record = {
                     "case_id": case["id"],
                     "status": observation["status"],
