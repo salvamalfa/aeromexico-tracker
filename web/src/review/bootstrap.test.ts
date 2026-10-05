@@ -185,6 +185,150 @@ describe("review page bootstrap", () => {
     expect(document.querySelector<HTMLButtonElement>("#export-button")?.disabled).toBe(false);
   });
 
+  it("merges legacy cache without losing current work and treats imported grades as authoritative", async () => {
+    document.body.innerHTML = reviewShell();
+    vi.stubGlobal("crypto", webcrypto as unknown as Crypto);
+    const dataset = sourceDataset();
+    const bytes = new TextEncoder().encode(JSON.stringify(dataset));
+    const contentHash = await sha256Hex(bytes.slice().buffer as ArrayBuffer);
+    const key = storageKey(dataset.dataset_id, contentHash);
+    window.localStorage.setItem(key, JSON.stringify({
+      schema_version: 1,
+      dataset_id: dataset.dataset_id,
+      dataset_content_sha256: contentHash,
+      ratings: [
+        { question_id: "Q01", alias: "A", status: "problem", notes: "older saved grade" },
+        { question_id: "Q02", alias: "B", status: "correct", notes: "older independent grade" },
+      ],
+    }));
+    bootstrapReview(document, window.localStorage);
+    const input = document.querySelector<HTMLInputElement>("#dataset-file")!;
+    const file = { size: bytes.byteLength, arrayBuffer: async () => bytes.buffer } as File;
+    Object.defineProperty(input, "files", { configurable: true, value: [file] });
+    input.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(document.querySelector("#review-workspace")?.hasAttribute("hidden")).toBe(false));
+
+    document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="correct"]')?.click();
+    document.querySelector<HTMLInputElement>("#cache-option")!.click();
+    expect(document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="correct"]')?.checked).toBe(true);
+    expect(document.querySelector<HTMLOutputElement>("#progress-count")?.value).toBe("2 / 74");
+    const merged = JSON.parse(window.localStorage.getItem(key)!).ratings as Array<{ question_id: string; alias: string; status: string }>;
+    expect(merged.find((rating) => rating.question_id === "Q01" && rating.alias === "A")?.status).toBe("correct");
+    expect(merged.find((rating) => rating.question_id === "Q02" && rating.alias === "B")?.status).toBe("correct");
+
+    document.querySelector<HTMLInputElement>("#cache-option")!.click();
+    const importedGrades = {
+      schema_version: 1,
+      dataset_id: dataset.dataset_id,
+      dataset_content_sha256: contentHash,
+      ratings: [{ question_id: "Q01", alias: "A", status: "not_evaluable", notes: "imported replacement" }],
+    };
+    const gradeBytes = new TextEncoder().encode(JSON.stringify(importedGrades));
+    const gradeFile = { size: gradeBytes.byteLength, arrayBuffer: async () => gradeBytes.buffer } as File;
+    Object.defineProperty(document.querySelector("#ratings-file"), "files", { configurable: true, value: [gradeFile] });
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    document.querySelector<HTMLInputElement>("#ratings-file")?.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(document.querySelector<HTMLElement>("#load-status")?.textContent).toContain("Se importaron"));
+    expect(document.querySelector<HTMLOutputElement>("#progress-count")?.value).toBe("1 / 74");
+
+    document.querySelector<HTMLInputElement>("#cache-option")!.click();
+    const replaced = JSON.parse(window.localStorage.getItem(key)!).ratings as Array<{ question_id: string; alias: string; status: string }>;
+    expect(replaced).toEqual([{ question_id: "Q01", alias: "A", status: "not_evaluable", notes: "imported replacement" }]);
+    expect(document.querySelector<HTMLOutputElement>("#progress-count")?.value).toBe("1 / 74");
+  });
+
+  it("validates then asks before replacing a legacy review, and cancel keeps identity and selection", async () => {
+    document.body.innerHTML = reviewShell();
+    vi.stubGlobal("crypto", webcrypto as unknown as Crypto);
+    bootstrapReview(document, window.localStorage);
+    const dataset = sourceDataset();
+    const bytes = new TextEncoder().encode(JSON.stringify(dataset));
+    const input = document.querySelector<HTMLInputElement>("#dataset-file")!;
+    const file = { size: bytes.byteLength, arrayBuffer: async () => bytes.buffer } as File;
+    Object.defineProperty(input, "files", { configurable: true, value: [file] });
+    input.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(document.querySelector("#review-workspace")?.hasAttribute("hidden")).toBe(false));
+    document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="correct"]')?.click();
+    document.querySelector<HTMLButtonElement>('#question-nav button[data-question-index="1"]')?.click();
+    const confirmation = vi.spyOn(window, "confirm").mockReturnValue(false);
+
+    const different = structuredClone(dataset);
+    different.questions[1]!.question = "Pregunta alternativa sintética";
+    const differentBytes = new TextEncoder().encode(JSON.stringify(different));
+    const differentFile = { size: differentBytes.byteLength, arrayBuffer: async () => differentBytes.buffer } as File;
+    Object.defineProperty(input, "files", { configurable: true, value: [differentFile] });
+    input.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(document.querySelector<HTMLElement>("#load-status")?.textContent).toContain("Importación cancelada"));
+    expect(confirmation).toHaveBeenCalledTimes(1);
+    expect(document.querySelector("#question-position")?.textContent).toContain("Q02");
+    expect(document.querySelector("#question-text")?.textContent).toBe("Pregunta 2");
+    expect(document.querySelector<HTMLOutputElement>("#progress-count")?.value).toBe("1 / 74");
+
+    Object.defineProperty(input, "files", { configurable: true, value: [file] });
+    input.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(document.querySelector<HTMLElement>("#load-status")?.textContent)
+      .toContain("se conserva el progreso actual"));
+    expect(confirmation).toHaveBeenCalledTimes(1);
+    expect(document.querySelector("#question-position")?.textContent).toContain("Q02");
+    expect(document.querySelector<HTMLOutputElement>("#progress-count")?.value).toBe("1 / 74");
+    document.querySelector<HTMLButtonElement>('#question-nav button[data-question-index="0"]')?.click();
+    expect(document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="correct"]')?.checked).toBe(true);
+  });
+
+  it("confirms a different valid bundle before replacement and keeps the active cut on cancel", async () => {
+    document.body.innerHTML = reviewShell();
+    vi.stubGlobal("crypto", webcrypto as unknown as Crypto);
+    const dataset = sourceDataset();
+    const datasetJson = `${JSON.stringify(parseDataset(dataset), null, 2)}\n`;
+    const datasetBytes = new TextEncoder().encode(datasetJson);
+    const datasetHash = await sha256Hex(datasetBytes.slice().buffer as ArrayBuffer);
+    const missing = dataset.questions.flatMap((question) => question.candidates
+      .filter((candidate) => candidate.answer === null)
+      .map((candidate) => ({ question_id: question.id, alias: candidate.alias, status: "not_attempted" })));
+    const cut = (cut_id: string) => ({
+      cut_id, version: "1", label: cut_id, disposition: "complete", source_sha256: dataset.dataset_id,
+      dataset_sha256: datasetHash, dataset_json: datasetJson, slot_dispositions: missing,
+    });
+    const makeBundle = (bundle_id: string) => JSON.stringify({
+      schema_version: 1, bundle_id, bundle_version: "1", title: bundle_id,
+      cuts: [cut("first"), cut("second")],
+    });
+    const text = makeBundle("original-bundle");
+    const bytes = new TextEncoder().encode(text);
+    const file = { size: bytes.byteLength, arrayBuffer: async () => bytes.buffer } as File;
+    bootstrapReview(document, window.localStorage);
+    const input = document.querySelector<HTMLInputElement>("#dataset-file")!;
+    Object.defineProperty(input, "files", { configurable: true, value: [file] });
+    input.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(document.querySelector("#cut-controls")?.hasAttribute("hidden")).toBe(false));
+    document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="problem"]')?.click();
+    const selector = document.querySelector<HTMLSelectElement>("#cut-select")!;
+    selector.value = "second";
+    selector.dispatchEvent(new Event("change"));
+    document.querySelector<HTMLInputElement>('input[name="rating-Q01-B"][value="correct"]')?.click();
+    const confirmation = vi.spyOn(window, "confirm").mockReturnValue(false);
+
+    const replacementBytes = new TextEncoder().encode(makeBundle("replacement-bundle"));
+    const replacementFile = { size: replacementBytes.byteLength, arrayBuffer: async () => replacementBytes.buffer } as File;
+    Object.defineProperty(input, "files", { configurable: true, value: [replacementFile] });
+    input.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(document.querySelector<HTMLElement>("#load-status")?.textContent).toContain("Importación cancelada"));
+
+    expect(confirmation).toHaveBeenCalledTimes(1);
+    expect(document.querySelector("#bundle-title")?.textContent).toContain("original-bundle");
+    expect(document.querySelector<HTMLSelectElement>("#cut-select")?.value).toBe("second");
+    expect(document.querySelector<HTMLInputElement>('input[name="rating-Q01-B"][value="correct"]')?.checked).toBe(true);
+    expect(document.querySelector<HTMLOutputElement>("#progress-count")?.value).toBe("1 / 74");
+
+    Object.defineProperty(input, "files", { configurable: true, value: [file] });
+    input.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(document.querySelector<HTMLElement>("#load-status")?.textContent)
+      .toContain("se conserva el progreso actual"));
+    expect(confirmation).toHaveBeenCalledTimes(1);
+    expect(document.querySelector<HTMLSelectElement>("#cut-select")?.value).toBe("second");
+    expect(document.querySelector<HTMLInputElement>('input[name="rating-Q01-B"][value="correct"]')?.checked).toBe(true);
+  });
+
   it("imports one bundle, switches cut-local progress, and keeps aliases scoped to each cut", async () => {
     document.body.innerHTML = reviewShell();
     vi.stubGlobal("crypto", webcrypto as unknown as Crypto);

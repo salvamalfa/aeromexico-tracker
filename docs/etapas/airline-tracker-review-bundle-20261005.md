@@ -22,6 +22,15 @@ cortes, incluso una lista vacía cuando se borraron calificaciones. Si el
 navegador rechaza una escritura, el trabajo permanece en memoria, la interfaz
 avisa del fallo y mantiene disponible la exportación.
 
+Al activar el guardado después de trabajar sin él, las calificaciones en
+memoria prevalecen para los espacios editados y se combinan con las guardadas
+no modificadas. Importar un archivo de calificaciones reemplaza el conjunto en
+memoria de forma explícita y evita que el caché anterior restaure entradas
+eliminadas. Antes de cambiar a otro conjunto o paquete válido, la interfaz
+solicita confirmación si hay calificaciones en memoria; cancelar conserva el
+archivo, corte, hash y calificaciones actuales. Volver a seleccionar el mismo
+archivo exacto conserva el progreso sin preguntar.
+
 ## Validación y publicación
 
 El código validado corresponde al commit
