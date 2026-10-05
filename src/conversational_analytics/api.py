@@ -129,6 +129,17 @@ def create_app(
     app.state.snapshot_available = getattr(snapshot, "version", "unavailable") != "unavailable"
     app.state.begin_shutdown = worker.begin_shutdown if worker else (lambda: None)
 
+    # Buffer bounded bodies only after the boundary and auth middleware have
+    # admitted the request. Public login still reaches the body limit first;
+    # protected requests can fail closed without waiting on an unauthenticated
+    # client to finish sending its body.
+    app.add_middleware(
+        BoundedBodyMiddleware,
+        limit_for_path=lambda path: LOGIN_BODY_LIMIT
+        if path == "/api/chat/login"
+        else max(16_384, config.max_message_chars * 8 + 4_096),
+    )
+
     fingerprints = config.password_fingerprints()
     login_slots = threading.BoundedSemaphore(2)
 
@@ -176,13 +187,6 @@ def create_app(
             )
         request.state.owner_id = owner
         return await call_next(request)
-
-    app.add_middleware(
-        BoundedBodyMiddleware,
-        limit_for_path=lambda path: LOGIN_BODY_LIMIT
-        if path == "/api/chat/login"
-        else max(16_384, config.max_message_chars * 8 + 4_096),
-    )
 
     # Add CORS after the auth middleware so it wraps even 401/403 responses.
     # No cookies: GitHub Pages and the API are cross-site, so third-party

@@ -5,8 +5,10 @@ terminal y comprobar el acceso protegido. Mantiene apagado el chat público.
 
 ## Decisiones recibidas
 
-El dueño confirmó explícitamente las definiciones del catálogo y aceptó su
-alcance como MVP, con ampliación posterior. Grupo Aeroméxico incluye Connect en
+La decisión explícita del dueño en este chat, el 4 de octubre de 2026, fue:
+«Confirmo estas definiciones [...] esta primera versión que sirva como MVP me
+parece correcta [...] por el momento esta bien». Aceptó el catálogo y su alcance
+como MVP, con ampliación posterior. Grupo Aeroméxico incluye Connect en
 las métricas económicas trimestrales; industria suma Aeroméxico, Volaris y Viva;
 las series de compañía y AFAC permanecen separadas; participación conserva su
 universo AFAC y los cambios se expresan en puntos porcentuales. ASK y economía
@@ -16,7 +18,9 @@ Vuelos, ni se transforman faltantes en cero.
 El catálogo registra `owner_approved_mvp`. Su nueva versión semántica es
 `0b8de07ff211ca1ba984bd87281a2d68950a3e36268909b2121a7ed6b35e0365`.
 Cambió el metadato de revisión, no los datos, métricas o definiciones. La fixture
-y los reportes de comparación anteriores conservan su versión original.
+y los reportes de comparación anteriores conservan su versión original. Una
+conversación abierta con la versión anterior recibe `snapshot_changed`; el
+holdout congelado no debe ejecutarse contra esta versión distinta.
 
 El dueño también confirmó los límites propuestos: 200.000 tokens diarios por
 usuario y globales, reserva de 170.000 y US$0,10 diarios para Luna, o reserva de
@@ -44,7 +48,10 @@ modifica snapshots, reportes, rúbricas originales o contabilidad. La
 `access.html` permite comprobar el estado, verificar la contraseña y cerrar la
 sesión contra la API HTTPS existente. No crea turnos ni habilita inferencia.
 La contraseña inicial se entrega en un archivo privado; Railway recibe solo su
-hash. La sesión del navegador permanece en memoria.
+hash. La sesión del navegador permanece en memoria. El bundle público incluye
+la dirección `https://aeromexico-tracker-production.up.railway.app`: la API es
+accesible por HTTPS y exige contraseña en sus rutas protegidas. Publicar esta
+página permite comprobar el acceso, pero no habilita inferencia.
 
 La comprobación remota descubrió que el middleware anterior devolvía HTTP 411
 a solicitudes legítimas del login detrás de Railway. El límite ahora se aplica
@@ -52,6 +59,10 @@ a los bytes recibidos, incluidos cuerpos sin `Content-Length` o enviados en
 fragmentos. Conserva el límite específico del login, rechaza cuerpos excesivos
 y longitudes inválidas, y acota el tiempo de lectura antes de analizar el JSON.
 No elimina la autenticación ni las comprobaciones de origen.
+La revisión de Codex y Claude detectó además que el límite leía cuerpos antes
+de autenticar las rutas protegidas. Se corrigió el orden: un cliente sin sesión
+recibe 401 sin lectura del cuerpo; origen y frontera local se comprueban antes
+de esa lectura. El login público conserva sus límites y el plazo de lectura.
 
 El diagnóstico offline de los cuatro fallos puntuados encontró tres consultas
 con alcance incorrecto y un caso que requiere juzgar el texto de la respuesta.
@@ -62,8 +73,12 @@ a la métrica, entidad, fuente y periodo solicitados. Si el alcance es ambiguo,
 debe aclararlo; no debe sustituir una serie cercana.
 
 Las pruebas de contrato verifican ese comportamiento sin llamadas al proveedor.
-No prueban que un modelo cumpla el gate de calidad: los resultados originales
-permanecen intactos y no se recalifican con estas instrucciones. El dueño aún
+No prueban que un modelo cumpla el gate de calidad. Las cifras Luna 7/9, Sol
+9/10 y Astra 8/9 corresponden al contrato de instrucciones anterior; los
+resultados originales permanecen intactos y no se recalifican con estas
+instrucciones. Antes de elegir un modelo hace falta validar la calidad del
+contrato nuevo mediante un plan separado, sin repetir intentos del corte
+congelado ni exceder el presupuesto autorizado. El dueño aún
 debe revisar las respuestas y decidir el modelo; cualquier validación pagada
 nueva requiere un plan y presupuesto concretos autorizados.
 

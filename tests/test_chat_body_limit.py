@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
 
 import pytest
 
+from src.conversational_analytics.api import create_app
 from src.conversational_analytics.body_limit import BoundedBodyMiddleware
+from src.conversational_analytics.config import ChatConfig
 
 
 async def _invoke(headers, chunks, limit=8, receive_delay=0, send_delay=0):
@@ -96,3 +99,100 @@ def test_slow_413_response_is_not_replaced_by_a_second_timeout_response():
     assert status == 413
     assert body == b""
     assert len(starts) == 1 and starts[0]["status"] == 413
+
+
+def _request_scope(
+    *,
+    authorization=None,
+    origin="https://dashboard.example",
+    client=("203.0.113.9", 50000),
+    chunked=False,
+):
+    headers = [(b"host", b"api.example"), (b"origin", origin.encode())]
+    if authorization is not None:
+        headers.append((b"authorization", authorization.encode()))
+    if chunked:
+        headers.append((b"transfer-encoding", b"chunked"))
+    return {
+        "type": "http",
+        "asgi": {"version": "3.0", "spec_version": "2.3"},
+        "http_version": "1.1",
+        "method": "POST",
+        "scheme": "https",
+        "path": "/api/chat/conversations",
+        "raw_path": b"/api/chat/conversations",
+        "query_string": b"",
+        "root_path": "",
+        "headers": headers,
+        "server": ("api.example", 443),
+        "client": client,
+    }
+
+
+def _run_asgi(app, scope):
+    receive_calls = 0
+    sent = []
+
+    async def receive():
+        nonlocal receive_calls
+        receive_calls += 1
+        # Model a client that keeps its chunked upload open indefinitely.
+        await asyncio.Event().wait()
+
+    async def send(message):
+        sent.append(message)
+
+    async def invoke():
+        await app(scope, receive, send)
+
+    asyncio.run(asyncio.wait_for(invoke(), timeout=0.5))
+    status = next(message["status"] for message in sent if message["type"] == "http.response.start")
+    return status, receive_calls, sent
+
+
+@pytest.mark.parametrize("authorization", [None, "Bearer invalid-token"])
+@pytest.mark.parametrize("chunked", [False, True], ids=["missing-length", "chunked"])
+def test_unauthorized_post_is_rejected_before_reading_body(tmp_path: Path, authorization, chunked):
+    config = ChatConfig(
+        state_path=tmp_path / "chat.sqlite3",
+        auth_mode="password",
+        password_users={},
+        allowed_origins=("https://dashboard.example",),
+    )
+    app = create_app(config, snapshot=object(), provider=object(), start_worker=False)
+
+    status, reads, sent = _run_asgi(app, _request_scope(authorization=authorization, chunked=chunked))
+
+    assert status == 401
+    assert reads == 0
+    response_headers = next(
+        message["headers"] for message in sent if message["type"] == "http.response.start"
+    )
+    assert any(
+        name.lower() == b"access-control-allow-origin" and value == b"https://dashboard.example"
+        for name, value in response_headers
+    )
+
+
+@pytest.mark.parametrize(
+    ("auth_mode", "origin", "client", "expected"),
+    [
+        ("password", "https://evil.example", ("203.0.113.9", 50000), 403),
+        ("local", "http://127.0.0.1", ("203.0.113.9", 50000), 403),
+    ],
+)
+def test_boundary_rejections_are_also_before_body_read(
+    tmp_path: Path, auth_mode, origin, client, expected
+):
+    config = ChatConfig(
+        state_path=tmp_path / "chat.sqlite3",
+        auth_mode=auth_mode,
+        password_users={},
+        allowed_origins=("https://dashboard.example",) if auth_mode == "password" else (),
+    )
+    app = create_app(config, snapshot=object(), provider=object(), start_worker=False)
+
+    status, reads, _ = _run_asgi(app, _request_scope(origin=origin, client=client))
+
+    assert status == expected
+    assert reads == 0
