@@ -40,13 +40,16 @@ El lector valida el esquema completo antes de mostrar respuestas. Un paquete es
 un objeto JSON estricto con `schema_version: 1`, `bundle_id`, `bundle_version`,
 `title` y `cuts`. Cada corte contiene `cut_id`, `version`, `label`,
 `disposition` (`terminal`, `complete` o `partial`), `source_sha256`,
-`dataset_sha256`, `dataset` y `slot_dispositions`. `dataset` conserva sin cambios
-el conjunto de revisión de esquema 1 (`dataset_id`, preguntas, candidatos A/B/C
-y `available_count`). `source_sha256` es el digest de vinculación a fuentes que
-expone el conjunto y debe coincidir con `dataset_id`; no es necesariamente el
-hash de un archivo fuente individual. `dataset_sha256` comprueba los bytes UTF-8
-del conjunto independiente serializado con indentación de dos espacios y salto
-de línea final, luego de normalizarlo con el esquema actual.
+`dataset_sha256`, `dataset_json` y `slot_dispositions`. `dataset_json` es una
+cadena con el texto JSON literal del conjunto de revisión de esquema 1
+(`dataset_id`, preguntas, candidatos A/B/C y `available_count`). El lector
+calcula `dataset_sha256` sobre los bytes UTF-8 de esa cadena exacta antes de
+interpretarla; espacios, orden de claves y representaciones numéricas forman
+parte del hash. Esto evita volver a serializar datos y mantiene interoperabilidad
+con el texto fuente original. `source_sha256` es el digest de vinculación a
+fuentes que expone el conjunto y debe coincidir con `dataset_id`; no es
+necesariamente el hash de un archivo fuente individual. El texto JSON anidado
+tiene un límite de 9 MB dentro del límite de 10 MB del paquete.
 
 El paquete declara exactamente un estado para cada espacio sin respuesta y
 ninguno para los candidatos con texto: `no_answer`, `failed`, `held` o

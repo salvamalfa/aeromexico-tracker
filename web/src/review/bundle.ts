@@ -37,11 +37,6 @@ function boundedText(value: unknown, label: string, max: number): string {
   return value;
 }
 
-/** Bytes emitted by scripts/chat/export_review_dataset.py for a normalized dataset. */
-export function datasetFileBytes(dataset: ReviewDataset): Uint8Array {
-  return new TextEncoder().encode(`${JSON.stringify(dataset, null, 2)}\n`);
-}
-
 export async function validateBundle(value: unknown, sha256: (bytes: Uint8Array) => Promise<string>): Promise<ReviewBundle> {
   const data = record(value, "Paquete de revisión", ["schema_version", "bundle_id", "bundle_version", "title", "cuts"]);
   if (data.schema_version !== 1) throw new Error("Versión de paquete no compatible.");
@@ -57,7 +52,7 @@ export async function validateBundle(value: unknown, sha256: (bytes: Uint8Array)
   for (const [index, rawCut] of data.cuts.entries()) {
     const label = `Corte ${index + 1}`;
     const item = record(rawCut, label, [
-      "cut_id", "version", "label", "disposition", "source_sha256", "dataset_sha256", "dataset", "slot_dispositions",
+      "cut_id", "version", "label", "disposition", "source_sha256", "dataset_sha256", "dataset_json", "slot_dispositions",
     ]);
     const cutId = boundedText(item.cut_id, `${label} identificador`, 64);
     if (!cutIdPattern.test(cutId) || seenCutIds.has(cutId)) throw new Error(`${label}: identificador inválido o repetido.`);
@@ -73,13 +68,19 @@ export async function validateBundle(value: unknown, sha256: (bytes: Uint8Array)
     if (typeof item.dataset_sha256 !== "string" || !hashPattern.test(item.dataset_sha256)) {
       throw new Error(`${label}: hash del conjunto inválido.`);
     }
-    const dataset = parseDataset(item.dataset);
-    if (item.source_sha256 !== dataset.dataset_id) {
-      throw new Error(`${label}: el digest de origen no coincide con el conjunto.`);
-    }
-    const calculatedDatasetHash = await sha256(datasetFileBytes(dataset));
+    if (typeof item.dataset_json !== "string") throw new Error(`${label}: texto del conjunto inválido.`);
+    const datasetBytes = new TextEncoder().encode(item.dataset_json);
+    if (datasetBytes.byteLength > 9 * 1024 * 1024) throw new Error(`${label}: el conjunto supera el límite de 9 MB.`);
+    const calculatedDatasetHash = await sha256(datasetBytes);
     if (item.dataset_sha256 !== calculatedDatasetHash) {
       throw new Error(`${label}: el conjunto cambió o su hash no coincide.`);
+    }
+    let datasetValue: unknown;
+    try { datasetValue = JSON.parse(item.dataset_json) as unknown; }
+    catch { throw new Error(`${label}: el texto del conjunto no contiene JSON válido.`); }
+    const dataset = parseDataset(datasetValue);
+    if (item.source_sha256 !== dataset.dataset_id) {
+      throw new Error(`${label}: el digest de origen no coincide con el conjunto.`);
     }
     if (!Array.isArray(item.slot_dispositions) || item.slot_dispositions.length > dataset.questions.length * aliases.length) {
       throw new Error(`${label}: estados de respuestas faltantes inválidos.`);
@@ -122,6 +123,7 @@ export async function validateBundle(value: unknown, sha256: (bytes: Uint8Array)
       disposition: item.disposition as ReviewCut["disposition"],
       source_sha256: item.source_sha256,
       dataset_sha256: item.dataset_sha256,
+      dataset_json: item.dataset_json,
       dataset,
       slot_dispositions: [...declared.values()],
     });

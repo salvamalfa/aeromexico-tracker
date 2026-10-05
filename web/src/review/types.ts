@@ -51,6 +51,7 @@ export interface ReviewCut {
   disposition: CutDisposition;
   source_sha256: string;
   dataset_sha256: string;
+  dataset_json: string;
   dataset: ReviewDataset;
   slot_dispositions: SlotDisposition[];
 }

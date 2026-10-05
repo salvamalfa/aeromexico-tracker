@@ -1,9 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { webcrypto } from "node:crypto";
 import { bootstrapReview, sha256Hex } from "./bootstrap";
-import { datasetFileBytes } from "./bundle";
 import { parseDataset } from "./validation";
-import { storageKey } from "./storage";
+import { bundleStorageKey, storageKey } from "./storage";
 
 function reviewShell(): string {
   return `
@@ -66,6 +65,31 @@ describe("review page bootstrap", () => {
     expect(setSpy).not.toHaveBeenCalled();
   });
 
+  it("does not touch the storage getter until local caching is enabled", async () => {
+    document.body.innerHTML = reviewShell();
+    vi.stubGlobal("crypto", webcrypto as unknown as Crypto);
+    const descriptor = Object.getOwnPropertyDescriptor(window, "localStorage");
+    Object.defineProperty(window, "localStorage", {
+      configurable: true,
+      get() { throw new Error("storage getter blocked"); },
+    });
+    try {
+      expect(() => bootstrapReview(document)).not.toThrow();
+      const bytes = new TextEncoder().encode(JSON.stringify(sourceDataset()));
+      const file = { size: bytes.byteLength, arrayBuffer: async () => bytes.buffer } as File;
+      Object.defineProperty(document.querySelector("#dataset-file"), "files", { value: [file] });
+      document.querySelector<HTMLInputElement>("#dataset-file")?.dispatchEvent(new Event("change"));
+      await vi.waitFor(() => expect(document.querySelector("#review-workspace")?.hasAttribute("hidden")).toBe(false));
+
+      document.querySelector<HTMLInputElement>("#cache-option")!.click();
+      expect(document.querySelector<HTMLElement>("#load-status")?.textContent).toContain("No se pudo leer el guardado local");
+      document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="problem"]')?.click();
+      expect(document.querySelector<HTMLOutputElement>("#progress-count")?.value).toBe("1 / 74");
+    } finally {
+      if (descriptor) Object.defineProperty(window, "localStorage", descriptor);
+    }
+  });
+
   it("hashes the exact file bytes, so whitespace edits receive a distinct identity", async () => {
     const first = new TextEncoder().encode('{"dataset_id":"sheet-hash"}').buffer;
     const edited = new TextEncoder().encode('{ "dataset_id": "sheet-hash" }').buffer;
@@ -83,7 +107,7 @@ describe("review page bootstrap", () => {
     const text = JSON.stringify(sourceDataset());
     const bytes = new TextEncoder().encode(text);
     const file = { size: bytes.byteLength, arrayBuffer: async () => bytes.buffer } as File;
-    Object.defineProperty(document.querySelector("#dataset-file"), "files", { value: [file] });
+    Object.defineProperty(document.querySelector("#dataset-file"), "files", { configurable: true, value: [file] });
     document.querySelector<HTMLInputElement>("#dataset-file")?.dispatchEvent(new Event("change"));
     await vi.waitFor(() => expect(document.querySelector("#review-workspace")?.hasAttribute("hidden")).toBe(false));
 
@@ -110,7 +134,7 @@ describe("review page bootstrap", () => {
     bootstrapReview(document, window.localStorage);
     const bytes = new TextEncoder().encode(JSON.stringify(sourceDataset()));
     const file = { size: bytes.byteLength, arrayBuffer: async () => bytes.buffer } as File;
-    Object.defineProperty(document.querySelector("#dataset-file"), "files", { value: [file] });
+    Object.defineProperty(document.querySelector("#dataset-file"), "files", { configurable: true, value: [file] });
     document.querySelector<HTMLInputElement>("#dataset-file")?.dispatchEvent(new Event("change"));
     await vi.waitFor(() => expect(document.querySelector("#review-workspace")?.hasAttribute("hidden")).toBe(false));
 
@@ -147,7 +171,7 @@ describe("review page bootstrap", () => {
     window.localStorage.setItem(key, original);
     bootstrapReview(document, window.localStorage);
     const file = { size: bytes.byteLength, arrayBuffer: async () => bytes.buffer } as File;
-    Object.defineProperty(document.querySelector("#dataset-file"), "files", { value: [file] });
+    Object.defineProperty(document.querySelector("#dataset-file"), "files", { configurable: true, value: [file] });
     document.querySelector<HTMLInputElement>("#dataset-file")?.dispatchEvent(new Event("change"));
     await vi.waitFor(() => expect(document.querySelector("#review-workspace")?.hasAttribute("hidden")).toBe(false));
     document.querySelector<HTMLInputElement>("#cache-option")!.click();
@@ -166,7 +190,8 @@ describe("review page bootstrap", () => {
     vi.stubGlobal("crypto", webcrypto as unknown as Crypto);
     const dataset = sourceDataset();
     const normalizedDataset = parseDataset(dataset);
-    const datasetBytes = datasetFileBytes(normalizedDataset);
+    const datasetJson = `${JSON.stringify(normalizedDataset, null, 2)}\n`;
+    const datasetBytes = new TextEncoder().encode(datasetJson);
     const datasetHash = await sha256Hex(datasetBytes.slice().buffer as ArrayBuffer);
     const sourceHash = dataset.dataset_id;
     const missing = dataset.questions.flatMap((question) => question.candidates
@@ -175,16 +200,24 @@ describe("review page bootstrap", () => {
     const cut = (cut_id: string, version: string) => ({
       cut_id, version, label: cut_id === "original" ? "Corte original" : "MVP actual",
       disposition: "complete", source_sha256: sourceHash, dataset_sha256: datasetHash,
-      dataset, slot_dispositions: missing,
+      dataset_json: datasetJson, slot_dispositions: missing,
     });
     const bundleText = JSON.stringify({
       schema_version: 1, bundle_id: "synthetic-review", bundle_version: "1.0.0", title: "Paquete sintético",
       cuts: [cut("original", "1.0.0"), cut("current", "2.0.0")],
     });
     const bytes = new TextEncoder().encode(bundleText);
+    const bundleHash = await sha256Hex(bytes.slice().buffer as ArrayBuffer);
     const file = { size: bytes.byteLength, arrayBuffer: async () => bytes.buffer } as File;
     bootstrapReview(document, window.localStorage);
-    Object.defineProperty(document.querySelector("#dataset-file"), "files", { value: [file] });
+    window.localStorage.setItem(bundleStorageKey(bundleHash, "current", datasetHash), JSON.stringify({
+      schema_version: 1,
+      dataset_id: sourceHash,
+      dataset_content_sha256: datasetHash,
+      ratings: [{ question_id: "Q01", alias: "A", status: "problem", notes: "saved old rating" }],
+    }));
+    document.querySelector<HTMLInputElement>("#cache-option")!.checked = true;
+    Object.defineProperty(document.querySelector("#dataset-file"), "files", { configurable: true, value: [file] });
     document.querySelector<HTMLInputElement>("#dataset-file")?.dispatchEvent(new Event("change"));
     await vi.waitFor(() => expect(document.querySelector("#cut-controls")?.hasAttribute("hidden")).toBe(false));
 
@@ -195,12 +228,82 @@ describe("review page bootstrap", () => {
     const selector = document.querySelector<HTMLSelectElement>("#cut-select")!;
     selector.value = "current";
     selector.dispatchEvent(new Event("change"));
-    expect((document.querySelector("#progress-count") as HTMLOutputElement)?.value).toBe("0 / 74");
+    expect((document.querySelector("#progress-count") as HTMLOutputElement)?.value).toBe("1 / 74");
     document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="correct"]')?.click();
     selector.value = "original";
     selector.dispatchEvent(new Event("change"));
     expect((document.querySelector("#progress-count") as HTMLOutputElement)?.value).toBe("1 / 74");
     expect(document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="problem"]')?.checked).toBe(true);
-    expect(window.localStorage.length).toBe(0);
+
+    const grades = {
+      schema_version: 2,
+      bundle_id: "synthetic-review",
+      bundle_version: "1.0.0",
+      bundle_content_sha256: bundleHash,
+      cuts: [
+        { cut_id: "original", version: "1.0.0", dataset_id: sourceHash, dataset_sha256: datasetHash, ratings: [] },
+        { cut_id: "current", version: "2.0.0", dataset_id: sourceHash, dataset_sha256: datasetHash,
+          ratings: [{ question_id: "Q01", alias: "A", status: "correct", notes: "new imported grade" }] },
+      ],
+    };
+    const gradesBytes = new TextEncoder().encode(JSON.stringify(grades));
+    const gradesFile = { size: gradesBytes.byteLength, arrayBuffer: async () => gradesBytes.buffer } as File;
+    Object.defineProperty(document.querySelector("#ratings-file"), "files", { configurable: true, value: [gradesFile] });
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    document.querySelector<HTMLInputElement>("#ratings-file")?.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(document.querySelector<HTMLElement>("#load-status")?.textContent).toContain("Se importaron"));
+    selector.value = "current";
+    selector.dispatchEvent(new Event("change"));
+    expect(document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="correct"]')?.checked).toBe(true);
+
+    grades.cuts[1]!.ratings = [];
+    const clearedBytes = new TextEncoder().encode(JSON.stringify(grades));
+    const clearedFile = { size: clearedBytes.byteLength, arrayBuffer: async () => clearedBytes.buffer } as File;
+    Object.defineProperty(document.querySelector("#ratings-file"), "files", { configurable: true, value: [clearedFile] });
+    document.querySelector<HTMLInputElement>("#ratings-file")?.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(document.querySelector<HTMLElement>("#load-status")?.textContent).toContain("Se importaron 0 calificaciones"));
+    selector.value = "original";
+    selector.dispatchEvent(new Event("change"));
+    selector.value = "current";
+    selector.dispatchEvent(new Event("change"));
+    expect(document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="problem"]')?.checked).toBe(false);
+    expect(document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="correct"]')?.checked).toBe(false);
+
+    const invalidBundle = JSON.parse(bundleText) as { cuts: Array<Record<string, unknown>> };
+    invalidBundle.cuts[0]!.dataset_sha256 = "f".repeat(64);
+    const invalidBytes = new TextEncoder().encode(JSON.stringify(invalidBundle));
+    const invalidFile = { size: invalidBytes.byteLength, arrayBuffer: async () => invalidBytes.buffer } as File;
+    Object.defineProperty(document.querySelector("#dataset-file"), "files", { configurable: true, value: [invalidFile] });
+    document.querySelector<HTMLInputElement>("#dataset-file")?.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(document.querySelector<HTMLElement>("#load-status")?.dataset.error).toBe("true"));
+    expect(document.querySelector<HTMLSelectElement>("#cut-select")?.value).toBe("current");
+    expect(document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="problem"]')?.checked).toBe(false);
+    expect(document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="correct"]')?.checked).toBe(false);
+    expect(document.querySelector("#review-workspace")?.hasAttribute("hidden")).toBe(false);
+
+    const createDescriptor = Object.getOwnPropertyDescriptor(window.URL, "createObjectURL");
+    const revokeDescriptor = Object.getOwnPropertyDescriptor(window.URL, "revokeObjectURL");
+    let exportedBlob: Blob | null = null;
+    Object.defineProperty(window.URL, "createObjectURL", {
+      configurable: true,
+      value: (blob: Blob) => { exportedBlob = blob; return "blob:synthetic"; },
+    });
+    Object.defineProperty(window.URL, "revokeObjectURL", { configurable: true, value: () => {} });
+    const anchorClick = vi.spyOn(window.HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    document.querySelector<HTMLButtonElement>("#export-button")?.click();
+    const exportedText = await new Promise<string>((resolve, reject) => {
+      if (!exportedBlob) return reject(new Error("No se creó el archivo de calificaciones."));
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsText(exportedBlob);
+    });
+    expect(JSON.parse(exportedText).bundle_content_sha256).toBe(bundleHash);
+    anchorClick.mockRestore();
+    if (createDescriptor) Object.defineProperty(window.URL, "createObjectURL", createDescriptor);
+    else delete (window.URL as unknown as { createObjectURL?: unknown }).createObjectURL;
+    if (revokeDescriptor) Object.defineProperty(window.URL, "revokeObjectURL", revokeDescriptor);
+    else delete (window.URL as unknown as { revokeObjectURL?: unknown }).revokeObjectURL;
+    expect(window.localStorage.length).toBe(2);
   });
 });

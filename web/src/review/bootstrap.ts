@@ -51,7 +51,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-export function bootstrapReview(doc: Document = document, storage: Storage = window.localStorage): void {
+export function bootstrapReview(doc: Document = document, storageSource?: Storage | (() => Storage)): void {
   const datasetInput = requireNode<HTMLInputElement>(doc, "#dataset-file");
   const ratingsInput = requireNode<HTMLInputElement>(doc, "#ratings-file");
   const importButton = requireNode<HTMLButtonElement>(doc, "#import-button");
@@ -72,6 +72,10 @@ export function bootstrapReview(doc: Document = document, storage: Storage = win
   const next = requireNode<HTMLButtonElement>(doc, "#next-question");
   const view = doc.defaultView;
   if (!view) throw new Error("La revisión requiere un navegador.");
+  const getStorage = (): Storage => {
+    if (typeof storageSource === "function") return storageSource();
+    return storageSource ?? view.localStorage;
+  };
 
   let dataset: ReviewDataset | null = null;
   let bundle: ReviewBundle | null = null;
@@ -80,6 +84,7 @@ export function bootstrapReview(doc: Document = document, storage: Storage = win
   let bundleHash = "";
   let ratings: RatingMap = new Map();
   let ratingsByCut = new Map<string, RatingMap>();
+  let loadedBundleCuts = new Set<string>();
   let canPersist = true;
   let selectedIndex = 0;
   const visible = () => dataset ? visibleQuestionIndices(dataset, ratings, filter.value as QuestionFilter) : [];
@@ -95,10 +100,10 @@ export function bootstrapReview(doc: Document = document, storage: Storage = win
     if (!cacheOption.checked || !canPersist || !dataset) return;
     try {
       if (bundle && activeCut) {
-        storage.setItem(bundleStorageKey(bundleHash, activeCut.cut_id, activeCut.dataset_sha256),
+        getStorage().setItem(bundleStorageKey(bundleHash, activeCut.cut_id, activeCut.dataset_sha256),
           JSON.stringify(ratingsFileForCut(activeCut, ratings)));
       } else {
-        saveRatings(dataset, contentHash, ratings, storage);
+        saveRatings(dataset, contentHash, ratings, getStorage());
       }
     } catch {
       announce("No se pudo guardar en este navegador. Exporta las calificaciones antes de salir.", true);
@@ -136,14 +141,17 @@ export function bootstrapReview(doc: Document = document, storage: Storage = win
         const key = ratingKey(questionId, alias);
         if (!status) ratings.delete(key);
         else ratings.set(key, { question_id: questionId, alias, status, notes });
-        if (bundle && activeCut) ratingsByCut.set(activeCut.cut_id, ratings);
+        if (bundle && activeCut) {
+          ratingsByCut.set(activeCut.cut_id, ratings);
+          loadedBundleCuts.add(activeCut.cut_id);
+        }
         persistActiveRatings();
         updateSidebar();
       }, activeSlotStates());
   };
   const loadBundleCutRatings = (cut: ReviewCut): RatingMap => {
     const key = bundleStorageKey(bundleHash, cut.cut_id, cut.dataset_sha256);
-    const raw = storage.getItem(key);
+    const raw = getStorage().getItem(key);
     if (!raw) return new Map();
     let value: unknown;
     try { value = JSON.parse(raw) as unknown; } catch { throw new Error("El guardado local está dañado; no se modificó."); }
@@ -162,7 +170,8 @@ export function bootstrapReview(doc: Document = document, storage: Storage = win
     const missingCounts = { no_answer: 0, failed: 0, held: 0, not_attempted: 0 };
     for (const slot of selected.slot_dispositions) missingCounts[slot.status] += 1;
     cutStatus.textContent = `${selected.disposition === "terminal" ? "Corte terminal" : selected.disposition === "complete" ? "Corte completo" : "Corte parcial"} · ${selected.dataset.questions.length} preguntas · ${selected.dataset.available_count} respuestas disponibles · ${missingCounts.no_answer} sin respuesta, ${missingCounts.failed} con error, ${missingCounts.held} en espera, ${missingCounts.not_attempted} no intentadas.`;
-    if (cacheOption.checked && canPersist) {
+    if (cacheOption.checked && canPersist && !loadedBundleCuts.has(selected.cut_id)) {
+      loadedBundleCuts.add(selected.cut_id);
       try {
         const stored = loadBundleCutRatings(selected);
         if (stored.size || !ratings.size) ratings = stored;
@@ -195,14 +204,20 @@ export function bootstrapReview(doc: Document = document, storage: Storage = win
     }
     try {
       if (bundle) {
+        const nextRatingsByCut = new Map(ratingsByCut);
+        const newlyLoaded = new Set<string>();
         for (const cut of bundle.cuts) {
+          if (loadedBundleCuts.has(cut.cut_id)) continue;
           const stored = loadBundleCutRatings(cut);
-          const current = ratingsByCut.get(cut.cut_id) ?? new Map();
-          ratingsByCut.set(cut.cut_id, stored.size || current.size === 0 ? stored : current);
+          const current = nextRatingsByCut.get(cut.cut_id) ?? new Map();
+          nextRatingsByCut.set(cut.cut_id, stored.size || current.size === 0 ? stored : current);
+          newlyLoaded.add(cut.cut_id);
         }
+        ratingsByCut = nextRatingsByCut;
+        newlyLoaded.forEach((cutId) => loadedBundleCuts.add(cutId));
         if (activeCut) ratings = ratingsByCut.get(activeCut.cut_id) ?? new Map();
       } else {
-        const stored = loadRatings(dataset, contentHash, storage);
+        const stored = loadRatings(dataset, contentHash, getStorage());
         if (stored.size || ratings.size === 0) ratings = stored;
       }
       canPersist = true;
@@ -221,18 +236,18 @@ export function bootstrapReview(doc: Document = document, storage: Storage = win
     if (!file) return;
     try {
       const imported = await readJsonFile(file);
-      bundle = null;
-      activeCut = null;
-      bundleHash = "";
-      contentHash = imported.contentHash;
-      ratingsByCut = new Map();
       if (isRecord(imported.value) && "cuts" in imported.value) {
         const parsedBundle = await validateBundle(imported.value, async (bytes) =>
           sha256Hex(bytes.slice().buffer as ArrayBuffer));
+        activeCut = null;
         bundle = parsedBundle;
         bundleHash = imported.contentHash;
+        contentHash = "";
         ratings = new Map();
+        ratingsByCut = new Map();
+        loadedBundleCuts = new Set();
         bundle.cuts.forEach((cut) => ratingsByCut.set(cut.cut_id, new Map()));
+        canPersist = true;
         bundleTitle.textContent = `${bundle.title} · versión ${bundle.bundle_version}`;
         cutSelect.replaceChildren(...bundle.cuts.map((cut) => {
           const option = doc.createElement("option");
@@ -247,12 +262,18 @@ export function bootstrapReview(doc: Document = document, storage: Storage = win
         workspace.hidden = false;
         announce(`Paquete cargado: ${bundle.cuts.length} cortes versionados. El hash del paquete y cada corte se verificaron.`);
       } else {
-        dataset = parseDataset(imported.value);
-        ratings = new Map();
+        const parsedDataset = parseDataset(imported.value);
+        dataset = parsedDataset;
+        bundle = null;
         activeCut = null;
+        bundleHash = "";
+        contentHash = imported.contentHash;
+        ratings = new Map();
+        ratingsByCut = new Map();
+        loadedBundleCuts = new Set();
         cutControls.hidden = true;
         if (cacheOption.checked) {
-          try { ratings = loadRatings(dataset, contentHash, storage); canPersist = true; }
+          try { ratings = loadRatings(dataset, contentHash, getStorage()); canPersist = true; }
           catch { canPersist = false; announce("No se pudo recuperar el guardado anterior. Se conserva sin cambios; exporta las calificaciones.", true); }
         } else canPersist = true;
         selectedIndex = 0;
@@ -286,6 +307,7 @@ export function bootstrapReview(doc: Document = document, storage: Storage = win
       }
       if (bundle) {
         ratingsByCut = incoming as Map<string, RatingMap>;
+        loadedBundleCuts = new Set(bundle.cuts.map((cut) => cut.cut_id));
         if (activeCut) ratings = ratingsByCut.get(activeCut.cut_id) ?? new Map();
       } else ratings = incoming as RatingMap;
       persistActiveRatings();
