@@ -104,6 +104,21 @@ class ReviewDatasetExportTests(unittest.TestCase):
             with self.assertRaisesRegex(exporter.ExportError, "mode 0600"):
                 exporter.build_dataset(source, platform="posix")
 
+    def test_crlf_worksheet_parses_like_lf_and_hashes_original_bytes(self):
+        lf_text = synthetic_worksheet()
+        crlf_text = lf_text.replace("\n", "\r\n")
+        lf_dataset = exporter.parse_worksheet(lf_text, "a" * 64)
+        crlf_dataset = exporter.parse_worksheet(crlf_text, "b" * 64)
+        self.assertEqual(lf_dataset["questions"], crlf_dataset["questions"])
+        self.assertEqual(lf_dataset["available_count"], crlf_dataset["available_count"])
+
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "worksheet.md"
+            source.write_bytes(crlf_text.encode("utf-8"))
+            dataset = exporter.build_dataset(source, platform="nt")
+            self.assertEqual(dataset["dataset_id"], hashlib.sha256(source.read_bytes()).hexdigest())
+            self.assertNotEqual(dataset["dataset_id"], hashlib.sha256(lf_text.encode("utf-8")).hexdigest())
+
     def test_variable_fences_and_exact_40_74_120_contract(self):
         text = synthetic_worksheet()
         dataset = exporter.parse_worksheet(text, "a" * 64)

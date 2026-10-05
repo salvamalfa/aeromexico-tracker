@@ -48,6 +48,8 @@ Windows nativo no interpreta `st_mode` como una ACL ni exige los bits `0600`;
 el dueño debe usar una carpeta con acceso privado en su cuenta de Windows.
 La escritura exclusiva y la comprobación del contenido se mantienen en ambas
 plataformas, sin sobrescribir el corte existente.
+También acepta saltos de línea CRLF: normaliza solamente el texto usado para
+analizar los encabezados, mientras conserva el SHA-256 de los bytes originales.
 
 ## Acceso y calidad
 

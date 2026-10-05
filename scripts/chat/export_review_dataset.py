@@ -177,6 +177,9 @@ def parse_question(section: str, question_id: str) -> dict[str, Any]:
 
 def parse_worksheet(text: str, worksheet_sha256: str) -> dict[str, Any]:
     """Validate and parse the entire 40-question/120-slot blind worksheet."""
+    # Markdown files restored or edited on native Windows commonly use CRLF.
+    # Normalize a copy for parsing; build_dataset hashes the original bytes.
+    text = text.replace("\r\n", "\n")
     headings = list(QUESTION_HEAD.finditer(text))
     ids = [match.group(1) for match in headings]
     expected_ids = [f"Q{number:02d}" for number in range(1, EXPECTED_QUESTION_COUNT + 1)]
