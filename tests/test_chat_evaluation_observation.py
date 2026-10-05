@@ -10,6 +10,13 @@ from src.conversational_analytics.evaluation_observation import observation_from
 from src.conversational_analytics.tools.registry import ToolRegistry
 
 _TEST_VERSIONS = {"data_version": "fixture-data-v1", "semantic_version": "fixture-semantic-v1"}
+_TEST_METRIC_DIMENSIONS = {
+    "metric_a": [],
+    "metric_b": [],
+    "metric_c": [],
+    "ask_km": [],
+    "load_factor": [],
+}
 
 
 def _load_factor_case():
@@ -26,13 +33,26 @@ def _successful_call(name: str, arguments: dict, result: dict) -> dict:
     }
 
 
-def _observe(calls: list[dict], response: str = "", *, expected_versions: dict | None = None) -> dict:
+def _observe(
+    calls: list[dict],
+    response: str = "",
+    *,
+    expected_versions: dict | None = None,
+    metric_dimensions: dict[str, list[str]] | None = None,
+    scope: dict | None = None,
+) -> dict:
     versions = expected_versions or (
         {key: calls[0]["result"][key] for key in ("data_version", "semantic_version")}
         if calls
         else _TEST_VERSIONS
     )
-    return observation_from_tool_calls(calls, response, expected_versions=versions, scope={})
+    return observation_from_tool_calls(
+        calls,
+        response,
+        expected_versions=versions,
+        scope=scope or {},
+        metric_dimensions=metric_dimensions or _TEST_METRIC_DIMENSIONS,
+    )
 
 
 def _row(metric: str, period: str, *, entity: str = "AEROMEXICO", value: float = 0.5) -> dict:
@@ -177,7 +197,8 @@ def test_mixed_segment_scope_extra_rows_and_version_mismatch_fail_closed():
         _call("query_metrics", {**base_args, "segment": "total"}, [{**total, "segment": "total"}]),
         _call("query_metrics", {**base_args, "segment": "domestic"}, [domestic]),
     ]
-    assert _observe(mixed)["not_scored_reason"] == "mixed_segment_scope"
+    segment_dimensions = {**_TEST_METRIC_DIMENSIONS, "metric_a": ["segment"]}
+    assert _observe(mixed, metric_dimensions=segment_dimensions)["not_scored_reason"] == "mixed_segment_scope"
 
     extra = _call("query_metrics", base_args, [{**total, "metric_id": "metric_b"}])
     assert _observe([extra])["not_scored_reason"] == "evidence_row_outside_scope"
@@ -202,16 +223,100 @@ def test_mixed_segment_scope_extra_rows_and_version_mismatch_fail_closed():
 def test_segment_inherited_from_pinned_context_is_kept_in_scope():
     scope = {"filters": {"segment": "domestic"}}
     args = {"metric_ids": ["metric_a"], "entity_ids": ["AEROMEXICO"], "periods": ["2026Q2"]}
+    segment_dimensions = {**_TEST_METRIC_DIMENSIONS, "metric_a": ["segment"]}
     call = _call("query_metrics", args, [{**_row("metric_a", "2026Q2"), "segment": "domestic"}])
     call["scope"] = scope
 
     observation = observation_from_tool_calls(
-        [call], "respuesta", expected_versions=_TEST_VERSIONS, scope=scope
+        [call],
+        "respuesta",
+        expected_versions=_TEST_VERSIONS,
+        scope=scope,
+        metric_dimensions=segment_dimensions,
     )
 
     assert observation["status"] == "supported"
     assert observation["plan"]["filters"] == {"segment": "domestic"}
     assert observation["rows"][0]["segment"] == "domestic"
+
+    missing_segment = _call("query_metrics", args, [_row("metric_a", "2026Q2")])
+    missing_segment["scope"] = scope
+    rejected = observation_from_tool_calls(
+        [missing_segment],
+        "respuesta",
+        expected_versions=_TEST_VERSIONS,
+        scope=scope,
+        metric_dimensions=segment_dimensions,
+    )
+    assert rejected["not_scored_reason"] == "evidence_row_outside_scope"
+
+    missing_required_segment = _call("query_metrics", args, [_row("metric_a", "2026Q2")])
+    rejected_without_context = observation_from_tool_calls(
+        [missing_required_segment],
+        "respuesta",
+        expected_versions=_TEST_VERSIONS,
+        scope={},
+        metric_dimensions=segment_dimensions,
+    )
+    assert rejected_without_context["not_scored_reason"] == "invalid_evidence_arguments"
+
+    explicit_override = _call(
+        "query_metrics",
+        {**args, "segment": "international"},
+        [{**_row("metric_a", "2026Q2"), "segment": "international"}],
+    )
+    explicit_override["scope"] = scope
+    accepted_override = observation_from_tool_calls(
+        [explicit_override],
+        "respuesta",
+        expected_versions=_TEST_VERSIONS,
+        scope=scope,
+        metric_dimensions=segment_dimensions,
+    )
+    assert accepted_override["status"] == "supported"
+    assert accepted_override["plan"]["filters"] == {"segment": "international"}
+
+
+def test_context_segment_is_ignored_for_metric_without_segment_dimension():
+    scope = {"filters": {"segment": "domestic"}}
+    args = {"metric_ids": ["load_factor"], "entity_ids": ["AEROMEXICO"], "periods": ["2026Q2"]}
+    call = _call("query_metrics", args, [_row("load_factor", "2026Q2")])
+    call["scope"] = scope
+
+    observation = observation_from_tool_calls(
+        [call],
+        "respuesta",
+        expected_versions=_TEST_VERSIONS,
+        scope=scope,
+        metric_dimensions=_TEST_METRIC_DIMENSIONS,
+    )
+
+    assert observation["status"] == "supported"
+    assert observation["plan"] == {
+        "metric_ids": ["load_factor"],
+        "entity_ids": ["AEROMEXICO"],
+        "periods": ["2026Q2"],
+        "operation": "query",
+    }
+
+    invalid_explicit = _call(
+        "query_metrics",
+        {**args, "segment": "domestic"},
+        [{**_row("load_factor", "2026Q2"), "segment": "domestic"}],
+    )
+    assert _observe([invalid_explicit])["not_scored_reason"] == "invalid_evidence_arguments"
+
+    mixed_dimensions = {**_TEST_METRIC_DIMENSIONS, "metric_a": ["segment"]}
+    invalid_mixed_query = _call(
+        "query_metrics",
+        {"metric_ids": ["metric_a", "load_factor"], "entity_ids": ["AEROMEXICO"],
+         "periods": ["2026Q2"]},
+        [_row("metric_a", "2026Q2"), _row("load_factor", "2026Q2")],
+    )
+    invalid_mixed_query["scope"] = scope
+    assert _observe(
+        [invalid_mixed_query], metric_dimensions=mixed_dimensions, scope=scope
+    )["not_scored_reason"] == "invalid_evidence_arguments"
 
 
 def test_successful_query_with_missing_requested_cells_is_unscored():

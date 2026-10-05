@@ -25,6 +25,7 @@ def observation_from_tool_calls(
     *,
     expected_versions: dict[str, str],
     scope: dict[str, Any],
+    metric_dimensions: dict[str, list[str]],
 ) -> dict[str, Any]:
     """Union successful query evidence or fail closed when its scope is ambiguous."""
     evidence: list[tuple[dict[str, Any], list[dict[str, Any]], str]] = []
@@ -46,7 +47,10 @@ def observation_from_tool_calls(
         arguments = call.get("arguments")
         if not isinstance(arguments, dict):
             return _ungraded(response, "invalid_evidence_arguments")
-        if not _segment_scope_is_valid(arguments, scope):
+        if (
+            not _segment_scope_is_valid(arguments, scope)
+            or not _metric_scope_is_valid(name, arguments, scope, metric_dimensions)
+        ):
             return _ungraded(response, "invalid_evidence_arguments")
         if name == "compare_metrics" and any(
             arguments.get(key) not in (None, expected_versions.get(key))
@@ -58,12 +62,12 @@ def observation_from_tool_calls(
             if not isinstance(raw_row, dict):
                 return _ungraded(response, "invalid_evidence_row")
             row = _canonical_row(raw_row)
-            if row is None or not _row_matches_call(row, name, arguments, scope):
+            if row is None or not _row_matches_call(row, name, arguments, scope, metric_dimensions):
                 return _ungraded(response, "evidence_row_outside_scope")
             rows.append(row)
-        if not _call_rows_are_complete(name, arguments, rows, scope):
+        if not _call_rows_are_complete(name, arguments, rows, scope, metric_dimensions):
             return _ungraded(response, "incomplete_successful_evidence")
-        plan = _actual_plan(name, arguments, rows, scope)
+        plan = _actual_plan(name, arguments, rows, scope, metric_dimensions)
         if not all(plan.get(key) for key in ("metric_ids", "entity_ids", "periods")):
             return _ungraded(response, "invalid_evidence_plan")
         evidence.append((plan, rows, name))
@@ -144,14 +148,42 @@ def _canonical_row(row: dict[str, Any]) -> dict[str, Any] | None:
     return {key: row[key] for key in _ROW_FIELDS if key in row}
 
 
-def _resolved_segment(arguments: dict[str, Any], scope: dict[str, Any]) -> str | None:
+def _resolved_segment(
+    name: str,
+    arguments: dict[str, Any],
+    scope: dict[str, Any],
+    metric_dimensions: dict[str, list[str]],
+) -> str | None:
     explicit = arguments.get("segment")
     if explicit is not None:
         return explicit if isinstance(explicit, str) else None
-    filters = scope.get("filters")
-    if isinstance(filters, dict) and isinstance(filters.get("segment"), str):
-        return filters["segment"]
+    if _inherits_context_segment(name, arguments, metric_dimensions):
+        filters = scope.get("filters")
+        if isinstance(filters, dict):
+            segment = filters.get("segment")
+            return segment if isinstance(segment, str) else None
     return None
+
+
+def _inherits_context_segment(
+    name: str, arguments: dict[str, Any], metric_dimensions: dict[str, list[str]]
+) -> bool:
+    if name == "query_metrics":
+        metric_ids = arguments.get("metric_ids")
+        return (
+            isinstance(metric_ids, list)
+            and bool(metric_ids)
+            and all(
+                metric_id in metric_dimensions and "segment" in metric_dimensions[metric_id]
+                for metric_id in metric_ids
+            )
+        )
+    metric_id = arguments.get("metric_id")
+    return (
+        isinstance(metric_id, str)
+        and metric_id in metric_dimensions
+        and "segment" in metric_dimensions[metric_id]
+    )
 
 
 def _segment_scope_is_valid(arguments: dict[str, Any], scope: dict[str, Any]) -> bool:
@@ -165,8 +197,32 @@ def _segment_scope_is_valid(arguments: dict[str, Any], scope: dict[str, Any]) ->
     return True
 
 
+def _metric_scope_is_valid(
+    name: str,
+    arguments: dict[str, Any],
+    scope: dict[str, Any],
+    metric_dimensions: dict[str, list[str]],
+) -> bool:
+    if name == "query_metrics":
+        metric_ids = arguments.get("metric_ids")
+    else:
+        metric_ids = [arguments.get("metric_id")]
+    if not isinstance(metric_ids, list) or not metric_ids or not all(
+        isinstance(metric_id, str) and metric_id in metric_dimensions for metric_id in metric_ids
+    ):
+        return False
+    if arguments.get("segment") is not None:
+        return all("segment" in metric_dimensions[metric_id] for metric_id in metric_ids)
+    needs_segment = any("segment" in metric_dimensions[metric_id] for metric_id in metric_ids)
+    return not needs_segment or _resolved_segment(name, arguments, scope, metric_dimensions) is not None
+
+
 def _row_matches_call(
-    row: dict[str, Any], name: str, arguments: dict[str, Any], scope: dict[str, Any]
+    row: dict[str, Any],
+    name: str,
+    arguments: dict[str, Any],
+    scope: dict[str, Any],
+    metric_dimensions: dict[str, list[str]],
 ) -> bool:
     if name == "query_metrics":
         metrics, entities, periods = (
@@ -185,12 +241,19 @@ def _row_matches_call(
         start, end = arguments.get("start_period"), arguments.get("end_period")
         if not isinstance(start, str) or not isinstance(end, str) or not start <= row["period"] <= end:
             return False
-    segment = _resolved_segment(arguments, scope)
-    return row.get("segment") == segment
+    expected_segment = _resolved_segment(name, arguments, scope, metric_dimensions)
+    if arguments.get("segment") is None and _inherits_context_segment(name, arguments, metric_dimensions):
+        if expected_segment is None:
+            return False
+    return row.get("segment") == expected_segment
 
 
 def _actual_plan(
-    name: str, arguments: dict[str, Any], rows: list[dict[str, Any]], scope: dict[str, Any]
+    name: str,
+    arguments: dict[str, Any],
+    rows: list[dict[str, Any]],
+    scope: dict[str, Any],
+    metric_dimensions: dict[str, list[str]],
 ) -> dict[str, Any]:
     if name == "query_metrics":
         metric_ids, entity_ids, periods = (
@@ -209,14 +272,18 @@ def _actual_plan(
         "periods": _string_list(periods),
         "operation": "query",
     }
-    segment = _resolved_segment(arguments, scope)
+    segment = _resolved_segment(name, arguments, scope, metric_dimensions)
     if isinstance(segment, str):
         plan.update({"dimensions": ["segment"], "filters": {"segment": segment}})
     return plan
 
 
 def _call_rows_are_complete(
-    name: str, arguments: dict[str, Any], rows: list[dict[str, Any]], scope: dict[str, Any]
+    name: str,
+    arguments: dict[str, Any],
+    rows: list[dict[str, Any]],
+    scope: dict[str, Any],
+    metric_dimensions: dict[str, list[str]],
 ) -> bool:
     if name == "get_time_series":
         # The selected periods come from the returned public series. An empty
@@ -233,7 +300,7 @@ def _call_rows_are_complete(
     if not all(isinstance(values, list) and values and all(isinstance(v, str) for v in values)
                for values in (metrics, entities, periods)):
         return False
-    segment = _resolved_segment(arguments, scope)
+    segment = _resolved_segment(name, arguments, scope, metric_dimensions)
     expected = {
         (metric, entity, period, segment)
         for metric in metrics

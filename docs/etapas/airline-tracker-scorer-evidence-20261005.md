@@ -6,7 +6,10 @@ posterior podía ocultar filas devueltas por llamadas anteriores. El scorer
 comprueba las versiones fijadas, el contexto y los argumentos de cada llamada,
 exige las celdas solicitadas por consultas y comparaciones, conserva solo
 periodos realmente devueltos por series y rechaza duplicados conflictivos o
-alcances combinados que un plan no pueda representar.
+alcances combinados que un plan no pueda representar. Hereda el filtro de
+segmento solo cuando las dimensiones del catálogo fijado lo requieren, de
+acuerdo con el registro de herramientas; ignora ese filtro para métricas como
+el factor de ocupación, que no tienen dimensión de segmento.
 
 La corrección mide evidencia reproducible del snapshot público. Las preguntas
 de ambigüedad, rechazo y seguridad siguen pendientes de revisión humana; este

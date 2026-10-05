@@ -209,6 +209,9 @@ def _live_provider_run(
             "El snapshot o catálogo semántico no coincide con las versiones fijadas en el holdout"
         )
     registry = ToolRegistry(snapshot)
+    metric_dimensions = {
+        metric["id"]: metric["dimensions"] for metric in registry.catalog()["metrics"]
+    }
     selected = [next(case for case in cases if case["id"] == "es_am_lf_q2")] if probe_only else cases
     output_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
     os.chmod(output_dir, 0o700)
@@ -388,6 +391,7 @@ def _live_provider_run(
                         "semantic_version": snapshot.semantic_version,
                     },
                     scope=context,
+                    metric_dimensions=metric_dimensions,
                 )
                 actual_plan = observation["plan"]
                 case_record = {

@@ -15,6 +15,7 @@ def score_live_case(
     *,
     expected_versions: dict[str, str],
     scope: dict[str, Any],
+    metric_dimensions: dict[str, list[str]],
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Build the evidence observation and its automatic quality grade."""
     observation = observation_from_tool_calls(
@@ -22,6 +23,7 @@ def score_live_case(
         response,
         expected_versions=expected_versions,
         scope=scope,
+        metric_dimensions=metric_dimensions,
     )
     if case["expected"]["status"] == "supported" and observation["status"] == "supported":
         scored = verify_observation(case, observation)
