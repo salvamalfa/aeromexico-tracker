@@ -22,6 +22,7 @@ from .auth import client_address, hash_fingerprint, new_session_token, token_dig
 from .body_limit import BoundedBodyMiddleware
 from .config import ChatConfig
 from .providers import MockProvider
+from .providers._openai_helpers import TERMINAL_USAGE_RECONCILIATION_SECONDS
 from .service import ChatService, InvalidRequest
 from .storage import AdmissionDenied, ChatStore, Conflict, NotFound
 from .worker import TurnWorker
@@ -115,7 +116,7 @@ def create_app(
         yield
         if worker:
             timeout = (
-                config.max_turn_seconds + 5
+                config.max_turn_seconds + TERMINAL_USAGE_RECONCILIATION_SECONDS + 10
                 if worker_shutdown_timeout_seconds is None
                 else worker_shutdown_timeout_seconds
             )

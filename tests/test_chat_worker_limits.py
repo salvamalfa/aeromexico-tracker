@@ -52,9 +52,17 @@ class ToolCallingProvider:
         self.deleted.append(session_id)
 
 
-def _claimed_turn(store: ChatStore, key: str = "client-1"):
+def _claimed_turn(store: ChatStore, key: str = "client-1", *, reserved_tokens: int = 0):
     conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1")
-    turn, _ = store.submit_turn("alice", conversation["id"], "consulta", key, {})
+    turn, _ = store.submit_turn(
+        "alice",
+        conversation["id"],
+        "consulta",
+        key,
+        {},
+        reserved_tokens=reserved_tokens,
+        user_token_budget=max(100_000, reserved_tokens),
+    )
     return conversation, turn, store.claim_turn()
 
 
@@ -91,6 +99,47 @@ def test_tool_call_limit_stops_dispatch_before_excess_tool_execution(tmp_path: P
         "turn.started",
         "turn.failed",
     ]
+
+
+def test_worker_boundary_stops_ninth_tool_dispatch_at_eight(tmp_path: Path):
+    db = tmp_path / "worker-tool-limit-eight.sqlite3"
+    store = ChatStore(db)
+    _, turn, claim = _claimed_turn(store)
+    provider = ToolCallingProvider([{} for _ in range(9)])
+    worker = _worker(store, db, provider, max_tool_calls=8)
+    registry = Registry({"rows": [{"value": 1}]})
+    worker._registry = registry
+
+    worker._execute_turn(claim)
+
+    assert registry.invoked == 8
+    assert store.get_turn("alice", turn["id"])["status"] == "failed"
+
+
+def test_terminal_usage_window_does_not_extend_provider_execution_or_drop_completed_answer(tmp_path: Path):
+    class CompletedButDelayedProvider(ToolCallingProvider):
+        supports_terminal_usage_reconciliation = True
+
+        def run_turn(self, **kwargs):
+            kwargs["mark_terminal_completed"]()
+            # Simulate a bounded post-terminal usage read that crosses the
+            # execution deadline. The worker must keep the result and its hold.
+            assert kwargs["cancel_event"].wait(timeout=0.06) is False
+            return ProviderResult("terminal answer", usage_complete=False)
+
+    db = tmp_path / "terminal-usage-window.sqlite3"
+    store = ChatStore(db)
+    _, turn, claim = _claimed_turn(store, reserved_tokens=150_000)
+    provider = CompletedButDelayedProvider([])
+    worker = _worker(store, db, provider, max_seconds=0.02)
+    worker._registry = Registry({})
+
+    worker._execute_turn(claim)
+
+    record = store.get_turn("alice", turn["id"])
+    assert record["status"] == "completed"
+    assert not record["usage_complete"]
+    assert record["reserved_tokens"] >= 150_000
 
 
 def test_tool_result_byte_limit_fails_turn_without_persisting_oversized_result(tmp_path: Path):

@@ -33,9 +33,9 @@ class ChatConfig:
     openai_enabled: bool = False
     admission_enabled: bool = True
     max_message_chars: int = 8_000
-    max_tool_calls: int = 5
+    max_tool_calls: int = 8
     max_tool_result_bytes: int = 16_000
-    max_turn_seconds: int = 90
+    max_turn_seconds: int = 180
     # Pending plus running turns admitted across all users. One worker thread
     # executes them sequentially; this is a queue bound, not parallelism.
     max_concurrent_global: int = 2
@@ -125,9 +125,9 @@ class ChatConfig:
             admission_enabled=os.environ.get("CHAT_ADMISSION_ENABLED", "true").lower()
             not in {"0", "false", "no"},
             max_message_chars=_env_int("CHAT_MAX_MESSAGE_CHARS", 8_000),
-            max_tool_calls=_env_int("CHAT_MAX_TOOL_CALLS", 5),
+            max_tool_calls=_env_int("CHAT_MAX_TOOL_CALLS", 8),
             max_tool_result_bytes=_env_int("CHAT_MAX_TOOL_RESULT_BYTES", 16_000),
-            max_turn_seconds=_env_int("CHAT_MAX_TURN_SECONDS", 90),
+            max_turn_seconds=_env_int("CHAT_MAX_TURN_SECONDS", 180),
             max_concurrent_global=_env_int("CHAT_MAX_CONCURRENT_GLOBAL", 2),
             max_active_per_user=_env_int("CHAT_MAX_ACTIVE_PER_USER", 1),
             daily_token_budget_user=_env_int("CHAT_DAILY_TOKEN_BUDGET_USER", 200_000),

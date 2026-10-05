@@ -198,6 +198,7 @@ def _live_provider_run(
         not math.isfinite(amount) or amount <= 0 for pair in prices.values() for amount in pair
     ):
         raise ValueError("cada candidato requiere precios finitos y positivos de entrada/salida")
+    runtime_config = ChatConfig.from_env()
     snapshot = Snapshot(snapshot_root)
     expected_versions = load_fixture()["expected_versions"]
     if (
@@ -222,7 +223,8 @@ def _live_provider_run(
         "candidate_models": models,
         "budget_usd_operational_stop": budget_usd,
         "budget_guaranteed": False,
-        "max_tool_calls_per_turn": 5,
+        "max_tool_calls_per_turn": runtime_config.max_tool_calls,
+        "max_turn_seconds_per_turn": runtime_config.max_turn_seconds,
         "probe_only": probe_only,
         "case_count": len(selected),
         "models": [],
@@ -259,12 +261,10 @@ def _live_provider_run(
         progress_state.update(status="running", current_model=model)
         input_rate, output_rate = prices[model]
         config = replace(
-            ChatConfig.from_env(),
+            runtime_config,
             provider="openai",
             model=model,
             openai_enabled=True,
-            max_tool_calls=5,
-            max_tool_result_bytes=16_000,
         )
         provider = None
         model_report: dict[str, Any] = {

@@ -44,9 +44,25 @@ def _submit(service: ChatService, owner: str, conversation_id: str, message_id: 
 
 def test_pilot_defaults_set_owner_and_global_daily_tokens_and_reservation_floor():
     config = ChatConfig()
+    assert config.max_tool_calls == 8
+    assert config.max_turn_seconds == 180
     assert config.daily_token_budget_user == 200_000
     assert config.daily_token_budget_global == 200_000
     assert config.minimum_turn_reservation_tokens == 150_000
+
+
+def test_environment_defaults_match_shared_production_tool_and_turn_limits(monkeypatch):
+    monkeypatch.setenv("CHAT_PROVIDER", "mock")
+    monkeypatch.setenv("CHAT_AUTH_MODE", "local")
+    monkeypatch.delenv("CHAT_PASSWORDS_JSON", raising=False)
+    monkeypatch.delenv("CHAT_TRUSTED_PROXY", raising=False)
+    monkeypatch.delenv("CHAT_MAX_TOOL_CALLS", raising=False)
+    monkeypatch.delenv("CHAT_MAX_TURN_SECONDS", raising=False)
+
+    config = ChatConfig.from_env()
+
+    assert config.max_tool_calls == ChatConfig().max_tool_calls == 8
+    assert config.max_turn_seconds == ChatConfig().max_turn_seconds == 180
 
 
 def test_paid_turn_reservation_fits_default_cost_quotas_at_explicit_luna_prices(tmp_path: Path):

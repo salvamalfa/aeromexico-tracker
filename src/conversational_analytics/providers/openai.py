@@ -7,12 +7,13 @@ import os
 import threading
 import time
 import uuid
-from typing import Any
+from typing import Any, Callable
 
 from ._input_authorization import InputAuthorizer, send_tool_result
 from ._openai_helpers import (
     ALLOWED_TOOL_NAMES,
     SYSTEM_INSTRUCTIONS,
+    TERMINAL_USAGE_RECONCILIATION_SECONDS,
     OpenAIProviderError,
     ToolResultLimitExceeded,
     chart_from_results,
@@ -46,6 +47,7 @@ class OpenAIProvider:
     """
 
     supports_input_authorization = True
+    supports_terminal_usage_reconciliation = True
 
     def __init__(
         self,
@@ -84,16 +86,18 @@ class OpenAIProvider:
         persist_session,
         cancel_event: threading.Event,
         authorize_input: InputAuthorizer | None = None,
+        mark_terminal_completed: Callable[[], None] | None = None,
     ) -> ProviderResult:
+        mark_terminal_completed = mark_terminal_completed or (lambda: None)
         message = self._latest_user_message(messages)
         tools = self._validate_tool_specs(tool_specs)
         instructions = self._instructions()
         app_turn_id = self._app_turn_id(messages)
-        # Recreated sessions receive bounded history after worker restart or remote deletion.
         history = prior_history(messages) if session_id is None else []
         request_input = self._message_input(context, message, history)
         tracked_sessions: set[str] = set()
         started_at = time.monotonic()
+        usage_deadline = started_at + self.max_turn_seconds + TERMINAL_USAGE_RECONCILIATION_SECONDS
         stream_manager = None
         stream_iter = None
         stream_closed = False
@@ -308,6 +312,7 @@ class OpenAIProvider:
                 elif event_type == "agent.session.turn.completed":
                     if is_current_turn:
                         terminal = "completed"
+                        mark_terminal_completed()
                         usage = usage_from_event(event_data)
                         if usage is None and session_id and turn_id:
                             usage = read_completed_turn_usage(
@@ -315,7 +320,7 @@ class OpenAIProvider:
                                 session_id,
                                 turn_id,
                                 cancel_event=cancel_event,
-                                deadline=started_at + self.max_turn_seconds,
+                                deadline=usage_deadline,
                                 close_stream=close_active_stream,
                             )
                         if usage is not None:
@@ -349,8 +354,8 @@ class OpenAIProvider:
                         raise cancelled
                     if recovered_status == "completed":
                         terminal = "completed"
+                        mark_terminal_completed()
                         if content:
-                            # The saved turn is authoritative: drop partial deltas.
                             content_parts.clear()
                             content_parts[(0, 0, "")] = content
                         turn_id = recovered_turn_id or turn_id
@@ -361,7 +366,7 @@ class OpenAIProvider:
                                 session_id,
                                 turn_id,
                                 cancel_event=cancel_event,
-                                deadline=started_at + self.max_turn_seconds,
+                                deadline=usage_deadline,
                                 close_stream=close_active_stream,
                             )
                             if usage is not None:
@@ -399,8 +404,6 @@ class OpenAIProvider:
             recovered = self._recover(session_id, turn_id, prior_turn_id) if session_id else None
             if recovered and recovered[1] == "completed" and recovered[0]:
                 return result_from_recovered(recovered[0], recovered[3], session_id, tool_outputs)
-            # SDK exception strings can contain request details; keep the public
-            # error deliberately generic and do not log the exception object.
             raise OpenAIProviderError(
                 "No se pudo completar el turno de Agents API; no se reenviará el mensaje automáticamente"
             ) from None
@@ -417,8 +420,6 @@ class OpenAIProvider:
                 events=[{"type": "agent.session.input.cancel"}],
             )
         except Exception:
-            # Cancellation is best effort; the turn state remains owned by the
-            # worker and will be reconciled on its next event or recovery read.
             return
 
     def delete(self, session_id: str) -> None:

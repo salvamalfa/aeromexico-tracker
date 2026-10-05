@@ -73,8 +73,10 @@ MAX_HISTORY_MESSAGES = 8
 MAX_HISTORY_MESSAGE_CHARS = 2_000
 USAGE_POLL_MAX_ATTEMPTS = 5
 USAGE_POLL_INTERVAL_SECONDS = 2.0
+TERMINAL_USAGE_RECONCILIATION_SECONDS = 30.0
+TERMINAL_USAGE_POLL_MAX_ATTEMPTS = 16
 PROVIDER_REASON_CODES = frozenset({"tool_call_limit", "turn_timeout", "tool_result_limit"})
-POST_CANCEL_USAGE_TIMEOUT_SECONDS = 30.0
+POST_CANCEL_USAGE_TIMEOUT_SECONDS = TERMINAL_USAGE_RECONCILIATION_SECONDS
 POST_CANCEL_USAGE_ATTEMPTS = 6
 POST_CANCEL_USAGE_POLL_INTERVAL_SECONDS = 5.0
 
@@ -201,6 +203,15 @@ def poll_turn_usage(
         except Exception:
             turn = None
         if turn is not None:
+            if (
+                field(turn, "id") != turn_id
+                or field(turn, "session_id") != session_id
+                or field(turn, "subagent_id") is not None
+            ):
+                return None
+            if field(turn, "status") != "completed":
+                turn = None
+        if turn is not None:
             usage = field(turn, "usage")
             if not isinstance(usage, Mapping):
                 usage = to_dict(usage)
@@ -224,21 +235,33 @@ def read_completed_turn_usage(
     close_stream: Callable[[], None],
     wait_seconds: float | None = None,
 ) -> tuple[int, int] | None:
-    """Release the event stream, then poll the read-only usage endpoint."""
+    """Release the event stream, then poll read-only usage for at most 30 seconds.
+
+    The caller must invoke this only after a terminal completed event for the
+    exact root turn. The worker's separate execution watchdog is paused only
+    after it receives that terminal-completion signal; explicit cancellation
+    still interrupts the poll.
+    """
     close_stream()
     if wait_seconds is None:
         wait_seconds = USAGE_POLL_INTERVAL_SECONDS
+    deadline = min(deadline, time.monotonic() + TERMINAL_USAGE_RECONCILIATION_SECONDS)
     usage = poll_turn_usage(
         client,
         session_id,
         turn_id,
         cancel_event=cancel_event,
         deadline=deadline,
-        max_attempts=USAGE_POLL_MAX_ATTEMPTS,
+        max_attempts=TERMINAL_USAGE_POLL_MAX_ATTEMPTS,
         wait_seconds=wait_seconds,
     )
     if cancel_event.is_set():
-        raise InterruptedError("turn cancelled")
+        interrupted = InterruptedError("turn cancelled")
+        if usage is not None:
+            # A cancellation racing with the successful GET must suppress the
+            # response while preserving already-confirmed accounting data.
+            interrupted.usage = usage  # type: ignore[attr-defined]
+        raise interrupted
     return usage
 
 
