@@ -15,7 +15,68 @@ from test_chat_openai_usage import _limited_provider_run, _usage
 
 from src.conversational_analytics.config import ChatConfig
 from src.conversational_analytics.providers import _openai_helpers as helpers
-from src.conversational_analytics.providers.openai import OpenAIProviderError
+from src.conversational_analytics.providers import openai as openai_provider_module
+from src.conversational_analytics.providers.openai import OpenAIProvider, OpenAIProviderError
+
+
+def test_provider_like_config_uses_production_default_limits():
+    provider = OpenAIProvider(SimpleNamespace(openai_enabled=True, model="fake"), client=object())
+
+    assert provider.max_tool_calls == 8
+    assert provider.max_turn_seconds == 180
+
+
+def test_eof_recovery_after_execution_deadline_is_rejected_with_known_usage(monkeypatch):
+    clock = [0.0]
+    monkeypatch.setattr(openai_provider_module.time, "monotonic", lambda: clock[0])
+
+    def recover(self, *_args):
+        clock[0] = 181.0
+        return "Recovered answer", "completed", "turn_provider", {
+            "input_tokens": 31,
+            "output_tokens": 19,
+        }
+
+    monkeypatch.setattr(OpenAIProvider, "_recover", recover)
+    _, run = _limited_provider_run(
+        [
+            {"type": "agent.session.created", "session": {"id": "sess_fixture"}},
+            {"type": "agent.session.turn.created", "turn_id": "turn_provider"},
+        ]
+    )
+
+    with pytest.raises(OpenAIProviderError) as caught:
+        run()
+
+    assert caught.value.reason_code == "turn_timeout"
+    assert getattr(caught.value, "usage", None) == (31, 19)
+
+
+def test_late_completed_event_timeout_keeps_event_usage_without_answer(monkeypatch):
+    ticks = iter([0.0, 0.0, 0.0, 181.0])
+    monkeypatch.setattr(openai_provider_module.time, "monotonic", lambda: next(ticks))
+    _, run = _limited_provider_run(
+        [
+            {"type": "agent.session.created", "session": {"id": "sess_fixture"}},
+            {"type": "agent.session.turn.created", "turn_id": "turn_provider"},
+            {
+                "type": "agent.session.turn.completed",
+                "turn_id": "turn_provider",
+                "turn": {
+                    "id": "turn_provider",
+                    "status": "completed",
+                    "usage": {"input_tokens": 31, "output_tokens": 19},
+                },
+            },
+        ],
+        config={"max_turn_seconds": 180},
+    )
+
+    with pytest.raises(OpenAIProviderError) as caught:
+        run()
+
+    assert caught.value.reason_code == "turn_timeout"
+    assert getattr(caught.value, "usage", None) == (31, 19)
 
 
 @pytest.mark.parametrize(

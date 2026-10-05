@@ -4,6 +4,7 @@ import threading
 
 from test_chat_worker_limits import Registry, _claimed_turn, _worker
 
+from src.conversational_analytics import worker as worker_module
 from src.conversational_analytics.storage import ChatStore
 
 
@@ -59,3 +60,29 @@ def test_cancel_racing_with_confirmed_usage_books_once_and_keeps_answer_suppress
     events = [event["type"] for event in store.list_events("alice", turn["id"])]
     assert "message.completed" not in events
     assert events.count("turn.cancelled") == 1
+
+
+def test_worker_rejects_terminal_callback_after_local_deadline_and_books_known_usage(tmp_path, monkeypatch):
+    clock = [0.0]
+    monkeypatch.setattr(worker_module.time, "monotonic", lambda: clock[0])
+
+    class LateProvider:
+        supports_terminal_usage_reconciliation = True
+
+        def run_turn(self, **kwargs):
+            clock[0] = 21.0
+            kwargs["mark_terminal_completed"]((31, 19))
+
+    db = tmp_path / "late-terminal.sqlite3"
+    store = ChatStore(db)
+    _, turn, claim = _claimed_turn(store, reserved_tokens=150_000)
+    worker = _worker(store, db, LateProvider(), max_seconds=20)
+    worker._registry = Registry({})
+
+    worker._execute_turn(claim)
+
+    record = store.get_turn("alice", turn["id"])
+    assert (record["status"], record["error_code"]) == ("failed", "timeout")
+    usage = store.usage("alice")
+    assert (usage["input_tokens"], usage["output_tokens"], usage["turn_count"]) == (31, 19, 1)
+    assert "message.completed" not in [event["type"] for event in store.list_events("alice", turn["id"])]

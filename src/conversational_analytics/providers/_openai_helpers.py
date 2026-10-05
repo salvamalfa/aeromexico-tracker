@@ -179,6 +179,43 @@ def usage_from_event(event_data: dict[str, Any]) -> tuple[int, int] | None:
     return (input_tokens, output_tokens) if complete else None
 
 
+def terminal_event_usage(
+    event_type: str, is_current_turn: bool, event_data: dict[str, Any]
+) -> tuple[int, int] | None:
+    if is_current_turn and event_type in {
+        "agent.session.turn.completed",
+        "agent.session.turn.failed",
+        "agent.session.turn.cancelled",
+    }:
+        return usage_from_event(event_data)
+    return None
+
+
+def completion_guards(
+    cancel_event: threading.Event,
+    started_at: float,
+    max_seconds: int,
+    mark_terminal_completed: Callable[[tuple[int, int] | None], None],
+    timeout_error: Callable[[], Exception],
+) -> tuple[Callable[[tuple[int, int] | None], None], Callable[[tuple[int, int] | None], None]]:
+    def check(usage: tuple[int, int] | None = None) -> None:
+        if cancel_event.is_set():
+            error: Exception = InterruptedError("turn cancelled")
+        elif time.monotonic() - started_at >= max_seconds:
+            error = timeout_error()
+        else:
+            return
+        if usage is not None:
+            error.usage = usage  # type: ignore[attr-defined]
+        raise error
+
+    def accept(usage: tuple[int, int] | None) -> None:
+        check(usage)
+        mark_terminal_completed(usage)
+
+    return check, accept
+
+
 def poll_turn_usage(
     client: Any,
     session_id: str,

@@ -337,11 +337,19 @@ class TurnWorker:
         finalization_timer.daemon = True
         finalization_timer.start()
 
-        def mark_terminal_completed() -> None:
+        def mark_terminal_completed(usage: tuple[int, int] | None = None) -> None:
             """Yield the execution watchdog only after provider completion."""
             with self._guard:
                 if cancel_event.is_set() or not self.store.is_running(turn_id):
-                    raise InterruptedError("turn was cancelled before terminal usage reconciliation")
+                    error = InterruptedError("turn was cancelled before terminal usage reconciliation")
+                    if usage is not None:
+                        error.usage = usage  # type: ignore[attr-defined]
+                    raise error
+                if time.monotonic() > deadline:
+                    error = TimeoutError("turn deadline exceeded")
+                    if usage is not None:
+                        error.usage = usage  # type: ignore[attr-defined]
+                    raise error
                 active.provider_terminal_completed = True
 
         def emit(event_type: str, payload: dict[str, Any]) -> None:
@@ -379,8 +387,6 @@ class TurnWorker:
         def authorize_provider_input() -> None:
             """Linearize each provider input against cancellation and shutdown."""
             with self._guard:
-                if time.monotonic() > deadline:
-                    raise TimeoutError("turn deadline exceeded")
                 if (
                     self._shutdown_expired
                     or active.provider_terminal_completed
@@ -388,6 +394,8 @@ class TurnWorker:
                     or not self.store.is_running(turn_id)
                 ):
                     raise InterruptedError("provider input was not authorized")
+                if time.monotonic() > deadline:
+                    raise TimeoutError("turn deadline exceeded")
                 active.provider_input_started = True
 
         def call_tool(provider_turn_id: str, call_id: str, name: str, args: dict[str, Any]) -> dict[str, Any]:
