@@ -1,9 +1,6 @@
-import {
-  type RatingMap,
-  type ReviewDataset,
-  ratingKey,
-} from "./types";
-import { loadRatings, saveRatings } from "./storage";
+import { bundleRatingsFile, parseBundleRatings, validateBundle } from "./bundle";
+import { type BundleRatingsFile, type Rating, type RatingMap, type ReviewBundle, type ReviewCut, type ReviewDataset, ratingKey } from "./types";
+import { bundleStorageKey, loadRatings, saveRatings } from "./storage";
 import { renderNavigation, renderProgress, renderQuestion } from "./render";
 import { type QuestionFilter, visibleQuestionIndices } from "./filters";
 import { parseDataset, parseRatings, ratingsFile } from "./validation";
@@ -38,17 +35,20 @@ async function readJsonFile(file: File): Promise<{ value: unknown; contentHash: 
   }
 }
 
-function downloadRatings(dataset: ReviewDataset, contentHash: string, ratings: RatingMap, view: Window): void {
-  const file = ratingsFile(dataset, contentHash, ratings);
-  const blob = new Blob([`${JSON.stringify(file, null, 2)}\n`], { type: "application/json" });
+function downloadJson(value: unknown, filename: string, view: Window): void {
+  const blob = new Blob([`${JSON.stringify(value, null, 2)}\n`], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = `calificaciones-${dataset.dataset_id.slice(0, 12)}.json`;
+  anchor.download = filename;
   anchor.ownerDocument.body.append(anchor);
   anchor.click();
   anchor.remove();
   view.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 export function bootstrapReview(doc: Document = document, storage: Storage = window.localStorage): void {
@@ -58,6 +58,11 @@ export function bootstrapReview(doc: Document = document, storage: Storage = win
   const exportButton = requireNode<HTMLButtonElement>(doc, "#export-button");
   const loadStatus = requireNode<HTMLElement>(doc, "#load-status");
   const workspace = requireNode<HTMLElement>(doc, "#review-workspace");
+  const cutControls = requireNode<HTMLElement>(doc, "#cut-controls");
+  const bundleTitle = requireNode<HTMLElement>(doc, "#bundle-title");
+  const cutSelect = requireNode<HTMLSelectElement>(doc, "#cut-select");
+  const cutStatus = requireNode<HTMLElement>(doc, "#cut-status");
+  const cacheOption = requireNode<HTMLInputElement>(doc, "#cache-option");
   const nav = requireNode<HTMLOListElement>(doc, "#question-nav");
   const filter = requireNode<HTMLSelectElement>(doc, "#question-filter");
   const filterEmpty = requireNode<HTMLElement>(doc, "#filter-empty");
@@ -69,22 +74,32 @@ export function bootstrapReview(doc: Document = document, storage: Storage = win
   if (!view) throw new Error("La revisión requiere un navegador.");
 
   let dataset: ReviewDataset | null = null;
+  let bundle: ReviewBundle | null = null;
+  let activeCut: ReviewCut | null = null;
   let contentHash = "";
+  let bundleHash = "";
   let ratings: RatingMap = new Map();
+  let ratingsByCut = new Map<string, RatingMap>();
   let canPersist = true;
   let selectedIndex = 0;
-  const visible = () => dataset
-    ? visibleQuestionIndices(dataset, ratings, filter.value as QuestionFilter)
-    : [];
+  const visible = () => dataset ? visibleQuestionIndices(dataset, ratings, filter.value as QuestionFilter) : [];
 
   const announce = (message: string, error = false) => {
     loadStatus.textContent = message;
     loadStatus.setAttribute("data-error", String(error));
   };
-  const save = () => {
-    if (!dataset || !canPersist) return;
+  const activeSlotStates = () => new Map((activeCut?.slot_dispositions ?? []).map((slot) => [
+    ratingKey(slot.question_id, slot.alias), slot.status,
+  ]));
+  const persistActiveRatings = () => {
+    if (!cacheOption.checked || !canPersist || !dataset) return;
     try {
-      saveRatings(dataset, contentHash, ratings, storage);
+      if (bundle && activeCut) {
+        storage.setItem(bundleStorageKey(bundleHash, activeCut.cut_id, activeCut.dataset_sha256),
+          JSON.stringify(ratingsFileForCut(activeCut, ratings)));
+      } else {
+        saveRatings(dataset, contentHash, ratings, storage);
+      }
     } catch {
       announce("No se pudo guardar en este navegador. Exporta las calificaciones antes de salir.", true);
     }
@@ -118,29 +133,87 @@ export function bootstrapReview(doc: Document = document, storage: Storage = win
     renderQuestion(dataset, selectedIndex, ratings, position > 0 || position === -1,
       position < indices.length - 1 || position === -1,
       (questionId, alias, status, notes) => {
-      const key = ratingKey(questionId, alias);
-      if (!status) {
-        ratings.delete(key);
-      } else {
-        ratings.set(key, { question_id: questionId, alias, status, notes });
+        const key = ratingKey(questionId, alias);
+        if (!status) ratings.delete(key);
+        else ratings.set(key, { question_id: questionId, alias, status, notes });
+        if (bundle && activeCut) ratingsByCut.set(activeCut.cut_id, ratings);
+        persistActiveRatings();
+        updateSidebar();
+      }, activeSlotStates());
+  };
+  const loadBundleCutRatings = (cut: ReviewCut): RatingMap => {
+    const key = bundleStorageKey(bundleHash, cut.cut_id, cut.dataset_sha256);
+    const raw = storage.getItem(key);
+    if (!raw) return new Map();
+    let value: unknown;
+    try { value = JSON.parse(raw) as unknown; } catch { throw new Error("El guardado local está dañado; no se modificó."); }
+    return parseRatings(value, cut.dataset, cut.dataset_sha256);
+  };
+  const chooseCut = (cutId: string, announceSelection = false) => {
+    if (!bundle) return;
+    const selected = bundle.cuts.find((cut) => cut.cut_id === cutId);
+    if (!selected) return;
+    activeCut = selected;
+    dataset = selected.dataset;
+    ratings = ratingsByCut.get(selected.cut_id) ?? new Map();
+    ratingsByCut.set(selected.cut_id, ratings);
+    selectedIndex = 0;
+    filter.value = "all";
+    const missingCounts = { no_answer: 0, failed: 0, held: 0, not_attempted: 0 };
+    for (const slot of selected.slot_dispositions) missingCounts[slot.status] += 1;
+    cutStatus.textContent = `${selected.disposition === "terminal" ? "Corte terminal" : selected.disposition === "complete" ? "Corte completo" : "Corte parcial"} · ${selected.dataset.questions.length} preguntas · ${selected.dataset.available_count} respuestas disponibles · ${missingCounts.no_answer} sin respuesta, ${missingCounts.failed} con error, ${missingCounts.held} en espera, ${missingCounts.not_attempted} no intentadas.`;
+    if (cacheOption.checked && canPersist) {
+      try {
+        const stored = loadBundleCutRatings(selected);
+        if (stored.size || !ratings.size) ratings = stored;
+        ratingsByCut.set(selected.cut_id, ratings);
+      } catch {
+        canPersist = false;
+        announce("No se pudo recuperar el guardado anterior. Se conserva el trabajo en memoria y el paquete puede exportarse.", true);
       }
-      save();
-      updateSidebar();
-    });
+    }
+    updateView();
+    if (announceSelection) announce(`Corte seleccionado: ${selected.label}. Su progreso está separado de los demás cortes.`);
   };
   const moveQuestion = (delta: number, focus = false) => {
     if (!dataset) return;
     const indices = visible();
     if (indices.length === 0) return;
     const position = indices.indexOf(selectedIndex);
-    const nextIndex = position === -1
-      ? (delta > 0 ? indices[0] : indices[indices.length - 1])
-      : indices[position + delta];
+    const nextIndex = position === -1 ? (delta > 0 ? indices[0] : indices[indices.length - 1]) : indices[position + delta];
     if (nextIndex === undefined) return;
     selectedIndex = nextIndex;
     updateView();
     if (focus) nav.querySelector<HTMLButtonElement>(`[data-question-index="${nextIndex}"]`)?.focus();
   };
+
+  cacheOption.addEventListener("change", () => {
+    if (!cacheOption.checked || !dataset) {
+      canPersist = true;
+      announce(cacheOption.checked ? "El guardado local está activado." : "El guardado local está desactivado; el progreso seguirá disponible en memoria y al exportar.");
+      return;
+    }
+    try {
+      if (bundle) {
+        for (const cut of bundle.cuts) {
+          const stored = loadBundleCutRatings(cut);
+          const current = ratingsByCut.get(cut.cut_id) ?? new Map();
+          ratingsByCut.set(cut.cut_id, stored.size || current.size === 0 ? stored : current);
+        }
+        if (activeCut) ratings = ratingsByCut.get(activeCut.cut_id) ?? new Map();
+      } else {
+        const stored = loadRatings(dataset, contentHash, storage);
+        if (stored.size || ratings.size === 0) ratings = stored;
+      }
+      canPersist = true;
+      persistActiveRatings();
+      updateView();
+      announce("Guardado local activado. Se usa una clave vinculada al hash exacto del archivo y, para paquetes, al corte.");
+    } catch {
+      canPersist = false;
+      announce("No se pudo leer el guardado local; se conserva sin cambios. Puedes exportar el progreso.", true);
+    }
+  });
 
   datasetInput.addEventListener("change", async () => {
     const file = datasetInput.files?.[0];
@@ -148,82 +221,113 @@ export function bootstrapReview(doc: Document = document, storage: Storage = win
     if (!file) return;
     try {
       const imported = await readJsonFile(file);
-      const parsed = parseDataset(imported.value);
-      dataset = parsed;
+      bundle = null;
+      activeCut = null;
+      bundleHash = "";
       contentHash = imported.contentHash;
-      selectedIndex = 0;
-      canPersist = true;
-      try {
-        ratings = loadRatings(parsed, contentHash, storage);
-        announce(`Archivo cargado: ${parsed.questions.length} preguntas y ${parsed.available_count} respuestas.`);
-      } catch {
+      ratingsByCut = new Map();
+      if (isRecord(imported.value) && "cuts" in imported.value) {
+        const parsedBundle = await validateBundle(imported.value, async (bytes) =>
+          sha256Hex(bytes.slice().buffer as ArrayBuffer));
+        bundle = parsedBundle;
+        bundleHash = imported.contentHash;
         ratings = new Map();
-        canPersist = false;
-        announce("No se pudo recuperar el guardado anterior. Se conservará sin cambios; esta revisión solo se guardará al exportarla.", true);
+        bundle.cuts.forEach((cut) => ratingsByCut.set(cut.cut_id, new Map()));
+        bundleTitle.textContent = `${bundle.title} · versión ${bundle.bundle_version}`;
+        cutSelect.replaceChildren(...bundle.cuts.map((cut) => {
+          const option = doc.createElement("option");
+          option.value = cut.cut_id;
+          option.textContent = `${cut.label} · ${cut.version}`;
+          return option;
+        }));
+        cutControls.hidden = false;
+        chooseCut(bundle.cuts[0].cut_id);
+        importButton.disabled = false;
+        exportButton.disabled = false;
+        workspace.hidden = false;
+        announce(`Paquete cargado: ${bundle.cuts.length} cortes versionados. El hash del paquete y cada corte se verificaron.`);
+      } else {
+        dataset = parseDataset(imported.value);
+        ratings = new Map();
+        activeCut = null;
+        cutControls.hidden = true;
+        if (cacheOption.checked) {
+          try { ratings = loadRatings(dataset, contentHash, storage); canPersist = true; }
+          catch { canPersist = false; announce("No se pudo recuperar el guardado anterior. Se conserva sin cambios; exporta las calificaciones.", true); }
+        } else canPersist = true;
+        selectedIndex = 0;
+        workspace.hidden = false;
+        importButton.disabled = false;
+        exportButton.disabled = false;
+        updateView();
+        announce(`Archivo cargado: ${dataset.questions.length} preguntas y ${dataset.available_count} respuestas disponibles.`);
       }
-      workspace.hidden = false;
-      importButton.disabled = false;
-      exportButton.disabled = false;
-      updateView();
     } catch (error) {
       announce(error instanceof Error ? error.message : "No se pudo abrir el archivo.", true);
     }
   });
-
+  cutSelect.addEventListener("change", () => chooseCut(cutSelect.value, true));
   importButton.addEventListener("click", () => ratingsInput.click());
   ratingsInput.addEventListener("change", async () => {
     const file = ratingsInput.files?.[0];
     ratingsInput.value = "";
     if (!file || !dataset) return;
     try {
-      const parsed = await readJsonFile(file);
-      const imported = parseRatings(parsed.value, dataset, contentHash);
-      if (ratings.size > 0 && !view.confirm("Importar reemplazará las calificaciones guardadas para este conjunto. ¿Continuar?")) {
+      const imported = await readJsonFile(file);
+      const incoming = bundle
+        ? parseBundleRatings(imported.value, bundle, bundleHash)
+        : parseLegacyRatings(imported.value, dataset, contentHash);
+      const hasRatings = bundle
+        ? [...ratingsByCut.values()].some((value) => value.size > 0)
+        : ratings.size > 0;
+      if (hasRatings && !view.confirm("Importar reemplazará las calificaciones guardadas para este paquete. ¿Continuar?")) {
         announce("Importación cancelada.");
         return;
       }
-      ratings = imported;
-      save();
+      if (bundle) {
+        ratingsByCut = incoming as Map<string, RatingMap>;
+        if (activeCut) ratings = ratingsByCut.get(activeCut.cut_id) ?? new Map();
+      } else ratings = incoming as RatingMap;
+      persistActiveRatings();
       updateView();
-      announce(`Se importaron ${ratings.size} calificaciones.`);
+      const count = bundle ? [...ratingsByCut.values()].reduce((sum, map) => sum + map.size, 0) : ratings.size;
+      announce(`Se importaron ${count} calificaciones${bundle ? ` en ${bundle.cuts.length} cortes` : ""}.`);
     } catch (error) {
       announce(error instanceof Error ? error.message : "No se pudieron importar las calificaciones.", true);
     }
   });
-
   exportButton.addEventListener("click", () => {
     if (!dataset) return;
-    downloadRatings(dataset, contentHash, ratings, view);
-    announce(`Se exportaron ${ratings.size} calificaciones, sin respuestas.`);
+    if (bundle) {
+      const file: BundleRatingsFile = bundleRatingsFile(bundle, bundleHash, ratingsByCut);
+      downloadJson(file, "calificaciones-paquete.json", view);
+      const count = file.cuts.reduce((sum, cut) => sum + cut.ratings.length, 0);
+      announce(`Se exportaron ${count} calificaciones de ${file.cuts.length} cortes; incluye solo notas y decisiones, no respuestas.`);
+    } else {
+      downloadJson(ratingsFile(dataset, contentHash, ratings), "calificaciones.json", view);
+      announce(`Se exportaron ${ratings.size} calificaciones, sin respuestas.`);
+    }
   });
-  filter.addEventListener("change", () => {
-    updateView();
-  });
+  filter.addEventListener("change", updateView);
   nav.addEventListener("keydown", (event) => {
     if (!(event instanceof view.KeyboardEvent)) return;
-    if (event.key === "ArrowRight" || event.key === "ArrowDown") {
-      event.preventDefault();
-      moveQuestion(1, true);
-    } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
-      event.preventDefault();
-      moveQuestion(-1, true);
-    } else if (event.key === "Home" || event.key === "End") {
+    if (["ArrowRight", "ArrowDown"].includes(event.key)) { event.preventDefault(); moveQuestion(1, true); }
+    else if (["ArrowLeft", "ArrowUp"].includes(event.key)) { event.preventDefault(); moveQuestion(-1, true); }
+    else if (event.key === "Home" || event.key === "End") {
       event.preventDefault();
       const indices = visible();
       const index = event.key === "Home" ? indices[0] : indices[indices.length - 1];
-      if (index !== undefined) {
-        selectedIndex = index;
-        updateView();
-        nav.querySelector<HTMLButtonElement>(`[data-question-index="${index}"]`)?.focus();
-      }
+      if (index !== undefined) { selectedIndex = index; updateView(); nav.querySelector<HTMLButtonElement>(`[data-question-index="${index}"]`)?.focus(); }
     }
   });
-  previous.addEventListener("click", () => {
-    moveQuestion(-1);
-    doc.querySelector<HTMLButtonElement>("#previous-question")?.focus();
-  });
-  next.addEventListener("click", () => {
-    moveQuestion(1);
-    doc.querySelector<HTMLButtonElement>("#next-question")?.focus();
-  });
+  previous.addEventListener("click", () => { moveQuestion(-1); doc.querySelector<HTMLButtonElement>("#previous-question")?.focus(); });
+  next.addEventListener("click", () => { moveQuestion(1); doc.querySelector<HTMLButtonElement>("#next-question")?.focus(); });
+}
+
+function ratingsFileForCut(cut: ReviewCut, ratings: RatingMap): ReturnType<typeof ratingsFile> {
+  return ratingsFile(cut.dataset, cut.dataset_sha256, ratings);
+}
+
+function parseLegacyRatings(value: unknown, dataset: ReviewDataset, contentHash: string): RatingMap {
+  return parseRatings(value, dataset, contentHash);
 }

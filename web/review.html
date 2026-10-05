@@ -14,26 +14,35 @@
       <div>
         <p class="eyebrow">Revisión privada</p>
         <h1>Califica las respuestas</h1>
-        <p class="intro">Carga el archivo JSON que te compartieron. Las respuestas se quedan en este navegador y no se envían a ningún servidor.</p>
+        <p class="intro">Carga el archivo JSON privado. Los paquetes reúnen cortes versionados en un solo archivo para revisar y exportar sin mezclar sus calificaciones.</p>
       </div>
       <a class="dashboard-link" href="./">Volver al dashboard</a>
     </header>
 
     <section class="privacy-note" aria-labelledby="privacy-title">
       <h2 id="privacy-title">Privacidad y guardado</h2>
-      <p>Este sitio no contiene el conjunto de respuestas. El archivo que cargues y tus calificaciones se procesan localmente; las calificaciones se guardan en el almacenamiento de este navegador, asociadas al hash del archivo. Antes de cambiar de navegador o dispositivo, exporta tus calificaciones. Ese archivo exportado incluye el hash, las decisiones y las notas, pero no las respuestas.</p>
+      <p>Este sitio no contiene el conjunto de respuestas. El archivo y las calificaciones se procesan localmente y no se envían al servidor. El guardado local es opcional y empieza desactivado; al activarlo queda ligado al hash exacto del archivo y, en un paquete, al corte. Exporta las calificaciones para continuar en otro dispositivo. El archivo exportado incluye hashes, decisiones y notas, pero no las respuestas.</p>
     </section>
 
     <section class="file-panel" aria-labelledby="load-title">
-      <h2 id="load-title">Abrir conjunto de revisión</h2>
-      <label class="file-label" for="dataset-file">Archivo de respuestas JSON</label>
+      <h2 id="load-title">Abrir revisión</h2>
+      <label class="file-label" for="dataset-file">Archivo JSON de respuestas o paquete completo</label>
       <input id="dataset-file" type="file" accept="application/json,.json">
       <p id="load-status" class="status-message" role="status" aria-live="polite">Aún no has cargado un archivo.</p>
+      <label class="cache-option" for="cache-option"><input id="cache-option" type="checkbox"> Guardar automáticamente en este navegador (opcional)</label>
       <div class="file-actions">
         <button id="import-button" type="button" disabled>Importar calificaciones</button>
         <input id="ratings-file" type="file" accept="application/json,.json" hidden>
-        <button id="export-button" type="button" disabled>Exportar calificaciones</button>
+        <button id="export-button" type="button" disabled>Exportar todas las calificaciones</button>
       </div>
+    </section>
+
+    <section id="cut-controls" class="cut-panel" hidden aria-label="Cortes incluidos en el paquete">
+      <h2 id="bundle-title"></h2>
+      <label class="filter-label" for="cut-select">Corte que quieres revisar</label>
+      <select id="cut-select"></select>
+      <p id="cut-status" class="muted" role="status"></p>
+      <p class="cut-alias-note">Los alias A, B y C solo identifican candidatos dentro del corte seleccionado.</p>
     </section>
 
     <section id="review-workspace" class="workspace" hidden aria-label="Revisión de respuestas">

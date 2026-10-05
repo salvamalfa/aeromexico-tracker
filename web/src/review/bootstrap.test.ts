@@ -1,13 +1,17 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { webcrypto } from "node:crypto";
 import { bootstrapReview, sha256Hex } from "./bootstrap";
+import { datasetFileBytes } from "./bundle";
+import { parseDataset } from "./validation";
 import { storageKey } from "./storage";
 
 function reviewShell(): string {
   return `
     <input id="dataset-file" type="file"><input id="ratings-file" type="file">
     <button id="import-button"></button><button id="export-button"></button>
-    <p id="load-status"></p><section id="review-workspace" hidden>
+    <p id="load-status"></p><label><input id="cache-option" type="checkbox"></label>
+    <section id="cut-controls" hidden><h2 id="bundle-title"></h2><select id="cut-select"></select><p id="cut-status"></p></section>
+    <section id="review-workspace" hidden>
       <output id="progress-count"></output><progress id="review-progress"></progress><p id="progress-detail"></p>
       <strong id="count-correct"></strong><strong id="count-problem"></strong>
       <strong id="count-not-evaluable"></strong><strong id="count-unreviewed"></strong>
@@ -22,7 +26,7 @@ function reviewShell(): string {
   `;
 }
 
-function sourceDataset(): object {
+function sourceDataset() {
   return {
     schema_version: 1,
     dataset_id: "a".repeat(64),
@@ -50,12 +54,16 @@ describe("review page bootstrap", () => {
   it("starts with an empty shell and performs no network request", () => {
     document.body.innerHTML = reviewShell();
     const fetchSpy = vi.fn();
+    const getSpy = vi.fn(() => null);
+    const setSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);
 
-    bootstrapReview(document, window.localStorage);
+    bootstrapReview(document, { getItem: getSpy, setItem: setSpy } as unknown as Storage);
 
     expect(document.querySelector("#review-workspace")?.hasAttribute("hidden")).toBe(true);
     expect(fetchSpy).not.toHaveBeenCalled();
+    expect(getSpy).not.toHaveBeenCalled();
+    expect(setSpy).not.toHaveBeenCalled();
   });
 
   it("hashes the exact file bytes, so whitespace edits receive a distinct identity", async () => {
@@ -142,13 +150,57 @@ describe("review page bootstrap", () => {
     Object.defineProperty(document.querySelector("#dataset-file"), "files", { value: [file] });
     document.querySelector<HTMLInputElement>("#dataset-file")?.dispatchEvent(new Event("change"));
     await vi.waitFor(() => expect(document.querySelector("#review-workspace")?.hasAttribute("hidden")).toBe(false));
+    document.querySelector<HTMLInputElement>("#cache-option")!.click();
 
     document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="problem"]')?.click();
 
     expect(window.localStorage.getItem(key)).toBe(original);
     expect(document.querySelector<HTMLElement>("#load-status")?.textContent)
-      .toContain("esta revisión solo se guardará al exportarla");
+      .toContain("Puedes exportar el progreso");
     expect(document.querySelector<HTMLOutputElement>("#progress-count")?.value).toBe("1 / 74");
     expect(document.querySelector<HTMLButtonElement>("#export-button")?.disabled).toBe(false);
+  });
+
+  it("imports one bundle, switches cut-local progress, and keeps aliases scoped to each cut", async () => {
+    document.body.innerHTML = reviewShell();
+    vi.stubGlobal("crypto", webcrypto as unknown as Crypto);
+    const dataset = sourceDataset();
+    const normalizedDataset = parseDataset(dataset);
+    const datasetBytes = datasetFileBytes(normalizedDataset);
+    const datasetHash = await sha256Hex(datasetBytes.slice().buffer as ArrayBuffer);
+    const sourceHash = dataset.dataset_id;
+    const missing = dataset.questions.flatMap((question) => question.candidates
+      .filter((candidate) => candidate.answer === null)
+      .map((candidate) => ({ question_id: question.id, alias: candidate.alias, status: "not_attempted" })));
+    const cut = (cut_id: string, version: string) => ({
+      cut_id, version, label: cut_id === "original" ? "Corte original" : "MVP actual",
+      disposition: "complete", source_sha256: sourceHash, dataset_sha256: datasetHash,
+      dataset, slot_dispositions: missing,
+    });
+    const bundleText = JSON.stringify({
+      schema_version: 1, bundle_id: "synthetic-review", bundle_version: "1.0.0", title: "Paquete sintético",
+      cuts: [cut("original", "1.0.0"), cut("current", "2.0.0")],
+    });
+    const bytes = new TextEncoder().encode(bundleText);
+    const file = { size: bytes.byteLength, arrayBuffer: async () => bytes.buffer } as File;
+    bootstrapReview(document, window.localStorage);
+    Object.defineProperty(document.querySelector("#dataset-file"), "files", { value: [file] });
+    document.querySelector<HTMLInputElement>("#dataset-file")?.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(document.querySelector("#cut-controls")?.hasAttribute("hidden")).toBe(false));
+
+    expect(document.querySelectorAll("#cut-select option")).toHaveLength(2);
+    expect(document.querySelector("#cut-status")?.textContent).toContain("74 respuestas disponibles");
+    document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="problem"]')?.click();
+    expect((document.querySelector("#progress-count") as HTMLOutputElement)?.value).toBe("1 / 74");
+    const selector = document.querySelector<HTMLSelectElement>("#cut-select")!;
+    selector.value = "current";
+    selector.dispatchEvent(new Event("change"));
+    expect((document.querySelector("#progress-count") as HTMLOutputElement)?.value).toBe("0 / 74");
+    document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="correct"]')?.click();
+    selector.value = "original";
+    selector.dispatchEvent(new Event("change"));
+    expect((document.querySelector("#progress-count") as HTMLOutputElement)?.value).toBe("1 / 74");
+    expect(document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="problem"]')?.checked).toBe(true);
+    expect(window.localStorage.length).toBe(0);
   });
 });

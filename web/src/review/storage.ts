@@ -7,6 +7,10 @@ export function storageKey(datasetId: string, contentHash: string): string {
   return `${PREFIX}${datasetId}:${contentHash}`;
 }
 
+export function bundleStorageKey(bundleHash: string, cutId: string, datasetHash: string): string {
+  return `${PREFIX}bundle:${bundleHash}:${cutId}:${datasetHash}`;
+}
+
 export function loadRatings(dataset: ReviewDataset, contentHash: string, storage: Storage): RatingMap {
   const raw = storage.getItem(storageKey(dataset.dataset_id, contentHash));
   if (!raw) return new Map();
