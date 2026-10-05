@@ -102,6 +102,10 @@ def test_review_import_rating_export_and_local_recovery(review_server, width: in
         )
         page.locator("#review-workspace").wait_for(state="visible")
         assert page.locator("#progress-count").inner_text() == "0 / 4"
+        assert not page.locator("#cache-option").is_checked()
+        # Local persistence is an explicit opt-in; enable it for this recovery
+        # scenario rather than assuming a fresh page silently hydrates it.
+        page.locator("#cache-option").check()
         assert page.locator("#expected-summary").inner_text()
         assert page.locator("#candidate-list .missing-answer").count() == 1
         assert page.locator('input[name="rating-Q01-C"]').count() == 0
@@ -157,6 +161,10 @@ def test_review_import_rating_export_and_local_recovery(review_server, width: in
             {"name": "synthetic-review.json", "mimeType": "application/json", "buffer": dataset_bytes}
         )
         page.locator("#review-workspace").wait_for(state="visible")
+        assert not page.locator("#cache-option").is_checked()
+        assert page.locator("#progress-count").inner_text() == "0 / 4"
+        assert not page.locator('input[name="rating-Q01-A"][value="correct"]').is_checked()
+        page.locator("#cache-option").check()
         assert page.locator("#progress-count").inner_text() == "2 / 4"
         assert page.locator('input[name="rating-Q01-A"][value="correct"]').is_checked()
         assert page.get_by_label("Notas para candidato A").input_value() == "Nota sintética de revisión"

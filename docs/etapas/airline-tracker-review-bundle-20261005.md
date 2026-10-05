@@ -31,6 +31,12 @@ de la interfaz no encontró hallazgos. El gate de publicación utilizó el
 registro de análisis de 2T26 ya aprobado y compiló con la función de chat
 desactivada. `src.publish.verify site/` confirmó el sitio resultante.
 
+La prueba de navegador de recuperación también verifica que el guardado
+empieza desactivado, no restaura calificaciones hasta que la persona lo activa
+y recupera el progreso guardado al volver a activarlo. La misma selección de
+11 pruebas de navegador que ejecuta CI pasó localmente con Chromium después
+de este ajuste.
+
 La publicación está en el commit de artefactos `93f440c9cdf8592ffed71308678b9467635d2249`.
 El manifiesto de análisis coincide con la línea base previa y los 112 archivos
 de `site/data/v1/` conservan sus hashes. El cambio no incluye respuestas
