@@ -11,7 +11,7 @@ function fixtureDataset() {
     dataset_id: "a".repeat(64),
     available_count: 2,
     questions: [{
-      id: "Q01", question: "Pregunta sintética", language: "es", expected: { value: 1 },
+      id: "Q01", question: "Pregunta sintética", language: "es", expected: { "10": "diez", "2": "dos", value: 1 },
       candidates: [
         { alias: "A", answer: "Respuesta sintética A" },
         { alias: "B", answer: "Respuesta sintética B" },
@@ -23,7 +23,14 @@ function fixtureDataset() {
 
 async function makeBundle() {
   const dataset = parseDataset(fixtureDataset());
-  const datasetJson = `${JSON.stringify(dataset, null, 2).replace('"value": 1', '"value": 1.0')}\n`;
+  const reordered = {
+    questions: dataset.questions,
+    available_count: dataset.available_count,
+    dataset_id: dataset.dataset_id,
+    schema_version: dataset.schema_version,
+  };
+  const sourceText = JSON.stringify(reordered, null, 2);
+  const datasetJson = `${sourceText.replace(/"2": "dos",\n(\s*)"10": "diez",/, '"10": "diez",\n$1"2": "dos",').replace('"value": 1', '"value": 1.0')}\n`;
   const datasetBytes = new TextEncoder().encode(datasetJson);
   const datasetSha = await sha256Hex(datasetBytes.slice().buffer as ArrayBuffer);
   const cut = (cutId: string, version: string) => ({
@@ -51,9 +58,10 @@ describe("review bundles", () => {
   it("validates every missing slot and rejects duplicate cuts or a changed dataset hash", async () => {
     const { raw, bundle, sha } = await makeBundle();
     expect(raw.cuts[0]?.dataset_json).toContain('"value": 1.0');
+    expect(raw.cuts[0]?.dataset_json.indexOf('"10": "diez"')).toBeLessThan(raw.cuts[0]?.dataset_json.indexOf('"2": "dos"'));
     await expect(validateBundle(raw, sha)).resolves.toHaveProperty("cuts.length", 2);
     expect(bundle.cuts[0]?.dataset_json).toBe(raw.cuts[0]?.dataset_json);
-    expect(bundle.cuts[0]?.dataset.questions[0]?.expected).toEqual({ value: 1 });
+    expect(bundle.cuts[0]?.dataset.questions[0]?.expected).toEqual({ "10": "diez", "2": "dos", value: 1 });
     const duplicate = structuredClone(raw);
     duplicate.cuts[1].cut_id = duplicate.cuts[0].cut_id;
     await expect(validateBundle(duplicate, sha)).rejects.toThrow("identificador inválido o repetido");

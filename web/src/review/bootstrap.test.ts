@@ -225,7 +225,7 @@ describe("review page bootstrap", () => {
     expect(document.querySelector("#cut-status")?.textContent).toContain("74 respuestas disponibles");
     document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="problem"]')?.click();
     expect((document.querySelector("#progress-count") as HTMLOutputElement)?.value).toBe("1 / 74");
-    const selector = document.querySelector<HTMLSelectElement>("#cut-select")!;
+    let selector = document.querySelector<HTMLSelectElement>("#cut-select")!;
     selector.value = "current";
     selector.dispatchEvent(new Event("change"));
     expect((document.querySelector("#progress-count") as HTMLOutputElement)?.value).toBe("1 / 74");
@@ -252,8 +252,23 @@ describe("review page bootstrap", () => {
     vi.spyOn(window, "confirm").mockReturnValue(true);
     document.querySelector<HTMLInputElement>("#ratings-file")?.dispatchEvent(new Event("change"));
     await vi.waitFor(() => expect(document.querySelector<HTMLElement>("#load-status")?.textContent).toContain("Se importaron"));
-    selector.value = "current";
-    selector.dispatchEvent(new Event("change"));
+    const currentStorageKey = bundleStorageKey(bundleHash, "current", datasetHash);
+    expect(JSON.parse(window.localStorage.getItem(currentStorageKey)!).ratings[0].status).toBe("correct");
+
+    const reloadAndSelectCurrent = async (): Promise<HTMLSelectElement> => {
+      document.body.innerHTML = reviewShell();
+      bootstrapReview(document, window.localStorage);
+      document.querySelector<HTMLInputElement>("#cache-option")!.checked = true;
+      Object.defineProperty(document.querySelector("#dataset-file"), "files", { configurable: true, value: [file] });
+      document.querySelector<HTMLInputElement>("#dataset-file")?.dispatchEvent(new Event("change"));
+      await vi.waitFor(() => expect(document.querySelector("#cut-controls")?.hasAttribute("hidden")).toBe(false));
+      const freshSelector = document.querySelector<HTMLSelectElement>("#cut-select")!;
+      freshSelector.value = "current";
+      freshSelector.dispatchEvent(new Event("change"));
+      return freshSelector;
+    };
+
+    selector = await reloadAndSelectCurrent();
     expect(document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="correct"]')?.checked).toBe(true);
 
     grades.cuts[1]!.ratings = [];
@@ -262,13 +277,13 @@ describe("review page bootstrap", () => {
     Object.defineProperty(document.querySelector("#ratings-file"), "files", { configurable: true, value: [clearedFile] });
     document.querySelector<HTMLInputElement>("#ratings-file")?.dispatchEvent(new Event("change"));
     await vi.waitFor(() => expect(document.querySelector<HTMLElement>("#load-status")?.textContent).toContain("Se importaron 0 calificaciones"));
-    selector.value = "original";
-    selector.dispatchEvent(new Event("change"));
-    selector.value = "current";
-    selector.dispatchEvent(new Event("change"));
+    expect(JSON.parse(window.localStorage.getItem(currentStorageKey)!).ratings).toEqual([]);
+
+    selector = await reloadAndSelectCurrent();
     expect(document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="problem"]')?.checked).toBe(false);
     expect(document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="correct"]')?.checked).toBe(false);
 
+    // Invalid replacement must keep this refreshed bundle and its grades bound to the uploaded bytes.
     const invalidBundle = JSON.parse(bundleText) as { cuts: Array<Record<string, unknown>> };
     invalidBundle.cuts[0]!.dataset_sha256 = "f".repeat(64);
     const invalidBytes = new TextEncoder().encode(JSON.stringify(invalidBundle));
@@ -299,11 +314,69 @@ describe("review page bootstrap", () => {
       reader.readAsText(exportedBlob);
     });
     expect(JSON.parse(exportedText).bundle_content_sha256).toBe(bundleHash);
+    await new Promise((resolve) => window.setTimeout(resolve, 1));
     anchorClick.mockRestore();
     if (createDescriptor) Object.defineProperty(window.URL, "createObjectURL", createDescriptor);
     else delete (window.URL as unknown as { createObjectURL?: unknown }).createObjectURL;
     if (revokeDescriptor) Object.defineProperty(window.URL, "revokeObjectURL", revokeDescriptor);
     else delete (window.URL as unknown as { revokeObjectURL?: unknown }).revokeObjectURL;
     expect(window.localStorage.length).toBe(2);
+  });
+
+  it("keeps imported cut grades exportable and warns when saving all cuts fails", async () => {
+    document.body.innerHTML = reviewShell();
+    vi.stubGlobal("crypto", webcrypto as unknown as Crypto);
+    const dataset = sourceDataset();
+    const datasetJson = `${JSON.stringify(parseDataset(dataset), null, 2)}\n`;
+    const datasetBytes = new TextEncoder().encode(datasetJson);
+    const datasetHash = await sha256Hex(datasetBytes.slice().buffer as ArrayBuffer);
+    const missing = dataset.questions.flatMap((question) => question.candidates
+      .filter((candidate) => candidate.answer === null)
+      .map((candidate) => ({ question_id: question.id, alias: candidate.alias, status: "not_attempted" })));
+    const cut = (cut_id: string, version: string) => ({
+      cut_id, version, label: cut_id, disposition: "complete", source_sha256: dataset.dataset_id,
+      dataset_sha256: datasetHash, dataset_json: datasetJson, slot_dispositions: missing,
+    });
+    const bundleText = JSON.stringify({
+      schema_version: 1, bundle_id: "storage-failure", bundle_version: "1", title: "Paquete sintético",
+      cuts: [cut("first", "1"), cut("second", "2")],
+    });
+    const bundleBytes = new TextEncoder().encode(bundleText);
+    const bundleHash = await sha256Hex(bundleBytes.slice().buffer as ArrayBuffer);
+    let writeCount = 0;
+    const storage = {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn(() => { writeCount += 1; if (writeCount === 2) throw new Error("storage full"); }),
+    } as unknown as Storage;
+    bootstrapReview(document, storage);
+    document.querySelector<HTMLInputElement>("#cache-option")!.checked = true;
+    const bundleFile = { size: bundleBytes.byteLength, arrayBuffer: async () => bundleBytes.buffer } as File;
+    Object.defineProperty(document.querySelector("#dataset-file"), "files", { configurable: true, value: [bundleFile] });
+    document.querySelector<HTMLInputElement>("#dataset-file")?.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(document.querySelector("#cut-controls")?.hasAttribute("hidden")).toBe(false));
+
+    const grades = {
+      schema_version: 2,
+      bundle_id: "storage-failure",
+      bundle_version: "1",
+      bundle_content_sha256: bundleHash,
+      cuts: [
+        { cut_id: "first", version: "1", dataset_id: dataset.dataset_id, dataset_sha256: datasetHash,
+          ratings: [{ question_id: "Q01", alias: "A", status: "correct", notes: "first cut" }] },
+        { cut_id: "second", version: "2", dataset_id: dataset.dataset_id, dataset_sha256: datasetHash,
+          ratings: [{ question_id: "Q02", alias: "B", status: "problem", notes: "second cut" }] },
+      ],
+    };
+    const gradeBytes = new TextEncoder().encode(JSON.stringify(grades));
+    const gradeFile = { size: gradeBytes.byteLength, arrayBuffer: async () => gradeBytes.buffer } as File;
+    Object.defineProperty(document.querySelector("#ratings-file"), "files", { configurable: true, value: [gradeFile] });
+    document.querySelector<HTMLInputElement>("#ratings-file")?.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(document.querySelector<HTMLElement>("#load-status")?.textContent)
+      .toContain("Las calificaciones siguen en memoria"));
+
+    expect(storage.setItem).toHaveBeenCalledTimes(2);
+    expect(document.querySelector<HTMLOutputElement>("#progress-count")?.value).toBe("1 / 74");
+    expect(document.querySelector<HTMLButtonElement>("#export-button")?.disabled).toBe(false);
+    expect(document.querySelector<HTMLElement>("#load-status")?.dataset.error).toBe("true");
   });
 });

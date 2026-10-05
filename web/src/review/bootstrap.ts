@@ -96,8 +96,9 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
   const activeSlotStates = () => new Map((activeCut?.slot_dispositions ?? []).map((slot) => [
     ratingKey(slot.question_id, slot.alias), slot.status,
   ]));
-  const persistActiveRatings = () => {
-    if (!cacheOption.checked || !canPersist || !dataset) return;
+  const persistActiveRatings = (): boolean => {
+    if (!cacheOption.checked || !dataset) return true;
+    if (!canPersist) return false;
     try {
       if (bundle && activeCut) {
         getStorage().setItem(bundleStorageKey(bundleHash, activeCut.cut_id, activeCut.dataset_sha256),
@@ -105,8 +106,28 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
       } else {
         saveRatings(dataset, contentHash, ratings, getStorage());
       }
+      return true;
     } catch {
+      canPersist = false;
       announce("No se pudo guardar en este navegador. Exporta las calificaciones antes de salir.", true);
+      return false;
+    }
+  };
+  const persistAllBundleRatings = (): boolean => {
+    if (!cacheOption.checked || !bundle) return true;
+    if (!canPersist) return false;
+    try {
+      const storage = getStorage();
+      for (const cut of bundle.cuts) {
+        const values = ratingsByCut.get(cut.cut_id) ?? new Map();
+        storage.setItem(bundleStorageKey(bundleHash, cut.cut_id, cut.dataset_sha256),
+          JSON.stringify(ratingsFileForCut(cut, values)));
+      }
+      return true;
+    } catch {
+      canPersist = false;
+      announce("No se pudieron guardar todos los cortes en este navegador. Las calificaciones siguen en memoria; exporta el paquete antes de salir.", true);
+      return false;
     }
   };
   const updateSidebar = () => {
@@ -310,10 +331,10 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
         loadedBundleCuts = new Set(bundle.cuts.map((cut) => cut.cut_id));
         if (activeCut) ratings = ratingsByCut.get(activeCut.cut_id) ?? new Map();
       } else ratings = incoming as RatingMap;
-      persistActiveRatings();
+      const persistenceSucceeded = bundle ? persistAllBundleRatings() : persistActiveRatings();
       updateView();
       const count = bundle ? [...ratingsByCut.values()].reduce((sum, map) => sum + map.size, 0) : ratings.size;
-      announce(`Se importaron ${count} calificaciones${bundle ? ` en ${bundle.cuts.length} cortes` : ""}.`);
+      if (persistenceSucceeded) announce(`Se importaron ${count} calificaciones${bundle ? ` en ${bundle.cuts.length} cortes` : ""}.`);
     } catch (error) {
       announce(error instanceof Error ? error.message : "No se pudieron importar las calificaciones.", true);
     }
