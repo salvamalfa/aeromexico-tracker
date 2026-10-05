@@ -69,19 +69,28 @@ class ToolRegistry:
             {
                 "type": "function",
                 "name": "get_data_catalog",
-                "description": "Métricas, entidades y periodos disponibles en este snapshot público.",
+                "description": (
+                    "Catálogo público con IDs, alias, unidades, granos, cobertura y periodos disponibles. "
+                    "Usa métricas habilitadas; el inventario no habilitado no es consultable."
+                ),
                 "parameters": _schema({}, []),
             },
             {
                 "type": "function",
                 "name": "get_metric_definition",
-                "description": "Definición, unidad, cobertura y límites de una métrica permitida.",
+                "description": (
+                    "Definición, fuente, unidad, cobertura y límites de un ID exacto. "
+                    "Consulta la ficha cuando dos conceptos o denominadores puedan confundirse."
+                ),
                 "parameters": _schema({"metric_id": qstr}, ["metric_id"]),
             },
             {
                 "type": "function",
                 "name": "query_metrics",
-                "description": "Consulta determinista por métricas, entidades y periodos permitidos.",
+                "description": (
+                    "Consulta exacta por IDs publicados de métrica, entidad y periodo. "
+                    "No sustituye una serie cercana; verifica las filas y su disponibilidad."
+                ),
                 "parameters": _schema(
                     {
                         "metric_ids": arr,
@@ -97,7 +106,8 @@ class ToolRegistry:
                 "type": "function",
                 "name": "compare_metrics",
                 "description": (
-                    "Compara dos periodos y separa delta nativo, puntos porcentuales y cambio relativo."
+                    "Compara dos periodos solicitados para la misma métrica, entidad y fuente; "
+                    "separa delta nativo, puntos porcentuales y cambio relativo."
                 ),
                 "parameters": _schema(
                     {
@@ -115,8 +125,8 @@ class ToolRegistry:
                 "type": "function",
                 "name": "get_time_series",
                 "description": (
-                    "Serie ordenada en periodos publicados. Si el intervalo excede el límite de "
-                    "filas, devuelve los periodos más recientes e indica cuántos anteriores omitió."
+                    "Serie inclusiva y ordenada dentro del rango publicado solicitado. Si excede "
+                    "el límite de filas, devuelve los periodos más recientes e indica cuántos omitió."
                 ),
                 "parameters": _schema(
                     {
@@ -133,7 +143,9 @@ class ToolRegistry:
             {
                 "type": "function",
                 "name": "get_source_references",
-                "description": "Referencias públicas permitidas para métricas consultables.",
+                "description": (
+                    "Referencias públicas permitidas para los IDs exactos de métricas consultadas."
+                ),
                 "parameters": _schema({"metric_ids": {"type": "array", "items": qstr, "maxItems": 10}}, []),
             },
             {

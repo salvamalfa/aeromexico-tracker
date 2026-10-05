@@ -1,4 +1,4 @@
-metadata: {catalog_version: chat_entities_v1, owner: Airline Tracker product definition, review_status: agent_reconciled_owner_review_pending, effective_from: '2026-10-04'}
+metadata: {catalog_version: chat_entities_v1, owner: Airline Tracker product definition, review_status: owner_approved_mvp, effective_from: '2026-10-04'}
 entities:
   - id: AEROMEXICO
     label: Aeroméxico

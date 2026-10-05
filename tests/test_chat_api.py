@@ -259,15 +259,47 @@ def test_local_mode_rejects_all_forwarding_headers_with_loopback_peer_and_host(
     assert response.status_code == 403
 
 
-def test_post_bodies_must_declare_their_length(tmp_path: Path):
-    config = ChatConfig(state_path=tmp_path / "chat.sqlite3")
-    app = create_app(config, snapshot=Snapshot(), provider=object(), start_worker=False)
-    client = TestClient(app, base_url="http://127.0.0.1", client=("127.0.0.1", 50000))
+def test_streamed_post_bodies_are_bounded_without_requiring_content_length(tmp_path: Path):
+    password = generate_password()
+    app, client = _password_app(tmp_path, {"owner": hash_password(password)})
 
-    def chunks():
-        yield b"{}"
+    def login_chunks():
+        yield b'{"pass'
+        yield b'word":"'
+        yield password.encode()
+        yield b'"}'
 
-    assert client.post("/api/chat/conversations", content=chunks()).status_code == 411
+    login = client.post(
+        "/api/chat/login",
+        content=login_chunks(),
+        headers={"Origin": ORIGIN, "Content-Type": "application/json"},
+    )
+    assert login.status_code == 200, login.text
+    assert login.headers["access-control-allow-origin"] == ORIGIN
+
+    def oversized_chunks():
+        yield b"x" * 600
+        yield b"x" * 600
+
+    oversized = client.post(
+        "/api/chat/login",
+        content=oversized_chunks(),
+        headers={"Origin": ORIGIN, "Content-Type": "application/json"},
+    )
+    assert oversized.status_code == 413
+    assert oversized.headers["access-control-allow-origin"] == ORIGIN
+    assert client.post("/api/chat/conversations", content=iter([b"{}"])).status_code == 401
+
+
+def test_declared_oversized_login_body_is_rejected_before_json_parsing(tmp_path: Path):
+    _, client = _password_app(tmp_path, {"owner": hash_password(generate_password())})
+    response = client.post(
+        "/api/chat/login",
+        content=b"{" + b"x" * 1_100,
+        headers={"Origin": ORIGIN, "Content-Type": "application/json"},
+    )
+    assert response.status_code == 413
+    assert response.json() == {"detail": "request body too large"}
 
 
 def test_config_requires_password_mode_for_openai(monkeypatch: pytest.MonkeyPatch):

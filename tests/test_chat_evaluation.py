@@ -144,7 +144,9 @@ def test_dry_run_never_calls_provider_and_exposes_estimates_and_destinations() -
     assert "chat-eval-" in result["destinations"]["live_report_if_authorized"]
 
 
-def test_live_provider_error_writes_private_report_and_stops_without_retry(monkeypatch, tmp_path) -> None:
+def test_live_provider_error_writes_private_report_and_stops_without_retry(
+    monkeypatch, tmp_path, mock_live_holdout_current_versions
+) -> None:
     from src.conversational_analytics.providers.openai import OpenAIProviderError
 
     class AuthenticationError(Exception):
@@ -173,7 +175,11 @@ def test_live_provider_error_writes_private_report_and_stops_without_retry(monke
             type(self).cancel_calls += 1
 
     monkeypatch.setattr("src.conversational_analytics.providers.openai.OpenAIProvider", FailingProvider)
-    cases = [case for case in load_cases() if case["expected"]["status"] == "supported"][:2]
+    cases = [
+        case
+        for case in mock_live_holdout_current_versions["cases"]
+        if case["expected"]["status"] == "supported"
+    ][:2]
     report = _live_provider_run(
         cases=cases,
         models=["gpt-6-luna"],
@@ -222,7 +228,9 @@ def test_live_provider_error_writes_private_report_and_stops_without_retry(monke
     assert "response" not in progress
 
 
-def test_post_cancel_terminal_usage_is_counted_without_scoring_or_continuing(monkeypatch, tmp_path) -> None:
+def test_post_cancel_terminal_usage_is_counted_without_scoring_or_continuing(
+    monkeypatch, tmp_path, mock_live_holdout_current_versions
+) -> None:
     from types import SimpleNamespace
 
     from src.conversational_analytics.providers.openai import OpenAIProviderError
@@ -262,7 +270,11 @@ def test_post_cancel_terminal_usage_is_counted_without_scoring_or_continuing(mon
             raise AssertionError("failed provider session must remain available for audit")
 
     monkeypatch.setattr("src.conversational_analytics.providers.openai.OpenAIProvider", FailingProvider)
-    cases = [case for case in load_cases() if case["expected"]["status"] == "supported"][:2]
+    cases = [
+        case
+        for case in mock_live_holdout_current_versions["cases"]
+        if case["expected"]["status"] == "supported"
+    ][:2]
     report = _live_provider_run(
         cases=cases,
         models=["gpt-6-luna"],
@@ -288,7 +300,9 @@ def test_post_cancel_terminal_usage_is_counted_without_scoring_or_continuing(mon
     assert model["spent_unknown"] is False
 
 
-def test_live_tool_validation_error_is_returned_to_provider_like_worker(monkeypatch, tmp_path) -> None:
+def test_live_tool_validation_error_is_returned_to_provider_like_worker(
+    monkeypatch, tmp_path, mock_live_holdout_current_versions
+) -> None:
     from src.conversational_analytics.providers.base import ProviderResult
 
     class CorrectingProvider:
@@ -322,7 +336,7 @@ def test_live_tool_validation_error_is_returned_to_provider_like_worker(monkeypa
 
     monkeypatch.setattr("src.conversational_analytics.providers.openai.OpenAIProvider", CorrectingProvider)
     report = _live_provider_run(
-        cases=load_cases(),
+        cases=mock_live_holdout_current_versions["cases"],
         models=["gpt-6-luna"],
         budget_usd=10.0,
         snapshot_root=Path("site"),
@@ -340,7 +354,9 @@ def test_live_tool_validation_error_is_returned_to_provider_like_worker(monkeypa
     assert case["model_turn_completed"] is True
 
 
-def test_final_report_write_failure_never_marks_progress_completed(monkeypatch, tmp_path) -> None:
+def test_final_report_write_failure_never_marks_progress_completed(
+    monkeypatch, tmp_path, mock_live_holdout_current_versions
+) -> None:
     from src.conversational_analytics.providers.base import ProviderResult
 
     class KnownUsageProvider:
@@ -372,7 +388,7 @@ def test_final_report_write_failure_never_marks_progress_completed(monkeypatch, 
     output_dir = tmp_path / "finalization-failure"
     with pytest.raises(OSError, match="synthetic private-file failure"):
         _live_provider_run(
-            cases=load_cases(),
+            cases=mock_live_holdout_current_versions["cases"],
             models=["gpt-6-luna"],
             budget_usd=10.0,
             snapshot_root=Path("site"),
@@ -388,7 +404,9 @@ def test_final_report_write_failure_never_marks_progress_completed(monkeypatch, 
     assert progress["estimated_spend_usd"] == progress["known_estimated_spend_usd"]
 
 
-def test_post_result_checkpoint_failure_is_not_recorded_as_provider_error(monkeypatch, tmp_path) -> None:
+def test_post_result_checkpoint_failure_is_not_recorded_as_provider_error(
+    monkeypatch, tmp_path, mock_live_holdout_current_versions
+) -> None:
     from src.conversational_analytics.providers.base import ProviderResult
 
     class KnownUsageProvider:
@@ -433,7 +451,7 @@ def test_post_result_checkpoint_failure_is_not_recorded_as_provider_error(monkey
     output_dir = tmp_path / "post-result-checkpoint-failure"
     with pytest.raises(evaluation_live._CheckpointWriteError):
         _live_provider_run(
-            cases=load_cases(),
+            cases=mock_live_holdout_current_versions["cases"],
             models=["gpt-6-luna"],
             budget_usd=10.0,
             snapshot_root=Path("site"),
