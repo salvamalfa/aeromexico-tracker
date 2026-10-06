@@ -134,9 +134,12 @@ CHAT_STATE_PATH=/data/chat.sqlite3
 ```
 
 El launcher también fija esos valores seguros por defecto para proveedor,
-admisión, retención y ruta. Rechaza modo local, OpenAI, admisión habilitada,
-retención distinta de 30 días, ruta fuera del volumen, puerto inválido o un
-volumen no escribible. Para preparar solo el hash de
+admisión, retención y ruta: sin variables explícitas, el servicio arranca en
+`mock` con la admisión cerrada. Rechaza modo local, más de un usuario,
+retención distinta de 30 días, ruta fuera del volumen, puerto inválido, un
+volumen no escribible, un turno mayor de 180 segundos y una configuración
+OpenAI incompleta (sin `CHAT_OPENAI_ENABLED=true`, `CHAT_MODEL` o precios) o
+cuya reserva mínima no quepa en los topes diarios en dólares. Para preparar solo el hash de
 contraseña en un entorno local confiable, ejecuta
 `python -m src.conversational_analytics hash-password`; el comando lee la
 contraseña sin eco y entrega el hash. Guarda el hash en el gestor de variables
@@ -144,8 +147,67 @@ de Railway. Nunca pongas la contraseña ni el hash en un archivo commiteado.
 
 El modo `mock` y la admisión de turnos deshabilitada son deliberados para el
 primer deploy: permiten comprobar login, historial y conectividad sin inferencia
-ni gasto. Habilitar un proveedor pagado requiere completar los gates de modelo,
-precios, consumo, presupuesto y credenciales en una etapa posterior.
+ni gasto. Encender OpenAI es un cambio explícito de variables que requiere la
+autorización del dueño con modelo, precios y topes (sección siguiente).
+
+## Activación del MVP
+
+Requisitos previos: el dueño calificó los cortes en `review.html`, se eligió el
+modelo y el dueño autorizó explícitamente el gasto. Luego:
+
+1. **Variables de Railway** (panel del servicio, nunca en Git), además de las de
+   arriba:
+
+   ```text
+   CHAT_PROVIDER=openai
+   CHAT_OPENAI_ENABLED=true
+   CHAT_MODEL=<id exacto del modelo elegido>
+   OPENAI_API_KEY=<clave del proyecto>
+   CHAT_INPUT_COST_PER_MILLION=<tarifa normal de entrada>
+   CHAT_OUTPUT_COST_PER_MILLION=<tarifa normal de salida>
+   CHAT_ADMISSION_ENABLED=true
+   CHAT_DAILY_COST_BUDGET_USER_USD=1
+   CHAT_DAILY_COST_BUDGET_GLOBAL_USD=1
+   ```
+
+   Tarifas normales por millón documentadas: Luna 0.10/0.50, Sol 6.1 2/10,
+   Astra 10/50. La reserva mínima se cobra a la tarifa de salida: Luna
+   US$0.075 cabe en US$1 (unas 215 preguntas al día); Sol 6.1 (US$1.50) y
+   Astra (US$7.50) no caben y el servicio no arranca. Para ellos sube ambos
+   topes por encima de esa reserva más el gasto diario esperado.
+2. Confirma que `CHAT_ALLOWED_ORIGINS` incluye `https://salvamalfa.github.io`.
+3. Despliega y comprueba `/api/chat/health`: `provider` debe ser `openai` y
+   `admission_enabled`, `true`. Si el arranque falla, el log indica qué variable
+   falta; no hay llamada al proveedor antes de una pregunta.
+4. **Panel en Pages:** cambia `VITE_CHAT_ENABLED=true` en `web/.env.production`
+   (la URL de la API ya está ahí), ejecuta `src.publish` con el registro ya
+   aprobado y `src.publish.verify site/`, y abre el PR con `site/`. El panel
+   queda visible para todos; escribir requiere la contraseña.
+5. Tras el deploy de Pages, prueba login y una pregunta desde Pages y desde el
+   teléfono con la computadora apagada.
+
+**Rollback inmediato:** `CHAT_ADMISSION_ENABLED=false` en Railway cierra la
+admisión sin redeploy del sitio; el panel sigue visible y cada pregunta se
+rechaza con `chat admission is disabled`.
+
+### Control de gasto en dos capas
+
+1. **Tope diario de la app (dólares).** `CHAT_DAILY_COST_BUDGET_USER_USD` y
+   `CHAT_DAILY_COST_BUDGET_GLOBAL_USD` (por defecto US$1) se cambian en las
+   variables de Railway, sin tocar código. Al agotarse, el panel muestra que el
+   servicio rechazó la pregunta (`daily cost budget exhausted`) hasta las 00:00
+   UTC (18:00 de Ciudad de México).
+   El cupo de tokens (2,000,000 diarios) solo frena consumos desbocados.
+2. **Respaldo en OpenAI Platform.** El dueño lo configura en la cuenta, no en el
+   repo. La opción que corta con certeza es crédito prepagado **sin recarga
+   automática**: al agotarse el saldo, la API rechaza las llamadas y el chat
+   muestra un error del proveedor. Platform también ofrece presupuestos o
+   alertas por proyecto; verifica en la configuración del proyecto si cortan
+   las solicitudes o solo avisan. Esos límites son mensuales o por saldo, no
+   diarios.
+
+El incentivo de Data Sharing puede reducir la factura, pero ningún control
+depende de él (ver `data-sharing.md`).
 
 ## Verificación después del deploy
 

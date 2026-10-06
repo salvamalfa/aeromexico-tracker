@@ -106,14 +106,25 @@ público.
 
 ### Consumo de evaluaciones y otros procesos
 
-El chat aplica por defecto 200,000 tokens diarios por usuario y globales,
-sumando entrada y salida. Antes de cada turno OpenAI reserva al menos 150,000
-tokens, o la estimación dinámica si es mayor; mantiene los controles monetarios
-a tarifas normales. La demo `mock` conserva su estimación local habitual.
-Estos controles no sustituyen la factura ni verifican créditos de Data Sharing.
-El servicio rechaza al arrancar una configuración OpenAI cuya reserva mínima
-no quepa en el presupuesto monetario por usuario o global. Configura las tarifas
-normales del modelo elegido; los límites monetarios no se ajustan solos.
+El control principal de gasto es un **tope diario en dólares**: US$1 por
+usuario y US$1 global por defecto (`CHAT_DAILY_COST_BUDGET_USER_USD`,
+`CHAT_DAILY_COST_BUDGET_GLOBAL_USD`), configurable en Railway sin cambiar
+código. El cupo de tokens queda en 2,000,000 diarios por usuario y global solo
+como freno ante un consumo desbocado. Antes de cada turno OpenAI se reservan al
+menos 150,000 tokens, o la estimación dinámica si es mayor. La reserva monetaria
+cobra todos esos tokens a la tarifa de salida, porque Agents API no admite un
+límite de tokens de salida: con Luna (US$0.10/US$0.50 por millón) reserva
+US$0.075; con Sol 6.1 (US$2/US$10), US$1.50, que no cabe en US$1. Con el consumo
+medido (~US$0.004 por pregunta de Luna), US$1 al día alcanza para unas 215
+preguntas.
+
+La demo `mock` conserva su estimación local habitual. Estos controles no
+sustituyen la factura ni verifican créditos de Data Sharing; el incentivo es un
+posible ahorro, no el control de gasto. El servicio rechaza al arrancar una
+configuración OpenAI cuya reserva mínima no quepa en el presupuesto monetario
+por usuario o global. Configura las tarifas normales del modelo elegido; los
+límites monetarios no se ajustan solos. Como respaldo fuera de la app, usa los
+límites de OpenAI Platform (ver `railway.md`, «Control de gasto en dos capas»).
 
 Para incluir evaluaciones u otro proceso del proyecto, prepara un JSON privado
 con contadores confirmados y un identificador contable estable por intento o
@@ -131,7 +142,7 @@ Ejemplo de formato con valores ilustrativos:
      "estimated_cost_usd": 0.00425},
     {"accounting_id": "eval-0002", "owner_id": "owner",
      "usage_date": "2026-10-04", "status": "unknown",
-     "reserved_tokens": 150000, "reserved_cost_usd": 0.38}
+     "reserved_tokens": 150000, "reserved_cost_usd": 1.5}
   ]
 }
 ```
@@ -158,7 +169,15 @@ confirmados. Un lote inválido no aplica parcialmente. Los registros conocidos
 suman a las cuotas de su fecha UTC; un desconocido bloquea globalmente la
 admisión, aun si su fecha es anterior, y permanece hasta su conciliación.
 También pausa el inicio de turnos que ya estuvieran en cola; no reenvía ni
-reconstruye turnos que el proveedor ya haya recibido.
+reconstruye turnos que el proveedor ya haya recibido. Por eso `--apply` rechaza
+un lote con filas `unknown` salvo que se pase `--allow-admission-block`, y el
+resumen del dry-run indica `unknown_blocks_admission`.
+
+**S14 queda fuera de la base del chat.** El turno de evaluación de Sol con uso
+desconocido (S14) pertenece al expediente de la comparación y a su presupuesto
+de US$10, no a las cuotas diarias del chat. No lo importes como `unknown` a la
+base de Railway: pausaría todas las admisiones. Si se concilia con Usage,
+puede registrarse como `known` con su fecha UTC original.
 
 El importador no recupera Usage de OpenAI ni detecta cargas externas. Mantén
 `CHAT_ADMISSION_ENABLED=false` mientras un proceso separado esté activo y

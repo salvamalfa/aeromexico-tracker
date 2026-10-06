@@ -68,50 +68,31 @@ durable de reintentos. El uso confirmado se contabiliza en la fecha UTC de
 confirmación, como estimación operativa; esa fecha puede diferir de la fecha de
 solicitud o de la facturación del proveedor.
 
-**Configuración actual de referencia:** el proveedor OpenAI sigue apagado. Los
-valores configurados como referencia son 200,000 tokens por día tanto por
-usuario como para el total global. Cada turno OpenAI reservaría **al menos
-150,000 tokens**; conserva una estimación mayor cuando
-el historial y los límites de herramientas la requieren. El límite operativo
-de 200,000 queda 50,000 por debajo de la cuota principal publicada de 250,000;
-esa diferencia entre límites no es saldo seguro ni reserva utilizable. La
-reserva no es un máximo duro de API ni
-una garantía de gratuidad. El proveedor simulado conserva su estimación local
-para permitir la demo sin consumo OpenAI.
+**Política vigente del MVP (6 de octubre de 2026).** El dueño decidió
+controlar el gasto con un **tope diario en dólares** y no con el cupo de
+tokens del incentivo: US$1 por usuario y US$1 global por defecto, configurables
+en Railway. El cupo de tokens sube a 2,000,000 diarios como freno de seguridad.
+Cada turno OpenAI reserva al menos 150,000 tokens, cobrados a la tarifa de
+salida porque Agents API no admite un límite de salida (Luna US$0.075, Sol 6.1
+US$1.50). Con el consumo medido de Luna (~US$0.004 por pregunta) el tope admite
+unas 215 preguntas al día; Sol requiere subir el tope a US$1.50 o más. Data Sharing queda como
+posible ahorro: si el incentivo cubre parte del tráfico, la factura baja, pero
+ningún control de la app depende de él.
 
-**Capacidad matemática con esos valores de referencia.** Si se habilitara el
-proveedor, la admisión exigiría que
-consumo del día + reservas pendientes + reserva nueva no rebase 200,000. Con la
-media medida de ~40,000 tokens por pregunta de un turno
-([validación real](../etapas/airline-tracker-validacion-real-20261004.md)), la
-primera pregunta entra (0 + 150,000) y la segunda también (40,000 + 150,000).
-La tercera se rechaza (80,000 + 150,000 > 200,000) aunque el consumo real
-habría sido ~120,000. El piloto admite así **unas dos preguntas al día**, o
-una si el historial encarece los turnos. El valor de 150,000 es solo un control
-operativo de admisión y no una garantía de quedar bajo 200,000. Tampoco demuestra
-que sea suficiente para los turnos reales. La [comparación terminal](../etapas/airline-tracker-comparacion-final-20261004.md)
-midió un máximo Luna conocido de 128,309 tokens y la [propuesta revisable de
-reserva](../etapas/airline-tracker-reserva-propuesta-20261004.md) sugiere 170,000
-como piso metodológico con margen; con 200,000 diarios y un consumo ilustrativo
-de 40,000, ese piso admite una pregunta típica. Por tanto, la configuración
-actual de 150,000 no es una recomendación para activar OpenAI ni para bajar la
-reserva con el fin de aumentar preguntas. Más capacidad requiere una revisión
-del dueño con consumo medido, costos normales y reservas pendientes; no se
-ajusta automáticamente ni se asume que Data Sharing cubrirá todo el uso. La
-[verificación de elegibilidad y cobertura](data-sharing-verification.md)
-describe los límites de la oferta.
+La política anterior (200,000 tokens y reserva de 150,000, unas dos preguntas
+al día) y la [propuesta revisable de reserva](../etapas/airline-tracker-reserva-propuesta-20261004.md)
+se conservan como registro. Sus máximos se midieron con 5 llamadas de
+herramienta y 90 segundos; con los límites actuales (8 y 180) no se
+volvieron a medir. Es un riesgo aceptado para el MVP; el tope en dólares acota
+su efecto económico.
 
-Los límites se configuran con `CHAT_DAILY_TOKEN_BUDGET_USER`,
-`CHAT_DAILY_TOKEN_BUDGET_GLOBAL` y `CHAT_MINIMUM_TURN_RESERVATION_TOKENS`.
-La admisión suma consumo confirmado del día UTC, reservas pendientes y la
-reserva nueva, además de verificar los límites monetarios a tarifas normales.
-Las reservas desconocidas no se liberan por cambiar de día.
-
-La configuración del servicio valida que la reserva mínima pueda entrar en
-los presupuestos monetarios de usuario y global. Si no cabe, rechaza el arranque
-con un error de configuración, en vez de aceptar una instalación que deniegue
-todos los envíos. Usa los precios normales del modelo elegido: no aumentes
-presupuestos automáticamente ni configures precios cero por Data Sharing.
+Los límites se configuran con `CHAT_DAILY_COST_BUDGET_USER_USD`,
+`CHAT_DAILY_COST_BUDGET_GLOBAL_USD`, `CHAT_DAILY_TOKEN_BUDGET_USER`,
+`CHAT_DAILY_TOKEN_BUDGET_GLOBAL` y `CHAT_MINIMUM_TURN_RESERVATION_TOKENS`. La admisión suma consumo confirmado del día UTC,
+reservas pendientes y la reserva nueva. Las reservas desconocidas no se liberan
+por cambiar de día. El servicio rechaza al arrancar una configuración cuya
+reserva mínima no quepa en los presupuestos monetarios. Usa los precios
+normales del modelo elegido: no configures precios cero por Data Sharing.
 
 La organización solo consume este proyecto por ahora, pero el evaluador y el
 chat son procesos separados. Antes de abrir el piloto, importa el consumo de
@@ -121,6 +102,9 @@ cualquier registro externo con uso desconocido bloquea nuevas admisiones para
 todos los usuarios hasta conciliarse. Los registros sobreviven a la retención
 del historial. La base solo conoce el uso registrado: el importador no consulta
 Platform ni descubre automáticamente otros proyectos de la organización.
+El turno S14 de la comparación, con uso desconocido, no se importa a la base
+del chat: pertenece al presupuesto de la evaluación y, como `unknown`, pausaría
+todas las admisiones (ver [operación](operations.md#consumo-de-evaluaciones-y-otros-procesos)).
 
 No ejecutes procesos externos sin registrar su consumo/reserva y suspender la
 admisión del chat mientras se actualiza su expediente. Si aparecen otros
