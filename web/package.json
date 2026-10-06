@@ -16,7 +16,7 @@
     "plotly.js": "3.7.0"
   },
   "devDependencies": {
-    "@types/node": "22.20.4",
+    "@types/node": "22.20.5",
     "@types/plotly.js": "3.0.14",
     "jsdom": "25.0.1",
     "json-schema-to-typescript": "15.0.4",
