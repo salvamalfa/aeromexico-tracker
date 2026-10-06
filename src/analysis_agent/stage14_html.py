@@ -1,7 +1,6 @@
 """Local evidence-review UI; neither an analyst payload nor a dashboard export."""
 from html import escape
 import json
-from pathlib import Path
 from urllib.parse import urlsplit
 
 from src.analysis_agent.evidence import REVIEW, validate

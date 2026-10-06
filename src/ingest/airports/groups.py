@@ -14,9 +14,7 @@ import pandas as pd
 from pypdf import PdfReader
 
 from src.common.http import SourceHttpClient
-from src.common.storage import save_bronze
 from src.config import PATHS
-from src.ingest.airports.reference import OPERATOR_AIRPORTS
 from src.ingest.stage4_common import fetch_bronze, lineage, write_parquet_atomic
 
 

@@ -33,8 +33,6 @@ dependencies = [
     { name = "pandas" },
     { name = "pandera", extra = ["pandas", "polars"] },
     { name = "pdfplumber" },
-    { name = "playwright" },
-    { name = "plotly" },
     { name = "polars" },
     { name = "pyarrow" },
     { name = "pypdf" },
@@ -48,6 +46,7 @@ dependencies = [
 [package.optional-dependencies]
 analytics = [
     { name = "es-core-news-sm" },
+    { name = "plotly" },
     { name = "scikit-learn" },
     { name = "spacy" },
     { name = "statsforecast" },
@@ -72,6 +71,7 @@ dev = [
     { name = "ipykernel" },
     { name = "nbclient" },
     { name = "nbformat" },
+    { name = "playwright" },
     { name = "pytest" },
     { name = "ruff" },
 ]
@@ -90,8 +90,7 @@ requires-dist = [
     { name = "pandas", specifier = "==2.3.3" },
     { name = "pandera", extras = ["pandas", "polars"], specifier = "==0.32.1" },
     { name = "pdfplumber", specifier = "==0.11.10" },
-    { name = "playwright", specifier = "==1.62.0" },
-    { name = "plotly", specifier = "==6.9.0" },
+    { name = "plotly", marker = "extra == 'analytics'", specifier = "==6.9.0" },
     { name = "polars", specifier = "==1.43.2" },
     { name = "pyarrow", specifier = "==25.0.1" },
     { name = "pypdf", specifier = "==6.16.1" },
@@ -121,6 +120,7 @@ dev = [
     { name = "ipykernel", specifier = ">=7.3.0" },
     { name = "nbclient", specifier = ">=0.11.0" },
     { name = "nbformat", specifier = ">=5.11.1" },
+    { name = "playwright", specifier = "==1.62.0" },
     { name = "pytest", specifier = "==9.1.1" },
     { name = "ruff", specifier = ">=0.16.9" },
 ]
@@ -604,8 +604,8 @@ name = "httpcore2"
 version = "2.13.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "h11" },
-    { name = "truststore" },
+    { name = "h11", marker = "sys_platform != 'emscripten'" },
+    { name = "truststore", marker = "sys_platform != 'emscripten'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/cb/f3/1db7aa2bc2524062192bb0e0323969492d1883152a232fe36eea65f4e35c/httpcore2-2.13.1.tar.gz", hash = "sha256:e0aa977abe17e69a3b820a24542a6fa88702676d83880b8d194dcd18408e5103", size = 68071, upload-time = "2026-09-23T07:47:22.372Z" }
 wheels = [
@@ -1189,7 +1189,7 @@ name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ptyprocess" },
+    { name = "ptyprocess", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450, upload-time = "2023-11-25T09:07:26.339Z" }
 wheels = [

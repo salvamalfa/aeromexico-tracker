@@ -14,8 +14,6 @@ dependencies = [
   "pandas==2.3.3",
   "pandera[pandas,polars]==0.32.1",
   "pdfplumber==0.11.10",
-  "playwright==1.62.0",
-  "plotly==6.9.0",
   "polars==1.43.2",
   "pyarrow==25.0.1",
   "pypdf==6.16.1",
@@ -28,6 +26,8 @@ dependencies = [
 
 [project.optional-dependencies]
 analytics = [
+  # Only src/analytics/build_notebook.py and notebooks/ render Plotly figures in Python.
+  "plotly==6.9.0",
   "es-core-news-sm @ https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.8.0/es_core_news_sm-3.8.0-py3-none-any.whl",
   "scikit-learn==1.9.0",
   "spacy==3.8.15",
@@ -45,6 +45,8 @@ dev = [
   "ipykernel>=7.3.0",
   "nbclient>=0.11.0",
   "nbformat>=5.11.1",
+  # Browser smoke tests and src/smoke_test.py; never needed by the pipeline or the chat runtime.
+  "playwright==1.62.0",
   "pytest==9.1.1",
   "ruff>=0.16.9",
 ]

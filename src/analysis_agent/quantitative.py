@@ -4,9 +4,7 @@ from __future__ import annotations
 import argparse
 from decimal import Decimal
 import hashlib
-from html import escape
 import json
-import math
 from pathlib import Path
 
 from src.analysis_agent.evidence import canonical, digest, validate

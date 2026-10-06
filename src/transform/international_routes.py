@@ -92,7 +92,7 @@ def normalize(source, rows, artifact, airports):
                 base=aena_airport(values[1],AENA_BASE_AIRPORTS)
                 if counterpart is None or base is None: continue
                 operator=None;origin_iata,origin=counterpart;dest_iata,dest=base
-                observation_scope='market_route';airport_icao=None
+                observation_scope='market_route'
                 definition='Aena all-carrier market between Mexican and Spanish airport; carrier unavailable'
             if source.endswith('_passengers'):
                 passengers=metric;metric_key='passengers'

@@ -4,12 +4,11 @@ from __future__ import annotations
 
 from collections import Counter
 from datetime import UTC, date, datetime
-import hashlib
 import json
 from pathlib import Path
 import re
 import unicodedata
-from typing import Any, Iterable
+from typing import Any
 from urllib.parse import unquote
 
 from bs4 import BeautifulSoup
