@@ -4,6 +4,21 @@ Cambios notables del proyecto, para humanos. Formato inspirado en
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); no se usa
 versión semántica, las entradas van por fecha.
 
+## 2026-10-06 · Preparación del MVP del chat
+
+- El lanzador de Railway acepta OpenAI cuando se configura explícitamente
+  (modelo, precios, contraseña y topes); por defecto sigue en `mock` con la
+  admisión cerrada.
+- El gasto se controla con un tope diario de US$1 configurable en Railway; el
+  cupo de tokens queda como freno de seguridad y la reserva monetaria separa
+  tarifas de entrada y salida.
+- La versión de datos del chat ya no cambia con republicaciones de interfaz.
+- El importador de consumo exige una bandera explícita para filas desconocidas,
+  que pausan todo el chat; S14 queda fuera de la base del chat.
+- `web/.env.production` versiona la URL de la API con el panel apagado; la
+  activación del panel queda documentada en `docs/chat/railway.md`.
+- Detalle en `docs/etapas/chat-mvp-preparacion-20261006.md`.
+
 ## 2026-10-04 · Revisión de respuestas y acceso al MVP
 
 - Interfaz separada para revisar respuestas ciegas cargadas desde un archivo
