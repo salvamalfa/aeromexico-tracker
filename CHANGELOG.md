@@ -4,6 +4,16 @@ Cambios notables del proyecto, para humanos. Formato inspirado en
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); no se usa
 versión semántica, las entradas van por fecha.
 
+## 2026-10-06 · Pruebas más rápidas y CI más estricta
+
+- La suite pública baja de ~7 min a ~2 min 15 s: la validación de esquemas
+  se reutiliza para archivos idénticos (mismo hash) dentro de un proceso.
+- La CI revisa errores reales de Ruff (`--select F`) en `src/` y `scripts/`,
+  corre con permisos de solo lectura y Dependabot propone actualizaciones
+  mensuales agrupadas.
+- `playwright` y `plotly` (Python) dejan de instalarse en la base. Detalle en
+  `docs/etapas/mantenimiento-pruebas-ci-20261006.md`.
+
 ## 2026-10-06 · Preparación del MVP del chat
 
 - El lanzador de Railway acepta OpenAI cuando se configura explícitamente
