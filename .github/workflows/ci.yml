@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.0.1
+      - uses: astral-sh/setup-uv@v10.2.0
         with:
           python-version: "3.13"
           enable-cache: true
@@ -91,7 +91,7 @@ jobs:
       # and blind review stays local-only. None needs a warehouse or
       # analysis_runs/. Playwright parity tests still need the locally-restored
       # warehouse (`local_data`).
-      - uses: astral-sh/setup-uv@v10.0.1
+      - uses: astral-sh/setup-uv@v10.2.0
         with:
           python-version: "3.13"
           enable-cache: true
