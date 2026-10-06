@@ -32,7 +32,8 @@ def test_catalog_and_context_are_versioned_and_allowlisted() -> None:
     assert (
         snapshot.version == hashlib.sha256((FIXTURE / "publication_manifest.json").read_bytes()).hexdigest()
     )
-    assert catalog["metrics"]["metadata"]["review_status"] == "agent_reconciled_owner_review_pending"
+    assert catalog["metrics"]["metadata"]["review_status"] == "owner_approved_mvp"
+    assert catalog["entities"]["metadata"]["review_status"] == "owner_approved_mvp"
     assert {entity["id"] for entity in catalog["entities"]["entities"]} >= {
         "AEROMEXICO",
         "AEROMEXICO_CONNECT",

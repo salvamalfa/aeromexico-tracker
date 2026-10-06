@@ -1,4 +1,6 @@
 import { defineConfig } from "vite";
+import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 
 // GitHub Pages serves this site from a sub-path (/aeromexico-tracker/), so
 // every asset reference must be relative — see
@@ -19,6 +21,11 @@ export default defineConfig(({ command }) => ({
     // build timestamps) so the publication gate's manifest stays stable
     // across rebuilds of the same source.
     rollupOptions: {
+      input: {
+        dashboard: resolve(fileURLToPath(new URL(".", import.meta.url)), "index.html"),
+        review: resolve(fileURLToPath(new URL(".", import.meta.url)), "review.html"),
+        access: resolve(fileURLToPath(new URL(".", import.meta.url)), "access.html"),
+      },
       output: {
         entryFileNames: "assets/[name]-[hash].js",
         chunkFileNames: "assets/[name]-[hash].js",

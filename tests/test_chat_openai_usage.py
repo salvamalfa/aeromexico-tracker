@@ -208,13 +208,106 @@ def test_provider_polls_until_typed_turn_usage_appears_without_resubmitting_inpu
     assert stream.exit_count == 1
 
 
-def test_provider_stops_after_five_missing_usage_reads_and_keeps_turn_successful(monkeypatch):
+def test_provider_stops_after_bounded_missing_usage_reads_and_keeps_turn_successful(monkeypatch):
     monkeypatch.setattr(helpers, "USAGE_POLL_INTERVAL_SECONDS", 0.001)
     result, sessions, _ = _provider_call([None] * 5)
 
     assert result.content == "Respuesta offline."
     assert result.usage_complete is False
-    assert len(sessions.turn_retrieve_calls) == 5
+    assert len(sessions.turn_retrieve_calls) == helpers.TERMINAL_USAGE_POLL_MAX_ATTEMPTS
+    assert len(sessions.created) == 1
+
+
+def test_completed_turn_can_reconcile_usage_for_thirty_seconds_after_execution_deadline(monkeypatch):
+    clock = [0.0]
+
+    def monotonic():
+        if clock[0] == 0.0:
+            return 0.0
+        return 4.9
+
+    monkeypatch.setattr(helpers.time, "monotonic", monotonic)
+
+    def retrieve(self, turn_id, *, session_id, timeout):
+        assert self.stream.closed
+        self.turn_retrieve_calls.append((turn_id, session_id, timeout))
+        clock[0] = 5.5
+        return _turn(turn_id, status="completed", usage=_usage())
+
+    monkeypatch.setattr(_FakeSessions, "_retrieve_turn", retrieve)
+    result, sessions, _ = _provider_call([None])
+
+    assert result.content == "Respuesta offline."
+    assert (result.input_tokens, result.output_tokens, result.usage_complete) == (31, 19, True)
+    assert len(sessions.turn_retrieve_calls) == 1
+    assert sessions.turn_retrieve_calls[0][:2] == ("turn_fixture", "sess_fixture")
+    assert 0 < sessions.turn_retrieve_calls[0][2] <= helpers.TERMINAL_USAGE_RECONCILIATION_SECONDS
+    assert clock[0] > 5.0
+    assert len(sessions.created) == 1
+
+
+def test_completed_usage_reconciliation_still_stops_on_explicit_cancel(monkeypatch):
+    cancel_event = threading.Event()
+    calls = []
+
+    class Turns:
+        def retrieve(self, turn_id, *, session_id, timeout):
+            calls.append((turn_id, session_id, timeout))
+            cancel_event.set()
+            return None
+
+    stream = _FakeStream(_events_without_usage())
+    sessions = _FakeSessions(stream, [])
+    sessions.turns = SimpleNamespace(retrieve=Turns().retrieve)
+    client = SimpleNamespace(beta=SimpleNamespace(agents=SimpleNamespace(sessions=sessions)))
+    provider = OpenAIProvider(
+        SimpleNamespace(openai_enabled=True, model="model-explicit", max_turn_seconds=5), client=client
+    )
+
+    with pytest.raises(InterruptedError, match="turn cancelled"):
+        provider.run_turn(
+            session_id=None,
+            messages=[{"role": "user", "content": "Pregunta fixture", "turn_id": "app-turn-fixture"}],
+            context={"period": "2026Q2"},
+            tool_specs=ToolRegistry._make_specs(),
+            call_tool=lambda *_: {"ok": True},
+            emit=lambda *_: None,
+            persist_session=lambda *_: None,
+            cancel_event=cancel_event,
+        )
+
+    assert len(calls) == 1
+    assert calls[0][:2] == ("turn_fixture", "sess_fixture")
+
+
+def test_cancel_racing_with_confirmed_usage_preserves_accounting_without_answer():
+    cancel_event = threading.Event()
+
+    class Turns:
+        def retrieve(self, turn_id, *, session_id, timeout):
+            cancel_event.set()
+            return _turn(turn_id, status="completed", usage=_usage())
+
+    sessions = _FakeSessions(_FakeStream(_events_without_usage()), [])
+    sessions.turns = SimpleNamespace(retrieve=Turns().retrieve)
+    client = SimpleNamespace(beta=SimpleNamespace(agents=SimpleNamespace(sessions=sessions)))
+    provider = OpenAIProvider(
+        SimpleNamespace(openai_enabled=True, model="model-explicit", max_turn_seconds=5), client=client
+    )
+
+    with pytest.raises(InterruptedError, match="turn cancelled") as exc_info:
+        provider.run_turn(
+            session_id=None,
+            messages=[{"role": "user", "content": "Pregunta fixture", "turn_id": "app-turn-fixture"}],
+            context={"period": "2026Q2"},
+            tool_specs=ToolRegistry._make_specs(),
+            call_tool=lambda *_: {"ok": True},
+            emit=lambda *_: None,
+            persist_session=lambda *_: None,
+            cancel_event=cancel_event,
+        )
+
+    assert getattr(exc_info.value, "usage", None) == (31, 19)
     assert len(sessions.created) == 1
 
 

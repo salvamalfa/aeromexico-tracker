@@ -80,11 +80,20 @@ según política acordada y comprobar permisos de lectura exclusivos del usuario
 del servicio.
 
 En el launcher Railway, Uvicorn detiene los nuevos claims antes de esperar las
-conexiones SSE y les da hasta 5 segundos para cerrar. Luego el worker drena el
-turno activo durante hasta 90 segundos, dentro del margen de 100 segundos de
-Railway. Al agotar el límite, la cancelación remota se intenta en segundo plano
-y puede no confirmarse; el turno no se reproduce y cualquier uso no confirmado
-permanece como desconocido con su reserva.
+conexiones SSE y les da hasta 5 segundos para cerrar. El perfil permite hasta 8
+llamadas de herramienta y 180 segundos de ejecución del turno. Una respuesta
+terminal sin uso confirmado puede tener hasta 30 segundos adicionales para una
+consulta GET del uso del mismo turno; no se envían entradas nuevas. El worker
+reserva otros 10 segundos para estado local, SQLite y limpieza. Al máximo, su
+espera es de 220 segundos; Railway debe permitir 230 segundos en total: 5 de
+conexiones + 220 del worker + 5 de margen. Si `CHAT_MAX_TURN_SECONDS` se reduce,
+el launcher calcula el drenaje con ese valor; rechaza un valor superior a 180.
+
+Al agotar el límite de ejecución, el turno queda fallido aunque la cancelación
+remota se intente y luego se confirme uso. La conciliación GET puede completar
+la contabilidad de un turno terminal, pero no reabre ni repite su respuesta. Si
+el uso no se confirma, permanece desconocido con la reserva retenida. La gracia
+de cierre no demuestra la calidad de una respuesta del modelo.
 
 Poner un proxy TLS delante del servidor ASGI con certificados renovables,
 HSTS, límite de cuerpo, timeouts compatibles con SSE y forwarding de IP solo
@@ -226,13 +235,14 @@ retención y superar las pruebas HTTPS desde Pages. El acceso inicial será
 ### Cierre ordenado del worker
 
 Al cerrar el proceso, el worker deja de reclamar turnos nuevos y espera hasta
-`CHAT_MAX_TURN_SECONDS + 5` segundos a que termine el turno activo (95 segundos
-con el valor predeterminado de 90). Si vence ese plazo, registra el turno como
-fallido por timeout antes de solicitar la cancelación remota; la reserva de uso
-permanece retenida hasta que llegue uso confirmado. Una respuesta tardía puede
-conciliar esa reserva sin completar el turno ni volver a ejecutarlo. La llamada
-de cancelación remota es de mejor esfuerzo y no prolonga el cierre. El límite de
-gracia del servidor ASGI o del host debe permitir completar ese plazo para que
-el cierre ordenado tenga oportunidad de finalizar. Si el plazo vence después de
-reclamar un turno pero antes de iniciar entrada al proveedor, se registra cero
-uso confirmado y se libera su reserva porque no hubo solicitud remota.
+`CHAT_MAX_TURN_SECONDS + 30 + 10` segundos: ejecución, conciliación GET de uso
+terminal y finalización local. Con el límite hosted de 180 segundos, el worker
+dispone de 220 segundos y Railway necesita 230 segundos incluyendo 5 segundos
+para conexiones y 5 de margen. Una configuración inferior acorta la espera; una
+superior a 180 se rechaza al arrancar. Si vence el plazo de ejecución, el turno
+queda fallido por timeout antes de solicitar cancelación remota; confirmar uso
+después puede liberar su reserva, pero no completa ni vuelve a ejecutar el
+turno. La cancelación remota es de mejor esfuerzo. El uso que siga desconocido
+conserva la reserva. Si el límite vence después de reclamar un turno pero antes
+de iniciar entrada al proveedor, se registra cero uso confirmado y se libera su
+reserva porque no hubo solicitud remota.

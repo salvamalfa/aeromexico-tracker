@@ -65,8 +65,10 @@ A deployed backend uses `CHAT_AUTH_MODE=password`:
   Pages and the API are cross-site, so the session travels in the header and
   the browser keeps it only in memory.
 
-POST bodies must declare `Content-Length` (chunked uploads get `411`), and the
-login body is limited to 1 KB. Configure daily token/cost budgets,
+POST bodies are limited by actual received bytes, including requests without
+`Content-Length` and chunked uploads. Invalid or mismatched declared lengths are
+rejected; reading has a bounded deadline, and the login body is limited to 1 KB.
+Configure daily token/cost budgets,
 message/tool limits, queue bound (`CHAT_MAX_CONCURRENT_GLOBAL` counts pending
 plus running turns; a single worker thread runs them in order), admission, and
 retention with the corresponding `CHAT_*` environment variables.

@@ -19,8 +19,10 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from .auth import client_address, hash_fingerprint, new_session_token, token_digest, verify_password
+from .body_limit import BoundedBodyMiddleware
 from .config import ChatConfig
 from .providers import MockProvider
+from .providers._openai_helpers import TERMINAL_USAGE_RECONCILIATION_SECONDS
 from .service import ChatService, InvalidRequest
 from .storage import AdmissionDenied, ChatStore, Conflict, NotFound
 from .worker import TurnWorker
@@ -114,7 +116,7 @@ def create_app(
         yield
         if worker:
             timeout = (
-                config.max_turn_seconds + 5
+                config.max_turn_seconds + TERMINAL_USAGE_RECONCILIATION_SECONDS + 10
                 if worker_shutdown_timeout_seconds is None
                 else worker_shutdown_timeout_seconds
             )
@@ -128,6 +130,17 @@ def create_app(
     app.state.snapshot_available = getattr(snapshot, "version", "unavailable") != "unavailable"
     app.state.begin_shutdown = worker.begin_shutdown if worker else (lambda: None)
 
+    # Buffer bounded bodies only after the boundary and auth middleware have
+    # admitted the request. Public login still reaches the body limit first;
+    # protected requests can fail closed without waiting on an unauthenticated
+    # client to finish sending its body.
+    app.add_middleware(
+        BoundedBodyMiddleware,
+        limit_for_path=lambda path: LOGIN_BODY_LIMIT
+        if path == "/api/chat/login"
+        else max(16_384, config.max_message_chars * 8 + 4_096),
+    )
+
     fingerprints = config.password_fingerprints()
     login_slots = threading.BoundedSemaphore(2)
 
@@ -139,22 +152,6 @@ def create_app(
     async def local_boundary_and_auth(request: Request, call_next):
         origin = request.headers.get("origin")
         peer = request.client.host if request.client else ""
-        if request.method in {"POST", "PUT", "PATCH"}:
-            # Bodies must declare their size; chunked uploads would bypass the limit.
-            content_length = request.headers.get("content-length")
-            if request.headers.get("transfer-encoding") or content_length is None:
-                return JSONResponse({"detail": "content-length required"}, status_code=411)
-            try:
-                size = int(content_length)
-            except ValueError:
-                return JSONResponse({"detail": "invalid content length"}, status_code=400)
-            limit = (
-                LOGIN_BODY_LIMIT
-                if request.url.path == "/api/chat/login"
-                else max(16_384, config.max_message_chars * 8 + 4_096)
-            )
-            if size > limit:
-                return JSONResponse({"detail": "request body too large"}, status_code=413)
         if config.auth_mode == "local":
             try:
                 peer_local = ipaddress.ip_address(peer).is_loopback

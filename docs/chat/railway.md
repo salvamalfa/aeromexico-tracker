@@ -35,20 +35,28 @@ En **Settings** del servicio configura el perfil del piloto:
 | Serverless / dormir cuando esté inactivo | Activado |
 | Región | SFO (región ya seleccionada en el servicio) |
 | Deployment overlap | `0` segundos |
-| Deployment draining | `100` segundos |
+| Deployment draining | `230` segundos |
 | Restart policy | `On Failure` |
 | Restart retries | `3` |
 
 Al iniciar Uvicorn su cierre, el launcher detiene inmediatamente los nuevos
 claims antes de esperar conexiones SSE existentes. Uvicorn espera como máximo
-5 segundos por ellas; después el lifespan da al worker hasta 90 segundos para
-terminar el turno activo y reserva 5 segundos dentro del drenaje Railway de 100
-para completar el cierre. La cancelación del proveedor al vencer es best effort;
-el cierre no espera más allá del plazo ni garantiza que el remoto la acepte.
-El turno queda terminal y el
-uso no confirmado conserva su reserva. El presupuesto del proceso tiene margen,
-pero el comportamiento real de drenaje debe comprobarse en el host antes de
-confiar en él.
+5 segundos por ellas. El turno puede ejecutar hasta 180 segundos y, si la
+respuesta terminal no trae uso, el worker permite hasta 30 segundos para una
+consulta GET de uso del mismo turno, sin enviar entradas nuevas. Reserva además
+10 segundos para estado local, SQLite y limpieza; con el máximo de ejecución,
+el drenaje del worker es 220 segundos. El drenaje Railway de 230 segundos deja
+5 segundos antes y después de ese presupuesto (5 + 220 + 5). Una configuración
+`CHAT_MAX_TURN_SECONDS` menor reduce proporcionalmente la espera del worker;
+el launcher rechaza valores mayores de 180 segundos en vez de recortarlos.
+
+Se permiten hasta 8 llamadas de herramienta por turno. Agotar las llamadas o el
+tiempo de ejecución deja el turno fallido; la consulta de uso no cambia ese
+estado ni reintenta la respuesta. Si el uso no queda confirmado, su reserva se
+mantiene. La cancelación del proveedor al vencer es best effort y no garantiza
+que el remoto la acepte. La gracia permite finalizar trabajo y conciliar uso;
+no demuestra que la respuesta del modelo sea correcta. Comprueba el drenaje real
+en el host antes de confiar en él.
 
 Adjunta un volumen persistente de **500 MB** montado en `/data`. La base SQLite
 queda en `/data/chat.sqlite3`; el launcher restringe

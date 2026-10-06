@@ -77,10 +77,10 @@ jobs:
         working-directory: web
         run: npm run build
 
-      # The browser smoke tests (test_web_flights_smoke.py,
-      # test_web_page_smoke.py) use synthetic public fixtures; the chat smoke
-      # uses a fake API. None needs a warehouse or analysis_runs/. Playwright
-      # parity tests still need the locally-restored warehouse (`local_data`).
+      # The browser smoke tests use synthetic fixtures; chat uses a fake API,
+      # and blind review stays local-only. None needs a warehouse or
+      # analysis_runs/. Playwright parity tests still need the locally-restored
+      # warehouse (`local_data`).
       - uses: astral-sh/setup-uv@v10.0.1
         with:
           python-version: "3.13"
@@ -95,3 +95,4 @@ jobs:
           tests/test_web_flights_smoke.py
           tests/test_web_page_smoke.py
           tests/test_web_chat_smoke.py
+          tests/test_web_review_smoke.py

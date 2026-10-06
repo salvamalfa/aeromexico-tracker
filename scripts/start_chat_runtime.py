@@ -8,12 +8,45 @@ import tempfile
 from pathlib import Path
 
 from src.conversational_analytics.config import ChatConfig
+from src.conversational_analytics.providers._openai_helpers import (
+    TERMINAL_USAGE_RECONCILIATION_SECONDS,
+)
 
 RAILWAY_EDGE_NETWORK = "100.64.0.0/10"
-RAILWAY_DRAIN_SECONDS = 100
+RAILWAY_DRAIN_SECONDS = 230
 UVICORN_CONNECTION_DRAIN_SECONDS = 5
-WORKER_DRAIN_SECONDS = 90
+PROVIDER_EXECUTION_MAX_SECONDS = 180
+USAGE_RECONCILIATION_SECONDS = int(TERMINAL_USAGE_RECONCILIATION_SECONDS)
+LOCAL_FINALIZATION_SECONDS = 10
+WORKER_DRAIN_SECONDS = (
+    PROVIDER_EXECUTION_MAX_SECONDS
+    + USAGE_RECONCILIATION_SECONDS
+    + LOCAL_FINALIZATION_SECONDS
+)
 RAILWAY_SHUTDOWN_MARGIN_SECONDS = 5
+
+
+def worker_drain_seconds(config: ChatConfig) -> int:
+    """Bound worker shutdown by execution, usage reconciliation, and finalization."""
+    if config.max_turn_seconds > PROVIDER_EXECUTION_MAX_SECONDS:
+        raise ValueError(
+            "Hosted CHAT_MAX_TURN_SECONDS cannot exceed "
+            f"{PROVIDER_EXECUTION_MAX_SECONDS} seconds"
+        )
+    return (
+        config.max_turn_seconds
+        + USAGE_RECONCILIATION_SECONDS
+        + LOCAL_FINALIZATION_SECONDS
+    )
+
+
+def required_railway_drain_seconds(config: ChatConfig) -> int:
+    """Return the host drain required around Uvicorn and worker shutdown."""
+    return (
+        UVICORN_CONNECTION_DRAIN_SECONDS
+        + worker_drain_seconds(config)
+        + RAILWAY_SHUTDOWN_MARGIN_SECONDS
+    )
 
 
 def create_shutdown_aware_server(uvicorn, app, *, host: str, port: int):
@@ -53,6 +86,18 @@ def runtime_config(*, volume_path: Path = Path("/data")) -> tuple[ChatConfig, in
         raise ValueError("PORT must be an integer between 1 and 65535")
 
     config = ChatConfig.from_env()
+    if config.max_turn_seconds > PROVIDER_EXECUTION_MAX_SECONDS:
+        raise ValueError(
+            "Hosted CHAT_MAX_TURN_SECONDS cannot exceed "
+            f"{PROVIDER_EXECUTION_MAX_SECONDS} seconds"
+        )
+    required_drain = required_railway_drain_seconds(config)
+    if required_drain > RAILWAY_DRAIN_SECONDS:
+        raise ValueError(
+            "Hosted CHAT_MAX_TURN_SECONDS requires at least "
+            f"{required_drain} seconds of Railway deployment draining; "
+            f"configured launcher budget is {RAILWAY_DRAIN_SECONDS} seconds"
+        )
     if config.auth_mode != "password":
         raise ValueError("Hosted chat requires CHAT_AUTH_MODE=password")
     if len(config.password_users) != 1:
@@ -102,7 +147,7 @@ def main() -> None:
     secure_existing_sqlite_files(config.state_path)
     app = create_app(
         config,
-        worker_shutdown_timeout_seconds=min(WORKER_DRAIN_SECONDS, config.max_turn_seconds),
+        worker_shutdown_timeout_seconds=worker_drain_seconds(config),
     )
     server = create_shutdown_aware_server(uvicorn, app, host="0.0.0.0", port=port)
     server.run()

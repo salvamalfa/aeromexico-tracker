@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import threading
 import time
 from pathlib import Path
@@ -13,13 +14,20 @@ from fastapi.testclient import TestClient
 from starlette.requests import Request
 
 from scripts.start_chat_runtime import (
+    LOCAL_FINALIZATION_SECONDS,
+    PROVIDER_EXECUTION_MAX_SECONDS,
     RAILWAY_DRAIN_SECONDS,
     RAILWAY_SHUTDOWN_MARGIN_SECONDS,
+    USAGE_RECONCILIATION_SECONDS,
     UVICORN_CONNECTION_DRAIN_SECONDS,
     WORKER_DRAIN_SECONDS,
     create_shutdown_aware_server,
+    required_railway_drain_seconds,
+    runtime_config,
+    worker_drain_seconds,
 )
 from src.conversational_analytics.api import create_app
+from src.conversational_analytics.auth import hash_password
 from src.conversational_analytics.config import ChatConfig
 from src.conversational_analytics.providers.base import ProviderResult
 from src.conversational_analytics.storage import ChatStore
@@ -62,10 +70,49 @@ def test_uvicorn_shutdown_fences_claims_before_waiting_for_connections():
 
     assert observed == [("fence-claims", None), ("base-shutdown", None)]
     assert server.config.options["timeout_graceful_shutdown"] == 5
+    max_turn_config = ChatConfig(max_turn_seconds=PROVIDER_EXECUTION_MAX_SECONDS)
+    assert worker_drain_seconds(max_turn_config) == 220
+    assert required_railway_drain_seconds(max_turn_config) == 230
+    assert (
+        PROVIDER_EXECUTION_MAX_SECONDS
+        + USAGE_RECONCILIATION_SECONDS
+        + LOCAL_FINALIZATION_SECONDS
+        == WORKER_DRAIN_SECONDS
+    )
+    reduced_turn_config = ChatConfig(max_turn_seconds=90)
+    assert worker_drain_seconds(reduced_turn_config) == 130
+    assert required_railway_drain_seconds(reduced_turn_config) == 140
     assert (
         UVICORN_CONNECTION_DRAIN_SECONDS + WORKER_DRAIN_SECONDS + RAILWAY_SHUTDOWN_MARGIN_SECONDS
         <= RAILWAY_DRAIN_SECONDS
     )
+
+
+def test_worker_shutdown_rejects_execution_budget_above_hosted_limit():
+    with pytest.raises(ValueError, match="CHAT_MAX_TURN_SECONDS cannot exceed 180 seconds"):
+        worker_drain_seconds(ChatConfig(max_turn_seconds=181))
+
+
+def test_hosted_runtime_rejects_turn_timeout_above_execution_cap(monkeypatch, tmp_path):
+    values = {
+        "CHAT_AUTH_MODE": "password",
+        "CHAT_PASSWORDS_JSON": json.dumps(
+            [{"user_id": "owner", "password_hash": hash_password("shutdown-test-password")}]
+        ),
+        "CHAT_ALLOWED_ORIGINS": "https://dashboard.example",
+        "CHAT_PROVIDER": "mock",
+        "CHAT_ADMISSION_ENABLED": "false",
+        "CHAT_RETENTION_DAYS": "30",
+        "CHAT_STATE_PATH": str(tmp_path / "chat.sqlite3"),
+        "CHAT_MAX_TURN_SECONDS": "181",
+        "PORT": "8080",
+    }
+    for name, value in values.items():
+        monkeypatch.setenv(name, value)
+
+    with pytest.raises(ValueError, match="CHAT_MAX_TURN_SECONDS cannot exceed 180 seconds"):
+        runtime_config(volume_path=tmp_path)
+    assert not list(tmp_path.glob(".chat-write-check-*"))
 
 
 def test_runtime_sse_shutdown_keeps_active_turn_usage_and_leaves_pending_unclaimed(tmp_path: Path):
@@ -99,8 +146,16 @@ def test_runtime_sse_shutdown_keeps_active_turn_usage_and_leaves_pending_unclaim
         admission_enabled=True,
         max_active_per_user=2,
         poll_interval_seconds=0.01,
+        max_turn_seconds=PROVIDER_EXECUTION_MAX_SECONDS,
+        estimated_input_cost_per_million=0.10,
+        estimated_output_cost_per_million=0.50,
     )
-    app = create_app(config, snapshot=Snapshot(), provider=provider, worker_shutdown_timeout_seconds=0.5)
+    app = create_app(
+        config,
+        snapshot=Snapshot(),
+        provider=provider,
+        worker_shutdown_timeout_seconds=worker_drain_seconds(config),
+    )
     app.state.chat_worker._registry = EmptyRegistry()
     sse_open = threading.Event()
     sse_closed = threading.Event()

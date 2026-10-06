@@ -1,5 +1,14 @@
 # Comparación terminal de Airline Tracker — 4 de octubre de 2026
 
+> **Nota posterior (6 de octubre de 2026).** Las mediciones de este documento
+> se obtuvieron con los límites de turno vigentes entonces: 5 llamadas de
+> herramienta y 90 segundos. El PR #88 los subió a 8 llamadas y 180 segundos,
+> así que el peor caso por pregunta puede ser mayor y no se volvió a medir.
+> Para el MVP, la política de admisión pasó a un tope diario en dólares
+> configurable en Railway (ver `docs/etapas/chat-mvp-preparacion-20261006.md`);
+> los pisos de reserva propuestos aquí se conservan como registro, no como
+> configuración vigente.
+
 Este informe resume la unión terminal de los reportes del holdout y el estado
 operativo. Las disposiciones originales y sus puntuaciones no se alteraron.
 La revisión humana ciega sigue pendiente; el agregado no elige un modelo ni

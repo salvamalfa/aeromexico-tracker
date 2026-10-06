@@ -4,6 +4,25 @@ Cambios notables del proyecto, para humanos. Formato inspirado en
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); no se usa
 versión semántica, las entradas van por fecha.
 
+## 2026-10-04 · Revisión de respuestas y acceso al MVP
+
+- Interfaz separada para revisar respuestas ciegas cargadas desde un archivo
+  privado, guardar el avance local y exportar/importar calificaciones. La
+  publicación contiene una interfaz vacía y ninguna respuesta de evaluación.
+- Página para comprobar y cerrar la sesión del piloto con HTTPS, sin enviar
+  preguntas. La contraseña inicial se entrega por un archivo privado.
+- El login acepta cuerpos legítimos reenviados por Railway sin exigir
+  `Content-Length`; el límite se aplica a los bytes recibidos y al tiempo de
+  lectura antes de analizar el JSON.
+- El dueño confirmó las definiciones y el alcance del MVP. El catálogo registra
+  esa aprobación; no modifica las aprobaciones del Analysis Agent.
+- El contrato del proveedor prioriza el alcance explícito de la pregunta sobre
+  el contexto del dashboard y exige comprobar la identidad y disponibilidad de
+  las filas obtenidas. La comparación anterior conserva sus resultados: estos
+  cambios requieren validación de calidad antes de activar el chat.
+- Guía en `docs/chat/revision-respuestas.md` y corte de entrega en
+  `docs/etapas/airline-tracker-revision-ui-20261004.md`.
+
 ## 2026-10-04 · Recuperación segura de turnos del chat
 
 - El cierre bloquea claims de turnos nuevos. En Railway, Uvicorn da hasta 5 s a

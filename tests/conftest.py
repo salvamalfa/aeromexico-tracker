@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+from copy import deepcopy
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -131,6 +132,23 @@ def executive_payload() -> dict[str, Any]:
     return build_executive_payload()
 
 
+@pytest.fixture
+def mock_live_holdout_current_versions(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
+    """Re-version only an in-memory holdout copy for mocked live-run tests."""
+    from src.conversational_analytics import evaluation_live
+    from src.conversational_analytics.data.snapshot import Snapshot
+    from src.conversational_analytics.evaluation import load_fixture
+
+    fixture = deepcopy(load_fixture())
+    snapshot = Snapshot(PATHS.root / "site")
+    fixture["expected_versions"] = {
+        "data_version": snapshot.version,
+        "semantic_version": snapshot.semantic_version,
+    }
+    monkeypatch.setattr(evaluation_live, "load_fixture", lambda: deepcopy(fixture))
+    return fixture
+
+
 @pytest.fixture(scope="session")
 def web_dist_dir() -> Path:
     """Build web/ once per session with Vite and return web/dist/.
@@ -145,14 +163,19 @@ def web_dist_dir() -> Path:
     """
     npm = shutil.which("npm")
     if npm is None:
-        pytest.skip("web_dist_dir: npm is not on PATH; install Node 22 + npm 10 to run the web/ browser tests.")
+        pytest.skip(
+            "web_dist_dir: npm is not on PATH; install Node 22 + npm 10 to run the web/ browser tests."
+        )
     if not (WEB_ROOT / "node_modules").exists():
         result = subprocess.run([npm, "ci"], cwd=WEB_ROOT, capture_output=True, text=True)
         if result.returncode != 0:
             pytest.skip(f"web_dist_dir: `npm ci` failed in {WEB_ROOT}:\n{result.stdout}\n{result.stderr}")
     result = subprocess.run([npm, "run", "build"], cwd=WEB_ROOT, capture_output=True, text=True)
     if result.returncode != 0:
-        pytest.fail(f"web_dist_dir: `npm run build` failed in {WEB_ROOT}:\n{result.stdout}\n{result.stderr}", pytrace=False)
+        pytest.fail(
+            f"web_dist_dir: `npm run build` failed in {WEB_ROOT}:\n{result.stdout}\n{result.stderr}",
+            pytrace=False,
+        )
     dist = WEB_ROOT / "dist"
     assert (dist / "index.html").exists(), f"web_dist_dir: {dist}/index.html missing after a successful build"
     return dist
