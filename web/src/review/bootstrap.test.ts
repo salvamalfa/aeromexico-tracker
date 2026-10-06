@@ -93,6 +93,33 @@ function selectFile(selector: string, file: File): void {
   input.dispatchEvent(new Event("change"));
 }
 
+async function exportJson(): Promise<unknown> {
+  const createDescriptor = Object.getOwnPropertyDescriptor(window.URL, "createObjectURL");
+  const revokeDescriptor = Object.getOwnPropertyDescriptor(window.URL, "revokeObjectURL");
+  let exportedBlob: Blob | null = null;
+  Object.defineProperty(window.URL, "createObjectURL", { configurable: true, value: (blob: Blob) => { exportedBlob = blob; return "blob:captured"; } });
+  Object.defineProperty(window.URL, "revokeObjectURL", { configurable: true, value: () => {} });
+  const anchorClick = vi.spyOn(window.HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+  try {
+    document.querySelector<HTMLButtonElement>("#export-button")?.click();
+    const raw = await new Promise<string>((resolve, reject) => {
+      if (!exportedBlob) return reject(new Error("No se creó el archivo de calificaciones."));
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsText(exportedBlob);
+    });
+    await new Promise((resolve) => window.setTimeout(resolve, 1));
+    return JSON.parse(raw) as unknown;
+  } finally {
+    anchorClick.mockRestore();
+    if (createDescriptor) Object.defineProperty(window.URL, "createObjectURL", createDescriptor);
+    else delete (window.URL as unknown as { createObjectURL?: unknown }).createObjectURL;
+    if (revokeDescriptor) Object.defineProperty(window.URL, "revokeObjectURL", revokeDescriptor);
+    else delete (window.URL as unknown as { revokeObjectURL?: unknown }).revokeObjectURL;
+  }
+}
+
 function storedRatings(datasetId: string, datasetHash: string, ratings: unknown[]): string {
   return JSON.stringify({ schema_version: 1, dataset_id: datasetId, dataset_content_sha256: datasetHash, ratings });
 }
@@ -104,6 +131,78 @@ afterEach(() => {
 });
 
 describe("review page bootstrap", () => {
+  it("hydrates saved ratings from every cut before allowing an immediate package export", async () => {
+    document.body.innerHTML = reviewShell();
+    vi.stubGlobal("crypto", webcrypto as unknown as Crypto);
+    const fixture = await bundleFixture("preloaded-two-cuts");
+    const first = [{ question_id: "Q01", alias: "A", status: "correct", notes: "first saved" }];
+    const second = [{ question_id: "Q02", alias: "B", status: "problem", notes: "second saved" }];
+    for (const [cutId, values] of [["first", first], ["second", second]] as const) {
+      window.localStorage.setItem(bundleStorageKey(fixture.bundleHash, cutId, fixture.datasetHash),
+        storedRatings(fixture.dataset.dataset_id, fixture.datasetHash, values));
+    }
+    const storageWrite = vi.spyOn(window.localStorage, "setItem");
+    document.querySelector<HTMLInputElement>("#cache-option")!.checked = true;
+    bootstrapReview(document, window.localStorage);
+    selectFile("#dataset-file", fixture.file);
+    await vi.waitFor(() => expect(document.querySelector("#review-workspace")?.hasAttribute("hidden")).toBe(false));
+
+    expect(document.querySelector<HTMLSelectElement>("#cut-select")?.value).toBe("first");
+    const exported = await exportJson() as { cuts: Array<{ cut_id: string; ratings: unknown[] }> };
+    expect(exported.cuts.map((cut) => [cut.cut_id, cut.ratings])).toEqual([["first", first], ["second", second]]);
+    expect(document.querySelector<HTMLElement>("#load-status")?.textContent).toContain("Se exportaron 2 calificaciones de 2 cortes");
+    expect(storageWrite).not.toHaveBeenCalled();
+  });
+
+  it("detects a corrupt inactive cut on initial cached load and warns before exporting partial memory", async () => {
+    document.body.innerHTML = reviewShell();
+    vi.stubGlobal("crypto", webcrypto as unknown as Crypto);
+    const fixture = await bundleFixture("corrupt-inactive-initial");
+    const first = [{ question_id: "Q01", alias: "A", status: "correct", notes: "first retained" }];
+    const firstKey = bundleStorageKey(fixture.bundleHash, "first", fixture.datasetHash);
+    const secondKey = bundleStorageKey(fixture.bundleHash, "second", fixture.datasetHash);
+    const savedFirst = storedRatings(fixture.dataset.dataset_id, fixture.datasetHash, first);
+    const corruptSecond = "{corrupt inactive grades";
+    window.localStorage.setItem(firstKey, savedFirst);
+    window.localStorage.setItem(secondKey, corruptSecond);
+    const storageWrite = vi.spyOn(window.localStorage, "setItem");
+    document.querySelector<HTMLInputElement>("#cache-option")!.checked = true;
+    bootstrapReview(document, window.localStorage);
+    selectFile("#dataset-file", fixture.file);
+    await vi.waitFor(() => expect(document.querySelector("#review-workspace")?.hasAttribute("hidden")).toBe(false));
+
+    const status = document.querySelector<HTMLElement>("#load-status")!;
+    expect(document.querySelector<HTMLOutputElement>("#progress-count")?.value).toBe("0 / 74");
+    expect(status.textContent).toContain("No se pudieron recuperar todos los cortes guardados");
+    expect(status.dataset.error).toBe("true");
+    const exported = await exportJson() as { cuts: Array<{ cut_id: string; ratings: unknown[] }> };
+    expect(exported.cuts.map((cut) => [cut.cut_id, cut.ratings])).toEqual([
+      ["first", []], ["second", []],
+    ]);
+    expect(status.textContent).toContain("puede omitir esas calificaciones");
+    expect(status.dataset.error).toBe("true");
+    expect(storageWrite).not.toHaveBeenCalled();
+    expect(window.localStorage.getItem(firstKey)).toBe(savedFirst);
+    expect(window.localStorage.getItem(secondKey)).toBe(corruptSecond);
+
+    document.querySelector<HTMLInputElement>("#cache-option")!.click();
+    expect(status.textContent).toContain("El guardado local está desactivado");
+    await exportJson();
+    expect(status.textContent).toContain("este archivo puede omitir esas calificaciones");
+    expect(status.textContent).toContain("El caché no se modificó");
+    expect(status.dataset.error).toBe("true");
+    expect(window.localStorage.getItem(firstKey)).toBe(savedFirst);
+    expect(window.localStorage.getItem(secondKey)).toBe(corruptSecond);
+
+    selectFile("#ratings-file", jsonFile(fixture.grades(first, [])));
+    await vi.waitFor(() => expect(status.textContent).toContain("Se importaron 1 calificaciones"));
+    await exportJson();
+    expect(status.textContent).toContain("Se exportaron 1 calificaciones de 2 cortes");
+    expect(status.textContent).not.toContain("puede omitir esas calificaciones");
+    expect(window.localStorage.getItem(firstKey)).toBe(savedFirst);
+    expect(window.localStorage.getItem(secondKey)).toBe(corruptSecond);
+  });
+
   it("keeps a newer legacy dataset when an older bundle validation resolves or rejects late", async () => {
     document.body.innerHTML = reviewShell();
     const fixture = await bundleFixture("slow-old-bundle");
@@ -752,7 +851,7 @@ describe("review page bootstrap", () => {
     await vi.waitFor(() => expect(document.querySelector("#cut-controls")?.hasAttribute("hidden")).toBe(false));
 
     const status = document.querySelector<HTMLElement>("#load-status")!;
-    expect(status.textContent).toContain("No se pudo recuperar el guardado anterior");
+    expect(status.textContent).toContain("No se pudieron recuperar todos los cortes guardados");
     expect(status.dataset.error).toBe("true");
     document.querySelector<HTMLInputElement>("#cache-option")!.click();
     document.querySelector<HTMLInputElement>("#cache-option")!.click();
@@ -779,12 +878,12 @@ describe("review page bootstrap", () => {
     selector.value = "second";
     selector.dispatchEvent(new Event("change"));
     const status = document.querySelector<HTMLElement>("#load-status")!;
-    expect(status.textContent).toContain("No se pudo recuperar el guardado anterior");
+    expect(status.textContent).toContain("No se pudieron recuperar todos los cortes guardados");
     selector.value = "first";
     selector.dispatchEvent(new Event("change"));
     document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="correct"]')?.click();
 
-    expect(status.textContent).toContain("No se pudo recuperar el guardado anterior");
+    expect(status.textContent).toContain("No se pudieron recuperar todos los cortes guardados");
     expect(status.dataset.error).toBe("true");
     expect(document.querySelector<HTMLOutputElement>("#progress-count")?.value).toBe("1 / 74");
     expect(document.querySelector<HTMLButtonElement>("#export-button")?.disabled).toBe(false);
@@ -797,7 +896,7 @@ describe("review page bootstrap", () => {
     const anchorClick = vi.spyOn(window.HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
     document.querySelector<HTMLButtonElement>("#export-button")?.click();
     expect(status.textContent).toContain("Se exportaron");
-    expect(status.textContent).toContain("El guardado local sigue indisponible");
+    expect(status.textContent).toContain("este archivo puede omitir esas calificaciones");
     await new Promise((resolve) => window.setTimeout(resolve, 1));
     anchorClick.mockRestore();
     if (createDescriptor) Object.defineProperty(window.URL, "createObjectURL", createDescriptor);

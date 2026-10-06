@@ -4,9 +4,10 @@ import { bundleStorageKey, loadRatings, saveRatings } from "./storage";
 import { renderNavigation, renderProgress, renderQuestion } from "./render";
 import { type QuestionFilter, visibleQuestionIndices } from "./filters";
 import { parseDataset, parseRatings, ratingsFile } from "./validation";
-import { loadCutRatings, loadMissingBundleRatings, persistBundleRatings } from "./cache";
+import { loadMissingBundleRatings, persistBundleRatings } from "./cache";
 import { downloadJson, isRecord, readJsonFile } from "./files";
 import { ReviewLoadGeneration } from "./load-generation";
+import { announceReviewStatus } from "./status";
 
 export async function sha256Hex(bytes: ArrayBuffer, subtle: SubtleCrypto = crypto.subtle): Promise<string> {
   const digest = await subtle.digest("SHA-256", bytes);
@@ -40,12 +41,12 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
   let dataset: ReviewDataset | null = null, bundle: ReviewBundle | null = null, activeCut: ReviewCut | null = null;
   let contentHash = "", bundleHash = "";
   let ratings: RatingMap = new Map(), ratingsByCut = new Map<string, RatingMap>(), loadedBundleCuts = new Set<string>();
-  let legacyCacheLoaded = false;
-  let legacyRatingsAuthoritative = false;
+  let legacyCacheLoaded = false, legacyRatingsAuthoritative = false;
   const modifiedRatingKeys = new Set<string>();
   const modifiedRatingsByCut = new Map<string, Set<string>>();
   let canPersist = true;
   let cacheFailureWarning = false;
+  let cacheReadFailure = false;
   let selectedIndex = 0;
   const resetRatings = () => {
     ratings = new Map(); ratingsByCut = new Map(); loadedBundleCuts = new Set();
@@ -54,17 +55,8 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
   };
   const visible = () => dataset ? visibleQuestionIndices(dataset, ratings, filter.value as QuestionFilter) : [];
 
-  const announce = (message: string, error = false) => {
-    if (!error && cacheOption.checked && cacheFailureWarning) {
-      if (message.startsWith("Se exportaron")) {
-        loadStatus.textContent = `${message} El guardado local sigue indisponible; conserva este archivo antes de salir.`;
-        loadStatus.setAttribute("data-error", "true");
-      }
-      return;
-    }
-    loadStatus.textContent = message;
-    loadStatus.setAttribute("data-error", String(error));
-  };
+  const announce = (message: string, error = false) => announceReviewStatus(loadStatus,
+    cacheOption.checked, cacheFailureWarning, cacheReadFailure, message, error);
   const activeSlotStates = () => new Map((activeCut?.slot_dispositions ?? []).map((slot) => [
     ratingKey(slot.question_id, slot.alias), slot.status,
   ]));
@@ -116,6 +108,14 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
       announce("No se pudieron guardar todos los cortes en este navegador. Las calificaciones siguen en memoria; exporta el paquete antes de salir.", true);
       return false;
     }
+  };
+  const hydrateBundleCache = () => {
+    if (!bundle) return;
+    const prepared = loadMissingBundleRatings(bundle, bundleHash, ratingsByCut, loadedBundleCuts,
+      modifiedRatingsByCut, getStorage());
+    ratingsByCut = prepared.ratingsByCut;
+    loadedBundleCuts = prepared.loadedCuts;
+    if (activeCut) ratings = ratingsByCut.get(activeCut.cut_id) ?? new Map();
   };
   const updateSidebar = () => {
     if (!dataset) return;
@@ -176,15 +176,13 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
     cutStatus.textContent = `${selected.disposition === "terminal" ? "Corte terminal" : selected.disposition === "complete" ? "Corte completo" : "Corte parcial"} · ${selected.dataset.questions.length} preguntas · ${selected.dataset.available_count} respuestas disponibles · ${missingCounts.no_answer} sin respuesta, ${missingCounts.failed} con error, ${missingCounts.held} en espera, ${missingCounts.not_attempted} no intentadas.`;
     if (cacheOption.checked && canPersist && !loadedBundleCuts.has(selected.cut_id)) {
       try {
-        const stored = loadCutRatings(selected, bundleHash, getStorage());
-        if (stored.size || !ratings.size) ratings = stored;
-        ratingsByCut.set(selected.cut_id, ratings);
-        loadedBundleCuts.add(selected.cut_id);
+        hydrateBundleCache();
       } catch {
         canPersist = false;
         cacheFailureWarning = true;
+        cacheReadFailure = true;
         cacheReadFailed = true;
-        announce("No se pudo recuperar el guardado anterior. Se conserva el trabajo en memoria y el paquete puede exportarse.", true);
+        announce("No se pudieron recuperar todos los cortes guardados. Se conserva el trabajo en memoria y no se modificó el caché; la exportación puede quedar incompleta.", true);
       }
     }
     updateView();
@@ -213,11 +211,7 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
     }
     try {
       if (bundle) {
-        const prepared = loadMissingBundleRatings(bundle, bundleHash, ratingsByCut, loadedBundleCuts,
-          modifiedRatingsByCut, getStorage());
-        ratingsByCut = prepared.ratingsByCut;
-        loadedBundleCuts = prepared.loadedCuts;
-        if (activeCut) ratings = ratingsByCut.get(activeCut.cut_id) ?? new Map();
+        hydrateBundleCache();
       } else {
         if (!legacyCacheLoaded) {
           if (!legacyRatingsAuthoritative) {
@@ -238,11 +232,13 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
       updateView();
       if (persisted) {
         cacheFailureWarning = false;
+        cacheReadFailure = false;
         announce("Guardado local activado. Se usa una clave vinculada al hash exacto del archivo y, para paquetes, al corte.");
       }
     } catch {
       canPersist = false;
       cacheFailureWarning = true;
+      cacheReadFailure = true;
       announce("No se pudo leer el guardado local; se conserva sin cambios. Puedes exportar el progreso.", true);
     }
   });
@@ -270,6 +266,7 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
         bundle.cuts.forEach((cut) => ratingsByCut.set(cut.cut_id, new Map()));
         canPersist = true;
         cacheFailureWarning = false;
+        cacheReadFailure = false;
         bundleTitle.textContent = `${bundle.title} · versión ${bundle.bundle_version}`;
         cutSelect.replaceChildren(...bundle.cuts.map((cut) => {
           const option = doc.createElement("option");
@@ -278,7 +275,7 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
           return option;
         }));
         cutControls.hidden = false;
-        const cacheReadFailed = chooseCut(bundle.cuts[0].cut_id);
+        cacheReadFailed = chooseCut(bundle.cuts[0].cut_id) ?? false;
         importButton.disabled = false;
         exportButton.disabled = false;
         workspace.hidden = false;
@@ -297,12 +294,14 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
         contentHash = imported.contentHash;
         resetRatings();
         cacheFailureWarning = false;
+        cacheReadFailure = false;
         cutControls.hidden = true;
         if (cacheOption.checked) {
           try { ratings = loadRatings(dataset, contentHash, getStorage()); canPersist = true; legacyCacheLoaded = true; }
           catch {
             canPersist = false;
             cacheFailureWarning = true;
+            cacheReadFailure = true;
             cacheReadFailed = true;
             announce("No se pudo recuperar el guardado anterior. Se conserva sin cambios; exporta las calificaciones.", true);
           }
@@ -361,6 +360,7 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
         legacyCacheLoaded = true;
         modifiedRatingKeys.clear();
       }
+      cacheReadFailure = false;
       const persistenceSucceeded = selectedBundle ? persistAllBundleRatings() : persistActiveRatings();
       updateView();
       const count = selectedBundle ? [...ratingsByCut.values()].reduce((sum, map) => sum + map.size, 0) : ratings.size;
