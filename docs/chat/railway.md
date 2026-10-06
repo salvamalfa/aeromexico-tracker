@@ -152,8 +152,10 @@ autorización del dueño con modelo, precios y topes (sección siguiente).
 
 ## Activación del MVP
 
-Requisitos previos: el dueño calificó los cortes en `review.html`, se eligió el
-modelo y el dueño autorizó explícitamente el gasto. Luego:
+Requisitos previos: el dueño calificó los cortes en `review.html`, el agente
+propuso un modelo con evidencia y el dueño eligió modelo y tope. El agente que
+administra Railway y la API key ejecuta los pasos; el dueño no configura nada
+(ver el [traspaso de activación](traspaso-activacion-mvp-20261006.md)). Luego:
 
 1. **Variables de Railway** (panel del servicio, nunca en Git), además de las de
    arriba:

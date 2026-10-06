@@ -135,7 +135,8 @@ Por la decisión explícita de **no versionar bronze**, una reconstrucción con 
 
 El chat consulta el snapshot público con una capa semántica versionada; no abre el warehouse ni convierte ausencias en cero. El servicio usa un proveedor simulado por defecto. La integración real con Agents API ya se verificó dentro de la comparación autorizada. El corte de comparación terminó al alcanzar la reserva del presupuesto: contiene 74 respuestas disponibles de 40 preguntas y todavía no hay un modelo elegido. El consumo histórico no confirmado conserva sus reservas; los resultados no se repiten ni se recalifican automáticamente. La [documentación del chat](docs/chat/README.md) incluye instalación, operación y holdout, y la [validación real](docs/etapas/airline-tracker-validacion-real-20261004.md) registra el primer corte medido. La [interfaz de revisión](docs/chat/revision-respuestas.md) acepta un archivo individual o un paquete privado con cortes separados y exporta todas las calificaciones en un único archivo. El dueño aprobó el catálogo como MVP; aún faltan la revisión de respuestas y la validación de calidad del contrato de instrucciones actual. La API de Railway permite comprobar el acceso protegido con HTTPS. El chat público permanece desactivado.
 
-El perfil `chat-runtime` instala solo las dependencias del backend. El chat
-aplica cuotas de tokens y admite un registro contable privado del consumo de
-evaluaciones; la [continuación de cuotas y hosting](docs/etapas/airline-tracker-cuotas-hosting-20261004.md)
-documenta estas verificaciones y la opción Railway Free/Hobby para uso intermitente.
+El perfil `chat-runtime` instala solo las dependencias del backend. El gasto se
+controla con un tope diario en dólares configurable en Railway (US$1 por
+defecto), con el cupo de tokens solo como freno; el registro contable privado
+del consumo de evaluaciones se conserva. La activación del MVP (modelo, API key,
+panel en Pages) sigue el [traspaso de activación](docs/chat/traspaso-activacion-mvp-20261006.md).

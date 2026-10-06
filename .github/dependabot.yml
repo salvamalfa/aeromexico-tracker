@@ -1,11 +1,21 @@
-# Monthly, grouped update PRs so pinned dependencies do not silently age.
-# Every PR still goes through CI and the AGENTS.md review flow before merge.
+# Monthly, grouped update PRs for minor and patch releases only, so pinned
+# dependencies do not silently age. Every PR still goes through CI and the
+# AGENTS.md review flow before merge.
+#
+# Not proposed here, by owner decision (6 Oct 2026): major versions in any
+# ecosystem, and the chat runtime (openai, fastapi, uvicorn) at any level.
+# Upgrade those deliberately in their own PR, with the chat tests,
+# `python -m scripts.check_chat_runtime` and, for the runtime, a Railway
+# smoke test. GitHub security alerts are separate and still arrive.
 version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       actions:
         patterns: ["*"]
@@ -13,6 +23,9 @@ updates:
     directory: /web
     schedule:
       interval: monthly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       web:
         patterns: ["*"]
@@ -20,6 +33,12 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "openai"
+      - dependency-name: "fastapi"
+      - dependency-name: "uvicorn"
     groups:
       python:
         patterns: ["*"]

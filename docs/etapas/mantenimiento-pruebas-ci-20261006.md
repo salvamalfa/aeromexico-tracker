@@ -22,7 +22,10 @@ del chat.
   `permissions: contents: read` (compatible con la llamada desde `pages.yml`)
   y `.github/dependabot.yml` propone actualizaciones mensuales agrupadas de
   Actions, npm de `web/` y uv. Cada PR de Dependabot sigue el flujo de
-  `AGENTS.md`.
+  `AGENTS.md`. Después de su primera ejecución (PRs #93–#95, cerrados), el
+  dueño decidió limitarlo a versiones menores y de parche, y excluir del todo el
+  runtime del chat (`openai`, `fastapi`, `uvicorn`); esas actualizaciones se
+  hacen de forma deliberada, cada una en su propio PR y con sus pruebas.
 - **Dependencias.** `playwright` pasa al grupo `dev` (pruebas de navegador y
   `src/smoke_test.py`) y `plotly` al extra `analytics` (notebooks y
   `src/analytics/build_notebook.py`). `uv.lock` se resolvió de nuevo con los
