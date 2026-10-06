@@ -34,8 +34,8 @@ archivo exacto conserva el progreso sin preguntar.
 ## Validación y publicación
 
 El código validado corresponde al commit
-`d0dc4adfb765bc879aff27c7c1aea254527c8d8e`. TypeScript pasó con `npm run
-check`; Vitest pasó con 20 archivos y 125 pruebas. La auditoría independiente
+`92ece7da62d4d2eee57a0f15fb6a59d213befea0`. TypeScript pasó con `npm run
+check`; Vitest pasó con 21 archivos y 131 pruebas. La auditoría independiente
 de las correcciones de conservación de calificaciones no encontró hallazgos.
 El gate utilizó el registro de análisis de 2T26 ya aprobado y compiló con la
 función de chat desactivada. `src.publish.verify site/` confirmó los 123
