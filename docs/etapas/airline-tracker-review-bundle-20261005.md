@@ -34,8 +34,8 @@ archivo exacto conserva el progreso sin preguntar.
 ## Validación y publicación
 
 El código validado corresponde al commit
-`a9afbe9182dfb2e668e9c018ac15e5234fd1accf`. TypeScript pasó con `npm run
-check`; Vitest pasó con 21 archivos y 134 pruebas. La auditoría independiente
+`7e748ab3c8abe986260a94fd34b45923ee7c4a2b`. TypeScript pasó con `npm run
+check`; Vitest pasó con 21 archivos y 136 pruebas. La auditoría independiente
 de las correcciones de conservación de calificaciones no encontró hallazgos.
 El gate utilizó el registro de análisis de 2T26 ya aprobado y compiló con la
 función de chat desactivada. `src.publish.verify site/` confirmó los 123
@@ -65,14 +65,16 @@ previas no editadas se conservan y se guardan todos los cortes, incluidos los
 inactivos. Una importación de calificaciones sigue siendo autoritativa: los
 cortes vacíos reemplazan y limpian el caché anterior.
 
-Un error al leer o escribir el caché conserva el aviso mientras el guardado
-siga activado y mantiene las calificaciones en memoria y la exportación
-disponibles. Una lectura fallida no marca el corte como cargado ni permite
-sobrescribir contenido dañado al reactivar el guardado. Al exportar durante un
-error, la interfaz confirma la exportación y advierte que el guardado local
-sigue indisponible.
+La carga inicial con guardado activado recupera todos los cortes antes de
+habilitar la exportación; usa la misma lectura transaccional que la activación
+posterior. Si un corte inactivo está dañado, no se aplican mapas parciales ni
+se modifica el caché. La exportación advierte que puede omitir calificaciones
+no recuperadas, incluso si después se desactiva el guardado. Una importación
+validada de calificaciones reemplaza todos los mapas y elimina ese aviso;
+un fallo de escritura conserva el trabajo completo en memoria y recuerda
+guardar el archivo exportado.
 
-La verificación de estas correcciones pasó con Vitest (21 archivos, 134
+La verificación de estas correcciones pasó con Vitest (21 archivos, 136
 pruebas), TypeScript y el control del límite de 400 líneas por módulo;
 `bootstrap.ts` queda en 400 líneas. Los resultados de CI/Pages y la auditoría
 independiente corresponden al ciclo actualizado del PR.
