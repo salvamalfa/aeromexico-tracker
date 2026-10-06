@@ -34,11 +34,15 @@ con los límites del PR #88.
   histórica y una evaluación en vivo nueva debe fijar la vigente.
 - **Política de gasto** (`config.py`, `service.py`): topes de US$1 diarios por
   usuario y global por defecto, y cupo de tokens de 2,000,000 diarios como
-  freno de seguridad. La reserva monetaria cobra hasta 10,000 tokens
-  (`CHAT_RESERVED_OUTPUT_TOKENS`) a la tarifa de salida y el resto a la de
-  entrada; antes cobraba toda la reserva a la tarifa más cara. Reserva mínima
-  de 150,000 tokens sin cambio: Luna ~US$0.019, Sol 6.1 ~US$0.38; Astra
-  (~US$1.90) no cabe en US$1 y el servicio rechaza arrancar con ella.
+  freno de seguridad. La reserva monetaria sigue cobrando todos los tokens
+  reservados a la tarifa de salida: Agents API no acepta un límite de tokens de
+  salida, así que una reserva dividida podía quedar por debajo del costo real
+  (hallazgo de la revisión de Codex del PR #91). Reserva mínima de 150,000
+  tokens sin cambio: Luna US$0.075 cabe en US$1 (unas 215 preguntas al día
+  con ~US$0.004 por pregunta); Sol 6.1 (US$1.50) y Astra (US$7.50) requieren
+  subir el tope y, sin hacerlo, el servicio rechaza arrancar.
+  El proveedor simulado reserva tokens pero no dólares: no hace llamadas
+  pagadas y su demo no debe agotar el tope.
 - **S14 e importador** (`usage_import.py`): `--apply` con filas `unknown` exige
   `--allow-admission-block`, porque cualquier fila desconocida pausa todas las
   admisiones; el dry-run lo indica. S14 permanece en el expediente de la

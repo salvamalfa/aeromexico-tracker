@@ -134,7 +134,11 @@ class ChatService:
         # consume the OpenAI token allowance.
         if self.config.provider == "openai":
             reserve_tokens = max(reserve_tokens, self.config.minimum_turn_reservation_tokens)
-        reserve_cost = self.config.reservation_cost_usd(reserve_tokens)
+        # Only paid provider calls spend money: the mock demo keeps its token
+        # reservation but never draws on the daily dollar caps.
+        reserve_cost = (
+            self.config.reservation_cost_usd(reserve_tokens) if self.config.provider == "openai" else 0.0
+        )
         turn, duplicate = self.store.submit_turn(
             owner_id,
             conversation_id,

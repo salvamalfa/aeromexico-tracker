@@ -171,8 +171,10 @@ modelo y el dueño autorizó explícitamente el gasto. Luego:
    ```
 
    Tarifas normales por millón documentadas: Luna 0.10/0.50, Sol 6.1 2/10,
-   Astra 10/50. Con Astra, una sola reserva (~US$1.90) no cabe en US$1 y el
-   servicio no arranca: sube el tope o elige otro modelo.
+   Astra 10/50. La reserva mínima se cobra a la tarifa de salida: Luna
+   US$0.075 cabe en US$1 (unas 215 preguntas al día); Sol 6.1 (US$1.50) y
+   Astra (US$7.50) no caben y el servicio no arranca. Para ellos sube ambos
+   topes por encima de esa reserva más el gasto diario esperado.
 2. Confirma que `CHAT_ALLOWED_ORIGINS` incluye `https://salvamalfa.github.io`.
 3. Despliega y comprueba `/api/chat/health`: `provider` debe ser `openai` y
    `admission_enabled`, `true`. Si el arranque falla, el log indica qué variable

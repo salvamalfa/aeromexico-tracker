@@ -10,8 +10,8 @@ versión semántica, las entradas van por fecha.
   (modelo, precios, contraseña y topes); por defecto sigue en `mock` con la
   admisión cerrada.
 - El gasto se controla con un tope diario de US$1 configurable en Railway; el
-  cupo de tokens queda como freno de seguridad y la reserva monetaria separa
-  tarifas de entrada y salida.
+  cupo de tokens queda como freno de seguridad. La reserva se sigue cobrando a
+  la tarifa de salida (Luna cabe; Sol y Astra requieren subir el tope).
 - La versión de datos del chat ya no cambia con republicaciones de interfaz.
 - El importador de consumo exige una bandera explícita para filas desconocidas,
   que pausan todo el chat; S14 queda fuera de la base del chat.

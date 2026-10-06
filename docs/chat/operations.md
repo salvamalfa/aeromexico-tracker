@@ -112,10 +112,11 @@ usuario y US$1 global por defecto (`CHAT_DAILY_COST_BUDGET_USER_USD`,
 código. El cupo de tokens queda en 2,000,000 diarios por usuario y global solo
 como freno ante un consumo desbocado. Antes de cada turno OpenAI se reservan al
 menos 150,000 tokens, o la estimación dinámica si es mayor. La reserva monetaria
-cobra hasta `CHAT_RESERVED_OUTPUT_TOKENS` (10,000) a la tarifa de salida y el
-resto a la de entrada: con Luna (US$0.10/US$0.50 por millón) reserva ~US$0.019;
-con Sol 6.1 (US$2/US$10), ~US$0.38. Con el consumo medido (~US$0.004 por
-pregunta de Luna), US$1 al día alcanza para cientos de preguntas.
+cobra todos esos tokens a la tarifa de salida, porque Agents API no admite un
+límite de tokens de salida: con Luna (US$0.10/US$0.50 por millón) reserva
+US$0.075; con Sol 6.1 (US$2/US$10), US$1.50, que no cabe en US$1. Con el consumo
+medido (~US$0.004 por pregunta de Luna), US$1 al día alcanza para unas 215
+preguntas.
 
 La demo `mock` conserva su estimación local habitual. Estos controles no
 sustituyen la factura ni verifican créditos de Data Sharing; el incentivo es un
@@ -141,7 +142,7 @@ Ejemplo de formato con valores ilustrativos:
      "estimated_cost_usd": 0.00425},
     {"accounting_id": "eval-0002", "owner_id": "owner",
      "usage_date": "2026-10-04", "status": "unknown",
-     "reserved_tokens": 150000, "reserved_cost_usd": 0.38}
+     "reserved_tokens": 150000, "reserved_cost_usd": 1.5}
   ]
 }
 ```

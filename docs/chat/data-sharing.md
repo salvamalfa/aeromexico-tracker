@@ -72,10 +72,10 @@ solicitud o de la facturación del proveedor.
 controlar el gasto con un **tope diario en dólares** y no con el cupo de
 tokens del incentivo: US$1 por usuario y US$1 global por defecto, configurables
 en Railway. El cupo de tokens sube a 2,000,000 diarios como freno de seguridad.
-Cada turno OpenAI reserva al menos 150,000 tokens; la reserva monetaria cobra
-hasta 10,000 tokens a la tarifa de salida y el resto a la de entrada (Luna
-~US$0.019, Sol 6.1 ~US$0.38). Con el consumo medido de Luna (~US$0.004 por
-pregunta) el tope admite cientos de preguntas al día. Data Sharing queda como
+Cada turno OpenAI reserva al menos 150,000 tokens, cobrados a la tarifa de
+salida porque Agents API no admite un límite de salida (Luna US$0.075, Sol 6.1
+US$1.50). Con el consumo medido de Luna (~US$0.004 por pregunta) el tope admite
+unas 215 preguntas al día; Sol requiere subir el tope a US$1.50 o más. Data Sharing queda como
 posible ahorro: si el incentivo cubre parte del tráfico, la factura baja, pero
 ningún control de la app depende de él.
 
@@ -88,8 +88,7 @@ su efecto económico.
 
 Los límites se configuran con `CHAT_DAILY_COST_BUDGET_USER_USD`,
 `CHAT_DAILY_COST_BUDGET_GLOBAL_USD`, `CHAT_DAILY_TOKEN_BUDGET_USER`,
-`CHAT_DAILY_TOKEN_BUDGET_GLOBAL`, `CHAT_MINIMUM_TURN_RESERVATION_TOKENS` y
-`CHAT_RESERVED_OUTPUT_TOKENS`. La admisión suma consumo confirmado del día UTC,
+`CHAT_DAILY_TOKEN_BUDGET_GLOBAL` y `CHAT_MINIMUM_TURN_RESERVATION_TOKENS`. La admisión suma consumo confirmado del día UTC,
 reservas pendientes y la reserva nueva. Las reservas desconocidas no se liberan
 por cambiar de día. El servicio rechaza al arrancar una configuración cuya
 reserva mínima no quepa en los presupuestos monetarios. Usa los precios
