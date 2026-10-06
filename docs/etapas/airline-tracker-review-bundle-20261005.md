@@ -34,11 +34,12 @@ archivo exacto conserva el progreso sin preguntar.
 ## Validación y publicación
 
 El código validado corresponde al commit
-`99c1a9ab90e92b9fa6bee5b09c6f624de804fe10`. TypeScript pasó con `npm run
-check`; Vitest pasó con 20 archivos y 122 pruebas. La auditoría independiente
-de la interfaz no encontró hallazgos. El gate de publicación utilizó el
-registro de análisis de 2T26 ya aprobado y compiló con la función de chat
-desactivada. `src.publish.verify site/` confirmó el sitio resultante.
+`d0dc4adfb765bc879aff27c7c1aea254527c8d8e`. TypeScript pasó con `npm run
+check`; Vitest pasó con 20 archivos y 125 pruebas. La auditoría independiente
+de las correcciones de conservación de calificaciones no encontró hallazgos.
+El gate utilizó el registro de análisis de 2T26 ya aprobado y compiló con la
+función de chat desactivada. `src.publish.verify site/` confirmó los 123
+archivos resultantes.
 
 La prueba de navegador de recuperación también verifica que el guardado
 empieza desactivado, no restaura calificaciones hasta que la persona lo activa
@@ -46,7 +47,11 @@ y recupera el progreso guardado al volver a activarlo. La misma selección de
 11 pruebas de navegador que ejecuta CI pasó localmente con Chromium después
 de este ajuste.
 
-La publicación está en el commit de artefactos `93f440c9cdf8592ffed71308678b9467635d2249`.
 El manifiesto de análisis coincide con la línea base previa y los 112 archivos
-de `site/data/v1/` conservan sus hashes. El cambio no incluye respuestas
-privadas, calificaciones humanas ni una selección de modelo.
+de `site/data/v1/` conservan sus hashes. Las 11 pruebas de navegador de CI y el
+verificador del sitio compilado pasaron en localhost: revisión vacía en
+escritorio y móvil, acceso sin consultas ni sesión y dashboard sin chat.
+No hubo errores de consola, página o assets, ni solicitudes que no fueran GET.
+La verificación pública se realiza después del éxito del workflow de Pages.
+El cambio no incluye respuestas privadas, calificaciones humanas ni una
+selección de modelo.
