@@ -80,6 +80,19 @@ function jsonFile(value: unknown): File {
   return { size: bytes.byteLength, arrayBuffer: async () => bytes.buffer } as File;
 }
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason: unknown) => void;
+  const promise = new Promise<T>((yes, no) => { resolve = yes; reject = no; });
+  return { promise, resolve, reject };
+}
+
+function selectFile(selector: string, file: File): void {
+  const input = document.querySelector<HTMLInputElement>(selector)!;
+  Object.defineProperty(input, "files", { configurable: true, value: [file] });
+  input.dispatchEvent(new Event("change"));
+}
+
 function storedRatings(datasetId: string, datasetHash: string, ratings: unknown[]): string {
   return JSON.stringify({ schema_version: 1, dataset_id: datasetId, dataset_content_sha256: datasetHash, ratings });
 }
@@ -91,6 +104,105 @@ afterEach(() => {
 });
 
 describe("review page bootstrap", () => {
+  it("keeps a newer legacy dataset when an older bundle validation resolves or rejects late", async () => {
+    document.body.innerHTML = reviewShell();
+    const fixture = await bundleFixture("slow-old-bundle");
+    const datasetBytes = new TextEncoder().encode(`${JSON.stringify(parseDataset(fixture.dataset), null, 2)}\n`);
+    const originalDigest = webcrypto.subtle.digest.bind(webcrypto.subtle);
+    for (const rejectOld of [false, true]) {
+      document.body.innerHTML = reviewShell();
+      const started = deferred<void>();
+      const gate = deferred<ArrayBuffer>();
+      let pause = true;
+      vi.stubGlobal("crypto", { subtle: { digest(algorithm: AlgorithmIdentifier, data: BufferSource) {
+        const length = data instanceof ArrayBuffer ? data.byteLength : data.byteLength;
+        if (pause && length === datasetBytes.byteLength) {
+          pause = false;
+          started.resolve();
+          return gate.promise;
+        }
+        return originalDigest(algorithm, data);
+      } } } as unknown as Crypto);
+      bootstrapReview(document, window.localStorage);
+      selectFile("#dataset-file", fixture.file);
+      await started.promise;
+      const newer = sourceDataset();
+      newer.questions[0]!.question = "Dataset nuevo confirmado";
+      selectFile("#dataset-file", jsonFile(newer));
+      await vi.waitFor(() => expect(document.querySelector("#question-text")?.textContent).toBe("Dataset nuevo confirmado"));
+      const status = document.querySelector<HTMLElement>("#load-status")!;
+      const newerStatus = status.textContent;
+      if (rejectOld) gate.reject(new Error("digest viejo falló"));
+      else gate.resolve(await originalDigest("SHA-256", datasetBytes));
+      await new Promise((resolve) => window.setTimeout(resolve, 0));
+      expect(document.querySelector("#question-text")?.textContent).toBe("Dataset nuevo confirmado");
+      expect(status.textContent).toBe(newerStatus);
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("ignores a delayed ratings import after its dataset has been replaced", async () => {
+    document.body.innerHTML = reviewShell();
+    vi.stubGlobal("crypto", webcrypto as unknown as Crypto);
+    const originalDigest = webcrypto.subtle.digest.bind(webcrypto.subtle);
+    bootstrapReview(document, window.localStorage);
+    selectFile("#dataset-file", jsonFile(sourceDataset()));
+    await vi.waitFor(() => expect(document.querySelector("#review-workspace")?.hasAttribute("hidden")).toBe(false));
+    const grades = jsonFile({ schema_version: 1, dataset_id: "a".repeat(64), dataset_content_sha256: "b".repeat(64), ratings: [] });
+    const bytes = new Uint8Array(await grades.arrayBuffer());
+    const started = deferred<void>();
+    const gate = deferred<ArrayBuffer>();
+    let pause = true;
+    vi.stubGlobal("crypto", { subtle: { digest(algorithm: AlgorithmIdentifier, data: BufferSource) {
+      const length = data instanceof ArrayBuffer ? data.byteLength : data.byteLength;
+      if (pause && length === bytes.byteLength) { pause = false; started.resolve(); return gate.promise; }
+      return originalDigest(algorithm, data);
+    } } } as unknown as Crypto);
+    selectFile("#ratings-file", grades);
+    await started.promise;
+    const newer = sourceDataset();
+    newer.questions[0]!.question = "Dataset que invalida importación";
+    selectFile("#dataset-file", jsonFile(newer));
+    await vi.waitFor(() => expect(document.querySelector("#question-text")?.textContent).toBe("Dataset que invalida importación"));
+    const status = document.querySelector<HTMLElement>("#load-status")!;
+    const newerStatus = status.textContent;
+    gate.resolve(await originalDigest("SHA-256", bytes));
+    await new Promise((resolve) => window.setTimeout(resolve, 0));
+    expect(document.querySelector("#question-text")?.textContent).toBe("Dataset que invalida importación");
+    expect(status.textContent).toBe(newerStatus);
+    expect(document.querySelector<HTMLOutputElement>("#progress-count")?.value).toBe("0 / 74");
+  });
+
+  it("keeps package-wide grade imports valid when only the active cut changes", async () => {
+    document.body.innerHTML = reviewShell();
+    vi.stubGlobal("crypto", webcrypto as unknown as Crypto);
+    const fixture = await bundleFixture("cut-switch-during-import");
+    bootstrapReview(document, window.localStorage);
+    selectFile("#dataset-file", fixture.file);
+    await vi.waitFor(() => expect(document.querySelector("#cut-controls")?.hasAttribute("hidden")).toBe(false));
+    const gradeValue = fixture.grades([{ question_id: "Q01", alias: "A", status: "correct", notes: "imported" }], []);
+    const gradeBytes = new TextEncoder().encode(JSON.stringify(gradeValue));
+    const originalDigest = webcrypto.subtle.digest.bind(webcrypto.subtle);
+    const started = deferred<void>();
+    const gate = deferred<ArrayBuffer>();
+    let pause = true;
+    vi.stubGlobal("crypto", { subtle: { digest(algorithm: AlgorithmIdentifier, data: BufferSource) {
+      const length = data instanceof ArrayBuffer ? data.byteLength : data.byteLength;
+      if (pause && length === gradeBytes.byteLength) { pause = false; started.resolve(); return gate.promise; }
+      return originalDigest(algorithm, data);
+    } } } as unknown as Crypto);
+    selectFile("#ratings-file", jsonFile(gradeValue));
+    await started.promise;
+    const selector = document.querySelector<HTMLSelectElement>("#cut-select")!;
+    selector.value = "second";
+    selector.dispatchEvent(new Event("change"));
+    gate.resolve(await originalDigest("SHA-256", gradeBytes));
+    await vi.waitFor(() => expect(document.querySelector<HTMLElement>("#load-status")?.textContent).toContain("Se importaron 1 calificaciones"));
+    selector.value = "first";
+    selector.dispatchEvent(new Event("change"));
+    expect(document.querySelector<HTMLOutputElement>("#progress-count")?.value).toBe("1 / 74");
+  });
+
   it("starts with an empty shell and performs no network request", () => {
     document.body.innerHTML = reviewShell();
     const fetchSpy = vi.fn();

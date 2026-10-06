@@ -6,6 +6,7 @@ import { type QuestionFilter, visibleQuestionIndices } from "./filters";
 import { parseDataset, parseRatings, ratingsFile } from "./validation";
 import { loadCutRatings, loadMissingBundleRatings, persistBundleRatings } from "./cache";
 import { downloadJson, isRecord, readJsonFile } from "./files";
+import { ReviewLoadGeneration } from "./load-generation";
 
 export async function sha256Hex(bytes: ArrayBuffer, subtle: SubtleCrypto = crypto.subtle): Promise<string> {
   const digest = await subtle.digest("SHA-256", bytes);
@@ -19,39 +20,26 @@ function requireNode<T extends Element>(root: ParentNode, selector: string): T {
 }
 
 export function bootstrapReview(doc: Document = document, storageSource?: Storage | (() => Storage)): void {
-  const datasetInput = requireNode<HTMLInputElement>(doc, "#dataset-file");
-  const ratingsInput = requireNode<HTMLInputElement>(doc, "#ratings-file");
-  const importButton = requireNode<HTMLButtonElement>(doc, "#import-button");
-  const exportButton = requireNode<HTMLButtonElement>(doc, "#export-button");
-  const loadStatus = requireNode<HTMLElement>(doc, "#load-status");
-  const workspace = requireNode<HTMLElement>(doc, "#review-workspace");
-  const cutControls = requireNode<HTMLElement>(doc, "#cut-controls");
-  const bundleTitle = requireNode<HTMLElement>(doc, "#bundle-title");
-  const cutSelect = requireNode<HTMLSelectElement>(doc, "#cut-select");
-  const cutStatus = requireNode<HTMLElement>(doc, "#cut-status");
-  const cacheOption = requireNode<HTMLInputElement>(doc, "#cache-option");
-  const nav = requireNode<HTMLOListElement>(doc, "#question-nav");
-  const filter = requireNode<HTMLSelectElement>(doc, "#question-filter");
-  const filterEmpty = requireNode<HTMLElement>(doc, "#filter-empty");
-  const questionContent = requireNode<HTMLElement>(doc, "#question-content");
-  const selectionFilterNote = requireNode<HTMLElement>(doc, "#selection-filter-note");
-  const previous = requireNode<HTMLButtonElement>(doc, "#previous-question");
-  const next = requireNode<HTMLButtonElement>(doc, "#next-question");
+  const datasetInput = requireNode<HTMLInputElement>(doc, "#dataset-file"), ratingsInput = requireNode<HTMLInputElement>(doc, "#ratings-file");
+  const importButton = requireNode<HTMLButtonElement>(doc, "#import-button"), exportButton = requireNode<HTMLButtonElement>(doc, "#export-button");
+  const loadStatus = requireNode<HTMLElement>(doc, "#load-status"), workspace = requireNode<HTMLElement>(doc, "#review-workspace");
+  const cutControls = requireNode<HTMLElement>(doc, "#cut-controls"), bundleTitle = requireNode<HTMLElement>(doc, "#bundle-title");
+  const cutSelect = requireNode<HTMLSelectElement>(doc, "#cut-select"), cutStatus = requireNode<HTMLElement>(doc, "#cut-status");
+  const cacheOption = requireNode<HTMLInputElement>(doc, "#cache-option"), nav = requireNode<HTMLOListElement>(doc, "#question-nav");
+  const filter = requireNode<HTMLSelectElement>(doc, "#question-filter"), filterEmpty = requireNode<HTMLElement>(doc, "#filter-empty");
+  const questionContent = requireNode<HTMLElement>(doc, "#question-content"), selectionFilterNote = requireNode<HTMLElement>(doc, "#selection-filter-note");
+  const previous = requireNode<HTMLButtonElement>(doc, "#previous-question"), next = requireNode<HTMLButtonElement>(doc, "#next-question");
   const view = doc.defaultView;
   if (!view) throw new Error("La revisión requiere un navegador.");
+  const loadGeneration = new ReviewLoadGeneration();
   const getStorage = (): Storage => {
     if (typeof storageSource === "function") return storageSource();
     return storageSource ?? view.localStorage;
   };
 
-  let dataset: ReviewDataset | null = null;
-  let bundle: ReviewBundle | null = null;
-  let activeCut: ReviewCut | null = null;
-  let contentHash = "";
-  let bundleHash = "";
-  let ratings: RatingMap = new Map();
-  let ratingsByCut = new Map<string, RatingMap>();
-  let loadedBundleCuts = new Set<string>();
+  let dataset: ReviewDataset | null = null, bundle: ReviewBundle | null = null, activeCut: ReviewCut | null = null;
+  let contentHash = "", bundleHash = "";
+  let ratings: RatingMap = new Map(), ratingsByCut = new Map<string, RatingMap>(), loadedBundleCuts = new Set<string>();
   let legacyCacheLoaded = false;
   let legacyRatingsAuthoritative = false;
   const modifiedRatingKeys = new Set<string>();
@@ -59,6 +47,11 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
   let canPersist = true;
   let cacheFailureWarning = false;
   let selectedIndex = 0;
+  const resetRatings = () => {
+    ratings = new Map(); ratingsByCut = new Map(); loadedBundleCuts = new Set();
+    legacyCacheLoaded = false; legacyRatingsAuthoritative = false;
+    modifiedRatingKeys.clear(); modifiedRatingsByCut.clear();
+  };
   const visible = () => dataset ? visibleQuestionIndices(dataset, ratings, filter.value as QuestionFilter) : [];
 
   const announce = (message: string, error = false) => {
@@ -255,27 +248,25 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
   });
 
   datasetInput.addEventListener("change", async () => {
+    const request = loadGeneration.beginDatasetSelection();
     const file = datasetInput.files?.[0];
     datasetInput.value = "";
     if (!file) return;
     try {
       let cacheReadFailed = false;
       const imported = await readJsonFile(file, sha256Hex);
+      if (!loadGeneration.isCurrentDatasetSelection(request)) return;
       if (isRecord(imported.value) && "cuts" in imported.value) {
         const parsedBundle = await validateBundle(imported.value, async (bytes) =>
           sha256Hex(bytes.slice().buffer as ArrayBuffer));
+        if (!loadGeneration.isCurrentDatasetSelection(request)) return;
         if (!mayReplaceCurrentImport(imported.contentHash, true)) return;
+        loadGeneration.commitDatasetSelection();
         activeCut = null;
         bundle = parsedBundle;
         bundleHash = imported.contentHash;
         contentHash = "";
-        ratings = new Map();
-        ratingsByCut = new Map();
-        loadedBundleCuts = new Set();
-        legacyCacheLoaded = false;
-        legacyRatingsAuthoritative = false;
-        modifiedRatingKeys.clear();
-        modifiedRatingsByCut.clear();
+        resetRatings();
         bundle.cuts.forEach((cut) => ratingsByCut.set(cut.cut_id, new Map()));
         canPersist = true;
         cacheFailureWarning = false;
@@ -296,19 +287,15 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
         }
       } else {
         const parsedDataset = parseDataset(imported.value);
+        if (!loadGeneration.isCurrentDatasetSelection(request)) return;
         if (!mayReplaceCurrentImport(imported.contentHash, false)) return;
+        loadGeneration.commitDatasetSelection();
         dataset = parsedDataset;
         bundle = null;
         activeCut = null;
         bundleHash = "";
         contentHash = imported.contentHash;
-        ratings = new Map();
-        ratingsByCut = new Map();
-        loadedBundleCuts = new Set();
-        legacyCacheLoaded = false;
-        legacyRatingsAuthoritative = false;
-        modifiedRatingKeys.clear();
-        modifiedRatingsByCut.clear();
+        resetRatings();
         cacheFailureWarning = false;
         cutControls.hidden = true;
         if (cacheOption.checked) {
@@ -330,7 +317,9 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
         }
       }
     } catch (error) {
-      announce(error instanceof Error ? error.message : "No se pudo abrir el archivo.", true);
+      if (loadGeneration.isCurrentDatasetSelection(request)) {
+        announce(error instanceof Error ? error.message : "No se pudo abrir el archivo.", true);
+      }
     }
   });
   cutSelect.addEventListener("change", () => chooseCut(cutSelect.value, true));
@@ -338,22 +327,32 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
   ratingsInput.addEventListener("change", async () => {
     const file = ratingsInput.files?.[0];
     ratingsInput.value = "";
-    if (!file || !dataset) return;
+    if (!file || !dataset) {
+      loadGeneration.invalidateRatingsSelection();
+      return;
+    }
+    const selectedDataset = dataset;
+    const selectedBundle = bundle;
+    const selectedBundleHash = bundleHash;
+    const selectedContentHash = contentHash;
+    const request = loadGeneration.beginRatingsSelection(selectedDataset, selectedBundle,
+      selectedBundleHash, selectedContentHash);
     try {
       const imported = await readJsonFile(file, sha256Hex);
-      const incoming = bundle
-        ? parseBundleRatings(imported.value, bundle, bundleHash)
-        : parseRatings(imported.value, dataset, contentHash);
-      const hasRatings = bundle
+      if (!loadGeneration.isCurrentRatingsSelection(request, dataset, bundle, bundleHash, contentHash)) return;
+      const incoming = selectedBundle
+        ? parseBundleRatings(imported.value, selectedBundle, selectedBundleHash)
+        : parseRatings(imported.value, selectedDataset, selectedContentHash);
+      const hasRatings = selectedBundle
         ? [...ratingsByCut.values()].some((value) => value.size > 0)
         : ratings.size > 0;
       if (hasRatings && !view.confirm("Importar reemplazará las calificaciones guardadas para este paquete. ¿Continuar?")) {
         announce("Importación cancelada.");
         return;
       }
-      if (bundle) {
+      if (selectedBundle) {
         ratingsByCut = incoming as Map<string, RatingMap>;
-        loadedBundleCuts = new Set(bundle.cuts.map((cut) => cut.cut_id));
+        loadedBundleCuts = new Set(selectedBundle.cuts.map((cut) => cut.cut_id));
         modifiedRatingsByCut.clear();
         if (activeCut) ratings = ratingsByCut.get(activeCut.cut_id) ?? new Map();
       } else {
@@ -362,12 +361,14 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
         legacyCacheLoaded = true;
         modifiedRatingKeys.clear();
       }
-      const persistenceSucceeded = bundle ? persistAllBundleRatings() : persistActiveRatings();
+      const persistenceSucceeded = selectedBundle ? persistAllBundleRatings() : persistActiveRatings();
       updateView();
-      const count = bundle ? [...ratingsByCut.values()].reduce((sum, map) => sum + map.size, 0) : ratings.size;
-      if (persistenceSucceeded) announce(`Se importaron ${count} calificaciones${bundle ? ` en ${bundle.cuts.length} cortes` : ""}.`);
+      const count = selectedBundle ? [...ratingsByCut.values()].reduce((sum, map) => sum + map.size, 0) : ratings.size;
+      if (persistenceSucceeded) announce(`Se importaron ${count} calificaciones${selectedBundle ? ` en ${selectedBundle.cuts.length} cortes` : ""}.`);
     } catch (error) {
-      announce(error instanceof Error ? error.message : "No se pudieron importar las calificaciones.", true);
+      if (loadGeneration.isCurrentRatingsSelection(request, dataset, bundle, bundleHash, contentHash)) {
+        announce(error instanceof Error ? error.message : "No se pudieron importar las calificaciones.", true);
+      }
     }
   });
   exportButton.addEventListener("click", () => {
