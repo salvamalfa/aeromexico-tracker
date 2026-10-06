@@ -34,8 +34,8 @@ archivo exacto conserva el progreso sin preguntar.
 ## Validación y publicación
 
 El código validado corresponde al commit
-`92ece7da62d4d2eee57a0f15fb6a59d213befea0`. TypeScript pasó con `npm run
-check`; Vitest pasó con 21 archivos y 131 pruebas. La auditoría independiente
+`a9afbe9182dfb2e668e9c018ac15e5234fd1accf`. TypeScript pasó con `npm run
+check`; Vitest pasó con 21 archivos y 134 pruebas. La auditoría independiente
 de las correcciones de conservación de calificaciones no encontró hallazgos.
 El gate utilizó el registro de análisis de 2T26 ya aprobado y compiló con la
 función de chat desactivada. `src.publish.verify site/` confirmó los 123
@@ -72,7 +72,21 @@ sobrescribir contenido dañado al reactivar el guardado. Al exportar durante un
 error, la interfaz confirma la exportación y advierte que el guardado local
 sigue indisponible.
 
-La verificación de estas correcciones pasó con Vitest (21 archivos, 131
+La verificación de estas correcciones pasó con Vitest (21 archivos, 134
 pruebas), TypeScript y el control del límite de 400 líneas por módulo;
-`bootstrap.ts` queda en 399 líneas. Los resultados de CI/Pages y la auditoría
+`bootstrap.ts` queda en 400 líneas. Los resultados de CI/Pages y la auditoría
 independiente corresponden al ciclo actualizado del PR.
+
+## Selecciones de archivo durante una carga
+
+Cada selección de conjunto o paquete identifica su propia carga. Si una
+selección posterior termina antes, los resultados y errores de la anterior
+se descartan. Una importación de calificaciones queda vinculada al archivo
+que estaba cargado al seleccionarla; reemplazar ese archivo invalida la
+importación pendiente. Cambiar de corte dentro del mismo paquete conserva
+la importación de calificaciones, que abarca todos sus cortes.
+
+Las pruebas posponen explícitamente la validación de un paquete y la lectura
+de calificaciones para comprobar ambos órdenes de finalización. También
+comprueban que una carga inválida o un reemplazo cancelado conservan el
+archivo y las calificaciones actuales.
