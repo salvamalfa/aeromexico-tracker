@@ -165,7 +165,8 @@ def test_tool_argument_errors_reach_the_model_instead_of_failing_the_turn(tmp_pa
 def test_failed_turn_books_reported_usage_and_releases_its_hold(tmp_path: Path):
     store = ChatStore(tmp_path / "chat.sqlite3")
     turn, claim = _claimed(store, reserved_tokens=50_000)
-    config = ChatConfig(state_path=tmp_path / "chat.sqlite3")
+    # Paid-provider pricing: the mock provider books usage at zero dollars.
+    config = ChatConfig(state_path=tmp_path / "chat.sqlite3", provider="openai")
     worker = TurnWorker(store, config, FailingProvider(), Snapshot())
     worker._registry = Registry()
     worker._execute_turn(claim)

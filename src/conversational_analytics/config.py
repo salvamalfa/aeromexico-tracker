@@ -181,6 +181,15 @@ class ChatConfig:
         rate = max(self.estimated_input_cost_per_million, self.estimated_output_cost_per_million)
         return reserved_tokens * rate / 1_000_000
 
+    def usage_cost_usd(self, input_tokens: int, output_tokens: int) -> float:
+        """Estimated spend of confirmed usage; the mock provider never spends."""
+        if self.provider != "openai":
+            return 0.0
+        return (
+            input_tokens * self.estimated_input_cost_per_million
+            + output_tokens * self.estimated_output_cost_per_million
+        ) / 1_000_000
+
     def password_fingerprints(self) -> dict[str, str]:
         """Fingerprint per configured user; sessions die when a hash rotates."""
         from .auth import hash_fingerprint

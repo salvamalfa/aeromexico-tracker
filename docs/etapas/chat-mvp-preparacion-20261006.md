@@ -40,9 +40,10 @@ con los límites del PR #88.
   (hallazgo de la revisión de Codex del PR #91). Reserva mínima de 150,000
   tokens sin cambio: Luna US$0.075 cabe en US$1 (unas 215 preguntas al día
   con ~US$0.004 por pregunta); Sol 6.1 (US$1.50) y Astra (US$7.50) requieren
-  subir el tope y, sin hacerlo, el servicio rechaza arrancar.
-  El proveedor simulado reserva tokens pero no dólares: no hace llamadas
-  pagadas y su demo no debe agotar el tope.
+  un tope mayor que su reserva (con exactamente la reserva solo entra la
+  primera pregunta) y, por debajo de ella, el servicio rechaza arrancar.
+  El proveedor simulado reserva tokens pero no dólares y registra su uso a
+  US$0: no hace llamadas pagadas y su demo no debe agotar el tope.
 - **S14 e importador** (`usage_import.py`): `--apply` con filas `unknown` exige
   `--allow-admission-block`, porque cualquier fila desconocida pausa todas las
   admisiones; el dry-run lo indica. S14 permanece en el expediente de la

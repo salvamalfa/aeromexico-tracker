@@ -75,7 +75,8 @@ en Railway. El cupo de tokens sube a 2,000,000 diarios como freno de seguridad.
 Cada turno OpenAI reserva al menos 150,000 tokens, cobrados a la tarifa de
 salida porque Agents API no admite un límite de salida (Luna US$0.075, Sol 6.1
 US$1.50). Con el consumo medido de Luna (~US$0.004 por pregunta) el tope admite
-unas 215 preguntas al día; Sol requiere subir el tope a US$1.50 o más. Data Sharing queda como
+unas 215 preguntas al día. Sol 6.1 requiere un tope mayor que US$1.50: con US$2
+caben unas seis preguntas de ~US$0.076. Data Sharing queda como
 posible ahorro: si el incentivo cubre parte del tráfico, la factura baja, pero
 ningún control de la app depende de él.
 
@@ -110,8 +111,8 @@ No ejecutes procesos externos sin registrar su consumo/reserva y suspender la
 admisión del chat mientras se actualiza su expediente. Si aparecen otros
 proyectos, también deberán compartir este registro antes de considerar el
 límite global como representativo de toda la organización. La comparación ya
-autorizada conserva su presupuesto acumulado separado; el límite diario de
-200,000 es una política del piloto, no una autorización para repetir sus casos.
+autorizada conserva su presupuesto acumulado separado; el tope diario del chat
+(en dólares) es una política del piloto, no una autorización para repetir sus casos.
 
 La autorización ya vigente de hasta **US$10 para la comparación pagada** se
 mantiene bajo las tarifas API normales, sin depender del incentivo y sin pedir

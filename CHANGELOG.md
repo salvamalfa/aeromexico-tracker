@@ -14,6 +14,11 @@ versión semántica, las entradas van por fecha.
   del chat (`openai`, `fastapi`, `uvicorn`); sus primeros PRs (#93–#95) se
   cerraron sin integrar.
 - Estado actualizado en `README.md` y `docs/chat/README.md`.
+- Correcciones de una revisión adversarial independiente: el modo simulado
+  registra su uso a US$0; `import-usage` solo exige `--allow-admission-block`
+  para filas `unknown` nuevas; la guía aclara que Sol requiere un tope mayor que
+  su reserva, el commit previo de `web/.env.production` antes de `src.publish`
+  y la prueba de la clave de login detrás de Railway.
 
 ## 2026-10-06 · Pruebas más rápidas y CI más estricta
 

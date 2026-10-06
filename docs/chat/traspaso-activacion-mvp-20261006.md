@@ -34,8 +34,10 @@ siguen vigentes.
 - **Tope diario aprobado de US$1** por usuario y global
   (`CHAT_DAILY_COST_BUDGET_USER_USD`, `CHAT_DAILY_COST_BUDGET_GLOBAL_USD`).
   - La reserva mínima se cobra a la tarifa de salida: Luna US$0.075, unas 215
-    preguntas al día; Sol 6.1 requiere un tope de al menos US$1.50 y Astra
-    más de US$7.50.
+    preguntas al día. Sol 6.1 y Astra necesitan un tope mayor que su reserva
+    (US$1.50 y US$7.50): la admisión exige gasto del día + reservas + reserva
+    nueva ≤ tope, así que un tope igual a la reserva solo admite la primera
+    pregunta. Con Sol, US$2 alcanza para unas seis preguntas de ~US$0.076.
   - Si se propone Sol o Astra, plantea el tope necesario al dueño junto con
     el modelo.
 - **Respaldo de gasto:** el dueño cargará crédito prepagado de US$10–15 en
@@ -61,11 +63,27 @@ siguen vigentes.
    pregunta, tope necesario y riesgos. Espera su elección explícita.
 4. **Activación:** sigue `docs/chat/railway.md`, sección «Activación del MVP»:
    - variables de Railway, `CHAT_ALLOWED_ORIGINS` y `/api/chat/health`;
-   - `VITE_CHAT_ENABLED=true`, `src.publish` con el registro ya aprobado,
-     `src.publish.verify site/` y PR con `site/`.
+   - `VITE_CHAT_ENABLED=true` con commit previo (el gate rechaza `web/` sin
+     commit), sin `VITE_CHAT_*` en el entorno, `src.publish` con el registro
+     ya aprobado, `src.publish.verify site/` y PR con `site/`.
+   - Antes de abrir el chat, comprueba la clave del límite de login detrás
+     de Railway con la prueba booleana de `docs/chat/railway.md` (sin
+     registrar IPs): confirma que un fallo de login guarda un `client` fuera
+     de `100.64.0.0/10`.
 5. **Prueba final:** login y una pregunta desde Pages y desde el teléfono con
    la computadora apagada. **Rollback:** `CHAT_ADMISSION_ENABLED=false` en
    Railway.
+
+## Holdout y versiones
+
+El holdout congelado (`tests/fixtures/chat_evals/holdout.json`) conserva
+`data_version de3c4d…` y el `semantic_version` previo a la aprobación del
+catálogo (#87). Con la regla de versión vigente, los datos de ese corte dan
+`d9c4e56d04ad…`, idéntico al snapshot actual (mismos archivos `data/`,
+contratos y `analysis_manifest`). El catálogo sí cambió (`review_status`).
+Una evaluación en vivo nueva debe fijar ambas versiones vigentes en una copia
+o un fixture nuevo, documentando la equivalencia de datos; no reescribas el
+holdout histórico.
 
 ## Límites
 
