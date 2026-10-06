@@ -101,23 +101,22 @@ un monitor externo que despierte la app durante el periodo de inactividad.
 Uvicorn conserva `proxy_headers=False`; la aplicación solo usa
 `X-Forwarded-For` para el límite de intentos de login cuando el peer directo es
 confiable. El launcher fija `CHAT_TRUSTED_PROXY=100.64.0.0/10`, basado en el
-rango compartido RFC 6598, pero todavía no se ha confirmado desde un deploy sano
-que Railway conecte el contenedor desde ese rango ni cómo forma o reemplaza la
-cadena `X-Forwarded-For`. Mientras no se verifique, esto es una hipótesis de
-configuración, no un contrato observado.
+rango compartido RFC 6598. En el despliegue sano actual, cuatro solicitudes ya
+registradas por Uvicorn (health, preflight, petición sin autenticar y origen
+inválido) vieron un peer dentro de ese CIDR. Es evidencia de este despliegue,
+no un contrato permanente de Railway. Aún no se verificó cómo forma o reemplaza
+Railway la cadena `X-Forwarded-For` ni cuál dirección selecciona la aplicación
+para limitar intentos de login.
 
-Después del primer deploy sano, comprueba el peer ASGI (`request.client.host`)
-desde el log de acceso de Uvicorn o una lectura temporal que emita solo el
-resultado booleano `peer_in_trusted_cidr`; nunca registres el valor de IP. Los
-logs HTTP de Railway tienen un campo `srcIp`, pero su esquema no garantiza que
-sea el peer directo que ve ASGI, así que no lo uses como prueba del CIDR. Si no
-hay una lectura ASGI segura disponible, deja el peer como no verificado. Para
-comprobar la selección del cliente reenviado, usa un entorno o base de prueba y
-confirma que el `client` guardado por un único fallo de login queda fuera de
-`100.64.0.0/10`; muestra solo un booleano, nunca la IP ni el encabezado
-completo. No consumas intentos fallidos en el login real para esta prueba. Si
-se activa una CDN, repite ambas comprobaciones en aislamiento y no amplíes los
-rangos confiables sin evidencia del peer.
+La comprobación del peer ASGI (`request.client.host`) se hizo solo como un
+resultado booleano para cuatro solicitudes ya registradas; las cuatro quedaron
+dentro de `100.64.0.0/10`. No se guardaron IPs ni encabezados. Esto no demuestra
+la selección del cliente reenviado. Para verificar esa selección, usa un
+entorno o base de prueba y confirma que el `client` guardado por un único fallo
+de login queda fuera del CIDR; muestra solo un booleano, nunca la IP ni el
+encabezado completo. No consumas intentos fallidos en el login real para esta
+prueba. Si se activa una CDN, repite ambas comprobaciones en aislamiento y no
+amplíes los rangos confiables sin evidencia del peer.
 
 `CHAT_TRUSTED_PROXY` acepta IPs sueltas o redes CIDR solo dentro de rangos
 loopback, privados o compartidos; rechaza rangos públicos.
@@ -150,12 +149,28 @@ precios, consumo, presupuesto y credenciales en una etapa posterior.
 
 ## Verificación después del deploy
 
-Confirma que el deploy responde `200` en `/api/chat/health`, que el login desde
-el origen HTTPS configurado funciona, y que conversaciones siguen disponibles
-después de reiniciar una vez la instancia. Comprueba en los logs solo el estado
-del worker y los errores de arranque; no copies sesiones, hashes ni contenido
-privado a tickets. Railway debe construir desde el Dockerfile de este repo; no
-selecciones Railpack ni un comando que invoque el CLI local loopback-only.
+El despliegue actual responde `200` por HTTPS en `/api/chat/health` y al
+preflight desde Pages. Una petición de conversaciones sin autenticar recibió
+`401` con CORS para el origen permitido; un origen no permitido recibió `403`.
+El servicio informa autenticación `password`, proveedor `mock` y admisión
+apagada. Estas comprobaciones no hicieron login del dueño ni crearon una
+conversación. La autenticación del dueño, persistencia del volumen tras
+reiniciar Railway y acceso desde teléfono con la computadora apagada siguen
+pendientes. El smoke de la imagen local con el runtime de PR #84, anterior a la
+última corrección del adaptador OpenAI, usó contraseña sintética y verificó
+login, historial, permisos y persistencia tras reiniciar el contenedor local,
+sin red ni llamadas al proveedor; no sustituye las pruebas remotas. Comprueba
+en logs solo estado del worker y errores de arranque; no copies sesiones,
+hashes ni contenido privado a tickets. Railway debe construir desde el
+Dockerfile de este repo; no selecciones Railpack ni el CLI local loopback-only.
+
+PR #83 eliminó `railway.json` y la dependencia de Config as Code para servicios
+nuevos. Su primer intento de build falló con una validación genérica de
+Dockerfile y sin información que permita identificar la causa. PR #84 corrigió
+el Dockerfile y el runtime; después de integrarlo se quitó del servicio el pin
+de fuente antiguo para que siguiera la rama `master`, y el despliegue saludable
+posterior usó la fuente actual. No atribuyas el fallo anterior a una causa
+específica: no hay evidencia de ella.
 
 Referencias oficiales: [Config as Code](https://docs.railway.com/config-as-code)
 (deprecado; no disponible para servicios nuevos), [Dockerfiles

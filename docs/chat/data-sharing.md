@@ -68,27 +68,38 @@ durable de reintentos. El uso confirmado se contabiliza en la fecha UTC de
 confirmación, como estimación operativa; esa fecha puede diferir de la fecha de
 solicitud o de la facturación del proveedor.
 
-**Política implementada para el piloto:** los valores predeterminados son
-200,000 tokens por día tanto por usuario como para el total global. Cada turno
-OpenAI reserva **al menos 150,000 tokens**; conserva una estimación mayor cuando
-el historial y los límites de herramientas la requieren. Quedan 50 mil de
-margen respecto al cupo principal. La reserva no es un máximo duro de API ni
+**Configuración actual de referencia:** el proveedor OpenAI sigue apagado. Los
+valores configurados como referencia son 200,000 tokens por día tanto por
+usuario como para el total global. Cada turno OpenAI reservaría **al menos
+150,000 tokens**; conserva una estimación mayor cuando
+el historial y los límites de herramientas la requieren. El límite operativo
+de 200,000 queda 50,000 por debajo de la cuota principal publicada de 250,000;
+esa diferencia entre límites no es saldo seguro ni reserva utilizable. La
+reserva no es un máximo duro de API ni
 una garantía de gratuidad. El proveedor simulado conserva su estimación local
 para permitir la demo sin consumo OpenAI.
 
-**Capacidad efectiva con los valores predeterminados.** La admisión exige que
+**Capacidad matemática con esos valores de referencia.** Si se habilitara el
+proveedor, la admisión exigiría que
 consumo del día + reservas pendientes + reserva nueva no rebase 200,000. Con la
 media medida de ~40,000 tokens por pregunta de un turno
 ([validación real](../etapas/airline-tracker-validacion-real-20261004.md)), la
 primera pregunta entra (0 + 150,000) y la segunda también (40,000 + 150,000).
 La tercera se rechaza (80,000 + 150,000 > 200,000) aunque el consumo real
 habría sido ~120,000. El piloto admite así **unas dos preguntas al día**, o
-una si el historial encarece los turnos. Esto protege el tope de 200,000 frente
-al peor caso de un turno, pero deja sin usar la mayor parte del cupo de
-Data Sharing. Subir el número de preguntas exige bajar
-`CHAT_MINIMUM_TURN_RESERVATION_TOKENS` con evidencia del peor turno observado,
-o aceptar que el consumo pueda rebasar el cupo bonificado. Es una decisión del
-dueño, no un ajuste automático.
+una si el historial encarece los turnos. El valor de 150,000 es solo un control
+operativo de admisión y no una garantía de quedar bajo 200,000. Tampoco demuestra
+que sea suficiente para los turnos reales. La [comparación terminal](../etapas/airline-tracker-comparacion-final-20261004.md)
+midió un máximo Luna conocido de 128,309 tokens y la [propuesta revisable de
+reserva](../etapas/airline-tracker-reserva-propuesta-20261004.md) sugiere 170,000
+como piso metodológico con margen; con 200,000 diarios y un consumo ilustrativo
+de 40,000, ese piso admite una pregunta típica. Por tanto, la configuración
+actual de 150,000 no es una recomendación para activar OpenAI ni para bajar la
+reserva con el fin de aumentar preguntas. Más capacidad requiere una revisión
+del dueño con consumo medido, costos normales y reservas pendientes; no se
+ajusta automáticamente ni se asume que Data Sharing cubrirá todo el uso. La
+[verificación de elegibilidad y cobertura](data-sharing-verification.md)
+describe los límites de la oferta.
 
 Los límites se configuran con `CHAT_DAILY_TOKEN_BUDGET_USER`,
 `CHAT_DAILY_TOKEN_BUDGET_GLOBAL` y `CHAT_MINIMUM_TURN_RESERVATION_TOKENS`.
