@@ -43,6 +43,47 @@ function sourceDataset() {
   };
 }
 
+async function bundleFixture(bundleId = "cache-review") {
+  const dataset = sourceDataset();
+  const normalized = parseDataset(dataset);
+  const datasetJson = `${JSON.stringify(normalized, null, 2)}\n`;
+  const datasetBytes = new TextEncoder().encode(datasetJson);
+  const datasetHash = await sha256Hex(datasetBytes.slice().buffer as ArrayBuffer);
+  const missing = dataset.questions.flatMap((question) => question.candidates
+    .filter((candidate) => candidate.answer === null)
+    .map((candidate) => ({ question_id: question.id, alias: candidate.alias, status: "not_attempted" })));
+  const cuts = ["first", "second"].map((cut_id, index) => ({
+    cut_id, version: String(index + 1), label: cut_id, disposition: "complete",
+    source_sha256: dataset.dataset_id, dataset_sha256: datasetHash, dataset_json: datasetJson,
+    slot_dispositions: missing,
+  }));
+  const text = JSON.stringify({
+    schema_version: 1, bundle_id: bundleId, bundle_version: "1", title: bundleId, cuts,
+  });
+  const bytes = new TextEncoder().encode(text);
+  const bundleHash = await sha256Hex(bytes.slice().buffer as ArrayBuffer);
+  return {
+    dataset, datasetHash, bundleHash,
+    file: { size: bytes.byteLength, arrayBuffer: async () => bytes.buffer } as File,
+    grades: (first: unknown[], second: unknown[]) => ({
+      schema_version: 2, bundle_id: bundleId, bundle_version: "1", bundle_content_sha256: bundleHash,
+      cuts: ["first", "second"].map((cut_id, index) => ({
+        cut_id, version: String(index + 1), dataset_id: dataset.dataset_id, dataset_sha256: datasetHash,
+        ratings: index === 0 ? first : second,
+      })),
+    }),
+  };
+}
+
+function jsonFile(value: unknown): File {
+  const bytes = new TextEncoder().encode(JSON.stringify(value));
+  return { size: bytes.byteLength, arrayBuffer: async () => bytes.buffer } as File;
+}
+
+function storedRatings(datasetId: string, datasetHash: string, ratings: unknown[]): string {
+  return JSON.stringify({ schema_version: 1, dataset_id: datasetId, dataset_content_sha256: datasetHash, ratings });
+}
+
 afterEach(() => {
   document.body.replaceChildren();
   window.localStorage.clear();
@@ -522,5 +563,155 @@ describe("review page bootstrap", () => {
     expect(document.querySelector<HTMLOutputElement>("#progress-count")?.value).toBe("1 / 74");
     expect(document.querySelector<HTMLButtonElement>("#export-button")?.disabled).toBe(false);
     expect(document.querySelector<HTMLElement>("#load-status")?.dataset.error).toBe("true");
+  });
+
+  it("merges edited keys over saved bundle grades and persists every edited cut", async () => {
+    document.body.innerHTML = reviewShell();
+    vi.stubGlobal("crypto", webcrypto as unknown as Crypto);
+    const fixture = await bundleFixture();
+    window.localStorage.setItem(bundleStorageKey(fixture.bundleHash, "first", fixture.datasetHash),
+      storedRatings(fixture.dataset.dataset_id, fixture.datasetHash, [
+        { question_id: "Q01", alias: "A", status: "problem", notes: "older value" },
+        { question_id: "Q02", alias: "B", status: "correct", notes: "untouched value" },
+      ]));
+    bootstrapReview(document, window.localStorage);
+    const input = document.querySelector<HTMLInputElement>("#dataset-file")!;
+    Object.defineProperty(input, "files", { configurable: true, value: [fixture.file] });
+    input.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(document.querySelector("#cut-controls")?.hasAttribute("hidden")).toBe(false));
+
+    document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="correct"]')?.click();
+    const selector = document.querySelector<HTMLSelectElement>("#cut-select")!;
+    selector.value = "second";
+    selector.dispatchEvent(new Event("change"));
+    document.querySelector<HTMLInputElement>('input[name="rating-Q01-B"][value="problem"]')?.click();
+    document.querySelector<HTMLInputElement>("#cache-option")!.click();
+
+    const first = JSON.parse(window.localStorage.getItem(bundleStorageKey(fixture.bundleHash, "first", fixture.datasetHash))!).ratings;
+    const second = JSON.parse(window.localStorage.getItem(bundleStorageKey(fixture.bundleHash, "second", fixture.datasetHash))!).ratings;
+    expect(first).toEqual([
+      { question_id: "Q01", alias: "A", status: "correct", notes: "" },
+      { question_id: "Q02", alias: "B", status: "correct", notes: "untouched value" },
+    ]);
+    expect(second).toEqual([{ question_id: "Q01", alias: "B", status: "problem", notes: "" }]);
+    expect(document.querySelector<HTMLElement>("#load-status")?.textContent).toContain("Guardado local activado");
+  });
+
+  it("treats imported bundle grades as authoritative across cuts when caching is enabled later", async () => {
+    document.body.innerHTML = reviewShell();
+    vi.stubGlobal("crypto", webcrypto as unknown as Crypto);
+    const fixture = await bundleFixture("authoritative-cache");
+    const old = [{ question_id: "Q01", alias: "A", status: "problem", notes: "old saved grade" }];
+    for (const cutId of ["first", "second"]) {
+      window.localStorage.setItem(bundleStorageKey(fixture.bundleHash, cutId, fixture.datasetHash),
+        storedRatings(fixture.dataset.dataset_id, fixture.datasetHash, old));
+    }
+    bootstrapReview(document, window.localStorage);
+    const datasetInput = document.querySelector<HTMLInputElement>("#dataset-file")!;
+    Object.defineProperty(datasetInput, "files", { configurable: true, value: [fixture.file] });
+    datasetInput.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(document.querySelector("#cut-controls")?.hasAttribute("hidden")).toBe(false));
+
+    const ratingsInput = document.querySelector<HTMLInputElement>("#ratings-file")!;
+    Object.defineProperty(ratingsInput, "files", { configurable: true, value: [jsonFile(fixture.grades([], []))] });
+    ratingsInput.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(document.querySelector<HTMLElement>("#load-status")?.textContent).toContain("Se importaron 0 calificaciones"));
+    document.querySelector<HTMLInputElement>("#cache-option")!.click();
+
+    for (const cutId of ["first", "second"]) {
+      const saved = JSON.parse(window.localStorage.getItem(bundleStorageKey(fixture.bundleHash, cutId, fixture.datasetHash))!).ratings;
+      expect(saved).toEqual([]);
+    }
+    expect(window.localStorage.length).toBe(2);
+  });
+
+  it("keeps bundle cache-read warnings visible and never overwrites a failed read", async () => {
+    document.body.innerHTML = reviewShell();
+    vi.stubGlobal("crypto", webcrypto as unknown as Crypto);
+    const fixture = await bundleFixture("corrupt-cache");
+    const corrupt = "{corrupt saved grades";
+    const key = bundleStorageKey(fixture.bundleHash, "first", fixture.datasetHash);
+    window.localStorage.setItem(key, corrupt);
+    bootstrapReview(document, window.localStorage);
+    document.querySelector<HTMLInputElement>("#cache-option")!.checked = true;
+    const input = document.querySelector<HTMLInputElement>("#dataset-file")!;
+    Object.defineProperty(input, "files", { configurable: true, value: [fixture.file] });
+    input.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(document.querySelector("#cut-controls")?.hasAttribute("hidden")).toBe(false));
+
+    const status = document.querySelector<HTMLElement>("#load-status")!;
+    expect(status.textContent).toContain("No se pudo recuperar el guardado anterior");
+    expect(status.dataset.error).toBe("true");
+    document.querySelector<HTMLInputElement>("#cache-option")!.click();
+    document.querySelector<HTMLInputElement>("#cache-option")!.click();
+    expect(status.textContent).toContain("No se pudo leer el guardado local");
+    expect(status.dataset.error).toBe("true");
+    expect(window.localStorage.getItem(key)).toBe(corrupt);
+  });
+
+  it("keeps a later-cut cache warning visible while other cuts remain editable and exportable", async () => {
+    document.body.innerHTML = reviewShell();
+    vi.stubGlobal("crypto", webcrypto as unknown as Crypto);
+    const fixture = await bundleFixture("later-cut-failure");
+    const corrupt = "{corrupt second cut";
+    const failedKey = bundleStorageKey(fixture.bundleHash, "second", fixture.datasetHash);
+    window.localStorage.setItem(failedKey, corrupt);
+    bootstrapReview(document, window.localStorage);
+    document.querySelector<HTMLInputElement>("#cache-option")!.checked = true;
+    const input = document.querySelector<HTMLInputElement>("#dataset-file")!;
+    Object.defineProperty(input, "files", { configurable: true, value: [fixture.file] });
+    input.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(document.querySelector("#cut-controls")?.hasAttribute("hidden")).toBe(false));
+
+    const selector = document.querySelector<HTMLSelectElement>("#cut-select")!;
+    selector.value = "second";
+    selector.dispatchEvent(new Event("change"));
+    const status = document.querySelector<HTMLElement>("#load-status")!;
+    expect(status.textContent).toContain("No se pudo recuperar el guardado anterior");
+    selector.value = "first";
+    selector.dispatchEvent(new Event("change"));
+    document.querySelector<HTMLInputElement>('input[name="rating-Q01-A"][value="correct"]')?.click();
+
+    expect(status.textContent).toContain("No se pudo recuperar el guardado anterior");
+    expect(status.dataset.error).toBe("true");
+    expect(document.querySelector<HTMLOutputElement>("#progress-count")?.value).toBe("1 / 74");
+    expect(document.querySelector<HTMLButtonElement>("#export-button")?.disabled).toBe(false);
+    expect(window.localStorage.getItem(failedKey)).toBe(corrupt);
+
+    const createDescriptor = Object.getOwnPropertyDescriptor(window.URL, "createObjectURL");
+    const revokeDescriptor = Object.getOwnPropertyDescriptor(window.URL, "revokeObjectURL");
+    Object.defineProperty(window.URL, "createObjectURL", { configurable: true, value: () => "blob:recovery" });
+    Object.defineProperty(window.URL, "revokeObjectURL", { configurable: true, value: () => {} });
+    const anchorClick = vi.spyOn(window.HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    document.querySelector<HTMLButtonElement>("#export-button")?.click();
+    expect(status.textContent).toContain("Se exportaron");
+    expect(status.textContent).toContain("El guardado local sigue indisponible");
+    await new Promise((resolve) => window.setTimeout(resolve, 1));
+    anchorClick.mockRestore();
+    if (createDescriptor) Object.defineProperty(window.URL, "createObjectURL", createDescriptor);
+    else delete (window.URL as unknown as { createObjectURL?: unknown }).createObjectURL;
+    if (revokeDescriptor) Object.defineProperty(window.URL, "revokeObjectURL", revokeDescriptor);
+    else delete (window.URL as unknown as { revokeObjectURL?: unknown }).revokeObjectURL;
+  });
+
+  it("keeps legacy cache-read warnings visible after loading the dataset", async () => {
+    document.body.innerHTML = reviewShell();
+    vi.stubGlobal("crypto", webcrypto as unknown as Crypto);
+    const dataset = sourceDataset();
+    const bytes = new TextEncoder().encode(JSON.stringify(dataset));
+    const hash = await sha256Hex(bytes.slice().buffer as ArrayBuffer);
+    const key = storageKey(dataset.dataset_id, hash);
+    const corrupt = "{corrupt legacy grades";
+    window.localStorage.setItem(key, corrupt);
+    bootstrapReview(document, window.localStorage);
+    document.querySelector<HTMLInputElement>("#cache-option")!.checked = true;
+    const input = document.querySelector<HTMLInputElement>("#dataset-file")!;
+    Object.defineProperty(input, "files", { configurable: true, value: [{ size: bytes.byteLength, arrayBuffer: async () => bytes.buffer } as File] });
+    input.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(document.querySelector("#review-workspace")?.hasAttribute("hidden")).toBe(false));
+
+    expect(document.querySelector<HTMLElement>("#load-status")?.textContent).toContain("No se pudo recuperar el guardado anterior");
+    expect(document.querySelector<HTMLElement>("#load-status")?.dataset.error).toBe("true");
+    expect(window.localStorage.getItem(key)).toBe(corrupt);
   });
 });

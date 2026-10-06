@@ -55,3 +55,24 @@ No hubo errores de consola, página o assets, ni solicitudes que no fueran GET.
 La verificación pública se realiza después del éxito del workflow de Pages.
 El cambio no incluye respuestas privadas, calificaciones humanas ni una
 selección de modelo.
+
+## Correcciones posteriores de caché para el PR 90
+
+La revisión posterior encontró casos adicionales al activar el guardado local
+después de trabajar con él desactivado. Ahora las ediciones por pregunta se
+combinan sobre las calificaciones guardadas de cada corte; las calificaciones
+previas no editadas se conservan y se guardan todos los cortes, incluidos los
+inactivos. Una importación de calificaciones sigue siendo autoritativa: los
+cortes vacíos reemplazan y limpian el caché anterior.
+
+Un error al leer o escribir el caché conserva el aviso mientras el guardado
+siga activado y mantiene las calificaciones en memoria y la exportación
+disponibles. Una lectura fallida no marca el corte como cargado ni permite
+sobrescribir contenido dañado al reactivar el guardado. Al exportar durante un
+error, la interfaz confirma la exportación y advierte que el guardado local
+sigue indisponible.
+
+La verificación de estas correcciones pasó con Vitest (21 archivos, 131
+pruebas), TypeScript y el control del límite de 400 líneas por módulo;
+`bootstrap.ts` queda en 399 líneas. Los resultados de CI/Pages y la auditoría
+independiente corresponden al ciclo actualizado del PR.

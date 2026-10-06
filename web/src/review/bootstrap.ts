@@ -4,8 +4,8 @@ import { bundleStorageKey, loadRatings, saveRatings } from "./storage";
 import { renderNavigation, renderProgress, renderQuestion } from "./render";
 import { type QuestionFilter, visibleQuestionIndices } from "./filters";
 import { parseDataset, parseRatings, ratingsFile } from "./validation";
-
-const MAX_FILE_BYTES = 10 * 1024 * 1024;
+import { loadCutRatings, loadMissingBundleRatings, persistBundleRatings } from "./cache";
+import { downloadJson, isRecord, readJsonFile } from "./files";
 
 export async function sha256Hex(bytes: ArrayBuffer, subtle: SubtleCrypto = crypto.subtle): Promise<string> {
   const digest = await subtle.digest("SHA-256", bytes);
@@ -16,39 +16,6 @@ function requireNode<T extends Element>(root: ParentNode, selector: string): T {
   const node = root.querySelector<T>(selector);
   if (!node) throw new Error(`Falta el elemento requerido: ${selector}`);
   return node;
-}
-
-async function readJsonFile(file: File): Promise<{ value: unknown; contentHash: string }> {
-  if (file.size > MAX_FILE_BYTES) throw new Error("El archivo supera el límite de 10 MB.");
-  if (!crypto.subtle) throw new Error("Este navegador no permite verificar el archivo. Abre la página por HTTPS o localhost.");
-  let bytes: ArrayBuffer;
-  try {
-    bytes = await file.arrayBuffer();
-  } catch {
-    throw new Error("No se pudo leer el archivo.");
-  }
-  const contentHash = await sha256Hex(bytes);
-  try {
-    return { value: JSON.parse(new TextDecoder().decode(bytes)) as unknown, contentHash };
-  } catch {
-    throw new Error("El archivo no contiene JSON válido.");
-  }
-}
-
-function downloadJson(value: unknown, filename: string, view: Window): void {
-  const blob = new Blob([`${JSON.stringify(value, null, 2)}\n`], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.ownerDocument.body.append(anchor);
-  anchor.click();
-  anchor.remove();
-  view.setTimeout(() => URL.revokeObjectURL(url), 0);
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 export function bootstrapReview(doc: Document = document, storageSource?: Storage | (() => Storage)): void {
@@ -88,11 +55,20 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
   let legacyCacheLoaded = false;
   let legacyRatingsAuthoritative = false;
   const modifiedRatingKeys = new Set<string>();
+  const modifiedRatingsByCut = new Map<string, Set<string>>();
   let canPersist = true;
+  let cacheFailureWarning = false;
   let selectedIndex = 0;
   const visible = () => dataset ? visibleQuestionIndices(dataset, ratings, filter.value as QuestionFilter) : [];
 
   const announce = (message: string, error = false) => {
+    if (!error && cacheOption.checked && cacheFailureWarning) {
+      if (message.startsWith("Se exportaron")) {
+        loadStatus.textContent = `${message} El guardado local sigue indisponible; conserva este archivo antes de salir.`;
+        loadStatus.setAttribute("data-error", "true");
+      }
+      return;
+    }
     loadStatus.textContent = message;
     loadStatus.setAttribute("data-error", String(error));
   };
@@ -122,7 +98,7 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
     try {
       if (bundle && activeCut) {
         getStorage().setItem(bundleStorageKey(bundleHash, activeCut.cut_id, activeCut.dataset_sha256),
-          JSON.stringify(ratingsFileForCut(activeCut, ratings)));
+          JSON.stringify(ratingsFile(activeCut.dataset, activeCut.dataset_sha256, ratings)));
       } else {
         legacyCacheLoaded = true;
         saveRatings(dataset, contentHash, ratings, getStorage());
@@ -130,6 +106,7 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
       return true;
     } catch {
       canPersist = false;
+      cacheFailureWarning = true;
       announce("No se pudo guardar en este navegador. Exporta las calificaciones antes de salir.", true);
       return false;
     }
@@ -138,15 +115,11 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
     if (!cacheOption.checked || !bundle) return true;
     if (!canPersist) return false;
     try {
-      const storage = getStorage();
-      for (const cut of bundle.cuts) {
-        const values = ratingsByCut.get(cut.cut_id) ?? new Map();
-        storage.setItem(bundleStorageKey(bundleHash, cut.cut_id, cut.dataset_sha256),
-          JSON.stringify(ratingsFileForCut(cut, values)));
-      }
+      persistBundleRatings(bundle, bundleHash, ratingsByCut, getStorage());
       return true;
     } catch {
       canPersist = false;
+      cacheFailureWarning = true;
       announce("No se pudieron guardar todos los cortes en este navegador. Las calificaciones siguen en memoria; exporta el paquete antes de salir.", true);
       return false;
     }
@@ -186,19 +159,13 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
         else ratings.set(key, { question_id: questionId, alias, status, notes });
         if (bundle && activeCut) {
           ratingsByCut.set(activeCut.cut_id, ratings);
-          loadedBundleCuts.add(activeCut.cut_id);
+          const modified = modifiedRatingsByCut.get(activeCut.cut_id) ?? new Set<string>();
+          modified.add(key);
+          modifiedRatingsByCut.set(activeCut.cut_id, modified);
         }
         persistActiveRatings();
         updateSidebar();
       }, activeSlotStates());
-  };
-  const loadBundleCutRatings = (cut: ReviewCut): RatingMap => {
-    const key = bundleStorageKey(bundleHash, cut.cut_id, cut.dataset_sha256);
-    const raw = getStorage().getItem(key);
-    if (!raw) return new Map();
-    let value: unknown;
-    try { value = JSON.parse(raw) as unknown; } catch { throw new Error("El guardado local está dañado; no se modificó."); }
-    return parseRatings(value, cut.dataset, cut.dataset_sha256);
   };
   const chooseCut = (cutId: string, announceSelection = false) => {
     if (!bundle) return;
@@ -210,22 +177,28 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
     ratingsByCut.set(selected.cut_id, ratings);
     selectedIndex = 0;
     filter.value = "all";
+    let cacheReadFailed = false;
     const missingCounts = { no_answer: 0, failed: 0, held: 0, not_attempted: 0 };
     for (const slot of selected.slot_dispositions) missingCounts[slot.status] += 1;
     cutStatus.textContent = `${selected.disposition === "terminal" ? "Corte terminal" : selected.disposition === "complete" ? "Corte completo" : "Corte parcial"} · ${selected.dataset.questions.length} preguntas · ${selected.dataset.available_count} respuestas disponibles · ${missingCounts.no_answer} sin respuesta, ${missingCounts.failed} con error, ${missingCounts.held} en espera, ${missingCounts.not_attempted} no intentadas.`;
     if (cacheOption.checked && canPersist && !loadedBundleCuts.has(selected.cut_id)) {
-      loadedBundleCuts.add(selected.cut_id);
       try {
-        const stored = loadBundleCutRatings(selected);
+        const stored = loadCutRatings(selected, bundleHash, getStorage());
         if (stored.size || !ratings.size) ratings = stored;
         ratingsByCut.set(selected.cut_id, ratings);
+        loadedBundleCuts.add(selected.cut_id);
       } catch {
         canPersist = false;
+        cacheFailureWarning = true;
+        cacheReadFailed = true;
         announce("No se pudo recuperar el guardado anterior. Se conserva el trabajo en memoria y el paquete puede exportarse.", true);
       }
     }
     updateView();
-    if (announceSelection) announce(`Corte seleccionado: ${selected.label}. Su progreso está separado de los demás cortes.`);
+    if (announceSelection && !cacheReadFailed && !(cacheOption.checked && cacheFailureWarning)) {
+      announce(`Corte seleccionado: ${selected.label}. Su progreso está separado de los demás cortes.`);
+    }
+    return cacheReadFailed;
   };
   const moveQuestion = (delta: number, focus = false) => {
     if (!dataset) return;
@@ -247,17 +220,10 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
     }
     try {
       if (bundle) {
-        const nextRatingsByCut = new Map(ratingsByCut);
-        const newlyLoaded = new Set<string>();
-        for (const cut of bundle.cuts) {
-          if (loadedBundleCuts.has(cut.cut_id)) continue;
-          const stored = loadBundleCutRatings(cut);
-          const current = nextRatingsByCut.get(cut.cut_id) ?? new Map();
-          nextRatingsByCut.set(cut.cut_id, stored.size || current.size === 0 ? stored : current);
-          newlyLoaded.add(cut.cut_id);
-        }
-        ratingsByCut = nextRatingsByCut;
-        newlyLoaded.forEach((cutId) => loadedBundleCuts.add(cutId));
+        const prepared = loadMissingBundleRatings(bundle, bundleHash, ratingsByCut, loadedBundleCuts,
+          modifiedRatingsByCut, getStorage());
+        ratingsByCut = prepared.ratingsByCut;
+        loadedBundleCuts = prepared.loadedCuts;
         if (activeCut) ratings = ratingsByCut.get(activeCut.cut_id) ?? new Map();
       } else {
         if (!legacyCacheLoaded) {
@@ -275,11 +241,15 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
         }
       }
       canPersist = true;
-      const persisted = persistActiveRatings();
+      const persisted = bundle ? persistAllBundleRatings() : persistActiveRatings();
       updateView();
-      if (persisted) announce("Guardado local activado. Se usa una clave vinculada al hash exacto del archivo y, para paquetes, al corte.");
+      if (persisted) {
+        cacheFailureWarning = false;
+        announce("Guardado local activado. Se usa una clave vinculada al hash exacto del archivo y, para paquetes, al corte.");
+      }
     } catch {
       canPersist = false;
+      cacheFailureWarning = true;
       announce("No se pudo leer el guardado local; se conserva sin cambios. Puedes exportar el progreso.", true);
     }
   });
@@ -289,7 +259,8 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
     datasetInput.value = "";
     if (!file) return;
     try {
-      const imported = await readJsonFile(file);
+      let cacheReadFailed = false;
+      const imported = await readJsonFile(file, sha256Hex);
       if (isRecord(imported.value) && "cuts" in imported.value) {
         const parsedBundle = await validateBundle(imported.value, async (bytes) =>
           sha256Hex(bytes.slice().buffer as ArrayBuffer));
@@ -304,8 +275,10 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
         legacyCacheLoaded = false;
         legacyRatingsAuthoritative = false;
         modifiedRatingKeys.clear();
+        modifiedRatingsByCut.clear();
         bundle.cuts.forEach((cut) => ratingsByCut.set(cut.cut_id, new Map()));
         canPersist = true;
+        cacheFailureWarning = false;
         bundleTitle.textContent = `${bundle.title} · versión ${bundle.bundle_version}`;
         cutSelect.replaceChildren(...bundle.cuts.map((cut) => {
           const option = doc.createElement("option");
@@ -314,11 +287,13 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
           return option;
         }));
         cutControls.hidden = false;
-        chooseCut(bundle.cuts[0].cut_id);
+        const cacheReadFailed = chooseCut(bundle.cuts[0].cut_id);
         importButton.disabled = false;
         exportButton.disabled = false;
         workspace.hidden = false;
-        announce(`Paquete cargado: ${bundle.cuts.length} cortes versionados. El hash del paquete y cada corte se verificaron.`);
+        if (!cacheReadFailed && !(cacheOption.checked && cacheFailureWarning)) {
+          announce(`Paquete cargado: ${bundle.cuts.length} cortes versionados. El hash del paquete y cada corte se verificaron.`);
+        }
       } else {
         const parsedDataset = parseDataset(imported.value);
         if (!mayReplaceCurrentImport(imported.contentHash, false)) return;
@@ -333,17 +308,26 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
         legacyCacheLoaded = false;
         legacyRatingsAuthoritative = false;
         modifiedRatingKeys.clear();
+        modifiedRatingsByCut.clear();
+        cacheFailureWarning = false;
         cutControls.hidden = true;
         if (cacheOption.checked) {
           try { ratings = loadRatings(dataset, contentHash, getStorage()); canPersist = true; legacyCacheLoaded = true; }
-          catch { canPersist = false; announce("No se pudo recuperar el guardado anterior. Se conserva sin cambios; exporta las calificaciones.", true); }
+          catch {
+            canPersist = false;
+            cacheFailureWarning = true;
+            cacheReadFailed = true;
+            announce("No se pudo recuperar el guardado anterior. Se conserva sin cambios; exporta las calificaciones.", true);
+          }
         } else canPersist = true;
         selectedIndex = 0;
         workspace.hidden = false;
         importButton.disabled = false;
         exportButton.disabled = false;
         updateView();
-        announce(`Archivo cargado: ${dataset.questions.length} preguntas y ${dataset.available_count} respuestas disponibles.`);
+        if (!cacheReadFailed && !(cacheOption.checked && cacheFailureWarning)) {
+          announce(`Archivo cargado: ${dataset.questions.length} preguntas y ${dataset.available_count} respuestas disponibles.`);
+        }
       }
     } catch (error) {
       announce(error instanceof Error ? error.message : "No se pudo abrir el archivo.", true);
@@ -356,10 +340,10 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
     ratingsInput.value = "";
     if (!file || !dataset) return;
     try {
-      const imported = await readJsonFile(file);
+      const imported = await readJsonFile(file, sha256Hex);
       const incoming = bundle
         ? parseBundleRatings(imported.value, bundle, bundleHash)
-        : parseLegacyRatings(imported.value, dataset, contentHash);
+        : parseRatings(imported.value, dataset, contentHash);
       const hasRatings = bundle
         ? [...ratingsByCut.values()].some((value) => value.size > 0)
         : ratings.size > 0;
@@ -370,6 +354,7 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
       if (bundle) {
         ratingsByCut = incoming as Map<string, RatingMap>;
         loadedBundleCuts = new Set(bundle.cuts.map((cut) => cut.cut_id));
+        modifiedRatingsByCut.clear();
         if (activeCut) ratings = ratingsByCut.get(activeCut.cut_id) ?? new Map();
       } else {
         ratings = incoming as RatingMap;
@@ -411,12 +396,4 @@ export function bootstrapReview(doc: Document = document, storageSource?: Storag
   });
   previous.addEventListener("click", () => { moveQuestion(-1); doc.querySelector<HTMLButtonElement>("#previous-question")?.focus(); });
   next.addEventListener("click", () => { moveQuestion(1); doc.querySelector<HTMLButtonElement>("#next-question")?.focus(); });
-}
-
-function ratingsFileForCut(cut: ReviewCut, ratings: RatingMap): ReturnType<typeof ratingsFile> {
-  return ratingsFile(cut.dataset, cut.dataset_sha256, ratings);
-}
-
-function parseLegacyRatings(value: unknown, dataset: ReviewDataset, contentHash: string): RatingMap {
-  return parseRatings(value, dataset, contentHash);
 }
