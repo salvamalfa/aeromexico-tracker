@@ -3,6 +3,7 @@ import {
   type RatingMap,
   type RatingStatus,
   type ReviewDataset,
+  type SlotDisposition,
   ratingKey,
 } from "./types";
 import { questionProgress } from "./filters";
@@ -88,6 +89,7 @@ export function renderQuestion(
   hasPrevious: boolean,
   hasNext: boolean,
   onChange: (questionId: string, alias: CandidateAlias, status: RatingStatus | null, notes: string) => void,
+  slotDispositions: Map<string, SlotDisposition["status"]> = new Map(),
 ): void {
   const question = dataset.questions[index];
   const position = document.querySelector<HTMLElement>("#question-position");
@@ -114,7 +116,16 @@ export function renderQuestion(
     article.className = "candidate-card";
     article.append(textNode("h3", "candidate-heading", `Candidato ${candidate.alias}`));
     if (candidate.answer === null) {
-      article.append(textNode("p", "missing-answer", "Sin respuesta; no se puede calificar."));
+      const missingStatus = slotDispositions.get(ratingKey(question.id, candidate.alias));
+      const labels: Record<SlotDisposition["status"], string> = {
+        no_answer: "La ejecución terminó sin respuesta.",
+        failed: "La ejecución terminó con error; no hay respuesta para calificar.",
+        held: "Esta combinación quedó en espera; no hay respuesta para calificar.",
+        not_attempted: "Esta combinación no se intentó en este corte.",
+      };
+      article.append(textNode("p", "missing-answer", missingStatus
+        ? labels[missingStatus]
+        : "Sin respuesta disponible; el archivo no detalla su estado."));
       candidateList.append(article);
       continue;
     }
