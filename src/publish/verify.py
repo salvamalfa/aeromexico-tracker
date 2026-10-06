@@ -44,6 +44,7 @@ deploying, with no local data restored.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -74,6 +75,18 @@ ENTITY_KEYS = frozenset(entity.key for entity in EXTRA_ROUTE_ENTITIES)
 
 CONTRACTS_DIR = PATHS.root / "contracts" / "web"
 MANIFEST_SCHEMA_PATH = CONTRACTS_DIR / "publication_manifest.schema.json"
+
+
+# (file sha256, schema digest) pairs that already validated cleanly in this
+# process. Validation is deterministic for identical bytes and schema; only
+# repeated in-process runs (the test suite) benefit, a CLI run is unchanged.
+_CLEAN_DATA_FILES: set[tuple[str, str]] = set()
+
+
+def _schema_digest(schema: dict[str, Any]) -> str:
+    return hashlib.sha256(
+        json.dumps(schema, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
 
 
 class SiteVerificationError(RuntimeError):
@@ -230,14 +243,19 @@ def verify_site(site_dir: Path) -> list[str]:
             check_file_size(path, rules)
         except PrivacyViolation as error:
             problems.append(f"{rel}: {error}")
+        raw = path.read_bytes()
         try:
-            payload = json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as error:
+            payload = json.loads(raw.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as error:
             problems.append(f"{rel}: not valid JSON: {error}")
             continue
-        data_validator = Draft202012Validator(schema)
-        errors = [f"{rel} {list(e.path)}: {e.message}" for e in data_validator.iter_errors(payload)]
-        problems.extend(errors)
+        clean_key = (hashlib.sha256(raw).hexdigest(), _schema_digest(schema))
+        if clean_key not in _CLEAN_DATA_FILES:
+            data_validator = Draft202012Validator(schema)
+            errors = [f"{rel} {list(e.path)}: {e.message}" for e in data_validator.iter_errors(payload)]
+            problems.extend(errors)
+            if not errors:
+                _CLEAN_DATA_FILES.add(clean_key)
         forbidden = find_forbidden_fields(payload, rules["forbidden_fields"])
         carriers = find_disallowed_carriers(payload, rules["allowed_estimated_carriers"])
         for field in forbidden:

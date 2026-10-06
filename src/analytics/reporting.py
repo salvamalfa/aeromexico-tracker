@@ -122,7 +122,7 @@ def render_findings(
         "",
         f"- **El pronóstico mensual pasó un filtro real de desempeño.** {forecast_summary}",
         f"- **La red transfronteriza se separa en {route_meta['k']} perfiles de ruta.** La silueta es {route_meta['silhouette']:.3f} y la estabilidad entre semillas es {route_meta['stability_ari']:.3f}.",
-        f"- **La evidencia ofrece siete lecturas de negocio, pero no todas tienen la misma fuerza.** Combustible y reacción bursátil quedan marcados con confianza baja por historia corta; concentración y estacionalidad de T-100 tienen mayor respaldo.",
+        "- **La evidencia ofrece siete lecturas de negocio, pero no todas tienen la misma fuerza.** Combustible y reacción bursátil quedan marcados con confianza baja por historia corta; concentración y estacionalidad de T-100 tienen mayor respaldo.",
         f"- **Quedan {len(unexplained)} anomalías sin evento cercano conocido.** Son una lista de investigación, no errores confirmados.",
         "",
         "## Qué sí puede pronosticarse hoy",

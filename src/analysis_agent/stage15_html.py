@@ -1,7 +1,6 @@
 """Local review of calculations and their evidence graph."""
 from html import escape
 import json
-from pathlib import Path
 
 from src.analysis_agent.quantitative import OUTPUT
 from src.analysis_agent.stage14_html import safe_url
@@ -54,7 +53,6 @@ def run():
     body += '<article class="warning"><h2>Diferencias pendientes entre costo unitario y gasto financiero</h2><p>En estos periodos, CASK publicado y gasto operativo/ASK no coinciden dentro del redondeo. No se ha demostrado que tengan el mismo alcance. Se conserva la diferencia y queda prohibido presentar el puente del spread como una explicación del margen financiero.</p><table><tr><th>Periodo</th><th>Diferencia · centavos USD/ASK</th></tr>'
     for c in differences:body += f'<tr><td>{c["period_id"]}</td><td>{c["difference"]:+.4f}</td></tr>'
     body += '</table></article><article><h2>Cálculos del trimestre y comparaciones</h2><label for="filter">Buscar métrica o QoQ/YoY</label><input id="filter" type="search" placeholder="Ejemplo: rask, operating_margin, YoY"><div class="table-wrap"><table><thead><tr><th>Métrica/cálculo</th><th>Resultado</th><th>Detalle</th></tr></thead><tbody>'
-    used = set(n['calculation_id'] for n in result['nodes'] if n['period_id'] != result['period_id'])
     # Dialogs already emitted for bridges are reused rather than duplicated.
     existing = {id for b in result['bridges'] for id in b['contribution_ids']+[b['total_id']]}
     for n in result['nodes']:

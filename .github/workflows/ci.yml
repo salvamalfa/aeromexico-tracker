@@ -10,6 +10,10 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# CI only reads the repository; callers (pages.yml) grant their own scopes.
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -46,6 +50,12 @@ jobs:
         env:
           UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/chat-runtime-venv
         run: uv run --locked --only-group chat-runtime python -m scripts.check_chat_runtime
+
+      # Pyflakes errors (unused/undefined names, dead assignments) across the
+      # code CI ships. tests/ is excluded for now: pytest fixtures imported by
+      # name read as unused imports there.
+      - name: Ruff pyflakes check on src/ and scripts/
+        run: uv run ruff check --select F src scripts
 
       # Only these modules are ruff-formatted so far (see REPO_MAP.md);
       # the rest of the tree is not yet covered.

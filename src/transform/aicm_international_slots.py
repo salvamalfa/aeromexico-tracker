@@ -6,7 +6,7 @@ operations are a schedule, not a record that every flight took place.
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import datetime
 import hashlib
 import json
 from pathlib import Path

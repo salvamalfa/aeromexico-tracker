@@ -26,6 +26,13 @@ class SnapshotError(ValueError):
     """The published site snapshot is incomplete, altered, or unsafe."""
 
 
+# (file sha256, schema digest) pairs that already passed validation in this
+# process. Bytes are hash-checked against the manifest before validation and
+# JSON Schema validation is deterministic, so identical pairs never need a
+# second pass; tests and long-lived processes load the same site repeatedly.
+_VALIDATED_PAYLOADS: set[tuple[str, str]] = set()
+
+
 def data_version(manifest: dict[str, Any]) -> str:
     """Identify the data a conversation is pinned to, not the page that shows it.
 
@@ -132,12 +139,12 @@ class Snapshot:
         }
         for rel, schema in schema_map.items():
             if rel in payloads:
-                self._validate_schema_value(schema, payloads[rel])
+                self._validate_payload(paths[rel]["sha256"], schema, payloads[rel])
         for rel, payload in payloads.items():
             if rel.startswith("data/v1/analysis/"):
-                self._validate_schema_value(ANALYSIS_SCHEMA, payload)
+                self._validate_payload(paths[rel]["sha256"], ANALYSIS_SCHEMA, payload)
             if rel.startswith("data/v1/flights/") and rel != "data/v1/flights/quarters.json":
-                self._validate_schema_value(NETWORK_FILE_SCHEMA, payload)
+                self._validate_payload(paths[rel]["sha256"], NETWORK_FILE_SCHEMA, payload)
         self._payloads = MappingProxyType(payloads)
         self._catalog = self._load_catalog()
         semantic_digest = hashlib.sha256()
@@ -177,6 +184,17 @@ class Snapshot:
         schema = json.loads((base / "contracts/chat/semantic.schema.json").read_text(encoding="utf-8"))
         Snapshot._validate_schema_value(schema, catalog)
         return catalog
+
+    @staticmethod
+    def _validate_payload(file_sha256: str, schema: dict[str, Any], value: Any) -> None:
+        schema_digest = hashlib.sha256(
+            json.dumps(schema, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+        key = (file_sha256, schema_digest)
+        if key in _VALIDATED_PAYLOADS:
+            return
+        Snapshot._validate_schema_value(schema, value)
+        _VALIDATED_PAYLOADS.add(key)
 
     @staticmethod
     def _validate_schema_value(schema: dict[str, Any], value: Any) -> None:

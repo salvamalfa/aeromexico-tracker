@@ -42,7 +42,6 @@ from src.config import PATHS
 from src.ingest.aerodatabox.__main__ import day_weights, month_days
 from src.ingest.aerodatabox.international import (
     WINDOWS_PER_DAY,
-    mexican_airports,
     plan_units,
     pull_days,
     routes_by_operator,
