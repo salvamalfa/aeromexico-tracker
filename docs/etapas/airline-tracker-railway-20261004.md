@@ -4,11 +4,15 @@
 
 El dueño creó la cuenta de Railway y vinculó GitHub con el repositorio. El
 primer despliegue automático, antes del PR #83, falló durante `Railpack prepare`
-al no detectar un punto de entrada del backend en la raíz. El PR #83 se integró
-en `master` y sus checks `test` y `web` quedaron verdes. Un despliegue real de
-esa configuración sí se intentó después, pero falló en `BUILD_IMAGE` con el
-mensaje genérico `The Dockerfile failed validation`; el servicio no llegó a un
-estado saludable.
+al no detectar un punto de entrada del backend en la raíz. Un despliegue de la
+configuración de PR #83 falló históricamente en `BUILD_IMAGE` con el mensaje
+genérico `The Dockerfile failed validation`; no dejó información suficiente
+para identificar la causa. PR #83 eliminó `railway.json` y la dependencia de
+Config as Code para servicios nuevos. Después, PR #84 corrigió el Dockerfile y
+el runtime de producción. Tras integrar PR #84, se quitó del servicio el pin de
+fuente antiguo para que siguiera la rama `master`, y el servicio desplegó
+correctamente. La falla anterior queda como antecedente, no como diagnóstico
+del despliegue actual.
 
 El PR #83 preparó un build Docker explícito para la API con el perfil bloqueado
 `chat-runtime`, el snapshot publicado y un arranque que escucha el puerto de la
@@ -51,75 +55,59 @@ configuración preparada o un build válido no demuestra un despliegue saludable
 
 ## Verificación
 
-La imagen Docker local se construyó con el grupo `chat-runtime` bloqueado y
-Python 3.13 slim; instaló 25 paquetes y no instaló las dependencias de
-analítica. La primera prueba de build encontró que `uv sync --locked` también
-intentaba resolver metadatos de una dependencia opcional ajena al perfil; el
-Dockerfile usa `uv sync --frozen` para instalar el lock existente, mientras CI
-sigue verificando el lock completo con `--locked`. La CA del proxy del entorno
-local se montó como secreto temporal de BuildKit solo durante ese paso; TLS
-permaneció validado y la CA no se copió a ninguna capa. El build normal de
-Railway no depende de esa CA opcional.
+PR #84 se integró en `master` como `326d4c8`. Su CI pasó: 746 pruebas Python,
+6 omitidas, 77 no seleccionadas, 95 Vitest y 9 comprobaciones de navegador. El
+bot no dejó hallazgos abiertos y los hilos de revisión quedaron resueltos.
 
-El `railway.json` anterior validaba contra el esquema publicado, pero eso no
-demostraba que Railway lo aplicase a un servicio nuevo; Config as Code está
-deprecado y no está disponible para servicios nuevos. Tras el PR #83 se
-aplicaron al servicio remoto los 19 cambios autorizados de variables,
-configuración y volumen. Incluyen `RAILWAY_DOCKERFILE_PATH` para `Dockerfile.chat`,
-healthcheck `/api/chat/health` con timeout 300 s, una réplica, región SFO,
-Serverless activo, overlap 0 s, draining 100 s, restart `On Failure` con tres
-reintentos y volumen persistente de 500 MB en `/data`. Los valores secretos no
-se reproducen en esta documentación. La aplicación de ajustes no implica que el
-servicio haya desplegado correctamente: el intento real posterior falló en
-`BUILD_IMAGE`.
+El despliegue actual siguió el commit exacto de `master` y está saludable en
+<https://aeromexico-tracker-production.up.railway.app>. La prueba HTTPS devolvió
+`200` en `/api/chat/health`; la respuesta indica auth `password`, proveedor
+`mock` y admisión desactivada. El preflight desde Pages respondió `200`; una
+petición de conversaciones sin autenticar devolvió `401` con CORS para el
+origen permitido y un origen inválido recibió `403`. No se hizo login del dueño,
+no se creó conversación remota y no se enviaron inputs al proveedor. El servicio
+usa una réplica, volumen de 500 MB montado en `/data`, región SFO y suspensión
+serverless; la retención configurada del historial es de 30 días.
 
-Las ocho pruebas focales del launcher pasaron, al igual que Ruff, formato y
-comprobación del diff. El smoke completo de runtime con la variante local CA
-verificó `PORT` dinámico, healthcheck, rechazo `401` sin autenticar, login,
-creación de conversación, admisión cerrada (`429`, cero turnos iniciados), cero
-llamadas al proveedor, volumen con permisos `0700`, SQLite y sidecars con
-`0600`, exclusión de secretos de la imagen y persistencia tras reiniciar el
-contenedor. No hubo llamadas al proveedor. Este resultado corresponde a la
-variante local BuildKit/CA; no demuestra aceptación del `RUN` de producción
-simplificado ni del builder remoto.
+La comprobación de solo lectura usó cuatro filas existentes de logs de acceso
+Uvicorn: para health, preflight, petición sin autenticar y origen inválido, el
+peer ASGI cayó dentro de `100.64.0.0/10` en 4 de 4 casos. Solo se conservó el
+resultado booleano; no se guardaron IPs ni encabezados. Esto confirma la red del
+peer en las solicitudes observadas, no garantiza el contrato de Railway ni
+verifica qué dirección de `X-Forwarded-For` selecciona la aplicación. No se
+probaron contraseñas incorrectas en la cuenta real.
 
-El error remoto no proporcionó detalle que identificara la causa. Como ajuste
-de compatibilidad, el Dockerfile de producción elimina la directiva `#syntax` y
-el montaje opcional de secreto BuildKit, y usa un `RUN uv sync --frozen`
-estándar. Es una hipótesis de simplificación: no demuestra cuál fue la causa del
-rechazo ni que Railway acepte ya la imagen. El build y smoke de runtime
-completos con la variante BuildKit y CA temporal para el proxy terminaron
-correctamente; esa evidencia cubre el entorno local, no el builder remoto. La
-prueba completa del `RUN` de producción simplificado y su aceptación remota
-siguen pendientes. No hay un despliegue Railway saludable ni aceptación remota
-confirmada. La validación TLS del build local se mantiene. La variante local
-BuildKit se deriva por stdin del Dockerfile de producción usando el comando
-reproducible de `docs/chat/railway.md`; no queda un Dockerfile privado dentro del
-repositorio y no es el Dockerfile de producción.
+El smoke de la imagen local con el runtime de PR #84, anterior a la última
+corrección del adaptador OpenAI, usó una contraseña scrypt sintética, volumen
+temporal y red deshabilitada. Verificó puerto dinámico, auth requerida,
+login, creación e historial de conversación tras reiniciar el contenedor,
+admisión deshabilitada con `429`, cero llamadas al proveedor, permisos `0700`
+para `/data`, `0600` para SQLite y sus sidecars, y ausencia de rutas privadas en
+la imagen. Otro smoke local con proveedor falso mantuvo un SSE activo durante
+SIGTERM, detuvo nuevos claims, dejó el segundo turno pendiente y registró una
+sola vez el uso tardío del turno activo. Estas pruebas no sustituyen login del
+dueño ni reinicio del volumen remoto.
 
-Tras integrar el PR #85, la lectura remota de solo estado todavía muestra como
-último deploy el commit `ea9d2a7` del PR #83, en estado `FAILED`; no aparece un
-deploy nuevo que incluya el PR #85. Los logs disponibles de ese deploy solo
-indican que el builder Metal programó el build y no contienen logs de deploy, así
-que no aclaran la causa. El servicio continúa sin instancia sana. Por tanto,
-todavía no se puede confirmar que el peer directo de Railway esté en
-`100.64.0.0/10` ni el comportamiento real del encabezado `X-Forwarded-For`. La
-guía deja ambas cuestiones pendientes: Railway HTTP `srcIp` no demuestra el
-peer ASGI, y la verificación futura debe mostrar solo booleanos sin guardar IPs
-ni el encabezado completo.
+La corrección de compatibilidad del Dockerfile de producción usa un `RUN`
+estándar con `uv sync --frozen`; el despliegue saludable confirma que Railway
+aceptó la imagen y arrancó esa configuración. La variante BuildKit que monta una
+CA temporal solo sirve para el entorno local y no se usa en producción. La
+explicación y el comando reproducible están en [`docs/chat/railway.md`](../chat/railway.md).
 
-El smoke completo de runtime descrito arriba pasó con la variante local CA;
-todavía falta repetirlo con el `RUN` de producción simplificado y obtener
-aceptación del builder remoto. Hubo un intento real de despliegue, pero falló en
-`BUILD_IMAGE`; aún no existe un servicio Railway saludable. Después de conseguir
-un despliegue aceptado, seguirán pendientes
-la prueba HTTPS desde Pages, CORS con el origen final, login desde teléfono con
-la computadora apagada y persistencia tras reiniciar el volumen remoto. El código
-de cierre ordenado ahora tiene pruebas offline de drenaje, timeout y uso tardío;
-el drenaje en el host Railway sigue sin verificarse. El chat permanece con
-`mock` y admisión apagada mientras los gates semánticos y de calidad siguen
-pendientes.
+## Gates pendientes
 
-La entrega sigue AGENTS.md: PR, CI, revisión, merge y seguimiento de master.
+H1 sigue pendiente de la revisión semántica del dueño; la reconciliación técnica
+no equivale a aprobación. H4 no tiene modelo seleccionado: siguen pendientes
+la cobertura suficiente, la calificación humana y los gates de calidad. H5 ya
+tiene el backend HTTPS y el volumen persistente configurados, autenticación
+preparada y retención acordada, pero falta que el dueño complete un login remoto
+y verifique la persistencia del volumen tras reiniciar el servicio y el acceso
+desde el teléfono con la computadora apagada. La integración del chat en el
+frontend público y el proveedor pagado siguen apagados;
+el proveedor permanece en `mock` y la admisión de turnos deshabilitada. El
+resultado técnico de este despliegue no aprueba calidad ni autoriza activar el
+chat público o gasto de inferencia.
+
+La entrega sigue AGENTS.md: PR, CI, revisión, merge y seguimiento de `master`.
 Los archivos de datos publicados y las aprobaciones del Analysis Agent se
 conservan.
