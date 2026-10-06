@@ -28,13 +28,15 @@ sesiones del proveedor aisladas tras el adaptador.
 
 ## Estado de entrega
 
-| Hito | Estado al 4 oct 2026 |
+| Hito | Estado al 6 oct 2026 |
 |---|---|
-| H1 — semántica revisada | Conciliación técnica completa y 12 referencias estáticas verificadas; la revisión del dueño queda pendiente explícitamente. |
-| H2 — demo sin consumo | Backend, 11 métricas, siete herramientas, SSE y panel implementados y verificados. El fallo preexistente del diagnóstico de etapa 12 sigue documentado aparte. |
-| H3 — chat real local | Acceso confirmado con una sonda y consultas reales con herramientas y fuentes. El uso se recupera por lecturas oficiales; los errores y su consumo quedan registrados en la validación real. |
-| H4 — modelo elegido | Comparación en continuación autorizada para casos nuevos. El fallo anterior conserva uso desconocido y un supuesto de costo cero del dueño solo para el presupuesto del experimento. Cobertura, calificación y gates de calidad siguen pendientes; no hay modelo elegido. |
-| H5 — piloto publicado | Una contraseña del dueño preparada fuera de Git y retención de 30 días acordada. La cuenta Railway ya está creada; build y despliegue del backend en preparación, con validación HTTPS desde Pages pendiente. |
+| H1 — semántica revisada | Catálogo aprobado por el dueño para el MVP (`review_status: owner_approved_mvp`, PR #87). |
+| H2 — demo sin consumo | Backend, 11 métricas, siete herramientas, SSE y panel implementados y verificados. |
+| H3 — chat real local | Acceso confirmado con consultas reales con herramientas y fuentes; uso recuperado por lecturas oficiales. |
+| H4 — modelo elegido | Comparación terminada (Luna 7/9, Sol 9/10, Astra 8/9 parcial; ninguno llega al 95%). Falta la calificación del dueño en `review.html`, el gate de calidad y su elección de modelo y tope. |
+| H5 — piloto publicado | Backend en Railway con HTTPS, contraseña y `mock`; admisión cerrada. Listo para activar por configuración y publicar el panel. |
+
+Para activar el MVP, sigue el [traspaso de activación](traspaso-activacion-mvp-20261006.md).
 
 Para evaluación, cobertura, gates y límites, consulta [evaluaciones y presupuesto](evaluaciones-presupuesto.md).
 Para instalación, operación y el diseño propuesto de una instancia persistente,

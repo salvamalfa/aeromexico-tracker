@@ -4,6 +4,22 @@ Cambios notables del proyecto, para humanos. Formato inspirado en
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); no se usa
 versión semántica, las entradas van por fecha.
 
+## 2026-10-06 · Traspaso para activar el MVP del chat
+
+- Nuevo `docs/chat/traspaso-activacion-mvp-20261006.md`: roles (el dueño solo
+  califica y elige modelo y tope; el agente administra Railway y la API key),
+  decisiones vigentes (tope de US$1, crédito prepagado opcional, S14 fuera de la
+  base del chat) y pasos pendientes de la activación.
+- Dependabot se limita a versiones menores y de parche, y excluye el runtime
+  del chat (`openai`, `fastapi`, `uvicorn`); sus primeros PRs (#93–#95) se
+  cerraron sin integrar.
+- Estado actualizado en `README.md` y `docs/chat/README.md`.
+- Correcciones de una revisión adversarial independiente: el modo simulado
+  registra su uso a US$0; `import-usage` solo exige `--allow-admission-block`
+  para filas `unknown` nuevas; la guía aclara que Sol requiere un tope mayor que
+  su reserva, el commit previo de `web/.env.production` antes de `src.publish`
+  y la prueba de la clave de login detrás de Railway.
+
 ## 2026-10-06 · Pruebas más rápidas y CI más estricta
 
 - La suite pública baja de ~7 min a ~2 min 15 s: la validación de esquemas

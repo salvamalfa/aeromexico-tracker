@@ -215,3 +215,33 @@ def test_mock_reservations_hold_tokens_but_never_dollars(tmp_path: Path):
 
     assert turn["reserved_tokens"] > 0
     assert turn["reserved_cost_usd"] == 0.0
+
+
+def test_cap_equal_to_one_reservation_admits_only_until_any_spend(tmp_path: Path):
+    # Sol 6.1 prices: the floor hold is exactly US$1.50. A cap of US$1.50 starts,
+    # but any confirmed spend leaves no room for the next hold.
+    service, store = _service(
+        tmp_path,
+        estimated_input_cost_per_million=2.0,
+        estimated_output_cost_per_million=10.0,
+        daily_cost_budget_user_usd=1.5,
+        daily_cost_budget_global_usd=1.5,
+        max_active_per_user=3,
+        max_concurrent_global=3,
+    )
+    first = service.create_conversation("owner")
+    turn = _submit(service, "owner", first["id"], "sol-first")
+    store.claim_turn()
+    store.complete_turn(turn["turn_id"], "done", {}, 38_000, 200, 0.078, usage_complete=True)
+
+    second = service.create_conversation("owner")
+    with pytest.raises(AdmissionDenied, match="daily cost budget"):
+        _submit(service, "owner", second["id"], "sol-second")
+
+
+def test_mock_usage_is_priced_at_zero_dollars():
+    assert ChatConfig(provider="mock").usage_cost_usd(40_000, 500) == 0.0
+    luna = ChatConfig(
+        provider="openai", estimated_input_cost_per_million=0.1, estimated_output_cost_per_million=0.5
+    )
+    assert luna.usage_cost_usd(40_000, 500) == pytest.approx(0.00425)

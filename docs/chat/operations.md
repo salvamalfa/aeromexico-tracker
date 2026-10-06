@@ -118,7 +118,8 @@ US$0.075; con Sol 6.1 (US$2/US$10), US$1.50, que no cabe en US$1. Con el consumo
 medido (~US$0.004 por pregunta de Luna), US$1 al día alcanza para unas 215
 preguntas.
 
-La demo `mock` conserva su estimación local habitual. Estos controles no
+La demo `mock` reserva tokens pero no dólares y registra su uso a US$0: no
+hace llamadas pagadas ni consume el tope. Estos controles no
 sustituyen la factura ni verifican créditos de Data Sharing; el incentivo es un
 posible ahorro, no el control de gasto. El servicio rechaza al arrancar una
 configuración OpenAI cuya reserva mínima no quepa en el presupuesto monetario
@@ -170,8 +171,10 @@ suman a las cuotas de su fecha UTC; un desconocido bloquea globalmente la
 admisión, aun si su fecha es anterior, y permanece hasta su conciliación.
 También pausa el inicio de turnos que ya estuvieran en cola; no reenvía ni
 reconstruye turnos que el proveedor ya haya recibido. Por eso `--apply` rechaza
-un lote con filas `unknown` salvo que se pase `--allow-admission-block`, y el
-resumen del dry-run indica `unknown_blocks_admission`.
+un lote que agregue filas `unknown` nuevas a la base salvo que se pase
+`--allow-admission-block`; volver a listar una fila `unknown` ya guardada o
+conciliarla como `known` no lo requiere. El resumen del dry-run indica
+`unknown_blocks_admission`.
 
 **S14 queda fuera de la base del chat.** El turno de evaluación de Sol con uso
 desconocido (S14) pertenece al expediente de la comparación y a su presupuesto

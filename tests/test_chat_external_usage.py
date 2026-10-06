@@ -385,3 +385,14 @@ def test_cli_refuses_unknown_rows_unless_admission_block_is_explicit(tmp_path: P
     )
     with ChatStore(state)._connect() as db:
         assert db.execute("SELECT COUNT(*) FROM external_usage WHERE status='unknown'").fetchone()[0] == 1
+
+
+def test_cli_relisting_a_stored_unknown_row_needs_no_admission_block_flag(tmp_path: Path) -> None:
+    state = tmp_path / "chat.sqlite3"
+    pending = unknown("eval-pending")
+    ChatStore(state).external_usage_import([pending], apply=True)
+    source = tmp_path / "ledger.json"
+    # A cumulative ledger: the stored unknown row plus a newly confirmed one.
+    source.write_text(json.dumps(ledger(pending, known("eval-done", day=pending["usage_date"]))))
+
+    assert import_main(["--file", str(source), "--state-path", str(state), "--apply"]) == 0

@@ -152,8 +152,10 @@ autorización del dueño con modelo, precios y topes (sección siguiente).
 
 ## Activación del MVP
 
-Requisitos previos: el dueño calificó los cortes en `review.html`, se eligió el
-modelo y el dueño autorizó explícitamente el gasto. Luego:
+Requisitos previos: el dueño calificó los cortes en `review.html`, el agente
+propuso un modelo con evidencia y el dueño eligió modelo y tope. El agente que
+administra Railway y la API key ejecuta los pasos; el dueño no configura nada
+(ver el [traspaso de activación](traspaso-activacion-mvp-20261006.md)). Luego:
 
 1. **Variables de Railway** (panel del servicio, nunca en Git), además de las de
    arriba:
@@ -180,9 +182,12 @@ modelo y el dueño autorizó explícitamente el gasto. Luego:
    `admission_enabled`, `true`. Si el arranque falla, el log indica qué variable
    falta; no hay llamada al proveedor antes de una pregunta.
 4. **Panel en Pages:** cambia `VITE_CHAT_ENABLED=true` en `web/.env.production`
-   (la URL de la API ya está ahí), ejecuta `src.publish` con el registro ya
-   aprobado y `src.publish.verify site/`, y abre el PR con `site/`. El panel
-   queda visible para todos; escribir requiere la contraseña.
+   (la URL de la API ya está ahí) y **haz commit** de ese cambio: el gate
+   rechaza entradas de compilación sin commit bajo `web/`. Comprueba que no haya
+   variables `VITE_CHAT_*` exportadas en la shell, porque sobrescriben el
+   archivo. Luego ejecuta `src.publish` con el registro ya aprobado y
+   `src.publish.verify site/`, y abre el PR con `site/` como segundo commit. El
+   panel queda visible para todos; escribir requiere la contraseña.
 5. Tras el deploy de Pages, prueba login y una pregunta desde Pages y desde el
    teléfono con la computadora apagada.
 

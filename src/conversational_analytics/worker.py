@@ -492,17 +492,7 @@ class TurnWorker:
                 raise ValueError("provider output size exceeded")
             input_tokens = result.input_tokens if result.usage_complete else 0
             output_tokens = result.output_tokens if result.usage_complete else 0
-            cost = (
-                (
-                    (
-                        input_tokens * self.config.estimated_input_cost_per_million
-                        + output_tokens * self.config.estimated_output_cost_per_million
-                    )
-                    / 1_000_000
-                )
-                if result.usage_complete
-                else 0.0
-            )
+            cost = self.config.usage_cost_usd(input_tokens, output_tokens) if result.usage_complete else 0.0
             payload = {"references": result.references, "chart": result.chart}
             completed = self.store.complete_turn(
                 turn_id, content, payload, input_tokens, output_tokens, cost, result.usage_complete
@@ -555,19 +545,12 @@ class TurnWorker:
         if not usage:
             return None
         input_tokens, output_tokens = usage
-        cost = (
-            input_tokens * self.config.estimated_input_cost_per_million
-            + output_tokens * self.config.estimated_output_cost_per_million
-        ) / 1_000_000
-        return input_tokens, output_tokens, cost
+        return input_tokens, output_tokens, self.config.usage_cost_usd(input_tokens, output_tokens)
 
     def _record_result_usage(self, turn_id: str, result: ProviderResult) -> None:
         if not result.usage_complete:
             return
-        cost = (
-            result.input_tokens * self.config.estimated_input_cost_per_million
-            + result.output_tokens * self.config.estimated_output_cost_per_million
-        ) / 1_000_000
+        cost = self.config.usage_cost_usd(result.input_tokens, result.output_tokens)
         self.store.record_terminal_usage(turn_id, result.input_tokens, result.output_tokens, cost)
 
 

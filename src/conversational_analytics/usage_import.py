@@ -185,13 +185,21 @@ def import_main(argv: list[str]) -> int:
     args = parser.parse_args(argv)
     try:
         entries = read_ledger(args.file)
-        if args.apply and not args.allow_admission_block and any(e["status"] == "unknown" for e in entries):
-            print(
-                "Usage import refused: unknown rows would pause all chat admission; "
-                "reconcile them first or pass --allow-admission-block.",
-                file=sys.stderr,
-            )
-            return 2
+        if args.apply and not args.allow_admission_block:
+            # Only unknown rows new to this database add a block; re-listing an
+            # unknown row that is already stored (or reconciling one) does not.
+            state_path = Path(args.state_path)
+            if state_path.exists():
+                new_unknown = ChatStore(state_path).external_usage_import(entries, apply=False)["new_unknown"]
+            else:
+                new_unknown = sum(entry["status"] == "unknown" for entry in entries)
+            if new_unknown:
+                print(
+                    "Usage import refused: new unknown rows would pause all chat admission; "
+                    "reconcile them first or pass --allow-admission-block.",
+                    file=sys.stderr,
+                )
+                return 2
         if args.apply:
             state_path = Path(args.state_path)
             old_umask = os.umask(0o077)
