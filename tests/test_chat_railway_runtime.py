@@ -28,6 +28,13 @@ def _configure(monkeypatch, volume: Path) -> None:
         monkeypatch.setenv(name, value)
     # runtime_config fills this default into os.environ; undo it after each test.
     monkeypatch.delenv("CHAT_TRUSTED_PROXY", raising=False)
+    for name in (
+        "CHAT_OPENAI_ENABLED",
+        "CHAT_MODEL",
+        "CHAT_INPUT_COST_PER_MILLION",
+        "CHAT_OUTPUT_COST_PER_MILLION",
+    ):
+        monkeypatch.delenv(name, raising=False)
 
 
 def test_runtime_config_accepts_single_owner_and_writable_volume(monkeypatch, tmp_path):
@@ -71,7 +78,6 @@ def test_runtime_config_keeps_an_explicit_trusted_proxy(monkeypatch, tmp_path):
     ("name", "value", "error"),
     [
         ("CHAT_AUTH_MODE", "local", "CHAT_AUTH_MODE=password"),
-        ("CHAT_ADMISSION_ENABLED", "true", "CHAT_ADMISSION_ENABLED=false"),
         ("CHAT_RETENTION_DAYS", "31", "approved 30-day retention"),
         ("PORT", "70000", "PORT must be an integer"),
     ],
@@ -81,6 +87,56 @@ def test_runtime_config_rejects_unsafe_overrides(monkeypatch, tmp_path, name, va
     monkeypatch.setenv(name, value)
 
     with pytest.raises(ValueError, match=error):
+        runtime_config(volume_path=tmp_path)
+
+
+OPENAI_ENV = {
+    "CHAT_PROVIDER": "openai",
+    "CHAT_OPENAI_ENABLED": "true",
+    "CHAT_MODEL": "gpt-6-luna",
+    "CHAT_INPUT_COST_PER_MILLION": "0.10",
+    "CHAT_OUTPUT_COST_PER_MILLION": "0.50",
+    "CHAT_ADMISSION_ENABLED": "true",
+}
+
+
+def test_runtime_config_accepts_explicitly_configured_openai(monkeypatch, tmp_path):
+    _configure(monkeypatch, tmp_path)
+    for name, value in OPENAI_ENV.items():
+        monkeypatch.setenv(name, value)
+
+    config, _ = runtime_config(volume_path=tmp_path)
+
+    assert config.provider == "openai"
+    assert config.model == "gpt-6-luna"
+    assert config.admission_enabled is True
+
+
+@pytest.mark.parametrize(
+    ("missing", "error"),
+    [
+        ("CHAT_MODEL", "explicit CHAT_MODEL"),
+        ("CHAT_OPENAI_ENABLED", "CHAT_OPENAI_ENABLED=true"),
+        ("CHAT_OUTPUT_COST_PER_MILLION", "per-million token prices"),
+    ],
+)
+def test_runtime_config_rejects_incomplete_openai(monkeypatch, tmp_path, missing, error):
+    _configure(monkeypatch, tmp_path)
+    for name, value in OPENAI_ENV.items():
+        monkeypatch.setenv(name, value)
+    monkeypatch.delenv(missing)
+
+    with pytest.raises(ValueError, match=error):
+        runtime_config(volume_path=tmp_path)
+
+
+def test_runtime_config_rejects_dollar_caps_below_one_reservation(monkeypatch, tmp_path):
+    _configure(monkeypatch, tmp_path)
+    for name, value in OPENAI_ENV.items():
+        monkeypatch.setenv(name, value)
+    monkeypatch.setenv("CHAT_DAILY_COST_BUDGET_USER_USD", "0.001")
+
+    with pytest.raises(ValueError, match="CHAT_DAILY_COST_BUDGET_USER_USD"):
         runtime_config(volume_path=tmp_path)
 
 

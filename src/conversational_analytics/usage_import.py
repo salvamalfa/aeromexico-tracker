@@ -167,6 +167,8 @@ def safe_summary(
         **stats,
         "known_input_tokens": sum(entry["input_tokens"] for entry in known),
         "known_output_tokens": sum(entry["output_tokens"] for entry in known),
+        # Any unknown row pauses every chat admission until it is reconciled.
+        "unknown_blocks_admission": len(known) < len(entries),
     }
 
 
@@ -175,9 +177,21 @@ def import_main(argv: list[str]) -> int:
     parser.add_argument("--file", required=True, help="private version 1 token-only JSON ledger")
     parser.add_argument("--state-path", required=True, help="explicit chat SQLite path")
     parser.add_argument("--apply", action="store_true", help="write the validated batch; default is dry-run")
+    parser.add_argument(
+        "--allow-admission-block",
+        action="store_true",
+        help="required to apply unknown rows: they pause all chat admission until reconciled",
+    )
     args = parser.parse_args(argv)
     try:
         entries = read_ledger(args.file)
+        if args.apply and not args.allow_admission_block and any(e["status"] == "unknown" for e in entries):
+            print(
+                "Usage import refused: unknown rows would pause all chat admission; "
+                "reconcile them first or pass --allow-admission-block.",
+                file=sys.stderr,
+            )
+            return 2
         if args.apply:
             state_path = Path(args.state_path)
             old_umask = os.umask(0o077)

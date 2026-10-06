@@ -46,9 +46,13 @@ def test_pilot_defaults_set_owner_and_global_daily_tokens_and_reservation_floor(
     config = ChatConfig()
     assert config.max_tool_calls == 8
     assert config.max_turn_seconds == 180
-    assert config.daily_token_budget_user == 200_000
-    assert config.daily_token_budget_global == 200_000
+    # The MVP caps spend in dollars; token caps are only a runaway brake.
+    assert config.daily_cost_budget_user_usd == 1.0
+    assert config.daily_cost_budget_global_usd == 1.0
+    assert config.daily_token_budget_user == 2_000_000
+    assert config.daily_token_budget_global == 2_000_000
     assert config.minimum_turn_reservation_tokens == 150_000
+    assert config.reserved_output_tokens == 10_000
 
 
 def test_environment_defaults_match_shared_production_tool_and_turn_limits(monkeypatch):
@@ -73,12 +77,14 @@ def test_paid_turn_reservation_fits_default_cost_quotas_at_explicit_luna_prices(
     turn = store.get_turn("owner", submitted["turn_id"])
 
     assert turn["reserved_tokens"] == 150_000
-    assert turn["reserved_cost_usd"] == pytest.approx(0.075)
+    # 140,000 input tokens at US$0.10/M plus 10,000 output tokens at US$0.50/M.
+    assert turn["reserved_cost_usd"] == pytest.approx(0.019)
 
 
 @pytest.mark.parametrize(
     ("user_budget", "global_budget", "expected_setting"),
-    [(2.0, 10.0, "CHAT_DAILY_COST_BUDGET_USER_USD"), (100.0, 2.0, "CHAT_DAILY_COST_BUDGET_GLOBAL_USD")],
+    # Default prices (US$5/US$15 per million) reserve US$0.85 for one floor turn.
+    [(0.5, 10.0, "CHAT_DAILY_COST_BUDGET_USER_USD"), (100.0, 0.5, "CHAT_DAILY_COST_BUDGET_GLOBAL_USD")],
 )
 def test_app_rejects_openai_reservation_cost_before_provider_creation(
     tmp_path: Path,
@@ -126,7 +132,14 @@ def test_paid_turn_keeps_dynamic_reservation_when_it_exceeds_floor(tmp_path: Pat
 
 
 def test_confirmed_usage_plus_pending_hold_rejects_next_paid_floor_over_daily_limit(tmp_path: Path):
-    service, store = _service(tmp_path, max_active_per_user=3, max_concurrent_global=3)
+    # Exercises the token-cap mechanics with an explicit cap (defaults are dollar-led).
+    service, store = _service(
+        tmp_path,
+        max_active_per_user=3,
+        max_concurrent_global=3,
+        daily_token_budget_user=200_000,
+        daily_token_budget_global=200_000,
+    )
     first = service.create_conversation("owner")
     known, _ = store.submit_turn(
         "owner", first["id"], "first", "known", {}, reserved_tokens=60_000, reserved_cost_usd=0.1
@@ -164,3 +177,31 @@ def test_reservation_floor_environment_setting_requires_positive_integer(monkeyp
         monkeypatch.setenv("CHAT_MINIMUM_TURN_RESERVATION_TOKENS", invalid)
         with pytest.raises(ValueError):
             ChatConfig.from_env()
+
+
+@pytest.mark.parametrize(
+    ("input_price", "output_price", "reservation_usd", "admissible_at_one_dollar"),
+    [
+        # Luna: ~US$0.004 measured per question, so the dollar cap is not the bottleneck.
+        (0.10, 0.50, 0.019, True),
+        # Sol 6.1: one floor turn still fits under US$1 with the split pricing.
+        (2.0, 10.0, 0.38, True),
+        # Astra: a single floor reservation exceeds US$1 and is rejected at startup.
+        (10.0, 50.0, 1.9, False),
+    ],
+)
+def test_dollar_cap_reservation_prices_input_and_output_separately(
+    input_price, output_price, reservation_usd, admissible_at_one_dollar
+):
+    config = ChatConfig(
+        provider="openai",
+        estimated_input_cost_per_million=input_price,
+        estimated_output_cost_per_million=output_price,
+    )
+    assert config.reservation_cost_usd(150_000) == pytest.approx(reservation_usd)
+    assert config.reservation_cost_usd(5_000) == pytest.approx(5_000 * output_price / 1_000_000)
+    if admissible_at_one_dollar:
+        config.validate_admission_budgets()
+    else:
+        with pytest.raises(ValueError, match="CHAT_DAILY_COST_BUDGET_USER_USD"):
+            config.validate_admission_budgets()

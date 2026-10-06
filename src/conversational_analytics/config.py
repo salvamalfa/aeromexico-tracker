@@ -40,11 +40,15 @@ class ChatConfig:
     # executes them sequentially; this is a queue bound, not parallelism.
     max_concurrent_global: int = 2
     max_active_per_user: int = 1
-    daily_token_budget_user: int = 200_000
-    daily_token_budget_global: int = 200_000
+    # Spend is capped in dollars; the token caps are only a runaway brake and
+    # no longer track the Data Sharing incentive.
+    daily_token_budget_user: int = 2_000_000
+    daily_token_budget_global: int = 2_000_000
     minimum_turn_reservation_tokens: int = 150_000
-    daily_cost_budget_user_usd: float = 2.0
-    daily_cost_budget_global_usd: float = 10.0
+    # Share of a turn reservation priced at the output rate; the rest is input.
+    reserved_output_tokens: int = 10_000
+    daily_cost_budget_user_usd: float = 1.0
+    daily_cost_budget_global_usd: float = 1.0
     estimated_input_cost_per_million: float = 5.0
     estimated_output_cost_per_million: float = 15.0
     retention_days: int = 30
@@ -130,11 +134,12 @@ class ChatConfig:
             max_turn_seconds=_env_int("CHAT_MAX_TURN_SECONDS", 180),
             max_concurrent_global=_env_int("CHAT_MAX_CONCURRENT_GLOBAL", 2),
             max_active_per_user=_env_int("CHAT_MAX_ACTIVE_PER_USER", 1),
-            daily_token_budget_user=_env_int("CHAT_DAILY_TOKEN_BUDGET_USER", 200_000),
-            daily_token_budget_global=_env_int("CHAT_DAILY_TOKEN_BUDGET_GLOBAL", 200_000),
+            daily_token_budget_user=_env_int("CHAT_DAILY_TOKEN_BUDGET_USER", 2_000_000),
+            daily_token_budget_global=_env_int("CHAT_DAILY_TOKEN_BUDGET_GLOBAL", 2_000_000),
             minimum_turn_reservation_tokens=_env_int("CHAT_MINIMUM_TURN_RESERVATION_TOKENS", 150_000),
-            daily_cost_budget_user_usd=_env_float("CHAT_DAILY_COST_BUDGET_USER_USD", 2.0),
-            daily_cost_budget_global_usd=_env_float("CHAT_DAILY_COST_BUDGET_GLOBAL_USD", 10.0),
+            reserved_output_tokens=_env_int("CHAT_RESERVED_OUTPUT_TOKENS", 10_000),
+            daily_cost_budget_user_usd=_env_float("CHAT_DAILY_COST_BUDGET_USER_USD", 1.0),
+            daily_cost_budget_global_usd=_env_float("CHAT_DAILY_COST_BUDGET_GLOBAL_USD", 1.0),
             estimated_input_cost_per_million=_env_float("CHAT_INPUT_COST_PER_MILLION", 5.0),
             estimated_output_cost_per_million=_env_float("CHAT_OUTPUT_COST_PER_MILLION", 15.0),
             retention_days=_env_int("CHAT_RETENTION_DAYS", 30),
@@ -157,11 +162,7 @@ class ChatConfig:
         """Fail early if one minimum paid turn cannot fit the chat cost quotas."""
         if self.provider != "openai":
             return
-        reserve_cost = (
-            self.minimum_turn_reservation_tokens
-            * max(self.estimated_input_cost_per_million, self.estimated_output_cost_per_million)
-            / 1_000_000
-        )
+        reserve_cost = self.reservation_cost_usd(self.minimum_turn_reservation_tokens)
         for setting, budget in (
             ("CHAT_DAILY_COST_BUDGET_USER_USD", self.daily_cost_budget_user_usd),
             ("CHAT_DAILY_COST_BUDGET_GLOBAL_USD", self.daily_cost_budget_global_usd),
@@ -172,6 +173,19 @@ class ChatConfig:
                     f"above {setting}=${budget:.4f}; use the selected model's verified normal prices "
                     "and configure the chat cost quota to cover this reservation before starting"
                 )
+
+    def reservation_cost_usd(self, reserved_tokens: int) -> float:
+        """Price a reservation as input plus a bounded output share.
+
+        At most ``reserved_output_tokens`` of it are priced at the output rate
+        (observed answers stayed below 2,000 output tokens); the remainder is
+        priced as input, which dominates every measured turn.
+        """
+        output = min(reserved_tokens, self.reserved_output_tokens)
+        return (
+            (reserved_tokens - output) * self.estimated_input_cost_per_million
+            + output * self.estimated_output_cost_per_million
+        ) / 1_000_000
 
     def password_fingerprints(self) -> dict[str, str]:
         """Fingerprint per configured user; sessions die when a hash rotates."""

@@ -26,6 +26,29 @@ class SnapshotError(ValueError):
     """The published site snapshot is incomplete, altered, or unsafe."""
 
 
+def data_version(manifest: dict[str, Any]) -> str:
+    """Identify the data a conversation is pinned to, not the page that shows it.
+
+    Only `data/` file hashes, contract hashes and the approved analysis manifest
+    count. Republishing UI assets or a new `code_commit` keeps the version, so
+    open conversations and pinned evaluations survive interface-only releases.
+    """
+    pinned = {
+        "files": sorted(
+            (
+                {"path": entry["path"], "sha256": entry["sha256"], "bytes": entry["bytes"]}
+                for entry in manifest["files"]
+                if entry["path"].startswith("data/")
+            ),
+            key=lambda entry: entry["path"],
+        ),
+        "contracts": manifest.get("contracts", {}),
+        "analysis_manifest": manifest.get("analysis_manifest", []),
+    }
+    encoded = json.dumps(pinned, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
 class Snapshot:
     """Load `site/` once, verify its manifest, and expose read-only public data.
 
@@ -50,7 +73,7 @@ class Snapshot:
         manifest = json.loads(manifest_raw)
         self._validate_schema(self.project_root / "contracts/web/publication_manifest.schema.json", manifest)
         self.manifest = MappingProxyType(manifest)
-        self.version = hashlib.sha256(manifest_raw).hexdigest()
+        self.version = data_version(manifest)
         files = manifest["files"]
         paths: dict[str, dict[str, Any]] = {}
         for entry in files:

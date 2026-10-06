@@ -102,10 +102,12 @@ def runtime_config(*, volume_path: Path = Path("/data")) -> tuple[ChatConfig, in
         raise ValueError("Hosted chat requires CHAT_AUTH_MODE=password")
     if len(config.password_users) != 1:
         raise ValueError("Hosted single-owner chat requires exactly one configured password user")
-    if config.provider != "mock":
-        raise ValueError("Hosted pilot currently requires CHAT_PROVIDER=mock")
-    if config.admission_enabled:
-        raise ValueError("Hosted pilot requires CHAT_ADMISSION_ENABLED=false until spend gates are approved")
+    # The defaults above keep a fresh service on mock with admission closed.
+    # Enabling OpenAI is an explicit Railway configuration: ChatConfig.from_env
+    # already requires CHAT_OPENAI_ENABLED, CHAT_MODEL, normal prices and
+    # password auth, and create_app checks that one reservation fits the
+    # daily dollar caps.
+    config.validate_admission_budgets()
     if config.retention_days != 30:
         raise ValueError("Hosted pilot uses the approved 30-day retention period")
 

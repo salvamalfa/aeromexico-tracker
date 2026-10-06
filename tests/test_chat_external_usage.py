@@ -365,3 +365,23 @@ def test_usage_daily_external_budget_is_enforced_by_owner_and_global(tmp_path: P
             user_token_budget=1000,
             global_token_budget=120,
         )
+
+
+def test_cli_refuses_unknown_rows_unless_admission_block_is_explicit(tmp_path: Path, capsys) -> None:
+    source = tmp_path / "ledger.json"
+    source.write_text(json.dumps(ledger(unknown("eval-unknown"))))
+    state = tmp_path / "chat.sqlite3"
+
+    assert import_main(["--file", str(source), "--state-path", str(state)]) == 0
+    assert '"unknown_blocks_admission": true' in capsys.readouterr().out
+
+    assert import_main(["--file", str(source), "--state-path", str(state), "--apply"]) == 2
+    assert "pause all chat admission" in capsys.readouterr().err
+    assert not state.exists()
+
+    assert (
+        import_main(["--file", str(source), "--state-path", str(state), "--apply", "--allow-admission-block"])
+        == 0
+    )
+    with ChatStore(state)._connect() as db:
+        assert db.execute("SELECT COUNT(*) FROM external_usage WHERE status='unknown'").fetchone()[0] == 1

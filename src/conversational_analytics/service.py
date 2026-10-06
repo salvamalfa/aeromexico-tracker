@@ -134,11 +134,7 @@ class ChatService:
         # consume the OpenAI token allowance.
         if self.config.provider == "openai":
             reserve_tokens = max(reserve_tokens, self.config.minimum_turn_reservation_tokens)
-        reserve_cost = (
-            reserve_tokens
-            * max(self.config.estimated_input_cost_per_million, self.config.estimated_output_cost_per_million)
-            / 1_000_000
-        )
+        reserve_cost = self.config.reservation_cost_usd(reserve_tokens)
         turn, duplicate = self.store.submit_turn(
             owner_id,
             conversation_id,
