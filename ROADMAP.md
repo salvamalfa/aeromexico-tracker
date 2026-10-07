@@ -4,6 +4,9 @@ Propuesta — el dueño decide prioridades.
 
 ## Ahora
 
+- Activar el MVP del chat tal como está en `master`, siguiendo
+  `docs/chat/traspaso-activacion-mvp-20261006.md` (calificaciones del dueño ya
+  entregadas; el dueño elige modelo y tope).
 - Ciclo de análisis de 3T26 con el Analysis Agent (evidencia, cálculo,
   revisión y aprobación) una vez publicados los reportes trimestrales de
   Aeroméxico.
@@ -14,6 +17,17 @@ Propuesta — el dueño decide prioridades.
 
 ## Siguiente
 
+- Fase 2 del chat, después del MVP: agente analítico para preguntas de negocio
+  (`docs/chat/fase-2-agente-analitico.md`). Paquetes F2.1–F2.9:
+  - estilo de respuesta según las notas del dueño;
+  - evaluación en lenguaje de negocio;
+  - glosario y métricas totales;
+  - rutas y comparaciones;
+  - índice de reportes e índice semanal de noticias con aprobación;
+  - explicaciones atribuidas a fuentes;
+  - herramientas de presentación;
+  - nueva ronda de evaluación con cada modelo, ya autorizada por el dueño
+    una vez que apruebe la estimación de costo.
 - Ampliar la cobertura internacional de rutas más allá de EE. UU. (BTS
   T-100): candidatos con evidencia parcial en Brasil (ANAC), Colombia
   (Aerocivil), Reino Unido (CAA) y Perú (DGAC); España sigue bloqueada por

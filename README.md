@@ -133,10 +133,29 @@ Por la decisión explícita de **no versionar bronze**, una reconstrucción con 
 
 ## Chat analítico
 
-El chat consulta el snapshot público con una capa semántica versionada; no abre el warehouse ni convierte ausencias en cero. El servicio usa un proveedor simulado por defecto. La integración real con Agents API ya se verificó dentro de la comparación autorizada. El corte de comparación terminó al alcanzar la reserva del presupuesto: contiene 74 respuestas disponibles de 40 preguntas y todavía no hay un modelo elegido. El consumo histórico no confirmado conserva sus reservas; los resultados no se repiten ni se recalifican automáticamente. La [documentación del chat](docs/chat/README.md) incluye instalación, operación y holdout, y la [validación real](docs/etapas/airline-tracker-validacion-real-20261004.md) registra el primer corte medido. La [interfaz de revisión](docs/chat/revision-respuestas.md) acepta un archivo individual o un paquete privado con cortes separados y exporta todas las calificaciones en un único archivo. El dueño aprobó el catálogo como MVP; aún faltan la revisión de respuestas y la validación de calidad del contrato de instrucciones actual. La API de Railway permite comprobar el acceso protegido con HTTPS. El chat público permanece desactivado.
+El chat consulta el snapshot público con una capa semántica versionada; no abre el warehouse ni convierte ausencias en cero. El servicio usa un proveedor simulado por defecto. La integración real con Agents API ya se verificó dentro de la comparación autorizada. El corte de comparación terminó al alcanzar la reserva del presupuesto: contiene 74 respuestas disponibles de 40 preguntas y todavía no hay un modelo elegido. El consumo histórico no confirmado conserva sus reservas; los resultados no se repiten ni se recalifican automáticamente. La [documentación del chat](docs/chat/README.md) incluye instalación, operación y holdout, y la [validación real](docs/etapas/airline-tracker-validacion-real-20261004.md) registra el primer corte medido. La [interfaz de revisión](docs/chat/revision-respuestas.md) acepta un archivo individual o un paquete privado con cortes separados y exporta todas las calificaciones en un único archivo. El dueño aprobó el catálogo como MVP y entregó sus calificaciones de respuestas el 7 de octubre; falta aplicar el gate de calidad. La API de Railway permite comprobar el acceso protegido con HTTPS. El chat público permanece desactivado.
 
 El perfil `chat-runtime` instala solo las dependencias del backend. El gasto se
 controla con un tope diario en dólares configurable en Railway (US$1 por
 defecto), con el cupo de tokens solo como freno; el registro contable privado
 del consumo de evaluaciones se conserva. La activación del MVP (modelo, API key,
 panel en Pages) sigue el [traspaso de activación](docs/chat/traspaso-activacion-mvp-20261006.md).
+Después del MVP viene la [fase 2](docs/chat/fase-2-agente-analitico.md): un
+agente para preguntas de negocio que cruza métricas, reportes trimestrales y
+noticias aprobadas.
+
+### Cómo funciona el chat
+
+Una pregunta pasa por 7 piezas del backend en 11 pasos:
+
+![Recorrido de una pregunta por el backend del chat](docs/assets/chat/anatomia-chat-recorrido.gif)
+
+Así pide, valida, ejecuta y devuelve el agente sus 7 herramientas (escenario
+«comparar dos periodos»):
+
+![Recorrido de una llamada a herramientas](docs/assets/chat/anatomia-herramientas-recorrido.gif)
+
+Las versiones interactivas, con tres escenarios y el JSON de cada paso, están en
+[`docs/arquitectura/anatomia-chat.html`](docs/arquitectura/anatomia-chat.html) y
+[`docs/arquitectura/anatomia-herramientas.html`](docs/arquitectura/anatomia-herramientas.html).
+GitHub las muestra como código: descárgalas y ábrelas en un navegador.

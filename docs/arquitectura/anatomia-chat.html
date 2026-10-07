@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Copia versionada del diagrama interactivo. Ábrelo en un navegador; sin conexión usa las fuentes del sistema. -->
+<style>:root{color-scheme:light}body{margin:0}[hidden]{display:none!important}</style>
+<title>Anatomía del chat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one wide flow diagram in three zones (navegador · Railway · OpenAI), a step player under it, with a caption for the current step. */
+:root {
+  --bg:#F3F5F8; --surface:#FFFFFF; --ink:#14202F; --muted:#5B6678; --line:#C3CCD8; --hair:#DFE4EB;
+  --z-web:#E4EDF8; --z-srv:#ECE8F6; --z-ai:#E3F0EA;
+  --accent:#C94A0C; --accent-soft:#FBE4D6; --on-accent:#FFFFFF;
+  --pill:#FFF0C2; --pill-ink:#6E4B00;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg:#0E131A; --surface:#17202B; --ink:#E5EAF1; --muted:#98A4B6; --line:#3B475A; --hair:#263142;
+  --z-web:#13212F; --z-srv:#1D1A2D; --z-ai:#12251E;
+  --accent:#FF8B4D; --accent-soft:#3A2416; --on-accent:#1A0E06;
+  --pill:#3A3014; --pill-ink:#F3D27C; color-scheme:dark;
+} }
+:root[data-theme="dark"] {
+  --bg:#0E131A; --surface:#17202B; --ink:#E5EAF1; --muted:#98A4B6; --line:#3B475A; --hair:#263142;
+  --z-web:#13212F; --z-srv:#1D1A2D; --z-ai:#12251E;
+  --accent:#FF8B4D; --accent-soft:#3A2416; --on-accent:#1A0E06;
+  --pill:#3A3014; --pill-ink:#F3D27C; color-scheme:dark;
+}
+body { background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:15px; line-height:1.55; }
+.wrap { max-width:1180px; margin:0 auto; padding-inline:20px; padding-block:32px 56px; display:grid; gap:36px; }
+header { display:grid; gap:10px; max-width:70ch; }
+.eyebrow { font-family:var(--mono); font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:0; }
+h1 { font-size:clamp(28px,4vw,40px); line-height:1.1; margin:0; font-weight:700; letter-spacing:-.01em; text-wrap:balance; }
+h2 { font-size:20px; margin:0 0 14px; font-weight:600; text-wrap:balance; }
+.lede { margin:0; color:var(--muted); font-size:16px; }
+
+figure { margin:0; background:var(--surface); border:1px solid var(--hair); border-radius:18px; padding:16px; display:grid; gap:14px; }
+.scroll { overflow-x:auto; }
+#dia { display:block; width:100%; min-width:860px; height:auto; font-family:var(--sans); }
+figcaption { font-size:13px; color:var(--muted); }
+
+/* SVG parts */
+.z-web{fill:var(--z-web)} .z-srv{fill:var(--z-srv)} .z-ai{fill:var(--z-ai)}
+.zt { font-size:12px; font-weight:700; letter-spacing:.09em; fill:var(--ink); }
+.zs, .note { font-size:11px; fill:var(--muted); }
+.box { fill:var(--surface); stroke:var(--line); stroke-width:1.2; }
+.vault { fill:none; stroke:var(--muted); stroke-width:1.2; stroke-dasharray:5 4; }
+.tag { fill:var(--ink); }
+.tagt { font-family:var(--mono); font-size:12px; font-weight:600; fill:var(--surface); text-anchor:middle; }
+.bt { font-size:13.5px; font-weight:600; fill:var(--ink); }
+.bs { font-size:11px; fill:var(--muted); }
+.bub-me { fill:var(--ink); } .bub-me-t { font-size:10px; fill:var(--surface); }
+.bub-ai { fill:var(--z-web); } .bub-ai-t { font-size:10px; fill:var(--ink); }
+.pill { fill:var(--pill); } .pill-t { font-family:var(--mono); font-size:10px; font-weight:600; fill:var(--pill-ink); text-anchor:middle; letter-spacing:.04em; }
+.ln { fill:none; stroke:var(--muted); stroke-width:1.6; marker-end:url(#ah); }
+.ah { fill:var(--muted); } .ah-on { fill:var(--accent); }
+.bd circle { fill:var(--ink); }
+.bd text { font-family:var(--mono); font-size:10px; font-weight:600; fill:var(--surface); text-anchor:middle; }
+.lbl { font-size:11px; fill:var(--ink); }
+.mk-bg { fill:var(--surface); } .mk-srv { fill:var(--z-srv); }
+[data-s] { transition:opacity .25s ease; }
+#dia.focus [data-s] { opacity:.16; }
+#dia.focus [data-s].on { opacity:1; }
+.on .box { stroke:var(--accent); stroke-width:2.2; }
+.on .ln { stroke:var(--accent); stroke-width:2.2; marker-end:url(#ah-on); }
+.on .bd circle { fill:var(--accent); }
+.on .bd text { fill:var(--on-accent); }
+
+/* Player */
+.player { display:grid; gap:12px; }
+.controls { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+button { font:inherit; color:inherit; cursor:pointer; }
+button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.ctl { border:1px solid var(--line); background:var(--bg); border-radius:999px; padding:6px 14px; font-size:14px; font-weight:500; }
+.ctl.primary { background:var(--ink); color:var(--surface); border-color:var(--ink); }
+.chips { display:flex; flex-wrap:wrap; gap:6px; }
+.chip { width:34px; height:34px; border-radius:50%; border:1px solid var(--line); background:var(--bg); font-family:var(--mono); font-size:13px; font-weight:600; font-variant-numeric:tabular-nums; }
+.chip[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:var(--on-accent); }
+.caption { background:var(--bg); border-radius:12px; padding:12px 16px; min-height:68px; display:grid; gap:2px; }
+.caption .k { font-family:var(--mono); font-size:12px; color:var(--muted); letter-spacing:.04em; }
+.caption .v { font-size:15.5px; max-width:80ch; }
+
+@media (prefers-reduced-motion: reduce) { [data-s] { transition:none; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Aeroméxico tracker · backend del chat</p>
+    <h1>Qué pasa entre tu pregunta y la respuesta</h1>
+    <p class="lede">El dashboard vive en GitHub Pages y solo muestra archivos. El chat necesita un servidor que guarde la API key y haga el trabajo: ese servidor corre en Railway. Abajo están sus 7 piezas y el recorrido de una pregunta en 11 pasos.</p>
+  </header>
+
+  <section class="player" aria-label="Diagrama y recorrido paso a paso">
+    <figure>
+      <div class="scroll">
+<svg id="dia" viewBox="0 0 1120 560" role="img" aria-label="Una pregunta sale del navegador, pasa por la recepción, el guardia y el contador en Railway, espera en la bandeja, el proveedor la manda a OpenAI, el modelo pide datos a las herramientas, y la respuesta vuelve por la libreta y la recepción hasta el navegador.">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-on" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-on" d="M0,0 L10,5 L0,10 z"/></marker>
+  </defs>
+
+  <!-- Zones -->
+  <rect class="z-web" x="16" y="16" width="190" height="528" rx="16"/>
+  <rect class="z-srv" x="236" y="16" width="592" height="528" rx="16"/>
+  <rect class="z-ai" x="930" y="16" width="174" height="528" rx="16"/>
+  <text class="zt" x="36" y="46">TU NAVEGADOR</text><text class="zs" x="36" y="64">GitHub Pages</text>
+  <text class="zt" x="256" y="46">RAILWAY</text><text class="zs" x="256" y="64">servidor siempre prendido: el backend</text>
+  <text class="zt" x="950" y="46">OPENAI</text><text class="zs" x="950" y="64">fuera de tu proyecto</text>
+
+  <text class="note" x="36" y="300">Solo muestra archivos.</text>
+  <text class="note" x="36" y="318">No puede guardar</text>
+  <text class="note" x="36" y="336">la API key.</text>
+  <text class="note" x="950" y="420">Cobra a tu cuenta</text>
+  <text class="note" x="950" y="438">por tokens usados.</text>
+  <text class="note" x="950" y="466">Tope de respaldo:</text>
+  <text class="note" x="950" y="484">OpenAI Platform</text>
+
+  <!-- Chat panel -->
+  <g data-s="1 11">
+    <text class="zs" x="36" y="92">Panel del chat</text>
+    <rect class="box" x="36" y="100" width="150" height="150" rx="10"/>
+    <rect class="bub-me" x="66" y="112" width="112" height="36" rx="8"/>
+    <text class="bub-me-t" x="75" y="127">¿Cuántos pasajeros</text>
+    <text class="bub-me-t" x="75" y="141">hubo en 2025?</text>
+    <rect class="bub-ai" x="44" y="156" width="126" height="52" rx="8"/>
+    <text class="bub-ai-t" x="53" y="173">La respuesta llega</text>
+    <text class="bub-ai-t" x="53" y="187">poco a poco, con</text>
+    <text class="bub-ai-t" x="53" y="201">la fuente citada</text>
+    <text class="bs" x="46" y="236">Escribir pide contraseña</text>
+  </g>
+
+  <!-- Arrows: navegador ↔ recepción -->
+  <g data-s="1"><line class="ln" x1="186" y1="130" x2="254" y2="130"/><g class="bd"><circle cx="221" cy="130" r="9.5"/><text x="221" y="133.5">1</text></g></g>
+  <g data-s="11"><line class="ln" x1="256" y1="172" x2="188" y2="172"/><g class="bd"><circle cx="221" cy="172" r="9.5"/><text x="221" y="175.5">11</text></g></g>
+
+  <!-- Row 1 -->
+  <g data-s="1 11"><rect class="box" x="256" y="100" width="160" height="84" rx="10"/><rect class="tag" x="268" y="112" width="22" height="22" rx="5"/><text class="tagt" x="279" y="127.5">1</text><text class="bt" x="298" y="128">Recepción</text><text class="bs" x="268" y="154">la API: recibe y</text><text class="bs" x="268" y="170">entrega mensajes</text></g>
+  <g data-s="2"><line class="ln" x1="416" y1="142" x2="450" y2="142"/><g class="bd"><circle cx="434" cy="142" r="9.5"/><text x="434" y="145.5">2</text></g></g>
+  <g data-s="2"><rect class="box" x="452" y="100" width="160" height="84" rx="10"/><rect class="tag" x="464" y="112" width="22" height="22" rx="5"/><text class="tagt" x="475" y="127.5">2</text><text class="bt" x="494" y="128">Guardia</text><text class="bs" x="464" y="154">revisa que entraste</text><text class="bs" x="464" y="170">con la contraseña</text></g>
+  <g data-s="3"><line class="ln" x1="612" y1="142" x2="646" y2="142"/><g class="bd"><circle cx="630" cy="142" r="9.5"/><text x="630" y="145.5">3</text></g></g>
+  <g data-s="3 10"><rect class="box" x="648" y="100" width="160" height="84" rx="10"/><rect class="tag" x="660" y="112" width="22" height="22" rx="5"/><text class="tagt" x="671" y="127.5">3</text><text class="bt" x="690" y="128">Contador</text><text class="bs" x="660" y="154">tope de US$1 al día;</text><text class="bs" x="660" y="170">reserva y luego cobra</text></g>
+
+  <!-- Contador → bandeja -->
+  <g data-s="4"><path class="ln" d="M728,184 V217 H532 V248"/><rect class="mk-srv" x="609" y="209" width="80" height="16"/><g class="bd"><circle cx="596" cy="217" r="9.5"/><text x="596" y="220.5">4</text></g><text class="lbl" x="612" y="221">a la bandeja</text></g>
+  <!-- Libreta → recepción -->
+  <g data-s="11"><line class="ln" x1="336" y1="250" x2="336" y2="186"/><g class="bd"><circle cx="336" cy="217" r="9.5"/><text x="336" y="220.5">11</text></g><text class="lbl" x="352" y="221">en vivo</text></g>
+
+  <!-- Row 2 -->
+  <g data-s="4 10 11"><rect class="box" x="256" y="250" width="160" height="110" rx="10"/><rect class="tag" x="268" y="262" width="22" height="22" rx="5"/><text class="tagt" x="279" y="277.5">7</text><text class="bt" x="298" y="278">Libreta</text><text class="bs" x="268" y="304">base SQLite en el</text><text class="bs" x="268" y="320">disco de Railway:</text><text class="bs" x="268" y="336">conversaciones y gasto</text></g>
+  <g data-s="4"><line class="ln" x1="452" y1="280" x2="418" y2="280"/><g class="bd"><circle cx="434" cy="280" r="9.5"/><text x="434" y="283.5">4</text></g></g>
+  <g data-s="10"><line class="ln" x1="452" y1="330" x2="418" y2="330"/><g class="bd"><circle cx="434" cy="330" r="9.5"/><text x="434" y="333.5">10</text></g></g>
+  <g data-s="4 5 10"><rect class="box" x="452" y="250" width="160" height="110" rx="10"/><rect class="tag" x="464" y="262" width="22" height="22" rx="5"/><text class="tagt" x="475" y="277.5">4</text><text class="bt" x="494" y="278">Trabajador</text><text class="bs" x="464" y="304">atiende la bandeja</text><text class="bs" x="464" y="320">de pendientes en</text><text class="bs" x="464" y="336">segundo plano</text></g>
+  <g data-s="5"><line class="ln" x1="612" y1="280" x2="646" y2="280"/><g class="bd"><circle cx="630" cy="280" r="9.5"/><text x="630" y="283.5">5</text></g></g>
+  <g data-s="10"><line class="ln" x1="648" y1="330" x2="614" y2="330"/><g class="bd"><circle cx="630" cy="330" r="9.5"/><text x="630" y="333.5">10</text></g></g>
+  <g data-s="5 6 7 8 9 10"><rect class="box" x="648" y="250" width="160" height="110" rx="10"/><rect class="tag" x="660" y="262" width="22" height="22" rx="5"/><text class="tagt" x="671" y="277.5">5</text><text class="bt" x="690" y="278">Proveedor</text><text class="bs" x="660" y="304">conector al modelo;</text><text class="bs" x="660" y="320">usa la API key</text><rect class="pill" x="660" y="330" width="112" height="20" rx="10"/><text class="pill-t" x="716" y="344">HOY: SIMULADOR</text></g>
+
+  <!-- Proveedor ↔ modelo -->
+  <g data-s="6"><line class="ln" x1="808" y1="268" x2="944" y2="268"/><rect class="mk-bg" x="842" y="260" width="72" height="16"/><g class="bd"><circle cx="846" cy="268" r="9.5"/><text x="846" y="271.5">6</text></g><text class="lbl" x="861" y="272">pregunta</text></g>
+  <g data-s="7"><line class="ln" x1="946" y1="292" x2="810" y2="292"/><rect class="mk-bg" x="842" y="284" width="72" height="16"/><g class="bd"><circle cx="846" cy="292" r="9.5"/><text x="846" y="295.5">7</text></g><text class="lbl" x="861" y="296">pide dato</text></g>
+  <g data-s="8"><line class="ln" x1="808" y1="316" x2="944" y2="316"/><rect class="mk-bg" x="842" y="308" width="72" height="16"/><g class="bd"><circle cx="846" cy="316" r="9.5"/><text x="846" y="319.5">8</text></g><text class="lbl" x="861" y="320">dato real</text></g>
+  <g data-s="9"><line class="ln" x1="946" y1="340" x2="810" y2="340"/><rect class="mk-bg" x="842" y="332" width="72" height="16"/><g class="bd"><circle cx="846" cy="340" r="9.5"/><text x="846" y="343.5">9</text></g><text class="lbl" x="861" y="344">respuesta</text></g>
+
+  <g data-s="6 7 8 9"><rect class="box" x="946" y="240" width="142" height="140" rx="10"/><text class="bt" x="958" y="268">Modelo de IA</text><text class="bs" x="958" y="296">razona y redacta</text><text class="bs" x="958" y="314">no ve tus datos:</text><text class="bs" x="958" y="332">pide lo que falta</text></g>
+
+  <!-- Proveedor ↔ herramientas -->
+  <g data-s="7"><line class="ln" x1="700" y1="360" x2="700" y2="428"/><g class="bd"><circle cx="700" cy="395" r="9.5"/><text x="700" y="398.5">7</text></g><text class="lbl" x="715" y="399">consulta</text></g>
+  <g data-s="8"><line class="ln" x1="776" y1="430" x2="776" y2="362"/><g class="bd"><circle cx="776" cy="395" r="9.5"/><text x="776" y="398.5">8</text></g><text class="lbl" x="791" y="399">dato</text></g>
+
+  <!-- Row 3 -->
+  <rect class="vault" x="256" y="430" width="160" height="84" rx="10"/>
+  <text class="bt" x="268" y="458">Variables privadas</text>
+  <text class="bs" x="268" y="480">API key, contraseña</text>
+  <text class="bs" x="268" y="496">y tope de gasto</text>
+
+  <g data-s="8"><path class="box" d="M452,442 V500 A80,10 0 0 0 612,500 V442"/><ellipse class="box" cx="532" cy="442" rx="80" ry="10"/><text class="bt" x="532" y="476" text-anchor="middle">Datos aprobados</text><text class="bs" x="532" y="494" text-anchor="middle">misma versión que Pages</text></g>
+  <g data-s="8"><line class="ln" x1="612" y1="472" x2="646" y2="472"/><g class="bd"><circle cx="630" cy="472" r="9.5"/><text x="630" y="475.5">8</text></g></g>
+  <g data-s="7 8"><rect class="box" x="648" y="430" width="160" height="84" rx="10"/><rect class="tag" x="660" y="442" width="22" height="22" rx="5"/><text class="tagt" x="671" y="457.5">6</text><text class="bt" x="690" y="458">Herramientas</text><text class="bs" x="660" y="484">7 consultas fijas</text><text class="bs" x="660" y="500">a los datos</text></g>
+</svg>
+      </div>
+      <figcaption>Cuadros oscuros numerados: las 7 piezas del backend. Círculos: los 11 pasos de una pregunta. El rectángulo punteado guarda los secretos; nunca sale de Railway.</figcaption>
+    </figure>
+
+    <div class="controls">
+      <button class="ctl" id="prev" type="button" aria-label="Paso anterior">← Anterior</button>
+      <button class="ctl primary" id="play" type="button">▶ Recorrer</button>
+      <button class="ctl" id="next" type="button" aria-label="Paso siguiente">Siguiente →</button>
+      <button class="ctl" id="all" type="button">Ver todo</button>
+      <div class="chips" id="chips" role="group" aria-label="Elegir paso"></div>
+    </div>
+    <div class="caption" aria-live="polite"><span class="k" id="capk">Vista completa</span><span class="v" id="capv">Elige un número o pulsa «Recorrer» para seguir una pregunta de principio a fin. Lo que no participa en el paso se atenúa.</span></div>
+  </section>
+
+</div>
+
+<script>
+const PIECES = [
+  {id:"web", tag:"·", name:"Tu navegador", ds:"Muestra el panel del chat en Pages y envía la pregunta.", s:[1,11], ctx:true},
+  {id:"p1", tag:"1", name:"Recepción (la API)", ds:"La puerta de entrada: recibe preguntas en /api/chat/… y entrega las respuestas.", s:[1,11]},
+  {id:"p2", tag:"2", name:"Guardia", ds:"Solo deja escribir a quien entró con la contraseña. Ver el dashboard no la necesita.", s:[2]},
+  {id:"p3", tag:"3", name:"Contador", ds:"Lleva el gasto del día. Si la pregunta pudiera pasar del tope, la rechaza antes de gastar.", s:[3,10]},
+  {id:"p4", tag:"4", name:"Bandeja y trabajador", ds:"Las preguntas esperan su turno y el trabajador las atiende aparte. Cerrar la pestaña no las pierde.", s:[4,5,10]},
+  {id:"p5", tag:"5", name:"Proveedor", ds:"El conector con el modelo. Hoy es un simulador que cuesta US$0; al activarlo será OpenAI.", s:[5,6,7,8,9,10]},
+  {id:"p6", tag:"6", name:"Herramientas", ds:"Siete consultas fijas: catálogo, definiciones, métricas, comparaciones, series, fuentes y contexto.", s:[7,8]},
+  {id:"p7", tag:"7", name:"Libreta (SQLite)", ds:"Guarda conversaciones, el avance de cada respuesta y el gasto, en un disco que sobrevive reinicios.", s:[4,10,11]},
+  {id:"dat", tag:"·", name:"Datos aprobados", ds:"Las mismas cifras publicadas en el dashboard; el chat no usa otras.", s:[8], ctx:true},
+  {id:"ai", tag:"·", name:"Modelo de OpenAI", ds:"Razona y redacta. No conoce tus datos: los pide con las herramientas.", s:[6,7,8,9], ctx:true},
+];
+const STEPS = [
+  "Escribes la pregunta en el panel y la página la envía a Railway.",
+  "El guardia revisa que hayas entrado con la contraseña.",
+  "El contador mira el gasto del día y aparta un máximo; si no cabe en el tope de US$1, la rechaza aquí.",
+  "La pregunta entra a la bandeja de pendientes y queda anotada en la libreta.",
+  "El trabajador la toma y se la pasa al proveedor.",
+  "El proveedor manda la pregunta a OpenAI, junto con la lista de herramientas disponibles.",
+  "El modelo no sabe la cifra: pide un dato concreto y el proveedor consulta la herramienta indicada.",
+  "La herramienta busca en los datos aprobados y el dato real vuelve al modelo. Los pasos 7 y 8 pueden repetirse.",
+  "Con esos datos, el modelo redacta la respuesta y la devuelve.",
+  "El trabajador anota la respuesta y lo que realmente costó; el contador libera lo apartado de más.",
+  "La recepción lee la libreta y te manda la respuesta en vivo: la ves aparecer poco a poco.",
+];
+const dia = document.getElementById("dia");
+const parts = [...dia.querySelectorAll("[data-s]")].map(el => ({el, s: el.dataset.s.split(" ").map(Number)}));
+const chipsEl = document.getElementById("chips");
+const capk = document.getElementById("capk"), capv = document.getElementById("capv"), playBtn = document.getElementById("play");
+let cur = 0, timer = null;
+
+const who = n => PIECES.filter(p => p.s.includes(n)).map(p => p.ctx ? p.name : p.tag + " " + p.name).join(" · ");
+
+STEPS.forEach((t, i) => {
+  const n = i + 1;
+  const c = document.createElement("button");
+  c.type = "button"; c.className = "chip"; c.textContent = n; c.setAttribute("aria-pressed", "false");
+  c.setAttribute("aria-label", "Paso " + n); c.addEventListener("click", () => { stop(); setStep(n); });
+  chipsEl.appendChild(c);
+});
+
+
+function setStep(n) {
+  cur = n;
+  dia.classList.toggle("focus", n > 0);
+  for (const p of parts) p.el.classList.toggle("on", p.s.includes(n));
+  chipsEl.querySelectorAll(".chip").forEach((c, i) => c.setAttribute("aria-pressed", String(i + 1 === n)));
+  if (n > 0) { capk.textContent = `PASO ${n} DE 11 · ${who(n)}`; capv.textContent = STEPS[n - 1]; }
+  else { capk.textContent = "Vista completa"; capv.textContent = "Elige un número o pulsa «Recorrer» para seguir una pregunta de principio a fin. Lo que no participa en el paso se atenúa."; }
+}
+function stop() { if (timer) { clearInterval(timer); timer = null; } playBtn.textContent = "▶ Recorrer"; }
+playBtn.addEventListener("click", () => {
+  if (timer) { stop(); return; }
+  setStep(cur >= 11 || cur === 0 ? 1 : cur + 1);
+  playBtn.textContent = "❚❚ Pausa";
+  timer = setInterval(() => { if (cur >= 11) { stop(); return; } setStep(cur + 1); }, 2600);
+});
+document.getElementById("prev").addEventListener("click", () => { stop(); setStep(cur <= 1 ? 11 : cur - 1); });
+document.getElementById("next").addEventListener("click", () => { stop(); setStep(cur >= 11 ? 1 : cur + 1); });
+document.getElementById("all").addEventListener("click", () => { stop(); setStep(0); });
+</script>
+</body>
+</html>
