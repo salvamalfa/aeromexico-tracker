@@ -248,8 +248,10 @@ Cada paquete va en su propio PR, con pruebas y documentación.
 - Cada caso define el **comportamiento esperado**: responder, aclarar,
   rechazar o responder con límites. También define sus **fallos críticos** y
   el **paquete que necesita** (F2.3–F2.8).
-- El holdout de 40 queda intacto como **conjunto de seguridad**. Ambos
-  conjuntos corren en cada etapa.
+- El holdout de 40 queda intacto como **conjunto de seguridad**. Las etapas
+  de F2.9 usan ambos conjuntos, pero solo con los casos que ya se pueden
+  responder: un caso que requiere un paquete pendiente (F2.3–F2.8) no entra
+  hasta que ese paquete esté integrado.
 - El dueño revisa y ajusta la lista antes de fijarla y puede agregar
   preguntas propias.
 
@@ -352,8 +354,8 @@ límites. Los nombres de modelo y esfuerzo se ocultan en la revisión del dueño
 
 | Etapa | Qué corre | Para qué | Cuándo |
 |---|---|---|---|
-| 1 | Luna-M con el prompt actual contra Luna-M con el prompt de F2.1, en los 70 casos | Medir cuánto arregla el prompt por sí solo. | Tras F2.0–F2.2 |
-| 2 | Los cuatro candidatos en unas 15 preguntas (piloto) | Medir el costo y la latencia reales por candidato y recalcular el presupuesto de la etapa 3. | Tras F2.0–F2.2 |
+| 1 | Luna-M con el prompt actual contra Luna-M con el prompt de F2.1, en los 58 casos sin dependencias: los 40 de seguridad y las 18 preguntas de negocio marcadas «—» o «Harness» | Medir cuánto arregla el prompt por sí solo, sin que influyan las herramientas que faltan. | Tras F2.0–F2.2 |
+| 2 | Los cuatro candidatos en una muestra de 15 de esos 58 casos (piloto), con preguntas de ambos conjuntos | Medir el costo y la latencia reales por candidato y recalcular el presupuesto de la etapa 3. | Tras F2.0–F2.2 |
 | 3 | Los cuatro candidatos en los 70 casos; Luna-M y Luna-X dos veces, para medir variación | Comparación final. | Tras F2.3–F2.8 |
 
 ### Regla de decisión (propuesta, el dueño decide)
@@ -409,8 +411,8 @@ herramientas que se reenvían en cada llamada).
 | Etapa | Costo aproximado |
 |---|---:|
 | Desarrollo de F2.1–F2.8 (unas 5 rondas con Luna-M) | US$3–5 |
-| Etapa 1 (Luna-M, dos prompts) | US$1–2 |
-| Etapa 2, piloto (4 candidatos × 15 preguntas) | US$4–8 |
+| Etapa 1 (Luna-M, dos prompts, 58 casos) | US$1–2 |
+| Etapa 2, piloto (4 candidatos × 15 casos) | US$4–8 |
 | Etapa 3, final (4 candidatos y repetición de los dos Luna) | US$22–41 |
 | **Subtotal** | **US$30–56** |
 | Margen para reintentos y desconocidos (25%) | US$8–14 |
