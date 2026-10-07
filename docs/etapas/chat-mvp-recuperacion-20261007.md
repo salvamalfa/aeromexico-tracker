@@ -10,6 +10,10 @@ El adaptador recupera resultados terminales del turno exacto tras errores
 recuperables, sin reenviar entradas. Rechaza resultados de otros turnos,
 sesiones o subagentes y conserva las guardias locales. La lectura del historial
 recupera solo la respuesta final, sin incorporar mensajes intermedios.
+La lectura recorre cursores oficiales hasta delimitar los elementos del turno,
+con un máximo de 10 páginas, 1.000 elementos y 30 segundos. Detecta páginas
+superpuestas y conserva la recuperación cuando el resto del historial contiene
+turnos anteriores. La CLI comparte ese lector.
 
 La CLI privada permite reconciliar un turno existente fallido mediante lecturas
 del proveedor y una transacción local. Conserva el evento de fallo anterior y
@@ -17,6 +21,8 @@ registra la respuesta y el consumo una sola vez. Rechaza cancelaciones,
 timeouts, guardias conocidas, cambios de identidad y conversaciones con turnos
 posteriores. Su modo predeterminado no escribe ni llama al proveedor; no hay
 un endpoint público de administración.
+El contexto de Docker incluye explícitamente el archivo de la CLI y mantiene
+excluidos los demás scripts de chat e insumos privados.
 
 Esta corrección mantiene el modelo, el prompt, el esfuerzo y los límites del
 MVP. No introduce evaluaciones nuevas ni cambios de fase 2. Las respuestas y

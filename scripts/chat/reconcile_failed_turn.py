@@ -174,6 +174,7 @@ def _recover_exact(
         parse_usage,
         to_dict,
     )
+    from src.conversational_analytics.providers._openai_recovery import read_exact_turn_items
 
     turn = provider.client.beta.agents.sessions.turns.retrieve(
         turn_id, session_id=session_id, timeout=30
@@ -193,10 +194,10 @@ def _recover_exact(
     if not complete:
         raise ValueError("provider usage is incomplete")
 
-    page = provider.client.beta.agents.sessions.items.list(session_id, limit=100, order="desc")
-    items = [to_dict(item) for item in getattr(page, "data", [])]
-    if getattr(page, "has_more", False):
-        raise ValueError("provider item list is incomplete")
+    items = read_exact_turn_items(provider.client, session_id, turn_id)
+    if items is None:
+        raise ValueError("provider item history is incomplete or inconsistent")
+    items = [to_dict(item) for item in items]
     target = [item for item in items if item.get("turn_id") == turn_id]
     if not target:
         raise ValueError("provider returned no items for the exact turn")

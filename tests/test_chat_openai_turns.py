@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import json
+from types import SimpleNamespace
 
 import pytest
 
@@ -300,6 +301,93 @@ def test_recovery_rejects_partial_item_page_instead_of_returning_partial_text():
         _run(_provider(FakeClient(fake)), session_id="sess_fixture")
 
     assert len(fake.events.created) == 1
+
+
+def test_recovery_paginates_past_more_than_one_page_of_exact_turn_items():
+    class PagedItems:
+        def __init__(self, items):
+            self.items = items
+            self.calls = []
+
+        def list(self, session_id, *, limit, order, timeout, after=None):
+            assert session_id == "sess_fixture"
+            assert order == "desc" and timeout > 0
+            self.calls.append(after)
+            start = next(
+                (index + 1 for index, item in enumerate(self.items) if item["id"] == after), 0
+            )
+            page_items = self.items[start : start + limit]
+            return SimpleNamespace(
+                data=page_items,
+                has_more=start + len(page_items) < len(self.items),
+            )
+
+    current_turn = [
+        {
+            "id": "final-answer",
+            "type": "message",
+            "role": "assistant",
+            "status": "completed",
+            "phase": "final_answer",
+            "turn_id": "turn_new",
+            "content": [{"type": "output_text", "text": "Turno recuperado."}],
+        },
+        *[
+            {"id": f"current-{index}", "type": "function_call", "turn_id": "turn_new"}
+            for index in range(1, 150)
+        ],
+    ]
+    older_turns = [
+        {"id": f"old-{index}", "type": "function_call", "turn_id": "turn_old"}
+        for index in range(200)
+    ]
+    items = PagedItems(current_turn + older_turns)
+    client = SimpleNamespace(
+        beta=SimpleNamespace(
+            agents=SimpleNamespace(sessions=SimpleNamespace(items=items))
+        )
+    )
+
+    assert retrieve_completed_turn_output(client, "sess_fixture", "turn_new") == "Turno recuperado."
+    assert len(items.calls) == 2
+    assert items.calls[0] is None
+    assert items.calls[1] == "current-99"
+
+
+def test_recovery_rejects_overlapping_cursor_pages():
+    final_item = {
+        "id": "final-answer",
+        "type": "message",
+        "role": "assistant",
+        "status": "completed",
+        "phase": "final_answer",
+        "turn_id": "turn_new",
+        "content": [{"type": "output_text", "text": "No duplicar."}],
+    }
+
+    class OverlappingItems:
+        calls = 0
+
+        def list(self, session_id, *, limit, order, timeout, after=None):
+            assert session_id == "sess_fixture"
+            self.calls += 1
+            if after is None:
+                return SimpleNamespace(data=[final_item], has_more=True)
+            assert after == "final-answer"
+            return SimpleNamespace(
+                data=[final_item, {"id": "old", "turn_id": "turn_old"}],
+                has_more=False,
+            )
+
+    items = OverlappingItems()
+    client = SimpleNamespace(
+        beta=SimpleNamespace(
+            agents=SimpleNamespace(sessions=SimpleNamespace(items=items))
+        )
+    )
+
+    assert retrieve_completed_turn_output(client, "sess_fixture", "turn_new") == ""
+    assert items.calls == 2
 
 
 @pytest.mark.parametrize(

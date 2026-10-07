@@ -183,12 +183,13 @@ def test_exact_sdk_recovery_reads_only_final_answer_and_existing_items():
     class Items:
         calls = []
 
-        def list(self, session_id, *, limit, order):
-            self.calls.append((session_id, limit, order))
+        def list(self, session_id, **kwargs):
+            self.calls.append((session_id, kwargs))
             return SimpleNamespace(
                 has_more=False,
                 data=[
                     {
+                        "id": "item-analysis",
                         "type": "message",
                         "role": "assistant",
                         "turn_id": "turn-exact",
@@ -197,6 +198,7 @@ def test_exact_sdk_recovery_reads_only_final_answer_and_existing_items():
                         "content": [{"type": "output_text", "text": "hidden reasoning"}],
                     },
                     {
+                        "id": "item-final",
                         "type": "message",
                         "role": "assistant",
                         "turn_id": "turn-exact",
@@ -205,6 +207,7 @@ def test_exact_sdk_recovery_reads_only_final_answer_and_existing_items():
                         "content": [{"type": "output_text", "text": "Canonical answer."}],
                     },
                     {
+                        "id": "item-call",
                         "type": "function_call",
                         "turn_id": "turn-exact",
                         "call_id": "call-existing",
@@ -231,7 +234,10 @@ def test_exact_sdk_recovery_reads_only_final_answer_and_existing_items():
         }
     ]
     assert turns.calls == [("turn-exact", "session-exact")]
-    assert items.calls == [("session-exact", 100, "desc")]
+    assert items.calls[0][0] == "session-exact"
+    assert items.calls[0][1]["limit"] == 100
+    assert items.calls[0][1]["order"] == "desc"
+    assert items.calls[0][1]["timeout"] <= 5
 
 
 def test_exact_sdk_recovery_rejects_mismatch_and_truncated_item_page():
@@ -264,7 +270,7 @@ def test_exact_sdk_recovery_rejects_mismatch_and_truncated_item_page():
             }
 
     class TruncatedItems:
-        def list(self, session_id, *, limit, order):
+        def list(self, session_id, **_kwargs):
             return SimpleNamespace(has_more=True, data=[])
 
     truncated = SimpleNamespace(
@@ -278,6 +284,73 @@ def test_exact_sdk_recovery_rejects_mismatch_and_truncated_item_page():
     )
     with pytest.raises(ValueError):
         _recover_exact(truncated, "session-exact", "turn-exact")
+
+
+def test_exact_sdk_recovery_uses_paginated_items_for_final_and_tool_calls():
+    from scripts.chat.reconcile_failed_turn import _recover_exact
+
+    class Turns:
+        def retrieve(self, turn_id, *, session_id, timeout):
+            return {
+                "id": turn_id,
+                "session_id": session_id,
+                "status": "completed",
+                "usage": {"input_tokens": 30, "output_tokens": 8, "total_tokens": 38},
+            }
+
+    class Items:
+        calls = []
+
+        def list(self, session_id, *, limit, order, timeout, after=None):
+            self.calls.append(after)
+            if after is None:
+                return SimpleNamespace(
+                    has_more=True,
+                    data=[
+                        {
+                            "id": "item-final",
+                            "type": "message",
+                            "role": "assistant",
+                            "turn_id": "turn-exact",
+                            "phase": "final_answer",
+                            "status": "completed",
+                            "content": [{"type": "output_text", "text": "Paginated answer."}],
+                        }
+                    ],
+                )
+            return SimpleNamespace(
+                has_more=True,
+                data=[
+                    {
+                        "id": "item-call",
+                        "type": "function_call",
+                        "turn_id": "turn-exact",
+                        "call_id": "call-existing",
+                        "name": "query_metrics",
+                        "arguments": {"periods": ["2026Q2"]},
+                    },
+                    {
+                        "id": "item-old",
+                        "type": "message",
+                        "role": "assistant",
+                        "turn_id": "turn-old",
+                    },
+                ],
+            )
+
+    items = Items()
+    provider = SimpleNamespace(
+        client=SimpleNamespace(
+            beta=SimpleNamespace(
+                agents=SimpleNamespace(sessions=SimpleNamespace(turns=Turns(), items=items))
+            )
+        )
+    )
+    content, input_tokens, output_tokens, calls = _recover_exact(provider, "session-exact", "turn-exact")
+    assert content == "Paginated answer."
+    assert (input_tokens, output_tokens) == (30, 8)
+    assert calls[0]["call_id"] == "call-existing"
+    assert items.calls == [None, "item-final"]
 
 
 def test_recovered_answer_obeys_configured_worker_output_limit():
