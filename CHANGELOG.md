@@ -4,6 +4,23 @@ Cambios notables del proyecto, para humanos. Formato inspirado en
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); no se usa
 versión semántica, las entradas van por fecha.
 
+## 2026-10-07 · Fase 2 del chat: modelos, esfuerzo y nuevo conjunto de evaluación
+
+- `docs/chat/fase-2-agente-analitico.md` reescrito como guía de implementación:
+  - cuatro candidatos: Luna con esfuerzo medio y máximo, Sol con bajo y medio;
+    Astra queda fuera;
+  - nuevo paquete F2.0 para fijar y registrar el esfuerzo de razonamiento, que
+    nunca se configuró;
+  - F2.1 con formato de respuesta, reglas de criterio y las respuestas
+    preferidas del dueño como referencia, sin contaminar el holdout;
+  - F2.2 con 30 preguntas de negocio en lenguaje común;
+  - F2.9 con etapas, regla de decisión y costo estimado de US$40–70, cargado
+    por etapas;
+  - un borrador del prompt de sistema basado en las guías oficiales de OpenAI y
+    Anthropic, y una tabla de los puntos donde el agente debe pedir la decisión
+    del dueño.
+- `ROADMAP.md` actualizado.
+
 ## 2026-10-07 · Propuesta de la fase 2 del chat y diagramas de arquitectura
 
 - Nuevo `docs/chat/fase-2-agente-analitico.md`: después del MVP, el chat pasa

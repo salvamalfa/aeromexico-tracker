@@ -113,6 +113,6 @@ holdout histórico.
 - No consumir la API pagada fuera de esa activación (nuevas evaluaciones o la
   prueba de Data Sharing) sin una autorización específica. Las rondas de
   evaluación de la fase 2 ya están autorizadas, con las condiciones de
-  [fase 2](fase-2-agente-analitico.md#evaluación-y-presupuesto): estimación y
+  [fase 2](fase-2-agente-analitico.md#costo-estimado-de-las-evaluaciones): estimación y
   saldo necesario antes de gastar.
 - No cambiar aprobaciones ni datos publicados.

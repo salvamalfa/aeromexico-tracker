@@ -18,16 +18,15 @@ Propuesta — el dueño decide prioridades.
 ## Siguiente
 
 - Fase 2 del chat, después del MVP: agente analítico para preguntas de negocio
-  (`docs/chat/fase-2-agente-analitico.md`). Paquetes F2.1–F2.9:
-  - estilo de respuesta según las notas del dueño;
-  - evaluación en lenguaje de negocio;
-  - glosario y métricas totales;
-  - rutas y comparaciones;
+  (`docs/chat/fase-2-agente-analitico.md`). Paquetes F2.0–F2.9:
+  - modelo y esfuerzo de razonamiento explícitos;
+  - prompt de redacción y criterio, según las notas del dueño;
+  - conjunto de evaluación de negocio (30 preguntas en lenguaje común);
+  - glosario y métricas totales; rutas y comparaciones;
   - índice de reportes e índice semanal de noticias con aprobación;
-  - explicaciones atribuidas a fuentes;
-  - herramientas de presentación;
-  - nueva ronda de evaluación con cada modelo, ya autorizada por el dueño
-    una vez que apruebe la estimación de costo.
+  - explicaciones atribuidas a fuentes; herramientas de presentación;
+  - evaluación comparativa de Luna (medio y máximo) y Sol (bajo y medio), ya
+    autorizada por el dueño con gasto por etapas.
 - Ampliar la cobertura internacional de rutas más allá de EE. UU. (BTS
   T-100): candidatos con evidencia parcial en Brasil (ANAC), Colombia
   (Aerocivil), Reino Unido (CAA) y Perú (DGAC); España sigue bloqueada por
