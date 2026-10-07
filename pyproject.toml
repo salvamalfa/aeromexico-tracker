@@ -73,6 +73,9 @@ select = ["E", "F", "I"]
 [tool.ruff.lint.per-file-ignores]
 "src/analysis_agent/lifecycle.py" = ["E501", "E701", "E702", "E703"]
 "src/dashboard/international_routes.py" = ["E501", "E701", "E702", "E703"]
+# The approved calculation fingerprints this file's bytes. Keep its two
+# historical imports for byte identity; suppress only F401 in this file.
+"src/analysis_agent/quantitative.py" = ["F401"]
 
 [tool.pytest.ini_options]
 addopts = "-ra --strict-config --strict-markers"

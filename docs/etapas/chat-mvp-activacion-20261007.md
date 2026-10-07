@@ -18,6 +18,8 @@ imports que habían sido eliminados después de generarse el cálculo. El
 fingerprint registra los bytes completos del archivo; la fuente restaurada es
 idéntica a la que se usó para el cálculo aprobado. El replay mantuvo iguales
 los 372 nodos y sus cifras; no se editó el cálculo, el registro ni la aprobación.
+El chequeo Ruff F401 queda exceptuado solo para este archivo por esos dos
+imports; las demás reglas F y el resto de `src/` y `scripts/` siguen cubiertos.
 
 El gate generó 126 archivos con el panel incluido y `src.publish.verify site/`
 pasó. Los 112 archivos de `site/data/v1/` y el `analysis_manifest` coinciden
