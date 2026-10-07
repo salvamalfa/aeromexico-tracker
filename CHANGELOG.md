@@ -15,7 +15,10 @@ versión semántica, las entradas van por fecha.
     preferidas del dueño como referencia, sin contaminar el holdout;
   - F2.2 con 30 preguntas de negocio en lenguaje común;
   - F2.9 con etapas, regla de decisión y costo estimado de US$40–70, cargado
-    por etapas.
+    por etapas;
+  - un borrador del prompt de sistema basado en las guías oficiales de OpenAI y
+    Anthropic, y una tabla de los puntos donde el agente debe pedir la decisión
+    del dueño.
 - `ROADMAP.md` actualizado.
 
 ## 2026-10-07 · Propuesta de la fase 2 del chat y diagramas de arquitectura
