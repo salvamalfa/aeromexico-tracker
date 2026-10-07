@@ -198,9 +198,19 @@ ronda; por eso solo se propone en un subconjunto.
 
 ### Lo que debe hacer el agente antes de gastar
 
-1. Ejecutar `uv run python -m src.conversational_analytics.evaluation --dry-run`
-   con los modelos y las tarifas del día, y presentar al dueño las llamadas,
-   los tokens estimados, el costo por ronda y **el saldo que necesita cargar**.
+1. Preparar una estimación que refleje la carga real de la fase 2 y
+   presentar al dueño las llamadas, los tokens estimados, el costo por ronda y
+   **el saldo que necesita cargar**. El `--dry-run` actual **no sirve tal cual**:
+   - siempre carga el holdout de 40 casos;
+   - supone 1,200 tokens de entrada por pregunta, contra unos 40,000 medidos;
+   - sin `--models` ni `--model-price` no calcula ningún candidato.
+
+   Como parte de F2.2, amplía el evaluador para aceptar el fixture nuevo y los
+   tokens por pregunta. Parte de la entrada medida (~40,000 tokens) multiplicada
+   por el factor que justifiquen las nuevas herramientas, y pasa los modelos
+   candidatos con sus tarifas del día (`--models` y `--model-price`). Hasta
+   entonces, calcula la estimación a mano con la tabla de consumo medido y
+   explica los supuestos.
 2. Esperar a que el dueño cargue el saldo. La autorización cubre las rondas
    presentadas en esa estimación, no un gasto abierto.
 3. Fijar en un fixture nuevo `data_version` y `semantic_version`, el prompt,
