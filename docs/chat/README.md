@@ -33,10 +33,15 @@ sesiones del proveedor aisladas tras el adaptador.
 | H1 — semántica revisada | Catálogo aprobado por el dueño para el MVP (`review_status: owner_approved_mvp`, PR #87). |
 | H2 — demo sin consumo | Backend, 11 métricas, siete herramientas, SSE y panel implementados y verificados. |
 | H3 — chat real local | Acceso confirmado con consultas reales con herramientas y fuentes; uso recuperado por lecturas oficiales. |
-| H4 — modelo elegido | Comparación terminada (Luna 7/9, Sol 9/10, Astra 8/9 parcial; ninguno llega al 95%). Falta la calificación del dueño en `review.html`, el gate de calidad y su elección de modelo y tope. |
+| H4 — modelo elegido | Comparación terminada (Luna 7/9, Sol 9/10, Astra 8/9 parcial; ninguno llega al 95%). El dueño entregó sus calificaciones el 7 oct; faltan el gate de calidad y su elección de modelo y tope. |
 | H5 — piloto publicado | Backend en Railway con HTTPS, contraseña y `mock`; admisión cerrada. Listo para activar por configuración y publicar el panel. |
 
 Para activar el MVP, sigue el [traspaso de activación](traspaso-activacion-mvp-20261006.md).
+Después del MVP sigue la [fase 2: agente analítico para negocio](fase-2-agente-analitico.md).
+
+Diagramas interactivos de la arquitectura actual:
+[anatomía del chat](../arquitectura/anatomia-chat.html) y
+[anatomía de las herramientas](../arquitectura/anatomia-herramientas.html).
 
 Para evaluación, cobertura, gates y límites, consulta [evaluaciones y presupuesto](evaluaciones-presupuesto.md).
 Para instalación, operación y el diseño propuesto de una instancia persistente,

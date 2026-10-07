@@ -4,6 +4,22 @@ Cambios notables del proyecto, para humanos. Formato inspirado en
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); no se usa
 versión semántica, las entradas van por fecha.
 
+## 2026-10-07 · Propuesta de la fase 2 del chat y diagramas de arquitectura
+
+- Nuevo `docs/chat/fase-2-agente-analitico.md`: después del MVP, el chat pasa
+  a ser un agente para preguntas de negocio.
+  - Incluye glosario, métricas totales, rutas, índice de reportes, índice
+    semanal de noticias con aprobación, explicaciones atribuidas a fuentes y
+    herramientas de presentación.
+  - Paquetes F2.1–F2.9 con criterios de salida.
+  - Estimación de referencia del costo de las nuevas evaluaciones, que el
+    dueño autorizó sujeto a una estimación previa.
+- El traspaso de activación registra las calificaciones entregadas, que el MVP
+  se activa sin cambios y el saldo actual de la API.
+- Los diagramas «Anatomía del chat» y «Anatomía de las herramientas» viven en
+  `docs/arquitectura/`, como HTML interactivo y como GIF en el `README.md`.
+- Entradas nuevas en `ROADMAP.md`.
+
 ## 2026-10-06 · Traspaso para activar el MVP del chat
 
 - Nuevo `docs/chat/traspaso-activacion-mvp-20261006.md`: roles (el dueño solo

@@ -4,6 +4,27 @@ Documento operativo para el agente que activa el chat (ChatGPT). Resume el
 estado al 6 de octubre de 2026 y lo que falta. Las reglas de `AGENTS.md`
 siguen vigentes.
 
+**Orden de lectura:** este documento primero (activar el MVP). Después de la
+activación, [fase 2 del chat](fase-2-agente-analitico.md).
+
+## Actualización del 7 de octubre
+
+- **Calificaciones entregadas.** El dueño exportó `calificaciones-paquete.json`
+  desde `review.html` (paquete `airline-tracker-h1-owner-review` 1.0.0) y lo
+  entrega directamente al agente; no se versiona.
+  - `historical-74`: calificó las 74 respuestas disponibles, que cubren 36
+    preguntas. Marcó como problema Q08/A, Q21/A, Q22/A y Q40/A.
+  - `current-h1-v5`: calificó 39 de 40; falta Q14. Marcó como problema
+    Q35/A, que da una cifra en lugar de rechazar.
+  - Sus notas de estilo (introducciones largas, advertencias no pedidas,
+    mezcla de idiomas) se atienden en la fase 2, paquete F2.1.
+- **El MVP se activa sin cambios de código ni de prompt.** Si el gate de
+  calidad no pasa (por ejemplo, si Q35 cuenta como fallo crítico), no lo
+  corrijas por tu cuenta: presenta al dueño los casos, el arreglo mínimo y su
+  riesgo, y él decide si se corrige antes o se activa aceptando el riesgo.
+- **Saldo de la API:** US$10 cargados y US$2.72 gastados al 7 de octubre. El
+  chat en producción consume de ese saldo.
+
 ## Roles
 
 - **Dueño:** califica los cortes en `review.html` y entrega el archivo de
@@ -90,5 +111,8 @@ holdout histórico.
 - No encender OpenAI ni publicar el panel sin la elección explícita del dueño
   de modelo y tope.
 - No consumir la API pagada fuera de esa activación (nuevas evaluaciones o la
-  prueba de Data Sharing) sin una autorización específica.
+  prueba de Data Sharing) sin una autorización específica. Las rondas de
+  evaluación de la fase 2 ya están autorizadas, con las condiciones de
+  [fase 2](fase-2-agente-analitico.md#evaluación-y-presupuesto): estimación y
+  saldo necesario antes de gastar.
 - No cambiar aprobaciones ni datos publicados.
