@@ -13,7 +13,15 @@ ese límite conocido; no se creó un gate de aprobación ni se cambió el estado
 de aprobaciones. Evaluaciones nuevas, esfuerzo de respuesta y ajustes de estilo
 quedan para fase 2.
 
-La validación pendiente incluye confirmar la configuración y salud del servicio
-de Railway, compilar el sitio mediante el gate de publicación aprobado y
-comprobar el panel publicado. Esta etapa no modifica prompt, backend, datos ni
-aprobaciones y no ejecuta llamadas pagadas.
+Para validar el registro aprobado se restauraron en `quantitative.py` dos
+imports que habían sido eliminados después de generarse el cálculo. El
+fingerprint registra los bytes completos del archivo; la fuente restaurada es
+idéntica a la que se usó para el cálculo aprobado. El replay mantuvo iguales
+los 372 nodos y sus cifras; no se editó el cálculo, el registro ni la aprobación.
+
+El gate generó 126 archivos con el panel incluido y `src.publish.verify site/`
+pasó. Los 112 archivos de `site/data/v1/` y el `analysis_manifest` coinciden
+con `origin/master`; esta etapa no publica cifras nuevas. La compilación y la
+verificación local están completas. Sigue pendiente confirmar la configuración
+y salud de Railway y comprobar el panel tras el deploy de Pages. No se
+modificaron prompt ni backend y no se hicieron llamadas pagadas.
