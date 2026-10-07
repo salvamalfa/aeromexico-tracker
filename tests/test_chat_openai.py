@@ -256,7 +256,8 @@ class FakeSessions:
 
     def _list_items(self, session_id, **kwargs):
         assert session_id == "sess_fixture"
-        return SimpleNamespace(data=self._recovery.get("items", []) if self._recovery else [])
+        items = self._recovery or {}
+        return SimpleNamespace(data=items.get("items", []), has_more=bool(items.get("items_has_more")))
 
     def _retrieve_turn(self, turn_id, *, session_id, timeout):
         self.turn_retrieve_calls.append((turn_id, session_id, timeout))
@@ -496,42 +497,6 @@ def test_terminal_failure_and_cancellation_are_not_reported_as_completed(termina
 
     with pytest.raises((OpenAIProviderError, InterruptedError)):
         _run(provider, session_id="sess_fixture")
-
-
-def test_idle_and_eof_retrieves_saved_turn_state_but_does_not_replay_input():
-    completed_turn = _turn("turn_new", status="completed", usage=_usage()).model_dump()
-    completed_turn["session_id"] = "sess_fixture"
-    recovery = {
-        "id": "sess_fixture",
-        "status": "idle",
-        "required_actions": [],
-        "turns": [completed_turn],
-        "items": [
-            {
-                "id": "item_assistant",
-                "type": "message",
-                "role": "assistant",
-                "turn_id": "turn_new",
-                "output_index": 0,
-                "content": [{"type": "output_text", "text": "Recuperada sin reenviar."}],
-            }
-        ],
-    }
-    fake = FakeSessions(
-        event_stream=FakeStream(
-            [AgentSessionIdleEvent.model_construct(type="agent.session.idle", session={"id": "sess_fixture"})]
-        ),
-        prior_turns=[_turn("turn_old", status="completed")],
-        recovery=recovery,
-    )
-    provider = _provider(FakeClient(fake))
-
-    result, _, _ = _run(provider, session_id="sess_fixture")
-
-    assert result.content == "Recuperada sin reenviar."
-    assert result.usage_complete
-    assert fake.retrieve_calls == 1
-    assert len(fake.events.created) == 1
 
 
 def test_idle_without_new_terminal_turn_is_not_success():

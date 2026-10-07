@@ -161,6 +161,22 @@ def field(value: Any, name: str) -> Any:
     return getattr(value, name, None)
 
 
+def latest_provider_turn_id(client: Any, session_id: str) -> str | None:
+    """Read the previous turn ID before sending input to a reused session."""
+    try:
+        page = client.beta.agents.sessions.turns.list(session_id, limit=1, order="desc")
+        turns = list(getattr(page, "data", []))
+        if turns:
+            value = field(turns[0], "id")
+            return value if isinstance(value, str) and value else None
+    except Exception:
+        # Read history only before input; do not guess if that lookup fails.
+        raise OpenAIProviderError(
+            "No se pudo verificar el historial antes del siguiente mensaje"
+        ) from None
+    return None
+
+
 def required_string(value: Any, name: str) -> str:
     if not isinstance(value, str) or not value:
         raise ValueError(f"La acción del proveedor no incluye {name} válido")
@@ -467,6 +483,50 @@ def result_from_recovered(
         provider_session_id=session_id,
         usage_complete=usage_complete,
     )
+
+
+def recover_completed_provider_error(
+    error: OpenAIProviderError,
+    *,
+    recover: Callable[..., tuple[str, str, str | None, dict[str, Any]] | None],
+    session_id: str | None,
+    turn_id: str | None,
+    prior_turn_id: str | None,
+    client: Any,
+    cancel_event: threading.Event,
+    deadline: float,
+    close_stream: Callable[[], None],
+    accept_completed: Callable[[tuple[int, int] | None], None],
+    tool_outputs: list[dict[str, Any]],
+) -> ProviderResult | None:
+    """Recover a completed exact turn after a non-hardguard provider error."""
+    if error.reason_code or not session_id or not turn_id:
+        return None
+    close_stream()
+    recovered = recover(session_id, turn_id, prior_turn_id)
+    if not recovered or recovered[1] != "completed" or not recovered[0]:
+        return None
+    content, _, recovered_turn_id, usage_data = recovered
+    input_tokens, output_tokens, usage_complete = parse_usage(usage_data)
+    usage = (input_tokens, output_tokens) if usage_complete else None
+    if usage is None and recovered_turn_id:
+        usage = read_completed_turn_usage(
+            client,
+            session_id,
+            recovered_turn_id,
+            cancel_event=cancel_event,
+            deadline=deadline,
+            close_stream=close_stream,
+        )
+    if usage is not None:
+        input_tokens, output_tokens = usage
+        usage_data = {
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "total_tokens": input_tokens + output_tokens,
+        }
+    accept_completed(usage)
+    return result_from_recovered(content, usage_data, session_id, tool_outputs)
 
 
 def event_session_id(event: dict[str, Any]) -> str | None:

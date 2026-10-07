@@ -19,6 +19,7 @@ from openai.types.beta.agent_session_requires_action_event import AgentSessionRe
 from openai.types.beta.agent_session_turn_failed_event import AgentSessionTurnFailedEvent
 
 from src.conversational_analytics.providers.openai import OpenAIProviderError
+from src.conversational_analytics.providers._openai_recovery import retrieve_completed_turn_output
 from test_chat_openai import (
     FakeClient,
     FakeSessions,
@@ -148,6 +149,7 @@ def test_recovered_answer_replaces_partial_deltas_instead_of_appending():
                 "id": "item_assistant",
                 "type": "message",
                 "role": "assistant",
+                "status": "completed",
                 "turn_id": "turn_new",
                 "content": [{"type": "output_text", "text": "El factor fue 87.1%."}],
             }
@@ -168,3 +170,251 @@ def test_recovered_answer_replaces_partial_deltas_instead_of_appending():
     )
     result, _, _ = _run(_provider(FakeClient(fake)), session_id="sess_fixture")
     assert result.content == "El factor fue 87.1%."
+
+
+def test_provider_error_recovers_only_exact_completed_turn_without_resending_input():
+    completed_turn = _turn("turn_new", status="completed", usage=_usage(120, 7)).model_dump()
+    recovery = {
+        "id": "sess_fixture",
+        "status": "idle",
+        "required_actions": [],
+        "turns": [completed_turn],
+        "items": [
+            {
+                "id": "item_assistant",
+                "type": "message",
+                "role": "assistant",
+                "status": "completed",
+                "turn_id": "turn_new",
+                "content": [{"type": "output_text", "text": "Respuesta recuperada."}],
+            }
+        ],
+    }
+    fake = FakeSessions(
+        event_stream=FakeStream(
+            [_turn_created("turn_new"), OpenAIProviderError("stream interrupted")]
+        ),
+        prior_turns=[_turn("turn_old", status="completed")],
+        recovery=recovery,
+    )
+
+    result, _, _ = _run(_provider(FakeClient(fake)), session_id="sess_fixture")
+
+    assert result.content == "Respuesta recuperada."
+    assert (result.input_tokens, result.output_tokens, result.usage_complete) == (120, 7, True)
+    assert len(fake.events.created) == 1
+    assert fake.events.created[0]["events"][0]["type"] == "agent.session.input.message"
+
+
+def test_recovery_uses_final_answer_items_in_chronological_part_order():
+    completed_turn = _turn("turn_new", status="completed", usage=_usage()).model_dump()
+    def final_part(item_id, text):
+        return {
+            "id": item_id,
+            "type": "message",
+            "role": "assistant",
+            "status": "completed",
+            "phase": "final_answer",
+            "turn_id": "turn_new",
+            "content": [{"type": "output_text", "text": text}],
+        }
+    recovery = {
+        "id": "sess_fixture",
+        "status": "idle",
+        "required_actions": [],
+        "turns": [completed_turn],
+        # The API lists newest items first; content parts within each message
+        # remain in their natural order.
+        "items": [
+            final_part("final-2", " mundo"),
+            {
+                "id": "commentary",
+                "type": "message",
+                "role": "assistant",
+                "status": "completed",
+                "phase": "commentary",
+                "turn_id": "turn_new",
+                "content": [{"type": "output_text", "text": "comentario"}],
+            },
+            {
+                "id": "reasoning",
+                "type": "message",
+                "role": "assistant",
+                "status": "completed",
+                "phase": "analysis",
+                "turn_id": "turn_new",
+                "content": [{"type": "output_text", "text": "razonamiento"}],
+            },
+            {
+                **final_part("final-1", ""),
+                "content": [
+                    {"type": "output_text", "text": "Hola"},
+                    {"type": "output_text", "text": " "},
+                    {"type": "output_text", "text": "bienvenido"},
+                ],
+            },
+        ],
+    }
+    fake = FakeSessions(
+        event_stream=FakeStream(
+            [_turn_created("turn_new"), OpenAIProviderError("stream interrupted")]
+        ),
+        prior_turns=[_turn("turn_old", status="completed")],
+        recovery=recovery,
+    )
+
+    result, _, _ = _run(_provider(FakeClient(fake)), session_id="sess_fixture")
+
+    assert result.content == "Hola bienvenido mundo"
+
+
+def test_recovery_rejects_partial_item_page_instead_of_returning_partial_text():
+    completed_turn = _turn("turn_new", status="completed", usage=_usage()).model_dump()
+    recovery = {
+        "id": "sess_fixture",
+        "status": "idle",
+        "required_actions": [],
+        "turns": [completed_turn],
+        "items_has_more": True,
+        "items": [
+            {
+                "id": "final",
+                "type": "message",
+                "role": "assistant",
+                "status": "completed",
+                "phase": "final_answer",
+                "turn_id": "turn_new",
+                "content": [{"type": "output_text", "text": "parcial"}],
+            }
+        ],
+    }
+    fake = FakeSessions(
+        event_stream=FakeStream(
+            [_turn_created("turn_new"), OpenAIProviderError("stream interrupted")]
+        ),
+        prior_turns=[_turn("turn_old", status="completed")],
+        recovery=recovery,
+    )
+
+    with pytest.raises(OpenAIProviderError, match="stream interrupted"):
+        _run(_provider(FakeClient(fake)), session_id="sess_fixture")
+
+    assert len(fake.events.created) == 1
+
+
+@pytest.mark.parametrize(
+    "item",
+    [
+        {
+            "id": "final",
+            "type": "message",
+            "role": "assistant",
+            "status": "in_progress",
+            "phase": "final_answer",
+            "turn_id": "turn_new",
+            "content": [{"type": "output_text", "text": "aún no terminó"}],
+        },
+        {
+            "id": "legacy",
+            "type": "message",
+            "role": "assistant",
+            "status": "completed",
+            "turn_id": "turn_new",
+            "content": [{"type": "output_text", "text": "respuesta antigua"}],
+        },
+    ],
+)
+def test_recovery_does_not_accept_incomplete_or_shadowed_legacy_final_item(item):
+    items = [item]
+    if item["id"] == "legacy":
+        items.insert(
+            0,
+            {
+                "id": "later-commentary",
+                "type": "message",
+                "role": "assistant",
+                "status": "completed",
+                "phase": "commentary",
+                "turn_id": "turn_new",
+                "content": [{"type": "output_text", "text": "comentario posterior"}],
+            },
+        )
+    fake = FakeSessions(
+        recovery={"items": items},
+    )
+
+    assert retrieve_completed_turn_output(FakeClient(fake), "sess_fixture", "turn_new") == ""
+
+
+@pytest.mark.parametrize(
+    ("recovery_turn_id", "recovery_session_id"),
+    [("turn_old", "sess_fixture"), ("turn_other", "sess_fixture"), ("turn_new", "sess_other")],
+)
+def test_provider_error_does_not_recover_a_prior_or_different_turn(
+    recovery_turn_id, recovery_session_id
+):
+    recovery = {
+        "id": "sess_fixture",
+        "status": "idle",
+        "required_actions": [],
+        "turns": [
+            {
+                **_turn(recovery_turn_id, status="completed", usage=_usage()).model_dump(),
+                "session_id": recovery_session_id,
+            }
+        ],
+        "items": [
+            {
+                "id": "item_assistant",
+                "type": "message",
+                "role": "assistant",
+                "turn_id": recovery_turn_id,
+                "content": [{"type": "output_text", "text": "No corresponde."}],
+            }
+        ],
+    }
+    fake = FakeSessions(
+        event_stream=FakeStream(
+            [_turn_created("turn_new"), OpenAIProviderError("stream interrupted")]
+        ),
+        prior_turns=[_turn("turn_old", status="completed")],
+        recovery=recovery,
+    )
+
+    with pytest.raises(OpenAIProviderError, match="stream interrupted"):
+        _run(_provider(FakeClient(fake)), session_id="sess_fixture")
+
+    assert len(fake.events.created) == 1
+
+
+def test_hardguard_provider_error_still_bypasses_success_recovery():
+    completed_turn = _turn("turn_new", status="completed", usage=_usage()).model_dump()
+    recovery = {
+        "id": "sess_fixture",
+        "status": "idle",
+        "required_actions": [],
+        "turns": [completed_turn],
+        "items": [
+            {
+                "id": "item_assistant",
+                "type": "message",
+                "role": "assistant",
+                "turn_id": "turn_new",
+                "content": [{"type": "output_text", "text": "No debe aceptarse."}],
+            }
+        ],
+    }
+    error = OpenAIProviderError(
+        "hardguard", reason_code="tool_call_limit", session_id="sess_fixture", turn_id="turn_new"
+    )
+    fake = FakeSessions(
+        event_stream=FakeStream([_turn_created("turn_new"), error]),
+        prior_turns=[_turn("turn_old", status="completed")],
+        recovery=recovery,
+    )
+
+    with pytest.raises(OpenAIProviderError, match="hardguard") as raised:
+        _run(_provider(FakeClient(fake)), session_id="sess_fixture")
+
+    assert raised.value.reason_code == "tool_call_limit"
+    assert fake.retrieve_calls == 0

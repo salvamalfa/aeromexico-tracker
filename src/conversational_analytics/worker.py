@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .config import ChatConfig
-from .providers._openai_helpers import TERMINAL_USAGE_RECONCILIATION_SECONDS
+from .providers._openai_helpers import PROVIDER_REASON_CODES, TERMINAL_USAGE_RECONCILIATION_SECONDS
 from .providers.base import Provider, ProviderResult
 from .semantic.plan import PlanValidationError
 from .storage import ChatStore, NotFound
@@ -515,7 +515,20 @@ class TurnWorker:
                     self.store.record_terminal_usage(turn_id, *usage)
         except Exception as exc:
             # Keep details in internal logs with redaction; clients get a stable message.
-            LOG.error("Turn %s failed (%s)", turn_id, type(exc).__name__)
+            reason_code = getattr(exc, "reason_code", None)
+            if isinstance(reason_code, str) and reason_code in PROVIDER_REASON_CODES:
+                if self.store.is_running(turn_id):
+                    try:
+                        self.store.add_event(turn_id, "provider.failure", {"reason_code": reason_code})
+                    except Exception as event_exc:
+                        LOG.error(
+                            "Turn %s failure metadata could not be persisted (%s)",
+                            turn_id,
+                            type(event_exc).__name__,
+                        )
+                LOG.error("Turn %s failed (%s; reason=%s)", turn_id, type(exc).__name__, reason_code)
+            else:
+                LOG.error("Turn %s failed (%s)", turn_id, type(exc).__name__)
             self.store.fail_turn(
                 turn_id,
                 "provider_error",

@@ -23,10 +23,12 @@ from ._openai_helpers import (
     event_session_id,
     field,
     int_or_zero,
+    latest_provider_turn_id,
     parse_usage,
     prior_history,
     question_envelope,
     read_completed_turn_usage,
+    recover_completed_provider_error,
     references_from_results,
     required_string,
     result_from_recovered,
@@ -35,6 +37,7 @@ from ._openai_helpers import (
     usage_from_event,
 )
 from ._openai_helpers import event_turn_id as get_event_turn_id
+from ._openai_recovery import retrieve_completed_turn_output
 from .base import ProviderResult, ToolCall
 
 
@@ -234,7 +237,7 @@ class OpenAIProvider:
                 )
             else:
                 self._track_session(session_id, persist_session, tracked_sessions)
-                prior_turn_id = self._latest_provider_turn_id(session_id)
+                prior_turn_id = latest_provider_turn_id(self.client, session_id)
                 stream_manager = self.client.beta.agents.sessions.events.stream(session_id)
                 stream_iter = (
                     stream_manager.__enter__() if hasattr(stream_manager, "__enter__") else stream_manager
@@ -398,7 +401,22 @@ class OpenAIProvider:
             )
         except InterruptedError:
             raise
-        except OpenAIProviderError:
+        except OpenAIProviderError as error:
+            recovered_result = recover_completed_provider_error(
+                error,
+                recover=self._recover,
+                session_id=session_id,
+                turn_id=turn_id,
+                prior_turn_id=prior_turn_id,
+                client=self.client,
+                cancel_event=cancel_event,
+                deadline=usage_deadline,
+                close_stream=close_active_stream,
+                accept_completed=accept_completed,
+                tool_outputs=tool_outputs,
+            )
+            if recovered_result is not None:
+                return recovered_result
             raise
         except Exception:
             recovered = self._recover(session_id, turn_id, prior_turn_id) if session_id else None
@@ -452,6 +470,8 @@ class OpenAIProvider:
             return None
         try:
             session = to_dict(self.client.beta.agents.sessions.retrieve(session_id))
+            if session.get("id") != session_id:
+                return None
             actions = session.get("required_actions") or []
             if isinstance(actions, list) and actions:
                 for action in actions:
@@ -461,59 +481,36 @@ class OpenAIProvider:
                         raise OpenAIProviderError("Hay una acción pendiente para recuperar")
             turns_page = self.client.beta.agents.sessions.turns.list(session_id, limit=100, order="desc")
             turns = list(getattr(turns_page, "data", []))
-            candidate = next((t for t in turns if not turn_id or field(t, "id") == turn_id), None)
-            if candidate is None and turns:
-                candidate = turns[0]
+            # Recovery is safe only when the caller already observed this root
+            # turn's ID. Never substitute the latest turn: it may be a prior
+            # user turn or an unrelated turn in a reused provider session.
+            if not turn_id:
+                return None
+            candidate = next((t for t in turns if field(t, "id") == turn_id), None)
             if candidate is None:
                 return None
             candidate_data = to_dict(candidate)
-            if not turn_id and candidate_data.get("id") == prior_turn_id:
+            if (
+                candidate_data.get("id") != turn_id
+                or candidate_data.get("session_id") != session_id
+                or candidate_data.get("subagent_id") is not None
+            ):
                 return None
             status = candidate_data.get("status")
             canonical_id = candidate_data.get("id")
             if status not in {"completed", "failed", "cancelled"}:
                 return None
-            content = self._retrieve_output_text(session_id, canonical_id) if status == "completed" else ""
+            content = (
+                retrieve_completed_turn_output(self.client, session_id, canonical_id)
+                if status == "completed"
+                else ""
+            )
             usage = candidate_data.get("usage") if isinstance(candidate_data.get("usage"), dict) else {}
             return content, status, canonical_id, usage
         except OpenAIProviderError:
             raise
         except Exception:
             return None
-
-    def _latest_provider_turn_id(self, session_id: str) -> str | None:
-        try:
-            page = self.client.beta.agents.sessions.turns.list(session_id, limit=1, order="desc")
-            turns = list(getattr(page, "data", []))
-            if turns:
-                value = field(turns[0], "id")
-                return value if isinstance(value, str) and value else None
-        except Exception:
-            # Read history only before input; do not guess if that lookup fails.
-            raise OpenAIProviderError(
-                "No se pudo verificar el historial antes del siguiente mensaje"
-            ) from None
-        return None
-
-    def _retrieve_output_text(self, session_id: str, turn_id: str | None) -> str:
-        if not turn_id:
-            return ""
-        page = self.client.beta.agents.sessions.items.list(session_id, limit=100, order="desc")
-        output: list[str] = []
-        for item in getattr(page, "data", []):
-            data = to_dict(item)
-            if (
-                data.get("turn_id") != turn_id
-                or data.get("type") != "message"
-                or data.get("role") != "assistant"
-            ):
-                continue
-            for content in data.get("content", []):
-                part = to_dict(content)
-                text = part.get("text")
-                if part.get("type") in {"output_text", "text"} and isinstance(text, str):
-                    output.append(text)
-        return "".join(reversed(output)).strip()
 
     @staticmethod
     def _validate_tool_specs(specs: list[dict[str, Any]]) -> list[dict[str, Any]]:
