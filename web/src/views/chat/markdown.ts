@@ -78,8 +78,10 @@ function parseTable(lines: readonly string[], start: number, allowedUrls: Readon
     const candidate = lines[next]!.trim();
     if (!candidate.startsWith("|") && (!candidate.includes("|") || tableCells(candidate).length !== headings.length)) break;
     // A header followed by its separator starts the next table.
+    // A `---` divider after the table is not a separator: the column counts must match.
     const after = lines[nextLine(next + 1)];
-    if (after !== undefined && TABLE_SEPARATOR.test(after)) break;
+    const width = tableCells(candidate).length;
+    if (after !== undefined && TABLE_SEPARATOR.test(after) && width >= 2 && tableCells(after).length === width) break;
     // Rows past the limit are consumed, not rendered, so they never leak out as pipe text.
     if (rows.length < MAX_TABLE_ROWS) rows.push(tableCells(lines[next]!));
     else hidden += 1;

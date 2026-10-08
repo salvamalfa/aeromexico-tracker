@@ -65,6 +65,13 @@ describe("safe response rendering", () => {
     expect(host.querySelector("p")?.textContent).toBe("Texto con a | b | c.");
   });
 
+  it("keeps the last row when a markdown divider follows the table", () => {
+    const host = document.createElement("div");
+    renderSafeMarkdown(host, "| a | b |\n|---|---|\n| 1 | 2 |\n| 3 | 4 |\n\n---\n\nFin.");
+    expect(host.querySelectorAll("tbody tr")).toHaveLength(2);
+    expect(host.textContent).not.toContain("| 3 |");
+  });
+
   it("keeps pipes inside ordinary text and HTML-looking cells as plain text", () => {
     const host = document.createElement("div");
     renderSafeMarkdown(host, "Opción A | opción B\n\n| a | b |\n|---|---|\n| <img src=x onerror=alert(1)> | ok |");
