@@ -50,7 +50,8 @@ const MAX_TABLE_COLUMNS = 12;
 const MAX_TABLE_ROWS = 60;
 
 function tableCells(line: string): string[] {
-  const trimmed = line.trim().replace(/^\|/, "").replace(/\|$/, "");
+  // An escaped final pipe (`\|`) is cell text, not the closing delimiter.
+  const trimmed = line.trim().replace(/^\|/, "").replace(/(?<!\\)\|$/, "");
   return trimmed.split(/(?<!\\)\|/).map((cell) => cell.replace(/\\\|/g, "|").trim());
 }
 

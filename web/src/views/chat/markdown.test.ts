@@ -72,6 +72,12 @@ describe("safe response rendering", () => {
     expect(host.textContent).not.toContain("| 3 |");
   });
 
+  it("keeps an escaped pipe at the end of a cell", () => {
+    const host = document.createElement("div");
+    renderSafeMarkdown(host, "a | b\n---|---\nx | RASK \\|");
+    expect([...host.querySelectorAll("td")].map((cell) => cell.textContent)).toEqual(["x", "RASK |"]);
+  });
+
   it("keeps pipes inside ordinary text and HTML-looking cells as plain text", () => {
     const host = document.createElement("div");
     renderSafeMarkdown(host, "Opción A | opción B\n\n| a | b |\n|---|---|\n| <img src=x onerror=alert(1)> | ok |");
