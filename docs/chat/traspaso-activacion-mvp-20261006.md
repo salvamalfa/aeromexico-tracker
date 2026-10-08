@@ -1,118 +1,108 @@
 # Traspaso: activación del MVP del chat
 
-Documento operativo para el agente que activa el chat (ChatGPT). Resume el
-estado al 6 de octubre de 2026 y lo que falta. Las reglas de `AGENTS.md`
-siguen vigentes.
+Documento operativo de continuidad, actualizado el 8 de octubre de 2026. Resume
+la decisión del dueño, el estado comprobado y los límites del MVP. Las reglas
+de `AGENTS.md` siguen vigentes. La fase 2 no está iniciada y solo comienza
+cuando el dueño la solicite expresamente.
 
-**Orden de lectura:** este documento primero (activar el MVP). Después de la
-activación, [fase 2 del chat](fase-2-agente-analitico.md).
+**Orden de lectura:** este traspaso, luego el [estado del chat](README.md) y el
+[reporte de activación](../etapas/chat-mvp-activacion-20261007.md). Para una
+solicitud expresa de fase 2, consulta [fase 2 del chat](fase-2-agente-analitico.md).
 
-## Actualización del 7 de octubre
+## Estado operativo comprobado al 8 de octubre
 
-- **Calificaciones entregadas.** El dueño exportó `calificaciones-paquete.json`
-  desde `review.html` (paquete `airline-tracker-h1-owner-review` 1.0.0) y lo
-  entrega directamente al agente; no se versiona.
-  - `historical-74`: calificó las 74 respuestas disponibles, que cubren 36
-    preguntas. Marcó como problema Q08/A, Q21/A, Q22/A y Q40/A.
-  - `current-h1-v5`: calificó 39 de 40; falta Q14. Marcó como problema
-    Q35/A, que da una cifra en lugar de rechazar.
-  - Sus notas de estilo (introducciones largas, advertencias no pedidas,
-    mezcla de idiomas) se atienden en la fase 2, paquete F2.1.
-- **El MVP se activa sin cambios de código ni de prompt.** Si el gate de
-  calidad no pasa (por ejemplo, si Q35 cuenta como fallo crítico), no lo
-  corrijas por tu cuenta: presenta al dueño los casos, el arreglo mínimo y su
-  riesgo, y él decide si se corrige antes o se activa aceptando el riesgo.
-- **Saldo de la API:** US$10 cargados y US$2.72 gastados al 7 de octubre. El
-  chat en producción consume de ese saldo.
+- El dueño eligió `gpt-6.1-sol`, con topes diarios de **US$3 por usuario y
+  US$3 global**. El backend real usa autenticación con contraseña, proveedor
+  OpenAI y admisión habilitada. El panel está visible en
+  [Pages](https://salvamalfa.github.io/aeromexico-tracker/).
+- Se comprobó HTTPS 200 y estado `ok`; worker, autenticación con contraseña,
+  proveedor OpenAI y admisión reportaron estado habilitado. Una visita anónima
+  recibió 401 en conversaciones; CORS permitió el origen de Pages.
+- Se comprobaron una vez el login y la lectura del historial desde Pages con
+  las credenciales del dueño. La pregunta original aparece como `provider_error`, sin respuesta de asistente.
+  No se reenvió ni recuperó. No hay una respuesta nueva validada y queda
+  pendiente probar el acceso desde el teléfono.
+- La causa original no está demostrada. No se atribuye a límites de 8 llamadas
+  ni de 180 segundos. El uso del turno fallido ya está contabilizado en el
+  estado privado; conserva ese costo y el historial.
+- PR [#102](https://github.com/salvamalfa/aeromexico-tracker/pull/102),
+  [#103](https://github.com/salvamalfa/aeromexico-tracker/pull/103) y
+  [#104](https://github.com/salvamalfa/aeromexico-tracker/pull/104) están
+  fusionados. CI [37792230297](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/37792230297)
+  y Pages [37792230531](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/37792230531)
+  terminaron correctamente. La fuente publicada es `5e5d024`; los 112 archivos
+  de datos, contratos y `analysis_manifest` no cambiaron.
 
-## Roles
+## Calidad y evidencia
 
-- **Dueño:** califica los cortes en `review.html` y entrega el archivo de
-  «Exportar todas las calificaciones». Después elige el modelo y el tope entre
-  las opciones que se le propongan. No configura Railway, la API key ni el
-  repositorio.
-- **Agente (ChatGPT):** consolida las calificaciones, aplica el gate de calidad,
-  propone el modelo con evidencia, administra Railway y la API key como
-  variables de entorno, y ejecuta la activación y la publicación del panel.
+La evidencia histórica de Sol registró 31 respuestas correctas de 31
+respuestas disponibles; el conjunto soportado fue 10 de 12 preguntas y dos
+quedaron sin respuesta correcta. Es evidencia histórica que no valida el
+prompt actual. El dueño aceptó activar el MVP con esos límites conocidos; no
+hay un gate de calidad aprobado ni debe reportarse como superado.
 
-## Estado actual
+El saldo de OpenAI de **US$2.72 gastados** es el monto reportado al 7 de
+octubre, no está reconciliado contra el ledger de uso. No lo presentes como un
+saldo contable verificado ni como el costo total actual. S14 conserva su estado
+`NULL`/desconocido; desconocido nunca significa cero y no se importa como uso
+medido.
 
-- `master` contiene todo lo necesario para activar sin cambios de código:
-  - lanzador que acepta OpenAI configurado de forma explícita;
-  - `data_version` estable ante republicaciones de interfaz;
-  - tope diario en dólares;
-  - guard de `import-usage`;
-  - `web/.env.production` con la URL de la API y el panel apagado.
-  Detalle en `docs/etapas/chat-mvp-preparacion-20261006.md`.
-- **Railway:** servicio sano en `mock`, admisión cerrada, contraseña activa.
-- **Pages:** dashboard, `review.html` y `access.html` publicados; el panel del
-  chat no está compilado (`VITE_CHAT_ENABLED=false`).
-- **Dependabot:** solo propone versiones menores y de parche, y nunca el
-  runtime del chat (`openai`, `fastapi`, `uvicorn`).
+## Roles y operación
 
-## Decisiones vigentes del dueño
+- **Dueño:** eligió modelo y topes, puede decidir si se inicia fase 2 y realiza
+  las comprobaciones de uso desde su sesión. No se guardan aquí contraseñas,
+  tokens, claves ni identificadores privados del proveedor.
+- **Agente:** mantiene código y documentación conforme a una solicitud
+  explícita, revisa el estado público permitido y reporta claramente límites
+  de evidencia. La fase 2 no está autorizada por inferencia ni por la antigua
+  autorización general de cambios rutinarios.
 
-- **Tope diario aprobado de US$1** por usuario y global
-  (`CHAT_DAILY_COST_BUDGET_USER_USD`, `CHAT_DAILY_COST_BUDGET_GLOBAL_USD`).
-  - La reserva mínima se cobra a la tarifa de salida: Luna US$0.075, unas 215
-    preguntas al día. Sol 6.1 y Astra necesitan un tope mayor que su reserva
-    (US$1.50 y US$7.50): la admisión exige gasto del día + reservas + reserva
-    nueva ≤ tope, así que un tope igual a la reserva solo admite la primera
-    pregunta. Con Sol, US$2 alcanza para unas seis preguntas de ~US$0.076.
-  - Si se propone Sol o Astra, plantea el tope necesario al dueño junto con
-    el modelo.
-- **Respaldo de gasto:** el dueño cargará crédito prepagado de US$10–15 en
-  OpenAI, sin recarga automática. Es opcional y no sustituye el tope de la app.
-- **S14** no se importa a la base del chat: `unknown` pausaría todas las
-  admisiones, e `import-usage` exige `--allow-admission-block` para eso.
-- **Data Sharing** puede reducir la factura, pero no es un control de gasto.
-- **Fuera de alcance del MVP:** volver a medir el consumo con 8 llamadas y 180 s
-  (riesgo aceptado; el tope en dólares lo acota).
+El backend consume únicamente el snapshot público y mantiene versiones de
+datos y semántica por turno. Los valores `missing`, `NULL` o desconocidos se
+preservan; no se convierten en cero. No se reingresa ni reintenta una pregunta
+fallida de forma automática. No recuperes una respuesta del proveedor ni
+vuelvas a enviar el turno salvo que el dueño lo pida explícitamente y se
+compruebe antes su elegibilidad y costo.
 
-## Pasos pendientes
+La reserva de costo, los usos conocidos y los usos desconocidos deben
+preservarse en el ledger. No borres ni reproceses el turno fallido para ocultar
+el cargo. El límite diario monetario es el control operativo; los parámetros
+históricos de 8 llamadas y 180 segundos no explican por sí solos el fallo y no
+se cambian como parte de este traspaso.
 
-1. **Calificaciones:** recibir el JSON del dueño y consolidarlo con los
-   resultados de la comparación (`docs/etapas/airline-tracker-comparacion-final-20261004.md`).
-2. **Gate de calidad:**
-   - 95% o más de respuestas correctas sobre **todos** los casos soportados,
-     contando los no calificados y los fallidos en el denominador, y cero
-     fallos críticos;
-   - reportar por separado cuántos casos quedaron sin calificar;
-   - las calificaciones previas miden el prompt anterior al PR #87: señala qué
-     evidencia corresponde al prompt actual.
-3. **Propuesta al dueño:** modelo recomendado, alternativa, costo estimado por
-   pregunta, tope necesario y riesgos. Espera su elección explícita.
-4. **Activación:** sigue `docs/chat/railway.md`, sección «Activación del MVP»:
-   - variables de Railway, `CHAT_ALLOWED_ORIGINS` y `/api/chat/health`;
-   - `VITE_CHAT_ENABLED=true` con commit previo (el gate rechaza `web/` sin
-     commit), sin `VITE_CHAT_*` en el entorno, `src.publish` con el registro
-     ya aprobado, `src.publish.verify site/` y PR con `site/`.
-   - Antes de abrir el chat, comprueba la clave del límite de login detrás
-     de Railway con la prueba booleana de `docs/chat/railway.md` (sin
-     registrar IPs): confirma que un fallo de login guarda un `client` fuera
-     de `100.64.0.0/10`.
-5. **Prueba final:** login y una pregunta desde Pages y desde el teléfono con
-   la computadora apagada. **Rollback:** `CHAT_ADMISSION_ENABLED=false` en
-   Railway.
+## Versiones del holdout
 
-## Holdout y versiones
+El holdout congelado conserva `data_version de3c4d…` y el `semantic_version`
+anterior a la aprobación del catálogo en PR #87. Con la regla de versión
+vigente, los datos de ese corte producen `d9c4e56d04ad…`, igual al snapshot
+actual; los archivos de datos, contratos y `analysis_manifest` publicados no
+cambiaron. No reescribas el holdout ni atribuyas una diferencia de semántica a
+un cambio de datos.
 
-El holdout congelado (`tests/fixtures/chat_evals/holdout.json`) conserva
-`data_version de3c4d…` y el `semantic_version` previo a la aprobación del
-catálogo (#87). Con la regla de versión vigente, los datos de ese corte dan
-`d9c4e56d04ad…`, idéntico al snapshot actual (mismos archivos `data/`,
-contratos y `analysis_manifest`). El catálogo sí cambió (`review_status`).
-Una evaluación en vivo nueva debe fijar ambas versiones vigentes en una copia
-o un fixture nuevo, documentando la equivalencia de datos; no reescribas el
-holdout histórico.
+## Próxima comprobación
 
-## Límites
+La próxima comprobación pendiente es una sesión explícita desde el teléfono,
+con la computadora apagada: comprobar login y el estado del historial. No
+reenviar la pregunta fallida. Si el dueño decide probar una pregunta nueva,
+registrar el resultado como una observación nueva, separada de la pregunta
+original; no llamarla validación de calidad del prompt.
 
-- No encender OpenAI ni publicar el panel sin la elección explícita del dueño
-  de modelo y tope.
-- No consumir la API pagada fuera de esa activación (nuevas evaluaciones o la
-  prueba de Data Sharing) sin una autorización específica. Las rondas de
-  evaluación de la fase 2 ya están autorizadas, con las condiciones de
-  [fase 2](fase-2-agente-analitico.md#costo-estimado-de-las-evaluaciones): estimación y
-  saldo necesario antes de gastar.
-- No cambiar aprobaciones ni datos publicados.
+Si hace falta detener admisiones, usar `CHAT_ADMISSION_ENABLED=false` mediante
+un cambio de configuración y despliegue controlado. Esto debe preservar
+historial y costos ya registrados. El rollback no implica borrar turnos ni
+cambiar datos aprobados.
+
+## Contexto histórico del 7 de octubre
+
+El build de Pages preparado el 7 de octubre activó el panel en la compilación y
+pasó su gate local; eso no comprobaba por sí solo que Railway estuviera en modo
+real ni que una sesión de usuario funcionara. La activación operativa y el
+login/historial descritos arriba se comprobaron después, el 8 de octubre. El
+resultado actual de la pregunta sigue siendo un fallo conocido, sin respuesta
+validada.
+
+La actualización del catálogo semántico se aprobó para el MVP en PR #87. Las
+calificaciones entregadas el 7 de octubre y sus límites están descritos en el
+[reporte de activación](../etapas/chat-mvp-activacion-20261007.md). Las notas de
+estilo y las evaluaciones nuevas pertenecen a fase 2, solo cuando el dueño la
+solicite.
