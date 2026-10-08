@@ -26,18 +26,38 @@ y el registry expone siete herramientas de consulta controlada.
 FastAPI sirve historial y turnos por SSE, con almacenamiento SQLite local y
 sesiones del proveedor aisladas tras el adaptador.
 
-## Estado de entrega
+## Estado de entrega al 8 de octubre de 2026
 
-| Hito | Estado al 6 oct 2026 |
+| Hito | Estado |
 |---|---|
 | H1 — semántica revisada | Catálogo aprobado por el dueño para el MVP (`review_status: owner_approved_mvp`, PR #87). |
 | H2 — demo sin consumo | Backend, 11 métricas, siete herramientas, SSE y panel implementados y verificados. |
-| H3 — chat real local | Acceso confirmado con consultas reales con herramientas y fuentes; uso recuperado por lecturas oficiales. |
-| H4 — modelo elegido | Comparación terminada (Luna 7/9, Sol 9/10, Astra 8/9 parcial; ninguno llega al 95%). El dueño entregó sus calificaciones el 7 oct; faltan el gate de calidad y su elección de modelo y tope. |
-| H5 — piloto publicado | Backend en Railway con HTTPS, contraseña y `mock`; admisión cerrada. Listo para activar por configuración y publicar el panel. |
+| H3 — chat real local | Acceso confirmado previamente con consultas reales, herramientas y fuentes; el uso de esas sesiones se recuperó por lecturas oficiales. |
+| H4 — modelo elegido | El dueño eligió `gpt-6.1-sol`, con topes diarios de US$3 por usuario y US$3 global. La evidencia histórica disponible no valida el prompt actual y no se aprobó un gate de calidad. |
+| H5 — piloto publicado | Backend HTTPS en Railway con contraseña, proveedor OpenAI y admisión habilitada; panel visible en Pages. Se comprobaron una vez el login y la lectura del historial desde Pages con las credenciales del dueño; la pregunta original quedó `provider_error`, sin respuesta de asistente. Sin reenvío ni respuesta nueva validada. |
 
-Para activar el MVP, sigue el [traspaso de activación](traspaso-activacion-mvp-20261006.md).
-Después del MVP sigue la [fase 2: agente analítico para negocio](fase-2-agente-analitico.md).
+PRs [#102](https://github.com/salvamalfa/aeromexico-tracker/pull/102),
+[#103](https://github.com/salvamalfa/aeromexico-tracker/pull/103) y
+[#104](https://github.com/salvamalfa/aeromexico-tracker/pull/104) están fusionados.
+CI [37792230297](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/37792230297)
+y Pages [37792230531](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/37792230531)
+terminaron correctamente. La fuente publicada es `5e5d024`; los 112 archivos de
+datos, contratos y `analysis_manifest` no cambiaron.
+
+La evidencia histórica de Sol registró 31 respuestas correctas de 31
+respuestas disponibles; 10 de 12 preguntas soportadas tuvieron respuesta
+correcta. No demuestra calidad del prompt actual ni significa que el gate haya
+pasado. El dueño aceptó el MVP con límites conocidos. El monto reportado de
+US$2.72 gastados al 7 de octubre no está reconciliado contra el ledger; no es
+un saldo contable ni representa el consumo actual verificado. S14 conserva
+`NULL`/desconocido, que nunca se interpreta como cero.
+
+**Siguiente comprobación:** sesión desde el teléfono con la computadora apagada
+para confirmar login e historial, sin reenviar el turno fallido. Una pregunta
+nueva, si el dueño la decide, debe documentarse como observación separada y no
+como validación de calidad. La fase 2 no está iniciada; solo empieza por pedido
+expreso del dueño. Consulta el [traspaso operativo](traspaso-activacion-mvp-20261006.md)
+y el [reporte de activación](../etapas/chat-mvp-activacion-20261007.md).
 
 Diagramas interactivos de la arquitectura actual:
 [anatomía del chat](../arquitectura/anatomia-chat.html) y
@@ -77,6 +97,10 @@ versiones, sesión, turno, estado y ausencia de un turno posterior, respuesta
 previa, cancelación, timeout o eliminación de sesión. Si alguno cambió, no
 aplica la recuperación. No edites ni incluyas la base, los argumentos privados
 o la respuesta en el repositorio.
+
+La pregunta fallida mencionada en el estado del 8 de octubre no se ha
+recuperado ni se ha comprobado como elegible para esa operación. No ejecutes la
+recuperación ni vuelvas a enviarla sin pedido explícito del dueño.
 
 La [validación real](../etapas/airline-tracker-validacion-real-20261004.md) y la
 [guía de Data Sharing](data-sharing.md) detallan resultados, cobertura y
