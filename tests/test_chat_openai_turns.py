@@ -136,6 +136,30 @@ def test_failed_turn_reports_provider_usage_for_quota_accounting():
     assert fake.turn_list_calls == 1
 
 
+@pytest.mark.parametrize(
+    "event_type",
+    ["agent.session.failed", "agent.session.environment.failed", "error"],
+)
+def test_session_terminal_failures_skip_recovery_gets(event_type):
+    fake = FakeSessions(
+        event_stream=FakeStream(
+            [
+                _turn_created(),
+                {"type": event_type, "usage": _usage(13, 2)},
+            ]
+        ),
+        prior_turns=[_turn("turn_old", status="completed")],
+    )
+
+    with pytest.raises(OpenAIProviderError) as raised:
+        _run(_provider(FakeClient(fake)), session_id="sess_fixture")
+
+    assert raised.value.usage == (13, 2)
+    assert fake.retrieve_calls == 0
+    # The one listing is the pre-stream prior-turn lookup.
+    assert fake.turn_list_calls == 1
+
+
 def test_recovery_gets_are_capped_by_the_original_turn_deadline():
     fake = FakeSessions()
     timeout_calls = []

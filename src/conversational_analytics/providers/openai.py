@@ -344,7 +344,11 @@ class OpenAIProvider:
                         cancelled.usage = usage_from_event(event_data)  # type: ignore[attr-defined]
                         raise cancelled
                 elif event_type in {"agent.session.failed", "agent.session.environment.failed", "error"}:
-                    raise OpenAIProviderError("El ciclo del agente falló antes de completar el turno")
+                    terminal = "failed"
+                    raise OpenAIProviderError(
+                        "El ciclo del agente falló antes de completar el turno",
+                        usage_from_event(event_data),
+                    )
             if terminal != "completed":
                 recovered = self._recover(session_id, turn_id, prior_turn_id, deadline=turn_deadline)
                 if recovered is not None:
