@@ -285,7 +285,18 @@ class OpenAIProvider:
                         },
                     )
                 # Capture IDs before cancellation so the worker can stop a just-created remote session.
-                event_usage = terminal_event_usage(event_type, is_current_turn, event_data)
+                session_failure = event_type in {
+                    "agent.session.failed",
+                    "agent.session.environment.failed",
+                    "error",
+                }
+                if session_failure:
+                    terminal = "failed"
+                event_usage = (
+                    usage_from_event(event_data)
+                    if session_failure
+                    else terminal_event_usage(event_type, is_current_turn, event_data)
+                )
                 check_limits(event_usage)
                 if event_type == "agent.session.turn.output_text.delta" and is_current_turn:
                     key = (
@@ -405,10 +416,14 @@ class OpenAIProvider:
                 provider_session_id=session_id,
                 usage_complete=usage_complete,
             )
-        except InterruptedError:
+        except InterruptedError as error:
+            if usage_complete and getattr(error, "usage", None) is None:
+                error.usage = (input_tokens, output_tokens)  # type: ignore[attr-defined]
             raise
         except OpenAIProviderError as error:
-            if terminal in {"failed", "cancelled"}:
+            if usage_complete and error.usage is None:
+                error.usage = (input_tokens, output_tokens)
+            if terminal in {"failed", "cancelled"} or cancel_event.is_set():
                 raise
             recovered_result = recover_completed_provider_error(
                 error,
@@ -433,7 +448,7 @@ class OpenAIProvider:
                 raise
             recovered = (
                 self._recover(session_id, turn_id, prior_turn_id, deadline=turn_deadline)
-                if session_id
+                if session_id and not cancel_event.is_set()
                 else None
             )
             if recovered and recovered[1] == "completed" and recovered[0]:
@@ -441,7 +456,8 @@ class OpenAIProvider:
                 accept_completed(usage)
                 return result_from_recovered(recovered[0], recovered[3], session_id, tool_outputs)
             raise OpenAIProviderError(
-                "No se pudo completar el turno de Agents API; no se reenviará el mensaje automáticamente"
+                "No se pudo completar el turno de Agents API; no se reenviará el mensaje automáticamente",
+                (input_tokens, output_tokens) if usage_complete else None,
             ) from None
         finally:
             close_active_stream()

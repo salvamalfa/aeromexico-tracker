@@ -21,6 +21,7 @@ from openai.types.beta.agent_session_requires_action_event import AgentSessionRe
 from openai.types.beta.agent_session_turn_failed_event import AgentSessionTurnFailedEvent
 
 from src.conversational_analytics.providers.openai import OpenAIProviderError
+from src.conversational_analytics.providers import openai as openai_provider_module
 from src.conversational_analytics.providers._openai_recovery import retrieve_completed_turn_output
 from test_chat_openai import (
     FakeClient,
@@ -140,7 +141,33 @@ def test_failed_turn_reports_provider_usage_for_quota_accounting():
     "event_type",
     ["agent.session.failed", "agent.session.environment.failed", "error"],
 )
-def test_session_terminal_failures_skip_recovery_gets(event_type):
+@pytest.mark.parametrize("guard", ["normal", "deadline", "cancel"])
+def test_late_session_failures_preserve_usage_and_skip_recovery_gets(
+    monkeypatch, event_type, guard
+):
+    clock = [0.0]
+    cancel_event = {}
+    monkeypatch.setattr(openai_provider_module.time, "monotonic", lambda: clock[0])
+
+    original_guards = openai_provider_module.completion_guards
+
+    def capture_cancel_event(event, *args, **kwargs):
+        cancel_event["event"] = event
+        return original_guards(event, *args, **kwargs)
+
+    monkeypatch.setattr(openai_provider_module, "completion_guards", capture_cancel_event)
+    original_usage = openai_provider_module.usage_from_event
+
+    def trigger_guard(data):
+        if data.get("type") == event_type:
+            if guard == "deadline":
+                clock[0] = 5.0
+            elif guard == "cancel":
+                cancel_event["event"].set()
+        return original_usage(data)
+
+    monkeypatch.setattr(openai_provider_module, "usage_from_event", trigger_guard)
+
     fake = FakeSessions(
         event_stream=FakeStream(
             [
@@ -151,10 +178,13 @@ def test_session_terminal_failures_skip_recovery_gets(event_type):
         prior_turns=[_turn("turn_old", status="completed")],
     )
 
-    with pytest.raises(OpenAIProviderError) as raised:
+    expected_error = InterruptedError if guard == "cancel" else OpenAIProviderError
+    with pytest.raises(expected_error) as raised:
         _run(_provider(FakeClient(fake)), session_id="sess_fixture")
 
     assert raised.value.usage == (13, 2)
+    if guard == "deadline":
+        assert raised.value.reason_code == "turn_timeout"
     assert fake.retrieve_calls == 0
     # The one listing is the pre-stream prior-turn lookup.
     assert fake.turn_list_calls == 1
