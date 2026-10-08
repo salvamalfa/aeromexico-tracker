@@ -13,6 +13,41 @@ describe("safe response rendering", () => {
     expect(links[0]?.rel).toBe("noopener noreferrer");
   });
 
+  it("renders model-written tables as real tables, also with blank lines between rows", () => {
+    const host = document.createElement("div");
+    const answer = [
+      "Tomando pasajeros nacionales e internacionales juntos:",
+      "",
+      "| Aerolínea | 1T26 | 2T26 |",
+      "",
+      "|---|---:|---:|",
+      "",
+      "| **Volaris** | 35.9% | 36.7% |",
+      "",
+      "| Grupo Aeroméxico | 29.5% | 29.1% |",
+      "",
+      "Volaris gana participación.",
+    ].join("\n");
+    renderSafeMarkdown(host, answer);
+    const table = host.querySelector(".chat-table-wrap table");
+    expect(table).not.toBeNull();
+    expect([...table!.querySelectorAll("th")].map((cell) => cell.textContent)).toEqual(["Aerolínea", "1T26", "2T26"]);
+    const rows = [...table!.querySelectorAll("tbody tr")];
+    expect(rows).toHaveLength(2);
+    expect(rows[0]!.querySelector("strong")?.textContent).toBe("Volaris");
+    expect(rows[1]!.querySelectorAll("td")[2]?.className).toBe("align-right");
+    expect(host.querySelectorAll("p")).toHaveLength(2);
+    expect(host.textContent).not.toContain("|---");
+  });
+
+  it("keeps pipes inside ordinary text and HTML-looking cells as plain text", () => {
+    const host = document.createElement("div");
+    renderSafeMarkdown(host, "Opción A | opción B\n\n| a | b |\n|---|---|\n| <img src=x onerror=alert(1)> | ok |");
+    expect(host.querySelector("p")?.textContent).toBe("Opción A | opción B");
+    expect(host.querySelector("img")).toBeNull();
+    expect(host.querySelector("td")?.textContent).toBe("<img src=x onerror=alert(1)>");
+  });
+
   it("drops references with credentials or query strings and bounds the list", () => {
     const refs = safeReferences([
       { label: "ok", url: "https://www.gob.mx/afac/source" },

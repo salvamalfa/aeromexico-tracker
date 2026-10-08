@@ -44,6 +44,12 @@
 .chat-message-body p:last-child { margin-bottom: 0; }
 .chat-message-body h3, .chat-message-body h4, .chat-message-body h5 { margin: 8px 0 4px; font-size: 14px; }
 .chat-message-body ul { margin: 6px 0; padding-left: 22px; }
+.chat-table-wrap { max-width: 100%; margin: 6px 0 10px; overflow-x: auto; }
+.chat-table-wrap table { border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.chat-table-wrap th, .chat-table-wrap td { padding: 5px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.chat-table-wrap th { text-align: left; color: var(--brand-blue); font-weight: 700; border-bottom-width: 2px; }
+.chat-table-wrap .align-right { text-align: right; }
+.chat-table-wrap .align-center { text-align: center; }
 .chat-message-body a, .chat-references a { color: #064a9b; text-decoration: underline; text-underline-offset: 2px; }
 .chat-references { display: grid; gap: 7px; margin: 10px 0 0; padding: 10px 0 0 18px; border-top: 1px solid var(--line); font-size: 11px; }
 .chat-references small { display: block; color: var(--muted); margin-top: 2px; }
