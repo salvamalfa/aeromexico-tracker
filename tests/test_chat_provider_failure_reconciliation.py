@@ -10,7 +10,12 @@ from src.conversational_analytics.storage import ChatStore
 from src.conversational_analytics.worker import TurnWorker
 
 
-def _run_declared_terminal_failure(tmp_path: Path, usage: tuple[int, int] | None):
+def _run_declared_terminal_failure(
+    tmp_path: Path,
+    usage: tuple[int, int] | None,
+    *,
+    fail_failure_marker: bool = False,
+):
     class Provider:
         def run_turn(self, **kwargs):
             kwargs["persist_session"]("session-private-terminal")
@@ -26,6 +31,15 @@ def _run_declared_terminal_failure(tmp_path: Path, usage: tuple[int, int] | None
 
     state_path = tmp_path / "chat.sqlite3"
     store = ChatStore(state_path)
+    if fail_failure_marker:
+        original_add_event = store.add_event
+
+        def fail_failure_event(turn_id: str, event_type: str, data: dict):
+            if event_type == "provider.failure":
+                raise OSError("transient event-store failure")
+            return original_add_event(turn_id, event_type, data)
+
+        store.add_event = fail_failure_event
     conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1")
     turn, _ = store.submit_turn("alice", conversation["id"], "ask", "client-1", {})
     claim = store.claim_turn()
@@ -119,3 +133,83 @@ def test_declared_terminal_failure_without_usage_stays_unknown(tmp_path: Path):
     assert record["usage_complete"] == 0
     assert store.usage("alice")["input_tokens"] == 0
     assert store.usage("alice")["output_tokens"] == 0
+
+
+def test_failure_marker_write_error_uses_non_reconcilable_code_and_keeps_usage(
+    tmp_path: Path, monkeypatch, capsys
+):
+    import scripts.chat.reconcile_failed_turn as reconcile
+
+    store, conversation, turn = _run_declared_terminal_failure(tmp_path, (900, 40), fail_failure_marker=True)
+    record = store.get_turn("alice", turn["id"])
+    assert record["status"] == "failed"
+    assert record["error_code"] == "provider_guard_error"
+    assert (
+        record["usage_complete"],
+        record["estimated_input_tokens"],
+        record["estimated_output_tokens"],
+    ) == (
+        1,
+        900,
+        40,
+    )
+    assert store.usage("alice")["input_tokens"] == 900
+    assert store.usage("alice")["output_tokens"] == 40
+    assert not any(event["type"] == "provider.failure" for event in store.list_events("alice", turn["id"]))
+    assert not store.reconcile_failed_provider_turn(
+        turn_id=turn["id"],
+        owner_id="alice",
+        conversation_id=conversation["id"],
+        snapshot_version="snapshot-v1",
+        semantic_version="semantic-v1",
+        provider_session_id="session-private-terminal",
+        provider_turn_id="turn-private-terminal",
+        content="A later provider GET might say completed.",
+        payload={},
+        input_tokens=900,
+        output_tokens=40,
+        cost=0.00038,
+    )
+    assert store.get_turn("alice", turn["id"])["status"] == "failed"
+
+    monkeypatch.setenv("CHAT_STATE_PATH", str(store.path))
+    monkeypatch.setenv("CHAT_PROVIDER", "openai")
+    monkeypatch.setenv("CHAT_OPENAI_ENABLED", "true")
+    assert reconcile.run(["--turn-id", turn["id"], "--owner-id", "alice"]) == 0
+    plan = json.loads(capsys.readouterr().out)
+    assert plan["eligible_by_local_metadata"] is False
+    assert plan["error_code"] == "provider_guard_error"
+    assert plan["provider_calls"] == 0
+
+    provider_read_attempted = False
+
+    def record_provider_read(*args, **kwargs):
+        nonlocal provider_read_attempted
+        provider_read_attempted = True
+        raise AssertionError("provider read must be fenced by local preflight")
+
+    monkeypatch.setattr(reconcile, "_recover_exact", record_provider_read)
+    assert (
+        reconcile.run(
+            [
+                "--turn-id",
+                turn["id"],
+                "--owner-id",
+                "alice",
+                "--apply",
+                "--conversation-id",
+                conversation["id"],
+                "--provider-session-id",
+                "session-private-terminal",
+                "--provider-turn-id",
+                "turn-private-terminal",
+                "--snapshot-version",
+                "snapshot-v1",
+                "--semantic-version",
+                "semantic-v1",
+            ]
+        )
+        == 2
+    )
+    assert "eligibility or recovery check failed" in capsys.readouterr().err
+    assert provider_read_attempted is False
