@@ -7,7 +7,7 @@ from pathlib import Path
 import openpyxl
 from pypdf import PdfReader
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = Path(__file__).resolve().parents[4]
 OUT = Path(__file__).resolve().parent
 BRONZE = ROOT / 'data/bronze'
 result = {'scope': 'research_only', 'historical_cutoff': '2026-07-13', 'artifacts': [], 'city_pairs': {}, 'examples': [], 'pdf_excerpts': []}

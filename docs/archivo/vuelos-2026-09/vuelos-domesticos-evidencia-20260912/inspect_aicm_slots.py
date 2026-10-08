@@ -3,7 +3,7 @@
 This is research-only. Slot assignments are scheduled movements, not flown
 segments or transported passengers. Run from the repository root with:
 
-    .venv/Scripts/python.exe docs/etapas/vuelos-domesticos-evidencia-20260912/inspect_aicm_slots.py
+    .venv/Scripts/python.exe docs/archivo/vuelos-2026-09/vuelos-domesticos-evidencia-20260912/inspect_aicm_slots.py
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from pathlib import Path
 import pdfplumber
 
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = Path(__file__).resolve().parents[4]
 PDF = next(
     Path(path)
     for path in glob.glob(
