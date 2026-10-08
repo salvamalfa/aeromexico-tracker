@@ -1,0 +1,142 @@
+"""Recovery paths that accept a completed provider turn after a broken stream."""
+
+from __future__ import annotations
+
+import sqlite3
+import threading
+from pathlib import Path
+
+import pytest
+
+from src.conversational_analytics.config import ChatConfig
+from src.conversational_analytics.providers.base import ProviderResult
+from src.conversational_analytics.providers.openai import OpenAIProviderError
+from src.conversational_analytics.storage import ChatStore
+from src.conversational_analytics.worker import TurnWorker
+from test_chat_openai import (
+    FakeClient,
+    FakeSessions,
+    FakeStream,
+    _provider,
+    _run,
+    _session_created,
+    _specs,
+    _text_delta,
+    _turn,
+    _turn_created,
+    _usage,
+)
+from test_chat_worker import Registry, Snapshot
+
+FINAL_ITEM = {
+    "id": "item_final",
+    "turn_id": "turn_provider",
+    "type": "message",
+    "role": "assistant",
+    "phase": "final_answer",
+    "status": "completed",
+    "content": [{"type": "output_text", "text": "La ocupación fue de 87.1%."}],
+}
+
+
+def _recovery(turn, items):
+    return {"id": "sess_fixture", "status": "idle", "required_actions": [], "turns": [turn], "items": items}
+
+
+def test_truncated_stream_is_not_promoted_when_recovery_finds_no_final_text():
+    completed = _turn("turn_provider", status="completed", usage=_usage(500, 300))
+    fake = FakeSessions(
+        create_stream=FakeStream(
+            [_session_created(), _turn_created(), _text_delta(delta="La ocupación fue de 8")]
+        ),
+        recovery=_recovery(completed, []),
+        prior_turns=[completed],
+    )
+
+    with pytest.raises(OpenAIProviderError, match="sin texto") as raised:
+        _run(_provider(FakeClient(fake)))
+
+    # The partial delta never becomes the answer, and the known usage is kept.
+    assert raised.value.usage == (500, 300)
+
+
+def test_dropped_connection_recovery_reads_missing_usage():
+    without_usage = _turn("turn_provider", status="completed", usage=None)
+    with_usage = _turn("turn_provider", status="completed", usage=_usage(500, 300))
+    fake = FakeSessions(
+        create_stream=FakeStream(
+            [_session_created(), _turn_created(), _text_delta(delta="La"), ConnectionResetError("drop")]
+        ),
+        recovery=_recovery(without_usage, [FINAL_ITEM]),
+        prior_turns=[without_usage],
+        retrieved_turn=with_usage,
+    )
+
+    result, _, _ = _run(_provider(FakeClient(fake)))
+
+    assert result.content == "La ocupación fue de 87.1%."
+    assert (result.input_tokens, result.output_tokens, result.usage_complete) == (500, 300, True)
+    assert fake.turn_retrieve_calls
+
+
+def test_provider_error_recovery_signals_completion_before_polling_usage():
+    without_usage = _turn("turn_provider", status="completed", usage=None)
+    with_usage = _turn("turn_provider", status="completed", usage=_usage(500, 300))
+    order: list = []
+
+    class Sessions(FakeSessions):
+        def _retrieve_turn(self, turn_id, *, session_id, timeout):
+            order.append("usage_poll")
+            return super()._retrieve_turn(turn_id, session_id=session_id, timeout=timeout)
+
+    fake = Sessions(
+        create_stream=FakeStream(
+            [_session_created(), _turn_created(), OpenAIProviderError("stream interrupted")]
+        ),
+        recovery=_recovery(without_usage, [FINAL_ITEM]),
+        prior_turns=[without_usage],
+        retrieved_turn=with_usage,
+    )
+
+    result = _provider(FakeClient(fake)).run_turn(
+        session_id=None,
+        messages=[{"role": "user", "content": "¿Ocupación?", "turn_id": "app-turn-1"}],
+        context={"tab": "executive", "period": "2026Q1", "entity": "AEROMEXICO"},
+        tool_specs=_specs(),
+        call_tool=lambda *_: {},
+        emit=lambda *_: None,
+        persist_session=lambda _: None,
+        cancel_event=threading.Event(),
+        mark_terminal_completed=lambda usage=None: order.append("mark_completed"),
+    )
+
+    assert order[0] == "mark_completed" and "usage_poll" in order
+    assert (result.input_tokens, result.output_tokens, result.usage_complete) == (500, 300, True)
+
+
+class MetadataProvider:
+    def run_turn(self, **kwargs):
+        kwargs["emit"]("provider.metadata", {"provider_turn_id": None, "provider_event_type": "x"})
+        return ProviderResult("84.9", input_tokens=4, output_tokens=2, usage_complete=True)
+
+    def cancel(self, session_id):
+        pass
+
+    def delete(self, session_id):
+        pass
+
+
+def test_missing_provider_turn_id_is_not_stored_as_the_string_none(tmp_path: Path):
+    path = tmp_path / "chat.sqlite3"
+    store = ChatStore(path)
+    conv = store.create_conversation("alice", "snapshot-v1", "semantic-v1")
+    turn, _ = store.submit_turn(
+        "alice", conv["id"], "ask", "client-1", {}, reserved_tokens=100, reserved_cost_usd=0.01
+    )
+    worker = TurnWorker(store, ChatConfig(state_path=path), MetadataProvider(), Snapshot())
+    worker._registry = Registry()
+    worker._execute_turn(store.claim_turn())
+
+    with sqlite3.connect(path) as db:
+        (stored,) = db.execute("SELECT provider_turn_id FROM turns WHERE id=?", (turn["id"],)).fetchone()
+    assert stored is None

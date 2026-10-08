@@ -28,16 +28,14 @@ from ._openai_helpers import (
     provider_terminal_failure,
     question_envelope,
     read_completed_turn_usage,
-    recover_completed_provider_error,
     references_from_results,
     required_string,
-    result_from_recovered,
     terminal_event_usage,
     to_dict,
     usage_from_event,
 )
 from ._openai_helpers import event_turn_id as get_event_turn_id
-from ._openai_recovery import recover_exact_turn
+from ._openai_recovery import finish_recovered_completion, recover_completed_provider_error, recover_exact_turn
 from .base import ProviderResult, ToolCall
 
 
@@ -134,6 +132,16 @@ class OpenAIProvider:
             if stream_manager is not None and not stream_closed:
                 close_stream(stream_manager)
                 stream_closed = True
+
+        # Shared by every path that accepts a recovered completed turn.
+        finish: dict[str, Any] = {
+            "client": self.client,
+            "cancel_event": cancel_event,
+            "deadline": usage_deadline,
+            "close_stream": close_active_stream,
+            "accept_completed": accept_completed,
+            "tool_outputs": tool_outputs,
+        }
 
         def handle_action(action: Any) -> None:
             nonlocal turn_id
@@ -385,8 +393,8 @@ class OpenAIProvider:
                     if recovered_status == "completed":
                         accept_completed(recovered_usage)
                         terminal = "completed"
-                        if content:
-                            content_parts = {(0, 0, ""): content}
+                        # Recovered text replaces streamed deltas; with none, keep none.
+                        content_parts = {(0, 0, ""): content} if content else {}
                         turn_id = recovered_turn_id or turn_id
                         input_tokens, output_tokens, usage_complete = parse_usage(usage)
                         if not usage_complete and session_id and turn_id:
@@ -436,18 +444,11 @@ class OpenAIProvider:
                 raise
             recovered_result = recover_completed_provider_error(
                 error,
-                recover=lambda sid, tid, prior: self._recover(
-                    sid, tid, prior, deadline=turn_deadline
-                ),
+                recover=lambda sid, tid, prior: self._recover(sid, tid, prior, deadline=turn_deadline),
                 session_id=session_id,
                 turn_id=turn_id,
                 prior_turn_id=prior_turn_id,
-                client=self.client,
-                cancel_event=cancel_event,
-                deadline=usage_deadline,
-                close_stream=close_active_stream,
-                accept_completed=accept_completed,
-                tool_outputs=tool_outputs,
+                **finish,
             )
             if recovered_result is not None:
                 return recovered_result
@@ -461,9 +462,7 @@ class OpenAIProvider:
                 else None
             )
             if recovered and recovered[1] == "completed" and recovered[0]:
-                usage = usage_from_event({"usage": recovered[3]})
-                accept_completed(usage)
-                return result_from_recovered(recovered[0], recovered[3], session_id, tool_outputs)
+                return finish_recovered_completion(recovered, session_id=session_id, **finish)
             raise OpenAIProviderError(
                 "No se pudo completar el turno de Agents API; no se reenviará el mensaje automáticamente",
                 (input_tokens, output_tokens) if usage_complete else None,

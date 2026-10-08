@@ -502,50 +502,6 @@ def result_from_recovered(
     )
 
 
-def recover_completed_provider_error(
-    error: OpenAIProviderError,
-    *,
-    recover: Callable[..., tuple[str, str, str | None, dict[str, Any]] | None],
-    session_id: str | None,
-    turn_id: str | None,
-    prior_turn_id: str | None,
-    client: Any,
-    cancel_event: threading.Event,
-    deadline: float,
-    close_stream: Callable[[], None],
-    accept_completed: Callable[[tuple[int, int] | None], None],
-    tool_outputs: list[dict[str, Any]],
-) -> ProviderResult | None:
-    """Recover a completed exact turn after a non-hardguard provider error."""
-    if error.reason_code or not session_id or not turn_id:
-        return None
-    close_stream()
-    recovered = recover(session_id, turn_id, prior_turn_id)
-    if not recovered or recovered[1] != "completed" or not recovered[0]:
-        return None
-    content, _, recovered_turn_id, usage_data = recovered
-    input_tokens, output_tokens, usage_complete = parse_usage(usage_data)
-    usage = (input_tokens, output_tokens) if usage_complete else None
-    if usage is None and recovered_turn_id:
-        usage = read_completed_turn_usage(
-            client,
-            session_id,
-            recovered_turn_id,
-            cancel_event=cancel_event,
-            deadline=deadline,
-            close_stream=close_stream,
-        )
-    if usage is not None:
-        input_tokens, output_tokens = usage
-        usage_data = {
-            "input_tokens": input_tokens,
-            "output_tokens": output_tokens,
-            "total_tokens": input_tokens + output_tokens,
-        }
-    accept_completed(usage)
-    return result_from_recovered(content, usage_data, session_id, tool_outputs)
-
-
 def event_session_id(event: dict[str, Any]) -> str | None:
     session = event.get("session")
     if isinstance(session, dict) and isinstance(session.get("id"), str):

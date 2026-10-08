@@ -4,6 +4,16 @@ Cambios notables del proyecto, para humanos. Formato inspirado en
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); no se usa
 versión semántica, las entradas van por fecha.
 
+## 2026-10-08 · Correcciones a la recuperación de turnos del chat
+
+- Un stream cortado ya no guarda texto parcial como respuesta completa.
+- La recuperación tras una conexión caída consulta el uso faltante y libera la
+  reserva de gasto; antes, dos turnos así podían agotar el tope diario de Sol.
+- El worker deja de correr el límite de tiempo antes de consultar el uso de una
+  respuesta recuperada.
+- Ya no se guarda `"None"` como identificador del turno del proveedor.
+- Detalle en `docs/etapas/chat-recuperacion-correcciones-20261008.md`.
+
 ## 2026-10-07 · Fase 2 del chat: modelos, esfuerzo y nuevo conjunto de evaluación
 
 - `docs/chat/fase-2-agente-analitico.md` reescrito como guía de implementación:
