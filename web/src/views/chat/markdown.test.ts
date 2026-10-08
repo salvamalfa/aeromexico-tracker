@@ -40,6 +40,23 @@ describe("safe response rendering", () => {
     expect(host.textContent).not.toContain("|---");
   });
 
+  it("splits consecutive tables and consumes rows past the limit", () => {
+    const host = document.createElement("div");
+    const second = "| x | y |\n|---|---|\n| 1 | 2 |";
+    renderSafeMarkdown(host, `| a | b |\n|---|---|\n| 1 | 2 |\n\n${second}`);
+    const tables = host.querySelectorAll("table");
+    expect(tables).toHaveLength(2);
+    expect(tables[0]!.querySelectorAll("tbody tr")).toHaveLength(1);
+    expect(host.textContent).not.toContain("---");
+
+    const long = ["| n | v |", "|---|---|", ...Array.from({ length: 65 }, (_, i) => `| ${i} | x |`), "", "Fin."].join("\n");
+    renderSafeMarkdown(host, long);
+    expect(host.querySelectorAll("tbody tr")).toHaveLength(60);
+    expect(host.textContent).not.toContain("| 64 |");
+    expect(host.textContent).toContain("se omitieron 5");
+    expect([...host.querySelectorAll(":scope > p")].map((p) => p.textContent)).toEqual(["Fin."]);
+  });
+
   it("keeps pipes inside ordinary text and HTML-looking cells as plain text", () => {
     const host = document.createElement("div");
     renderSafeMarkdown(host, "Opción A | opción B\n\n| a | b |\n|---|---|\n| <img src=x onerror=alert(1)> | ok |");

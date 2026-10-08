@@ -72,9 +72,15 @@ function parseTable(lines: readonly string[], start: number, allowedUrls: Readon
   if (headings.length < 2 || headings.length > MAX_TABLE_COLUMNS || aligns.length !== headings.length) return null;
   const rows: string[][] = [];
   let index = separatorIndex + 1;
-  for (let next = nextLine(index); next < lines.length && rows.length < MAX_TABLE_ROWS; next = nextLine(index)) {
+  let hidden = 0;
+  for (let next = nextLine(index); next < lines.length; next = nextLine(index)) {
     if (!lines[next]!.trim().startsWith("|")) break;
-    rows.push(tableCells(lines[next]!));
+    // A header followed by its separator starts the next table.
+    const after = lines[nextLine(next + 1)];
+    if (after !== undefined && TABLE_SEPARATOR.test(after)) break;
+    // Rows past the limit are consumed, not rendered, so they never leak out as pipe text.
+    if (rows.length < MAX_TABLE_ROWS) rows.push(tableCells(lines[next]!));
+    else hidden += 1;
     index = next + 1;
   }
   const table = document.createElement("table");
@@ -98,6 +104,11 @@ function parseTable(lines: readonly string[], start: number, allowedUrls: Readon
   const wrap = document.createElement("div");
   wrap.className = "chat-table-wrap";
   wrap.append(table);
+  if (hidden) {
+    const note = document.createElement("p");
+    note.textContent = `Se muestran ${MAX_TABLE_ROWS} filas; se omitieron ${hidden}.`;
+    wrap.append(note);
+  }
   return [wrap, index];
 }
 
