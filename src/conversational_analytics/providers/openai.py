@@ -25,6 +25,7 @@ from ._openai_helpers import (
     latest_provider_turn_id,
     parse_usage,
     prior_history,
+    provider_terminal_failure,
     question_envelope,
     read_completed_turn_usage,
     recover_completed_provider_error,
@@ -290,12 +291,10 @@ class OpenAIProvider:
                     "agent.session.environment.failed",
                     "error",
                 }
-                if session_failure:
+                if session_failure or (event_type == "agent.session.turn.failed" and is_current_turn):
                     terminal = "failed"
-                event_usage = (
-                    usage_from_event(event_data)
-                    if session_failure
-                    else terminal_event_usage(event_type, is_current_turn, event_data)
+                event_usage = usage_from_event(event_data) if session_failure else terminal_event_usage(
+                    event_type, is_current_turn, event_data
                 )
                 check_limits(event_usage)
                 if event_type == "agent.session.turn.output_text.delta" and is_current_turn:
@@ -345,8 +344,11 @@ class OpenAIProvider:
                 elif event_type == "agent.session.turn.failed":
                     if is_current_turn:
                         terminal = "failed"
-                        raise OpenAIProviderError(
-                            "El proveedor marcó el turno como fallido", usage_from_event(event_data)
+                        raise provider_terminal_failure(
+                            "El proveedor marcó el turno como fallido",
+                            usage_from_event(event_data),
+                            session_id,
+                            turn_id,
                         )
                 elif event_type == "agent.session.turn.cancelled":
                     if is_current_turn:
@@ -356,9 +358,11 @@ class OpenAIProvider:
                         raise cancelled
                 elif event_type in {"agent.session.failed", "agent.session.environment.failed", "error"}:
                     terminal = "failed"
-                    raise OpenAIProviderError(
+                    raise provider_terminal_failure(
                         "El ciclo del agente falló antes de completar el turno",
                         usage_from_event(event_data),
+                        session_id,
+                        turn_id,
                     )
             if terminal != "completed":
                 recovered = self._recover(session_id, turn_id, prior_turn_id, deadline=turn_deadline)
@@ -367,7 +371,12 @@ class OpenAIProvider:
                     recovered_usage = usage_from_event({"usage": usage})
                     if recovered_status == "failed":
                         terminal = "failed"
-                        raise OpenAIProviderError("El proveedor marcó el turno como fallido", recovered_usage)
+                        raise provider_terminal_failure(
+                            "El proveedor marcó el turno como fallido",
+                            recovered_usage,
+                            session_id,
+                            recovered_turn_id,
+                        )
                     if recovered_status == "cancelled":
                         terminal = "cancelled"
                         cancelled = InterruptedError("turn cancelled")

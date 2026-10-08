@@ -131,6 +131,9 @@ def test_failed_turn_reports_provider_usage_for_quota_accounting():
     with pytest.raises(OpenAIProviderError) as raised:
         _run(_provider(FakeClient(fake)), session_id="sess_fixture")
     assert raised.value.usage == (120, 7)
+    assert raised.value.reason_code == "provider_terminal_failed"
+    assert raised.value.session_id == "sess_fixture"
+    assert raised.value.turn_id == "turn_provider"
     assert fake.retrieve_calls == 0
     # One turn listing happened before streaming to record the prior turn ID;
     # terminal failure must not trigger the recovery session/turn reads.
@@ -185,6 +188,8 @@ def test_late_session_failures_preserve_usage_and_skip_recovery_gets(
     assert raised.value.usage == (13, 2)
     if guard == "deadline":
         assert raised.value.reason_code == "turn_timeout"
+    elif guard == "normal":
+        assert raised.value.reason_code == "provider_terminal_failed"
     assert fake.retrieve_calls == 0
     # The one listing is the pre-stream prior-turn lookup.
     assert fake.turn_list_calls == 1

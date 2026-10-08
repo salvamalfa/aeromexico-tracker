@@ -539,6 +539,10 @@ def test_recovered_terminal_failure_or_cancel_preserves_reported_usage(status, e
     with pytest.raises(error_type) as caught:
         _run(_provider(FakeClient(fake)), session_id="sess_fixture")
     assert caught.value.usage == (31, 19)
+    if status == "failed":
+        assert caught.value.reason_code == "provider_terminal_failed"
+        assert caught.value.session_id == "sess_fixture"
+        assert caught.value.turn_id == "turn_recovered"
     assert fake.retrieve_calls == 1
     assert fake.turn_list_calls == 2  # prior turn lookup plus one recovery read
     assert 0 < fake.retrieve_timeouts[-1] <= 180

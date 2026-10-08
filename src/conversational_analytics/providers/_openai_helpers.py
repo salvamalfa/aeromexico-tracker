@@ -75,7 +75,9 @@ USAGE_POLL_MAX_ATTEMPTS = 5
 USAGE_POLL_INTERVAL_SECONDS = 2.0
 TERMINAL_USAGE_RECONCILIATION_SECONDS = 30.0
 TERMINAL_USAGE_POLL_MAX_ATTEMPTS = 16
-PROVIDER_REASON_CODES = frozenset({"tool_call_limit", "turn_timeout", "tool_result_limit"})
+PROVIDER_REASON_CODES = frozenset(
+    {"provider_terminal_failed", "tool_call_limit", "turn_timeout", "tool_result_limit"}
+)
 POST_CANCEL_USAGE_TIMEOUT_SECONDS = TERMINAL_USAGE_RECONCILIATION_SECONDS
 POST_CANCEL_USAGE_ATTEMPTS = 6
 POST_CANCEL_USAGE_POLL_INTERVAL_SECONDS = 5.0
@@ -100,6 +102,21 @@ class OpenAIProviderError(RuntimeError):
         )
         self.session_id = session_id if isinstance(session_id, str) and session_id else None
         self.turn_id = turn_id if isinstance(turn_id, str) and turn_id else None
+
+
+def provider_terminal_failure(
+    message: str,
+    usage: tuple[int, int] | None,
+    session_id: str | None,
+    turn_id: str | None,
+) -> OpenAIProviderError:
+    return OpenAIProviderError(
+        message,
+        usage,
+        reason_code="provider_terminal_failed",
+        session_id=session_id,
+        turn_id=turn_id,
+    )
 
 
 class ToolResultLimitExceeded(Exception):
