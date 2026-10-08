@@ -45,6 +45,105 @@ function appendInline(parent: HTMLElement, raw: string, allowedUrls: ReadonlySet
   parent.append(document.createTextNode(raw.slice(cursor)));
 }
 
+const TABLE_SEPARATOR = /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/;
+const MAX_TABLE_COLUMNS = 12;
+const MAX_TABLE_ROWS = 60;
+
+/** Split a table row on unescaped pipes; `\|` is a literal pipe and `\\` a literal backslash. */
+function tableCells(line: string): string[] {
+  const cells: string[] = [];
+  let cell = "";
+  let escaped = false;
+  let endedOnDelimiter = false;
+  for (const char of line.trim()) {
+    endedOnDelimiter = false;
+    if (escaped) {
+      cell += char === "|" || char === "\\" ? char : `\\${char}`;
+      escaped = false;
+    } else if (char === "\\") {
+      escaped = true;
+    } else if (char === "|") {
+      cells.push(cell);
+      cell = "";
+      endedOnDelimiter = true;
+    } else {
+      cell += char;
+    }
+  }
+  if (escaped) cell += "\\";
+  // Leading and trailing pipes are borders, not empty cells.
+  if (!endedOnDelimiter) cells.push(cell);
+  if (line.trim().startsWith("|")) cells.shift();
+  return cells.map((value) => value.trim());
+}
+
+/** Parse a GitHub-style table starting at `start`; returns the element and the next line index. */
+function parseTable(lines: readonly string[], start: number, allowedUrls: ReadonlySet<string>): [HTMLElement, number] | null {
+  // Models sometimes leave blank lines between table rows; skip them.
+  const nextLine = (from: number): number => {
+    let index = from;
+    while (index < lines.length && !lines[index]!.trim()) index += 1;
+    return index;
+  };
+  const header = lines[start]!;
+  const separatorIndex = nextLine(start + 1);
+  const separator = lines[separatorIndex];
+  // The leading pipe is optional in GFM; the separator and equal column counts mark a table.
+  if (!header.includes("|") || separator === undefined || !TABLE_SEPARATOR.test(separator)) return null;
+  const headings = tableCells(header);
+  const aligns = tableCells(separator).map((cell) =>
+    cell.endsWith(":") ? (cell.startsWith(":") ? "center" : "right") : "left");
+  if (headings.length < 2 || headings.length > MAX_TABLE_COLUMNS || aligns.length !== headings.length) return null;
+  const rows: string[][] = [];
+  let index = separatorIndex + 1;
+  let hidden = 0;
+  for (let next = nextLine(index); next < lines.length; next = nextLine(index)) {
+    const candidate = lines[next]!.trim();
+    // Across a blank line only a bordered row with the table's width continues it;
+    // anything else there is prose. Borderless rows must also match the width.
+    const gap = next !== index;
+    const fullWidth = tableCells(candidate).length === headings.length;
+    const isRow = candidate.startsWith("|") ? !gap || fullWidth : !gap && candidate.includes("|") && fullWidth;
+    if (!isRow) break;
+    // A header followed by its separator starts the next table.
+    // A `---` divider after the table is not a separator: the column counts must match.
+    const after = lines[nextLine(next + 1)];
+    const width = tableCells(candidate).length;
+    if (after !== undefined && TABLE_SEPARATOR.test(after) && width >= 2 && tableCells(after).length === width) break;
+    // Rows past the limit are consumed, not rendered, so they never leak out as pipe text.
+    if (rows.length < MAX_TABLE_ROWS) rows.push(tableCells(lines[next]!));
+    else hidden += 1;
+    index = next + 1;
+  }
+  const table = document.createElement("table");
+  const row = (cells: readonly string[], tag: "th" | "td"): HTMLTableRowElement => {
+    const tr = document.createElement("tr");
+    headings.forEach((_, column) => {
+      const cell = document.createElement(tag);
+      if (aligns[column] !== "left") cell.className = `align-${aligns[column]}`;
+      if (tag === "th") cell.scope = "col";
+      appendInline(cell, cells[column] ?? "", allowedUrls);
+      tr.append(cell);
+    });
+    return tr;
+  };
+  const thead = document.createElement("thead");
+  thead.append(row(headings, "th"));
+  const tbody = document.createElement("tbody");
+  for (const cells of rows) tbody.append(row(cells, "td"));
+  table.append(thead, tbody);
+  // Narrow screens scroll the table sideways instead of squeezing every column.
+  const wrap = document.createElement("div");
+  wrap.className = "chat-table-wrap";
+  wrap.append(table);
+  if (hidden) {
+    const note = document.createElement("p");
+    note.textContent = `Se muestran ${MAX_TABLE_ROWS} filas; se omitieron ${hidden}.`;
+    wrap.append(note);
+  }
+  return [wrap, index];
+}
+
 export function renderSafeMarkdown(container: HTMLElement, source: string, allowedUrls: readonly string[] = []): void {
   container.replaceChildren();
   const trustedUrls = new Set(allowedUrls.flatMap((raw) => {
@@ -53,8 +152,16 @@ export function renderSafeMarkdown(container: HTMLElement, source: string, allow
   }));
   const lines = source.replace(/\r/g, "").split("\n");
   let list: HTMLUListElement | null = null;
-  for (const line of lines) {
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index]!;
     if (!line.trim()) { list = null; continue; }
+    const table = parseTable(lines, index, trustedUrls);
+    if (table) {
+      list = null;
+      container.append(table[0]);
+      index = table[1] - 1;
+      continue;
+    }
     const item = line.match(/^\s*[-*]\s+(.+)$/);
     if (item) {
       if (!list) { list = document.createElement("ul"); container.append(list); }

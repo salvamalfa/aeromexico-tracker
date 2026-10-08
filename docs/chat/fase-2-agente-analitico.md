@@ -28,6 +28,21 @@ Diagramas de la arquitectura actual, interactivos:
 - **Saldo de la API al 7 oct 2026:** US$2.72 gastados de US$10 cargados. El
   chat en producción consume del mismo saldo.
 
+## Decisiones del dueño (8 oct 2026)
+
+Tras la primera respuesta real con una tabla (ver
+[el caso de market share](#caso-real-market-share-2026)):
+
+- **La frase de avance se conserva.** Una sola oración al inicio que diga qué va
+  a revisar («Voy a revisar qué series de participación…») da retroalimentación
+  mientras llega la respuesta. Lo que se corrige son las introducciones
+  **largas** que narran el proceso, no ese aviso breve.
+- **Las tablas con cifras salen del servidor**, con la presentación por
+  referencia de F2.8. Si el modelo escribe una tabla por su cuenta, la página
+  la muestra como tabla normal, **sin ninguna nota** que la distinga.
+- **Decimales con punto** (35.9%), como el resto del dashboard.
+- **Fuentes sin duplicar y con nombre distinguible.**
+
 ## Qué aprendimos de la primera evaluación
 
 El dueño reveló los alias de la revisión a ciegas: **A = Luna, B = Sol,
@@ -37,7 +52,8 @@ agente y no versionado) muestran dos problemas distintos.
 **1. Redacción, que se corrige con el prompt.** Luna casi siempre obtuvo el
 dato correcto, pero lo envolvía en:
 
-- introducciones largas que narran el proceso («voy a consultar…»);
+- introducciones largas que narran el proceso; el aviso de una sola oración
+  sí se conserva (decisión del 8 de octubre);
 - advertencias que nadie pidió («razón determinista», «no equivale a la
   rentabilidad total», «calculado a partir de las métricas publicadas»);
 - respuestas en español a preguntas en inglés, o mezclando idiomas.
@@ -132,10 +148,9 @@ medio, liga, resumen propio, entidades, temas y una cita breve. El lote
 semanal entra al índice publicado **solo con aprobación del dueño**. La
 herramienta es `buscar_noticias(texto, desde, hasta, empresa)`.
 
-**D. Presentación.** Las gráficas, comparaciones y tablas pasan a ser
-herramientas, por ejemplo `mostrar_grafica(métricas, entidades, periodos,
-tipo)`. El modelo elige qué mostrar y con qué IDs; el servidor valida y llena
-los números con datos publicados. Hoy la única gráfica la arma
+**D. Presentación.** Las tablas y gráficas con cifras las arma el servidor, no
+el modelo, con **presentación por referencia** (detalle en
+[F2.8](#f28--presentación-por-referencia)). Hoy la única gráfica la arma
 `get_time_series` de forma automática.
 
 ### Explicaciones atribuidas, no causalidad inventada
@@ -168,7 +183,7 @@ Cada paquete va en su propio PR, con pruebas y documentación.
 | F2.5 | **Índice de reportes** con búsqueda citada. | Pasajes con empresa, periodo y página; pruebas de citas. |
 | F2.6 | **Índice semanal de noticias** con rutina programada y aprobación del dueño. | Fichas sin texto completo de terceros; flujo de aprobación; herramienta de búsqueda. |
 | F2.7 | **Explicaciones atribuidas:** nueva regla causal y casos de evaluación. | Casos de «por qué» respondidos con las tres capas citadas. |
-| F2.8 | **Herramientas de presentación** (gráficas, comparaciones, tablas). | Componentes en `web/`, validación en el servidor y casos de evaluación. |
+| F2.8 | **Presentación por referencia** de tablas y gráficas, y fuentes sin duplicar (detalle abajo). | El caso real de market share se muestra como tabla validada; cifras de la tabla idénticas a las de la herramienta; sin vuelta extra al modelo. |
 | F2.9 | **Evaluación comparativa de los cuatro candidatos** (detalle abajo). | Reporte con calidad, latencia, tokens y costo por candidato; elección explícita del dueño. |
 
 **Orden y dependencias:**
@@ -289,9 +304,11 @@ tus herramientas.
 </rol>
 
 <como_responder>
-Empieza con la respuesta: el dato o la conclusión en la primera oración, con su
-periodo y unidad. El usuario lee en un panel pequeño y quiere el dato antes que
-el proceso, así que no describas lo que vas a consultar.
+Si vas a consultar datos, puedes avisar en una sola oración qué vas a revisar;
+el usuario ve ese aviso mientras esperas las herramientas. Después empieza con
+la respuesta: el dato o la conclusión en la primera oración, con su periodo y
+unidad. El usuario lee en un panel pequeño y quiere el dato antes que el
+proceso, así que no narres los pasos.
 
 Después, en un párrafo corto aparte, agrega solo el contexto que cambie cómo se
 lee el dato: por ejemplo, que «Aeroméxico» incluye a Aeroméxico Connect, que una
@@ -303,6 +320,12 @@ Cierra con una línea que diga de dónde sale el dato y, si lo calculaste, cómo
 Si usas un término técnico, explícalo en pocas palabras la primera vez. Responde
 en el idioma de la pregunta y mantenlo en toda la respuesta. Escribe en párrafos
 breves; usa listas o tablas solo para comparar varias aerolíneas o periodos.
+Escribe los decimales con punto (35.9%), como el dashboard.
+
+Para mostrar una tabla o gráfica con cifras, escribe la marca de presentación
+que devolvió la herramienta (por ejemplo {{tabla:‹id›}}) en su propio renglón:
+el sistema la reemplaza por la tabla con los datos publicados. No copies esas
+cifras a mano en otra tabla.
 </como_responder>
 
 <cuando_aclarar_o_declinar>
@@ -476,13 +499,119 @@ mande el historial de la conversación; hoy cada caso es de un solo turno.
 
 - **Automática**, donde se pueda: valores numéricos contra el oro, presencia de
   fuentes, idioma, que no haya cifra cuando se esperaba aclaración, y los
-  fallos críticos del holdout. El dueño solo revisa los casos de seguridad que
+  fallos críticos del holdout. También el formato: decimales con punto,
+  fuentes sin duplicar, aviso de avance de una sola oración como máximo y,
+  en comparaciones, una tabla bien formada. El dueño solo revisa los casos de seguridad que
   la calificación automática marque como dudosos.
 - **Del dueño**, a ciegas, sobre las preguntas de negocio de cada etapa: las
   respuestas de cada pregunta lado a lado en `review.html`, como en la primera
   ronda. Califica si es correcta, si es útil y si está bien redactada, y elige
   la mejor. La carga por etapa está en
   [Puntos de decisión del dueño](#puntos-de-decisión-del-dueño).
+
+## F2.8 · Presentación por referencia
+
+### Caso real: market share 2026
+
+El 8 de octubre, a «¿Cómo se ve el market share de las aerolíneas en 2026?»,
+el chat respondió con el aviso de avance, el dato principal y esta tabla
+escrita en markdown:
+
+```text
+| Aerolínea | 1T26 | 2T26 |
+|---|---:|---:|
+| Volaris | 35,9 % | 36,7 % |
+| Viva | 33,5 % | 33,3 % |
+| Grupo Aeroméxico | 29,5 % | 29,1 % |
+```
+
+Tres defectos:
+
+1. **La tabla no se veía como tabla.** El renderizador del chat no conocía
+   tablas y mostró cada renglón como párrafo con las barras visibles. Ya está
+   corregido en el MVP (ver abajo).
+2. **Decimales con coma** («35,9 %»), distinto del dashboard.
+3. **«Fuente pública AFAC» aparecía dos veces** en las referencias, más una liga
+   «Fuente: AFAC» dentro del texto.
+
+Además, el modelo copió las cifras a mano en la tabla. Ese es el riesgo de
+fondo: una tabla escrita por el modelo puede tener un número mal transcrito y
+no hay nada que lo detecte.
+
+### Qué ya existe (MVP, 8 oct 2026)
+
+`web/src/views/chat/markdown.ts` muestra como tabla real cualquier tabla de
+markdown estilo GitHub: encabezado, separador y filas, con alineación y
+desplazamiento lateral en pantallas angostas. Es el **respaldo**: cubre las
+tablas que el modelo escriba por su cuenta, por ejemplo de texto
+(aerolínea, fortaleza, debilidad) o cuando ninguna herramienta devolvió una
+tabla. No se agrega ninguna nota a esas tablas (decisión del dueño).
+
+### Diseño: presentación por referencia
+
+1. Las herramientas de datos (`query_metrics`, `compare_metrics`,
+   `get_time_series` y las de F2.3–F2.4) devuelven, además de sus cifras, un
+   objeto de presentación con identificador:
+
+   ```json
+   {
+     "display_id": "tabla:participacion_2026",
+     "kind": "table",
+     "title": "Participación de pasajeros, nacionales e internacionales",
+     "columns": [{"key": "entity", "label": "Aerolínea"},
+                 {"key": "2026Q1", "label": "1T26", "unit": "%"},
+                 {"key": "2026Q2", "label": "2T26", "unit": "%"}],
+     "rows": [{"entity": "Volaris", "2026Q1": 0.359, "2026Q2": 0.367}],
+     "value_kind": "reported",
+     "source": {"label": "AFAC, estadística mensual, junio 2026", "url": "…"}
+   }
+   ```
+
+   Los valores salen de los datos publicados; `value_kind` conserva si son
+   reportados, calculados, estimados o programados, y un faltante viaja como
+   `null`, nunca como cero.
+2. El modelo escribe la marca `{{tabla:participacion_2026}}` en su respuesta.
+   No vuelve a llamar a nada: la tabla ya venía en el resultado de la consulta.
+3. El servidor valida que cada marca corresponda a un objeto de presentación
+   de **ese mismo turno**. Una marca desconocida se quita y se registra; no se
+   inventa una tabla.
+4. La página dibuja la tabla con formato fijo: punto decimal, porcentajes con
+   un decimal, rótulo «estimado» cuando `value_kind` lo exija. Las gráficas usan
+   el mismo mecanismo (`grafica:‹id›`) y reemplazan a la gráfica automática de
+   `get_time_series`.
+
+### Por qué no una herramienta `mostrar_tabla` clásica
+
+| Opción | Costo extra por respuesta | Exactitud de cifras |
+|---|---|---|
+| Tabla escrita por el modelo | ~150 tokens de salida | El modelo transcribe; puede equivocarse. |
+| Herramienta clásica que el modelo llama al final | Una vuelta más al modelo: reenvía todo el contexto (~35 mil tokens de entrada; ~US$0.07 en el ledger, menos con caché) y varios segundos | Las cifras las pone el servidor. |
+| **Presentación por referencia** | Prácticamente igual a escribir la marca | Las cifras las pone el servidor. |
+
+Si alguna vez hace falta componer una tabla con resultados de varias
+consultas, se puede agregar una herramienta de composición; debe justificar su
+vuelta extra con un caso de evaluación.
+
+### Fuentes
+
+- Cada referencia lleva un nombre distinguible: emisor, publicación y periodo
+  («AFAC, estadística mensual, junio 2026»), no un rótulo genérico repetido.
+- Las referencias se deduplican por URL antes de mostrarse.
+- La respuesta no repite en el texto la liga que ya aparece en la lista de
+  fuentes; la tabla muestra su fuente en su pie.
+
+### Criterios de aceptación
+
+- La pregunta del caso real se responde con la tabla validada, decimales con
+  punto, la fuente una sola vez y el aviso de avance de una oración.
+- Las cifras de cada tabla coinciden exactamente con los datos publicados.
+  Prueba: comparar celda por celda con `market.json`.
+- Una marca inexistente no produce tabla ni error visible al usuario.
+- Sin llamadas extra al modelo por mostrar una tabla: el número de turnos del
+  proveedor no cambia frente a la misma respuesta sin tabla.
+- Casos de evaluación: N07, N08, N11 y N21 (comparaciones entre aerolíneas o
+  periodos) se califican también por formato, con la tabla por referencia
+  cuando F2.8 esté integrado y con tabla escrita mientras no.
 
 ## F2.9 · Evaluación comparativa
 

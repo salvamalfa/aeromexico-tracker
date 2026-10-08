@@ -13,6 +13,97 @@ describe("safe response rendering", () => {
     expect(links[0]?.rel).toBe("noopener noreferrer");
   });
 
+  it("renders model-written tables as real tables, also with blank lines between rows", () => {
+    const host = document.createElement("div");
+    const answer = [
+      "Tomando pasajeros nacionales e internacionales juntos:",
+      "",
+      "| Aerolínea | 1T26 | 2T26 |",
+      "",
+      "|---|---:|---:|",
+      "",
+      "| **Volaris** | 35.9% | 36.7% |",
+      "",
+      "| Grupo Aeroméxico | 29.5% | 29.1% |",
+      "",
+      "Volaris gana participación.",
+    ].join("\n");
+    renderSafeMarkdown(host, answer);
+    const table = host.querySelector(".chat-table-wrap table");
+    expect(table).not.toBeNull();
+    expect([...table!.querySelectorAll("th")].map((cell) => cell.textContent)).toEqual(["Aerolínea", "1T26", "2T26"]);
+    const rows = [...table!.querySelectorAll("tbody tr")];
+    expect(rows).toHaveLength(2);
+    expect(rows[0]!.querySelector("strong")?.textContent).toBe("Volaris");
+    expect(rows[1]!.querySelectorAll("td")[2]?.className).toBe("align-right");
+    expect(host.querySelectorAll("p")).toHaveLength(2);
+    expect(host.textContent).not.toContain("|---");
+  });
+
+  it("splits consecutive tables and consumes rows past the limit", () => {
+    const host = document.createElement("div");
+    const second = "| x | y |\n|---|---|\n| 1 | 2 |";
+    renderSafeMarkdown(host, `| a | b |\n|---|---|\n| 1 | 2 |\n\n${second}`);
+    const tables = host.querySelectorAll("table");
+    expect(tables).toHaveLength(2);
+    expect(tables[0]!.querySelectorAll("tbody tr")).toHaveLength(1);
+    expect(host.textContent).not.toContain("---");
+
+    const long = ["| n | v |", "|---|---|", ...Array.from({ length: 65 }, (_, i) => `| ${i} | x |`), "", "Fin."].join("\n");
+    renderSafeMarkdown(host, long);
+    expect(host.querySelectorAll("tbody tr")).toHaveLength(60);
+    expect(host.textContent).not.toContain("| 64 |");
+    expect(host.textContent).toContain("se omitieron 5");
+    expect([...host.querySelectorAll(":scope > p")].map((p) => p.textContent)).toEqual(["Fin."]);
+  });
+
+  it("accepts GFM tables without leading pipes", () => {
+    const host = document.createElement("div");
+    renderSafeMarkdown(host, "A | B\n---|---\n1 | 2\n3 | 4\n\nTexto con a | b | c.");
+    expect(host.querySelectorAll("tbody tr")).toHaveLength(2);
+    expect(host.querySelector("th")?.textContent).toBe("A");
+    expect(host.querySelector("p")?.textContent).toBe("Texto con a | b | c.");
+  });
+
+  it("keeps the last row when a markdown divider follows the table", () => {
+    const host = document.createElement("div");
+    renderSafeMarkdown(host, "| a | b |\n|---|---|\n| 1 | 2 |\n| 3 | 4 |\n\n---\n\nFin.");
+    expect(host.querySelectorAll("tbody tr")).toHaveLength(2);
+    expect(host.textContent).not.toContain("| 3 |");
+  });
+
+  it("keeps an escaped pipe at the end of a cell", () => {
+    const host = document.createElement("div");
+    renderSafeMarkdown(host, "a | b\n---|---\nx | RASK \\|");
+    expect([...host.querySelectorAll("td")].map((cell) => cell.textContent)).toEqual(["x", "RASK |"]);
+  });
+
+  it("keeps blank-separated borderless prose out of the table", () => {
+    const host = document.createElement("div");
+    renderSafeMarkdown(host, "A | B\n---|---\nVolaris | 36.7%\n\nVolaris | ganó 0.8 pp.");
+    expect(host.querySelectorAll("tbody tr")).toHaveLength(1);
+    expect(host.querySelector("p")?.textContent).toBe("Volaris | ganó 0.8 pp.");
+
+    renderSafeMarkdown(host, "| A | B |\n|---|---|\n| 1 | 2 |\n\n| Fuente: AFAC |");
+    expect(host.querySelectorAll("tbody tr")).toHaveLength(1);
+    expect(host.querySelector("p")?.textContent).toBe("| Fuente: AFAC |");
+  });
+
+  it("treats a pipe after an escaped backslash as a delimiter", () => {
+    const host = document.createElement("div");
+    renderSafeMarkdown(host, "Ruta | Valor\n---|---\nC:\\\\| 5\n| a \\| b | 6 |");
+    const rows = [...host.querySelectorAll("tbody tr")].map((row) => [...row.querySelectorAll("td")].map((cell) => cell.textContent));
+    expect(rows).toEqual([["C:\\", "5"], ["a | b", "6"]]);
+  });
+
+  it("keeps pipes inside ordinary text and HTML-looking cells as plain text", () => {
+    const host = document.createElement("div");
+    renderSafeMarkdown(host, "Opción A | opción B\n\n| a | b |\n|---|---|\n| <img src=x onerror=alert(1)> | ok |");
+    expect(host.querySelector("p")?.textContent).toBe("Opción A | opción B");
+    expect(host.querySelector("img")).toBeNull();
+    expect(host.querySelector("td")?.textContent).toBe("<img src=x onerror=alert(1)>");
+  });
+
   it("drops references with credentials or query strings and bounds the list", () => {
     const refs = safeReferences([
       { label: "ok", url: "https://www.gob.mx/afac/source" },
