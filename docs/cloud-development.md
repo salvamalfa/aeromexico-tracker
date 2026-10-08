@@ -46,7 +46,7 @@ regenerables demasiado grandes.
   falso positivo; no había coincidencia en ninguna celda lógica.
 
 El detalle reproducible está en
-[`docs/etapas/entrega-github-datos-privados-20260919.md`](etapas/entrega-github-datos-privados-20260919.md).
+[`docs/archivo/mantenimiento-2026-09/entrega-github-datos-privados-20260919.md`](archivo/mantenimiento-2026-09/entrega-github-datos-privados-20260919.md).
 
 ## Qué podrá hacer un agente de nube
 

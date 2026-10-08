@@ -43,7 +43,7 @@ materialización; solo versiones autorizadas para consumo se exportarán a Gold.
 Los borradores y comentarios privados nunca entrarán al HTML de consumo.
 
 Los contratos, políticas y transiciones se especifican en
-[contratos-v1](../../analysis-agent/contratos-v1.md). Son especificaciones para etapas
+[contratos-v1](../analysis-agent/contratos-v1.md). Son especificaciones para etapas
 posteriores, no interfaces productivas ya implementadas.
 
 ## Etapas

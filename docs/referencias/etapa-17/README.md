@@ -9,7 +9,7 @@ original. No confundir versiones ni trasladar su auditoría o una futura aprobac
 - [Contrato del auditor y aprobación](../../analysis-agent/auditor-v1.md)
 - `receipt.json`: versiones, estados, hashes, pruebas y conservación de datos.
 - `browser_validation.json`: comportamiento de la interfaz a tres anchos.
-- Capturas en `docs/assets/etapa-17`.
+- Capturas en `docs/archivo/assets/etapa-17`.
 
 Informes originales privados: `analysis_runs/audits/initial_review.json`,
 `final_review.json`, `adversarial_review.json`, `technical_review.json`. Las dos

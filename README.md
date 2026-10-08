@@ -32,8 +32,6 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
 
 ![Dashboard público integrado](docs/assets/dashboard/public-dashboard.png)
 
-Para recorrer el argumento completo, consulta [el recorrido narrado](docs/dashboard-recorrido.md).
-
 ## Estado
 
 - **Dashboard:** tres vistas publicadas en Pages (Lectura ejecutiva, Economía

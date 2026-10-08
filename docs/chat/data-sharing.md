@@ -8,7 +8,7 @@ comprobación separada del saldo bonificado. No modifica ajustes de cuenta.
 
 OpenAI cuenta tokens de entrada **y** salida. La oferta confirmada agrupa los
 modelos así para los niveles de uso 1–2 (los niveles 3–5 reciben 1 millón /
-10 millones; este piloto presupuesta con el valor de niveles 1–2):
+10 millones; este proyecto presupuesta con el valor de niveles 1–2):
 
 | Grupo | Cuota diaria compartida | IDs usados/relevantes |
 | --- | ---: | --- |
@@ -68,24 +68,24 @@ durable de reintentos. El uso confirmado se contabiliza en la fecha UTC de
 confirmación, como estimación operativa; esa fecha puede diferir de la fecha de
 solicitud o de la facturación del proveedor.
 
-**Política vigente del MVP (6 de octubre de 2026).** El dueño decidió
+**Política vigente del MVP.** El dueño decidió el 6 de octubre de 2026
 controlar el gasto con un **tope diario en dólares** y no con el cupo de
-tokens del incentivo: US$1 por usuario y US$1 global por defecto, configurables
-en Railway. El cupo de tokens sube a 2,000,000 diarios como freno de seguridad.
-Cada turno OpenAI reserva al menos 150,000 tokens, cobrados a la tarifa de
-salida porque Agents API no admite un límite de salida (Luna US$0.075, Sol 6.1
-US$1.50). Con el consumo medido de Luna (~US$0.004 por pregunta) el tope admite
-unas 215 preguntas al día. Sol 6.1 requiere un tope mayor que US$1.50: con US$2
-caben unas seis preguntas de ~US$0.076. Data Sharing queda como
-posible ahorro: si el incentivo cubre parte del tráfico, la factura baja, pero
-ningún control de la app depende de él.
+tokens del incentivo. En producción (`gpt-6.1-sol`) los topes son **US$5 por
+usuario y US$5 global**, configurados en Railway; subieron de US$3 el 8 de
+octubre a pedido del dueño. Si las variables no se definen, el código usa US$1.
+El cupo de tokens queda en 2,000,000 diarios como freno de seguridad. Cada
+turno OpenAI reserva al menos 150,000 tokens, cobrados a la tarifa de salida
+porque Agents API no admite un límite de salida: US$1.50 con Sol (US$10 por
+millón de salida); Luna reservaría US$0.075. Data Sharing queda como posible
+ahorro: si el incentivo cubre parte del tráfico, la factura baja, pero ningún
+control de la app depende de él.
 
 La política anterior (200,000 tokens y reserva de 150,000, unas dos preguntas
-al día) y la [propuesta revisable de reserva](../etapas/airline-tracker-reserva-propuesta-20261004.md)
+al día) y la [propuesta revisable de reserva](../archivo/chat-mvp/airline-tracker-reserva-propuesta-20261004.md)
 se conservan como registro. Sus máximos se midieron con 5 llamadas de
-herramienta y 90 segundos; con los límites actuales (8 y 180) no se
-volvieron a medir. Es un riesgo aceptado para el MVP; el tope en dólares acota
-su efecto económico.
+herramienta y 90 segundos; con los límites de producción (16 llamadas y 180
+segundos) no se volvieron a medir. Es un riesgo aceptado para el MVP; el tope
+en dólares acota su efecto económico.
 
 Los límites se configuran con `CHAT_DAILY_COST_BUDGET_USER_USD`,
 `CHAT_DAILY_COST_BUDGET_GLOBAL_USD`, `CHAT_DAILY_TOKEN_BUDGET_USER`,
@@ -96,8 +96,8 @@ reserva mínima no quepa en los presupuestos monetarios. Usa los precios
 normales del modelo elegido: no configures precios cero por Data Sharing.
 
 La organización solo consume este proyecto por ahora, pero el evaluador y el
-chat son procesos separados. Antes de abrir el piloto, importa el consumo de
-evaluaciones en la misma base SQLite mediante el [importador contable](operations.md#consumo-de-evaluaciones-y-otros-procesos).
+chat son procesos separados. El consumo de evaluaciones se importa en la misma
+base SQLite mediante el [importador contable](operations.md#consumo-de-evaluaciones-y-otros-procesos).
 Sus registros conocidos suman tokens de entrada y salida a las cuotas del día;
 cualquier registro externo con uso desconocido bloquea nuevas admisiones para
 todos los usuarios hasta conciliarse. Los registros sobreviven a la retención
@@ -110,13 +110,15 @@ todas las admisiones (ver [operación](operations.md#consumo-de-evaluaciones-y-o
 No ejecutes procesos externos sin registrar su consumo/reserva y suspender la
 admisión del chat mientras se actualiza su expediente. Si aparecen otros
 proyectos, también deberán compartir este registro antes de considerar el
-límite global como representativo de toda la organización. La comparación ya
-autorizada conserva su presupuesto acumulado separado; el tope diario del chat
-(en dólares) es una política del piloto, no una autorización para repetir sus casos.
+límite global como representativo de toda la organización. La comparación de
+modelos, ya terminada, conservó su presupuesto acumulado separado; el tope
+diario del chat (en dólares) es una política de operación, no una autorización
+para repetir sus casos.
 
-La autorización ya vigente de hasta **US$10 para la comparación pagada** se
-mantiene bajo las tarifas API normales, sin depender del incentivo y sin pedir
-una aprobación nueva. Mantener `CHAT_INPUT_COST_PER_MILLION`,
+La comparación pagada se hizo con una autorización de hasta **US$10** a
+tarifas API normales, sin depender del incentivo; esa autorización está
+cerrada. Las evaluaciones nuevas pertenecen a la
+[fase 2](fase-2-agente-analitico.md). Mantener `CHAT_INPUT_COST_PER_MILLION`,
 `CHAT_OUTPUT_COST_PER_MILLION` y presupuestos basados en precios normales; son
 estimaciones y controles operativos, no un techo contractual de factura.
 

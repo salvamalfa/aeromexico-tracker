@@ -1,0 +1,539 @@
+# Revisión del plan AeroDataBox + AFAC para pasajeros por ruta y aerolínea
+
+> **Método canónico:** el procedimiento completo y verificado de estimación
+> de pasajeros por ruta y aerolínea está en
+> [`../estimacion-pasajeros-ruta-aerolinea.md`](../../estimacion-pasajeros-ruta-aerolinea.md).
+> Este documento es un reporte de su etapa, no la especificación.
+
+Fecha: 2026-09-19  
+Alcance: mercado nacional mexicano, 2T26 y posible ampliación a todas las
+aerolíneas.  
+Estado: estimaciones retrospectivas de marzo–julio activadas en el dashboard;
+Analysis Agent inactivo y elegibilidad histórica al corte sin cambios.
+
+## Veredicto
+
+El plan es técnicamente plausible para producir una **estimación reconciliada**
+de pasajeros por ruta y aerolínea. No puede producir una observación de cuántos
+pasajeros transportó cada aerolínea en cada ruta porque AeroDataBox no entrega
+pasajeros y las dos marginales AFAC no identifican la celda conjunta.
+
+La distinción cambia el criterio de éxito:
+
+- sí puede completar el mapa con una distribución estimada, trazable y útil;
+- no elimina `N/D` con cifras observadas;
+- no debe etiquetar el resultado como dato de AFAC ni como pasajeros reportados
+  por la aerolínea;
+- debe acompañar cada celda con método, versión, cobertura de la semilla y una
+  medida de incertidumbre o calidad.
+
+Es escalable a todas las aerolíneas en cómputo y adquisición: un barrido por
+aeropuerto y fecha captura a todos los operadores visibles, por lo que el costo
+no crece linealmente con el número de aerolíneas. La dificultad que sí crece es
+la normalización de operadores, codeshares, carga, charter, configuraciones de
+flota y rutas ausentes de la semilla.
+
+## Qué está demostrado y qué no
+
+| Afirmación | Evaluación |
+|---|---|
+| AFAC publica marginal por ruta y marginal por aerolínea | Base válida si ambos archivos usan mes, dirección y universo compatibles |
+| AeroDataBox puede aportar frecuencia ruta × operador | Plausible y comprobable con un piloto pagado |
+| IPF reconcilia ambas marginales | Sí, si el soporte contiene todas las celdas necesarias y los totales son compatibles |
+| La celda IPF representa pasajeros observados | No; es una solución modelada entre múltiples soluciones posibles |
+| Error de 1.98 pp en T-100 | Reproducido después mediante el handoff; sigue siendo evidencia transfronteriza, no validación doméstica |
+| Una ruta con un operador es exacta | Solo si la semilla tiene cobertura completa y AFAC usa exactamente el mismo universo |
+| El enfoque se extiende a todas las aerolíneas | Sí, con un crosswalk exhaustivo y una puerta que rechace cobertura insuficiente |
+
+El documento inicial afirmaba que los módulos se habían mergeado en otro clon.
+La entrega posterior permitió recuperar el código, pruebas, fixtures y evidencia;
+la verificación independiente se documenta al final de este reporte.
+
+## Identificabilidad y límites del método
+
+IPF encuentra una matriz que respeta totales por ruta y por aerolínea, partiendo
+de una semilla de frecuencias. El ajuste cancela sesgos que sean constantes para
+toda una fila o columna, pero no puede identificar interacciones propias de una
+ruta: calibre de avión, ocupación, estacionalidad, mix de conexiones, política
+comercial o concentración de una aerolínea en ciertos horarios.
+
+Que los márgenes cierren exactamente es una propiedad del algoritmo, no una
+validación de las celdas. Deben publicarse al menos dos niveles de prueba:
+
+1. **Consistencia:** suma por ruta y aerolínea contra AFAC, convergencia y cero
+   masa perdida.
+2. **Validez:** backtest donde sí exista verdad conjunta, con error por
+   aerolínea, densidad, competencia, mes y tipo de ruta; después, una prueba de
+   sensibilidad con semillas perturbadas.
+
+El backtest México–Estados Unidos de T-100 es útil, pero no demuestra el error
+del mercado doméstico mexicano. La mezcla de flota y el comportamiento de
+Volaris/Viva pueden ser distintos. El 1.98 pp debe presentarse como referencia
+externa hasta conseguir una muestra doméstica independiente.
+
+## Grano correcto
+
+El estimador debe ejecutarse en el mismo grano de las marginales, idealmente:
+
+`mes × origen × destino × operador`.
+
+Después se suma a trimestre para el dashboard. Ejecutar IPF directamente en el
+trimestre puede dar celdas distintas a sumar tres ajustes mensuales. También hay
+que decidir si la vista muestra dirección o par bidireccional. No deben mezclarse
+en un mismo total:
+
+- vuelos realizados y programación;
+- pasajeros por tramo y pasajeros de itinerario;
+- operador y comercializador/codeshare;
+- Aerovías de México y Aeroméxico Connect cuando AFAC o la semilla permitan
+  distinguirlos;
+- pasajeros de Aeroméxico y total de todas las aerolíneas.
+
+## Factibilidad de AeroDataBox para 2T26
+
+El tarifario vigente ofrece Starter por USD 19 al mes, 40,000 unidades, cinco
+solicitudes por segundo, ventanas FIDS de 12 horas y hasta 180 días de histórico.
+El endpoint Tier 2 consume dos unidades.
+
+Con 58 aeropuertos, dos ventanas diarias y 91 días del trimestre, el máximo
+teórico es:
+
+`58 × 2 × 91 × 2 = 21,112 unidades`.
+
+Cabe en Starter. El plan externo cita 6,960 unidades por mes, cifra consistente
+con 58 aeropuertos, no con el piloto declarado de 40. Es necesario generar el
+presupuesto desde el inventario real y deduplicar: consultar llegadas y salidas
+en ambos extremos puede contar dos veces el mismo vuelo.
+
+La ventana histórica es urgente. El 1 de abril de 2026 está a 171 días de la
+fecha de esta revisión y rebasa 180 días el 28 de septiembre de 2026. Una
+respuesta obtenida fuera del límite documentado no debe utilizarse para planear
+el proyecto; se trata como comportamiento no garantizado.
+
+## Restricción de licencia que cambia la arquitectura
+
+La retención estándar permite conservar contenido crudo solo siete días. Los
+términos prohíben redistribuir respuestas, selecciones de campos o tablas apenas
+reformateadas. RapidAPI Mega, API.Market Ultra 2 y Mega, y ciertos planes
+directos amplían el plazo de retención, pero no autorizan publicar el crudo.
+Definen una obra derivada como procesamiento no trivial de múltiples
+observaciones o combinación con datos externos que no permita reconstruir un
+registro individual; esa obra derivada queda fuera de la restricción de caché.
+
+Por tanto:
+
+- para una captura sujeta a retención estándar no se debe crear un Bronze
+  permanente versionado con respuestas AeroDataBox; un plan con retención
+  extendida permitiría un Bronze privado durante el plazo autorizado, nunca su
+  publicación en Git;
+- no se deben subir respuestas ni una tabla vuelo por vuelo a GitHub;
+- un agregado mensual ruta × operador más el resultado IPF podría calificar
+  como obra derivada, pero conviene confirmarlo con el proveedor antes de
+  publicarlo como dataset descargable;
+- el código, crosswalks creados por el proyecto, manifiestos sin contenido,
+  diagnósticos y salidas AFAC pueden versionarse según sus propias licencias;
+- la ingesta debe borrar el crudo al completar el propósito o al vencer siete
+  días, lo que ocurra primero.
+
+Los términos y planes se revisaron el 2026-09-19; el anuncio aplicable fue
+publicado el 2026-09-07 y actualizado el 2026-09-08. Deben congelarse la URL,
+fecha y un hash o PDF de la versión aceptada al contratar.
+
+## Diseño recomendado
+
+### Puerta A: importar y reproducir el trabajo externo
+
+Obtener del otro clon los commits o un patch de los módulos, pruebas, fixtures y
+resultados de backtest. Ejecutar la suite local antes de aceptar las cifras de
+error. No reescribirlos desde el documento si el código original puede
+recuperarse.
+
+### Puerta B: piloto mínimo antes de barrer el trimestre
+
+1. Registrar el endpoint, términos, plan, costo y secreto.
+2. Ejecutar `--dry-run` para 58 aeropuertos y 2T26.
+3. Consultar dos días con perfiles distintos y solo una orientación que evite
+   duplicados.
+4. Separar vuelo operativo de codeshare, carga, charter y cancelación.
+5. Medir rutas y aerolíneas no mapeadas por conteo y por pasajeros AFAC.
+6. Permitir uso parcial si representa al menos 95% de pasajeros, los operadores
+   ausentes no superan 5% de pasajeros AFAC y `column_scale` queda dentro de
+   ±5%. Las exclusiones permanecen visibles y nunca se crea soporte no observado.
+
+### Puerta C: estimación auditable
+
+Crear hechos AFAC versionados para ambas marginales y una tabla nueva, sin
+contaminar T-100:
+
+`fact_route_carrier_domestic_estimate`
+
+Campos mínimos:
+
+- `period_id`, `origin_airport`, `destination_airport`;
+- `operating_carrier`, `passengers_estimated`;
+- `estimator_version`, `seed_source`, `seed_period_id`;
+- `is_estimated`, `is_single_operator_supported`;
+- `seed_coverage`, `unmapped_passenger_share`;
+- `row_residual`, `column_residual`, `converged`;
+- `uncertainty_band` o clase de confianza basada en sensibilidad.
+
+Persistir también reconciliaciones por ruta y aerolínea. Si los márgenes no
+coinciden o el soporte es inviable, no publicar un resultado parcial.
+
+### Puerta D: integración separada
+
+Mostrar primero una vista de revisión con tres capas distintas:
+
+1. rutas y vuelos observados/programados;
+2. pasajeros totales AFAC por ruta;
+3. distribución estimada por aerolínea.
+
+Solo después de revisión humana debe entrar al mapa principal. El dashboard
+debe permitir diferenciar `observado`, `programado`, `inferido` y `estimado` sin
+depender de un tooltip. La elegibilidad histórica al corte 2026-07-13 permanece
+separada del uso retrospectivo posterior.
+
+## Asientos, ocupación e internacional
+
+Frecuencias por sí solas no producen asientos ni ocupación. Una fase posterior
+puede mapear modelo de aeronave a configuración por operador, con rangos cuando
+haya varias cabinas, y calcular capacidad estimada. Esa extensión agrega otra
+fuente de error y no debe bloquear el primer cubo de pasajeros estimados.
+
+El método puede ampliarse a mercados internacionales solo cuando existan las
+dos marginales compatibles. Países con un cubo observado por ruta y aerolínea
+deben usar la fuente observada, no IPF. Para todas las aerolíneas, el mismo
+pipeline funciona si el universo AFAC, el seed y los filtros operativos se
+reconcilian.
+
+## Impacto de subir el proyecto a GitHub
+
+Versionar el trabajo local elimina el principal punto ciego del plan externo:
+un agente de nube podrá ver el generador integrado, ingestas internacionales,
+contratos, Gold y pruebas. No cambia la validez estadística del estimador ni
+autoriza publicar datos pagados. Tampoco reemplaza secretos, crudos locales o el
+ledger privado de aprobaciones.
+
+La nube mejora colaboración, revisión y continuidad. El costo es que la
+frontera de licencia debe quedar automatizada: un agente con acceso al repo no
+debe poder añadir accidentalmente una respuesta cruda. `.gitignore`, revisión
+de secretos, rutas temporales y pruebas de clasificación de artefactos deben
+formar parte de la implementación.
+
+## Preparación para continuar
+
+El repositorio público y su respaldo privado ya permiten ejecutar el piloto.
+El código externo fue integrado y las puertas previas de caché, cancelaciones,
+operadores e identificación de estimaciones están resueltas. Antes de consumir
+unidades o publicar resultados hacen falta:
+
+1. contratar el plan y guardar `AERODATABOX_API_KEY` como secreto del entorno;
+2. ejecutar primero los tres `--dry-run` de 2T26 y después una muestra de dos
+   días de abril con presupuesto máximo explícito;
+3. confirmar con el proveedor la publicación del agregado mensual ruta ×
+   operador, si se pretende versionarlo;
+4. aceptar explícitamente que el producto será una estimación y no pasajeros
+   observados por celda.
+
+El barrido completo de 2T26 cabe en 21,112 unidades:
+
+```powershell
+.venv\Scripts\python.exe -m src.ingest.aerodatabox 2026M04 --dry-run  # 6,960
+.venv\Scripts\python.exe -m src.ingest.aerodatabox 2026M05 --dry-run  # 7,192
+.venv\Scripts\python.exe -m src.ingest.aerodatabox 2026M06 --dry-run  # 6,960
+```
+
+Abril debe capturarse primero: el 1 de abril rebasa la ventana histórica
+documentada de 180 días el 28 de septiembre de 2026.
+
+Después de configurar la clave, la primera llamada deliberada será:
+
+```powershell
+.venv\Scripts\python.exe -m src.ingest.aerodatabox 2026M04 --days 2 --budget 464
+```
+
+Si la puerta de aceptación rechaza esos dos días, no se fuerza el ajuste: se
+amplía a siete días (`--days 7 --budget 1624`) y se vuelven a revisar cobertura,
+operadores y filas no mapeadas antes de decidir el barrido completo.
+
+### Resultado del piloto de dos días
+
+El workflow privado `35470311745` ejecutó el piloto sobre 58 aeropuertos y dos
+días de abril. Consumió 232 llamadas, 464 unidades, y eliminó el contenido del
+proveedor al terminar. La puerta devolvió `REJECT` y no ejecutó el ajuste:
+
+| Métrica | Resultado |
+|---|---:|
+| Rutas cubiertas | 428 de 539 |
+| Pasajeros AFAC representados | 98.1% |
+| Umbral requerido | 99% |
+| `column_scale` | 0.985 |
+| Vuelos vistos frente a AFAC, escalados | 30.4% |
+
+La muestra no observó Magnicharters ni TAR dentro del soporte aceptado. El feed
+también mostró `MXA` en el campo reservado para IATA y `Magnicharter` en
+singular; ambos valores se incorporaron únicamente porque corresponden a
+identidades ya documentadas en el crosswalk. `RFD`, `HU`, `TK` y `CZ`
+permanecen sin mapear: no se les asignará una aerolínea mexicana sin evidencia.
+
+El siguiente paso es la muestra de siete días. Si tampoco alcanza 99% de
+pasajeros o sigue sin observar operadores materiales, se detiene el método antes
+del barrido completo.
+
+### Resultado de la muestra de siete días
+
+El workflow privado `35470890247` amplió la prueba a una semana completa.
+Consumió 812 llamadas y 1,624 unidades; la limpieza de contenido del proveedor
+y la retención temporal del log terminaron correctamente. La puerta volvió a
+devolver `REJECT`, por lo que no se ejecutó IPF ni se produjo una estimación:
+
+El consumo acumulado de las dos corridas pagadas es **2,088 unidades**: 464 de
+la muestra de dos días y 1,624 de la muestra de siete días. Preparar y validar
+el mecanismo de retención posterior no consumió unidades adicionales.
+
+| Métrica | Resultado |
+|---|---:|
+| Rutas cubiertas | 452 de 539 |
+| Pasajeros AFAC representados | 98.9% |
+| Umbral requerido | 99% |
+| `column_scale` | 0.992 |
+| Vuelos vistos frente a AFAC, escalados | 90.8% |
+
+TAR siguió ausente del soporte aceptado. La revisión posterior identificó su
+código operativo `LCT` en una publicación gubernamental de Baja California Sur
+y lo añadió al crosswalk; `YQ` permanece como su código IATA ya soportado. El
+alias textual exacto `MXA` también se vinculó con Mexicana Nueva. Los operadores
+extranjeros o desconocidos continuaron sin asignarse.
+
+Fuente de verificación de TAR:
+[Secretaría de Finanzas y Administración de Baja California Sur](https://finanzas.bcs.gob.mx/fiscal/vuelos/).
+
+El workflow pagado quedó deshabilitado tras la corrida. Ejecutar abril completo
+costaría hasta 6,960 unidades y requiere una decisión explícita nueva. La puerta
+actual no justifica activar datos ni sustituir `N/D` en el dashboard.
+
+La corrida conservó el log agregado durante siete días, pero el primer diseño
+del workflow eliminó también el Parquet normalizado antes de subir artefactos.
+Por ello la cobertura de 98.9% es evidencia verificable del piloto, pero la
+semilla de siete días no puede reutilizarse para estimar. Fue una retención
+demasiado agresiva: no se repetirá la consulta solo para recuperar esas filas.
+
+El commit privado `bc463db` corrigió el orden para las corridas futuras. Antes
+de limpiar el runner, el workflow ahora sube un artefacto privado con
+vencimiento de siete días que contiene vuelos normalizados, semilla agregada,
+caché de auditoría, log, metadatos y hashes. El workflow sigue deshabilitado
+hasta revisar la cuota disponible y decidir el siguiente barrido pagado. La
+captura histórica de la corrida `35470890247` no se puede reconstruir sin una
+nueva consulta y permanece únicamente como evidencia agregada en el log.
+
+### Repetición retenida y criterio de uso parcial
+
+Con autorización explícita se repitió una sola vez la muestra de siete días en
+el workflow privado `35477575908`. Consumió 812 llamadas y 1,624 unidades. El
+gasto acumulado de las tres corridas pagadas quedó en **3,712 unidades**. El
+workflow volvió a `disabled_manually` inmediatamente después de iniciar y no
+puede repetirse por accidente.
+
+Esta vez la retención terminó correctamente. El artefacto privado contiene 816
+archivos y 9,060,485 bytes: 812 respuestas temporales del proveedor, 713 filas
+normalizadas, 713 filas de semilla, log, metadatos y manifiesto. Se recalcularon
+todos los SHA-256 y no hubo fallas. El contenido del proveedor vence a los siete
+días; la salida derivada se procesó inmediatamente.
+
+| Métrica | Repetición retenida |
+|---|---:|
+| Rutas AFAC cubiertas | 453 de 539 |
+| Pasajeros AFAC representados | 98.948% |
+| Vuelos vistos frente a AFAC | 91.0% |
+| `column_scale` | 0.992558 |
+| Aerolínea ausente | TAR |
+| Pasajeros AFAC de TAR | 0.310% |
+| Operadores representados | 7 |
+
+El criterio aprobado después de la corrida permite utilizar una semilla con
+**cobertura de pasajeros ≥95%** como estimación parcial. `seed_acceptance_v3`
+mantiene tres estados: `ACCEPT` para cobertura completa, `REVIEW` para una
+estimación parcial dentro de los límites y `REJECT` para cobertura menor a 95%,
+operadores ausentes por más de 5% o `column_scale` fuera de ±5%. Solo `ACCEPT` y
+`REVIEW` pueden ajustarse; ambos continúan marcados como estimación.
+
+Aplicado a la captura retenida, el resultado es `REVIEW` utilizable. El IPF
+generó 713 celdas direccionales ruta × aerolínea en 453 rutas y siete
+operadores. Convergió en 25 iteraciones, reconcilió 5,252,726 pasajeros y dejó
+desviaciones máximas de 0.041 pasajeros por ruta y menos de 0.000001 por
+aerolínea. Ninguna celda es observada o exacta.
+
+Para Aerovías de México y Aeroméxico Connect se obtuvieron 143 celdas en 107
+rutas direccionales. Al llevarlas a los mercados bidireccionales que ya muestra
+el dashboard, abril tiene soporte para **55 de los 56 mercados nacionales**:
+16 solo con Aerovías, 18 solo con Connect y 21 con ambos. `CLQ<>MEX` permanece
+sin soporte y conserva `N/D`.
+
+Este resultado todavía no completa 2T26: abril no se extrapola a mayo ni junio.
+Antes de sustituir valores `N/D` trimestrales hacen falta semillas retenidas de
+esos dos meses y revisión humana del cubo completo. Tampoco cambia la
+elegibilidad histórica al corte del 13 de julio de 2026 ni activa el dashboard
+o el Analysis Agent.
+
+No hace falta mantener abierta la sesión externa: sus commits, 89 pruebas,
+fixtures y resultados reproducibles ya fueron recuperados y verificados.
+
+## Verificación de la entrega externa
+
+La entrega se recibió en la rama
+`claude/route-carrier-handoff-20260919`, commit
+`762664bac1fb969ec46a8144c25ca1588596b2a3`. Los cinco PRs de implementación ya
+forman parte de `origin/master` mediante `dc55d07`.
+
+Comprobaciones independientes realizadas:
+
+- los 19 parches aplican desde `26d3617` y generan exactamente el árbol de
+  `dc55d07`;
+- las 89 pruebas focalizadas pasan en el entorno local;
+- el módulo reproduce 1.40 pp con asientos y 1.98 pp con vuelos;
+- el `--dry-run` calcula 7,192 unidades para 58 aeropuertos y julio completo;
+- la entrega no contiene una llave de API.
+
+La entrega está preservada y la sesión externa ya no es necesaria. Las cuatro
+reparaciones identificadas durante la revisión ya están en `master`:
+
+1. `data/bronze/aerodatabox/` es Bronze temporal ignorado por Git; las
+   respuestas crudas vencen y se purgan a los siete días. La misma carpeta
+   funciona como caché de reanudación sin cambiar la clasificación de la capa.
+2. La consulta pide `withCancelled=false` y el normalizador descarta además una
+   cancelación que llegue de forma defensiva, registrando el conteo.
+3. El adaptador reconoce `5D` y `SLI` como Aeroméxico Connect; un vuelo `AM` sin
+   modelo de aeronave queda sin mapear y nunca se asigna silenciosamente a
+   Aerovías de México.
+4. `is_exact` permanece falso y la salida del CLI fija `is_estimated = True`
+   hasta que exista evidencia suficiente de cobertura y universo compatibles.
+
+La validación final ejecutó 85 pruebas focalizadas del adaptador, IPF y puerta
+de aceptación, además de la suite completa: 429 aprobadas. Los `--dry-run` de
+abril, mayo y junio confirmaron 6,960, 7,192 y 6,960 unidades respectivamente.
+
+El manifiesto SHA-256 del handoff tiene dos discrepancias en las copias de los
+crosswalks por normalización LF/CRLF. Los contenidos coinciden con los archivos
+del árbol y los parches son reproducibles, pero el manifiesto debe regenerarse
+antes de considerarlo portable. La salida de la suite y los propios parches
+también contienen espacios finales; es higiene documental, no un fallo del
+estimador.
+
+## Corridas ampliadas de 2026 y cierre de consumo
+
+El 20 de septiembre de 2026 se ejecutó el lote autorizado en el orden solicitado:
+mayo, junio, enero, febrero y marzo. Mayo, junio y marzo completaron 812 llamadas
+cada uno. Enero y febrero fueron rechazados por el endpoint en la primera ventana
+de ACA con HTTP 400 y no se reintentaron. Después se consultó julio como el
+siguiente mes de 2026 con marginales AFAC disponibles. El workflow privado quedó
+de nuevo en estado `disabled_manually`.
+
+| Periodo | Cobertura de rutas AFAC | Cobertura de pasajeros | Ajuste IPF | Uso permitido |
+|---|---:|---:|---|---|
+| 2026M01 | No disponible | No disponible | No ejecutado | Fuera de la ventana histórica observada |
+| 2026M02 | No disponible | No disponible | No ejecutado | Fuera de la ventana histórica observada |
+| 2026M03 | 438 de 539 | 98.9% | No convergió en 5,000 iteraciones | Semilla y conteos reutilizables; estimación solo diagnóstica |
+| 2026M04 | 453 de 539 | 98.948% | Convergió en 25 iteraciones | Estimación parcial utilizable bajo el umbral aprobado de 95% |
+| 2026M05 | 449 de 526 | 99.1% | Convergió en 33 iteraciones | Estimación parcial utilizable bajo el umbral aprobado de 95% |
+| 2026M06 | 498 de 568 | 98.9% | No convergió en 5,000 iteraciones | Semilla y conteos reutilizables; estimación solo diagnóstica |
+| 2026M07 | 494 de 558 | 98.9% | No convergió en 5,000 iteraciones | Semilla y conteos reutilizables; estimación solo diagnóstica |
+
+La cobertura superior a 95% permite conservar la semilla como evidencia útil,
+pero no corrige por sí sola un ajuste que no converge. Por eso marzo, junio y
+julio conservan su estimación para diagnóstico sin declararla apta para el
+dashboard. Abril y mayo sí cumplen conjuntamente cobertura y convergencia. Esto
+todavía no basta para formar un trimestre 2T26 publicable: junio requiere reparar
+y volver a validar el ajuste sin volver a comprar los datos crudos.
+
+El rechazo de enero y febrero con la misma consulta que funciona desde marzo es
+evidencia empírica de la frontera histórica disponible el día de la captura. Todo
+2025 queda antes de esa frontera, por lo que no se gastaron unidades en sondearlo.
+
+Los paquetes derivados permanentes de marzo a julio están en el repositorio
+privado. Incluyen conteos agregados ruta × operador, semilla, estimación,
+diagnósticos, linaje y manifiestos; no contienen respuestas JSON ni filas de
+vuelo. Se verificaron tamaño y SHA-256 de los 35 archivos versionados. El
+[PR privado 9](https://github.com/salvamalfa/aeromexico-tracker-data/pull/9)
+corrigió el único hash obsoleto, correspondiente al `lineage.json` de abril. Las
+respuestas y tablas normalizadas vuelo por vuelo permanecen solo en
+artefactos transitorios de siete días.
+
+El conteo reproducible de consumo es:
+
+| Corrida | Llamadas HTTP | Unidades |
+|---|---:|---:|
+| Abril, muestra de dos días | 232 | 464 |
+| Abril, primera muestra de siete días | 812 | 1,624 |
+| Abril, repetición retenida de siete días | 812 | 1,624 |
+| Marzo, mayo, junio y julio | 3,248 | 6,496 |
+| Enero y febrero rechazados | 2 | 0 a 4 |
+| **Total** | **5,106** | **10,208 a 10,212** |
+
+El cliente cuenta dos unidades por cada intento una vez que recibe respuesta,
+incluidos los dos HTTP 400, así que su libro interno marca **10,212 unidades**.
+El portal de RapidAPI no estaba autenticado en el entorno de revisión y no se
+pudo comprobar si esos dos errores fueron facturados; por eso el consumo de la
+cuenta se conserva como un rango de cuatro unidades. Sobre una cuota de 50,000,
+quedan entre 39,788 y 39,792 unidades.
+
+En ese punto las corridas solo ampliaban evidencia retrospectiva: aún no
+sustituían `N/D`, no activaban `flight_evidence_v1` y no cambiaban el dashboard
+ni el Analysis Agent. La reparación e integración posteriores se documentan a
+continuación; la elegibilidad histórica al corte del 13 de julio de 2026 sigue
+sin cambios.
+
+## Reparación del soporte e integración retrospectiva
+
+La revisión posterior demostró que elevar el límite de iteraciones no resolvía
+marzo, junio o julio. El bloqueo era estructural: la muestra mensual no contenía
+algunas combinaciones ruta × operador necesarias para satisfacer simultáneamente
+las marginales AFAC de ruta y aerolínea. Se probó el mismo ajuste hasta 200,000
+iteraciones antes de descartar un problema de tolerancia o de límite de cómputo.
+
+La reparación `route_carrier_temporal_ipf_v1` conserva la semilla mensual cuando
+ya converge. Solo para un mes incompatible incorpora soporte de una combinación
+ruta × operador que sí fue observada en otro mes retenido, tomando primero el
+mes más cercano y ampliando hasta dos meses únicamente si hace falta. La celda
+prestada queda marcada con periodo de origen y distancia; no se convierte en un
+vuelo observado del mes objetivo. El peso base prestado es 0.1 del observado y
+se recalcula el ajuste con 0.01 y 1.0 para formar un rango de sensibilidad. Ese
+rango mide la dependencia del resultado respecto al peso del soporte añadido;
+no es un intervalo estadístico de confianza.
+
+| Periodo | Reparación | Soporte añadido | Iteraciones | Mercados AM/Connect | Pasajeros estimados AM/Connect |
+|---|---|---:|---:|---:|---:|
+| 2026M03 | mes contiguo | 36 celdas de soporte | 29 | 55 | 1,300,154 |
+| 2026M04 | no requerida | 0 | 25 | 55 | 1,332,006 |
+| 2026M05 | no requerida | 0 | 33 | 55 | 1,368,693 |
+| 2026M06 | mes contiguo | 40 celdas de soporte | 43 | 56 | 1,131,298 |
+| 2026M07 | hasta dos meses | 51 celdas de soporte | 75 | 55 | 1,299,088 |
+
+Los cinco ajustes convergen, no tienen valores negativos ni duplicados y
+reconcilian las marginales: la desviación máxima por ruta queda entre 0.038 y
+0.060 pasajeros según el mes, y la desviación por aerolínea es numéricamente
+cero. El Gold privado combinado contiene 3,721 celdas direccionales para todas
+las aerolíneas. El dashboard público no recibe ese cubo: el generador filtra
+solo `AEROMEXICO` y `AEROMEXICO_CONNECT` y embebe un extracto de visualización.
+
+En Vuelos, la red nacional abre en junio de 2026 y ofrece selectores para marzo,
+abril, mayo, junio y julio. Cada mercado muestra `≈ pasajeros`, el rango de
+sensibilidad y, al desplegarlo, el desglose separado de Aerovías de México y
+Aeroméxico Connect por sentido. Asientos, vuelos y ocupación siguen en `N/D`
+porque la frecuencia de la muestra no representa un total mensual observado.
+Marzo, junio y julio indican visiblemente que se completó soporte con meses
+cercanos. Abril y mayo conservan exclusivamente el soporte de su propio mes.
+
+Esta activación es retrospectiva y exclusiva del dashboard. Todas las filas
+mantienen `is_estimated = true`, `historically_eligible_at_2026_07_13 = false`
+y `agent_eligible = false`. No se activó `flight_evidence_v1`, no se añadió el
+cubo al paquete histórico y el Analysis Agent permanece inactivo. Las respuestas
+JSON y las tablas vuelo por vuelo siguen sujetas a eliminación a los siete días;
+las semillas, estimaciones, auditorías, linaje y manifiestos derivados se
+conservan en el repositorio privado.
+
+## Fuentes del proveedor revisadas
+
+- [API Pricing](https://aerodatabox.com/pricing/)
+- [Terms of Use](https://aerodatabox.com/terms)
+- [Direct API access](https://aerodatabox.com/direct-subscriptions)
+- [API Specification](https://aerodatabox.com/api-spec/)

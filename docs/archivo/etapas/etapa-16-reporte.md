@@ -36,7 +36,7 @@ otra. No hay aprobación implícita ni comandos de publicación.
   360, 736 y 1440 px; cero solicitudes de red al abrir, cero errores del navegador.
 - Inspección visual de escritorio y detalle móvil realizada sobre capturas.
 
-[Comprobantes](../../referencias/etapa-16/README.md).
+[Comprobantes](../referencias/etapa-16/README.md).
 
 ## Límites que siguen vigentes
 

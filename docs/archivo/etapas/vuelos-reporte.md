@@ -48,7 +48,7 @@ SHA-256 del archivo: `23aec382d2c3eb6dc92a5dd8b452fbe3e582717cac0e4b86a77b7c04ea
 - Paquete complementario: `src/analysis_agent/flight_evidence.py`
 - Pruebas: `tests/test_flights_prototype.py`
 - Vista de revisión: `prototypes/vuelos/vuelos_revision.html`
-- Evidencia visual: `docs/assets/vuelos/vuelos-360.png`, `vuelos-736.png`, `vuelos-desktop.png`
+- Evidencia visual: `docs/archivo/assets/vuelos/vuelos-360.png`, `vuelos-736.png`, `vuelos-desktop.png`
 
 Vista HTML SHA-256: `9a4617428b065c834bb0699730da5ff58b7bd64f24ac71ba865c7df99b541077`.
 
@@ -125,7 +125,7 @@ Fuentes técnicas revisadas:
 
 - 29 pruebas dirigidas aprobadas, incluida la comprobación de eje mensual continuo, siete huecos explícitos y suma de segmentos.
 - Navegador real en 360, 736 y 1440 px: tres trazas renderizadas, sin desbordamiento, errores de consola, errores de página ni solicitudes externas.
-- Capturas actualizadas en `docs/assets/vuelos/`.
+- Capturas actualizadas en `docs/archivo/assets/vuelos/`.
 - SHA-256 actualizado de la vista HTML: `daeb6b16f854af214f2f225d456f9b25dee8f7a1cae994faa2e4c9e038a8eb93`.
 - Los hashes observados del HTML principal y `reader_ui.py` permanecen iguales a la Entrega 1.
 
@@ -550,7 +550,7 @@ Pausar para la integración en una sesión separada.
 - `tests/test_stage18_integration.py`
 - `prototypes/vuelos/vuelos_revision.html`
 - `prototypes/etapa-11/resumen_ejecutivo.html`
-- `docs/assets/vuelos/red-rutas-desplegable.png`
+- `docs/archivo/assets/vuelos/red-rutas-desplegable.png`
 - `docs/etapas/vuelos-reporte.md`
 
 ### Validaciones
@@ -667,7 +667,7 @@ Pausar para comentarios antes de continuar con otra pestaña.
 - `tests/test_stage18_integration.py`
 - `prototypes/etapa-11/resumen_ejecutivo.html`
 - `prototypes/vuelos/vuelos_revision.html`
-- `docs/assets/vuelos/entrega-19-rutas-plegables.png`
+- `docs/archivo/assets/vuelos/entrega-19-rutas-plegables.png`
 - `docs/etapas/vuelos-reporte.md`
 
 ### Validación
@@ -682,12 +682,12 @@ Pausar para comentarios antes de continuar con otra pestaña.
 
 Se integran ANAC Brasil, Aerocivil Colombia y CAA Reino Unido. En 2T26, 46 mercados y 39 aeropuertos; seis mercados nuevos con MEX. Los 298 registros normalizados conservan linaje hasta Bronze. Fuente y meses visibles; métricas ausentes N/D; ninguna activación histórica del agente ni despliegue.
 
-Validación: 40 pruebas dirigidas y UI offline en 360/736/1440 px, sin solicitudes externas. Reporte y comandos en [vuelos-integracion-internacional-20260908.md](../../etapas/vuelos-integracion-internacional-20260908.md).
+Validación: 40 pruebas dirigidas y UI offline en 360/736/1440 px, sin solicitudes externas. Reporte y comandos en [vuelos-integracion-internacional-20260908.md](../vuelos-2026-09/vuelos-integracion-internacional-20260908.md).
 
 ## Entrega 21 · Nacional programado y España visible
 
-La vista local ofrece Nacional · programado e Internacional · observado. El PDF AM de slots del AICM aporta 45 rutas mexicanas y 31,098 asignaciones de abril–junio de 2026, con linaje Bronze → Silver → Gold y etiqueta explícita de programación. Madrid y Barcelona conservan la actividad por compañía y aeropuerto Aena en ambas vistas. No se atribuyen pasajeros ni vuelos efectivamente realizados a las rutas nacionales, y estos slots quedan fuera del expediente histórico del Analysis Agent. Validación: 22 pruebas enfocadas, comprobación en navegador a 360/736/1440 px y capturas. Detalle en [vuelos-nacional-aicm-integracion-20260913.md](../../etapas/vuelos-nacional-aicm-integracion-20260913.md).
+La vista local ofrece Nacional · programado e Internacional · observado. El PDF AM de slots del AICM aporta 45 rutas mexicanas y 31,098 asignaciones de abril–junio de 2026, con linaje Bronze → Silver → Gold y etiqueta explícita de programación. Madrid y Barcelona conservan la actividad por compañía y aeropuerto Aena en ambas vistas. No se atribuyen pasajeros ni vuelos efectivamente realizados a las rutas nacionales, y estos slots quedan fuera del expediente histórico del Analysis Agent. Validación: 22 pruebas enfocadas, comprobación en navegador a 360/736/1440 px y capturas. Detalle en [vuelos-nacional-aicm-integracion-20260913.md](../vuelos-2026-09/vuelos-nacional-aicm-integracion-20260913.md).
 
 ## Entrega 22 · Cobertura internacional ampliada a escala mundial
 
-El mismo PDF AICM aporta 13,662 asignaciones internacionales de abril–junio en 50 destinos; 25 mercados se agregan a la vista internacional sin duplicar los 25 que ya tenían fuente observada. OMA añade MTY–CDG, con 68 movimientos programados derivables de su frecuencia, y MTY–MAD con presencia confirmada y volumen sin desglose. El mapa local muestra ahora 73 mercados internacionales y permite localizar Canadá, España, Japón, Corea y otros destinos antes ausentes. Las capas internacionales nuevas conservan Silver, Gold y puentes de linaje; mantienen los slots como programación y la precedencia de fuentes observadas. Bajo el supuesto explícito de contar los slots como vuelos realizados para estimar cobertura, el escenario llega a **97.6%** de los vuelos regulares de Aerovías y Connect del 2T26; no se presenta como porcentaje verificado. El análisis histórico aprobado permanece intacto. Método, brechas y captura en [vuelos-cobertura-ampliada-20260913.md](../../etapas/vuelos-cobertura-ampliada-20260913.md).
+El mismo PDF AICM aporta 13,662 asignaciones internacionales de abril–junio en 50 destinos; 25 mercados se agregan a la vista internacional sin duplicar los 25 que ya tenían fuente observada. OMA añade MTY–CDG, con 68 movimientos programados derivables de su frecuencia, y MTY–MAD con presencia confirmada y volumen sin desglose. El mapa local muestra ahora 73 mercados internacionales y permite localizar Canadá, España, Japón, Corea y otros destinos antes ausentes. Las capas internacionales nuevas conservan Silver, Gold y puentes de linaje; mantienen los slots como programación y la precedencia de fuentes observadas. Bajo el supuesto explícito de contar los slots como vuelos realizados para estimar cobertura, el escenario llega a **97.6%** de los vuelos regulares de Aerovías y Connect del 2T26; no se presenta como porcentaje verificado. El análisis histórico aprobado permanece intacto. Método, brechas y captura en [vuelos-cobertura-ampliada-20260913.md](../vuelos-2026-09/vuelos-cobertura-ampliada-20260913.md).

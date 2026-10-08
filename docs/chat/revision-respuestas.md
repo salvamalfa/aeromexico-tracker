@@ -94,7 +94,7 @@ La escritura exclusiva evita reemplazar un archivo existente, pero no restringe
 quién puede leerlo. Nunca debe copiarse a `web/public/`, `site/`, un commit o un
 comentario del PR.
 
-## Acceso al piloto
+## Acceso al chat
 
 La página separada `access.html` permite comprobar la contraseña de la API con
 HTTPS. Mantiene la sesión solamente en memoria y permite cerrarla. No crea
@@ -102,6 +102,8 @@ preguntas ni habilita el chat. La contraseña inicial se entrega en un archivo
 privado; el servidor recibe únicamente su hash para configurarla.
 
 El dueño confirmó el significado del catálogo y el alcance como MVP el 4 de
-octubre de 2026, y confirmó los límites diarios propuestos. Estas decisiones
-no sustituyen la revisión de respuestas, la selección del modelo ni el gate de
-calidad. La activación del chat sigue pendiente de esas verificaciones.
+octubre de 2026. Después calificó las respuestas de la comparación con esta
+interfaz y eligió `gpt-6.1-sol`; el MVP está activo en producción desde el 8
+de octubre de 2026. No se aprobó un gate de calidad. La
+[fase 2](fase-2-agente-analitico.md) reutiliza `review.html` para calificar su
+conjunto de evaluación de negocio.

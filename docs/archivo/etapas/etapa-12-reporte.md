@@ -16,13 +16,13 @@ sin iniciar. Aceptar esta entrega y aprobar un análisis son actos separados.
 
 - Plan acordado: `docs/plan/17-analysis-agent-plan.md`.
 - Alcance de esta etapa: `docs/plan/18-etapa-12-especificacion-diagnostico.md`.
-- Contratos documentales: `docs/analysis-agent/contratos-v1.md`.
+- Contratos documentales: `docs/archivo/analysis-agent/contratos-v1.md`.
 - Generador de solo lectura sobre datos: `src/analysis_agent/stage12.py`.
 - Matriz JSON/CSV: `docs/referencias/etapa-12/`.
 - Maqueta independiente: `prototypes/etapa-12/analysis_agent.html`.
 - Ocho pruebas nuevas del diagnóstico; comandos `stage12-prototype` y
   `stage12-validate` registrados en `justfile`.
-- Capturas y observaciones de QA: `docs/assets/etapa-12/`.
+- Capturas y observaciones de QA: `docs/archivo/assets/etapa-12/`.
 
 No se instalaron dependencias ni se descargaron fuentes. Se verificaron los 22 PDF
 IR ya preservados en Bronze mediante SHA-256. Se leyeron el warehouse y los índices
@@ -80,7 +80,7 @@ del usuario. No se ejecutó una ingesta o reconstrucción completa, ajena a esta
 ## QA visual y funcional
 
 Se abrió la maqueta mediante el navegador in-app y un servidor limitado a su
-carpeta local. Capturas completas guardadas en `docs/assets/etapa-12/`.
+carpeta local. Capturas completas guardadas en `docs/archivo/assets/etapa-12/`.
 
 | Escenario | Observación |
 |---|---|

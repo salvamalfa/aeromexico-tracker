@@ -26,7 +26,7 @@ análisis versionado, paquete, cálculos, auditoría, cuatro documentos original
 Validación: dos pestañas, periodo compartido, gráficos y tabla en la segunda,
 superíndices, ausencia de evidencia técnica y desbordamiento a 360/736/1440 px;
 7 pruebas enfocadas aprobadas. Ver `tabs_checks.json` y `reader_publication.json`
-en `docs/referencias/etapa-18`. La SEC bloqueó el acceso desde Chromium automatizado;
+en `docs/archivo/referencias/etapa-18`. La SEC bloqueó el acceso desde Chromium automatizado;
 se verificaron los destinos contra las fuentes conservadas y se pudo leer el
 reporte con la herramienta web, pero no se confirmó visualmente el resaltado remoto.
 La sintaxis usa rangos Text Fragments documentados en https://web.dev/text-fragments/.
@@ -43,12 +43,12 @@ Estado final: **published**. Se incorporó a
 `prototypes/etapa-11/resumen_ejecutivo.html` y
 `prototypes/etapa-18/resumen_ejecutivo.html`. Ambas copias tienen SHA-256
 `ef08ce8b324ad892c61c97ebfe6bf460a6d5f2124484f0c54f252fb34ad8824f`.
-Comprobante y respaldo previo: `docs/referencias/etapa-18/closure_status.json`.
+Comprobante y respaldo previo: `docs/archivo/referencias/etapa-18/closure_status.json`.
 
 El archivo publicado pasó las comprobaciones en navegador a 360, 736 y 1440 px:
 texto exacto, contexto visible, tarjeta blanca, ventanas, teclado/foco y navegación
 trimestral, sin solicitudes de red ni errores. Comprobante:
-`docs/referencias/etapa-18/published_browser_checks.json`.
+`docs/archivo/referencias/etapa-18/published_browser_checks.json`.
 Se aprobaron 33 pruebas enfocadas tras añadir el registro de autorización pendiente
 de auditoría, además de las 66 pruebas previas de esta versión y su presentación.
 Gold y los expedientes congelados conservan sus hashes. No se publicó en Streamlit
@@ -87,7 +87,7 @@ El archivo ya exportado es una copia estática: una revocación no puede retirar
 
 - 39 pruebas enfocadas de Etapas 11, 17 y 18 aprobadas.
 - Navegador: 360, 736 y 1440 px; texto literal, énfasis, fondo blanco, ventanas, Escape, devolución de foco, navegación trimestral, ausencia de desbordamiento y errores JavaScript.
-- Comprobante: `docs/referencias/etapa-18/browser_checks.json`.
+- Comprobante: `docs/archivo/referencias/etapa-18/browser_checks.json`.
 - El dashboard de consumo `prototypes/etapa-18/resumen_ejecutivo.html` muestra el estado pendiente de aprobación. No contiene el borrador literal.
 - El HTML original de Etapa 11 y Gold no se modificaron por esta implementación.
 

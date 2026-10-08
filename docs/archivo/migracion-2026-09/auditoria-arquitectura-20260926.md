@@ -236,7 +236,7 @@ Mediciones (subconjuntos, entorno con datos restaurados):
   `test_stage12_diagnosis::test_outputs_match_snapshot_and_are_reproducible` (snapshot
   distinto en el byte 19,490) y `test_stage11 …matches_current_renderer` (deriva del §2.3.4).
 - Pytest compara strings de 7 MB con `==`; cuando falla, calcular el diff tarda minutos
-  (documentado en `docs/etapas/analysis-agent-portabilidad-publicacion-20260925.md`).
+  (documentado en `docs/archivo/mantenimiento-2026-09/analysis-agent-portabilidad-publicacion-20260925.md`).
 - CI: el repo público solo tiene `.github/workflows/refresh.yml` (trimestral/manual). Ejecuta
   `uv run pytest` completo en un runner sin warehouse, así que **no puede pasar** y abrirá un
   issue `validation-failed` en cada corrida. Además valida (`validate_stage8/10`) la app

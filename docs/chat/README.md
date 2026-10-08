@@ -33,16 +33,23 @@ sesiones del proveedor aisladas tras el adaptador.
 | H1 — semántica revisada | Catálogo aprobado por el dueño para el MVP (`review_status: owner_approved_mvp`, PR #87). |
 | H2 — demo sin consumo | Backend, 11 métricas, siete herramientas, SSE y panel implementados y verificados. |
 | H3 — chat real local | Acceso confirmado previamente con consultas reales, herramientas y fuentes; el uso de esas sesiones se recuperó por lecturas oficiales. |
-| H4 — modelo elegido | El dueño eligió `gpt-6.1-sol`, con topes diarios de US$3 por usuario y US$3 global. La evidencia histórica disponible no valida el prompt actual y no se aprobó un gate de calidad. |
-| H5 — piloto publicado | Backend HTTPS en Railway con contraseña, proveedor OpenAI y admisión habilitada; panel visible en Pages. Se comprobaron una vez el login y la lectura del historial desde Pages con las credenciales del dueño; la pregunta original quedó `provider_error`, sin respuesta de asistente. Sin reenvío ni respuesta nueva validada. |
+| H4 — modelo elegido | El dueño eligió `gpt-6.1-sol`. Topes diarios vigentes: US$5 por usuario y US$5 global (US$3 hasta el 8 de octubre); hasta 16 llamadas de herramienta por turno. La evidencia histórica disponible no valida el prompt actual y no se aprobó un gate de calidad. |
+| H5 — MVP en producción | Backend HTTPS en Railway con contraseña (un solo dueño), proveedor OpenAI y admisión habilitada; panel visible en Pages. El 8 de octubre el dueño obtuvo respuestas reales correctas: una aclaración y la de market share 2026 con tabla. |
 
-PRs [#102](https://github.com/salvamalfa/aeromexico-tracker/pull/102),
+La activación se integró con los PRs
+[#102](https://github.com/salvamalfa/aeromexico-tracker/pull/102),
 [#103](https://github.com/salvamalfa/aeromexico-tracker/pull/103) y
-[#104](https://github.com/salvamalfa/aeromexico-tracker/pull/104) están fusionados.
-CI [37792230297](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/37792230297)
-y Pages [37792230531](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/37792230531)
-terminaron correctamente. La fuente publicada es `5e5d024`; los 112 archivos de
-datos, contratos y `analysis_manifest` no cambiaron.
+[#104](https://github.com/salvamalfa/aeromexico-tracker/pull/104); los 112
+archivos de datos, contratos y `analysis_manifest` no cambiaron. El 8 de
+octubre, [#107](https://github.com/salvamalfa/aeromexico-tracker/pull/107) hizo
+que un turno detenido por un límite local cancele el turno del proveedor y
+registre su uso real, y [#108](https://github.com/salvamalfa/aeromexico-tracker/pull/108)
+renderiza tablas en el chat. Railway solo redespliega cuando cambia un archivo
+listado en `railway.toml` (watch paths).
+
+Un turno fallido del 8 de octubre (`0fc9308d…`, `tool_call_limit`) conserva
+una reserva de US$1.50 que cuenta contra el tope diario; solo se concilia si
+el dueño lo pide.
 
 La evidencia histórica de Sol registró 31 respuestas correctas de 31
 respuestas disponibles; 10 de 12 preguntas soportadas tuvieron respuesta
@@ -52,27 +59,32 @@ US$2.72 gastados al 7 de octubre no está reconciliado contra el ledger; no es
 un saldo contable ni representa el consumo actual verificado. S14 conserva
 `NULL`/desconocido, que nunca se interpreta como cero.
 
-**Siguiente comprobación:** sesión desde el teléfono con la computadora apagada
-para confirmar login e historial, sin reenviar el turno fallido. Una pregunta
-nueva, si el dueño la decide, debe documentarse como observación separada y no
-como validación de calidad. La fase 2 no está iniciada; solo empieza por pedido
-expreso del dueño. Consulta el [traspaso operativo](traspaso-activacion-mvp-20261006.md)
-y el [reporte de activación](../etapas/chat-mvp-activacion-20261007.md).
+Las respuestas correctas del 8 de octubre son observaciones de uso, no una
+validación de calidad del prompt. **Siguiente paso:** la
+[fase 2](fase-2-agente-analitico.md), que definirá el prompt, un conjunto de
+evaluación de negocio y la comparación de Luna (esfuerzo medio y máximo) con
+Sol (bajo y medio); empieza cuando el dueño envíe la solicitud. Consulta el
+[traspaso operativo](traspaso-activacion-mvp-20261006.md), el
+[reporte de activación](../etapas/chat-mvp-activacion-20261007.md), las
+[correcciones de recuperación](../etapas/chat-recuperacion-correcciones-20261008.md),
+el [diagnóstico de límites](../etapas/chat-limite-herramientas-presupuesto-20261008.md)
+y el [reporte de tablas](../etapas/chat-tablas-presentacion-20261008.md).
 
-Diagramas interactivos de la arquitectura actual:
-[anatomía del chat](../arquitectura/anatomia-chat.html) y
+El [adaptador Agents API](../arquitectura/airline-tracker-agents-api.md)
+describe la integración con el proveedor. Diagramas interactivos de la
+arquitectura actual: [anatomía del chat](../arquitectura/anatomia-chat.html) y
 [anatomía de las herramientas](../arquitectura/anatomia-herramientas.html).
 
 Para evaluación, cobertura, gates y límites, consulta [evaluaciones y presupuesto](evaluaciones-presupuesto.md).
-Para instalación, operación y el diseño propuesto de una instancia persistente,
-consulta [operaciones](operations.md). Los ejemplos de prompt no son el holdout:
-`tests/fixtures/chat_evals/holdout.json` tiene preguntas reservadas y valores
-estáticos verificados contra el snapshot publicado.
+Para instalación local y operación, consulta [operaciones](operations.md). Los
+ejemplos de prompt no son el holdout: `tests/fixtures/chat_evals/holdout.json`
+tiene preguntas reservadas y valores estáticos verificados contra el snapshot
+publicado.
 
-Para el piloto en Railway, consulta la [guía de configuración del backend](railway.md).
-Como alternativa, consulta la [guía de VPS Hostinger](hostinger-vps.md).
-Para el uso intermitente de un único usuario, consulta la
-[comparación de Railway Free, Hobby y VPS](hosting-options.md).
+El backend de producción corre en Railway; consulta la
+[guía de configuración del backend](railway.md). La elección de hosting quedó
+registrada en la [comparación de Railway y VPS](../archivo/chat-mvp/hosting-options.md),
+ya archivada.
 
 ## Recuperar un turno `provider_error`
 
@@ -98,10 +110,10 @@ previa, cancelación, timeout o eliminación de sesión. Si alguno cambió, no
 aplica la recuperación. No edites ni incluyas la base, los argumentos privados
 o la respuesta en el repositorio.
 
-La pregunta fallida mencionada en el estado del 8 de octubre no se ha
+La pregunta original del 7 de octubre, que quedó `provider_error`, no se ha
 recuperado ni se ha comprobado como elegible para esa operación. No ejecutes la
 recuperación ni vuelvas a enviarla sin pedido explícito del dueño.
 
-La [validación real](../etapas/airline-tracker-validacion-real-20261004.md) y la
+La [validación real](../archivo/chat-mvp/airline-tracker-validacion-real-20261004.md) y la
 [guía de Data Sharing](data-sharing.md) detallan resultados, cobertura y
 límites diarios y la importación del consumo de evaluaciones.

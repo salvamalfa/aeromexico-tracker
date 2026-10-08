@@ -19,7 +19,7 @@ Los controles de la maqueta son simulaciones sin persistencia.
 ## Entregables
 
 - `docs/plan/17-analysis-agent-plan.md`: plan completo por etapas.
-- `docs/analysis-agent/contratos-v1.md`: contrato documental y criterios editoriales.
+- `docs/archivo/analysis-agent/contratos-v1.md`: contrato documental y criterios editoriales.
 - `docs/referencias/etapa-12/diagnostico.json`: matriz completa, faltantes, artefactos,
   candidatos SEC, cobertura contextual y hashes de insumos.
 - `docs/referencias/etapa-12/cobertura.csv`: resumen tabular exportable.

@@ -65,7 +65,7 @@ relación con inversionistas. Sus cifras coinciden con las anclas SEC ya existen
 por lo que el backfill amplió la historia sin cambiar los valores actuales.
 
 Los archivos de diseño entregados por el usuario quedaron registrados en
-`docs/referencias/etapa-11/`, separados explícitamente de las fuentes de datos. Los
+`docs/archivo/referencias/etapa-11/`, separados explícitamente de las fuentes de datos. Los
 PDF originales permanecen en Bronze y no se duplican dentro de `docs/`.
 
 | Elemento | Resultado |

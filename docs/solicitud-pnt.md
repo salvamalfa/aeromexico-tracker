@@ -137,4 +137,4 @@ la exactitud del estimador está medida contra rutas México–Estados Unidos
 (1.98 pp de error en participación con semilla de vuelos), pero el mercado
 doméstico tiene una estructura competitiva distinta. Con la respuesta se calibra
 el residuo real y se puede publicar una banda de error doméstica en vez de una
-extrapolada. Ver [`estimador-ruta-aerolinea.md`](estimador-ruta-aerolinea.md).
+extrapolada. Ver [`estimador-ruta-aerolinea.md`](archivo/vuelos-2026-09/estimador-ruta-aerolinea.md).
