@@ -77,7 +77,12 @@ function parseTable(lines: readonly string[], start: number, allowedUrls: Readon
   let hidden = 0;
   for (let next = nextLine(index); next < lines.length; next = nextLine(index)) {
     const candidate = lines[next]!.trim();
-    if (!candidate.startsWith("|") && (!candidate.includes("|") || tableCells(candidate).length !== headings.length)) break;
+    // Across a blank line only a bordered row with the table's width continues it;
+    // anything else there is prose. Borderless rows must also match the width.
+    const gap = next !== index;
+    const fullWidth = tableCells(candidate).length === headings.length;
+    const isRow = candidate.startsWith("|") ? !gap || fullWidth : !gap && candidate.includes("|") && fullWidth;
+    if (!isRow) break;
     // A header followed by its separator starts the next table.
     // A `---` divider after the table is not a separator: the column counts must match.
     const after = lines[nextLine(next + 1)];

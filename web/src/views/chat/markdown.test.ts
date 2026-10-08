@@ -78,6 +78,17 @@ describe("safe response rendering", () => {
     expect([...host.querySelectorAll("td")].map((cell) => cell.textContent)).toEqual(["x", "RASK |"]);
   });
 
+  it("keeps blank-separated borderless prose out of the table", () => {
+    const host = document.createElement("div");
+    renderSafeMarkdown(host, "A | B\n---|---\nVolaris | 36.7%\n\nVolaris | ganó 0.8 pp.");
+    expect(host.querySelectorAll("tbody tr")).toHaveLength(1);
+    expect(host.querySelector("p")?.textContent).toBe("Volaris | ganó 0.8 pp.");
+
+    renderSafeMarkdown(host, "| A | B |\n|---|---|\n| 1 | 2 |\n\n| Fuente: AFAC |");
+    expect(host.querySelectorAll("tbody tr")).toHaveLength(1);
+    expect(host.querySelector("p")?.textContent).toBe("| Fuente: AFAC |");
+  });
+
   it("keeps pipes inside ordinary text and HTML-looking cells as plain text", () => {
     const host = document.createElement("div");
     renderSafeMarkdown(host, "Opción A | opción B\n\n| a | b |\n|---|---|\n| <img src=x onerror=alert(1)> | ok |");
