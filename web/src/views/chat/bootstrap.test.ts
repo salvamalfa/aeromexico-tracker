@@ -16,7 +16,7 @@ let acceptedRequests = new Map<string, { turn_id: string; status: string }>();
 let postedBodies: Array<{ content: string; client_message_id: string; context: unknown }> = [];
 let admittedTurnCount = 0;
 let conversationMessages: Array<Record<string, unknown>> = [];
-let conversationTurns: Array<{ id: string; status: string }> = [];
+let conversationTurns: Array<{ id: string; status: string; error_message?: string }> = [];
 let conversationReadError = false;
 let conversationReadErrorStatus = 503;
 let messagePostErrors: number[] = [];
@@ -147,6 +147,70 @@ describe("chat bootstrap audit", () => {
     input.value = "hola"; (panel.querySelector("[data-chat-form]") as HTMLFormElement).requestSubmit(); await flush(50);
     expect(panel.querySelector(".chat-retry")).not.toBeNull();
     expect(input.disabled).toBe(false);
+  });
+
+  it("shows the stored failure on its question after reopening without posting or replaying history", async () => {
+    installFetch("local");
+    localStorage.setItem("airline-tracker.chat.conversation-id", "c1");
+    conversationMessages = [
+      { id: "m-old", role: "user", content: "Pregunta anterior", turn_id: "t-old" },
+      { id: "m-failed", role: "user", content: "¿Cuál fue la ocupación?", turn_id: "t-failed" },
+    ];
+    conversationTurns = [
+      { id: "t-old", status: "completed" },
+      { id: "t-failed", status: "failed", error_message: "No fue posible completar. <img src=x onerror=alert(1)>" },
+    ];
+    const { mountChat } = await import("./bootstrap");
+    disposeChat = mountChat();
+    const panel = document.getElementById("airline-chat-panel")!;
+    (document.querySelector(".chat-launcher") as HTMLButtonElement).click(); await flush();
+
+    const failedRow = panel.querySelector<HTMLElement>('[data-message-id="m-failed"]')!;
+    expect(failedRow.dataset.turnId).toBe("t-failed");
+    expect(failedRow.querySelector(".chat-failure")?.textContent).toContain("No fue posible completar.");
+    expect(failedRow.querySelector("img")).toBeNull();
+    expect(panel.querySelector('[data-message-id="m-old"] .chat-failure')).toBeNull();
+    expect(panel.querySelector(".chat-message-assistant")).toBeNull();
+    expect(panel.querySelector(".chat-retry")).toBeNull();
+    expect(postedBodies).toHaveLength(0);
+  });
+
+  it("does not label a completed historical question as failed", async () => {
+    installFetch("local");
+    localStorage.setItem("airline-tracker.chat.conversation-id", "c1");
+    conversationMessages = [{ id: "m1", role: "user", content: "Pregunta respondida", turn_id: "t1" }];
+    conversationTurns = [{ id: "t1", status: "completed" }];
+    const { mountChat } = await import("./bootstrap");
+    disposeChat = mountChat();
+    const panel = document.getElementById("airline-chat-panel")!;
+    (document.querySelector(".chat-launcher") as HTMLButtonElement).click(); await flush();
+
+    expect(panel.querySelector(".chat-failure")).toBeNull();
+    expect(panel.querySelector(".chat-message-assistant")).toBeNull();
+    expect(postedBodies).toHaveLength(0);
+  });
+
+  it("clears a prior failure when a refreshed conversation reports the turn completed", async () => {
+    installFetch("password");
+    localStorage.setItem("airline-tracker.chat.conversation-id", "c1");
+    conversationMessages = [{ id: "m1", role: "user", content: "Pregunta guardada", turn_id: "t1" }];
+    conversationTurns = [{ id: "t1", status: "failed", error_message: "No fue posible completar." }];
+    const { mountChat } = await import("./bootstrap");
+    disposeChat = mountChat();
+    const panel = document.getElementById("airline-chat-panel")!;
+    (document.querySelector(".chat-launcher") as HTMLButtonElement).click(); await flush();
+    const access = panel.querySelector<HTMLFormElement>("[data-chat-access]")!;
+    const password = panel.querySelector<HTMLInputElement>("#chat-password")!;
+    password.value = "secret"; access.requestSubmit(); await flush();
+    expect(panel.querySelector(".chat-failure")?.textContent).toContain("No fue posible completar.");
+
+    (panel.querySelector("[data-chat-logout]") as HTMLButtonElement).click(); await flush();
+    conversationTurns = [{ id: "t1", status: "completed" }];
+    password.value = "secret"; access.requestSubmit(); await flush();
+
+    expect(panel.querySelector(".chat-failure")).toBeNull();
+    expect(panel.querySelector(".chat-message-assistant")).toBeNull();
+    expect(postedBodies).toHaveLength(0);
   });
 
   it("reuses the same client id and context when the accepted POST response is lost", async () => {

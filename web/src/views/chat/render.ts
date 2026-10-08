@@ -5,6 +5,7 @@ import { renderSafeMarkdown, safeReferences } from "./markdown";
 export interface RenderOptions {
   canRetry: (message: ChatMessage) => boolean;
   onRetry: (message: ChatMessage) => void;
+  failureMessage?: (message: ChatMessage) => string | undefined;
 }
 
 function referenceList(message: ChatMessage): HTMLUListElement | undefined {
@@ -34,6 +35,7 @@ export function renderMessages(node: HTMLOListElement, messages: readonly ChatMe
     const item = document.createElement("li");
     item.className = `chat-message chat-message-${message.role}${message.pending ? " is-pending" : ""}`;
     item.dataset.messageId = message.id;
+    if (message.turn_id) item.dataset.turnId = message.turn_id;
     const label = document.createElement("span");
     label.className = "chat-message-label";
     label.textContent = message.role === "user" ? "Tú" : "Airline Tracker";
@@ -43,6 +45,14 @@ export function renderMessages(node: HTMLOListElement, messages: readonly ChatMe
     const trustedReferenceUrls = safeReferences(message.references).flatMap((reference) => reference.url ? [reference.url] : []);
     renderSafeMarkdown(body, message.content, trustedReferenceUrls);
     item.append(body);
+    const failure = options.failureMessage?.(message);
+    if (failure) {
+      const notice = document.createElement("p");
+      notice.className = "chat-failure";
+      notice.setAttribute("role", "status");
+      notice.textContent = `No se pudo completar: ${failure}`;
+      item.append(notice);
+    }
     if (message.chart) {
       const chartHost = document.createElement("div");
       chartHost.className = "chat-answer-chart";

@@ -39,6 +39,7 @@ export interface ChatMessage {
 export interface ChatTurn {
   id: string;
   status: ChatTurnStatus;
+  error_message?: string | null;
 }
 
 export interface ChatConversation {

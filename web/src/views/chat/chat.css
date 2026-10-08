@@ -39,6 +39,7 @@
 .chat-message.is-pending { opacity: .84; }
 .chat-message-label { display: block; margin-bottom: 5px; color: var(--brand-blue); font-size: 10px; font-weight: 800; }
 .chat-message-body { font-size: 13px; line-height: 1.5; }
+.chat-failure { margin: 8px 0 0; color: #a12622; font-size: 12px; }
 .chat-message-body p { margin: 0 0 8px; }
 .chat-message-body p:last-child { margin-bottom: 0; }
 .chat-message-body h3, .chat-message-body h4, .chat-message-body h5 { margin: 8px 0 4px; font-size: 14px; }
