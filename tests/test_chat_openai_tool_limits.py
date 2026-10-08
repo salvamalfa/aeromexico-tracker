@@ -30,7 +30,8 @@ def test_eof_recovery_after_execution_deadline_is_rejected_with_known_usage(monk
     clock = [0.0]
     monkeypatch.setattr(openai_provider_module.time, "monotonic", lambda: clock[0])
 
-    def recover(self, *_args):
+    def recover(self, *_args, deadline):
+        assert deadline == 180.0
         clock[0] = 181.0
         return "Recovered answer", "completed", "turn_provider", {
             "input_tokens": 31,
@@ -42,7 +43,8 @@ def test_eof_recovery_after_execution_deadline_is_rejected_with_known_usage(monk
         [
             {"type": "agent.session.created", "session": {"id": "sess_fixture"}},
             {"type": "agent.session.turn.created", "turn_id": "turn_provider"},
-        ]
+        ],
+        config={"max_turn_seconds": 180},
     )
 
     with pytest.raises(OpenAIProviderError) as caught:

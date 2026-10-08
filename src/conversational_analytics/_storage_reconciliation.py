@@ -131,8 +131,6 @@ class TurnReconciliationMixin:
                 "turn.reconciled",
                 {
                     "source": "provider_completed_turn",
-                    "provider_session_id": provider_session_id,
-                    "provider_turn_id": provider_turn_id,
                 },
             )
             if not row["usage_complete"]:

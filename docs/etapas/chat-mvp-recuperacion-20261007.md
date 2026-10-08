@@ -18,6 +18,8 @@ La reconciliación también conserva el orden de las respuestas finales dividida
 en varios mensajes y excluye los mensajes intermedios. Su modo de vista previa
 declara las lecturas previstas, las ventanas y el destino local; al aplicar,
 informa el número de solicitudes de lectura realizadas.
+Las lecturas de recuperación del adaptador comparten el plazo restante del
+turno y no se repiten tras observar un fallo o cancelación terminal.
 
 La CLI privada permite reconciliar un turno existente fallido mediante lecturas
 del proveedor y una transacción local. Conserva el evento de fallo anterior y
@@ -25,6 +27,8 @@ registra la respuesta y el consumo una sola vez. Rechaza cancelaciones,
 timeouts, guardias conocidas, cambios de identidad y conversaciones con turnos
 posteriores. Su modo predeterminado no escribe ni llama al proveedor; no hay
 un endpoint público de administración.
+El evento público de reconciliación declara su procedencia sin incluir
+identificadores del proveedor; estos permanecen en las columnas privadas.
 El contexto de Docker incluye explícitamente el archivo de la CLI y mantiene
 excluidos los demás scripts de chat e insumos privados.
 

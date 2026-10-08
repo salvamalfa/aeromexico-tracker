@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import json
+import time
 from types import SimpleNamespace
 
 import pytest
@@ -129,6 +130,37 @@ def test_failed_turn_reports_provider_usage_for_quota_accounting():
     with pytest.raises(OpenAIProviderError) as raised:
         _run(_provider(FakeClient(fake)), session_id="sess_fixture")
     assert raised.value.usage == (120, 7)
+    assert fake.retrieve_calls == 0
+    # One turn listing happened before streaming to record the prior turn ID;
+    # terminal failure must not trigger the recovery session/turn reads.
+    assert fake.turn_list_calls == 1
+
+
+def test_recovery_gets_are_capped_by_the_original_turn_deadline():
+    fake = FakeSessions()
+    timeout_calls = []
+
+    def retrieve(session_id, *, timeout):
+        timeout_calls.append(("session", timeout))
+        raise TimeoutError("offline provider")
+
+    fake.retrieve = retrieve
+    provider = _provider(FakeClient(fake))
+    assert provider._recover(
+        "sess_fixture", "turn_new", deadline=time.monotonic() + 0.25
+    ) is None
+    assert timeout_calls and timeout_calls[0][0] == "session"
+    assert 0 < timeout_calls[0][1] <= 0.25
+    assert fake.turn_list_calls == 0
+
+
+def test_recovery_performs_no_get_after_turn_deadline():
+    fake = FakeSessions()
+    provider = _provider(FakeClient(fake))
+    assert provider._recover("sess_fixture", "turn_new", deadline=0.0) is None
+    assert provider._recover("sess_fixture", None, deadline=time.monotonic() + 1) is None
+    assert fake.retrieve_calls == 0
+    assert fake.turn_list_calls == 0
 
 
 def test_oversized_question_envelope_is_rejected_before_any_call():

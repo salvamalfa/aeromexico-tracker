@@ -221,7 +221,9 @@ class FakeSessions:
         self.created = []
         self.deleted = []
         self.retrieve_calls = 0
+        self.retrieve_timeouts = []
         self.turn_list_calls = 0
+        self.turn_list_timeouts = []
         self.retrieved_turn = retrieved_turn
         self._retrieved_turns = list(retrieved_turn) if isinstance(retrieved_turn, list) else None
         self.turn_retrieve_calls = []
@@ -237,9 +239,10 @@ class FakeSessions:
             self.events.stream_was_open = True
         return self._create_stream
 
-    def retrieve(self, session_id):
+    def retrieve(self, session_id, *, timeout=None):
         assert session_id == "sess_fixture"
         self.retrieve_calls += 1
+        self.retrieve_timeouts.append(timeout)
         return self._recovery or {"id": session_id, "status": "idle", "required_actions": []}
 
     def delete(self, session_id):
@@ -248,6 +251,7 @@ class FakeSessions:
     def _list_turns(self, session_id, **kwargs):
         assert session_id == "sess_fixture"
         self.turn_list_calls += 1
+        self.turn_list_timeouts.append(kwargs.get("timeout"))
         if self._recovery and self.turn_list_calls > 1:
             turns = self._recovery.get("turns", [])
         else:
@@ -535,6 +539,10 @@ def test_recovered_terminal_failure_or_cancel_preserves_reported_usage(status, e
     with pytest.raises(error_type) as caught:
         _run(_provider(FakeClient(fake)), session_id="sess_fixture")
     assert caught.value.usage == (31, 19)
+    assert fake.retrieve_calls == 1
+    assert fake.turn_list_calls == 2  # prior turn lookup plus one recovery read
+    assert 0 < fake.retrieve_timeouts[-1] <= 180
+    assert 0 < fake.turn_list_timeouts[-1] <= fake.retrieve_timeouts[-1]
 
 
 def test_cancel_and_delete_use_documented_events_and_session_endpoint():

@@ -60,6 +60,67 @@ def test_reconcile_preserves_failure_and_books_known_usage_once(tmp_path: Path):
     assert store.usage("alice")["turn_count"] == 1
 
 
+def test_reconciled_sse_event_keeps_provider_ids_private(tmp_path: Path):
+    pytest.importorskip("fastapi")
+    pytest.importorskip("httpx")
+    from fastapi.testclient import TestClient
+
+    from src.conversational_analytics.api import create_app
+    from src.conversational_analytics.config import ChatConfig
+
+    config = ChatConfig(state_path=tmp_path / "api.sqlite3")
+
+    class Snapshot:
+        version = "snapshot-v1"
+        semantic_version = "semantic-v1"
+
+    app = create_app(config, snapshot=Snapshot(), provider=object(), start_worker=False)
+    store = app.state.chat_store
+    conversation = store.create_conversation("local", "snapshot-v1", "semantic-v1")
+    turn, _ = store.submit_turn("local", conversation["id"], "private question", "client-1", {})
+    assert store.claim_turn()
+    store.set_provider_session(conversation["id"], "session-private-recovery")
+    store.set_provider_turn(turn["id"], "provider-turn-private-recovery")
+    store.fail_turn(turn["id"], "provider_error", "provider stream ended")
+
+    assert store.reconcile_failed_provider_turn(
+        turn_id=turn["id"],
+        owner_id="local",
+        conversation_id=conversation["id"],
+        snapshot_version="snapshot-v1",
+        semantic_version="semantic-v1",
+        provider_session_id="session-private-recovery",
+        provider_turn_id="provider-turn-private-recovery",
+        content="Private recovered answer.",
+        payload={"references": []},
+        input_tokens=40,
+        output_tokens=12,
+        cost=0.00038,
+    )
+    with TestClient(app, base_url="http://127.0.0.1", client=("127.0.0.1", 50000)) as client:
+        response = client.get(f"/api/chat/turns/{turn['id']}/events?after=0")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/event-stream")
+    assert "session-private-recovery" not in response.text
+    assert "provider-turn-private-recovery" not in response.text
+    sse_data = [json.loads(line[6:]) for line in response.text.splitlines() if line.startswith("data: ")]
+    reconciled = [payload for payload in sse_data if payload.get("source") == "provider_completed_turn"]
+    assert reconciled == [{"source": "provider_completed_turn"}]
+    event_types = [
+        line.removeprefix("event: ") for line in response.text.splitlines() if line.startswith("event: ")
+    ]
+    assert "turn.failed" in event_types
+    assert event_types[-3:] == ["message.completed", "turn.completed", "turn.reconciled"]
+    with store._connect() as db:
+        row = db.execute(
+            "SELECT c.provider_session_id,t.provider_turn_id FROM turns t "
+            "JOIN conversations c ON c.id=t.conversation_id WHERE t.id=?",
+            (turn["id"],),
+        ).fetchone()
+    assert tuple(row) == ("session-private-recovery", "provider-turn-private-recovery")
+
+
 def test_reconcile_accepts_already_booked_matching_usage_without_duplicate(tmp_path: Path):
     store, conversation, turn = failed_provider_turn(tmp_path)
     store.record_terminal_usage(turn["id"], 40, 12, 0.00038)
