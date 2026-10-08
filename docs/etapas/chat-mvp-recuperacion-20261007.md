@@ -14,6 +14,10 @@ La lectura recorre cursores oficiales hasta delimitar los elementos del turno,
 con un máximo de 10 páginas, 1.000 elementos y 30 segundos. Detecta páginas
 superpuestas y conserva la recuperación cuando el resto del historial contiene
 turnos anteriores. La CLI comparte ese lector.
+La reconciliación también conserva el orden de las respuestas finales divididas
+en varios mensajes y excluye los mensajes intermedios. Su modo de vista previa
+declara las lecturas previstas, las ventanas y el destino local; al aplicar,
+informa el número de solicitudes de lectura realizadas.
 
 La CLI privada permite reconciliar un turno existente fallido mediante lecturas
 del proveedor y una transacción local. Conserva el evento de fallo anterior y

@@ -64,7 +64,25 @@ def _safe_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
         "provider_deletion_queued": metadata["provider_deletion_queued"],
         "has_cancel_or_timeout_event": metadata["has_cancel_or_timeout_event"],
         "provider_calls": 0,
+        "planned_provider_requests": {
+            "turn_gets": 1,
+            "turn_get_timeout_seconds": 30,
+            "item_get_pages": {
+                "minimum": 1,
+                "maximum": 10,
+                "read_window_seconds": 30,
+            },
+            "total_bounded_seconds": 60,
+            "estimated_units": {
+                "minimum": 2,
+                "maximum": 11,
+                "unit": "read-only GET requests",
+                "model_generations": 0,
+                "provider_inputs_sent": False,
+            },
+        },
         "database_writes": 0,
+        "write_destinations": [str(_state_path().expanduser().resolve())],
     }
 
 
@@ -84,6 +102,42 @@ def _validate_recovered_content(content: str, max_message_chars: int) -> None:
     """Match the live worker's expanded provider-output ceiling."""
     if len(content) > max_message_chars * 4:
         raise ValueError("recovered answer exceeds the configured provider-output limit")
+
+
+class _CountingResource:
+    """Transparent SDK resource proxy that counts attempted read requests."""
+
+    def __init__(self, resource: Any, method_name: str, counter: list[int]):
+        self._resource = resource
+        self._method_name = method_name
+        self._counter = counter
+
+    def __getattr__(self, name: str) -> Any:
+        value = getattr(self._resource, name)
+        if name != self._method_name:
+            return value
+
+        def counted(*args: Any, **kwargs: Any) -> Any:
+            self._counter[0] += 1
+            return value(*args, **kwargs)
+
+        return counted
+
+
+def _counting_provider(provider: Any, counter: list[int]) -> Any:
+    """Wrap only turn retrieval and item listing; all SDK behavior passes through."""
+    client = provider.client
+    sessions = client.beta.agents.sessions
+    turns = _CountingResource(sessions.turns, "retrieve", counter)
+    items = _CountingResource(sessions.items, "list", counter)
+    proxy = type("_CountingProvider", (), {})()
+    proxy.client = type("_CountingClient", (), {})()
+    proxy.client.beta = type("_CountingBeta", (), {})()
+    proxy.client.beta.agents = type("_CountingAgents", (), {})()
+    proxy.client.beta.agents.sessions = type("_CountingSessions", (), {})()
+    proxy.client.beta.agents.sessions.turns = turns
+    proxy.client.beta.agents.sessions.items = items
+    return proxy
 
 
 def _state_path() -> Path:
@@ -170,10 +224,7 @@ def _recover_exact(
     provider: Any, session_id: str, turn_id: str
 ) -> tuple[str, int, int, list[dict[str, Any]]]:
     """GET one exact completed root turn and its items; never sends provider input."""
-    from src.conversational_analytics.providers._openai_helpers import (
-        parse_usage,
-        to_dict,
-    )
+    from src.conversational_analytics.providers._openai_helpers import parse_usage, to_dict
     from src.conversational_analytics.providers._openai_recovery import read_exact_turn_items
 
     turn = provider.client.beta.agents.sessions.turns.retrieve(
@@ -202,23 +253,11 @@ def _recover_exact(
     if not target:
         raise ValueError("provider returned no items for the exact turn")
 
-    output_parts: list[str] = []
-    final_messages = 0
+    assistant_messages: list[dict[str, Any]] = []
     calls: list[dict[str, Any]] = []
-    for item in reversed(target):
-        phase = item.get("phase")
-        if (
-            item.get("type") == "message"
-            and item.get("role") == "assistant"
-            and item.get("status") == "completed"
-            and (phase == "final_answer" or (phase is None and item.get("status") == "completed"))
-        ):
-            final_messages += 1
-            for raw_part in item.get("content", []):
-                part = to_dict(raw_part)
-                text = part.get("text")
-                if part.get("type") in {"output_text", "text"} and isinstance(text, str):
-                    output_parts.append(text)
+    for item in target:
+        if item.get("type") == "message" and item.get("role") == "assistant":
+            assistant_messages.append(item)
         elif item.get("type") == "function_call":
             args = item.get("arguments")
             if isinstance(args, str):
@@ -232,8 +271,30 @@ def _recover_exact(
                     "arguments": args,
                 }
             )
+    # Match retrieve_completed_turn_output: explicit final messages may be
+    # multipart; legacy phase-less schemas select only the last completed
+    # assistant message. Other assistant phases never enter the answer.
+    final_messages = [
+        message for message in assistant_messages
+        if message.get("phase") == "final_answer" and message.get("status") == "completed"
+    ]
+    selected = final_messages
+    if not selected and assistant_messages:
+        last_message = assistant_messages[-1]
+        if last_message.get("phase") is None and last_message.get("status") == "completed":
+            selected = [last_message]
+    output_parts: list[str] = []
+    for message in selected:
+        content_parts = message.get("content", [])
+        if not isinstance(content_parts, list):
+            continue
+        for raw_part in content_parts:
+            part = to_dict(raw_part)
+            text = part.get("text")
+            if part.get("type") in {"output_text", "text"} and isinstance(text, str):
+                output_parts.append(text)
     content = "".join(output_parts).strip()
-    if not content or final_messages != 1:
+    if not content:
         raise ValueError("provider completed turn has no final answer")
     # Reject duplicated call IDs or malformed references before matching local
     # persisted tool outputs. Calls themselves are never executed here.
@@ -280,8 +341,11 @@ def run(argv: list[str] | None = None) -> int:
         from src.conversational_analytics.storage import ChatStore
 
         provider = OpenAIProvider(config)
+        provider_request_count = [0]
         content, input_tokens, output_tokens, provider_calls = _recover_exact(
-            provider, args.provider_session_id, args.provider_turn_id
+            _counting_provider(provider, provider_request_count),
+            args.provider_session_id,
+            args.provider_turn_id,
         )
         _validate_recovered_content(content, config.max_message_chars)
         state_path = _state_path()
@@ -332,7 +396,7 @@ def run(argv: list[str] | None = None) -> int:
                     "mode": "applied",
                     "status": "completed",
                     "usage_complete": True,
-                    "provider_calls": 2,
+                    "provider_calls": provider_request_count[0],
                     "database_write": True,
                     "answer_emitted": False,
                 },

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from types import SimpleNamespace
@@ -157,8 +158,25 @@ def test_cli_dry_run_reads_only_sanitized_metadata(tmp_path: Path, monkeypatch, 
     assert run(["--turn-id", turn["id"], "--owner-id", "alice"]) == 0
 
     output = capsys.readouterr().out
-    assert '"mode":"dry_run"' in output
-    assert '"eligible_by_local_metadata":true' in output
+    plan = json.loads(output)
+    assert plan["mode"] == "dry_run"
+    assert plan["eligible_by_local_metadata"] is True
+    assert plan["planned_provider_requests"] == {
+        "turn_gets": 1,
+        "turn_get_timeout_seconds": 30,
+        "item_get_pages": {"minimum": 1, "maximum": 10, "read_window_seconds": 30},
+        "total_bounded_seconds": 60,
+        "estimated_units": {
+            "minimum": 2,
+            "maximum": 11,
+            "unit": "read-only GET requests",
+            "model_generations": 0,
+            "provider_inputs_sent": False,
+        },
+    }
+    assert plan["write_destinations"] == [str(store.path.resolve())]
+    assert plan["database_writes"] == 0
+    assert plan["provider_calls"] == 0
     assert "Private recovered answer" not in output
     assert turn["id"] not in output
     assert store.get_turn("alice", turn["id"])["status"] == "failed"
@@ -351,6 +369,74 @@ def test_exact_sdk_recovery_uses_paginated_items_for_final_and_tool_calls():
     assert (input_tokens, output_tokens) == (30, 8)
     assert calls[0]["call_id"] == "call-existing"
     assert items.calls == [None, "item-final"]
+
+
+def test_recovery_accepts_multipart_final_in_chronological_order_and_counts_gets():
+    from scripts.chat.reconcile_failed_turn import _counting_provider, _recover_exact
+
+    class Turns:
+        def retrieve(self, turn_id, *, session_id, timeout):
+            return {
+                "id": turn_id,
+                "session_id": session_id,
+                "status": "completed",
+                "usage": {"input_tokens": 3, "output_tokens": 2, "total_tokens": 5},
+            }
+
+    class Items:
+        def __init__(self):
+            self.calls = []
+
+        def list(self, session_id, *, after=None, **kwargs):
+            self.calls.append(after)
+            if after is None:
+                return SimpleNamespace(has_more=True, data=[
+                    {"id": "part-2", "type": "message", "role": "assistant", "turn_id": "t",
+                     "phase": "final_answer", "status": "completed", "content": [
+                         {"type": "output_text", "text": " second"}]},
+                    {"id": "comment", "type": "message", "role": "assistant", "turn_id": "t",
+                     "phase": "commentary", "status": "completed", "content": [
+                         {"type": "output_text", "text": " excluded"}]},
+                ])
+            return SimpleNamespace(has_more=False, data=[
+                {"id": "part-1", "type": "message", "role": "assistant", "turn_id": "t",
+                 "phase": "final_answer", "status": "completed", "content": [
+                     {"type": "output_text", "text": "First"}]},
+                {"id": "older", "type": "message", "role": "assistant", "turn_id": "previous"},
+            ])
+
+    items = Items()
+    provider = SimpleNamespace(client=SimpleNamespace(beta=SimpleNamespace(agents=SimpleNamespace(
+        sessions=SimpleNamespace(turns=Turns(), items=items)))))
+    count = [0]
+    result = _recover_exact(_counting_provider(provider, count), "s", "t")
+    assert result[0] == "First second"
+    assert count == [3]  # one exact-turn GET and two item-page GETs
+    assert items.calls == [None, "comment"]
+
+
+def test_recovery_legacy_phase_none_uses_only_last_completed_assistant_message():
+    from scripts.chat.reconcile_failed_turn import _recover_exact
+
+    class Turns:
+        def retrieve(self, turn_id, *, session_id, timeout):
+            return {"id": turn_id, "session_id": session_id, "status": "completed",
+                    "usage": {"input_tokens": 1, "output_tokens": 1, "total_tokens": 2}}
+
+    class Items:
+        def list(self, session_id, **kwargs):
+            return SimpleNamespace(has_more=False, data=[
+                {"id": "legacy-final", "type": "message", "role": "assistant", "turn_id": "t",
+                 "status": "completed", "content": [
+                     {"type": "output_text", "text": "Legacy result"}]},
+                {"id": "analysis", "type": "message", "role": "assistant", "turn_id": "t",
+                 "phase": "analysis", "status": "completed", "content": [
+                     {"type": "output_text", "text": "secret reasoning"}]},
+            ])
+
+    provider = SimpleNamespace(client=SimpleNamespace(beta=SimpleNamespace(agents=SimpleNamespace(
+        sessions=SimpleNamespace(turns=Turns(), items=Items())))))
+    assert _recover_exact(provider, "s", "t")[0] == "Legacy result"
 
 
 def test_recovered_answer_obeys_configured_worker_output_limit():
