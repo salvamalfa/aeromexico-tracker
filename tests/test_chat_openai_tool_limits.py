@@ -30,7 +30,8 @@ def test_eof_recovery_after_execution_deadline_is_rejected_with_known_usage(monk
     clock = [0.0]
     monkeypatch.setattr(openai_provider_module.time, "monotonic", lambda: clock[0])
 
-    def recover(self, *_args):
+    def recover(self, *_args, deadline):
+        assert deadline == 180.0
         clock[0] = 181.0
         return "Recovered answer", "completed", "turn_provider", {
             "input_tokens": 31,
@@ -42,7 +43,8 @@ def test_eof_recovery_after_execution_deadline_is_rejected_with_known_usage(monk
         [
             {"type": "agent.session.created", "session": {"id": "sess_fixture"}},
             {"type": "agent.session.turn.created", "turn_id": "turn_provider"},
-        ]
+        ],
+        config={"max_turn_seconds": 180},
     )
 
     with pytest.raises(OpenAIProviderError) as caught:
@@ -77,6 +79,129 @@ def test_late_completed_event_timeout_keeps_event_usage_without_answer(monkeypat
 
     assert caught.value.reason_code == "turn_timeout"
     assert getattr(caught.value, "usage", None) == (31, 19)
+
+
+def test_completed_usage_survives_missing_final_text_after_recovery_timeout(monkeypatch):
+    clock = [0.0]
+    recoveries = []
+    monkeypatch.setattr(openai_provider_module.time, "monotonic", lambda: clock[0])
+
+    def recover(self, *_args, deadline):
+        recoveries.append(deadline)
+        clock[0] = 6.0
+        return None
+
+    monkeypatch.setattr(OpenAIProvider, "_recover", recover)
+    _, run = _limited_provider_run(
+        [
+            {"type": "agent.session.created", "session": {"id": "sess_fixture"}},
+            {"type": "agent.session.turn.created", "turn_id": "turn_provider"},
+            {
+                "type": "agent.session.turn.completed",
+                "turn_id": "turn_provider",
+                "turn": {
+                    "id": "turn_provider",
+                    "status": "completed",
+                    "usage": _usage(),
+                },
+            },
+        ]
+    )
+
+    with pytest.raises(OpenAIProviderError) as caught:
+        run()
+
+    assert caught.value.usage == (31, 19)
+    assert recoveries == [5.0, 5.0]
+
+
+@pytest.mark.parametrize("error_type", [RuntimeError, InterruptedError])
+def test_local_error_after_completed_usage_keeps_usage(monkeypatch, error_type):
+    monkeypatch.setattr(
+        OpenAIProvider,
+        "_recover",
+        lambda *_args, **_kwargs: None,
+    )
+    monkeypatch.setattr(
+        openai_provider_module,
+        "references_from_results",
+        lambda _results: (_ for _ in ()).throw(error_type("local formatter error")),
+    )
+    _, run = _limited_provider_run(
+        [
+            {"type": "agent.session.created", "session": {"id": "sess_fixture"}},
+            {"type": "agent.session.turn.created", "turn_id": "turn_provider"},
+            {
+                "type": "agent.session.turn.output_text.done",
+                "turn_id": "turn_provider",
+                "text": "respuesta completa",
+            },
+            {
+                "type": "agent.session.turn.completed",
+                "turn_id": "turn_provider",
+                "turn": {
+                    "id": "turn_provider",
+                    "status": "completed",
+                    "usage": _usage(),
+                },
+            },
+        ]
+    )
+
+    with pytest.raises(OpenAIProviderError if error_type is RuntimeError else InterruptedError) as caught:
+        run()
+
+    assert caught.value.usage == (31, 19)
+
+
+@pytest.mark.parametrize("error_type", [RuntimeError, OpenAIProviderError])
+def test_formatter_cancellation_after_completed_usage_skips_recovery(monkeypatch, error_type):
+    cancel_event = {}
+    recovery_calls = []
+    original_guards = openai_provider_module.completion_guards
+
+    def capture_cancel_event(event, *args, **kwargs):
+        cancel_event["event"] = event
+        return original_guards(event, *args, **kwargs)
+
+    monkeypatch.setattr(openai_provider_module, "completion_guards", capture_cancel_event)
+    monkeypatch.setattr(
+        OpenAIProvider,
+        "_recover",
+        lambda *_args, **_kwargs: recovery_calls.append(True),
+    )
+
+    def cancel_then_fail(_results):
+        cancel_event["event"].set()
+        raise error_type("local formatter error")
+
+    monkeypatch.setattr(openai_provider_module, "references_from_results", cancel_then_fail)
+    _, run = _limited_provider_run(
+        [
+            {"type": "agent.session.created", "session": {"id": "sess_fixture"}},
+            {"type": "agent.session.turn.created", "turn_id": "turn_provider"},
+            {
+                "type": "agent.session.turn.output_text.done",
+                "turn_id": "turn_provider",
+                "text": "respuesta completa",
+            },
+            {
+                "type": "agent.session.turn.completed",
+                "turn_id": "turn_provider",
+                "turn": {
+                    "id": "turn_provider",
+                    "status": "completed",
+                    "usage": _usage(),
+                },
+            },
+        ]
+    )
+
+    with pytest.raises(OpenAIProviderError) as caught:
+        run()
+
+    assert caught.value.usage == (31, 19)
+    assert recovery_calls == []
 
 
 @pytest.mark.parametrize(

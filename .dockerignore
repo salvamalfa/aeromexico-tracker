@@ -6,6 +6,8 @@
 !uv.lock
 !scripts/
 !scripts/start_chat_runtime.py
+!scripts/chat/
+!scripts/chat/reconcile_failed_turn.py
 
 !src/
 !src/__init__.py

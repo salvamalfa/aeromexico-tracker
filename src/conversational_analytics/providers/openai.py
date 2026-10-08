@@ -21,12 +21,14 @@ from ._openai_helpers import (
     completion_guards,
     event_call_id,
     event_session_id,
-    field,
     int_or_zero,
+    latest_provider_turn_id,
     parse_usage,
     prior_history,
+    provider_terminal_failure,
     question_envelope,
     read_completed_turn_usage,
+    recover_completed_provider_error,
     references_from_results,
     required_string,
     result_from_recovered,
@@ -35,6 +37,7 @@ from ._openai_helpers import (
     usage_from_event,
 )
 from ._openai_helpers import event_turn_id as get_event_turn_id
+from ._openai_recovery import recover_exact_turn
 from .base import ProviderResult, ToolCall
 
 
@@ -97,6 +100,7 @@ class OpenAIProvider:
         request_input = self._message_input(context, message, history)
         tracked_sessions: set[str] = set()
         started_at = time.monotonic()
+        turn_deadline = started_at + self.max_turn_seconds
         usage_deadline = started_at + self.max_turn_seconds + TERMINAL_USAGE_RECONCILIATION_SECONDS
         stream_manager = None
         stream_iter = None
@@ -234,7 +238,7 @@ class OpenAIProvider:
                 )
             else:
                 self._track_session(session_id, persist_session, tracked_sessions)
-                prior_turn_id = self._latest_provider_turn_id(session_id)
+                prior_turn_id = latest_provider_turn_id(self.client, session_id)
                 stream_manager = self.client.beta.agents.sessions.events.stream(session_id)
                 stream_iter = (
                     stream_manager.__enter__() if hasattr(stream_manager, "__enter__") else stream_manager
@@ -282,7 +286,16 @@ class OpenAIProvider:
                         },
                     )
                 # Capture IDs before cancellation so the worker can stop a just-created remote session.
-                event_usage = terminal_event_usage(event_type, is_current_turn, event_data)
+                session_failure = event_type in {
+                    "agent.session.failed",
+                    "agent.session.environment.failed",
+                    "error",
+                }
+                if session_failure or (event_type == "agent.session.turn.failed" and is_current_turn):
+                    terminal = "failed"
+                event_usage = usage_from_event(event_data) if session_failure else terminal_event_usage(
+                    event_type, is_current_turn, event_data
+                )
                 check_limits(event_usage)
                 if event_type == "agent.session.turn.output_text.delta" and is_current_turn:
                     key = (
@@ -331,8 +344,11 @@ class OpenAIProvider:
                 elif event_type == "agent.session.turn.failed":
                     if is_current_turn:
                         terminal = "failed"
-                        raise OpenAIProviderError(
-                            "El proveedor marcó el turno como fallido", usage_from_event(event_data)
+                        raise provider_terminal_failure(
+                            "El proveedor marcó el turno como fallido",
+                            usage_from_event(event_data),
+                            session_id,
+                            turn_id,
                         )
                 elif event_type == "agent.session.turn.cancelled":
                     if is_current_turn:
@@ -341,15 +357,28 @@ class OpenAIProvider:
                         cancelled.usage = usage_from_event(event_data)  # type: ignore[attr-defined]
                         raise cancelled
                 elif event_type in {"agent.session.failed", "agent.session.environment.failed", "error"}:
-                    raise OpenAIProviderError("El ciclo del agente falló antes de completar el turno")
+                    terminal = "failed"
+                    raise provider_terminal_failure(
+                        "El ciclo del agente falló antes de completar el turno",
+                        usage_from_event(event_data),
+                        session_id,
+                        turn_id,
+                    )
             if terminal != "completed":
-                recovered = self._recover(session_id, turn_id, prior_turn_id)
+                recovered = self._recover(session_id, turn_id, prior_turn_id, deadline=turn_deadline)
                 if recovered is not None:
                     content, recovered_status, recovered_turn_id, usage = recovered
                     recovered_usage = usage_from_event({"usage": usage})
                     if recovered_status == "failed":
-                        raise OpenAIProviderError("El proveedor marcó el turno como fallido", recovered_usage)
+                        terminal = "failed"
+                        raise provider_terminal_failure(
+                            "El proveedor marcó el turno como fallido",
+                            recovered_usage,
+                            session_id,
+                            recovered_turn_id,
+                        )
                     if recovered_status == "cancelled":
+                        terminal = "cancelled"
                         cancelled = InterruptedError("turn cancelled")
                         cancelled.usage = recovered_usage  # type: ignore[attr-defined]
                         raise cancelled
@@ -379,7 +408,7 @@ class OpenAIProvider:
                     )
             content = "".join(content_parts[key] for key in sorted(content_parts)).strip()
             if not content:
-                recovered = self._recover(session_id, turn_id, prior_turn_id)
+                recovered = self._recover(session_id, turn_id, prior_turn_id, deadline=turn_deadline)
                 content = recovered[0] if recovered and recovered[1] == "completed" else ""
             if not content:
                 raise OpenAIProviderError(
@@ -396,18 +425,48 @@ class OpenAIProvider:
                 provider_session_id=session_id,
                 usage_complete=usage_complete,
             )
-        except InterruptedError:
+        except InterruptedError as error:
+            if usage_complete and getattr(error, "usage", None) is None:
+                error.usage = (input_tokens, output_tokens)  # type: ignore[attr-defined]
             raise
-        except OpenAIProviderError:
+        except OpenAIProviderError as error:
+            if usage_complete and error.usage is None:
+                error.usage = (input_tokens, output_tokens)
+            if terminal in {"failed", "cancelled"} or cancel_event.is_set():
+                raise
+            recovered_result = recover_completed_provider_error(
+                error,
+                recover=lambda sid, tid, prior: self._recover(
+                    sid, tid, prior, deadline=turn_deadline
+                ),
+                session_id=session_id,
+                turn_id=turn_id,
+                prior_turn_id=prior_turn_id,
+                client=self.client,
+                cancel_event=cancel_event,
+                deadline=usage_deadline,
+                close_stream=close_active_stream,
+                accept_completed=accept_completed,
+                tool_outputs=tool_outputs,
+            )
+            if recovered_result is not None:
+                return recovered_result
             raise
         except Exception:
-            recovered = self._recover(session_id, turn_id, prior_turn_id) if session_id else None
+            if terminal in {"failed", "cancelled"}:
+                raise
+            recovered = (
+                self._recover(session_id, turn_id, prior_turn_id, deadline=turn_deadline)
+                if session_id and not cancel_event.is_set()
+                else None
+            )
             if recovered and recovered[1] == "completed" and recovered[0]:
                 usage = usage_from_event({"usage": recovered[3]})
                 accept_completed(usage)
                 return result_from_recovered(recovered[0], recovered[3], session_id, tool_outputs)
             raise OpenAIProviderError(
-                "No se pudo completar el turno de Agents API; no se reenviará el mensaje automáticamente"
+                "No se pudo completar el turno de Agents API; no se reenviará el mensaje automáticamente",
+                (input_tokens, output_tokens) if usage_complete else None,
             ) from None
         finally:
             close_active_stream()
@@ -445,75 +504,15 @@ class OpenAIProvider:
         return [to_dict(action) for action in actions]
 
     def _recover(
-        self, session_id: str | None, turn_id: str | None, prior_turn_id: str | None = None
+        self,
+        session_id: str | None,
+        turn_id: str | None,
+        prior_turn_id: str | None = None,
+        *,
+        deadline: float,
     ) -> tuple[str, str, str | None, dict[str, Any]] | None:
         """Read saved turns/items after interruption without replaying input."""
-        if not session_id:
-            return None
-        try:
-            session = to_dict(self.client.beta.agents.sessions.retrieve(session_id))
-            actions = session.get("required_actions") or []
-            if isinstance(actions, list) and actions:
-                for action in actions:
-                    data = to_dict(action)
-                    if data.get("type") == "function_call":
-                        # The dispatcher key makes pending-action recovery safe.
-                        raise OpenAIProviderError("Hay una acción pendiente para recuperar")
-            turns_page = self.client.beta.agents.sessions.turns.list(session_id, limit=100, order="desc")
-            turns = list(getattr(turns_page, "data", []))
-            candidate = next((t for t in turns if not turn_id or field(t, "id") == turn_id), None)
-            if candidate is None and turns:
-                candidate = turns[0]
-            if candidate is None:
-                return None
-            candidate_data = to_dict(candidate)
-            if not turn_id and candidate_data.get("id") == prior_turn_id:
-                return None
-            status = candidate_data.get("status")
-            canonical_id = candidate_data.get("id")
-            if status not in {"completed", "failed", "cancelled"}:
-                return None
-            content = self._retrieve_output_text(session_id, canonical_id) if status == "completed" else ""
-            usage = candidate_data.get("usage") if isinstance(candidate_data.get("usage"), dict) else {}
-            return content, status, canonical_id, usage
-        except OpenAIProviderError:
-            raise
-        except Exception:
-            return None
-
-    def _latest_provider_turn_id(self, session_id: str) -> str | None:
-        try:
-            page = self.client.beta.agents.sessions.turns.list(session_id, limit=1, order="desc")
-            turns = list(getattr(page, "data", []))
-            if turns:
-                value = field(turns[0], "id")
-                return value if isinstance(value, str) and value else None
-        except Exception:
-            # Read history only before input; do not guess if that lookup fails.
-            raise OpenAIProviderError(
-                "No se pudo verificar el historial antes del siguiente mensaje"
-            ) from None
-        return None
-
-    def _retrieve_output_text(self, session_id: str, turn_id: str | None) -> str:
-        if not turn_id:
-            return ""
-        page = self.client.beta.agents.sessions.items.list(session_id, limit=100, order="desc")
-        output: list[str] = []
-        for item in getattr(page, "data", []):
-            data = to_dict(item)
-            if (
-                data.get("turn_id") != turn_id
-                or data.get("type") != "message"
-                or data.get("role") != "assistant"
-            ):
-                continue
-            for content in data.get("content", []):
-                part = to_dict(content)
-                text = part.get("text")
-                if part.get("type") in {"output_text", "text"} and isinstance(text, str):
-                    output.append(text)
-        return "".join(reversed(output)).strip()
+        return recover_exact_turn(self.client, session_id, turn_id, deadline=deadline)
 
     @staticmethod
     def _validate_tool_specs(specs: list[dict[str, Any]]) -> list[dict[str, Any]]:

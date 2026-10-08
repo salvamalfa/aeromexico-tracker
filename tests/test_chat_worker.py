@@ -5,6 +5,7 @@ from pathlib import Path
 
 from src.conversational_analytics.config import ChatConfig
 from src.conversational_analytics.providers.base import ProviderResult
+from src.conversational_analytics.providers.openai import OpenAIProviderError
 from src.conversational_analytics.storage import ChatStore
 from src.conversational_analytics.worker import TurnWorker
 
@@ -138,9 +139,11 @@ class ToolErrorProvider(DeterministicProvider):
 class FailingProvider(DeterministicProvider):
     def run_turn(self, **kwargs):
         self.calls += 1
-        error = RuntimeError("provider failed")
-        error.usage = (900, 40)
-        raise error
+        raise OpenAIProviderError(
+            "provider failed with private details",
+            usage=(900, 40),
+            reason_code="tool_call_limit",
+        )
 
 
 def _claimed(store: ChatStore, reserved_tokens: int = 100):
@@ -162,7 +165,9 @@ def test_tool_argument_errors_reach_the_model_instead_of_failing_the_turn(tmp_pa
     assert store.get_turn("alice", turn["id"])["status"] == "completed"
 
 
-def test_failed_turn_books_reported_usage_and_releases_its_hold(tmp_path: Path):
+def test_failed_turn_books_openai_error_usage_logs_safe_reason_and_releases_its_hold(
+    tmp_path: Path, caplog
+):
     store = ChatStore(tmp_path / "chat.sqlite3")
     turn, claim = _claimed(store, reserved_tokens=50_000)
     # Paid-provider pricing: the mock provider books usage at zero dollars.
@@ -170,6 +175,14 @@ def test_failed_turn_books_reported_usage_and_releases_its_hold(tmp_path: Path):
     worker = TurnWorker(store, config, FailingProvider(), Snapshot())
     worker._registry = Registry()
     worker._execute_turn(claim)
+    assert "reason=tool_call_limit" in caplog.text
+    assert "private details" not in caplog.text
+    events = store.list_events("alice", turn["id"])
+    assert events[-2]["type"] == "provider.failure"
+    assert events[-2]["data"] == {"reason_code": "tool_call_limit"}
+    assert events[-1]["type"] == "turn.failed"
+    assert events[-1]["data"]["code"] == "provider_error"
+    assert "private details" not in str(events[-2:])
     record = store.get_turn("alice", turn["id"])
     assert record["status"] == "failed"
     assert (record["usage_complete"], record["reserved_tokens"]) == (1, 0)

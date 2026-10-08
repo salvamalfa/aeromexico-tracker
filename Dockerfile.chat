@@ -34,6 +34,7 @@ COPY contracts/web/*.json contracts/web/privacy.yaml ./contracts/web/
 COPY site/publication_manifest.json ./site/
 COPY site/data/v1/ ./site/data/v1/
 COPY scripts/start_chat_runtime.py ./scripts/start_chat_runtime.py
+COPY scripts/chat/reconcile_failed_turn.py ./scripts/chat/reconcile_failed_turn.py
 
 RUN mkdir -p /data && chmod 0700 /data
 EXPOSE 8080

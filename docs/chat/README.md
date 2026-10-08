@@ -54,6 +54,30 @@ Como alternativa, consulta la [guía de VPS Hostinger](hostinger-vps.md).
 Para el uso intermitente de un único usuario, consulta la
 [comparación de Railway Free, Hobby y VPS](hosting-options.md).
 
+## Recuperar un turno `provider_error`
+
+`scripts/chat/reconcile_failed_turn.py` permite recuperar un único turno local
+fallido cuando el SDK conserva el turno exacto como completado. La ejecución
+predeterminada es de solo lectura local y muestra metadatos mínimos, sin
+pregunta, respuesta ni identificadores. `--apply` exige el turno, dueño,
+conversación, sesión y turno exactos del proveedor, y las versiones de datos y
+semántica copiadas del estado local. Confirma que la vista previa lo marca
+elegible antes de aplicar.
+
+La aplicación solo hace GET del turno y sus ítems ya existentes. Verifica que
+el turno devuelto sea exactamente el solicitado, que esté completado y tenga
+uso conocido, y que las llamadas a herramientas correspondan a resultados ya
+guardados localmente. No envía entrada al proveedor ni reactiva el worker. La
+respuesta queda en la base privada; stdout y los eventos de operación solo
+indican el resultado. Se conservan el evento original `turn.failed` y el
+registro de uso es idempotente.
+
+El método transaccional vuelve a comprobar propietario, conversación,
+versiones, sesión, turno, estado y ausencia de un turno posterior, respuesta
+previa, cancelación, timeout o eliminación de sesión. Si alguno cambió, no
+aplica la recuperación. No edites ni incluyas la base, los argumentos privados
+o la respuesta en el repositorio.
+
 La [validación real](../etapas/airline-tracker-validacion-real-20261004.md) y la
 [guía de Data Sharing](data-sharing.md) detallan resultados, cobertura y
 límites diarios y la importación del consumo de evaluaciones.

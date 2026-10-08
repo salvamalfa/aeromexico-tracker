@@ -75,7 +75,9 @@ USAGE_POLL_MAX_ATTEMPTS = 5
 USAGE_POLL_INTERVAL_SECONDS = 2.0
 TERMINAL_USAGE_RECONCILIATION_SECONDS = 30.0
 TERMINAL_USAGE_POLL_MAX_ATTEMPTS = 16
-PROVIDER_REASON_CODES = frozenset({"tool_call_limit", "turn_timeout", "tool_result_limit"})
+PROVIDER_REASON_CODES = frozenset(
+    {"provider_terminal_failed", "tool_call_limit", "turn_timeout", "tool_result_limit"}
+)
 POST_CANCEL_USAGE_TIMEOUT_SECONDS = TERMINAL_USAGE_RECONCILIATION_SECONDS
 POST_CANCEL_USAGE_ATTEMPTS = 6
 POST_CANCEL_USAGE_POLL_INTERVAL_SECONDS = 5.0
@@ -100,6 +102,21 @@ class OpenAIProviderError(RuntimeError):
         )
         self.session_id = session_id if isinstance(session_id, str) and session_id else None
         self.turn_id = turn_id if isinstance(turn_id, str) and turn_id else None
+
+
+def provider_terminal_failure(
+    message: str,
+    usage: tuple[int, int] | None,
+    session_id: str | None,
+    turn_id: str | None,
+) -> OpenAIProviderError:
+    return OpenAIProviderError(
+        message,
+        usage,
+        reason_code="provider_terminal_failed",
+        session_id=session_id,
+        turn_id=turn_id,
+    )
 
 
 class ToolResultLimitExceeded(Exception):
@@ -159,6 +176,22 @@ def field(value: Any, name: str) -> Any:
     if isinstance(value, Mapping):
         return value.get(name)
     return getattr(value, name, None)
+
+
+def latest_provider_turn_id(client: Any, session_id: str) -> str | None:
+    """Read the previous turn ID before sending input to a reused session."""
+    try:
+        page = client.beta.agents.sessions.turns.list(session_id, limit=1, order="desc")
+        turns = list(getattr(page, "data", []))
+        if turns:
+            value = field(turns[0], "id")
+            return value if isinstance(value, str) and value else None
+    except Exception:
+        # Read history only before input; do not guess if that lookup fails.
+        raise OpenAIProviderError(
+            "No se pudo verificar el historial antes del siguiente mensaje"
+        ) from None
+    return None
 
 
 def required_string(value: Any, name: str) -> str:
@@ -467,6 +500,50 @@ def result_from_recovered(
         provider_session_id=session_id,
         usage_complete=usage_complete,
     )
+
+
+def recover_completed_provider_error(
+    error: OpenAIProviderError,
+    *,
+    recover: Callable[..., tuple[str, str, str | None, dict[str, Any]] | None],
+    session_id: str | None,
+    turn_id: str | None,
+    prior_turn_id: str | None,
+    client: Any,
+    cancel_event: threading.Event,
+    deadline: float,
+    close_stream: Callable[[], None],
+    accept_completed: Callable[[tuple[int, int] | None], None],
+    tool_outputs: list[dict[str, Any]],
+) -> ProviderResult | None:
+    """Recover a completed exact turn after a non-hardguard provider error."""
+    if error.reason_code or not session_id or not turn_id:
+        return None
+    close_stream()
+    recovered = recover(session_id, turn_id, prior_turn_id)
+    if not recovered or recovered[1] != "completed" or not recovered[0]:
+        return None
+    content, _, recovered_turn_id, usage_data = recovered
+    input_tokens, output_tokens, usage_complete = parse_usage(usage_data)
+    usage = (input_tokens, output_tokens) if usage_complete else None
+    if usage is None and recovered_turn_id:
+        usage = read_completed_turn_usage(
+            client,
+            session_id,
+            recovered_turn_id,
+            cancel_event=cancel_event,
+            deadline=deadline,
+            close_stream=close_stream,
+        )
+    if usage is not None:
+        input_tokens, output_tokens = usage
+        usage_data = {
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "total_tokens": input_tokens + output_tokens,
+        }
+    accept_completed(usage)
+    return result_from_recovered(content, usage_data, session_id, tool_outputs)
 
 
 def event_session_id(event: dict[str, Any]) -> str | None:

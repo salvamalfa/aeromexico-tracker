@@ -14,13 +14,16 @@ from typing import Any
 from ._storage_auth import AuthSessionMixin
 from ._storage_common import AdmissionDenied, ChatError, Conflict, NotFound, utcnow
 from ._storage_external_usage import ExternalUsageMixin
+from ._storage_reconciliation import TurnReconciliationMixin
 from ._storage_tools import ToolResultMixin
 from ._storage_usage import UsageRetentionMixin
 
 __all__ = ["AdmissionDenied", "ChatError", "ChatStore", "Conflict", "NotFound", "utcnow"]
 
 
-class ChatStore(ToolResultMixin, UsageRetentionMixin, ExternalUsageMixin, AuthSessionMixin):
+class ChatStore(
+    TurnReconciliationMixin, ToolResultMixin, UsageRetentionMixin, ExternalUsageMixin, AuthSessionMixin
+):
     """SQLite store. Every operation opens its own connection for thread safety."""
 
     def __init__(self, path: str | Path):
