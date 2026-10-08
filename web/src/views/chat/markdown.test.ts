@@ -89,6 +89,13 @@ describe("safe response rendering", () => {
     expect(host.querySelector("p")?.textContent).toBe("| Fuente: AFAC |");
   });
 
+  it("treats a pipe after an escaped backslash as a delimiter", () => {
+    const host = document.createElement("div");
+    renderSafeMarkdown(host, "Ruta | Valor\n---|---\nC:\\\\| 5\n| a \\| b | 6 |");
+    const rows = [...host.querySelectorAll("tbody tr")].map((row) => [...row.querySelectorAll("td")].map((cell) => cell.textContent));
+    expect(rows).toEqual([["C:\\", "5"], ["a | b", "6"]]);
+  });
+
   it("keeps pipes inside ordinary text and HTML-looking cells as plain text", () => {
     const host = document.createElement("div");
     renderSafeMarkdown(host, "Opción A | opción B\n\n| a | b |\n|---|---|\n| <img src=x onerror=alert(1)> | ok |");

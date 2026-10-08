@@ -49,10 +49,32 @@ const TABLE_SEPARATOR = /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/;
 const MAX_TABLE_COLUMNS = 12;
 const MAX_TABLE_ROWS = 60;
 
+/** Split a table row on unescaped pipes; `\|` is a literal pipe and `\\` a literal backslash. */
 function tableCells(line: string): string[] {
-  // An escaped final pipe (`\|`) is cell text, not the closing delimiter.
-  const trimmed = line.trim().replace(/^\|/, "").replace(/(?<!\\)\|$/, "");
-  return trimmed.split(/(?<!\\)\|/).map((cell) => cell.replace(/\\\|/g, "|").trim());
+  const cells: string[] = [];
+  let cell = "";
+  let escaped = false;
+  let endedOnDelimiter = false;
+  for (const char of line.trim()) {
+    endedOnDelimiter = false;
+    if (escaped) {
+      cell += char === "|" || char === "\\" ? char : `\\${char}`;
+      escaped = false;
+    } else if (char === "\\") {
+      escaped = true;
+    } else if (char === "|") {
+      cells.push(cell);
+      cell = "";
+      endedOnDelimiter = true;
+    } else {
+      cell += char;
+    }
+  }
+  if (escaped) cell += "\\";
+  // Leading and trailing pipes are borders, not empty cells.
+  if (!endedOnDelimiter) cells.push(cell);
+  if (line.trim().startsWith("|")) cells.shift();
+  return cells.map((value) => value.trim());
 }
 
 /** Parse a GitHub-style table starting at `start`; returns the element and the next line index. */
