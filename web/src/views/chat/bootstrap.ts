@@ -68,9 +68,13 @@ export function mountChat(): () => void {
   const logoutButton = query<HTMLButtonElement>("[data-chat-logout]");
 
   const turns = new Map<string, string>();
+  const turnErrors = new Map<string, string>();
   const submissions = new ChatSubmissionLedger();
   const paintMessages = () => renderMessages(messagesNode, state.messages, {
     canRetry: (message) => Boolean(message.retryMessageId || (message.turn_id && ["failed", "cancelled"].includes(turns.get(message.turn_id) ?? ""))),
+    failureMessage: (message) => message.role === "user" && message.turn_id && turns.get(message.turn_id) === "failed" &&
+      !state.messages.some((candidate) => candidate.role === "assistant" && candidate.turn_id === message.turn_id)
+      ? turnErrors.get(message.turn_id) : undefined,
     onRetry: (message) => {
       const submission = message.retryMessageId ? submissions.get(message.retryMessageId) : undefined;
       if (submission) { void submitMessage(submission.message.content, submission.message.id); return; }
@@ -150,6 +154,7 @@ export function mountChat(): () => void {
   }
 
   function loadConversation(conversation: ChatConversation): void {
+    turnErrors.clear();
     state.conversationId = conversation.id;
     state.snapshotVersion = conversation.snapshot_version;
     state.messages = conversation.messages.map((message) => ({
@@ -175,7 +180,10 @@ export function mountChat(): () => void {
         });
       }
     }
-    for (const turn of conversation.turns) turns.set(turn.id, turn.status);
+    for (const turn of conversation.turns) {
+      turns.set(turn.id, turn.status);
+      if (turn.status === "failed" && typeof turn.error_message === "string" && turn.error_message.trim()) turnErrors.set(turn.id, turn.error_message);
+    }
     const active = [...conversation.turns].reverse().find((turn) => turn.status === "pending" || turn.status === "running");
     if (!active) {
       if (!state.activeTurn) setBusy(false);

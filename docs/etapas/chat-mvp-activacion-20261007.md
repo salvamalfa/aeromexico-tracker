@@ -27,3 +27,8 @@ con `origin/master`; esta etapa no publica cifras nuevas. La compilación y la
 verificación local están completas. Sigue pendiente confirmar la configuración
 y salud de Railway y comprobar el panel tras el deploy de Pages. No se
 modificaron prompt ni backend y no se hicieron llamadas pagadas.
+
+Una corrección de interfaz muestra en la pregunta histórica el error seguro
+guardado para un turno fallido sin respuesta, sin reenviar la pregunta al abrir
+el chat. No cambia la activación del MVP ni los datos aprobados y no implica
+una verificación de despliegue en vivo.
