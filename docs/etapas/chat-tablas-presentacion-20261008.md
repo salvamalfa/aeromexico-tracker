@@ -41,7 +41,18 @@ conocía párrafos, listas, títulos, negritas, cursivas y ligas.
 
 ## Publicación
 
-El cambio solo se ve en Pages cuando `site/` se reconstruye con el gate y el
-análisis 2026Q2 ya aprobado (`186ba823…`), comprobando que los hashes de
-`site/data/v1/` y el `analysis_manifest` no cambien. Ese paso queda pendiente
-en el PR #108 hasta que el entorno permita ejecutar el gate.
+Autorizada por el dueño el 8 de octubre. El respaldo privado
+(`aeromexico-tracker-data`, 26 sep) se restauró en la sesión; su warehouse no
+tenía la entidad `INDUSTRY` que espera el código actual, así que se
+reconstruyó localmente con `src.rebuild`. Los archivos versionados que
+reescribió esa reconstrucción (gold, modelos, notas de EDA) se descartaron
+sin commit. Después:
+
+- `src.publish` con el análisis 2026Q2 ya aprobado (`186ba823…`) generó
+  `site/` desde el commit `0cd69f4`;
+- `src.publish.verify site/` pasó;
+- los 112 archivos de `site/data/v1/`, los contratos y el `analysis_manifest`
+  son idénticos byte a byte a la publicación anterior. Solo cambiaron los
+  archivos compilados de la página, `index.html` y el manifiesto.
+
+Ninguna aprobación se creó ni cambió.
