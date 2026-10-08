@@ -4,6 +4,23 @@ Cambios notables del proyecto, para humanos. Formato inspirado en
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); no se usa
 versión semántica, las entradas van por fecha.
 
+## 2026-10-08 · Chat: límite de herramientas, reserva sin vencimiento y Railway
+
+- Diagnóstico de la segunda pregunta real del dueño: falló por
+  `tool_call_limit` (más de 8 consultas), y su reserva de US$1.50 quedó
+  apartada sin vencimiento. Eso provocó el «daily cost budget exhausted» del
+  reintento.
+- Railway, a pedido del dueño: tope diario de US$3 a US$5 (usuario y global),
+  `CHAT_MAX_TOOL_CALLS` de 8 a 16, y watch paths para que solo los cambios del
+  backend o de los datos publicados redespliegan el chat (`railway.toml`).
+- El worker cancela el turno del proveedor detenido por un límite local y
+  registra su uso real; si sigue desconocido, conserva la reserva.
+- Los mensajes INFO de Uvicorn van a stdout y Railway ya no los marca como
+  error.
+- `AGENTS.md`: revisión cruzada entre agentes para PRs de código sin revisión
+  de Codex.
+- Detalle en `docs/etapas/chat-limite-herramientas-presupuesto-20261008.md`.
+
 ## 2026-10-08 · Correcciones a la recuperación de turnos del chat
 
 - Un stream cortado ya no guarda texto parcial como respuesta completa.

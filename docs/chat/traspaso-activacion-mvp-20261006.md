@@ -11,8 +11,10 @@ solicitud expresa de fase 2, consulta [fase 2 del chat](fase-2-agente-analitico.
 
 ## Estado operativo comprobado al 8 de octubre
 
-- El dueño eligió `gpt-6.1-sol`, con topes diarios de **US$3 por usuario y
-  US$3 global**. El backend real usa autenticación con contraseña, proveedor
+- El dueño eligió `gpt-6.1-sol`. Los topes diarios eran de **US$3 por usuario y
+  US$3 global**; el 8 de octubre, a pedido del dueño, se subieron a **US$5** y
+  `CHAT_MAX_TOOL_CALLS` pasó de 8 a 16 (ver
+  [diagnóstico](../etapas/chat-limite-herramientas-presupuesto-20261008.md)). El backend real usa autenticación con contraseña, proveedor
   OpenAI y admisión habilitada. El panel está visible en
   [Pages](https://salvamalfa.github.io/aeromexico-tracker/).
 - Se comprobó HTTPS 200 y estado `ok`; worker, autenticación con contraseña,
@@ -22,8 +24,9 @@ solicitud expresa de fase 2, consulta [fase 2 del chat](fase-2-agente-analitico.
   las credenciales del dueño. La pregunta original aparece como `provider_error`, sin respuesta de asistente.
   No se reenvió ni recuperó. No hay una respuesta nueva validada y queda
   pendiente probar el acceso desde el teléfono.
-- La causa original no está demostrada. No se atribuye a límites de 8 llamadas
-  ni de 180 segundos. El uso del turno fallido ya está contabilizado en el
+- La causa original no está demostrada, pero el turno terminó con 8 resultados
+  de herramienta. La segunda pregunta real, del 8 de octubre, falló por
+  `tool_call_limit`, así que es muy probable que la causa haya sido la misma. El uso del turno fallido ya está contabilizado en el
   estado privado; conserva ese costo y el historial.
 - PR [#102](https://github.com/salvamalfa/aeromexico-tracker/pull/102),
   [#103](https://github.com/salvamalfa/aeromexico-tracker/pull/103) y
@@ -66,9 +69,11 @@ compruebe antes su elegibilidad y costo.
 
 La reserva de costo, los usos conocidos y los usos desconocidos deben
 preservarse en el ledger. No borres ni reproceses el turno fallido para ocultar
-el cargo. El límite diario monetario es el control operativo; los parámetros
-históricos de 8 llamadas y 180 segundos no explican por sí solos el fallo y no
-se cambian como parte de este traspaso.
+el cargo. El límite diario monetario es el control operativo. El 8 de octubre
+el límite de llamadas pasó de 8 a 16 por la falla comprobada por
+`tool_call_limit`; el de 180 segundos no cambió. Un turno fallido con uso
+desconocido conserva su reserva hasta que se concilia, incluso en días
+posteriores.
 
 ## Versiones del holdout
 

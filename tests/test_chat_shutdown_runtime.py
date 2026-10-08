@@ -63,7 +63,11 @@ def test_uvicorn_shutdown_fences_claims_before_waiting_for_connections():
 
     state = SimpleNamespace(begin_shutdown=lambda: observed.append(("fence-claims", None)))
     app = SimpleNamespace(state=state)
-    uvicorn = SimpleNamespace(Config=FakeConfig, Server=FakeServer)
+    from uvicorn.config import LOGGING_CONFIG
+
+    uvicorn = SimpleNamespace(
+        Config=FakeConfig, Server=FakeServer, config=SimpleNamespace(LOGGING_CONFIG=LOGGING_CONFIG)
+    )
     server = create_shutdown_aware_server(uvicorn, app, host="127.0.0.1", port=8080)
 
     asyncio.run(server.shutdown())
