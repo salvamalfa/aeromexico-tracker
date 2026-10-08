@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import copy
+import logging
 import os
 import stat
 import tempfile
@@ -49,6 +51,24 @@ def required_railway_drain_seconds(config: ChatConfig) -> int:
     )
 
 
+def split_stream_log_config(base: dict) -> dict:
+    """Send Uvicorn's INFO lines to stdout and keep warnings and errors on stderr.
+
+    Railway labels every stderr line as an error, so the default config made
+    routine startup and shutdown messages look like failures.
+    """
+    config = copy.deepcopy(base)
+    handlers = config["handlers"]
+    handlers["errors"] = {**handlers["default"], "stream": "ext://sys.stderr", "level": "WARNING"}
+    handlers["default"] = {
+        **handlers["default"],
+        "stream": "ext://sys.stdout",
+        "filters": [lambda record: record.levelno < logging.WARNING],
+    }
+    config["loggers"]["uvicorn"]["handlers"] = ["default", "errors"]
+    return config
+
+
 def create_shutdown_aware_server(uvicorn, app, *, host: str, port: int):
     """Start claim draining on SIGTERM, before Uvicorn waits on SSE requests."""
     config = uvicorn.Config(
@@ -57,6 +77,7 @@ def create_shutdown_aware_server(uvicorn, app, *, host: str, port: int):
         port=port,
         proxy_headers=False,
         timeout_graceful_shutdown=UVICORN_CONNECTION_DRAIN_SECONDS,
+        log_config=split_stream_log_config(uvicorn.config.LOGGING_CONFIG),
     )
 
     class ShutdownAwareServer(uvicorn.Server):

@@ -1,0 +1,25 @@
+# Railway config as code for the chat backend (service aeromexico-tracker).
+# Only changes to the image's inputs redeploy the chat, so docs-only or
+# web-only merges no longer restart it and cut conversations in progress.
+# tests/test_railway_watch_patterns.py keeps this list in sync with the COPY
+# lines of Dockerfile.chat; add a pattern here when you add a COPY there.
+[build]
+watchPatterns = [
+  "Dockerfile.chat",
+  "railway.toml",
+  "pyproject.toml",
+  "uv.lock",
+  "src/__init__.py",
+  "src/config.py",
+  "src/conversational_analytics/**",
+  "src/web_export/**",
+  "src/dashboard/__init__.py",
+  "src/dashboard/flights_html.py",
+  "config/chat/**",
+  "contracts/chat/**",
+  "contracts/web/**",
+  "site/publication_manifest.json",
+  "site/data/v1/**",
+  "scripts/start_chat_runtime.py",
+  "scripts/chat/**",
+]

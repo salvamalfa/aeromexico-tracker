@@ -12,7 +12,11 @@ from dataclasses import dataclass
 from typing import Any
 
 from .config import ChatConfig
-from .providers._openai_helpers import PROVIDER_REASON_CODES, TERMINAL_USAGE_RECONCILIATION_SECONDS
+from .providers._openai_helpers import (
+    PROVIDER_REASON_CODES,
+    TERMINAL_USAGE_RECONCILIATION_SECONDS,
+    recover_usage_after_cancel,
+)
 from .providers.base import Provider, ProviderResult
 from .semantic.plan import PlanValidationError
 from .storage import ChatStore, NotFound
@@ -531,12 +535,15 @@ class TurnWorker:
                 LOG.error("Turn %s failed (%s; reason=%s)", turn_id, type(exc).__name__, reason_code)
             else:
                 LOG.error("Turn %s failed (%s)", turn_id, type(exc).__name__)
+            usage = self._reported_usage(exc)
             self.store.fail_turn(
                 turn_id,
                 "provider_error" if failure_marker_persisted else "provider_guard_error",
                 "No fue posible completar el turno. Inténtalo de nuevo.",
-                usage=self._reported_usage(exc),
+                usage=usage,
             )
+            if usage is None and isinstance(reason_code, str) and reason_code in PROVIDER_REASON_CODES:
+                self._book_usage_after_limit(turn_id, exc)
         finally:
             execution_timer.cancel()
             finalization_timer.cancel()
@@ -561,6 +568,24 @@ class TurnWorker:
             return None
         input_tokens, output_tokens = usage
         return input_tokens, output_tokens, self.config.usage_cost_usd(input_tokens, output_tokens)
+
+    def _book_usage_after_limit(self, turn_id: str, exc: BaseException) -> None:
+        """Cancel the provider turn a local limit stopped, then book its final usage.
+
+        Otherwise the failed turn keeps its whole reservation as unknown usage,
+        which never expires and shrinks the quota of every later day.
+        """
+        session_id = getattr(exc, "session_id", None)
+        cancel = getattr(self.provider, "cancel", None)
+        if not isinstance(session_id, str) or not session_id or not callable(cancel):
+            return
+        try:
+            cancel(session_id)
+            usage, _ = recover_usage_after_cancel(self.provider, exc, session_id)
+        except Exception:
+            return
+        if usage is not None:
+            self.store.record_terminal_usage(turn_id, *usage, self.config.usage_cost_usd(*usage))
 
     def _record_result_usage(self, turn_id: str, result: ProviderResult) -> None:
         if not result.usage_complete:

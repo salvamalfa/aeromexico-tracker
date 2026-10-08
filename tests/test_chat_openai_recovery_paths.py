@@ -140,3 +140,73 @@ def test_missing_provider_turn_id_is_not_stored_as_the_string_none(tmp_path: Pat
     with sqlite3.connect(path) as db:
         (stored,) = db.execute("SELECT provider_turn_id FROM turns WHERE id=?", (turn["id"],)).fetchone()
     assert stored is None
+
+
+class LimitProvider:
+    """Stops a turn on a local limit, as OpenAIProvider does at the 9th tool call."""
+
+    def __init__(self, sessions):
+        self.client = FakeClient(sessions)
+        self.cancelled: list[str] = []
+
+    def run_turn(self, **kwargs):
+        raise OpenAIProviderError(
+            "El turno alcanzó el máximo de llamadas de herramientas",
+            reason_code="tool_call_limit",
+            session_id="sess_fixture",
+            turn_id="turn_provider",
+        )
+
+    def cancel(self, session_id):
+        self.cancelled.append(session_id)
+
+    def delete(self, session_id):
+        pass
+
+
+def _run_limited_turn(tmp_path: Path, retrieved_turn):
+    path = tmp_path / "chat.sqlite3"
+    store = ChatStore(path)
+    conv = store.create_conversation("alice", "snapshot-v1", "semantic-v1")
+    turn, _ = store.submit_turn(
+        "alice", conv["id"], "ask", "client-1", {}, reserved_tokens=100, reserved_cost_usd=0.01
+    )
+    config = ChatConfig(
+        state_path=path,
+        provider="openai",
+        estimated_input_cost_per_million=2.0,
+        estimated_output_cost_per_million=10.0,
+    )
+    provider = LimitProvider(FakeSessions(retrieved_turn=retrieved_turn))
+    worker = TurnWorker(store, config, provider, Snapshot())
+    worker._registry = Registry()
+    worker._execute_turn(store.claim_turn())
+    with sqlite3.connect(path) as db:
+        row = db.execute(
+            "SELECT status,usage_complete,reserved_cost_usd,estimated_cost_usd FROM turns WHERE id=?",
+            (turn["id"],),
+        ).fetchone()
+    return provider, row
+
+
+def test_tool_limit_failure_cancels_the_provider_turn_and_books_its_usage(tmp_path: Path):
+    cancelled = _turn("turn_provider", status="cancelled", usage=_usage(500, 300))
+
+    provider, (status, usage_complete, reserved, cost) = _run_limited_turn(tmp_path, cancelled)
+
+    assert provider.cancelled == ["sess_fixture"]
+    assert (status, usage_complete, reserved) == ("failed", 1, 0)
+    assert cost == pytest.approx((500 * 2.0 + 300 * 10.0) / 1_000_000)
+
+
+def test_tool_limit_failure_keeps_the_hold_when_usage_stays_unknown(tmp_path: Path, monkeypatch):
+    from src.conversational_analytics.providers import _openai_helpers
+
+    monkeypatch.setattr(_openai_helpers, "POST_CANCEL_USAGE_ATTEMPTS", 1)
+    still_running = _turn("turn_provider", status="in_progress", usage=None)
+
+    provider, (status, usage_complete, reserved, _) = _run_limited_turn(tmp_path, still_running)
+
+    assert provider.cancelled == ["sess_fixture"]
+    # Unknown never becomes zero: the reservation stays held.
+    assert (status, usage_complete, reserved) == ("failed", 0, 0.01)
