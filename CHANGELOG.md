@@ -4,6 +4,16 @@ Cambios notables del proyecto, para humanos. Formato inspirado en
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); no se usa
 versión semántica, las entradas van por fecha.
 
+## 2026-10-08 · Chat: tablas en las respuestas y diseño de presentación
+
+- El chat muestra como tabla real las tablas que escribe el modelo; antes
+  aparecían como renglones con barras `|`.
+- Fase 2: F2.8 pasa a «presentación por referencia». Las herramientas
+  devuelven la tabla validada y el modelo solo escribe su marca. Se agregan las
+  decisiones del dueño del 8 de octubre: se conserva el aviso de avance de una
+  oración, decimales con punto y fuentes sin duplicar.
+- Detalle en `docs/etapas/chat-tablas-presentacion-20261008.md`.
+
 ## 2026-10-08 · Chat: límite de herramientas, reserva sin vencimiento y Railway
 
 - Diagnóstico de la segunda pregunta real del dueño: falló por
