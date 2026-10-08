@@ -57,6 +57,14 @@ describe("safe response rendering", () => {
     expect([...host.querySelectorAll(":scope > p")].map((p) => p.textContent)).toEqual(["Fin."]);
   });
 
+  it("accepts GFM tables without leading pipes", () => {
+    const host = document.createElement("div");
+    renderSafeMarkdown(host, "A | B\n---|---\n1 | 2\n3 | 4\n\nTexto con a | b | c.");
+    expect(host.querySelectorAll("tbody tr")).toHaveLength(2);
+    expect(host.querySelector("th")?.textContent).toBe("A");
+    expect(host.querySelector("p")?.textContent).toBe("Texto con a | b | c.");
+  });
+
   it("keeps pipes inside ordinary text and HTML-looking cells as plain text", () => {
     const host = document.createElement("div");
     renderSafeMarkdown(host, "Opción A | opción B\n\n| a | b |\n|---|---|\n| <img src=x onerror=alert(1)> | ok |");

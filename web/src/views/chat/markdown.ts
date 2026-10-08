@@ -65,7 +65,8 @@ function parseTable(lines: readonly string[], start: number, allowedUrls: Readon
   const header = lines[start]!;
   const separatorIndex = nextLine(start + 1);
   const separator = lines[separatorIndex];
-  if (!header.trim().startsWith("|") || separator === undefined || !TABLE_SEPARATOR.test(separator)) return null;
+  // The leading pipe is optional in GFM; the separator and equal column counts mark a table.
+  if (!header.includes("|") || separator === undefined || !TABLE_SEPARATOR.test(separator)) return null;
   const headings = tableCells(header);
   const aligns = tableCells(separator).map((cell) =>
     cell.endsWith(":") ? (cell.startsWith(":") ? "center" : "right") : "left");
@@ -74,7 +75,8 @@ function parseTable(lines: readonly string[], start: number, allowedUrls: Readon
   let index = separatorIndex + 1;
   let hidden = 0;
   for (let next = nextLine(index); next < lines.length; next = nextLine(index)) {
-    if (!lines[next]!.trim().startsWith("|")) break;
+    const candidate = lines[next]!.trim();
+    if (!candidate.startsWith("|") && (!candidate.includes("|") || tableCells(candidate).length !== headings.length)) break;
     // A header followed by its separator starts the next table.
     const after = lines[nextLine(next + 1)];
     if (after !== undefined && TABLE_SEPARATOR.test(after)) break;
