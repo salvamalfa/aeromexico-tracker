@@ -357,7 +357,7 @@ class TurnWorker:
             if event_type == "provider.metadata":
                 self.store.set_provider_turn(
                     turn_id,
-                    str(payload.get("provider_turn_id", payload.get("turn_id", ""))),
+                    str(payload.get("provider_turn_id") or payload.get("turn_id") or ""),
                     str(payload.get("provider_event_id", "")) or None,
                     str(payload.get("provider_event_type", "")) or None,
                 )

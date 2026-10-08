@@ -2,10 +2,19 @@
 
 from __future__ import annotations
 
+import threading
 import time
-from typing import Any
+from typing import Any, Callable
 
-from ._openai_helpers import OpenAIProviderError, field, to_dict
+from ._openai_helpers import (
+    OpenAIProviderError,
+    field,
+    parse_usage,
+    read_completed_turn_usage,
+    result_from_recovered,
+    to_dict,
+)
+from .base import ProviderResult
 
 
 def recover_exact_turn(
@@ -170,3 +179,75 @@ def retrieve_completed_turn_output(
             if part.get("type") in {"output_text", "text"} and isinstance(text, str):
                 output.append(text)
     return "".join(output).strip()
+
+
+def finish_recovered_completion(
+    recovered: tuple[str, str, str | None, dict[str, Any]],
+    *,
+    client: Any,
+    session_id: str,
+    cancel_event: threading.Event,
+    deadline: float,
+    close_stream: Callable[[], None],
+    accept_completed: Callable[[tuple[int, int] | None], None],
+    tool_outputs: list[dict[str, Any]],
+) -> ProviderResult:
+    """Accept a recovered completed turn, then read any usage it still lacks.
+
+    Completion is signalled before the bounded usage poll, as on the in-stream
+    terminal path, so the worker's execution watchdog cannot time out a turn
+    whose answer is already recovered. Missing usage would otherwise keep the
+    turn's cost hold and block later admissions.
+    """
+    content, _, recovered_turn_id, usage_data = recovered
+    input_tokens, output_tokens, usage_complete = parse_usage(usage_data)
+    accept_completed((input_tokens, output_tokens) if usage_complete else None)
+    if not usage_complete and recovered_turn_id:
+        usage = read_completed_turn_usage(
+            client,
+            session_id,
+            recovered_turn_id,
+            cancel_event=cancel_event,
+            deadline=deadline,
+            close_stream=close_stream,
+        )
+        if usage is not None:
+            usage_data = {
+                "input_tokens": usage[0],
+                "output_tokens": usage[1],
+                "total_tokens": usage[0] + usage[1],
+            }
+    return result_from_recovered(content, usage_data, session_id, tool_outputs)
+
+
+def recover_completed_provider_error(
+    error: OpenAIProviderError,
+    *,
+    recover: Callable[..., tuple[str, str, str | None, dict[str, Any]] | None],
+    session_id: str | None,
+    turn_id: str | None,
+    prior_turn_id: str | None,
+    client: Any,
+    cancel_event: threading.Event,
+    deadline: float,
+    close_stream: Callable[[], None],
+    accept_completed: Callable[[tuple[int, int] | None], None],
+    tool_outputs: list[dict[str, Any]],
+) -> ProviderResult | None:
+    """Recover a completed exact turn after a non-hardguard provider error."""
+    if error.reason_code or not session_id or not turn_id:
+        return None
+    close_stream()
+    recovered = recover(session_id, turn_id, prior_turn_id)
+    if not recovered or recovered[1] != "completed" or not recovered[0]:
+        return None
+    return finish_recovered_completion(
+        recovered,
+        client=client,
+        session_id=session_id,
+        cancel_event=cancel_event,
+        deadline=deadline,
+        close_stream=close_stream,
+        accept_completed=accept_completed,
+        tool_outputs=tool_outputs,
+    )
