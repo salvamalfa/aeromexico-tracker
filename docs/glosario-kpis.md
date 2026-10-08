@@ -1,7 +1,10 @@
-# 11 — Glosario de KPIs con Interpretación de Negocio
+# Glosario de KPIs con interpretación de negocio
 
-**Este archivo es el insumo directo de la tabla `dim_metric` (Etapa 6) y del componente
-`kpi_card` del dashboard (Etapa 8).** El agente debe cargarlo como datos, no reescribirlo.
+**Este archivo es un insumo directo de los datos:** `src/transform/stage6_dimensions.py`
+lo lee para construir la tabla `dim_metric` y, desde ella, las definiciones de
+`docs/diccionario-datos.md`. Los encabezados `###` y las etiquetas en negritas
+(«Qué es», «Fórmula», «Si sube»…) son su formato de lectura: cambia el texto con
+cuidado y no renombres secciones sin revisar ese código.
 
 Formato de cada entrada: qué es, fórmula, de dónde sale, qué significa que suba, qué
 significa que baje, referencia de industria, y advertencias.

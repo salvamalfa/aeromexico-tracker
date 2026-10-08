@@ -52,7 +52,7 @@ candidato a los demás. Sin precio registrado el costo queda `null`; la tabla
 debe volver a comprobarse el día de una prueba live. Una proyección de tokens
 es solo orientativa, no una tarifa por pregunta: una pregunta enviada puede
 originar varios turnos del modelo, llamadas de herramientas y contexto
-acumulado. Consulta el [reporte de validación con mediciones reales](../archivo/chat-mvp/airline-tracker-validacion-real-20261004.md)
+acumulado. Consulta el [reporte de validación con mediciones reales](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/chat-mvp/airline-tracker-validacion-real-20261004.md)
 para revisar consumo por pregunta; el cálculo suma todos sus turnos, incluidos
 los que terminan con error, cancelación o sin respuesta útil. Las escrituras de
 caché, créditos y otros ajustes de factura pueden ser desconocidos; no se les
@@ -115,7 +115,7 @@ declarar la limitación; las ambigüedades materiales deben pedir precisión. Un
 modelo que no alcance estos gates no se elige por tener menor costo o menor
 latencia.
 
-El [reporte final de validación real](../archivo/chat-mvp/airline-tracker-validacion-real-20261004.md)
+El [reporte final de validación real](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/chat-mvp/airline-tracker-validacion-real-20261004.md)
 es la fuente de mediciones por pregunta y candidato: latencia, resultado de
 calidad con denominador, tokens de todos los turnos, errores y costo estimado
 a tarifas vigentes. Sus escenarios mensuales deben partir del uso medido y

@@ -81,7 +81,7 @@ ahorro: si el incentivo cubre parte del tráfico, la factura baja, pero ningún
 control de la app depende de él.
 
 La política anterior (200,000 tokens y reserva de 150,000, unas dos preguntas
-al día) y la [propuesta revisable de reserva](../archivo/chat-mvp/airline-tracker-reserva-propuesta-20261004.md)
+al día) y la [propuesta revisable de reserva](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/chat-mvp/airline-tracker-reserva-propuesta-20261004.md)
 se conservan como registro. Sus máximos se midieron con 5 llamadas de
 herramienta y 90 segundos; con los límites de producción (16 llamadas y 180
 segundos) no se volvieron a medir. Es un riesgo aceptado para el MVP; el tope

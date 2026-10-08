@@ -443,7 +443,7 @@ regular internacional, todas las aerolíneas:
 
 Comprobación cruzada: el valor de Aeroméxico en 2026M05 es 648,414, idéntico al
 de `PAXREG!A24:H24` del resumen por empresa de julio de 2026 registrado en
-`docs/archivo/vuelos-2026-09/afac-rutas-evidencia-20260908/inspection.json`. Las dos vías de
+[`docs/archivo/vuelos-2026-09/afac-rutas-evidencia-20260908/inspection.json`](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/vuelos-2026-09/afac-rutas-evidencia-20260908/inspection.json). Las dos vías de
 publicación coinciden.
 
 ### 9.2 Marginal de ruta internacional — **disponible y verificada en el archivo**
@@ -1017,12 +1017,12 @@ Límites que permanecen aunque todo lo demás salga bien:
 
 ### Reportes de etapa relacionados
 
-- `docs/archivo/vuelos-2026-09/aerodatabox-ruta-aerolinea-revision-20260919.md`
+- [`docs/archivo/vuelos-2026-09/aerodatabox-ruta-aerolinea-revision-20260919.md`](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/vuelos-2026-09/aerodatabox-ruta-aerolinea-revision-20260919.md)
 - `docs/etapas/vuelos-capacidad-ocupacion-estimada-20260920.md`
-- `docs/archivo/vuelos-2026-09/afac-rutas-investigacion-20260908.md`
-- `docs/archivo/vuelos-2026-09/aerodatabox-internacional-investigacion-20260921.md`
-- `docs/archivo/vuelos-2026-09/pasajeros-por-ruta-y-aerolinea.md`
-- `docs/archivo/vuelos-2026-09/estimador-ruta-aerolinea.md`
+- [`docs/archivo/vuelos-2026-09/afac-rutas-investigacion-20260908.md`](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/vuelos-2026-09/afac-rutas-investigacion-20260908.md)
+- [`docs/archivo/vuelos-2026-09/aerodatabox-internacional-investigacion-20260921.md`](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/vuelos-2026-09/aerodatabox-internacional-investigacion-20260921.md)
+- [`docs/archivo/vuelos-2026-09/pasajeros-por-ruta-y-aerolinea.md`](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/vuelos-2026-09/pasajeros-por-ruta-y-aerolinea.md)
+- [`docs/archivo/vuelos-2026-09/estimador-ruta-aerolinea.md`](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/vuelos-2026-09/estimador-ruta-aerolinea.md)
 - `docs/cloud-development.md` (frontera de licencia del proveedor)
 
 ### Evidencia externa
@@ -1473,7 +1473,7 @@ El dashboard integrado (`prototypes/etapa-11/resumen_ejecutivo.html`,
 `static/aeromexico_tracker.html`) se publicó el 2026-09-25 con autorización
 explícita, por el flujo normal de `stage18`, tras corregir la dependencia de
 plataforma que hacía fallar `evidence.validate`
-(`docs/archivo/mantenimiento-2026-09/analysis-agent-portabilidad-publicacion-20260925.md`).
+([`docs/archivo/mantenimiento-2026-09/analysis-agent-portabilidad-publicacion-20260925.md`](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/mantenimiento-2026-09/analysis-agent-portabilidad-publicacion-20260925.md)).
 
 ### 9.14 Asientos y ocupación internacionales
 

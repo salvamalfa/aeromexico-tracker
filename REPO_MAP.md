@@ -61,7 +61,7 @@ de una rama sin fusionar cuyo `site/` ya firmado se sirve en
 `pages.yml` verifica ese `site/` con el verificador y los contratos de su propio
 commit, y si falla no despliega nada. Para actualizarla o retirarla, hace falta
 un PR a `master` que cambie el commit fijado o borre el archivo. Ver
-`docs/archivo/mantenimiento-2026-09/pages-preview-v2-20260930.md`.
+[`docs/archivo/mantenimiento-2026-09/pages-preview-v2-20260930.md`](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/mantenimiento-2026-09/pages-preview-v2-20260930.md).
 
 **Repo de datos privado:** insumos regenerables y privados
 (`data/bronze`, `data/silver`, warehouse, `analysis_runs/`) tienen respaldo en
@@ -96,7 +96,7 @@ Nada de esto genera HTML: `src/dashboard/` y `src/web_export/` son
 constructores de payloads JSON; el único maquetado/interacción vive en
 `web/src/views/`.
 
-1. Lee `docs/etapas/vuelos-pasajeros-traspaso-20260913.md` (traspaso canónico de Vuelos).
+1. Lee `docs/etapas/vuelos-pasajeros-traspaso-20260913.md` (guía de entrada de Vuelos).
 2. Edita el payload en `src/dashboard/flights.py` (datos) y/o la lista blanca en
    `src/dashboard/flights_html.py::integration_flight_payload` (qué campos
    llegan al JSON exportado vía `src/web_export/flights.py`).
@@ -143,12 +143,13 @@ dupliques aquí.
 El trabajo abierto vive en `ROADMAP.md` ("Ahora"/"Siguiente"). Un paquete de
 varios pasos delegado por la sesión coordinadora lo ejecuta el subagente
 `implementador` (`.claude/agents/implementador.md`), en su propia rama,
-commiteando y subiendo tras cada tarea. La historia de proyectos cerrados vive
-en `docs/archivo/` y no se retoma.
+commiteando y subiendo tras cada tarea. La historia de proyectos cerrados se
+resume en `docs/archivo/README.md` y no se retoma.
 
-### e) Cerrar un esfuerzo y archivar su documentación
+### e) Cerrar un esfuerzo y retirar su documentación
 
 Sigue la sección «Ciclo de vida de la documentación» de `AGENTS.md`: pasa lo
-que sigue vigente a la documentación permanente, mueve los reportes y planes
-cerrados a `docs/archivo/` con `git mv`, corrige los enlaces que apuntaban a
-ellos y actualiza `docs/archivo/README.md`.
+que sigue vigente a la documentación permanente, resume el esfuerzo en
+`docs/archivo/README.md` con un enlace permanente a los originales en un
+commit fijo, borra los originales con `git rm` y cambia los enlaces que
+apuntaban a ellos por ese enlace permanente.

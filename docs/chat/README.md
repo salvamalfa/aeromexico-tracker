@@ -83,7 +83,7 @@ publicado.
 
 El backend de producción corre en Railway; consulta la
 [guía de configuración del backend](railway.md). La elección de hosting quedó
-registrada en la [comparación de Railway y VPS](../archivo/chat-mvp/hosting-options.md),
+registrada en la [comparación de Railway y VPS](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/chat-mvp/hosting-options.md),
 ya archivada.
 
 ## Recuperar un turno `provider_error`
@@ -114,6 +114,6 @@ La pregunta original del 7 de octubre, que quedó `provider_error`, no se ha
 recuperado ni se ha comprobado como elegible para esa operación. No ejecutes la
 recuperación ni vuelvas a enviarla sin pedido explícito del dueño.
 
-La [validación real](../archivo/chat-mvp/airline-tracker-validacion-real-20261004.md) y la
+La [validación real](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/chat-mvp/airline-tracker-validacion-real-20261004.md) y la
 [guía de Data Sharing](data-sharing.md) detallan resultados, cobertura y
 límites diarios y la importación del consumo de evaluaciones.

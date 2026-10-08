@@ -116,8 +116,8 @@ auditada de 2T26 se conserva en `prototypes/etapa-17/audited_analysis.html`.
 - [Diccionario de tablas y columnas](docs/diccionario-datos.md)
 - [Diccionario de conceptos XBRL](docs/diccionario-conceptos-xbrl.md)
 - [Hallazgos analíticos](docs/analytics/hallazgos.md)
-- [Reportes de etapa vigentes](docs/etapas/) (histórico 0–18 en `docs/archivo/etapas/`)
-- [Plan original (histórico)](docs/archivo/plan-original/README.md)
+- [Reportes de etapa vigentes](docs/etapas/) (histórico 0–18 en [`docs/archivo/etapas/`](https://github.com/salvamalfa/aeromexico-tracker/tree/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/etapas))
+- [Plan original (histórico)](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/plan-original/README.md)
 
 Fuentes principales: SEC EDGAR, BMV XBRL, AFAC, BTS T-100, Banxico, EIA, datos públicos de mercado, reportes de aerolíneas, grupos aeroportuarios y fuentes regulatorias abiertas. Las limitaciones y bloqueos de cada fuente están documentados en los reportes de etapa.
 

@@ -664,7 +664,7 @@ comprobarse el día de la prueba.
 | `gpt-6-luna` | 0.10 / 0.50 | ~40,000 tokens | US$0.0043 |
 | `gpt-6.1-sol` | 2 / 10 | ~38,000 tokens | ~US$0.077 (solo intentos completos) |
 
-Fuente: [validación real](../archivo/chat-mvp/airline-tracker-validacion-real-20261004.md).
+Fuente: [validación real](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/chat-mvp/airline-tracker-validacion-real-20261004.md).
 En Sol, el costo lo domina la entrada (prompt, fichas y resultados de
 herramientas que se reenvían en cada llamada).
 

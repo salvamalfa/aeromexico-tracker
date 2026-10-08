@@ -10,7 +10,7 @@ Python siempre disponible, un volumen persistente para su estado SQLite y una
 URL HTTPS que la página de GitHub Pages pueda llamar. Lo usa un solo dueño, de
 forma intermitente. El 4 de octubre se compararon Railway (Free y Hobby) y un
 VPS de Hostinger; esa comparación y la guía del VPS quedaron como historia en
-`docs/archivo/chat-mvp/`.
+[`docs/archivo/chat-mvp/`](https://github.com/salvamalfa/aeromexico-tracker/tree/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/chat-mvp).
 
 ## Decisión
 

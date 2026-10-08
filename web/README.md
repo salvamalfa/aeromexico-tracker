@@ -4,7 +4,7 @@ Vite + TypeScript front-end for the whole published page — shared header,
 period stepper, and the reader-tabs shell around three views (Lectura
 ejecutiva, Economía unitaria, Vuelos) — loading the v1 payload split by
 `src/web_export/` via `fetch`. See
-`docs/etapas/vuelos-pasajeros-traspaso-20260913.md` for Vuelos' history.
+`docs/etapas/vuelos-pasajeros-traspaso-20260913.md` for the Vuelos entry guide.
 Built with Vite and strict TypeScript (`package.json`, `vite.config.ts`,
 `tsconfig.json`).
 
