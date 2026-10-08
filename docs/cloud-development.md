@@ -46,7 +46,7 @@ regenerables demasiado grandes.
   falso positivo; no había coincidencia en ninguna celda lógica.
 
 El detalle reproducible está en
-[`docs/etapas/entrega-github-datos-privados-20260919.md`](etapas/entrega-github-datos-privados-20260919.md).
+[`docs/archivo/mantenimiento-2026-09/entrega-github-datos-privados-20260919.md`](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/mantenimiento-2026-09/entrega-github-datos-privados-20260919.md).
 
 ## Qué podrá hacer un agente de nube
 

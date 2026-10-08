@@ -13,3 +13,4 @@ gana una línea `**Estado:** reemplazada — …` al inicio.
 | [006](decision-006-acceso-iag.md) | Acceso y alcance de IAG | Aceptada |
 | [007](decision-007-warehouse-bigquery.md) | Warehouse de consumo y BigQuery | Aceptada |
 | [008](decision-008-saneamiento-backend.md) | Saneamiento del backend y trazabilidad | Reemplazada parcialmente (Streamlit → `web/`) |
+| [009](decision-009-hosting-chat-railway.md) | Hosting del backend del chat en Railway | Aceptada |

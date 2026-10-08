@@ -1,10 +1,10 @@
 # Fase 2 del chat: agente analítico para negocio
 
 Documento de diseño e implementación de la **segunda etapa del chat, posterior
-al MVP**. Primero se activa el chat tal como está, siguiendo el
-[traspaso de activación](traspaso-activacion-mvp-20261006.md). Después, el
-agente que implemente (ChatGPT u otro) trabaja este documento paquete por
-paquete, cada uno en su propio PR. Las reglas de `AGENTS.md` siguen vigentes.
+al MVP**. El MVP ya está activo en producción desde el 8 de octubre de 2026
+(ver el [traspaso de activación](traspaso-activacion-mvp-20261006.md)); la fase 2
+parte de ese estado. El agente que implemente (ChatGPT u otro) trabaja este
+documento paquete por paquete, cada uno en su propio PR. Las reglas de `AGENTS.md` siguen vigentes.
 
 Diagramas de la arquitectura actual, interactivos:
 [anatomía del chat](../arquitectura/anatomia-chat.html) y
@@ -664,7 +664,7 @@ comprobarse el día de la prueba.
 | `gpt-6-luna` | 0.10 / 0.50 | ~40,000 tokens | US$0.0043 |
 | `gpt-6.1-sol` | 2 / 10 | ~38,000 tokens | ~US$0.077 (solo intentos completos) |
 
-Fuente: [validación real](../etapas/airline-tracker-validacion-real-20261004.md).
+Fuente: [validación real](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/chat-mvp/airline-tracker-validacion-real-20261004.md).
 En Sol, el costo lo domina la entrada (prompt, fichas y resultados de
 herramientas que se reenvían en cada llamada).
 

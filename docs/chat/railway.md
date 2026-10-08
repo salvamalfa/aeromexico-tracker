@@ -1,6 +1,8 @@
-# Railway: backend piloto
+# Railway: backend de producción
 
-Este perfil despliega solo el backend del chat. Railway usa `Dockerfile.chat`
+Este perfil despliega solo el backend del chat, activo en producción desde el
+8 de octubre de 2026 (servicio `aeromexico-tracker`, proyecto
+`soothing-possibility`, volumen `/data`). Railway usa `Dockerfile.chat`
 mediante el ajuste de servicio `RAILWAY_DOCKERFILE_PATH=Dockerfile.chat`; la
 imagen instala el grupo bloqueado `chat-runtime`,
 verifica el snapshot público que el repositorio ya publica y arranca Uvicorn en
@@ -12,6 +14,14 @@ No uses `railway.json` para crear este servicio. Railway documenta que Config as
 Code está deprecado y que los servicios nuevos no pueden adoptarlo; validar el
 JSON contra el esquema legado no demuestra que Railway vaya a aplicarlo.
 Configura el Dockerfile y las opciones de deploy en el servicio de Railway.
+Los watch paths del servicio (Settings → Build) se configuraron el 8 de octubre
+de 2026: Railway redespliega el chat únicamente cuando cambia uno de esos
+archivos, así que un merge solo de documentación o de `web/` no lo reinicia.
+`railway.toml` guarda la misma lista versionada, y
+`tests/test_railway_watch_patterns.py` comprueba que cubra todo lo que copia
+`Dockerfile.chat`. Como Config as Code está deprecado (corte el 1 de diciembre
+de 2026), no dependas de que Railway lea ese archivo: si agregas un `COPY`,
+agrega su patrón en `railway.toml` **y** en la configuración del servicio.
 
 ## Configuración de una sola instancia
 
@@ -25,7 +35,7 @@ Railway usa `Dockerfile` automáticamente si está en la raíz, pero `Dockerfile
 es un nombre personalizado y requiere esa variable, según su [documentación de
 Dockerfiles](https://docs.railway.com/builds/dockerfiles#custom-dockerfile-path).
 
-En **Settings** del servicio configura el perfil del piloto:
+En **Settings** del servicio configura el perfil de producción:
 
 | Opción | Valor |
 |---|---|
@@ -50,9 +60,11 @@ el drenaje del worker es 220 segundos. El drenaje Railway de 230 segundos deja
 `CHAT_MAX_TURN_SECONDS` menor reduce proporcionalmente la espera del worker;
 el launcher rechaza valores mayores de 180 segundos en vez de recortarlos.
 
-Se permiten hasta 8 llamadas de herramienta por turno. Agotar las llamadas o el
-tiempo de ejecución deja el turno fallido; la consulta de uso no cambia ese
-estado ni reintenta la respuesta. Si el uso no queda confirmado, su reserva se
+El código permite por defecto 8 llamadas de herramienta por turno; producción
+usa `CHAT_MAX_TOOL_CALLS=16`. Agotar las llamadas o el tiempo de ejecución deja
+el turno fallido; desde PR #107 el worker cancela el turno del proveedor y
+registra su uso real. La consulta de uso no cambia el estado fallido ni
+reintenta la respuesta. Si el uso no queda confirmado, su reserva se
 mantiene. La cancelación del proveedor al vencer es best effort y no garantiza
 que el remoto la acepte. La gracia permite finalizar trabajo y conciliar uso;
 no demuestra que la respuesta del modelo sea correcta. Comprueba el drenaje real
@@ -121,7 +133,9 @@ amplíes los rangos confiables sin evidencia del peer.
 `CHAT_TRUSTED_PROXY` acepta IPs sueltas o redes CIDR solo dentro de rangos
 loopback, privados o compartidos; rechaza rangos públicos.
 
-Añade estas variables de entorno en el panel de Railway, nunca en Git:
+Variables base en el panel de Railway, nunca en Git. `CHAT_PROVIDER` y
+`CHAT_ADMISSION_ENABLED` muestran los valores seguros del primer deploy; los de
+producción están en [Activación del MVP](#activación-del-mvp):
 
 ```text
 CHAT_AUTH_MODE=password
@@ -145,51 +159,56 @@ contraseña en un entorno local confiable, ejecuta
 contraseña sin eco y entrega el hash. Guarda el hash en el gestor de variables
 de Railway. Nunca pongas la contraseña ni el hash en un archivo commiteado.
 
-El modo `mock` y la admisión de turnos deshabilitada son deliberados para el
-primer deploy: permiten comprobar login, historial y conectividad sin inferencia
-ni gasto. Encender OpenAI es un cambio explícito de variables que requiere la
-autorización del dueño con modelo, precios y topes (sección siguiente).
+El primer deploy usó deliberadamente `mock` con la admisión cerrada para
+comprobar login, historial y conectividad sin inferencia ni gasto. Encender
+OpenAI fue un cambio explícito de variables autorizado por el dueño con modelo,
+precios y topes (sección siguiente); cambiar el modelo, los precios o los topes
+sigue requiriendo su autorización.
 
 ## Activación del MVP
 
-Requisitos previos: el dueño calificó los cortes en `review.html`, el agente
-propuso un modelo con evidencia y el dueño eligió modelo y tope. El agente que
-administra Railway y la API key ejecuta los pasos; el dueño no configura nada
-(ver el [traspaso de activación](traspaso-activacion-mvp-20261006.md)). Luego:
+El MVP se activó con estos pasos; la activación quedó comprobada el 8 de
+octubre de 2026 (ver el [traspaso de activación](traspaso-activacion-mvp-20261006.md)).
+Se conservan como referencia para reconstruir el servicio. Antes, el dueño
+calificó los cortes en `review.html` y eligió modelo y topes; el agente que
+administra Railway y la API key ejecutó los pasos.
 
 1. **Variables de Railway** (panel del servicio, nunca en Git), además de las de
-   arriba:
+   arriba. Valores vigentes:
 
    ```text
    CHAT_PROVIDER=openai
    CHAT_OPENAI_ENABLED=true
-   CHAT_MODEL=<id exacto del modelo elegido>
+   CHAT_MODEL=gpt-6.1-sol
    OPENAI_API_KEY=<clave del proyecto>
-   CHAT_INPUT_COST_PER_MILLION=<tarifa normal de entrada>
-   CHAT_OUTPUT_COST_PER_MILLION=<tarifa normal de salida>
+   CHAT_INPUT_COST_PER_MILLION=2
+   CHAT_OUTPUT_COST_PER_MILLION=10
    CHAT_ADMISSION_ENABLED=true
-   CHAT_DAILY_COST_BUDGET_USER_USD=1
-   CHAT_DAILY_COST_BUDGET_GLOBAL_USD=1
+   CHAT_DAILY_COST_BUDGET_USER_USD=5
+   CHAT_DAILY_COST_BUDGET_GLOBAL_USD=5
+   CHAT_MAX_TOOL_CALLS=16
    ```
 
-   Tarifas normales por millón documentadas: Luna 0.10/0.50, Sol 6.1 2/10,
-   Astra 10/50. La reserva mínima se cobra a la tarifa de salida: Luna
-   US$0.075 cabe en US$1 (unas 215 preguntas al día); Sol 6.1 (US$1.50) y
-   Astra (US$7.50) no caben y el servicio no arranca. Para ellos sube ambos
-   topes por encima de esa reserva más el gasto diario esperado.
-2. Confirma que `CHAT_ALLOWED_ORIGINS` incluye `https://salvamalfa.github.io`.
-3. Despliega y comprueba `/api/chat/health`: `provider` debe ser `openai` y
-   `admission_enabled`, `true`. Si el arranque falla, el log indica qué variable
+   Los topes eran US$3 hasta el 8 de octubre, cuando el dueño pidió subirlos a
+   US$5 y subir `CHAT_MAX_TOOL_CALLS` de 8 a 16. Tarifas normales por millón
+   documentadas: Luna 0.10/0.50, Sol 6.1 2/10, Astra 10/50. La reserva mínima
+   se cobra a la tarifa de salida: Sol 6.1 reserva US$1.50 por turno, que no
+   cabe en el valor por defecto de US$1, así que el servicio no arranca sin
+   topes explícitos mayores que esa reserva más el gasto diario esperado.
+2. `CHAT_ALLOWED_ORIGINS` incluye `https://salvamalfa.github.io`.
+3. Tras desplegar, `/api/chat/health` reporta `provider` `openai` y
+   `admission_enabled` `true`. Si el arranque falla, el log indica qué variable
    falta; no hay llamada al proveedor antes de una pregunta.
-4. **Panel en Pages:** cambia `VITE_CHAT_ENABLED=true` en `web/.env.production`
-   (la URL de la API ya está ahí) y **haz commit** de ese cambio: el gate
-   rechaza entradas de compilación sin commit bajo `web/`. Comprueba que no haya
-   variables `VITE_CHAT_*` exportadas en la shell, porque sobrescriben el
-   archivo. Luego ejecuta `src.publish` con el registro ya aprobado y
-   `src.publish.verify site/`, y abre el PR con `site/` como segundo commit. El
-   panel queda visible para todos; escribir requiere la contraseña.
-5. Tras el deploy de Pages, prueba login y una pregunta desde Pages y desde el
-   teléfono con la computadora apagada.
+4. **Panel en Pages:** `VITE_CHAT_ENABLED=true` en `web/.env.production` (la
+   URL de la API ya está ahí), con commit de ese cambio: el gate rechaza
+   entradas de compilación sin commit bajo `web/`. Las variables `VITE_CHAT_*`
+   exportadas en la shell sobrescriben el archivo; compruébalo antes de
+   publicar. La publicación usa `src.publish` con el registro ya aprobado y
+   `src.publish.verify site/`, con `site/` como segundo commit del PR. El panel
+   queda visible para todos; escribir requiere la contraseña.
+5. Se probaron login, historial y preguntas reales desde Pages. La prueba desde
+   el teléfono con la computadora apagada queda como comprobación opcional del
+   dueño.
 
 **Rollback inmediato:** `CHAT_ADMISSION_ENABLED=false` en Railway cierra la
 admisión sin redeploy del sitio; el panel sigue visible y cada pregunta se
@@ -198,8 +217,8 @@ rechaza con `chat admission is disabled`.
 ### Control de gasto en dos capas
 
 1. **Tope diario de la app (dólares).** `CHAT_DAILY_COST_BUDGET_USER_USD` y
-   `CHAT_DAILY_COST_BUDGET_GLOBAL_USD` (por defecto US$1) se cambian en las
-   variables de Railway, sin tocar código. Al agotarse, el panel muestra que el
+   `CHAT_DAILY_COST_BUDGET_GLOBAL_USD` (US$5 en producción; US$1 si no se
+   definen) se cambian en las variables de Railway, sin tocar código. Al agotarse, el panel muestra que el
    servicio rechazó la pregunta (`daily cost budget exhausted`) hasta las 00:00
    UTC (18:00 de Ciudad de México).
    El cupo de tokens (2,000,000 diarios) solo frena consumos desbocados.
@@ -216,20 +235,17 @@ depende de él (ver `data-sharing.md`).
 
 ## Verificación después del deploy
 
-El despliegue actual responde `200` por HTTPS en `/api/chat/health` y al
-preflight desde Pages. Una petición de conversaciones sin autenticar recibió
-`401` con CORS para el origen permitido; un origen no permitido recibió `403`.
-El servicio informa autenticación `password`, proveedor `mock` y admisión
-apagada. Estas comprobaciones no hicieron login del dueño ni crearon una
-conversación. La autenticación del dueño, persistencia del volumen tras
-reiniciar Railway y acceso desde teléfono con la computadora apagada siguen
-pendientes. El smoke de la imagen local con el runtime de PR #84, anterior a la
-última corrección del adaptador OpenAI, usó contraseña sintética y verificó
-login, historial, permisos y persistencia tras reiniciar el contenedor local,
-sin red ni llamadas al proveedor; no sustituye las pruebas remotas. Comprueba
-en logs solo estado del worker y errores de arranque; no copies sesiones,
-hashes ni contenido privado a tickets. Railway debe construir desde el
-Dockerfile de este repo; no selecciones Railpack ni el CLI local loopback-only.
+Estado comprobado el 8 de octubre de 2026: el despliegue `7ccae673` terminó en
+SUCCESS y `/api/chat/health` responde `200` por HTTPS con estado `ok`, worker
+listo, autenticación `password`, proveedor `openai` y admisión habilitada. Una
+petición de conversaciones sin autenticar recibe `401` y CORS permite el origen
+de Pages; un origen no permitido recibió `403`. El dueño comprobó login e
+historial desde Pages y obtuvo respuestas reales correctas. No se documentó
+una prueba específica de persistencia del volumen tras reiniciar Railway.
+Comprueba en logs solo estado del worker y errores de arranque; no copies
+sesiones, hashes ni contenido privado a tickets. Railway debe construir desde
+el Dockerfile de este repo; no selecciones Railpack ni el CLI local
+loopback-only.
 
 PR #83 eliminó `railway.json` y la dependencia de Config as Code para servicios
 nuevos. Su primer intento de build falló con una validación genérica de

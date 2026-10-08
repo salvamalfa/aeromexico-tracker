@@ -326,7 +326,7 @@ def build_dim_airport_group() -> pd.DataFrame:
 
 def _parse_glossary() -> dict[str, dict[str, str]]:
     text = (
-        PATHS.root / "docs" / "archivo" / "plan-original" / "11-glosario-kpis.md"
+        PATHS.root / "docs" / "glosario-kpis.md"
     ).read_text(encoding="utf-8")
     sections: dict[str, dict[str, str]] = {}
     matches = list(re.finditer(r"^###\s+(.+)$", text, flags=re.MULTILINE))

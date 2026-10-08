@@ -32,7 +32,7 @@ uv run python -m src.conversational_analytics.evaluation --dry-run \
 ```
 
 El dry-run no hace llamadas ni escribe archivos y no elige modelo. La shortlist
-de evaluación propuesta es `gpt-6-luna`, `gpt-6.1-sol` y `gpt-6-astra`. Tarifas
+que se evaluó fue `gpt-6-luna`, `gpt-6.1-sol` y `gpt-6-astra`. Tarifas
 estándar de contexto corto revisadas el 3 oct 2026 (zona horaria del dueño), en
 USD por millón de tokens (fuente: [página de tarifas de OpenAI](https://developers.openai.com/api/docs/pricing)):
 
@@ -52,7 +52,7 @@ candidato a los demás. Sin precio registrado el costo queda `null`; la tabla
 debe volver a comprobarse el día de una prueba live. Una proyección de tokens
 es solo orientativa, no una tarifa por pregunta: una pregunta enviada puede
 originar varios turnos del modelo, llamadas de herramientas y contexto
-acumulado. Consulta el [reporte de validación con mediciones reales](../etapas/airline-tracker-validacion-real-20261004.md)
+acumulado. Consulta el [reporte de validación con mediciones reales](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/chat-mvp/airline-tracker-validacion-real-20261004.md)
 para revisar consumo por pregunta; el cálculo suma todos sus turnos, incluidos
 los que terminan con error, cancelación o sin respuesta útil. Las escrituras de
 caché, créditos y otros ajustes de factura pueden ser desconocidos; no se les
@@ -80,10 +80,11 @@ El SDK deshabilita reintentos automáticos y no se repiten preguntas ya enviadas
 Una respuesta fallida sigue siendo consumo facturable. El comando
 offline `--dry-run` planifica sin llamadas; no reproduce las fases live.
 
-El permiso de esta evaluación cubre únicamente las fases autorizadas hasta el
-umbral operativo acumulado de US$10; el saldo no se reinicia al pasar de una
-fase a otra. Para revisar uso y estado, consulta el reporte de la etapa enlazado
-arriba. Si el uso de un turno no se confirma, su costo permanece desconocido:
+La comparación de modelos ya terminó. Su permiso cubrió únicamente las fases
+autorizadas hasta un umbral operativo acumulado de US$10, sin reiniciar el saldo
+entre fases; esa autorización está cerrada. Para revisar uso y estado, consulta
+el reporte de la etapa enlazado arriba. Las evaluaciones nuevas y su
+presupuesto se definen en la [fase 2](fase-2-agente-analitico.md). Si el uso de un turno no se confirma, su costo permanece desconocido:
 no se vuelve a enviar la pregunta para reconstruirlo ni se presenta un subtotal
 conocido como total.
 
@@ -114,14 +115,16 @@ declarar la limitación; las ambigüedades materiales deben pedir precisión. Un
 modelo que no alcance estos gates no se elige por tener menor costo o menor
 latencia.
 
-El [reporte final de validación real](../etapas/airline-tracker-validacion-real-20261004.md)
+El [reporte final de validación real](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/chat-mvp/airline-tracker-validacion-real-20261004.md)
 es la fuente de mediciones por pregunta y candidato: latencia, resultado de
 calidad con denominador, tokens de todos los turnos, errores y costo estimado
 a tarifas vigentes. Sus escenarios mensuales deben partir del uso medido y
 declarar sus supuestos; el hosting se presenta por separado. Ni la estimación
-del harness ni un presupuesto propio prometen un tope de factura. No se eligió
-un modelo ni un objetivo mensual. La autorización live existente tiene un
-umbral acumulado a tarifas normales; un incentivo o una escritura de caché
-no se contabiliza como crédito confirmado. Ver
+del harness ni un presupuesto propio prometen un tope de factura. Tras la
+comparación, el dueño eligió `gpt-6.1-sol` para el MVP; no se aprobó un gate
+de calidad ni se fijó un objetivo mensual. La comparación de Luna y Sol con
+distintos esfuerzos, el conjunto de evaluación de negocio y cualquier gate
+nuevo se definen en la [fase 2](fase-2-agente-analitico.md). Un incentivo o
+una escritura de caché no se contabiliza como crédito confirmado. Ver
 [cobertura y propuesta de límites](data-sharing.md)
 antes de atribuir costo cero a una llamada.

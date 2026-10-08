@@ -4,6 +4,27 @@ Cambios notables del proyecto, para humanos. Formato inspirado en
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); no se usa
 versión semántica, las entradas van por fecha.
 
+## 2026-10-08 · Limpieza de documentación: estado actual e historia
+
+- Regla nueva en `AGENTS.md` («Ciclo de vida de la documentación»): lo vigente
+  describe el presente; al cerrar un esfuerzo, lo que sigue vigente pasa a la
+  documentación permanente, el resto se resume en `docs/archivo/README.md` y
+  los originales se borran del árbol (quedan en Git, con enlace permanente).
+  Las decisiones no se borran, se reemplazan.
+- Se retiraron del árbol 215 documentos y recursos históricos: plan
+  original, reportes de etapa 0–18, migración a Vite, construcción del MVP del
+  chat, investigación de Vuelos de septiembre, mantenimiento cerrado y material
+  de la app retirada. `docs/archivo/README.md` los resume y enlaza en el commit
+  `7478082`; los enlaces vigentes apuntan ahí.
+- El glosario de KPIs vuelve a `docs/glosario-kpis.md`: es un insumo vigente de
+  `dim_metric` y del diccionario de datos.
+- Se eliminó `docs/solicitud-pnt.md` (la solicitud a la PNT ya no se hará).
+- La guía de entrada de Vuelos describe la app actual.
+- `README.md`, `ROADMAP.md`, `REPO_MAP.md` y la documentación del chat
+  describen el estado al 8 de octubre: MVP activo, topes de US$5, 16 consultas
+  y fase 2 como siguiente paso.
+- Decisión 009: el backend del chat se aloja en Railway.
+
 ## 2026-10-08 · Chat: tablas en las respuestas y diseño de presentación
 
 - El chat muestra como tabla real las tablas que escribe el modelo; antes
@@ -98,7 +119,7 @@ versión semántica, las entradas van por fecha.
   corre con permisos de solo lectura y Dependabot propone actualizaciones
   mensuales agrupadas.
 - `playwright` y `plotly` (Python) dejan de instalarse en la base. Detalle en
-  `docs/etapas/mantenimiento-pruebas-ci-20261006.md`.
+  [`docs/archivo/mantenimiento-2026-09/mantenimiento-pruebas-ci-20261006.md`](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/mantenimiento-2026-09/mantenimiento-pruebas-ci-20261006.md).
 
 ## 2026-10-06 · Preparación del MVP del chat
 
@@ -113,7 +134,7 @@ versión semántica, las entradas van por fecha.
   que pausan todo el chat; S14 queda fuera de la base del chat.
 - `web/.env.production` versiona la URL de la API con el panel apagado; la
   activación del panel queda documentada en `docs/chat/railway.md`.
-- Detalle en `docs/etapas/chat-mvp-preparacion-20261006.md`.
+- Detalle en [`docs/archivo/chat-mvp/chat-mvp-preparacion-20261006.md`](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/chat-mvp/chat-mvp-preparacion-20261006.md).
 
 ## 2026-10-04 · Revisión de respuestas y acceso al MVP
 
@@ -132,7 +153,7 @@ versión semántica, las entradas van por fecha.
   las filas obtenidas. La comparación anterior conserva sus resultados: estos
   cambios requieren validación de calidad antes de activar el chat.
 - Guía en `docs/chat/revision-respuestas.md` y corte de entrega en
-  `docs/etapas/airline-tracker-revision-ui-20261004.md`.
+  [`docs/archivo/chat-mvp/airline-tracker-revision-ui-20261004.md`](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/chat-mvp/airline-tracker-revision-ui-20261004.md).
 
 ## 2026-10-04 · Recuperación segura de turnos del chat
 
@@ -151,7 +172,7 @@ versión semántica, las entradas van por fecha.
   entradas ni convertir el valor a cero. Esto no aprueba calidad ni habilita
   el proveedor.
 - Contexto de recuperación en
-  `docs/etapas/airline-tracker-evaluation-recovery-20261004.md`.
+  [`docs/archivo/chat-mvp/airline-tracker-evaluation-recovery-20261004.md`](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/chat-mvp/airline-tracker-evaluation-recovery-20261004.md).
 
 ## 2026-10-04 · Arranque del backend en Railway
 
@@ -174,7 +195,7 @@ versión semántica, las entradas van por fecha.
   documento de SEC o del repositorio.
 - Se documenta la capacidad efectiva de la política de tokens (unas dos
   preguntas al día). Detalle en
-  `docs/etapas/airline-tracker-auditoria-chat-20261004.md`.
+  [`docs/archivo/chat-mvp/airline-tracker-auditoria-chat-20261004.md`](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/chat-mvp/airline-tracker-auditoria-chat-20261004.md).
 
 ## 2026-10-04
 
@@ -194,7 +215,7 @@ versión semántica, las entradas van por fecha.
   en cola, la pérdida de historial al recrear la sesión del proveedor, el uso
   de turnos fallidos y bloqueos del servidor. El sitio publicado no cambia y el
   chat sigue apagado. Detalle en
-  `docs/etapas/airline-tracker-remediacion-20261004.md`.
+  [`docs/archivo/chat-mvp/airline-tracker-remediacion-20261004.md`](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/chat-mvp/airline-tracker-remediacion-20261004.md).
 
 ### Fixed
 
@@ -265,14 +286,14 @@ versión semántica, las entradas van por fecha.
   cambios rutinarios solicitados: implementación, PR, merge, publicación en
   Pages y verificación final. `AGENTS.md` define las puertas y las acciones de
   mayor riesgo que siguen requiriendo autorización específica. Detalle en
-  [`docs/etapas/flujo-agentes-punta-a-punta-20260927.md`](docs/etapas/flujo-agentes-punta-a-punta-20260927.md).
+  [`docs/archivo/mantenimiento-2026-09/flujo-agentes-punta-a-punta-20260927.md`](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/mantenimiento-2026-09/flujo-agentes-punta-a-punta-20260927.md).
 
 ### Fixed
 
 - Los gráficos de Economía unitaria ahora se ajustan al abrir la pestaña. El
   cambio usa la instancia local de Plotly, corrige gráficos estrechos o
   desbordados y valida que cada SVG ocupe el ancho de su contenedor. Detalle en
-  [`docs/etapas/ajuste-graficos-economia-20260927.md`](docs/etapas/ajuste-graficos-economia-20260927.md).
+  [`docs/archivo/mantenimiento-2026-09/ajuste-graficos-economia-20260927.md`](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/mantenimiento-2026-09/ajuste-graficos-economia-20260927.md).
 
 - El diagnóstico de etapa 12 registra un hash del contenido lógico del
   warehouse en vez de los bytes del archivo, así que un warehouse restaurado
@@ -283,7 +304,7 @@ versión semántica, las entradas van por fecha.
   conserva la red nacional estimada. `validate_stage9` acepta el registro de
   41 pasos. Las pruebas de la guarda de rutas ya no dependen del Bronze local.
   Detalle en
-  [`docs/etapas/rebuild-datos-privados-20260927.md`](docs/etapas/rebuild-datos-privados-20260927.md).
+  [`docs/archivo/mantenimiento-2026-09/rebuild-datos-privados-20260927.md`](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/mantenimiento-2026-09/rebuild-datos-privados-20260927.md).
 
 - Vuelos: el total de vuelos de la red cuenta solo vuelos observados; los
   programados (slots del AICM, anuncio fechado de OMA) y los inferidos de
@@ -292,7 +313,7 @@ versión semántica, las entradas van por fecha.
   Además, la región seleccionada se limpia al pasar a un trimestre sin rutas
   de esa región, y el mapa recalcula su recorte al redimensionar la ventana.
   Detalle en
-  [`docs/etapas/vuelos-total-red-codex-20260927.md`](docs/etapas/vuelos-total-red-codex-20260927.md).
+  [`docs/archivo/vuelos-2026-09/vuelos-total-red-codex-20260927.md`](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/vuelos-2026-09/vuelos-total-red-codex-20260927.md).
 
 - Rutas internacionales: las bandas de ocupación fuera de [0, 100%] se omiten igual que en las nacionales.
 
@@ -342,7 +363,7 @@ versión semántica, las entradas van por fecha.
   implementación del dashboard, publicada en GitHub Pages
   (<https://salvamalfa.github.io/aeromexico-tracker/>); la app Streamlit y el
   consumidor HTML de una sola página se retiraron por completo (detalle
-  histórico en `docs/archivo/migracion-2026-09/`).
+  histórico en [`docs/archivo/migracion-2026-09/`](https://github.com/salvamalfa/aeromexico-tracker/tree/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/migracion-2026-09)).
 
 ## 2026-09-19 a 2026-09-25
 
@@ -360,6 +381,6 @@ versión semántica, las entradas van por fecha.
 
 ## Antes de 2026-09-19
 
-Ver `docs/etapas/` (trabajo vigente) y `docs/archivo/etapas/` (reportes de
+Ver `docs/etapas/` (trabajo vigente) y [`docs/archivo/etapas/`](https://github.com/salvamalfa/aeromexico-tracker/tree/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/etapas) (reportes de
 etapa 0–18 y de la app retirada) para el detalle completo de cada entrega
 desde el inicio del proyecto (agosto de 2026).

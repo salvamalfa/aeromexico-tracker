@@ -25,10 +25,10 @@ no autoriza por sí sola a publicar datos nuevos.
 
 `README.md`: estado actual. `CHANGELOG.md`: cambios recientes. `ROADMAP.md`:
 lo que sigue (propuesta, el dueño decide prioridades). `REPO_MAP.md`: mapa del
-árbol y recetas paso a paso. `docs/archivo/`: historia (migración a
-Vite/Pages, plan original, auditorías, reportes de etapa 0–18 de la app
-retirada) — no la leas salvo que la tarea lo requiera explícitamente; está
-fuera de las búsquedas de agentes (`.ignore`).
+árbol y recetas paso a paso. `docs/archivo/README.md`: resumen de la historia
+del proyecto con enlaces a los documentos originales en Git — no lo leas salvo
+que la tarea lo requiera explícitamente; está fuera de las búsquedas de agentes
+(`.ignore`).
 
 ## Entorno y comandos
 
@@ -226,6 +226,36 @@ forma irreversible; o saltar controles de GitHub y del gate. Puedes preparar
 el código y un PR revisable mientras llega esa decisión. La autorización para
 publicar una corrección de interfaz con datos ya aprobados no equivale a
 aprobar datos nuevos.
+
+## Ciclo de vida de la documentación
+
+El repositorio documenta el estado actual. La historia se resume en
+`docs/archivo/README.md` y los documentos originales viven en Git: se borran
+del árbol, no se acumulan.
+
+- **Vigente:** `README.md`, `AGENTS.md`, `REPO_MAP.md`, `ROADMAP.md`,
+  `CHANGELOG.md` y `docs/`. Describe cómo funciona hoy el sistema o qué sigue,
+  y se actualiza en el mismo PR que cambia lo que describe.
+- **Reportes de etapa (`docs/etapas/`):** bitácora fechada de un paso; no se
+  reescriben después. Se quedan mientras su esfuerzo siga abierto, mientras
+  sean la procedencia de un dato publicado que ningún documento permanente
+  explica, o mientras los cite el código.
+- **Planes, propuestas y traspasos:** viven en `docs/` mientras están activos.
+  Al cerrar el esfuerzo (por ejemplo, al terminar la fase 2 del chat):
+  1. pasa lo que siga vigente (cómo funciona, límites, decisiones) a la
+     documentación permanente, como `docs/chat/README.md` o `REPO_MAP.md`;
+  2. agrega a `docs/archivo/README.md` un párrafo que resuma el esfuerzo y
+     enlace los originales en un commit fijo
+     (`https://github.com/salvamalfa/aeromexico-tracker/tree/<sha>/<ruta>`);
+  3. borra los originales con `git rm` y cambia los enlaces que apuntaban a
+     ellos por ese enlace permanente.
+- **Decisiones (`docs/decisiones/`):** no se borran ni se reescriben. Una
+  decisión que cambia se reemplaza por una nueva y la anterior se marca
+  «Reemplazada por …».
+- Un documento que ya no aplica y no aporta historia útil se borra sin más;
+  Git conserva su versión anterior.
+- No borres ni muevas un documento que citen el código, una prueba o un
+  contrato sin actualizar esa referencia en el mismo PR.
 
 ## Criterio de cierre
 

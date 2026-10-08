@@ -1,29 +1,126 @@
-# Traspaso: pasajeros por ruta en Vuelos
+# Vuelos: guía de entrada
 
-Fecha de comprobación: 13 de septiembre de 2026. Este documento orienta una investigación nueva; no autoriza atribuir pasajeros de todo un mercado a Aeroméxico ni modifica la publicación vigente.
+Vigente al 8 de octubre de 2026. Reemplaza el traspaso del 13 de septiembre de
+2026, que describía la app retirada; conserva la ruta del archivo porque
+`AGENTS.md`, `REPO_MAP.md` y comentarios de `web/src/views/flights/` la citan.
 
-## Punto de partida verificable
+## Dónde vive la vista
 
-- La versión local que alimenta la publicación es [resumen_ejecutivo.html](../../prototypes/etapa-11/resumen_ejecutivo.html), SHA-256 `4e08a0124c75d67f4c4aea3b4fabbfc5dac82b0bcb7e97c215772ade461a8087`, 6,390,181 bytes. Se copió byte por byte a `static/aeromexico_tracker.html` en `master`, commit `26d3617`, y el navegador confirmó que Streamlit servía el mismo SHA. [Aplicación pública](https://aeromexico-tracker-djwjbylohwdryhbvnjhwsy.streamlit.app/).
-- El [expediente de cobertura ampliada](vuelos-cobertura-ampliada-20260913.md) describe 56 mercados nacionales y 73 internacionales en 2T26. La cobertura de vuelos de **98.4%** es un escenario aceptado por el usuario que cuenta slots programados como realizados solo para ese cálculo. Sigue identificado el tipo de fuente en el mapa y en Gold; el porcentaje no certifica operaciones efectuadas por ruta.
-- Lectura directa de `src.dashboard.flights.build_flight_payload()` contra el warehouse local: **88 de 129 mercados carecen de pasajeros propios por ruta**. En nacional, **56/56** están en N/D: 45 AICM programados, tres mercados AFAC atribuidos por inferencia y ocho AIFA con presencia de compañía pero sin volumen propio. En internacional, **32/73** están en N/D: 25 AICM programados, cuatro Colombia Aerocivil, uno Reino Unido CAA y dos OMA. Los otros **41/73** tienen pasajeros: 40 mercados BTS T-100 México–Estados Unidos y uno ANAC Brasil. Esta comprobación se refiere al payload de 2T26, no a todos los trimestres.
-- Aena ya conserva pasajeros de Aerovías por aeropuerto español: 2T26 Madrid 188,234 y Barcelona 31,808. [Expediente España](vuelos-espana-integracion-20260912.md). Su exportación de compañía carece del aeropuerto mexicano; el archivo O/D carece de compañía. Esas cifras están en tarjetas por aeropuerto y no se asignan a una línea concreta del mapa.
-- AFAC `REG NAC` y `REG INT` publican pasajeros y vuelos por par de ciudades, sentido y mes para **todas las aerolíneas**. El resumen AFAC sí separa Aerovías/Connect, pero no contiene ruta. [Diagnóstico de tablas y definiciones](afac-rutas-investigacion-20260908.md) · [original Bronze origen–destino](../../data/bronze/afac_research/afac_research_city_pairs_2026M07_20260908T182059Z.xlsx). El horario AICM identifica vuelos AM y rutas, pero carece de pasajeros. SEC informa pasajeros agregados, tampoco por ruta.
-- El Analysis Agent de 2T26 usa corte histórico del **13 de julio de 2026**. Los archivos AFAC de julio se publicaron después y sirven al dashboard retrospectivo actual, no al expediente congelado del agente sin una versión elegible anterior. No activar nuevas fuentes en el Analysis Agent durante esta investigación.
+- **Interfaz:** [`web/src/views/flights/`](../../web/src/views/flights/)
+  (Vite + TypeScript), única implementación publicada. Arranque en
+  `bootstrap.ts`; estado y carga diferida de archivos por periodo en
+  `state.ts`; mapa en `map.ts`; red y alcance en `network.ts`; tabla de rutas
+  en `table.ts`; selector de aerolínea en `carriers.ts` y
+  [`web/src/views/shell/carriers.ts`](../../web/src/views/shell/carriers.ts).
+- **Contrato de datos:**
+  [`contracts/web/flights.schema.json`](../../contracts/web/flights.schema.json).
+- **Payload:** [`src/dashboard/flights.py`](../../src/dashboard/flights.py)
+  (`build_flight_payload`),
+  [`domestic_routes.py`](../../src/dashboard/domestic_routes.py),
+  [`international_routes.py`](../../src/dashboard/international_routes.py) y,
+  para Industria/Volaris/Viva,
+  [`entity_routes.py`](../../src/dashboard/entity_routes.py),
+  [`route_entities.py`](../../src/dashboard/route_entities.py) y
+  [`route_capacity.py`](../../src/dashboard/route_capacity.py).
+- **Lista blanca:**
+  [`flights_html.py::integration_flight_payload`](../../src/dashboard/flights_html.py).
+  Un campo que no esté ahí se descarta sin error.
+- **Exportación y publicación:**
+  [`src/web_export/flights.py`](../../src/web_export/flights.py) escribe
+  `flights/quarters.json` y un archivo por periodo (`domestic/`,
+  `international/`, `entities/<KEY>/`); [`src/publish/`](../../src/publish/)
+  ensambla y firma `site/`. Ver [`REPO_MAP.md`](../../REPO_MAP.md) y
+  [`AGENTS.md`](../../AGENTS.md).
 
-## Hallazgos exploratorios aún sin integrar
+## Qué muestra hoy
 
-En la hoja `REG INT` del libro AFAC 2026, los mercados `GUADALAJARA → MADRID` (fila 309) y `MADRID → GUADALAJARA` (449) registran 26 vuelos en cada mes de abril, mayo y junio; sus pasajeros están en `U309:W309` y `U449:W449`. `MONTERREY → SEOUL` (599) y `MONTERREY → TOKYO` (600) registran 30, 31 y 30 vuelos en esos meses, respectivamente, con pasajeros en `U599:W599` y `U600:W600`. **Son totales de mercado, sin identificador de aerolínea, y todavía no son pasajeros atribuibles a Aeroméxico.** El libro se rotula OFOD y no se ha demostrado que cada fila sea una etapa sin escalas; por ejemplo, `GUADALAJARA ↔ SEOUL` también tiene vuelos pero cero pasajeros en abril–junio. No incorporar esas cifras sin resolver significado, aerolínea y eventual doble conteo.
+- **Tarjetas** (pasajeros, ASM, RPM, ocupación) con selector de una
+  aerolínea: Industria, Aeroméxico, Volaris o Viva. Aeroméxico usa la serie
+  trimestral SEC; las demás, su reporte trimestral (RPM en N/D donde no se
+  publica).
+- **Mezcla nacional/internacional** por trimestre o mes, con selector de
+  varias aerolíneas: Aeroméxico sola usa la serie mensual AFAC Gold; cualquier
+  otra selección usa AFAC por aerolínea.
+- **Red de vuelos:** mapa y tabla «Rutas destacadas / Mayores cambios / Todas»
+  con pasajeros, vuelos y ocupación por ruta; Nacional o Internacional;
+  regiones internacionales; búsqueda de aeropuerto; selector de aerolínea
+  (default Industria, que suma las tres y muestra el reparto por ruta).
+- **Nacional:** pasajeros, vuelos, asientos y ocupación estimados por ruta
+  (AFAC + AeroDataBox, IPF), por mes; en el `site/` vigente, 2026M03–2026M07.
+- **Internacional:** México–EE. UU. observado (BTS T-100); el resto,
+  estimado y marcado «estim.». Solo Grupo Aeroméxico conserva capas propias:
+  slots AICM, AIFA, anuncios OMA y observaciones ANAC/Aerocivil/CAA/Aena.
+- **Asientos y ocupación:** Aeroméxico por modelo de avión capturado;
+  Volaris y Viva por promedio de flota. Siempre estimados y con rango.
+- Rutas solo con presencia, sin volumen atribuible, no se dibujan; la vista
+  dice cuántas quedaron fuera.
 
-Como pistas de presencia de ruta, [OMA, 10 de noviembre de 2025](https://noticias.oma.aero/news/oma-y-aeromexico-anuncian-nueva-ruta-directa-monterrey-paris-c41b4-5f19f.html) menciona Madrid, Seúl y Tokio en la red de largo alcance desde Monterrey. [GAP/Aeroméxico, 16 de diciembre de 2021](https://aeropuertosgap.com.mx/files/AEROMEXICO_INAUGURA_SU_RUTA_GUADALAJARA-MADRID.pdf) documenta el inicio de Guadalajara–Madrid. Un horario comercial externo conserva fechas de vigencia de 2026 para [GDL–MAD](https://info.flightmapper.net/route/Aeromexico_AM_GDL_MAD), [MTY–ICN](https://info.flightmapper.net/route/YY_MTY_ICN) y [MTY–NRT](https://info.flightmapper.net/route/YY_MTY_NRT). Estos enlaces son **candidatos de verificación**, no originales Bronze ni pruebas de pasajeros transportados por Aeroméxico en 2T26. La publicación actual conserva 73 mercados internacionales, sin esas adiciones.
+## Reglas de significado que más pesan aquí
 
-## Investigación recomendada para la nueva sesión
+- Pasajeros ruta×aerolínea son **estimación** (IPF sobre marginales AFAC) y
+  viajan como `passengers_estimated`, aunque reconcilien exacto.
+- Observado, programado y estimado no se suman. Slots AICM y anuncios OMA son
+  programación (`operation_status`), no vuelos realizados.
+- Operador ≠ comercializador/codeshare. Aerovías y Connect se ajustan por
+  separado y se suman como Grupo Aeroméxico; en internacional la evidencia
+  observada es solo de Aerovías.
+- T-100 cubre operaciones del reportante entre México y EE. UU.; no la red
+  mundial, codeshares ni ingresos.
+- Faltante es N/D, nunca cero.
+- `flight_evidence_v1` es candidato no aprobado. `python -m
+  src.dashboard.build_flights` lo regenera como candidato; no lo actives ni
+  hagas backfill.
 
-1. Construir una matriz de los 88 mercados N/D: compañía u operador, ambos aeropuertos, periodo, fuente actual, pasajeros ausentes y país o autoridad candidata. Priorizar volumen probable y cobertura completa de abril–junio; distinguir Aerovías y Connect.
-2. Revisar fuentes oficiales por **operador × origen × destino × mes × pasajeros**. Empezar por las bases ya trabajadas (AFAC, Aena, Aerocivil, CAA, ANAC, BTS) y buscar complementos de aeropuertos o autoridades para nacional, España, Colombia, Reino Unido, Canadá, Japón y Corea. Verificar si la métrica es pasajero por tramo, embarcado, terminal o itinerario O/D, y si incluye conexiones o códigos compartidos.
-3. Comparar ventanas y alcances antes de reconciliar con pasajeros AFAC por compañía y SEC trimestral. Si una fuente solo tiene pasajeros de todo el mercado, conservarla como contexto. Una atribución por exclusividad necesita evidencia de todos los operadores pertinentes y de su vigencia durante el trimestre completo.
-4. Entregar un diagnóstico con fuentes originales, URLs, fechas, hashes, granularidad, cobertura, ejemplos de filas, estimación de cuántos N/D podrían resolverse y riesgos. Proponer un incremento concreto. Esperar la revisión del usuario antes de modificar Bronze/Silver/Gold o el dashboard en la nueva sesión.
+El método canónico está en
+[`docs/estimacion-pasajeros-ruta-aerolinea.md`](../estimacion-pasajeros-ruta-aerolinea.md);
+léelo antes de tocar el estimador y no lo reconstruyas desde reportes sueltos.
 
-## Cómo retomar el proyecto
+## Cambios típicos
 
-Abrir una tarea **local en el checkout guardado** `C:/Users/salva/Documents/Codex/AMEX/Aeromexico Tracker`. La mayoría de los cambios de pipeline, Bronze, Silver, Gold y documentos de esta fase permanecen locales sin commit; una tarea creada desde un worktree limpio de `master` vería principalmente el HTML estático publicado y perdería este contexto local. Revisar `git status` y conservar cambios ajenos antes de editar. El entorno Python del checkout es `.venv/Scripts/python.exe`. El dashboard local se genera desde `src.dashboard.build_flights` y `src.analysis_agent.stage18`; editar el generador, no el HTML generado. No regenerar ni publicar Streamlit como parte del diagnóstico de pasajeros.
+- UI o columna nueva: recetas (a) y (b) de
+  [`REPO_MAP.md` § Recetas](../../REPO_MAP.md#recetas).
+- Mes nuevo de datos: receta (c), que remite a
+  [`aerodatabox-agosto-captura-20260925.md`](aerodatabox-agosto-captura-20260925.md)
+  (guía operativa; la API es pagada y requiere autorización específica).
+- Pruebas focalizadas (marcadas `local_data`: necesitan warehouse local):
+  `tests/test_flights_prototype.py`, `tests/test_international_routes.py`,
+  `tests/test_aicm_international_slots.py`, `tests/test_route_entities.py`,
+  `tests/test_flights_national_quarter_selection.py`. Sin datos locales
+  corren `tests/test_route_carrier_ipf.py` y `tests/test_fleet_capacity.py`.
+  En `web/`: `npm run check && npm run test`.
+
+## Reportes vigentes relacionados
+
+- [`vuelos-capacidad-ocupacion-estimada-20260920.md`](vuelos-capacidad-ocupacion-estimada-20260920.md):
+  asientos y ocupación nacionales.
+- [`correcciones-codex-estimaciones-20260927.md`](correcciones-codex-estimaciones-20260927.md):
+  correcciones a bandas de ocupación y Gold de rutas.
+- Dashboard v2: [fase 0](dashboard-v2-fase0-datos-20260928.md) (datos de
+  Volaris y Viva), [fase 2](dashboard-v2-fase2-web-20260930.md) (selectores),
+  [fase 3](dashboard-v2-fase3-mapa-20260930.md) (mapa por aerolínea),
+  [fase 4](dashboard-v2-fase4-capacidad-20260930.md) (capacidad por promedio
+  de flota).
+
+## Límites y pendientes
+
+- Internacional fuera de EE. UU. sigue parcial: hay evidencia en Brasil
+  (ANAC), Colombia (Aerocivil), Reino Unido (CAA) y Perú (DGAC); España sigue
+  bloqueada por falta de cruce compañía + ambos aeropuertos + mes en Aena
+  ([`ROADMAP.md`](../../ROADMAP.md)).
+- Auditoría de exclusividad de operador en mercados nacionales candidatos
+  (p. ej. MEX–CPE, MEX–MAM) antes de tratar un total AFAC como pasajeros de
+  Aeroméxico.
+- El error medido del estimador viene de un mercado transfronterizo corto y no
+  garantiza Europa, Asia o Latinoamérica; el rango `low/high` es sensibilidad,
+  no incertidumbre estadística (§12 del método canónico).
+- Activar datos en el dashboard no cambia la elegibilidad histórica al
+  2026-07-13 ni el Analysis Agent.
+
+## Historia
+
+Los reportes de investigación e integración de septiembre de 2026 (AFAC,
+AeroDataBox, Aena, AICM, ANAC/Aerocivil/CAA y pilotos de pasajeros) se
+consolidaron; su contenido duradero vive en
+[`docs/estimacion-pasajeros-ruta-aerolinea.md`](../estimacion-pasajeros-ruta-aerolinea.md).
+Los originales se consultan en
+[`docs/archivo/vuelos-2026-09` en `7478082`](https://github.com/salvamalfa/aeromexico-tracker/tree/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/vuelos-2026-09).

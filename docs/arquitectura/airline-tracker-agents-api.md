@@ -1,6 +1,6 @@
 # Adaptador Agents API de Airline Tracker
 
-El piloto usa el cliente Python oficial `openai==3.13.0` y la Agents API con
+El chat usa el cliente Python oficial `openai==3.13.0` y la Agents API con
 `environment.type="none"`. No instala `openai-agents`, no crea un entorno de
 ejecución y no permite shell, búsqueda web ni herramientas ajenas a las siete
 funciones de consulta definidas en `src/conversational_analytics/tools/`.
@@ -22,7 +22,7 @@ predeterminado. `ChatConfig.from_env()` falla al iniciar si faltan los controles
 requeridos; tener una variable de clave presente no valida que la cuenta tenga
 acceso a Agents API.
 
-Instala solo las dependencias del piloto de chat:
+Instala solo las dependencias del chat:
 
 ```sh
 uv sync --extra chat
@@ -92,8 +92,9 @@ y en `uv.lock`. `tests/test_chat_openai.py` valida eventos tipados del SDK,
 llamadas de herramientas, contexto de seguimiento, terminales fallidos/cancelados,
 recuperación tras desconexión, cancelación y borrado. Estas pruebas no verifican
 permisos reales, disponibilidad del modelo, tarifas ni acceso de la cuenta al
-endpoint Agents API. La autorización de uso pagado y la selección del modelo del
-dashboard siguen pendientes.
+endpoint Agents API. El dueño eligió `gpt-6.1-sol` y el uso pagado está activo
+en producción en Railway desde el 8 de octubre de 2026, con topes diarios en
+dólares (ver [Railway](../chat/railway.md) y el [estado del chat](../chat/README.md)).
 
 Contrato consultado el 4 de octubre de 2026: [Agents API overview](https://developers.openai.com/api/docs/guides/agents-api/overview),
 [sessions](https://developers.openai.com/api/docs/guides/agents-api/sessions),

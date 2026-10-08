@@ -71,7 +71,7 @@ def generate() -> str:
         [
             "## Catálogo de métricas",
             "",
-            "Las interpretaciones provienen de `docs/archivo/plan-original/11-glosario-kpis.md`; las métricas técnicas no mostradas en el dashboard conservan una descripción de trazabilidad.",
+            "Las interpretaciones provienen de `docs/glosario-kpis.md`; las métricas técnicas no mostradas en el dashboard conservan una descripción de trazabilidad.",
             "",
         ]
     )

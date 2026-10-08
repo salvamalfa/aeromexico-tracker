@@ -44,7 +44,7 @@ reportes.
 
 ### Contraseña
 
-El piloto usa `CHAT_AUTH_MODE=password` con **una sola contraseña**, del dueño
+Producción usa `CHAT_AUTH_MODE=password` con **una sola contraseña**, del dueño
 (`user_id` `owner`), hasta que se decida dar acceso a más personas:
 
 1. Generar la contraseña y su hash, en la máquina del dueño:
@@ -54,8 +54,8 @@ El piloto usa `CHAT_AUTH_MODE=password` con **una sola contraseña**, del dueño
    propia (mínimo 12 caracteres) sin eco e imprime solo el hash.
 2. En el entorno del servidor, fuera del repositorio:
    `CHAT_PASSWORDS_JSON=[{"user_id":"owner","password_hash":"scrypt$15$8$1$…"}]`,
-   `CHAT_ALLOWED_ORIGINS=https://salvamalfa.github.io` y, si hay proxy TLS en el
-   mismo host, `CHAT_TRUSTED_PROXY=127.0.0.1`.
+   `CHAT_ALLOWED_ORIGINS=https://salvamalfa.github.io`. En Railway el launcher
+   fija `CHAT_TRUSTED_PROXY` (ver [railway.md](railway.md)).
 3. Rotar: generar otro hash, reemplazarlo y reiniciar. Las sesiones emitidas
    con el hash anterior dejan de valer.
 
@@ -67,21 +67,18 @@ encima de 50 fallos globales por hora el servidor registra un error para
 alertar, pero no bloquea a nadie: un bloqueo global permitiría a cualquiera
 dejar fuera al dueño.
 
-## Diseño viable para un piloto de una instancia
+## Producción en Railway
 
-Una instalación de piloto viable usa un servidor Linux persistente que el dueño
-controle, con un volumen local durable. No requiere elegir ni contratar ahora
-un proveedor. Ejecutar un proceso FastAPI y su worker mediante una unidad
-`systemd`; fijar el checkout/release y entorno Python, reiniciar al fallar y
-esperar cierre ordenado. El worker debe vivir más que la conexión SSE del
-navegador y reanudar o marcar como fallidos los turnos tras reinicio. SQLite y
-sus archivos WAL residen juntos bajo `/var/lib/airline-tracker-chat/`; respaldar
-según política acordada y comprobar permisos de lectura exclusivos del usuario
-del servicio.
+El backend de producción corre en Railway como una sola instancia, con el
+proceso FastAPI, su worker y SQLite (con sus archivos WAL) en el volumen
+persistente `/data`. Configuración, variables y verificación están en
+[railway.md](railway.md). El worker vive más que la conexión SSE del navegador
+y reanuda o marca como fallidos los turnos tras un reinicio.
 
 En el launcher Railway, Uvicorn detiene los nuevos claims antes de esperar las
-conexiones SSE y les da hasta 5 segundos para cerrar. El perfil permite hasta 8
-llamadas de herramienta y 180 segundos de ejecución del turno. Una respuesta
+conexiones SSE y les da hasta 5 segundos para cerrar. El código permite por
+defecto hasta 8 llamadas de herramienta por turno (`CHAT_MAX_TOOL_CALLS`);
+producción usa 16. El turno puede ejecutar hasta 180 segundos. Una respuesta
 terminal sin uso confirmado puede tener hasta 30 segundos adicionales para una
 consulta GET del uso del mismo turno; no se envían entradas nuevas. El worker
 reserva otros 10 segundos para estado local, SQLite y limpieza. Al máximo, su
@@ -95,28 +92,25 @@ la contabilidad de un turno terminal, pero no reabre ni repite su respuesta. Si
 el uso no se confirma, permanece desconocido con la reserva retenida. La gracia
 de cierre no demuestra la calidad de una respuesta del modelo.
 
-Poner un proxy TLS delante del servidor ASGI con certificados renovables,
-HSTS, límite de cuerpo, timeouts compatibles con SSE y forwarding de IP solo
-desde el proxy confiable. Publicar solamente la API, no el puerto de SQLite.
-El frontend usa `VITE_CHAT_API_URL` inyectada al compilar. Antes
-de habilitarlo desde Pages, probar preflight CORS y una sesión real desde el
-origen exacto, además de rechazos para origen/token no autorizados. Si no se
-puede autenticar a los usuarios del dashboard, mantener desactivado el panel
-público.
+Railway termina HTTPS delante del servidor ASGI; solo se publica la API, no
+SQLite. El frontend usa `VITE_CHAT_API_URL` inyectada al compilar. Tras un
+cambio de origen, autenticación o proxy, vuelve a probar preflight CORS, una
+sesión real desde el origen exacto y los rechazos para origen/token no
+autorizados.
 
 ### Consumo de evaluaciones y otros procesos
 
-El control principal de gasto es un **tope diario en dólares**: US$1 por
-usuario y US$1 global por defecto (`CHAT_DAILY_COST_BUDGET_USER_USD`,
-`CHAT_DAILY_COST_BUDGET_GLOBAL_USD`), configurable en Railway sin cambiar
-código. El cupo de tokens queda en 2,000,000 diarios por usuario y global solo
-como freno ante un consumo desbocado. Antes de cada turno OpenAI se reservan al
-menos 150,000 tokens, o la estimación dinámica si es mayor. La reserva monetaria
-cobra todos esos tokens a la tarifa de salida, porque Agents API no admite un
-límite de tokens de salida: con Luna (US$0.10/US$0.50 por millón) reserva
-US$0.075; con Sol 6.1 (US$2/US$10), US$1.50, que no cabe en US$1. Con el consumo
-medido (~US$0.004 por pregunta de Luna), US$1 al día alcanza para unas 215
-preguntas.
+El control principal de gasto es un **tope diario en dólares**
+(`CHAT_DAILY_COST_BUDGET_USER_USD`, `CHAT_DAILY_COST_BUDGET_GLOBAL_USD`),
+configurable en Railway sin cambiar código. Producción usa US$5 por usuario y
+US$5 global; si las variables no se definen, el código usa US$1. El cupo de
+tokens queda en 2,000,000 diarios por usuario y global solo como freno ante un
+consumo desbocado. Antes de cada turno OpenAI se reservan al menos 150,000
+tokens, o la estimación dinámica si es mayor. La reserva monetaria cobra todos
+esos tokens a la tarifa de salida, porque Agents API no admite un límite de
+tokens de salida: con Sol 6.1 (US$2/US$10 por millón) reserva US$1.50, que no
+cabe en el valor por defecto de US$1; con Luna (US$0.10/US$0.50) reservaría
+US$0.075.
 
 La demo `mock` reserva tokens pero no dólares y registra su uso a US$0: no
 hace llamadas pagadas ni consume el tope. Estos controles no
@@ -241,18 +235,15 @@ si hay turnos fallidos, si la cola crece, si se exceden cuotas o si queda poco
 espacio en disco. Una instancia puede tener un solo worker y rechazar exceso de
 concurrencia; no requiere escalado a cero.
 
-Mantener cada versión de aplicación como release separada y configuración fuera
-del checkout. El rollback consiste en apuntar `systemd` a la versión estable
-anterior, recargar y reiniciar, y apagar el flag Vite del chat si falla la API.
-No revertir SQLite copiando una base vieja sobre una nueva: hacer copia con la
-aplicación detenida o mediante mecanismo consistente, conservar esquema y
-comprobar migraciones antes del despliegue. Probar restauración y borrado antes
-de abrir el piloto.
-
-Esta es una receta de destino revisable, no una infraestructura creada o
-validada. H5 seguirá pendiente hasta disponer de un host administrado, acordar la
-retención y superar las pruebas HTTPS desde Pages. El acceso inicial será
-únicamente para el dueño, con la contraseña preparada fuera de Git.
+La configuración vive en las variables de Railway, fuera del repositorio.
+Railway solo redespliega cuando cambia un archivo listado en `railway.toml`. El
+rollback inmediato es `CHAT_ADMISSION_ENABLED=false` (ver [railway.md](railway.md));
+si falla la API, apaga además el flag Vite del chat. No revertir SQLite
+copiando una base vieja sobre una nueva: hacer copia con la aplicación detenida
+o mediante mecanismo consistente, conservar esquema y comprobar migraciones
+antes del despliegue. Prueba la restauración y el borrado antes de depender de
+una copia. El acceso es únicamente para el dueño, con la contraseña fuera de
+Git.
 
 ### Cierre ordenado del worker
 
