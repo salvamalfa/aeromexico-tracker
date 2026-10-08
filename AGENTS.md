@@ -227,6 +227,34 @@ el código y un PR revisable mientras llega esa decisión. La autorización para
 publicar una corrección de interfaz con datos ya aprobados no equivale a
 aprobar datos nuevos.
 
+## Ciclo de vida de la documentación
+
+El repositorio documenta el estado actual; la historia vive en
+`docs/archivo/`, fuera de las búsquedas de agentes (`.ignore`) y en Git.
+
+- **Vigente:** `README.md`, `AGENTS.md`, `REPO_MAP.md`, `ROADMAP.md`,
+  `CHANGELOG.md` y `docs/` fuera de `docs/archivo/`. Describe cómo funciona hoy
+  el sistema o qué sigue, y se actualiza en el mismo PR que cambia lo que
+  describe.
+- **Reportes de etapa (`docs/etapas/`):** bitácora fechada de un paso; no se
+  reescriben después. Se quedan en `docs/etapas/` mientras su esfuerzo siga
+  abierto, mientras sean la procedencia de un dato publicado que ningún
+  documento permanente explica, o mientras los cite el código.
+- **Planes, propuestas y traspasos:** viven en `docs/` mientras están activos.
+  Al cerrar el esfuerzo (por ejemplo, al terminar la fase 2 del chat):
+  1. pasa lo que siga vigente (cómo funciona, límites, decisiones) a la
+     documentación permanente, como `docs/chat/README.md` o `REPO_MAP.md`;
+  2. mueve el plan y sus reportes de etapa a `docs/archivo/<tema>/` con
+     `git mv`;
+  3. corrige los enlaces y agrega la entrada en `docs/archivo/README.md`.
+- **Decisiones (`docs/decisiones/`):** no se archivan ni se reescriben. Una
+  decisión que cambia se reemplaza por una nueva y la anterior se marca
+  «Reemplazada por …».
+- Un documento que ya no aplica y no aporta historia útil se borra; Git
+  conserva su versión anterior.
+- No muevas un documento que citen el código, una prueba o un contrato sin
+  actualizar esa referencia en el mismo PR.
+
 ## Criterio de cierre
 
 Antes de entregar:

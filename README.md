@@ -36,19 +36,18 @@ Para recorrer el argumento completo, consulta [el recorrido narrado](docs/dashbo
 
 ## Estado
 
-**Analysis Agent:** Etapas 12–14 aceptadas. La [Etapa 15](docs/archivo/etapas/etapa-15-reporte.md)
-está implementada y pendiente de revisión humana: [cálculos, puentes y fuentes](prototypes/etapa-15/quantitative_review.html).
-El motor utiliza evidencia congelada de 2T26 y conserva las diferencias de alcance pendientes.
-El expediente aprobado de 2T26 sí está publicado en el dashboard público (pestaña Lectura
-ejecutiva y `data/v1/analysis/2026Q2.json`); lo que sigue pendiente es la redacción y
-publicación de análisis de trimestres posteriores.
+- **Dashboard:** tres vistas publicadas en Pages (Lectura ejecutiva, Economía
+  unitaria y Vuelos), construidas solo con datos y análisis ya aprobados.
+- **Analysis Agent:** el análisis de 2T26 está aprobado y publicado en la
+  Lectura ejecutiva (`data/v1/analysis/2026Q2.json`). El siguiente ciclo es
+  3T26, cuando Aeroméxico publique su reporte trimestral.
+- **Chat:** el MVP está activo en producción desde el 8 de octubre de 2026 y la
+  fase 2 está por empezar (ver [Chat analítico](#chat-analítico)).
+- **Datos:** AFAC y AeroDataBox se actualizan a mano mes a mes; lo pendiente
+  está en [`ROADMAP.md`](ROADMAP.md).
 
-Las **Etapas 0 a 10 están completas**.
-
-Conteos de tablas Gold y pruebas cambian con cada etapa; la cuenta vigente y
+Conteos de tablas Gold y pruebas cambian con cada cambio; la cuenta vigente y
 el comando para reproducirla están en [`REPO_MAP.md`](REPO_MAP.md), no aquí.
-
-- Operación offline: el dashboard solo lee Parquet local mediante DuckDB en memoria.
 
 ## Hallazgos principales
 
@@ -112,10 +111,9 @@ Las tablas gold sí se versionan porque son los extractos públicos y compactos 
 
 ## Datos y documentación
 
-El Analysis Agent tiene una [lectura de 2T26 auditada para revisión local](prototypes/etapa-17/audited_analysis.html),
-una [skill del proyecto](.agents/skills/aeromexico-tracker-analysis/SKILL.md) y
-[comandos de autoría](docs/analysis-agent/analista-v1.md). Etapa 17 pendiente de
-aceptación; el análisis está validado, pero todavía no aprobado ni integrado al dashboard.
+El Analysis Agent tiene una [skill del proyecto](.agents/skills/aeromexico-tracker-analysis/SKILL.md)
+y [comandos de autoría](docs/analysis-agent/analista-v1.md). La revisión
+auditada de 2T26 se conserva en `prototypes/etapa-17/audited_analysis.html`.
 
 - [Diccionario de tablas y columnas](docs/diccionario-datos.md)
 - [Diccionario de conceptos XBRL](docs/diccionario-conceptos-xbrl.md)
@@ -133,16 +131,23 @@ Por la decisión explícita de **no versionar bronze**, una reconstrucción con 
 
 ## Chat analítico
 
-El chat consulta el snapshot público con una capa semántica versionada; no abre el warehouse ni convierte ausencias en cero. El dueño eligió `gpt-6.1-sol`, topes diarios de US$3 por usuario y global, y activar el MVP con la evidencia histórica disponible: 31 respuestas disponibles fueron correctas; 10 de las 12 preguntas del conjunto soportado tuvieron respuesta correcta y dos intentos quedaron sin respuesta correcta. Esa evidencia no valida el prompt actual; no se declaró aprobado el gate de calidad. Nuevas evaluaciones, esfuerzo de respuesta y estilo quedan para fase 2. El panel habilitado se compila y publica en Pages mediante el gate y CI; escribir requiere contraseña. El [PR #102](https://github.com/salvamalfa/aeromexico-tracker/pull/102) y el [reporte de activación](docs/etapas/chat-mvp-activacion-20261007.md) permiten consultar su estado verificable. La [documentación del chat](docs/chat/README.md) incluye instalación, operación y holdout; la [interfaz de revisión](docs/chat/revision-respuestas.md) acepta calificaciones exportadas.
+El chat responde preguntas sobre el snapshot público con una capa semántica
+versionada; no abre el warehouse ni convierte ausencias en cero. **Estado al 8
+de octubre de 2026:** MVP activo en Railway con `gpt-6.1-sol`, acceso con
+contraseña, topes diarios de US$5 (por usuario y global) y hasta 16 consultas a
+los datos por pregunta. Ya respondió preguntas reales y muestra tablas. La
+calidad todavía no tiene un gate aprobado: eso lo resuelve la fase 2.
+
+- Operación, instalación y límites: [documentación del chat](docs/chat/README.md)
+  y [traspaso operativo](docs/chat/traspaso-activacion-mvp-20261006.md).
+- Lo que sigue: la [fase 2](docs/chat/fase-2-agente-analitico.md), un agente
+  para preguntas de negocio que cruza métricas, reportes trimestrales y
+  noticias aprobadas, con evaluación comparativa de modelos.
 
 El perfil `chat-runtime` instala solo las dependencias del backend. El gasto se
-controla con un tope diario en dólares configurable en Railway (US$1 por
-defecto), con el cupo de tokens solo como freno; el registro contable privado
-del consumo de evaluaciones se conserva. La activación del MVP (modelo, API key,
-panel en Pages) sigue el [traspaso de activación](docs/chat/traspaso-activacion-mvp-20261006.md).
-Después del MVP viene la [fase 2](docs/chat/fase-2-agente-analitico.md): un
-agente para preguntas de negocio que cruza métricas, reportes trimestrales y
-noticias aprobadas.
+controla con un tope diario en dólares configurable en Railway (US$1 si no se
+configura), con el cupo de tokens solo como freno; el registro contable privado
+del consumo se conserva.
 
 ### Cómo funciona el chat
 

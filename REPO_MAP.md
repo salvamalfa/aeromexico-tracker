@@ -17,6 +17,7 @@ comunes. Ver también `CLAUDE.md`, `AGENTS.md`, `CHANGELOG.md` y `ROADMAP.md`.
 | Exportadores web | `src/web_export/` | Divide esos mismos payloads en JSON por periodo bajo `web/public/data/v1/` (local, no versionado), validados contra `contracts/web/` y `config/web_inputs.yaml` antes de escribir. `flights/quarters.json` incluye además `available_periods`: el manifiesto de qué archivos por periodo existen, para que `web/` sepa qué pedir con `fetch()` sin listar el directorio. `analysis.py` exporta, para cada periodo que el ledger local (`analysis_runs/`) tiene actualmente aprobado o publicado (`discover_approved_manifest`), exactamente lo que `analysis_agent.lifecycle.consumer_payload(record)` autoriza — lectura del flujo de aprobación existente, nunca escritura; falla si falta el expediente local salvo `--allow-missing-analysis` (dev). |
 | Gate de publicación (`site/`) | `src/publish/` | El único objeto firmado y publicado: dado uno o más registros de `analysis_runs/drafts/` ya aprobados, re-verifica cada uno con las funciones de `lifecycle.py`, exporta el payload v1 (Vuelos/ejecutivo completos, análisis solo de los periodos dados), compila `web/` con Vite y ensambla+firma `site/` (`publication_manifest.json`: commit, hash de cada contrato, SHA-256/tamaño de cada archivo, entradas del `analysis-manifest`). `src/publish/verify.py` revisa ese manifiesto sin datos privados (lo ejecuta `.github/workflows/pages.yml` antes de desplegar). Recibo intent/published en `analysis_runs/publications/` (local). Ver `src/publish/README.md` y §4.2 punto 5/Fase 5 de la auditoría. |
 | Front-end en archivos reales | `web/` | La página completa (Vite + TypeScript), **única** implementación publicada de las tres vistas (Lectura ejecutiva, Economía unitaria, Vuelos): HTML/CSS/TS reales (ES modules, `web/src/views/{flights,executive,economy,shell}/*.ts`, ≤ 400 líneas cada uno; tipos generados en `web/src/types/generated/` desde `contracts/web/*.schema.json` vía `npm run gen:types`) que consume `web/public/data/v1/` con `fetch()`. Plotly se importa parcial (`plotly.js/lib/core` + `bar`/`scatter`/`scattergeo`/`choropleth`, ver `web/src/lib/plotly.ts`). Ver `web/README.md`. |
+| Chat | `src/conversational_analytics/`, `scripts/start_chat_runtime.py`, `scripts/chat/`, `Dockerfile.chat`, `railway.toml` | Backend FastAPI del chat, desplegado en Railway: capa semántica sobre el snapshot publicado (`site/data/v1/`), 7 herramientas de solo lectura, proveedor OpenAI Agents API y estado en SQLite en el volumen `/data`. El panel vive en `web/src/views/chat/`. Railway solo redespliega cuando cambia algún archivo que lista `railway.toml`. Ver `docs/chat/README.md`. |
 | Pruebas | `tests/` | `uv run pytest`; marcadores `local_data` (necesita `data/bronze|silver`/warehouse local) y `browser` (Playwright) se excluyen en CI. |
 
 **Gold tables:** 43 Parquet en `data/gold/` versionados en git (ver
@@ -144,3 +145,10 @@ varios pasos delegado por la sesión coordinadora lo ejecuta el subagente
 `implementador` (`.claude/agents/implementador.md`), en su propia rama,
 commiteando y subiendo tras cada tarea. La historia de proyectos cerrados vive
 en `docs/archivo/` y no se retoma.
+
+### e) Cerrar un esfuerzo y archivar su documentación
+
+Sigue la sección «Ciclo de vida de la documentación» de `AGENTS.md`: pasa lo
+que sigue vigente a la documentación permanente, mueve los reportes y planes
+cerrados a `docs/archivo/` con `git mv`, corrige los enlaces que apuntaban a
+ellos y actualiza `docs/archivo/README.md`.
