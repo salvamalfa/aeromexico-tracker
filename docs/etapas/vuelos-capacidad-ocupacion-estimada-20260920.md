@@ -10,10 +10,9 @@
 La vista nacional de `Vuelos` muestra para marzo–julio de 2026 cuatro métricas
 por mercado: pasajeros, asientos, vuelos y ocupación. Todas llevan `≈` porque
 combinan estimaciones y ninguna se presenta como operación realizada observada.
-El HTML principal regenerado es
-[`prototypes/etapa-11/resumen_ejecutivo.html`](../../prototypes/etapa-11/resumen_ejecutivo.html)
-y su copia pública byte por byte es
-[`static/aeromexico_tracker.html`](../../static/aeromexico_tracker.html).
+En su momento se publicó en el HTML de la app anterior
+(`prototypes/etapa-11/resumen_ejecutivo.html` y `static/aeromexico_tracker.html`,
+ya retirados); hoy la muestra la vista de Vuelos en `web/`.
 
 No se hicieron llamadas nuevas a AeroDataBox. La derivación reutilizó los
 artefactos transitorios de las corridas ya autorizadas para 2026M03–2026M07,
