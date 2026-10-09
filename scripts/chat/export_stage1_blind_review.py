@@ -76,7 +76,9 @@ def _is_known_terminal_tool_limit(row: dict[str, Any]) -> bool:
         and not isinstance(cost, bool)
         and math.isfinite(cost)
         and cost >= 0
-        and isinstance(lower_bound, (int, float)) and math.isfinite(lower_bound)
+        and isinstance(lower_bound, (int, float))
+        and not isinstance(lower_bound, bool)
+        and math.isfinite(lower_bound)
         and lower_bound == cost
         and isinstance(latency, (int, float))
         and not isinstance(latency, bool)
