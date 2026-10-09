@@ -194,6 +194,19 @@ def latest_provider_turn_id(client: Any, session_id: str) -> str | None:
     return None
 
 
+def required_actions(client: Any, event: dict[str, Any], session_id: str | None) -> list[dict[str, Any]]:
+    """Resolve the provider's required function actions from a session event."""
+    session = event.get("session")
+    if not isinstance(session, dict):
+        if not session_id:
+            raise OpenAIProviderError("El evento no identifica la sesión que requiere acción")
+        session = to_dict(client.beta.agents.sessions.retrieve(session_id))
+    actions = session.get("required_actions")
+    if not isinstance(actions, list):
+        raise OpenAIProviderError("El proveedor no devolvió las acciones pendientes")
+    return [to_dict(action) for action in actions]
+
+
 def required_string(value: Any, name: str) -> str:
     if not isinstance(value, str) or not value:
         raise ValueError(f"La acción del proveedor no incluye {name} válido")

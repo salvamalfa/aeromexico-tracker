@@ -316,13 +316,15 @@ def test_creates_none_session_with_explicit_model_tools_and_live_context_envelop
             ]
         )
     )
-    provider = _provider(FakeClient(fake))
+    provider = _provider(FakeClient(fake), reasoning_effort="max", text_verbosity="low")
 
     result, events, saved = _run(provider)
 
     request = fake.created[0]
     assert request["environment"] == {"type": "none"}
     assert request["agent"]["model"] == "model-explicit"
+    assert request["agent"]["reasoning"] == {"effort": "max"}
+    assert request["agent"]["text"] == {"verbosity": "low"}
     assert len(request["agent"]["tools"]) == 7
     assert {tool["name"] for tool in request["agent"]["tools"]} == {
         "get_data_catalog",

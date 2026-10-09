@@ -117,3 +117,22 @@ recuperación ni vuelvas a enviarla sin pedido explícito del dueño.
 La [validación real](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/chat-mvp/airline-tracker-validacion-real-20261004.md) y la
 [guía de Data Sharing](data-sharing.md) detallan resultados, cobertura y
 límites diarios y la importación del consumo de evaluaciones.
+
+## F2.0 · Modelo y esfuerzo fijados
+
+La configuración versionada en [`../../config/chat/models.json`](../../config/chat/models.json)
+define capacidades y precios de `gpt-6-luna` y `gpt-6.1-sol`. El servicio
+valida `CHAT_REASONING_EFFORT` y `CHAT_TEXT_VERBOSITY`, los envía explícitamente
+al crear una sesión Agents API y registra modelo, esfuerzo y verbosidad en
+SQLite para cada turno. `/api/chat/health` reporta la selección y el número
+teórico de reservas mínimas que cabe bajo los topes configurados. El cálculo no
+es una cota de facturación porque no hay límite de salida acumulado que cubra
+un turno de hasta 16 herramientas; consulta [operaciones](operations.md).
+
+Las conversaciones OpenAI existentes antes de F2.0 no tienen settings locales
+fijados. Se conservan para leer su historial; para evitar enviar preguntas con
+la configuración remota anterior, requieren crear una conversación nueva.
+También se necesita una conversación nueva al cambiar modelo, esfuerzo o
+verbosidad. El default local sigue siendo `CHAT_MAX_TOOL_CALLS=8`; el límite
+operativo documentado para producción es 16. Implementación F2.0 lista para
+revisión; no se ejecutaron consultas de pago ni se cambió Railway.

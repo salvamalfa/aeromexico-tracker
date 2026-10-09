@@ -7,12 +7,6 @@ import threading
 from pathlib import Path
 
 import pytest
-
-from src.conversational_analytics.config import ChatConfig
-from src.conversational_analytics.providers.base import ProviderResult
-from src.conversational_analytics.providers.openai import OpenAIProviderError
-from src.conversational_analytics.storage import ChatStore
-from src.conversational_analytics.worker import TurnWorker
 from test_chat_openai import (
     FakeClient,
     FakeSessions,
@@ -27,6 +21,12 @@ from test_chat_openai import (
     _usage,
 )
 from test_chat_worker import Registry, Snapshot
+
+from src.conversational_analytics.config import ChatConfig
+from src.conversational_analytics.providers.base import ProviderResult
+from src.conversational_analytics.providers.openai import OpenAIProviderError
+from src.conversational_analytics.storage import ChatStore
+from src.conversational_analytics.worker import TurnWorker
 
 FINAL_ITEM = {
     "id": "item_final",
@@ -167,13 +167,27 @@ class LimitProvider:
 def _run_limited_turn(tmp_path: Path, retrieved_turn):
     path = tmp_path / "chat.sqlite3"
     store = ChatStore(path)
-    conv = store.create_conversation("alice", "snapshot-v1", "semantic-v1")
+    conv = store.create_conversation(
+        "alice", "snapshot-v1", "semantic-v1", "gpt-6.1-sol", "medium", "medium"
+    )
     turn, _ = store.submit_turn(
-        "alice", conv["id"], "ask", "client-1", {}, reserved_tokens=100, reserved_cost_usd=0.01
+        "alice",
+        conv["id"],
+        "ask",
+        "client-1",
+        {},
+        reserved_tokens=100,
+        reserved_cost_usd=0.01,
+        model="gpt-6.1-sol",
+        reasoning_effort="medium",
+        text_verbosity="medium",
     )
     config = ChatConfig(
         state_path=path,
         provider="openai",
+        model="gpt-6.1-sol",
+        reasoning_effort="medium",
+        text_verbosity="medium",
         estimated_input_cost_per_million=2.0,
         estimated_output_cost_per_million=10.0,
     )
@@ -196,7 +210,7 @@ def test_tool_limit_failure_cancels_the_provider_turn_and_books_its_usage(tmp_pa
 
     assert provider.cancelled == ["sess_fixture"]
     assert (status, usage_complete, reserved) == ("failed", 1, 0)
-    assert cost == pytest.approx((500 * 2.0 + 300 * 10.0) / 1_000_000)
+    assert cost == pytest.approx((500 * 2.0 * 1.25 + 300 * 10.0) / 1_000_000)
 
 
 def test_tool_limit_failure_keeps_the_hold_when_usage_stays_unknown(tmp_path: Path, monkeypatch):
