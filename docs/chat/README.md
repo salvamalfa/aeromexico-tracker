@@ -1,5 +1,10 @@
 # Chat analítico de Airline Tracker
 
+La revisión vigente para el periodo por omisión del chat está en
+[revisión de periodo del dashboard (9 oct 2026)](revision-periodo-dashboard-20261009.md).
+Conserva por separado el prompt de producción como baseline y el propuesto;
+no modifica la evidencia histórica de fase 2.
+
 El chat consulta una proyección permitida de los JSON públicos publicados en
 `site/data/v1`. El servicio fija cada turno a un `data_version` y un
 `semantic_version`; no abre el warehouse, bronze o silver. Python valida el

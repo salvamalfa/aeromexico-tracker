@@ -140,6 +140,35 @@ def test_conversation_compare_has_stable_delta_sign_and_persists_history(tmp_pat
         assert len(conversation_state["turns"]) == 2
 
 
+def test_omitted_period_uses_the_current_dashboard_selection(tmp_path: Path) -> None:
+    snapshot = Snapshot(ROOT / "site")
+    provider = _RecordingMockProvider(snapshot)
+    app = _app(tmp_path, snapshot, provider)
+    context = {
+        "tab": "reading",
+        "period": "2026Q2",
+        "entity": "AEROMEXICO",
+        "card_id": "market-card",
+        "filters": {"segment": "total"},
+    }
+
+    with TestClient(app, base_url="http://127.0.0.1", client=("127.0.0.1", 50000)) as client:
+        conversation = client.post("/api/chat/conversations")
+        assert conversation.status_code == 201
+        turn_id = _new_turn(client, conversation.json()["id"], "¿Cuál fue la participación?", context)
+        _completed_events(client, turn_id)
+
+    assert provider.tool_calls[-1] == (
+        "query_metrics",
+        {
+            "metric_ids": ["market_share"],
+            "entity_ids": ["AEROMEXICO"],
+            "periods": ["2026Q2"],
+            "segment": "total",
+        },
+    )
+
+
 def test_conversation_series_keeps_missing_values_null_and_uses_source_references(
     tmp_path: Path,
 ) -> None:

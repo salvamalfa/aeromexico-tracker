@@ -8,10 +8,20 @@ import pytest
 
 from src.conversational_analytics.data.snapshot import Snapshot, SnapshotError, data_version
 from src.conversational_analytics.evaluation import load_cases
+from src.conversational_analytics.providers._openai_helpers import SYSTEM_INSTRUCTIONS
 from src.conversational_analytics.semantic.context import validate_context
 from src.conversational_analytics.semantic.plan import PlanValidationError, QueryPlan, validate_plan
 
 FIXTURE = Path(__file__).parent / "fixtures/chat/site"
+
+
+def test_system_instructions_resolve_omitted_period_without_resolving_other_ambiguity() -> None:
+    assert "(1) un periodo explícito en la pregunta actual" in SYSTEM_INSTRUCTIONS
+    assert "(2) el periodo previo solo si" in SYSTEM_INSTRUCTIONS
+    assert "(3) el periodo seleccionado en el contexto validado" in SYSTEM_INSTRUCTIONS
+    assert "pide el periodo" in SYSTEM_INSTRUCTIONS
+    assert "no infieras ni reemplaces métrica, entidad, segmento, mercado" in SYSTEM_INSTRUCTIONS
+    assert "denominador o fuente con el contexto" in SYSTEM_INSTRUCTIONS
 
 
 def test_supported_holdout_contexts_pass_production_validation() -> None:
