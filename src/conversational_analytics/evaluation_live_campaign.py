@@ -13,6 +13,7 @@ from .evaluation_live import _live_provider_run, _write_private_json
 from .evaluation_live_composite import _merge_private_reports
 from .evaluation_live_reconciliation import (
     _known_case_cost,
+    _legacy_boundary_quality_proof,
     _legacy_report_hash,
     _slot_coverage_complete,
     _tool_limit_terminal,
@@ -101,15 +102,28 @@ def run_campaign(
         run = run_by_id[run_id]
         summary = saved_run.get("summary", {})
         legacy_report_hash = _legacy_report_hash(saved_run, run, run["case_ids"])
+        legacy_quality_proof = (
+            _legacy_boundary_quality_proof(saved_run, run, run["case_ids"], legacy_report_hash)
+            if legacy_report_hash is not None
+            else None
+        )
+        migrated_cases = []
+        for case in saved_run.get("cases", []):
+            enriched = dict(case)
+            proof = (legacy_quality_proof or {}).get(str(case.get("case_id")))
+            if proof is not None:
+                for key, value in proof.items():
+                    enriched.setdefault(key, value)
+            migrated_cases.append(enriched)
         if (
             not saved_run.get("complete")
             and summary.get("run_status") == "completed"
             and not saved_run.get("spent_unknown")
             and legacy_report_hash is not None
-            and _slot_coverage_complete(
-                saved_run.get("cases", []), run["case_ids"], by_case, allow_legacy_boundary=True
-            )
+            and legacy_quality_proof is not None
+            and _slot_coverage_complete(migrated_cases, run["case_ids"], by_case, allow_legacy_boundary=True)
         ):
+            saved_run["cases"] = migrated_cases
             saved_run["complete"] = True
             saved_run["stopped_reason"] = None
             summary.update(
@@ -215,6 +229,8 @@ def run_campaign(
                 saved_case["error_metadata"] = case["error_metadata"]
             if "provider_calls" in case:
                 saved_case["provider_calls"] = case["provider_calls"]
+            if "quality" in case:
+                saved_case["quality"] = case["quality"]
             new_cases.append(saved_case)
         all_cases = prior_cases + new_cases
         coverage_complete = _slot_coverage_complete(all_cases, run["case_ids"], by_case)

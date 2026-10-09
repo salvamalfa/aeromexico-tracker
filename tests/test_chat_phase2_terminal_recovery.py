@@ -10,6 +10,7 @@ import pytest
 from src.conversational_analytics import evaluation_live_campaign as campaign
 from src.conversational_analytics.evaluation_live_reconciliation import (
     _slot_coverage_complete,
+    _terminal_boundary_rejection,
     reconcile_terminal_report,
     validate_report_parts,
 )
@@ -311,6 +312,38 @@ def test_resume_preflight_rejects_unknown_completed_status_or_missing_cost(tmp_p
             cases_by_id={"N01": {"id": "N01"}},
             expected_cost=0.1,
         )
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    ["scored", "integer_flags", "contradictory_legacy_counter", "boolean_counter"],
+)
+def test_boundary_rejection_requires_ungraded_bool_flags_and_all_zero_counters(mutation) -> None:
+    case = next(case for case in _stage1_cases() if case["id"] == "es_card_conflicting_context")
+    row = {
+        "case_id": case["id"],
+        "status": "application_context_rejected",
+        "provider_calls": 0,
+        "provider_request_count": 0,
+        "provider_turn_started": False,
+        "model_turn_completed": False,
+        "usage_complete": None,
+        "estimated_cost_usd": None,
+        "known_estimated_cost_lower_bound_usd": None,
+        "application_boundary_test_completed": True,
+        "quality": {"scored": False, "not_scored_reason": "application_context_rejected"},
+    }
+    assert _terminal_boundary_rejection(row, case, allow_legacy=True)
+    if mutation == "scored":
+        row["quality"]["scored"] = True
+    elif mutation == "integer_flags":
+        row["provider_turn_started"] = 0
+        row["model_turn_completed"] = 0
+    elif mutation == "contradictory_legacy_counter":
+        row["provider_request_count"] = 1
+    else:
+        row["provider_calls"] = False
+    assert not _terminal_boundary_rejection(row, case, allow_legacy=True)
 
 
 @pytest.mark.parametrize(

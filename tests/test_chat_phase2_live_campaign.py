@@ -337,6 +337,7 @@ def _boundary_rejection(case_id: str) -> dict:
         "usage_complete": None,
         "estimated_cost_usd": None,
         "known_estimated_cost_lower_bound_usd": None,
+        "quality": {"scored": False, "not_scored_reason": "application_context_rejected"},
     }
 
 
@@ -459,11 +460,23 @@ def test_legacy_completed_report_migrates_and_resumes_only_next_slot(monkeypatch
                                 "case_id": "es_card_conflicting_context",
                                 "status": "application_context_rejected",
                                 "provider_calls": 0,
+                                "provider_turn_started": False,
+                                "model_turn_completed": False,
+                                "usage_complete": None,
+                                "estimated_cost_usd": None,
+                                "known_estimated_cost_lower_bound_usd": None,
+                                "quality": {"scored": False},
                             },
                             {
                                 "case_id": "en_private_context_override",
                                 "status": "application_context_rejected",
                                 "provider_calls": 0,
+                                "provider_turn_started": False,
+                                "model_turn_completed": False,
+                                "usage_complete": None,
+                                "estimated_cost_usd": None,
+                                "known_estimated_cost_lower_bound_usd": None,
+                                "quality": {"scored": False},
                             },
                             {
                                 "case_id": "N01",
@@ -536,7 +549,18 @@ def test_legacy_completed_report_migrates_and_resumes_only_next_slot(monkeypatch
     migrated = json.loads(state_path.read_text(encoding="utf-8"))["completed_runs"]["old-current"]
     assert migrated["complete"] is True
     assert migrated["known_estimated_cost_usd"] == 0.1
-    assert migrated["cases"] == legacy_cases
+    assert migrated["cases"][:2] == [
+        {
+            **legacy_cases[0],
+            "quality": {"scored": False},
+            "provider_calls": 0,
+        },
+        {
+            **legacy_cases[1],
+            "quality": {"scored": False},
+            "provider_calls": 0,
+        },
+    ]
 
 
 @pytest.mark.parametrize(

@@ -31,10 +31,20 @@ def _terminal_boundary_rejection(
         pass
     else:
         return False
+    provider_started = record.get("provider_turn_started")
+    model_completed = record.get("model_turn_completed")
+    quality = record.get("quality")
+    if (
+        (provider_started is not None and provider_started is not False)
+        or (model_completed is not None and model_completed is not False)
+        or not isinstance(quality, Mapping)
+        or quality.get("scored") is not False
+    ):
+        return False
     proof = (
         record.get("status") == "application_context_rejected"
-        and record.get("provider_turn_started") in (False, None)
-        and record.get("model_turn_completed") in (False, None)
+        and provider_started in (False, None)
+        and model_completed in (False, None)
         and record.get("usage_complete") is None
         and record.get("estimated_cost_usd") is None
         and record.get("known_estimated_cost_lower_bound_usd") is None
@@ -44,8 +54,13 @@ def _terminal_boundary_rejection(
     if not proof:
         return False
     if allow_legacy:
+        counters = [record[key] for key in ("provider_calls", "provider_request_count") if key in record]
         return (
-            record.get("provider_calls", 0) == 0
+            "provider_calls" in record
+            and bool(counters)
+            and all(
+                isinstance(value, int) and not isinstance(value, bool) and value == 0 for value in counters
+            )
             and record.get("application_boundary_test_completed", True) is True
         )
     counters = [
@@ -247,6 +262,7 @@ def reconcile_terminal_report(
                 "provider_calls",
                 "application_boundary_test_completed",
                 "error_metadata",
+                "quality",
             )
             if key in row
         }
@@ -364,8 +380,15 @@ def _legacy_report_hash(
     for case in report_cases:
         saved_case = saved_by_id[str(case["case_id"])]
         if case.get("status") == "application_context_rejected":
+            counters = [case[key] for key in ("provider_calls", "provider_request_count") if key in case]
             if (
-                case.get("provider_calls") != 0
+                "provider_calls" not in case
+                or not counters
+                or any(
+                    not isinstance(value, int) or isinstance(value, bool) or value != 0 for value in counters
+                )
+                or not isinstance(case.get("quality"), Mapping)
+                or case["quality"].get("scored") is not False
                 or case.get("provider_turn_started", False) is not False
                 or case.get("model_turn_completed", False) is not False
                 or case.get("session_id") is not None
@@ -399,6 +422,52 @@ def _legacy_report_hash(
         ):
             return None
     return hashlib.sha256(raw).hexdigest()
+
+
+def _legacy_boundary_quality_proof(
+    saved_run: Mapping[str, Any],
+    run: Mapping[str, Any],
+    case_ids: Sequence[str],
+    expected_report_sha256: str,
+) -> dict[str, dict[str, Any]] | None:
+    """Return minimal ungraded boundary metadata from the hash-verified source report."""
+    report_path = saved_run.get("summary", {}).get("report_path")
+    if not isinstance(report_path, str):
+        return None
+    try:
+        raw = Path(report_path).read_bytes()
+        report = json.loads(raw)
+    except (OSError, json.JSONDecodeError):
+        return None
+    models = report.get("models")
+    if (
+        hashlib.sha256(raw).hexdigest() != expected_report_sha256
+        or report.get("run_status") != "completed"
+        or report.get("run_identity") != run.get("identity")
+        or not isinstance(models, list)
+        or len(models) != 1
+    ):
+        return None
+    report_cases = models[0].get("cases", [])
+    if [str(row.get("case_id")) for row in report_cases] != list(map(str, case_ids)):
+        return None
+    proof: dict[str, dict[str, Any]] = {}
+    for row in report_cases:
+        if row.get("status") != "application_context_rejected":
+            continue
+        quality = row.get("quality")
+        if not isinstance(quality, Mapping) or quality.get("scored") is not False:
+            return None
+        counters = {key: row[key] for key in ("provider_calls", "provider_request_count") if key in row}
+        if "provider_calls" not in counters or any(
+            not isinstance(value, int) or isinstance(value, bool) or value != 0 for value in counters.values()
+        ):
+            return None
+        proof[str(row["case_id"])] = {
+            "quality": {key: quality[key] for key in ("scored", "not_scored_reason") if key in quality},
+            **counters,
+        }
+    return proof
 
 
 def _known_case_cost(case: Mapping[str, Any]) -> float:
