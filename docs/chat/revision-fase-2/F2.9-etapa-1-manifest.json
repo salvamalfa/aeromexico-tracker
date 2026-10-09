@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "stage": "F2.9-stage-1",
-  "status": "ready_for_human_review",
+  "status": "business_review_received",
   "human_review_complete": false,
-  "human_review_status": "pending",
+  "human_review_status": "business_complete_safety_pending",
   "future_stage_authorization": "none",
   "provenance": {
     "execution_commit": "72b33f29e41a6fe1f270c19304ecdbce4e47917b",
@@ -35,7 +35,30 @@
       "unavailable_slots": 1,
       "dataset_id": "d90473950a627c5cb67d3267c1bb326d167bd3c5be44af5285309cc225797722",
       "json_sha256": "569bbfab0ba3b0393dd0ef65d02de5c8cd60174dfa257a22a004549299dd5954",
-      "markdown_sha256": "001e6fa63c80fc2210081182511354f549f3e716a4006a30d09d78782887b26d"
+      "markdown_sha256": "001e6fa63c80fc2210081182511354f549f3e716a4006a30d09d78782887b26d",
+      "human_review": {
+        "status": "complete",
+        "responses_reviewed": 35,
+        "responses_correct": 35,
+        "correctness_by_variant": {
+          "current": {
+            "reviewed": 17,
+            "correct": 17
+          },
+          "proposed": {
+            "reviewed": 18,
+            "correct": 18
+          }
+        },
+        "paired_comparison": {
+          "cases": 17,
+          "preferred_proposed": 9,
+          "preferred_current": 7,
+          "tie": 1,
+          "unpaired_case": "Q11",
+          "unpaired_reason": "Current execution reached the tool-call limit and produced no response."
+        }
+      }
     },
     "safety": {
       "cases": 40,
