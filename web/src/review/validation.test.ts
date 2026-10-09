@@ -187,6 +187,51 @@ describe("blind review file validation", () => {
     expect(document.querySelector("img, script")).toBeNull();
   });
 
+  it("keeps unmarked prefixes in place and does not split marker-like text inside multiline HTML", () => {
+    document.body.innerHTML = `
+      <p id="question-position"></p><h2 id="question-text"></h2><p id="question-language"></p>
+      <div id="expected-summary"></div><pre id="expected-answer"></pre><div id="candidate-list"></div>
+      <button id="previous-question"></button><button id="next-question"></button>`;
+    const source = sampleDataset();
+    source.questions[0]!.candidates[0]!.answer = "Prefacio del asistente antes del turno.\n\nRespuesta del asistente · turno 1:\nRespuesta sintética.";
+    let dataset = parseDataset(source);
+    renderQuestion(dataset, 0, new Map(), false, true, () => undefined);
+    let bodies = document.querySelectorAll<HTMLElement>(".candidate-card:first-child .review-message-assistant .review-message-body");
+    expect(bodies).toHaveLength(1);
+    const prefixed = bodies[0]!.textContent ?? "";
+    expect(prefixed.indexOf("Prefacio del asistente")).toBeLessThan(prefixed.indexOf("Respuesta del asistente · turno 1:"));
+    expect(prefixed.indexOf("Respuesta del asistente · turno 1:")).toBeLessThan(prefixed.indexOf("Respuesta sintética."));
+
+    source.questions[0]!.candidates[0]!.answer = [
+      "Respuesta del asistente · turno 1:",
+      "Ejemplo HTML:",
+      "<div>",
+      "Respuesta del asistente · turno 2:",
+      "marcador literal",
+      "</div>",
+    ].join("\n");
+    dataset = parseDataset(source);
+    renderQuestion(dataset, 0, new Map(), false, true, () => undefined);
+    bodies = document.querySelectorAll<HTMLElement>(".candidate-card:first-child .review-message-assistant .review-message-body");
+    expect(bodies).toHaveLength(1);
+    expect(bodies[0]?.textContent).toContain("Respuesta del asistente · turno 2:");
+    expect(bodies[0]?.querySelector("div")).toBeNull();
+
+    source.questions[0]!.candidates[0]!.answer = [
+      "Respuesta del asistente · turno 1:",
+      "<!--",
+      "Respuesta del asistente · turno 2:",
+      "marcador literal",
+      "-->",
+    ].join("\n");
+    dataset = parseDataset(source);
+    renderQuestion(dataset, 0, new Map(), false, true, () => undefined);
+    bodies = document.querySelectorAll<HTMLElement>(".candidate-card:first-child .review-message-assistant .review-message-body");
+    expect(bodies).toHaveLength(1);
+    expect(bodies[0]?.textContent).toContain("Respuesta del asistente · turno 2:");
+    expect([...bodies[0]!.childNodes].some((node) => node.nodeType === Node.COMMENT_NODE)).toBe(false);
+  });
+
   it("shows application-context-rejected slots as not evaluable and without rating controls", () => {
     document.body.innerHTML = `
       <p id="question-position"></p><h2 id="question-text"></h2><p id="question-language"></p>
