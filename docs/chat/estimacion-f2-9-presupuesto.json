@@ -1,5 +1,5 @@
 {
-  "status": "planning_only_pending_owner_approval",
+  "status": "planning_only; stage_1_owner_approved; stages_2_3_pending",
   "reviewed_at_owner_local": "2026-10-08 America/Mexico_City",
   "tariff_source": "https://developers.openai.com/api/docs/models/",
   "tariff_basis": "Authoritative model catalog prices, USD per million input/cached/write/output tokens; short-context scenarios.",
@@ -40,9 +40,9 @@
     },
     "fixtures": {
       "business_path": "tests/fixtures/chat_evals/business_proposed.json",
-      "business_sha256": "585adf3901c19581f563d2fe0f5b2d4f41ac90a614d6ce6f200a580d774c2b56",
+      "business_sha256": "30fc0acfc5d9fee1ffffd3624209712dd8160806dae4d904c4310a8f53537640",
       "safety_path": "tests/fixtures/chat_evals/safety_current.json",
-      "safety_sha256": "2fce3196a5ca63edbe7c32e898f8ce456408ffd151788f263a3f105cd8aca2b6",
+      "safety_sha256": "bdac43e63b75e4b9362db28db7168d57a4b533b8f2e5d23b96e7f0809960edf6",
       "business_expected_versions": {
         "data_version": "d9c4e56d04ad67be5dff6d6e9f7f6615f4f4be985ec1e5ee59781a7735007037",
         "semantic_version": "0b8de07ff211ca1ba984bd87281a2d68950a3e36268909b2121a7ed6b35e0365"
@@ -1173,26 +1173,51 @@
         "modeled_upper_cost_no_cache_usd": 1.612,
         "margin_rate": 0.25,
         "funds_to_have_available_if_zero_verified_balance_usd": 3,
-        "net_topup_rule": "max(0, stage reserve - reconciled available balance); current balance is unreconciled"
+        "net_topup_rule": "max(0, stage reserve - owner-confirmed available balance); provider usage is not independently reconciled"
       },
       {
         "stage": 2,
         "modeled_upper_cost_no_cache_usd": 8.1825,
         "margin_rate": 0.25,
         "funds_to_have_available_if_zero_verified_balance_usd": 11,
-        "net_topup_rule": "max(0, stage reserve - reconciled available balance); current balance is unreconciled"
+        "net_topup_rule": "max(0, stage reserve - owner-confirmed available balance); provider usage is not independently reconciled"
       },
       {
         "stage": 3,
         "modeled_upper_cost_no_cache_usd": 42.994,
         "margin_rate": 0.25,
         "funds_to_have_available_if_zero_verified_balance_usd": 54,
-        "net_topup_rule": "max(0, stage reserve - reconciled available balance); current balance is unreconciled"
+        "net_topup_rule": "max(0, stage reserve - owner-confirmed available balance); provider usage is not independently reconciled"
       }
     ],
     "stage_3_is_provisional": true,
-    "available_balance_usd": null,
-    "balance_status": "unreconciled; the historical ~US$7 figure is not current available balance"
+    "available_balance_usd": 7.2,
+    "balance_status": "confirmed_by_owner; provider usage not reconciled",
+    "current_authorization": {
+      "stage_1_reserve_usd": 3.0,
+      "stage_1_only": true,
+      "available_balance_usd": 7.2,
+      "used_usd": 2.8,
+      "confirmed_by_owner": true,
+      "provider_reconciled": false,
+      "source": "owner declaration in the current project chat"
+    }
+  },
+  "stage_1_operational_guard": {
+    "candidate": "gpt-6-luna@medium",
+    "tool_calls_per_turn": 16,
+    "reserved_tokens_per_turn": {
+      "input": 140000,
+      "output": 32000
+    },
+    "reservation_rate_usd_per_million": 0.75,
+    "reservation_usd_per_turn": 0.129,
+    "planned_user_turns": 124,
+    "sum_if_all_turn_reservations_were_held_simultaneously_usd": 15.996,
+    "budget_usd": 3.0,
+    "admission_behavior": "the runner checks the next case reservation against remaining budget after confirmed spend; it does not hold all planned reservations at once",
+    "offline_representative_scenario": "all 124 turns confirm 100000 input and 6000 output tokens; modeled spend $1.922; both slots complete within $3",
+    "limitations": "unknown spend halts admission and blocks replay; actual usage and long-context request pricing may differ"
   },
   "limitations": [
     "No paid API was called and no credentials were read. No live usage, latency, cache rates, or invoice were measured.",
@@ -1201,7 +1226,7 @@
     "Cache scenarios price each input token once as normal or cached. Cache-write usage remains unknown, not zero.",
     "Long-context pricing applies per provider request above 272k input tokens. Request-level token counts are unavailable; an actual request crossing this threshold would cost more.",
     "The 25% planning margin is not a spending ceiling or invoice guarantee.",
-    "The live account balance is unreconciled; no deduction is made from the former ~US$7 reference.",
+    "The US$7.20 balance is owner-declared and not independently reconciled against provider usage.",
     "The 3–5 USD development estimate is a rough plan reference and is not assigned to stage reserves without concrete calls."
   ]
 }

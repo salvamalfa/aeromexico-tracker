@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
   "dataset": "business proposal; separate from security holdout",
-  "status": "DRAFT_PENDING_OWNER_APPROVAL",
+  "status": "OWNER_APPROVED",
   "expected_versions": {
     "data_version": "d9c4e56d04ad67be5dff6d6e9f7f6615f4f4be985ec1e5ee59781a7735007037",
     "semantic_version": "0b8de07ff211ca1ba984bd87281a2d68950a3e36268909b2121a7ed6b35e0365"
   },
-  "prompt_version": "f2.1-proposal-pending-owner-approval",
+  "prompt_version": "f2.1-owner-approved-2f459949",
   "tool_version": "current allowlisted tools; future packages pending",
-  "description": "Preguntas, comportamientos y rúbricas son borrador pendiente de aprobación del dueño. Gold values only from public snapshot/code; pending dependencies have no gold answer yet. Holdout security fixture remains untouched.",
+  "description": "El dueño aprobó las 30 preguntas y sus rúbricas. Doce casos (N01, N04, N09–N10, N15–N19, N22–N23 y N29) siguen pendientes de dependencias futuras y no están habilitados para evaluación live; los 18 casos actuales son elegibles para etapa 1. La aprobación no autoriza etapas 2/3 ni cambios de datos.",
   "cases": [
     {
       "id": "N01",
@@ -2066,5 +2066,102 @@
       "gold_state": "pending_generation_against_exact_pinned_snapshot"
     }
   ],
-  "gold_policy": "All numeric gold rows and derived values generated from the pinned current public snapshot with ToolRegistry/Python; never model-generated."
+  "gold_policy": "All numeric gold rows and derived values generated from the pinned current public snapshot with ToolRegistry/Python; never model-generated.",
+  "owner_approval": {
+    "status": "approved",
+    "source": "explicit owner approval in the current project chat",
+    "approved_scope": {
+      "business_case_ids": [
+        "N01",
+        "N02",
+        "N03",
+        "N04",
+        "N05",
+        "N06",
+        "N07",
+        "N08",
+        "N09",
+        "N10",
+        "N11",
+        "N12",
+        "N13",
+        "N14",
+        "N15",
+        "N16",
+        "N17",
+        "N18",
+        "N19",
+        "N20",
+        "N21",
+        "N22",
+        "N23",
+        "N24",
+        "N25",
+        "N26",
+        "N27",
+        "N28",
+        "N29",
+        "N30"
+      ],
+      "business_questions_and_rubrics": true,
+      "current_stage_1_business_case_ids": [
+        "N02",
+        "N03",
+        "N05",
+        "N06",
+        "N07",
+        "N08",
+        "N11",
+        "N12",
+        "N13",
+        "N14",
+        "N20",
+        "N21",
+        "N24",
+        "N25",
+        "N26",
+        "N27",
+        "N28",
+        "N30"
+      ],
+      "future_dependency_case_ids": [
+        "N01",
+        "N04",
+        "N09",
+        "N10",
+        "N15",
+        "N16",
+        "N17",
+        "N18",
+        "N19",
+        "N22",
+        "N23",
+        "N29"
+      ]
+    },
+    "not_authorized": [
+      "stage 2",
+      "stage 3",
+      "new data or snapshot approval"
+    ],
+    "prompt_source_commit": "2f45994962b227b62e542b75b851c731b671329e",
+    "prompt_source_path": "docs/chat/revision-fase-2/F2.1-prompt-propuesto.md",
+    "prompt_source_sha256": "656de4bc6a0a92d7374513a7fbac27ec304a3216f4ea99ad82c423ea08a0e6b1",
+    "approved_prompt_content_sha256": "33b8f7a0900869812d98bba57daa2ce3ea2f6b5c02a86a7eb3b8e830c7f7694b",
+    "business_questions_and_rubrics_approved": true,
+    "case_ratings_approved": false,
+    "model_answer_ratings_status": "not_started",
+    "approved_live_stages": [
+      1
+    ]
+  },
+  "campaign_authorization": {
+    "stage_1_reserve_usd": 3.0,
+    "stage_1_only": true,
+    "available_balance_usd": 7.2,
+    "used_usd": 2.8,
+    "confirmed_by_owner": true,
+    "provider_reconciled": false,
+    "source": "owner declaration in the current project chat"
+  }
 }

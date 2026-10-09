@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from .data.snapshot import Snapshot
-from .evaluation_plan import render_dry_run
+from .evaluation_plan import render_campaign_dry_run, render_dry_run
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURE_PATH = ROOT / "tests/fixtures/chat_evals/holdout.json"
@@ -440,6 +440,9 @@ def main(argv: list[str] | None = None) -> int:
             parser.error("el fixture de negocio sigue en borrador; no puede habilitar una corrida live")
         if args.stage is None:
             parser.error("la corrida de negocio requiere --stage")
+        approved_stages = fixture.get("owner_approval", {}).get("approved_live_stages", [])
+        if args.stage not in approved_stages:
+            parser.error("la etapa de negocio no está autorizada para live por la aprobación vigente")
         if args.stage == 3:
             parser.error("etapa 3 bloqueada hasta readiness explícita de F2.3–F2.8 y resolución de N17")
         unresolved = [
@@ -464,14 +467,20 @@ def main(argv: list[str] | None = None) -> int:
             parser.error("--prompt-runs debe ser positivo")
         print(
             json.dumps(
-                render_dry_run(
-                    cases,
-                    models=args.models,
-                    prices=prices,
-                    input_tokens_per_question=args.input_tokens_per_question,
-                    output_tokens_per_question=args.output_tokens_per_question,
-                    expected_versions=fixture.get("expected_versions"),
-                    prompt_runs=prompt_runs,
+                render_campaign_dry_run(
+                    render_dry_run(
+                        cases,
+                        models=args.models,
+                        prices=prices,
+                        input_tokens_per_question=args.input_tokens_per_question,
+                        output_tokens_per_question=args.output_tokens_per_question,
+                        expected_versions=fixture.get("expected_versions"),
+                        prompt_runs=prompt_runs,
+                    ),
+                    args=args,
+                    fixture=fixture,
+                    cases=cases,
+                    is_business=is_business,
                 ),
                 ensure_ascii=False,
                 indent=2,
@@ -565,6 +574,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
     return 0
+
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
+
 def render_dry_run(
     cases: list[dict[str, Any]],
     *,
@@ -68,3 +69,62 @@ def render_dry_run(
             "writes_now": [],
         },
     }
+
+
+def render_campaign_dry_run(
+    report: dict[str, Any], *, args: Any, fixture: dict[str, Any],
+    cases: list[dict[str, Any]], is_business: bool,
+) -> dict[str, Any]:
+    """Attach stable F2.2 identities to a no-provider campaign plan."""
+    if not is_business or args.stage != 1 or not args.prompt_proposed:
+        return report
+    if not args.prompt_proposed.is_file():
+        raise ValueError("--prompt-proposed no existe")
+    if args.models and args.models != ["gpt-6-luna@medium"]:
+        raise ValueError("El dry-run F2.2 de etapa 1 requiere solo gpt-6-luna@medium")
+    from .evaluation_campaign import build_campaign_runs, extract_proposed_prompt
+    from .data.snapshot import Snapshot
+    from .providers._openai_helpers import SYSTEM_INSTRUCTIONS
+    from .tools.registry import ToolRegistry
+
+    proposed = extract_proposed_prompt(args.prompt_proposed.read_text(encoding="utf-8"))
+    registry = ToolRegistry(Snapshot(args.snapshot))
+    runs = build_campaign_runs(
+        1,
+        cases,
+        data_version=fixture["expected_versions"]["data_version"],
+        semantic_version=fixture["expected_versions"]["semantic_version"],
+        prompts={"current": SYSTEM_INSTRUCTIONS, "proposed": proposed},
+        tool_specs=registry.tool_specs(),
+        limits={
+            "max_tool_calls": 16,
+            "max_message_chars": 8_000,
+            "max_tool_result_bytes": 16_000,
+            "max_turn_seconds": 180,
+        },
+        text_verbosity="medium",
+        candidates=["gpt-6-luna@medium"],
+    )
+    report["campaign_plan"] = {
+        "mode": "offline_identity_plan; no provider client or API calls",
+        "candidate": "gpt-6-luna@medium",
+        "shared_operational_budget_usd_if_authorized": 3.0,
+        "limits": runs[0]["limits"],
+        "run_ids": [run["run_id"] for run in runs],
+        "runs": [
+            {
+                "run_id": run["run_id"],
+                "prompt_variant": run["prompt_variant"],
+                "prompt_content_hash": run["prompt_content_hash"],
+                "identity_hash": run["identity_hash"],
+                "case_count": run["case_count"],
+                "user_message_count": run["user_message_count"],
+            }
+            for run in runs
+        ],
+        "output_and_checkpoint_paths": {
+            "reports": str(args.output_dir),
+            "checkpoint": str(args.campaign_state or args.output_dir / "f2-2-stage-1-campaign.json"),
+        },
+    }
+    return report
