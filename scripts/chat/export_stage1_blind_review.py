@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build an offline, blinded F2.9 stage-1 review from two real run reports.
+"""Build offline F2.9 stage-1 business review and safety appendix.
 
 The input reports and alias key are private. Only completed assistant text,
 the pinned questions, and the approved rubric are copied into review artifacts.
@@ -23,6 +23,8 @@ SAFETY_FIXTURE = ROOT / "tests/fixtures/chat_evals/safety_current.json"
 DEFAULT_OUT = ROOT / ".state/outputs/chat-evaluations/f2-stage1-blind"
 ALIASES = ("A", "B")
 EXPECTED_CASES = 58
+EXPECTED_BUSINESS_CASES = 18
+EXPECTED_SAFETY_CASES = 40
 EXPECTED_MESSAGES = 62
 
 
@@ -40,18 +42,19 @@ def _read_json(path: Path) -> dict[str, Any]:
     return value
 
 
-def _fixture_cases() -> list[dict[str, Any]]:
+def _fixture_cases() -> dict[str, list[dict[str, Any]]]:
     business = _read_json(BUSINESS_FIXTURE).get("cases")
     safety = _read_json(SAFETY_FIXTURE).get("cases")
     if not isinstance(business, list) or not isinstance(safety, list):
         raise ExportError("Los fixtures stage 1 no contienen listas de casos")
     selected = [case for case in business if 1 in case.get("selection_stages", [])]
-    cases = list(safety) + selected
-    if len(safety) != 40 or len(selected) != 18:
+    if len(safety) != EXPECTED_SAFETY_CASES or len(selected) != EXPECTED_BUSINESS_CASES:
         raise ExportError("El alcance congelado de stage 1 ya no es 40 safety + 18 negocio")
-    if sum(len(case.get("turns") or [case.get("question")]) for case in cases) != EXPECTED_MESSAGES:
+    if len(safety) + len(selected) != EXPECTED_CASES:
+        raise ExportError("El alcance congelado de stage 1 ya no contiene 58 casos")
+    if sum(len(case.get("turns") or [case.get("question")]) for case in safety + selected) != EXPECTED_MESSAGES:
         raise ExportError("El alcance congelado de stage 1 ya no contiene 62 mensajes")
-    return cases
+    return {"business": selected, "safety": safety}
 
 
 def _run_cases(report: dict[str, Any], path: Path) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
@@ -178,15 +181,27 @@ def _blind_dataset(cases: list[dict[str, Any]], run_rows: dict[str, dict[str, di
     return canonical, {"schema_version": 1, "questions": key_rows}, rubric_rows
 
 
-def _markdown(dataset: dict[str, Any], rubric_rows: list[dict[str, Any]]) -> str:
+def _gold_summary(case: dict[str, Any]) -> str:
+    # Reuse the repository's established human-readable expected-value renderer
+    # (including derived comparison gold for N07/N11/N21).
+    from render_business_fixture_review import _gold_summary as render_gold_summary
+
+    return render_gold_summary(case)
+
+
+def _markdown(dataset: dict[str, Any], rubric_rows: list[dict[str, Any]], case_by_id: dict[str, dict[str, Any]], *, title: str, cohort_note: str = "") -> str:
     rubric_by_id = {row["question_id"]: row for row in rubric_rows}
-    chunks = ["# F2.9 · Etapa 1 · revisión ciega", "",
+    chunks = [title, "",
               "Respuestas anónimas agrupadas por caso. Revisa el comportamiento esperado y los fallos críticos. No hay puntuación numérica.",
-              "En cada caso marca utilidad y redacción para A y B, anota correcciones necesarias y selecciona cuál respuesta prefieres. Usa ‘empate’ o ‘ninguna’ si corresponde.", ""]
+              "En cada caso registra corrección, utilidad, redacción y mejoras concretas; la selección de ganador A/B/empate es opcional.", ""]
+    if cohort_note:
+        chunks += [cohort_note, ""]
     for question in dataset["questions"]:
         qid = question["id"]
         rubric = rubric_by_id[qid]
+        case = case_by_id[rubric["case_id"]]
         chunks += [f"## {qid}", "", "**Conversación evaluada**", "", question["question"], "",
+                   "**Referencia esperada**", "", _gold_summary(case), "",
                    "**Comportamiento esperado, rúbrica y fallos críticos**", "", rubric["behavior"], ""]
         for candidate in question["candidates"]:
             alias = candidate["alias"]
@@ -264,7 +279,7 @@ def _technical_summary(metadata: dict[str, dict[str, Any]], expected_ids: set[st
 
 
 def export(current_path: Path, proposed_path: Path, out_dir: Path) -> dict[str, Any]:
-    cases = _fixture_cases()
+    cohorts = _fixture_cases()
     current_rows, current_meta = _run_cases(_read_json(current_path), current_path)
     proposed_rows, proposed_meta = _run_cases(_read_json(proposed_path), proposed_path)
     for variant, metadata in (("current", current_meta), ("proposed", proposed_meta)):
@@ -280,40 +295,60 @@ def export(current_path: Path, proposed_path: Path, out_dir: Path) -> dict[str, 
             or identity.get("candidate") != "gpt-6-luna@medium"
         ):
             raise ExportError(f"El reporte no corresponde a Luna-M etapa 1 variante {variant}")
-    expected_ids = {case["id"] for case in cases}
-    for label, rows in (("current", current_rows), ("proposed", proposed_rows)):
-        extra = set(rows) - expected_ids
-        if extra:
-            raise ExportError(f"El reporte {label} contiene casos fuera del alcance congelado")
+    all_cases = cohorts["safety"] + cohorts["business"]
+    expected_ids = {case["id"] for case in all_cases}
     run_rows = {"current": current_rows, "proposed": proposed_rows}
-    dataset, private_key, rubric_rows = _blind_dataset(cases, run_rows)
-    private_key["variants"] = {
-        variant: {
-            "candidate": metadata["model"].get("candidate"),
-            "model": metadata["model"].get("model"),
-            "reasoning_effort": metadata["model"].get("reasoning_effort"),
-            "source_report_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+
+    def add_variant_metadata(private_key: dict[str, Any]) -> None:
+        private_key["variants"] = {
+            variant: {
+                "candidate": metadata["model"].get("candidate"),
+                "model": metadata["model"].get("model"),
+                "reasoning_effort": metadata["model"].get("reasoning_effort"),
+                "source_report_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+            }
+            for variant, metadata, path in (
+                ("current", current_meta, current_path),
+                ("proposed", proposed_meta, proposed_path),
+            )
         }
-        for variant, metadata, path in (
-            ("current", current_meta, current_path),
-            ("proposed", proposed_meta, proposed_path),
-        )
-    }
+
     technical = _technical_summary({"current": current_meta, "proposed": proposed_meta}, expected_ids)
-    outputs = {
-        "stage1-review.json": json.dumps(dataset, ensure_ascii=False, indent=2, allow_nan=False) + "\n",
-        "stage1-review.md": _markdown(dataset, rubric_rows),
-        "stage1-alias-key.json": json.dumps(private_key, ensure_ascii=False, indent=2, allow_nan=False) + "\n",
-        "stage1-technical-summary.json": json.dumps(technical, ensure_ascii=False, indent=2, allow_nan=False) + "\n",
-    }
+    exact_reports = all(set(rows) == expected_ids for rows in (current_rows, proposed_rows))
+    if not exact_reports:
+        _write_private(out_dir / "stage1-technical-summary.json",
+                       (json.dumps(technical, ensure_ascii=False, indent=2, allow_nan=False) + "\n").encode("utf-8"))
+        raise ExportError("Cada reporte debe contener exactamente los 58 casos; se guardó el resumen técnico privado con faltantes/gasto.")
+
+    outputs: dict[str, str] = {}
+    result_counts: dict[str, int] = {}
+    for cohort_name, filename_prefix, title, cohort_note in (
+        ("business", "stage1-review", "# F2.9 · Etapa 1 · revisión ciega · negocio", ""),
+        ("safety", "stage1-safety-appendix", "# F2.9 · Etapa 1 · apéndice ciego · safety",
+         "Este apéndice requiere calificación humana. Su inclusión no aprueba los casos ni la conducta evaluada."),
+    ):
+        cases = cohorts[cohort_name]
+        dataset, private_key, rubric_rows = _blind_dataset(cases, run_rows)
+        add_variant_metadata(private_key)
+        case_by_id = {case["id"]: case for case in cases}
+        outputs[f"{filename_prefix}.json"] = json.dumps(dataset, ensure_ascii=False, indent=2, allow_nan=False) + "\n"
+        outputs[f"{filename_prefix}.md"] = _markdown(
+            dataset, rubric_rows, case_by_id, title=title, cohort_note=cohort_note,
+        )
+        outputs[f"{filename_prefix}-alias-key.json"] = json.dumps(private_key, ensure_ascii=False, indent=2, allow_nan=False) + "\n"
+        result_counts[cohort_name] = dataset["available_count"]
+    outputs["stage1-technical-summary.json"] = json.dumps(technical, ensure_ascii=False, indent=2, allow_nan=False) + "\n"
     for name, text in outputs.items():
         target = out_dir / name
         _write_private(target, text.encode("utf-8"))
-    return {"status": "written", "review_json": str(out_dir / "stage1-review.json"),
-            "review_markdown": str(out_dir / "stage1-review.md"),
-            "alias_key": str(out_dir / "stage1-alias-key.json"),
+    return {"status": "written", "business_review_json": str(out_dir / "stage1-review.json"),
+            "business_review_markdown": str(out_dir / "stage1-review.md"),
+            "safety_appendix_json": str(out_dir / "stage1-safety-appendix.json"),
+            "safety_appendix_markdown": str(out_dir / "stage1-safety-appendix.md"),
+            "business_alias_key": str(out_dir / "stage1-review-alias-key.json"),
+            "safety_alias_key": str(out_dir / "stage1-safety-appendix-alias-key.json"),
             "technical_summary": str(out_dir / "stage1-technical-summary.json"),
-            "available_answers": dataset["available_count"],
+            "available_answers_by_cohort": result_counts,
             "technical": technical}
 
 

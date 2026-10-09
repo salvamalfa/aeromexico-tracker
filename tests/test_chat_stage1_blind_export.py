@@ -38,8 +38,9 @@ def detailed_report(cases: list[dict[str, object]], variant: str) -> dict[str, o
 
 
 class Stage1BlindExportTests(unittest.TestCase):
-    def test_exports_blind_two_alias_dataset_and_grouped_multiturn_markdown(self):
-        cases = exporter._fixture_cases()
+    def test_exports_18_business_cases_and_40_safety_appendix_separately(self):
+        cohorts = exporter._fixture_cases()
+        cases = cohorts["safety"] + cohorts["business"]
         report_cases = []
         for case in cases:
             turns = case.get("turns") or [case["question"]]
@@ -63,30 +64,65 @@ class Stage1BlindExportTests(unittest.TestCase):
             dataset_text = (output / "stage1-review.json").read_text(encoding="utf-8")
             dataset = json.loads(dataset_text)
             markdown = (output / "stage1-review.md").read_text(encoding="utf-8")
-            key = json.loads((output / "stage1-alias-key.json").read_text(encoding="utf-8"))
+            safety_text = (output / "stage1-safety-appendix.json").read_text(encoding="utf-8")
+            safety_dataset = json.loads(safety_text)
+            safety_markdown = (output / "stage1-safety-appendix.md").read_text(encoding="utf-8")
+            key = json.loads((output / "stage1-review-alias-key.json").read_text(encoding="utf-8"))
+            safety_key = json.loads((output / "stage1-safety-appendix-alias-key.json").read_text(encoding="utf-8"))
             technical = json.loads((output / "stage1-technical-summary.json").read_text(encoding="utf-8"))
 
-            self.assertEqual(len(dataset["questions"]), 58)
-            self.assertEqual(dataset["available_count"], 116)
-            self.assertTrue(all(len(question["candidates"]) == 2 for question in dataset["questions"]))
+            self.assertEqual(len(dataset["questions"]), 18)
+            self.assertEqual(dataset["available_count"], 36)
+            self.assertEqual(len(safety_dataset["questions"]), 40)
+            self.assertEqual(safety_dataset["available_count"], 80)
+            self.assertEqual(result["available_answers_by_cohort"], {"business": 36, "safety": 80})
+            self.assertTrue(all(len(question["candidates"]) == 2 for question in dataset["questions"] + safety_dataset["questions"]))
             self.assertTrue(all("Synthetic answer turn" in candidate["answer"]
-                                for question in dataset["questions"] for candidate in question["candidates"]))
+                                for question in dataset["questions"] + safety_dataset["questions"]
+                                for candidate in question["candidates"]))
             self.assertIn("turno 2", markdown)
             self.assertIn("Utilidad (nota cualitativa)", markdown)
             self.assertIn("Redacción (nota cualitativa)", markdown)
-            self.assertIn("Mejor respuesta para este caso", markdown)
-            self.assertNotIn("gpt-6-luna", dataset_text + markdown)
-            self.assertNotIn("CURRENT_PRIVATE", dataset_text + markdown)
-            self.assertNotIn("PROPOSED_PRIVATE", dataset_text + markdown)
-            self.assertNotIn("session_PRIVATE_DO_NOT_EXPORT", dataset_text + markdown)
-            self.assertNotIn("raw log", dataset_text + markdown)
+            self.assertIn("Mejor respuesta para este caso (opcional)", markdown)
+            self.assertIn("Referencia esperada", markdown)
+            self.assertIn("84.9 %", markdown)
+            self.assertIn("calificación humana", safety_markdown)
+            blind = dataset_text + markdown + safety_text + safety_markdown
+            self.assertNotIn("gpt-6-luna", blind)
+            self.assertNotIn("CURRENT_PRIVATE", blind)
+            self.assertNotIn("PROPOSED_PRIVATE", blind)
+            self.assertNotIn("session_PRIVATE_DO_NOT_EXPORT", blind)
+            self.assertNotIn("raw log", blind)
             self.assertEqual(key["variants"]["current"]["model"], "gpt-6-luna")
+            self.assertEqual(len(key["questions"]), 18)
+            self.assertEqual(len(safety_key["questions"]), 40)
+            n02_id = next(item["blind_question_id"] for item in key["questions"] if item["case_id"] == "N02")
+            n02 = next(question for question in dataset["questions"] if question["id"] == n02_id)
+            self.assertIn("plan", n02["expected"])
+            self.assertIn("rows", n02["expected"])
             self.assertEqual(technical["estimated_cost_usd_total"], 0.024)
             self.assertEqual(technical["runs"][0]["usage_incomplete_or_unknown_count"], 0)
             if os.name == "posix":
                 self.assertEqual((output.stat().st_mode & 0o777), 0o700)
-                for name in ("stage1-review.json", "stage1-review.md", "stage1-alias-key.json", "stage1-technical-summary.json"):
+                for name in (
+                    "stage1-review.json", "stage1-review.md", "stage1-review-alias-key.json",
+                    "stage1-safety-appendix.json", "stage1-safety-appendix.md",
+                    "stage1-safety-appendix-alias-key.json", "stage1-technical-summary.json",
+                ):
                     self.assertEqual((output / name).stat().st_mode & 0o777, 0o600)
+
+    def test_incomplete_report_writes_private_technical_summary_then_refuses_reviews(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            current = Path(temporary) / "current-report.json"
+            proposed = Path(temporary) / "proposed-report.json"
+            current.write_text(json.dumps(detailed_report([], "current")), encoding="utf-8")
+            proposed.write_text(json.dumps(detailed_report([], "proposed")), encoding="utf-8")
+            output = Path(temporary) / "out"
+            with self.assertRaisesRegex(exporter.ExportError, "exactamente los 58 casos"):
+                exporter.export(current, proposed, output)
+            technical = json.loads((output / "stage1-technical-summary.json").read_text(encoding="utf-8"))
+            self.assertEqual(technical["runs"][0]["missing_case_count"], 58)
+            self.assertFalse((output / "stage1-review.json").exists())
 
     def test_missing_or_failed_responses_remain_explicit_in_private_key(self):
         dataset, key, _ = exporter._blind_dataset(
