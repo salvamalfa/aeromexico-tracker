@@ -1,7 +1,7 @@
 # Decisión: alcance aprobado para evaluación F2.2 etapa 1
 
-**Fecha:** 9 de octubre de 2026  
-**Decisor:** dueño del proyecto  
+**Fecha:** 9 de octubre de 2026
+**Decisor:** dueño del proyecto
 **Estado:** vigente
 
 El dueño aprobó explícitamente el prompt completo F2.1 contenido en el commit
