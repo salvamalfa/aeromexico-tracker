@@ -427,6 +427,10 @@ def test_rearm_archives_zero_start_n25_then_stub_resumes_five_and_58(tmp_path, m
     [
         "provider_started",
         "positive_counter",
+        "provider_events",
+        "provider_event_count",
+        "tool_events",
+        "tool_event_count",
         "positive_turn_count",
         "positive_token_total",
         "positive_cost",
@@ -451,6 +455,14 @@ def test_rearm_blocks_ambiguous_or_changed_evidence_without_writing(tmp_path, mu
         row["provider_turn_started"] = True
     elif mutation == "positive_counter":
         row["provider_calls"] = 1
+    elif mutation == "provider_events":
+        row["provider_events"] = [{"type": "request_started"}]
+    elif mutation == "provider_event_count":
+        row["provider_event_count"] = 1
+    elif mutation == "tool_events":
+        row["tool_events"] = [{"type": "tool_started"}]
+    elif mutation == "tool_event_count":
+        row["tool_event_count"] = 1
     elif mutation == "positive_turn_count":
         row["turn_count"] = 1
     elif mutation == "positive_token_total":

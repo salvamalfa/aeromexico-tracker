@@ -14,10 +14,19 @@ from .evaluation_campaign import aggregate_campaign_budget
 from .evaluation_live_reconciliation import _finite_cost, validate_report_parts
 
 _PENDING_AFTER_N25 = ["N25", "N26", "N27", "N28", "N30"]
-_ZERO_OR_ABSENT_COUNTERS = ("provider_calls", "provider_request_count", "turn_count", "tool_call_count")
+_ZERO_OR_ABSENT_COUNTERS = (
+    "provider_calls",
+    "provider_request_count",
+    "turn_count",
+    "tool_call_count",
+    "provider_event_count",
+    "tool_event_count",
+)
 _NO_SIDE_EFFECT_FIELDS = (
     "session_id",
     "tool_calls",
+    "provider_events",
+    "tool_events",
     "turn_usage",
     "events",
     "event_ids",
