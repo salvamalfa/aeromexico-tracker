@@ -201,7 +201,9 @@ def test_live_provider_error_writes_private_report_and_stops_without_retry(
         "exception_types": ["OpenAIProviderError", "AuthenticationError"],
         "http_status": 401,
     }
-    assert model["quality_summary"]["supported_scored"] == 0
+    assert model["quality_summary"]["numeric_gold_case_count"] == 2
+    assert model["quality_summary"]["numeric_gold_case_passed"] == 0
+    assert model["quality_summary"]["numeric_gold_accuracy"] == 0
     assert model["spent_unknown"] is True
     assert model["estimated_cost_usd"] is None
     assert model["known_estimated_cost_usd"] == 0
@@ -295,7 +297,7 @@ def test_post_cancel_terminal_usage_is_counted_without_scoring_or_continuing(
     assert case["error_metadata"]["reason_code"] == "tool_call_limit"
     assert case["input_tokens"] == 35_573
     assert case["output_tokens"] == 208
-    assert case["estimated_cost_usd"] == pytest.approx(0.0036613)
+    assert case["estimated_cost_usd"] == pytest.approx(0.004550625)
     assert case["post_cancel_usage_reconciliation"] == "complete"
     assert model["spent_unknown"] is False
 
@@ -350,8 +352,11 @@ def test_live_tool_validation_error_is_returned_to_provider_like_worker(
     assert CorrectingProvider.tool_error["error"]["code"] == "tool_rejected"
     assert case["tool_calls"][0]["result"]["error"]["code"] == "tool_rejected"
     assert case["status"] == "ungraded"
-    assert case["quality"] == {"scored": False, "not_scored_reason": "no_successful_row_evidence"}
-    assert case["model_turn_completed"] is True
+    assert case["quality"]["scored"] is True
+    assert case["quality"]["passed"] is False
+    assert case["quality"]["automatic_grade_type"] == "numeric_gold"
+    assert case["quality"]["not_scored_reason"] == "no_successful_row_evidence"
+
 
 
 def test_final_report_write_failure_never_marks_progress_completed(

@@ -1,0 +1,1207 @@
+{
+  "status": "planning_only_pending_owner_approval",
+  "reviewed_at_owner_local": "2026-10-08 America/Mexico_City",
+  "tariff_source": "https://developers.openai.com/api/docs/models/",
+  "tariff_basis": "Authoritative model catalog prices, USD per million input/cached/write/output tokens; short-context scenarios.",
+  "measurements": {
+    "tokenizer_note": "tiktoken is used if installed; an unavailable model mapping falls back to labeled o200k_base proxy. Character/4 is a planning heuristic. These are source payload sizes, not billed prefills.",
+    "f2_1_prompt": {
+      "source": "F2.1 prompt fenced text from commit 2f45994962b227b62e542b75b851c731b671329e",
+      "characters_exact": 7564,
+      "utf8_bytes_exact": 7721,
+      "tokenizer": "unavailable",
+      "token_count_status": "heuristic_only_tiktoken_unavailable",
+      "tokens": null,
+      "tokens_heuristic_chars_div_4": 1891
+    },
+    "f2_1_prompt_source": {
+      "commit": "2f45994962b227b62e542b75b851c731b671329e",
+      "path": "docs/chat/revision-fase-2/F2.1-prompt-propuesto.md",
+      "sha256": "656de4bc6a0a92d7374513a7fbac27ec304a3216f4ea99ad82c423ea08a0e6b1",
+      "immutable_url": "https://github.com/salvamalfa/aeromexico-tracker/blob/2f45994962b227b62e542b75b851c731b671329e/docs/chat/revision-fase-2/F2.1-prompt-propuesto.md"
+    },
+    "tool_schemas": {
+      "source": "ToolRegistry(Snapshot(site)).tool_specs() serialized JSON",
+      "characters_exact": 3291,
+      "utf8_bytes_exact": 3306,
+      "tokenizer": "unavailable",
+      "token_count_status": "heuristic_only_tiktoken_unavailable",
+      "tokens": null,
+      "tokens_heuristic_chars_div_4": 823
+    },
+    "fixture_gold_rows": {
+      "source": "business_proposed.json expected.rows serialized JSON",
+      "characters_exact": 16860,
+      "utf8_bytes_exact": 16932,
+      "tokenizer": "unavailable",
+      "token_count_status": "heuristic_only_tiktoken_unavailable",
+      "tokens": null,
+      "tokens_heuristic_chars_div_4": 4215
+    },
+    "fixtures": {
+      "business_path": "tests/fixtures/chat_evals/business_proposed.json",
+      "business_sha256": "585adf3901c19581f563d2fe0f5b2d4f41ac90a614d6ce6f200a580d774c2b56",
+      "safety_path": "tests/fixtures/chat_evals/safety_current.json",
+      "safety_sha256": "2fce3196a5ca63edbe7c32e898f8ce456408ffd151788f263a3f105cd8aca2b6",
+      "business_expected_versions": {
+        "data_version": "d9c4e56d04ad67be5dff6d6e9f7f6615f4f4be985ec1e5ee59781a7735007037",
+        "semantic_version": "0b8de07ff211ca1ba984bd87281a2d68950a3e36268909b2121a7ed6b35e0365"
+      },
+      "safety_expected_versions": {
+        "data_version": "d9c4e56d04ad67be5dff6d6e9f7f6615f4f4be985ec1e5ee59781a7735007037",
+        "semantic_version": "0b8de07ff211ca1ba984bd87281a2d68950a3e36268909b2121a7ed6b35e0365"
+      }
+    },
+    "model_catalog": {
+      "path": "config/chat/models.json",
+      "sha256": "9744c985f051c898a8af6e8d3c8766c6885e77d8a13d55b72e30427b15468d4c",
+      "source": "https://developers.openai.com/api/docs/models/",
+      "pricing_as_of": {
+        "gpt-6-luna": "2026-10-09",
+        "gpt-6.1-sol": "2026-10-09"
+      },
+      "pricing_dates_utc": [
+        "2026-10-09"
+      ],
+      "model_sources": {
+        "gpt-6-luna": "https://developers.openai.com/api/docs/models/gpt-6-luna",
+        "gpt-6.1-sol": "https://developers.openai.com/api/docs/models/gpt-6.1-sol"
+      },
+      "owner_local_review_date": "2026-10-08 America/Mexico_City"
+    },
+    "historical_anchor": {
+      "input_tokens_per_user_question": 40000,
+      "status": "observed historical aggregate across internal provider calls; not measured on this fixture",
+      "source": "prior live validation dated 2026-10-04, linked from fase-2-agente-analitico.md"
+    }
+  },
+  "assumptions": {
+    "input_tokens_per_user_message_range": [
+      60000,
+      100000
+    ],
+    "output_ranges_include_reasoning_once": true,
+    "cache_scenarios": [
+      0.0,
+      0.8
+    ],
+    "cache_write_usage": "unknown; not assumed zero",
+    "long_context": "Catalog thresholds/multipliers are recorded, but request-level token usage is unknown; modeled costs do not apply the long-context premium.",
+    "margin_rate": 0.25
+  },
+  "campaign_budget_scope": {
+    "scope": "one shared operational budget per stage campaign",
+    "details": "Within a stage, prompt variants, candidates, repetitions, and resumed runs share one campaign ledger. Each stage has its own authorization and budget_usd; there is no single live ledger spanning all three stages.",
+    "resume": "resume requires the same campaign identity and budget; interrupted provider work with unknown spend blocks replay",
+    "limit": "operational stop only; it does not guarantee a maximum invoice"
+  },
+  "estimates": [
+    {
+      "mode": "offline_modelled_estimate",
+      "cache_hit_rate_scenario": 0.0,
+      "stages": [
+        {
+          "mode": "offline_modelled_estimate",
+          "selected_case_count": 58,
+          "user_messages_per_case_run": 62,
+          "input_tokens_range_per_user_message": [
+            60000,
+            100000
+          ],
+          "cache_hit_rate_scenario": 0.0,
+          "candidate_estimates": [
+            {
+              "candidate": "gpt-6-luna@medium",
+              "model": "gpt-6-luna",
+              "reasoning_effort": "medium",
+              "case_runs": 116,
+              "user_messages": 124,
+              "estimated_input_tokens_range": [
+                7440000,
+                12400000
+              ],
+              "modeled_output_plus_reasoning_tokens_range": [
+                372000,
+                744000
+              ],
+              "rates_usd_per_million": {
+                "input": 0.1,
+                "cached_input": 0.01,
+                "cache_write": 0.125,
+                "output": 0.5
+              },
+              "estimated_cost_usd_range": [
+                0.93,
+                1.612
+              ],
+              "long_context_pricing": {
+                "threshold_input_tokens": 272000,
+                "input_multiplier": 2.0,
+                "output_multiplier": 1.5,
+                "applied": false,
+                "reason": "Per-request input size is not measured; the range models aggregate user-message usage."
+              },
+              "pricing_as_of": "2026-10-09",
+              "cache_hit_rate_scenario": 0.0,
+              "cache_write_usage": "unknown; not priced as zero",
+              "billing_status": "modelled estimate; no provider usage or invoice"
+            }
+          ],
+          "stage": 1,
+          "selected_case_ids": [
+            "es_am_lf_q2",
+            "es_volaris_ask",
+            "es_viva_margin",
+            "en_am_rask",
+            "en_industry_passengers",
+            "es_am_market_share",
+            "es_market_share_pp",
+            "en_relative_share_change",
+            "es_industry_weighted_lf",
+            "es_am_cask",
+            "es_missing_period",
+            "en_load_factor_unavailable",
+            "es_passengers_route",
+            "es_private_warehouse",
+            "en_private_files",
+            "es_prompt_injection",
+            "es_industry_definition",
+            "en_am_entity_ambiguity",
+            "es_connect_separation",
+            "es_growth_ambiguity",
+            "en_profitability_ambiguity",
+            "es_cost_ambiguity",
+            "es_this_quarter",
+            "en_not_zero",
+            "es_null_vs_zero",
+            "es_ratio_average",
+            "en_relative_vs_pp",
+            "es_relative_ratio",
+            "en_unit_margin_meaning",
+            "es_causal_claim",
+            "en_world_t100",
+            "es_route_estimate",
+            "es_card_context",
+            "en_card_filter_scope",
+            "es_card_conflicting_context",
+            "es_route_query_forbidden_dimension",
+            "en_unauthorized_new_period",
+            "es_compare_entity_ambiguity",
+            "en_private_context_override",
+            "es_viva_missing_company_passengers",
+            "N02",
+            "N03",
+            "N05",
+            "N06",
+            "N07",
+            "N08",
+            "N11",
+            "N12",
+            "N13",
+            "N14",
+            "N20",
+            "N21",
+            "N24",
+            "N25",
+            "N26",
+            "N27",
+            "N28",
+            "N30"
+          ],
+          "extra_multiturn_user_messages_per_case_run": 4
+        },
+        {
+          "mode": "offline_modelled_estimate",
+          "selected_case_count": 15,
+          "user_messages_per_case_run": 15,
+          "input_tokens_range_per_user_message": [
+            60000,
+            100000
+          ],
+          "cache_hit_rate_scenario": 0.0,
+          "candidate_estimates": [
+            {
+              "candidate": "gpt-6-luna@medium",
+              "model": "gpt-6-luna",
+              "reasoning_effort": "medium",
+              "case_runs": 15,
+              "user_messages": 15,
+              "estimated_input_tokens_range": [
+                900000,
+                1500000
+              ],
+              "modeled_output_plus_reasoning_tokens_range": [
+                45000,
+                90000
+              ],
+              "rates_usd_per_million": {
+                "input": 0.1,
+                "cached_input": 0.01,
+                "cache_write": 0.125,
+                "output": 0.5
+              },
+              "estimated_cost_usd_range": [
+                0.1125,
+                0.195
+              ],
+              "long_context_pricing": {
+                "threshold_input_tokens": 272000,
+                "input_multiplier": 2.0,
+                "output_multiplier": 1.5,
+                "applied": false,
+                "reason": "Per-request input size is not measured; the range models aggregate user-message usage."
+              },
+              "pricing_as_of": "2026-10-09",
+              "cache_hit_rate_scenario": 0.0,
+              "cache_write_usage": "unknown; not priced as zero",
+              "billing_status": "modelled estimate; no provider usage or invoice"
+            },
+            {
+              "candidate": "gpt-6-luna@max",
+              "model": "gpt-6-luna",
+              "reasoning_effort": "max",
+              "case_runs": 15,
+              "user_messages": 15,
+              "estimated_input_tokens_range": [
+                900000,
+                1500000
+              ],
+              "modeled_output_plus_reasoning_tokens_range": [
+                150000,
+                375000
+              ],
+              "rates_usd_per_million": {
+                "input": 0.1,
+                "cached_input": 0.01,
+                "cache_write": 0.125,
+                "output": 0.5
+              },
+              "estimated_cost_usd_range": [
+                0.165,
+                0.3375
+              ],
+              "long_context_pricing": {
+                "threshold_input_tokens": 272000,
+                "input_multiplier": 2.0,
+                "output_multiplier": 1.5,
+                "applied": false,
+                "reason": "Per-request input size is not measured; the range models aggregate user-message usage."
+              },
+              "pricing_as_of": "2026-10-09",
+              "cache_hit_rate_scenario": 0.0,
+              "cache_write_usage": "unknown; not priced as zero",
+              "billing_status": "modelled estimate; no provider usage or invoice"
+            },
+            {
+              "candidate": "gpt-6.1-sol@low",
+              "model": "gpt-6.1-sol",
+              "reasoning_effort": "low",
+              "case_runs": 15,
+              "user_messages": 15,
+              "estimated_input_tokens_range": [
+                900000,
+                1500000
+              ],
+              "modeled_output_plus_reasoning_tokens_range": [
+                15000,
+                45000
+              ],
+              "rates_usd_per_million": {
+                "input": 2.0,
+                "cached_input": 0.1,
+                "cache_write": 2.5,
+                "output": 10.0
+              },
+              "estimated_cost_usd_range": [
+                1.95,
+                3.45
+              ],
+              "long_context_pricing": {
+                "threshold_input_tokens": 272000,
+                "input_multiplier": 2.0,
+                "output_multiplier": 1.5,
+                "applied": false,
+                "reason": "Per-request input size is not measured; the range models aggregate user-message usage."
+              },
+              "pricing_as_of": "2026-10-09",
+              "cache_hit_rate_scenario": 0.0,
+              "cache_write_usage": "unknown; not priced as zero",
+              "billing_status": "modelled estimate; no provider usage or invoice"
+            },
+            {
+              "candidate": "gpt-6.1-sol@medium",
+              "model": "gpt-6.1-sol",
+              "reasoning_effort": "medium",
+              "case_runs": 15,
+              "user_messages": 15,
+              "estimated_input_tokens_range": [
+                900000,
+                1500000
+              ],
+              "modeled_output_plus_reasoning_tokens_range": [
+                45000,
+                120000
+              ],
+              "rates_usd_per_million": {
+                "input": 2.0,
+                "cached_input": 0.1,
+                "cache_write": 2.5,
+                "output": 10.0
+              },
+              "estimated_cost_usd_range": [
+                2.25,
+                4.2
+              ],
+              "long_context_pricing": {
+                "threshold_input_tokens": 272000,
+                "input_multiplier": 2.0,
+                "output_multiplier": 1.5,
+                "applied": false,
+                "reason": "Per-request input size is not measured; the range models aggregate user-message usage."
+              },
+              "pricing_as_of": "2026-10-09",
+              "cache_hit_rate_scenario": 0.0,
+              "cache_write_usage": "unknown; not priced as zero",
+              "billing_status": "modelled estimate; no provider usage or invoice"
+            }
+          ],
+          "stage": 2,
+          "selected_case_ids": [
+            "N02",
+            "N03",
+            "N05",
+            "N06",
+            "N07",
+            "en_relative_share_change",
+            "es_missing_period",
+            "en_load_factor_unavailable",
+            "es_passengers_route",
+            "es_private_warehouse",
+            "en_private_files",
+            "es_prompt_injection",
+            "es_industry_definition",
+            "en_am_entity_ambiguity",
+            "es_connect_separation"
+          ],
+          "extra_multiturn_user_messages_per_case_run": 0
+        },
+        {
+          "mode": "offline_modelled_estimate",
+          "selected_case_count": 70,
+          "user_messages_per_case_run": 74,
+          "input_tokens_range_per_user_message": [
+            60000,
+            100000
+          ],
+          "cache_hit_rate_scenario": 0.0,
+          "candidate_estimates": [
+            {
+              "candidate": "gpt-6-luna@medium",
+              "model": "gpt-6-luna",
+              "reasoning_effort": "medium",
+              "case_runs": 140,
+              "user_messages": 148,
+              "estimated_input_tokens_range": [
+                8880000,
+                14800000
+              ],
+              "modeled_output_plus_reasoning_tokens_range": [
+                444000,
+                888000
+              ],
+              "rates_usd_per_million": {
+                "input": 0.1,
+                "cached_input": 0.01,
+                "cache_write": 0.125,
+                "output": 0.5
+              },
+              "estimated_cost_usd_range": [
+                1.11,
+                1.924
+              ],
+              "long_context_pricing": {
+                "threshold_input_tokens": 272000,
+                "input_multiplier": 2.0,
+                "output_multiplier": 1.5,
+                "applied": false,
+                "reason": "Per-request input size is not measured; the range models aggregate user-message usage."
+              },
+              "pricing_as_of": "2026-10-09",
+              "cache_hit_rate_scenario": 0.0,
+              "cache_write_usage": "unknown; not priced as zero",
+              "billing_status": "modelled estimate; no provider usage or invoice"
+            },
+            {
+              "candidate": "gpt-6-luna@max",
+              "model": "gpt-6-luna",
+              "reasoning_effort": "max",
+              "case_runs": 140,
+              "user_messages": 148,
+              "estimated_input_tokens_range": [
+                8880000,
+                14800000
+              ],
+              "modeled_output_plus_reasoning_tokens_range": [
+                1480000,
+                3700000
+              ],
+              "rates_usd_per_million": {
+                "input": 0.1,
+                "cached_input": 0.01,
+                "cache_write": 0.125,
+                "output": 0.5
+              },
+              "estimated_cost_usd_range": [
+                1.628,
+                3.33
+              ],
+              "long_context_pricing": {
+                "threshold_input_tokens": 272000,
+                "input_multiplier": 2.0,
+                "output_multiplier": 1.5,
+                "applied": false,
+                "reason": "Per-request input size is not measured; the range models aggregate user-message usage."
+              },
+              "pricing_as_of": "2026-10-09",
+              "cache_hit_rate_scenario": 0.0,
+              "cache_write_usage": "unknown; not priced as zero",
+              "billing_status": "modelled estimate; no provider usage or invoice"
+            },
+            {
+              "candidate": "gpt-6.1-sol@low",
+              "model": "gpt-6.1-sol",
+              "reasoning_effort": "low",
+              "case_runs": 70,
+              "user_messages": 74,
+              "estimated_input_tokens_range": [
+                4440000,
+                7400000
+              ],
+              "modeled_output_plus_reasoning_tokens_range": [
+                74000,
+                222000
+              ],
+              "rates_usd_per_million": {
+                "input": 2.0,
+                "cached_input": 0.1,
+                "cache_write": 2.5,
+                "output": 10.0
+              },
+              "estimated_cost_usd_range": [
+                9.62,
+                17.02
+              ],
+              "long_context_pricing": {
+                "threshold_input_tokens": 272000,
+                "input_multiplier": 2.0,
+                "output_multiplier": 1.5,
+                "applied": false,
+                "reason": "Per-request input size is not measured; the range models aggregate user-message usage."
+              },
+              "pricing_as_of": "2026-10-09",
+              "cache_hit_rate_scenario": 0.0,
+              "cache_write_usage": "unknown; not priced as zero",
+              "billing_status": "modelled estimate; no provider usage or invoice"
+            },
+            {
+              "candidate": "gpt-6.1-sol@medium",
+              "model": "gpt-6.1-sol",
+              "reasoning_effort": "medium",
+              "case_runs": 70,
+              "user_messages": 74,
+              "estimated_input_tokens_range": [
+                4440000,
+                7400000
+              ],
+              "modeled_output_plus_reasoning_tokens_range": [
+                222000,
+                592000
+              ],
+              "rates_usd_per_million": {
+                "input": 2.0,
+                "cached_input": 0.1,
+                "cache_write": 2.5,
+                "output": 10.0
+              },
+              "estimated_cost_usd_range": [
+                11.1,
+                20.72
+              ],
+              "long_context_pricing": {
+                "threshold_input_tokens": 272000,
+                "input_multiplier": 2.0,
+                "output_multiplier": 1.5,
+                "applied": false,
+                "reason": "Per-request input size is not measured; the range models aggregate user-message usage."
+              },
+              "pricing_as_of": "2026-10-09",
+              "cache_hit_rate_scenario": 0.0,
+              "cache_write_usage": "unknown; not priced as zero",
+              "billing_status": "modelled estimate; no provider usage or invoice"
+            }
+          ],
+          "stage": 3,
+          "selected_case_ids": [
+            "es_am_lf_q2",
+            "es_volaris_ask",
+            "es_viva_margin",
+            "en_am_rask",
+            "en_industry_passengers",
+            "es_am_market_share",
+            "es_market_share_pp",
+            "en_relative_share_change",
+            "es_industry_weighted_lf",
+            "es_am_cask",
+            "es_missing_period",
+            "en_load_factor_unavailable",
+            "es_passengers_route",
+            "es_private_warehouse",
+            "en_private_files",
+            "es_prompt_injection",
+            "es_industry_definition",
+            "en_am_entity_ambiguity",
+            "es_connect_separation",
+            "es_growth_ambiguity",
+            "en_profitability_ambiguity",
+            "es_cost_ambiguity",
+            "es_this_quarter",
+            "en_not_zero",
+            "es_null_vs_zero",
+            "es_ratio_average",
+            "en_relative_vs_pp",
+            "es_relative_ratio",
+            "en_unit_margin_meaning",
+            "es_causal_claim",
+            "en_world_t100",
+            "es_route_estimate",
+            "es_card_context",
+            "en_card_filter_scope",
+            "es_card_conflicting_context",
+            "es_route_query_forbidden_dimension",
+            "en_unauthorized_new_period",
+            "es_compare_entity_ambiguity",
+            "en_private_context_override",
+            "es_viva_missing_company_passengers",
+            "N01",
+            "N02",
+            "N03",
+            "N04",
+            "N05",
+            "N06",
+            "N07",
+            "N08",
+            "N09",
+            "N10",
+            "N11",
+            "N12",
+            "N13",
+            "N14",
+            "N15",
+            "N16",
+            "N17",
+            "N18",
+            "N19",
+            "N20",
+            "N21",
+            "N22",
+            "N23",
+            "N24",
+            "N25",
+            "N26",
+            "N27",
+            "N28",
+            "N29",
+            "N30"
+          ],
+          "extra_multiturn_user_messages_per_case_run": 4
+        }
+      ],
+      "all_stage_cost_usd_range": [
+        28.8655,
+        52.7885
+      ]
+    },
+    {
+      "mode": "offline_modelled_estimate",
+      "cache_hit_rate_scenario": 0.8,
+      "stages": [
+        {
+          "mode": "offline_modelled_estimate",
+          "selected_case_count": 58,
+          "user_messages_per_case_run": 62,
+          "input_tokens_range_per_user_message": [
+            60000,
+            100000
+          ],
+          "cache_hit_rate_scenario": 0.8,
+          "candidate_estimates": [
+            {
+              "candidate": "gpt-6-luna@medium",
+              "model": "gpt-6-luna",
+              "reasoning_effort": "medium",
+              "case_runs": 116,
+              "user_messages": 124,
+              "estimated_input_tokens_range": [
+                7440000,
+                12400000
+              ],
+              "modeled_output_plus_reasoning_tokens_range": [
+                372000,
+                744000
+              ],
+              "rates_usd_per_million": {
+                "input": 0.1,
+                "cached_input": 0.01,
+                "cache_write": 0.125,
+                "output": 0.5
+              },
+              "estimated_cost_usd_range": [
+                0.3943,
+                0.7192
+              ],
+              "long_context_pricing": {
+                "threshold_input_tokens": 272000,
+                "input_multiplier": 2.0,
+                "output_multiplier": 1.5,
+                "applied": false,
+                "reason": "Per-request input size is not measured; the range models aggregate user-message usage."
+              },
+              "pricing_as_of": "2026-10-09",
+              "cache_hit_rate_scenario": 0.8,
+              "cache_write_usage": "unknown; not priced as zero",
+              "billing_status": "modelled estimate; no provider usage or invoice"
+            }
+          ],
+          "stage": 1,
+          "selected_case_ids": [
+            "es_am_lf_q2",
+            "es_volaris_ask",
+            "es_viva_margin",
+            "en_am_rask",
+            "en_industry_passengers",
+            "es_am_market_share",
+            "es_market_share_pp",
+            "en_relative_share_change",
+            "es_industry_weighted_lf",
+            "es_am_cask",
+            "es_missing_period",
+            "en_load_factor_unavailable",
+            "es_passengers_route",
+            "es_private_warehouse",
+            "en_private_files",
+            "es_prompt_injection",
+            "es_industry_definition",
+            "en_am_entity_ambiguity",
+            "es_connect_separation",
+            "es_growth_ambiguity",
+            "en_profitability_ambiguity",
+            "es_cost_ambiguity",
+            "es_this_quarter",
+            "en_not_zero",
+            "es_null_vs_zero",
+            "es_ratio_average",
+            "en_relative_vs_pp",
+            "es_relative_ratio",
+            "en_unit_margin_meaning",
+            "es_causal_claim",
+            "en_world_t100",
+            "es_route_estimate",
+            "es_card_context",
+            "en_card_filter_scope",
+            "es_card_conflicting_context",
+            "es_route_query_forbidden_dimension",
+            "en_unauthorized_new_period",
+            "es_compare_entity_ambiguity",
+            "en_private_context_override",
+            "es_viva_missing_company_passengers",
+            "N02",
+            "N03",
+            "N05",
+            "N06",
+            "N07",
+            "N08",
+            "N11",
+            "N12",
+            "N13",
+            "N14",
+            "N20",
+            "N21",
+            "N24",
+            "N25",
+            "N26",
+            "N27",
+            "N28",
+            "N30"
+          ],
+          "extra_multiturn_user_messages_per_case_run": 4
+        },
+        {
+          "mode": "offline_modelled_estimate",
+          "selected_case_count": 15,
+          "user_messages_per_case_run": 15,
+          "input_tokens_range_per_user_message": [
+            60000,
+            100000
+          ],
+          "cache_hit_rate_scenario": 0.8,
+          "candidate_estimates": [
+            {
+              "candidate": "gpt-6-luna@medium",
+              "model": "gpt-6-luna",
+              "reasoning_effort": "medium",
+              "case_runs": 15,
+              "user_messages": 15,
+              "estimated_input_tokens_range": [
+                900000,
+                1500000
+              ],
+              "modeled_output_plus_reasoning_tokens_range": [
+                45000,
+                90000
+              ],
+              "rates_usd_per_million": {
+                "input": 0.1,
+                "cached_input": 0.01,
+                "cache_write": 0.125,
+                "output": 0.5
+              },
+              "estimated_cost_usd_range": [
+                0.0477,
+                0.087
+              ],
+              "long_context_pricing": {
+                "threshold_input_tokens": 272000,
+                "input_multiplier": 2.0,
+                "output_multiplier": 1.5,
+                "applied": false,
+                "reason": "Per-request input size is not measured; the range models aggregate user-message usage."
+              },
+              "pricing_as_of": "2026-10-09",
+              "cache_hit_rate_scenario": 0.8,
+              "cache_write_usage": "unknown; not priced as zero",
+              "billing_status": "modelled estimate; no provider usage or invoice"
+            },
+            {
+              "candidate": "gpt-6-luna@max",
+              "model": "gpt-6-luna",
+              "reasoning_effort": "max",
+              "case_runs": 15,
+              "user_messages": 15,
+              "estimated_input_tokens_range": [
+                900000,
+                1500000
+              ],
+              "modeled_output_plus_reasoning_tokens_range": [
+                150000,
+                375000
+              ],
+              "rates_usd_per_million": {
+                "input": 0.1,
+                "cached_input": 0.01,
+                "cache_write": 0.125,
+                "output": 0.5
+              },
+              "estimated_cost_usd_range": [
+                0.1002,
+                0.2295
+              ],
+              "long_context_pricing": {
+                "threshold_input_tokens": 272000,
+                "input_multiplier": 2.0,
+                "output_multiplier": 1.5,
+                "applied": false,
+                "reason": "Per-request input size is not measured; the range models aggregate user-message usage."
+              },
+              "pricing_as_of": "2026-10-09",
+              "cache_hit_rate_scenario": 0.8,
+              "cache_write_usage": "unknown; not priced as zero",
+              "billing_status": "modelled estimate; no provider usage or invoice"
+            },
+            {
+              "candidate": "gpt-6.1-sol@low",
+              "model": "gpt-6.1-sol",
+              "reasoning_effort": "low",
+              "case_runs": 15,
+              "user_messages": 15,
+              "estimated_input_tokens_range": [
+                900000,
+                1500000
+              ],
+              "modeled_output_plus_reasoning_tokens_range": [
+                15000,
+                45000
+              ],
+              "rates_usd_per_million": {
+                "input": 2.0,
+                "cached_input": 0.1,
+                "cache_write": 2.5,
+                "output": 10.0
+              },
+              "estimated_cost_usd_range": [
+                0.582,
+                1.17
+              ],
+              "long_context_pricing": {
+                "threshold_input_tokens": 272000,
+                "input_multiplier": 2.0,
+                "output_multiplier": 1.5,
+                "applied": false,
+                "reason": "Per-request input size is not measured; the range models aggregate user-message usage."
+              },
+              "pricing_as_of": "2026-10-09",
+              "cache_hit_rate_scenario": 0.8,
+              "cache_write_usage": "unknown; not priced as zero",
+              "billing_status": "modelled estimate; no provider usage or invoice"
+            },
+            {
+              "candidate": "gpt-6.1-sol@medium",
+              "model": "gpt-6.1-sol",
+              "reasoning_effort": "medium",
+              "case_runs": 15,
+              "user_messages": 15,
+              "estimated_input_tokens_range": [
+                900000,
+                1500000
+              ],
+              "modeled_output_plus_reasoning_tokens_range": [
+                45000,
+                120000
+              ],
+              "rates_usd_per_million": {
+                "input": 2.0,
+                "cached_input": 0.1,
+                "cache_write": 2.5,
+                "output": 10.0
+              },
+              "estimated_cost_usd_range": [
+                0.882,
+                1.92
+              ],
+              "long_context_pricing": {
+                "threshold_input_tokens": 272000,
+                "input_multiplier": 2.0,
+                "output_multiplier": 1.5,
+                "applied": false,
+                "reason": "Per-request input size is not measured; the range models aggregate user-message usage."
+              },
+              "pricing_as_of": "2026-10-09",
+              "cache_hit_rate_scenario": 0.8,
+              "cache_write_usage": "unknown; not priced as zero",
+              "billing_status": "modelled estimate; no provider usage or invoice"
+            }
+          ],
+          "stage": 2,
+          "selected_case_ids": [
+            "N02",
+            "N03",
+            "N05",
+            "N06",
+            "N07",
+            "en_relative_share_change",
+            "es_missing_period",
+            "en_load_factor_unavailable",
+            "es_passengers_route",
+            "es_private_warehouse",
+            "en_private_files",
+            "es_prompt_injection",
+            "es_industry_definition",
+            "en_am_entity_ambiguity",
+            "es_connect_separation"
+          ],
+          "extra_multiturn_user_messages_per_case_run": 0
+        },
+        {
+          "mode": "offline_modelled_estimate",
+          "selected_case_count": 70,
+          "user_messages_per_case_run": 74,
+          "input_tokens_range_per_user_message": [
+            60000,
+            100000
+          ],
+          "cache_hit_rate_scenario": 0.8,
+          "candidate_estimates": [
+            {
+              "candidate": "gpt-6-luna@medium",
+              "model": "gpt-6-luna",
+              "reasoning_effort": "medium",
+              "case_runs": 140,
+              "user_messages": 148,
+              "estimated_input_tokens_range": [
+                8880000,
+                14800000
+              ],
+              "modeled_output_plus_reasoning_tokens_range": [
+                444000,
+                888000
+              ],
+              "rates_usd_per_million": {
+                "input": 0.1,
+                "cached_input": 0.01,
+                "cache_write": 0.125,
+                "output": 0.5
+              },
+              "estimated_cost_usd_range": [
+                0.4706,
+                0.8584
+              ],
+              "long_context_pricing": {
+                "threshold_input_tokens": 272000,
+                "input_multiplier": 2.0,
+                "output_multiplier": 1.5,
+                "applied": false,
+                "reason": "Per-request input size is not measured; the range models aggregate user-message usage."
+              },
+              "pricing_as_of": "2026-10-09",
+              "cache_hit_rate_scenario": 0.8,
+              "cache_write_usage": "unknown; not priced as zero",
+              "billing_status": "modelled estimate; no provider usage or invoice"
+            },
+            {
+              "candidate": "gpt-6-luna@max",
+              "model": "gpt-6-luna",
+              "reasoning_effort": "max",
+              "case_runs": 140,
+              "user_messages": 148,
+              "estimated_input_tokens_range": [
+                8880000,
+                14800000
+              ],
+              "modeled_output_plus_reasoning_tokens_range": [
+                1480000,
+                3700000
+              ],
+              "rates_usd_per_million": {
+                "input": 0.1,
+                "cached_input": 0.01,
+                "cache_write": 0.125,
+                "output": 0.5
+              },
+              "estimated_cost_usd_range": [
+                0.9886,
+                2.2644
+              ],
+              "long_context_pricing": {
+                "threshold_input_tokens": 272000,
+                "input_multiplier": 2.0,
+                "output_multiplier": 1.5,
+                "applied": false,
+                "reason": "Per-request input size is not measured; the range models aggregate user-message usage."
+              },
+              "pricing_as_of": "2026-10-09",
+              "cache_hit_rate_scenario": 0.8,
+              "cache_write_usage": "unknown; not priced as zero",
+              "billing_status": "modelled estimate; no provider usage or invoice"
+            },
+            {
+              "candidate": "gpt-6.1-sol@low",
+              "model": "gpt-6.1-sol",
+              "reasoning_effort": "low",
+              "case_runs": 70,
+              "user_messages": 74,
+              "estimated_input_tokens_range": [
+                4440000,
+                7400000
+              ],
+              "modeled_output_plus_reasoning_tokens_range": [
+                74000,
+                222000
+              ],
+              "rates_usd_per_million": {
+                "input": 2.0,
+                "cached_input": 0.1,
+                "cache_write": 2.5,
+                "output": 10.0
+              },
+              "estimated_cost_usd_range": [
+                2.8712,
+                5.772
+              ],
+              "long_context_pricing": {
+                "threshold_input_tokens": 272000,
+                "input_multiplier": 2.0,
+                "output_multiplier": 1.5,
+                "applied": false,
+                "reason": "Per-request input size is not measured; the range models aggregate user-message usage."
+              },
+              "pricing_as_of": "2026-10-09",
+              "cache_hit_rate_scenario": 0.8,
+              "cache_write_usage": "unknown; not priced as zero",
+              "billing_status": "modelled estimate; no provider usage or invoice"
+            },
+            {
+              "candidate": "gpt-6.1-sol@medium",
+              "model": "gpt-6.1-sol",
+              "reasoning_effort": "medium",
+              "case_runs": 70,
+              "user_messages": 74,
+              "estimated_input_tokens_range": [
+                4440000,
+                7400000
+              ],
+              "modeled_output_plus_reasoning_tokens_range": [
+                222000,
+                592000
+              ],
+              "rates_usd_per_million": {
+                "input": 2.0,
+                "cached_input": 0.1,
+                "cache_write": 2.5,
+                "output": 10.0
+              },
+              "estimated_cost_usd_range": [
+                4.3512,
+                9.472
+              ],
+              "long_context_pricing": {
+                "threshold_input_tokens": 272000,
+                "input_multiplier": 2.0,
+                "output_multiplier": 1.5,
+                "applied": false,
+                "reason": "Per-request input size is not measured; the range models aggregate user-message usage."
+              },
+              "pricing_as_of": "2026-10-09",
+              "cache_hit_rate_scenario": 0.8,
+              "cache_write_usage": "unknown; not priced as zero",
+              "billing_status": "modelled estimate; no provider usage or invoice"
+            }
+          ],
+          "stage": 3,
+          "selected_case_ids": [
+            "es_am_lf_q2",
+            "es_volaris_ask",
+            "es_viva_margin",
+            "en_am_rask",
+            "en_industry_passengers",
+            "es_am_market_share",
+            "es_market_share_pp",
+            "en_relative_share_change",
+            "es_industry_weighted_lf",
+            "es_am_cask",
+            "es_missing_period",
+            "en_load_factor_unavailable",
+            "es_passengers_route",
+            "es_private_warehouse",
+            "en_private_files",
+            "es_prompt_injection",
+            "es_industry_definition",
+            "en_am_entity_ambiguity",
+            "es_connect_separation",
+            "es_growth_ambiguity",
+            "en_profitability_ambiguity",
+            "es_cost_ambiguity",
+            "es_this_quarter",
+            "en_not_zero",
+            "es_null_vs_zero",
+            "es_ratio_average",
+            "en_relative_vs_pp",
+            "es_relative_ratio",
+            "en_unit_margin_meaning",
+            "es_causal_claim",
+            "en_world_t100",
+            "es_route_estimate",
+            "es_card_context",
+            "en_card_filter_scope",
+            "es_card_conflicting_context",
+            "es_route_query_forbidden_dimension",
+            "en_unauthorized_new_period",
+            "es_compare_entity_ambiguity",
+            "en_private_context_override",
+            "es_viva_missing_company_passengers",
+            "N01",
+            "N02",
+            "N03",
+            "N04",
+            "N05",
+            "N06",
+            "N07",
+            "N08",
+            "N09",
+            "N10",
+            "N11",
+            "N12",
+            "N13",
+            "N14",
+            "N15",
+            "N16",
+            "N17",
+            "N18",
+            "N19",
+            "N20",
+            "N21",
+            "N22",
+            "N23",
+            "N24",
+            "N25",
+            "N26",
+            "N27",
+            "N28",
+            "N29",
+            "N30"
+          ],
+          "extra_multiturn_user_messages_per_case_run": 4
+        }
+      ],
+      "all_stage_cost_usd_range": [
+        10.6878,
+        22.4925
+      ]
+    }
+  ],
+  "roadmap_budget": {
+    "development_reference_usd": [
+      3.0,
+      5.0
+    ],
+    "development_note": "The F2 plan says roughly five Luna-M rounds for F2.1–F2.8; without concrete run plans this estimate remains separate from stage budgets.",
+    "stages_no_cache_usd": [
+      28.8655,
+      52.7885
+    ],
+    "stages_plus_development_usd": [
+      31.8655,
+      57.7885
+    ],
+    "plus_development_and_25_percent_margin_usd": [
+      39.8319,
+      72.2356
+    ],
+    "global_planning_reference_usd": 73,
+    "all_work_funds_scope": "global planning reference only: one margin is applied to the high estimate for all three stages plus the development reference, then rounded up; it is not an authorized budget or an operational campaign cap",
+    "stage_reserves": [
+      {
+        "stage": 1,
+        "modeled_upper_cost_no_cache_usd": 1.612,
+        "margin_rate": 0.25,
+        "funds_to_have_available_if_zero_verified_balance_usd": 3,
+        "net_topup_rule": "max(0, stage reserve - reconciled available balance); current balance is unreconciled"
+      },
+      {
+        "stage": 2,
+        "modeled_upper_cost_no_cache_usd": 8.1825,
+        "margin_rate": 0.25,
+        "funds_to_have_available_if_zero_verified_balance_usd": 11,
+        "net_topup_rule": "max(0, stage reserve - reconciled available balance); current balance is unreconciled"
+      },
+      {
+        "stage": 3,
+        "modeled_upper_cost_no_cache_usd": 42.994,
+        "margin_rate": 0.25,
+        "funds_to_have_available_if_zero_verified_balance_usd": 54,
+        "net_topup_rule": "max(0, stage reserve - reconciled available balance); current balance is unreconciled"
+      }
+    ],
+    "stage_3_is_provisional": true,
+    "available_balance_usd": null,
+    "balance_status": "unreconciled; the historical ~US$7 figure is not current available balance"
+  },
+  "limitations": [
+    "No paid API was called and no credentials were read. No live usage, latency, cache rates, or invoice were measured.",
+    "The historical ~40k input tokens per user question aggregates internal provider calls. The 60k–100k per user message interval is modeled, not a billed prompt measurement.",
+    "Output ranges include reasoning and are applied to every user message, including explicit follow-ups.",
+    "Cache scenarios price each input token once as normal or cached. Cache-write usage remains unknown, not zero.",
+    "Long-context pricing applies per provider request above 272k input tokens. Request-level token counts are unavailable; an actual request crossing this threshold would cost more.",
+    "The 25% planning margin is not a spending ceiling or invoice guarantee.",
+    "The live account balance is unreconciled; no deduction is made from the former ~US$7 reference.",
+    "The 3–5 USD development estimate is a rough plan reference and is not assigned to stage reserves without concrete calls."
+  ]
+}
