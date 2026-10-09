@@ -69,13 +69,18 @@ un corte duplicado o faltante, identificadores en conflicto y hashes inválidos.
 Los archivos antiguos de conjunto y calificaciones de esquema 1 siguen
 funcionando como una revisión de un único conjunto.
 
-El resultado esperado presenta etiquetas, porcentajes y unidades para facilitar
-la revisión; el detalle completo queda en un desplegable. Las respuestas y la
-referencia se muestran como texto sin ejecutar
-HTML. Importar una hoja de calificaciones valida su versión, el conjunto de
-respuestas, el SHA-256 de los bytes del archivo importado y sus identificadores
-antes de aplicar cambios. La interfaz no
-declara aprobación humana mientras queden respuestas pendientes.
+La pregunta y las respuestas se muestran como mensajes intercalados por turno,
+con los alias A/B/C visibles. El formato anterior, sin marcadores de turno,
+conserva el texto completo como una pregunta y una respuesta. Las respuestas
+admiten Markdown seguro para facilitar la lectura; el texto original completo
+queda disponible en un desplegable. La referencia presenta los valores o
+criterios disponibles y conserva el detalle completo en otro desplegable. La
+interfaz no ejecuta HTML incluido en los mensajes.
+
+Importar una hoja de calificaciones valida su versión, el conjunto de respuestas,
+el SHA-256 de los bytes del archivo importado y sus identificadores antes de
+aplicar cambios. La interfaz no declara aprobación humana mientras queden
+respuestas pendientes.
 
 ## Preparación del archivo privado
 

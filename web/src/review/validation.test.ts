@@ -121,10 +121,144 @@ describe("blind review file validation", () => {
     source.questions[0].candidates[0].answer = malicious;
     const dataset = parseDataset(source);
     renderQuestion(dataset, 0, new Map(), false, true, () => undefined);
-    expect(document.querySelector("#question-text")?.textContent).toBe(malicious);
+    expect(document.querySelector("#question-text")?.textContent).toBe("Pregunta y respuestas");
     expect(document.querySelector("#expected-answer")?.textContent).toBe(malicious);
-    expect(document.querySelector(".candidate-answer")?.textContent).toBe(malicious);
+    expect(document.querySelector(".review-message-user .review-message-body")?.textContent).toBe(malicious);
+    expect(document.querySelector(".review-message-assistant .review-message-body")?.textContent).toBe(malicious);
     expect(document.querySelector("img, script")).toBeNull();
+  });
+
+  it("interleaves user and assistant messages by their existing turn markers", () => {
+    document.body.innerHTML = `
+      <p id="question-position"></p><h2 id="question-text"></h2><p id="question-language"></p>
+      <div id="expected-summary"></div><pre id="expected-answer"></pre><div id="candidate-list"></div>
+      <button id="previous-question"></button><button id="next-question"></button>`;
+    const source = sampleDataset();
+    source.questions[0]!.question = "Mensaje del usuario · turno 1:\n¿Cuál fue la ocupación?\n\nMensaje del usuario · turno 2:\nNow in English, please.";
+    source.questions[0]!.candidates[0]!.answer = "Respuesta del asistente · turno 1:\nFue 84.9%.\n\nRespuesta del asistente · turno 2:\nIt was 84.9%.";
+    source.questions[0]!.candidates[1]!.answer = "Respuesta del asistente · turno 1:\n84.9%.\n\nRespuesta del asistente · turno 2:\n84.9 percent.";
+    const dataset = parseDataset(source);
+    renderQuestion(dataset, 0, new Map(), false, true, () => undefined);
+    const messages = [...document.querySelectorAll<HTMLElement>(".candidate-card:first-child .review-message")];
+    expect(messages.map((message) => message.classList.contains("review-message-user") ? "user" : "assistant"))
+      .toEqual(["user", "assistant", "user", "assistant"]);
+    expect(messages.map((message) => message.querySelector(".review-message-label")?.textContent))
+      .toEqual(["Usuario · turno 1", "Asistente · turno 1", "Usuario · turno 2", "Asistente · turno 2"]);
+    expect(messages[2]?.textContent).toContain("Now in English, please.");
+    expect(document.querySelector(".candidate-card:first-child .candidate-original pre")?.textContent)
+      .toBe(source.questions[0]!.candidates[0]!.answer);
+
+    source.questions[0]!.question = [1, 2, 3].map((turn) => `Mensaje del usuario · turno ${turn}:\nPetición ${turn}.`).join("\n\n");
+    source.questions[0]!.candidates[1]!.answer = [1, 2, 3].map((turn) => `Respuesta del asistente · turno ${turn}:\nRespuesta ${turn}.`).join("\n\n");
+    const threeTurn = parseDataset(source);
+    renderQuestion(threeTurn, 0, new Map(), false, true, () => undefined);
+    const thirdCandidate = [...document.querySelectorAll<HTMLElement>(".candidate-card:nth-child(2) .review-message")];
+    expect(thirdCandidate.map((message) => message.classList.contains("review-message-user") ? "user" : "assistant"))
+      .toEqual(["user", "assistant", "user", "assistant", "user", "assistant"]);
+    expect(thirdCandidate.map((message) => message.querySelector(".review-message-label")?.textContent))
+      .toEqual(["Usuario · turno 1", "Asistente · turno 1", "Usuario · turno 2", "Asistente · turno 2", "Usuario · turno 3", "Asistente · turno 3"]);
+  });
+
+  it("keeps legacy text and falls back to raw safe rendering when turn markers are invalid or quoted", () => {
+    document.body.innerHTML = `
+      <p id="question-position"></p><h2 id="question-text"></h2><p id="question-language"></p>
+      <div id="expected-summary"></div><pre id="expected-answer"></pre><div id="candidate-list"></div>
+      <button id="previous-question"></button><button id="next-question"></button>`;
+    const source = sampleDataset();
+    source.questions[0]!.question = "Pregunta anterior completa";
+    source.questions[0]!.candidates[0]!.answer = "Respuesta anterior completa";
+    let dataset = parseDataset(source);
+    renderQuestion(dataset, 0, new Map(), false, true, () => undefined);
+    expect(document.querySelector(".review-message-user .review-message-label")?.textContent).toBe("Usuario");
+    expect(document.querySelector(".review-message-assistant .review-message-label")?.textContent).toBe("Asistente");
+    expect(document.querySelector(".review-message-user")?.textContent).toContain("Pregunta anterior completa");
+    expect(document.querySelector(".review-message-assistant")?.textContent).toContain("Respuesta anterior completa");
+
+    source.questions[0]!.question = "Mensaje del usuario · turno 1:\nPregunta.\n\nMensaje del usuario · turno 3:\nCita omitida.";
+    source.questions[0]!.candidates[0]!.answer = "Respuesta del asistente · turno 1:\n```text\nMensaje del usuario · turno 2:\nCódigo literal\n```";
+    dataset = parseDataset(source);
+    renderQuestion(dataset, 0, new Map(), false, true, () => undefined);
+    expect(document.querySelectorAll(".candidate-card:first-child .review-message-user")).toHaveLength(1);
+    expect(document.querySelectorAll(".candidate-card:first-child .review-message-assistant")).toHaveLength(1);
+    expect(document.querySelector(".candidate-card:first-child .review-message-body pre")?.textContent)
+      .toContain("Mensaje del usuario · turno 2:");
+    expect(document.querySelector(".candidate-card:first-child .review-message-body")?.textContent)
+      .toContain("Mensaje del usuario · turno 3:");
+    expect(document.querySelector("img, script")).toBeNull();
+  });
+
+  it("keeps unmarked prefixes in place and does not split marker-like text inside multiline HTML", () => {
+    document.body.innerHTML = `
+      <p id="question-position"></p><h2 id="question-text"></h2><p id="question-language"></p>
+      <div id="expected-summary"></div><pre id="expected-answer"></pre><div id="candidate-list"></div>
+      <button id="previous-question"></button><button id="next-question"></button>`;
+    const source = sampleDataset();
+    source.questions[0]!.candidates[0]!.answer = "Prefacio del asistente antes del turno.\n\nRespuesta del asistente · turno 1:\nRespuesta sintética.";
+    let dataset = parseDataset(source);
+    renderQuestion(dataset, 0, new Map(), false, true, () => undefined);
+    let bodies = document.querySelectorAll<HTMLElement>(".candidate-card:first-child .review-message-assistant .review-message-body");
+    expect(bodies).toHaveLength(1);
+    const prefixed = bodies[0]!.textContent ?? "";
+    expect(prefixed.indexOf("Prefacio del asistente")).toBeLessThan(prefixed.indexOf("Respuesta del asistente · turno 1:"));
+    expect(prefixed.indexOf("Respuesta del asistente · turno 1:")).toBeLessThan(prefixed.indexOf("Respuesta sintética."));
+
+    source.questions[0]!.candidates[0]!.answer = [
+      "Respuesta del asistente · turno 1:",
+      "Ejemplo HTML:",
+      "<div>",
+      "Respuesta del asistente · turno 2:",
+      "marcador literal",
+      "</div>",
+    ].join("\n");
+    dataset = parseDataset(source);
+    renderQuestion(dataset, 0, new Map(), false, true, () => undefined);
+    bodies = document.querySelectorAll<HTMLElement>(".candidate-card:first-child .review-message-assistant .review-message-body");
+    expect(bodies).toHaveLength(1);
+    expect(bodies[0]?.textContent).toContain("Respuesta del asistente · turno 2:");
+    expect(bodies[0]?.querySelector("div")).toBeNull();
+
+    source.questions[0]!.candidates[0]!.answer = [
+      "Respuesta del asistente · turno 1:",
+      "<!-- comentario inline -->",
+      "<!-- comentario multilinea:",
+      "Respuesta del asistente · turno 2:",
+      "marcador literal",
+      "-->",
+    ].join("\n");
+    dataset = parseDataset(source);
+    renderQuestion(dataset, 0, new Map(), false, true, () => undefined);
+    bodies = document.querySelectorAll<HTMLElement>(".candidate-card:first-child .review-message-assistant .review-message-body");
+    expect(bodies).toHaveLength(1);
+    expect(bodies[0]?.textContent).toContain("<!-- comentario inline -->");
+    expect(bodies[0]?.textContent).toContain("Respuesta del asistente · turno 2:");
+    expect(bodies[0]?.querySelector("div, script, img")).toBeNull();
+
+    source.questions[0]!.candidates[0]!.answer = [
+      "Respuesta del asistente · turno 1:",
+      "<div>",
+      "Respuesta del asistente · turno 2:",
+      "marcador literal",
+    ].join("\n");
+    dataset = parseDataset(source);
+    renderQuestion(dataset, 0, new Map(), false, true, () => undefined);
+    bodies = document.querySelectorAll<HTMLElement>(".candidate-card:first-child .review-message-assistant .review-message-body");
+    expect(bodies).toHaveLength(1);
+    expect(bodies[0]?.textContent).toContain("Respuesta del asistente · turno 2:");
+    expect(bodies[0]?.querySelector("div, script, img")).toBeNull();
+
+    source.questions[0]!.candidates[0]!.answer = [
+      "Respuesta del asistente · turno 1:",
+      "<!--",
+      "Respuesta del asistente · turno 2:",
+      "marcador literal",
+      "-->",
+    ].join("\n");
+    dataset = parseDataset(source);
+    renderQuestion(dataset, 0, new Map(), false, true, () => undefined);
+    bodies = document.querySelectorAll<HTMLElement>(".candidate-card:first-child .review-message-assistant .review-message-body");
+    expect(bodies).toHaveLength(1);
+    expect(bodies[0]?.textContent).toContain("Respuesta del asistente · turno 2:");
+    expect([...bodies[0]!.childNodes].some((node) => node.nodeType === Node.COMMENT_NODE)).toBe(false);
   });
 
   it("shows application-context-rejected slots as not evaluable and without rating controls", () => {
@@ -140,6 +274,7 @@ describe("blind review file validation", () => {
     renderQuestion(dataset, 0, new Map(), false, true, () => undefined);
     const rejected = document.querySelector(".candidate-card:first-child");
     expect(rejected?.textContent).toContain("No evaluable: rechazado por el contexto de aplicación");
+    expect(rejected?.querySelector(".review-message-user .review-message-body")?.textContent).toContain("Pregunta 1");
     expect(rejected?.querySelector(".rating-options")).toBeNull();
   });
 });

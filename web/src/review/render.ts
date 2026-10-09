@@ -8,6 +8,7 @@ import {
 } from "./types";
 import { questionProgress } from "./filters";
 import { renderExpectedSummary } from "./expected";
+import { renderSafeMarkdown } from "../views/chat/markdown";
 
 const decisions: Array<{ value: RatingStatus; label: string }> = [
   { value: "correct", label: "Correcta" },
@@ -25,6 +26,85 @@ function textNode(tag: string, className: string, text: string): HTMLElement {
 function expectedText(value: unknown): string {
   if (typeof value === "string") return value;
   return JSON.stringify(value, null, 2) ?? "null";
+}
+
+type ConversationMessage = { role: "user" | "assistant"; turn?: number; content: string };
+type ParsedConversation = { messages: ConversationMessage[]; valid: boolean };
+
+function hasHtmlLikeSyntax(source: string): boolean {
+  // Marker-like text inside raw HTML is ambiguous to split without parsing HTML.
+  // Fall back to rendering the whole field as inert Markdown text instead.
+  return /<!--|<\/?[a-z][\w:-]*\b|<![a-z]/i.test(source);
+}
+
+function conversationMessages(source: string, role: ConversationMessage["role"]): ParsedConversation {
+  if (!source) return { messages: [], valid: true };
+  const markerPattern = role === "user"
+    ? /^Mensaje del usuario · turno (\d+):[ \t]*$/
+    : /^Respuesta del asistente · turno (\d+):[ \t]*$/;
+  const markers: Array<{ start: number; end: number; turn: number }> = [];
+  let fence: { character: string; width: number } | null = null;
+  let offset = 0;
+  for (const rawLine of source.split(/(?<=\n)/)) {
+    const line = rawLine.replace(/\r?\n$/, "");
+    const fenceStart = line.match(/^\s*(`{3,}|~{3,})/);
+    if (fence) {
+      const closing = new RegExp(`^\\s*${fence.character}{${fence.width},}\\s*$`);
+      if (closing.test(line)) fence = null;
+    } else if (fenceStart) {
+      fence = { character: fenceStart[1]![0]!, width: fenceStart[1]!.length };
+    } else if (!/^\s*>/.test(line)) {
+      const match = line.match(markerPattern);
+      if (match) markers.push({ start: offset, end: offset + rawLine.length, turn: Number(match[1]) });
+    }
+    offset += rawLine.length;
+  }
+  if (!markers.length) return { messages: [{ role, content: source }], valid: true };
+  const messages: ConversationMessage[] = [];
+  const prefix = source.slice(0, markers[0]!.start);
+  if (prefix.trim()) messages.push({ role, content: prefix });
+  for (const [index, marker] of markers.entries()) {
+    messages.push({
+      role,
+      turn: marker.turn,
+      content: source.slice(marker.end, markers[index + 1]?.start ?? source.length),
+    });
+  }
+  return {
+    messages,
+    valid: !prefix.trim() && !hasHtmlLikeSyntax(source)
+      && markers.every((marker, index) => Number.isSafeInteger(marker.turn) && marker.turn === index + 1),
+  };
+}
+
+function renderCandidateConversation(host: HTMLElement, userSource: string, assistantSource: string): void {
+  const users = conversationMessages(userSource, "user");
+  const assistants = conversationMessages(assistantSource, "assistant");
+  const messages = (users.valid && assistants.valid
+    ? [...users.messages, ...assistants.messages]
+    : [{ role: "user" as const, content: userSource }, { role: "assistant" as const, content: assistantSource }])
+    .sort((left, right) => {
+    const leftTurn = left.turn ?? (left.role === "user" ? -Infinity : Infinity);
+    const rightTurn = right.turn ?? (right.role === "user" ? -Infinity : Infinity);
+    if (leftTurn !== rightTurn) return leftTurn < rightTurn ? -1 : 1;
+    if (left.role === right.role) return 0;
+    return left.role === "user" ? -1 : 1;
+  });
+  for (const message of messages) {
+    const bubble = document.createElement("section");
+    bubble.className = `review-message review-message-${message.role}`;
+    const label = document.createElement("h4");
+    label.className = "review-message-label";
+    label.textContent = message.turn
+      ? `${message.role === "user" ? "Usuario" : "Asistente"} · turno ${message.turn}`
+      : message.role === "user" ? "Usuario" : "Asistente";
+    const body = document.createElement("div");
+    body.className = "review-message-body markdown-body";
+    const allowedUrls = [...message.content.matchAll(/\]\((https:\/\/[^)]+)\)/g)].map((match) => match[1]!);
+    renderSafeMarkdown(body, message.content, allowedUrls);
+    bubble.append(label, body);
+    host.append(bubble);
+  }
 }
 
 export function renderNavigation(
@@ -103,7 +183,7 @@ export function renderQuestion(
   if (!question || !position || !title || !language || !summary || !expected || !candidateList || !previous || !next) return;
 
   position.textContent = `Pregunta ${index + 1} de ${dataset.questions.length} · ${question.id}`;
-  title.textContent = question.question;
+  title.textContent = "Pregunta y respuestas";
   language.textContent = `Idioma: ${question.language}`;
   expected.textContent = expectedText(question.expected);
   renderExpectedSummary(summary, question.expected);
@@ -123,6 +203,11 @@ export function renderQuestion(
     article.append(textNode("h3", "candidate-heading", `Candidato ${candidate.alias}`));
     if (candidate.answer === null) {
       if (rejectedAliases.includes(candidate.alias)) {
+        const conversation = document.createElement("div");
+        conversation.className = "candidate-answer";
+        conversation.setAttribute("aria-label", `Pregunta para el candidato ${candidate.alias}`);
+        renderCandidateConversation(conversation, question.question, "");
+        article.append(conversation);
         article.append(textNode("p", "missing-answer", "No evaluable: rechazado por el contexto de aplicación antes de llamar al modelo."));
         candidateList.append(article);
         continue;
@@ -134,15 +219,31 @@ export function renderQuestion(
         held: "Esta combinación quedó en espera; no hay respuesta para calificar.",
         not_attempted: "Esta combinación no se intentó en este corte.",
       };
+      const conversation = document.createElement("div");
+      conversation.className = "candidate-answer";
+      conversation.setAttribute("aria-label", `Pregunta para el candidato ${candidate.alias}`);
+      renderCandidateConversation(conversation, question.question, "");
+      article.append(conversation);
       article.append(textNode("p", "missing-answer", missingStatus
         ? labels[missingStatus]
         : "Sin respuesta disponible; el archivo no detalla su estado."));
       candidateList.append(article);
       continue;
     }
-    const answer = textNode("div", "candidate-answer", candidate.answer || "[Respuesta vacía]");
-    answer.setAttribute("aria-label", `Respuesta del candidato ${candidate.alias}`);
+    const answer = document.createElement("div");
+    answer.className = "candidate-answer";
+    answer.setAttribute("aria-label", `Conversación del candidato ${candidate.alias}`);
+    renderCandidateConversation(answer, question.question, candidate.answer);
+    if (!candidate.answer) answer.append(textNode("p", "missing-answer", "[Respuesta vacía]"));
     article.append(answer);
+    const original = document.createElement("details");
+    original.className = "candidate-original";
+    const originalSummary = document.createElement("summary");
+    originalSummary.textContent = "Ver texto original completo";
+    const originalText = document.createElement("pre");
+    originalText.textContent = candidate.answer;
+    original.append(originalSummary, originalText);
+    article.append(original);
     const key = ratingKey(question.id, candidate.alias);
     const existing = ratings.get(key);
     const fieldset = document.createElement("fieldset");

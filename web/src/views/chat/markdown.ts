@@ -14,13 +14,17 @@ function trustedSourceUrl(raw: string): string | undefined {
 }
 
 function appendInline(parent: HTMLElement, raw: string, allowedUrls: ReadonlySet<string>): void {
-  const pattern = /(\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^)]+\))/g;
+  const pattern = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^)]+\))/g;
   let cursor = 0;
   for (const match of raw.matchAll(pattern)) {
     const index = match.index ?? 0;
     parent.append(document.createTextNode(raw.slice(cursor, index)));
     const token = match[0];
-    if (token.startsWith("**")) {
+    if (token.startsWith("`")) {
+      const code = document.createElement("code");
+      code.textContent = token.slice(1, -1);
+      parent.append(code);
+    } else if (token.startsWith("**")) {
       const strong = document.createElement("strong");
       strong.textContent = token.slice(2, -2);
       parent.append(strong);
@@ -152,23 +156,58 @@ export function renderSafeMarkdown(container: HTMLElement, source: string, allow
   }));
   const lines = source.replace(/\r/g, "").split("\n");
   let list: HTMLUListElement | null = null;
+  let orderedList: HTMLOListElement | null = null;
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index]!;
-    if (!line.trim()) { list = null; continue; }
+    if (!line.trim()) { list = null; orderedList = null; continue; }
+    const fence = line.match(/^\s*(```+|~~~+)\s*([\w+-]{0,20})\s*$/);
+    if (fence) {
+      list = null;
+      orderedList = null;
+      const closing = new RegExp(`^\\s*${fence[1]![0]}{${fence[1]!.length},}\\s*$`);
+      const content: string[] = [];
+      let end = index + 1;
+      while (end < lines.length && !closing.test(lines[end]!)) content.push(lines[end++]!);
+      if (end < lines.length) index = end;
+      else index = lines.length;
+      const pre = document.createElement("pre");
+      const code = document.createElement("code");
+      if (fence[2]) code.dataset.language = fence[2];
+      code.textContent = content.join("\n");
+      pre.append(code);
+      container.append(pre);
+      continue;
+    }
     const table = parseTable(lines, index, trustedUrls);
     if (table) {
       list = null;
+      orderedList = null;
       container.append(table[0]);
       index = table[1] - 1;
       continue;
     }
     const item = line.match(/^\s*[-*]\s+(.+)$/);
     if (item) {
+      orderedList = null;
       if (!list) { list = document.createElement("ul"); container.append(list); }
       const li = document.createElement("li"); appendInline(li, item[1]!, trustedUrls); list.append(li);
       continue;
     }
     list = null;
+    const orderedItem = line.match(/^\s*\d+[.)]\s+(.+)$/);
+    if (orderedItem) {
+      if (!orderedList) { orderedList = document.createElement("ol"); container.append(orderedList); }
+      const li = document.createElement("li"); appendInline(li, orderedItem[1]!, trustedUrls); orderedList.append(li);
+      continue;
+    }
+    orderedList = null;
+    const quote = line.match(/^\s*>\s?(.*)$/);
+    if (quote) {
+      const blockquote = document.createElement("blockquote");
+      appendInline(blockquote, quote[1]!, trustedUrls);
+      container.append(blockquote);
+      continue;
+    }
     const heading = line.match(/^(#{1,3})\s+(.+)$/);
     const element = document.createElement(heading ? `h${heading[1]!.length + 2}` : "p");
     appendInline(element, heading?.[2] ?? line, trustedUrls);

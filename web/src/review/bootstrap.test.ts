@@ -228,13 +228,13 @@ describe("review page bootstrap", () => {
       const newer = sourceDataset();
       newer.questions[0]!.question = "Dataset nuevo confirmado";
       selectFile("#dataset-file", jsonFile(newer));
-      await vi.waitFor(() => expect(document.querySelector("#question-text")?.textContent).toBe("Dataset nuevo confirmado"));
+      await vi.waitFor(() => expect(document.querySelector(".candidate-card .review-message-user .review-message-body")?.textContent).toContain("Dataset nuevo confirmado"));
       const status = document.querySelector<HTMLElement>("#load-status")!;
       const newerStatus = status.textContent;
       if (rejectOld) gate.reject(new Error("digest viejo falló"));
       else gate.resolve(await originalDigest("SHA-256", datasetBytes));
       await new Promise((resolve) => window.setTimeout(resolve, 0));
-      expect(document.querySelector("#question-text")?.textContent).toBe("Dataset nuevo confirmado");
+      expect(document.querySelector(".candidate-card .review-message-user .review-message-body")?.textContent).toContain("Dataset nuevo confirmado");
       expect(status.textContent).toBe(newerStatus);
       vi.unstubAllGlobals();
     }
@@ -262,12 +262,12 @@ describe("review page bootstrap", () => {
     const newer = sourceDataset();
     newer.questions[0]!.question = "Dataset que invalida importación";
     selectFile("#dataset-file", jsonFile(newer));
-    await vi.waitFor(() => expect(document.querySelector("#question-text")?.textContent).toBe("Dataset que invalida importación"));
+    await vi.waitFor(() => expect(document.querySelector(".candidate-card .review-message-user .review-message-body")?.textContent).toContain("Dataset que invalida importación"));
     const status = document.querySelector<HTMLElement>("#load-status")!;
     const newerStatus = status.textContent;
     gate.resolve(await originalDigest("SHA-256", bytes));
     await new Promise((resolve) => window.setTimeout(resolve, 0));
-    expect(document.querySelector("#question-text")?.textContent).toBe("Dataset que invalida importación");
+    expect(document.querySelector(".candidate-card .review-message-user .review-message-body")?.textContent).toContain("Dataset que invalida importación");
     expect(status.textContent).toBe(newerStatus);
     expect(document.querySelector<HTMLOutputElement>("#progress-count")?.value).toBe("0 / 74");
   });
@@ -513,7 +513,7 @@ describe("review page bootstrap", () => {
     await vi.waitFor(() => expect(document.querySelector<HTMLElement>("#load-status")?.textContent).toContain("Importación cancelada"));
     expect(confirmation).toHaveBeenCalledTimes(1);
     expect(document.querySelector("#question-position")?.textContent).toContain("Q02");
-    expect(document.querySelector("#question-text")?.textContent).toBe("Pregunta 2");
+    expect(document.querySelector(".candidate-card .review-message-user .review-message-body")?.textContent).toContain("Pregunta 2");
     expect(document.querySelector<HTMLOutputElement>("#progress-count")?.value).toBe("1 / 74");
 
     Object.defineProperty(input, "files", { configurable: true, value: [file] });

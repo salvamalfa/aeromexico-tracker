@@ -39,6 +39,28 @@ describe("expected-result summary", () => {
     expect(host.textContent).toContain("solicitudes sensibles");
   });
 
+  it("summarizes multi-turn criteria for Q01, Q07, and Q11 without claiming missing published rows", () => {
+    const criteria = [
+      ["fails language switch or changes facts", "Responde en el idioma solicitado sin cambiar los hechos."],
+      ["changes the numeric answer", "Mantiene la cifra al simplificar la explicación."],
+      ["drops 2T26 or metric context", "Conserva el periodo 2T26 y la misma métrica al cambiar de aerolínea."],
+    ];
+    for (const [raw, label] of criteria) {
+      const host = document.createElement("div");
+      renderExpectedSummary(host, {
+        status: "multi_turn",
+        critical_failures: [raw],
+        rubric: { correctness: "pending owner review", usefulness: "pending owner review", writing: "pending owner review" },
+      });
+      expect(host.textContent).toContain("Evalúa la conversación completa");
+      expect(host.textContent).toContain(label);
+      expect(host.textContent).toContain("no una referencia numérica");
+      expect(host.textContent).not.toContain("no contiene filas publicadas");
+      expect(host.textContent).not.toContain("84.9");
+      expect(host.textContent).not.toContain("pendiente de revisión humana");
+    }
+  });
+
   it("never creates markup from golden values or exposes unknown metric identifiers in the summary", () => {
     const host = document.createElement("div");
     const hostile = '<svg onload="window.__reviewXss=true">';
