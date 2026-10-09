@@ -114,7 +114,8 @@ def _live_provider_run(
         "quality_thresholds": {"supported_accuracy_minimum": 0.95, "critical_failures_allowed": 0},
         "note": (
             "Un turno ya iniciado puede exceder el umbral; uso/costo reportado y caché "
-            "pueden ser desconocidos. reasoning_tokens no se expone por separado; forma parte de output_tokens."
+            "pueden ser desconocidos. reasoning_tokens no se expone por separado; "
+            "forma parte de output_tokens."
         ),
         "output_path": str(out),
         "progress_path": str(progress_out),
@@ -235,6 +236,9 @@ def _live_provider_run(
                         "status": "application_context_rejected",
                         "error": str(exc),
                         "provider_calls": 0,
+                        "provider_turn_started": False,
+                        "model_turn_completed": False,
+                        "application_boundary_test_completed": True,
                         "latency_seconds": time.perf_counter() - started,
                         "quality": {"scored": False, "not_scored_reason": "application_context_rejected"},
                     }

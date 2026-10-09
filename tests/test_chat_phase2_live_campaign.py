@@ -69,11 +69,20 @@ def _complete_report(run_identity: dict, cases: list[dict], cost: float = 0.1) -
     }
 
 
-def _invoke(monkeypatch, tmp_path: Path, runs: list[dict], fake, *, budget: float = 2.0, resume: bool = False):
+def _invoke(
+    monkeypatch,
+    tmp_path: Path,
+    runs: list[dict],
+    fake,
+    *,
+    budget: float = 2.0,
+    resume: bool = False,
+    cases: list[dict] | None = None,
+):
     monkeypatch.setattr(campaign, "_live_provider_run", fake)
     return campaign.run_campaign(
         runs=runs,
-        cases=[_case("N01"), _case("N02")],
+        cases=cases or [_case("N01"), _case("N02")],
         budget_usd=budget,
         snapshot_root=tmp_path / "snapshot",
         prices={"gpt-6-luna@medium": (0.1, 0.5)},
@@ -119,7 +128,9 @@ def test_campaign_passes_remaining_budget_across_slots(monkeypatch, tmp_path: Pa
     assert budgets == [1.0, pytest.approx(0.4)]
 
 
-def test_exact_resume_skips_only_completed_slot_and_continues_partial_slot(monkeypatch, tmp_path: Path) -> None:
+def test_exact_resume_skips_only_completed_slot_and_continues_partial_slot(
+    monkeypatch, tmp_path: Path
+) -> None:
     runs = [
         _run("completed-slot"),
         _run("partial-slot", repetition=2, case_ids=["N01", "N02"]),
@@ -134,16 +145,23 @@ def test_exact_resume_skips_only_completed_slot_and_continues_partial_slot(monke
             return {
                 "output_path": "/private/partial.json",
                 "run_status": "stopped",
-                "models": [{
-                    "known_estimated_cost_usd": 0.1,
-                    "spent_unknown": False,
-                    "quality_summary": {},
-                    "cases": [{
-                        "case_id": "N01", "provider_turn_started": True,
-                        "usage_complete": True, "estimated_cost_usd": 0.1,
-                        "status": "supported", "model_turn_completed": True,
-                    }],
-                }],
+                "models": [
+                    {
+                        "known_estimated_cost_usd": 0.1,
+                        "spent_unknown": False,
+                        "quality_summary": {},
+                        "cases": [
+                            {
+                                "case_id": "N01",
+                                "provider_turn_started": True,
+                                "usage_complete": True,
+                                "estimated_cost_usd": 0.1,
+                                "status": "supported",
+                                "model_turn_completed": True,
+                            }
+                        ],
+                    }
+                ],
             }
         return _complete_report(kwargs["run_identity"], kwargs["cases"], cost=0.1)
 
@@ -200,7 +218,9 @@ def test_interrupted_active_slot_blocks_resume_without_replay(monkeypatch, tmp_p
     assert saved["spent_unknown"] is True
 
 
-def test_unknown_spend_retains_lower_bound_and_blocks_next_slot_and_resume(monkeypatch, tmp_path: Path) -> None:
+def test_unknown_spend_retains_lower_bound_and_blocks_next_slot_and_resume(
+    monkeypatch, tmp_path: Path
+) -> None:
     runs = [_run("unknown-slot"), _run("must-not-run", repetition=2)]
     calls = []
 
@@ -209,17 +229,24 @@ def test_unknown_spend_retains_lower_bound_and_blocks_next_slot_and_resume(monke
         return {
             "output_path": "/private/unknown.json",
             "run_status": "stopped",
-            "models": [{
-                "known_estimated_cost_usd": 0.25,
-                "spent_unknown": True,
-                "quality_summary": {},
-                "cases": [{
-                    "case_id": "N01", "provider_turn_started": True,
-                    "usage_complete": False, "estimated_cost_usd": None,
-                    "known_estimated_cost_lower_bound_usd": 0.25,
-                    "status": "provider_error", "model_turn_completed": False,
-                }],
-            }],
+            "models": [
+                {
+                    "known_estimated_cost_usd": 0.25,
+                    "spent_unknown": True,
+                    "quality_summary": {},
+                    "cases": [
+                        {
+                            "case_id": "N01",
+                            "provider_turn_started": True,
+                            "usage_complete": False,
+                            "estimated_cost_usd": None,
+                            "known_estimated_cost_lower_bound_usd": 0.25,
+                            "status": "provider_error",
+                            "model_turn_completed": False,
+                        }
+                    ],
+                }
+            ],
         }
 
     result = _invoke(monkeypatch, tmp_path, runs, unknown)
@@ -234,7 +261,9 @@ def test_unknown_spend_retains_lower_bound_and_blocks_next_slot_and_resume(monke
     assert calls == ["unknown-slot"]
 
 
-def test_partial_budget_response_is_not_completed_and_does_not_start_next_slot(monkeypatch, tmp_path: Path) -> None:
+def test_partial_budget_response_is_not_completed_and_does_not_start_next_slot(
+    monkeypatch, tmp_path: Path
+) -> None:
     runs = [
         _run("partial-slot", case_ids=["N01", "N02"]),
         _run("must-not-run", repetition=2),
@@ -246,16 +275,23 @@ def test_partial_budget_response_is_not_completed_and_does_not_start_next_slot(m
         return {
             "output_path": "/private/partial.json",
             "run_status": "stopped",
-            "models": [{
-                "known_estimated_cost_usd": 0.1,
-                "spent_unknown": False,
-                "quality_summary": {},
-                "cases": [{
-                    "case_id": "N01", "provider_turn_started": True,
-                    "usage_complete": True, "estimated_cost_usd": 0.1,
-                    "status": "supported", "model_turn_completed": True,
-                }],
-            }],
+            "models": [
+                {
+                    "known_estimated_cost_usd": 0.1,
+                    "spent_unknown": False,
+                    "quality_summary": {},
+                    "cases": [
+                        {
+                            "case_id": "N01",
+                            "provider_turn_started": True,
+                            "usage_complete": True,
+                            "estimated_cost_usd": 0.1,
+                            "status": "supported",
+                            "model_turn_completed": True,
+                        }
+                    ],
+                }
+            ],
         }
 
     result = _invoke(monkeypatch, tmp_path, runs, partial)
@@ -265,3 +301,257 @@ def test_partial_budget_response_is_not_completed_and_does_not_start_next_slot(m
     assert result["run_summaries"][0]["complete"] is False
     assert result["run_summaries"][0]["case_count"] == 1
     assert result["run_summaries"][0]["expected_case_count"] == 2
+
+
+def _boundary_case(case_id: str, context: dict) -> dict:
+    return {"id": case_id, "question": "Prueba de contexto inválido", "context": context}
+
+
+def _boundary_rejection(case_id: str) -> dict:
+    return {
+        "case_id": case_id,
+        "status": "application_context_rejected",
+        "provider_calls": 0,
+        "provider_turn_started": False,
+        "model_turn_completed": False,
+        "application_boundary_test_completed": True,
+        "usage_complete": None,
+        "estimated_cost_usd": None,
+        "known_estimated_cost_lower_bound_usd": None,
+    }
+
+
+def test_two_stage_one_prompt_slots_complete_with_ungraded_boundary_rows(monkeypatch, tmp_path: Path) -> None:
+    fixture = json.loads(Path("tests/fixtures/chat_evals/safety_current.json").read_text(encoding="utf-8"))
+    safety = fixture["cases"]
+    business_fixture = json.loads(
+        Path("tests/fixtures/chat_evals/business_proposed.json").read_text(encoding="utf-8")
+    )
+    business = [case for case in business_fixture["cases"] if 1 in case.get("selection_stages", [])]
+    cases = safety + business
+    ids = [case["id"] for case in cases]
+    boundary_ids = {"es_card_conflicting_context", "en_private_context_override"}
+    runs = [_run("current", case_ids=ids), _run("proposed", prompt_variant="proposed", case_ids=ids)]
+    calls = []
+
+    def complete_with_boundaries(**kwargs):
+        calls.append(kwargs["run_identity"]["run_id"])
+        model_cases = []
+        for case in kwargs["cases"]:
+            if case["id"] in boundary_ids:
+                model_cases.append(_boundary_rejection(case["id"]))
+            else:
+                model_cases.append(
+                    {
+                        "case_id": case["id"],
+                        "status": "supported",
+                        "provider_turn_started": True,
+                        "usage_complete": True,
+                        "estimated_cost_usd": 0.001,
+                        "known_estimated_cost_lower_bound_usd": 0.001,
+                        "model_turn_completed": True,
+                    }
+                )
+        return {
+            "output_path": f"/private/{kwargs['run_identity']['run_id']}.json",
+            "run_status": "completed",
+            "models": [
+                {
+                    "known_estimated_cost_usd": 0.056,
+                    "spent_unknown": False,
+                    "quality_summary": {"human_review_pending_case_count": 56},
+                    "cases": model_cases,
+                }
+            ],
+        }
+
+    result = _invoke(monkeypatch, tmp_path, runs, complete_with_boundaries, budget=1.0, cases=cases)
+
+    assert result["status"] == "completed"
+    assert calls == ["current", "proposed"]
+    assert all(row["complete"] is True and row["case_count"] == 58 for row in result["run_summaries"])
+    saved = json.loads((tmp_path / "campaign.json").read_text(encoding="utf-8"))
+    for run in saved["completed_runs"].values():
+        boundary_rows = [row for row in run["cases"] if row["case_id"] in boundary_ids]
+        assert len(boundary_rows) == 2
+        assert all(row["model_turn_completed"] is False for row in boundary_rows)
+        assert all(row["provider_turn_started"] is False for row in boundary_rows)
+        assert all(row["estimated_cost_usd"] is None for row in boundary_rows)
+
+
+def test_legacy_completed_report_migrates_and_resumes_only_next_slot(monkeypatch, tmp_path: Path) -> None:
+    cases = [
+        _boundary_case(
+            "es_card_conflicting_context",
+            {"tab": "economy", "period": "2026Q2", "entity": "AEROMEXICO", "card_id": "rask"},
+        ),
+        _boundary_case(
+            "en_private_context_override",
+            {"tab": "flights", "period": "2026Q2", "entity": "AEROMEXICO", "card_id": "network"},
+        ),
+        _case("N01"),
+    ]
+    ids = [case["id"] for case in cases]
+    runs = [_run("old-current", case_ids=ids), _run("new-proposed", prompt_variant="proposed", case_ids=ids)]
+    state_path = tmp_path / "campaign.json"
+    first = _run("old-current", case_ids=ids)
+    legacy_cases = [
+        {
+            "case_id": "es_card_conflicting_context",
+            "status": "application_context_rejected",
+            "provider_turn_started": False,
+            "model_turn_completed": False,
+        },
+        {
+            "case_id": "en_private_context_override",
+            "status": "application_context_rejected",
+            "provider_turn_started": False,
+            "model_turn_completed": False,
+        },
+        {
+            "case_id": "N01",
+            "status": "supported",
+            "provider_turn_started": True,
+            "usage_complete": True,
+            "estimated_cost_usd": 0.1,
+            "model_turn_completed": True,
+        },
+    ]
+    old_report_path = tmp_path / "old-run.json"
+    old_report_path.write_text(
+        json.dumps(
+            {
+                "run_identity": first["identity"],
+                "run_status": "completed",
+                "models": [
+                    {
+                        "candidate": first["candidate"],
+                        "spent_unknown": False,
+                        "cases": [
+                            {
+                                "case_id": "es_card_conflicting_context",
+                                "status": "application_context_rejected",
+                                "provider_calls": 0,
+                            },
+                            {
+                                "case_id": "en_private_context_override",
+                                "status": "application_context_rejected",
+                                "provider_calls": 0,
+                            },
+                            {
+                                "case_id": "N01",
+                                "status": "supported",
+                                "provider_turn_started": True,
+                                "usage_complete": True,
+                                "estimated_cost_usd": 0.1,
+                                "model_turn_completed": True,
+                            },
+                        ],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    identity = {
+        "runs": [run["identity"] for run in runs],
+        "run_identity_hashes": [run["identity_hash"] for run in runs],
+        "budget_usd": 2.0,
+        "expected_versions": {"data_version": "data-v1", "semantic_version": "semantic-v1"},
+        "snapshot_root": str(tmp_path / "snapshot"),
+        "prices": {"gpt-6-luna@medium": [0.1, 0.5]},
+    }
+    old_slot = {
+        "run_id": first["run_id"],
+        "identity": first["identity"],
+        "known_estimated_cost_usd": 0.1,
+        "spent_unknown": False,
+        "cases": legacy_cases,
+        "complete": False,
+        "stopped_reason": "campaign_budget",
+        "summary": {
+            "run_id": first["run_id"],
+            "report_path": str(old_report_path),
+            "run_status": "completed",
+            "case_count": 3,
+            "expected_case_count": 3,
+            "complete": False,
+            "stopped_reason": "campaign_budget",
+            "known_estimated_cost_usd": 0.1,
+            "spent_unknown": False,
+            "quality_summary": {},
+        },
+    }
+    state_path.write_text(
+        json.dumps(
+            {
+                "identity": identity,
+                "status": "stopped_campaign_budget",
+                "budget_usd": 2.0,
+                "known_spend_usd": 0.1,
+                "spent_unknown": False,
+                "active_run_id": None,
+                "completed_runs": {first["run_id"]: old_slot},
+            }
+        ),
+        encoding="utf-8",
+    )
+    calls = []
+
+    def complete(**kwargs):
+        calls.append(kwargs["run_identity"]["run_id"])
+        return _complete_report(kwargs["run_identity"], kwargs["cases"], cost=0.1)
+
+    result = _invoke(monkeypatch, tmp_path, runs, complete, budget=2.0, resume=True, cases=cases)
+
+    assert result["status"] == "completed"
+    assert calls == ["new-proposed"]
+    migrated = json.loads(state_path.read_text(encoding="utf-8"))["completed_runs"]["old-current"]
+    assert migrated["complete"] is True
+    assert migrated["known_estimated_cost_usd"] == 0.1
+    assert migrated["cases"] == legacy_cases
+
+
+@pytest.mark.parametrize(
+    "bad_row",
+    [
+        {
+            "status": "application_context_rejected",
+            "provider_calls": 0,
+            "provider_turn_started": False,
+            "model_turn_completed": False,
+            "application_boundary_test_completed": True,
+        },
+        {
+            "status": "application_context_rejected",
+            "provider_calls": 1,
+            "provider_turn_started": True,
+            "model_turn_completed": False,
+            "application_boundary_test_completed": True,
+        },
+    ],
+)
+def test_unexpected_or_provider_started_rejection_does_not_complete_slot(
+    monkeypatch, tmp_path: Path, bad_row: dict
+) -> None:
+    fixture_case = _boundary_case("unexpected", {"unknown": "key"})
+    runs = [_run("bad-boundary", case_ids=["unexpected"]), _run("must-not-run", repetition=2)]
+
+    def reject(**kwargs):
+        row = {"case_id": "unexpected", "usage_complete": None, "estimated_cost_usd": None, **bad_row}
+        return {
+            "output_path": "/private/bad.json",
+            "run_status": "completed",
+            "models": [
+                {
+                    "known_estimated_cost_usd": 0,
+                    "spent_unknown": False,
+                    "quality_summary": {},
+                    "cases": [row],
+                }
+            ],
+        }
+
+    result = _invoke(monkeypatch, tmp_path, runs, reject, cases=[fixture_case])
+    assert result["status"] == "stopped_campaign_budget"
+    assert result["run_summaries"][0]["complete"] is False
