@@ -206,11 +206,11 @@ def _markdown(dataset: dict[str, Any], rubric_rows: list[dict[str, Any]], case_b
         for candidate in question["candidates"]:
             alias = candidate["alias"]
             chunks += [f"### Candidato {alias}", "", candidate["answer"] or "Sin respuesta final completada para esta combinación.", "",
-                       f"- Evaluación general: [ ] correcta  [ ] problema  [ ] no evaluable",
-                       f"- Fallo crítico: [ ] sí  [ ] no  Detalle: ______________________________",
-                       f"- Utilidad (nota cualitativa): ______________________________",
-                       f"- Redacción (nota cualitativa): ____________________________",
-                       f"- Corrección o mejora concreta: _____________________________", ""]
+                       "- Evaluación general: [ ] correcta  [ ] problema  [ ] no evaluable",
+                       "- Fallo crítico: [ ] sí  [ ] no  Detalle: ______________________________",
+                       "- Utilidad (nota cualitativa): ______________________________",
+                       "- Redacción (nota cualitativa): ____________________________",
+                       "- Corrección o mejora concreta: _____________________________", ""]
         chunks += ["**Mejor respuesta para este caso (opcional)**: [ ] A  [ ] B  [ ] empate", "",
                    "Notas del caso: __________________________________________________", "", "---", ""]
     return "\n".join(chunks)
