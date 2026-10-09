@@ -13,6 +13,9 @@ from .evaluation_campaign import aggregate_campaign_budget
 from .service import validate_context
 
 _EXPECTED_CONTEXT_BOUNDARY_CASES = frozenset({"es_card_conflicting_context", "en_private_context_override"})
+_COMPLETED_OBSERVATION_STATUSES = frozenset(
+    {"supported", "refused", "unsupported", "clarify", "multi_turn", "ungraded"}
+)
 
 
 def _terminal_boundary_rejection(
@@ -100,6 +103,8 @@ def _slot_coverage_complete(
                 record.get("provider_turn_started") is not True
                 or record.get("status") == "provider_error"
                 or record.get("usage_complete") is not True
+                or record.get("status") not in _COMPLETED_OBSERVATION_STATUSES
+                or _finite_cost(record.get("estimated_cost_usd")) is None
             ):
                 return False
         elif _tool_limit_terminal(record):
@@ -193,7 +198,7 @@ def reconcile_terminal_report(
             if (
                 row.get("provider_turn_started") is not True
                 or row.get("usage_complete") is not True
-                or row.get("status") in {"provider_error", "error", "failed"}
+                or row.get("status") not in _COMPLETED_OBSERVATION_STATUSES
             ):
                 raise ValueError("Reconciliación bloqueada: turno completado sin uso confirmado")
             if _finite_cost(row.get("estimated_cost_usd")) is None:
@@ -464,7 +469,7 @@ def validate_report_parts(
             valid = (
                 row.get("provider_turn_started") is True
                 and row.get("usage_complete") is True
-                and row.get("status") not in {"provider_error", "error", "failed"}
+                and row.get("status") in _COMPLETED_OBSERVATION_STATUSES
                 and _finite_cost(row.get("estimated_cost_usd")) is not None
             )
         else:

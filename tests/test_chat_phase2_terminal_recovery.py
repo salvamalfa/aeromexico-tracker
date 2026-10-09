@@ -8,7 +8,11 @@ from pathlib import Path
 import pytest
 
 from src.conversational_analytics import evaluation_live_campaign as campaign
-from src.conversational_analytics.evaluation_live_reconciliation import reconcile_terminal_report
+from src.conversational_analytics.evaluation_live_reconciliation import (
+    _slot_coverage_complete,
+    reconcile_terminal_report,
+    validate_report_parts,
+)
 
 
 def _run(run_id: str, prompt_variant: str, case_ids: list[str]) -> dict:
@@ -67,7 +71,7 @@ def _completed_report(identity: dict, cases: list[dict], cost: float) -> dict:
                         "output_tokens": 2,
                         "latency_seconds": 0.25,
                         "turn_count": 1,
-                        "quality": {"scored": False},
+                        "quality": {"scored": False, "requires_blinded_human_rubric": True},
                     }
                     for case in cases
                 ],
@@ -158,7 +162,7 @@ def test_reconcile_53_rows_then_resume_only_five_and_write_private_58_row_compos
                     "input_tokens": 1000,
                     "output_tokens": 20,
                     "latency_seconds": 10.0,
-                    "quality": {"scored": False},
+                    "quality": {"scored": False, "requires_blinded_human_rubric": True},
                 }
             )
         else:
@@ -176,7 +180,7 @@ def test_reconcile_53_rows_then_resume_only_five_and_write_private_58_row_compos
                     "output_tokens": 20,
                     "latency_seconds": 1.0,
                     "turn_count": 1,
-                    "quality": {"scored": False},
+                    "quality": {"scored": False, "requires_blinded_human_rubric": True},
                 }
             )
     prior_cost = sum(row.get("estimated_cost_usd") or 0 for row in raw_rows if row["provider_turn_started"])
@@ -186,6 +190,7 @@ def test_reconcile_53_rows_then_resume_only_five_and_write_private_58_row_compos
             {
                 "output_path": str(report_path),
                 "run_status": "stopped",
+                "stopped_reason": "provider_error_or_usage_unknown",
                 "probe_only": False,
                 "candidate_models": [current["candidate"]],
                 "run_identity": current["identity"],
@@ -200,7 +205,11 @@ def test_reconcile_53_rows_then_resume_only_five_and_write_private_58_row_compos
                         "spent_unknown": False,
                         "estimated_cost_usd": prior_cost,
                         "known_estimated_cost_usd": prior_cost,
-                        "quality_summary": {"human_rubric_pending_count": 56},
+                        "stopped_reason": "provider_error_or_usage_unknown",
+                        "quality_summary": {
+                            "human_review_pending_case_count": 56,
+                            "critical_failure_gate": "pending blinded owner review of every rubric item",
+                        },
                         "cases": raw_rows,
                     }
                 ],
@@ -256,13 +265,67 @@ def test_reconcile_53_rows_then_resume_only_five_and_write_private_58_row_compos
     assert model["token_totals"]["input_tokens"] == 51050
     assert model["token_totals"]["output_tokens"] == 1030
     assert model["planned_user_message_count"] == 62
+    assert model["stopped_reason"] is None
+    assert composite["stopped_reason"] is None
     assert composite["quality_review_status"] == "pending_human_review"
+    assert model["quality_summary"]["human_review_pending_case_count"] == 56
+    assert model["quality_summary"]["critical_failure_gate"] == (
+        "pending blinded owner review of every rubric item"
+    )
     assert composite["composite_parts"][0]["sha256"] == report_hash
 
 
 @pytest.mark.parametrize(
+    ("status", "cost", "expected"),
+    [("supported", 0.01, True), ("invented_success", 0.01, False), ("supported", None, False)],
+)
+def test_slot_completion_requires_known_observation_status_and_finite_cost(status, cost, expected) -> None:
+    row = {
+        "case_id": "N01",
+        "status": status,
+        "provider_turn_started": True,
+        "model_turn_completed": True,
+        "usage_complete": True,
+        "estimated_cost_usd": cost,
+    }
+    assert _slot_coverage_complete([row], ["N01"], {"N01": {"id": "N01"}}) is expected
+
+
+@pytest.mark.parametrize("mutation", ["unknown_status", "missing_cost"])
+def test_resume_preflight_rejects_unknown_completed_status_or_missing_cost(tmp_path, mutation) -> None:
+    identity = _run("active", "current", ["N01"])["identity"]
+    report = _completed_report(identity, [{"id": "N01"}], 0.1)
+    row = report["models"][0]["cases"][0]
+    if mutation == "unknown_status":
+        row["status"] = "invented_success"
+    else:
+        row["estimated_cost_usd"] = None
+    path = tmp_path / "part.json"
+    path.write_text(json.dumps(report))
+    with pytest.raises(ValueError):
+        validate_report_parts(
+            parts=[{"path": str(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}],
+            run_identity=identity,
+            expected_case_ids=["N01"],
+            saved_cases=[row],
+            cases_by_id={"N01": {"id": "N01"}},
+            expected_cost=0.1,
+        )
+
+
+@pytest.mark.parametrize(
     "mutation",
-    ["identity", "unknown", "http_error", "missing_cost", "duplicate", "partial", "contradictory_counter"],
+    [
+        "identity",
+        "unknown",
+        "http_error",
+        "missing_cost",
+        "missing_completed_cost",
+        "unknown_observation_status",
+        "duplicate",
+        "partial",
+        "contradictory_counter",
+    ],
 )
 def test_reconciliation_rejects_tampered_or_ambiguous_report_before_checkpoint_write(
     tmp_path, mutation
@@ -359,6 +422,10 @@ def test_reconciliation_rejects_tampered_or_ambiguous_report_before_checkpoint_w
         rows[-1]["error_metadata"]["reason_code"] = "http_429"
     if mutation == "missing_cost":
         rows[-1]["estimated_cost_usd"] = None
+    if mutation == "missing_completed_cost":
+        rows[1]["estimated_cost_usd"] = None
+    if mutation == "unknown_observation_status":
+        rows[1]["status"] = "invented_success"
     if mutation == "duplicate":
         rows.append(dict(rows[-1]))
     if mutation == "partial":

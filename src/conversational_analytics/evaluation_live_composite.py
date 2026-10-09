@@ -8,7 +8,12 @@ import math
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
-from .evaluation_live_reconciliation import _finite_cost, _tool_limit_terminal
+from .evaluation_live_reconciliation import (
+    _COMPLETED_OBSERVATION_STATUSES,
+    _finite_cost,
+    _terminal_boundary_rejection,
+    _tool_limit_terminal,
+)
 from .evaluation_live_support import _numeric_gold_summary, _quality_dict
 
 
@@ -47,6 +52,20 @@ def _merge_private_reports(
     assert header is not None
     model = dict(header["models"][0])
     model["cases"] = rows
+    cases_by_id = {str(case["id"]): case for case in cases}
+    for row in rows:
+        if row.get("model_turn_completed") is True:
+            if (
+                row.get("status") not in _COMPLETED_OBSERVATION_STATUSES
+                or row.get("provider_turn_started") is not True
+                or row.get("usage_complete") is not True
+                or _finite_cost(row.get("estimated_cost_usd")) is None
+            ):
+                raise ValueError("Composite bloqueado: estado o costo completado inválido")
+        elif not _tool_limit_terminal(row) and not _terminal_boundary_rejection(
+            row, cases_by_id.get(str(row.get("case_id")), {})
+        ):
+            raise ValueError("Composite bloqueado: fila terminal inválida")
     attempted = [row for row in rows if row.get("provider_turn_started") is True]
     costs = [_finite_cost(row.get("estimated_cost_usd")) for row in attempted]
     if any(value is None for value in costs):
@@ -110,6 +129,7 @@ def _merge_private_reports(
         ),
         quality_review_status="pending_human_review",
         planned_user_message_count=sum(len(case.get("turns", [case.get("question")])) for case in cases),
+        stopped_reason=None,
     )
     numeric = _numeric_gold_summary([dict(case) for case in cases], rows)
     tripwires = [
@@ -118,15 +138,20 @@ def _merge_private_reports(
         if _quality_dict(row).get("automatic_grade_type") in {"tripwire", "multi_turn_tripwires"}
         and _quality_dict(row).get("scored")
     ]
-    model["quality_summary"] = {
-        **numeric,
-        "tripwire_case_count": len(tripwires),
-        "tripwire_case_passed": sum(bool(_quality_dict(row).get("passed")) for row in tripwires),
-        "human_rubric_pending_count": sum(
-            bool(_quality_dict(row).get("requires_blinded_human_rubric")) for row in rows
-        ),
-        "review_status": "pending_human_review",
-    }
+    quality_summary = dict(model.get("quality_summary", {}))
+    quality_summary.update(
+        {
+            **numeric,
+            "tripwire_case_count": len(tripwires),
+            "tripwire_case_passed": sum(bool(_quality_dict(row).get("passed")) for row in tripwires),
+            "human_review_pending_case_count": sum(
+                bool(_quality_dict(row).get("requires_blinded_human_rubric")) for row in rows
+            ),
+            "review_status": "pending_human_review",
+        }
+    )
+    quality_summary.setdefault("critical_failure_gate", "pending blinded owner review of every rubric item")
+    model["quality_summary"] = quality_summary
     composite = dict(header)
     composite.update(
         run_status="technically_closed_with_terminal_case_errors"
@@ -143,6 +168,7 @@ def _merge_private_reports(
         provider_invoice_status="not_reconciled",
         models=[model],
         quality_review_status="pending_human_review",
+        stopped_reason=None,
     )
     from .evaluation_live import _write_private_json
 
