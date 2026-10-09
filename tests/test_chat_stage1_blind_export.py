@@ -156,6 +156,31 @@ class Stage1BlindExportTests(unittest.TestCase):
             "turn_responses": ["first", ""],
         }, 2, "synthetic"), (None, "failed"))
 
+    def test_legacy_context_rejection_without_completion_flags_is_accepted_only_for_pinned_cases(self):
+        legacy = {
+            "status": "application_context_rejected",
+            "provider_calls": 0,
+            "provider_turn_started": None,
+            "model_turn_completed": None,
+            "usage_complete": None,
+            "estimated_cost_usd": None,
+            "known_estimated_cost_lower_bound_usd": None,
+            "session_id": None,
+            "quality": {"scored": False, "not_scored_reason": "application_context_rejected"},
+        }
+        for case_id in exporter.APPLICATION_CONTEXT_REJECT_CASES:
+            self.assertTrue(exporter._is_expected_context_rejection(legacy, case_id))
+            self.assertEqual(
+                exporter._answer(legacy, 1, case_id),
+                (None, "application_context_rejected_unscored"),
+            )
+        self.assertFalse(exporter._is_expected_context_rejection(legacy, "another-case"))
+        self.assertFalse(
+            exporter._is_expected_context_rejection(
+                {**legacy, "provider_calls": 1}, "es_card_conflicting_context"
+            )
+        )
+
     def test_reconciled_tool_limit_is_a_covered_case_without_a_model_answer(self):
         cohorts = exporter._fixture_cases()
         cases = cohorts["safety"] + cohorts["business"]
