@@ -156,6 +156,86 @@ class Stage1BlindExportTests(unittest.TestCase):
             "turn_responses": ["first", ""],
         }, 2, "synthetic"), (None, "failed"))
 
+    def test_reconciled_tool_limit_is_a_covered_case_without_a_model_answer(self):
+        cohorts = exporter._fixture_cases()
+        cases = cohorts["safety"] + cohorts["business"]
+        reports = []
+        for variant in ("current", "proposed"):
+            report_cases = []
+            for case in cases:
+                turns = case.get("turns") or [case["question"]]
+                if case["id"] in exporter.APPLICATION_CONTEXT_REJECT_CASES:
+                    report_cases.append({
+                        "case_id": case["id"], "status": "application_context_rejected",
+                        "provider_calls": 0, "model_turn_completed": False,
+                        "quality": {"scored": False, "not_scored_reason": "application_context_rejected"},
+                    })
+                elif variant == "current" and case["id"] == "N24":
+                    report_cases.append({
+                        "case_id": case["id"], "status": "provider_error",
+                        "provider_turn_started": True, "model_turn_completed": False,
+                        "usage_complete": True, "estimated_cost_usd": 0.0004,
+                        "known_estimated_cost_lower_bound_usd": 0.0004,
+                        "latency_seconds": 2.5,
+                        "error_metadata": {"reason_code": "tool_call_limit"},
+                        "quality": {"scored": False, "not_scored_reason": "provider_error"},
+                    })
+                else:
+                    report_cases.append({
+                        "case_id": case["id"], "model_turn_completed": True,
+                        "provider_turn_started": True, "provider_calls": len(turns), "usage_complete": True,
+                        "turn_responses": [
+                            f"Synthetic answer turn {index + 1}" for index in range(len(turns))
+                        ],
+                    })
+            reports.append(detailed_report(report_cases, variant))
+        with tempfile.TemporaryDirectory() as temporary:
+            current = Path(temporary) / "current-report.json"
+            proposed = Path(temporary) / "proposed-report.json"
+            current.write_text(json.dumps(reports[0]), encoding="utf-8")
+            proposed.write_text(json.dumps(reports[1]), encoding="utf-8")
+            result = exporter.export(current, proposed, Path(temporary) / "out")
+            technical = result["technical"]
+            row = technical["runs"][0]
+            self.assertEqual(result["available_answers_by_cohort"]["business"], 35)
+            self.assertEqual(result["available_answers_by_cohort"]["safety"], 76)
+            self.assertEqual(row["case_rows"], 58)
+            self.assertEqual(row["completed_case_count"], 55)
+            self.assertEqual(row["terminal_tool_limit_count"], 1)
+            self.assertEqual(row["technically_covered_case_count"], 58)
+            self.assertEqual(row["unexpected_incomplete_case_count"], 0)
+            self.assertTrue(technical["case_coverage_complete"])
+            self.assertFalse(technical["expected_model_answers_complete"])
+            self.assertTrue(technical["review_complete"])
+            self.assertEqual(technical["human_review_status"], "pending")
+            dataset = json.loads((Path(temporary) / "out/stage1-review.json").read_text(encoding="utf-8"))
+            key_path = Path(temporary) / "out/stage1-review-alias-key.json"
+            key = json.loads(key_path.read_text(encoding="utf-8"))
+            n24_id = next(q["blind_question_id"] for q in key["questions"] if q["case_id"] == "N24")
+            question = next(q for q in dataset["questions"] if q["id"] == n24_id)
+            tool_limit_candidates = [
+                candidate for candidate in question["candidates"] if candidate["answer"] is None
+            ]
+            self.assertEqual(len(tool_limit_candidates), 1)
+
+    def test_tool_limit_requires_usage_cost_latency_and_no_partial_answer(self):
+        valid = {
+            "status": "provider_error", "provider_turn_started": True,
+            "model_turn_completed": False, "usage_complete": True,
+            "estimated_cost_usd": 0.01, "known_estimated_cost_lower_bound_usd": 0.01,
+            "latency_seconds": 1.0, "error_metadata": {"reason_code": "tool_call_limit"},
+            "quality": {"scored": False, "not_scored_reason": "provider_error"},
+        }
+        self.assertTrue(exporter._is_known_terminal_tool_limit(valid))
+        for invalid in (
+            {**valid, "usage_complete": False},
+            {**valid, "estimated_cost_usd": None},
+            {**valid, "latency_seconds": None},
+            {**valid, "turn_responses": ["partial answer"]},
+            {**valid, "error_metadata": {"reason_code": "provider_error"}},
+        ):
+            self.assertFalse(exporter._is_known_terminal_tool_limit(invalid))
+
     def test_expected_boundary_rejects_keep_case_coverage_but_reduce_model_answer_count(self):
         cohorts = exporter._fixture_cases()
         cases = cohorts["safety"] + cohorts["business"]

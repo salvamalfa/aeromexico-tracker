@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import secrets
 from pathlib import Path
@@ -47,6 +48,41 @@ def _is_expected_context_rejection(row: dict[str, Any], case_id: str) -> bool:
         and isinstance(quality, dict)
         and quality.get("scored") is False
         and quality.get("not_scored_reason") == "application_context_rejected"
+    )
+
+
+def _is_known_terminal_tool_limit(row: dict[str, Any]) -> bool:
+    """Recognize a terminal tool limit only when usage and spend are reconciled."""
+    error = row.get("error_metadata")
+    quality = row.get("quality")
+    cost = row.get("estimated_cost_usd")
+    lower_bound = row.get("known_estimated_cost_lower_bound_usd")
+    latency = row.get("latency_seconds")
+    no_answer = (
+        row.get("response") in (None, "")
+        and row.get("turn_responses") in (None, [])
+    )
+    return (
+        row.get("status") == "provider_error"
+        and row.get("provider_turn_started") is True
+        and row.get("model_turn_completed") is False
+        and row.get("usage_complete") is True
+        and isinstance(error, dict)
+        and error.get("reason_code") == "tool_call_limit"
+        and isinstance(quality, dict)
+        and quality.get("scored") is False
+        and quality.get("not_scored_reason") == "provider_error"
+        and isinstance(cost, (int, float))
+        and not isinstance(cost, bool)
+        and math.isfinite(cost)
+        and cost >= 0
+        and isinstance(lower_bound, (int, float)) and math.isfinite(lower_bound)
+        and lower_bound == cost
+        and isinstance(latency, (int, float))
+        and not isinstance(latency, bool)
+        and math.isfinite(latency)
+        and latency >= 0
+        and no_answer
     )
 
 
@@ -99,6 +135,8 @@ def _answer(row: dict[str, Any] | None, expected_turns: int, case_id: str) -> tu
         return None, "not_attempted"
     if _is_expected_context_rejection(row, case_id):
         return None, "application_context_rejected_unscored"
+    if _is_known_terminal_tool_limit(row):
+        return None, "tool_call_limit_no_answer"
     if row.get("status") == "application_context_rejected":
         return None, "failed"
     if row.get("model_turn_completed") is not True:
@@ -236,6 +274,10 @@ def _markdown(dataset: dict[str, Any], rubric_rows: list[dict[str, Any]], case_b
             disposition = rubric["slot_dispositions"].get(alias)
             missing_copy = {
                 "application_context_rejected_unscored": "No evaluable como respuesta del modelo: rechazo por contexto de aplicación antes de llamar al modelo. La prueba no cubre el comportamiento esperado del modelo.",
+                "tool_call_limit_no_answer": (
+                    "La ejecución terminó por el límite de llamadas a herramientas. El uso y el costo están "
+                    "conciliados; no se produjo una respuesta del modelo para calificar."
+                ),
                 "not_attempted": "Esta combinación no se intentó; no hay respuesta para calificar.",
                 "no_answer": "La ejecución terminó sin una respuesta no vacía para calificar.",
                 "failed": "La ejecución no produjo una respuesta completa para calificar.",
@@ -295,9 +337,10 @@ def _technical_summary(metadata: dict[str, dict[str, Any]], expected_ids: set[st
             row for row in cases
             if _is_expected_context_rejection(row, str(row.get("case_id", "")))
         ]
+        terminal_tool_limits = [row for row in cases if _is_known_terminal_tool_limit(row)]
         unexpected_incomplete = [
             row for row in cases
-            if row not in expected_boundary_rejects
+            if row not in expected_boundary_rejects and row not in terminal_tool_limits
             and _answer(row, expected_turn_counts.get(str(row.get("case_id", "")), 1), str(row.get("case_id", "")))[1] != "available"
         ]
         exportable_answers = sum(
@@ -319,6 +362,8 @@ def _technical_summary(metadata: dict[str, dict[str, Any]], expected_ids: set[st
                      "completed_case_count": sum(row.get("model_turn_completed") is True for row in cases),
                      "exportable_answer_case_count": exportable_answers,
                      "expected_boundary_reject_count": len(expected_boundary_rejects),
+                     "terminal_tool_limit_count": len(terminal_tool_limits),
+                     "technically_covered_case_count": len(set(by_id) & expected_ids),
                      "unexpected_incomplete_case_count": len(unexpected_incomplete),
                      "missing_case_count": len(missing), "missing_case_ids": missing,
                      "attempted_case_count": len(attempted), "usage_incomplete_or_unknown_count": len(unknown_usage),
@@ -343,6 +388,7 @@ def _technical_summary(metadata: dict[str, dict[str, Any]], expected_ids: set[st
             "model_response_coverage_complete": completed_model_answers == len(expected_ids) * len(rows),
             "expected_model_answers_complete": completed_model_answers == expected_model_answers and no_unexpected_incomplete,
             "review_complete": case_coverage_complete and no_unexpected_incomplete,
+            "human_review_status": "pending",
             "future_stage_authorization": "none"}
 
 
