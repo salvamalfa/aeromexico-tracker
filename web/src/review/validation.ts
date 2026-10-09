@@ -80,7 +80,10 @@ export function parseDataset(value: unknown): ReviewDataset {
       if (typeof candidate.answer === "string") availableAnswers += 1;
       return { alias, answer: candidate.answer as string | null };
     });
-    if (seen.size !== candidates.length) throw new Error(`${label}: falta un alias de candidato.`);
+    const expectedAliases = aliases.slice(0, candidates.length);
+    if (seen.size !== candidates.length || expectedAliases.some((alias) => !seen.has(alias))) {
+      throw new Error(`${label}: los alias deben ser A/B o A/B/C según la cantidad de candidatos.`);
+    }
     return {
       id: question.id,
       question: question.question,

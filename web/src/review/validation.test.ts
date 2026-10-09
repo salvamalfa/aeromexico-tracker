@@ -52,6 +52,14 @@ describe("blind review file validation", () => {
     const dataset = parseDataset(source);
     expect(dataset.questions[0]?.candidates.map(({ alias }) => alias)).toEqual(["A", "B"]);
     expect(dataset.available_count).toBe(2);
+
+    const nonCanonicalAliases = sampleDataset();
+    nonCanonicalAliases.questions = nonCanonicalAliases.questions.slice(0, 1).map((question) => ({
+      ...question,
+      candidates: [question.candidates[0]!, { ...question.candidates[1]!, alias: "C" }],
+    }));
+    nonCanonicalAliases.available_count = 2;
+    expect(() => parseDataset(nonCanonicalAliases)).toThrow("los alias deben ser A/B o A/B/C");
   });
 
   it("rejects malformed, aliased, extra-field, or count-mismatched source data", () => {
