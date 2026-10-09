@@ -278,6 +278,7 @@ def run_campaign(
             if not complete
             else None
         )
+        archived_unstarted_attempts = list(completed.get(run_id, {}).get("archived_unstarted_attempts", []))
         completed_run = {
             "run_id": run_id,
             "identity": run["identity"],
@@ -303,6 +304,9 @@ def run_campaign(
                 "quality_summary": model["quality_summary"],
             },
         }
+        if archived_unstarted_attempts:
+            completed_run["archived_unstarted_attempts"] = archived_unstarted_attempts
+            completed_run["summary"]["archived_unstarted_attempts"] = archived_unstarted_attempts
         completed[run_id] = completed_run
         state["active_run_id"] = None
         state["spent_unknown"] = bool(model["spent_unknown"])
