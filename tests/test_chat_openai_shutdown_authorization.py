@@ -185,7 +185,7 @@ def test_reused_session_cancel_before_input_write_is_reissued_after_write(
 def test_worker_shutdown_stays_bounded_while_post_write_cancel_is_blocked(tmp_path):
     path = tmp_path / "reused-session-shutdown.sqlite3"
     store = ChatStore(path)
-    conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1")
+    conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1", provider="mock")
     store.set_provider_session(conversation["id"], "sess_fixture")
     first, _ = store.submit_turn(
         "alice",
@@ -193,17 +193,19 @@ def test_worker_shutdown_stays_bounded_while_post_write_cancel_is_blocked(tmp_pa
         "primera",
         "first",
         {},
+        provider="mock",
         max_active_per_user=2,
         reserved_tokens=100,
         reserved_cost_usd=0.01,
     )
-    next_conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1")
+    next_conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1", provider="mock")
     queued, _ = store.submit_turn(
         "alice",
         next_conversation["id"],
         "siguiente",
         "queued",
         {},
+        provider="mock",
         max_active_per_user=2,
         reserved_tokens=100,
         reserved_cost_usd=0.01,

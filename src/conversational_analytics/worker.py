@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .config import ChatConfig
+from .model_settings import fail_if_settings_changed
 from .providers._openai_helpers import (
     PROVIDER_REASON_CODES,
     TERMINAL_USAGE_RECONCILIATION_SECONDS,
@@ -20,6 +21,7 @@ from .providers._openai_helpers import (
 from .providers.base import Provider, ProviderResult
 from .semantic.plan import PlanValidationError
 from .storage import ChatStore, NotFound
+from .usage_pricing import price_usage, reported_usage
 
 LOG = logging.getLogger("conversational_analytics.worker")
 
@@ -280,12 +282,17 @@ class TurnWorker:
             with self._guard:
                 self._active.pop(turn_id, None)
             return
+        if fail_if_settings_changed(self.store, turn, self.config):
+            with self._guard:
+                self._active.pop(turn_id, None)
+            return
         deadline = time.monotonic() + self.config.max_turn_seconds
         if turn["snapshot_version"] != str(getattr(self.snapshot, "version", "unavailable")):
             self.store.fail_turn(
                 turn_id,
                 "snapshot_changed",
                 "La versión de datos cambió. Crea una conversación nueva para continuar.",
+                usage=(0, 0, 0.0),
             )
             with self._guard:
                 self._active.pop(turn_id, None)
@@ -302,6 +309,7 @@ class TurnWorker:
                 turn_id,
                 "semantic_changed",
                 "Las definiciones cambiaron. Crea una conversación nueva para continuar.",
+                usage=(0, 0, 0.0),
             )
             with self._guard:
                 self._active.pop(turn_id, None)
@@ -496,7 +504,7 @@ class TurnWorker:
                 raise ValueError("provider output size exceeded")
             input_tokens = result.input_tokens if result.usage_complete else 0
             output_tokens = result.output_tokens if result.usage_complete else 0
-            cost = self.config.usage_cost_usd(input_tokens, output_tokens) if result.usage_complete else 0.0
+            cost = price_usage(self.config, input_tokens, output_tokens) if result.usage_complete else 0.0
             payload = {"references": result.references, "chart": result.chart}
             completed = self.store.complete_turn(
                 turn_id, content, payload, input_tokens, output_tokens, cost, result.usage_complete
@@ -506,7 +514,7 @@ class TurnWorker:
         except InterruptedError as exc:
             if not self.store.is_cancelled(turn_id):
                 self.store.fail_turn(turn_id, "cancelled", "El turno fue cancelado.")
-            usage = self._reported_usage(exc)
+            usage = reported_usage(exc, self.config)
             if usage is not None:
                 self.store.record_terminal_usage(turn_id, *usage)
         except TimeoutError as exc:
@@ -514,7 +522,7 @@ class TurnWorker:
             if result is not None:
                 self._record_result_usage(turn_id, result)
             else:
-                usage = self._reported_usage(exc)
+                usage = reported_usage(exc, self.config)
                 if usage is not None:
                     self.store.record_terminal_usage(turn_id, *usage)
         except Exception as exc:
@@ -535,7 +543,7 @@ class TurnWorker:
                 LOG.error("Turn %s failed (%s; reason=%s)", turn_id, type(exc).__name__, reason_code)
             else:
                 LOG.error("Turn %s failed (%s)", turn_id, type(exc).__name__)
-            usage = self._reported_usage(exc)
+            usage = reported_usage(exc, self.config)
             self.store.fail_turn(
                 turn_id,
                 "provider_error" if failure_marker_persisted else "provider_guard_error",
@@ -561,14 +569,6 @@ class TurnWorker:
                 if self._active.get(turn_id) is active:
                     self._active.pop(turn_id, None)
 
-    def _reported_usage(self, exc: BaseException) -> tuple[int, int, float] | None:
-        """Provider usage attached to a failure, priced like a completed turn."""
-        usage = getattr(exc, "usage", None)
-        if not usage:
-            return None
-        input_tokens, output_tokens = usage
-        return input_tokens, output_tokens, self.config.usage_cost_usd(input_tokens, output_tokens)
-
     def _book_usage_after_limit(self, turn_id: str, exc: BaseException) -> None:
         """Cancel the provider turn a local limit stopped, then book its final usage.
 
@@ -585,12 +585,12 @@ class TurnWorker:
         except Exception:
             return
         if usage is not None:
-            self.store.record_terminal_usage(turn_id, *usage, self.config.usage_cost_usd(*usage))
+            self.store.record_terminal_usage(turn_id, *usage, price_usage(self.config, *usage))
 
     def _record_result_usage(self, turn_id: str, result: ProviderResult) -> None:
         if not result.usage_complete:
             return
-        cost = self.config.usage_cost_usd(result.input_tokens, result.output_tokens)
+        cost = price_usage(self.config, result.input_tokens, result.output_tokens)
         self.store.record_terminal_usage(turn_id, result.input_tokens, result.output_tokens, cost)
 
 

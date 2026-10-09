@@ -308,9 +308,9 @@ def test_config_requires_password_mode_for_openai(monkeypatch: pytest.MonkeyPatc
             monkeypatch.delenv(name)
     monkeypatch.setenv("CHAT_PROVIDER", "openai")
     monkeypatch.setenv("CHAT_OPENAI_ENABLED", "true")
-    monkeypatch.setenv("CHAT_MODEL", "test-model")
-    monkeypatch.setenv("CHAT_INPUT_COST_PER_MILLION", "1")
-    monkeypatch.setenv("CHAT_OUTPUT_COST_PER_MILLION", "2")
+    monkeypatch.setenv("CHAT_MODEL", "gpt-6-luna")
+    monkeypatch.setenv("CHAT_INPUT_COST_PER_MILLION", "0.10")
+    monkeypatch.setenv("CHAT_OUTPUT_COST_PER_MILLION", "0.50")
     with pytest.raises(ValueError, match="CHAT_AUTH_MODE=password"):
         ChatConfig.from_env()
     monkeypatch.setenv("CHAT_ALLOW_LOCAL_OPENAI", "true")

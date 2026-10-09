@@ -10,8 +10,24 @@ import json
 import math
 import os
 from dataclasses import dataclass, field
+from functools import lru_cache
 from pathlib import Path
 from urllib.parse import urlsplit
+
+MODEL_CATALOG_PATH = Path(__file__).resolve().parents[2] / "config/chat/models.json"
+
+
+@lru_cache(maxsize=1)
+def model_catalog() -> dict[str, dict[str, object]]:
+    """Return versioned model capabilities and prices shipped with the chat image."""
+    with MODEL_CATALOG_PATH.open(encoding="utf-8") as handle:
+        catalog = json.load(handle)
+    if not isinstance(catalog, dict) or catalog.get("schema_version") != 1:
+        raise ValueError("config/chat/models.json must use schema_version 1")
+    models = catalog.get("models")
+    if not isinstance(models, dict) or not models:
+        raise ValueError("config/chat/models.json must define model capabilities")
+    return models
 
 
 @dataclass(frozen=True)
@@ -30,6 +46,8 @@ class ChatConfig:
     allowed_origins: tuple[str, ...] = ()
     provider: str = "mock"
     model: str | None = None
+    reasoning_effort: str = "medium"
+    text_verbosity: str = "medium"
     openai_enabled: bool = False
     admission_enabled: bool = True
     max_message_chars: int = 8_000
@@ -49,6 +67,10 @@ class ChatConfig:
     daily_cost_budget_global_usd: float = 1.0
     estimated_input_cost_per_million: float = 5.0
     estimated_output_cost_per_million: float = 15.0
+    long_context_threshold_input_tokens: int = 272_000
+    long_context_input_multiplier: float = 2.0
+    long_context_output_multiplier: float = 1.5
+    cache_write_input_multiplier: float = 1.25
     retention_days: int = 30
     poll_interval_seconds: float = 0.2
 
@@ -94,6 +116,8 @@ class ChatConfig:
         if provider not in {"mock", "openai"}:
             raise ValueError("CHAT_PROVIDER must be 'mock' or 'openai'")
         model = os.environ.get("CHAT_MODEL") or None
+        reasoning_effort = os.environ.get("CHAT_REASONING_EFFORT", "medium").strip().lower()
+        text_verbosity = os.environ.get("CHAT_TEXT_VERBOSITY", "medium").strip().lower()
         openai_enabled = os.environ.get("CHAT_OPENAI_ENABLED", "false").lower() in {"1", "true", "yes"}
         if provider == "openai" and (not openai_enabled or not model):
             raise ValueError("OpenAI mode requires CHAT_OPENAI_ENABLED=true and an explicit CHAT_MODEL")
@@ -107,13 +131,29 @@ class ChatConfig:
                 "OpenAI mode requires CHAT_AUTH_MODE=password "
                 "(CHAT_ALLOW_LOCAL_OPENAI=true only on the owner's machine)"
             )
-        if (
-            provider == "openai"
-            and not {"CHAT_INPUT_COST_PER_MILLION", "CHAT_OUTPUT_COST_PER_MILLION"} <= os.environ.keys()
-        ):
-            raise ValueError(
-                "OpenAI mode requires explicit per-million token prices for conservative cost quotas"
-            )
+        if provider == "openai":
+            _validate_model_settings(model, reasoning_effort, text_verbosity)
+            rates = model_catalog()[model]
+            for env_name, key in (
+                ("CHAT_INPUT_COST_PER_MILLION", "input_usd_per_million"),
+                ("CHAT_OUTPUT_COST_PER_MILLION", "output_usd_per_million"),
+            ):
+                configured = _env_float(env_name, float(rates[key]))
+                if not math.isclose(configured, float(rates[key]), rel_tol=0.0, abs_tol=1e-9):
+                    raise ValueError(f"{env_name} must match the versioned price for CHAT_MODEL")
+            input_rate = float(rates["input_usd_per_million"])
+            output_rate = float(rates["output_usd_per_million"])
+            long_context_threshold = int(rates["long_context_threshold_input_tokens"])
+            long_context_input_multiplier = float(rates["long_context_input_multiplier"])
+            long_context_output_multiplier = float(rates["long_context_output_multiplier"])
+            cache_write_input_multiplier = float(rates["cache_write_input_multiplier"])
+        else:
+            input_rate = _env_float("CHAT_INPUT_COST_PER_MILLION", 5.0)
+            output_rate = _env_float("CHAT_OUTPUT_COST_PER_MILLION", 15.0)
+            long_context_threshold = 272_000
+            long_context_input_multiplier = 2.0
+            long_context_output_multiplier = 1.5
+            cache_write_input_multiplier = 1.25
         return cls(
             state_path=state_path,
             auth_mode=auth_mode,
@@ -123,6 +163,8 @@ class ChatConfig:
             allowed_origins=allowed_origins,
             provider=provider,
             model=model,
+            reasoning_effort=reasoning_effort,
+            text_verbosity=text_verbosity,
             openai_enabled=openai_enabled,
             admission_enabled=os.environ.get("CHAT_ADMISSION_ENABLED", "true").lower()
             not in {"0", "false", "no"},
@@ -137,8 +179,12 @@ class ChatConfig:
             minimum_turn_reservation_tokens=_env_int("CHAT_MINIMUM_TURN_RESERVATION_TOKENS", 150_000),
             daily_cost_budget_user_usd=_env_float("CHAT_DAILY_COST_BUDGET_USER_USD", 1.0),
             daily_cost_budget_global_usd=_env_float("CHAT_DAILY_COST_BUDGET_GLOBAL_USD", 1.0),
-            estimated_input_cost_per_million=_env_float("CHAT_INPUT_COST_PER_MILLION", 5.0),
-            estimated_output_cost_per_million=_env_float("CHAT_OUTPUT_COST_PER_MILLION", 15.0),
+            estimated_input_cost_per_million=input_rate,
+            estimated_output_cost_per_million=output_rate,
+            long_context_threshold_input_tokens=long_context_threshold,
+            long_context_input_multiplier=long_context_input_multiplier,
+            long_context_output_multiplier=long_context_output_multiplier,
+            cache_write_input_multiplier=cache_write_input_multiplier,
             retention_days=_env_int("CHAT_RETENTION_DAYS", 30),
             poll_interval_seconds=_env_float("CHAT_POLL_INTERVAL_SECONDS", 0.2),
         )
@@ -149,6 +195,9 @@ class ChatConfig:
             "daily_cost_budget_global_usd",
             "estimated_input_cost_per_million",
             "estimated_output_cost_per_million",
+            "long_context_input_multiplier",
+            "long_context_output_multiplier",
+            "cache_write_input_multiplier",
             "poll_interval_seconds",
         ):
             value = getattr(self, name)
@@ -178,16 +227,26 @@ class ChatConfig:
         reservation may arrive as output (including reasoning); pricing it all
         at the output rate keeps the hold an upper bound for tokens within it.
         """
-        rate = max(self.estimated_input_cost_per_million, self.estimated_output_cost_per_million)
+        rate = max(
+            self.estimated_input_cost_per_million
+            * self.long_context_input_multiplier
+            * self.cache_write_input_multiplier,
+            self.estimated_output_cost_per_million * self.long_context_output_multiplier,
+        )
         return reserved_tokens * rate / 1_000_000
 
     def usage_cost_usd(self, input_tokens: int, output_tokens: int) -> float:
         """Estimated spend of confirmed usage; the mock provider never spends."""
         if self.provider != "openai":
             return 0.0
+        long_context = input_tokens > self.long_context_threshold_input_tokens
+        input_multiplier = self.cache_write_input_multiplier * (
+            self.long_context_input_multiplier if long_context else 1.0
+        )
+        output_multiplier = self.long_context_output_multiplier if long_context else 1.0
         return (
-            input_tokens * self.estimated_input_cost_per_million
-            + output_tokens * self.estimated_output_cost_per_million
+            input_tokens * self.estimated_input_cost_per_million * input_multiplier
+            + output_tokens * self.estimated_output_cost_per_million * output_multiplier
         ) / 1_000_000
 
     def password_fingerprints(self) -> dict[str, str]:
@@ -216,6 +275,22 @@ def _password_users(raw: str) -> dict[str, str]:
     except (ValueError, TypeError, KeyError, json.JSONDecodeError) as exc:
         raise ValueError("CHAT_PASSWORDS_JSON must contain user_id and scrypt password_hash entries") from exc
     return users
+
+
+def _validate_model_settings(model: str | None, effort: str, verbosity: str) -> None:
+    if not model:
+        raise ValueError("OpenAI mode requires an explicit CHAT_MODEL")
+    entry = model_catalog().get(model)
+    if entry is None:
+        raise ValueError("CHAT_MODEL must be listed in config/chat/models.json")
+    efforts = entry.get("reasoning_efforts")
+    if not isinstance(efforts, list) or effort not in efforts:
+        allowed = ", ".join(efforts) if isinstance(efforts, list) else "none"
+        raise ValueError(f"CHAT_REASONING_EFFORT for {model} must be one of: {allowed}")
+    levels = entry.get("text_verbosity")
+    if not isinstance(levels, list) or verbosity not in levels:
+        allowed = ", ".join(levels) if isinstance(levels, list) else "none"
+        raise ValueError(f"CHAT_TEXT_VERBOSITY for {model} must be one of: {allowed}")
 
 
 def _env_int(name: str, default: int) -> int:

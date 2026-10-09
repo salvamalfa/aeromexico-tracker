@@ -76,8 +76,8 @@ def test_paid_turn_reservation_fits_default_cost_quotas_at_explicit_luna_prices(
     turn = store.get_turn("owner", submitted["turn_id"])
 
     assert turn["reserved_tokens"] == 150_000
-    # The whole floor is priced at the output rate (US$0.50/M): no output cap exists.
-    assert turn["reserved_cost_usd"] == pytest.approx(0.075)
+    # The whole floor uses the documented 1.5× long-context output rate.
+    assert turn["reserved_cost_usd"] == pytest.approx(0.1125)
 
 
 @pytest.mark.parametrize(
@@ -181,11 +181,11 @@ def test_reservation_floor_environment_setting_requires_positive_integer(monkeyp
 @pytest.mark.parametrize(
     ("input_price", "output_price", "reservation_usd", "admissible_at_one_dollar"),
     [
-        # Luna: US$0.075 hold; at ~US$0.004 per measured question US$1 admits ~215 a day.
-        (0.10, 0.50, 0.075, True),
+        # Luna hold uses the long-context output premium: 150k × US$0.75/M.
+        (0.10, 0.50, 0.1125, True),
         # Sol 6.1 and Astra: one floor hold exceeds US$1, so startup is refused.
-        (2.0, 10.0, 1.5, False),
-        (10.0, 50.0, 7.5, False),
+        (2.0, 10.0, 2.25, False),
+        (10.0, 50.0, 11.25, False),
     ],
 )
 def test_dollar_cap_reservation_prices_every_token_at_the_output_rate(
@@ -218,14 +218,15 @@ def test_mock_reservations_hold_tokens_but_never_dollars(tmp_path: Path):
 
 
 def test_cap_equal_to_one_reservation_admits_only_until_any_spend(tmp_path: Path):
-    # Sol 6.1 prices: the floor hold is exactly US$1.50. A cap of US$1.50 starts,
+    # Sol 6.1 reserves at the documented long-context output rate, US$2.25.
+    # A cap equal to one reservation starts,
     # but any confirmed spend leaves no room for the next hold.
     service, store = _service(
         tmp_path,
         estimated_input_cost_per_million=2.0,
         estimated_output_cost_per_million=10.0,
-        daily_cost_budget_user_usd=1.5,
-        daily_cost_budget_global_usd=1.5,
+        daily_cost_budget_user_usd=2.25,
+        daily_cost_budget_global_usd=2.25,
         max_active_per_user=3,
         max_concurrent_global=3,
     )
@@ -244,4 +245,4 @@ def test_mock_usage_is_priced_at_zero_dollars():
     luna = ChatConfig(
         provider="openai", estimated_input_cost_per_million=0.1, estimated_output_cost_per_million=0.5
     )
-    assert luna.usage_cost_usd(40_000, 500) == pytest.approx(0.00425)
+    assert luna.usage_cost_usd(40_000, 500) == pytest.approx(0.00525)
