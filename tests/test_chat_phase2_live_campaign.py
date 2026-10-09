@@ -331,6 +331,7 @@ def _boundary_rejection(case_id: str) -> dict:
         "case_id": case_id,
         "status": "application_context_rejected",
         "provider_calls": 0,
+        "provider_request_count": 0,
         "provider_turn_started": False,
         "model_turn_completed": False,
         "application_boundary_test_completed": True,
@@ -456,28 +457,8 @@ def test_legacy_completed_report_migrates_and_resumes_only_next_slot(monkeypatch
                         "candidate": first["candidate"],
                         "spent_unknown": False,
                         "cases": [
-                            {
-                                "case_id": "es_card_conflicting_context",
-                                "status": "application_context_rejected",
-                                "provider_calls": 0,
-                                "provider_turn_started": False,
-                                "model_turn_completed": False,
-                                "usage_complete": None,
-                                "estimated_cost_usd": None,
-                                "known_estimated_cost_lower_bound_usd": None,
-                                "quality": {"scored": False},
-                            },
-                            {
-                                "case_id": "en_private_context_override",
-                                "status": "application_context_rejected",
-                                "provider_calls": 0,
-                                "provider_turn_started": False,
-                                "model_turn_completed": False,
-                                "usage_complete": None,
-                                "estimated_cost_usd": None,
-                                "known_estimated_cost_lower_bound_usd": None,
-                                "quality": {"scored": False},
-                            },
+                            _boundary_rejection("es_card_conflicting_context"),
+                            _boundary_rejection("en_private_context_override"),
                             {
                                 "case_id": "N01",
                                 "status": "supported",
@@ -552,13 +533,15 @@ def test_legacy_completed_report_migrates_and_resumes_only_next_slot(monkeypatch
     assert migrated["cases"][:2] == [
         {
             **legacy_cases[0],
-            "quality": {"scored": False},
+            "quality": {"scored": False, "not_scored_reason": "application_context_rejected"},
             "provider_calls": 0,
+            "provider_request_count": 0,
         },
         {
             **legacy_cases[1],
-            "quality": {"scored": False},
+            "quality": {"scored": False, "not_scored_reason": "application_context_rejected"},
             "provider_calls": 0,
+            "provider_request_count": 0,
         },
     ]
 
