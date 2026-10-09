@@ -1,6 +1,6 @@
 # Estimación offline F2.9 (borrador)
 
-**Estado: estimación modelada; fixture, rúbrica, prompt, alcance y presupuesto siguen pendientes de aprobación. No hubo llamadas pagadas ni uso de credenciales.**
+**Estado: la etapa 1 está aprobada; las etapas 2/3 siguen pendientes. Esta estimación no ejecutó llamadas pagadas ni leyó credenciales.**
 
 Fecha de tarifas declarada por catálogo (UTC): 2026-10-09; revisión local: 2026-10-08 America/Mexico_City. Catálogo `config/chat/models.json`, SHA-256 `9744c985f051c898a8af6e8d3c8766c6885e77d8a13d55b72e30427b15468d4c`. Fichas oficiales: [gpt-6-luna](https://developers.openai.com/api/docs/models/gpt-6-luna), [gpt-6.1-sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol).
 
@@ -61,7 +61,7 @@ Total de tres etapas en el escenario: **$10.69–$22.49**.
 
 ## Fondos por cargar antes de cada etapa
 
-Cada etapa es una campaña separada con su propia autorización y `budget_usd`. Dentro de la etapa, sus prompts, candidatos, repeticiones y reanudaciones comparten un solo ledger; no hay un ledger operativo único para las tres etapas. Se usa el costo alto sin caché y se agrega 25%, redondeando al siguiente dólar. No se resta saldo porque no está reconciliado. Si se confirma saldo disponible, carga `max(0, reserva − saldo disponible)`.
+Cada etapa es una campaña separada con su propia autorización y `budget_usd`. Dentro de la etapa, sus prompts, candidatos, repeticiones y reanudaciones comparten un solo ledger; no hay un ledger operativo único para las tres etapas. Se usa el costo alto sin caché y se agrega 25%, redondeando al siguiente dólar. El dueño confirmó US$7.20 disponibles tras US$2.80 usados; no se consultó ni reconcilió el uso del proveedor. Solo la reserva de US$3 para etapa 1 está autorizada.
 
 | Etapa | Costo alto sin caché | Con margen | Fondos necesarios si saldo verificado es US$0 |
 |---|---:|---:|---:|
@@ -75,6 +75,7 @@ La etapa 3 es provisional y debe recalcularse después del piloto con el uso med
 
 ## Límites
 
-Se presupone precio de contexto corto. La tarifa long-context aplica por solicitud individual que exceda 272,000 tokens de entrada; no hay medición por solicitud para saber si ocurre. En ese caso el costo sería mayor. El saldo vivo no está conciliado y la referencia histórica de ~US$7 no se considera saldo disponible.
+Se presupone precio de contexto corto. La tarifa long-context aplica por solicitud individual que exceda 272,000 tokens de entrada; no hay medición por solicitud para saber si ocurre. En ese caso el costo sería mayor. El saldo US$7.20 es una declaración confirmada por el dueño, no una reconciliación del proveedor.
+La reserva conservadora operativa de etapa 1 es distinta de la estimación de gasto: con Luna medium y 16 llamadas de herramienta, el runner usa 140,000 tokens de entrada más 32,000 de salida por mensaje para admitir el siguiente caso, valorados a US$0.75 por millón de tokens reservados. Son US$0.129 por turno (US$0.387 para el caso de tres turnos). El runner no retiene todas las reservas a la vez: tras cada caso contabiliza el uso confirmado y compara el saldo restante con la siguiente reserva. Una suma hipotética de US$15.996 para los 124 turnos no representa fondos retenidos. En un escenario offline representativo de 100,000 tokens de entrada y 6,000 de salida por turno, el gasto estimado es US$1.922 y los dos slots caben bajo el tope US$3. El gasto real puede variar; una solicitud con uso desconocido detiene la campaña y bloquea replay.
 
 El JSON conserva versiones y hashes de fixtures y catálogo. Para regenerar: `uv run python scripts/chat/render_phase2_estimate.py [--model-catalog PATH]`.

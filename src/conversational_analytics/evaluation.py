@@ -440,6 +440,9 @@ def main(argv: list[str] | None = None) -> int:
             parser.error("el fixture de negocio sigue en borrador; no puede habilitar una corrida live")
         if args.stage is None:
             parser.error("la corrida de negocio requiere --stage")
+        approved_stages = fixture.get("owner_approval", {}).get("approved_live_stages", [])
+        if args.stage not in approved_stages:
+            parser.error("la etapa de negocio no está autorizada para live por la aprobación vigente")
         if args.stage == 3:
             parser.error("etapa 3 bloqueada hasta readiness explícita de F2.3–F2.8 y resolución de N17")
         unresolved = [
@@ -464,14 +467,20 @@ def main(argv: list[str] | None = None) -> int:
             parser.error("--prompt-runs debe ser positivo")
         print(
             json.dumps(
-                render_dry_run(
-                    cases,
-                    models=args.models,
-                    prices=prices,
-                    input_tokens_per_question=args.input_tokens_per_question,
-                    output_tokens_per_question=args.output_tokens_per_question,
-                    expected_versions=fixture.get("expected_versions"),
-                    prompt_runs=prompt_runs,
+                _render_campaign_dry_run(
+                    render_dry_run(
+                        cases,
+                        models=args.models,
+                        prices=prices,
+                        input_tokens_per_question=args.input_tokens_per_question,
+                        output_tokens_per_question=args.output_tokens_per_question,
+                        expected_versions=fixture.get("expected_versions"),
+                        prompt_runs=prompt_runs,
+                    ),
+                    args=args,
+                    fixture=fixture,
+                    cases=cases,
+                    is_business=is_business,
                 ),
                 ensure_ascii=False,
                 indent=2,
@@ -565,6 +574,64 @@ def main(argv: list[str] | None = None) -> int:
     )
     print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
     return 0
+
+
+def _render_campaign_dry_run(
+    report: dict[str, Any], *, args: argparse.Namespace, fixture: dict[str, Any],
+    cases: list[dict[str, Any]], is_business: bool,
+) -> dict[str, Any]:
+    """Attach stable F2.2 identities to a no-provider campaign plan."""
+    if not is_business or args.stage != 1 or not args.prompt_proposed:
+        return report
+    if not args.prompt_proposed.is_file():
+        raise ValueError("--prompt-proposed no existe")
+    if args.models and args.models != ["gpt-6-luna@medium"]:
+        raise ValueError("El dry-run F2.2 de etapa 1 requiere solo gpt-6-luna@medium")
+    from .evaluation_campaign import build_campaign_runs, extract_proposed_prompt
+    from .providers._openai_helpers import SYSTEM_INSTRUCTIONS
+    from .tools.registry import ToolRegistry
+
+    proposed = extract_proposed_prompt(args.prompt_proposed.read_text(encoding="utf-8"))
+    registry = ToolRegistry(Snapshot(args.snapshot))
+    runs = build_campaign_runs(
+        1,
+        cases,
+        data_version=fixture["expected_versions"]["data_version"],
+        semantic_version=fixture["expected_versions"]["semantic_version"],
+        prompts={"current": SYSTEM_INSTRUCTIONS, "proposed": proposed},
+        tool_specs=registry.tool_specs(),
+        limits={
+            "max_tool_calls": 16,
+            "max_message_chars": 8_000,
+            "max_tool_result_bytes": 16_000,
+            "max_turn_seconds": 180,
+        },
+        text_verbosity="medium",
+        candidates=["gpt-6-luna@medium"],
+    )
+    report["campaign_plan"] = {
+        "mode": "offline_identity_plan; no provider client or API calls",
+        "candidate": "gpt-6-luna@medium",
+        "shared_operational_budget_usd_if_authorized": 3.0,
+        "limits": runs[0]["limits"],
+        "run_ids": [run["run_id"] for run in runs],
+        "runs": [
+            {
+                "run_id": run["run_id"],
+                "prompt_variant": run["prompt_variant"],
+                "prompt_content_hash": run["prompt_content_hash"],
+                "identity_hash": run["identity_hash"],
+                "case_count": run["case_count"],
+                "user_message_count": run["user_message_count"],
+            }
+            for run in runs
+        ],
+        "output_and_checkpoint_paths": {
+            "reports": str(args.output_dir),
+            "checkpoint": str(args.campaign_state or args.output_dir / "f2-2-stage-1-campaign.json"),
+        },
+    }
+    return report
 
 
 if __name__ == "__main__":

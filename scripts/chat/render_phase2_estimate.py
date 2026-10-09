@@ -99,6 +99,7 @@ def _catalog_path_label(path: Path) -> str:
 def render(model_catalog_path: Path = DEFAULT_CATALOG) -> tuple[dict[str, Any], str]:
     business = json.loads(BUSINESS_FIXTURE.read_text(encoding="utf-8"))
     safety = json.loads(SAFETY_FIXTURE.read_text(encoding="utf-8"))
+    authorization = business.get("campaign_authorization", {})
     catalog, catalog_sha = _load_catalog(model_catalog_path)
     specs = specs_from_model_catalog(catalog["models"])
 
@@ -182,7 +183,7 @@ def render(model_catalog_path: Path = DEFAULT_CATALOG) -> tuple[dict[str, Any], 
             "modeled_upper_cost_no_cache_usd": round(high, 4),
             "margin_rate": MARGIN,
             "funds_to_have_available_if_zero_verified_balance_usd": _ceil_dollar(high * (1 + MARGIN)),
-            "net_topup_rule": "max(0, stage reserve - reconciled available balance); current balance is unreconciled",
+            "net_topup_rule": "max(0, stage reserve - owner-confirmed available balance); provider usage is not independently reconciled",
         })
     low, high = estimates[0]["all_stage_cost_usd_range"]
     roadmap = {
@@ -198,11 +199,16 @@ def render(model_catalog_path: Path = DEFAULT_CATALOG) -> tuple[dict[str, Any], 
         "all_work_funds_scope": "global planning reference only: one margin is applied to the high estimate for all three stages plus the development reference, then rounded up; it is not an authorized budget or an operational campaign cap",
         "stage_reserves": stage_reserves,
         "stage_3_is_provisional": True,
-        "available_balance_usd": None,
-        "balance_status": "unreconciled; the historical ~US$7 figure is not current available balance",
+        "available_balance_usd": authorization.get("available_balance_usd"),
+        "balance_status": (
+            "confirmed_by_owner; provider usage not reconciled"
+            if authorization.get("confirmed_by_owner") and not authorization.get("provider_reconciled")
+            else "unreconciled"
+        ),
+        "current_authorization": authorization,
     }
     payload = {
-        "status": "planning_only_pending_owner_approval",
+        "status": "planning_only; stage_1_owner_approved; stages_2_3_pending",
         "reviewed_at_owner_local": "2026-10-08 America/Mexico_City",
         "tariff_source": catalog.get("source"),
         "tariff_basis": "Authoritative model catalog prices, USD per million input/cached/write/output tokens; short-context scenarios.",
@@ -223,6 +229,19 @@ def render(model_catalog_path: Path = DEFAULT_CATALOG) -> tuple[dict[str, Any], 
         },
         "estimates": estimates,
         "roadmap_budget": roadmap,
+        "stage_1_operational_guard": {
+            "candidate": "gpt-6-luna@medium",
+            "tool_calls_per_turn": 16,
+            "reserved_tokens_per_turn": {"input": 140_000, "output": 32_000},
+            "reservation_rate_usd_per_million": 0.75,
+            "reservation_usd_per_turn": 0.129,
+            "planned_user_turns": 124,
+            "sum_if_all_turn_reservations_were_held_simultaneously_usd": 15.996,
+            "budget_usd": authorization.get("stage_1_reserve_usd", 3.0),
+            "admission_behavior": "the runner checks the next case reservation against remaining budget after confirmed spend; it does not hold all planned reservations at once",
+            "offline_representative_scenario": "all 124 turns confirm 100000 input and 6000 output tokens; modeled spend $1.922; both slots complete within $3",
+            "limitations": "unknown spend halts admission and blocks replay; actual usage and long-context request pricing may differ",
+        },
         "limitations": [
             "No paid API was called and no credentials were read. No live usage, latency, cache rates, or invoice were measured.",
             "The historical ~40k input tokens per user question aggregates internal provider calls. The 60k–100k per user message interval is modeled, not a billed prompt measurement.",
@@ -230,7 +249,7 @@ def render(model_catalog_path: Path = DEFAULT_CATALOG) -> tuple[dict[str, Any], 
             "Cache scenarios price each input token once as normal or cached. Cache-write usage remains unknown, not zero.",
             "Long-context pricing applies per provider request above 272k input tokens. Request-level token counts are unavailable; an actual request crossing this threshold would cost more.",
             "The 25% planning margin is not a spending ceiling or invoice guarantee.",
-            "The live account balance is unreconciled; no deduction is made from the former ~US$7 reference.",
+            "The US$7.20 balance is owner-declared and not independently reconciled against provider usage.",
             "The 3–5 USD development estimate is a rough plan reference and is not assigned to stage reserves without concrete calls.",
         ],
     }
@@ -254,7 +273,7 @@ def _render_markdown(payload: dict[str, Any]) -> str:
     rows = [
         "# Estimación offline F2.9 (borrador)",
         "",
-        "**Estado: estimación modelada; fixture, rúbrica, prompt, alcance y presupuesto siguen pendientes de aprobación. No hubo llamadas pagadas ni uso de credenciales.**",
+        "**Estado: la etapa 1 está aprobada; las etapas 2/3 siguen pendientes. Esta estimación no ejecutó llamadas pagadas ni leyó credenciales.**",
         "",
         f"Fecha de tarifas declarada por catálogo (UTC): {', '.join(ms['model_catalog']['pricing_dates_utc'])}; revisión local: {ms['model_catalog']['owner_local_review_date']}. Catálogo `{ms['model_catalog']['path']}`, SHA-256 `{ms['model_catalog']['sha256']}`. Fichas oficiales: "
         + ", ".join(f"[{model}]({source})" for model, source in ms["model_catalog"]["model_sources"].items()) + ".",
@@ -306,7 +325,7 @@ def _render_markdown(payload: dict[str, Any]) -> str:
     rows.extend([
         "## Fondos por cargar antes de cada etapa",
         "",
-        "Cada etapa es una campaña separada con su propia autorización y `budget_usd`. Dentro de la etapa, sus prompts, candidatos, repeticiones y reanudaciones comparten un solo ledger; no hay un ledger operativo único para las tres etapas. Se usa el costo alto sin caché y se agrega 25%, redondeando al siguiente dólar. No se resta saldo porque no está reconciliado. Si se confirma saldo disponible, carga `max(0, reserva − saldo disponible)`.",
+        f"Cada etapa es una campaña separada con su propia autorización y `budget_usd`. Dentro de la etapa, sus prompts, candidatos, repeticiones y reanudaciones comparten un solo ledger; no hay un ledger operativo único para las tres etapas. Se usa el costo alto sin caché y se agrega 25%, redondeando al siguiente dólar. El dueño confirmó US${roadmap['available_balance_usd']:.2f} disponibles tras US$2.80 usados; no se consultó ni reconcilió el uso del proveedor. Solo la reserva de US$3 para etapa 1 está autorizada.",
         "",
         "| Etapa | Costo alto sin caché | Con margen | Fondos necesarios si saldo verificado es US$0 |",
         "|---|---:|---:|---:|",
@@ -321,7 +340,8 @@ def _render_markdown(payload: dict[str, Any]) -> str:
         "",
         "## Límites",
         "",
-        "Se presupone precio de contexto corto. La tarifa long-context aplica por solicitud individual que exceda 272,000 tokens de entrada; no hay medición por solicitud para saber si ocurre. En ese caso el costo sería mayor. El saldo vivo no está conciliado y la referencia histórica de ~US$7 no se considera saldo disponible.",
+        "Se presupone precio de contexto corto. La tarifa long-context aplica por solicitud individual que exceda 272,000 tokens de entrada; no hay medición por solicitud para saber si ocurre. En ese caso el costo sería mayor. El saldo US$7.20 es una declaración confirmada por el dueño, no una reconciliación del proveedor.",
+        "La reserva conservadora operativa de etapa 1 es distinta de la estimación de gasto: con Luna medium y 16 llamadas de herramienta, el runner usa 140,000 tokens de entrada más 32,000 de salida por mensaje para admitir el siguiente caso, valorados a US$0.75 por millón de tokens reservados. Son US$0.129 por turno (US$0.387 para el caso de tres turnos). El runner no retiene todas las reservas a la vez: tras cada caso contabiliza el uso confirmado y compara el saldo restante con la siguiente reserva. Una suma hipotética de US$15.996 para los 124 turnos no representa fondos retenidos. En un escenario offline representativo de 100,000 tokens de entrada y 6,000 de salida por turno, el gasto estimado es US$1.922 y los dos slots caben bajo el tope US$3. El gasto real puede variar; una solicitud con uso desconocido detiene la campaña y bloquea replay.",
         "",
         "El JSON conserva versiones y hashes de fixtures y catálogo. Para regenerar: `uv run python scripts/chat/render_phase2_estimate.py [--model-catalog PATH]`.",
         "",
