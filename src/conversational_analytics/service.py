@@ -52,7 +52,15 @@ class ChatService:
         return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
     def create_conversation(self, owner_id: str) -> dict[str, Any]:
-        return self.store.create_conversation(owner_id, self.snapshot_version, self.semantic_version)
+        settings = {
+            "provider": self.config.provider,
+            "model": self.config.model if self.config.provider == "openai" else None,
+            "reasoning_effort": self.config.reasoning_effort if self.config.provider == "openai" else None,
+            "text_verbosity": self.config.text_verbosity if self.config.provider == "openai" else None,
+        }
+        return self.store.create_conversation(
+            owner_id, self.snapshot_version, self.semantic_version, **settings
+        )
 
     def ensure_current_snapshot(self, owner_id: str, conversation_id: str) -> None:
         history = self.store.get_conversation(owner_id, conversation_id)
@@ -62,6 +70,20 @@ class ChatService:
         ):
             raise Conflict(
                 "snapshot_changed: crea una conversación nueva para usar los datos y definiciones vigentes"
+            )
+        pinned_provider = history.get("provider")
+        legacy_openai_session = pinned_provider is None and history.get("provider_session_id") is not None
+        if (pinned_provider is not None and pinned_provider != self.config.provider) or (
+            legacy_openai_session and self.config.provider != "openai"
+        ):
+            raise Conflict("provider_changed: crea una conversación nueva para cambiar de proveedor")
+        if self.config.provider == "openai" and any(
+            history.get(field) != getattr(self.config, field)
+            for field in ("model", "reasoning_effort", "text_verbosity")
+        ):
+            raise Conflict(
+                "model_configuration_changed: crea una conversación nueva para aplicar "
+                "el modelo, esfuerzo y verbosidad vigentes"
             )
 
     def delete_conversation(self, owner_id: str, conversation_id: str) -> None:
@@ -153,17 +175,35 @@ class ChatService:
             user_cost_budget=self.config.daily_cost_budget_user_usd,
             global_cost_budget=self.config.daily_cost_budget_global_usd,
             max_active_global=self.config.max_concurrent_global,
+            model=self.config.model if self.config.provider == "openai" else None,
+            reasoning_effort=self.config.reasoning_effort if self.config.provider == "openai" else None,
+            text_verbosity=self.config.text_verbosity if self.config.provider == "openai" else None,
+            provider=self.config.provider,
         )
         return {"turn_id": turn["id"], "status": turn["status"], "deduplicated": duplicate}
 
     def health(self) -> dict[str, Any]:
-        return {
+        result = {
             "status": "ok",
             "admission_enabled": self.config.admission_enabled,
             "provider": self.config.provider,
             "snapshot_version": self.snapshot_version,
             "worker_running": bool(self.worker and self.worker.running),
         }
+        if self.config.provider == "openai":
+            minimum_cost = self.config.reservation_cost_usd(self.config.minimum_turn_reservation_tokens)
+            result.update(
+                model=self.config.model,
+                reasoning_effort=self.config.reasoning_effort,
+                text_verbosity=self.config.text_verbosity,
+                minimum_reservation_turns_per_day=min(
+                    self.config.daily_token_budget_user // self.config.minimum_turn_reservation_tokens,
+                    self.config.daily_token_budget_global // self.config.minimum_turn_reservation_tokens,
+                    int(self.config.daily_cost_budget_user_usd // minimum_cost),
+                    int(self.config.daily_cost_budget_global_usd // minimum_cost),
+                ),
+            )
+        return result
 
 
 __all__ = ["ChatService", "InvalidRequest", "validate_context"]

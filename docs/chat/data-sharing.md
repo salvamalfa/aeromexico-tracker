@@ -74,11 +74,13 @@ tokens del incentivo. En producción (`gpt-6.1-sol`) los topes son **US$5 por
 usuario y US$5 global**, configurados en Railway; subieron de US$3 el 8 de
 octubre a pedido del dueño. Si las variables no se definen, el código usa US$1.
 El cupo de tokens queda en 2,000,000 diarios como freno de seguridad. Cada
-turno OpenAI reserva al menos 150,000 tokens, cobrados a la tarifa de salida
-porque Agents API no admite un límite de salida: US$1.50 con Sol (US$10 por
-millón de salida); Luna reservaría US$0.075. Data Sharing queda como posible
-ahorro: si el incentivo cubre parte del tráfico, la factura baja, pero ningún
-control de la app depende de él.
+turno OpenAI reserva al menos 150,000 tokens, o la estimación dinámica si es
+mayor. La reserva aplica el precio superior versionado, incluida la prima de
+salida para contexto largo: US$2.25 con Sol (US$10 por millón base) y
+US$0.1125 con Luna (US$0.50 por millón base). Agents API no impone un límite
+acumulado de salida; esta reserva no garantiza un máximo de factura. Data
+Sharing queda como posible ahorro: si el incentivo cubre parte del tráfico, la
+factura baja, pero ningún control de la app depende de él.
 
 La política anterior (200,000 tokens y reserva de 150,000, unas dos preguntas
 al día) y la [propuesta revisable de reserva](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/chat-mvp/airline-tracker-reserva-propuesta-20261004.md)

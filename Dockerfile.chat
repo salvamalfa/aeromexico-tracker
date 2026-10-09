@@ -29,6 +29,7 @@ COPY src/conversational_analytics/ ./src/conversational_analytics/
 COPY src/web_export/ ./src/web_export/
 COPY src/dashboard/__init__.py src/dashboard/flights_html.py ./src/dashboard/
 COPY config/chat/*.yaml ./config/chat/
+COPY config/chat/*.json ./config/chat/
 COPY contracts/chat/semantic.schema.json ./contracts/chat/
 COPY contracts/web/*.json contracts/web/privacy.yaml ./contracts/web/
 COPY site/publication_manifest.json ./site/
