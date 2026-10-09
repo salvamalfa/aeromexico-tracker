@@ -203,6 +203,11 @@ export function renderQuestion(
     article.append(textNode("h3", "candidate-heading", `Candidato ${candidate.alias}`));
     if (candidate.answer === null) {
       if (rejectedAliases.includes(candidate.alias)) {
+        const conversation = document.createElement("div");
+        conversation.className = "candidate-answer";
+        conversation.setAttribute("aria-label", `Pregunta para el candidato ${candidate.alias}`);
+        renderCandidateConversation(conversation, question.question, "");
+        article.append(conversation);
         article.append(textNode("p", "missing-answer", "No evaluable: rechazado por el contexto de aplicación antes de llamar al modelo."));
         candidateList.append(article);
         continue;

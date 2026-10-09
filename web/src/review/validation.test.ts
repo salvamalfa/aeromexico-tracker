@@ -274,6 +274,7 @@ describe("blind review file validation", () => {
     renderQuestion(dataset, 0, new Map(), false, true, () => undefined);
     const rejected = document.querySelector(".candidate-card:first-child");
     expect(rejected?.textContent).toContain("No evaluable: rechazado por el contexto de aplicación");
+    expect(rejected?.querySelector(".review-message-user .review-message-body")?.textContent).toContain("Pregunta 1");
     expect(rejected?.querySelector(".rating-options")).toBeNull();
   });
 });
