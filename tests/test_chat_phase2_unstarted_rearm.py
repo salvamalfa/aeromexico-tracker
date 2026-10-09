@@ -420,6 +420,80 @@ def test_rearm_archives_zero_start_n25_then_stub_resumes_five_and_58(tmp_path, m
     assert composite["models"][0]["quality_summary"]["critical_failure_gate"] == (
         "pending blinded owner review of every rubric item"
     )
+    assert completed["summary"]["quality_summary"] == composite["models"][0]["quality_summary"]
+    assert completed["summary"]["quality_summary_scope"] == "full_case_set"
+    assert completed["summary"]["quality_summary_case_count"] == 58
+    latest_part = json.loads(Path(completed["summary"]["report_parts"][-1]["path"]).read_text())
+    assert completed["summary"]["quality_summary"]["human_review_pending_case_count"] == 55
+    assert (
+        completed["summary"]["quality_summary"]["human_review_pending_case_count"]
+        > latest_part["models"][0]["quality_summary"]["human_review_pending_case_count"]
+    )
+
+
+def test_partial_campaign_summary_labels_latest_part_scope_and_count(tmp_path, monkeypatch) -> None:
+    cases = _stage1_cases()[:3]
+    run = _runs(cases)[0]
+    calls = []
+
+    def provider_stub(**kwargs):
+        selected = kwargs["cases"]
+        identity = kwargs["run_identity"]
+        calls.append([case["id"] for case in selected])
+        row = _completed_row(selected[0], identity, 0.001)
+        return {
+            "output_path": str(tmp_path / f"not-written-{len(calls)}.json"),
+            "run_status": "stopped",
+            "run_identity": identity,
+            "data_version": identity["data_version"],
+            "semantic_version": identity["semantic_version"],
+            "candidate_models": [identity["candidate"]],
+            "probe_only": False,
+            "estimated_cost_usd": 0.001,
+            "models": [
+                {
+                    "candidate": identity["candidate"],
+                    "model": identity["model"],
+                    "run_identity": identity,
+                    "spent_unknown": False,
+                    "estimated_cost_usd": 0.001,
+                    "known_estimated_cost_usd": 0.001,
+                    "quality_summary": {
+                        "human_review_pending_case_count": 1,
+                        "critical_failure_gate": "pending blinded owner review of every rubric item",
+                    },
+                    "cases": [row],
+                }
+            ],
+        }
+
+    monkeypatch.setattr(campaign, "_live_provider_run", provider_stub)
+    state_path = tmp_path / "campaign.json"
+    output_dir = tmp_path / "reports"
+    kwargs = {
+        "runs": [run],
+        "cases": cases,
+        "budget_usd": 3.0,
+        "snapshot_root": tmp_path / "snapshot",
+        "prices": {run["candidate"]: (0.1, 0.5)},
+        "expected_versions": {
+            "data_version": run["identity"]["data_version"],
+            "semantic_version": run["identity"]["semantic_version"],
+        },
+        "state_path": state_path,
+        "output_dir": output_dir,
+    }
+    campaign.run_campaign(**kwargs)
+    resumed = campaign.run_campaign(**kwargs, resume=True)
+    summary = resumed["run_summaries"][0]
+    assert calls == [[case["id"] for case in cases], [case["id"] for case in cases[1:]]]
+    assert summary["case_count"] == 2
+    assert summary["quality_summary_scope"] == "latest_report_part"
+    assert summary["quality_summary_case_count"] == 1
+    assert summary["quality_summary"]["human_review_pending_case_count"] == 1
+    assert summary["quality_summary"]["critical_failure_gate"] == (
+        "pending blinded owner review of every rubric item"
+    )
 
 
 @pytest.mark.parametrize(

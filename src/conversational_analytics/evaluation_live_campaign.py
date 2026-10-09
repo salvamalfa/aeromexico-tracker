@@ -244,6 +244,9 @@ def run_campaign(
         current_parts = prior_parts + [{"path": report["output_path"], "sha256": report_digest}]
         composite_path = None
         composite_digest = None
+        quality_summary = model["quality_summary"]
+        quality_summary_scope = "latest_report_part"
+        quality_summary_case_count = len(new_cases)
         if coverage_complete:
             for part in current_parts:
                 if (
@@ -264,6 +267,18 @@ def run_campaign(
                 cases=[by_case[case_id] for case_id in run["case_ids"]],
                 output_path=composite_path,
             )
+            composite_raw = composite_path.read_bytes()
+            if hashlib.sha256(composite_raw).hexdigest() != composite_digest:
+                raise ValueError("Composite bloqueado: el hash cambió al leer sus métricas")
+            composite = json.loads(composite_raw)
+            composite_models = composite.get("models")
+            if not isinstance(composite_models, list) or len(composite_models) != 1:
+                raise ValueError("Composite bloqueado: falta el agregado único de calidad")
+            quality_summary = composite_models[0].get("quality_summary")
+            if not isinstance(quality_summary, dict):
+                raise ValueError("Composite bloqueado: falta el resumen agregado de calidad")
+            quality_summary_scope = "full_case_set"
+            quality_summary_case_count = len(all_cases)
         nonlocal_provider_error = any(
             case.get("status") in {"provider_error", "error", "failed"} and not _tool_limit_terminal(case)
             for case in all_cases
@@ -301,7 +316,9 @@ def run_campaign(
                 "terminal_case_failure_reason": "tool_call_limit" if controlled_error_count else None,
                 "known_estimated_cost_usd": sum(_known_case_cost(case) for case in all_cases),
                 "spent_unknown": model["spent_unknown"],
-                "quality_summary": model["quality_summary"],
+                "quality_summary": quality_summary,
+                "quality_summary_scope": quality_summary_scope,
+                "quality_summary_case_count": quality_summary_case_count,
             },
         }
         if archived_unstarted_attempts:
