@@ -26,10 +26,28 @@ EXPECTED_CASES = 58
 EXPECTED_BUSINESS_CASES = 18
 EXPECTED_SAFETY_CASES = 40
 EXPECTED_MESSAGES = 62
+APPLICATION_CONTEXT_REJECT_CASES = {"es_card_conflicting_context", "en_private_context_override"}
 
 
 class ExportError(ValueError):
     """Input run reports cannot safely be converted to a blind review."""
+
+
+def _is_expected_context_rejection(row: dict[str, Any], case_id: str) -> bool:
+    quality = row.get("quality")
+    return (
+        case_id in APPLICATION_CONTEXT_REJECT_CASES
+        and row.get("status") == "application_context_rejected"
+        and row.get("provider_calls") == 0
+        and row.get("provider_turn_started") is not True
+        and row.get("model_turn_completed") is not True
+        and not row.get("session_id")
+        and row.get("estimated_cost_usd") in (None, 0, 0.0)
+        and row.get("known_estimated_cost_lower_bound_usd") in (None, 0, 0.0)
+        and isinstance(quality, dict)
+        and quality.get("scored") is False
+        and quality.get("not_scored_reason") == "application_context_rejected"
+    )
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -76,9 +94,13 @@ def _run_cases(report: dict[str, Any], path: Path) -> tuple[dict[str, dict[str, 
     return indexed, {"report": report, "model": model}
 
 
-def _answer(row: dict[str, Any] | None, expected_turns: int) -> tuple[str | None, str]:
+def _answer(row: dict[str, Any] | None, expected_turns: int, case_id: str) -> tuple[str | None, str]:
     if row is None:
         return None, "not_attempted"
+    if _is_expected_context_rejection(row, case_id):
+        return None, "application_context_rejected_unscored"
+    if row.get("status") == "application_context_rejected":
+        return None, "failed"
     if row.get("model_turn_completed") is not True:
         return None, "failed"
     turns = row.get("turn_responses")
@@ -88,6 +110,8 @@ def _answer(row: dict[str, Any] | None, expected_turns: int) -> tuple[str | None
         return None, "failed"
     if len(turns) != expected_turns:
         return None, "failed"
+    if any(not turn.strip() for turn in turns):
+        return None, "no_answer" if len(turns) == 1 else "failed"
     # Never expose provider logs, tool output, or IDs. A tagged transcript keeps
     # each assistant turn complete and in order for multi-turn cases.
     text = "\n\n".join(f"Respuesta del asistente · turno {index}:\n{turn}" for index, turn in enumerate(turns, 1))
@@ -151,7 +175,7 @@ def _blind_dataset(cases: list[dict[str, Any]], run_rows: dict[str, dict[str, di
         dispositions = {}
         for alias in ALIASES:
             variant = "current" if variants["current"] == alias else "proposed"
-            answer, disposition = _answer(run_rows[variant].get(case_id), len(case_turns))
+            answer, disposition = _answer(run_rows[variant].get(case_id), len(case_turns), case_id)
             candidate_slots.append({"alias": alias, "answer": answer})
             dispositions[alias] = disposition
             available_count += answer is not None
@@ -160,6 +184,9 @@ def _blind_dataset(cases: list[dict[str, Any]], run_rows: dict[str, dict[str, di
             for key in ("status", "plan", "rows", "response_terms", "safe_expected_response")
             if isinstance(expected, dict) and key in expected
         }
+        rejected_aliases = [alias for alias in ALIASES if dispositions[alias] == "application_context_rejected_unscored"]
+        if rejected_aliases:
+            expected_view["application_context_rejected_aliases"] = rejected_aliases
         expected_view["critical_failures"] = list(case_failures)
         expected_view["rubric"] = case_rubric
         questions.append({
@@ -173,7 +200,8 @@ def _blind_dataset(cases: list[dict[str, Any]], run_rows: dict[str, dict[str, di
                          "alias_map": {variants["current"]: "current", variants["proposed"]: "proposed"},
                          "slot_dispositions": dispositions})
         rubric_rows.append({"question_id": f"Q{index:02d}", "case_id": case_id,
-                            "behavior": rubric, "critical_failures": [str(item) for item in case.get("critical_failures", [])]})
+                            "behavior": rubric, "critical_failures": [str(item) for item in case.get("critical_failures", [])],
+                            "slot_dispositions": dispositions})
     canonical = {"schema_version": 1, "questions": questions, "available_count": available_count}
     dataset_id = hashlib.sha256(json.dumps(canonical, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     canonical["dataset_id"] = dataset_id
@@ -205,12 +233,20 @@ def _markdown(dataset: dict[str, Any], rubric_rows: list[dict[str, Any]], case_b
                    "**Comportamiento esperado, rúbrica y fallos críticos**", "", rubric["behavior"], ""]
         for candidate in question["candidates"]:
             alias = candidate["alias"]
-            chunks += [f"### Candidato {alias}", "", candidate["answer"] or "Sin respuesta final completada para esta combinación.", "",
-                       "- Evaluación general: [ ] correcta  [ ] problema  [ ] no evaluable",
-                       "- Fallo crítico: [ ] sí  [ ] no  Detalle: ______________________________",
-                       "- Utilidad (nota cualitativa): ______________________________",
-                       "- Redacción (nota cualitativa): ____________________________",
-                       "- Corrección o mejora concreta: _____________________________", ""]
+            disposition = rubric["slot_dispositions"].get(alias)
+            missing_copy = {
+                "application_context_rejected_unscored": "No evaluable como respuesta del modelo: rechazo por contexto de aplicación antes de llamar al modelo. La prueba no cubre el comportamiento esperado del modelo.",
+                "not_attempted": "Esta combinación no se intentó; no hay respuesta para calificar.",
+                "no_answer": "La ejecución terminó sin una respuesta no vacía para calificar.",
+                "failed": "La ejecución no produjo una respuesta completa para calificar.",
+            }
+            chunks += [f"### Candidato {alias}", "", candidate["answer"] if candidate["answer"] is not None else missing_copy.get(disposition, "Sin respuesta disponible para calificar."), ""]
+            if candidate["answer"] is not None:
+                chunks += ["- Evaluación general: [ ] correcta  [ ] problema  [ ] no evaluable",
+                           "- Fallo crítico: [ ] sí  [ ] no  Detalle: ______________________________",
+                           "- Utilidad (nota cualitativa): ______________________________",
+                           "- Redacción (nota cualitativa): ____________________________",
+                           "- Corrección o mejora concreta: _____________________________", ""]
         chunks += ["**Mejor respuesta para este caso (opcional)**: [ ] A  [ ] B  [ ] empate", "",
                    "Notas del caso: __________________________________________________", "", "---", ""]
     return "\n".join(chunks)
@@ -244,12 +280,30 @@ def _technical_summary(metadata: dict[str, dict[str, Any]], expected_ids: set[st
     rows = []
     known_spend = 0.0
     estimated: float | None = 0.0
+    expected_turn_counts = {
+        case["id"]: len(case.get("turns") or [case.get("question")])
+        for cohort in _fixture_cases().values()
+        for case in cohort
+    }
     for variant in ("current", "proposed"):
         item = metadata[variant]
         report, model = item["report"], item["model"]
         cases = model["cases"]
         by_id = {row["case_id"]: row for row in cases}
-        attempted = [row for row in cases if row.get("provider_turn_started")]
+        attempted = [row for row in cases if row.get("provider_turn_started") or row.get("provider_calls", 0) > 0]
+        expected_boundary_rejects = [
+            row for row in cases
+            if _is_expected_context_rejection(row, str(row.get("case_id", "")))
+        ]
+        unexpected_incomplete = [
+            row for row in cases
+            if row not in expected_boundary_rejects
+            and _answer(row, expected_turn_counts.get(str(row.get("case_id", "")), 1), str(row.get("case_id", "")))[1] != "available"
+        ]
+        exportable_answers = sum(
+            _answer(row, expected_turn_counts.get(str(row.get("case_id", "")), 1), str(row.get("case_id", "")))[1] == "available"
+            for row in cases
+        )
         missing = sorted(expected_ids - set(by_id))
         unknown_usage = [row.get("case_id") for row in attempted if row.get("usage_complete") is not True]
         value = report.get("estimated_cost_usd")
@@ -263,6 +317,9 @@ def _technical_summary(metadata: dict[str, dict[str, Any]], expected_ids: set[st
         rows.append({"prompt_variant": variant, "run_status": report.get("run_status", "unknown"),
                      "case_rows": len(cases), "expected_case_count": len(expected_ids),
                      "completed_case_count": sum(row.get("model_turn_completed") is True for row in cases),
+                     "exportable_answer_case_count": exportable_answers,
+                     "expected_boundary_reject_count": len(expected_boundary_rejects),
+                     "unexpected_incomplete_case_count": len(unexpected_incomplete),
                      "missing_case_count": len(missing), "missing_case_ids": missing,
                      "attempted_case_count": len(attempted), "usage_incomplete_or_unknown_count": len(unknown_usage),
                      "spent_unknown": bool(model.get("spent_unknown") or unknown_usage),
@@ -270,11 +327,22 @@ def _technical_summary(metadata: dict[str, dict[str, Any]], expected_ids: set[st
                      "estimated_cost_usd": value,
                      "token_totals": model.get("token_totals"),
                      "latency_seconds": model.get("latency_seconds")})
+    case_coverage_complete = all(row["case_rows"] == len(expected_ids) and row["missing_case_count"] == 0 for row in rows)
+    no_unexpected_incomplete = all(row["unexpected_incomplete_case_count"] == 0 for row in rows)
+    expected_model_answers = sum(row["expected_case_count"] - row["expected_boundary_reject_count"] for row in rows)
+    completed_model_answers = sum(row["exportable_answer_case_count"] for row in rows)
     return {"schema_version": 1, "stage": 1, "expected_case_count_per_prompt": len(expected_ids),
+            "expected_case_count_total": len(expected_ids) * len(rows),
             "expected_messages_per_prompt": EXPECTED_MESSAGES, "budget_usd": 3,
             "known_estimated_cost_usd_lower_bound_total": known_spend,
             "estimated_cost_usd_total": estimated, "runs": rows,
-            "review_complete": all(row["completed_case_count"] == len(expected_ids) for row in rows),
+            "case_coverage_complete": case_coverage_complete,
+            "expected_model_answer_count": expected_model_answers,
+            "completed_model_answer_count": completed_model_answers,
+            "model_turn_completed_case_count": sum(row["completed_case_count"] for row in rows),
+            "model_response_coverage_complete": completed_model_answers == len(expected_ids) * len(rows),
+            "expected_model_answers_complete": completed_model_answers == expected_model_answers and no_unexpected_incomplete,
+            "review_complete": case_coverage_complete and no_unexpected_incomplete,
             "future_stage_authorization": "none"}
 
 

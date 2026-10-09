@@ -133,6 +133,80 @@ class Stage1BlindExportTests(unittest.TestCase):
         statuses = key["questions"][0]["slot_dispositions"]
         self.assertCountEqual(statuses.values(), ["not_attempted", "failed"])
 
+    def test_application_context_rejections_are_unscored_and_answer_whitespace_is_missing(self):
+        for case_id in exporter.APPLICATION_CONTEXT_REJECT_CASES:
+            boundary_row = {
+                    "case_id": case_id,
+                    "status": "application_context_rejected",
+                    "provider_calls": 0,
+                    "model_turn_completed": False,
+                    "quality": {"scored": False, "not_scored_reason": "application_context_rejected"},
+                }
+            self.assertEqual(exporter._answer(boundary_row, 1, case_id), (None, "application_context_rejected_unscored"))
+            self.assertEqual(exporter._answer({**boundary_row, "session_id": "synthetic-session"}, 1, case_id), (None, "failed"))
+            self.assertEqual(exporter._answer({**boundary_row, "estimated_cost_usd": 0.01}, 1, case_id), (None, "failed"))
+        self.assertEqual(exporter._answer({
+            "case_id": "synthetic",
+            "model_turn_completed": True,
+            "turn_responses": ["   "],
+        }, 1, "synthetic"), (None, "no_answer"))
+        self.assertEqual(exporter._answer({
+            "case_id": "synthetic",
+            "model_turn_completed": True,
+            "turn_responses": ["first", ""],
+        }, 2, "synthetic"), (None, "failed"))
+
+    def test_expected_boundary_rejects_keep_case_coverage_but_reduce_model_answer_count(self):
+        cohorts = exporter._fixture_cases()
+        cases = cohorts["safety"] + cohorts["business"]
+        boundary_ids = exporter.APPLICATION_CONTEXT_REJECT_CASES
+        report_cases = []
+        for case in cases:
+            turns = case.get("turns") or [case["question"]]
+            if case["id"] in boundary_ids:
+                report_cases.append({
+                    "case_id": case["id"], "status": "application_context_rejected",
+                    "provider_calls": 0, "model_turn_completed": False,
+                    "quality": {"scored": False, "not_scored_reason": "application_context_rejected"},
+                })
+            else:
+                report_cases.append({
+                    "case_id": case["id"], "model_turn_completed": True,
+                    "provider_turn_started": True, "provider_calls": len(turns), "usage_complete": True,
+                    "turn_responses": [f"Synthetic answer turn {index + 1}" for index in range(len(turns))],
+                })
+        with tempfile.TemporaryDirectory() as temporary:
+            current = Path(temporary) / "current-report.json"
+            proposed = Path(temporary) / "proposed-report.json"
+            current.write_text(json.dumps(detailed_report(report_cases, "current")), encoding="utf-8")
+            proposed.write_text(json.dumps(detailed_report(report_cases, "proposed")), encoding="utf-8")
+            output = Path(temporary) / "out"
+            result = exporter.export(current, proposed, output)
+            technical = json.loads((output / "stage1-technical-summary.json").read_text(encoding="utf-8"))
+            safety = json.loads((output / "stage1-safety-appendix.json").read_text(encoding="utf-8"))
+            safety_markdown = (output / "stage1-safety-appendix.md").read_text(encoding="utf-8")
+            self.assertEqual(result["available_answers_by_cohort"], {"business": 36, "safety": 76})
+            self.assertEqual(technical["expected_case_count_total"], 116)
+            self.assertEqual(technical["completed_model_answer_count"], 112)
+            self.assertFalse(technical["model_response_coverage_complete"])
+            self.assertTrue(technical["expected_model_answers_complete"])
+            self.assertTrue(technical["case_coverage_complete"])
+            self.assertTrue(technical["review_complete"])
+            self.assertTrue(all(row["case_rows"] == 58 for row in technical["runs"]))
+            self.assertTrue(all(row["completed_case_count"] == 56 for row in technical["runs"]))
+            self.assertTrue(all(row["expected_boundary_reject_count"] == 2 for row in technical["runs"]))
+            self.assertTrue(all(row["unexpected_incomplete_case_count"] == 0 for row in technical["runs"]))
+            self.assertEqual(len(safety["questions"]), 40)
+            self.assertEqual(safety["available_count"], 76)
+            self.assertIn("No evaluable como respuesta del modelo", safety_markdown)
+            self.assertIn("no cubre el comportamiento esperado del modelo", safety_markdown)
+            boundary_question = next(
+                question for question in safety["questions"]
+                if "application_context_rejected_aliases" in question["expected"]
+            )
+            self.assertEqual(len(boundary_question["expected"]["application_context_rejected_aliases"]), 2)
+            self.assertTrue(all(candidate["answer"] is None for candidate in boundary_question["candidates"]))
+
     def test_does_not_overwrite_existing_artifacts(self):
         with tempfile.TemporaryDirectory() as temporary:
             output = Path(temporary) / "out"

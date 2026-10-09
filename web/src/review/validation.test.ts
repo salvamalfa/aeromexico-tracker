@@ -118,4 +118,19 @@ describe("blind review file validation", () => {
     expect(document.querySelector(".candidate-answer")?.textContent).toBe(malicious);
     expect(document.querySelector("img, script")).toBeNull();
   });
+
+  it("labels application-context rejections as unscored model responses", () => {
+    document.body.innerHTML = `
+      <p id="question-position"></p><h2 id="question-text"></h2><p id="question-language"></p>
+      <div id="expected-summary"></div><pre id="expected-answer"></pre><div id="candidate-list"></div>
+      <button id="previous-question"></button><button id="next-question"></button>`;
+    const source = sampleDataset();
+    source.questions[0].expected = { status: "clarify", application_context_rejected_aliases: ["A"] };
+    source.questions[0].candidates[0].answer = null;
+    source.available_count -= 1;
+    const dataset = parseDataset(source);
+    renderQuestion(dataset, 0, new Map(), false, true, () => undefined);
+    expect(document.querySelector(".missing-answer")?.textContent).toContain("No evaluable como respuesta del modelo");
+    expect(document.querySelector(".candidate-card:first-child .rating-options")).toBeNull();
+  });
 });
