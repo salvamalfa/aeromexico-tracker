@@ -47,20 +47,33 @@ def _case(case_id: str = "N01") -> dict:
 def _complete_report(run_identity: dict, cases: list[dict], cost: float = 0.1) -> dict:
     return {
         "output_path": f"/private/{run_identity['run_id']}.json",
+        "run_identity": run_identity,
         "run_status": "completed",
+        "estimated_cost_usd": cost,
+        "known_estimated_cost_usd": cost,
         "models": [
             {
+                "candidate": run_identity["candidate"],
+                "model": run_identity["model"],
+                "run_identity": run_identity,
                 "known_estimated_cost_usd": cost,
+                "estimated_cost_usd": cost,
                 "spent_unknown": False,
                 "quality_summary": {"supported_passed": len(cases)},
                 "cases": [
                     {
                         "case_id": item["id"],
+                        "run_identity": run_identity,
                         "provider_turn_started": True,
                         "usage_complete": True,
                         "estimated_cost_usd": cost / len(cases),
                         "status": "supported",
                         "model_turn_completed": True,
+                        "input_tokens": 5,
+                        "output_tokens": 2,
+                        "latency_seconds": 0.5,
+                        "turn_count": 1,
+                        "quality": {"scored": False},
                     }
                     for item in cases
                 ],
@@ -144,15 +157,21 @@ def test_exact_resume_skips_only_completed_slot_and_continues_partial_slot(
         if run_id == "partial-slot":
             return {
                 "output_path": "/private/partial.json",
+                "run_identity": kwargs["run_identity"],
                 "run_status": "stopped",
                 "models": [
                     {
+                        "candidate": kwargs["run_identity"]["candidate"],
+                        "model": kwargs["run_identity"]["model"],
+                        "run_identity": kwargs["run_identity"],
                         "known_estimated_cost_usd": 0.1,
+                        "estimated_cost_usd": 0.1,
                         "spent_unknown": False,
                         "quality_summary": {},
                         "cases": [
                             {
                                 "case_id": "N01",
+                                "run_identity": kwargs["run_identity"],
                                 "provider_turn_started": True,
                                 "usage_complete": True,
                                 "estimated_cost_usd": 0.1,
@@ -339,11 +358,14 @@ def test_two_stage_one_prompt_slots_complete_with_ungraded_boundary_rows(monkeyp
         model_cases = []
         for case in kwargs["cases"]:
             if case["id"] in boundary_ids:
-                model_cases.append(_boundary_rejection(case["id"]))
+                model_cases.append(
+                    {**_boundary_rejection(case["id"]), "run_identity": kwargs["run_identity"]}
+                )
             else:
                 model_cases.append(
                     {
                         "case_id": case["id"],
+                        "run_identity": kwargs["run_identity"],
                         "status": "supported",
                         "provider_turn_started": True,
                         "usage_complete": True,
@@ -354,10 +376,15 @@ def test_two_stage_one_prompt_slots_complete_with_ungraded_boundary_rows(monkeyp
                 )
         return {
             "output_path": f"/private/{kwargs['run_identity']['run_id']}.json",
+            "run_identity": kwargs["run_identity"],
             "run_status": "completed",
+            "estimated_cost_usd": 0.056,
             "models": [
                 {
+                    "candidate": kwargs["run_identity"]["candidate"],
+                    "run_identity": kwargs["run_identity"],
                     "known_estimated_cost_usd": 0.056,
+                    "estimated_cost_usd": 0.056,
                     "spent_unknown": False,
                     "quality_summary": {"human_review_pending_case_count": 56},
                     "cases": model_cases,

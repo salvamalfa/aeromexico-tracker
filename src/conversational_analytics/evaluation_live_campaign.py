@@ -10,142 +10,14 @@ from typing import Any, Mapping, Sequence
 
 from .evaluation_campaign import aggregate_campaign_budget, validate_resume_identity
 from .evaluation_live import _live_provider_run, _write_private_json
-from .service import validate_context
-
-_EXPECTED_CONTEXT_BOUNDARY_CASES = frozenset({"es_card_conflicting_context", "en_private_context_override"})
-
-
-def _terminal_boundary_rejection(
-    record: Mapping[str, Any], case: Mapping[str, Any], *, allow_legacy: bool = False
-) -> bool:
-    """Recognize the two fixture rows that terminate at the UI boundary, ungraded."""
-    case_id = str(case.get("id", ""))
-    if case_id not in _EXPECTED_CONTEXT_BOUNDARY_CASES or str(record.get("case_id")) != case_id:
-        return False
-    try:
-        validate_context(case.get("context", {}))
-    except ValueError:
-        pass
-    else:
-        return False
-    proof = (
-        record.get("status") == "application_context_rejected"
-        and record.get("provider_turn_started") is False
-        and record.get("model_turn_completed") is False
-        and record.get("usage_complete") is None
-        and record.get("estimated_cost_usd") is None
-        and record.get("known_estimated_cost_lower_bound_usd") is None
-    )
-    if not proof:
-        return False
-    if allow_legacy:
-        return (
-            record.get("provider_calls", 0) == 0
-            and record.get("application_boundary_test_completed", True) is True
-        )
-    return record.get("provider_calls") == 0 and record.get("application_boundary_test_completed") is True
-
-
-def _slot_coverage_complete(
-    records: Sequence[Mapping[str, Any]],
-    case_ids: Sequence[str],
-    cases_by_id: Mapping[str, Mapping[str, Any]],
-    *,
-    allow_legacy_boundary: bool = False,
-) -> bool:
-    ids = [str(record.get("case_id")) for record in records]
-    if set(ids) != set(case_ids) or len(ids) != len(case_ids):
-        return False
-    for record, case_id in zip(records, ids):
-        if record.get("model_turn_completed") is True:
-            if (
-                record.get("provider_turn_started") is not True
-                or record.get("status") == "provider_error"
-                or record.get("usage_complete") is not True
-            ):
-                return False
-        elif not _terminal_boundary_rejection(
-            record, cases_by_id[case_id], allow_legacy=allow_legacy_boundary
-        ):
-            return False
-    return True
-
-
-def _legacy_report_hash(
-    saved_run: Mapping[str, Any], run: Mapping[str, Any], case_ids: Sequence[str]
-) -> str | None:
-    """Verify the original private report before migrating a legacy checkpoint."""
-    report_path = saved_run.get("summary", {}).get("report_path")
-    if not isinstance(report_path, str):
-        return None
-    path = Path(report_path)
-    try:
-        raw = path.read_bytes()
-        report = json.loads(raw)
-    except (OSError, json.JSONDecodeError):
-        return None
-    models = report.get("models", [])
-    if (
-        report.get("run_status") != "completed"
-        or report.get("run_identity") != run.get("identity")
-        or len(models) != 1
-        or models[0].get("candidate") != run.get("candidate")
-        or models[0].get("spent_unknown") is not False
-    ):
-        return None
-    report_cases = models[0].get("cases", [])
-    ids = [str(case.get("case_id")) for case in report_cases]
-    if set(ids) != set(case_ids) or len(ids) != len(case_ids):
-        return None
-    saved_cases = saved_run.get("cases", [])
-    saved_by_id = {str(case.get("case_id")): case for case in saved_cases}
-    if set(saved_by_id) != set(case_ids) or len(saved_cases) != len(case_ids):
-        return None
-    for case in report_cases:
-        saved_case = saved_by_id[str(case["case_id"])]
-        if case.get("status") == "application_context_rejected":
-            if (
-                case.get("provider_calls") != 0
-                or case.get("provider_turn_started", False) is not False
-                or case.get("model_turn_completed", False) is not False
-                or case.get("session_id") is not None
-                or case.get("turn_usage")
-                or case.get("estimated_cost_usd") is not None
-                or case.get("known_estimated_cost_lower_bound_usd") is not None
-                or saved_case.get("status") != case.get("status")
-                or saved_case.get("provider_turn_started", False) is not False
-                or saved_case.get("model_turn_completed", False) is not False
-                or saved_case.get("usage_complete") is not None
-                or saved_case.get("estimated_cost_usd") is not None
-                or saved_case.get("known_estimated_cost_lower_bound_usd") is not None
-            ):
-                return None
-        elif (
-            case.get("model_turn_completed") is not True
-            or case.get("provider_turn_started") is not True
-            or case.get("usage_complete") is not True
-            or case.get("status") == "provider_error"
-            or any(
-                saved_case.get(key) != case.get(key)
-                for key in (
-                    "status",
-                    "provider_turn_started",
-                    "model_turn_completed",
-                    "usage_complete",
-                    "estimated_cost_usd",
-                    "known_estimated_cost_lower_bound_usd",
-                )
-            )
-        ):
-            return None
-    return hashlib.sha256(raw).hexdigest()
-
-
-def _known_case_cost(case: Mapping[str, Any]) -> float:
-    amount = case.get("estimated_cost_usd")
-    if amount is None:
-        amount = case.get("known_estimated_cost_lower_bound_usd")
-    return float(amount) if isinstance(amount, (int, float)) and not isinstance(amount, bool) else 0.0
+from .evaluation_live_composite import _merge_private_reports
+from .evaluation_live_reconciliation import (
+    _known_case_cost,
+    _legacy_report_hash,
+    _slot_coverage_complete,
+    _tool_limit_terminal,
+    validate_report_parts,
+)
 
 
 def run_campaign(
@@ -270,14 +142,34 @@ def run_campaign(
                 _write_private_json(state_path, state)
                 break
             prior_cases = list(saved_run.get("cases", []))
+            prior_parts = list(saved_run.get("summary", {}).get("report_parts", []))
+            if not prior_parts and saved_run.get("summary", {}).get("report_path"):
+                prior_parts = [
+                    {
+                        "path": saved_run["summary"]["report_path"],
+                        "sha256": saved_run["summary"].get("report_sha256"),
+                    }
+                ]
         else:
             selected_ids = list(run["case_ids"])
             prior_cases = []
+            prior_parts = []
         remaining = budget_usd - float(spend["known_spend_usd"])
         if remaining <= 0:
             state.update(status="stopped_campaign_budget", known_spend_usd=spend["known_spend_usd"])
             _write_private_json(state_path, state)
             break
+        if prior_cases:
+            validate_report_parts(
+                parts=prior_parts,
+                run_identity=run["identity"],
+                expected_case_ids=run["case_ids"],
+                saved_cases=prior_cases,
+                cases_by_id=by_case,
+                expected_cost=completed[run_id].get("known_estimated_cost_usd"),
+            )
+        if any(output_dir.glob(f"{run_id}-composite-*.json")):
+            raise ValueError("Resume bloqueado: ya existe un composite para esta corrida")
         selected = [by_case[case_id] for case_id in selected_ids]
         candidate = str(run["candidate"])
         if candidate not in prices:
@@ -297,6 +189,15 @@ def run_campaign(
             run_identity=dict(run["identity"]),
             limits_override=dict(run["limits"]),
         )
+        report_path = Path(report["output_path"])
+        if not report_path.exists():
+            # Offline stubs and alternate runners may return an in-memory
+            # report; persist it privately so resumed accounting has evidence.
+            report_path = output_dir / f"{run_id}-part-{len(prior_parts) + 1}.json"
+            if report_path.exists():
+                raise ValueError("Informe bloqueado: destino de parte ya existe")
+            _write_private_json(report_path, report)
+            report["output_path"] = str(report_path)
         model = report["models"][0]
         new_cases = []
         for case in model["cases"]:
@@ -310,6 +211,8 @@ def run_campaign(
                 "model_turn_completed": case.get("model_turn_completed", False),
                 "application_boundary_test_completed": case.get("application_boundary_test_completed", False),
             }
+            if "error_metadata" in case:
+                saved_case["error_metadata"] = case["error_metadata"]
             if "provider_calls" in case:
                 saved_case["provider_calls"] = case["provider_calls"]
             new_cases.append(saved_case)
@@ -321,9 +224,40 @@ def run_campaign(
             and not model.get("stopped_reason")
             and not model.get("spent_unknown")
         )
+        report_digest = hashlib.sha256(report_path.read_bytes()).hexdigest()
+        current_parts = prior_parts + [{"path": report["output_path"], "sha256": report_digest}]
+        composite_path = None
+        composite_digest = None
+        if coverage_complete:
+            for part in current_parts:
+                if (
+                    not part.get("sha256")
+                    or hashlib.sha256(Path(part["path"]).read_bytes()).hexdigest() != part["sha256"]
+                ):
+                    raise ValueError("Composite bloqueado: el hash de un informe fuente no coincide")
+            source_set_hash = hashlib.sha256(
+                "|".join(part["sha256"] for part in current_parts).encode("ascii")
+            ).hexdigest()[:16]
+            composite_path = output_dir / f"{run_id}-composite-{source_set_hash}.json"
+            if composite_path.exists():
+                raise ValueError("Composite bloqueado: destino de informe ya existe")
+            composite_digest, _ = _merge_private_reports(
+                report_paths=[part["path"] for part in current_parts],
+                expected_identity=run["identity"],
+                expected_case_ids=run["case_ids"],
+                cases=[by_case[case_id] for case_id in run["case_ids"]],
+                output_path=composite_path,
+            )
+        nonlocal_provider_error = any(
+            case.get("status") in {"provider_error", "error", "failed"} and not _tool_limit_terminal(case)
+            for case in all_cases
+        )
+        controlled_error_count = sum(_tool_limit_terminal(case) for case in all_cases)
         stopped_reason = (
             "provider_error"
-            if any(case.get("status") == "provider_error" for case in all_cases)
+            if nonlocal_provider_error
+            else "stopped_controlled_case_failure"
+            if controlled_error_count and not complete
             else "campaign_budget"
             if not complete
             else None
@@ -338,12 +272,16 @@ def run_campaign(
             "stopped_reason": stopped_reason,
             "summary": {
                 "run_id": run_id,
-                "report_path": report["output_path"],
-                "run_status": report["run_status"],
+                "report_path": str(composite_path) if composite_path else report["output_path"],
+                "report_sha256": composite_digest or report_digest,
+                "report_parts": current_parts,
+                "run_status": "completed" if complete else report["run_status"],
                 "case_count": len(all_cases),
                 "expected_case_count": len(run["case_ids"]),
                 "complete": complete,
                 "stopped_reason": stopped_reason,
+                "terminal_case_failure_count": controlled_error_count,
+                "terminal_case_failure_reason": "tool_call_limit" if controlled_error_count else None,
                 "known_estimated_cost_usd": sum(_known_case_cost(case) for case in all_cases),
                 "spent_unknown": model["spent_unknown"],
                 "quality_summary": model["quality_summary"],
@@ -361,6 +299,8 @@ def run_campaign(
             if complete
             else "stopped_provider_error"
             if stopped_reason == "provider_error"
+            else "stopped_controlled_case_failure"
+            if stopped_reason == "stopped_controlled_case_failure"
             else "stopped_campaign_budget"
         )
         _write_private_json(state_path, state)
@@ -377,6 +317,8 @@ def run_campaign(
         if all_runs_complete
         else "stopped_provider_error"
         if state.get("status") == "stopped_provider_error"
+        else "stopped_controlled_case_failure"
+        if state.get("status") == "stopped_controlled_case_failure"
         else "stopped_campaign_budget"
     )
     state["active_run_id"] = None
