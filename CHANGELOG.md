@@ -35,6 +35,11 @@ versión semántica, las entradas van por fecha.
   oración, decimales con punto y fuentes sin duplicar.
 - Detalle en `docs/etapas/chat-tablas-presentacion-20261008.md`.
 
+## 2026-10-09 · Revisión privada del chat por turno
+
+- `review.html` compara cada candidato como conversación ordenada por turno y muestra Markdown seguro; el texto original completo permanece disponible. Ver [bitácora](docs/etapas/chat-revision-conversaciones-20261009.md).
+- La referencia distingue criterios `multi_turn` de valores numéricos y evita afirmar que faltan datos publicados. Detalle y validación en [la bitácora](docs/etapas/chat-revision-conversaciones-20261009.md).
+
 ## 2026-10-08 · Chat: límite de herramientas, reserva sin vencimiento y Railway
 
 - Diagnóstico de la segunda pregunta real del dueño: falló por
