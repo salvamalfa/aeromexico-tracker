@@ -6,8 +6,8 @@
   de la conversación y después el periodo seleccionado vigente. Si falta,
   pide aclaración; una fecha explícita siempre prevalece.
 - La regla de periodo no resuelve ambigüedades de métrica, entidad, segmento,
-  mercado, denominador o fuente. La revisión registra por separado el prompt
-  actual de producción y el propuesto, sin reescribir evidencia anterior.
+  mercado, denominador o fuente. La bitácora enlaza el baseline y la revisión
+  en Git sin reescribir evidencia anterior.
 - Prueba offline del contrato del prompt; no se consumen APIs ni evaluaciones.
 
 Cambios notables del proyecto, para humanos. Formato inspirado en
