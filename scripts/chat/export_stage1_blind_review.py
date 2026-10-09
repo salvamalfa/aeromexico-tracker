@@ -389,7 +389,8 @@ def _technical_summary(metadata: dict[str, dict[str, Any]], expected_ids: set[st
             "model_turn_completed_case_count": sum(row["completed_case_count"] for row in rows),
             "model_response_coverage_complete": completed_model_answers == len(expected_ids) * len(rows),
             "expected_model_answers_complete": completed_model_answers == expected_model_answers and no_unexpected_incomplete,
-            "review_complete": case_coverage_complete and no_unexpected_incomplete,
+            "review_artifacts_ready": case_coverage_complete and no_unexpected_incomplete,
+            "human_review_complete": False,
             "human_review_status": "pending",
             "future_stage_authorization": "none"}
 
