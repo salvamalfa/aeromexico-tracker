@@ -42,7 +42,10 @@ un objeto JSON estricto con `schema_version: 1`, `bundle_id`, `bundle_version`,
 `disposition` (`terminal`, `complete` o `partial`), `source_sha256`,
 `dataset_sha256`, `dataset_json` y `slot_dispositions`. `dataset_json` es una
 cadena con el texto JSON literal del conjunto de revisión de esquema 1
-(`dataset_id`, preguntas, candidatos A/B/C y `available_count`). El lector
+(`dataset_id`, preguntas, candidatos anónimos A/B/C (dos o tres por pregunta)
+y `available_count`). Los espacios con respuesta nula marcados como rechazo
+por contexto de aplicación se muestran como no evaluables y no admiten
+calificación. El lector
 calcula `dataset_sha256` sobre los bytes UTF-8 de esa cadena exacta antes de
 interpretarla; espacios, orden de claves y representaciones numéricas forman
 parte del hash. Esto evita volver a serializar datos y mantiene interoperabilidad

@@ -107,6 +107,12 @@ export function renderQuestion(
   language.textContent = `Idioma: ${question.language}`;
   expected.textContent = expectedText(question.expected);
   renderExpectedSummary(summary, question.expected);
+  const expectedData = typeof question.expected === "object" && question.expected !== null && !Array.isArray(question.expected)
+    ? question.expected as Record<string, unknown>
+    : {};
+  const rejectedAliases = Array.isArray(expectedData.application_context_rejected_aliases)
+    ? expectedData.application_context_rejected_aliases
+    : [];
   candidateList.replaceChildren();
   previous.disabled = !hasPrevious;
   next.disabled = !hasNext;
@@ -116,6 +122,11 @@ export function renderQuestion(
     article.className = "candidate-card";
     article.append(textNode("h3", "candidate-heading", `Candidato ${candidate.alias}`));
     if (candidate.answer === null) {
+      if (rejectedAliases.includes(candidate.alias)) {
+        article.append(textNode("p", "missing-answer", "No evaluable: rechazado por el contexto de aplicación antes de llamar al modelo."));
+        candidateList.append(article);
+        continue;
+      }
       const missingStatus = slotDispositions.get(ratingKey(question.id, candidate.alias));
       const labels: Record<SlotDisposition["status"], string> = {
         no_answer: "La ejecución terminó sin respuesta.",
