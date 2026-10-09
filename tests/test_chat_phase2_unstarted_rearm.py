@@ -11,6 +11,7 @@ import pytest
 
 from src.conversational_analytics import evaluation_live_campaign as campaign
 from src.conversational_analytics.evaluation_live_rearm import rearm_unstarted_case
+from src.conversational_analytics.evaluation_live_reconciliation import _slot_coverage_complete
 
 _TARGET = "f22-s1-gpt-6-luna-medium-current-r1"
 _FAILURE_SHA = "12067cc4c428d2df5c74404d844d0a08f929b7578fbae5233b9e204f86da36a6"
@@ -85,7 +86,6 @@ def _boundary(case_id: str, identity: dict) -> dict:
         "usage_complete": None,
         "estimated_cost_usd": None,
         "known_estimated_cost_lower_bound_usd": None,
-        "application_boundary_test_completed": True,
         "quality": {"scored": False, "not_scored_reason": "application_context_rejected"},
     }
 
@@ -494,6 +494,29 @@ def test_partial_campaign_summary_labels_latest_part_scope_and_count(tmp_path, m
     assert summary["quality_summary"]["critical_failure_gate"] == (
         "pending blinded owner review of every rubric item"
     )
+
+
+def test_missing_boundary_flag_preserves_full_coverage_but_false_blocks() -> None:
+    cases = _stage1_cases()
+    by_id = {case["id"]: case for case in cases}
+    run_identity = _runs(cases)[0]["identity"]
+    boundary_ids = {"es_card_conflicting_context", "en_private_context_override"}
+    rows = []
+    for case in cases:
+        if case["id"] in boundary_ids:
+            row = _boundary(case["id"], run_identity)
+            assert "application_boundary_test_completed" not in row
+            assert row["quality"]["scored"] is False
+            assert "passed" not in row["quality"]
+            rows.append(row)
+        else:
+            rows.append(_completed_row(case, run_identity, 0.001))
+    case_ids = [case["id"] for case in cases]
+    assert _slot_coverage_complete(rows, case_ids, by_id)
+    for row in rows:
+        if row["case_id"] in boundary_ids:
+            row["application_boundary_test_completed"] = False
+    assert not _slot_coverage_complete(rows, case_ids, by_id)
 
 
 @pytest.mark.parametrize(

@@ -223,8 +223,11 @@ def run_campaign(
                 "known_estimated_cost_lower_bound_usd": case.get("known_estimated_cost_lower_bound_usd"),
                 "status": case.get("status"),
                 "model_turn_completed": case.get("model_turn_completed", False),
-                "application_boundary_test_completed": case.get("application_boundary_test_completed", False),
             }
+            if "application_boundary_test_completed" in case:
+                saved_case["application_boundary_test_completed"] = case[
+                    "application_boundary_test_completed"
+                ]
             if "error_metadata" in case:
                 saved_case["error_metadata"] = case["error_metadata"]
             if "provider_calls" in case:
