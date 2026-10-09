@@ -20,9 +20,12 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from .data.snapshot import Snapshot
+from .evaluation_plan import render_campaign_dry_run, render_dry_run
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURE_PATH = ROOT / "tests/fixtures/chat_evals/holdout.json"
+BUSINESS_FIXTURE_PATH = ROOT / "tests/fixtures/chat_evals/business_proposed.json"
+SAFETY_CURRENT_FIXTURE_PATH = ROOT / "tests/fixtures/chat_evals/safety_current.json"
 
 
 @dataclass(frozen=True)
@@ -46,6 +49,19 @@ def load_fixture(path: Path = FIXTURE_PATH) -> dict[str, Any]:
 
 def load_cases(path: Path = FIXTURE_PATH) -> list[dict[str, Any]]:
     return load_fixture(path)["cases"]
+
+
+def phase_cases(business_cases: list[dict[str, Any]], holdout_cases: list[dict[str, Any]], stage: int) -> list[dict[str, Any]]:
+    """Return the fixed F2.9 scope without modifying either source fixture."""
+    business = [case for case in business_cases if stage in case.get("selection_stages", [])]
+    if stage == 1:
+        return holdout_cases + business
+    if stage == 3:
+        return holdout_cases + business_cases
+    # Stable stratified pilot: five business cases and ten safety cases, chosen
+    # by fixed order so a dry-run and a later reviewed run see the same inputs.
+    safety = [case for case in holdout_cases if case.get("expected", {}).get("status") in {"refused", "clarify", "unsupported"}]
+    return business[:5] + safety[:10]
 
 
 def approximately_equal(
@@ -116,7 +132,37 @@ def _response_term_present(term: str, response: str) -> bool:
     quarter = _quarter_parts(term)
     if quarter:
         return _quarter_alias_present(quarter[0], quarter[1], response)
+    if re.fullmatch(r"\s*[+-]?[\d., ]+\s*", term):
+        expected_number = _normalized_decimal(term)
+        if expected_number is None:
+            return False
+        for match in re.finditer(r"(?<!\w)[+-]?\d[\d., ]*(?:\d)?(?!\w)", response):
+            actual_number = _normalized_decimal(match.group(0))
+            if actual_number == expected_number:
+                return True
+        return False
     return term.casefold() in response.casefold()
+
+
+def _normalized_decimal(value: str) -> Decimal | None:
+    """Read common decimal and thousands separators without changing value."""
+    text = value.strip().replace(" ", "")
+    if not text:
+        return None
+    if "," in text and "." in text:
+        decimal_mark = "." if text.rfind(".") > text.rfind(",") else ","
+        thousands_mark = "," if decimal_mark == "." else "."
+        text = text.replace(thousands_mark, "").replace(decimal_mark, ".")
+    elif "," in text:
+        chunks = text.split(",")
+        text = "".join(chunks) if len(chunks) > 1 and all(len(part) == 3 for part in chunks[1:]) else text.replace(",", ".")
+    elif text.count(".") > 1:
+        chunks = text.split(".")
+        text = "".join(chunks) if all(len(part) == 3 for part in chunks[1:]) else text
+    try:
+        return Decimal(text)
+    except InvalidOperation:
+        return None
 
 
 def verify_observation(
@@ -164,6 +210,9 @@ def verify_observation(
     response = str(observation.get("response", ""))
     if expected_status == "supported":
         expected_rows = case["expected"].get("rows", [])
+        if not case["expected"].get("plan") or not expected_rows:
+            failures.append("gold incompleto: plan o filas esperadas ausentes")
+            return CaseResult(case["id"], False, tuple(checks), tuple(failures))
         observed_rows = observation.get("rows", [])
         for expected_row in expected_rows:
             row = next(
@@ -301,63 +350,6 @@ def audit_snapshot(
     }
 
 
-def render_dry_run(
-    cases: list[dict[str, Any]],
-    *,
-    models: list[str] | None = None,
-    prices: dict[str, tuple[float, float]] | None = None,
-    input_tokens_per_question: int = 1_200,
-    output_tokens_per_question: int = 350,
-    window_questions: int = 10,
-    expected_versions: dict[str, str] | None = None,
-) -> dict[str, Any]:
-    """Describe planned candidate runs, token windows, cost estimates and writes."""
-    candidates = models or []
-    windows = math.ceil(len(cases) / window_questions) if cases else 0
-    rows = []
-    for model in candidates:
-        input_tokens = len(cases) * input_tokens_per_question
-        output_tokens = len(cases) * output_tokens_per_question
-        planned_calls = sum(2 if case["expected"]["status"] == "supported" else 1 for case in cases)
-        input_price, output_price = (prices or {}).get(model, (None, None))
-        estimated_cost = None
-        if input_price is not None and output_price is not None:
-            estimated_cost = input_tokens * input_price / 1_000_000 + output_tokens * output_price / 1_000_000
-        rows.append(
-            {
-                "model": model,
-                "questions": len(cases),
-                "windows": windows,
-                "planned_provider_calls": planned_calls,
-                "estimated_input_tokens": input_tokens,
-                "estimated_output_tokens": output_tokens,
-                "input_price_usd_per_million": input_price,
-                "output_price_usd_per_million": output_price,
-                "estimated_cost_usd": estimated_cost,
-                "estimate_note": (
-                    "estimación aproximada que incluye contexto/herramientas, respuesta y hasta una "
-                    "consulta de herramienta por caso soportado; historial, iteraciones y caché pueden "
-                    "cambiar uso y costo"
-                ),
-            }
-        )
-    return {
-        "mode": "dry-run",
-        "expected_versions": expected_versions or {},
-        "provider_calls": 0,
-        "question_count": len(cases),
-        "window_questions": window_questions,
-        "planned_provider_calls_total": sum(row["planned_provider_calls"] for row in rows),
-        "candidate_runs": rows,
-        "destinations": {
-            "provider": "ninguno (sin llamadas)",
-            "dry_run_report": "stdout (no se persiste)",
-            "live_report_if_authorized": ".state/outputs/chat-evaluations/chat-eval-<UTC timestamp>.json",
-            "writes_now": [],
-        },
-    }
-
-
 def _parse_prices(
     items: list[str], models: list[str] | None, parser: argparse.ArgumentParser
 ) -> dict[str, tuple[float, float]]:
@@ -380,6 +372,11 @@ def _parse_prices(
             parser.error("--model-price debe ser MODEL=INPUT:OUTPUT, tarifas positivas y una por modelo")
     if set(prices) - set(models or []):
         parser.error("--model-price solo puede referirse a modelos listados con --models")
+    from .evaluation_business import CANDIDATES
+
+    invalid = [candidate for candidate in (models or []) if "@" in candidate and candidate not in CANDIDATES]
+    if invalid:
+        parser.error(f"candidato modelo@esfuerzo no admitido: {', '.join(invalid)}")
     return prices
 
 
@@ -396,6 +393,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--budget-usd", type=float)
     parser.add_argument("--models", nargs="+", help="modelos candidatos, sin ganador predeterminado")
+    parser.add_argument("--fixture", type=Path, help="fixture JSON; por omisión holdout de seguridad")
+    parser.add_argument("--stage", type=int, choices=(1, 2, 3), help="seleccionar casos de negocio por etapa F2.9")
+    parser.add_argument("--with-holdout", action="store_true", help="combinar seguridad holdout con fixture de negocio")
+    parser.add_argument("--input-tokens-per-question", type=int, default=40_000)
+    parser.add_argument("--output-tokens-per-question", type=int, default=4_000)
+    parser.add_argument("--prompt-runs", type=int, help="corridas con versiones de prompt distintas; por defecto 2 para etapa 1 y 1 en las demás")
     parser.add_argument(
         "--opt-in", action="store_true", help="autoriza explícitamente consumo de API para esta ejecución"
     )
@@ -403,6 +406,9 @@ def main(argv: list[str] | None = None) -> int:
         "--probe-only", action="store_true", help="una sonda con un candidato antes del holdout"
     )
     parser.add_argument("--output-dir", type=Path, default=Path(".state/outputs/chat-evaluations"))
+    parser.add_argument("--campaign-state", type=Path, help="ledger privado de esta etapa; por defecto incluye el número de etapa")
+    parser.add_argument("--resume", action="store_true", help="reanudar solo la identidad y los run IDs guardados")
+    parser.add_argument("--prompt-proposed", type=Path, help="documento F2.1 revisable con prompt propuesto")
     parser.add_argument(
         "--model-price",
         action="append",
@@ -412,10 +418,41 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--snapshot", type=Path, default=Path("site"))
     args = parser.parse_args(argv)
-    fixture = load_fixture()
+    fixture_path = args.fixture or FIXTURE_PATH
+    fixture = load_fixture(fixture_path)
+    if fixture.get("dataset", "").startswith("business"):
+        from .evaluation_business import validate_business_fixture
+
+        validate_business_fixture(fixture)
+    is_business = fixture.get("dataset", "").startswith("business")
     cases = fixture["cases"]
+    if args.stage:
+        if fixture_path == BUSINESS_FIXTURE_PATH or fixture.get("dataset", "").startswith("business"):
+            cases = phase_cases(cases, load_fixture(SAFETY_CURRENT_FIXTURE_PATH)["cases"], args.stage)
+        else:
+            cases = [case for case in cases if args.stage in case.get("selection_stages", [])]
+    elif args.with_holdout:
+        cases = load_fixture(SAFETY_CURRENT_FIXTURE_PATH)["cases"] + cases
     if args.run and args.dry_run:
         parser.error("elige --run o --dry-run, no ambos")
+    if args.run and is_business:
+        if fixture.get("status") != "OWNER_APPROVED":
+            parser.error("el fixture de negocio sigue en borrador; no puede habilitar una corrida live")
+        if args.stage is None:
+            parser.error("la corrida de negocio requiere --stage")
+        approved_stages = fixture.get("owner_approval", {}).get("approved_live_stages", [])
+        if args.stage not in approved_stages:
+            parser.error("la etapa de negocio no está autorizada para live por la aprobación vigente")
+        if args.stage == 3:
+            parser.error("etapa 3 bloqueada hasta readiness explícita de F2.3–F2.8 y resolución de N17")
+        unresolved = [
+            case["id"] for case in cases
+            if case.get("dependencies")
+            or (case.get("expected", {}).get("status") == "supported"
+                and (not case["expected"].get("plan") or not case["expected"].get("rows")))
+        ]
+        if unresolved:
+            parser.error(f"corrida live bloqueada: casos sin dependencias/gold listos: {', '.join(unresolved)}")
     if not args.run:
         if args.budget_usd or args.opt_in:
             parser.error("--budget-usd y --opt-in solo aplican junto con --run")
@@ -425,13 +462,25 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(report, ensure_ascii=False, indent=2))
             return 1 if report["snapshot_cases_failed"] else 0
         prices = _parse_prices(args.model_price, args.models, parser)
+        prompt_runs = args.prompt_runs if args.prompt_runs is not None else (2 if args.stage == 1 else 1)
+        if prompt_runs <= 0:
+            parser.error("--prompt-runs debe ser positivo")
         print(
             json.dumps(
-                render_dry_run(
-                    cases,
-                    models=args.models,
-                    prices=prices,
-                    expected_versions=fixture.get("expected_versions"),
+                render_campaign_dry_run(
+                    render_dry_run(
+                        cases,
+                        models=args.models,
+                        prices=prices,
+                        input_tokens_per_question=args.input_tokens_per_question,
+                        output_tokens_per_question=args.output_tokens_per_question,
+                        expected_versions=fixture.get("expected_versions"),
+                        prompt_runs=prompt_runs,
+                    ),
+                    args=args,
+                    fixture=fixture,
+                    cases=cases,
+                    is_business=is_business,
                 ),
                 ensure_ascii=False,
                 indent=2,
@@ -444,14 +493,67 @@ def main(argv: list[str] | None = None) -> int:
         or args.budget_usd is None
         or not math.isfinite(args.budget_usd)
         or args.budget_usd <= 0
-        or not args.models
+        or (not args.models and not is_business)
     ):
-        parser.error("--run exige --budget-usd positivo, --models y --opt-in explícitos")
-    if args.budget_usd > 10:
-        parser.error("el umbral operativo de este harness no puede superar US$10")
-    if not args.probe_only and len(args.models) not in (2, 3):
+        parser.error("--run exige --budget-usd positivo y --opt-in; el holdout también requiere --models")
+    if is_business:
+        if args.probe_only or args.model_price or args.models:
+            parser.error("una campaña F2.2 usa candidatos y tarifas del catálogo; no admite sonda ni overrides")
+        if not args.prompt_proposed or not args.prompt_proposed.is_file():
+            parser.error("la campaña F2.2 requiere --prompt-proposed con el documento F2.1 revisable")
+        from .evaluation_campaign import CAMPAIGN_CANDIDATES, build_campaign_runs, extract_proposed_prompt
+        from .evaluation_live_campaign import run_campaign
+        from .providers._openai_helpers import SYSTEM_INSTRUCTIONS
+        from .config import ChatConfig, model_catalog
+        from .tools.registry import ToolRegistry
+
+        runtime_config = ChatConfig.from_env()
+        proposed_prompt = extract_proposed_prompt(args.prompt_proposed.read_text(encoding="utf-8"))
+        snapshot = Snapshot(args.snapshot)
+        registry = ToolRegistry(snapshot)
+        limits = {
+            "max_tool_calls": 16,
+            "max_message_chars": runtime_config.max_message_chars,
+            "max_tool_result_bytes": runtime_config.max_tool_result_bytes,
+            "max_turn_seconds": runtime_config.max_turn_seconds,
+        }
+        prompts = {"proposed": proposed_prompt}
+        if args.stage == 1:
+            prompts["current"] = SYSTEM_INSTRUCTIONS
+        campaign_runs = build_campaign_runs(
+            args.stage,
+            cases,
+            data_version=fixture["expected_versions"]["data_version"],
+            semantic_version=fixture["expected_versions"]["semantic_version"],
+            prompts=prompts,
+            tool_specs=registry.tool_specs(),
+            limits=limits,
+            text_verbosity=runtime_config.text_verbosity,
+        )
+        catalog = model_catalog()
+        prices = {
+            candidate: (
+                float(catalog[details["model"]]["input_usd_per_million"]),
+                float(catalog[details["model"]]["output_usd_per_million"]),
+            )
+            for candidate, details in CAMPAIGN_CANDIDATES.items()
+        }
+        result = run_campaign(
+            runs=campaign_runs,
+            cases=cases,
+            budget_usd=args.budget_usd,
+            snapshot_root=args.snapshot,
+            prices=prices,
+            expected_versions=fixture["expected_versions"],
+            state_path=args.campaign_state or args.output_dir / f"f2-2-stage-{args.stage}-campaign.json",
+            output_dir=args.output_dir,
+            resume=args.resume,
+        )
+        print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
+        return 0
+    if not args.probe_only and len(args.models) not in (2, 3, 4):
         parser.error(
-            "la comparación holdout requiere 2–3 modelos; usa --probe-only para una sonda individual"
+            "la comparación admite 2–4 candidatos; usa --probe-only para una sonda individual"
         )
     prices = _parse_prices(args.model_price, args.models, parser)
     if set(prices) != set(args.models):
@@ -468,9 +570,11 @@ def main(argv: list[str] | None = None) -> int:
         prices=prices,
         probe_only=args.probe_only,
         output_dir=args.output_dir,
+        expected_versions=fixture.get("expected_versions"),
     )
     print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
     return 0
+
 
 
 if __name__ == "__main__":

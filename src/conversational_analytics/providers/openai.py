@@ -61,12 +61,16 @@ class OpenAIProvider:
         config: Any,
         *,
         client: Any | None = None,
+        system_instructions_override: str | None = None,
     ) -> None:
         if not getattr(config, "openai_enabled", False) or not getattr(config, "model", None):
             raise OpenAIProviderError("OpenAI requiere habilitación explícita y CHAT_MODEL configurado")
         self.model = str(config.model)
         self.reasoning_effort = str(getattr(config, "reasoning_effort", "medium"))
         self.text_verbosity = str(getattr(config, "text_verbosity", "medium"))
+        if system_instructions_override is not None and not system_instructions_override.strip():
+            raise OpenAIProviderError("El override de instrucciones del proveedor no puede estar vacío")
+        self.system_instructions_override = system_instructions_override
         self.max_tool_calls = int(getattr(config, "max_tool_calls", 8))
         self.max_tool_result_bytes = int(getattr(config, "max_tool_result_bytes", 64_000))
         self.max_turn_seconds = int(getattr(config, "max_turn_seconds", 180))
@@ -100,7 +104,7 @@ class OpenAIProvider:
         mark_terminal_completed = mark_terminal_completed or (lambda _usage=None: None)
         message = self._latest_user_message(messages)
         tools = self._validate_tool_specs(tool_specs)
-        instructions = SYSTEM_INSTRUCTIONS
+        instructions = self.system_instructions_override or SYSTEM_INSTRUCTIONS
         app_turn_id = self._app_turn_id(messages)
         history = prior_history(messages) if session_id is None else []
         request_input = self._message_input(context, message, history)
@@ -592,6 +596,5 @@ class OpenAIProvider:
         if session_id and session_id not in tracked:
             persist_session(session_id)
             tracked.add(session_id)
-
 
 __all__ = ["OpenAIProvider", "OpenAIProviderError"]
