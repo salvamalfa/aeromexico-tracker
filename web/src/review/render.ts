@@ -31,20 +31,10 @@ function expectedText(value: unknown): string {
 type ConversationMessage = { role: "user" | "assistant"; turn?: number; content: string };
 type ParsedConversation = { messages: ConversationMessage[]; valid: boolean };
 
-function hasMultilineHtml(source: string): boolean {
-  const commentStart = source.indexOf("<!--");
-  if (commentStart >= 0) {
-    const commentEnd = source.indexOf("-->", commentStart + 4);
-    if (commentEnd > commentStart && source.slice(commentStart, commentEnd).includes("\n")) return true;
-  }
-  for (const opening of source.matchAll(/<([a-z][\w:-]*)\b[^>]*>/gi)) {
-    const start = opening.index ?? 0;
-    const closing = new RegExp(`<\\/\\s*${opening[1]}\\s*>`, "ig");
-    closing.lastIndex = start + opening[0].length;
-    const close = closing.exec(source);
-    if (close && source.slice(start, close.index).includes("\n")) return true;
-  }
-  return false;
+function hasHtmlLikeSyntax(source: string): boolean {
+  // Marker-like text inside raw HTML is ambiguous to split without parsing HTML.
+  // Fall back to rendering the whole field as inert Markdown text instead.
+  return /<!--|<\/?[a-z][\w:-]*\b|<![a-z]/i.test(source);
 }
 
 function conversationMessages(source: string, role: ConversationMessage["role"]): ParsedConversation {
@@ -82,7 +72,7 @@ function conversationMessages(source: string, role: ConversationMessage["role"])
   }
   return {
     messages,
-    valid: !prefix.trim() && !hasMultilineHtml(source)
+    valid: !prefix.trim() && !hasHtmlLikeSyntax(source)
       && markers.every((marker, index) => Number.isSafeInteger(marker.turn) && marker.turn === index + 1),
   };
 }

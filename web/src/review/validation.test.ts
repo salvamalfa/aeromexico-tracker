@@ -219,6 +219,35 @@ describe("blind review file validation", () => {
 
     source.questions[0]!.candidates[0]!.answer = [
       "Respuesta del asistente · turno 1:",
+      "<!-- comentario inline -->",
+      "<!-- comentario multilinea:",
+      "Respuesta del asistente · turno 2:",
+      "marcador literal",
+      "-->",
+    ].join("\n");
+    dataset = parseDataset(source);
+    renderQuestion(dataset, 0, new Map(), false, true, () => undefined);
+    bodies = document.querySelectorAll<HTMLElement>(".candidate-card:first-child .review-message-assistant .review-message-body");
+    expect(bodies).toHaveLength(1);
+    expect(bodies[0]?.textContent).toContain("<!-- comentario inline -->");
+    expect(bodies[0]?.textContent).toContain("Respuesta del asistente · turno 2:");
+    expect(bodies[0]?.querySelector("div, script, img")).toBeNull();
+
+    source.questions[0]!.candidates[0]!.answer = [
+      "Respuesta del asistente · turno 1:",
+      "<div>",
+      "Respuesta del asistente · turno 2:",
+      "marcador literal",
+    ].join("\n");
+    dataset = parseDataset(source);
+    renderQuestion(dataset, 0, new Map(), false, true, () => undefined);
+    bodies = document.querySelectorAll<HTMLElement>(".candidate-card:first-child .review-message-assistant .review-message-body");
+    expect(bodies).toHaveLength(1);
+    expect(bodies[0]?.textContent).toContain("Respuesta del asistente · turno 2:");
+    expect(bodies[0]?.querySelector("div, script, img")).toBeNull();
+
+    source.questions[0]!.candidates[0]!.answer = [
+      "Respuesta del asistente · turno 1:",
       "<!--",
       "Respuesta del asistente · turno 2:",
       "marcador literal",
