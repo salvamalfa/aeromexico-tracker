@@ -152,7 +152,7 @@ def finalization_artifacts(root: Path) -> tuple[Path, Path, Path, dict[Path, str
     answer_sha = hashlib.sha256(answer_text.encode()).hexdigest()
     recovery = {
         "schema_version": 1,
-        "capture_kind": "GET_completed_turn_recovery",
+        "capture_kind": "terminal_transport_recovery",
         "source": {
             "candidate": "gpt-6.1-sol@low",
             "case_id": "es_am_market_share",

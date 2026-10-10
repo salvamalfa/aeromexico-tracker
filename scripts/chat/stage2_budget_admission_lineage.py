@@ -66,7 +66,7 @@ def _samples(sources: dict[str, dict[str, Any]], source_hashes: dict[str, str], 
     usage = recovery.get("usage", {})
     recovered = (usage.get("input_tokens"), usage.get("output_tokens"))
     if (
-        recovery.get("capture_kind") != "GET_completed_turn_recovery"
+        recovery.get("capture_kind") != "terminal_transport_recovery"
         or recovery.get("source", {}).get("candidate") != "gpt-6.1-sol@low"
         or recovery.get("source", {}).get("case_id") != "es_am_market_share"
         or usage.get("usage_complete") is not True

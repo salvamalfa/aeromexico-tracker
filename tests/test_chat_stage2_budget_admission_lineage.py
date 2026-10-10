@@ -33,7 +33,7 @@ def _valid_inputs():
         },
         "closed_report_luna_max": {"models": [{"candidate": "gpt-6-luna@max", "cases": rows[14:]}]},
         "recovery": {
-            "capture_kind": "GET_completed_turn_recovery",
+            "capture_kind": "terminal_transport_recovery",
             "source": {"candidate": "gpt-6.1-sol@low", "case_id": "es_am_market_share"},
             "usage": {"usage_complete": True, "input_tokens": 137_951, "output_tokens": 499},
         },
@@ -153,6 +153,14 @@ class BudgetAdmissionLineageTests(unittest.TestCase):
                     admission.validate_budget_admission_policy(
                         plan, sources, hashes, campaign, runs, digest=_digest, error=ValueError
                     )
+
+    def test_rejects_unpinned_recovery_capture_kind(self):
+        plan, sources, hashes, campaign, runs, _ = _valid_inputs()
+        sources["recovery"]["capture_kind"] = "GET_completed_turn_recovery"
+        with self.assertRaisesRegex(ValueError, "recuperación terminal exacta"):
+            admission.validate_budget_admission_policy(
+                plan, sources, hashes, campaign, runs, digest=_digest, error=ValueError
+            )
 
 
 if __name__ == "__main__":
