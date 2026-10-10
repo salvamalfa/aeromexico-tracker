@@ -130,6 +130,88 @@ def test_response_terms_accept_locale_equivalent_percent_and_quarter_format() ->
     assert any("respuesta sin términos requeridos" in failure for failure in incorrect.failures)
 
 
+def test_quarter_aliases_accept_equivalents_and_reject_wrong_period() -> None:
+    from src.conversational_analytics.evaluation import _response_term_present
+
+    for actual in ("2026Q2", "2026 Q2", "2Q26", "2T26"):
+        assert _response_term_present("2026Q2", f"Public dashboard period: {actual}.")
+    for actual in ("2026Q1", "1Q26", "2T25"):
+        assert not _response_term_present("2026Q2", f"Public dashboard period: {actual}.")
+
+
+def test_stage2_fixture_is_frozen_to_budget_and_preserves_source_lineage() -> None:
+    from src.conversational_analytics.evaluation import (
+        BUSINESS_FIXTURE_PATH,
+        SAFETY_CURRENT_FIXTURE_PATH,
+        STAGE2_PILOT_FIXTURE_PATH,
+        phase_cases,
+    )
+    from src.conversational_analytics.semantic.context import validate_context
+
+    business = json.loads(BUSINESS_FIXTURE_PATH.read_text(encoding="utf-8"))
+    safety = json.loads(SAFETY_CURRENT_FIXTURE_PATH.read_text(encoding="utf-8"))
+    derived = json.loads(STAGE2_PILOT_FIXTURE_PATH.read_text(encoding="utf-8"))
+    selected = phase_cases(business["cases"], safety["cases"], 2)
+    assert [case["id"] for case in selected] == [case["id"] for case in derived["cases"]]
+    assert len(selected) == 15
+    for source_name, path in (
+        ("business_proposed", BUSINESS_FIXTURE_PATH),
+        ("safety_current", SAFETY_CURRENT_FIXTURE_PATH),
+    ):
+        import hashlib
+
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        assert derived["lineage"]["source_fixtures"][source_name]["sha256"] == digest
+    for case in derived["cases"]:
+        if case.get("context"):
+            validate_context(case["context"])
+
+
+def test_clarification_accepts_imperatives_without_invented_numeric_answers() -> None:
+    from src.conversational_analytics.evaluation_live_scoring import score_live_case
+
+    case = {
+        "id": "clarify-case",
+        "expected": {"status": "clarify"},
+    }
+    options = {
+        "expected_versions": {},
+        "scope": {},
+        "metric_dimensions": {},
+    }
+    _, reasonable = score_live_case(
+        case, [], "Please specify the quarter and segment.", **options
+    )
+    assert reasonable["passed"], reasonable["failures"]
+
+    _, invented = score_live_case(
+        case, [], "Please specify the quarter; the share fell by 8.9%.", **options
+    )
+    assert not invented["passed"]
+    assert "numeric_answer_given_when_clarification_expected" in invented["failures"]
+
+
+def test_supported_gold_rejects_wrong_unit_and_period() -> None:
+    case = json.loads(json.dumps(next(case for case in load_cases() if case["id"] == "es_am_lf_q2")))
+    case["expected"]["rows"][0]["unit"] = "fraction"
+    row = {
+        **case["expected"]["rows"][0],
+        "availability": "available",
+        "source_references": [{"label": "SEC", "url": "https://www.sec.gov/example"}],
+    }
+    for bad_row in ({**row, "unit": "passengers"}, {**row, "period": "2026Q3"}):
+        failed = verify_observation(
+            case,
+            {
+                "status": "supported",
+                "plan": case["expected"]["plan"],
+                "rows": [bad_row],
+                "response": "84.9% in 2026Q2",
+            },
+        )
+        assert not failed.passed
+
+
 def test_dry_run_never_calls_provider_and_exposes_estimates_and_destinations() -> None:
     result = render_dry_run(
         load_cases(), models=["candidate-a", "candidate-b"], prices={"candidate-a": (2.0, 8.0)}

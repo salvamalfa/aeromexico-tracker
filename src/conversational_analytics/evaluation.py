@@ -26,6 +26,7 @@ ROOT = Path(__file__).resolve().parents[2]
 FIXTURE_PATH = ROOT / "tests/fixtures/chat_evals/holdout.json"
 BUSINESS_FIXTURE_PATH = ROOT / "tests/fixtures/chat_evals/business_proposed.json"
 SAFETY_CURRENT_FIXTURE_PATH = ROOT / "tests/fixtures/chat_evals/safety_current.json"
+STAGE2_PILOT_FIXTURE_PATH = ROOT / "tests/fixtures/chat_evals/f2_9_stage2.json"
 
 
 @dataclass(frozen=True)
@@ -51,17 +52,30 @@ def load_cases(path: Path = FIXTURE_PATH) -> list[dict[str, Any]]:
     return load_fixture(path)["cases"]
 
 
-def phase_cases(business_cases: list[dict[str, Any]], holdout_cases: list[dict[str, Any]], stage: int) -> list[dict[str, Any]]:
+def phase_cases(
+    business_cases: list[dict[str, Any]], holdout_cases: list[dict[str, Any]], stage: int
+) -> list[dict[str, Any]]:
     """Return the fixed F2.9 scope without modifying either source fixture."""
     business = [case for case in business_cases if stage in case.get("selection_stages", [])]
     if stage == 1:
         return holdout_cases + business
+    if stage == 2:
+        budget_path = ROOT / "docs/chat/revision-fase-2/F2.9-etapa-2-presupuesto.json"
+        budget = json.loads(budget_path.read_text(encoding="utf-8"))
+        frozen_ids = [
+            item["id"]
+            for cohort in ("business_cases", "safety_cases")
+            for item in budget["sample"][cohort]
+        ]
+        pilot = load_fixture(STAGE2_PILOT_FIXTURE_PATH)["cases"]
+        if [case["id"] for case in pilot] != frozen_ids:
+            raise ValueError(
+                "El fixture derivado de etapa 2 no coincide con la muestra congelada del presupuesto"
+            )
+        return pilot
     if stage == 3:
         return holdout_cases + business_cases
-    # Stable stratified pilot: five business cases and ten safety cases, chosen
-    # by fixed order so a dry-run and a later reviewed run see the same inputs.
-    safety = [case for case in holdout_cases if case.get("expected", {}).get("status") in {"refused", "clarify", "unsupported"}]
-    return business[:5] + safety[:10]
+    raise ValueError(f"Etapa F2.9 no reconocida: {stage}")
 
 
 def approximately_equal(
@@ -101,6 +115,8 @@ def _quarter_alias_present(year: int, quarter: int, response: str) -> bool:
     patterns = (
         rf"\b{year}\s*[-–—_/ ]?\s*[qQ]\s*{quarter}\b",
         rf"\b[qQ]\s*{quarter}\s*[-–—_/ ]+\s*{year}\b",
+        rf"\b{quarter}\s*[qQ]\s*{yy}\b",
+        rf"\b{quarter}\s*[qQ]\s*{year}\b",
         rf"\b{quarter}\s*[tT]\s*{yy}\b",
         rf"\b{quarter}\s*[tT]\s*{year}\b",
         rf"\b[tT]\s*{quarter}\s*[-–—_/ ]+\s*{year}\b",

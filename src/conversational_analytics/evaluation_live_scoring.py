@@ -11,7 +11,12 @@ from .evaluation_observation import observation_from_tool_calls
 
 def _has_non_context_numeric_claim(response: str) -> bool:
     """Catch result-like numbers while allowing a requested year as context."""
-    without_period_labels = re.sub(r"\b[1-4][tq]\d{2,4}\b", " ", response, flags=re.IGNORECASE)
+    without_period_labels = re.sub(
+        r"\b(?:[1-4]\s*[tq]\s*(?:20)?\d{2}|(?:19|20)\d{2}\s*q\s*[1-4]|q\s*[1-4]\s*(?:19|20)\d{2})\b",
+        " ",
+        response,
+        flags=re.IGNORECASE,
+    )
     pattern = r"(?<![\w])\d[\d.,]*(?:\s*(?:%|pasajeros?|vuelos?|usd|mxn|d[oó]lares?))?"
     for match in re.finditer(pattern, without_period_labels, re.IGNORECASE):
         token = match.group(0).strip()
@@ -24,6 +29,26 @@ def _has_non_context_numeric_claim(response: str) -> bool:
         if not (1900 <= value <= 2100 and value.is_integer()):
             return True
     return False
+
+
+def _has_clarification_request(response: str) -> bool:
+    """Recognize direct questions and concise imperative/contextual requests."""
+    if re.search(r"[?¿]", response):
+        return True
+    if re.search(
+        r"\b(?:please\s+)?(?:clarify|specify|indicate|tell\s+me|confirm|choose|provide)\b"
+        r"|\b(?:por\s+favor\s+)?(?:aclara|aclare|especifica|especifique|indica|indique|"
+        r"precisa|precise|dime|dígame|confirma|confirme|elige|elija)\b",
+        response,
+        re.IGNORECASE,
+    ):
+        return True
+    return bool(re.search(
+        r"\b(?:I\s+need|we\s+need|necesito|hace\s+falta)\b.{0,100}\b"
+        r"(?:period|quarter|metric|measure|segment|criterio|periodo|trimestre|métrica|medida|segmento)\b",
+        response,
+        re.IGNORECASE,
+    ))
 
 
 def score_live_case(
@@ -66,18 +91,20 @@ def score_live_case(
                     phrase for phrase in expected.get("must_not_contain", [])
                     if phrase.casefold() in response_for_turn.casefold()
                 ]
-                numeric_claim = _has_non_context_numeric_claim(response_for_turn) if expected.get("forbid_numeric_claims") else False
-                failed = (
-                    not re.search(r"[?¿]", response_for_turn)
-                    or bool(re.search(r"(?<!\w)\d+(?:[.,]\d+)?\s*%", response_for_turn))
-                    or numeric_claim
-                    or bool(forbidden)
+                numeric_claim = (
+                    _has_non_context_numeric_claim(response_for_turn)
+                    if expected.get("forbid_numeric_claims")
+                    else False
                 )
+                clarify_requested = _has_clarification_request(response_for_turn)
+                failed = not clarify_requested or numeric_claim or bool(forbidden)
                 failures = []
-                if not re.search(r"[?¿]", response_for_turn): failures.append("missing_clarification_question")
-                if numeric_claim: failures.append("provisional_numeric_claim_before_clarification")
-                if forbidden: failures.append("forbidden_winner_claim_before_clarification")
-                if re.search(r"(?<!\w)\d+(?:[.,]\d+)?\s*%", response_for_turn): failures.append("provisional_percentage_before_clarification")
+                if not clarify_requested:
+                    failures.append("missing_clarification_request")
+                if numeric_claim:
+                    failures.append("provisional_numeric_claim_before_clarification")
+                if forbidden:
+                    failures.append("forbidden_winner_claim_before_clarification")
                 turn_grades.append({
                     "scored": True, "passed": not failed,
                     "checks": ["clarifies_without_provisional_claim"] if not failed else [],
@@ -169,11 +196,11 @@ def score_live_case(
         failures: list[str] = []
         # Outcome checks are tripwires, not substitutes for the owner's rubric.
         if expected == "clarify":
-            if not re.search(r"[?¿]", response):
-                failures.append("clarification_without_question")
+            if not _has_clarification_request(response):
+                failures.append("clarification_without_request")
             else:
-                checks.append("clarification_question_present")
-            if re.search(r"(?<!\w)\d+(?:[.,]\d+)?\s*%", response):
+                checks.append("clarification_request_present")
+            if _has_non_context_numeric_claim(response):
                 failures.append("numeric_answer_given_when_clarification_expected")
         elif expected in {"unsupported", "refused"}:
             if re.search(r"(?<!\w)\d+(?:[.,]\d+)?\s*%", response):
