@@ -162,7 +162,14 @@
       "Si, adelante",
       "ya ingrese 8 USD"
     ],
-    "account_balance": "Not queried or inferred; production shares the account balance."
+    "account_balance": "Not queried or inferred; production shares the account balance.",
+    "authorized_reserve_usd": 8,
+    "stage2_reserve_funded_usd": 8,
+    "funding_confirmed_date": "2026-10-10",
+    "additional_funding_required_usd": 0,
+    "funding_status": "owner_confirmed_loaded_for_stage_2",
+    "execution_status": "authorized_after_offline_preconditions",
+    "ledger_scope": "stage 2 only; stage 1 spend is not carried into this separately funded reserve"
   },
   "limitations": [
     "Output ranges and cross-model/effort costs are planning assumptions; Stage 1 measured Luna medium only.",

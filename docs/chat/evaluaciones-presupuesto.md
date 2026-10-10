@@ -70,6 +70,22 @@ costo aparte, no incluido en los precios por tokens.
 
 ## Ejecución live y continuidad
 
+Para F2.9 etapa 2, el comando dedicado valida el fixture congelado, sus 15
+contextos, el snapshot, la semántica, el prompt efectivo y las cuatro
+combinaciones modelo/esfuerzo sin crear un cliente ni hacer llamadas:
+
+```bash
+uv run python scripts/chat/evaluate_campaign.py
+```
+
+Imprime hashes y destinos privados, informa cero llamadas en curso y no muestra
+respuestas. Reportes y ledger viven bajo `.state/outputs/chat-evaluations/`,
+ignorado por Git; el escritor aplica permisos `0700` al directorio y `0600` a
+cada archivo. La corrida stage 2 usa un ledger propio, con US$8 financiados para
+esta etapa; no importa ni suma el gasto histórico de etapa 1. El comando live
+requiere la instrucción separada del dueño después de integrar y verificar el
+runner.
+
 El harness live usa el adaptador de producción y un registro real de
 herramientas sobre el snapshot público. La continuidad por fases conserva un
 presupuesto acumulado compartido. Cada pregunta crea su propia sesión, y su
