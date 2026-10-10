@@ -465,7 +465,10 @@ class OpenAIProvider:
                 if terminal != "completed":
                     # Idle or EOF is not proof that this user's turn succeeded.
                     raise OpenAIProviderError(
-                        "El stream cerró sin resultado terminal; no se reenvió el mensaje"
+                        "El stream cerró sin resultado terminal; no se reenvió el mensaje",
+                        diagnostic_reason_code="provider_stream_incomplete",
+                        session_id=session_id,
+                        turn_id=turn_id,
                     )
             content = "".join(content_parts[key] for key in sorted(content_parts)).strip()
             if not content:
@@ -473,7 +476,10 @@ class OpenAIProvider:
                 content = recovered[0] if recovered and recovered[1] == "completed" else ""
             if not content:
                 raise OpenAIProviderError(
-                    "El turno se completó sin texto; revisa el historial antes de reintentar"
+                    "El turno se completó sin texto; revisa el historial antes de reintentar",
+                    diagnostic_reason_code="provider_completion_without_text",
+                    session_id=session_id,
+                    turn_id=turn_id,
                 )
             references = references_from_results(tool_outputs)
             chart = chart_from_results(tool_outputs)
@@ -494,7 +500,12 @@ class OpenAIProvider:
             if usage_complete and error.usage is None:
                 error.usage = (input_tokens, output_tokens)
             if terminal in {"failed", "cancelled"} or cancel_event.is_set():
-                runtime_helpers.attach_failure_context(error, session_id, turn_id)
+                runtime_helpers.attach_failure_context(
+                    error,
+                    session_id,
+                    turn_id,
+                    "provider_terminal_failed" if terminal == "failed" else None,
+                )
                 raise
             recovered_result = recover_completed_provider_error(
                 error,
@@ -509,20 +520,19 @@ class OpenAIProvider:
             runtime_helpers.attach_failure_context(error, session_id, turn_id)
             raise
         except Exception as exc:
-            if terminal in {"failed", "cancelled"}:
-                raise
             recovered = (
                 self._recover(session_id, turn_id, prior_turn_id, deadline=turn_deadline)
-                if session_id and not cancel_event.is_set()
+                if session_id and terminal not in {"failed", "cancelled"} and not cancel_event.is_set()
                 else None
             )
             if recovered and recovered[1] == "completed" and recovered[0]:
                 return finish_recovered_completion(recovered, session_id=session_id, **finish)
             upstream = upstream_error_metadata(exc)
+            reason_code = "provider_terminal_failed" if terminal == "failed" else "provider_request_failed"
             raise OpenAIProviderError(
                 "No se pudo completar el turno de Agents API; no se reenviará el mensaje automáticamente",
                 (input_tokens, output_tokens) if usage_complete else None,
-                reason_code="provider_terminal_failed" if session_id else None,
+                reason_code=reason_code if session_id else None,
                 session_id=session_id,
                 turn_id=turn_id,
                 **upstream,

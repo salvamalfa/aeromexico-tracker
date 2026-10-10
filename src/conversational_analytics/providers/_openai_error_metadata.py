@@ -67,7 +67,7 @@ def upstream_error_metadata(error: BaseException) -> dict[str, str | int]:
     if status is None:
         status = getattr(error, "status_code", None)
     code = getattr(error, "upstream_error_code", None) or getattr(error, "code", None)
-    if code not in SAFE_UPSTREAM_ERROR_CODES:
+    if not isinstance(code, str) or code not in SAFE_UPSTREAM_ERROR_CODES:
         body = getattr(error, "body", None)
         details = body.get("error") if isinstance(body, Mapping) else None
         if isinstance(details, Mapping):

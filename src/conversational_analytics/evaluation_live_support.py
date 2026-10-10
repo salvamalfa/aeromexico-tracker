@@ -33,7 +33,15 @@ _SAFE_EXCEPTION_TYPES = frozenset(
 )
 _SAFE_HTTP_STATUSES = frozenset({400, 401, 403, 404, 408, 409, 413, 422, 425, 429, 500, 502, 503, 504})
 _SAFE_REASON_CODES = frozenset(
-    {"provider_terminal_failed", "tool_call_limit", "turn_timeout", "tool_result_limit"}
+    {
+        "provider_terminal_failed",
+        "provider_stream_incomplete",
+        "provider_completion_without_text",
+        "provider_request_failed",
+        "tool_call_limit",
+        "turn_timeout",
+        "tool_result_limit",
+    }
 )
 _RESERVATION_INPUT_TOKENS_PER_CASE_FLOOR = 140_000
 _RESERVATION_OUTPUT_TOKENS_PER_CASE_FLOOR = 10_000
@@ -65,7 +73,7 @@ def _error_metadata(exc: BaseException) -> dict[str, Any]:
         ):
             status = candidate
         candidate_reason = getattr(current, "reason_code", None)
-        if candidate_reason in _SAFE_REASON_CODES:
+        if isinstance(candidate_reason, str) and candidate_reason in _SAFE_REASON_CODES:
             reason_code = candidate_reason
         candidate_turn_id = getattr(current, "turn_id", None)
         if provider_turn_id is None and isinstance(candidate_turn_id, str) and candidate_turn_id:
@@ -90,7 +98,8 @@ def _numeric_gold_summary(
 ) -> dict[str, Any]:
     """Keep missing, failed, and unattempted gold cases in the accuracy denominator."""
     expected = [
-        case for case in selected
+        case
+        for case in selected
         if case.get("expected", {}).get("status") == "supported"
         and case.get("expected", {}).get("plan")
         and case.get("expected", {}).get("rows")

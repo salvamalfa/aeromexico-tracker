@@ -6,7 +6,7 @@ import json
 import uuid
 from typing import Any
 
-from ._openai_helpers import ALLOWED_TOOL_NAMES, OpenAIProviderError, question_envelope
+from ._openai_helpers import ALLOWED_TOOL_NAMES, PROVIDER_REASON_CODES, OpenAIProviderError, question_envelope
 
 
 def validate_tool_specs(specs: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -86,8 +86,18 @@ def track_session(session_id: str | None, persist_session, tracked: set[str]) ->
         tracked.add(session_id)
 
 
-def attach_failure_context(error: OpenAIProviderError, session_id: str | None, turn_id: str | None) -> None:
+def attach_failure_context(
+    error: OpenAIProviderError,
+    session_id: str | None,
+    turn_id: str | None,
+    reason_code: str | None = None,
+) -> None:
     error.session_id = error.session_id or session_id
     error.turn_id = error.turn_id or turn_id
-    if error.reason_code is None and error.session_id:
-        error.reason_code = "provider_terminal_failed"
+    candidate_reason = reason_code or error.diagnostic_reason_code
+    if (
+        error.reason_code is None
+        and isinstance(candidate_reason, str)
+        and candidate_reason in PROVIDER_REASON_CODES
+    ):
+        error.reason_code = candidate_reason
