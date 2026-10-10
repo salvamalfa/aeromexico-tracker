@@ -17,7 +17,7 @@ APPROVED_SOURCE_SHA256 = {
     "closed_report_luna_medium": "98be1fa45a1407e35fa368e62090b111139e8a7e5619352fe35a44c35f1108ac",
     "closed_report_luna_max": "1d090a49966876cf3fe9b0f847e079c6b0b72da1ef3f19d73d76fa8c19bd51ca",
     "sol_low_progress": "f7a085c2d56ca79b8a8d52402392c9f10dae62e388e1437f941759fd9fe20821",
-    "recovery": "74709aadfb6c255726ebaa6a5f32dafd868abc9d640f489861ed672fa04bf1d6",
+    "terminal_recovery": "74709aadfb6c255726ebaa6a5f32dafd868abc9d640f489861ed672fa04bf1d6",
 }
 ORIGINAL_EXECUTION = "73db4d1c638e0c208feae433642e652485f5dfe6"
 CONTINUATION_EXECUTION = "8f671846f819db57dd0a96d70074d4d568551100"
@@ -79,14 +79,18 @@ def _pinned_sources(plan: dict[str, Any], error: type[ValueError], read_json_wit
     hashes: dict[str, str] = {}
     for name, path in paths.items():
         value, actual_hash = _read(path, name, read_json_with_hash)
-        if actual_hash != APPROVED_SOURCE_SHA256[name]:
+        pin_name = "terminal_recovery" if name == "recovery" else name
+        if actual_hash != APPROVED_SOURCE_SHA256[pin_name]:
             raise error(f"El SHA-256 de la fuente privada no coincide con el pin: {name}")
         values[name], hashes[name] = value, actual_hash
     declared = plan.get("source_sha256")
+    declared_hashes = {
+        "terminal_recovery" if name == "recovery" else name: value for name, value in hashes.items()
+    }
     if (
         not isinstance(declared, dict)
-        or set(declared) != set(hashes)
-        or any(declared.get(name) != value for name, value in hashes.items())
+        or set(declared) != set(declared_hashes)
+        or any(declared.get(name) != value for name, value in declared_hashes.items())
     ):
         raise error("Los SHA-256 de fuentes del plan no corresponden a los bytes fijados")
     if (
@@ -332,7 +336,16 @@ def validate_finalization_inputs(
         or derived_spec.get("case_id") not in (None, RECOVERED_CASE)
         or derived_spec.get("identity") != low_continuation.get("identity")
         or derived_spec.get("identity_hash") != low_continuation.get("identity_hash")
-        or derived_spec.get("source_run_identity_hash") != low_continuation.get("identity_hash")
+        or derived_spec.get("source_run_identity_hash")
+        != next(
+            (
+                run.get("identity_hash")
+                for run in cont_plan.get("source", {}).get("runs", [])
+                if run.get("run_id")
+                == low_continuation.get("identity", {}).get("continuation", {}).get("source_run_id")
+            ),
+            None,
+        )
         or derived_spec.get("recovery_sha256") != source_hashes["recovery"]
         or derived_spec.get("progress_sha256") != source_hashes["sol_low_progress"]
         or derived_spec.get("human_review_required") is not True

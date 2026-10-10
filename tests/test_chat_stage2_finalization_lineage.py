@@ -244,7 +244,7 @@ def finalization_artifacts(root: Path) -> tuple[Path, Path, Path, dict[Path, str
         "closed_report_luna_medium": closed_reports[0]["sha256"],
         "closed_report_luna_max": closed_reports[1]["sha256"],
         "sol_low_progress": progress_sha,
-        "recovery": recovery_sha,
+        "terminal_recovery": recovery_sha,
     }
     final_plan = {
         "schema_version": 1,
@@ -316,7 +316,7 @@ def finalization_artifacts(root: Path) -> tuple[Path, Path, Path, dict[Path, str
                     "candidate": "gpt-6.1-sol@low",
                     "identity": low["identity"],
                     "identity_hash": low["identity_hash"],
-                    "source_run_identity_hash": low["identity_hash"],
+                    "source_run_identity_hash": source_run["identity_hash"],
                     "recovery_sha256": recovery_sha,
                     "progress_sha256": progress_sha,
                     "human_review_required": True,
@@ -386,6 +386,13 @@ class Stage2FinalizationLineageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             plan, evidence, fixture_path, original_hashes = finalization_artifacts(root)
+            plan_payload = json.loads(plan.read_text(encoding="utf-8"))
+            recovery_lineage = plan_payload["finalization"]["derived_reports"]["sol_low_recovery"]
+            self.assertIn("terminal_recovery", plan_payload["source_sha256"])
+            self.assertNotIn("recovery", plan_payload["source_sha256"])
+            self.assertNotEqual(
+                recovery_lineage["source_run_identity_hash"], recovery_lineage["identity_hash"]
+            )
             result = self._run(root, plan, evidence, fixture_path, original_hashes)
             dataset = json.loads((root / ".state/review/stage2-review.json").read_text())
             private = json.loads((root / ".state/review/stage2-alias-key.json").read_text())
