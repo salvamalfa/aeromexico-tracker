@@ -15,12 +15,18 @@ import re
 import sys
 from collections import Counter
 from dataclasses import dataclass
-from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Iterable
 
 from .data.snapshot import Snapshot
 from .evaluation_plan import render_campaign_dry_run, render_dry_run
+from .evaluation_response_checks import (
+    has_unexpected_numeric_claim,
+    response_attribution_failures,
+)
+from .evaluation_response_checks import (
+    response_term_present as _response_term_present,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURE_PATH = ROOT / "tests/fixtures/chat_evals/holdout.json"
@@ -92,93 +98,6 @@ def approximately_equal(
 def extract_numbers(text: str) -> list[float]:
     """Extract decimal numbers from a rendered answer, ignoring punctuation."""
     return [float(token.replace(",", ".")) for token in re.findall(r"(?<!\w)-?\d+(?:[.,]\d+)?", text)]
-
-
-def _quarter_parts(term: str) -> tuple[int, int] | None:
-    match = re.fullmatch(r"\s*(20\d{2})\s*[-–—_/ ]?\s*[qQ]\s*([1-4])\s*", term)
-    if match:
-        return int(match.group(1)), int(match.group(2))
-    match = re.fullmatch(r"\s*[qQ]\s*([1-4])\s*[-–—_/ ]+\s*(20\d{2})\s*", term)
-    if match:
-        return int(match.group(2)), int(match.group(1))
-    match = re.fullmatch(r"\s*([1-4])\s*[tT]\s*(20\d{2}|\d{2})\s*", term)
-    if match:
-        year = int(match.group(2))
-        return (year if year > 99 else 2000 + year), int(match.group(1))
-    return None
-
-
-def _quarter_alias_present(year: int, quarter: int, response: str) -> bool:
-    yy = str(year)[-2:]
-    names_es = ("primer", "segundo", "tercer", "cuarto")
-    names_en = ("first", "second", "third", "fourth")
-    patterns = (
-        rf"\b{year}\s*[-–—_/ ]?\s*[qQ]\s*{quarter}\b",
-        rf"\b[qQ]\s*{quarter}\s*[-–—_/ ]+\s*{year}\b",
-        rf"\b{quarter}\s*[qQ]\s*{yy}\b",
-        rf"\b{quarter}\s*[qQ]\s*{year}\b",
-        rf"\b{quarter}\s*[tT]\s*{yy}\b",
-        rf"\b{quarter}\s*[tT]\s*{year}\b",
-        rf"\b[tT]\s*{quarter}\s*[-–—_/ ]+\s*{year}\b",
-        rf"\b{names_es[quarter - 1]}\s+trimestre\s+(?:de\s+)?{year}\b",
-        rf"\b{names_en[quarter - 1]}\s+quarter\s+(?:of\s+)?{year}\b",
-    )
-    return any(re.search(pattern, response, re.IGNORECASE) for pattern in patterns)
-
-
-def _response_term_present(term: str, response: str) -> bool:
-    """Match exact terms plus common decimal and bilingual quarter formatting."""
-    percent = re.fullmatch(r"\s*(\d+(?:[.,]\d+)?)\s*%\s*", term)
-    if percent:
-        try:
-            expected = Decimal(percent.group(1).replace(",", "."))
-        except InvalidOperation:
-            return False
-        for match in re.finditer(
-            r"(?<![\w.])([+-]?\d+(?:[.,]\d+)?)\s*(?:%|por\s+ciento|percent)(?!\w)",
-            response,
-            re.IGNORECASE,
-        ):
-            try:
-                if Decimal(match.group(1).replace(",", ".")) == expected:
-                    return True
-            except InvalidOperation:
-                continue
-        return False
-    quarter = _quarter_parts(term)
-    if quarter:
-        return _quarter_alias_present(quarter[0], quarter[1], response)
-    if re.fullmatch(r"\s*[+-]?[\d., ]+\s*", term):
-        expected_number = _normalized_decimal(term)
-        if expected_number is None:
-            return False
-        for match in re.finditer(r"(?<!\w)[+-]?\d[\d., ]*(?:\d)?(?!\w)", response):
-            actual_number = _normalized_decimal(match.group(0))
-            if actual_number == expected_number:
-                return True
-        return False
-    return term.casefold() in response.casefold()
-
-
-def _normalized_decimal(value: str) -> Decimal | None:
-    """Read common decimal and thousands separators without changing value."""
-    text = value.strip().replace(" ", "")
-    if not text:
-        return None
-    if "," in text and "." in text:
-        decimal_mark = "." if text.rfind(".") > text.rfind(",") else ","
-        thousands_mark = "," if decimal_mark == "." else "."
-        text = text.replace(thousands_mark, "").replace(decimal_mark, ".")
-    elif "," in text:
-        chunks = text.split(",")
-        text = "".join(chunks) if len(chunks) > 1 and all(len(part) == 3 for part in chunks[1:]) else text.replace(",", ".")
-    elif text.count(".") > 1:
-        chunks = text.split(".")
-        text = "".join(chunks) if all(len(part) == 3 for part in chunks[1:]) else text
-    try:
-        return Decimal(text)
-    except InvalidOperation:
-        return None
 
 
 def verify_observation(
@@ -294,6 +213,27 @@ def verify_observation(
                     failures.append(
                         rule.get("failure", "porcentaje confunde magnitudes con unidades distintas")
                     )
+            failures.extend(
+                response_attribution_failures(
+                    response, case["expected"].get("response_attributions", [])
+                )
+            )
+            numeric_guard = case["expected"].get("response_numeric_guard")
+            if numeric_guard and has_unexpected_numeric_claim(
+                response,
+                allowed_numbers=numeric_guard.get("allowed_numbers", []),
+                allowed_periods=numeric_guard.get("allowed_periods", []),
+            ):
+                failures.append(
+                    numeric_guard.get("failure", "response_contains_numeric_claim_without_fixture_evidence")
+                )
+            missing_required_terms = [
+                term
+                for term in case["expected"].get("required_response_terms", [])
+                if term.casefold() not in response.casefold()
+            ]
+            if missing_required_terms:
+                failures.append("required_scope_disclosure_missing")
     else:
         for forbidden in case["expected"].get("must_not_contain", []):
             if forbidden.casefold() in response.casefold():
@@ -537,10 +477,10 @@ def main(argv: list[str] | None = None) -> int:
             parser.error("una campaña F2.2 usa candidatos y tarifas del catálogo; no admite sonda ni overrides")
         if not args.prompt_proposed or not args.prompt_proposed.is_file():
             parser.error("la campaña F2.2 requiere --prompt-proposed con el documento F2.1 revisable")
+        from .config import ChatConfig, model_catalog
         from .evaluation_campaign import CAMPAIGN_CANDIDATES, build_campaign_runs, extract_proposed_prompt
         from .evaluation_live_campaign import run_campaign
         from .providers._openai_helpers import SYSTEM_INSTRUCTIONS
-        from .config import ChatConfig, model_catalog
         from .tools.registry import ToolRegistry
 
         runtime_config = ChatConfig.from_env()

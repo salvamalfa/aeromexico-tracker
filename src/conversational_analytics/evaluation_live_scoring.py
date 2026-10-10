@@ -5,8 +5,9 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from .evaluation import _response_term_present, verify_observation
+from .evaluation import verify_observation
 from .evaluation_observation import observation_from_tool_calls
+from .evaluation_response_checks import response_term_present as _response_term_present
 
 
 def _has_non_context_numeric_claim(response: str) -> bool:

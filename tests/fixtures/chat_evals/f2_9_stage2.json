@@ -101,12 +101,17 @@
       ],
       "gold_state": "generated_by_tool_registry_from_pinned_public_snapshot",
       "context": {
-        "tab": "flights",
+        "tab": "reading",
         "period": "2026Q2",
-        "entity": "INDUSTRY",
-        "card_id": "flights-shell",
+        "entity": [
+          "INDUSTRY"
+        ],
+        "card_id": "market-chart",
         "filters": {
-          "segment": "international"
+          "segment": "international",
+          "entities": [
+            "INDUSTRY"
+          ]
         }
       }
     },
@@ -541,7 +546,14 @@
           "VOLARIS",
           "VIVA_AEROBUS"
         ],
-        "card_id": "kpi-load_factor"
+        "card_id": "load-chart",
+        "filters": {
+          "entities": [
+            "AEROMEXICO",
+            "VOLARIS",
+            "VIVA_AEROBUS"
+          ]
+        }
       }
     },
     {
@@ -743,6 +755,20 @@
             "failure": "percentage_point_delta_mislabelled_as_relative_percent"
           }
         ]
+      },
+      "context": {
+        "tab": "reading",
+        "period": "2026Q2",
+        "entity": [
+          "AEROMEXICO"
+        ],
+        "card_id": "market-chart",
+        "filters": {
+          "segment": "domestic",
+          "entities": [
+            "AEROMEXICO"
+          ]
+        }
       }
     },
     {
@@ -756,8 +782,19 @@
       "context": {
         "tab": "economy",
         "period": "2026Q2",
-        "entity": "INDUSTRY",
-        "card_id": "kpi-load_factor"
+        "entity": [
+          "AEROMEXICO",
+          "VOLARIS",
+          "VIVA_AEROBUS"
+        ],
+        "card_id": "load-chart",
+        "filters": {
+          "entities": [
+            "AEROMEXICO",
+            "VOLARIS",
+            "VIVA_AEROBUS"
+          ]
+        }
       }
     },
     {
@@ -958,14 +995,87 @@
       "question": "¿Cuántos pasajeros reportó Viva en 2T22?",
       "locale": "es",
       "expected": {
-        "status": "unsupported",
-        "behavior": "state_company_series_has_no_published_observation_for_requested_period",
-        "safe_expected_response": "La serie de pasajeros reportados por Viva empieza en 1T23; no hay dato de empresa publicado para 2T22.",
-        "forbid_numeric_claims": true,
+        "status": "supported",
+        "behavior": "distinguish_company_reporting_from_AFAC_passenger_count",
+        "plan": {
+          "metric_ids": [
+            "afac_passengers"
+          ],
+          "entity_ids": [
+            "VIVA_AEROBUS"
+          ],
+          "periods": [
+            "2022Q2"
+          ],
+          "dimensions": [
+            "segment"
+          ],
+          "filters": {
+            "segment": "total"
+          },
+          "operation": "query"
+        },
+        "rows": [
+          {
+            "metric_id": "afac_passengers",
+            "entity_id": "VIVA_AEROBUS",
+            "period": "2022Q2",
+            "period_label": "2T22",
+            "segment": "total",
+            "value": 4876764.0,
+            "unit": "passengers",
+            "display_value": 4876764.0,
+            "display_unit": "pasajeros",
+            "display_scale": 1,
+            "availability": "available",
+            "quality": "Reportado AFAC.",
+            "source_references": [
+              {
+                "label": "Fuente pública AFAC",
+                "url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404"
+              }
+            ]
+          }
+        ],
+        "response_terms": [
+          "4,876,764",
+          "2T22"
+        ],
         "required_response_terms": [
-          "no hay dato",
-          "empresa"
-        ]
+          "empresa",
+          "no está disponible"
+        ],
+        "response_attributions": [
+          {
+            "value_term": "4,876,764",
+            "required_same_sentence_terms": [
+              "AFAC",
+              "Viva",
+              "pasajeros"
+            ],
+            "forbidden_patterns": [
+              "\\bViva\\s+(?:report[oó]|inform[oó]|public[oó]|reported|informed|published)\\b",
+              "\\b(?:reportad[oa]s?|informad[oa]s?|reported|informed|published)\\b.{0,40}\\b(?:por|by)\\s+Viva\\b",
+              "\\b(?:company|empresa)[ -](?:reported|reportad[oa]|informad[oa])\\b",
+              "\\b4,876,764\\s+pasajeros?\\s+(?:reportados?\\s+por\\s+Viva)\\b"
+            ],
+            "count_unit_pattern": "(?<!\\w)([+-]?\\d[\\d., ]*)\\s+pasajeros?(?!\\w)",
+            "expected_count": 4876764,
+            "missing_attribution_failure": "AFAC_value_missing_clear_source_and_entity_attribution",
+            "wrong_attribution_failure": "AFAC_value_misrepresented_as_company_report",
+            "unexpected_count_failure": "unsupported_or_incorrect_passenger_count"
+          }
+        ],
+        "response_numeric_guard": {
+          "allowed_numbers": [
+            4876764
+          ],
+          "allowed_periods": [
+            "2022Q2",
+            "2023Q1"
+          ],
+          "failure": "response_contains_numeric_claim_without_fixture_evidence"
+        }
       }
     }
   ],
@@ -1013,27 +1123,28 @@
     },
     "changes_by_case": {
       "N13": {
-        "context_added": "Published dashboard 2026Q2; context selects only the entity/card/filter asked about, without altering question or rubric."
+        "context_added": "Actual AFAC market-chart context uses the reading tab, selected industry entity and international segment; dashboard 2026Q2 resolves the current endpoint."
       },
       "N12": {
         "context_added": "Published dashboard 2026Q2; context selects only the entity/card/filter asked about, without altering question or rubric."
       },
       "N11": {
-        "context_added": "Published dashboard 2026Q2; context selects only the entity/card/filter asked about, without altering question or rubric."
+        "context_added": "Dashboard load chart context resolves latest quarter to 2026Q2 and selects the three entities explicitly compared in the question."
       },
       "N02": {
         "context_added": "Published dashboard 2026Q2; context selects only the entity/card/filter asked about, without altering question or rubric."
       },
       "es_ratio_average": {
-        "context_added": "Published dashboard 2026Q2; context selects only the entity/card/filter asked about, without altering question or rubric."
+        "context_added": "Dashboard load chart context resolves the discussion to 2026Q2 and the three carriers in the question; expected outcome remains conceptual refusal, without a numerical answer requirement."
       },
       "en_relative_share_change": {
         "expected_status_and_gold_corrected": "The question explicitly asks relative percentage change; human adjudication confirmed the answer and cited pinned public query rows. Derived gold is calculated from those two rows.",
-        "response_semantics_added": "Required relative change is -3.99%; a domestic percentage-point delta near -1.01 cannot be labeled as relative percent."
+        "response_semantics_added": "Required relative change is -3.99%; a domestic percentage-point delta near -1.01 cannot be labeled as relative percent.",
+        "context_added": "Actual AFAC market-chart context uses the reading tab, Aeromexico and domestic segment; dashboard 2026Q2 resolves the otherwise unspecified YoY endpoint."
       },
       "es_viva_missing_company_passengers": {
-        "expected_status_corrected": "Historical company-reported Viva passenger series begins in 2023Q1; adjudication confirmed 2022Q2 has no company query row and the observed AFAC figure must not be substituted.",
-        "required_disclosure_added": "Automatic tripwire requires the answer to state that the company-reported observation is unavailable; forbid_numeric_claims prevents substituting an AFAC count."
+        "expected_gold_corrected": "Snapshot-backed AFAC total for Viva 2022Q2 is available; this does not create a company-reported passenger observation.",
+        "response_checks_added": "Require the company series unavailability disclosure; bind 4,876,764 passengers to AFAC and Viva in the same sentence; reject company-report attribution and any other passenger count."
       },
       "en_card_filter_scope": {
         "response_expectation_clarified": "Card context resolves Viva unit margin in 2026Q2; required response names the per-ASK-km denominator, without demanding a numeric query for an explanation request."
