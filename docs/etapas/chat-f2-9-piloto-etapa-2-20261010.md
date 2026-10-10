@@ -8,3 +8,4 @@
 - Revisión: UI A–D publicada en [review.html](https://salvamalfa.github.io/aeromexico-tracker/review.html) por [PR119](https://github.com/salvamalfa/aeromexico-tracker/pull/119); el JSON comparativo espera la reconciliación del consumo.
 - No solicitar calificación sobre esta entrega incompleta; la reserva de US$8 ya fue autorizada y financiada.
 - Validación: 130 pruebas focalizadas y 991 pruebas públicas más 14 subtests pasaron; 6 omisiones por artefactos locales o preview.
+- Parche posterior (`a52bc48a75ac0d549e6080da16a6988fd8503cbb`), separado de la ejecución original (`73db4d1c638e0c208feae433642e652485f5dfe6`): futuros errores conservan IDs privados y metadatos saneados, distinguen EOF, respuesta sin texto, HTTP y fallo terminal sin reenviar inputs; 181 pruebas focalizadas offline pasaron en integración y runtime smoke sin proveedor.
