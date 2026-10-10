@@ -8,7 +8,7 @@ import math
 from pathlib import Path
 from typing import Any
 
-from scripts.chat.stage2_finalization import conservative_usage_cost
+from stage2_finalization import conservative_usage_cost
 
 ROOT = Path(__file__).resolve().parents[2]
 FORECAST_PATH = ROOT / "docs/chat/revision-fase-2/F2.9-etapa-2-presupuesto.json"
