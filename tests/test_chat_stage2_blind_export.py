@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import sys
@@ -54,6 +55,8 @@ def run_report(candidate: str, cases: list[dict] | None = None) -> dict:
         "case_fixture_hash": exporter._digest(fixture_cases),
     }
     return {
+        "mode": "live-evaluation",
+        "probe_only": False,
         "run_status": "completed",
         "data_version": "data-v1",
         "semantic_version": "semantic-v1",
@@ -193,6 +196,127 @@ class Stage2BlindExportTests(unittest.TestCase):
             with patch.object(exporter, "ROOT", root):
                 with self.assertRaisesRegex(exporter.ExportError, r"dentro de \.state"):
                     exporter.export(reports, root / "public", fixture_path)
+
+    def test_unions_resumed_fragments_with_per_case_source_lineage_without_mutation(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            fixture = fixture_payload()
+            reports = self._reports(root)
+            candidate = "gpt-6-luna@medium"
+            first = run_report(candidate)
+            first["models"][0]["cases"] = [
+                {"case_id": case_id, "model_turn_completed": True,
+                 "turn_responses": [f"Original primera parte: {index}"]}
+                for index, case_id in enumerate(exporter.EXPECTED_CASE_IDS[:8])
+            ]
+            # The first budget-stopped invocation keeps its original planned
+            # count even though only eight detailed rows were persisted.
+            first["case_count"] = 15
+            resumed = run_report(candidate)
+            resumed["models"][0]["cases"] = [
+                {"case_id": case_id, "model_turn_completed": True,
+                 "turn_responses": [f"Respuesta reanudada: {index}"]}
+                for index, case_id in enumerate(exporter.EXPECTED_CASE_IDS[8:], 8)
+            ]
+            resumed["case_count"] = 7
+            first_path = root / "first.json"
+            resumed_path = root / "resumed.json"
+            first_path.write_text(json.dumps(first), encoding="utf-8")
+            resumed_path.write_text(json.dumps(resumed), encoding="utf-8")
+            before = {
+                first_path: hashlib.sha256(first_path.read_bytes()).hexdigest(),
+                resumed_path: hashlib.sha256(resumed_path.read_bytes()).hexdigest(),
+            }
+            reports[candidate] = [first_path, resumed_path]
+
+            dataset, key, _ = exporter.build_blind_dataset(fixture, reports)
+            lineage = key["runs"][candidate]
+            self.assertEqual(lineage["identity"], first["run_identity"])
+            self.assertEqual(len(lineage["source_reports"]), 2)
+            self.assertEqual(set(lineage["case_sources"]), set(exporter.EXPECTED_CASE_IDS))
+            self.assertEqual(lineage["source_reports"][0]["case_ids"], list(exporter.EXPECTED_CASE_IDS[:8]))
+            self.assertEqual(lineage["source_reports"][1]["case_ids"], list(exporter.EXPECTED_CASE_IDS[8:]))
+            for index, case_id in enumerate(exporter.EXPECTED_CASE_IDS):
+                answer_row = dataset["questions"][index]
+                alias = next(item["alias"] for item in answer_row["candidates"]
+                             if key["questions"][index]["alias_map"][item["alias"]] == candidate)
+                answer = answer_row["candidates"][ord(alias) - ord("A")]["answer"]
+                expected = f"Original primera parte: {index}" if index < 8 else f"Respuesta reanudada: {index}"
+                self.assertEqual(answer, expected)
+                source_path = first_path if index < 8 else resumed_path
+                self.assertEqual(lineage["case_sources"][case_id]["source_report_sha256"], before[source_path])
+            self.assertEqual({path: hashlib.sha256(path.read_bytes()).hexdigest() for path in before}, before)
+
+    def test_missing_candidate_fragment_stays_null_and_overlaps_are_rejected(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            reports = self._reports(root)
+            candidate = "gpt-6-luna@medium"
+            partial = run_report(candidate)
+            missing = exporter.EXPECTED_CASE_IDS[-1]
+            partial["models"][0]["cases"] = [row for row in partial["models"][0]["cases"] if row["case_id"] != missing]
+            partial_path = root / "missing.json"
+            partial_path.write_text(json.dumps(partial), encoding="utf-8")
+            reports[candidate] = [partial_path]
+            dataset, key, technical = exporter.build_blind_dataset(fixture_payload(), reports)
+            question_index = exporter.EXPECTED_CASE_IDS.index(missing)
+            alias = next(alias for alias, run in key["questions"][question_index]["alias_map"].items()
+                         if run == candidate)
+            self.assertIsNone(dataset["questions"][question_index]["candidates"][ord(alias) - ord("A")]["answer"])
+            self.assertEqual(key["questions"][question_index]["slot_dispositions"][alias], "not_attempted")
+            self.assertEqual(technical["null_slot_count"], 1)
+            self.assertNotIn(missing, key["runs"][candidate]["case_sources"])
+
+            second = run_report(candidate, cases=[
+                {"case_id": exporter.EXPECTED_CASE_IDS[0], "model_turn_completed": True,
+                 "turn_responses": ["duplicate"]}
+            ])
+            second_path = root / "overlap.json"
+            second_path.write_text(json.dumps(second), encoding="utf-8")
+            reports[candidate] = [reports[candidate][0], second_path]
+            with self.assertRaisesRegex(exporter.ExportError, "traslapan"):
+                exporter.build_blind_dataset(fixture_payload(), reports)
+
+    def test_resumed_fragment_rejects_changed_execution_identity(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            reports = self._reports(root)
+            candidate = "gpt-6-luna@medium"
+            first = run_report(candidate, cases=[{
+                "case_id": exporter.EXPECTED_CASE_IDS[0], "model_turn_completed": True,
+                "turn_responses": ["original"],
+            }])
+            resumed = run_report(candidate, cases=[{
+                "case_id": exporter.EXPECTED_CASE_IDS[1], "model_turn_completed": True,
+                "turn_responses": ["different execution"],
+            }])
+            resumed["run_identity"]["execution_commit"] = "other-sha"
+            resumed["identity_hash"] = exporter._digest(resumed["run_identity"])
+            resumed["run_identity_hash"] = exporter._digest(resumed["run_identity"])
+            first_path, resumed_path = root / "one.json", root / "two.json"
+            first_path.write_text(json.dumps(first), encoding="utf-8")
+            resumed_path.write_text(json.dumps(resumed), encoding="utf-8")
+            reports[candidate] = [first_path, resumed_path]
+            with self.assertRaisesRegex(exporter.ExportError, "identidad exacta"):
+                exporter.build_blind_dataset(fixture_payload(), reports)
+
+    def test_rejects_probe_reports_and_cross_candidate_tool_spec_drift(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            probe = run_report("gpt-6-luna@medium")
+            probe["mode"] = "live-probe"
+            probe["probe_only"] = True
+            reports = self._reports(root, {"gpt-6-luna@medium": probe})
+            with self.assertRaisesRegex(exporter.ExportError, "sonda"):
+                exporter.build_blind_dataset(fixture_payload(), reports)
+
+            drifted = run_report("gpt-6-luna@medium")
+            drifted["run_identity"]["tool_spec_hash"] = "d" * 64
+            drifted["identity_hash"] = exporter._digest(drifted["run_identity"])
+            drifted["run_identity_hash"] = exporter._digest(drifted["run_identity"])
+            reports = self._reports(root, {"gpt-6-luna@medium": drifted})
+            with self.assertRaisesRegex(exporter.ExportError, "snapshot, prompt, herramientas y límites"):
+                exporter.build_blind_dataset(fixture_payload(), reports)
 
 
 if __name__ == "__main__":

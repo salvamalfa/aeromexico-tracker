@@ -15,7 +15,7 @@ import os
 import re
 import secrets
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURE = ROOT / "tests/fixtures/chat_evals/f2_9_stage2.json"
@@ -105,8 +105,8 @@ def _report_cases(report: dict[str, Any], path: Path) -> tuple[dict[str, dict[st
         raise ExportError(f"Se esperaba un reporte detallado de un candidato: {path.name}")
     model = models[0]
     rows = model.get("cases")
-    if not isinstance(rows, list):
-        raise ExportError(f"El reporte no incluye filas de casos: {path.name}")
+    if not isinstance(rows, list) or not rows:
+        raise ExportError(f"El reporte no incluye filas detalladas de casos: {path.name}")
     indexed: dict[str, dict[str, Any]] = {}
     for row in rows:
         if not isinstance(row, dict) or not isinstance(row.get("case_id"), str):
@@ -132,6 +132,8 @@ def _validate_report(candidate: str, metadata: dict[str, Any], identity_hash: st
                      fixture: dict[str, Any], cases: list[dict[str, Any]], path: Path) -> None:
     model_name, effort = CANDIDATES[candidate]
     report, model, identity = metadata["report"], metadata["model"], metadata["identity"]
+    if report.get("mode") != "live-evaluation" or report.get("probe_only") is not False:
+        raise ExportError(f"Se requiere un reporte detallado live-evaluation, no una sonda: {path.name}")
     expected_versions = fixture["expected_versions"]
     expected_identity = {
         "stage": 2,
@@ -156,8 +158,13 @@ def _validate_report(candidate: str, metadata: dict[str, Any], identity_hash: st
         raise ExportError(f"La versión semántica no coincide con el contexto del dashboard: {path.name}")
     if model.get("candidate") != candidate or model.get("model") != model_name or model.get("reasoning_effort") != effort:
         raise ExportError(f"El modelo/esfuerzo del reporte no coincide con su alias privado: {path.name}")
-    if report.get("case_count") != len(cases) or identity.get("case_count", len(cases)) != len(cases):
-        raise ExportError(f"La corrida no fija exactamente 15 casos: {path.name}")
+    row_count = len(model.get("cases", []))
+    declared_count = report.get("case_count")
+    # A resumed live report records the number of cases attempted in that
+    # invocation. Earlier budget-stopped reports can retain the full planned
+    # count while containing only the rows reached before the stop.
+    if declared_count not in (row_count, len(cases)) or identity.get("case_count", len(cases)) != len(cases):
+        raise ExportError(f"El fragmento no coincide con los casos planeados: {path.name}")
     if identity_hash != _digest(identity):
         raise ExportError(f"No se pudo verificar el identity hash: {path.name}")
 
@@ -182,34 +189,80 @@ def _answer(row: dict[str, Any] | None, case_id: str) -> tuple[str | None, str]:
     return answer, "available"
 
 
-def build_blind_dataset(fixture: dict[str, Any], report_paths: dict[str, Path]) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+def build_blind_dataset(
+    fixture: dict[str, Any],
+    report_paths: dict[str, Path | Sequence[Path]],
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     cases = _fixture_cases(fixture)
     if set(report_paths) != set(CANDIDATES):
         raise ExportError("Se requieren exactamente los cuatro reportes candidatos autorizados")
     indexed_by_candidate: dict[str, dict[str, dict[str, Any]]] = {}
     metadata_by_candidate: dict[str, dict[str, Any]] = {}
     identity_hashes: dict[str, str] = {}
-    source_report_hashes: dict[str, str] = {}
+    source_reports: dict[str, list[dict[str, Any]]] = {}
+    case_sources: dict[str, dict[str, dict[str, Any]]] = {}
     campaign_hashes: set[str] = set()
     for candidate in CANDIDATES:
-        path = report_paths[candidate]
-        report, report_sha256 = _read_json_with_hash(path, candidate)
-        indexed, metadata, identity_hash, campaign_hash = _report_cases(report, path)
-        _validate_report(candidate, metadata, identity_hash, fixture, cases, path)
-        unknown = set(indexed) - set(EXPECTED_CASE_IDS)
-        if unknown:
-            raise ExportError(f"El reporte contiene casos ajenos al fixture: {path.name}")
-        indexed_by_candidate[candidate] = indexed
-        metadata_by_candidate[candidate] = metadata
-        identity_hashes[candidate] = identity_hash
-        source_report_hashes[candidate] = report_sha256
-        campaign_hashes.add(campaign_hash)
+        raw_paths = report_paths[candidate]
+        paths = [raw_paths] if isinstance(raw_paths, Path) else list(raw_paths)
+        if not paths:
+            raise ExportError(f"El candidato {candidate} no tiene reportes fuente")
+        merged: dict[str, dict[str, Any]] = {}
+        candidate_fragments: list[dict[str, Any]] = []
+        candidate_identity: dict[str, Any] | None = None
+        candidate_identity_hash: str | None = None
+        candidate_campaign_hash: str | None = None
+        candidate_case_sources: dict[str, dict[str, Any]] = {}
+        for path in paths:
+            report, report_sha256 = _read_json_with_hash(path, candidate)
+            indexed, metadata, identity_hash, campaign_hash = _report_cases(report, path)
+            _validate_report(candidate, metadata, identity_hash, fixture, cases, path)
+            unknown = set(indexed) - set(EXPECTED_CASE_IDS)
+            if unknown:
+                raise ExportError(f"El reporte contiene casos ajenos al fixture: {path.name}")
+            overlap = set(merged) & set(indexed)
+            if overlap:
+                raise ExportError(f"Los fragmentos de {candidate} se traslapan en casos: {', '.join(sorted(overlap))}")
+            identity = metadata["identity"]
+            if candidate_identity is not None and (
+                _canonical(identity) != _canonical(candidate_identity)
+                or identity_hash != candidate_identity_hash
+                or campaign_hash != candidate_campaign_hash
+            ):
+                raise ExportError(f"Los fragmentos de {candidate} no comparten identidad exacta de corrida/campaña")
+            candidate_identity = identity
+            candidate_identity_hash = identity_hash
+            candidate_campaign_hash = campaign_hash
+            merged.update(indexed)
+            fragment = {
+                "source_report_sha256": report_sha256,
+                "identity_hash": identity_hash,
+                "case_ids": [case_id for case_id in EXPECTED_CASE_IDS if case_id in indexed],
+            }
+            candidate_fragments.append(fragment)
+            for case_id in indexed:
+                candidate_case_sources[case_id] = {
+                    "source_report_sha256": report_sha256,
+                    "identity_hash": identity_hash,
+                }
+            campaign_hashes.add(campaign_hash)
+        indexed_by_candidate[candidate] = merged
+        metadata_by_candidate[candidate] = {
+            "identity": candidate_identity,
+            "campaign_identity_hash": candidate_campaign_hash,
+        }
+        identity_hashes[candidate] = str(candidate_identity_hash)
+        source_reports[candidate] = candidate_fragments
+        case_sources[candidate] = candidate_case_sources
     if len(campaign_hashes) != 1:
         raise ExportError("Los cuatro reportes no pertenecen a la misma identidad de campaña")
     prompts = {item["identity"]["prompt_content_hash"] for item in metadata_by_candidate.values()}
     if len(prompts) != 1:
         raise ExportError("Los cuatro reportes no usaron el mismo prompt efectivo")
-    shared_identity_fields = ("data_version", "semantic_version", "prompt_content_hash", "tool_spec_hash", "limits")
+    shared_identity_fields = (
+        "data_version", "semantic_version", "source_fingerprint", "execution_commit",
+        "prompt_content_hash", "tool_spec_hash", "limits", "text_verbosity",
+    )
     reference_identity = metadata_by_candidate[next(iter(CANDIDATES))]["identity"]
     for metadata in metadata_by_candidate.values():
         identity = metadata["identity"]
@@ -256,7 +309,9 @@ def build_blind_dataset(fixture: dict[str, Any], report_paths: dict[str, Path]) 
         "runs": {
             candidate: {
                 "identity_hash": identity_hashes[candidate],
-                "source_report_sha256": source_report_hashes[candidate],
+                "identity": metadata_by_candidate[candidate]["identity"],
+                "source_reports": source_reports[candidate],
+                "case_sources": case_sources[candidate],
             }
             for candidate in CANDIDATES
         },
@@ -304,7 +359,7 @@ def _write_private(path: Path, content: bytes) -> None:
         raise
 
 
-def export(report_paths: dict[str, Path], out_dir: Path, fixture_path: Path = FIXTURE) -> dict[str, Any]:
+def export(report_paths: dict[str, Path | Sequence[Path]], out_dir: Path, fixture_path: Path = FIXTURE) -> dict[str, Any]:
     output_dir = out_dir.resolve()
     state_root = (ROOT / ".state").resolve()
     if state_root not in output_dir.parents:
@@ -339,7 +394,8 @@ def export(report_paths: dict[str, Path], out_dir: Path, fixture_path: Path = FI
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     for candidate, option in zip(CANDIDATES, ("luna-medium", "luna-max", "sol-low", "sol-medium"), strict=True):
-        parser.add_argument(f"--{option}-report", required=True, type=Path)
+        parser.add_argument(f"--{option}-report", required=True, action="append", type=Path,
+                            help="Informe detallado del candidato; repite la opción para fragmentos reanudados")
     parser.add_argument("--fixture", type=Path, default=FIXTURE)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     args = parser.parse_args(argv)

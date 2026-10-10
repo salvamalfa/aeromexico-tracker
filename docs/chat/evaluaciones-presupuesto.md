@@ -119,6 +119,16 @@ operativa puede detener casos posteriores, pero no limita los tokens de una
 llamada ya iniciada ni garantiza un techo exacto. No se inventan resultados ni
 costos faltantes.
 
+El exportador de revisión ciega acepta más de un reporte detallado por
+candidato al repetir su opción `--*-report`. Une filas solo si los fragmentos
+comparten la identidad íntegra de corrida y campaña, snapshot, semántica,
+prompt, herramientas, límites y ejecución; rechaza casos duplicados. La llave
+privada conserva cada identidad, el hash SHA-256 de cada reporte fuente y el
+hash fuente asignado a cada caso. Los casos ausentes siguen como `null` con
+disposición privada `not_attempted`; el exportador no cambia informes fuente,
+ledger ni estado de gasto y no convierte esta unión en autorización para
+reanudar una corrida live.
+
 Usar el mismo holdout, snapshot, semántica, prompt de sistema, límites y
 configuración de herramienta por modelo. No incluir la pregunta y su respuesta
 de oro como instrucción al modelo. Revisar outputs sin nombres de modelo antes
