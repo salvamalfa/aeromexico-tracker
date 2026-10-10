@@ -98,6 +98,7 @@ def empirical_reservation_assumption(
     rates = catalog["models"]["gpt-6.1-sol"]
     return {
         "basis": "f2_9_empirical_pilot_estimate_not_hard_cap",
+        "budget_guaranteed": False,
         "input_tokens_per_turn": reserved_input,
         "output_tokens_per_turn": reserved_output,
         "historical_sample_count": sample_count,

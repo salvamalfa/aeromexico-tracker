@@ -17,7 +17,9 @@ from scripts.chat.stage2_finalization import (
     read_pinned_sources,
     validate_terminal_recovery,
 )
+from src.conversational_analytics.config import ChatConfig
 from src.conversational_analytics.evaluation_campaign import STAGE2_EXPECTED_CASE_IDS
+from src.conversational_analytics.evaluation_live_reservation import reservation_assumption
 
 
 def _digest(raw: bytes) -> str:
@@ -443,6 +445,18 @@ def test_empirical_29_request_reservation_fits_all_known_carry_and_approved_fore
         catalog,
         request_count=29,
     )
+    sol_rates = catalog["models"]["gpt-6.1-sol"]
+    runtime_config = ChatConfig(
+        provider="openai",
+        model="gpt-6.1-sol",
+        estimated_input_cost_per_million=float(sol_rates["input_usd_per_million"]),
+        estimated_output_cost_per_million=float(sol_rates["output_usd_per_million"]),
+        long_context_threshold_input_tokens=int(sol_rates["long_context_threshold_input_tokens"]),
+        long_context_input_multiplier=float(sol_rates["long_context_input_multiplier"]),
+        long_context_output_multiplier=float(sol_rates["long_context_output_multiplier"]),
+        cache_write_input_multiplier=float(sol_rates["cache_write_input_multiplier"]),
+    )
+    assert reservation_assumption(runtime_config, assumption) == assumption
     carry = 2.274144375
     reserve = assumption["planned_batch_estimated_reservation_usd"]
     forecast = finalizer._approved_forecast(8.0 - carry, carry)
@@ -468,6 +482,7 @@ def test_empirical_29_request_reservation_fits_all_known_carry_and_approved_fore
     assert carry + forecast["estimated_cost_range_usd"][1] < 8.0
     assert forecast["estimated_cost_range_usd"][1] == pytest.approx(5.284293)
     assert assumption["basis"] == "f2_9_empirical_pilot_estimate_not_hard_cap"
+    assert assumption["budget_guaranteed"] is False
 
 
 def test_empirical_admission_rejects_unaccounted_unknown_rows() -> None:
