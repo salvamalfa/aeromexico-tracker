@@ -23,6 +23,7 @@ def run_campaign(
     state_path: Path,
     output_dir: Path,
     resume: bool = False,
+    reservation_assumption_override: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Execute stable run slots under one shared hard campaign stop.
 
@@ -31,11 +32,25 @@ def run_campaign(
     reconciled. Successfully persisted run slots are skipped on an exact
     identity resume, so prompt variants and repetitions cannot collapse.
     """
-    if isinstance(budget_usd, bool) or not isinstance(budget_usd, (int, float)) or not math.isfinite(budget_usd) or budget_usd <= 0:
+    if (
+        isinstance(budget_usd, bool)
+        or not isinstance(budget_usd, (int, float))
+        or not math.isfinite(budget_usd)
+        or budget_usd <= 0
+    ):
         raise ValueError("El presupuesto de campaña debe ser finito y positivo")
     if not runs:
         raise ValueError("La campaña requiere al menos una corrida")
     run_specs = [dict(run) for run in runs]
+    if reservation_assumption_override is not None:
+        expected_slots = reservation_assumption_override.get("planned_request_count")
+        actual_slots = sum(len(run.get("case_ids", [])) for run in run_specs)
+        candidate_slots = {run.get("candidate"): len(run.get("case_ids", [])) for run in run_specs}
+        if (
+            expected_slots != actual_slots
+            or candidate_slots != {"gpt-6.1-sol@low": 14, "gpt-6.1-sol@medium": 15}
+        ):
+            raise ValueError("La reserva empírica no coincide con el total de turnos planificados")
     identity = {
         "runs": [run.get("identity") for run in run_specs],
         "run_identity_hashes": [run.get("identity_hash") for run in run_specs],
@@ -43,9 +58,13 @@ def run_campaign(
         "expected_versions": dict(expected_versions),
         "snapshot_root": str(snapshot_root),
         "prices": {key: list(value) for key, value in sorted(prices.items())},
+            "reservation_assumption_override": dict(reservation_assumption_override)
+            if reservation_assumption_override is not None else None,
     }
     identity_hash = hashlib.sha256(
-        json.dumps(identity, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
+        json.dumps(
+            identity, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False
+        ).encode("utf-8")
     ).hexdigest()
     if state_path.exists():
         if not resume:
@@ -128,8 +147,21 @@ def run_campaign(
             expected_versions=dict(expected_versions),
             system_instructions=str(run["prompt"]),
             run_identity=dict(run["identity"]),
+            run_identity_hash=str(run["identity_hash"]),
+            campaign_identity_hash=identity_hash,
             limits_override=dict(run["limits"]),
+            text_verbosity_override=str(run["text_verbosity"]),
+            reservation_assumption_override=(
+                dict(reservation_assumption_override)
+                if reservation_assumption_override is not None
+                else None
+            ),
         )
+        report["run_identity_hash"] = str(run["identity_hash"])
+        report["campaign_identity_hash"] = identity_hash
+        source_report = Path(str(report.get("output_path", "")))
+        if source_report.is_file():
+            _write_private_json(source_report, report)
         model = report["models"][0]
         new_cases = [
             {
@@ -222,5 +254,8 @@ def run_campaign(
         **spend,
         "run_summaries": reports,
         "state_path": str(state_path),
-        "note": "Un turno iniciado puede exceder la reserva; gasto desconocido detiene la campaña y bloquea replay.",
+        "note": (
+            "Un turno iniciado puede exceder la reserva; gasto desconocido detiene la campaña "
+            "y bloquea replay."
+        ),
     }

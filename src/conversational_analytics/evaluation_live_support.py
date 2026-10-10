@@ -9,11 +9,14 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+from .providers._openai_error_metadata import upstream_error_metadata
+
 _SAFE_EXCEPTION_TYPES = frozenset(
     {
         "APIConnectionError",
-        "APITimeoutError",
+        "APIError",
         "APIStatusError",
+        "APITimeoutError",
         "AuthenticationError",
         "BadRequestError",
         "ConflictError",
@@ -29,7 +32,17 @@ _SAFE_EXCEPTION_TYPES = frozenset(
     }
 )
 _SAFE_HTTP_STATUSES = frozenset({400, 401, 403, 404, 408, 409, 413, 422, 425, 429, 500, 502, 503, 504})
-_SAFE_REASON_CODES = frozenset({"tool_call_limit", "turn_timeout", "tool_result_limit"})
+_SAFE_REASON_CODES = frozenset(
+    {
+        "provider_terminal_failed",
+        "provider_stream_incomplete",
+        "provider_completion_without_text",
+        "provider_request_failed",
+        "tool_call_limit",
+        "turn_timeout",
+        "tool_result_limit",
+    }
+)
 _RESERVATION_INPUT_TOKENS_PER_CASE_FLOOR = 140_000
 _RESERVATION_OUTPUT_TOKENS_PER_CASE_FLOOR = 10_000
 
@@ -43,6 +56,8 @@ def _error_metadata(exc: BaseException) -> dict[str, Any]:
     names: list[str] = []
     status: int | None = None
     reason_code: str | None = None
+    provider_turn_id: str | None = None
+    upstream: dict[str, str | int] = {}
     current: BaseException | None = exc
     visited: set[int] = set()
     while current is not None and id(current) not in visited and len(visited) < 6:
@@ -58,12 +73,18 @@ def _error_metadata(exc: BaseException) -> dict[str, Any]:
         ):
             status = candidate
         candidate_reason = getattr(current, "reason_code", None)
-        if candidate_reason in _SAFE_REASON_CODES:
+        if isinstance(candidate_reason, str) and candidate_reason in _SAFE_REASON_CODES:
             reason_code = candidate_reason
+        candidate_turn_id = getattr(current, "turn_id", None)
+        if provider_turn_id is None and isinstance(candidate_turn_id, str) and candidate_turn_id:
+            provider_turn_id = candidate_turn_id
+        upstream.update(upstream_error_metadata(current))
         current = current.__cause__ or current.__context__
     result: dict[str, Any] = {"exception_types": names or ["unknown"]}
     result.update({"http_status": status} if status is not None else {})
     result.update({"reason_code": reason_code} if reason_code is not None else {})
+    result.update({"provider_turn_id": provider_turn_id} if provider_turn_id is not None else {})
+    result.update(upstream)
     return result
 
 
@@ -77,7 +98,8 @@ def _numeric_gold_summary(
 ) -> dict[str, Any]:
     """Keep missing, failed, and unattempted gold cases in the accuracy denominator."""
     expected = [
-        case for case in selected
+        case
+        for case in selected
         if case.get("expected", {}).get("status") == "supported"
         and case.get("expected", {}).get("plan")
         and case.get("expected", {}).get("rows")
@@ -108,6 +130,54 @@ def _failure_usage(exc: BaseException) -> tuple[int, int] | None:
     ):
         return usage
     return None
+
+
+def _apply_provider_cancel_outcome(
+    case_record: dict[str, Any],
+    progress_state: dict[str, Any],
+    error: BaseException,
+    provider: Any,
+    session_id: str | None,
+) -> str:
+    """Persist cancellation certainty and retain sessions without replay."""
+    if getattr(error, "deadline_watchdog_fired", False):
+        snapshot = getattr(error, "cancel_outcome", None)
+        try:
+            outcome = snapshot() if callable(snapshot) else {}
+        except Exception as exc:
+            outcome = {"status": "unknown_manual_reconciliation", "error": exc}
+        if not isinstance(outcome, dict):
+            outcome = {}
+        status = outcome.get("status")
+        if not isinstance(status, str):
+            status = "unknown_manual_reconciliation"
+        cancel_error = outcome.get("error")
+        if isinstance(cancel_error, BaseException):
+            case_record["provider_cancel_error_metadata"] = _error_metadata(cancel_error)
+        elif isinstance(outcome.get("error_metadata"), dict):
+            case_record["provider_cancel_error_metadata"] = outcome["error_metadata"]
+    elif session_id and callable(getattr(provider, "cancel", None)):
+        try:
+            outcome = provider.cancel(session_id)
+            if isinstance(outcome, dict) and isinstance(outcome.get("status"), str):
+                status = outcome["status"]
+                if isinstance(outcome.get("error_metadata"), dict):
+                    case_record["provider_cancel_error_metadata"] = outcome["error_metadata"]
+            elif outcome is False:
+                status = "failed_manual_reconciliation"
+            else:
+                status = "cancelled"
+        except Exception as exc:
+            status = "failed_manual_reconciliation"
+            case_record["provider_cancel_error_metadata"] = _error_metadata(exc)
+    else:
+        status = "unavailable_manual_reconciliation"
+    case_record["provider_cancel"] = status
+    progress_state["provider_cancel_state"] = status
+    if session_id and status != "cancelled":
+        progress_state["session_to_reconcile"] = session_id
+        progress_state["manual_cancel_required"] = True
+    return status
 
 
 def _write_private_json(path: Path, payload: dict[str, Any]) -> None:
@@ -172,6 +242,8 @@ def _progress_payload(report: dict[str, Any], state: dict[str, Any]) -> dict[str
         "active_case_id": state.get("active_case_id"),
         "active_session_id": state.get("active_session_id"),
         "session_to_reconcile": state.get("session_to_reconcile"),
+        "provider_cancel_state": state.get("provider_cancel_state"),
+        "manual_cancel_required": bool(state.get("manual_cancel_required")),
         "active_usage_state": state.get("active_usage_state"),
         "last_error_metadata": state.get("last_error_metadata"),
         "models": models,

@@ -1,4 +1,4 @@
-"""Pure campaign planning and resume guards for the private F2.2 harness.
+"""Pure campaign planning and resume guards for the private F2.9 harness.
 
 This module never creates a provider client or reads environment variables. It
 builds stable run identities so a campaign can be resumed only with the exact
@@ -20,6 +20,122 @@ CAMPAIGN_CANDIDATES: dict[str, dict[str, str]] = {
     "gpt-6.1-sol@low": {"model": "gpt-6.1-sol", "reasoning_effort": "low"},
     "gpt-6.1-sol@medium": {"model": "gpt-6.1-sol", "reasoning_effort": "medium"},
 }
+
+STAGE2_BUDGET_PATH = "docs/chat/revision-fase-2/F2.9-etapa-2-presupuesto.json"
+STAGE2_FIXTURE_PATH = "tests/fixtures/chat_evals/f2_9_stage2.json"
+STAGE2_EXPECTED_CASE_IDS = (
+    "N13", "N12", "N20", "N11", "N02",
+    "en_card_filter_scope", "en_relative_share_change", "es_ratio_average",
+    "en_am_rask", "es_am_lf_q2", "es_industry_weighted_lf", "es_volaris_ask",
+    "en_industry_passengers", "es_am_market_share", "es_viva_missing_company_passengers",
+)
+STAGE2_RESERVE_USD = 8.0
+STAGE2_FUNDED_RESERVE_USD = 8.0
+STAGE2_AUTHORIZATION_DATE = "2026-10-10"
+STAGE2_MAX_TOOL_CALLS = 16
+STAGE2_APPROVED_PROMPT_BASE_SHA256 = "33b8f7a0900869812d98bba57daa2ce3ea2f6b5c02a86a7eb3b8e830c7f7694b"
+
+
+def sha256_file(path: Any) -> str:
+    """Hash a file without exposing its contents in a plan or report."""
+    from pathlib import Path
+
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def stage2_case_context_hash(cases: Sequence[Mapping[str, Any]]) -> str:
+    """Hash the selected, validated UI context attached to the frozen cases."""
+    contexts = [{"id": str(case.get("id", "")), "context": case.get("context", {})} for case in cases]
+    return _digest(contexts)
+
+
+def validate_stage2_plan(
+    *,
+    config: Mapping[str, Any],
+    fixture: Mapping[str, Any],
+    cases: Sequence[Mapping[str, Any]],
+    candidates: Mapping[str, Mapping[str, str]],
+    snapshot_data_version: str,
+    snapshot_semantic_version: str,
+    prompt: str,
+    api_key_present: bool,
+) -> dict[str, Any]:
+    """Fail closed on the frozen F2.9 stage-2 scope and return safe provenance."""
+    if config.get("stage") != "F2.9-stage-2":
+        raise ValueError("La configuración no corresponde a F2.9 etapa 2")
+    if config.get("status") != "budget_authorized_offline_preflight_ready":
+        raise ValueError("Estado de configuración de etapa 2 no reconocido")
+    authorization = config.get("owner_decision", {})
+    if (
+        authorization.get("authorized_reserve_usd") != STAGE2_RESERVE_USD
+        or authorization.get("stage2_reserve_funded_usd") != STAGE2_FUNDED_RESERVE_USD
+        or authorization.get("funding_confirmed_date") != STAGE2_AUTHORIZATION_DATE
+    ):
+            raise ValueError("La reserva financiada de etapa 2 no coincide con la autorización vigente")
+    ids = [str(case.get("id", "")) for case in cases]
+    if tuple(ids) != STAGE2_EXPECTED_CASE_IDS:
+        raise ValueError("La cohorte stage2 debe coincidir en orden con los 15 IDs congelados")
+    if len(cases) != 15 or any(len(case.get("turns", [case.get("question")])) != 1 for case in cases):
+        raise ValueError("La cohorte stage2 requiere exactamente 15 casos de un mensaje")
+    for case in cases:
+        if case.get("dependencies"):
+            raise ValueError(f"{case['id']}: el caso stage2 conserva dependencias pendientes")
+        if not isinstance(case.get("context", {}), Mapping):
+            raise ValueError(f"{case['id']}: contexto de aplicación inválido")
+        if not isinstance(case.get("question"), str) or not case["question"].strip():
+            raise ValueError(f"{case['id']}: pregunta vacía")
+        expected = case.get("expected", {})
+        if not isinstance(expected, Mapping) or not expected.get("status"):
+            raise ValueError(f"{case['id']}: falta expectativa/rúbrica validada")
+        if expected.get("status") not in {"supported", "unsupported", "clarify", "refused"}:
+            raise ValueError(f"{case['id']}: expectativa no elegible para el piloto de 1 mensaje")
+        if expected.get("status") == "supported" and expected.get("plan") and not expected.get("rows"):
+            raise ValueError(f"{case['id']}: consulta supported sin filas gold validadas")
+        if case.get("cohort") not in (None, "business", "safety"):
+            raise ValueError(f"{case['id']}: cohorte no elegible")
+    if fixture.get("expected_versions", {}).get("data_version") != snapshot_data_version:
+        raise ValueError("La versión de datos del fixture no coincide con el snapshot validado")
+    if fixture.get("expected_versions", {}).get("semantic_version") != snapshot_semantic_version:
+        raise ValueError("La versión semántica del fixture no coincide con el catálogo validado")
+    if not prompt.strip():
+        raise ValueError("El prompt propuesto efectivo está vacío")
+    if fixture.get("status") not in {"DERIVED_OFFLINE_REVIEW", "OWNER_APPROVED"}:
+        raise ValueError("El fixture stage2 no tiene estado de revisión elegible")
+    if set(candidates) != set(CAMPAIGN_CANDIDATES):
+        raise ValueError("La etapa 2 requiere los cuatro candidatos autorizados")
+    for name, expected in CAMPAIGN_CANDIDATES.items():
+        actual = candidates[name]
+        if (
+            actual.get("model") != expected["model"]
+            or actual.get("reasoning_effort") != expected["reasoning_effort"]
+        ):
+            raise ValueError(f"Modelo/esfuerzo distinto a lo aprobado: {name}")
+    return {
+        "stage": "F2.9-stage-2",
+        "budget_authorized": True,
+        "owner_authorized": True,
+        "live_execution_started": False,
+        "authorized_reserve_usd": STAGE2_RESERVE_USD,
+        "stage2_reserve_funded_usd": STAGE2_FUNDED_RESERVE_USD,
+        "funding_confirmed_date": STAGE2_AUTHORIZATION_DATE,
+        "additional_funding_required_usd": 0.0,
+        "case_count": len(cases),
+        "case_ids": ids,
+        "cohort_counts": {"business": 5, "safety": 10},
+        "candidate_count": len(candidates),
+        "planned_responses": len(cases) * len(candidates),
+        "candidate_settings": {key: dict(value) for key, value in candidates.items()},
+        "data_version": snapshot_data_version,
+        "semantic_version": snapshot_semantic_version,
+        "fixture_sha256": _digest(fixture),
+        "case_context_sha256": stage2_case_context_hash(cases),
+        "approved_prompt_base_sha256": STAGE2_APPROVED_PROMPT_BASE_SHA256,
+        "prompt_sha256": prompt_content_hash(prompt),
+        "api_key_present": bool(api_key_present),
+        "max_tool_calls_per_turn": STAGE2_MAX_TOOL_CALLS,
+        "sequential_candidates": True,
+        "provider_calls_now": 0,
+    }
 
 
 def _canonical(value: Any) -> bytes:
@@ -95,6 +211,25 @@ def extract_proposed_prompt(markdown_or_prompt: str) -> str:
     raise ValueError("Documento F2.1 sin bloque cercado bajo el encabezado del prompt propuesto")
 
 
+def approved_stage2_prompt_base(markdown_or_prompt: str) -> str:
+    """Extract only the owner-approved F2.1 text and reject any content drift."""
+    proposed = extract_proposed_prompt(markdown_or_prompt)
+    if prompt_content_hash(proposed) != STAGE2_APPROVED_PROMPT_BASE_SHA256:
+        raise ValueError("El prompt base no coincide con el SHA-256 aprobado de F2.1")
+    return proposed
+
+
+def effective_stage2_prompt(markdown_or_prompt: str) -> str:
+    """Validate approved F2.1 text and apply the versioned period policy once."""
+    proposed = approved_stage2_prompt_base(markdown_or_prompt)
+    from .providers._openai_prompt import prompt_sha256, with_dashboard_period_policy
+
+    effective = with_dashboard_period_policy(proposed)
+    if prompt_sha256(effective) != prompt_content_hash(effective):
+        raise ValueError("El hash del prompt efectivo difiere entre preflight y runner")
+    return effective
+
+
 def prompt_content_hash(prompt: str) -> str:
     """Hash the exact normalized prompt content used by the runner."""
     if not isinstance(prompt, str) or not prompt.strip():
@@ -133,6 +268,8 @@ def build_campaign_runs(
     limits: Mapping[str, Any],
     text_verbosity: str,
     candidates: Mapping[str, Mapping[str, str]] | Sequence[str] | None = None,
+    source_fingerprint: str | None = None,
+    execution_commit: str | None = None,
 ) -> list[dict[str, Any]]:
     """Build the fixed F2.9 schedule and complete per-run identity records.
 
@@ -145,6 +282,10 @@ def build_campaign_runs(
         raise ValueError("La etapa debe ser 1, 2 o 3")
     if not data_version or not semantic_version or not text_verbosity:
         raise ValueError("Faltan versiones de datos, semántica o verbosidad")
+    if source_fingerprint is not None and not re.fullmatch(r"[0-9a-f]{64}", source_fingerprint):
+        raise ValueError("source_fingerprint debe ser SHA-256 hexadecimal")
+    if execution_commit is not None and not re.fullmatch(r"[0-9a-f]{40}", execution_commit):
+        raise ValueError("execution_commit debe ser un SHA de commit Git de 40 caracteres")
     case_ids = [str(case.get("id", "")) for case in cases]
     if any(not item for item in case_ids) or len(case_ids) != len(set(case_ids)):
         raise ValueError("Los casos deben tener IDs no vacíos y únicos")
@@ -234,11 +375,14 @@ def build_campaign_runs(
             "tool_spec_hash": tool_hash,
             "data_version": data_version,
             "semantic_version": semantic_version,
+            "source_fingerprint": source_fingerprint,
             "limits": dict(limits),
             "repetition": repetition,
             "case_ids_hash": _digest(case_ids),
             "case_fixture_hash": case_hash,
         }
+        if execution_commit is not None:
+            identity["execution_commit"] = execution_commit
         runs.append(
             {
                 **identity,
@@ -294,7 +438,11 @@ def aggregate_campaign_budget(runs: Iterable[Mapping[str, Any]]) -> dict[str, An
                     raise ValueError(f"Caso duplicado en presupuesto: {key}")
                 seen_case_keys.add(key)
                 provider_calls = case.get("provider_calls", 0)
-                if isinstance(provider_calls, bool) or not isinstance(provider_calls, int) or provider_calls < 0:
+                if (
+                    isinstance(provider_calls, bool)
+                    or not isinstance(provider_calls, int)
+                    or provider_calls < 0
+                ):
                     raise ValueError("provider_calls debe ser un entero no negativo")
                 started_value = case.get("provider_turn_started", provider_calls > 0)
                 if not isinstance(started_value, bool):

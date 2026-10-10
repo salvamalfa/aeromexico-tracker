@@ -130,6 +130,27 @@ def test_response_terms_accept_locale_equivalent_percent_and_quarter_format() ->
     assert any("respuesta sin términos requeridos" in failure for failure in incorrect.failures)
 
 
+def test_supported_gold_rejects_wrong_unit_and_period() -> None:
+    case = json.loads(json.dumps(next(case for case in load_cases() if case["id"] == "es_am_lf_q2")))
+    case["expected"]["rows"][0]["unit"] = "fraction"
+    row = {
+        **case["expected"]["rows"][0],
+        "availability": "available",
+        "source_references": [{"label": "SEC", "url": "https://www.sec.gov/example"}],
+    }
+    for bad_row in ({**row, "unit": "passengers"}, {**row, "period": "2026Q3"}):
+        failed = verify_observation(
+            case,
+            {
+                "status": "supported",
+                "plan": case["expected"]["plan"],
+                "rows": [bad_row],
+                "response": "84.9% in 2026Q2",
+            },
+        )
+        assert not failed.passed
+
+
 def test_dry_run_never_calls_provider_and_exposes_estimates_and_destinations() -> None:
     result = render_dry_run(
         load_cases(), models=["candidate-a", "candidate-b"], prices={"candidate-a": (2.0, 8.0)}
@@ -195,11 +216,13 @@ def test_live_provider_error_writes_private_report_and_stops_without_retry(
     assert FailingProvider.delete_calls == 0
     assert FailingProvider.cancel_calls == 1
     assert len(model["cases"]) == 1
-    assert model["cases"][0]["provider_cancel"] == "attempted"
+    assert model["cases"][0]["provider_cancel"] == "cancelled"
     assert model["cases"][0]["quality"] == {"scored": False, "not_scored_reason": "provider_error"}
     assert model["cases"][0]["error_metadata"] == {
         "exception_types": ["OpenAIProviderError", "AuthenticationError"],
         "http_status": 401,
+        "upstream_exception_type": "AuthenticationError",
+        "upstream_http_status": 401,
     }
     assert model["quality_summary"]["numeric_gold_case_count"] == 2
     assert model["quality_summary"]["numeric_gold_case_passed"] == 0
@@ -295,6 +318,8 @@ def test_post_cancel_terminal_usage_is_counted_without_scoring_or_continuing(
     assert case["model_turn_completed"] is False
     assert case["quality"] == {"scored": False, "not_scored_reason": "provider_error"}
     assert case["error_metadata"]["reason_code"] == "tool_call_limit"
+    assert case["error_metadata"]["provider_turn_id"] == "turn-exact"
+    assert case["session_id"] == "session-exact"
     assert case["input_tokens"] == 35_573
     assert case["output_tokens"] == 208
     assert case["estimated_cost_usd"] == pytest.approx(0.004550625)
@@ -358,7 +383,6 @@ def test_live_tool_validation_error_is_returned_to_provider_like_worker(
     assert case["quality"]["not_scored_reason"] == "no_successful_row_evidence"
 
 
-
 def test_final_report_write_failure_never_marks_progress_completed(
     monkeypatch, tmp_path, mock_live_holdout_current_versions
 ) -> None:
@@ -385,7 +409,11 @@ def test_final_report_write_failure_never_marks_progress_completed(
     real_writer = evaluation_live._write_private_json
 
     def fail_final_report(path, payload):
-        if path.name.endswith(".json") and not path.name.endswith(".progress.json"):
+        if (
+            path.name.endswith(".json")
+            and not path.name.endswith(".progress.json")
+            and not path.name.endswith(".cases.json")
+        ):
             raise OSError("synthetic private-file failure")
         real_writer(path, payload)
 
@@ -474,8 +502,11 @@ def test_post_result_checkpoint_failure_is_not_recorded_as_provider_error(
     assert progress["active_usage_state"] == "unknown_in_flight"
     assert progress["active_case_id"] == "es_am_lf_q2"
     assert progress["models"][0]["case_count"] == 0
+    assert len(list(output_dir.glob("chat-eval-*.cases.json"))) == 1
     assert not [
-        path for path in output_dir.glob("chat-eval-*.json") if not path.name.endswith(".progress.json")
+        path
+        for path in output_dir.glob("chat-eval-*.json")
+        if not path.name.endswith((".progress.json", ".cases.json"))
     ]
 
 

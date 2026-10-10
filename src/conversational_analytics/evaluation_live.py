@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import math
 import os
 import time
 from dataclasses import replace
@@ -12,11 +11,16 @@ from typing import Any
 
 from .data.snapshot import Snapshot
 from .evaluation import load_fixture
+from .evaluation_live_checkpoint import (
+    finalize_report,
+    initial_report,
+    write_detailed_case_checkpoint,
+)
+from .evaluation_live_reservation import case_reservation_cost, reservation_assumption
 from .evaluation_live_scoring import score_live_case
 from .evaluation_live_support import (
+    _apply_provider_cancel_outcome,
     _CheckpointWriteError,
-    _RESERVATION_INPUT_TOKENS_PER_CASE_FLOOR,
-    _RESERVATION_OUTPUT_TOKENS_PER_CASE_FLOOR,
     _error_metadata,
     _failure_usage,
     _nearest_rank_percentile,
@@ -26,8 +30,10 @@ from .evaluation_live_support import (
     _write_private_json,
 )
 from .evaluation_live_turns import ConversationRunError, run_conversation
+from .evaluation_live_validation import validate_live_request
 from .providers._openai_helpers import reconcile_case_usage_after_cancel
 from .semantic.plan import PlanValidationError
+
 
 def _live_provider_run(
     *,
@@ -41,7 +47,11 @@ def _live_provider_run(
     expected_versions: dict[str, str] | None = None,
     system_instructions: str | None = None,
     run_identity: dict[str, Any] | None = None,
+    run_identity_hash: str | None = None,
+    campaign_identity_hash: str | None = None,
     limits_override: dict[str, int] | None = None,
+    text_verbosity_override: str | None = None,
+    reservation_assumption_override: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Run gated holdout cases through the production provider/tool boundary.
 
@@ -54,15 +64,14 @@ def _live_provider_run(
     from .providers.openai import OpenAIProvider
     from .tools.registry import ToolRegistry
 
-    if not math.isfinite(budget_usd) or budget_usd <= 0:
-        raise ValueError("el presupuesto operativo por corrida debe ser finito y positivo")
-    if len(models) not in (1, 2, 3, 4):
-        raise ValueError("se permite una sonda o comparación de 2–4 candidatos modelo@esfuerzo")
-    if set(prices) != set(models) or any(
-        not math.isfinite(amount) or amount <= 0 for pair in prices.values() for amount in pair
-    ):
-        raise ValueError("cada candidato requiere precios finitos y positivos de entrada/salida")
+    validate_live_request(budget_usd, models, prices)
     runtime_config = ChatConfig.from_env()
+    if text_verbosity_override is not None:
+        if text_verbosity_override not in {"low", "medium", "high"}:
+            raise ValueError("La verbosidad de texto de la campaña no es válida")
+        if run_identity and run_identity.get("text_verbosity") != text_verbosity_override:
+            raise ValueError("La verbosidad no coincide con la identidad de corrida")
+        runtime_config = replace(runtime_config, text_verbosity=text_verbosity_override)
     if limits_override:
         allowed_limits = {
             "max_tool_calls": "max_tool_calls",
@@ -97,28 +106,23 @@ def _live_provider_run(
     run_stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     out = output_dir / f"chat-eval-{run_stamp}.json"
     progress_out = output_dir / f"chat-eval-{run_stamp}.progress.json"
-    report: dict[str, Any] = {
-        "mode": "live-probe" if probe_only else "live-evaluation",
-        "created_at_utc": datetime.now(timezone.utc).isoformat(),
-        "data_version": snapshot.version,
-        "semantic_version": snapshot.semantic_version,
-        "candidate_models": models,
-        "run_identity": run_identity,
-        "budget_usd_operational_stop": budget_usd,
-        "budget_guaranteed": False,
-        "max_tool_calls_per_turn": runtime_config.max_tool_calls,
-        "max_turn_seconds_per_turn": runtime_config.max_turn_seconds,
-        "probe_only": probe_only,
-        "case_count": len(selected),
-        "models": [],
-        "quality_thresholds": {"supported_accuracy_minimum": 0.95, "critical_failures_allowed": 0},
-        "note": (
-            "Un turno ya iniciado puede exceder el umbral; uso/costo reportado y caché "
-            "pueden ser desconocidos. reasoning_tokens no se expone por separado; forma parte de output_tokens."
-        ),
-        "output_path": str(out),
-        "progress_path": str(progress_out),
-    }
+    detail_out = output_dir / f"chat-eval-{run_stamp}.cases.json"
+    report = initial_report(
+        probe_only=probe_only,
+        data_version=snapshot.version,
+        semantic_version=snapshot.semantic_version,
+        models=models,
+        run_identity=run_identity,
+        run_identity_hash=run_identity_hash,
+        campaign_identity_hash=campaign_identity_hash,
+        budget_usd=budget_usd,
+        max_tool_calls=runtime_config.max_tool_calls,
+        max_turn_seconds=runtime_config.max_turn_seconds,
+        case_count=len(selected),
+        output_path=out,
+        progress_path=progress_out,
+        detail_path=detail_out,
+    )
     progress_state: dict[str, Any] = {
         "status": "starting",
         "known_estimated_spend_usd": 0.0,
@@ -185,21 +189,7 @@ def _live_provider_run(
             "known_estimated_cost_usd": 0.0,
             "spent_unknown": False,
             "run_identity": run_identity,
-            "reservation_assumption": {
-                    "input_tokens_per_turn": max(
-                    _RESERVATION_INPUT_TOKENS_PER_CASE_FLOOR,
-                    config.max_tool_calls
-                    * (config.max_message_chars // 4 + config.max_tool_result_bytes // 4),
-                ),
-                "output_tokens_per_turn": max(
-                    _RESERVATION_OUTPUT_TOKENS_PER_CASE_FLOOR, config.max_tool_calls * 2_000
-                ),
-                "note": (
-                    "reserva operativa por mensaje con piso de 140k input y 10k output, valorados con tarifa "
-                    "conservadora de cache-write/salida y multiplicadores long-context. Una solicitud puede "
-                    "excederla; gasto desconocido detiene la campaña y bloquea replay"
-                ),
-            },
+            "reservation_assumption": reservation_assumption(config, reservation_assumption_override),
         }
         report["models"].append(model_report)
         checkpoint()
@@ -207,10 +197,8 @@ def _live_provider_run(
             if stop_all:
                 model_report["stopped_reason"] = "previous_model_usage_unknown; comparison stopped"
                 break
-            reserve_input = model_report["reservation_assumption"]["input_tokens_per_turn"]
-            reserve_output = model_report["reservation_assumption"]["output_tokens_per_turn"]
             turn_count = len(case.get("turns", [case["question"]]))
-            case_reserve = turn_count * config.reservation_cost_usd(reserve_input + reserve_output)
+            case_reserve = case_reservation_cost(config, model_report["reservation_assumption"], turn_count)
             if estimated_total_usd + case_reserve > budget_usd:
                 model_report["stopped_reason"] = "remaining_budget_below_estimated_next_case_reservation"
                 model_report["remaining_budget_usd_before_stop"] = max(0.0, budget_usd - estimated_total_usd)
@@ -226,7 +214,6 @@ def _live_provider_run(
             # rejection. Never forward unknown context keys to the provider.
             try:
                 from .service import validate_context
-
                 context = validate_context(case_context)
             except ValueError as exc:
                 model_report["cases"].append(
@@ -391,6 +378,12 @@ def _live_provider_run(
                     None if model_report["spent_unknown"] else model_report["known_estimated_cost_usd"]
                 )
                 model_report["cases"].append(case_record)
+                try:
+                    write_detailed_case_checkpoint(detail_out, report, _write_private_json)
+                except Exception as exc:
+                    raise _CheckpointWriteError(
+                        "No se pudo escribir el checkpoint privado por caso."
+                    ) from exc
                 progress_state.update(
                     known_estimated_spend_usd=estimated_total_usd,
                     active_case_id=None,
@@ -471,19 +464,16 @@ def _live_provider_run(
                     "error_metadata": error_metadata,
                     "run_identity": run_identity,
                 }
-                cancel_provider = getattr(provider, "cancel", None)
-                if session and provider is not None and callable(cancel_provider):
-                    try:
-                        cancel_provider(session[-1])
-                        case_record["provider_cancel"] = "attempted"
-                    except Exception:
-                        case_record["provider_cancel"] = "failed"
-                else:
-                    case_record["provider_cancel"] = "not_available"
+                cancel_status = _apply_provider_cancel_outcome(
+                    case_record, progress_state, provider_error, provider, session[-1] if session else None
+                )
                 failure_usage = reconcile_case_usage_after_cancel(
                     case_record, failure_usage, provider, provider_error, session[-1] if session else None
                 )
-                known_cost = sum(config.usage_cost_usd(result.input_tokens, result.output_tokens) for result in known_turns)
+                known_cost = sum(
+                    config.usage_cost_usd(result.input_tokens, result.output_tokens)
+                    for result in known_turns
+                )
                 if failure_usage is not None:
                     known_cost += config.usage_cost_usd(failure_usage[0], failure_usage[1])
                 case_usage_complete = bool(case_record["usage_complete"] or (
@@ -498,6 +488,7 @@ def _live_provider_run(
                     None if model_report["spent_unknown"] else model_report["known_estimated_cost_usd"]
                 )
                 model_report["cases"].append(case_record)
+                write_detailed_case_checkpoint(detail_out, report, _write_private_json)
                 model_report["stopped_reason"] = "provider_error_or_usage_unknown; no further cases admitted"
                 stop_all = True
                 progress_state.update(
@@ -514,7 +505,7 @@ def _live_provider_run(
                     ),
                     last_error_metadata=error_metadata,
                 )
-                if session and not case_usage_complete:
+                if session and (not case_usage_complete or cancel_status != "cancelled"):
                     progress_state["session_to_reconcile"] = session[-1]
                 checkpoint()
                 if session and provider is not None:
@@ -544,7 +535,9 @@ def _live_provider_run(
             "p50": _nearest_rank_percentile(latencies, 0.50),
             "p90": _nearest_rank_percentile(latencies, 0.90),
             "p95": _nearest_rank_percentile(latencies, 0.95),
-            "percentile_method": "nearest rank; p95 retained for compatibility, p90 is the proposed decision metric",
+            "percentile_method": (
+                "nearest rank; p95 retained for compatibility, p90 is the proposed decision metric"
+            ),
         }
         model_report["token_totals"] = {
             "input_tokens": sum(case["input_tokens"] for case in token_rows)
@@ -557,7 +550,9 @@ def _live_provider_run(
                 case.get("input_tokens", 0) for case in attempted if isinstance(case.get("input_tokens"), int)
             ),
             "known_output_tokens_lower_bound": sum(
-                case.get("output_tokens", 0) for case in attempted if isinstance(case.get("output_tokens"), int)
+                case.get("output_tokens", 0)
+                for case in attempted
+                if isinstance(case.get("output_tokens"), int)
             ),
             "usage_complete_case_count": len(token_rows),
             "turn_count": len(attempted),
@@ -573,22 +568,6 @@ def _live_provider_run(
             active_usage_state=None,
         )
         checkpoint()
-    final_status = "stopped" if stop_all else "completed"
-    report["known_estimated_cost_usd"] = estimated_total_usd
-    report["estimated_cost_usd"] = (
-        None if any(model["spent_unknown"] for model in report["models"]) else estimated_total_usd
+    return finalize_report(
+        out, report, progress_state, estimated_total_usd, stop_all, checkpoint, _write_private_json
     )
-    report["run_status"] = final_status
-    progress_state.update(
-        status="finalizing",
-        current_model=None,
-        known_estimated_spend_usd=estimated_total_usd,
-        active_case_id=None,
-        active_session_id=None,
-        active_usage_state=None,
-    )
-    checkpoint()
-    _write_private_json(out, report)
-    progress_state["status"] = final_status
-    checkpoint()
-    return report

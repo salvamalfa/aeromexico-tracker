@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, Callable
 
 InputAuthorizer = Callable[[], None]
+InputDispatcher = Callable[[Callable[[], Any]], Any]
 
 
 def send_tool_result(
@@ -17,6 +18,7 @@ def send_tool_result(
     output: str | None = None,
     error: str | None = None,
     authorize_input: InputAuthorizer | None = None,
+    dispatch_input: InputDispatcher | None = None,
 ) -> None:
     payload: dict[str, Any] = {
         "type": "agent.session.input.tool_result",
@@ -28,10 +30,15 @@ def send_tool_result(
         payload["output"] = output or "{}"
     else:
         payload["error"] = error or "La herramienta no pudo completar la consulta."
-    if authorize_input is not None:
-        authorize_input()
-    client.beta.agents.sessions.events.create(
-        session_id,
-        idempotency_key=f"airline-tracker-tool-{turn_id}-{call_id}",
-        events=[payload],
-    )
+    def request() -> Any:
+        return client.beta.agents.sessions.events.create(
+            session_id,
+            idempotency_key=f"airline-tracker-tool-{turn_id}-{call_id}",
+            events=[payload],
+        )
+    if dispatch_input is not None:
+        dispatch_input(request)
+    else:
+        if authorize_input is not None:
+            authorize_input()
+        request()

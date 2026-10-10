@@ -1,11 +1,18 @@
 """Integration tests for campaign scheduling, resume, and global spend stops."""
 
 import json
+import stat
 from pathlib import Path
 
 import pytest
 
+from src.conversational_analytics import evaluation_live
 from src.conversational_analytics import evaluation_live_campaign as campaign
+from src.conversational_analytics.config import ChatConfig
+from src.conversational_analytics.evaluation_live_reservation import (
+    case_reservation_cost,
+    reservation_assumption,
+)
 
 
 def _run(
@@ -104,6 +111,188 @@ def test_distinct_prompt_and_luna_repetition_slots_each_reach_provider(monkeypat
     assert [call["run_identity"]["prompt_variant"] for call in seen[:2]] == ["current", "proposed"]
     assert [call["run_identity"]["repetition"] for call in seen[2:]] == [1, 2]
     assert len({call["run_identity"]["run_id"] for call in seen}) == 4
+
+
+def test_campaign_passes_identity_text_verbosity_to_runtime_override(monkeypatch, tmp_path: Path) -> None:
+    run = _run("verbosity-slot")
+    run["text_verbosity"] = "high"
+    run["identity"]["text_verbosity"] = "high"
+    seen = []
+
+    def fake(**kwargs):
+        seen.append(kwargs)
+        return _complete_report(kwargs["run_identity"], kwargs["cases"])
+
+    _invoke(monkeypatch, tmp_path, [run], fake)
+
+    assert seen[0]["text_verbosity_override"] == "high"
+    assert seen[0]["text_verbosity_override"] == seen[0]["run_identity"]["text_verbosity"]
+
+
+def test_empirical_campaign_rejects_wrong_total_slots_before_state_or_provider(monkeypatch, tmp_path: Path) -> None:
+    run = _run("wrong-reservation-slot-count")
+    run["case_ids"] = ["N01"]
+    reservation = {"planned_request_count": 29}
+    calls = []
+    monkeypatch.setattr(campaign, "_live_provider_run", lambda **kwargs: calls.append(kwargs))
+
+    with pytest.raises(ValueError, match="total de turnos planificados"):
+        campaign.run_campaign(
+            runs=[run], cases=[_case()], budget_usd=1.0,
+            snapshot_root=tmp_path / "snapshot",
+            prices={"gpt-6-luna@medium": (0.1, 0.5)},
+            expected_versions={"data_version": "data-v1", "semantic_version": "semantic-v1"},
+            state_path=tmp_path / "campaign.json", output_dir=tmp_path / "runs",
+            reservation_assumption_override=reservation,
+        )
+    assert calls == []
+    assert not (tmp_path / "campaign.json").exists()
+
+
+@pytest.mark.parametrize("estimate_index", [0, 1], ids=["approved-low", "approved-upper"])
+def test_scheduler_completes_all_29_slots_within_remaining_budget(
+    monkeypatch, tmp_path: Path, estimate_index: int
+) -> None:
+    remaining = 5.725855625
+    low_range, medium_range = (2.045324, 2.345324), (2.345324, 3.095324)
+    low_spend = low_range[estimate_index] * 14 / 15
+    medium_spend = medium_range[estimate_index]
+    low_ids = [f"L{index:02}" for index in range(14)]
+    medium_ids = [f"M{index:02}" for index in range(15)]
+    low, medium = _run("final-low", case_ids=low_ids), _run("final-medium", case_ids=medium_ids)
+    for run, candidate, model, effort in (
+        (low, "gpt-6.1-sol@low", "gpt-6.1-sol", "low"),
+        (medium, "gpt-6.1-sol@medium", "gpt-6.1-sol", "medium"),
+    ):
+        run["candidate"] = run["identity"]["candidate"] = candidate
+        run["model"] = run["identity"]["model"] = model
+        run["reasoning_effort"] = run["identity"]["reasoning_effort"] = effort
+    reservation = {
+        "basis": "f2_9_empirical_pilot_estimate_not_hard_cap",
+        "input_tokens_per_turn": 68_570,
+        "output_tokens_per_turn": 2_073,
+        "historical_sample_count": 30,
+        "historical_candidate_counts": {
+            "gpt-6-luna@medium": 14, "gpt-6-luna@max": 15, "gpt-6.1-sol@low": 1,
+        },
+        "planned_request_count": 29,
+        "safety_margin_fraction": 0.35,
+        "per_case_estimated_reservation_usd": 0.192155,
+        "planned_batch_estimated_reservation_usd": 5.572495,
+        "budget_guaranteed": False,
+    }
+    calls = []
+    observed = []
+
+    def fake_live(**kwargs):
+        calls.append(kwargs)
+        candidate = kwargs["models"][0]
+        config = ChatConfig(
+            provider="openai", model="gpt-6.1-sol",
+            estimated_input_cost_per_million=2.0,
+            estimated_output_cost_per_million=10.0,
+            cache_write_input_multiplier=1.25,
+            long_context_threshold_input_tokens=272_000,
+            long_context_input_multiplier=2.0,
+            long_context_output_multiplier=1.5,
+        )
+        assumption = reservation_assumption(config, kwargs["reservation_assumption_override"])
+        total_reservation = sum(
+            case_reservation_cost(config, assumption, 1) for _ in kwargs["cases"]
+        )
+        observed.append((candidate, len(kwargs["cases"]), kwargs["budget_usd"], total_reservation))
+        actual_total = low_spend if candidate.endswith("@low") else medium_spend
+        per_case = actual_total / len(kwargs["cases"])
+        return {
+            "output_path": f"/private/{candidate}.json", "run_status": "completed",
+            "models": [{
+                "known_estimated_cost_usd": actual_total, "spent_unknown": False,
+                "quality_summary": {},
+                "cases": [{
+                    "case_id": case["id"], "provider_turn_started": True,
+                    "usage_complete": True, "estimated_cost_usd": per_case,
+                    "status": "supported", "model_turn_completed": True,
+                } for case in kwargs["cases"]],
+            }],
+        }
+
+    monkeypatch.setattr(campaign, "_live_provider_run", fake_live)
+    result = campaign.run_campaign(
+        runs=[low, medium],
+        cases=[_case(case_id) for case_id in low_ids + medium_ids],
+        budget_usd=remaining,
+        snapshot_root=tmp_path / "snapshot",
+        prices={"gpt-6.1-sol@low": (2.0, 10.0), "gpt-6.1-sol@medium": (2.0, 10.0)},
+        expected_versions={"data_version": "data-v1", "semantic_version": "semantic-v1"},
+        state_path=tmp_path / f"scenario-{estimate_index}.json",
+        output_dir=tmp_path / f"runs-{estimate_index}",
+        reservation_assumption_override=reservation,
+    )
+
+    assert result["status"] == "completed"
+    assert [row[1] for row in observed] == [14, 15]
+    assert observed[0][3] + observed[1][3] == pytest.approx(5.572495)
+    assert result["known_spend_usd"] == pytest.approx(low_spend + medium_spend)
+    assert result["known_spend_usd"] <= remaining
+    state = json.loads((tmp_path / f"scenario-{estimate_index}.json").read_text())
+    assert state["identity"]["reservation_assumption_override"] == reservation
+    assert all(call["reservation_assumption_override"] == reservation for call in calls)
+
+
+def test_live_runner_applies_identity_verbosity_to_runtime_config(monkeypatch, tmp_path: Path) -> None:
+    seen = []
+    replace_config = evaluation_live.replace
+
+    def capture_replace(config, **changes):
+        if "text_verbosity" in changes:
+            seen.append((config.text_verbosity, changes["text_verbosity"]))
+        return replace_config(config, **changes)
+
+    class StopAfterConfig(Exception):
+        pass
+
+    def stop_before_snapshot(_path):
+        raise StopAfterConfig
+
+    monkeypatch.setattr(evaluation_live, "replace", capture_replace)
+    monkeypatch.setattr(evaluation_live, "Snapshot", stop_before_snapshot)
+    monkeypatch.setattr(ChatConfig, "from_env", classmethod(lambda cls: cls(text_verbosity="low")))
+
+    with pytest.raises(StopAfterConfig):
+        evaluation_live._live_provider_run(
+            cases=[_case()],
+            models=["gpt-6-luna@medium"],
+            budget_usd=1.0,
+            snapshot_root=tmp_path / "unused-snapshot",
+            prices={"gpt-6-luna@medium": (0.1, 0.5)},
+            probe_only=False,
+            output_dir=tmp_path / "unused-output",
+            expected_versions={"data_version": "data-v1", "semantic_version": "semantic-v1"},
+            run_identity={"text_verbosity": "high"},
+            text_verbosity_override="high",
+        )
+
+    assert seen == [("low", "high")]
+
+
+def test_campaign_stamps_exact_identity_on_private_source_report(monkeypatch, tmp_path: Path) -> None:
+    run = _run("source-report-slot")
+    source_report = tmp_path / "runs" / "provider-report.json"
+
+    def fake(**kwargs):
+        report = _complete_report(kwargs["run_identity"], kwargs["cases"])
+        report["output_path"] = str(source_report)
+        campaign._write_private_json(source_report, report)
+        return report
+
+    result = _invoke(monkeypatch, tmp_path, [run], fake)
+    persisted = json.loads(source_report.read_text(encoding="utf-8"))
+
+    assert result["status"] == "completed"
+    assert persisted["run_identity_hash"] == run["identity_hash"]
+    assert persisted["campaign_identity_hash"] == result["identity_hash"]
+    assert stat.S_IMODE(source_report.stat().st_mode) == 0o600
+    assert stat.S_IMODE(source_report.parent.stat().st_mode) == 0o700
 
 
 def test_campaign_passes_remaining_budget_across_slots(monkeypatch, tmp_path: Path) -> None:
