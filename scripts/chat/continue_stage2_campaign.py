@@ -30,14 +30,29 @@ SOURCE_DIR = ROOT / ".state/outputs/chat-evaluations/f2-9-stage-2"
 SOURCE_LEDGER = SOURCE_DIR / "campaign.json"
 SOURCE_REPORT = SOURCE_DIR / ("f22-s2-gpt-6-luna-medium-proposed-r1/chat-eval-20261010T072010745621Z.json")
 OWNER_EVIDENCE = SOURCE_DIR / "privateowner-usage-confirmation-20261010.json"
+APPROVED_PRIVATE_SOURCE_SHA256 = {
+    "source ledger": "fb6a661a8635b8e139951a541ee549ba7f3b35dfde611ebfc73e31eb5fad5140",
+    "source report": "0305ac40cc52e72371a1ed3b3334624c6261ed4be99adcfd9518727265913002",
+    "owner evidence": "a042789788649f22e9bf213d14a274fc9e117fcd825b8ce6cfd0221007c4446c",
+}
 
 
-def _read_private_json(path: Path) -> tuple[dict[str, Any], bytes]:
-    raw = path.read_bytes()
+def _read_pinned_private_sources(paths: dict[str, Path]) -> dict[str, bytes]:
+    """Read each private source once and pin trusted bytes before parsing or preparation."""
+    raw_by_label = {label: path.read_bytes() for label, path in paths.items()}
+    for label, raw in raw_by_label.items():
+        expected_sha = APPROVED_PRIVATE_SOURCE_SHA256[label]
+        actual_sha = hashlib.sha256(raw).hexdigest()
+        if actual_sha != expected_sha:
+            raise ValueError(f"El SHA-256 de {label} no coincide con la fuente aprobada")
+    return raw_by_label
+
+
+def _parse_pinned_private_json(raw: bytes, *, label: str) -> dict[str, Any]:
     value = json.loads(raw.decode("utf-8"))
     if not isinstance(value, dict):
-        raise ValueError(f"JSON privado debe ser objeto: {path}")
-    return value, raw
+        raise ValueError(f"JSON privado debe ser objeto: {label}")
+    return value
 
 
 def _private_write(path: Path, value: dict[str, Any]) -> None:
@@ -98,6 +113,13 @@ def _validate_destination_relationships(
 def prepare_continuation(
     args: argparse.Namespace,
 ) -> tuple[dict[str, Any], list[dict], list[dict], Path, dict, dict]:
+    source_bytes = _read_pinned_private_sources(
+        {
+            "source ledger": args.source_ledger,
+            "source report": args.source_report,
+            "owner evidence": args.owner_evidence,
+        }
+    )
     args.output_dir = _require_private_destination(args.output_dir, label="output-dir")
     args.campaign_state = _require_private_destination(args.campaign_state, label="campaign-state")
     args.plan_path = _require_private_destination(args.plan_path, label="plan-path")
@@ -111,9 +133,12 @@ def prepare_continuation(
     # snapshot, tools, model settings and runtime limits. Its destinations are
     # redirected to a new private continuation folder before it can create them.
     base_plan, planned_runs, cases, snapshot_root, catalog, fixture = prepare(args)
-    source_state, source_ledger_bytes = _read_private_json(args.source_ledger.resolve())
-    evidence, evidence_bytes = _read_private_json(args.owner_evidence.resolve())
-    source_report_bytes = args.source_report.resolve().read_bytes()
+    source_ledger_bytes = source_bytes["source ledger"]
+    source_report_bytes = source_bytes["source report"]
+    evidence_bytes = source_bytes["owner evidence"]
+    source_state = _parse_pinned_private_json(source_ledger_bytes, label="source ledger")
+    source_report = _parse_pinned_private_json(source_report_bytes, label="source report")
+    evidence = _parse_pinned_private_json(evidence_bytes, label="owner evidence")
     source_ledger_sha = hashlib.sha256(source_ledger_bytes).hexdigest()
     source_report_sha = hashlib.sha256(source_report_bytes).hexdigest()
     usage_reconciliation = {
@@ -166,7 +191,6 @@ def prepare_continuation(
         ),
         "invoice_total_usd": None,
     }
-    source_report = json.loads(source_report_bytes.decode("utf-8"))
     auditable_runs = [
         {
             key: run[key]
