@@ -110,6 +110,7 @@ class OpenAIProvider:
         emit,
         persist_session,
         cancel_event: threading.Event,
+        cancel_provider: Callable[[str], None] | None = None,
         authorize_input: InputAuthorizer | None = None,
         mark_terminal_completed: Callable[[tuple[int, int] | None], None] | None = None,
         retire_session: Callable[[str], None] | None = None,
@@ -308,7 +309,7 @@ class OpenAIProvider:
                     )
                 finally:
                     if cancel_event.is_set():
-                        self.cancel(session_id)
+                        (cancel_provider or self.cancel)(session_id)
                 if cancel_event.is_set():
                     raise InterruptedError("turn cancelled")
             runtime_helpers.track_session(session_id, persist_session, tracked_sessions)

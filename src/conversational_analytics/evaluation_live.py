@@ -478,7 +478,9 @@ def _live_provider_run(
                     "run_identity": run_identity,
                 }
                 cancel_provider = getattr(provider, "cancel", None)
-                if session and provider is not None and callable(cancel_provider):
+                if getattr(provider_error, "deadline_watchdog_fired", False):
+                    case_record["provider_cancel"] = "attempted_by_deadline_watchdog"
+                elif session and provider is not None and callable(cancel_provider):
                     try:
                         cancel_provider(session[-1])
                         case_record["provider_cancel"] = "attempted"
