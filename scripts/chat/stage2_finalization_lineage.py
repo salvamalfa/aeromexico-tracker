@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +26,17 @@ RECOVERED_CASE = "es_am_market_share"
 ORIGINAL_FAILURE = "en_am_rask"
 SOL_LOW = "gpt-6.1-sol@low"
 SOL_MEDIUM = "gpt-6.1-sol@medium"
+
+
+def _is_commit_ancestor(commit: str) -> bool:
+    repo = Path(__file__).resolve().parents[2]
+    result = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", commit, "HEAD"],
+        cwd=repo,
+        capture_output=True,
+        check=False,
+    )
+    return result.returncode == 0
 
 
 def _path(section: dict[str, Any], key: str, label: str, error: type[ValueError]) -> Path:
@@ -103,7 +115,7 @@ def _pinned_sources(plan: dict[str, Any], error: type[ValueError], read_json_wit
         or interrupted.get("execution_commit") != CONTINUATION_EXECUTION
         or interrupted.get("progress_sha256") != hashes["sol_low_progress"]
         or recovery.get("sha256") != hashes["recovery"]
-        or recovery.get("plan_sha256") != hashes["continuation_plan"]
+        or recovery.get("continuation_plan_sha256") != hashes["continuation_plan"]
         or recovery.get("progress_sha256") != hashes["sol_low_progress"]
     ):
         raise error("Los metadatos de lineage no coinciden con las fuentes congeladas")
@@ -267,6 +279,7 @@ def validate_finalization_inputs(
         report_cases=report_cases,
         fixture_cases=fixture_cases,
         allow_interrupted_active_run=True,
+        allow_preflight_source_plan=True,
     )
     if (
         lineage["plan_sha256"] != source_hashes["continuation_plan"]
@@ -297,7 +310,12 @@ def validate_finalization_inputs(
     }
     progress_models = progress.get("models", [])
     progress_low = next(
-        (row for row in progress_models if isinstance(row, dict) and row.get("candidate") == SOL_LOW), {}
+        (
+            row
+            for row in progress_models
+            if isinstance(row, dict) and row.get("model") == candidates[SOL_LOW][0]
+        ),
+        {},
     )
     if (
         cont_ledger.get("status") != "running"
@@ -390,6 +408,7 @@ def validate_finalization_inputs(
         or not isinstance(final.get("execution_commit"), str)
         or len(final.get("execution_commit", "")) != 40
         or any(char not in "0123456789abcdef" for char in final.get("execution_commit", ""))
+            or not _is_commit_ancestor(final["execution_commit"])
         or final_identity.get("runs") != [row.get("identity") for row in final_runs]
         or final_identity.get("run_identity_hashes") != [row.get("identity_hash") for row in final_runs]
         or final_identity.get("budget_usd")

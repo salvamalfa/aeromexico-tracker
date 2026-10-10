@@ -34,12 +34,19 @@ def validate_continuation_inputs(
     report_cases: Any,
     fixture_cases: Any,
     allow_interrupted_active_run: bool = False,
+    allow_preflight_source_plan: bool = False,
 ) -> tuple[dict[str, Sequence[Path]], dict[str, Any]]:
     """Load and verify the explicit source-to-continuation provenance chain."""
     plan, plan_sha = read_json_with_hash(plan_path, "continuation plan")
     if plan.get("schema_version") != 1 or plan.get("kind") != "f2_9_stage2_continuation_plan":
         raise ExportError("El archivo no es un plan de continuación stage2 compatible")
-    if plan.get("mode") != "live-campaign" or plan.get("provider_calls_now") is not None:
+    live_plan = plan.get("mode") == "live-campaign" and plan.get("provider_calls_now") is None
+    pinned_preflight = (
+        allow_preflight_source_plan
+        and plan.get("mode") == "offline-preflight-only"
+        and plan.get("provider_calls_now") == 0
+    )
+    if not (live_plan or pinned_preflight):
         raise ExportError("El plan aún no tiene una continuación live registrada")
     source, continuation, billing = (
         plan.get("source"), plan.get("continuation"), plan.get("billing_reconciliation")
@@ -244,7 +251,10 @@ def validate_continuation_inputs(
     if allow_interrupted_active_run and active_run_id in actual_completed:
         raise ExportError("La corrida activa interrumpida también aparece como cerrada en el ledger")
     live_result = plan.get("live_result")
-    if not isinstance(live_result, dict) or live_result.get("identity_hash") != continuation_campaign_hash:
+    if pinned_preflight and allow_interrupted_active_run:
+        if live_result is not None:
+            raise ExportError("El plan preflight interrumpido no debe afirmar una corrida live")
+    elif not isinstance(live_result, dict) or live_result.get("identity_hash") != continuation_campaign_hash:
         raise ExportError("El plan no conserva el resultado del ledger de continuación por su hash")
     continuation_commit = continuation.get("execution_commit")
     if not isinstance(continuation_commit, str) or not SHA.fullmatch(continuation_commit):
@@ -421,6 +431,7 @@ def validate_continuation_inputs(
         "owner_evidence_sha256": evidence_sha,
         "continuation_campaign_identity_hash": continuation_campaign_hash,
         "continuation_execution_commit": continuation_commit,
+        "continuation_plan_mode": plan.get("mode"),
         "continuation_ledger_sha256": continuation_ledger_sha,
         "continuation_fragments": fragments,
         "fragments": fragments,

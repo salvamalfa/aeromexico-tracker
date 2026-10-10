@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import sys
@@ -14,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts/chat"))
 sys.path.insert(0, str(Path(__file__).parent))
 import export_stage2_blind_review as exporter  # noqa: E402
+import finalize_stage2_campaign as finalizer  # noqa: E402
 import stage2_finalization_lineage as final_lineage  # noqa: E402
 from test_chat_stage2_continuation_lineage import (  # noqa: E402
     continuation_artifacts,
@@ -27,12 +29,94 @@ def _write(path: Path, value: dict) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _prepare_with_real_producer(
+    root: Path, paths: dict[str, Path], fixture: dict
+) -> tuple[dict, list[dict], Path]:
+    """Exercise the actual offline plan producer with deterministic source validation."""
+    cont_plan = json.loads(paths["continuation_plan"].read_text(encoding="utf-8"))
+    cont_ledger = json.loads(paths["continuation_ledger"].read_text(encoding="utf-8"))
+    recovery = json.loads(paths["terminal_recovery"].read_text(encoding="utf-8"))
+    low = next(run for run in cont_plan["continuation"]["runs"] if run["candidate"] == "gpt-6.1-sol@low")
+    source_low = next(run for run in cont_plan["source"]["runs"] if run["candidate"] == "gpt-6.1-sol@low")
+    source = {
+        "original_ledger": json.loads(paths["original_ledger"].read_text(encoding="utf-8")),
+        "original_report": json.loads(paths["original_report"].read_text(encoding="utf-8")),
+        "owner_evidence": json.loads(paths["owner_evidence"].read_text(encoding="utf-8")),
+        "continuation_plan": cont_plan,
+        "_low_run": low,
+        "_source_low_run": source_low,
+        "_continuation_campaign_hash": cont_ledger["identity_hash"],
+        "_recovered_answer": recovery["answer"]["text"],
+        "_answer_sha256": recovery["answer"]["sha256"],
+        "_recovered_input_tokens": recovery["usage"]["input_tokens"],
+        "_recovered_output_tokens": recovery["usage"]["output_tokens"],
+    }
+    continuation = cont_plan["continuation"]
+    base_plan = {
+        "fixture_file_sha256": continuation["fixture_sha256"],
+        "prompt_sha256": continuation["prompt_sha256"],
+        "case_context_sha256": continuation["context_sha256"],
+        "tool_specs_sha256": continuation["tool_specs_sha256"],
+    }
+    source_bytes = {name: path.read_bytes() for name, path in paths.items()}
+    source_pins = {name: hashlib.sha256(content).hexdigest() for name, content in source_bytes.items()}
+    output = root / "producer-output"
+    args = argparse.Namespace(
+        source_paths=paths,
+        output_dir=output,
+        campaign_state=output / "campaign.json",
+        plan_path=output / "finalization_plan.json",
+        derived_report=output / "sol-low-recovered-case.json",
+    )
+    prepared_runs = [
+        {
+            "candidate": run["candidate"],
+            "prompt": "synthetic frozen prompt",
+            "text_verbosity": "medium",
+            "limits": {},
+        }
+        for run in continuation["runs"]
+    ]
+    with (
+        patch.object(finalizer, "_validate_output_paths"),
+        patch.object(finalizer, "_reject_source_symlinks"),
+        patch.object(finalizer, "read_pinned_sources", return_value=source_bytes),
+        patch.object(finalizer, "validate_sources", return_value=source),
+        patch.object(
+            finalizer,
+            "prepare",
+            return_value=(base_plan, prepared_runs, fixture["cases"], root / "site", {}, fixture),
+        ),
+        patch.object(finalizer, "_git_execution_commit", return_value="d" * 40),
+        patch.object(finalizer, "conservative_usage_cost", return_value=0.001),
+        patch.dict(finalizer.APPROVED_SOURCE_SHA256, source_pins, clear=True),
+        patch.object(finalizer, "EXPECTED_ORIGINAL_EXECUTION", cont_plan["source"]["execution_commit"]),
+        patch.object(
+            finalizer,
+            "EXPECTED_CONTINUATION_EXECUTION",
+            continuation["execution_commit"],
+        ),
+    ):
+        plan, runs, _, _, _, _ = finalizer.prepare_finalization(args)
+    if plan["mode"] != "offline-preflight-only" or plan["provider_calls_now"] != 0:
+        raise AssertionError("El productor no emitió el contrato offline esperado")
+    return plan, runs, args.derived_report
+
+
 def finalization_artifacts(root: Path) -> tuple[Path, Path, Path, dict[Path, str]]:
     """Build production-shaped original, interrupted, recovery, and final ledgers."""
     cont_plan_path, evidence_path, continuation_reports, _ = continuation_artifacts(root)
     cont_plan = json.loads(cont_plan_path.read_text(encoding="utf-8"))
+    # Finalization intentionally consumes the frozen preflight plan while its
+    # ledger, progress checkpoint, and two closed reports prove what ran.
+    cont_plan["mode"] = "offline-preflight-only"
+    cont_plan["provider_calls_now"] = 0
+    cont_plan.pop("live_result", None)
+    _write(cont_plan_path, cont_plan)
     fixture_path = root / "fixture.json"
     fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+    source_ledger_path = Path(cont_plan["source"]["ledger_path"])
+    source_report_path = Path(cont_plan["source"]["report_path"])
     cont_ledger_path = Path(cont_plan["continuation"]["ledger_path"])
     cont_ledger = json.loads(cont_ledger_path.read_text(encoding="utf-8"))
     runs = cont_plan["continuation"]["runs"]
@@ -54,7 +138,7 @@ def finalization_artifacts(root: Path) -> tuple[Path, Path, Path, dict[Path, str
         "status": "running",
         "active_case_id": "es_am_market_share",
         "known_estimated_spend_usd": 1.72828,
-        "models": [{"candidate": "gpt-6.1-sol@low", "case_count": 13, "completed_turn_count": 13}],
+        "models": [{"model": "gpt-6.1-sol", "case_count": 13, "completed_turn_count": 13}],
     }
     progress_sha = _write(progress_path, progress)
 
@@ -127,50 +211,34 @@ def finalization_artifacts(root: Path) -> tuple[Path, Path, Path, dict[Path, str
         "tool_trace": "unavailable",
         "human_review_required": True,
     }
-    derived_sha = _write(derived_path, derived)
-
-    case_by_id = {case["id"]: case for case in fixture["cases"]}
-    replacement_ids = list(exporter.EXPECTED_CASE_IDS[:13])
-    never_ids = [exporter.EXPECTED_CASE_IDS[14]]
-    selected_by_candidate = {
-        "gpt-6.1-sol@low": replacement_ids + never_ids,
-        "gpt-6.1-sol@medium": list(exporter.EXPECTED_CASE_IDS),
+    _write(derived_path, derived)
+    final_commit = "d" * 40
+    source_paths = {
+        "original_ledger": source_ledger_path,
+        "original_report": source_report_path,
+        "owner_evidence": evidence_path,
+        "continuation_plan": cont_plan_path,
+        "continuation_ledger": cont_ledger_path,
+        "closed_report_luna_medium": continuation_reports[0],
+        "closed_report_luna_max": continuation_reports[1],
+        "sol_low_progress": progress_path,
+        "terminal_recovery": recovery_path,
     }
-    final_commit = "c" * 40
-    final_run_rows = []
+    producer_plan, produced_runs, produced_derived_path = _prepare_with_real_producer(
+        root, source_paths, fixture
+    )
+    derived_path = produced_derived_path
+    final_run_rows = producer_plan["finalization"]["runs"]
     final_report_paths: dict[str, Path] = {}
-    for candidate, selected in selected_by_candidate.items():
-        source_cont = next(run for run in runs if run["candidate"] == candidate)
-        identity = json.loads(json.dumps(source_cont["identity"]))
-        run_id = identity["run_id"].split("-cont-")[0] + "-final-test"
-        identity.update(
-            {
-                "run_id": run_id,
-                "case_ids_hash": exporter._digest(selected),
-                "case_fixture_hash": exporter._digest([case_by_id[case_id] for case_id in selected]),
-                "execution_commit": final_commit,
-                "finalization": {
-                    "source_continuation_run_id": source_cont["run_id"],
-                    "source_identity_hash": source_cont["identity_hash"],
-                },
-            }
-        )
-        identity_hash = exporter._digest(identity)
-        final_run_rows.append(
-            {
-                "run_id": run_id,
-                "candidate": candidate,
-                "identity": identity,
-                "identity_hash": identity_hash,
-                "case_ids": selected,
-                "source_run_id": source_cont["run_id"],
-                "report_paths": [],
-            }
-        )
+    for run in produced_runs:
+        candidate = run["candidate"]
+        selected = run["case_ids"]
+        run_row = next(row for row in final_run_rows if row["run_id"] == run["run_id"])
+        run_row["report_paths"] = []
     final_campaign_identity = {
         "runs": [row["identity"] for row in final_run_rows],
         "run_identity_hashes": [row["identity_hash"] for row in final_run_rows],
-        "budget_usd": 7.94539875,
+        "budget_usd": producer_plan["billing_reconciliation"]["remaining_budget_usd"],
         "expected_versions": fixture["expected_versions"],
         "snapshot_root": str(root / "site"),
         "prices": cont_ledger["identity"]["prices"],
@@ -218,120 +286,19 @@ def finalization_artifacts(root: Path) -> tuple[Path, Path, Path, dict[Path, str
     }
     _write(final_ledger_path, final_ledger)
 
-    source_ledger_path = Path(cont_plan["source"]["ledger_path"])
-    source_report_path = Path(cont_plan["source"]["report_path"])
-    closed_reports = [
-        {
-            "path": str(continuation_reports[0]),
-            "sha256": hashlib.sha256(continuation_reports[0].read_bytes()).hexdigest(),
-            "candidate": "gpt-6-luna@medium",
-        },
-        {
-            "path": str(continuation_reports[1]),
-            "sha256": hashlib.sha256(continuation_reports[1].read_bytes()).hexdigest(),
-            "candidate": "gpt-6-luna@max",
-        },
-    ]
-    original_hashes = {
-        "original_ledger": hashlib.sha256(source_ledger_path.read_bytes()).hexdigest(),
-        "original_report": hashlib.sha256(source_report_path.read_bytes()).hexdigest(),
-        "owner_evidence": hashlib.sha256(evidence_path.read_bytes()).hexdigest(),
-    }
-    source_sha = {
-        **original_hashes,
-        "continuation_plan": cont_plan_hash,
-        "continuation_ledger": hashlib.sha256(cont_ledger_path.read_bytes()).hexdigest(),
-        "closed_report_luna_medium": closed_reports[0]["sha256"],
-        "closed_report_luna_max": closed_reports[1]["sha256"],
-        "sol_low_progress": progress_sha,
-        "terminal_recovery": recovery_sha,
-    }
-    final_plan = {
-        "schema_version": 1,
-        "kind": "f2_9_stage2_finalization_plan",
-        "mode": "live-campaign",
-        "provider_calls_now": None,
-        "source": {
-            "campaign_identity_hash": cont_plan["source"]["campaign_identity_hash"],
-            "ledger_sha256": original_hashes["original_ledger"],
-            "report_sha256": original_hashes["original_report"],
-            "owner_evidence_sha256": original_hashes["owner_evidence"],
-            "execution_commit": cont_plan["source"]["execution_commit"],
-            "paths": {
-                "original_ledger": str(source_ledger_path),
-                "original_report": str(source_report_path),
-                "owner_evidence": str(evidence_path),
-            },
-        },
-        "interrupted_continuation": {
-            "continuation_plan_sha256": cont_plan_hash,
-            "continuation_ledger_sha256": source_sha["continuation_ledger"],
-            "execution_commit": cont_plan["continuation"]["execution_commit"],
-            "plan_path": str(cont_plan_path),
-            "ledger_path": str(cont_ledger_path),
-            "closed_reports": closed_reports,
-            "progress_path": str(progress_path),
-            "progress_sha256": progress_sha,
-            "progress_case_count": 13,
-            "progress_cost_is_aggregate": True,
-        },
-        "recovery": {
-            "path": str(recovery_path),
-            "sha256": recovery_sha,
-            "status": "GET_recovered_remote_completed_idle",
-            "case_id": "es_am_market_share",
-            "candidate": "gpt-6.1-sol@low",
-            "usage_complete": True,
-            "input_tokens": 137951,
-            "output_tokens": 499,
-            "latency_ms": None,
-            "tool_trace": "unavailable",
-            "auto_graded": False,
-            "auto_approved": False,
-            "tool_calls_inferred": False,
-            "plan_sha256": cont_plan_hash,
-            "progress_sha256": progress_sha,
-            "source_run_identity_hash": source_run["identity_hash"],
-            "continuation_run_identity_hash": low["identity_hash"],
-            "answer_sha256": answer_sha,
-            "report_path": str(derived_path),
-            "report_sha256": derived_sha,
-        },
-        "billing_reconciliation": {
-            "authorized_reserve_usd": 8.0,
-            "remaining_budget_usd": 7.94539875,
-            "invoice_total_usd": None,
-        },
-        "finalization": {
-            "execution_commit": final_commit,
-            "continuation_id": "test",
-            "plan_path": str(root / "finalization-plan.json"),
-            "ledger_path": str(final_ledger_path),
-            "output_dir": str(root / "final"),
-            "runs": final_run_rows,
-            "derived_reports": {
-                "sol_low_recovery": {
-                    "path": str(derived_path),
-                    "sha256": derived_sha,
-                    "candidate": "gpt-6.1-sol@low",
-                    "identity": low["identity"],
-                    "identity_hash": low["identity_hash"],
-                    "source_run_identity_hash": source_run["identity_hash"],
-                    "recovery_sha256": recovery_sha,
-                    "progress_sha256": progress_sha,
-                    "human_review_required": True,
-                }
-            },
-            "replacement_case_ids": replacement_ids,
-            "never_attempted_case_ids": never_ids,
-            "recovered_case_id_skipped": "es_am_market_share",
-            "excluded_original_failure": {"candidate": "gpt-6-luna@medium", "case_id": "en_am_rask"},
-            "new_provider_request_count": 29,
-            "response_count_ceiling_if_complete": 59,
-            "max_reviewable_candidates": 59,
-        },
-        "source_sha256": source_sha,
-        "live_result": {"status": "completed", "identity_hash": final_campaign_hash},
+    final_plan = producer_plan
+    final_plan["mode"] = "live-campaign"
+    final_plan["provider_calls_now"] = None
+    final_plan["finalization"]["ledger_path"] = str(final_ledger_path)
+    final_plan["finalization"]["plan_path"] = str(root / "finalization-plan.json")
+    final_plan["finalization"]["output_dir"] = str(root / "final")
+    final_plan["live_result"] = {
+        "status": "completed",
+        "identity_hash": final_campaign_hash,
+        "run_summaries": [
+            {"run_id": run["run_id"], "report_path": str(final_report_paths[run["candidate"]])}
+            for run in produced_runs
+        ],
     }
     final_plan_path = root / "finalization-plan.json"
     _write(final_plan_path, final_plan)
@@ -358,6 +325,9 @@ def finalization_artifacts(root: Path) -> tuple[Path, Path, Path, dict[Path, str
 
 
 class Stage2FinalizationLineageTests(unittest.TestCase):
+    def test_final_execution_commit_must_resolve_in_git_history(self):
+        self.assertFalse(final_lineage._is_commit_ancestor("0" * 40))
+
     def _run(self, root: Path, plan: Path, evidence: Path, fixture_path: Path, pins: dict[Path, str]):
         plan_payload = json.loads(plan.read_text(encoding="utf-8"))
         with (
@@ -373,6 +343,7 @@ class Stage2FinalizationLineageTests(unittest.TestCase):
                 "CONTINUATION_EXECUTION",
                 plan_payload["interrupted_continuation"]["execution_commit"],
             ),
+            patch.object(final_lineage, "_is_commit_ancestor", return_value=True),
         ):
             return exporter.export(
                 None,
