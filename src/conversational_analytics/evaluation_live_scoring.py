@@ -212,6 +212,13 @@ def score_live_case(
             for forbidden in case["expected"].get("must_not_contain", []):
                 if forbidden.casefold() in response.casefold():
                     failures.append(f"forbidden_claim:{forbidden}")
+        missing_required_terms = [
+            term
+            for term in case["expected"].get("required_response_terms", [])
+            if term.casefold() not in response.casefold()
+        ]
+        if missing_required_terms:
+            failures.append("required_scope_disclosure_missing")
         if re.search(r"\d,\d+\s*%", response):
             failures.append("decimal_comma_format")
         else:

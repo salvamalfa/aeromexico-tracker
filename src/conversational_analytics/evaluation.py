@@ -274,6 +274,26 @@ def verify_observation(
                 failures.append(f"respuesta sin términos requeridos: {', '.join(missing_terms)}")
             elif required_terms:
                 checks.append("respuesta")
+            for rule in case["expected"].get("response_numeric_semantics", []):
+                forbidden_value = float(rule["forbid_percent_value"])
+                tolerance = float(rule.get("tolerance", 0.01))
+                percent_values = re.finditer(
+                    r"(?<![\w.])([+-]?\d+(?:[.,]\d+)?)\s*(?:%|por\s+ciento|percent)(?!\w)",
+                    response,
+                    re.IGNORECASE,
+                )
+                if any(
+                    math.isclose(
+                        float(match.group(1).replace(",", ".")),
+                        forbidden_value,
+                        abs_tol=tolerance,
+                        rel_tol=0,
+                    )
+                    for match in percent_values
+                ):
+                    failures.append(
+                        rule.get("failure", "porcentaje confunde magnitudes con unidades distintas")
+                    )
     else:
         for forbidden in case["expected"].get("must_not_contain", []):
             if forbidden.casefold() in response.casefold():

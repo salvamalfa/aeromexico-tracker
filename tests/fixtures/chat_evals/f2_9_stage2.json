@@ -735,7 +735,14 @@
           "value_percent": -3.9922,
           "formula": "(2026Q2 domestic market share / 2025Q2 domestic market share - 1) * 100",
           "source": "pinned public snapshot rows returned by query_metrics"
-        }
+        },
+        "response_numeric_semantics": [
+          {
+            "forbid_percent_value": -1.012,
+            "tolerance": 0.02,
+            "failure": "percentage_point_delta_mislabelled_as_relative_percent"
+          }
+        ]
       }
     },
     {
@@ -954,7 +961,11 @@
         "status": "unsupported",
         "behavior": "state_company_series_has_no_published_observation_for_requested_period",
         "safe_expected_response": "La serie de pasajeros reportados por Viva empieza en 1T23; no hay dato de empresa publicado para 2T22.",
-        "forbid_numeric_claims": true
+        "forbid_numeric_claims": true,
+        "required_response_terms": [
+          "no hay dato",
+          "empresa"
+        ]
       }
     }
   ],
@@ -1017,10 +1028,12 @@
         "context_added": "Published dashboard 2026Q2; context selects only the entity/card/filter asked about, without altering question or rubric."
       },
       "en_relative_share_change": {
-        "expected_status_and_gold_corrected": "The question explicitly asks relative percentage change; human adjudication confirmed the answer and cited pinned public query rows. Derived gold is calculated from those two rows."
+        "expected_status_and_gold_corrected": "The question explicitly asks relative percentage change; human adjudication confirmed the answer and cited pinned public query rows. Derived gold is calculated from those two rows.",
+        "response_semantics_added": "Required relative change is -3.99%; a domestic percentage-point delta near -1.01 cannot be labeled as relative percent."
       },
       "es_viva_missing_company_passengers": {
-        "expected_status_corrected": "Historical company-reported Viva passenger series begins in 2023Q1; adjudication confirmed 2022Q2 has no company query row and the observed AFAC figure must not be substituted."
+        "expected_status_corrected": "Historical company-reported Viva passenger series begins in 2023Q1; adjudication confirmed 2022Q2 has no company query row and the observed AFAC figure must not be substituted.",
+        "required_disclosure_added": "Automatic tripwire requires the answer to state that the company-reported observation is unavailable; forbid_numeric_claims prevents substituting an AFAC count."
       },
       "en_card_filter_scope": {
         "response_expectation_clarified": "Card context resolves Viva unit margin in 2026Q2; required response names the per-ASK-km denominator, without demanding a numeric query for an explanation request."

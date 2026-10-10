@@ -191,6 +191,68 @@ def test_clarification_accepts_imperatives_without_invented_numeric_answers() ->
     assert "numeric_answer_given_when_clarification_expected" in invented["failures"]
 
 
+def test_relative_share_gold_rejects_percentage_points_labeled_as_percent() -> None:
+    from src.conversational_analytics.evaluation import STAGE2_PILOT_FIXTURE_PATH
+
+    payload = json.loads(STAGE2_PILOT_FIXTURE_PATH.read_text(encoding="utf-8"))
+    case = next(case for case in payload["cases"] if case["id"] == "en_relative_share_change")
+    rows = [
+        {
+            **row,
+            "availability": "available",
+        }
+        for row in case["expected"]["rows"]
+    ]
+    valid = verify_observation(
+        case,
+        {
+            "status": "supported",
+            "plan": case["expected"]["plan"],
+            "rows": rows,
+            "response": "Relative change: -3.99% from 2T25 to 2T26; separate share-point delta is -1.01 pp.",
+        },
+    )
+    assert valid.passed, valid.failures
+
+    confused = verify_observation(
+        case,
+        {
+            "status": "supported",
+            "plan": case["expected"]["plan"],
+            "rows": rows,
+            "response": "Relative change: -3.99% from 2T25 to 2T26; this is the same as -1.01%.",
+        },
+    )
+    assert not confused.passed
+    assert "percentage_point_delta_mislabelled_as_relative_percent" in confused.failures
+
+
+def test_viva_missing_company_gold_requires_unavailable_disclosure_and_rejects_afac_value() -> None:
+    from src.conversational_analytics.evaluation import STAGE2_PILOT_FIXTURE_PATH
+    from src.conversational_analytics.evaluation_live_scoring import score_live_case
+
+    payload = json.loads(STAGE2_PILOT_FIXTURE_PATH.read_text(encoding="utf-8"))
+    case = next(case for case in payload["cases"] if case["id"] == "es_viva_missing_company_passengers")
+    options = {"expected_versions": {}, "scope": {}, "metric_dimensions": {}}
+    _, absent = score_live_case(
+        case,
+        [],
+        "No hay dato de empresa reportado por Viva en 2T22; la serie AFAC es distinta.",
+        **options,
+    )
+    assert absent["passed"], absent["failures"]
+
+    _, substituted = score_live_case(
+        case,
+        [],
+        "AFAC reportó 4,876,764 pasajeros para ese periodo.",
+        **options,
+    )
+    assert not substituted["passed"]
+    assert "unsupported_absolute_numeric_claim" in substituted["failures"]
+    assert "required_scope_disclosure_missing" in substituted["failures"]
+
+
 def test_supported_gold_rejects_wrong_unit_and_period() -> None:
     case = json.loads(json.dumps(next(case for case in load_cases() if case["id"] == "es_am_lf_q2")))
     case["expected"]["rows"][0]["unit"] = "fraction"
