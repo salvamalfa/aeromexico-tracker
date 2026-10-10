@@ -40,6 +40,10 @@ def test_f21_override_is_preserved_and_derived_prompt_gets_period_policy_and_dis
     assert "(2) el periodo anterior solo si" in effective
     assert "(3) el periodo seleccionado en el" in effective
     assert "pregunta cuál periodo necesita el usuario" in effective
+    assert "esta gráfica" in effective
+    assert "tarjeta activa" in effective
+    assert "el contexto validado puede completar lo que omita la pregunta" in effective
+    assert "no infieras la métrica, entidad" not in effective
     assert effective == with_dashboard_period_policy(effective)
     assert prompt_sha256(approved_prompt) != prompt_sha256(effective)
     assert PERIOD_SELECTION_POLICY_VERSION in SYSTEM_INSTRUCTIONS
@@ -47,6 +51,7 @@ def test_f21_override_is_preserved_and_derived_prompt_gets_period_policy_and_dis
 
 def test_new_session_records_hashes_of_effective_override_and_derivation():
     source = "Prompt aprobado de F2.1: estilo, criterios y ejemplos completos."
+    runner_prompt = with_dashboard_period_policy(source)
     fake = FakeSessions(
         create_stream=FakeStream(
             [
@@ -57,16 +62,18 @@ def test_new_session_records_hashes_of_effective_override_and_derivation():
             ]
         )
     )
-    provider = _provider(FakeClient(fake), system_instructions_override=source)
+    provider = _provider(FakeClient(fake), system_instructions_override=runner_prompt)
+    assert provider._instructions() == runner_prompt
 
     _run(provider)
 
     metadata = fake.created[0]["metadata"]
+    assert metadata[INSTRUCTIONS_FINGERPRINT_KEY] == prompt_sha256(runner_prompt)
     assert (
         metadata[INSTRUCTIONS_FINGERPRINT_KEY]
         == hashlib.sha256(provider._instructions().encode("utf-8")).hexdigest()
     )
-    assert metadata[PROMPT_INPUT_FINGERPRINT_KEY] == hashlib.sha256(source.encode("utf-8")).hexdigest()
+    assert metadata[PROMPT_INPUT_FINGERPRINT_KEY] == prompt_sha256(runner_prompt)
     assert metadata[INSTRUCTIONS_DERIVATION_KEY] == PERIOD_SELECTION_POLICY_VERSION
 
 
