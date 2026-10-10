@@ -9,7 +9,11 @@ from pathlib import Path
 
 import pytest
 
-from scripts.chat.continue_stage2_campaign import _require_private_destination
+from scripts.chat.continue_stage2_campaign import (
+    SOURCE_REPORT,
+    _validate_destination_relationships,
+    main,
+)
 from src.conversational_analytics.evaluation import load_cases, phase_cases
 from src.conversational_analytics.evaluation_campaign import (
     CAMPAIGN_CANDIDATES,
@@ -259,6 +263,17 @@ def test_continuation_rejects_overspend_and_identity_drift() -> None:
 def test_plan_path_must_be_private_before_any_directory_permission_change(tmp_path: Path) -> None:
     outside = tmp_path / "public-plan.json"
     mode_before = tmp_path.stat().st_mode & 0o777
-    with pytest.raises(ValueError, match="dentro de .state"):
-        _require_private_destination(outside, label="plan-path")
+    with pytest.raises(SystemExit):
+        main(["--plan-path", str(outside)])
+    assert not outside.exists()
     assert tmp_path.stat().st_mode & 0o777 == mode_before
+
+
+def test_private_destination_cannot_overwrite_a_source_artifact() -> None:
+    output_dir = ROOT / ".state/outputs/chat-evaluations/f2-9-stage-2-continuation-test"
+    campaign_path = output_dir / "campaign.json"
+    source_path = SOURCE_REPORT.resolve()
+    with pytest.raises(ValueError, match="coincide con un artefacto fuente"):
+        _validate_destination_relationships(
+            output_dir.resolve(), campaign_path.resolve(), source_path, {source_path}
+        )

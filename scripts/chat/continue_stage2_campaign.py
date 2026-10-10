@@ -83,25 +83,31 @@ def _require_private_destination(path: Path, *, label: str) -> Path:
     return resolved
 
 
+def _validate_destination_relationships(
+    output_dir: Path, campaign_state: Path, plan_path: Path, source_paths: set[Path]
+) -> None:
+    if campaign_state == plan_path:
+        raise ValueError("El plan y el ledger de continuación requieren rutas distintas")
+    if {output_dir, campaign_state, plan_path} & source_paths:
+        raise ValueError("Un destino privado coincide con un artefacto fuente de solo lectura")
+    if output_dir not in campaign_state.parents or output_dir not in plan_path.parents:
+        raise ValueError("Ledger y plan deben quedar dentro de la carpeta de continuación")
+    if any(output_dir in path.parents or path in output_dir.parents for path in source_paths):
+        raise ValueError("La carpeta de continuación no puede solaparse con fuentes originales")
+
+
 def prepare_continuation(
     args: argparse.Namespace,
 ) -> tuple[dict[str, Any], list[dict], list[dict], Path, dict, dict]:
     args.output_dir = _require_private_destination(args.output_dir, label="output-dir")
     args.campaign_state = _require_private_destination(args.campaign_state, label="campaign-state")
     args.plan_path = _require_private_destination(args.plan_path, label="plan-path")
-    if args.campaign_state == args.plan_path:
-        raise ValueError("El plan y el ledger de continuación requieren rutas distintas")
-    if args.output_dir not in args.campaign_state.parents or args.output_dir not in args.plan_path.parents:
-        raise ValueError("Ledger y plan deben quedar dentro de la carpeta de continuación")
     source_paths = {
         args.source_ledger.resolve(),
         args.source_report.resolve(),
         args.owner_evidence.resolve(),
     }
-    if {args.output_dir, args.campaign_state, args.plan_path} & source_paths:
-        raise ValueError("Un destino privado coincide con un artefacto fuente de solo lectura")
-    if any(args.output_dir in path.parents or path in args.output_dir.parents for path in source_paths):
-        raise ValueError("La carpeta de continuación no puede solaparse con fuentes originales")
+    _validate_destination_relationships(args.output_dir, args.campaign_state, args.plan_path, source_paths)
     # The shared campaign preflight validates the frozen fixture, prompt, data
     # snapshot, tools, model settings and runtime limits. Its destinations are
     # redirected to a new private continuation folder before it can create them.
