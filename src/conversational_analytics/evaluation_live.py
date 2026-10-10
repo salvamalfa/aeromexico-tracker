@@ -42,6 +42,7 @@ def _live_provider_run(
     system_instructions: str | None = None,
     run_identity: dict[str, Any] | None = None,
     limits_override: dict[str, int] | None = None,
+    text_verbosity_override: str | None = None,
 ) -> dict[str, Any]:
     """Run gated holdout cases through the production provider/tool boundary.
 
@@ -63,6 +64,12 @@ def _live_provider_run(
     ):
         raise ValueError("cada candidato requiere precios finitos y positivos de entrada/salida")
     runtime_config = ChatConfig.from_env()
+    if text_verbosity_override is not None:
+        if text_verbosity_override not in {"low", "medium", "high"}:
+            raise ValueError("La verbosidad de texto de la campaña no es válida")
+        if run_identity and run_identity.get("text_verbosity") != text_verbosity_override:
+            raise ValueError("La verbosidad no coincide con la identidad de corrida")
+        runtime_config = replace(runtime_config, text_verbosity=text_verbosity_override)
     if limits_override:
         allowed_limits = {
             "max_tool_calls": "max_tool_calls",
@@ -226,7 +233,6 @@ def _live_provider_run(
             # rejection. Never forward unknown context keys to the provider.
             try:
                 from .service import validate_context
-
                 context = validate_context(case_context)
             except ValueError as exc:
                 model_report["cases"].append(

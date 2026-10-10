@@ -129,6 +129,7 @@ def run_campaign(
             system_instructions=str(run["prompt"]),
             run_identity=dict(run["identity"]),
             limits_override=dict(run["limits"]),
+            text_verbosity_override=str(run["text_verbosity"]),
         )
         report["run_identity_hash"] = str(run["identity_hash"])
         report["campaign_identity_hash"] = identity_hash

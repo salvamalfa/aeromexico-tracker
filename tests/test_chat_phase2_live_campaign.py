@@ -7,6 +7,8 @@ from pathlib import Path
 import pytest
 
 from src.conversational_analytics import evaluation_live_campaign as campaign
+from src.conversational_analytics import evaluation_live
+from src.conversational_analytics.config import ChatConfig
 
 
 def _run(
@@ -105,6 +107,58 @@ def test_distinct_prompt_and_luna_repetition_slots_each_reach_provider(monkeypat
     assert [call["run_identity"]["prompt_variant"] for call in seen[:2]] == ["current", "proposed"]
     assert [call["run_identity"]["repetition"] for call in seen[2:]] == [1, 2]
     assert len({call["run_identity"]["run_id"] for call in seen}) == 4
+
+
+def test_campaign_passes_identity_text_verbosity_to_runtime_override(monkeypatch, tmp_path: Path) -> None:
+    run = _run("verbosity-slot")
+    run["text_verbosity"] = "high"
+    run["identity"]["text_verbosity"] = "high"
+    seen = []
+
+    def fake(**kwargs):
+        seen.append(kwargs)
+        return _complete_report(kwargs["run_identity"], kwargs["cases"])
+
+    _invoke(monkeypatch, tmp_path, [run], fake)
+
+    assert seen[0]["text_verbosity_override"] == "high"
+    assert seen[0]["text_verbosity_override"] == seen[0]["run_identity"]["text_verbosity"]
+
+
+def test_live_runner_applies_identity_verbosity_to_runtime_config(monkeypatch, tmp_path: Path) -> None:
+    seen = []
+    replace_config = evaluation_live.replace
+
+    def capture_replace(config, **changes):
+        if "text_verbosity" in changes:
+            seen.append((config.text_verbosity, changes["text_verbosity"]))
+        return replace_config(config, **changes)
+
+    class StopAfterConfig(Exception):
+        pass
+
+    def stop_before_snapshot(_path):
+        raise StopAfterConfig
+
+    monkeypatch.setattr(evaluation_live, "replace", capture_replace)
+    monkeypatch.setattr(evaluation_live, "Snapshot", stop_before_snapshot)
+    monkeypatch.setattr(ChatConfig, "from_env", classmethod(lambda cls: cls(text_verbosity="low")))
+
+    with pytest.raises(StopAfterConfig):
+        evaluation_live._live_provider_run(
+            cases=[_case()],
+            models=["gpt-6-luna@medium"],
+            budget_usd=1.0,
+            snapshot_root=tmp_path / "unused-snapshot",
+            prices={"gpt-6-luna@medium": (0.1, 0.5)},
+            probe_only=False,
+            output_dir=tmp_path / "unused-output",
+            expected_versions={"data_version": "data-v1", "semantic_version": "semantic-v1"},
+            run_identity={"text_verbosity": "high"},
+            text_verbosity_override="high",
+        )
+
+    assert seen == [("low", "high")]
 
 
 def test_campaign_stamps_exact_identity_on_private_source_report(monkeypatch, tmp_path: Path) -> None:

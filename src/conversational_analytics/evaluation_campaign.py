@@ -112,7 +112,9 @@ def validate_stage2_plan(
             raise ValueError(f"Modelo/esfuerzo distinto a lo aprobado: {name}")
     return {
         "stage": "F2.9-stage-2",
-        "execution_authorized": False,
+        "budget_authorized": True,
+        "owner_authorized": True,
+        "live_execution_started": False,
         "authorized_reserve_usd": STAGE2_RESERVE_USD,
         "stage2_reserve_funded_usd": STAGE2_FUNDED_RESERVE_USD,
         "funding_confirmed_date": STAGE2_AUTHORIZATION_DATE,

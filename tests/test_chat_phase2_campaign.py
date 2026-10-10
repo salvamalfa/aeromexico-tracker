@@ -191,7 +191,9 @@ def test_stage2_preflight_freezes_four_candidates_ids_budget_and_hashes() -> Non
         api_key_present=False,
     )
 
-    assert plan["execution_authorized"] is False
+    assert plan["budget_authorized"] is True
+    assert plan["owner_authorized"] is True
+    assert plan["live_execution_started"] is False
     assert plan["authorized_reserve_usd"] == 8.0
     assert plan["additional_funding_required_usd"] == 0.0
     assert plan["planned_responses"] == 60

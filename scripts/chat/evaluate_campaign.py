@@ -278,6 +278,7 @@ def main(argv: list[str] | None = None) -> int:
         output_dir=args.output_dir.resolve(),
         resume=args.resume,
     )
+    plan["live_execution_started"] = True
     print(json.dumps({"preflight": plan, "campaign": result}, ensure_ascii=False, indent=2, default=str))
     return 0
 
