@@ -33,6 +33,7 @@ STAGE2_RESERVE_USD = 8.0
 STAGE2_FUNDED_RESERVE_USD = 8.0
 STAGE2_AUTHORIZATION_DATE = "2026-10-10"
 STAGE2_MAX_TOOL_CALLS = 16
+STAGE2_APPROVED_PROMPT_BASE_SHA256 = "33b8f7a0900869812d98bba57daa2ce3ea2f6b5c02a86a7eb3b8e830c7f7694b"
 
 
 def sha256_file(path: Any) -> str:
@@ -62,11 +63,7 @@ def validate_stage2_plan(
     """Fail closed on the frozen F2.9 stage-2 scope and return safe provenance."""
     if config.get("stage") != "F2.9-stage-2":
         raise ValueError("La configuración no corresponde a F2.9 etapa 2")
-    accepted_statuses = {
-        "ready_offline_preflight_only_no_execution_authorized",
-        "budget_preview_only_no_execution_authorized",
-    }
-    if config.get("status") not in accepted_statuses:
+    if config.get("status") != "budget_authorized_offline_preflight_ready":
         raise ValueError("Estado de configuración de etapa 2 no reconocido")
     authorization = config.get("owner_decision", {})
     if (
@@ -130,6 +127,7 @@ def validate_stage2_plan(
         "semantic_version": snapshot_semantic_version,
         "fixture_sha256": _digest(fixture),
         "case_context_sha256": stage2_case_context_hash(cases),
+        "approved_prompt_base_sha256": STAGE2_APPROVED_PROMPT_BASE_SHA256,
         "prompt_sha256": prompt_content_hash(prompt),
         "api_key_present": bool(api_key_present),
         "max_tool_calls_per_turn": STAGE2_MAX_TOOL_CALLS,
@@ -211,9 +209,17 @@ def extract_proposed_prompt(markdown_or_prompt: str) -> str:
     raise ValueError("Documento F2.1 sin bloque cercado bajo el encabezado del prompt propuesto")
 
 
-def effective_stage2_prompt(markdown_or_prompt: str) -> str:
-    """Extract F2.1's proposed prompt and apply the versioned period policy once."""
+def approved_stage2_prompt_base(markdown_or_prompt: str) -> str:
+    """Extract only the owner-approved F2.1 text and reject any content drift."""
     proposed = extract_proposed_prompt(markdown_or_prompt)
+    if prompt_content_hash(proposed) != STAGE2_APPROVED_PROMPT_BASE_SHA256:
+        raise ValueError("El prompt base no coincide con el SHA-256 aprobado de F2.1")
+    return proposed
+
+
+def effective_stage2_prompt(markdown_or_prompt: str) -> str:
+    """Validate approved F2.1 text and apply the versioned period policy once."""
+    proposed = approved_stage2_prompt_base(markdown_or_prompt)
     from .providers._openai_prompt import prompt_sha256, with_dashboard_period_policy
 
     effective = with_dashboard_period_policy(proposed)
@@ -261,6 +267,7 @@ def build_campaign_runs(
     text_verbosity: str,
     candidates: Mapping[str, Mapping[str, str]] | Sequence[str] | None = None,
     source_fingerprint: str | None = None,
+    execution_commit: str | None = None,
 ) -> list[dict[str, Any]]:
     """Build the fixed F2.9 schedule and complete per-run identity records.
 
@@ -275,6 +282,8 @@ def build_campaign_runs(
         raise ValueError("Faltan versiones de datos, semántica o verbosidad")
     if source_fingerprint is not None and not re.fullmatch(r"[0-9a-f]{64}", source_fingerprint):
         raise ValueError("source_fingerprint debe ser SHA-256 hexadecimal")
+    if execution_commit is not None and not re.fullmatch(r"[0-9a-f]{40}", execution_commit):
+        raise ValueError("execution_commit debe ser un SHA de commit Git de 40 caracteres")
     case_ids = [str(case.get("id", "")) for case in cases]
     if any(not item for item in case_ids) or len(case_ids) != len(set(case_ids)):
         raise ValueError("Los casos deben tener IDs no vacíos y únicos")
@@ -370,6 +379,8 @@ def build_campaign_runs(
             "case_ids_hash": _digest(case_ids),
             "case_fixture_hash": case_hash,
         }
+        if execution_commit is not None:
+            identity["execution_commit"] = execution_commit
         runs.append(
             {
                 **identity,

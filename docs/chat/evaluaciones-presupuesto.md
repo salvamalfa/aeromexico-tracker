@@ -83,8 +83,8 @@ respuestas. Reportes y ledger viven bajo `.state/outputs/chat-evaluations/`,
 ignorado por Git; el escritor aplica permisos `0700` al directorio y `0600` a
 cada archivo. La corrida stage 2 usa un ledger propio, con US$8 financiados para
 esta etapa; no importa ni suma el gasto histórico de etapa 1. El comando live
-requiere la instrucción separada del dueño después de integrar y verificar el
-runner.
+se habilita explícitamente con `--run --opt-in` después de integrar y verificar
+el runner; el saldo de etapa 2 ya está autorizado y financiado.
 
 El harness live usa el adaptador de producción y un registro real de
 herramientas sobre el snapshot público. La continuidad por fases conserva un

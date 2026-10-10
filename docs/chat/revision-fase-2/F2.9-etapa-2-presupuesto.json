@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "stage": "F2.9-stage-2",
-  "status": "authorized_funded_preconditions_pending",
+  "status": "budget_authorized_offline_preflight_ready",
   "stage1": {
     "human_review": "complete",
     "complete_responses": 111,
@@ -168,7 +168,7 @@
     "funding_confirmed_date": "2026-10-10",
     "additional_funding_required_usd": 0,
     "funding_status": "owner_confirmed_loaded_for_stage_2",
-    "execution_status": "authorized_after_offline_preconditions",
+    "execution_status": "stage2_budget_authorized; CLI live flags require completed integration checks",
     "ledger_scope": "stage 2 only; stage 1 spend is not carried into this separately funded reserve"
   },
   "limitations": [
@@ -177,9 +177,11 @@
     "Tariffs are versioned estimates. Unknown future context growth, retries, or usage can change spend; the operational reserve is not a bill cap."
   ],
   "preconditions_before_execution": [
-    "Adjust the evaluator offline for the approved Stage 2 plan and clear outstanding evaluation checks.",
-    "Validate dashboard context and period-resolution behavior in the target; historical fixtures are empty and do not validate the behavior.",
-    "Execution remains pending completion of these offline preconditions."
+    "Adjust the evaluator for the approved stage-2 plan.",
+    "Freeze a new stage-2 fixture with the 15 listed IDs, validated context, and corrected expected outcomes.",
+    "Integrate and verify the period-resolution prompt rule in the target; hash the effective prompt and semantics in the campaign identity.",
+    "Run the offline preflight and retain all outputs/checkpoints under private ignored .state/ with owner-only permissions.",
+    "The default CLI is offline; after integration checks, live requires both explicit --run and --opt-in flags."
   ],
   "stage2_authorization": {
     "owner_authorized": true,

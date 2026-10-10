@@ -13,6 +13,7 @@ from src.conversational_analytics.evaluation_campaign import (
     STAGE2_EXPECTED_CASE_IDS,
     STAGE2_RESERVE_USD,
     aggregate_campaign_budget,
+    approved_stage2_prompt_base,
     build_campaign_runs,
     checkpoint_key,
     effective_stage2_prompt,
@@ -77,11 +78,27 @@ def test_f21_plan_extracts_only_its_prompt_draft_fence() -> None:
     assert "Lo que queda pendiente al ajustar el borrador" not in prompt
 
 
+def test_stage2_accepts_only_the_approved_f21_prompt_base() -> None:
+    approved = (ROOT / "docs/chat/revision-fase-2/F2.1-prompt-aprobado.md").read_text(encoding="utf-8")
+    base = approved_stage2_prompt_base(approved)
+    from scripts.chat.evaluate_campaign import DEFAULT_STAGE2_PROMPT_PATH
+
+    assert DEFAULT_STAGE2_PROMPT_PATH == ROOT / "docs/chat/revision-fase-2/F2.1-prompt-aprobado.md"
+    assert prompt_content_hash(base) == "33b8f7a0900869812d98bba57daa2ce3ea2f6b5c02a86a7eb3b8e830c7f7694b"
+    draft_plan = (ROOT / "docs/chat/fase-2-agente-analitico.md").read_text(encoding="utf-8")
+    with pytest.raises(ValueError, match="SHA-256 aprobado"):
+        effective_stage2_prompt(draft_plan)
+    with pytest.raises(ValueError, match="SHA-256 aprobado"):
+        approved_stage2_prompt_base("texto arbitrario no aprobado")
+    with pytest.raises(ValueError, match="SHA-256 aprobado"):
+        approved_stage2_prompt_base(approved.replace("rapidez y precisión", "rapidez y precisión modificadas"))
+
+
 def test_preflight_prompt_hash_equals_the_provider_instructions_hash() -> None:
     prompt_module = pytest.importorskip("src.conversational_analytics.providers._openai_prompt")
     from src.conversational_analytics.providers.openai import OpenAIProvider
 
-    source = (ROOT / "docs/chat/fase-2-agente-analitico.md").read_text(encoding="utf-8")
+    source = (ROOT / "docs/chat/revision-fase-2/F2.1-prompt-aprobado.md").read_text(encoding="utf-8")
     effective = effective_stage2_prompt(source)
     provider = OpenAIProvider(
         SimpleNamespace(
@@ -146,7 +163,7 @@ def _stage2_cases() -> list[dict]:
 def _stage2_config() -> dict:
     return {
         "stage": "F2.9-stage-2",
-        "status": "ready_offline_preflight_only_no_execution_authorized",
+        "status": "budget_authorized_offline_preflight_ready",
         "owner_decision": {
             "authorized_reserve_usd": STAGE2_RESERVE_USD,
             "stage2_reserve_funded_usd": 8.0,
@@ -236,6 +253,31 @@ def test_resume_fails_closed_on_prompt_or_limit_change() -> None:
     original = runs(1)[0]["identity"]
     validate_resume_identity(original, dict(original))
     changed = dict(original, limits={"max_tool_calls": 9, "max_turn_seconds": 120})
+    with pytest.raises(ValueError, match="Resume bloqueado"):
+        validate_resume_identity(original, changed)
+
+
+def test_resume_fails_closed_when_execution_commit_changes() -> None:
+    cases = _stage2_cases()
+    original = build_campaign_runs(
+        2,
+        cases,
+        **COMMON,
+        prompts={"proposed": "Prompt efectivo"},
+        source_fingerprint="c" * 64,
+        execution_commit="a" * 40,
+    )[0]["identity"]
+    changed = build_campaign_runs(
+        2,
+        cases,
+        **COMMON,
+        prompts={"proposed": "Prompt efectivo"},
+        source_fingerprint="c" * 64,
+        execution_commit="b" * 40,
+    )[0]["identity"]
+
+    assert original["case_fixture_hash"] == changed["case_fixture_hash"]
+    assert original["execution_commit"] != changed["execution_commit"]
     with pytest.raises(ValueError, match="Resume bloqueado"):
         validate_resume_identity(original, changed)
 

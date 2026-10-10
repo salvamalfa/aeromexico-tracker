@@ -1,7 +1,7 @@
 """Offline preflight and explicitly gated runner for F2.9 stage 2.
 
 The default command only prints a safe plan. A paid run additionally requires
-``--run --opt-in`` after the owner gives the separate execution instruction.
+the explicit ``--run --opt-in`` flags; the default never crosses the provider boundary.
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_STAGE2_PROMPT_PATH = ROOT / "docs/chat/revision-fase-2/F2.1-prompt-aprobado.md"
 sys.path.insert(0, str(ROOT))
 
 from src.conversational_analytics.data.snapshot import Snapshot  # noqa: E402
@@ -38,6 +39,14 @@ from src.conversational_analytics.tools.registry import ToolRegistry  # noqa: E4
 PreparedCampaign = tuple[
     dict[str, Any], list[dict[str, Any]], list[dict[str, Any]], Path, dict[str, Any], dict[str, Any]
 ]
+EXECUTION_INPUT_PATHS = (
+    "src/conversational_analytics/",
+    "scripts/chat/",
+    "config/chat/",
+    "tests/fixtures/chat_evals/f2_9_stage2.json",
+    "docs/chat/revision-fase-2/F2.1-prompt-aprobado.md",
+    "docs/chat/revision-fase-2/F2.9-etapa-2-presupuesto.json",
+)
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -73,6 +82,27 @@ def _verify_private_destination(path: Path, *, directory: bool) -> None:
     ).returncode == 0
     if not ignored:
         raise ValueError(f"Destino de campaña no ignorado por Git: {absolute}")
+
+
+def _git_execution_commit() -> str:
+    result = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=ROOT, check=True, capture_output=True, text=True
+    )
+    commit = result.stdout.strip()
+    if len(commit) != 40:
+        raise ValueError("No se pudo fijar el commit del código ejecutado")
+    return commit
+
+
+def _dirty_execution_inputs() -> str:
+    result = subprocess.run(
+        ["git", "status", "--porcelain", "--untracked-files=all", "--", *EXECUTION_INPUT_PATHS],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.strip()
 
 
 def prepare(args: argparse.Namespace) -> PreparedCampaign:
@@ -116,6 +146,7 @@ def prepare(args: argparse.Namespace) -> PreparedCampaign:
     )
     registry = ToolRegistry(snapshot)
     fixture_sha256 = sha256_file(fixture_path)
+    execution_commit = _git_execution_commit()
     runtime_limits = {
         "max_tool_calls": STAGE2_MAX_TOOL_CALLS,
         "max_message_chars": args.max_message_chars,
@@ -132,6 +163,7 @@ def prepare(args: argparse.Namespace) -> PreparedCampaign:
         limits=runtime_limits,
         text_verbosity=args.text_verbosity,
         source_fingerprint=fixture_sha256,
+        execution_commit=execution_commit,
     )
     output_dir = args.output_dir.resolve()
     ledger_path = args.campaign_state.resolve()
@@ -142,6 +174,7 @@ def prepare(args: argparse.Namespace) -> PreparedCampaign:
             "budget_config_sha256": hashlib.sha256(budget_path.read_bytes()).hexdigest(),
             "model_catalog_sha256": catalog_sha256,
             "fixture_file_sha256": fixture_sha256,
+            "execution_commit": execution_commit,
             "snapshot_manifest_sha256": hashlib.sha256(
                 (snapshot.root / "publication_manifest.json").read_bytes()
             ).hexdigest(),
@@ -175,14 +208,14 @@ def prepare(args: argparse.Namespace) -> PreparedCampaign:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Preflight aislado para F2.9 etapa 2")
     parser.add_argument(
-        "--run", action="store_true", help="cruzar el límite del proveedor; exige opt-in aparte"
+        "--run", action="store_true", help="ejecutar la campaña live autorizada para esta etapa"
     )
     parser.add_argument(
         "--opt-in", action="store_true",
-        help="confirma la instrucción separada para esta ejecución live",
+        help="habilitar explícitamente las llamadas al proveedor en esta invocación",
     )
     parser.add_argument("--fixture", type=Path, default=ROOT / STAGE2_FIXTURE_PATH)
-    parser.add_argument("--prompt-proposed", type=Path, default=ROOT / "docs/chat/fase-2-agente-analitico.md")
+    parser.add_argument("--prompt-proposed", type=Path, default=DEFAULT_STAGE2_PROMPT_PATH)
     parser.add_argument("--snapshot", type=Path, default=ROOT / "site")
     parser.add_argument(
         "--output-dir", type=Path,
@@ -199,7 +232,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--resume", action="store_true")
     args = parser.parse_args(argv)
     if args.run != args.opt_in:
-        parser.error("live requiere simultáneamente --run y --opt-in, tras la instrucción separada del dueño")
+        parser.error("live requiere --run y --opt-in juntos; el preflight por omisión no hace llamadas")
     try:
         plan, runs, cases, snapshot_root, catalog, fixture = prepare(args)
     except (OSError, ValueError, KeyError, json.JSONDecodeError) as exc:
@@ -207,7 +240,7 @@ def main(argv: list[str] | None = None) -> int:
     if not args.run:
         plan["mode"] = "offline-preflight-only"
         plan["provider_calls_now"] = 0
-        plan["live_execution"] = "requires_separate_owner_instruction_after_integration"
+        plan["live_execution"] = "requires_both_explicit_cli_flags_after_integration_checks"
         plan["planned_candidate_responses"] = len(cases) * len(runs)
         plan["budget_usd_operational_stop"] = STAGE2_RESERVE_USD
         plan["resume_requested"] = bool(args.resume)
@@ -216,6 +249,12 @@ def main(argv: list[str] | None = None) -> int:
 
     if not plan["api_key_present"]:
         parser.error("OPENAI_API_KEY no está presente; no se inició el proveedor")
+    dirty_inputs = _dirty_execution_inputs()
+    if dirty_inputs:
+        parser.error(
+            "live bloqueado porque los insumos de ejecución tienen cambios sin commit: "
+            + dirty_inputs
+        )
 
     from src.conversational_analytics.evaluation_live_campaign import run_campaign
 
