@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from stage2_continuation_lineage import validate_continuation_inputs
+from stage2_finalization_lineage import validate_finalization_inputs
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURE = ROOT / "tests/fixtures/chat_evals/f2_9_stage2.json"
@@ -284,13 +285,18 @@ def build_blind_dataset(
                     "source_report_sha256": report_sha256,
                     "identity_hash": identity_hash,
                     "execution_commit": identity.get("execution_commit"),
+                    **spec.get("provenance", {}),
                 }
             campaign_hashes.add(campaign_hash)
         if continuation_lineage is not None:
             chain = continuation_lineage["identity_chains"][candidate]
             candidate_identity = chain[-1]["identity"]
             candidate_identity_hash = chain[-1]["identity_hash"]
-            candidate_campaign_hash = continuation_lineage["continuation_campaign_identity_hash"]
+            candidate_campaign_hash = (
+                continuation_lineage["finalization_campaign_identity_hash"]
+                if continuation_lineage.get("lineage_mode") == "finalization"
+                else continuation_lineage["continuation_campaign_identity_hash"]
+            )
             identity_chains[candidate] = chain
             for case_id, source in candidate_case_sources.items():
                 source["source_execution_commit"] = continuation_lineage["source_execution_commit"]
@@ -312,9 +318,11 @@ def build_blind_dataset(
     if len(prompts) != 1:
         raise ExportError("Los cuatro reportes no usaron el mismo prompt efectivo")
     shared_identity_fields = (
-        "data_version", "semantic_version", "source_fingerprint", "execution_commit",
+        "data_version", "semantic_version", "source_fingerprint",
         "prompt_content_hash", "tool_spec_hash", "limits", "text_verbosity",
     )
+    if continuation_lineage is None or continuation_lineage.get("lineage_mode") != "finalization":
+        shared_identity_fields = (*shared_identity_fields[:3], "execution_commit", *shared_identity_fields[3:])
     reference_identity = metadata_by_candidate[next(iter(CANDIDATES))]["identity"]
     for metadata in metadata_by_candidate.values():
         identity = metadata["identity"]
@@ -381,7 +389,7 @@ def build_blind_dataset(
             for candidate in CANDIDATES
         },
         "campaign_identity_hash": (
-            continuation_lineage["continuation_campaign_identity_hash"]
+            continuation_lineage.get("finalization_campaign_identity_hash", continuation_lineage["continuation_campaign_identity_hash"])
             if continuation_lineage is not None else next(iter(campaign_hashes))
         ),
         "questions": private_questions,
@@ -427,20 +435,45 @@ def _write_private(path: Path, content: bytes) -> None:
         raise
 
 
+def _reject_symlink_path(path: Path, label: str) -> None:
+    absolute = path.absolute()
+    cursor = Path(absolute.anchor)
+    for part in absolute.parts[1:]:
+        cursor /= part
+        if cursor.is_symlink():
+            raise ExportError(f"La ruta de {label} contiene un enlace simbólico")
+
+
 def export(
     report_paths: dict[str, Path | Sequence[Path]] | None,
     out_dir: Path,
     fixture_path: Path = FIXTURE,
     continuation_plan_path: Path | None = None,
     owner_usage_evidence_path: Path | None = None,
+    finalization_plan_path: Path | None = None,
 ) -> dict[str, Any]:
+    _reject_symlink_path(out_dir, "salida privada")
     output_dir = out_dir.resolve()
     state_root = (ROOT / ".state").resolve()
     if state_root not in output_dir.parents:
         raise ExportError("Los archivos de revisión y la llave deben escribirse dentro de .state/ ignorado")
     fixture = _read_json(fixture_path, "fixture")
     continuation_lineage = None
-    if continuation_plan_path is not None:
+    if continuation_plan_path is not None and finalization_plan_path is not None:
+        raise ExportError("Elige un solo plan privado: continuación o finalización")
+    if finalization_plan_path is not None:
+        if report_paths:
+            raise ExportError("Los reportes de finalización se resuelven desde los ledgers fijados")
+        if owner_usage_evidence_path is None:
+            raise ExportError("La finalización requiere la ruta de la evidencia privada del dueño")
+        report_paths, continuation_lineage = validate_finalization_inputs(
+            finalization_plan_path, fixture_path, owner_usage_evidence_path, fixture,
+            candidates=CANDIDATES, expected_case_ids=EXPECTED_CASE_IDS,
+            ExportError=ExportError, canonical=_canonical, digest=_digest,
+            read_json_with_hash=_read_json_with_hash, report_cases=_report_cases,
+            fixture_cases=_fixture_cases,
+        )
+    elif continuation_plan_path is not None:
         if report_paths:
             raise ExportError("Los reportes de una continuación se resuelven desde el ledger real y su plan")
         if owner_usage_evidence_path is None:
@@ -457,12 +490,22 @@ def export(
     dataset, alias_key, technical = build_blind_dataset(fixture, report_paths, continuation_lineage)
     if continuation_lineage is not None:
         technical.update({
-            "continuation": True,
+            "continuation": continuation_lineage.get("lineage_mode") != "finalization",
             "response_count_ceiling": 59,
             "source_campaign_identity_hash": continuation_lineage["source_campaign_identity_hash"],
             "continuation_campaign_identity_hash": continuation_lineage["continuation_campaign_identity_hash"],
             "owner_evidence_sha256": continuation_lineage["owner_evidence_sha256"],
         })
+        if continuation_lineage.get("lineage_mode") == "finalization":
+            technical.update({
+                "finalization": True,
+                "finalization_plan_sha256": continuation_lineage["finalization_plan_sha256"],
+                "finalization_campaign_identity_hash": continuation_lineage["finalization_campaign_identity_hash"],
+                "finalization_execution_commit": continuation_lineage["finalization_execution_commit"],
+                "finalization_ledger_sha256": continuation_lineage["finalization_ledger_sha256"],
+                "recovery_sha256": continuation_lineage["recovery_sha256"],
+                "source_progress_sha256": continuation_lineage["progress_sha256"],
+            })
     payloads = {
         "stage2-review.json": dataset,
         "stage2-alias-key.json": alias_key,
@@ -497,19 +540,22 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--continuation-plan", type=Path,
                         help="Plan privado y ledger real para unir la continuación autorizada stage2")
+    parser.add_argument("--finalization-plan", type=Path,
+                        help="Plan privado para unir el piloto, la continuación interrumpida y su finalización")
     parser.add_argument("--owner-usage-evidence", type=Path,
                         help="Archivo privado con la evidencia agregada owner-reported referida por el plan")
     args = parser.parse_args(argv)
     path_values = (args.luna_medium_report, args.luna_max_report, args.sol_low_report, args.sol_medium_report)
     paths = None
-    if args.continuation_plan is None:
+    if args.continuation_plan is None and args.finalization_plan is None:
         if any(value is None for value in path_values):
             parser.error("Se requiere cada reporte candidato o --continuation-plan")
         paths = dict(zip(CANDIDATES, path_values, strict=True))
     elif any(value is not None for value in path_values):
         parser.error("No combines rutas de reportes manuales con --continuation-plan")
     try:
-        result = export(paths, args.out, args.fixture, args.continuation_plan, args.owner_usage_evidence)
+        result = export(paths, args.out, args.fixture, args.continuation_plan,
+                        args.owner_usage_evidence, args.finalization_plan)
     except (ExportError, FileExistsError, OSError) as exc:
         parser.error(str(exc))
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))

@@ -33,6 +33,7 @@ def validate_continuation_inputs(
     read_json_with_hash: Any,
     report_cases: Any,
     fixture_cases: Any,
+    allow_interrupted_active_run: bool = False,
 ) -> tuple[dict[str, Sequence[Path]], dict[str, Any]]:
     """Load and verify the explicit source-to-continuation provenance chain."""
     plan, plan_sha = read_json_with_hash(plan_path, "continuation plan")
@@ -213,7 +214,15 @@ def validate_continuation_inputs(
         raise ExportError("La identidad del ledger de continuación no coincide con sus bytes")
     if continuation.get("source_campaign_identity_hash") != source_campaign_hash:
         raise ExportError("El plan de continuación no apunta a la campaña fuente")
-    if continuation_ledger.get("active_run_id") is not None or continuation_ledger.get("status") not in {
+    active_run_id = continuation_ledger.get("active_run_id")
+    if allow_interrupted_active_run:
+        if (
+            continuation_ledger.get("status") != "running"
+            or not isinstance(active_run_id, str)
+            or active_run_id not in {run.get("run_id") for run in continuation_runs}
+        ):
+            raise ExportError("El ledger interrumpido no conserva su corrida activa planeada")
+    elif active_run_id is not None or continuation_ledger.get("status") not in {
         "completed", "stopped_campaign_budget", "stopped_provider_error", "stopped_unknown_spend",
     }:
         raise ExportError("El ledger de continuación aún tiene una corrida activa o estado no exportable")
@@ -232,6 +241,8 @@ def validate_continuation_inputs(
         or not set(actual_completed) <= set(planned_run_ids)
     ):
         raise ExportError("El ledger real no coincide exactamente con el plan de continuación")
+    if allow_interrupted_active_run and active_run_id in actual_completed:
+        raise ExportError("La corrida activa interrumpida también aparece como cerrada en el ledger")
     live_result = plan.get("live_result")
     if not isinstance(live_result, dict) or live_result.get("identity_hash") != continuation_campaign_hash:
         raise ExportError("El plan no conserva el resultado del ledger de continuación por su hash")
