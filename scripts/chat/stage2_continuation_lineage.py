@@ -323,14 +323,27 @@ def validate_continuation_inputs(
         if run_id not in actual_completed:
             continue
         actual = actual_completed[run_id]
-        if canonical(actual.get("identity")) != canonical(run.get("identity")):
-            raise ExportError("El slot real de continuación no conserva su identidad planeada")
+        if (
+            canonical(actual.get("identity")) != canonical(run.get("identity"))
+            or actual.get("identity_hash") != run.get("identity_hash")
+        ):
+            raise ExportError("El slot real de continuación no conserva su identidad y hash planeados")
         summary = actual.get("summary", {})
         report_path = Path(str(summary.get("report_path", ""))).resolve()
         if not report_path.is_file():
             raise ExportError("Falta el reporte detallado citado por el ledger de continuación")
         continuation_report, report_sha = read_json_with_hash(report_path, "reporte de continuación")
         indexed, metadata, identity_hash, campaign_hash = report_cases(continuation_report, report_path)
+        if (
+            continuation_report.get("mode") != "live-evaluation"
+            or continuation_report.get("probe_only") is not False
+            or canonical(metadata["identity"]) != canonical(run.get("identity"))
+            or identity_hash != run.get("identity_hash")
+            or continuation_report.get("run_identity_hash") != run.get("identity_hash")
+            or continuation_report.get("identity_hash") != run.get("identity_hash")
+            or campaign_hash != continuation_campaign_hash
+        ):
+            raise ExportError("El reporte de continuación no coincide con identidad/hash de corrida y campaña del ledger")
         expected_case_ids = list(run.get("case_ids", []))
         actual_case_rows = actual.get("cases", [])
         if [case_id for case_id in indexed if case_id in set(expected_case_ids)] != [

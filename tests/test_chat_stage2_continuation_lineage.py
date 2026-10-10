@@ -72,6 +72,25 @@ class Stage2ContinuationExportTests(unittest.TestCase):
                     with self.assertRaises(exporter.ExportError):
                         exporter.export(None, root / ".state/review", root / "fixture.json", plan_path, evidence_path)
 
+    def test_continuation_report_hashes_must_match_ledger_and_plan(self):
+        for tamper in ("campaign", "run_identity_hash", "identity_hash", "probe"):
+            with self.subTest(tamper=tamper), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                plan_path, evidence_path, report_paths, _ = continuation_artifacts(root)
+                report_path = report_paths[0]
+                report = json.loads(report_path.read_text(encoding="utf-8"))
+                if tamper == "campaign":
+                    report["campaign_identity_hash"] = "c" * 64
+                elif tamper in {"run_identity_hash", "identity_hash"}:
+                    report[tamper] = "c" * 64
+                else:
+                    report["mode"] = "live-probe"
+                    report["probe_only"] = True
+                report_path.write_text(json.dumps(report), encoding="utf-8")
+                with patch.object(exporter, "ROOT", root):
+                    with self.assertRaises(exporter.ExportError):
+                        exporter.export(None, root / ".state/review", root / "fixture.json", plan_path, evidence_path)
+
     def test_continuation_rejects_replayed_source_case_overlap(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
