@@ -200,9 +200,7 @@ def latest_provider_turn_id(client: Any, session_id: str) -> str | None:
             return value if isinstance(value, str) and value else None
     except Exception:
         # Read history only before input; do not guess if that lookup fails.
-        raise OpenAIProviderError(
-            "No se pudo verificar el historial antes del siguiente mensaje"
-        ) from None
+        raise OpenAIProviderError("No se pudo verificar el historial antes del siguiente mensaje") from None
     return None
 
 
@@ -563,3 +561,30 @@ def close_stream(stream: Any) -> None:
                 close()
     except Exception:
         return
+
+
+def latest_user_message(messages: list[dict[str, Any]]) -> str:
+    for message in reversed(messages):
+        if isinstance(message, dict) and message.get("role") == "user":
+            content = message.get("content")
+            if isinstance(content, str) and content.strip():
+                return content
+    raise OpenAIProviderError("No hay un mensaje de usuario para enviar al proveedor")
+
+
+def app_turn_id(messages: list[dict[str, Any]]) -> str:
+    import uuid
+
+    for message in reversed(messages):
+        if isinstance(message, dict) and message.get("role") == "user":
+            for key in ("turn_id", "id"):
+                candidate = message.get(key)
+                if isinstance(candidate, str) and candidate:
+                    return candidate
+    return str(uuid.uuid4())
+
+
+def track_session(session_id: str | None, persist_session, tracked: set[str]) -> None:
+    if session_id and session_id not in tracked:
+        persist_session(session_id)
+        tracked.add(session_id)

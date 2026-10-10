@@ -1,6 +1,6 @@
 # Periodo por omisión del chat · 9 oct 2026
 
-La [UI ya enviaba la selección](../../web/src/views/chat/context.ts); algunos casos históricos del [benchmark](../../src/conversational_analytics/evaluation_live.py) omitían `context`, que el harness sustituye por `{}`.
+La [UI ya enviaba la selección](../../web/src/views/chat/context.ts); algunos casos históricos del [benchmark](https://github.com/salvamalfa/aeromexico-tracker/blob/5e908a11/src/conversational_analytics/evaluation_live.py) omitían `context`, que el harness sustituye por `{}`.
 El prompt del proveedor ahora prioriza periodo explícito, seguimiento conversacional inequívoco, selección del dashboard y aclaración si falta periodo.
 Esta regla solo resuelve el periodo: no deduce métrica, entidad, segmento, mercado, denominador ni fuente ambiguos.
 Baseline de producción: [prompt en `135e89e`](https://github.com/salvamalfa/aeromexico-tracker/blob/135e89e/src/conversational_analytics/providers/_openai_helpers.py).
