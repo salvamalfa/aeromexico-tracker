@@ -17,6 +17,8 @@ import secrets
 from pathlib import Path
 from typing import Any, Sequence
 
+from stage2_continuation_lineage import validate_continuation_inputs
+
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURE = ROOT / "tests/fixtures/chat_evals/f2_9_stage2.json"
 DEFAULT_OUT = ROOT / ".state/outputs/chat-evaluations/f2-9-stage-2-blind-review"
@@ -129,13 +131,16 @@ def _report_cases(report: dict[str, Any], path: Path) -> tuple[dict[str, dict[st
 
 
 def _validate_report(candidate: str, metadata: dict[str, Any], identity_hash: str,
-                     fixture: dict[str, Any], cases: list[dict[str, Any]], path: Path) -> None:
+                     fixture: dict[str, Any], cases: list[dict[str, Any]], path: Path,
+                     expected_identity: dict[str, Any] | None = None,
+                     expected_case_ids: Sequence[str] | None = None) -> None:
     model_name, effort = CANDIDATES[candidate]
     report, model, identity = metadata["report"], metadata["model"], metadata["identity"]
     if report.get("mode") != "live-evaluation" or report.get("probe_only") is not False:
         raise ExportError(f"Se requiere un reporte detallado live-evaluation, no una sonda: {path.name}")
     expected_versions = fixture["expected_versions"]
-    expected_identity = {
+    planned_case_ids = list(expected_case_ids or [case["id"] for case in cases])
+    required_identity = {
         "stage": 2,
         "candidate": candidate,
         "model": model_name,
@@ -143,13 +148,15 @@ def _validate_report(candidate: str, metadata: dict[str, Any], identity_hash: st
         "prompt_variant": "proposed",
         "repetition": 1,
         "prompt_content_hash": identity.get("prompt_content_hash"),
-        "case_ids_hash": _digest([case["id"] for case in cases]),
+        "case_ids_hash": _digest(planned_case_ids),
         "case_fixture_hash": _digest(cases),
         "run_id": f"f22-s2-{re.sub(r'[^a-z0-9]+', '-', candidate.casefold()).strip('-')}-proposed-r1",
     }
-    for key, value in expected_identity.items():
-        if identity.get(key) != value:
+    for key, value in required_identity.items():
+        if expected_identity is None and identity.get(key) != value:
             raise ExportError(f"La identidad de corrida no coincide en {key}: {path.name}")
+    if expected_identity is not None and _canonical(identity) != _canonical(expected_identity):
+        raise ExportError(f"La identidad del informe no coincide con su lineage autorizado: {path.name}")
     if not isinstance(identity.get("prompt_content_hash"), str) or not HASH.fullmatch(identity["prompt_content_hash"]):
         raise ExportError(f"Falta el hash del prompt efectivo: {path.name}")
     if report.get("data_version") != expected_versions["data_version"] or identity.get("data_version") != expected_versions["data_version"]:
@@ -163,8 +170,10 @@ def _validate_report(candidate: str, metadata: dict[str, Any], identity_hash: st
     # A resumed live report records the number of cases attempted in that
     # invocation. Earlier budget-stopped reports can retain the full planned
     # count while containing only the rows reached before the stop.
-    if declared_count not in (row_count, len(cases)) or identity.get("case_count", len(cases)) != len(cases):
+    if declared_count not in (row_count, len(planned_case_ids)):
         raise ExportError(f"El fragmento no coincide con los casos planeados: {path.name}")
+    if identity.get("case_ids_hash") != _digest(planned_case_ids):
+        raise ExportError(f"Los IDs del fragmento no coinciden con la corrida planeada: {path.name}")
     if identity_hash != _digest(identity):
         raise ExportError(f"No se pudo verificar el identity hash: {path.name}")
 
@@ -192,6 +201,7 @@ def _answer(row: dict[str, Any] | None, case_id: str) -> tuple[str | None, str]:
 def build_blind_dataset(
     fixture: dict[str, Any],
     report_paths: dict[str, Path | Sequence[Path]],
+    continuation_lineage: dict[str, Any] | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     cases = _fixture_cases(fixture)
     if set(report_paths) != set(CANDIDATES):
@@ -202,10 +212,11 @@ def build_blind_dataset(
     source_reports: dict[str, list[dict[str, Any]]] = {}
     case_sources: dict[str, dict[str, dict[str, Any]]] = {}
     campaign_hashes: set[str] = set()
+    identity_chains: dict[str, list[dict[str, Any]]] = {}
     for candidate in CANDIDATES:
         raw_paths = report_paths[candidate]
         paths = [raw_paths] if isinstance(raw_paths, Path) else list(raw_paths)
-        if not paths:
+        if not paths and continuation_lineage is None:
             raise ExportError(f"El candidato {candidate} no tiene reportes fuente")
         merged: dict[str, dict[str, Any]] = {}
         candidate_fragments: list[dict[str, Any]] = []
@@ -213,39 +224,80 @@ def build_blind_dataset(
         candidate_identity_hash: str | None = None
         candidate_campaign_hash: str | None = None
         candidate_case_sources: dict[str, dict[str, Any]] = {}
-        for path in paths:
+        specs = (
+            continuation_lineage["fragments"][candidate]
+            if continuation_lineage is not None
+            else [{"path": path, "role": "campaign"} for path in paths]
+        )
+        if continuation_lineage is not None and [spec["path"] for spec in specs] != paths:
+            raise ExportError("Las rutas de reportes no coinciden con el plan privado de continuación")
+        seen_chain: set[str] = set()
+        for spec in specs:
+            path = spec["path"]
             report, report_sha256 = _read_json_with_hash(path, candidate)
             indexed, metadata, identity_hash, campaign_hash = _report_cases(report, path)
-            _validate_report(candidate, metadata, identity_hash, fixture, cases, path)
+            expected_identity = spec.get("identity") if continuation_lineage is not None else None
+            expected_case_ids = spec.get("expected_case_ids") if continuation_lineage is not None else None
+            _validate_report(candidate, metadata, identity_hash, fixture, cases, path,
+                             expected_identity=expected_identity, expected_case_ids=expected_case_ids)
             unknown = set(indexed) - set(EXPECTED_CASE_IDS)
             if unknown:
                 raise ExportError(f"El reporte contiene casos ajenos al fixture: {path.name}")
+            if continuation_lineage is not None:
+                if report_sha256 != spec.get("sha256") or campaign_hash != spec.get("campaign_identity_hash"):
+                    raise ExportError(f"Los bytes del fragmento {spec.get('role')} no coinciden con el lineage privado")
+                if set(indexed) - set(expected_case_ids or []):
+                    raise ExportError(f"El fragmento contiene casos fuera de su slot autorizado: {path.name}")
+                if set(indexed) != set(spec.get("case_ids", [])):
+                    raise ExportError(f"Los casos del fragmento no coinciden con ledger/lineage: {path.name}")
+                if spec["role"] in seen_chain:
+                    raise ExportError(f"El lineage repite el tipo de fragmento {spec['role']} para {candidate}")
+                seen_chain.add(spec["role"])
             overlap = set(merged) & set(indexed)
             if overlap:
                 raise ExportError(f"Los fragmentos de {candidate} se traslapan en casos: {', '.join(sorted(overlap))}")
             identity = metadata["identity"]
-            if candidate_identity is not None and (
+            if continuation_lineage is None and candidate_identity is not None and (
                 _canonical(identity) != _canonical(candidate_identity)
                 or identity_hash != candidate_identity_hash
                 or campaign_hash != candidate_campaign_hash
             ):
                 raise ExportError(f"Los fragmentos de {candidate} no comparten identidad exacta de corrida/campaña")
-            candidate_identity = identity
-            candidate_identity_hash = identity_hash
-            candidate_campaign_hash = campaign_hash
+            if continuation_lineage is None:
+                candidate_identity = identity
+                candidate_identity_hash = identity_hash
+                candidate_campaign_hash = campaign_hash
             merged.update(indexed)
             fragment = {
+                "lineage_role": spec.get("role", "campaign"),
+                "campaign_identity_hash": campaign_hash,
                 "source_report_sha256": report_sha256,
                 "identity_hash": identity_hash,
+                "execution_commit": identity.get("execution_commit"),
                 "case_ids": [case_id for case_id in EXPECTED_CASE_IDS if case_id in indexed],
             }
             candidate_fragments.append(fragment)
             for case_id in indexed:
                 candidate_case_sources[case_id] = {
+                    "lineage_role": spec.get("role", "campaign"),
+                    "campaign_identity_hash": campaign_hash,
                     "source_report_sha256": report_sha256,
                     "identity_hash": identity_hash,
+                    "execution_commit": identity.get("execution_commit"),
                 }
             campaign_hashes.add(campaign_hash)
+        if continuation_lineage is not None:
+            chain = continuation_lineage["identity_chains"][candidate]
+            candidate_identity = chain[-1]["identity"]
+            candidate_identity_hash = chain[-1]["identity_hash"]
+            candidate_campaign_hash = continuation_lineage["continuation_campaign_identity_hash"]
+            identity_chains[candidate] = chain
+            for case_id, source in candidate_case_sources.items():
+                source["source_execution_commit"] = continuation_lineage["source_execution_commit"]
+                source["continuation_execution_commit"] = continuation_lineage["continuation_execution_commit"]
+                source["plan_sha256"] = continuation_lineage["plan_sha256"]
+                source["source_ledger_sha256"] = continuation_lineage["source_ledger_sha256"]
+                source["continuation_ledger_sha256"] = continuation_lineage["continuation_ledger_sha256"]
         indexed_by_candidate[candidate] = merged
         metadata_by_candidate[candidate] = {
             "identity": candidate_identity,
@@ -254,9 +306,9 @@ def build_blind_dataset(
         identity_hashes[candidate] = str(candidate_identity_hash)
         source_reports[candidate] = candidate_fragments
         case_sources[candidate] = candidate_case_sources
-    if len(campaign_hashes) != 1:
+    if continuation_lineage is None and len(campaign_hashes) != 1:
         raise ExportError("Los cuatro reportes no pertenecen a la misma identidad de campaña")
-    prompts = {item["identity"]["prompt_content_hash"] for item in metadata_by_candidate.values()}
+    prompts = {item["identity"]["prompt_content_hash"] for item in metadata_by_candidate.values() if item["identity"]}
     if len(prompts) != 1:
         raise ExportError("Los cuatro reportes no usaron el mismo prompt efectivo")
     shared_identity_fields = (
@@ -266,6 +318,8 @@ def build_blind_dataset(
     reference_identity = metadata_by_candidate[next(iter(CANDIDATES))]["identity"]
     for metadata in metadata_by_candidate.values():
         identity = metadata["identity"]
+        if identity is None:
+            raise ExportError("El lineage no conserva identidad nueva para cada candidato")
         if any(identity.get(field) != reference_identity.get(field) for field in shared_identity_fields):
             raise ExportError("Los cuatro reportes no comparten snapshot, prompt, herramientas y límites")
 
@@ -310,12 +364,26 @@ def build_blind_dataset(
             candidate: {
                 "identity_hash": identity_hashes[candidate],
                 "identity": metadata_by_candidate[candidate]["identity"],
+                **({
+                    "identity_chain": identity_chains[candidate],
+                    "source_campaign_identity_hash": continuation_lineage["source_campaign_identity_hash"],
+                    "source_execution_commit": continuation_lineage["source_execution_commit"],
+                    "continuation_campaign_identity_hash": continuation_lineage["continuation_campaign_identity_hash"],
+                    "continuation_execution_commit": continuation_lineage["continuation_execution_commit"],
+                    "source_ledger_sha256": continuation_lineage["source_ledger_sha256"],
+                    "continuation_ledger_sha256": continuation_lineage["continuation_ledger_sha256"],
+                    "owner_evidence_sha256": continuation_lineage["owner_evidence_sha256"],
+                    "continuation_plan_sha256": continuation_lineage["plan_sha256"],
+                } if continuation_lineage is not None else {}),
                 "source_reports": source_reports[candidate],
                 "case_sources": case_sources[candidate],
             }
             for candidate in CANDIDATES
         },
-        "campaign_identity_hash": next(iter(campaign_hashes)),
+        "campaign_identity_hash": (
+            continuation_lineage["continuation_campaign_identity_hash"]
+            if continuation_lineage is not None else next(iter(campaign_hashes))
+        ),
         "questions": private_questions,
     }
     technical = {
@@ -359,13 +427,42 @@ def _write_private(path: Path, content: bytes) -> None:
         raise
 
 
-def export(report_paths: dict[str, Path | Sequence[Path]], out_dir: Path, fixture_path: Path = FIXTURE) -> dict[str, Any]:
+def export(
+    report_paths: dict[str, Path | Sequence[Path]] | None,
+    out_dir: Path,
+    fixture_path: Path = FIXTURE,
+    continuation_plan_path: Path | None = None,
+    owner_usage_evidence_path: Path | None = None,
+) -> dict[str, Any]:
     output_dir = out_dir.resolve()
     state_root = (ROOT / ".state").resolve()
     if state_root not in output_dir.parents:
         raise ExportError("Los archivos de revisión y la llave deben escribirse dentro de .state/ ignorado")
     fixture = _read_json(fixture_path, "fixture")
-    dataset, alias_key, technical = build_blind_dataset(fixture, report_paths)
+    continuation_lineage = None
+    if continuation_plan_path is not None:
+        if report_paths:
+            raise ExportError("Los reportes de una continuación se resuelven desde el ledger real y su plan")
+        if owner_usage_evidence_path is None:
+            raise ExportError("La continuación requiere la ruta de la evidencia privada del dueño")
+        report_paths, continuation_lineage = validate_continuation_inputs(
+            continuation_plan_path, fixture_path, owner_usage_evidence_path, fixture,
+            candidates=CANDIDATES, expected_case_ids=EXPECTED_CASE_IDS,
+            ExportError=ExportError, canonical=_canonical, digest=_digest,
+            read_json_with_hash=_read_json_with_hash, report_cases=_report_cases,
+            fixture_cases=_fixture_cases,
+        )
+    if report_paths is None:
+        raise ExportError("Faltan reportes o plan de continuación")
+    dataset, alias_key, technical = build_blind_dataset(fixture, report_paths, continuation_lineage)
+    if continuation_lineage is not None:
+        technical.update({
+            "continuation": True,
+            "response_count_ceiling": 59,
+            "source_campaign_identity_hash": continuation_lineage["source_campaign_identity_hash"],
+            "continuation_campaign_identity_hash": continuation_lineage["continuation_campaign_identity_hash"],
+            "owner_evidence_sha256": continuation_lineage["owner_evidence_sha256"],
+        })
     payloads = {
         "stage2-review.json": dataset,
         "stage2-alias-key.json": alias_key,
@@ -394,16 +491,25 @@ def export(report_paths: dict[str, Path | Sequence[Path]], out_dir: Path, fixtur
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     for candidate, option in zip(CANDIDATES, ("luna-medium", "luna-max", "sol-low", "sol-medium"), strict=True):
-        parser.add_argument(f"--{option}-report", required=True, action="append", type=Path,
+        parser.add_argument(f"--{option}-report", action="append", type=Path,
                             help="Informe detallado del candidato; repite la opción para fragmentos reanudados")
     parser.add_argument("--fixture", type=Path, default=FIXTURE)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    parser.add_argument("--continuation-plan", type=Path,
+                        help="Plan privado y ledger real para unir la continuación autorizada stage2")
+    parser.add_argument("--owner-usage-evidence", type=Path,
+                        help="Archivo privado con la evidencia agregada owner-reported referida por el plan")
     args = parser.parse_args(argv)
-    paths = dict(zip(CANDIDATES, (
-        args.luna_medium_report, args.luna_max_report, args.sol_low_report, args.sol_medium_report,
-    ), strict=True))
+    path_values = (args.luna_medium_report, args.luna_max_report, args.sol_low_report, args.sol_medium_report)
+    paths = None
+    if args.continuation_plan is None:
+        if any(value is None for value in path_values):
+            parser.error("Se requiere cada reporte candidato o --continuation-plan")
+        paths = dict(zip(CANDIDATES, path_values, strict=True))
+    elif any(value is not None for value in path_values):
+        parser.error("No combines rutas de reportes manuales con --continuation-plan")
     try:
-        result = export(paths, args.out, args.fixture)
+        result = export(paths, args.out, args.fixture, args.continuation_plan, args.owner_usage_evidence)
     except (ExportError, FileExistsError, OSError) as exc:
         parser.error(str(exc))
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))

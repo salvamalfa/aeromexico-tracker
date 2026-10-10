@@ -54,6 +54,8 @@ def run_report(candidate: str, cases: list[dict] | None = None) -> dict:
         "case_ids_hash": exporter._digest([case["id"] for case in fixture_cases]),
         "case_fixture_hash": exporter._digest(fixture_cases),
     }
+
+
     return {
         "mode": "live-evaluation",
         "probe_only": False,
