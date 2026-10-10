@@ -34,10 +34,20 @@ def _round_up_ratio(total: int, count: int) -> int:
 def _samples(sources: dict[str, dict[str, Any]], source_hashes: dict[str, str], error: type[ValueError]):
     tokens: list[tuple[int, int]] = []
     failed = 0
+    candidate_counts: dict[str, int] = {}
+    expected_candidates = {
+        "original_report": "gpt-6-luna@medium",
+        "closed_report_luna_medium": "gpt-6-luna@medium",
+        "closed_report_luna_max": "gpt-6-luna@max",
+    }
     for name in SAMPLE_SOURCES[:3]:
         report = sources.get(name, {})
         models = report.get("models", [])
-        if not isinstance(models, list) or len(models) != 1:
+        if (
+            not isinstance(models, list)
+            or len(models) != 1
+            or models[0].get("candidate") != expected_candidates[name]
+        ):
             raise error("La muestra presupuestal no conserva el reporte de un solo modelo")
         rows = models[0].get("cases", [])
         for row in rows:
@@ -50,6 +60,8 @@ def _samples(sources: dict[str, dict[str, Any]], source_hashes: dict[str, str], 
             if any(isinstance(value, bool) or not isinstance(value, int) or value < 0 for value in values):
                 raise error("Una respuesta de la muestra carece de tokens enteros válidos")
             tokens.append((values[0], values[1]))
+            candidate = expected_candidates[name]
+            candidate_counts[candidate] = candidate_counts.get(candidate, 0) + 1
     recovery = sources.get("recovery", {})
     usage = recovery.get("usage", {})
     recovered = (usage.get("input_tokens"), usage.get("output_tokens"))
@@ -64,12 +76,21 @@ def _samples(sources: dict[str, dict[str, Any]], source_hashes: dict[str, str], 
     ):
         raise error("La muestra requiere 29 respuestas reportadas y la recuperación terminal exacta")
     tokens.append((recovered[0], recovered[1]))
+    candidate_counts["gpt-6.1-sol@low"] = 1
+    if candidate_counts != {
+        "gpt-6-luna@medium": 14,
+        "gpt-6-luna@max": 15,
+        "gpt-6.1-sol@low": 1,
+    }:
+        raise error(
+            "La mezcla histórica requiere 14 Luna medium, 15 max y 1 Sol low"
+        )
     source_sha = {
         "terminal_recovery" if name == "terminal_recovery" else name:
         source_hashes["recovery" if name == "terminal_recovery" else name]
         for name in SAMPLE_SOURCES
     }
-    return tokens, source_sha
+    return tokens, source_sha, candidate_counts
 
 
 def _forecast(remaining: float, carry_total: float, error: type[ValueError]) -> dict[str, Any]:
@@ -125,7 +146,7 @@ def validate_budget_admission_policy(
     if _sha256(tariff_raw) != TARIFF_SHA256:
         raise error("El catálogo de tarifas no coincide con el pin aprobado")
 
-    tokens, sample_sha = _samples(sources, source_hashes, error)
+    tokens, sample_sha, candidate_counts = _samples(sources, source_hashes, error)
     sample_count = len(tokens)
     input_total = sum(row[0] for row in tokens)
     output_total = sum(row[1] for row in tokens)
@@ -135,6 +156,17 @@ def validate_budget_admission_policy(
     reserved_input = math.ceil(mean_input * (1 + margin))
     reserved_output = math.ceil(mean_output * (1 + margin))
     per_case = conservative_usage_cost(reserved_input, reserved_output, tariff)
+    rates = tariff["models"]["gpt-6.1-sol"]
+    unit_prices = {
+        "input_normal": float(rates["input_usd_per_million"]),
+        "input_cache_write": float(rates["cache_write_usd_per_million"]),
+        "output": float(rates["output_usd_per_million"]),
+    }
+    long_context = {
+        "long_context_threshold_input_tokens": int(rates["long_context_threshold_input_tokens"]),
+        "long_context_input_multiplier": float(rates["long_context_input_multiplier"]),
+        "long_context_output_multiplier": float(rates["long_context_output_multiplier"]),
+    }
     planned_total = per_case * 29
     remaining = billing.get("remaining_budget_usd")
     carry_total = billing.get("carry_total_estimate_usd")
@@ -155,14 +187,18 @@ def validate_budget_admission_policy(
         "input_tokens_per_turn": reserved_input,
         "output_tokens_per_turn": reserved_output,
         "historical_sample_count": sample_count,
+        "historical_candidate_counts": candidate_counts,
         "historical_input_tokens": input_total,
         "historical_output_tokens": output_total,
         "mean_input_tokens_rounded_up": mean_input,
         "mean_output_tokens_rounded_up": mean_output,
+        "budget_guaranteed": False,
         "safety_margin_fraction": margin,
         "per_case_estimated_reservation_usd": per_case,
         "planned_request_count": 29,
         "planned_batch_estimated_reservation_usd": planned_total,
+        "unit_prices_usd_per_million": unit_prices,
+        **long_context,
         "price_basis": (
             "separate Sol input at cache-write rate and output at catalog rate; no cache credit"
         ),
@@ -173,7 +209,6 @@ def validate_budget_admission_policy(
     if (
         _sha256(tariff_raw) != TARIFF_SHA256
         or any(reservation.get(key) != value for key, value in expected_fields.items())
-        or reservation.get("budget_guaranteed") is not False
         or billing.get("budget_admission_policy_sha256") != digest(reservation)
         or planned_total > remaining
         or carry_total + planned_total > 8.0
@@ -184,6 +219,7 @@ def validate_budget_admission_policy(
         "basis": reservation["basis"],
         "sha256": digest(reservation),
         "historical_sample_count": sample_count,
+        "historical_candidate_counts": candidate_counts,
         "historical_input_tokens": input_total,
         "historical_output_tokens": output_total,
         "safety_margin_fraction": margin,
@@ -191,6 +227,9 @@ def validate_budget_admission_policy(
         "output_tokens_per_turn": reserved_output,
         "planned_request_count": 29,
         "planned_batch_estimated_reservation_usd": planned_total,
+        "unit_prices_usd_per_million": unit_prices,
+        **long_context,
+        "price_basis": expected_fields["price_basis"],
         "source_sha256": sample_sha,
         "tariff_catalog_sha256": expected_fields["tariff_catalog_sha256"],
         "approved_budget_forecast_sha256": FORECAST_SHA256,

@@ -27,9 +27,11 @@ def _valid_inputs():
     ]
     original = rows[:8] + [{"model_turn_completed": False, "usage_complete": False}]
     reports = {
-        "original_report": {"models": [{"cases": original}]},
-        "closed_report_luna_medium": {"models": [{"cases": rows[8:14]}]},
-        "closed_report_luna_max": {"models": [{"cases": rows[14:]}]},
+        "original_report": {"models": [{"candidate": "gpt-6-luna@medium", "cases": original}]},
+        "closed_report_luna_medium": {
+            "models": [{"candidate": "gpt-6-luna@medium", "cases": rows[8:14]}]
+        },
+        "closed_report_luna_max": {"models": [{"candidate": "gpt-6-luna@max", "cases": rows[14:]}]},
         "recovery": {
             "capture_kind": "GET_completed_turn_recovery",
             "source": {"candidate": "gpt-6.1-sol@low", "case_id": "es_am_market_share"},
@@ -47,6 +49,22 @@ def _valid_inputs():
     reserved_input = (mean_input * 135 + 99) // 100
     reserved_output = (mean_output * 135 + 99) // 100
     per_case = admission.conservative_usage_cost(reserved_input, reserved_output, tariff)
+    rates = tariff["models"]["gpt-6.1-sol"]
+    candidate_counts = {
+        "gpt-6-luna@medium": 14,
+        "gpt-6-luna@max": 15,
+        "gpt-6.1-sol@low": 1,
+    }
+    unit_prices = {
+        "input_normal": float(rates["input_usd_per_million"]),
+        "input_cache_write": float(rates["cache_write_usd_per_million"]),
+        "output": float(rates["output_usd_per_million"]),
+    }
+    long_context = {
+        "long_context_threshold_input_tokens": int(rates["long_context_threshold_input_tokens"]),
+        "long_context_input_multiplier": float(rates["long_context_input_multiplier"]),
+        "long_context_output_multiplier": float(rates["long_context_output_multiplier"]),
+    }
     remaining, carry_total = 5.725, 2.275
     approved = admission._forecast(remaining, carry_total, ValueError)
     reservation = {
@@ -54,18 +72,21 @@ def _valid_inputs():
         "input_tokens_per_turn": reserved_input,
         "output_tokens_per_turn": reserved_output,
         "historical_sample_count": 30,
+        "historical_candidate_counts": candidate_counts,
         "historical_input_tokens": input_total,
         "historical_output_tokens": output_total,
         "mean_input_tokens_rounded_up": mean_input,
         "mean_output_tokens_rounded_up": mean_output,
+        "budget_guaranteed": False,
         "safety_margin_fraction": 0.35,
         "per_case_estimated_reservation_usd": per_case,
         "planned_request_count": 29,
         "planned_batch_estimated_reservation_usd": per_case * 29,
-        "price_basis": "separate Sol input at cache-write rate and output at catalog rate; no cache credit",
         "note": "planning estimate, not a hard cap",
-        "budget_guaranteed": False,
         "sample_source_sha256": sample_sha,
+        "unit_prices_usd_per_million": unit_prices,
+        **long_context,
+        "price_basis": "separate Sol input at cache-write rate and output at catalog rate; no cache credit",
         "tariff_catalog_sha256": _digest(tariff),
         "approved_budget_forecast_sha256": admission.FORECAST_SHA256,
     }
@@ -73,6 +94,7 @@ def _valid_inputs():
         "basis": reservation["basis"],
         "sha256": _digest(reservation),
         "historical_sample_count": 30,
+        "historical_candidate_counts": candidate_counts,
         "historical_input_tokens": input_total,
         "historical_output_tokens": output_total,
         "safety_margin_fraction": 0.35,
@@ -80,6 +102,9 @@ def _valid_inputs():
         "output_tokens_per_turn": reserved_output,
         "planned_request_count": 29,
         "planned_batch_estimated_reservation_usd": per_case * 29,
+        "unit_prices_usd_per_million": unit_prices,
+        **long_context,
+        "price_basis": "separate Sol input at cache-write rate and output at catalog rate; no cache credit",
         "source_sha256": sample_sha,
         "tariff_catalog_sha256": _digest(tariff),
         "approved_budget_forecast_sha256": admission.FORECAST_SHA256,
