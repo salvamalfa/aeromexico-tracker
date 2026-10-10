@@ -216,7 +216,7 @@ def test_live_provider_error_writes_private_report_and_stops_without_retry(
     assert FailingProvider.delete_calls == 0
     assert FailingProvider.cancel_calls == 1
     assert len(model["cases"]) == 1
-    assert model["cases"][0]["provider_cancel"] == "attempted"
+    assert model["cases"][0]["provider_cancel"] == "cancelled"
     assert model["cases"][0]["quality"] == {"scored": False, "not_scored_reason": "provider_error"}
     assert model["cases"][0]["error_metadata"] == {
         "exception_types": ["OpenAIProviderError", "AuthenticationError"],

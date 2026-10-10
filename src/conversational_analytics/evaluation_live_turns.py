@@ -42,11 +42,13 @@ def run_conversation(
         cancel_event = threading.Event()
         deadline_fired = threading.Event()
         cancellation_started = threading.Event()
+        cancellation_done = threading.Event()
         close_started = threading.Event()
         state_lock = threading.Lock()
         input_gate_lock = threading.Lock()
         input_gate_open = [True]
         provider_turn_id: list[str | None] = [None]
+        cancel_state: dict[str, Any] = {"status": "not_requested", "error": None}
         stream_closer: list[Callable[[], None] | None] = [None]
         turn_id_ready = threading.Event()
         started = time.monotonic()
@@ -67,8 +69,43 @@ def run_conversation(
                     return
                 cancellation_started.set()
             cancel = getattr(provider, "cancel", None)
-            if callable(cancel):
-                async_call(cancel, session_id)
+            if not callable(cancel):
+                with state_lock:
+                    cancel_state["status"] = "unavailable_manual_reconciliation"
+                cancellation_done.set()
+                return
+            with state_lock:
+                cancel_state["status"] = "pending_manual_reconciliation"
+
+            def request_cancel() -> None:
+                try:
+                    result = cancel(session_id)
+                except Exception as exc:
+                    with state_lock:
+                        cancel_state.update(
+                            status="failed_manual_reconciliation", error=exc
+                        )
+                else:
+                    with state_lock:
+                        if isinstance(result, dict) and isinstance(result.get("status"), str):
+                            cancel_state.update(
+                                status=result["status"],
+                                error=None,
+                                error_metadata=result.get("error_metadata"),
+                            )
+                        elif result is False:
+                            cancel_state.update(status="failed_manual_reconciliation", error=None)
+                        else:
+                            cancel_state.update(status="cancelled", error=None)
+                finally:
+                    cancellation_done.set()
+
+            try:
+                async_call(request_cancel)
+            except RuntimeError as exc:
+                with state_lock:
+                    cancel_state.update(status="failed_manual_reconciliation", error=exc)
+                cancellation_done.set()
 
         def close_once(closer: Callable[[], None] | None) -> None:
             if closer is None:
@@ -84,24 +121,27 @@ def run_conversation(
                 timeout_error.session_id = session[-1] if session else None  # type: ignore[attr-defined]
                 timeout_error.turn_id = provider_turn_id[0]  # type: ignore[attr-defined]
                 timeout_error.deadline_watchdog_fired = True  # type: ignore[attr-defined]
+                timeout_error.cancel_outcome = cancel_snapshot  # type: ignore[attr-defined]
+                timeout_error.cancel_done = cancellation_done  # type: ignore[attr-defined]
             except Exception:
                 pass
+
+        def cancel_snapshot() -> dict[str, Any]:
+            with state_lock:
+                return dict(cancel_state)
 
         def expire_turn() -> None:
             with input_gate_lock:
                 input_gate_open[0] = False
             deadline_fired.set()
             cancel_event.set()
+            with state_lock:
+                session_id = session[-1] if session else None
+                closer = stream_closer[0]
+            if session_id:
+                cancel_once(session_id)
+            close_once(closer)
             set_timeout_metadata()
-            def cleanup() -> None:
-                with state_lock:
-                    session_id = session[-1] if session else None
-                    closer = stream_closer[0]
-                if session_id:
-                    cancel_once(session_id)
-                close_once(closer)
-
-            async_call(cleanup)
 
         def authorize_input() -> None:
             if deadline_fired.is_set() or time.monotonic() >= deadline:

@@ -93,3 +93,24 @@ def test_registered_stream_close_is_idempotent_under_watchdog_race():
 
     assert not worker.is_alive()
     assert stream.close_count == 1
+
+
+def test_cancel_uses_finite_timeout_and_returns_remote_failure():
+    fake = FakeSessions()
+    client = FakeClient(fake)
+    client_options = []
+    client.with_options = lambda **kwargs: (client_options.append(kwargs) or client)
+    provider = _provider(client)
+
+    def fail_cancel(session_id, **kwargs):
+        fake.events.created.append({"session_id": session_id, **kwargs})
+        raise OSError("remote cancel failed")
+
+    fake.events.create = fail_cancel
+    result = provider.cancel("sess_fixture")
+
+    assert fake.events.created[0]["timeout"] == 10.0
+    assert fake.events.created[0]["events"] == [{"type": "agent.session.input.cancel"}]
+    assert client_options == [{"timeout": 10.0, "max_retries": 0}]
+    assert result["status"] == "failed_manual_reconciliation"
+    assert result["error_metadata"]["upstream_exception_type"] == "OSError"

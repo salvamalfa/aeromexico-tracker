@@ -11,6 +11,7 @@ from typing import Any, Callable
 from ..model_settings import agent_configuration
 from . import _openai_runtime_helpers as runtime_helpers
 from ._input_authorization import InputAuthorizer, InputDispatcher, send_tool_result
+from ._openai_cancel import cancel_session
 from ._openai_error_metadata import upstream_error_metadata
 from ._openai_helpers import (
     ALLOWED_TOOL_NAMES,
@@ -62,6 +63,7 @@ class OpenAIProvider:
     supports_input_authorization = True
     supports_terminal_usage_reconciliation = True
     supports_session_retirement = True
+    cancel_timeout_seconds = 10.0
 
     def __init__(
         self,
@@ -556,17 +558,9 @@ class OpenAIProvider:
         finally:
             close_active_stream()
 
-    def cancel(self, session_id: str) -> None:
-        """Request cancellation through the documented session event API."""
-        if not session_id:
-            return
-        try:
-            self.client.beta.agents.sessions.events.create(
-                session_id,
-                events=[{"type": "agent.session.input.cancel"}],
-            )
-        except Exception:
-            return
+    def cancel(self, session_id: str) -> dict[str, Any]:
+        """Request cancellation once with a finite timeout and expose its outcome."""
+        return cancel_session(self.client, session_id, self.cancel_timeout_seconds)
 
     def delete(self, session_id: str) -> None:
         """Delete the provider-side session when its local conversation is deleted."""

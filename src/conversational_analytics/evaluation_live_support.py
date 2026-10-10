@@ -132,6 +132,54 @@ def _failure_usage(exc: BaseException) -> tuple[int, int] | None:
     return None
 
 
+def _apply_provider_cancel_outcome(
+    case_record: dict[str, Any],
+    progress_state: dict[str, Any],
+    error: BaseException,
+    provider: Any,
+    session_id: str | None,
+) -> str:
+    """Persist cancellation certainty and retain sessions without replay."""
+    if getattr(error, "deadline_watchdog_fired", False):
+        snapshot = getattr(error, "cancel_outcome", None)
+        try:
+            outcome = snapshot() if callable(snapshot) else {}
+        except Exception as exc:
+            outcome = {"status": "unknown_manual_reconciliation", "error": exc}
+        if not isinstance(outcome, dict):
+            outcome = {}
+        status = outcome.get("status")
+        if not isinstance(status, str):
+            status = "unknown_manual_reconciliation"
+        cancel_error = outcome.get("error")
+        if isinstance(cancel_error, BaseException):
+            case_record["provider_cancel_error_metadata"] = _error_metadata(cancel_error)
+        elif isinstance(outcome.get("error_metadata"), dict):
+            case_record["provider_cancel_error_metadata"] = outcome["error_metadata"]
+    elif session_id and callable(getattr(provider, "cancel", None)):
+        try:
+            outcome = provider.cancel(session_id)
+            if isinstance(outcome, dict) and isinstance(outcome.get("status"), str):
+                status = outcome["status"]
+                if isinstance(outcome.get("error_metadata"), dict):
+                    case_record["provider_cancel_error_metadata"] = outcome["error_metadata"]
+            elif outcome is False:
+                status = "failed_manual_reconciliation"
+            else:
+                status = "cancelled"
+        except Exception as exc:
+            status = "failed_manual_reconciliation"
+            case_record["provider_cancel_error_metadata"] = _error_metadata(exc)
+    else:
+        status = "unavailable_manual_reconciliation"
+    case_record["provider_cancel"] = status
+    progress_state["provider_cancel_state"] = status
+    if session_id and status != "cancelled":
+        progress_state["session_to_reconcile"] = session_id
+        progress_state["manual_cancel_required"] = True
+    return status
+
+
 def _write_private_json(path: Path, payload: dict[str, Any]) -> None:
     """Atomically persist sensitive evaluation files with owner-only access."""
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -194,6 +242,8 @@ def _progress_payload(report: dict[str, Any], state: dict[str, Any]) -> dict[str
         "active_case_id": state.get("active_case_id"),
         "active_session_id": state.get("active_session_id"),
         "session_to_reconcile": state.get("session_to_reconcile"),
+        "provider_cancel_state": state.get("provider_cancel_state"),
+        "manual_cancel_required": bool(state.get("manual_cancel_required")),
         "active_usage_state": state.get("active_usage_state"),
         "last_error_metadata": state.get("last_error_metadata"),
         "models": models,

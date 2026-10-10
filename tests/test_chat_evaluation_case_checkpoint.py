@@ -4,6 +4,8 @@ import hashlib
 import json
 import os
 import stat
+import threading
+import time
 from pathlib import Path
 
 import pytest
@@ -142,3 +144,68 @@ def test_case_checkpoint_write_failure_prevents_remote_delete_and_next_case(
 
     assert Provider.calls == 1
     assert Provider.deletes == 0
+
+
+@pytest.mark.parametrize("cancel_mode", ["failure", "pending"])
+def test_watchdog_cancel_outcome_is_checkpointed_and_session_is_retained(
+    cancel_mode, monkeypatch, tmp_path, mock_live_holdout_current_versions
+):
+    release_cancel = threading.Event()
+
+    class Provider:
+        calls = 0
+        cancel_calls = 0
+        deletes = 0
+
+        def __init__(self, _config):
+            self.max_turn_seconds = 0.03
+            self.cancel_requested = threading.Event()
+
+        def run_turn(self, *, persist_session, cancel_event, **_kwargs):
+            type(self).calls += 1
+            persist_session("sess_cancel_fixture")
+            assert cancel_event.wait(0.5)
+            time.sleep(0.03)
+            raise RuntimeError("turn timed out")
+
+        def cancel(self, _session_id):
+            type(self).cancel_calls += 1
+            self.cancel_requested.set()
+            if cancel_mode == "pending":
+                release_cancel.wait()
+                return
+            raise OSError("private cancel failure")
+
+        def delete(self, _session_id):
+            type(self).deletes += 1
+
+    monkeypatch.setattr("src.conversational_analytics.providers.openai.OpenAIProvider", Provider)
+    report = _live_provider_run(
+        cases=mock_live_holdout_current_versions["cases"],
+        models=["gpt-6-luna"],
+        budget_usd=10.0,
+        snapshot_root=Path("site"),
+        prices={"gpt-6-luna": (0.10, 0.50)},
+        probe_only=False,
+        output_dir=tmp_path / f"private-cancel-{cancel_mode}",
+    )
+
+    case_record = report["models"][0]["cases"][0]
+    assert Provider.calls == Provider.cancel_calls == 1
+    assert Provider.deletes == 0
+    expected_status = (
+        "pending_manual_reconciliation"
+        if cancel_mode == "pending"
+        else "failed_manual_reconciliation"
+    )
+    assert case_record["provider_cancel"] == expected_status
+    if cancel_mode == "failure":
+        assert case_record["provider_cancel_error_metadata"]["exception_types"] == ["OSError"]
+    assert case_record["session_id"] == "sess_cancel_fixture"
+    assert case_record["input_tokens"] is None
+    assert case_record["output_tokens"] is None
+    progress = json.loads(Path(report["progress_path"]).read_text(encoding="utf-8"))
+    assert progress["provider_cancel_state"] == expected_status
+    assert progress["session_to_reconcile"] == "sess_cancel_fixture"
+    assert progress["manual_cancel_required"] is True
+    release_cancel.set()

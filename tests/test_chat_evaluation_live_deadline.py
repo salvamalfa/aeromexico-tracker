@@ -223,6 +223,46 @@ def test_blocked_remote_cancel_does_not_extend_deadline_return():
     assert provider.message_posts == 1
 
 
+def test_failed_deadline_cancel_is_exposed_for_manual_reconciliation():
+    class FailingCancelProvider(HeartbeatingProvider):
+        def cancel(self, session_id):
+            self.cancel_count += 1
+            raise OSError("cancel endpoint unavailable")
+
+    provider = FailingCancelProvider(max_turn_seconds=0.03)
+    with pytest.raises(ConversationRunError) as caught:
+        _run(provider)
+
+    error = caught.value.original_error
+    assert error.cancel_done.wait(0.5)
+    outcome = error.cancel_outcome()
+    assert outcome["status"] == "failed_manual_reconciliation"
+    assert isinstance(outcome["error"], OSError)
+    assert provider.cancel_count == 1
+    assert provider.message_posts == 1
+
+
+def test_hanging_deadline_cancel_stays_pending_without_blocking_return():
+    release_cancel = threading.Event()
+
+    class HangingCancelProvider(HeartbeatingProvider):
+        def cancel(self, session_id):
+            self.cancel_count += 1
+            release_cancel.wait()
+
+    provider = HangingCancelProvider(max_turn_seconds=0.03)
+    started = time.monotonic()
+    with pytest.raises(ConversationRunError) as caught:
+        _run(provider)
+
+    error = caught.value.original_error
+    assert time.monotonic() - started < 0.5
+    assert error.cancel_outcome()["status"] == "pending_manual_reconciliation"
+    assert provider.cancel_count == 1
+    assert provider.message_posts == 1
+    release_cancel.set()
+
+
 class FastProvider:
     max_turn_seconds = 0.15
 

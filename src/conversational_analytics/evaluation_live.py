@@ -20,6 +20,7 @@ from .evaluation_live_scoring import score_live_case
 from .evaluation_live_support import (
     _RESERVATION_INPUT_TOKENS_PER_CASE_FLOOR,
     _RESERVATION_OUTPUT_TOKENS_PER_CASE_FLOOR,
+    _apply_provider_cancel_outcome,
     _CheckpointWriteError,
     _error_metadata,
     _failure_usage,
@@ -479,17 +480,9 @@ def _live_provider_run(
                     "error_metadata": error_metadata,
                     "run_identity": run_identity,
                 }
-                cancel_provider = getattr(provider, "cancel", None)
-                if getattr(provider_error, "deadline_watchdog_fired", False):
-                    case_record["provider_cancel"] = "attempted_by_deadline_watchdog"
-                elif session and provider is not None and callable(cancel_provider):
-                    try:
-                        cancel_provider(session[-1])
-                        case_record["provider_cancel"] = "attempted"
-                    except Exception:
-                        case_record["provider_cancel"] = "failed"
-                else:
-                    case_record["provider_cancel"] = "not_available"
+                cancel_status = _apply_provider_cancel_outcome(
+                    case_record, progress_state, provider_error, provider, session[-1] if session else None
+                )
                 failure_usage = reconcile_case_usage_after_cancel(
                     case_record, failure_usage, provider, provider_error, session[-1] if session else None
                 )
@@ -528,7 +521,7 @@ def _live_provider_run(
                     ),
                     last_error_metadata=error_metadata,
                 )
-                if session and not case_usage_complete:
+                if session and (not case_usage_complete or cancel_status != "cancelled"):
                     progress_state["session_to_reconcile"] = session[-1]
                 checkpoint()
                 if session and provider is not None:
