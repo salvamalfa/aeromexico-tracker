@@ -44,12 +44,44 @@ def _has_clarification_request(response: str) -> bool:
         re.IGNORECASE,
     ):
         return True
+    if re.search(
+        r"\b(?:which|what)\s+(?:period|quarter|metric|measure|segment|criteria|periodo|trimestre|m[eé]trica|medida)\b"
+        r".{0,100}\b(?:use|compare|mean|refer|choose|select|analyze|include|want|like)\b",
+        response,
+        re.IGNORECASE,
+    ):
+        return True
     return bool(re.search(
         r"\b(?:I\s+need|we\s+need|necesito|hace\s+falta)\b.{0,100}\b"
         r"(?:period|quarter|metric|measure|segment|criterio|periodo|trimestre|métrica|medida|segmento)\b",
         response,
         re.IGNORECASE,
     ))
+
+
+def _matches_response_alternative(
+    case: dict[str, Any], tool_calls: list[dict[str, Any]], response: str
+) -> dict[str, Any] | None:
+    """Match fixture-defined safe answers that need no numeric gold observation."""
+    for alternative in case.get("expected", {}).get("response_alternatives", []):
+        if alternative.get("forbid_numeric_query") and any(
+            call.get("name") == "query_metrics" for call in tool_calls
+        ):
+            continue
+        if alternative.get("forbid_numeric_claims") and _has_non_context_numeric_claim(response):
+            continue
+        if any(
+            not any(term.casefold() in response.casefold() for term in group)
+            for group in alternative.get("required_term_groups", [])
+        ):
+            continue
+        if any(
+            not re.search(pattern, response, re.IGNORECASE)
+            for pattern in alternative.get("required_patterns", [])
+        ):
+            continue
+        return alternative
+    return None
 
 
 def score_live_case(
@@ -161,6 +193,19 @@ def score_live_case(
     ):
         return {"status": "ungraded", "plan": None, "rows": [], "response": response}, {
             "scored": False, "not_scored_reason": "missing_numeric_gold"
+        }
+    alternative = _matches_response_alternative(case, tool_calls, response)
+    if alternative:
+        return {"status": "supported_alternative", "plan": None, "rows": [], "response": response}, {
+            "scored": True,
+            "passed": True,
+            "automatic_grade_type": alternative.get(
+                "automatic_grade_type", "fixture_defined_safe_response_alternative"
+            ),
+            "checks": alternative.get("checks", []),
+            "failures": [],
+            "requires_blinded_human_rubric": True,
+            "human_rubric_status": "pending_owner_approval",
         }
     observation = observation_from_tool_calls(
         tool_calls,

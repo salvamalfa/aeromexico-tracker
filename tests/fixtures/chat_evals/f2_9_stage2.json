@@ -1056,14 +1056,19 @@
             "forbidden_patterns": [
               "\\bViva\\s+(?:report[oó]|inform[oó]|public[oó]|reported|informed|published)\\b",
               "\\b(?:reportad[oa]s?|informad[oa]s?|reported|informed|published)\\b.{0,40}\\b(?:por|by)\\s+Viva\\b",
-              "\\b(?:company|empresa)[ -](?:reported|reportad[oa]|informad[oa])\\b",
+              "\\b(?:company|empresa|compa(?:ñ|n)ía)[ -](?:reported|reportad[oa]|informad[oa]|comunicad[oa])\\s+(?:count|number|figure|passengers?|cifra|dato|n[uú]mero|pasajeros?)\\b",
+              "\\b(?:la\\s+)?(?:empresa|compa(?:ñ|n)ía|Viva)\\s+(?:report[oó]|inform[oó]|comunic[oó]|public[oó]|señal[oó])\\b",
+              "\\b(?:cifra|dato|n[uú]mero|valor|cantidad|4,876,764|pasajeros?)\\b.{0,40}\\b(?:reportad[oa]s?|informad[oa]s?|comunicad[oa]s?|publicad[oa]s?)\\b.{0,40}\\b(?:por|de)\\s+(?:la\\s+)?(?:empresa|compa(?:ñ|n)ía|Viva)\\b",
+              "\\b(?:cifra|dato|n[uú]mero|valor)\\b.{0,60}\\b(?:que\\s+)?(?:la\\s+)?(?:empresa|compa(?:ñ|n)ía|Viva)\\s+(?:report[oó]|inform[oó]|comunic[oó]|public[oó])\\b",
+              "\\b(?:empresa|compa(?:ñ|n)ía|Viva)\\s+(?:report[oó]|inform[oó]|comunic[oó])\\b.{0,50}\\b(?:cifra|dato|n[uú]mero|valor|cantidad)\\b",
               "\\b4,876,764\\s+pasajeros?\\s+(?:reportados?\\s+por\\s+Viva)\\b"
             ],
             "count_unit_pattern": "(?<!\\w)([+-]?\\d[\\d., ]*)\\s+pasajeros?(?!\\w)",
             "expected_count": 4876764,
             "missing_attribution_failure": "AFAC_value_missing_clear_source_and_entity_attribution",
             "wrong_attribution_failure": "AFAC_value_misrepresented_as_company_report",
-            "unexpected_count_failure": "unsupported_or_incorrect_passenger_count"
+            "unexpected_count_failure": "unsupported_or_incorrect_passenger_count",
+            "review_limit": "Pattern tripwires cover common attribution forms; they are not a universal language parser, and the human rubric remains authoritative."
           }
         ],
         "response_numeric_guard": {
@@ -1075,12 +1080,37 @@
             "2023Q1"
           ],
           "failure": "response_contains_numeric_claim_without_fixture_evidence"
-        }
+        },
+        "response_alternatives": [
+          {
+            "id": "company_passenger_series_unavailable_without_numeric_substitution",
+            "forbid_numeric_query": true,
+            "forbid_numeric_claims": true,
+            "required_term_groups": [
+              [
+                "Viva"
+              ],
+              [
+                "empresa",
+                "compañía"
+              ]
+            ],
+            "required_patterns": [
+              "\\b(?:no\\s+(?:hay|existe|está|se encuentra|se report[oó])|sin)\\b.{0,60}\\b(?:dato|observaci[oó]n|serie|publicad[oa]|disponible|registro)\\b|\\b(?:dato|observaci[oó]n|serie|registro)\\b.{0,60}\\b(?:no\\s+(?:está|se encuentra|hay|existe|fue\\s+publicad[oa]))\\b"
+            ],
+            "automatic_grade_type": "fixture_defined_safe_response_alternative",
+            "checks": [
+              "company_series_unavailability_disclosed",
+              "no_numeric_substitution"
+            ],
+            "review_limit": "Automatic tripwire only; human rubric remains authoritative for meaning and attribution."
+          }
+        ]
       }
     }
   ],
   "lineage": {
-    "derivation_version": "1.0.0",
+    "derivation_version": "1.1.0",
     "source_fixtures": {
       "business_proposed": {
         "path": "tests/fixtures/chat_evals/business_proposed.json",
@@ -1144,7 +1174,7 @@
       },
       "es_viva_missing_company_passengers": {
         "expected_gold_corrected": "Snapshot-backed AFAC total for Viva 2022Q2 is available; this does not create a company-reported passenger observation.",
-        "response_checks_added": "Require the company series unavailability disclosure; bind 4,876,764 passengers to AFAC and Viva in the same sentence; reject company-report attribution and any other passenger count."
+        "response_checks_added": "Allow a no-number company-series-unavailable alternative without numeric query; otherwise bind 4,876,764 passengers to AFAC and Viva in the same sentence and reject common company-report attributions or extra figures. These are tripwires; human rubric remains authoritative."
       },
       "en_card_filter_scope": {
         "response_expectation_clarified": "Card context resolves Viva unit margin in 2026Q2; required response names the per-ASK-km denominator, without demanding a numeric query for an explanation request."

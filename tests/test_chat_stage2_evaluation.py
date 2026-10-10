@@ -66,6 +66,26 @@ def test_stage2_fixture_is_frozen_to_budget_and_preserves_source_lineage() -> No
     } <= context_case_ids
 
 
+def test_stage2_snapshot_audit_is_reproducible_and_does_not_grade_model_quality() -> None:
+    from src.conversational_analytics.data.snapshot import Snapshot
+    from src.conversational_analytics.evaluation import STAGE2_PILOT_FIXTURE_PATH, audit_snapshot
+
+    payload = json.loads(STAGE2_PILOT_FIXTURE_PATH.read_text(encoding="utf-8"))
+    report = audit_snapshot(
+        Snapshot("site"),
+        payload["cases"],
+        expected_versions=payload["expected_versions"],
+    )
+
+    assert report["mode"] == "offline-snapshot-audit"
+    assert report["cases_total"] == 15
+    assert report["snapshot_cases_checked"] == report["snapshot_cases_passed"] == 13
+    assert report["snapshot_cases_failed"] == []
+    assert report["fixture_version_mismatches"] == {}
+    assert set(report["model_quality_cases_pending"]) == {"N20", "es_ratio_average"}
+    assert report["quality_denominator"] == 0
+
+
 def test_clarification_accepts_imperatives_without_invented_numeric_answers() -> None:
     from src.conversational_analytics.evaluation_live_scoring import score_live_case
 
@@ -82,6 +102,11 @@ def test_clarification_accepts_imperatives_without_invented_numeric_answers() ->
         case, [], "Please specify the quarter and segment.", **options
     )
     assert reasonable["passed"], reasonable["failures"]
+
+    _, questionless = score_live_case(
+        case, [], "Which quarter should I use to compare the carriers", **options
+    )
+    assert questionless["passed"], questionless["failures"]
 
     _, invented = score_live_case(
         case, [], "Please specify the quarter; the share fell by 8.9%.", **options
@@ -164,6 +189,17 @@ def test_viva_missing_company_gold_allows_labeled_afac_with_evidence_only() -> N
     )
     assert labeled_afac["passed"], labeled_afac["failures"]
 
+    absent_only_response = (
+        "Para Viva no hay dato de empresa publicado para 2T22; "
+        "la serie de pasajeros de la compañía no está disponible."
+    )
+    absent_only_observation, absent_only = score_live_case(
+        case, [], absent_only_response, **options
+    )
+    assert absent_only_observation["status"] == "supported_alternative"
+    assert absent_only["passed"], absent_only
+    assert absent_only["automatic_grade_type"] == "fixture_defined_safe_response_alternative"
+
     for response in (
         (
             "Viva reportó 4,876,764 pasajeros; la cifra también aparece en AFAC y no está disponible "
@@ -176,6 +212,18 @@ def test_viva_missing_company_gold_allows_labeled_afac_with_evidence_only() -> N
         (
             "AFAC reportó 4,876,764 pasajeros para Viva; Viva informó 4,876,764 pasajeros; "
             "la serie no está disponible para la empresa."
+        ),
+        (
+            "AFAC registró 4,876,764 pasajeros de Viva en 2T22, cifra que la empresa reportó; "
+            "la serie de pasajeros no está disponible."
+        ),
+        (
+            "AFAC registró 4,876,764 pasajeros de Viva en 2T22, cifra que Viva comunicó; "
+            "la serie de pasajeros no está disponible."
+        ),
+        (
+            "AFAC registró 4,876,764 pasajeros de Viva en 2T22, "
+            "cifra reportada por la compañía; la serie no está disponible para la empresa."
         ),
     ):
         _, misattributed = score_live_case(case, tool_calls, response, **options)
@@ -227,4 +275,13 @@ def test_viva_missing_company_gold_allows_labeled_afac_with_evidence_only() -> N
     )
     assert not no_evidence["passed"]
     assert "supported_answer_not_observed" in no_evidence["failures"]
+
+    _, unsupported_alternative = score_live_case(
+        case,
+        [],
+        "Para Viva no hay dato de empresa publicado para 2T22; el valor sería 4,000,000 pasajeros.",
+        **options,
+    )
+    assert not unsupported_alternative["passed"]
+    assert "supported_answer_not_observed" in unsupported_alternative["failures"]
 
