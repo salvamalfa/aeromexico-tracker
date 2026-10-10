@@ -74,6 +74,12 @@ Para F2.9 etapa 2, el comando dedicado valida el fixture congelado, sus 15
 contextos, el snapshot, la semántica, el prompt efectivo y las cuatro
 combinaciones modelo/esfuerzo sin crear un cliente ni hacer llamadas:
 
+El evaluador lee los bytes del fixture una sola vez y exige SHA-256
+`824db2fb0bd1f1e58c08a16c234e8fe4d9d280f783e9010ded5ad8912b64092e` antes de
+interpretar el JSON o preparar la campaña. Una ruta externa solo se acepta si
+contiene exactamente esos mismos bytes; conservar los 15 IDs no autoriza a
+cambiar preguntas, contextos, resultados esperados ni rúbricas.
+
 ```bash
 uv run python scripts/chat/evaluate_campaign.py
 ```

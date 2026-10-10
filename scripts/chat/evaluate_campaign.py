@@ -20,7 +20,6 @@ DEFAULT_STAGE2_PROMPT_PATH = ROOT / "docs/chat/revision-fase-2/F2.1-prompt-aprob
 sys.path.insert(0, str(ROOT))
 
 from src.conversational_analytics.data.snapshot import Snapshot  # noqa: E402
-from src.conversational_analytics.evaluation import load_fixture  # noqa: E402
 from src.conversational_analytics.evaluation_campaign import (  # noqa: E402
     CAMPAIGN_CANDIDATES,
     STAGE2_BUDGET_PATH,
@@ -47,6 +46,9 @@ EXECUTION_INPUT_PATHS = (
     "docs/chat/revision-fase-2/F2.1-prompt-aprobado.md",
     "docs/chat/revision-fase-2/F2.9-etapa-2-presupuesto.json",
 )
+APPROVED_STAGE2_FIXTURE_SHA256 = (
+    "824db2fb0bd1f1e58c08a16c234e8fe4d9d280f783e9010ded5ad8912b64092e"
+)
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -64,6 +66,25 @@ def _fixture_cases(payload: dict[str, Any]) -> list[dict[str, Any]]:
     if missing:
         raise ValueError(f"Fixture stage2 incompleto; faltan IDs congelados: {', '.join(missing)}")
     return [by_id[case_id] for case_id in STAGE2_EXPECTED_CASE_IDS]
+
+
+def _read_approved_stage2_fixture(path: Path) -> tuple[dict[str, Any], str]:
+    """Read once, pin the exact approved bytes, then parse that same buffer."""
+    fixture_bytes = path.read_bytes()
+    fixture_sha256 = hashlib.sha256(fixture_bytes).hexdigest()
+    if fixture_sha256 != APPROVED_STAGE2_FIXTURE_SHA256:
+        raise ValueError(
+            "El fixture stage2 no coincide byte por byte con el fixture aprobado "
+            f"(SHA-256 recibido {fixture_sha256})"
+        )
+    fixture = json.loads(fixture_bytes.decode("utf-8"))
+    if (
+        not isinstance(fixture, dict)
+        or fixture.get("schema_version") != 1
+        or not isinstance(fixture.get("cases"), list)
+    ):
+        raise ValueError("Fixture stage2 aprobado inválido")
+    return fixture, fixture_sha256
 
 
 def _verify_private_destination(path: Path, *, directory: bool) -> None:
@@ -106,10 +127,10 @@ def _dirty_execution_inputs() -> str:
 
 
 def prepare(args: argparse.Namespace) -> PreparedCampaign:
+    fixture_path = args.fixture.resolve()
+    fixture, fixture_sha256 = _read_approved_stage2_fixture(fixture_path)
     budget_path = ROOT / STAGE2_BUDGET_PATH
     budget = _load_json(budget_path)
-    fixture_path = args.fixture.resolve()
-    fixture = load_fixture(fixture_path)
     cases = _fixture_cases(fixture)
     for case in cases:
         try:
@@ -145,7 +166,6 @@ def prepare(args: argparse.Namespace) -> PreparedCampaign:
         api_key_present=bool(os.environ.get("OPENAI_API_KEY")),
     )
     registry = ToolRegistry(snapshot)
-    fixture_sha256 = sha256_file(fixture_path)
     execution_commit = _git_execution_commit()
     runtime_limits = {
         "max_tool_calls": STAGE2_MAX_TOOL_CALLS,
