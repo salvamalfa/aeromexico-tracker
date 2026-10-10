@@ -1,6 +1,7 @@
 """Integration tests for campaign scheduling, resume, and global spend stops."""
 
 import json
+import stat
 from pathlib import Path
 
 import pytest
@@ -104,6 +105,26 @@ def test_distinct_prompt_and_luna_repetition_slots_each_reach_provider(monkeypat
     assert [call["run_identity"]["prompt_variant"] for call in seen[:2]] == ["current", "proposed"]
     assert [call["run_identity"]["repetition"] for call in seen[2:]] == [1, 2]
     assert len({call["run_identity"]["run_id"] for call in seen}) == 4
+
+
+def test_campaign_stamps_exact_identity_on_private_source_report(monkeypatch, tmp_path: Path) -> None:
+    run = _run("source-report-slot")
+    source_report = tmp_path / "runs" / "provider-report.json"
+
+    def fake(**kwargs):
+        report = _complete_report(kwargs["run_identity"], kwargs["cases"])
+        report["output_path"] = str(source_report)
+        campaign._write_private_json(source_report, report)
+        return report
+
+    result = _invoke(monkeypatch, tmp_path, [run], fake)
+    persisted = json.loads(source_report.read_text(encoding="utf-8"))
+
+    assert result["status"] == "completed"
+    assert persisted["run_identity_hash"] == run["identity_hash"]
+    assert persisted["campaign_identity_hash"] == result["identity_hash"]
+    assert stat.S_IMODE(source_report.stat().st_mode) == 0o600
+    assert stat.S_IMODE(source_report.parent.stat().st_mode) == 0o700
 
 
 def test_campaign_passes_remaining_budget_across_slots(monkeypatch, tmp_path: Path) -> None:

@@ -130,6 +130,11 @@ def run_campaign(
             run_identity=dict(run["identity"]),
             limits_override=dict(run["limits"]),
         )
+        report["run_identity_hash"] = str(run["identity_hash"])
+        report["campaign_identity_hash"] = identity_hash
+        source_report = Path(str(report.get("output_path", "")))
+        if source_report.is_file():
+            _write_private_json(source_report, report)
         model = report["models"][0]
         new_cases = [
             {
