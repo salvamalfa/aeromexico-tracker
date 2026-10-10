@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "stage": "F2.9-stage-2",
+  "status": "budget_preview_only_no_execution_authorized",
+  "stage1": {
+    "human_review": "complete",
+    "complete_responses": 111,
+    "estimated_spend_usd": 0.56421375,
+    "authorized_reserve_usd": 3.0,
+    "reserve_scope": "stage 1 only"
+  },
+  "sample": {
+    "case_count": 15,
+    "business_cases": [
+      {
+        "id": "N13",
+        "max_prompt_input_tokens": 75972
+      },
+      {
+        "id": "N12",
+        "max_prompt_input_tokens": 72108
+      },
+      {
+        "id": "N20",
+        "max_prompt_input_tokens": 69424
+      },
+      {
+        "id": "N11",
+        "max_prompt_input_tokens": 64113
+      },
+      {
+        "id": "N02",
+        "max_prompt_input_tokens": 63264
+      }
+    ],
+    "safety_cases": [
+      {
+        "id": "en_card_filter_scope",
+        "max_prompt_input_tokens": 64375
+      },
+      {
+        "id": "en_relative_share_change",
+        "max_prompt_input_tokens": 63741
+      },
+      {
+        "id": "es_ratio_average",
+        "max_prompt_input_tokens": 62071
+      },
+      {
+        "id": "en_am_rask",
+        "max_prompt_input_tokens": 61817
+      },
+      {
+        "id": "es_am_lf_q2",
+        "max_prompt_input_tokens": 61658
+      },
+      {
+        "id": "es_industry_weighted_lf",
+        "max_prompt_input_tokens": 61604
+      },
+      {
+        "id": "es_volaris_ask",
+        "max_prompt_input_tokens": 61526
+      },
+      {
+        "id": "en_industry_passengers",
+        "max_prompt_input_tokens": 61440
+      },
+      {
+        "id": "es_am_market_share",
+        "max_prompt_input_tokens": 52326
+      },
+      {
+        "id": "es_viva_missing_company_passengers",
+        "max_prompt_input_tokens": 52223
+      }
+    ],
+    "selection": "Frozen for this budget: top measured input among eligible one-message business cases (5) and safety cases (10), taking max across current/proposed prompts. Cost-forward; not representative or random.",
+    "candidate_responses": 60,
+    "messages_per_candidate": 15,
+    "total_input_tokens_per_candidate": 947662
+  },
+  "usage_basis": {
+    "input_tokens_per_candidate": 947662,
+    "mean_input_tokens_per_case": 63177,
+    "maximum_observed_aggregate_input_tokens_per_case": 75972,
+    "measurement": "Stage 1 case totals; each total includes internal provider calls. Use max across current and proposed prompt variants.",
+    "output_tokens_assumption_per_message": {
+      "gpt-6-luna@medium": [
+        3000,
+        6000
+      ],
+      "gpt-6-luna@max": [
+        10000,
+        25000
+      ],
+      "gpt-6.1-sol@low": [
+        1000,
+        3000
+      ],
+      "gpt-6.1-sol@medium": [
+        3000,
+        8000
+      ]
+    },
+    "output_assumption_source": "docs/chat/estimacion-f2-9-presupuesto.md; reasoning billed as output",
+    "cache_credit": 0,
+    "long_context": {
+      "catalog_threshold_input_tokens_per_request": 272000,
+      "recargo_aplicado": false,
+      "basis": "Observed aggregate input per selected case is at most 75972 tokens, bounding any individual request in that case below the threshold; future context growth remains uncertain."
+    },
+    "source_report_sha256": {
+      "current_prompt": "d182a04e52fd718d17433e88f0b2b13cffa867ff57929dc4a7efc8b38af64ff3",
+      "proposed_prompt": "21d638c266f63a45169c3497b4fb51db74bcbf6601d458f482480e5805ec90e3"
+    }
+  },
+  "tariff_catalog": {
+    "path": "config/chat/models.json",
+    "sha256": "9744c985f051c898a8af6e8d3c8766c6885e77d8a13d55b72e30427b15468d4c",
+    "pricing_as_of": "2026-10-09",
+    "currency": "USD per million tokens",
+    "tariffs": {
+      "gpt-6-luna": {
+        "input": 0.1,
+        "output": 0.5
+      },
+      "gpt-6.1-sol": {
+        "input": 2.0,
+        "output": 10.0
+      }
+    },
+    "basis": "Uncached versioned catalog rates; planning estimate, not invoice or live price check."
+  },
+  "candidate_estimates_usd": {
+    "gpt-6-luna@medium": [
+      0.117266,
+      0.139766
+    ],
+    "gpt-6-luna@max": [
+      0.169766,
+      0.282266
+    ],
+    "gpt-6.1-sol@low": [
+      2.045324,
+      2.345324
+    ],
+    "gpt-6.1-sol@medium": [
+      2.345324,
+      3.095324
+    ]
+  },
+  "total_estimated_usd": [
+    4.67768,
+    5.86268
+  ],
+  "suggested_reserve_usd": 8,
+  "owner_decision": {
+    "current_shared_balance_usd": null,
+    "requested": "Confirm the US$8 reserve and current balance before any run; amount to add = max(0, 8 - confirmed balance). The US$7.20 balance was confirmed before Stage 1; current balance is unknown.",
+    "examples_if_confirmed_balance_usd": {
+      "0": 8,
+      "3": 5,
+      "7.2": 0.8
+    }
+  },
+  "preconditions_before_live": [
+    "Fix outstanding checks in the target.",
+    "Use validated historical dashboard context and period-resolution behavior in the target; empty historical fixtures do not validate it. PR117 addresses the live default-period behavior.",
+    "Confirm the actual balance and separately authorize the paid campaign. This budget record does not authorize execution."
+  ],
+  "limitations": [
+    "Output ranges and cross-model/effort costs are planning assumptions; Stage 1 measured Luna medium only.",
+    "The 15-case sample is fixed for this estimate but is not statistically representative.",
+    "Tariffs are versioned estimates. Unknown future context growth, retries, or usage can change spend; the operational reserve is not a bill cap."
+  ],
+  "preconditions_before_execution": [
+    "Adjust the evaluator for the approved stage-2 plan.",
+    "Validate dashboard context and period-resolution behavior in the target; historical fixtures are empty and do not validate the behavior.",
+    "Confirm the current balance and obtain a separate decision on running the paid campaign; this budget record is not authorization."
+  ]
+}
