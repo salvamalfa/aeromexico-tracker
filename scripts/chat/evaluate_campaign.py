@@ -87,15 +87,15 @@ def _read_approved_stage2_fixture(path: Path) -> tuple[dict[str, Any], str]:
     return fixture, fixture_sha256
 
 
-def _verify_private_destination(path: Path, *, directory: bool) -> None:
+def _verify_private_destination(path: Path, *, directory: bool, create: bool = True) -> None:
     absolute = path.resolve()
     state_root = (ROOT / ".state").resolve()
     if state_root not in absolute.parents:
         raise ValueError("Los reportes y el ledger deben quedar dentro de .state/ ignorado")
-    if directory:
+    if create and directory:
         absolute.mkdir(parents=True, exist_ok=True, mode=0o700)
         os.chmod(absolute, 0o700)
-    else:
+    elif create:
         absolute.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         os.chmod(absolute.parent, 0o700)
     ignored = subprocess.run(
@@ -126,7 +126,7 @@ def _dirty_execution_inputs() -> str:
     return result.stdout.strip()
 
 
-def prepare(args: argparse.Namespace) -> PreparedCampaign:
+def prepare(args: argparse.Namespace, *, create_destinations: bool = True) -> PreparedCampaign:
     fixture_path = args.fixture.resolve()
     fixture, fixture_sha256 = _read_approved_stage2_fixture(fixture_path)
     budget_path = ROOT / STAGE2_BUDGET_PATH
@@ -187,8 +187,8 @@ def prepare(args: argparse.Namespace) -> PreparedCampaign:
     )
     output_dir = args.output_dir.resolve()
     ledger_path = args.campaign_state.resolve()
-    _verify_private_destination(output_dir, directory=True)
-    _verify_private_destination(ledger_path, directory=False)
+    _verify_private_destination(output_dir, directory=True, create=create_destinations)
+    _verify_private_destination(ledger_path, directory=False, create=create_destinations)
     validation.update(
         {
             "budget_config_sha256": hashlib.sha256(budget_path.read_bytes()).hexdigest(),
