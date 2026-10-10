@@ -159,7 +159,10 @@ def test_viva_missing_company_gold_allows_labeled_afac_with_evidence_only() -> N
     case = next(case for case in payload["cases"] if case["id"] == "es_viva_missing_company_passengers")
     versions = payload["expected_versions"]
     scope = {}
-    metric_dimensions = {"afac_passengers": ["segment"]}
+    metric_dimensions = {
+        "afac_passengers": ["segment"],
+        "company_passengers": ["segment"],
+    }
     plan = case["expected"]["plan"]
     row = case["expected"]["rows"][0]
     tool_calls = [{
@@ -199,6 +202,23 @@ def test_viva_missing_company_gold_allows_labeled_afac_with_evidence_only() -> N
     assert absent_only_observation["status"] == "supported_alternative"
     assert absent_only["passed"], absent_only
     assert absent_only["automatic_grade_type"] == "fixture_defined_safe_response_alternative"
+
+    unavailable_company_query = [{
+        "name": "query_metrics",
+        "arguments": {
+            "metric_ids": ["company_passengers"],
+            "entity_ids": ["VIVA_AEROBUS"],
+            "periods": ["2022Q2"],
+            "segment": "total",
+        },
+        "scope": scope,
+        "result": {**versions, "rows": [], "truncated": False},
+    }]
+    queried_absence_observation, queried_absence = score_live_case(
+        case, unavailable_company_query, absent_only_response, **options
+    )
+    assert queried_absence_observation["status"] == "supported_alternative"
+    assert queried_absence["passed"], queried_absence
 
     for response in (
         (
@@ -278,7 +298,7 @@ def test_viva_missing_company_gold_allows_labeled_afac_with_evidence_only() -> N
 
     _, unsupported_alternative = score_live_case(
         case,
-        [],
+        unavailable_company_query,
         "Para Viva no hay dato de empresa publicado para 2T22; el valor sería 4,000,000 pasajeros.",
         **options,
     )

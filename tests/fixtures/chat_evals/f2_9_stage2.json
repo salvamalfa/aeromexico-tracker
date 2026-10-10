@@ -1084,7 +1084,6 @@
         "response_alternatives": [
           {
             "id": "company_passenger_series_unavailable_without_numeric_substitution",
-            "forbid_numeric_query": true,
             "forbid_numeric_claims": true,
             "required_term_groups": [
               [
