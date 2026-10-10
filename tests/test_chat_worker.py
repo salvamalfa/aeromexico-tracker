@@ -67,6 +67,32 @@ def test_worker_persists_tool_answer_events_and_usage(tmp_path: Path):
     assert store.get_tool_result(turn["id"], "call-1")["rows"][0]["display_value"] == 84.9
 
 
+def test_worker_passes_durable_session_retirement_callback(tmp_path: Path):
+    class RetiringProvider(DeterministicProvider):
+        supports_session_retirement = True
+
+        def run_turn(self, **kwargs):
+            kwargs["retire_session"]("provider-session-old")
+            return ProviderResult("ok", input_tokens=1, output_tokens=1, usage_complete=True)
+
+    store = ChatStore(tmp_path / "chat.sqlite3")
+    conv = store.create_conversation("alice", "snapshot-v1", "semantic-v1")
+    turn, _ = store.submit_turn("alice", conv["id"], "ask", "client-1", {})
+    claim = store.claim_turn()
+    worker = TurnWorker(
+        store,
+        ChatConfig(state_path=tmp_path / "chat.sqlite3"),
+        RetiringProvider(),
+        Snapshot(),
+    )
+    worker._registry = Registry()
+
+    worker._execute_turn(claim)
+
+    assert store.get_turn("alice", turn["id"])["status"] == "completed"
+    assert store.pending_provider_deletions() == ["provider-session-old"]
+
+
 class BlockingProvider(DeterministicProvider):
     def __init__(self):
         super().__init__()

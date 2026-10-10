@@ -64,11 +64,11 @@ def _session_created(session_id: str = "sess_fixture"):
     )
 
 
-def _turn_created(turn_id: str = "turn_provider"):
+def _turn_created(turn_id: str = "turn_provider", session_id: str = "sess_fixture"):
     return AgentSessionTurnCreatedEvent.model_validate(
         {
             "event_id": "evt_turn_created",
-            "session_id": "sess_fixture",
+            "session_id": session_id,
             "turn_id": turn_id,
             "type": "agent.session.turn.created",
             "turn": _turn(turn_id).model_dump(),
@@ -91,11 +91,13 @@ def _text_delta(turn_id: str = "turn_provider", delta: str = "Respuesta"):
     )
 
 
-def _text_done(turn_id: str = "turn_provider", text: str = "Respuesta final"):
+def _text_done(
+    turn_id: str = "turn_provider", text: str = "Respuesta final", session_id: str = "sess_fixture"
+):
     return AgentSessionTurnOutputTextDoneEvent.model_validate(
         {
             "event_id": "evt_text_done",
-            "session_id": "sess_fixture",
+            "session_id": session_id,
             "turn_id": turn_id,
             "item_id": "item_assistant",
             "output_index": 0,
@@ -106,11 +108,11 @@ def _text_done(turn_id: str = "turn_provider", text: str = "Respuesta final"):
     )
 
 
-def _completed(turn_id: str = "turn_provider", usage=None):
+def _completed(turn_id: str = "turn_provider", usage=None, session_id: str = "sess_fixture"):
     return AgentSessionTurnCompletedEvent.model_validate(
         {
             "event_id": "evt_turn_completed",
-            "session_id": "sess_fixture",
+            "session_id": session_id,
             "turn_id": turn_id,
             "type": "agent.session.turn.completed",
             "turn": _turn(turn_id, status="completed", usage=usage or _usage()).model_dump(),
@@ -213,11 +215,18 @@ class FakeSessions:
         prior_turns=None,
         recovery=None,
         retrieved_turn=None,
+        session_metadata=None,
+        retrieved_session_id=None,
+        retrieve_error=None,
     ):
         self._create_stream = create_stream or FakeStream([])
         self.events = FakeEvents(lambda: event_stream or FakeStream([]))
         self._prior_turns = list(prior_turns or [])
         self._recovery = recovery
+        self.session_metadata = session_metadata
+        self.default_session_metadata = None
+        self.retrieved_session_id = retrieved_session_id
+        self.retrieve_error = retrieve_error
         self.created = []
         self.deleted = []
         self.retrieve_calls = 0
@@ -243,7 +252,15 @@ class FakeSessions:
         assert session_id == "sess_fixture"
         self.retrieve_calls += 1
         self.retrieve_timeouts.append(timeout)
-        return self._recovery or {"id": session_id, "status": "idle", "required_actions": []}
+        if self.retrieve_error is not None:
+            raise self.retrieve_error
+        result = dict(self._recovery or {"status": "idle", "required_actions": []})
+        result.setdefault("id", self.retrieved_session_id or session_id)
+        if self.session_metadata is not None:
+            result.setdefault("metadata", self.session_metadata)
+        elif self.default_session_metadata is not None:
+            result.setdefault("metadata", self.default_session_metadata)
+        return result
 
     def delete(self, session_id):
         self.deleted.append(session_id)
@@ -276,17 +293,41 @@ class FakeClient:
         self.beta = SimpleNamespace(agents=SimpleNamespace(sessions=sessions))
 
 
-def _provider(client, **config_overrides):
+def _provider(client, *, system_instructions_override=None, **config_overrides):
     values = {"openai_enabled": True, "model": "model-explicit", "max_turn_seconds": 5}
     values.update(config_overrides)
-    return OpenAIProvider(SimpleNamespace(**values), client=client)
+    provider = OpenAIProvider(
+        SimpleNamespace(**values),
+        client=client,
+        system_instructions_override=system_instructions_override,
+    )
+    sessions = client.beta.agents.sessions
+    if hasattr(sessions, "default_session_metadata"):
+        from src.conversational_analytics.providers._openai_prompt import prompt_sha256
+        from src.conversational_analytics.providers._openai_session_version import (
+            INSTRUCTIONS_FINGERPRINT_KEY,
+        )
+
+        sessions.default_session_metadata = {
+            INSTRUCTIONS_FINGERPRINT_KEY: prompt_sha256(provider._instructions())
+        }
+    return provider
 
 
 def _specs():
     return ToolRegistry._make_specs()
 
 
-def _run(provider, *, session_id=None, events=None, context=None, call_tool=None, messages=None):
+def _run(
+    provider,
+    *,
+    session_id=None,
+    events=None,
+    context=None,
+    call_tool=None,
+    messages=None,
+    retire_session=None,
+):
     emissions = []
     saved_sessions = []
     result = provider.run_turn(
@@ -299,6 +340,7 @@ def _run(provider, *, session_id=None, events=None, context=None, call_tool=None
         emit=lambda kind, payload: emissions.append((kind, payload)),
         persist_session=saved_sessions.append,
         cancel_event=threading.Event(),
+        retire_session=retire_session,
     )
     return result, emissions, saved_sessions
 
@@ -545,7 +587,8 @@ def test_recovered_terminal_failure_or_cancel_preserves_reported_usage(status, e
         assert caught.value.reason_code == "provider_terminal_failed"
         assert caught.value.session_id == "sess_fixture"
         assert caught.value.turn_id == "turn_recovered"
-    assert fake.retrieve_calls == 1
+    # One initial session-version check plus one terminal recovery read.
+    assert fake.retrieve_calls == 2
     assert fake.turn_list_calls == 2  # prior turn lookup plus one recovery read
     assert 0 < fake.retrieve_timeouts[-1] <= 180
     assert 0 < fake.turn_list_timeouts[-1] <= fake.retrieve_timeouts[-1]

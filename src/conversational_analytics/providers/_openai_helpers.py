@@ -9,6 +9,7 @@ from collections.abc import Callable, Iterable, Mapping
 from typing import Any
 from urllib.parse import urlparse
 
+from ._openai_prompt import PERIOD_SELECTION_POLICY
 from .base import ProviderResult
 
 ALLOWED_TOOL_NAMES = frozenset(
@@ -65,6 +66,7 @@ Responde solo después de consultar las herramientas necesarias. Las respuestas
 deben ser concisas, declarar periodo y unidad, y enlazar referencias únicamente
 cuando el servidor las entregue.
 """
+SYSTEM_INSTRUCTIONS = f"{SYSTEM_INSTRUCTIONS.rstrip()}\n\n{PERIOD_SELECTION_POLICY}"
 
 
 MAX_ENVELOPE_BYTES = 12_000
