@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import os
+import stat
 import sys
 from pathlib import Path
 from typing import Any
@@ -14,7 +15,6 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from scripts.chat.continue_stage2_campaign import (  # noqa: E402
-    _private_write,
     _require_private_destination,
     _validate_destination_relationships,
 )
@@ -96,6 +96,25 @@ def _json_bytes(value: Any) -> bytes:
     ).encode()
 
 
+def _atomic_private_bytes(path: Path, content: bytes) -> None:
+    temp = path.with_name(path.name + ".tmp")
+    flags = os.O_CREAT | os.O_EXCL | os.O_WRONLY | getattr(os, "O_NOFOLLOW", 0)
+    fd = os.open(temp, flags, 0o600)
+    try:
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(content)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temp, path)
+        os.chmod(path, 0o600)
+    except BaseException:
+        try:
+            temp.unlink()
+        except FileNotFoundError:
+            pass
+        raise
+
+
 def _reject_source_symlinks(paths: dict[str, Path]) -> None:
     for label, path in paths.items():
         absolute = _lexical(path)
@@ -104,6 +123,13 @@ def _reject_source_symlinks(paths: dict[str, Path]) -> None:
             current = current / part
             if current.is_symlink():
                 raise ValueError(f"La ruta fuente atraviesa un symlink: {label}")
+
+
+def _validate_source_files(paths: dict[str, Path]) -> None:
+    for label, path in paths.items():
+        info = path.stat(follow_symlinks=False)
+        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+            raise ValueError(f"La fuente debe ser archivo regular sin hardlinks: {label}")
 
 
 def _validate_output_paths(args: argparse.Namespace) -> None:
@@ -143,6 +169,14 @@ def _validate_output_paths(args: argparse.Namespace) -> None:
         for source in source_paths
     ):
         raise ValueError("La carpeta y los destinos privados no pueden solaparse con fuentes originales")
+    for output in outputs:
+        if not output.exists():
+            continue
+        info = output.stat(follow_symlinks=False)
+        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or any(
+            source.exists() and os.path.samefile(output, source) for source in source_paths
+        ):
+            raise ValueError("El destino debe ser archivo regular sin hardlinks con otras rutas")
     _validate_destination_relationships(args.output_dir, args.campaign_state, args.plan_path, source_paths)
 
 
@@ -191,6 +225,7 @@ def prepare_finalization(
     # All private source bytes are pinned before JSON parsing, shared preflight, or mkdir.
     _validate_output_paths(args)
     _reject_source_symlinks(args.source_paths)
+    _validate_source_files(args.source_paths)
     raw = read_pinned_sources(args.source_paths, APPROVED_SOURCE_SHA256)
     source = validate_sources(
         raw,
@@ -286,8 +321,7 @@ def prepare_finalization(
     # This is the first write and occurs only after every trusted source is pinned and validated.
     args.derived_report.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     os.chmod(args.derived_report.parent, 0o700)
-    args.derived_report.write_bytes(derived_bytes)
-    os.chmod(args.derived_report, 0o600)
+    _atomic_private_bytes(args.derived_report, derived_bytes)
     run_records = [
         {key: run[key] for key in ("run_id", "candidate", "identity", "identity_hash", "case_ids")}
         | {"source_run_id": run["identity"]["finalization"]["source_continuation_run_id"], "report_paths": []}
@@ -469,11 +503,11 @@ def main(argv: list[str] | None = None) -> int:
         for slot in plan["finalization"]["runs"]:
             summary = by_run.get(slot["run_id"], {})
             slot["report_paths"] = [summary["report_path"]] if summary.get("report_path") else []
-        _private_write(args.plan_path.resolve(), plan)
+        _atomic_private_bytes(args.plan_path.resolve(), _json_bytes(plan) + b"\n")
         print(json.dumps({"plan": plan, "campaign": result}, ensure_ascii=False, indent=2, default=str))
         return 0
     plan["live_execution"] = "requires_explicit_run_and_opt_in_after_root_go"
-    _private_write(args.plan_path.resolve(), plan)
+    _atomic_private_bytes(args.plan_path.resolve(), _json_bytes(plan) + b"\n")
     print(json.dumps(plan, ensure_ascii=False, indent=2))
     return 0
 

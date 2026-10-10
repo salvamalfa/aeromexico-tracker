@@ -187,6 +187,65 @@ def test_duplicate_output_leaf_paths_block_before_source_read(monkeypatch) -> No
         finalizer.prepare_finalization(args)
 
 
+@pytest.mark.parametrize("output_leaf", ["sol-low-recovered-case.json", "campaign.json"])
+def test_hardlinked_output_rejected_before_read_or_write_and_source_remains_intact(
+    tmp_path: Path, monkeypatch, output_leaf: str
+) -> None:
+    paths, approved = _write_source_set(tmp_path)
+    monkeypatch.setattr(finalizer, "APPROVED_SOURCE_SHA256", approved)
+    output = finalizer.FINALIZATION_DIR
+    output.mkdir(parents=True, exist_ok=True, mode=0o700)
+    linked_output = output / output_leaf
+    if linked_output.exists():
+        linked_output.unlink()
+    source_bytes = paths["original_ledger"].read_bytes()
+    shared_source = output.parent / f"{tmp_path.name}-source.json"
+    shared_source.write_bytes(source_bytes)
+    paths["original_ledger"] = shared_source
+    approved["original_ledger"] = _digest(source_bytes)
+    monkeypatch.setattr(finalizer, "APPROVED_SOURCE_SHA256", approved)
+    original_sha = _digest(shared_source.read_bytes())
+    linked_output.hardlink_to(shared_source)
+    parent_modes = [(path, path.stat().st_mode & 0o777) for path in (output.parent, output)]
+    args = SimpleNamespace(
+        source_paths=paths,
+        output_dir=output,
+        campaign_state=linked_output if output_leaf == "campaign.json" else output / "campaign.json",
+        plan_path=output / "finalization_plan.json",
+        derived_report=(
+            linked_output
+            if output_leaf == "sol-low-recovered-case.json"
+            else output / "sol-low-recovered-case.json"
+        ),
+    )
+    calls = {"read": 0, "mkdir": 0, "chmod": 0}
+
+    def fail_read(*a, **k):
+        calls["read"] += 1
+        raise AssertionError("source read before hardlink rejection")
+
+    def fail_mutation(name):
+        def fail(*a, **k):
+            calls[name] += 1
+            raise AssertionError(f"{name} ran before hardlink rejection")
+
+        return fail
+
+    monkeypatch.setattr(finalizer, "read_pinned_sources", fail_read)
+    monkeypatch.setattr(Path, "mkdir", fail_mutation("mkdir"))
+    monkeypatch.setattr(finalizer.os, "chmod", fail_mutation("chmod"))
+
+    with pytest.raises(ValueError, match="hardlinks"):
+        finalizer.prepare_finalization(args)
+
+    assert calls == {key: 0 for key in calls}
+    assert _digest(shared_source.read_bytes()) == original_sha
+    assert linked_output.stat().st_ino == shared_source.stat().st_ino
+    assert [(path, path.stat().st_mode & 0o777) for path, _ in parent_modes] == parent_modes
+    linked_output.unlink()
+    shared_source.unlink()
+
+
 def test_source_symlink_parent_blocks_before_read_parse_and_writes(tmp_path: Path, monkeypatch) -> None:
     paths, approved = _write_source_set(tmp_path)
     monkeypatch.setattr(finalizer, "APPROVED_SOURCE_SHA256", approved)
@@ -233,6 +292,30 @@ def test_source_symlink_parent_blocks_before_read_parse_and_writes(tmp_path: Pat
         finalizer.prepare_finalization(args)
 
     assert calls == {key: 0 for key in calls}
+
+
+def test_hardlinked_source_rejected_before_source_read(tmp_path: Path, monkeypatch) -> None:
+    paths, approved = _write_source_set(tmp_path)
+    monkeypatch.setattr(finalizer, "APPROVED_SOURCE_SHA256", approved)
+    linked_copy = tmp_path / "linked-copy.json"
+    linked_copy.hardlink_to(paths["original_ledger"])
+    source_sha = _digest(paths["original_ledger"].read_bytes())
+    output = finalizer.FINALIZATION_DIR
+    args = SimpleNamespace(
+        source_paths=paths,
+        output_dir=output,
+        campaign_state=output / "campaign.json",
+        plan_path=output / "finalization_plan.json",
+        derived_report=output / "sol-low-recovered-case.json",
+    )
+    read_calls = []
+    monkeypatch.setattr(finalizer, "read_pinned_sources", lambda *a, **k: read_calls.append(True))
+
+    with pytest.raises(ValueError, match="fuente debe ser archivo regular sin hardlinks"):
+        finalizer.prepare_finalization(args)
+
+    assert read_calls == []
+    assert _digest(paths["original_ledger"].read_bytes()) == source_sha
 
 
 def test_final_case_partition_excludes_recovered_case_and_avoids_original_failure_replay() -> None:
