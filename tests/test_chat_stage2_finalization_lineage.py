@@ -247,6 +247,9 @@ def finalization_artifacts(root: Path) -> tuple[Path, Path, Path, dict[Path, str
         "snapshot_root": str(root / "site"),
         "prices": cont_ledger["identity"]["prices"],
         "execution_commit": final_commit,
+        "reservation_assumption_override": producer_plan["billing_reconciliation"][
+            "admission_reservation"
+        ],
     }
     final_campaign_hash = exporter._digest(final_campaign_identity)
     final_completed = {}
