@@ -17,18 +17,33 @@ class HeartbeatingProvider:
     def __init__(self, *, max_turn_seconds: float, usage: tuple[int, int] | None = None):
         self.max_turn_seconds = max_turn_seconds
         self.usage = usage
-        self.cancelled = threading.Event()
+        self.stream_closed = threading.Event()
         self.cancel_count = 0
+        self.close_count = 0
         self.message_posts = 0
 
-    def run_turn(self, *, emit, persist_session, cancel_event, cancel_provider, **_kwargs):
+    def run_turn(
+        self,
+        *,
+        emit,
+        persist_session,
+        register_stream_close,
+        cancel_provider,
+        **_kwargs,
+    ):
         self.message_posts += 1
         persist_session("sess_fixture")
         emit("provider.metadata", {"provider_turn_id": "turn_fixture"})
+
+        def close_stream():
+            self.close_count += 1
+            self.stream_closed.set()
+
+        register_stream_close(close_stream)
         # The loop represents an SDK stream receiving comments/heartbeats. They
         # do not yield provider events, so application-level deadline checks
         # cannot run until the independent watchdog cancels the session.
-        while not self.cancelled.wait(0.005):
+        while not self.stream_closed.wait(0.005):
             pass
         # Exercise the provider's own cancellation path racing the watchdog.
         cancel_provider("sess_fixture")
@@ -40,7 +55,6 @@ class HeartbeatingProvider:
     def cancel(self, session_id: str) -> None:
         assert session_id == "sess_fixture"
         self.cancel_count += 1
-        self.cancelled.set()
 
 
 def _run(provider):
@@ -69,31 +83,39 @@ def test_live_deadline_cancels_blocking_stream_once_and_preserves_usage(usage):
 
     assert time.monotonic() - started < 1
     assert provider.message_posts == 1
+    assert provider.close_count == 1
+    # Cancellation is deliberately detached; it cannot delay timeout return.
+    for _ in range(50):
+        if provider.cancel_count:
+            break
+        time.sleep(0.005)
     assert provider.cancel_count == 1
     assert caught.value.original_error.deadline_watchdog_fired is True
     assert caught.value.original_error.reason_code == "turn_timeout"
     assert caught.value.original_error.session_id == "sess_fixture"
     assert caught.value.original_error.turn_id == "turn_fixture"
     assert caught.value.usage == usage
-    # The timer has been cancelled and joined; it cannot issue a late cancel.
+    # Watchdog actions are one-shot; late worker unwind cannot send another.
     time.sleep(0.08)
     assert provider.cancel_count == 1
 
 
-def test_deadline_during_session_creation_cancels_after_session_id_is_known():
+def test_deadline_during_session_creation_blocks_late_message_post():
     session_creation_release = threading.Event()
 
     class SlowSessionCreationProvider(HeartbeatingProvider):
-        def run_turn(self, *, persist_session, cancel_event, cancel_provider, **_kwargs):
-            self.message_posts += 1
-            assert session_creation_release.wait(1)
-            persist_session("sess_fixture")
-            while not self.cancelled.wait(0.005):
-                pass
-            cancel_provider("sess_fixture")
-            raise RuntimeError("stream cancelled after session creation")
+        def __init__(self):
+            super().__init__(max_turn_seconds=0.04)
+            self.create_posts = 0
 
-    provider = SlowSessionCreationProvider(max_turn_seconds=0.04)
+        def run_turn(self, *, persist_session, authorize_input, **_kwargs):
+            self.create_posts += 1
+            session_creation_release.wait()
+            persist_session("sess_fixture")
+            authorize_input()
+            self.message_posts += 1
+
+    provider = SlowSessionCreationProvider()
     errors: list[BaseException] = []
 
     def run():
@@ -105,14 +127,100 @@ def test_deadline_during_session_creation_cancels_after_session_id_is_known():
     thread = threading.Thread(target=run)
     thread.start()
     time.sleep(0.08)
-    session_creation_release.set()
-    thread.join(1)
-
+    thread.join(0.5)
     assert not thread.is_alive()
     assert len(errors) == 1 and isinstance(errors[0], ConversationRunError)
-    assert provider.message_posts == 1
+
+    # The create request was already in flight, but after it returns the
+    # authorization fence prevents any new paid user-message request.
+    session_creation_release.set()
+    for _ in range(100):
+        if provider.cancel_count:
+            break
+        time.sleep(0.005)
+    assert provider.create_posts == 1
+    assert provider.message_posts == 0
     assert provider.cancel_count == 1
     assert errors[0].original_error.deadline_watchdog_fired is True
+
+
+def test_unresolved_session_creation_returns_without_worker_join():
+    class NeverReturningCreateProvider:
+        max_turn_seconds = 0.03
+        create_posts = 0
+        message_posts = 0
+        cancel_count = 0
+
+        def run_turn(self, **_kwargs):
+            self.create_posts += 1
+            threading.Event().wait()
+
+        def cancel(self, _session_id):
+            self.cancel_count += 1
+
+    provider = NeverReturningCreateProvider()
+    started = time.monotonic()
+    with pytest.raises(ConversationRunError) as caught:
+        _run(provider)
+
+    assert time.monotonic() - started < 0.3
+    assert caught.value.original_error.deadline_watchdog_fired is True
+    assert provider.create_posts == 1
+    assert provider.message_posts == 0
+    assert provider.cancel_count == 0  # no exact session ID exists to cancel
+
+
+def test_dispatch_fence_rejects_post_after_authorization_gap():
+    release_dispatch = threading.Event()
+
+    class Provider:
+        max_turn_seconds = 0.04
+        message_posts = 0
+        cancel_count = 0
+
+        def run_turn(self, *, persist_session, authorize_input, dispatch_input, **_kwargs):
+            persist_session("sess_fixture")
+            authorize_input()
+            release_dispatch.wait()
+            dispatch_input(lambda: setattr(self, "message_posts", self.message_posts + 1))
+
+        def cancel(self, _session_id):
+            self.cancel_count += 1
+
+    provider = Provider()
+    errors: list[BaseException] = []
+
+    def run():
+        try:
+            _run(provider)
+        except BaseException as exc:
+            errors.append(exc)
+
+    thread = threading.Thread(target=run)
+    thread.start()
+    time.sleep(0.08)
+    thread.join(0.5)
+    assert not thread.is_alive()
+    assert len(errors) == 1 and isinstance(errors[0], ConversationRunError)
+    release_dispatch.set()
+    time.sleep(0.03)
+    assert provider.message_posts == 0
+    assert provider.cancel_count == 1
+
+
+def test_blocked_remote_cancel_does_not_extend_deadline_return():
+    class HangingCancelProvider(HeartbeatingProvider):
+        def cancel(self, session_id):
+            self.cancel_count += 1
+            threading.Event().wait(0.25)
+
+    provider = HangingCancelProvider(max_turn_seconds=0.04)
+    started = time.monotonic()
+    with pytest.raises(ConversationRunError):
+        _run(provider)
+    assert time.monotonic() - started < 0.2
+    assert provider.close_count == 1
+    assert provider.message_posts == 1
 
 
 class FastProvider:

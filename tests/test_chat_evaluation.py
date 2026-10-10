@@ -409,7 +409,11 @@ def test_final_report_write_failure_never_marks_progress_completed(
     real_writer = evaluation_live._write_private_json
 
     def fail_final_report(path, payload):
-        if path.name.endswith(".json") and not path.name.endswith(".progress.json"):
+        if (
+            path.name.endswith(".json")
+            and not path.name.endswith(".progress.json")
+            and not path.name.endswith(".cases.json")
+        ):
             raise OSError("synthetic private-file failure")
         real_writer(path, payload)
 
@@ -498,8 +502,11 @@ def test_post_result_checkpoint_failure_is_not_recorded_as_provider_error(
     assert progress["active_usage_state"] == "unknown_in_flight"
     assert progress["active_case_id"] == "es_am_lf_q2"
     assert progress["models"][0]["case_count"] == 0
+    assert len(list(output_dir.glob("chat-eval-*.cases.json"))) == 1
     assert not [
-        path for path in output_dir.glob("chat-eval-*.json") if not path.name.endswith(".progress.json")
+        path
+        for path in output_dir.glob("chat-eval-*.json")
+        if not path.name.endswith((".progress.json", ".cases.json"))
     ]
 
 

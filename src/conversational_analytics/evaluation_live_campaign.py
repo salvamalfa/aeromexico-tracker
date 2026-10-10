@@ -31,7 +31,12 @@ def run_campaign(
     reconciled. Successfully persisted run slots are skipped on an exact
     identity resume, so prompt variants and repetitions cannot collapse.
     """
-    if isinstance(budget_usd, bool) or not isinstance(budget_usd, (int, float)) or not math.isfinite(budget_usd) or budget_usd <= 0:
+    if (
+        isinstance(budget_usd, bool)
+        or not isinstance(budget_usd, (int, float))
+        or not math.isfinite(budget_usd)
+        or budget_usd <= 0
+    ):
         raise ValueError("El presupuesto de campaña debe ser finito y positivo")
     if not runs:
         raise ValueError("La campaña requiere al menos una corrida")
@@ -45,7 +50,9 @@ def run_campaign(
         "prices": {key: list(value) for key, value in sorted(prices.items())},
     }
     identity_hash = hashlib.sha256(
-        json.dumps(identity, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
+        json.dumps(
+            identity, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False
+        ).encode("utf-8")
     ).hexdigest()
     if state_path.exists():
         if not resume:
@@ -128,6 +135,8 @@ def run_campaign(
             expected_versions=dict(expected_versions),
             system_instructions=str(run["prompt"]),
             run_identity=dict(run["identity"]),
+            run_identity_hash=str(run["identity_hash"]),
+            campaign_identity_hash=identity_hash,
             limits_override=dict(run["limits"]),
             text_verbosity_override=str(run["text_verbosity"]),
         )
@@ -228,5 +237,8 @@ def run_campaign(
         **spend,
         "run_summaries": reports,
         "state_path": str(state_path),
-        "note": "Un turno iniciado puede exceder la reserva; gasto desconocido detiene la campaña y bloquea replay.",
+        "note": (
+            "Un turno iniciado puede exceder la reserva; gasto desconocido detiene la campaña "
+            "y bloquea replay."
+        ),
     }

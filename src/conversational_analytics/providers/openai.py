@@ -10,7 +10,7 @@ from typing import Any, Callable
 
 from ..model_settings import agent_configuration
 from . import _openai_runtime_helpers as runtime_helpers
-from ._input_authorization import InputAuthorizer, send_tool_result
+from ._input_authorization import InputAuthorizer, InputDispatcher, send_tool_result
 from ._openai_error_metadata import upstream_error_metadata
 from ._openai_helpers import (
     ALLOWED_TOOL_NAMES,
@@ -57,12 +57,7 @@ from .base import ProviderResult, ToolCall
 
 
 class OpenAIProvider:
-    """Blocking provider implementation backed by ``openai>=3.13.0``.
-
-    ``client`` is injectable for offline tests. Production construction is
-    credential-lazy and never probes the API; the official SDK reads its key
-    from ``OPENAI_API_KEY`` only when a call is made.
-    """
+    """Blocking credential-lazy OpenAI Agents provider with an injectable client."""
 
     supports_input_authorization = True
     supports_terminal_usage_reconciliation = True
@@ -112,6 +107,8 @@ class OpenAIProvider:
         cancel_event: threading.Event,
         cancel_provider: Callable[[str], None] | None = None,
         authorize_input: InputAuthorizer | None = None,
+        dispatch_input: InputDispatcher | None = None,
+        register_stream_close: Callable[[Callable[[], None]], None] | None = None,
         mark_terminal_completed: Callable[[tuple[int, int] | None], None] | None = None,
         retire_session: Callable[[str], None] | None = None,
     ) -> ProviderResult:
@@ -151,6 +148,12 @@ class OpenAIProvider:
         prior_turn_id: str | None = None
         authorize = authorize_input or (lambda: None)
 
+        def dispatch(request: Callable[[], Any]) -> Any:
+            if dispatch_input is not None:
+                return dispatch_input(request)
+            authorize()
+            return request()
+
         def limit_error(message: str, reason: str, current_turn: str | None) -> OpenAIProviderError:
             return OpenAIProviderError(
                 message, reason_code=reason, session_id=session_id, turn_id=current_turn
@@ -166,10 +169,14 @@ class OpenAIProvider:
 
         def close_active_stream() -> None:
             nonlocal stream_closed
-            if stream_manager is not None and not stream_closed:
-                close_stream(stream_manager)
+            with stream_close_lock:
+                if stream_manager is None or stream_closed:
+                    return
                 stream_closed = True
+                manager = stream_manager
+            close_stream(manager)
 
+        stream_close_lock = threading.Lock()
         # Shared by every path that accepts a recovered completed turn.
         finish: dict[str, Any] = {
             "client": self.client,
@@ -240,6 +247,7 @@ class OpenAIProvider:
                     success=False,
                     error=str(error.get("message", "")),
                     authorize_input=authorize,
+                    dispatch_input=dispatch,
                 )
                 return
             tool_outputs.append(result)
@@ -251,6 +259,7 @@ class OpenAIProvider:
                 success=True,
                 output=encoded,
                 authorize_input=authorize,
+                dispatch_input=dispatch,
             )
 
         def is_current_root_turn(event_data: dict[str, Any]) -> bool:
@@ -269,24 +278,27 @@ class OpenAIProvider:
             if cancel_event.is_set():
                 raise InterruptedError("turn cancelled")
             if session_was_created:
-                authorize()
-                stream_manager = self.client.beta.agents.sessions.create(
-                    agent=agent_configuration(
-                        self.model,
-                        instructions,
-                        tools,
-                        self.reasoning_effort,
-                        self.text_verbosity,
-                    ),
-                    environment={"type": "none"},
-                    input=request_input,
-                    metadata={
-                        INSTRUCTIONS_FINGERPRINT_KEY: instructions_fingerprint,
-                        PROMPT_INPUT_FINGERPRINT_KEY: input_fingerprint,
-                        INSTRUCTIONS_DERIVATION_KEY: PERIOD_SELECTION_POLICY_VERSION,
-                    },
-                    stream=True,
+                stream_manager = dispatch(
+                    lambda: self.client.beta.agents.sessions.create(
+                        agent=agent_configuration(
+                            self.model,
+                            instructions,
+                            tools,
+                            self.reasoning_effort,
+                            self.text_verbosity,
+                        ),
+                        environment={"type": "none"},
+                        input=request_input,
+                        metadata={
+                            INSTRUCTIONS_FINGERPRINT_KEY: instructions_fingerprint,
+                            PROMPT_INPUT_FINGERPRINT_KEY: input_fingerprint,
+                            INSTRUCTIONS_DERIVATION_KEY: PERIOD_SELECTION_POLICY_VERSION,
+                        },
+                        stream=True,
+                    )
                 )
+                if register_stream_close is not None:
+                    register_stream_close(close_active_stream)
                 if hasattr(stream_manager, "with_result_collection"):
                     stream_manager = stream_manager.with_result_collection()
                 stream_iter = (
@@ -296,16 +308,19 @@ class OpenAIProvider:
                 runtime_helpers.track_session(session_id, persist_session, tracked_sessions)
                 prior_turn_id = latest_provider_turn_id(self.client, session_id)
                 stream_manager = self.client.beta.agents.sessions.events.stream(session_id)
+                if register_stream_close is not None:
+                    register_stream_close(close_active_stream)
                 stream_iter = (
                     stream_manager.__enter__() if hasattr(stream_manager, "__enter__") else stream_manager
                 )
                 # The event stream is attached before the user message is sent.
-                authorize()
                 try:
-                    self.client.beta.agents.sessions.events.create(
-                        session_id,
-                        idempotency_key=f"airline-tracker-turn-{app_turn_id}",
-                        events=[{"type": "agent.session.input.message", "input": request_input}],
+                    dispatch(
+                        lambda: self.client.beta.agents.sessions.events.create(
+                            session_id,
+                            idempotency_key=f"airline-tracker-turn-{app_turn_id}",
+                            events=[{"type": "agent.session.input.message", "input": request_input}],
+                        )
                     )
                 finally:
                     if cancel_event.is_set():
@@ -577,6 +592,5 @@ class OpenAIProvider:
     ) -> tuple[str, str, str | None, dict[str, Any]] | None:
         """Read saved turns/items after interruption without replaying input."""
         return recover_exact_turn(self.client, session_id, turn_id, deadline=deadline)
-
 
 __all__ = ["OpenAIProvider", "OpenAIProviderError"]
