@@ -19,8 +19,6 @@ from .evaluation_live_checkpoint import (
 from .evaluation_live_reservation import case_reservation_cost, reservation_assumption
 from .evaluation_live_scoring import score_live_case
 from .evaluation_live_support import (
-    _RESERVATION_INPUT_TOKENS_PER_CASE_FLOOR,
-    _RESERVATION_OUTPUT_TOKENS_PER_CASE_FLOOR,
     _apply_provider_cancel_outcome,
     _CheckpointWriteError,
     _error_metadata,
