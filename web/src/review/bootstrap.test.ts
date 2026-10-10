@@ -131,6 +131,36 @@ afterEach(() => {
 });
 
 describe("review page bootstrap", () => {
+  it("imports, counts, and exports a D rating through the browser review flow", async () => {
+    document.body.innerHTML = reviewShell();
+    vi.stubGlobal("crypto", webcrypto as unknown as Crypto);
+    const dataset = {
+      schema_version: 1, dataset_id: "d".repeat(64), available_count: 4,
+      questions: [{
+        id: "Q01", question: "Pregunta de cuatro candidatos", language: "es", expected: { status: "supported" },
+        candidates: ["A", "B", "C", "D"].map((alias) => ({ alias, answer: `Respuesta ${alias}` })),
+      }],
+    };
+    const serialized = JSON.stringify(dataset);
+    const bytes = new TextEncoder().encode(serialized);
+    const contentHash = await sha256Hex(bytes.slice().buffer as ArrayBuffer);
+    document.querySelector<HTMLInputElement>("#cache-option")!.checked = true;
+    bootstrapReview(document, window.localStorage);
+    selectFile("#dataset-file", jsonFile(dataset));
+    await vi.waitFor(() => expect(document.querySelector("#review-workspace")?.hasAttribute("hidden")).toBe(false));
+
+    selectFile("#ratings-file", jsonFile({
+      schema_version: 1, dataset_id: dataset.dataset_id, dataset_content_sha256: contentHash,
+      ratings: [{ question_id: "Q01", alias: "D", status: "correct", notes: "Revisada" }],
+    }));
+    await vi.waitFor(() => expect(document.querySelector<HTMLOutputElement>("#progress-count")?.value).toBe("1 / 4"));
+    expect(document.querySelectorAll(".candidate-card")).toHaveLength(4);
+    expect(document.querySelector<HTMLElement>(".candidate-card:last-child .candidate-heading")?.textContent).toBe("Candidato D");
+    const exported = await exportJson() as { ratings: Array<{ alias: string; status: string; notes: string }> };
+    expect(exported.ratings).toEqual([{ question_id: "Q01", alias: "D", status: "correct", notes: "Revisada" }]);
+    expect(window.localStorage.getItem(storageKey(dataset.dataset_id, contentHash))).toContain('"alias":"D"');
+  });
+
   it("hydrates saved ratings from every cut before allowing an immediate package export", async () => {
     document.body.innerHTML = reviewShell();
     vi.stubGlobal("crypto", webcrypto as unknown as Crypto);

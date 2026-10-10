@@ -12,7 +12,7 @@ import { ratingKey } from "./types";
 
 const hashPattern = /^[a-f0-9]{64}$/;
 const cutIdPattern = /^[a-z0-9][a-z0-9-]{0,63}$/;
-const aliases: CandidateAlias[] = ["A", "B", "C"];
+const aliases: CandidateAlias[] = ["A", "B", "C", "D"];
 const missingStatuses = ["no_answer", "failed", "held", "not_attempted"] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {

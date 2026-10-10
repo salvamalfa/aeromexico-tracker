@@ -59,7 +59,24 @@ describe("blind review file validation", () => {
       candidates: [question.candidates[0]!, { ...question.candidates[1]!, alias: "C" }],
     }));
     nonCanonicalAliases.available_count = 2;
-    expect(() => parseDataset(nonCanonicalAliases)).toThrow("los alias deben ser A/B o A/B/C");
+    expect(() => parseDataset(nonCanonicalAliases)).toThrow("alias deben ser consecutivos desde A");
+  });
+
+  it("accepts four consecutive aliases and round-trips a D rating", () => {
+    const source = sampleDataset();
+    source.questions = source.questions.slice(0, 1).map((question) => ({
+      ...question,
+      candidates: [...question.candidates, { alias: "D", answer: "Respuesta Q01-D" }],
+    }));
+    source.available_count = 4;
+    const dataset = parseDataset(source);
+    expect(dataset.questions[0]?.candidates.map(({ alias }) => alias)).toEqual(["A", "B", "C", "D"]);
+    const raw = {
+      schema_version: 1, dataset_id: dataset.dataset_id, dataset_content_sha256: contentHash,
+      ratings: [{ question_id: "Q01", alias: "D", status: "correct", notes: "" }],
+    };
+    const ratings = parseRatings(raw, dataset, contentHash);
+    expect(ratingsFile(dataset, contentHash, ratings)).toEqual(raw);
   });
 
   it("rejects malformed, aliased, extra-field, or count-mismatched source data", () => {
