@@ -325,7 +325,9 @@ def validate_continuation_inputs(
         actual = actual_completed[run_id]
         if (
             canonical(actual.get("identity")) != canonical(run.get("identity"))
-            or actual.get("identity_hash") != run.get("identity_hash")
+            or digest(actual.get("identity")) != run.get("identity_hash")
+            or (actual.get("identity_hash") is not None
+                and actual.get("identity_hash") != run.get("identity_hash"))
         ):
             raise ExportError("El slot real de continuación no conserva su identidad y hash planeados")
         summary = actual.get("summary", {})
@@ -340,7 +342,8 @@ def validate_continuation_inputs(
             or canonical(metadata["identity"]) != canonical(run.get("identity"))
             or identity_hash != run.get("identity_hash")
             or continuation_report.get("run_identity_hash") != run.get("identity_hash")
-            or continuation_report.get("identity_hash") != run.get("identity_hash")
+            or (continuation_report.get("identity_hash") is not None
+                and continuation_report.get("identity_hash") != run.get("identity_hash"))
             or campaign_hash != continuation_campaign_hash
         ):
             raise ExportError("El reporte de continuación no coincide con identidad/hash de corrida y campaña del ledger")

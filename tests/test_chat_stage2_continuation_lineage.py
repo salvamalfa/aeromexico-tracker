@@ -167,8 +167,8 @@ def continuation_artifacts(root: Path) -> tuple[Path, Path, list[Path], dict[Pat
         for index, case_id in enumerate(source_ids)
     ])
     source_report["run_identity"] = source_run
+    source_report.pop("identity_hash", None)
     source_report["run_identity_hash"] = exporter._digest(source_run)
-    source_report["identity_hash"] = exporter._digest(source_run)
     source_report["campaign_identity_hash"] = source_campaign_hash
     source_report["case_count"] = 15
     source_report_path = root / "source-report.json"
@@ -280,15 +280,15 @@ def continuation_artifacts(root: Path) -> tuple[Path, Path, list[Path], dict[Pat
             for index, case_id in enumerate(selected)
         ])
         report["run_identity"] = run["identity"]
+        report.pop("identity_hash", None)
         report["run_identity_hash"] = run["identity_hash"]
-        report["identity_hash"] = run["identity_hash"]
         report["campaign_identity_hash"] = continuation_campaign_hash
         report["case_count"] = len(selected)
         report_path = cont_reports_dir / f"{candidate.replace('@', '-')}.json"
         report_path.write_text(json.dumps(report), encoding="utf-8")
         continuation_report_paths.append(report_path)
         actual_runs[run["run_id"]] = {
-            "identity": run["identity"], "identity_hash": run["identity_hash"],
+            "identity": run["identity"],
             "cases": [{"case_id": case_id, "model_turn_completed": True} for case_id in selected],
             "complete": True,
             "summary": {"report_path": str(report_path), "run_status": "completed",
