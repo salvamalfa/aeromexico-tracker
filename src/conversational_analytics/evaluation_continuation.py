@@ -328,6 +328,8 @@ def prepare_stage2_continuation(
         raise ValueError("La evidencia privada debe ser un objeto JSON UTF-8 válido") from error
     if not isinstance(evidence, Mapping):
         raise ValueError("La evidencia privada no es un objeto de uso")
+    if evidence.get("schema_version") != 1 or evidence.get("kind") != "private_owner_usage_confirmation":
+        raise ValueError("La evidencia owner-reported usa un schema no reconocido")
 
     if usage_reconciliation.get("status") != "owner_confirmed_aggregate":
         raise ValueError("Solo se acepta la attestación agregada confirmada por el dueño")
@@ -361,6 +363,12 @@ def prepare_stage2_continuation(
     ):
         if source_evidence.get(key) != expected:
             raise ValueError(f"La attestación no está ligada a la fuente original: {key}")
+    if (
+        source_evidence.get("pilot_candidate_models_in_source_report")
+        != source_report.get("candidate_models")
+        or source_evidence.get("source_report_model_entry_count") != 1
+    ):
+        raise ValueError("La attestación owner-reported no coincide con el candidato del reporte fuente")
     if source_report.get("run_identity_hash") != failed_identity_hash:
         raise ValueError("El reporte no está ligado a la identidad original de la corrida")
     if (
@@ -372,6 +380,7 @@ def prepare_stage2_continuation(
         spend_evidence.get("failed_case_cost_estimate_usd") is not None
         or spend_evidence.get("invoice_total_usd") is not None
         or spend_evidence.get("failed_case_individual_usage") is not None
+        or spend_evidence.get("failed_case") != failed_case_id
     ):
         raise ValueError("La attestación no debe afirmar importe exacto de factura o fallo")
     if (

@@ -156,7 +156,7 @@ def _fixtures() -> tuple[list[dict], dict, dict, bytes, bytes, bytes, dict]:
     report_bytes = json.dumps(report, sort_keys=True, separators=(",", ":")).encode()
     evidence = {
         "schema_version": 1,
-        "kind": "f2_9_owner_usage_confirmation",
+        "kind": "private_owner_usage_confirmation",
         "owner_attestation": {
             "source": "owner_reported_OpenAI_Usage",
             "aggregate_date": "2026-10-10",
@@ -174,10 +174,13 @@ def _fixtures() -> tuple[list[dict], dict, dict, bytes, bytes, bytes, dict]:
             "execution_commit": failed["identity"]["execution_commit"],
             "campaign_identity_hash": campaign_hash,
             "run_identity_hash": failed["identity_hash"],
+            "pilot_candidate_models_in_source_report": [failed["candidate"]],
+            "source_report_model_entry_count": 1,
         },
         "reconciliation": {
             "complete_responses": 8,
             "attempted_responses": 9,
+            "failed_case": failed_case,
             "aggregate_tokens_match_known_case_lower_bounds": True,
             "failed_case_individual_usage": None,
             "failed_case_cost_estimate_usd": None,
