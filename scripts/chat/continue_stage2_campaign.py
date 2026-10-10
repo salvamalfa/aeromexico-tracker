@@ -138,7 +138,7 @@ def prepare_continuation(
     evidence_bytes = source_bytes["owner evidence"]
     source_state = _parse_pinned_private_json(source_ledger_bytes, label="source ledger")
     source_report = _parse_pinned_private_json(source_report_bytes, label="source report")
-    evidence = _parse_pinned_private_json(evidence_bytes, label="owner evidence")
+    _parse_pinned_private_json(evidence_bytes, label="owner evidence")
     source_ledger_sha = hashlib.sha256(source_ledger_bytes).hexdigest()
     source_report_sha = hashlib.sha256(source_report_bytes).hexdigest()
     usage_reconciliation = {
