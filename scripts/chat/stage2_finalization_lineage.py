@@ -7,6 +7,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from stage2_budget_admission_lineage import validate_budget_admission_policy
 from stage2_continuation_lineage import validate_continuation_inputs
 
 APPROVED_SOURCE_SHA256 = {
@@ -396,6 +397,16 @@ def validate_finalization_inputs(
     final_identity = final_ledger.get("identity")
     final_campaign_hash = final_ledger.get("identity_hash")
     live_result = plan.get("live_result")
+    if isinstance(final_identity, dict):
+        validate_budget_admission_policy(
+            plan,
+            sources,
+            source_hashes,
+            final_identity,
+            final_runs,
+            digest=digest,
+            error=ExportError,
+        )
     if (
         not isinstance(final_identity, dict)
         or final_campaign_hash != digest(final_identity)
@@ -456,6 +467,7 @@ def validate_finalization_inputs(
             "execution_commit",
             "continuation",
             "finalization",
+            "budget_admission_policy",
         }
         prior_base = {key: value for key, value in source_run["identity"].items() if key not in variable}
         final_base = {key: value for key, value in identity.items() if key not in variable}
