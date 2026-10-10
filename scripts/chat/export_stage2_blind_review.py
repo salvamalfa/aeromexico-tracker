@@ -84,8 +84,9 @@ def _fixture_cases(fixture: dict[str, Any]) -> list[dict[str, Any]]:
     if not isinstance(cases, list) or any(not isinstance(case, dict) for case in cases):
         raise ExportError("El fixture stage2 no contiene casos válidos")
     by_id = {case.get("id"): case for case in cases}
-    if len(by_id) != len(cases) or tuple(by_id) != EXPECTED_CASE_IDS:
-        raise ExportError("El fixture debe contener los 15 IDs congelados, en el orden aprobado")
+    if len(by_id) != len(cases) or set(by_id) != set(EXPECTED_CASE_IDS):
+        raise ExportError("El fixture debe contener exactamente los 15 IDs congelados")
+    cases = [by_id[case_id] for case_id in EXPECTED_CASE_IDS]
     business = [case for case in cases if case.get("cohort", "business" if str(case["id"]).startswith("N") else "safety") == "business"]
     safety = [case for case in cases if case.get("cohort", "business" if str(case["id"]).startswith("N") else "safety") == "safety"]
     if len(business) != 5 or len(safety) != 10:
