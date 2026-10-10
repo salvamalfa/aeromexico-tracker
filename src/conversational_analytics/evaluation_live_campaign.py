@@ -23,6 +23,7 @@ def run_campaign(
     state_path: Path,
     output_dir: Path,
     resume: bool = False,
+    reservation_assumption_override: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Execute stable run slots under one shared hard campaign stop.
 
@@ -41,6 +42,15 @@ def run_campaign(
     if not runs:
         raise ValueError("La campaña requiere al menos una corrida")
     run_specs = [dict(run) for run in runs]
+    if reservation_assumption_override is not None:
+        expected_slots = reservation_assumption_override.get("planned_request_count")
+        actual_slots = sum(len(run.get("case_ids", [])) for run in run_specs)
+        candidate_slots = {run.get("candidate"): len(run.get("case_ids", [])) for run in run_specs}
+        if (
+            expected_slots != actual_slots
+            or candidate_slots != {"gpt-6.1-sol@low": 14, "gpt-6.1-sol@medium": 15}
+        ):
+            raise ValueError("La reserva empírica no coincide con el total de turnos planificados")
     identity = {
         "runs": [run.get("identity") for run in run_specs],
         "run_identity_hashes": [run.get("identity_hash") for run in run_specs],
@@ -48,6 +58,8 @@ def run_campaign(
         "expected_versions": dict(expected_versions),
         "snapshot_root": str(snapshot_root),
         "prices": {key: list(value) for key, value in sorted(prices.items())},
+            "reservation_assumption_override": dict(reservation_assumption_override)
+            if reservation_assumption_override is not None else None,
     }
     identity_hash = hashlib.sha256(
         json.dumps(
@@ -139,6 +151,11 @@ def run_campaign(
             campaign_identity_hash=identity_hash,
             limits_override=dict(run["limits"]),
             text_verbosity_override=str(run["text_verbosity"]),
+            reservation_assumption_override=(
+                dict(reservation_assumption_override)
+                if reservation_assumption_override is not None
+                else None
+            ),
         )
         report["run_identity_hash"] = str(run["identity_hash"])
         report["campaign_identity_hash"] = identity_hash

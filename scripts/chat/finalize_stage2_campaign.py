@@ -27,6 +27,7 @@ from scripts.chat.evaluate_campaign import (  # noqa: E402
 from scripts.chat.stage2_finalization import (  # noqa: E402
     conservative_usage_cost,
     derived_recovery_report,
+    empirical_reservation_assumption,
     final_case_partition,
     read_pinned_sources,
 )
@@ -76,6 +77,8 @@ EXPECTED_CONTINUATION_EXECUTION = "8f671846f819db57dd0a96d70074d4d568551100"
 ORIGINAL_KNOWN_COST_USD = 0.05460125
 CLOSED_CONTINUATION_COST_USD = 0.141395625
 SOL_LOW_PROGRESS_COST_USD = 1.72828
+STAGE2_BUDGET_ESTIMATE = ROOT / "docs/chat/revision-fase-2/F2.9-etapa-2-presupuesto.json"
+STAGE2_BUDGET_ESTIMATE_SHA256 = "0f94efcae33177cde6e1cfc71415a3caa724757b0f053cca82b1e63d18f27803"
 
 
 def _digest_bytes(raw: bytes) -> str:
@@ -94,6 +97,32 @@ def _json_bytes(value: Any) -> bytes:
     return json.dumps(
         value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False
     ).encode()
+
+
+def _approved_forecast(remaining: float, carry_total: float) -> dict[str, Any]:
+    raw = STAGE2_BUDGET_ESTIMATE.read_bytes()
+    if _digest_bytes(raw) != STAGE2_BUDGET_ESTIMATE_SHA256:
+        raise ValueError("El estimado aprobado de etapa 2 no coincide con su hash")
+    estimates = json.loads(raw)["candidate_estimates_usd"]
+    low = estimates["gpt-6.1-sol@low"]
+    medium = estimates["gpt-6.1-sol@medium"]
+    if len(low) != 2 or len(medium) != 2:
+        raise ValueError("El estimado aprobado no contiene los rangos Sol esperados")
+    lower = low[0] * (14 / 15) + medium[0]
+    upper = low[1] * (14 / 15) + medium[1]
+    if upper > remaining or carry_total + upper > STAGE2_RESERVE_USD:
+        raise ValueError("El rango alto aprobado de las 29 solicitudes supera la reserva disponible")
+    return {
+        "source_path": str(STAGE2_BUDGET_ESTIMATE.relative_to(ROOT)),
+        "source_sha256": STAGE2_BUDGET_ESTIMATE_SHA256,
+        "low_case_count": 14,
+        "medium_case_count": 15,
+        "estimated_cost_range_usd": [lower, upper],
+        "remaining_after_upper_estimate_usd": remaining - upper,
+        "reserve_after_carry_and_upper_estimate_usd": STAGE2_RESERVE_USD - carry_total - upper,
+        "basis": "approved stage-2 estimate scaled to 14 Low plus 15 Medium calls",
+        "budget_guaranteed": False,
+    }
 
 
 def _atomic_private_bytes(path: Path, content: bytes) -> None:
@@ -187,6 +216,7 @@ def _build_run(
     execution_commit: str,
     continuation_plan_sha256: str,
     prepared_run: dict[str, Any],
+    budget_admission_policy: dict[str, Any],
 ) -> dict[str, Any]:
     identity = json.loads(json.dumps(base_run["identity"]))
     run_id = base_run["run_id"].split("-cont-")[0] + f"-final-{FINALIZATION_ID}"
@@ -202,6 +232,7 @@ def _build_run(
                 "source_identity_hash": base_run["identity_hash"],
                 "finalization_id": FINALIZATION_ID,
             },
+            "budget_admission_policy": budget_admission_policy,
         }
     )
     return {
@@ -261,20 +292,6 @@ def prepare_finalization(
         "gpt-6.1-sol@low": final_low_ids,
         "gpt-6.1-sol@medium": partition["sol_medium_case_ids"],
     }
-    current_commit = _git_execution_commit()
-    continuation_plan_sha = APPROVED_SOURCE_SHA256["continuation_plan"]
-    prepared_by_candidate = {run["candidate"]: run for run in planned_runs}
-    runs = [
-        _build_run(
-            by_candidate[candidate],
-            ids,
-            [fixture_by_id[cid] for cid in ids],
-            current_commit,
-            continuation_plan_sha,
-            prepared_by_candidate[candidate],
-        )
-        for candidate, ids in run_case_ids.items()
-    ]
     expected_input = source["_recovered_input_tokens"]
     expected_output = source["_recovered_output_tokens"]
     recovered_cost = conservative_usage_cost(expected_input, expected_output, catalog)
@@ -304,6 +321,68 @@ def prepare_finalization(
     if remaining <= 0:
         raise ValueError("El gasto estimado acumulado agotó la reserva autorizada")
     source_bytes_hashes = {name: _digest_bytes(content) for name, content in raw.items()}
+    tariff_sha = _digest(catalog)
+    reservation = empirical_reservation_assumption(
+        [source["original_report"], source["closed_report_luna_medium"], source["closed_report_luna_max"]],
+        (expected_input, expected_output),
+        catalog,
+        request_count=29,
+    )
+    reservation.update(
+        {
+            "sample_source_sha256": {
+                name: source_bytes_hashes[name]
+                for name in (
+                    "original_report", "closed_report_luna_medium",
+                    "closed_report_luna_max", "terminal_recovery",
+                )
+            },
+            "tariff_catalog_sha256": tariff_sha,
+            "approved_budget_forecast_sha256": STAGE2_BUDGET_ESTIMATE_SHA256,
+        }
+    )
+    forecast = _approved_forecast(remaining, carry_total)
+    reservation_sha = _digest(reservation)
+    budget_admission_policy = {
+        "basis": reservation["basis"],
+        "sha256": reservation_sha,
+        "historical_sample_count": reservation["historical_sample_count"],
+        "historical_candidate_counts": reservation["historical_candidate_counts"],
+        "historical_input_tokens": reservation["historical_input_tokens"],
+        "historical_output_tokens": reservation["historical_output_tokens"],
+        "safety_margin_fraction": reservation["safety_margin_fraction"],
+        "input_tokens_per_turn": reservation["input_tokens_per_turn"],
+        "output_tokens_per_turn": reservation["output_tokens_per_turn"],
+        "planned_request_count": reservation["planned_request_count"],
+        "planned_batch_estimated_reservation_usd": reservation["planned_batch_estimated_reservation_usd"],
+        "unit_prices_usd_per_million": reservation["unit_prices_usd_per_million"],
+        "long_context_threshold_input_tokens": reservation["long_context_threshold_input_tokens"],
+        "long_context_input_multiplier": reservation["long_context_input_multiplier"],
+        "long_context_output_multiplier": reservation["long_context_output_multiplier"],
+        "price_basis": reservation["price_basis"],
+        "source_sha256": reservation["sample_source_sha256"],
+        "tariff_catalog_sha256": tariff_sha,
+        "approved_budget_forecast_sha256": STAGE2_BUDGET_ESTIMATE_SHA256,
+        "approved_forecast_range_usd": forecast["estimated_cost_range_usd"],
+        "budget_guaranteed": False,
+    }
+    if (
+        reservation["planned_batch_estimated_reservation_usd"] > remaining
+        or carry_total + reservation["planned_batch_estimated_reservation_usd"] > STAGE2_RESERVE_USD
+    ):
+        raise ValueError("La reserva empírica completa de 29 solicitudes no cabe en el saldo aprobado")
+    current_commit = _git_execution_commit()
+    continuation_plan_sha = APPROVED_SOURCE_SHA256["continuation_plan"]
+    prepared_by_candidate = {run["candidate"]: run for run in planned_runs}
+    runs = [
+        _build_run(
+            by_candidate[candidate], ids,
+            [fixture_by_id[cid] for cid in ids], current_commit,
+            continuation_plan_sha, prepared_by_candidate[candidate],
+            budget_admission_policy,
+        )
+        for candidate, ids in run_case_ids.items()
+    ]
     recovery_sha = source_bytes_hashes["terminal_recovery"]
     derived = derived_recovery_report(
         run_identity=source["_low_run"]["identity"],
@@ -396,6 +475,9 @@ def prepare_finalization(
             "carry_components": carry,
             "carry_total_estimate_usd": carry_total,
             "remaining_budget_usd": remaining,
+            "admission_reservation": reservation,
+            "approved_estimate_forecast": forecast,
+            "budget_admission_policy_sha256": reservation_sha,
             "invoice_total_usd": None,
             "usage_rule": (
                 "Conservative cache-write input tariff; original failed-call cost remains unknown"
@@ -407,6 +489,7 @@ def prepare_finalization(
             "plan_path": str(args.plan_path.resolve()),
             "ledger_path": str(args.campaign_state.resolve()),
             "output_dir": str(args.output_dir.resolve()),
+            "budget_admission_policy": budget_admission_policy,
             "runs": run_records,
             "derived_reports": {
                 "sol_low_recovery": {
@@ -495,6 +578,7 @@ def main(argv: list[str] | None = None) -> int:
             state_path=args.campaign_state.resolve(),
             output_dir=args.output_dir.resolve(),
             resume=False,
+            reservation_assumption_override=plan["billing_reconciliation"]["admission_reservation"],
         )
         plan["mode"] = "live-campaign"
         plan["provider_calls_now"] = None

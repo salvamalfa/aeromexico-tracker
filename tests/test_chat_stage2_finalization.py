@@ -12,6 +12,7 @@ from scripts.chat import stage2_finalization_sources as source_validation
 from scripts.chat.stage2_finalization import (
     conservative_usage_cost,
     derived_recovery_report,
+    empirical_reservation_assumption,
     final_case_partition,
     read_pinned_sources,
     validate_terminal_recovery,
@@ -414,3 +415,82 @@ def test_recovered_sol_cost_uses_conservative_pinned_input_tariff() -> None:
     assert recovery_cost == pytest.approx(0.3498675)
     assert total == pytest.approx(2.274144375)
     assert 8.0 - total == pytest.approx(5.725855625)
+
+
+def test_empirical_29_request_reservation_fits_all_known_carry_and_approved_forecast() -> None:
+    historical = [
+        {
+            "model_turn_completed": True,
+            "usage_complete": True,
+            "input_tokens": 47_786 if index < 22 else 47_785,
+            "output_tokens": 1_571 if index < 17 else 1_570,
+        }
+        for index in range(29)
+    ]
+
+    def report(count: int, candidate: str, *, failed: bool = False) -> dict:
+        rows = historical[:count]
+        del historical[:count]
+        if failed:
+            rows.append({"model_turn_completed": False, "usage_complete": None})
+        return {"models": [{"candidate": candidate, "cases": rows}]}
+
+    catalog = json.loads((finalizer.ROOT / "config/chat/models.json").read_text())
+    assumption = empirical_reservation_assumption(
+        [report(8, "gpt-6-luna@medium", failed=True), report(6, "gpt-6-luna@medium"),
+         report(15, "gpt-6-luna@max")],
+        (137_951, 499),
+        catalog,
+        request_count=29,
+    )
+    carry = 2.274144375
+    reserve = assumption["planned_batch_estimated_reservation_usd"]
+    forecast = finalizer._approved_forecast(8.0 - carry, carry)
+
+    assert assumption["historical_sample_count"] == 30
+    assert assumption["historical_candidate_counts"] == {
+        "gpt-6-luna@medium": 14, "gpt-6-luna@max": 15, "gpt-6.1-sol@low": 1,
+    }
+    assert assumption["historical_input_tokens"] == 1_523_738
+    assert assumption["historical_output_tokens"] == 46_046
+    assert assumption["input_tokens_per_turn"] > assumption["mean_input_tokens_rounded_up"]
+    assert assumption["output_tokens_per_turn"] > assumption["mean_output_tokens_rounded_up"]
+    assert assumption["input_tokens_per_turn"] == 68_570
+    assert assumption["output_tokens_per_turn"] == 2_073
+    assert assumption["safety_margin_fraction"] == pytest.approx(0.35)
+    assert assumption["unit_prices_usd_per_million"] == {
+        "input_normal": 2.0,
+        "input_cache_write": 2.5,
+        "output": 10.0,
+    }
+    assert reserve == pytest.approx(29 * 0.192155)
+    assert carry + reserve < 8.0
+    assert carry + forecast["estimated_cost_range_usd"][1] < 8.0
+    assert forecast["estimated_cost_range_usd"][1] == pytest.approx(5.284293)
+    assert assumption["basis"] == "f2_9_empirical_pilot_estimate_not_hard_cap"
+
+
+def test_empirical_admission_rejects_unaccounted_unknown_rows() -> None:
+    def report(count: int, candidate: str, *, failed: bool = False) -> dict:
+        rows = [
+            {
+                "model_turn_completed": True,
+                "usage_complete": True,
+                "input_tokens": 50_000,
+                "output_tokens": 1_500,
+            }
+            for _ in range(count)
+        ]
+        if failed:
+            rows.append({"model_turn_completed": False, "usage_complete": None})
+        return {"models": [{"candidate": candidate, "cases": rows}]}
+
+    catalog = json.loads((finalizer.ROOT / "config/chat/models.json").read_text())
+    with pytest.raises(ValueError, match="29 respuestas históricas completas"):
+        empirical_reservation_assumption(
+            [report(7, "gpt-6-luna@medium", failed=True), report(6, "gpt-6-luna@medium"),
+             report(15, "gpt-6-luna@max")],
+            (137_951, 499),
+            catalog,
+            request_count=29,
+        )

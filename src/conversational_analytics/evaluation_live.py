@@ -16,6 +16,7 @@ from .evaluation_live_checkpoint import (
     initial_report,
     write_detailed_case_checkpoint,
 )
+from .evaluation_live_reservation import case_reservation_cost, reservation_assumption
 from .evaluation_live_scoring import score_live_case
 from .evaluation_live_support import (
     _RESERVATION_INPUT_TOKENS_PER_CASE_FLOOR,
@@ -52,6 +53,7 @@ def _live_provider_run(
     campaign_identity_hash: str | None = None,
     limits_override: dict[str, int] | None = None,
     text_verbosity_override: str | None = None,
+    reservation_assumption_override: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Run gated holdout cases through the production provider/tool boundary.
 
@@ -189,21 +191,7 @@ def _live_provider_run(
             "known_estimated_cost_usd": 0.0,
             "spent_unknown": False,
             "run_identity": run_identity,
-            "reservation_assumption": {
-                    "input_tokens_per_turn": max(
-                    _RESERVATION_INPUT_TOKENS_PER_CASE_FLOOR,
-                    config.max_tool_calls
-                    * (config.max_message_chars // 4 + config.max_tool_result_bytes // 4),
-                ),
-                "output_tokens_per_turn": max(
-                    _RESERVATION_OUTPUT_TOKENS_PER_CASE_FLOOR, config.max_tool_calls * 2_000
-                ),
-                "note": (
-                    "reserva operativa por mensaje con piso de 140k input y 10k output, valorados con tarifa "
-                    "conservadora de cache-write/salida y multiplicadores long-context. Una solicitud puede "
-                    "excederla; gasto desconocido detiene la campaña y bloquea replay"
-                ),
-            },
+            "reservation_assumption": reservation_assumption(config, reservation_assumption_override),
         }
         report["models"].append(model_report)
         checkpoint()
@@ -211,10 +199,8 @@ def _live_provider_run(
             if stop_all:
                 model_report["stopped_reason"] = "previous_model_usage_unknown; comparison stopped"
                 break
-            reserve_input = model_report["reservation_assumption"]["input_tokens_per_turn"]
-            reserve_output = model_report["reservation_assumption"]["output_tokens_per_turn"]
             turn_count = len(case.get("turns", [case["question"]]))
-            case_reserve = turn_count * config.reservation_cost_usd(reserve_input + reserve_output)
+            case_reserve = case_reservation_cost(config, model_report["reservation_assumption"], turn_count)
             if estimated_total_usd + case_reserve > budget_usd:
                 model_report["stopped_reason"] = "remaining_budget_below_estimated_next_case_reservation"
                 model_report["remaining_budget_usd_before_stop"] = max(0.0, budget_usd - estimated_total_usd)

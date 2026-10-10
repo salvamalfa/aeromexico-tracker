@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -36,9 +37,94 @@ def conservative_usage_cost(input_tokens: int, output_tokens: int, catalog: dict
         model="gpt-6.1-sol",
         estimated_input_cost_per_million=float(model["input_usd_per_million"]),
         estimated_output_cost_per_million=float(model["output_usd_per_million"]),
+        long_context_threshold_input_tokens=int(model["long_context_threshold_input_tokens"]),
+        long_context_input_multiplier=float(model["long_context_input_multiplier"]),
+        long_context_output_multiplier=float(model["long_context_output_multiplier"]),
         cache_write_input_multiplier=float(model["cache_write_input_multiplier"]),
     )
     return pricing.usage_cost_usd(input_tokens, output_tokens)
+
+
+def empirical_reservation_assumption(
+    reports: list[dict[str, Any]],
+    recovered_usage: tuple[int, int],
+    catalog: dict[str, Any],
+    *,
+    request_count: int,
+    safety_margin: float = 0.35,
+) -> dict[str, Any]:
+    """Price a pilot-only admission forecast from complete prior usage plus a margin."""
+    if request_count != 29 or not math.isfinite(safety_margin) or not 0 < safety_margin <= 0.5:
+        raise ValueError("La reserva empírica requiere 29 slots y margen entre 0 y 50%")
+    samples: list[tuple[int, int]] = []
+    incomplete_count = 0
+    candidate_counts: dict[str, int] = {}
+    for report in reports:
+        models = report.get("models", [])
+        if len(models) != 1:
+            raise ValueError("La muestra de presupuesto debe contener un modelo por reporte")
+        candidate = models[0].get("candidate")
+        if candidate not in {"gpt-6-luna@medium", "gpt-6-luna@max"}:
+            raise ValueError("La muestra histórica contiene un candidato no autorizado")
+        for row in models[0].get("cases", []):
+            if row.get("model_turn_completed") is not True or row.get("usage_complete") is not True:
+                incomplete_count += 1
+                continue
+            input_tokens, output_tokens = row.get("input_tokens"), row.get("output_tokens")
+            if any(
+                isinstance(value, bool) or not isinstance(value, int) or value < 0
+                for value in (input_tokens, output_tokens)
+            ):
+                raise ValueError("Una respuesta completa no conserva conteos de tokens válidos")
+            samples.append((input_tokens, output_tokens))
+            candidate_counts[candidate] = candidate_counts.get(candidate, 0) + 1
+    if len(samples) != 29 or incomplete_count != 1:
+        raise ValueError("La reserva requiere exactamente 29 respuestas históricas completas")
+    if candidate_counts != {"gpt-6-luna@medium": 14, "gpt-6-luna@max": 15}:
+        raise ValueError("La mezcla histórica no coincide con las 14 respuestas Luna medium y 15 max")
+    recovered_input, recovered_output = recovered_usage
+    if any(isinstance(value, bool) or not isinstance(value, int) or value < 0 for value in recovered_usage):
+        raise ValueError("El uso recuperado no conserva conteos de tokens válidos")
+    samples.append((recovered_input, recovered_output))
+    candidate_counts["gpt-6.1-sol@low"] = 1
+    sample_count = len(samples)
+    input_sum = sum(row[0] for row in samples)
+    output_sum = sum(row[1] for row in samples)
+    mean_input = math.ceil(input_sum / sample_count)
+    mean_output = math.ceil(output_sum / sample_count)
+    reserved_input = math.ceil(mean_input * (1 + safety_margin))
+    reserved_output = math.ceil(mean_output * (1 + safety_margin))
+    per_case = conservative_usage_cost(reserved_input, reserved_output, catalog)
+    rates = catalog["models"]["gpt-6.1-sol"]
+    return {
+        "basis": "f2_9_empirical_pilot_estimate_not_hard_cap",
+        "input_tokens_per_turn": reserved_input,
+        "output_tokens_per_turn": reserved_output,
+        "historical_sample_count": sample_count,
+        "historical_candidate_counts": candidate_counts,
+        "historical_input_tokens": input_sum,
+        "historical_output_tokens": output_sum,
+        "mean_input_tokens_rounded_up": mean_input,
+        "mean_output_tokens_rounded_up": mean_output,
+        "safety_margin_fraction": safety_margin,
+        "per_case_estimated_reservation_usd": per_case,
+        "planned_request_count": request_count,
+        "planned_batch_estimated_reservation_usd": per_case * request_count,
+        "unit_prices_usd_per_million": {
+            "input_normal": float(rates["input_usd_per_million"]),
+            "input_cache_write": float(rates["cache_write_usd_per_million"]),
+            "output": float(rates["output_usd_per_million"]),
+        },
+        "long_context_threshold_input_tokens": int(rates["long_context_threshold_input_tokens"]),
+        "long_context_input_multiplier": float(rates["long_context_input_multiplier"]),
+        "long_context_output_multiplier": float(rates["long_context_output_multiplier"]),
+        "price_basis": "separate Sol input at cache-write rate and output at catalog rate; no cache credit",
+        "note": (
+            "Heterogeneous descriptive sample (14 Luna medium, 15 Luna max, 1 recovered Sol low); "
+            "mean plus 35% planning margin is an operational estimate, not a hard cap. Usage beyond it "
+            "can stop the campaign or exceed the authorized reserve."
+        ),
+    }
 
 
 def final_case_partition(case_ids: tuple[str, ...]) -> dict[str, list[str] | str]:

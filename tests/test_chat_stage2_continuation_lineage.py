@@ -160,10 +160,15 @@ def continuation_artifacts(root: Path) -> tuple[Path, Path, list[Path], dict[Pat
     }
     source_campaign_hash = exporter._digest(source_ledger_identity)
     source_run = source_identities[0]
+    historical_input = [47_786 if index < 22 else 47_785 for index in range(29)]
+    historical_output = [1_571 if index < 17 else 1_570 for index in range(29)]
     source_report = run_report("gpt-6-luna@medium", [
         {"case_id": case_id, "model_turn_completed": index < 8,
          "status": "supported" if index < 8 else "provider_error",
-         "turn_responses": [f"Respuesta fuente {index}"] if index < 8 else []}
+         "turn_responses": [f"Respuesta fuente {index}"] if index < 8 else [],
+         "usage_complete": index < 8,
+         "input_tokens": historical_input[index] if index < 8 else None,
+         "output_tokens": historical_output[index] if index < 8 else None}
         for index, case_id in enumerate(source_ids)
     ])
     source_report["run_identity"] = source_run
@@ -271,14 +276,26 @@ def continuation_artifacts(root: Path) -> tuple[Path, Path, list[Path], dict[Pat
     continuation_campaign_hash = exporter._digest(cont_ledger_identity)
     actual_runs = {}
     continuation_report_paths = []
+    usage_offset = 8
     for run in continuation_runs:
         candidate = run["candidate"]
         selected = run["case_ids"]
-        report = run_report(candidate, [
+        rows = [
             {"case_id": case_id, "model_turn_completed": True,
              "turn_responses": [f"Respuesta continuación {candidate[-4:]} {index}"]}
             for index, case_id in enumerate(selected)
-        ])
+        ]
+        if candidate == "gpt-6-luna@medium":
+            for row in rows:
+                row.update(usage_complete=True, input_tokens=historical_input[usage_offset],
+                           output_tokens=historical_output[usage_offset])
+                usage_offset += 1
+        elif candidate == "gpt-6-luna@max":
+            for row in rows:
+                row.update(usage_complete=True, input_tokens=historical_input[usage_offset],
+                           output_tokens=historical_output[usage_offset])
+                usage_offset += 1
+        report = run_report(candidate, rows)
         report["run_identity"] = run["identity"]
         report.pop("identity_hash", None)
         report["run_identity_hash"] = run["identity_hash"]

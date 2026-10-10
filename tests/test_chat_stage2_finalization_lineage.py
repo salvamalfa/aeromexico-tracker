@@ -59,6 +59,8 @@ def _prepare_with_real_producer(
         "tool_specs_sha256": continuation["tool_specs_sha256"],
     }
     source_bytes = {name: path.read_bytes() for name, path in paths.items()}
+    source["closed_report_luna_medium"] = json.loads(source_bytes["closed_report_luna_medium"])
+    source["closed_report_luna_max"] = json.loads(source_bytes["closed_report_luna_max"])
     source_pins = {name: hashlib.sha256(content).hexdigest() for name, content in source_bytes.items()}
     output = root / "producer-output"
     args = argparse.Namespace(
@@ -85,10 +87,12 @@ def _prepare_with_real_producer(
         patch.object(
             finalizer,
             "prepare",
-            return_value=(base_plan, prepared_runs, fixture["cases"], root / "site", {}, fixture),
+            return_value=(
+                base_plan, prepared_runs, fixture["cases"], root / "site",
+                json.loads((ROOT / "config/chat/models.json").read_text()), fixture,
+            ),
         ),
         patch.object(finalizer, "_git_execution_commit", return_value="d" * 40),
-        patch.object(finalizer, "conservative_usage_cost", return_value=0.001),
         patch.dict(finalizer.APPROVED_SOURCE_SHA256, source_pins, clear=True),
         patch.object(finalizer, "EXPECTED_ORIGINAL_EXECUTION", cont_plan["source"]["execution_commit"]),
         patch.object(
