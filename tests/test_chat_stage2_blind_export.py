@@ -60,6 +60,8 @@ def run_report(candidate: str, cases: list[dict] | None = None) -> dict:
         "case_count": 15,
         "run_identity": identity,
         "identity_hash": exporter._digest(identity),
+        "run_identity_hash": exporter._digest(identity),
+        "campaign_identity_hash": "c" * 64,
         "models": [{
             "candidate": candidate,
             "model": model,
@@ -151,6 +153,7 @@ class Stage2BlindExportTests(unittest.TestCase):
             changed = run_report("gpt-6-luna@medium")
             changed["run_identity"]["semantic_version"] = "other-semantic"
             changed["identity_hash"] = exporter._digest(changed["run_identity"])
+            changed["run_identity_hash"] = exporter._digest(changed["run_identity"])
             reports = self._reports(root, {"gpt-6-luna@medium": changed})
             with self.assertRaisesRegex(exporter.ExportError, "versión semántica"):
                 exporter.build_blind_dataset(fixture_payload(), reports)
@@ -164,6 +167,7 @@ class Stage2BlindExportTests(unittest.TestCase):
             reports = self._reports(root)
             report = json.loads(reports["gpt-6-luna@medium"].read_text(encoding="utf-8"))
             report["identity_hash"] = "0" * 64
+            report["run_identity_hash"] = "0" * 64
             reports["gpt-6-luna@medium"].write_text(json.dumps(report), encoding="utf-8")
             with self.assertRaisesRegex(exporter.ExportError, "hash de run_identity"):
                 exporter.build_blind_dataset(fixture_payload(), reports)

@@ -40,7 +40,7 @@ PROVIDER_ID = re.compile(
 )
 CASE_ID = re.compile(r"\b(?:en|es)_[a-z0-9]+(?:_[a-z0-9]+)+\b", re.I)
 UUID = re.compile(r"\b[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b", re.I)
-IDENTITY_TERMS = ("gpt-6-luna", "gpt 6 luna", "gpt-6.1-sol", "gpt 6.1 sol", "gpt-6-astra")
+IDENTITY_TERMS = ("gpt-6-luna", "gpt 6 luna", "gpt-6.1-sol", "gpt 6.1 sol", "gpt-6-astra", "luna", "sol", "astra")
 
 
 class ExportError(ValueError):
@@ -59,13 +59,19 @@ def _digest(value: Any) -> str:
 
 
 def _read_json(path: Path, label: str) -> dict[str, Any]:
+    payload, _ = _read_json_with_hash(path, label)
+    return payload
+
+
+def _read_json_with_hash(path: Path, label: str) -> tuple[dict[str, Any], str]:
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
+        raw = path.read_bytes()
+        payload = json.loads(raw.decode("utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise ExportError(f"No se pudo leer JSON válido para {label}: {path.name}") from exc
     if not isinstance(payload, dict):
         raise ExportError(f"El JSON de {label} debe ser un objeto")
-    return payload
+    return payload, hashlib.sha256(raw).hexdigest()
 
 
 def _fixture_cases(fixture: dict[str, Any]) -> list[dict[str, Any]]:
@@ -92,7 +98,7 @@ def _fixture_cases(fixture: dict[str, Any]) -> list[dict[str, Any]]:
     return cases
 
 
-def _report_cases(report: dict[str, Any], path: Path) -> tuple[dict[str, dict[str, Any]], dict[str, Any], str]:
+def _report_cases(report: dict[str, Any], path: Path) -> tuple[dict[str, dict[str, Any]], dict[str, Any], str, str]:
     models = report.get("models")
     if not isinstance(models, list) or len(models) != 1 or not isinstance(models[0], dict):
         raise ExportError(f"Se esperaba un reporte detallado de un candidato: {path.name}")
@@ -112,10 +118,13 @@ def _report_cases(report: dict[str, Any], path: Path) -> tuple[dict[str, dict[st
     if not isinstance(identity, dict):
         raise ExportError(f"El reporte no conserva run_identity: {path.name}")
     computed_identity_hash = _digest(identity)
-    declared_hash = report.get("identity_hash", identity.get("identity_hash"))
-    if declared_hash is not None and declared_hash != computed_identity_hash:
+    declared_hash = report.get("run_identity_hash", report.get("identity_hash", identity.get("identity_hash")))
+    if declared_hash != computed_identity_hash:
         raise ExportError(f"El hash de run_identity no coincide: {path.name}")
-    return indexed, {"report": report, "model": model, "identity": identity}, computed_identity_hash
+    campaign_hash = report.get("campaign_identity_hash")
+    if not isinstance(campaign_hash, str) or not HASH.fullmatch(campaign_hash):
+        raise ExportError(f"El reporte no conserva el hash de identidad de campaña: {path.name}")
+    return indexed, {"report": report, "model": model, "identity": identity, "campaign_identity_hash": campaign_hash}, computed_identity_hash, campaign_hash
 
 
 def _validate_report(candidate: str, metadata: dict[str, Any], identity_hash: str,
@@ -179,10 +188,12 @@ def build_blind_dataset(fixture: dict[str, Any], report_paths: dict[str, Path]) 
     indexed_by_candidate: dict[str, dict[str, dict[str, Any]]] = {}
     metadata_by_candidate: dict[str, dict[str, Any]] = {}
     identity_hashes: dict[str, str] = {}
+    source_report_hashes: dict[str, str] = {}
+    campaign_hashes: set[str] = set()
     for candidate in CANDIDATES:
         path = report_paths[candidate]
-        report = _read_json(path, candidate)
-        indexed, metadata, identity_hash = _report_cases(report, path)
+        report, report_sha256 = _read_json_with_hash(path, candidate)
+        indexed, metadata, identity_hash, campaign_hash = _report_cases(report, path)
         _validate_report(candidate, metadata, identity_hash, fixture, cases, path)
         unknown = set(indexed) - set(EXPECTED_CASE_IDS)
         if unknown:
@@ -190,6 +201,10 @@ def build_blind_dataset(fixture: dict[str, Any], report_paths: dict[str, Path]) 
         indexed_by_candidate[candidate] = indexed
         metadata_by_candidate[candidate] = metadata
         identity_hashes[candidate] = identity_hash
+        source_report_hashes[candidate] = report_sha256
+        campaign_hashes.add(campaign_hash)
+    if len(campaign_hashes) != 1:
+        raise ExportError("Los cuatro reportes no pertenecen a la misma identidad de campaña")
     prompts = {item["identity"]["prompt_content_hash"] for item in metadata_by_candidate.values()}
     if len(prompts) != 1:
         raise ExportError("Los cuatro reportes no usaron el mismo prompt efectivo")
@@ -240,10 +255,11 @@ def build_blind_dataset(fixture: dict[str, Any], report_paths: dict[str, Path]) 
         "runs": {
             candidate: {
                 "identity_hash": identity_hashes[candidate],
-                "source_report_sha256": hashlib.sha256(report_paths[candidate].read_bytes()).hexdigest(),
+                "source_report_sha256": source_report_hashes[candidate],
             }
             for candidate in CANDIDATES
         },
+        "campaign_identity_hash": next(iter(campaign_hashes)),
         "questions": private_questions,
     }
     technical = {
