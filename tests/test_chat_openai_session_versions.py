@@ -18,6 +18,7 @@ from test_chat_openai import (
 
 from src.conversational_analytics.providers._openai_helpers import SYSTEM_INSTRUCTIONS, OpenAIProviderError
 from src.conversational_analytics.providers._openai_prompt import (
+    PERIOD_SELECTION_POLICY,
     PERIOD_SELECTION_POLICY_VERSION,
     prompt_sha256,
     with_dashboard_period_policy,
@@ -47,6 +48,27 @@ def test_f21_override_is_preserved_and_derived_prompt_gets_period_policy_and_dis
     assert effective == with_dashboard_period_policy(effective)
     assert prompt_sha256(approved_prompt) != prompt_sha256(effective)
     assert PERIOD_SELECTION_POLICY_VERSION in SYSTEM_INSTRUCTIONS
+
+
+def test_quoted_policy_before_later_instruction_is_appended_and_then_idempotent():
+    source = f"{PERIOD_SELECTION_POLICY}\nINSTRUCCIÓN POSTERIOR"
+
+    effective = with_dashboard_period_policy(source)
+
+    assert effective.startswith(source)
+    assert effective.endswith(PERIOD_SELECTION_POLICY)
+    assert with_dashboard_period_policy(effective) == effective
+    assert effective.count(PERIOD_SELECTION_POLICY) == 2
+    assert prompt_sha256(with_dashboard_period_policy(effective)) == prompt_sha256(effective)
+
+
+def test_terminal_policy_and_trailing_whitespace_keep_exact_text_and_hash():
+    source = f"Prompt origen\n\n{PERIOD_SELECTION_POLICY}\n  "
+
+    effective = with_dashboard_period_policy(source)
+
+    assert effective == source
+    assert prompt_sha256(effective) == prompt_sha256(source)
 
 
 def test_new_session_records_hashes_of_effective_override_and_derivation():

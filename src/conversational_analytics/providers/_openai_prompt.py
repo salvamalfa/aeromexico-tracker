@@ -34,9 +34,9 @@ def with_dashboard_period_policy(base_prompt: str) -> str:
     """
     if not isinstance(base_prompt, str) or not base_prompt.strip():
         raise ValueError("Las instrucciones del proveedor no pueden estar vacías")
-    if PERIOD_SELECTION_POLICY in base_prompt:
+    if base_prompt.rstrip().endswith(PERIOD_SELECTION_POLICY):
         return base_prompt
-    return f"{base_prompt.rstrip()}\n\n{PERIOD_SELECTION_POLICY}"
+    return f"{base_prompt}\n\n{PERIOD_SELECTION_POLICY}"
 
 
 # Backward-compatible internal name while call sites move to the shared API.
