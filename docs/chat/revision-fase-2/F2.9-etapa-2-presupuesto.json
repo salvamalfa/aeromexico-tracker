@@ -164,11 +164,6 @@
       "7.2": 0.8
     }
   },
-  "preconditions_before_live": [
-    "Fix outstanding checks in the target.",
-    "Use validated historical dashboard context and period-resolution behavior in the target; empty historical fixtures do not validate it. PR117 addresses the live default-period behavior.",
-    "Confirm the actual balance and separately authorize the paid campaign. This budget record does not authorize execution."
-  ],
   "limitations": [
     "Output ranges and cross-model/effort costs are planning assumptions; Stage 1 measured Luna medium only.",
     "The 15-case sample is fixed for this estimate but is not statistically representative.",
