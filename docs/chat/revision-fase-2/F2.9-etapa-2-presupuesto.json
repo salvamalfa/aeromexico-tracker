@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "stage": "F2.9-stage-2",
-  "status": "budget_preview_only_no_execution_authorized",
+  "status": "authorized_funded_preconditions_pending",
   "stage1": {
     "human_review": "complete",
     "complete_responses": 111,
@@ -157,12 +157,12 @@
   "suggested_reserve_usd": 8,
   "owner_decision": {
     "current_shared_balance_usd": null,
-    "requested": "Confirm the US$8 reserve and current balance before any run; amount to add = max(0, 8 - confirmed balance). The US$7.20 balance was confirmed before Stage 1; current balance is unknown.",
-    "examples_if_confirmed_balance_usd": {
-      "0": 8,
-      "3": 5,
-      "7.2": 0.8
-    }
+    "authorization": "Approved the US$8 reserve and Stage 2 pilot; confirmed an US$8 contribution on 2026-10-10 America/Mexico_City.",
+    "messages_exact": [
+      "Si, adelante",
+      "ya ingrese 8 USD"
+    ],
+    "account_balance": "Not queried or inferred; production shares the account balance."
   },
   "limitations": [
     "Output ranges and cross-model/effort costs are planning assumptions; Stage 1 measured Luna medium only.",
@@ -170,8 +170,22 @@
     "Tariffs are versioned estimates. Unknown future context growth, retries, or usage can change spend; the operational reserve is not a bill cap."
   ],
   "preconditions_before_execution": [
-    "Adjust the evaluator for the approved stage-2 plan.",
+    "Adjust the evaluator offline for the approved Stage 2 plan and clear outstanding evaluation checks.",
     "Validate dashboard context and period-resolution behavior in the target; historical fixtures are empty and do not validate the behavior.",
-    "Confirm the current balance and obtain a separate decision on running the paid campaign; this budget record is not authorization."
-  ]
+    "Execution remains pending completion of these offline preconditions."
+  ],
+  "stage2_authorization": {
+    "owner_authorized": true,
+    "reserve_usd": 8,
+    "contribution_usd": 8,
+    "authorization_date": "2026-10-10",
+    "timezone": "America/Mexico_City",
+    "source_messages_exact": [
+      "Si, adelante",
+      "ya ingrese 8 USD"
+    ],
+    "current_total_account_balance_usd": null,
+    "current_balance_note": "Not queried or inferred; production shares the account balance.",
+    "execution_status": "pending offline evaluator and dashboard-context/period preconditions"
+  }
 }
