@@ -99,11 +99,59 @@ def _fixtures() -> tuple[list[dict], dict, dict, bytes, bytes, bytes, dict]:
         },
     }
     ledger_bytes = json.dumps(source, sort_keys=True, separators=(",", ":")).encode()
+    input_counts = [50_000] * 7 + [58_550]
+    output_counts = [1_000] * 7 + [65]
+    complete_rows = [
+        {
+            "case_id": case_id,
+            "status": "supported",
+            "model_turn_completed": True,
+            "usage_complete": True,
+            "input_tokens": input_count,
+            "output_tokens": output_count,
+            "estimated_cost_usd": (input_count * 0.125 + output_count * 0.5) / 1_000_000,
+        }
+        for case_id, input_count, output_count in zip(
+            attempted[:-1], input_counts, output_counts, strict=True
+        )
+    ]
+    known_cost = sum(row["estimated_cost_usd"] for row in complete_rows)
     report = {
         "campaign_identity_hash": campaign_hash,
         "run_identity_hash": failed["identity_hash"],
         "run_identity": failed["identity"],
         "case_count": 15,
+        "run_status": "stopped",
+        "candidate_models": [failed["candidate"]],
+        "known_estimated_cost_usd": known_cost,
+        "models": [
+            {
+                "candidate": failed["candidate"],
+                "model": failed["model"],
+                "reasoning_effort": failed["reasoning_effort"],
+                "run_identity": failed["identity"],
+                "spent_unknown": True,
+                "cases": [
+                    *complete_rows,
+                    {
+                        "case_id": failed_case,
+                        "status": "provider_error",
+                        "model_turn_completed": False,
+                        "usage_complete": False,
+                        "input_tokens": None,
+                        "output_tokens": None,
+                        "estimated_cost_usd": None,
+                    },
+                ],
+                "known_estimated_cost_usd": known_cost,
+                "token_totals": {
+                    "usage_complete_case_count": 8,
+                    "turn_count": 9,
+                    "known_input_tokens_lower_bound": sum(input_counts),
+                    "known_output_tokens_lower_bound": sum(output_counts),
+                },
+            }
+        ],
     }
     report_bytes = json.dumps(report, sort_keys=True, separators=(",", ":")).encode()
     evidence = {
@@ -223,37 +271,35 @@ def test_continuation_rejects_changed_source_bytes_and_wrong_owner_attestation()
         _prepare(planned, source, bad_reconciliation, ledger, report, altered_bytes, catalog)
 
 
-def test_continuation_rejects_overspend_and_identity_drift() -> None:
+@pytest.mark.parametrize("drift", ["model", "row_order", "cost", "tokens"])
+def test_continuation_rejects_source_report_drift(drift: str) -> None:
     planned, source, reconciliation, ledger, report, evidence, catalog = _fixtures()
-    overspend_source = deepcopy(source)
-    overspend_source["known_spend_usd"] = 8.0
-    overspend_run = next(iter(overspend_source["completed_runs"].values()))
-    overspend_run["known_estimated_cost_usd"] = 8.0
-    overspend_ledger = json.dumps(overspend_source, sort_keys=True, separators=(",", ":")).encode()
-    altered_evidence = json.loads(evidence)
-    altered_evidence["source_identity"]["campaign_ledger_sha256"] = hashlib.sha256(
-        overspend_ledger
-    ).hexdigest()
-    altered_evidence["reconciliation"]["known_completed_case_cost_estimate_usd"] = 8.0
-    altered_bytes = json.dumps(altered_evidence, sort_keys=True, separators=(",", ":")).encode()
-    altered_rec = dict(
+    report_value = json.loads(report)
+    rows = report_value["models"][0]["cases"]
+    if drift == "model":
+        report_value["models"][0]["model"] = "gpt-6.1-sol"
+    elif drift == "row_order":
+        rows[0], rows[1] = rows[1], rows[0]
+    elif drift == "cost":
+        rows[0]["estimated_cost_usd"] += 0.01
+    else:
+        rows[0]["input_tokens"] += 1
+    changed_report = json.dumps(report_value, sort_keys=True, separators=(",", ":")).encode()
+    changed_sha = hashlib.sha256(changed_report).hexdigest()
+    evidence_value = json.loads(evidence)
+    evidence_value["source_identity"]["report_sha256"] = changed_sha
+    changed_evidence = json.dumps(evidence_value, sort_keys=True, separators=(",", ":")).encode()
+    changed_rec = dict(
         reconciliation,
-        source_ledger_sha256=hashlib.sha256(overspend_ledger).hexdigest(),
-        evidence_sha256=hashlib.sha256(altered_bytes).hexdigest(),
+        source_report_sha256=changed_sha,
+        evidence_sha256=hashlib.sha256(changed_evidence).hexdigest(),
     )
-    with pytest.raises(ValueError, match="No queda presupuesto"):
-        prepare_stage2_continuation(
-            planned,
-            overspend_source,
-            usage_reconciliation=altered_rec,
-            evidence_bytes=altered_bytes,
-            source_ledger_bytes=overspend_ledger,
-            source_ledger_sha256=hashlib.sha256(overspend_ledger).hexdigest(),
-            source_report_bytes=report,
-            source_report_sha256=hashlib.sha256(report).hexdigest(),
-            model_catalog_bytes=(ROOT / "config/chat/models.json").read_bytes(),
-            model_catalog=catalog,
-        )
+    with pytest.raises(ValueError):
+        _prepare(planned, source, changed_rec, ledger, changed_report, changed_evidence, catalog)
+
+
+def test_continuation_rejects_identity_drift() -> None:
+    planned, source, reconciliation, ledger, report, evidence, catalog = _fixtures()
     drifted = deepcopy(planned)
     drifted[0]["case_ids"][0] = "N99"
     with pytest.raises(ValueError, match="IDs planeados"):

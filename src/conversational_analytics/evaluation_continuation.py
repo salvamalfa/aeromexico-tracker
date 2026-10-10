@@ -1,4 +1,4 @@
-"""Offline preparation for a no-replay continuation after usage reconciliation."""
+"""Offline preparation for a no-replay continuation with aggregate usage evidence."""
 
 from __future__ import annotations
 
@@ -21,6 +21,95 @@ from .evaluation_campaign import (
 STAGE2_APPROVED_MODEL_CATALOG_SHA256 = "9744c985f051c898a8af6e8d3c8766c6885e77d8a13d55b72e30427b15468d4c"
 
 
+def _validate_source_report(
+    report: Mapping[str, Any],
+    *,
+    source_run: Mapping[str, Any],
+    source_run_identity_hash: str,
+    attempted_case_ids: Sequence[str],
+    known_spend_usd: float,
+) -> tuple[int, int]:
+    """Bind the detailed source report to the partial ledger and its lower bounds."""
+    if report.get("run_identity_hash") != source_run_identity_hash:
+        raise ValueError("El reporte no está ligado a la identidad original de la corrida")
+    if _canonical(report.get("run_identity", {})) != _canonical(source_run.get("identity", {})):
+        raise ValueError("La identidad del reporte difiere de la corrida fallida del ledger")
+    if report.get("case_count") != len(STAGE2_EXPECTED_CASE_IDS) or report.get("run_status") == "completed":
+        raise ValueError("El reporte no conserva el estado parcial de la corrida original")
+    if report.get("campaign_identity_hash") is None:
+        raise ValueError("El reporte no conserva la identidad de campaña")
+    models = report.get("models")
+    if not isinstance(models, list) or len(models) != 1 or not isinstance(models[0], Mapping):
+        raise ValueError("El reporte fuente debe contener un solo modelo Luna-medium")
+    model = models[0]
+    identity = source_run.get("identity", {})
+    if report.get("candidate_models") != [identity.get("candidate")]:
+        raise ValueError("El reporte no identifica únicamente el candidato Luna-medium")
+    for key in ("candidate", "model", "reasoning_effort", "run_identity"):
+        if key == "run_identity":
+            matches = _canonical(model.get(key, {})) == _canonical(identity)
+        else:
+            matches = model.get(key) == identity.get(key)
+        if not matches:
+            raise ValueError(f"El reporte fuente cambió el candidato/modelo/esfuerzo: {key}")
+    if model.get("spent_unknown") is not True:
+        raise ValueError("El reporte no conserva el gasto desconocido de la corrida fallida")
+    rows = model.get("cases")
+    if not isinstance(rows, list) or [str(row.get("case_id", "")) for row in rows] != list(
+        attempted_case_ids
+    ):
+        raise ValueError("Las filas del reporte no coinciden en orden con los casos intentados del ledger")
+    complete_rows = rows[:-1]
+    failed_row = rows[-1]
+    input_tokens = 0
+    output_tokens = 0
+    known_cost = 0.0
+    for row in complete_rows:
+        if row.get("model_turn_completed") is not True or row.get("usage_complete") is not True:
+            raise ValueError("El reporte no conserva ocho respuestas y usos completos")
+        for key in ("input_tokens", "output_tokens"):
+            value = row.get(key)
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                raise ValueError("Una respuesta completa no conserva tokens explícitos")
+        cost = row.get("estimated_cost_usd")
+        if (
+            isinstance(cost, bool)
+            or not isinstance(cost, (int, float))
+            or not math.isfinite(cost)
+            or cost < 0
+        ):
+            raise ValueError("Una respuesta completa no conserva costo estimado válido")
+        input_tokens += row["input_tokens"]
+        output_tokens += row["output_tokens"]
+        known_cost += float(cost)
+    if (
+        failed_row.get("status") != "provider_error"
+        or failed_row.get("model_turn_completed") is not False
+        or failed_row.get("usage_complete") is not False
+        or failed_row.get("input_tokens") is not None
+        or failed_row.get("output_tokens") is not None
+        or failed_row.get("estimated_cost_usd") is not None
+    ):
+        raise ValueError("La fila fallida debe conservar uso y costo individuales desconocidos")
+    if not math.isclose(known_cost, known_spend_usd, rel_tol=0.0, abs_tol=1e-9):
+        raise ValueError("Los costos de las ocho filas completas no suman el gasto conocido del ledger")
+    if not math.isclose(
+        float(report.get("known_estimated_cost_usd", -1)), known_spend_usd, rel_tol=0.0, abs_tol=1e-9
+    ):
+        raise ValueError("El total conocido del reporte no coincide con el ledger")
+    totals = model.get("token_totals")
+    if not isinstance(totals, Mapping):
+        raise ValueError("El reporte no conserva los totales de tokens conocidos")
+    if (
+        totals.get("usage_complete_case_count") != 8
+        or totals.get("turn_count") != 9
+        or totals.get("known_input_tokens_lower_bound") != input_tokens
+        or totals.get("known_output_tokens_lower_bound") != output_tokens
+    ):
+        raise ValueError("Los totales de tokens no concilian con las ocho filas completas")
+    return input_tokens, output_tokens
+
+
 def prepare_stage2_continuation(
     planned_runs: Sequence[Mapping[str, Any]],
     source_state: Mapping[str, Any],
@@ -37,9 +126,10 @@ def prepare_stage2_continuation(
     """Select only unused slots, preserving the source ledger and reports.
 
     The failed slot is excluded along with every other started slot. A root
-    reconciliation record must attest that token usage came from the exact
-    provider turn; this function performs no provider reads or writes. SHA-256
-    checks bind supplied bytes but do not prove their external provenance.
+    The owner-reported daily aggregate binds to the original campaign artifacts,
+    while usage and cost for the individual failed turn stay unknown. This
+    function performs no provider reads or writes. SHA-256 checks bind supplied
+    bytes but do not prove their external provenance.
     """
     if source_state.get("status") != "stopped_unknown_spend" or source_state.get("spent_unknown") is not True:
         raise ValueError("La continuación requiere un ledger stage2 detenido por gasto desconocido")
@@ -216,6 +306,16 @@ def prepare_stage2_continuation(
     source_report_identity_hash = source_report.get("campaign_identity_hash")
     if source_report_identity_hash != source_state["identity_hash"]:
         raise ValueError("El reporte privado no pertenece a la campaña original")
+    failed_identity_hash = source_hashes[
+        next(index for index, identity in enumerate(source_runs) if identity.get("run_id") == failed_run_id)
+    ]
+    source_lower_bound_tokens = _validate_source_report(
+        source_report,
+        source_run=failed_run,
+        source_run_identity_hash=failed_identity_hash,
+        attempted_case_ids=recorded_case_ids,
+        known_spend_usd=float(source_state["known_spend_usd"]),
+    )
 
     if not isinstance(evidence_bytes, bytes) or not evidence_bytes:
         raise ValueError("Falta la attestación privada de uso agregado del dueño")
@@ -252,9 +352,6 @@ def prepare_stage2_continuation(
         raise ValueError("La attestación privada no conserva la confirmación owner-reported")
     if owner.get("external_usage_independently_verified") is not False:
         raise ValueError("El uso owner-reported no debe presentarse como verificación externa")
-    failed_identity_hash = source_hashes[
-        next(index for index, identity in enumerate(source_runs) if identity.get("run_id") == failed_run_id)
-    ]
     for key, expected in (
         ("campaign_identity_hash", source_state["identity_hash"]),
         ("campaign_ledger_sha256", source_ledger_sha256),
@@ -291,6 +388,8 @@ def prepare_stage2_continuation(
     expected_tokens = (408_550, 7_065)
     if tokens != expected_tokens:
         raise ValueError("Los tokens agregados no coinciden con la confirmación registrada")
+    if source_lower_bound_tokens != tokens:
+        raise ValueError("El agregado diario no concilia con los lower bounds de ocho respuestas conocidas")
 
     model = "gpt-6-luna"
     pricing = model_catalog.get("models", {}).get(model)

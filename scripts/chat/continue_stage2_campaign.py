@@ -26,8 +26,7 @@ from src.conversational_analytics.evaluation_continuation import (  # noqa: E402
     prepare_stage2_continuation,
 )
 
-SOURCE_ROOT = Path("/workspace/phase2-stage2-integration")
-SOURCE_DIR = SOURCE_ROOT / ".state/outputs/chat-evaluations/f2-9-stage-2"
+SOURCE_DIR = ROOT / ".state/outputs/chat-evaluations/f2-9-stage-2"
 SOURCE_LEDGER = SOURCE_DIR / "campaign.json"
 SOURCE_REPORT = SOURCE_DIR / ("f22-s2-gpt-6-luna-medium-proposed-r1/chat-eval-20261010T072010745621Z.json")
 OWNER_EVIDENCE = SOURCE_DIR / "privateowner-usage-confirmation-20261010.json"
