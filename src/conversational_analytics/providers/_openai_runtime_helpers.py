@@ -84,3 +84,10 @@ def track_session(session_id: str | None, persist_session, tracked: set[str]) ->
     if session_id and session_id not in tracked:
         persist_session(session_id)
         tracked.add(session_id)
+
+
+def attach_failure_context(error: OpenAIProviderError, session_id: str | None, turn_id: str | None) -> None:
+    error.session_id = error.session_id or session_id
+    error.turn_id = error.turn_id or turn_id
+    if error.reason_code is None and error.session_id:
+        error.reason_code = "provider_terminal_failed"

@@ -130,7 +130,6 @@ def test_response_terms_accept_locale_equivalent_percent_and_quarter_format() ->
     assert any("respuesta sin términos requeridos" in failure for failure in incorrect.failures)
 
 
-
 def test_supported_gold_rejects_wrong_unit_and_period() -> None:
     case = json.loads(json.dumps(next(case for case in load_cases() if case["id"] == "es_am_lf_q2")))
     case["expected"]["rows"][0]["unit"] = "fraction"
@@ -222,6 +221,8 @@ def test_live_provider_error_writes_private_report_and_stops_without_retry(
     assert model["cases"][0]["error_metadata"] == {
         "exception_types": ["OpenAIProviderError", "AuthenticationError"],
         "http_status": 401,
+        "upstream_exception_type": "AuthenticationError",
+        "upstream_http_status": 401,
     }
     assert model["quality_summary"]["numeric_gold_case_count"] == 2
     assert model["quality_summary"]["numeric_gold_case_passed"] == 0
@@ -317,6 +318,8 @@ def test_post_cancel_terminal_usage_is_counted_without_scoring_or_continuing(
     assert case["model_turn_completed"] is False
     assert case["quality"] == {"scored": False, "not_scored_reason": "provider_error"}
     assert case["error_metadata"]["reason_code"] == "tool_call_limit"
+    assert case["error_metadata"]["provider_turn_id"] == "turn-exact"
+    assert case["session_id"] == "session-exact"
     assert case["input_tokens"] == 35_573
     assert case["output_tokens"] == 208
     assert case["estimated_cost_usd"] == pytest.approx(0.004550625)
@@ -378,7 +381,6 @@ def test_live_tool_validation_error_is_returned_to_provider_like_worker(
     assert case["quality"]["passed"] is False
     assert case["quality"]["automatic_grade_type"] == "numeric_gold"
     assert case["quality"]["not_scored_reason"] == "no_successful_row_evidence"
-
 
 
 def test_final_report_write_failure_never_marks_progress_completed(

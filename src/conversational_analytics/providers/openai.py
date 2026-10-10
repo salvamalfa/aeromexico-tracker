@@ -11,6 +11,7 @@ from typing import Any, Callable
 from ..model_settings import agent_configuration
 from . import _openai_runtime_helpers as runtime_helpers
 from ._input_authorization import InputAuthorizer, send_tool_result
+from ._openai_error_metadata import upstream_error_metadata
 from ._openai_helpers import (
     ALLOWED_TOOL_NAMES,
     SYSTEM_INSTRUCTIONS,
@@ -493,6 +494,7 @@ class OpenAIProvider:
             if usage_complete and error.usage is None:
                 error.usage = (input_tokens, output_tokens)
             if terminal in {"failed", "cancelled"} or cancel_event.is_set():
+                runtime_helpers.attach_failure_context(error, session_id, turn_id)
                 raise
             recovered_result = recover_completed_provider_error(
                 error,
@@ -504,8 +506,9 @@ class OpenAIProvider:
             )
             if recovered_result is not None:
                 return recovered_result
+            runtime_helpers.attach_failure_context(error, session_id, turn_id)
             raise
-        except Exception:
+        except Exception as exc:
             if terminal in {"failed", "cancelled"}:
                 raise
             recovered = (
@@ -515,9 +518,14 @@ class OpenAIProvider:
             )
             if recovered and recovered[1] == "completed" and recovered[0]:
                 return finish_recovered_completion(recovered, session_id=session_id, **finish)
+            upstream = upstream_error_metadata(exc)
             raise OpenAIProviderError(
                 "No se pudo completar el turno de Agents API; no se reenviará el mensaje automáticamente",
                 (input_tokens, output_tokens) if usage_complete else None,
+                reason_code="provider_terminal_failed" if session_id else None,
+                session_id=session_id,
+                turn_id=turn_id,
+                **upstream,
             ) from None
         finally:
             close_active_stream()

@@ -9,11 +9,14 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+from .providers._openai_error_metadata import upstream_error_metadata
+
 _SAFE_EXCEPTION_TYPES = frozenset(
     {
         "APIConnectionError",
-        "APITimeoutError",
+        "APIError",
         "APIStatusError",
+        "APITimeoutError",
         "AuthenticationError",
         "BadRequestError",
         "ConflictError",
@@ -29,7 +32,9 @@ _SAFE_EXCEPTION_TYPES = frozenset(
     }
 )
 _SAFE_HTTP_STATUSES = frozenset({400, 401, 403, 404, 408, 409, 413, 422, 425, 429, 500, 502, 503, 504})
-_SAFE_REASON_CODES = frozenset({"tool_call_limit", "turn_timeout", "tool_result_limit"})
+_SAFE_REASON_CODES = frozenset(
+    {"provider_terminal_failed", "tool_call_limit", "turn_timeout", "tool_result_limit"}
+)
 _RESERVATION_INPUT_TOKENS_PER_CASE_FLOOR = 140_000
 _RESERVATION_OUTPUT_TOKENS_PER_CASE_FLOOR = 10_000
 
@@ -43,6 +48,8 @@ def _error_metadata(exc: BaseException) -> dict[str, Any]:
     names: list[str] = []
     status: int | None = None
     reason_code: str | None = None
+    provider_turn_id: str | None = None
+    upstream: dict[str, str | int] = {}
     current: BaseException | None = exc
     visited: set[int] = set()
     while current is not None and id(current) not in visited and len(visited) < 6:
@@ -60,10 +67,16 @@ def _error_metadata(exc: BaseException) -> dict[str, Any]:
         candidate_reason = getattr(current, "reason_code", None)
         if candidate_reason in _SAFE_REASON_CODES:
             reason_code = candidate_reason
+        candidate_turn_id = getattr(current, "turn_id", None)
+        if provider_turn_id is None and isinstance(candidate_turn_id, str) and candidate_turn_id:
+            provider_turn_id = candidate_turn_id
+        upstream.update(upstream_error_metadata(current))
         current = current.__cause__ or current.__context__
     result: dict[str, Any] = {"exception_types": names or ["unknown"]}
     result.update({"http_status": status} if status is not None else {})
     result.update({"reason_code": reason_code} if reason_code is not None else {})
+    result.update({"provider_turn_id": provider_turn_id} if provider_turn_id is not None else {})
+    result.update(upstream)
     return result
 
 

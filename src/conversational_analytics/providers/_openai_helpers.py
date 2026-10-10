@@ -9,6 +9,7 @@ from collections.abc import Callable, Iterable, Mapping
 from typing import Any
 from urllib.parse import urlparse
 
+from ._openai_error_metadata import sanitize_upstream_fields
 from ._openai_prompt import PERIOD_SELECTION_POLICY
 from .base import ProviderResult
 
@@ -96,6 +97,9 @@ class OpenAIProviderError(RuntimeError):
         reason_code: str | None = None,
         session_id: str | None = None,
         turn_id: str | None = None,
+        upstream_exception_type: str | None = None,
+        upstream_http_status: int | None = None,
+        upstream_error_code: str | None = None,
     ) -> None:
         super().__init__(message)
         self.usage = usage
@@ -104,6 +108,12 @@ class OpenAIProviderError(RuntimeError):
         )
         self.session_id = session_id if isinstance(session_id, str) and session_id else None
         self.turn_id = turn_id if isinstance(turn_id, str) and turn_id else None
+        self.upstream_metadata = sanitize_upstream_fields(
+            upstream_exception_type, upstream_http_status, upstream_error_code
+        )
+        self.upstream_exception_type = self.upstream_metadata.get("upstream_exception_type")
+        self.upstream_http_status = self.upstream_metadata.get("upstream_http_status")
+        self.upstream_error_code = self.upstream_metadata.get("upstream_error_code")
 
 
 def provider_terminal_failure(
@@ -190,9 +200,7 @@ def latest_provider_turn_id(client: Any, session_id: str) -> str | None:
             return value if isinstance(value, str) and value else None
     except Exception:
         # Read history only before input; do not guess if that lookup fails.
-        raise OpenAIProviderError(
-            "No se pudo verificar el historial antes del siguiente mensaje"
-        ) from None
+        raise OpenAIProviderError("No se pudo verificar el historial antes del siguiente mensaje") from None
     return None
 
 

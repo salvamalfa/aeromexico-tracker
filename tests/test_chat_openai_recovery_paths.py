@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sqlite3
 import threading
 from pathlib import Path
@@ -23,6 +24,7 @@ from test_chat_openai import (
 from test_chat_worker import Registry, Snapshot
 
 from src.conversational_analytics.config import ChatConfig
+from src.conversational_analytics.evaluation_live_support import _error_metadata
 from src.conversational_analytics.providers.base import ProviderResult
 from src.conversational_analytics.providers.openai import OpenAIProviderError
 from src.conversational_analytics.storage import ChatStore
@@ -58,6 +60,56 @@ def test_truncated_stream_is_not_promoted_when_recovery_finds_no_final_text():
 
     # The partial delta never becomes the answer, and the known usage is kept.
     assert raised.value.usage == (500, 300)
+    assert (raised.value.reason_code, raised.value.session_id, raised.value.turn_id) == (
+        "provider_terminal_failed",
+        "sess_fixture",
+        "turn_provider",
+    )
+
+
+def test_stream_eof_keeps_exact_session_turn_identity_for_usage_reconciliation():
+    fake = FakeSessions(create_stream=FakeStream([_session_created(), _turn_created()]))
+
+    with pytest.raises(OpenAIProviderError, match="cerró sin resultado terminal") as raised:
+        _run(_provider(FakeClient(fake)))
+
+    assert (raised.value.reason_code, raised.value.session_id, raised.value.turn_id) == (
+        "provider_terminal_failed",
+        "sess_fixture",
+        "turn_provider",
+    )
+
+
+def test_api_500_error_metadata_is_allowlisted_and_keeps_exact_turn_context():
+    class InternalServerError(Exception):
+        status_code = 500
+        code = "server_error"
+        body = {"error": {"code": "server_error", "message": "secret-response-body"}}
+
+    fake = FakeSessions(
+        create_stream=FakeStream([_session_created(), _turn_created(), InternalServerError("secret-message")])
+    )
+
+    with pytest.raises(OpenAIProviderError) as raised:
+        _run(_provider(FakeClient(fake)))
+
+    error = raised.value
+    metadata = _error_metadata(error)
+    assert (error.reason_code, error.session_id, error.turn_id) == (
+        "provider_terminal_failed",
+        "sess_fixture",
+        "turn_provider",
+    )
+    assert metadata == {
+        "exception_types": ["OpenAIProviderError", "InternalServerError"],
+        "http_status": 500,
+        "reason_code": "provider_terminal_failed",
+        "provider_turn_id": "turn_provider",
+        "upstream_exception_type": "InternalServerError",
+        "upstream_http_status": 500,
+        "upstream_error_code": "server_error",
+    }
+    assert "secret" not in json.dumps(metadata)
 
 
 def test_dropped_connection_recovery_reads_missing_usage():
@@ -167,9 +219,7 @@ class LimitProvider:
 def _run_limited_turn(tmp_path: Path, retrieved_turn):
     path = tmp_path / "chat.sqlite3"
     store = ChatStore(path)
-    conv = store.create_conversation(
-        "alice", "snapshot-v1", "semantic-v1", "gpt-6.1-sol", "medium", "medium"
-    )
+    conv = store.create_conversation("alice", "snapshot-v1", "semantic-v1", "gpt-6.1-sol", "medium", "medium")
     turn, _ = store.submit_turn(
         "alice",
         conv["id"],
