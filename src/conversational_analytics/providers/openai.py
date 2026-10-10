@@ -6,7 +6,6 @@ import json
 import os
 import threading
 import time
-import uuid
 from typing import Any, Callable
 
 from ._input_authorization import InputAuthorizer, send_tool_result
@@ -23,6 +22,7 @@ from ._openai_helpers import (
     event_session_id,
     int_or_zero,
     latest_provider_turn_id,
+    latest_user_message,
     parse_usage,
     prior_history,
     provider_terminal_failure,
@@ -32,23 +32,32 @@ from ._openai_helpers import (
     required_string,
     terminal_event_usage,
     to_dict,
+    track_session,
     usage_from_event,
 )
+from ._openai_helpers import (
+    app_turn_id as get_app_turn_id,
+)
 from ._openai_helpers import event_turn_id as get_event_turn_id
-from ._openai_recovery import finish_recovered_completion, recover_completed_provider_error, recover_exact_turn
+from ._openai_recovery import (
+    finish_recovered_completion,
+    recover_completed_provider_error,
+    recover_exact_turn,
+)
+from ._openai_session_version import (
+    INSTRUCTIONS_FINGERPRINT_KEY,
+    fingerprint,
+    verify_or_rotate_session,
+)
 from .base import ProviderResult, ToolCall
 
 
 class OpenAIProvider:
-    """Blocking provider implementation backed by ``openai>=3.13.0``.
-
-    ``client`` is injectable for offline tests. Production construction is
-    credential-lazy and never probes the API; the official SDK reads its key
-    from ``OPENAI_API_KEY`` only when a call is made.
-    """
+    """Official Agents SDK provider; ``client`` is injectable for offline tests."""
 
     supports_input_authorization = True
     supports_terminal_usage_reconciliation = True
+    supports_session_retirement = True
 
     def __init__(
         self,
@@ -88,17 +97,27 @@ class OpenAIProvider:
         cancel_event: threading.Event,
         authorize_input: InputAuthorizer | None = None,
         mark_terminal_completed: Callable[[tuple[int, int] | None], None] | None = None,
+        retire_session: Callable[[str], None] | None = None,
     ) -> ProviderResult:
         mark_terminal_completed = mark_terminal_completed or (lambda _usage=None: None)
-        message = self._latest_user_message(messages)
+        message = latest_user_message(messages)
         tools = self._validate_tool_specs(tool_specs)
         instructions = self._instructions()
-        app_turn_id = self._app_turn_id(messages)
+        instructions_fingerprint = fingerprint(instructions)
+        app_turn_id = get_app_turn_id(messages)
+        started_at = time.monotonic()
+        turn_deadline = started_at + self.max_turn_seconds
+        session_id, retired_session_id = verify_or_rotate_session(
+            self.client.beta.agents.sessions,
+            session_id,
+            instructions_fingerprint,
+            turn_deadline,
+            cancel_event,
+            retire_session,
+        )
         history = prior_history(messages) if session_id is None else []
         request_input = self._message_input(context, message, history)
         tracked_sessions: set[str] = set()
-        started_at = time.monotonic()
-        turn_deadline = started_at + self.max_turn_seconds
         usage_deadline = started_at + self.max_turn_seconds + TERMINAL_USAGE_RECONCILIATION_SECONDS
         stream_manager = None
         stream_iter = None
@@ -237,6 +256,7 @@ class OpenAIProvider:
                     agent={"model": self.model, "instructions": instructions, "tools": tools},
                     environment={"type": "none"},
                     input=request_input,
+                    metadata={INSTRUCTIONS_FINGERPRINT_KEY: instructions_fingerprint},
                     stream=True,
                 )
                 if hasattr(stream_manager, "with_result_collection"):
@@ -245,7 +265,7 @@ class OpenAIProvider:
                     stream_manager.__enter__() if hasattr(stream_manager, "__enter__") else stream_manager
                 )
             else:
-                self._track_session(session_id, persist_session, tracked_sessions)
+                track_session(session_id, persist_session, tracked_sessions)
                 prior_turn_id = latest_provider_turn_id(self.client, session_id)
                 stream_manager = self.client.beta.agents.sessions.events.stream(session_id)
                 stream_iter = (
@@ -264,7 +284,7 @@ class OpenAIProvider:
                         self.cancel(session_id)
                 if cancel_event.is_set():
                     raise InterruptedError("turn cancelled")
-            self._track_session(session_id, persist_session, tracked_sessions)
+            track_session(session_id, persist_session, tracked_sessions)
             if stream_iter is None:
                 raise OpenAIProviderError("El SDK no abrió el stream de la sesión")
             for event in stream_iter:
@@ -273,7 +293,11 @@ class OpenAIProvider:
                 discovered_session = event_session_id(event_data)
                 if discovered_session and discovered_session != session_id:
                     session_id = discovered_session
-                    self._track_session(session_id, persist_session, tracked_sessions)
+                    track_session(session_id, persist_session, tracked_sessions)
+                    if retired_session_id:
+                        if retire_session is not None:
+                            retire_session(retired_session_id)
+                        retired_session_id = None
                 is_current_turn = is_current_root_turn(event_data)
                 event_id = event_data.get("event_id")
                 if event_type in {
@@ -301,8 +325,10 @@ class OpenAIProvider:
                 }
                 if session_failure or (event_type == "agent.session.turn.failed" and is_current_turn):
                     terminal = "failed"
-                event_usage = usage_from_event(event_data) if session_failure else terminal_event_usage(
-                    event_type, is_current_turn, event_data
+                event_usage = (
+                    usage_from_event(event_data)
+                    if session_failure
+                    else terminal_event_usage(event_type, is_current_turn, event_data)
                 )
                 check_limits(event_usage)
                 if event_type == "agent.session.turn.output_text.delta" and is_current_turn:
@@ -547,25 +573,6 @@ class OpenAIProvider:
         return validated
 
     @staticmethod
-    def _latest_user_message(messages: list[dict[str, Any]]) -> str:
-        for message in reversed(messages):
-            if isinstance(message, dict) and message.get("role") == "user":
-                content = message.get("content")
-                if isinstance(content, str) and content.strip():
-                    return content
-        raise OpenAIProviderError("No hay un mensaje de usuario para enviar al proveedor")
-
-    @staticmethod
-    def _app_turn_id(messages: list[dict[str, Any]]) -> str:
-        for message in reversed(messages):
-            if isinstance(message, dict) and message.get("role") == "user":
-                for key in ("turn_id", "id"):
-                    candidate = message.get(key)
-                    if isinstance(candidate, str) and candidate:
-                        return candidate
-        return str(uuid.uuid4())
-
-    @staticmethod
     def _instructions() -> str:
         return SYSTEM_INSTRUCTIONS
 
@@ -587,12 +594,6 @@ class OpenAIProvider:
                 else "El mensaje o contexto no es JSON válido"
             ) from None
         return [{"role": "user", "content": [{"type": "input_text", "text": text}]}]
-
-    @staticmethod
-    def _track_session(session_id: str | None, persist_session, tracked: set[str]) -> None:
-        if session_id and session_id not in tracked:
-            persist_session(session_id)
-            tracked.add(session_id)
 
 
 __all__ = ["OpenAIProvider", "OpenAIProviderError"]

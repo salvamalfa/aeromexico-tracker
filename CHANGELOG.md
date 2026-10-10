@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-09 · El chat usa el periodo seleccionado en el dashboard
+
+- Si la pregunta omite periodo, el prompt prioriza un seguimiento inequívoco
+  de la conversación y después el periodo seleccionado vigente. Si falta,
+  pide aclaración; una fecha explícita siempre prevalece.
+- La regla de periodo no resuelve ambigüedades de métrica, entidad, segmento,
+  mercado, denominador o fuente. La bitácora enlaza el baseline y la revisión
+  en Git sin reescribir evidencia anterior.
+- Prueba offline del contrato del prompt; no se consumen APIs ni evaluaciones.
+
 Cambios notables del proyecto, para humanos. Formato inspirado en
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); no se usa
 versión semántica, las entradas van por fecha.

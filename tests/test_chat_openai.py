@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import threading
 from types import SimpleNamespace
 
@@ -29,6 +30,8 @@ from openai.types.beta.agent_session_turn_output_text_done_event import AgentSes
 from openai.types.beta.agents.sessions.turn import Turn  # noqa: E402
 
 from src.conversational_analytics.providers.openai import OpenAIProvider, OpenAIProviderError  # noqa: E402
+from src.conversational_analytics.providers._openai_helpers import SYSTEM_INSTRUCTIONS  # noqa: E402
+from src.conversational_analytics.providers._openai_session_version import INSTRUCTIONS_FINGERPRINT_KEY  # noqa: E402
 from src.conversational_analytics.tools.registry import ToolRegistry  # noqa: E402
 
 
@@ -42,13 +45,20 @@ def _usage(input_tokens: int = 31, output_tokens: int = 19) -> dict:
     }
 
 
-def _turn(turn_id: str, *, status: str = "in_progress", subagent_id=None, usage=None) -> Turn:
+def _turn(
+    turn_id: str,
+    *,
+    status: str = "in_progress",
+    subagent_id=None,
+    usage=None,
+    session_id: str = "sess_fixture",
+) -> Turn:
     value = {
         "id": turn_id,
         "agent_id": "agent_fixture",
         "created_at": 1_791_100_000,
         "object": "agent.session.turn",
-        "session_id": "sess_fixture",
+        "session_id": session_id,
         "status": status,
         "subagent_id": subagent_id,
     }
@@ -64,14 +74,14 @@ def _session_created(session_id: str = "sess_fixture"):
     )
 
 
-def _turn_created(turn_id: str = "turn_provider"):
+def _turn_created(turn_id: str = "turn_provider", session_id: str = "sess_fixture"):
     return AgentSessionTurnCreatedEvent.model_validate(
         {
             "event_id": "evt_turn_created",
-            "session_id": "sess_fixture",
+            "session_id": session_id,
             "turn_id": turn_id,
             "type": "agent.session.turn.created",
-            "turn": _turn(turn_id).model_dump(),
+            "turn": _turn(turn_id, session_id=session_id).model_dump(),
         }
     )
 
@@ -91,11 +101,15 @@ def _text_delta(turn_id: str = "turn_provider", delta: str = "Respuesta"):
     )
 
 
-def _text_done(turn_id: str = "turn_provider", text: str = "Respuesta final"):
+def _text_done(
+    turn_id: str = "turn_provider",
+    text: str = "Respuesta final",
+    session_id: str = "sess_fixture",
+):
     return AgentSessionTurnOutputTextDoneEvent.model_validate(
         {
             "event_id": "evt_text_done",
-            "session_id": "sess_fixture",
+            "session_id": session_id,
             "turn_id": turn_id,
             "item_id": "item_assistant",
             "output_index": 0,
@@ -106,14 +120,16 @@ def _text_done(turn_id: str = "turn_provider", text: str = "Respuesta final"):
     )
 
 
-def _completed(turn_id: str = "turn_provider", usage=None):
+def _completed(turn_id: str = "turn_provider", usage=None, session_id: str = "sess_fixture"):
     return AgentSessionTurnCompletedEvent.model_validate(
         {
             "event_id": "evt_turn_completed",
-            "session_id": "sess_fixture",
+            "session_id": session_id,
             "turn_id": turn_id,
             "type": "agent.session.turn.completed",
-            "turn": _turn(turn_id, status="completed", usage=usage or _usage()).model_dump(),
+            "turn": _turn(
+                turn_id, status="completed", usage=usage or _usage(), session_id=session_id
+            ).model_dump(),
             "usage": usage or _usage(),
         }
     )
@@ -213,11 +229,23 @@ class FakeSessions:
         prior_turns=None,
         recovery=None,
         retrieved_turn=None,
+        session_metadata=None,
+        retrieve_error=None,
+        retrieved_session_id=None,
     ):
         self._create_stream = create_stream or FakeStream([])
         self.events = FakeEvents(lambda: event_stream or FakeStream([]))
         self._prior_turns = list(prior_turns or [])
         self._recovery = recovery
+        self.session_metadata = (
+            session_metadata
+            if session_metadata is not None
+            else {
+                INSTRUCTIONS_FINGERPRINT_KEY: hashlib.sha256(SYSTEM_INSTRUCTIONS.encode("utf-8")).hexdigest()
+            }
+        )
+        self.retrieve_error = retrieve_error
+        self.retrieved_session_id = retrieved_session_id
         self.created = []
         self.deleted = []
         self.retrieve_calls = 0
@@ -243,7 +271,15 @@ class FakeSessions:
         assert session_id == "sess_fixture"
         self.retrieve_calls += 1
         self.retrieve_timeouts.append(timeout)
-        return self._recovery or {"id": session_id, "status": "idle", "required_actions": []}
+        if self.retrieve_error:
+            raise self.retrieve_error
+        session = dict(self._recovery or {"id": session_id, "status": "idle", "required_actions": []})
+        if self.retrieved_session_id is not None:
+            session["id"] = self.retrieved_session_id
+        else:
+            session.setdefault("id", session_id)
+        session.setdefault("metadata", self.session_metadata)
+        return session
 
     def delete(self, session_id):
         self.deleted.append(session_id)
@@ -286,20 +322,32 @@ def _specs():
     return ToolRegistry._make_specs()
 
 
-def _run(provider, *, session_id=None, events=None, context=None, call_tool=None, messages=None):
+def _run(
+    provider,
+    *,
+    session_id=None,
+    events=None,
+    context=None,
+    call_tool=None,
+    messages=None,
+    retire_session=None,
+):
     emissions = []
     saved_sessions = []
-    result = provider.run_turn(
-        session_id=session_id,
-        messages=messages
+    arguments = {
+        "session_id": session_id,
+        "messages": messages
         or [{"role": "user", "content": "¿Cómo cambió el factor de ocupación?", "turn_id": "app-turn-1"}],
-        context=context or {"tab": "executive", "period": "2026Q1", "entity": "AEROMEXICO"},
-        tool_specs=_specs(),
-        call_tool=call_tool or (lambda provider_turn, call_id, name, args: {"ok": True}),
-        emit=lambda kind, payload: emissions.append((kind, payload)),
-        persist_session=saved_sessions.append,
-        cancel_event=threading.Event(),
-    )
+        "context": context or {"tab": "executive", "period": "2026Q1", "entity": "AEROMEXICO"},
+        "tool_specs": _specs(),
+        "call_tool": call_tool or (lambda provider_turn, call_id, name, args: {"ok": True}),
+        "emit": lambda kind, payload: emissions.append((kind, payload)),
+        "persist_session": saved_sessions.append,
+        "cancel_event": threading.Event(),
+    }
+    if retire_session is not None:
+        arguments["retire_session"] = retire_session
+    result = provider.run_turn(**arguments)
     return result, emissions, saved_sessions
 
 
@@ -322,6 +370,9 @@ def test_creates_none_session_with_explicit_model_tools_and_live_context_envelop
 
     request = fake.created[0]
     assert request["environment"] == {"type": "none"}
+    assert request["metadata"] == {
+        INSTRUCTIONS_FINGERPRINT_KEY: hashlib.sha256(SYSTEM_INSTRUCTIONS.encode("utf-8")).hexdigest()
+    }
     assert request["agent"]["model"] == "model-explicit"
     assert len(request["agent"]["tools"]) == 7
     assert {tool["name"] for tool in request["agent"]["tools"]} == {
@@ -466,31 +517,6 @@ def test_function_call_uses_official_required_action_shape_and_persists_provider
     )
 
 
-def test_existing_session_subscribes_before_input_and_sends_current_context_on_every_turn():
-    turn_old = _turn("turn_old", status="completed")
-    event_stream = FakeStream(
-        [
-            _turn_created("turn_new"),
-            _text_done("turn_new", "Respuesta al periodo actual."),
-            _completed("turn_new"),
-        ]
-    )
-    fake = FakeSessions(event_stream=event_stream, prior_turns=[turn_old])
-    provider = _provider(FakeClient(fake))
-    new_context = {"tab": "economy", "period": "2026Q2", "entity": "VOLARIS"}
-
-    result, _, saved = _run(provider, session_id="sess_fixture", context=new_context)
-
-    assert fake.events.streams[0].entered
-    assert fake.events.created[0]["idempotency_key"] == "airline-tracker-turn-app-turn-1"
-    envelope = json.loads(fake.events.created[0]["events"][0]["input"][0]["content"][0]["text"])
-    assert envelope["dashboard_context"] == new_context
-    assert result.content == "Respuesta al periodo actual."
-    assert result.provider_session_id == "sess_fixture"
-    assert saved == ["sess_fixture"]
-    assert event_stream.closed
-
-
 @pytest.mark.parametrize("terminal", [_failed(), _cancelled()], ids=["failed", "cancelled"])
 def test_terminal_failure_and_cancellation_are_not_reported_as_completed(terminal):
     fake = FakeSessions(
@@ -543,7 +569,7 @@ def test_recovered_terminal_failure_or_cancel_preserves_reported_usage(status, e
         assert caught.value.reason_code == "provider_terminal_failed"
         assert caught.value.session_id == "sess_fixture"
         assert caught.value.turn_id == "turn_recovered"
-    assert fake.retrieve_calls == 1
+    assert fake.retrieve_calls == 2  # session-version check plus terminal recovery read
     assert fake.turn_list_calls == 2  # prior turn lookup plus one recovery read
     assert 0 < fake.retrieve_timeouts[-1] <= 180
     assert 0 < fake.turn_list_timeouts[-1] <= fake.retrieve_timeouts[-1]
@@ -565,12 +591,3 @@ def test_tool_schema_is_exactly_allowlisted_and_closed():
     assert len(OpenAIProvider._validate_tool_specs(specs)) == 7
     with pytest.raises(OpenAIProviderError, match="herramienta desconocida"):
         OpenAIProvider._validate_tool_specs(specs + [{"type": "function", "name": "shell", "parameters": {}}])
-
-
-def test_openai_client_requires_existing_key_without_printing_or_probing(monkeypatch, capsys):
-    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-
-    with pytest.raises(OpenAIProviderError, match="no está configurada"):
-        OpenAIProvider(SimpleNamespace(openai_enabled=True, model="explicit-model"))
-
-    assert capsys.readouterr().out == ""

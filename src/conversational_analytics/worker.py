@@ -481,6 +481,8 @@ class TurnWorker:
                 provider_arguments["authorize_input"] = authorize_provider_input
             if getattr(self.provider, "supports_terminal_usage_reconciliation", False):
                 provider_arguments["mark_terminal_completed"] = mark_terminal_completed
+            if getattr(self.provider, "supports_session_retirement", False):
+                provider_arguments["retire_session"] = self.store.queue_provider_deletion
             result = self.provider.run_turn(**provider_arguments)
             if not isinstance(result, ProviderResult):
                 raise TypeError("provider returned an invalid result")
