@@ -2,16 +2,19 @@
 
 import hashlib
 import json
+from types import SimpleNamespace
 
 import pytest
 from test_chat_openai import (
     FakeClient,
     FakeSessions,
     FakeStream,
+    OpenAIProvider,
     _completed,
     _provider,
     _run,
     _session_created,
+    _specs,
     _text_done,
     _turn_created,
 )
@@ -23,11 +26,29 @@ from src.conversational_analytics.providers._openai_prompt import (
     prompt_sha256,
     with_dashboard_period_policy,
 )
+from src.conversational_analytics.providers._openai_runtime_helpers import validate_tool_specs
 from src.conversational_analytics.providers._openai_session_version import (
     INSTRUCTIONS_DERIVATION_KEY,
     INSTRUCTIONS_FINGERPRINT_KEY,
     PROMPT_INPUT_FINGERPRINT_KEY,
 )
+
+
+class UnverifiableFakeSessions(FakeSessions):
+    def __init__(self, *, retrieve_error=None, retrieved_session_id=None, **kwargs):
+        super().__init__(**kwargs)
+        self.retrieve_error = retrieve_error
+        self.retrieved_session_id = retrieved_session_id
+
+    def retrieve(self, session_id, *, timeout=None):
+        if self.retrieve_error is not None:
+            self.retrieve_calls += 1
+            self.retrieve_timeouts.append(timeout)
+            raise self.retrieve_error
+        result = super().retrieve(session_id, timeout=timeout)
+        if self.retrieved_session_id is not None:
+            result["id"] = self.retrieved_session_id
+        return result
 
 
 def test_f21_override_is_preserved_and_derived_prompt_gets_period_policy_and_distinct_hash():
@@ -145,7 +166,7 @@ def test_legacy_or_stale_session_rotates_with_history_then_queues_old_session_fo
     ],
 )
 def test_unverifiable_session_fails_closed_before_input(retrieve_error, retrieved_session_id, message):
-    fake = FakeSessions(retrieve_error=retrieve_error, retrieved_session_id=retrieved_session_id)
+    fake = UnverifiableFakeSessions(retrieve_error=retrieve_error, retrieved_session_id=retrieved_session_id)
     provider = _provider(FakeClient(fake))
 
     with pytest.raises(OpenAIProviderError, match=message):
@@ -166,3 +187,19 @@ def test_prompt_mismatch_without_retirement_queue_fails_closed_before_input():
 
     assert fake.created == []
     assert fake.events.created == []
+
+
+def test_tool_schema_is_exactly_allowlisted_and_closed():
+    specs = _specs()
+    assert len(validate_tool_specs(specs)) == 7
+    with pytest.raises(OpenAIProviderError, match="herramienta desconocida"):
+        validate_tool_specs(specs + [{"type": "function", "name": "shell", "parameters": {}}])
+
+
+def test_openai_client_requires_existing_key_without_printing_or_probing(monkeypatch, capsys):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+    with pytest.raises(OpenAIProviderError, match="no está configurada"):
+        OpenAIProvider(SimpleNamespace(openai_enabled=True, model="explicit-model"))
+
+    assert capsys.readouterr().out == ""

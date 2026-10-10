@@ -29,7 +29,14 @@ from openai.types.beta.agent_session_turn_output_text_done_event import AgentSes
 from openai.types.beta.agents.sessions.turn import Turn  # noqa: E402
 
 from src.conversational_analytics.providers.openai import OpenAIProvider, OpenAIProviderError  # noqa: E402
+from src.conversational_analytics.providers._openai_helpers import SYSTEM_INSTRUCTIONS  # noqa: E402
+from src.conversational_analytics.providers._openai_prompt import prompt_sha256  # noqa: E402
+from src.conversational_analytics.providers._openai_session_version import INSTRUCTIONS_FINGERPRINT_KEY  # noqa: E402
 from src.conversational_analytics.tools.registry import ToolRegistry  # noqa: E402
+
+DEFAULT_SESSION_METADATA = {
+    INSTRUCTIONS_FINGERPRINT_KEY: prompt_sha256(SYSTEM_INSTRUCTIONS),
+}
 
 
 def _usage(input_tokens: int = 31, output_tokens: int = 19) -> dict:
@@ -216,17 +223,12 @@ class FakeSessions:
         recovery=None,
         retrieved_turn=None,
         session_metadata=None,
-        retrieved_session_id=None,
-        retrieve_error=None,
     ):
         self._create_stream = create_stream or FakeStream([])
         self.events = FakeEvents(lambda: event_stream or FakeStream([]))
         self._prior_turns = list(prior_turns or [])
         self._recovery = recovery
         self.session_metadata = session_metadata
-        self.default_session_metadata = None
-        self.retrieved_session_id = retrieved_session_id
-        self.retrieve_error = retrieve_error
         self.created = []
         self.deleted = []
         self.retrieve_calls = 0
@@ -252,14 +254,12 @@ class FakeSessions:
         assert session_id == "sess_fixture"
         self.retrieve_calls += 1
         self.retrieve_timeouts.append(timeout)
-        if self.retrieve_error is not None:
-            raise self.retrieve_error
         result = dict(self._recovery or {"status": "idle", "required_actions": []})
-        result.setdefault("id", self.retrieved_session_id or session_id)
+        result.setdefault("id", session_id)
         if self.session_metadata is not None:
             result.setdefault("metadata", self.session_metadata)
-        elif self.default_session_metadata is not None:
-            result.setdefault("metadata", self.default_session_metadata)
+        else:
+            result.setdefault("metadata", DEFAULT_SESSION_METADATA)
         return result
 
     def delete(self, session_id):
@@ -301,16 +301,6 @@ def _provider(client, *, system_instructions_override=None, **config_overrides):
         client=client,
         system_instructions_override=system_instructions_override,
     )
-    sessions = client.beta.agents.sessions
-    if hasattr(sessions, "default_session_metadata"):
-        from src.conversational_analytics.providers._openai_prompt import prompt_sha256
-        from src.conversational_analytics.providers._openai_session_version import (
-            INSTRUCTIONS_FINGERPRINT_KEY,
-        )
-
-        sessions.default_session_metadata = {
-            INSTRUCTIONS_FINGERPRINT_KEY: prompt_sha256(provider._instructions())
-        }
     return provider
 
 
@@ -603,19 +593,3 @@ def test_cancel_and_delete_use_documented_events_and_session_endpoint():
 
     assert fake.events.created[0]["events"] == [{"type": "agent.session.input.cancel"}]
     assert fake.deleted == ["sess_fixture"]
-
-
-def test_tool_schema_is_exactly_allowlisted_and_closed():
-    specs = _specs()
-    assert len(OpenAIProvider._validate_tool_specs(specs)) == 7
-    with pytest.raises(OpenAIProviderError, match="herramienta desconocida"):
-        OpenAIProvider._validate_tool_specs(specs + [{"type": "function", "name": "shell", "parameters": {}}])
-
-
-def test_openai_client_requires_existing_key_without_printing_or_probing(monkeypatch, capsys):
-    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-
-    with pytest.raises(OpenAIProviderError, match="no está configurada"):
-        OpenAIProvider(SimpleNamespace(openai_enabled=True, model="explicit-model"))
-
-    assert capsys.readouterr().out == ""
