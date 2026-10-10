@@ -23,6 +23,13 @@ def _digest(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
+def _private_output(monkeypatch, tmp_path: Path) -> Path:
+    output = finalizer.SOURCE_ROOT / f"test-{tmp_path.name}"
+    output.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    monkeypatch.setattr(finalizer, "FINALIZATION_DIR", output)
+    return output
+
+
 def _write_source_set(tmp_path: Path, *, tamper: str | None = None) -> tuple[dict[str, Path], dict[str, str]]:
     paths: dict[str, Path] = {}
     approved: dict[str, str] = {}
@@ -58,7 +65,7 @@ def test_rehashed_source_metadata_does_not_replace_fixed_raw_pin(tmp_path: Path)
 def test_tampered_cli_source_blocks_before_preflight_or_private_writes(tmp_path: Path, monkeypatch) -> None:
     paths, approved = _write_source_set(tmp_path, tamper="original_ledger")
     monkeypatch.setattr(finalizer, "APPROVED_SOURCE_SHA256", approved)
-    output = finalizer.FINALIZATION_DIR
+    output = _private_output(monkeypatch, tmp_path)
     before = (
         {path.name: (_digest(path.read_bytes()), path.stat().st_mode & 0o777) for path in output.iterdir()}
         if output.exists()
@@ -110,7 +117,7 @@ def test_source_symlink_is_rejected_before_reading_or_chmod(tmp_path: Path, monk
     source_copy.write_text("{}", encoding="utf-8")
     paths["original_ledger"].unlink()
     paths["original_ledger"].symlink_to(source_copy)
-    output = finalizer.FINALIZATION_DIR
+    output = _private_output(monkeypatch, tmp_path)
     monkeypatch.setattr(
         finalizer,
         "read_pinned_sources",
@@ -132,8 +139,10 @@ def test_source_symlink_is_rejected_before_reading_or_chmod(tmp_path: Path, monk
     assert chmod_calls == []
 
 
-def test_output_source_overlap_blocks_before_read_parse_or_parent_permission_change(monkeypatch) -> None:
-    output = finalizer.FINALIZATION_DIR
+def test_output_source_overlap_blocks_before_read_parse_or_parent_permission_change(
+    tmp_path: Path, monkeypatch
+) -> None:
+    output = _private_output(monkeypatch, tmp_path)
     paths = dict(finalizer.SOURCE_PATHS)
     paths["original_ledger"] = output / "campaign.json"
     args = SimpleNamespace(
@@ -168,8 +177,8 @@ def test_output_source_overlap_blocks_before_read_parse_or_parent_permission_cha
     assert modes_after == modes_before
 
 
-def test_duplicate_output_leaf_paths_block_before_source_read(monkeypatch) -> None:
-    output = finalizer.FINALIZATION_DIR
+def test_duplicate_output_leaf_paths_block_before_source_read(tmp_path: Path, monkeypatch) -> None:
+    output = _private_output(monkeypatch, tmp_path)
     args = SimpleNamespace(
         source_paths=finalizer.SOURCE_PATHS,
         output_dir=output,
@@ -193,13 +202,13 @@ def test_hardlinked_output_rejected_before_read_or_write_and_source_remains_inta
 ) -> None:
     paths, approved = _write_source_set(tmp_path)
     monkeypatch.setattr(finalizer, "APPROVED_SOURCE_SHA256", approved)
-    output = finalizer.FINALIZATION_DIR
+    output = _private_output(monkeypatch, tmp_path)
     output.mkdir(parents=True, exist_ok=True, mode=0o700)
     linked_output = output / output_leaf
-    if linked_output.exists():
-        linked_output.unlink()
+    assert not linked_output.exists()
     source_bytes = paths["original_ledger"].read_bytes()
     shared_source = output.parent / f"{tmp_path.name}-source.json"
+    assert not shared_source.exists()
     shared_source.write_bytes(source_bytes)
     paths["original_ledger"] = shared_source
     approved["original_ledger"] = _digest(source_bytes)
@@ -255,7 +264,7 @@ def test_source_symlink_parent_blocks_before_read_parse_and_writes(tmp_path: Pat
     link_parent = tmp_path / "linked-parent"
     link_parent.symlink_to(real_parent, target_is_directory=True)
     paths["original_ledger"] = link_parent / "source.json"
-    output = finalizer.FINALIZATION_DIR
+    output = _private_output(monkeypatch, tmp_path)
     args = SimpleNamespace(
         source_paths=paths,
         output_dir=output,
@@ -300,7 +309,7 @@ def test_hardlinked_source_rejected_before_source_read(tmp_path: Path, monkeypat
     linked_copy = tmp_path / "linked-copy.json"
     linked_copy.hardlink_to(paths["original_ledger"])
     source_sha = _digest(paths["original_ledger"].read_bytes())
-    output = finalizer.FINALIZATION_DIR
+    output = _private_output(monkeypatch, tmp_path)
     args = SimpleNamespace(
         source_paths=paths,
         output_dir=output,
