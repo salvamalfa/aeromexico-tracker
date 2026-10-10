@@ -8,7 +8,7 @@ import {
   ratingKey,
 } from "./types";
 
-const aliases: CandidateAlias[] = ["A", "B", "C"];
+const aliases: CandidateAlias[] = ["A", "B", "C", "D"];
 const statuses: RatingStatus[] = ["correct", "problem", "not_evaluable"];
 const hashPattern = /^[a-f0-9]{64}$/;
 const questionPattern = /^Q\d{2}$/;
@@ -63,7 +63,7 @@ export function parseDataset(value: unknown): ReviewDataset {
       throw new Error(`${label}: idioma inválido.`);
     }
     if (!Array.isArray(question.candidates) || question.candidates.length < 2 || question.candidates.length > aliases.length) {
-      throw new Error(`${label}: se esperan dos o tres candidatos anónimos.`);
+      throw new Error(`${label}: se esperan dos, tres o cuatro candidatos anónimos.`);
     }
     const seen = new Set<CandidateAlias>();
     const candidates = question.candidates.map((rawCandidate, candidateIndex) => {
@@ -82,7 +82,7 @@ export function parseDataset(value: unknown): ReviewDataset {
     });
     const expectedAliases = aliases.slice(0, candidates.length);
     if (seen.size !== candidates.length || expectedAliases.some((alias) => !seen.has(alias))) {
-      throw new Error(`${label}: los alias deben ser A/B o A/B/C según la cantidad de candidatos.`);
+      throw new Error(`${label}: los alias deben ser consecutivos desde A según la cantidad de candidatos.`);
     }
     return {
       id: question.id,

@@ -9,13 +9,14 @@ function fixtureDataset() {
   return {
     schema_version: 1,
     dataset_id: "a".repeat(64),
-    available_count: 2,
+    available_count: 3,
     questions: [{
       id: "Q01", question: "Pregunta sintética", language: "es", expected: { "10": "diez", "2": "dos", value: 1 },
       candidates: [
         { alias: "A", answer: "Respuesta sintética A" },
         { alias: "B", answer: "Respuesta sintética B" },
         { alias: "C", answer: null },
+        { alias: "D", answer: "Respuesta sintética D" },
       ],
     }],
   };
@@ -80,7 +81,7 @@ describe("review bundles", () => {
     const { bundle } = await makeBundle();
     const bundleHash = "b".repeat(64);
     const first: RatingMap = new Map([[
-      "Q01:A", { question_id: "Q01", alias: "A", status: "problem", notes: "Revisar cita" },
+      "Q01:D", { question_id: "Q01", alias: "D", status: "problem", notes: "Revisar cita" },
     ]]);
     const second: RatingMap = new Map([[
       "Q01:A", { question_id: "Q01", alias: "A", status: "correct", notes: "Correcta en este corte" },
