@@ -67,6 +67,37 @@ def test_worker_persists_tool_answer_events_and_usage(tmp_path: Path):
     assert store.get_tool_result(turn["id"], "call-1")["rows"][0]["display_value"] == 84.9
 
 
+def test_worker_queues_retired_provider_session_after_persisting_replacement(tmp_path: Path):
+    store = ChatStore(tmp_path / "chat.sqlite3")
+    conv = store.create_conversation("alice", "snapshot-v1", "semantic-v1")
+    store.set_provider_session(conv["id"], "session-old")
+    turn, _ = store.submit_turn("alice", conv["id"], "ask", "client-1", {})
+    claim = store.claim_turn()
+
+    class SessionMigratingProvider(DeterministicProvider):
+        supports_session_retirement = True
+
+        def run_turn(self, **kwargs):
+            kwargs["persist_session"]("session-current")
+            conversation = store.owned_conversation("alice", conv["id"])
+            assert conversation["provider_session_id"] == "session-current"
+            kwargs["retire_session"]("session-old")
+            return ProviderResult("answer", input_tokens=1, output_tokens=1, usage_complete=True)
+
+    worker = TurnWorker(
+        store,
+        ChatConfig(state_path=tmp_path / "chat.sqlite3"),
+        SessionMigratingProvider(),
+        Snapshot(),
+    )
+    worker._registry = Registry()
+    worker._execute_turn(claim)
+
+    assert store.get_turn("alice", turn["id"])["status"] == "completed"
+    assert store.owned_conversation("alice", conv["id"])["provider_session_id"] == "session-current"
+    assert store.pending_provider_deletions() == ["session-old"]
+
+
 class BlockingProvider(DeterministicProvider):
     def __init__(self):
         super().__init__()
@@ -165,9 +196,7 @@ def test_tool_argument_errors_reach_the_model_instead_of_failing_the_turn(tmp_pa
     assert store.get_turn("alice", turn["id"])["status"] == "completed"
 
 
-def test_failed_turn_books_openai_error_usage_logs_safe_reason_and_releases_its_hold(
-    tmp_path: Path, caplog
-):
+def test_failed_turn_books_openai_error_usage_logs_safe_reason_and_releases_its_hold(tmp_path: Path, caplog):
     store = ChatStore(tmp_path / "chat.sqlite3")
     turn, claim = _claimed(store, reserved_tokens=50_000)
     # Paid-provider pricing: the mock provider books usage at zero dollars.

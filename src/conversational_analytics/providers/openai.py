@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import threading
@@ -35,7 +36,11 @@ from ._openai_helpers import (
     usage_from_event,
 )
 from ._openai_helpers import event_turn_id as get_event_turn_id
-from ._openai_recovery import finish_recovered_completion, recover_completed_provider_error, recover_exact_turn
+from ._openai_recovery import (
+    finish_recovered_completion,
+    recover_completed_provider_error,
+    recover_exact_turn,
+)
 from .base import ProviderResult, ToolCall
 
 
@@ -49,6 +54,8 @@ class OpenAIProvider:
 
     supports_input_authorization = True
     supports_terminal_usage_reconciliation = True
+    supports_session_retirement = True
+    INSTRUCTIONS_FINGERPRINT_KEY = "chat_instructions_sha256"
 
     def __init__(
         self,
@@ -88,17 +95,45 @@ class OpenAIProvider:
         cancel_event: threading.Event,
         authorize_input: InputAuthorizer | None = None,
         mark_terminal_completed: Callable[[tuple[int, int] | None], None] | None = None,
+        retire_session: Callable[[str], None] | None = None,
     ) -> ProviderResult:
         mark_terminal_completed = mark_terminal_completed or (lambda _usage=None: None)
         message = self._latest_user_message(messages)
         tools = self._validate_tool_specs(tool_specs)
         instructions = self._instructions()
+        instructions_fingerprint = hashlib.sha256(instructions.encode("utf-8")).hexdigest()
         app_turn_id = self._app_turn_id(messages)
+        started_at = time.monotonic()
+        turn_deadline = started_at + self.max_turn_seconds
+        retired_session_id: str | None = None
+        if session_id is not None:
+            if cancel_event.is_set():
+                raise InterruptedError("turn cancelled")
+            remaining = turn_deadline - time.monotonic()
+            if remaining <= 0:
+                raise OpenAIProviderError("El turno excedió el límite de tiempo configurado")
+            try:
+                persisted_session = to_dict(
+                    self.client.beta.agents.sessions.retrieve(session_id, timeout=remaining)
+                )
+            except Exception:
+                raise OpenAIProviderError(
+                    "No se pudo verificar la versión de instrucciones de la sesión"
+                ) from None
+            if persisted_session.get("id") != session_id:
+                raise OpenAIProviderError("No se pudo verificar la identidad de la sesión")
+            metadata = persisted_session.get("metadata")
+            fingerprint = (
+                metadata.get(self.INSTRUCTIONS_FINGERPRINT_KEY) if isinstance(metadata, dict) else None
+            )
+            if fingerprint != instructions_fingerprint:
+                if retire_session is None:
+                    raise OpenAIProviderError("No se pudo encolar la sesión anterior para borrado")
+                retired_session_id = session_id
+                session_id = None
         history = prior_history(messages) if session_id is None else []
         request_input = self._message_input(context, message, history)
         tracked_sessions: set[str] = set()
-        started_at = time.monotonic()
-        turn_deadline = started_at + self.max_turn_seconds
         usage_deadline = started_at + self.max_turn_seconds + TERMINAL_USAGE_RECONCILIATION_SECONDS
         stream_manager = None
         stream_iter = None
@@ -237,6 +272,7 @@ class OpenAIProvider:
                     agent={"model": self.model, "instructions": instructions, "tools": tools},
                     environment={"type": "none"},
                     input=request_input,
+                    metadata={self.INSTRUCTIONS_FINGERPRINT_KEY: instructions_fingerprint},
                     stream=True,
                 )
                 if hasattr(stream_manager, "with_result_collection"):
@@ -274,6 +310,10 @@ class OpenAIProvider:
                 if discovered_session and discovered_session != session_id:
                     session_id = discovered_session
                     self._track_session(session_id, persist_session, tracked_sessions)
+                    if retired_session_id:
+                        if retire_session is not None:
+                            retire_session(retired_session_id)
+                        retired_session_id = None
                 is_current_turn = is_current_root_turn(event_data)
                 event_id = event_data.get("event_id")
                 if event_type in {
@@ -301,8 +341,10 @@ class OpenAIProvider:
                 }
                 if session_failure or (event_type == "agent.session.turn.failed" and is_current_turn):
                     terminal = "failed"
-                event_usage = usage_from_event(event_data) if session_failure else terminal_event_usage(
-                    event_type, is_current_turn, event_data
+                event_usage = (
+                    usage_from_event(event_data)
+                    if session_failure
+                    else terminal_event_usage(event_type, is_current_turn, event_data)
                 )
                 check_limits(event_usage)
                 if event_type == "agent.session.turn.output_text.delta" and is_current_turn:
