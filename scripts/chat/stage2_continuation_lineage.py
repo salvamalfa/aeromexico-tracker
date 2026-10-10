@@ -232,7 +232,7 @@ def validate_continuation_inputs(
         or not set(actual_completed) <= set(planned_run_ids)
     ):
         raise ExportError("El ledger real no coincide exactamente con el plan de continuación")
-    live_result = continuation.get("live_result")
+    live_result = plan.get("live_result")
     if not isinstance(live_result, dict) or live_result.get("identity_hash") != continuation_campaign_hash:
         raise ExportError("El plan no conserva el resultado del ledger de continuación por su hash")
     continuation_commit = continuation.get("execution_commit")

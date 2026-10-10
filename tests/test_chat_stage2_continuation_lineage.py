@@ -325,8 +325,8 @@ def continuation_artifacts(root: Path) -> tuple[Path, Path, list[Path], dict[Pat
             "runtime_limits": source_identities[0]["limits"],
             "ledger_path": str(cont_ledger_path), "output_dir": str(cont_reports_dir),
             "runs": continuation_runs,
-            "live_result": {"identity_hash": continuation_campaign_hash},
         },
+        "live_result": {"mode": "live-campaign", "identity_hash": continuation_campaign_hash},
         "billing_reconciliation": {
             "source_ledger_sha256": source_ledger_sha, "source_report_sha256": source_report_sha,
             "evidence_sha256": evidence_sha, "status": "owner_confirmed_aggregate",
