@@ -42,6 +42,76 @@ _SAFE_HTTP_STATUSES = frozenset({400, 401, 403, 404, 408, 409, 413, 422, 425, 42
 _SAFE_REASON_CODES = frozenset({"tool_call_limit", "turn_timeout", "tool_result_limit"})
 _RESERVATION_INPUT_TOKENS_PER_CASE_FLOOR = 140_000
 _RESERVATION_OUTPUT_TOKENS_PER_CASE_FLOOR = 10_000
+_LIVE_CANDIDATE_ALIASES = {
+    "Luna-M": ("gpt-6-luna", "medium", "medium"),
+    "Luna-X": ("gpt-6-luna", "max", "medium"),
+    "Sol-B": ("gpt-6.1-sol", "low", "medium"),
+    "Sol-M": ("gpt-6.1-sol", "medium", "medium"),
+}
+
+
+def _resolve_live_candidates(
+    requested: list[Any], default_effort: str, default_verbosity: str
+) -> list[dict[str, str]]:
+    """Resolve legacy model strings and explicit candidate IDs to fixed settings."""
+    from .config import model_catalog
+
+    catalog = model_catalog()
+    resolved: list[dict[str, str]] = []
+    seen_ids: set[str] = set()
+    for item in requested:
+        explicit_id: str | None = None
+        if isinstance(item, str):
+            price_key = item
+            if item in _LIVE_CANDIDATE_ALIASES:
+                model, effort, verbosity = _LIVE_CANDIDATE_ALIASES[item]
+                explicit_id = item
+            else:
+                parts = item.split("@")
+                if len(parts) > 3 or not parts[0]:
+                    raise ValueError(f"candidato inválido: {item!r}")
+                model = parts[0]
+                effort = parts[1] if len(parts) > 1 and parts[1] else default_effort
+                verbosity = parts[2] if len(parts) > 2 and parts[2] else default_verbosity
+        elif isinstance(item, dict):
+            model = item.get("model")
+            effort = item.get("reasoning_effort")
+            verbosity = item.get("text_verbosity")
+            explicit_id = item.get("candidate_id")
+            if not all(isinstance(value, str) and value for value in (model, effort, verbosity)):
+                raise ValueError(
+                    "cada candidato requiere model, reasoning_effort y text_verbosity explícitos"
+                )
+            if explicit_id is not None and (not isinstance(explicit_id, str) or not explicit_id.strip()):
+                raise ValueError("candidate_id debe ser una cadena no vacía")
+            price_key = explicit_id or f"{model}@{effort}@{verbosity}"
+        else:
+            raise ValueError("los candidatos deben ser IDs de modelo o objetos de configuración")
+        if not isinstance(model, str) or not isinstance(effort, str) or not isinstance(verbosity, str):
+            raise ValueError("cada candidato requiere modelo, esfuerzo y verbosidad explícitos")
+        entry = catalog.get(model)
+        if entry is None:
+            raise ValueError(f"modelo no versionado para candidato: {model}")
+        efforts = entry.get("reasoning_efforts")
+        levels = entry.get("text_verbosity")
+        if not isinstance(efforts, list) or effort not in efforts:
+            raise ValueError(f"esfuerzo {effort!r} no permitido para {model}")
+        if not isinstance(levels, list) or verbosity not in levels:
+            raise ValueError(f"verbosidad {verbosity!r} no permitida para {model}")
+        candidate_id = explicit_id or f"{model}@{effort}@{verbosity}"
+        if candidate_id in seen_ids:
+            raise ValueError(f"candidate_id duplicado: {candidate_id}")
+        seen_ids.add(candidate_id)
+        resolved.append(
+            {
+                "candidate_id": candidate_id,
+                "price_key": price_key,
+                "model": model,
+                "reasoning_effort": effort,
+                "text_verbosity": verbosity,
+            }
+        )
+    return resolved
 
 
 class _CheckpointWriteError(RuntimeError):
@@ -126,7 +196,10 @@ def _progress_payload(report: dict[str, Any], state: dict[str, Any]) -> dict[str
         cases = model["cases"]
         models.append(
             {
+                "candidate_id": model["candidate_id"],
                 "model": model["model"],
+                "reasoning_effort": model["reasoning_effort"],
+                "text_verbosity": model["text_verbosity"],
                 "case_count": len(cases),
                 "completed_turn_count": sum(bool(case.get("model_turn_completed")) for case in cases),
                 "provider_error_count": sum(case.get("status") == "provider_error" for case in cases),
@@ -151,7 +224,10 @@ def _progress_payload(report: dict[str, Any], state: dict[str, Any]) -> dict[str
             None if usage_unknown else max(0.0, report["budget_usd_operational_stop"] - known_spend)
         ),
         "status": state["status"],
+        "current_candidate_id": state.get("current_candidate_id"),
         "current_model": state.get("current_model"),
+        "current_reasoning_effort": state.get("current_reasoning_effort"),
+        "current_text_verbosity": state.get("current_text_verbosity"),
         "active_case_id": state.get("active_case_id"),
         "active_session_id": state.get("active_session_id"),
         "session_to_reconcile": state.get("session_to_reconcile"),
@@ -172,7 +248,7 @@ def _nearest_rank_percentile(values: list[float], percentile: float) -> float | 
 def _live_provider_run(
     *,
     cases: list[dict[str, Any]],
-    models: list[str],
+    models: list[Any],
     budget_usd: float,
     snapshot_root: Path,
     prices: dict[str, tuple[float, float]],
@@ -192,13 +268,22 @@ def _live_provider_run(
 
     if not math.isfinite(budget_usd) or budget_usd <= 0 or budget_usd > 10:
         raise ValueError("el presupuesto debe ser finito, positivo y no superar US$10")
-    if len(models) not in (1, 2, 3):
-        raise ValueError("se permite una sonda con 1 modelo o una comparación de 2–3 modelos")
-    if set(prices) != set(models) or any(
-        not math.isfinite(amount) or amount <= 0 for pair in prices.values() for amount in pair
+    if len(models) not in (1, 2, 3, 4):
+        raise ValueError("se permite una sonda con 1 modelo o una comparación de 2–4 candidatos")
+    if any(
+        not isinstance(pair, tuple)
+        or len(pair) != 2
+        or any(not math.isfinite(amount) or amount <= 0 for amount in pair)
+        for pair in prices.values()
     ):
         raise ValueError("cada candidato requiere precios finitos y positivos de entrada/salida")
     runtime_config = ChatConfig.from_env()
+    candidates = _resolve_live_candidates(
+        models, runtime_config.reasoning_effort, runtime_config.text_verbosity
+    )
+    price_keys = [candidate["price_key"] for candidate in candidates]
+    if len(price_keys) != len(set(price_keys)) or set(prices) != set(price_keys):
+        raise ValueError("cada candidato único requiere una tarifa ligada a su ID")
     snapshot = Snapshot(snapshot_root)
     expected_versions = load_fixture()["expected_versions"]
     if (
@@ -209,9 +294,7 @@ def _live_provider_run(
             "El snapshot o catálogo semántico no coincide con las versiones fijadas en el holdout"
         )
     registry = ToolRegistry(snapshot)
-    metric_dimensions = {
-        metric["id"]: metric["dimensions"] for metric in registry.catalog()["metrics"]
-    }
+    metric_dimensions = {metric["id"]: metric["dimensions"] for metric in registry.catalog()["metrics"]}
     selected = [next(case for case in cases if case["id"] == "es_am_lf_q2")] if probe_only else cases
     output_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
     os.chmod(output_dir, 0o700)
@@ -224,6 +307,16 @@ def _live_provider_run(
         "data_version": snapshot.version,
         "semantic_version": snapshot.semantic_version,
         "candidate_models": models,
+        "candidate_ids": [candidate["candidate_id"] for candidate in candidates],
+        "candidate_configs": [
+            {
+                "candidate_id": candidate["candidate_id"],
+                "model": candidate["model"],
+                "reasoning_effort": candidate["reasoning_effort"],
+                "text_verbosity": candidate["text_verbosity"],
+            }
+            for candidate in candidates
+        ],
         "budget_usd_operational_stop": budget_usd,
         "budget_guaranteed": False,
         "max_tool_calls_per_turn": runtime_config.max_tool_calls,
@@ -243,6 +336,9 @@ def _live_provider_run(
         "status": "starting",
         "known_estimated_spend_usd": 0.0,
         "current_model": None,
+        "current_candidate_id": None,
+        "current_reasoning_effort": None,
+        "current_text_verbosity": None,
         "active_case_id": None,
         "active_session_id": None,
         "session_to_reconcile": None,
@@ -258,20 +354,35 @@ def _live_provider_run(
 
     estimated_total_usd = 0.0
     stop_all = False
-    for model in models:
+    for candidate in candidates:
         if stop_all:
             break
-        progress_state.update(status="running", current_model=model)
-        input_rate, output_rate = prices[model]
+        model = candidate["model"]
+        candidate_id = candidate["candidate_id"]
+        reasoning_effort = candidate["reasoning_effort"]
+        text_verbosity = candidate["text_verbosity"]
+        progress_state.update(
+            status="running",
+            current_candidate_id=candidate_id,
+            current_model=model,
+            current_reasoning_effort=reasoning_effort,
+            current_text_verbosity=text_verbosity,
+        )
+        input_rate, output_rate = prices[candidate["price_key"]]
         config = replace(
             runtime_config,
             provider="openai",
             model=model,
+            reasoning_effort=reasoning_effort,
+            text_verbosity=text_verbosity,
             openai_enabled=True,
         )
         provider = None
         model_report: dict[str, Any] = {
+            "candidate_id": candidate_id,
             "model": model,
+            "reasoning_effort": reasoning_effort,
+            "text_verbosity": text_verbosity,
             "input_price_usd_per_million": input_rate,
             "output_price_usd_per_million": output_rate,
             "cached_input_price": "unknown/not applied",
@@ -323,6 +434,10 @@ def _live_provider_run(
                 model_report["cases"].append(
                     {
                         "case_id": case["id"],
+                        "candidate_id": candidate_id,
+                        "model": model,
+                        "reasoning_effort": reasoning_effort,
+                        "text_verbosity": text_verbosity,
                         "status": "application_context_rejected",
                         "error": str(exc),
                         "provider_calls": 0,
@@ -333,7 +448,10 @@ def _live_provider_run(
                 continue
             progress_state.update(
                 status="running",
+                current_candidate_id=candidate_id,
                 current_model=model,
+                current_reasoning_effort=reasoning_effort,
+                current_text_verbosity=text_verbosity,
                 active_case_id=case["id"],
                 active_session_id=None,
                 active_usage_state="unknown_in_flight",
@@ -396,6 +514,10 @@ def _live_provider_run(
                 actual_plan = observation["plan"]
                 case_record = {
                     "case_id": case["id"],
+                    "candidate_id": candidate_id,
+                    "model": model,
+                    "reasoning_effort": reasoning_effort,
+                    "text_verbosity": text_verbosity,
                     "status": observation["status"],
                     "response": result.content,
                     "plan": actual_plan,
@@ -484,6 +606,10 @@ def _live_provider_run(
                 error_metadata = _error_metadata(exc)
                 case_record = {
                     "case_id": case["id"],
+                    "candidate_id": candidate_id,
+                    "model": model,
+                    "reasoning_effort": reasoning_effort,
+                    "text_verbosity": text_verbosity,
                     "status": "provider_error",
                     "tool_calls": called_tools,
                     "session_id": session[-1] if session else None,
@@ -572,7 +698,10 @@ def _live_provider_run(
         }
         progress_state.update(
             status="stopped" if stop_all else "running",
+            current_candidate_id=None if stop_all else candidate_id,
             current_model=None if stop_all else model,
+            current_reasoning_effort=None if stop_all else reasoning_effort,
+            current_text_verbosity=None if stop_all else text_verbosity,
             known_estimated_spend_usd=estimated_total_usd,
             active_case_id=None,
             active_session_id=None,
@@ -587,7 +716,10 @@ def _live_provider_run(
     report["run_status"] = final_status
     progress_state.update(
         status="finalizing",
+        current_candidate_id=None,
         current_model=None,
+        current_reasoning_effort=None,
+        current_text_verbosity=None,
         known_estimated_spend_usd=estimated_total_usd,
         active_case_id=None,
         active_session_id=None,
