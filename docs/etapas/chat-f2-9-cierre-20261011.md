@@ -16,11 +16,13 @@ saldo de la cuenta ni se verificó factura. El agregado de calidad conserva el
 denominador por candidato y marca el espacio faltante; no se incluye la
 calificación por pregunta.
 
-La campaña completa propuesta contiene 30 casos y 34 mensajes, sin casos PI.
+La campaña completa propuesta contiene 30 casos y 34 mensajes, con una repetición
+de Sol low y sin casos PI.
 Se trazó la muestra Sol low de etapa 2 (842,452 tokens de entrada y 4,157 de
 salida entre 15 slots, incluida la respuesta terminal recuperada). Aplicando
 tarifa de entrada cache-write US$2.50/M, salida US$10/M (catálogo consultado con
-tarifas al 9 oct 2026) y 35% de margen, la proyección es US$6.58 redondeados al centavo. Es una estimación de planificación,
+tarifas al 9 oct 2026) y 35% de margen, la proyección para esa única repetición
+es US$6.58 redondeados al centavo. Es una estimación de planificación,
 no factura ni límite duro; la etapa 3 requiere cotización nueva y aprobación del
 dueño antes de consumo. El perfil no ejecuta proveedor ni lee credenciales.
 
