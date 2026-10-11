@@ -1,6 +1,7 @@
 import type { ChatMessage } from "../../types/chat";
 import { renderSafeChart } from "./chart";
 import { renderSafeMarkdown, safeReferences } from "./markdown";
+import { safeDisplays } from "./display";
 
 export interface RenderOptions {
   canRetry: (message: ChatMessage) => boolean;
@@ -9,7 +10,8 @@ export interface RenderOptions {
 }
 
 function referenceList(message: ChatMessage): HTMLUListElement | undefined {
-  const references = safeReferences(message.references);
+  const displayUrls = new Set(safeDisplays(message.displays).flatMap((display) => display.sources.flatMap((source) => source.url ? [source.url] : [])));
+  const references = safeReferences(message.references).filter((reference) => !reference.url || !displayUrls.has(reference.url));
   if (!references.length) return undefined;
   const refs = document.createElement("ul");
   refs.className = "chat-references";
@@ -42,8 +44,12 @@ export function renderMessages(node: HTMLOListElement, messages: readonly ChatMe
     item.append(label);
     const body = document.createElement("div");
     body.className = "chat-message-body";
-    const trustedReferenceUrls = safeReferences(message.references).flatMap((reference) => reference.url ? [reference.url] : []);
-    renderSafeMarkdown(body, message.content, trustedReferenceUrls);
+    const displays = safeDisplays(message.displays);
+    const trustedReferenceUrls = [
+      ...safeReferences(message.references).flatMap((reference) => reference.url ? [reference.url] : []),
+      ...displays.flatMap((display) => display.sources.flatMap((source) => source.url ? [source.url] : [])),
+    ];
+    renderSafeMarkdown(body, message.content, trustedReferenceUrls, displays);
     item.append(body);
     const failure = options.failureMessage?.(message);
     if (failure) {
@@ -53,7 +59,7 @@ export function renderMessages(node: HTMLOListElement, messages: readonly ChatMe
       notice.textContent = `No se pudo completar: ${failure}`;
       item.append(notice);
     }
-    if (message.chart) {
+    if (message.chart && !displays.some((display) => display.kind === "chart")) {
       const chartHost = document.createElement("div");
       chartHost.className = "chat-answer-chart";
       chartHost.setAttribute("role", "img");

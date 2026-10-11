@@ -15,6 +15,11 @@ aclaración. No se reparte un total por rutas sin evidencia, no se confunde
 Aeroméxico consolidado con Aerovías aislada, y una ausencia conserva el estado
 `missing` en vez de convertirse en cero.
 
+La presentación por referencia agrega `DisplayRegistry` al límite del worker:
+la respuesta cita tablas y gráficas validadas del mismo turno, que el frontend
+renderiza desde los valores persistidos sin otra consulta al modelo. El estado
+local de F2.8 y sus verificaciones están en el [reporte de etapa](../etapas/chat-f2-8-presentacion-20261011.md).
+
 El catálogo inicial distingue `company_passengers` de `afac_passengers`, razón
 por la cual “pasajeros” puede requerir aclaración. Los porcentajes se guardan
 como fracción y se muestran como porcentaje; los campos `*_pp` ya están en
