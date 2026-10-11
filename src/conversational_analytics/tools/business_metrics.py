@@ -1,0 +1,325 @@
+"""Business metric aggregation primitives and the F2.3 closed candidate gate.
+
+This module reads only the already validated public Snapshot. Candidate totals
+remain unavailable until an owner-approved semantic definition and a published
+source field are wired in. The aggregation function is intentionally generic so
+other deterministic query tools can reuse the same complete-period rules.
+"""
+
+from __future__ import annotations
+
+import json
+import math
+import re
+from typing import Any, Iterable
+
+from src.conversational_analytics.data.snapshot import Snapshot
+
+_PERIOD_RE = re.compile(r"^(\d{4})(?:Q([1-4])|H([12]))?$")
+_PROPOSAL_IDS = {"total_revenue", "operating_costs", "fuel_expense", "operating_income"}
+_ENTITY_IDS = {"AEROMEXICO", "VOLARIS", "VIVA_AEROBUS", "INDUSTRY"}
+BUSINESS_METRIC_TOOL_NAMES = ("query_business_metrics", "get_business_metric_definition")
+
+
+def metric_proposals() -> dict[str, Any]:
+    """Return the versioned glossary, source inventory, and closed candidates."""
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[3]
+    return json.loads((root / "config/chat/metrics-candidates.json").read_text(encoding="utf-8"))
+
+
+def business_metric_tool_specs() -> list[dict[str, Any]]:
+    """Return tool declarations for a registry to opt into after owner review."""
+    return [
+        {
+            "type": "function",
+            "name": "query_business_metrics",
+            "description": (
+                "Consulta un monto financiero candidato solo si está aprobado y publicado; "
+                "también suma pasajeros reportados sobre trimestres completos."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "metric_id": {"type": "string", "minLength": 1},
+                    "entity_id": {"type": "string", "enum": sorted(_ENTITY_IDS)},
+                    "period": {
+                        "type": "string",
+                        "pattern": r"^\d{4}(?:Q[1-4]|H[12])?$",
+                        "description": "Trimestre YYYYQn, semestre calendario YYYYH1/YYYH2, o año YYYY.",
+                    },
+                },
+                "required": ["metric_id", "entity_id", "period"],
+                "additionalProperties": False,
+            },
+        },
+        {
+            "type": "function",
+            "name": "get_business_metric_definition",
+            "description": (
+                "Devuelve la propuesta de definición, unidad, cobertura y gate de un candidato F2.3."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {"metric_id": {"type": "string", "minLength": 1}},
+                "required": ["metric_id"],
+                "additionalProperties": False,
+            },
+        },
+    ]
+
+
+def get_business_metric_definition(metric_id: str) -> dict[str, Any]:
+    """Return a candidate definition without changing its approval state."""
+    catalog = metric_proposals()
+    try:
+        definition = next(item for item in catalog["candidate_metrics"] if item["id"] == metric_id)
+    except StopIteration as exc:
+        raise ValueError(f"Definición candidata desconocida: {metric_id}") from exc
+    return {
+        "metric": definition,
+        "approval_gate": catalog["metadata"]["activation_gate"],
+        "approval_status": definition["approval_status"],
+        "production_enabled": False,
+    }
+
+
+def _expected_quarters(period: str) -> list[str]:
+    match = _PERIOD_RE.fullmatch(period) if isinstance(period, str) else None
+    if not match:
+        raise ValueError("period debe tener formato YYYYQn, YYYYH1, YYYYH2 o YYYY")
+    year, quarter, half = match.groups()
+    if quarter:
+        return [f"{year}Q{quarter}"]
+    if half:
+        return [f"{year}Q{1 if half == '1' else 3}", f"{year}Q{2 if half == '1' else 4}"]
+    return [f"{year}Q{q}" for q in range(1, 5)]
+
+
+def aggregate_quarters(
+    records: Iterable[dict[str, Any]],
+    period: str,
+    *,
+    value_key: str = "value",
+    period_key: str = "period_id",
+) -> dict[str, Any]:
+    """Sum a quarter-grain flow only when every constituent quarter is present.
+
+    Rows with a missing/null value remain missing, and an explicitly reported
+    zero remains a valid value. Annual and half-year aggregates never imply
+    completeness from row count alone: each expected quarter ID must exist with
+    a numeric value.
+    """
+    expected = _expected_quarters(period)
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for row in records:
+        if isinstance(row, dict) and isinstance(row.get(period_key), str):
+            grouped.setdefault(row[period_key], []).append(row)
+    values: dict[str, float] = {}
+    missing_periods = []
+    conflicting_periods = []
+    for quarter in expected:
+        quarter_rows = grouped.get(quarter, [])
+        valid = [
+            row[value_key]
+            for row in quarter_rows
+            if isinstance(row.get(value_key), (int, float))
+            and not isinstance(row.get(value_key), bool)
+            and math.isfinite(float(row[value_key]))
+        ]
+        if not quarter_rows or len(valid) != len(quarter_rows):
+            missing_periods.append(quarter)
+        elif len({float(value) for value in valid}) > 1:
+            conflicting_periods.append(quarter)
+        else:
+            values[quarter] = float(valid[0])
+    if missing_periods:
+        return {
+            "period": period,
+            "value": None,
+            "availability": "incomplete",
+            "expected_periods": expected,
+            "included_periods": [q for q in expected if q in values],
+            "missing_periods": missing_periods,
+            "conflicting_periods": conflicting_periods,
+        }
+    if conflicting_periods:
+        return {
+            "period": period,
+            "value": None,
+            "availability": "source_conflict",
+            "expected_periods": expected,
+            "included_periods": [q for q in expected if q in values],
+            "missing_periods": [],
+            "conflicting_periods": conflicting_periods,
+        }
+    return {
+        "period": period,
+        "value": math.fsum(values[q] for q in expected),
+        "availability": "available",
+        "expected_periods": expected,
+        "included_periods": expected,
+        "missing_periods": [],
+        "conflicting_periods": [],
+    }
+
+
+def aggregate_weighted_ratio(
+    records: Iterable[dict[str, Any]],
+    period: str,
+    *,
+    value_key: str = "value",
+    weight_key: str = "weight",
+    period_key: str = "period_id",
+) -> dict[str, Any]:
+    """Aggregate a ratio using its published denominator as weight.
+
+    All expected periods need a finite ratio and positive finite denominator.
+    This computes ``sum(ratio * denominator) / sum(denominator)`` and never
+    takes a simple mean of percentages or unit ratios.
+    """
+    expected = _expected_quarters(period)
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for row in records:
+        if isinstance(row, dict) and isinstance(row.get(period_key), str):
+            grouped.setdefault(row[period_key], []).append(row)
+    values: dict[str, tuple[float, float]] = {}
+    missing_periods = []
+    conflicting_periods = []
+    for quarter in expected:
+        quarter_rows = grouped.get(quarter, [])
+        pairs = []
+        for row in quarter_rows:
+            value, weight = row.get(value_key), row.get(weight_key)
+            if (
+                not isinstance(value, (int, float))
+                or isinstance(value, bool)
+                or not math.isfinite(float(value))
+                or not isinstance(weight, (int, float))
+                or isinstance(weight, bool)
+                or not math.isfinite(float(weight))
+                or float(weight) <= 0
+            ):
+                continue
+            pairs.append((float(value), float(weight)))
+        if not quarter_rows or len(pairs) != len(quarter_rows):
+            missing_periods.append(quarter)
+        elif len(set(pairs)) > 1:
+            conflicting_periods.append(quarter)
+        else:
+            values[quarter] = pairs[0]
+    included = [quarter for quarter in expected if quarter in values]
+    if missing_periods or conflicting_periods:
+        return {
+            "period": period,
+            "value": None,
+            "availability": "incomplete" if missing_periods else "source_conflict",
+            "expected_periods": expected,
+            "included_periods": included,
+            "missing_periods": missing_periods,
+            "conflicting_periods": conflicting_periods,
+            "numerator_sum": None,
+            "denominator_sum": None,
+        }
+    numerator_sum = math.fsum(values[quarter][0] * values[quarter][1] for quarter in expected)
+    denominator_sum = math.fsum(values[quarter][1] for quarter in expected)
+    return {
+        "period": period,
+        "value": numerator_sum / denominator_sum,
+        "availability": "available",
+        "expected_periods": expected,
+        "included_periods": expected,
+        "missing_periods": [],
+        "conflicting_periods": [],
+        "numerator_sum": numerator_sum,
+        "denominator_sum": denominator_sum,
+    }
+
+
+def deterministic_query(
+    snapshot: Snapshot,
+    metric_id: str,
+    entity_id: str,
+    period: str,
+) -> dict[str, Any]:
+    """Query an F2.3 business metric with a deterministic owner approval gate.
+
+    Current integration is intentionally limited to the already approved
+    `company_passengers` projection. Proposed total financial metrics always
+    return a gate-closed result with no value.
+    """
+    _expected_quarters(period)  # validate even when the candidate gate is closed
+    if entity_id not in _ENTITY_IDS:
+        raise ValueError(f"Entidad desconocida: {entity_id}")
+    if metric_id in _PROPOSAL_IDS:
+        proposal = next(item for item in metric_proposals()["candidate_metrics"] if item["id"] == metric_id)
+        return {
+            "metric_id": metric_id,
+            "entity_id": entity_id,
+            "period": period,
+            "value": None,
+            "availability": "approval_required",
+            "value_kind": "candidate_unapproved",
+            "approval_gate": "closed",
+            "reason": proposal["blocked_reason"],
+            "source_references": [],
+        }
+    if metric_id != "company_passengers":
+        raise ValueError(f"Métrica F2.3 no disponible en este dispatcher: {metric_id}")
+
+    doc = snapshot.payload("data/v1/executive.json")
+    entity = doc.get("entities", {}).get(entity_id)
+    rows = entity.get("records", []) if entity else []
+    all_quarters = [{"period_id": row.get("period_id"), "value": row.get("passengers")} for row in rows]
+    aggregate = aggregate_quarters(all_quarters, period)
+    references = [
+        {
+            "label": "Datos publicados del dashboard",
+            "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json",
+        }
+    ]
+    return {
+        "metric_id": metric_id,
+        "entity_id": entity_id,
+        **aggregate,
+        "unit": "passengers",
+        "value_kind": "reported"
+        if len(aggregate["expected_periods"]) == 1
+        else "derived_sum_of_reported_quarters",
+        "quality": "reported_company_series; deterministic sum of published quarters",
+        "source_references": references,
+    }
+
+
+def dispatch_business_metric_tool(
+    snapshot: Snapshot,
+    tool_name: str,
+    arguments: dict[str, Any],
+) -> dict[str, Any]:
+    """Small adapter for a central registry to call F2.3 tools by name."""
+    if not isinstance(arguments, dict):
+        raise ValueError("arguments debe ser un objeto")
+    if tool_name == "get_business_metric_definition":
+        if set(arguments) != {"metric_id"}:
+            raise ValueError("get_business_metric_definition requiere solo metric_id")
+        return get_business_metric_definition(arguments["metric_id"])
+    if tool_name == "query_business_metrics":
+        if set(arguments) != {"metric_id", "entity_id", "period"}:
+            raise ValueError("query_business_metrics requiere metric_id, entity_id y period")
+        return deterministic_query(
+            snapshot, arguments["metric_id"], arguments["entity_id"], arguments["period"]
+        )
+    raise ValueError(f"Herramienta F2.3 desconocida: {tool_name}")
+
+
+__all__ = [
+    "BUSINESS_METRIC_TOOL_NAMES",
+    "aggregate_quarters",
+    "aggregate_weighted_ratio",
+    "business_metric_tool_specs",
+    "dispatch_business_metric_tool",
+    "deterministic_query",
+    "get_business_metric_definition",
+    "metric_proposals",
+]
