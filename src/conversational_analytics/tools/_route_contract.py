@@ -176,7 +176,19 @@ def source_references(networks: list[tuple[dict[str, Any], str]]) -> list[dict[s
                     "url": "https://salvamalfa.github.io/aeromexico-tracker/" + quote(source_path, safe="/"),
                 }
             )
-    return list({(item["label"], item["url"]): item for item in refs}.values())
+    return deduplicate_source_references(refs)
+
+
+def deduplicate_source_references(refs: list[dict[str, str]]) -> list[dict[str, str]]:
+    by_url: dict[str, dict[str, Any]] = {}
+    for ref in refs:
+        url, label = ref.get("url"), ref.get("label")
+        if not isinstance(url, str) or not isinstance(label, str) or not label:
+            continue
+        source = by_url.setdefault(url, {"url": url, "labels": []})
+        if label not in source["labels"]:
+            source["labels"].append(label)
+    return [{"url": url, "label": " · ".join(source["labels"])} for url, source in by_url.items()]
 
 
 def build_display(

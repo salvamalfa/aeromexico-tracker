@@ -37,6 +37,9 @@ from src.conversational_analytics.tools._route_contract import (
     coverage as _coverage,
 )
 from src.conversational_analytics.tools._route_contract import (
+    deduplicate_source_references as _deduplicate_source_references,
+)
+from src.conversational_analytics.tools._route_contract import (
     display_query_hash as _display_query_hash,
 )
 from src.conversational_analytics.tools._route_contract import (
@@ -144,8 +147,7 @@ class RouteTools:
                         "url": source_url,
                     }
                 )
-        refs = list({(item["label"], item["url"]): item for item in refs}.values())
-        unique_refs = list({(item["label"], item["url"]): item for item in refs}.values())
+        unique_refs = _deduplicate_source_references(refs)
         return {
             "data_version": self.snapshot.version,
             "semantic_version": self.snapshot.semantic_version,

@@ -6,6 +6,7 @@ import pytest
 
 from src.conversational_analytics.data.snapshot import Snapshot
 from src.conversational_analytics.semantic.plan import PlanValidationError
+from src.conversational_analytics.tools._route_contract import source_references
 from src.conversational_analytics.tools.routes import RouteTools
 
 
@@ -519,3 +520,19 @@ def test_shared_route_display_ids_include_entities_metric_and_top_n() -> None:
         len({first["display"]["display_id"], second["display"]["display_id"], third["display"]["display_id"]})
         == 3
     )
+
+
+def test_source_references_deduplicate_by_url_and_merge_distinct_labels() -> None:
+    path = "data/v1/flights/domestic/2026Q2.json"
+    refs = source_references(
+        [
+            ({"period_label": "2T26, Grupo Aeroméxico"}, path),
+            ({"period_label": "2T26, Industria"}, path),
+        ]
+    )
+    assert refs == [
+        {
+            "label": "Dashboard público · 2T26, Grupo Aeroméxico · Dashboard público · 2T26, Industria",
+            "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/flights/domestic/2026Q2.json",
+        }
+    ]
