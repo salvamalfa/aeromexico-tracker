@@ -395,7 +395,14 @@ def main(argv: list[str] | None = None) -> int:
         "--run", action="store_true", help="ejecutar comparación live (solo con consentimiento explícito)"
     )
     parser.add_argument("--budget-usd", type=float)
-    parser.add_argument("--models", nargs="+", help="modelos candidatos, sin ganador predeterminado")
+    parser.add_argument(
+        "--models",
+        nargs="+",
+        help=(
+            "candidatos sin ganador predeterminado: modelo, modelo@esfuerzo@verbosidad, "
+            "o alias Luna-M/Luna-X/Sol-B/Sol-M"
+        ),
+    )
     parser.add_argument(
         "--opt-in", action="store_true", help="autoriza explícitamente consumo de API para esta ejecución"
     )
@@ -407,8 +414,8 @@ def main(argv: list[str] | None = None) -> int:
         "--model-price",
         action="append",
         default=[],
-        metavar="MODEL=INPUT:OUTPUT",
-        help="tarifas USD/millón para un candidato, ingresadas por quien ejecuta",
+        metavar="CANDIDATE=INPUT:OUTPUT",
+        help="tarifa USD/millón por candidato; use exactamente el valor de --models",
     )
     parser.add_argument("--snapshot", type=Path, default=Path("site"))
     args = parser.parse_args(argv)
@@ -449,9 +456,9 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--run exige --budget-usd positivo, --models y --opt-in explícitos")
     if args.budget_usd > 10:
         parser.error("el umbral operativo de este harness no puede superar US$10")
-    if not args.probe_only and len(args.models) not in (2, 3):
+    if not args.probe_only and len(args.models) not in (2, 3, 4):
         parser.error(
-            "la comparación holdout requiere 2–3 modelos; usa --probe-only para una sonda individual"
+            "la comparación holdout requiere 2–4 candidatos; usa --probe-only para una sonda individual"
         )
     prices = _parse_prices(args.model_price, args.models, parser)
     if set(prices) != set(args.models):
