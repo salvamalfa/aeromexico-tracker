@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://salvamalfa.github.io/aeromexico-tracker/contracts/business_metrics_approval.schema.json",
+  "title": "Owner approval receipt for public business metrics",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "receipt_id", "approved_at", "approved_metric_ids", "definitions_sha256", "proposal_sha256"],
+  "properties": {
+    "schema_version": {"const": "business_metrics_approval_v1"},
+    "status": {"const": "owner_approved"},
+    "receipt_id": {"type": "string", "minLength": 1},
+    "approved_at": {"type": "string", "format": "date-time"},
+    "approved_metric_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["total_revenue", "operating_costs", "fuel_expense", "operating_income"]}},
+    "definitions_sha256": {"$ref": "#/$defs/sha256"},
+    "proposal_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {"sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}
+}

@@ -32,6 +32,13 @@ front-end publishes. Fuente única de verdad de la forma pública de los datos.
   nombres de campo prohibidos en cualquier nivel del payload, y el tamaño
   máximo por archivo exportado.
 
+F2.3 añade `business_metrics.schema.json` para series financieras Gold
+aprobadas. Cada registro conserva calendario/fiscal, moneda y unidad reportada,
+FX y referencias públicas. `business_metrics_approval.schema.json` liga la
+salida al hash exacto de definiciones y propuesta. Sin un recibo coincidente en
+`config/chat/business-metrics-approval-receipt.json`, la publicación actual no
+incluye esos archivos.
+
 ## Entradas / salidas
 
 - **Entradas:** ninguna; son artefactos versionados a mano que documentan un

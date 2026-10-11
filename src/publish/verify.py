@@ -63,6 +63,8 @@ from src.web_export.privacy import (
 )
 from src.web_export.schemas import (
     ANALYSIS_SCHEMA,
+    BUSINESS_METRICS_APPROVAL_SCHEMA,
+    BUSINESS_METRICS_SCHEMA,
     EXECUTIVE_SCHEMA,
     MARKET_SCHEMA,
     NETWORK_FILE_SCHEMA,
@@ -124,6 +126,10 @@ def _data_schema_for(rel_path: str) -> dict[str, Any] | None:
         return NETWORK_FILE_SCHEMA
     if parts[2:3] == ["analysis"] and len(parts) == 4:
         return ANALYSIS_SCHEMA
+    if parts[2:] == ["business_metrics.json"]:
+        return BUSINESS_METRICS_SCHEMA
+    if parts[2:] == ["business_metrics.approval.json"]:
+        return BUSINESS_METRICS_APPROVAL_SCHEMA
     return None
 
 
@@ -192,7 +198,16 @@ def verify_site(site_dir: Path) -> list[str]:
         expected_contracts = None
     if expected_contracts is not None:
         manifest_contracts = manifest.get("contracts", {})
-        for name, expected_hash in sorted(expected_contracts.items()):
+        has_business_metrics = "data/v1/business_metrics.json" in listed_paths
+        business_contracts = {"business_metrics.schema.json", "business_metrics_approval.schema.json"}
+        required_contracts = {
+            name: digest
+            for name, digest in expected_contracts.items()
+            if has_business_metrics or name not in business_contracts
+        }
+        if has_business_metrics and not business_contracts <= set(manifest_contracts):
+            problems.append("business metrics files require both business-metrics contract hashes")
+        for name, expected_hash in sorted(required_contracts.items()):
             actual_hash = manifest_contracts.get(name)
             if actual_hash != expected_hash:
                 problems.append(
@@ -266,7 +281,12 @@ def verify_site(site_dir: Path) -> list[str]:
             analysis_payloads_by_period[payload["period_id"]] = payload
 
     analysis_fields = (
-        "period_id", "version", "content_hash", "evidence_fingerprint", "approval_event", "audit_hash",
+        "period_id",
+        "version",
+        "content_hash",
+        "evidence_fingerprint",
+        "approval_event",
+        "audit_hash",
     )
     for index, entry in enumerate(manifest["analysis_manifest"]):
         for field in analysis_fields:

@@ -25,14 +25,20 @@ FLIGHTS_SCHEMA = _load("flights.schema.json")
 EXECUTIVE_SCHEMA = _load("executive.schema.json")
 ANALYSIS_SCHEMA = _load("analysis.schema.json")
 MARKET_SCHEMA = _load("market.schema.json")
+BUSINESS_METRICS_SCHEMA = _load("business_metrics.schema.json")
+BUSINESS_METRICS_APPROVAL_SCHEMA = _load("business_metrics_approval.schema.json")
 
 QUARTERS_FILE_SCHEMA: dict[str, Any] = {
     "$defs": FLIGHTS_SCHEMA["$defs"],
     "type": "object",
     "additionalProperties": False,
     "required": [
-        "schema_version", "metadata", "quarters", "monthly_passengers",
-        "route_network", "available_periods",
+        "schema_version",
+        "metadata",
+        "quarters",
+        "monthly_passengers",
+        "route_network",
+        "available_periods",
     ],
     "properties": {
         "schema_version": FLIGHTS_SCHEMA["properties"]["schema_version"],
