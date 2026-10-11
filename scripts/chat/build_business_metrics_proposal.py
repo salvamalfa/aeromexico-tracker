@@ -46,7 +46,16 @@ def _source_priority() -> dict[str, int]:
         "SELECT source_system, priority FROM read_parquet(?) WHERE data_domain = 'carrier_metrics'",
         params=[str(GOLD / "dim_source_priority.parquet")],
     ).fetchall()
-    return {source: priority for source, priority in rows if source != "*"}
+    return {source: priority for source, priority in rows}
+
+
+def _preferred_sources(candidates: list[dict[str, Any]], priority: dict[str, int]) -> list[dict[str, Any]]:
+    """Return the top-ranked rows, applying the configured wildcard default."""
+    default_priority = priority.get("*", 999)
+    best_priority = min(priority.get(row["source_system"], default_priority) for row in candidates)
+    return [
+        row for row in candidates if priority.get(row["source_system"], default_priority) == best_priority
+    ]
 
 
 def _source_refs(
@@ -91,12 +100,7 @@ def _load_quarter_rows() -> tuple[
 
     selected: dict[tuple[str, str, str], dict[str, Any]] = {}
     for key, candidates in grouped.items():
-        best_priority = min(priority.get(row["source_system"], priority.get("*", 999)) for row in candidates)
-        preferred = [
-            row
-            for row in candidates
-            if priority.get(row["source_system"], priority.get("*", 999)) == best_priority
-        ]
+        preferred = _preferred_sources(candidates, priority)
         normalized = {row["value_usd"] for row in preferred}
         if len(normalized) != 1 or None in normalized or not all(math.isfinite(float(v)) for v in normalized):
             selected[key] = {
