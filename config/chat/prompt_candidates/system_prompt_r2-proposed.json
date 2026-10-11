@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "status": "proposed_not_approved_not_active",
+  "version": "r2-proposed",
+  "supersedes_prompt_base_sha256": "33b8f7a0900869812d98bba57daa2ce3ea2f6b5c02a86a7eb3b8e830c7f7694b",
+  "current_effective_prompt_sha256": "439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5",
+  "proposed_effective_prompt_sha256": "afc6daecc2fc5f7adbd86a2a0cd9cd5be3f9184ecd3869604e25752dfdfcf2e2",
+  "capabilities": [
+    "route_queries",
+    "business_metric_queries",
+    "evidence_search",
+    "same_turn_displays",
+    "three_layer_causal_explanations"
+  ],
+  "activation_gate": "requires owner approval of exact prompt hash and capability/data receipts; runtime default remains r1-final"
+}

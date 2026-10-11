@@ -32,7 +32,9 @@ COPY config/chat/*.yaml ./config/chat/
 COPY config/chat/*.json ./config/chat/
 COPY config/chat/system_prompt.txt ./config/chat/system_prompt.txt
 COPY config/chat/evidence/approved-index.json ./config/chat/evidence/approved-index.json
-COPY contracts/chat/semantic.schema.json ./contracts/chat/
+COPY config/chat/prompt_candidates/system_prompt_r2-proposed.txt ./config/chat/prompt_candidates/
+COPY config/chat/prompt_candidates/system_prompt_r2-proposed.json ./config/chat/prompt_candidates/
+COPY contracts/chat/*.schema.json ./contracts/chat/
 COPY contracts/web/*.json contracts/web/privacy.yaml ./contracts/web/
 COPY site/publication_manifest.json ./site/
 COPY site/data/v1/ ./site/data/v1/

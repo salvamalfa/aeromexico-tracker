@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://salvamalfa.github.io/aeromexico-tracker/contracts/chat/evidence-index.schema.json",
+  "title": "Approved chat evidence index",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "records"],
+  "properties": {
+    "schema": {"const": "chat_evidence_index_v1"},
+    "version": {"type": "string", "minLength": 1, "maxLength": 80},
+    "records": {
+      "type": "array",
+      "items": {"oneOf": [{"$ref": "#/$defs/report"}, {"$ref": "#/$defs/news"}]}
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "url", "sha256"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1, "maxLength": 120},
+        "url": {"type": "string", "format": "uri", "maxLength": 1000},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["receipt_id", "candidate_id", "decision", "owner_id", "approved_at", "source_sha256", "excerpt_sha256", "candidate_content_sha256"],
+      "properties": {
+        "receipt_id": {"type": "string", "minLength": 1, "maxLength": 120},
+        "candidate_id": {"type": "string", "minLength": 1, "maxLength": 120},
+        "decision": {"const": "owner_approved"},
+        "owner_id": {"type": "string", "minLength": 1, "maxLength": 120},
+        "approved_at": {"type": "string", "minLength": 1, "maxLength": 40},
+        "source_sha256": {"$ref": "#/$defs/sha256"},
+        "excerpt_sha256": {"$ref": "#/$defs/sha256"},
+        "candidate_content_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision", "owner_id", "receipt_id", "approved_at", "receipt"],
+      "properties": {
+        "decision": {"const": "owner_approved"},
+        "owner_id": {"type": "string", "minLength": 1, "maxLength": 120},
+        "receipt_id": {"type": "string", "minLength": 1, "maxLength": 120},
+        "approved_at": {"type": "string", "minLength": 1, "maxLength": 40},
+        "receipt": {"$ref": "#/$defs/receipt"}
+      }
+    },
+    "common": {
+      "type": "object",
+      "required": ["id", "kind", "source", "review"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1, "maxLength": 120},
+        "source": {"$ref": "#/$defs/source"},
+        "review": {"$ref": "#/$defs/review"}
+      }
+    },
+    "report": {
+      "allOf": [
+        {"$ref": "#/$defs/common"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "kind", "company", "period", "section", "page", "excerpt", "source", "review"],
+          "properties": {
+            "id": {"type": "string", "minLength": 1, "maxLength": 120},
+            "kind": {"const": "report"},
+            "company": {"type": "string", "minLength": 1, "maxLength": 100},
+            "period": {"type": "string", "pattern": "^\\d{4}Q[1-4]$"},
+            "section": {"type": "string", "minLength": 1, "maxLength": 240},
+            "page": {"type": "integer", "minimum": 1},
+            "excerpt": {"type": "string", "minLength": 1, "maxLength": 480},
+            "source": {"$ref": "#/$defs/source"},
+            "review": {"$ref": "#/$defs/review"}
+          }
+        }
+      ]
+    },
+    "news": {
+      "allOf": [
+        {"$ref": "#/$defs/common"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "kind", "published_at", "publisher", "title", "description", "companies", "topics", "source", "review"],
+          "properties": {
+            "id": {"type": "string", "minLength": 1, "maxLength": 120},
+            "kind": {"const": "news"},
+            "published_at": {"type": "string", "format": "date"},
+            "publisher": {"type": "string", "minLength": 1, "maxLength": 120},
+            "title": {"type": "string", "minLength": 1, "maxLength": 300},
+            "description": {"type": "string", "minLength": 1, "maxLength": 320},
+            "companies": {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 100}, "maxItems": 10},
+            "topics": {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 80}, "maxItems": 20},
+            "brief_quote": {"type": "string", "maxLength": 200},
+            "source": {"$ref": "#/$defs/source"},
+            "review": {"$ref": "#/$defs/review"}
+          }
+        }
+      ]
+    }
+  }
+}

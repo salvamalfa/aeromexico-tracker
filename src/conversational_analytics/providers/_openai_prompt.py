@@ -7,6 +7,7 @@ from pathlib import Path
 
 APPROVED_BASE_PROMPT_SHA256 = "33b8f7a0900869812d98bba57daa2ce3ea2f6b5c02a86a7eb3b8e830c7f7694b"
 APPROVED_EFFECTIVE_PROMPT_SHA256 = "439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5"
+APPROVED_PROMPT_VERSION = "r1-final"
 APPROVED_PROMPT_PATH = Path(__file__).resolve().parents[3] / "config/chat/system_prompt.txt"
 PERIOD_SELECTION_POLICY_VERSION = "dashboard-period-priority-v2"
 PERIOD_SELECTION_POLICY = f"""\
@@ -65,3 +66,10 @@ SYSTEM_INSTRUCTIONS = load_system_instructions()
 def effective_prompt_sha256() -> str:
     """Return the hash of the exact validated prompt sent to the provider."""
     return prompt_sha256(SYSTEM_INSTRUCTIONS)
+
+
+def effective_prompt_version() -> str:
+    """Return the version name bound to the approved effective prompt hash."""
+    if effective_prompt_sha256() != APPROVED_EFFECTIVE_PROMPT_SHA256:
+        raise RuntimeError("La versión del prompt no coincide con el contrato aprobado")
+    return APPROVED_PROMPT_VERSION

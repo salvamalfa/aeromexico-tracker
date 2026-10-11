@@ -29,12 +29,30 @@ como fracción y se muestran como porcentaje; los campos `*_pp` ya están en
 puntos porcentuales. Ocupación, RASK y CASK de Industria se conservan como
 razones ponderadas publicadas. Ver las fichas de [métricas](../../config/chat/metrics.yaml)
 y [entidades](../../config/chat/entities.yaml). El catálogo habilita 11 métricas
-versionadas (8 fichas adicionales permanecen en inventario sin activar)
-y el registry expone siete herramientas de consulta controlada.
+versionadas (8 fichas adicionales permanecen en inventario sin activar).
+El contrato operativo documentado para Railway permite hasta 16 llamadas de
+herramienta por turno; el default local es 8.
 FastAPI sirve historial y turnos por SSE, con almacenamiento SQLite local y
 sesiones del proveedor aisladas tras el adaptador.
 
-## Estado de entrega al 8 de octubre de 2026
+## Estado de entrega
+
+La entrega activa sigue siendo el MVP de Railway. La integración local de F2
+prepara `gpt-6.1-sol` con `CHAT_REASONING_EFFORT=low` y el prompt `r1-final`
+(SHA-256 efectivo `439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`);
+la selección aún requiere despliegue y verificación en Railway. Los paquetes
+F2.3–F2.9 y las capacidades nuevas no se consideran activados por estar
+implementados o integrados localmente. Las funciones sujetas a aprobación de
+datos permanecen cerradas hasta contar con un recibo válido y una publicación
+verificada.
+
+El siguiente paso operativo es revisar e integrar los PRs de F2 y después
+verificar el despliegue autorizado. No hay consultas pagadas pendientes.
+La propuesta de prompt r2 y su hash exacto están en
+[`config/chat/prompt_candidates/`](../../config/chat/prompt_candidates/);
+no está aprobada ni activa.
+
+### Registro histórico al 8 de octubre de 2026
 
 | Hito | Estado |
 |---|---|
@@ -68,10 +86,7 @@ un saldo contable ni representa el consumo actual verificado. S14 conserva
 `NULL`/desconocido, que nunca se interpreta como cero.
 
 Las respuestas correctas del 8 de octubre son observaciones de uso, no una
-validación de calidad del prompt. **Siguiente paso:** la
-[fase 2](fase-2-agente-analitico.md), que definirá el prompt, un conjunto de
-evaluación de negocio y la comparación de Luna (esfuerzo medio y máximo) con
-Sol (bajo y medio); empieza cuando el dueño envíe la solicitud. Consulta el
+validación de calidad del prompt. Consulta la [fase 2](fase-2-agente-analitico.md), el
 [traspaso operativo](traspaso-activacion-mvp-20261006.md), el
 [reporte de activación](../etapas/chat-mvp-activacion-20261007.md), las
 [correcciones de recuperación](../etapas/chat-recuperacion-correcciones-20261008.md),

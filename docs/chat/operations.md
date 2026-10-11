@@ -112,16 +112,24 @@ no admite un límite acumulado de tokens de salida: con Sol 6.1
 (US$2/US$10 por millón) aparta US$2.25 y con Luna (US$0.10/US$0.50) aparta
 US$0.1125, incluyendo la prima de salida de contexto largo (1.5×).
 
-Las tarifas y capacidades se versionan en `config/chat/models.json`. Los
-candidatos aprobados para comparar son `gpt-6-luna` (esfuerzos `medium` y
-`max`) y `gpt-6.1-sol` (`low` y `medium`); los demás niveles documentados por
-modelo también se aceptan al configurar el servicio. `CHAT_REASONING_EFFORT`
-por omisión es `medium`, que es el valor por omisión efectivo de ambos modelos.
-`CHAT_TEXT_VERBOSITY` también usa `medium` por omisión y acepta `low`,
+Las tarifas y capacidades se versionan en `config/chat/models.json`. La
+selección autorizada para el runtime es `gpt-6.1-sol` con
+`CHAT_REASONING_EFFORT=low`. El default del código sigue siendo `medium` si la
+variable no está definida; por eso la activación requiere configurar `low`
+explícitamente y verificarlo en health. Los demás niveles documentados por
+modelo se aceptan para ejecuciones locales de evaluación.
+`CHAT_TEXT_VERBOSITY` usa `medium` por omisión y acepta `low`,
 `medium` o `high`. Para modelos del catálogo no hace falta declarar precios en
 el entorno: el servicio usa los valores versionados. Si se conservan
 `CHAT_INPUT_COST_PER_MILLION` o `CHAT_OUTPUT_COST_PER_MILLION`, deben coincidir
 con el modelo elegido; el launcher rechaza discrepancias.
+
+La versión de prompt vigente para el despliegue es `CHAT_PROMPT_VERSION=r1-final`,
+con hash efectivo `439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`.
+Las herramientas nuevas quedan deshabilitadas por omisión. No se deben habilitar
+con el prompt r1; cualquier capacidad adicional requiere un prompt compatible
+aprobado y, cuando corresponda, recibo de aprobación de datos y publicación
+verificada.
 
 La capacidad `minimum_reservation_turns_per_day` que muestra `/api/chat/health`
 es un cálculo de admisión: aplica los presupuestos diarios de tokens y dólares

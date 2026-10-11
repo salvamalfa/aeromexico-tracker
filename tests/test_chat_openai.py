@@ -31,14 +31,23 @@ from openai.types.beta.agents.sessions.turn import Turn  # noqa: E402
 
 from src.conversational_analytics.providers.openai import OpenAIProvider, OpenAIProviderError  # noqa: E402
 from src.conversational_analytics.providers._openai_prompt import SYSTEM_INSTRUCTIONS, prompt_sha256  # noqa: E402
-from src.conversational_analytics.providers._openai_session_version import INSTRUCTIONS_FINGERPRINT_KEY  # noqa: E402
+from src.conversational_analytics.providers._openai_session_version import (  # noqa: E402
+    INSTRUCTIONS_FINGERPRINT_KEY,
+    SESSION_CONFIGURATION_FINGERPRINT_KEY,
+)
 from src.conversational_analytics.providers._openai_prompt import PERIOD_SELECTION_POLICY_VERSION  # noqa: E402
-from src.conversational_analytics.providers._openai_runtime_helpers import validate_tool_specs  # noqa: E402
+from src.conversational_analytics.providers._openai_runtime_helpers import (  # noqa: E402
+    session_configuration_fingerprint,
+    validate_tool_specs,
+)
 from src.conversational_analytics.providers._openai_session_version import INSTRUCTIONS_DERIVATION_KEY, PROMPT_INPUT_FINGERPRINT_KEY  # noqa: E402
 from src.conversational_analytics.tools.registry import ToolRegistry  # noqa: E402
 
 DEFAULT_SESSION_METADATA = {
     INSTRUCTIONS_FINGERPRINT_KEY: prompt_sha256(SYSTEM_INSTRUCTIONS),
+    SESSION_CONFIGURATION_FINGERPRINT_KEY: session_configuration_fingerprint(
+        SYSTEM_INSTRUCTIONS, validate_tool_specs(ToolRegistry._make_specs())
+    ),
 }
 
 
@@ -247,9 +256,7 @@ class FakeSessions:
         self.session_metadata = (
             session_metadata
             if session_metadata is not None
-            else {
-                INSTRUCTIONS_FINGERPRINT_KEY: hashlib.sha256(SYSTEM_INSTRUCTIONS.encode("utf-8")).hexdigest()
-            }
+            else dict(DEFAULT_SESSION_METADATA)
         )
         self.retrieve_error = retrieve_error
         self.retrieved_session_id = retrieved_session_id
@@ -383,8 +390,12 @@ def test_creates_none_session_with_explicit_model_tools_and_live_context_envelop
     request = fake.created[0]
     assert request["environment"] == {"type": "none"}
     expected_prompt_hash = hashlib.sha256(SYSTEM_INSTRUCTIONS.encode("utf-8")).hexdigest()
+    expected_session_config_hash = session_configuration_fingerprint(
+        SYSTEM_INSTRUCTIONS, validate_tool_specs(_specs())
+    )
     assert request["metadata"] == {
         INSTRUCTIONS_FINGERPRINT_KEY: expected_prompt_hash,
+        SESSION_CONFIGURATION_FINGERPRINT_KEY: expected_session_config_hash,
         PROMPT_INPUT_FINGERPRINT_KEY: expected_prompt_hash,
         INSTRUCTIONS_DERIVATION_KEY: PERIOD_SELECTION_POLICY_VERSION,
     }

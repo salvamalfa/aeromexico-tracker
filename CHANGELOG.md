@@ -5,6 +5,8 @@
 - El runtime carga el prompt aprobado y validado en F2.9 etapa 2, fija Sol con
   esfuerzo low y reporta el hash efectivo en health. La activación espera el
   despliegue y la verificación en Railway; no se hicieron llamadas pagadas.
+- R2 queda como propuesta revisable (`config/chat/prompt_candidates/`); r1
+  sigue siendo la única versión activa y rechaza las nuevas capacidades.
 
 ## 2026-10-09 · El chat usa el periodo seleccionado en el dashboard
 

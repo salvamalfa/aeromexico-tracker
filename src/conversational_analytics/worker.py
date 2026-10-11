@@ -170,7 +170,7 @@ class TurnWorker:
         if self._registry is None:
             from .tools.registry import ToolRegistry
 
-            self._registry = ToolRegistry(self.snapshot)
+            self._registry = ToolRegistry(self.snapshot, self.config)
         return self._registry
 
     def _run(self) -> None:
