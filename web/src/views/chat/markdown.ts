@@ -3,7 +3,7 @@ import { renderDisplay, safeDisplays } from "./display";
 
 const TRUSTED_HOSTS = new Set([
   "sec.gov", "www.sec.gov", "ir.aeromexico.com", "cdn.investorcloud.net", "www.flightglobal.com",
-  "gob.mx", "www.gob.mx", "github.com", "salvamalfa.github.io",
+  "www.bmv.com.mx", "gob.mx", "www.gob.mx", "github.com", "salvamalfa.github.io",
 ]);
 
 function trustedSourceUrl(raw: string): string | undefined {
@@ -202,7 +202,7 @@ export function renderSafeMarkdown(container: HTMLElement, source: string, allow
 
 export function safeReferences(references: unknown): ChatReference[] {
   if (!Array.isArray(references)) return [];
-  const seenUrls = new Set<string>();
+  const seenSources = new Set<string>();
   return references.slice(0, 12).flatMap((value) => {
     if (!value || typeof value !== "object") return [];
     const ref = value as Record<string, unknown>;
@@ -212,8 +212,9 @@ export function safeReferences(references: unknown): ChatReference[] {
     if (typeof ref.url === "string") {
       output.url = trustedSourceUrl(ref.url);
       if (output.url) {
-        if (seenUrls.has(output.url)) return [];
-        seenUrls.add(output.url);
+        const sourceKey = `${output.label}\n${output.url}`;
+        if (seenSources.has(sourceKey)) return [];
+        seenSources.add(sourceKey);
       }
     }
     return [output];

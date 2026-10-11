@@ -35,6 +35,7 @@ ALLOWED_REFERENCE_HOSTS = frozenset(
         "ir.aeromexico.com",
         "cdn.investorcloud.net",
         "www.flightglobal.com",
+        "www.bmv.com.mx",
     }
 )
 SYSTEM_INSTRUCTIONS = """\

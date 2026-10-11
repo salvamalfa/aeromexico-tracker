@@ -45,6 +45,63 @@ def test_market_table_cells_are_the_published_market_json_values() -> None:
     assert display["rows"][0]["period"] == "2T26"
 
 
+def test_fallback_value_kind_comes_from_metric_definition_and_candidate_gate_stays_closed() -> None:
+    snapshot = Snapshot(SITE)
+    registry = ToolRegistry(snapshot)
+    result = registry.invoke(
+        "query_metrics",
+        {
+            "metric_ids": ["unit_margin_cents_per_km"],
+            "entity_ids": ["AEROMEXICO"],
+            "periods": ["2026Q2"],
+        },
+    )
+    display = make_displays(result, "query_metrics", "call-margin", snapshot.catalog())["display"]
+    assert display["value_kind"] == "calculated"
+
+    candidate = {
+        "rows": [
+            {
+                "metric_id": "candidate_metric",
+                "period": "2026Q2",
+                "value": None,
+                "availability": "approval_required",
+                "approval_gate": "closed",
+                "value_kind": "candidate_unapproved",
+                "unit": "USD",
+            }
+        ],
+    }
+    closed_catalog = {
+        "metrics": {
+            "metrics": [
+                {"id": "candidate_metric", "label": "Candidato", "review_status": "candidate_unapproved"}
+            ]
+        }
+    }
+    closed_display = make_displays(candidate, "query_business_metrics", "call-candidate", closed_catalog)
+    assert closed_display["display"]["value_kind"] == "candidate_unapproved"
+    candidate["rows"][0]["value"] = 100
+    assert (
+        make_displays(candidate, "query_business_metrics", "call-candidate-value", closed_catalog)
+        == candidate
+    )
+
+    assert (
+        DisplayRegistry().add(
+            {
+                "display_id": "tabla:candidate_value",
+                "kind": "table",
+                "title": "Candidato",
+                "value_kind": "candidate_unapproved",
+                "columns": [{"key": "value", "label": "Valor"}],
+                "rows": [{"value": 100}],
+            }
+        )
+        is None
+    )
+
+
 def test_unknown_and_other_turn_markers_are_removed_without_artifacts() -> None:
     registry = DisplayRegistry()
     registry.add(
@@ -69,7 +126,7 @@ def test_unknown_and_other_turn_markers_are_removed_without_artifacts() -> None:
     assert displays == []
 
 
-def test_missing_cells_remain_null_and_source_urls_are_deduplicated() -> None:
+def test_missing_cells_remain_null_and_distinct_source_labels_are_preserved() -> None:
     result = {
         "rows": [
             {
@@ -90,7 +147,8 @@ def test_missing_cells_remain_null_and_source_urls_are_deduplicated() -> None:
     enriched = make_displays(result, "query_metrics", "call-missing")
     assert enriched["display"]["rows"][0]["value"] is None
     assert enriched["display"]["sources"] == [
-        {"label": "AFAC, estadística mensual, junio 2026", "url": "https://www.gob.mx/afac/source"}
+        {"label": "AFAC, estadística mensual, junio 2026", "url": "https://www.gob.mx/afac/source"},
+        {"label": "AFAC duplicada", "url": "https://www.gob.mx/afac/source"},
     ]
 
 
@@ -114,6 +172,20 @@ def test_invalid_display_shape_is_not_registered() -> None:
     assert displays == []
 
 
+def test_display_without_value_kind_is_labeled_unknown_not_reported() -> None:
+    display = DisplayRegistry().add(
+        {
+            "display_id": "tabla:unknown_kind",
+            "kind": "table",
+            "title": "Tipo ausente",
+            "columns": [{"key": "value", "label": "Valor"}],
+            "rows": [{"value": 12}],
+        }
+    )
+    assert display is not None
+    assert display["value_kind"] == "unknown"
+
+
 def test_verified_financial_and_reporting_sources_survive_but_unknown_hosts_do_not() -> None:
     display = DisplayRegistry().add(
         {
@@ -127,6 +199,22 @@ def test_verified_financial_and_reporting_sources_survive_but_unknown_hosts_do_n
                 {"label": "Aeroméxico IR", "url": "https://ir.aeromexico.com/report-q2.pdf"},
                 {"label": "Viva InvestorCloud", "url": "https://cdn.investorcloud.net/viva/report-q2.pdf"},
                 {"label": "FlightGlobal", "url": "https://www.flightglobal.com/news/article.html"},
+                {
+                    "label": "BMV · Aeroméxico 2026Q2",
+                    "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1573911_2026-02_1.zip#member=am_q2.json",
+                },
+                {
+                    "label": "BMV unverified fragment",
+                    "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1573911_2026-02_1.zip#other=am_q2.json",
+                },
+                {
+                    "label": "BMV encoded fragment",
+                    "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1573911_2026-02_1.zip#member%3Dam_q2.json",
+                },
+                {
+                    "label": "BMV noncanonical fragment",
+                    "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1573911_2026-02_1.zip#Member=am_q2.json",
+                },
                 {"label": "Unverified", "url": "https://example.org/article"},
             ],
         }
@@ -137,13 +225,15 @@ def test_verified_financial_and_reporting_sources_survive_but_unknown_hosts_do_n
         "Aeroméxico IR",
         "Viva InvestorCloud",
         "FlightGlobal",
+        "BMV · Aeroméxico 2026Q2 · miembro ZIP am_q2.json",
     ]
+    bmv = display["sources"][-1]
+    assert bmv["url"] == "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1573911_2026-02_1.zip"
     references = references_from_results(
         [
             {
                 "source_references": [
-                    {"label": source["label"], "url": source["url"]}
-                    for source in display["sources"]
+                    {"label": source["label"], "url": source["url"]} for source in display["sources"]
                 ]
                 + [{"label": "Unverified", "url": "https://example.org/article"}]
             }
@@ -153,7 +243,44 @@ def test_verified_financial_and_reporting_sources_survive_but_unknown_hosts_do_n
         "https://ir.aeromexico.com/report-q2.pdf",
         "https://cdn.investorcloud.net/viva/report-q2.pdf",
         "https://www.flightglobal.com/news/article.html",
+        "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1573911_2026-02_1.zip",
     }
+
+
+def test_same_source_url_keeps_distinct_member_labels() -> None:
+    registry = DisplayRegistry()
+    registry.add(
+        {
+            "display_id": "tabla:two_members",
+            "kind": "table",
+            "title": "Dos miembros BMV",
+            "columns": [{"key": "value", "label": "Valor"}],
+            "rows": [{"value": 1}],
+            "value_kind": "reported",
+            "sources": [
+                {
+                    "label": "Reporte · miembro ZIP q1.json",
+                    "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/package.zip",
+                }
+            ],
+        }
+    )
+    _, displays, references = registry.finalize(
+        "{{tabla:two_members}}",
+        [
+            {
+                "label": "Reporte · miembro ZIP q2.json",
+                "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/package.zip",
+            }
+        ],
+    )
+    assert len(displays) == 1
+    assert references == [
+        {
+            "label": "Reporte · miembro ZIP q2.json",
+            "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/package.zip",
+        }
+    ]
 
 
 def test_route_tool_contract_accepts_observed_and_missing_display_objects() -> None:
