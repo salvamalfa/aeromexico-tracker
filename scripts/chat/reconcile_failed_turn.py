@@ -13,6 +13,7 @@ import json
 import os
 import sqlite3
 import sys
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
@@ -38,6 +39,12 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def _safe_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
+    model_settings = _pinned_model_settings(metadata)
+    catalog_entry = None
+    if model_settings is not None:
+        from src.conversational_analytics.config import model_catalog
+
+        catalog_entry = model_catalog()[model_settings["model"]]
     eligible = (
         metadata["status"] == "failed"
         and metadata["error_code"] == "provider_error"
@@ -49,6 +56,7 @@ def _safe_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
         and not metadata["has_assistant_message"]
         and not metadata["provider_deletion_queued"]
         and not metadata["has_cancel_or_timeout_event"]
+        and model_settings is not None
     )
     return {
         "mode": "dry_run",
@@ -56,6 +64,14 @@ def _safe_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
         "status": metadata["status"],
         "error_code": metadata["error_code"],
         "usage_already_booked": metadata["usage_complete"],
+        "model_settings_pinned": model_settings is not None,
+        "model_settings_reconciliation_required": model_settings is None,
+        "model": model_settings["model"] if model_settings is not None else None,
+        "reasoning_effort": model_settings["reasoning_effort"] if model_settings is not None else None,
+        "text_verbosity": model_settings["text_verbosity"] if model_settings is not None else None,
+        "pricing_model": model_settings["model"] if model_settings is not None else None,
+        "pricing_source": "config/chat/models.json" if catalog_entry is not None else None,
+        "pricing_as_of": catalog_entry.get("pricing_as_of") if catalog_entry is not None else None,
         "has_existing_provider_ids": (
             metadata["has_provider_turn_id"] and metadata["has_provider_session_id"]
         ),
@@ -84,6 +100,67 @@ def _safe_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
         "database_writes": 0,
         "write_destinations": [str(_state_path().expanduser().resolve())],
     }
+
+
+class ModelSettingsReconciliationRequired(ValueError):
+    """The failed turn has no complete, internally consistent model pin."""
+
+
+def _pinned_model_settings(metadata: dict[str, Any]) -> dict[str, str] | None:
+    """Return only a turn's complete catalog-valid settings, never an env fallback."""
+    model = metadata.get("model")
+    effort = metadata.get("reasoning_effort")
+    verbosity = metadata.get("text_verbosity")
+    provider = metadata.get("provider")
+    conversation_model = metadata.get("conversation_model")
+    conversation_effort = metadata.get("conversation_reasoning_effort")
+    conversation_verbosity = metadata.get("conversation_text_verbosity")
+    conversation_provider = metadata.get("conversation_provider")
+    values = (model, effort, verbosity, conversation_model, conversation_effort, conversation_verbosity)
+    if (
+        provider != "openai"
+        or conversation_provider != "openai"
+        or any(not isinstance(value, str) or not value.strip() for value in values)
+        or (model, effort, verbosity) != (conversation_model, conversation_effort, conversation_verbosity)
+    ):
+        return None
+    from src.conversational_analytics.config import model_catalog
+
+    catalog_entry = model_catalog().get(model)
+    if (
+        not isinstance(catalog_entry, dict)
+        or effort not in catalog_entry.get("reasoning_efforts", [])
+        or verbosity not in catalog_entry.get("text_verbosity", [])
+    ):
+        return None
+    return {"model": model, "reasoning_effort": effort, "text_verbosity": verbosity}
+
+
+def _config_for_pinned_turn(config: Any, metadata: dict[str, Any]) -> Any:
+    """Keep current credentials/limits but price and identify the failed turn by its pin."""
+    settings = _pinned_model_settings(metadata)
+    if settings is None:
+        raise ModelSettingsReconciliationRequired(
+            "failed turn model/effort/verbosity pin is missing or inconsistent; "
+            "explicit model-settings reconciliation required"
+        )
+    from src.conversational_analytics.config import model_catalog
+
+    prices = model_catalog()[settings["model"]]
+    return replace(
+        config,
+        provider="openai",
+        openai_enabled=True,
+        model=settings["model"],
+        reasoning_effort=settings["reasoning_effort"],
+        text_verbosity=settings["text_verbosity"],
+        estimated_input_cost_per_million=float(prices["input_usd_per_million"]),
+        estimated_output_cost_per_million=float(prices["output_usd_per_million"]),
+        long_context_threshold_input_tokens=int(prices["long_context_threshold_input_tokens"]),
+        long_context_input_multiplier=float(prices["long_context_input_multiplier"]),
+        long_context_output_multiplier=float(prices["long_context_output_multiplier"]),
+        cache_write_input_multiplier=float(prices["cache_write_input_multiplier"]),
+    )
 
 
 def _required_apply_args(args: argparse.Namespace) -> None:
@@ -156,7 +233,10 @@ def _read_local_metadata(db_path: Path, owner_id: str, turn_id: str) -> dict[str
         db.row_factory = sqlite3.Row
         row = db.execute(
             "SELECT t.id,t.owner_id,t.conversation_id,t.status,t.error_code,t.usage_complete,"
-            "t.provider_turn_id,c.snapshot_version,c.semantic_version,c.provider_session_id,"
+            "t.provider_turn_id,t.model,t.reasoning_effort,t.text_verbosity,t.provider,"
+            "c.model AS conversation_model,c.reasoning_effort AS conversation_reasoning_effort,"
+            "c.text_verbosity AS conversation_text_verbosity,c.provider AS conversation_provider,"
+            "c.snapshot_version,c.semantic_version,c.provider_session_id,"
             "t.created_at FROM turns t JOIN conversations c ON c.id=t.conversation_id "
             "WHERE t.id=? AND t.owner_id=?",
             (turn_id, owner_id),
@@ -197,6 +277,14 @@ def _read_local_metadata(db_path: Path, owner_id: str, turn_id: str) -> dict[str
         "provider_session_id": row["provider_session_id"],
         "snapshot_version": row["snapshot_version"],
         "semantic_version": row["semantic_version"],
+        "model": row["model"],
+        "reasoning_effort": row["reasoning_effort"],
+        "text_verbosity": row["text_verbosity"],
+        "provider": row["provider"],
+        "conversation_model": row["conversation_model"],
+        "conversation_reasoning_effort": row["conversation_reasoning_effort"],
+        "conversation_text_verbosity": row["conversation_text_verbosity"],
+        "conversation_provider": row["conversation_provider"],
     }
 
 
@@ -315,6 +403,11 @@ def run(argv: list[str] | None = None) -> int:
             return 0
 
         _required_apply_args(args)
+        if _pinned_model_settings(metadata) is None:
+            raise ModelSettingsReconciliationRequired(
+                "failed turn model/effort/verbosity pin is missing or inconsistent; "
+                "explicit model-settings reconciliation required"
+            )
         safe = _safe_metadata(metadata)
         if not safe["eligible_by_local_metadata"]:
             raise ValueError("local turn does not meet recovery eligibility")
@@ -329,9 +422,10 @@ def run(argv: list[str] | None = None) -> int:
             raise ValueError("explicit identity does not match existing local metadata")
         from src.conversational_analytics.config import ChatConfig
 
-        config = ChatConfig.from_env()
-        if config.provider != "openai" or not config.openai_enabled:
+        current_config = ChatConfig.from_env()
+        if current_config.provider != "openai" or not current_config.openai_enabled:
             raise ValueError("OpenAI provider is not explicitly enabled")
+        config = _config_for_pinned_turn(current_config, metadata)
 
         from src.conversational_analytics.providers._openai_helpers import (
             chart_from_results,
@@ -382,6 +476,10 @@ def run(argv: list[str] | None = None) -> int:
             semantic_version=args.semantic_version,
             provider_session_id=args.provider_session_id,
             provider_turn_id=args.provider_turn_id,
+            provider=metadata["provider"],
+            model=metadata["model"],
+            reasoning_effort=metadata["reasoning_effort"],
+            text_verbosity=metadata["text_verbosity"],
             content=content,
             payload=payload,
             input_tokens=input_tokens,
@@ -406,6 +504,8 @@ def run(argv: list[str] | None = None) -> int:
         return 0
     except LookupError:
         print("reconciliation unavailable: local target not found", file=sys.stderr)
+    except ModelSettingsReconciliationRequired as exc:
+        print(f"reconciliation unavailable: {exc}", file=sys.stderr)
     except Exception:
         # Avoid provider SDK exception text, answer content, IDs, or config data.
         print("reconciliation unavailable: eligibility or recovery check failed", file=sys.stderr)
