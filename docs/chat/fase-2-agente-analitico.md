@@ -186,6 +186,35 @@ Cada paquete va en su propio PR, con pruebas y documentación.
 | F2.8 | **Presentación por referencia** de tablas y gráficas, y fuentes sin duplicar (detalle abajo). | El caso real de market share se muestra como tabla validada; cifras de la tabla idénticas a las de la herramienta; sin vuelta extra al modelo. |
 | F2.9 | **Evaluación comparativa de los cuatro candidatos** (detalle abajo). | Reporte con calidad, latencia, tokens y costo por candidato; elección explícita del dueño. |
 
+### Preparación F2.5–F2.7 (11 oct 2026)
+
+Hay una implementación local en revisión para búsqueda determinística de
+evidencia (`search_reports`, `search_news`) y una regla causal versionada
+separada del prompt aprobado. El registry y el prompt F2.1 no se amplían hasta
+que se integren y revisen sus interfaces. El índice versionado inicia vacío:
+un registro solo se busca si trae una decisión de aprobación del dueño, su
+identificador real de recibo, fecha, fuente HTTPS permitida con hash SHA-256 y
+los metadatos obligatorios. Una búsqueda devuelve hasta cinco coincidencias;
+los reportes incluyen empresa, periodo, sección, página y extracto de hasta
+480 caracteres. Las noticias devuelven ficha, resumen propio de hasta 320
+caracteres y cita breve de hasta 200, nunca el cuerpo del artículo.
+
+Los manifests `config/chat/evidence/candidates/` están cerrados como candidatos
+y no contienen pasajes ni aprobaciones. El comando
+`scripts/chat/collect_news_candidates.py --week-start YYYY-MM-DD --input
+<headline-metadata.json>` genera vista previa sin red ni escritura; se puede
+persistir un manifest cerrado con `--write-candidate`. La fecha debe ser lunes
+UTC; repetir una escritura idéntica no cambia el archivo y una distinta no lo
+sobrescribe. El input solo admite titulares y metadatos RSS, no artículos. No
+hay cron activo.
+
+`config/chat/prompt_rules/f2_7_attributed_causes.v1.md` define una propuesta
+de tres capas (dato, atribución explícita del reporte, contexto de noticia) y
+prohíbe inferir causalidad a partir de coincidencia temporal. Es una regla
+separada para revisión; no cambia el prompt F2.1 aprobado ni se activa en
+producción. Los casos de evaluación con tres capas y citas deben añadirse al
+conjunto versionado cuando el dueño apruebe el comportamiento.
+
 **Orden y dependencias:**
 
 1. **F2.0, F2.1 y F2.2 primero.** Son baratos y fijan qué se mide y cómo.

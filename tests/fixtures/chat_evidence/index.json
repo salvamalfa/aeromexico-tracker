@@ -1,0 +1,41 @@
+{
+  "schema": "chat_evidence_index_v1",
+  "version": "fixture-v1",
+  "records": [
+    {
+      "id": "report-approved",
+      "kind": "report",
+      "company": "Aeroméxico",
+      "period": "2026Q2",
+      "section": "Combustible",
+      "page": 12,
+      "excerpt": "El gasto de combustible aumentó durante el trimestre.",
+      "source": {"id": "fixture-report", "url": "https://www.sec.gov/Archives/edgar/data/1/fixture.htm", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "review": {"decision": "owner_approved", "owner_id": "fixture-owner", "receipt_id": "fixture-receipt", "approved_at": "2026-01-02T00:00:00Z"}
+    },
+    {
+      "id": "report-unapproved",
+      "kind": "report",
+      "company": "Aeroméxico",
+      "period": "2026Q2",
+      "section": "Combustible",
+      "page": 13,
+      "excerpt": "El precio del combustible tuvo movimientos.",
+      "source": {"id": "fixture-report-2", "url": "https://www.sec.gov/Archives/edgar/data/1/fixture.htm", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+      "review": {"decision": "pending", "owner_id": "", "receipt_id": "", "approved_at": ""}
+    },
+    {
+      "id": "news-approved",
+      "kind": "news",
+      "published_at": "2026-06-15",
+      "publisher": "Fuente pública fixture",
+      "title": "Combustible y aerolíneas",
+      "description": "Nota sobre precios del combustible en el sector aéreo.",
+      "companies": ["Aeroméxico"],
+      "topics": ["combustible", "costos"],
+      "brief_quote": "Los precios cambiaron durante junio.",
+      "source": {"id": "fixture-news", "url": "https://www.sec.gov/Archives/edgar/data/1/news.htm", "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"},
+      "review": {"decision": "owner_approved", "owner_id": "fixture-owner", "receipt_id": "fixture-news-receipt", "approved_at": "2026-06-20T00:00:00Z"}
+    }
+  ]
+}

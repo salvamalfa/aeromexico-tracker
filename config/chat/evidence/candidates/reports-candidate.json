@@ -1,0 +1,30 @@
+{
+  "schema": "chat_report_candidates_v1",
+  "status": "candidate_closed",
+  "created_at": "2026-10-11",
+  "records": [
+    {
+      "candidate_id": "aeromexico-2026q2-sec-exhibit-991",
+      "kind": "report_source_candidate",
+      "company": "Aeroméxico",
+      "period": "2026Q2",
+      "source": {
+        "id": "sec-000119312526302103-ex991",
+        "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm",
+        "sha256": null
+      },
+      "excerpt": null,
+      "page": null,
+      "section": null,
+      "review": {
+        "status": "owner_review_required",
+        "receipt_id": null,
+        "blockers": [
+          "Fetch and pin the exact public source bytes and SHA-256.",
+          "Extract a short excerpt with verified report page and section.",
+          "Obtain explicit owner approval and record its actual receipt."
+        ]
+      }
+    }
+  ]
+}
