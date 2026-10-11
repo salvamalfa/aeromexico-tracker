@@ -218,9 +218,7 @@ def build_display(
         display_rows.append(display_row)
     kinds = {row.get("value_kind") for row in rows if row.get("value_kind")}
     value_kind = next(iter(kinds)) if len(kinds) == 1 else "mixed" if kinds else "missing"
-    query_hash = hashlib.sha256(
-        json.dumps(query, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    ).hexdigest()[:16]
+    query_hash = display_query_hash(query)
     refs = source_references(networks)
     return {
         "display_id": f"tabla:rutas_{query_hash}",
@@ -233,3 +231,10 @@ def build_display(
         "sources": refs,
         "source_references": refs,
     }
+
+
+def display_query_hash(query: dict[str, Any]) -> str:
+    """Stable short identifier for every normalized query dimension."""
+    return hashlib.sha256(
+        json.dumps(query, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()[:16]

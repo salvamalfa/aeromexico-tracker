@@ -37,6 +37,9 @@ from src.conversational_analytics.tools._route_contract import (
     coverage as _coverage,
 )
 from src.conversational_analytics.tools._route_contract import (
+    display_query_hash as _display_query_hash,
+)
+from src.conversational_analytics.tools._route_contract import (
     safe_source_url as _safe_source_url,
 )
 from src.conversational_analytics.tools._route_contract import (
@@ -520,7 +523,7 @@ class RouteTools:
         value_kinds = {row["value_kind"] for row in rows}
         source_references = _source_references(networks_with_paths)
         display = {
-            "display_id": f"tabla:rutas_compartidas_{period}",
+            "display_id": f"tabla:rutas_compartidas_{_display_query_hash(query)}",
             "kind": "table",
             "title": f"Rutas compartidas · {period}",
             "columns": [

@@ -491,3 +491,31 @@ def test_route_display_ids_change_with_filters_and_metric() -> None:
     ]
     display_ids = [tools.invoke("query_routes", query)["display"]["display_id"] for query in queries]
     assert len(set(display_ids)) == len(queries)
+
+
+def test_shared_route_display_ids_include_entities_metric_and_top_n() -> None:
+    routes = [_route("MEX<>CUN", 100)]
+    payloads = _paths(
+        {
+            (entity, "domestic", "2026M07"): _network("2026M07", routes)
+            for entity in ("AEROMEXICO_GROUP", "VIVA_AEROBUS", "VOLARIS")
+        }
+    )
+    tools = RouteTools(MemorySnapshot(payloads))
+    base = {"segment": "domestic", "period": "2026M07"}
+    first = tools.invoke(
+        "find_shared_routes",
+        {**base, "entity_ids": ["AEROMEXICO_GROUP", "VIVA_AEROBUS"], "metric": "passengers", "top_n": 3},
+    )
+    second = tools.invoke(
+        "find_shared_routes",
+        {**base, "entity_ids": ["AEROMEXICO_GROUP", "VOLARIS"], "metric": "seats", "top_n": 3},
+    )
+    third = tools.invoke(
+        "find_shared_routes",
+        {**base, "entity_ids": ["AEROMEXICO_GROUP", "VIVA_AEROBUS"], "metric": "passengers", "top_n": 1},
+    )
+    assert (
+        len({first["display"]["display_id"], second["display"]["display_id"], third["display"]["display_id"]})
+        == 3
+    )
