@@ -20,6 +20,10 @@ class TurnReconciliationMixin:
         semantic_version: str,
         provider_session_id: str,
         provider_turn_id: str,
+        provider: str,
+        model: str,
+        reasoning_effort: str,
+        text_verbosity: str,
         content: str,
         payload: dict[str, Any],
         input_tokens: int,
@@ -35,6 +39,10 @@ class TurnReconciliationMixin:
             semantic_version,
             provider_session_id,
             provider_turn_id,
+            provider,
+            model,
+            reasoning_effort,
+            text_verbosity,
         )
         if (
             any(not isinstance(value, str) or not value for value in identities)
@@ -56,7 +64,11 @@ class TurnReconciliationMixin:
             db.execute("BEGIN IMMEDIATE")
             row = db.execute(
                 "SELECT t.*,c.owner_id AS conversation_owner,c.snapshot_version,c.semantic_version,"
-                "c.provider_session_id FROM turns t JOIN conversations c ON c.id=t.conversation_id "
+                "c.provider_session_id,c.model AS conversation_model,"
+                "c.reasoning_effort AS conversation_reasoning_effort,"
+                "c.text_verbosity AS conversation_text_verbosity,"
+                "c.provider AS conversation_provider "
+                "FROM turns t JOIN conversations c ON c.id=t.conversation_id "
                 "WHERE t.id=?",
                 (turn_id,),
             ).fetchone()
@@ -71,6 +83,14 @@ class TurnReconciliationMixin:
                 or row["semantic_version"] != semantic_version
                 or row["provider_session_id"] != provider_session_id
                 or row["provider_turn_id"] != provider_turn_id
+                or row["provider"] != provider
+                or row["conversation_provider"] != provider
+                or row["model"] != model
+                or row["reasoning_effort"] != reasoning_effort
+                or row["text_verbosity"] != text_verbosity
+                or row["conversation_model"] != model
+                or row["conversation_reasoning_effort"] != reasoning_effort
+                or row["conversation_text_verbosity"] != text_verbosity
                 or row["status"] != "failed"
                 or row["error_code"] != "provider_error"
             ):
