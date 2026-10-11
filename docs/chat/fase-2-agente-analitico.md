@@ -509,6 +509,32 @@ mande el historial de la conversación; hoy cada caso es de un solo turno.
   la mejor. La carga por etapa está en
   [Puntos de decisión del dueño](#puntos-de-decisión-del-dueño).
 
+## F2.4 · Consultas de rutas publicadas
+
+**Guía breve:** pide el periodo, el segmento (nacional o internacional) y la aerolínea.
+Para comparar crecimiento, indica también el periodo base; el chat ordena solo rutas
+comparables y explica cuándo falta cobertura. «¿Qué rutas comparte Aeroméxico con Viva?»
+usa rutas publicadas del mismo periodo y muestra el valor de cada operador. Las cifras
+estimadas se etiquetan como estimación; la programación y las operaciones observadas
+conservan su tipo. Aeroméxico aparece como Grupo Aeroméxico cuando la publicación
+no separa Aerovías de México y Connect.
+
+La herramienta `query_routes` acepta una métrica (`passengers`, `seats`, `departures`
+o `load_factor`), una entidad, un segmento, un periodo y un límite de hasta 20 rutas.
+Puede ordenar por valor, cambio absoluto o cambio relativo frente a un periodo explícito.
+El cambio requiere que ambos periodos tengan cobertura completa y que la ruta, la fuente
+y el tipo de valor coincidan; una ruta ausente no se rellena con cero. `find_shared_routes`
+intersecta rutas de dos o tres aerolíneas para el mismo periodo y segmento. Industria no
+se admite como competidor porque es el agregado de esas aerolíneas.
+
+Las consultas solo leen JSON firmado de `site/data/v1/flights/`. Cada resultado incluye
+la versión de datos y semántica, cobertura esperada/observada, elegibilidad histórica,
+fuentes, procedencia del valor por ruta y una tabla por referencia apta para F2.8. El
+contrato no abre el warehouse ni habilita la evidencia candidata `flight_evidence_v1`.
+La red publicada expone Grupo Aeroméxico; Connect queda agregado en esa entidad, sin
+atribuirle rutas o cifras individuales. La disponibilidad de meses y trimestres cambia
+por segmento; si el periodo no está publicado, el resultado es faltante.
+
 ## F2.8 · Presentación por referencia
 
 ### Caso real: market share 2026
