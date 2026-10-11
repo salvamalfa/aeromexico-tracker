@@ -532,7 +532,7 @@ def test_source_references_deduplicate_by_url_and_merge_distinct_labels() -> Non
     )
     assert refs == [
         {
-            "label": "Dashboard público · 2T26, Grupo Aeroméxico · Dashboard público · 2T26, Industria",
+            "label": "Dashboard público · 2T26, Grupo Aeroméxico / 2T26, Industria",
             "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/flights/domestic/2026Q2.json",
         }
     ]

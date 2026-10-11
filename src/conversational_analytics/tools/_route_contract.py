@@ -188,7 +188,17 @@ def deduplicate_source_references(refs: list[dict[str, str]]) -> list[dict[str, 
         source = by_url.setdefault(url, {"url": url, "labels": []})
         if label not in source["labels"]:
             source["labels"].append(label)
-    return [{"url": url, "label": " · ".join(source["labels"])} for url, source in by_url.items()]
+    prefix = "Dashboard público · "
+    merged = []
+    for url, source in by_url.items():
+        labels = source["labels"]
+        label = (
+            prefix + " / ".join(item.removeprefix(prefix) for item in labels)
+            if all(item.startswith(prefix) for item in labels)
+            else " · ".join(labels)
+        )
+        merged.append({"url": url, "label": label})
+    return merged
 
 
 def build_display(
