@@ -285,6 +285,7 @@ class RouteTools:
                 "rows": [],
                 "row_count": 0,
                 "available_route_count": 0,
+                "missing_route_count": 0,
                 "truncated": False,
                 "display": self._display(query, [], []),
             }
@@ -305,6 +306,7 @@ class RouteTools:
             if route.get("market_key")
         }
         rows = []
+        missing_route_count = 0
         for market_key, route in current_map.items():
             if query.get("origin_iata") and query["origin_iata"] not in market_key.split("<>"):
                 continue
@@ -316,6 +318,7 @@ class RouteTools:
             # Missing values are not queryable routes and must not inflate the
             # available count or appear as rows that look like zero-valued data.
             if value is None:
+                missing_route_count += 1
                 continue
             previous_route = previous_map.get(market_key)
             previous_value = previous_route.get(metric) if previous_route else None
@@ -391,7 +394,17 @@ class RouteTools:
             rows.sort(key=lambda row: (row["value"] is not None, row["value"] or 0), reverse=True)
         available_route_count = len(rows)
         rows = rows[:top_n]
-        coverage = {period: _coverage(current_network)}
+        coverage = {
+            period: {
+                **_coverage(current_network),
+                "missing_route_count": missing_route_count,
+                "missing_value_reason": (
+                    "Las rutas sin valor para esta métrica se excluyen; su ausencia no significa cero."
+                    if missing_route_count
+                    else None
+                ),
+            }
+        }
         if comparison_period:
             coverage[comparison_period] = (
                 _coverage(previous_network)
@@ -414,6 +427,7 @@ class RouteTools:
             "rows": rows,
             "row_count": len(rows),
             "available_route_count": available_route_count,
+            "missing_route_count": missing_route_count,
             "truncated": available_route_count > top_n,
             "display": self._display(display_query, rows, networks),
         }
@@ -578,6 +592,24 @@ class RouteTools:
                 source_families = {
                     str(item["source_label"] or "").split(" · ", maxsplit=1)[0] for item in carriers.values()
                 }
+                carrier_coverages = {
+                    entity_id: _coverage(network_by_entity[entity_id]) for entity_id in entity_ids
+                }
+                expected_universes = {
+                    tuple(sorted(item["expected_months"])) for item in carrier_coverages.values()
+                }
+                observed_universes = {
+                    tuple(sorted(item["observed_months"])) for item in carrier_coverages.values()
+                }
+                comparability_reasons = []
+                if not all(item["complete"] for item in carrier_coverages.values()):
+                    comparability_reasons.append("coverage_incomplete")
+                if len(expected_universes) != 1 or len(observed_universes) != 1:
+                    comparability_reasons.append("period_universe_differs")
+                if len(kinds) != 1:
+                    comparability_reasons.append("value_kind_differs")
+                if len(source_families) != 1:
+                    comparability_reasons.append("source_family_differs")
                 rows.append(
                     {
                         "market_key": market_key,
@@ -587,9 +619,10 @@ class RouteTools:
                         "combined_value": sum(item["value"] for item in carriers.values()),
                         "unit": _METRIC_LABELS[metric][1],
                         "coverage": {
-                            entity_id: _coverage(network_by_entity[entity_id]) for entity_id in entity_ids
+                            **carrier_coverages,
                         },
-                        "comparable": len(kinds) == 1 and len(source_families) == 1,
+                        "comparable": not comparability_reasons,
+                        "comparability_reason": comparability_reasons,
                         "value_kind": next(iter(kinds)) if len(kinds) == 1 else "mixed",
                     }
                 )

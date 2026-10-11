@@ -101,6 +101,7 @@ def test_published_route_query_ranks_estimates_and_preserves_value_kind() -> Non
     assert "no modifica ni implica" in result["coverage"]["2026M07"]["usage_scope_description"]
     assert result["truncated"] is True
     assert result["available_route_count"] == 2
+    assert result["missing_route_count"] == 1
     assert all(row["value"] is not None for row in result["rows"])
     assert result["display"]["rows"][0]["value_kind"] == "estimated"
     assert result["sources"][0]["url"].endswith("domestic/2026M07.json")
@@ -126,8 +127,10 @@ def test_null_metric_values_do_not_count_as_available_or_truncated_routes() -> N
 
     assert result["rows"][0]["market_key"] == "MEX<>CUN"
     assert result["available_route_count"] == 1
+    assert result["missing_route_count"] == 1
     assert result["row_count"] == 1
     assert result["truncated"] is False
+    assert "no significa cero" in result["coverage"]["2026M07"]["missing_value_reason"]
 
 
 def test_growth_comparison_requires_same_route_complete_coverage_and_value_kind() -> None:
@@ -318,3 +321,17 @@ def test_queries_the_signed_public_snapshot_without_private_inputs() -> None:
     assert shared["rows"]
     assert all(row["carriers"]["AEROMEXICO_GROUP"]["value"] > 0 for row in shared["rows"])
     assert all(row["carriers"]["VIVA_AEROBUS"]["value"] > 0 for row in shared["rows"])
+
+    international_shared = tools.invoke(
+        "find_shared_routes",
+        {
+            "entity_ids": ["AEROMEXICO_GROUP", "VOLARIS", "VIVA_AEROBUS"],
+            "segment": "international",
+            "period": "2026Q2",
+            "top_n": 20,
+        },
+    )
+    assert international_shared["rows"]
+    assert all(not coverage["complete"] for coverage in international_shared["coverage"].values())
+    assert all(not row["comparable"] for row in international_shared["rows"])
+    assert all("coverage_incomplete" in row["comparability_reason"] for row in international_shared["rows"])
