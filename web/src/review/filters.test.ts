@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { visibleQuestionIndices } from "./filters";
+import { questionProgress, visibleQuestionIndices } from "./filters";
 import { type RatingMap, type ReviewDataset, ratingKey } from "./types";
 
 function dataset(): ReviewDataset {
@@ -35,5 +35,21 @@ describe("question filters", () => {
     expect(visibleQuestionIndices(source, ratings, "pending")).toContain(1);
     expect(visibleQuestionIndices(source, ratings, "problems")).toEqual([1]);
     expect(visibleQuestionIndices(source, ratings, "pending")).not.toContain(39);
+  });
+
+  it("counts and filters all four candidates, including alias D", () => {
+    const source: ReviewDataset = {
+      schema_version: 1, dataset_id: "b".repeat(64), available_count: 4,
+      questions: [{
+        id: "Q01", question: "Pregunta", language: "es", expected: null,
+        candidates: ["A", "B", "C", "D"].map((alias) => ({ alias: alias as "A" | "B" | "C" | "D", answer: alias })),
+      }],
+    };
+    const ratings: RatingMap = new Map([[
+      ratingKey("Q01", "D"), { question_id: "Q01", alias: "D", status: "problem", notes: "" },
+    ]]);
+    expect(questionProgress(source, 0, ratings)).toEqual({ available: 4, reviewed: 1, hasProblem: true });
+    expect(visibleQuestionIndices(source, ratings, "pending")).toEqual([0]);
+    expect(visibleQuestionIndices(source, ratings, "problems")).toEqual([0]);
   });
 });

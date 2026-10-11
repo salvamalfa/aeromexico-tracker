@@ -13,6 +13,33 @@ describe("safe response rendering", () => {
     expect(links[0]?.rel).toBe("noopener noreferrer");
   });
 
+  it("renders bold, ordered and unordered lists, quotations, and fenced code as inert markup", () => {
+    const host = document.createElement("div");
+    renderSafeMarkdown(host, [
+      "**Negritas** y `código inline`.",
+      "",
+      "1. Primer paso",
+      "2. Segundo paso",
+      "",
+      "- Una opción",
+      "- Otra opción",
+      "",
+      "> Cita visible",
+      "",
+      "```html",
+      "<script>window.__reviewXss=true</script>",
+      "```",
+    ].join("\n"));
+    expect(host.querySelector("strong")?.textContent).toBe("Negritas");
+    expect(host.querySelector("p code")?.textContent).toBe("código inline");
+    expect(host.querySelectorAll("ol li")).toHaveLength(2);
+    expect(host.querySelectorAll("ul li")).toHaveLength(2);
+    expect(host.querySelector("blockquote")?.textContent).toBe("Cita visible");
+    expect(host.querySelector("pre code")?.textContent).toBe("<script>window.__reviewXss=true</script>");
+    expect(host.querySelector("script")).toBeNull();
+    expect(host.textContent).toContain("window.__reviewXss=true");
+  });
+
   it("renders model-written tables as real tables, also with blank lines between rows", () => {
     const host = document.createElement("div");
     const answer = [

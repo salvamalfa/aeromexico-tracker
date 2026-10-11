@@ -8,7 +8,7 @@ import {
   ratingKey,
 } from "./types";
 
-const aliases: CandidateAlias[] = ["A", "B", "C"];
+const aliases: CandidateAlias[] = ["A", "B", "C", "D"];
 const statuses: RatingStatus[] = ["correct", "problem", "not_evaluable"];
 const hashPattern = /^[a-f0-9]{64}$/;
 const questionPattern = /^Q\d{2}$/;
@@ -62,8 +62,8 @@ export function parseDataset(value: unknown): ReviewDataset {
     if (typeof question.language !== "string" || !question.language.trim() || question.language.length > 40) {
       throw new Error(`${label}: idioma inválido.`);
     }
-    if (!Array.isArray(question.candidates) || question.candidates.length !== aliases.length) {
-      throw new Error(`${label}: se esperan exactamente tres candidatos anónimos.`);
+    if (!Array.isArray(question.candidates) || question.candidates.length < 2 || question.candidates.length > aliases.length) {
+      throw new Error(`${label}: se esperan dos, tres o cuatro candidatos anónimos.`);
     }
     const seen = new Set<CandidateAlias>();
     const candidates = question.candidates.map((rawCandidate, candidateIndex) => {
@@ -80,7 +80,10 @@ export function parseDataset(value: unknown): ReviewDataset {
       if (typeof candidate.answer === "string") availableAnswers += 1;
       return { alias, answer: candidate.answer as string | null };
     });
-    if (seen.size !== aliases.length) throw new Error(`${label}: falta un alias de candidato.`);
+    const expectedAliases = aliases.slice(0, candidates.length);
+    if (seen.size !== candidates.length || expectedAliases.some((alias) => !seen.has(alias))) {
+      throw new Error(`${label}: los alias deben ser consecutivos desde A según la cantidad de candidatos.`);
+    }
     return {
       id: question.id,
       question: question.question,

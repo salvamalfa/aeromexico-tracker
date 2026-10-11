@@ -119,6 +119,9 @@ def test_conversation_and_each_turn_pin_settings_and_expose_them(tmp_path):
     assert visible["turns"][0]["reasoning_effort"] == "max"
     assert visible["provider"] == "openai"
     assert service.health()["minimum_reservation_turns_per_day"] == 13
+    assert service.health()["prompt_content_hash"] == (
+        "439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5"
+    )
 
 
 def test_legacy_conversation_cannot_send_with_new_settings_and_dedup_stays_idempotent(tmp_path):

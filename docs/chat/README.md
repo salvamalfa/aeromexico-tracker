@@ -1,5 +1,8 @@
 # Chat analítico de Airline Tracker
 
+La revisión vigente para el periodo por omisión del chat está en
+[la bitácora de etapa (9 oct 2026)](../etapas/chat-periodo-dashboard-20261009.md).
+
 El chat consulta una proyección permitida de los JSON públicos publicados en
 `site/data/v1`. El servicio fija cada turno a un `data_version` y un
 `semantic_version`; no abre el warehouse, bronze o silver. Python valida el
@@ -129,10 +132,14 @@ teórico de reservas mínimas que cabe bajo los topes configurados. El cálculo 
 es una cota de facturación porque no hay límite de salida acumulado que cubra
 un turno de hasta 16 herramientas; consulta [operaciones](operations.md).
 
-Las conversaciones OpenAI existentes antes de F2.0 no tienen settings locales
-fijados. Se conservan para leer su historial; para evitar enviar preguntas con
-la configuración remota anterior, requieren crear una conversación nueva.
-También se necesita una conversación nueva al cambiar modelo, esfuerzo o
-verbosidad. El default local sigue siendo `CHAT_MAX_TOOL_CALLS=8`; el límite
-operativo documentado para producción es 16. Implementación F2.0 lista para
-revisión; no se ejecutaron consultas de pago ni se cambió Railway.
+El dueño eligió `gpt-6.1-sol` con esfuerzo `low` y aprobó el prompt evaluado en
+F2.9 etapa 2. Tras desplegar, Railway debe usar
+`CHAT_REASONING_EFFORT=low`; hasta verificarlo, modelo, esfuerzo y prompt aún
+no están activos. La fuente versionada del prompt tiene SHA-256
+`33b8f7a0900869812d98bba57daa2ce3ea2f6b5c02a86a7eb3b8e830c7f7694b`; el texto
+efectivo que suma la regla de periodo evaluada tiene SHA-256
+`439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`, que
+reportará `/api/chat/health`. Se conservan los topes actuales. Las conversaciones
+OpenAI existentes requieren una nueva conversación para aplicar cambios de
+configuración. El default local sigue siendo `CHAT_MAX_TOOL_CALLS=8`; producción
+documenta 16. No se ejecutaron consultas de pago.

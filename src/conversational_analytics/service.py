@@ -9,6 +9,7 @@ from typing import Any
 
 from .config import ChatConfig
 from .providers._openai_helpers import question_envelope
+from .providers._openai_prompt import effective_prompt_sha256
 from .semantic.context import validate_context as _validate_semantic_context
 from .semantic.plan import PlanValidationError
 from .storage import AdmissionDenied, ChatStore, Conflict
@@ -196,6 +197,7 @@ class ChatService:
                 model=self.config.model,
                 reasoning_effort=self.config.reasoning_effort,
                 text_verbosity=self.config.text_verbosity,
+                prompt_content_hash=effective_prompt_sha256(),
                 minimum_reservation_turns_per_day=min(
                     self.config.daily_token_budget_user // self.config.minimum_turn_reservation_tokens,
                     self.config.daily_token_budget_global // self.config.minimum_turn_reservation_tokens,

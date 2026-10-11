@@ -31,6 +31,14 @@ En **Variables** del servicio agrega:
 RAILWAY_DOCKERFILE_PATH=Dockerfile.chat
 ```
 
+El dueño eligió `gpt-6.1-sol` con `low` y aprobó el prompt evaluado en F2.9
+etapa 2. Despliega el runtime que carga `config/chat/system_prompt.txt`,
+después aplica solo `CHAT_REASONING_EFFORT=low` en Railway; conserva
+`CHAT_MODEL=gpt-6.1-sol`, tarifas y topes actuales. Verifica en
+`/api/chat/health` el esfuerzo `low` y el prompt efectivo con SHA-256
+`439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`, luego usa
+una conversación nueva. No se ejecuta ninguna evaluación pagada.
+
 Railway usa `Dockerfile` automáticamente si está en la raíz, pero `Dockerfile.chat`
 es un nombre personalizado y requiere esa variable, según su [documentación de
 Dockerfiles](https://docs.railway.com/builds/dockerfiles#custom-dockerfile-path).

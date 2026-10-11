@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-10-11 · Chat: prompt evaluado y Sol low preparados para activación
+
+- El runtime carga el prompt aprobado y validado en F2.9 etapa 2, fija Sol con
+  esfuerzo low y reporta el hash efectivo en health. La activación espera el
+  despliegue y la verificación en Railway; no se hicieron llamadas pagadas.
+
+## 2026-10-09 · El chat usa el periodo seleccionado en el dashboard
+
+- Si la pregunta omite periodo, el prompt prioriza un seguimiento inequívoco
+  de la conversación y después el periodo seleccionado vigente. Si falta,
+  pide aclaración; una fecha explícita siempre prevalece.
+- La regla de periodo no resuelve ambigüedades de métrica, entidad, segmento,
+  mercado, denominador o fuente. La bitácora enlaza el baseline y la revisión
+  en Git sin reescribir evidencia anterior.
+- Prueba offline del contrato del prompt; no se consumen APIs ni evaluaciones.
+
 Cambios notables del proyecto, para humanos. Formato inspirado en
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); no se usa
 versión semántica, las entradas van por fecha.
@@ -34,6 +50,11 @@ versión semántica, las entradas van por fecha.
   decisiones del dueño del 8 de octubre: se conserva el aviso de avance de una
   oración, decimales con punto y fuentes sin duplicar.
 - Detalle en `docs/etapas/chat-tablas-presentacion-20261008.md`.
+
+## 2026-10-09 · Revisión privada del chat por turno
+
+- `review.html` compara cada candidato como conversación ordenada por turno y muestra Markdown seguro; el texto original completo permanece disponible. Ver [bitácora](docs/etapas/chat-revision-conversaciones-20261009.md).
+- La referencia distingue criterios `multi_turn` de valores numéricos y evita afirmar que faltan datos publicados. Detalle y validación en [la bitácora](docs/etapas/chat-revision-conversaciones-20261009.md).
 
 ## 2026-10-08 · Chat: límite de herramientas, reserva sin vencimiento y Railway
 

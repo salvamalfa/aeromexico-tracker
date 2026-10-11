@@ -34,6 +34,7 @@ const statusCopy: Record<string, string> = {
   answered: "Se espera una respuesta con datos.",
   complete: "Se espera una respuesta con datos.",
   supported: "Se espera una respuesta con datos.",
+  multi_turn: "Evalúa la conversación completa: conserva los datos y atiende cada nueva petición.",
   clarify: "Debe pedir una aclaración antes de dar una cifra.",
   clarification: "Debe pedir una aclaración antes de dar una cifra.",
   needs_clarification: "Debe pedir una aclaración antes de dar una cifra.",
@@ -64,6 +65,61 @@ function formatValue(value: unknown, metric: MetricDisplay): string {
     maximumFractionDigits: metric.rounding,
   }).format(scaled);
   return `${number} ${metric.unit}`;
+}
+
+function labels(values: unknown, catalog: Record<string, string>, fallback: string): string[] {
+  if (!Array.isArray(values)) return [];
+  return values.flatMap((value) => {
+    if (typeof value !== "string") return [];
+    const label = catalog[value];
+    return label ? [label] : [fallback];
+  });
+}
+
+function planSummary(data: Record<string, unknown>): HTMLElement | null {
+  const plan = record(data.plan);
+  if (!plan) return null;
+  const metricNames = labels(plan.metric_ids, Object.fromEntries(Object.entries(metrics).map(([key, value]) => [key, value.label])), "Métrica de referencia");
+  const entityNames = labels(plan.entity_ids, entities, "Entidad de referencia");
+  const periods = Array.isArray(plan.periods)
+    ? plan.periods.filter((value): value is string => typeof value === "string")
+    : [];
+  const details = [
+    metricNames.length ? `Indicador: ${[...new Set(metricNames)].join(", ")}` : "",
+    entityNames.length ? `Grupo: ${[...new Set(entityNames)].join(", ")}` : "",
+    periods.length ? `Periodo: ${[...new Set(periods)].join(", ")}` : "",
+  ].filter(Boolean);
+  if (!details.length) return null;
+  const list = document.createElement("ul");
+  list.className = "expected-rows";
+  for (const detail of details) {
+    const item = document.createElement("li");
+    item.textContent = detail;
+    list.append(item);
+  }
+  return list;
+}
+
+const criticalFailureLabels: Record<string, string> = {
+  "fails language switch or changes facts": "Responde en el idioma solicitado sin cambiar los hechos.",
+  "changes the numeric answer": "Mantiene la cifra al simplificar la explicación.",
+  "drops 2t26 or metric context": "Conserva el periodo 2T26 y la misma métrica al cambiar de aerolínea.",
+};
+
+function appendReviewCriteria(host: HTMLElement, data: Record<string, unknown>): void {
+  if (Array.isArray(data.critical_failures) && data.critical_failures.length) {
+    const heading = document.createElement("h4");
+    heading.textContent = "Criterios de revisión";
+    const list = document.createElement("ul");
+    list.className = "expected-rows";
+    for (const failure of data.critical_failures) {
+      if (typeof failure !== "string") continue;
+      const item = document.createElement("li");
+      item.textContent = criticalFailureLabels[failure.toLocaleLowerCase("en")] ?? failure;
+      list.append(item);
+    }
+    if (list.childElementCount) host.append(heading, list);
+  }
 }
 
 function rowSummary(row: unknown, index: number): HTMLElement {
@@ -102,8 +158,20 @@ export function renderExpectedSummary(host: HTMLElement, expected: unknown): voi
     note.textContent = guidance;
     host.append(note);
   }
+  appendReviewCriteria(host, data);
   if (!Array.isArray(data.rows) || data.rows.length === 0) {
-    if (!guidance) host.textContent = "La referencia no contiene filas publicadas. Consulta el detalle de evaluación.";
+    const summary = planSummary(data);
+    if (summary) {
+      const note = document.createElement("p");
+      note.className = "expected-guidance";
+      note.textContent = "El resultado numérico no está resumido aquí; revisa el detalle de evaluación.";
+      host.append(summary, note);
+    } else if (status?.toLowerCase() === "multi_turn") {
+      const note = document.createElement("p");
+      note.className = "expected-guidance";
+      note.textContent = "Este caso incluye criterios de conversación; no una referencia numérica.";
+      host.append(note);
+    } else if (!guidance && host.childElementCount === 0) host.textContent = "El resumen de referencia no está disponible aquí. Consulta el detalle de evaluación.";
     return;
   }
   const rows = document.createElement("ul");

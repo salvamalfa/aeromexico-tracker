@@ -1,4 +1,4 @@
-export type CandidateAlias = "A" | "B" | "C";
+export type CandidateAlias = "A" | "B" | "C" | "D";
 export type RatingStatus = "correct" | "problem" | "not_evaluable";
 
 export interface CandidateAnswer {

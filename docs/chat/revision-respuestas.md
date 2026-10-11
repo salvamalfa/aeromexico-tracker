@@ -15,10 +15,10 @@ calificaciones ni notas a un servidor, y no hace solicitudes a OpenAI.
    elige correcta, con problema o no evaluable, y explica los problemas en las notas.
    Una combinación sin respuesta permanece fuera del progreso y muestra el estado
    declarado por ese corte: sin respuesta, error terminal, en espera o no intentada.
-3. Cada corte tiene su propio progreso y sus propios alias ciegos. A y B solo
-   identifican candidatos dentro de ese corte; no implican que el alias refiera
-   al mismo candidato en otro corte. Los totales siempre corresponden al corte
-   seleccionado.
+3. Cada corte tiene su propio progreso. Los alias anónimos se asignan por
+   pregunta y solo identifican candidatos en esa pregunta; no implican que el
+   alias refiera al mismo candidato en otra pregunta o corte. Los totales
+   siempre corresponden al corte seleccionado.
 4. El guardado automático del navegador es opcional y está desactivado al abrir
    la página. Puedes activarlo explícitamente; sus claves incluyen el hash del
    archivo exacto y el identificador, versión y hash del conjunto de cada corte.
@@ -42,7 +42,11 @@ un objeto JSON estricto con `schema_version: 1`, `bundle_id`, `bundle_version`,
 `disposition` (`terminal`, `complete` o `partial`), `source_sha256`,
 `dataset_sha256`, `dataset_json` y `slot_dispositions`. `dataset_json` es una
 cadena con el texto JSON literal del conjunto de revisión de esquema 1
-(`dataset_id`, preguntas, candidatos A/B/C y `available_count`). El lector
+(`dataset_id`, preguntas, candidatos anónimos etiquetados A/B, A/B/C o A/B/C/D
+(dos a cuatro por pregunta), y `available_count`). Los espacios con respuesta
+nula marcados como rechazo
+por contexto de aplicación se muestran como no evaluables y no admiten
+calificación. El lector
 calcula `dataset_sha256` sobre los bytes UTF-8 de esa cadena exacta antes de
 interpretarla; espacios, orden de claves y representaciones numéricas forman
 parte del hash. Esto evita volver a serializar datos y mantiene interoperabilidad
@@ -66,13 +70,18 @@ un corte duplicado o faltante, identificadores en conflicto y hashes inválidos.
 Los archivos antiguos de conjunto y calificaciones de esquema 1 siguen
 funcionando como una revisión de un único conjunto.
 
-El resultado esperado presenta etiquetas, porcentajes y unidades para facilitar
-la revisión; el detalle completo queda en un desplegable. Las respuestas y la
-referencia se muestran como texto sin ejecutar
-HTML. Importar una hoja de calificaciones valida su versión, el conjunto de
-respuestas, el SHA-256 de los bytes del archivo importado y sus identificadores
-antes de aplicar cambios. La interfaz no
-declara aprobación humana mientras queden respuestas pendientes.
+La pregunta y las respuestas se muestran como mensajes intercalados por turno,
+con los alias A–D visibles. El formato anterior, sin marcadores de turno,
+conserva el texto completo como una pregunta y una respuesta. Las respuestas
+admiten Markdown seguro para facilitar la lectura; el texto original completo
+queda disponible en un desplegable. La referencia presenta los valores o
+criterios disponibles y conserva el detalle completo en otro desplegable. La
+interfaz no ejecuta HTML incluido en los mensajes.
+
+Importar una hoja de calificaciones valida su versión, el conjunto de respuestas,
+el SHA-256 de los bytes del archivo importado y sus identificadores antes de
+aplicar cambios. La interfaz no declara aprobación humana mientras queden
+respuestas pendientes.
 
 ## Preparación del archivo privado
 
