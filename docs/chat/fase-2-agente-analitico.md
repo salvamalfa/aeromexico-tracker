@@ -771,3 +771,10 @@ herramientas que se reenvían en cada llamada).
 - Las evaluaciones en vivo siguen el procedimiento de
   [evaluaciones y presupuesto](evaluaciones-presupuesto.md), más la
   autorización de este documento.
+
+### F2.9 · stage 3 offline
+- `uv run python scripts/chat/check_stage3_coverage.py --output .state/outputs/chat-evaluations/f2-9-stage-3/coverage.json` ejecuta herramientas deterministas para N01–N30 y deriva cobertura desde el snapshot fijado.
+- El reporte clasifica `supported`, `coverage_missing` y `approval_blocked`; fija prompt, catálogo, herramientas, índice de evidencia, métricas y versiones de datos.
+- `--run --opt-in` requiere recibos de financiación y capacidades exactos para Sol low, prompt R2 compatible y dependencias publicadas; sin ellos bloquea antes de credenciales/API.
+- `scripts/chat/export_stage3_review.py` une el reporte con una corrida live autorizada y crea JSON privado para `web/review.html`; el mapa de alias queda en `.state/`.
+- Implementación: [coverage](../../src/conversational_analytics/evaluation_stage3_coverage.py), [preflight](../../scripts/chat/check_stage3_coverage.py), [exportador](../../scripts/chat/export_stage3_review.py), [pruebas](../../tests/test_chat_f29_stage3_coverage.py).

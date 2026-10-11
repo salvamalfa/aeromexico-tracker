@@ -24,6 +24,7 @@ def run_campaign(
     output_dir: Path,
     resume: bool = False,
     reservation_assumption_override: Mapping[str, Any] | None = None,
+    continue_after_known_provider_errors: bool = False,
 ) -> dict[str, Any]:
     """Execute stable run slots under one shared hard campaign stop.
 
@@ -46,10 +47,10 @@ def run_campaign(
         expected_slots = reservation_assumption_override.get("planned_request_count")
         actual_slots = sum(len(run.get("case_ids", [])) for run in run_specs)
         candidate_slots = {run.get("candidate"): len(run.get("case_ids", [])) for run in run_specs}
-        if (
-            expected_slots != actual_slots
-            or candidate_slots != {"gpt-6.1-sol@low": 14, "gpt-6.1-sol@medium": 15}
-        ):
+        if expected_slots != actual_slots or candidate_slots != {
+            "gpt-6.1-sol@low": 14,
+            "gpt-6.1-sol@medium": 15,
+        }:
             raise ValueError("La reserva empírica no coincide con el total de turnos planificados")
     identity = {
         "runs": [run.get("identity") for run in run_specs],
@@ -58,8 +59,9 @@ def run_campaign(
         "expected_versions": dict(expected_versions),
         "snapshot_root": str(snapshot_root),
         "prices": {key: list(value) for key, value in sorted(prices.items())},
-            "reservation_assumption_override": dict(reservation_assumption_override)
-            if reservation_assumption_override is not None else None,
+        "reservation_assumption_override": dict(reservation_assumption_override)
+        if reservation_assumption_override is not None
+        else None,
     }
     identity_hash = hashlib.sha256(
         json.dumps(
@@ -152,10 +154,9 @@ def run_campaign(
             limits_override=dict(run["limits"]),
             text_verbosity_override=str(run["text_verbosity"]),
             reservation_assumption_override=(
-                dict(reservation_assumption_override)
-                if reservation_assumption_override is not None
-                else None
+                dict(reservation_assumption_override) if reservation_assumption_override is not None else None
             ),
+            continue_after_known_provider_errors=continue_after_known_provider_errors,
         )
         report["run_identity_hash"] = str(run["identity_hash"])
         report["campaign_identity_hash"] = identity_hash
@@ -172,6 +173,7 @@ def run_campaign(
                 "known_estimated_cost_lower_bound_usd": case.get("known_estimated_cost_lower_bound_usd"),
                 "status": case.get("status"),
                 "model_turn_completed": case.get("model_turn_completed", False),
+                "usage_reconciled_noncritical_error": case.get("status") == "provider_error_known_usage",
             }
             for case in model["cases"]
         ]
@@ -182,18 +184,30 @@ def run_campaign(
             and len(all_cases) == len(run["case_ids"])
             and report.get("run_status") == "completed"
             and not model.get("stopped_reason")
-            and all(case.get("model_turn_completed") for case in all_cases)
+            and all(
+                case.get("model_turn_completed")
+                or (continue_after_known_provider_errors and case.get("usage_reconciled_noncritical_error"))
+                for case in all_cases
+            )
         )
         stopped_reason = (
-            "provider_error" if any(case.get("status") == "provider_error" for case in all_cases)
-            else "campaign_budget" if not complete else None
+            "provider_error"
+            if any(case.get("status") == "provider_error" for case in all_cases)
+            else "known_noncritical_provider_errors"
+            if any(case.get("usage_reconciled_noncritical_error") for case in all_cases)
+            else "campaign_budget"
+            if not complete
+            else None
         )
         completed_run = {
             "run_id": run_id,
             "identity": run["identity"],
             "known_estimated_cost_usd": sum(
-                float(case.get("estimated_cost_usd") if case.get("estimated_cost_usd") is not None
-                      else case.get("known_estimated_cost_lower_bound_usd", 0.0))
+                float(
+                    case.get("estimated_cost_usd")
+                    if case.get("estimated_cost_usd") is not None
+                    else case.get("known_estimated_cost_lower_bound_usd", 0.0)
+                )
                 for case in all_cases
             ),
             "spent_unknown": model["spent_unknown"],
@@ -209,11 +223,17 @@ def run_campaign(
                 "complete": complete,
                 "stopped_reason": stopped_reason,
                 "known_estimated_cost_usd": sum(
-                    float(case.get("estimated_cost_usd") if case.get("estimated_cost_usd") is not None
-                          else case.get("known_estimated_cost_lower_bound_usd", 0.0))
+                    float(
+                        case.get("estimated_cost_usd")
+                        if case.get("estimated_cost_usd") is not None
+                        else case.get("known_estimated_cost_lower_bound_usd", 0.0)
+                    )
                     for case in all_cases
                 ),
                 "spent_unknown": model["spent_unknown"],
+                "known_noncritical_provider_error_count": sum(
+                    case.get("usage_reconciled_noncritical_error", False) for case in all_cases
+                ),
                 "quality_summary": model["quality_summary"],
             },
         }
@@ -223,23 +243,34 @@ def run_campaign(
         spend = aggregate_campaign_budget(list(completed.values()))
         state["known_spend_usd"] = spend["known_spend_usd"]
         state["status"] = (
-            "stopped_unknown_spend" if model["spent_unknown"]
-            else "running" if complete
-            else "stopped_provider_error" if stopped_reason == "provider_error"
+            "stopped_unknown_spend"
+            if model["spent_unknown"]
+            else "running"
+            if complete
+            else "stopped_provider_error"
+            if stopped_reason == "provider_error"
             else "stopped_campaign_budget"
         )
         _write_private_json(state_path, state)
         reports.append(completed_run["summary"])
-        if not spend["admit_new_requests"] or not complete:
+        if not spend["admit_new_requests"] or (not complete and not continue_after_known_provider_errors):
             break
     all_runs_complete = all(
-        str(run["run_id"]) in completed and completed[str(run["run_id"])].get("complete")
-        for run in run_specs
+        str(run["run_id"]) in completed and completed[str(run["run_id"])].get("complete") for run in run_specs
     )
     state["status"] = (
-        state.get("status") if state.get("spent_unknown")
-        else "completed" if all_runs_complete
-        else "stopped_provider_error" if state.get("status") == "stopped_provider_error"
+        state.get("status")
+        if state.get("spent_unknown")
+        else "completed_with_known_provider_errors"
+        if all_runs_complete
+        and any(
+            completed_run.get("stopped_reason") == "known_noncritical_provider_errors"
+            for completed_run in completed.values()
+        )
+        else "completed"
+        if all_runs_complete
+        else "stopped_provider_error"
+        if state.get("status") == "stopped_provider_error"
         else "stopped_campaign_budget"
     )
     state["active_run_id"] = None

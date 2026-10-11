@@ -253,6 +253,69 @@ def test_live_provider_error_writes_private_report_and_stops_without_retry(
     assert "response" not in progress
 
 
+def test_live_runner_continues_after_recoverable_error_with_reconciled_usage(
+    monkeypatch, tmp_path, mock_live_holdout_current_versions
+) -> None:
+    from src.conversational_analytics.providers.base import ProviderResult
+    from src.conversational_analytics.providers.openai import OpenAIProviderError
+
+    class Provider:
+        calls = 0
+
+        def __init__(self, _config):
+            pass
+
+        def run_turn(self, *, persist_session, **_kwargs):
+            Provider.calls += 1
+            persist_session(f"session-{Provider.calls}")
+            if Provider.calls == 1:
+                raise OpenAIProviderError(
+                    "temporary upstream failure", usage=(12, 3), upstream_http_status=503
+                )
+            return ProviderResult(
+                content="second case completed",
+                input_tokens=10,
+                output_tokens=2,
+                provider_session_id="session-2",
+                usage_complete=True,
+            )
+
+        def cancel(self, _session_id):
+            return "cancelled"
+
+        def delete(self, _session_id):
+            pass
+
+    monkeypatch.setattr("src.conversational_analytics.providers.openai.OpenAIProvider", Provider)
+    cases = [
+        case
+        for case in mock_live_holdout_current_versions["cases"]
+        if case["expected"]["status"] == "supported"
+    ][:2]
+    report = _live_provider_run(
+        cases=cases,
+        models=["gpt-6-luna@low"],
+        budget_usd=10.0,
+        snapshot_root=Path("site"),
+        prices={"gpt-6-luna@low": (0.10, 0.50)},
+        probe_only=False,
+        output_dir=tmp_path / "private-recoverable-run",
+        continue_after_known_provider_errors=True,
+    )
+
+    model = report["models"][0]
+    assert Provider.calls == 2
+    assert [case["status"] for case in model["cases"]] == [
+        "provider_error_known_usage",
+        "ungraded",
+    ]
+    assert model["cases"][0]["usage_complete"] is True
+    assert model["cases"][0]["estimated_cost_usd"] is not None
+    assert model["cases"][0]["continue_reason"] == "recoverable_http_error_usage_reconciled"
+    assert model["spent_unknown"] is False
+    assert report["run_status"] == "completed"
+
+
 def test_post_cancel_terminal_usage_is_counted_without_scoring_or_continuing(
     monkeypatch, tmp_path, mock_live_holdout_current_versions
 ) -> None:

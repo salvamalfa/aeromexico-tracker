@@ -11,7 +11,7 @@ import {
 const aliases: CandidateAlias[] = ["A", "B", "C", "D"];
 const statuses: RatingStatus[] = ["correct", "problem", "not_evaluable"];
 const hashPattern = /^[a-f0-9]{64}$/;
-const questionPattern = /^Q\d{2}$/;
+const questionPattern = /^(?:Q|N)\d{2}$/;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -62,8 +62,8 @@ export function parseDataset(value: unknown): ReviewDataset {
     if (typeof question.language !== "string" || !question.language.trim() || question.language.length > 40) {
       throw new Error(`${label}: idioma inválido.`);
     }
-    if (!Array.isArray(question.candidates) || question.candidates.length < 2 || question.candidates.length > aliases.length) {
-      throw new Error(`${label}: se esperan dos, tres o cuatro candidatos anónimos.`);
+    if (!Array.isArray(question.candidates) || question.candidates.length < 1 || question.candidates.length > aliases.length) {
+      throw new Error(`${label}: se espera entre uno y cuatro candidatos anónimos.`);
     }
     const seen = new Set<CandidateAlias>();
     const candidates = question.candidates.map((rawCandidate, candidateIndex) => {

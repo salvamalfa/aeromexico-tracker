@@ -62,6 +62,26 @@ describe("blind review file validation", () => {
     expect(() => parseDataset(nonCanonicalAliases)).toThrow("alias deben ser consecutivos desde A");
   });
 
+  it("imports a one-candidate stage-3 dataset with frozen N case IDs", () => {
+    const source = sampleDataset();
+    source.questions = source.questions.slice(0, 1).map((question) => ({
+      ...question,
+      id: "N01",
+      candidates: [{ alias: "A", answer: "Respuesta auditada" }],
+    }));
+    source.available_count = 1;
+    const dataset = parseDataset(source);
+    expect(dataset.questions[0]?.id).toBe("N01");
+    expect(dataset.questions[0]?.candidates).toEqual([{ alias: "A", answer: "Respuesta auditada" }]);
+    const ratings = parseRatings({
+      schema_version: 1,
+      dataset_id: dataset.dataset_id,
+      dataset_content_sha256: contentHash,
+      ratings: [{ question_id: "N01", alias: "A", status: "correct", notes: "" }],
+    }, dataset, contentHash);
+    expect(ratingsFile(dataset, contentHash, ratings).ratings[0]?.question_id).toBe("N01");
+  });
+
   it("accepts four consecutive aliases and round-trips a D rating", () => {
     const source = sampleDataset();
     source.questions = source.questions.slice(0, 1).map((question) => ({

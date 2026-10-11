@@ -52,6 +52,7 @@ def _live_provider_run(
     limits_override: dict[str, int] | None = None,
     text_verbosity_override: str | None = None,
     reservation_assumption_override: dict[str, Any] | None = None,
+    continue_after_known_provider_errors: bool = False,
 ) -> dict[str, Any]:
     """Run gated holdout cases through the production provider/tool boundary.
 
@@ -97,9 +98,7 @@ def _live_provider_run(
             "El snapshot o catálogo semántico no coincide con las versiones fijadas en el holdout"
         )
     registry = ToolRegistry(snapshot)
-    metric_dimensions = {
-        metric["id"]: metric["dimensions"] for metric in registry.catalog()["metrics"]
-    }
+    metric_dimensions = {metric["id"]: metric["dimensions"] for metric in registry.catalog()["metrics"]}
     selected = [next(case for case in cases if case["id"] == "es_am_lf_q2")] if probe_only else cases
     output_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
     os.chmod(output_dir, 0o700)
@@ -214,6 +213,7 @@ def _live_provider_run(
             # rejection. Never forward unknown context keys to the provider.
             try:
                 from .service import validate_context
+
                 context = validate_context(case_context)
             except ValueError as exc:
                 model_report["cases"].append(
@@ -425,11 +425,13 @@ def _live_provider_run(
                 known_input = sum(result.input_tokens for result in known_turns) if known_turns else None
                 known_output = sum(result.output_tokens for result in known_turns) if known_turns else None
                 input_parts = [
-                    value for value in (known_input, failure_usage[0] if failure_usage else None)
+                    value
+                    for value in (known_input, failure_usage[0] if failure_usage else None)
                     if value is not None
                 ]
                 output_parts = [
-                    value for value in (known_output, failure_usage[1] if failure_usage else None)
+                    value
+                    for value in (known_output, failure_usage[1] if failure_usage else None)
                     if value is not None
                 ]
                 error_metadata = _error_metadata(provider_error)
@@ -471,28 +473,52 @@ def _live_provider_run(
                     case_record, failure_usage, provider, provider_error, session[-1] if session else None
                 )
                 known_cost = sum(
-                    config.usage_cost_usd(result.input_tokens, result.output_tokens)
-                    for result in known_turns
+                    config.usage_cost_usd(result.input_tokens, result.output_tokens) for result in known_turns
                 )
                 if failure_usage is not None:
                     known_cost += config.usage_cost_usd(failure_usage[0], failure_usage[1])
-                case_usage_complete = bool(case_record["usage_complete"] or (
-                    len(known_turns) == len(completed_turns) and failure_usage is not None
-                ))
+                case_usage_complete = bool(
+                    case_record["usage_complete"]
+                    or (len(known_turns) == len(completed_turns) and failure_usage is not None)
+                )
                 case_record["known_estimated_cost_lower_bound_usd"] = known_cost
                 case_record["estimated_cost_usd"] = known_cost if case_usage_complete else None
                 model_report["known_estimated_cost_usd"] += known_cost
                 estimated_total_usd += known_cost
                 model_report["spent_unknown"] = not case_usage_complete and provider is not None
+                status_code = error_metadata.get("http_status", error_metadata.get("upstream_http_status"))
+                recoverable_status = status_code in {408, 409, 425, 429} or (
+                    isinstance(status_code, int) and 500 <= status_code <= 599
+                )
+                known_noncritical_error = bool(
+                    continue_after_known_provider_errors
+                    and case_usage_complete
+                    and not model_report["spent_unknown"]
+                    and recoverable_status
+                )
+                if known_noncritical_error:
+                    case_record["status"] = "provider_error_known_usage"
+                    case_record["continue_reason"] = "recoverable_http_error_usage_reconciled"
                 model_report["estimated_cost_usd"] = (
                     None if model_report["spent_unknown"] else model_report["known_estimated_cost_usd"]
                 )
                 model_report["cases"].append(case_record)
                 write_detailed_case_checkpoint(detail_out, report, _write_private_json)
-                model_report["stopped_reason"] = "provider_error_or_usage_unknown; no further cases admitted"
-                stop_all = True
+                if known_noncritical_error:
+                    model_report["known_noncritical_provider_error_count"] = (
+                        model_report.get("known_noncritical_provider_error_count", 0) + 1
+                    )
+                    model_report["last_known_noncritical_error"] = error_metadata
+                    stop_all = False
+                else:
+                    model_report["stopped_reason"] = (
+                        "provider_error_or_usage_unknown; no further cases admitted"
+                    )
+                    stop_all = True
                 progress_state.update(
-                    status="stopped_provider_error",
+                    status="continuing_after_known_provider_error"
+                    if known_noncritical_error
+                    else "stopped_provider_error",
                     known_estimated_spend_usd=estimated_total_usd,
                     active_case_id=case["id"],
                     active_session_id=session[-1] if session else None,
@@ -509,11 +535,22 @@ def _live_provider_run(
                     progress_state["session_to_reconcile"] = session[-1]
                 checkpoint()
                 if session and provider is not None:
-                    case_record["provider_session_delete"] = "deferred_provider_error"
-                break
+                    if known_noncritical_error and cancel_status == "cancelled" and case_usage_complete:
+                        try:
+                            provider.delete(session[-1])
+                            case_record["provider_session_delete"] = "requested"
+                        except Exception:
+                            case_record["provider_session_delete"] = "failed"
+                            case_record["remote_retention_state"] = "unknown"
+                        write_detailed_case_checkpoint(detail_out, report, _write_private_json)
+                    else:
+                        case_record["provider_session_delete"] = "deferred_provider_error"
+                if not known_noncritical_error:
+                    break
         numeric_gold_summary = _numeric_gold_summary(selected, model_report["cases"])
         tripwires = [
-            c for c in model_report["cases"]
+            c
+            for c in model_report["cases"]
             if _quality_dict(c).get("automatic_grade_type") in {"tripwire", "multi_turn_tripwires"}
             and _quality_dict(c).get("scored")
         ]
