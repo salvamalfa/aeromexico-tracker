@@ -1,0 +1,22 @@
+{
+  "schema": "chat_f2_7_explanation_cases_v1",
+  "status": "candidate_closed",
+  "cases": [
+    {
+      "case_id": "aeromexico-2026q2-fuel-expense",
+      "question": "¿Por qué aumentó el gasto de combustible de Aeroméxico en 2T26?",
+      "evidence_layers": {
+        "reported_data": ["aeromexico-2026q2-fuel-expense-metric"],
+        "company_attribution": ["aeromexico-2026q2-fuel-attribution"],
+        "news_context": ["flightglobal-aeromexico-q2-2026-07-15"]
+      },
+      "answer_requirements": [
+        "Citar que el reporte informó $493.8m y aumento interanual de 79.9% (p. 1).",
+        "Atribuirlo al reporte: precios elevados vinculados a eventos geopolíticos desde fines de febrero; incluir el aumento de $219.3m y cerca de $30m sobre la guía (p. 3).",
+        "Separar la nota FlightGlobal del 15 jul: recoge costos de combustible e impacto del Mundial en el trimestre; no presentarla como prueba causal independiente ni ampliar su afirmación.",
+        "No añadir causas de demanda, tipo de cambio o capacidad que las fuentes citadas no atribuyan al gasto de combustible."
+      ],
+      "review": {"status": "owner_review_required", "receipt": null}
+    }
+  ]
+}

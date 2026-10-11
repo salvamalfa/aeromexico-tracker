@@ -1,0 +1,59 @@
+name: Prepare weekly chat news candidates (manual review only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      week_start:
+        description: Monday UTC date for the candidate batch (YYYY-MM-DD)
+        required: true
+        type: string
+      metadata_file:
+        description: Committed headline metadata JSON under config/chat/evidence/candidates/news/inbox/
+        required: true
+        type: string
+      write_candidate:
+        description: Build a closed candidate manifest and attach it as a workflow artifact
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  candidates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Validate metadata path
+        env:
+          METADATA_FILE: ${{ inputs.metadata_file }}
+        run: |
+          case "$METADATA_FILE" in
+            config/chat/evidence/candidates/news/inbox/*.json) test -f "$METADATA_FILE" ;;
+            *) echo "metadata_file must be a committed JSON inside the news inbox" >&2; exit 2 ;;
+          esac
+      - name: Build weekly candidate manifest
+        env:
+          WEEK_START: ${{ inputs.week_start }}
+          METADATA_FILE: ${{ inputs.metadata_file }}
+          WRITE_CANDIDATE: ${{ inputs.write_candidate }}
+        run: |
+          args=(--week-start "$WEEK_START" --input "$METADATA_FILE" --output-dir "$RUNNER_TEMP/news-candidates")
+          if [ "$WRITE_CANDIDATE" = "true" ]; then
+            args+=(--write-candidate)
+          fi
+          uv run python scripts/chat/collect_news_candidates.py "${args[@]}"
+      - name: Attach closed candidate manifest for owner review
+        if: ${{ inputs.write_candidate }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: chat-news-candidates-${{ inputs.week_start }}
+          path: ${{ runner.temp }}/news-candidates/news-${{ inputs.week_start }}.json
+          if-no-files-found: error
+          retention-days: 14

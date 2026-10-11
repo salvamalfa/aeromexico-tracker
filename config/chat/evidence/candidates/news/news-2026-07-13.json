@@ -1,0 +1,38 @@
+{
+  "schema": "chat_news_candidates_v1",
+  "status": "candidate_closed",
+  "week_start": "2026-07-13",
+  "week_end": "2026-07-19",
+  "collection_policy": "Public publisher metadata only; short curator-written description, no article body or third-party quote.",
+  "limits": {
+    "article_bodies_collected": false,
+    "max_description_chars": 320,
+    "max_quote_chars": 200
+  },
+  "records": [
+    {
+      "candidate_id": "flightglobal-aeromexico-q2-2026-07-15",
+      "published_at": "2026-07-15",
+      "publisher": "FlightGlobal",
+      "title": "Aeromexico sees bright second half after Q2 challenges",
+      "url": "https://www.flightglobal.com/archive/2026/07/aeromexico-sees-bright-second-half-after-q2-challenges/",
+      "source_sha256": "0657284f197d63153e105a87292244ced09c341a0ead6905aa93e2303eeb1bf1",
+      "captured_at": "2026-10-11",
+      "description": "Cobertura del 2T26 de Aeroméxico que menciona presión de combustible e impacto del Mundial, junto con la perspectiva de mejores condiciones para el segundo semestre.",
+      "companies": [
+        "Aeroméxico"
+      ],
+      "topics": [
+        "combustible",
+        "resultados",
+        "2T26"
+      ],
+      "brief_quote": null,
+      "kind": "news_candidate",
+      "review": {
+        "status": "owner_review_required",
+        "receipt": null
+      }
+    }
+  ]
+}

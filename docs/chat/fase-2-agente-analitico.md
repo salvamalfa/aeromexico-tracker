@@ -181,10 +181,46 @@ Cada paquete va en su propio PR, con pruebas y documentación.
 | F2.3 | **Glosario de negocio y métricas totales:** ingresos, costos, combustible, utilidad operativa y años completos, con procedencia y reglas de agregación. | Catálogo candidato, agregación determinista y propuesta para revisión; las métricas nuevas siguen bloqueadas hasta decisión del dueño. [Revisión breve](f23-propuesta-revision-dueno.md) · [detalle técnico](f23-metricas-detalle-tecnico.md). |
 | F2.4 | **Rutas y comparaciones:** constructor de consultas sobre datos publicados de rutas y comparación de varias aerolíneas. Las cifras estimadas se rotulan como estimación. | «Top N rutas» reproducible; ninguna estimación presentada como dato observado. |
 | F2.5 | **Índice de reportes** con búsqueda citada. | Pasajes con empresa, periodo y página; pruebas de citas. |
-| F2.6 | **Índice semanal de noticias** con rutina programada y aprobación del dueño. | Fichas sin texto completo de terceros; flujo de aprobación; herramienta de búsqueda. |
+| F2.6 | **Índice semanal de noticias** con rutina manual y aprobación del dueño. | Fichas sin texto completo de terceros; flujo de aprobación; herramienta de búsqueda. |
 | F2.7 | **Explicaciones atribuidas:** nueva regla causal y casos de evaluación. | Casos de «por qué» respondidos con las tres capas citadas. |
 | F2.8 | **Presentación por referencia** de tablas y gráficas, y fuentes sin duplicar (detalle abajo). | El caso real de market share se muestra como tabla validada; cifras de la tabla idénticas a las de la herramienta; sin vuelta extra al modelo. |
 | F2.9 | **Evaluación comparativa de los cuatro candidatos** (detalle abajo). | Reporte con calidad, latencia, tokens y costo por candidato; elección explícita del dueño. |
+
+### Preparación F2.5–F2.7 (11 oct 2026)
+
+La búsqueda determinística (`search_reports`, `search_news`) devuelve hasta cinco
+resultados solo desde `config/chat/evidence/approved-index.json`, que continúa vacío. Un registro aprobado requiere recibo que identifique candidato, decisión,
+dueño, fecha, hash de fuente y hash del pasaje/resumen. La herramienta valida que
+esos campos enlacen el recibo con el registro; la validación estructural no
+verifica una firma ni sustituye el recibo real del dueño. Las citas de reportes
+incluyen empresa, periodo, sección, página real y pasaje de hasta 480 caracteres;
+la ficha de noticia limita el resumen propio a 320 caracteres y cita breve a
+200, sin almacenar cuerpo de artículo.
+
+`config/chat/evidence/candidates/reports-candidate.json` ahora contiene siete
+pasajes revisables de Aeroméxico, Volaris y Viva Aerobus (Q1 y Q2 2026), con
+PDFs oficiales o exhibit SEC, hash de captura y ubicación comprobada. Los HTML
+de Volaris conservan una diferencia de bytes frente al Gold publicado; se marca
+`byte_identity_mismatch_pending_review`, sin llamarla restatement. Tres fichas
+FlightGlobal de combustible/resultados 2T26 tienen fecha, URL directa, SHA-256 y
+resumen corto propio en `config/chat/evidence/candidates/news/news-*.json`.
+
+El lote semanal se prepara a mano con
+`scripts/chat/collect_news_candidates.py --week-start YYYY-MM-DD --input
+<headline-metadata.json>`; primero imprime un dry-run y solo escribe con
+`--write-candidate`. Repetir contenido idéntico no cambia el archivo y no
+sobrescribe contenido distinto. `.github/workflows/chat-news-candidates.yml`
+expone únicamente `workflow_dispatch` para preparar un artifact cerrado de
+revisión, sin cron, commits, notificaciones ni aprobación. El input acepta
+metadatos, no cuerpo de artículos.
+
+`config/chat/prompt_rules/f2_7_attributed_causes.v1.md` define una propuesta
+de tres capas (dato, atribución explícita del reporte, contexto de noticia) y
+prohíbe inferir causalidad a partir de coincidencia temporal. Es una regla
+separada para revisión; no cambia el prompt F2.1 aprobado ni se activa en
+producción. `config/chat/evidence/candidates/f2-7-explanation-cases.json`
+propone un caso positivo con tres capas y citas enlazadas; sigue pendiente de
+revisión junto con sus pasajes y ficha noticiosa.
 
 **Orden y dependencias:**
 
