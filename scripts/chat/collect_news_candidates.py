@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sys
 from datetime import date
 from pathlib import Path
@@ -17,8 +18,10 @@ from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = ROOT / "config/chat/evidence/candidates/news"
-ALLOWED_HOSTS = {"news.google.com", "www.eleconomista.com.mx", "eleconomista.com.mx"}
+ALLOWED_HOSTS = {"www.flightglobal.com"}
 MAX_ITEMS = 250
+MAX_DESCRIPTION_CHARS = 320
+HASH_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
 def monday(value: str) -> date:
@@ -45,8 +48,27 @@ def _normalize_item(raw: Any) -> dict[str, Any] | None:
         return None
     if len(title) > 240 or len(url) > 1000 or len(publisher) > 120:
         return None
-    # The source hash is deliberately absent until a curator pins the exact
-    # source artifact. Hashing a URL or feed metadata would misstate provenance.
+    description = raw.get("description")
+    source_sha256 = raw.get("source_sha256")
+    if description is not None and (
+        not isinstance(description, str) or len(description.strip()) > MAX_DESCRIPTION_CHARS
+    ):
+        return None
+    if source_sha256 is not None and (
+        not isinstance(source_sha256, str) or not HASH_RE.fullmatch(source_sha256)
+    ):
+        return None
+    companies, topics, quote = raw.get("companies", []), raw.get("topics", []), raw.get("brief_quote")
+    if not isinstance(companies, list) or len(companies) > 8 or any(
+        not isinstance(x, str) or len(x) > 100 for x in companies
+    ):
+        return None
+    if not isinstance(topics, list) or len(topics) > 12 or any(
+        not isinstance(x, str) or len(x) > 80 for x in topics
+    ):
+        return None
+    if quote is not None and (not isinstance(quote, str) or len(quote.strip()) > 200):
+        return None
     item_id = hashlib.sha256(f"{published.isoformat()}\n{url}".encode()).hexdigest()[:20]
     return {
         "candidate_id": f"news-{item_id}",
@@ -55,12 +77,12 @@ def _normalize_item(raw: Any) -> dict[str, Any] | None:
         "publisher": publisher.strip(),
         "title": title.strip(),
         "url": url.strip(),
-        "source_sha256": None,
-        "description": None,
-        "companies": [],
-        "topics": [],
-        "brief_quote": None,
-        "review": {"status": "owner_review_required", "receipt_id": None},
+        "source_sha256": source_sha256,
+        "description": description.strip() if isinstance(description, str) else None,
+        "companies": [x.strip() for x in companies],
+        "topics": [x.strip() for x in topics],
+        "brief_quote": quote.strip() if isinstance(quote, str) else None,
+        "review": {"status": "owner_review_required", "receipt": None},
     }
 
 

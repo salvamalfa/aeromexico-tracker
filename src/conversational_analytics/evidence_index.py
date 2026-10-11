@@ -6,6 +6,7 @@ does not ingest report bodies or news articles at query time.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import unicodedata
@@ -20,8 +21,7 @@ MAX_EXCERPT_CHARS = 480
 MAX_NEWS_DESCRIPTION_CHARS = 320
 MAX_NEWS_QUOTE_CHARS = 200
 ALLOWED_HOSTS = frozenset(
-    {"sec.gov", "www.sec.gov", "bmv.com.mx", "www.bmv.com.mx", "aeromexico.com", "www.aeromexico.com",
-     "volaris.com", "www.volaris.com", "vivaaerobus.com", "www.vivaaerobus.com", "gob.mx", "www.gob.mx"}
+    {"sec.gov", "www.sec.gov", "ir.aeromexico.com", "cdn.investorcloud.net", "www.flightglobal.com"}
 )
 _TOKEN_RE = re.compile(r"[^\w]+", re.UNICODE)
 _HASH_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -42,15 +42,33 @@ def _text(value: Any, field: str, maximum: int, *, allow_empty: bool = False) ->
 
 def _approved(record: dict[str, Any]) -> bool:
     review = record.get("review")
+    receipt = review.get("receipt") if isinstance(review, dict) else None
+    if not isinstance(review, dict) or not isinstance(receipt, dict):
+        return False
+    source = _source(record)
+    try:
+        candidate_id = _text(record.get("id"), "id", 120)
+        if record.get("kind") == "report":
+            excerpt = _text(record.get("excerpt"), "excerpt", MAX_EXCERPT_CHARS)
+        elif record.get("kind") == "news":
+            excerpt = _text(record.get("description"), "description", MAX_NEWS_DESCRIPTION_CHARS)
+        else:
+            return False
+    except EvidenceIndexError:
+        return False
+    excerpt_hash = hashlib.sha256(excerpt.encode("utf-8")).hexdigest()
     return (
-        isinstance(review, dict)
-        and review.get("decision") == "owner_approved"
-        and isinstance(review.get("owner_id"), str)
-        and bool(review["owner_id"].strip())
-        and isinstance(review.get("receipt_id"), str)
-        and bool(review["receipt_id"].strip())
-        and isinstance(review.get("approved_at"), str)
-        and bool(review["approved_at"].strip())
+        review.get("decision") == "owner_approved"
+        and isinstance(review.get("owner_id"), str) and bool(review["owner_id"].strip())
+        and isinstance(review.get("approved_at"), str) and bool(review["approved_at"].strip())
+        and receipt.get("receipt_id") == review.get("receipt_id")
+        and isinstance(review.get("receipt_id"), str) and bool(review["receipt_id"].strip())
+        and receipt.get("candidate_id") == candidate_id
+        and receipt.get("decision") == "owner_approved"
+        and receipt.get("owner_id") == review.get("owner_id")
+        and receipt.get("approved_at") == review.get("approved_at")
+        and receipt.get("source_sha256") == source["sha256"]
+        and receipt.get("excerpt_sha256") == excerpt_hash
     )
 
 
@@ -150,6 +168,7 @@ class EvidenceIndex:
         results = []
         for score, record, excerpt in matches[:limit]:
             source = _source(record)
+            page = record["page"]
             results.append({
                 "id": _text(record.get("id"), "id", 120),
                 "company": _text(record.get("company"), "company", 100),
