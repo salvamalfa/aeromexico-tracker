@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import threading
 import time
 from typing import Any, Callable
@@ -10,10 +9,8 @@ from typing import Any, Callable
 from ._openai_helpers import OpenAIProviderError, to_dict
 
 INSTRUCTIONS_FINGERPRINT_KEY = "chat_instructions_sha256"
-
-
-def fingerprint(instructions: str) -> str:
-    return hashlib.sha256(instructions.encode("utf-8")).hexdigest()
+PROMPT_INPUT_FINGERPRINT_KEY = "chat_prompt_input_sha256"
+INSTRUCTIONS_DERIVATION_KEY = "chat_instructions_derivation"
 
 
 def verify_or_rotate_session(
@@ -24,6 +21,7 @@ def verify_or_rotate_session(
     cancel_event: threading.Event,
     retire_session: Callable[[str], None] | None,
 ) -> tuple[str | None, str | None]:
+    """Reuse only a session whose identity and effective prompt hash are verified."""
     if session_id is None:
         return None, None
     if cancel_event.is_set():

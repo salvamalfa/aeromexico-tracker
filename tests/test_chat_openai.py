@@ -30,9 +30,16 @@ from openai.types.beta.agent_session_turn_output_text_done_event import AgentSes
 from openai.types.beta.agents.sessions.turn import Turn  # noqa: E402
 
 from src.conversational_analytics.providers.openai import OpenAIProvider, OpenAIProviderError  # noqa: E402
-from src.conversational_analytics.providers._openai_prompt import SYSTEM_INSTRUCTIONS  # noqa: E402
+from src.conversational_analytics.providers._openai_prompt import SYSTEM_INSTRUCTIONS, prompt_sha256  # noqa: E402
 from src.conversational_analytics.providers._openai_session_version import INSTRUCTIONS_FINGERPRINT_KEY  # noqa: E402
+from src.conversational_analytics.providers._openai_prompt import PERIOD_SELECTION_POLICY_VERSION  # noqa: E402
+from src.conversational_analytics.providers._openai_runtime_helpers import validate_tool_specs  # noqa: E402
+from src.conversational_analytics.providers._openai_session_version import INSTRUCTIONS_DERIVATION_KEY, PROMPT_INPUT_FINGERPRINT_KEY  # noqa: E402
 from src.conversational_analytics.tools.registry import ToolRegistry  # noqa: E402
+
+DEFAULT_SESSION_METADATA = {
+    INSTRUCTIONS_FINGERPRINT_KEY: prompt_sha256(SYSTEM_INSTRUCTIONS),
+}
 
 
 def _usage(input_tokens: int = 31, output_tokens: int = 19) -> dict:
@@ -312,10 +319,15 @@ class FakeClient:
         self.beta = SimpleNamespace(agents=SimpleNamespace(sessions=sessions))
 
 
-def _provider(client, **config_overrides):
+def _provider(client, *, system_instructions_override=None, **config_overrides):
     values = {"openai_enabled": True, "model": "model-explicit", "max_turn_seconds": 5}
     values.update(config_overrides)
-    return OpenAIProvider(SimpleNamespace(**values), client=client)
+    provider = OpenAIProvider(
+        SimpleNamespace(**values),
+        client=client,
+        system_instructions_override=system_instructions_override,
+    )
+    return provider
 
 
 def _specs():
@@ -370,8 +382,11 @@ def test_creates_none_session_with_explicit_model_tools_and_live_context_envelop
 
     request = fake.created[0]
     assert request["environment"] == {"type": "none"}
+    expected_prompt_hash = hashlib.sha256(SYSTEM_INSTRUCTIONS.encode("utf-8")).hexdigest()
     assert request["metadata"] == {
-        INSTRUCTIONS_FINGERPRINT_KEY: hashlib.sha256(SYSTEM_INSTRUCTIONS.encode("utf-8")).hexdigest()
+        INSTRUCTIONS_FINGERPRINT_KEY: expected_prompt_hash,
+        PROMPT_INPUT_FINGERPRINT_KEY: expected_prompt_hash,
+        INSTRUCTIONS_DERIVATION_KEY: PERIOD_SELECTION_POLICY_VERSION,
     }
     assert request["agent"]["model"] == "model-explicit"
     assert request["agent"]["reasoning"] == {"effort": "max"}
@@ -590,6 +605,6 @@ def test_cancel_and_delete_use_documented_events_and_session_endpoint():
 
 def test_tool_schema_is_exactly_allowlisted_and_closed():
     specs = _specs()
-    assert len(OpenAIProvider._validate_tool_specs(specs)) == 7
+    assert len(validate_tool_specs(specs)) == 7
     with pytest.raises(OpenAIProviderError, match="herramienta desconocida"):
-        OpenAIProvider._validate_tool_specs(specs + [{"type": "function", "name": "shell", "parameters": {}}])
+        validate_tool_specs(specs + [{"type": "function", "name": "shell", "parameters": {}}])

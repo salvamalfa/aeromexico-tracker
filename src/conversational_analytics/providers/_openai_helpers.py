@@ -9,11 +9,12 @@ from collections.abc import Callable, Iterable, Mapping
 from typing import Any
 from urllib.parse import urlparse
 
-from .base import ProviderResult
+from ._openai_error_metadata import sanitize_upstream_fields
 from ._openai_prompt import (
     SYSTEM_INSTRUCTIONS as SYSTEM_INSTRUCTIONS,
     effective_instructions as effective_instructions,
 )
+from .base import ProviderResult
 
 ALLOWED_TOOL_NAMES = frozenset(
     {
@@ -38,7 +39,15 @@ USAGE_POLL_INTERVAL_SECONDS = 2.0
 TERMINAL_USAGE_RECONCILIATION_SECONDS = 30.0
 TERMINAL_USAGE_POLL_MAX_ATTEMPTS = 16
 PROVIDER_REASON_CODES = frozenset(
-    {"provider_terminal_failed", "tool_call_limit", "turn_timeout", "tool_result_limit"}
+    {
+        "provider_terminal_failed",
+        "provider_stream_incomplete",
+        "provider_completion_without_text",
+        "provider_request_failed",
+        "tool_call_limit",
+        "turn_timeout",
+        "tool_result_limit",
+    }
 )
 POST_CANCEL_USAGE_TIMEOUT_SECONDS = TERMINAL_USAGE_RECONCILIATION_SECONDS
 POST_CANCEL_USAGE_ATTEMPTS = 6
@@ -54,16 +63,31 @@ class OpenAIProviderError(RuntimeError):
         usage: tuple[int, int] | None = None,
         *,
         reason_code: str | None = None,
+        diagnostic_reason_code: str | None = None,
         session_id: str | None = None,
         turn_id: str | None = None,
+        upstream_exception_type: str | None = None,
+        upstream_http_status: int | None = None,
+        upstream_error_code: str | None = None,
     ) -> None:
         super().__init__(message)
         self.usage = usage
         self.reason_code = (
             reason_code if isinstance(reason_code, str) and reason_code in PROVIDER_REASON_CODES else None
         )
+        self.diagnostic_reason_code = (
+            diagnostic_reason_code
+            if isinstance(diagnostic_reason_code, str) and diagnostic_reason_code in PROVIDER_REASON_CODES
+            else None
+        )
         self.session_id = session_id if isinstance(session_id, str) and session_id else None
         self.turn_id = turn_id if isinstance(turn_id, str) and turn_id else None
+        self.upstream_metadata = sanitize_upstream_fields(
+            upstream_exception_type, upstream_http_status, upstream_error_code
+        )
+        self.upstream_exception_type = self.upstream_metadata.get("upstream_exception_type")
+        self.upstream_http_status = self.upstream_metadata.get("upstream_http_status")
+        self.upstream_error_code = self.upstream_metadata.get("upstream_error_code")
 
 
 def provider_terminal_failure(
@@ -524,30 +548,3 @@ def close_stream(stream: Any) -> None:
                 close()
     except Exception:
         return
-
-
-def latest_user_message(messages: list[dict[str, Any]]) -> str:
-    for message in reversed(messages):
-        if isinstance(message, dict) and message.get("role") == "user":
-            content = message.get("content")
-            if isinstance(content, str) and content.strip():
-                return content
-    raise OpenAIProviderError("No hay un mensaje de usuario para enviar al proveedor")
-
-
-def app_turn_id(messages: list[dict[str, Any]]) -> str:
-    import uuid
-
-    for message in reversed(messages):
-        if isinstance(message, dict) and message.get("role") == "user":
-            for key in ("turn_id", "id"):
-                candidate = message.get(key)
-                if isinstance(candidate, str) and candidate:
-                    return candidate
-    return str(uuid.uuid4())
-
-
-def track_session(session_id: str | None, persist_session, tracked: set[str]) -> None:
-    if session_id and session_id not in tracked:
-        persist_session(session_id)
-        tracked.add(session_id)
