@@ -213,7 +213,10 @@ def _progress_payload(report: dict[str, Any], state: dict[str, Any]) -> dict[str
         cases = model["cases"]
         models.append(
             {
+                "candidate_id": model.get("candidate_id"),
                 "model": model["model"],
+                "reasoning_effort": model.get("reasoning_effort"),
+                "text_verbosity": model.get("text_verbosity"),
                 "case_count": len(cases),
                 "completed_turn_count": sum(bool(case.get("model_turn_completed")) for case in cases),
                 "provider_error_count": sum(case.get("status") == "provider_error" for case in cases),
@@ -229,6 +232,8 @@ def _progress_payload(report: dict[str, Any], state: dict[str, Any]) -> dict[str
         "data_version": report["data_version"],
         "semantic_version": report["semantic_version"],
         "candidate_models": report["candidate_models"],
+        "candidate_ids": report.get("candidate_ids", []),
+        "candidate_configs": report.get("candidate_configs", []),
         "output_path": report["output_path"],
         "progress_path": report["progress_path"],
         "budget_usd_operational_stop": report["budget_usd_operational_stop"],
@@ -239,6 +244,9 @@ def _progress_payload(report: dict[str, Any], state: dict[str, Any]) -> dict[str
         ),
         "status": state["status"],
         "current_model": state.get("current_model"),
+        "current_candidate_id": state.get("current_candidate_id"),
+        "current_reasoning_effort": state.get("current_reasoning_effort"),
+        "current_text_verbosity": state.get("current_text_verbosity"),
         "active_case_id": state.get("active_case_id"),
         "active_session_id": state.get("active_session_id"),
         "session_to_reconcile": state.get("session_to_reconcile"),
