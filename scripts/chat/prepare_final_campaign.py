@@ -66,6 +66,11 @@ def build_plan(*, profile_path: Path, candidate_override: str | None = None) -> 
         raise ValueError("El perfil debe incluir el cohorte completo de 30 casos de negocio")
     if profile.get("safety_prompt_injection_cases") is not False:
         raise ValueError("Este preflight no debe añadir casos de prompt injection")
+    repetitions = profile.get("run_repetitions")
+    if isinstance(repetitions, bool) or not isinstance(repetitions, int) or repetitions < 1:
+        raise ValueError("run_repetitions debe ser un entero positivo")
+    if repetitions != 1:
+        raise ValueError("este perfil solo admite la única repetición presupuestada")
     if fixture_hash != EXPECTED_CASE_HASH:
         raise ValueError("El fixture de negocio cambió; requiere revisión y nuevo pin")
     cases = fixture.get("cases")
@@ -117,7 +122,7 @@ def build_plan(*, profile_path: Path, candidate_override: str | None = None) -> 
         "case_count": len(cases),
         "case_ids": ids,
         "messages_per_candidate": messages,
-        "repetitions": profile["run_repetitions"],
+        "repetitions": repetitions,
         "prompt_injection_cases_added": 0,
         "source_hashes": {
             "profile": profile_hash,

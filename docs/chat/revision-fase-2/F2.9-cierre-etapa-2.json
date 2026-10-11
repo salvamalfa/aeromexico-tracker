@@ -38,6 +38,7 @@
     "candidate": "gpt-6.1-sol@low",
     "case_count": 30,
     "user_messages_per_candidate": 34,
+    "repetitions": 1,
     "input_tokens_projected": 1909558,
     "output_tokens_projected": 9423,
     "cost_before_margin_usd": 4.86812,
@@ -53,7 +54,7 @@
     "sol_low_measured_input_tokens": 842452,
     "sol_low_measured_output_tokens": 4157,
     "business_fixture_sha256": "30fc0acfc5d9fee1ffffd3624209712dd8160806dae4d904c4310a8f53537640",
-    "model_catalog_sha256": "9744c985f051c898a8af6e8d3c8766c6885e77d8c3f2c5b58bd1a4d37f302d75"
+    "model_catalog_sha256": "9744c985f051c898a8af6e8d3c8766c6885e77d8a13d55b72e30427b15468d4c"
   },
   "privacy": {
     "raw_answers_included": false,
