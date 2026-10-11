@@ -178,7 +178,7 @@ Cada paquete va en su propio PR, con pruebas y documentación.
 | F2.0 | **Modelo y esfuerzo explícitos** (detalle abajo). | El esfuerzo se configura, se valida, se registra y se reporta. |
 | F2.1 | **Prompt de redacción y criterio** (detalle abajo). | Prompt nuevo con pruebas offline; mejora medida en la etapa 1 de F2.9. |
 | F2.2 | **Conjunto de evaluación de negocio y harness** (detalle abajo). | Fixture con versiones fijadas, rúbrica aprobada por el dueño y harness con conversaciones de varios turnos y candidatos `modelo@esfuerzo`. |
-| F2.3 | **Glosario de negocio y métricas totales:** ingresos, costos, combustible, utilidad operativa y años completos, con procedencia y reglas de agregación. | Catálogo ampliado y conciliado con los reportes; pruebas de agregación. |
+| F2.3 | **Glosario de negocio y métricas totales:** ingresos, costos, combustible, utilidad operativa y años completos, con procedencia y reglas de agregación. | Catálogo candidato, agregación determinista y propuesta para revisión; las métricas nuevas siguen bloqueadas hasta decisión del dueño. [Revisión breve](f23-propuesta-revision-dueno.md) · [detalle técnico](f23-metricas-detalle-tecnico.md). |
 | F2.4 | **Rutas y comparaciones:** constructor de consultas sobre datos publicados de rutas y comparación de varias aerolíneas. Las cifras estimadas se rotulan como estimación. | «Top N rutas» reproducible; ninguna estimación presentada como dato observado. |
 | F2.5 | **Índice de reportes** con búsqueda citada. | Pasajes con empresa, periodo y página; pruebas de citas. |
 | F2.6 | **Índice semanal de noticias** con rutina programada y aprobación del dueño. | Fichas sin texto completo de terceros; flujo de aprobación; herramienta de búsqueda. |

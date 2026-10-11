@@ -1,0 +1,4092 @@
+{
+  "coverage": {
+    "available_rows": 70,
+    "period_rows": 120,
+    "requested_periods": [
+      "2025Q1",
+      "2025Q2",
+      "2025Q3",
+      "2025Q4",
+      "2025H1",
+      "2025H2",
+      "2025",
+      "2026Q1",
+      "2026Q2",
+      "2026H1"
+    ],
+    "source_quarter_coverage": {
+      "fuel_expense:AEROMEXICO": [
+        "2024Q3",
+        "2024Q4",
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4",
+        "2026Q1",
+        "2026Q2"
+      ],
+      "fuel_expense:VIVA_AEROBUS": [],
+      "fuel_expense:VOLARIS": [],
+      "operating_costs:AEROMEXICO": [
+        "2024Q3",
+        "2024Q4",
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4",
+        "2026Q1",
+        "2026Q2"
+      ],
+      "operating_costs:VIVA_AEROBUS": [],
+      "operating_costs:VOLARIS": [],
+      "operating_income:AEROMEXICO": [
+        "2024Q3",
+        "2024Q4",
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4",
+        "2026Q1",
+        "2026Q2"
+      ],
+      "operating_income:VIVA_AEROBUS": [],
+      "operating_income:VOLARIS": [
+        "2020Q3",
+        "2020Q4",
+        "2021Q1",
+        "2021Q2",
+        "2021Q3",
+        "2021Q4",
+        "2022Q1",
+        "2022Q2",
+        "2022Q3",
+        "2022Q4",
+        "2023Q1",
+        "2023Q2",
+        "2023Q3",
+        "2023Q4",
+        "2024Q1",
+        "2024Q2",
+        "2024Q3",
+        "2024Q4",
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4",
+        "2026Q1",
+        "2026Q2"
+      ],
+      "total_revenue:AEROMEXICO": [
+        "2024Q3",
+        "2024Q4",
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4",
+        "2026Q1",
+        "2026Q2"
+      ],
+      "total_revenue:VIVA_AEROBUS": [
+        "2023Q1",
+        "2023Q2",
+        "2023Q3",
+        "2023Q4",
+        "2024Q1",
+        "2024Q2",
+        "2024Q3",
+        "2024Q4",
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4",
+        "2026Q1",
+        "2026Q2"
+      ],
+      "total_revenue:VOLARIS": [
+        "2020Q3",
+        "2020Q4",
+        "2021Q1",
+        "2021Q2",
+        "2021Q3",
+        "2021Q4",
+        "2022Q1",
+        "2022Q2",
+        "2022Q3",
+        "2022Q4",
+        "2023Q1",
+        "2023Q2",
+        "2023Q3",
+        "2023Q4",
+        "2024Q1",
+        "2024Q2",
+        "2024Q3",
+        "2024Q4",
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4",
+        "2026Q1",
+        "2026Q2"
+      ]
+    }
+  },
+  "metadata": {
+    "approval_status": "owner_review_required_nonproduction_candidate",
+    "artifact_id": "chat_business_metrics_f23_candidate_v1",
+    "currency_basis": "Uses Gold value_usd and retains each source currency; this script computes no conversion.",
+    "input_hashes": {
+      "data/gold/dim_source_artifact.parquet": "87a50a160e87287d49064a9ca3f7baf8cb782336de89ac14e7c0d58e98ea0223",
+      "data/gold/dim_source_priority.parquet": "9964715398fa008459d0d1d5997253aee68e00d222204eaeff63a98e2d80e3d3",
+      "data/gold/fact_carrier_metrics.parquet": "20dff48b0e347e5d35cb184a3c8828b55901b64f620dbebed66b59b63b5cfe86"
+    },
+    "limitations": [
+      "Review artifact over versioned public Gold; this is not an approved chat payload.",
+      "No raw filings or untracked bronze/silver/warehouse data are read.",
+      "Financial definitions, source precedence, USD normalization, entity scope, and coverage require owner review before activation."
+    ],
+    "period_rule": "Years and semesters sum complete selected calendar quarters; native annual Gold rows are excluded from those sums.",
+    "production_enabled": false,
+    "source_selection": "Lowest dim_source_priority.priority per metric/entity/quarter. Equal-rank records collapse only when normalized USD values match; mismatches are marked as conflicts.",
+    "source_tables": [
+      "data/gold/fact_carrier_metrics.parquet",
+      "data/gold/dim_source_priority.parquet",
+      "data/gold/dim_source_artifact.parquet"
+    ]
+  },
+  "rows": [
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q1"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2025Q1"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "2f56f5531fe03816495251ac6e0b8bcfecf54d872e056de9634f5fd1f15421a8",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 1184000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q2"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2025Q2"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q2",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "6207b9a113074f68e0d8196f9597ddf35f40a32b5f53ca97c5cd2c0a2f0ac781",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 1314000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q3"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2025Q3"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q3",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "942c6005d9a1b38a021fab446d950398bb227d38072646779be012f69eb19ce6",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312525276200/d39921dex992.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 1425000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q4"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2025Q4"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q4",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "22fc1c4202485216ae3caaaf3b525d33f1220c51ca7c53088fb04ecacbf9f498",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526052732/d89476dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 1438000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025H1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "2f56f5531fe03816495251ac6e0b8bcfecf54d872e056de9634f5fd1f15421a8",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex991.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "6207b9a113074f68e0d8196f9597ddf35f40a32b5f53ca97c5cd2c0a2f0ac781",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 2498000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025H2",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "942c6005d9a1b38a021fab446d950398bb227d38072646779be012f69eb19ce6",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312525276200/d39921dex992.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "22fc1c4202485216ae3caaaf3b525d33f1220c51ca7c53088fb04ecacbf9f498",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526052732/d89476dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 2863000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "942c6005d9a1b38a021fab446d950398bb227d38072646779be012f69eb19ce6",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312525276200/d39921dex992.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "22fc1c4202485216ae3caaaf3b525d33f1220c51ca7c53088fb04ecacbf9f498",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526052732/d89476dex991.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "2f56f5531fe03816495251ac6e0b8bcfecf54d872e056de9634f5fd1f15421a8",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex991.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "6207b9a113074f68e0d8196f9597ddf35f40a32b5f53ca97c5cd2c0a2f0ac781",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 5361000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2026Q1"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2026Q1"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2026Q1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "2f56f5531fe03816495251ac6e0b8bcfecf54d872e056de9634f5fd1f15421a8",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 1341000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2026Q2"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2026Q2"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2026Q2",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "6207b9a113074f68e0d8196f9597ddf35f40a32b5f53ca97c5cd2c0a2f0ac781",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 1479000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2026H1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "2f56f5531fe03816495251ac6e0b8bcfecf54d872e056de9634f5fd1f15421a8",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex991.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "6207b9a113074f68e0d8196f9597ddf35f40a32b5f53ca97c5cd2c0a2f0ac781",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 2820000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q1"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2025Q1"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "cb83220cb9aa729d30f301225ca888b282172c1302a0807742274fa9b3132243",
+          "url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281425001665/ex99-1.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 678000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q2"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2025Q2"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q2",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "cd051d052ff6a2e6e008da48b28eefe4895bdcf724f4f4bab14de6c24873cc10",
+          "url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281425002705/ex99-1.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 693000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q3"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2025Q3"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q3",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "b068ea73b4014d408bd9da7b084319853f29a46e03d4fae70162f3cf0aca848f",
+          "url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281425003639/ex99-1.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 784000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q4"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2025Q4"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q4",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "2090f2ba2b3509fb1164c757dd524969a2492decdb74ae6457215fdd023fe420",
+          "url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281426000491/ex99-1.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 882000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025H1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "cb83220cb9aa729d30f301225ca888b282172c1302a0807742274fa9b3132243",
+          "url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281425001665/ex99-1.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "cd051d052ff6a2e6e008da48b28eefe4895bdcf724f4f4bab14de6c24873cc10",
+          "url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281425002705/ex99-1.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 1371000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025H2",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "b068ea73b4014d408bd9da7b084319853f29a46e03d4fae70162f3cf0aca848f",
+          "url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281425003639/ex99-1.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "2090f2ba2b3509fb1164c757dd524969a2492decdb74ae6457215fdd023fe420",
+          "url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281426000491/ex99-1.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 1666000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "cb83220cb9aa729d30f301225ca888b282172c1302a0807742274fa9b3132243",
+          "url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281425001665/ex99-1.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "cd051d052ff6a2e6e008da48b28eefe4895bdcf724f4f4bab14de6c24873cc10",
+          "url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281425002705/ex99-1.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "b068ea73b4014d408bd9da7b084319853f29a46e03d4fae70162f3cf0aca848f",
+          "url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281425003639/ex99-1.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "2090f2ba2b3509fb1164c757dd524969a2492decdb74ae6457215fdd023fe420",
+          "url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281426000491/ex99-1.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 3037000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2026Q1"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2026Q1"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2026Q1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "5f796fe7b6b49fddb9a9798b223e81862ecd5d5bf5ff81a532ad1874d7d8dd61",
+          "url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281426002555/ex99-1.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 770000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2026Q2"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2026Q2"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2026Q2",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "841076ba42154b82a09c87003383e588dfa197b0e7bfffd32193ca6af94ebbf4",
+          "url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281426003836/ex99-1.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 859000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2026H1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "5f796fe7b6b49fddb9a9798b223e81862ecd5d5bf5ff81a532ad1874d7d8dd61",
+          "url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281426002555/ex99-1.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "841076ba42154b82a09c87003383e588dfa197b0e7bfffd32193ca6af94ebbf4",
+          "url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281426003836/ex99-1.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 1629000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q1"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2025Q1"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "767a917048b9d014b644caeff8ff020d2c5161fb970eb0187b7b3ff78025b84b",
+          "url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2025-1T25-en.pdf"
+        }
+      ],
+      "source_systems": [
+        "viva_ir"
+      ],
+      "unit": "USD",
+      "value": 491000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q2"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2025Q2"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q2",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "51edba882b0e8e2c8a0bfc8e53c54cf32d90144e153b754eca69f06725ac6439",
+          "url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2025-2T25-en.pdf"
+        }
+      ],
+      "source_systems": [
+        "viva_ir"
+      ],
+      "unit": "USD",
+      "value": 549000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q3"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2025Q3"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q3",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "6e85f1d3a926e21c76b431cd886b38f5e871eb6a8d62482e0ea3cdda3ee46b77",
+          "url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2025-3T25-en.pdf"
+        }
+      ],
+      "source_systems": [
+        "viva_ir"
+      ],
+      "unit": "USD",
+      "value": 656000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q4"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2025Q4"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q4",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "eec96225ac7d3c4fe270777bdb65893a0c303a1b0d7990b201a7dc9fb473d0ab",
+          "url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2025-4T25-en.pdf"
+        }
+      ],
+      "source_systems": [
+        "viva_ir"
+      ],
+      "unit": "USD",
+      "value": 680000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025H1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "767a917048b9d014b644caeff8ff020d2c5161fb970eb0187b7b3ff78025b84b",
+          "url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2025-1T25-en.pdf"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "51edba882b0e8e2c8a0bfc8e53c54cf32d90144e153b754eca69f06725ac6439",
+          "url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2025-2T25-en.pdf"
+        }
+      ],
+      "source_systems": [
+        "viva_ir"
+      ],
+      "unit": "USD",
+      "value": 1040000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025H2",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "6e85f1d3a926e21c76b431cd886b38f5e871eb6a8d62482e0ea3cdda3ee46b77",
+          "url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2025-3T25-en.pdf"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "eec96225ac7d3c4fe270777bdb65893a0c303a1b0d7990b201a7dc9fb473d0ab",
+          "url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2025-4T25-en.pdf"
+        }
+      ],
+      "source_systems": [
+        "viva_ir"
+      ],
+      "unit": "USD",
+      "value": 1336000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "767a917048b9d014b644caeff8ff020d2c5161fb970eb0187b7b3ff78025b84b",
+          "url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2025-1T25-en.pdf"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "51edba882b0e8e2c8a0bfc8e53c54cf32d90144e153b754eca69f06725ac6439",
+          "url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2025-2T25-en.pdf"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "6e85f1d3a926e21c76b431cd886b38f5e871eb6a8d62482e0ea3cdda3ee46b77",
+          "url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2025-3T25-en.pdf"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "eec96225ac7d3c4fe270777bdb65893a0c303a1b0d7990b201a7dc9fb473d0ab",
+          "url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2025-4T25-en.pdf"
+        }
+      ],
+      "source_systems": [
+        "viva_ir"
+      ],
+      "unit": "USD",
+      "value": 2376000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2026Q1"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2026Q1"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2026Q1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "9ff9a82afff61477908acd10018be79333210b6dcaa90cabb90bffffa04e8ab7",
+          "url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2026-1T26-en.pdf"
+        }
+      ],
+      "source_systems": [
+        "viva_ir"
+      ],
+      "unit": "USD",
+      "value": 528000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2026Q2"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2026Q2"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2026Q2",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "4fca922642ce3fe06743578064239107539b0546c1519a11abecb0eef098bc7f",
+          "url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2026-2T26-en.pdf"
+        }
+      ],
+      "source_systems": [
+        "viva_ir"
+      ],
+      "unit": "USD",
+      "value": 609000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "gold_metric_key": "total_revenue",
+      "included_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "metric_id": "total_revenue",
+      "missing_or_conflicting_quarters": [],
+      "period": "2026H1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "9ff9a82afff61477908acd10018be79333210b6dcaa90cabb90bffffa04e8ab7",
+          "url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2026-1T26-en.pdf"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "4fca922642ce3fe06743578064239107539b0546c1519a11abecb0eef098bc7f",
+          "url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2026-2T26-en.pdf"
+        }
+      ],
+      "source_systems": [
+        "viva_ir"
+      ],
+      "unit": "USD",
+      "value": 1137000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q1"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [
+        "2025Q1"
+      ],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "2f56f5531fe03816495251ac6e0b8bcfecf54d872e056de9634f5fd1f15421a8",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 1042000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q2"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [
+        "2025Q2"
+      ],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q2",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "6207b9a113074f68e0d8196f9597ddf35f40a32b5f53ca97c5cd2c0a2f0ac781",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 1084000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q3"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [
+        "2025Q3"
+      ],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q3",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "942c6005d9a1b38a021fab446d950398bb227d38072646779be012f69eb19ce6",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312525276200/d39921dex992.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 1172000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q4"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [
+        "2025Q4"
+      ],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q4",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "22fc1c4202485216ae3caaaf3b525d33f1220c51ca7c53088fb04ecacbf9f498",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526052732/d89476dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 1135000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025H1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "2f56f5531fe03816495251ac6e0b8bcfecf54d872e056de9634f5fd1f15421a8",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex991.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "6207b9a113074f68e0d8196f9597ddf35f40a32b5f53ca97c5cd2c0a2f0ac781",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 2126000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025H2",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "942c6005d9a1b38a021fab446d950398bb227d38072646779be012f69eb19ce6",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312525276200/d39921dex992.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "22fc1c4202485216ae3caaaf3b525d33f1220c51ca7c53088fb04ecacbf9f498",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526052732/d89476dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 2307000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "942c6005d9a1b38a021fab446d950398bb227d38072646779be012f69eb19ce6",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312525276200/d39921dex992.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "22fc1c4202485216ae3caaaf3b525d33f1220c51ca7c53088fb04ecacbf9f498",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526052732/d89476dex991.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "2f56f5531fe03816495251ac6e0b8bcfecf54d872e056de9634f5fd1f15421a8",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex991.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "6207b9a113074f68e0d8196f9597ddf35f40a32b5f53ca97c5cd2c0a2f0ac781",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 4433000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2026Q1"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [
+        "2026Q1"
+      ],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [],
+      "period": "2026Q1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "2f56f5531fe03816495251ac6e0b8bcfecf54d872e056de9634f5fd1f15421a8",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 1200000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2026Q2"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [
+        "2026Q2"
+      ],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [],
+      "period": "2026Q2",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "6207b9a113074f68e0d8196f9597ddf35f40a32b5f53ca97c5cd2c0a2f0ac781",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 1411000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [],
+      "period": "2026H1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "2f56f5531fe03816495251ac6e0b8bcfecf54d872e056de9634f5fd1f15421a8",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex991.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "6207b9a113074f68e0d8196f9597ddf35f40a32b5f53ca97c5cd2c0a2f0ac781",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 2611000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q1"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [
+        "2025Q1"
+      ],
+      "period": "2025Q1",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q2"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [
+        "2025Q2"
+      ],
+      "period": "2025Q2",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q3"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [
+        "2025Q3"
+      ],
+      "period": "2025Q3",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q4"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [
+        "2025Q4"
+      ],
+      "period": "2025Q4",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "period": "2025H1",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "period": "2025H2",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "period": "2025",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2026Q1"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [
+        "2026Q1"
+      ],
+      "period": "2026Q1",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2026Q2"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [
+        "2026Q2"
+      ],
+      "period": "2026Q2",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "period": "2026H1",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q1"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [
+        "2025Q1"
+      ],
+      "period": "2025Q1",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q2"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [
+        "2025Q2"
+      ],
+      "period": "2025Q2",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q3"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [
+        "2025Q3"
+      ],
+      "period": "2025Q3",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q4"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [
+        "2025Q4"
+      ],
+      "period": "2025Q4",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "period": "2025H1",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "period": "2025H2",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "period": "2025",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2026Q1"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [
+        "2026Q1"
+      ],
+      "period": "2026Q1",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2026Q2"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [
+        "2026Q2"
+      ],
+      "period": "2026Q2",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "gold_metric_key": "operating_expenses_total",
+      "included_quarters": [],
+      "metric_id": "operating_costs",
+      "missing_or_conflicting_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "period": "2026H1",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q1"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [
+        "2025Q1"
+      ],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "2f56f5531fe03816495251ac6e0b8bcfecf54d872e056de9634f5fd1f15421a8",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 286000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q2"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [
+        "2025Q2"
+      ],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q2",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "6207b9a113074f68e0d8196f9597ddf35f40a32b5f53ca97c5cd2c0a2f0ac781",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 274000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q3"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [
+        "2025Q3"
+      ],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q3",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "942c6005d9a1b38a021fab446d950398bb227d38072646779be012f69eb19ce6",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312525276200/d39921dex992.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 298000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q4"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [
+        "2025Q4"
+      ],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q4",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "22fc1c4202485216ae3caaaf3b525d33f1220c51ca7c53088fb04ecacbf9f498",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526052732/d89476dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 280000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025H1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "2f56f5531fe03816495251ac6e0b8bcfecf54d872e056de9634f5fd1f15421a8",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex991.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "6207b9a113074f68e0d8196f9597ddf35f40a32b5f53ca97c5cd2c0a2f0ac781",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 560000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025H2",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "942c6005d9a1b38a021fab446d950398bb227d38072646779be012f69eb19ce6",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312525276200/d39921dex992.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "22fc1c4202485216ae3caaaf3b525d33f1220c51ca7c53088fb04ecacbf9f498",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526052732/d89476dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 578000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "942c6005d9a1b38a021fab446d950398bb227d38072646779be012f69eb19ce6",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312525276200/d39921dex992.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "22fc1c4202485216ae3caaaf3b525d33f1220c51ca7c53088fb04ecacbf9f498",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526052732/d89476dex991.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "2f56f5531fe03816495251ac6e0b8bcfecf54d872e056de9634f5fd1f15421a8",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex991.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "6207b9a113074f68e0d8196f9597ddf35f40a32b5f53ca97c5cd2c0a2f0ac781",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 1138000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2026Q1"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [
+        "2026Q1"
+      ],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [],
+      "period": "2026Q1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "2f56f5531fe03816495251ac6e0b8bcfecf54d872e056de9634f5fd1f15421a8",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 315000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2026Q2"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [
+        "2026Q2"
+      ],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [],
+      "period": "2026Q2",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "6207b9a113074f68e0d8196f9597ddf35f40a32b5f53ca97c5cd2c0a2f0ac781",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 494000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [],
+      "period": "2026H1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "2f56f5531fe03816495251ac6e0b8bcfecf54d872e056de9634f5fd1f15421a8",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex991.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "6207b9a113074f68e0d8196f9597ddf35f40a32b5f53ca97c5cd2c0a2f0ac781",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 809000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q1"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [
+        "2025Q1"
+      ],
+      "period": "2025Q1",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q2"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [
+        "2025Q2"
+      ],
+      "period": "2025Q2",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q3"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [
+        "2025Q3"
+      ],
+      "period": "2025Q3",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q4"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [
+        "2025Q4"
+      ],
+      "period": "2025Q4",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "period": "2025H1",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "period": "2025H2",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "period": "2025",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2026Q1"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [
+        "2026Q1"
+      ],
+      "period": "2026Q1",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2026Q2"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [
+        "2026Q2"
+      ],
+      "period": "2026Q2",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "period": "2026H1",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q1"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [
+        "2025Q1"
+      ],
+      "period": "2025Q1",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q2"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [
+        "2025Q2"
+      ],
+      "period": "2025Q2",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q3"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [
+        "2025Q3"
+      ],
+      "period": "2025Q3",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q4"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [
+        "2025Q4"
+      ],
+      "period": "2025Q4",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "period": "2025H1",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "period": "2025H2",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "period": "2025",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2026Q1"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [
+        "2026Q1"
+      ],
+      "period": "2026Q1",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2026Q2"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [
+        "2026Q2"
+      ],
+      "period": "2026Q2",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "gold_metric_key": "jet_fuel_expense",
+      "included_quarters": [],
+      "metric_id": "fuel_expense",
+      "missing_or_conflicting_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "period": "2026H1",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q1"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [
+        "2025Q1"
+      ],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "2f56f5531fe03816495251ac6e0b8bcfecf54d872e056de9634f5fd1f15421a8",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 142000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q2"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [
+        "2025Q2"
+      ],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q2",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "6207b9a113074f68e0d8196f9597ddf35f40a32b5f53ca97c5cd2c0a2f0ac781",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 230000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q3"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [
+        "2025Q3"
+      ],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q3",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "942c6005d9a1b38a021fab446d950398bb227d38072646779be012f69eb19ce6",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312525276200/d39921dex992.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 252800000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q4"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [
+        "2025Q4"
+      ],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q4",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "22fc1c4202485216ae3caaaf3b525d33f1220c51ca7c53088fb04ecacbf9f498",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526052732/d89476dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 303100000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025H1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "2f56f5531fe03816495251ac6e0b8bcfecf54d872e056de9634f5fd1f15421a8",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex991.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "6207b9a113074f68e0d8196f9597ddf35f40a32b5f53ca97c5cd2c0a2f0ac781",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 372000000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025H2",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "942c6005d9a1b38a021fab446d950398bb227d38072646779be012f69eb19ce6",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312525276200/d39921dex992.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "22fc1c4202485216ae3caaaf3b525d33f1220c51ca7c53088fb04ecacbf9f498",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526052732/d89476dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 555900000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "942c6005d9a1b38a021fab446d950398bb227d38072646779be012f69eb19ce6",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312525276200/d39921dex992.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "22fc1c4202485216ae3caaaf3b525d33f1220c51ca7c53088fb04ecacbf9f498",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526052732/d89476dex991.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "2f56f5531fe03816495251ac6e0b8bcfecf54d872e056de9634f5fd1f15421a8",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex991.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "6207b9a113074f68e0d8196f9597ddf35f40a32b5f53ca97c5cd2c0a2f0ac781",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 927900000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2026Q1"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [
+        "2026Q1"
+      ],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [],
+      "period": "2026Q1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "2f56f5531fe03816495251ac6e0b8bcfecf54d872e056de9634f5fd1f15421a8",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 141800000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2026Q2"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [
+        "2026Q2"
+      ],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [],
+      "period": "2026Q2",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "6207b9a113074f68e0d8196f9597ddf35f40a32b5f53ca97c5cd2c0a2f0ac781",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 67900000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "AEROMEXICO",
+      "expected_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [],
+      "period": "2026H1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "2f56f5531fe03816495251ac6e0b8bcfecf54d872e056de9634f5fd1f15421a8",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex991.htm"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "6207b9a113074f68e0d8196f9597ddf35f40a32b5f53ca97c5cd2c0a2f0ac781",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+        }
+      ],
+      "source_systems": [
+        "sec_edgar"
+      ],
+      "unit": "USD",
+      "value": 209700000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q1"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [
+        "2025Q1"
+      ],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "42f4a94abc6db64633ce3f12136e6120c83fb03c123c2e632ed09b59a8f7022b",
+          "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1458190_2025-01_1.zip#member=ifrsxbrl_1458190_2025-01_1.json"
+        }
+      ],
+      "source_systems": [
+        "bmv_xbrl"
+      ],
+      "unit": "USD",
+      "value": -10172000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q2"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [
+        "2025Q2"
+      ],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q2",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "e98664e99dbfbd11162b901f6809dbf46925fb2a8bb2088a98a099a89388bc1d",
+          "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1480425_2025-02_1.zip#member=ifrsxbrl_1480425_2025-02_1.json"
+        }
+      ],
+      "source_systems": [
+        "bmv_xbrl"
+      ],
+      "unit": "USD",
+      "value": -22266000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q3"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [
+        "2025Q3"
+      ],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q3",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "a17f2178a4267084eaaf172ac14579596e648cec534dc0b4b258383d5c1e5c42",
+          "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1502022_2025-03_1.zip#member=ifrsxbrl_1502022_2025-03_1.json"
+        }
+      ],
+      "source_systems": [
+        "bmv_xbrl"
+      ],
+      "unit": "USD",
+      "value": 67655000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q4"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [
+        "2025Q4"
+      ],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025Q4",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "10d2964d90b567f71b29c792429b3a475cbe72713ed378c47fb9160cfb3bed31",
+          "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1551832_2025-04d_1.zip#member=ifrsxbrl_1551832_2025-04d_1.json"
+        }
+      ],
+      "source_systems": [
+        "bmv_xbrl"
+      ],
+      "unit": "USD",
+      "value": 99777000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025H1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "42f4a94abc6db64633ce3f12136e6120c83fb03c123c2e632ed09b59a8f7022b",
+          "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1458190_2025-01_1.zip#member=ifrsxbrl_1458190_2025-01_1.json"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "e98664e99dbfbd11162b901f6809dbf46925fb2a8bb2088a98a099a89388bc1d",
+          "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1480425_2025-02_1.zip#member=ifrsxbrl_1480425_2025-02_1.json"
+        }
+      ],
+      "source_systems": [
+        "bmv_xbrl"
+      ],
+      "unit": "USD",
+      "value": -32438000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025H2",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "a17f2178a4267084eaaf172ac14579596e648cec534dc0b4b258383d5c1e5c42",
+          "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1502022_2025-03_1.zip#member=ifrsxbrl_1502022_2025-03_1.json"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "10d2964d90b567f71b29c792429b3a475cbe72713ed378c47fb9160cfb3bed31",
+          "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1551832_2025-04d_1.zip#member=ifrsxbrl_1551832_2025-04d_1.json"
+        }
+      ],
+      "source_systems": [
+        "bmv_xbrl"
+      ],
+      "unit": "USD",
+      "value": 167432000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [],
+      "period": "2025",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "42f4a94abc6db64633ce3f12136e6120c83fb03c123c2e632ed09b59a8f7022b",
+          "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1458190_2025-01_1.zip#member=ifrsxbrl_1458190_2025-01_1.json"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "e98664e99dbfbd11162b901f6809dbf46925fb2a8bb2088a98a099a89388bc1d",
+          "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1480425_2025-02_1.zip#member=ifrsxbrl_1480425_2025-02_1.json"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "a17f2178a4267084eaaf172ac14579596e648cec534dc0b4b258383d5c1e5c42",
+          "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1502022_2025-03_1.zip#member=ifrsxbrl_1502022_2025-03_1.json"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "10d2964d90b567f71b29c792429b3a475cbe72713ed378c47fb9160cfb3bed31",
+          "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1551832_2025-04d_1.zip#member=ifrsxbrl_1551832_2025-04d_1.json"
+        }
+      ],
+      "source_systems": [
+        "bmv_xbrl"
+      ],
+      "unit": "USD",
+      "value": 134994000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2026Q1"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [
+        "2026Q1"
+      ],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [],
+      "period": "2026Q1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "f288185ce24c81dc88d9b54bce1a94d057bbe74b09c56587b28aa62627d439df",
+          "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1551858_2026-01_1.zip#member=ifrsxbrl_1551858_2026-01_1.json"
+        }
+      ],
+      "source_systems": [
+        "bmv_xbrl"
+      ],
+      "unit": "USD",
+      "value": -21319000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2026Q2"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [
+        "2026Q2"
+      ],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [],
+      "period": "2026Q2",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "3be67b3fa6536773e68a3ff3c2c2c10600b74797f0d6235d81ce2b3049430179",
+          "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1575692_2026-02_1.zip#member=ifrsxbrl_1575692_2026-02_1.json"
+        }
+      ],
+      "source_systems": [
+        "bmv_xbrl"
+      ],
+      "unit": "USD",
+      "value": -98848000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "available",
+      "currency_as_reported": [
+        "USD"
+      ],
+      "entity_id": "VOLARIS",
+      "expected_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [],
+      "period": "2026H1",
+      "source_references": [
+        {
+          "public_artifact": true,
+          "sha256": "f288185ce24c81dc88d9b54bce1a94d057bbe74b09c56587b28aa62627d439df",
+          "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1551858_2026-01_1.zip#member=ifrsxbrl_1551858_2026-01_1.json"
+        },
+        {
+          "public_artifact": true,
+          "sha256": "3be67b3fa6536773e68a3ff3c2c2c10600b74797f0d6235d81ce2b3049430179",
+          "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1575692_2026-02_1.zip#member=ifrsxbrl_1575692_2026-02_1.json"
+        }
+      ],
+      "source_systems": [
+        "bmv_xbrl"
+      ],
+      "unit": "USD",
+      "value": -120167000.0,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q1"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [
+        "2025Q1"
+      ],
+      "period": "2025Q1",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q2"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [
+        "2025Q2"
+      ],
+      "period": "2025Q2",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q3"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [
+        "2025Q3"
+      ],
+      "period": "2025Q3",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q4"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [
+        "2025Q4"
+      ],
+      "period": "2025Q4",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [
+        "2025Q1",
+        "2025Q2"
+      ],
+      "period": "2025H1",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [
+        "2025Q3",
+        "2025Q4"
+      ],
+      "period": "2025H2",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [
+        "2025Q1",
+        "2025Q2",
+        "2025Q3",
+        "2025Q4"
+      ],
+      "period": "2025",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2026Q1"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [
+        "2026Q1"
+      ],
+      "period": "2026Q1",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2026Q2"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [
+        "2026Q2"
+      ],
+      "period": "2026Q2",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    },
+    {
+      "aggregation": "deterministic_sum_of_selected_quarter_value_usd",
+      "any_derived": false,
+      "any_estimated": false,
+      "approval_status": "owner_review_required_nonproduction_candidate",
+      "availability": "incomplete",
+      "currency_as_reported": [],
+      "entity_id": "VIVA_AEROBUS",
+      "expected_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "gold_metric_key": "operating_income",
+      "included_quarters": [],
+      "metric_id": "operating_income",
+      "missing_or_conflicting_quarters": [
+        "2026Q1",
+        "2026Q2"
+      ],
+      "period": "2026H1",
+      "source_references": [],
+      "source_systems": [],
+      "unit": "USD",
+      "value": null,
+      "value_kind": "candidate_reported_gold_derived_sum"
+    }
+  ]
+}
