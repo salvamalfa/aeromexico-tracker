@@ -37,7 +37,19 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Dev only: skip a period whose analysis record/approval is not present locally.",
     )
+    parser.add_argument(
+        "--business-metrics-proposal",
+        type=Path,
+        help="Review proposal to export only with matching approval receipt.",
+    )
+    parser.add_argument(
+        "--business-metrics-receipt",
+        type=Path,
+        help="Owner approval receipt; both business-metrics options are required together.",
+    )
     args = parser.parse_args(argv)
+    if bool(args.business_metrics_proposal) != bool(args.business_metrics_receipt):
+        parser.error("--business-metrics-proposal and --business-metrics-receipt must be supplied together")
 
     try:
         flight_payload = build_flight_payload()
@@ -49,6 +61,15 @@ def main(argv: list[str] | None = None) -> int:
             args.out,
             allow_missing=args.allow_missing_analysis,
         )
+        if args.business_metrics_proposal and args.business_metrics_receipt:
+            from src.web_export.business_metrics import export_approved_business_metrics
+
+            written += export_approved_business_metrics(
+                args.business_metrics_proposal,
+                PATHS.root / "config/chat/metrics-candidates.json",
+                args.business_metrics_receipt,
+                args.out,
+            )
     except (MissingWebInput, MissingAnalysisInput) as error:
         print(f"web_export: {error}", file=sys.stderr)
         return 1

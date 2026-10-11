@@ -1,9 +1,8 @@
-"""Business metric aggregation primitives and the F2.3 closed candidate gate.
+"""Business metric aggregations over the validated public Snapshot.
 
-This module reads only the already validated public Snapshot. Candidate totals
-remain unavailable until an owner-approved semantic definition and a published
-source field are wired in. The aggregation function is intentionally generic so
-other deterministic query tools can reuse the same complete-period rules.
+Financial totals require a separately published payload and a receipt whose
+hashes match the exact candidate definitions and proposal. Aggregations are
+deterministic and require complete calendar quarters.
 """
 
 from __future__ import annotations
@@ -18,6 +17,7 @@ from src.conversational_analytics.data.snapshot import Snapshot
 _PERIOD_RE = re.compile(r"^(\d{4})(?:Q([1-4])|H([12]))?$")
 _PROPOSAL_IDS = {"total_revenue", "operating_costs", "fuel_expense", "operating_income"}
 _ENTITY_IDS = {"AEROMEXICO", "VOLARIS", "VIVA_AEROBUS", "INDUSTRY"}
+_WEIGHTED_RATIO_IDS = {"rask_cents_per_km", "cask_cents_per_km", "load_factor"}
 BUSINESS_METRIC_TOOL_NAMES = ("query_business_metrics", "get_business_metric_definition")
 
 
@@ -70,18 +70,28 @@ def business_metric_tool_specs() -> list[dict[str, Any]]:
     ]
 
 
-def get_business_metric_definition(metric_id: str) -> dict[str, Any]:
+def get_business_metric_definition(metric_id: str, snapshot: Snapshot | None = None) -> dict[str, Any]:
     """Return a candidate definition without changing its approval state."""
     catalog = metric_proposals()
     try:
         definition = next(item for item in catalog["candidate_metrics"] if item["id"] == metric_id)
     except StopIteration as exc:
         raise ValueError(f"Definición candidata desconocida: {metric_id}") from exc
+    is_approved = False
+    if snapshot is not None and metric_id in _PROPOSAL_IDS:
+        try:
+            published = snapshot.payload("data/v1/business_metrics.json")
+            is_approved = metric_id in published.get("metadata", {}).get("metric_ids", [])
+        except ValueError:
+            pass
+    result = dict(definition)
+    if is_approved:
+        result["approval_status"] = "owner_approved_published"
     return {
-        "metric": definition,
-        "approval_gate": catalog["metadata"]["activation_gate"],
-        "approval_status": definition["approval_status"],
-        "production_enabled": False,
+        "metric": result,
+        "approval_gate": "open" if is_approved else catalog["metadata"]["activation_gate"],
+        "approval_status": result["approval_status"],
+        "production_enabled": is_approved,
     }
 
 
@@ -243,27 +253,131 @@ def deterministic_query(
     entity_id: str,
     period: str,
 ) -> dict[str, Any]:
-    """Query an F2.3 business metric with a deterministic owner approval gate.
-
-    Current integration is intentionally limited to the already approved
-    `company_passengers` projection. Proposed total financial metrics always
-    return a gate-closed result with no value.
-    """
+    """Query approved totals/ratios from Snapshot, or return the candidate gate closed."""
     _expected_quarters(period)  # validate even when the candidate gate is closed
     if entity_id not in _ENTITY_IDS:
         raise ValueError(f"Entidad desconocida: {entity_id}")
     if metric_id in _PROPOSAL_IDS:
         proposal = next(item for item in metric_proposals()["candidate_metrics"] if item["id"] == metric_id)
+        try:
+            payload = snapshot.payload("data/v1/business_metrics.json")
+        except ValueError:
+            payload = None
+        if payload is None or metric_id not in payload.get("metadata", {}).get("metric_ids", []):
+            return {
+                "metric_id": metric_id,
+                "entity_id": entity_id,
+                "period": period,
+                "value": None,
+                "availability": "approval_required",
+                "value_kind": "candidate_unapproved",
+                "approval_gate": "closed",
+                "reason": proposal["blocked_reason"],
+                "source_references": [],
+            }
+        approved_rows = [
+            {"period_id": row["period"], "value": row["value"], "availability": row["availability"]}
+            for row in payload["rows"]
+            if row["metric_id"] == metric_id and row["entity_id"] == entity_id
+        ]
+        aggregate_rows = [
+            {"period_id": row["period_id"], "value": row["value"]}
+            for row in approved_rows
+            if row["availability"] == "available"
+        ]
+        aggregate = aggregate_quarters(aggregate_rows, period)
+        expected = set(aggregate["expected_periods"])
+        source_conflicts = sorted(
+            row["period_id"]
+            for row in approved_rows
+            if row["period_id"] in expected and row["availability"] == "source_conflict"
+        )
+        if source_conflicts:
+            aggregate.update(
+                {"value": None, "availability": "source_conflict", "conflicting_periods": source_conflicts}
+            )
+        row_by_period = {
+            row["period"]: row
+            for row in payload["rows"]
+            if row["metric_id"] == metric_id and row["entity_id"] == entity_id
+        }
+        used = [row_by_period[q] for q in aggregate["included_periods"] if q in row_by_period]
+        cited = [row_by_period[q] for q in aggregate["expected_periods"] if q in row_by_period]
+        source_refs_by_key = {}
+        for row in cited:
+            for ref in row["source_references"]:
+                source_refs_by_key[
+                    (ref["url"], ref["sha256"], ref["source_system"], ref["member"], ref["label"])
+                ] = ref
+        quarter_source = [source for row in used for source in row["quarter_sources"]]
         return {
             "metric_id": metric_id,
             "entity_id": entity_id,
-            "period": period,
-            "value": None,
-            "availability": "approval_required",
-            "value_kind": "candidate_unapproved",
-            "approval_gate": "closed",
-            "reason": proposal["blocked_reason"],
-            "source_references": [],
+            **aggregate,
+            "unit": "USD",
+            "value_kind": "owner_approved_reported_quarter_sum"
+            if len(aggregate["expected_periods"]) > 1
+            else "owner_approved_reported",
+            "approval_gate": "open",
+            "currency_as_reported": sorted(
+                {currency for row in used for currency in row["currency_as_reported"]}
+            ),
+            "any_preliminary": any(source["is_preliminary"] for source in quarter_source),
+            "fiscal_period_ids": sorted(
+                {period_id for source in quarter_source for period_id in [source["fiscal_period_id"]]}
+            ),
+            "source_references": [
+                source_refs_by_key[key]
+                for key in sorted(
+                    source_refs_by_key, key=lambda value: tuple(str(part or "") for part in value)
+                )
+            ],
+            "quarter_sources": quarter_source,
+        }
+    if metric_id in _WEIGHTED_RATIO_IDS:
+        doc = snapshot.payload("data/v1/executive.json")
+        entity = doc.get("entities", {}).get(entity_id)
+        rows = entity.get("records", []) if entity else []
+        field = metric_id
+        ratio_rows = [
+            {
+                "period_id": row.get("period_id"),
+                "value": row.get(field),
+                "weight": row.get("ask_km"),
+                "basis": row.get("load_factor_basis") if metric_id == "load_factor" else "ASK-km",
+            }
+            for row in rows
+        ]
+        aggregate = aggregate_weighted_ratio(ratio_rows, period)
+        expected = set(aggregate["expected_periods"])
+        basis_by_period = {
+            row.get("period_id"): row.get("basis") for row in ratio_rows if row.get("period_id") in expected
+        }
+        bases = {basis for basis in basis_by_period.values() if basis}
+        if metric_id == "load_factor" and len(bases) > 1:
+            aggregate.update(
+                {
+                    "value": None,
+                    "availability": "source_conflict",
+                    "conflicting_periods": sorted(basis_by_period),
+                }
+            )
+        field_unit = "percent" if metric_id == "load_factor" else "cents_usd_per_ask_km"
+        return {
+            "metric_id": metric_id,
+            "entity_id": entity_id,
+            **aggregate,
+            "unit": field_unit,
+            "denominator": "ask_km",
+            "aggregation": "ASK-weighted mean of published quarterly ratios; requires complete quarters",
+            "ratio_basis": sorted(bases),
+            "value_kind": "derived_weighted_mean_of_published_quarter_ratios",
+            "source_references": [
+                {
+                    "label": "Datos publicados del dashboard",
+                    "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json",
+                }
+            ],
         }
     if metric_id != "company_passengers":
         raise ValueError(f"Métrica F2.3 no disponible en este dispatcher: {metric_id}")
@@ -303,7 +417,7 @@ def dispatch_business_metric_tool(
     if tool_name == "get_business_metric_definition":
         if set(arguments) != {"metric_id"}:
             raise ValueError("get_business_metric_definition requiere solo metric_id")
-        return get_business_metric_definition(arguments["metric_id"])
+        return get_business_metric_definition(arguments["metric_id"], snapshot)
     if tool_name == "query_business_metrics":
         if set(arguments) != {"metric_id", "entity_id", "period"}:
             raise ValueError("query_business_metrics requiere metric_id, entity_id y period")

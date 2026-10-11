@@ -32,6 +32,8 @@ CONTRACT_FILES = (
     "executive.schema.json",
     "market.schema.json",
     "analysis.schema.json",
+    "business_metrics.schema.json",
+    "business_metrics_approval.schema.json",
     "publication_manifest.schema.json",
     "privacy.yaml",
 )
