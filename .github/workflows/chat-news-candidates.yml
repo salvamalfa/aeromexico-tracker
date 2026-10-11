@@ -24,20 +24,40 @@ jobs:
   candidates:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v10.2.0
         with:
           enable-cache: true
       - name: Validate metadata path
         env:
           METADATA_FILE: ${{ inputs.metadata_file }}
         run: |
-          case "$METADATA_FILE" in
-            config/chat/evidence/candidates/news/inbox/*.json) test -f "$METADATA_FILE" ;;
-            *) echo "metadata_file must be a committed JSON inside the news inbox" >&2; exit 2 ;;
-          esac
+          python - "$METADATA_FILE" <<'PY'
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          root = Path.cwd().resolve()
+          inbox = (root / "config/chat/evidence/candidates/news/inbox").resolve()
+          raw_path = Path(sys.argv[1])
+          requested = root / raw_path
+          candidate = requested.resolve()
+          in_repo_path = [requested, *requested.parents]
+          has_symlink = any(path.is_symlink() for path in in_repo_path if path == root or root in path.parents)
+          if (
+              raw_path.is_absolute() or ".." in raw_path.parts or has_symlink
+              or not candidate.is_relative_to(inbox) or candidate.suffix != ".json" or not candidate.is_file()
+          ):
+              raise SystemExit("metadata_file must resolve to a JSON file inside the news inbox")
+          relative = candidate.relative_to(root).as_posix()
+          if subprocess.run(
+              ["git", "ls-files", "--error-unmatch", "--", relative], check=False,
+              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+          ).returncode:
+              raise SystemExit("metadata_file must be tracked in Git and cannot be a symlink")
+          PY
       - name: Build weekly candidate manifest
         env:
           WEEK_START: ${{ inputs.week_start }}

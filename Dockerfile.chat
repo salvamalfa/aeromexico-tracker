@@ -31,6 +31,7 @@ COPY src/dashboard/__init__.py src/dashboard/flights_html.py ./src/dashboard/
 COPY config/chat/*.yaml ./config/chat/
 COPY config/chat/*.json ./config/chat/
 COPY config/chat/system_prompt.txt ./config/chat/system_prompt.txt
+COPY config/chat/evidence/approved-index.json ./config/chat/evidence/approved-index.json
 COPY contracts/chat/semantic.schema.json ./contracts/chat/
 COPY contracts/web/*.json contracts/web/privacy.yaml ./contracts/web/
 COPY site/publication_manifest.json ./site/
