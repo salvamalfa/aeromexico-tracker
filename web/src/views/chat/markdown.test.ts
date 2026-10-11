@@ -21,6 +21,25 @@ describe("safe response rendering", () => {
     expect(host.textContent).not.toContain("{{tabla:");
   });
 
+  it("keeps verified financial and reporting citations clickable", () => {
+    const host = document.createElement("div");
+    const display = {
+      display_id: "tabla:financial_sources", kind: "table", title: "Resultados", value_kind: "reported",
+      columns: [{ key: "value", label: "Valor" }], rows: [{ value: 1 }],
+      sources: [
+        { label: "Aeroméxico IR", url: "https://ir.aeromexico.com/report-q2.pdf" },
+        { label: "Viva InvestorCloud", url: "https://cdn.investorcloud.net/viva/report-q2.pdf" },
+        { label: "FlightGlobal", url: "https://www.flightglobal.com/news/article.html" },
+        { label: "No verificada", url: "https://example.org/article" },
+      ],
+    };
+    renderSafeMarkdown(host, "{{tabla:financial_sources}}", [], [display]);
+    expect([...host.querySelectorAll<HTMLAnchorElement>(".chat-display-sources a")].map((link) => link.hostname)).toEqual([
+      "ir.aeromexico.com", "cdn.investorcloud.net", "www.flightglobal.com",
+    ]);
+    expect(host.textContent).not.toContain("No verificada");
+  });
+
   it("removes missing and mismatched display markers without drawing artifacts", () => {
     const host = document.createElement("div");
     renderSafeMarkdown(host, "{{tabla:unknown}} {{grafica:unknown}}", [], [

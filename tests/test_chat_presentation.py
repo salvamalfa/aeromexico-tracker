@@ -6,6 +6,7 @@ from pathlib import Path
 from src.conversational_analytics.config import ChatConfig
 from src.conversational_analytics.data.snapshot import Snapshot
 from src.conversational_analytics.presentation import DisplayRegistry, make_displays
+from src.conversational_analytics.providers._openai_helpers import references_from_results
 from src.conversational_analytics.providers.base import ProviderResult
 from src.conversational_analytics.storage import ChatStore
 from src.conversational_analytics.tools.registry import ToolRegistry
@@ -36,6 +37,11 @@ def test_market_table_cells_are_the_published_market_json_values() -> None:
     for entity_id in ("VOLARIS", "VIVA_AEROBUS", "AEROMEXICO"):
         label = next(item["label"] for item in catalog["entities"]["entities"] if item["id"] == entity_id)
         assert displayed[label] == published[entity_id]["share"]
+    metric_label = next(
+        item["label"] for item in catalog["metrics"]["metrics"] if item["id"] == "market_share"
+    )
+    assert display["title"] == metric_label
+    assert next(column for column in display["columns"] if column["key"] == "value")["unit"] == "fraction"
     assert display["rows"][0]["period"] == "2T26"
 
 
@@ -106,6 +112,48 @@ def test_invalid_display_shape_is_not_registered() -> None:
     content, displays, _ = registry.finalize("{{tabla:bad}}")
     assert content == ""
     assert displays == []
+
+
+def test_verified_financial_and_reporting_sources_survive_but_unknown_hosts_do_not() -> None:
+    display = DisplayRegistry().add(
+        {
+            "display_id": "tabla:verified_sources",
+            "kind": "table",
+            "title": "Fuentes verificadas",
+            "columns": [{"key": "value", "label": "Valor"}],
+            "rows": [{"value": 1}],
+            "value_kind": "reported",
+            "sources": [
+                {"label": "Aeroméxico IR", "url": "https://ir.aeromexico.com/report-q2.pdf"},
+                {"label": "Viva InvestorCloud", "url": "https://cdn.investorcloud.net/viva/report-q2.pdf"},
+                {"label": "FlightGlobal", "url": "https://www.flightglobal.com/news/article.html"},
+                {"label": "Unverified", "url": "https://example.org/article"},
+            ],
+        }
+    )
+
+    assert display is not None
+    assert [source["label"] for source in display["sources"]] == [
+        "Aeroméxico IR",
+        "Viva InvestorCloud",
+        "FlightGlobal",
+    ]
+    references = references_from_results(
+        [
+            {
+                "source_references": [
+                    {"label": source["label"], "url": source["url"]}
+                    for source in display["sources"]
+                ]
+                + [{"label": "Unverified", "url": "https://example.org/article"}]
+            }
+        ]
+    )
+    assert {reference["url"] for reference in references} == {
+        "https://ir.aeromexico.com/report-q2.pdf",
+        "https://cdn.investorcloud.net/viva/report-q2.pdf",
+        "https://www.flightglobal.com/news/article.html",
+    }
 
 
 def test_route_tool_contract_accepts_observed_and_missing_display_objects() -> None:

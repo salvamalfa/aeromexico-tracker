@@ -25,7 +25,17 @@ ALLOWED_TOOL_NAMES = frozenset(
     }
 )
 ALLOWED_REFERENCE_HOSTS = frozenset(
-    {"sec.gov", "www.sec.gov", "gob.mx", "www.gob.mx", "github.com", "salvamalfa.github.io"}
+    {
+        "sec.gov",
+        "www.sec.gov",
+        "gob.mx",
+        "www.gob.mx",
+        "github.com",
+        "salvamalfa.github.io",
+        "ir.aeromexico.com",
+        "cdn.investorcloud.net",
+        "www.flightglobal.com",
+    }
 )
 SYSTEM_INSTRUCTIONS = """\
 Eres el asistente analítico de Airline Tracker. Responde en español salvo que el

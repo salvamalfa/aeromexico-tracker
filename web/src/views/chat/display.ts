@@ -6,7 +6,10 @@ const VALUE_KINDS = new Set([
   "derived_sum_of_reported_quarters", "candidate_unapproved", "missing",
 ]);
 const DISPLAY_ID = /^(tabla|grafica):[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$/;
-const TRUSTED_HOSTS = new Set(["sec.gov", "www.sec.gov", "ir.aeromexico.com", "gob.mx", "www.gob.mx", "github.com", "salvamalfa.github.io"]);
+const TRUSTED_HOSTS = new Set([
+  "sec.gov", "www.sec.gov", "ir.aeromexico.com", "cdn.investorcloud.net", "www.flightglobal.com",
+  "gob.mx", "www.gob.mx", "github.com", "salvamalfa.github.io",
+]);
 
 function parseSources(value: unknown): ChatReference[] {
   if (!Array.isArray(value)) return [];

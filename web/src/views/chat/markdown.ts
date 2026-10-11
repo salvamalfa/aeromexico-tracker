@@ -2,8 +2,8 @@ import type { ChatChart, ChatDisplay, ChatMessage, ChatReference } from "../../t
 import { renderDisplay, safeDisplays } from "./display";
 
 const TRUSTED_HOSTS = new Set([
-  "sec.gov", "www.sec.gov", "ir.aeromexico.com", "gob.mx", "www.gob.mx",
-  "github.com", "salvamalfa.github.io",
+  "sec.gov", "www.sec.gov", "ir.aeromexico.com", "cdn.investorcloud.net", "www.flightglobal.com",
+  "gob.mx", "www.gob.mx", "github.com", "salvamalfa.github.io",
 ]);
 
 function trustedSourceUrl(raw: string): string | undefined {
