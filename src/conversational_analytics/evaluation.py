@@ -368,7 +368,14 @@ def main(argv: list[str] | None = None) -> int:
         "--run", action="store_true", help="ejecutar comparación live (solo con consentimiento explícito)"
     )
     parser.add_argument("--budget-usd", type=float)
-    parser.add_argument("--models", nargs="+", help="modelos candidatos, sin ganador predeterminado")
+    parser.add_argument(
+        "--models",
+        nargs="+",
+        help=(
+            "candidatos sin ganador predeterminado: modelo, modelo@esfuerzo@verbosidad, "
+            "o alias Luna-M/Luna-X/Sol-B/Sol-M"
+        ),
+    )
     parser.add_argument("--fixture", type=Path, help="fixture JSON; por omisión holdout de seguridad")
     parser.add_argument("--stage", type=int, choices=(1, 2, 3), help="seleccionar casos de negocio por etapa F2.9")
     parser.add_argument("--with-holdout", action="store_true", help="combinar seguridad holdout con fixture de negocio")
@@ -389,8 +396,8 @@ def main(argv: list[str] | None = None) -> int:
         "--model-price",
         action="append",
         default=[],
-        metavar="MODEL=INPUT:OUTPUT",
-        help="tarifas USD/millón para un candidato, ingresadas por quien ejecuta",
+        metavar="CANDIDATE=INPUT:OUTPUT",
+        help="tarifa USD/millón por candidato; use exactamente el valor de --models",
     )
     parser.add_argument("--snapshot", type=Path, default=Path("site"))
     args = parser.parse_args(argv)
@@ -472,6 +479,8 @@ def main(argv: list[str] | None = None) -> int:
         or (not args.models and not is_business)
     ):
         parser.error("--run exige --budget-usd positivo y --opt-in; el holdout también requiere --models")
+    if args.budget_usd > 10:
+        parser.error("el umbral operativo de este harness no puede superar US$10")
     if is_business:
         if args.probe_only or args.model_price or args.models:
             parser.error("una campaña F2.2 usa candidatos y tarifas del catálogo; no admite sonda ni overrides")
@@ -529,7 +538,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if not args.probe_only and len(args.models) not in (2, 3, 4):
         parser.error(
-            "la comparación admite 2–4 candidatos; usa --probe-only para una sonda individual"
+            "la comparación holdout requiere 2–4 candidatos; usa --probe-only para una sonda individual"
         )
     prices = _parse_prices(args.model_price, args.models, parser)
     if set(prices) != set(args.models):
