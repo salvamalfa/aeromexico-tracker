@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import copy
+import hashlib
+import json
 import re
 from typing import Any
-from urllib.parse import urlsplit
+from urllib.parse import quote, urlsplit
 
 from src.conversational_analytics.semantic.plan import PlanValidationError
 
@@ -154,3 +156,80 @@ def safe_source_url(url: Any) -> str | None:
     if parsed.scheme != "https" or parsed.hostname not in SOURCE_HOSTS or parsed.username or parsed.password:
         return None
     return url
+
+
+def source_references(networks: list[tuple[dict[str, Any], str]]) -> list[dict[str, str]]:
+    refs = []
+    for network, path in networks:
+        paths = network.get("source_paths")
+        if not isinstance(paths, list):
+            paths = [path]
+        for source_path in paths:
+            period_label = (
+                source_path.rsplit("/", 1)[-1].removesuffix(".json")
+                if isinstance(network.get("source_paths"), list)
+                else network.get("period_label", source_path.rsplit("/", 1)[-1])
+            )
+            refs.append(
+                {
+                    "label": f"Dashboard público · {period_label}",
+                    "url": "https://salvamalfa.github.io/aeromexico-tracker/" + quote(source_path, safe="/"),
+                }
+            )
+    return list({(item["label"], item["url"]): item for item in refs}.values())
+
+
+def build_display(
+    query: dict[str, Any], rows: list[dict[str, Any]], networks: list[tuple[dict[str, Any], str]]
+) -> dict[str, Any]:
+    metric = query.get("metric", "passengers")
+    title, unit = METRIC_LABELS[metric]
+    columns = [
+        {"key": "market_key", "label": "Ruta"},
+        {"key": "value", "label": title, "unit": unit},
+        {"key": "value_kind", "label": "Tipo de valor"},
+    ]
+    if query.get("comparison_period"):
+        columns.extend(
+            [
+                {"key": "comparison_value", "label": query["comparison_period"], "unit": unit},
+                {"key": "comparison_value_kind", "label": "Tipo en periodo anterior"},
+                {"key": "comparison_available", "label": "Comparación disponible"},
+                {"key": "comparison_reason", "label": "Motivo"},
+                {"key": "absolute_change", "label": "Cambio", "unit": unit},
+                {"key": "relative_change_percent", "label": "Cambio relativo", "unit": "%"},
+            ]
+        )
+    display_rows = []
+    for row in rows:
+        display_row = {key: row[key] for key in ("market_key", "value", "value_kind")}
+        if row.get("comparison"):
+            comparison = row["comparison"]
+            display_row.update(
+                {
+                    "comparison_value": comparison["value"],
+                    "comparison_value_kind": comparison["value_kind"],
+                    "comparison_available": "Sí" if comparison["available"] else "No",
+                    "comparison_reason": comparison["reason"],
+                    "absolute_change": comparison["absolute_change"],
+                    "relative_change_percent": comparison["relative_change_percent"],
+                }
+            )
+        display_rows.append(display_row)
+    kinds = {row.get("value_kind") for row in rows if row.get("value_kind")}
+    value_kind = next(iter(kinds)) if len(kinds) == 1 else "mixed" if kinds else "missing"
+    query_hash = hashlib.sha256(
+        json.dumps(query, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()[:16]
+    refs = source_references(networks)
+    return {
+        "display_id": f"tabla:rutas_{query_hash}",
+        "kind": "table",
+        "title": query.get("title", f"Rutas compartidas · {query.get('period', '')}"),
+        "columns": columns,
+        "rows": display_rows,
+        "value_kind": value_kind,
+        "source": refs[0] if refs else None,
+        "sources": refs,
+        "source_references": refs,
+    }

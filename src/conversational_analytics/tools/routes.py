@@ -31,10 +31,16 @@ from src.conversational_analytics.tools._route_contract import (
     METRIC_LABELS as _METRIC_LABELS,
 )
 from src.conversational_analytics.tools._route_contract import (
+    build_display as _build_display,
+)
+from src.conversational_analytics.tools._route_contract import (
     coverage as _coverage,
 )
 from src.conversational_analytics.tools._route_contract import (
     safe_source_url as _safe_source_url,
+)
+from src.conversational_analytics.tools._route_contract import (
+    source_references as _source_references,
 )
 from src.conversational_analytics.tools._route_contract import (
     validate_choice as _validate_choice,
@@ -45,9 +51,13 @@ from src.conversational_analytics.tools._route_contract import (
 from src.conversational_analytics.tools._route_contract import (
     validate_top_n as _validate_top_n,
 )
+from src.conversational_analytics.tools._route_rollup import rollup_complete_quarter
 
 
 def _value_kind(network: dict[str, Any], route: dict[str, Any], metric: str) -> str:
+    override = (route.get("metric_value_kinds") or {}).get(metric)
+    if override in {"reported", "observed", "estimated", "scheduled", "mixed", "missing"}:
+        return override
     if metric == "passengers" and route.get("passengers_estimated"):
         return "estimated"
     if metric in {"seats", "load_factor"} and route.get("capacity_estimated"):
@@ -81,21 +91,49 @@ class RouteTools:
         try:
             network = self.snapshot.payload(path)
         except (ValueError, KeyError):
+            if segment == "domestic" and "Q" in period:
+                year, quarter = int(period[:4]), int(period[-1])
+                first_month = (quarter - 1) * 3 + 1
+                month_periods = [f"{year:04d}M{month:02d}" for month in range(first_month, first_month + 3)]
+                month_networks = []
+                for month_period in month_periods:
+                    try:
+                        month_networks.append(
+                            self.snapshot.payload(path_for(entity_id, segment, month_period))
+                        )
+                    except (ValueError, KeyError):
+                        return None, path
+                rollup = rollup_complete_quarter(period, month_networks, _value_kind)
+                if rollup is not None:
+                    rollup["source_paths"] = [path_for(entity_id, segment, month) for month in month_periods]
+                return rollup, path
             return None, path
         return network, path
 
     def _metadata(self, query: dict[str, Any], networks: list[tuple[dict[str, Any], str]]) -> dict[str, Any]:
         refs = []
         for network, path in networks:
-            published_url = "https://salvamalfa.github.io/aeromexico-tracker/" + quote(path, safe="/")
-            refs.append(
-                {
-                    "label": f"Dashboard público, rutas: {network.get('period_label', query['period'])}",
-                    "url": published_url,
-                }
-            )
-            source_url = _safe_source_url(network.get("source_url"))
-            if source_url:
+            source_paths = network.get("source_paths")
+            if not isinstance(source_paths, list):
+                source_paths = [path]
+            for source_path in source_paths:
+                published_url = "https://salvamalfa.github.io/aeromexico-tracker/" + quote(
+                    source_path, safe="/"
+                )
+                source_period = source_path.rsplit("/", 1)[-1].removesuffix(".json")
+                refs.append(
+                    {
+                        "label": f"Dashboard público, rutas: {source_period}",
+                        "url": published_url,
+                    }
+                )
+            source_urls = network.get("source_urls")
+            if not isinstance(source_urls, list):
+                source_urls = [network.get("source_url")]
+            for raw_source_url in source_urls:
+                source_url = _safe_source_url(raw_source_url)
+                if not source_url:
+                    continue
                 refs.append(
                     {
                         "label": ", ".join(sorted(network.get("coverage_by_source", {})))
@@ -173,7 +211,7 @@ class RouteTools:
                 "available_route_count": 0,
                 "missing_route_count": 0,
                 "truncated": False,
-                "display": self._display(query, [], []),
+                "display": _build_display(query, [], []),
             }
         networks = [(current_network, current_path)]
         previous_network = None
@@ -315,7 +353,7 @@ class RouteTools:
             "available_route_count": available_route_count,
             "missing_route_count": missing_route_count,
             "truncated": available_route_count > top_n,
-            "display": self._display(display_query, rows, networks),
+            "display": _build_display(display_query, rows, networks),
         }
 
     @staticmethod
@@ -343,69 +381,6 @@ class RouteTools:
         if route.get("source_label") != previous_route.get("source_label"):
             return "Cambió la fuente de la ruta"
         return f"No hay comparación válida contra {comparison_period}"
-
-    @staticmethod
-    def _display(
-        query: dict[str, Any], rows: list[dict[str, Any]], networks: list[tuple[dict[str, Any], str]]
-    ):
-        metric = query.get("metric", "passengers")
-        title, unit = _METRIC_LABELS[metric]
-        columns = [
-            {"key": "market_key", "label": "Ruta"},
-            {"key": "value", "label": title, "unit": unit},
-            {"key": "value_kind", "label": "Tipo de valor"},
-        ]
-        if query.get("comparison_period"):
-            columns.extend(
-                [
-                    {"key": "comparison_value", "label": query["comparison_period"], "unit": unit},
-                    {"key": "absolute_change", "label": "Cambio", "unit": unit},
-                    {"key": "relative_change_percent", "label": "Cambio relativo", "unit": "%"},
-                ]
-            )
-        display_rows = []
-        for row in rows:
-            display_row = {
-                "market_key": row["market_key"],
-                "value": row["value"],
-                "value_kind": row["value_kind"],
-            }
-            if row.get("comparison"):
-                display_row.update(
-                    {
-                        "comparison_value": row["comparison"]["value"],
-                        "absolute_change": row["comparison"]["absolute_change"],
-                        "relative_change_percent": row["comparison"]["relative_change_percent"],
-                    }
-                )
-            display_rows.append(display_row)
-        kinds = {row.get("value_kind") for row in rows if row.get("value_kind")}
-        value_kind = next(iter(kinds)) if len(kinds) == 1 else "mixed" if kinds else "missing"
-        period_id = query.get("period", "periodo").replace("/", "-")
-        source_references = RouteTools._source_refs(networks)
-        return {
-            "display_id": f"tabla:rutas_{query.get('entity_id', 'compartidas').lower()}_{period_id}",
-            "kind": "table",
-            "title": query.get("title", f"Rutas compartidas · {query.get('period', '')}"),
-            "columns": columns,
-            "rows": display_rows,
-            "value_kind": value_kind,
-            "source": source_references[0] if source_references else None,
-            "sources": source_references,
-            "source_references": source_references,
-        }
-
-    @staticmethod
-    def _source_refs(networks: list[tuple[dict[str, Any], str]]) -> list[dict[str, str]]:
-        refs = []
-        for network, path in networks:
-            refs.append(
-                {
-                    "label": f"Dashboard público · {network.get('period_label', path.rsplit('/', 1)[-1])}",
-                    "url": "https://salvamalfa.github.io/aeromexico-tracker/" + quote(path, safe="/"),
-                }
-            )
-        return refs
 
     def find_shared_routes(self, arguments: dict[str, Any]) -> dict[str, Any]:
         allowed = {"entity_ids", "segment", "period", "metric", "top_n"}
@@ -543,7 +518,7 @@ class RouteTools:
             for row in rows
         ]
         value_kinds = {row["value_kind"] for row in rows}
-        source_references = self._source_refs(networks_with_paths)
+        source_references = _source_references(networks_with_paths)
         display = {
             "display_id": f"tabla:rutas_compartidas_{period}",
             "kind": "table",
