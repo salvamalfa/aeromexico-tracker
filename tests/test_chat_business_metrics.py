@@ -4,7 +4,11 @@ from pathlib import Path
 
 import pytest
 
-from scripts.chat.build_business_metrics_proposal import build_proposal
+from scripts.chat.build_business_metrics_proposal import (
+    _preferred_sources,
+    _source_priority,
+    build_proposal,
+)
 from src.conversational_analytics.data.snapshot import Snapshot
 from src.conversational_analytics.tools.business_metrics import (
     BUSINESS_METRIC_TOOL_NAMES,
@@ -126,6 +130,15 @@ def test_gold_proposal_is_review_only_and_aggregates_complete_year_from_quarters
     assert annual["aggregation"] == "deterministic_sum_of_selected_quarter_value_usd"
     assert annual["source_references"]
     assert all(ref["public_artifact"] for ref in annual["source_references"])
+
+
+def test_unlisted_gold_source_uses_wildcard_priority_before_lower_ranked_known_source() -> None:
+    priorities = {"*": 2, "bmv_xbrl": 5}
+    new_source = {"source_system": "future_public_source", "value_usd": 10}
+    lower_ranked = {"source_system": "bmv_xbrl", "value_usd": 11}
+
+    assert _source_priority()["*"] == 2
+    assert _preferred_sources([lower_ranked, new_source], priorities) == [new_source]
 
 
 def test_company_passenger_query_uses_public_snapshot_and_marks_partial_year_missing() -> None:
