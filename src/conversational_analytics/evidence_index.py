@@ -69,6 +69,7 @@ def _approved(record: dict[str, Any]) -> bool:
         and receipt.get("approved_at") == review.get("approved_at")
         and receipt.get("source_sha256") == source["sha256"]
         and receipt.get("excerpt_sha256") == excerpt_hash
+        and receipt.get("candidate_content_sha256") == candidate_content_sha256(record)
     )
 
 
@@ -90,6 +91,17 @@ def _source(record: dict[str, Any]) -> dict[str, str]:
 def _norm(value: str) -> str:
     folded = unicodedata.normalize("NFKD", value.casefold())
     return "".join(char for char in folded if not unicodedata.combining(char))
+
+
+def candidate_content_sha256(record: dict[str, Any]) -> str:
+    """Hash all evidence metadata except the review/receipt envelope.
+
+    Includes citation URL and location, entity, period, title/date, topics,
+    excerpt/description, source hash, and any future semantic record fields.
+    """
+    content = {key: value for key, value in record.items() if key != "review"}
+    canonical = json.dumps(content, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def _tokens(value: str) -> set[str]:

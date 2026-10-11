@@ -83,6 +83,38 @@ def test_receipt_must_bind_candidate_source_and_excerpt(tmp_path: Path) -> None:
     assert "report-approved" not in [row["id"] for row in result["results"]]
 
 
+def test_receipt_must_bind_all_semantic_citation_and_search_metadata(tmp_path: Path) -> None:
+    mutations = [
+        ("report-approved", ("page",), 99, "report"),
+        ("report-approved", ("company",), "Volaris", "report"),
+        ("report-approved", ("period",), "2025Q2", "report"),
+        (
+            "report-approved", ("source", "url"),
+            "https://www.sec.gov/Archives/edgar/data/1/other.htm", "report",
+        ),
+        ("report-approved", ("section",), "Ingresos", "report"),
+        ("news-approved", ("title",), "Titular modificado", "news"),
+        ("news-approved", ("published_at",), "2026-06-16", "news"),
+        ("news-approved", ("topics",), ["otro tema"], "news"),
+        ("news-approved", ("companies",), ["Volaris"], "news"),
+    ]
+    for case_number, (record_id, keys, value, kind) in enumerate(mutations):
+        payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        row = next(item for item in payload["records"] if item["id"] == record_id)
+        target = row
+        for key in keys[:-1]:
+            target = target[key]
+        target[keys[-1]] = value
+        path = tmp_path / f"index-{case_number}.json"
+        path.write_text(json.dumps(payload), encoding="utf-8")
+        evidence_index = EvidenceIndex(path)
+        if kind == "report":
+            result = evidence_index.search_reports("combustible", limit=5)
+        else:
+            result = evidence_index.search_news("combustible", limit=5)
+        assert record_id not in [match["id"] for match in result["results"]]
+
+
 def test_real_report_candidates_stay_closed_and_are_not_an_approved_index() -> None:
     candidate_path = Path("config/chat/evidence/candidates/reports-candidate.json")
     payload = json.loads(candidate_path.read_text(encoding="utf-8"))

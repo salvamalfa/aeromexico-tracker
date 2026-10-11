@@ -190,9 +190,12 @@ Cada paquete va en su propio PR, con pruebas y documentación.
 
 La búsqueda determinística (`search_reports`, `search_news`) devuelve hasta cinco
 resultados solo desde `config/chat/evidence/approved-index.json`, que continúa vacío. Un registro aprobado requiere recibo que identifique candidato, decisión,
-dueño, fecha, hash de fuente y hash del pasaje/resumen. La herramienta valida que
-esos campos enlacen el recibo con el registro; la validación estructural no
-verifica una firma ni sustituye el recibo real del dueño. Las citas de reportes
+dueño, fecha, hash de fuente, hash del pasaje/resumen y
+`candidate_content_sha256`, calculado sobre todos los campos semánticos del
+candidato (incluidos URL y ubicación de cita, empresa, periodo, título, fecha,
+temas y metadatos de búsqueda). Así, una modificación posterior invalida el
+recibo. La validación estructural no verifica una firma ni sustituye el recibo
+real del dueño. Las citas de reportes
 incluyen empresa, periodo, sección, página real y pasaje de hasta 480 caracteres;
 la ficha de noticia limita el resumen propio a 320 caracteres y cita breve a
 200, sin almacenar cuerpo de artículo.
@@ -221,6 +224,11 @@ separada para revisión; no cambia el prompt F2.1 aprobado ni se activa en
 producción. `config/chat/evidence/candidates/f2-7-explanation-cases.json`
 propone un caso positivo con tres capas y citas enlazadas; sigue pendiente de
 revisión junto con sus pasajes y ficha noticiosa.
+
+La bitácora final con procedencia, estado, workflow y validación está en
+[`docs/etapas/chat-f25-f27-evidencia-20261011-final.md`](../etapas/chat-f25-f27-evidencia-20261011-final.md).
+La bitácora inicial [`chat-f25-f27-evidencia-20261011.md`](../etapas/chat-f25-f27-evidencia-20261011.md)
+se conserva como registro histórico del scaffold y no describe el estado final.
 
 **Orden y dependencias:**
 
