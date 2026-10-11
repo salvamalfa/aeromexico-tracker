@@ -1,0 +1,21 @@
+{
+  "schema": "chat_news_source_candidates_v1",
+  "status": "candidate_closed",
+  "created_at": "2026-10-11",
+  "collection_policy": "Manual weekly review only. Public headline/article metadata and bounded curator summaries; no article bodies or copied third-party excerpts are stored. Candidate records remain closed until a concrete owner review receipt is bound to each source and summary.",
+  "sources": [
+    {
+      "candidate_id": "flightglobal-public-airline-news",
+      "name": "FlightGlobal",
+      "allowed_host": "www.flightglobal.com",
+      "discovery_url": "https://www.flightglobal.com/sitemap.xml",
+      "purpose": "Public airline reporting relevant to fuel costs and quarterly results; cite direct publisher articles with captured HTML SHA-256.",
+      "review": "owner_review_required",
+      "blockers": [
+        "Review source terms and summary retention with the owner.",
+        "Review individual candidate metadata, summaries, and source hashes.",
+        "No report or news candidate is approved for chat search yet."
+      ]
+    }
+  ]
+}
