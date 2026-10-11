@@ -173,6 +173,9 @@ def test_growth_comparison_requires_same_route_complete_coverage_and_value_kind(
     assert result["rows"][0]["comparison"]["relative_change_percent"] == 25
     assert result["rows"][0]["comparison"]["available"] is True
     assert result["available_route_count"] == 1
+    assert result["display"]["rows"][0]["comparison_available"] == "Sí"
+    assert result["display"]["rows"][0]["comparison_value_kind"] == "estimated"
+    assert result["display"]["rows"][0]["comparison_reason"] is None
 
 
 def test_partial_coverage_cannot_be_ranked_as_growth_and_missing_period_stays_missing() -> None:
@@ -199,6 +202,11 @@ def test_partial_coverage_cannot_be_ranked_as_growth_and_missing_period_stays_mi
     assert result["rows"][0]["value"] == 120
     assert result["rows"][0]["comparison"]["absolute_change"] is None
     assert "cobertura" in result["rows"][0]["comparison"]["reason"]
+    display_row = result["display"]["rows"][0]
+    assert display_row["comparison_value"] == 100
+    assert display_row["comparison_value_kind"] == "estimated"
+    assert display_row["comparison_available"] == "No"
+    assert "cobertura" in display_row["comparison_reason"]
     ranked = tools.invoke(
         "query_routes",
         {
@@ -335,3 +343,179 @@ def test_queries_the_signed_public_snapshot_without_private_inputs() -> None:
     assert all(not coverage["complete"] for coverage in international_shared["coverage"].values())
     assert all(not row["comparable"] for row in international_shared["rows"])
     assert all("coverage_incomplete" in row["comparability_reason"] for row in international_shared["rows"])
+
+
+def test_domestic_quarter_rollup_uses_only_three_complete_published_months() -> None:
+    snapshot = Snapshot(Path("site"))
+    tools = RouteTools(snapshot)
+    months = ["2026M04", "2026M05", "2026M06"]
+    networks = [snapshot.payload(f"data/v1/flights/domestic/{period}.json") for period in months]
+    monthly_maps = [{route["market_key"]: route for route in network["routes"]} for network in networks]
+    complete_keys = set.intersection(
+        *(
+            set(
+                market
+                for market, route in routes.items()
+                if isinstance(route.get("passengers"), (int, float))
+            )
+            for routes in monthly_maps
+        )
+    )
+    market_key = sorted(complete_keys)[0]
+    origin, destination = market_key.split("<>")
+    result = tools.invoke(
+        "query_routes",
+        {
+            "entity_id": "AEROMEXICO_GROUP",
+            "segment": "domestic",
+            "period": "2026Q2",
+            "metric": "passengers",
+            "origin_iata": origin,
+            "destination_iata": destination,
+            "top_n": 1,
+        },
+    )
+
+    assert result["rows"][0]["market_key"] == market_key
+    assert result["rows"][0]["value"] == sum(routes[market_key]["passengers"] for routes in monthly_maps)
+    assert result["rows"][0]["value_kind"] == "estimated"
+    assert result["coverage"]["2026Q2"]["expected_months"] == months
+    assert result["coverage"]["2026Q2"]["observed_months"] == months
+    assert result["coverage"]["2026Q2"]["agent_eligible"] is False
+    assert result["coverage"]["2026Q2"]["usage_scope"] == "published_dashboard_retrospective"
+    dashboard_sources = [
+        source["url"] for source in result["sources"] if "salvamalfa.github.io" in source["url"]
+    ]
+    assert {url.rsplit("/", 1)[-1] for url in dashboard_sources} == {f"{month}.json" for month in months}
+    assert not any(url.endswith("domestic/2026Q2.json") for url in dashboard_sources)
+
+    load_factor = tools.invoke(
+        "query_routes",
+        {
+            "entity_id": "AEROMEXICO_GROUP",
+            "segment": "domestic",
+            "period": "2026Q2",
+            "metric": "load_factor",
+            "origin_iata": origin,
+            "destination_iata": destination,
+            "top_n": 1,
+        },
+    )
+    passengers = sum(routes[market_key]["passengers"] for routes in monthly_maps)
+    seats = sum(routes[market_key]["seats"] for routes in monthly_maps)
+    assert load_factor["rows"][0]["value"] == pytest.approx(passengers / seats * 100)
+
+    partial_keys = set.union(*(set(routes) for routes in monthly_maps)) - complete_keys
+    assert partial_keys
+    partial_key = sorted(partial_keys)[0]
+    origin, destination = partial_key.split("<>")
+    missing = tools.invoke(
+        "query_routes",
+        {
+            "entity_id": "AEROMEXICO_GROUP",
+            "segment": "domestic",
+            "period": "2026Q2",
+            "metric": "passengers",
+            "origin_iata": origin,
+            "destination_iata": destination,
+            "top_n": 1,
+        },
+    )
+    assert missing["rows"] == []
+    assert missing["missing_route_count"] == 1
+    assert "no significa cero" in missing["coverage"]["2026Q2"]["missing_value_reason"]
+
+
+def test_domestic_quarter_requires_all_months_and_prefers_native_quarter_payload() -> None:
+    month4 = _network("2026M04", [_route("MEX<>CUN", 20)])
+    month5 = _network("2026M05", [_route("MEX<>CUN", 30)])
+    incomplete = RouteTools(
+        MemorySnapshot(
+            _paths(
+                {
+                    ("AEROMEXICO_GROUP", "domestic", "2026M04"): month4,
+                    ("AEROMEXICO_GROUP", "domestic", "2026M05"): month5,
+                }
+            )
+        )
+    ).invoke(
+        "query_routes",
+        {"entity_id": "AEROMEXICO_GROUP", "segment": "domestic", "period": "2026Q2", "metric": "passengers"},
+    )
+    assert incomplete["rows"] == []
+    assert incomplete["coverage"]["2026Q2"]["availability"] == "missing"
+
+    native = _network("2026Q2", [_route("MEX<>CUN", 777)])
+    paths = _paths(
+        {
+            ("AEROMEXICO_GROUP", "domestic", "2026Q2"): native,
+            ("AEROMEXICO_GROUP", "domestic", "2026M04"): month4,
+            ("AEROMEXICO_GROUP", "domestic", "2026M05"): month5,
+            ("AEROMEXICO_GROUP", "domestic", "2026M06"): _network("2026M06", [_route("MEX<>CUN", 40)]),
+        }
+    )
+    preferred = RouteTools(MemorySnapshot(paths)).invoke(
+        "query_routes",
+        {"entity_id": "AEROMEXICO_GROUP", "segment": "domestic", "period": "2026Q2", "metric": "passengers"},
+    )
+    assert preferred["rows"][0]["value"] == 777
+
+
+def test_route_display_ids_change_with_filters_and_metric() -> None:
+    domestic = _network(
+        "2026M07",
+        [_route("MEX<>CUN", 100), _route("MEX<>MTY", 200)],
+    )
+    international = _network("2026M07", [_route("MEX<>CUN", 300)])
+    previous = _network("2025M07", [_route("MEX<>CUN", 90)])
+    paths = _paths(
+        {
+            ("AEROMEXICO_GROUP", "domestic", "2026M07"): domestic,
+            ("AEROMEXICO_GROUP", "domestic", "2025M07"): previous,
+            ("AEROMEXICO_GROUP", "international", "2026M07"): international,
+        }
+    )
+    tools = RouteTools(MemorySnapshot(paths))
+    common = {"entity_id": "AEROMEXICO_GROUP", "period": "2026M07", "top_n": 5}
+    queries = [
+        {**common, "segment": "domestic", "metric": "passengers"},
+        {**common, "segment": "domestic", "metric": "seats"},
+        {**common, "segment": "domestic", "metric": "passengers", "origin_iata": "CUN"},
+        {
+            **common,
+            "segment": "domestic",
+            "metric": "passengers",
+            "comparison_period": "2025M07",
+        },
+        {**common, "segment": "international", "metric": "passengers"},
+    ]
+    display_ids = [tools.invoke("query_routes", query)["display"]["display_id"] for query in queries]
+    assert len(set(display_ids)) == len(queries)
+
+
+def test_shared_route_display_ids_include_entities_metric_and_top_n() -> None:
+    routes = [_route("MEX<>CUN", 100)]
+    payloads = _paths(
+        {
+            (entity, "domestic", "2026M07"): _network("2026M07", routes)
+            for entity in ("AEROMEXICO_GROUP", "VIVA_AEROBUS", "VOLARIS")
+        }
+    )
+    tools = RouteTools(MemorySnapshot(payloads))
+    base = {"segment": "domestic", "period": "2026M07"}
+    first = tools.invoke(
+        "find_shared_routes",
+        {**base, "entity_ids": ["AEROMEXICO_GROUP", "VIVA_AEROBUS"], "metric": "passengers", "top_n": 3},
+    )
+    second = tools.invoke(
+        "find_shared_routes",
+        {**base, "entity_ids": ["AEROMEXICO_GROUP", "VOLARIS"], "metric": "seats", "top_n": 3},
+    )
+    third = tools.invoke(
+        "find_shared_routes",
+        {**base, "entity_ids": ["AEROMEXICO_GROUP", "VIVA_AEROBUS"], "metric": "passengers", "top_n": 1},
+    )
+    assert (
+        len({first["display"]["display_id"], second["display"]["display_id"], third["display"]["display_id"]})
+        == 3
+    )
