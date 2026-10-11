@@ -97,9 +97,37 @@ def test_published_route_query_ranks_estimates_and_preserves_value_kind() -> Non
     assert result["rows"][0]["value_kind"] == "estimated"
     assert result["coverage"]["2026M07"]["agent_eligible"] is False
     assert result["coverage"]["2026M07"]["eligibility_reason"]
+    assert result["coverage"]["2026M07"]["usage_scope"] == "published_dashboard_retrospective"
+    assert "no modifica ni implica" in result["coverage"]["2026M07"]["usage_scope_description"]
     assert result["truncated"] is True
+    assert result["available_route_count"] == 2
+    assert all(row["value"] is not None for row in result["rows"])
     assert result["display"]["rows"][0]["value_kind"] == "estimated"
     assert result["sources"][0]["url"].endswith("domestic/2026M07.json")
+
+
+def test_null_metric_values_do_not_count_as_available_or_truncated_routes() -> None:
+    current = _network(
+        "2026M07",
+        [_route("MEX<>CUN", 100), _route("MEX<>MTY", None)],
+    )
+    tools = RouteTools(MemorySnapshot(_paths({("AEROMEXICO_GROUP", "domestic", "2026M07"): current})))
+
+    result = tools.invoke(
+        "query_routes",
+        {
+            "entity_id": "AEROMEXICO_GROUP",
+            "segment": "domestic",
+            "period": "2026M07",
+            "metric": "passengers",
+            "top_n": 1,
+        },
+    )
+
+    assert result["rows"][0]["market_key"] == "MEX<>CUN"
+    assert result["available_route_count"] == 1
+    assert result["row_count"] == 1
+    assert result["truncated"] is False
 
 
 def test_growth_comparison_requires_same_route_complete_coverage_and_value_kind() -> None:

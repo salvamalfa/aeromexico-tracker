@@ -159,6 +159,11 @@ def _coverage(network: dict[str, Any]) -> dict[str, Any]:
         "complete": complete,
         "agent_eligible": network.get("agent_eligible"),
         "eligibility_reason": network.get("eligibility_reason"),
+        "usage_scope": "published_dashboard_retrospective",
+        "usage_scope_description": (
+            "Consulta de datos ya publicados en el dashboard; esto no modifica ni implica "
+            "elegibilidad histórica para AnalysisAgent."
+        ),
         "sources": copy.deepcopy(network.get("coverage_by_source") or {}),
     }
 
@@ -308,6 +313,10 @@ class RouteTools:
             value = route.get(metric)
             if metric == "load_factor" and value is not None:
                 value = value * 100
+            # Missing values are not queryable routes and must not inflate the
+            # available count or appear as rows that look like zero-valued data.
+            if value is None:
+                continue
             previous_route = previous_map.get(market_key)
             previous_value = previous_route.get(metric) if previous_route else None
             if metric == "load_factor" and previous_value is not None:
