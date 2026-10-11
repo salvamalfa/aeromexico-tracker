@@ -24,7 +24,17 @@ _VALUE_KINDS = {
     "candidate_unapproved",
     "missing",
 }
-_SAFE_HOSTS = {"sec.gov", "www.sec.gov", "gob.mx", "www.gob.mx", "github.com", "salvamalfa.github.io"}
+_SAFE_HOSTS = {
+    "sec.gov",
+    "www.sec.gov",
+    "gob.mx",
+    "www.gob.mx",
+    "github.com",
+    "salvamalfa.github.io",
+    "ir.aeromexico.com",
+    "cdn.investorcloud.net",
+    "www.flightglobal.com",
+}
 
 
 def _safe_sources(*candidates: Any) -> list[dict[str, str]]:
@@ -283,7 +293,11 @@ def _build_query_display(
         display_rows.append(item)
     if not display_rows:
         return None
-    title = next(iter(metrics.values())) if len(metrics) == 1 else "Resultados de la consulta"
+    if len(metric_ids) == 1:
+        metric_id = next(iter(metric_ids))
+        title = str(metrics.get(metric_id) or metric_id)
+    else:
+        title = "Resultados de la consulta"
     return {
         "display_id": f"tabla:consulta_{short_id}",
         "kind": "table",

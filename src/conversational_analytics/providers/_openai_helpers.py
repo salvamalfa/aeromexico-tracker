@@ -28,7 +28,17 @@ ALLOWED_TOOL_NAMES = frozenset(
     }
 )
 ALLOWED_REFERENCE_HOSTS = frozenset(
-    {"sec.gov", "www.sec.gov", "gob.mx", "www.gob.mx", "github.com", "salvamalfa.github.io"}
+    {
+        "sec.gov",
+        "www.sec.gov",
+        "gob.mx",
+        "www.gob.mx",
+        "github.com",
+        "salvamalfa.github.io",
+        "ir.aeromexico.com",
+        "cdn.investorcloud.net",
+        "www.flightglobal.com",
+    }
 )
 MAX_ENVELOPE_BYTES = 12_000
 MAX_HISTORY_CHARS = 8_000
