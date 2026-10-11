@@ -130,6 +130,11 @@ Las herramientas nuevas quedan deshabilitadas por omisión. No se deben habilita
 con el prompt r1; cualquier capacidad adicional requiere un prompt compatible
 aprobado y, cuando corresponda, recibo de aprobación de datos y publicación
 verificada.
+La propuesta r2 (`68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf`)
+no está activa. Seleccionarla requiere `CHAT_PROMPT_VERSION=r2-proposed` y un
+recibo owner versionado mediante `CHAT_PROMPT_APPROVAL_RECEIPT_PATH` y su SHA-256
+en `CHAT_PROMPT_APPROVAL_RECEIPT_SHA256`; sin esos valores el servicio falla
+cerrado. No hay recibo vigente.
 
 La capacidad `minimum_reservation_turns_per_day` que muestra `/api/chat/health`
 es un cálculo de admisión: aplica los presupuestos diarios de tokens y dólares

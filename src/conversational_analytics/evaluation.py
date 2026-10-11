@@ -69,9 +69,7 @@ def phase_cases(
         budget_path = ROOT / "docs/chat/revision-fase-2/F2.9-etapa-2-presupuesto.json"
         budget = json.loads(budget_path.read_text(encoding="utf-8"))
         frozen_ids = [
-            item["id"]
-            for cohort in ("business_cases", "safety_cases")
-            for item in budget["sample"][cohort]
+            item["id"] for cohort in ("business_cases", "safety_cases") for item in budget["sample"][cohort]
         ]
         pilot = load_fixture(STAGE2_PILOT_FIXTURE_PATH)["cases"]
         if [case["id"] for case in pilot] != frozen_ids:
@@ -214,9 +212,7 @@ def verify_observation(
                         rule.get("failure", "porcentaje confunde magnitudes con unidades distintas")
                     )
             failures.extend(
-                response_attribution_failures(
-                    response, case["expected"].get("response_attributions", [])
-                )
+                response_attribution_failures(response, case["expected"].get("response_attributions", []))
             )
             numeric_guard = case["expected"].get("response_numeric_guard")
             if numeric_guard and has_unexpected_numeric_claim(
@@ -348,11 +344,6 @@ def _parse_prices(
             parser.error("--model-price debe ser MODEL=INPUT:OUTPUT, tarifas positivas y una por modelo")
     if set(prices) - set(models or []):
         parser.error("--model-price solo puede referirse a modelos listados con --models")
-    from .evaluation_business import CANDIDATES
-
-    invalid = [candidate for candidate in (models or []) if "@" in candidate and candidate not in CANDIDATES]
-    if invalid:
-        parser.error(f"candidato modelo@esfuerzo no admitido: {', '.join(invalid)}")
     return prices
 
 
@@ -377,11 +368,19 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
     parser.add_argument("--fixture", type=Path, help="fixture JSON; por omisión holdout de seguridad")
-    parser.add_argument("--stage", type=int, choices=(1, 2, 3), help="seleccionar casos de negocio por etapa F2.9")
-    parser.add_argument("--with-holdout", action="store_true", help="combinar seguridad holdout con fixture de negocio")
+    parser.add_argument(
+        "--stage", type=int, choices=(1, 2, 3), help="seleccionar casos de negocio por etapa F2.9"
+    )
+    parser.add_argument(
+        "--with-holdout", action="store_true", help="combinar seguridad holdout con fixture de negocio"
+    )
     parser.add_argument("--input-tokens-per-question", type=int, default=40_000)
     parser.add_argument("--output-tokens-per-question", type=int, default=4_000)
-    parser.add_argument("--prompt-runs", type=int, help="corridas con versiones de prompt distintas; por defecto 2 para etapa 1 y 1 en las demás")
+    parser.add_argument(
+        "--prompt-runs",
+        type=int,
+        help="corridas con versiones de prompt distintas; por defecto 2 para etapa 1 y 1 en las demás",
+    )
     parser.add_argument(
         "--opt-in", action="store_true", help="autoriza explícitamente consumo de API para esta ejecución"
     )
@@ -389,8 +388,14 @@ def main(argv: list[str] | None = None) -> int:
         "--probe-only", action="store_true", help="una sonda con un candidato antes del holdout"
     )
     parser.add_argument("--output-dir", type=Path, default=Path(".state/outputs/chat-evaluations"))
-    parser.add_argument("--campaign-state", type=Path, help="ledger privado de esta etapa; por defecto incluye el número de etapa")
-    parser.add_argument("--resume", action="store_true", help="reanudar solo la identidad y los run IDs guardados")
+    parser.add_argument(
+        "--campaign-state",
+        type=Path,
+        help="ledger privado de esta etapa; por defecto incluye el número de etapa",
+    )
+    parser.add_argument(
+        "--resume", action="store_true", help="reanudar solo la identidad y los run IDs guardados"
+    )
     parser.add_argument("--prompt-proposed", type=Path, help="documento F2.1 revisable con prompt propuesto")
     parser.add_argument(
         "--model-price",
@@ -429,13 +434,18 @@ def main(argv: list[str] | None = None) -> int:
         if args.stage == 3:
             parser.error("etapa 3 bloqueada hasta readiness explícita de F2.3–F2.8 y resolución de N17")
         unresolved = [
-            case["id"] for case in cases
+            case["id"]
+            for case in cases
             if case.get("dependencies")
-            or (case.get("expected", {}).get("status") == "supported"
-                and (not case["expected"].get("plan") or not case["expected"].get("rows")))
+            or (
+                case.get("expected", {}).get("status") == "supported"
+                and (not case["expected"].get("plan") or not case["expected"].get("rows"))
+            )
         ]
         if unresolved:
-            parser.error(f"corrida live bloqueada: casos sin dependencias/gold listos: {', '.join(unresolved)}")
+            parser.error(
+                f"corrida live bloqueada: casos sin dependencias/gold listos: {', '.join(unresolved)}"
+            )
     if not args.run:
         if args.budget_usd or args.opt_in:
             parser.error("--budget-usd y --opt-in solo aplican junto con --run")
@@ -483,7 +493,9 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("el umbral operativo de este harness no puede superar US$10")
     if is_business:
         if args.probe_only or args.model_price or args.models:
-            parser.error("una campaña F2.2 usa candidatos y tarifas del catálogo; no admite sonda ni overrides")
+            parser.error(
+                "una campaña F2.2 usa candidatos y tarifas del catálogo; no admite sonda ni overrides"
+            )
         if not args.prompt_proposed or not args.prompt_proposed.is_file():
             parser.error("la campaña F2.2 requiere --prompt-proposed con el documento F2.1 revisable")
         from .config import ChatConfig, model_catalog
@@ -559,7 +571,6 @@ def main(argv: list[str] | None = None) -> int:
     )
     print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
     return 0
-
 
 
 if __name__ == "__main__":

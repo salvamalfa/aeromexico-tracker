@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 import hashlib
+import json
+import os
 from pathlib import Path
 
 APPROVED_BASE_PROMPT_SHA256 = "33b8f7a0900869812d98bba57daa2ce3ea2f6b5c02a86a7eb3b8e830c7f7694b"
 APPROVED_EFFECTIVE_PROMPT_SHA256 = "439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5"
 APPROVED_PROMPT_VERSION = "r1-final"
 APPROVED_PROMPT_PATH = Path(__file__).resolve().parents[3] / "config/chat/system_prompt.txt"
+R2_PROMPT_VERSION = "r2-proposed"
+R2_PROMPT_PATH = Path(__file__).resolve().parents[3] / "config/chat/prompt_candidates/system_prompt_r2-proposed.txt"
+R2_PROMPT_METADATA_PATH = R2_PROMPT_PATH.with_suffix(".json")
+R2_PROMPT_SHA256 = "68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf"
 PERIOD_SELECTION_POLICY_VERSION = "dashboard-period-priority-v2"
 PERIOD_SELECTION_POLICY = f"""\
 <prioridad_de_periodo version="{PERIOD_SELECTION_POLICY_VERSION}">
@@ -46,12 +52,64 @@ def with_dashboard_period_policy(base_prompt: str) -> str:
 effective_instructions = with_dashboard_period_policy
 
 
-def load_system_instructions(path: Path = APPROVED_PROMPT_PATH) -> str:
-    """Fail closed if the versioned source or its evaluated derivation drifts."""
+def _read_prompt(path: Path) -> str:
     try:
-        base_prompt = path.read_text(encoding="utf-8").strip()
+        return path.read_text(encoding="utf-8").strip()
     except OSError as exc:
-        raise RuntimeError("No se pudo cargar el prompt aprobado del chat") from exc
+        raise RuntimeError("No se pudo cargar el prompt versionado del chat") from exc
+
+
+def _load_r2_instructions() -> str:
+    receipt_path = Path(os.environ.get(
+        "CHAT_PROMPT_APPROVAL_RECEIPT_PATH",
+        str(R2_PROMPT_PATH.parents[1] / "prompt_approval.json"),
+    )).resolve()
+    expected_receipt_sha = os.environ.get("CHAT_PROMPT_APPROVAL_RECEIPT_SHA256", "").strip().lower()
+    if not expected_receipt_sha:
+        raise RuntimeError("R2 requiere un recibo de aprobación del prompt con hash fijado")
+    try:
+        receipt_bytes = receipt_path.read_bytes()
+        metadata = json.loads(R2_PROMPT_METADATA_PATH.read_text(encoding="utf-8"))
+        receipt = json.loads(receipt_bytes)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RuntimeError("No se pudo verificar el recibo de aprobación de R2") from exc
+    if hashlib.sha256(receipt_bytes).hexdigest() != expected_receipt_sha:
+        raise RuntimeError("El recibo de aprobación de R2 no coincide con el hash fijado")
+    try:
+        prompt_path = _read_prompt(R2_PROMPT_PATH)
+        prompt_hash = prompt_sha256(prompt_path)
+        receipt_capabilities = receipt["capabilities"]
+        expected_capabilities = metadata["capabilities"]
+        if (
+            metadata.get("status") != "proposed_not_approved_not_active"
+            or metadata.get("version") != R2_PROMPT_VERSION
+            or metadata.get("proposed_effective_prompt_sha256") != R2_PROMPT_SHA256
+            or prompt_hash != R2_PROMPT_SHA256
+            or receipt.get("schema_version") != 1
+            or receipt.get("status") != "owner_approved"
+            or receipt.get("version") != R2_PROMPT_VERSION
+            or receipt.get("prompt_sha256") != R2_PROMPT_SHA256
+            or receipt.get("prompt_path") != "config/chat/prompt_candidates/system_prompt_r2-proposed.txt"
+            or not isinstance(receipt.get("decision_ref"), str)
+            or not receipt["decision_ref"].strip()
+            or not isinstance(receipt.get("owner"), str)
+            or not receipt["owner"].strip()
+            or receipt_capabilities != expected_capabilities
+        ):
+            raise ValueError
+    except (KeyError, TypeError, ValueError) as exc:
+        raise RuntimeError("El recibo de aprobación de R2 no coincide con el prompt y sus capacidades") from exc
+    return prompt_path
+
+
+def load_active_system_instructions() -> str:
+    """Load the selected prompt; R1 is default and R2 requires a pinned owner receipt."""
+    selected_version = os.environ.get("CHAT_PROMPT_VERSION", APPROVED_PROMPT_VERSION).strip().lower()
+    if selected_version == R2_PROMPT_VERSION:
+        return _load_r2_instructions()
+    if selected_version != APPROVED_PROMPT_VERSION:
+        raise RuntimeError("CHAT_PROMPT_VERSION no corresponde a un prompt disponible")
+    base_prompt = _read_prompt(APPROVED_PROMPT_PATH)
     if prompt_sha256(base_prompt) != APPROVED_BASE_PROMPT_SHA256:
         raise RuntimeError("El prompt base del chat no coincide con el SHA-256 aprobado")
     effective_prompt = with_dashboard_period_policy(base_prompt)
@@ -60,16 +118,30 @@ def load_system_instructions(path: Path = APPROVED_PROMPT_PATH) -> str:
     return effective_prompt
 
 
-SYSTEM_INSTRUCTIONS = load_system_instructions()
+def load_system_instructions(path: Path = APPROVED_PROMPT_PATH) -> str:
+    """Load the exact R1 approved source; retained for compatibility and tests."""
+    base_prompt = _read_prompt(path)
+    if prompt_sha256(base_prompt) != APPROVED_BASE_PROMPT_SHA256:
+        raise RuntimeError("El prompt base del chat no coincide con el SHA-256 aprobado")
+    effective_prompt = with_dashboard_period_policy(base_prompt)
+    if prompt_sha256(effective_prompt) != APPROVED_EFFECTIVE_PROMPT_SHA256:
+        raise RuntimeError("El prompt efectivo del chat no coincide con el SHA-256 evaluado")
+    return effective_prompt
+
+
+SYSTEM_INSTRUCTIONS = load_active_system_instructions()
 
 
 def effective_prompt_sha256() -> str:
     """Return the hash of the exact validated prompt sent to the provider."""
-    return prompt_sha256(SYSTEM_INSTRUCTIONS)
+    return prompt_sha256(load_active_system_instructions())
 
 
 def effective_prompt_version() -> str:
     """Return the version name bound to the approved effective prompt hash."""
-    if effective_prompt_sha256() != APPROVED_EFFECTIVE_PROMPT_SHA256:
-        raise RuntimeError("La versión del prompt no coincide con el contrato aprobado")
-    return APPROVED_PROMPT_VERSION
+    digest = effective_prompt_sha256()
+    if digest == APPROVED_EFFECTIVE_PROMPT_SHA256:
+        return APPROVED_PROMPT_VERSION
+    if digest == R2_PROMPT_SHA256:
+        return R2_PROMPT_VERSION
+    raise RuntimeError("La versión del prompt no coincide con un contrato aprobado")

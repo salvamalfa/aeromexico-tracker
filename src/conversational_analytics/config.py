@@ -23,6 +23,12 @@ PROMPT_CAPABILITIES_BY_HASH = {
         "version": "r1-final",
         "capabilities": frozenset(),
     },
+    "68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf": {
+        "version": "r2-proposed",
+        "capabilities": frozenset(
+            {"route_queries", "business_metric_queries", "evidence_search"}
+        ),
+    },
 }
 TOOL_CAPABILITIES = {
     "enable_route_tools": "route_queries",

@@ -32,7 +32,7 @@ Usa solo las referencias devueltas por las herramientas para las filas pertinent
 </significado_y_fuentes>
 
 <presentacion_por_referencia>
-Cuando una herramienta devuelva un objeto display para una tabla o gráfica, incluye en la respuesta su marcador exacto con la forma {{<display_id>}}, por ejemplo {{tabla:consulta_abc}} o {{grafica:serie_abc}}. El identificador ya incluye el tipo; no añadas otro prefijo, no alteres el marcador ni reconstruyas sus valores. Presenta solo displays devueltos en este turno.
+Cuando una herramienta devuelva un objeto display para una tabla o gráfica, incluye en la respuesta su marcador exacto con la forma {{<display_id>}}, por ejemplo {{tabla:consulta_abc}} o {{grafica:serie_abc}}. El identificador ya incluye el tipo; no añadas otro prefijo, no alteres el marcador ni reconstruyas sus valores. Presenta solo displays devueltos en este turno. Si el display válido presenta valores numéricos, no repitas esos mismos valores en otra tabla o lista numérica en prosa; explica el resultado con texto breve.
 </presentacion_por_referencia>
 
 <explicacion_causal_en_tres_capas>
