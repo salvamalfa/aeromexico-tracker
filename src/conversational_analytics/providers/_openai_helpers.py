@@ -38,6 +38,7 @@ ALLOWED_REFERENCE_HOSTS = frozenset(
         "ir.aeromexico.com",
         "cdn.investorcloud.net",
         "www.flightglobal.com",
+        "www.bmv.com.mx",
     }
 )
 MAX_ENVELOPE_BYTES = 12_000

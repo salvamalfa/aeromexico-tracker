@@ -3,12 +3,21 @@ import { parseSafeChart, renderSafeChart } from "./chart";
 
 const VALUE_KINDS = new Set([
   "reported", "observed", "calculated", "inferred", "estimated", "scheduled", "mixed",
-  "derived_sum_of_reported_quarters", "candidate_unapproved", "missing",
+  "derived_sum_of_reported_quarters", "owner_approved_reported", "owner_approved_reported_quarter_sum",
+  "candidate_unapproved", "missing", "unknown",
 ]);
+const VALUE_KIND_LABELS: Record<string, string> = {
+  reported: "Reportado", observed: "Observado", calculated: "Calculado", inferred: "Inferido",
+  estimated: "Estimado", scheduled: "Programado", mixed: "Tipo mixto",
+  derived_sum_of_reported_quarters: "Suma derivada de trimestres reportados",
+  owner_approved_reported: "Reportado · aprobado", owner_approved_reported_quarter_sum: "Suma derivada · aprobada",
+  candidate_unapproved: "Candidato sin aprobación · puerta cerrada", missing: "No disponible",
+  unknown: "Tipo no especificado",
+};
 const DISPLAY_ID = /^(tabla|grafica):[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$/;
 const TRUSTED_HOSTS = new Set([
   "sec.gov", "www.sec.gov", "ir.aeromexico.com", "cdn.investorcloud.net", "www.flightglobal.com",
-  "gob.mx", "www.gob.mx", "github.com", "salvamalfa.github.io",
+  "www.bmv.com.mx", "gob.mx", "www.gob.mx", "github.com", "salvamalfa.github.io",
 ]);
 
 function parseSources(value: unknown): ChatReference[] {
@@ -23,8 +32,9 @@ function parseSources(value: unknown): ChatReference[] {
       try {
         const url = new URL(source.url);
         if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash || !TRUSTED_HOSTS.has(url.hostname.toLowerCase())) return [];
-        if (seen.has(url.href)) return [];
-        seen.add(url.href);
+        const sourceKey = `${source.label.trim()}\n${url.href}`;
+        if (seen.has(sourceKey)) return [];
+        seen.add(sourceKey);
         result.url = url.href;
       } catch { return []; }
     }
@@ -81,11 +91,15 @@ export function safeDisplays(value: unknown): ChatDisplay[] {
         return [clean];
       });
       if (rows.length !== raw.rows.length) return [];
+      if (raw.value_kind === "candidate_unapproved" && rows.some((row) =>
+        Object.values(row).some((cell) => typeof cell === "number"))) return [];
       result.columns = columns;
       result.rows = rows;
     } else {
       const chart = parseSafeChart(raw.chart);
       if (!chart) return [];
+      if (raw.value_kind === "candidate_unapproved" && chart.series.some((series) =>
+        series.y.some((point) => point !== null))) return [];
       result.chart = chart;
     }
     seen.add(raw.display_id);
@@ -99,9 +113,10 @@ function formattedNumber(value: number, unit?: string): string {
   return new Intl.NumberFormat("en-US", { maximumFractionDigits: 4 }).format(value);
 }
 
-function renderSources(host: HTMLElement, sources: readonly ChatReference[], seenUrls: Set<string>): void {
-  const unique = sources.filter((source) => !source.url || !seenUrls.has(source.url));
-  for (const source of unique) if (source.url) seenUrls.add(source.url);
+function renderSources(host: HTMLElement, sources: readonly ChatReference[], seenSources: Set<string>): void {
+  const sourceKey = (source: ChatReference) => `${source.label}\n${source.url ?? ""}`;
+  const unique = sources.filter((source) => !seenSources.has(sourceKey(source)));
+  for (const source of unique) seenSources.add(sourceKey(source));
   if (!unique.length) return;
   const footer = document.createElement("p");
   footer.className = "chat-display-sources";
@@ -117,17 +132,17 @@ function renderSources(host: HTMLElement, sources: readonly ChatReference[], see
   host.append(footer);
 }
 
-export function renderDisplay(host: HTMLElement, display: ChatDisplay, seenUrls: Set<string>): boolean {
+export function renderDisplay(host: HTMLElement, display: ChatDisplay, seenSources: Set<string>): boolean {
   const section = document.createElement("section");
   section.className = `chat-display chat-display-${display.kind}`;
   section.dataset.displayId = display.display_id;
   const heading = document.createElement("h4");
   heading.textContent = display.title;
   section.append(heading);
-  if (display.value_kind === "estimated") {
+  if (display.value_kind !== "reported") {
     const badge = document.createElement("span");
-    badge.className = "chat-display-estimated";
-    badge.textContent = "Estimado";
+    badge.className = "chat-display-kind";
+    badge.textContent = VALUE_KIND_LABELS[display.value_kind] ?? "Tipo no especificado";
     section.append(badge);
   }
   if (display.kind === "table" && display.columns && display.rows) {
@@ -175,7 +190,7 @@ export function renderDisplay(host: HTMLElement, display: ChatDisplay, seenUrls:
     } : { ...chart, title: "" };
     if (!renderSafeChart(chartHost, renderedChart)) return false;
   } else return false;
-  renderSources(section, display.sources, seenUrls);
+  renderSources(section, display.sources, seenSources);
   host.append(section);
   return true;
 }

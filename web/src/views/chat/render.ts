@@ -10,8 +10,10 @@ export interface RenderOptions {
 }
 
 function referenceList(message: ChatMessage): HTMLUListElement | undefined {
-  const displayUrls = new Set(safeDisplays(message.displays).flatMap((display) => display.sources.flatMap((source) => source.url ? [source.url] : [])));
-  const references = safeReferences(message.references).filter((reference) => !reference.url || !displayUrls.has(reference.url));
+  const displaySources = new Set(safeDisplays(message.displays).flatMap((display) =>
+    display.sources.map((source) => `${source.label}\n${source.url ?? ""}`)));
+  const references = safeReferences(message.references).filter((reference) =>
+    !displaySources.has(`${reference.label}\n${reference.url ?? ""}`));
   if (!references.length) return undefined;
   const refs = document.createElement("ul");
   refs.className = "chat-references";
