@@ -42,6 +42,9 @@ def with_dashboard_period_policy(base_prompt: str) -> str:
     return f"{base_prompt}\n\n{PERIOD_SELECTION_POLICY}"
 
 
+effective_instructions = with_dashboard_period_policy
+
+
 def load_system_instructions(path: Path = APPROVED_PROMPT_PATH) -> str:
     """Fail closed if the versioned source or its evaluated derivation drifts."""
     try:

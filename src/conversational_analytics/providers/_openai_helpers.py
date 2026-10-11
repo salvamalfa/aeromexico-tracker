@@ -10,6 +10,10 @@ from typing import Any
 from urllib.parse import urlparse
 
 from .base import ProviderResult
+from ._openai_prompt import (
+    SYSTEM_INSTRUCTIONS as SYSTEM_INSTRUCTIONS,
+    effective_instructions as effective_instructions,
+)
 
 ALLOWED_TOOL_NAMES = frozenset(
     {

@@ -7,8 +7,14 @@ from src.conversational_analytics.providers._openai_prompt import (
     APPROVED_EFFECTIVE_PROMPT_SHA256,
     PERIOD_SELECTION_POLICY,
     SYSTEM_INSTRUCTIONS,
+    effective_instructions as with_approved_policy,
     load_system_instructions,
     prompt_sha256,
+    with_dashboard_period_policy,
+)
+from src.conversational_analytics.providers._openai_helpers import (
+    SYSTEM_INSTRUCTIONS as compatibility_prompt,
+    effective_instructions as compatibility_policy,
 )
 
 
@@ -19,6 +25,8 @@ def test_runtime_prompt_matches_approved_stage_two_sol_low_prompt():
     assert SYSTEM_INSTRUCTIONS.count(PERIOD_SELECTION_POLICY) == 1
     assert "get_dashboard_context" in SYSTEM_INSTRUCTIONS
     assert "No prometas buscar en reportes o noticias" in SYSTEM_INSTRUCTIONS
+    assert compatibility_prompt == SYSTEM_INSTRUCTIONS
+    assert compatibility_policy is with_dashboard_period_policy is with_approved_policy
 
 
 def test_prompt_source_drift_fails_closed(tmp_path):

@@ -239,4 +239,3 @@ class ConversationStoreMixin:
             )
             db.execute("COMMIT")
         return {"id": turn_id, "status": "pending", "created_at": now}, False
-
