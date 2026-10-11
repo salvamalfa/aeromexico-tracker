@@ -13,6 +13,7 @@ from typing import Any
 
 from .config import ChatConfig
 from .model_settings import fail_if_settings_changed
+from .presentation import DisplayRegistry
 from .providers._openai_helpers import (
     PROVIDER_REASON_CODES,
     TERMINAL_USAGE_RECONCILIATION_SECONDS,
@@ -315,6 +316,7 @@ class TurnWorker:
                 self._active.pop(turn_id, None)
             return
         registry = self._get_registry()
+        presentation = DisplayRegistry(self.snapshot.catalog() if hasattr(self.snapshot, "catalog") else {})
         tool_specs = registry.tool_specs()
         call_counter = 0
         emitted_chars = 0
@@ -418,7 +420,7 @@ class TurnWorker:
                 raise TimeoutError("turn deadline exceeded")
             cached = self.store.get_tool_result(turn_id, call_id, name, args, provider_turn_id)
             if cached is not None:
-                return cached
+                return presentation.add_tool_result(cached, name, call_id)
             claimed, prior_result = self.store.begin_tool_call(turn_id, call_id, name, provider_turn_id)
             if not claimed:
                 return prior_result or {}
@@ -440,6 +442,7 @@ class TurnWorker:
                 result = {"error": {"code": "tool_rejected", "message": message}}
             if cancel_event.is_set() or not self.store.is_running(turn_id):
                 raise InterruptedError("turn no longer active")
+            result = presentation.add_tool_result(result, name, call_id)
             encoded = json.dumps(result, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode(
                 "utf-8"
             )
@@ -504,10 +507,15 @@ class TurnWorker:
             content = result.content
             if len(content) > self.config.max_message_chars * 4:
                 raise ValueError("provider output size exceeded")
+            content, displays, references = presentation.finalize(content, result.references)
             input_tokens = result.input_tokens if result.usage_complete else 0
             output_tokens = result.output_tokens if result.usage_complete else 0
             cost = price_usage(self.config, input_tokens, output_tokens) if result.usage_complete else 0.0
-            payload = {"references": result.references, "chart": result.chart}
+            payload = {
+                "references": references,
+                "chart": None if displays else result.chart,
+                "displays": displays,
+            }
             completed = self.store.complete_turn(
                 turn_id, content, payload, input_tokens, output_tokens, cost, result.usage_complete
             )

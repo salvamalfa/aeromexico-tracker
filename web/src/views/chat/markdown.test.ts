@@ -3,6 +3,33 @@ import { renderSafeMarkdown, safeReferences } from "./markdown";
 import { parseSafeChart } from "./chart";
 
 describe("safe response rendering", () => {
+  it("renders same-turn reference tables from raw fractions with one decimal and a single source", () => {
+    const host = document.createElement("div");
+    const market = {
+      display_id: "tabla:market_2026", kind: "table", title: "Participación total, 2T26", value_kind: "estimated",
+      columns: [{ key: "airline", label: "Aerolínea" }, { key: "share", label: "2T26", unit: "fraction" }],
+      rows: [{ airline: "Volaris", share: 0.366615816786413 }, { airline: "Grupo Aeroméxico", share: null }],
+      sources: [
+        { label: "AFAC, estadística mensual, junio 2026", url: "https://www.gob.mx/afac/source" },
+        { label: "AFAC duplicada", url: "https://www.gob.mx/afac/source" },
+      ],
+    };
+    renderSafeMarkdown(host, "Participación: {{tabla:market_2026}}", [], [market]);
+    expect(host.querySelector(".chat-display-estimated")?.textContent).toBe("Estimado");
+    expect([...host.querySelectorAll("tbody td")].map((cell) => cell.textContent)).toEqual(["Volaris", "36.7%", "Grupo Aeroméxico", "—"]);
+    expect(host.querySelectorAll(".chat-display-sources a")).toHaveLength(1);
+    expect(host.textContent).not.toContain("{{tabla:");
+  });
+
+  it("removes missing and mismatched display markers without drawing artifacts", () => {
+    const host = document.createElement("div");
+    renderSafeMarkdown(host, "{{tabla:unknown}} {{grafica:unknown}}", [], [
+      { display_id: "tabla:wrong", kind: "table", title: "Tabla", value_kind: "reported", columns: [{ key: "x", label: "X" }], rows: [{ x: 1 }] },
+    ]);
+    expect(host.textContent).toBe("");
+    expect(host.querySelector("table, .chat-answer-chart")).toBeNull();
+  });
+
   it("treats raw HTML as text and permits only safe https markdown links", () => {
     const host = document.createElement("div");
     renderSafeMarkdown(host, `<img src=x onerror=alert(1)> [fuente](https://www.sec.gov/report) [mal](javascript:alert(1)) [phishing](https://www.sec.gov/forged)`, ["https://www.sec.gov/report"]);

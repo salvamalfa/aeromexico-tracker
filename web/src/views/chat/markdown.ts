@@ -1,4 +1,5 @@
-import type { ChatChart, ChatMessage, ChatReference } from "../../types/chat";
+import type { ChatChart, ChatDisplay, ChatMessage, ChatReference } from "../../types/chat";
+import { renderDisplay, safeDisplays } from "./display";
 
 const TRUSTED_HOSTS = new Set([
   "sec.gov", "www.sec.gov", "ir.aeromexico.com", "gob.mx", "www.gob.mx",
@@ -148,7 +149,12 @@ function parseTable(lines: readonly string[], start: number, allowedUrls: Readon
   return [wrap, index];
 }
 
-export function renderSafeMarkdown(container: HTMLElement, source: string, allowedUrls: readonly string[] = []): void {
+export function renderSafeMarkdown(
+  container: HTMLElement,
+  source: string,
+  allowedUrls: readonly string[] = [],
+  rawDisplays: unknown = [],
+): void {
   container.replaceChildren();
   const trustedUrls = new Set(allowedUrls.flatMap((raw) => {
     const url = trustedSourceUrl(raw);
@@ -157,6 +163,9 @@ export function renderSafeMarkdown(container: HTMLElement, source: string, allow
   const lines = source.replace(/\r/g, "").split("\n");
   let list: HTMLUListElement | null = null;
   let orderedList: HTMLOListElement | null = null;
+  const displays = safeDisplays(rawDisplays);
+  const byId = new Map(displays.map((display) => [display.display_id, display]));
+  const shownSources = new Set<string>();
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index]!;
     if (!line.trim()) { list = null; orderedList = null; continue; }
@@ -184,6 +193,37 @@ export function renderSafeMarkdown(container: HTMLElement, source: string, allow
       orderedList = null;
       container.append(table[0]);
       index = table[1] - 1;
+      continue;
+    }
+    const displayMarker = /\{\{(tabla|grafica):([A-Za-z0-9][A-Za-z0-9_.-]{0,95})\}\}/g;
+    const displayMatches = [...line.matchAll(displayMarker)];
+    if (displayMatches.length) {
+      let cursor = 0;
+      for (const match of displayMatches) {
+        const start = match.index ?? 0;
+        const before = line.slice(cursor, start);
+        if (before.trim()) {
+          const paragraph = document.createElement("p");
+          appendInline(paragraph, before, trustedUrls);
+          container.append(paragraph);
+        }
+        const displayId = `${match[1] === "tabla" ? "tabla" : "grafica"}:${match[2]}`;
+        const display: ChatDisplay | undefined = byId.get(displayId);
+        if (display && ((match[1] === "tabla") === (display.kind === "table"))) {
+          list = null;
+          orderedList = null;
+          renderDisplay(container, display, shownSources);
+        }
+        cursor = start + match[0].length;
+      }
+      const after = line.slice(cursor);
+      if (after.trim()) {
+        const paragraph = document.createElement("p");
+        appendInline(paragraph, after, trustedUrls);
+        container.append(paragraph);
+      }
+      list = null;
+      orderedList = null;
       continue;
     }
     const item = line.match(/^\s*[-*]\s+(.+)$/);
@@ -233,5 +273,6 @@ export function messageFromPayload(raw: Record<string, unknown>, maxLength = 20_
     ...(typeof raw.content === "string" ? { content: raw.content.slice(0, maxLength) } : {}),
     references: safeReferences(raw.references),
     ...(raw.chart ? { chart: raw.chart as ChatChart } : {}),
+    displays: safeDisplays(raw.displays),
   };
 }
