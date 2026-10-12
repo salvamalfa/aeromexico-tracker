@@ -25,13 +25,14 @@ as — a directory built from `web/` plus the exported v1 payloads. See
   `dist/`, so this *is* "dist + data").
   For a strictly interface-only change, `--ui-only` reuses the existing
   public `data/v1/` payload. It first requires the whole tracked `site/` to
-  be byte-for-byte unchanged from `origin/master`, verifies the site manifest
+  be byte-for-byte unchanged from one pinned `origin/master` commit, verifies the site manifest
   and its exact approved analysis-manifest entries, then checks that the
   frontend build preserved every data file hash and size. It retains the
   trusted manifest's contract hashes too, so a UI release does not change the
   conversation's data version merely because this codebase added a dormant,
   optional contract. It repeats the trusted-site and approval checks
-  immediately before the atomic swap. This mode cannot bless edited data by
+  immediately before the atomic swap, and refuses if the trusted ref moved
+  during the build. This mode cannot bless edited data by
   rebuilding its manifest, and it never invokes warehouse exporters.
 - `manifest.py`: builds and (de)serializes `publication_manifest.json` —
   the code commit (`git rev-parse HEAD`), each `contracts/web/*` file's own

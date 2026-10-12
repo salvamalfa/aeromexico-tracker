@@ -113,8 +113,25 @@ def _reject_duplicate_periods(records: list[dict[str, Any]]) -> None:
             )
 
 
+def _trusted_site_commit(root: Path, trusted_ref: str = "origin/master") -> str:
+    result = subprocess.run(
+        ["git", "rev-parse", "--verify", f"{trusted_ref}^{{commit}}"],
+        cwd=Path(root),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0 or not result.stdout.strip():
+        raise PublicationRefused(f"trusted site base {trusted_ref!r} is unavailable")
+    return result.stdout.strip()
+
+
 def require_trusted_site_baseline(
-    site_dir: Path, *, root: Path = PATHS.root, trusted_ref: str = "origin/master"
+    site_dir: Path,
+    *,
+    root: Path = PATHS.root,
+    trusted_ref: str = "origin/master",
+    trusted_commit: str | None = None,
 ) -> None:
     """Require an unchanged, tracked site from the trusted published base.
 
@@ -142,6 +159,10 @@ def require_trusted_site_baseline(
     )
     if ref_check.returncode != 0:
         raise PublicationRefused(f"trusted site base {trusted_ref!r} is unavailable")
+    resolved_commit = ref_check.stdout.strip()
+    if trusted_commit is not None and resolved_commit != trusted_commit:
+        raise PublicationRefused(f"trusted site base {trusted_ref!r} changed during publication")
+    trusted_commit = trusted_commit or resolved_commit
     status = subprocess.run(
         ["git", "status", "--porcelain", "--untracked-files=all", "--", "site"],
         cwd=root,
@@ -152,7 +173,7 @@ def require_trusted_site_baseline(
     if status.returncode != 0 or status.stdout.strip():
         raise PublicationRefused("site/ has uncommitted or untracked files; cannot reuse it as trusted data")
     diff = subprocess.run(
-        ["git", "diff", "--quiet", trusted_ref, "--", "site"],
+        ["git", "diff", "--quiet", trusted_commit, "--", "site"],
         cwd=root,
         capture_output=True,
         text=True,
@@ -443,7 +464,8 @@ def publish_ui_only(
     authorized = [entry[1] for entry in entries]
     analysis_manifest = [{key: entry[key] for key in ANALYSIS_MANIFEST_FIELDS} for entry in authorized]
 
-    require_trusted_site_baseline(out_dir, root=PATHS.root)
+    trusted_site_commit = _trusted_site_commit(PATHS.root)
+    require_trusted_site_baseline(out_dir, root=PATHS.root, trusted_commit=trusted_site_commit)
 
     from .verify import verify_site
 
@@ -482,7 +504,11 @@ def publish_ui_only(
             # Recheck the trusted payload at the last possible moment too;
             # the frontend build runs outside the ledger lock and the site
             # directory is not itself protected by that lock.
-            require_trusted_site_baseline(out_dir, root=PATHS.root)
+            require_trusted_site_baseline(
+                out_dir,
+                root=PATHS.root,
+                trusted_commit=trusted_site_commit,
+            )
             current = [
                 {key: entry[1][key] for key in ANALYSIS_MANIFEST_FIELDS}
                 for entry in _verify_under_lock(records, root)

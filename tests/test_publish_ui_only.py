@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from src.publish.gate import PublicationRefused, require_trusted_site_baseline
+from src.publish.gate import PublicationRefused, _trusted_site_commit, require_trusted_site_baseline
 from src.publish.manifest import build_manifest
 
 
@@ -47,12 +47,17 @@ def test_ui_only_baseline_refuses_a_site_committed_after_trusted_base(tmp_path: 
     _git(root, "add", "site")
     _git(root, "commit", "-m", "trusted published site")
     _git(root, "update-ref", "refs/remotes/origin/master", "HEAD")
+    trusted_commit = _trusted_site_commit(root)
     (site / "index.html").write_text("untrusted but committed", encoding="utf-8")
     _git(root, "add", "site")
     _git(root, "commit", "-m", "untrusted replacement")
 
     with pytest.raises(PublicationRefused, match="differs from the trusted"):
-        require_trusted_site_baseline(site, root=root)
+        require_trusted_site_baseline(site, root=root, trusted_commit=trusted_commit)
+
+    _git(root, "update-ref", "refs/remotes/origin/master", "HEAD")
+    with pytest.raises(PublicationRefused, match="changed during publication"):
+        require_trusted_site_baseline(site, root=root, trusted_commit=trusted_commit)
 
 
 def test_manifest_can_preserve_trusted_contract_set_for_ui_only_release(tmp_path: Path) -> None:
