@@ -23,6 +23,14 @@ as — a directory built from `web/` plus the exported v1 payloads. See
   check and the swap. Only after that second check passes does it assemble
   `site/` from the built `web/dist/` (Vite already copies `public/` into
   `dist/`, so this *is* "dist + data").
+  For a strictly interface-only change, `--ui-only` reuses the existing
+  public `data/v1/` payload. It first requires the whole tracked `site/` to
+  be byte-for-byte unchanged from `origin/master`, verifies the site manifest
+  and its exact approved analysis-manifest entries, then checks that the
+  frontend build preserved every data file hash and size. It repeats the
+  trusted-site and approval checks immediately before the atomic swap. This
+  mode cannot bless edited data by rebuilding its manifest, and it never
+  invokes warehouse exporters.
 - `manifest.py`: builds and (de)serializes `publication_manifest.json` —
   the code commit (`git rev-parse HEAD`), each `contracts/web/*` file's own
   SHA-256 (its "version"), every other file under `site/` with its
@@ -66,13 +74,14 @@ action still needs the owner's specific authorization. See `REPO_MAP.md`.
 
 ```
 uv run python -m src.publish --record analysis_runs/drafts/2026Q2/<hash>.json --out site/
+uv run python -m src.publish --ui-only --record analysis_runs/drafts/2026Q2/<hash>.json --out site/
 uv run python -m src.publish.verify site/
 ```
 
 ## Comando de prueba focalizada
 
 ```
-uv run pytest -q tests/test_publish_manifest.py tests/test_publish_verify.py
+uv run pytest -q tests/test_publish_manifest.py tests/test_publish_verify.py tests/test_publish_ui_only.py
 ```
 
 The negative fixtures under `tests/fixtures/site/` (altered byte, extra
