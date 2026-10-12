@@ -164,19 +164,33 @@ def test_receipt_hash_and_snapshot_validation_ignore_json_formatting(
 
 
 def test_site_without_financial_payload_keeps_its_existing_manifest_without_a_pin(
+    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    from tests._pre_financial_snapshot import copy_pre_financial_snapshot
+
     monkeypatch.delenv(APPROVAL_RECEIPT_SHA256_ENV, raising=False)
-    manifest_path = ROOT / "site/publication_manifest.json"
+    source_manifest = ROOT / "site/publication_manifest.json"
+    source_manifest_before = source_manifest.read_bytes()
+    site = copy_pre_financial_snapshot(tmp_path / "pre-financial")
+    manifest_path = site / "publication_manifest.json"
+    manifest = json.loads(manifest_path.read_bytes())
+    manifest["files"] = manifest_mod.file_entries(site)
+    manifest["contracts"] = {
+        name: digest
+        for name, digest in manifest["contracts"].items()
+        if name not in {"business_metrics.schema.json", "business_metrics_approval.schema.json"}
+    }
+    manifest_mod.write_manifest(site, manifest)
     original_manifest = manifest_path.read_bytes()
-    manifest = json.loads(original_manifest)
 
     assert sum(item["path"].startswith("data/") for item in manifest["files"]) == 112
     assert len(manifest["contracts"]) == 6
     assert not any("business_metrics" in item["path"] for item in manifest["files"])
-    assert verify_site(ROOT / "site") == []
-    Snapshot(ROOT / "site")
+    assert verify_site(site) == []
+    Snapshot(site)
     assert manifest_path.read_bytes() == original_manifest
+    assert source_manifest.read_bytes() == source_manifest_before
 
 
 def test_approved_snapshot_query_sums_full_year_and_keeps_source_currency_and_units(tmp_path: Path) -> None:
