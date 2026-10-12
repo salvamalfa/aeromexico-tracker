@@ -161,7 +161,7 @@ def test_stage3_cli_reaches_only_a_fake_runner_with_exact_trusted_receipts(monke
         "input_tokens_per_turn": 83_528,
         "output_tokens_per_turn": 375,
         "planned_batch_estimated_reservation_usd": 7.22738,
-        "campaign_sha256": "coverage-sha",
+        "campaign_sha256": report["campaign_sha256"],
         "budget_guaranteed": False,
     }
     monkeypatch.setattr(

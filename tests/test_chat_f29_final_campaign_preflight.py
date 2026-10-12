@@ -86,6 +86,7 @@ def test_stage3_empirical_reservation_admits_all_34_messages_under_eight_dollars
         long_context_threshold_input_tokens=272_000,
     )
     assumption = reservation_assumption(config, plan["reservation_assumption_override"])
+    assert assumption["campaign_sha256"] == plan["campaign_sha256"]
     assert assumption["planned_request_count"] == 34
     assert assumption["input_tokens_per_turn"] < 100_000
     assert assumption["output_tokens_per_turn"] < 1_000

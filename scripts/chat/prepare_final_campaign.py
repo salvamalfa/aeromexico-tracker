@@ -319,7 +319,7 @@ def build_plan(
         "safety_margin_fraction": margin,
         "per_case_estimated_reservation_usd": reservation_unit_cost,
         "planned_batch_estimated_reservation_usd": reservation_unit_cost * messages_per_campaign,
-        "campaign_sha256": metrics_coverage["campaign_sha256"],
+        "campaign_sha256": campaign_sha256,
         "budget_guaranteed": False,
         "note": (
             "Empirical planning allowance per user message; not a hard cap. "
