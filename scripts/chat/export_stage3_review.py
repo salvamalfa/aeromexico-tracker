@@ -22,6 +22,7 @@ from src.conversational_analytics.evaluation_stage3_coverage import CAMPAIGN_CAN
 
 FIXTURE = ROOT / "tests/fixtures/chat_evals/business_proposed.json"
 HASH = re.compile(r"^[a-f0-9]{64}$")
+CONSOLIDATED_REPORT = re.compile(r"\.consolidated-([a-f0-9]{64})\.json$")
 
 
 def _read(path: Path) -> tuple[dict[str, Any], str]:
@@ -46,7 +47,11 @@ def _write_private(path: Path, payload: dict[str, Any]) -> None:
 
 
 def build_dataset(
-    coverage: dict[str, Any], live: dict[str, Any], fixture: dict[str, Any], fixture_sha256: str
+    coverage: dict[str, Any],
+    live: dict[str, Any],
+    fixture: dict[str, Any],
+    fixture_sha256: str,
+    live_report_sha256: str | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     if coverage.get("kind") != "f2_9_stage3_derived_coverage" or coverage.get("provider_calls") != 0:
         raise ValueError("Se requiere un informe stage3 derivado offline")
@@ -61,6 +66,13 @@ def build_dataset(
     model = models[0]
     identity = live.get("run_identity")
     coverage_identity = coverage.get("campaign_identity")
+    coverage_cases = coverage.get("cases")
+    if not isinstance(coverage_identity, dict):
+        raise ValueError("La cobertura stage3 no incluye campaign_identity")
+    if _canonical_hash(coverage_identity) != campaign_sha:
+        raise ValueError("El SHA de campaña no coincide con campaign_identity")
+    if _canonical_hash(coverage_cases) != coverage_identity.get("derived_coverage_sha256"):
+        raise ValueError("Los casos derivados no coinciden con su SHA fijado")
     if (
         not isinstance(model, dict)
         or model.get("candidate_id") != f"{CAMPAIGN_CANDIDATE}@medium"
@@ -77,6 +89,7 @@ def build_dataset(
         or identity.get("model") != "gpt-6.1-sol"
         or identity.get("reasoning_effort") != "low"
         or identity.get("text_verbosity") != "medium"
+        or identity.get("coverage_campaign_sha256") != campaign_sha
         or live.get("data_version") != coverage.get("pins", {}).get("data_version")
         or live.get("semantic_version") != coverage.get("pins", {}).get("semantic_version")
     ):
@@ -89,8 +102,9 @@ def build_dataset(
         or fixture_sha256 != coverage_identity.get("case_fixture_sha256")
     ):
         raise ValueError("El fixture no coincide con el hash fijado por la campaña stage3")
+    if live_report_sha256 is not None and not HASH.fullmatch(live_report_sha256):
+        raise ValueError("El reporte live no incluye un SHA de contenido válido")
     fixture_cases = fixture.get("cases")
-    coverage_cases = coverage.get("cases")
     live_cases = model.get("cases")
     if not all(
         isinstance(items, list) and len(items) == 30 for items in (fixture_cases, coverage_cases, live_cases)
@@ -163,6 +177,7 @@ def build_dataset(
             {
                 "coverage_sha256": campaign_sha,
                 "live_campaign_identity_hash": live["campaign_identity_hash"],
+                "live_report_sha256": live_report_sha256 or _canonical_hash(live),
                 "case_ids": expected_ids,
             }
         ),
@@ -175,6 +190,7 @@ def build_dataset(
         "candidate_aliases": {"A": CAMPAIGN_CANDIDATE},
         "coverage_campaign_sha256": campaign_sha,
         "live_campaign_identity_hash": live["campaign_identity_hash"],
+        "live_report_sha256": live_report_sha256 or _canonical_hash(live),
     }
     return dataset, private_mapping
 
@@ -193,9 +209,14 @@ def main(argv: list[str] | None = None) -> int:
     if state_root not in output_dir.parents:
         parser.error("Los datos de revisión deben guardarse dentro de .state/")
     coverage, _ = _read(args.coverage)
-    live, _ = _read(args.live_report)
+    live, live_sha256 = _read(args.live_report)
+    filename_match = CONSOLIDATED_REPORT.search(args.live_report.name)
+    if filename_match is None or filename_match.group(1) != live_sha256:
+        raise ValueError("El SHA del reporte live no coincide con su nombre consolidado")
     fixture, fixture_sha256 = _read(args.fixture)
-    dataset, mapping = build_dataset(coverage, live, fixture, fixture_sha256)
+    dataset, mapping = build_dataset(
+        coverage, live, fixture, fixture_sha256, live_report_sha256=live_sha256
+    )
     _write_private(output_dir / "review.json", dataset)
     _write_private(output_dir / "candidate-aliases.json", mapping)
     print(
