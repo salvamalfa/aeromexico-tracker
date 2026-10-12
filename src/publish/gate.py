@@ -276,7 +276,13 @@ def build_web(web_dir: Path = WEB_DIR) -> Path:
     return dist
 
 
-def assemble_site(dist_dir: Path, analysis_manifest: list[dict[str, str]], out_dir: Path) -> dict[str, Any]:
+def assemble_site(
+    dist_dir: Path,
+    analysis_manifest: list[dict[str, str]],
+    out_dir: Path,
+    *,
+    contracts: dict[str, str] | None = None,
+) -> dict[str, Any]:
     """Copy dist_dir into a fresh temp directory, write the manifest into it,
     and atomically swap it in for out_dir. Returns the written manifest."""
 
@@ -287,7 +293,7 @@ def assemble_site(dist_dir: Path, analysis_manifest: list[dict[str, str]], out_d
     try:
         shutil.rmtree(tmp_dir)
         shutil.copytree(dist_dir, tmp_dir)
-        manifest = manifest_mod.build_manifest(tmp_dir, analysis_manifest)
+        manifest = manifest_mod.build_manifest(tmp_dir, analysis_manifest, contracts=contracts)
         manifest_mod.write_manifest(tmp_dir, manifest)
 
         previous = None
@@ -483,7 +489,12 @@ def publish_ui_only(
             ]
             if sorted(current, key=lambda item: item["period_id"]) != expected_analysis_manifest:
                 raise ValueError("approval changed while the UI was being built; rerun the publication")
-            manifest = assemble_site(dist_dir, analysis_manifest, out_dir)
+            manifest = assemble_site(
+                dist_dir,
+                analysis_manifest,
+                out_dir,
+                contracts=current_manifest["contracts"],
+            )
     except ValueError as error:
         raise PublicationRefused(
             f"record failed verification/approval just before UI-only publish (nothing swapped in): {error}"

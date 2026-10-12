@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from src.publish.gate import PublicationRefused, require_trusted_site_baseline
+from src.publish.manifest import build_manifest
 
 
 def _git(root: Path, *args: str) -> None:
@@ -52,3 +53,9 @@ def test_ui_only_baseline_refuses_a_site_committed_after_trusted_base(tmp_path: 
 
     with pytest.raises(PublicationRefused, match="differs from the trusted"):
         require_trusted_site_baseline(site, root=root)
+
+
+def test_manifest_can_preserve_trusted_contract_set_for_ui_only_release(tmp_path: Path) -> None:
+    trusted_contracts = {"publication_manifest.schema.json": "a" * 64}
+    manifest = build_manifest(tmp_path, [], contracts=trusted_contracts, code_commit="commit")
+    assert manifest["contracts"] == trusted_contracts
