@@ -47,7 +47,7 @@ def test_profile_dry_run_selects_all_business_cases_without_live_side_effects():
     assert context["modeled_provider_requests"] == 89
     assert context["modeled_provider_request_hypothesis_range"] == [85, 89]
     assert context["tool_calls"] == 55
-    assert context["tool_result_serialized_utf8_bytes"] == 95_232
+    assert context["tool_result_serialized_utf8_bytes"] == 95_316
     assert context["largest_tool_result_utf8_bytes"] == 15_652
     assert plan["source_hashes"]["model_catalog"] == (
         "9744c985f051c898a8af6e8d3c8766c6885e77d8a13d55b72e30427b15468d4c"
@@ -86,6 +86,7 @@ def test_stage3_empirical_reservation_admits_all_34_messages_under_eight_dollars
         long_context_threshold_input_tokens=272_000,
     )
     assumption = reservation_assumption(config, plan["reservation_assumption_override"])
+    assert assumption["campaign_sha256"] == plan["campaign_sha256"]
     assert assumption["planned_request_count"] == 34
     assert assumption["input_tokens_per_turn"] < 100_000
     assert assumption["output_tokens_per_turn"] < 1_000
