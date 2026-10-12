@@ -6,6 +6,6 @@ La implementación está integrada para revisión; las capacidades nuevas siguen
 - **Métricas:** [revisar 4 importes financieros candidatos](f23-propuesta-revision-dueno.md); con las 3 series existentes serían 7 series en total. Decidir cuáles importes aprobar.
 - **Reportes:** [revisar los 7 pasajes](../../config/chat/evidence/candidates/reports-candidate.json) y aprobar o rechazar cada uno.
 - **Noticias:** [revisar las 3 fichas](../../config/chat/evidence/candidates/news/) y aprobar o rechazar cada una.
-- **Stage 3:** [revisar el preflight y decidir su nuevo presupuesto](../../config/chat/f2_9_final_campaign.json); recalcular el costo después de integrar dependencias.
+- **Stage 3:** [revisar el perfil parcial de negocio](../../config/chat/f2_9_business_stage3_partial.json) y decidir su nuevo presupuesto; el preflight offline estima US$6.58 para 30 casos y 34 mensajes.
 
 Se cierra la fase 2 cuando el contenido aprobado esté publicado y la campaña nueva esté autorizada y completada. Los recibos y detalles operativos están en [operaciones](operations.md).
