@@ -253,7 +253,7 @@ def render_matrix(fixture: dict[str, Any]) -> str:
             "",
             "Los paquetes F2.3–F2.8 están integrados para revisión; sus puertas siguen cerradas hasta "
             "aprobar capacidades, fuentes y contenido. Todo Gold dependiente debe generarse contra el "
-            "snapshot y la versión semántica fijados. Las fuentes financieras candidatas de F2.3 "
+            "snapshot y versión semántica fijados. Las fuentes financieras candidatas de F2.3 "
             "permanecen cerradas hasta recibo/aprobación del dueño. La estimación offline vigente de "
             "etapa 3 es US$7.06–7.23 con margen de 35%; la reserva propuesta es US$8 para 30 casos/34 "
             "mensajes. El saldo actual es desconocido y solo modifica cuánto habría que recargar; la "
