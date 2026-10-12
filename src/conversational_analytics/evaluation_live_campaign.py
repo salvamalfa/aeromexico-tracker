@@ -10,6 +10,12 @@ from typing import Any, Mapping, Sequence
 
 from .evaluation_campaign import aggregate_campaign_budget, validate_resume_identity
 from .evaluation_live import _live_provider_run, _write_private_json
+from .evaluation_live_campaign_reports import (
+    _consolidate_report,
+    _fragment_record,
+    _load_fragment_cases,
+    _private_fragment_path,
+)
 
 
 def run_campaign(
@@ -124,7 +130,31 @@ def run_campaign(
     for run_id, saved_run in completed.items():
         if run_id not in run_by_id:
             raise ValueError("Resume bloqueado: estado contiene un run_id fuera del plan")
-        validate_resume_identity(saved_run.get("identity", {}), run_by_id[run_id].get("identity", {}))
+        saved_spec = run_by_id[run_id]
+        validate_resume_identity(saved_run.get("identity", {}), saved_spec.get("identity", {}))
+        fragments = saved_run.get("report_fragments", [])
+        if fragments:
+            prior_detail = _load_fragment_cases(
+                fragments,
+                run_dir=output_dir / run_id,
+                run=saved_spec,
+                campaign_identity_hash=identity_hash,
+            )
+            accounting_ids = [str(case.get("case_id")) for case in saved_run.get("cases", [])]
+            detail_ids = [str(case.get("case_id")) for case in prior_detail]
+            if detail_ids != accounting_ids:
+                raise ValueError(
+                    "Resume bloqueado: filas detalladas no coinciden con el accounting acumulado"
+                )
+            summary = saved_run.get("summary", {})
+            summary_path = Path(str(summary.get("report_path", "")))
+            summary_sha = summary.get("report_sha256")
+            if summary_sha:
+                consolidated_path, consolidated_sha = _private_fragment_path(
+                    summary_path, output_dir / run_id
+                )
+                if consolidated_sha != summary_sha:
+                    raise ValueError("Resume bloqueado: cambió el hash del reporte consolidado")
     budget_rows = [saved_run for saved_run in completed.values()]
     spend = aggregate_campaign_budget(budget_rows)
     if not spend["admit_new_requests"] or state.get("spent_unknown"):
@@ -133,6 +163,7 @@ def run_campaign(
     by_case = {str(case["id"]): dict(case) for case in cases}
     for run in run_specs:
         run_id = str(run["run_id"])
+        run_dir = output_dir / run_id
         if run_id in completed:
             saved_run = completed[run_id]
             if saved_run.get("complete"):
@@ -149,9 +180,21 @@ def run_campaign(
                 _write_private_json(state_path, state)
                 break
             prior_cases = list(saved_run.get("cases", []))
+            prior_fragments = list(saved_run.get("report_fragments", []))
         else:
             selected_ids = list(run["case_ids"])
             prior_cases = []
+            prior_fragments = []
+        prior_detailed_cases = _load_fragment_cases(
+            prior_fragments,
+            run_dir=run_dir,
+            run=run,
+            campaign_identity_hash=identity_hash,
+        ) if prior_fragments else []
+        if prior_detailed_cases and [row["case_id"] for row in prior_detailed_cases] != [
+            row["case_id"] for row in prior_cases
+        ]:
+            raise ValueError("Resume bloqueado: detailed cases no coinciden con accounting previo")
         remaining = budget_usd - float(spend["known_spend_usd"])
         if remaining <= 0:
             state.update(status="stopped_campaign_budget", known_spend_usd=spend["known_spend_usd"])
@@ -184,11 +227,25 @@ def run_campaign(
             continue_after_known_provider_errors=continue_after_known_provider_errors,
             runtime_config=runtime_config,
         )
-        report["run_identity_hash"] = str(run["identity_hash"])
-        report["campaign_identity_hash"] = identity_hash
         source_report = Path(str(report.get("output_path", "")))
         if source_report.is_file():
-            _write_private_json(source_report, report)
+            persisted_report = json.loads(source_report.read_text(encoding="utf-8"))
+            metadata = {
+                "run_identity_hash": str(run["identity_hash"]),
+                "campaign_identity_hash": identity_hash,
+            }
+            changed = False
+            for key, value in metadata.items():
+                if key not in persisted_report:
+                    persisted_report[key] = value
+                    changed = True
+                elif persisted_report[key] != value:
+                    raise ValueError("El reporte live no coincide con la identidad fijada")
+            if changed:
+                _write_private_json(source_report, persisted_report)
+                report.update(metadata)
+        new_fragment = _fragment_record(report, run_dir, run, identity_hash)
+        fragments = prior_fragments + ([new_fragment] if new_fragment else [])
         model = report["models"][0]
         new_cases = [
             {
@@ -205,6 +262,13 @@ def run_campaign(
         ]
         all_cases = prior_cases + new_cases
         returned_ids = {str(case.get("case_id")) for case in all_cases}
+        if (
+            len(all_cases) != len(returned_ids)
+            or not returned_ids <= set(run["case_ids"])
+            or [str(case.get("case_id")) for case in all_cases]
+            != [case_id for case_id in run["case_ids"] if case_id in returned_ids]
+        ):
+            raise ValueError("La corrida produjo IDs duplicados, desconocidos o fuera de orden")
         complete = (
             returned_ids == set(run["case_ids"])
             and len(all_cases) == len(run["case_ids"])
@@ -225,6 +289,29 @@ def run_campaign(
             if not complete
             else None
         )
+        detailed_cases = prior_detailed_cases
+        if new_fragment:
+            detailed_cases = _load_fragment_cases(
+                fragments,
+                run_dir=run_dir,
+                run=run,
+                campaign_identity_hash=identity_hash,
+            )
+        consolidated_path: str | None = None
+        consolidated_sha: str | None = None
+        if fragments and [str(row.get("case_id")) for row in detailed_cases] == [
+            str(row.get("case_id")) for row in all_cases
+        ]:
+            consolidated_path, consolidated_sha = _consolidate_report(
+                report=report,
+                detailed_cases=detailed_cases,
+                all_cases=all_cases,
+                run=run,
+                complete=complete,
+                run_dir=run_dir,
+                fragments=fragments,
+                fixture_cases=cases,
+            )
         completed_run = {
             "run_id": run_id,
             "identity": run["identity"],
@@ -238,12 +325,14 @@ def run_campaign(
             ),
             "spent_unknown": model["spent_unknown"],
             "cases": all_cases,
+            "report_fragments": fragments,
             "complete": complete,
             "stopped_reason": stopped_reason,
             "summary": {
                 "run_id": run_id,
-                "report_path": report["output_path"],
-                "run_status": report["run_status"],
+                "report_path": consolidated_path or report["output_path"],
+                "report_sha256": consolidated_sha,
+                "run_status": "completed" if complete else report["run_status"],
                 "case_count": len(all_cases),
                 "expected_case_count": len(run["case_ids"]),
                 "complete": complete,
