@@ -1,0 +1,37 @@
+"""Keep only required chat configuration in the Docker build context."""
+
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_chat_runtime_configuration_is_reincluded_in_docker_context():
+    rules = set((ROOT / ".dockerignore").read_text(encoding="utf-8").splitlines())
+    dockerfile = (ROOT / "Dockerfile.chat").read_text(encoding="utf-8")
+
+    # Docker applies ignore rules to parent directories too, so both directory
+    # levels and each nested runtime input must be explicitly re-included.
+    required_rules = {
+        "!config/",
+        "!config/chat/",
+        "!config/chat/models.json",
+        "!config/chat/metrics-candidates.json",
+        "!config/chat/system_prompt.txt",
+        "!config/chat/evidence/",
+        "!config/chat/evidence/approved-index.json",
+        "!config/chat/prompt_candidates/",
+        "!config/chat/prompt_candidates/system_prompt_r2-proposed.txt",
+        "!config/chat/prompt_candidates/system_prompt_r2-proposed.json",
+    }
+    assert required_rules <= rules
+    assert "COPY config/chat/*.yaml ./config/chat/" in dockerfile
+    assert "COPY config/chat/models.json config/chat/metrics-candidates.json ./config/chat/" in dockerfile
+    assert "COPY config/chat/system_prompt.txt ./config/chat/system_prompt.txt" in dockerfile
+    assert "COPY config/chat/evidence/approved-index.json ./config/chat/evidence/approved-index.json" in dockerfile
+    assert "COPY config/chat/prompt_candidates/system_prompt_r2-proposed.txt ./config/chat/prompt_candidates/" in dockerfile
+    assert "COPY config/chat/prompt_candidates/system_prompt_r2-proposed.json ./config/chat/prompt_candidates/" in dockerfile
+
+    # Keep candidate records, inbox contents, and local state out of the image.
+    assert "!config/chat/evidence/**" not in rules
+    assert "!config/chat/prompt_candidates/**" not in rules
+    assert "!config/chat/**" not in rules
