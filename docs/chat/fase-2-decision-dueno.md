@@ -9,4 +9,4 @@ PR #120 está integrado y desplegado, con Railway y Pages verificados. Las capac
 - **Noticias:** aprobar/rechazar cada una de las [tres fichas](../../config/chat/evidence/candidates/news/).
 - **Stage 3:** aprobar una reserva nueva de **US$8** y confirmar el saldo (ahora desconocido); estimado **US$7.06–7.23**, 30 casos/34 mensajes: [cotización](revision-fase-2/F2.9-etapa-3-presupuesto-actual.md).
 
-La aprobación de contenido o presupuesto no activa funciones ni ejecuta Stage 3 por sí sola; el siguiente paso se prepara después de recibir las decisiones. Los detalles están en [operaciones](operations.md).
+Aplicaré las decisiones aprobadas y, con presupuesto y saldo confirmados, presentaré los resultados de Stage 3 en JSON para [review.html](https://salvamalfa.github.io/aeromexico-tracker/review.html). Los detalles están en [operaciones](operations.md).
