@@ -166,6 +166,44 @@ def test_known_body_error_code_is_extracted_without_body_message():
     assert "secret" not in json.dumps(metadata)
 
 
+def test_bad_request_metadata_keeps_only_safe_rejection_fields_and_request_id():
+    class BadRequestError(Exception):
+        status_code = 400
+        request_id = "req_abc-123"
+        body = {
+            "error": {
+                "type": "invalid_request_error",
+                "code": "unsupported_value",
+                "param": "agent.tools[12].parameters.properties.period",
+                "message": "private request contents",
+            }
+        }
+
+    metadata = upstream_error_metadata(BadRequestError("private exception message"))
+
+    assert metadata == {
+        "upstream_exception_type": "BadRequestError",
+        "upstream_http_status": 400,
+        "upstream_error_code": "unsupported_value",
+        "upstream_error_type": "invalid_request_error",
+        "upstream_error_param": "agent.tools[12].parameters.properties.period",
+        "upstream_request_id": "req_abc-123",
+    }
+    assert "private" not in json.dumps(metadata)
+
+
+def test_bad_request_metadata_drops_unrecognized_error_param_and_request_id():
+    class BadRequestError(Exception):
+        status_code = 400
+        request_id = "private request data"
+        body = {"error": {"type": "private type", "code": "private-code", "param": "secret-value"}}
+
+    assert upstream_error_metadata(BadRequestError()) == {
+        "upstream_exception_type": "BadRequestError",
+        "upstream_http_status": 400,
+    }
+
+
 def test_diagnostic_failure_code_reads_usage_only_from_exact_terminal_turn():
     from src.conversational_analytics.providers._openai_helpers import recover_usage_after_cancel
 
