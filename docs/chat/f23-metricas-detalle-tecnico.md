@@ -85,7 +85,10 @@ ASK.
 El generador
 [`../../scripts/chat/build_business_metrics_proposal.py`](../../scripts/chat/build_business_metrics_proposal.py)
 crea el artefacto de revisión a partir exclusivamente de los Parquet Gold
-versionados. El operador debe pasar `--dry-run` y `--out`. Elige el menor
+versionados. El operador debe pasar `--dry-run` y `--out`; la propuesta
+autoritativa que se empaqueta con el runtime vive en
+[`../../config/chat/business-metrics-proposal.json`](../../config/chat/business-metrics-proposal.json).
+Elige el menor
 `dim_source_priority.priority` para `carrier_metrics`; si hay fuentes empatadas
 con importes USD distintos, marca conflicto y no agrega. Si los importes
 empatados coinciden, conserva referencias de todas ellas sin promediarlas.
@@ -94,7 +97,7 @@ conserva la divisa original y añade referencias públicas y hashes de los
 artefactos fuente. No calcula conversiones ni consume archivos fuera de Gold.
 
 La salida preparada está en
-[`f23-metrics-candidate-dry-run.json`](f23-metrics-candidate-dry-run.json): 564
+[`business-metrics-proposal.json`](../../config/chat/business-metrics-proposal.json): 564
 combinaciones de métrica, entidad y período; 158 tienen todos los trimestres y
 fuentes utilizables en el alcance seleccionado. Incluye quarters 2020–2026,
 agregados calendario, fiscalidad, unidad/divisa reportada, FX y referencias

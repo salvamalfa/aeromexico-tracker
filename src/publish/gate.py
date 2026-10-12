@@ -186,7 +186,7 @@ def export_data(entries: list[tuple[Any, Any, Any, Any]], out_dir: Path) -> None
 
         try:
             export_approved_business_metrics(
-                PATHS.root / "docs/chat/f23-metrics-candidate-dry-run.json",
+                PATHS.root / "config/chat/business-metrics-proposal.json",
                 PATHS.root / "config/chat/metrics-candidates.json",
                 receipt,
                 out_dir,
