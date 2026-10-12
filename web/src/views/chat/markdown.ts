@@ -257,23 +257,29 @@ export function renderSafeMarkdown(
 
 export function safeReferences(references: unknown): ChatReference[] {
   if (!Array.isArray(references)) return [];
-  const seenSources = new Set<string>();
-  return references.slice(0, 12).flatMap((value) => {
-    if (!value || typeof value !== "object") return [];
+  const output: ChatReference[] = [];
+  const byUrl = new Map<string, ChatReference>();
+  for (const value of references) {
+    if (!value || typeof value !== "object") continue;
     const ref = value as Record<string, unknown>;
-    if (typeof ref.label !== "string") return [];
-    const output: ChatReference = { label: ref.label.slice(0, 200) };
-    if (typeof ref.detail === "string") output.detail = ref.detail.slice(0, 500);
+    if (typeof ref.label !== "string") continue;
+    const item: ChatReference = { label: ref.label.slice(0, 200) };
+    if (typeof ref.detail === "string") item.detail = ref.detail.slice(0, 500);
     if (typeof ref.url === "string") {
-      output.url = trustedSourceUrl(ref.url);
-      if (output.url) {
-        const sourceKey = `${output.label}\n${output.url}`;
-        if (seenSources.has(sourceKey)) return [];
-        seenSources.add(sourceKey);
+      item.url = trustedSourceUrl(ref.url);
+      if (item.url) {
+        const previous = byUrl.get(item.url);
+        if (previous) {
+          if (!previous.label.split(" · ").includes(item.label)) previous.label = `${previous.label} · ${item.label}`.slice(0, 200);
+          if (item.detail && item.detail !== previous.detail) previous.detail = [previous.detail, item.detail].filter(Boolean).join(" · ").slice(0, 500);
+          continue;
+        }
+        byUrl.set(item.url, item);
       }
     }
-    return [output];
-  });
+    if (output.length < 12) output.push(item);
+  }
+  return output;
 }
 
 export function messageFromPayload(raw: Record<string, unknown>, maxLength = 20_000): Partial<ChatMessage> {

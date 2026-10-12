@@ -59,6 +59,13 @@ def test_fallback_value_kind_comes_from_metric_definition_and_candidate_gate_sta
     display = make_displays(result, "query_metrics", "call-margin", snapshot.catalog())["display"]
     assert display["value_kind"] == "calculated"
 
+    # Older metric catalog snapshots may omit the calculation annotation.
+    legacy_catalog = {"metrics": {"metrics": [{"id": "unit_margin_cents_per_km", "label": "Margen unitario"}]}}
+    legacy_result = {
+        "rows": [{"metric_id": "unit_margin_cents_per_km", "entity_id": "AEROMEXICO", "period": "2026Q2", "value": 0.43, "unit": "cents/ASK-km"}]
+    }
+    assert make_displays(legacy_result, "query_metrics", "legacy-margin", legacy_catalog)["display"]["value_kind"] == "calculated"
+
     candidate = {
         "rows": [
             {
@@ -126,6 +133,28 @@ def test_unknown_and_other_turn_markers_are_removed_without_artifacts() -> None:
     assert displays == []
 
 
+def test_numeric_markdown_table_is_removed_only_with_a_valid_display_marker() -> None:
+    registry = DisplayRegistry()
+    registry.add({
+        "display_id": "tabla:verified",
+        "kind": "table",
+        "title": "Dato verificado",
+        "value_kind": "reported",
+        "columns": [{"key": "value", "label": "Valor"}],
+        "rows": [{"value": 84.9}],
+    })
+    content = "Dato: 84.9% {{tabla:verified}}\n\n| Métrica | Valor |\n| --- | ---: |\n| Factor | 99.9% |\n\n| Estado | Nota |\n| --- | --- |\n| Margen | calculado |"
+    sanitized, displays, _ = registry.finalize(content)
+    assert "99.9%" not in sanitized
+    assert "| Estado | Nota |" in sanitized
+    assert "| Margen | calculado |" in sanitized
+    assert len(displays) == 1
+
+    # Legacy R1 content has no valid marker, so its Markdown table stays intact.
+    legacy, _, _ = DisplayRegistry().finalize("| Métrica | Valor |\n| --- | ---: |\n| Factor | 99.9% |")
+    assert "99.9%" in legacy
+
+
 def test_missing_cells_remain_null_and_distinct_source_labels_are_preserved() -> None:
     result = {
         "rows": [
@@ -147,8 +176,7 @@ def test_missing_cells_remain_null_and_distinct_source_labels_are_preserved() ->
     enriched = make_displays(result, "query_metrics", "call-missing")
     assert enriched["display"]["rows"][0]["value"] is None
     assert enriched["display"]["sources"] == [
-        {"label": "AFAC, estadística mensual, junio 2026", "url": "https://www.gob.mx/afac/source"},
-        {"label": "AFAC duplicada", "url": "https://www.gob.mx/afac/source"},
+        {"label": "AFAC, estadística mensual, junio 2026 · AFAC duplicada", "url": "https://www.gob.mx/afac/source"},
     ]
 
 
@@ -275,12 +303,11 @@ def test_same_source_url_keeps_distinct_member_labels() -> None:
         ],
     )
     assert len(displays) == 1
-    assert references == [
-        {
-            "label": "Reporte · miembro ZIP q2.json",
-            "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/package.zip",
-        }
-    ]
+    assert references == []
+    assert displays[0]["sources"] == [{
+        "label": "Reporte · miembro ZIP q2.json · Reporte · miembro ZIP q1.json",
+        "url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/package.zip",
+    }]
 
 
 def test_route_tool_contract_accepts_observed_and_missing_display_objects() -> None:

@@ -45,7 +45,7 @@ _BMV_MEMBER = re.compile(r"^member=([A-Za-z0-9][A-Za-z0-9._-]*\.json)$")
 
 def _safe_sources(*candidates: Any) -> list[dict[str, str]]:
     sources: list[dict[str, str]] = []
-    seen: set[tuple[str, str]] = set()
+    labels_by_url: dict[str, list[str]] = {}
     for candidate in candidates:
         if isinstance(candidate, dict):
             candidate = [candidate]
@@ -82,10 +82,13 @@ def _safe_sources(*candidates: Any) -> list[dict[str, str]]:
             except ValueError:
                 continue
             clean_label = label.strip()[:160]
-            key = (clean_label, url)
-            if key in seen:
+            labels = labels_by_url.get(url)
+            if labels is not None:
+                if clean_label not in labels and len(labels) < 12:
+                    labels.append(clean_label)
+                    next(item for item in sources if item["url"] == url)["label"] = " · ".join(labels)
                 continue
-            seen.add(key)
+            labels_by_url[url] = [clean_label]
             sources.append({"label": clean_label, "url": url})
             if len(sources) == 12:
                 return sources
@@ -116,6 +119,10 @@ def _row_kind(row: dict[str, Any], metric: dict[str, Any]) -> str:
         return "candidate_unapproved"
     if row.get("value") is None or availability in {"missing", "unavailable", "not_published"}:
         return "missing"
+    # This metric is explicitly computed as RASK minus CASK in the published
+    # KPI catalog. Older catalog snapshots omit the calculation description.
+    if row.get("metric_id") == "unit_margin_cents_per_km":
+        return "calculated"
     quality = " ".join(
         str(value)
         for value in (row.get("quality"), metric.get("quality"), metric.get("calculation"))
@@ -456,17 +463,49 @@ class DisplayRegistry:
             "",
             sanitized,
         )
+        if selected:
+            sanitized = _remove_numeric_markdown_tables(sanitized)
         ref_candidates = [references]
         ref_candidates.extend(display.get("sources") for display in selected)
         unique_sources = _safe_sources(*ref_candidates)
-        shown_sources = {
-            (source["label"], source["url"]) for display in selected for source in display.get("sources", [])
-        }
+        shown_urls = {source["url"] for display in selected for source in display.get("sources", [])}
+        for display in selected:
+            for displayed_source in display.get("sources", []):
+                merged = next((source for source in unique_sources if source["url"] == displayed_source["url"]), None)
+                if merged:
+                    displayed_source["label"] = merged["label"]
         return (
             sanitized,
             selected,
-            [source for source in unique_sources if (source["label"], source["url"]) not in shown_sources],
+            [source for source in unique_sources if source["url"] not in shown_urls],
         )
+
+
+_TABLE_SEPARATOR = re.compile(r"^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)*\|?\s*$")
+_NUMERIC_CELL = re.compile(r"(?<![A-Za-z])[-+]?\d[\d,]*(?:\.\d+)?\s*(?:%|pp|¢|USD|MXN|mil|millones|M)?(?![A-Za-z])", re.I)
+
+
+def _remove_numeric_markdown_tables(content: str) -> str:
+    """Drop numeric prose tables when the same response has a validated display."""
+    lines = content.splitlines(keepends=True)
+    output: list[str] = []
+    index = 0
+    while index < len(lines):
+        if "|" not in lines[index] or index + 1 >= len(lines) or not _TABLE_SEPARATOR.fullmatch(lines[index + 1].strip()):
+            output.append(lines[index])
+            index += 1
+            continue
+        end = index + 2
+        while end < len(lines) and "|" in lines[end] and lines[end].strip():
+            end += 1
+        data_rows = lines[index + 2:end]
+        cells = [cell.strip() for row in data_rows for cell in row.strip().strip("|").split("|")]
+        if data_rows and any(_NUMERIC_CELL.search(cell) for cell in cells):
+            index = end
+        else:
+            output.extend(lines[index:end])
+            index = end
+    return "".join(output)
 
 
 def display_registry_for_snapshot(snapshot: Any) -> DisplayRegistry:

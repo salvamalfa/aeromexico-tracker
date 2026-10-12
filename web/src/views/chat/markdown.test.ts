@@ -3,7 +3,7 @@ import { renderSafeMarkdown, safeReferences } from "./markdown";
 import { parseSafeChart } from "./chart";
 
 describe("safe response rendering", () => {
-  it("renders same-turn reference tables and preserves distinct source labels", () => {
+  it("renders same-turn reference tables and combines labels for duplicate source URLs", () => {
     const host = document.createElement("div");
     const market = {
       display_id: "tabla:market_2026", kind: "table", title: "Participación total, 2T26", value_kind: "estimated",
@@ -18,7 +18,7 @@ describe("safe response rendering", () => {
     expect(host.querySelector(".chat-display-kind")?.textContent).toBe("Estimado");
     expect([...host.querySelectorAll("tbody td")].map((cell) => cell.textContent)).toEqual(["Volaris", "36.7%", "Grupo Aeroméxico", "—"]);
     expect([...host.querySelectorAll(".chat-display-sources a")].map((link) => link.textContent)).toEqual([
-      "AFAC, estadística mensual, junio 2026", "AFAC duplicada",
+      "AFAC, estadística mensual, junio 2026 · AFAC duplicada",
     ]);
     expect(host.textContent).not.toContain("{{tabla:");
   });
@@ -39,8 +39,9 @@ describe("safe response rendering", () => {
     };
     renderSafeMarkdown(host, "{{tabla:financial_sources}}", [], [display]);
     expect([...host.querySelectorAll<HTMLAnchorElement>(".chat-display-sources a")].map((link) => link.hostname)).toEqual([
-      "ir.aeromexico.com", "cdn.investorcloud.net", "www.flightglobal.com", "www.bmv.com.mx", "www.bmv.com.mx",
+      "ir.aeromexico.com", "cdn.investorcloud.net", "www.flightglobal.com", "www.bmv.com.mx",
     ]);
+    expect(host.querySelector(".chat-display-sources a:last-child")?.textContent).toBe("BMV · miembro ZIP q1.json · BMV · miembro ZIP q2.json");
     expect(host.textContent).not.toContain("No verificada");
   });
 
@@ -211,6 +212,13 @@ describe("safe response rendering", () => {
     expect(refs.length).toBe(12);
     expect(refs[0]?.url).toBe("https://www.gob.mx/afac/source");
     expect(refs[1]?.url).toBeUndefined();
+  });
+
+  it("merges citation labels by canonical URL", () => {
+    expect(safeReferences([
+      { label: "AFAC", url: "https://www.gob.mx/afac/source" },
+      { label: "AFAC, junio", url: "https://www.gob.mx/afac/source" },
+    ])).toEqual([{ label: "AFAC · AFAC, junio", url: "https://www.gob.mx/afac/source" }]);
   });
 
   it("accepts bounded bar and line chart shapes and rejects arbitrary Plotly options", () => {
