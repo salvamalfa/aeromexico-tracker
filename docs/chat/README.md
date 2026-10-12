@@ -23,6 +23,12 @@ la respuesta cita tablas y gráficas validadas del mismo turno, que el frontend
 renderiza desde los valores persistidos sin otra consulta al modelo. El estado
 local de F2.8 y sus verificaciones están en el [reporte de etapa](../etapas/chat-f2-8-presentacion-20261011.md).
 
+Cuando se habilite la búsqueda aprobada de reportes o noticias, cada resultado
+también entrega `references` con su URL exacta y una etiqueta de empresa,
+periodo/página o medio/fecha/título. El proveedor las conserva en las fuentes
+del turno y agrupa etiquetas que comparten URL; la capacidad continúa apagada
+mientras `approved-index.json` no tenga registros aprobados.
+
 El catálogo inicial distingue `company_passengers` de `afac_passengers`, razón
 por la cual “pasajeros” puede requerir aclaración. Los porcentajes se guardan
 como fracción y se muestran como porcentaje; los campos `*_pp` ya están en
