@@ -78,6 +78,7 @@ def _approved(record: dict[str, Any]) -> bool:
         and receipt.get("source_sha256") == source["sha256"]
         and receipt.get("excerpt_sha256") == excerpt_hash
         and receipt.get("candidate_content_sha256") == candidate_content_sha256(record)
+        and _valid_decision_reference(receipt.get("decision_reference"))
     )
 
 
@@ -96,6 +97,10 @@ def _valid_approved_at(value: Any) -> bool:
 
 def _valid_receipt_id(value: Any) -> bool:
     return isinstance(value, str) and bool(value.strip()) and len(value) <= 120
+
+
+def _valid_decision_reference(value: Any) -> bool:
+    return isinstance(value, str) and bool(value.strip()) and len(value) <= 300
 
 
 def _source(record: dict[str, Any]) -> dict[str, str]:

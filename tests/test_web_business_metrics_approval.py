@@ -334,3 +334,21 @@ def test_year_is_incomplete_when_source_has_only_two_quarters(tmp_path: Path) ->
     assert result["availability"] == "incomplete"
     assert result["value"] is None
     assert result["missing_periods"] == ["2026Q3", "2026Q4"]
+
+
+def test_owner_approved_financial_receipt_binds_exact_four_metric_inputs(monkeypatch) -> None:
+    receipt_path = ROOT / "config/chat/business-metrics-approval-receipt.json"
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    monkeypatch.setenv(APPROVAL_RECEIPT_SHA256_ENV, canonical_receipt_sha256(receipt))
+    payload, checked = build_approved_payload(
+        ROOT / "config/chat/business-metrics-proposal.json",
+        ROOT / "config/chat/metrics-candidates.json",
+        receipt_path,
+    )
+    assert checked["owner_id"] == "salvamalfa"
+    assert len(payload["rows"]) > 0
+    assert payload["metadata"]["metric_ids"] == [
+        "fuel_expense", "operating_costs", "operating_income", "total_revenue"
+    ]
+    assert payload["metadata"]["approval_receipt_sha256"] == canonical_receipt_sha256(receipt)
+    assert "81bbd7e807e4a9f2c2b42a39a47147931b87439b" in checked["decision_reference"]

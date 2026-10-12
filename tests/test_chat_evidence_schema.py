@@ -8,7 +8,7 @@ from jsonschema import Draft202012Validator
 SCHEMA_PATH = Path("contracts/chat/evidence-index.schema.json")
 
 
-def test_empty_runtime_index_and_approved_fixture_match_versioned_contract() -> None:
+def test_runtime_approved_index_and_fixture_match_versioned_contract() -> None:
     schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
     validator = Draft202012Validator(schema)
     for path in (

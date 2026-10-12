@@ -1,12 +1,18 @@
 # Fase 2 del chat · decisiones del dueño
 
-PR #120 está integrado y desplegado, con Railway y Pages verificados. Las capacidades nuevas siguen cerradas.
+La decisión del 12 de octubre de 2026 aprobó los insumos exactos de R2, las
+cuatro métricas, siete pasajes de reportes, tres fichas de noticias y una nueva
+reserva financiada de US$8 para Stage 3. El registro inmutable cita el paquete
+PR #126 y conserva que el saldo total sigue desconocido: [decisión](../decisiones/20261012-chat-fase2-r2-contenido-stage3.md).
 
-- R1, Sol low, las preguntas y la rúbrica ya están aprobados; no hace falta repetir esas decisiones.
-- **R2:** aprobar el texto exacto o conservar R1: [prompt](../../config/chat/prompt_candidates/system_prompt_r2-proposed.txt).
-- **Métricas:** aprobar/rechazar los cuatro importes financieros propuestos: [resumen F2.3](f23-propuesta-revision-dueno.md).
-- **Reportes:** aprobar/rechazar cada uno de los [siete pasajes](../../config/chat/evidence/candidates/reports-candidate.json).
-- **Noticias:** aprobar/rechazar cada una de las [tres fichas](../../config/chat/evidence/candidates/news/).
-- **Stage 3:** aprobar una reserva nueva de **US$8** y confirmar el saldo (ahora desconocido); estimado **US$7.06–7.23**, 30 casos/34 mensajes: [cotización](revision-fase-2/F2.9-etapa-3-presupuesto-actual.md).
+Los recibos de contenido preparados enlazan esa decisión y fijan los hashes de
+sus insumos. La aprobación no activa por sí sola el runtime: R1 sigue siendo el
+predeterminado, las banderas de capacidades siguen apagadas y los pins externos
+solo se configuran al preparar la operación. R2 conserva su estado contractual
+`proposed_not_approved_not_active`; su recibo de aprobación autoriza el uso
+cuando el dueño configure deliberadamente su pin y seleccione esa versión.
 
-Aplicaré las decisiones aprobadas y, con presupuesto y saldo confirmados, presentaré los resultados de Stage 3 en JSON para [review.html](https://salvamalfa.github.io/aeromexico-tracker/review.html). Los detalles están en [operaciones](operations.md).
+La reserva Stage 3 está confirmada; el saldo total es desconocido. La evaluación
+preparada contempla 30 casos y 34 mensajes; no se han ejecutado llamadas
+pagadas. La publicación de nuevas cifras/fichas en Pages y la activación de
+capacidades quedan para el preflight operativo posterior.
