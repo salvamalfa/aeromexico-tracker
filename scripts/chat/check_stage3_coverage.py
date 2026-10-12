@@ -13,6 +13,8 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
+TRUSTED_BUDGET_RECEIPT_SHA_ENV = "F29_STAGE3_BUDGET_RECEIPT_SHA256"
+TRUSTED_CAPABILITY_RECEIPT_SHA_ENV = "F29_STAGE3_CAPABILITY_RECEIPT_SHA256"
 sys.path.insert(0, str(ROOT))
 
 from src.conversational_analytics.evaluation_stage3_coverage import (  # noqa: E402
@@ -87,6 +89,7 @@ def _blocked(
         "reserve_usd": reserve,
         "provider_calls": 0,
         "credentials_read": credentials_read,
+        "trusted_receipt_sha256": report.get("trusted_receipt_sha256"),
         "coverage_summary": {
             "case_count": report["case_count"],
             "counts": report["counts"],
@@ -110,7 +113,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--fixture", type=Path, default=ROOT / "tests/fixtures/chat_evals/business_proposed.json"
     )
-    parser.add_argument("--profile", type=Path, default=ROOT / "config/chat/f2_9_final_campaign.json")
+    parser.add_argument("--profile", type=Path, default=ROOT / "config/chat/f2_9_business_stage3_partial.json")
     parser.add_argument("--output", type=Path, help="reporte privado opcional bajo .state/")
     parser.add_argument("--run", action="store_true", help="solicitar ejecución live (siempre receipt-gated)")
     parser.add_argument("--opt-in", action="store_true", help="consentimiento explícito de esta invocación")
@@ -143,12 +146,30 @@ def main(argv: list[str] | None = None) -> int:
             result = _blocked("missing_exact_scope_receipts", report, reserve)
             _write_output(args.output, result)
             return 2
+        budget_receipt_sha = os.environ.get(TRUSTED_BUDGET_RECEIPT_SHA_ENV)
+        capability_receipt_sha = os.environ.get(TRUSTED_CAPABILITY_RECEIPT_SHA_ENV)
+        if not budget_receipt_sha or not capability_receipt_sha:
+            result = _blocked("missing_external_receipt_sha256_pins", report, reserve)
+            _write_output(args.output, result)
+            return 2
         budget_receipt = _read_receipt(args.budget_receipt)
         capability_receipt = _read_receipt(args.capability_receipt)
-        valid, reason = validate_receipt_scope(budget_receipt, capability_receipt, report, reserve)
+        valid, reason = validate_receipt_scope(
+            budget_receipt,
+            capability_receipt,
+            report,
+            reserve,
+            budget_receipt_sha256=budget_receipt_sha,
+            capability_receipt_sha256=capability_receipt_sha,
+        )
         if not valid:
             _write_output(args.output, _blocked(reason, report, reserve))
             return 2
+        trusted_receipt_sha256 = {
+            "budget": budget_receipt_sha,
+            "capabilities": capability_receipt_sha,
+        }
+        report["trusted_receipt_sha256"] = trusted_receipt_sha256
 
         if capability_receipt.get("stage3_live_authorized") is not True:
             _write_output(
@@ -205,6 +226,7 @@ def main(argv: list[str] | None = None) -> int:
         run_id = f"f29-stage3-sol-low-{report['runtime_capabilities']['required_prompt_version']}"
         identity = {
             **report["campaign_identity"],
+            "trusted_receipt_sha256": trusted_receipt_sha256,
             "run_id": run_id,
             "case_ids": [case["id"] for case in cases],
             "case_ids_sha256": hashlib.sha256(
@@ -222,12 +244,7 @@ def main(argv: list[str] | None = None) -> int:
             "identity_hash": identity_hash,
             "prompt": active_prompt,
             "case_ids": [case["id"] for case in cases],
-            "limits": {
-                "max_tool_calls": 8,
-                "max_message_chars": 8_000,
-                "max_tool_result_bytes": 16_000,
-                "max_turn_seconds": 180,
-            },
+            "limits": dict(report["campaign_identity"]["limits"]),
             "text_verbosity": "medium",
         }
         catalog = json.loads((ROOT / "config/chat/models.json").read_text(encoding="utf-8"))["models"]
@@ -253,7 +270,12 @@ def main(argv: list[str] | None = None) -> int:
         )
         _write_output(
             args.output,
-            {"mode": "live-campaign", "campaign_sha256": report["campaign_sha256"], "campaign": campaign},
+            {
+                "mode": "live-campaign",
+                "campaign_sha256": report["campaign_sha256"],
+                "trusted_receipt_sha256": trusted_receipt_sha256,
+                "campaign": campaign,
+            },
         )
         return 0
     except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:

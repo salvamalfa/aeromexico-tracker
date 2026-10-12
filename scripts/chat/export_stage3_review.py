@@ -60,10 +60,15 @@ def build_dataset(
         raise ValueError("Se espera exactamente un candidato seleccionado")
     model = models[0]
     identity = live.get("run_identity")
+    coverage_identity = coverage.get("campaign_identity")
     if (
         model.get("candidate") != CAMPAIGN_CANDIDATE
-        or live.get("campaign_identity_hash") is None
+        or not isinstance(live.get("campaign_identity_hash"), str)
+        or not HASH.fullmatch(live["campaign_identity_hash"])
         or not isinstance(identity, dict)
+        or not isinstance(coverage_identity, dict)
+        or not isinstance(live.get("run_identity_hash"), str)
+        or _canonical_hash(identity) != live["run_identity_hash"]
         or identity.get("candidate") != CAMPAIGN_CANDIDATE
         or identity.get("model") != "gpt-6.1-sol"
         or identity.get("reasoning_effort") != "low"
@@ -72,6 +77,8 @@ def build_dataset(
         or live.get("semantic_version") != coverage.get("pins", {}).get("semantic_version")
     ):
         raise ValueError("El reporte no coincide con Sol low o no conserva su lineage")
+    if any(identity.get(key) != value for key, value in coverage_identity.items()):
+        raise ValueError("La ejecución live no coincide con todos los pins de cobertura stage3")
     fixture_cases = fixture.get("cases")
     coverage_cases = coverage.get("cases")
     live_cases = model.get("cases")
@@ -88,6 +95,12 @@ def build_dataset(
         raise ValueError("Los tres artefactos deben conservar N01–N30 en orden")
     questions = []
     for original, derived, answer_row in zip(fixture_cases, coverage_cases, live_cases, strict=True):
+        evidence = derived.get("derived_expectations", [])
+        if not isinstance(evidence, list) or any(not isinstance(row, dict) for row in evidence):
+            raise ValueError(f"{original['id']}: numeric evidence tiene un formato inválido")
+        calculations = derived.get("derived_calculations", [])
+        if not isinstance(calculations, list) or any(not isinstance(row, dict) for row in calculations):
+            raise ValueError(f"{original['id']}: derived calculations tiene un formato inválido")
         if answer_row.get("model_turn_completed") is True:
             turns = answer_row.get("turn_responses")
             if not isinstance(turns, list) or not turns or any(not isinstance(text, str) for text in turns):
@@ -114,7 +127,15 @@ def build_dataset(
             "coverage_status": derived.get("status"),
             "status_basis": derived.get("status_basis"),
             "limitation": derived.get("limitation"),
-            "numeric_evidence": derived.get("derived_expectations", []),
+            "numeric_evidence": evidence,
+            "derived_calculations": calculations,
+            "rows": [
+                row
+                for row in evidence
+                if row.get("availability") == "available"
+                and isinstance(row.get("value"), (int, float))
+                and not isinstance(row.get("value"), bool)
+            ] + calculations,
             "sources": derived.get("source_references", []),
         }
         questions.append(

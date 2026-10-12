@@ -24,6 +24,42 @@ describe("expected-result summary", () => {
     expect(host.textContent).toContain("84.9 %");
   });
 
+  it("renders exported Stage 3 numeric evidence as the reviewer reference rows", () => {
+    const host = document.createElement("div");
+    renderExpectedSummary(host, {
+      coverage_status: "supported",
+      status_basis: "numeric_tool_evidence_with_public_sources",
+      numeric_evidence: [{
+        metric_id: "company_passengers",
+        entity_id: "AEROMEXICO",
+        period: "2025",
+        value: 26_000_000,
+        unit: "pasajeros",
+        availability: "available",
+      }],
+      rows: [{
+        metric_id: "company_passengers",
+        entity_id: "AEROMEXICO",
+        period: "2025",
+        value: 26_000_000,
+        unit: "pasajeros",
+        availability: "available",
+      }, {
+        calculation: "VOLARIS + Viva: participación conjunta",
+        period: "2026Q2",
+        value: 74.4,
+        unit: "percent",
+        denominator: "all domestic AFAC passenger traffic",
+      }],
+    });
+    expect(host.textContent).toContain("Aeroméxico");
+    expect(host.textContent).toContain("2025");
+    expect(host.textContent).toContain("26,000,000 pasajeros");
+    expect(host.textContent).toContain("74.4 %");
+    expect(host.textContent).toContain("denominador: all domestic AFAC passenger traffic");
+    expect(host.textContent).not.toContain("detalle de evaluación");
+  });
+
   it("keeps missing values as N/D and explains clarify/refuse expectations", () => {
     const host = document.createElement("div");
     renderExpectedSummary(host, {
