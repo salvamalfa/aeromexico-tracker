@@ -345,7 +345,8 @@ def test_queries_the_signed_public_snapshot_without_private_inputs() -> None:
     assert all(not row["comparable"] for row in international_shared["rows"])
     assert all("coverage_incomplete" in row["comparability_reason"] for row in international_shared["rows"])
     assert all(row["combined_value"] is None for row in international_shared["rows"])
-    assert all(row["combined_value"] is None for row in international_shared["display"]["rows"])
+    assert len(international_shared["display"]["columns"]) <= 12
+    assert "combined_value" not in [column["key"] for column in international_shared["display"]["columns"]]
 
 
 def test_domestic_quarter_rollup_uses_only_three_complete_published_months() -> None:

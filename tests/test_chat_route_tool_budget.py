@@ -18,7 +18,8 @@ def test_default_shared_route_result_fits_provider_budget_and_keeps_display_vali
         },
     )
 
-    assert len(json.dumps(result, ensure_ascii=False, allow_nan=False, separators=(",", ":")).encode()) <= 16_000
+    encoded = json.dumps(result, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
+    assert len(encoded.encode()) <= 16_000
     assert result["requested_top_n"] == 20
     assert result["applied_top_n"] == result["row_count"] == len(result["rows"])
     assert result["available_route_count"] >= result["row_count"]
@@ -115,3 +116,74 @@ def test_real_international_quarter_route_queries_fit_presented_tool_budget() ->
             assert all(row["comparison"] is not None for row in result["rows"])
             assert all(isinstance(row["comparison"]["available"], bool) for row in result["rows"])
         assert enriched["displays"][0]["display_id"] == result["display"]["display_id"]
+
+
+def test_shared_route_queries_fit_presented_budget_and_display_contract() -> None:
+    from types import SimpleNamespace
+
+    from src.conversational_analytics.presentation import DisplayRegistry
+    from src.conversational_analytics.tools.registry import ToolRegistry
+
+    snapshot = Snapshot(Path("site"))
+    registry = ToolRegistry(snapshot, SimpleNamespace(enable_route_tools=True))
+    cases = (
+        (["AEROMEXICO_GROUP", "VIVA_AEROBUS"], "2026M07"),
+        (["AEROMEXICO_GROUP", "VOLARIS", "VIVA_AEROBUS"], "2026Q2"),
+    )
+    for entity_ids, period in cases:
+        for metric in ("passengers", "seats", "departures"):
+            for top_n in (None, 20):
+                query = {
+                    "entity_ids": entity_ids,
+                    "segment": "domestic",
+                    "period": period,
+                    "metric": metric,
+                }
+                if top_n is not None:
+                    query["top_n"] = top_n
+                result = registry.invoke("find_shared_routes", query)
+                enriched = DisplayRegistry().add_tool_result(result, "find_shared_routes", "shared-call")
+                final_bytes = len(
+                    json.dumps(enriched, ensure_ascii=False, separators=(",", ":")).encode()
+                )
+                assert final_bytes < 16_000
+                assert len(result["display"]["columns"]) <= 12
+                assert len(enriched["displays"]) == 1
+                display = enriched["displays"][0]
+                assert display["columns"]
+                assert display["rows"]
+                assert len(display["columns"]) <= 12
+                assert all(len(row) == len(display["columns"]) for row in display["rows"])
+                assert result["requested_top_n"] == (top_n or 10)
+                assert result["row_count"] == result["applied_top_n"] == len(result["rows"])
+                assert result["available_route_count"] >= result["row_count"]
+                assert result["truncated"] is (result["row_count"] < result["available_route_count"])
+                assert result["coverage"].keys() == set(entity_ids)
+                for carrier_coverage in result["coverage"].values():
+                    assert carrier_coverage["availability"] in {"complete", "partial"}
+                    assert isinstance(carrier_coverage["expected_months"], list)
+                    assert isinstance(carrier_coverage["observed_months"], list)
+                    assert carrier_coverage["eligibility_reason"]
+                assert set(result["carrier_metadata"]) == set(entity_ids)
+                for row in result["rows"]:
+                    assert set(row["carriers"]) == set(entity_ids)
+                    assert isinstance(row["comparable"], bool)
+                    assert isinstance(row["comparability_reason"], list)
+                    for entity_id, carrier in row["carriers"].items():
+                        assert carrier["value"] is not None
+                        assert carrier["value_kind"] in {"observed", "estimated", "scheduled"}
+                        source_ref = carrier["source_ref"]
+                        source_labels = result["carrier_metadata"][entity_id]["source_labels"]
+                        assert source_ref in source_labels
+                        assert source_labels[source_ref]
+                columns = {column["key"] for column in display["columns"]}
+                for entity_id in entity_ids:
+                    assert f"{entity_id}_value_kind" in columns
+                    assert f"{entity_id}_source_label" in columns
+                for row in display["rows"]:
+                    for entity_id in entity_ids:
+                        assert row[f"{entity_id}_value_kind"]
+                        assert row[f"{entity_id}_source_label"]
+                if len(entity_ids) == 3:
+                    assert "coverage_summary" not in columns
+                    assert "comparability_reason" in columns
