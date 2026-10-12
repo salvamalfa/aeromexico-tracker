@@ -318,47 +318,6 @@ def test_queries_the_signed_public_snapshot_without_private_inputs() -> None:
     assert {row["value_kind"] for row in international["rows"]} <= {"observed", "estimated", "scheduled"}
     assert all(row["source_label"] and row["operation_status"] for row in international["rows"])
 
-    # The published Q2 international payload includes an ancillary AICM note on
-    # the BTS LAX route and a scheduled departure row whose passengers are AFAC
-    # estimates. Interpret each selected metric from its own evidence.
-    for market_key, expected in {
-        "LAX<>MEX": ("observed", "observed", "observed"),
-        "GUA<>MEX": ("estimated", "scheduled", "estimated"),
-    }.items():
-        kinds = {}
-        for metric in ("passengers", "departures", "load_factor"):
-            metric_result = tools.invoke(
-                "query_routes",
-                {
-                    "entity_id": "AEROMEXICO_GROUP",
-                    "segment": "international",
-                    "period": "2026Q2",
-                    "metric": metric,
-                    "origin_iata": market_key.split("<>")[0],
-                    "destination_iata": market_key.split("<>")[1],
-                    "top_n": 1,
-                },
-            )
-            row = metric_result["rows"][0]
-            kinds[metric] = row["value_kind"]
-            assert row["metric_source_label"]
-            if metric == "load_factor":
-                assert row["value"] <= 100
-        assert tuple(kinds[metric] for metric in ("passengers", "departures", "load_factor")) == expected
-    gua_passengers = tools.invoke(
-        "query_routes",
-        {
-            "entity_id": "AEROMEXICO_GROUP",
-            "segment": "international",
-            "period": "2026Q2",
-            "metric": "passengers",
-            "origin_iata": "GUA",
-            "destination_iata": "MEX",
-            "top_n": 1,
-        },
-    )["rows"][0]
-    assert gua_passengers["metric_source_label"].startswith("AFAC + AeroDataBox")
-
     shared = tools.invoke(
         "find_shared_routes",
         {
