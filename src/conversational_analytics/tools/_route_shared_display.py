@@ -71,6 +71,7 @@ def bound_shared_result(
     """Keep the advertised route query within the provider's result budget."""
     rows = result["rows"]
     result["truncation_reason"] = None
+    title_base = result["display"]["title"]
     while True:
         columns, display_rows = build_shared_display(
             rows, entity_ids, labels, unit, result["coverage"], result["carrier_metadata"]
@@ -85,6 +86,7 @@ def bound_shared_result(
         result["applied_top_n"] = len(rows)
         result["available_route_count"] = available_count
         result["truncated"] = len(rows) < available_count
+        result["display"]["title"] = f"{title_base} · {len(rows)} de {available_count} mostradas"
         encoded = json.dumps(result, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
         if len(encoded.encode("utf-8")) <= MAX_SHARED_ROUTE_RESULT_BYTES:
             return result

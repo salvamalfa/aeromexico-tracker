@@ -27,6 +27,10 @@ def test_default_shared_route_result_fits_provider_budget_and_keeps_display_vali
     assert result["carrier_metadata"]["AEROMEXICO_GROUP"]["label"]
 
     display = result["display"]
+    assert display["title"] == (
+        f"Rutas compartidas · 2026Q2 · {result['row_count']} de "
+        f"{result['available_route_count']} mostradas"
+    )
     assert len(display["columns"]) == len({column["key"] for column in display["columns"]})
     keys = {column["key"] for column in display["columns"]}
     assert all(set(row) == keys for row in display["rows"])
