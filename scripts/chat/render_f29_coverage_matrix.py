@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import html
 import json
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +13,23 @@ ROOT = Path(__file__).resolve().parents[2]
 FIXTURE = ROOT / "tests/fixtures/chat_evals/business_proposed.json"
 OUTPUT = ROOT / "docs/chat/revision-fase-2/F2.9-matriz-cobertura-final.md"
 EXPECTED_CASE_HASH = "30fc0acfc5d9fee1ffffd3624209712dd8160806dae4d904c4310a8f53537640"
+
+
+@lru_cache(maxsize=1)
+def _current_payload_metrics() -> tuple[int, int, int]:
+    # Keep the generated matrix tied to the same deterministic offline derivation as the budget.
+    try:
+        from scripts.chat.prepare_final_campaign import DEFAULT_PROFILE, build_plan
+    except ModuleNotFoundError:
+        # Direct script execution places scripts/chat on sys.path instead of the repository root.
+        from prepare_final_campaign import DEFAULT_PROFILE, build_plan
+
+    context = build_plan(profile_path=DEFAULT_PROFILE)["projection"]["context_delta"]
+    return (
+        context["tool_calls"],
+        context["tool_result_serialized_utf8_bytes"],
+        context["largest_tool_result_utf8_bytes"],
+    )
 
 CASE_GUIDANCE = {
     "N20": (
@@ -126,6 +144,7 @@ def render_matrix(fixture: dict[str, Any]) -> str:
     if fixture != json.loads(FIXTURE.read_text(encoding="utf-8")):
         raise ValueError("La matriz debe renderizarse desde el fixture congelado en disco")
     cases = fixture["cases"]
+    tool_calls, result_bytes, max_result_bytes = _current_payload_metrics()
     if fixture.get("status") != "OWNER_APPROVED" or len(cases) != 30:
         raise ValueError("La matriz requiere los 30 casos business OWNER_APPROVED congelados")
 
@@ -258,8 +277,11 @@ def render_matrix(fixture: dict[str, Any]) -> str:
             "etapa 3 es US$7.06–7.23 con margen de 35%; la reserva propuesta es US$8 para 30 casos/34 "
             "mensajes. El saldo actual es desconocido y solo modifica cuánto habría que recargar; la "
             "reserva se mantiene en US$8. No está aprobada ni financiada y no es un hard cap. La "
-            "derivación actual midió 55 llamadas de herramienta, 95,316 bytes de resultados y un "
-            "máximo de 15,652 bytes. Ver [estimación y hashes](F2.9-etapa-3-presupuesto-actual.md).",
+            f"derivación offline actual registró {tool_calls} llamadas y {result_bytes:,} bytes "
+            "agregados de resultados después de aplicar una vez el formato de display; el máximo "
+            f"registrado fue {max_result_bytes:,} bytes. Las pruebas focales verifican el helper "
+            "local bajo 16,000 bytes; esta medición no garantiza el tamaño de respuestas enriquecidas "
+            "en vivo. Ver [estimación y hashes](F2.9-etapa-3-presupuesto-actual.md).",
             "",
             "Estado del plan (2026-10-12): la etapa 3 está propuesta solo como campaña parcial de negocio. "
             "El perfil `config/chat/f2_9_business_stage3_partial.json` limita el alcance a los 30 casos "
