@@ -67,16 +67,18 @@ def render_matrix(fixture: dict[str, Any]) -> str:
         raise ValueError("La matriz requiere los 30 casos business OWNER_APPROVED congelados")
 
     lines = [
-        "# F2.9 · Matriz de cobertura para la campaña final",
+        "# F2.9 · Matriz de cobertura de la etapa 3 parcial de negocio",
         "",
         "Generada desde `tests/fixtures/chat_evals/business_proposed.json` sin modificarlo. "
         f"SHA-256 canónico del fixture: `{fixture_hash}`. Las preguntas, estados, acciones, "
         "dependencias, IDs de métricas, referencias y fallos críticos se copian del fixture aprobado; "
         "esta tabla no redefine su Gold.",
         "",
-        "La campaña propuesta usa Sol low, una sola repetición, 30 casos business y 34 turnos de usuario. "
-        "No agrega casos de prompt injection. Es una proyección offline; requiere revalidar Gold/snapshot "
-        "y aprobar un presupuesto nuevo antes de cualquier llamada.",
+        "El preflight parcial usa Sol low, una sola repetición, 30 casos business y 34 turnos de usuario. "
+        "Excluye la cohorte safety y no agrega casos de prompt injection, de acuerdo con la instrucción "
+        "explícita del dueño; no representa cobertura ni validación completa de seguridad. Es una "
+        "proyección offline; requiere revalidar Gold/snapshot y aprobar un presupuesto nuevo antes de "
+        "cualquier llamada.",
         "",
         "| ID | Pregunta(s) congelada(s) | Acción esperada congelada | Métricas / fuentes en Gold | "
         "Dependencias y fallos críticos |",
@@ -147,8 +149,14 @@ def render_matrix(fixture: dict[str, Any]) -> str:
             "La proyección actual de US$6.58 corresponde a una repetición y margen de 35%, no a una reserva "
             "aprobada ni a un hard cap; debe recalcularse tras integrar dependencias.",
             "",
-            "El preflight `scripts/chat/prepare_final_campaign.py` valida el perfil, fixture, catálogo de "
-            "precios y evidencia de uso; el perfil rechaza repeticiones distintas de una.",
+            "Estado del plan (2026-10-11): la etapa 3 está propuesta solo como campaña parcial de negocio. "
+            "El perfil `config/chat/f2_9_business_stage3_partial.json` limita el alcance a los 30 casos "
+            "business y una repetición; safety y prompt injection quedan fuera, sin presentarse como "
+            "validados. El preflight `scripts/chat/prepare_final_campaign.py` compara hashes y totales "
+            "de tokens de uso medido con el artefacto público de cierre etapa 2 fijado, además de validar "
+            "fixture y catálogo. Persisten gates de integración, Gold/snapshot y presupuesto; no está "
+            "autorizada ninguna llamada. Detalles del hardening y sus pruebas en "
+            "[`bitácora de preflight`](../../etapas/chat-f2-9-preflight-integridad-20261011.md).",
             "",
         ]
     )
