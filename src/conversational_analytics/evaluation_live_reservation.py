@@ -31,7 +31,8 @@ def reservation_assumption(config: ChatConfig, override: Mapping[str, Any] | Non
             ),
         }
     if override.get("basis") != "f2_9_empirical_pilot_estimate_not_hard_cap":
-        raise ValueError("La política de reserva empírica no está aprobada para esta campaña")
+        if override.get("basis") != "f2_9_stage3_projected_usage_not_hard_cap":
+            raise ValueError("La política de reserva empírica no está aprobada para esta campaña")
     for key in ("input_tokens_per_turn", "output_tokens_per_turn", "planned_request_count"):
         value = override.get(key)
         if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
@@ -41,17 +42,9 @@ def reservation_assumption(config: ChatConfig, override: Mapping[str, Any] | Non
     expected_unit_cost = config.usage_cost_usd(
         override["input_tokens_per_turn"], override["output_tokens_per_turn"]
     )
-    if (
+    stage3 = override.get("basis") == "f2_9_stage3_projected_usage_not_hard_cap"
+    common_invalid = (
         config.model != "gpt-6.1-sol"
-        or override.get("historical_sample_count") != 30
-        or override.get("historical_candidate_counts") != {
-            "gpt-6-luna@medium": 14,
-            "gpt-6-luna@max": 15,
-            "gpt-6.1-sol@low": 1,
-        }
-        or override.get("planned_request_count") != 29
-        or override.get("input_tokens_per_turn") != 68_570
-        or override.get("output_tokens_per_turn") != 2_073
         or isinstance(margin, bool)
         or not isinstance(margin, (int, float))
         or not math.isfinite(margin)
@@ -61,14 +54,42 @@ def reservation_assumption(config: ChatConfig, override: Mapping[str, Any] | Non
         or not math.isfinite(per_case)
         or per_case <= 0
         or not math.isclose(per_case, expected_unit_cost, rel_tol=0, abs_tol=1e-12)
-        or not math.isclose(
-            float(override.get("planned_batch_estimated_reservation_usd", -1)),
-            expected_unit_cost * 29,
-            rel_tol=0,
-            abs_tol=1e-9,
-        )
         or override.get("budget_guaranteed") is not False
-    ):
+    )
+    if stage3:
+        invalid = (
+            common_invalid
+            or override.get("historical_sample_count") != 15
+            or override.get("planned_message_count") != override.get("planned_request_count")
+            or not isinstance(override.get("campaign_sha256"), str)
+            or not math.isclose(
+                float(override.get("planned_batch_estimated_reservation_usd", -1)),
+                expected_unit_cost * override["planned_request_count"],
+                rel_tol=0,
+                abs_tol=1e-9,
+            )
+        )
+    else:
+        invalid = (
+            common_invalid
+            or override.get("historical_sample_count") != 30
+            or override.get("historical_candidate_counts")
+            != {
+                "gpt-6-luna@medium": 14,
+                "gpt-6-luna@max": 15,
+                "gpt-6.1-sol@low": 1,
+            }
+            or override.get("planned_request_count") != 29
+            or override.get("input_tokens_per_turn") != 68_570
+            or override.get("output_tokens_per_turn") != 2_073
+            or not math.isclose(
+                float(override.get("planned_batch_estimated_reservation_usd", -1)),
+                expected_unit_cost * 29,
+                rel_tol=0,
+                abs_tol=1e-9,
+            )
+        )
+    if invalid:
         raise ValueError("La reserva empírica no conserva margen o estimación válidos")
     return dict(override)
 
@@ -78,7 +99,10 @@ def case_reservation_cost(config: ChatConfig, assumption: Mapping[str, Any], tur
         raise ValueError("El caso debe contener al menos un turno")
     inputs = assumption["input_tokens_per_turn"]
     outputs = assumption["output_tokens_per_turn"]
-    if assumption.get("basis") == "f2_9_empirical_pilot_estimate_not_hard_cap":
+    if assumption.get("basis") in {
+        "f2_9_empirical_pilot_estimate_not_hard_cap",
+        "f2_9_stage3_projected_usage_not_hard_cap",
+    }:
         per_turn = config.usage_cost_usd(inputs, outputs)
     else:
         per_turn = config.reservation_cost_usd(inputs + outputs)

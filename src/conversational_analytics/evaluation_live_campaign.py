@@ -25,6 +25,7 @@ def run_campaign(
     resume: bool = False,
     reservation_assumption_override: Mapping[str, Any] | None = None,
     continue_after_known_provider_errors: bool = False,
+    runtime_config: Any | None = None,
 ) -> dict[str, Any]:
     """Execute stable run slots under one shared hard campaign stop.
 
@@ -45,13 +46,37 @@ def run_campaign(
     run_specs = [dict(run) for run in runs]
     if reservation_assumption_override is not None:
         expected_slots = reservation_assumption_override.get("planned_request_count")
-        actual_slots = sum(len(run.get("case_ids", [])) for run in run_specs)
-        candidate_slots = {run.get("candidate"): len(run.get("case_ids", [])) for run in run_specs}
-        if expected_slots != actual_slots or candidate_slots != {
-            "gpt-6.1-sol@low": 14,
-            "gpt-6.1-sol@medium": 15,
-        }:
+        case_by_id = {str(case["id"]): case for case in cases}
+        actual_messages = sum(
+            len(case_by_id[case_id].get("turns", [case_by_id[case_id].get("question")]))
+            for run in run_specs
+            for case_id in run.get("case_ids", [])
+        )
+        if expected_slots != actual_messages:
             raise ValueError("La reserva empírica no coincide con el total de turnos planificados")
+        for field in ("input_tokens_per_turn", "output_tokens_per_turn", "planned_request_count"):
+            value = reservation_assumption_override.get(field)
+            if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+                raise ValueError("La reserva empírica contiene límites inválidos")
+        batch_reservation = reservation_assumption_override.get("planned_batch_estimated_reservation_usd")
+        if (
+            isinstance(batch_reservation, bool)
+            or not isinstance(batch_reservation, (int, float))
+            or not math.isfinite(batch_reservation)
+            or batch_reservation <= 0
+        ):
+            raise ValueError("La reserva empírica contiene una proyección inválida")
+        if reservation_assumption_override.get("basis") == "f2_9_stage3_projected_usage_not_hard_cap":
+            if (
+                len(run_specs) != 1
+                or len(set(case_id for run in run_specs for case_id in run.get("case_ids", []))) != 30
+                or actual_messages != 34
+                or run_specs[0].get("candidate") != "gpt-6.1-sol@low"
+                or run_specs[0].get("identity", {}).get("coverage_campaign_sha256")
+                != reservation_assumption_override.get("campaign_sha256")
+                or batch_reservation > budget_usd
+            ):
+                raise ValueError("La reserva stage3 no coincide con el plan fijado de 30 casos/34 mensajes")
     identity = {
         "runs": [run.get("identity") for run in run_specs],
         "run_identity_hashes": [run.get("identity_hash") for run in run_specs],
@@ -157,6 +182,7 @@ def run_campaign(
                 dict(reservation_assumption_override) if reservation_assumption_override is not None else None
             ),
             continue_after_known_provider_errors=continue_after_known_provider_errors,
+            runtime_config=runtime_config,
         )
         report["run_identity_hash"] = str(run["identity_hash"])
         report["campaign_identity_hash"] = identity_hash

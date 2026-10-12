@@ -24,14 +24,14 @@ def test_profile_dry_run_selects_all_business_cases_without_live_side_effects():
     assert plan["case_count"] == 30
     assert plan["messages_per_candidate"] == 34
     assert plan["repetitions"] == 1
-    assert plan["projection"]["projected_input_tokens_range"] == [2_051_046, 2_098_209]
-    assert plan["projection"]["projected_input_tokens"] == 2_098_209
+    assert plan["projection"]["projected_input_tokens_range"] == [2_055_140, 2_103_667]
+    assert plan["projection"]["projected_input_tokens"] == 2_103_667
     assert plan["projection"]["projected_output_tokens"] == 9_423
-    assert plan["projection"]["cost_before_margin_usd_range"] == [5.22184, 5.339748]
+    assert plan["projection"]["cost_before_margin_usd_range"] == [5.232075, 5.353393]
     assert plan["projection"]["historical_scaled_baseline_cost_before_margin_usd"] == 4.86812
-    assert plan["projection"]["context_delta_input_cost_before_margin_usd_range"] == [0.35372, 0.471627]
+    assert plan["projection"]["context_delta_input_cost_before_margin_usd_range"] == [0.363955, 0.485272]
     assert plan["projection"]["safety_margin_fraction"] == 0.35
-    assert plan["projection"]["cost_after_margin_usd_range"] == [7.0495, 7.2087]
+    assert plan["projection"]["cost_after_margin_usd_range"] == [7.0633, 7.2271]
     assert plan["projection"]["proposed_reserve_usd"] == 8.0
     context = plan["projection"]["context_delta"]
     assert context["prompt_r1_effective_utf8_bytes"] == 8_937
@@ -41,9 +41,9 @@ def test_profile_dry_run_selects_all_business_cases_without_live_side_effects():
     assert context["historical_tool_schema_sha256"] == (
         "1ff0d3a35647f7a0c2fc956884a4d267b0148065ccd3e2469139463f859bea19"
     )
-    assert context["current_tool_schema_utf8_bytes"] == 7_436
-    assert context["tool_schema_delta_utf8_bytes_per_request"] == 4_130
-    assert context["total_delta_utf8_bytes_per_request"] == 6_359
+    assert context["current_tool_schema_utf8_bytes"] == 7_620
+    assert context["tool_schema_delta_utf8_bytes_per_request"] == 4_314
+    assert context["total_delta_utf8_bytes_per_request"] == 6_543
     assert context["modeled_provider_requests"] == 89
     assert context["modeled_provider_request_hypothesis_range"] == [85, 89]
     assert context["tool_calls"] == 55
@@ -65,6 +65,36 @@ def test_profile_dry_run_selects_all_business_cases_without_live_side_effects():
     assert plan["gates"]["30_case_gold_and_support_expectations_revalidated"] is False
     assert plan["gates"]["snapshot_and_semantic_versions_pinned_after_integration"] is False
     assert plan["gates"]["new_stage3_budget_approved_and_funded"] is False
+
+
+def test_stage3_empirical_reservation_admits_all_34_messages_under_eight_dollars():
+    from src.conversational_analytics.config import ChatConfig
+    from src.conversational_analytics.evaluation_live_reservation import (
+        case_reservation_cost,
+        reservation_assumption,
+    )
+
+    plan = build_plan(profile_path=DEFAULT_PROFILE)
+    config = ChatConfig(
+        provider="openai",
+        model="gpt-6.1-sol",
+        estimated_input_cost_per_million=2.0,
+        estimated_output_cost_per_million=10.0,
+        cache_write_input_multiplier=1.25,
+        long_context_input_multiplier=2.0,
+        long_context_output_multiplier=1.5,
+        long_context_threshold_input_tokens=272_000,
+    )
+    assumption = reservation_assumption(config, plan["reservation_assumption_override"])
+    assert assumption["planned_request_count"] == 34
+    assert assumption["input_tokens_per_turn"] < 100_000
+    assert assumption["output_tokens_per_turn"] < 1_000
+    fixture = json.loads((ROOT / "tests/fixtures/chat_evals/business_proposed.json").read_text())
+    reserved = sum(
+        case_reservation_cost(config, assumption, len(case.get("turns", [case["question"]])))
+        for case in fixture["cases"]
+    )
+    assert reserved <= 8.0
 
 
 def test_preflight_allows_only_the_candidate_supported_by_measured_usage():

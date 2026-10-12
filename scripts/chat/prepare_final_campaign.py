@@ -49,8 +49,10 @@ def _message_count(cases: list[dict[str, Any]]) -> int:
         turns = case.get("turns")
         if turns is None:
             turns = [case.get("question")]
-        if not isinstance(turns, list) or not turns or any(
-            not isinstance(turn, str) or not turn.strip() for turn in turns
+        if (
+            not isinstance(turns, list)
+            or not turns
+            or any(not isinstance(turn, str) or not turn.strip() for turn in turns)
         ):
             raise ValueError(f"Turnos inválidos en {case.get('id', '<sin id>')}")
         count += len(turns)
@@ -225,9 +227,6 @@ def build_plan(
         load_system_instructions,
         prompt_sha256,
     )
-    from src.conversational_analytics.tools.business_metrics import business_metric_tool_specs
-    from src.conversational_analytics.tools.evidence import evidence_tool_specs
-    from src.conversational_analytics.tools.routes import ROUTE_TOOL_SPECS
 
     coverage = coverage_report or derive_stage3_coverage(
         snapshot_root=ROOT / "site", fixture_path=fixture_path, profile_path=profile_path
@@ -258,9 +257,7 @@ def build_plan(
 
     snapshot = Snapshot(ROOT / "site")
     tools = _Tools(snapshot)
-    current_tool_specs = (
-        tools.registry.tool_specs() + ROUTE_TOOL_SPECS + business_metric_tool_specs() + evidence_tool_specs()
-    )
+    current_tool_specs = tools.registry.tool_specs()
     current_tool_schema_json = json.dumps(
         current_tool_specs, ensure_ascii=False, sort_keys=True, separators=(",", ":")
     )
@@ -295,22 +292,40 @@ def build_plan(
     ]
     costs_after_margin = [cost * (1 + margin) for cost in costs_before_margin]
     proposed_cost_range = [round(value, 4) for value in costs_after_margin]
-    historical_scaled_cost = (
-        input_tokens * input_rate + output_tokens * output_rate
-    ) / 1_000_000
+    historical_scaled_cost = (input_tokens * input_rate + output_tokens * output_rate) / 1_000_000
     context_delta_input_cost_range = [
         delta * input_rate / 1_000_000 for delta in context_delta_input_tokens_range
     ]
     reserve_usd = float(_ceil_dollar(costs_after_margin[1]))
     base_cost = costs_before_margin[1]
+    reservation_input_per_message = math.ceil(projected_input_tokens_range[1] / messages * (1 + margin))
+    reservation_output_per_message = math.ceil(math.ceil(output_tokens) / messages * (1 + margin))
     campaign_identity = dict(metrics_coverage["campaign_identity"])
     campaign_identity["reserve_usd"] = reserve_usd
     campaign_identity_json = json.dumps(
         campaign_identity, ensure_ascii=False, sort_keys=True, separators=(",", ":")
     )
-    campaign_sha256 = hashlib.sha256(
-        campaign_identity_json.encode("utf-8")
-    ).hexdigest()
+    campaign_sha256 = hashlib.sha256(campaign_identity_json.encode("utf-8")).hexdigest()
+    reservation_unit_cost = (
+        reservation_input_per_message * input_rate + reservation_output_per_message * output_rate
+    ) / 1_000_000
+    reservation_assumption_override = {
+        "basis": "f2_9_stage3_projected_usage_not_hard_cap",
+        "historical_sample_count": reference["question_count"],
+        "planned_request_count": messages_per_campaign,
+        "planned_message_count": messages_per_campaign,
+        "input_tokens_per_turn": reservation_input_per_message,
+        "output_tokens_per_turn": reservation_output_per_message,
+        "safety_margin_fraction": margin,
+        "per_case_estimated_reservation_usd": reservation_unit_cost,
+        "planned_batch_estimated_reservation_usd": reservation_unit_cost * messages_per_campaign,
+        "campaign_sha256": metrics_coverage["campaign_sha256"],
+        "budget_guaranteed": False,
+        "note": (
+            "Empirical planning allowance per user message; not a hard cap. "
+            "Unknown usage stops and blocks resume."
+        ),
+    }
     return {
         "stage": "F2.9-stage-3",
         "mode": "offline_preflight_only",
@@ -404,6 +419,7 @@ def build_plan(
             "invoice_or_hard_cap": False,
             "funding_status": "not_approved; account_balance_unknown",
         },
+        "reservation_assumption_override": reservation_assumption_override,
         "gates": profile.get("gates", {}),
         "provider_calls_now": 0,
         "credentials_read": False,

@@ -54,6 +54,7 @@ def _live_provider_run(
     text_verbosity_override: str | None = None,
     reservation_assumption_override: dict[str, Any] | None = None,
     continue_after_known_provider_errors: bool = False,
+    runtime_config: Any | None = None,
 ) -> dict[str, Any]:
     """Run gated holdout cases through the production provider/tool boundary.
 
@@ -66,7 +67,7 @@ def _live_provider_run(
     from .providers.openai import OpenAIProvider
     from .tools.registry import ToolRegistry
 
-    runtime_config = ChatConfig.from_env()
+    runtime_config = runtime_config or ChatConfig.from_env()
     if text_verbosity_override is not None:
         if text_verbosity_override not in {"low", "medium", "high"}:
             raise ValueError("La verbosidad de texto de la campaña no es válida")
@@ -104,7 +105,7 @@ def _live_provider_run(
         raise ValueError(
             "El snapshot o catálogo semántico no coincide con las versiones fijadas en el holdout"
         )
-    registry = ToolRegistry(snapshot)
+    registry = ToolRegistry(snapshot, runtime_config)
     metric_dimensions = {metric["id"]: metric["dimensions"] for metric in registry.catalog()["metrics"]}
     selected = [next(case for case in cases if case["id"] == "es_am_lf_q2")] if probe_only else cases
     output_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
