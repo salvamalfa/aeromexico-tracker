@@ -46,6 +46,64 @@ def _write_private(path: Path, payload: dict[str, Any]) -> None:
     os.chmod(path, 0o600)
 
 
+def _verify_campaign_ledger(
+    state: dict[str, Any], live: dict[str, Any], report_path: Path, report_sha256: str
+) -> None:
+    identity = live.get("run_identity")
+    run_id = identity.get("run_id") if isinstance(identity, dict) else None
+    state_identity = state.get("identity")
+    state_hash = state.get("identity_hash")
+    if (
+        state.get("status") not in {"completed", "completed_with_known_provider_errors"}
+        or state.get("active_run_id") is not None
+        or state.get("spent_unknown") is not False
+        or not isinstance(state_identity, dict)
+        or not isinstance(state_hash, str)
+        or _canonical_hash(state_identity) != state_hash
+        or live.get("campaign_identity_hash") != state_hash
+    ):
+        raise ValueError("El estado de campaña no valida identidad y completion del reporte live")
+    if not isinstance(run_id, str):
+        raise ValueError("El reporte live no incluye un run_id válido")
+    run_specs, run_hashes = state_identity.get("runs"), state_identity.get("run_identity_hashes")
+    if (
+        not isinstance(run_specs, list)
+        or not isinstance(run_hashes, list)
+        or len(run_specs) != len(run_hashes)
+    ):
+        raise ValueError("El estado de campaña no contiene el plan de corridas esperado")
+    matching_runs = [
+        index
+        for index, planned in enumerate(run_specs)
+        if planned == identity and run_hashes[index] == live.get("run_identity_hash")
+    ]
+    if len(matching_runs) != 1:
+        raise ValueError("La identidad live no coincide con una corrida única del ledger")
+    completed_runs = state.get("completed_runs")
+    completed = completed_runs.get(run_id) if isinstance(completed_runs, dict) else None
+    summary = completed.get("summary") if isinstance(completed, dict) else None
+    if (
+        not isinstance(run_id, str)
+        or not isinstance(completed, dict)
+        or completed.get("complete") is not True
+        or completed.get("identity") != identity
+        or not isinstance(summary, dict)
+        or summary.get("run_id") != run_id
+        or summary.get("complete") is not True
+        or summary.get("run_status") != "completed"
+        or not isinstance(summary.get("report_path"), str)
+        or summary.get("report_sha256") != report_sha256
+    ):
+        raise ValueError("La corrida seleccionada no está completa o no coincide con el ledger")
+    try:
+        ledger_report_path = Path(str(summary.get("report_path"))).resolve(strict=True)
+        selected_report_path = report_path.resolve(strict=True)
+    except (OSError, RuntimeError) as exc:
+        raise ValueError("El ledger no apunta al reporte consolidado seleccionado") from exc
+    if ledger_report_path != selected_report_path:
+        raise ValueError("El path del reporte live no coincide con el ledger")
+
+
 def build_dataset(
     coverage: dict[str, Any],
     live: dict[str, Any],
@@ -199,6 +257,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--coverage", type=Path, required=True)
     parser.add_argument("--live-report", type=Path, required=True)
+    parser.add_argument(
+        "--campaign-state",
+        type=Path,
+        default=ROOT / ".state/outputs/chat-evaluations/f2-9-stage-3/campaign.json",
+    )
     parser.add_argument("--fixture", type=Path, default=FIXTURE)
     parser.add_argument(
         "--output-dir", type=Path, default=ROOT / ".state/outputs/chat-evaluations/f2-9-stage-3/review"
@@ -208,11 +271,16 @@ def main(argv: list[str] | None = None) -> int:
     state_root = (ROOT / ".state").resolve()
     if state_root not in output_dir.parents:
         parser.error("Los datos de revisión deben guardarse dentro de .state/")
+    campaign_state_path = args.campaign_state.resolve()
+    if state_root not in campaign_state_path.parents:
+        parser.error("El estado de campaña privado debe leerse desde .state/")
     coverage, _ = _read(args.coverage)
     live, live_sha256 = _read(args.live_report)
+    campaign_state, _ = _read(campaign_state_path)
     filename_match = CONSOLIDATED_REPORT.search(args.live_report.name)
     if filename_match is None or filename_match.group(1) != live_sha256:
         raise ValueError("El SHA del reporte live no coincide con su nombre consolidado")
+    _verify_campaign_ledger(campaign_state, live, args.live_report, live_sha256)
     fixture, fixture_sha256 = _read(args.fixture)
     dataset, mapping = build_dataset(
         coverage, live, fixture, fixture_sha256, live_report_sha256=live_sha256
