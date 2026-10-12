@@ -42,6 +42,7 @@
       "stage3_tool_schema": "13 definitions, measured from the current coverage source",
       "bytes_per_token_proxy_range": [3, 4],
       "request_count_basis": "34 user messages plus 55 deterministic tool calls; upper proxy count 89",
+      "request_count_hypothesis_range": [85, 89],
       "tokenizer_or_provider_usage": "not queried"
     }
   },

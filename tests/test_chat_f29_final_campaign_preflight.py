@@ -28,6 +28,8 @@ def test_profile_dry_run_selects_all_business_cases_without_live_side_effects():
     assert plan["projection"]["projected_input_tokens"] == 2_098_209
     assert plan["projection"]["projected_output_tokens"] == 9_423
     assert plan["projection"]["cost_before_margin_usd_range"] == [5.22184, 5.339748]
+    assert plan["projection"]["historical_scaled_baseline_cost_before_margin_usd"] == 4.86812
+    assert plan["projection"]["context_delta_input_cost_before_margin_usd_range"] == [0.35372, 0.471627]
     assert plan["projection"]["safety_margin_fraction"] == 0.35
     assert plan["projection"]["cost_after_margin_usd_range"] == [7.0495, 7.2087]
     assert plan["projection"]["proposed_reserve_usd"] == 8.0
@@ -43,6 +45,7 @@ def test_profile_dry_run_selects_all_business_cases_without_live_side_effects():
     assert context["tool_schema_delta_utf8_bytes_per_request"] == 4_130
     assert context["total_delta_utf8_bytes_per_request"] == 6_359
     assert context["modeled_provider_requests"] == 89
+    assert context["modeled_provider_request_hypothesis_range"] == [85, 89]
     assert context["tool_calls"] == 55
     assert context["tool_result_serialized_utf8_bytes"] == 95_232
     assert context["largest_tool_result_utf8_bytes"] == 15_652

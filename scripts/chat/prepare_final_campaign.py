@@ -251,6 +251,10 @@ def build_plan(
     # Each user message and each tool continuation is a modeled provider request.
     # The highest observed offline call count is used as the conservative proxy.
     modeled_provider_requests = messages_per_campaign + tool_call_count
+    modeled_provider_request_hypothesis_range = [
+        len(cases) * repetitions + tool_call_count,
+        modeled_provider_requests,
+    ]
 
     snapshot = Snapshot(ROOT / "site")
     tools = _Tools(snapshot)
@@ -291,6 +295,12 @@ def build_plan(
     ]
     costs_after_margin = [cost * (1 + margin) for cost in costs_before_margin]
     proposed_cost_range = [round(value, 4) for value in costs_after_margin]
+    historical_scaled_cost = (
+        input_tokens * input_rate + output_tokens * output_rate
+    ) / 1_000_000
+    context_delta_input_cost_range = [
+        delta * input_rate / 1_000_000 for delta in context_delta_input_tokens_range
+    ]
     reserve_usd = float(_ceil_dollar(costs_after_margin[1]))
     base_cost = costs_before_margin[1]
     campaign_identity = dict(metrics_coverage["campaign_identity"])
@@ -353,6 +363,10 @@ def build_plan(
             "projected_output_tokens": math.ceil(output_tokens),
             "cost_before_margin_usd": round(base_cost, 6),
             "cost_before_margin_usd_range": [round(value, 6) for value in costs_before_margin],
+            "historical_scaled_baseline_cost_before_margin_usd": round(historical_scaled_cost, 6),
+            "context_delta_input_cost_before_margin_usd_range": [
+                round(value, 6) for value in context_delta_input_cost_range
+            ],
             "cost_after_margin_usd_range": proposed_cost_range,
             "proposed_cost_upper_usd": round(costs_after_margin[1], 4),
             "proposed_reserve_usd": reserve_usd,
@@ -373,6 +387,7 @@ def build_plan(
                 "tool_schema_delta_utf8_bytes_per_request": tool_schema_delta_bytes,
                 "total_delta_utf8_bytes_per_request": context_delta_bytes_per_request,
                 "modeled_provider_requests": modeled_provider_requests,
+                "modeled_provider_request_hypothesis_range": modeled_provider_request_hypothesis_range,
                 "tool_calls": tool_call_count,
                 "tool_result_serialized_utf8_bytes": sum(map(len, serialized_results)),
                 "tool_arguments_serialized_utf8_bytes": sum(map(len, serialized_arguments)),
