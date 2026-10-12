@@ -6,7 +6,10 @@ from pathlib import Path
 import pytest
 
 from src.conversational_analytics.evidence_index import EvidenceIndex, EvidenceIndexError
+from src.conversational_analytics.data.snapshot import Snapshot
+from src.conversational_analytics.providers._openai_references import references_from_results
 from src.conversational_analytics.tools.evidence import dispatch_evidence_tool, evidence_tool_specs
+from src.conversational_analytics.tools.registry import ToolRegistry
 
 FIXTURE = Path("tests/fixtures/chat_evidence/index.json")
 
@@ -50,7 +53,41 @@ def test_news_search_returns_bounded_ficha_and_date_citation() -> None:
     assert row["description"] == "Nota sobre precios del combustible en el sector aéreo."
     assert "body" not in row and "full_text" not in row
     assert row["citation"]["source_sha256"] == "c" * 64
+    assert row["references"] == [{
+        "label": "Fuente pública fixture · Combustible y aerolíneas (2026-06-15)",
+        "url": "https://www.sec.gov/Archives/edgar/data/1/news.htm",
+    }]
     assert index.search_news("combustible", "2026-07-01", "2026-07-31", "Aeroméxico")["count"] == 0
+
+
+def test_registry_evidence_hits_reach_provider_references_with_exact_urls() -> None:
+    class Capabilities:
+        enable_evidence_tools = True
+        enable_route_tools = False
+        enable_business_metric_tools = False
+
+    registry = ToolRegistry(Snapshot(Path("tests/fixtures/chat/site")), Capabilities())
+    registry._evidence_index = EvidenceIndex(FIXTURE)
+    report = registry.invoke(
+        "search_reports", {"query": "aumentó", "company": "Aeroméxico", "period": "2026Q2", "limit": 5}
+    )
+    news = registry.invoke(
+        "search_news", {
+            "query": "combustible costos", "start_date": "2026-06-01", "end_date": "2026-06-30",
+            "company": "Aeroméxico", "limit": 5,
+        }
+    )
+    refs = references_from_results([report, news])
+    assert refs == [
+        {
+            "label": "Reporte Aeroméxico 2026Q2, p. 12",
+            "url": "https://www.sec.gov/Archives/edgar/data/1/fixture.htm",
+        },
+        {
+            "label": "Fuente pública fixture · Combustible y aerolíneas (2026-06-15)",
+            "url": "https://www.sec.gov/Archives/edgar/data/1/news.htm",
+        },
+    ]
 
 
 def test_news_tool_schemas_are_closed_and_dispatch_rejects_extra_arguments() -> None:

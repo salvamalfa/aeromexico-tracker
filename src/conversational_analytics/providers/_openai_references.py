@@ -54,7 +54,12 @@ def references_from_results(results: Iterable[dict[str, Any]]) -> list[dict[str,
 
     for result in results:
         walk(result)
-    unique: dict[tuple[str, str, str], dict[str, Any]] = {}
+    unique: dict[tuple[str, str], dict[str, Any]] = {}
     for ref in found:
-        unique[(ref["label"], ref["url"], str(ref.get("metric_id", "")))] = ref
+        key = (ref["url"], str(ref.get("metric_id", "")))
+        previous = unique.get(key)
+        if previous is None:
+            unique[key] = ref
+        elif ref["label"] not in previous["label"].split("; "):
+            previous["label"] = "; ".join((previous["label"], ref["label"]))
     return list(unique.values())

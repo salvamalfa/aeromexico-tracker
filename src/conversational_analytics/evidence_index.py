@@ -192,6 +192,10 @@ class EvidenceIndex:
                     "label": f"Reporte {record['company']} {record['period']}, p. {page}",
                     "url": source["url"], "source_id": source["id"], "source_sha256": source["sha256"],
                 },
+                "references": [{
+                    "label": f"Reporte {record['company']} {record['period']}, p. {page}",
+                    "url": source["url"],
+                }],
                 "_score": score,
             })
         for result in results:
@@ -247,9 +251,19 @@ class EvidenceIndex:
                 "title": title, "description": description, "companies": companies,
                 "topics": topics, "brief_quote": quote,
                 "citation": {
-                    "label": _text(record.get("publisher"), "publisher", 120),
+                    "label": (
+                        f"{_text(record.get('publisher'), 'publisher', 120)} · "
+                        f"{title} ({published})"
+                    ),
                     "url": source["url"], "source_id": source["id"], "source_sha256": source["sha256"],
                 },
+                "references": [{
+                    "label": (
+                        f"{_text(record.get('publisher'), 'publisher', 120)} · "
+                        f"{title} ({published})"
+                    ),
+                    "url": source["url"],
+                }],
                 "_score": score,
             })
         for result in results:
