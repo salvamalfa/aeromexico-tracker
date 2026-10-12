@@ -67,20 +67,34 @@ def _value_kind(network: dict[str, Any], route: dict[str, Any], metric: str) -> 
         return override
     if metric == "passengers" and route.get("passengers_estimated"):
         return "estimated"
-    if metric in {"seats", "load_factor"} and route.get("capacity_estimated"):
-        return "estimated"
-    if metric == "load_factor" and route.get("load_factor_status") == "estimated":
+    if metric in {"seats", "load_factor"} and (
+        route.get("capacity_estimated") or route.get("load_factor_status") == "estimated"
+    ):
         return "estimated"
     status = str(route.get("operation_status") or "").lower()
     source = str(route.get("source_label") or "").lower()
-    note = str(route.get("coverage_note") or "").lower()
-    if "programad" in status or "programad" in source or "programad" in note:
+    # Operation status applies to departures. Route notes can mention a second,
+    # ancillary source (for example AICM schedules on a BTS passenger row), so
+    # they must not override the selected metric's evidence.
+    if metric == "departures" and ("programad" in status or status == "assigned_slot_not_flown"):
         return "scheduled"
-    if "observed" in status or "t-100" in source or "observad" in note:
+    if "observed" in status or "t-100" in source:
         return "observed"
     if metric in {"passengers", "seats", "departures", "load_factor"} and route.get("capacity_estimated"):
         return "estimated"
     return "observed"
+
+
+def _metric_source_label(route: dict[str, Any], metric: str) -> str | None:
+    """Return provenance for the selected value, not an ancillary route note."""
+    source = route.get("source_label")
+    note = str(route.get("coverage_note") or "")
+    if metric == "passengers" and route.get("passengers_estimated"):
+        marker = "Pasajeros estimados de "
+        if marker in note:
+            entity = note.split(marker, 1)[1].split(" · ", 1)[0]
+            return f"AFAC + AeroDataBox · {entity}"
+    return source
 
 
 class RouteTools:
@@ -269,7 +283,7 @@ class RouteTools:
                 and value is not None
                 and previous_value is not None
                 and current_kind == previous_kind
-                and route.get("source_label") == previous_route.get("source_label")
+                and _metric_source_label(route, metric) == _metric_source_label(previous_route, metric)
             )
             delta = value - previous_value if comparable else None
             relative = delta / abs(previous_value) * 100 if comparable and previous_value != 0 else None
@@ -285,6 +299,7 @@ class RouteTools:
                 "value_kind": current_kind,
                 "unit": _METRIC_LABELS[metric][1],
                 "source_label": route.get("source_label"),
+                "metric_source_label": _metric_source_label(route, metric),
                 "operation_status": route.get("operation_status"),
                 "coverage_note": route.get("coverage_note"),
                 "comparison": {
@@ -306,6 +321,7 @@ class RouteTools:
                         current_kind,
                         previous_kind,
                         comparison_period,
+                        metric,
                     ),
                 }
                 if comparison_period
@@ -373,6 +389,7 @@ class RouteTools:
         current_kind,
         previous_kind,
         comparison_period,
+        metric,
     ):
         if previous is None:
             return "El periodo comparativo no está publicado"
@@ -384,7 +401,7 @@ class RouteTools:
             return "Falta el valor de la ruta en al menos un periodo"
         if current_kind != previous_kind:
             return "Cambió el tipo de valor (observado, estimado o programado)"
-        if route.get("source_label") != previous_route.get("source_label"):
+        if _metric_source_label(route, metric) != _metric_source_label(previous_route, metric):
             return "Cambió la fuente de la ruta"
         return f"No hay comparación válida contra {comparison_period}"
 
@@ -449,16 +466,14 @@ class RouteTools:
                     "value_kind": _value_kind(network_by_entity[entity_id], route, metric)
                     if value is not None
                     else None,
-                    "source_label": route.get("source_label"),
+                    "source_label": _metric_source_label(route, metric),
                 }
             # Exact entity route sets are the evidence of presence. For INDUSTRY + an
             # individual airline, the airline's own file must carry a positive value.
             if valid and all(item["value"] is not None and item["value"] > 0 for item in carriers.values()):
                 first_route = route_maps[entity_ids[0]][market_key]
                 kinds = {item["value_kind"] for item in carriers.values()}
-                source_families = {
-                    str(item["source_label"] or "").split(" · ", maxsplit=1)[0] for item in carriers.values()
-                }
+                source_families = {str(item["source_label"] or "").split(" · ", maxsplit=1)[0] for item in carriers.values()}
                 carrier_coverages = {
                     entity_id: _coverage(network_by_entity[entity_id]) for entity_id in entity_ids
                 }
@@ -483,7 +498,11 @@ class RouteTools:
                         "origin": copy.deepcopy(first_route.get("origin")),
                         "destination": copy.deepcopy(first_route.get("destination")),
                         "carriers": carriers,
-                        "combined_value": sum(item["value"] for item in carriers.values()),
+                        "combined_value": (
+                            sum(item["value"] for item in carriers.values())
+                            if not comparability_reasons
+                            else None
+                        ),
                         "unit": _METRIC_LABELS[metric][1],
                         "coverage": {
                             **carrier_coverages,
@@ -493,7 +512,14 @@ class RouteTools:
                         "value_kind": next(iter(kinds)) if len(kinds) == 1 else "mixed",
                     }
                 )
-        rows.sort(key=lambda row: (row["combined_value"], row["market_key"]), reverse=True)
+        rows.sort(
+            key=lambda row: (
+                row["comparable"],
+                row["combined_value"] if row["combined_value"] is not None else 0,
+                row["market_key"],
+            ),
+            reverse=True,
+        )
         count = len(rows)
         rows = rows[:top_n]
         networks_with_paths = [
