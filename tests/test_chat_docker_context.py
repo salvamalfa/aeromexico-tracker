@@ -58,8 +58,7 @@ def test_chat_runtime_configuration_is_reincluded_in_docker_context():
             rule.startswith("!") and fnmatch.fnmatchcase(relpath, rule[1:])
             for rule in rules
         ), relpath
-        parents = Path(relpath).parents
-        for parent in parents:
+        for parent in Path(relpath).parents:
             if str(parent) == ".":
                 continue
             parent_rule = f"!{parent.as_posix()}/"
