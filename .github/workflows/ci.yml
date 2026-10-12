@@ -10,6 +10,11 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# A blank repository variable keeps financial payloads closed; a published
+# receipt requires the owner's exact canonical hash pin.
+env:
+  CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256: ${{ vars.CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256 }}
+
 # CI only reads the repository; callers (pages.yml) grant their own scopes.
 permissions:
   contents: read

@@ -9,17 +9,15 @@ from typing import Any
 
 from jsonschema import Draft202012Validator
 
+from src.web_export.business_metrics_approval import (
+    BusinessMetricsApprovalError,
+    validate_approval_receipt,
+)
 from src.web_export.privacy import check_privacy, load_privacy_rules
-from src.web_export.writer import dumps_deterministic, write_json
+from src.web_export.writer import write_json
 
 ROOT = Path(__file__).resolve().parents[2]
 BUSINESS_SCHEMA_PATH = ROOT / "contracts/web/business_metrics.schema.json"
-APPROVAL_SCHEMA_PATH = ROOT / "contracts/web/business_metrics_approval.schema.json"
-
-
-class BusinessMetricsApprovalError(ValueError):
-    """Approval receipt is absent, stale, incomplete, or malformed."""
-
 
 def _sha256(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
@@ -45,11 +43,8 @@ def build_approved_payload(
     """
     proposal, proposal_raw = _load_json(proposal_path)
     definitions, definitions_raw = _load_json(definitions_path)
-    receipt, receipt_raw = _load_json(receipt_path)
-    receipt_schema = json.loads(APPROVAL_SCHEMA_PATH.read_text(encoding="utf-8"))
-    errors = list(Draft202012Validator(receipt_schema).iter_errors(receipt))
-    if errors:
-        raise BusinessMetricsApprovalError(f"Invalid approval receipt: {errors[0].message}")
+    receipt, _ = _load_json(receipt_path)
+    receipt_sha256 = validate_approval_receipt(receipt)
     if receipt["definitions_sha256"] != _sha256(definitions_raw):
         raise BusinessMetricsApprovalError("Approval receipt does not match current metric definitions")
     if receipt["proposal_sha256"] != _sha256(proposal_raw):
@@ -135,7 +130,7 @@ def build_approved_payload(
         "metadata": {
             "definitions_sha256": _sha256(definitions_raw),
             "proposal_sha256": _sha256(proposal_raw),
-            "approval_receipt_sha256": _sha256((dumps_deterministic(receipt) + "\n").encode("utf-8")),
+            "approval_receipt_sha256": receipt_sha256,
             "metric_ids": sorted(approved),
             "currency_basis": "USD; reported currency and any FX metadata retained per quarter",
         },
