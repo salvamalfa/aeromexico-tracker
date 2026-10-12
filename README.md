@@ -45,7 +45,8 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
   El dueño aprobó R2, cuatro métricas, siete pasajes, tres fichas y una reserva
   nueva de US$8. Stage 3 espera ejecución y revisión del JSON; el saldo total
   es desconocido. El runtime mantiene R1/Sol low y las funciones nuevas siguen
-  apagadas (ver [Chat analítico](#chat-analítico)).
+  apagadas; los pins aprobados están preparados para el siguiente despliegue
+  (ver [Chat analítico](#chat-analítico)).
 - **Datos:** AFAC y AeroDataBox se actualizan a mano mes a mes; lo pendiente
   está en [`ROADMAP.md`](ROADMAP.md).
 

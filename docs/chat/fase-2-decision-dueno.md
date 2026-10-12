@@ -4,4 +4,4 @@ El dueño aprobó R2, cuatro métricas, siete pasajes, tres fichas y la reserva 
 
 Stage 3 (30 casos/34 mensajes; estimado US$7.06–7.23) espera ejecución y revisión JSON. El total de cuenta sigue desconocido; la reserva está financiada: [estimación](revision-fase-2/F2.9-etapa-3-presupuesto-actual.md).
 
-Producción conserva R1/Sol low; las banderas y pins de capacidades siguen apagados hasta revisar la calificación JSON. R1, preguntas y rúbrica no requieren nueva aprobación.
+Producción conserva R1/Sol low; los pins aprobados están preparados para el siguiente despliegue, mientras R2 y las capacidades siguen apagados hasta revisar el JSON. R1, preguntas y rúbrica no requieren nueva aprobación.

@@ -80,9 +80,9 @@ La verificación posterior a PR #120 está en la
 reportó `SUCCESS` y health 200 con R1/Sol low y
 `enabled_capabilities: []`. Los recibos fuente de contenido aprobados se
 prepararon después en el [registro de decisión](../decisiones/20261012-chat-fase2-r2-contenido-stage3.md).
-Sus pins externos y las banderas de rutas, métricas financieras y evidencia
-siguen sin configurar; R1 permanece predeterminado y no hubo llamada pagada ni
-activación de candidatos.
+Los pins externos aprobados están preparados para el siguiente despliegue; las
+banderas de rutas, métricas financieras y evidencia siguen apagadas. R1
+permanece predeterminado; no hubo llamada pagada ni activación de candidatos.
 
 Verificación registrada el 12 de octubre de 2026: Railway reportó `SUCCESS`
 para el despliegue `dd97b38e-383b-48ab-9fab-ca5bf0f78c70` sobre el commit
@@ -159,7 +159,9 @@ aprobado y su recibo versionado está en `config/chat/prompt_approval.json`, per
 no está activo en producción. El runtime requiere selección explícita con
 `CHAT_PROMPT_VERSION=r2-proposed` y el recibo mediante
 `CHAT_PROMPT_APPROVAL_RECEIPT_PATH` y `CHAT_PROMPT_APPROVAL_RECEIPT_SHA256`;
-las variables y banderas permanecen apagadas hasta revisar Stage 3.
+la versión R2 permanece sin seleccionar y las banderas siguen apagadas hasta
+revisar Stage 3. Los pins de aprobación están preparados para el siguiente
+despliegue.
 
 Las tres banderas `CHAT_ENABLE_ROUTE_TOOLS`,
 `CHAT_ENABLE_BUSINESS_METRIC_TOOLS` y `CHAT_ENABLE_EVIDENCE_TOOLS` usan `false`
@@ -170,8 +172,8 @@ siete pasajes y tres fichas aprobados, cada uno con recibo verificable de su
 contenido semántico completo. Las funciones permanecen apagadas hasta la
 ejecución y revisión de los resultados JSON de Stage 3. No actives una bandera
 por la aprobación de contenido sola. El Dockerfile lleva la
-configuración versionada anidada; el recibo R2 se suministra por configuración
-privada y no se incluye en la imagen.
+configuración versionada anidada e incluye el recibo público de aprobación R2.
+El SHA-256 canónico aprobado se fija por separado en Railway.
 
 La capacidad `minimum_reservation_turns_per_day` que muestra `/api/chat/health`
 es un cálculo de admisión: aplica los presupuestos diarios de tokens y dólares

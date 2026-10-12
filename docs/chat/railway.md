@@ -33,10 +33,10 @@ RAILWAY_DOCKERFILE_PATH=Dockerfile.chat
 
 El dueño aprobó las cuatro métricas financieras; su recibo versionado está en
 `config/chat/business-metrics-approval-receipt.json`. La variable
-`CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256` y la bandera de métricas siguen
-sin configurar mientras Stage 3 espera ejecución y revisión JSON. Al activar la
-capacidad, fija por canal externo el SHA-256 canónico aprobado; nunca derives el
-pin del recibo versionado dentro del repositorio.
+El pin canónico de `CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256` está preparado
+en Railway para el siguiente despliegue; la bandera de métricas sigue apagada
+mientras Stage 3 espera ejecución y revisión JSON. Nunca derives el pin del
+recibo versionado dentro del repositorio.
 
 El dueño eligió `gpt-6.1-sol` con `low` y aprobó el prompt evaluado en F2.9
 etapa 2. Despliega el runtime que carga `config/chat/system_prompt.txt`,
@@ -47,10 +47,10 @@ después aplica solo `CHAT_REASONING_EFFORT=low` en Railway; conserva
 una conversación nueva. No se ejecuta ninguna evaluación pagada.
 
 El índice versionado contiene siete pasajes de reportes y tres fichas de
-noticias aprobados. `CHAT_EVIDENCE_APPROVED_INDEX_SHA256` y la bandera de
-evidencia siguen sin configurar mientras Stage 3 espera ejecución y revisión
-JSON. Al activar la capacidad, fija por canal externo el SHA-256 canónico
-aprobado del objeto completo; el runtime falla cerrado si el pin no coincide.
+noticias aprobados. `CHAT_EVIDENCE_APPROVED_INDEX_SHA256` está preparado en
+Railway para el siguiente despliegue; la bandera de evidencia sigue apagada
+mientras Stage 3 espera ejecución y revisión JSON. El pin es el SHA-256 canónico
+aprobado del objeto completo; el runtime falla cerrado si no coincide.
 
 Railway usa `Dockerfile` automáticamente si está en la raíz, pero `Dockerfile.chat`
 es un nombre personalizado y requiere esa variable, según su [documentación de
