@@ -39,8 +39,10 @@ class EvidenceIndexError(ValueError):
 def _text(value: Any, field: str, maximum: int, *, allow_empty: bool = False) -> str:
     if not isinstance(value, str):
         raise EvidenceIndexError(f"{field} debe ser texto")
+    if len(value) > maximum:
+        raise EvidenceIndexError(f"{field} está vacío o supera su límite")
     value = value.strip()
-    if (not value and not allow_empty) or len(value) > maximum:
+    if not value and not allow_empty:
         raise EvidenceIndexError(f"{field} está vacío o supera su límite")
     return value
 
@@ -67,7 +69,7 @@ def _approved(record: dict[str, Any]) -> bool:
         and review.get("owner_id") == APPROVED_OWNER_ID
         and _valid_approved_at(review.get("approved_at"))
         and receipt.get("receipt_id") == review.get("receipt_id")
-        and isinstance(review.get("receipt_id"), str) and bool(review["receipt_id"].strip())
+        and _valid_receipt_id(review.get("receipt_id"))
         and receipt.get("candidate_id") == candidate_id
         and receipt.get("decision") == "owner_approved"
         and receipt.get("owner_id") == APPROVED_OWNER_ID
@@ -80,7 +82,7 @@ def _approved(record: dict[str, Any]) -> bool:
 
 
 def _valid_approved_at(value: Any) -> bool:
-    if not isinstance(value, str) or not re.fullmatch(
+    if not isinstance(value, str) or len(value) > 40 or not re.fullmatch(
         r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})",
         value,
     ):
@@ -90,6 +92,10 @@ def _valid_approved_at(value: Any) -> bool:
     except ValueError:
         return False
     return True
+
+
+def _valid_receipt_id(value: Any) -> bool:
+    return isinstance(value, str) and bool(value.strip()) and len(value) <= 120
 
 
 def _source(record: dict[str, Any]) -> dict[str, str]:
@@ -148,6 +154,13 @@ def _optional_filter(value: Any, field: str, maximum: int) -> str | None:
     return _norm(_text(value, field, maximum))
 
 
+def _period(value: Any) -> str:
+    period = _text(value, "period", 6)
+    if not re.fullmatch(r"\d{4}Q[1-4]", period):
+        raise EvidenceIndexError("period debe usar YYYYQ1 a YYYYQ4")
+    return period
+
+
 def _match_score(query: set[str], fields: list[str]) -> int:
     available = set().union(*(_tokens(field) for field in fields)) if fields else set()
     return len(query & available)
@@ -202,9 +215,12 @@ class EvidenceIndex:
         for record in self.records:
             if record.get("kind") != "report":
                 continue
-            if company_filter and _norm(str(record.get("company", ""))) != company_filter:
+            company = _text(record.get("company"), "company", 100)
+            record_period = _period(record.get("period"))
+            section = _text(record.get("section"), "section", 240)
+            if company_filter and _norm(company) != company_filter:
                 continue
-            if period_filter and record.get("period") != period_filter:
+            if period_filter and record_period != period_filter:
                 continue
             page = record.get("page")
             if not isinstance(page, int) or isinstance(page, bool) or page < 1:
@@ -212,7 +228,7 @@ class EvidenceIndex:
             excerpt = _text(record.get("excerpt"), "excerpt", MAX_EXCERPT_CHARS)
             score = _match_score(
                 query_tokens,
-                [excerpt, str(record.get("section", "")), str(record.get("company", ""))],
+                [excerpt, section, company],
             )
             if score:
                 matches.append((score, record, excerpt))
@@ -229,8 +245,8 @@ class EvidenceIndex:
             results.append({
                 "id": _text(record.get("id"), "id", 120),
                 "company": _text(record.get("company"), "company", 100),
-                "period": _text(record.get("period"), "period", 20),
-                "section": _text(record.get("section", ""), "section", 120, allow_empty=True),
+                "period": _period(record.get("period")),
+                "section": _text(record.get("section"), "section", 240),
                 "page": page,
                 "excerpt": excerpt,
                 "citation": {
@@ -269,17 +285,19 @@ class EvidenceIndex:
                 continue
             published = _date(record.get("published_at"), "published_at")
             companies = record.get("companies", [])
-            if not isinstance(companies, list) or any(not isinstance(x, str) for x in companies):
-                raise EvidenceIndexError("news.companies debe ser una lista de texto")
+            if not isinstance(companies, list) or len(companies) > 10:
+                raise EvidenceIndexError("news.companies debe tener como máximo 10 elementos")
+            companies = [_text(item, "news.companies[]", 100) for item in companies]
             if company_filter and all(_norm(item) != company_filter for item in companies):
                 continue
             if start_date and published < start_date or end_date and published > end_date:
                 continue
-            title = _text(record.get("title"), "title", 240)
+            title = _text(record.get("title"), "title", 300)
             description = _text(record.get("description"), "description", MAX_NEWS_DESCRIPTION_CHARS)
             topics = record.get("topics", [])
-            if not isinstance(topics, list) or any(not isinstance(x, str) for x in topics):
-                raise EvidenceIndexError("news.topics debe ser una lista de texto")
+            if not isinstance(topics, list) or len(topics) > 20:
+                raise EvidenceIndexError("news.topics debe tener como máximo 20 elementos")
+            topics = [_text(item, "news.topics[]", 80) for item in topics]
             score = _match_score(query_tokens, [title, description, " ".join(companies), " ".join(topics)])
             if score:
                 matches.append((score, published, record, title, description, companies, topics))
@@ -289,7 +307,7 @@ class EvidenceIndex:
             source = _source(record)
             quote = record.get("brief_quote")
             if quote is not None:
-                quote = _text(quote, "brief_quote", MAX_NEWS_QUOTE_CHARS)
+                quote = _text(quote, "brief_quote", MAX_NEWS_QUOTE_CHARS, allow_empty=True)
             results.append({
                 "id": _text(record.get("id"), "id", 120), "published_at": published,
                 "publisher": _text(record.get("publisher"), "publisher", 120),
