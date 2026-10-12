@@ -154,21 +154,22 @@ Las herramientas nuevas quedan deshabilitadas por omisión. No se deben habilita
 con el prompt r1; cualquier capacidad adicional requiere un prompt compatible
 aprobado y, cuando corresponda, recibo de aprobación de datos y publicación
 verificada.
-La propuesta r2 (`68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf`)
-no está activa. Seleccionarla requiere `CHAT_PROMPT_VERSION=r2-proposed` y un
-recibo owner versionado mediante `CHAT_PROMPT_APPROVAL_RECEIPT_PATH` y su SHA-256
-en `CHAT_PROMPT_APPROVAL_RECEIPT_SHA256`; sin esos valores el servicio falla
-cerrado. No hay recibo vigente.
+R2 (`68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf`) está
+aprobado y su recibo versionado está en `config/chat/prompt_approval.json`, pero
+no está activo en producción. El runtime requiere selección explícita con
+`CHAT_PROMPT_VERSION=r2-proposed` y el recibo mediante
+`CHAT_PROMPT_APPROVAL_RECEIPT_PATH` y `CHAT_PROMPT_APPROVAL_RECEIPT_SHA256`;
+las variables y banderas permanecen apagadas hasta revisar Stage 3.
 
 Las tres banderas `CHAT_ENABLE_ROUTE_TOOLS`,
 `CHAT_ENABLE_BUSINESS_METRIC_TOOLS` y `CHAT_ENABLE_EVIDENCE_TOOLS` usan `false`
 como default y siguen desactivadas. Rutas y herramientas financieras requieren
-el prompt R2 con recibo válido; las métricas financieras además necesitan su
-proyección pública con recibo ligado a los valores y definiciones. La evidencia
-solo se busca en `config/chat/evidence/approved-index.json`, que permanece
-vacío: cada registro futuro requiere recibo verificable para su contenido
-semántico completo. No actives una bandera al aprobar solamente el prompt, ni
-rellenes el índice antes de aprobar los pasajes. El Dockerfile lleva la
+el prompt R2 con recibo válido; las cuatro métricas tienen recibo aprobado y
+su proyección ligada a los valores y definiciones. El índice versionado tiene
+siete pasajes y tres fichas aprobados, cada uno con recibo verificable de su
+contenido semántico completo. Las funciones permanecen apagadas hasta la
+ejecución y revisión de los resultados JSON de Stage 3. No actives una bandera
+por la aprobación de contenido sola. El Dockerfile lleva la
 configuración versionada anidada; el recibo R2 se suministra por configuración
 privada y no se incluye en la imagen.
 
