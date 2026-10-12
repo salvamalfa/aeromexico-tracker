@@ -95,6 +95,9 @@ def finalize_report(
         active_usage_state=None,
     )
     checkpoint()
+    detail_path = report.get("case_checkpoint_path")
+    if isinstance(detail_path, str) and detail_path:
+        write_detailed_case_checkpoint(Path(detail_path), report, writer)
     writer(path, report)
     progress_state["status"] = status
     checkpoint()
