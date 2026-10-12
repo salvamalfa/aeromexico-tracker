@@ -151,6 +151,20 @@ def _kind(rows: list[dict[str, Any]], catalog_metrics: dict[str, dict[str, Any]]
     return next(iter(kinds)) if len(kinds) == 1 else "mixed" if kinds else "missing"
 
 
+_FRIENDLY_UNITS = {
+    "fraction": "%",
+    "%": "%",
+    "USD_millions": "millones de USD",
+    "USD_cents_per_ASK_km": "¢ USD/ASK-km",
+    "cents/ASK-km": "¢/ASK-km",
+    "USD": "USD",
+}
+
+
+def _friendly_unit(unit: Any) -> str:
+    return _FRIENDLY_UNITS.get(str(unit), str(unit).replace("_", " ")) if unit else "unidad no indicada"
+
+
 def _described_sources(raw: Any, rows: list[dict[str, Any]]) -> list[dict[str, str]]:
     sources = _safe_sources(*raw) if isinstance(raw, list) else _safe_sources(raw)
     periods = list(
@@ -355,12 +369,15 @@ def _build_query_display(
     metric_ids = {row.get("metric_id") for row in rows}
     if len(metric_ids) > 1:
         columns.append({"key": "metric", "label": "Métrica"})
-    units = {row.get("unit") for row in rows}
-    unit = next(iter(units)) if len(units) == 1 and isinstance(next(iter(units)), str) else None
-    value_column = {"key": "value", "label": "Valor"}
+    units = {row.get("unit") for row in rows if isinstance(row.get("unit"), str) and row["unit"]}
+    unit = next(iter(units)) if len(units) == 1 else None
+    mixed_units = len(units) > 1
+    value_column = {"key": "value", "label": f"Valor ({_friendly_unit(unit)})" if unit else "Valor"}
     if unit:
         value_column["unit"] = unit
     columns.append(value_column)
+    if mixed_units:
+        columns.append({"key": "unit", "label": "Unidad"})
     entity_catalog = catalog.get("entities", [])
     if isinstance(entity_catalog, dict):
         entity_catalog = entity_catalog.get("entities", [])
@@ -381,6 +398,8 @@ def _build_query_display(
         }
         if len(metric_ids) > 1:
             item["metric"] = str(metrics.get(row.get("metric_id"), row.get("metric_id") or ""))
+        if mixed_units:
+            item["unit"] = row.get("unit")
         display_rows.append(item)
     if not display_rows:
         return None
@@ -485,26 +504,67 @@ _TABLE_SEPARATOR = re.compile(r"^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)*\|?\
 _NUMERIC_CELL = re.compile(r"(?<![A-Za-z])[-+]?\d[\d,]*(?:\.\d+)?\s*(?:%|pp|¢|USD|MXN|mil|millones|M)?(?![A-Za-z])", re.I)
 
 
+def _markdown_cells(line: str) -> list[str]:
+    cells = [cell.strip() for cell in line.strip().split("|")]
+    if line.strip().startswith("|"):
+        cells = cells[1:]
+    if line.strip().endswith("|"):
+        cells = cells[:-1]
+    return cells
+
+
+def _next_nonblank(lines: list[str], start: int) -> int:
+    while start < len(lines) and not lines[start].strip():
+        start += 1
+    return start
+
+
 def _remove_numeric_markdown_tables(content: str) -> str:
     """Drop numeric prose tables when the same response has a validated display."""
     lines = content.splitlines(keepends=True)
     output: list[str] = []
     index = 0
     while index < len(lines):
-        if "|" not in lines[index] or index + 1 >= len(lines) or not _TABLE_SEPARATOR.fullmatch(lines[index + 1].strip()):
+        header = lines[index].strip()
+        separator_index = _next_nonblank(lines, index + 1)
+        if (
+            "|" not in header
+            or separator_index >= len(lines)
+            or not _TABLE_SEPARATOR.fullmatch(lines[separator_index].strip())
+        ):
             output.append(lines[index])
             index += 1
             continue
-        end = index + 2
-        while end < len(lines) and "|" in lines[end] and lines[end].strip():
-            end += 1
-        data_rows = lines[index + 2:end]
-        cells = [cell.strip() for row in data_rows for cell in row.strip().strip("|").split("|")]
+        width = len(_markdown_cells(header))
+        row_index = separator_index + 1
+        data_rows: list[str] = []
+        while True:
+            candidate_index = _next_nonblank(lines, row_index)
+            if candidate_index >= len(lines):
+                row_index = candidate_index
+                break
+            candidate = lines[candidate_index].strip()
+            gap = candidate_index != row_index
+            cells = _markdown_cells(candidate)
+            full_width = len(cells) == width
+            is_row = candidate.startswith("|") and (not gap or full_width)
+            is_row = is_row or (not gap and "|" in candidate and full_width)
+            if not is_row:
+                row_index = candidate_index
+                break
+            after = _next_nonblank(lines, candidate_index + 1)
+            after_cells = _markdown_cells(lines[after].strip()) if after < len(lines) else []
+            if after < len(lines) and _TABLE_SEPARATOR.fullmatch(lines[after].strip()) and len(cells) >= 2 and len(after_cells) == len(cells):
+                row_index = candidate_index
+                break
+            data_rows.append(lines[candidate_index])
+            row_index = candidate_index + 1
+        cells = [cell.strip() for row in data_rows for cell in _markdown_cells(row)]
         if data_rows and any(_NUMERIC_CELL.search(cell) for cell in cells):
-            index = end
+            index = row_index
         else:
-            output.extend(lines[index:end])
-            index = end
+            output.extend(lines[index:row_index])
+            index = row_index
     return "".join(output)
 
 

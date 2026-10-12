@@ -65,6 +65,29 @@ describe("safe response rendering", () => {
     expect(host.textContent).toBe("");
   });
 
+  it("keeps mixed metric units beside each value and scales fractions once", () => {
+    const host = document.createElement("div");
+    renderSafeMarkdown(host, "{{tabla:mixed_units}}", [], [{
+      display_id: "tabla:mixed_units", kind: "table", title: "Resultados", value_kind: "mixed",
+      columns: [
+        { key: "metric", label: "Métrica" },
+        { key: "value", label: "Valor" },
+        { key: "unit", label: "Unidad" },
+      ],
+      rows: [
+        { metric: "Margen unitario", value: 0.435, unit: "USD_cents_per_ASK_km" },
+        { metric: "Ingresos", value: 1479, unit: "USD_millions" },
+        { metric: "Factor de ocupación", value: 0.849, unit: "fraction" },
+      ],
+    }]);
+    const rows = [...host.querySelectorAll("tbody tr")].map((row) => [...row.querySelectorAll("td")].map((cell) => cell.textContent));
+    expect(rows).toEqual([
+      ["Margen unitario", "0.435", "¢ USD/ASK-km"],
+      ["Ingresos", "1,479", "millones de USD"],
+      ["Factor de ocupación", "84.9%", "%"],
+    ]);
+  });
+
   it("removes missing and mismatched display markers without drawing artifacts", () => {
     const host = document.createElement("div");
     renderSafeMarkdown(host, "{{tabla:unknown}} {{grafica:unknown}}", [], [

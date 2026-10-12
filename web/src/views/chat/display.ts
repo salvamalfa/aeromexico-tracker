@@ -124,6 +124,15 @@ function formattedNumber(value: number, unit?: string): string {
   return new Intl.NumberFormat("en-US", { maximumFractionDigits: 4 }).format(value);
 }
 
+function friendlyUnit(unit: string): string {
+  return ({
+    fraction: "%",
+    "USD_millions": "millones de USD",
+    "USD_cents_per_ASK_km": "¢ USD/ASK-km",
+    "cents/ASK-km": "¢/ASK-km",
+  } as Record<string, string>)[unit] ?? unit.replaceAll("_", " ");
+}
+
 function renderSources(host: HTMLElement, sources: readonly ChatReference[], seenSources: Set<string>): void {
   const sourceKey = (source: ChatReference) => `${source.label}\n${source.url ?? ""}`;
   const unique = sources.filter((source) => !seenSources.has(sourceKey(source)));
@@ -174,8 +183,9 @@ export function renderDisplay(host: HTMLElement, display: ChatDisplay, seenSourc
         const value = row[column.key];
         if (typeof value === "number") {
           td.className = "align-right";
-          td.textContent = formattedNumber(value, column.unit);
-        } else if (value === null || value === undefined) td.textContent = "—";
+          td.textContent = formattedNumber(value, column.key === "value" && typeof row.unit === "string" ? row.unit : column.unit);
+        } else if (column.key === "unit" && typeof value === "string") td.textContent = friendlyUnit(value);
+        else if (value === null || value === undefined) td.textContent = "—";
         else td.textContent = String(value);
         tr.append(td);
       }
