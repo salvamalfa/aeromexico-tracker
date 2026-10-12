@@ -7,6 +7,8 @@ from pathlib import Path
 import pytest
 
 from scripts.chat import export_stage3_review as exporter
+from src.conversational_analytics import evaluation_live_campaign as campaign
+from src.conversational_analytics.evaluation_live import _write_private_json
 from src.conversational_analytics.evaluation_stage3_coverage import CAMPAIGN_CANDIDATE
 
 FIXTURE_PATH = Path("tests/fixtures/chat_evals/business_proposed.json")
@@ -103,6 +105,98 @@ def _write_consolidated_report(directory: Path, report: dict) -> Path:
     return path
 
 
+def _produce_campaign_report(directory: Path, monkeypatch) -> tuple[Path, Path, dict, dict, str]:
+    fixture, coverage, live, fixture_sha = _inputs()
+    run_identity = live["run_identity"]
+    run_id = run_identity["run_id"]
+    run = {
+        **run_identity,
+        "run_id": run_id,
+        "candidate": CAMPAIGN_CANDIDATE,
+        "case_ids": run_identity["case_ids"],
+        "identity": run_identity,
+        "identity_hash": live["run_identity_hash"],
+        "prompt": "Synthetic fixture prompt",
+        "limits": run_identity["limits"],
+        "text_verbosity": "medium",
+    }
+
+    def fake_live_run(**kwargs):
+        output_dir = Path(kwargs["output_dir"])
+        report_path = output_dir / "fragment.json"
+        checkpoint_path = output_dir / "fragment.cases.json"
+        cases = [
+            {
+                "case_id": case["id"],
+                "provider_turn_started": True,
+                "usage_complete": True,
+                "estimated_cost_usd": 0.01,
+                "known_estimated_cost_lower_bound_usd": None,
+                "input_tokens": 10,
+                "output_tokens": 10,
+                "status": "completed",
+                "model_turn_completed": True,
+                "turn_responses": [
+                    f"Respuesta sintética {index}" for index, _ in enumerate(case["turns"])
+                ],
+                "quality": {"passed": True},
+                "latency_seconds": 0.1,
+            }
+            for case in kwargs["cases"]
+        ]
+        model = {
+            "candidate_id": f"{CAMPAIGN_CANDIDATE}@medium",
+            "model": "gpt-6.1-sol",
+            "reasoning_effort": "low",
+            "text_verbosity": "medium",
+            "cases": cases,
+            "known_estimated_cost_usd": 0.01 * len(cases),
+            "spent_unknown": False,
+            "quality_summary": {},
+        }
+        identity_fields = {
+            "run_identity": kwargs["run_identity"],
+            "run_identity_hash": kwargs["run_identity_hash"],
+            "campaign_identity_hash": kwargs["campaign_identity_hash"],
+            "data_version": kwargs["expected_versions"]["data_version"],
+            "semantic_version": kwargs["expected_versions"]["semantic_version"],
+        }
+        report = {
+            **identity_fields,
+            "mode": "live-evaluation",
+            "probe_only": False,
+            "run_status": "completed",
+            "output_path": str(report_path),
+            "case_checkpoint_path": str(checkpoint_path),
+            "models": [model],
+        }
+        detail = {
+            **identity_fields,
+            "models": [{"cases": cases}],
+        }
+        _write_private_json(report_path, report)
+        _write_private_json(checkpoint_path, detail)
+        return report
+
+    monkeypatch.setattr(campaign, "_live_provider_run", fake_live_run)
+    state_path = directory / ".state" / "campaign.json"
+    output_dir = directory / ".state" / "runs"
+    result = campaign.run_campaign(
+        runs=[run],
+        cases=fixture["cases"],
+        budget_usd=8.0,
+        snapshot_root=directory / "snapshot",
+        prices={CAMPAIGN_CANDIDATE: (2.5, 10.0)},
+        expected_versions={"data_version": "data", "semantic_version": "semantic"},
+        state_path=state_path,
+        output_dir=output_dir,
+    )
+    assert result["status"] == "completed"
+    ledger = json.loads(state_path.read_text(encoding="utf-8"))
+    summary = result["run_summaries"][0]
+    return Path(summary["report_path"]), state_path, ledger, coverage, fixture_sha
+
+
 def test_stage3_export_accepts_producer_report_shape_and_maps_all_expectations() -> None:
     fixture, coverage, live, fixture_sha = _inputs()
     dataset, mapping = exporter.build_dataset(coverage, live, fixture, fixture_sha)
@@ -175,14 +269,14 @@ def test_stage3_export_rejects_live_identity_with_wrong_coverage_campaign_hash()
 
 
 def test_stage3_export_cli_rejects_mutated_fixture_before_writing(tmp_path: Path, monkeypatch) -> None:
-    fixture, coverage, live, _fixture_sha = _inputs()
+    live_path, ledger_path, _ledger, coverage, _fixture_sha = _produce_campaign_report(tmp_path, monkeypatch)
+    fixture = json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
     altered_fixture = json.loads(json.dumps(fixture))
     altered_fixture["cases"][0]["turns"][0] += " Pregunta alterada."
     fixture_path = tmp_path / "custom-fixture.json"
     fixture_path.write_text(json.dumps(altered_fixture), encoding="utf-8")
-    coverage_path, live_path = tmp_path / "coverage.json", tmp_path / "live.json"
+    coverage_path = tmp_path / "coverage.json"
     coverage_path.write_text(json.dumps(coverage), encoding="utf-8")
-    live_path = _write_consolidated_report(tmp_path, live)
     monkeypatch.setattr(exporter, "ROOT", tmp_path)
     output_dir = tmp_path / ".state" / "review"
 
@@ -190,6 +284,7 @@ def test_stage3_export_cli_rejects_mutated_fixture_before_writing(tmp_path: Path
         exporter.main([
             "--coverage", str(coverage_path),
             "--live-report", str(live_path),
+            "--campaign-state", str(ledger_path),
             "--fixture", str(fixture_path),
             "--output-dir", str(output_dir),
         ])
@@ -197,10 +292,9 @@ def test_stage3_export_cli_rejects_mutated_fixture_before_writing(tmp_path: Path
 
 
 def test_stage3_export_cli_accepts_content_addressed_live_report(tmp_path: Path, monkeypatch) -> None:
-    fixture, coverage, live, _fixture_sha = _inputs()
+    live_path, ledger_path, ledger, coverage, _fixture_sha = _produce_campaign_report(tmp_path, monkeypatch)
     coverage_path = tmp_path / "coverage.json"
     coverage_path.write_text(json.dumps(coverage), encoding="utf-8")
-    live_path = _write_consolidated_report(tmp_path, live)
     fixture_path = FIXTURE_PATH
     monkeypatch.setattr(exporter, "ROOT", tmp_path)
     output_dir = tmp_path / ".state" / "review"
@@ -208,34 +302,61 @@ def test_stage3_export_cli_accepts_content_addressed_live_report(tmp_path: Path,
     assert exporter.main([
         "--coverage", str(coverage_path),
         "--live-report", str(live_path),
+        "--campaign-state", str(ledger_path),
         "--fixture", str(fixture_path),
         "--output-dir", str(output_dir),
     ]) == 0
     dataset = json.loads((output_dir / "review.json").read_text(encoding="utf-8"))
     report_digest = live_path.name.split(".consolidated-")[1].removesuffix(".json")
+    run_id = next(iter(ledger["completed_runs"]))
+    report = json.loads(live_path.read_text(encoding="utf-8"))
+    assert ledger["completed_runs"][run_id]["summary"]["report_sha256"] == report_digest
     assert dataset["dataset_id"] == exporter._canonical_hash({
         "coverage_sha256": coverage["campaign_sha256"],
-        "live_campaign_identity_hash": live["campaign_identity_hash"],
+        "live_campaign_identity_hash": report["campaign_identity_hash"],
         "live_report_sha256": report_digest,
         "case_ids": [f"N{i:02d}" for i in range(1, 31)],
     })
 
 
 def test_stage3_export_cli_rejects_edited_live_response_before_writing(tmp_path: Path, monkeypatch) -> None:
-    _fixture, coverage, live, _fixture_sha = _inputs()
+    live_path, ledger_path, _ledger, coverage, _fixture_sha = _produce_campaign_report(tmp_path, monkeypatch)
     coverage_path = tmp_path / "coverage.json"
     coverage_path.write_text(json.dumps(coverage), encoding="utf-8")
-    live_path = _write_consolidated_report(tmp_path, live)
     tampered = json.loads(live_path.read_text(encoding="utf-8"))
     tampered["models"][0]["cases"][0]["turn_responses"][0] = "Respuesta editada después de consolidar"
-    live_path.write_text(json.dumps(tampered), encoding="utf-8")
+    tampered_path = _write_consolidated_report(live_path.parent, tampered)
     monkeypatch.setattr(exporter, "ROOT", tmp_path)
     output_dir = tmp_path / ".state" / "review"
 
-    with pytest.raises(ValueError, match="SHA del reporte live"):
+    with pytest.raises(ValueError, match="no está completa o no coincide con el ledger"):
+        exporter.main([
+            "--coverage", str(coverage_path),
+            "--live-report", str(tampered_path),
+            "--campaign-state", str(ledger_path),
+            "--fixture", str(FIXTURE_PATH),
+            "--output-dir", str(output_dir),
+        ])
+    assert not output_dir.exists()
+
+
+def test_stage3_export_cli_rejects_incomplete_campaign_ledger_before_writing(
+    tmp_path: Path, monkeypatch
+) -> None:
+    live_path, ledger_path, ledger, coverage, _fixture_sha = _produce_campaign_report(tmp_path, monkeypatch)
+    run_id = next(iter(ledger["completed_runs"]))
+    ledger["completed_runs"][run_id]["complete"] = False
+    ledger_path.write_text(json.dumps(ledger), encoding="utf-8")
+    coverage_path = tmp_path / "coverage.json"
+    coverage_path.write_text(json.dumps(coverage), encoding="utf-8")
+    monkeypatch.setattr(exporter, "ROOT", tmp_path)
+    output_dir = tmp_path / ".state" / "review"
+
+    with pytest.raises(ValueError, match="no está completa o no coincide con el ledger"):
         exporter.main([
             "--coverage", str(coverage_path),
             "--live-report", str(live_path),
+            "--campaign-state", str(ledger_path),
             "--fixture", str(FIXTURE_PATH),
             "--output-dir", str(output_dir),
         ])
