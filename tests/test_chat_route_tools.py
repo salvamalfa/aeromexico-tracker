@@ -615,7 +615,9 @@ def test_shared_route_display_preserves_incomparability_and_each_carriers_metada
     assert "coverage_incomplete" in shown["comparability_reason"]
     assert shown["AEROMEXICO_GROUP_value_kind"] == "estimated"
     assert shown["VIVA_AEROBUS_value_kind"] == "observed"
-    assert shown["carrier_coverage"] == row["coverage"]
+    assert "carrier_coverage" not in shown
+    assert result["coverage"]["AEROMEXICO_GROUP"]
+    assert shown["coverage_summary"]
     assert {"AEROMEXICO_GROUP_value", "VIVA_AEROBUS_value"} <= {
         column["key"] for column in display["columns"]
     }
