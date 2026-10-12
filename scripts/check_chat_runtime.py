@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import os
 import secrets
 import shutil
 import sys
@@ -17,6 +18,7 @@ from contextlib import redirect_stdout
 from io import StringIO
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 from src.conversational_analytics.__main__ import main as chat_main
 from src.conversational_analytics.api import create_app
@@ -95,6 +97,10 @@ def _check_packaged_business_metrics_snapshot() -> None:
     """
     from src.publish import manifest as manifest_mod
     from src.web_export.business_metrics import build_approved_payload
+    from src.web_export.business_metrics_approval import (
+        APPROVAL_RECEIPT_SHA256_ENV,
+        canonical_receipt_sha256,
+    )
     from src.web_export.writer import write_json
 
     proposal = ROOT / "config/chat/business-metrics-proposal.json"
@@ -114,19 +120,23 @@ def _check_packaged_business_metrics_snapshot() -> None:
             "approved_metric_ids": ["total_revenue"],
             "definitions_sha256": hashlib.sha256(definitions.read_bytes()).hexdigest(),
             "proposal_sha256": hashlib.sha256(proposal.read_bytes()).hexdigest(),
+            "owner_id": "salvamalfa",
+            "decision_reference": "synthetic runtime smoke fixture only",
         }
         write_json(receipt_path, receipt)
-        payload, receipt = build_approved_payload(proposal, definitions, receipt_path)
-        write_json(site / "data/v1/business_metrics.json", payload)
-        write_json(site / "data/v1/business_metrics.approval.json", receipt)
-        manifest = json.loads((site / "publication_manifest.json").read_text(encoding="utf-8"))
-        manifest["contracts"] = manifest_mod.contract_hashes()
-        manifest["files"] = manifest_mod.file_entries(site)
-        manifest_mod.write_manifest(site, manifest)
+        pin = canonical_receipt_sha256(receipt)
+        with patch.dict(os.environ, {APPROVAL_RECEIPT_SHA256_ENV: pin}):
+            payload, receipt = build_approved_payload(proposal, definitions, receipt_path)
+            write_json(site / "data/v1/business_metrics.json", payload)
+            write_json(site / "data/v1/business_metrics.approval.json", receipt)
+            manifest = json.loads((site / "publication_manifest.json").read_text(encoding="utf-8"))
+            manifest["contracts"] = manifest_mod.contract_hashes()
+            manifest["files"] = manifest_mod.file_entries(site)
+            manifest_mod.write_manifest(site, manifest)
 
-        approved_snapshot = Snapshot(site)
-        approved = approved_snapshot.payload("data/v1/business_metrics.json")
-        assert approved["metadata"]["metric_ids"] == ["total_revenue"]
+            approved_snapshot = Snapshot(site)
+            approved = approved_snapshot.payload("data/v1/business_metrics.json")
+            assert approved["metadata"]["metric_ids"] == ["total_revenue"]
 
 
 async def _check() -> None:

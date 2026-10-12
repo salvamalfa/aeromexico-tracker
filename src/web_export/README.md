@@ -57,8 +57,10 @@ exporta.
 
 ```
 uv run python -m src.web_export --out web/public/data/v1 [--allow-missing-analysis]
-# Optional after owner review: add --business-metrics-proposal <proposal.json>
-# and --business-metrics-receipt <receipt.json> together.
+# Only after owner review: add --business-metrics-proposal <proposal.json>
+# and --business-metrics-receipt <receipt.json> together, and set
+# CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256 outside the repository to the
+# canonical SHA-256 of that owner receipt. The export fails closed without it.
 ```
 
 Imprime cada archivo escrito con su tamaño y falla (código de salida 1) con
@@ -74,3 +76,10 @@ uv run pytest -q tests/test_web_export.py
 Incluye una prueba de equivalencia (`local_data`): recombinar los archivos
 divididos reproduce, campo a campo, el payload que hoy se embebe en el HTML
 integrado.
+
+El recibo debe declarar `owner_id: "salvamalfa"`, una fecha `approved_at`
+válida y una `decision_reference` no vacía. El hash externo se calcula sobre
+el objeto JSON canónico (claves ordenadas, separadores compactos y UTF-8), por
+lo que cambiar sangría o saltos de línea no cambia la identidad del recibo.
+No guardes el pin en Git ni lo derives automáticamente de un recibo del
+repositorio.

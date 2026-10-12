@@ -3,8 +3,8 @@ from __future__ import annotations
 import hashlib
 import json
 import shutil
-from types import SimpleNamespace
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -18,6 +18,10 @@ from src.conversational_analytics.tools.registry import ToolRegistry
 from src.publish import manifest as manifest_mod
 from src.publish.verify import verify_site
 from src.web_export.business_metrics import BusinessMetricsApprovalError, build_approved_payload
+from src.web_export.business_metrics_approval import (
+    APPROVAL_RECEIPT_SHA256_ENV,
+    canonical_receipt_sha256,
+)
 from src.web_export.writer import write_json
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -33,7 +37,17 @@ def _receipt(definitions: Path, proposal: Path, metrics: list[str] | None = None
         "approved_metric_ids": metrics or ["total_revenue"],
         "definitions_sha256": hashlib.sha256(definitions.read_bytes()).hexdigest(),
         "proposal_sha256": hashlib.sha256(proposal.read_bytes()).hexdigest(),
+        "owner_id": "salvamalfa",
+        "decision_reference": "test-fixture-owner-decision",
     }
+
+
+@pytest.fixture(autouse=True)
+def _pin_synthetic_receipt(monkeypatch: pytest.MonkeyPatch) -> None:
+    definitions = ROOT / "config/chat/metrics-candidates.json"
+    proposal = ROOT / "config/chat/business-metrics-proposal.json"
+    receipt = _receipt(definitions, proposal)
+    monkeypatch.setenv(APPROVAL_RECEIPT_SHA256_ENV, canonical_receipt_sha256(receipt))
 
 
 def _approved_snapshot(tmp_path: Path) -> Snapshot:
@@ -71,7 +85,11 @@ def test_receipt_must_match_exact_definition_and_proposal_bytes(tmp_path: Path) 
     assert payload["metadata"]["metric_ids"] == ["total_revenue"]
     assert payload["rows"]
     assert receipt["receipt_id"] == "test-fixture-only"
-    assert all(row["value_kind"] in {"owner_approved_gold_reported", "owner_approved_gold_fx_converted"} for row in payload["rows"])
+    assert all(
+        row["value_kind"]
+        in {"owner_approved_gold_reported", "owner_approved_gold_fx_converted"}
+        for row in payload["rows"]
+    )
     serialized_payload = json.dumps(payload, ensure_ascii=False)
     assert all(
         metric not in serialized_payload for metric in ("operating_costs", "fuel_expense", "operating_income")
@@ -99,6 +117,66 @@ def test_receipt_must_match_exact_definition_and_proposal_bytes(tmp_path: Path) 
     stale_definitions.write_bytes(definitions.read_bytes() + b" ")
     with pytest.raises(BusinessMetricsApprovalError, match="current metric definitions"):
         build_approved_payload(proposal, stale_definitions, receipt_path)
+
+
+def test_receipt_requires_external_canonical_pin_and_trusted_owner_fields(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    proposal = ROOT / "config/chat/business-metrics-proposal.json"
+    definitions = ROOT / "config/chat/metrics-candidates.json"
+    receipt = _receipt(definitions, proposal)
+    receipt_path = tmp_path / "receipt.json"
+    receipt_path.write_text(json.dumps(receipt, indent=2), encoding="utf-8")
+
+    monkeypatch.delenv(APPROVAL_RECEIPT_SHA256_ENV)
+    with pytest.raises(BusinessMetricsApprovalError, match="must pin"):
+        build_approved_payload(proposal, definitions, receipt_path)
+
+    monkeypatch.setenv(APPROVAL_RECEIPT_SHA256_ENV, "0" * 64)
+    with pytest.raises(BusinessMetricsApprovalError, match="externally pinned SHA-256"):
+        build_approved_payload(proposal, definitions, receipt_path)
+
+    for field, value, message in (
+        ("approved_at", "not-a-date", "approved_at"),
+        ("owner_id", "contributor", "owner_id"),
+        ("decision_reference", "   ", "decision_reference"),
+    ):
+        forged = {**receipt, field: value}
+        write_json(receipt_path, forged)
+        monkeypatch.setenv(APPROVAL_RECEIPT_SHA256_ENV, canonical_receipt_sha256(forged))
+        with pytest.raises(BusinessMetricsApprovalError, match=message):
+            build_approved_payload(proposal, definitions, receipt_path)
+
+
+def test_receipt_hash_and_snapshot_validation_ignore_json_formatting(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    snapshot = _approved_snapshot(tmp_path)
+    receipt_path = snapshot.root / "data/v1/business_metrics.approval.json"
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, indent=4), encoding="utf-8")
+    _resign_site(snapshot.root)
+
+    reloaded = Snapshot(snapshot.root)
+    payload = reloaded.payload("data/v1/business_metrics.json")
+    assert payload["metadata"]["approval_receipt_sha256"] == canonical_receipt_sha256(receipt)
+    assert reloaded.payload("data/v1/business_metrics.approval.json") == receipt
+
+
+def test_site_without_financial_payload_keeps_its_existing_manifest_without_a_pin(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv(APPROVAL_RECEIPT_SHA256_ENV, raising=False)
+    manifest_path = ROOT / "site/publication_manifest.json"
+    original_manifest = manifest_path.read_bytes()
+    manifest = json.loads(original_manifest)
+
+    assert sum(item["path"].startswith("data/") for item in manifest["files"]) == 112
+    assert len(manifest["contracts"]) == 6
+    assert not any("business_metrics" in item["path"] for item in manifest["files"])
+    assert verify_site(ROOT / "site") == []
+    Snapshot(ROOT / "site")
+    assert manifest_path.read_bytes() == original_manifest
 
 
 def test_approved_snapshot_query_sums_full_year_and_keeps_source_currency_and_units(tmp_path: Path) -> None:

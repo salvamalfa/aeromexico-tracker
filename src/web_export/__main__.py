@@ -18,6 +18,7 @@ from src.dashboard.executive_summary import build_executive_payload
 from src.dashboard.flights import build_flight_payload
 from src.dashboard.market import build_market_payload
 from src.web_export.analysis import MissingAnalysisInput, export_analysis
+from src.web_export.business_metrics_approval import BusinessMetricsApprovalError
 from src.web_export.executive import export_executive
 from src.web_export.flights import export_flights
 from src.web_export.inputs import MissingWebInput
@@ -70,7 +71,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.business_metrics_receipt,
                 args.out,
             )
-    except (MissingWebInput, MissingAnalysisInput) as error:
+    except (MissingWebInput, MissingAnalysisInput, BusinessMetricsApprovalError) as error:
         print(f"web_export: {error}", file=sys.stderr)
         return 1
 

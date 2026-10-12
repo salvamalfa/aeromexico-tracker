@@ -31,6 +31,12 @@ En **Variables** del servicio agrega:
 RAILWAY_DOCKERFILE_PATH=Dockerfile.chat
 ```
 
+Deja `CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256` sin configurar mientras
+no exista una aprobación financiera real. Si el dueño activa ese payload,
+configura también esta variable en Railway con el SHA-256 canónico que aprobó
+por un canal externo; nunca derives el pin del recibo que está dentro del
+repositorio. El backend rechaza el payload si falta el pin o no coincide.
+
 El dueño eligió `gpt-6.1-sol` con `low` y aprobó el prompt evaluado en F2.9
 etapa 2. Despliega el runtime que carga `config/chat/system_prompt.txt`,
 después aplica solo `CHAT_REASONING_EFFORT=low` en Railway; conserva
