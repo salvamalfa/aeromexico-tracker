@@ -45,6 +45,11 @@ después aplica solo `CHAT_REASONING_EFFORT=low` en Railway; conserva
 `439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`, luego usa
 una conversación nueva. No se ejecuta ninguna evaluación pagada.
 
+Mantén `CHAT_EVIDENCE_APPROVED_INDEX_SHA256` sin configurar mientras el índice
+aprobado esté vacío. Si se agregan registros con aprobación del dueño, fija en
+Railway el SHA-256 canónico del objeto completo del índice, aprobado por un
+canal externo; el runtime rechaza cualquier índice poblado sin ese pin exacto.
+
 Railway usa `Dockerfile` automáticamente si está en la raíz, pero `Dockerfile.chat`
 es un nombre personalizado y requiere esa variable, según su [documentación de
 Dockerfiles](https://docs.railway.com/builds/dockerfiles#custom-dockerfile-path).

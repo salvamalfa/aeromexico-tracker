@@ -1,17 +1,36 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 
-from src.conversational_analytics.evidence_index import EvidenceIndex, EvidenceIndexError
 from src.conversational_analytics.data.snapshot import Snapshot
+from src.conversational_analytics.evidence_index import (
+    APPROVED_INDEX_SHA256_ENV,
+    EvidenceIndex,
+    EvidenceIndexError,
+    candidate_content_sha256,
+    canonical_index_sha256,
+)
 from src.conversational_analytics.providers._openai_references import references_from_results
 from src.conversational_analytics.tools.evidence import dispatch_evidence_tool, evidence_tool_specs
 from src.conversational_analytics.tools.registry import ToolRegistry
 
 FIXTURE = Path("tests/fixtures/chat_evidence/index.json")
+
+
+@pytest.fixture(autouse=True)
+def _pin_synthetic_fixture(monkeypatch: pytest.MonkeyPatch) -> None:
+    payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    monkeypatch.setenv(APPROVED_INDEX_SHA256_ENV, canonical_index_sha256(payload))
+
+
+def _write_index(path: Path, payload: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    monkeypatch.setenv(APPROVED_INDEX_SHA256_ENV, canonical_index_sha256(payload))
 
 
 def test_report_search_is_deterministic_filtered_and_cited() -> None:
@@ -60,14 +79,23 @@ def test_news_search_returns_bounded_ficha_and_date_citation() -> None:
     assert index.search_news("combustible", "2026-07-01", "2026-07-31", "Aeroméxico")["count"] == 0
 
 
-def test_registry_evidence_hits_reach_provider_references_with_exact_urls() -> None:
+def test_registry_evidence_hits_reach_provider_references_with_exact_urls(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     class Capabilities:
         enable_evidence_tools = True
         enable_route_tools = False
         enable_business_metric_tools = False
 
-    registry = ToolRegistry(Snapshot(Path("tests/fixtures/chat/site")), Capabilities())
-    registry._evidence_index = EvidenceIndex(FIXTURE)
+    payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    index_path = tmp_path / "config/chat/evidence/approved-index.json"
+    index_path.parent.mkdir(parents=True)
+    index_path.write_text(json.dumps(payload), encoding="utf-8")
+    monkeypatch.setenv(APPROVED_INDEX_SHA256_ENV, canonical_index_sha256(payload))
+    snapshot = Snapshot(Path("tests/fixtures/chat/site"))
+    snapshot.project_root = tmp_path
+    registry = ToolRegistry(snapshot, Capabilities())
+    assert registry.evidence_index_sha256 == hashlib.sha256(index_path.read_bytes()).hexdigest()
     report = registry.invoke(
         "search_reports", {"query": "aumentó", "company": "Aeroméxico", "period": "2026Q2", "limit": 5}
     )
@@ -100,27 +128,33 @@ def test_news_tool_schemas_are_closed_and_dispatch_rejects_extra_arguments() -> 
     assert result == {"error": "argumentos inválidos"}
 
 
-def test_invalid_source_host_and_unbounded_excerpt_are_rejected(tmp_path: Path) -> None:
+def test_invalid_source_host_and_unbounded_excerpt_are_rejected(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
     approved = payload["records"][0]
     approved["source"]["url"] = "https://example.com/filing"
     path = tmp_path / "index.json"
-    path.write_text(json.dumps(payload), encoding="utf-8")
+    _write_index(path, payload, monkeypatch)
     with pytest.raises(EvidenceIndexError, match="lista HTTPS permitida"):
         EvidenceIndex(path)
 
 
-def test_receipt_must_bind_candidate_source_and_excerpt(tmp_path: Path) -> None:
+def test_receipt_must_bind_candidate_source_and_excerpt(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
     approved = payload["records"][0]
     approved["review"]["receipt"]["source_sha256"] = "f" * 64
     path = tmp_path / "index.json"
-    path.write_text(json.dumps(payload), encoding="utf-8")
+    _write_index(path, payload, monkeypatch)
     result = EvidenceIndex(path).search_reports("combustible", "Aeroméxico", "2026Q2")
     assert "report-approved" not in [row["id"] for row in result["results"]]
 
 
-def test_receipt_must_bind_all_semantic_citation_and_search_metadata(tmp_path: Path) -> None:
+def test_receipt_must_bind_all_semantic_citation_and_search_metadata(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     mutations = [
         ("report-approved", ("page",), 99, "report"),
         ("report-approved", ("company",), "Volaris", "report"),
@@ -143,13 +177,94 @@ def test_receipt_must_bind_all_semantic_citation_and_search_metadata(tmp_path: P
             target = target[key]
         target[keys[-1]] = value
         path = tmp_path / f"index-{case_number}.json"
-        path.write_text(json.dumps(payload), encoding="utf-8")
+        _write_index(path, payload, monkeypatch)
         evidence_index = EvidenceIndex(path)
         if kind == "report":
             result = evidence_index.search_reports("combustible", limit=5)
         else:
             result = evidence_index.search_news("combustible", limit=5)
         assert record_id not in [match["id"] for match in result["results"]]
+
+
+def test_nonempty_index_requires_external_canonical_pin_and_rejects_local_rehash(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    index_path = tmp_path / "approved-index.json"
+    index_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    monkeypatch.delenv(APPROVED_INDEX_SHA256_ENV)
+    with pytest.raises(EvidenceIndexError, match="debe fijar"):
+        EvidenceIndex(index_path)
+
+    pin = canonical_index_sha256(payload)
+    monkeypatch.setenv(APPROVED_INDEX_SHA256_ENV, pin)
+    assert EvidenceIndex(index_path).search_reports("combustible")["count"] == 2
+
+    # Whitespace and key order do not alter the canonical object hash.
+    index_path.write_text(json.dumps(payload, ensure_ascii=False, indent=4), encoding="utf-8")
+    assert EvidenceIndex(index_path).search_reports("combustible")["count"] == 2
+
+    forged = json.loads(json.dumps(payload))
+    forged_record = forged["records"][0]
+    forged_excerpt = "Texto manipulado con combustible."
+    forged_record["excerpt"] = forged_excerpt
+    forged_receipt = forged_record["review"]["receipt"]
+    forged_receipt["excerpt_sha256"] = hashlib.sha256(forged_excerpt.encode("utf-8")).hexdigest()
+    forged_receipt["candidate_content_sha256"] = candidate_content_sha256(forged_record)
+    # A contributor can recalculate every local receipt field and file hash,
+    # but cannot replace the externally supplied pin.
+    index_path.write_text(json.dumps(forged), encoding="utf-8")
+    with pytest.raises(EvidenceIndexError, match="no coincide"):
+        EvidenceIndex(index_path)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [("owner_id", "contributor"), ("approved_at", "2026-99-99T00:00:00Z")],
+)
+def test_unknown_owner_or_invalid_approval_date_is_not_approved_even_with_pin(
+    field: str, value: str, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    report = next(row for row in payload["records"] if row["id"] == "report-approved")
+    report["review"][field] = value
+    report["review"]["receipt"][field] = value
+    path = tmp_path / "untrusted-owner.json"
+    _write_index(path, payload, monkeypatch)
+
+    result = EvidenceIndex(path).search_reports("aumentó", "Aeroméxico", "2026Q2")
+    assert "report-approved" not in [row["id"] for row in result["results"]]
+
+
+def test_empty_runtime_index_loads_without_external_pin(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv(APPROVED_INDEX_SHA256_ENV, raising=False)
+    index = EvidenceIndex("config/chat/evidence/approved-index.json")
+    assert index.records == []
+    assert index.search_reports("combustible")["count"] == 0
+
+
+def test_registry_fails_before_registering_tools_for_rehashed_forged_index(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    class Capabilities:
+        enable_evidence_tools = True
+        enable_route_tools = False
+        enable_business_metric_tools = False
+
+    payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    payload["records"][0]["excerpt"] = "A locally rehashed forged approval."
+    index_path = tmp_path / "config/chat/evidence/approved-index.json"
+    index_path.parent.mkdir(parents=True)
+    index_path.write_text(json.dumps(payload), encoding="utf-8")
+    monkeypatch.setenv(APPROVED_INDEX_SHA256_ENV, canonical_index_sha256(
+        json.loads(FIXTURE.read_text(encoding="utf-8"))
+    ))
+
+    snapshot = Snapshot(Path("tests/fixtures/chat/site"))
+    snapshot.project_root = tmp_path
+    with pytest.raises(EvidenceIndexError, match="no coincide"):
+        ToolRegistry(snapshot, Capabilities())
 
 
 def test_real_report_candidates_stay_closed_and_are_not_an_approved_index() -> None:
