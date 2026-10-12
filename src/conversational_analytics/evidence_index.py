@@ -7,14 +7,19 @@ does not ingest report bodies or news articles at query time.
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
+import os
 import re
 import unicodedata
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
 INDEX_SCHEMA = "chat_evidence_index_v1"
+APPROVED_INDEX_SHA256_ENV = "CHAT_EVIDENCE_APPROVED_INDEX_SHA256"
+APPROVED_OWNER_ID = "salvamalfa"
 MAX_QUERY_CHARS = 240
 MAX_RESULTS = 5
 MAX_EXCERPT_CHARS = 480
@@ -59,18 +64,32 @@ def _approved(record: dict[str, Any]) -> bool:
     excerpt_hash = hashlib.sha256(excerpt.encode("utf-8")).hexdigest()
     return (
         review.get("decision") == "owner_approved"
-        and isinstance(review.get("owner_id"), str) and bool(review["owner_id"].strip())
-        and isinstance(review.get("approved_at"), str) and bool(review["approved_at"].strip())
+        and review.get("owner_id") == APPROVED_OWNER_ID
+        and _valid_approved_at(review.get("approved_at"))
         and receipt.get("receipt_id") == review.get("receipt_id")
         and isinstance(review.get("receipt_id"), str) and bool(review["receipt_id"].strip())
         and receipt.get("candidate_id") == candidate_id
         and receipt.get("decision") == "owner_approved"
-        and receipt.get("owner_id") == review.get("owner_id")
+        and receipt.get("owner_id") == APPROVED_OWNER_ID
         and receipt.get("approved_at") == review.get("approved_at")
+        and _valid_approved_at(receipt.get("approved_at"))
         and receipt.get("source_sha256") == source["sha256"]
         and receipt.get("excerpt_sha256") == excerpt_hash
         and receipt.get("candidate_content_sha256") == candidate_content_sha256(record)
     )
+
+
+def _valid_approved_at(value: Any) -> bool:
+    if not isinstance(value, str) or not re.fullmatch(
+        r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})",
+        value,
+    ):
+        return False
+    try:
+        datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return True
 
 
 def _source(record: dict[str, Any]) -> dict[str, str]:
@@ -104,6 +123,21 @@ def candidate_content_sha256(record: dict[str, Any]) -> str:
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
+def canonical_index_sha256(payload: dict[str, Any]) -> str:
+    """Hash the complete parsed index, independent of JSON formatting."""
+    try:
+        canonical = json.dumps(
+            payload,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        )
+    except (TypeError, ValueError) as exc:
+        raise EvidenceIndexError("El índice no se puede serializar de forma canónica") from exc
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
 def _tokens(value: str) -> set[str]:
     return {token for token in _TOKEN_RE.split(_norm(value)) if len(token) > 1}
 
@@ -129,7 +163,17 @@ def _load_approved(path: Path) -> dict[str, Any]:
     records = payload.get("records")
     if not isinstance(records, list):
         raise EvidenceIndexError("records debe ser una lista")
-    return {"version": _text(payload.get("version"), "version", 80), "records": records}
+    version = _text(payload.get("version"), "version", 80)
+    index_sha256 = canonical_index_sha256(payload)
+    if records:
+        expected_sha256 = os.environ.get(APPROVED_INDEX_SHA256_ENV, "").strip().lower()
+        if not _HASH_RE.fullmatch(expected_sha256):
+            raise EvidenceIndexError(
+                f"{APPROVED_INDEX_SHA256_ENV} debe fijar el SHA-256 canónico del índice aprobado"
+            )
+        if not hmac.compare_digest(index_sha256, expected_sha256):
+            raise EvidenceIndexError("El índice aprobado no coincide con el SHA-256 externo fijado")
+    return {"version": version, "records": records, "sha256": index_sha256}
 
 
 class EvidenceIndex:
@@ -139,6 +183,7 @@ class EvidenceIndex:
         self.path = Path(path)
         payload = _load_approved(self.path)
         self.version = payload["version"]
+        self.sha256 = payload["sha256"]
         self.records = [
             record for record in payload["records"] if isinstance(record, dict) and _approved(record)
         ]
