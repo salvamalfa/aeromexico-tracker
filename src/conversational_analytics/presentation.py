@@ -9,6 +9,8 @@ import re
 from typing import Any
 from urllib.parse import urlsplit
 
+from .markdown_tables import remove_numeric_markdown_tables
+
 LOG = logging.getLogger("conversational_analytics.presentation")
 _MARKER = re.compile(r"\{\{(tabla|grafica):([A-Za-z0-9][A-Za-z0-9_.-]{0,95})\}\}")
 _DISPLAY_ID = re.compile(r"^(tabla|grafica):[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$")
@@ -206,6 +208,10 @@ def _validated_display(raw: Any) -> dict[str, Any] | None:
         or value_kind not in _VALUE_KINDS
     ):
         return None
+    # Candidate values are not publishable presentation objects, even when
+    # their payload contains only nulls or strings that resemble numbers.
+    if value_kind == "candidate_unapproved":
+        return None
     result: dict[str, Any] = {
         "display_id": display_id,
         "kind": kind,
@@ -336,7 +342,7 @@ def _build_query_display(
     catalog_metrics = {
         item.get("id"): item for item in metric_catalog if isinstance(item, dict) and item.get("id")
     }
-    if any(
+    candidate_rows = any(
         _unapproved_metric(catalog_metrics.get(str(row.get("metric_id") or ""), {}))
         or row.get("approval_required") is True
         or row.get("approval_gate") == "closed"
@@ -344,7 +350,8 @@ def _build_query_display(
         or str(row.get("availability") or "").lower()
         in {"candidate_unapproved", "approval_required", "not_approved"}
         for row in rows
-    ) and any(row.get("value") is not None for row in rows):
+    )
+    if candidate_rows:
         return None
     if tool_name == "get_time_series" and isinstance(chart, dict):
         series = chart.get("series")
@@ -483,7 +490,7 @@ class DisplayRegistry:
             sanitized,
         )
         if selected:
-            sanitized = _remove_numeric_markdown_tables(sanitized)
+            sanitized = remove_numeric_markdown_tables(sanitized)
         ref_candidates = [references]
         ref_candidates.extend(display.get("sources") for display in selected)
         unique_sources = _safe_sources(*ref_candidates)
@@ -498,74 +505,6 @@ class DisplayRegistry:
             selected,
             [source for source in unique_sources if source["url"] not in shown_urls],
         )
-
-
-_TABLE_SEPARATOR = re.compile(r"^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)*\|?\s*$")
-_NUMERIC_CELL = re.compile(r"(?<![A-Za-z])[-+]?\d[\d,]*(?:\.\d+)?\s*(?:%|pp|¢|USD|MXN|mil|millones|M)?(?![A-Za-z])", re.I)
-
-
-def _markdown_cells(line: str) -> list[str]:
-    cells = [cell.strip() for cell in line.strip().split("|")]
-    if line.strip().startswith("|"):
-        cells = cells[1:]
-    if line.strip().endswith("|"):
-        cells = cells[:-1]
-    return cells
-
-
-def _next_nonblank(lines: list[str], start: int) -> int:
-    while start < len(lines) and not lines[start].strip():
-        start += 1
-    return start
-
-
-def _remove_numeric_markdown_tables(content: str) -> str:
-    """Drop numeric prose tables when the same response has a validated display."""
-    lines = content.splitlines(keepends=True)
-    output: list[str] = []
-    index = 0
-    while index < len(lines):
-        header = lines[index].strip()
-        separator_index = _next_nonblank(lines, index + 1)
-        if (
-            "|" not in header
-            or separator_index >= len(lines)
-            or not _TABLE_SEPARATOR.fullmatch(lines[separator_index].strip())
-        ):
-            output.append(lines[index])
-            index += 1
-            continue
-        width = len(_markdown_cells(header))
-        row_index = separator_index + 1
-        data_rows: list[str] = []
-        while True:
-            candidate_index = _next_nonblank(lines, row_index)
-            if candidate_index >= len(lines):
-                row_index = candidate_index
-                break
-            candidate = lines[candidate_index].strip()
-            gap = candidate_index != row_index
-            cells = _markdown_cells(candidate)
-            full_width = len(cells) == width
-            is_row = candidate.startswith("|") and (not gap or full_width)
-            is_row = is_row or (not gap and "|" in candidate and full_width)
-            if not is_row:
-                row_index = candidate_index
-                break
-            after = _next_nonblank(lines, candidate_index + 1)
-            after_cells = _markdown_cells(lines[after].strip()) if after < len(lines) else []
-            if after < len(lines) and _TABLE_SEPARATOR.fullmatch(lines[after].strip()) and len(cells) >= 2 and len(after_cells) == len(cells):
-                row_index = candidate_index
-                break
-            data_rows.append(lines[candidate_index])
-            row_index = candidate_index + 1
-        cells = [cell.strip() for row in data_rows for cell in _markdown_cells(row)]
-        if data_rows and any(_NUMERIC_CELL.search(cell) for cell in cells):
-            index = row_index
-        else:
-            output.extend(lines[index:row_index])
-            index = row_index
-    return "".join(output)
 
 
 def display_registry_for_snapshot(snapshot: Any) -> DisplayRegistry:

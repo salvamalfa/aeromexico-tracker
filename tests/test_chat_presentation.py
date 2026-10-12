@@ -89,12 +89,16 @@ def test_fallback_value_kind_comes_from_metric_definition_and_candidate_gate_sta
         }
     }
     closed_display = make_displays(candidate, "query_business_metrics", "call-candidate", closed_catalog)
-    assert closed_display["display"]["value_kind"] == "candidate_unapproved"
+    assert "display" not in closed_display
+    assert "displays" not in closed_display
+    # Candidate data may be serialized as text, including financial-looking
+    # strings, so the gate suppresses the whole display instead of parsing it.
+    candidate["rows"][0]["value"] = "100 pasajeros"
+    assert "display" not in make_displays(candidate, "query_business_metrics", "call-candidate-text", closed_catalog)
+    candidate["rows"][0]["value"] = "$1,200 USD"
+    assert "display" not in make_displays(candidate, "query_business_metrics", "call-candidate-currency", closed_catalog)
     candidate["rows"][0]["value"] = 100
-    assert (
-        make_displays(candidate, "query_business_metrics", "call-candidate-value", closed_catalog)
-        == candidate
-    )
+    assert "display" not in make_displays(candidate, "query_business_metrics", "call-candidate-value", closed_catalog)
 
     assert (
         DisplayRegistry().add(
@@ -153,9 +157,34 @@ def test_numeric_markdown_table_is_removed_only_with_a_valid_display_marker() ->
     assert "| Margen | calculado |" in sanitized
     assert len(displays) == 1
 
+    # Escaped pipes use the same cell grammar as the browser. A numeric row
+    # after an escaped delimiter must not evade suppression.
+    escaped = "{{tabla:verified}}\n\n| Factor \\| ajustado | Valor |\n| --- | ---: |\n| Ocupación | 99.9% |"
+    escaped_sanitized, _, _ = registry.finalize(escaped)
+    assert "99.9%" not in escaped_sanitized
+
     # Legacy R1 content has no valid marker, so its Markdown table stays intact.
     legacy, _, _ = DisplayRegistry().finalize("| Métrica | Valor |\n| --- | ---: |\n| Factor | 99.9% |")
     assert "99.9%" in legacy
+
+
+def test_shared_markdown_table_corpus_matches_server_suppression_grammar() -> None:
+    cases_path = Path(__file__).parents[1] / "web/src/views/chat/markdown_table_cases.json"
+    cases = json.loads(cases_path.read_text(encoding="utf-8"))
+    registry = DisplayRegistry()
+    registry.add({
+        "display_id": "tabla:corpus",
+        "kind": "table",
+        "title": "Tabla validada",
+        "value_kind": "reported",
+        "columns": [{"key": "value", "label": "Valor"}],
+        "rows": [{"value": 1}],
+    })
+    for case in cases:
+        markdown = f"{{{{tabla:corpus}}}}\n\n{case['markdown']}"
+        sanitized, _, _ = registry.finalize(markdown)
+        table_text = "\n".join(case["markdown"].splitlines())
+        assert (table_text not in sanitized) is case["value_bearing"], case["name"]
 
 
 def test_mixed_metric_query_keeps_each_value_unit_explicit() -> None:
