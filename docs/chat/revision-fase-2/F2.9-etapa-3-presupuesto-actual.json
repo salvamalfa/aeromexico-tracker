@@ -4,7 +4,7 @@
   "status": "offline_business_only_partial_preflight_pending_dependency_and_budget_gates",
   "candidate": "gpt-6.1-sol@low",
   "campaign_id": "f2-9-stage-3-business-partial-v1",
-  "campaign_sha256": "17c5ba06ea24c6ca6bd865b8c60ca30bea46f70d8aa985038e7bd31b794b8dbf",
+  "campaign_sha256": "83e747c4532de17e8f65bfa73fc9ac5d63ed8a23536a5642649237a5facd381e",
   "cohort": "business_only_partial_stage3",
   "safety_scope": "excluded_by_explicit_owner_direction; no prompt-injection cases are added or represented as validated",
   "case_count": 30,
@@ -13,14 +13,14 @@
   "coverage_summary": {
     "counts": {
       "supported": 12,
-      "coverage_missing": 10,
-      "approval_blocked": 8
+      "coverage_missing": 12,
+      "approval_blocked": 6
     },
     "provider_calls": 0,
     "credentials_read": false,
     "snapshot_data_version": "d9c4e56d04ad67be5dff6d6e9f7f6615f4f4be985ec1e5ee59781a7735007037",
     "snapshot_semantic_version": "0b8de07ff211ca1ba984bd87281a2d68950a3e36268909b2121a7ed6b35e0365",
-    "execution_commit": "83e60cab9b6e3e961a9dd9b91b0495221f5cbffa"
+    "execution_commit": "476c3956f9582f11623fbc5fa28f13a0c5b9d068"
   },
   "limits": {
     "max_message_chars": 8000,
@@ -36,9 +36,9 @@
     "public_stage2_closeout": "bf03c82e52fcff3b89fbcf18794218300149ae6859950199a6fd90c56fdd522d",
     "active_prompt_r1": "439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5",
     "required_prompt_r2": "68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf",
-    "tool_specs": "0a62d6166afe05db79d44c6d669641e187db713aa7ea81010b82c011d22c5c14",
+    "tool_specs": "7a873062d16d404c89c42457c268bfc41535039b14cb25b51f1d99adc2f9c9d9",
     "snapshot_manifest": "244cc9de0f97dea146935cfb2d277cb0b838547ce982674d074db3da78dce024",
-    "derived_coverage": "3220ea96906be4a9d6e12cbca1af38d7f5b3f00d74a5ec7da8922e8fa952328c",
+    "derived_coverage": "df9aa501685d8f954450a9223c36e5fb211a327d003a8eeb1b4af6dc04dfaa9e",
     "final_report": "1c547c0d5c8814e194f3da5c52bf97898a042a1e01d5dd5be80391df3f00a0bf",
     "terminal_recovery": "74709aadfb6c255726ebaa6a5f32dafd868abc9d640f489861ed672fa04bf1d6"
   },
@@ -53,27 +53,27 @@
   },
   "projection": {
     "basis": "stage2_measured_usage_scaled_to_34_messages_plus_current_prompt_and_tool_schema_context_delta",
-    "projected_input_tokens": 2098209,
+    "projected_input_tokens": 2103667,
     "projected_input_tokens_range": [
-      2051046,
-      2098209
+      2055140,
+      2103667
     ],
     "projected_output_tokens": 9423,
-    "cost_before_margin_usd": 5.339748,
+    "cost_before_margin_usd": 5.353393,
     "cost_before_margin_usd_range": [
-      5.22184,
-      5.339748
+      5.232075,
+      5.353393
     ],
     "historical_scaled_baseline_cost_before_margin_usd": 4.86812,
     "context_delta_input_cost_before_margin_usd_range": [
-      0.35372,
-      0.471627
+      0.363955,
+      0.485272
     ],
     "cost_after_margin_usd_range": [
-      7.0495,
-      7.2087
+      7.0633,
+      7.2271
     ],
-    "proposed_cost_upper_usd": 7.2087,
+    "proposed_cost_upper_usd": 7.2271,
     "proposed_reserve_usd": 8.0,
     "safety_margin_fraction": 0.35,
     "context_delta": {
@@ -85,17 +85,17 @@
       "historical_tool_schema_utf8_bytes": 3306,
       "historical_tool_schema_sha256": "1ff0d3a35647f7a0c2fc956884a4d267b0148065ccd3e2469139463f859bea19",
       "historical_execution_commit": "a3704be6ab9dacd8c481caff7caf3278fe861e90",
-      "current_tool_schema_utf8_bytes": 7436,
-      "current_tool_schema_sha256": "0a62d6166afe05db79d44c6d669641e187db713aa7ea81010b82c011d22c5c14",
-      "tool_schema_delta_utf8_bytes_per_request": 4130,
-      "total_delta_utf8_bytes_per_request": 6359,
+      "current_tool_schema_utf8_bytes": 7620,
+      "current_tool_schema_sha256": "7a873062d16d404c89c42457c268bfc41535039b14cb25b51f1d99adc2f9c9d9",
+      "tool_schema_delta_utf8_bytes_per_request": 4314,
+      "total_delta_utf8_bytes_per_request": 6543,
       "modeled_provider_requests": 89,
       "modeled_provider_request_hypothesis_range": [
         85,
         89
       ],
       "tool_calls": 55,
-      "tool_result_serialized_utf8_bytes": 95232,
+      "tool_result_serialized_utf8_bytes": 95316,
       "tool_arguments_serialized_utf8_bytes": 3831,
       "largest_tool_result_utf8_bytes": 15652,
       "bytes_per_token_proxy_range": [
@@ -103,8 +103,8 @@
         4
       ],
       "input_token_delta_range": [
-        141488,
-        188651
+        145582,
+        194109
       ],
       "estimation_note": "3–4 UTF-8 bytes/token proxy; no tokenizer or provider usage was queried. Tool result sizes are an aggregate and are not converted into billed tokens."
     },
@@ -112,6 +112,20 @@
     "owner_approval_required": true,
     "invoice_or_hard_cap": false,
     "funding_status": "not_approved; account_balance_unknown"
+  },
+  "reservation_assumption_override": {
+    "basis": "f2_9_stage3_projected_usage_not_hard_cap",
+    "historical_sample_count": 15,
+    "planned_request_count": 34,
+    "planned_message_count": 34,
+    "input_tokens_per_turn": 83528,
+    "output_tokens_per_turn": 375,
+    "safety_margin_fraction": 0.35,
+    "per_case_estimated_reservation_usd": 0.21257,
+    "planned_batch_estimated_reservation_usd": 7.22738,
+    "campaign_sha256": "83e747c4532de17e8f65bfa73fc9ac5d63ed8a23536a5642649237a5facd381e",
+    "budget_guaranteed": false,
+    "note": "Empirical planning allowance per user message; not a hard cap. Unknown usage stops and blocks resume."
   },
   "gates": {
     "full_stage2_review_received": true,

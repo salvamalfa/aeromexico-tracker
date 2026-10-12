@@ -698,8 +698,9 @@ La campaña de Stage 3 preparada actualmente es parcial: 30 casos de negocio,
 34 mensajes y una repetición de Sol low, sin casos de inyección. No equivale a
 la comparación de cuatro candidatos de 70 slots descrita en el plan original,
 ni su preflight offline es una ejecución o un resultado de calidad. La cotización
-es US$7.05–7.21; propone US$8 disponibles si el saldo confirmado fuera cero,
-pero el saldo es desconocido y no hay autorización/fondeo de campaña. La fase 2
+es US$7.06–7.23; propone una reserva máxima de US$8 para 30 casos/34 mensajes.
+El saldo actual es desconocido y solo cambia la recarga necesaria, no la reserva;
+no hay autorización/fondeo de campaña. La fase 2
 permanece abierta hasta resolver el contenido y el presupuesto y completar la
 revisión/ejecución correspondientes.
 

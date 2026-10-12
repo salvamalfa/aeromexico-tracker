@@ -57,9 +57,10 @@ cerradas: rutas, métricas financieras y búsqueda de evidencia usan flags
 false; el índice de evidencia aprobado está vacío. R1 sigue activo, así que no
 se requiere volver a aprobar R1 ni las preguntas, rúbrica o modelo/esfuerzo.
 R2 y los contenidos propuestos aún requieren decisión; Stage 3 requiere
-presupuesto nuevo. Su preflight offline propone 30 casos/34 mensajes, US$7.05–
-7.21 y US$8 disponibles si el saldo confirmado fuera cero; el saldo real es
-desconocido y no está aprobada ni financiada una ejecución. Consulta la
+presupuesto nuevo. Su preflight offline estima US$7.06–7.23 para 30 casos/34
+mensajes y propone una reserva máxima de US$8; el saldo actual es desconocido y
+solo reduce la recarga necesaria, no la reserva. La campaña no está aprobada ni
+financiada. Consulta la
 [cotización vigente](revision-fase-2/F2.9-etapa-3-presupuesto-actual.md), el
 [resumen de decisiones](fase-2-decision-dueno.md) y el
 [reporte de activación](../etapas/chat-f2-0-activacion-20261012.md).

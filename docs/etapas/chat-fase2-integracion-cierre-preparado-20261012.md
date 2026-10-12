@@ -17,8 +17,9 @@ R2, siete métricas financieras, siete pasajes de reportes y tres noticias
 siguen como propuestas. Las banderas de rutas, métricas financieras y evidencia
 continúan apagadas; `approved-index.json` está vacío y el payload financiero
 no está activado. La evaluación Stage 3 preparada es parcial: 30 casos/34
-mensajes, con estimado US$7.05–7.21 y propuesta de US$8 disponibles si el saldo
-confirmado fuera cero. El saldo real es desconocido. No hubo campaña pagada ni
+mensajes, con estimación US$7.06–7.23 y propuesta de reserva máxima de US$8.
+El saldo real es desconocido y solo modifica la recarga necesaria, no la reserva.
+No hubo campaña pagada ni
 nueva aprobación de contenido o presupuesto. No se requiere volver a aprobar
 R1, las preguntas, la rúbrica o el modelo/esfuerzo.
 
