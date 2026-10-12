@@ -27,13 +27,22 @@
     "accounting": "14 completed report rows plus one exact GET-recovered terminal turn; no replay; the recovery has no valid latency or tool trace"
   },
   "estimate": {
-    "basis": "observed_stage2_sol_low_mean_per_question_scaled_to_stage3_user_messages",
+    "basis": "observed_stage2_sol_low_mean_per_question_scaled_to_stage3_user_messages_plus_current_R2_and_tool_schema_context_delta",
     "input_rate_usd_per_million": 2.5,
     "input_rate_basis": "cache-write rate, conservatively charged; no cached-input credit",
     "output_rate_usd_per_million": 10.0,
     "margin_fraction": 0.35,
-    "rounding": "ceil_to_cent",
-    "scope_note": "Planning estimate only. Stage 3 needs a new owner-approved reserve and a fresh offline preflight after dependencies are integrated."
+    "rounding": "cost_range_display_4dp; reserve_ceil_to_whole_usd",
+    "scope_note": "Planning estimate only. Stage 3 requires the proposed R2 prompt and the current 13-tool schema; R2 activation and a new US$8 reserve remain pending owner approval/funding. The balance is unknown. No provider calls are authorized.",
+    "context_delta_proxy": {
+      "historical_stage2_prompt": "approved R1 effective prompt",
+      "stage3_prompt": "R2 proposed, required by the stage-3 profile, not active or approved",
+      "historical_tool_schema": "7 definitions, 3306 UTF-8 bytes, execution commit a3704be6ab9dacd8c481caff7caf3278fe861e90",
+      "stage3_tool_schema": "13 definitions, measured from the current coverage source",
+      "bytes_per_token_proxy_range": [3, 4],
+      "request_count_basis": "34 user messages plus 55 deterministic tool calls; upper proxy count 89",
+      "tokenizer_or_provider_usage": "not queried"
+    }
   },
   "gates": {
     "full_stage2_review_received": true,

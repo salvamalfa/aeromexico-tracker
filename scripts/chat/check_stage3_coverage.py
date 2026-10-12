@@ -131,7 +131,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         from scripts.chat.prepare_final_campaign import build_plan
 
-        cost_plan = build_plan(profile_path=args.profile.resolve())
+        cost_plan = build_plan(profile_path=args.profile.resolve(), coverage_report=report)
         reserve = float(cost_plan["projection"]["proposed_reserve_usd"])
         _bind_reserve(report, reserve)
         report["budget_plan"] = cost_plan["projection"]

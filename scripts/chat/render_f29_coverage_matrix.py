@@ -253,16 +253,18 @@ def render_matrix(fixture: dict[str, Any]) -> str:
             "la presencia de módulos aislados no abre las puertas. Todo Gold dependiente debe generarse "
             "contra snapshot y versión semántica fijados después de integrar esos paquetes. Las fuentes "
             "financieras candidatas de F2.3 permanecen cerradas hasta recibo/aprobación del dueño. "
-            "La proyección actual de US$6.58 corresponde a una repetición y margen de 35%, no a una reserva "
-            "aprobada ni a un hard cap; debe recalcularse tras integrar dependencias.",
+            "La cotización offline vigente de etapa 3 es US$7.05–7.21 con margen de 35%; propone "
+            "US$8 disponibles si el saldo confirmado fuera cero. No es una reserva aprobada ni un hard cap, "
+            "y el saldo de cuenta es desconocido. El detalle y los hashes están en la "
+            "[cotización actual](F2.9-etapa-3-presupuesto-actual.md).",
             "",
-            "Estado del plan (2026-10-11): la etapa 3 está propuesta solo como campaña parcial de negocio. "
+            "Estado del plan (2026-10-12): la etapa 3 está propuesta solo como campaña parcial de negocio. "
             "El perfil `config/chat/f2_9_business_stage3_partial.json` limita el alcance a los 30 casos "
             "business y una repetición; safety y prompt injection quedan fuera, sin presentarse como "
             "validados. El preflight `scripts/chat/prepare_final_campaign.py` compara hashes y totales "
             "de tokens de uso medido con el artefacto público de cierre etapa 2 fijado, además de validar "
             "fixture y catálogo. Persisten gates de integración, Gold/snapshot y presupuesto; no está "
-            "autorizada ninguna llamada. Detalles del hardening y sus pruebas en "
+            "autorizada ninguna llamada. Detalles del preflight de cobertura y sus pruebas en "
             "[`bitácora de preflight`](../../etapas/chat-f2-9-preflight-integridad-20261011.md).",
             "",
         ]

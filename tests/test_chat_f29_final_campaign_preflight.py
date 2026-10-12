@@ -24,11 +24,25 @@ def test_profile_dry_run_selects_all_business_cases_without_live_side_effects():
     assert plan["case_count"] == 30
     assert plan["messages_per_candidate"] == 34
     assert plan["repetitions"] == 1
-    assert plan["projection"]["projected_input_tokens"] == 1_909_558
+    assert plan["projection"]["projected_input_tokens_range"] == [2_051_046, 2_098_209]
+    assert plan["projection"]["projected_input_tokens"] == 2_098_209
     assert plan["projection"]["projected_output_tokens"] == 9_423
-    assert plan["projection"]["cost_before_margin_usd"] == 4.86812
+    assert plan["projection"]["cost_before_margin_usd_range"] == [5.22184, 5.339748]
     assert plan["projection"]["safety_margin_fraction"] == 0.35
-    assert plan["projection"]["proposed_reserve_usd"] == 6.58
+    assert plan["projection"]["cost_after_margin_usd_range"] == [7.0495, 7.2087]
+    assert plan["projection"]["proposed_reserve_usd"] == 8.0
+    context = plan["projection"]["context_delta"]
+    assert context["prompt_r1_effective_utf8_bytes"] == 8_937
+    assert context["prompt_r2_proposed_utf8_bytes"] == 11_166
+    assert context["prompt_delta_utf8_bytes_per_request"] == 2_229
+    assert context["historical_tool_schema_utf8_bytes"] == 3_306
+    assert context["current_tool_schema_utf8_bytes"] == 7_436
+    assert context["tool_schema_delta_utf8_bytes_per_request"] == 4_130
+    assert context["total_delta_utf8_bytes_per_request"] == 6_359
+    assert context["modeled_provider_requests"] == 89
+    assert context["tool_calls"] == 55
+    assert context["tool_result_serialized_utf8_bytes"] == 95_232
+    assert context["largest_tool_result_utf8_bytes"] == 15_652
     assert plan["source_hashes"]["model_catalog"] == (
         "9744c985f051c898a8af6e8d3c8766c6885e77d8a13d55b72e30427b15468d4c"
     )
@@ -39,7 +53,7 @@ def test_profile_dry_run_selects_all_business_cases_without_live_side_effects():
     assert plan["provider_calls_now"] == 0
     assert plan["credentials_read"] is False
     assert plan["live_execution_available"] is False
-    assert plan["projection"]["proposed_reserve_usd"] == 6.58
+    assert plan["projection"]["proposed_reserve_usd"] == 8.0
     assert plan["projection"]["owner_approval_required"] is True
     assert plan["gates"]["f23_f24_f25_f26_f27_f28_integrated_and_reviewed"] is False
     assert plan["gates"]["30_case_gold_and_support_expectations_revalidated"] is False
