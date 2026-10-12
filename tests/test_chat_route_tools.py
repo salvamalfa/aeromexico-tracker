@@ -352,12 +352,24 @@ def test_domestic_quarter_rollup_uses_only_three_complete_published_months() -> 
     months = ["2026M04", "2026M05", "2026M06"]
     networks = [snapshot.payload(f"data/v1/flights/domestic/{period}.json") for period in months]
     monthly_maps = [{route["market_key"]: route for route in network["routes"]} for network in networks]
+    passenger_keys = set.intersection(
+        *(
+            {
+                market
+                for market, route in routes.items()
+                if isinstance(route.get("passengers"), (int, float))
+            }
+            for routes in monthly_maps
+        )
+    )
     complete_keys = set.intersection(
         *(
             set(
                 market
                 for market, route in routes.items()
                 if isinstance(route.get("passengers"), (int, float))
+                and isinstance(route.get("load_factor"), (int, float))
+                and route.get("load_factor_status") != "inconsistent_inputs"
             )
             for routes in monthly_maps
         )
@@ -406,7 +418,13 @@ def test_domestic_quarter_rollup_uses_only_three_complete_published_months() -> 
     seats = sum(routes[market_key]["seats"] for routes in monthly_maps)
     assert load_factor["rows"][0]["value"] == pytest.approx(passengers / seats * 100)
 
-    partial_keys = set.union(*(set(routes) for routes in monthly_maps)) - complete_keys
+    published_rollup, _ = tools._load("AEROMEXICO_GROUP", "domestic", "2026Q2")
+    mex_vsa = next(row for row in published_rollup["routes"] if row["market_key"] == "MEX<>VSA")
+    assert mex_vsa["load_factor"] is None
+    assert mex_vsa["load_factor_status"] == "inconsistent_inputs"
+    assert mex_vsa["metric_value_kinds"]["load_factor"] == "missing"
+
+    partial_keys = set.union(*(set(routes) for routes in monthly_maps)) - passenger_keys
     assert partial_keys
     partial_key = sorted(partial_keys)[0]
     origin, destination = partial_key.split("<>")
@@ -520,6 +538,44 @@ def test_shared_route_display_ids_include_entities_metric_and_top_n() -> None:
         len({first["display"]["display_id"], second["display"]["display_id"], third["display"]["display_id"]})
         == 3
     )
+
+
+def test_shared_route_display_preserves_incomparability_and_each_carriers_metadata() -> None:
+    route_aero = _route("MEX<>CUN", 100, kind="estimated")
+    route_viva = _route("MEX<>CUN", 80, kind="observed", source="BTS T-100")
+    paths = _paths(
+        {
+            ("AEROMEXICO_GROUP", "domestic", "2026M07"): _network("2026M07", [route_aero]),
+            ("VIVA_AEROBUS", "domestic", "2026M07"): _network(
+                "2026M07", [route_viva], complete=False
+            ),
+        }
+    )
+    result = RouteTools(MemorySnapshot(paths)).invoke(
+        "find_shared_routes",
+        {
+            "entity_ids": ["AEROMEXICO_GROUP", "VIVA_AEROBUS"],
+            "segment": "domestic",
+            "period": "2026M07",
+            "metric": "passengers",
+        },
+    )
+
+    row = result["rows"][0]
+    display = result["display"]
+    shown = display["rows"][0]
+    assert row["comparable"] is False
+    assert {"coverage_incomplete", "value_kind_differs", "source_family_differs"} <= set(
+        row["comparability_reason"]
+    )
+    assert shown["comparable"] is False
+    assert "coverage_incomplete" in shown["comparability_reason"]
+    assert shown["AEROMEXICO_GROUP_value_kind"] == "estimated"
+    assert shown["VIVA_AEROBUS_value_kind"] == "observed"
+    assert shown["carrier_coverage"] == row["coverage"]
+    assert {"AEROMEXICO_GROUP_value", "VIVA_AEROBUS_value"} <= {
+        column["key"] for column in display["columns"]
+    }
 
 
 def test_source_references_deduplicate_by_url_and_merge_distinct_labels() -> None:
