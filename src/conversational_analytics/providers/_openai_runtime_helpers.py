@@ -77,7 +77,9 @@ def validate_tool_specs(specs: list[dict[str, Any]]) -> list[dict[str, Any]]:
         }
         if "strict" in raw and raw["strict"] is not True:
             raise OpenAIProviderError("Las herramientas solo admiten validación estricta")
-        clean["strict"] = True
+        # Agents API function tools do not accept the Responses API's `strict`
+        # field. Keep strict schema normalization and validation above, while
+        # emitting only fields supported by AgentToolConfigParamFunction.
         names.add(name)
         validated.append(clean)
     if not ALLOWED_TOOL_NAMES <= names:
