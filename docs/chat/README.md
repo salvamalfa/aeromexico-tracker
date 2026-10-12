@@ -55,6 +55,10 @@ F2.3–F2.9 están implementados localmente, pero las nuevas capacidades siguen
 cerradas: rutas, métricas financieras y búsqueda de evidencia usan flags false;
 el índice de evidencia aprobado está vacío y R2 requiere un recibo de dueño
 ligado al hash exacto. Stage 3 requiere presupuesto nuevo y una campaña final.
+La cotización offline actual de esa campaña parcial es US$7.05–7.21 y propone
+US$8 disponibles si el saldo confirmado es cero; no está aprobada ni financiada.
+El saldo de cuenta es desconocido. Consulta la [cotización vigente de F2.9
+etapa 3](revision-fase-2/F2.9-etapa-3-presupuesto-actual.md).
 Ver el [resumen de decisiones del dueño](fase-2-decision-dueno.md) y el
 [reporte de activación](../etapas/chat-f2-0-activacion-20261012.md). No hay
 consultas pagadas pendientes.

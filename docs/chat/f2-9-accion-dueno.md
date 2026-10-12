@@ -4,5 +4,11 @@ F2.9 etapa 2 quedó calificada: 55 correctas de 59 respuestas disponibles; queda
 Sol low quedó elegido por el dueño para continuar; la elección no declara aprobado un gate de calidad.
 El archivo agregado y sus denominadores están en [cierre de etapa 2](revision-fase-2/F2.9-cierre-etapa-2.json).
 Los 30 casos, dependencias y contratos por paquete están en la [matriz de cobertura](revision-fase-2/F2.9-matriz-cobertura-final.md).
-El dry-run Sol low para 30 casos/34 turnos y una repetición estima US$6.58 con margen 35%; no está autorizado ni financiado.
-Próximo paso: integrar F2.3–F2.8, revalidar snapshot/gold y presentar una nueva cotización y presupuesto antes de cualquier llamada pagada.
+El cierre inmutable de etapa 2 conserva la proyección histórica de US$6.58.
+Con los pines y la cobertura offline actuales, la nueva cotización de etapa 3
+es US$7.05–7.21 y propone US$8 disponibles si el saldo confirmado fuera cero;
+no está aprobada ni financiada y el saldo de cuenta es desconocido. Consulta la
+[cotización offline vigente](revision-fase-2/F2.9-etapa-3-presupuesto-actual.md)
+y su [JSON con hashes](revision-fase-2/F2.9-etapa-3-presupuesto-actual.json).
+Próximo paso: revalidar Gold/dependencias/snapshot, confirmar saldo y presentar
+el presupuesto nuevo para aprobación antes de cualquier llamada pagada.

@@ -113,7 +113,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--fixture", type=Path, default=ROOT / "tests/fixtures/chat_evals/business_proposed.json"
     )
-    parser.add_argument("--profile", type=Path, default=ROOT / "config/chat/f2_9_business_stage3_partial.json")
+    parser.add_argument(
+        "--profile", type=Path, default=ROOT / "config/chat/f2_9_business_stage3_partial.json"
+    )
     parser.add_argument("--output", type=Path, help="reporte privado opcional bajo .state/")
     parser.add_argument("--run", action="store_true", help="solicitar ejecución live (siempre receipt-gated)")
     parser.add_argument("--opt-in", action="store_true", help="consentimiento explícito de esta invocación")
@@ -131,7 +133,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         from scripts.chat.prepare_final_campaign import build_plan
 
-        cost_plan = build_plan(profile_path=args.profile.resolve())
+        cost_plan = build_plan(profile_path=args.profile.resolve(), coverage_report=report)
         reserve = float(cost_plan["projection"]["proposed_reserve_usd"])
         _bind_reserve(report, reserve)
         report["budget_plan"] = cost_plan["projection"]

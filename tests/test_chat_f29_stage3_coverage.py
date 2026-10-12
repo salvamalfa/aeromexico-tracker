@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import json
 import hashlib
+import json
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -367,6 +367,7 @@ def test_stage3_cli_blocks_missing_receipts_before_credentials_or_provider(monke
     assert blocked["reason"] == "missing_exact_scope_receipts"
     assert blocked["provider_calls"] == 0
     assert blocked["credentials_read"] is False
+    assert blocked["reserve_usd"] == 8.0
 
 
 def test_stage3_cli_requires_external_receipt_hashes_before_reading_receipts_or_credentials(
@@ -413,6 +414,7 @@ def test_stage3_cli_requires_external_receipt_hashes_before_reading_receipts_or_
     assert captured[0]["reason"] == "missing_external_receipt_sha256_pins"
     assert captured[0]["provider_calls"] == 0
     assert captured[0]["credentials_read"] is False
+    assert captured[0]["reserve_usd"] == 8.0
 
 
 def test_stage3_review_export_maps_only_one_candidate_and_all_derived_expectations() -> None:
