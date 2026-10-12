@@ -88,6 +88,27 @@ def test_unit_ratios_use_denominator_weight_instead_of_simple_mean() -> None:
     assert result["denominator_sum"] == 4
 
 
+def test_load_factor_query_returns_ask_weighted_percent_from_fraction_inputs() -> None:
+    snapshot = Snapshot(FIXTURE)
+    quarter = deterministic_query(snapshot, "load_factor", "AEROMEXICO", "2026Q2")
+    first_half = deterministic_query(snapshot, "load_factor", "AEROMEXICO", "2026H1")
+    records = snapshot.payload("data/v1/executive.json")["entities"]["AEROMEXICO"]["records"]
+    q1, q2 = records[0], records[1]
+    expected_h1 = (
+        (q1["load_factor"] * q1["ask_km"] + q2["load_factor"] * q2["ask_km"])
+        / (q1["ask_km"] + q2["ask_km"])
+        * 100
+    )
+
+    assert quarter["unit"] == "percent"
+    assert quarter["value"] == pytest.approx(84.9)
+    assert first_half["value"] == pytest.approx(expected_h1)
+    assert first_half["value"] != pytest.approx(0.848)
+    assert first_half["numerator_sum"] == pytest.approx(
+        (q1["load_factor"] * q1["ask_km"] + q2["load_factor"] * q2["ask_km"]) * 100
+    )
+
+
 def test_closed_financial_candidate_gate_never_returns_a_value() -> None:
     result = deterministic_query(Snapshot(FIXTURE), "total_revenue", "AEROMEXICO", "2025")
     candidate = next(

@@ -76,9 +76,11 @@ USD, preserva unidad/divisa reportada, periodo fiscal y FX por trimestre.
 Para razones publicadas, `aggregate_weighted_ratio` calcula la suma de cada
 razón multiplicada por su denominador, dividida entre la suma de denominadores.
 RASK/CASK usan ASK-km; factor de ocupación usa ASK y solo se publica si la base
-trimestral coincide. Exige trimestres completos y nunca promedia porcentajes
-simples. Un importe total financiero usa el campo de monto directo cuando está
-disponible; no se deriva de una razón por ASK.
+trimestral coincide. La fuente almacena ocupación como fracción; la consulta la
+devuelve como porcentaje una vez calculada la ponderación. Exige trimestres
+completos y nunca promedia porcentajes simples. Un importe total financiero usa
+el campo de monto directo cuando está disponible; no se deriva de una razón por
+ASK.
 
 El generador
 [`../../scripts/chat/build_business_metrics_proposal.py`](../../scripts/chat/build_business_metrics_proposal.py)

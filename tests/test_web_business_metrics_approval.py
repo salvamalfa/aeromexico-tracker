@@ -13,6 +13,7 @@ from src.conversational_analytics.tools.business_metrics import (
     get_business_metric_definition,
 )
 from src.publish import manifest as manifest_mod
+from src.publish.verify import verify_site
 from src.web_export.business_metrics import BusinessMetricsApprovalError, build_approved_payload
 from src.web_export.writer import write_json
 
@@ -137,6 +138,48 @@ def test_snapshot_rejects_receipt_or_payload_not_hash_bound_to_proposal(tmp_path
 
     with pytest.raises(SnapshotError, match="business metrics approval could not be revalidated"):
         Snapshot(snapshot.root)
+
+
+def _resign_site(site: Path) -> None:
+    manifest = dict(json.loads((site / "publication_manifest.json").read_text(encoding="utf-8")))
+    manifest["files"] = manifest_mod.file_entries(site)
+    manifest_mod.write_manifest(site, manifest)
+
+
+def test_publish_verify_requires_the_business_metrics_receipt_pair(tmp_path: Path) -> None:
+    snapshot = _approved_snapshot(tmp_path)
+    (snapshot.root / "data/v1/business_metrics.approval.json").unlink()
+    _resign_site(snapshot.root)
+
+    problems = verify_site(snapshot.root)
+
+    assert any("payload and approval receipt must be published together" in problem for problem in problems)
+
+
+def test_publish_verify_revalidates_business_metrics_payload_and_receipt_pins(tmp_path: Path) -> None:
+    snapshot = _approved_snapshot(tmp_path)
+    receipt_path = snapshot.root / "data/v1/business_metrics.approval.json"
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    receipt["definitions_sha256"] = "0" * 64
+    write_json(receipt_path, receipt)
+    _resign_site(snapshot.root)
+
+    problems = verify_site(snapshot.root)
+
+    assert any("business metrics approval could not be revalidated" in problem for problem in problems)
+
+
+def test_publish_verify_rejects_rebuilt_manifest_with_tampered_business_metrics(tmp_path: Path) -> None:
+    snapshot = _approved_snapshot(tmp_path)
+    payload_path = snapshot.root / "data/v1/business_metrics.json"
+    payload = json.loads(payload_path.read_text(encoding="utf-8"))
+    next(row for row in payload["rows"] if row["value"] is not None)["value"] += 1
+    write_json(payload_path, payload)
+    _resign_site(snapshot.root)
+
+    problems = verify_site(snapshot.root)
+
+    assert any("do not match the current approved proposal and receipt" in problem for problem in problems)
 
 
 def test_year_is_incomplete_when_source_has_only_two_quarters(tmp_path: Path) -> None:
