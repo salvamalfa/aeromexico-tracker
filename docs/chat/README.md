@@ -51,19 +51,19 @@ snapshot `d9c4e56d04ad67be5dff6d6e9f7f6615f4f4be985ec1e5ee59781a7735007037`;
 health respondió 200 y la admisión/worker estaban activos. No se hizo ninguna
 consulta pagada durante la verificación.
 
-F2.3–F2.9 están preparados en el [PR #120](https://github.com/salvamalfa/aeromexico-tracker/pull/120),
-que sigue en revisión y no está desplegado. Las capacidades nuevas siguen
-cerradas: rutas, métricas financieras y búsqueda de evidencia usan flags
-false; el índice de evidencia aprobado está vacío. R1 sigue activo, así que no
-se requiere volver a aprobar R1 ni las preguntas, rúbrica o modelo/esfuerzo.
-R2 y los contenidos propuestos aún requieren decisión; Stage 3 requiere
-presupuesto nuevo. Su preflight offline estima US$7.06–7.23 para 30 casos/34
-mensajes y propone una reserva máxima de US$8; el saldo actual es desconocido y
-solo reduce la recarga necesaria, no la reserva. La campaña no está aprobada ni
-financiada. Consulta la
+El código F2.3–F2.9 se integró en el [PR #120](https://github.com/salvamalfa/aeromexico-tracker/pull/120)
+y se verificó en Railway y Pages. Health respondió 200 con R1, Sol low y
+`enabled_capabilities: []`; las capacidades nuevas siguen cerradas, los flags
+apagados y el índice aprobado vacío. R1, Sol low, las preguntas y la rúbrica
+ya están aprobados; no hace falta repetir esas decisiones. R2 y los contenidos
+propuestos esperan decisión; Stage 3 requiere presupuesto nuevo. Su preflight
+offline estima US$7.06–7.23 para 30 casos/34 mensajes y propone una reserva
+nueva de US$8; el saldo actual es desconocido y solo reduce la recarga necesaria.
+No hubo consulta pagada ni campaña. Consulta la
 [cotización vigente](revision-fase-2/F2.9-etapa-3-presupuesto-actual.md), el
-[resumen de decisiones](fase-2-decision-dueno.md) y el
-[reporte de activación](../etapas/chat-f2-0-activacion-20261012.md).
+[brief de decisiones del dueño](fase-2-decision-dueno.md) y el
+[reporte de activación](../etapas/chat-f2-0-activacion-20261012.md) y la
+[verificación posterior a PR #120](../etapas/chat-fase2-entrega-final-20261012.md).
 
 ### Registro histórico al 8 de octubre de 2026
 

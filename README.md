@@ -42,10 +42,10 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
 - **Chat:** el MVP sigue activo en Railway. El despliegue verificado usa
   `gpt-6.1-sol`, esfuerzo `low` y R1; health respondió 200. Las capacidades de
   rutas, métricas financieras y búsqueda de evidencia permanecen apagadas.
-  El código F2.3–F2.9 está en el PR #120, todavía en revisión; no se ha
-  desplegado. La campaña propuesta de Stage 3 no se ha ejecutado, y su saldo
-  disponible es desconocido. La fase 2 sigue abierta a las decisiones de
-  contenido y presupuesto (ver [Chat analítico](#chat-analítico)).
+  PR #120 está integrado y desplegado, con Railway y Pages verificados. Las
+  capacidades nuevas siguen cerradas. Stage 3 no se ha ejecutado y el saldo
+  actual es desconocido. La fase 2 espera las decisiones de contenido y
+  presupuesto (ver [Chat analítico](#chat-analítico)).
 - **Datos:** AFAC y AeroDataBox se actualizan a mano mes a mes; lo pendiente
   está en [`ROADMAP.md`](ROADMAP.md).
 
@@ -138,14 +138,14 @@ El chat responde preguntas sobre el snapshot público con una capa semántica
 versionada; no abre el warehouse ni convierte ausencias en cero. El MVP sigue
 activo en Railway con `gpt-6.1-sol`, acceso con contraseña, topes diarios de
 US$5 (por usuario y global) y hasta 16 llamadas de herramienta por pregunta.
-El despliegue verificado el 12 oct 2026 usa Sol low y R1 efectivo; health
-respondió 200 sin enviar una pregunta pagada. La integración F2.3–F2.9 está en
-el PR #120, que sigue en revisión. R2, siete métricas financieras, siete
-pasajes y tres noticias son propuestas pendientes; los flags permanecen
-apagados y el índice aprobado vacío. Stage 3 propone 30 casos/34 mensajes,
-US$7.05–7.21 y US$8 disponibles si el saldo confirmado fuera cero; el saldo
-real es desconocido y no hubo campaña pagada. No se ha aprobado un gate de
-calidad.
+PR #120 integró F2.3–F2.9 y está desplegado. Railway confirmó `SUCCESS` y
+`/api/chat/health` respondió 200 con Sol low y R1 efectivo; Pages pasó todos los
+checks y las páginas públicas se verificaron. El deployment confirma
+`enabled_capabilities: []`: los flags siguen apagados y el índice aprobado
+vacío. No se hizo una consulta pagada. R2, cuatro métricas financieras, siete
+pasajes y tres noticias esperan decisión. Stage 3 propone 30 casos/34 mensajes,
+US$7.06–7.23 y una reserva nueva de US$8; el saldo real es desconocido y no
+hubo campaña pagada. No se ha aprobado un gate de calidad.
 
 - Operación, instalación y límites: [documentación del chat](docs/chat/README.md)
   y [traspaso operativo](docs/chat/traspaso-activacion-mvp-20261006.md).

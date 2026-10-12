@@ -75,6 +75,13 @@ persistente `/data`. Configuración, variables y verificación están en
 [railway.md](railway.md). El worker vive más que la conexión SSE del navegador
 y reanuda o marca como fallidos los turnos tras un reinicio.
 
+La verificación posterior a PR #120 está en la
+[bitácora de entrega](../etapas/chat-fase2-entrega-final-20261012.md): Railway
+reportó `SUCCESS` y health 200 con R1/Sol low y
+`enabled_capabilities: []`. Las banderas de rutas, métricas financieras y
+evidencia y sus pins de aprobación permanecen sin configurar; no hubo llamada
+pagada ni se activaron candidatos.
+
 Verificación registrada el 12 de octubre de 2026: Railway reportó `SUCCESS`
 para el despliegue `dd97b38e-383b-48ab-9fab-ca5bf0f78c70` sobre el commit
 `60e741b4b4c70ba2d092061f571b924690afcfcd`; `GET /api/chat/health` respondió
