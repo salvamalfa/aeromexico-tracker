@@ -327,6 +327,19 @@ def test_same_source_url_keeps_distinct_member_labels() -> None:
     }]
 
 
+def test_provider_references_deduplicate_by_url_and_keep_distinct_page_labels() -> None:
+    references = references_from_results([
+        {"references": [
+            {"label": "Reporte Aeroméxico 2026Q2, p. 12", "url": "https://www.sec.gov/report"},
+            {"label": "Reporte Aeroméxico 2026Q2, p. 13", "url": "https://www.sec.gov/report"},
+        ]}
+    ])
+    assert references == [{
+        "label": "Reporte Aeroméxico 2026Q2, p. 12; Reporte Aeroméxico 2026Q2, p. 13",
+        "url": "https://www.sec.gov/report",
+    }]
+
+
 def test_route_tool_contract_accepts_observed_and_missing_display_objects() -> None:
     registry = DisplayRegistry()
     route_result = {
