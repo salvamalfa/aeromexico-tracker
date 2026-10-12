@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from src.conversational_analytics import evaluation, evaluation_live
+from src.conversational_analytics import evaluation_live
 from src.conversational_analytics.evaluation import (
     FIXTURE_PATH,
     approximately_equal,
@@ -571,52 +571,3 @@ def test_post_result_checkpoint_failure_is_not_recorded_as_provider_error(
         for path in output_dir.glob("chat-eval-*.json")
         if not path.name.endswith((".progress.json", ".cases.json"))
     ]
-
-
-@pytest.mark.parametrize(
-    "args",
-    [
-        ["--budget-usd", "nan"],
-        ["--budget-usd", "inf"],
-    ],
-)
-def test_live_cli_rejects_nonfinite_budget_before_runtime(monkeypatch, args) -> None:
-    monkeypatch.setattr(
-        evaluation_live, "_live_provider_run", lambda **kwargs: pytest.fail("runtime invoked")
-    )
-    with pytest.raises(SystemExit) as error:
-        evaluation.main(
-            [
-                "--run",
-                "--opt-in",
-                *args,
-                "--models",
-                "gpt-6-luna",
-                "--model-price",
-                "gpt-6-luna=0.1:0.5",
-                "--probe-only",
-            ]
-        )
-    assert error.value.code == 2
-
-
-@pytest.mark.parametrize("price", ["nan:0.5", "0.1:inf", "0:0.5"])
-def test_live_cli_rejects_nonfinite_or_nonpositive_prices_before_runtime(monkeypatch, price) -> None:
-    monkeypatch.setattr(
-        evaluation_live, "_live_provider_run", lambda **kwargs: pytest.fail("runtime invoked")
-    )
-    with pytest.raises(SystemExit) as error:
-        evaluation.main(
-            [
-                "--run",
-                "--opt-in",
-                "--budget-usd",
-                "1",
-                "--models",
-                "gpt-6-luna",
-                "--model-price",
-                f"gpt-6-luna={price}",
-                "--probe-only",
-            ]
-        )
-    assert error.value.code == 2

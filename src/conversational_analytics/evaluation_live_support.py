@@ -121,6 +121,80 @@ def _numeric_gold_summary(
     }
 
 
+def _summarize_candidate(
+    selected: list[dict[str, Any]],
+    model_report: dict[str, Any],
+    *,
+    model: str,
+    stop_all: bool,
+    estimated_total_usd: float,
+    progress_state: dict[str, Any],
+    checkpoint: Any,
+) -> None:
+    """Attach quality, latency, and token summaries after a candidate finishes."""
+    numeric_gold_summary = _numeric_gold_summary(selected, model_report["cases"])
+    tripwires = [
+        case
+        for case in model_report["cases"]
+        if _quality_dict(case).get("automatic_grade_type") in {"tripwire", "multi_turn_tripwires"}
+        and _quality_dict(case).get("scored")
+    ]
+    model_report["quality_summary"] = {
+        **numeric_gold_summary,
+        "tripwire_case_count": len(tripwires),
+        "tripwire_case_passed": sum(bool(_quality_dict(case).get("passed")) for case in tripwires),
+        "human_review_pending_case_count": sum(
+            bool(_quality_dict(case).get("requires_blinded_human_rubric"))
+            for case in model_report["cases"]
+        ),
+        "critical_failure_gate": "pending blinded owner review of every rubric item",
+    }
+    completed = [case for case in model_report["cases"] if case.get("model_turn_completed")]
+    latencies = [float(case["latency_seconds"]) for case in completed]
+    attempted = [case for case in model_report["cases"] if case.get("provider_turn_started")]
+    token_rows = [case for case in attempted if case.get("usage_complete")]
+    model_report["latency_seconds"] = {
+        "completed_turn_count": len(completed),
+        "p50": _nearest_rank_percentile(latencies, 0.50),
+        "p90": _nearest_rank_percentile(latencies, 0.90),
+        "p95": _nearest_rank_percentile(latencies, 0.95),
+        "percentile_method": (
+            "nearest rank; p95 retained for compatibility, p90 is the proposed decision metric"
+        ),
+    }
+    model_report["token_totals"] = {
+        "input_tokens": sum(case["input_tokens"] for case in token_rows)
+        if len(token_rows) == len(attempted)
+        else None,
+        "output_tokens": sum(case["output_tokens"] for case in token_rows)
+        if len(token_rows) == len(attempted)
+        else None,
+        "known_input_tokens_lower_bound": sum(
+            case.get("input_tokens", 0)
+            for case in attempted
+            if isinstance(case.get("input_tokens"), int)
+        ),
+        "known_output_tokens_lower_bound": sum(
+            case.get("output_tokens", 0)
+            for case in attempted
+            if isinstance(case.get("output_tokens"), int)
+        ),
+        "usage_complete_case_count": len(token_rows),
+        "turn_count": len(attempted),
+        "cached_tokens": "unknown",
+        "reasoning_tokens": "unknown; included in output_tokens",
+    }
+    progress_state.update(
+        status="stopped" if stop_all else "running",
+        current_model=None if stop_all else model,
+        known_estimated_spend_usd=estimated_total_usd,
+        active_case_id=None,
+        active_session_id=None,
+        active_usage_state=None,
+    )
+    checkpoint()
+
+
 def _failure_usage(exc: BaseException) -> tuple[int, int] | None:
     usage = getattr(exc, "usage", None)
     if (
