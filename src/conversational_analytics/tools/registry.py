@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 from typing import Any
 from urllib.parse import urlparse
 
@@ -16,6 +17,7 @@ from src.conversational_analytics.semantic.plan import (
     QueryPlan,
     validate_plan,
 )
+from src.conversational_analytics.tools.routes import ROUTE_TOOL_SPECS, RouteTools
 
 ALLOWED_HOSTS = {"sec.gov", "www.sec.gov", "gob.mx", "www.gob.mx", "github.com", "salvamalfa.github.io"}
 TOOL_NAMES = (
@@ -27,6 +29,9 @@ TOOL_NAMES = (
     "get_source_references",
     "get_dashboard_context",
 )
+ROUTE_TOOL_NAMES = ("query_routes", "find_shared_routes")
+BUSINESS_METRIC_TOOL_NAMES = ("query_business_metrics", "get_business_metric_definition")
+EVIDENCE_TOOL_NAMES = ("search_reports", "search_news")
 
 
 def _reference_label(hostname: str, path: str) -> str:
@@ -51,113 +56,62 @@ def _schema(properties: dict[str, Any], required: list[str]) -> dict[str, Any]:
 
 
 class ToolRegistry:
-    def __init__(self, snapshot: Snapshot):
+    def __init__(self, snapshot: Snapshot, config: Any | None = None):
         self.snapshot = snapshot
+        self.enable_route_tools = bool(getattr(config, "enable_route_tools", False))
+        self.enable_business_metric_tools = bool(getattr(config, "enable_business_metric_tools", False))
+        self.enable_evidence_tools = bool(getattr(config, "enable_evidence_tools", False))
+        self._active_tool_names = set(TOOL_NAMES)
+        if self.enable_route_tools:
+            self._active_tool_names.update(ROUTE_TOOL_NAMES)
+        if self.enable_business_metric_tools:
+            self._active_tool_names.update(BUSINESS_METRIC_TOOL_NAMES)
+        if self.enable_evidence_tools:
+            self._active_tool_names.update(EVIDENCE_TOOL_NAMES)
+        self._evidence_index = None
+        self.evidence_index_sha256 = None
+        if self.enable_evidence_tools:
+            from src.conversational_analytics.evidence_index import EvidenceIndex
+
+            index_path = (snapshot.project_root / "config/chat/evidence/approved-index.json").resolve()
+            config_root = (snapshot.project_root / "config/chat/evidence").resolve()
+            if config_root not in index_path.parents or not index_path.is_file():
+                raise PlanValidationError("El índice aprobado de evidencia no está disponible")
+            index_bytes = index_path.read_bytes()
+            self.evidence_index_sha256 = hashlib.sha256(index_bytes).hexdigest()
+            self._evidence_index = EvidenceIndex(index_path)
         self._catalog = snapshot.catalog()
         self._metrics = {item["id"]: item for item in self._catalog["metrics"]["metrics"]}
         self._entities = {item["id"]: item for item in self._catalog["entities"]["entities"]}
-        self._tool_specs = self._make_specs()
+        self._tool_specs = self._configured_specs()
 
     def tool_specs(self) -> list[dict[str, Any]]:
         return copy.deepcopy(self._tool_specs)
 
     @staticmethod
     def _make_specs() -> list[dict[str, Any]]:
-        qstr = {"type": "string", "minLength": 1}
-        arr = {"type": "array", "items": qstr, "minItems": 1, "maxItems": 32}
-        return [
-            {
-                "type": "function",
-                "name": "get_data_catalog",
-                "description": (
-                    "Catálogo público con IDs, alias, unidades, granos, cobertura y periodos disponibles. "
-                    "Usa métricas habilitadas; el inventario no habilitado no es consultable."
-                ),
-                "parameters": _schema({}, []),
-            },
-            {
-                "type": "function",
-                "name": "get_metric_definition",
-                "description": (
-                    "Definición, fuente, unidad, cobertura y límites de un ID exacto. "
-                    "Consulta la ficha cuando dos conceptos o denominadores puedan confundirse."
-                ),
-                "parameters": _schema({"metric_id": qstr}, ["metric_id"]),
-            },
-            {
-                "type": "function",
-                "name": "query_metrics",
-                "description": (
-                    "Consulta exacta por IDs publicados de métrica, entidad y periodo. "
-                    "No sustituye una serie cercana; verifica las filas y su disponibilidad."
-                ),
-                "parameters": _schema(
-                    {
-                        "metric_ids": arr,
-                        "entity_ids": {"type": "array", "items": qstr, "minItems": 1, "maxItems": 4},
-                        "periods": arr,
-                        "segment": {"type": "string", "enum": sorted(SEGMENTS)},
-                        "limit": {"type": "integer", "minimum": 1, "maximum": 20},
-                    },
-                    ["metric_ids", "entity_ids", "periods"],
-                ),
-            },
-            {
-                "type": "function",
-                "name": "compare_metrics",
-                "description": (
-                    "Compara dos periodos solicitados para la misma métrica, entidad y fuente; "
-                    "separa delta nativo, puntos porcentuales y cambio relativo."
-                ),
-                "parameters": _schema(
-                    {
-                        "metric_id": qstr,
-                        "entity_id": qstr,
-                        "periods": {"type": "array", "items": qstr, "minItems": 2, "maxItems": 2},
-                        "segment": {"type": "string", "enum": sorted(SEGMENTS)},
-                        "data_version": qstr,
-                        "semantic_version": qstr,
-                    },
-                    ["metric_id", "entity_id", "periods"],
-                ),
-            },
-            {
-                "type": "function",
-                "name": "get_time_series",
-                "description": (
-                    "Serie inclusiva y ordenada dentro del rango publicado solicitado. Si excede "
-                    "el límite de filas, devuelve los periodos más recientes e indica cuántos omitió."
-                ),
-                "parameters": _schema(
-                    {
-                        "metric_id": qstr,
-                        "entity_id": qstr,
-                        "start_period": qstr,
-                        "end_period": qstr,
-                        "segment": {"type": "string", "enum": sorted(SEGMENTS)},
-                        "limit": {"type": "integer", "minimum": 1, "maximum": 20},
-                    },
-                    ["metric_id", "entity_id", "start_period", "end_period"],
-                ),
-            },
-            {
-                "type": "function",
-                "name": "get_source_references",
-                "description": (
-                    "Referencias públicas permitidas para los IDs exactos de métricas consultadas."
-                ),
-                "parameters": _schema({"metric_ids": {"type": "array", "items": qstr, "maxItems": 10}}, []),
-            },
-            {
-                "type": "function",
-                "name": "get_dashboard_context",
-                "description": (
-                    "Devuelve únicamente contexto visible del dashboard después de validar "
-                    "sus claves y valores."
-                ),
-                "parameters": _schema({}, []),
-            },
-        ]
+        from src.conversational_analytics.tools._base_tool_specs import make_base_tool_specs
+
+        return make_base_tool_specs()
+
+    def _configured_specs(self) -> list[dict[str, Any]]:
+        specs = self._make_specs()
+        if self.enable_route_tools:
+            specs.extend(copy.deepcopy(ROUTE_TOOL_SPECS))
+        if self.enable_business_metric_tools:
+            from src.conversational_analytics.tools.business_metrics import business_metric_tool_specs
+
+            specs.extend(business_metric_tool_specs())
+        if self.enable_evidence_tools:
+            from src.conversational_analytics.tools.evidence import evidence_tool_specs
+
+            evidence_specs = evidence_tool_specs()
+            for spec in evidence_specs:
+                spec["description"] = (
+                    f"{spec['description']} Índice aprobado SHA-256: {self.evidence_index_sha256}."
+                )
+            specs.extend(evidence_specs)
+        return specs
 
     def catalog(self) -> dict[str, Any]:
         exec_doc = self.snapshot.payload("data/v1/executive.json")
@@ -166,6 +120,18 @@ class ToolRegistry:
             flights = self.snapshot.payload("data/v1/flights/quarters.json")
         except ValueError:
             flights = {}
+        flight_periods = flights.get("available_periods", {})
+        route_periods = {
+            "AEROMEXICO_GROUP": {
+                "domestic_monthly": copy.deepcopy(flight_periods.get("domestic_monthly", [])),
+                "international_quarters": copy.deepcopy(flight_periods.get("international", [])),
+            }
+        }
+        for entity_id, periods_by_segment in flight_periods.get("entities", {}).items():
+            route_periods[entity_id] = {
+                "domestic_monthly": copy.deepcopy(periods_by_segment.get("domestic_monthly", [])),
+                "international_quarters": copy.deepcopy(periods_by_segment.get("international", [])),
+            }
         periods = {
             "economic_quarters": sorted(
                 {row["period_id"] for item in exec_doc["entities"].values() for row in item["records"]}
@@ -202,6 +168,11 @@ class ToolRegistry:
             "metrics": enabled_summary,
             "inventory_not_enabled": deferred_summary,
             "periods": periods,
+            "route_periods": route_periods,
+            "route_periods_note": (
+                "Export presence only; each query returns its own coverage and value eligibility. "
+                "Use exact exported periods and never substitute a nearest period."
+            ),
         }
 
     def _validate_context(self, context: dict[str, Any] | None) -> dict[str, Any]:
@@ -431,10 +402,23 @@ class ToolRegistry:
     def invoke(
         self, name: str, arguments: dict[str, Any], context: dict[str, Any] | None = None
     ) -> dict[str, Any]:
-        if name not in TOOL_NAMES:
+        if name not in self._active_tool_names:
             raise PlanValidationError(f"Herramienta desconocida: {name}")
         if not isinstance(arguments, dict):
             raise PlanValidationError("arguments debe ser un objeto")
+        if name in ROUTE_TOOL_NAMES:
+            return RouteTools(self.snapshot).invoke(name, arguments)
+        if name in BUSINESS_METRIC_TOOL_NAMES:
+            from src.conversational_analytics.tools.business_metrics import dispatch_business_metric_tool
+
+            try:
+                return dispatch_business_metric_tool(self.snapshot, name, arguments)
+            except ValueError as exc:
+                raise PlanValidationError(str(exc)) from exc
+        if name in EVIDENCE_TOOL_NAMES:
+            from src.conversational_analytics.tools.evidence import dispatch_evidence_tool
+
+            return dispatch_evidence_tool(name, arguments, self._evidence_index)
         clean_context = self._validate_context(context)
         if name == "get_dashboard_context":
             if arguments:
@@ -589,4 +573,4 @@ class ToolRegistry:
         return sorted(period for period in periods if start <= period <= end)
 
 
-__all__ = ["ToolRegistry", "TOOL_NAMES"]
+__all__ = ["ToolRegistry", "TOOL_NAMES", "ROUTE_TOOL_NAMES", "BUSINESS_METRIC_TOOL_NAMES"]

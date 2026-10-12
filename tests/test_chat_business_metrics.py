@@ -4,7 +4,12 @@ from pathlib import Path
 
 import pytest
 
-from scripts.chat.build_business_metrics_proposal import build_proposal
+from scripts.chat.build_business_metrics_proposal import (
+    _preferred_sources,
+    _source_priority,
+    _sources_have_compatible_usd_basis,
+    build_proposal,
+)
 from src.conversational_analytics.data.snapshot import Snapshot
 from src.conversational_analytics.tools.business_metrics import (
     BUSINESS_METRIC_TOOL_NAMES,
@@ -83,6 +88,27 @@ def test_unit_ratios_use_denominator_weight_instead_of_simple_mean() -> None:
     assert result["denominator_sum"] == 4
 
 
+def test_load_factor_query_returns_ask_weighted_percent_from_fraction_inputs() -> None:
+    snapshot = Snapshot(FIXTURE)
+    quarter = deterministic_query(snapshot, "load_factor", "AEROMEXICO", "2026Q2")
+    first_half = deterministic_query(snapshot, "load_factor", "AEROMEXICO", "2026H1")
+    records = snapshot.payload("data/v1/executive.json")["entities"]["AEROMEXICO"]["records"]
+    q1, q2 = records[0], records[1]
+    expected_h1 = (
+        (q1["load_factor"] * q1["ask_km"] + q2["load_factor"] * q2["ask_km"])
+        / (q1["ask_km"] + q2["ask_km"])
+        * 100
+    )
+
+    assert quarter["unit"] == "percent"
+    assert quarter["value"] == pytest.approx(84.9)
+    assert first_half["value"] == pytest.approx(expected_h1)
+    assert first_half["value"] != pytest.approx(0.848)
+    assert first_half["numerator_sum"] == pytest.approx(
+        (q1["load_factor"] * q1["ask_km"] + q2["load_factor"] * q2["ask_km"]) * 100
+    )
+
+
 def test_closed_financial_candidate_gate_never_returns_a_value() -> None:
     result = deterministic_query(Snapshot(FIXTURE), "total_revenue", "AEROMEXICO", "2025")
     candidate = next(
@@ -125,7 +151,48 @@ def test_gold_proposal_is_review_only_and_aggregates_complete_year_from_quarters
     assert annual["value"] == pytest.approx(sum(row["value"] for row in quarter_rows))
     assert annual["aggregation"] == "deterministic_sum_of_selected_quarter_value_usd"
     assert annual["source_references"]
-    assert all(ref["public_artifact"] for ref in annual["source_references"])
+    assert annual["value"] == pytest.approx(5_361_000_000)
+    assert all(ref["url"].startswith("https://") and ref["sha256"] for ref in annual["source_references"])
+    audited = {
+        row["metric_id"]: row["value"]
+        for row in proposal["rows"]
+        if row["entity_id"] == "AEROMEXICO" and row["period"] == "2025" and row["availability"] == "available"
+    }
+    assert audited["operating_costs"] == pytest.approx(4_433_000_000)
+    assert audited["fuel_expense"] == pytest.approx(1_138_000_000)
+    assert audited["operating_income"] == pytest.approx(927_900_000)
+    q2_2026 = next(
+        row
+        for row in proposal["rows"]
+        if row["metric_id"] == "total_revenue"
+        and row["entity_id"] == "AEROMEXICO"
+        and row["period"] == "2026Q2"
+    )
+    assert q2_2026["any_preliminary"] is True
+    current_check = q2_2026["source_references"][0]["current_identity_check"]
+    assert current_check["status"] == "byte_identity_mismatch_factual_values_match"
+    assert current_check["current_bytes"] == 230386
+
+
+def test_unlisted_gold_source_uses_wildcard_priority_before_lower_ranked_known_source() -> None:
+    priorities = {"*": 2, "bmv_xbrl": 5}
+    new_source = {"source_system": "future_public_source", "value_usd": 10}
+    lower_ranked = {"source_system": "bmv_xbrl", "value_usd": 11}
+
+    assert _source_priority()["*"] == 2
+    assert _preferred_sources([lower_ranked, new_source], priorities) == [new_source]
+
+
+def test_currency_conversion_and_normalized_unit_must_be_explicit() -> None:
+    mxn = {
+        "unit_normalized": "usd",
+        "currency": "MXN",
+        "fx_rate_used": 0.058,
+        "fx_rate_type": "quarter_average",
+    }
+    assert _sources_have_compatible_usd_basis([mxn])
+    assert not _sources_have_compatible_usd_basis([{**mxn, "fx_rate_used": None}])
+    assert not _sources_have_compatible_usd_basis([{**mxn, "unit_normalized": "USD millions"}])
 
 
 def test_company_passenger_query_uses_public_snapshot_and_marks_partial_year_missing() -> None:
@@ -137,6 +204,15 @@ def test_company_passenger_query_uses_public_snapshot_and_marks_partial_year_mis
     assert result["missing_periods"] == ["2025Q1", "2025Q2"]
     assert result["included_periods"] == []
     assert result["source_references"][0]["url"].endswith("executive.json")
+
+
+def test_published_rask_uses_ask_weight_and_reports_denominator() -> None:
+    result = deterministic_query(Snapshot(FIXTURE), "rask_cents_per_km", "AEROMEXICO", "2026Q1")
+    source = Snapshot(FIXTURE).payload("data/v1/executive.json")["entities"]["AEROMEXICO"]["records"][0]
+    assert result["availability"] == "available"
+    assert result["value"] == source["rask_cents_per_km"]
+    assert result["denominator"] == "ask_km"
+    assert result["denominator_sum"] == source["ask_km"]
 
 
 @pytest.mark.parametrize("period", ["2025Q5", "2025M01", "2025H3", "2025Q1-Q4"])

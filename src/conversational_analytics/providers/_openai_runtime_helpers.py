@@ -2,11 +2,58 @@
 
 from __future__ import annotations
 
+import copy
+import hashlib
 import json
 import uuid
 from typing import Any
 
 from ._openai_helpers import ALLOWED_TOOL_NAMES, PROVIDER_REASON_CODES, OpenAIProviderError, question_envelope
+
+OPTIONAL_TOOL_NAMES = frozenset(
+    {
+        "query_routes",
+        "find_shared_routes",
+        "query_business_metrics",
+        "get_business_metric_definition",
+        "search_reports",
+        "search_news",
+    }
+)
+
+
+def _strict_schema(schema: dict[str, Any]) -> dict[str, Any]:
+    """Make every property required and nullable where callers may omit it."""
+    if schema.get("type") != "object" or schema.get("additionalProperties") is not False:
+        raise OpenAIProviderError("Cada herramienta debe tener un esquema JSON de objeto cerrado")
+    properties = schema.get("properties")
+    required = schema.get("required")
+    if not isinstance(properties, dict) or not isinstance(required, list):
+        raise OpenAIProviderError("El esquema de argumentos de herramienta está incompleto")
+    if any(name not in properties for name in required):
+        raise OpenAIProviderError("El esquema marca como requerido un campo no declarado")
+    result = copy.deepcopy(schema)
+    normalized_properties = {}
+    for name, prop in properties.items():
+        if not isinstance(prop, dict):
+            raise OpenAIProviderError("Cada propiedad de herramienta requiere un esquema JSON")
+        normalized = copy.deepcopy(prop)
+        if normalized.get("type") == "object":
+            normalized = _strict_schema(normalized)
+        elif name not in required:
+            value_type = normalized.get("type")
+            if isinstance(value_type, str):
+                normalized["type"] = [value_type, "null"]
+            elif isinstance(value_type, list) and "null" not in value_type:
+                normalized["type"] = [*value_type, "null"]
+            else:
+                raise OpenAIProviderError("Una propiedad opcional debe declarar tipo para admitir null")
+            if isinstance(normalized.get("enum"), list) and None not in normalized["enum"]:
+                normalized["enum"].append(None)
+        normalized_properties[name] = normalized
+    result["properties"] = normalized_properties
+    result["required"] = list(properties)
+    return result
 
 
 def validate_tool_specs(specs: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -19,27 +66,34 @@ def validate_tool_specs(specs: list[dict[str, Any]]) -> list[dict[str, Any]]:
             raise OpenAIProviderError("El catálogo contiene una herramienta fuera del formato function")
         name = raw.get("name")
         params = raw.get("parameters")
-        if name not in ALLOWED_TOOL_NAMES or name in names or not isinstance(params, dict):
+        if name not in ALLOWED_TOOL_NAMES | OPTIONAL_TOOL_NAMES or name in names or not isinstance(params, dict):
             raise OpenAIProviderError("El catálogo contiene una herramienta desconocida o duplicada")
-        if params.get("type") != "object" or params.get("additionalProperties") is not False:
-            raise OpenAIProviderError("Cada herramienta debe tener un esquema JSON de objeto cerrado")
-        if not isinstance(params.get("properties"), dict) or not isinstance(params.get("required"), list):
-            raise OpenAIProviderError("El esquema de argumentos de herramienta está incompleto")
+        params = _strict_schema(params)
         clean = {
             "type": "function",
             "name": name,
             "description": str(raw.get("description", ""))[:1000],
             "parameters": params,
         }
-        if "strict" in raw:
-            if raw["strict"] is not True:
-                raise OpenAIProviderError("Las herramientas solo admiten validación estricta")
-            clean["strict"] = True
+        if "strict" in raw and raw["strict"] is not True:
+            raise OpenAIProviderError("Las herramientas solo admiten validación estricta")
+        clean["strict"] = True
         names.add(name)
         validated.append(clean)
-    if names != ALLOWED_TOOL_NAMES:
-        raise OpenAIProviderError("Se requieren exactamente las siete herramientas aprobadas")
+    if not ALLOWED_TOOL_NAMES <= names:
+        raise OpenAIProviderError("Se requieren las siete herramientas base aprobadas")
     return validated
+
+
+def session_configuration_fingerprint(instructions: str, tools: list[dict[str, Any]]) -> str:
+    """Pin a provider session to exact instructions and its closed tool catalogue."""
+    canonical = json.dumps(
+        {"instructions": instructions, "tools": tools},
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def latest_user_message(messages: list[dict[str, Any]]) -> str:

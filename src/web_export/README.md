@@ -49,13 +49,16 @@ exporta.
 - **Salidas:** `<out>/flights/quarters.json`,
   `<out>/flights/domestic/<period_id>.json`,
   `<out>/flights/international/<period_id>.json`, `<out>/executive.json`,
-  `<out>/analysis/<period_id>.json`.
+  `<out>/analysis/<period_id>.json`; opt-in financial files only when a
+  proposal and matching public approval receipt are explicitly supplied.
   `<out>` es local (no versionado; ver `.gitignore` para `web/public/data/`).
 
 ## Punto de entrada
 
 ```
 uv run python -m src.web_export --out web/public/data/v1 [--allow-missing-analysis]
+# Optional after owner review: add --business-metrics-proposal <proposal.json>
+# and --business-metrics-receipt <receipt.json> together.
 ```
 
 Imprime cada archivo escrito con su tamaño y falla (código de salida 1) con

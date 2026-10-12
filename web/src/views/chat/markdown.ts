@@ -2,8 +2,8 @@ import type { ChatChart, ChatDisplay, ChatMessage, ChatReference } from "../../t
 import { renderDisplay, safeDisplays } from "./display";
 
 const TRUSTED_HOSTS = new Set([
-  "sec.gov", "www.sec.gov", "ir.aeromexico.com", "gob.mx", "www.gob.mx",
-  "github.com", "salvamalfa.github.io",
+  "sec.gov", "www.sec.gov", "ir.aeromexico.com", "cdn.investorcloud.net", "www.flightglobal.com",
+  "www.bmv.com.mx", "gob.mx", "www.gob.mx", "github.com", "salvamalfa.github.io",
 ]);
 
 function trustedSourceUrl(raw: string): string | undefined {
@@ -257,15 +257,29 @@ export function renderSafeMarkdown(
 
 export function safeReferences(references: unknown): ChatReference[] {
   if (!Array.isArray(references)) return [];
-  return references.slice(0, 12).flatMap((value) => {
-    if (!value || typeof value !== "object") return [];
+  const output: ChatReference[] = [];
+  const byUrl = new Map<string, ChatReference>();
+  for (const value of references) {
+    if (!value || typeof value !== "object") continue;
     const ref = value as Record<string, unknown>;
-    if (typeof ref.label !== "string") return [];
-    const output: ChatReference = { label: ref.label.slice(0, 200) };
-    if (typeof ref.detail === "string") output.detail = ref.detail.slice(0, 500);
-    if (typeof ref.url === "string") output.url = trustedSourceUrl(ref.url);
-    return [output];
-  });
+    if (typeof ref.label !== "string") continue;
+    const item: ChatReference = { label: ref.label.slice(0, 200) };
+    if (typeof ref.detail === "string") item.detail = ref.detail.slice(0, 500);
+    if (typeof ref.url === "string") {
+      item.url = trustedSourceUrl(ref.url);
+      if (item.url) {
+        const previous = byUrl.get(item.url);
+        if (previous) {
+          if (!previous.label.split(" · ").includes(item.label)) previous.label = `${previous.label} · ${item.label}`.slice(0, 200);
+          if (item.detail && item.detail !== previous.detail) previous.detail = [previous.detail, item.detail].filter(Boolean).join(" · ").slice(0, 500);
+          continue;
+        }
+        byUrl.set(item.url, item);
+      }
+    }
+    if (output.length < 12) output.push(item);
+  }
+  return output;
 }
 
 export function messageFromPayload(raw: Record<string, unknown>, maxLength = 20_000): Partial<ChatMessage> {

@@ -14,7 +14,6 @@ from ._input_authorization import InputAuthorizer, InputDispatcher, send_tool_re
 from ._openai_cancel import cancel_session
 from ._openai_error_metadata import upstream_error_metadata
 from ._openai_helpers import (
-    ALLOWED_TOOL_NAMES,
     SYSTEM_INSTRUCTIONS,
     TERMINAL_USAGE_RECONCILIATION_SECONDS,
     OpenAIProviderError,
@@ -52,6 +51,7 @@ from ._openai_session_version import (
     INSTRUCTIONS_DERIVATION_KEY,
     INSTRUCTIONS_FINGERPRINT_KEY,
     PROMPT_INPUT_FINGERPRINT_KEY,
+    SESSION_CONFIGURATION_FINGERPRINT_KEY,
     verify_or_rotate_session,
 )
 from .base import ProviderResult, ToolCall
@@ -117,9 +117,14 @@ class OpenAIProvider:
         mark_terminal_completed = mark_terminal_completed or (lambda _usage=None: None)
         message = runtime_helpers.latest_user_message(messages)
         tools = runtime_helpers.validate_tool_specs(tool_specs)
+        active_tool_names = frozenset(tool["name"] for tool in tools)
         input_instructions = self.system_instructions_override or SYSTEM_INSTRUCTIONS
         instructions = self._instructions()
+        # Bind a persistent session to the exact prompt and tool catalogue.
+        # Tool descriptions include the approved evidence-index hash, so a news
+        # index change retires sessions before any additional input is sent.
         instructions_fingerprint = prompt_sha256(instructions)
+        configuration_fingerprint = runtime_helpers.session_configuration_fingerprint(instructions, tools)
         input_fingerprint = prompt_sha256(input_instructions)
         app_turn_id = runtime_helpers.app_turn_id(messages)
         started_at = time.monotonic()
@@ -128,6 +133,7 @@ class OpenAIProvider:
             self.client.beta.agents.sessions,
             session_id,
             instructions_fingerprint,
+            configuration_fingerprint,
             turn_deadline,
             cancel_event,
             retire_session,
@@ -200,7 +206,7 @@ class OpenAIProvider:
             args = data.get("arguments")
             if not isinstance(args, dict):
                 raise OpenAIProviderError("La llamada de herramienta no contiene argumentos JSON válidos")
-            if name not in ALLOWED_TOOL_NAMES:
+            if name not in active_tool_names:
                 raise OpenAIProviderError("El agente solicitó una herramienta fuera de la lista permitida")
             if session_id is None:
                 raise OpenAIProviderError("El proveedor no devolvió la sesión antes de una acción")
@@ -293,6 +299,7 @@ class OpenAIProvider:
                         input=request_input,
                         metadata={
                             INSTRUCTIONS_FINGERPRINT_KEY: instructions_fingerprint,
+                            SESSION_CONFIGURATION_FINGERPRINT_KEY: configuration_fingerprint,
                             PROMPT_INPUT_FINGERPRINT_KEY: input_fingerprint,
                             INSTRUCTIONS_DERIVATION_KEY: PERIOD_SELECTION_POLICY_VERSION,
                         },

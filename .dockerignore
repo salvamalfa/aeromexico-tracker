@@ -23,6 +23,14 @@
 !config/
 !config/chat/
 !config/chat/*.yaml
+!config/chat/models.json
+!config/chat/metrics-candidates.json
+!config/chat/system_prompt.txt
+!config/chat/evidence/
+!config/chat/evidence/approved-index.json
+!config/chat/prompt_candidates/
+!config/chat/prompt_candidates/system_prompt_r2-proposed.txt
+!config/chat/prompt_candidates/system_prompt_r2-proposed.json
 !contracts/
 !contracts/chat/
 !contracts/chat/semantic.schema.json

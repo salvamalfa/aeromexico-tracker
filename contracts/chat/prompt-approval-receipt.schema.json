@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://airline-tracker.example/contracts/chat/prompt-approval-receipt.schema.json",
+  "title": "Chat prompt owner approval receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "version",
+    "prompt_sha256",
+    "prompt_path",
+    "capabilities",
+    "decision_ref",
+    "owner"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "status": { "const": "owner_approved" },
+    "version": { "const": "r2-proposed" },
+    "prompt_sha256": {
+      "const": "68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf"
+    },
+    "prompt_path": {
+      "const": "config/chat/prompt_candidates/system_prompt_r2-proposed.txt"
+    },
+    "capabilities": {
+      "const": [
+        "route_queries",
+        "business_metric_queries",
+        "evidence_search",
+        "same_turn_displays",
+        "three_layer_causal_explanations"
+      ]
+    },
+    "decision_ref": { "type": "string", "minLength": 1 },
+    "owner": { "type": "string", "minLength": 1 }
+  }
+}

@@ -16,6 +16,26 @@ from urllib.parse import urlsplit
 
 MODEL_CATALOG_PATH = Path(__file__).resolve().parents[2] / "config/chat/models.json"
 
+# These are the only capabilities recognized by the currently approved prompt.
+# Add to this map only when the exact compatible prompt is approved and pinned.
+PROMPT_CAPABILITIES_BY_HASH = {
+    "439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5": {
+        "version": "r1-final",
+        "capabilities": frozenset(),
+    },
+    "68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf": {
+        "version": "r2-proposed",
+        "capabilities": frozenset(
+            {"route_queries", "business_metric_queries", "evidence_search"}
+        ),
+    },
+}
+TOOL_CAPABILITIES = {
+    "enable_route_tools": "route_queries",
+    "enable_business_metric_tools": "business_metric_queries",
+    "enable_evidence_tools": "evidence_search",
+}
+
 
 @lru_cache(maxsize=1)
 def model_catalog() -> dict[str, dict[str, object]]:
@@ -48,8 +68,14 @@ class ChatConfig:
     model: str | None = None
     reasoning_effort: str = "medium"
     text_verbosity: str = "medium"
+    prompt_version: str = "r1-final"
     openai_enabled: bool = False
     admission_enabled: bool = True
+    # Capability additions remain disabled until the owner approves the
+    # matching prompt and data activation.
+    enable_route_tools: bool = False
+    enable_business_metric_tools: bool = False
+    enable_evidence_tools: bool = False
     max_message_chars: int = 8_000
     max_tool_calls: int = 8
     max_tool_result_bytes: int = 16_000
@@ -118,6 +144,7 @@ class ChatConfig:
         model = os.environ.get("CHAT_MODEL") or None
         reasoning_effort = os.environ.get("CHAT_REASONING_EFFORT", "medium").strip().lower()
         text_verbosity = os.environ.get("CHAT_TEXT_VERBOSITY", "medium").strip().lower()
+        prompt_version = os.environ.get("CHAT_PROMPT_VERSION", "r1-final").strip().lower()
         openai_enabled = os.environ.get("CHAT_OPENAI_ENABLED", "false").lower() in {"1", "true", "yes"}
         if provider == "openai" and (not openai_enabled or not model):
             raise ValueError("OpenAI mode requires CHAT_OPENAI_ENABLED=true and an explicit CHAT_MODEL")
@@ -165,7 +192,11 @@ class ChatConfig:
             model=model,
             reasoning_effort=reasoning_effort,
             text_verbosity=text_verbosity,
+            prompt_version=prompt_version,
             openai_enabled=openai_enabled,
+            enable_route_tools=_env_bool("CHAT_ENABLE_ROUTE_TOOLS", False),
+            enable_business_metric_tools=_env_bool("CHAT_ENABLE_BUSINESS_METRIC_TOOLS", False),
+            enable_evidence_tools=_env_bool("CHAT_ENABLE_EVIDENCE_TOOLS", False),
             admission_enabled=os.environ.get("CHAT_ADMISSION_ENABLED", "true").lower()
             not in {"0", "false", "no"},
             max_message_chars=_env_int("CHAT_MAX_MESSAGE_CHARS", 8_000),
@@ -190,6 +221,25 @@ class ChatConfig:
         )
 
     def __post_init__(self) -> None:
+        requested = {
+            capability
+            for field_name, capability in TOOL_CAPABILITIES.items()
+            if getattr(self, field_name)
+        }
+        from .providers._openai_prompt import effective_prompt_sha256, effective_prompt_version
+
+        active_hash = effective_prompt_sha256()
+        active_version = effective_prompt_version()
+        if self.prompt_version != active_version:
+            raise ValueError("CHAT_PROMPT_VERSION must match the exact prompt bundled in this runtime")
+        contract = PROMPT_CAPABILITIES_BY_HASH.get(active_hash)
+        if contract is None or contract["version"] != self.prompt_version:
+            raise ValueError("The active prompt hash/version has no capability contract")
+        supported = contract["capabilities"]
+        if requested and not requested <= supported:
+            raise ValueError(
+                "Enabled chat tools require an exact approved prompt that declares those capabilities"
+            )
         for name in (
             "daily_cost_budget_user_usd",
             "daily_cost_budget_global_usd",
@@ -298,6 +348,18 @@ def _env_int(name: str, default: int) -> int:
     if value <= 0:
         raise ValueError(f"{name} must be positive")
     return value
+
+
+def _env_bool(name: str, default: bool) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    normalized = raw.strip().lower()
+    if normalized in {"1", "true", "yes"}:
+        return True
+    if normalized in {"0", "false", "no"}:
+        return False
+    raise ValueError(f"{name} must be true or false")
 
 
 def _env_float(name: str, default: float) -> float:

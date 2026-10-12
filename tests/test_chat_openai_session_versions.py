@@ -26,11 +26,15 @@ from src.conversational_analytics.providers._openai_prompt import (
     prompt_sha256,
     with_dashboard_period_policy,
 )
-from src.conversational_analytics.providers._openai_runtime_helpers import validate_tool_specs
+from src.conversational_analytics.providers._openai_runtime_helpers import (
+    session_configuration_fingerprint,
+    validate_tool_specs,
+)
 from src.conversational_analytics.providers._openai_session_version import (
     INSTRUCTIONS_DERIVATION_KEY,
     INSTRUCTIONS_FINGERPRINT_KEY,
     PROMPT_INPUT_FINGERPRINT_KEY,
+    SESSION_CONFIGURATION_FINGERPRINT_KEY,
 )
 
 
@@ -92,6 +96,15 @@ def test_terminal_policy_and_trailing_whitespace_keep_exact_text_and_hash():
     assert prompt_sha256(effective) == prompt_sha256(source)
 
 
+def test_provider_session_fingerprint_changes_when_tool_identity_changes():
+    tools = validate_tool_specs(_specs())
+    original = session_configuration_fingerprint(SYSTEM_INSTRUCTIONS, tools)
+    changed_tools = json.loads(json.dumps(tools))
+    changed_tools[0]["description"] += " Index hash: fixture-version-2."
+
+    assert session_configuration_fingerprint(SYSTEM_INSTRUCTIONS, changed_tools) != original
+
+
 def test_new_session_records_hashes_of_effective_override_and_derivation():
     source = "Prompt aprobado de F2.1: estilo, criterios y ejemplos completos."
     runner_prompt = with_dashboard_period_policy(source)
@@ -112,6 +125,9 @@ def test_new_session_records_hashes_of_effective_override_and_derivation():
 
     metadata = fake.created[0]["metadata"]
     assert metadata[INSTRUCTIONS_FINGERPRINT_KEY] == prompt_sha256(runner_prompt)
+    assert metadata[SESSION_CONFIGURATION_FINGERPRINT_KEY] == session_configuration_fingerprint(
+        runner_prompt, validate_tool_specs(_specs())
+    )
     assert (
         metadata[INSTRUCTIONS_FINGERPRINT_KEY]
         == hashlib.sha256(provider._instructions().encode("utf-8")).hexdigest()

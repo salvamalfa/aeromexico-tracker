@@ -53,13 +53,13 @@ from jsonschema import Draft202012Validator
 from src.analysis_agent import lifecycle as flow
 from src.config import PATHS
 from src.dashboard.executive_summary import build_executive_payload
-from src.dashboard.market import build_market_payload
 from src.dashboard.flights import build_flight_payload
+from src.dashboard.market import build_market_payload
 from src.web_export import analysis as analysis_export
 from src.web_export.executive import export_executive
-from src.web_export.market import export_market
 from src.web_export.flights import export_flights
 from src.web_export.inputs import MissingWebInput
+from src.web_export.market import export_market
 from src.web_export.privacy import PrivacyViolation, check_privacy, load_privacy_rules
 from src.web_export.schemas import ANALYSIS_SCHEMA
 from src.web_export.writer import write_json
@@ -72,7 +72,12 @@ WEB_DIST = WEB_DIR / "dist"
 PUBLICATIONS_ROOT = PATHS.root / "analysis_runs" / "publications"
 
 ANALYSIS_MANIFEST_FIELDS = (
-    "period_id", "version", "content_hash", "evidence_fingerprint", "approval_event", "audit_hash",
+    "period_id",
+    "version",
+    "content_hash",
+    "evidence_fingerprint",
+    "approval_event",
+    "audit_hash",
 )
 
 
@@ -146,7 +151,9 @@ def verify_records(records: list[dict[str, Any]], root: Path = flow.ROOT) -> lis
         raise PublicationRefused(f"record failed verification/approval: {error}") from error
 
 
-def _analysis_payload(record: dict[str, Any], authorized: dict[str, Any], package, calculations) -> dict[str, Any]:
+def _analysis_payload(
+    record: dict[str, Any], authorized: dict[str, Any], package, calculations
+) -> dict[str, Any]:
     """Same shape src.web_export.analysis.export_period writes, built from
     the (record, authorized, package, calculations) this gate already holds
     from verify_records, instead of re-querying the ledger a second time."""
@@ -168,6 +175,24 @@ def export_data(entries: list[tuple[Any, Any, Any, Any]], out_dir: Path) -> None
         export_market(build_market_payload(), out_dir)
     except MissingWebInput as error:
         raise PublicationRefused(str(error)) from error
+
+    # A public approval receipt is an explicit opt-in. No receipt means the
+    # existing publication payload is byte-for-byte unaffected by F2.3.
+    receipt = PATHS.root / "config/chat/business-metrics-approval-receipt.json"
+    if receipt.is_file():
+        from src.web_export.business_metrics import (
+            export_approved_business_metrics,
+        )
+
+        try:
+            export_approved_business_metrics(
+                PATHS.root / "docs/chat/f23-metrics-candidate-dry-run.json",
+                PATHS.root / "config/chat/metrics-candidates.json",
+                receipt,
+                out_dir,
+            )
+        except (OSError, ValueError) as error:
+            raise PublicationRefused(f"business metric approval rejected: {error}") from error
 
     validator = Draft202012Validator(ANALYSIS_SCHEMA)
     rules = load_privacy_rules()
@@ -218,7 +243,9 @@ def assemble_site(dist_dir: Path, analysis_manifest: list[dict[str, str]], out_d
 
         previous = None
         if out_dir.exists():
-            previous = parent / (out_dir.name + ".prev-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f"))
+            previous = parent / (
+                out_dir.name + ".prev-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f")
+            )
             out_dir.rename(previous)
         try:
             tmp_dir.rename(out_dir)
@@ -234,7 +261,9 @@ def assemble_site(dist_dir: Path, analysis_manifest: list[dict[str, str]], out_d
             shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
-def write_receipt(manifest: dict[str, Any], authorized: list[dict[str, Any]], out_dir: Path) -> dict[str, Any]:
+def write_receipt(
+    manifest: dict[str, Any], authorized: list[dict[str, Any]], out_dir: Path
+) -> dict[str, Any]:
     """intent/published receipt in analysis_runs/publications/, hashing the
     manifest (hash of hashes) rather than raw site/ bytes."""
 

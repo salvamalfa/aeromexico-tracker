@@ -45,6 +45,45 @@ def test_tools_compute_raw_and_display_values_without_unit_confusion() -> None:
     assert result["references"] and result["data_version"] == snapshot.version
 
 
+def test_public_catalog_lists_route_months_and_quarter_rollups_separately() -> None:
+    class CatalogSnapshot:
+        version = "catalog-v1"
+        semantic_version = "semantic-v1"
+
+        @staticmethod
+        def catalog():
+            return {
+                "entities": {"entities": []},
+                "metrics": {"metrics": [], "inventory_not_enabled": []},
+            }
+
+        @staticmethod
+        def payload(path):
+            if path == "data/v1/executive.json":
+                return {"entities": {}}
+            if path == "data/v1/market.json":
+                return {"months": [], "quarters": []}
+            if path == "data/v1/flights/quarters.json":
+                return {
+                    "available_periods": {
+                        "domestic_monthly": ["2026M07"],
+                        "international": ["2026Q2"],
+                        "entities": {},
+                    }
+                }
+            raise ValueError(path)
+
+    catalog = ToolRegistry(CatalogSnapshot()).catalog()
+    route_periods = catalog["route_periods"]
+
+    assert route_periods["AEROMEXICO_GROUP"]["domestic_monthly"]
+    assert route_periods["AEROMEXICO_GROUP"]["international_quarters"]
+    assert "2026M07" in route_periods["AEROMEXICO_GROUP"]["domestic_monthly"]
+    assert "2026Q2" in route_periods["AEROMEXICO_GROUP"]["international_quarters"]
+    assert "agent_eligible" not in route_periods["AEROMEXICO_GROUP"]
+    assert "never substitute a nearest period" in catalog["route_periods_note"]
+
+
 def test_market_share_changes_are_stored_as_percentage_points() -> None:
     tools = ToolRegistry(Snapshot(FIXTURE))
     result = tools.invoke(

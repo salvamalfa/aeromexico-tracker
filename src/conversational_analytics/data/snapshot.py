@@ -15,6 +15,8 @@ from jsonschema import Draft202012Validator
 from src.web_export.privacy import check_file_size, check_privacy, load_privacy_rules
 from src.web_export.schemas import (
     ANALYSIS_SCHEMA,
+    BUSINESS_METRICS_APPROVAL_SCHEMA,
+    BUSINESS_METRICS_SCHEMA,
     EXECUTIVE_SCHEMA,
     MARKET_SCHEMA,
     NETWORK_FILE_SCHEMA,
@@ -136,6 +138,8 @@ class Snapshot:
             "data/v1/executive.json": EXECUTIVE_SCHEMA,
             "data/v1/market.json": MARKET_SCHEMA,
             "data/v1/flights/quarters.json": QUARTERS_FILE_SCHEMA,
+            "data/v1/business_metrics.json": BUSINESS_METRICS_SCHEMA,
+            "data/v1/business_metrics.approval.json": BUSINESS_METRICS_APPROVAL_SCHEMA,
         }
         for rel, schema in schema_map.items():
             if rel in payloads:
@@ -145,6 +149,33 @@ class Snapshot:
                 self._validate_payload(paths[rel]["sha256"], ANALYSIS_SCHEMA, payload)
             if rel.startswith("data/v1/flights/") and rel != "data/v1/flights/quarters.json":
                 self._validate_payload(paths[rel]["sha256"], NETWORK_FILE_SCHEMA, payload)
+        metrics_path = "data/v1/business_metrics.json"
+        approval_path = "data/v1/business_metrics.approval.json"
+        if (metrics_path in payloads) != (approval_path in payloads):
+            raise SnapshotError("business metrics payload and approval receipt must be published together")
+        if metrics_path in payloads:
+            required_business_contracts = {
+                "business_metrics.schema.json",
+                "business_metrics_approval.schema.json",
+            }
+            if not required_business_contracts <= set(manifest["contracts"]):
+                raise SnapshotError(
+                    "business metrics payload is missing its published schema contract hashes"
+                )
+            from src.web_export.business_metrics import build_approved_payload
+
+            try:
+                expected, expected_receipt = build_approved_payload(
+                    self.project_root / "docs/chat/f23-metrics-candidate-dry-run.json",
+                    self.project_root / "config/chat/metrics-candidates.json",
+                    self.root / approval_path,
+                )
+            except (OSError, ValueError, json.JSONDecodeError) as exc:
+                raise SnapshotError(f"business metrics approval could not be revalidated: {exc}") from exc
+            if payloads[metrics_path] != expected or payloads[approval_path] != expected_receipt:
+                raise SnapshotError(
+                    "published business metrics do not match the current approved proposal and receipt"
+                )
         self._payloads = MappingProxyType(payloads)
         self._catalog = self._load_catalog()
         semantic_digest = hashlib.sha256()

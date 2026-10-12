@@ -63,11 +63,14 @@ from src.web_export.privacy import (
 )
 from src.web_export.schemas import (
     ANALYSIS_SCHEMA,
+    BUSINESS_METRICS_APPROVAL_SCHEMA,
+    BUSINESS_METRICS_SCHEMA,
     EXECUTIVE_SCHEMA,
     MARKET_SCHEMA,
     NETWORK_FILE_SCHEMA,
     QUARTERS_FILE_SCHEMA,
 )
+from src.web_export.business_metrics import build_approved_payload
 
 from . import manifest as manifest_mod
 
@@ -124,6 +127,10 @@ def _data_schema_for(rel_path: str) -> dict[str, Any] | None:
         return NETWORK_FILE_SCHEMA
     if parts[2:3] == ["analysis"] and len(parts) == 4:
         return ANALYSIS_SCHEMA
+    if parts[2:] == ["business_metrics.json"]:
+        return BUSINESS_METRICS_SCHEMA
+    if parts[2:] == ["business_metrics.approval.json"]:
+        return BUSINESS_METRICS_APPROVAL_SCHEMA
     return None
 
 
@@ -192,7 +199,16 @@ def verify_site(site_dir: Path) -> list[str]:
         expected_contracts = None
     if expected_contracts is not None:
         manifest_contracts = manifest.get("contracts", {})
-        for name, expected_hash in sorted(expected_contracts.items()):
+        has_business_metrics = "data/v1/business_metrics.json" in listed_paths
+        business_contracts = {"business_metrics.schema.json", "business_metrics_approval.schema.json"}
+        required_contracts = {
+            name: digest
+            for name, digest in expected_contracts.items()
+            if has_business_metrics or name not in business_contracts
+        }
+        if has_business_metrics and not business_contracts <= set(manifest_contracts):
+            problems.append("business metrics files require both business-metrics contract hashes")
+        for name, expected_hash in sorted(required_contracts.items()):
             actual_hash = manifest_contracts.get(name)
             if actual_hash != expected_hash:
                 problems.append(
@@ -226,6 +242,7 @@ def verify_site(site_dir: Path) -> list[str]:
             problems.append(f"manifest lists {rel}, which is missing on disk")
 
     analysis_payloads_by_period: dict[str, dict[str, Any]] = {}
+    data_payloads: dict[str, dict[str, Any]] = {}
     rules = load_privacy_rules()
     for rel in sorted(actual_paths):
         parts = rel.split("/")
@@ -249,6 +266,8 @@ def verify_site(site_dir: Path) -> list[str]:
         except (UnicodeDecodeError, json.JSONDecodeError) as error:
             problems.append(f"{rel}: not valid JSON: {error}")
             continue
+        if isinstance(payload, dict):
+            data_payloads[rel] = payload
         clean_key = (hashlib.sha256(raw).hexdigest(), _schema_digest(schema))
         if clean_key not in _CLEAN_DATA_FILES:
             data_validator = Draft202012Validator(schema)
@@ -265,8 +284,36 @@ def verify_site(site_dir: Path) -> list[str]:
         if schema is ANALYSIS_SCHEMA and isinstance(payload.get("period_id"), str):
             analysis_payloads_by_period[payload["period_id"]] = payload
 
+    metrics_path = "data/v1/business_metrics.json"
+    receipt_path = "data/v1/business_metrics.approval.json"
+    has_metrics = metrics_path in listed_paths
+    has_receipt = receipt_path in listed_paths
+    if has_metrics != has_receipt:
+        problems.append("business metrics payload and approval receipt must be published together")
+    elif has_metrics and metrics_path in data_payloads and receipt_path in data_payloads:
+        try:
+            expected_payload, expected_receipt = build_approved_payload(
+                PATHS.root / "docs/chat/f23-metrics-candidate-dry-run.json",
+                PATHS.root / "config/chat/metrics-candidates.json",
+                site_dir / receipt_path,
+            )
+        except (OSError, ValueError, json.JSONDecodeError) as error:
+            problems.append(f"business metrics approval could not be revalidated: {error}")
+        else:
+            if data_payloads[metrics_path] != expected_payload:
+                problems.append(
+                    "published business metrics do not match the current approved proposal and receipt"
+                )
+            if data_payloads[receipt_path] != expected_receipt:
+                problems.append("published business metrics approval receipt does not match its file")
+
     analysis_fields = (
-        "period_id", "version", "content_hash", "evidence_fingerprint", "approval_event", "audit_hash",
+        "period_id",
+        "version",
+        "content_hash",
+        "evidence_fingerprint",
+        "approval_event",
+        "audit_hash",
     )
     for index, entry in enumerate(manifest["analysis_manifest"]):
         for field in analysis_fields:

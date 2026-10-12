@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from ._evaluation_live_candidates import candidate_config, candidate_configs, validate_live_candidates
 from .data.snapshot import Snapshot
 from .evaluation import load_fixture
 from .evaluation_live_checkpoint import (
@@ -23,14 +24,11 @@ from .evaluation_live_support import (
     _CheckpointWriteError,
     _error_metadata,
     _failure_usage,
-    _nearest_rank_percentile,
-    _numeric_gold_summary,
     _progress_payload,
-    _quality_dict,
+    _summarize_candidate,
     _write_private_json,
 )
 from .evaluation_live_turns import ConversationRunError, run_conversation
-from .evaluation_live_validation import validate_live_request
 from .providers._openai_helpers import reconcile_case_usage_after_cancel
 from .semantic.plan import PlanValidationError
 
@@ -38,7 +36,7 @@ from .semantic.plan import PlanValidationError
 def _live_provider_run(
     *,
     cases: list[dict[str, Any]],
-    models: list[str],
+    models: list[Any],
     budget_usd: float,
     snapshot_root: Path,
     prices: dict[str, tuple[float, float]],
@@ -65,7 +63,6 @@ def _live_provider_run(
     from .providers.openai import OpenAIProvider
     from .tools.registry import ToolRegistry
 
-    validate_live_request(budget_usd, models, prices)
     runtime_config = ChatConfig.from_env()
     if text_verbosity_override is not None:
         if text_verbosity_override not in {"low", "medium", "high"}:
@@ -88,6 +85,13 @@ def _live_provider_run(
                 raise ValueError(f"El límite {key} debe ser entero positivo")
             validated_limits[allowed_limits[key]] = value
         runtime_config = replace(runtime_config, **validated_limits)
+    candidates = validate_live_candidates(
+        models=models,
+        prices=prices,
+        budget_usd=budget_usd,
+        default_effort=runtime_config.reasoning_effort,
+        default_verbosity=runtime_config.text_verbosity,
+    )
     snapshot = Snapshot(snapshot_root)
     expected_versions = expected_versions or load_fixture()["expected_versions"]
     if (
@@ -122,6 +126,8 @@ def _live_provider_run(
         progress_path=progress_out,
         detail_path=detail_out,
     )
+    report["candidate_ids"] = [candidate["candidate_id"] for candidate in candidates]
+    report["candidate_configs"] = candidate_configs(candidates)
     progress_state: dict[str, Any] = {
         "status": "starting",
         "known_estimated_spend_usd": 0.0,
@@ -141,36 +147,30 @@ def _live_provider_run(
 
     estimated_total_usd = 0.0
     stop_all = False
-    for candidate in models:
+    for candidate in candidates:
         if stop_all:
             break
-        model, sep, effort = candidate.partition("@")
-        effort = effort or getattr(runtime_config, "reasoning_effort", "medium")
-        verbosity = getattr(runtime_config, "text_verbosity", None)
-        progress_state.update(status="running", current_model=model)
-        input_rate, output_rate = prices.get(candidate, prices.get(model, (None, None)))
+        candidate_id = candidate["candidate_id"]
+        model = candidate["model"]
+        effort = candidate["reasoning_effort"]
+        verbosity = candidate["text_verbosity"]
+        progress_state.update(
+            status="running",
+            current_candidate_id=candidate_id,
+            current_model=model,
+            current_reasoning_effort=effort,
+            current_text_verbosity=verbosity,
+        )
+        input_rate, output_rate = prices[candidate["price_key"]]
         if input_rate is None or output_rate is None:
-            raise ValueError(f"Falta tarifa para candidato {candidate}")
-        changes = {"provider": "openai", "model": model, "openai_enabled": True}
+            raise ValueError(f"Falta tarifa para candidato {candidate_id}")
         model_rates = model_catalog().get(model)
         if model_rates is None:
             raise ValueError(f"El catálogo de modelos no contiene {model}")
-        changes.update(
-            estimated_input_cost_per_million=float(model_rates["input_usd_per_million"]),
-            estimated_output_cost_per_million=float(model_rates["output_usd_per_million"]),
-            long_context_threshold_input_tokens=int(model_rates["long_context_threshold_input_tokens"]),
-            long_context_input_multiplier=float(model_rates["long_context_input_multiplier"]),
-            long_context_output_multiplier=float(model_rates["long_context_output_multiplier"]),
-            cache_write_input_multiplier=float(model_rates["cache_write_input_multiplier"]),
-        )
-        if hasattr(runtime_config, "reasoning_effort"):
-            changes["reasoning_effort"] = effort
-        if hasattr(runtime_config, "text_verbosity"):
-            changes["text_verbosity"] = verbosity
-        config = replace(runtime_config, **changes)
+        config = candidate_config(runtime_config, candidate)
         provider = None
         model_report: dict[str, Any] = {
-            "candidate": candidate,
+            "candidate_id": candidate_id,
             "model": model,
             "reasoning_effort": effort,
             "text_verbosity": verbosity,
@@ -305,7 +305,7 @@ def _live_provider_run(
                 case_record = {
                     "case_id": case["id"],
                     "expected_status": case.get("expected", {}).get("status"),
-                    "candidate": candidate,
+                    "candidate_id": candidate_id,
                     "model": model,
                     "reasoning_effort": effort,
                     "text_verbosity": verbosity,
@@ -438,7 +438,7 @@ def _live_provider_run(
                 case_record = {
                     "case_id": case["id"],
                     "expected_status": case.get("expected", {}).get("status"),
-                    "candidate": candidate,
+                    "candidate_id": candidate_id,
                     "model": model,
                     "reasoning_effort": effort,
                     "text_verbosity": verbosity,
@@ -547,64 +547,15 @@ def _live_provider_run(
                         case_record["provider_session_delete"] = "deferred_provider_error"
                 if not known_noncritical_error:
                     break
-        numeric_gold_summary = _numeric_gold_summary(selected, model_report["cases"])
-        tripwires = [
-            c
-            for c in model_report["cases"]
-            if _quality_dict(c).get("automatic_grade_type") in {"tripwire", "multi_turn_tripwires"}
-            and _quality_dict(c).get("scored")
-        ]
-        model_report["quality_summary"] = {
-            **numeric_gold_summary,
-            "tripwire_case_count": len(tripwires),
-            "tripwire_case_passed": sum(bool(_quality_dict(c).get("passed")) for c in tripwires),
-            "human_review_pending_case_count": sum(
-                bool(_quality_dict(c).get("requires_blinded_human_rubric")) for c in model_report["cases"]
-            ),
-            "critical_failure_gate": "pending blinded owner review of every rubric item",
-        }
-        completed = [case for case in model_report["cases"] if case.get("model_turn_completed")]
-        latencies = [float(case["latency_seconds"]) for case in completed]
-        attempted = [case for case in model_report["cases"] if case.get("provider_turn_started")]
-        token_rows = [case for case in attempted if case.get("usage_complete")]
-        model_report["latency_seconds"] = {
-            "completed_turn_count": len(completed),
-            "p50": _nearest_rank_percentile(latencies, 0.50),
-            "p90": _nearest_rank_percentile(latencies, 0.90),
-            "p95": _nearest_rank_percentile(latencies, 0.95),
-            "percentile_method": (
-                "nearest rank; p95 retained for compatibility, p90 is the proposed decision metric"
-            ),
-        }
-        model_report["token_totals"] = {
-            "input_tokens": sum(case["input_tokens"] for case in token_rows)
-            if len(token_rows) == len(attempted)
-            else None,
-            "output_tokens": sum(case["output_tokens"] for case in token_rows)
-            if len(token_rows) == len(attempted)
-            else None,
-            "known_input_tokens_lower_bound": sum(
-                case.get("input_tokens", 0) for case in attempted if isinstance(case.get("input_tokens"), int)
-            ),
-            "known_output_tokens_lower_bound": sum(
-                case.get("output_tokens", 0)
-                for case in attempted
-                if isinstance(case.get("output_tokens"), int)
-            ),
-            "usage_complete_case_count": len(token_rows),
-            "turn_count": len(attempted),
-            "cached_tokens": "unknown",
-            "reasoning_tokens": "unknown; included in output_tokens",
-        }
-        progress_state.update(
-            status="stopped" if stop_all else "running",
-            current_model=None if stop_all else model,
-            known_estimated_spend_usd=estimated_total_usd,
-            active_case_id=None,
-            active_session_id=None,
-            active_usage_state=None,
+        _summarize_candidate(
+            selected,
+            model_report,
+            model=model,
+            stop_all=stop_all,
+            estimated_total_usd=estimated_total_usd,
+            progress_state=progress_state,
+            checkpoint=checkpoint,
         )
-        checkpoint()
     return finalize_report(
         out, report, progress_state, estimated_total_usd, stop_all, checkpoint, _write_private_json
     )

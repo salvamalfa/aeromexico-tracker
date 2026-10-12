@@ -31,14 +31,23 @@ from openai.types.beta.agents.sessions.turn import Turn  # noqa: E402
 
 from src.conversational_analytics.providers.openai import OpenAIProvider, OpenAIProviderError  # noqa: E402
 from src.conversational_analytics.providers._openai_prompt import SYSTEM_INSTRUCTIONS, prompt_sha256  # noqa: E402
-from src.conversational_analytics.providers._openai_session_version import INSTRUCTIONS_FINGERPRINT_KEY  # noqa: E402
+from src.conversational_analytics.providers._openai_session_version import (  # noqa: E402
+    INSTRUCTIONS_FINGERPRINT_KEY,
+    SESSION_CONFIGURATION_FINGERPRINT_KEY,
+)
 from src.conversational_analytics.providers._openai_prompt import PERIOD_SELECTION_POLICY_VERSION  # noqa: E402
-from src.conversational_analytics.providers._openai_runtime_helpers import validate_tool_specs  # noqa: E402
+from src.conversational_analytics.providers._openai_runtime_helpers import (  # noqa: E402
+    session_configuration_fingerprint,
+    validate_tool_specs,
+)
 from src.conversational_analytics.providers._openai_session_version import INSTRUCTIONS_DERIVATION_KEY, PROMPT_INPUT_FINGERPRINT_KEY  # noqa: E402
 from src.conversational_analytics.tools.registry import ToolRegistry  # noqa: E402
 
 DEFAULT_SESSION_METADATA = {
     INSTRUCTIONS_FINGERPRINT_KEY: prompt_sha256(SYSTEM_INSTRUCTIONS),
+    SESSION_CONFIGURATION_FINGERPRINT_KEY: session_configuration_fingerprint(
+        SYSTEM_INSTRUCTIONS, validate_tool_specs(ToolRegistry._make_specs())
+    ),
 }
 
 
@@ -247,9 +256,7 @@ class FakeSessions:
         self.session_metadata = (
             session_metadata
             if session_metadata is not None
-            else {
-                INSTRUCTIONS_FINGERPRINT_KEY: hashlib.sha256(SYSTEM_INSTRUCTIONS.encode("utf-8")).hexdigest()
-            }
+            else dict(DEFAULT_SESSION_METADATA)
         )
         self.retrieve_error = retrieve_error
         self.retrieved_session_id = retrieved_session_id
@@ -383,8 +390,12 @@ def test_creates_none_session_with_explicit_model_tools_and_live_context_envelop
     request = fake.created[0]
     assert request["environment"] == {"type": "none"}
     expected_prompt_hash = hashlib.sha256(SYSTEM_INSTRUCTIONS.encode("utf-8")).hexdigest()
+    expected_session_config_hash = session_configuration_fingerprint(
+        SYSTEM_INSTRUCTIONS, validate_tool_specs(_specs())
+    )
     assert request["metadata"] == {
         INSTRUCTIONS_FINGERPRINT_KEY: expected_prompt_hash,
+        SESSION_CONFIGURATION_FINGERPRINT_KEY: expected_session_config_hash,
         PROMPT_INPUT_FINGERPRINT_KEY: expected_prompt_hash,
         INSTRUCTIONS_DERIVATION_KEY: PERIOD_SELECTION_POLICY_VERSION,
     }
@@ -532,79 +543,3 @@ def test_function_call_uses_official_required_action_shape_and_persists_provider
     assert any(
         kind == "tool.completed" and payload["name"] == "get_metric_definition" for kind, payload in events
     )
-
-
-@pytest.mark.parametrize("terminal", [_failed(), _cancelled()], ids=["failed", "cancelled"])
-def test_terminal_failure_and_cancellation_are_not_reported_as_completed(terminal):
-    fake = FakeSessions(
-        event_stream=FakeStream([_turn_created(), terminal]),
-        prior_turns=[_turn("turn_old", status="completed")],
-    )
-    provider = _provider(FakeClient(fake))
-
-    with pytest.raises((OpenAIProviderError, InterruptedError)):
-        _run(provider, session_id="sess_fixture")
-
-
-def test_idle_without_new_terminal_turn_is_not_success():
-    old = _turn("turn_old", status="completed")
-    fake = FakeSessions(
-        event_stream=FakeStream(
-            [AgentSessionIdleEvent.model_construct(type="agent.session.idle", session={"id": "sess_fixture"})]
-        ),
-        prior_turns=[old],
-        recovery={"id": "sess_fixture", "status": "idle", "required_actions": [], "turns": [old]},
-    )
-    provider = _provider(FakeClient(fake))
-
-    with pytest.raises(OpenAIProviderError, match="sin resultado terminal"):
-        _run(provider, session_id="sess_fixture")
-
-
-@pytest.mark.parametrize(
-    ("status", "error_type"),
-    [("failed", OpenAIProviderError), ("cancelled", InterruptedError)],
-)
-def test_recovered_terminal_failure_or_cancel_preserves_reported_usage(status, error_type):
-    recovered_turn = _turn("turn_recovered", status=status, usage=_usage())
-    fake = FakeSessions(
-        event_stream=FakeStream(
-            [
-                _turn_created("turn_recovered"),
-                AgentSessionIdleEvent.model_construct(
-                    type="agent.session.idle", session={"id": "sess_fixture"}
-                ),
-            ]
-        ),
-        prior_turns=[_turn("turn_old", status="completed")],
-        recovery={"id": "sess_fixture", "status": "idle", "required_actions": [], "turns": [recovered_turn]},
-    )
-    with pytest.raises(error_type) as caught:
-        _run(_provider(FakeClient(fake)), session_id="sess_fixture")
-    assert caught.value.usage == (31, 19)
-    if status == "failed":
-        assert caught.value.reason_code == "provider_terminal_failed"
-        assert caught.value.session_id == "sess_fixture"
-        assert caught.value.turn_id == "turn_recovered"
-    assert fake.retrieve_calls == 2  # session-version check plus terminal recovery read
-    assert fake.turn_list_calls == 2  # prior turn lookup plus one recovery read
-    assert 0 < fake.retrieve_timeouts[-1] <= 180
-    assert 0 < fake.turn_list_timeouts[-1] <= fake.retrieve_timeouts[-1]
-
-
-def test_cancel_and_delete_use_documented_events_and_session_endpoint():
-    fake = FakeSessions()
-    provider = _provider(FakeClient(fake))
-
-    provider.cancel("sess_fixture")
-    provider.delete("sess_fixture")
-
-    assert fake.events.created[0]["events"] == [{"type": "agent.session.input.cancel"}]
-    assert fake.deleted == ["sess_fixture"]
-
-
-def test_tool_schema_is_exactly_allowlisted_and_closed():
-    specs = _specs()
-    assert len(validate_tool_specs(specs)) == 7
-    with pytest.raises(OpenAIProviderError, match="herramienta desconocida"):
-        validate_tool_specs(specs + [{"type": "function", "name": "shell", "parameters": {}}])

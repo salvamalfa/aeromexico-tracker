@@ -27,6 +27,15 @@ demuestra comparabilidad entre entidades. Los períodos anuales nativos de Gold
 se excluyen al construir estos agregados. La propuesta solo suma los registros
 trimestrales cuando la cobertura esperada está completa.
 
+La revisión F25 cotejó Aeroméxico 2025 con cuatro reportes oficiales: ingresos
+USD 5.361B, costos operativos 4.433B, combustible 1.138B y utilidad operativa
+927.9M, sumados desde Q1–Q4. Para SEC Q2 2026, Gold conserva una captura
+preliminar de 230,275 bytes (`6207b9a1…f0ac781`, 2026-08-20); el mismo URL
+devolvió 230,386 bytes (`ce94b0fe…e2e7cd6`, 2026-10-11). F25 confirmó que los
+valores reportados relevantes coinciden. Es una diferencia de identidad de
+bytes, no evidencia de restatement. La propuesta y proyección preservan la
+fecha/hash/tamaño de captura, la bandera preliminar y la comprobación actual.
+
 ## Catálogo candidato
 
 [`../../config/chat/metrics-candidates.json`](../../config/chat/metrics-candidates.json)
@@ -58,15 +67,20 @@ trimestres y los años cuatro. Una fila ausente, `null`, no numérica o no finit
 produce `value: null`, `availability: incomplete` y la lista de períodos
 faltantes; un cero explícito sí cuenta. El dispatcher solo resuelve
 `company_passengers` desde el JSON aprobado y devuelve `value_kind`, unidad,
-calidad y referencia. Los cuatro IDs financieros siempre devuelven null,
-`approval_required` y `approval_gate: closed`.
+calidad y referencia. Los cuatro IDs financieros devuelven null y
+`approval_required` hasta que Snapshot cargue juntos `business_metrics.json` y
+`business_metrics.approval.json`; luego exige los hashes exactos de definiciones
+y propuesta antes de resolver un monto. La agregación usa trimestres Gold en
+USD, preserva unidad/divisa reportada, periodo fiscal y FX por trimestre.
 
 Para razones publicadas, `aggregate_weighted_ratio` calcula la suma de cada
 razón multiplicada por su denominador, dividida entre la suma de denominadores.
-Requiere una razón y peso positivos válidos para cada trimestre; rechaza
-duplicados con valores o pesos en conflicto. Así se conserva la ponderación de
-RASK/CASK por ASK y nunca se promedian porcentajes simples. Un importe total
-financiero debe preferir el campo de monto reportado cuando esté disponible.
+RASK/CASK usan ASK-km; factor de ocupación usa ASK y solo se publica si la base
+trimestral coincide. La fuente almacena ocupación como fracción; la consulta la
+devuelve como porcentaje una vez calculada la ponderación. Exige trimestres
+completos y nunca promedia porcentajes simples. Un importe total financiero usa
+el campo de monto directo cuando está disponible; no se deriva de una razón por
+ASK.
 
 El generador
 [`../../scripts/chat/build_business_metrics_proposal.py`](../../scripts/chat/build_business_metrics_proposal.py)
@@ -80,9 +94,11 @@ conserva la divisa original y añade referencias públicas y hashes de los
 artefactos fuente. No calcula conversiones ni consume archivos fuera de Gold.
 
 La salida preparada está en
-[`f23-metrics-candidate-dry-run.json`](f23-metrics-candidate-dry-run.json): 120
-combinaciones de métrica, entidad y período; 70 tienen todos los trimestres y
-fuentes utilizables en el alcance seleccionado. Todas llevan
+[`f23-metrics-candidate-dry-run.json`](f23-metrics-candidate-dry-run.json): 564
+combinaciones de métrica, entidad y período; 158 tienen todos los trimestres y
+fuentes utilizables en el alcance seleccionado. Incluye quarters 2020–2026,
+agregados calendario, fiscalidad, unidad/divisa reportada, FX y referencias
+públicas por quarter. Todas llevan
 `owner_review_required_nonproduction_candidate` y
 `production_enabled: false`. Es material para evaluar definiciones y
 cobertura; no es parte de `site/` ni puede leerlo el servicio de chat.

@@ -21,15 +21,31 @@ _VALUE_KINDS = {
     "scheduled",
     "mixed",
     "derived_sum_of_reported_quarters",
+    "owner_approved_reported",
+    "owner_approved_reported_quarter_sum",
     "candidate_unapproved",
     "missing",
+    "unknown",
 }
-_SAFE_HOSTS = {"sec.gov", "www.sec.gov", "gob.mx", "www.gob.mx", "github.com", "salvamalfa.github.io"}
+_SAFE_HOSTS = {
+    "sec.gov",
+    "www.sec.gov",
+    "gob.mx",
+    "www.gob.mx",
+    "github.com",
+    "salvamalfa.github.io",
+    "ir.aeromexico.com",
+    "cdn.investorcloud.net",
+    "www.flightglobal.com",
+    "www.bmv.com.mx",
+}
+_BMV_ZIP_PATH = re.compile(r"^/docs-pub/ifrsxbrl/[A-Za-z0-9._-]+\.zip$")
+_BMV_MEMBER = re.compile(r"^member=([A-Za-z0-9][A-Za-z0-9._-]*\.json)$")
 
 
 def _safe_sources(*candidates: Any) -> list[dict[str, str]]:
     sources: list[dict[str, str]] = []
-    seen: set[str] = set()
+    labels_by_url: dict[str, list[str]] = {}
     for candidate in candidates:
         if isinstance(candidate, dict):
             candidate = [candidate]
@@ -47,30 +63,92 @@ def _safe_sources(*candidates: Any) -> list[dict[str, str]]:
                     parsed.scheme != "https"
                     or parsed.username
                     or parsed.password
-                    or parsed.query
-                    or parsed.fragment
                     or parsed.hostname not in _SAFE_HOSTS
                 ):
                     continue
-                url = parsed.geturl()
+                if parsed.hostname == "www.bmv.com.mx":
+                    if parsed.query or not _BMV_ZIP_PATH.fullmatch(parsed.path):
+                        continue
+                    if parsed.fragment:
+                        member = _BMV_MEMBER.fullmatch(parsed.fragment)
+                        if not member:
+                            continue
+                        label = f"{label.strip()} · miembro ZIP {member.group(1)}"
+                    url = parsed._replace(fragment="").geturl()
+                else:
+                    if parsed.query or parsed.fragment:
+                        continue
+                    url = parsed.geturl()
             except ValueError:
                 continue
-            if url in seen:
+            clean_label = label.strip()[:160]
+            labels = labels_by_url.get(url)
+            if labels is not None:
+                if clean_label not in labels and len(labels) < 12:
+                    labels.append(clean_label)
+                    next(item for item in sources if item["url"] == url)["label"] = " · ".join(labels)
                 continue
-            seen.add(url)
-            sources.append({"label": label.strip()[:160], "url": url})
+            labels_by_url[url] = [clean_label]
+            sources.append({"label": clean_label, "url": url})
             if len(sources) == 12:
                 return sources
     return sources
 
 
-def _kind(rows: list[dict[str, Any]]) -> str:
-    kinds = {
-        row.get("value_kind")
-        for row in rows
-        if isinstance(row.get("value_kind"), str) and row.get("value_kind") in _VALUE_KINDS
-    }
-    return next(iter(kinds)) if len(kinds) == 1 else "mixed" if kinds else "reported"
+def _unapproved_metric(metric: dict[str, Any]) -> bool:
+    status = str(metric.get("review_status") or "").lower()
+    return bool(metric.get("approval_required")) or "candidate" in status or "approval" in status
+
+
+def _row_kind(row: dict[str, Any], metric: dict[str, Any]) -> str:
+    direct = row.get("value_kind")
+    if direct == "owner_approved_reported":
+        return "reported"
+    if direct == "owner_approved_reported_quarter_sum":
+        return "derived_sum_of_reported_quarters"
+    if isinstance(direct, str) and direct in _VALUE_KINDS:
+        return direct
+    if (
+        _unapproved_metric(metric)
+        or row.get("approval_required") is True
+        or row.get("approval_gate") == "closed"
+    ):
+        return "candidate_unapproved"
+    availability = str(row.get("availability") or "").lower()
+    if availability in {"candidate_unapproved", "approval_required", "not_approved"}:
+        return "candidate_unapproved"
+    if row.get("value") is None or availability in {"missing", "unavailable", "not_published"}:
+        return "missing"
+    # This metric is explicitly computed as RASK minus CASK in the published
+    # KPI catalog. Older catalog snapshots omit the calculation description.
+    if row.get("metric_id") == "unit_margin_cents_per_km":
+        return "calculated"
+    quality = " ".join(
+        str(value)
+        for value in (row.get("quality"), metric.get("quality"), metric.get("calculation"))
+        if isinstance(value, str)
+    ).lower()
+    if "programad" in quality or "scheduled" in quality:
+        return "scheduled"
+    if "estimad" in quality or "estimated" in quality:
+        return "estimated"
+    if "inferid" in quality or "inferred" in quality:
+        return "inferred"
+    if "calculad" in quality or "calculated" in quality or "derived" in quality:
+        if "reportad" in quality or "reported" in quality:
+            return "mixed"
+        return "calculated"
+    if "observad" in quality or "observed" in quality:
+        return "observed"
+    if "reportad" in quality or "reported" in quality:
+        return "reported"
+    return "unknown"
+
+
+def _kind(rows: list[dict[str, Any]], catalog_metrics: dict[str, dict[str, Any]] | None = None) -> str:
+    catalog_metrics = catalog_metrics or {}
+    kinds = {_row_kind(row, catalog_metrics.get(str(row.get("metric_id") or ""), {})) for row in rows}
+    return next(iter(kinds)) if len(kinds) == 1 else "mixed" if kinds else "missing"
 
 
 def _described_sources(raw: Any, rows: list[dict[str, Any]]) -> list[dict[str, str]]:
@@ -106,7 +184,7 @@ def _validated_display(raw: Any) -> dict[str, Any] | None:
     if not match or ((match.group(1) == "tabla") != (kind == "table")):
         return None
     title = raw.get("title")
-    value_kind = raw.get("value_kind", "reported")
+    value_kind = raw.get("value_kind", "unknown")
     if (
         not isinstance(title, str)
         or not title.strip()
@@ -168,6 +246,12 @@ def _validated_display(raw: Any) -> dict[str, Any] | None:
                 else:
                     return None
             clean_rows.append(clean)
+        if value_kind == "candidate_unapproved" and any(
+            isinstance(value, (int, float)) and not isinstance(value, bool)
+            for row in clean_rows
+            for value in row.values()
+        ):
+            return None
         result.update(columns=clean_columns, rows=clean_rows)
     elif kind == "chart":
         chart = raw.get("chart", raw)
@@ -207,6 +291,10 @@ def _validated_display(raw: Any) -> dict[str, Any] | None:
             ):
                 return None
             clean_series.append({"name": item["name"][:120], "y": values})
+        if value_kind == "candidate_unapproved" and any(
+            value is not None for item in clean_series for value in item["y"]
+        ):
+            return None
         result["chart"] = {
             "type": chart["type"],
             "title": result["title"],
@@ -227,6 +315,23 @@ def _build_query_display(
         return None
     chart = result.get("chart")
     short_id = hashlib.sha256(call_id.encode("utf-8", errors="replace")).hexdigest()[:12]
+    catalog = catalog or {}
+    metric_catalog = catalog.get("metrics", [])
+    if isinstance(metric_catalog, dict):
+        metric_catalog = metric_catalog.get("metrics", [])
+    catalog_metrics = {
+        item.get("id"): item for item in metric_catalog if isinstance(item, dict) and item.get("id")
+    }
+    if any(
+        _unapproved_metric(catalog_metrics.get(str(row.get("metric_id") or ""), {}))
+        or row.get("approval_required") is True
+        or row.get("approval_gate") == "closed"
+        or row.get("value_kind") == "candidate_unapproved"
+        or str(row.get("availability") or "").lower()
+        in {"candidate_unapproved", "approval_required", "not_approved"}
+        for row in rows
+    ) and any(row.get("value") is not None for row in rows):
+        return None
     if tool_name == "get_time_series" and isinstance(chart, dict):
         series = chart.get("series")
         if not isinstance(series, list) or not series:
@@ -240,7 +345,7 @@ def _build_query_display(
             "kind": "chart",
             "title": chart.get("title") or "Serie temporal",
             "chart": display_chart,
-            "value_kind": _kind(rows),
+            "value_kind": _kind(rows, catalog_metrics),
             "sources": _described_sources([result.get("references"), result.get("source_references")], rows),
         }
     columns = [
@@ -256,13 +361,9 @@ def _build_query_display(
     if unit:
         value_column["unit"] = unit
     columns.append(value_column)
-    catalog = catalog or {}
     entity_catalog = catalog.get("entities", [])
-    metric_catalog = catalog.get("metrics", [])
     if isinstance(entity_catalog, dict):
         entity_catalog = entity_catalog.get("entities", [])
-    if isinstance(metric_catalog, dict):
-        metric_catalog = metric_catalog.get("metrics", [])
     entities = {item.get("id"): item.get("label") for item in entity_catalog if isinstance(item, dict)}
     metrics = {item.get("id"): item.get("label") for item in metric_catalog if isinstance(item, dict)}
     entities.update(
@@ -283,14 +384,18 @@ def _build_query_display(
         display_rows.append(item)
     if not display_rows:
         return None
-    title = next(iter(metrics.values())) if len(metrics) == 1 else "Resultados de la consulta"
+    if len(metric_ids) == 1:
+        metric_id = next(iter(metric_ids))
+        title = str(metrics.get(metric_id) or metric_id)
+    else:
+        title = "Resultados de la consulta"
     return {
         "display_id": f"tabla:consulta_{short_id}",
         "kind": "table",
         "title": str(title),
         "columns": columns,
         "rows": display_rows,
-        "value_kind": _kind(rows),
+        "value_kind": _kind(rows, catalog_metrics),
         "sources": _described_sources([result.get("references"), result.get("source_references")], rows),
     }
 
@@ -358,11 +463,69 @@ class DisplayRegistry:
             "",
             sanitized,
         )
+        if selected:
+            sanitized = _remove_numeric_markdown_tables(sanitized)
         ref_candidates = [references]
         ref_candidates.extend(display.get("sources") for display in selected)
         unique_sources = _safe_sources(*ref_candidates)
         shown_urls = {source["url"] for display in selected for source in display.get("sources", [])}
-        return sanitized, selected, [source for source in unique_sources if source["url"] not in shown_urls]
+        for display in selected:
+            for displayed_source in display.get("sources", []):
+                merged = next((source for source in unique_sources if source["url"] == displayed_source["url"]), None)
+                if merged:
+                    displayed_source["label"] = merged["label"]
+        return (
+            sanitized,
+            selected,
+            [source for source in unique_sources if source["url"] not in shown_urls],
+        )
+
+
+_TABLE_SEPARATOR = re.compile(r"^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)*\|?\s*$")
+_NUMERIC_CELL = re.compile(r"(?<![A-Za-z])[-+]?\d[\d,]*(?:\.\d+)?\s*(?:%|pp|¢|USD|MXN|mil|millones|M)?(?![A-Za-z])", re.I)
+
+
+def _remove_numeric_markdown_tables(content: str) -> str:
+    """Drop numeric prose tables when the same response has a validated display."""
+    lines = content.splitlines(keepends=True)
+    output: list[str] = []
+    index = 0
+    while index < len(lines):
+        if "|" not in lines[index] or index + 1 >= len(lines) or not _TABLE_SEPARATOR.fullmatch(lines[index + 1].strip()):
+            output.append(lines[index])
+            index += 1
+            continue
+        end = index + 2
+        while end < len(lines) and "|" in lines[end] and lines[end].strip():
+            end += 1
+        data_rows = lines[index + 2:end]
+        cells = [cell.strip() for row in data_rows for cell in row.strip().strip("|").split("|")]
+        if data_rows and any(_NUMERIC_CELL.search(cell) for cell in cells):
+            index = end
+        else:
+            output.extend(lines[index:end])
+            index = end
+    return "".join(output)
+
+
+def display_registry_for_snapshot(snapshot: Any) -> DisplayRegistry:
+    catalog = snapshot.catalog() if hasattr(snapshot, "catalog") else {}
+    return DisplayRegistry(catalog)
+
+
+def finalize_turn_presentation(
+    registry: DisplayRegistry, result: Any, config: Any
+) -> tuple[str, dict[str, Any]]:
+    """Validate final content and build the persisted presentation payload."""
+    content = result.content
+    if len(content) > config.max_message_chars * 4:
+        raise ValueError("provider output size exceeded")
+    content, displays, references = registry.finalize(content, result.references)
+    return content, {
+        "references": references,
+        "chart": None if displays else result.chart,
+        "displays": displays,
+    }
 
 
 def make_displays(

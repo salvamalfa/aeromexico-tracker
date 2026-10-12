@@ -1,0 +1,38 @@
+{
+  "schema": "chat_news_candidates_v1",
+  "status": "candidate_closed",
+  "week_start": "2026-07-20",
+  "week_end": "2026-07-26",
+  "collection_policy": "Public publisher metadata only; short curator-written description, no article body or third-party quote.",
+  "limits": {
+    "article_bodies_collected": false,
+    "max_description_chars": 320,
+    "max_quote_chars": 200
+  },
+  "records": [
+    {
+      "candidate_id": "flightglobal-volaris-q2-2026-07-22",
+      "published_at": "2026-07-22",
+      "publisher": "FlightGlobal",
+      "title": "Volaris losses widen as fuel costs surge",
+      "url": "https://www.flightglobal.com/airlines/2026/07/volaris-earnings-second-quarter-fuel-costs/",
+      "source_sha256": "17f1347b9fe12fffccdf3c138504ef0b45fb0a7a589ac3a2240f88c5859124ae",
+      "captured_at": "2026-10-11",
+      "description": "Cobertura del resultado de Volaris en 2T26 que relaciona la pérdida trimestral con los mayores costos de combustible frente al crecimiento de ingresos.",
+      "companies": [
+        "Volaris"
+      ],
+      "topics": [
+        "combustible",
+        "resultados",
+        "2T26"
+      ],
+      "brief_quote": null,
+      "kind": "news_candidate",
+      "review": {
+        "status": "owner_review_required",
+        "receipt": null
+      }
+    }
+  ]
+}
