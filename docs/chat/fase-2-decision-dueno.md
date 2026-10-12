@@ -1,18 +1,7 @@
-# Fase 2 del chat · decisiones del dueño
+# Fase 2 del chat · estado para el dueño
 
-La decisión del 12 de octubre de 2026 aprobó los insumos exactos de R2, las
-cuatro métricas, siete pasajes de reportes, tres fichas de noticias y una nueva
-reserva financiada de US$8 para Stage 3. El registro inmutable cita el paquete
-PR #126 y conserva que el saldo total sigue desconocido: [decisión](../decisiones/20261012-chat-fase2-r2-contenido-stage3.md).
+El dueño aprobó R2, cuatro métricas, siete pasajes, tres fichas y la reserva nueva financiada de US$8: [registro](../decisiones/20261012-chat-fase2-r2-contenido-stage3.md).
 
-Los recibos de contenido preparados enlazan esa decisión y fijan los hashes de
-sus insumos. La aprobación no activa por sí sola el runtime: R1 sigue siendo el
-predeterminado, las banderas de capacidades siguen apagadas y los pins externos
-solo se configuran al preparar la operación. R2 conserva su estado contractual
-`proposed_not_approved_not_active`; su recibo de aprobación autoriza el uso
-cuando el dueño configure deliberadamente su pin y seleccione esa versión.
+Stage 3 (30 casos/34 mensajes; estimado US$7.06–7.23) espera ejecución y revisión JSON. El total de cuenta sigue desconocido; la reserva está financiada: [estimación](revision-fase-2/F2.9-etapa-3-presupuesto-actual.md).
 
-La reserva Stage 3 está confirmada; el saldo total es desconocido. La evaluación
-preparada contempla 30 casos y 34 mensajes; no se han ejecutado llamadas
-pagadas. La publicación de nuevas cifras/fichas en Pages y la activación de
-capacidades quedan para el preflight operativo posterior.
+Producción conserva R1/Sol low; los pins aprobados están preparados para el siguiente despliegue, mientras R2 y las capacidades siguen apagados hasta revisar el JSON. R1, preguntas y rúbrica no requieren nueva aprobación.

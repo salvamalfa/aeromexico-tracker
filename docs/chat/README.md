@@ -23,11 +23,12 @@ la respuesta cita tablas y gráficas validadas del mismo turno, que el frontend
 renderiza desde los valores persistidos sin otra consulta al modelo. El estado
 local de F2.8 y sus verificaciones están en el [reporte de etapa](../etapas/chat-f2-8-presentacion-20261011.md).
 
-Cuando se habilite la búsqueda aprobada de reportes o noticias, cada resultado
-también entrega `references` con su URL exacta y una etiqueta de empresa,
-periodo/página o medio/fecha/título. El proveedor las conserva en las fuentes
-del turno y agrupa etiquetas que comparten URL; la capacidad continúa apagada
-mientras `approved-index.json` no tenga registros aprobados.
+El índice versionado contiene siete pasajes de reportes y tres fichas de
+noticias aprobados por el dueño. Las herramientas de evidencia siguen
+desactivadas hasta ejecutar Stage 3 y revisar sus resultados JSON. Cuando se
+habilite la búsqueda, cada resultado entrega `references` con su URL exacta y
+una etiqueta de empresa, periodo/página o medio/fecha/título; el proveedor las
+conserva en las fuentes del turno y agrupa etiquetas que comparten URL.
 
 El catálogo inicial distingue `company_passengers` de `afac_passengers`, razón
 por la cual “pasajeros” puede requerir aclaración. Los porcentajes se guardan
@@ -53,17 +54,18 @@ consulta pagada durante la verificación.
 
 El código F2.3–F2.9 se integró en el [PR #120](https://github.com/salvamalfa/aeromexico-tracker/pull/120)
 y se verificó en Railway y Pages. Health respondió 200 con R1, Sol low y
-`enabled_capabilities: []`; las capacidades nuevas siguen cerradas, los flags
-apagados y el índice aprobado vacío. R1, Sol low, las preguntas y la rúbrica
-ya están aprobados; no hace falta repetir esas decisiones. R2 y los contenidos
-propuestos esperan decisión; Stage 3 requiere presupuesto nuevo. Su preflight
-offline estima US$7.06–7.23 para 30 casos/34 mensajes y propone una reserva
-nueva de US$8; el saldo actual es desconocido y solo reduce la recarga necesaria.
-No hubo consulta pagada ni campaña. Consulta la
+`enabled_capabilities: []`; las funciones nuevas siguen apagadas. El dueño
+aprobó R2, cuatro métricas financieras, siete pasajes, tres fichas y una nueva
+reserva financiada de US$8. R1, Sol low, las preguntas y la rúbrica ya estaban
+aprobados y no se vuelven a solicitar. Stage 3 (30 casos/34 mensajes) sigue
+pendiente de ejecución y revisión de resultados JSON; el estimado es US$7.06–
+7.23 y el saldo total es desconocido. No se ha ejecutado una campaña ni se ha
+aprobado un gate de calidad. Consulta la
 [cotización vigente](revision-fase-2/F2.9-etapa-3-presupuesto-actual.md), el
 [brief de decisiones del dueño](fase-2-decision-dueno.md) y el
-[reporte de activación](../etapas/chat-f2-0-activacion-20261012.md) y la
-[verificación posterior a PR #120](../etapas/chat-fase2-entrega-final-20261012.md).
+[reporte de activación](../etapas/chat-f2-0-activacion-20261012.md), la
+[verificación posterior a PR #120](../etapas/chat-fase2-entrega-final-20261012.md)
+y el [registro de aprobación y Stage 3](../etapas/chat-fase2-aprobacion-stage3-20261012.md).
 
 ### Registro histórico al 8 de octubre de 2026
 
