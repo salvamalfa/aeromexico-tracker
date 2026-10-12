@@ -10,7 +10,7 @@ from typing import Any
 
 from ._openai_error_metadata import sanitize_upstream_fields
 from ._openai_prompt import PERIOD_SELECTION_POLICY
-from ._openai_references import ALLOWED_REFERENCE_HOSTS, references_from_results
+from ._openai_references import ALLOWED_REFERENCE_HOSTS as ALLOWED_REFERENCE_HOSTS, references_from_results
 from .base import ProviderResult
 
 ALLOWED_TOOL_NAMES = frozenset(
