@@ -75,7 +75,7 @@
         "metric_id": {"type": "string"}, "entity_id": {"type": "string"}, "period": {"type": "string", "pattern": "^[0-9]{4}Q[1-4]$"},
         "value": {"type": ["number", "null"]}, "unit": {"const": "USD"},
         "availability": {"enum": ["available", "incomplete", "source_conflict"]},
-        "value_kind": {"const": "owner_approved_gold_reported"},
+        "value_kind": {"enum": ["owner_approved_gold_reported", "owner_approved_gold_fx_converted"]},
         "any_preliminary": {"type": "boolean"},
         "calendar_period_id": {"type": "string"}, "fiscal_period_ids": {"type": "array", "items": {"type": "string"}},
         "currency_as_reported": {"type": "array", "items": {"type": "string"}},

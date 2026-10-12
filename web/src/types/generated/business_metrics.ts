@@ -21,7 +21,7 @@ export interface Row {
   value: number | null;
   unit: "USD";
   availability: "available" | "incomplete" | "source_conflict";
-  value_kind: "owner_approved_gold_reported";
+  value_kind: "owner_approved_gold_reported" | "owner_approved_gold_fx_converted";
   any_preliminary: boolean;
   calendar_period_id: string;
   fiscal_period_ids: string[];

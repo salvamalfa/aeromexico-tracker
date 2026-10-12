@@ -168,9 +168,9 @@ def _load_quarter_rows() -> tuple[dict[tuple[str, str, str], dict[str, Any]], di
             "unit_as_reported": chosen["unit_as_reported"],
             "unit_normalized": chosen["unit_normalized"],
             "source_system": chosen["source_system"],
-            "derived": bool(chosen["is_derived"]),
-            "estimated": bool(chosen["is_estimated"]),
-            "preliminary": bool(chosen["is_preliminary"]),
+            "derived": any(bool(row["is_derived"]) for row in preferred),
+            "estimated": any(bool(row["is_estimated"]) for row in preferred),
+            "preliminary": any(bool(row["is_preliminary"]) for row in preferred),
             "source_files": {row["source_file"] for row in preferred},
         }
     return selected, source_registry

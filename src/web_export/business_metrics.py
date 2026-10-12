@@ -66,6 +66,11 @@ def build_approved_payload(
         if metric_id not in approved or len(period) != 6 or period[4] != "Q":
             continue
         quarter_sources = source_row.get("quarter_sources", [])
+        fx_converted = any(
+            item.get("currency_as_reported") not in (None, "USD")
+            and item.get("fx_rate_used") is not None
+            for item in quarter_sources
+        )
         quarter_rows.append(
             {
                 "metric_id": metric_id,
@@ -74,7 +79,9 @@ def build_approved_payload(
                 "value": source_row.get("value"),
                 "unit": source_row.get("unit", "USD"),
                 "availability": source_row["availability"],
-                "value_kind": "owner_approved_gold_reported",
+                "value_kind": (
+                    "owner_approved_gold_fx_converted" if fx_converted else "owner_approved_gold_reported"
+                ),
                 "any_preliminary": source_row.get("any_preliminary", False),
                 "calendar_period_id": quarter_sources[0]["calendar_period_id"] if quarter_sources else period,
                 "fiscal_period_ids": sorted({item["fiscal_period_id"] for item in quarter_sources}),

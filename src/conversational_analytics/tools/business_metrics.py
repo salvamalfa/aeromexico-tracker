@@ -276,7 +276,12 @@ def deterministic_query(
                 "source_references": [],
             }
         approved_rows = [
-            {"period_id": row["period"], "value": row["value"], "availability": row["availability"]}
+            {
+                "period_id": row["period"],
+                "value": row["value"],
+                "availability": row["availability"],
+                "value_kind": row["value_kind"],
+            }
             for row in payload["rows"]
             if row["metric_id"] == metric_id and row["entity_id"] == entity_id
         ]
@@ -302,6 +307,7 @@ def deterministic_query(
             if row["metric_id"] == metric_id and row["entity_id"] == entity_id
         }
         used = [row_by_period[q] for q in aggregate["included_periods"] if q in row_by_period]
+        any_fx_converted = any(row["value_kind"] == "owner_approved_gold_fx_converted" for row in used)
         cited = [row_by_period[q] for q in aggregate["expected_periods"] if q in row_by_period]
         source_refs_by_key = {}
         for row in cited:
@@ -315,9 +321,15 @@ def deterministic_query(
             "entity_id": entity_id,
             **aggregate,
             "unit": "USD",
-            "value_kind": "owner_approved_reported_quarter_sum"
-            if len(aggregate["expected_periods"]) > 1
-            else "owner_approved_reported",
+            "value_kind": (
+                "owner_approved_calculated_fx_conversion_quarter_sum"
+                if any_fx_converted and len(aggregate["expected_periods"]) > 1
+                else "owner_approved_calculated_fx_conversion"
+                if any_fx_converted
+                else "owner_approved_reported_quarter_sum"
+                if len(aggregate["expected_periods"]) > 1
+                else "owner_approved_reported"
+            ),
             "approval_gate": "open",
             "currency_as_reported": sorted(
                 {currency for row in used for currency in row["currency_as_reported"]}
