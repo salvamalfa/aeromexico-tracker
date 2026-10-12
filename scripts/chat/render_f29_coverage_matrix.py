@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import html
 import json
 from pathlib import Path
 from typing import Any
@@ -207,6 +208,26 @@ def render_matrix(fixture: dict[str, Any]) -> str:
         if case_id in CASE_GUIDANCE:
             gate += f"; guía: {CASE_GUIDANCE[case_id]}"
         lines.append(f"| {case_id} | {questions} | {action} | {evidence} | {_cell(gate)} |")
+
+    lines.extend(["", "## Contrato Gold completo por caso", ""])
+    lines.append(
+        "Los bloques siguientes conservan íntegro `expected` del fixture congelado, incluidos "
+        "Gold derivado, fórmulas, denominadores, fuentes, restricciones y expectativas por turno."
+    )
+    lines.append("")
+    for case in cases:
+        expected_json = html.escape(_json(case.get("expected", {})))
+        lines.extend(
+            [
+                "<details>",
+                f"<summary>{case['id']} · contrato Gold congelado</summary>",
+                "",
+                f"<pre>{expected_json}</pre>",
+                "",
+                "</details>",
+                "",
+            ]
+        )
 
     lines.extend(
         [
