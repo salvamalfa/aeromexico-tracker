@@ -136,6 +136,18 @@ recibo owner versionado mediante `CHAT_PROMPT_APPROVAL_RECEIPT_PATH` y su SHA-25
 en `CHAT_PROMPT_APPROVAL_RECEIPT_SHA256`; sin esos valores el servicio falla
 cerrado. No hay recibo vigente.
 
+Las tres banderas `CHAT_ENABLE_ROUTE_TOOLS`,
+`CHAT_ENABLE_BUSINESS_METRIC_TOOLS` y `CHAT_ENABLE_EVIDENCE_TOOLS` usan `false`
+como default y siguen desactivadas. Rutas y herramientas financieras requieren
+el prompt R2 con recibo válido; las métricas financieras además necesitan su
+proyección pública con recibo ligado a los valores y definiciones. La evidencia
+solo se busca en `config/chat/evidence/approved-index.json`, que permanece
+vacío: cada registro futuro requiere recibo verificable para su contenido
+semántico completo. No actives una bandera al aprobar solamente el prompt, ni
+rellenes el índice antes de aprobar los pasajes. El Dockerfile lleva la
+configuración versionada anidada; el recibo R2 se suministra por configuración
+privada y no se incluye en la imagen.
+
 La capacidad `minimum_reservation_turns_per_day` que muestra `/api/chat/health`
 es un cálculo de admisión: aplica los presupuestos diarios de tokens y dólares
 a la reserva mínima de 150,000 tokens. La reserva aplica a todo el volumen el
