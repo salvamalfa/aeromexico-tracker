@@ -18,6 +18,24 @@
     "value_bearing": true
   },
   {
+    "name": "scientific notation and signed exponent",
+    "markdown": "| Métrica | estimación A | estimación B |\n| --- | ---: | ---: |\n| Pasajeros | 1.2e9 | 1.2E+9 |",
+    "rows": [["Pasajeros", "1.2e9", "1.2E+9"]],
+    "value_bearing": true
+  },
+  {
+    "name": "currency and attached magnitude suffixes",
+    "markdown": "| Concepto | Valor |\n| --- | ---: |\n| Ingresos | €1M |\n| Mercado | 1.2bn |",
+    "rows": [["Ingresos", "€1M"], ["Mercado", "1.2bn"]],
+    "value_bearing": true
+  },
+  {
+    "name": "Unicode digits and period labels",
+    "markdown": "| Periodo | Factor |\n| --- | ---: |\n| 2026Q2 | ٨٤٫٩٪ |",
+    "rows": [["2026Q2", "٨٤٫٩٪"]],
+    "value_bearing": true
+  },
+  {
     "name": "blank lines between bordered rows",
     "markdown": "| Estado | Nota |\n| --- | --- |\n| Tráfico | estable |\n\n| Mezcla | favorable |",
     "rows": [["Tráfico", "estable"], ["Mezcla", "favorable"]],

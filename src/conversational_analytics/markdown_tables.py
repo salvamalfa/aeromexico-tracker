@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 
 _TABLE_SEPARATOR = re.compile(r"^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)*\|?\s*$")
-_NUMERIC_CELL = re.compile(r"(?<![A-Za-z])[-+]?\d[\d,]*(?:\.\d+)?\s*(?:%|pp|¢|USD|MXN|mil|millones|M)?(?![A-Za-z])", re.I)
 
 
 def _cells(line: str) -> list[str]:
@@ -88,7 +87,10 @@ def remove_numeric_markdown_tables(content: str) -> str:
             data_rows.append(lines[candidate_index])
             row_index = candidate_index + 1
         cells = [cell for row in data_rows for cell in _cells(row)]
-        if data_rows and any(_NUMERIC_CELL.search(cell) for cell in cells):
+        # Any Unicode digit marks numeric content. This intentionally covers
+        # scientific notation, attached currency/scale suffixes and period
+        # labels without trying to enumerate every human number format.
+        if data_rows and any(char.isdigit() for cell in cells for char in cell):
             index = row_index
         else:
             output.extend(lines[index:row_index])
