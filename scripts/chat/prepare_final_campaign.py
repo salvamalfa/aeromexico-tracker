@@ -22,6 +22,15 @@ PUBLIC_CLOSEOUT_SHA256 = "bf03c82e52fcff3b89fbcf18794218300149ae6859950199a6fd90
 EXPECTED_CASE_COUNT = 30
 EXPECTED_CASE_HASH = "30fc0acfc5d9fee1ffffd3624209712dd8160806dae4d904c4310a8f53537640"
 EXPECTED_MESSAGE_COUNT = 34
+EXPECTED_PROFILE_STATUS = "offline_business_only_partial_preflight_pending_dependency_and_budget_gates"
+EXPECTED_GATES = {
+    "full_stage2_review_received": True,
+    "business_fixture_hash_frozen_for_this_preflight": True,
+    "f23_f24_f25_f26_f27_f28_integrated_and_reviewed": False,
+    "30_case_gold_and_support_expectations_revalidated": False,
+    "snapshot_and_semantic_versions_pinned_after_integration": False,
+    "new_stage3_budget_approved_and_funded": False,
+}
 
 
 def _read_object(path: Path) -> tuple[dict[str, Any], str]:
@@ -143,6 +152,10 @@ def build_plan(*, profile_path: Path, candidate_override: str | None = None) -> 
         raise ValueError("El perfil debe declarar la exclusión explícita de la cohorte safety")
     if profile.get("safety_prompt_injection_cases") is not False:
         raise ValueError("Este preflight no debe añadir casos de prompt injection")
+    if profile.get("status") != EXPECTED_PROFILE_STATUS:
+        raise ValueError("El perfil debe mantener el estado pendiente de la campaña parcial")
+    if profile.get("gates") != EXPECTED_GATES:
+        raise ValueError("El preflight offline solo admite las puertas pendientes fijadas para esta campaña")
     repetitions = profile.get("run_repetitions")
     if isinstance(repetitions, bool) or not isinstance(repetitions, int) or repetitions < 1:
         raise ValueError("run_repetitions debe ser un entero positivo")

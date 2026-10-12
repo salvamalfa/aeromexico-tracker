@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import html
 import re
 from pathlib import Path
 
@@ -60,6 +61,27 @@ def test_preflight_rejects_changed_fixture_and_cached_input_credit(tmp_path: Pat
     tampered = tmp_path / "profile.json"
     tampered.write_text(json.dumps(profile), encoding="utf-8")
     with pytest.raises(ValueError, match="excluir créditos por caché"):
+        build_plan(profile_path=tampered)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("new_stage3_budget_approved_and_funded", True),
+        ("f23_f24_f25_f26_f27_f28_integrated_and_reviewed", True),
+        ("30_case_gold_and_support_expectations_revalidated", True),
+        ("snapshot_and_semantic_versions_pinned_after_integration", True),
+    ],
+)
+def test_preflight_rejects_custom_profiles_that_claim_pending_gates_are_complete(
+    tmp_path: Path, field: str, value: bool
+):
+    profile = json.loads(DEFAULT_PROFILE.read_text(encoding="utf-8"))
+    profile["gates"][field] = value
+    tampered = tmp_path / "profile.json"
+    tampered.write_text(json.dumps(profile), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="puertas pendientes fijadas"):
         build_plan(profile_path=tampered)
 
 
@@ -159,6 +181,29 @@ def test_matrix_keeps_turn_level_gold_sources_and_constraints_for_n24_to_n26():
         assert "executive.json" in rows[case_id]
     assert "preservar" in rows["N25"]
     assert "preservar" in rows["N26"]
+
+
+def test_matrix_preserves_the_complete_frozen_expected_contract_for_every_case():
+    fixture = json.loads((ROOT / "tests/fixtures/chat_evals/business_proposed.json").read_text())
+    matrix = render_matrix(fixture)
+
+    for case in fixture["cases"]:
+        expected = json.dumps(
+            case["expected"], ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        )
+        assert f"<pre>{html.escape(expected)}</pre>" in matrix
+
+    n07 = next(case for case in fixture["cases"] if case["id"] == "N07")["expected"]
+    n11 = next(case for case in fixture["cases"] if case["id"] == "N11")["expected"]
+    n21 = next(case for case in fixture["cases"] if case["id"] == "N21")["expected"]
+    assert n07["derived_gold"]["kind"] == "percentage_point_change"
+    assert set(n07["derived_gold"]["values_pp"]) == {"VOLARIS", "AEROMEXICO"}
+    assert "does not establish" in n07["derived_gold"]["interpretation"]
+    assert n11["derived_gold"]["winner"] == "VOLARIS"
+    assert set(n11["derived_gold"]["values_pp"]) == {"AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"}
+    assert n21["derived_gold"]["value"] == 74.4
+    assert n21["derived_gold"]["raw_fraction_sum"] == 0.7444707301790031
+    assert n21["derived_gold"]["formula"] == "round(sum(row.value) * 100, 1)"
 
 
 def test_matrix_renderer_rejects_any_unfrozen_fixture_change():
