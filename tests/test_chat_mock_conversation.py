@@ -236,3 +236,25 @@ def test_explicit_entity_overrides_dashboard_context_and_all_carriers_uses_afac_
         assert comparison["current"]["entity_id"] == "MEXICAN_CARRIERS"
         assert comparison["previous"]["value"] == 19_319_636
         assert comparison["current"]["value"] == 20_361_241
+
+
+def test_mock_display_marks_fx_converted_usd_as_calculated() -> None:
+    provider = MockProvider(None)
+    text, _ = provider._format_result(
+        "query_business_metrics",
+        {
+            "rows": [
+                {
+                    "entity_id": "VOLARIS",
+                    "period": "2020Q3",
+                    "availability": "available",
+                    "display_value": "USD 213.8M",
+                    "display_unit": "USD",
+                    "value_kind": "owner_approved_calculated_fx_conversion",
+                    "quality": "reported source amount",
+                }
+            ],
+            "references": [],
+        },
+    )
+    assert "VOLARIS · 2020Q3: USD 213.8M USD (Calculado)." in text

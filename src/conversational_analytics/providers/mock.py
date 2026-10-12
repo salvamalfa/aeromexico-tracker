@@ -192,18 +192,20 @@ class MockProvider:
                 value = "sin dato publicado"
             else:
                 value = f"{row['display_value']} {row['display_unit']}"
+            value_kind = str(row.get("value_kind", "")).casefold()
             raw_quality = str(row.get("quality", "")).split(":", 1)[0].strip().casefold()
-            quality = (
-                "Reportado"
-                if raw_quality.startswith(("reported", "reportado"))
-                else "Calculado"
-                if raw_quality.startswith(("calculated", "calculado"))
-                else "Estimado"
-                if raw_quality.startswith(("estimated", "estimado"))
-                else "No disponible"
-                if row.get("availability") != "available"
-                else "Calidad indicada en la definición"
-            )
+            if "fx_conversion" in value_kind or "fx_converted" in value_kind:
+                quality = "Calculado"
+            elif raw_quality.startswith(("reported", "reportado")):
+                quality = "Reportado"
+            elif raw_quality.startswith(("calculated", "calculado")):
+                quality = "Calculado"
+            elif raw_quality.startswith(("estimated", "estimado")):
+                quality = "Estimado"
+            elif row.get("availability") != "available":
+                quality = "No disponible"
+            else:
+                quality = "Calidad indicada en la definición"
             entity_name = entity_labels.get(row.get("entity_id"), row.get("entity_id", "Entidad"))
             lines.append(
                 f"- {entity_name} · {row.get('period_label', row.get('period', ''))}: {value} ({quality})."

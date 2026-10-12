@@ -68,7 +68,7 @@ def test_receipt_must_match_exact_definition_and_proposal_bytes(tmp_path: Path) 
     assert payload["metadata"]["metric_ids"] == ["total_revenue"]
     assert payload["rows"]
     assert receipt["receipt_id"] == "test-fixture-only"
-    assert all(row["value_kind"] == "owner_approved_gold_reported" for row in payload["rows"])
+    assert all(row["value_kind"] in {"owner_approved_gold_reported", "owner_approved_gold_fx_converted"} for row in payload["rows"])
     serialized_payload = json.dumps(payload, ensure_ascii=False)
     assert all(
         metric not in serialized_payload for metric in ("operating_costs", "fuel_expense", "operating_income")
@@ -111,9 +111,17 @@ def test_approved_snapshot_query_sums_full_year_and_keeps_source_currency_and_un
     assert q1["quarter_sources"][0]["unit_as_reported"] == "USD millions"
     assert q1["quarter_sources"][0]["fx_rate_used"] == 1.0
     mxn = deterministic_query(snapshot, "total_revenue", "VOLARIS", "2020Q3")
+    assert mxn["value"] == pytest.approx(213_829_404.2979688)
+    assert mxn["value_kind"] == "owner_approved_calculated_fx_conversion"
     assert mxn["currency_as_reported"] == ["MXN"]
     assert mxn["quarter_sources"][0]["fx_rate_used"] > 0
     assert mxn["quarter_sources"][0]["fx_rate_type"]
+    converted_half = deterministic_query(snapshot, "total_revenue", "VOLARIS", "2020H2")
+    assert converted_half["value_kind"] == "owner_approved_calculated_fx_conversion_quarter_sum"
+    native_usd = deterministic_query(snapshot, "total_revenue", "VOLARIS", "2021Q1")
+    assert native_usd["value_kind"] == "owner_approved_reported"
+    native_year = deterministic_query(snapshot, "total_revenue", "VOLARIS", "2021")
+    assert native_year["value_kind"] == "owner_approved_reported_quarter_sum"
     assert mxn["source_references"][0]["url"].startswith("https://www.bmv.com.mx/docs-pub/ifrsxbrl/")
     assert "#" not in mxn["source_references"][0]["url"]
     assert mxn["source_references"][0]["citation_url"].endswith("#member=ifrsxbrl_1135999_2021-03_1.json")
