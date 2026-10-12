@@ -14,7 +14,7 @@
 - R1 permanece activo (hash efectivo
   `439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`). R2 se
   selecciona únicamente con un recibo de dueño válido y fijado por hash; su
-  propuesta efectiva es `b23b04ee146a9075a8459446eb210aeae19da074e4c5f3cffc18efe6c504f90a`.
+  propuesta efectiva es `68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf`.
 - Stage 3 tiene preflight offline para 30 casos/34 mensajes, estimado US$7.06–
   7.23 y propuesta de una reserva nueva de US$8. El saldo es desconocido y no
   se ejecutó campaña. Ver [reporte de activación](docs/etapas/chat-f2-0-activacion-20261012.md),
