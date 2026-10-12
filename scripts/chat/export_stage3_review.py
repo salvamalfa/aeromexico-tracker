@@ -46,7 +46,7 @@ def _write_private(path: Path, payload: dict[str, Any]) -> None:
 
 
 def build_dataset(
-    coverage: dict[str, Any], live: dict[str, Any], fixture: dict[str, Any]
+    coverage: dict[str, Any], live: dict[str, Any], fixture: dict[str, Any], fixture_sha256: str
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     if coverage.get("kind") != "f2_9_stage3_derived_coverage" or coverage.get("provider_calls") != 0:
         raise ValueError("Se requiere un informe stage3 derivado offline")
@@ -62,7 +62,11 @@ def build_dataset(
     identity = live.get("run_identity")
     coverage_identity = coverage.get("campaign_identity")
     if (
-        model.get("candidate") != CAMPAIGN_CANDIDATE
+        not isinstance(model, dict)
+        or model.get("candidate_id") != f"{CAMPAIGN_CANDIDATE}@medium"
+        or model.get("model") != "gpt-6.1-sol"
+        or model.get("reasoning_effort") != "low"
+        or model.get("text_verbosity") != "medium"
         or not isinstance(live.get("campaign_identity_hash"), str)
         or not HASH.fullmatch(live["campaign_identity_hash"])
         or not isinstance(identity, dict)
@@ -79,6 +83,12 @@ def build_dataset(
         raise ValueError("El reporte no coincide con Sol low o no conserva su lineage")
     if any(identity.get(key) != value for key, value in coverage_identity.items()):
         raise ValueError("La ejecución live no coincide con todos los pins de cobertura stage3")
+    if (
+        not isinstance(fixture_sha256, str)
+        or not HASH.fullmatch(fixture_sha256)
+        or fixture_sha256 != coverage_identity.get("case_fixture_sha256")
+    ):
+        raise ValueError("El fixture no coincide con el hash fijado por la campaña stage3")
     fixture_cases = fixture.get("cases")
     coverage_cases = coverage.get("cases")
     live_cases = model.get("cases")
@@ -184,8 +194,8 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("Los datos de revisión deben guardarse dentro de .state/")
     coverage, _ = _read(args.coverage)
     live, _ = _read(args.live_report)
-    fixture, _ = _read(args.fixture)
-    dataset, mapping = build_dataset(coverage, live, fixture)
+    fixture, fixture_sha256 = _read(args.fixture)
+    dataset, mapping = build_dataset(coverage, live, fixture, fixture_sha256)
     _write_private(output_dir / "review.json", dataset)
     _write_private(output_dir / "candidate-aliases.json", mapping)
     print(
