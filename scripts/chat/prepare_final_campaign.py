@@ -364,7 +364,9 @@ def build_plan(
                 "prompt_r2_sha256": r2_prompt_sha,
                 "prompt_delta_utf8_bytes_per_request": prompt_delta_bytes,
                 "historical_tool_schema_utf8_bytes": historical_tool_schema_bytes,
-                "historical_tool_schema_sha256_prefix": "1ff0d3…",
+                "historical_tool_schema_sha256": (
+                    "1ff0d3a35647f7a0c2fc956884a4d267b0148065ccd3e2469139463f859bea19"
+                ),
                 "historical_execution_commit": "a3704be6ab9dacd8c481caff7caf3278fe861e90",
                 "current_tool_schema_utf8_bytes": current_tool_schema_bytes,
                 "current_tool_schema_sha256": current_tool_schema_sha,

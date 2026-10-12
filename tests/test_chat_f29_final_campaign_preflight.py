@@ -36,6 +36,9 @@ def test_profile_dry_run_selects_all_business_cases_without_live_side_effects():
     assert context["prompt_r2_proposed_utf8_bytes"] == 11_166
     assert context["prompt_delta_utf8_bytes_per_request"] == 2_229
     assert context["historical_tool_schema_utf8_bytes"] == 3_306
+    assert context["historical_tool_schema_sha256"] == (
+        "1ff0d3a35647f7a0c2fc956884a4d267b0148065ccd3e2469139463f859bea19"
+    )
     assert context["current_tool_schema_utf8_bytes"] == 7_436
     assert context["tool_schema_delta_utf8_bytes_per_request"] == 4_130
     assert context["total_delta_utf8_bytes_per_request"] == 6_359

@@ -38,6 +38,7 @@
       "historical_stage2_prompt": "approved R1 effective prompt",
       "stage3_prompt": "R2 proposed, required by the stage-3 profile, not active or approved",
       "historical_tool_schema": "7 definitions, 3306 UTF-8 bytes, execution commit a3704be6ab9dacd8c481caff7caf3278fe861e90",
+      "historical_tool_schema_sha256": "1ff0d3a35647f7a0c2fc956884a4d267b0148065ccd3e2469139463f859bea19",
       "stage3_tool_schema": "13 definitions, measured from the current coverage source",
       "bytes_per_token_proxy_range": [3, 4],
       "request_count_basis": "34 user messages plus 55 deterministic tool calls; upper proxy count 89",
