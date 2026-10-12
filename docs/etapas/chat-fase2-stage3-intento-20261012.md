@@ -12,6 +12,9 @@
   dueño](../chat/fase-2-decision-dueno.md).
 - No están disponibles los JSON de los 30 casos. Producción sigue R1/Sol low,
   con las nuevas capacidades apagadas; no se cambió runtime ni se activó nada.
-- [PR #126](https://github.com/salvamalfa/aeromexico-tracker/pull/126) queda
-  como continuación tras conciliar el intento y configurar variables. Las
-  aprobaciones registradas se conservan; no se pide aprobar contenido otra vez.
+- [PR #126](https://github.com/salvamalfa/aeromexico-tracker/pull/126) sigue
+  para integración al configurar las variables. Las aprobaciones registradas
+  se conservan; no se pide aprobar contenido otra vez.
+- El dueño autorizó reintentar sin esperar la conciliación del N01; el Stage 3
+  retry está en curso. La decisión no convierte el uso previo desconocido en
+  cero ni aporta resultados de la nueva ejecución: [autorización](../decisiones/20261012-chat-stage3-reintento.md).
