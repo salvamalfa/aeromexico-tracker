@@ -11,10 +11,14 @@ from typing import Any
 from ._openai_error_metadata import sanitize_upstream_fields
 from ._openai_prompt import (
     SYSTEM_INSTRUCTIONS as SYSTEM_INSTRUCTIONS,
+)
+from ._openai_prompt import (
     effective_instructions as effective_instructions,
 )
 from ._openai_references import (
     ALLOWED_REFERENCE_HOSTS as ALLOWED_REFERENCE_HOSTS,
+)
+from ._openai_references import (
     references_from_results,
 )
 from .base import ProviderResult
