@@ -37,22 +37,82 @@ def _json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
-def _case_sources(case: dict[str, Any]) -> tuple[list[str], list[str]]:
+def _turn_expectations(case: dict[str, Any]) -> list[dict[str, Any]]:
     expected = case.get("expected", {})
-    plan = expected.get("plan", {})
-    metric_ids = list(plan.get("metric_ids", []))
-    references = []
-    for row in expected.get("rows", []):
-        references.extend(row.get("source_references", []))
-    references.extend(expected.get("source_references", []))
+    turns = expected.get("turns")
+    if not isinstance(turns, list):
+        turns = [expected]
+    questions = case.get("turns", [case.get("question", "")])
+    rendered = []
+    for index, turn in enumerate(turns):
+        if not isinstance(turn, dict):
+            continue
+        plan = turn.get("plan", {})
+        references = []
+        rows = turn.get("rows", [])
+        for row in rows:
+            references.extend(row.get("source_references", []))
+        references.extend(turn.get("source_references", []))
+        unique = []
+        seen = set()
+        for reference in references:
+            url = reference.get("url")
+            label = reference.get("label", "")
+            if isinstance(url, str) and (label, url) not in seen:
+                seen.add((label, url))
+                unique.append(f"{label}: {url}")
+        facts = []
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            if "value" in row:
+                facts.append(
+                    f"{row.get('metric_id')}={row.get('value')} {row.get('unit')} "
+                    f"({row.get('period_label', row.get('period'))})"
+                )
+        constraints = []
+        if turn.get("response_behavior"):
+            constraints.append(f"comportamiento: {turn['response_behavior']}")
+        if turn.get("response_terms"):
+            constraints.append(f"términos: {', '.join(turn['response_terms'])}")
+        if turn.get("preserve_response_terms"):
+            constraints.append(f"preservar: {', '.join(turn['preserve_response_terms'])}")
+        if turn.get("preserve_any_terms"):
+            constraints.append(f"preservar alternativa: {_json(turn['preserve_any_terms'])}")
+        if turn.get("forbid_numeric_claims") is True:
+            constraints.append("prohibir afirmaciones numéricas")
+        if turn.get("must_not_contain"):
+            constraints.append(f"no afirmar: {_json(turn['must_not_contain'])}")
+        failures = turn.get("critical_failures", [])
+        if failures:
+            constraints.append(f"fallos críticos: {_json(failures)}")
+        prompt = questions[index] if index < len(questions) else f"turno {index + 1}"
+        rendered.append(
+            {
+                "index": index + 1,
+                "question": prompt,
+                "status": turn.get("status", "missing"),
+                "plan": plan,
+                "metric_ids": list(plan.get("metric_ids", [])),
+                "entities": list(plan.get("entity_ids", [])),
+                "periods": list(plan.get("periods", [])),
+                "facts": facts,
+                "references": unique,
+                "constraints": constraints,
+            }
+        )
+    return rendered
+
+
+def _case_sources(case: dict[str, Any]) -> tuple[list[str], list[str]]:
+    references = [reference for turn in _turn_expectations(case) for reference in turn["references"]]
+    metric_ids = list(dict.fromkeys(metric for turn in _turn_expectations(case) for metric in turn["metric_ids"]))
     unique = []
     seen = set()
     for reference in references:
-        url = reference.get("url")
-        label = reference.get("label", "")
-        if isinstance(url, str) and (label, url) not in seen:
-            seen.add((label, url))
-            unique.append(f"{label}: {url}")
+        if reference not in seen:
+            seen.add(reference)
+            unique.append(reference)
     return metric_ids, unique
 
 
@@ -88,11 +148,37 @@ def render_matrix(fixture: dict[str, Any]) -> str:
         case_id = case["id"]
         expected = case.get("expected", {})
         turns = case.get("turns", [case.get("question", "")])
-        questions = "<br>".join(f"{index}. {_cell(question)}" for index, question in enumerate(turns, 1))
-        action = f"`{expected.get('status', 'missing')}` · `{expected.get('behavior', 'missing')}`"
+        turn_expectations = _turn_expectations(case)
+        questions = "<br>".join(
+            f"{index}. {_cell(question)}" for index, question in enumerate(turns, 1)
+        )
+        if expected.get("status") == "multi_turn":
+            action = f"`multi_turn` · `{expected.get('behavior', 'missing')}`"
+            action += "<br>" + "<br>".join(
+                f"turno {turn['index']}: `{turn['status']}`"
+                + (f" · {_cell('; '.join(turn['constraints']))}" if turn["constraints"] else "")
+                for turn in turn_expectations
+            )
+        else:
+            action = f"`{expected.get('status', 'missing')}` · `{expected.get('behavior', 'missing')}`"
         metric_ids, references = _case_sources(case)
         plan = expected.get("plan", {})
         details = []
+        for turn in turn_expectations:
+            if len(turn_expectations) > 1:
+                details.append(f"turno {turn['index']} Gold: `{turn['status']}`")
+            if turn["metric_ids"]:
+                details.append(f"métricas turno {turn['index']}: `{', '.join(turn['metric_ids'])}`")
+            if turn["entities"]:
+                details.append(f"entidades turno {turn['index']}: `{', '.join(turn['entities'])}`")
+            if turn["periods"]:
+                details.append(f"periodos turno {turn['index']}: `{', '.join(turn['periods'])}`")
+            details.extend(f"Gold turno {turn['index']}: `{_cell(fact)}`" for fact in turn["facts"])
+            details.extend(_cell(reference) for reference in turn["references"])
+            details.extend(
+                f"restricción turno {turn['index']}: {_cell(constraint)}"
+                for constraint in turn["constraints"]
+            )
         if metric_ids:
             details.append(f"metric IDs: `{', '.join(metric_ids)}`")
         if plan.get("entity_ids"):
