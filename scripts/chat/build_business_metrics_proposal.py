@@ -27,6 +27,7 @@ METRIC_MAP = {
     "fuel_expense": "jet_fuel_expense",
     "operating_income": "operating_income",
 }
+GOLD_METRIC_TO_ID = {gold_metric: metric_id for metric_id, gold_metric in METRIC_MAP.items()}
 ENTITIES = ("AEROMEXICO", "VOLARIS", "VIVA_AEROBUS")
 PERIODS = tuple(
     [
@@ -153,6 +154,7 @@ def _load_quarter_rows() -> tuple[dict[tuple[str, str, str], dict[str, Any]], di
         chosen = sorted(preferred, key=lambda row: (row["source_system"], row["source_file"]))[0]
         selected[key] = {
             "availability": "available",
+            "metric_id": GOLD_METRIC_TO_ID[chosen["metric_key"]],
             "value": float(chosen["value_usd"]),
             "carrier_key": chosen["carrier_key"],
             "period_id": chosen["period_id"],
@@ -227,6 +229,8 @@ def _public_source_refs(
                 and digest == SEC_Q2_2026_IDENTITY_CHECK["gold_capture_sha256"]
                 and source.get("captured_bytes") == SEC_Q2_2026_IDENTITY_CHECK["gold_capture_bytes"]
             ):
+                metric_id = item.get("metric_id") or GOLD_METRIC_TO_ID.get(item.get("metric_key"))
+                reported_values = SEC_Q2_2026_IDENTITY_CHECK["reported_values_usd_millions"]
                 identity_check = {
                     key: SEC_Q2_2026_IDENTITY_CHECK[key]
                     for key in (
@@ -235,9 +239,11 @@ def _public_source_refs(
                         "checked_at",
                         "status",
                         "note",
-                        "reported_values_usd_millions",
                     )
                 }
+                identity_check["reported_values_usd_millions"] = (
+                    {metric_id: reported_values[metric_id]} if metric_id in reported_values else {}
+                )
             key = (url, digest, item.get("source_system"), member, label)
             unique[key] = {
                 "url": url,

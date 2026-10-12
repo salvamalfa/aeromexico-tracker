@@ -166,7 +166,7 @@ class Snapshot:
 
             try:
                 expected, expected_receipt = build_approved_payload(
-                    self.project_root / "docs/chat/f23-metrics-candidate-dry-run.json",
+                    self.project_root / "config/chat/business-metrics-proposal.json",
                     self.project_root / "config/chat/metrics-candidates.json",
                     self.root / approval_path,
                 )

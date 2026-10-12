@@ -41,12 +41,7 @@ def _approved_snapshot(tmp_path: Path) -> Snapshot:
     shutil.copytree(ROOT / "contracts/web", project / "contracts/web")
     shutil.copytree(ROOT / "contracts/chat", project / "contracts/chat")
     shutil.copytree(ROOT / "config/chat", project / "config/chat")
-    (project / "docs/chat").mkdir(parents=True)
-    shutil.copy2(
-        ROOT / "docs/chat/f23-metrics-candidate-dry-run.json",
-        project / "docs/chat/f23-metrics-candidate-dry-run.json",
-    )
-    proposal = project / "docs/chat/f23-metrics-candidate-dry-run.json"
+    proposal = project / "config/chat/business-metrics-proposal.json"
     definitions = project / "config/chat/metrics-candidates.json"
     receipt = _receipt(definitions, proposal)
     receipt_path = project / "config/chat/business-metrics-approval-receipt.json"
@@ -64,7 +59,7 @@ def _approved_snapshot(tmp_path: Path) -> Snapshot:
 
 
 def test_receipt_must_match_exact_definition_and_proposal_bytes(tmp_path: Path) -> None:
-    proposal = ROOT / "docs/chat/f23-metrics-candidate-dry-run.json"
+    proposal = ROOT / "config/chat/business-metrics-proposal.json"
     definitions = ROOT / "config/chat/metrics-candidates.json"
     receipt_path = tmp_path / "receipt.json"
     receipt_path.write_text(json.dumps(_receipt(definitions, proposal)), encoding="utf-8")
@@ -74,6 +69,23 @@ def test_receipt_must_match_exact_definition_and_proposal_bytes(tmp_path: Path) 
     assert payload["rows"]
     assert receipt["receipt_id"] == "test-fixture-only"
     assert all(row["value_kind"] == "owner_approved_gold_reported" for row in payload["rows"])
+    serialized_payload = json.dumps(payload, ensure_ascii=False)
+    assert all(
+        metric not in serialized_payload for metric in ("operating_costs", "fuel_expense", "operating_income")
+    )
+    q2_revenue = next(
+        row for row in payload["rows"] if row["metric_id"] == "total_revenue" and row["period"] == "2026Q2"
+    )
+    q2_refs = [
+        *q2_revenue["source_references"],
+        *q2_revenue["quarter_sources"][0]["source_references"],
+    ]
+    identity_ref = next(ref for ref in q2_refs if ref["current_identity_check"])
+    identity_check = identity_ref["current_identity_check"]
+    assert identity_check["reported_values_usd_millions"] == {"total_revenue": 1479.0}
+    assert identity_check["status"] == "byte_identity_mismatch_factual_values_match"
+    assert identity_ref["sha256"] == "6207b9a113074f68e0d8196f9597ddf35f40a32b5f53ca97c5cd2c0a2f0ac781"
+    assert identity_ref["captured_bytes"] == 230275
 
     stale_proposal = tmp_path / "stale-proposal.json"
     stale_proposal.write_bytes(proposal.read_bytes() + b" ")
