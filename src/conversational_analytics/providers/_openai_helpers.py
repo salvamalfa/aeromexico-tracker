@@ -13,7 +13,10 @@ from ._openai_prompt import (
     SYSTEM_INSTRUCTIONS as SYSTEM_INSTRUCTIONS,
     effective_instructions as effective_instructions,
 )
-from ._openai_references import ALLOWED_REFERENCE_HOSTS, references_from_results
+from ._openai_references import (
+    ALLOWED_REFERENCE_HOSTS as ALLOWED_REFERENCE_HOSTS,
+    references_from_results,
+)
 from .base import ProviderResult
 
 ALLOWED_TOOL_NAMES = frozenset(
