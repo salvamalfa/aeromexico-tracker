@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "stage": "F2.9-stage-3",
-  "status": "offline_profile_pending_dependency_and_budget_gates",
+  "status": "offline_business_only_partial_preflight_pending_dependency_and_budget_gates",
   "selected_candidate": "gpt-6.1-sol@low",
   "fixture": "tests/fixtures/chat_evals/business_proposed.json",
   "cohort": "business",
-  "case_scope": "all_30_owner_approved_business_cases",
+  "case_scope": "owner_approved_30_business_cases_only",
   "safety_prompt_injection_cases": false,
   "run_repetitions": 1,
   "measured_reference": {
@@ -36,5 +36,7 @@
     "30_case_gold_and_support_expectations_revalidated": false,
     "snapshot_and_semantic_versions_pinned_after_integration": false,
     "new_stage3_budget_approved_and_funded": false
-  }
+  },
+  "campaign_id": "f2-9-stage-3-business-partial-v1",
+  "safety_scope": "excluded_by_explicit_owner_direction; no prompt-injection cases are added or represented as validated"
 }

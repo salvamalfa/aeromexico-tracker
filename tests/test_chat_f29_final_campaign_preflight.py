@@ -16,8 +16,23 @@ def test_profile_dry_run_selects_all_business_cases_without_live_side_effects():
     plan = build_plan(profile_path=DEFAULT_PROFILE)
 
     assert plan["candidate"] == "gpt-6.1-sol@low"
+    assert plan["campaign_id"] == "f2-9-stage-3-business-partial-v1"
+    assert plan["cohort"] == "business_only_partial_stage3"
+    assert "excluded_by_explicit_owner_direction" in plan["safety_scope"]
     assert plan["case_count"] == 30
     assert plan["messages_per_candidate"] == 34
+    assert plan["repetitions"] == 1
+    assert plan["projection"]["projected_input_tokens"] == 1_909_558
+    assert plan["projection"]["projected_output_tokens"] == 9_423
+    assert plan["projection"]["cost_before_margin_usd"] == 4.86812
+    assert plan["projection"]["safety_margin_fraction"] == 0.35
+    assert plan["projection"]["proposed_reserve_usd"] == 6.58
+    assert plan["source_hashes"]["model_catalog"] == (
+        "9744c985f051c898a8af6e8d3c8766c6885e77d8a13d55b72e30427b15468d4c"
+    )
+    assert plan["source_hashes"]["public_stage2_closeout"] == (
+        "bf03c82e52fcff3b89fbcf18794218300149ae6859950199a6fd90c56fdd522d"
+    )
     assert plan["prompt_injection_cases_added"] == 0
     assert plan["provider_calls_now"] == 0
     assert plan["credentials_read"] is False
@@ -47,6 +62,44 @@ def test_preflight_rejects_changed_fixture_and_cached_input_credit(tmp_path: Pat
         build_plan(profile_path=tampered)
 
 
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("final_report", "0" * 64, "no coincide con el cierre fijado"),
+        ("terminal_recovery", "f" * 64, "no coincide con el cierre fijado"),
+    ],
+)
+def test_preflight_rejects_custom_profile_source_hashes_not_bound_to_public_closeout(
+    tmp_path: Path, field: str, value: str, message: str
+):
+    profile = json.loads(DEFAULT_PROFILE.read_text(encoding="utf-8"))
+    profile["measured_reference"]["source_hashes"][field] = value
+    tampered = tmp_path / "profile.json"
+    tampered.write_text(json.dumps(profile), encoding="utf-8")
+
+    with pytest.raises(ValueError, match=message):
+        build_plan(profile_path=tampered)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("completed_input_tokens", 1, "no coincide con el total del cierre F2.9 fijado"),
+        ("completed_output_tokens", 0, "debe ser un total entero positivo"),
+    ],
+)
+def test_preflight_rejects_custom_profile_token_totals_below_pinned_closeout(
+    tmp_path: Path, field: str, value: int, message: str
+):
+    profile = json.loads(DEFAULT_PROFILE.read_text(encoding="utf-8"))
+    profile["measured_reference"][field] = value
+    tampered = tmp_path / "profile.json"
+    tampered.write_text(json.dumps(profile), encoding="utf-8")
+
+    with pytest.raises(ValueError, match=message):
+        build_plan(profile_path=tampered)
+
+
 def test_matrix_covers_each_frozen_business_case_and_future_gates():
     fixture = json.loads((ROOT / "tests/fixtures/chat_evals/business_proposed.json").read_text())
     matrix = MATRIX.read_text(encoding="utf-8")
@@ -68,3 +121,40 @@ def test_matrix_covers_each_frozen_business_case_and_future_gates():
         "snapshot y versión semántica",
     ):
         assert required in matrix
+
+
+def test_matrix_is_generated_from_exact_frozen_questions_and_expectations():
+    from scripts.chat.render_f29_coverage_matrix import render_matrix
+
+    fixture = json.loads((ROOT / "tests/fixtures/chat_evals/business_proposed.json").read_text())
+    assert MATRIX.read_text(encoding="utf-8") == render_matrix(fixture)
+    for case in fixture["cases"]:
+        assert f"| {case['id']} |" in MATRIX.read_text(encoding="utf-8")
+        assert f"`{case['expected']['status']}` · `{case['expected']['behavior']}`" in MATRIX.read_text(
+            encoding="utf-8"
+        )
+    assert "2027" in MATRIX.read_text(encoding="utf-8")
+    assert "1T26 + 2T26" in MATRIX.read_text(encoding="utf-8")
+    assert "gasto total/participación del combustible" in MATRIX.read_text(encoding="utf-8")
+
+
+def test_matrix_renderer_rejects_any_unfrozen_fixture_change():
+    from scripts.chat.render_f29_coverage_matrix import render_matrix
+
+    fixture = json.loads((ROOT / "tests/fixtures/chat_evals/business_proposed.json").read_text())
+    fixture["cases"][19]["turns"][0] = "invented question"
+    with pytest.raises(ValueError, match="fixture congelado"):
+        render_matrix(fixture)
+
+
+@pytest.mark.parametrize("repetitions", [0, -1, 2, True, 1.0, "1"])
+def test_final_preflight_rejects_unfunded_or_invalid_repetition_counts(
+    tmp_path: Path, repetitions
+):
+    profile = json.loads(DEFAULT_PROFILE.read_text(encoding="utf-8"))
+    profile["run_repetitions"] = repetitions
+    changed_profile = tmp_path / "profile.json"
+    changed_profile.write_text(json.dumps(profile), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="run_repetitions|única repetición presupuestada"):
+        build_plan(profile_path=changed_profile)
