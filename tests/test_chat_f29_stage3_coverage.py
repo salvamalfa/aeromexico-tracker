@@ -9,9 +9,26 @@ import pytest
 
 from src.conversational_analytics.evaluation_stage3_coverage import (
     CAMPAIGN_CANDIDATE,
+    _extract_evidence,
     derive_stage3_coverage,
     validate_receipt_scope,
 )
+
+
+def test_retrospective_dashboard_provenance_does_not_block_agent_coverage():
+    retrospective = {
+        "coverage": {
+            "agent_eligible": False,
+            "usage_scope": "published_dashboard_retrospective",
+            "rows": [{"value": 12, "availability": "available"}],
+        }
+    }
+    genuine_policy_block = {
+        "coverage": {"agent_eligible": False, "usage_scope": "live_forecast"}
+    }
+
+    assert _extract_evidence(retrospective)[3] is False
+    assert _extract_evidence(genuine_policy_block)[3] is True
 
 _TEST_APPROVED_AT = date.today().isoformat()
 _TEST_VALID_UNTIL = (date.today() + timedelta(days=1)).isoformat()

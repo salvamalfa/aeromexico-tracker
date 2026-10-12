@@ -119,6 +119,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", type=Path, help="reporte privado opcional bajo .state/")
     parser.add_argument("--run", action="store_true", help="solicitar ejecución live (siempre receipt-gated)")
     parser.add_argument("--opt-in", action="store_true", help="consentimiento explícito de esta invocación")
+    parser.add_argument(
+        "--resume", action="store_true", help="reanudar solo con identidad y gasto reconciliados"
+    )
     parser.add_argument("--budget-receipt", type=Path)
     parser.add_argument("--capability-receipt", type=Path)
     args = parser.parse_args(argv)
@@ -204,6 +207,8 @@ def main(argv: list[str] | None = None) -> int:
         # fixture/profile, so this path is intentionally not exercised here.
         # The delegated execution boundary is the same campaign runner used by
         # evaluate_campaign; it is reached only after all local gates above.
+        from dataclasses import replace
+
         from src.conversational_analytics.config import ChatConfig
         from src.conversational_analytics.data.snapshot import Snapshot
         from src.conversational_analytics.evaluation_live_campaign import run_campaign
@@ -216,6 +221,27 @@ def main(argv: list[str] | None = None) -> int:
         snapshot = Snapshot(args.snapshot.resolve())
         fixture = json.loads(args.fixture.read_text(encoding="utf-8"))
         _runtime_config = ChatConfig.from_env()
+        _runtime_config = replace(
+            _runtime_config,
+            max_message_chars=report["campaign_identity"]["limits"]["max_message_chars"],
+            max_tool_calls=report["campaign_identity"]["limits"]["max_tool_calls"],
+            max_tool_result_bytes=report["campaign_identity"]["limits"]["max_tool_result_bytes"],
+            max_turn_seconds=report["campaign_identity"]["limits"]["max_turn_seconds"],
+        )
+        from src.conversational_analytics.tools.registry import ToolRegistry
+
+        _runtime_specs = ToolRegistry(snapshot, _runtime_config).tool_specs()
+        _runtime_schema_sha = hashlib.sha256(
+            json.dumps(_runtime_specs, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode(
+                "utf-8"
+            )
+        ).hexdigest()
+        if (
+            _runtime_schema_sha != report["runtime_capabilities"]["tool_specs_sha256"]
+            or [spec["name"] for spec in _runtime_specs] != report["runtime_capabilities"]["tool_names"]
+        ):
+            _write_output(args.output, _blocked("runtime_tool_capabilities_mismatch", report, reserve))
+            return 2
         active_prompt = load_active_system_instructions()
         if (
             effective_prompt_sha256() != report["runtime_capabilities"]["required_prompt_sha256"]
@@ -228,6 +254,7 @@ def main(argv: list[str] | None = None) -> int:
         run_id = f"f29-stage3-sol-low-{report['runtime_capabilities']['required_prompt_version']}"
         identity = {
             **report["campaign_identity"],
+            "coverage_campaign_sha256": report["campaign_sha256"],
             "trusted_receipt_sha256": trusted_receipt_sha256,
             "run_id": run_id,
             "case_ids": [case["id"] for case in cases],
@@ -269,6 +296,9 @@ def main(argv: list[str] | None = None) -> int:
             state_path=ROOT / ".state/outputs/chat-evaluations/f2-9-stage-3/campaign.json",
             output_dir=ROOT / ".state/outputs/chat-evaluations/f2-9-stage-3/runs",
             continue_after_known_provider_errors=True,
+            reservation_assumption_override=cost_plan["reservation_assumption_override"],
+            resume=args.resume,
+            runtime_config=_runtime_config,
         )
         _write_output(
             args.output,

@@ -240,6 +240,9 @@ def test_scheduler_completes_all_29_slots_within_remaining_budget(
 
 
 def test_live_runner_applies_identity_verbosity_to_runtime_config(monkeypatch, tmp_path: Path) -> None:
+    from src.conversational_analytics.providers import _openai_prompt
+    from src.conversational_analytics.tools import registry as tools_registry
+
     seen = []
     replace_config = evaluation_live.replace
 
@@ -251,12 +254,37 @@ def test_live_runner_applies_identity_verbosity_to_runtime_config(monkeypatch, t
     class StopAfterConfig(Exception):
         pass
 
-    def stop_before_snapshot(_path):
+    def stop_at_registry(_snapshot, config):
+        seen.append(("registry", config))
         raise StopAfterConfig
 
     monkeypatch.setattr(evaluation_live, "replace", capture_replace)
-    monkeypatch.setattr(evaluation_live, "Snapshot", stop_before_snapshot)
-    monkeypatch.setattr(ChatConfig, "from_env", classmethod(lambda cls: cls(text_verbosity="low")))
+    monkeypatch.setattr(
+        evaluation_live,
+        "Snapshot",
+        lambda _path: type("Snapshot", (), {"version": "data-v1", "semantic_version": "semantic-v1"})(),
+    )
+    monkeypatch.setattr(tools_registry, "ToolRegistry", stop_at_registry)
+    monkeypatch.setattr(
+        _openai_prompt,
+        "effective_prompt_sha256",
+        lambda: "68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf",
+    )
+    monkeypatch.setattr(_openai_prompt, "effective_prompt_version", lambda: "r2-proposed")
+    monkeypatch.setattr(
+        ChatConfig,
+        "from_env",
+        classmethod(lambda cls: pytest.fail("explicit runtime config must be propagated")),
+    )
+    runtime_config = ChatConfig(
+        provider="mock",
+        prompt_version="r2-proposed",
+        enable_route_tools=True,
+        enable_business_metric_tools=True,
+        enable_evidence_tools=True,
+        max_tool_calls=16,
+        text_verbosity="low",
+    )
 
     with pytest.raises(StopAfterConfig):
         evaluation_live._live_provider_run(
@@ -270,9 +298,16 @@ def test_live_runner_applies_identity_verbosity_to_runtime_config(monkeypatch, t
             expected_versions={"data_version": "data-v1", "semantic_version": "semantic-v1"},
             run_identity={"text_verbosity": "high"},
             text_verbosity_override="high",
+            runtime_config=runtime_config,
         )
 
-    assert seen == [("low", "high")]
+    assert seen[0] == ("low", "high")
+    assert seen[1][0] == "registry"
+    assert seen[1][1].enable_route_tools is True
+    assert seen[1][1].enable_business_metric_tools is True
+    assert seen[1][1].enable_evidence_tools is True
+    assert seen[1][1].max_tool_calls == 16
+    assert seen[1][1].text_verbosity == "high"
 
 
 def test_campaign_stamps_exact_identity_on_private_source_report(monkeypatch, tmp_path: Path) -> None:

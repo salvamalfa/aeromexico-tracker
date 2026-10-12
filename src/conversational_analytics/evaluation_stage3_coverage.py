@@ -15,22 +15,22 @@ import re
 import subprocess
 from datetime import date
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 from .data.snapshot import Snapshot
 from .evaluation_stage3_scenarios import _derived_calculations, _scenario_calls
 from .providers import _openai_prompt
-from .tools.business_metrics import business_metric_tool_specs, dispatch_business_metric_tool
+from .tools.business_metrics import dispatch_business_metric_tool
 from .tools.registry import ToolRegistry
-from .tools.routes import ROUTE_TOOL_SPECS, RouteTools
+from .tools.routes import RouteTools
 
 try:
     from .evidence_index import EvidenceIndex
-    from .tools.evidence import dispatch_evidence_tool, evidence_tool_specs
+    from .tools.evidence import dispatch_evidence_tool
 except ImportError:  # F2.5/F2.6 can be merged independently from this checker.
     EvidenceIndex = None  # type: ignore[assignment,misc]
     dispatch_evidence_tool = None
-    evidence_tool_specs = None
 
 ROOT = Path(__file__).resolve().parents[2]
 STAGE3_FIXTURE = ROOT / "tests/fixtures/chat_evals/business_proposed.json"
@@ -79,7 +79,14 @@ class _Tools:
 
     def __init__(self, snapshot: Snapshot):
         self.snapshot = snapshot
-        self.registry = ToolRegistry(snapshot)
+        self.registry = ToolRegistry(
+            snapshot,
+            SimpleNamespace(
+                enable_route_tools=True,
+                enable_business_metric_tools=True,
+                enable_evidence_tools=True,
+            ),
+        )
         self.routes = RouteTools(snapshot)
         self.evidence = None
         evidence_path = ROOT / "config/chat/evidence/approved-index.json"
@@ -120,7 +127,10 @@ def _extract_evidence(
         if isinstance(value, dict):
             if value.get("approval_gate") == "closed" or value.get("availability") == "approval_required":
                 gate_closed = True
-            if value.get("agent_eligible") is False:
+            if (
+                value.get("agent_eligible") is False
+                and value.get("usage_scope") != "published_dashboard_retrospective"
+            ):
                 route_policy_block = True
             url = value.get("url")
             label = value.get("label")
@@ -205,9 +215,7 @@ def derive_stage3_coverage(
     tools = _Tools(snapshot)
     catalog_result = tools.call("get_data_catalog", {})
     periods = catalog_result["periods"]
-    toolspecs = tools.registry.tool_specs() + ROUTE_TOOL_SPECS + business_metric_tool_specs()
-    if evidence_tool_specs is not None:
-        toolspecs += evidence_tool_specs()
+    toolspecs = tools.registry.tool_specs()
     toolspec_hash = _canonical_hash(toolspecs)
     snapshot_manifest_sha = _file_hash(snapshot.root / "publication_manifest.json")
     projection_paths = ("data/v1/business_metrics.json", "data/v1/business_metrics.approval.json")
@@ -262,10 +270,10 @@ def derive_stage3_coverage(
                 continue
             found, refs, closed, route_block = _extract_evidence(call["result"], path=f"calls[{index}]")
             derived_evidence.extend(found)
-            if any(
-                item.get("availability") == "available" and _numeric(item.get("value"))
-                for item in found
-            ) and not refs:
+            if (
+                any(item.get("availability") == "available" and _numeric(item.get("value")) for item in found)
+                and not refs
+            ):
                 tool_source_coverage_complete = False
             for ref in refs:
                 source_map.setdefault(ref["url"], ref)
@@ -486,8 +494,10 @@ def validate_receipt_scope(
         ("capabilities", capability_receipt, "f29_stage3_capabilities"),
     ):
         trusted_hash = trusted_hashes[label]
-        if not isinstance(trusted_hash, str) or len(trusted_hash) != 64 or any(
-            char not in _HASH for char in trusted_hash
+        if (
+            not isinstance(trusted_hash, str)
+            or len(trusted_hash) != 64
+            or any(char not in _HASH for char in trusted_hash)
         ):
             return False, f"{label}_receipt_sha256_missing_or_invalid"
         if _canonical_hash(receipt) != trusted_hash:
