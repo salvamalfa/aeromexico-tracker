@@ -100,6 +100,14 @@ def test_completed_case_is_durable_with_campaign_lineage_before_delete(
     assert len(sidecars) == 1
     assert result["case_checkpoint_path"] == str(sidecars[0])
     assert os.stat(sidecars[0]).st_mode & 0o777 == 0o600
+    final_detail = json.loads(sidecars[0].read_text(encoding="utf-8"))
+    final_main = json.loads(Path(result["output_path"]).read_text(encoding="utf-8"))
+    detail_rows = final_detail["models"][0]["cases"]
+    main_rows = final_main["models"][0]["cases"]
+    assert detail_rows == main_rows
+    cleanup_rows = [row for row in detail_rows if "provider_session_delete" in row]
+    assert cleanup_rows
+    assert all(row["provider_session_delete"] == "requested" for row in cleanup_rows)
 
 
 def test_case_checkpoint_write_failure_prevents_remote_delete_and_next_case(
