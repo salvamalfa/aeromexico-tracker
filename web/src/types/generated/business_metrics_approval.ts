@@ -17,4 +17,6 @@ export interface OwnerApprovalReceiptForPublicBusinessMetrics {
   ];
   definitions_sha256: Sha256;
   proposal_sha256: Sha256;
+  owner_id: "salvamalfa";
+  decision_reference: string;
 }
