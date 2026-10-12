@@ -188,7 +188,17 @@ def deduplicate_source_references(refs: list[dict[str, str]]) -> list[dict[str, 
         source = by_url.setdefault(url, {"url": url, "labels": []})
         if label not in source["labels"]:
             source["labels"].append(label)
-    return [{"url": url, "label": " · ".join(source["labels"])} for url, source in by_url.items()]
+    prefix = "Dashboard público · "
+    merged = []
+    for url, source in by_url.items():
+        labels = source["labels"]
+        label = (
+            prefix + " / ".join(item.removeprefix(prefix) for item in labels)
+            if all(item.startswith(prefix) for item in labels)
+            else " · ".join(labels)
+        )
+        merged.append({"url": url, "label": label})
+    return merged
 
 
 def build_display(
@@ -200,6 +210,7 @@ def build_display(
         {"key": "market_key", "label": "Ruta"},
         {"key": "value", "label": title, "unit": unit},
         {"key": "value_kind", "label": "Tipo de valor"},
+        {"key": "metric_source_label", "label": "Fuente de la métrica"},
     ]
     if query.get("comparison_period"):
         columns.extend(
@@ -214,7 +225,10 @@ def build_display(
         )
     display_rows = []
     for row in rows:
-        display_row = {key: row[key] for key in ("market_key", "value", "value_kind")}
+        display_row = {
+            key: row[key]
+            for key in ("market_key", "value", "value_kind", "metric_source_label")
+        }
         if row.get("comparison"):
             comparison = row["comparison"]
             display_row.update(
