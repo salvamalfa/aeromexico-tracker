@@ -93,6 +93,19 @@ def _quality_dict(case_record: dict[str, Any]) -> dict[str, Any]:
     return quality if isinstance(quality, dict) else {}
 
 
+def _attempted_turn_count(attempted: list[dict[str, Any]]) -> int | None:
+    counts: list[int] = []
+    for case in attempted:
+        count = case.get("turn_count", case.get("turns"))
+        if isinstance(count, bool) or not isinstance(count, int) or count < 0:
+            turn_usage = case.get("turn_usage")
+            if not isinstance(turn_usage, list):
+                return None
+            count = len(turn_usage)
+        counts.append(count)
+    return sum(counts)
+
+
 def _numeric_gold_summary(
     selected: list[dict[str, Any]], case_records: list[dict[str, Any]]
 ) -> dict[str, Any]:
@@ -180,7 +193,7 @@ def _summarize_candidate(
             if isinstance(case.get("output_tokens"), int)
         ),
         "usage_complete_case_count": len(token_rows),
-        "turn_count": len(attempted),
+        "turn_count": _attempted_turn_count(attempted),
         "cached_tokens": "unknown",
         "reasoning_tokens": "unknown; included in output_tokens",
     }

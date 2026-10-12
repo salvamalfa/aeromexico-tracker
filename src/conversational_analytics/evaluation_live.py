@@ -448,6 +448,7 @@ def _live_provider_run(
                     "text_verbosity": verbosity,
                     "status": "provider_error",
                     "tool_calls": called_tools,
+                    "turn_count": len(completed_turns) + (1 if provider is not None else 0),
                     "session_id": session[-1] if session else None,
                     "input_tokens": sum(input_parts) if input_parts else None,
                     "output_tokens": sum(output_parts) if output_parts else None,

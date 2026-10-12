@@ -201,7 +201,11 @@ def _consolidate_report(
     model["estimated_cost_usd"] = (
         None if model["spent_unknown"] else model["known_estimated_cost_usd"]
     )
-    from .evaluation_live_support import _nearest_rank_percentile, _numeric_gold_summary
+    from .evaluation_live_support import (
+        _attempted_turn_count,
+        _nearest_rank_percentile,
+        _numeric_gold_summary,
+    )
 
     fixture_by_id = {str(case["id"]): case for case in fixture_cases}
     selected = [fixture_by_id[case_id] for case_id in ordered_ids]
@@ -235,7 +239,7 @@ def _consolidate_report(
             case.get("output_tokens", 0) for case in attempted if isinstance(case.get("output_tokens"), int)
         ),
         "usage_complete_case_count": len(token_rows),
-        "turn_count": len(attempted),
+        "turn_count": _attempted_turn_count(attempted),
         "cached_tokens": "unknown",
         "reasoning_tokens": "unknown; included in output_tokens",
     }
