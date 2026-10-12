@@ -21,7 +21,15 @@ def test_stage3_resume_consolidates_private_details_for_all_cases_and_exports(
     fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
     fixture_sha = hashlib.sha256(fixture_path.read_bytes()).hexdigest()
     case_ids = [case["id"] for case in fixture["cases"]]
-    coverage_sha = "c" * 64
+    coverage_cases = [
+        {
+            "case_id": case_id,
+            "status": "supported",
+            "derived_expectations": [],
+            "derived_calculations": [],
+        }
+        for case_id in case_ids
+    ]
     coverage_identity = {
         "stage": "F2.9-stage-3",
         "candidate": "gpt-6.1-sol@low",
@@ -32,9 +40,10 @@ def test_stage3_resume_consolidates_private_details_for_all_cases_and_exports(
         "profile_sha256": "a" * 64,
         "snapshot_data_version": "data-v1",
         "snapshot_semantic_version": "semantic-v1",
-        "coverage_campaign_sha256": coverage_sha,
+        "derived_coverage_sha256": _canonical_hash(coverage_cases),
     }
-    identity = dict(coverage_identity)
+    coverage_sha = _canonical_hash(coverage_identity)
+    identity = {**coverage_identity, "coverage_campaign_sha256": coverage_sha}
     run = {
         "run_id": "stage3-resume",
         "candidate": "gpt-6.1-sol@low",
@@ -167,8 +176,8 @@ def test_stage3_resume_consolidates_private_details_for_all_cases_and_exports(
     assert len(consolidated["source_report_fragments"]) == 2
     assert consolidated["mode"] == "live-evaluation"
     assert consolidated["probe_only"] is False
-    assert consolidated["run_identity"] == coverage_identity
-    assert consolidated["run_identity_hash"] == _canonical_hash(coverage_identity)
+    assert consolidated["run_identity"] == identity
+    assert consolidated["run_identity_hash"] == _canonical_hash(identity)
     assert consolidated["campaign_identity_hash"] == final["identity_hash"]
     assert consolidated["data_version"] == "data-v1"
     assert consolidated["semantic_version"] == "semantic-v1"
@@ -182,19 +191,22 @@ def test_stage3_resume_consolidates_private_details_for_all_cases_and_exports(
         "campaign_sha256": coverage_sha,
         "campaign_identity": coverage_identity,
         "pins": {"data_version": "data-v1", "semantic_version": "semantic-v1"},
-        "cases": [
-            {
-                "case_id": case_id,
-                "status": "supported",
-                "derived_expectations": [],
-                "derived_calculations": [],
-            }
-            for case_id in case_ids
-        ],
+        "cases": coverage_cases,
     }
-    dataset, _ = build_dataset(coverage, consolidated, fixture, fixture_sha)
+    live_report_sha = hashlib.sha256(consolidated_path.read_bytes()).hexdigest()
+    dataset, _ = build_dataset(
+        coverage, consolidated, fixture, fixture_sha, live_report_sha
+    )
     assert len(dataset["questions"]) == 30
     assert dataset["available_count"] == 30
+    assert dataset["dataset_id"] == _canonical_hash(
+        {
+            "coverage_sha256": coverage_sha,
+            "live_campaign_identity_hash": final["identity_hash"],
+            "live_report_sha256": live_report_sha,
+            "case_ids": case_ids,
+        }
+    )
 
     before_replay = consolidated_path.read_bytes()
     replay = campaign.run_campaign(**args, resume=True)
