@@ -43,8 +43,8 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
   `gpt-6.1-sol`, esfuerzo `low` y R1; health respondió 200. Las capacidades de
   rutas, métricas financieras y búsqueda de evidencia permanecen apagadas.
   El dueño aprobó R2, cuatro métricas, siete pasajes, tres fichas y una reserva
-  nueva de US$8. Stage 3 espera ejecución y revisión del JSON; el saldo total
-  es desconocido. El runtime mantiene R1/Sol low y las funciones nuevas siguen
+  nueva de US$8. El intento N01 terminó HTTP 400 antes de sesión, sin respuesta
+  ni uso conciliado; gasto y saldo siguen desconocidos. El runtime mantiene R1/Sol low y las funciones nuevas siguen
   apagadas; los pins aprobados están preparados para el siguiente despliegue
   (ver [Chat analítico](#chat-analítico)).
 - **Datos:** AFAC y AeroDataBox se actualizan a mano mes a mes; lo pendiente
@@ -146,9 +146,10 @@ checks y las páginas públicas se verificaron. El deployment confirma
 cuatro métricas financieras, siete pasajes de reportes, tres fichas de noticias
 y una reserva nueva financiada de US$8. El runtime mantiene R1/Sol low y las
 funciones nuevas siguen apagadas hasta revisar los resultados JSON de Stage 3.
-La campaña de 30 casos/34 mensajes está pendiente de ejecución; el estimado es
-US$7.06–7.23 y el saldo total de cuenta sigue desconocido. No se ha ejecutado
-la campaña ni se ha aprobado un gate de calidad.
+La evaluación Stage 3 de 30 casos/34 mensajes no tiene resultados JSON: un
+intento N01 devolvió HTTP 400 antes de sesión; su consumo no está
+conciliado (`stopped_unknown_spend`), así que no se afirma costo cero ni saldo
+intacto. No hay gate de calidad aprobado.
 
 - Operación, instalación y límites: [documentación del chat](docs/chat/README.md)
   y [traspaso operativo](docs/chat/traspaso-activacion-mvp-20261006.md).
