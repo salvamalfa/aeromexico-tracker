@@ -596,3 +596,50 @@ def test_source_references_deduplicate_by_url_and_merge_distinct_labels() -> Non
             "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/flights/domestic/2026Q2.json",
         }
     ]
+
+
+def test_real_international_quarter_route_queries_fit_presented_tool_budget() -> None:
+    import json
+    from types import SimpleNamespace
+
+    from src.conversational_analytics.presentation import DisplayRegistry
+    from src.conversational_analytics.tools.registry import ToolRegistry
+
+    snapshot = Snapshot(Path("site"))
+    registry = ToolRegistry(snapshot, SimpleNamespace(enable_route_tools=True))
+    for top_n, comparison_period in ((None, None), (20, None), (None, "2026Q1"), (20, "2026Q1")):
+        query = {
+            "entity_id": "AEROMEXICO_GROUP",
+            "segment": "international",
+            "period": "2026Q2",
+            "metric": "seats",
+        }
+        if comparison_period is not None:
+            query["comparison_period"] = comparison_period
+        if top_n is not None:
+            query["top_n"] = top_n
+        result = registry.invoke("query_routes", query)
+        raw_bytes = len(json.dumps(result, ensure_ascii=False, separators=(",", ":")).encode())
+        enriched = DisplayRegistry().add_tool_result(result, "query_routes", "route-call")
+        final_bytes = len(json.dumps(enriched, ensure_ascii=False, separators=(",", ":")).encode())
+        expected = top_n or 10
+
+        assert raw_bytes <= 15_000
+        assert final_bytes <= 15_652
+        assert result["requested_top_n"] == expected
+        assert result["available_route_count"] == 75
+        assert result["applied_top_n"] == len(result["rows"]) <= expected
+        assert result["truncated"] is True
+        assert result["truncation_reason"] == "tool_result_size_limit"
+        assert result["display"]["title"].endswith("75 mostradas")
+        assert len(result["display"]["rows"]) == len(result["rows"])
+        assert result["rows"]
+        assert all(row["metric_provenance"] for row in result["rows"])
+        assert all(row["value"] is not None for row in result["rows"])
+        assert all(row["value_kind"] in {"observed", "estimated", "scheduled"} for row in result["rows"])
+        assert isinstance(result["coverage"]["2026Q2"]["complete"], bool)
+        assert result["coverage"]["2026Q2"]["availability"] in {"complete", "partial"}
+        if comparison_period is not None:
+            assert all(row["comparison"] is not None for row in result["rows"])
+            assert all(isinstance(row["comparison"]["available"], bool) for row in result["rows"])
+        assert enriched["displays"][0]["display_id"] == result["display"]["display_id"]
