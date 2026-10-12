@@ -113,7 +113,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--fixture", type=Path, default=ROOT / "tests/fixtures/chat_evals/business_proposed.json"
     )
-    parser.add_argument("--profile", type=Path, default=ROOT / "config/chat/f2_9_business_stage3_partial.json")
+    parser.add_argument(
+        "--profile", type=Path, default=ROOT / "config/chat/f2_9_business_stage3_partial.json"
+    )
     parser.add_argument("--output", type=Path, help="reporte privado opcional bajo .state/")
     parser.add_argument("--run", action="store_true", help="solicitar ejecución live (siempre receipt-gated)")
     parser.add_argument("--opt-in", action="store_true", help="consentimiento explícito de esta invocación")

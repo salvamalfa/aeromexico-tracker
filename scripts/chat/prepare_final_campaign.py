@@ -154,7 +154,8 @@ def build_plan(
     if profile.get("case_scope") != "owner_approved_30_business_cases_only":
         raise ValueError("El perfil debe limitarse a los 30 casos de negocio aprobados")
     if profile.get("safety_scope") != (
-        "excluded_by_explicit_owner_direction; no prompt-injection cases are added or represented as validated"
+        "excluded_by_explicit_owner_direction; no prompt-injection cases are added "
+        "or represented as validated"
     ):
         raise ValueError("El perfil debe declarar la exclusión explícita de la cohorte safety")
     if profile.get("safety_prompt_injection_cases") is not False:
@@ -212,21 +213,21 @@ def build_plan(
 
     # Recreate the deterministic offline tool aggregate used for the estimate.
     # This measures schema and tool-result bytes only; it never contacts a model.
+    from src.conversational_analytics.data.snapshot import Snapshot
     from src.conversational_analytics.evaluation_stage3_coverage import (
-        _Tools,
         _canonical_hash,
+        _Tools,
         derive_stage3_coverage,
     )
-    from src.conversational_analytics.data.snapshot import Snapshot
-    from src.conversational_analytics.tools.business_metrics import business_metric_tool_specs
-    from src.conversational_analytics.tools.evidence import evidence_tool_specs
-    from src.conversational_analytics.tools.routes import ROUTE_TOOL_SPECS
     from src.conversational_analytics.providers._openai_prompt import (
         R2_PROMPT_PATH,
         R2_PROMPT_SHA256,
         load_system_instructions,
         prompt_sha256,
     )
+    from src.conversational_analytics.tools.business_metrics import business_metric_tool_specs
+    from src.conversational_analytics.tools.evidence import evidence_tool_specs
+    from src.conversational_analytics.tools.routes import ROUTE_TOOL_SPECS
 
     coverage = coverage_report or derive_stage3_coverage(
         snapshot_root=ROOT / "site", fixture_path=fixture_path, profile_path=profile_path
@@ -256,9 +257,10 @@ def build_plan(
     current_tool_specs = (
         tools.registry.tool_specs() + ROUTE_TOOL_SPECS + business_metric_tool_specs() + evidence_tool_specs()
     )
-    current_tool_schema_bytes = len(
-        json.dumps(current_tool_specs, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    current_tool_schema_json = json.dumps(
+        current_tool_specs, ensure_ascii=False, sort_keys=True, separators=(",", ":")
     )
+    current_tool_schema_bytes = len(current_tool_schema_json.encode("utf-8"))
     current_tool_schema_sha = _canonical_hash(current_tool_specs)
     r1_prompt = load_system_instructions()
     r2_prompt = R2_PROMPT_PATH.read_text(encoding="utf-8").strip()
@@ -271,7 +273,8 @@ def build_plan(
     prompt_delta_bytes = len(r2_prompt.encode("utf-8")) - len(r1_prompt.encode("utf-8"))
     tool_schema_delta_bytes = current_tool_schema_bytes - historical_tool_schema_bytes
     context_delta_bytes_per_request = prompt_delta_bytes + tool_schema_delta_bytes
-    if context_delta_bytes_per_request <= 0 or current_tool_schema_sha != metrics_coverage["runtime_capabilities"]["tool_specs_sha256"]:
+    coverage_tool_schema_sha = metrics_coverage["runtime_capabilities"]["tool_specs_sha256"]
+    if context_delta_bytes_per_request <= 0 or current_tool_schema_sha != coverage_tool_schema_sha:
         raise ValueError("La medición del contexto actual no coincide con los pins de cobertura")
     context_delta_input_tokens_range = [
         math.ceil(context_delta_bytes_per_request * modeled_provider_requests / bytes_per_token)
@@ -292,8 +295,11 @@ def build_plan(
     base_cost = costs_before_margin[1]
     campaign_identity = dict(metrics_coverage["campaign_identity"])
     campaign_identity["reserve_usd"] = reserve_usd
+    campaign_identity_json = json.dumps(
+        campaign_identity, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    )
     campaign_sha256 = hashlib.sha256(
-        json.dumps(campaign_identity, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        campaign_identity_json.encode("utf-8")
     ).hexdigest()
     return {
         "stage": "F2.9-stage-3",
@@ -339,7 +345,9 @@ def build_plan(
             "pricing_as_of": model.get("pricing_as_of"),
         },
         "projection": {
-            "basis": "stage2_measured_usage_scaled_to_34_messages_plus_current_prompt_and_tool_schema_context_delta",
+            "basis": (
+                "stage2_measured_usage_scaled_to_34_messages_plus_current_prompt_and_tool_schema_context_delta"
+            ),
             "projected_input_tokens": projected_input_tokens_range[1],
             "projected_input_tokens_range": projected_input_tokens_range,
             "projected_output_tokens": math.ceil(output_tokens),
@@ -369,7 +377,10 @@ def build_plan(
                 "largest_tool_result_utf8_bytes": max(map(len, serialized_results), default=0),
                 "bytes_per_token_proxy_range": list(bytes_per_token_proxy_range),
                 "input_token_delta_range": context_delta_input_tokens_range,
-                "estimation_note": "3–4 UTF-8 bytes/token proxy; no tokenizer or provider usage was queried. Tool result sizes are reported as an aggregate, not converted into billed tokens.",
+                "estimation_note": (
+                    "3–4 UTF-8 bytes/token proxy; no tokenizer or provider usage was queried. "
+                    "Tool result sizes are an aggregate and are not converted into billed tokens."
+                ),
             },
             "funds_to_have_available_if_zero_verified_balance_usd": reserve_usd,
             "owner_approval_required": True,

@@ -107,7 +107,9 @@ def _turn_expectations(case: dict[str, Any]) -> list[dict[str, Any]]:
 
 def _case_sources(case: dict[str, Any]) -> tuple[list[str], list[str]]:
     references = [reference for turn in _turn_expectations(case) for reference in turn["references"]]
-    metric_ids = list(dict.fromkeys(metric for turn in _turn_expectations(case) for metric in turn["metric_ids"]))
+    metric_ids = list(
+        dict.fromkeys(metric for turn in _turn_expectations(case) for metric in turn["metric_ids"])
+    )
     unique = []
     seen = set()
     for reference in references:
