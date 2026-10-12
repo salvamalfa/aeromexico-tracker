@@ -110,6 +110,14 @@ def _row_kind(row: dict[str, Any], metric: dict[str, Any]) -> str:
         return "derived_sum_of_reported_quarters"
     if isinstance(direct, str) and direct in _VALUE_KINDS:
         return direct
+    if isinstance(direct, str) and direct.startswith("owner_approved_calculated_"):
+        return "calculated"
+    if isinstance(direct, str) and direct.startswith("owner_approved_gold_fx_converted"):
+        return "calculated"
+    if isinstance(direct, str) and direct.startswith("owner_approved_gold_reported"):
+        return "reported"
+    if isinstance(direct, str) and direct.startswith("derived_weighted_mean"):
+        return "calculated"
     if (
         _unapproved_metric(metric)
         or row.get("approval_required") is True
@@ -331,6 +339,36 @@ def _build_query_display(
     result: dict[str, Any], tool_name: str, call_id: str, catalog: dict[str, Any] | None = None
 ) -> dict[str, Any] | None:
     rows = result.get("rows")
+    if tool_name == "query_business_metrics" and rows is None:
+        # F2.3 returns one scalar result. Adapt only the known scalar contract;
+        # its approval gate remains authoritative and candidate values stay
+        # blocked even if a malformed payload includes a numeric value.
+        if (
+            result.get("approval_gate") == "closed"
+            or result.get("value_kind") == "candidate_unapproved"
+            or result.get("availability") in ("candidate_unapproved", "approval_required", "not_approved")
+        ):
+            return None
+        value = result.get("value")
+        if value is not None:
+            if not isinstance(value, (int, float)) or isinstance(value, bool):
+                return None
+            try:
+                finite = math.isfinite(value)
+            except (OverflowError, TypeError, ValueError):
+                finite = False
+            if not finite:
+                return None
+        rows = [{
+            "metric_id": result.get("metric_id"),
+            "entity_id": result.get("entity_id"),
+            "period": result.get("period"),
+            "value": value,
+            "unit": result.get("unit"),
+            "value_kind": result.get("value_kind"),
+            "availability": result.get("availability"),
+            "approval_gate": result.get("approval_gate"),
+        }]
     if not isinstance(rows, list) or not rows or not all(isinstance(row, dict) for row in rows):
         return None
     chart = result.get("chart")

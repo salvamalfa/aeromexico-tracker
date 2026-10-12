@@ -3,15 +3,18 @@ from __future__ import annotations
 import hashlib
 import json
 import shutil
+from types import SimpleNamespace
 from pathlib import Path
 
 import pytest
 
 from src.conversational_analytics.data.snapshot import Snapshot, SnapshotError
+from src.conversational_analytics.presentation import make_displays
 from src.conversational_analytics.tools.business_metrics import (
     deterministic_query,
     get_business_metric_definition,
 )
+from src.conversational_analytics.tools.registry import ToolRegistry
 from src.publish import manifest as manifest_mod
 from src.publish.verify import verify_site
 from src.web_export.business_metrics import BusinessMetricsApprovalError, build_approved_payload
@@ -144,6 +147,51 @@ def test_approved_snapshot_query_sums_full_year_and_keeps_source_currency_and_un
     capture = q2_2026["source_references"][0]
     assert capture["captured_bytes"] == 230275
     assert capture["current_identity_check"]["current_bytes"] == 230386
+
+
+def test_approved_business_metric_scalar_gets_safe_cited_display(tmp_path: Path) -> None:
+    snapshot = _approved_snapshot(tmp_path)
+    registry = ToolRegistry(snapshot, SimpleNamespace(enable_business_metric_tools=True))
+    catalog = snapshot.catalog()
+    result = registry.invoke(
+        "query_business_metrics",
+        {"metric_id": "total_revenue", "entity_id": "AEROMEXICO", "period": "2025Q1"},
+    )
+
+    shown = make_displays(result, "query_business_metrics", "approved-call-1", catalog)
+    display = shown["display"]
+    expected_hash = hashlib.sha256(b"approved-call-1").hexdigest()[:12]
+    assert display["display_id"] == f"tabla:consulta_{expected_hash}"
+    assert display["value_kind"] == "reported"
+    assert display["rows"] == [{"entity": "Aeroméxico", "period": "2025Q1", "value": result["value"]}]
+    value_column = next(column for column in display["columns"] if column["key"] == "value")
+    assert value_column["unit"] == "USD"
+    assert display["sources"]
+    assert display["sources"][0]["url"] == result["source_references"][0]["url"]
+    second = make_displays(result, "query_business_metrics", "approved-call-2", catalog)["display"]
+    assert second["display_id"] != display["display_id"]
+
+    missing = {**result, "value": None, "availability": "incomplete"}
+    missing_display = make_displays(missing, "query_business_metrics", "missing-call", catalog)["display"]
+    assert missing_display["rows"][0]["value"] is None
+
+    ratio_result = registry.invoke(
+        "query_business_metrics",
+        {"metric_id": "load_factor", "entity_id": "AEROMEXICO", "period": "2026Q2"},
+    )
+    ratio_display = make_displays(ratio_result, "query_business_metrics", "ratio-call", catalog)["display"]
+    assert ratio_display["rows"][0]["value"] == pytest.approx(84.9)
+    assert ratio_display["columns"][-1]["unit"] == "percent"
+    assert ratio_display["value_kind"] == "calculated"
+
+    candidate = {
+        **result,
+        "value": 123.0,
+        "approval_gate": "closed",
+        "availability": "approval_required",
+        "value_kind": "candidate_unapproved",
+    }
+    assert "display" not in make_displays(candidate, "query_business_metrics", "candidate-call", catalog)
 
 
 def test_snapshot_rejects_receipt_or_payload_not_hash_bound_to_proposal(tmp_path: Path) -> None:
