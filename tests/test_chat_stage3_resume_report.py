@@ -210,3 +210,98 @@ def test_stage3_resume_consolidates_private_details_for_all_cases_and_exports(
         campaign.run_campaign(**changed_args, resume=True)
     assert consolidated_path.read_bytes() == before_replay
     assert len(calls) == 2
+
+
+def test_budget_below_first_reservation_writes_empty_detail_and_resume_stays_known(
+    monkeypatch, tmp_path: Path, mock_live_holdout_current_versions
+) -> None:
+    from src.conversational_analytics.config import ChatConfig
+    from src.conversational_analytics.evaluation_live_reservation import (
+        case_reservation_cost,
+        reservation_assumption,
+    )
+
+    case = mock_live_holdout_current_versions["cases"][0]
+    versions = mock_live_holdout_current_versions["expected_versions"]
+    identity = {
+        "run_id": "zero-admission",
+        "candidate": "gpt-6-luna@medium",
+        "model": "gpt-6-luna",
+        "reasoning_effort": "medium",
+        "text_verbosity": "medium",
+        "data_version": versions["data_version"],
+        "semantic_version": versions["semantic_version"],
+    }
+    run = {
+        **identity,
+        "prompt": "test prompt",
+        "limits": {"max_tool_calls": 8, "max_message_chars": 8000},
+        "identity": identity,
+        "identity_hash": _canonical_hash(identity),
+        "case_ids": [case["id"]],
+    }
+    config = ChatConfig(
+        provider="openai",
+        model="gpt-6-luna",
+        openai_enabled=True,
+        estimated_input_cost_per_million=0.1,
+        estimated_output_cost_per_million=0.5,
+    )
+    reserve = case_reservation_cost(
+        config,
+        reservation_assumption(config, None),
+        len(case.get("turns", [case["question"]])),
+    )
+    budget = reserve / 10
+    assert 0 < budget < reserve
+
+    class NoRequestProvider:
+        constructions = 0
+        requests = 0
+
+        def __init__(self, _config):
+            type(self).constructions += 1
+
+        def run_turn(self, **_kwargs):
+            type(self).requests += 1
+            raise AssertionError("No provider request is admitted below the first reservation")
+
+    monkeypatch.setattr("src.conversational_analytics.providers.openai.OpenAIProvider", NoRequestProvider)
+    args = {
+        "runs": [run],
+        "cases": [case],
+        "budget_usd": budget,
+        "snapshot_root": Path("site"),
+        "prices": {"gpt-6-luna@medium": (0.1, 0.5)},
+        "expected_versions": versions,
+        "state_path": tmp_path / "campaign.json",
+        "output_dir": tmp_path / "private-runs",
+        "runtime_config": config,
+    }
+    result = campaign.run_campaign(**args)
+    state = json.loads((tmp_path / "campaign.json").read_text(encoding="utf-8"))
+    assert result["status"] == "stopped_campaign_budget"
+    assert result["known_spend_usd"] == 0
+    assert state["known_spend_usd"] == 0
+    assert state["active_run_id"] is None
+    assert state["spent_unknown"] is False
+    assert NoRequestProvider.constructions == NoRequestProvider.requests == 0
+
+    saved_run = state["completed_runs"][run["run_id"]]
+    assert saved_run["cases"] == []
+    fragment = saved_run["report_fragments"][0]
+    run_dir = args["output_dir"] / run["run_id"]
+    report = json.loads((run_dir / fragment["report_path"]).read_text(encoding="utf-8"))
+    detail = json.loads((run_dir / fragment["detail_path"]).read_text(encoding="utf-8"))
+    assert report["models"][0]["cases"] == detail["models"][0]["cases"] == []
+    assert report["run_identity_hash"] == run["identity_hash"]
+    assert report["campaign_identity_hash"] == result["identity_hash"]
+    assert stat.S_IMODE((run_dir / fragment["detail_path"]).stat().st_mode) == 0o600
+
+    resumed = campaign.run_campaign(**args, resume=True)
+    resumed_state = json.loads((tmp_path / "campaign.json").read_text(encoding="utf-8"))
+    assert resumed["status"] == "stopped_campaign_budget"
+    assert resumed["known_spend_usd"] == 0
+    assert resumed_state["active_run_id"] is None
+    assert resumed_state["spent_unknown"] is False
+    assert NoRequestProvider.constructions == NoRequestProvider.requests == 0
