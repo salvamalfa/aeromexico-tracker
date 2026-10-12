@@ -91,8 +91,8 @@ def upstream_error_metadata(error: BaseException) -> dict[str, str | int]:
     if status is None:
         status = getattr(error, "status_code", None)
     code = getattr(error, "upstream_error_code", None) or getattr(error, "code", None)
-    error_type = getattr(error, "upstream_error_type", None)
-    param = getattr(error, "upstream_error_param", None)
+    error_type = getattr(error, "upstream_error_type", None) or getattr(error, "type", None)
+    param = getattr(error, "upstream_error_param", None) or getattr(error, "param", None)
     request_id = getattr(error, "request_id", None)
     if request_id is None:
         response = getattr(error, "response", None)
@@ -101,7 +101,7 @@ def upstream_error_metadata(error: BaseException) -> dict[str, str | int]:
             request_id = headers.get("x-request-id")
     if not isinstance(code, str) or code not in SAFE_UPSTREAM_ERROR_CODES:
         body = getattr(error, "body", None)
-        details = body.get("error") if isinstance(body, Mapping) else None
+        details = body.get("error", body) if isinstance(body, Mapping) else None
         if isinstance(details, Mapping):
             code = details.get("code")
             error_type = details.get("type", error_type)

@@ -204,6 +204,37 @@ def test_bad_request_metadata_drops_unrecognized_error_param_and_request_id():
     }
 
 
+def test_flat_sdk_bad_request_survives_provider_wrapper_with_sanitized_metadata():
+    class BadRequestError(Exception):
+        status_code = 400
+        type = "invalid_request_error"
+        code = "unsupported_value"
+        param = "agent.tools[12].parameters.properties.period"
+        request_id = "req_bad-request-123"
+        body = {
+            "type": "invalid_request_error",
+            "code": "unsupported_value",
+            "param": "agent.tools[12].parameters.properties.period",
+            "message": "secret request payload",
+        }
+
+    fake = FakeSessions(
+        create_stream=FakeStream([_session_created(), _turn_created(), BadRequestError("secret response")])
+    )
+    with pytest.raises(OpenAIProviderError) as raised:
+        _run(_provider(FakeClient(fake)))
+
+    metadata = _error_metadata(raised.value)
+    assert type(raised.value).__name__ == "OpenAIProviderError"
+    assert metadata["upstream_http_status"] == 400
+    assert metadata["upstream_error_type"] == "invalid_request_error"
+    assert metadata["upstream_error_code"] == "unsupported_value"
+    assert metadata["upstream_error_param"] == "agent.tools[12].parameters.properties.period"
+    assert metadata["upstream_request_id"] == "req_bad-request-123"
+    assert "secret" not in json.dumps(metadata)
+    assert raised.value.usage is None
+
+
 def test_diagnostic_failure_code_reads_usage_only_from_exact_terminal_turn():
     from src.conversational_analytics.providers._openai_helpers import recover_usage_after_cancel
 
