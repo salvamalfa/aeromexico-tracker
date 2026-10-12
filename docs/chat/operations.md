@@ -173,7 +173,7 @@ contenido semántico completo. Las funciones permanecen apagadas hasta la
 ejecución y revisión de los resultados JSON de Stage 3. No actives una bandera
 por la aprobación de contenido sola. El Dockerfile lleva la
 configuración versionada anidada e incluye el recibo público de aprobación R2.
-El SHA-256 canónico aprobado se fija por separado en Railway.
+El SHA-256 de los bytes exactos del recibo R2 se fija por separado en Railway.
 
 La capacidad `minimum_reservation_turns_per_day` que muestra `/api/chat/health`
 es un cálculo de admisión: aplica los presupuestos diarios de tokens y dólares
