@@ -11,11 +11,14 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import re
 import subprocess
+from datetime import date
 from pathlib import Path
 from typing import Any
 
 from .data.snapshot import Snapshot
+from .evaluation_stage3_scenarios import _derived_calculations, _scenario_calls
 from .providers import _openai_prompt
 from .tools.business_metrics import business_metric_tool_specs, dispatch_business_metric_tool
 from .tools.registry import ToolRegistry
@@ -31,7 +34,7 @@ except ImportError:  # F2.5/F2.6 can be merged independently from this checker.
 
 ROOT = Path(__file__).resolve().parents[2]
 STAGE3_FIXTURE = ROOT / "tests/fixtures/chat_evals/business_proposed.json"
-STAGE3_PROFILE = ROOT / "config/chat/f2_9_final_campaign.json"
+STAGE3_PROFILE = ROOT / "config/chat/f2_9_business_stage3_partial.json"
 PROMPT_SOURCE = ROOT / "config/chat/system_prompt.txt"
 MODEL_CATALOG = ROOT / "config/chat/models.json"
 METRIC_CANDIDATES = ROOT / "config/chat/metrics-candidates.json"
@@ -42,6 +45,7 @@ STAGE3_PROMPT_VERSION = "r2-proposed"
 STAGE3_PROMPT_SHA256 = "68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf"
 EXPECTED_FIXTURE_SHA256 = "30fc0acfc5d9fee1ffffd3624209712dd8160806dae4d904c4310a8f53537640"
 _HASH = set("0123456789abcdef")
+_OWNER = "salvamalfa"
 
 
 def _canonical_hash(value: Any) -> str:
@@ -96,334 +100,6 @@ class _Tools:
             result = self.registry.invoke(name, arguments)
         self.calls.append({"tool": name, "arguments": arguments, "result": result})
         return result
-
-
-def _latest_prior(periods: list[str], current: str, years: int = 1) -> str | None:
-    if "Q" in current:
-        year, quarter = current.split("Q")
-        target = f"{int(year) - years:04d}Q{quarter}"
-    elif "M" in current:
-        year, month = current.split("M")
-        target = f"{int(year) - years:04d}M{month}"
-    else:
-        return None
-    return target if target in periods else None
-
-
-def _scenario_calls(
-    case_id: str, periods: dict[str, Any]
-) -> tuple[list[tuple[str, dict[str, Any]]], str | None]:
-    """Return tool actions derived from the frozen question's intent, not its old status."""
-    economic = periods["economic_quarters"]
-    market = periods["market_quarters"]
-    months = periods["market_months"]
-    flights = periods["flight"]
-    latest_econ = economic[-1] if economic else None
-    latest_market = market[-1] if market else None
-    intl = flights.get("international", [])
-    dom_monthly = flights.get("domestic_monthly", [])
-    latest_flight = (dom_monthly or intl or [None])[-1]
-    prior_econ = _latest_prior(economic, latest_econ) if latest_econ else None
-    prior_market = _latest_prior(market, latest_market) if latest_market else None
-    actions: list[tuple[str, dict[str, Any]]] = []
-    scope_limit: str | None = None
-
-    def query(metric: str, entities: list[str], selected: list[str], segment: str | None = None):
-        args: dict[str, Any] = {"metric_ids": [metric], "entity_ids": entities, "periods": selected}
-        if segment:
-            args["segment"] = segment
-        actions.append(("query_metrics", args))
-
-    def series(metric: str, entity: str, selected: list[str], segment: str | None = None):
-        if not selected:
-            return
-        args: dict[str, Any] = {
-            "metric_id": metric,
-            "entity_id": entity,
-            "start_period": selected[0],
-            "end_period": selected[-1],
-            "limit": 20,
-        }
-        if segment:
-            args["segment"] = segment
-        actions.append(("get_time_series", args))
-
-    if case_id == "N01":
-        actions.append(
-            (
-                "query_business_metrics",
-                {"metric_id": "company_passengers", "entity_id": "AEROMEXICO", "period": "2025"},
-            )
-        )
-    elif case_id == "N02":
-        query("load_factor", ["AEROMEXICO"], [latest_econ] if latest_econ else [])
-    elif case_id == "N03":
-        query("cask_cents_per_km", ["AEROMEXICO", "VOLARIS"], [latest_econ] if latest_econ else [])
-    elif case_id == "N04":
-        actions.extend(
-            [
-                ("get_business_metric_definition", {"metric_id": "total_revenue"}),
-                (
-                    "query_business_metrics",
-                    {
-                        "metric_id": "total_revenue",
-                        "entity_id": "AEROMEXICO",
-                        "period": latest_econ or "2026Q2",
-                    },
-                ),
-            ]
-        )
-    elif case_id == "N05":
-        query("afac_passengers", ["AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"], ["2025Q4"], "total")
-    elif case_id == "N06":
-        if prior_econ and latest_econ:
-            for metric in ("company_passengers", "load_factor", "cask_cents_per_km"):
-                actions.append(
-                    (
-                        "compare_metrics",
-                        {
-                            "metric_id": metric,
-                            "entity_id": "AEROMEXICO",
-                            "periods": [prior_econ, latest_econ],
-                        },
-                    )
-                )
-        scope_limit = (
-            "La pregunta no define una métrica única; las comparaciones separadas no forman "
-            "una calificación global."
-        )
-    elif case_id in {"N07", "N08"}:
-        selected = [period for period in (prior_market, latest_market) if period]
-        if selected:
-            query("market_share", ["AEROMEXICO", "VOLARIS"], selected, "domestic")
-            actions.append(("get_source_references", {"metric_ids": ["market_share"]}))
-    elif case_id == "N09":
-        if latest_flight:
-            prior = _latest_prior(dom_monthly or intl, latest_flight)
-            args: dict[str, Any] = {
-                "entity_id": "AEROMEXICO_GROUP",
-                "segment": "domestic",
-                "period": latest_flight,
-                "metric": "passengers",
-                "top_n": 5,
-            }
-            if prior:
-                args["comparison_period"] = prior
-                args["order_by"] = "absolute_change"
-            actions.append(("query_routes", args))
-    elif case_id == "N10":
-        if latest_flight:
-            actions.append(
-                (
-                    "find_shared_routes",
-                    {
-                        "entity_ids": ["AEROMEXICO_GROUP", "VIVA_AEROBUS"],
-                        "segment": "domestic",
-                        "period": latest_flight,
-                        "metric": "passengers",
-                        "top_n": 20,
-                    },
-                )
-            )
-    elif case_id == "N11":
-        if prior_econ and latest_econ:
-            query("load_factor", ["AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"], [prior_econ, latest_econ])
-    elif case_id == "N12":
-        history = [period for period in economic if period >= "2024Q3"]
-        series("cask_cents_per_km", "AEROMEXICO", history)
-        actions.append(("get_source_references", {"metric_ids": ["cask_cents_per_km"]}))
-    elif case_id == "N13":
-        if prior_market and latest_market:
-            actions.append(
-                (
-                    "compare_metrics",
-                    {
-                        "metric_id": "afac_passengers",
-                        "entity_id": "INDUSTRY",
-                        "periods": [prior_market, latest_market],
-                        "segment": "international",
-                    },
-                )
-            )
-    elif case_id == "N14":
-        selected_months = [period for period in months if period.startswith("2026M")]
-        if selected_months:
-            query("afac_passengers", ["AEROMEXICO"], selected_months, "total")
-        else:
-            actions.append(
-                (
-                    "query_business_metrics",
-                    {"metric_id": "company_passengers", "entity_id": "AEROMEXICO", "period": "2026H1"},
-                )
-            )
-    elif case_id == "N15":
-        if latest_econ:
-            query("cask_cents_per_km", ["AEROMEXICO"], [latest_econ], None)
-        actions.append(("get_business_metric_definition", {"metric_id": "fuel_expense"}))
-        actions.append(
-            (
-                "query_business_metrics",
-                {"metric_id": "fuel_expense", "entity_id": "AEROMEXICO", "period": latest_econ or "2026Q2"},
-            )
-        )
-        scope_limit = "La causa del cambio requiere el componente financiero publicado y su aprobación."
-    elif case_id == "N16":
-        actions.extend(
-            [
-                (
-                    "search_reports",
-                    {
-                        "query": "combustible costos Aeromexico",
-                        "company": "Aeromexico",
-                        "period": None,
-                        "limit": 5,
-                    },
-                ),
-                ("get_business_metric_definition", {"metric_id": "fuel_expense"}),
-                (
-                    "query_business_metrics",
-                    {
-                        "metric_id": "fuel_expense",
-                        "entity_id": "AEROMEXICO",
-                        "period": latest_econ or "2026Q2",
-                    },
-                ),
-            ]
-        )
-        scope_limit = "Las herramientas de referencia no buscan ni extraen texto de reportes."
-    elif case_id == "N17":
-        actions.append(
-            (
-                "search_news",
-                {
-                    "query": "aerolíneas México eventos",
-                    "start_date": "2026-01-01",
-                    "end_date": "2026-10-11",
-                    "company": None,
-                    "limit": 5,
-                },
-            )
-        )
-        scope_limit = "No hay una herramienta de búsqueda de noticias o atribución de eventos."
-    elif case_id == "N18":
-        if prior_econ and latest_econ:
-            actions.append(
-                (
-                    "compare_metrics",
-                    {
-                        "metric_id": "load_factor",
-                        "entity_id": "VOLARIS",
-                        "periods": [prior_econ, latest_econ],
-                    },
-                )
-            )
-        scope_limit = "La serie permite medir el cambio, pero no identifica su causa."
-    elif case_id == "N19":
-        actions.append(("get_business_metric_definition", {"metric_id": "fuel_expense"}))
-        for entity in ("AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"):
-            actions.append(
-                (
-                    "query_business_metrics",
-                    {"metric_id": "fuel_expense", "entity_id": entity, "period": latest_econ or "2026Q2"},
-                )
-            )
-    elif case_id == "N20":
-        if latest_econ:
-            actions.append(
-                (
-                    "query_business_metrics",
-                    {"metric_id": "company_passengers", "entity_id": "AEROMEXICO", "period": latest_econ},
-                )
-            )
-        scope_limit = "El snapshot publica datos históricos; no incluye un pronóstico para 2027."
-    elif case_id == "N21":
-        if latest_market:
-            query("market_share", ["VOLARIS", "VIVA_AEROBUS"], [latest_market], "domestic")
-            actions.append(("get_source_references", {"metric_ids": ["market_share"]}))
-    elif case_id == "N22":
-        actions.extend(
-            [
-                ("get_business_metric_definition", {"metric_id": "fuel_expense"}),
-                ("get_business_metric_definition", {"metric_id": "operating_costs"}),
-                (
-                    "query_business_metrics",
-                    {
-                        "metric_id": "fuel_expense",
-                        "entity_id": "AEROMEXICO",
-                        "period": latest_econ or "2026Q2",
-                    },
-                ),
-                (
-                    "query_business_metrics",
-                    {
-                        "metric_id": "operating_costs",
-                        "entity_id": "AEROMEXICO",
-                        "period": latest_econ or "2026Q2",
-                    },
-                ),
-            ]
-        )
-    elif case_id == "N23":
-        actions.extend(
-            [
-                (
-                    "query_business_metrics",
-                    {"metric_id": "company_passengers", "entity_id": "VIVA_AEROBUS", "period": "2026H1"},
-                ),
-                (
-                    "query_business_metrics",
-                    {"metric_id": "company_passengers", "entity_id": "VOLARIS", "period": "2026H1"},
-                ),
-            ]
-        )
-    elif case_id == "N24":
-        actions.append(("get_dashboard_context", {}))
-        query("company_passengers", ["AEROMEXICO", "VOLARIS"], [latest_econ] if latest_econ else [])
-        if prior_econ and latest_econ:
-            query("company_passengers", ["AEROMEXICO", "VOLARIS"], [prior_econ, latest_econ])
-        actions.append(("get_source_references", {"metric_ids": ["company_passengers"]}))
-    elif case_id in {"N25", "N26"}:
-        actions.append(("get_dashboard_context", {}))
-        query(
-            "load_factor",
-            ["AEROMEXICO"],
-            ["2026Q2"] if "2026Q2" in economic else ([latest_econ] if latest_econ else []),
-        )
-        actions.append(("get_source_references", {"metric_ids": ["load_factor"]}))
-        # Follow-up turns are deliberately satisfied from the retained first-turn result.
-    elif case_id == "N27":
-        scope_limit = "No existe una definición única publicada de la mejor aerolínea."
-    elif case_id == "N28":
-        scope_limit = "El análisis no ofrece recomendaciones de inversión."
-    elif case_id == "N29":
-        actions.extend(
-            [
-                ("get_business_metric_definition", {"metric_id": "operating_income"}),
-                (
-                    "query_business_metrics",
-                    {
-                        "metric_id": "operating_income",
-                        "entity_id": "AEROMEXICO",
-                        "period": latest_econ or "2026Q2",
-                    },
-                ),
-                (
-                    "query_business_metrics",
-                    {
-                        "metric_id": "company_passengers",
-                        "entity_id": "AEROMEXICO",
-                        "period": latest_econ or "2026Q2",
-                    },
-                ),
-            ]
-        )
-    elif case_id == "N30":
-        actions.append(("get_data_catalog", {}))
-        scope_limit = "El catálogo no ofrece conteos diarios de vuelos cancelados."
-    else:
-        scope_limit = "No hay un escenario determinista para el caso."
-
-    return actions, scope_limit
 
 
 def _numeric(value: Any) -> bool:
@@ -534,7 +210,20 @@ def derive_stage3_coverage(
     evidence_index_path = "config/chat/evidence/approved-index.json"
     evidence_path = ROOT / evidence_index_path
     evidence_index_hash = _file_hash(evidence_path) if evidence_path.is_file() else None
+    evidence_index_payload = _read_object(evidence_path)[0] if evidence_path.is_file() else {}
     evidence_record_count = len(tools.evidence.records) if tools.evidence is not None else 0
+    # The exact public index bytes are the stable content pin across supported
+    # index schemas; do not infer publication from an assumed records field.
+    evidence_content_sha = evidence_index_hash
+    evidence_content_version = next(
+        (
+            evidence_index_payload[key]
+            for key in ("content_version", "index_version", "schema_version")
+            if isinstance(evidence_index_payload.get(key), (str, int))
+            and not isinstance(evidence_index_payload.get(key), bool)
+        ),
+        f"sha256:{evidence_index_hash}" if evidence_index_hash else None,
+    )
 
     rows = []
     counts = {"supported": 0, "coverage_missing": 0, "approval_blocked": 0}
@@ -557,11 +246,19 @@ def derive_stage3_coverage(
         source_map: dict[str, dict[str, str]] = {}
         approval_blocked = False
         route_policy_block = False
+        tool_execution_complete = all("result" in call for call in tools.calls)
+        tool_source_coverage_complete = True
         for index, call in enumerate(tools.calls):
             if "result" not in call:
+                tool_source_coverage_complete = False
                 continue
             found, refs, closed, route_block = _extract_evidence(call["result"], path=f"calls[{index}]")
             derived_evidence.extend(found)
+            if any(
+                item.get("availability") == "available" and _numeric(item.get("value"))
+                for item in found
+            ) and not refs:
+                tool_source_coverage_complete = False
             for ref in refs:
                 source_map.setdefault(ref["url"], ref)
             approval_blocked |= closed
@@ -571,12 +268,25 @@ def derive_stage3_coverage(
             for item in derived_evidence
             if item.get("availability") == "available" and _numeric(item.get("value"))
         ]
+        evidence_rows_complete = bool(derived_evidence) and all(
+            item.get("availability") == "available" and _numeric(item.get("value"))
+            for item in derived_evidence
+        )
         # A closed semantic/eligibility gate outranks missing rows; available
         # rows still remain in the artifact so reviewers can see what is known.
         status = (
             "approval_blocked"
             if approval_blocked or route_policy_block
-            else ("coverage_missing" if limitation or not finite_rows or not source_map else "supported")
+            else (
+                "coverage_missing"
+                if limitation
+                or not finite_rows
+                or not evidence_rows_complete
+                or not tool_execution_complete
+                or not tool_source_coverage_complete
+                or not source_map
+                else "supported"
+            )
         )
         counts[status] += 1
         rows.append(
@@ -593,6 +303,12 @@ def derive_stage3_coverage(
                     if route_policy_block
                     else "declared_capability_limit"
                     if limitation
+                    else "tool_execution_incomplete"
+                    if not tool_execution_complete
+                    else "tool_source_coverage_incomplete"
+                    if not tool_source_coverage_complete or not source_map
+                    else "requested_evidence_rows_incomplete"
+                    if not evidence_rows_complete
                     else "no_numeric_available_tool_evidence"
                     if not finite_rows
                     else "numeric_tool_evidence_with_public_sources"
@@ -600,6 +316,10 @@ def derive_stage3_coverage(
                 "limitation": limitation,
                 "calls": tools.calls,
                 "derived_expectations": derived_evidence,
+                "tool_execution_complete": tool_execution_complete,
+                "tool_source_coverage_complete": tool_source_coverage_complete,
+                "evidence_rows_complete": evidence_rows_complete,
+                "derived_calculations": _derived_calculations(case["id"], derived_evidence),
                 "source_references": list(source_map.values()),
                 "follow_up_turns_reused_prior_tool_results": case["id"] in {"N25", "N26"},
             }
@@ -637,20 +357,23 @@ def derive_stage3_coverage(
         "report_evidence_index": {
             "status": (
                 "published"
-                if report_index_published and report_search_available
+                if report_index_published and report_search_available and report_news_available
                 else "missing_index"
                 if evidence_index_hash is None
                 else "empty_index"
                 if not report_index_published
-                else "report_search_tool_unavailable"
-                if not report_search_available
+                else "search_tools_unavailable"
+                if not report_search_available or not report_news_available or tools.evidence is None
                 else "published"
             ),
             "manifest_path": evidence_index_path,
             "sha256": evidence_index_hash,
+            "content_sha256": evidence_content_sha,
+            "content_version": evidence_content_version,
             "record_count": evidence_record_count,
             "search_tools": sorted(report_search_tools),
             "news_search_available": report_news_available,
+            "report_search_available": report_search_available,
         },
         "routes": {
             "status": "tools_available_but_row_coverage_is_checked_per_case",
@@ -728,8 +451,11 @@ def validate_receipt_scope(
     capability_receipt: dict[str, Any],
     report: dict[str, Any],
     reserve_usd: float,
+    *,
+    budget_receipt_sha256: str | None = None,
+    capability_receipt_sha256: str | None = None,
 ) -> tuple[bool, str]:
-    """Validate exact campaign, candidate, reserve, pins, and explicit approvals."""
+    """Validate pinned receipt bytes, owner decision references, and exact campaign scope."""
     common = {
         "campaign_sha256": report["campaign_sha256"],
         "candidate": CAMPAIGN_CANDIDATE,
@@ -742,10 +468,50 @@ def validate_receipt_scope(
         or reserve_usd <= 0
     ):
         return False, "reserve_invalid"
+    trusted_hashes = {
+        "budget": budget_receipt_sha256,
+        "capabilities": capability_receipt_sha256,
+    }
     for label, receipt, kind in (
         ("budget", budget_receipt, "f29_stage3_funding"),
         ("capabilities", capability_receipt, "f29_stage3_capabilities"),
     ):
+        trusted_hash = trusted_hashes[label]
+        if not isinstance(trusted_hash, str) or len(trusted_hash) != 64 or any(
+            char not in _HASH for char in trusted_hash
+        ):
+            return False, f"{label}_receipt_sha256_missing_or_invalid"
+        if _canonical_hash(receipt) != trusted_hash:
+            return False, f"{label}_receipt_sha256_mismatch"
+        if receipt.get("approved_by") != _OWNER:
+            return False, f"{label}_receipt_owner_mismatch"
+        approved_at = receipt.get("approved_at")
+        try:
+            approval_date = date.fromisoformat(approved_at) if isinstance(approved_at, str) else None
+            valid_until = (
+                date.fromisoformat(receipt["valid_until"])
+                if isinstance(receipt.get("valid_until"), str)
+                else None
+            )
+        except ValueError:
+            approval_date = None
+            valid_until = None
+        if (
+            approval_date is None
+            or approval_date.isoformat() != approved_at
+            or valid_until is None
+            or valid_until.isoformat() != receipt.get("valid_until")
+            or approval_date > valid_until
+        ):
+            return False, f"{label}_receipt_approval_date_invalid"
+        if valid_until < date.today():
+            return False, f"{label}_receipt_expired"
+        decision_ref = receipt.get("decision_ref")
+        if not isinstance(decision_ref, str) or not re.fullmatch(
+            r"https://github\.com/salvamalfa/aeromexico-tracker/blob/[0-9a-f]{40}/docs/(?:decisiones|chat)/[A-Za-z0-9._/-]+(?:#[A-Za-z0-9._-]+)?",
+            decision_ref,
+        ):
+            return False, f"{label}_receipt_decision_ref_untrusted"
         if receipt.get("schema_version") != 1 or receipt.get("receipt_type") != kind:
             return False, f"{label}_receipt_invalid"
         if receipt.get("status") != "approved":
@@ -770,10 +536,26 @@ def validate_receipt_scope(
         "active_prompt_version": report["runtime_capabilities"]["active_prompt_version"],
         "required_prompt_sha256": report["runtime_capabilities"]["required_prompt_sha256"],
         "capability_pins_sha256": report["campaign_identity"]["capability_pins_sha256"],
+        "report_evidence_index_sha256": report["published_capabilities"]["report_evidence_index"].get(
+            "sha256"
+        ),
+        "report_evidence_content_sha256": report["published_capabilities"]["report_evidence_index"].get(
+            "content_sha256"
+        ),
+        "report_evidence_content_version": report["published_capabilities"]["report_evidence_index"].get(
+            "content_version"
+        ),
     }.items():
         if capability_receipt.get(key) != value:
             return False, f"capabilities_receipt_scope_mismatch_{key}"
-    required = {"business_metrics", "routes", "report_evidence", "presentation"}
+    required = {
+        "business_metrics",
+        "routes",
+        "report_evidence",
+        "report_search",
+        "news_search",
+        "presentation",
+    }
     capabilities = capability_receipt.get("capabilities")
     if not isinstance(capabilities, list) or not required <= set(capabilities):
         return False, "capabilities_receipt_incomplete"
@@ -781,6 +563,14 @@ def validate_receipt_scope(
         return False, "capabilities_receipt_stage3_authorization_missing"
     if report["runtime_capabilities"].get("prompt_compatible") is not True:
         return False, "stage3_prompt_not_activated"
+    published = report["published_capabilities"]
+    if published["business_metric_projection"].get("status") != "published":
+        return False, "business_metric_projection_not_published"
+    evidence = published["report_evidence_index"]
+    if evidence.get("status") != "published":
+        return False, "report_evidence_index_not_published"
+    if not evidence.get("report_search_available") or not evidence.get("news_search_available"):
+        return False, "required_report_news_search_tools_unavailable"
     return True, "receipts_match_exact_campaign_scope"
 
 

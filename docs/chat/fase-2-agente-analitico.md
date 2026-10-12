@@ -774,7 +774,7 @@ herramientas que se reenvían en cada llamada).
 
 ### F2.9 · stage 3 offline
 - `uv run python scripts/chat/check_stage3_coverage.py --output .state/outputs/chat-evaluations/f2-9-stage-3/coverage.json` ejecuta herramientas deterministas para N01–N30 y deriva cobertura desde el snapshot fijado.
-- El reporte clasifica `supported`, `coverage_missing` y `approval_blocked`; fija prompt, catálogo, herramientas, índice de evidencia, métricas y versiones de datos.
-- `--run --opt-in` requiere recibos de financiación y capacidades exactos para Sol low, prompt R2 compatible y dependencias publicadas; sin ellos bloquea antes de credenciales/API.
+- El reporte clasifica `supported`, `coverage_missing` y `approval_blocked`; fija prompt, catálogo, herramientas, índice de evidencia, métricas y versiones de datos. Este preflight cubre solo los 30 casos business; la cohorte safety no está validada.
+- `--run --opt-in` requiere los recibos de financiación y capacidades, sus SHA-256 canónicos fijados externamente en `F29_STAGE3_BUDGET_RECEIPT_SHA256` y `F29_STAGE3_CAPABILITY_RECEIPT_SHA256`, `approved_by: salvamalfa`, fechas `approved_at`/`valid_until` válidas y vigentes, una referencia inmutable a una decisión del dueño, alcance exacto de Sol low, prompt R2 compatible y dependencias publicadas. Los hashes de recibo son obligatorios antes de leer credenciales o inicializar el proveedor.
 - `scripts/chat/export_stage3_review.py` une el reporte con una corrida live autorizada y crea JSON privado para `web/review.html`; el mapa de alias queda en `.state/`.
 - Implementación: [coverage](../../src/conversational_analytics/evaluation_stage3_coverage.py), [preflight](../../scripts/chat/check_stage3_coverage.py), [exportador](../../scripts/chat/export_stage3_review.py), [pruebas](../../tests/test_chat_f29_stage3_coverage.py).
