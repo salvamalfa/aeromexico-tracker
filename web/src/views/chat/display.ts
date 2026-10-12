@@ -22,24 +22,35 @@ const TRUSTED_HOSTS = new Set([
 
 function parseSources(value: unknown): ChatReference[] {
   if (!Array.isArray(value)) return [];
-  const seen = new Set<string>();
-  return value.slice(0, 12).flatMap((item) => {
-    if (!item || typeof item !== "object") return [];
+  const sources: ChatReference[] = [];
+  const labelsByUrl = new Map<string, string[]>();
+  for (const item of value) {
+    if (!item || typeof item !== "object") continue;
     const source = item as Record<string, unknown>;
-    if (typeof source.label !== "string" || !source.label.trim()) return [];
-    const result: ChatReference = { label: source.label.slice(0, 200) };
+    if (typeof source.label !== "string" || !source.label.trim()) continue;
+    const label = source.label.trim().slice(0, 160);
+    const result: ChatReference = { label };
     if (typeof source.url === "string") {
       try {
         const url = new URL(source.url);
-        if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash || !TRUSTED_HOSTS.has(url.hostname.toLowerCase())) return [];
-        const sourceKey = `${source.label.trim()}\n${url.href}`;
-        if (seen.has(sourceKey)) return [];
-        seen.add(sourceKey);
+        if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash || !TRUSTED_HOSTS.has(url.hostname.toLowerCase())) continue;
+        const previousLabels = labelsByUrl.get(url.href);
+        if (previousLabels) {
+          if (!previousLabels.includes(label) && previousLabels.length < 12) {
+            previousLabels.push(label);
+            const existing = sources.find((item) => item.url === url.href);
+            if (existing) existing.label = previousLabels.join(" · ");
+          }
+          continue;
+        }
+        if (sources.length >= 12) continue;
+        labelsByUrl.set(url.href, [label]);
         result.url = url.href;
-      } catch { return []; }
+      } catch { continue; }
     }
-    return [result];
-  });
+    if (sources.length < 12) sources.push(result);
+  }
+  return sources;
 }
 
 function parseColumns(value: unknown): ChatDisplayColumn[] | undefined {
