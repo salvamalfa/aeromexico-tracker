@@ -12,12 +12,19 @@
     "prompt_path",
     "capabilities",
     "decision_ref",
-    "owner"
+    "owner",
+    "approved_at"
   ],
   "properties": {
-    "schema_version": { "const": 1 },
-    "status": { "const": "owner_approved" },
-    "version": { "const": "r2-proposed" },
+    "schema_version": {
+      "const": 1
+    },
+    "status": {
+      "const": "owner_approved"
+    },
+    "version": {
+      "const": "r2-proposed"
+    },
     "prompt_sha256": {
       "const": "68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf"
     },
@@ -33,7 +40,17 @@
         "three_layer_causal_explanations"
       ]
     },
-    "decision_ref": { "type": "string", "minLength": 1 },
-    "owner": { "type": "string", "minLength": 1 }
+    "decision_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time"
+    }
   }
 }
