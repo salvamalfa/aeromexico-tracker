@@ -24,6 +24,7 @@ from .evaluation_live_support import (
     _CheckpointWriteError,
     _error_metadata,
     _failure_usage,
+    _numeric_gold_summary,
     _progress_payload,
     _summarize_candidate,
     _write_private_json,
