@@ -57,11 +57,6 @@ from src.conversational_analytics.tools._route_contract import (
 from src.conversational_analytics.tools._route_contract import (
     validate_top_n as _validate_top_n,
 )
-from src.conversational_analytics.tools._route_rollup import rollup_complete_quarter
-from src.conversational_analytics.tools._route_shared_display import bound_shared_result
-from src.conversational_analytics.tools._route_shared_metadata import (
-    build_shared_carrier_metadata,
-)
 from src.conversational_analytics.tools._route_provenance import (
     capacity_provenance as _capacity_provenance,
 )
@@ -72,6 +67,12 @@ from src.conversational_analytics.tools._route_provenance import (
     metric_source_label as _metric_source_label,
 )
 from src.conversational_analytics.tools._route_provenance import value_kind as _value_kind
+from src.conversational_analytics.tools._route_query_display import bound_route_query_result
+from src.conversational_analytics.tools._route_rollup import rollup_complete_quarter
+from src.conversational_analytics.tools._route_shared_display import bound_shared_result
+from src.conversational_analytics.tools._route_shared_metadata import (
+    build_shared_carrier_metadata,
+)
 
 
 class RouteTools:
@@ -200,7 +201,7 @@ class RouteTools:
 
         current_network, current_path = self._load(entity_id, segment, period)
         if current_network is None:
-            return {
+            result = {
                 **self._metadata(query, []),
                 "coverage": {period: {"availability": "missing", "complete": False}},
                 "rows": [],
@@ -210,6 +211,7 @@ class RouteTools:
                 "truncated": False,
                 "display": _build_display(query, [], []),
             }
+            return bound_route_query_result(result, 0, top_n)
         networks = [(current_network, current_path)]
         previous_network = None
         if comparison_period:
@@ -348,7 +350,7 @@ class RouteTools:
             )
         title, _ = _METRIC_LABELS[metric]
         display_query = {**query, "title": f"{title} por ruta · {_ENTITY_LABELS[entity_id]} · {period}"}
-        return {
+        result = {
             **self._metadata(query, networks),
             "coverage": coverage,
             "rows": rows,
@@ -358,6 +360,7 @@ class RouteTools:
             "truncated": available_route_count > top_n,
             "display": _build_display(display_query, rows, networks),
         }
+        return bound_route_query_result(result, available_route_count, top_n)
 
     @staticmethod
     def _comparability_reason(
