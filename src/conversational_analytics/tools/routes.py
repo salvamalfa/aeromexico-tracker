@@ -59,42 +59,16 @@ from src.conversational_analytics.tools._route_contract import (
 )
 from src.conversational_analytics.tools._route_rollup import rollup_complete_quarter
 from src.conversational_analytics.tools._route_shared_display import build_shared_display
-
-
-def _value_kind(network: dict[str, Any], route: dict[str, Any], metric: str) -> str:
-    override = (route.get("metric_value_kinds") or {}).get(metric)
-    if override in {"reported", "observed", "estimated", "scheduled", "mixed", "missing"}:
-        return override
-    if metric == "passengers" and route.get("passengers_estimated"):
-        return "estimated"
-    if metric in {"seats", "load_factor"} and (
-        route.get("capacity_estimated") or route.get("load_factor_status") == "estimated"
-    ):
-        return "estimated"
-    status = str(route.get("operation_status") or "").lower()
-    source = str(route.get("source_label") or "").lower()
-    # Operation status applies to departures. Route notes can mention a second,
-    # ancillary source (for example AICM schedules on a BTS passenger row), so
-    # they must not override the selected metric's evidence.
-    if metric == "departures" and ("programad" in status or status == "assigned_slot_not_flown"):
-        return "scheduled"
-    if "observed" in status or "t-100" in source:
-        return "observed"
-    if metric in {"passengers", "seats", "departures", "load_factor"} and route.get("capacity_estimated"):
-        return "estimated"
-    return "observed"
-
-
-def _metric_source_label(route: dict[str, Any], metric: str) -> str | None:
-    """Return provenance for the selected value, not an ancillary route note."""
-    source = route.get("source_label")
-    note = str(route.get("coverage_note") or "")
-    if metric == "passengers" and route.get("passengers_estimated"):
-        marker = "Pasajeros estimados de "
-        if marker in note:
-            entity = note.split(marker, 1)[1].split(" · ", 1)[0]
-            return f"AFAC + AeroDataBox · {entity}"
-    return source
+from src.conversational_analytics.tools._route_provenance import (
+    capacity_provenance as _capacity_provenance,
+)
+from src.conversational_analytics.tools._route_provenance import (
+    metric_provenance as _metric_provenance,
+)
+from src.conversational_analytics.tools._route_provenance import (
+    metric_source_label as _metric_source_label,
+)
+from src.conversational_analytics.tools._route_provenance import value_kind as _value_kind
 
 
 class RouteTools:
@@ -283,7 +257,8 @@ class RouteTools:
                 and value is not None
                 and previous_value is not None
                 and current_kind == previous_kind
-                and _metric_source_label(route, metric) == _metric_source_label(previous_route, metric)
+                and _metric_source_label(current_network, route, metric, entity_id)
+                == _metric_source_label(previous_network, previous_route, metric, entity_id)
             )
             delta = value - previous_value if comparable else None
             relative = delta / abs(previous_value) * 100 if comparable and previous_value != 0 else None
@@ -299,7 +274,9 @@ class RouteTools:
                 "value_kind": current_kind,
                 "unit": _METRIC_LABELS[metric][1],
                 "source_label": route.get("source_label"),
-                "metric_source_label": _metric_source_label(route, metric),
+                "metric_source_label": _metric_source_label(current_network, route, metric, entity_id),
+                "metric_provenance": _metric_provenance(current_network, route, metric, entity_id),
+                "capacity_provenance": _capacity_provenance(current_network, route, entity_id),
                 "operation_status": route.get("operation_status"),
                 "coverage_note": route.get("coverage_note"),
                 "comparison": {
@@ -322,6 +299,7 @@ class RouteTools:
                         previous_kind,
                         comparison_period,
                         metric,
+                        entity_id,
                     ),
                 }
                 if comparison_period
@@ -390,6 +368,7 @@ class RouteTools:
         previous_kind,
         comparison_period,
         metric,
+        entity_id,
     ):
         if previous is None:
             return "El periodo comparativo no está publicado"
@@ -401,7 +380,9 @@ class RouteTools:
             return "Falta el valor de la ruta en al menos un periodo"
         if current_kind != previous_kind:
             return "Cambió el tipo de valor (observado, estimado o programado)"
-        if _metric_source_label(route, metric) != _metric_source_label(previous_route, metric):
+        if _metric_source_label(current, route, metric, entity_id) != _metric_source_label(
+            previous, previous_route, metric, entity_id
+        ):
             return "Cambió la fuente de la ruta"
         return f"No hay comparación válida contra {comparison_period}"
 
@@ -466,7 +447,15 @@ class RouteTools:
                     "value_kind": _value_kind(network_by_entity[entity_id], route, metric)
                     if value is not None
                     else None,
-                    "source_label": _metric_source_label(route, metric),
+                    "source_label": _metric_source_label(
+                        network_by_entity[entity_id], route, metric, entity_id
+                    ),
+                    "provenance": _metric_provenance(
+                        network_by_entity[entity_id], route, metric, entity_id
+                    ),
+                    "capacity_provenance": _capacity_provenance(
+                        network_by_entity[entity_id], route, entity_id
+                    ),
                 }
             # Exact entity route sets are the evidence of presence. For INDUSTRY + an
             # individual airline, the airline's own file must carry a positive value.
