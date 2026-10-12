@@ -28,6 +28,9 @@ from .evaluation_live_support import (
     _summarize_candidate,
     _write_private_json,
 )
+from .evaluation_live_support import (
+    _numeric_gold_summary as _numeric_gold_summary,
+)
 from .evaluation_live_turns import ConversationRunError, run_conversation
 from .providers._openai_helpers import reconcile_case_usage_after_cancel
 from .semantic.plan import PlanValidationError

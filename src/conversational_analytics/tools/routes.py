@@ -58,6 +58,7 @@ from src.conversational_analytics.tools._route_contract import (
     validate_top_n as _validate_top_n,
 )
 from src.conversational_analytics.tools._route_rollup import rollup_complete_quarter
+from src.conversational_analytics.tools._route_shared_display import build_shared_display
 
 
 def _value_kind(network: dict[str, Any], route: dict[str, Any], metric: str) -> str:
@@ -513,33 +514,16 @@ class RouteTools:
             for key, value in ((entity, network_by_entity.get(entity)) for entity in entity_ids)
         }
         meta = self._metadata(query, networks_with_paths)
-        display_rows = [
-            {
-                "market_key": row["market_key"],
-                "combined_value": row["combined_value"],
-                **{f"{key}_value": value["value"] for key, value in row["carriers"].items()},
-                "value_kind": row["value_kind"],
-            }
-            for row in rows
-        ]
+        display_columns, display_rows = build_shared_display(
+            rows, entity_ids, _ENTITY_LABELS, _METRIC_LABELS[metric][1]
+        )
         value_kinds = {row["value_kind"] for row in rows}
         source_references = _source_references(networks_with_paths)
         display = {
             "display_id": f"tabla:rutas_compartidas_{_display_query_hash(query)}",
             "kind": "table",
             "title": f"Rutas compartidas · {period}",
-            "columns": [
-                {"key": "market_key", "label": "Ruta"},
-                *[
-                    {
-                        "key": f"{entity}_value",
-                        "label": _ENTITY_LABELS[entity],
-                        "unit": _METRIC_LABELS[metric][1],
-                    }
-                    for entity in entity_ids
-                ],
-                {"key": "value_kind", "label": "Tipo de valor"},
-            ],
+            "columns": display_columns,
             "rows": display_rows,
             "value_kind": next(iter(value_kinds))
             if len(value_kinds) == 1

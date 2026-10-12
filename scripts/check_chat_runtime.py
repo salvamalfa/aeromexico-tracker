@@ -7,8 +7,10 @@ browser. It is intended to run inside an isolated `chat-runtime` environment.
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import secrets
+import shutil
 import sys
 import tempfile
 from contextlib import redirect_stdout
@@ -84,6 +86,49 @@ def _events(body: bytes) -> list[dict[str, Any]]:
     return parsed
 
 
+def _check_packaged_business_metrics_snapshot() -> None:
+    """Verify the image's pinned proposal can validate a receipt-bound fixture.
+
+    The receipt and published financial payload below exist only in a temporary
+    fixture tree. This proves the isolated runtime has the proposal closure it
+    needs without adding an approval receipt or financial data to the image.
+    """
+    from src.publish import manifest as manifest_mod
+    from src.web_export.business_metrics import build_approved_payload
+    from src.web_export.writer import write_json
+
+    proposal = ROOT / "config/chat/business-metrics-proposal.json"
+    definitions = ROOT / "config/chat/metrics-candidates.json"
+    assert proposal.is_file(), "packaged business-metrics proposal is missing"
+    assert definitions.is_file(), "packaged business-metrics definitions are missing"
+    with tempfile.TemporaryDirectory(prefix="chat-runtime-approved-metrics-") as temp:
+        fixture_root = Path(temp)
+        site = fixture_root / "site"
+        shutil.copytree(ROOT / "tests/fixtures/chat/site", site)
+        receipt_path = fixture_root / "receipt-fixture-only.json"
+        receipt = {
+            "schema_version": "business_metrics_approval_v1",
+            "status": "owner_approved",
+            "receipt_id": "runtime-smoke-fixture-only",
+            "approved_at": "2026-01-01T00:00:00Z",
+            "approved_metric_ids": ["total_revenue"],
+            "definitions_sha256": hashlib.sha256(definitions.read_bytes()).hexdigest(),
+            "proposal_sha256": hashlib.sha256(proposal.read_bytes()).hexdigest(),
+        }
+        write_json(receipt_path, receipt)
+        payload, receipt = build_approved_payload(proposal, definitions, receipt_path)
+        write_json(site / "data/v1/business_metrics.json", payload)
+        write_json(site / "data/v1/business_metrics.approval.json", receipt)
+        manifest = json.loads((site / "publication_manifest.json").read_text(encoding="utf-8"))
+        manifest["contracts"] = manifest_mod.contract_hashes()
+        manifest["files"] = manifest_mod.file_entries(site)
+        manifest_mod.write_manifest(site, manifest)
+
+        approved_snapshot = Snapshot(site)
+        approved = approved_snapshot.payload("data/v1/business_metrics.json")
+        assert approved["metadata"]["metric_ids"] == ["total_revenue"]
+
+
 async def _check() -> None:
     # The command parser and official provider adapter must import without
     # creating a client or making a provider request.
@@ -99,6 +144,7 @@ async def _check() -> None:
 
     snapshot = Snapshot(ROOT / "site")
     assert snapshot.version != "unavailable"
+    _check_packaged_business_metrics_snapshot()
     password = secrets.token_urlsafe(18)
     with tempfile.TemporaryDirectory(prefix="airline-chat-runtime-") as temp:
         config = ChatConfig(
@@ -165,6 +211,7 @@ async def _check() -> None:
 
     heavyweight = {"pandas", "polars", "pyarrow", "duckdb", "playwright"}
     assert not heavyweight.intersection(sys.modules)
+    assert not any(name == "src.analytics" or name.startswith("src.analytics.") for name in sys.modules)
 
 
 if __name__ == "__main__":

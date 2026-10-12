@@ -54,6 +54,7 @@ from jsonschema import Draft202012Validator
 
 from src.config import PATHS
 from src.dashboard.route_entities import EXTRA_ROUTE_ENTITIES
+from src.web_export.business_metrics import build_approved_payload
 from src.web_export.privacy import (
     PrivacyViolation,
     check_file_size,
@@ -70,7 +71,6 @@ from src.web_export.schemas import (
     NETWORK_FILE_SCHEMA,
     QUARTERS_FILE_SCHEMA,
 )
-from src.web_export.business_metrics import build_approved_payload
 
 from . import manifest as manifest_mod
 
@@ -293,7 +293,7 @@ def verify_site(site_dir: Path) -> list[str]:
     elif has_metrics and metrics_path in data_payloads and receipt_path in data_payloads:
         try:
             expected_payload, expected_receipt = build_approved_payload(
-                PATHS.root / "docs/chat/f23-metrics-candidate-dry-run.json",
+                PATHS.root / "config/chat/business-metrics-proposal.json",
                 PATHS.root / "config/chat/metrics-candidates.json",
                 site_dir / receipt_path,
             )

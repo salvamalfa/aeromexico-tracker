@@ -79,7 +79,18 @@ def rollup_complete_quarter(
 
         passenger_values = [item.get("passengers") if item else None for item in month_routes]
         seat_values = [item.get("seats") if item else None for item in month_routes]
-        if all(
+        monthly_load_factors = [item.get("load_factor") if item else None for item in month_routes]
+        monthly_load_factor_statuses = [
+            item.get("load_factor_status") if item else None for item in month_routes
+        ]
+        valid_monthly_load_factors = all(
+            isinstance(value, (int, float))
+            and not isinstance(value, bool)
+            and 0 <= value <= 1
+            and status in {None, "estimated", "reported", "observed"}
+            for value, status in zip(monthly_load_factors, monthly_load_factor_statuses, strict=True)
+        )
+        if valid_monthly_load_factors and all(
             isinstance(value, (int, float)) and not isinstance(value, bool) for value in passenger_values
         ) and all(
             isinstance(value, (int, float)) and not isinstance(value, bool) and value > 0
@@ -93,13 +104,16 @@ def rollup_complete_quarter(
             for network, item in zip(networks, month_routes, strict=True)
             if item is not None and item.get("load_factor") is not None
         }
-        metric_kinds["load_factor"] = (
-            next(iter(load_factor_kinds))
-            if len(load_factor_kinds) == 1
-            else "mixed"
-            if load_factor_kinds
-            else "missing"
-        )
+        if route["load_factor"] is None:
+            metric_kinds["load_factor"] = "missing"
+        else:
+            metric_kinds["load_factor"] = (
+                next(iter(load_factor_kinds))
+                if len(load_factor_kinds) == 1
+                else "mixed"
+                if load_factor_kinds
+                else "missing"
+            )
         route["metric_value_kinds"] = metric_kinds
         route["passengers_estimated"] = any(
             bool(item and item.get("passengers_estimated")) for item in month_routes
@@ -107,9 +121,14 @@ def rollup_complete_quarter(
         route["capacity_estimated"] = any(
             bool(item and item.get("capacity_estimated")) for item in month_routes
         )
-        route["load_factor_status"] = (
-            "estimated" if metric_kinds["load_factor"] == "estimated" else base.get("load_factor_status")
-        )
+        if route["load_factor"] is not None:
+            route["load_factor_status"] = (
+                "estimated" if metric_kinds["load_factor"] == "estimated" else base.get("load_factor_status")
+            )
+        elif "inconsistent_inputs" in monthly_load_factor_statuses:
+            route["load_factor_status"] = "inconsistent_inputs"
+        else:
+            route["load_factor_status"] = "capacity_incomplete"
         routes.append(route)
 
     eligibility = [network.get("agent_eligible") for network in networks]

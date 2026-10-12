@@ -17,6 +17,7 @@ def test_chat_runtime_configuration_is_reincluded_in_docker_context():
         "!config/chat/",
         "!config/chat/models.json",
         "!config/chat/metrics-candidates.json",
+        "!config/chat/business-metrics-proposal.json",
         "!config/chat/system_prompt.txt",
         "!config/chat/evidence/",
         "!config/chat/evidence/approved-index.json",
@@ -44,12 +45,14 @@ def test_chat_runtime_configuration_is_reincluded_in_docker_context():
     assert {
         "config/chat/models.json",
         "config/chat/metrics-candidates.json",
+        "config/chat/business-metrics-proposal.json",
         "config/chat/system_prompt.txt",
         "config/chat/evidence/approved-index.json",
         "config/chat/prompt_candidates/system_prompt_r2-proposed.txt",
         "config/chat/prompt_candidates/system_prompt_r2-proposed.json",
     } <= copied_config_files
     assert "config/chat/runtime.example.env" not in copied_files
+    assert "config/chat/business-metrics-approval-receipt.json" not in copied_files
 
     # Every copied configuration file and each directory leading to it must
     # have an explicit allow rule; the broad default remains deny-all.

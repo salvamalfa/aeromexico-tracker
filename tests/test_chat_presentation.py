@@ -58,6 +58,8 @@ def test_fallback_value_kind_comes_from_metric_definition_and_candidate_gate_sta
     )
     display = make_displays(result, "query_metrics", "call-margin", snapshot.catalog())["display"]
     assert display["value_kind"] == "calculated"
+    value_column = next(column for column in display["columns"] if column["key"] == "value")
+    assert value_column["label"] == "Valor (¢ USD/ASK-km)"
 
     # Older metric catalog snapshots may omit the calculation annotation.
     legacy_catalog = {"metrics": {"metrics": [{"id": "unit_margin_cents_per_km", "label": "Margen unitario"}]}}
@@ -143,9 +145,10 @@ def test_numeric_markdown_table_is_removed_only_with_a_valid_display_marker() ->
         "columns": [{"key": "value", "label": "Valor"}],
         "rows": [{"value": 84.9}],
     })
-    content = "Dato: 84.9% {{tabla:verified}}\n\n| Métrica | Valor |\n| --- | ---: |\n| Factor | 99.9% |\n\n| Estado | Nota |\n| --- | --- |\n| Margen | calculado |"
+    content = "Dato: 84.9% {{tabla:missing}} {{tabla:verified}}\n\n| Métrica | Valor |\n\n| --- | ---: |\n\n| Factor | 99.9% |\n\n| Estado | Nota |\n| --- | --- |\n| Margen | calculado |"
     sanitized, displays, _ = registry.finalize(content)
     assert "99.9%" not in sanitized
+    assert "{{tabla:missing}}" not in sanitized
     assert "| Estado | Nota |" in sanitized
     assert "| Margen | calculado |" in sanitized
     assert len(displays) == 1
@@ -155,7 +158,21 @@ def test_numeric_markdown_table_is_removed_only_with_a_valid_display_marker() ->
     assert "99.9%" in legacy
 
 
-def test_missing_cells_remain_null_and_distinct_source_labels_are_preserved() -> None:
+def test_mixed_metric_query_keeps_each_value_unit_explicit() -> None:
+    mixed = {
+        "rows": [
+            {"metric_id": "unit_margin_cents_per_km", "metric_label": "Margen unitario", "entity_id": "AEROMEXICO", "period": "2026Q2", "value": 0.435, "unit": "USD_cents_per_ASK_km"},
+            {"metric_id": "revenue", "metric_label": "Ingresos", "entity_id": "AEROMEXICO", "period": "2026Q2", "value": 1479, "unit": "USD_millions"},
+            {"metric_id": "load_factor_reported", "metric_label": "Factor de ocupación", "entity_id": "AEROMEXICO", "period": "2026Q2", "value": 0.849, "unit": "fraction"},
+        ]
+    }
+    display = make_displays(mixed, "query_metrics", "mixed-units")["display"]
+    assert {column["key"] for column in display["columns"]} >= {"value", "unit", "metric"}
+    assert [row["unit"] for row in display["rows"]] == ["USD_cents_per_ASK_km", "USD_millions", "fraction"]
+    assert [row["value"] for row in display["rows"]] == [0.435, 1479, 0.849]
+
+
+def test_missing_cells_remain_null_and_duplicate_source_labels_are_combined() -> None:
     result = {
         "rows": [
             {

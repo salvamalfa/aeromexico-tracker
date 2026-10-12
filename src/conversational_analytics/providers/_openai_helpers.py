@@ -7,12 +7,19 @@ import threading
 import time
 from collections.abc import Callable, Iterable, Mapping
 from typing import Any
-from urllib.parse import urlparse
 
 from ._openai_error_metadata import sanitize_upstream_fields
 from ._openai_prompt import (
     SYSTEM_INSTRUCTIONS as SYSTEM_INSTRUCTIONS,
+)
+from ._openai_prompt import (
     effective_instructions as effective_instructions,
+)
+from ._openai_references import (
+    ALLOWED_REFERENCE_HOSTS as ALLOWED_REFERENCE_HOSTS,
+)
+from ._openai_references import (
+    references_from_results,
 )
 from .base import ProviderResult
 
@@ -25,20 +32,6 @@ ALLOWED_TOOL_NAMES = frozenset(
         "get_time_series",
         "get_source_references",
         "get_dashboard_context",
-    }
-)
-ALLOWED_REFERENCE_HOSTS = frozenset(
-    {
-        "sec.gov",
-        "www.sec.gov",
-        "gob.mx",
-        "www.gob.mx",
-        "github.com",
-        "salvamalfa.github.io",
-        "ir.aeromexico.com",
-        "cdn.investorcloud.net",
-        "www.flightglobal.com",
-        "www.bmv.com.mx",
     }
 )
 MAX_ENVELOPE_BYTES = 12_000
@@ -441,47 +434,6 @@ def parse_usage(value: Any) -> tuple[int, int, bool]:
     ):
         return input_tokens, output_tokens, True
     return 0, 0, False
-
-
-def references_from_results(results: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
-    found: list[dict[str, Any]] = []
-
-    def walk(value: Any) -> None:
-        if isinstance(value, dict):
-            for key in ("references", "source_references"):
-                refs = value.get(key)
-                if isinstance(refs, list):
-                    for ref in refs:
-                        if not isinstance(ref, dict):
-                            continue
-                        label, url = ref.get("label"), ref.get("url")
-                        if not isinstance(label, str) or not isinstance(url, str):
-                            continue
-                        parsed = urlparse(url)
-                        if parsed.scheme == "https" and parsed.hostname in ALLOWED_REFERENCE_HOSTS:
-                            found.append(
-                                {
-                                    "label": label,
-                                    "url": url,
-                                    **(
-                                        {"metric_id": ref["metric_id"]}
-                                        if isinstance(ref.get("metric_id"), str)
-                                        else {}
-                                    ),
-                                }
-                            )
-            for child in value.values():
-                walk(child)
-        elif isinstance(value, list):
-            for child in value:
-                walk(child)
-
-    for result in results:
-        walk(result)
-    unique: dict[tuple[str, str, str], dict[str, Any]] = {}
-    for ref in found:
-        unique[(ref["label"], ref["url"], str(ref.get("metric_id", "")))] = ref
-    return list(unique.values())
 
 
 def chart_from_results(results: Iterable[dict[str, Any]]) -> dict[str, Any] | None:

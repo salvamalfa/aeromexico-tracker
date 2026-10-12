@@ -924,9 +924,6 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
                   "total_revenue": 1479.0
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
@@ -956,9 +953,6 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
               "total_revenue": 1479.0
             },
             "status": "byte_identity_mismatch_factual_values_match"
@@ -1224,9 +1218,6 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
                   "total_revenue": 1479.0
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
@@ -1256,9 +1247,6 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
               "total_revenue": 1479.0
             },
             "status": "byte_identity_mismatch_factual_values_match"
@@ -1705,9 +1693,6 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
                   "total_revenue": 1479.0
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
@@ -1748,9 +1733,6 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
               "total_revenue": 1479.0
             },
             "status": "byte_identity_mismatch_factual_values_match"
@@ -1945,9 +1927,6 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
                   "total_revenue": 1479.0
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
@@ -1988,9 +1967,6 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
               "total_revenue": 1479.0
             },
             "status": "byte_identity_mismatch_factual_values_match"
@@ -2350,9 +2326,6 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
                   "total_revenue": 1479.0
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
@@ -2467,9 +2440,6 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
               "total_revenue": 1479.0
             },
             "status": "byte_identity_mismatch_factual_values_match"
@@ -2561,9 +2531,6 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
                   "total_revenue": 1479.0
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
@@ -2604,9 +2571,6 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
               "total_revenue": 1479.0
             },
             "status": "byte_identity_mismatch_factual_values_match"
@@ -10557,10 +10521,7 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
-                  "total_revenue": 1479.0
+                  "operating_costs": 1411.0
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
               },
@@ -10589,10 +10550,7 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
-              "total_revenue": 1479.0
+              "operating_costs": 1411.0
             },
             "status": "byte_identity_mismatch_factual_values_match"
           },
@@ -10857,10 +10815,7 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
-                  "total_revenue": 1479.0
+                  "operating_costs": 1411.0
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
               },
@@ -10889,10 +10844,7 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
-              "total_revenue": 1479.0
+              "operating_costs": 1411.0
             },
             "status": "byte_identity_mismatch_factual_values_match"
           },
@@ -11338,10 +11290,7 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
-                  "total_revenue": 1479.0
+                  "operating_costs": 1411.0
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
               },
@@ -11381,10 +11330,7 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
-              "total_revenue": 1479.0
+              "operating_costs": 1411.0
             },
             "status": "byte_identity_mismatch_factual_values_match"
           },
@@ -11578,10 +11524,7 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
-                  "total_revenue": 1479.0
+                  "operating_costs": 1411.0
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
               },
@@ -11621,10 +11564,7 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
-              "total_revenue": 1479.0
+              "operating_costs": 1411.0
             },
             "status": "byte_identity_mismatch_factual_values_match"
           },
@@ -11983,10 +11923,7 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
-                  "total_revenue": 1479.0
+                  "operating_costs": 1411.0
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
               },
@@ -12100,10 +12037,7 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
-              "total_revenue": 1479.0
+              "operating_costs": 1411.0
             },
             "status": "byte_identity_mismatch_factual_values_match"
           },
@@ -12194,10 +12128,7 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
-                  "total_revenue": 1479.0
+                  "operating_costs": 1411.0
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
               },
@@ -12237,10 +12168,7 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
-              "total_revenue": 1479.0
+              "operating_costs": 1411.0
             },
             "status": "byte_identity_mismatch_factual_values_match"
           },
@@ -15557,10 +15485,7 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
-                  "total_revenue": 1479.0
+                  "fuel_expense": 493.8
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
               },
@@ -15589,10 +15514,7 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
-              "total_revenue": 1479.0
+              "fuel_expense": 493.8
             },
             "status": "byte_identity_mismatch_factual_values_match"
           },
@@ -15857,10 +15779,7 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
-                  "total_revenue": 1479.0
+                  "fuel_expense": 493.8
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
               },
@@ -15889,10 +15808,7 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
-              "total_revenue": 1479.0
+              "fuel_expense": 493.8
             },
             "status": "byte_identity_mismatch_factual_values_match"
           },
@@ -16338,10 +16254,7 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
-                  "total_revenue": 1479.0
+                  "fuel_expense": 493.8
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
               },
@@ -16381,10 +16294,7 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
-              "total_revenue": 1479.0
+              "fuel_expense": 493.8
             },
             "status": "byte_identity_mismatch_factual_values_match"
           },
@@ -16578,10 +16488,7 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
-                  "total_revenue": 1479.0
+                  "fuel_expense": 493.8
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
               },
@@ -16621,10 +16528,7 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
-              "total_revenue": 1479.0
+              "fuel_expense": 493.8
             },
             "status": "byte_identity_mismatch_factual_values_match"
           },
@@ -16983,10 +16887,7 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
-                  "total_revenue": 1479.0
+                  "fuel_expense": 493.8
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
               },
@@ -17100,10 +17001,7 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
-              "total_revenue": 1479.0
+              "fuel_expense": 493.8
             },
             "status": "byte_identity_mismatch_factual_values_match"
           },
@@ -17194,10 +17092,7 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
-                  "total_revenue": 1479.0
+                  "fuel_expense": 493.8
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
               },
@@ -17237,10 +17132,7 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
-              "total_revenue": 1479.0
+              "fuel_expense": 493.8
             },
             "status": "byte_identity_mismatch_factual_values_match"
           },
@@ -20557,10 +20449,7 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
-                  "total_revenue": 1479.0
+                  "operating_income": 67.9
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
               },
@@ -20589,10 +20478,7 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
-              "total_revenue": 1479.0
+              "operating_income": 67.9
             },
             "status": "byte_identity_mismatch_factual_values_match"
           },
@@ -20857,10 +20743,7 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
-                  "total_revenue": 1479.0
+                  "operating_income": 67.9
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
               },
@@ -20889,10 +20772,7 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
-              "total_revenue": 1479.0
+              "operating_income": 67.9
             },
             "status": "byte_identity_mismatch_factual_values_match"
           },
@@ -21338,10 +21218,7 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
-                  "total_revenue": 1479.0
+                  "operating_income": 67.9
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
               },
@@ -21381,10 +21258,7 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
-              "total_revenue": 1479.0
+              "operating_income": 67.9
             },
             "status": "byte_identity_mismatch_factual_values_match"
           },
@@ -21578,10 +21452,7 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
-                  "total_revenue": 1479.0
+                  "operating_income": 67.9
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
               },
@@ -21621,10 +21492,7 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
-              "total_revenue": 1479.0
+              "operating_income": 67.9
             },
             "status": "byte_identity_mismatch_factual_values_match"
           },
@@ -21983,10 +21851,7 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
-                  "total_revenue": 1479.0
+                  "operating_income": 67.9
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
               },
@@ -22100,10 +21965,7 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
-              "total_revenue": 1479.0
+              "operating_income": 67.9
             },
             "status": "byte_identity_mismatch_factual_values_match"
           },
@@ -22194,10 +22056,7 @@
                 "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
                 "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
                 "reported_values_usd_millions": {
-                  "fuel_expense": 493.8,
-                  "operating_costs": 1411.0,
-                  "operating_income": 67.9,
-                  "total_revenue": 1479.0
+                  "operating_income": 67.9
                 },
                 "status": "byte_identity_mismatch_factual_values_match"
               },
@@ -22237,10 +22096,7 @@
             "current_sha256": "ce94b0feac78c8621f5c4ec9e82b5953847f048a202b43ab829d45956e2e7cd6",
             "note": "The current SEC URL returns different bytes than the dated Gold capture. F25 read-only review confirmed the relevant reported figures match; this is not evidence of a restatement.",
             "reported_values_usd_millions": {
-              "fuel_expense": 493.8,
-              "operating_costs": 1411.0,
-              "operating_income": 67.9,
-              "total_revenue": 1479.0
+              "operating_income": 67.9
             },
             "status": "byte_identity_mismatch_factual_values_match"
           },
