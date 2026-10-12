@@ -34,6 +34,12 @@ as — a directory built from `web/` plus the exported v1 payloads. See
   immediately before the atomic swap, and refuses if the trusted ref moved
   during the build. This mode cannot bless edited data by
   rebuilding its manifest, and it never invokes warehouse exporters.
+- `--business-metrics-only` uses the same immutable published-site baseline
+  and exact current analysis approval, then adds only the separately pinned
+  business-metrics payload and receipt. It requires the baseline data files to
+  remain byte-identical, validates the completed candidate site before swap,
+  and rechecks both the trusted baseline and Analysis Agent approval under the
+  ledger lock immediately before the atomic replacement.
 - `manifest.py`: builds and (de)serializes `publication_manifest.json` —
   the code commit (`git rev-parse HEAD`), each `contracts/web/*` file's own
   SHA-256 (its "version"), every other file under `site/` with its
@@ -78,6 +84,7 @@ action still needs the owner's specific authorization. See `REPO_MAP.md`.
 ```
 uv run python -m src.publish --record analysis_runs/drafts/2026Q2/<hash>.json --out site/
 uv run python -m src.publish --ui-only --record analysis_runs/drafts/2026Q2/<hash>.json --out site/
+uv run python -m src.publish --business-metrics-only --record analysis_runs/drafts/2026Q2/<hash>.json --out site/
 uv run python -m src.publish.verify site/
 ```
 
