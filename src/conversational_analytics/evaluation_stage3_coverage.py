@@ -182,6 +182,14 @@ def derive_stage3_coverage(
         raise ValueError("La campaña stage3 fija únicamente Sol low")
     if profile.get("run_repetitions") != 1:
         raise ValueError("Stage3 coverage espera una sola pasada del candidato seleccionado")
+    limits = profile.get("limits")
+    if limits != {
+        "max_message_chars": 8_000,
+        "max_tool_calls": 16,
+        "max_tool_result_bytes": 16_000,
+        "max_turn_seconds": 180,
+    }:
+        raise ValueError("Stage3 requiere los límites runtime fijados y aprobados para la campaña")
     approved_prompt = fixture.get("owner_approval", {}).get("approved_prompt_content_sha256")
     from .providers._openai_prompt import APPROVED_BASE_PROMPT_SHA256
 
@@ -405,6 +413,7 @@ def derive_stage3_coverage(
         "derived_coverage_sha256": _canonical_hash(rows),
         "execution_commit": _execution_commit(),
         "run_repetitions": 1,
+        "limits": limits,
     }
     campaign_sha = _canonical_hash(campaign_identity)
     return {
@@ -536,6 +545,7 @@ def validate_receipt_scope(
         "active_prompt_version": report["runtime_capabilities"]["active_prompt_version"],
         "required_prompt_sha256": report["runtime_capabilities"]["required_prompt_sha256"],
         "capability_pins_sha256": report["campaign_identity"]["capability_pins_sha256"],
+        "limits": report["campaign_identity"]["limits"],
         "report_evidence_index_sha256": report["published_capabilities"]["report_evidence_index"].get(
             "sha256"
         ),

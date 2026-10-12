@@ -413,8 +413,9 @@ def _derived_calculations(case_id: str, evidence: list[dict[str, Any]]) -> list[
             calculations.append(
                 {
                     "calculation": "VOLARIS_plus_VIVA_AEROBUS_market_share",
-                    "value": math.fsum((volaris, viva)),
-                    "unit": "fraction",
+                    "value": math.fsum((volaris, viva)) * 100,
+                    "unit": "percent",
+                    "denominator": "all domestic AFAC passenger traffic",
                     "period": "2026Q2",
                 }
             )

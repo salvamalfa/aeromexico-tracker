@@ -8,6 +8,12 @@
   "case_scope": "owner_approved_30_business_cases_only",
   "safety_prompt_injection_cases": false,
   "run_repetitions": 1,
+  "limits": {
+    "max_message_chars": 8000,
+    "max_tool_calls": 16,
+    "max_tool_result_bytes": 16000,
+    "max_turn_seconds": 180
+  },
   "measured_reference": {
     "stage": "F2.9-stage-2",
     "candidate": "gpt-6.1-sol@low",

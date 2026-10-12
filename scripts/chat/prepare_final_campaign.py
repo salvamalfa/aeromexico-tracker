@@ -161,6 +161,14 @@ def build_plan(*, profile_path: Path, candidate_override: str | None = None) -> 
         raise ValueError("run_repetitions debe ser un entero positivo")
     if repetitions != 1:
         raise ValueError("este perfil solo admite la única repetición presupuestada")
+    expected_limits = {
+        "max_message_chars": 8_000,
+        "max_tool_calls": 16,
+        "max_tool_result_bytes": 16_000,
+        "max_turn_seconds": 180,
+    }
+    if profile.get("limits") != expected_limits:
+        raise ValueError("El perfil debe conservar los límites runtime fijados para la campaña")
     if fixture_hash != EXPECTED_CASE_HASH:
         raise ValueError("El fixture de negocio cambió; requiere revisión y nuevo pin")
     cases = fixture.get("cases")
@@ -211,6 +219,7 @@ def build_plan(*, profile_path: Path, candidate_override: str | None = None) -> 
         "case_ids": ids,
         "messages_per_candidate": messages,
         "repetitions": repetitions,
+        "limits": expected_limits,
         "prompt_injection_cases_added": 0,
         "source_hashes": {
             "profile": profile_hash,

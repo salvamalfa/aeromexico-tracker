@@ -244,12 +244,7 @@ def main(argv: list[str] | None = None) -> int:
             "identity_hash": identity_hash,
             "prompt": active_prompt,
             "case_ids": [case["id"] for case in cases],
-            "limits": {
-                "max_tool_calls": 8,
-                "max_message_chars": 8_000,
-                "max_tool_result_bytes": 16_000,
-                "max_turn_seconds": 180,
-            },
+            "limits": dict(report["campaign_identity"]["limits"]),
             "text_verbosity": "medium",
         }
         catalog = json.loads((ROOT / "config/chat/models.json").read_text(encoding="utf-8"))["models"]

@@ -5,6 +5,8 @@ import hashlib
 from datetime import date, timedelta
 from pathlib import Path
 
+import pytest
+
 from src.conversational_analytics.evaluation_stage3_coverage import (
     CAMPAIGN_CANDIDATE,
     derive_stage3_coverage,
@@ -102,15 +104,32 @@ def test_stage3_derives_all_30_cases_from_real_tools_and_current_snapshot() -> N
         urls = [reference["url"] for reference in case["source_references"]]
         assert len(urls) == len(set(urls))
     evidence_index = report["published_capabilities"]["report_evidence_index"]
-    assert evidence_index["status"] == "missing_index"
-    assert evidence_index["report_search_available"] is False
-    assert evidence_index["news_search_available"] is False
+    assert evidence_index["status"] == "empty_index"
+    assert evidence_index["report_search_available"] is True
+    assert evidence_index["news_search_available"] is True
+
+
+def test_stage3_derived_market_share_sum_is_a_percent_of_total_afac_denominator() -> None:
+    from src.conversational_analytics.evaluation_stage3_scenarios import _derived_calculations
+
+    rows = [
+        {"metric_id": "market_share", "entity_id": entity, "period": "2026Q2", "value": value,
+         "availability": "available"}
+        for entity, value in (("VOLARIS", 0.43), ("VIVA_AEROBUS", 0.314))
+    ]
+    assert _derived_calculations("N21", rows) == [{
+        "calculation": "VOLARIS_plus_VIVA_AEROBUS_market_share",
+        "value": 74.4,
+        "unit": "percent",
+        "denominator": "all domestic AFAC passenger traffic",
+        "period": "2026Q2",
+    }]
 
 
 def test_stage3_receipts_require_exact_scope_and_real_approval_status() -> None:
     report = {
         "campaign_sha256": "a" * 64,
-        "campaign_identity": {"capability_pins_sha256": "b" * 64},
+        "campaign_identity": {"capability_pins_sha256": "b" * 64, "limits": {"max_tool_calls": 16}},
         "pins": {"data_version": "data", "semantic_version": "semantic", "prompt_content_sha256": "prompt"},
         "runtime_capabilities": {
             "tool_specs_sha256": "tools",
@@ -169,7 +188,7 @@ def test_stage3_receipts_require_exact_scope_and_real_approval_status() -> None:
 def test_stage3_capability_receipt_binds_evidence_index_content_version() -> None:
     report = {
         "campaign_sha256": "a" * 64,
-        "campaign_identity": {"capability_pins_sha256": "b" * 64},
+        "campaign_identity": {"capability_pins_sha256": "b" * 64, "limits": {"max_tool_calls": 16}},
         "pins": {
             "data_version": "data",
             "semantic_version": "semantic",
@@ -242,6 +261,7 @@ def test_stage3_capability_receipt_binds_evidence_index_content_version() -> Non
         "active_prompt_version": "r2-proposed",
         "required_prompt_sha256": "prompt-r2",
         "capability_pins_sha256": "b" * 64,
+        "limits": {"max_tool_calls": 16},
         "report_evidence_index_sha256": "index-file-hash",
         "report_evidence_content_sha256": "index-content-hash",
         "report_evidence_content_version": "v7",
@@ -403,6 +423,18 @@ def test_stage3_review_export_maps_only_one_candidate_and_all_derived_expectatio
         "kind": "f2_9_stage3_derived_coverage",
         "provider_calls": 0,
         "campaign_sha256": "a" * 64,
+        "campaign_identity": {
+            "candidate": CAMPAIGN_CANDIDATE,
+            "model": "gpt-6.1-sol",
+            "reasoning_effort": "low",
+            "text_verbosity": "medium",
+            "snapshot_data_version": "data",
+            "snapshot_semantic_version": "semantic",
+            "tool_specs_sha256": "tools",
+            "prompt_content_sha256": "prompt",
+            "case_fixture_sha256": "fixture",
+            "limits": {"max_tool_calls": 16},
+        },
         "pins": {"data_version": "data", "semantic_version": "semantic"},
         "cases": [
             {
@@ -410,7 +442,10 @@ def test_stage3_review_export_maps_only_one_candidate_and_all_derived_expectatio
                 "status": "supported",
                 "status_basis": "numeric_tool_evidence_with_public_sources",
                 "limitation": None,
-                "derived_expectations": [{"value": 100}],
+                "derived_expectations": [{
+                    "value": 100, "availability": "available", "metric_id": "company_passengers",
+                    "entity_id": "AEROMEXICO", "period": "2025", "unit": "pasajeros",
+                }],
                 "source_references": [],
             }
             for case in fixture["cases"]
@@ -423,6 +458,7 @@ def test_stage3_review_export_maps_only_one_candidate_and_all_derived_expectatio
         "data_version": "data",
         "semantic_version": "semantic",
         "run_identity": {
+            **coverage["campaign_identity"],
             "candidate": CAMPAIGN_CANDIDATE,
             "model": "gpt-6.1-sol",
             "reasoning_effort": "low",
@@ -442,6 +478,9 @@ def test_stage3_review_export_maps_only_one_candidate_and_all_derived_expectatio
             }
         ],
     }
+    live["run_identity_hash"] = hashlib.sha256(
+        json.dumps(live["run_identity"], ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
     dataset, mapping = build_dataset(coverage, live, fixture)
     assert dataset["available_count"] == 30
     assert [question["id"] for question in dataset["questions"]] == [f"N{i:02d}" for i in range(1, 31)]
@@ -449,5 +488,43 @@ def test_stage3_review_export_maps_only_one_candidate_and_all_derived_expectatio
         len(question["candidates"]) == 1 and question["candidates"][0]["alias"] == "A"
         for question in dataset["questions"]
     )
-    assert dataset["questions"][0]["expected"]["numeric_evidence"] == [{"value": 100}]
+    assert dataset["questions"][0]["expected"]["numeric_evidence"][0]["value"] == 100
+    assert dataset["questions"][0]["expected"]["rows"][0]["value"] == 100
     assert mapping["candidate_aliases"] == {"A": CAMPAIGN_CANDIDATE}
+
+
+def test_stage3_review_export_rejects_same_case_ids_with_a_different_live_prompt_pin() -> None:
+    from scripts.chat.export_stage3_review import _canonical_hash, build_dataset
+
+    fixture = json.loads(Path("tests/fixtures/chat_evals/business_proposed.json").read_text())
+    identity = {
+        "candidate": CAMPAIGN_CANDIDATE,
+        "model": "gpt-6.1-sol",
+        "reasoning_effort": "low",
+        "text_verbosity": "medium",
+        "snapshot_data_version": "data",
+        "snapshot_semantic_version": "semantic",
+        "tool_specs_sha256": "tools",
+        "prompt_content_sha256": "prompt",
+        "case_fixture_sha256": "fixture",
+        "limits": {"max_tool_calls": 16},
+    }
+    coverage = {
+        "kind": "f2_9_stage3_derived_coverage", "provider_calls": 0,
+        "campaign_sha256": "a" * 64, "campaign_identity": identity,
+        "pins": {"data_version": "data", "semantic_version": "semantic"},
+        "cases": [{"case_id": case["id"], "derived_expectations": []} for case in fixture["cases"]],
+    }
+    live_identity = {**identity, "prompt_content_sha256": "old-prompt"}
+    live = {
+        "mode": "live-evaluation", "probe_only": False,
+        "campaign_identity_hash": "b" * 64,
+        "run_identity": live_identity, "run_identity_hash": _canonical_hash(live_identity),
+        "data_version": "data", "semantic_version": "semantic",
+        "models": [{"candidate": CAMPAIGN_CANDIDATE, "cases": [
+            {"case_id": case["id"], "model_turn_completed": False}
+            for case in fixture["cases"]
+        ]}],
+    }
+    with pytest.raises(ValueError, match="todos los pins de cobertura"):
+        build_dataset(coverage, live, fixture)
