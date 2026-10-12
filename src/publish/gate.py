@@ -46,7 +46,7 @@ import sys
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from jsonschema import Draft202012Validator
 
@@ -303,6 +303,7 @@ def assemble_site(
     out_dir: Path,
     *,
     contracts: dict[str, str] | None = None,
+    validate_candidate: Callable[[Path], None] | None = None,
 ) -> dict[str, Any]:
     """Copy dist_dir into a fresh temp directory, write the manifest into it,
     and atomically swap it in for out_dir. Returns the written manifest."""
@@ -316,6 +317,8 @@ def assemble_site(
         shutil.copytree(dist_dir, tmp_dir)
         manifest = manifest_mod.build_manifest(tmp_dir, analysis_manifest, contracts=contracts)
         manifest_mod.write_manifest(tmp_dir, manifest)
+        if validate_candidate is not None:
+            validate_candidate(tmp_dir)
 
         previous = None
         if out_dir.exists():
@@ -536,15 +539,28 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--record", type=Path, action="append", default=[], dest="records")
     parser.add_argument("--out", type=Path, default=PATHS.root / "site")
-    parser.add_argument(
+    publish_modes = parser.add_mutually_exclusive_group()
+    publish_modes.add_argument(
         "--ui-only",
         action="store_true",
         help="rebuild the frontend while preserving the exact existing public data and analysis manifest",
     )
+    publish_modes.add_argument(
+        "--business-metrics-only",
+        action="store_true",
+        help="add only the separately approved business-metrics pair to the trusted published data baseline",
+    )
     args = parser.parse_args(argv)
 
     try:
-        result = publish_ui_only(args.records, args.out) if args.ui_only else publish(args.records, args.out)
+        if args.business_metrics_only:
+            from .financial_overlay import publish_business_metrics_only
+
+            result = publish_business_metrics_only(args.records, args.out)
+        elif args.ui_only:
+            result = publish_ui_only(args.records, args.out)
+        else:
+            result = publish(args.records, args.out)
     except PublicationRefused as error:
         print(f"src.publish: refused: {error}", file=sys.stderr)
         return 1
