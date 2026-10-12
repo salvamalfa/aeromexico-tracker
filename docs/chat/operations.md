@@ -75,6 +75,16 @@ persistente `/data`. Configuración, variables y verificación están en
 [railway.md](railway.md). El worker vive más que la conexión SSE del navegador
 y reanuda o marca como fallidos los turnos tras un reinicio.
 
+Verificación registrada el 12 de octubre de 2026: Railway reportó `SUCCESS`
+para el despliegue `dd97b38e-383b-48ab-9fab-ca5bf0f78c70` sobre el commit
+`60e741b4b4c70ba2d092061f571b924690afcfcd`; `GET /api/chat/health` respondió
+200 con `gpt-6.1-sol`, esfuerzo `low`, verbosidad `medium`, R1 efectivo
+`439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5` y el
+snapshot registrado en el [reporte de activación](../etapas/chat-f2-0-activacion-20261012.md).
+La verificación fue de estado y health; no envió una pregunta pagada. Este
+registro confirma la configuración F2.0, no calidad de prompt ni activación de
+las capacidades de fase 2.
+
 En el launcher Railway, Uvicorn detiene los nuevos claims antes de esperar las
 conexiones SSE y les da hasta 5 segundos para cerrar. El código permite por
 defecto hasta 8 llamadas de herramienta por turno (`CHAT_MAX_TOOL_CALLS`);

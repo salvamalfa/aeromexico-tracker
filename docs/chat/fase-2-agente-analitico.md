@@ -685,6 +685,24 @@ vuelta extra con un caso de evaluación.
 
 ## F2.9 · Evaluación comparativa
 
+### Estado actualizado al 12 de octubre de 2026
+
+F2.0 quedó confirmado en Railway con Sol low y R1 efectivo; el health 200
+verifica configuración y disponibilidad, no calidad del prompt. El código
+F2.3–F2.9 está preparado en el PR #120, aún en revisión y sin despliegue. R2,
+las métricas financieras y los índices de reportes/noticias siguen propuestos,
+con sus puertas apagadas. No se requiere repetir aprobaciones de R1, modelo,
+preguntas o rúbrica.
+
+La campaña de Stage 3 preparada actualmente es parcial: 30 casos de negocio,
+34 mensajes y una repetición de Sol low, sin casos de inyección. No equivale a
+la comparación de cuatro candidatos de 70 slots descrita en el plan original,
+ni su preflight offline es una ejecución o un resultado de calidad. La cotización
+es US$7.05–7.21; propone US$8 disponibles si el saldo confirmado fuera cero,
+pero el saldo es desconocido y no hay autorización/fondeo de campaña. La fase 2
+permanece abierta hasta resolver el contenido y el presupuesto y completar la
+revisión/ejecución correspondientes.
+
 ### Candidatos
 
 | Candidato | Modelo | Esfuerzo |

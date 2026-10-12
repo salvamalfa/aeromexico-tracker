@@ -39,13 +39,13 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
 - **Analysis Agent:** el análisis de 2T26 está aprobado y publicado en la
   Lectura ejecutiva (`data/v1/analysis/2026Q2.json`). El siguiente ciclo es
   3T26, cuando Aeroméxico publique su reporte trimestral.
-- **Chat:** el MVP continúa activo en producción. La integración local de fase
-  2 ya contiene el modelo/esfuerzo aprobados, rutas, presentación por referencia,
-  finanzas y búsqueda de evidencia con puertas de activación; las capacidades
-  de rutas, métricas financieras y evidencia siguen apagadas hasta aprobar sus
-  datos y, para R2, su hash exacto de prompt. Stage 3 requiere además un nuevo
-  presupuesto. La fase 2 no se declara cerrada mientras falten esas decisiones
-  (ver [Chat analítico](#chat-analítico)).
+- **Chat:** el MVP sigue activo en Railway. El despliegue verificado usa
+  `gpt-6.1-sol`, esfuerzo `low` y R1; health respondió 200. Las capacidades de
+  rutas, métricas financieras y búsqueda de evidencia permanecen apagadas.
+  El código F2.3–F2.9 está en el PR #120, todavía en revisión; no se ha
+  desplegado. La campaña propuesta de Stage 3 no se ha ejecutado, y su saldo
+  disponible es desconocido. La fase 2 sigue abierta a las decisiones de
+  contenido y presupuesto (ver [Chat analítico](#chat-analítico)).
 - **Datos:** AFAC y AeroDataBox se actualizan a mano mes a mes; lo pendiente
   está en [`ROADMAP.md`](ROADMAP.md).
 
@@ -138,12 +138,14 @@ El chat responde preguntas sobre el snapshot público con una capa semántica
 versionada; no abre el warehouse ni convierte ausencias en cero. El MVP sigue
 activo en Railway con `gpt-6.1-sol`, acceso con contraseña, topes diarios de
 US$5 (por usuario y global) y hasta 16 llamadas de herramienta por pregunta.
-Ya respondió preguntas reales y muestra tablas. La fase 2 eligió Sol con
-esfuerzo bajo y mantuvo R1 como prompt activo; el hash R2 propuesto, la
-proyección de siete métricas financieras, siete pasajes de reportes y tres
-fichas de noticias se preparan para decisión del dueño. El índice aprobado
-sigue vacío y Stage 3 requiere presupuesto nuevo. No hay un gate de calidad
-aprobado.
+El despliegue verificado el 12 oct 2026 usa Sol low y R1 efectivo; health
+respondió 200 sin enviar una pregunta pagada. La integración F2.3–F2.9 está en
+el PR #120, que sigue en revisión. R2, siete métricas financieras, siete
+pasajes y tres noticias son propuestas pendientes; los flags permanecen
+apagados y el índice aprobado vacío. Stage 3 propone 30 casos/34 mensajes,
+US$7.05–7.21 y US$8 disponibles si el saldo confirmado fuera cero; el saldo
+real es desconocido y no hubo campaña pagada. No se ha aprobado un gate de
+calidad.
 
 - Operación, instalación y límites: [documentación del chat](docs/chat/README.md)
   y [traspaso operativo](docs/chat/traspaso-activacion-mvp-20261006.md).
