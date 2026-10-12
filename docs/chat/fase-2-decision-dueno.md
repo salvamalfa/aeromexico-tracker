@@ -2,7 +2,7 @@
 
 R2, cuatro métricas, siete pasajes, tres fichas y la reserva Stage 3 ya están aprobados: [decisión](../decisiones/20261012-chat-fase2-r2-contenido-stage3.md). No hace falta repetir esa aprobación.
 
-N01 se intentó el 12 oct, 23:39 UTC; HTTP 400 antes de crear sesión. No hay respuesta ni uso; ledger `stopped_unknown_spend`. Confirma 0 tokens/US$0 o informa tokens y costo reales en [Usage](https://platform.openai.com/usage). No reintentar hasta conciliar el consumo.
+N01 se intentó el 12 oct, 23:39 UTC; HTTP 400 antes de crear sesión. No hay respuesta ni registro del consumo; ledger `stopped_unknown_spend`. Confirma 0 tokens/US$0 o informa tokens y costo reales en [Usage](https://platform.openai.com/usage). No reintentar hasta conciliar el consumo.
 
 Para CI, configura en [GitHub Actions Variables](https://github.com/salvamalfa/aeromexico-tracker/settings/variables/actions): `CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256` = `644eb640124297fc63b306836607aea6e4b0be424b85e67b902cc9f5407153ae`.
 
