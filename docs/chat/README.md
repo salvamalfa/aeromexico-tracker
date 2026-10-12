@@ -57,15 +57,16 @@ y se verificó en Railway y Pages. Health respondió 200 con R1, Sol low y
 `enabled_capabilities: []`; las funciones nuevas siguen apagadas. El dueño
 aprobó R2, cuatro métricas financieras, siete pasajes, tres fichas y una nueva
 reserva financiada de US$8. R1, Sol low, las preguntas y la rúbrica ya estaban
-aprobados y no se vuelven a solicitar. Stage 3 (30 casos/34 mensajes) sigue
-pendiente de ejecución y revisión de resultados JSON; el estimado es US$7.06–
-7.23 y el saldo total es desconocido. No se ha ejecutado una campaña ni se ha
-aprobado un gate de calidad. Consulta la
+aprobados y no se vuelven a solicitar. Stage 3 (30 casos/34 mensajes) no tiene
+resultados JSON disponibles. N01 devolvió HTTP 400 antes de sesión y el uso
+quedó `stopped_unknown_spend`; no se declara costo cero ni saldo intacto. No se
+ha aprobado un gate de calidad. Consulta la
 [cotización vigente](revision-fase-2/F2.9-etapa-3-presupuesto-actual.md), el
 [brief de decisiones del dueño](fase-2-decision-dueno.md) y el
 [reporte de activación](../etapas/chat-f2-0-activacion-20261012.md), la
 [verificación posterior a PR #120](../etapas/chat-fase2-entrega-final-20261012.md)
-y el [registro de aprobación y Stage 3](../etapas/chat-fase2-aprobacion-stage3-20261012.md).
+y el [registro de aprobación y Stage 3](../etapas/chat-fase2-aprobacion-stage3-20261012.md),
+además de la [bitácora del intento reciente](../etapas/chat-fase2-stage3-intento-20261012.md).
 
 ### Registro histórico al 8 de octubre de 2026
 

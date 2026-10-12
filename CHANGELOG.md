@@ -9,19 +9,21 @@
 - PR #120 se integró en `ae73af21af51601bd57e62133feccd19988d94a5` (código
   `761d13b9ed6e33dec02508155d4bc82fdbb959d3`). Railway y Pages quedaron
   verificados; health reportó R1/Sol low y `enabled_capabilities: []`. Las
-  capacidades de fase 2 siguen apagadas; no hubo consulta pagada ni campaña
-  Stage 3.
+  capacidades de fase 2 siguen apagadas. Un intento Stage 3 N01 posterior fue
+  rechazado antes de crear sesión; su uso sigue sin conciliar.
 - R1 permanece activo (hash efectivo
   `439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`). R2,
   hash efectivo `68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf`,
   recibió aprobación; el runtime sigue en R1 hasta revisar Stage 3.
 - El 12 de octubre el dueño aprobó R2, cuatro métricas financieras, siete
   pasajes, tres fichas y una reserva Stage 3 nueva, financiada, de US$8. El
-  saldo total sigue desconocido. La campaña (30 casos/34 mensajes; estimado
-  US$7.06–7.23) espera ejecución y revisión del JSON. Ver el
-  [registro de decisión](docs/decisiones/20261012-chat-fase2-r2-contenido-stage3.md),
+  saldo total sigue desconocido. El intento N01 (12 oct, 23:39 UTC) devolvió
+  HTTP 400 antes de sesión y quedó `stopped_unknown_spend`; no hay salida JSON
+  de los 30 casos ni consumo conciliado. Ver la
+  el [registro de decisión](docs/decisiones/20261012-chat-fase2-r2-contenido-stage3.md),
   [estado para el dueño](docs/chat/fase-2-decision-dueno.md) y
-  [actualización de etapa](docs/etapas/chat-fase2-aprobacion-stage3-20261012.md).
+  [actualización de etapa](docs/etapas/chat-fase2-aprobacion-stage3-20261012.md)
+  y la [bitácora del intento](docs/etapas/chat-fase2-stage3-intento-20261012.md).
 
 ## 2026-10-11 · Chat: prompt evaluado y Sol low preparados para activación
 
