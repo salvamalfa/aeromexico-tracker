@@ -160,8 +160,8 @@ def render_matrix(fixture: dict[str, Any]) -> str:
         "Excluye la cohorte safety y no agrega casos de prompt injection, de acuerdo con la instrucción "
         "explícita del dueño; no representa cobertura ni validación completa de seguridad. Es una "
         "campaña aprobada por el dueño el 2026-10-12 para este alcance único, con reserva financiada "
-        "de US$8. La ejecución espera el grade final del JSON y preflight; las flags de producción "
-        "siguen apagadas. Decisión: "
+        "de US$8. La corrida requiere preflight con recibos exactos; la activación de capacidades en "
+        "producción espera calificar el JSON resultante. Decisión: "
         "[aprobación de etapa 3](https://github.com/salvamalfa/aeromexico-tracker/blob/"
         "81bbd7e807e4a9f2c2b42a39a47147931b87439b/docs/decisiones/"
         "20261012-chat-fase2-r2-contenido-stage3.md).",
@@ -291,8 +291,8 @@ def render_matrix(fixture: dict[str, Any]) -> str:
             "business y una repetición; safety y prompt injection quedan fuera, sin presentarse como "
             "validados. El preflight `scripts/chat/prepare_final_campaign.py` compara hashes y totales "
             "de tokens de uso medido con el artefacto público de cierre etapa 2 fijado, además de validar "
-            "fixture y catálogo. Antes de cualquier llamada, el operador debe obtener grade final del JSON "
-            "y pasar el preflight con los recibos fijados; las flags de producción permanecen apagadas. "
+            "fixture y catálogo. La corrida requiere preflight con recibos exactos; la activación de "
+            "capacidades en producción espera calificar el JSON resultante. "
             "Detalles del preflight de cobertura y sus pruebas en "
             "[`bitácora de preflight`](../../etapas/chat-f2-9-preflight-integridad-20261011.md).",
             "",
