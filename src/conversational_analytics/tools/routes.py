@@ -58,7 +58,10 @@ from src.conversational_analytics.tools._route_contract import (
     validate_top_n as _validate_top_n,
 )
 from src.conversational_analytics.tools._route_rollup import rollup_complete_quarter
-from src.conversational_analytics.tools._route_shared_display import build_shared_display
+from src.conversational_analytics.tools._route_shared_display import bound_shared_result
+from src.conversational_analytics.tools._route_shared_metadata import (
+    build_shared_carrier_metadata,
+)
 from src.conversational_analytics.tools._route_provenance import (
     capacity_provenance as _capacity_provenance,
 )
@@ -421,6 +424,20 @@ class RouteTools:
             route_maps[entity_id] = {
                 r["market_key"]: r for r in network.get("routes", []) if r.get("market_key")
             }
+        source_labels = {
+            entity_id: sorted(
+                {
+                    label
+                    for route in route_maps.get(entity_id, {}).values()
+                    if (label := _metric_source_label(network_by_entity[entity_id], route, metric, entity_id))
+                }
+            )
+            for entity_id in entity_ids
+        }
+        source_ids = {
+            entity_id: {label: str(index) for index, label in enumerate(labels)}
+            for entity_id, labels in source_labels.items()
+        }
 
         route_keys = (
             set.intersection(*(set(route_maps.get(entity_id, {})) for entity_id in entity_ids))
@@ -442,27 +459,26 @@ class RouteTools:
                     valid = False
                     break
                 carriers[entity_id] = {
-                    "label": _ENTITY_LABELS[entity_id],
                     "value": value,
                     "value_kind": _value_kind(network_by_entity[entity_id], route, metric)
                     if value is not None
                     else None,
-                    "source_label": _metric_source_label(
-                        network_by_entity[entity_id], route, metric, entity_id
-                    ),
-                    "provenance": _metric_provenance(
-                        network_by_entity[entity_id], route, metric, entity_id
-                    ),
-                    "capacity_provenance": _capacity_provenance(
-                        network_by_entity[entity_id], route, entity_id
+                    "source_ref": source_ids[entity_id].get(
+                        _metric_source_label(network_by_entity[entity_id], route, metric, entity_id)
                     ),
                 }
             # Exact entity route sets are the evidence of presence. For INDUSTRY + an
             # individual airline, the airline's own file must carry a positive value.
             if valid and all(item["value"] is not None and item["value"] > 0 for item in carriers.values()):
-                first_route = route_maps[entity_ids[0]][market_key]
                 kinds = {item["value_kind"] for item in carriers.values()}
-                source_families = {str(item["source_label"] or "").split(" · ", maxsplit=1)[0] for item in carriers.values()}
+                source_families = {
+                    str(
+                        source_labels[entity_id][int(carriers[entity_id]["source_ref"])]
+                        if carriers[entity_id]["source_ref"] is not None
+                        else ""
+                    ).split(" · ", maxsplit=1)[0]
+                    for entity_id in entity_ids
+                }
                 carrier_coverages = {
                     entity_id: _coverage(network_by_entity[entity_id]) for entity_id in entity_ids
                 }
@@ -484,18 +500,12 @@ class RouteTools:
                 rows.append(
                     {
                         "market_key": market_key,
-                        "origin": copy.deepcopy(first_route.get("origin")),
-                        "destination": copy.deepcopy(first_route.get("destination")),
                         "carriers": carriers,
                         "combined_value": (
                             sum(item["value"] for item in carriers.values())
                             if not comparability_reasons
                             else None
                         ),
-                        "unit": _METRIC_LABELS[metric][1],
-                        "coverage": {
-                            **carrier_coverages,
-                        },
                         "comparable": not comparability_reasons,
                         "comparability_reason": comparability_reasons,
                         "value_kind": next(iter(kinds)) if len(kinds) == 1 else "mixed",
@@ -529,8 +539,13 @@ class RouteTools:
             for key, value in ((entity, network_by_entity.get(entity)) for entity in entity_ids)
         }
         meta = self._metadata(query, networks_with_paths)
-        display_columns, display_rows = build_shared_display(
-            rows, entity_ids, _ENTITY_LABELS, _METRIC_LABELS[metric][1]
+        carrier_metadata = build_shared_carrier_metadata(
+            entity_ids,
+            _ENTITY_LABELS,
+            network_by_entity,
+            route_maps,
+            source_ids,
+            source_labels,
         )
         value_kinds = {row["value_kind"] for row in rows}
         source_references = _source_references(networks_with_paths)
@@ -538,22 +553,23 @@ class RouteTools:
             "display_id": f"tabla:rutas_compartidas_{_display_query_hash(query)}",
             "kind": "table",
             "title": f"Rutas compartidas · {period}",
-            "columns": display_columns,
-            "rows": display_rows,
+            "columns": [],
+            "rows": [],
             "value_kind": next(iter(value_kinds))
             if len(value_kinds) == 1
             else "mixed"
             if value_kinds
             else "missing",
             "source": source_references[0] if source_references else None,
-            "sources": source_references,
-            "source_references": source_references,
         }
-        return {
+        result = {
             **meta,
             "coverage": coverage,
+            "carrier_metadata": carrier_metadata,
             "rows": rows,
             "row_count": len(rows),
+            "requested_top_n": top_n,
+            "applied_top_n": len(rows),
             "available_route_count": count,
             "truncated": count > top_n,
             "aeromexico_scope": (
@@ -562,6 +578,9 @@ class RouteTools:
             ),
             "display": display,
         }
+        return bound_shared_result(
+            result, entity_ids, _ENTITY_LABELS, _METRIC_LABELS[metric][1], count
+        )
 
     def invoke(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         if name not in TOOL_NAMES:
