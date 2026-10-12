@@ -11,6 +11,7 @@ from src.conversational_analytics.evidence_index import (
     EvidenceIndex,
     canonical_index_sha256,
 )
+from src.conversational_analytics.data.snapshot import Snapshot
 from src.conversational_analytics.evaluation_stage3_coverage import (
     CAMPAIGN_CANDIDATE,
     _extract_evidence,
@@ -71,6 +72,18 @@ def test_stage3_derives_all_30_cases_from_real_tools_and_current_snapshot(monkey
     assert report["provider_calls"] == 0
     assert report["credentials_read"] is False
     assert report["fixtures_modified"] is False
+    fixture = json.loads(Path("tests/fixtures/chat_evals/business_proposed.json").read_text())
+    assert report["fixture_lineage"] == {
+        "fixture_sha256": hashlib.sha256(
+            Path("tests/fixtures/chat_evals/business_proposed.json").read_bytes()
+        ).hexdigest(),
+        "source_expected_versions": fixture["expected_versions"],
+    }
+    current_snapshot = Snapshot(Path("site"))
+    assert report["pins"]["data_version"] == current_snapshot.version
+    assert report["pins"]["semantic_version"] == current_snapshot.semantic_version
+    assert report["pins"]["data_version"] == report["campaign_identity"]["snapshot_data_version"]
+    assert report["pins"]["semantic_version"] == report["campaign_identity"]["snapshot_semantic_version"]
     assert report["current_dashboard_period"] == {
         "economic": "2026Q2",
         "market": "2026Q2",
@@ -128,15 +141,29 @@ def test_stage3_derives_all_30_cases_from_real_tools_and_current_snapshot(monkey
             assert case["tool_source_coverage_complete"] is True
             assert case["evidence_rows_complete"] is True
 
-    assert cases["N04"]["status"] == "approval_blocked"
-    candidate_call = cases["N04"]["calls"][1]["result"]
-    assert candidate_call["approval_gate"] == "closed"
-    assert candidate_call["value"] is None
+    assert cases["N04"]["status"] == "supported"
+    definition_call, financial_call = (call["result"] for call in cases["N04"]["calls"])
+    assert definition_call["approval_status"] == "owner_approved_published"
+    assert financial_call["approval_gate"] == "open"
+    published_finance = json.loads(Path("site/data/v1/business_metrics.json").read_text())
+    assert financial_call["metric_id"] == "total_revenue"
+    expected_revenue = next(
+        row["value"]
+        for row in published_finance["rows"]
+        if row["metric_id"] == "total_revenue"
+        and row["entity_id"] == "AEROMEXICO"
+        and row["period"] == "2026Q2"
+    )
+    assert financial_call["value"] == expected_revenue
     assert cases["N09"]["calls"][0]["tool"] == "query_routes"
     assert "error" not in cases["N09"]["calls"][0]
     assert cases["N10"]["calls"][0]["tool"] == "find_shared_routes"
     assert cases["N12"]["calls"][0]["tool"] == "get_time_series"
-    assert cases["N16"]["status"] == "approval_blocked"
+    assert cases["N16"]["status"] == "coverage_missing"
+    assert cases["N16"]["status_basis"] == "declared_capability_limit"
+    assert "no buscan ni extraen texto" in cases["N16"]["limitation"]
+    assert cases["N16"]["calls"][0]["result"]["count"] == 3
+    assert cases["N16"]["calls"][2]["result"]["approval_gate"] == "open"
     n23_values = [call["result"]["value"] for call in cases["N23"]["calls"]]
     assert cases["N23"]["derived_calculations"][0]["value"] == n23_values[0] - n23_values[1]
     assert cases["N25"]["follow_up_turns_reused_prior_tool_results"] is True
