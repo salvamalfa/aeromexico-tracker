@@ -117,7 +117,12 @@ selección autorizada para el runtime es `gpt-6.1-sol` con
 `CHAT_REASONING_EFFORT=low`. El default del código sigue siendo `medium` si la
 variable no está definida; por eso la activación requiere configurar `low`
 explícitamente y verificarlo en health. Los demás niveles documentados por
-modelo se aceptan para ejecuciones locales de evaluación.
+modelo se aceptan para ejecuciones locales de evaluación. El 12 de octubre de
+2026, `/api/chat/health` confirmó `gpt-6.1-sol`, esfuerzo `low`, verbosidad
+`medium`, prompt efectivo `439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`,
+snapshot `d9c4e56d04ad67be5dff6d6e9f7f6615f4f4be985ec1e5ee59781a7735007037`,
+worker activo y admisión habilitada. La verificación no envió una pregunta al
+proveedor; ver el [reporte de activación](../etapas/chat-f2-0-activacion-20261012.md).
 `CHAT_TEXT_VERBOSITY` usa `medium` por omisión y acepta `low`,
 `medium` o `high`. Para modelos del catálogo no hace falta declarar precios en
 el entorno: el servicio usa los valores versionados. Si se conservan

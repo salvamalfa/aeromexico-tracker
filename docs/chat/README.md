@@ -37,20 +37,21 @@ sesiones del proveedor aisladas tras el adaptador.
 
 ## Estado de entrega
 
-La entrega activa sigue siendo el MVP de Railway. La integración local de F2
-prepara `gpt-6.1-sol` con `CHAT_REASONING_EFFORT=low` y el prompt `r1-final`
-(SHA-256 efectivo `439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`);
-la selección aún requiere despliegue y verificación en Railway. Los paquetes
-F2.3–F2.9 y las capacidades nuevas no se consideran activados por estar
-implementados o integrados localmente. Las funciones sujetas a aprobación de
-datos permanecen cerradas hasta contar con un recibo válido y una publicación
-verificada.
+El MVP sigue activo en Railway. El 12 de octubre de 2026 se verificó el despliegue
+`dd97b38e-383b-48ab-9fab-ca5bf0f78c70` con `gpt-6.1-sol`, esfuerzo `low`,
+verbosidad `medium`, prompt `r1-final` (SHA-256 efectivo
+`439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`) y
+snapshot `d9c4e56d04ad67be5dff6d6e9f7f6615f4f4be985ec1e5ee59781a7735007037`;
+health respondió 200 y la admisión/worker estaban activos. No se hizo ninguna
+consulta pagada durante la verificación.
 
-El siguiente paso operativo es revisar e integrar los PRs de F2 y después
-verificar el despliegue autorizado. No hay consultas pagadas pendientes.
-La propuesta de prompt r2 y su hash exacto están en
-[`config/chat/prompt_candidates/`](../../config/chat/prompt_candidates/);
-no está aprobada ni activa.
+F2.3–F2.9 están implementados localmente, pero las nuevas capacidades siguen
+cerradas: rutas, métricas financieras y búsqueda de evidencia usan flags false;
+el índice de evidencia aprobado está vacío y R2 requiere un recibo de dueño
+ligado al hash exacto. Stage 3 requiere presupuesto nuevo y una campaña final.
+Ver el [resumen de decisiones del dueño](fase-2-decision-dueno.md) y el
+[reporte de activación](../etapas/chat-f2-0-activacion-20261012.md). No hay
+consultas pagadas pendientes.
 
 ### Registro histórico al 8 de octubre de 2026
 

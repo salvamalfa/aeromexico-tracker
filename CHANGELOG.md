@@ -12,6 +12,7 @@
   propuesta efectiva es `68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf`.
 - Stage 3 está preparado para preflight offline. No hay recibo de presupuesto
   aprobado ni se ejecutó una evaluación pagada; la fase 2 no se declara cerrada.
+- Railway confirmó F2.0 con Sol low y R1 efectivo `439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`; health respondió 200. La verificación no envió una pregunta pagada. Ver [reporte de activación](docs/etapas/chat-f2-0-activacion-20261012.md).
 
 ## 2026-10-11 · Chat: prompt evaluado y Sol low preparados para activación
 
