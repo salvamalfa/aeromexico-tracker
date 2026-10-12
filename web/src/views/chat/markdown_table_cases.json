@@ -1,0 +1,26 @@
+[
+  {
+    "name": "escaped pipe in numeric table heading",
+    "markdown": "| Factor \\| ajustado | Valor |\n| --- | ---: |\n| Ocupación | 99.9% |",
+    "rows": [["Ocupación", "99.9%"]],
+    "value_bearing": true
+  },
+  {
+    "name": "escaped backslash before delimiter",
+    "markdown": "Ruta | Valor\n---|---\nC:\\\\| 5",
+    "rows": [["C:\\", "5"]],
+    "value_bearing": true
+  },
+  {
+    "name": "borderless GFM rows",
+    "markdown": "A | B\n---|---\n1 | 2\n3 | 4",
+    "rows": [["1", "2"], ["3", "4"]],
+    "value_bearing": true
+  },
+  {
+    "name": "blank lines between bordered rows",
+    "markdown": "| Estado | Nota |\n| --- | --- |\n| Tráfico | estable |\n\n| Mezcla | favorable |",
+    "rows": [["Tráfico", "estable"], ["Mezcla", "favorable"]],
+    "value_bearing": false
+  }
+]

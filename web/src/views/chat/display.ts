@@ -77,6 +77,9 @@ export function safeDisplays(value: unknown): ChatDisplay[] {
     const kind = raw.kind;
     if ((kind !== "table" && kind !== "chart") || typeof raw.display_id !== "string" || !DISPLAY_ID.test(raw.display_id) || seen.has(raw.display_id)) return [];
     if ((raw.display_id.startsWith("tabla:") ? "table" : "chart") !== kind || typeof raw.title !== "string" || !VALUE_KINDS.has(String(raw.value_kind))) return [];
+    // Candidate displays remain unpublished regardless of whether their values
+    // arrived as numbers, numeric strings, or null placeholders.
+    if (raw.value_kind === "candidate_unapproved") return [];
     const sources = parseSources(raw.sources);
     const result: ChatDisplay = {
       display_id: raw.display_id,

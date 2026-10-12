@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { renderSafeMarkdown, safeReferences } from "./markdown";
 import { parseSafeChart } from "./chart";
+import tableCases from "./markdown_table_cases.json";
 
 describe("safe response rendering", () => {
   it("renders same-turn reference tables and combines labels for duplicate source URLs", () => {
@@ -21,6 +22,18 @@ describe("safe response rendering", () => {
       "AFAC, estadística mensual, junio 2026 · AFAC duplicada",
     ]);
     expect(host.textContent).not.toContain("{{tabla:");
+  });
+
+  it("never renders candidate displays with null or numeric-looking strings", () => {
+    const host = document.createElement("div");
+    for (const value of [null, "100 pasajeros", "$1,200 USD"]) {
+      renderSafeMarkdown(host, "{{tabla:candidate}}", [], [{
+        display_id: "tabla:candidate", kind: "table", title: "Candidato", value_kind: "candidate_unapproved",
+        columns: [{ key: "value", label: "Valor" }], rows: [{ value }], sources: [],
+      }]);
+      expect(host.textContent).toBe("");
+      expect(host.querySelector("table")).toBeNull();
+    }
   });
 
   it("keeps verified financial and reporting citations clickable", () => {
@@ -95,6 +108,25 @@ describe("safe response rendering", () => {
     ]);
     expect(host.textContent).toBe("");
     expect(host.querySelector("table, .chat-answer-chart")).toBeNull();
+  });
+
+  it("splits escaped pipe table cells consistently with the sanitizer", () => {
+    const host = document.createElement("div");
+    renderSafeMarkdown(host, "| Factor \\| ajustado | Valor |\n| --- | ---: |\n| Ocupación | 99.9% |");
+    const cells = [...host.querySelectorAll("th")].map((cell) => cell.textContent);
+    expect(cells).toEqual(["Factor | ajustado", "Valor"]);
+    expect(host.querySelector("tbody td:last-child")?.textContent).toBe("99.9%");
+  });
+
+  it("normalizes the shared server and browser table corpus", () => {
+    for (const testCase of tableCases) {
+      const host = document.createElement("div");
+      renderSafeMarkdown(host, testCase.markdown);
+      const rows = [...host.querySelectorAll("tbody tr")].map((row) =>
+        [...row.querySelectorAll("td")].map((cell) => cell.textContent ?? ""),
+      );
+      expect(rows, testCase.name).toEqual(testCase.rows);
+    }
   });
 
   it("treats raw HTML as text and permits only safe https markdown links", () => {
