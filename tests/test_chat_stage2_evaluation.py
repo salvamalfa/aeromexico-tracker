@@ -72,11 +72,13 @@ def test_stage2_snapshot_audit_is_reproducible_and_does_not_grade_model_quality(
 ) -> None:
     from src.conversational_analytics.data.snapshot import Snapshot
     from src.conversational_analytics.evaluation import STAGE2_PILOT_FIXTURE_PATH, audit_snapshot
-    from tests._trusted_site import copy_origin_master_site
+    from tests._pre_financial_snapshot import copy_pre_financial_snapshot
 
     payload = json.loads(STAGE2_PILOT_FIXTURE_PATH.read_text(encoding="utf-8"))
+    snapshot = Snapshot(copy_pre_financial_snapshot(tmp_path / "pre-financial"))
+    assert snapshot.version == payload["expected_versions"]["data_version"]
     report = audit_snapshot(
-        Snapshot(copy_origin_master_site(tmp_path / "trusted-baseline")),
+        snapshot,
         payload["cases"],
         expected_versions=payload["expected_versions"],
     )

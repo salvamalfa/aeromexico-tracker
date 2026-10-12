@@ -167,14 +167,12 @@ def test_site_without_financial_payload_keeps_its_existing_manifest_without_a_pi
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from tests._trusted_site import copy_origin_master_site
+    from tests._pre_financial_snapshot import copy_pre_financial_snapshot
 
     monkeypatch.delenv(APPROVAL_RECEIPT_SHA256_ENV, raising=False)
     source_manifest = ROOT / "site/publication_manifest.json"
     source_manifest_before = source_manifest.read_bytes()
-    site = copy_origin_master_site(tmp_path / "trusted-baseline")
-    for name in ("business_metrics.json", "business_metrics.approval.json"):
-        (site / "data/v1" / name).unlink(missing_ok=True)
+    site = copy_pre_financial_snapshot(tmp_path / "pre-financial")
     manifest_path = site / "publication_manifest.json"
     manifest = json.loads(manifest_path.read_bytes())
     manifest["files"] = manifest_mod.file_entries(site)

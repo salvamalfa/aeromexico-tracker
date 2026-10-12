@@ -32,8 +32,11 @@ def test_approved_fixture_completes_offline_preflight_from_an_external_copy(
     external_fixture = tmp_path / "same-approved-content.json"
     external_fixture.write_bytes(APPROVED_FIXTURE.read_bytes())
     monkeypatch.setattr(evaluate_campaign, "_verify_private_destination", lambda *a, **k: None)
-    from tests._trusted_site import copy_origin_master_site
-    baseline = copy_origin_master_site(tmp_path / "trusted-baseline")
+    from tests._pre_financial_snapshot import copy_pre_financial_snapshot
+    baseline = copy_pre_financial_snapshot(tmp_path / "pre-financial")
+    from src.conversational_analytics.data.snapshot import Snapshot
+    approved = json.loads(external_fixture.read_text(encoding="utf-8"))
+    assert Snapshot(baseline).version == approved["expected_versions"]["data_version"]
 
     plan, runs, cases, _, _, _ = evaluate_campaign.prepare(
         _args(external_fixture, tmp_path, snapshot=baseline)
