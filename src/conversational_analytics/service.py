@@ -9,7 +9,7 @@ from typing import Any
 
 from .config import ChatConfig
 from .providers._openai_helpers import question_envelope
-from .providers._openai_prompt import effective_prompt_sha256
+from .providers._openai_prompt import effective_prompt_sha256, effective_prompt_version
 from .semantic.context import validate_context as _validate_semantic_context
 from .semantic.plan import PlanValidationError
 from .storage import AdmissionDenied, ChatStore, Conflict
@@ -190,6 +190,16 @@ class ChatService:
             "provider": self.config.provider,
             "snapshot_version": self.snapshot_version,
             "worker_running": bool(self.worker and self.worker.running),
+            "enabled_capabilities": [
+                name
+                for name, enabled in (
+                    ("route_queries", self.config.enable_route_tools),
+                    ("business_metric_queries", self.config.enable_business_metric_tools),
+                    ("evidence_search", self.config.enable_evidence_tools),
+                )
+                if enabled
+            ],
+            "prompt_version": effective_prompt_version(),
         }
         if self.config.provider == "openai":
             minimum_cost = self.config.reservation_cost_usd(self.config.minimum_turn_reservation_tokens)
@@ -205,6 +215,9 @@ class ChatService:
                     int(self.config.daily_cost_budget_global_usd // minimum_cost),
                 ),
             )
+        if self.config.enable_evidence_tools:
+            index_path = self.snapshot.project_root / "config/chat/evidence/approved-index.json"
+            result["evidence_index_sha256"] = hashlib.sha256(index_path.read_bytes()).hexdigest()
         return result
 
 

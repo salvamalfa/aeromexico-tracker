@@ -18,18 +18,54 @@ aclaración. No se reparte un total por rutas sin evidencia, no se confunde
 Aeroméxico consolidado con Aerovías aislada, y una ausencia conserva el estado
 `missing` en vez de convertirse en cero.
 
+La presentación por referencia agrega `DisplayRegistry` al límite del worker:
+la respuesta cita tablas y gráficas validadas del mismo turno, que el frontend
+renderiza desde los valores persistidos sin otra consulta al modelo. El estado
+local de F2.8 y sus verificaciones están en el [reporte de etapa](../etapas/chat-f2-8-presentacion-20261011.md).
+
+Cuando se habilite la búsqueda aprobada de reportes o noticias, cada resultado
+también entrega `references` con su URL exacta y una etiqueta de empresa,
+periodo/página o medio/fecha/título. El proveedor las conserva en las fuentes
+del turno y agrupa etiquetas que comparten URL; la capacidad continúa apagada
+mientras `approved-index.json` no tenga registros aprobados.
+
 El catálogo inicial distingue `company_passengers` de `afac_passengers`, razón
 por la cual “pasajeros” puede requerir aclaración. Los porcentajes se guardan
 como fracción y se muestran como porcentaje; los campos `*_pp` ya están en
 puntos porcentuales. Ocupación, RASK y CASK de Industria se conservan como
 razones ponderadas publicadas. Ver las fichas de [métricas](../../config/chat/metrics.yaml)
 y [entidades](../../config/chat/entities.yaml). El catálogo habilita 11 métricas
-versionadas (8 fichas adicionales permanecen en inventario sin activar)
-y el registry expone siete herramientas de consulta controlada.
+versionadas (8 fichas adicionales permanecen en inventario sin activar).
+El contrato operativo documentado para Railway permite hasta 16 llamadas de
+herramienta por turno; el default local es 8.
 FastAPI sirve historial y turnos por SSE, con almacenamiento SQLite local y
 sesiones del proveedor aisladas tras el adaptador.
 
-## Estado de entrega al 8 de octubre de 2026
+## Estado de entrega
+
+El MVP sigue activo en Railway. El 12 de octubre de 2026 se verificó el despliegue
+`dd97b38e-383b-48ab-9fab-ca5bf0f78c70` con `gpt-6.1-sol`, esfuerzo `low`,
+verbosidad `medium`, prompt `r1-final` (SHA-256 efectivo
+`439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`) y
+snapshot `d9c4e56d04ad67be5dff6d6e9f7f6615f4f4be985ec1e5ee59781a7735007037`;
+health respondió 200 y la admisión/worker estaban activos. No se hizo ninguna
+consulta pagada durante la verificación.
+
+F2.3–F2.9 están preparados en el [PR #120](https://github.com/salvamalfa/aeromexico-tracker/pull/120),
+que sigue en revisión y no está desplegado. Las capacidades nuevas siguen
+cerradas: rutas, métricas financieras y búsqueda de evidencia usan flags
+false; el índice de evidencia aprobado está vacío. R1 sigue activo, así que no
+se requiere volver a aprobar R1 ni las preguntas, rúbrica o modelo/esfuerzo.
+R2 y los contenidos propuestos aún requieren decisión; Stage 3 requiere
+presupuesto nuevo. Su preflight offline estima US$7.06–7.23 para 30 casos/34
+mensajes y propone una reserva máxima de US$8; el saldo actual es desconocido y
+solo reduce la recarga necesaria, no la reserva. La campaña no está aprobada ni
+financiada. Consulta la
+[cotización vigente](revision-fase-2/F2.9-etapa-3-presupuesto-actual.md), el
+[resumen de decisiones](fase-2-decision-dueno.md) y el
+[reporte de activación](../etapas/chat-f2-0-activacion-20261012.md).
+
+### Registro histórico al 8 de octubre de 2026
 
 | Hito | Estado |
 |---|---|
@@ -63,10 +99,7 @@ un saldo contable ni representa el consumo actual verificado. S14 conserva
 `NULL`/desconocido, que nunca se interpreta como cero.
 
 Las respuestas correctas del 8 de octubre son observaciones de uso, no una
-validación de calidad del prompt. **Siguiente paso:** la
-[fase 2](fase-2-agente-analitico.md), que definirá el prompt, un conjunto de
-evaluación de negocio y la comparación de Luna (esfuerzo medio y máximo) con
-Sol (bajo y medio); empieza cuando el dueño envíe la solicitud. Consulta el
+validación de calidad del prompt. Consulta la [fase 2](fase-2-agente-analitico.md), el
 [traspaso operativo](traspaso-activacion-mvp-20261006.md), el
 [reporte de activación](../etapas/chat-mvp-activacion-20261007.md), las
 [correcciones de recuperación](../etapas/chat-recuperacion-correcciones-20261008.md),
@@ -133,9 +166,10 @@ es una cota de facturación porque no hay límite de salida acumulado que cubra
 un turno de hasta 16 herramientas; consulta [operaciones](operations.md).
 
 El dueño eligió `gpt-6.1-sol` con esfuerzo `low` y aprobó el prompt evaluado en
-F2.9 etapa 2. Tras desplegar, Railway debe usar
-`CHAT_REASONING_EFFORT=low`; hasta verificarlo, modelo, esfuerzo y prompt aún
-no están activos. La fuente versionada del prompt tiene SHA-256
+F2.9 etapa 2. Railway confirmó esta configuración en el despliegue
+`dd97b38e-383b-48ab-9fab-ca5bf0f78c70`, estado `SUCCESS`, commit
+`60e741b4b4c70ba2d092061f571b924690afcfcd`; `/api/chat/health` respondió 200.
+La fuente versionada del prompt tiene SHA-256
 `33b8f7a0900869812d98bba57daa2ce3ea2f6b5c02a86a7eb3b8e830c7f7694b`; el texto
 efectivo que suma la regla de periodo evaluada tiene SHA-256
 `439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`, que

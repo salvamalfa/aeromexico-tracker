@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://salvamalfa.github.io/aeromexico-tracker/contracts/chat/prompt-candidate.schema.json",
+  "title": "Proposed chat prompt metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "version", "supersedes_prompt_base_sha256", "current_effective_prompt_sha256", "proposed_effective_prompt_sha256", "capabilities", "activation_gate"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"const": "proposed_not_approved_not_active"},
+    "version": {"type": "string", "minLength": 1, "maxLength": 40},
+    "supersedes_prompt_base_sha256": {"$ref": "#/$defs/sha256"},
+    "current_effective_prompt_sha256": {"$ref": "#/$defs/sha256"},
+    "proposed_effective_prompt_sha256": {"$ref": "#/$defs/sha256"},
+    "capabilities": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 80}},
+    "activation_gate": {"type": "string", "minLength": 1, "maxLength": 300}
+  },
+  "$defs": {"sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

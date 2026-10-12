@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "stage": "F2.9-stage-3",
+  "status": "offline_business_only_partial_preflight_pending_dependency_and_budget_gates",
+  "selected_candidate": "gpt-6.1-sol@low",
+  "fixture": "tests/fixtures/chat_evals/business_proposed.json",
+  "cohort": "business",
+  "case_scope": "owner_approved_30_business_cases_only",
+  "safety_prompt_injection_cases": false,
+  "run_repetitions": 1,
+  "limits": {
+    "max_message_chars": 8000,
+    "max_tool_calls": 16,
+    "max_tool_result_bytes": 16000,
+    "max_turn_seconds": 180
+  },
+  "measured_reference": {
+    "stage": "F2.9-stage-2",
+    "candidate": "gpt-6.1-sol@low",
+    "question_count": 15,
+    "completed_input_tokens": 842452,
+    "completed_output_tokens": 4157,
+    "source_hashes": {
+      "final_report": "1c547c0d5c8814e194f3da5c52bf97898a042a1e01d5dd5be80391df3f00a0bf",
+      "terminal_recovery": "74709aadfb6c255726ebaa6a5f32dafd868abc9d640f489861ed672fa04bf1d6"
+    },
+    "accounting": "14 completed report rows plus one exact GET-recovered terminal turn; no replay; the recovery has no valid latency or tool trace"
+  },
+  "estimate": {
+    "basis": "observed_stage2_sol_low_mean_per_question_scaled_to_stage3_user_messages_plus_current_R2_and_tool_schema_context_delta",
+    "input_rate_usd_per_million": 2.5,
+    "input_rate_basis": "cache-write rate, conservatively charged; no cached-input credit",
+    "output_rate_usd_per_million": 10.0,
+    "margin_fraction": 0.35,
+    "rounding": "cost_range_display_4dp; reserve_ceil_to_whole_usd",
+    "scope_note": "Planning estimate only. Stage 3 requires the proposed R2 prompt and the current 13-tool schema; R2 activation and a new US$8 reserve remain pending owner approval/funding. The balance is unknown. No provider calls are authorized.",
+    "context_delta_proxy": {
+      "historical_stage2_prompt": "approved R1 effective prompt",
+      "stage3_prompt": "R2 proposed, required by the stage-3 profile, not active or approved",
+      "historical_tool_schema": "7 definitions, 3306 UTF-8 bytes, execution commit a3704be6ab9dacd8c481caff7caf3278fe861e90",
+      "historical_tool_schema_sha256": "1ff0d3a35647f7a0c2fc956884a4d267b0148065ccd3e2469139463f859bea19",
+      "stage3_tool_schema": "13 definitions, measured from the current coverage source",
+      "bytes_per_token_proxy_range": [3, 4],
+      "request_count_basis": "34 user messages plus 55 deterministic tool calls; upper proxy count 89",
+      "request_count_hypothesis_range": [85, 89],
+      "tokenizer_or_provider_usage": "not queried"
+    }
+  },
+  "gates": {
+    "full_stage2_review_received": true,
+    "business_fixture_hash_frozen_for_this_preflight": true,
+    "f23_f24_f25_f26_f27_f28_integrated_and_reviewed": false,
+    "30_case_gold_and_support_expectations_revalidated": false,
+    "snapshot_and_semantic_versions_pinned_after_integration": false,
+    "new_stage3_budget_approved_and_funded": false
+  },
+  "campaign_id": "f2-9-stage-3-business-partial-v1",
+  "safety_scope": "excluded_by_explicit_owner_direction; no prompt-injection cases are added or represented as validated"
+}

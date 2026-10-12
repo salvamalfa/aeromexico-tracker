@@ -70,6 +70,28 @@ costo aparte, no incluido en los precios por tokens.
 
 ## Ejecución live y continuidad
 
+Para F2.9 etapa 2, el comando dedicado valida el fixture congelado, sus 15
+contextos, el snapshot, la semántica, el prompt efectivo y las cuatro
+combinaciones modelo/esfuerzo sin crear un cliente ni hacer llamadas:
+
+El evaluador lee los bytes del fixture una sola vez y exige SHA-256
+`824db2fb0bd1f1e58c08a16c234e8fe4d9d280f783e9010ded5ad8912b64092e` antes de
+interpretar el JSON o preparar la campaña. Una ruta externa solo se acepta si
+contiene exactamente esos mismos bytes; conservar los 15 IDs no autoriza a
+cambiar preguntas, contextos, resultados esperados ni rúbricas.
+
+```bash
+uv run python scripts/chat/evaluate_campaign.py
+```
+
+Imprime hashes y destinos privados, informa cero llamadas en curso y no muestra
+respuestas. Reportes y ledger viven bajo `.state/outputs/chat-evaluations/`,
+ignorado por Git; el escritor aplica permisos `0700` al directorio y `0600` a
+cada archivo. La corrida stage 2 usa un ledger propio, con US$8 financiados para
+esta etapa; no importa ni suma el gasto histórico de etapa 1. El comando live
+se habilita explícitamente con `--run --opt-in` después de integrar y verificar
+el runner; el saldo de etapa 2 ya está autorizado y financiado.
+
 El harness live usa el adaptador de producción y un registro real de
 herramientas sobre el snapshot público. La continuidad por fases conserva un
 presupuesto acumulado compartido. Cada pregunta crea su propia sesión, y su
@@ -96,6 +118,16 @@ es una estimación con las tarifas ingresadas, no una factura. La reserva
 operativa puede detener casos posteriores, pero no limita los tokens de una
 llamada ya iniciada ni garantiza un techo exacto. No se inventan resultados ni
 costos faltantes.
+
+El exportador de revisión ciega acepta más de un reporte detallado por
+candidato al repetir su opción `--*-report`. Une filas solo si los fragmentos
+comparten la identidad íntegra de corrida y campaña, snapshot, semántica,
+prompt, herramientas, límites y ejecución; rechaza casos duplicados. La llave
+privada conserva cada identidad, el hash SHA-256 de cada reporte fuente y el
+hash fuente asignado a cada caso. Los casos ausentes siguen como `null` con
+disposición privada `not_attempted`; el exportador no cambia informes fuente,
+ledger ni estado de gasto y no convierte esta unión en autorización para
+reanudar una corrida live.
 
 Usar el mismo holdout, snapshot, semántica, prompt de sistema, límites y
 configuración de herramienta por modelo. No incluir la pregunta y su respuesta

@@ -83,7 +83,7 @@ class ConversationStoreMixin:
                     **{
                         k: v
                         for k, v in json.loads(row["payload_json"]).items()
-                        if k in {"references", "chart"}
+                        if k in {"references", "chart", "displays"}
                     },
                 }
                 for row in messages

@@ -54,6 +54,11 @@
 .chat-references { display: grid; gap: 7px; margin: 10px 0 0; padding: 10px 0 0 18px; border-top: 1px solid var(--line); font-size: 11px; }
 .chat-references small { display: block; color: var(--muted); margin-top: 2px; }
 .chat-answer-chart { width: 100%; min-height: 240px; margin-top: 10px; }
+.chat-display { margin: 10px 0 14px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+.chat-display h4 { margin: 0 0 6px; color: var(--brand-blue); font-size: 13px; }
+.chat-display-kind { display: inline-block; margin-bottom: 5px; color: #7a4b00; font-size: 11px; font-weight: 700; }
+.chat-display-sources { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+.chat-display-chart .chat-answer-chart { min-height: 260px; margin-top: 0; }
 .chat-status { min-height: 22px; padding: 0 16px 7px; color: var(--muted); font-size: 11px; }
 .chat-composer { padding: 13px 16px 16px; border-top: 1px solid var(--line); background: #f8fafd; }
 .chat-composer label { display: block; margin-bottom: 6px; font-size: 11px; font-weight: 750; }

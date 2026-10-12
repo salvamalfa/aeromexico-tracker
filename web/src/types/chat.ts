@@ -23,6 +23,24 @@ export interface ChatChart {
   unit?: string;
 }
 
+export interface ChatDisplayColumn {
+  key: string;
+  label: string;
+  unit?: string;
+}
+
+export interface ChatDisplay {
+  display_id: string;
+  kind: "table" | "chart";
+  title: string;
+  value_kind: "reported" | "observed" | "calculated" | "inferred" | "estimated" | "scheduled" | "mixed" |
+    "derived_sum_of_reported_quarters" | "candidate_unapproved" | "missing";
+  sources: ChatReference[];
+  columns?: ChatDisplayColumn[];
+  rows?: Array<Record<string, string | number | boolean | null>>;
+  chart?: ChatChart;
+}
+
 export interface ChatMessage {
   id: string;
   role: ChatRole;
@@ -31,6 +49,7 @@ export interface ChatMessage {
   created_at?: string;
   references?: ChatReference[];
   chart?: ChatChart;
+  displays?: ChatDisplay[];
   pending?: boolean;
   retryMessageId?: string;
   clientMessageId?: string;

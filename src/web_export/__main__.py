@@ -18,6 +18,7 @@ from src.dashboard.executive_summary import build_executive_payload
 from src.dashboard.flights import build_flight_payload
 from src.dashboard.market import build_market_payload
 from src.web_export.analysis import MissingAnalysisInput, export_analysis
+from src.web_export.business_metrics_approval import BusinessMetricsApprovalError
 from src.web_export.executive import export_executive
 from src.web_export.flights import export_flights
 from src.web_export.inputs import MissingWebInput
@@ -37,7 +38,19 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Dev only: skip a period whose analysis record/approval is not present locally.",
     )
+    parser.add_argument(
+        "--business-metrics-proposal",
+        type=Path,
+        help="Review proposal to export only with matching approval receipt.",
+    )
+    parser.add_argument(
+        "--business-metrics-receipt",
+        type=Path,
+        help="Owner approval receipt; both business-metrics options are required together.",
+    )
     args = parser.parse_args(argv)
+    if bool(args.business_metrics_proposal) != bool(args.business_metrics_receipt):
+        parser.error("--business-metrics-proposal and --business-metrics-receipt must be supplied together")
 
     try:
         flight_payload = build_flight_payload()
@@ -49,7 +62,16 @@ def main(argv: list[str] | None = None) -> int:
             args.out,
             allow_missing=args.allow_missing_analysis,
         )
-    except (MissingWebInput, MissingAnalysisInput) as error:
+        if args.business_metrics_proposal and args.business_metrics_receipt:
+            from src.web_export.business_metrics import export_approved_business_metrics
+
+            written += export_approved_business_metrics(
+                args.business_metrics_proposal,
+                PATHS.root / "config/chat/metrics-candidates.json",
+                args.business_metrics_receipt,
+                args.out,
+            )
+    except (MissingWebInput, MissingAnalysisInput, BusinessMetricsApprovalError) as error:
         print(f"web_export: {error}", file=sys.stderr)
         return 1
 

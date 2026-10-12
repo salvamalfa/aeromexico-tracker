@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://salvamalfa.github.io/aeromexico-tracker/contracts/business_metrics.schema.json",
+  "title": "Approved public business metrics v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "metadata", "rows"],
+  "properties": {
+    "schema_version": {"const": "business_metrics_v1"},
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["definitions_sha256", "proposal_sha256", "approval_receipt_sha256", "metric_ids", "currency_basis"],
+      "properties": {
+        "definitions_sha256": {"$ref": "#/$defs/sha256"},
+        "proposal_sha256": {"$ref": "#/$defs/sha256"},
+        "approval_receipt_sha256": {"$ref": "#/$defs/sha256"},
+        "metric_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "currency_basis": {"const": "USD; reported currency and any FX metadata retained per quarter"}
+      }
+    },
+    "rows": {"type": "array", "items": {"$ref": "#/$defs/row"}}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["url", "citation_url", "member", "label", "sha256", "source_system", "captured_at", "captured_bytes", "current_identity_check"],
+      "properties": {
+        "url": {"type": ["string", "null"], "format": "uri"},
+        "citation_url": {"type": ["string", "null"], "format": "uri"},
+        "member": {"type": ["string", "null"]},
+        "label": {"type": "string"},
+        "sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+        "source_system": {"type": ["string", "null"]},
+        "captured_at": {"type": ["string", "null"]},
+        "captured_bytes": {"type": ["integer", "null"]},
+        "current_identity_check": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "object", "additionalProperties": false,
+              "required": ["current_sha256", "current_bytes", "checked_at", "status", "note", "reported_values_usd_millions"],
+              "properties": {
+                "current_sha256": {"$ref": "#/$defs/sha256"},
+                "current_bytes": {"type": "integer", "minimum": 0},
+                "checked_at": {"type": "string", "format": "date"},
+                "status": {"const": "byte_identity_mismatch_factual_values_match"},
+                "note": {"type": "string"},
+                "reported_values_usd_millions": {"type": "object", "additionalProperties": {"type": "number"}}
+              }
+            }
+          ]
+        }
+      }
+    },
+    "quarter_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["calendar_period_id", "fiscal_period_id", "value_as_reported", "currency_as_reported", "unit_as_reported", "unit_normalized", "fx_rate_used", "fx_rate_type", "is_preliminary", "source_system", "source_references"],
+      "properties": {
+        "calendar_period_id": {"type": "string"}, "fiscal_period_id": {"type": "string"},
+        "value_as_reported": {"type": ["number", "null"]}, "currency_as_reported": {"type": ["string", "null"]},
+        "unit_as_reported": {"type": ["string", "null"]}, "unit_normalized": {"type": ["string", "null"]},
+        "fx_rate_used": {"type": ["number", "null"]}, "fx_rate_type": {"type": ["string", "null"]},
+        "is_preliminary": {"type": "boolean"},
+        "source_system": {"type": ["string", "null"]},
+        "source_references": {"type": "array", "items": {"$ref": "#/$defs/source"}}
+      }
+    },
+    "row": {
+      "type": "object", "additionalProperties": false,
+      "required": ["metric_id", "entity_id", "period", "value", "unit", "availability", "value_kind", "any_preliminary", "calendar_period_id", "fiscal_period_ids", "currency_as_reported", "quarter_sources", "source_references"],
+      "properties": {
+        "metric_id": {"type": "string"}, "entity_id": {"type": "string"}, "period": {"type": "string", "pattern": "^[0-9]{4}Q[1-4]$"},
+        "value": {"type": ["number", "null"]}, "unit": {"const": "USD"},
+        "availability": {"enum": ["available", "incomplete", "source_conflict"]},
+        "value_kind": {"enum": ["owner_approved_gold_reported", "owner_approved_gold_fx_converted"]},
+        "any_preliminary": {"type": "boolean"},
+        "calendar_period_id": {"type": "string"}, "fiscal_period_ids": {"type": "array", "items": {"type": "string"}},
+        "currency_as_reported": {"type": "array", "items": {"type": "string"}},
+        "quarter_sources": {"type": "array", "items": {"$ref": "#/$defs/quarter_source"}},
+        "source_references": {"type": "array", "items": {"$ref": "#/$defs/source"}}
+      }
+    }
+  }
+}

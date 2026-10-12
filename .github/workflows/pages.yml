@@ -19,6 +19,11 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+# A blank repository variable keeps financial payloads closed; a published
+# receipt requires the owner's exact canonical hash pin.
+env:
+  CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256: ${{ vars.CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256 }}
+
 # Read-only by default: only deploy gets the Pages/OIDC credentials, so no
 # job that runs code (ci, and the preview verifier, which runs the pinned
 # commit's own code) can use them.

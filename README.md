@@ -39,9 +39,13 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
 - **Analysis Agent:** el análisis de 2T26 está aprobado y publicado en la
   Lectura ejecutiva (`data/v1/analysis/2026Q2.json`). El siguiente ciclo es
   3T26, cuando Aeroméxico publique su reporte trimestral.
-- **Chat:** el MVP está activo en producción desde el 8 de octubre de 2026 y la
-  fase 2 ya implementó el control explícito de modelo y esfuerzo F2.0; sigue en
-  revisión antes de despliegue (ver [Chat analítico](#chat-analítico)).
+- **Chat:** el MVP sigue activo en Railway. El despliegue verificado usa
+  `gpt-6.1-sol`, esfuerzo `low` y R1; health respondió 200. Las capacidades de
+  rutas, métricas financieras y búsqueda de evidencia permanecen apagadas.
+  El código F2.3–F2.9 está en el PR #120, todavía en revisión; no se ha
+  desplegado. La campaña propuesta de Stage 3 no se ha ejecutado, y su saldo
+  disponible es desconocido. La fase 2 sigue abierta a las decisiones de
+  contenido y presupuesto (ver [Chat analítico](#chat-analítico)).
 - **Datos:** AFAC y AeroDataBox se actualizan a mano mes a mes; lo pendiente
   está en [`ROADMAP.md`](ROADMAP.md).
 
@@ -131,17 +135,22 @@ Por la decisión explícita de **no versionar bronze**, una reconstrucción con 
 ## Chat analítico
 
 El chat responde preguntas sobre el snapshot público con una capa semántica
-versionada; no abre el warehouse ni convierte ausencias en cero. **Estado al 8
-de octubre de 2026:** MVP activo en Railway con `gpt-6.1-sol`, acceso con
-contraseña, topes diarios de US$5 (por usuario y global) y hasta 16 consultas a
-los datos por pregunta. Ya respondió preguntas reales y muestra tablas. La
-calidad todavía no tiene un gate aprobado: eso lo resuelve la fase 2.
+versionada; no abre el warehouse ni convierte ausencias en cero. El MVP sigue
+activo en Railway con `gpt-6.1-sol`, acceso con contraseña, topes diarios de
+US$5 (por usuario y global) y hasta 16 llamadas de herramienta por pregunta.
+El despliegue verificado el 12 oct 2026 usa Sol low y R1 efectivo; health
+respondió 200 sin enviar una pregunta pagada. La integración F2.3–F2.9 está en
+el PR #120, que sigue en revisión. R2, siete métricas financieras, siete
+pasajes y tres noticias son propuestas pendientes; los flags permanecen
+apagados y el índice aprobado vacío. Stage 3 propone 30 casos/34 mensajes,
+US$7.05–7.21 y US$8 disponibles si el saldo confirmado fuera cero; el saldo
+real es desconocido y no hubo campaña pagada. No se ha aprobado un gate de
+calidad.
 
 - Operación, instalación y límites: [documentación del chat](docs/chat/README.md)
   y [traspaso operativo](docs/chat/traspaso-activacion-mvp-20261006.md).
-- Lo que sigue: la [fase 2](docs/chat/fase-2-agente-analitico.md), un agente
-  para preguntas de negocio que cruza métricas, reportes trimestrales y
-  noticias aprobadas, con evaluación comparativa de modelos.
+- Implementación y decisiones pendientes: la [fase 2](docs/chat/fase-2-agente-analitico.md)
+  y el [resumen para decisión del dueño](docs/chat/fase-2-decision-dueno.md).
 
 El perfil `chat-runtime` instala solo las dependencias del backend. El gasto se
 controla con un tope diario en dólares configurable en Railway (US$1 si no se

@@ -7,13 +7,21 @@ import threading
 import time
 from collections.abc import Callable, Iterable, Mapping
 from typing import Any
-from urllib.parse import urlparse
 
-from .base import ProviderResult
+from ._openai_error_metadata import sanitize_upstream_fields
 from ._openai_prompt import (
     SYSTEM_INSTRUCTIONS as SYSTEM_INSTRUCTIONS,
+)
+from ._openai_prompt import (
     effective_instructions as effective_instructions,
 )
+from ._openai_references import (
+    ALLOWED_REFERENCE_HOSTS as ALLOWED_REFERENCE_HOSTS,
+)
+from ._openai_references import (
+    references_from_results,
+)
+from .base import ProviderResult
 
 ALLOWED_TOOL_NAMES = frozenset(
     {
@@ -26,9 +34,6 @@ ALLOWED_TOOL_NAMES = frozenset(
         "get_dashboard_context",
     }
 )
-ALLOWED_REFERENCE_HOSTS = frozenset(
-    {"sec.gov", "www.sec.gov", "gob.mx", "www.gob.mx", "github.com", "salvamalfa.github.io"}
-)
 MAX_ENVELOPE_BYTES = 12_000
 MAX_HISTORY_CHARS = 8_000
 MAX_HISTORY_MESSAGES = 8
@@ -38,7 +43,15 @@ USAGE_POLL_INTERVAL_SECONDS = 2.0
 TERMINAL_USAGE_RECONCILIATION_SECONDS = 30.0
 TERMINAL_USAGE_POLL_MAX_ATTEMPTS = 16
 PROVIDER_REASON_CODES = frozenset(
-    {"provider_terminal_failed", "tool_call_limit", "turn_timeout", "tool_result_limit"}
+    {
+        "provider_terminal_failed",
+        "provider_stream_incomplete",
+        "provider_completion_without_text",
+        "provider_request_failed",
+        "tool_call_limit",
+        "turn_timeout",
+        "tool_result_limit",
+    }
 )
 POST_CANCEL_USAGE_TIMEOUT_SECONDS = TERMINAL_USAGE_RECONCILIATION_SECONDS
 POST_CANCEL_USAGE_ATTEMPTS = 6
@@ -54,16 +67,31 @@ class OpenAIProviderError(RuntimeError):
         usage: tuple[int, int] | None = None,
         *,
         reason_code: str | None = None,
+        diagnostic_reason_code: str | None = None,
         session_id: str | None = None,
         turn_id: str | None = None,
+        upstream_exception_type: str | None = None,
+        upstream_http_status: int | None = None,
+        upstream_error_code: str | None = None,
     ) -> None:
         super().__init__(message)
         self.usage = usage
         self.reason_code = (
             reason_code if isinstance(reason_code, str) and reason_code in PROVIDER_REASON_CODES else None
         )
+        self.diagnostic_reason_code = (
+            diagnostic_reason_code
+            if isinstance(diagnostic_reason_code, str) and diagnostic_reason_code in PROVIDER_REASON_CODES
+            else None
+        )
         self.session_id = session_id if isinstance(session_id, str) and session_id else None
         self.turn_id = turn_id if isinstance(turn_id, str) and turn_id else None
+        self.upstream_metadata = sanitize_upstream_fields(
+            upstream_exception_type, upstream_http_status, upstream_error_code
+        )
+        self.upstream_exception_type = self.upstream_metadata.get("upstream_exception_type")
+        self.upstream_http_status = self.upstream_metadata.get("upstream_http_status")
+        self.upstream_error_code = self.upstream_metadata.get("upstream_error_code")
 
 
 def provider_terminal_failure(
@@ -408,47 +436,6 @@ def parse_usage(value: Any) -> tuple[int, int, bool]:
     return 0, 0, False
 
 
-def references_from_results(results: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
-    found: list[dict[str, Any]] = []
-
-    def walk(value: Any) -> None:
-        if isinstance(value, dict):
-            for key in ("references", "source_references"):
-                refs = value.get(key)
-                if isinstance(refs, list):
-                    for ref in refs:
-                        if not isinstance(ref, dict):
-                            continue
-                        label, url = ref.get("label"), ref.get("url")
-                        if not isinstance(label, str) or not isinstance(url, str):
-                            continue
-                        parsed = urlparse(url)
-                        if parsed.scheme == "https" and parsed.hostname in ALLOWED_REFERENCE_HOSTS:
-                            found.append(
-                                {
-                                    "label": label,
-                                    "url": url,
-                                    **(
-                                        {"metric_id": ref["metric_id"]}
-                                        if isinstance(ref.get("metric_id"), str)
-                                        else {}
-                                    ),
-                                }
-                            )
-            for child in value.values():
-                walk(child)
-        elif isinstance(value, list):
-            for child in value:
-                walk(child)
-
-    for result in results:
-        walk(result)
-    unique: dict[tuple[str, str, str], dict[str, Any]] = {}
-    for ref in found:
-        unique[(ref["label"], ref["url"], str(ref.get("metric_id", "")))] = ref
-    return list(unique.values())
-
-
 def chart_from_results(results: Iterable[dict[str, Any]]) -> dict[str, Any] | None:
     for result in reversed(list(results)):
         chart = result.get("chart") if isinstance(result, dict) else None
@@ -524,30 +511,3 @@ def close_stream(stream: Any) -> None:
                 close()
     except Exception:
         return
-
-
-def latest_user_message(messages: list[dict[str, Any]]) -> str:
-    for message in reversed(messages):
-        if isinstance(message, dict) and message.get("role") == "user":
-            content = message.get("content")
-            if isinstance(content, str) and content.strip():
-                return content
-    raise OpenAIProviderError("No hay un mensaje de usuario para enviar al proveedor")
-
-
-def app_turn_id(messages: list[dict[str, Any]]) -> str:
-    import uuid
-
-    for message in reversed(messages):
-        if isinstance(message, dict) and message.get("role") == "user":
-            for key in ("turn_id", "id"):
-                candidate = message.get(key)
-                if isinstance(candidate, str) and candidate:
-                    return candidate
-    return str(uuid.uuid4())
-
-
-def track_session(session_id: str | None, persist_session, tracked: set[str]) -> None:
-    if session_id and session_id not in tracked:
-        persist_session(session_id)
-        tracked.add(session_id)

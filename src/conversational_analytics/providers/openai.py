@@ -9,9 +9,12 @@ import time
 from typing import Any, Callable
 
 from ..model_settings import agent_configuration
-from ._input_authorization import InputAuthorizer, send_tool_result
+from . import _openai_runtime_helpers as runtime_helpers
+from ._input_authorization import InputAuthorizer, InputDispatcher, send_tool_result
+from ._openai_cancel import cancel_session
+from ._openai_error_metadata import upstream_error_metadata
 from ._openai_helpers import (
-    ALLOWED_TOOL_NAMES,
+    SYSTEM_INSTRUCTIONS,
     TERMINAL_USAGE_RECONCILIATION_SECONDS,
     OpenAIProviderError,
     ToolResultLimitExceeded,
@@ -22,56 +25,61 @@ from ._openai_helpers import (
     event_session_id,
     int_or_zero,
     latest_provider_turn_id,
-    latest_user_message,
     parse_usage,
     prior_history,
     provider_terminal_failure,
-    question_envelope,
     read_completed_turn_usage,
     references_from_results,
     required_actions,
     required_string,
     terminal_event_usage,
     to_dict,
-    track_session,
     usage_from_event,
 )
-from ._openai_helpers import (
-    app_turn_id as get_app_turn_id,
-)
 from ._openai_helpers import event_turn_id as get_event_turn_id
+from ._openai_prompt import (
+    PERIOD_SELECTION_POLICY_VERSION,
+    prompt_sha256,
+    with_dashboard_period_policy,
+)
 from ._openai_recovery import (
     finish_recovered_completion,
     recover_completed_provider_error,
     recover_exact_turn,
 )
 from ._openai_session_version import (
+    INSTRUCTIONS_DERIVATION_KEY,
     INSTRUCTIONS_FINGERPRINT_KEY,
-    fingerprint,
+    PROMPT_INPUT_FINGERPRINT_KEY,
+    SESSION_CONFIGURATION_FINGERPRINT_KEY,
     verify_or_rotate_session,
 )
-from ._openai_prompt import SYSTEM_INSTRUCTIONS
 from .base import ProviderResult, ToolCall
 
 
 class OpenAIProvider:
-    """Official Agents SDK provider; ``client`` is injectable for offline tests."""
+    """Blocking credential-lazy OpenAI Agents provider with an injectable client."""
 
     supports_input_authorization = True
     supports_terminal_usage_reconciliation = True
     supports_session_retirement = True
+    cancel_timeout_seconds = 10.0
 
     def __init__(
         self,
         config: Any,
         *,
         client: Any | None = None,
+        system_instructions_override: str | None = None,
     ) -> None:
         if not getattr(config, "openai_enabled", False) or not getattr(config, "model", None):
             raise OpenAIProviderError("OpenAI requiere habilitación explícita y CHAT_MODEL configurado")
         self.model = str(config.model)
         self.reasoning_effort = str(getattr(config, "reasoning_effort", "medium"))
         self.text_verbosity = str(getattr(config, "text_verbosity", "medium"))
+        if system_instructions_override is not None and not system_instructions_override.strip():
+            raise OpenAIProviderError("El override de instrucciones del proveedor no puede estar vacío")
+        self.system_instructions_override = system_instructions_override
         self.max_tool_calls = int(getattr(config, "max_tool_calls", 8))
         self.max_tool_result_bytes = int(getattr(config, "max_tool_result_bytes", 64_000))
         self.max_turn_seconds = int(getattr(config, "max_turn_seconds", 180))
@@ -99,28 +107,39 @@ class OpenAIProvider:
         emit,
         persist_session,
         cancel_event: threading.Event,
+        cancel_provider: Callable[[str], None] | None = None,
         authorize_input: InputAuthorizer | None = None,
+        dispatch_input: InputDispatcher | None = None,
+        register_stream_close: Callable[[Callable[[], None]], None] | None = None,
         mark_terminal_completed: Callable[[tuple[int, int] | None], None] | None = None,
         retire_session: Callable[[str], None] | None = None,
     ) -> ProviderResult:
         mark_terminal_completed = mark_terminal_completed or (lambda _usage=None: None)
-        message = latest_user_message(messages)
-        tools = self._validate_tool_specs(tool_specs)
+        message = runtime_helpers.latest_user_message(messages)
+        tools = runtime_helpers.validate_tool_specs(tool_specs)
+        active_tool_names = frozenset(tool["name"] for tool in tools)
+        input_instructions = self.system_instructions_override or SYSTEM_INSTRUCTIONS
         instructions = self._instructions()
-        instructions_fingerprint = fingerprint(instructions)
-        app_turn_id = get_app_turn_id(messages)
+        # Bind a persistent session to the exact prompt and tool catalogue.
+        # Tool descriptions include the approved evidence-index hash, so a news
+        # index change retires sessions before any additional input is sent.
+        instructions_fingerprint = prompt_sha256(instructions)
+        configuration_fingerprint = runtime_helpers.session_configuration_fingerprint(instructions, tools)
+        input_fingerprint = prompt_sha256(input_instructions)
+        app_turn_id = runtime_helpers.app_turn_id(messages)
         started_at = time.monotonic()
         turn_deadline = started_at + self.max_turn_seconds
         session_id, retired_session_id = verify_or_rotate_session(
             self.client.beta.agents.sessions,
             session_id,
             instructions_fingerprint,
+            configuration_fingerprint,
             turn_deadline,
             cancel_event,
             retire_session,
         )
         history = prior_history(messages) if session_id is None else []
-        request_input = self._message_input(context, message, history)
+        request_input = runtime_helpers.message_input(context, message, history)
         tracked_sessions: set[str] = set()
         usage_deadline = started_at + self.max_turn_seconds + TERMINAL_USAGE_RECONCILIATION_SECONDS
         stream_manager = None
@@ -137,6 +156,12 @@ class OpenAIProvider:
         prior_turn_id: str | None = None
         authorize = authorize_input or (lambda: None)
 
+        def dispatch(request: Callable[[], Any]) -> Any:
+            if dispatch_input is not None:
+                return dispatch_input(request)
+            authorize()
+            return request()
+
         def limit_error(message: str, reason: str, current_turn: str | None) -> OpenAIProviderError:
             return OpenAIProviderError(
                 message, reason_code=reason, session_id=session_id, turn_id=current_turn
@@ -152,10 +177,14 @@ class OpenAIProvider:
 
         def close_active_stream() -> None:
             nonlocal stream_closed
-            if stream_manager is not None and not stream_closed:
-                close_stream(stream_manager)
+            with stream_close_lock:
+                if stream_manager is None or stream_closed:
+                    return
                 stream_closed = True
+                manager = stream_manager
+            close_stream(manager)
 
+        stream_close_lock = threading.Lock()
         # Shared by every path that accepts a recovered completed turn.
         finish: dict[str, Any] = {
             "client": self.client,
@@ -177,7 +206,7 @@ class OpenAIProvider:
             args = data.get("arguments")
             if not isinstance(args, dict):
                 raise OpenAIProviderError("La llamada de herramienta no contiene argumentos JSON válidos")
-            if name not in ALLOWED_TOOL_NAMES:
+            if name not in active_tool_names:
                 raise OpenAIProviderError("El agente solicitó una herramienta fuera de la lista permitida")
             if session_id is None:
                 raise OpenAIProviderError("El proveedor no devolvió la sesión antes de una acción")
@@ -226,6 +255,7 @@ class OpenAIProvider:
                     success=False,
                     error=str(error.get("message", "")),
                     authorize_input=authorize,
+                    dispatch_input=dispatch,
                 )
                 return
             tool_outputs.append(result)
@@ -237,6 +267,7 @@ class OpenAIProvider:
                 success=True,
                 output=encoded,
                 authorize_input=authorize,
+                dispatch_input=dispatch,
             )
 
         def is_current_root_turn(event_data: dict[str, Any]) -> bool:
@@ -255,46 +286,57 @@ class OpenAIProvider:
             if cancel_event.is_set():
                 raise InterruptedError("turn cancelled")
             if session_was_created:
-                authorize()
-                stream_manager = self.client.beta.agents.sessions.create(
-                    agent=agent_configuration(
-                        self.model,
-                        instructions,
-                        tools,
-                        self.reasoning_effort,
-                        self.text_verbosity,
-                    ),
-                    environment={"type": "none"},
-                    input=request_input,
-                    metadata={INSTRUCTIONS_FINGERPRINT_KEY: instructions_fingerprint},
-                    stream=True,
+                stream_manager = dispatch(
+                    lambda: self.client.beta.agents.sessions.create(
+                        agent=agent_configuration(
+                            self.model,
+                            instructions,
+                            tools,
+                            self.reasoning_effort,
+                            self.text_verbosity,
+                        ),
+                        environment={"type": "none"},
+                        input=request_input,
+                        metadata={
+                            INSTRUCTIONS_FINGERPRINT_KEY: instructions_fingerprint,
+                            SESSION_CONFIGURATION_FINGERPRINT_KEY: configuration_fingerprint,
+                            PROMPT_INPUT_FINGERPRINT_KEY: input_fingerprint,
+                            INSTRUCTIONS_DERIVATION_KEY: PERIOD_SELECTION_POLICY_VERSION,
+                        },
+                        stream=True,
+                    )
                 )
+                if register_stream_close is not None:
+                    register_stream_close(close_active_stream)
                 if hasattr(stream_manager, "with_result_collection"):
                     stream_manager = stream_manager.with_result_collection()
                 stream_iter = (
                     stream_manager.__enter__() if hasattr(stream_manager, "__enter__") else stream_manager
                 )
             else:
-                track_session(session_id, persist_session, tracked_sessions)
+                runtime_helpers.track_session(session_id, persist_session, tracked_sessions)
                 prior_turn_id = latest_provider_turn_id(self.client, session_id)
                 stream_manager = self.client.beta.agents.sessions.events.stream(session_id)
+                if register_stream_close is not None:
+                    register_stream_close(close_active_stream)
                 stream_iter = (
                     stream_manager.__enter__() if hasattr(stream_manager, "__enter__") else stream_manager
                 )
                 # The event stream is attached before the user message is sent.
-                authorize()
                 try:
-                    self.client.beta.agents.sessions.events.create(
-                        session_id,
-                        idempotency_key=f"airline-tracker-turn-{app_turn_id}",
-                        events=[{"type": "agent.session.input.message", "input": request_input}],
+                    dispatch(
+                        lambda: self.client.beta.agents.sessions.events.create(
+                            session_id,
+                            idempotency_key=f"airline-tracker-turn-{app_turn_id}",
+                            events=[{"type": "agent.session.input.message", "input": request_input}],
+                        )
                     )
                 finally:
                     if cancel_event.is_set():
-                        self.cancel(session_id)
+                        (cancel_provider or self.cancel)(session_id)
                 if cancel_event.is_set():
                     raise InterruptedError("turn cancelled")
-            track_session(session_id, persist_session, tracked_sessions)
+            runtime_helpers.track_session(session_id, persist_session, tracked_sessions)
             if stream_iter is None:
                 raise OpenAIProviderError("El SDK no abrió el stream de la sesión")
             for event in stream_iter:
@@ -303,7 +345,7 @@ class OpenAIProvider:
                 discovered_session = event_session_id(event_data)
                 if discovered_session and discovered_session != session_id:
                     session_id = discovered_session
-                    track_session(session_id, persist_session, tracked_sessions)
+                    runtime_helpers.track_session(session_id, persist_session, tracked_sessions)
                     if retired_session_id:
                         if retire_session is not None:
                             retire_session(retired_session_id)
@@ -448,7 +490,10 @@ class OpenAIProvider:
                 if terminal != "completed":
                     # Idle or EOF is not proof that this user's turn succeeded.
                     raise OpenAIProviderError(
-                        "El stream cerró sin resultado terminal; no se reenvió el mensaje"
+                        "El stream cerró sin resultado terminal; no se reenvió el mensaje",
+                        diagnostic_reason_code="provider_stream_incomplete",
+                        session_id=session_id,
+                        turn_id=turn_id,
                     )
             content = "".join(content_parts[key] for key in sorted(content_parts)).strip()
             if not content:
@@ -456,7 +501,10 @@ class OpenAIProvider:
                 content = recovered[0] if recovered and recovered[1] == "completed" else ""
             if not content:
                 raise OpenAIProviderError(
-                    "El turno se completó sin texto; revisa el historial antes de reintentar"
+                    "El turno se completó sin texto; revisa el historial antes de reintentar",
+                    diagnostic_reason_code="provider_completion_without_text",
+                    session_id=session_id,
+                    turn_id=turn_id,
                 )
             references = references_from_results(tool_outputs)
             chart = chart_from_results(tool_outputs)
@@ -477,6 +525,12 @@ class OpenAIProvider:
             if usage_complete and error.usage is None:
                 error.usage = (input_tokens, output_tokens)
             if terminal in {"failed", "cancelled"} or cancel_event.is_set():
+                runtime_helpers.attach_failure_context(
+                    error,
+                    session_id,
+                    turn_id,
+                    "provider_terminal_failed" if terminal == "failed" else None,
+                )
                 raise
             recovered_result = recover_completed_provider_error(
                 error,
@@ -488,35 +542,32 @@ class OpenAIProvider:
             )
             if recovered_result is not None:
                 return recovered_result
+            runtime_helpers.attach_failure_context(error, session_id, turn_id)
             raise
-        except Exception:
-            if terminal in {"failed", "cancelled"}:
-                raise
+        except Exception as exc:
             recovered = (
                 self._recover(session_id, turn_id, prior_turn_id, deadline=turn_deadline)
-                if session_id and not cancel_event.is_set()
+                if session_id and terminal not in {"failed", "cancelled"} and not cancel_event.is_set()
                 else None
             )
             if recovered and recovered[1] == "completed" and recovered[0]:
                 return finish_recovered_completion(recovered, session_id=session_id, **finish)
+            upstream = upstream_error_metadata(exc)
+            reason_code = "provider_terminal_failed" if terminal == "failed" else "provider_request_failed"
             raise OpenAIProviderError(
                 "No se pudo completar el turno de Agents API; no se reenviará el mensaje automáticamente",
                 (input_tokens, output_tokens) if usage_complete else None,
+                reason_code=reason_code if session_id else None,
+                session_id=session_id,
+                turn_id=turn_id,
+                **upstream,
             ) from None
         finally:
             close_active_stream()
 
-    def cancel(self, session_id: str) -> None:
-        """Request cancellation through the documented session event API."""
-        if not session_id:
-            return
-        try:
-            self.client.beta.agents.sessions.events.create(
-                session_id,
-                events=[{"type": "agent.session.input.cancel"}],
-            )
-        except Exception:
-            return
+    def cancel(self, session_id: str) -> dict[str, Any]:
+        """Request cancellation once with a finite timeout and expose its outcome."""
+        return cancel_session(self.client, session_id, self.cancel_timeout_seconds)
 
     def delete(self, session_id: str) -> None:
         """Delete the provider-side session when its local conversation is deleted."""
@@ -526,6 +577,11 @@ class OpenAIProvider:
             self.client.beta.agents.sessions.delete(session_id)
         except Exception:
             raise OpenAIProviderError("No se pudo borrar la sesión del proveedor") from None
+
+    def _instructions(self) -> str:
+        """Return the effective prompt, including the current versioned period rule."""
+        source = self.system_instructions_override or SYSTEM_INSTRUCTIONS
+        return with_dashboard_period_policy(source)
 
     def _recover(
         self,
@@ -537,62 +593,5 @@ class OpenAIProvider:
     ) -> tuple[str, str, str | None, dict[str, Any]] | None:
         """Read saved turns/items after interruption without replaying input."""
         return recover_exact_turn(self.client, session_id, turn_id, deadline=deadline)
-
-    @staticmethod
-    def _validate_tool_specs(specs: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        if not isinstance(specs, list):
-            raise OpenAIProviderError("El catálogo de herramientas es inválido")
-        validated: list[dict[str, Any]] = []
-        names: set[str] = set()
-        for raw in specs:
-            if not isinstance(raw, dict) or raw.get("type") != "function":
-                raise OpenAIProviderError("El catálogo contiene una herramienta fuera del formato function")
-            name = raw.get("name")
-            params = raw.get("parameters")
-            if name not in ALLOWED_TOOL_NAMES or name in names or not isinstance(params, dict):
-                raise OpenAIProviderError("El catálogo contiene una herramienta desconocida o duplicada")
-            if params.get("type") != "object" or params.get("additionalProperties") is not False:
-                raise OpenAIProviderError("Cada herramienta debe tener un esquema JSON de objeto cerrado")
-            if not isinstance(params.get("properties"), dict) or not isinstance(params.get("required"), list):
-                raise OpenAIProviderError("El esquema de argumentos de herramienta está incompleto")
-            clean = {
-                "type": "function",
-                "name": name,
-                "description": str(raw.get("description", ""))[:1000],
-                "parameters": params,
-            }
-            if "strict" in raw:
-                if raw["strict"] is not True:
-                    raise OpenAIProviderError("Las herramientas solo admiten validación estricta")
-                clean["strict"] = True
-            names.add(name)
-            validated.append(clean)
-        if names != ALLOWED_TOOL_NAMES:
-            raise OpenAIProviderError("Se requieren exactamente las siete herramientas aprobadas")
-        return validated
-
-    @staticmethod
-    def _instructions() -> str:
-        return SYSTEM_INSTRUCTIONS
-
-    @staticmethod
-    def _message_input(
-        context: dict[str, Any], message: str, history: list[dict[str, str]] | None = None
-    ) -> list[dict[str, Any]]:
-        try:
-            envelope = question_envelope(context, message)
-            if history:
-                envelope["conversation_history"] = history
-            text = json.dumps(
-                envelope, ensure_ascii=False, allow_nan=False, sort_keys=True, separators=(",", ":")
-            )
-        except (TypeError, ValueError) as exc:
-            raise OpenAIProviderError(
-                str(exc)
-                if isinstance(exc, ValueError) and str(exc)
-                else "El mensaje o contexto no es JSON válido"
-            ) from None
-        return [{"role": "user", "content": [{"type": "input_text", "text": text}]}]
-
 
 __all__ = ["OpenAIProvider", "OpenAIProviderError"]

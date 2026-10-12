@@ -53,13 +53,13 @@ from jsonschema import Draft202012Validator
 from src.analysis_agent import lifecycle as flow
 from src.config import PATHS
 from src.dashboard.executive_summary import build_executive_payload
-from src.dashboard.market import build_market_payload
 from src.dashboard.flights import build_flight_payload
+from src.dashboard.market import build_market_payload
 from src.web_export import analysis as analysis_export
 from src.web_export.executive import export_executive
-from src.web_export.market import export_market
 from src.web_export.flights import export_flights
 from src.web_export.inputs import MissingWebInput
+from src.web_export.market import export_market
 from src.web_export.privacy import PrivacyViolation, check_privacy, load_privacy_rules
 from src.web_export.schemas import ANALYSIS_SCHEMA
 from src.web_export.writer import write_json
@@ -72,7 +72,12 @@ WEB_DIST = WEB_DIR / "dist"
 PUBLICATIONS_ROOT = PATHS.root / "analysis_runs" / "publications"
 
 ANALYSIS_MANIFEST_FIELDS = (
-    "period_id", "version", "content_hash", "evidence_fingerprint", "approval_event", "audit_hash",
+    "period_id",
+    "version",
+    "content_hash",
+    "evidence_fingerprint",
+    "approval_event",
+    "audit_hash",
 )
 
 
@@ -106,6 +111,76 @@ def _reject_duplicate_periods(records: list[dict[str, Any]]) -> None:
                 f"Multiple approved versions for period {period_id}: {versions_str} — "
                 "revoke one or select explicitly"
             )
+
+
+def _trusted_site_commit(root: Path, trusted_ref: str = "origin/master") -> str:
+    result = subprocess.run(
+        ["git", "rev-parse", "--verify", f"{trusted_ref}^{{commit}}"],
+        cwd=Path(root),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0 or not result.stdout.strip():
+        raise PublicationRefused(f"trusted site base {trusted_ref!r} is unavailable")
+    return result.stdout.strip()
+
+
+def require_trusted_site_baseline(
+    site_dir: Path,
+    *,
+    root: Path = PATHS.root,
+    trusted_ref: str = "origin/master",
+    trusted_commit: str | None = None,
+) -> None:
+    """Require an unchanged, tracked site from the trusted published base.
+
+    A self-consistent manifest is not enough: an edited payload could be
+    paired with a freshly rebuilt manifest. Comparing the entire tracked site
+    with the trusted base binds every reused data hash to the committed public
+    snapshot before a UI-only build.
+    """
+
+    root = Path(root).resolve()
+    site_dir = Path(site_dir).resolve()
+    try:
+        relative = site_dir.relative_to(root)
+    except ValueError as error:
+        raise PublicationRefused("UI-only publication must target site/ inside the code checkout") from error
+    if relative.as_posix() != "site":
+        raise PublicationRefused("UI-only publication must target the tracked site/ directory")
+
+    ref_check = subprocess.run(
+        ["git", "rev-parse", "--verify", f"{trusted_ref}^{{commit}}"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if ref_check.returncode != 0:
+        raise PublicationRefused(f"trusted site base {trusted_ref!r} is unavailable")
+    resolved_commit = ref_check.stdout.strip()
+    if trusted_commit is not None and resolved_commit != trusted_commit:
+        raise PublicationRefused(f"trusted site base {trusted_ref!r} changed during publication")
+    trusted_commit = trusted_commit or resolved_commit
+    status = subprocess.run(
+        ["git", "status", "--porcelain", "--untracked-files=all", "--", "site"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if status.returncode != 0 or status.stdout.strip():
+        raise PublicationRefused("site/ has uncommitted or untracked files; cannot reuse it as trusted data")
+    diff = subprocess.run(
+        ["git", "diff", "--quiet", trusted_commit, "--", "site"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if diff.returncode != 0:
+        raise PublicationRefused(f"site/ differs from the trusted published base {trusted_ref!r}")
 
 
 def _verify_under_lock(records: list[dict[str, Any]], root: Path) -> list[tuple[Any, Any, Any, Any]]:
@@ -146,7 +221,9 @@ def verify_records(records: list[dict[str, Any]], root: Path = flow.ROOT) -> lis
         raise PublicationRefused(f"record failed verification/approval: {error}") from error
 
 
-def _analysis_payload(record: dict[str, Any], authorized: dict[str, Any], package, calculations) -> dict[str, Any]:
+def _analysis_payload(
+    record: dict[str, Any], authorized: dict[str, Any], package, calculations
+) -> dict[str, Any]:
     """Same shape src.web_export.analysis.export_period writes, built from
     the (record, authorized, package, calculations) this gate already holds
     from verify_records, instead of re-querying the ledger a second time."""
@@ -168,6 +245,24 @@ def export_data(entries: list[tuple[Any, Any, Any, Any]], out_dir: Path) -> None
         export_market(build_market_payload(), out_dir)
     except MissingWebInput as error:
         raise PublicationRefused(str(error)) from error
+
+    # A public approval receipt is an explicit opt-in. No receipt means the
+    # existing publication payload is byte-for-byte unaffected by F2.3.
+    receipt = PATHS.root / "config/chat/business-metrics-approval-receipt.json"
+    if receipt.is_file():
+        from src.web_export.business_metrics import (
+            export_approved_business_metrics,
+        )
+
+        try:
+            export_approved_business_metrics(
+                PATHS.root / "config/chat/business-metrics-proposal.json",
+                PATHS.root / "config/chat/metrics-candidates.json",
+                receipt,
+                out_dir,
+            )
+        except (OSError, ValueError) as error:
+            raise PublicationRefused(f"business metric approval rejected: {error}") from error
 
     validator = Draft202012Validator(ANALYSIS_SCHEMA)
     rules = load_privacy_rules()
@@ -202,7 +297,13 @@ def build_web(web_dir: Path = WEB_DIR) -> Path:
     return dist
 
 
-def assemble_site(dist_dir: Path, analysis_manifest: list[dict[str, str]], out_dir: Path) -> dict[str, Any]:
+def assemble_site(
+    dist_dir: Path,
+    analysis_manifest: list[dict[str, str]],
+    out_dir: Path,
+    *,
+    contracts: dict[str, str] | None = None,
+) -> dict[str, Any]:
     """Copy dist_dir into a fresh temp directory, write the manifest into it,
     and atomically swap it in for out_dir. Returns the written manifest."""
 
@@ -213,12 +314,14 @@ def assemble_site(dist_dir: Path, analysis_manifest: list[dict[str, str]], out_d
     try:
         shutil.rmtree(tmp_dir)
         shutil.copytree(dist_dir, tmp_dir)
-        manifest = manifest_mod.build_manifest(tmp_dir, analysis_manifest)
+        manifest = manifest_mod.build_manifest(tmp_dir, analysis_manifest, contracts=contracts)
         manifest_mod.write_manifest(tmp_dir, manifest)
 
         previous = None
         if out_dir.exists():
-            previous = parent / (out_dir.name + ".prev-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f"))
+            previous = parent / (
+                out_dir.name + ".prev-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f")
+            )
             out_dir.rename(previous)
         try:
             tmp_dir.rename(out_dir)
@@ -234,7 +337,9 @@ def assemble_site(dist_dir: Path, analysis_manifest: list[dict[str, str]], out_d
             shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
-def write_receipt(manifest: dict[str, Any], authorized: list[dict[str, Any]], out_dir: Path) -> dict[str, Any]:
+def write_receipt(
+    manifest: dict[str, Any], authorized: list[dict[str, Any]], out_dir: Path
+) -> dict[str, Any]:
     """intent/published receipt in analysis_runs/publications/, hashing the
     manifest (hash of hashes) rather than raw site/ bytes."""
 
@@ -328,16 +433,118 @@ def publish(
     return {"manifest": manifest, "receipt": receipt}
 
 
+def publish_ui_only(
+    record_paths: list[Path],
+    out_dir: Path,
+    *,
+    root: Path = flow.ROOT,
+    web_dir: Path = WEB_DIR,
+    web_data_v1: Path = WEB_DATA_V1,
+) -> dict[str, Any]:
+    """Rebuild the frontend while retaining the exact currently published data.
+
+    This path is only for interface-only changes. It verifies the existing site,
+    pins its analysis manifest to the supplied currently approved records,
+    copies its signed ``data/v1`` files into the frontend build, and refuses to
+    swap if any output data hash changes. Approval is checked before the build
+    and again under the ledger lock immediately before the atomic site swap.
+    """
+
+    root = Path(root)
+    out_dir = Path(out_dir).resolve()
+    try:
+        manifest_mod.refuse_if_build_inputs_dirty()
+    except RuntimeError as error:
+        raise PublicationRefused(f"uncommitted UI build inputs: {error}") from error
+
+    records = load_records(record_paths)
+    if not records:
+        raise PublicationRefused("no --record given; refuse to publish an empty analysis manifest")
+    entries = verify_records(records, root=root)
+    authorized = [entry[1] for entry in entries]
+    analysis_manifest = [{key: entry[key] for key in ANALYSIS_MANIFEST_FIELDS} for entry in authorized]
+
+    trusted_site_commit = _trusted_site_commit(PATHS.root)
+    require_trusted_site_baseline(out_dir, root=PATHS.root, trusted_commit=trusted_site_commit)
+
+    from .verify import verify_site
+
+    site_problems = verify_site(out_dir)
+    if site_problems:
+        raise PublicationRefused(f"existing site is not valid for UI-only publication: {site_problems[:5]}")
+    current_manifest = manifest_mod.load_manifest(out_dir)
+    if current_manifest["analysis_manifest"] != sorted(analysis_manifest, key=lambda item: item["period_id"]):
+        raise PublicationRefused("existing site analysis manifest does not match the exact approved records")
+
+    source_data = {
+        item["path"]: (item["sha256"], item["bytes"])
+        for item in current_manifest["files"]
+        if item["path"].startswith("data/v1/")
+    }
+    source_dir = out_dir / "data/v1"
+    if not source_data or not source_dir.is_dir():
+        raise PublicationRefused("existing site has no published data/v1 payload to preserve")
+    if Path(web_data_v1).exists():
+        shutil.rmtree(web_data_v1)
+    Path(web_data_v1).parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(source_dir, web_data_v1)
+
+    dist_dir = build_web(web_dir)
+    built_data = {
+        item["path"]: (item["sha256"], item["bytes"])
+        for item in manifest_mod.file_entries(dist_dir)
+        if item["path"].startswith("data/v1/")
+    }
+    if built_data != source_data:
+        raise PublicationRefused("UI build changed the existing public data/v1 files")
+
+    expected_analysis_manifest = sorted(analysis_manifest, key=lambda item: item["period_id"])
+    try:
+        with flow.writer(root):
+            # Recheck the trusted payload at the last possible moment too;
+            # the frontend build runs outside the ledger lock and the site
+            # directory is not itself protected by that lock.
+            require_trusted_site_baseline(
+                out_dir,
+                root=PATHS.root,
+                trusted_commit=trusted_site_commit,
+            )
+            current = [
+                {key: entry[1][key] for key in ANALYSIS_MANIFEST_FIELDS}
+                for entry in _verify_under_lock(records, root)
+            ]
+            if sorted(current, key=lambda item: item["period_id"]) != expected_analysis_manifest:
+                raise ValueError("approval changed while the UI was being built; rerun the publication")
+            manifest = assemble_site(
+                dist_dir,
+                analysis_manifest,
+                out_dir,
+                contracts=current_manifest["contracts"],
+            )
+    except ValueError as error:
+        raise PublicationRefused(
+            f"record failed verification/approval just before UI-only publish (nothing swapped in): {error}"
+        ) from error
+
+    receipt = write_receipt(manifest, authorized, out_dir)
+    return {"manifest": manifest, "receipt": receipt}
+
+
 def main(argv: list[str] | None = None) -> int:
     import argparse
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--record", type=Path, action="append", default=[], dest="records")
     parser.add_argument("--out", type=Path, default=PATHS.root / "site")
+    parser.add_argument(
+        "--ui-only",
+        action="store_true",
+        help="rebuild the frontend while preserving the exact existing public data and analysis manifest",
+    )
     args = parser.parse_args(argv)
 
     try:
-        result = publish(args.records, args.out)
+        result = publish_ui_only(args.records, args.out) if args.ui_only else publish(args.records, args.out)
     except PublicationRefused as error:
         print(f"src.publish: refused: {error}", file=sys.stderr)
         return 1

@@ -178,13 +178,57 @@ Cada paquete va en su propio PR, con pruebas y documentación.
 | F2.0 | **Modelo y esfuerzo explícitos** (detalle abajo). | El esfuerzo se configura, se valida, se registra y se reporta. |
 | F2.1 | **Prompt de redacción y criterio** (detalle abajo). | Prompt nuevo con pruebas offline; mejora medida en la etapa 1 de F2.9. |
 | F2.2 | **Conjunto de evaluación de negocio y harness** (detalle abajo). | Fixture con versiones fijadas, rúbrica aprobada por el dueño y harness con conversaciones de varios turnos y candidatos `modelo@esfuerzo`. |
-| F2.3 | **Glosario de negocio y métricas totales:** ingresos, costos, combustible, utilidad operativa y años completos, con procedencia y reglas de agregación. | Catálogo ampliado y conciliado con los reportes; pruebas de agregación. |
+| F2.3 | **Glosario de negocio y métricas totales:** ingresos, costos, combustible, utilidad operativa y agregados de años/semestres completos, con calendario/fiscalidad, unidades, moneda, FX y procedencia. RASK/CASK y ocupación usan ponderación por ASK compatible. | Catálogo candidato, proyección pública activable solo con recibo del dueño ligado por hash a definiciones/propuesta; sin recibo las cifras nuevas siguen cerradas. Pasajeros reportados permanece separado de AFAC/Vuelos. [Revisión breve](f23-propuesta-revision-dueno.md) · [detalle técnico](f23-metricas-detalle-tecnico.md). |
 | F2.4 | **Rutas y comparaciones:** constructor de consultas sobre datos publicados de rutas y comparación de varias aerolíneas. Las cifras estimadas se rotulan como estimación. | «Top N rutas» reproducible; ninguna estimación presentada como dato observado. |
 | F2.5 | **Índice de reportes** con búsqueda citada. | Pasajes con empresa, periodo y página; pruebas de citas. |
-| F2.6 | **Índice semanal de noticias** con rutina programada y aprobación del dueño. | Fichas sin texto completo de terceros; flujo de aprobación; herramienta de búsqueda. |
+| F2.6 | **Índice semanal de noticias** con rutina manual y aprobación del dueño. | Fichas sin texto completo de terceros; flujo de aprobación; herramienta de búsqueda. |
 | F2.7 | **Explicaciones atribuidas:** nueva regla causal y casos de evaluación. | Casos de «por qué» respondidos con las tres capas citadas. |
 | F2.8 | **Presentación por referencia** de tablas y gráficas, y fuentes sin duplicar (detalle abajo). | El caso real de market share se muestra como tabla validada; cifras de la tabla idénticas a las de la herramienta; sin vuelta extra al modelo. |
 | F2.9 | **Evaluación comparativa de los cuatro candidatos** (detalle abajo). | Reporte con calidad, latencia, tokens y costo por candidato; elección explícita del dueño. |
+
+### Preparación F2.5–F2.7 (11 oct 2026)
+
+La búsqueda determinística (`search_reports`, `search_news`) devuelve hasta cinco
+resultados solo desde `config/chat/evidence/approved-index.json`, que continúa vacío. Un registro aprobado requiere recibo que identifique candidato, decisión,
+dueño, fecha, hash de fuente, hash del pasaje/resumen y
+`candidate_content_sha256`, calculado sobre todos los campos semánticos del
+candidato (incluidos URL y ubicación de cita, empresa, periodo, título, fecha,
+temas y metadatos de búsqueda). Así, una modificación posterior invalida el
+recibo. La validación estructural no verifica una firma ni sustituye el recibo
+real del dueño. Las citas de reportes
+incluyen empresa, periodo, sección, página real y pasaje de hasta 480 caracteres;
+la ficha de noticia limita el resumen propio a 320 caracteres y cita breve a
+200, sin almacenar cuerpo de artículo.
+
+`config/chat/evidence/candidates/reports-candidate.json` ahora contiene siete
+pasajes revisables de Aeroméxico, Volaris y Viva Aerobus (Q1 y Q2 2026), con
+PDFs oficiales o exhibit SEC, hash de captura y ubicación comprobada. Los HTML
+de Volaris conservan una diferencia de bytes frente al Gold publicado; se marca
+`byte_identity_mismatch_pending_review`, sin llamarla restatement. Tres fichas
+FlightGlobal de combustible/resultados 2T26 tienen fecha, URL directa, SHA-256 y
+resumen corto propio en `config/chat/evidence/candidates/news/news-*.json`.
+
+El lote semanal se prepara a mano con
+`scripts/chat/collect_news_candidates.py --week-start YYYY-MM-DD --input
+<headline-metadata.json>`; primero imprime un dry-run y solo escribe con
+`--write-candidate`. Repetir contenido idéntico no cambia el archivo y no
+sobrescribe contenido distinto. `.github/workflows/chat-news-candidates.yml`
+expone únicamente `workflow_dispatch` para preparar un artifact cerrado de
+revisión, sin cron, commits, notificaciones ni aprobación. El input acepta
+metadatos, no cuerpo de artículos.
+
+`config/chat/prompt_rules/f2_7_attributed_causes.v1.md` define una propuesta
+de tres capas (dato, atribución explícita del reporte, contexto de noticia) y
+prohíbe inferir causalidad a partir de coincidencia temporal. Es una regla
+separada para revisión; no cambia el prompt F2.1 aprobado ni se activa en
+producción. `config/chat/evidence/candidates/f2-7-explanation-cases.json`
+propone un caso positivo con tres capas y citas enlazadas; sigue pendiente de
+revisión junto con sus pasajes y ficha noticiosa.
+
+La bitácora final con procedencia, estado, workflow y validación está en
+[`docs/etapas/chat-f25-f27-evidencia-20261011-final.md`](../etapas/chat-f25-f27-evidencia-20261011-final.md).
+La bitácora inicial [`chat-f25-f27-evidencia-20261011.md`](../etapas/chat-f25-f27-evidencia-20261011.md)
+se conserva como registro histórico del scaffold y no describe el estado final.
 
 **Orden y dependencias:**
 
@@ -509,6 +553,32 @@ mande el historial de la conversación; hoy cada caso es de un solo turno.
   la mejor. La carga por etapa está en
   [Puntos de decisión del dueño](#puntos-de-decisión-del-dueño).
 
+## F2.4 · Consultas de rutas publicadas
+
+**Guía breve:** pide el periodo, el segmento (nacional o internacional) y la aerolínea.
+Para comparar crecimiento, indica también el periodo base; el chat ordena solo rutas
+comparables y explica cuándo falta cobertura. «¿Qué rutas comparte Aeroméxico con Viva?»
+usa rutas publicadas del mismo periodo y muestra el valor de cada operador. Las cifras
+estimadas se etiquetan como estimación; la programación y las operaciones observadas
+conservan su tipo. Aeroméxico aparece como Grupo Aeroméxico cuando la publicación
+no separa Aerovías de México y Connect.
+
+La herramienta `query_routes` acepta una métrica (`passengers`, `seats`, `departures`
+o `load_factor`), una entidad, un segmento, un periodo y un límite de hasta 20 rutas.
+Puede ordenar por valor, cambio absoluto o cambio relativo frente a un periodo explícito.
+El cambio requiere que ambos periodos tengan cobertura completa y que la ruta, la fuente
+y el tipo de valor coincidan; una ruta ausente no se rellena con cero. `find_shared_routes`
+intersecta rutas de dos o tres aerolíneas para el mismo periodo y segmento. Industria no
+se admite como competidor porque es el agregado de esas aerolíneas.
+
+Las consultas solo leen JSON firmado de `site/data/v1/flights/`. Cada resultado incluye
+la versión de datos y semántica, cobertura esperada/observada, elegibilidad histórica,
+fuentes, procedencia del valor por ruta y una tabla por referencia apta para F2.8. El
+contrato no abre el warehouse ni habilita la evidencia candidata `flight_evidence_v1`.
+La red publicada expone Grupo Aeroméxico; Connect queda agregado en esa entidad, sin
+atribuirle rutas o cifras individuales. La disponibilidad de meses y trimestres cambia
+por segmento; si el periodo no está publicado, el resultado es faltante.
+
 ## F2.8 · Presentación por referencia
 
 ### Caso real: market share 2026
@@ -614,6 +684,25 @@ vuelta extra con un caso de evaluación.
   cuando F2.8 esté integrado y con tabla escrita mientras no.
 
 ## F2.9 · Evaluación comparativa
+
+### Estado actualizado al 12 de octubre de 2026
+
+F2.0 quedó confirmado en Railway con Sol low y R1 efectivo; el health 200
+verifica configuración y disponibilidad, no calidad del prompt. El código
+F2.3–F2.9 está preparado en el PR #120, aún en revisión y sin despliegue. R2,
+las métricas financieras y los índices de reportes/noticias siguen propuestos,
+con sus puertas apagadas. No se requiere repetir aprobaciones de R1, modelo,
+preguntas o rúbrica.
+
+La campaña de Stage 3 preparada actualmente es parcial: 30 casos de negocio,
+34 mensajes y una repetición de Sol low, sin casos de inyección. No equivale a
+la comparación de cuatro candidatos de 70 slots descrita en el plan original,
+ni su preflight offline es una ejecución o un resultado de calidad. La cotización
+es US$7.06–7.23; propone una reserva máxima de US$8 para 30 casos/34 mensajes.
+El saldo actual es desconocido y solo cambia la recarga necesaria, no la reserva;
+no hay autorización/fondeo de campaña. La fase 2
+permanece abierta hasta resolver el contenido y el presupuesto y completar la
+revisión/ejecución correspondientes.
 
 ### Candidatos
 
@@ -745,3 +834,10 @@ herramientas que se reenvían en cada llamada).
 - Las evaluaciones en vivo siguen el procedimiento de
   [evaluaciones y presupuesto](evaluaciones-presupuesto.md), más la
   autorización de este documento.
+
+### F2.9 · stage 3 offline
+- `uv run python scripts/chat/check_stage3_coverage.py --output .state/outputs/chat-evaluations/f2-9-stage-3/coverage.json` ejecuta herramientas deterministas para N01–N30 y deriva cobertura desde el snapshot fijado.
+- El reporte clasifica `supported`, `coverage_missing` y `approval_blocked`; fija prompt, catálogo, herramientas, índice de evidencia, métricas y versiones de datos. Este preflight cubre solo los 30 casos business; la cohorte safety no está validada.
+- `--run --opt-in` requiere los recibos de financiación y capacidades, sus SHA-256 canónicos fijados externamente en `F29_STAGE3_BUDGET_RECEIPT_SHA256` y `F29_STAGE3_CAPABILITY_RECEIPT_SHA256`, `approved_by: salvamalfa`, fechas `approved_at`/`valid_until` válidas y vigentes, una referencia inmutable a una decisión del dueño, alcance exacto de Sol low, prompt R2 compatible y dependencias publicadas. Los hashes de recibo son obligatorios antes de leer credenciales o inicializar el proveedor.
+- `scripts/chat/export_stage3_review.py` une el reporte con una corrida live autorizada y crea JSON privado para `web/review.html`; el mapa de alias queda en `.state/`.
+- Implementación: [coverage](../../src/conversational_analytics/evaluation_stage3_coverage.py), [preflight](../../scripts/chat/check_stage3_coverage.py), [exportador](../../scripts/chat/export_stage3_review.py), [pruebas](../../tests/test_chat_f29_stage3_coverage.py).

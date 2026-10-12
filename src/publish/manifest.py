@@ -32,6 +32,8 @@ CONTRACT_FILES = (
     "executive.schema.json",
     "market.schema.json",
     "analysis.schema.json",
+    "business_metrics.schema.json",
+    "business_metrics_approval.schema.json",
     "publication_manifest.schema.json",
     "privacy.yaml",
 )
@@ -146,13 +148,14 @@ def build_manifest(
     *,
     code_commit: str | None = None,
     contracts_dir: Path = CONTRACTS_DIR,
+    contracts: dict[str, str] | None = None,
     generated_at: str | None = None,
 ) -> dict[str, Any]:
     return {
         "schema_version": SCHEMA_VERSION,
         "code_commit": code_commit if code_commit is not None else current_commit(),
         "generated_at": generated_at if generated_at is not None else datetime.now(timezone.utc).isoformat(),
-        "contracts": contract_hashes(contracts_dir),
+        "contracts": dict(contracts) if contracts is not None else contract_hashes(contracts_dir),
         "files": file_entries(site_dir),
         "analysis_manifest": sorted(analysis_manifest, key=lambda e: e["period_id"]),
     }

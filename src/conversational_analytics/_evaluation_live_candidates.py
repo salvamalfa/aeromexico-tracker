@@ -123,6 +123,9 @@ def candidate_configs(candidates: list[dict[str, str]]) -> list[dict[str, str]]:
 
 def candidate_config(runtime_config: Any, candidate: dict[str, str]) -> Any:
     """Build an isolated provider config pinned to one candidate's three settings."""
+    from .config import model_catalog
+
+    prices = model_catalog()[candidate["model"]]
     return replace(
         runtime_config,
         provider="openai",
@@ -130,6 +133,12 @@ def candidate_config(runtime_config: Any, candidate: dict[str, str]) -> Any:
         reasoning_effort=candidate["reasoning_effort"],
         text_verbosity=candidate["text_verbosity"],
         openai_enabled=True,
+        estimated_input_cost_per_million=float(prices["input_usd_per_million"]),
+        estimated_output_cost_per_million=float(prices["output_usd_per_million"]),
+        long_context_threshold_input_tokens=int(prices["long_context_threshold_input_tokens"]),
+        long_context_input_multiplier=float(prices["long_context_input_multiplier"]),
+        long_context_output_multiplier=float(prices["long_context_output_multiplier"]),
+        cache_write_input_multiplier=float(prices["cache_write_input_multiplier"]),
     )
 
 

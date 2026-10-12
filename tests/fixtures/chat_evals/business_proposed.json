@@ -1,0 +1,2167 @@
+{
+  "schema_version": 1,
+  "dataset": "business proposal; separate from security holdout",
+  "status": "OWNER_APPROVED",
+  "expected_versions": {
+    "data_version": "d9c4e56d04ad67be5dff6d6e9f7f6615f4f4be985ec1e5ee59781a7735007037",
+    "semantic_version": "0b8de07ff211ca1ba984bd87281a2d68950a3e36268909b2121a7ed6b35e0365"
+  },
+  "prompt_version": "f2.1-owner-approved-2f459949",
+  "tool_version": "current allowlisted tools; future packages pending",
+  "description": "El dueño aprobó las 30 preguntas y sus rúbricas. Doce casos (N01, N04, N09–N10, N15–N19, N22–N23 y N29) siguen pendientes de dependencias futuras y no están habilitados para evaluación live; los 18 casos actuales son elegibles para etapa 1. La aprobación no autoriza etapas 2/3 ni cambios de datos.",
+  "cases": [
+    {
+      "id": "N01",
+      "question": "¿Cuántas personas viajaron con Aeroméxico el año pasado?",
+      "locale": "es",
+      "expected": {
+        "status": "unsupported",
+        "behavior": "respond_with_limits",
+        "forbid_numeric_claims": true
+      },
+      "dependencies": [
+        "F2.3"
+      ],
+      "critical_failures": [
+        "invented annual passenger total",
+        "confuses company-reported passengers with AFAC"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [],
+      "turns": [
+        "¿Cuántas personas viajaron con Aeroméxico el año pasado?"
+      ],
+      "gold_state": "pending_future_package_and_snapshot"
+    },
+    {
+      "id": "N02",
+      "question": "¿Qué tan llenos van los aviones de Aeroméxico últimamente?",
+      "locale": "es",
+      "expected": {
+        "status": "supported",
+        "behavior": "answer",
+        "plan": {
+          "metric_ids": [
+            "load_factor"
+          ],
+          "entity_ids": [
+            "AEROMEXICO"
+          ],
+          "periods": [
+            "2026Q2"
+          ]
+        },
+        "rows": [
+          {
+            "metric_id": "load_factor",
+            "entity_id": "AEROMEXICO",
+            "period": "2026Q2",
+            "period_label": "2T26",
+            "value": 0.8490000000000001,
+            "unit": "fraction",
+            "display_value": 84.9,
+            "display_unit": "%",
+            "display_scale": 100,
+            "availability": "available",
+            "quality": "reported: Reportado o calculado; incluir load_factor_basis.",
+            "source_references": [
+              {
+                "label": "Datos publicados del dashboard",
+                "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+              },
+              {
+                "label": "Reporte trimestral Aeroméxico 2026Q2",
+                "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+              }
+            ]
+          }
+        ],
+        "response_terms": [
+          "84.9%",
+          "2T26"
+        ]
+      },
+      "dependencies": [],
+      "critical_failures": [
+        "wrong period or metric"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [
+        1,
+        2,
+        3
+      ],
+      "turns": [
+        "¿Qué tan llenos van los aviones de Aeroméxico últimamente?"
+      ],
+      "gold_state": "generated_by_tool_registry_from_pinned_public_snapshot"
+    },
+    {
+      "id": "N03",
+      "question": "¿A quién le cuesta más operar cada asiento, a Aeroméxico o a Volaris?",
+      "locale": "es",
+      "expected": {
+        "status": "supported",
+        "behavior": "answer_comparison",
+        "plan": {
+          "metric_ids": [
+            "cask_cents_per_km"
+          ],
+          "entity_ids": [
+            "AEROMEXICO",
+            "VOLARIS"
+          ],
+          "periods": [
+            "2026Q2"
+          ]
+        },
+        "rows": [
+          {
+            "metric_id": "cask_cents_per_km",
+            "entity_id": "AEROMEXICO",
+            "period": "2026Q2",
+            "period_label": "2T26",
+            "value": 9.50697924123121,
+            "unit": "USD_cents_per_ASK_km",
+            "display_value": 9.51,
+            "display_unit": "¢ USD / ASK-km",
+            "display_scale": 1,
+            "availability": "available",
+            "quality": "Reportado/consolidado por la fuente trimestral.",
+            "source_references": [
+              {
+                "label": "Datos publicados del dashboard",
+                "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+              },
+              {
+                "label": "Reporte trimestral Aeroméxico 2026Q2",
+                "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+              }
+            ]
+          },
+          {
+            "metric_id": "cask_cents_per_km",
+            "entity_id": "VOLARIS",
+            "period": "2026Q2",
+            "period_label": "2T26",
+            "value": 6.574107213870993,
+            "unit": "USD_cents_per_ASK_km",
+            "display_value": 6.57,
+            "display_unit": "¢ USD / ASK-km",
+            "display_scale": 1,
+            "availability": "available",
+            "quality": "Reportado/consolidado por la fuente trimestral.",
+            "source_references": [
+              {
+                "label": "Datos publicados del dashboard",
+                "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+              }
+            ]
+          }
+        ],
+        "response_terms": [
+          "9.51",
+          "6.57",
+          "2T26"
+        ]
+      },
+      "dependencies": [],
+      "critical_failures": [
+        "compares different periods or metric definitions"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [
+        1,
+        2,
+        3
+      ],
+      "turns": [
+        "¿A quién le cuesta más operar cada asiento, a Aeroméxico o a Volaris?"
+      ],
+      "gold_state": "generated_by_tool_registry_from_pinned_public_snapshot"
+    },
+    {
+      "id": "N04",
+      "question": "¿Cómo le fue a Aeroméxico en ingresos el último trimestre?",
+      "locale": "es",
+      "expected": {
+        "status": "unsupported",
+        "behavior": "respond_with_limits"
+      },
+      "dependencies": [
+        "F2.3"
+      ],
+      "critical_failures": [
+        "labels RASK as total revenue"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [],
+      "turns": [
+        "¿Cómo le fue a Aeroméxico en ingresos el último trimestre?"
+      ],
+      "gold_state": "pending_future_package_and_snapshot"
+    },
+    {
+      "id": "N05",
+      "question": "¿Quién es la aerolínea más grande de México?",
+      "locale": "es",
+      "expected": {
+        "status": "clarify",
+        "behavior": "answer_with_criterion_or_clarify"
+      },
+      "dependencies": [],
+      "critical_failures": [
+        "unqualified largest claim"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [
+        1,
+        2,
+        3
+      ],
+      "turns": [
+        "¿Quién es la aerolínea más grande de México?"
+      ],
+      "gold_state": "pending_generation_against_exact_pinned_snapshot"
+    },
+    {
+      "id": "N06",
+      "question": "How is Aeroméxico doing compared with last year?",
+      "locale": "en",
+      "expected": {
+        "status": "clarify",
+        "behavior": "answer_or_clarify_in_english"
+      },
+      "dependencies": [],
+      "critical_failures": [],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [
+        1,
+        2,
+        3
+      ],
+      "turns": [
+        "How is Aeroméxico doing compared with last year?"
+      ],
+      "gold_state": "pending_generation_against_exact_pinned_snapshot"
+    },
+    {
+      "id": "N07",
+      "question": "¿Volaris le está quitando mercado a Aeroméxico?",
+      "locale": "es",
+      "expected": {
+        "status": "supported",
+        "behavior": "answer_comparison",
+        "plan": {
+          "metric_ids": [
+            "market_share"
+          ],
+          "entity_ids": [
+            "VOLARIS",
+            "AEROMEXICO"
+          ],
+          "periods": [
+            "2025Q3",
+            "2025Q4",
+            "2026Q1",
+            "2026Q2"
+          ],
+          "dimensions": [
+            "segment"
+          ],
+          "filters": {
+            "segment": "domestic"
+          }
+        },
+        "rows": [
+          {
+            "metric_id": "market_share",
+            "entity_id": "VOLARIS",
+            "period": "2025Q3",
+            "period_label": "3T25",
+            "segment": "domestic",
+            "value": 0.3374176017681846,
+            "unit": "fraction",
+            "display_value": 33.7,
+            "display_unit": "%",
+            "display_scale": 100,
+            "availability": "available",
+            "quality": "Reportado AFAC, razón determinista. No representa participación mundial; excluye aerolíneas extranjeras porque AFAC no las publica por aerolínea.",
+            "source_references": [
+              {
+                "label": "Fuente pública AFAC",
+                "url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404"
+              }
+            ]
+          },
+          {
+            "metric_id": "market_share",
+            "entity_id": "VOLARIS",
+            "period": "2025Q4",
+            "period_label": "4T25",
+            "segment": "domestic",
+            "value": 0.34029761837216366,
+            "unit": "fraction",
+            "display_value": 34.0,
+            "display_unit": "%",
+            "display_scale": 100,
+            "availability": "available",
+            "quality": "Reportado AFAC, razón determinista. No representa participación mundial; excluye aerolíneas extranjeras porque AFAC no las publica por aerolínea.",
+            "source_references": [
+              {
+                "label": "Fuente pública AFAC",
+                "url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404"
+              }
+            ]
+          },
+          {
+            "metric_id": "market_share",
+            "entity_id": "VOLARIS",
+            "period": "2026Q1",
+            "period_label": "1T26",
+            "segment": "domestic",
+            "value": 0.3474615745402284,
+            "unit": "fraction",
+            "display_value": 34.7,
+            "display_unit": "%",
+            "display_scale": 100,
+            "availability": "available",
+            "quality": "Reportado AFAC, razón determinista. No representa participación mundial; excluye aerolíneas extranjeras porque AFAC no las publica por aerolínea.",
+            "source_references": [
+              {
+                "label": "Fuente pública AFAC",
+                "url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404"
+              }
+            ]
+          },
+          {
+            "metric_id": "market_share",
+            "entity_id": "VOLARIS",
+            "period": "2026Q2",
+            "period_label": "2T26",
+            "segment": "domestic",
+            "value": 0.357688577358412,
+            "unit": "fraction",
+            "display_value": 35.8,
+            "display_unit": "%",
+            "display_scale": 100,
+            "availability": "available",
+            "quality": "Reportado AFAC, razón determinista. No representa participación mundial; excluye aerolíneas extranjeras porque AFAC no las publica por aerolínea.",
+            "source_references": [
+              {
+                "label": "Fuente pública AFAC",
+                "url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404"
+              }
+            ]
+          },
+          {
+            "metric_id": "market_share",
+            "entity_id": "AEROMEXICO",
+            "period": "2025Q3",
+            "period_label": "3T25",
+            "segment": "domestic",
+            "value": 0.2450920789474549,
+            "unit": "fraction",
+            "display_value": 24.5,
+            "display_unit": "%",
+            "display_scale": 100,
+            "availability": "available",
+            "quality": "Reportado AFAC, razón determinista. No representa participación mundial; excluye aerolíneas extranjeras porque AFAC no las publica por aerolínea.",
+            "source_references": [
+              {
+                "label": "Fuente pública AFAC",
+                "url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404"
+              }
+            ]
+          },
+          {
+            "metric_id": "market_share",
+            "entity_id": "AEROMEXICO",
+            "period": "2025Q4",
+            "period_label": "4T25",
+            "segment": "domestic",
+            "value": 0.24408229169831502,
+            "unit": "fraction",
+            "display_value": 24.4,
+            "display_unit": "%",
+            "display_scale": 100,
+            "availability": "available",
+            "quality": "Reportado AFAC, razón determinista. No representa participación mundial; excluye aerolíneas extranjeras porque AFAC no las publica por aerolínea.",
+            "source_references": [
+              {
+                "label": "Fuente pública AFAC",
+                "url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404"
+              }
+            ]
+          },
+          {
+            "metric_id": "market_share",
+            "entity_id": "AEROMEXICO",
+            "period": "2026Q1",
+            "period_label": "1T26",
+            "segment": "domestic",
+            "value": 0.24997512349503867,
+            "unit": "fraction",
+            "display_value": 25.0,
+            "display_unit": "%",
+            "display_scale": 100,
+            "availability": "available",
+            "quality": "Reportado AFAC, razón determinista. No representa participación mundial; excluye aerolíneas extranjeras porque AFAC no las publica por aerolínea.",
+            "source_references": [
+              {
+                "label": "Fuente pública AFAC",
+                "url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404"
+              }
+            ]
+          },
+          {
+            "metric_id": "market_share",
+            "entity_id": "AEROMEXICO",
+            "period": "2026Q2",
+            "period_label": "2T26",
+            "segment": "domestic",
+            "value": 0.24337659436582212,
+            "unit": "fraction",
+            "display_value": 24.3,
+            "display_unit": "%",
+            "display_scale": 100,
+            "availability": "available",
+            "quality": "Reportado AFAC, razón determinista. No representa participación mundial; excluye aerolíneas extranjeras porque AFAC no las publica por aerolínea.",
+            "source_references": [
+              {
+                "label": "Fuente pública AFAC",
+                "url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404"
+              }
+            ]
+          }
+        ],
+        "response_terms": [
+          "33.7%",
+          "34.0%",
+          "34.7%",
+          "35.8%",
+          "24.5%",
+          "24.4%",
+          "25.0%",
+          "24.3%",
+          "3T25",
+          "4T25",
+          "1T26",
+          "2T26",
+          "+2.03 pp",
+          "-0.17 pp"
+        ],
+        "derived_gold": {
+          "kind": "percentage_point_change",
+          "period_start": "2025Q3",
+          "period_end": "2026Q2",
+          "segment": "domestic",
+          "values_pp": {
+            "VOLARIS": 2.0271,
+            "AEROMEXICO": -0.1715
+          },
+          "interpretation": "Volaris increased its domestic share and Aeromexico decreased; this trend alone does not establish that one caused the other.",
+          "numeric_source": "difference of ToolRegistry market_share fractions times 100; rounded to 4 decimals"
+        }
+      },
+      "dependencies": [],
+      "critical_failures": [
+        "claims causality from share trend"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [
+        1,
+        2,
+        3
+      ],
+      "turns": [
+        "¿Volaris le está quitando mercado a Aeroméxico?"
+      ],
+      "gold_state": "generated_by_tool_registry_from_pinned_public_snapshot"
+    },
+    {
+      "id": "N08",
+      "question": "Compara la participación de Volaris y Aeroméxico entre 2025 y 2026.",
+      "locale": "es",
+      "expected": {
+        "status": "clarify",
+        "behavior": "clarify_period_or_compare_equivalent_quarters"
+      },
+      "dependencies": [],
+      "critical_failures": [
+        "confuses percentage points and relative change"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [
+        1,
+        2,
+        3
+      ],
+      "turns": [
+        "Compara la participación de Volaris y Aeroméxico entre 2025 y 2026."
+      ],
+      "gold_state": "pending_generation_against_exact_pinned_snapshot"
+    },
+    {
+      "id": "N09",
+      "question": "¿Cuáles fueron las cinco rutas nacionales de Aeroméxico que más crecieron este año?",
+      "locale": "es",
+      "expected": {
+        "status": "unsupported",
+        "behavior": "answer_top5_and_label_estimates"
+      },
+      "dependencies": [
+        "F2.4"
+      ],
+      "critical_failures": [
+        "labels estimate as observed"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [],
+      "turns": [
+        "¿Cuáles fueron las cinco rutas nacionales de Aeroméxico que más crecieron este año?"
+      ],
+      "gold_state": "pending_future_package_and_snapshot"
+    },
+    {
+      "id": "N10",
+      "question": "¿En qué rutas compiten directamente Aeroméxico y Viva?",
+      "locale": "es",
+      "expected": {
+        "status": "unsupported",
+        "behavior": "answer_with_coverage"
+      },
+      "dependencies": [
+        "F2.4"
+      ],
+      "critical_failures": [
+        "claims complete route coverage without evidence"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [],
+      "turns": [
+        "¿En qué rutas compiten directamente Aeroméxico y Viva?"
+      ],
+      "gold_state": "pending_future_package_and_snapshot"
+    },
+    {
+      "id": "N11",
+      "question": "¿Qué aerolínea mejoró más su ocupación en el último año?",
+      "locale": "es",
+      "expected": {
+        "status": "supported",
+        "behavior": "answer_comparison",
+        "plan": {
+          "metric_ids": [
+            "load_factor"
+          ],
+          "entity_ids": [
+            "AEROMEXICO",
+            "VOLARIS",
+            "VIVA_AEROBUS"
+          ],
+          "periods": [
+            "2025Q2",
+            "2026Q2"
+          ]
+        },
+        "rows": [
+          {
+            "metric_id": "load_factor",
+            "entity_id": "AEROMEXICO",
+            "period": "2025Q2",
+            "period_label": "2T25",
+            "value": 0.8570000000000001,
+            "unit": "fraction",
+            "display_value": 85.7,
+            "display_unit": "%",
+            "display_scale": 100,
+            "availability": "available",
+            "quality": "reported: Reportado o calculado; incluir load_factor_basis.",
+            "source_references": [
+              {
+                "label": "Datos publicados del dashboard",
+                "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+              }
+            ]
+          },
+          {
+            "metric_id": "load_factor",
+            "entity_id": "AEROMEXICO",
+            "period": "2026Q2",
+            "period_label": "2T26",
+            "value": 0.8490000000000001,
+            "unit": "fraction",
+            "display_value": 84.9,
+            "display_unit": "%",
+            "display_scale": 100,
+            "availability": "available",
+            "quality": "reported: Reportado o calculado; incluir load_factor_basis.",
+            "source_references": [
+              {
+                "label": "Datos publicados del dashboard",
+                "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+              },
+              {
+                "label": "Reporte trimestral Aeroméxico 2026Q2",
+                "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+              }
+            ]
+          },
+          {
+            "metric_id": "load_factor",
+            "entity_id": "VOLARIS",
+            "period": "2025Q2",
+            "period_label": "2T25",
+            "value": 0.8240000000000001,
+            "unit": "fraction",
+            "display_value": 82.4,
+            "display_unit": "%",
+            "display_scale": 100,
+            "availability": "available",
+            "quality": "reported: Reportado o calculado; incluir load_factor_basis.",
+            "source_references": [
+              {
+                "label": "Datos publicados del dashboard",
+                "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+              }
+            ]
+          },
+          {
+            "metric_id": "load_factor",
+            "entity_id": "VOLARIS",
+            "period": "2026Q2",
+            "period_label": "2T26",
+            "value": 0.848,
+            "unit": "fraction",
+            "display_value": 84.8,
+            "display_unit": "%",
+            "display_scale": 100,
+            "availability": "available",
+            "quality": "reported: Reportado o calculado; incluir load_factor_basis.",
+            "source_references": [
+              {
+                "label": "Datos publicados del dashboard",
+                "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+              }
+            ]
+          },
+          {
+            "metric_id": "load_factor",
+            "entity_id": "VIVA_AEROBUS",
+            "period": "2025Q2",
+            "period_label": "2T25",
+            "value": 0.858,
+            "unit": "fraction",
+            "display_value": 85.8,
+            "display_unit": "%",
+            "display_scale": 100,
+            "availability": "available",
+            "quality": "reported: Reportado o calculado; incluir load_factor_basis.",
+            "source_references": [
+              {
+                "label": "Datos publicados del dashboard",
+                "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+              }
+            ]
+          },
+          {
+            "metric_id": "load_factor",
+            "entity_id": "VIVA_AEROBUS",
+            "period": "2026Q2",
+            "period_label": "2T26",
+            "value": 0.8590000000000001,
+            "unit": "fraction",
+            "display_value": 85.9,
+            "display_unit": "%",
+            "display_scale": 100,
+            "availability": "available",
+            "quality": "reported: Reportado o calculado; incluir load_factor_basis.",
+            "source_references": [
+              {
+                "label": "Datos publicados del dashboard",
+                "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+              }
+            ]
+          }
+        ],
+        "response_terms": [
+          "85.7%",
+          "84.9%",
+          "82.4%",
+          "84.8%",
+          "85.8%",
+          "85.9%",
+          "2T25",
+          "2T26",
+          "Volaris",
+          "+2.4 pp"
+        ],
+        "derived_gold": {
+          "kind": "load_factor_change_and_winner",
+          "period_start": "2025Q2",
+          "period_end": "2026Q2",
+          "values_pp": {
+            "AEROMEXICO": -0.8,
+            "VOLARIS": 2.4,
+            "VIVA_AEROBUS": 0.1
+          },
+          "winner": "VOLARIS",
+          "formula": "(load_factor_2026Q2 - load_factor_2025Q2) * 100; pp"
+        }
+      },
+      "dependencies": [],
+      "critical_failures": [],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [
+        1,
+        2,
+        3
+      ],
+      "turns": [
+        "¿Qué aerolínea mejoró más su ocupación en el último año?"
+      ],
+      "gold_state": "generated_by_tool_registry_from_pinned_public_snapshot"
+    },
+    {
+      "id": "N12",
+      "question": "¿Cómo ha evolucionado el costo por asiento de Aeroméxico en los últimos dos años?",
+      "locale": "es",
+      "expected": {
+        "status": "supported",
+        "behavior": "answer_with_trend_chart",
+        "plan": {
+          "metric_ids": [
+            "cask_cents_per_km"
+          ],
+          "entity_ids": [
+            "AEROMEXICO"
+          ],
+          "periods": [
+            "2024Q3",
+            "2024Q4",
+            "2025Q1",
+            "2025Q2",
+            "2025Q3",
+            "2025Q4",
+            "2026Q1",
+            "2026Q2"
+          ]
+        },
+        "rows": [
+          {
+            "metric_id": "cask_cents_per_km",
+            "entity_id": "AEROMEXICO",
+            "period": "2024Q3",
+            "period_label": "3T24",
+            "value": 7.642865664519208,
+            "unit": "USD_cents_per_ASK_km",
+            "display_value": 7.64,
+            "display_unit": "¢ USD / ASK-km",
+            "display_scale": 1,
+            "availability": "available",
+            "quality": "Reportado/consolidado por la fuente trimestral.",
+            "source_references": [
+              {
+                "label": "Datos publicados del dashboard",
+                "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+              }
+            ]
+          },
+          {
+            "metric_id": "cask_cents_per_km",
+            "entity_id": "AEROMEXICO",
+            "period": "2024Q4",
+            "period_label": "4T24",
+            "value": 8.07782549908534,
+            "unit": "USD_cents_per_ASK_km",
+            "display_value": 8.08,
+            "display_unit": "¢ USD / ASK-km",
+            "display_scale": 1,
+            "availability": "available",
+            "quality": "Reportado/consolidado por la fuente trimestral.",
+            "source_references": [
+              {
+                "label": "Datos publicados del dashboard",
+                "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+              }
+            ]
+          },
+          {
+            "metric_id": "cask_cents_per_km",
+            "entity_id": "AEROMEXICO",
+            "period": "2025Q1",
+            "period_label": "1T25",
+            "value": 7.394317187624274,
+            "unit": "USD_cents_per_ASK_km",
+            "display_value": 7.39,
+            "display_unit": "¢ USD / ASK-km",
+            "display_scale": 1,
+            "availability": "available",
+            "quality": "Reportado/consolidado por la fuente trimestral.",
+            "source_references": [
+              {
+                "label": "Datos publicados del dashboard",
+                "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+              }
+            ]
+          },
+          {
+            "metric_id": "cask_cents_per_km",
+            "entity_id": "AEROMEXICO",
+            "period": "2025Q2",
+            "period_label": "2T25",
+            "value": 7.394317187624274,
+            "unit": "USD_cents_per_ASK_km",
+            "display_value": 7.39,
+            "display_unit": "¢ USD / ASK-km",
+            "display_scale": 1,
+            "availability": "available",
+            "quality": "Reportado/consolidado por la fuente trimestral.",
+            "source_references": [
+              {
+                "label": "Datos publicados del dashboard",
+                "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+              }
+            ]
+          },
+          {
+            "metric_id": "cask_cents_per_km",
+            "entity_id": "AEROMEXICO",
+            "period": "2025Q3",
+            "period_label": "3T25",
+            "value": 7.89141414141414,
+            "unit": "USD_cents_per_ASK_km",
+            "display_value": 7.89,
+            "display_unit": "¢ USD / ASK-km",
+            "display_scale": 1,
+            "availability": "available",
+            "quality": "Reportado/consolidado por la fuente trimestral.",
+            "source_references": [
+              {
+                "label": "Datos publicados del dashboard",
+                "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+              }
+            ]
+          },
+          {
+            "metric_id": "cask_cents_per_km",
+            "entity_id": "AEROMEXICO",
+            "period": "2025Q4",
+            "period_label": "4T25",
+            "value": 8.45064821442774,
+            "unit": "USD_cents_per_ASK_km",
+            "display_value": 8.45,
+            "display_unit": "¢ USD / ASK-km",
+            "display_scale": 1,
+            "availability": "available",
+            "quality": "Reportado/consolidado por la fuente trimestral.",
+            "source_references": [
+              {
+                "label": "Datos publicados del dashboard",
+                "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+              }
+            ]
+          },
+          {
+            "metric_id": "cask_cents_per_km",
+            "entity_id": "AEROMEXICO",
+            "period": "2026Q1",
+            "period_label": "1T26",
+            "value": 8.574922452875208,
+            "unit": "USD_cents_per_ASK_km",
+            "display_value": 8.57,
+            "display_unit": "¢ USD / ASK-km",
+            "display_scale": 1,
+            "availability": "available",
+            "quality": "Reportado/consolidado por la fuente trimestral.",
+            "source_references": [
+              {
+                "label": "Datos publicados del dashboard",
+                "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+              }
+            ]
+          },
+          {
+            "metric_id": "cask_cents_per_km",
+            "entity_id": "AEROMEXICO",
+            "period": "2026Q2",
+            "period_label": "2T26",
+            "value": 9.50697924123121,
+            "unit": "USD_cents_per_ASK_km",
+            "display_value": 9.51,
+            "display_unit": "¢ USD / ASK-km",
+            "display_scale": 1,
+            "availability": "available",
+            "quality": "Reportado/consolidado por la fuente trimestral.",
+            "source_references": [
+              {
+                "label": "Datos publicados del dashboard",
+                "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+              },
+              {
+                "label": "Reporte trimestral Aeroméxico 2026Q2",
+                "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+              }
+            ]
+          }
+        ],
+        "response_terms": [
+          "7.64",
+          "9.51",
+          "3T24",
+          "2T26"
+        ]
+      },
+      "dependencies": [],
+      "critical_failures": [],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [
+        1,
+        2,
+        3
+      ],
+      "turns": [
+        "¿Cómo ha evolucionado el costo por asiento de Aeroméxico en los últimos dos años?"
+      ],
+      "gold_state": "generated_by_tool_registry_from_pinned_public_snapshot"
+    },
+    {
+      "id": "N13",
+      "question": "¿Se está recuperando el tráfico internacional?",
+      "locale": "es",
+      "expected": {
+        "status": "supported",
+        "behavior": "answer_with_comparator",
+        "plan": {
+          "metric_ids": [
+            "afac_passengers"
+          ],
+          "entity_ids": [
+            "INDUSTRY"
+          ],
+          "periods": [
+            "2025Q2",
+            "2026Q2"
+          ],
+          "dimensions": [
+            "segment"
+          ],
+          "filters": {
+            "segment": "international"
+          }
+        },
+        "rows": [
+          {
+            "metric_id": "afac_passengers",
+            "entity_id": "INDUSTRY",
+            "period": "2025Q2",
+            "period_label": "2T25",
+            "segment": "international",
+            "value": 4314625.0,
+            "unit": "passengers",
+            "display_value": 4314625.0,
+            "display_unit": "pasajeros",
+            "display_scale": 1,
+            "availability": "available",
+            "quality": "Reportado AFAC.",
+            "source_references": [
+              {
+                "label": "Fuente pública AFAC",
+                "url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404"
+              }
+            ]
+          },
+          {
+            "metric_id": "afac_passengers",
+            "entity_id": "INDUSTRY",
+            "period": "2026Q2",
+            "period_label": "2T26",
+            "segment": "international",
+            "value": 4512273.0,
+            "unit": "passengers",
+            "display_value": 4512273.0,
+            "display_unit": "pasajeros",
+            "display_scale": 1,
+            "availability": "available",
+            "quality": "Reportado AFAC.",
+            "source_references": [
+              {
+                "label": "Fuente pública AFAC",
+                "url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404"
+              }
+            ]
+          }
+        ],
+        "response_terms": [
+          "4314625",
+          "4512273",
+          "2T25",
+          "2T26"
+        ]
+      },
+      "dependencies": [],
+      "critical_failures": [],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [
+        1,
+        2,
+        3
+      ],
+      "turns": [
+        "¿Se está recuperando el tráfico internacional?"
+      ],
+      "gold_state": "generated_by_tool_registry_from_pinned_public_snapshot"
+    },
+    {
+      "id": "N14",
+      "question": "Muéstrame los pasajeros mensuales de Aeroméxico en 2026.",
+      "locale": "es",
+      "expected": {
+        "status": "supported",
+        "behavior": "answer_with_monthly_series",
+        "plan": {
+          "metric_ids": [
+            "afac_passengers"
+          ],
+          "entity_ids": [
+            "AEROMEXICO"
+          ],
+          "periods": [
+            "2026M01",
+            "2026M02",
+            "2026M03",
+            "2026M04",
+            "2026M05",
+            "2026M06"
+          ],
+          "dimensions": [
+            "segment"
+          ],
+          "filters": {
+            "segment": "total"
+          }
+        },
+        "rows": [
+          {
+            "metric_id": "afac_passengers",
+            "entity_id": "AEROMEXICO",
+            "period": "2026M01",
+            "period_label": "ene 26",
+            "segment": "total",
+            "value": 2022461.0,
+            "unit": "passengers",
+            "display_value": 2022461.0,
+            "display_unit": "pasajeros",
+            "display_scale": 1,
+            "availability": "available",
+            "quality": "Reportado AFAC.",
+            "source_references": [
+              {
+                "label": "Fuente pública AFAC",
+                "url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404"
+              }
+            ]
+          },
+          {
+            "metric_id": "afac_passengers",
+            "entity_id": "AEROMEXICO",
+            "period": "2026M02",
+            "period_label": "feb 26",
+            "segment": "total",
+            "value": 1715135.0,
+            "unit": "passengers",
+            "display_value": 1715135.0,
+            "display_unit": "pasajeros",
+            "display_scale": 1,
+            "availability": "available",
+            "quality": "Reportado AFAC.",
+            "source_references": [
+              {
+                "label": "Fuente pública AFAC",
+                "url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404"
+              }
+            ]
+          },
+          {
+            "metric_id": "afac_passengers",
+            "entity_id": "AEROMEXICO",
+            "period": "2026M03",
+            "period_label": "mar 26",
+            "segment": "total",
+            "value": 1960822.0,
+            "unit": "passengers",
+            "display_value": 1960822.0,
+            "display_unit": "pasajeros",
+            "display_scale": 1,
+            "availability": "available",
+            "quality": "Reportado AFAC.",
+            "source_references": [
+              {
+                "label": "Fuente pública AFAC",
+                "url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404"
+              }
+            ]
+          },
+          {
+            "metric_id": "afac_passengers",
+            "entity_id": "AEROMEXICO",
+            "period": "2026M04",
+            "period_label": "abr 26",
+            "segment": "total",
+            "value": 2029229.0,
+            "unit": "passengers",
+            "display_value": 2029229.0,
+            "display_unit": "pasajeros",
+            "display_scale": 1,
+            "availability": "available",
+            "quality": "Reportado AFAC.",
+            "source_references": [
+              {
+                "label": "Fuente pública AFAC",
+                "url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404"
+              }
+            ]
+          },
+          {
+            "metric_id": "afac_passengers",
+            "entity_id": "AEROMEXICO",
+            "period": "2026M05",
+            "period_label": "may 26",
+            "segment": "total",
+            "value": 2066587.0,
+            "unit": "passengers",
+            "display_value": 2066587.0,
+            "display_unit": "pasajeros",
+            "display_scale": 1,
+            "availability": "available",
+            "quality": "Reportado AFAC.",
+            "source_references": [
+              {
+                "label": "Fuente pública AFAC",
+                "url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404"
+              }
+            ]
+          },
+          {
+            "metric_id": "afac_passengers",
+            "entity_id": "AEROMEXICO",
+            "period": "2026M06",
+            "period_label": "jun 26",
+            "segment": "total",
+            "value": 1821195.0,
+            "unit": "passengers",
+            "display_value": 1821195.0,
+            "display_unit": "pasajeros",
+            "display_scale": 1,
+            "availability": "available",
+            "quality": "Reportado AFAC.",
+            "source_references": [
+              {
+                "label": "Fuente pública AFAC",
+                "url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404"
+              }
+            ]
+          }
+        ],
+        "response_terms": [
+          "2022461",
+          "1715135",
+          "1960822",
+          "2029229",
+          "2066587",
+          "1821195",
+          "ene 26",
+          "feb 26",
+          "mar 26",
+          "abr 26",
+          "may 26",
+          "jun 26"
+        ]
+      },
+      "dependencies": [],
+      "critical_failures": [],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [
+        1,
+        2,
+        3
+      ],
+      "turns": [
+        "Muéstrame los pasajeros mensuales de Aeroméxico en 2026."
+      ],
+      "gold_state": "generated_by_tool_registry_from_pinned_public_snapshot"
+    },
+    {
+      "id": "N15",
+      "question": "¿Por qué subió el costo por asiento de Aeroméxico este trimestre?",
+      "locale": "es",
+      "expected": {
+        "status": "unsupported",
+        "behavior": "answer_with_attributed_sources"
+      },
+      "dependencies": [
+        "F2.5",
+        "F2.7"
+      ],
+      "critical_failures": [
+        "causal claim without cited attribution"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [],
+      "turns": [
+        "¿Por qué subió el costo por asiento de Aeroméxico este trimestre?"
+      ],
+      "gold_state": "pending_future_package_and_snapshot"
+    },
+    {
+      "id": "N16",
+      "question": "¿Qué dijo Aeroméxico sobre el combustible en su último reporte?",
+      "locale": "es",
+      "expected": {
+        "status": "unsupported",
+        "behavior": "quote_with_page"
+      },
+      "dependencies": [
+        "F2.5"
+      ],
+      "critical_failures": [
+        "fabricated quote or page"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [],
+      "turns": [
+        "¿Qué dijo Aeroméxico sobre el combustible en su último reporte?"
+      ],
+      "gold_state": "pending_future_package_and_snapshot"
+    },
+    {
+      "id": "N17",
+      "question": "¿Hubo alguna noticia que explique la caída de pasajeros de junio de 2026?",
+      "locale": "es",
+      "expected": {
+        "status": "unsupported",
+        "behavior": "search_approved_news_or_say_none"
+      },
+      "dependencies": [
+        "F2.6"
+      ],
+      "critical_failures": [
+        "fabricated news or link"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [],
+      "turns": [
+        "¿Hubo alguna noticia que explique la caída de pasajeros de junio de 2026?"
+      ],
+      "gold_state": "pending_future_package_and_snapshot"
+    },
+    {
+      "id": "N18",
+      "question": "¿Por qué bajó la ocupación de Volaris?",
+      "locale": "es",
+      "expected": {
+        "status": "unsupported",
+        "behavior": "answer_data_then_attribute_or_state_none"
+      },
+      "dependencies": [
+        "F2.5",
+        "F2.7"
+      ],
+      "critical_failures": [],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [],
+      "turns": [
+        "¿Por qué bajó la ocupación de Volaris?"
+      ],
+      "gold_state": "pending_future_package_and_snapshot"
+    },
+    {
+      "id": "N19",
+      "question": "¿El alza del combustible afectó igual a todas las aerolíneas?",
+      "locale": "es",
+      "expected": {
+        "status": "unsupported",
+        "behavior": "compare_with_attributed_sources"
+      },
+      "dependencies": [
+        "F2.5",
+        "F2.6"
+      ],
+      "critical_failures": [],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [],
+      "turns": [
+        "¿El alza del combustible afectó igual a todas las aerolíneas?"
+      ],
+      "gold_state": "pending_future_package_and_snapshot"
+    },
+    {
+      "id": "N20",
+      "question": "Si Aeroméxico mantiene su ritmo, ¿cuántos pasajeros tendrá en 2027?",
+      "locale": "es",
+      "expected": {
+        "status": "unsupported",
+        "behavior": "refuse_forecast_offer_history",
+        "forbid_numeric_claims": true
+      },
+      "dependencies": [],
+      "critical_failures": [
+        "fabricated forecast"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [
+        1,
+        2,
+        3
+      ],
+      "turns": [
+        "Si Aeroméxico mantiene su ritmo, ¿cuántos pasajeros tendrá en 2027?"
+      ],
+      "gold_state": "pending_generation_against_exact_pinned_snapshot"
+    },
+    {
+      "id": "N21",
+      "question": "¿Qué parte del mercado doméstico tienen juntas Volaris y Viva?",
+      "locale": "es",
+      "expected": {
+        "status": "supported",
+        "behavior": "answer_sum_same_period_segment_denominator",
+        "plan": {
+          "metric_ids": [
+            "market_share"
+          ],
+          "entity_ids": [
+            "VOLARIS",
+            "VIVA_AEROBUS"
+          ],
+          "periods": [
+            "2026Q2"
+          ],
+          "dimensions": [
+            "segment"
+          ],
+          "filters": {
+            "segment": "domestic"
+          }
+        },
+        "rows": [
+          {
+            "metric_id": "market_share",
+            "entity_id": "VOLARIS",
+            "period": "2026Q2",
+            "period_label": "2T26",
+            "segment": "domestic",
+            "value": 0.357688577358412,
+            "unit": "fraction",
+            "display_value": 35.8,
+            "display_unit": "%",
+            "display_scale": 100,
+            "availability": "available",
+            "quality": "Reportado AFAC, razón determinista. No representa participación mundial; excluye aerolíneas extranjeras porque AFAC no las publica por aerolínea.",
+            "source_references": [
+              {
+                "label": "Fuente pública AFAC",
+                "url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404"
+              }
+            ]
+          },
+          {
+            "metric_id": "market_share",
+            "entity_id": "VIVA_AEROBUS",
+            "period": "2026Q2",
+            "period_label": "2T26",
+            "segment": "domestic",
+            "value": 0.38678215282059114,
+            "unit": "fraction",
+            "display_value": 38.7,
+            "display_unit": "%",
+            "display_scale": 100,
+            "availability": "available",
+            "quality": "Reportado AFAC, razón determinista. No representa participación mundial; excluye aerolíneas extranjeras porque AFAC no las publica por aerolínea.",
+            "source_references": [
+              {
+                "label": "Fuente pública AFAC",
+                "url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404"
+              }
+            ]
+          }
+        ],
+        "response_terms": [
+          "74.4%",
+          "2T26"
+        ],
+        "derived_gold": {
+          "kind": "sum_percentages",
+          "raw_fraction_sum": 0.7444707301790031,
+          "value": 74.4,
+          "unit": "%",
+          "formula": "round(sum(row.value) * 100, 1)",
+          "period": "2026Q2",
+          "segment": "domestic",
+          "response_terms": [
+            "74.4%",
+            "2T26"
+          ]
+        }
+      },
+      "dependencies": [],
+      "critical_failures": [
+        "adds unlike denominators"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [
+        1,
+        2,
+        3
+      ],
+      "turns": [
+        "¿Qué parte del mercado doméstico tienen juntas Volaris y Viva?"
+      ],
+      "gold_state": "generated_by_tool_registry_from_pinned_public_snapshot"
+    },
+    {
+      "id": "N22",
+      "question": "¿Cuánto pesó el combustible en el costo de Aeroméxico?",
+      "locale": "es",
+      "expected": {
+        "status": "unsupported",
+        "behavior": "answer_with_definition"
+      },
+      "dependencies": [
+        "F2.3"
+      ],
+      "critical_failures": [
+        "labels CASK fuel component as total fuel spend"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [],
+      "turns": [
+        "¿Cuánto pesó el combustible en el costo de Aeroméxico?"
+      ],
+      "gold_state": "pending_future_package_and_snapshot"
+    },
+    {
+      "id": "N23",
+      "question": "¿Cuántos pasajeros más transportó Viva que Volaris en el primer semestre?",
+      "locale": "es",
+      "expected": {
+        "status": "unsupported",
+        "behavior": "answer_sum_and_difference"
+      },
+      "dependencies": [
+        "F2.3"
+      ],
+      "critical_failures": [
+        "wrong source or period aggregation"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [],
+      "turns": [
+        "¿Cuántos pasajeros más transportó Viva que Volaris en el primer semestre?"
+      ],
+      "gold_state": "pending_future_package_and_snapshot"
+    },
+    {
+      "id": "N24",
+      "question": "¿Cómo le fue a Aeroméxico en el 2T26?",
+      "locale": "es",
+      "expected": {
+        "status": "multi_turn",
+        "behavior": "retain_context_and_define_growth",
+        "turns": [
+          {
+            "status": "supported",
+            "plan": {
+              "metric_ids": [
+                "company_passengers",
+                "load_factor",
+                "cask_cents_per_km"
+              ],
+              "entity_ids": [
+                "AEROMEXICO"
+              ],
+              "periods": [
+                "2026Q2"
+              ]
+            },
+            "rows": [
+              {
+                "metric_id": "company_passengers",
+                "entity_id": "AEROMEXICO",
+                "period": "2026Q2",
+                "period_label": "2T26",
+                "value": 6014000.0,
+                "unit": "passengers",
+                "display_value": 6014000.0,
+                "display_unit": "pasajeros",
+                "display_scale": 1,
+                "availability": "available",
+                "quality": "Reportado por compañía en la serie trimestral de economía unitaria.",
+                "source_references": [
+                  {
+                    "label": "Datos publicados del dashboard",
+                    "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+                  },
+                  {
+                    "label": "Reporte trimestral Aeroméxico 2026Q2",
+                    "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+                  }
+                ]
+              },
+              {
+                "metric_id": "load_factor",
+                "entity_id": "AEROMEXICO",
+                "period": "2026Q2",
+                "period_label": "2T26",
+                "value": 0.8490000000000001,
+                "unit": "fraction",
+                "display_value": 84.9,
+                "display_unit": "%",
+                "display_scale": 100,
+                "availability": "available",
+                "quality": "reported: Reportado o calculado; incluir load_factor_basis.",
+                "source_references": [
+                  {
+                    "label": "Datos publicados del dashboard",
+                    "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+                  },
+                  {
+                    "label": "Reporte trimestral Aeroméxico 2026Q2",
+                    "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+                  }
+                ]
+              },
+              {
+                "metric_id": "cask_cents_per_km",
+                "entity_id": "AEROMEXICO",
+                "period": "2026Q2",
+                "period_label": "2T26",
+                "value": 9.50697924123121,
+                "unit": "USD_cents_per_ASK_km",
+                "display_value": 9.51,
+                "display_unit": "¢ USD / ASK-km",
+                "display_scale": 1,
+                "availability": "available",
+                "quality": "Reportado/consolidado por la fuente trimestral.",
+                "source_references": [
+                  {
+                    "label": "Datos publicados del dashboard",
+                    "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+                  },
+                  {
+                    "label": "Reporte trimestral Aeroméxico 2026Q2",
+                    "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+                  }
+                ]
+              }
+            ],
+            "response_behavior": "preserve period and same three metrics",
+            "response_terms": [
+              "6014000",
+              "2T26",
+              "84.9%",
+              "9.51"
+            ]
+          },
+          {
+            "status": "supported",
+            "plan": {
+              "metric_ids": [
+                "company_passengers",
+                "load_factor",
+                "cask_cents_per_km"
+              ],
+              "entity_ids": [
+                "VOLARIS"
+              ],
+              "periods": [
+                "2026Q2"
+              ]
+            },
+            "rows": [
+              {
+                "metric_id": "company_passengers",
+                "entity_id": "VOLARIS",
+                "period": "2026Q2",
+                "period_label": "2T26",
+                "value": 8064000.0,
+                "unit": "passengers",
+                "display_value": 8064000.0,
+                "display_unit": "pasajeros",
+                "display_scale": 1,
+                "availability": "available",
+                "quality": "Reportado por compañía en la serie trimestral de economía unitaria.",
+                "source_references": [
+                  {
+                    "label": "Datos publicados del dashboard",
+                    "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+                  }
+                ]
+              },
+              {
+                "metric_id": "load_factor",
+                "entity_id": "VOLARIS",
+                "period": "2026Q2",
+                "period_label": "2T26",
+                "value": 0.848,
+                "unit": "fraction",
+                "display_value": 84.8,
+                "display_unit": "%",
+                "display_scale": 100,
+                "availability": "available",
+                "quality": "reported: Reportado o calculado; incluir load_factor_basis.",
+                "source_references": [
+                  {
+                    "label": "Datos publicados del dashboard",
+                    "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+                  }
+                ]
+              },
+              {
+                "metric_id": "cask_cents_per_km",
+                "entity_id": "VOLARIS",
+                "period": "2026Q2",
+                "period_label": "2T26",
+                "value": 6.574107213870993,
+                "unit": "USD_cents_per_ASK_km",
+                "display_value": 6.57,
+                "display_unit": "¢ USD / ASK-km",
+                "display_scale": 1,
+                "availability": "available",
+                "quality": "Reportado/consolidado por la fuente trimestral.",
+                "source_references": [
+                  {
+                    "label": "Datos publicados del dashboard",
+                    "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+                  }
+                ]
+              }
+            ],
+            "response_behavior": "preserve period and same three metrics",
+            "response_terms": [
+              "8064000",
+              "2T26",
+              "84.8%",
+              "6.57"
+            ]
+          },
+          {
+            "status": "clarify",
+            "response_behavior": "ask which growth metric (passengers, load factor, or CASK); no provisional growth winner",
+            "critical_failures": [
+              "gives a growth winner without selecting a growth metric"
+            ],
+            "forbid_numeric_claims": true,
+            "must_not_contain": [
+              "Volaris creció",
+              "Aeroméxico creció",
+              "Viva creció",
+              "Volaris ganó",
+              "Aeroméxico ganó",
+              "Viva ganó"
+            ]
+          }
+        ]
+      },
+      "dependencies": [],
+      "critical_failures": [
+        "drops 2T26 or metric context"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [
+        1,
+        2,
+        3
+      ],
+      "turns": [
+        "¿Cómo le fue a Aeroméxico en el 2T26?",
+        "¿Y a Volaris?",
+        "¿Quién creció más?"
+      ],
+      "gold_state": "pending_generation_against_exact_pinned_snapshot"
+    },
+    {
+      "id": "N25",
+      "question": "Explícamelo más simple.",
+      "locale": "es",
+      "expected": {
+        "status": "multi_turn",
+        "behavior": "rephrase_without_requery_or_number_change",
+        "turns": [
+          {
+            "status": "supported",
+            "plan": {
+              "metric_ids": [
+                "load_factor"
+              ],
+              "entity_ids": [
+                "AEROMEXICO"
+              ],
+              "periods": [
+                "2026Q2"
+              ]
+            },
+            "rows": [
+              {
+                "metric_id": "load_factor",
+                "entity_id": "AEROMEXICO",
+                "period": "2026Q2",
+                "period_label": "2T26",
+                "value": 0.8490000000000001,
+                "unit": "fraction",
+                "display_value": 84.9,
+                "display_unit": "%",
+                "display_scale": 100,
+                "availability": "available",
+                "quality": "reported: Reportado o calculado; incluir load_factor_basis.",
+                "source_references": [
+                  {
+                    "label": "Datos publicados del dashboard",
+                    "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+                  },
+                  {
+                    "label": "Reporte trimestral Aeroméxico 2026Q2",
+                    "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+                  }
+                ]
+              }
+            ],
+            "response_behavior": "answer with pinned value, unit and period",
+            "response_terms": [
+              "84.9%",
+              "2T26",
+              "Aeroméxico",
+              "ocupación"
+            ]
+          },
+          {
+            "status": "rephrase",
+            "response_behavior": "rephrase and preserve prior value/unit/period without another tool call",
+            "preserve_response_terms": [
+              "84.9%",
+              "2T26",
+              "Aeroméxico"
+            ],
+            "preserve_any_terms": [
+              [
+                "ocupación",
+                "factor de ocupación"
+              ]
+            ]
+          }
+        ]
+      },
+      "dependencies": [],
+      "critical_failures": [
+        "changes the numeric answer"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [
+        1,
+        2,
+        3
+      ],
+      "turns": [
+        "¿Cuál fue el factor de ocupación de Aeroméxico en 2T26?",
+        "Explícamelo más simple."
+      ],
+      "gold_state": "pending_generation_against_exact_pinned_snapshot"
+    },
+    {
+      "id": "N26",
+      "question": "Now in English, please.",
+      "locale": "en",
+      "expected": {
+        "status": "multi_turn",
+        "behavior": "switch_language_preserve_content",
+        "turns": [
+          {
+            "status": "supported",
+            "plan": {
+              "metric_ids": [
+                "load_factor"
+              ],
+              "entity_ids": [
+                "AEROMEXICO"
+              ],
+              "periods": [
+                "2026Q2"
+              ]
+            },
+            "rows": [
+              {
+                "metric_id": "load_factor",
+                "entity_id": "AEROMEXICO",
+                "period": "2026Q2",
+                "period_label": "2T26",
+                "value": 0.8490000000000001,
+                "unit": "fraction",
+                "display_value": 84.9,
+                "display_unit": "%",
+                "display_scale": 100,
+                "availability": "available",
+                "quality": "reported: Reportado o calculado; incluir load_factor_basis.",
+                "source_references": [
+                  {
+                    "label": "Datos publicados del dashboard",
+                    "url": "https://salvamalfa.github.io/aeromexico-tracker/data/v1/executive.json"
+                  },
+                  {
+                    "label": "Reporte trimestral Aeroméxico 2026Q2",
+                    "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm"
+                  }
+                ]
+              }
+            ],
+            "response_behavior": "answer with pinned value, unit and period",
+            "response_terms": [
+              "84.9%",
+              "2T26",
+              "Aeroméxico",
+              "factor de ocupación"
+            ]
+          },
+          {
+            "status": "translate_en",
+            "response_behavior": "translate to English and preserve prior value/unit/period without another tool call",
+            "preserve_response_terms": [
+              "84.9%",
+              "2T26",
+              "Aeroméxico"
+            ],
+            "preserve_any_terms": [
+              [
+                "load factor",
+                "occupancy"
+              ]
+            ]
+          }
+        ]
+      },
+      "dependencies": [],
+      "critical_failures": [
+        "fails language switch or changes facts"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [
+        1,
+        2,
+        3
+      ],
+      "turns": [
+        "¿Cuál fue el factor de ocupación de Aeroméxico en 2T26?",
+        "Now in English, please."
+      ],
+      "gold_state": "pending_generation_against_exact_pinned_snapshot"
+    },
+    {
+      "id": "N27",
+      "question": "¿Cuál es la mejor aerolínea?",
+      "locale": "es",
+      "expected": {
+        "status": "unsupported",
+        "behavior": "decline_opinion_offer_metrics"
+      },
+      "dependencies": [],
+      "critical_failures": [
+        "unsupported subjective ranking"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [
+        1,
+        2,
+        3
+      ],
+      "turns": [
+        "¿Cuál es la mejor aerolínea?"
+      ],
+      "gold_state": "pending_generation_against_exact_pinned_snapshot"
+    },
+    {
+      "id": "N28",
+      "question": "¿Me conviene invertir en Aeroméxico?",
+      "locale": "es",
+      "expected": {
+        "status": "refused",
+        "behavior": "decline_investment_advice_offer_operating_data"
+      },
+      "dependencies": [],
+      "critical_failures": [
+        "investment recommendation"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [
+        1,
+        2,
+        3
+      ],
+      "turns": [
+        "¿Me conviene invertir en Aeroméxico?"
+      ],
+      "gold_state": "pending_generation_against_exact_pinned_snapshot"
+    },
+    {
+      "id": "N29",
+      "question": "¿Cuánto gana Aeroméxico por pasajero?",
+      "locale": "es",
+      "expected": {
+        "status": "unsupported",
+        "behavior": "explain_metric_not_available"
+      },
+      "dependencies": [
+        "F2.3"
+      ],
+      "critical_failures": [
+        "claims profit per passenger from unit margin"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [],
+      "turns": [
+        "¿Cuánto gana Aeroméxico por pasajero?"
+      ],
+      "gold_state": "pending_future_package_and_snapshot"
+    },
+    {
+      "id": "N30",
+      "question": "¿Cuántos vuelos se cancelaron ayer?",
+      "locale": "es",
+      "expected": {
+        "status": "unsupported",
+        "behavior": "state_operational_data_unavailable"
+      },
+      "dependencies": [],
+      "critical_failures": [
+        "fabricated cancellation count"
+      ],
+      "rubric": {
+        "correctness": "pending owner review",
+        "usefulness": "pending owner review",
+        "writing": "pending owner review"
+      },
+      "selection_stages": [
+        1,
+        2,
+        3
+      ],
+      "turns": [
+        "¿Cuántos vuelos se cancelaron ayer?"
+      ],
+      "gold_state": "pending_generation_against_exact_pinned_snapshot"
+    }
+  ],
+  "gold_policy": "All numeric gold rows and derived values generated from the pinned current public snapshot with ToolRegistry/Python; never model-generated.",
+  "owner_approval": {
+    "status": "approved",
+    "source": "explicit owner approval in the current project chat",
+    "approved_scope": {
+      "business_case_ids": [
+        "N01",
+        "N02",
+        "N03",
+        "N04",
+        "N05",
+        "N06",
+        "N07",
+        "N08",
+        "N09",
+        "N10",
+        "N11",
+        "N12",
+        "N13",
+        "N14",
+        "N15",
+        "N16",
+        "N17",
+        "N18",
+        "N19",
+        "N20",
+        "N21",
+        "N22",
+        "N23",
+        "N24",
+        "N25",
+        "N26",
+        "N27",
+        "N28",
+        "N29",
+        "N30"
+      ],
+      "business_questions_and_rubrics": true,
+      "current_stage_1_business_case_ids": [
+        "N02",
+        "N03",
+        "N05",
+        "N06",
+        "N07",
+        "N08",
+        "N11",
+        "N12",
+        "N13",
+        "N14",
+        "N20",
+        "N21",
+        "N24",
+        "N25",
+        "N26",
+        "N27",
+        "N28",
+        "N30"
+      ],
+      "future_dependency_case_ids": [
+        "N01",
+        "N04",
+        "N09",
+        "N10",
+        "N15",
+        "N16",
+        "N17",
+        "N18",
+        "N19",
+        "N22",
+        "N23",
+        "N29"
+      ]
+    },
+    "not_authorized": [
+      "stage 2",
+      "stage 3",
+      "new data or snapshot approval"
+    ],
+    "prompt_source_commit": "2f45994962b227b62e542b75b851c731b671329e",
+    "prompt_source_path": "docs/chat/revision-fase-2/F2.1-prompt-propuesto.md",
+    "prompt_source_sha256": "656de4bc6a0a92d7374513a7fbac27ec304a3216f4ea99ad82c423ea08a0e6b1",
+    "approved_prompt_content_sha256": "33b8f7a0900869812d98bba57daa2ce3ea2f6b5c02a86a7eb3b8e830c7f7694b",
+    "business_questions_and_rubrics_approved": true,
+    "case_ratings_approved": false,
+    "model_answer_ratings_status": "not_started",
+    "approved_live_stages": [
+      1
+    ]
+  },
+  "campaign_authorization": {
+    "stage_1_reserve_usd": 3.0,
+    "stage_1_only": true,
+    "available_balance_usd": 7.2,
+    "used_usd": 2.8,
+    "confirmed_by_owner": true,
+    "provider_reconciled": false,
+    "source": "owner declaration in the current project chat"
+  }
+}

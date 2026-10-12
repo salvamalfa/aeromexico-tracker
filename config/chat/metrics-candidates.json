@@ -1,0 +1,177 @@
+{
+  "metadata": {
+    "catalog_version": "chat_business_metrics_candidates_v1",
+    "owner": "Airline Tracker product definition",
+    "review_status": "owner_review_required",
+    "activation_gate": "closed",
+    "note": "Candidate definitions are not part of the active semantic catalog. No value may be returned for these IDs until the owner reviews the definition, source field, units, currency, consolidation basis, and coverage, and the approved data is added to a versioned public payload."
+  },
+  "glossary": [
+    {
+      "term": "ingresos totales",
+      "aliases": [
+        "ingresos",
+        "ventas",
+        "revenue",
+        "total revenue"
+      ],
+      "proposed_metric_id": "total_revenue",
+      "status": "owner_review_required",
+      "resolution": "The current published snapshot exposes RASK (income per ASK-km), not a monetary revenue total. Ask for clarification if the user means unit revenue; otherwise explain that total revenue is not available."
+    },
+    {
+      "term": "costos operativos totales",
+      "aliases": [
+        "costos",
+        "costo operativo",
+        "gastos operativos",
+        "operating costs"
+      ],
+      "proposed_metric_id": "operating_costs",
+      "status": "owner_review_required",
+      "resolution": "The current published snapshot exposes CASK (cost per ASK-km), not a monetary cost total. Do not multiply by ASK unless an approved payload explicitly defines the compatible source and basis."
+    },
+    {
+      "term": "combustible",
+      "aliases": [
+        "gasto de combustible",
+        "fuel expense",
+        "combustible total"
+      ],
+      "proposed_metric_id": "fuel_expense",
+      "status": "owner_review_required",
+      "resolution": "Fuel price and fuel per ASK are not the same as total fuel expense. No approved total fuel expense field is present in the published snapshot."
+    },
+    {
+      "term": "utilidad operativa",
+      "aliases": [
+        "resultado operativo",
+        "operating income",
+        "operating profit"
+      ],
+      "proposed_metric_id": "operating_income",
+      "status": "owner_review_required",
+      "resolution": "Do not substitute unit margin, EBITDAR, or net income. No approved operating income total is present in the published snapshot."
+    },
+    {
+      "term": "pasajeros reportados por la compañía",
+      "aliases": [
+        "pasajeros transportados",
+        "company passengers",
+        "pasajeros de la compañía"
+      ],
+      "active_metric_id": "company_passengers",
+      "status": "existing_owner_approved",
+      "resolution": "Quarterly company reported counts can be summed only across complete quarter coverage. Distinguish this measure from AFAC passengers."
+    },
+    {
+      "term": "pasajeros AFAC",
+      "aliases": [
+        "pasajeros registrados por AFAC",
+        "AFAC passengers"
+      ],
+      "active_metric_id": "afac_passengers",
+      "status": "existing_owner_approved",
+      "resolution": "Use the selected AFAC segment and period. Do not treat this as equivalent to company reported passengers."
+    }
+  ],
+  "candidate_metrics": [
+    {
+      "id": "total_revenue",
+      "label": "Ingresos totales",
+      "unit": {
+        "storage": "currency_amount_usd",
+        "display": "USD",
+        "scale": 1
+      },
+      "grain": "Empresa × trimestre/año calendario",
+      "candidate_source": "data/gold/fact_carrier_metrics.parquet · metric_key=total_revenue; map through carrier_key, period_type, period_id, value_usd and source_file/source_hash.",
+      "published_json_field": null,
+      "gold_coverage": {"AEROMEXICO": "2024Q3–2026Q2 (8 distinct quarters; 2025 annual quarters complete)", "VOLARIS": "2020Q3–2026Q2 (24 distinct quarters; currencies reported as MXN/USD; 2025 complete)", "VIVA_AEROBUS": "2023Q1–2026Q2 (14 quarters; 2025 complete)"},
+      "site_chat_coverage": "none; no total revenue field in data/v1 JSON",
+      "aggregation": "sum_complete_quarters",
+      "approval_status": "owner_review_required",
+      "blocked_reason": "Gold contains candidate extracts but the chat's approved site snapshot does not. Owner review must approve the metric definition, financial source precedence, currency conversion, and a new published JSON projection."
+    },
+    {
+      "id": "operating_costs",
+      "label": "Costos operativos totales",
+      "unit": {
+        "storage": "currency_amount_usd",
+        "display": "USD",
+        "scale": 1
+      },
+      "grain": "Aeroméxico Grupo × trimestre calendario",
+      "candidate_source": "data/gold/fact_carrier_metrics.parquet · metric_key=operating_expenses_total; fields value_usd, period_id, source_file/source_hash.",
+      "published_json_field": null,
+      "gold_coverage": {"AEROMEXICO": "2024Q3–2026Q2 (8 consecutive quarters)"},
+      "site_chat_coverage": "none; no total operating cost field in data/v1 JSON",
+      "aggregation": "sum_complete_quarters",
+      "approval_status": "owner_review_required",
+      "blocked_reason": "Gold candidate is Aeroméxico-only; confirm included expense categories and source provenance before any public chat projection."
+    },
+    {
+      "id": "fuel_expense",
+      "label": "Gasto total de combustible",
+      "unit": {
+        "storage": "currency_amount_usd",
+        "display": "USD",
+        "scale": 1
+      },
+      "grain": "Aeroméxico Grupo × trimestre calendario",
+      "candidate_source": "data/gold/fact_carrier_metrics.parquet · metric_key=jet_fuel_expense; fields value_usd, period_id, source_file/source_hash.",
+      "published_json_field": null,
+      "gold_coverage": {"AEROMEXICO": "2024Q3–2026Q2 (8 consecutive quarters)"},
+      "site_chat_coverage": "none; CASK ex-fuel is a unit ratio, not total fuel expense",
+      "aggregation": "sum_complete_quarters",
+      "approval_status": "owner_review_required",
+      "blocked_reason": "Gold candidate is Aeroméxico-only. Confirm it is a reported expense amount, the USD conversion, and compatibility with total operating expenses before approval."
+    },
+    {
+      "id": "operating_income",
+      "label": "Utilidad operativa",
+      "unit": {
+        "storage": "currency_amount_usd",
+        "display": "USD",
+        "scale": 1
+      },
+      "grain": "Empresa × trimestre/año calendario",
+      "candidate_source": "data/gold/fact_carrier_metrics.parquet · metric_key=operating_income; fields value_usd, period_id, source_system/source_file/source_hash.",
+      "published_json_field": null,
+      "gold_coverage": {"AEROMEXICO": "2024Q3–2026Q2 (8 distinct quarters; 2025 complete)", "VOLARIS": "2020Q3–2026Q2 (24 quarters; reported MXN/USD; 2025 complete)"},
+      "site_chat_coverage": "none; no operating income total field in data/v1 JSON",
+      "aggregation": "sum_complete_quarters",
+      "approval_status": "owner_review_required",
+      "blocked_reason": "Gold coverage is not uniform and includes source differences; confirm accounting definition and prevent confusion with unit margin, EBITDAR, and net income."
+    }
+  ],
+  "published_series_inventory": [
+    {
+      "metric_id": "company_passengers",
+      "label": "Pasajeros reportados en economía unitaria",
+      "published_json_field": "data/v1/executive.json · entities[entity].records[].passengers",
+      "unit": "passengers",
+      "source_scope": "Quarterly company-reported dashboard series; Aeroméxico is Grupo Aeroméxico consolidated.",
+      "coverage_by_entity": {
+        "AEROMEXICO": "2021Q1–2026Q2 (22 quarters)",
+        "VOLARIS": "2022Q4–2026Q2 (15 quarters)",
+        "VIVA_AEROBUS": "2023Q1–2026Q2 (14 quarters)",
+        "INDUSTRY": "2023Q1–2026Q2 (14 quarters)"
+      },
+      "approval_status": "existing_owner_approved_mvp",
+      "aggregation": "sum_complete_quarters"
+    },
+    {
+      "metric_id": "flight_passengers",
+      "label": "Pasajeros reportados en Vuelos",
+      "published_json_field": "data/v1/flights/quarters.json · quarters[].metrics.passengers.value",
+      "unit": "passengers",
+      "source_scope": "Grupo Aeroméxico quarterly SEC series; a distinct published series from executive passengers and AFAC passengers.",
+      "coverage_by_entity": {
+        "AEROMEXICO": "2021Q1–2026Q2 (22 quarters)"
+      },
+      "approval_status": "inventory_not_enabled_for_chat",
+      "aggregation": "sum_complete_quarters"
+    }
+  ]
+}

@@ -1,0 +1,171 @@
+{
+  "schema": "chat_report_candidates_v1",
+  "status": "candidate_closed",
+  "created_at": "2026-10-11",
+  "policy": "These are review candidates from public official reports, not approved evidence. Excerpts are bounded; raw report bytes are not stored. Volaris capture hashes differ from published Gold baselines; identity mismatch is pending review and does not imply restatement.",
+  "records": [
+    {
+      "candidate_id": "aeromexico-2026q1-fuel-attribution",
+      "kind": "report_source_candidate",
+      "company": "Aeroméxico",
+      "period": "2026Q1",
+      "source": {
+        "id": "aeromexico-ir-1q26-results-pdf",
+        "url": "https://ir.aeromexico.com/system/files-encrypted/nasdaq_kms/assets/2026/04/22/13-55-58/Aerom%C3%A9xico%201Q26%20Results.pdf",
+        "sha256": "9cb3aac805f0a69ceb0f58ad28cb8616c4d24f457fbb3cf177f845e87f874548",
+        "captured_at": "2026-10-11",
+        "gold_baseline_sha256": null,
+        "identity_status": "current_public_capture"
+      },
+      "page": 3,
+      "section": "1Q26 Operating Expenses",
+      "excerpt": "The increase was primarily driven by the impact of the Mexican peso’s appreciation on peso-denominated expenses, inflation in wages, salaries, and benefits, increased depreciation and amortization associated with the fleet expansion in 2025, and elevated fuel prices triggered by global geopolitical events since late February.",
+      "review": {
+        "status": "owner_review_required",
+        "receipt": null
+      },
+      "source_format": "pdf",
+      "location_type": "pdf_page_number"
+    },
+    {
+      "candidate_id": "aeromexico-2026q2-fuel-attribution",
+      "kind": "report_source_candidate",
+      "company": "Aeroméxico",
+      "period": "2026Q2",
+      "source": {
+        "id": "aeromexico-ir-2q26-results-pdf",
+        "url": "https://ir.aeromexico.com/static-files/5a9eac4b-5357-4344-8f6d-8548ad608cca",
+        "sha256": "6d5b2e4fa8ea8622cbe6b41b11e4b45e1667d1e30f09254e1a115e54427b09b3",
+        "captured_at": "2026-10-11",
+        "gold_baseline_sha256": null,
+        "identity_status": "current_public_capture"
+      },
+      "page": 3,
+      "section": "2Q26 Operating Expenses",
+      "excerpt": "The increase was primarily driven by elevated fuel costs resulting from global geopolitical events that began in late February, with market prices remaining elevated through the quarter. As a result, fuel expense increased by approximately $219.3 million year-over-year, exceeding our second-quarter guidance by approximately $30 million.",
+      "review": {
+        "status": "owner_review_required",
+        "receipt": null
+      },
+      "source_format": "pdf",
+      "location_type": "pdf_page_number"
+    },
+    {
+      "candidate_id": "aeromexico-2026q2-fuel-expense-metric",
+      "kind": "report_source_candidate",
+      "company": "Aeroméxico",
+      "period": "2026Q2",
+      "source": {
+        "id": "aeromexico-ir-2q26-results-pdf",
+        "url": "https://ir.aeromexico.com/static-files/5a9eac4b-5357-4344-8f6d-8548ad608cca",
+        "sha256": "6d5b2e4fa8ea8622cbe6b41b11e4b45e1667d1e30f09254e1a115e54427b09b3",
+        "captured_at": "2026-10-11",
+        "gold_baseline_sha256": null,
+        "identity_status": "current_public_capture"
+      },
+      "page": 1,
+      "section": "2Q26 Highlights",
+      "excerpt": "Total fuel expense amounted to $493.8 million, a 79.9% year-over-year increase.",
+      "source_format": "pdf",
+      "location_type": "pdf_page_number",
+      "review": {
+        "status": "owner_review_required",
+        "receipt": null
+      }
+    },
+    {
+      "candidate_id": "viva-2026q1-fuel-and-cost-attribution",
+      "kind": "report_source_candidate",
+      "company": "Viva Aerobus",
+      "period": "2026Q1",
+      "source": {
+        "id": "viva-ir-2026q1-earnings-pdf",
+        "url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2026-1T26-en.pdf",
+        "sha256": "9ff9a82afff61477908acd10018be79333210b6dcaa90cabb90bffffa04e8ab7",
+        "captured_at": "2026-10-11",
+        "gold_baseline_sha256": "9ff9a82afff61477908acd10018be79333210b6dcaa90cabb90bffffa04e8ab7",
+        "identity_status": "matches_published_gold_capture"
+      },
+      "page": 1,
+      "section": "CEO message / 1Q26 highlights",
+      "excerpt": "These conditions were compounded by temporary market disruptions in Jalisco and elevated fuel prices that reached US$4.5 per gallon due to geopolitical conflicts, creating additional pressure during a seasonally slower quarter. In response, we proactively reduced capacity to align with the current demand environment, while maintaining the disciplined execution and flexibility that characterizes our ULCC model.",
+      "review": {
+        "status": "owner_review_required",
+        "receipt": null
+      },
+      "source_format": "pdf",
+      "location_type": "pdf_page_number"
+    },
+    {
+      "candidate_id": "viva-2026q2-fuel-environment-attribution",
+      "kind": "report_source_candidate",
+      "company": "Viva Aerobus",
+      "period": "2026Q2",
+      "source": {
+        "id": "viva-ir-2026q2-earnings-pdf",
+        "url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2026-2T26-en.pdf",
+        "sha256": "4fca922642ce3fe06743578064239107539b0546c1519a11abecb0eef098bc7f",
+        "captured_at": "2026-10-11",
+        "gold_baseline_sha256": "4fca922642ce3fe06743578064239107539b0546c1519a11abecb0eef098bc7f",
+        "identity_status": "matches_published_gold_capture"
+      },
+      "page": 1,
+      "section": "CEO message / 2Q26 highlights",
+      "excerpt": "The second quarter was defined by an extraordinarily elevated fuel environment, reflecting the sustained impact of geopolitical disruptions that emerged during the end of the first quarter.",
+      "review": {
+        "status": "owner_review_required",
+        "receipt": null
+      },
+      "source_format": "pdf",
+      "location_type": "pdf_page_number"
+    },
+    {
+      "candidate_id": "volaris-2026q1-economic-fuel-cost",
+      "kind": "report_source_candidate",
+      "company": "Volaris",
+      "period": "2026Q1",
+      "source": {
+        "id": "sec-0001292814-26-002555-ex99-1",
+        "url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281426002555/ex99-1.htm",
+        "sha256": "5f3bc5afad61836db4227fb0ba7c84d901ab550a43cd3e3b8d23c6e5b2777343",
+        "captured_at": "2026-10-11",
+        "gold_baseline_sha256": "5f796fe7b6b49fddb9a9798b223e81862ecd5d5bf5ff81a532ad1874d7d8dd61",
+        "identity_status": "byte_identity_mismatch_pending_review",
+        "baseline_captured_at": "2026-08-24"
+      },
+      "page": 53,
+      "section": "First Quarter Consolidated Financial Highlights",
+      "excerpt": "The average economic fuel cost increased 16.2% to $3.06 per gallon. CASM ex fuel stood at 6.04 cents, despite flying fewer ASMs than planned during the quarter and the impact of a stronger Mexican peso, reflecting the translation of peso-denominated costs into U.S. dollars.",
+      "review": {
+        "status": "owner_review_required",
+        "receipt": null
+      },
+      "source_format": "html_with_embedded_printed_page_markers",
+      "location_type": "html_embedded_printed_page_number"
+    },
+    {
+      "candidate_id": "volaris-2026q2-economic-fuel-cost",
+      "kind": "report_source_candidate",
+      "company": "Volaris",
+      "period": "2026Q2",
+      "source": {
+        "id": "sec-0001292814-26-003836-ex99-1",
+        "url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281426003836/ex99-1.htm",
+        "sha256": "48b82186b9725f95a621f9a103e306cbe9b713ae1c56fbb7cd2e7d5372f7ec76",
+        "captured_at": "2026-10-11",
+        "gold_baseline_sha256": "841076ba42154b82a09c87003383e588dfa197b0e7bfffd32193ca6af94ebbf4",
+        "identity_status": "byte_identity_mismatch_pending_review",
+        "baseline_captured_at": "2026-08-24"
+      },
+      "page": 57,
+      "section": "Second Quarter Consolidated Financial Highlights",
+      "excerpt": "CASM totaled 10.58 cents, up 31.3%. The average economic fuel cost increased 70.0% to $4.18 per gallon. CASM ex fuel stood at 6.75 cents, as anticipated, representing an 18.6% increase.",
+      "review": {
+        "status": "owner_review_required",
+        "receipt": null
+      },
+      "source_format": "html_with_embedded_printed_page_markers",
+      "location_type": "html_embedded_printed_page_number"
+    }
+  ]
+}

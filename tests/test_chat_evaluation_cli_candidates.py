@@ -1,3 +1,5 @@
+"""Offline public CLI contract tests for live candidate selection."""
+
 from __future__ import annotations
 
 import json
@@ -15,7 +17,7 @@ def test_public_live_cli_runs_four_named_candidates_without_network(
 
     fixture = mock_live_holdout_current_versions
     single_case_fixture = {**fixture, "cases": fixture["cases"][:1]}
-    monkeypatch.setattr(evaluation, "load_fixture", lambda: single_case_fixture)
+    monkeypatch.setattr(evaluation, "load_fixture", lambda *_args: single_case_fixture)
     monkeypatch.setattr(evaluation_live, "load_fixture", lambda: single_case_fixture)
     monkeypatch.setenv("CHAT_REASONING_EFFORT", "medium")
     monkeypatch.setenv("CHAT_TEXT_VERBOSITY", "medium")
@@ -32,7 +34,7 @@ def test_public_live_cli_runs_four_named_candidates_without_network(
 
     monkeypatch.setattr(openai_module, "OpenAIProvider", OfflineProvider)
     candidates = ["Luna-M", "Luna-X", "Sol-B", "Sol-M"]
-    args = ["--run", "--opt-in", "--budget-usd", "1", "--models", *candidates, "--snapshot", "site"]
+    args = ["--run", "--opt-in", "--budget-usd", "10", "--models", *candidates, "--snapshot", "site"]
     for candidate in candidates:
         args.extend(["--model-price", f"{candidate}=0.000001:0.000001"])
     output_dir = tmp_path / "public-cli-four-candidates"
@@ -65,7 +67,7 @@ def test_public_live_cli_accepts_full_candidate_settings_and_price_keys(
 
     fixture = mock_live_holdout_current_versions
     single_case_fixture = {**fixture, "cases": fixture["cases"][:1]}
-    monkeypatch.setattr(evaluation, "load_fixture", lambda: single_case_fixture)
+    monkeypatch.setattr(evaluation, "load_fixture", lambda *_args: single_case_fixture)
     monkeypatch.setattr(evaluation_live, "load_fixture", lambda: single_case_fixture)
     seen_configs = []
 
@@ -80,7 +82,7 @@ def test_public_live_cli_accepts_full_candidate_settings_and_price_keys(
 
     monkeypatch.setattr(openai_module, "OpenAIProvider", OfflineProvider)
     candidates = ["gpt-6-luna@high@low", "gpt-6.1-sol@high@low"]
-    args = ["--run", "--opt-in", "--budget-usd", "1", "--models", *candidates, "--snapshot", "site"]
+    args = ["--run", "--opt-in", "--budget-usd", "10", "--models", *candidates, "--snapshot", "site"]
     for candidate in candidates:
         args.extend(["--model-price", f"{candidate}=0.000001:0.000001"])
     output_dir = tmp_path / "public-cli-full-settings"
@@ -102,7 +104,7 @@ def test_public_live_cli_invalid_candidate_fails_before_provider_or_output(
 
     fixture = mock_live_holdout_current_versions
     single_case_fixture = {**fixture, "cases": fixture["cases"][:1]}
-    monkeypatch.setattr(evaluation, "load_fixture", lambda: single_case_fixture)
+    monkeypatch.setattr(evaluation, "load_fixture", lambda *_args: single_case_fixture)
     monkeypatch.setattr(evaluation_live, "load_fixture", lambda: single_case_fixture)
 
     class UnexpectedProvider:
@@ -118,7 +120,7 @@ def test_public_live_cli_invalid_candidate_fails_before_provider_or_output(
                 "--run",
                 "--opt-in",
                 "--budget-usd",
-                "1",
+                "10",
                 "--probe-only",
                 "--models",
                 candidate,

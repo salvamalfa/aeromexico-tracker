@@ -130,16 +130,31 @@ function rowSummary(row: unknown, index: number): HTMLElement {
     return item;
   }
   const metricId = firstString(data, ["metric", "metric_id", "metricId", "metric_label", "metricLabel", "id"]);
+  const calculation = firstString(data, ["calculation"]);
   const metric = metricId ? metrics[metricId] ?? metricLabels.get(metricId.toLocaleLowerCase("es")) : undefined;
   const entityId = firstString(data, ["entity", "entity_id", "entityId", "entity_label", "entityLabel"]);
   const entity = entityId
     ? entities[entityId] ?? entityLabels.get(entityId.toLocaleLowerCase("es"))
     : undefined;
   const period = firstString(data, ["period", "period_id", "periodId"]);
-  const metricName = metric?.label ?? "Métrica sin etiqueta del catálogo";
+  const metricName = metric?.label ?? calculation ?? "Métrica sin etiqueta del catálogo";
   const entityName = entity ?? "Entidad sin etiqueta del catálogo";
-  const value = formatValue(data.value, metric ?? { label: "", unit: "", scale: 1, rounding: 2 });
-  item.textContent = `${metricName} · ${entityName}${period ? ` · ${period}` : ""}: ${value}`;
+  const periods = Array.isArray(data.periods)
+    ? data.periods.filter((period): period is string => typeof period === "string")
+    : [];
+  const periodLabel = period ?? (periods.length ? periods.join(" → ") : null);
+  const value = formatValue(data.value, metric ?? {
+    label: "",
+    unit: data.unit === "percentage_points" ? "pp"
+      : data.unit === "percent" ? "%"
+        : typeof data.unit === "string" ? data.unit : "",
+    scale: 1,
+    rounding: data.unit === "percent" || data.unit === "percentage_points" ? 1 : 2,
+  });
+  const denominator = firstString(data, ["denominator"]);
+  item.textContent = calculation
+    ? `${metricName}${periodLabel ? ` · ${periodLabel}` : ""}: ${value}${denominator ? ` (denominador: ${denominator})` : ""}`
+    : `${metricName} · ${entityName}${periodLabel ? ` · ${periodLabel}` : ""}: ${value}`;
   return item;
 }
 

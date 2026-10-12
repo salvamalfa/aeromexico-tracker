@@ -75,6 +75,16 @@ persistente `/data`. Configuración, variables y verificación están en
 [railway.md](railway.md). El worker vive más que la conexión SSE del navegador
 y reanuda o marca como fallidos los turnos tras un reinicio.
 
+Verificación registrada el 12 de octubre de 2026: Railway reportó `SUCCESS`
+para el despliegue `dd97b38e-383b-48ab-9fab-ca5bf0f78c70` sobre el commit
+`60e741b4b4c70ba2d092061f571b924690afcfcd`; `GET /api/chat/health` respondió
+200 con `gpt-6.1-sol`, esfuerzo `low`, verbosidad `medium`, R1 efectivo
+`439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5` y el
+snapshot registrado en el [reporte de activación](../etapas/chat-f2-0-activacion-20261012.md).
+La verificación fue de estado y health; no envió una pregunta pagada. Este
+registro confirma la configuración F2.0, no calidad de prompt ni activación de
+las capacidades de fase 2.
+
 En el launcher Railway, Uvicorn detiene los nuevos claims antes de esperar las
 conexiones SSE y les da hasta 5 segundos para cerrar. El código permite por
 defecto hasta 8 llamadas de herramienta por turno (`CHAT_MAX_TOOL_CALLS`);
@@ -112,16 +122,46 @@ no admite un límite acumulado de tokens de salida: con Sol 6.1
 (US$2/US$10 por millón) aparta US$2.25 y con Luna (US$0.10/US$0.50) aparta
 US$0.1125, incluyendo la prima de salida de contexto largo (1.5×).
 
-Las tarifas y capacidades se versionan en `config/chat/models.json`. Los
-candidatos aprobados para comparar son `gpt-6-luna` (esfuerzos `medium` y
-`max`) y `gpt-6.1-sol` (`low` y `medium`); los demás niveles documentados por
-modelo también se aceptan al configurar el servicio. `CHAT_REASONING_EFFORT`
-por omisión es `medium`, que es el valor por omisión efectivo de ambos modelos.
-`CHAT_TEXT_VERBOSITY` también usa `medium` por omisión y acepta `low`,
+Las tarifas y capacidades se versionan en `config/chat/models.json`. La
+selección autorizada para el runtime es `gpt-6.1-sol` con
+`CHAT_REASONING_EFFORT=low`. El default del código sigue siendo `medium` si la
+variable no está definida; por eso la activación requiere configurar `low`
+explícitamente y verificarlo en health. Los demás niveles documentados por
+modelo se aceptan para ejecuciones locales de evaluación. El 12 de octubre de
+2026, `/api/chat/health` confirmó `gpt-6.1-sol`, esfuerzo `low`, verbosidad
+`medium`, prompt efectivo `439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`,
+snapshot `d9c4e56d04ad67be5dff6d6e9f7f6615f4f4be985ec1e5ee59781a7735007037`,
+worker activo y admisión habilitada. La verificación no envió una pregunta al
+proveedor; ver el [reporte de activación](../etapas/chat-f2-0-activacion-20261012.md).
+`CHAT_TEXT_VERBOSITY` usa `medium` por omisión y acepta `low`,
 `medium` o `high`. Para modelos del catálogo no hace falta declarar precios en
 el entorno: el servicio usa los valores versionados. Si se conservan
 `CHAT_INPUT_COST_PER_MILLION` o `CHAT_OUTPUT_COST_PER_MILLION`, deben coincidir
 con el modelo elegido; el launcher rechaza discrepancias.
+
+La versión de prompt vigente para el despliegue es `CHAT_PROMPT_VERSION=r1-final`,
+con hash efectivo `439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`.
+Las herramientas nuevas quedan deshabilitadas por omisión. No se deben habilitar
+con el prompt r1; cualquier capacidad adicional requiere un prompt compatible
+aprobado y, cuando corresponda, recibo de aprobación de datos y publicación
+verificada.
+La propuesta r2 (`68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf`)
+no está activa. Seleccionarla requiere `CHAT_PROMPT_VERSION=r2-proposed` y un
+recibo owner versionado mediante `CHAT_PROMPT_APPROVAL_RECEIPT_PATH` y su SHA-256
+en `CHAT_PROMPT_APPROVAL_RECEIPT_SHA256`; sin esos valores el servicio falla
+cerrado. No hay recibo vigente.
+
+Las tres banderas `CHAT_ENABLE_ROUTE_TOOLS`,
+`CHAT_ENABLE_BUSINESS_METRIC_TOOLS` y `CHAT_ENABLE_EVIDENCE_TOOLS` usan `false`
+como default y siguen desactivadas. Rutas y herramientas financieras requieren
+el prompt R2 con recibo válido; las métricas financieras además necesitan su
+proyección pública con recibo ligado a los valores y definiciones. La evidencia
+solo se busca en `config/chat/evidence/approved-index.json`, que permanece
+vacío: cada registro futuro requiere recibo verificable para su contenido
+semántico completo. No actives una bandera al aprobar solamente el prompt, ni
+rellenes el índice antes de aprobar los pasajes. El Dockerfile lleva la
+configuración versionada anidada; el recibo R2 se suministra por configuración
+privada y no se incluye en la imagen.
 
 La capacidad `minimum_reservation_turns_per_day` que muestra `/api/chat/health`
 es un cálculo de admisión: aplica los presupuestos diarios de tokens y dólares

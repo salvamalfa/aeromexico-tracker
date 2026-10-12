@@ -1,8 +1,134 @@
 import { describe, expect, it } from "vitest";
 import { renderSafeMarkdown, safeReferences } from "./markdown";
 import { parseSafeChart } from "./chart";
+import tableCases from "./markdown_table_cases.json";
 
 describe("safe response rendering", () => {
+  it("renders same-turn reference tables and combines labels for duplicate source URLs", () => {
+    const host = document.createElement("div");
+    const market = {
+      display_id: "tabla:market_2026", kind: "table", title: "Participación total, 2T26", value_kind: "estimated",
+      columns: [{ key: "airline", label: "Aerolínea" }, { key: "share", label: "2T26", unit: "fraction" }],
+      rows: [{ airline: "Volaris", share: 0.366615816786413 }, { airline: "Grupo Aeroméxico", share: null }],
+      sources: [
+        { label: "AFAC, estadística mensual, junio 2026", url: "https://www.gob.mx/afac/source" },
+        { label: "AFAC duplicada", url: "https://www.gob.mx/afac/source" },
+      ],
+    };
+    renderSafeMarkdown(host, "Participación: {{tabla:market_2026}}", [], [market]);
+    expect(host.querySelector(".chat-display-kind")?.textContent).toBe("Estimado");
+    expect([...host.querySelectorAll("tbody td")].map((cell) => cell.textContent)).toEqual(["Volaris", "36.7%", "Grupo Aeroméxico", "—"]);
+    expect([...host.querySelectorAll(".chat-display-sources a")].map((link) => link.textContent)).toEqual([
+      "AFAC, estadística mensual, junio 2026 · AFAC duplicada",
+    ]);
+    expect(host.textContent).not.toContain("{{tabla:");
+  });
+
+  it("never renders candidate displays with null or numeric-looking strings", () => {
+    const host = document.createElement("div");
+    for (const value of [null, "100 pasajeros", "$1,200 USD"]) {
+      renderSafeMarkdown(host, "{{tabla:candidate}}", [], [{
+        display_id: "tabla:candidate", kind: "table", title: "Candidato", value_kind: "candidate_unapproved",
+        columns: [{ key: "value", label: "Valor" }], rows: [{ value }], sources: [],
+      }]);
+      expect(host.textContent).toBe("");
+      expect(host.querySelector("table")).toBeNull();
+    }
+  });
+
+  it("keeps verified financial and reporting citations clickable", () => {
+    const host = document.createElement("div");
+    const display = {
+      display_id: "tabla:financial_sources", kind: "table", title: "Resultados", value_kind: "reported",
+      columns: [{ key: "value", label: "Valor" }], rows: [{ value: 1 }],
+      sources: [
+        { label: "Aeroméxico IR", url: "https://ir.aeromexico.com/report-q2.pdf" },
+        { label: "Viva InvestorCloud", url: "https://cdn.investorcloud.net/viva/report-q2.pdf" },
+        { label: "FlightGlobal", url: "https://www.flightglobal.com/news/article.html" },
+        { label: "BMV · miembro ZIP q1.json", url: "https://www.bmv.com.mx/docs-pub/ifrsxbrl/package.zip" },
+        { label: "BMV · miembro ZIP q2.json", url: "https://www.bmv.com.mx/docs-pub/ifrsxbrl/package.zip" },
+        { label: "No verificada", url: "https://example.org/article" },
+      ],
+    };
+    renderSafeMarkdown(host, "{{tabla:financial_sources}}", [], [display]);
+    expect([...host.querySelectorAll<HTMLAnchorElement>(".chat-display-sources a")].map((link) => link.hostname)).toEqual([
+      "ir.aeromexico.com", "cdn.investorcloud.net", "www.flightglobal.com", "www.bmv.com.mx",
+    ]);
+    expect(host.querySelector(".chat-display-sources a:last-child")?.textContent).toBe("BMV · miembro ZIP q1.json · BMV · miembro ZIP q2.json");
+    expect(host.textContent).not.toContain("No verificada");
+  });
+
+  it("labels calculated values and blocks values behind a closed approval gate", () => {
+    const host = document.createElement("div");
+    renderSafeMarkdown(host, "{{tabla:calculated}}", [], [
+      {
+        display_id: "tabla:calculated", kind: "table", title: "Margen unitario", value_kind: "calculated",
+        columns: [{ key: "value", label: "Margen", unit: "USD_cents_per_ASK_km" }], rows: [{ value: 0.43 }], sources: [],
+      },
+    ]);
+    expect(host.querySelector(".chat-display-kind")?.textContent).toBe("Calculado");
+
+    renderSafeMarkdown(host, "{{tabla:blocked}}", [], [
+      {
+        display_id: "tabla:blocked", kind: "table", title: "Candidato", value_kind: "candidate_unapproved",
+        columns: [{ key: "value", label: "Valor" }], rows: [{ value: 100 }], sources: [],
+      },
+    ]);
+    expect(host.querySelector("table")).toBeNull();
+    expect(host.textContent).toBe("");
+  });
+
+  it("keeps mixed metric units beside each value and scales fractions once", () => {
+    const host = document.createElement("div");
+    renderSafeMarkdown(host, "{{tabla:mixed_units}}", [], [{
+      display_id: "tabla:mixed_units", kind: "table", title: "Resultados", value_kind: "mixed",
+      columns: [
+        { key: "metric", label: "Métrica" },
+        { key: "value", label: "Valor" },
+        { key: "unit", label: "Unidad" },
+      ],
+      rows: [
+        { metric: "Margen unitario", value: 0.435, unit: "USD_cents_per_ASK_km" },
+        { metric: "Ingresos", value: 1479, unit: "USD_millions" },
+        { metric: "Factor de ocupación", value: 0.849, unit: "fraction" },
+      ],
+    }]);
+    const rows = [...host.querySelectorAll("tbody tr")].map((row) => [...row.querySelectorAll("td")].map((cell) => cell.textContent));
+    expect(rows).toEqual([
+      ["Margen unitario", "0.435", "¢ USD/ASK-km"],
+      ["Ingresos", "1,479", "millones de USD"],
+      ["Factor de ocupación", "84.9%", "%"],
+    ]);
+  });
+
+  it("removes missing and mismatched display markers without drawing artifacts", () => {
+    const host = document.createElement("div");
+    renderSafeMarkdown(host, "{{tabla:unknown}} {{grafica:unknown}}", [], [
+      { display_id: "tabla:wrong", kind: "table", title: "Tabla", value_kind: "reported", columns: [{ key: "x", label: "X" }], rows: [{ x: 1 }] },
+    ]);
+    expect(host.textContent).toBe("");
+    expect(host.querySelector("table, .chat-answer-chart")).toBeNull();
+  });
+
+  it("splits escaped pipe table cells consistently with the sanitizer", () => {
+    const host = document.createElement("div");
+    renderSafeMarkdown(host, "| Factor \\| ajustado | Valor |\n| --- | ---: |\n| Ocupación | 99.9% |");
+    const cells = [...host.querySelectorAll("th")].map((cell) => cell.textContent);
+    expect(cells).toEqual(["Factor | ajustado", "Valor"]);
+    expect(host.querySelector("tbody td:last-child")?.textContent).toBe("99.9%");
+  });
+
+  it("normalizes the shared server and browser table corpus", () => {
+    for (const testCase of tableCases) {
+      const host = document.createElement("div");
+      renderSafeMarkdown(host, testCase.markdown);
+      const rows = [...host.querySelectorAll("tbody tr")].map((row) =>
+        [...row.querySelectorAll("td")].map((cell) => cell.textContent ?? ""),
+      );
+      expect(rows, testCase.name).toEqual(testCase.rows);
+    }
+  });
+
   it("treats raw HTML as text and permits only safe https markdown links", () => {
     const host = document.createElement("div");
     renderSafeMarkdown(host, `<img src=x onerror=alert(1)> [fuente](https://www.sec.gov/report) [mal](javascript:alert(1)) [phishing](https://www.sec.gov/forged)`, ["https://www.sec.gov/report"]);
@@ -141,6 +267,13 @@ describe("safe response rendering", () => {
     expect(refs.length).toBe(12);
     expect(refs[0]?.url).toBe("https://www.gob.mx/afac/source");
     expect(refs[1]?.url).toBeUndefined();
+  });
+
+  it("merges citation labels by canonical URL", () => {
+    expect(safeReferences([
+      { label: "AFAC", url: "https://www.gob.mx/afac/source" },
+      { label: "AFAC, junio", url: "https://www.gob.mx/afac/source" },
+    ])).toEqual([{ label: "AFAC · AFAC, junio", url: "https://www.gob.mx/afac/source" }]);
   });
 
   it("accepts bounded bar and line chart shapes and rejects arbitrary Plotly options", () => {

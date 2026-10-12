@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from src.conversational_analytics import evaluation, evaluation_live
+from src.conversational_analytics import evaluation_live
 from src.conversational_analytics.evaluation import (
     FIXTURE_PATH,
     approximately_equal,
@@ -130,6 +130,27 @@ def test_response_terms_accept_locale_equivalent_percent_and_quarter_format() ->
     assert any("respuesta sin términos requeridos" in failure for failure in incorrect.failures)
 
 
+def test_supported_gold_rejects_wrong_unit_and_period() -> None:
+    case = json.loads(json.dumps(next(case for case in load_cases() if case["id"] == "es_am_lf_q2")))
+    case["expected"]["rows"][0]["unit"] = "fraction"
+    row = {
+        **case["expected"]["rows"][0],
+        "availability": "available",
+        "source_references": [{"label": "SEC", "url": "https://www.sec.gov/example"}],
+    }
+    for bad_row in ({**row, "unit": "passengers"}, {**row, "period": "2026Q3"}):
+        failed = verify_observation(
+            case,
+            {
+                "status": "supported",
+                "plan": case["expected"]["plan"],
+                "rows": [bad_row],
+                "response": "84.9% in 2026Q2",
+            },
+        )
+        assert not failed.passed
+
+
 def test_dry_run_never_calls_provider_and_exposes_estimates_and_destinations() -> None:
     result = render_dry_run(
         load_cases(), models=["candidate-a", "candidate-b"], prices={"candidate-a": (2.0, 8.0)}
@@ -195,13 +216,17 @@ def test_live_provider_error_writes_private_report_and_stops_without_retry(
     assert FailingProvider.delete_calls == 0
     assert FailingProvider.cancel_calls == 1
     assert len(model["cases"]) == 1
-    assert model["cases"][0]["provider_cancel"] == "attempted"
+    assert model["cases"][0]["provider_cancel"] == "cancelled"
     assert model["cases"][0]["quality"] == {"scored": False, "not_scored_reason": "provider_error"}
     assert model["cases"][0]["error_metadata"] == {
         "exception_types": ["OpenAIProviderError", "AuthenticationError"],
         "http_status": 401,
+        "upstream_exception_type": "AuthenticationError",
+        "upstream_http_status": 401,
     }
-    assert model["quality_summary"]["supported_scored"] == 0
+    assert model["quality_summary"]["numeric_gold_case_count"] == 2
+    assert model["quality_summary"]["numeric_gold_case_passed"] == 0
+    assert model["quality_summary"]["numeric_gold_accuracy"] == 0
     assert model["spent_unknown"] is True
     assert model["estimated_cost_usd"] is None
     assert model["known_estimated_cost_usd"] == 0
@@ -226,6 +251,69 @@ def test_live_provider_error_writes_private_report_and_stops_without_retry(
     assert progress["session_to_reconcile"] == "session-metadata"
     assert "question" not in progress
     assert "response" not in progress
+
+
+def test_live_runner_continues_after_recoverable_error_with_reconciled_usage(
+    monkeypatch, tmp_path, mock_live_holdout_current_versions
+) -> None:
+    from src.conversational_analytics.providers.base import ProviderResult
+    from src.conversational_analytics.providers.openai import OpenAIProviderError
+
+    class Provider:
+        calls = 0
+
+        def __init__(self, _config):
+            pass
+
+        def run_turn(self, *, persist_session, **_kwargs):
+            Provider.calls += 1
+            persist_session(f"session-{Provider.calls}")
+            if Provider.calls == 1:
+                raise OpenAIProviderError(
+                    "temporary upstream failure", usage=(12, 3), upstream_http_status=503
+                )
+            return ProviderResult(
+                content="second case completed",
+                input_tokens=10,
+                output_tokens=2,
+                provider_session_id="session-2",
+                usage_complete=True,
+            )
+
+        def cancel(self, _session_id):
+            return "cancelled"
+
+        def delete(self, _session_id):
+            pass
+
+    monkeypatch.setattr("src.conversational_analytics.providers.openai.OpenAIProvider", Provider)
+    cases = [
+        case
+        for case in mock_live_holdout_current_versions["cases"]
+        if case["expected"]["status"] == "supported"
+    ][:2]
+    report = _live_provider_run(
+        cases=cases,
+        models=["gpt-6-luna@low"],
+        budget_usd=10.0,
+        snapshot_root=Path("site"),
+        prices={"gpt-6-luna@low": (0.10, 0.50)},
+        probe_only=False,
+        output_dir=tmp_path / "private-recoverable-run",
+        continue_after_known_provider_errors=True,
+    )
+
+    model = report["models"][0]
+    assert Provider.calls == 2
+    assert [case["status"] for case in model["cases"]] == [
+        "provider_error_known_usage",
+        "ungraded",
+    ]
+    assert model["cases"][0]["usage_complete"] is True
+    assert model["cases"][0]["estimated_cost_usd"] is not None
+    assert model["cases"][0]["continue_reason"] == "recoverable_http_error_usage_reconciled"
+    assert model["spent_unknown"] is False
+    assert report["run_status"] == "completed"
 
 
 def test_post_cancel_terminal_usage_is_counted_without_scoring_or_continuing(
@@ -293,9 +381,11 @@ def test_post_cancel_terminal_usage_is_counted_without_scoring_or_continuing(
     assert case["model_turn_completed"] is False
     assert case["quality"] == {"scored": False, "not_scored_reason": "provider_error"}
     assert case["error_metadata"]["reason_code"] == "tool_call_limit"
+    assert case["error_metadata"]["provider_turn_id"] == "turn-exact"
+    assert case["session_id"] == "session-exact"
     assert case["input_tokens"] == 35_573
     assert case["output_tokens"] == 208
-    assert case["estimated_cost_usd"] == pytest.approx(0.0036613)
+    assert case["estimated_cost_usd"] == pytest.approx(0.004550625)
     assert case["post_cancel_usage_reconciliation"] == "complete"
     assert model["spent_unknown"] is False
 
@@ -350,8 +440,10 @@ def test_live_tool_validation_error_is_returned_to_provider_like_worker(
     assert CorrectingProvider.tool_error["error"]["code"] == "tool_rejected"
     assert case["tool_calls"][0]["result"]["error"]["code"] == "tool_rejected"
     assert case["status"] == "ungraded"
-    assert case["quality"] == {"scored": False, "not_scored_reason": "no_successful_row_evidence"}
-    assert case["model_turn_completed"] is True
+    assert case["quality"]["scored"] is True
+    assert case["quality"]["passed"] is False
+    assert case["quality"]["automatic_grade_type"] == "numeric_gold"
+    assert case["quality"]["not_scored_reason"] == "no_successful_row_evidence"
 
 
 def test_final_report_write_failure_never_marks_progress_completed(
@@ -380,7 +472,11 @@ def test_final_report_write_failure_never_marks_progress_completed(
     real_writer = evaluation_live._write_private_json
 
     def fail_final_report(path, payload):
-        if path.name.endswith(".json") and not path.name.endswith(".progress.json"):
+        if (
+            path.name.endswith(".json")
+            and not path.name.endswith(".progress.json")
+            and not path.name.endswith(".cases.json")
+        ):
             raise OSError("synthetic private-file failure")
         real_writer(path, payload)
 
@@ -469,55 +565,9 @@ def test_post_result_checkpoint_failure_is_not_recorded_as_provider_error(
     assert progress["active_usage_state"] == "unknown_in_flight"
     assert progress["active_case_id"] == "es_am_lf_q2"
     assert progress["models"][0]["case_count"] == 0
+    assert len(list(output_dir.glob("chat-eval-*.cases.json"))) == 1
     assert not [
-        path for path in output_dir.glob("chat-eval-*.json") if not path.name.endswith(".progress.json")
+        path
+        for path in output_dir.glob("chat-eval-*.json")
+        if not path.name.endswith((".progress.json", ".cases.json"))
     ]
-
-
-@pytest.mark.parametrize(
-    "args",
-    [
-        ["--budget-usd", "nan"],
-        ["--budget-usd", "inf"],
-    ],
-)
-def test_live_cli_rejects_nonfinite_budget_before_runtime(monkeypatch, args) -> None:
-    monkeypatch.setattr(
-        evaluation_live, "_live_provider_run", lambda **kwargs: pytest.fail("runtime invoked")
-    )
-    with pytest.raises(SystemExit) as error:
-        evaluation.main(
-            [
-                "--run",
-                "--opt-in",
-                *args,
-                "--models",
-                "gpt-6-luna",
-                "--model-price",
-                "gpt-6-luna=0.1:0.5",
-                "--probe-only",
-            ]
-        )
-    assert error.value.code == 2
-
-
-@pytest.mark.parametrize("price", ["nan:0.5", "0.1:inf", "0:0.5"])
-def test_live_cli_rejects_nonfinite_or_nonpositive_prices_before_runtime(monkeypatch, price) -> None:
-    monkeypatch.setattr(
-        evaluation_live, "_live_provider_run", lambda **kwargs: pytest.fail("runtime invoked")
-    )
-    with pytest.raises(SystemExit) as error:
-        evaluation.main(
-            [
-                "--run",
-                "--opt-in",
-                "--budget-usd",
-                "1",
-                "--models",
-                "gpt-6-luna",
-                "--model-price",
-                f"gpt-6-luna={price}",
-                "--probe-only",
-            ]
-        )
-    assert error.value.code == 2

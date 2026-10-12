@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "stage": "F2.9-stage-2-closeout",
+  "review": {
+    "dataset_id": "712ac2078dd882e1294214b4e236ce2d9f88917527a25af88d633ed81943f963",
+    "dataset_content_sha256": "89ce49d6db988b61c793e4e70be76290b35243071e0fdebf22d53b73d22c1fab",
+    "ratings_file_sha256": "2c86b8d8493653e0c197d69f9bbd40c7ea82bb7e76f96199353b3df2303e79ec",
+    "rated_response_count": 59,
+    "available_response_slots": 59,
+    "total_response_slots": 60,
+    "unavailable_slots": 1,
+    "ratings": {
+      "correct": 55,
+      "problem": 4,
+      "no_evaluable": 0
+    },
+    "candidate_results": [
+      {"candidate": "gpt-6-luna@medium", "correct": 14, "rated": 14, "available": 14, "slots": 15, "unavailable": 1},
+      {"candidate": "gpt-6-luna@max", "correct": 14, "rated": 15, "available": 15, "slots": 15, "unavailable": 0},
+      {"candidate": "gpt-6.1-sol@low", "correct": 13, "rated": 15, "available": 15, "slots": 15, "unavailable": 0},
+      {"candidate": "gpt-6.1-sol@medium", "correct": 14, "rated": 15, "available": 15, "slots": 15, "unavailable": 0}
+    ]
+  },
+  "owner_choice": {
+    "candidate": "gpt-6.1-sol@low",
+    "decision": "explicitly_selected_by_owner_for_phase_2",
+    "quality_gate_passed": false,
+    "daily_limit_approved": false
+  },
+  "stage2_budget": {
+    "authorized_reserve_usd": 8.0,
+    "estimated_total_spend_usd": 6.130509375,
+    "estimated_operational_remainder_usd": 1.869490625,
+    "invoice_verified": false,
+    "account_balance_read": false
+  },
+  "stage3_plan": {
+    "candidate": "gpt-6.1-sol@low",
+    "case_count": 30,
+    "user_messages_per_candidate": 34,
+    "repetitions": 1,
+    "input_tokens_projected": 1909558,
+    "output_tokens_projected": 9423,
+    "cost_before_margin_usd": 4.86812,
+    "margin_fraction": 0.35,
+    "proposed_reserve_usd": 6.58,
+    "tariff_catalog_pricing_as_of": "2026-10-09",
+    "budget_authorized": false,
+    "provider_calls": 0
+  },
+  "provenance": {
+    "sol_low_stage2_final_report_sha256": "1c547c0d5c8814e194f3da5c52bf97898a042a1e01d5dd5be80391df3f00a0bf",
+    "sol_low_recovered_turn_sha256": "74709aadfb6c255726ebaa6a5f32dafd868abc9d640f489861ed672fa04bf1d6",
+    "sol_low_measured_input_tokens": 842452,
+    "sol_low_measured_output_tokens": 4157,
+    "business_fixture_sha256": "30fc0acfc5d9fee1ffffd3624209712dd8160806dae4d904c4310a8f53537640",
+    "model_catalog_sha256": "9744c985f051c898a8af6e8d3c8766c6885e77d8a13d55b72e30427b15468d4c"
+  },
+  "privacy": {
+    "raw_answers_included": false,
+    "alias_key_included": false,
+    "question_level_ratings_included": false,
+    "reviewer_notes_included": false
+  },
+  "interpretation": [
+    "No 95% quality claim: Sol low has 13/15 correct (86.7%) and Sol medium has 14/15 (93.3%).",
+    "Luna medium is 14/14 among available responses; the fifteenth slot is unavailable and is not counted as correct or incorrect.",
+    "The owner chose Sol low explicitly; this choice does not mean a quality threshold passed.",
+    "The proposed stage-3 reserve is a planning estimate from measured Sol low stage-2 usage scaled from 15 questions to 34 user messages, priced at the cache-write input rate and full output rate, then increased by 35% and rounded up to cents.",
+    "A new owner-approved budget and refreshed preflight are required after F2.3–F2.8 integration; no stage-3 calls are authorized here."
+  ]
+}
