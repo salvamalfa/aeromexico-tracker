@@ -6,6 +6,7 @@ import json
 from typing import Any
 
 MAX_SHARED_ROUTE_RESULT_BYTES = 15_000
+MAX_PRESENTED_SHARED_ROUTE_RESULT_BYTES = 15_652
 
 
 def build_shared_display(
@@ -17,11 +18,19 @@ def build_shared_display(
     carrier_metadata: dict[str, dict[str, Any]],
 ) -> tuple[list[dict[str, str]], list[dict[str, Any]]]:
     """Keep comparability and each carrier's provenance beside displayed values."""
-    columns = [
-        {"key": "market_key", "label": "Ruta"},
-        {"key": "combined_value", "label": "Total combinado", "unit": unit},
-        {"key": "value_kind", "label": "Tipo de valor"},
-    ]
+    # Three carrier values each need a value, kind and source column. Keep the
+    # table within the presentation contract's 12-column limit by omitting
+    # aggregate and coverage-summary columns; those details remain in the raw
+    # result metadata.
+    compact_display = len(entity_ids) == 3
+    columns = [{"key": "market_key", "label": "Ruta"}]
+    if not compact_display:
+        columns.extend(
+            [
+                {"key": "combined_value", "label": "Total combinado", "unit": unit},
+                {"key": "value_kind", "label": "Tipo de valor"},
+            ]
+        )
     for entity_id in entity_ids:
         columns.extend(
             [
@@ -34,24 +43,30 @@ def build_shared_display(
         [
             {"key": "comparable", "label": "Comparable"},
             {"key": "comparability_reason", "label": "Motivo"},
-            {"key": "coverage_summary", "label": "Cobertura por aerolínea"},
         ]
     )
+    if not compact_display:
+        columns.append({"key": "coverage_summary", "label": "Cobertura por aerolínea"})
     display_rows = []
     for row in rows:
         display_row = {
             "market_key": row["market_key"],
-            "combined_value": row["combined_value"],
-            "value_kind": row["value_kind"],
             "comparable": row["comparable"],
             "comparability_reason": "; ".join(row["comparability_reason"]) or None,
-            "coverage_summary": "; ".join(
-                f"{_coverage_label(entity_id)} "
-                f"{len(coverage[entity_id]['observed_months'])}/"
-                f"{len(coverage[entity_id]['expected_months'])}"
-                for entity_id in entity_ids
-            ),
         }
+        if not compact_display:
+            display_row.update(
+                {
+                    "combined_value": row["combined_value"],
+                    "value_kind": row["value_kind"],
+                    "coverage_summary": "; ".join(
+                        f"{_coverage_label(entity_id)} "
+                        f"{len(coverage[entity_id]['observed_months'])}/"
+                        f"{len(coverage[entity_id]['expected_months'])}"
+                        for entity_id in entity_ids
+                    ),
+                }
+            )
         for entity_id, carrier in row["carriers"].items():
             display_row[f"{entity_id}_value"] = carrier["value"]
             display_row[f"{entity_id}_value_kind"] = carrier["value_kind"]
@@ -88,7 +103,14 @@ def bound_shared_result(
         result["truncated"] = len(rows) < available_count
         result["display"]["title"] = f"{title_base} · {len(rows)} de {available_count} mostradas"
         encoded = json.dumps(result, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
-        if len(encoded.encode("utf-8")) <= MAX_SHARED_ROUTE_RESULT_BYTES:
+        presented = {**result, "displays": [result["display"]]}
+        presented_encoded = json.dumps(
+            presented, ensure_ascii=False, allow_nan=False, separators=(",", ":")
+        )
+        if (
+            len(encoded.encode("utf-8")) <= MAX_SHARED_ROUTE_RESULT_BYTES
+            and len(presented_encoded.encode("utf-8")) <= MAX_PRESENTED_SHARED_ROUTE_RESULT_BYTES
+        ):
             return result
         if not rows:
             raise ValueError("shared-route metadata exceeds the tool result budget")
