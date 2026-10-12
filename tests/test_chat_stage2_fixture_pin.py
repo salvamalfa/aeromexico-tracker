@@ -12,11 +12,11 @@ ROOT = Path(__file__).resolve().parents[1]
 APPROVED_FIXTURE = ROOT / "tests/fixtures/chat_evals/f2_9_stage2.json"
 
 
-def _args(fixture: Path, tmp_path: Path) -> Namespace:
+def _args(fixture: Path, tmp_path: Path, snapshot: Path | None = None) -> Namespace:
     return Namespace(
         fixture=fixture,
         prompt_proposed=evaluate_campaign.DEFAULT_STAGE2_PROMPT_PATH,
-        snapshot=ROOT / "site",
+        snapshot=snapshot or ROOT / "site",
         max_message_chars=8_000,
         max_tool_result_bytes=16_000,
         max_turn_seconds=180,
@@ -32,8 +32,12 @@ def test_approved_fixture_completes_offline_preflight_from_an_external_copy(
     external_fixture = tmp_path / "same-approved-content.json"
     external_fixture.write_bytes(APPROVED_FIXTURE.read_bytes())
     monkeypatch.setattr(evaluate_campaign, "_verify_private_destination", lambda *a, **k: None)
+    from tests._trusted_site import copy_origin_master_site
+    baseline = copy_origin_master_site(tmp_path / "trusted-baseline")
 
-    plan, runs, cases, _, _, _ = evaluate_campaign.prepare(_args(external_fixture, tmp_path))
+    plan, runs, cases, _, _, _ = evaluate_campaign.prepare(
+        _args(external_fixture, tmp_path, snapshot=baseline)
+    )
 
     assert plan["fixture_file_sha256"] == evaluate_campaign.APPROVED_STAGE2_FIXTURE_SHA256
     assert plan["fixture_source"] == "external"
