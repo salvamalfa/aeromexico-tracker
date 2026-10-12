@@ -18,7 +18,11 @@ EXPECTED_CASE_HASH = "30fc0acfc5d9fee1ffffd3624209712dd8160806dae4d904c4310a8f53
 @lru_cache(maxsize=1)
 def _current_payload_metrics() -> tuple[int, int, int]:
     # Keep the generated matrix tied to the same deterministic offline derivation as the budget.
-    from scripts.chat.prepare_final_campaign import DEFAULT_PROFILE, build_plan
+    try:
+        from scripts.chat.prepare_final_campaign import DEFAULT_PROFILE, build_plan
+    except ModuleNotFoundError:
+        # Direct script execution places scripts/chat on sys.path instead of the repository root.
+        from prepare_final_campaign import DEFAULT_PROFILE, build_plan
 
     context = build_plan(profile_path=DEFAULT_PROFILE)["projection"]["context_delta"]
     return (
