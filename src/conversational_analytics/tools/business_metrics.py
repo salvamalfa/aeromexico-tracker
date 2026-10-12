@@ -362,6 +362,12 @@ def deterministic_query(
                     "conflicting_periods": sorted(basis_by_period),
                 }
             )
+        elif metric_id == "load_factor" and aggregate["availability"] == "available":
+            # Executive payloads store load factor as a fraction (0.849); this
+            # tool declares percent, so scale the weighted result and its
+            # weighted numerator exactly once at the output boundary.
+            aggregate["value"] *= 100
+            aggregate["numerator_sum"] *= 100
         field_unit = "percent" if metric_id == "load_factor" else "cents_usd_per_ask_km"
         return {
             "metric_id": metric_id,
