@@ -23,6 +23,8 @@
 !config/
 !config/chat/
 !config/chat/*.yaml
+!config/chat/models.json
+!config/chat/system_prompt.txt
 !contracts/
 !contracts/chat/
 !contracts/chat/semantic.schema.json

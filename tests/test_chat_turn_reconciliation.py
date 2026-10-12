@@ -12,8 +12,18 @@ from src.conversational_analytics.storage import ChatStore
 
 def failed_provider_turn(tmp_path: Path) -> tuple[ChatStore, dict, dict]:
     store = ChatStore(tmp_path / "chat.sqlite3")
-    conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1")
-    turn, _ = store.submit_turn("alice", conversation["id"], "private question", "client-1", {})
+    settings = {
+        "model": "gpt-6-luna",
+        "reasoning_effort": "low",
+        "text_verbosity": "medium",
+        "provider": "openai",
+    }
+    conversation = store.create_conversation(
+        "alice", "snapshot-v1", "semantic-v1", **settings
+    )
+    turn, _ = store.submit_turn(
+        "alice", conversation["id"], "private question", "client-1", {}, **settings
+    )
     assert store.claim_turn()
     store.set_provider_session(conversation["id"], "session-existing")
     store.set_provider_turn(turn["id"], "provider-turn-existing")
@@ -30,6 +40,10 @@ def apply(store: ChatStore, conversation: dict, turn: dict) -> bool:
         semantic_version="semantic-v1",
         provider_session_id="session-existing",
         provider_turn_id="provider-turn-existing",
+        provider="openai",
+        model="gpt-6-luna",
+        reasoning_effort="low",
+        text_verbosity="medium",
         content="Private recovered answer.",
         payload={"references": []},
         input_tokens=40,
@@ -76,8 +90,14 @@ def test_reconciled_sse_event_keeps_provider_ids_private(tmp_path: Path):
 
     app = create_app(config, snapshot=Snapshot(), provider=object(), start_worker=False)
     store = app.state.chat_store
-    conversation = store.create_conversation("local", "snapshot-v1", "semantic-v1")
-    turn, _ = store.submit_turn("local", conversation["id"], "private question", "client-1", {})
+    settings = {
+        "model": "gpt-6-luna",
+        "reasoning_effort": "low",
+        "text_verbosity": "medium",
+        "provider": "openai",
+    }
+    conversation = store.create_conversation("local", "snapshot-v1", "semantic-v1", **settings)
+    turn, _ = store.submit_turn("local", conversation["id"], "private question", "client-1", {}, **settings)
     assert store.claim_turn()
     store.set_provider_session(conversation["id"], "session-private-recovery")
     store.set_provider_turn(turn["id"], "provider-turn-private-recovery")
@@ -91,6 +111,10 @@ def test_reconciled_sse_event_keeps_provider_ids_private(tmp_path: Path):
         semantic_version="semantic-v1",
         provider_session_id="session-private-recovery",
         provider_turn_id="provider-turn-private-recovery",
+        provider="openai",
+        model="gpt-6-luna",
+        reasoning_effort="low",
+        text_verbosity="medium",
         content="Private recovered answer.",
         payload={"references": []},
         input_tokens=40,
@@ -187,6 +211,10 @@ def test_reconcile_fences_unknown_identity_later_turn_and_concurrent_apply(tmp_p
         semantic_version="semantic-v1",
         provider_session_id="session-existing",
         provider_turn_id="provider-turn-existing",
+        provider="openai",
+        model="gpt-6-luna",
+        reasoning_effort="low",
+        text_verbosity="medium",
         content="Private recovered answer.",
         payload={},
         input_tokens=40,

@@ -15,10 +15,14 @@ stay in the server environment. The default has no paid provider calls.
 ## HTTP contract
 
 - `GET /api/chat/health` reports service, worker, provider name, admission flag,
-  auth mode (`local` or `password`) and snapshot version. It is public in
-  password mode and does not report secret readiness.
+  auth mode (`local` or `password`) and snapshot version. OpenAI mode also
+  reports the selected model, reasoning effort, text verbosity and the number
+  of minimum reservations that fit the configured daily budgets. It is public
+  in password mode and does not report secret readiness.
 - `POST /api/chat/login` / `POST /api/chat/logout`: see password mode below.
-- `POST /api/chat/conversations` returns `{id,snapshot_version,semantic_version,created_at}`.
+- `POST /api/chat/conversations` returns the pinned data, semantic and model
+  settings. OpenAI turns also record model, effort and verbosity in SQLite and
+  in the conversation response.
 - `GET /api/chat/conversations/{id}` returns the pinned versions, visible
   messages, and turn states. Ownership is checked on every request.
 - `DELETE /api/chat/conversations/{id}` cancels active work, requests provider
@@ -75,5 +79,8 @@ retention with the corresponding `CHAT_*` environment variables.
 
 Conversations are pinned to data and semantic versions. If either changes,
 existing conversations remain readable but new turns fail with a clear version
-conflict. A provider call interrupted by process restart is marked failed, its
-session is canceled/deleted, and that ambiguous turn is never replayed.
+conflict. OpenAI conversations also pin model, effort and verbosity; existing
+conversations without these settings, or after a setting changes, remain
+readable but require a new conversation before another question. A provider
+call interrupted by process restart is marked failed, its session is
+canceled/deleted, and that ambiguous turn is never replayed.

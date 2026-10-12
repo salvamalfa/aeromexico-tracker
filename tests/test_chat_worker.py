@@ -69,9 +69,22 @@ def test_worker_persists_tool_answer_events_and_usage(tmp_path: Path):
 
 def test_worker_queues_retired_provider_session_after_persisting_replacement(tmp_path: Path):
     store = ChatStore(tmp_path / "chat.sqlite3")
-    conv = store.create_conversation("alice", "snapshot-v1", "semantic-v1")
+    settings = {
+        "provider": "openai",
+        "model": "gpt-6.1-sol",
+        "reasoning_effort": "low",
+        "text_verbosity": "medium",
+    }
+    conv = store.create_conversation("alice", "snapshot-v1", "semantic-v1", **settings)
     store.set_provider_session(conv["id"], "session-old")
-    turn, _ = store.submit_turn("alice", conv["id"], "ask", "client-1", {})
+    turn, _ = store.submit_turn(
+        "alice",
+        conv["id"],
+        "ask",
+        "client-1",
+        {},
+        **{key: settings[key] for key in ("model", "reasoning_effort", "text_verbosity", "provider")},
+    )
     claim = store.claim_turn()
 
     class SessionMigratingProvider(DeterministicProvider):
@@ -86,7 +99,16 @@ def test_worker_queues_retired_provider_session_after_persisting_replacement(tmp
 
     worker = TurnWorker(
         store,
-        ChatConfig(state_path=tmp_path / "chat.sqlite3"),
+        ChatConfig(
+            state_path=tmp_path / "chat.sqlite3",
+            provider="openai",
+            model="gpt-6.1-sol",
+            reasoning_effort="low",
+            text_verbosity="medium",
+            openai_enabled=True,
+            estimated_input_cost_per_million=2.0,
+            estimated_output_cost_per_million=10.0,
+        ),
         SessionMigratingProvider(),
         Snapshot(),
     )

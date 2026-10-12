@@ -30,7 +30,7 @@ from openai.types.beta.agent_session_turn_output_text_done_event import AgentSes
 from openai.types.beta.agents.sessions.turn import Turn  # noqa: E402
 
 from src.conversational_analytics.providers.openai import OpenAIProvider, OpenAIProviderError  # noqa: E402
-from src.conversational_analytics.providers._openai_helpers import SYSTEM_INSTRUCTIONS  # noqa: E402
+from src.conversational_analytics.providers._openai_prompt import SYSTEM_INSTRUCTIONS  # noqa: E402
 from src.conversational_analytics.providers._openai_session_version import INSTRUCTIONS_FINGERPRINT_KEY  # noqa: E402
 from src.conversational_analytics.tools.registry import ToolRegistry  # noqa: E402
 
@@ -364,7 +364,7 @@ def test_creates_none_session_with_explicit_model_tools_and_live_context_envelop
             ]
         )
     )
-    provider = _provider(FakeClient(fake))
+    provider = _provider(FakeClient(fake), reasoning_effort="max", text_verbosity="low")
 
     result, events, saved = _run(provider)
 
@@ -374,6 +374,8 @@ def test_creates_none_session_with_explicit_model_tools_and_live_context_envelop
         INSTRUCTIONS_FINGERPRINT_KEY: hashlib.sha256(SYSTEM_INSTRUCTIONS.encode("utf-8")).hexdigest()
     }
     assert request["agent"]["model"] == "model-explicit"
+    assert request["agent"]["reasoning"] == {"effort": "max"}
+    assert request["agent"]["text"] == {"verbosity": "low"}
     assert len(request["agent"]["tools"]) == 7
     assert {tool["name"] for tool in request["agent"]["tools"]} == {
         "get_data_catalog",

@@ -40,12 +40,31 @@ def _run_declared_terminal_failure(
             return original_add_event(turn_id, event_type, data)
 
         store.add_event = fail_failure_event
-    conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1")
-    turn, _ = store.submit_turn("alice", conversation["id"], "ask", "client-1", {})
+    settings = {
+        "model": "gpt-6-luna",
+        "reasoning_effort": "low",
+        "text_verbosity": "medium",
+        "provider": "openai",
+    }
+    conversation = store.create_conversation(
+        "alice", "snapshot-v1", "semantic-v1", **settings
+    )
+    turn, _ = store.submit_turn(
+        "alice", conversation["id"], "ask", "client-1", {}, **settings
+    )
     claim = store.claim_turn()
+    config = ChatConfig(
+        state_path=state_path,
+        provider="openai",
+        model="gpt-6-luna",
+        reasoning_effort="low",
+        text_verbosity="medium",
+        estimated_input_cost_per_million=0.1,
+        estimated_output_cost_per_million=0.5,
+    )
     worker = TurnWorker(
         store,
-        ChatConfig(state_path=state_path, provider="openai"),
+        config,
         Provider(),
         SimpleNamespace(version="snapshot-v1", semantic_version="semantic-v1", catalog=lambda: {}),
     )
@@ -117,6 +136,10 @@ def test_declared_terminal_failure_blocks_cli_recovery_and_keeps_confirmed_usage
         semantic_version="semantic-v1",
         provider_session_id="session-private-terminal",
         provider_turn_id="turn-private-terminal",
+        provider="openai",
+        model="gpt-6-luna",
+        reasoning_effort="low",
+        text_verbosity="medium",
         content="A later provider GET might say completed.",
         payload={},
         input_tokens=900,
@@ -164,6 +187,10 @@ def test_failure_marker_write_error_uses_non_reconcilable_code_and_keeps_usage(
         semantic_version="semantic-v1",
         provider_session_id="session-private-terminal",
         provider_turn_id="turn-private-terminal",
+        provider="openai",
+        model="gpt-6-luna",
+        reasoning_effort="low",
+        text_verbosity="medium",
         content="A later provider GET might say completed.",
         payload={},
         input_tokens=900,

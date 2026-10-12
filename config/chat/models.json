@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "source": "https://developers.openai.com/api/docs/models/",
+  "models": {
+    "gpt-6-luna": {
+      "source": "https://developers.openai.com/api/docs/models/gpt-6-luna",
+      "reasoning_efforts": [
+        "none",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "text_verbosity": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "input_usd_per_million": 0.1,
+      "cached_input_usd_per_million": 0.01,
+      "cache_write_usd_per_million": 0.125,
+      "output_usd_per_million": 0.5,
+      "long_context_threshold_input_tokens": 272000,
+      "long_context_input_multiplier": 2.0,
+      "long_context_output_multiplier": 1.5,
+      "cache_write_input_multiplier": 1.25,
+      "pricing_as_of": "2026-10-09"
+    },
+    "gpt-6.1-sol": {
+      "source": "https://developers.openai.com/api/docs/models/gpt-6.1-sol",
+      "reasoning_efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "text_verbosity": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "input_usd_per_million": 2.0,
+      "cached_input_usd_per_million": 0.1,
+      "cache_write_usd_per_million": 2.5,
+      "output_usd_per_million": 10.0,
+      "long_context_threshold_input_tokens": 272000,
+      "long_context_input_multiplier": 2.0,
+      "long_context_output_multiplier": 1.5,
+      "cache_write_input_multiplier": 1.25,
+      "pricing_as_of": "2026-10-09"
+    }
+  }
+}

@@ -120,3 +120,26 @@ recuperación ni vuelvas a enviarla sin pedido explícito del dueño.
 La [validación real](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/chat-mvp/airline-tracker-validacion-real-20261004.md) y la
 [guía de Data Sharing](data-sharing.md) detallan resultados, cobertura y
 límites diarios y la importación del consumo de evaluaciones.
+
+## F2.0 · Modelo y esfuerzo fijados
+
+La configuración versionada en [`../../config/chat/models.json`](../../config/chat/models.json)
+define capacidades y precios de `gpt-6-luna` y `gpt-6.1-sol`. El servicio
+valida `CHAT_REASONING_EFFORT` y `CHAT_TEXT_VERBOSITY`, los envía explícitamente
+al crear una sesión Agents API y registra modelo, esfuerzo y verbosidad en
+SQLite para cada turno. `/api/chat/health` reporta la selección y el número
+teórico de reservas mínimas que cabe bajo los topes configurados. El cálculo no
+es una cota de facturación porque no hay límite de salida acumulado que cubra
+un turno de hasta 16 herramientas; consulta [operaciones](operations.md).
+
+El dueño eligió `gpt-6.1-sol` con esfuerzo `low` y aprobó el prompt evaluado en
+F2.9 etapa 2. Tras desplegar, Railway debe usar
+`CHAT_REASONING_EFFORT=low`; hasta verificarlo, modelo, esfuerzo y prompt aún
+no están activos. La fuente versionada del prompt tiene SHA-256
+`33b8f7a0900869812d98bba57daa2ce3ea2f6b5c02a86a7eb3b8e830c7f7694b`; el texto
+efectivo que suma la regla de periodo evaluada tiene SHA-256
+`439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`, que
+reportará `/api/chat/health`. Se conservan los topes actuales. Las conversaciones
+OpenAI existentes requieren una nueva conversación para aplicar cambios de
+configuración. El default local sigue siendo `CHAT_MAX_TOOL_CALLS=8`; producción
+documenta 16. No se ejecutaron consultas de pago.

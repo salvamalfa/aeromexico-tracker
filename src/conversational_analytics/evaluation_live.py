@@ -8,11 +8,18 @@ import os
 import tempfile
 import threading
 import time
-from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from ._evaluation_live_candidates import (
+    candidate_config,
+    candidate_configs,
+    validate_live_candidates,
+)
+from ._evaluation_live_candidates import (
+    progress_payload as _progress_payload,
+)
 from .data.snapshot import Snapshot
 from .evaluation import load_fixture
 from .evaluation_live_scoring import score_live_case
@@ -42,8 +49,6 @@ _SAFE_HTTP_STATUSES = frozenset({400, 401, 403, 404, 408, 409, 413, 422, 425, 42
 _SAFE_REASON_CODES = frozenset({"tool_call_limit", "turn_timeout", "tool_result_limit"})
 _RESERVATION_INPUT_TOKENS_PER_CASE_FLOOR = 140_000
 _RESERVATION_OUTPUT_TOKENS_PER_CASE_FLOOR = 10_000
-
-
 class _CheckpointWriteError(RuntimeError):
     """A private checkpoint failure must not be reclassified as provider failure."""
 
@@ -115,53 +120,6 @@ def _write_private_json(path: Path, payload: dict[str, Any]) -> None:
             temporary_path.unlink()
 
 
-def _progress_payload(report: dict[str, Any], state: dict[str, Any]) -> dict[str, Any]:
-    """Build a safe progress summary; never copy prompts or model responses."""
-    usage_unknown = state.get("active_usage_state") in {"unknown", "unknown_in_flight"} or any(
-        model["spent_unknown"] for model in report["models"]
-    )
-    known_spend = state["known_estimated_spend_usd"]
-    models = []
-    for model in report["models"]:
-        cases = model["cases"]
-        models.append(
-            {
-                "model": model["model"],
-                "case_count": len(cases),
-                "completed_turn_count": sum(bool(case.get("model_turn_completed")) for case in cases),
-                "provider_error_count": sum(case.get("status") == "provider_error" for case in cases),
-                "estimated_cost_usd": None if model["spent_unknown"] else model["known_estimated_cost_usd"],
-                "known_estimated_cost_usd": model["known_estimated_cost_usd"],
-                "spent_unknown": model["spent_unknown"],
-                "stopped_reason": model.get("stopped_reason"),
-            }
-        )
-    return {
-        "mode": report["mode"],
-        "created_at_utc": report["created_at_utc"],
-        "data_version": report["data_version"],
-        "semantic_version": report["semantic_version"],
-        "candidate_models": report["candidate_models"],
-        "output_path": report["output_path"],
-        "progress_path": report["progress_path"],
-        "budget_usd_operational_stop": report["budget_usd_operational_stop"],
-        "estimated_spend_usd": None if usage_unknown else known_spend,
-        "known_estimated_spend_usd": known_spend,
-        "remaining_estimated_budget_usd": (
-            None if usage_unknown else max(0.0, report["budget_usd_operational_stop"] - known_spend)
-        ),
-        "status": state["status"],
-        "current_model": state.get("current_model"),
-        "active_case_id": state.get("active_case_id"),
-        "active_session_id": state.get("active_session_id"),
-        "session_to_reconcile": state.get("session_to_reconcile"),
-        "active_usage_state": state.get("active_usage_state"),
-        "last_error_metadata": state.get("last_error_metadata"),
-        "models": models,
-        "note": "Resumen de progreso sin preguntas, respuestas, argumentos ni filas del proveedor.",
-    }
-
-
 def _nearest_rank_percentile(values: list[float], percentile: float) -> float | None:
     if not values:
         return None
@@ -172,7 +130,7 @@ def _nearest_rank_percentile(values: list[float], percentile: float) -> float | 
 def _live_provider_run(
     *,
     cases: list[dict[str, Any]],
-    models: list[str],
+    models: list[Any],
     budget_usd: float,
     snapshot_root: Path,
     prices: dict[str, tuple[float, float]],
@@ -190,15 +148,14 @@ def _live_provider_run(
     from .providers.openai import OpenAIProvider
     from .tools.registry import ToolRegistry
 
-    if not math.isfinite(budget_usd) or budget_usd <= 0 or budget_usd > 10:
-        raise ValueError("el presupuesto debe ser finito, positivo y no superar US$10")
-    if len(models) not in (1, 2, 3):
-        raise ValueError("se permite una sonda con 1 modelo o una comparación de 2–3 modelos")
-    if set(prices) != set(models) or any(
-        not math.isfinite(amount) or amount <= 0 for pair in prices.values() for amount in pair
-    ):
-        raise ValueError("cada candidato requiere precios finitos y positivos de entrada/salida")
     runtime_config = ChatConfig.from_env()
+    candidates = validate_live_candidates(
+        models=models,
+        prices=prices,
+        budget_usd=budget_usd,
+        default_effort=runtime_config.reasoning_effort,
+        default_verbosity=runtime_config.text_verbosity,
+    )
     snapshot = Snapshot(snapshot_root)
     expected_versions = load_fixture()["expected_versions"]
     if (
@@ -209,9 +166,7 @@ def _live_provider_run(
             "El snapshot o catálogo semántico no coincide con las versiones fijadas en el holdout"
         )
     registry = ToolRegistry(snapshot)
-    metric_dimensions = {
-        metric["id"]: metric["dimensions"] for metric in registry.catalog()["metrics"]
-    }
+    metric_dimensions = {metric["id"]: metric["dimensions"] for metric in registry.catalog()["metrics"]}
     selected = [next(case for case in cases if case["id"] == "es_am_lf_q2")] if probe_only else cases
     output_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
     os.chmod(output_dir, 0o700)
@@ -224,6 +179,8 @@ def _live_provider_run(
         "data_version": snapshot.version,
         "semantic_version": snapshot.semantic_version,
         "candidate_models": models,
+        "candidate_ids": [candidate["candidate_id"] for candidate in candidates],
+        "candidate_configs": candidate_configs(candidates),
         "budget_usd_operational_stop": budget_usd,
         "budget_guaranteed": False,
         "max_tool_calls_per_turn": runtime_config.max_tool_calls,
@@ -243,6 +200,9 @@ def _live_provider_run(
         "status": "starting",
         "known_estimated_spend_usd": 0.0,
         "current_model": None,
+        "current_candidate_id": None,
+        "current_reasoning_effort": None,
+        "current_text_verbosity": None,
         "active_case_id": None,
         "active_session_id": None,
         "session_to_reconcile": None,
@@ -258,20 +218,28 @@ def _live_provider_run(
 
     estimated_total_usd = 0.0
     stop_all = False
-    for model in models:
+    for candidate in candidates:
         if stop_all:
             break
-        progress_state.update(status="running", current_model=model)
-        input_rate, output_rate = prices[model]
-        config = replace(
-            runtime_config,
-            provider="openai",
-            model=model,
-            openai_enabled=True,
+        model = candidate["model"]
+        candidate_id = candidate["candidate_id"]
+        reasoning_effort = candidate["reasoning_effort"]
+        text_verbosity = candidate["text_verbosity"]
+        progress_state.update(
+            status="running",
+            current_candidate_id=candidate_id,
+            current_model=model,
+            current_reasoning_effort=reasoning_effort,
+            current_text_verbosity=text_verbosity,
         )
+        input_rate, output_rate = prices[candidate["price_key"]]
+        config = candidate_config(runtime_config, candidate)
         provider = None
         model_report: dict[str, Any] = {
+            "candidate_id": candidate_id,
             "model": model,
+            "reasoning_effort": reasoning_effort,
+            "text_verbosity": text_verbosity,
             "input_price_usd_per_million": input_rate,
             "output_price_usd_per_million": output_rate,
             "cached_input_price": "unknown/not applied",
@@ -323,6 +291,10 @@ def _live_provider_run(
                 model_report["cases"].append(
                     {
                         "case_id": case["id"],
+                        "candidate_id": candidate_id,
+                        "model": model,
+                        "reasoning_effort": reasoning_effort,
+                        "text_verbosity": text_verbosity,
                         "status": "application_context_rejected",
                         "error": str(exc),
                         "provider_calls": 0,
@@ -333,7 +305,10 @@ def _live_provider_run(
                 continue
             progress_state.update(
                 status="running",
+                current_candidate_id=candidate_id,
                 current_model=model,
+                current_reasoning_effort=reasoning_effort,
+                current_text_verbosity=text_verbosity,
                 active_case_id=case["id"],
                 active_session_id=None,
                 active_usage_state="unknown_in_flight",
@@ -396,6 +371,10 @@ def _live_provider_run(
                 actual_plan = observation["plan"]
                 case_record = {
                     "case_id": case["id"],
+                    "candidate_id": candidate_id,
+                    "model": model,
+                    "reasoning_effort": reasoning_effort,
+                    "text_verbosity": text_verbosity,
                     "status": observation["status"],
                     "response": result.content,
                     "plan": actual_plan,
@@ -484,6 +463,10 @@ def _live_provider_run(
                 error_metadata = _error_metadata(exc)
                 case_record = {
                     "case_id": case["id"],
+                    "candidate_id": candidate_id,
+                    "model": model,
+                    "reasoning_effort": reasoning_effort,
+                    "text_verbosity": text_verbosity,
                     "status": "provider_error",
                     "tool_calls": called_tools,
                     "session_id": session[-1] if session else None,
@@ -572,7 +555,10 @@ def _live_provider_run(
         }
         progress_state.update(
             status="stopped" if stop_all else "running",
+            current_candidate_id=None if stop_all else candidate_id,
             current_model=None if stop_all else model,
+            current_reasoning_effort=None if stop_all else reasoning_effort,
+            current_text_verbosity=None if stop_all else text_verbosity,
             known_estimated_spend_usd=estimated_total_usd,
             active_case_id=None,
             active_session_id=None,
@@ -587,7 +573,10 @@ def _live_provider_run(
     report["run_status"] = final_status
     progress_state.update(
         status="finalizing",
+        current_candidate_id=None,
         current_model=None,
+        current_reasoning_effort=None,
+        current_text_verbosity=None,
         known_estimated_spend_usd=estimated_total_usd,
         active_case_id=None,
         active_session_id=None,

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-11 · Chat: prompt evaluado y Sol low preparados para activación
+
+- El runtime carga el prompt aprobado y validado en F2.9 etapa 2, fija Sol con
+  esfuerzo low y reporta el hash efectivo en health. La activación espera el
+  despliegue y la verificación en Railway; no se hicieron llamadas pagadas.
+
 ## 2026-10-09 · El chat usa el periodo seleccionado en el dashboard
 
 - Si la pregunta omite periodo, el prompt prioriza un seguimiento inequívoco

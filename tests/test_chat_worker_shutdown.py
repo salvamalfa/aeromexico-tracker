@@ -50,13 +50,14 @@ class ShutdownProvider:
 
 
 def _queued(store: ChatStore, key: str):
-    conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1")
+    conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1", provider="mock")
     turn, _ = store.submit_turn(
         "alice",
         conversation["id"],
         "consulta",
         key,
         {},
+        provider="mock",
         max_active_per_user=2,
         reserved_tokens=100,
         reserved_cost_usd=0.01,
@@ -202,10 +203,11 @@ def test_expired_stop_between_claim_and_registration_fails_without_provider_inpu
 def test_expired_stop_before_reused_session_input_does_not_cancel_old_session(tmp_path):
     path = tmp_path / "chat.sqlite3"
     store = ChatStore(path)
-    conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1")
+    conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1", provider="mock")
     store.set_provider_session(conversation["id"], "reused-session")
     active, _ = store.submit_turn(
-        "alice", conversation["id"], "consulta", "active", {}, reserved_tokens=100, reserved_cost_usd=0.01
+        "alice", conversation["id"], "consulta", "active", {}, provider="mock", reserved_tokens=100,
+        reserved_cost_usd=0.01
     )
 
     class BeforeInputProvider(ShutdownProvider):

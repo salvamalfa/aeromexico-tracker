@@ -106,11 +106,51 @@ configurable en Railway sin cambiar código. Producción usa US$5 por usuario y
 US$5 global; si las variables no se definen, el código usa US$1. El cupo de
 tokens queda en 2,000,000 diarios por usuario y global solo como freno ante un
 consumo desbocado. Antes de cada turno OpenAI se reservan al menos 150,000
-tokens, o la estimación dinámica si es mayor. La reserva monetaria cobra todos
-esos tokens a la tarifa de salida, porque Agents API no admite un límite de
-tokens de salida: con Sol 6.1 (US$2/US$10 por millón) reserva US$1.50, que no
-cabe en el valor por defecto de US$1; con Luna (US$0.10/US$0.50) reservaría
-US$0.075.
+tokens, o la estimación dinámica si es mayor. La reserva monetaria cobra todo
+ese volumen a la tarifa más alta que aplique en el catálogo, porque Agents API
+no admite un límite acumulado de tokens de salida: con Sol 6.1
+(US$2/US$10 por millón) aparta US$2.25 y con Luna (US$0.10/US$0.50) aparta
+US$0.1125, incluyendo la prima de salida de contexto largo (1.5×).
+
+Las tarifas y capacidades se versionan en `config/chat/models.json`. Los
+candidatos aprobados para comparar son `gpt-6-luna` (esfuerzos `medium` y
+`max`) y `gpt-6.1-sol` (`low` y `medium`); los demás niveles documentados por
+modelo también se aceptan al configurar el servicio. `CHAT_REASONING_EFFORT`
+por omisión es `medium`, que es el valor por omisión efectivo de ambos modelos.
+`CHAT_TEXT_VERBOSITY` también usa `medium` por omisión y acepta `low`,
+`medium` o `high`. Para modelos del catálogo no hace falta declarar precios en
+el entorno: el servicio usa los valores versionados. Si se conservan
+`CHAT_INPUT_COST_PER_MILLION` o `CHAT_OUTPUT_COST_PER_MILLION`, deben coincidir
+con el modelo elegido; el launcher rechaza discrepancias.
+
+La capacidad `minimum_reservation_turns_per_day` que muestra `/api/chat/health`
+es un cálculo de admisión: aplica los presupuestos diarios de tokens y dólares
+a la reserva mínima de 150,000 tokens. La reserva aplica a todo el volumen el
+mayor precio conservador del catálogo: 1.25× para escrituras de caché y la
+prima de salida de contexto largo de 1.5×. Con ambos topes de US$5 permite como
+máximo 13 reservas para Luna (US$0.1125 por reserva; limita el cupo de 2 M de
+tokens) y 2 para Sol (US$2.25 por reserva). No predice el número de preguntas
+que completarán ni es un límite de gasto real: la estimación dinámica puede ser
+mayor y Agents API no expone al adaptador un tope de salida acumulado por sesión
+que garantice el peor caso de un turno de hasta 16 herramientas. Un turno puede
+superar su reserva y el cupo de gasto se revisa al admitirlo. No interpretes la
+reserva como una cota de facturación.
+
+Cada conversación y turno OpenAI conserva modelo, esfuerzo y verbosidad
+seleccionados. Las sesiones remotas son inmutables en verbosidad; por eso una
+conversación anterior a F2.0 (sin configuración local fijada), o cualquier
+conversación cuando cambien esas variables, se puede leer pero no recibe nuevas
+preguntas. Crea una conversación nueva para comenzar con la configuración
+vigente. También se fija el proveedor por conversación y turno. Si una fila
+antigua tiene `provider` nulo pero conserva `provider_session_id`, se interpreta
+como una sesión OpenAI heredada y no se permite continuarla con `CHAT_PROVIDER=mock`:
+de otro modo una respuesta mock podría quedar dentro del historial de una sesión
+remota. Este rechazo ocurre antes de encolar o reservar el turno. Las filas
+antiguas sin sesión remota pueden seguirse usando en modo mock. Una pregunta que
+ya estaba en cola y cuyo modelo o proveedor cambió antes de su ejecución falla
+antes de enviar entrada y libera su reserva como uso conocido cero. El default
+local `CHAT_MAX_TOOL_CALLS=8` sigue siendo distinto del límite operativo
+configurado en producción de 16.
 
 La demo `mock` reserva tokens pero no dólares y registra su uso a US$0: no
 hace llamadas pagadas ni consume el tope. Estos controles no

@@ -117,7 +117,6 @@ def test_runtime_config_accepts_explicitly_configured_openai(monkeypatch, tmp_pa
     [
         ("CHAT_MODEL", "explicit CHAT_MODEL"),
         ("CHAT_OPENAI_ENABLED", "CHAT_OPENAI_ENABLED=true"),
-        ("CHAT_OUTPUT_COST_PER_MILLION", "per-million token prices"),
     ],
 )
 def test_runtime_config_rejects_incomplete_openai(monkeypatch, tmp_path, missing, error):
@@ -128,6 +127,20 @@ def test_runtime_config_rejects_incomplete_openai(monkeypatch, tmp_path, missing
 
     with pytest.raises(ValueError, match=error):
         runtime_config(volume_path=tmp_path)
+
+
+def test_runtime_config_uses_versioned_model_prices_without_price_environment(monkeypatch, tmp_path):
+    _configure(monkeypatch, tmp_path)
+    for name, value in OPENAI_ENV.items():
+        if name not in {"CHAT_INPUT_COST_PER_MILLION", "CHAT_OUTPUT_COST_PER_MILLION"}:
+            monkeypatch.setenv(name, value)
+
+    config, _ = runtime_config(volume_path=tmp_path)
+
+    assert (config.estimated_input_cost_per_million, config.estimated_output_cost_per_million) == (
+        0.10,
+        0.50,
+    )
 
 
 def test_runtime_config_rejects_dollar_caps_below_one_reservation(monkeypatch, tmp_path):

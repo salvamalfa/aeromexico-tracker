@@ -40,7 +40,8 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
   Lectura ejecutiva (`data/v1/analysis/2026Q2.json`). El siguiente ciclo es
   3T26, cuando Aeroméxico publique su reporte trimestral.
 - **Chat:** el MVP está activo en producción desde el 8 de octubre de 2026 y la
-  fase 2 está por empezar (ver [Chat analítico](#chat-analítico)).
+  fase 2 ya implementó el control explícito de modelo y esfuerzo F2.0; sigue en
+  revisión antes de despliegue (ver [Chat analítico](#chat-analítico)).
 - **Datos:** AFAC y AeroDataBox se actualizan a mano mes a mes; lo pendiente
   está en [`ROADMAP.md`](ROADMAP.md).
 

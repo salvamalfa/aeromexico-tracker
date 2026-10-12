@@ -53,13 +53,14 @@ class ToolCallingProvider:
 
 
 def _claimed_turn(store: ChatStore, key: str = "client-1", *, reserved_tokens: int = 0):
-    conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1")
+    conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1", provider="mock")
     turn, _ = store.submit_turn(
         "alice",
         conversation["id"],
         "consulta",
         key,
         {},
+        provider="mock",
         reserved_tokens=reserved_tokens,
         user_token_budget=max(100_000, reserved_tokens),
     )
@@ -313,8 +314,8 @@ def test_late_provider_result_books_known_usage_once_without_completing_turn(
 def test_next_turn_waits_for_timeout_provider_cancel_to_drain(tmp_path: Path):
     db = tmp_path / "chat.sqlite3"
     store = ChatStore(db)
-    conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1")
-    store.submit_turn("alice", conversation["id"], "primera", "client-1", {})
+    conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1", provider="mock")
+    store.submit_turn("alice", conversation["id"], "primera", "client-1", {}, provider="mock")
     first_claim = store.claim_turn()
     provider = SlowCancelProvider()
     worker = _worker(store, db, provider, max_seconds=0.05)
@@ -327,7 +328,7 @@ def test_next_turn_waits_for_timeout_provider_cancel_to_drain(tmp_path: Path):
     first_thread.join(timeout=0.1)
     assert first_thread.is_alive()
 
-    store.submit_turn("alice", conversation["id"], "segunda", "client-2", {})
+    store.submit_turn("alice", conversation["id"], "segunda", "client-2", {}, provider="mock")
     provider.cancel_release.set()
     first_thread.join(timeout=1)
     assert not first_thread.is_alive()
@@ -344,8 +345,8 @@ def test_next_turn_waits_for_timeout_provider_cancel_to_drain(tmp_path: Path):
 def test_next_turn_waits_for_explicit_provider_cancel_to_drain(tmp_path: Path):
     db = tmp_path / "chat.sqlite3"
     store = ChatStore(db)
-    conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1")
-    store.submit_turn("alice", conversation["id"], "primera", "client-1", {})
+    conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1", provider="mock")
+    store.submit_turn("alice", conversation["id"], "primera", "client-1", {}, provider="mock")
     first_claim = store.claim_turn()
     provider = SlowCancelProvider()
     worker = _worker(store, db, provider, max_seconds=2)
@@ -361,7 +362,7 @@ def test_next_turn_waits_for_explicit_provider_cancel_to_drain(tmp_path: Path):
     first_thread.join(timeout=0.1)
     assert first_thread.is_alive()
 
-    store.submit_turn("alice", conversation["id"], "segunda", "client-2", {})
+    store.submit_turn("alice", conversation["id"], "segunda", "client-2", {}, provider="mock")
     provider.cancel_release.set()
     cancel_thread.join(timeout=1)
     first_thread.join(timeout=1)
@@ -442,8 +443,8 @@ def test_terminal_during_session_creation_cancels_late_session_and_drains(
 ):
     db = tmp_path / f"late-session-{terminal_status}.sqlite3"
     store = ChatStore(db)
-    conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1")
-    store.submit_turn("alice", conversation["id"], "primera", "client-1", {})
+    conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1", provider="mock")
+    store.submit_turn("alice", conversation["id"], "primera", "client-1", {}, provider="mock")
     first_claim = store.claim_turn()
     provider = LateSessionDiscoveryProvider()
     worker = _worker(store, db, provider, max_seconds=0.05 if terminal_status == "timeout" else 2)
@@ -482,7 +483,7 @@ def test_terminal_during_session_creation_cancels_late_session_and_drains(
     assert "message.delta" not in event_types
     assert "provider.metadata" not in event_types
 
-    store.submit_turn("alice", conversation["id"], "segunda", "client-2", {})
+    store.submit_turn("alice", conversation["id"], "segunda", "client-2", {}, provider="mock")
     provider.cancel_release.set()
     first_thread.join(timeout=1)
     assert not first_thread.is_alive()

@@ -19,7 +19,8 @@ from test_chat_openai import (
     _turn_created,
 )
 
-from src.conversational_analytics.providers._openai_helpers import SYSTEM_INSTRUCTIONS, OpenAIProviderError
+from src.conversational_analytics.providers._openai_helpers import OpenAIProviderError
+from src.conversational_analytics.providers._openai_prompt import SYSTEM_INSTRUCTIONS
 from src.conversational_analytics.providers._openai_session_version import INSTRUCTIONS_FINGERPRINT_KEY
 
 

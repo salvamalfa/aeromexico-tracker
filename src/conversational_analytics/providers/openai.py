@@ -8,10 +8,10 @@ import threading
 import time
 from typing import Any, Callable
 
+from ..model_settings import agent_configuration
 from ._input_authorization import InputAuthorizer, send_tool_result
 from ._openai_helpers import (
     ALLOWED_TOOL_NAMES,
-    SYSTEM_INSTRUCTIONS,
     TERMINAL_USAGE_RECONCILIATION_SECONDS,
     OpenAIProviderError,
     ToolResultLimitExceeded,
@@ -29,6 +29,7 @@ from ._openai_helpers import (
     question_envelope,
     read_completed_turn_usage,
     references_from_results,
+    required_actions,
     required_string,
     terminal_event_usage,
     to_dict,
@@ -49,6 +50,7 @@ from ._openai_session_version import (
     fingerprint,
     verify_or_rotate_session,
 )
+from ._openai_prompt import SYSTEM_INSTRUCTIONS
 from .base import ProviderResult, ToolCall
 
 
@@ -68,6 +70,8 @@ class OpenAIProvider:
         if not getattr(config, "openai_enabled", False) or not getattr(config, "model", None):
             raise OpenAIProviderError("OpenAI requiere habilitación explícita y CHAT_MODEL configurado")
         self.model = str(config.model)
+        self.reasoning_effort = str(getattr(config, "reasoning_effort", "medium"))
+        self.text_verbosity = str(getattr(config, "text_verbosity", "medium"))
         self.max_tool_calls = int(getattr(config, "max_tool_calls", 8))
         self.max_tool_result_bytes = int(getattr(config, "max_tool_result_bytes", 64_000))
         self.max_turn_seconds = int(getattr(config, "max_turn_seconds", 180))
@@ -253,7 +257,13 @@ class OpenAIProvider:
             if session_was_created:
                 authorize()
                 stream_manager = self.client.beta.agents.sessions.create(
-                    agent={"model": self.model, "instructions": instructions, "tools": tools},
+                    agent=agent_configuration(
+                        self.model,
+                        instructions,
+                        tools,
+                        self.reasoning_effort,
+                        self.text_verbosity,
+                    ),
                     environment={"type": "none"},
                     input=request_input,
                     metadata={INSTRUCTIONS_FINGERPRINT_KEY: instructions_fingerprint},
@@ -354,7 +364,7 @@ class OpenAIProvider:
                     if isinstance(text, str):
                         content_parts[key] = text
                 elif event_type == "agent.session.requires_action":
-                    actions = self._required_actions(event_data, session_id)
+                    actions = required_actions(self.client, event_data, session_id)
                     for action in actions:
                         handle_action(action)
                 elif event_type == "agent.session.turn.completed":
@@ -516,17 +526,6 @@ class OpenAIProvider:
             self.client.beta.agents.sessions.delete(session_id)
         except Exception:
             raise OpenAIProviderError("No se pudo borrar la sesión del proveedor") from None
-
-    def _required_actions(self, event: dict[str, Any], session_id: str | None) -> list[dict[str, Any]]:
-        session = event.get("session")
-        if not isinstance(session, dict):
-            if not session_id:
-                raise OpenAIProviderError("El evento no identifica la sesión que requiere acción")
-            session = to_dict(self.client.beta.agents.sessions.retrieve(session_id))
-        actions = session.get("required_actions")
-        if not isinstance(actions, list):
-            raise OpenAIProviderError("El proveedor no devolvió las acciones pendientes")
-        return [to_dict(action) for action in actions]
 
     def _recover(
         self,
