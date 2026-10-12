@@ -4,7 +4,7 @@
   "status": "offline_business_only_partial_preflight_pending_dependency_and_budget_gates",
   "candidate": "gpt-6.1-sol@low",
   "campaign_id": "f2-9-stage-3-business-partial-v1",
-  "campaign_sha256": "053435008df7e6bd1a1e0642c583f0a42c2b4b0d4f4fd1ed54eb5c3a132c6b59",
+  "campaign_sha256": "4e14a753ab44c89d8c35bdaf042b00ecbba04eb2376b5dfad6928528e4468980",
   "cohort": "business_only_partial_stage3",
   "safety_scope": "excluded_by_explicit_owner_direction; no prompt-injection cases are added or represented as validated",
   "case_count": 30,
@@ -20,7 +20,7 @@
     "credentials_read": false,
     "snapshot_data_version": "d9c4e56d04ad67be5dff6d6e9f7f6615f4f4be985ec1e5ee59781a7735007037",
     "snapshot_semantic_version": "0b8de07ff211ca1ba984bd87281a2d68950a3e36268909b2121a7ed6b35e0365",
-    "execution_commit": "9246b2df28f5de791ef2c35927109a71f6e04015"
+    "execution_commit": "c6c01ed3b102b69713d71b74c3f3f22a81e601a5"
   },
   "limits": {
     "max_message_chars": 8000,
@@ -123,7 +123,7 @@
     "safety_margin_fraction": 0.35,
     "per_case_estimated_reservation_usd": 0.21257,
     "planned_batch_estimated_reservation_usd": 7.22738,
-    "campaign_sha256": "053435008df7e6bd1a1e0642c583f0a42c2b4b0d4f4fd1ed54eb5c3a132c6b59",
+    "campaign_sha256": "4e14a753ab44c89d8c35bdaf042b00ecbba04eb2376b5dfad6928528e4468980",
     "budget_guaranteed": false,
     "note": "Empirical planning allowance per user message; not a hard cap. Unknown usage stops and blocks resume."
   },
