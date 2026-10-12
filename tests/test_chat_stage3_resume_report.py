@@ -317,3 +317,78 @@ def test_budget_below_first_reservation_writes_empty_detail_and_resume_stays_kno
     assert resumed_state["active_run_id"] is None
     assert resumed_state["spent_unknown"] is False
     assert NoRequestProvider.constructions == NoRequestProvider.requests == 0
+
+
+def test_token_turn_totals_count_attempted_user_turns_in_report_and_consolidation(
+    tmp_path: Path,
+) -> None:
+    from src.conversational_analytics.evaluation_live_campaign_reports import _consolidate_report
+    from src.conversational_analytics.evaluation_live_support import (
+        _attempted_turn_count,
+        _summarize_candidate,
+    )
+
+    fixture_path = Path(__file__).resolve().parents[1] / "tests/fixtures/chat_evals/business_proposed.json"
+    selected = json.loads(fixture_path.read_text(encoding="utf-8"))["cases"]
+    selected[0]["turns"] = [selected[0]["question"], "one added continuation"]
+    case_rows = []
+    for case in selected:
+        turn_count = len(case["turns"])
+        status = "supported"
+        completed = True
+        if case["id"] == "N24":
+            turn_count = 2  # N24 fails on its second of three scheduled turns.
+            status = "provider_error_known_usage"
+            completed = False
+        case_rows.append(
+            {
+                "case_id": case["id"],
+                "status": status,
+                "provider_turn_started": True,
+                "turn_count": turn_count,
+                "turn_usage": [
+                    {"input_tokens": 100, "output_tokens": 10, "usage_complete": True}
+                    for _ in range(turn_count)
+                ],
+                "input_tokens": 100 * turn_count,
+                "output_tokens": 10 * turn_count,
+                "usage_complete": True,
+                "model_turn_completed": completed,
+                "latency_seconds": 0.1 if completed else None,
+                "estimated_cost_usd": 0.1,
+                "quality": {},
+            }
+        )
+    assert sum(len(case["turns"]) for case in selected) == 35
+    assert sum(case["turn_count"] for case in case_rows) == 34
+
+    model = {"cases": case_rows, "spent_unknown": False, "known_estimated_cost_usd": 3.4}
+    _summarize_candidate(
+        selected,
+        model,
+        model="gpt-6.1-sol",
+        stop_all=False,
+        estimated_total_usd=3.4,
+        progress_state={},
+        checkpoint=lambda: None,
+    )
+    assert model["token_totals"]["turn_count"] == 34
+    assert model["token_totals"]["input_tokens"] == 3_400
+    assert model["token_totals"]["output_tokens"] == 340
+    assert _attempted_turn_count([{"provider_turn_started": True}]) is None
+
+    report = {"models": [model]}
+    run = {"run_id": "turn-counts", "case_ids": [case["id"] for case in selected]}
+    report_path, _ = _consolidate_report(
+        report=report,
+        detailed_cases=case_rows,
+        all_cases=case_rows,
+        run=run,
+        complete=True,
+        run_dir=tmp_path,
+        fragments=[],
+        fixture_cases=selected,
+    )
+    consolidated = json.loads(Path(report_path).read_text(encoding="utf-8"))
+    assert consolidated["models"][0]["token_totals"] == model["token_totals"]
+    assert consolidated["models"][0]["token_totals"]["turn_count"] == 34
