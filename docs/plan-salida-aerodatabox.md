@@ -105,9 +105,13 @@ y derecho de conservación. No requiere reanudar estimaciones de pasajeros.
 Evitar recomprar marzo–agosto conservados, horarios futuros o octubre incompleto.
 El remanente de una cuota no obliga a consumirla.
 
-El endpoint vigente de aeropuerto cuesta dos unidades por ventana de doce
-horas. Septiembre completo son 120 unidades/aeropuerto; siete días son 28.
-**MEX/GDL/MTY completos: 360 unidades; seis aeropuertos del núcleo: 720**.
+El código y recibos existentes presupuestan dos unidades por ventana de doce
+horas. **360/720/2.176 unidades están condicionadas a que la cuenta conserve
+esa tarifa**; marketplace, plan efectivo y condiciones heredadas no están
+verificados. Bajo ese supuesto, septiembre completo son 120 unidades/aeropuerto
+y siete días son 28; MEX/GDL/MTY completos son 180 requests/360 unidades y seis
+aeropuertos del núcleo son 360 requests/720 unidades. Si la tarifa cambia,
+recalcular unidades a partir de requests antes de autorizar cualquier compra.
 Filtrar Aeroméxico después de recibir datos no reduce solicitudes ni coste.
 Mantener diagnóstico de estatus: un registro del feed no certifica por sí solo
 un vuelo realizado. Un conteo de días muestreados es observado en esos días;
@@ -121,6 +125,12 @@ internacional descarta domésticos y la CLI doméstica puede lanzar IPF.
 Primero revisar derivación offline compatible y deduplicación entre extremos,
 sin comprar ni despachar comandos esperando reutilización automática.
 
+Controlar simultáneamente unidades, requests y transferencia/bandwidth según
+el plan real, incluidos otros consumidores. Registrar posibles créditos
+automáticos y comprobar saldo efectivo; no anticipar créditos ni asumir que
+un fallo devuelve consumo. La reserva de unidades no demuestra suficiencia
+de requests o transferencia.
+
 ## Históricos y licencia
 
 Conservar los derivados privados y su linaje para trazabilidad; no borrar
@@ -130,6 +140,10 @@ agregación mensual no basta por sí sola. La práctica del repositorio es
 retención cruda de siete días y derivados privados. El [anuncio de septiembre](https://aerodatabox.com/2026-09-terms-update)
 incluye transiciones para suscripciones existentes: comprobar las condiciones
 efectivas del plan antes de cualquier compra, retención o redistribución.
+La excepción de caché para derivados no acredita por sí sola derecho a seguir
+publicándolos tras cancelar: revisar también terminación y permisos que
+sobreviven bajo los términos aplicables. No retirar ni borrar históricos por
+esa incertidumbre durante esta fase documental.
 No acumular contenido especulativamente ni tratar una cancelación como permiso
 de publicar respuestas. El expediente contractual permanece privado.
 
