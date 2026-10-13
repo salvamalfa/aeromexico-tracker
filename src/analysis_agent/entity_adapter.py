@@ -41,31 +41,31 @@ def read(path):
 
 
 def code_version():
-    modules = (
-        "src/analysis_agent/entity_adapter.py",
-        "src/analysis_agent/lifecycle.py",
-        "src/analysis_agent/lifecycle_identity.py",
-        "src/analysis_agent/analyst.py",
-        "src/analysis_agent/evidence.py",
-        "src/web_export/analysis.py",
-        "src/web_export/privacy.py",
-        "src/web_export/schemas.py",
-        "src/web_export/writer.py",
-        "src/publish/manifest.py",
-        "src/publish/gate.py",
-        "src/publish/records.py",
-        "src/publish/receipts.py",
-        "src/publish/verify.py",
-        "contracts/web/analysis.schema.json",
-        "contracts/web/publication_manifest.schema.json",
-        "contracts/web/privacy.yaml",
-        "web/src/views/executive/narrative.ts",
-        "web/package-lock.json",
-        "src/dashboard/entities.py",
-        "src/config.py",
-        "uv.lock",
-    )
-    return digest({name: sha(PATHS.root / name) for name in modules})
+    root = PATHS.root
+    paths = {root / name for name in ("src/dashboard/entities.py", "src/config.py", "uv.lock")}
+    for directory in ("src/analysis_agent", "src/publish", "src/web_export"):
+        paths.update((root / directory).rglob("*.py"))
+    paths.update(path for path in (root / "contracts/web").rglob("*") if path.is_file())
+    test_directories = {"test", "tests", "spec", "specs", "__tests__", "__specs__"}
+    web_root = root / "web/src"
+    for path in web_root.rglob("*"):
+        if (
+            path.is_file()
+            and path.suffix in {".ts", ".tsx", ".js", ".jsx", ".json", ".css"}
+            and not test_directories.intersection(path.relative_to(web_root).parts)
+            and not re.search(r"(?:^|[._-])(?:test|spec)(?:[._-]|$)", path.name)
+        ):
+            paths.add(path)
+    for name in ("index.html", "package.json", "package-lock.json", "vite.config.ts"):
+        path = root / "web" / name
+        if path.is_file():
+            paths.add(path)
+    paths.update((root / "web").glob("tsconfig*.json"))
+    names = sorted(path.relative_to(root).as_posix() for path in paths if path.is_file())
+    for name in ("src/dashboard/entities.py", "src/config.py", "uv.lock"):
+        if name not in names:
+            raise ValueError(f"Required entity dependency is missing: {name}")
+    return digest({name: sha(root / name) for name in names})
 
 
 def require_current_presentation(record):

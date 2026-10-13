@@ -110,6 +110,11 @@ def test_shared_validation_change_invalidates_entity_presentation(monkeypatch, f
         "contracts/web/publication_manifest.schema.json",
         "contracts/web/privacy.yaml",
         "web/src/views/executive/narrative.ts",
+        "web/src/views/shell/carriers.ts",
+        "web/src/views/executive/bootstrap.ts",
+        "web/src/views/executive/state.ts",
+        "web/src/views/executive/entities.ts",
+        "web/src/views/flights/dom.ts",
         "web/package-lock.json",
     ],
 )
@@ -125,6 +130,85 @@ def test_publication_provenance_dependency_changes_entity_code_version(monkeypat
     assert adapter.code_version() != baseline
     with pytest.raises(ValueError, match="implementation changed"):
         adapter.require_current_presentation(record)
+
+
+def _temporary_code_tree(tmp_path, monkeypatch):
+    for name in ("src/dashboard/entities.py", "src/config.py", "uv.lock"):
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("synthetic baseline")
+    monkeypatch.setattr(adapter, "PATHS", SimpleNamespace(root=tmp_path))
+
+
+def test_code_version_is_deterministic_and_uses_sorted_relative_paths(tmp_path, monkeypatch):
+    _temporary_code_tree(tmp_path, monkeypatch)
+    for name in ("web/src/z.ts", "src/publish/b.py", "contracts/web/a.json", "web/src/a.css"):
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("synthetic runtime dependency")
+    actual_digest = adapter.digest
+    keys = []
+
+    def capture(value):
+        keys.append(list(value))
+        return actual_digest(value)
+
+    monkeypatch.setattr(adapter, "digest", capture)
+    assert adapter.code_version() == adapter.code_version()
+    assert keys[0] == sorted(keys[0]) == keys[1]
+    assert all(not path.startswith("/") for path in keys[0])
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "src/analysis_agent/new.py",
+        "src/publish/new.py",
+        "src/web_export/new.py",
+        "contracts/web/new.schema.json",
+        "web/src/new.ts",
+        "web/src/new.tsx",
+        "web/src/new.js",
+        "web/src/new.jsx",
+        "web/src/new.json",
+        "web/src/new.css",
+        "web/index.html",
+        "web/package.json",
+        "web/package-lock.json",
+        "web/vite.config.ts",
+        "web/tsconfig.json",
+        "web/tsconfig.app.json",
+    ],
+)
+def test_runtime_file_addition_and_deletion_change_code_version(tmp_path, monkeypatch, name):
+    _temporary_code_tree(tmp_path, monkeypatch)
+    baseline = adapter.code_version()
+    path = tmp_path / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("synthetic new runtime dependency")
+    assert adapter.code_version() != baseline
+    path.unlink()
+    assert adapter.code_version() == baseline
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "web/src/new.test.ts",
+        "web/src/new.spec.tsx",
+        "web/src/new.spec.js",
+        "web/src/__tests__/helper.ts",
+        "web/src/tests/helper.json",
+        "web/src/spec/helper.css",
+    ],
+)
+def test_web_test_and_spec_files_do_not_change_code_version(tmp_path, monkeypatch, name):
+    _temporary_code_tree(tmp_path, monkeypatch)
+    baseline = adapter.code_version()
+    path = tmp_path / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("synthetic test-only dependency")
+    assert adapter.code_version() == baseline
 
 
 @pytest.mark.parametrize("format_fields", [{"formatted": "1,0"}, {"formatted_value": "1,0"}])
