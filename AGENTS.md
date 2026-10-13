@@ -41,6 +41,14 @@ reconstruye gold, `just rebuild` todo el pipeline offline. Dashboard local:
 --allow-missing-analysis` y luego `cd web && npm ci && npm run dev` (ver
 `web/README.md`).
 
+El desarrollo cloud en Linux también está soportado. Sigue
+[`docs/cloud-development.md`](docs/cloud-development.md) para activar las
+cachés escribibles, preparar un checkout aislado y verificar la vigencia del
+warehouse restaurado frente a Gold. Una preparación sin encargo funcional
+termina en auditoría y PR en borrador. Si el encargo requiere aprobación para
+las primeras integraciones/publicaciones, conserva ese límite aunque los
+checks estén verdes; no habilites auto-merge ni despaches producción.
+
 Los comandos con red, cuotas, suscripciones o APIs pagadas requieren una
 ejecución deliberada. Implementa primero un `--dry-run` que muestre llamadas,
 ventanas, unidades estimadas y destinos de escritura.

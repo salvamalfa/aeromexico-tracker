@@ -1,6 +1,7 @@
 # Desarrollo seguro desde GitHub y agentes de nube
 
-Fecha de revisión: 2026-09-19.
+Procedimientos cloud revisados: 2026-10-13. Los estados fechados abajo conservan
+su corte histórico.
 
 ## Decisión
 
@@ -145,13 +146,105 @@ Fuentes vigentes revisadas:
 
 ## Configuración mínima de un entorno de nube
 
-1. Clonar la rama de trabajo o el PR.
-2. Instalar Python 3.13, `uv` y Chromium con `just setup`.
-3. Crear secretos desde `.env.example`; nunca escribir valores en archivos
-   versionados.
-4. Ejecutar `just test` antes de editar y anotar cualquier diferencia de línea
-   base.
-5. Para tareas sin Bronze/Silver, trabajar contra `data/gold/` y declarar esa
-   limitación en el PR.
-6. Para una ingesta, usar un secreto del proveedor y un destino temporal
-   ignorado; correr primero `--dry-run`.
+1. Revisar estado y cambios existentes en ambos repos; hacer `git fetch` y
+   crear la rama o worktree desde el `origin/master` vigente. Conservar los
+   checkouts anteriores. Mantener público y privado como carpetas hermanas.
+2. Instalar Python 3.13 y las dependencias bloqueadas con
+   `uv sync --all-extras --all-groups --locked`; en `web/`, `npm ci`. CI usa
+   Node 22. Instalar el Chromium de la versión bloqueada de Playwright, sin
+   apuntarlo a un navegador de otro major.
+3. Usar Gold públicos para pruebas sin insumos privados. Para una restauración,
+   materializar LFS y verificar hashes/derivados en el privado antes de copiar.
+   Restaurar en un checkout aislado: `restore_snapshot.py` sobrescribe rutas
+   existentes, incluidas algunas que pueden estar versionadas. No ejecutarlo
+   sobre trabajo ajeno; revisar el estado Git después.
+4. Comprobar el warehouse: su snapshot puede ser anterior a Gold público. Con
+   los cuatro Gold privados ya verificados en destinos ignorados, la rutina
+   existente `build_warehouse(max_stage=9)` reconstruye solo la base local
+   desde Gold vigente; no consulta proveedores ni modifica aprobaciones.
+5. Ejecutar la suite y checks indicados en `REPO_MAP.md` y `web/README.md`.
+   Registrar fallos, errores y skips con causa; CI pública no demuestra que la
+   suite con datos privados pase. No reconstruir una aprobación para pasarla.
+6. Dashboard estático y pruebas offline no necesitan credenciales. Para los
+   checks que verifican métricas financieras o evidencia aprobadas, usar los
+   pins existentes registrados en `docs/chat/fase-2-decision-dueno.md`, limitados a
+   ese proceso. No calcular un pin nuevo desde el recibo ni cambiar variables
+   externas. Para una ingesta autorizada, usar el secreto existente y un
+   destino ignorado; empezar por `--dry-run`.
+
+### Shell Linux y preview local
+
+En el cloud con raíz `/workspace`, la activación existente se carga con
+`source /workspace/.cloud-setup/activate.sh` si está presente. La shell de una
+tarea nueva puede no cargarla automáticamente. Las cachés deben ser
+escribibles; una instalación nueva debe ejecutar `uv sync` explícitamente
+aunque la activación exporte `UV_NO_SYNC=1`.
+
+```bash
+export UV_CACHE_DIR=/workspace/.cache/uv
+export UV_PYTHON_INSTALL_DIR=/workspace/.local/share/uv/python
+export PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright
+uv sync --all-extras --all-groups --locked
+uv run --no-sync playwright install chromium
+cd web
+npm ci --cache /workspace/.cache/npm
+```
+
+Tras la restauración y comprobación de los Gold privados, desde la raíz del
+checkout público aislado:
+
+```bash
+uv run --no-sync python -c 'from src.transform.stage6_warehouse import build_warehouse; build_warehouse(max_stage=9)'
+```
+
+Para inspeccionar la versión publicada sin reconstruir datos ni ejecutar el
+gate, servir `site/` con `python -m http.server 4173 --bind 127.0.0.1 --directory
+site`. Para desarrollar `web/`, seguir su README. Declarar si el navegador es
+del cloud o una sesión del usuario, qué herramienta se usó, y si se probaron
+datos reales o fixtures. Si Chromium no confía en el certificado del proxy,
+no desactivar TLS ni instalar confianza sin autorización: verificar los
+archivos HTTPS por hash con un cliente que ya confíe y probar la copia local.
+
+Si GitHub API/fetch funcionan pero el push falla en el hook LFS por falta de
+credenciales, una sesión `gh` ya autorizada puede proporcionar su ayudante
+solo para ese comando:
+
+```bash
+git -c credential.helper= -c 'credential.helper=!gh auth git-credential' push -u origin <rama>
+```
+
+No imprimir el resultado del ayudante, crear tokens, desactivar hooks ni
+guardar una configuración de credenciales persistente para resolverlo.
+
+### Operación continua y límites de entrega
+
+El dueño define objetivos y prioridades; el agente define criterios de
+aceptación verificables y resuelve decisiones técnicas normales. Escalar
+alternativas con impacto material de producto, nuevas cifras/evidencia,
+consumo pagado, credenciales, accesos persistentes y cambios de seguridad.
+Conservar decisiones y pendientes en sus documentos canónicos, sin duplicar
+`ROADMAP.md`, los procedimientos del chat o la documentación privada.
+
+Antes de push, comprobar los triggers del commit y el destino real:
+
+| Destino | Trigger vigente al 13 oct 2026 | Consecuencia |
+|---|---|---|
+| CI pública | PR; push a `master`; `workflow_call` | `test` y `web` validan el commit del PR. |
+| Pages | Push a `master` que cambie `site/**` o `.github/pages-preview.json`; despacho manual | Publica el sitio firmado tras verify y CI. También actualizar una preview en Pages modifica producción. |
+| Railway | Fuente `master` y watch paths del servicio | Cambios de entradas Docker redespliegan el chat. `checkSuites=false`: no espera CI; no asumir que el merge es inocuo. |
+| Datos privados | Capturas pagadas por despacho manual; retención cada seis horas | Push documental no captura datos ni consume API. |
+
+Las fuentes y su periodicidad viven en `config/source_catalog.yaml`. El
+workflow `refresh.yml` monitorea frescura y valida; no reemplaza la descarga
+manual mensual de AFAC/AeroDataBox. Noticias del chat solo produce candidatos
+por despacho manual. Los límites del snapshot/retención están en el README
+privado; Railway, recuperación y controles del chat en `docs/chat/railway.md`.
+
+Cerrar una preparación exige accesos comprobados sin secretos, dependencias
+instalables, resultados explícitos de tests, QA del sitio y contraste con
+fuentes, documentación revisable y pendientes concretos. Una auditoría inicial
+queda en PR borrador para aprobación explícita antes de integrar y publicar;
+no activa auto-merge, evidencia, proveedores ni cambios de infraestructura.
+
+Evidencia de la preparación del 13 de octubre:
+[`docs/etapas/cloud-readiness-20261013.md`](etapas/cloud-readiness-20261013.md).
