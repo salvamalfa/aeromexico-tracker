@@ -262,7 +262,10 @@ def _entity_claim_citations(claim, package, calculations, numbers, rendered_text
         value = claim.get("lead") or rendered_text.split(". ", 1)[0]
         if value and value in rendered_text:
             selections.append((span["excerpt_id"], value))
-    result, seen = [], set()
+    # A displayed value can depend on many rows of the same report. Group
+    # those rows before constructing anchors: one marker per value/document,
+    # while retaining every primary document in the verified lineage.
+    grouped = {}
     for excerpt_id, value in selections:
         excerpt = excerpts[excerpt_id]
         source = sources.get(excerpt.get("artifact_id"), {})
@@ -276,22 +279,31 @@ def _entity_claim_citations(claim, package, calculations, numbers, rendered_text
             or parsed.port not in (None, 443)
         ):
             continue
-        href = url.split("#")[0]
+        document_url = url.split("#")[0]
+        document_id = excerpt.get("artifact_id") or document_url
+        group = grouped.setdefault((document_id, document_url, value), {})
+        group.setdefault(excerpt_id, excerpt)
+    result = []
+    for (_, document_url, value), group in grouped.items():
+        href = document_url
+        excerpt = next(iter(group.values()))
         literal = excerpt.get("text", "").strip()
-        if parsed.hostname in ("www.sec.gov", "sec.gov") and literal:
+        if len(group) == 1 and urlparse(document_url).hostname in ("www.sec.gov", "sec.gov") and literal:
             # Short literal anchors only; the private excerpt object never leaves.
             anchor = literal.splitlines()[0][:120]
             href += "#:~:text=" + quote(anchor, safe="").replace("-", "%2D")
-        key = (href, value)
-        if key in seen:
-            continue
-        seen.add(key)
         label = str(numbers.setdefault(href, len(numbers) + 1))
+        periods = sorted({item.get("period_id", package["period_id"]) for item in group.values()})
+        title = "Reporte original · " + ", ".join(periods)
+        if len(group) > 1:
+            # Multiple rows support the value; link the report as a whole
+            # rather than selecting one row as if it alone proved the ratio.
+            title += " · varios insumos del cálculo"
         result.append(
             {
                 "label": label,
                 "href": href,
-                "title": "Reporte original · " + excerpt.get("period_id", package["period_id"]),
+                "title": title,
                 "value": value,
             }
         )

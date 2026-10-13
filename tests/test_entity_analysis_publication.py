@@ -241,3 +241,53 @@ def test_entity_citation_refuses_nonofficial_host():
     package["sources"][0]["source_url"] = "https://cdn.investorcloud.net.evil.example/report.pdf"
     claim = {"text_template": "{{income}}", "bindings": {"income": {"calculation_id": "c"}}}
     assert analysis._claim_citations(claim, package, calculations, {}) == []
+
+
+@pytest.mark.parametrize("second_document", ["report-b.htm", "report-a.htm"])
+def test_entity_citations_group_transitive_rows_by_value_and_primary_document(second_document):
+    package, calculations = _citation_inputs()
+    package["sources"][0]["source_url"] = "https://www.sec.gov/report-a.htm"
+    package["sources"].append({"artifact_id": "b", "source_url": "https://www.sec.gov/" + second_document})
+    package["excerpts"].extend(
+        [
+            {"excerpt_id": "e2", "artifact_id": "a", "period_id": "2026Q2", "text": "Another row"},
+            {"excerpt_id": "e3", "artifact_id": "b", "period_id": "2026Q2", "text": "Second report row"},
+        ]
+    )
+    package["metrics"].extend(
+        [
+            {"metric_id": "m2", "excerpt_id": "e2", "artifact_id": "a"},
+            {"metric_id": "m3", "excerpt_id": "e3", "artifact_id": "b"},
+        ]
+    )
+    calculations["nodes"].append(
+        {"calculation_id": "nested", "input_ids": ["m2", "m3"], "formatted_value": "unused"}
+    )
+    calculations["nodes"][0]["input_ids"] = ["m", "nested"]
+    claim = {"text_template": "Ingresos de {{income}}.", "bindings": {"income": {"calculation_id": "c"}}}
+
+    citations = analysis._claim_citations(claim, package, calculations, {})
+
+    assert len(citations) == 2
+    assert citations[0]["href"] == "https://www.sec.gov/report-a.htm"
+    assert citations[0]["title"].endswith("varios insumos del cálculo")
+    assert citations[1]["href"].startswith("https://www.sec.gov/" + second_document + "#:~:text=")
+    assert {citation["value"] for citation in citations} == {"609,0 millones de dólares"}
+    assert all(set(citation) == {"label", "href", "title", "value"} for citation in citations)
+
+
+def test_entity_citations_preserve_distinct_values_from_the_same_document():
+    package, calculations = _citation_inputs()
+    calculations["nodes"].append(
+        {**calculations["nodes"][0], "calculation_id": "cost", "formatted_value": "647,0 millones de dólares"}
+    )
+    claim = {
+        "text_template": "Ingresos de {{income}} y costos de {{cost}}.",
+        "bindings": {"income": {"calculation_id": "c"}, "cost": {"calculation_id": "cost"}},
+    }
+    citations = analysis._claim_citations(claim, package, calculations, {})
+    assert len(citations) == 2
+    assert {citation["value"] for citation in citations} == {
+        "609,0 millones de dólares",
+        "647,0 millones de dólares",
+    }

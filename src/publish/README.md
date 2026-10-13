@@ -115,3 +115,12 @@ approval entry) run in CI with no private data. A full local run of
 `analysis_runs/` record) is exercised by `tests/test_publish_gate.py` and,
 for the built site's visible parity against the published page, by
 `tests/test_site_parity.py` (`browser` + `local_data`).
+
+El ledger conserva aprobaciones técnicas históricas cuando cambia la huella
+de implementación. Para reproducir una publicación, selecciona sus cuatro
+registros exactos con `--record`; toma las identidades de
+`site/publication_manifest.json`. El descubrimiento automático rechaza
+múltiples versiones aprobadas de una misma entidad y trimestre. En un
+export de desarrollo, pasa ese `analysis_manifest` explícitamente a
+`src.web_export.analysis.export_analysis(..., manifest=...)`; no revoques
+autorizaciones históricas ni elijas una versión por fecha para eludir el guard.
