@@ -110,7 +110,9 @@ def test_persisted_owner_prompt_receipt_matches_immutable_decision(monkeypatch, 
     schema = json.loads(Path("contracts/chat/prompt-approval-receipt.schema.json").read_text())
     assert not list(Draft202012Validator(schema).iter_errors(receipt))
     assert receipt["owner"] == "salvamalfa"
-    assert receipt["decision_ref"].endswith("81bbd7e807e4a9f2c2b42a39a47147931b87439b/docs/decisiones/20261012-chat-fase2-r2-contenido-stage3.md")
+    assert receipt["decision_ref"] == "https://github.com/salvamalfa/aeromexico-tracker/blob/76407da561ac1ff799c012ce5390c01176b30772/docs/decisiones/20261012-chat-periodo-selector-cierre-fase2.md"
+    assert receipt["approved_at"] == "2026-10-13T00:44:04Z"
+    assert receipt["prompt_sha256"] == R2_PROMPT_SHA256
     assert json.loads(Path("config/chat/prompt_candidates/system_prompt_r2-proposed.json").read_text())["status"] == "proposed_not_approved_not_active"
     monkeypatch.setenv("CHAT_PROMPT_VERSION", "r2-proposed")
     monkeypatch.setenv("CHAT_PROMPT_APPROVAL_RECEIPT_PATH", str(canonical_path))
@@ -131,3 +133,23 @@ def test_persisted_owner_prompt_receipt_matches_immutable_decision(monkeypatch, 
             prompt_module.load_active_system_instructions()
 
     assert canonical_path.read_bytes() == original_bytes
+
+
+def test_r2_selected_period_examples_do_not_request_an_already_resolved_period() -> None:
+    from src.conversational_analytics.providers._openai_prompt import (
+        PERIOD_SELECTION_POLICY, with_dashboard_period_policy,
+    )
+
+    prompt = Path("config/chat/prompt_candidates/system_prompt_r2-proposed.txt").read_text().strip()
+    clarification = prompt.split('<ejemplo id="aclaracion_sin_cifra">', 1)[1].split('</ejemplo>', 1)[0]
+    assert 'dashboard_context.period = "2026Q2"' in clarification
+    assert "y para qué periodo" not in clarification
+    assert "¿Te refieres a ‹definición A› o ‹definición B›?" in clarification
+    direct = prompt.split('<ejemplo id="periodo_omitido_con_selector">', 1)[1].split('</ejemplo>', 1)[0]
+    assert "Tras consultar las herramientas para 2026Q2" in direct
+    assert "valor y unidad devueltos por la herramienta" in direct
+    assert "No vuelvas a preguntar por el periodo que ya aporta el selector" in prompt
+    assert "combustible → fuel" in prompt
+    assert "Una búsqueda vacía no demuestra que el reporte no trate el tema" in prompt
+    assert prompt.endswith(PERIOD_SELECTION_POLICY)
+    assert with_dashboard_period_policy(prompt) == prompt

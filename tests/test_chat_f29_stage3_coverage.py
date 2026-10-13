@@ -11,6 +11,7 @@ from src.conversational_analytics.evidence_index import (
     EvidenceIndex,
     canonical_index_sha256,
 )
+from src.conversational_analytics.providers import _openai_prompt
 from src.conversational_analytics.data.snapshot import Snapshot
 from src.conversational_analytics.evaluation_stage3_coverage import (
     CAMPAIGN_CANDIDATE,
@@ -93,7 +94,7 @@ def test_stage3_derives_all_30_cases_from_real_tools_and_current_snapshot(monkey
     assert report["runtime_capabilities"]["stage3_candidate_count"] == 1
     assert report["runtime_capabilities"]["required_prompt_version"] == "r2-proposed"
     assert report["runtime_capabilities"]["required_prompt_sha256"] == (
-        "68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf"
+        _openai_prompt.R2_PROMPT_SHA256
     )
     assert report["runtime_capabilities"]["prompt_compatible"] is (
         report["runtime_capabilities"]["prompt_content_sha256"]

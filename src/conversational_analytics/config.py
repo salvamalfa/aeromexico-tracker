@@ -23,7 +23,15 @@ PROMPT_CAPABILITIES_BY_HASH = {
         "version": "r1-final",
         "capabilities": frozenset(),
     },
+    # Historical R2 lineage for offline campaign inspection. The runtime loader
+    # accepts only the current exact R2 hash and its pinned owner receipt.
     "68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf": {
+        "version": "r2-proposed",
+        "capabilities": frozenset(
+            {"route_queries", "business_metric_queries", "evidence_search"}
+        ),
+    },
+    "cec193aa10dff802d5578da00777b5b56c74bfcc71aeccaf1ea718c07cc763b1": {
         "version": "r2-proposed",
         "capabilities": frozenset(
             {"route_queries", "business_metric_queries", "evidence_search"}
