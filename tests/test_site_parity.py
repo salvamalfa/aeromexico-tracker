@@ -26,6 +26,7 @@ from pathlib import Path
 import pytest
 
 from src.analysis_agent import lifecycle as flow
+from src.publish import manifest as manifest_mod
 from src.publish.verify import verify_site
 from src.web_export.analysis import MissingAnalysisInput, discover_approved_manifest, export_period
 from src.web_export.executive import export_executive
@@ -53,11 +54,18 @@ def _skip_or_fail(config: pytest.Config, message: str) -> None:
 def _require_site(request: pytest.FixtureRequest) -> None:
     if not SITE_DIR.is_dir():
         _skip_or_fail(
-            request.config, f"{SITE_DIR} does not exist; run `python -m src.publish --record ... --out site/` first"
+            request.config,
+            f"{SITE_DIR} does not exist; run `python -m src.publish --record ... --out site/` first",
         )
     problems = verify_site(SITE_DIR)
     if problems:
         _skip_or_fail(request.config, f"{SITE_DIR} fails src.publish.verify: {problems[:3]}")
+
+
+def _export_approved_entry(entry: dict) -> dict:
+    """Use the exporter's canonical legacy/entity record loader for this identity."""
+    entity_args = {"entity_key": entry["entity_key"]} if "entity_key" in entry else {}
+    return export_period(entry["period_id"], entry["version"], root=flow.ROOT, **entity_args)
 
 
 def test_site_flights_and_executive_data_match_a_fresh_export(
@@ -75,19 +83,28 @@ def test_site_flights_and_executive_data_match_a_fresh_export(
     site_executive = json.loads((DATA_DIR / "executive.json").read_text(encoding="utf-8"))
     assert fresh_executive == site_executive
 
-    for analysis_path in sorted((DATA_DIR / "analysis").glob("*.json")):
-        period_id = analysis_path.stem
+    expected_entries = {
+        manifest_mod.analysis_identity(entry): entry
+        for entry in manifest_mod.load_manifest(SITE_DIR)["analysis_manifest"]
+    }
+    checked = set()
+    for analysis_path in sorted((DATA_DIR / "analysis").rglob("*.json")):
         site_analysis = json.loads(analysis_path.read_text(encoding="utf-8"))
+        identity = manifest_mod.analysis_identity(site_analysis)
+        entry = expected_entries[identity]
+        assert analysis_path.relative_to(DATA_DIR) == manifest_mod.analysis_relative_path(entry)
         try:
-            fresh_analysis = export_period(period_id, site_analysis["version"], root=flow.ROOT)
+            fresh_analysis = _export_approved_entry(entry)
         except MissingAnalysisInput as error:
             # _skip_or_fail always raises (Skipped or Failed), so this loop
             # iteration never reaches the assert below in that case.
             _skip_or_fail(
-                request.config, f"{period_id}/{site_analysis['version']} no longer approved locally: {error}"
+                request.config, f"{identity}/{site_analysis['version']} no longer approved locally: {error}"
             )
             continue
         assert fresh_analysis == site_analysis
+        checked.add(identity)
+    assert checked == set(expected_entries), f"never checked {set(expected_entries) - checked}"
 
 
 # ---------------------------------------------------------------------------
@@ -151,7 +168,11 @@ def _period_ids(executive_payload: dict) -> list[str]:
 
 @browser_test
 def test_reader_tabs_switch_panels_on_the_site(site_page) -> None:
-    for tab_id, panel_id in (("tab-economy", "panel-economy"), ("tab-flights", "panel-flights"), ("tab-reading", "panel-reading")):
+    for tab_id, panel_id in (
+        ("tab-economy", "panel-economy"),
+        ("tab-flights", "panel-flights"),
+        ("tab-reading", "panel-reading"),
+    ):
         site_page.click(f"#{tab_id}")
         assert site_page.is_visible(f"#{panel_id}")
         assert site_page.get_attribute(f"#{tab_id}", "aria-selected") == "true"
@@ -208,22 +229,36 @@ def _with_citation_labels(text: str, citations: list[dict]) -> str:
     order) occurrence of its ``value`` -- the same substring the DOM ends
     up with once the <sup><a> citation marker is spliced in."""
 
-    result: list[str] = []
-    cursor = 0
+    # Text nodes remain eligible after a marker is appended. A second source
+    # citing the same value is inserted before the first marker; citation text
+    # itself is never searched (it lives inside <sup>/<a>).
+    segments: list[str | tuple[str, str]] = [text]
     for citation in citations:
-        index = text.find(citation["value"], cursor)
-        if index == -1:
-            continue
-        end = index + len(citation["value"])
-        result.append(text[cursor:end])
-        result.append(citation["label"])
-        cursor = end
-    result.append(text[cursor:])
-    return "".join(result)
+        for position, segment in enumerate(segments):
+            if not isinstance(segment, str):
+                continue
+            index = segment.find(citation["value"])
+            if index == -1:
+                continue
+            end = index + len(citation["value"])
+            segments[position : position + 1] = [
+                segment[:end],
+                ("citation", citation["label"]),
+                segment[end:],
+            ]
+            break
+    return "".join(segment if isinstance(segment, str) else segment[1] for segment in segments)
+
+
+def test_citation_labels_preserve_multiple_sources_for_the_same_value() -> None:
+    citations = [{"value": "42", "label": "1"}, {"value": "42", "label": "2"}]
+    assert _with_citation_labels("Valor 42 y texto.", citations) == "Valor 4221 y texto."
 
 
 @browser_test
-def test_reading_tab_narrative_matches_the_approved_analysis(request: pytest.FixtureRequest, site_page) -> None:
+def test_reading_tab_narrative_matches_the_approved_analysis(
+    request: pytest.FixtureRequest, site_page, site_server
+) -> None:
     """For every period the local ledger currently has approved/published,
     the reading tab's narrative text contains that exact approved thesis
     and every summary item, citation markers included -- read straight from
@@ -237,7 +272,7 @@ def test_reading_tab_narrative_matches_the_approved_analysis(request: pytest.Fix
     expected = {}
     for entry in manifest:
         try:
-            expected[entry["period_id"]] = export_period(entry["period_id"], entry["version"], root=flow.ROOT)
+            expected[manifest_mod.analysis_identity(entry)] = _export_approved_entry(entry)
         except MissingAnalysisInput as error:
             # discover_approved_manifest() just said entry was approved; if
             # export_period() now disagrees, the approval was revoked (or
@@ -246,25 +281,21 @@ def test_reading_tab_narrative_matches_the_approved_analysis(request: pytest.Fix
             # catch rather than silently skip.
             _skip_or_fail(request.config, f"{entry}: {error}")
 
-    site_page.click("#tab-reading")
-    while site_page.is_enabled("#period-next"):
-        site_page.click("#period-next")
-    checked: set[str] = set()
-    while True:
-        period_id = site_page.evaluate("document.getElementById('narrative-copy').dataset.period")
-        if period_id in expected:
-            analysis = expected[period_id]
-            citations_by_claim = {claim["claim_id"]: claim["citations"] for claim in analysis["claims"]}
-            text = _text(site_page, "#narrative-copy")
-            assert analysis["thesis"] in text, period_id
-            for item in analysis["summary_items"]:
-                expected_text = _with_citation_labels(item["text"], citations_by_claim.get(item["claim_id"], []))
-                assert expected_text in text, (period_id, item["claim_id"])
-            checked.add(period_id)
-        if not site_page.is_enabled("#period-prev"):
-            break
-        site_page.click("#period-prev")
+    checked = set()
+    for (entity, period_id), analysis in expected.items():
+        site_page.goto(f"{site_server}?entity={entity}&period={period_id}")
         site_page.wait_for_function(
-            "(id) => document.getElementById('narrative-copy').dataset.period !== id", arg=period_id
+            "([entity, period, thesis]) => { const copy = document.getElementById('narrative-copy'); "
+            "return copy.dataset.entity === entity && copy.dataset.period === period && "
+            "copy.querySelector('h3')?.textContent === thesis; }",
+            arg=[entity, period_id, analysis["thesis"]],
         )
+        site_page.click("#tab-reading")
+        citations_by_claim = {claim["claim_id"]: claim["citations"] for claim in analysis["claims"]}
+        text = _text(site_page, "#narrative-copy")
+        assert analysis["thesis"] in text, (entity, period_id)
+        for item in analysis["summary_items"]:
+            expected_text = _with_citation_labels(item["text"], citations_by_claim.get(item["claim_id"], []))
+            assert expected_text in text, (entity, period_id, item["claim_id"])
+        checked.add((entity, period_id))
     assert checked == set(expected), f"never reached {set(expected) - checked}"

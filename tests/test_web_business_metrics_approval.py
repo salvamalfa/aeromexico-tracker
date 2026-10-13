@@ -86,8 +86,7 @@ def test_receipt_must_match_exact_definition_and_proposal_bytes(tmp_path: Path) 
     assert payload["rows"]
     assert receipt["receipt_id"] == "test-fixture-only"
     assert all(
-        row["value_kind"]
-        in {"owner_approved_gold_reported", "owner_approved_gold_fx_converted"}
+        row["value_kind"] in {"owner_approved_gold_reported", "owner_approved_gold_fx_converted"}
         for row in payload["rows"]
     )
     serialized_payload = json.dumps(payload, ensure_ascii=False)
@@ -172,6 +171,9 @@ def test_site_without_financial_payload_keeps_its_existing_manifest_without_a_pi
     monkeypatch.delenv(APPROVAL_RECEIPT_SHA256_ENV, raising=False)
     source_manifest = ROOT / "site/publication_manifest.json"
     source_manifest_before = source_manifest.read_bytes()
+    source_entries = json.loads(source_manifest_before)["files"]
+    overlay_paths = {"data/v1/business_metrics.json", "data/v1/business_metrics.approval.json"}
+    expected_entries = [entry for entry in source_entries if entry["path"] not in overlay_paths]
     site = copy_pre_financial_snapshot(tmp_path / "pre-financial")
     manifest_path = site / "publication_manifest.json"
     manifest = json.loads(manifest_path.read_bytes())
@@ -184,7 +186,10 @@ def test_site_without_financial_payload_keeps_its_existing_manifest_without_a_pi
     manifest_mod.write_manifest(site, manifest)
     original_manifest = manifest_path.read_bytes()
 
-    assert sum(item["path"].startswith("data/") for item in manifest["files"]) == 112
+    assert manifest["files"] == expected_entries
+    assert sum(item["path"].startswith("data/") for item in manifest["files"]) == sum(
+        item["path"].startswith("data/") for item in expected_entries
+    )
     assert len(manifest["contracts"]) == 6
     assert not any("business_metrics" in item["path"] for item in manifest["files"])
     assert verify_site(site) == []
@@ -362,7 +367,10 @@ def test_owner_approved_financial_receipt_binds_exact_four_metric_inputs(monkeyp
     assert checked["owner_id"] == "salvamalfa"
     assert len(payload["rows"]) > 0
     assert payload["metadata"]["metric_ids"] == [
-        "fuel_expense", "operating_costs", "operating_income", "total_revenue"
+        "fuel_expense",
+        "operating_costs",
+        "operating_income",
+        "total_revenue",
     ]
     assert payload["metadata"]["approval_receipt_sha256"] == canonical_receipt_sha256(receipt)
     assert "81bbd7e807e4a9f2c2b42a39a47147931b87439b" in checked["decision_reference"]
