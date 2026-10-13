@@ -112,6 +112,11 @@ Las tablas gold sí se versionan porque son los extractos públicos y compactos 
 
 ## Datos y documentación
 
+- [Catálogo completo y calendario de rondas mensuales/trimestrales](docs/catalogo-fuentes-calendario.md)
+  (fase 1 documental: fechas, cobertura, dependencias y anexos métricos).
+- [Continuidad sin capturas AeroDataBox recurrentes](docs/plan-salida-aerodatabox.md)
+  (propuesta de alcance; todavía no modifica la vista publicada).
+
 El Analysis Agent tiene una [skill del proyecto](.agents/skills/aeromexico-tracker-analysis/SKILL.md)
 y [comandos de autoría](docs/analysis-agent/analista-v1.md). La revisión
 auditada de 2T26 se conserva en `prototypes/etapa-17/audited_analysis.html`.
