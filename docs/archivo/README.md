@@ -101,3 +101,5 @@ operativa está en la documentación vigente del chat y el brief de cierre.
 El [brief candidato de métricas F2.3](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/f23-propuesta-revision-dueno.md)
 se retiró tras la aprobación y activación de las métricas; las definiciones y
 recibos vigentes permanecen versionados.
+El [detalle técnico candidato F2.3](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/f23-metricas-detalle-tecnico.md)
+también permanece en ese commit; describía la proyección previa a la activación.
