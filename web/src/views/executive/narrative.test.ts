@@ -46,6 +46,45 @@ describe("applyCitations", () => {
     expect(links.map((a) => a.textContent)).toEqual(["1", "2"]);
   });
 
+  it("keeps five distinct source documents in input order at the first occurrence of one value", () => {
+    const p = document.createElement("p");
+    p.textContent = "Ingreso 12.3%; después se repite 12.3%.";
+    const sources = Array.from({ length: 5 }, (_, index) => citation({
+      label: String(index + 1), href: `https://www.sec.gov/report-${index + 1}.htm`,
+    }));
+    applyCitations(p, sources);
+    const links = [...p.querySelectorAll<HTMLAnchorElement>("a.source-note")];
+    expect(links.map((link) => link.textContent)).toEqual(["1", "2", "3", "4", "5"]);
+    expect(links.map((link) => link.href)).toEqual(sources.map((source) => source.href));
+    expect(p.textContent).toBe("Ingreso 12.3%12345; después se repite 12.3%.");
+    expect(p.querySelector("sup sup, a a")).toBeNull();
+  });
+
+  it("keeps interleaved source lists beside their own values across emphasized text nodes", () => {
+    const p = document.createElement("p");
+    p.innerHTML = "Ingreso <strong>5.5</strong>, costo <em>4.4</em>, diferencia 1.1.";
+    const values = ["5.5", "4.4", "5.5", "1.1", "4.4"];
+    const sources = values.map((value, index) => citation({
+      value, label: String(index + 1), href: `https://www.sec.gov/source-${index + 1}.htm`,
+      title: `Documento ${index + 1}`,
+    }));
+    applyCitations(p, sources);
+    const links = [...p.querySelectorAll<HTMLAnchorElement>("a.source-note")];
+    expect(p.textContent).toBe("Ingreso 5.513, costo 4.425, diferencia 1.14.");
+    expect([...p.querySelectorAll("strong a")].map((link) => link.textContent)).toEqual(["1", "3"]);
+    expect([...p.querySelectorAll("em a")].map((link) => link.textContent)).toEqual(["2", "5"]);
+    expect(links.map((link) => link.textContent).sort()).toEqual(["1", "2", "3", "4", "5"]);
+    for (const source of sources) {
+      const link = links.find((link) => link.textContent === source.label)!;
+      expect(link.getAttribute("href")).toBe(source.href);
+      expect(link.getAttribute("aria-label")).toBe(`Fuente ${source.label}: abrir dato original`);
+      expect(link.getAttribute("target")).toBe("_blank");
+      expect(link.getAttribute("rel")).toBe("noopener noreferrer");
+      expect(link.getAttribute("title")).toBe(source.title);
+      expect(link.closest("sup")?.parentElement?.closest("a, sup")).toBeNull();
+    }
+  });
+
   it("never re-wraps text already inside a citation link or superscript", () => {
     const p = document.createElement("p");
     p.textContent = "12.3% y de nuevo 12.3% más adelante.";

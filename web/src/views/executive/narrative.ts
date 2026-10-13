@@ -25,8 +25,25 @@ export function citationsByClaim(analysis: AnalysisDocument): Map<string, Analys
 
 // Port of reader_ui.py::cite()'s inner text-node walk and <sup><a> splice.
 export function applyCitations(container: Element, citations: AnalysisCitation[]): void {
+  const tails = new Map<string, HTMLElement>();
   for (const citation of citations) {
     if (!citation.value || !safeSourceUrl(citation.href)) continue;
+    const sup = document.createElement("sup");
+    const a = document.createElement("a");
+    a.href = citation.href;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.className = "source-note";
+    a.setAttribute("aria-label", `Fuente ${citation.label}: abrir dato original`);
+    a.title = citation.title;
+    a.textContent = citation.label;
+    sup.appendChild(a);
+    const tail = tails.get(citation.value);
+    if (tail) {
+      tail.after(sup);
+      tails.set(citation.value, sup);
+      continue;
+    }
     const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
     let node = walker.nextNode() as Text | null;
     while (node) {
@@ -42,18 +59,9 @@ export function applyCitations(container: Element, citations: AnalysisCitation[]
       }
       const before = text.slice(0, index + citation.value.length);
       const after = text.slice(index + citation.value.length);
-      const sup = document.createElement("sup");
-      const a = document.createElement("a");
-      a.href = citation.href;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.className = "source-note";
-      a.setAttribute("aria-label", `Fuente ${citation.label}: abrir dato original`);
-      a.title = citation.title;
-      a.textContent = citation.label;
-      sup.appendChild(a);
       node.textContent = before;
       node.after(sup, document.createTextNode(after));
+      tails.set(citation.value, sup);
       break;
     }
   }

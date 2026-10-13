@@ -229,11 +229,22 @@ def _with_citation_labels(text: str, citations: list[dict]) -> str:
     order) occurrence of its ``value`` -- the same substring the DOM ends
     up with once the <sup><a> citation marker is spliced in."""
 
-    # Text nodes remain eligible after a marker is appended. A second source
-    # citing the same value is inserted before the first marker; citation text
-    # itself is never searched (it lives inside <sup>/<a>).
+    # Sources for a shared value append to its first marker group in input
+    # order. Citation labels are never searched as narrative text.
     segments: list[str | tuple[str, str]] = [text]
     for citation in citations:
+        marker_position = next(
+            (
+                i
+                for i, segment in enumerate(segments)
+                if isinstance(segment, tuple) and segment[0] == citation["value"]
+            ),
+            None,
+        )
+        if marker_position is not None:
+            previous = segments[marker_position]
+            segments[marker_position] = (citation["value"], previous[1] + citation["label"])
+            continue
         for position, segment in enumerate(segments):
             if not isinstance(segment, str):
                 continue
@@ -243,7 +254,7 @@ def _with_citation_labels(text: str, citations: list[dict]) -> str:
             end = index + len(citation["value"])
             segments[position : position + 1] = [
                 segment[:end],
-                ("citation", citation["label"]),
+                (citation["value"], citation["label"]),
                 segment[end:],
             ]
             break
@@ -252,7 +263,7 @@ def _with_citation_labels(text: str, citations: list[dict]) -> str:
 
 def test_citation_labels_preserve_multiple_sources_for_the_same_value() -> None:
     citations = [{"value": "42", "label": "1"}, {"value": "42", "label": "2"}]
-    assert _with_citation_labels("Valor 42 y texto.", citations) == "Valor 4221 y texto."
+    assert _with_citation_labels("Valor 42 y texto.", citations) == "Valor 4212 y texto."
 
 
 @browser_test

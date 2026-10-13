@@ -102,8 +102,15 @@ def test_shared_validation_change_invalidates_entity_presentation(monkeypatch, f
         "src/web_export/schemas.py",
         "src/web_export/writer.py",
         "src/publish/manifest.py",
+        "src/publish/gate.py",
+        "src/publish/records.py",
+        "src/publish/receipts.py",
+        "src/publish/verify.py",
         "contracts/web/analysis.schema.json",
+        "contracts/web/publication_manifest.schema.json",
         "contracts/web/privacy.yaml",
+        "web/src/views/executive/narrative.ts",
+        "web/package-lock.json",
     ],
 )
 def test_publication_provenance_dependency_changes_entity_code_version(monkeypatch, module):
