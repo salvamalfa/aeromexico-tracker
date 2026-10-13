@@ -28,8 +28,11 @@ describe("state/period", () => {
     subscribe((periodId) => calls.push(`a:${periodId}`));
     subscribe((periodId) => calls.push(`b:${periodId}`));
 
+    window.history.replaceState(null, "", "/?entity=VIVA_AEROBUS&period=2026Q2");
     next.click();
     expect(currentPeriodId()).toBe("2026Q3");
+    expect(new URLSearchParams(window.location.search).get("period")).toBe("2026Q3");
+    expect(new URLSearchParams(window.location.search).get("entity")).toBe("VIVA_AEROBUS");
     // One click, one notification per subscriber, in subscription order —
     // the second wireStepper() call above did not attach a second listener.
     expect(calls).toEqual(["a:2026Q3", "b:2026Q3"]);
@@ -48,5 +51,6 @@ describe("state/period", () => {
     subscribe(late);
     next.click();
     expect(late).toHaveBeenCalledExactlyOnceWith("2026Q2");
+    window.history.replaceState(null, "", "/");
   });
 });

@@ -65,52 +65,26 @@ from src.web_export.schemas import ANALYSIS_SCHEMA
 from src.web_export.writer import write_json
 
 from . import manifest as manifest_mod
+from .records import (
+    ANALYSIS_MANIFEST_FIELDS as ANALYSIS_MANIFEST_FIELDS,
+)
+from .records import (
+    PublicationRefused as PublicationRefused,
+)
+from .records import (
+    _analysis_manifest_entry as _analysis_manifest_entry,
+)
+from .records import (
+    _reject_duplicate_periods as _reject_duplicate_periods,
+)
+from .records import (
+    load_records as load_records,
+)
 
 WEB_DIR = PATHS.root / "web"
 WEB_DATA_V1 = WEB_DIR / "public" / "data" / "v1"
 WEB_DIST = WEB_DIR / "dist"
 PUBLICATIONS_ROOT = PATHS.root / "analysis_runs" / "publications"
-
-ANALYSIS_MANIFEST_FIELDS = (
-    "period_id",
-    "version",
-    "content_hash",
-    "evidence_fingerprint",
-    "approval_event",
-    "audit_hash",
-)
-
-
-class PublicationRefused(RuntimeError):
-    """A record failed verification, or web_export/npm build failed. Nothing was written."""
-
-
-def load_records(record_paths: list[Path]) -> list[dict[str, Any]]:
-    import json
-
-    records = []
-    for path in record_paths:
-        records.append(json.loads(Path(path).read_text(encoding="utf-8")))
-    _reject_duplicate_periods(records)
-    return records
-
-
-def _reject_duplicate_periods(records: list[dict[str, Any]]) -> None:
-    """Two --record for the same period_id is ambiguous -- which one
-    ends up in analysis/<period_id>.json is not something this gate should
-    guess. Refuse before any verification/export/build work happens."""
-
-    by_period: dict[str, list[str]] = {}
-    for record in records:
-        period_id = record["draft"]["period_id"]
-        by_period.setdefault(period_id, []).append(record.get("version", "?"))
-    for period_id, versions in sorted(by_period.items()):
-        if len(versions) > 1:
-            versions_str = ", ".join(sorted(versions))
-            raise PublicationRefused(
-                f"Multiple approved versions for period {period_id}: {versions_str} — "
-                "revoke one or select explicitly"
-            )
 
 
 def _trusted_site_commit(root: Path, trusted_ref: str = "origin/master") -> str:
@@ -195,6 +169,19 @@ def _verify_under_lock(records: list[dict[str, Any]], root: Path) -> list[tuple[
     for record in records:
         authorized = flow.consumer_payload(record, root)
         package, calculations, _ = flow.verified_inputs(record)
+        expected = manifest_mod.analysis_identity(record["draft"])
+        if (
+            manifest_mod.analysis_identity(authorized) != expected
+            or authorized.get("version") != record["version"]
+        ):
+            raise ValueError("Authorized analysis entity/period/version differs from its record")
+        if "entity_key" in record["draft"]:
+            if (
+                authorized.get("entity_key") != expected[0]
+                or package.get("entity_key") != expected[0]
+                or package.get("period_id") != expected[1]
+            ):
+                raise ValueError("Entity record, authorization and evidence identities differ")
         entries.append((record, authorized, package, calculations))
     return entries
 
@@ -229,7 +216,7 @@ def _analysis_payload(
     from verify_records, instead of re-querying the ledger a second time."""
 
     payload = analysis_export._drop_private_sections(copy.deepcopy(authorized), record)
-    citations = analysis_export._citations_by_claim(record, package, calculations)
+    citations = analysis_export._citations_by_claim(record, package, calculations, payload)
     for claim in payload["claims"]:
         claim["citations"] = citations.get(claim["claim_id"], [])
     return payload
@@ -266,9 +253,19 @@ def export_data(entries: list[tuple[Any, Any, Any, Any]], out_dir: Path) -> None
 
     validator = Draft202012Validator(ANALYSIS_SCHEMA)
     rules = load_privacy_rules()
+    seen = set()
     for record, authorized, package, calculations in entries:
         period_id = authorized["period_id"]
         payload = _analysis_payload(record, authorized, package, calculations)
+        identity = manifest_mod.analysis_identity(payload)
+        if (
+            identity != manifest_mod.analysis_identity(record["draft"])
+            or payload["version"] != record["version"]
+        ):
+            raise PublicationRefused("Exported analysis entity/period/version differs from its record")
+        if identity in seen:
+            raise PublicationRefused(f"Multiple analysis payloads for entity/period {identity}")
+        seen.add(identity)
         errors = [f"{list(e.path)}: {e.message}" for e in validator.iter_errors(payload)]
         if errors:
             raise PublicationRefused(f"analysis/{period_id}.json does not match its schema: {errors[:5]}")
@@ -276,7 +273,7 @@ def export_data(entries: list[tuple[Any, Any, Any, Any]], out_dir: Path) -> None
             check_privacy(payload, rules)
         except PrivacyViolation as error:
             raise PublicationRefused(f"analysis/{period_id}.json: {error}") from error
-        write_json(out_dir / "analysis" / f"{period_id}.json", payload)
+        write_json(out_dir / manifest_mod.analysis_relative_path(payload), payload)
 
 
 def build_web(web_dir: Path = WEB_DIR) -> Path:
@@ -354,6 +351,15 @@ def write_receipt(
         "versions": sorted(e["version"] for e in authorized),
         "approval_events": sorted(e["approval_event"] for e in authorized),
     }
+    if any("entity_key" in entry for entry in authorized):
+        receipt["analysis_identities"] = [
+            {
+                "entity_key": manifest_mod.analysis_identity(entry)[0],
+                "period_id": entry["period_id"],
+                "version": entry["version"],
+            }
+            for entry in sorted(authorized, key=manifest_mod.analysis_sort_key)
+        ]
     key = manifest_mod.manifest_hash(receipt)
     store = PUBLICATIONS_ROOT
     store.mkdir(parents=True, exist_ok=True)
@@ -418,12 +424,10 @@ def publish(
     # the second check with a new approval_event/audit_hash that no longer
     # matches what dist_dir contains, so any change aborts instead.
     authorized = [e[1] for e in entries]
-    analysis_manifest = [{k: e[k] for k in ANALYSIS_MANIFEST_FIELDS} for e in authorized]
+    analysis_manifest = [_analysis_manifest_entry(e) for e in authorized]
     try:
         with flow.writer(root):
-            current = [
-                {k: e[1][k] for k in ANALYSIS_MANIFEST_FIELDS} for e in _verify_under_lock(records, root)
-            ]
+            current = [_analysis_manifest_entry(e[1]) for e in _verify_under_lock(records, root)]
             if current != analysis_manifest:
                 raise ValueError("approval changed while the site was being built; rerun the publication")
             manifest = assemble_site(dist_dir, analysis_manifest, out_dir)
@@ -465,7 +469,7 @@ def publish_ui_only(
         raise PublicationRefused("no --record given; refuse to publish an empty analysis manifest")
     entries = verify_records(records, root=root)
     authorized = [entry[1] for entry in entries]
-    analysis_manifest = [{key: entry[key] for key in ANALYSIS_MANIFEST_FIELDS} for entry in authorized]
+    analysis_manifest = [_analysis_manifest_entry(entry) for entry in authorized]
 
     trusted_site_commit = _trusted_site_commit(PATHS.root)
     require_trusted_site_baseline(out_dir, root=PATHS.root, trusted_commit=trusted_site_commit)
@@ -476,7 +480,7 @@ def publish_ui_only(
     if site_problems:
         raise PublicationRefused(f"existing site is not valid for UI-only publication: {site_problems[:5]}")
     current_manifest = manifest_mod.load_manifest(out_dir)
-    if current_manifest["analysis_manifest"] != sorted(analysis_manifest, key=lambda item: item["period_id"]):
+    if current_manifest["analysis_manifest"] != sorted(analysis_manifest, key=manifest_mod.analysis_sort_key):
         raise PublicationRefused("existing site analysis manifest does not match the exact approved records")
 
     source_data = {
@@ -501,7 +505,7 @@ def publish_ui_only(
     if built_data != source_data:
         raise PublicationRefused("UI build changed the existing public data/v1 files")
 
-    expected_analysis_manifest = sorted(analysis_manifest, key=lambda item: item["period_id"])
+    expected_analysis_manifest = sorted(analysis_manifest, key=manifest_mod.analysis_sort_key)
     try:
         with flow.writer(root):
             # Recheck the trusted payload at the last possible moment too;
@@ -512,11 +516,8 @@ def publish_ui_only(
                 root=PATHS.root,
                 trusted_commit=trusted_site_commit,
             )
-            current = [
-                {key: entry[1][key] for key in ANALYSIS_MANIFEST_FIELDS}
-                for entry in _verify_under_lock(records, root)
-            ]
-            if sorted(current, key=lambda item: item["period_id"]) != expected_analysis_manifest:
+            current = [_analysis_manifest_entry(entry[1]) for entry in _verify_under_lock(records, root)]
+            if sorted(current, key=manifest_mod.analysis_sort_key) != expected_analysis_manifest:
                 raise ValueError("approval changed while the UI was being built; rerun the publication")
             manifest = assemble_site(
                 dist_dir,

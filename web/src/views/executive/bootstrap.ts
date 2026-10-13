@@ -59,6 +59,7 @@ async function render(periodId: string): Promise<void> {
   state.periodIndex = state.records.findIndex((record) => record.period_id === periodId);
   renderKpisAndTable(periodId);
   await renderReading(periodId);
+  if (periodId !== currentPeriodId()) return;
   renderMarket(periodId);
   const range = $("unit-range") as HTMLSelectElement;
   const inRange = range.value === "all" || state.records.slice(-Number(range.value)).some((r) => r.period_id === periodId);

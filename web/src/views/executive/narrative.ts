@@ -2,7 +2,7 @@
 // web/public/data/v1/analysis/<period_id>.json — the export of
 // src.analysis_agent.lifecycle.consumer_payload(record) plus per-claim
 // citations (see src/web_export/analysis.py) — one fetch per period,
-// cached afterwards. A period with no exported file (draft/unapproved, or
+// cached afterwards by data root, entity and period. A period with no exported file (draft/unapproved, or
 // a dev build run with --allow-missing-analysis) shows the same fallback
 // text the published page shows for a quarter pending approval.
 //
@@ -17,6 +17,7 @@
 import { $ } from "../flights/dom";
 import { state } from "./state";
 import type { AnalysisCitation, AnalysisDocument, ExecutiveView } from "../../types/domain";
+import { isEntityKey } from "../shell/carriers";
 
 export function citationsByClaim(analysis: AnalysisDocument): Map<string, AnalysisCitation[]> {
   return new Map(analysis.claims.map((claim) => [claim.claim_id, claim.citations]));
@@ -25,11 +26,11 @@ export function citationsByClaim(analysis: AnalysisDocument): Map<string, Analys
 // Port of reader_ui.py::cite()'s inner text-node walk and <sup><a> splice.
 export function applyCitations(container: Element, citations: AnalysisCitation[]): void {
   for (const citation of citations) {
+    if (!citation.value || !safeSourceUrl(citation.href)) continue;
     const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
     let node = walker.nextNode() as Text | null;
     while (node) {
-      const parentName = node.parentElement?.nodeName;
-      if (parentName === "A" || parentName === "SUP") {
+      if (node.parentElement?.closest("a, sup")) {
         node = walker.nextNode() as Text | null;
         continue;
       }
@@ -58,15 +59,63 @@ export function applyCitations(container: Element, citations: AnalysisCitation[]
   }
 }
 
-const cache = new Map<string, AnalysisDocument | null>(); // period_id -> payload | null (no export for this period)
-let dialogPeriodLabel = "";
+function safeSourceUrl(href: string): boolean {
+  try {
+    const url = new URL(href);
+    return url.protocol === "https:" && !url.username && !url.password && [
+      "www.sec.gov", "sec.gov", "ir.aeromexico.com", "cdn.investorcloud.net", "ir.volaris.com",
+    ].includes(url.hostname);
+  } catch { return false; }
+}
 
-async function fetchAnalysis(periodId: string): Promise<AnalysisDocument | null> {
-  if (cache.has(periodId)) return cache.get(periodId) ?? null;
-  const response = await fetch(`${state.dataRoot}/analysis/${periodId}.json`);
-  const payload = response.ok ? ((await response.json()) as AnalysisDocument) : null;
-  cache.set(periodId, payload);
-  return payload;
+const cache = new Map<string, AnalysisDocument | null>();
+let renderEpoch = 0;
+
+function validDate(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+// Runtime boundary: a missing entity is compatible only with the historical
+// Aeroméxico endpoint. Never use that document as another entity's fallback.
+export function validAnalysis(payload: unknown, entityKey: string, periodId: string): payload is AnalysisDocument {
+  if (!payload || typeof payload !== "object") return false;
+  const p = payload as Record<string, unknown>;
+  if (p.period_id !== periodId || typeof p.version !== "string" || !p.version.trim()) return false;
+  if ((p.entity_key === undefined ? "AEROMEXICO" : p.entity_key) !== entityKey) return false;
+  if (entityKey !== "AEROMEXICO" && (
+    typeof p.period_label !== "string" || !p.period_label.trim() ||
+    !validDate(p.cutoff_date) ||
+    p.selection_mode !== "retrospective" || p.guidance_as_of !== "report_date"
+  )) return false;
+  const strings = (v: unknown): v is string[] => Array.isArray(v) && v.every((s) => typeof s === "string");
+  if (typeof p.thesis !== "string" || !strings(p.context)) return false;
+  if (!Array.isArray(p.summary_items) || !p.summary_items.every((s) => s &&
+    typeof s.claim_id === "string" && typeof s.text === "string" &&
+    (s.lead == null || typeof s.lead === "string") && (s.emphasis === undefined || strings(s.emphasis)))) return false;
+  if (!Array.isArray(p.sections) || !p.sections.every((s) => s &&
+    typeof s.title === "string" && strings(s.paragraphs) && strings(s.claim_ids) && s.paragraphs.length === s.claim_ids.length)) return false;
+  if (!Array.isArray(p.claims) || !p.claims.every((c) => c && typeof c.claim_id === "string" &&
+    Array.isArray(c.citations) && c.citations.every((x: AnalysisCitation) => x &&
+      [x.label, x.href, x.title, x.value].every((v) => typeof v === "string") && safeSourceUrl(x.href)))) return false;
+  const claimIds = new Set(p.claims.map((c) => c.claim_id));
+  return claimIds.size === p.claims.length && p.summary_items.every((s) => claimIds.has(s.claim_id)) &&
+    p.sections.every((s) => s.claim_ids.every((id: string) => claimIds.has(id)));
+}
+
+async function fetchAnalysis(entityKey: string, periodId: string): Promise<AnalysisDocument | null> {
+  if (!isEntityKey(entityKey) || !/^\d{4}Q[1-4]$/.test(periodId)) return null;
+  const key = JSON.stringify([state.dataRoot, entityKey, periodId]);
+  if (cache.has(key)) return cache.get(key) ?? null;
+  const path = entityKey === "AEROMEXICO" ? periodId : `${entityKey}/${periodId}`;
+  try {
+    const response = await fetch(`${state.dataRoot}/analysis/${path}.json`);
+    const raw: unknown = response.ok ? await response.json() : null;
+    const payload = validAnalysis(raw, entityKey, periodId) ? raw : null;
+    cache.set(key, payload);
+    return payload;
+  } catch { return null; }
 }
 
 // Port of src/analysis_agent/analyst.py::emphasized: wraps the lead
@@ -96,12 +145,23 @@ function escapeHtml(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-function renderDialog(analysis: AnalysisDocument, periodLabel: string): void {
+function temporalNotice(analysis: AnalysisDocument): string {
+  if (!analysis.cutoff_date || analysis.selection_mode !== "retrospective") return "";
+  const parsed = new Date(`${analysis.cutoff_date}T00:00:00Z`);
+  const date = Number.isNaN(parsed.getTime()) ? analysis.cutoff_date : new Intl.DateTimeFormat("es-MX", {
+    day: "numeric", month: "long", year: "numeric", timeZone: "UTC",
+  }).format(parsed);
+  return `Corte de información: ${date} · Análisis retrospectivo. Las expectativas corresponden a la fecha del reporte.`;
+}
+
+function renderDialog(analysis: AnalysisDocument, periodLabel: string, entityKey: string, entityName: string): void {
   const dialog = $("analysis-full");
   if (!dialog) return;
-  dialog.querySelector(".bar h2")!.textContent = `Análisis completo · ${periodLabel}`;
+  const prefix = entityKey === "AEROMEXICO" ? "Análisis completo" : `Análisis completo · ${entityName}`;
+  dialog.querySelector(".bar h2")!.textContent = `${prefix} · ${periodLabel}`;
   const content = dialog.querySelector(".modal-content")!;
-  content.innerHTML = analysis.sections
+  const notice = temporalNotice(analysis);
+  content.innerHTML = (notice ? `<aside class="analysis-context">${escapeHtml(notice)}</aside>` : "") + analysis.sections
     .map(
       (section) =>
         `<section><h3>${escapeHtml(section.title)}</h3>` +
@@ -118,34 +178,41 @@ function renderDialog(analysis: AnalysisDocument, periodLabel: string): void {
   });
 }
 
-function wireDialogButton(analysis: AnalysisDocument, periodLabel: string): void {
+function wireDialogButton(analysis: AnalysisDocument, periodLabel: string, entityKey: string, entityName: string): void {
   const button = $("analysis-open-full");
   if (!button) return;
   button.onclick = () => {
-    dialogPeriodLabel = periodLabel;
-    renderDialog(analysis, dialogPeriodLabel);
+    renderDialog(analysis, periodLabel, entityKey, entityName);
     ($("analysis-full") as HTMLDialogElement).showModal();
   };
 }
 
-// Only Aeroméxico has an approved analysis today (Analysis Agent); the
-// industry and the other airlines show the same pending text until their
-// own theses are approved (Dashboard v2, fase 5).
 export async function renderNarrative(view: ExecutiveView, entityKey = "AEROMEXICO", entityName = "Aeroméxico"): Promise<void> {
+  const epoch = ++renderEpoch;
   $("narrative-period")!.textContent = view.period_label;
   const entityNode = $("narrative-entity");
   if (entityNode) entityNode.textContent = entityName;
-  const analysis = entityKey === "AEROMEXICO" ? await fetchAnalysis(view.period_id) : null;
   const copy = $("narrative-copy")!;
+  const dialog = $("analysis-full") as HTMLDialogElement | null;
+  if (dialog?.open) dialog.close();
+  dialog?.querySelector(".modal-content")?.replaceChildren();
+  copy.innerHTML = '<p class="analysis-placeholder">Cargando análisis…</p>';
+  copy.dataset.period = view.period_id;
+  copy.dataset.entity = entityKey;
+  const analysis = await fetchAnalysis(entityKey, view.period_id);
+  if (epoch !== renderEpoch) return;
   if (!analysis) {
     copy.innerHTML = '<p class="analysis-placeholder" id="analysis-empty">Análisis pendiente de aprobación para este trimestre.</p>';
     copy.dataset.period = view.period_id;
     return;
   }
+  const periodLabel = analysis.period_label ?? view.period_label;
+  $("narrative-period")!.textContent = periodLabel;
   const items = analysis.summary_items
     .map((item) => `<li>${emphasized(item.text, item.lead ?? "", item.emphasis)}</li>`)
     .join("");
-  const context = analysis.context.map((text) => `<aside class="analysis-context">${escapeHtml(text)}</aside>`).join("");
+  const notice = temporalNotice(analysis);
+  const context = [...(notice ? [notice] : []), ...analysis.context].map((text) => `<aside class="analysis-context">${escapeHtml(text)}</aside>`).join("");
   copy.innerHTML =
     `<div><h3>${escapeHtml(analysis.thesis)}</h3>` +
     `<ul class="analysis-summary">${items}</ul>${context}` +
@@ -156,5 +223,5 @@ export async function renderNarrative(view: ExecutiveView, entityKey = "AEROMEXI
     if (claimId) applyCitations(li, citations.get(claimId) ?? []);
   });
   copy.dataset.period = view.period_id;
-  wireDialogButton(analysis, view.period_label);
+  wireDialogButton(analysis, periodLabel, entityKey, entityName);
 }

@@ -4,7 +4,14 @@
 /**
  * Describes web/public/data/v1/analysis/<period_id>.json: exactly the fields src.analysis_agent.lifecycle.consumer_payload(record) authorizes for a currently-approved analysis version, minus any reader-private section (see src/web_export/analysis.py). Each claim also carries the citation(s) the published page overlays on that claim's text, ported from src.analysis_agent.reader_ui.cite() — only the public source URL, the visible tooltip text and the substring to wrap ever leave this file; no excerpt/source/calculation object, lineage or provider identifier. See docs/arquitectura/auditoria-arquitectura-20260926.md Fase 3 and contracts/web/README.md.
  */
-export interface AnalisisDelAnalysisAgentParaLaLecturaEjecutivaV1 {
+export type AnalisisDelAnalysisAgentParaLaLecturaEjecutivaV1 = {
+  [k: string]: unknown;
+} & {
+  entity_key?: "AEROMEXICO" | "VOLARIS" | "VIVA_AEROBUS" | "INDUSTRY";
+  period_label?: string;
+  cutoff_date?: string;
+  selection_mode?: string;
+  guidance_as_of?: string;
   period_id: string;
   version: string;
   content_hash: string;
@@ -20,7 +27,8 @@ export interface AnalisisDelAnalysisAgentParaLaLecturaEjecutivaV1 {
   audit_hash: string;
   version_event_head: string;
   context: string[];
-}
+};
+
 export interface SummaryItem {
   claim_id: string;
   lead: string | null;

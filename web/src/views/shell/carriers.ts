@@ -61,6 +61,8 @@ function syncUrl(): void {
   if (typeof window === "undefined" || !window.history?.replaceState) return;
   const params = new URLSearchParams(window.location.search);
   for (const [card, keys] of selections) params.set(`sel_${card}`, serializeSelection(keys));
+  const reading = selections.get("reading")?.[0];
+  if (reading && params.has("entity")) params.set("entity", reading);
   const query = params.toString();
   window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`);
 }
@@ -79,7 +81,8 @@ function summaryText(keys: EntityKey[]): string {
 // `onChange` fires on every user change (never on mount).
 export function mountPicker(host: HTMLElement, spec: PickerSpec, onChange: Listener): EntityKey[] {
   const params = new URLSearchParams(window.location.search);
-  const initial = parseSelection(params.get(`sel_${spec.card}`), spec.multi, spec.defaults);
+  const raw = params.get(`sel_${spec.card}`) ?? (spec.card === "reading" ? params.get("entity") : null);
+  const initial = parseSelection(raw, spec.multi, spec.defaults);
   selections.set(spec.card, initial);
   const labelText = spec.label ?? "Aerolínea";
   const id = `carrier-${spec.card}`;
