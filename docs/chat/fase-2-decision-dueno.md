@@ -1,11 +1,9 @@
-# Fase 2 del chat · acciones del dueño
+# Fase 2 del chat · estado para el dueño
 
-R2, cuatro métricas, siete pasajes, tres fichas y la reserva Stage 3 ya están aprobados: [decisión](../decisiones/20261012-chat-fase2-r2-contenido-stage3.md). No hace falta repetir esa aprobación.
-
-N01 se intentó el 12 oct, 23:39 UTC; HTTP 400 antes de crear sesión. Su consumo sigue desconocido (`stopped_unknown_spend`), no se declara cero. El dueño autorizó el reintento sin conciliación previa; Stage 3 está en curso, aún sin resultados: [decisión](../decisiones/20261012-chat-stage3-reintento.md) y [bitácora](../etapas/chat-fase2-stage3-intento-20261012.md).
-
-Para CI, configura en [GitHub Actions Variables](https://github.com/salvamalfa/aeromexico-tracker/settings/variables/actions): `CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256` = `644eb640124297fc63b306836607aea6e4b0be424b85e67b902cc9f5407153ae`.
-
-Configura también `CHAT_EVIDENCE_APPROVED_INDEX_SHA256` = `1cd0455ac1944849d567c96f7147c3f393d17333dac2c28b70459e4f7887334f`. La lectura API de variables dio 403; configúralas manualmente. Luego continúa [PR #126](https://github.com/salvamalfa/aeromexico-tracker/pull/126); no se vuelve a pedir aprobación.
-
-Los JSON de los 30 casos no están disponibles; gasto real y saldo siguen desconocidos. Producción mantiene R1/Sol low y las capacidades apagadas: [bitácora del intento](../etapas/chat-fase2-stage3-intento-20261012.md).
+No hay acción pendiente del dueño: contenidos, ajuste de R2 y activación están autorizados; se omite otra evaluación pagada.
+Stage 3 completó 30 casos/34 mensajes; costo estimado registrado: US$2.626185.
+Revisión recibida: 16 correctos, 14 problemas; 13 notas de periodo, 12 casos sin contexto del dashboard.
+La interfaz ya envía la selección automáticamente; la campaña no prueba una falla del selector real.
+La fase 2 está implementada; R1 y flags apagados siguen como default hasta la selección externa explícita de R2.
+Plan técnico: integrar el ajuste de periodo y búsqueda bilingüe, seleccionar R2 y capacidades autorizadas, verificar hashes, flags y health del despliegue.
+No se afirma despliegue final verificado ni un gate de calidad aprobado. Detalle: [operaciones](operations.md).

@@ -24,9 +24,9 @@ renderiza desde los valores persistidos sin otra consulta al modelo. El estado
 local de F2.8 y sus verificaciones están en el [reporte de etapa](../etapas/chat-f2-8-presentacion-20261011.md).
 
 El índice versionado contiene siete pasajes de reportes y tres fichas de
-noticias aprobados por el dueño. Las herramientas de evidencia siguen
-desactivadas hasta ejecutar Stage 3 y revisar sus resultados JSON. Cuando se
-habilite la búsqueda, cada resultado entrega `references` con su URL exacta y
+noticias aprobados por el dueño. La activación de las herramientas de evidencia
+con R2 está autorizada y pendiente de verificación del despliegue. Cada
+resultado entrega `references` con su URL exacta y
 una etiqueta de empresa, periodo/página o medio/fecha/título; el proveedor las
 conserva en las fuentes del turno y agrupa etiquetas que comparten URL.
 
@@ -52,21 +52,20 @@ snapshot `d9c4e56d04ad67be5dff6d6e9f7f6615f4f4be985ec1e5ee59781a7735007037`;
 health respondió 200 y la admisión/worker estaban activos. No se hizo ninguna
 consulta pagada durante la verificación.
 
-El código F2.3–F2.9 se integró en el [PR #120](https://github.com/salvamalfa/aeromexico-tracker/pull/120)
-y se verificó en Railway y Pages. Health respondió 200 con R1, Sol low y
-`enabled_capabilities: []`; las funciones nuevas siguen apagadas. El dueño
-aprobó R2, cuatro métricas financieras, siete pasajes, tres fichas y una nueva
-reserva financiada de US$8. R1, Sol low, las preguntas y la rúbrica ya estaban
-aprobados y no se vuelven a solicitar. Stage 3 (30 casos/34 mensajes) no tiene
-resultados JSON disponibles. N01 devolvió HTTP 400 antes de sesión y el uso
-quedó `stopped_unknown_spend`; no se declara costo cero ni saldo intacto. No se
-ha aprobado un gate de calidad. Consulta la
-[cotización vigente](revision-fase-2/F2.9-etapa-3-presupuesto-actual.md), el
-[brief de decisiones del dueño](fase-2-decision-dueno.md) y el
-[reporte de activación](../etapas/chat-f2-0-activacion-20261012.md), la
-[verificación posterior a PR #120](../etapas/chat-fase2-entrega-final-20261012.md)
-y el [registro de aprobación y Stage 3](../etapas/chat-fase2-aprobacion-stage3-20261012.md),
-además de la [bitácora del intento reciente](../etapas/chat-fase2-stage3-intento-20261012.md).
+La fase 2 está implementada. Stage 3 completó 30 casos/34 mensajes con costo
+estimado registrado de US$2.626185; la revisión del dueño calificó 16 correctos
+y 14 problemas. De las 13 notas de periodo, 12 corresponden a ejecuciones sin
+contexto; la interfaz ya transmite automáticamente la selección del dashboard.
+No se interpreta este resultado como prueba de que el selector real se ignore.
+
+El dueño autorizó ajustar R2 sin repetir la evaluación pagada. El prompt debe
+priorizar el periodo seleccionado, explicitar el periodo utilizado y recuperar
+pasajes ingleses para consultas en español. R1 permanece predeterminado y las
+capacidades nuevas apagadas por omisión. La activación explícita de R2 y sus
+capacidades está autorizada y planeada; falta verificar el despliegue, sus hashes,
+flags y health. No se declara una nueva evaluación ni un gate de calidad
+aprobado. No hay acción pendiente del dueño: el trabajo restante es técnico.
+Consulta [operaciones](operations.md) y el [brief del dueño](fase-2-decision-dueno.md).
 
 ### Registro histórico al 8 de octubre de 2026
 

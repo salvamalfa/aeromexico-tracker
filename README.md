@@ -39,14 +39,11 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
 - **Analysis Agent:** el análisis de 2T26 está aprobado y publicado en la
   Lectura ejecutiva (`data/v1/analysis/2026Q2.json`). El siguiente ciclo es
   3T26, cuando Aeroméxico publique su reporte trimestral.
-- **Chat:** el MVP sigue activo en Railway. El despliegue verificado usa
-  `gpt-6.1-sol`, esfuerzo `low` y R1; health respondió 200. Las capacidades de
-  rutas, métricas financieras y búsqueda de evidencia permanecen apagadas.
-  El dueño aprobó R2, cuatro métricas, siete pasajes, tres fichas y una reserva
-  nueva de US$8. El intento N01 terminó HTTP 400 antes de sesión, sin respuesta
-  ni uso conciliado; gasto y saldo siguen desconocidos. El runtime mantiene R1/Sol low y las funciones nuevas siguen
-  apagadas; los pins aprobados están preparados para el siguiente despliegue
-  (ver [Chat analítico](#chat-analítico)).
+- **Chat:** fase 2 implementada; Stage 3 completó 30 casos/34 mensajes y la
+  revisión privada recibió 16 correctos y 14 problemas. El dueño autorizó el
+  ajuste final de R2 sin otra evaluación pagada. R1/Sol low conserva su default;
+  la activación explícita de R2 y capacidades aprobadas está pendiente de
+  verificar en el despliegue (ver [Chat analítico](#chat-analítico)).
 - **Datos:** AFAC y AeroDataBox se actualizan a mano mes a mes; lo pendiente
   está en [`ROADMAP.md`](ROADMAP.md).
 
@@ -139,21 +136,23 @@ El chat responde preguntas sobre el snapshot público con una capa semántica
 versionada; no abre el warehouse ni convierte ausencias en cero. El MVP sigue
 activo en Railway con `gpt-6.1-sol`, acceso con contraseña, topes diarios de
 US$5 (por usuario y global) y hasta 16 llamadas de herramienta por pregunta.
-PR #120 integró F2.3–F2.9 y está desplegado. Railway confirmó `SUCCESS` y
-`/api/chat/health` respondió 200 con Sol low y R1 efectivo; Pages pasó todos los
-checks y las páginas públicas se verificaron. El deployment confirma
-`enabled_capabilities: []`: los flags siguen apagados. El dueño aprobó R2,
-cuatro métricas financieras, siete pasajes de reportes, tres fichas de noticias
-y una reserva nueva financiada de US$8. El runtime mantiene R1/Sol low y las
-funciones nuevas siguen apagadas hasta revisar los resultados JSON de Stage 3.
-La evaluación Stage 3 de 30 casos/34 mensajes no tiene resultados JSON: un
-intento N01 devolvió HTTP 400 antes de sesión; su consumo no está
-conciliado (`stopped_unknown_spend`), así que no se afirma costo cero ni saldo
-intacto. No hay gate de calidad aprobado.
+La fase 2 está implementada; su activación final requiere verificar el despliegue.
+Stage 3 completó 30 casos/34 mensajes con costo estimado registrado de
+US$2.626185. La revisión del dueño recibió 16 calificaciones correctas y 14
+problemas; 13 notas mencionan el periodo, pero 12 de esos casos se ejecutaron
+sin contexto del dashboard. La interfaz ya envía automáticamente la selección;
+esta campaña no demuestra que el chat ignore el selector real.
+
+El dueño autorizó corregir R2 y omitir otra evaluación pagada. El ajuste prioriza
+el periodo seleccionado y la recuperación de evidencia en inglés cuando la
+pregunta está en español. R1/Sol low y las capacidades apagadas siguen como
+default; la selección explícita de R2 y sus capacidades está autorizada y
+planeada, pendiente de comprobar versión, hashes, flags y health en Railway.
+Las calificaciones recibidas no constituyen un gate automático de calidad.
 
 - Operación, instalación y límites: [documentación del chat](docs/chat/README.md)
   y [traspaso operativo](docs/chat/traspaso-activacion-mvp-20261006.md).
-- Implementación y decisiones pendientes: la [fase 2](docs/chat/fase-2-agente-analitico.md)
+- Implementación y cierre técnico: la [fase 2](docs/chat/fase-2-agente-analitico.md)
   y el [resumen para decisión del dueño](docs/chat/fase-2-decision-dueno.md).
 
 El perfil `chat-runtime` instala solo las dependencias del backend. El gasto se
