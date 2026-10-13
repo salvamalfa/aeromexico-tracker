@@ -57,10 +57,8 @@ function movePeriod(offset: number): void {
   store.index = next;
   const periodId = store.periodIds[next]!;
   const params = new URLSearchParams(window.location.search);
-  if (params.has("period")) {
-    params.set("period", periodId);
-    window.history.replaceState(null, "", `${window.location.pathname}?${params}${window.location.hash}`);
-  }
+  params.set("period", periodId);
+  window.history.replaceState(null, "", `${window.location.pathname}?${params}${window.location.hash}`);
   for (const listener of listeners) listener(periodId);
 }
 
