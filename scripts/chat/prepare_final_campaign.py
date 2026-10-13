@@ -217,13 +217,13 @@ def build_plan(
     # This measures schema and tool-result bytes only; it never contacts a model.
     from src.conversational_analytics.data.snapshot import Snapshot
     from src.conversational_analytics.evaluation_stage3_coverage import (
+        STAGE3_PROMPT_PATH,
+        STAGE3_PROMPT_SHA256,
         _canonical_hash,
         _Tools,
         derive_stage3_coverage,
     )
     from src.conversational_analytics.providers._openai_prompt import (
-        R2_PROMPT_PATH,
-        R2_PROMPT_SHA256,
         load_system_instructions,
         prompt_sha256,
     )
@@ -264,10 +264,10 @@ def build_plan(
     current_tool_schema_bytes = len(current_tool_schema_json.encode("utf-8"))
     current_tool_schema_sha = _canonical_hash(current_tool_specs)
     r1_prompt = load_system_instructions()
-    r2_prompt = R2_PROMPT_PATH.read_text(encoding="utf-8").strip()
+    r2_prompt = STAGE3_PROMPT_PATH.read_text(encoding="utf-8").strip()
     r2_prompt_sha = prompt_sha256(r2_prompt)
-    if r2_prompt_sha != R2_PROMPT_SHA256:
-        raise ValueError("El prompt R2 propuesto no coincide con su hash fijado")
+    if r2_prompt_sha != STAGE3_PROMPT_SHA256:
+        raise ValueError("El prompt histórico de etapa 3 no coincide con su hash fijado")
 
     historical_tool_schema_bytes = 3_306
     bytes_per_token_proxy_range = (3, 4)

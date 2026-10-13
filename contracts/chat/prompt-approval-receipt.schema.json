@@ -26,7 +26,7 @@
       "const": "r2-proposed"
     },
     "prompt_sha256": {
-      "const": "68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf"
+      "const": "cec193aa10dff802d5578da00777b5b56c74bfcc71aeccaf1ea718c07cc763b1"
     },
     "prompt_path": {
       "const": "config/chat/prompt_candidates/system_prompt_r2-proposed.txt"

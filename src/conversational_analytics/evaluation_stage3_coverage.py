@@ -42,7 +42,9 @@ METRIC_REGISTRY = ROOT / "config/chat/metrics.yaml"
 EVIDENCE_APPROVAL_INDEX = ROOT / "config/chat/evidence/approved-index.json"
 CAMPAIGN_CANDIDATE = "gpt-6.1-sol@low"
 STAGE3_PROMPT_VERSION = "r2-proposed"
+# Frozen identity of the completed stage-three campaign, independent of production.
 STAGE3_PROMPT_SHA256 = "68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf"
+STAGE3_PROMPT_PATH = ROOT / "config/chat/evaluation_prompts/system_prompt_r2-stage3.txt"
 EXPECTED_FIXTURE_SHA256 = "30fc0acfc5d9fee1ffffd3624209712dd8160806dae4d904c4310a8f53537640"
 _HASH = set("0123456789abcdef")
 _OWNER = "salvamalfa"

@@ -80,9 +80,18 @@ La verificación posterior a PR #120 está en la
 reportó `SUCCESS` y health 200 con R1/Sol low y
 `enabled_capabilities: []`. Los recibos fuente de contenido aprobados se
 prepararon después en el [registro de decisión](../decisiones/20261012-chat-fase2-r2-contenido-stage3.md).
-Los pins externos aprobados están preparados para el siguiente despliegue; las
-banderas de rutas, métricas financieras y evidencia siguen apagadas. R1
-permanece predeterminado; no hubo llamada pagada ni activación de candidatos.
+La fase 2 está implementada y su activación final está autorizada, pendiente de
+verificación del despliegue. Stage 3 completó 30 casos/34 mensajes con costo
+estimado registrado de US$2.626185. El dueño devolvió 16 correctos y 14 problemas;
+13 notas mencionan periodo y 12 de esos casos tenían contexto vacío. La UI ya
+transmite automáticamente la selección. Las respuestas y notas individuales
+permanecen en el expediente privado.
+
+El dueño autorizó ajustar R2 y omitir otra evaluación pagada. El plan técnico es
+integrar el ajuste, seleccionar R2 y las capacidades aprobadas en Railway y
+comprobar health, versión efectiva, hashes y flags. Hasta verificarlo, no se
+presenta esta activación como un despliegue confirmado. No hay acción pendiente
+del dueño ni un gate automático de calidad aprobado.
 
 Verificación registrada el 12 de octubre de 2026: Railway reportó `SUCCESS`
 para el despliegue `dd97b38e-383b-48ab-9fab-ca5bf0f78c70` sobre el commit
@@ -154,26 +163,22 @@ Las herramientas nuevas quedan deshabilitadas por omisión. No se deben habilita
 con el prompt r1; cualquier capacidad adicional requiere un prompt compatible
 aprobado y, cuando corresponda, recibo de aprobación de datos y publicación
 verificada.
-R2 (`68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf`) está
-aprobado y su recibo versionado está en `config/chat/prompt_approval.json`, pero
-no está activo en producción. El runtime requiere selección explícita con
-`CHAT_PROMPT_VERSION=r2-proposed` y el recibo mediante
-`CHAT_PROMPT_APPROVAL_RECEIPT_PATH` y `CHAT_PROMPT_APPROVAL_RECEIPT_SHA256`;
-la versión R2 permanece sin seleccionar y las banderas siguen apagadas hasta
-revisar Stage 3. Los pins de aprobación están preparados para el siguiente
-despliegue.
+El ajuste autorizado de R2 queda registrado en
+`config/chat/prompt_candidates/` y `config/chat/prompt_approval.json`; usa los
+hashes exactos vigentes de esos archivos, no los del prompt de Stage 3.
+El runtime requiere selección explícita con `CHAT_PROMPT_VERSION=r2-proposed`
+y el recibo mediante `CHAT_PROMPT_APPROVAL_RECEIPT_PATH` y
+`CHAT_PROMPT_APPROVAL_RECEIPT_SHA256`. El default sigue siendo R1.
 
 Las tres banderas `CHAT_ENABLE_ROUTE_TOOLS`,
-`CHAT_ENABLE_BUSINESS_METRIC_TOOLS` y `CHAT_ENABLE_EVIDENCE_TOOLS` usan `false`
-como default y siguen desactivadas. Rutas y herramientas financieras requieren
-el prompt R2 con recibo válido; las cuatro métricas tienen recibo aprobado y
-su proyección ligada a los valores y definiciones. El índice versionado tiene
-siete pasajes y tres fichas aprobados, cada uno con recibo verificable de su
-contenido semántico completo. Las funciones permanecen apagadas hasta la
-ejecución y revisión de los resultados JSON de Stage 3. No actives una bandera
-por la aprobación de contenido sola. El Dockerfile lleva la
-configuración versionada anidada e incluye el recibo público de aprobación R2.
-El SHA-256 de los bytes exactos del recibo R2 se fija por separado en Railway.
+`CHAT_ENABLE_BUSINESS_METRIC_TOOLS` y `CHAT_ENABLE_EVIDENCE_TOOLS` mantienen
+`false` como default. La activación autorizada requiere R2 compatible, recibos
+válidos y pins externos de las cuatro métricas financieras y del índice de
+siete pasajes y tres fichas aprobados. Selecciona explícitamente R2 y esas
+capacidades, despliega y comprueba los hashes efectivos y `enabled_capabilities`
+en health. Si no corresponden a los archivos aprobados, corrige la configuración
+antes de declarar la activación verificada. Esta comprobación no envía una
+pregunta pagada ni acredita calidad del prompt ajustado.
 
 La capacidad `minimum_reservation_turns_per_day` que muestra `/api/chat/health`
 es un cálculo de admisión: aplica los presupuestos diarios de tokens y dólares

@@ -219,3 +219,34 @@ def test_openai_client_requires_existing_key_without_printing_or_probing(monkeyp
         OpenAIProvider(SimpleNamespace(openai_enabled=True, model="explicit-model"))
 
     assert capsys.readouterr().out == ""
+
+
+def test_current_dashboard_period_is_sent_when_r2_session_is_created_and_reused():
+    from pathlib import Path
+
+    r2 = Path("config/chat/prompt_candidates/system_prompt_r2-proposed.txt").read_text().strip()
+    fake = FakeSessions(
+        create_stream=FakeStream([
+            _session_created(), _turn_created(), _text_done(), _completed(),
+        ]),
+        event_stream=FakeStream([
+            _turn_created(), _text_done(), _completed(),
+        ]),
+    )
+    provider = _provider(FakeClient(fake), system_instructions_override=r2)
+    initial = {"tab": "economy", "period": "2026Q1", "entity": "AEROMEXICO"}
+    _run(provider, context=initial)
+    first = json.loads(fake.created[0]["input"][0]["content"][0]["text"])
+    assert first["dashboard_context"] == initial
+
+    # Reuse the exact session configuration; changing selection must not rotate it.
+    fake.session_metadata = fake.created[0]["metadata"]
+    current = {**initial, "period": "2026Q2"}
+    _run(provider, session_id="sess_fixture", context=current)
+    inputs = [event for call in fake.events.created for event in call["events"]
+              if event["type"] == "agent.session.input.message"]
+    assert len(fake.created) == 1
+    assert len(inputs) == 1
+    later = json.loads(inputs[0]["input"][0]["content"][0]["text"])
+    assert later["dashboard_context"] == current
+    assert "conversation_history" not in later

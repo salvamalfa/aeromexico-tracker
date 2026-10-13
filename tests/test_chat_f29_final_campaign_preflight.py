@@ -24,6 +24,7 @@ def test_profile_dry_run_selects_all_business_cases_without_live_side_effects():
     assert plan["case_count"] == 30
     assert plan["messages_per_candidate"] == 34
     assert plan["repetitions"] == 1
+    # This preflight belongs to the completed campaign and uses its frozen R2.
     assert plan["projection"]["projected_input_tokens_range"] == [2_055_140, 2_103_667]
     assert plan["projection"]["projected_input_tokens"] == 2_103_667
     assert plan["projection"]["projected_output_tokens"] == 9_423
@@ -37,6 +38,7 @@ def test_profile_dry_run_selects_all_business_cases_without_live_side_effects():
     assert context["prompt_r1_effective_utf8_bytes"] == 8_937
     assert context["prompt_r2_proposed_utf8_bytes"] == 11_166
     assert context["prompt_delta_utf8_bytes_per_request"] == 2_229
+    assert context["prompt_r2_sha256"] == "68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf"
     assert context["historical_tool_schema_utf8_bytes"] == 3_306
     assert context["historical_tool_schema_sha256"] == (
         "1ff0d3a35647f7a0c2fc956884a4d267b0148065ccd3e2469139463f859bea19"
