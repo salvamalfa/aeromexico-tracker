@@ -81,3 +81,25 @@ Economía, portabilidad de la publicación, entrega del repositorio de datos
 privados, flujo de agentes de punta a punta, CI y dependencias, vista previa
 `/v2/` en Pages y reconstrucción con datos privados. Sus reglas vigentes están
 en `AGENTS.md`, `REPO_MAP.md` y `docs/cloud-development.md`.
+
+
+## Fase 2 del chat (8–12 de octubre de 2026, fecha México)
+
+El [plan original fijado](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/fase-2-agente-analitico.md) se retiró del árbol tras implementar y activar
+R2, rutas, métricas financieras y evidencia. Stage 3 recibió revisión del dueño
+y un ajuste final autorizado sin otra evaluación pagada; el gate original de
+70 casos/safety no está acreditado. El estado operativo vive en
+[README del chat](../chat/README.md), [operaciones](../chat/operations.md) y
+[verificación de cierre](../etapas/chat-fase2-cierre-operativo-20261012.md).
+Los reportes de etapa, decisiones y artefactos históricos permanecen intactos.
+
+El [traspaso de activación del MVP](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/traspaso-activacion-mvp-20261006.md)
+y el [brief anterior de F2.9](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/f2-9-accion-dueno.md) también se
+retiraron: describían activación y decisiones ya completadas. Su continuidad
+operativa está en la documentación vigente del chat y el brief de cierre.
+
+El [brief candidato de métricas F2.3](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/f23-propuesta-revision-dueno.md)
+se retiró tras la aprobación y activación de las métricas; las definiciones y
+recibos vigentes permanecen versionados.
+El [detalle técnico candidato F2.3](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/f23-metricas-detalle-tecnico.md)
+también permanece en ese commit; describía la proyección previa a la activación.

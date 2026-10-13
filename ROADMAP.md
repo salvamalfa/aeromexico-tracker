@@ -4,10 +4,6 @@ Propuesta — el dueño decide prioridades.
 
 ## Ahora
 
-- Fase 2 del chat (`docs/chat/fase-2-agente-analitico.md`), empezando por
-  F2.0 (modelo y esfuerzo explícitos), F2.1 (prompt) y F2.2 (conjunto de
-  evaluación de negocio), con los puntos de decisión del dueño que marca el
-  documento. El MVP está activo desde el 8 de octubre de 2026.
 - Ciclo de análisis de 3T26 con el Analysis Agent (evidencia, cálculo,
   revisión y aprobación) una vez publicados los reportes trimestrales de
   Aeroméxico.
@@ -18,10 +14,6 @@ Propuesta — el dueño decide prioridades.
 
 ## Siguiente
 
-- Fase 2 del chat, paquetes F2.3–F2.9 (glosario y métricas totales, rutas,
-  índices de reportes y noticias, explicaciones atribuidas, presentación por
-  referencia y evaluación comparativa de Luna y Sol), en el orden y con los
-  puntos de decisión del documento de fase 2.
 - Ampliar la cobertura internacional de rutas más allá de EE. UU. (BTS
   T-100): candidatos con evidencia parcial en Brasil (ANAC), Colombia
   (Aerocivil), Reino Unido (CAA) y Perú (DGAC); España sigue bloqueada por

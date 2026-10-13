@@ -120,7 +120,7 @@ para repetir sus casos.
 La comparación pagada se hizo con una autorización de hasta **US$10** a
 tarifas API normales, sin depender del incentivo; esa autorización está
 cerrada. Las evaluaciones nuevas pertenecen a la
-[fase 2](fase-2-agente-analitico.md). Mantener `CHAT_INPUT_COST_PER_MILLION`,
+[fase 2](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/fase-2-agente-analitico.md). Mantener `CHAT_INPUT_COST_PER_MILLION`,
 `CHAT_OUTPUT_COST_PER_MILLION` y presupuestos basados en precios normales; son
 estimaciones y controles operativos, no un techo contractual de factura.
 

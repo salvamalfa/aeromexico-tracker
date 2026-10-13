@@ -80,18 +80,19 @@ La verificación posterior a PR #120 está en la
 reportó `SUCCESS` y health 200 con R1/Sol low y
 `enabled_capabilities: []`. Los recibos fuente de contenido aprobados se
 prepararon después en el [registro de decisión](../decisiones/20261012-chat-fase2-r2-contenido-stage3.md).
-La fase 2 está implementada y su activación final está autorizada, pendiente de
-verificación del despliegue. Stage 3 completó 30 casos/34 mensajes con costo
-estimado registrado de US$2.626185. El dueño devolvió 16 correctos y 14 problemas;
-13 notas mencionan periodo y 12 de esos casos tenían contexto vacío. La UI ya
-transmite automáticamente la selección. Las respuestas y notas individuales
-permanecen en el expediente privado.
+La fase 2 está implementada y activa. El despliegue final Railway
+`6889bc94-da81-4294-b2bd-a8fc5d14fbe7` sobre `30a931d` terminó `SUCCESS`;
+health 200 confirmó R2/Sol low/medium, worker/admisión y las tres capacidades.
+El snapshot público permanece sin cambios. Ver [cierre operativo](../etapas/chat-fase2-cierre-operativo-20261012.md).
 
-El dueño autorizó ajustar R2 y omitir otra evaluación pagada. El plan técnico es
-integrar el ajuste, seleccionar R2 y las capacidades aprobadas en Railway y
-comprobar health, versión efectiva, hashes y flags. Hasta verificarlo, no se
-presenta esta activación como un despliegue confirmado. No hay acción pendiente
-del dueño ni un gate automático de calidad aprobado.
+Stage 3 completó 30 casos/34 mensajes con costo estimado US$2.626185; el dueño
+calificó 16 correctos y 14 problemas. De 13 notas de periodo, 12 casos recibieron
+contexto vacío; la UI ya envía la selección. El ajuste de R2 fue autorizado sin
+otra evaluación pagada. Las respuestas individuales permanecen privadas;
+no se acredita el gate original de 70 casos/safety. No hay acción pendiente del dueño.
+Una evaluación futura del selector requiere contexto explícito por caso. La
+campaña histórica conserva sus archivos y hashes; no mide el comportamiento
+del prompt ajustado.
 
 Verificación registrada el 12 de octubre de 2026: Railway reportó `SUCCESS`
 para el despliegue `dd97b38e-383b-48ab-9fab-ca5bf0f78c70` sobre el commit
@@ -157,8 +158,8 @@ el entorno: el servicio usa los valores versionados. Si se conservan
 `CHAT_INPUT_COST_PER_MILLION` o `CHAT_OUTPUT_COST_PER_MILLION`, deben coincidir
 con el modelo elegido; el launcher rechaza discrepancias.
 
-La versión de prompt vigente para el despliegue es `CHAT_PROMPT_VERSION=r1-final`,
-con hash efectivo `439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`.
+La versión activa en Railway es `CHAT_PROMPT_VERSION=r2-proposed`, con hash
+efectivo `cec193aa10dff802d5578da00777b5b56c74bfcc71aeccaf1ea718c07cc763b1`.
 Las herramientas nuevas quedan deshabilitadas por omisión. No se deben habilitar
 con el prompt r1; cualquier capacidad adicional requiere un prompt compatible
 aprobado y, cuando corresponda, recibo de aprobación de datos y publicación
@@ -174,7 +175,8 @@ Las tres banderas `CHAT_ENABLE_ROUTE_TOOLS`,
 `CHAT_ENABLE_BUSINESS_METRIC_TOOLS` y `CHAT_ENABLE_EVIDENCE_TOOLS` mantienen
 `false` como default. La activación autorizada requiere R2 compatible, recibos
 válidos y pins externos de las cuatro métricas financieras y del índice de
-siete pasajes y tres fichas aprobados. Selecciona explícitamente R2 y esas
+siete pasajes y tres fichas aprobados. Esta selección ya está verificada en
+producción. Para un despliegue nuevo, selecciona explícitamente R2 y esas
 capacidades, despliega y comprueba los hashes efectivos y `enabled_capabilities`
 en health. Si no corresponden a los archivos aprobados, corrige la configuración
 antes de declarar la activación verificada. Esta comprobación no envía una

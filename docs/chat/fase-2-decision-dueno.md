@@ -1,9 +1,9 @@
-# Fase 2 del chat · estado para el dueño
+# Fase 2 del chat · cierre operativo
 
-No hay acción pendiente del dueño: contenidos, ajuste de R2 y activación están autorizados; se omite otra evaluación pagada.
-Stage 3 completó 30 casos/34 mensajes; costo estimado registrado: US$2.626185.
-Revisión recibida: 16 correctos, 14 problemas; 13 notas de periodo, 12 casos sin contexto del dashboard.
-La interfaz ya envía la selección automáticamente; la campaña no prueba una falla del selector real.
-La fase 2 está implementada; R1 y flags apagados siguen como default hasta la selección externa explícita de R2.
-Plan técnico: integrar el ajuste de periodo y búsqueda bilingüe, seleccionar R2 y capacidades autorizadas, verificar hashes, flags y health del despliegue.
-No se afirma despliegue final verificado ni un gate de calidad aprobado. Detalle: [operaciones](operations.md).
+No hay acción pendiente del dueño. Fase 2 implementada y activa; despliegue verificado.
+Stage 3: 30 casos/34 mensajes, US$2.626185 estimados; revisión privada: 16 correctos, 14 problemas.
+De 13 notas de periodo, 12 casos recibieron contexto vacío; la UI ya transmite la selección.
+R2 ajustado, Sol low/medium y rutas, métricas financieras y evidencia están activos.
+Railway `SUCCESS`; [health 200](https://aeromexico-tracker-production.up.railway.app/api/chat/health) confirmó worker/admisión y capacidades.
+El snapshot público no cambió. No hubo otra evaluación pagada; el gate original de 70 casos/safety no está acreditado.
+[PR #129](https://github.com/salvamalfa/aeromexico-tracker/pull/129) · [verificación y hashes](../etapas/chat-fase2-cierre-operativo-20261012.md).

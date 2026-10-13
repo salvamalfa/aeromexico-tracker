@@ -25,7 +25,7 @@ local de F2.8 y sus verificaciones están en el [reporte de etapa](../etapas/cha
 
 El índice versionado contiene siete pasajes de reportes y tres fichas de
 noticias aprobados por el dueño. La activación de las herramientas de evidencia
-con R2 está autorizada y pendiente de verificación del despliegue. Cada
+con R2 está activa y verificada en Railway. Cada
 resultado entrega `references` con su URL exacta y
 una etiqueta de empresa, periodo/página o medio/fecha/título; el proveedor las
 conserva en las fuentes del turno y agrupa etiquetas que comparten URL.
@@ -44,13 +44,11 @@ sesiones del proveedor aisladas tras el adaptador.
 
 ## Estado de entrega
 
-El MVP sigue activo en Railway. El 12 de octubre de 2026 se verificó el despliegue
-`dd97b38e-383b-48ab-9fab-ca5bf0f78c70` con `gpt-6.1-sol`, esfuerzo `low`,
-verbosidad `medium`, prompt `r1-final` (SHA-256 efectivo
-`439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`) y
-snapshot `d9c4e56d04ad67be5dff6d6e9f7f6615f4f4be985ec1e5ee59781a7735007037`;
-health respondió 200 y la admisión/worker estaban activos. No se hizo ninguna
-consulta pagada durante la verificación.
+R2 está activo en Railway con `gpt-6.1-sol`, esfuerzo `low` y verbosidad
+`medium`. El despliegue `6889bc94-da81-4294-b2bd-a8fc5d14fbe7` sobre `30a931d`
+terminó `SUCCESS`; health respondió 200 con worker/admisión activos y
+`route_queries`, `business_metric_queries`, `evidence_search` habilitados.
+Prompt efectivo y pins: [cierre operativo](../etapas/chat-fase2-cierre-operativo-20261012.md).
 
 La fase 2 está implementada. Stage 3 completó 30 casos/34 mensajes con costo
 estimado registrado de US$2.626185; la revisión del dueño calificó 16 correctos
@@ -61,11 +59,11 @@ No se interpreta este resultado como prueba de que el selector real se ignore.
 El dueño autorizó ajustar R2 sin repetir la evaluación pagada. El prompt debe
 priorizar el periodo seleccionado, explicitar el periodo utilizado y recuperar
 pasajes ingleses para consultas en español. R1 permanece predeterminado y las
-capacidades nuevas apagadas por omisión. La activación explícita de R2 y sus
-capacidades está autorizada y planeada; falta verificar el despliegue, sus hashes,
-flags y health. No se declara una nueva evaluación ni un gate de calidad
-aprobado. No hay acción pendiente del dueño: el trabajo restante es técnico.
-Consulta [operaciones](operations.md) y el [brief del dueño](fase-2-decision-dueno.md).
+capacidades nuevas apagadas por omisión; producción selecciona R2 explícitamente.
+La fase 2 está implementada y activa, con despliegue verificado. No se repitió
+la evaluación pagada ni se acreditó el gate original de 70 casos/safety.
+No hay acción pendiente del dueño. Consulta [operaciones](operations.md) y el
+[brief del dueño](fase-2-decision-dueno.md).
 
 ### Registro histórico al 8 de octubre de 2026
 
@@ -101,8 +99,8 @@ un saldo contable ni representa el consumo actual verificado. S14 conserva
 `NULL`/desconocido, que nunca se interpreta como cero.
 
 Las respuestas correctas del 8 de octubre son observaciones de uso, no una
-validación de calidad del prompt. Consulta la [fase 2](fase-2-agente-analitico.md), el
-[traspaso operativo](traspaso-activacion-mvp-20261006.md), el
+validación de calidad del prompt. Consulta la [fase 2](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/fase-2-agente-analitico.md), el
+[traspaso operativo](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/traspaso-activacion-mvp-20261006.md), el
 [reporte de activación](../etapas/chat-mvp-activacion-20261007.md), las
 [correcciones de recuperación](../etapas/chat-recuperacion-correcciones-20261008.md),
 el [diagnóstico de límites](../etapas/chat-limite-herramientas-presupuesto-20261008.md)
@@ -167,15 +165,12 @@ teórico de reservas mínimas que cabe bajo los topes configurados. El cálculo 
 es una cota de facturación porque no hay límite de salida acumulado que cubra
 un turno de hasta 16 herramientas; consulta [operaciones](operations.md).
 
-El dueño eligió `gpt-6.1-sol` con esfuerzo `low` y aprobó el prompt evaluado en
-F2.9 etapa 2. Railway confirmó esta configuración en el despliegue
-`dd97b38e-383b-48ab-9fab-ca5bf0f78c70`, estado `SUCCESS`, commit
-`60e741b4b4c70ba2d092061f571b924690afcfcd`; `/api/chat/health` respondió 200.
-La fuente versionada del prompt tiene SHA-256
-`33b8f7a0900869812d98bba57daa2ce3ea2f6b5c02a86a7eb3b8e830c7f7694b`; el texto
-efectivo que suma la regla de periodo evaluada tiene SHA-256
-`439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`, que
-reportará `/api/chat/health`. Se conservan los topes actuales. Las conversaciones
+El dueño eligió `gpt-6.1-sol` con esfuerzo `low`; producción usa R2 ajustado
+y aprobado. Railway verificó el despliegue `6889bc94-da81-4294-b2bd-a8fc5d14fbe7`,
+`SUCCESS`, commit `30a931d166ffc4864a10316dbdc65c8db9382f18`;
+health 200 confirmó el SHA-256 efectivo
+`cec193aa10dff802d5578da00777b5b56c74bfcc71aeccaf1ea718c07cc763b1`.
+Se conservan los topes actuales. Las conversaciones
 OpenAI existentes requieren una nueva conversación para aplicar cambios de
 configuración. El default local sigue siendo `CHAT_MAX_TOOL_CALLS=8`; producción
 documenta 16. No se ejecutaron consultas de pago.

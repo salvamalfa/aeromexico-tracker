@@ -41,9 +41,9 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
   3T26, cuando Aeroméxico publique su reporte trimestral.
 - **Chat:** fase 2 implementada; Stage 3 completó 30 casos/34 mensajes y la
   revisión privada recibió 16 correctos y 14 problemas. El dueño autorizó el
-  ajuste final de R2 sin otra evaluación pagada. R1/Sol low conserva su default;
-  la activación explícita de R2 y capacidades aprobadas está pendiente de
-  verificar en el despliegue (ver [Chat analítico](#chat-analítico)).
+  ajuste final de R2 sin otra evaluación pagada. R2/Sol low y las capacidades
+  de rutas, métricas financieras y evidencia están activos y verificados en
+  Railway (ver [Chat analítico](#chat-analítico)).
 - **Datos:** AFAC y AeroDataBox se actualizan a mano mes a mes; lo pendiente
   está en [`ROADMAP.md`](ROADMAP.md).
 
@@ -136,7 +136,7 @@ El chat responde preguntas sobre el snapshot público con una capa semántica
 versionada; no abre el warehouse ni convierte ausencias en cero. El MVP sigue
 activo en Railway con `gpt-6.1-sol`, acceso con contraseña, topes diarios de
 US$5 (por usuario y global) y hasta 16 llamadas de herramienta por pregunta.
-La fase 2 está implementada; su activación final requiere verificar el despliegue.
+La fase 2 está implementada y activa; el despliegue final está verificado.
 Stage 3 completó 30 casos/34 mensajes con costo estimado registrado de
 US$2.626185. La revisión del dueño recibió 16 calificaciones correctas y 14
 problemas; 13 notas mencionan el periodo, pero 12 de esos casos se ejecutaron
@@ -145,14 +145,16 @@ esta campaña no demuestra que el chat ignore el selector real.
 
 El dueño autorizó corregir R2 y omitir otra evaluación pagada. El ajuste prioriza
 el periodo seleccionado y la recuperación de evidencia en inglés cuando la
-pregunta está en español. R1/Sol low y las capacidades apagadas siguen como
-default; la selección explícita de R2 y sus capacidades está autorizada y
-planeada, pendiente de comprobar versión, hashes, flags y health en Railway.
-Las calificaciones recibidas no constituyen un gate automático de calidad.
+pregunta está en español. Railway confirmó `SUCCESS` sobre el commit `30a931d`;
+health 200 confirmó R2, Sol low/medium, worker y admisión activos, y capacidades
+de rutas, métricas financieras y evidencia habilitadas. El snapshot público no
+cambió. El código conserva R1 y flags apagados como defaults; producción los
+selecciona explícitamente. No hubo otra evaluación pagada ni se acreditó el
+gate original de 70 casos/safety. Ver [cierre operativo](docs/etapas/chat-fase2-cierre-operativo-20261012.md).
 
 - Operación, instalación y límites: [documentación del chat](docs/chat/README.md)
-  y [traspaso operativo](docs/chat/traspaso-activacion-mvp-20261006.md).
-- Implementación y cierre técnico: la [fase 2](docs/chat/fase-2-agente-analitico.md)
+  y [traspaso operativo](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/traspaso-activacion-mvp-20261006.md).
+- Implementación y cierre técnico: la [fase 2](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/fase-2-agente-analitico.md)
   y el [resumen para decisión del dueño](docs/chat/fase-2-decision-dueno.md).
 
 El perfil `chat-runtime` instala solo las dependencias del backend. El gasto se
@@ -166,8 +168,9 @@ Una pregunta pasa por 7 piezas del backend en 11 pasos:
 
 ![Recorrido de una pregunta por el backend del chat](docs/assets/chat/anatomia-chat-recorrido.gif)
 
-Así pide, valida, ejecuta y devuelve el agente sus 7 herramientas (escenario
-«comparar dos periodos»):
+El diagrama muestra las 7 herramientas base del agente en el escenario
+«comparar dos periodos». Producción con R2 tiene 13 herramientas: las 7 base
+y 2 adicionales por cada capacidad de rutas, métricas financieras y evidencia:
 
 ![Recorrido de una llamada a herramientas](docs/assets/chat/anatomia-herramientas-recorrido.gif)
 
