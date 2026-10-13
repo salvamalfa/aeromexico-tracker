@@ -8,8 +8,8 @@
   "tablas_gold_versionadas": 43,
   "alcance": "Metadatos de archivos Gold ya públicos; no incorpora cubos privados ni observaciones nuevas. Los extremos léxicos en tablas-publicas.csv no certifican trimestre completo ni última observación: separar grano y valores observados de pronósticos. Fuentes sin filas carrier pueden alimentar otras tablas; activa no prueba actualización automática.",
   "archivos": {
-    "fuentes.csv": "cf5eac0c2a151deb47e286ec7ed480e431ba6489f0961ff63f7680642c2bd397",
-    "metricas.csv": "f53ba3c32fe9ffbc8bb540e49c6113d98fbc662e842d4c9352ac453553caef58",
-    "tablas-publicas.csv": "3591d6a302668fe44bb28f003416334d8db44860b66e7e3f95bec3597a99e110"
+    "fuentes.csv": "19ae25e9c0787003fed64ae039ae5920c8e5cb884387795b3bec674a2a4267b1",
+    "metricas.csv": "a4c6a87d202fc71cfdf6bfaa94d1fe82117cbd39ca7a3e0786718b87d1cc9fe8",
+    "tablas-publicas.csv": "4b2349619deeea8ec900ff1056000570cd9da329b62920cd080a084fdd9092c8"
   }
 }
