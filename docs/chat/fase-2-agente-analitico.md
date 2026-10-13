@@ -1,5 +1,12 @@
 # Fase 2 del chat: agente analítico para negocio
 
+> Estado vigente: la fase 2 está implementada y activa, con despliegue verificado.
+> El dueño recibió Stage 3 y autorizó el ajuste final de R2 sin
+> otra evaluación pagada; el gate original de 70 casos/safety no está acreditado.
+> Este plan se conserva porque pruebas y generadores lo referencian. Operación
+> actual: [README del chat](README.md); [plan histórico fijado](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/fase-2-agente-analitico.md).
+
+
 Documento de diseño e implementación de la **segunda etapa del chat, posterior
 al MVP**. El MVP ya está activo en producción desde el 8 de octubre de 2026
 (ver el [traspaso de activación](traspaso-activacion-mvp-20261006.md)); la fase 2

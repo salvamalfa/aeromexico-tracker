@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-10-12 · Chat: cierre operativo de fase 2 (fecha México)
+
+- PR #129 integrado; Railway `SUCCESS` y health 200 confirman R2/Sol low/medium,
+  worker/admisión y rutas, métricas financieras y evidencia activos.
+- Snapshot público sin cambios; ajuste autorizado sin otra evaluación pagada.
+  El gate original de 70 casos/safety no está acreditado; no hay acción pendiente
+  del dueño. [Verificación](docs/etapas/chat-fase2-cierre-operativo-20261012.md).
+
+## 2026-10-12 · Chat: revisión recibida y ajuste final de R2 (fecha México)
+
+- Stage 3 completó 30 casos/34 mensajes; costo estimado registrado US$2.626185.
+  El dueño calificó 16 correctos y 14 problemas. De 13 notas de periodo, 12
+  corresponden a casos sin contexto; la UI ya envía automáticamente la selección.
+- Ajuste de R2 autorizado para priorizar el periodo seleccionado y recuperar
+  evidencia inglesa desde preguntas en español; se omite otra evaluación pagada.
+- Fase 2 implementada, con activación explícita autorizada y pendiente de
+  verificar el despliegue. R1 y capacidades apagadas conservan sus defaults;
+  no se declara un gate de calidad ni despliegue final verificado.
+
 ## 2026-10-12 · Chat: contenidos de fase 2 aprobados; Stage 3 pendiente
 
 - PR #111 quedó integrado en `b6d8822`; el despliegue Railway
