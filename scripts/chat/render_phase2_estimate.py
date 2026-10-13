@@ -144,7 +144,7 @@ def render(model_catalog_path: Path = DEFAULT_CATALOG) -> tuple[dict[str, Any], 
         "historical_anchor": {
             "input_tokens_per_user_question": 40_000,
             "status": "observed historical aggregate across internal provider calls; not measured on this fixture",
-            "source": "prior live validation dated 2026-10-04, linked from https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/fase-2-agente-analitico.md",
+            "source": "prior live validation dated 2026-10-04, linked from fase-2-agente-analitico.md",
         },
     }
 

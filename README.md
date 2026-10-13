@@ -168,8 +168,9 @@ Una pregunta pasa por 7 piezas del backend en 11 pasos:
 
 ![Recorrido de una pregunta por el backend del chat](docs/assets/chat/anatomia-chat-recorrido.gif)
 
-Así pide, valida, ejecuta y devuelve el agente sus 7 herramientas (escenario
-«comparar dos periodos»):
+El diagrama muestra las 7 herramientas base del agente en el escenario
+«comparar dos periodos». Producción con R2 tiene 13 herramientas: las 7 base
+y 2 adicionales por cada capacidad de rutas, métricas financieras y evidencia:
 
 ![Recorrido de una llamada a herramientas](docs/assets/chat/anatomia-herramientas-recorrido.gif)
 
