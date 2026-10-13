@@ -158,11 +158,16 @@ def _normalize(package, context, evidence, candidate):
                 "literal_text", original.get("literal_table_fragment", original.get("literal_fragment", ""))
             ),
         )
-        if "artifact_id" not in excerpt:
-            matches = [s for s in package["sources"] if s["source_file"] == excerpt["source_file"]]
-            if len(matches) != 1:
-                raise ValueError("Excerpt source identity is ambiguous")
-            excerpt["artifact_id"] = matches[0]["artifact_id"]
+        source_file = excerpt.get("source_file")
+        if not isinstance(source_file, str) or not source_file:
+            raise ValueError("Excerpt source_file is required")
+        matches = [s for s in package["sources"] if s["source_file"] == source_file]
+        if len(matches) != 1:
+            raise ValueError("Excerpt source identity is ambiguous")
+        artifact_id = matches[0]["artifact_id"]
+        if "artifact_id" in excerpt and excerpt["artifact_id"] != artifact_id:
+            raise ValueError("Excerpt artifact identity differs from its source_file")
+        excerpt["artifact_id"] = artifact_id
         excerpts.append(excerpt)
     by_excerpt = {e["excerpt_id"]: e for e in excerpts}
     raw_inputs = context["inputs"]

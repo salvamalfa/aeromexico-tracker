@@ -114,3 +114,69 @@ def test_normalization_accepts_either_reviewed_format_field(format_fields):
         package, {"inputs": [], "calculations": {"calc_test": node}}, {"excerpts": []}, {"claims": []}
     )
     assert calculated["nodes"][0]["formatted_value"] == "1,0"
+
+
+def _source_identity_normalization_case():
+    package = {
+        "entity_key": "VOLARIS",
+        "period_id": "2026Q2",
+        "sources": [
+            {"artifact_id": "source-a", "source_file": "report-a.pdf"},
+            {"artifact_id": "source-b", "source_file": "report-b.pdf"},
+        ],
+        "package_id": "synthetic",
+        "evidence_fingerprint": "test",
+    }
+    evidence = {
+        "excerpts": [
+            {
+                "excerpt_id": "excerpt-a",
+                "source_file": "report-a.pdf",
+                "artifact_id": "source-a",
+                "literal_text": "Synthetic primary fragment.",
+            }
+        ]
+    }
+    context = {
+        "inputs": [{"input_id": "metric-a", "excerpt_id": "excerpt-a"}],
+        "calculations": {},
+    }
+    return package, context, evidence, {"claims": []}
+
+
+@pytest.mark.parametrize("supplied_artifact", [True, False])
+def test_normalization_resolves_unique_source_file_and_accepts_matching_artifact(supplied_artifact):
+    package, context, evidence, candidate = _source_identity_normalization_case()
+    if not supplied_artifact:
+        evidence["excerpts"][0].pop("artifact_id")
+    normalized, _, _ = adapter._normalize(package, context, evidence, candidate)
+    assert normalized["excerpts"][0]["artifact_id"] == "source-a"
+    assert normalized["metrics"][0]["artifact_id"] == "source-a"
+
+
+def test_normalization_rejects_another_valid_artifact_for_the_excerpt_source_file():
+    package, context, evidence, candidate = _source_identity_normalization_case()
+    evidence["excerpts"][0]["artifact_id"] = "source-b"
+    with pytest.raises(ValueError, match="artifact identity differs"):
+        adapter._normalize(package, context, evidence, candidate)
+
+
+def test_normalization_rejects_mistyped_source_even_with_a_valid_supplied_artifact():
+    package, context, evidence, candidate = _source_identity_normalization_case()
+    evidence["excerpts"][0]["source_file"] = "report-typo.pdf"
+    with pytest.raises(ValueError, match="source identity is ambiguous"):
+        adapter._normalize(package, context, evidence, candidate)
+
+
+def test_normalization_rejects_duplicate_source_file_even_with_matching_supplied_artifact():
+    package, context, evidence, candidate = _source_identity_normalization_case()
+    package["sources"].append({"artifact_id": "source-c", "source_file": "report-a.pdf"})
+    with pytest.raises(ValueError, match="source identity is ambiguous"):
+        adapter._normalize(package, context, evidence, candidate)
+
+
+def test_normalization_requires_source_file_even_with_valid_supplied_artifact():
+    package, context, evidence, candidate = _source_identity_normalization_case()
+    evidence["excerpts"][0].pop("source_file")
+    with pytest.raises(ValueError, match="source_file is required"):
+        adapter._normalize(package, context, evidence, candidate)
