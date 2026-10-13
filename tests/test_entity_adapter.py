@@ -76,3 +76,41 @@ def test_original_and_capture_proof_fail_closed(tmp_path, monkeypatch, change):
     monkeypatch.setattr(adapter, "PATHS", SimpleNamespace(root=tmp_path, bronze=bronze))
     with pytest.raises(ValueError):
         adapter._sources({"artifacts": [source]})
+
+
+@pytest.mark.parametrize(
+    "filename", ["analyst.py", "evidence.py", "lifecycle_identity.py", "entities.py", "uv.lock"]
+)
+def test_shared_validation_change_invalidates_entity_presentation(monkeypatch, filename):
+    from src.analysis_agent.analyst import SKILL
+
+    baseline = adapter.code_version()
+    original_sha = adapter.sha
+    record = {"code_version": baseline, "prompt_version": original_sha(SKILL)}
+    monkeypatch.setattr(
+        adapter, "sha", lambda path: "0" * 64 if path.name == filename else original_sha(path)
+    )
+    with pytest.raises(ValueError, match="implementation changed"):
+        adapter.require_current_presentation(record)
+
+
+@pytest.mark.parametrize("format_fields", [{"formatted": "1,0"}, {"formatted_value": "1,0"}])
+def test_normalization_accepts_either_reviewed_format_field(format_fields):
+    package = {
+        "entity_key": "VOLARIS",
+        "period_id": "2026Q2",
+        "sources": [],
+        "package_id": "synthetic",
+        "evidence_fingerprint": "test",
+    }
+    node = {
+        "calculation_id": "calc_test",
+        "value": 1.0,
+        "unit": "USD",
+        "period_id": "2026Q2",
+        **format_fields,
+    }
+    _, calculated, _ = adapter._normalize(
+        package, {"inputs": [], "calculations": {"calc_test": node}}, {"excerpts": []}, {"claims": []}
+    )
+    assert calculated["nodes"][0]["formatted_value"] == "1,0"

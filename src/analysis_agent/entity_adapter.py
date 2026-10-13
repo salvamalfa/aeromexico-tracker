@@ -27,7 +27,7 @@ ENTITIES = {"VIVA_AEROBUS", "VOLARIS", "INDUSTRY"}
 REPLAY_CODE = {
     "VIVA_AEROBUS": ("prepare.py", "9b8a6a0dd5732764047a56f14b9a1aa76dd3087642bb41c6d7b40f8072d06203"),
     "VOLARIS": ("prepare.py", "3b1edea60088851ea0272e8fe1ba80363c7aca56bafa8964562018f0ee9bdb25"),
-    "INDUSTRY": ("build_context.py", "07e819b71c2c2335ef595943c9fc94d1792ab7439f53f0e3402d719214a9d192"),
+    "INDUSTRY": ("build_context.py", "1a99818ff7927331c429e477f4795da4b7a39d22b74aa0a7ab116b24c3eb5e0a"),
 }
 TOKEN = re.compile(r"\{\{([^{}]+)\}\}")
 
@@ -41,12 +41,17 @@ def read(path):
 
 
 def code_version():
-    return digest(
-        {
-            name: sha(Path(__file__).with_name(name))
-            for name in ("entity_adapter.py", "lifecycle.py", "lifecycle_identity.py")
-        }
+    modules = (
+        "src/analysis_agent/entity_adapter.py",
+        "src/analysis_agent/lifecycle.py",
+        "src/analysis_agent/lifecycle_identity.py",
+        "src/analysis_agent/analyst.py",
+        "src/analysis_agent/evidence.py",
+        "src/dashboard/entities.py",
+        "src/config.py",
+        "uv.lock",
     )
+    return digest({name: sha(PATHS.root / name) for name in modules})
 
 
 def require_current_presentation(record):
@@ -182,7 +187,7 @@ def _normalize(package, context, evidence, candidate):
             key=node["calculation_id"],
             entity_formatted=True,
         )
-        node["formatted_value"] = node.get("formatted", node["formatted_value"])
+        node["formatted_value"] = node["formatted"] if "formatted" in node else node["formatted_value"]
     by_node = {n["calculation_id"]: n for n in nodes}
     draft = json.loads(canonical(candidate))
     for claim in draft["claims"]:
