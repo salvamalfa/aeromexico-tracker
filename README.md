@@ -43,9 +43,10 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
   `gpt-6.1-sol`, esfuerzo `low` y R1; health respondió 200. Las capacidades de
   rutas, métricas financieras y búsqueda de evidencia permanecen apagadas.
   El dueño aprobó R2, cuatro métricas, siete pasajes, tres fichas y una reserva
-  nueva de US$8. El intento N01 terminó HTTP 400 antes de sesión, sin respuesta
-  ni uso conciliado; gasto y saldo siguen desconocidos. El runtime mantiene R1/Sol low y las funciones nuevas siguen
-  apagadas; los pins aprobados están preparados para el siguiente despliegue
+  nueva de US$8. Stage 3 completó 30 conversaciones / 34 respuestas, sin errores
+  del proveedor; costo estimado conocido: US$2.626185. El JSON privado está
+  entregado para calificación del dueño. El runtime mantiene R1/Sol low y las
+  funciones nuevas siguen apagadas; los pins externos ya están configurados
   (ver [Chat analítico](#chat-analítico)).
 - **Datos:** AFAC y AeroDataBox se actualizan a mano mes a mes; lo pendiente
   está en [`ROADMAP.md`](ROADMAP.md).
@@ -146,10 +147,13 @@ checks y las páginas públicas se verificaron. El deployment confirma
 cuatro métricas financieras, siete pasajes de reportes, tres fichas de noticias
 y una reserva nueva financiada de US$8. El runtime mantiene R1/Sol low y las
 funciones nuevas siguen apagadas hasta revisar los resultados JSON de Stage 3.
-La evaluación Stage 3 de 30 casos/34 mensajes no tiene resultados JSON: un
-intento N01 devolvió HTTP 400 antes de sesión; su consumo no está
-conciliado (`stopped_unknown_spend`), así que no se afirma costo cero ni saldo
-intacto. No hay gate de calidad aprobado.
+Stage 3 completó 30 casos / 34 respuestas sin errores del proveedor, con costo
+estimado conocido de US$2.626185. El JSON privado ya está entregado para
+calificación en [review.html](https://salvamalfa.github.io/aeromexico-tracker/review.html).
+Los rechazos anteriores conservan consumo desconocido separado; no hay gate de
+calidad aprobado. [PR #126](https://github.com/salvamalfa/aeromexico-tracker/pull/126)
+está fusionado, Railway y Pages están verificados y las variables externas ya
+están configuradas.
 
 - Operación, instalación y límites: [documentación del chat](docs/chat/README.md)
   y [traspaso operativo](docs/chat/traspaso-activacion-mvp-20261006.md).

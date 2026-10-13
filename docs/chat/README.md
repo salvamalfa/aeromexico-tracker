@@ -57,10 +57,15 @@ y se verificó en Railway y Pages. Health respondió 200 con R1, Sol low y
 `enabled_capabilities: []`; las funciones nuevas siguen apagadas. El dueño
 aprobó R2, cuatro métricas financieras, siete pasajes, tres fichas y una nueva
 reserva financiada de US$8. R1, Sol low, las preguntas y la rúbrica ya estaban
-aprobados y no se vuelven a solicitar. Stage 3 (30 casos/34 mensajes) no tiene
-resultados JSON disponibles. N01 devolvió HTTP 400 antes de sesión y el uso
-quedó `stopped_unknown_spend`; no se declara costo cero ni saldo intacto. No se
-ha aprobado un gate de calidad. Consulta la
+aprobados y no se vuelven a solicitar. Stage 3 completó 30 casos / 34 respuestas
+sin errores del proveedor; costo estimado conocido: US$2.626185. El JSON privado
+está entregado para calificación del dueño en
+[review.html](https://salvamalfa.github.io/aeromexico-tracker/review.html).
+Los rechazos previos conservan consumo desconocido separado. No se ha aprobado
+un gate de calidad. [PR #126](https://github.com/salvamalfa/aeromexico-tracker/pull/126)
+está fusionado, Railway y Pages están verificados y las variables externas
+están configuradas. Consulta los
+[resultados entregados](../etapas/chat-stage3-resultados-revision-20261013.md), la
 [cotización vigente](revision-fase-2/F2.9-etapa-3-presupuesto-actual.md), el
 [brief de decisiones del dueño](fase-2-decision-dueno.md) y el
 [reporte de activación](../etapas/chat-f2-0-activacion-20261012.md), la

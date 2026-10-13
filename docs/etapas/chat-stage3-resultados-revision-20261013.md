@@ -1,0 +1,9 @@
+# Stage 3 · resultados entregados para revisión · 13 oct 2026
+
+30 conversaciones / 34 respuestas completas; cero errores API. Uso: 1,034,354 tokens de entrada y 4,030 de salida; costo estimado conocido: US$2.626185 / reserva aprobada US$8. Los rechazos previos conservan consumo desconocido separado.
+Ejecución: `9011825bcfd4b598a5c85dc2bf14713cf6e28d97`; Sol `gpt-6.1-sol`, esfuerzo `low`, verbosity `medium`, R2 SHA-256 `68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf`; snapshot `d443ae435fa5ad645ea7dbafe4ea165198eb1e0d8b9c348ac3fd299141501dbb`.
+JSON privado entregado en el chat de Codex: SHA-256 `f2b9017a427503f0eab9c80e62bcaf096bd616ce8a494a7c55af8c6eb0e177ba`; dataset ID `1fe493d362418df0832fb87a62192bac4f9558e3a59c00b31a35d4ff858cae80`. No se publican respuestas, ratings ni mapa de alias.
+UI: [review.html](https://salvamalfa.github.io/aeromexico-tracker/review.html); importación de 30 preguntas / 30 respuestas verificada sin errores JavaScript, con Markdown renderizado.
+Pendiente: el dueño califica corrección, fallos críticos, utilidad, redacción y mejora concreta y devuelve el export de calificaciones; [brief](../chat/fase-2-decision-dueno.md). No hay gate de calidad aprobado ni validación de toda la batería de seguridad de 70 casos.
+[PR #126](https://github.com/salvamalfa/aeromexico-tracker/pull/126) fusionado: `d456eb8dc05e586d7119161c710db5ff47af0da3`. Railway deployment `93447a36-7477-4382-bea6-d711ead0ad09` SUCCESS, health 200 con D443; [Pages run 38326443540](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/38326443540) SUCCESS. Manifiesto público idéntico al sitio firmado: 114 datos / ocho contratos, análisis aprobado conservado y 312 filas financieras / cuatro métricas.
+Producción mantiene R1 / Sol low y capacidades nuevas apagadas. Contenido, preguntas, rúbrica, modelo y presupuesto aprobados; las variables externas ya están configuradas. Esta entrega no activa flags ni repite inferencias.

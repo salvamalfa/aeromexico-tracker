@@ -1,11 +1,9 @@
-# Fase 2 del chat · acciones del dueño
+# Fase 2 del chat · calificación del dueño
 
-R2, cuatro métricas, siete pasajes, tres fichas y la reserva Stage 3 ya están aprobados: [decisión](../decisiones/20261012-chat-fase2-r2-contenido-stage3.md). No hace falta repetir esa aprobación.
+Stage 3 completó 30 conversaciones / 34 respuestas, sin errores del proveedor; costo estimado conocido de la ejecución exitosa: US$2.626185 sobre la reserva aprobada de US$8. El JSON privado con las 30 respuestas está entregado en el chat de Codex: [resultados y procedencia](../etapas/chat-stage3-resultados-revision-20261013.md).
 
-N01 se intentó el 12 oct, 23:39 UTC; HTTP 400 antes de crear sesión. Su consumo sigue desconocido (`stopped_unknown_spend`), no se declara cero. El dueño autorizó el reintento sin conciliación previa; Stage 3 está en curso, aún sin resultados: [decisión](../decisiones/20261012-chat-stage3-reintento.md) y [bitácora](../etapas/chat-fase2-stage3-intento-20261012.md).
+Importa ese JSON en [review.html](https://salvamalfa.github.io/aeromexico-tracker/review.html), califica corrección, fallos críticos, utilidad, redacción y una mejora concreta por caso, y devuelve las calificaciones exportadas. La importación de las 30 preguntas se verificó sin errores JavaScript y con Markdown renderizado.
 
-Para CI, configura en [GitHub Actions Variables](https://github.com/salvamalfa/aeromexico-tracker/settings/variables/actions): `CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256` = `644eb640124297fc63b306836607aea6e4b0be424b85e67b902cc9f5407153ae`.
+Contenido, R2, preguntas, rúbrica, Sol low y presupuesto ya están aprobados; las variables externas ya están configuradas. [PR #126](https://github.com/salvamalfa/aeromexico-tracker/pull/126) está fusionado y publicado en Railway y Pages, ambos verificados. La única acción pendiente del dueño es calificar el JSON.
 
-Configura también `CHAT_EVIDENCE_APPROVED_INDEX_SHA256` = `1cd0455ac1944849d567c96f7147c3f393d17333dac2c28b70459e4f7887334f`. La lectura API de variables dio 403; configúralas manualmente. Luego continúa [PR #126](https://github.com/salvamalfa/aeromexico-tracker/pull/126); no se vuelve a pedir aprobación.
-
-Los JSON de los 30 casos no están disponibles; gasto real y saldo siguen desconocidos. Producción mantiene R1/Sol low y las capacidades apagadas: [bitácora del intento](../etapas/chat-fase2-stage3-intento-20261012.md).
+Producción mantiene R1 / Sol low y las capacidades nuevas apagadas hasta revisar las calificaciones. Los rechazos HTTP 400 previos conservan su consumo desconocido en el archivo histórico, separado del costo de la ejecución exitosa.
