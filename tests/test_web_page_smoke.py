@@ -51,7 +51,10 @@ def web_server(tmp_path_factory, web_dist_dir):
     from (see web/src/views/{flights,executive}/state.ts)."""
 
     root = tmp_path_factory.mktemp("web_page_smoke")
-    shutil.copytree(web_dist_dir, root, dirs_exist_ok=True)
+    # A local build can include a real export from web/public/data. Keeping
+    # its entity/period files would let the synthetic page load real routes
+    # (and their map dependencies) instead of the fixture below.
+    shutil.copytree(web_dist_dir, root, dirs_exist_ok=True, ignore=shutil.ignore_patterns("data"))
 
     out_dir = root / "data" / "v1"
     flights_fixture = _load_fixture("flights_sample.json")
@@ -76,6 +79,7 @@ def web_server(tmp_path_factory, web_dist_dir):
 @pytest.fixture()
 def page_with_console_capture(web_server):
     console_errors: list[str] = []
+    external_requests: list[str] = []
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(executable_path=_chromium_executable())
         page = browser.new_page()
@@ -85,12 +89,18 @@ def page_with_console_capture(web_server):
             if message.type == "error":
                 console_errors.append(message.text)
 
+        def on_request(request: Any) -> None:
+            if not request.url.startswith(web_server):
+                external_requests.append(request.url)
+
         page.on("console", on_console_error)
         page.on("pageerror", lambda error: console_errors.append(str(error)))
+        page.on("request", on_request)
         page.goto(web_server)
         page.wait_for_function("document.getElementById('period-display').textContent !== '—'")
         yield page, console_errors
         browser.close()
+    assert external_requests == [], f"Synthetic smoke requested external resources: {external_requests}"
 
 
 def test_reading_tab_renders_the_synthetic_analysis_by_default(page_with_console_capture) -> None:
@@ -122,6 +132,7 @@ def test_flights_tab_renders_the_synthetic_fixture(page_with_console_capture) ->
     page, console_errors = page_with_console_capture
     page.click("#tab-flights")
     page.wait_for_selector("#network-volume:not([hidden])")
+    page.wait_for_selector("#route-flow-map .scattergeo .js-line")
     assert page.is_visible("#panel-flights")
     assert page.inner_text("#flight-kpi-passengers") != "—"
     assert console_errors == []

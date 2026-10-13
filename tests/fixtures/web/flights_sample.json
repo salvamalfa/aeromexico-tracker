@@ -70,7 +70,19 @@
   "route_network": {
     "world_geometry": {
       "geojson": {"type": "FeatureCollection", "features": []},
-      "topojson": {"type": "Topology", "objects": {}},
+      "topojson": {
+        "type": "Topology",
+        "objects": {
+          "land": {"type": "GeometryCollection", "geometries": []},
+          "ocean": {"type": "GeometryCollection", "geometries": []},
+          "countries": {"type": "GeometryCollection", "geometries": []},
+          "coastlines": {"type": "GeometryCollection", "geometries": []},
+          "lakes": {"type": "GeometryCollection", "geometries": []},
+          "rivers": {"type": "GeometryCollection", "geometries": []},
+          "subunits": {"type": "GeometryCollection", "geometries": []}
+        },
+        "arcs": []
+      },
       "source_url": "https://example.invalid/natural-earth",
       "version": "fixture",
       "license": "public domain",

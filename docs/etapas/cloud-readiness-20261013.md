@@ -62,7 +62,7 @@ contenido. No se incluyen datos privados en el diff.
   proveedor mock; cero llamadas al proveedor.
 - `src.publish.verify site/`: pasó con el pin financiero aprobado.
 - `src.dashboard.validate_stage8`: 8/8; la alerta de frescura sigue abierta.
-- Suite completa preparada: 1.348 pasadas, dos fallidas, un skip (preview Pages
+- Línea base de la suite preparada: 1.348 pasadas, dos fallidas, un skip (preview Pages
   no configurada), 29 subtests pasados y cero errores de setup, en 487 s.
   La paridad con el sitio y el panel completo ya pasan. Fallos:
   `test_stage12_diagnosis.py::test_outputs_match_snapshot_and_are_reproducible`
@@ -70,9 +70,32 @@ contenido. No se incluyen datos privados en el diff.
   `test_web_page_smoke.py::test_flights_tab_renders_the_synthetic_fixture`
   (el smoke copia archivos reales del export dentro de su fixture y pide
   `cdn.plot.ly/un/world_110m.json`, rechazado por TLS del cloud).
-  Se confirmó que el HTML de Etapa 12 difiere únicamente por un fingerprint;
-  el smoke de Vuelos pasa al repetirlo sin el export real dentro del build
-  de fixtures. No se modifican el prototipo ni las pruebas en este encargo.
+  Se confirmó que el HTML de Etapa 12 difiere únicamente por un fingerprint.
+  La repetición aislada del smoke pasó, pero un control nuevo de requests
+  reveló que la topología vacía aún podía pedir el CDN antes de que terminara
+  la prueba.
+
+### Correcciones verificadas de la preparación
+
+Se regeneraron `diagnostico.json` y `prototypes/etapa-12/analysis_agent.html`
+con `python -m src.analysis_agent.stage12`. Cambió exclusivamente
+`input_sha256.warehouse_content`; JSON embebido y JSON canónico coinciden,
+CSV y datos permanecen iguales. La prueba conserva comparación byte a byte,
+reproducibilidad y comprobación de que warehouse/Gold no se modifican.
+
+Los dos smokes copian el build sin sus exportaciones `data/`; después exportan
+únicamente sus fixtures. La topología sintética ahora incluye las capas vacías
+válidas que Plotly necesita, y los smokes esperan a que las rutas se dibujen.
+El smoke de página falla si se pide cualquier recurso externo. No se simula
+éxito de un CDN ni se desactiva TLS.
+
+Pruebas focalizadas de Etapa 12 y los dos módulos smoke: 19 pasadas con el
+export real presente en `web/public/data/v1`. El resultado de la suite completa
+y de CI sobre el commit final se conserva en el
+[PR #130](https://github.com/salvamalfa/aeromexico-tracker/pull/130).
+El PR público contiene documentación, código de tests/fixture y dos artefactos
+diagnósticos regenerados; no cambia código de producto, Gold, `site/`, contratos
+ni workflows. El privado #23 sigue siendo solo documentación.
 
 Playwright/Chromium **del cloud**, sin navegador ni sesión del usuario:
 Lectura, Economía y Vuelos del `site/` sin modificar, escritorio 1440 px y
@@ -94,10 +117,9 @@ no afirma que se descargaron fuentes nuevas.
   de 62. Vuelos estimado nacional contiene marzo–julio; no confundir ambas
   coberturas. El refresco mensual requiere un encargo y fuentes revisadas;
   no lo ejecuta automáticamente `refresh.yml`.
-- La suite completa aún necesita resolver el fingerprint del fixture de
-  Etapa 12 y aislar los datos sintéticos del smoke. Esto impide declararla
-  verde; el entorno de desarrollo, el sitio real y su paridad sí están
-  comprobados. No ocultar estos fallos con una excepción TLS o un hash nuevo.
+- El fingerprint desfasado y la dependencia de red del smoke se corrigen
+  arriba, conservando checks estrictos. Antes de integrar, comprobar `test` y
+  `web` del head vigente del PR; no sustituir CI final por la de un commit anterior.
 - El privado registra que probe/sweep figuran `active` pese a documentar la
   práctica de deshabilitarlos fuera de un despacho; siguen siendo manuales.
   Se conserva su estado durante esta preparación.
@@ -110,5 +132,11 @@ no afirma que se descargaron fuentes nuevas.
 
 Prueba pública: [dashboard](https://salvamalfa.github.io/aeromexico-tracker/) y
 [health](https://aeromexico-tracker-production.up.railway.app/api/chat/health).
-Los cambios de documentación se entregan en PRs borrador; necesitan aprobación
+Los cambios de esta preparación se entregan en PRs borrador; necesitan aprobación
 explícita antes de integrar. No se habilita auto-merge ni publicación.
+
+Una sola aprobación explícita puede autorizar ambos PRs identificando sus
+heads finales y el alcance anterior. Sus archivos quedan fuera de los triggers
+de Pages y los watch paths de Railway auditados: la integración pública corre
+CI y la privada no despacha capturas. Revalidar esos triggers y el diff contra
+`master` inmediatamente antes de integrar, por si cambió la base o configuración.
