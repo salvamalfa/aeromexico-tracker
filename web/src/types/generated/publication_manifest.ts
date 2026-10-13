@@ -20,6 +20,7 @@ export interface FileEntry {
   bytes: number;
 }
 export interface AnalysisEntry {
+  entity_key?: "AEROMEXICO" | "VOLARIS" | "VIVA_AEROBUS" | "INDUSTRY";
   period_id: string;
   version: string;
   content_hash: string;

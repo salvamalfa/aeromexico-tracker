@@ -304,6 +304,12 @@ export interface AnalysisClaim {
 
 export interface AnalysisDocument {
   period_id: string;
+  version: string;
+  entity_key?: string;
+  period_label?: string;
+  cutoff_date?: string;
+  selection_mode?: "retrospective";
+  guidance_as_of?: "report_date";
   thesis: string;
   summary_items: AnalysisSummaryItem[];
   context: string[];

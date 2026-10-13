@@ -76,7 +76,7 @@ def test_stage2_snapshot_audit_is_reproducible_and_does_not_grade_model_quality(
 
     payload = json.loads(STAGE2_PILOT_FIXTURE_PATH.read_text(encoding="utf-8"))
     snapshot = Snapshot(copy_pre_financial_snapshot(tmp_path / "pre-financial"))
-    assert snapshot.version == payload["expected_versions"]["data_version"]
+    assert snapshot.version != payload["expected_versions"]["data_version"]
     report = audit_snapshot(
         snapshot,
         payload["cases"],
@@ -86,8 +86,16 @@ def test_stage2_snapshot_audit_is_reproducible_and_does_not_grade_model_quality(
     assert report["mode"] == "offline-snapshot-audit"
     assert report["cases_total"] == 15
     assert report["snapshot_cases_checked"] == report["snapshot_cases_passed"] == 13
-    assert report["snapshot_cases_failed"] == []
-    assert report["fixture_version_mismatches"] == {}
+    # The original cases remain numerically reproducible, while the published
+    # narratives/contracts have a newer identity than the frozen campaign.
+    mismatch = {
+        "data_version": {
+            "expected": payload["expected_versions"]["data_version"],
+            "actual": snapshot.version,
+        }
+    }
+    assert report["snapshot_cases_failed"] == [{"id": "fixture-version", "failures": mismatch}]
+    assert report["fixture_version_mismatches"] == mismatch
     assert set(report["model_quality_cases_pending"]) == {"N20", "es_ratio_average"}
     assert report["quality_denominator"] == 0
 

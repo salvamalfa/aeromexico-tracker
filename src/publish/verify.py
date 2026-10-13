@@ -9,7 +9,7 @@ exiting non-zero, so one run names everything wrong):
    web/*`` hash matches ``src.publish.manifest.contract_hashes()`` computed
    fresh from this checkout, ``files`` includes ``index.html`` and at least
    one other asset, ``analysis_manifest`` is non-empty, and neither list
-   contains a duplicate key (``path`` for ``files``, ``period_id`` for
+   contains a duplicate key (``path`` for ``files``, entity/period for
    ``analysis_manifest``).
 3. Every file the manifest lists exists under ``site/`` with the exact
    SHA-256 and byte size recorded.
@@ -127,6 +127,8 @@ def _data_schema_for(rel_path: str) -> dict[str, Any] | None:
         return NETWORK_FILE_SCHEMA
     if parts[2:3] == ["analysis"] and len(parts) == 4:
         return ANALYSIS_SCHEMA
+    if parts[2:3] == ["analysis"] and len(parts) == 5 and parts[3] in manifest_mod.ANALYSIS_ENTITIES:
+        return ANALYSIS_SCHEMA
     if parts[2:] == ["business_metrics.json"]:
         return BUSINESS_METRICS_SCHEMA
     if parts[2:] == ["business_metrics.approval.json"]:
@@ -170,15 +172,17 @@ def verify_site(site_dir: Path) -> list[str]:
     for path_str in sorted(duplicate_file_paths):
         problems.append(f"manifest 'files' lists {path_str!r} more than once")
 
-    seen_period_ids: set[str] = set()
-    duplicate_period_ids: set[str] = set()
+    seen_period_ids: set[tuple[str, str]] = set()
+    duplicate_period_ids: set[tuple[str, str]] = set()
     for entry in manifest["analysis_manifest"]:
-        period_id = entry.get("period_id")
-        if period_id in seen_period_ids:
-            duplicate_period_ids.add(period_id)
-        seen_period_ids.add(period_id)
-    for period_id in sorted(pid for pid in duplicate_period_ids if pid is not None):
-        problems.append(f"manifest 'analysis_manifest' lists period_id {period_id!r} more than once")
+        identity = manifest_mod.analysis_identity(entry)
+        if identity in seen_period_ids:
+            duplicate_period_ids.add(identity)
+        seen_period_ids.add(identity)
+    for entity, period_id in sorted(duplicate_period_ids):
+        problems.append(
+            f"manifest 'analysis_manifest' lists period_id {period_id!r} for entity {entity!r} more than once"
+        )
 
     listed_paths = {entry["path"]: entry for entry in manifest["files"]}
 
@@ -241,7 +245,7 @@ def verify_site(site_dir: Path) -> list[str]:
         if rel not in actual_paths:
             problems.append(f"manifest lists {rel}, which is missing on disk")
 
-    analysis_payloads_by_period: dict[str, dict[str, Any]] = {}
+    analysis_payloads_by_period: dict[tuple[str, str], tuple[str, dict[str, Any]]] = {}
     data_payloads: dict[str, dict[str, Any]] = {}
     rules = load_privacy_rules()
     for rel in sorted(actual_paths):
@@ -281,8 +285,22 @@ def verify_site(site_dir: Path) -> list[str]:
             problems.append(f"{rel}: forbidden field present: {field}")
         for carrier in carriers:
             problems.append(f"{rel}: disallowed carrier_key: {carrier}")
-        if schema is ANALYSIS_SCHEMA and isinstance(payload.get("period_id"), str):
-            analysis_payloads_by_period[payload["period_id"]] = payload
+        if (
+            schema is ANALYSIS_SCHEMA
+            and isinstance(payload, dict)
+            and isinstance(payload.get("period_id"), str)
+        ):
+            try:
+                identity = manifest_mod.analysis_identity(payload)
+            except ValueError as error:
+                problems.append(f"{rel}: {error}")
+                continue
+            expected_path = "data/v1/" + manifest_mod.analysis_relative_path(payload).as_posix()
+            if rel != expected_path:
+                problems.append(f"{rel}: analysis entity/period header requires path {expected_path}")
+            if identity in analysis_payloads_by_period:
+                problems.append(f"{rel}: duplicate analysis payload for entity/period {identity}")
+            analysis_payloads_by_period[identity] = (rel, payload)
 
     metrics_path = "data/v1/business_metrics.json"
     receipt_path = "data/v1/business_metrics.approval.json"
@@ -322,20 +340,29 @@ def verify_site(site_dir: Path) -> list[str]:
                 problems.append(f"analysis_manifest[{index}]: {field!r} is missing or not a non-empty string")
                 break
         else:
-            period_id = entry["period_id"]
-            payload = analysis_payloads_by_period.get(period_id)
-            if payload is None:
+            identity = manifest_mod.analysis_identity(entry)
+            expected_path = "data/v1/" + manifest_mod.analysis_relative_path(entry).as_posix()
+            pair = analysis_payloads_by_period.get(identity)
+            if pair is None:
                 problems.append(
-                    f"analysis_manifest[{index}]: no readable data/v1/analysis/{period_id}.json "
-                    "to cross-check against"
+                    f"analysis_manifest[{index}]: no readable {expected_path} to cross-check against"
                 )
                 continue
+            actual_path, payload = pair
+            if actual_path != expected_path:
+                problems.append(
+                    f"analysis_manifest[{index}]: entity/period identity requires "
+                    f"{expected_path}, found {actual_path}"
+                )
             for field in analysis_fields:
                 if payload.get(field) != entry[field]:
                     problems.append(
                         f"analysis_manifest[{index}] ({field!r}): manifest says {entry[field]!r}, but "
-                        f"data/v1/analysis/{period_id}.json's own {field!r} is {payload.get(field)!r}"
+                        f"{actual_path}'s own {field!r} is {payload.get(field)!r}"
                     )
+    for identity, (rel, _) in sorted(analysis_payloads_by_period.items()):
+        if identity not in seen_period_ids:
+            problems.append(f"{rel}: analysis entity/period has no approval identity in analysis_manifest")
 
     return problems
 

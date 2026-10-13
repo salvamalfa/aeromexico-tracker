@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from argparse import Namespace
 from pathlib import Path
@@ -26,27 +27,28 @@ def _args(fixture: Path, tmp_path: Path, snapshot: Path | None = None) -> Namesp
     )
 
 
-def test_approved_fixture_completes_offline_preflight_from_an_external_copy(
+def test_approved_external_fixture_rejects_current_snapshot_version_drift(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     external_fixture = tmp_path / "same-approved-content.json"
     external_fixture.write_bytes(APPROVED_FIXTURE.read_bytes())
-    monkeypatch.setattr(evaluate_campaign, "_verify_private_destination", lambda *a, **k: None)
+    def preparation_must_not_write(*args, **kwargs):
+        raise AssertionError("La deriva de versión debe bloquear los destinos de la campaña")
+
+    monkeypatch.setattr(evaluate_campaign, "_verify_private_destination", preparation_must_not_write)
     from tests._pre_financial_snapshot import copy_pre_financial_snapshot
     baseline = copy_pre_financial_snapshot(tmp_path / "pre-financial")
     from src.conversational_analytics.data.snapshot import Snapshot
     approved = json.loads(external_fixture.read_text(encoding="utf-8"))
-    assert Snapshot(baseline).version == approved["expected_versions"]["data_version"]
+    assert hashlib.sha256(external_fixture.read_bytes()).hexdigest() == evaluate_campaign.APPROVED_STAGE2_FIXTURE_SHA256
+    assert Snapshot(baseline).version != approved["expected_versions"]["data_version"]
 
-    plan, runs, cases, _, _, _ = evaluate_campaign.prepare(
-        _args(external_fixture, tmp_path, snapshot=baseline)
-    )
-
-    assert plan["fixture_file_sha256"] == evaluate_campaign.APPROVED_STAGE2_FIXTURE_SHA256
-    assert plan["fixture_source"] == "external"
-    assert len(cases) == 15
-    assert len(runs) == 4
-    assert plan["live_execution_started"] is False
+    # Publishing new narratives/contracts changes the snapshot identity. The
+    # approved historical fixture stays frozen; its preflight must stop here.
+    with pytest.raises(ValueError, match="versión de datos del fixture no coincide"):
+        evaluate_campaign.prepare(_args(external_fixture, tmp_path, snapshot=baseline))
+    assert not (tmp_path / "outputs").exists()
+    assert not (tmp_path / "campaign.json").exists()
 
 
 @pytest.mark.parametrize(

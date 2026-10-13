@@ -43,6 +43,7 @@
         "approval_event", "audit_hash"
       ],
       "properties": {
+        "entity_key": { "enum": ["AEROMEXICO", "VOLARIS", "VIVA_AEROBUS", "INDUSTRY"] },
         "period_id": { "type": "string", "pattern": "^\\d{4}Q[1-4]$" },
         "version": { "type": "string" },
         "content_hash": { "type": "string" },

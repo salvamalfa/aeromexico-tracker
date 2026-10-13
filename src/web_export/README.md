@@ -57,11 +57,27 @@ exporta.
 
 ```
 uv run python -m src.web_export --out web/public/data/v1 [--allow-missing-analysis]
+# Reproducir las identidades exactas de una publicación, con expediente local:
+uv run python -m src.web_export --out web/public/data/v1 --analysis-manifest site/publication_manifest.json
 # Only after owner review: add --business-metrics-proposal <proposal.json>
 # and --business-metrics-receipt <receipt.json> together, and set
 # CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256 outside the repository to the
 # canonical SHA-256 of that owner receipt. The export fails closed without it.
 ```
+
+`--analysis-manifest` acepta el manifiesto completo de publicación o un archivo
+JSON con una lista de identidades `period_id`, `version` y, para las tesis nuevas,
+`entity_key`. En Python: `export_analysis(out_dir, manifest=identidades)`.
+Aeroméxico conserva `analysis/<period_id>.json` cuando su identidad omite
+`entity_key`; las tesis nuevas usan `analysis/<entity_key>/<period_id>.json`.
+El selector evita la búsqueda ambigua y mantiene cada versión exacta, pero
+requiere aprobación humana vigente y código compatible en `consumer_payload`.
+Los campos de recibo presentes deben coincidir con lo autorizado. Una selección
+explícita incompleta falla incluso con `--allow-missing-analysis`; nunca elige
+otra versión ni revoca una aprobación. Sin selector, se conserva el descubrimiento
+por defecto y su rechazo de versiones múltiples para la misma entidad y periodo.
+Para regenerar solamente las tesis, el módulo `src.web_export.analysis` admite
+los mismos argumentos `--out` y `--analysis-manifest`.
 
 Imprime cada archivo escrito con su tamaño y falla (código de salida 1) con
 un mensaje legible si falta un insumo requerido (Gold o, para `analysis.py`,

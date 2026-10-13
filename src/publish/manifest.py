@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -23,6 +24,36 @@ from src.web_export.writer import dumps_deterministic
 CONTRACTS_DIR = PATHS.root / "contracts" / "web"
 SCHEMA_VERSION = "publication_manifest_v1"
 MANIFEST_NAME = "publication_manifest.json"
+ANALYSIS_ENTITIES = frozenset({"AEROMEXICO", "VOLARIS", "VIVA_AEROBUS", "INDUSTRY"})
+
+
+def analysis_identity(entry: dict[str, Any]) -> tuple[str, str]:
+    """One publication slot per entity and quarter; legacy entries mean Aeroméxico."""
+
+    entity = entry.get("entity_key", "AEROMEXICO")
+    period = entry.get("period_id")
+    if (
+        not isinstance(entity, str)
+        or entity not in ANALYSIS_ENTITIES
+        or not isinstance(period, str)
+        or not re.fullmatch(r"\d{4}Q[1-4]", period)
+    ):
+        raise ValueError("Invalid analysis entity/period identity")
+    return entity, period
+
+
+def analysis_sort_key(entry: dict[str, Any]) -> tuple[str, str, str]:
+    return (*analysis_identity(entry), entry["version"])
+
+
+def analysis_relative_path(entry: dict[str, Any]) -> Path:
+    """Keep legacy files at analysis/<quarter>; entity records have their own namespace."""
+
+    entity, period = analysis_identity(entry)
+    if "entity_key" in entry:
+        return Path("analysis") / entity / f"{period}.json"
+    return Path("analysis") / f"{period}.json"
+
 
 # Files that describe the public data/contract boundary, not the site's own
 # build output. Their own content hash stands in for "the contract version"
@@ -157,7 +188,7 @@ def build_manifest(
         "generated_at": generated_at if generated_at is not None else datetime.now(timezone.utc).isoformat(),
         "contracts": dict(contracts) if contracts is not None else contract_hashes(contracts_dir),
         "files": file_entries(site_dir),
-        "analysis_manifest": sorted(analysis_manifest, key=lambda e: e["period_id"]),
+        "analysis_manifest": sorted(analysis_manifest, key=analysis_sort_key),
     }
 
 

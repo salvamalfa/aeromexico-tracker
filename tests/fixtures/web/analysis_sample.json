@@ -46,6 +46,38 @@
           "value": "fixture"
         }
       ]
+    },
+    {
+      "claim_id": "summary_unit",
+      "type": "observed_fact",
+      "text": "A second fixture claim with no emphasis, for the smoke and parity tests.",
+      "calculation_ids": [],
+      "evidence_ids": [],
+      "citations": []
+    },
+    {
+      "claim_id": "section_one_claim",
+      "type": "observed_fact",
+      "text": "Fixture paragraph for section one.",
+      "calculation_ids": [],
+      "evidence_ids": [],
+      "citations": []
+    },
+    {
+      "claim_id": "section_two_claim_a",
+      "type": "observed_fact",
+      "text": "Fixture paragraph for section two.",
+      "calculation_ids": [],
+      "evidence_ids": [],
+      "citations": []
+    },
+    {
+      "claim_id": "section_two_claim_b",
+      "type": "observed_fact",
+      "text": "A second paragraph.",
+      "calculation_ids": [],
+      "evidence_ids": [],
+      "citations": []
     }
   ],
   "evidence_fingerprint": "fixture-evidence-fingerprint",

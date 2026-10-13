@@ -52,11 +52,14 @@ export async function loadExecutive(dataRoot?: string): Promise<ExecutiveDocumen
   state.views = payload.views;
   state.entities = payload.entities ?? null;
   state.entityList = payload.entity_list ?? null;
+  const requestedPeriod = new URLSearchParams(window.location.search).get("period");
+  const defaultPeriod = requestedPeriod && state.views[requestedPeriod] &&
+    state.records.some((record) => record.period_id === requestedPeriod) ? requestedPeriod : state.metadata?.default_period;
   state.periodIndex = Math.max(
     0,
-    state.records.findIndex((record) => record.period_id === state.metadata?.default_period)
+    state.records.findIndex((record) => record.period_id === defaultPeriod)
   );
-  initPeriods(state.records.map((record) => record.period_id), state.metadata?.default_period);
+  initPeriods(state.records.map((record) => record.period_id), defaultPeriod);
   return payload;
 }
 

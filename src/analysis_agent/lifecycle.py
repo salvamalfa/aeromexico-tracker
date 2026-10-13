@@ -3,19 +3,29 @@
 from __future__ import annotations
 
 import argparse
-from contextlib import contextmanager
-from datetime import datetime, timezone
-import json
 import hashlib
+import json
 import os
-from pathlib import Path
 import re
 import sqlite3
 import tempfile
+from contextlib import contextmanager
+from datetime import datetime, timezone
+from pathlib import Path
 
 from src.config import PATHS
+
+from .analyst import SKILL, load_inputs, validate
 from .evidence import canonical, digest
-from .analyst import load_inputs, validate, SKILL
+from .lifecycle_identity import (
+    LEGACY_ENTITY,
+    check_entity_reference,
+    entity_key,
+    event_identity,
+    is_entity_record,
+    record_identity,
+    verify_record,
+)
 
 ROOT = PATHS.root / "analysis_runs/lifecycle"
 CHECKS = {
@@ -31,23 +41,20 @@ CHECKS = {
 }
 
 
-def verify_record(record):
-    if record["content_hash"] != digest(record["draft"]):
-        raise ValueError("Draft content changed after versioning")
-    version = digest({k: record[k] for k in ("draft", "prompt_version", "code_version")})
-    if version != record["version"] or record["analysis_id"] != record["draft"]["period_id"] + "_" + version:
-        raise ValueError("Version identity mismatch")
-    if not re.fullmatch(r"\d{4}Q[1-4]", record["draft"]["period_id"]):
-        raise ValueError("Invalid period")
-
-
 def verified_inputs(record):
     verify_record(record)
     d = record["draft"]
-    if not re.fullmatch(r"\d{4}Q[1-4]_[a-f0-9]{64}", d["package_id"]) or not re.fullmatch(
+    package_prefix = d["period_id"]
+    if is_entity_record(record):
+        package_prefix = entity_key(record) + "_" + package_prefix
+    if not re.fullmatch(re.escape(package_prefix) + r"_[a-f0-9]{64}", d["package_id"]) or not re.fullmatch(
         r"[a-f0-9]{64}", d["calculation_fingerprint"]
     ):
         raise ValueError("Invalid input identity")
+    if is_entity_record(record):
+        from .entity_adapter import verified_inputs as verify_entity_inputs
+
+        return verify_entity_inputs(record)
     p, c = load_inputs(
         PATHS.root / "analysis_runs/evidence" / f"{d['package_id']}.json",
         PATHS.root / "analysis_runs/quantitative" / f"{d['calculation_fingerprint']}.json",
@@ -98,6 +105,7 @@ def events(root=ROOT):
             or path.name != f"{index:08d}_{expected}.json"
         ):
             raise ValueError("Ledger sequence/hash mismatch; do not promote")
+        event_identity(event)
         previous = expected
         result.append(event)
     head = root / "head.json"
@@ -129,13 +137,13 @@ def append(action, record, payload, actor, root=ROOT):
         history = events(root)
         # Duplicate retries do not create a new transition or date.
         signature = {"action": action, "version": record["version"], "payload": payload, "actor": actor}
-        candidates = list(reversed(history))
+        if is_entity_record(record):
+            signature["entity_key"] = entity_key(record)
+        candidates = [e for e in reversed(history) if event_identity(e) == record_identity(record)]
         if action == "revoke":
-            candidates = [
-                e for e in candidates if e["version"] == record["version"] and e["action"] != "comment"
-            ][:1]
+            candidates = [e for e in candidates if e["action"] != "comment"][:1]
         for old in candidates:
-            if {k: old[k] for k in signature} == signature:
+            if {k: old.get(k) for k in signature} == signature:
                 return old
         event = dict(
             signature,
@@ -152,6 +160,7 @@ def append(action, record, payload, actor, root=ROOT):
 
 def audit_contract(report, record):
     verify_record(record)
+    check_entity_reference(report, record, "Audit")
     if report.get("version") != record["version"] or report.get("content_hash") != record["content_hash"]:
         raise ValueError("Audit targets another version/content")
     if report.get("reviewer") != "independent_codex_agent" or not report.get("reviewer_task"):
@@ -203,7 +212,7 @@ def record_audit(record, report, root=ROOT):
 
 def state(record, root=ROOT):
     verify_record(record)
-    history = [e for e in events(root) if e["version"] == record["version"]]
+    history = [e for e in events(root) if event_identity(e) == record_identity(record)]
     status = "draft"
     audit = None
     approval = None
@@ -260,6 +269,7 @@ def state(record, root=ROOT):
 
 
 def check_authorization(authorization, record):
+    check_entity_reference(authorization, record, "Authorization")
     if (
         authorization.get("decision") != "approve_analysis"
         or authorization.get("version") != record["version"]
@@ -309,6 +319,8 @@ def approval_event(record, authorization, audit_hash, root):
             previous_hash=history[-1]["event_hash"] if history else None,
             created_at=datetime.now(timezone.utc).isoformat(),
         )
+        if is_entity_record(record):
+            event["entity_key"] = entity_key(record)
         event["event_hash"] = digest(event)
         atomic_json(root / "events" / f"{event['sequence']:08d}_{event['event_hash']}.json", event)
         advance_head(root, event)
@@ -420,10 +432,18 @@ def consumer_payload(record, root=ROOT):
         "version_event_head": current["events"][-1]["event_hash"],
     }
     payload["context"] = [checks["rendered"][cid] for cid in d.get("context_claim_ids", [])]
+    if is_entity_record(record):
+        payload["entity_key"] = entity_key(record)
+        for field in ("period_label", "cutoff_date", "selection_mode", "guidance_as_of"):
+            payload[field] = d[field]
     return payload
 
 
 def require_current_presentation(record):
+    if is_entity_record(record):
+        from .entity_adapter import require_current_presentation as require_entity_presentation
+
+        return require_entity_presentation(record)
     code = digest(
         {
             name: hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest()
@@ -462,6 +482,7 @@ def materialize(records, root=ROOT):
         rows.append(
             {
                 "analysis_id": record["analysis_id"],
+                "entity_key": entity_key(record),
                 "period_id": d["period_id"],
                 "version": record["version"],
                 "state": current["state"],
@@ -487,13 +508,14 @@ def rebuild_projection(records, root=ROOT):
             db = sqlite3.connect(name)
             try:
                 db.execute(
-                    "CREATE TABLE fact_quarterly_analysis (analysis_id TEXT PRIMARY KEY, period_id TEXT, version TEXT UNIQUE, state TEXT, content_hash TEXT, content_json TEXT, created_at TEXT, model TEXT, audit_hash TEXT, approval_event TEXT)"
+                    "CREATE TABLE fact_quarterly_analysis (analysis_id TEXT PRIMARY KEY, entity_key TEXT, period_id TEXT, version TEXT, state TEXT, content_hash TEXT, content_json TEXT, created_at TEXT, model TEXT, audit_hash TEXT, approval_event TEXT, UNIQUE(entity_key, period_id, version))"
                 )
                 for row in table["rows"]:
                     db.execute(
-                        "INSERT INTO fact_quarterly_analysis VALUES (?,?,?,?,?,?,?,?,?,?)",
+                        "INSERT INTO fact_quarterly_analysis VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                         (
                             row["analysis_id"],
+                            row["entity_key"],
                             row["period_id"],
                             row["version"],
                             row["state"],
@@ -506,14 +528,16 @@ def rebuild_projection(records, root=ROOT):
                         ),
                     )
                 db.execute(
-                    "CREATE TABLE analysis_events (sequence INTEGER PRIMARY KEY, event_hash TEXT UNIQUE, version TEXT, action TEXT, event_json TEXT)"
+                    "CREATE TABLE analysis_events (sequence INTEGER PRIMARY KEY, event_hash TEXT UNIQUE, entity_key TEXT, period_id TEXT, version TEXT, action TEXT, event_json TEXT)"
                 )
                 for event in events(root):
                     db.execute(
-                        "INSERT INTO analysis_events VALUES (?,?,?,?,?)",
+                        "INSERT INTO analysis_events VALUES (?,?,?,?,?,?,?)",
                         (
                             event["sequence"],
                             event["event_hash"],
+                            event.get("entity_key", LEGACY_ENTITY),
+                            event["period_id"],
                             event["version"],
                             event["action"],
                             canonical(event).decode(),
@@ -551,10 +575,18 @@ def main():
         consumer_payload(record)
     s = state(record)
     if args.operation in ("audit", "comment", "approve", "revoke"):
-        identities = {(e["period_id"], e["version"]) for e in events()}
+        identities = {(e.get("entity_key"), e["period_id"], e["version"]) for e in events()}
         records = [
-            json.loads((PATHS.root / "analysis_runs/drafts" / period / (version + ".json")).read_bytes())
-            for period, version in sorted(identities)
+            json.loads(
+                (
+                    PATHS.root
+                    / "analysis_runs/drafts"
+                    / (entity if entity is not None else "")
+                    / period
+                    / (version + ".json")
+                ).read_bytes()
+            )
+            for entity, period, version in sorted(identities, key=lambda i: (i[0] or "", i[1], i[2]))
         ]
         rebuild_projection(records)
     print(json.dumps({"state": s["state"], "version": s["version"], "event_count": len(s["events"])}))

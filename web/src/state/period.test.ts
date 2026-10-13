@@ -5,7 +5,8 @@ import { currentIndex, currentPeriodId, initPeriods, periodCount, subscribe, wir
 // listeners, the subscriber list) that is meant to be set up exactly once
 // per page load — so, unlike the rest of this repo's tests, this suite
 // runs everything against one shared #period-prev/#period-next pair in a
-// single test, instead of recreating it (and re-wiring) per case.
+// shared-store test, instead of recreating it (and re-wiring) per case.
+// The URL regression below imports a fresh store to isolate its listeners.
 describe("state/period", () => {
   it("owns the selected index, the stepper buttons and every subscriber", () => {
     document.body.innerHTML = '<button id="period-prev"></button><button id="period-next"></button>';
@@ -28,8 +29,11 @@ describe("state/period", () => {
     subscribe((periodId) => calls.push(`a:${periodId}`));
     subscribe((periodId) => calls.push(`b:${periodId}`));
 
+    window.history.replaceState(null, "", "/?entity=VIVA_AEROBUS&period=2026Q2");
     next.click();
     expect(currentPeriodId()).toBe("2026Q3");
+    expect(new URLSearchParams(window.location.search).get("period")).toBe("2026Q3");
+    expect(new URLSearchParams(window.location.search).get("entity")).toBe("VIVA_AEROBUS");
     // One click, one notification per subscriber, in subscription order —
     // the second wireStepper() call above did not attach a second listener.
     expect(calls).toEqual(["a:2026Q3", "b:2026Q3"]);
@@ -48,5 +52,24 @@ describe("state/period", () => {
     subscribe(late);
     next.click();
     expect(late).toHaveBeenCalledExactlyOnceWith("2026Q2");
+    window.history.replaceState(null, "", "/");
+  });
+
+  it("adds the selected quarter to an ordinary URL and preserves other parameters and the fragment", async () => {
+    vi.resetModules();
+    const periods = await import("./period");
+    document.body.innerHTML = '<button id="period-prev"></button><button id="period-next"></button>';
+    window.history.replaceState(null, "", "/dashboard?sel_reading=VOLARIS&sel_kpis=INDUSTRY&segment=domestic#panel-economy");
+    periods.initPeriods(["2026Q1", "2026Q2"], "2026Q2");
+    periods.wireStepper();
+    document.getElementById("period-prev")!.click();
+    const params = new URLSearchParams(window.location.search);
+    expect(params.get("period")).toBe("2026Q1");
+    expect(params.get("sel_reading")).toBe("VOLARIS");
+    expect(params.get("sel_kpis")).toBe("INDUSTRY");
+    expect(params.get("segment")).toBe("domestic");
+    expect(window.location.pathname).toBe("/dashboard");
+    expect(window.location.hash).toBe("#panel-economy");
+    window.history.replaceState(null, "", "/");
   });
 });

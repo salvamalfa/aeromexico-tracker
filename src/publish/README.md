@@ -79,6 +79,20 @@ action still needs the owner's specific authorization. See `REPO_MAP.md`.
 - **Salidas:** `site/` (versioned); an intent/published receipt under
   `analysis_runs/publications/` (local, non-versioned).
 
+Los nuevos registros de entidad viven en
+`analysis_runs/drafts/<entity_key>/<period>/<version>.json`. Para publicar el
+mismo trimestre de Aeroméxico, Volaris, Viva e Industria, pasar los cuatro
+registros mediante cuatro opciones `--record`. Cada uno debe conservar su
+aprobación vigente y su identidad de entidad, trimestre y versión. El gate
+rechaza dos versiones de una misma entidad y trimestre.
+
+El registro histórico de Aeroméxico conserva
+`data/v1/analysis/<period>.json` y sus bytes publicados. Los nuevos registros
+se exportan a `data/v1/analysis/<entity_key>/<period>.json`, con `entity_key`
+en el payload y el manifest. Una entrada histórica sin ese campo corresponde
+a Aeroméxico. El verificador comprueba que ruta, encabezado y manifest
+coincidan; la presencia de un archivo por sí sola no acredita aprobación.
+
 ## Punto de entrada
 
 ```
@@ -101,3 +115,12 @@ approval entry) run in CI with no private data. A full local run of
 `analysis_runs/` record) is exercised by `tests/test_publish_gate.py` and,
 for the built site's visible parity against the published page, by
 `tests/test_site_parity.py` (`browser` + `local_data`).
+
+El ledger conserva aprobaciones técnicas históricas cuando cambia la huella
+de implementación. Para reproducir una publicación, selecciona sus cuatro
+registros exactos con `--record`; toma las identidades de
+`site/publication_manifest.json`. El descubrimiento automático rechaza
+múltiples versiones aprobadas de una misma entidad y trimestre. En un
+export de desarrollo, pasa ese `analysis_manifest` explícitamente a
+`src.web_export.analysis.export_analysis(..., manifest=...)`; no revoques
+autorizaciones históricas ni elijas una versión por fecha para eludir el guard.
