@@ -1,5 +1,6 @@
 """Offline contract checks for stable F2.2 runs, resume, and spend guards."""
 
+import hashlib
 import math
 from pathlib import Path
 from types import SimpleNamespace
@@ -68,14 +69,13 @@ COMPARISON MUST NOT BE USED
         extract_proposed_prompt("# F2.1 Prompt\n\n## Comparación\n```\nOLD\n```")
 
 
-def test_f21_plan_extracts_only_its_prompt_draft_fence() -> None:
-    source = (ROOT / "docs/chat/fase-2-agente-analitico.md").read_text(encoding="utf-8")
-    prompt = extract_proposed_prompt(source)
-
-    assert prompt.startswith("<rol>")
-    assert prompt.endswith("</ejemplos>")
-    assert "### Borrador inicial" not in prompt
-    assert "Lo que queda pendiente al ajustar el borrador" not in prompt
+def test_business_inputs_remain_frozen_after_plan_archival() -> None:
+    """Approved inputs survive archival without loading historical prose or network."""
+    fixture = ROOT / "tests/fixtures/chat_evals/business_proposed.json"
+    assert hashlib.sha256(fixture.read_bytes()).hexdigest() == (
+        "30fc0acfc5d9fee1ffffd3624209712dd8160806dae4d904c4310a8f53537640"
+    )
+    assert [case["id"] for case in BUSINESS] == [f"N{index:02d}" for index in range(1, 31)]
 
 
 def test_stage2_accepts_only_the_approved_f21_prompt_base() -> None:
@@ -85,9 +85,9 @@ def test_stage2_accepts_only_the_approved_f21_prompt_base() -> None:
 
     assert DEFAULT_STAGE2_PROMPT_PATH == ROOT / "docs/chat/revision-fase-2/F2.1-prompt-aprobado.md"
     assert prompt_content_hash(base) == "33b8f7a0900869812d98bba57daa2ce3ea2f6b5c02a86a7eb3b8e830c7f7694b"
-    draft_plan = (ROOT / "docs/chat/fase-2-agente-analitico.md").read_text(encoding="utf-8")
+    # Reject unapproved prompt content independently of the archived design prose.
     with pytest.raises(ValueError, match="SHA-256 aprobado"):
-        effective_stage2_prompt(draft_plan)
+        effective_stage2_prompt("<rol>Unapproved draft</rol>")
     with pytest.raises(ValueError, match="SHA-256 aprobado"):
         approved_stage2_prompt_base("texto arbitrario no aprobado")
     with pytest.raises(ValueError, match="SHA-256 aprobado"):

@@ -99,7 +99,7 @@ un saldo contable ni representa el consumo actual verificado. S14 conserva
 `NULL`/desconocido, que nunca se interpreta como cero.
 
 Las respuestas correctas del 8 de octubre son observaciones de uso, no una
-validación de calidad del prompt. Consulta la [fase 2](fase-2-agente-analitico.md), el
+validación de calidad del prompt. Consulta la [fase 2](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/fase-2-agente-analitico.md), el
 [traspaso operativo](traspaso-activacion-mvp-20261006.md), el
 [reporte de activación](../etapas/chat-mvp-activacion-20261007.md), las
 [correcciones de recuperación](../etapas/chat-recuperacion-correcciones-20261008.md),

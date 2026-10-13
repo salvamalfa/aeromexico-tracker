@@ -114,5 +114,5 @@ El dueño confirmó el significado del catálogo y el alcance como MVP el 4 de
 octubre de 2026. Después calificó las respuestas de la comparación con esta
 interfaz y eligió `gpt-6.1-sol`; el MVP está activo en producción desde el 8
 de octubre de 2026. No se aprobó un gate de calidad. La
-[fase 2](fase-2-agente-analitico.md) reutiliza `review.html` para calificar su
+[fase 2](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/fase-2-agente-analitico.md) reutiliza `review.html` para calificar su
 conjunto de evaluación de negocio.

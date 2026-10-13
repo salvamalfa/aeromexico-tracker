@@ -3,7 +3,7 @@
 Documento operativo de continuidad, actualizado el 8 de octubre de 2026. Resume
 la decisión del dueño, el estado comprobado y los límites del MVP. Las reglas
 de `AGENTS.md` siguen vigentes. La siguiente etapa es la
-[fase 2 del chat](fase-2-agente-analitico.md), que comienza cuando el dueño
+[fase 2 del chat](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/fase-2-agente-analitico.md), que comienza cuando el dueño
 envíe la solicitud.
 
 **Orden de lectura:** este traspaso, luego el [estado del chat](README.md) y el

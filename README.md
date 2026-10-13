@@ -154,7 +154,7 @@ gate original de 70 casos/safety. Ver [cierre operativo](docs/etapas/chat-fase2-
 
 - Operación, instalación y límites: [documentación del chat](docs/chat/README.md)
   y [traspaso operativo](docs/chat/traspaso-activacion-mvp-20261006.md).
-- Implementación y cierre técnico: la [fase 2](docs/chat/fase-2-agente-analitico.md)
+- Implementación y cierre técnico: la [fase 2](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/fase-2-agente-analitico.md)
   y el [resumen para decisión del dueño](docs/chat/fase-2-decision-dueno.md).
 
 El perfil `chat-runtime` instala solo las dependencias del backend. El gasto se

@@ -106,7 +106,7 @@ La comparación de modelos ya terminó. Su permiso cubrió únicamente las fases
 autorizadas hasta un umbral operativo acumulado de US$10, sin reiniciar el saldo
 entre fases; esa autorización está cerrada. Para revisar uso y estado, consulta
 el reporte de la etapa enlazado arriba. Las evaluaciones nuevas y su
-presupuesto se definen en la [fase 2](fase-2-agente-analitico.md). Si el uso de un turno no se confirma, su costo permanece desconocido:
+presupuesto se definen en la [fase 2](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/fase-2-agente-analitico.md). Si el uso de un turno no se confirma, su costo permanece desconocido:
 no se vuelve a enviar la pregunta para reconstruirlo ni se presenta un subtotal
 conocido como total.
 
@@ -156,7 +156,7 @@ del harness ni un presupuesto propio prometen un tope de factura. Tras la
 comparación, el dueño eligió `gpt-6.1-sol` para el MVP; no se aprobó un gate
 de calidad ni se fijó un objetivo mensual. La comparación de Luna y Sol con
 distintos esfuerzos, el conjunto de evaluación de negocio y cualquier gate
-nuevo se definen en la [fase 2](fase-2-agente-analitico.md). Un incentivo o
+nuevo se definen en la [fase 2](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/fase-2-agente-analitico.md). Un incentivo o
 una escritura de caché no se contabiliza como crédito confirmado. Ver
 [cobertura y propuesta de límites](data-sharing.md)
 antes de atribuir costo cero a una llamada.
