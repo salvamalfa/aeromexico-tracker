@@ -90,6 +90,9 @@ calificó 16 correctos y 14 problemas. De 13 notas de periodo, 12 casos recibier
 contexto vacío; la UI ya envía la selección. El ajuste de R2 fue autorizado sin
 otra evaluación pagada. Las respuestas individuales permanecen privadas;
 no se acredita el gate original de 70 casos/safety. No hay acción pendiente del dueño.
+Una evaluación futura del selector requiere contexto explícito por caso. La
+campaña histórica conserva sus archivos y hashes; no mide el comportamiento
+del prompt ajustado.
 
 Verificación registrada el 12 de octubre de 2026: Railway reportó `SUCCESS`
 para el despliegue `dd97b38e-383b-48ab-9fab-ca5bf0f78c70` sobre el commit
