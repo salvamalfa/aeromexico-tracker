@@ -245,6 +245,31 @@ def test_entity_citation_has_no_excerpt_url_fallback_without_matching_artifact()
     assert analysis._claim_citations(claim, package, calculations, {}) == []
 
 
+@pytest.mark.parametrize("identity", ["artifact_id", "excerpt_id"])
+def test_entity_citation_rejects_duplicate_identities_before_building_maps(identity):
+    package, calculations = _citation_inputs()
+    if identity == "artifact_id":
+        package["sources"].append(
+            {
+                "artifact_id": "a",
+                "source_file": "other.pdf",
+                "source_url": "https://cdn.investorcloud.net/VivaAerobus/other.pdf",
+            }
+        )
+    else:
+        package["excerpts"].append(
+            {
+                "excerpt_id": "e",
+                "artifact_id": "a",
+                "period_id": "2026Q2",
+                "text": "Another primary fragment.",
+            }
+        )
+    claim = {"text_template": "{{income}}", "bindings": {"income": {"calculation_id": "c"}}}
+    with pytest.raises(ValueError, match=f"Duplicate {identity}"):
+        analysis._claim_citations(claim, package, calculations, {})
+
+
 def test_entity_qualitative_and_company_citations_link_exact_rendered_leads():
     package, calculations = _citation_inputs()
     claim = {

@@ -47,6 +47,13 @@ def code_version():
         "src/analysis_agent/lifecycle_identity.py",
         "src/analysis_agent/analyst.py",
         "src/analysis_agent/evidence.py",
+        "src/web_export/analysis.py",
+        "src/web_export/privacy.py",
+        "src/web_export/schemas.py",
+        "src/web_export/writer.py",
+        "src/publish/manifest.py",
+        "contracts/web/analysis.schema.json",
+        "contracts/web/privacy.yaml",
         "src/dashboard/entities.py",
         "src/config.py",
         "uv.lock",
@@ -148,7 +155,20 @@ def _replay(package, folder):
     return frozen
 
 
+def _require_unique_ids(items, field):
+    seen = set()
+    for item in items:
+        identity = item.get(field)
+        if not isinstance(identity, str) or not identity:
+            raise ValueError(f"Invalid {field}")
+        if identity in seen:
+            raise ValueError(f"Duplicate {field}: {identity}")
+        seen.add(identity)
+
+
 def _normalize(package, context, evidence, candidate):
+    _require_unique_ids(package["sources"], "artifact_id")
+    _require_unique_ids(evidence["excerpts"], "excerpt_id")
     excerpts = []
     for original in evidence["excerpts"]:
         excerpt = dict(original)

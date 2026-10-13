@@ -94,6 +94,32 @@ def test_shared_validation_change_invalidates_entity_presentation(monkeypatch, f
         adapter.require_current_presentation(record)
 
 
+@pytest.mark.parametrize(
+    "module",
+    [
+        "src/web_export/analysis.py",
+        "src/web_export/privacy.py",
+        "src/web_export/schemas.py",
+        "src/web_export/writer.py",
+        "src/publish/manifest.py",
+        "contracts/web/analysis.schema.json",
+        "contracts/web/privacy.yaml",
+    ],
+)
+def test_publication_provenance_dependency_changes_entity_code_version(monkeypatch, module):
+    from src.analysis_agent.analyst import SKILL
+
+    baseline = adapter.code_version()
+    original_sha = adapter.sha
+    record = {"code_version": baseline, "prompt_version": original_sha(SKILL)}
+    dependency = adapter.PATHS.root / module
+    assert dependency.is_file()
+    monkeypatch.setattr(adapter, "sha", lambda path: "0" * 64 if path == dependency else original_sha(path))
+    assert adapter.code_version() != baseline
+    with pytest.raises(ValueError, match="implementation changed"):
+        adapter.require_current_presentation(record)
+
+
 @pytest.mark.parametrize("format_fields", [{"formatted": "1,0"}, {"formatted_value": "1,0"}])
 def test_normalization_accepts_either_reviewed_format_field(format_fields):
     package = {
@@ -179,4 +205,25 @@ def test_normalization_requires_source_file_even_with_valid_supplied_artifact():
     package, context, evidence, candidate = _source_identity_normalization_case()
     evidence["excerpts"][0].pop("source_file")
     with pytest.raises(ValueError, match="source_file is required"):
+        adapter._normalize(package, context, evidence, candidate)
+
+
+def test_normalization_rejects_same_artifact_id_for_different_valid_source_files():
+    package, context, evidence, candidate = _source_identity_normalization_case()
+    package["sources"][1]["artifact_id"] = "source-a"
+    with pytest.raises(ValueError, match="Duplicate artifact_id"):
+        adapter._normalize(package, context, evidence, candidate)
+
+
+def test_normalization_rejects_same_excerpt_id_for_different_valid_sources():
+    package, context, evidence, candidate = _source_identity_normalization_case()
+    evidence["excerpts"].append(
+        {
+            "excerpt_id": "excerpt-a",
+            "source_file": "report-b.pdf",
+            "artifact_id": "source-b",
+            "literal_text": "Another valid primary fragment.",
+        }
+    )
+    with pytest.raises(ValueError, match="Duplicate excerpt_id"):
         adapter._normalize(package, context, evidence, candidate)

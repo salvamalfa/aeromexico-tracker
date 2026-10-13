@@ -179,7 +179,13 @@ def validate_analysis_manifest(value: Any) -> list[dict[str, str]]:
     if not isinstance(value, list):
         raise ValueError("Analysis manifest must be a publication manifest or an identity list")
     fields = {
-        "entity_key", "period_id", "version", "content_hash", "evidence_fingerprint", "approval_event", "audit_hash",
+        "entity_key",
+        "period_id",
+        "version",
+        "content_hash",
+        "evidence_fingerprint",
+        "approval_event",
+        "audit_hash",
     }
     selected = []
     seen = set()
@@ -271,6 +277,10 @@ def _entity_claim_citations(claim, package, calculations, numbers, rendered_text
     link to each member's original, while a qualitative sentence links its
     literal rendered lead. Tooltips contain only a public period label.
     """
+    from src.analysis_agent.entity_adapter import _require_unique_ids
+
+    _require_unique_ids(package["sources"], "artifact_id")
+    _require_unique_ids(package["excerpts"], "excerpt_id")
     nodes = {node["calculation_id"]: node for node in calculations["nodes"]}
     excerpts = {excerpt["excerpt_id"]: excerpt for excerpt in package["excerpts"]}
     sources = {source["artifact_id"]: source for source in package["sources"]}
@@ -477,7 +487,9 @@ def export_analysis(
                 continue
             for field in ("content_hash", "evidence_fingerprint", "approval_event", "audit_hash"):
                 if field in entry and payload.get(field) != entry[field]:
-                    raise ValueError(f"Selected analysis {period_id}/{version} does not match manifest {field}")
+                    raise ValueError(
+                        f"Selected analysis {period_id}/{version} does not match manifest {field}"
+                    )
             errors = [f"{list(e.path)}: {e.message}" for e in validator.iter_errors(payload)]
             if errors:
                 raise ValueError(f"analysis/{period_id}.json does not match its schema: {errors[:5]}")
@@ -509,8 +521,12 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, default=PATHS.root / "web" / "public" / "data" / "v1")
     parser.add_argument(
-        "--analysis-manifest", type=Path,
-        help="Exact identity list or publication_manifest.json; selected versions still require current approval.",
+        "--analysis-manifest",
+        type=Path,
+        help=(
+            "Exact identity list or publication_manifest.json; "
+            "selected versions still require current approval."
+        ),
     )
     parser.add_argument(
         "--allow-missing-analysis",
