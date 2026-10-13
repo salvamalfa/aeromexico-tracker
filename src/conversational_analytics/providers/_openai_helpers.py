@@ -73,6 +73,9 @@ class OpenAIProviderError(RuntimeError):
         upstream_exception_type: str | None = None,
         upstream_http_status: int | None = None,
         upstream_error_code: str | None = None,
+        upstream_error_type: str | None = None,
+        upstream_error_param: str | None = None,
+        upstream_request_id: str | None = None,
     ) -> None:
         super().__init__(message)
         self.usage = usage
@@ -87,11 +90,19 @@ class OpenAIProviderError(RuntimeError):
         self.session_id = session_id if isinstance(session_id, str) and session_id else None
         self.turn_id = turn_id if isinstance(turn_id, str) and turn_id else None
         self.upstream_metadata = sanitize_upstream_fields(
-            upstream_exception_type, upstream_http_status, upstream_error_code
+            upstream_exception_type,
+            upstream_http_status,
+            upstream_error_code,
+            upstream_error_type,
+            upstream_error_param,
+            upstream_request_id,
         )
         self.upstream_exception_type = self.upstream_metadata.get("upstream_exception_type")
         self.upstream_http_status = self.upstream_metadata.get("upstream_http_status")
         self.upstream_error_code = self.upstream_metadata.get("upstream_error_code")
+        self.upstream_error_type = self.upstream_metadata.get("upstream_error_type")
+        self.upstream_error_param = self.upstream_metadata.get("upstream_error_param")
+        self.upstream_request_id = self.upstream_metadata.get("upstream_request_id")
 
 
 def provider_terminal_failure(

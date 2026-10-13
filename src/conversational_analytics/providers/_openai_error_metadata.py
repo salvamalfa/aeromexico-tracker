@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import re
 from typing import Any
 
 SAFE_UPSTREAM_EXCEPTION_TYPES = frozenset(
@@ -45,10 +46,23 @@ SAFE_UPSTREAM_ERROR_CODES = frozenset(
         "unsupported_value",
     }
 )
+SAFE_UPSTREAM_ERROR_TYPES = frozenset(
+    {"invalid_request_error", "authentication_error", "permission_error", "rate_limit_error", "server_error"}
+)
+_SAFE_ERROR_PARAM = re.compile(r"^[A-Za-z0-9_.\[\]-]{1,160}$")
+_SAFE_REQUEST_ID = re.compile(r"^[A-Za-z0-9_-]{1,128}$")
+_SAFE_ERROR_PARAM_ROOTS = frozenset(
+    {"agent", "model", "instructions", "tools", "reasoning", "text", "input", "metadata"}
+)
 
 
 def sanitize_upstream_fields(
-    exception_type: Any = None, status: Any = None, code: Any = None
+    exception_type: Any = None,
+    status: Any = None,
+    code: Any = None,
+    error_type: Any = None,
+    param: Any = None,
+    request_id: Any = None,
 ) -> dict[str, str | int]:
     result: dict[str, str | int] = {}
     if isinstance(exception_type, str) and exception_type in SAFE_UPSTREAM_EXCEPTION_TYPES:
@@ -57,6 +71,16 @@ def sanitize_upstream_fields(
         result["upstream_http_status"] = status
     if isinstance(code, str) and code in SAFE_UPSTREAM_ERROR_CODES:
         result["upstream_error_code"] = code
+    if isinstance(error_type, str) and error_type in SAFE_UPSTREAM_ERROR_TYPES:
+        result["upstream_error_type"] = error_type
+    if (
+        isinstance(param, str)
+        and _SAFE_ERROR_PARAM.fullmatch(param)
+        and param.split(".", 1)[0].split("[", 1)[0] in _SAFE_ERROR_PARAM_ROOTS
+    ):
+        result["upstream_error_param"] = param
+    if isinstance(request_id, str) and _SAFE_REQUEST_ID.fullmatch(request_id):
+        result["upstream_request_id"] = request_id
     return result
 
 
@@ -67,9 +91,19 @@ def upstream_error_metadata(error: BaseException) -> dict[str, str | int]:
     if status is None:
         status = getattr(error, "status_code", None)
     code = getattr(error, "upstream_error_code", None) or getattr(error, "code", None)
+    error_type = getattr(error, "upstream_error_type", None) or getattr(error, "type", None)
+    param = getattr(error, "upstream_error_param", None) or getattr(error, "param", None)
+    request_id = getattr(error, "request_id", None)
+    if request_id is None:
+        response = getattr(error, "response", None)
+        headers = getattr(response, "headers", None)
+        if isinstance(headers, Mapping):
+            request_id = headers.get("x-request-id")
     if not isinstance(code, str) or code not in SAFE_UPSTREAM_ERROR_CODES:
         body = getattr(error, "body", None)
-        details = body.get("error") if isinstance(body, Mapping) else None
+        details = body.get("error", body) if isinstance(body, Mapping) else None
         if isinstance(details, Mapping):
             code = details.get("code")
-    return sanitize_upstream_fields(exception_type, status, code)
+            error_type = details.get("type", error_type)
+            param = details.get("param", param)
+    return sanitize_upstream_fields(exception_type, status, code, error_type, param, request_id)

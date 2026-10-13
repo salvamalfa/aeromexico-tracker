@@ -249,7 +249,9 @@ def main(argv: list[str] | None = None) -> int:
         ):
             _write_output(args.output, _blocked("active_prompt_changed_after_preflight", report, reserve))
             return 2
-        cases = fixture["cases"]
+        from src.conversational_analytics.evaluation_stage3_cases import current_stage3_cases
+
+        cases = current_stage3_cases(fixture["cases"], report)
         candidate_id = CAMPAIGN_CANDIDATE
         run_id = f"f29-stage3-sol-low-{report['runtime_capabilities']['required_prompt_version']}"
         identity = {

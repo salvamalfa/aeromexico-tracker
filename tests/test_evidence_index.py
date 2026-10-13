@@ -370,9 +370,14 @@ def test_unknown_owner_or_invalid_approval_date_is_not_approved_even_with_pin(
     assert "report-approved" not in [row["id"] for row in result["results"]]
 
 
-def test_empty_runtime_index_loads_without_external_pin(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_empty_index_loads_without_external_pin(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.delenv(APPROVED_INDEX_SHA256_ENV, raising=False)
-    index = EvidenceIndex("config/chat/evidence/approved-index.json")
+    empty_path = tmp_path / "empty-index.json"
+    empty_path.write_text(
+        json.dumps({"schema": "chat_evidence_index_v1", "version": "evidence-v1-empty", "records": []}),
+        encoding="utf-8",
+    )
+    index = EvidenceIndex(empty_path)
     assert index.records == []
     assert index.search_reports("combustible")["count"] == 0
 
@@ -400,7 +405,9 @@ def test_registry_fails_before_registering_tools_for_rehashed_forged_index(
         ToolRegistry(snapshot, Capabilities())
 
 
-def test_real_report_candidates_stay_closed_and_are_not_an_approved_index() -> None:
+def test_candidate_files_remain_proposals_while_approved_index_has_pinned_content(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     candidate_path = Path("config/chat/evidence/candidates/reports-candidate.json")
     payload = json.loads(candidate_path.read_text(encoding="utf-8"))
     assert payload["status"] == "candidate_closed"
@@ -410,9 +417,21 @@ def test_real_report_candidates_stay_closed_and_are_not_an_approved_index() -> N
     assert {row["company"] for row in payload["records"]} == {"Aeroméxico", "Volaris", "Viva Aerobus"}
     volaris = [row for row in payload["records"] if row["company"] == "Volaris"]
     assert all(row["source"]["identity_status"] == "byte_identity_mismatch_pending_review" for row in volaris)
-    assert (
-        EvidenceIndex("config/chat/evidence/approved-index.json").search_reports("combustible")["count"] == 0
-    )
+
+    approved_path = Path("config/chat/evidence/approved-index.json")
+    approved = json.loads(approved_path.read_text(encoding="utf-8"))
+    assert len(approved["records"]) == 10
+    assert sum(row["kind"] == "report" for row in approved["records"]) == 7
+    assert sum(row["kind"] == "news" for row in approved["records"]) == 3
+    pin = canonical_index_sha256(approved)
+    monkeypatch.setenv(APPROVED_INDEX_SHA256_ENV, pin)
+    index = EvidenceIndex(approved_path)
+    assert len(index.records) == 10
+    assert {row["review"]["receipt"]["decision_reference"] for row in index.records} == {
+        "https://github.com/salvamalfa/aeromexico-tracker/blob/81bbd7e807e4a9f2c2b42a39a47147931b87439b/docs/decisiones/20261012-chat-fase2-r2-contenido-stage3.md"
+    }
+    assert index.search_reports("fuel")["count"] > 0
+    assert index.search_news("combustible")["count"] == 3
 
 
 def test_real_news_candidates_are_bounded_hash_pinned_and_pending() -> None:

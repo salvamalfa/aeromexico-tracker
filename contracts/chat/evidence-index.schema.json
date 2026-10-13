@@ -28,7 +28,7 @@
     "receipt": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["receipt_id", "candidate_id", "decision", "owner_id", "approved_at", "source_sha256", "excerpt_sha256", "candidate_content_sha256"],
+      "required": ["receipt_id", "candidate_id", "decision", "owner_id", "approved_at", "source_sha256", "excerpt_sha256", "candidate_content_sha256", "decision_reference"],
       "properties": {
         "receipt_id": {"type": "string", "minLength": 1, "maxLength": 120},
         "candidate_id": {"type": "string", "minLength": 1, "maxLength": 120},
@@ -37,7 +37,8 @@
         "approved_at": {"type": "string", "minLength": 1, "maxLength": 40},
         "source_sha256": {"$ref": "#/$defs/sha256"},
         "excerpt_sha256": {"$ref": "#/$defs/sha256"},
-        "candidate_content_sha256": {"$ref": "#/$defs/sha256"}
+        "candidate_content_sha256": {"$ref": "#/$defs/sha256"},
+        "decision_reference": {"type": "string", "minLength": 1, "maxLength": 300}
       }
     },
     "review": {

@@ -164,19 +164,33 @@ def test_receipt_hash_and_snapshot_validation_ignore_json_formatting(
 
 
 def test_site_without_financial_payload_keeps_its_existing_manifest_without_a_pin(
+    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    from tests._pre_financial_snapshot import copy_pre_financial_snapshot
+
     monkeypatch.delenv(APPROVAL_RECEIPT_SHA256_ENV, raising=False)
-    manifest_path = ROOT / "site/publication_manifest.json"
+    source_manifest = ROOT / "site/publication_manifest.json"
+    source_manifest_before = source_manifest.read_bytes()
+    site = copy_pre_financial_snapshot(tmp_path / "pre-financial")
+    manifest_path = site / "publication_manifest.json"
+    manifest = json.loads(manifest_path.read_bytes())
+    manifest["files"] = manifest_mod.file_entries(site)
+    manifest["contracts"] = {
+        name: digest
+        for name, digest in manifest["contracts"].items()
+        if name not in {"business_metrics.schema.json", "business_metrics_approval.schema.json"}
+    }
+    manifest_mod.write_manifest(site, manifest)
     original_manifest = manifest_path.read_bytes()
-    manifest = json.loads(original_manifest)
 
     assert sum(item["path"].startswith("data/") for item in manifest["files"]) == 112
     assert len(manifest["contracts"]) == 6
     assert not any("business_metrics" in item["path"] for item in manifest["files"])
-    assert verify_site(ROOT / "site") == []
-    Snapshot(ROOT / "site")
+    assert verify_site(site) == []
+    Snapshot(site)
     assert manifest_path.read_bytes() == original_manifest
+    assert source_manifest.read_bytes() == source_manifest_before
 
 
 def test_approved_snapshot_query_sums_full_year_and_keeps_source_currency_and_units(tmp_path: Path) -> None:
@@ -334,3 +348,21 @@ def test_year_is_incomplete_when_source_has_only_two_quarters(tmp_path: Path) ->
     assert result["availability"] == "incomplete"
     assert result["value"] is None
     assert result["missing_periods"] == ["2026Q3", "2026Q4"]
+
+
+def test_owner_approved_financial_receipt_binds_exact_four_metric_inputs(monkeypatch) -> None:
+    receipt_path = ROOT / "config/chat/business-metrics-approval-receipt.json"
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    monkeypatch.setenv(APPROVAL_RECEIPT_SHA256_ENV, canonical_receipt_sha256(receipt))
+    payload, checked = build_approved_payload(
+        ROOT / "config/chat/business-metrics-proposal.json",
+        ROOT / "config/chat/metrics-candidates.json",
+        receipt_path,
+    )
+    assert checked["owner_id"] == "salvamalfa"
+    assert len(payload["rows"]) > 0
+    assert payload["metadata"]["metric_ids"] == [
+        "fuel_expense", "operating_costs", "operating_income", "total_revenue"
+    ]
+    assert payload["metadata"]["approval_receipt_sha256"] == canonical_receipt_sha256(receipt)
+    assert "81bbd7e807e4a9f2c2b42a39a47147931b87439b" in checked["decision_reference"]

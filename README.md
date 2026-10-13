@@ -42,10 +42,11 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
 - **Chat:** el MVP sigue activo en Railway. El despliegue verificado usa
   `gpt-6.1-sol`, esfuerzo `low` y R1; health respondió 200. Las capacidades de
   rutas, métricas financieras y búsqueda de evidencia permanecen apagadas.
-  El código F2.3–F2.9 está en el PR #120, todavía en revisión; no se ha
-  desplegado. La campaña propuesta de Stage 3 no se ha ejecutado, y su saldo
-  disponible es desconocido. La fase 2 sigue abierta a las decisiones de
-  contenido y presupuesto (ver [Chat analítico](#chat-analítico)).
+  El dueño aprobó R2, cuatro métricas, siete pasajes, tres fichas y una reserva
+  nueva de US$8. El intento N01 terminó HTTP 400 antes de sesión, sin respuesta
+  ni uso conciliado; gasto y saldo siguen desconocidos. El runtime mantiene R1/Sol low y las funciones nuevas siguen
+  apagadas; los pins aprobados están preparados para el siguiente despliegue
+  (ver [Chat analítico](#chat-analítico)).
 - **Datos:** AFAC y AeroDataBox se actualizan a mano mes a mes; lo pendiente
   está en [`ROADMAP.md`](ROADMAP.md).
 
@@ -138,14 +139,17 @@ El chat responde preguntas sobre el snapshot público con una capa semántica
 versionada; no abre el warehouse ni convierte ausencias en cero. El MVP sigue
 activo en Railway con `gpt-6.1-sol`, acceso con contraseña, topes diarios de
 US$5 (por usuario y global) y hasta 16 llamadas de herramienta por pregunta.
-El despliegue verificado el 12 oct 2026 usa Sol low y R1 efectivo; health
-respondió 200 sin enviar una pregunta pagada. La integración F2.3–F2.9 está en
-el PR #120, que sigue en revisión. R2, siete métricas financieras, siete
-pasajes y tres noticias son propuestas pendientes; los flags permanecen
-apagados y el índice aprobado vacío. Stage 3 propone 30 casos/34 mensajes,
-US$7.05–7.21 y US$8 disponibles si el saldo confirmado fuera cero; el saldo
-real es desconocido y no hubo campaña pagada. No se ha aprobado un gate de
-calidad.
+PR #120 integró F2.3–F2.9 y está desplegado. Railway confirmó `SUCCESS` y
+`/api/chat/health` respondió 200 con Sol low y R1 efectivo; Pages pasó todos los
+checks y las páginas públicas se verificaron. El deployment confirma
+`enabled_capabilities: []`: los flags siguen apagados. El dueño aprobó R2,
+cuatro métricas financieras, siete pasajes de reportes, tres fichas de noticias
+y una reserva nueva financiada de US$8. El runtime mantiene R1/Sol low y las
+funciones nuevas siguen apagadas hasta revisar los resultados JSON de Stage 3.
+La evaluación Stage 3 de 30 casos/34 mensajes no tiene resultados JSON: un
+intento N01 devolvió HTTP 400 antes de sesión; su consumo no está
+conciliado (`stopped_unknown_spend`), así que no se afirma costo cero ni saldo
+intacto. No hay gate de calidad aprobado.
 
 - Operación, instalación y límites: [documentación del chat](docs/chat/README.md)
   y [traspaso operativo](docs/chat/traspaso-activacion-mvp-20261006.md).

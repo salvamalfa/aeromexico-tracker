@@ -1,11 +1,11 @@
-# Fase 2 del chat · decisiones del dueño
+# Fase 2 del chat · acciones del dueño
 
-La implementación está integrada para revisión; las capacidades nuevas siguen cerradas. No hace falta volver a aprobar R1, el modelo/esfuerzo, las preguntas ni la rúbrica.
+R2, cuatro métricas, siete pasajes, tres fichas y la reserva Stage 3 ya están aprobados: [decisión](../decisiones/20261012-chat-fase2-r2-contenido-stage3.md). No hace falta repetir esa aprobación.
 
-- **Prompt R2:** [revisar y aprobar el texto exacto](../../config/chat/prompt_candidates/system_prompt_r2-proposed.txt) o conservar R1.
-- **Métricas:** [revisar 4 importes financieros candidatos](f23-propuesta-revision-dueno.md); con las 3 series existentes serían 7 series en total. Decidir cuáles importes aprobar.
-- **Reportes:** [revisar los 7 pasajes](../../config/chat/evidence/candidates/reports-candidate.json) y aprobar o rechazar cada uno.
-- **Noticias:** [revisar las 3 fichas](../../config/chat/evidence/candidates/news/) y aprobar o rechazar cada una.
-- **Stage 3:** autorizar una reserva máxima de **US$8** para 30 casos/34 mensajes (estimación **US$7.06–7.23**) y confirmar el saldo actual. El saldo puede reducir la recarga necesaria; la reserva se mantiene en US$8. [Estimación actual](revision-fase-2/F2.9-etapa-3-presupuesto-actual.md) · [perfil parcial de negocio](../../config/chat/f2_9_business_stage3_partial.json).
+N01 se intentó el 12 oct, 23:39 UTC; HTTP 400 antes de crear sesión. Su consumo sigue desconocido (`stopped_unknown_spend`), no se declara cero. El dueño autorizó el reintento sin conciliación previa; Stage 3 está en curso, aún sin resultados: [decisión](../decisiones/20261012-chat-stage3-reintento.md) y [bitácora](../etapas/chat-fase2-stage3-intento-20261012.md).
 
-Se cierra la fase 2 cuando el contenido aprobado esté publicado y la campaña nueva esté autorizada y completada. Los recibos y detalles operativos están en [operaciones](operations.md).
+Para CI, configura en [GitHub Actions Variables](https://github.com/salvamalfa/aeromexico-tracker/settings/variables/actions): `CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256` = `644eb640124297fc63b306836607aea6e4b0be424b85e67b902cc9f5407153ae`.
+
+Configura también `CHAT_EVIDENCE_APPROVED_INDEX_SHA256` = `1cd0455ac1944849d567c96f7147c3f393d17333dac2c28b70459e4f7887334f`. La lectura API de variables dio 403; configúralas manualmente. Luego continúa [PR #126](https://github.com/salvamalfa/aeromexico-tracker/pull/126); no se vuelve a pedir aprobación.
+
+Los JSON de los 30 casos no están disponibles; gasto real y saldo siguen desconocidos. Producción mantiene R1/Sol low y las capacidades apagadas: [bitácora del intento](../etapas/chat-fase2-stage3-intento-20261012.md).

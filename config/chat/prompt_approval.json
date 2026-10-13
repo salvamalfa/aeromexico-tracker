@@ -1,0 +1,17 @@
+{
+  "approved_at": "2026-10-12T22:56:00Z",
+  "capabilities": [
+    "route_queries",
+    "business_metric_queries",
+    "evidence_search",
+    "same_turn_displays",
+    "three_layer_causal_explanations"
+  ],
+  "decision_ref": "https://github.com/salvamalfa/aeromexico-tracker/blob/81bbd7e807e4a9f2c2b42a39a47147931b87439b/docs/decisiones/20261012-chat-fase2-r2-contenido-stage3.md",
+  "owner": "salvamalfa",
+  "prompt_path": "config/chat/prompt_candidates/system_prompt_r2-proposed.txt",
+  "prompt_sha256": "68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf",
+  "schema_version": 1,
+  "status": "owner_approved",
+  "version": "r2-proposed"
+}

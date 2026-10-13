@@ -23,6 +23,7 @@ concurrency:
 # receipt requires the owner's exact canonical hash pin.
 env:
   CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256: ${{ vars.CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256 }}
+  CHAT_EVIDENCE_APPROVED_INDEX_SHA256: ${{ vars.CHAT_EVIDENCE_APPROVED_INDEX_SHA256 }}
 
 # Read-only by default: only deploy gets the Pages/OIDC credentials, so no
 # job that runs code (ci, and the preview verifier, which runs the pinned

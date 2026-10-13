@@ -85,6 +85,8 @@ def test_stage3_cli_reaches_only_a_fake_runner_with_exact_trusted_receipts(monke
             },
         },
     }
+    fixture = json.loads(cli.ROOT.joinpath("tests/fixtures/chat_evals/business_proposed.json").read_text())
+    report["cases"] = [{"case_id": case["id"], "status": "supported"} for case in fixture["cases"]]
     cli._bind_reserve(report, 8.0)
     common = {
         "schema_version": 1,
@@ -238,5 +240,11 @@ def test_stage3_cli_reaches_only_a_fake_runner_with_exact_trusted_receipts(monke
     assert (configured.max_tool_calls, configured.max_tool_result_bytes) == (16, 16_000)
     assert called[0]["runtime_config"] is configured
     assert called[0]["reservation_assumption_override"] == reservation
+    actual_cases = called[0]["cases"]
+    assert [case["question"] for case in actual_cases] == [case["question"] for case in fixture["cases"]]
+    assert [case["turns"] for case in actual_cases] == [case["turns"] for case in fixture["cases"]]
+    assert [case.get("context") for case in actual_cases] == [case.get("context") for case in fixture["cases"]]
+    assert actual_cases[3]["expected"]["status"] == "supported"
+    assert fixture["cases"][3]["expected"]["status"] == "unsupported"
     assert called[0]["resume"] is False
     assert called[0]["budget_usd"] == 8.0

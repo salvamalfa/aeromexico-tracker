@@ -207,11 +207,7 @@ def derive_stage3_coverage(
         raise ValueError("El prompt runtime no coincide con el contenido aprobado por el dueño")
 
     snapshot = Snapshot(snapshot_root)
-    versions = fixture.get("expected_versions", {})
-    if snapshot.version != versions.get("data_version") or snapshot.semantic_version != versions.get(
-        "semantic_version"
-    ):
-        raise ValueError("El snapshot/diccionario semántico ya no coincide con los pins del fixture")
+    fixture_expected_versions = fixture["expected_versions"]
     tools = _Tools(snapshot)
     catalog_result = tools.call("get_data_catalog", {})
     periods = catalog_result["periods"]
@@ -428,6 +424,10 @@ def derive_stage3_coverage(
         "schema_version": 1,
         "kind": "f2_9_stage3_derived_coverage",
         "mode": "offline_tool_coverage_only",
+        "fixture_lineage": {
+            "fixture_sha256": fixture_sha,
+            "source_expected_versions": fixture_expected_versions,
+        },
         "campaign_identity": campaign_identity,
         "campaign_sha256": campaign_sha,
         "case_count": len(rows),

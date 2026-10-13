@@ -1,5 +1,337 @@
 {
+  "records": [
+    {
+      "company": "Aeroméxico",
+      "excerpt": "The increase was primarily driven by the impact of the Mexican peso’s appreciation on peso-denominated expenses, inflation in wages, salaries, and benefits, increased depreciation and amortization associated with the fleet expansion in 2025, and elevated fuel prices triggered by global geopolitical events since late February.",
+      "id": "aeromexico-2026q1-fuel-attribution",
+      "kind": "report",
+      "page": 3,
+      "period": "2026Q1",
+      "review": {
+        "approved_at": "2026-10-12T22:56:00Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-10-12T22:56:00Z",
+          "candidate_content_sha256": "04800a683b05cbe6c1c16afd928f3658672829d29eeb02e61a911554203a198d",
+          "candidate_id": "aeromexico-2026q1-fuel-attribution",
+          "decision": "owner_approved",
+          "decision_reference": "https://github.com/salvamalfa/aeromexico-tracker/blob/81bbd7e807e4a9f2c2b42a39a47147931b87439b/docs/decisiones/20261012-chat-fase2-r2-contenido-stage3.md",
+          "excerpt_sha256": "96249bb6b816e12f60002cde84ec57ccdd610d8ff461cce9b0cd0cad2bbc188d",
+          "owner_id": "salvamalfa",
+          "receipt_id": "owner-chat-approval-2026-10-12:aeromexico-2026q1-fuel-attribution",
+          "source_sha256": "9cb3aac805f0a69ceb0f58ad28cb8616c4d24f457fbb3cf177f845e87f874548"
+        },
+        "receipt_id": "owner-chat-approval-2026-10-12:aeromexico-2026q1-fuel-attribution"
+      },
+      "section": "1Q26 Operating Expenses",
+      "source": {
+        "id": "aeromexico-ir-1q26-results-pdf",
+        "sha256": "9cb3aac805f0a69ceb0f58ad28cb8616c4d24f457fbb3cf177f845e87f874548",
+        "url": "https://ir.aeromexico.com/system/files-encrypted/nasdaq_kms/assets/2026/04/22/13-55-58/Aerom%C3%A9xico%201Q26%20Results.pdf"
+      }
+    },
+    {
+      "company": "Aeroméxico",
+      "excerpt": "The increase was primarily driven by elevated fuel costs resulting from global geopolitical events that began in late February, with market prices remaining elevated through the quarter. As a result, fuel expense increased by approximately $219.3 million year-over-year, exceeding our second-quarter guidance by approximately $30 million.",
+      "id": "aeromexico-2026q2-fuel-attribution",
+      "kind": "report",
+      "page": 3,
+      "period": "2026Q2",
+      "review": {
+        "approved_at": "2026-10-12T22:56:00Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-10-12T22:56:00Z",
+          "candidate_content_sha256": "adb3776747529cdbbabe8e43162024ecc280fd08d7a83d76d44a632995741028",
+          "candidate_id": "aeromexico-2026q2-fuel-attribution",
+          "decision": "owner_approved",
+          "decision_reference": "https://github.com/salvamalfa/aeromexico-tracker/blob/81bbd7e807e4a9f2c2b42a39a47147931b87439b/docs/decisiones/20261012-chat-fase2-r2-contenido-stage3.md",
+          "excerpt_sha256": "0b6f326c833ac1ab5fc2328950037f2e69b2cda5ffd856e323bb95ea9c353415",
+          "owner_id": "salvamalfa",
+          "receipt_id": "owner-chat-approval-2026-10-12:aeromexico-2026q2-fuel-attribution",
+          "source_sha256": "6d5b2e4fa8ea8622cbe6b41b11e4b45e1667d1e30f09254e1a115e54427b09b3"
+        },
+        "receipt_id": "owner-chat-approval-2026-10-12:aeromexico-2026q2-fuel-attribution"
+      },
+      "section": "2Q26 Operating Expenses",
+      "source": {
+        "id": "aeromexico-ir-2q26-results-pdf",
+        "sha256": "6d5b2e4fa8ea8622cbe6b41b11e4b45e1667d1e30f09254e1a115e54427b09b3",
+        "url": "https://ir.aeromexico.com/static-files/5a9eac4b-5357-4344-8f6d-8548ad608cca"
+      }
+    },
+    {
+      "company": "Aeroméxico",
+      "excerpt": "Total fuel expense amounted to $493.8 million, a 79.9% year-over-year increase.",
+      "id": "aeromexico-2026q2-fuel-expense-metric",
+      "kind": "report",
+      "page": 1,
+      "period": "2026Q2",
+      "review": {
+        "approved_at": "2026-10-12T22:56:00Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-10-12T22:56:00Z",
+          "candidate_content_sha256": "484acc468158e160f6bcdb5c51269167867e5c067d1cd7d26ec4ef43cc0afc7d",
+          "candidate_id": "aeromexico-2026q2-fuel-expense-metric",
+          "decision": "owner_approved",
+          "decision_reference": "https://github.com/salvamalfa/aeromexico-tracker/blob/81bbd7e807e4a9f2c2b42a39a47147931b87439b/docs/decisiones/20261012-chat-fase2-r2-contenido-stage3.md",
+          "excerpt_sha256": "1b2cad5befd87542d912be3ccee233f8af77296f734b894fd1f357b76ef36b8a",
+          "owner_id": "salvamalfa",
+          "receipt_id": "owner-chat-approval-2026-10-12:aeromexico-2026q2-fuel-expense-metric",
+          "source_sha256": "6d5b2e4fa8ea8622cbe6b41b11e4b45e1667d1e30f09254e1a115e54427b09b3"
+        },
+        "receipt_id": "owner-chat-approval-2026-10-12:aeromexico-2026q2-fuel-expense-metric"
+      },
+      "section": "2Q26 Highlights",
+      "source": {
+        "id": "aeromexico-ir-2q26-results-pdf",
+        "sha256": "6d5b2e4fa8ea8622cbe6b41b11e4b45e1667d1e30f09254e1a115e54427b09b3",
+        "url": "https://ir.aeromexico.com/static-files/5a9eac4b-5357-4344-8f6d-8548ad608cca"
+      }
+    },
+    {
+      "company": "Viva Aerobus",
+      "excerpt": "These conditions were compounded by temporary market disruptions in Jalisco and elevated fuel prices that reached US$4.5 per gallon due to geopolitical conflicts, creating additional pressure during a seasonally slower quarter. In response, we proactively reduced capacity to align with the current demand environment, while maintaining the disciplined execution and flexibility that characterizes our ULCC model.",
+      "id": "viva-2026q1-fuel-and-cost-attribution",
+      "kind": "report",
+      "page": 1,
+      "period": "2026Q1",
+      "review": {
+        "approved_at": "2026-10-12T22:56:00Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-10-12T22:56:00Z",
+          "candidate_content_sha256": "ef8614ef9f914d8254d847f9db005de1929de84094df3be0a06a1b71a3b53327",
+          "candidate_id": "viva-2026q1-fuel-and-cost-attribution",
+          "decision": "owner_approved",
+          "decision_reference": "https://github.com/salvamalfa/aeromexico-tracker/blob/81bbd7e807e4a9f2c2b42a39a47147931b87439b/docs/decisiones/20261012-chat-fase2-r2-contenido-stage3.md",
+          "excerpt_sha256": "64c3b968723d751397892dc9319b715a0904eb485c2c9cb575100c3bc772254e",
+          "owner_id": "salvamalfa",
+          "receipt_id": "owner-chat-approval-2026-10-12:viva-2026q1-fuel-and-cost-attribution",
+          "source_sha256": "9ff9a82afff61477908acd10018be79333210b6dcaa90cabb90bffffa04e8ab7"
+        },
+        "receipt_id": "owner-chat-approval-2026-10-12:viva-2026q1-fuel-and-cost-attribution"
+      },
+      "section": "CEO message / 1Q26 highlights",
+      "source": {
+        "id": "viva-ir-2026q1-earnings-pdf",
+        "sha256": "9ff9a82afff61477908acd10018be79333210b6dcaa90cabb90bffffa04e8ab7",
+        "url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2026-1T26-en.pdf"
+      }
+    },
+    {
+      "company": "Viva Aerobus",
+      "excerpt": "The second quarter was defined by an extraordinarily elevated fuel environment, reflecting the sustained impact of geopolitical disruptions that emerged during the end of the first quarter.",
+      "id": "viva-2026q2-fuel-environment-attribution",
+      "kind": "report",
+      "page": 1,
+      "period": "2026Q2",
+      "review": {
+        "approved_at": "2026-10-12T22:56:00Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-10-12T22:56:00Z",
+          "candidate_content_sha256": "9e065f907d0234eb71c37ef61e80144bca826e619f1ed606ca90900fc010433c",
+          "candidate_id": "viva-2026q2-fuel-environment-attribution",
+          "decision": "owner_approved",
+          "decision_reference": "https://github.com/salvamalfa/aeromexico-tracker/blob/81bbd7e807e4a9f2c2b42a39a47147931b87439b/docs/decisiones/20261012-chat-fase2-r2-contenido-stage3.md",
+          "excerpt_sha256": "5b8d50f54e96db7ef3ce61966991583e9555dac656e2ee54fe7fd8c234f54b2f",
+          "owner_id": "salvamalfa",
+          "receipt_id": "owner-chat-approval-2026-10-12:viva-2026q2-fuel-environment-attribution",
+          "source_sha256": "4fca922642ce3fe06743578064239107539b0546c1519a11abecb0eef098bc7f"
+        },
+        "receipt_id": "owner-chat-approval-2026-10-12:viva-2026q2-fuel-environment-attribution"
+      },
+      "section": "CEO message / 2Q26 highlights",
+      "source": {
+        "id": "viva-ir-2026q2-earnings-pdf",
+        "sha256": "4fca922642ce3fe06743578064239107539b0546c1519a11abecb0eef098bc7f",
+        "url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2026-2T26-en.pdf"
+      }
+    },
+    {
+      "company": "Volaris",
+      "excerpt": "The average economic fuel cost increased 16.2% to $3.06 per gallon. CASM ex fuel stood at 6.04 cents, despite flying fewer ASMs than planned during the quarter and the impact of a stronger Mexican peso, reflecting the translation of peso-denominated costs into U.S. dollars.",
+      "id": "volaris-2026q1-economic-fuel-cost",
+      "kind": "report",
+      "page": 53,
+      "period": "2026Q1",
+      "review": {
+        "approved_at": "2026-10-12T22:56:00Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-10-12T22:56:00Z",
+          "candidate_content_sha256": "e11317360623bda1321d63090eaee0c7b4a0f15781c8d81b7daee31ee81e454c",
+          "candidate_id": "volaris-2026q1-economic-fuel-cost",
+          "decision": "owner_approved",
+          "decision_reference": "https://github.com/salvamalfa/aeromexico-tracker/blob/81bbd7e807e4a9f2c2b42a39a47147931b87439b/docs/decisiones/20261012-chat-fase2-r2-contenido-stage3.md",
+          "excerpt_sha256": "67c571cbd21dfab883cb638986685315355ac23e8b42275b8cd09ab818fa14af",
+          "owner_id": "salvamalfa",
+          "receipt_id": "owner-chat-approval-2026-10-12:volaris-2026q1-economic-fuel-cost",
+          "source_sha256": "5f3bc5afad61836db4227fb0ba7c84d901ab550a43cd3e3b8d23c6e5b2777343"
+        },
+        "receipt_id": "owner-chat-approval-2026-10-12:volaris-2026q1-economic-fuel-cost"
+      },
+      "section": "First Quarter Consolidated Financial Highlights",
+      "source": {
+        "id": "sec-0001292814-26-002555-ex99-1",
+        "sha256": "5f3bc5afad61836db4227fb0ba7c84d901ab550a43cd3e3b8d23c6e5b2777343",
+        "url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281426002555/ex99-1.htm"
+      }
+    },
+    {
+      "company": "Volaris",
+      "excerpt": "CASM totaled 10.58 cents, up 31.3%. The average economic fuel cost increased 70.0% to $4.18 per gallon. CASM ex fuel stood at 6.75 cents, as anticipated, representing an 18.6% increase.",
+      "id": "volaris-2026q2-economic-fuel-cost",
+      "kind": "report",
+      "page": 57,
+      "period": "2026Q2",
+      "review": {
+        "approved_at": "2026-10-12T22:56:00Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-10-12T22:56:00Z",
+          "candidate_content_sha256": "a5d84e65557c4febbe6c328a056bbffb8ca7beafbf2c5c0c4193a3376f9f1cf1",
+          "candidate_id": "volaris-2026q2-economic-fuel-cost",
+          "decision": "owner_approved",
+          "decision_reference": "https://github.com/salvamalfa/aeromexico-tracker/blob/81bbd7e807e4a9f2c2b42a39a47147931b87439b/docs/decisiones/20261012-chat-fase2-r2-contenido-stage3.md",
+          "excerpt_sha256": "caca59636d21a5e9d2de1e60a333269f03b4028f0a286d37259c97ad5123110b",
+          "owner_id": "salvamalfa",
+          "receipt_id": "owner-chat-approval-2026-10-12:volaris-2026q2-economic-fuel-cost",
+          "source_sha256": "48b82186b9725f95a621f9a103e306cbe9b713ae1c56fbb7cd2e7d5372f7ec76"
+        },
+        "receipt_id": "owner-chat-approval-2026-10-12:volaris-2026q2-economic-fuel-cost"
+      },
+      "section": "Second Quarter Consolidated Financial Highlights",
+      "source": {
+        "id": "sec-0001292814-26-003836-ex99-1",
+        "sha256": "48b82186b9725f95a621f9a103e306cbe9b713ae1c56fbb7cd2e7d5372f7ec76",
+        "url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281426003836/ex99-1.htm"
+      }
+    },
+    {
+      "companies": [
+        "Aeroméxico"
+      ],
+      "description": "Contexto sobre cómo Aeroméxico respondió a la presión del combustible con ajustes de capacidad doméstica y tarifas; la nota no sustituye las cifras del reporte.",
+      "id": "flightglobal-aeromexico-fuel-2026-04-30",
+      "kind": "news",
+      "published_at": "2026-04-30",
+      "publisher": "FlightGlobal",
+      "review": {
+        "approved_at": "2026-10-12T22:56:00Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-10-12T22:56:00Z",
+          "candidate_content_sha256": "b3b6d489d32f60f7679d6e9060b8f2144e67eddd0c3f642c1c9a1357ffab4bd9",
+          "candidate_id": "flightglobal-aeromexico-fuel-2026-04-30",
+          "decision": "owner_approved",
+          "decision_reference": "https://github.com/salvamalfa/aeromexico-tracker/blob/81bbd7e807e4a9f2c2b42a39a47147931b87439b/docs/decisiones/20261012-chat-fase2-r2-contenido-stage3.md",
+          "excerpt_sha256": "c7965e10d9b17ebcdc355cc5f9fd3a7bb51707d6e6d505276a792dcaf1770c4c",
+          "owner_id": "salvamalfa",
+          "receipt_id": "owner-chat-approval-2026-10-12:flightglobal-aeromexico-fuel-2026-04-30",
+          "source_sha256": "a849218752df17cb4366e696178e4d8c61cd135ea3a7adc904b57abdac0b7b8b"
+        },
+        "receipt_id": "owner-chat-approval-2026-10-12:flightglobal-aeromexico-fuel-2026-04-30"
+      },
+      "source": {
+        "id": "flightglobal-aeromexico-fuel-2026-04-30",
+        "sha256": "a849218752df17cb4366e696178e4d8c61cd135ea3a7adc904b57abdac0b7b8b",
+        "url": "https://www.flightglobal.com/aeromexico/2026/04/long-haul-flights-absorbing-bulk-of-aeromexicos-soaring-fuel-prices/"
+      },
+      "title": "Long-haul demand absorbing bulk of Aeromexico’s soaring fuel prices",
+      "topics": [
+        "combustible",
+        "tarifas",
+        "capacidad"
+      ]
+    },
+    {
+      "companies": [
+        "Aeroméxico"
+      ],
+      "description": "Cobertura del 2T26 de Aeroméxico que menciona presión de combustible e impacto del Mundial, junto con la perspectiva de mejores condiciones para el segundo semestre.",
+      "id": "flightglobal-aeromexico-q2-2026-07-15",
+      "kind": "news",
+      "published_at": "2026-07-15",
+      "publisher": "FlightGlobal",
+      "review": {
+        "approved_at": "2026-10-12T22:56:00Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-10-12T22:56:00Z",
+          "candidate_content_sha256": "d2168e108a38182998d1bedf9c090859dd1daf0b996833100a91bc2609b8d20d",
+          "candidate_id": "flightglobal-aeromexico-q2-2026-07-15",
+          "decision": "owner_approved",
+          "decision_reference": "https://github.com/salvamalfa/aeromexico-tracker/blob/81bbd7e807e4a9f2c2b42a39a47147931b87439b/docs/decisiones/20261012-chat-fase2-r2-contenido-stage3.md",
+          "excerpt_sha256": "39ad1202bf84c2b93be77e23fecf13ba8bfd0d5d92fa97c0a60c8a988c9b2c9e",
+          "owner_id": "salvamalfa",
+          "receipt_id": "owner-chat-approval-2026-10-12:flightglobal-aeromexico-q2-2026-07-15",
+          "source_sha256": "0657284f197d63153e105a87292244ced09c341a0ead6905aa93e2303eeb1bf1"
+        },
+        "receipt_id": "owner-chat-approval-2026-10-12:flightglobal-aeromexico-q2-2026-07-15"
+      },
+      "source": {
+        "id": "flightglobal-aeromexico-q2-2026-07-15",
+        "sha256": "0657284f197d63153e105a87292244ced09c341a0ead6905aa93e2303eeb1bf1",
+        "url": "https://www.flightglobal.com/archive/2026/07/aeromexico-sees-bright-second-half-after-q2-challenges/"
+      },
+      "title": "Aeromexico sees bright second half after Q2 challenges",
+      "topics": [
+        "combustible",
+        "resultados",
+        "2T26"
+      ]
+    },
+    {
+      "companies": [
+        "Volaris"
+      ],
+      "description": "Cobertura del resultado de Volaris en 2T26 que relaciona la pérdida trimestral con los mayores costos de combustible frente al crecimiento de ingresos.",
+      "id": "flightglobal-volaris-q2-2026-07-22",
+      "kind": "news",
+      "published_at": "2026-07-22",
+      "publisher": "FlightGlobal",
+      "review": {
+        "approved_at": "2026-10-12T22:56:00Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-10-12T22:56:00Z",
+          "candidate_content_sha256": "ee93d12a13f9131c8e7340c5db3736673fb87f49b4aa0f7bbe442d1152adb30b",
+          "candidate_id": "flightglobal-volaris-q2-2026-07-22",
+          "decision": "owner_approved",
+          "decision_reference": "https://github.com/salvamalfa/aeromexico-tracker/blob/81bbd7e807e4a9f2c2b42a39a47147931b87439b/docs/decisiones/20261012-chat-fase2-r2-contenido-stage3.md",
+          "excerpt_sha256": "a33d844f7f1167a5e8c208eb3351300f6a797e778e18c8d40e65150eb0726762",
+          "owner_id": "salvamalfa",
+          "receipt_id": "owner-chat-approval-2026-10-12:flightglobal-volaris-q2-2026-07-22",
+          "source_sha256": "17f1347b9fe12fffccdf3c138504ef0b45fb0a7a589ac3a2240f88c5859124ae"
+        },
+        "receipt_id": "owner-chat-approval-2026-10-12:flightglobal-volaris-q2-2026-07-22"
+      },
+      "source": {
+        "id": "flightglobal-volaris-q2-2026-07-22",
+        "sha256": "17f1347b9fe12fffccdf3c138504ef0b45fb0a7a589ac3a2240f88c5859124ae",
+        "url": "https://www.flightglobal.com/airlines/2026/07/volaris-earnings-second-quarter-fuel-costs/"
+      },
+      "title": "Volaris losses widen as fuel costs surge",
+      "topics": [
+        "combustible",
+        "resultados",
+        "2T26"
+      ]
+    }
+  ],
   "schema": "chat_evidence_index_v1",
-  "version": "evidence-v1-empty",
-  "records": []
+  "version": "evidence-v2-approved-2026-10-12"
 }

@@ -1,0 +1,16 @@
+{
+  "approved_at": "2026-10-12T22:56:00Z",
+  "approved_metric_ids": [
+    "total_revenue",
+    "operating_costs",
+    "fuel_expense",
+    "operating_income"
+  ],
+  "decision_reference": "https://github.com/salvamalfa/aeromexico-tracker/blob/81bbd7e807e4a9f2c2b42a39a47147931b87439b/docs/decisiones/20261012-chat-fase2-r2-contenido-stage3.md",
+  "definitions_sha256": "9a3e4afe1b888c0ea75421ce4b7eb362304ce240ef84011d3a3e6aaa4b456ad7",
+  "owner_id": "salvamalfa",
+  "proposal_sha256": "0ee163e77214bf62d189f0236ff913b0f54c4b6576d8c9ba3d06cd19422f3d11",
+  "receipt_id": "owner-chat-approval-2026-10-12-business-metrics",
+  "schema_version": "business_metrics_approval_v1",
+  "status": "owner_approved"
+}

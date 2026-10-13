@@ -5,6 +5,8 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
+from datetime import datetime
 from pathlib import Path
 
 APPROVED_BASE_PROMPT_SHA256 = "33b8f7a0900869812d98bba57daa2ce3ea2f6b5c02a86a7eb3b8e830c7f7694b"
@@ -59,6 +61,14 @@ def _read_prompt(path: Path) -> str:
         raise RuntimeError("No se pudo cargar el prompt versionado del chat") from exc
 
 
+def _valid_approval_datetime(value: str) -> bool:
+    try:
+        datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return True
+
+
 def _load_r2_instructions() -> str:
     receipt_path = Path(os.environ.get(
         "CHAT_PROMPT_APPROVAL_RECEIPT_PATH",
@@ -92,8 +102,13 @@ def _load_r2_instructions() -> str:
             or receipt.get("prompt_path") != "config/chat/prompt_candidates/system_prompt_r2-proposed.txt"
             or not isinstance(receipt.get("decision_ref"), str)
             or not receipt["decision_ref"].strip()
-            or not isinstance(receipt.get("owner"), str)
-            or not receipt["owner"].strip()
+            or receipt.get("owner") != "salvamalfa"
+            or not isinstance(receipt.get("approved_at"), str)
+            or not re.fullmatch(
+                r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})",
+                receipt["approved_at"],
+            )
+            or not _valid_approval_datetime(receipt["approved_at"])
             or receipt_capabilities != expected_capabilities
         ):
             raise ValueError

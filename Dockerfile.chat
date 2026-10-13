@@ -29,13 +29,14 @@ COPY src/conversational_analytics/ ./src/conversational_analytics/
 COPY src/web_export/ ./src/web_export/
 COPY src/dashboard/__init__.py src/dashboard/flights_html.py ./src/dashboard/
 # Copy only the runtime configuration. Candidate evidence and collection
-# inboxes stay out of the image; the approved index is empty until review.
+# inboxes stay out of the image; approval receipts bind the exact owner-reviewed inputs.
 COPY config/chat/*.yaml ./config/chat/
 COPY config/chat/models.json config/chat/metrics-candidates.json config/chat/business-metrics-proposal.json ./config/chat/
 COPY config/chat/system_prompt.txt ./config/chat/system_prompt.txt
 COPY config/chat/evidence/approved-index.json ./config/chat/evidence/approved-index.json
 COPY config/chat/prompt_candidates/system_prompt_r2-proposed.txt ./config/chat/prompt_candidates/
 COPY config/chat/prompt_candidates/system_prompt_r2-proposed.json ./config/chat/prompt_candidates/
+COPY config/chat/prompt_approval.json ./config/chat/
 COPY contracts/chat/*.schema.json ./contracts/chat/
 COPY contracts/web/*.json contracts/web/privacy.yaml ./contracts/web/
 COPY site/publication_manifest.json ./site/

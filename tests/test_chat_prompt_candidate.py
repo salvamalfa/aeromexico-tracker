@@ -51,7 +51,8 @@ def _write_r2_receipt(path: Path) -> str:
             "three_layer_causal_explanations",
         ],
         "decision_ref": "owner-decision-test-fixture",
-        "owner": "test-owner",
+        "owner": "salvamalfa",
+        "approved_at": "2026-10-12T22:56:00Z",
     }
     schema = json.loads(
         Path("contracts/chat/prompt-approval-receipt.schema.json").read_text(encoding="utf-8")
@@ -98,3 +99,35 @@ def test_r2_selector_accepts_only_receipt_with_exact_prompt_and_metadata(monkeyp
     monkeypatch.setattr(prompt_module, "R2_PROMPT_METADATA_PATH", changed_path)
     with pytest.raises(RuntimeError, match="no coincide"):
         load_active_system_instructions()
+
+
+def test_persisted_owner_prompt_receipt_matches_immutable_decision(monkeypatch, tmp_path: Path) -> None:
+    from src.conversational_analytics.providers import _openai_prompt as prompt_module
+
+    canonical_path = Path("config/chat/prompt_approval.json")
+    original_bytes = canonical_path.read_bytes()
+    receipt = json.loads(original_bytes)
+    schema = json.loads(Path("contracts/chat/prompt-approval-receipt.schema.json").read_text())
+    assert not list(Draft202012Validator(schema).iter_errors(receipt))
+    assert receipt["owner"] == "salvamalfa"
+    assert receipt["decision_ref"].endswith("81bbd7e807e4a9f2c2b42a39a47147931b87439b/docs/decisiones/20261012-chat-fase2-r2-contenido-stage3.md")
+    assert json.loads(Path("config/chat/prompt_candidates/system_prompt_r2-proposed.json").read_text())["status"] == "proposed_not_approved_not_active"
+    monkeypatch.setenv("CHAT_PROMPT_VERSION", "r2-proposed")
+    monkeypatch.setenv("CHAT_PROMPT_APPROVAL_RECEIPT_PATH", str(canonical_path))
+    monkeypatch.setenv("CHAT_PROMPT_APPROVAL_RECEIPT_SHA256", hashlib.sha256(original_bytes).hexdigest())
+    assert hashlib.sha256(prompt_module.load_active_system_instructions().encode()).hexdigest() == R2_PROMPT_SHA256
+
+    import pytest
+
+    forged_path = tmp_path / "forged-prompt-approval.json"
+    for field, forged_value in (("owner", "untrusted-contributor"), ("approved_at", "not-a-date")):
+        forged = dict(receipt)
+        forged[field] = forged_value
+        forged_bytes = json.dumps(forged).encode("utf-8")
+        forged_path.write_bytes(forged_bytes)
+        monkeypatch.setenv("CHAT_PROMPT_APPROVAL_RECEIPT_PATH", str(forged_path))
+        monkeypatch.setenv("CHAT_PROMPT_APPROVAL_RECEIPT_SHA256", hashlib.sha256(forged_bytes).hexdigest())
+        with pytest.raises(RuntimeError, match="no coincide"):
+            prompt_module.load_active_system_instructions()
+
+    assert canonical_path.read_bytes() == original_bytes

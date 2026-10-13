@@ -75,6 +75,15 @@ persistente `/data`. Configuración, variables y verificación están en
 [railway.md](railway.md). El worker vive más que la conexión SSE del navegador
 y reanuda o marca como fallidos los turnos tras un reinicio.
 
+La verificación posterior a PR #120 está en la
+[bitácora de entrega](../etapas/chat-fase2-entrega-final-20261012.md): Railway
+reportó `SUCCESS` y health 200 con R1/Sol low y
+`enabled_capabilities: []`. Los recibos fuente de contenido aprobados se
+prepararon después en el [registro de decisión](../decisiones/20261012-chat-fase2-r2-contenido-stage3.md).
+Los pins externos aprobados están preparados para el siguiente despliegue; las
+banderas de rutas, métricas financieras y evidencia siguen apagadas. R1
+permanece predeterminado; no hubo llamada pagada ni activación de candidatos.
+
 Verificación registrada el 12 de octubre de 2026: Railway reportó `SUCCESS`
 para el despliegue `dd97b38e-383b-48ab-9fab-ca5bf0f78c70` sobre el commit
 `60e741b4b4c70ba2d092061f571b924690afcfcd`; `GET /api/chat/health` respondió
@@ -145,23 +154,26 @@ Las herramientas nuevas quedan deshabilitadas por omisión. No se deben habilita
 con el prompt r1; cualquier capacidad adicional requiere un prompt compatible
 aprobado y, cuando corresponda, recibo de aprobación de datos y publicación
 verificada.
-La propuesta r2 (`68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf`)
-no está activa. Seleccionarla requiere `CHAT_PROMPT_VERSION=r2-proposed` y un
-recibo owner versionado mediante `CHAT_PROMPT_APPROVAL_RECEIPT_PATH` y su SHA-256
-en `CHAT_PROMPT_APPROVAL_RECEIPT_SHA256`; sin esos valores el servicio falla
-cerrado. No hay recibo vigente.
+R2 (`68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf`) está
+aprobado y su recibo versionado está en `config/chat/prompt_approval.json`, pero
+no está activo en producción. El runtime requiere selección explícita con
+`CHAT_PROMPT_VERSION=r2-proposed` y el recibo mediante
+`CHAT_PROMPT_APPROVAL_RECEIPT_PATH` y `CHAT_PROMPT_APPROVAL_RECEIPT_SHA256`;
+la versión R2 permanece sin seleccionar y las banderas siguen apagadas hasta
+revisar Stage 3. Los pins de aprobación están preparados para el siguiente
+despliegue.
 
 Las tres banderas `CHAT_ENABLE_ROUTE_TOOLS`,
 `CHAT_ENABLE_BUSINESS_METRIC_TOOLS` y `CHAT_ENABLE_EVIDENCE_TOOLS` usan `false`
 como default y siguen desactivadas. Rutas y herramientas financieras requieren
-el prompt R2 con recibo válido; las métricas financieras además necesitan su
-proyección pública con recibo ligado a los valores y definiciones. La evidencia
-solo se busca en `config/chat/evidence/approved-index.json`, que permanece
-vacío: cada registro futuro requiere recibo verificable para su contenido
-semántico completo. No actives una bandera al aprobar solamente el prompt, ni
-rellenes el índice antes de aprobar los pasajes. El Dockerfile lleva la
-configuración versionada anidada; el recibo R2 se suministra por configuración
-privada y no se incluye en la imagen.
+el prompt R2 con recibo válido; las cuatro métricas tienen recibo aprobado y
+su proyección ligada a los valores y definiciones. El índice versionado tiene
+siete pasajes y tres fichas aprobados, cada uno con recibo verificable de su
+contenido semántico completo. Las funciones permanecen apagadas hasta la
+ejecución y revisión de los resultados JSON de Stage 3. No actives una bandera
+por la aprobación de contenido sola. El Dockerfile lleva la
+configuración versionada anidada e incluye el recibo público de aprobación R2.
+El SHA-256 de los bytes exactos del recibo R2 se fija por separado en Railway.
 
 La capacidad `minimum_reservation_turns_per_day` que muestra `/api/chat/health`
 es un cálculo de admisión: aplica los presupuestos diarios de tokens y dólares

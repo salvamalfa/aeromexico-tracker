@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 from src.conversational_analytics.evaluation import verify_observation
 
@@ -66,13 +67,18 @@ def test_stage2_fixture_is_frozen_to_budget_and_preserves_source_lineage() -> No
     } <= context_case_ids
 
 
-def test_stage2_snapshot_audit_is_reproducible_and_does_not_grade_model_quality() -> None:
+def test_stage2_snapshot_audit_is_reproducible_and_does_not_grade_model_quality(
+    tmp_path: Path,
+) -> None:
     from src.conversational_analytics.data.snapshot import Snapshot
     from src.conversational_analytics.evaluation import STAGE2_PILOT_FIXTURE_PATH, audit_snapshot
+    from tests._pre_financial_snapshot import copy_pre_financial_snapshot
 
     payload = json.loads(STAGE2_PILOT_FIXTURE_PATH.read_text(encoding="utf-8"))
+    snapshot = Snapshot(copy_pre_financial_snapshot(tmp_path / "pre-financial"))
+    assert snapshot.version == payload["expected_versions"]["data_version"]
     report = audit_snapshot(
-        Snapshot("site"),
+        snapshot,
         payload["cases"],
         expected_versions=payload["expected_versions"],
     )

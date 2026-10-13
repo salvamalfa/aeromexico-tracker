@@ -1,24 +1,29 @@
 # Changelog
 
-## 2026-10-12 · Chat: F2.0 activo; integración de fase 2 en revisión
+## 2026-10-12 · Chat: contenidos de fase 2 aprobados; Stage 3 pendiente
 
 - PR #111 quedó integrado en `b6d8822`; el despliegue Railway
   `dd97b38e-383b-48ab-9fab-ca5bf0f78c70` (commit `60e741b`) terminó
   `SUCCESS` y health respondió 200 con Sol low y R1. No se envió pregunta
   pagada durante la verificación.
-- El código de rutas, métricas financieras, búsqueda de reportes/noticias y
-  presentación por referencia está en PR #120, todavía en revisión, sin merge
-  ni despliegue. Las capacidades permanecen detrás de flags apagados; el índice
-  aprobado sigue vacío.
+- PR #120 se integró en `ae73af21af51601bd57e62133feccd19988d94a5` (código
+  `761d13b9ed6e33dec02508155d4bc82fdbb959d3`). Railway y Pages quedaron
+  verificados; health reportó R1/Sol low y `enabled_capabilities: []`. Las
+  capacidades de fase 2 siguen apagadas. Un intento Stage 3 N01 posterior fue
+  rechazado antes de crear sesión; su uso sigue sin conciliar.
 - R1 permanece activo (hash efectivo
-  `439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`). R2 se
-  selecciona únicamente con un recibo de dueño válido y fijado por hash; su
-  propuesta efectiva es `68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf`.
-- Stage 3 tiene preflight offline para 30 casos/34 mensajes, estimado US$7.05–
-  7.21 y propuesta de US$8 si saldo confirmado = 0. El saldo real es
-  desconocido; no hay recibo de presupuesto aprobado ni se ejecutó campaña.
-  La fase 2 sigue abierta. Ver [reporte de activación](docs/etapas/chat-f2-0-activacion-20261012.md)
-  y [bitácora de integración](docs/etapas/chat-fase2-integracion-cierre-preparado-20261012.md).
+  `439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`). R2,
+  hash efectivo `68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf`,
+  recibió aprobación; el runtime sigue en R1 hasta revisar Stage 3.
+- El 12 de octubre el dueño aprobó R2, cuatro métricas financieras, siete
+  pasajes, tres fichas y una reserva Stage 3 nueva, financiada, de US$8. El
+  saldo total sigue desconocido. El intento N01 (12 oct, 23:39 UTC) devolvió
+  HTTP 400 antes de sesión y quedó `stopped_unknown_spend`; no hay salida JSON
+  de los 30 casos ni consumo conciliado. Ver la
+  el [registro de decisión](docs/decisiones/20261012-chat-fase2-r2-contenido-stage3.md),
+  [estado para el dueño](docs/chat/fase-2-decision-dueno.md) y
+  [actualización de etapa](docs/etapas/chat-fase2-aprobacion-stage3-20261012.md)
+  y la [bitácora del intento](docs/etapas/chat-fase2-stage3-intento-20261012.md).
 
 ## 2026-10-11 · Chat: prompt evaluado y Sol low preparados para activación
 

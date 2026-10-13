@@ -31,11 +31,12 @@ En **Variables** del servicio agrega:
 RAILWAY_DOCKERFILE_PATH=Dockerfile.chat
 ```
 
-Deja `CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256` sin configurar mientras
-no exista una aprobación financiera real. Si el dueño activa ese payload,
-configura también esta variable en Railway con el SHA-256 canónico que aprobó
-por un canal externo; nunca derives el pin del recibo que está dentro del
-repositorio. El backend rechaza el payload si falta el pin o no coincide.
+El dueño aprobó las cuatro métricas financieras; su recibo versionado está en
+`config/chat/business-metrics-approval-receipt.json`. La variable
+El pin canónico de `CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256` está preparado
+en Railway para el siguiente despliegue; la bandera de métricas sigue apagada
+mientras Stage 3 espera ejecución y revisión JSON. Nunca derives el pin del
+recibo versionado dentro del repositorio.
 
 El dueño eligió `gpt-6.1-sol` con `low` y aprobó el prompt evaluado en F2.9
 etapa 2. Despliega el runtime que carga `config/chat/system_prompt.txt`,
@@ -45,10 +46,11 @@ después aplica solo `CHAT_REASONING_EFFORT=low` en Railway; conserva
 `439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`, luego usa
 una conversación nueva. No se ejecuta ninguna evaluación pagada.
 
-Mantén `CHAT_EVIDENCE_APPROVED_INDEX_SHA256` sin configurar mientras el índice
-aprobado esté vacío. Si se agregan registros con aprobación del dueño, fija en
-Railway el SHA-256 canónico del objeto completo del índice, aprobado por un
-canal externo; el runtime rechaza cualquier índice poblado sin ese pin exacto.
+El índice versionado contiene siete pasajes de reportes y tres fichas de
+noticias aprobados. `CHAT_EVIDENCE_APPROVED_INDEX_SHA256` está preparado en
+Railway para el siguiente despliegue; la bandera de evidencia sigue apagada
+mientras Stage 3 espera ejecución y revisión JSON. El pin es el SHA-256 canónico
+aprobado del objeto completo; el runtime falla cerrado si no coincide.
 
 Railway usa `Dockerfile` automáticamente si está en la raíz, pero `Dockerfile.chat`
 es un nombre personalizado y requiere esa variable, según su [documentación de

@@ -27,6 +27,7 @@
 !config/chat/metrics-candidates.json
 !config/chat/business-metrics-proposal.json
 !config/chat/system_prompt.txt
+!config/chat/prompt_approval.json
 !config/chat/evidence/
 !config/chat/evidence/approved-index.json
 !config/chat/prompt_candidates/

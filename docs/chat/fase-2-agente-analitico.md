@@ -688,21 +688,22 @@ vuelta extra con un caso de evaluación.
 ### Estado actualizado al 12 de octubre de 2026
 
 F2.0 quedó confirmado en Railway con Sol low y R1 efectivo; el health 200
-verifica configuración y disponibilidad, no calidad del prompt. El código
-F2.3–F2.9 está preparado en el PR #120, aún en revisión y sin despliegue. R2,
-las métricas financieras y los índices de reportes/noticias siguen propuestos,
-con sus puertas apagadas. No se requiere repetir aprobaciones de R1, modelo,
-preguntas o rúbrica.
+verifica configuración y disponibilidad, no calidad del prompt. PR #120 quedó
+integrado y desplegado. El dueño aprobó R2, cuatro métricas financieras, siete
+pasajes de reportes, tres fichas de noticias y una nueva reserva financiada de
+US$8; el [registro de decisión](../decisiones/20261012-chat-fase2-r2-contenido-stage3.md)
+conserva que el saldo total de la cuenta es desconocido. No se requiere repetir
+aprobaciones de R1, Sol low, preguntas o rúbrica.
 
 La campaña de Stage 3 preparada actualmente es parcial: 30 casos de negocio,
 34 mensajes y una repetición de Sol low, sin casos de inyección. No equivale a
 la comparación de cuatro candidatos de 70 slots descrita en el plan original,
 ni su preflight offline es una ejecución o un resultado de calidad. La cotización
-es US$7.06–7.23; propone una reserva máxima de US$8 para 30 casos/34 mensajes.
-El saldo actual es desconocido y solo cambia la recarga necesaria, no la reserva;
-no hay autorización/fondeo de campaña. La fase 2
-permanece abierta hasta resolver el contenido y el presupuesto y completar la
-revisión/ejecución correspondientes.
+es US$7.06–7.23 y la reserva nueva de US$8 está financiada. La ejecución y la
+revisión de los resultados JSON siguen pendientes; no se han hecho llamadas
+pagadas. Producción conserva R1/Sol low y las banderas de capacidades apagadas
+hasta revisar esos resultados. La fase 2 sigue abierta hasta completar esa
+revisión y resolver el estado de activación.
 
 ### Candidatos
 
