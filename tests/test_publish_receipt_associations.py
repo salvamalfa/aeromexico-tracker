@@ -125,6 +125,17 @@ def test_four_record_gate_receipt_keeps_shuffled_approval_pairs_and_publication_
         return dist
 
     monkeypatch.setattr(gate, "build_web", build_web)
+    atomic_json = flow.atomic_json
+
+    def checked_atomic_json(path, value):
+        if path.name.endswith(".published.json"):
+            intent = path.with_name(path.name.replace(".published.json", ".intent.json"))
+            assert json.loads(intent.read_bytes()) == {
+                key: item for key, item in value.items() if key != "published_at"
+            }
+        atomic_json(path, value)
+
+    monkeypatch.setattr(flow, "atomic_json", checked_atomic_json)
     site = tmp_path / "site"
     result = gate.publish(paths[::-1], site, root=root, web_data_v1=web_data)
     assert list(zip(result["receipt"]["versions"], result["receipt"]["approval_events"])) == expected_pairs
@@ -134,11 +145,30 @@ def test_four_record_gate_receipt_keeps_shuffled_approval_pairs_and_publication_
     assert {e["entity_key"] for e in identities} == {"AEROMEXICO", "INDUSTRY", "VIVA_AEROBUS", "VOLARIS"}
     proof_path = next((root / "publications").glob("*.published.json"))
     proof = json.loads(proof_path.read_bytes())
+    proof_intent = proof_path.with_name(proof_path.name.replace(".published.json", ".intent.json"))
+    intent_payload = json.loads(proof_intent.read_bytes())
+    assert intent_payload == {key: value for key, value in proof.items() if key != "published_at"}
+    assert proof_path.name == manifest_mod.manifest_hash(intent_payload) + ".published.json"
+    normal_intent = next((root.parent / "publications").glob("*.intent.json"))
+    normal_done = normal_intent.with_name(normal_intent.name.replace(".intent.json", ".published.json"))
+    assert json.loads(normal_intent.read_bytes()) == result["receipt"]
+    normal_completed = json.loads(normal_done.read_bytes())
+    assert {key: value for key, value in normal_completed.items() if key != "published_at"} == result[
+        "receipt"
+    ]
     assert proof["receipt_type"] == "gate_site_manifest"
     assert proof["proof_scope"] == "local_generated_site"
     assert proof["output"] == str(site / "publication_manifest.json")
     assert proof["html_sha256"] == manifest_mod.sha256_file(site / "publication_manifest.json")
     assert all(flow.state(record, root)["state"] == "published" for record in records)
+
+    saved_intent = proof_intent.read_bytes()
+    proof_intent.unlink()
+    saved_completion = proof_path.read_bytes()
+    with pytest.raises(gate.PublicationRefused, match="lacks its matching intent"):
+        gate.write_receipt(result["manifest"], authorized, site, root=root)
+    assert not proof_intent.exists() and proof_path.read_bytes() == saved_completion
+    proof_intent.write_bytes(saved_intent)
 
     target = site / "publication_manifest.json"
     original = target.read_bytes()
@@ -149,3 +179,27 @@ def test_four_record_gate_receipt_keeps_shuffled_approval_pairs_and_publication_
     flow.revoke(legacy, "TEST ONLY withdrawal after local generation", "TEST ONLY", root)
     assert flow.state(legacy, root)["state"] == "validated"
     assert all(flow.state(record, root)["state"] == "published" for record in records if record is not legacy)
+
+
+def test_gate_receipt_wrapper_preserves_publications_root_override(monkeypatch, tmp_path):
+    root, store, site = tmp_path / "ledger", tmp_path / "override-store", tmp_path / "site"
+    monkeypatch.setattr(flow, "ROOT", root)
+    monkeypatch.setattr(gate, "PUBLICATIONS_ROOT", store)
+    site.mkdir()
+    (site / "index.html").write_text("TEST ONLY", encoding="utf-8")
+    entry = {
+        "period_id": "2026Q2",
+        "version": "1" * 64,
+        "approval_event": "f" * 64,
+        "content_hash": "2" * 64,
+        "evidence_fingerprint": "3" * 64,
+        "audit_hash": "4" * 64,
+    }
+    manifest = manifest_mod.build_manifest(site, [entry], code_commit="a" * 40)
+    manifest_mod.write_manifest(site, manifest)
+    receipt = gate.write_receipt(manifest, [entry], site, root=root)
+    key = manifest_mod.manifest_hash(receipt)
+    assert (store / (key + ".intent.json")).is_file()
+    assert (store / (key + ".published.json")).is_file()
+    assert list((root / "publications").glob("*.intent.json"))
+    assert list((root / "publications").glob("*.published.json"))

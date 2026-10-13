@@ -308,7 +308,7 @@ def _entity_claim_citations(claim, package, calculations, numbers, rendered_text
     for excerpt_id, value in selections:
         excerpt = excerpts[excerpt_id]
         source = sources.get(excerpt.get("artifact_id"), {})
-        url = excerpt.get("source_url") or source.get("source_url", "")
+        url = source.get("source_url", "")
         parsed = urlparse(url)
         if (
             parsed.scheme != "https"

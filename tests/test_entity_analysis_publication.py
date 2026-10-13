@@ -223,6 +223,28 @@ def test_entity_quantitative_citation_uses_exact_approved_format_and_public_fiel
     assert set(result[0]) == {"label", "href", "title", "value"}
 
 
+@pytest.mark.parametrize("qualitative", [False, True])
+def test_entity_citation_uses_verified_artifact_url_over_allowed_excerpt_override(qualitative):
+    package, calculations = _citation_inputs()
+    package["excerpts"][0]["source_url"] = "https://cdn.investorcloud.net/VivaAerobus/wrong-report.pdf"
+    claim = (
+        {"text_template": "Los costos aumentaron.", "evidence_ids": ["e"], "bindings": {}}
+        if qualitative
+        else {"text_template": "{{income}}", "bindings": {"income": {"calculation_id": "c"}}}
+    )
+    citations = analysis._claim_citations(claim, package, calculations, {})
+    assert len(citations) == 1
+    assert citations[0]["href"] == package["sources"][0]["source_url"]
+
+
+def test_entity_citation_has_no_excerpt_url_fallback_without_matching_artifact():
+    package, calculations = _citation_inputs()
+    package["excerpts"][0]["artifact_id"] = "missing-artifact"
+    package["excerpts"][0]["source_url"] = "https://cdn.investorcloud.net/VivaAerobus/report.pdf"
+    claim = {"text_template": "{{income}}", "bindings": {"income": {"calculation_id": "c"}}}
+    assert analysis._claim_citations(claim, package, calculations, {}) == []
+
+
 def test_entity_qualitative_and_company_citations_link_exact_rendered_leads():
     package, calculations = _citation_inputs()
     claim = {
