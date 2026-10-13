@@ -8,6 +8,7 @@ from typing import Any
 from .evaluation import verify_observation
 from .evaluation_observation import observation_from_tool_calls
 from .evaluation_response_checks import response_term_present as _response_term_present
+from .evaluation_stage3_cases import STAGE3_GRADING_MODE
 
 
 def _has_non_context_numeric_claim(response: str) -> bool:
@@ -96,6 +97,22 @@ def score_live_case(
     turn_tool_calls: list[list[dict[str, Any]]] | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Build the evidence observation and its automatic quality grade."""
+    if case.get("grading_mode") == STAGE3_GRADING_MODE:
+        observation = observation_from_tool_calls(
+            tool_calls,
+            response,
+            expected_versions=expected_versions,
+            scope=scope,
+            metric_dimensions=metric_dimensions,
+        )
+        return observation, {
+            "scored": False,
+            "not_scored_reason": "current_coverage_requires_blinded_owner_review",
+            "coverage_status": case["expected"]["coverage_status"],
+            "coverage_campaign_sha256": case["expected"]["coverage_campaign_sha256"],
+            "requires_blinded_human_rubric": True,
+            "human_rubric_status": "pending_owner_approval",
+        }
     expected_turns = case.get("expected", {}).get("turns")
     if isinstance(expected_turns, list):
         responses = turn_responses or []

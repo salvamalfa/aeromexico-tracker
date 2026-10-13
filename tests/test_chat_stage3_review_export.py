@@ -197,6 +197,22 @@ def _produce_campaign_report(directory: Path, monkeypatch) -> tuple[Path, Path, 
     return Path(summary["report_path"]), state_path, ledger, coverage, fixture_sha
 
 
+def test_stage3_export_excludes_legacy_automatic_grades_from_owner_dataset() -> None:
+    fixture, coverage, live, fixture_sha = _inputs()
+    model = live["models"][0]
+    model["quality_summary"] = {"numeric_gold_accuracy": 0.0, "tripwire_case_passed": 0}
+    for case in model["cases"]:
+        case["expected_status"] = "unsupported"
+        case["quality"] = {"scored": True, "passed": False, "failures": ["legacy_gold_failure"]}
+    dataset, _mapping = exporter.build_dataset(coverage, live, fixture, fixture_sha)
+    assert dataset["questions"][3]["expected"]["coverage_status"] == "supported"
+    assert dataset["questions"][3]["expected"]["rows"][0]["value"] == 100
+    encoded = json.dumps(dataset)
+    for legacy in ("quality_summary", "numeric_gold_accuracy", "legacy_gold_failure", "expected_status"):
+        assert legacy not in encoded
+    assert all(set(question["candidates"][0]) == {"alias", "answer"} for question in dataset["questions"])
+
+
 def test_stage3_export_accepts_producer_report_shape_and_maps_all_expectations() -> None:
     fixture, coverage, live, fixture_sha = _inputs()
     dataset, mapping = exporter.build_dataset(coverage, live, fixture, fixture_sha)
