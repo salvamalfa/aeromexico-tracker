@@ -31,26 +31,23 @@ En **Variables** del servicio agrega:
 RAILWAY_DOCKERFILE_PATH=Dockerfile.chat
 ```
 
-El dueño aprobó las cuatro métricas financieras; su recibo versionado está en
-`config/chat/business-metrics-approval-receipt.json`. La variable
-El pin canónico de `CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256` está preparado
-en Railway para el siguiente despliegue; la bandera de métricas sigue apagada
-mientras Stage 3 espera ejecución y revisión JSON. Nunca derives el pin del
-recibo versionado dentro del repositorio.
+Producción tiene R2 activo con `gpt-6.1-sol`, esfuerzo `low` y verbosidad
+`medium`; rutas, métricas financieras y evidencia están habilitadas. Stage 3
+terminó y recibió revisión del dueño. El despliegue, hashes efectivos y pins
+verificados están en el [cierre operativo](../etapas/chat-fase2-cierre-operativo-20261012.md).
 
-El dueño eligió `gpt-6.1-sol` con `low` y aprobó el prompt evaluado en F2.9
-etapa 2. Despliega el runtime que carga `config/chat/system_prompt.txt`,
-después aplica solo `CHAT_REASONING_EFFORT=low` en Railway; conserva
-`CHAT_MODEL=gpt-6.1-sol`, tarifas y topes actuales. Verifica en
-`/api/chat/health` el esfuerzo `low` y el prompt efectivo con SHA-256
-`439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5`, luego usa
-una conversación nueva. No se ejecuta ninguna evaluación pagada.
+Para reconstruir esta selección, configura explícitamente `CHAT_PROMPT_VERSION=r2-proposed`,
+el recibo de `config/chat/prompt_approval.json` y su pin externo, además de las
+banderas autorizadas. Conserva modelo, tarifas y topes actuales; verifica en
+`/api/chat/health` el hash del prompt y las capacidades, y usa una conversación
+nueva. Esta comprobación no requiere una pregunta pagada.
 
-El índice versionado contiene siete pasajes de reportes y tres fichas de
-noticias aprobados. `CHAT_EVIDENCE_APPROVED_INDEX_SHA256` está preparado en
-Railway para el siguiente despliegue; la bandera de evidencia sigue apagada
-mientras Stage 3 espera ejecución y revisión JSON. El pin es el SHA-256 canónico
-aprobado del objeto completo; el runtime falla cerrado si no coincide.
+Las cuatro métricas financieras conservan el recibo
+`config/chat/business-metrics-approval-receipt.json` y el pin canónico externo
+`CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256`. El índice conserva siete
+pasajes y tres fichas aprobados y el pin `CHAT_EVIDENCE_APPROVED_INDEX_SHA256`.
+Nunca derives los pins de confianza del archivo desplegado; el runtime falla
+cerrado si no coinciden con los aprobados externamente.
 
 Railway usa `Dockerfile` automáticamente si está en la raíz, pero `Dockerfile.chat`
 es un nombre personalizado y requiere esa variable, según su [documentación de
@@ -189,7 +186,7 @@ sigue requiriendo su autorización.
 ## Activación del MVP
 
 El MVP se activó con estos pasos; la activación quedó comprobada el 8 de
-octubre de 2026 (ver el [traspaso de activación](traspaso-activacion-mvp-20261006.md)).
+octubre de 2026 (ver el [traspaso de activación](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/traspaso-activacion-mvp-20261006.md)).
 Se conservan como referencia para reconstruir el servicio. Antes, el dueño
 calificó los cortes en `review.html` y eligió modelo y topes; el agente que
 administra Railway y la API key ejecutó los pasos.

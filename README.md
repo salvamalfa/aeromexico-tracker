@@ -153,7 +153,7 @@ selecciona explícitamente. No hubo otra evaluación pagada ni se acreditó el
 gate original de 70 casos/safety. Ver [cierre operativo](docs/etapas/chat-fase2-cierre-operativo-20261012.md).
 
 - Operación, instalación y límites: [documentación del chat](docs/chat/README.md)
-  y [traspaso operativo](docs/chat/traspaso-activacion-mvp-20261006.md).
+  y [traspaso operativo](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/traspaso-activacion-mvp-20261006.md).
 - Implementación y cierre técnico: la [fase 2](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/fase-2-agente-analitico.md)
   y el [resumen para decisión del dueño](docs/chat/fase-2-decision-dueno.md).
 
