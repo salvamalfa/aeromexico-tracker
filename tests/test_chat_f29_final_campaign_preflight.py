@@ -24,31 +24,28 @@ def test_profile_dry_run_selects_all_business_cases_without_live_side_effects():
     assert plan["case_count"] == 30
     assert plan["messages_per_candidate"] == 34
     assert plan["repetitions"] == 1
-    # Current projection includes the selector/bilingual R2 clarification;
-    # measured stage-two costs and frozen campaign artifacts remain unchanged.
-    assert plan["projection"]["projected_input_tokens_range"] == [2_084_955, 2_143_421]
-    assert plan["projection"]["projected_input_tokens"] == 2_143_421
+    # This preflight belongs to the completed campaign and uses its frozen R2.
+    assert plan["projection"]["projected_input_tokens_range"] == [2_055_140, 2_103_667]
+    assert plan["projection"]["projected_input_tokens"] == 2_103_667
     assert plan["projection"]["projected_output_tokens"] == 9_423
-    assert plan["projection"]["cost_before_margin_usd_range"] == [5.306613, 5.452778]
+    assert plan["projection"]["cost_before_margin_usd_range"] == [5.232075, 5.353393]
     assert plan["projection"]["historical_scaled_baseline_cost_before_margin_usd"] == 4.86812
-    assert plan["projection"]["context_delta_input_cost_before_margin_usd_range"] == [0.438493, 0.584658]
+    assert plan["projection"]["context_delta_input_cost_before_margin_usd_range"] == [0.363955, 0.485272]
     assert plan["projection"]["safety_margin_fraction"] == 0.35
-    assert plan["projection"]["cost_after_margin_usd_range"] == [7.1639, 7.3613]
+    assert plan["projection"]["cost_after_margin_usd_range"] == [7.0633, 7.2271]
     assert plan["projection"]["proposed_reserve_usd"] == 8.0
     context = plan["projection"]["context_delta"]
     assert context["prompt_r1_effective_utf8_bytes"] == 8_937
-    assert context["prompt_r2_sha256"] == (
-        "cec193aa10dff802d5578da00777b5b56c74bfcc71aeccaf1ea718c07cc763b1"
-    )
-    assert context["prompt_r2_proposed_utf8_bytes"] == 12_506
-    assert context["prompt_delta_utf8_bytes_per_request"] == 3_569
+    assert context["prompt_r2_proposed_utf8_bytes"] == 11_166
+    assert context["prompt_delta_utf8_bytes_per_request"] == 2_229
+    assert context["prompt_r2_sha256"] == "68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf"
     assert context["historical_tool_schema_utf8_bytes"] == 3_306
     assert context["historical_tool_schema_sha256"] == (
         "1ff0d3a35647f7a0c2fc956884a4d267b0148065ccd3e2469139463f859bea19"
     )
     assert context["current_tool_schema_utf8_bytes"] == 7_620
     assert context["tool_schema_delta_utf8_bytes_per_request"] == 4_314
-    assert context["total_delta_utf8_bytes_per_request"] == 7_883
+    assert context["total_delta_utf8_bytes_per_request"] == 6_543
     assert context["modeled_provider_requests"] == 89
     assert context["modeled_provider_request_hypothesis_range"] == [85, 89]
     assert context["tool_calls"] == 55

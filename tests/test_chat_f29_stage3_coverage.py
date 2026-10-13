@@ -6,6 +6,8 @@ import os
 from datetime import date, timedelta
 from pathlib import Path
 
+import pytest
+
 from src.conversational_analytics.evidence_index import (
     APPROVED_INDEX_SHA256_ENV,
     EvidenceIndex,
@@ -15,6 +17,8 @@ from src.conversational_analytics.providers import _openai_prompt
 from src.conversational_analytics.data.snapshot import Snapshot
 from src.conversational_analytics.evaluation_stage3_coverage import (
     CAMPAIGN_CANDIDATE,
+    STAGE3_PROMPT_SHA256,
+    STAGE3_PROMPT_PATH,
     _extract_evidence,
     derive_stage3_coverage,
     validate_receipt_scope,
@@ -94,7 +98,7 @@ def test_stage3_derives_all_30_cases_from_real_tools_and_current_snapshot(monkey
     assert report["runtime_capabilities"]["stage3_candidate_count"] == 1
     assert report["runtime_capabilities"]["required_prompt_version"] == "r2-proposed"
     assert report["runtime_capabilities"]["required_prompt_sha256"] == (
-        _openai_prompt.R2_PROMPT_SHA256
+        STAGE3_PROMPT_SHA256
     )
     assert report["runtime_capabilities"]["prompt_compatible"] is (
         report["runtime_capabilities"]["prompt_content_sha256"]
@@ -498,3 +502,24 @@ def test_stage3_cli_requires_external_receipt_hashes_before_reading_receipts_or_
     assert captured[0]["provider_calls"] == 0
     assert captured[0]["credentials_read"] is False
     assert captured[0]["reserve_usd"] == 8.0
+
+
+@pytest.mark.parametrize("historical", [True, False])
+def test_stage3_campaign_identity_stays_frozen_when_production_prompt_changes(monkeypatch, historical):
+    """Simulate each runtime hash offline; production R2 cannot inherit old grades."""
+    historical_prompt = STAGE3_PROMPT_PATH.read_text(encoding="utf-8").strip()
+    assert hashlib.sha256(historical_prompt.encode()).hexdigest() == STAGE3_PROMPT_SHA256
+    assert STAGE3_PROMPT_SHA256 == "68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf"
+    assert _openai_prompt.R2_PROMPT_SHA256 != STAGE3_PROMPT_SHA256
+    for name, pin in _actual_approved_content_pins().items():
+        monkeypatch.setenv(name, pin)
+    selected_hash = STAGE3_PROMPT_SHA256 if historical else _openai_prompt.R2_PROMPT_SHA256
+    monkeypatch.setattr(_openai_prompt, "effective_prompt_sha256", lambda: selected_hash)
+    monkeypatch.setattr(_openai_prompt, "effective_prompt_version", lambda: "r2-proposed")
+    report = derive_stage3_coverage(snapshot_root=Path("site"))
+    assert report["pins"]["prompt_content_sha256"] == selected_hash
+    assert report["campaign_identity"]["prompt_content_sha256"] == selected_hash
+    assert report["campaign_identity"]["required_prompt_sha256"] == STAGE3_PROMPT_SHA256
+    assert report["runtime_capabilities"]["required_prompt_sha256"] == STAGE3_PROMPT_SHA256
+    assert report["runtime_capabilities"]["prompt_compatible"] is historical
+    assert report["provider_calls"] == 0
