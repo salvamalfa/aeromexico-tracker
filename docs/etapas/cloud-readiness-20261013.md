@@ -40,8 +40,9 @@ La activación existente del cloud no se cargaba automáticamente en la shell.
 El warehouse del snapshot antecedía al panel Industria/Viva. La suite inicial
 sin navegador, con solo el pin financiero, dio 1.315 pasadas, siete fallos,
 14 errores y un skip: seis fallos por pin de evidencia ausente y el resto por
-panel Industria incompleto. Se usaron los dos pins aprobados de
-`docs/chat/fase-2-decision-dueno.md`, solo en procesos locales; se reconstruyó
+panel Industria incompleto. Se usaron los dos pins aprobados del
+[brief en el commit auditado](https://github.com/salvamalfa/aeromexico-tracker/blob/d456eb8dc05e586d7119161c710db5ff47af0da3/docs/chat/fase-2-decision-dueno.md),
+solo en procesos locales; se reconstruyó
 el warehouse con `build_warehouse(max_stage=9)` desde Gold vigente, sin
 regenerar cifras ni modificar aprobaciones. Panel resultante: Industria 14,
 Aeroméxico 22, Volaris 15 y Viva 14 trimestres. Export real: 112 archivos.

@@ -167,8 +167,10 @@ Fuentes vigentes revisadas:
    suite con datos privados pase. No reconstruir una aprobación para pasarla.
 6. Dashboard estático y pruebas offline no necesitan credenciales. Para los
    checks que verifican métricas financieras o evidencia aprobadas, usar los
-   pins existentes registrados en `docs/chat/fase-2-decision-dueno.md`, limitados a
-   ese proceso. No calcular un pin nuevo desde el recibo ni cambiar variables
+   pins existentes del [registro de aprobación en el commit auditado](https://github.com/salvamalfa/aeromexico-tracker/blob/d456eb8dc05e586d7119161c710db5ff47af0da3/docs/chat/fase-2-decision-dueno.md),
+   limitados a ese proceso. El brief vigente puede retirarlos al cerrar Stage 3;
+   ese enlace conserva su procedencia sin duplicar sus valores. No calcular un
+   pin nuevo desde el recibo ni cambiar variables
    externas. Para una ingesta autorizada, usar el secreto existente y un
    destino ignorado; empezar por `--dry-run`.
 
