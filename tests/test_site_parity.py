@@ -28,7 +28,7 @@ import pytest
 from src.analysis_agent import lifecycle as flow
 from src.publish import manifest as manifest_mod
 from src.publish.verify import verify_site
-from src.web_export.analysis import MissingAnalysisInput, discover_approved_manifest, export_period
+from src.web_export.analysis import MissingAnalysisInput, export_period
 from src.web_export.executive import export_executive
 from src.web_export.flights import export_flights, recombine_flights
 
@@ -259,26 +259,22 @@ def test_citation_labels_preserve_multiple_sources_for_the_same_value() -> None:
 def test_reading_tab_narrative_matches_the_approved_analysis(
     request: pytest.FixtureRequest, site_page, site_server
 ) -> None:
-    """For every period the local ledger currently has approved/published,
+    """For every entity/period the published manifest selects,
     the reading tab's narrative text contains that exact approved thesis
     and every summary item, citation markers included -- read straight from
     the ledger, not from a second render."""
 
-    manifest = discover_approved_manifest(flow.ROOT)
+    manifest = manifest_mod.load_manifest(SITE_DIR)["analysis_manifest"]
     if not manifest:
-        # Missing data (nothing approved at all), not a race: stays a skip
-        # even under --require-local-data.
-        pytest.skip("No period is currently approved/published in this checkout's local analysis_runs/")
+        _skip_or_fail(request.config, "The published site has no selected analysis identities")
     expected = {}
     for entry in manifest:
         try:
             expected[manifest_mod.analysis_identity(entry)] = _export_approved_entry(entry)
         except MissingAnalysisInput as error:
-            # discover_approved_manifest() just said entry was approved; if
-            # export_period() now disagrees, the approval was revoked (or
-            # the record went missing) between those two calls -- "no
-            # longer approved locally" -- which --require-local-data should
-            # catch rather than silently skip.
+            # The site pins an exact record, including its entity namespace.
+            # Historical technical versions are deliberately not discovered:
+            # the current code/approval guards must authorize this selected one.
             _skip_or_fail(request.config, f"{entry}: {error}")
 
     checked = set()
