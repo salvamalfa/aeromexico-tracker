@@ -40,6 +40,8 @@ anything.
 from __future__ import annotations
 
 import copy
+import hashlib
+import json
 import shutil
 import subprocess
 import sys
@@ -338,30 +340,39 @@ def assemble_site(
 
 
 def write_receipt(
-    manifest: dict[str, Any], authorized: list[dict[str, Any]], out_dir: Path
+    manifest: dict[str, Any], authorized: list[dict[str, Any]], out_dir: Path, *, root: Path = flow.ROOT
 ) -> dict[str, Any]:
     """intent/published receipt in analysis_runs/publications/, hashing the
     manifest (hash of hashes) rather than raw site/ bytes."""
 
+    # The legacy lifecycle reader zips these two compatibility arrays. Sort
+    # their tuples together so a version never acquires another approval.
+    pairs = sorted((entry["version"], entry["approval_event"]) for entry in authorized)
+    target = Path(out_dir).resolve() / manifest_mod.MANIFEST_NAME
+    target_bytes = target.read_bytes()
+    if json.loads(target_bytes) != manifest:
+        raise PublicationRefused("Receipt target does not match the generated site manifest")
     receipt = {
         "manifest_sha256": manifest_mod.manifest_hash(manifest),
         "output": str(Path(out_dir).resolve()),
         "code_commit": manifest["code_commit"],
         "periods": sorted(e["period_id"] for e in authorized),
-        "versions": sorted(e["version"] for e in authorized),
-        "approval_events": sorted(e["approval_event"] for e in authorized),
+        "versions": [version for version, _ in pairs],
+        "approval_events": [approval for _, approval in pairs],
     }
+    identities = [
+        {
+            "entity_key": manifest_mod.analysis_identity(e)[0],
+            "period_id": e["period_id"],
+            "version": e["version"],
+            "approval_event": e["approval_event"],
+        }
+        for e in sorted(authorized, key=manifest_mod.analysis_sort_key)
+    ]
     if any("entity_key" in entry for entry in authorized):
-        receipt["analysis_identities"] = [
-            {
-                "entity_key": manifest_mod.analysis_identity(entry)[0],
-                "period_id": entry["period_id"],
-                "version": entry["version"],
-            }
-            for entry in sorted(authorized, key=manifest_mod.analysis_sort_key)
-        ]
+        receipt["analysis_identities"] = identities
     key = manifest_mod.manifest_hash(receipt)
-    store = PUBLICATIONS_ROOT
+    store = PUBLICATIONS_ROOT if Path(root) == Path(flow.ROOT) else Path(root).parent / "publications"
     store.mkdir(parents=True, exist_ok=True)
     intent = store / (key + ".intent.json")
     done = store / (key + ".published.json")
@@ -369,6 +380,18 @@ def write_receipt(
         flow.atomic_json(intent, receipt)
     if not done.exists():
         flow.atomic_json(done, {**receipt, "published_at": datetime.now(timezone.utc).isoformat()})
+    # The unchanged lifecycle reader calls this file hash html_sha256. Its
+    # target is our generated manifest; this proves local consumption only.
+    proof = receipt | {
+        "output": str(target),
+        "html_sha256": hashlib.sha256(target_bytes).hexdigest(),
+        "receipt_type": "gate_site_manifest",
+        "proof_scope": "local_generated_site",
+        "analysis_identities": identities,
+    }
+    publication = Path(root) / "publications" / (manifest_mod.manifest_hash(proof) + ".published.json")
+    if not publication.exists():
+        flow.atomic_json(publication, proof | {"published_at": datetime.now(timezone.utc).isoformat()})
     return receipt
 
 
@@ -436,7 +459,7 @@ def publish(
             f"record failed verification/approval just before publish (nothing swapped in): {error}"
         ) from error
 
-    receipt = write_receipt(manifest, authorized, out_dir)
+    receipt = write_receipt(manifest, authorized, out_dir, root=root)
     return {"manifest": manifest, "receipt": receipt}
 
 
@@ -530,7 +553,7 @@ def publish_ui_only(
             f"record failed verification/approval just before UI-only publish (nothing swapped in): {error}"
         ) from error
 
-    receipt = write_receipt(manifest, authorized, out_dir)
+    receipt = write_receipt(manifest, authorized, out_dir, root=root)
     return {"manifest": manifest, "receipt": receipt}
 
 

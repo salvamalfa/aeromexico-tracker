@@ -36,7 +36,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote, urlparse
 
-from jsonschema import Draft202012Validator
+from jsonschema import Draft202012Validator, FormatChecker
 
 from src.analysis_agent import lifecycle as flow
 from src.analysis_agent.analyst import formatted, lineage
@@ -164,6 +164,45 @@ def _load_record(
     if _record_manifest_entry(record) != entry:
         raise ValueError("Loaded analysis does not match the requested entity/period/version")
     return record
+
+
+def validate_analysis_manifest(value: Any) -> list[dict[str, str]]:
+    """Validate an exact selection; it never establishes human approval."""
+    if isinstance(value, dict):
+        schema = json.loads(
+            (PATHS.root / "contracts/web/publication_manifest.schema.json").read_text(encoding="utf-8")
+        )
+        errors = list(Draft202012Validator(schema, format_checker=FormatChecker()).iter_errors(value))
+        if errors:
+            raise ValueError(f"Invalid analysis publication manifest: {errors[0].message}")
+        value = value["analysis_manifest"]
+    if not isinstance(value, list):
+        raise ValueError("Analysis manifest must be a publication manifest or an identity list")
+    fields = {
+        "entity_key", "period_id", "version", "content_hash", "evidence_fingerprint", "approval_event", "audit_hash",
+    }
+    selected = []
+    seen = set()
+    for entry in value:
+        if (
+            not isinstance(entry, dict)
+            or not {"period_id", "version"} <= entry.keys()
+            or not entry.keys() <= fields
+            or any(not isinstance(v, str) or not v.strip() for v in entry.values())
+        ):
+            raise ValueError("Invalid analysis manifest entry: exact entity/period/version identity required")
+        _record_manifest_entry({"draft": entry, "version": entry["version"]})
+        identity = analysis_identity(entry)
+        if identity in seen:
+            raise ValueError(f"Multiple selected versions for entity/period {identity}")
+        seen.add(identity)
+        selected.append(dict(entry))
+    return sorted(selected, key=analysis_sort_key)
+
+
+def load_analysis_manifest(path: Path) -> list[dict[str, str]]:
+    """Load the explicit CLI selector before generators or output mutations."""
+    return validate_analysis_manifest(json.loads(path.read_text(encoding="utf-8")))
 
 
 def _claim_citations(
@@ -376,11 +415,11 @@ def export_period(
         raise MissingAnalysisInput(
             f"{period_id}/{version} has no current human approval under {root}: {error}"
         ) from error
-    if entity_key is not None and (
-        authorized.get("entity_key"),
+    if (
+        authorized.get("entity_key", "AEROMEXICO"),
         authorized.get("period_id"),
         authorized.get("version"),
-    ) != (entity_key, period_id, version):
+    ) != (entity_key or "AEROMEXICO", period_id, version):
         raise ValueError("Authorized analysis identity does not match requested entity/period/version")
     authorized = _drop_private_sections(authorized, record)
     citations = _citations_by_claim(record, package, calculations, authorized)
@@ -394,9 +433,14 @@ def export_analysis(
     *,
     root: Path = flow.ROOT,
     allow_missing: bool = False,
+    manifest: list[dict[str, str]] | dict[str, Any] | None = None,
 ) -> list[Path]:
     """Write legacy or namespaced analysis files for every currently approved
     or published draft under ``root`` (see ``discover_approved_manifest``).
+    An explicit ``manifest`` selects exact identities without discovery. It
+    may be an identity list or a full publication manifest; every selected
+    record still passes the current consumer gate and must match any supplied
+    receipt fields. Missing/unapproved selections always fail, including dev.
 
     With ``allow_missing`` (dev only), a period whose record or approval is
     not present locally is skipped with a stderr note instead of failing
@@ -409,7 +453,7 @@ def export_analysis(
     manifest, every period) does not linger from an earlier export.
     """
 
-    manifest = discover_approved_manifest(root)
+    selection = discover_approved_manifest(root) if manifest is None else validate_analysis_manifest(manifest)
     validator = Draft202012Validator(ANALYSIS_SCHEMA)
     rules = load_privacy_rules()
     analysis_dir = out_dir / "analysis"
@@ -417,7 +461,7 @@ def export_analysis(
     tmp_dir = Path(tempfile.mkdtemp(dir=analysis_dir.parent, prefix=analysis_dir.name + ".tmp-"))
     written_names: list[str] = []
     try:
-        for entry in manifest:
+        for entry in selection:
             period_id, version = entry["period_id"], entry["version"]
             try:
                 payload = export_period(
@@ -427,10 +471,13 @@ def export_analysis(
                     **({"entity_key": entry["entity_key"]} if "entity_key" in entry else {}),
                 )
             except MissingAnalysisInput as error:
-                if not allow_missing:
+                if not allow_missing or manifest is not None:
                     raise
                 print(f"web_export.analysis: skipping {period_id} ({error})", file=sys.stderr)
                 continue
+            for field in ("content_hash", "evidence_fingerprint", "approval_event", "audit_hash"):
+                if field in entry and payload.get(field) != entry[field]:
+                    raise ValueError(f"Selected analysis {period_id}/{version} does not match manifest {field}")
             errors = [f"{list(e.path)}: {e.message}" for e in validator.iter_errors(payload)]
             if errors:
                 raise ValueError(f"analysis/{period_id}.json does not match its schema: {errors[:5]}")
@@ -462,6 +509,10 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, default=PATHS.root / "web" / "public" / "data" / "v1")
     parser.add_argument(
+        "--analysis-manifest", type=Path,
+        help="Exact identity list or publication_manifest.json; selected versions still require current approval.",
+    )
+    parser.add_argument(
         "--allow-missing-analysis",
         action="store_true",
         dest="allow_missing",
@@ -472,8 +523,9 @@ def main(argv: list[str] | None = None) -> int:
         written = export_analysis(
             args.out,
             allow_missing=args.allow_missing,
+            manifest=load_analysis_manifest(args.analysis_manifest) if args.analysis_manifest else None,
         )
-    except (MissingAnalysisInput, ValueError) as error:
+    except (MissingAnalysisInput, ValueError, OSError) as error:
         print(f"web_export.analysis: {error}", file=sys.stderr)
         return 1
     for path in sorted(written):

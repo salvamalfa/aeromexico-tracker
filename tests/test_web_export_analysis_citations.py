@@ -141,6 +141,8 @@ def test_export_period_attaches_citations_and_section_claim_ids(monkeypatch) -> 
     package, calculations = _package_and_calculations()
     record = _record(["private_section"])
     authorized = {
+        "period_id": "2026Q2",
+        "version": "v1",
         "claims": [
             {"claim_id": cid, "type": "observed_fact", "text": "t", "calculation_ids": [], "evidence_ids": []}
             for cid in ("summary_claim", "public_claim", "private_claim")

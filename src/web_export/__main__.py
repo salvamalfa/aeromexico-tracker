@@ -17,7 +17,7 @@ from src.config import PATHS
 from src.dashboard.executive_summary import build_executive_payload
 from src.dashboard.flights import build_flight_payload
 from src.dashboard.market import build_market_payload
-from src.web_export.analysis import MissingAnalysisInput, export_analysis
+from src.web_export.analysis import MissingAnalysisInput, export_analysis, load_analysis_manifest
 from src.web_export.business_metrics_approval import BusinessMetricsApprovalError
 from src.web_export.executive import export_executive
 from src.web_export.flights import export_flights
@@ -27,6 +27,10 @@ from src.web_export.market import export_market
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--analysis-manifest", type=Path,
+        help="Exact analysis identity list or publication_manifest.json, without ambiguous ledger discovery.",
+    )
     parser.add_argument(
         "--out",
         type=Path,
@@ -53,6 +57,7 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--business-metrics-proposal and --business-metrics-receipt must be supplied together")
 
     try:
+        analysis_manifest = load_analysis_manifest(args.analysis_manifest) if args.analysis_manifest else None
         flight_payload = build_flight_payload()
         written = export_flights(flight_payload, args.out)
         executive_payload = build_executive_payload()
@@ -61,6 +66,7 @@ def main(argv: list[str] | None = None) -> int:
         written += export_analysis(
             args.out,
             allow_missing=args.allow_missing_analysis,
+            manifest=analysis_manifest,
         )
         if args.business_metrics_proposal and args.business_metrics_receipt:
             from src.web_export.business_metrics import export_approved_business_metrics
@@ -71,7 +77,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.business_metrics_receipt,
                 args.out,
             )
-    except (MissingWebInput, MissingAnalysisInput, BusinessMetricsApprovalError) as error:
+    except (MissingWebInput, MissingAnalysisInput, BusinessMetricsApprovalError, ValueError, OSError) as error:
         print(f"web_export: {error}", file=sys.stderr)
         return 1
 
