@@ -97,6 +97,19 @@ El PR público contiene documentación, código de tests/fixture y dos artefacto
 diagnósticos regenerados; no cambia código de producto, Gold, `site/`, contratos
 ni workflows. El privado #23 sigue siendo solo documentación.
 
+La suite completa de las correcciones (`dcd8ad4`) terminó con **1.350 pasadas,
+un skip** (sin preview Pages configurada) y 29 subtests pasados, en 463 s. CI
+del mismo commit: `test` y `web` SUCCESS
+([run 38330546157](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/38330546157)).
+
+Durante la validación, el PR #129 se integró fuera de esta preparación en
+`master` `30a931d` (01:06:42 UTC) y Railway lo desplegó como
+`6889bc94-da81-4294-b2bd-a8fc5d14fbe7`, SUCCESS. Se incorporó ese `master`
+sin conflictos a la rama de preparación y se revalidan las áreas afectadas y
+CI del head resultante. Su contenido no es un cambio propio del PR #130:
+el diff contra el nuevo `master` conserva exclusivamente los ocho archivos
+de preparación. No se revierte ni modifica el trabajo de #129.
+
 Playwright/Chromium **del cloud**, sin navegador ni sesión del usuario:
 Lectura, Economía y Vuelos del `site/` sin modificar, escritorio 1440 px y
 móvil 390 px; sin errores JavaScript ni requests fallidos y sin overflow tras
@@ -123,8 +136,8 @@ no afirma que se descargaron fuentes nuevas.
 - El privado registra que probe/sweep figuran `active` pese a documentar la
   práctica de deshabilitarlos fuera de un despacho; siguen siendo manuales.
   Se conserva su estado durante esta preparación.
-- PR borrador [#128](https://github.com/salvamalfa/aeromexico-tracker/pull/128)
-  declara Stage 3 entregado y pendiente de ratings del dueño. Se revisó su
+- Al comienzo, PR borrador [#128](https://github.com/salvamalfa/aeromexico-tracker/pull/128)
+  declaraba Stage 3 entregado y pendiente de ratings del dueño. Se revisó su
   alcance documental, sin editarlo ni verificar esa calificación contra un
   expediente privado posterior al snapshot. No bloquea esta preparación.
 - Smoke de chat pagado, nuevas capturas, reinicios/persistencia tras restart,
