@@ -97,3 +97,7 @@ El [traspaso de activación del MVP](https://github.com/salvamalfa/aeromexico-tr
 y el [brief anterior de F2.9](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/f2-9-accion-dueno.md) también se
 retiraron: describían activación y decisiones ya completadas. Su continuidad
 operativa está en la documentación vigente del chat y el brief de cierre.
+
+El [brief candidato de métricas F2.3](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/f23-propuesta-revision-dueno.md)
+se retiró tras la aprobación y activación de las métricas; las definiciones y
+recibos vigentes permanecen versionados.
