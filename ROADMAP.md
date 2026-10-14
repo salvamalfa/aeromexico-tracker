@@ -14,7 +14,7 @@ Propuesta — el dueño decide prioridades.
   Aeroméxico.
 - Refresco manual de AFAC (rezago típico 27–36 días tras el cierre de mes);
   agosto de 2026 se esperaba entre el 28 de septiembre y el 2 de octubre.
-- Preparar la [continuidad de Vuelos sin capturas AeroDataBox recurrentes](docs/plan-salida-aerodatabox.md):
+- Revisar y publicar, con aprobación del dueño, la [retirada de AeroDataBox](docs/etapas/cierre-aerodatabox-20261014.md):
   conservar agregados reportados por aerolínea y rutas observadas BTS; retirar
   estimaciones dependientes de semilla en una migración posterior revisada.
   La propuesta todavía no cambia el dashboard ni autoriza nuevas compras.

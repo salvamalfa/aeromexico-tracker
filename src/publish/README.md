@@ -40,6 +40,16 @@ as — a directory built from `web/` plus the exported v1 payloads. See
   remain byte-identical, validates the completed candidate site before swap,
   and rechecks both the trusted baseline and Analysis Agent approval under the
   ledger lock immediately before the atomic replacement.
+- `--official-routes-only` prepara la retirada de estimaciones sobre el `site/`
+  firmado de un commit fijo de `origin/master`. Revalida las cuatro tesis con
+  la implementación exacta de esa base y el ledger/insumos privados actuales,
+  antes y después del build. Rechaza cambios a análisis, renderer compartido,
+  contratos y Gold oficiales; conserva **todos los datos ajenos a Vuelos byte
+  por byte** y las identidades de aprobación. Solo reconstruye las vistas de
+  rutas oficiales. Así no crea tesis nuevas ni reutiliza aprobaciones para
+  números o prosa distintos. El modo normal conserva su control estricto de
+  versión de implementación. La variante no despacha Pages ni Railway: la
+  integración/publicación de esta retirada requiere aprobación del dueño.
 - `manifest.py`: builds and (de)serializes `publication_manifest.json` —
   the code commit (`git rev-parse HEAD`), each `contracts/web/*` file's own
   SHA-256 (its "version"), every other file under `site/` with its

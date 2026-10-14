@@ -204,9 +204,7 @@ def test_matrix_covers_each_frozen_business_case_and_future_gates():
 
 def test_matrix_is_generated_from_exact_frozen_questions_and_expectations():
     fixture = json.loads((ROOT / "tests/fixtures/chat_evals/business_proposed.json").read_text())
-    actual = render_matrix(fixture)
-    frozen = MATRIX.read_text(encoding="utf-8")
-    assert actual.split("## Presupuesto")[0] == frozen.split("## Presupuesto")[0]
+    assert MATRIX.read_text(encoding="utf-8") == render_matrix(fixture)
     for case in fixture["cases"]:
         assert f"| {case['id']} |" in MATRIX.read_text(encoding="utf-8")
         assert f"`{case['expected']['status']}` · `{case['expected']['behavior']}`" in MATRIX.read_text(

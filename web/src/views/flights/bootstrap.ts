@@ -13,7 +13,7 @@
 import Plotly from "../../lib/plotly";
 import { $ } from "./dom";
 import { currentPeriodId, subscribe } from "../../state/period";
-import { domesticAvailableForQuarter, loadQuarters, state } from "./state";
+import { loadQuarters, state } from "./state";
 import { renderQuarter } from "./quarter";
 import { renderMix } from "./mix";
 import { renderNetworkPeriod, renderRouteMode } from "./network";
@@ -61,10 +61,8 @@ function wireControls(): void {
     if (syncPeriodIndex(periodId)) void renderQuarter();
   });
   $("network-mode-domestic")!.addEventListener("click", async () => {
-    if (domesticAvailableForQuarter(state.quarters[state.periodIndex]!.period_id)) {
-      state.networkMode = "domestic";
-      await renderNetworkPeriod(state.quarters[state.periodIndex]!.period_id);
-    }
+    state.networkMode = "domestic";
+    await renderNetworkPeriod(state.quarters[state.periodIndex]!.period_id);
   });
   $("network-mode-international")!.addEventListener("click", async () => {
     state.networkMode = "international";
