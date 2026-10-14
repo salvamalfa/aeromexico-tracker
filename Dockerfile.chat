@@ -27,7 +27,7 @@ COPY --from=build /opt/venv /opt/venv
 COPY src/__init__.py src/config.py ./src/
 COPY src/conversational_analytics/ ./src/conversational_analytics/
 COPY src/web_export/ ./src/web_export/
-COPY src/dashboard/__init__.py src/dashboard/flights_html.py ./src/dashboard/
+COPY src/dashboard/__init__.py src/dashboard/flights_html.py src/dashboard/official_route_policy.py ./src/dashboard/
 # Copy only the runtime configuration. Candidate evidence and collection
 # inboxes stay out of the image; approval receipts bind the exact owner-reviewed inputs.
 COPY config/chat/*.yaml ./config/chat/

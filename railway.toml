@@ -6,6 +6,7 @@
 [build]
 watchPatterns = [
   "Dockerfile.chat",
+  ".dockerignore",
   "railway.toml",
   "pyproject.toml",
   "uv.lock",
@@ -15,6 +16,7 @@ watchPatterns = [
   "src/web_export/**",
   "src/dashboard/__init__.py",
   "src/dashboard/flights_html.py",
+  "src/dashboard/official_route_policy.py",
   "config/chat/**",
   "contracts/chat/**",
   "contracts/web/**",
