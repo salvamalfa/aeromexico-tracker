@@ -521,6 +521,10 @@ def main(argv: list[str] | None = None) -> int:
         help="rebuild the frontend while preserving the exact existing public data and analysis manifest",
     )
     publish_modes.add_argument(
+        "--official-routes-only", action="store_true",
+        help="replace route data while preserving exact trusted non-flight data and currently approved thesis identities",
+    )
+    publish_modes.add_argument(
         "--business-metrics-only",
         action="store_true",
         help="add only the separately approved business-metrics pair to the trusted published data baseline",
@@ -528,7 +532,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        if args.business_metrics_only:
+        if args.official_routes_only:
+            from .official_routes import publish_official_routes_only
+
+            result = publish_official_routes_only(args.records, args.out)
+        elif args.business_metrics_only:
             from .financial_overlay import publish_business_metrics_only
 
             result = publish_business_metrics_only(args.records, args.out)
