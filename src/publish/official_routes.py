@@ -269,6 +269,7 @@ def require_retained_official_metrics(baseline: Path, candidate: Path) -> None:
 def publish_official_routes_only(record_paths: list[Path], out_dir: Path):
     """Prepare a signed candidate; deployment remains a separate approved step."""
     from . import gate
+    from .domestic_schedules import require_domestic_gold_schedules
 
     out_dir = Path(out_dir).resolve()
     manifest_mod.refuse_if_build_inputs_dirty()
@@ -301,6 +302,7 @@ def publish_official_routes_only(record_paths: list[Path], out_dir: Path):
     dist = gate.build_web(gate.WEB_DIR)
     require_type_only_domain_change(PATHS.root, commit)
     require_retained_official_metrics(baseline, dist)
+    require_domestic_gold_schedules(baseline, dist, PATHS.gold)
     if data_identities(dist) != preserved:
         raise gate.PublicationRefused("Route migration changed non-flight data or approved analysis bytes")
     contracts = manifest_mod.contract_hashes()
@@ -311,6 +313,7 @@ def publish_official_routes_only(record_paths: list[Path], out_dir: Path):
         if data_identities(candidate) != preserved:
             raise ValueError("Candidate changed a trusted non-flight data file")
         require_retained_official_metrics(baseline, candidate)
+        require_domestic_gold_schedules(baseline, candidate, PATHS.gold)
         problems = verify_site(candidate)
         if problems:
             raise ValueError(f"Official-route candidate failed verification: {problems[:3]}")

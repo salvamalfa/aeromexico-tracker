@@ -46,7 +46,10 @@ as — a directory built from `web/` plus the exported v1 payloads. See
   antes y después del build. Rechaza cambios a análisis, renderer compartido,
   contratos y Gold oficiales; conserva **todos los datos ajenos a Vuelos byte
   por byte** y las identidades de aprobación. Solo reconstruye las vistas de
-  rutas oficiales. Así no crea tesis nuevas ni reutiliza aprobaciones para
+  rutas oficiales. La programación nacional se verifica por ruta, dirección y
+  meses directamente contra Gold, junto con sus etiquetas y el listado completo
+  de periodos/entidades; no depende del constructor que genera el candidato.
+  Así no crea tesis nuevas ni reutiliza aprobaciones para
   números o prosa distintos. El modo normal conserva su control estricto de
   versión de implementación. La variante no despacha Pages ni Railway: la
   integración/publicación de esta retirada requiere aprobación del dueño.
