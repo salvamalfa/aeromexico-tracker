@@ -1,0 +1,48 @@
+{
+  "fecha_revision": "2026-10-13",
+  "source_commit": "ea88008cedc7827c58f616d89de65d34e787899d",
+  "catalogo_fuentes": 29,
+  "metricas_dimension": 99,
+  "metricas_seleccionadas_dashboard": 34,
+  "metricas_presentes_fact_carrier_metrics": 93,
+  "tablas_gold_versionadas": 43,
+  "alcance": "Metadatos de archivos Gold ya públicos; no incorpora cubos privados ni observaciones nuevas. Los extremos léxicos en tablas-publicas.csv no certifican trimestre completo ni última observación: separar grano y valores observados de pronósticos. Fuentes sin filas carrier pueden alimentar otras tablas; activa no prueba actualización automática.",
+  "archivos": {
+    "fuentes.csv": "eb0c02452ad4d473df1a1c385bbf34cc990ef9c0d1281e3ff9355654afe11693",
+    "metricas.csv": "5ee21410756ad42fec029b24c74ced75eaa91e3c17298c4b852c502f7a5fdcde",
+    "tablas-publicas.csv": "5bf8094ad81211f4d8df25e9645354285c9300f1497411360364ad3962cbfac0"
+  },
+  "aliases_documentales_adicionales": {
+    "afac_od_exclusive_market_inference": {
+      "source_key": "derived_gold",
+      "classification": "inferencia, no observación por operador/ruta",
+      "basis": "src/transform/afac_exclusive_domestic.py; source_catalog.yaml no contiene todavía ese alias; solo se amplía el anexo documental"
+    }
+  },
+  "formulas_documentales_corregidas": {
+    "basis": "src/transform/stage6_facts.py:109-116,530-585 y src/parse/sec/earnings_release.py:51-55; cifras y dimensión Gold sin cambios",
+    "formulas": {
+      "sla_cask": "cask × sqrt(average_stage_length / 1834); NULL si falta etapa; etapa en km > 0",
+      "sla_rask": "rask × sqrt(average_stage_length / 1834); NULL si falta etapa; etapa en km > 0",
+      "rask": "total_revenue / (asm_total × 1.609344) × 100; derivación en centavos USD/ASK-km; se prefiere dato reportado compatible",
+      "cask": "operating_expenses_total / (asm_total × 1.609344) × 100; derivación en centavos USD/ASK-km; se prefiere dato reportado compatible",
+      "cask_ex_fuel": "(operating_expenses_total - jet_fuel_expense) / (asm_total × 1.609344) × 100; centavos USD/ASK-km",
+      "casm": "operating_expenses_total / asm_total × 100; centavos USD por ASM-milla; se conserva definición reportada",
+      "casm_ex_fuel": "(operating_expenses_total - jet_fuel_expense) / asm_total × 100; centavos USD por ASM-milla",
+      "yield": "passenger_revenue / rpm_total × 100; centavos USD por RPM-milla; se conserva definición reportada",
+      "yield_derived": "passenger_revenue / (rpm_total × 1.609344) × 100; centavos USD por RPK-km"
+    }
+  },
+  "procedencia_documental_heredada": {
+    "fact_route_traffic_summary": {
+      "sources": [
+        "bts_t100"
+      ],
+      "parents": [
+        "fact_route_traffic",
+        "dim_route"
+      ],
+      "basis": "src/dashboard/prepare.py:20-30; source_system no materializado en salida"
+    }
+  }
+}

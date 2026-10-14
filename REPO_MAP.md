@@ -3,6 +3,12 @@
 Qué vive dónde, comandos clave y recetas paso a paso para los cambios más
 comunes. Ver también `CLAUDE.md`, `AGENTS.md`, `CHANGELOG.md` y `ROADMAP.md`.
 
+Para diseñar los siguientes lotes de datos, ver el
+[catálogo de fuentes/métricas y calendario](docs/catalogo-fuentes-calendario.md)
+y la [propuesta de salida de AeroDataBox](docs/plan-salida-aerodatabox.md).
+Son entregables documentales de fase 1; no sustituyen contratos ni ejecutan
+actualizaciones.
+
 ## Qué vive dónde
 
 | Área | Módulos | Rol |

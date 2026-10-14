@@ -4,13 +4,20 @@ Propuesta — el dueño decide prioridades.
 
 ## Ahora
 
+- Fase 1 de actualización por lotes: revisar el
+  [catálogo de fuentes/métricas y calendario](docs/catalogo-fuentes-calendario.md).
+  Una ronda mensual desde el 15 y una trimestral según publicaciones reales;
+  propuesta documental, sin coordinador ni nuevas automatizaciones.
+
 - Ciclo de análisis de 3T26 con el Analysis Agent (evidencia, cálculo,
   revisión y aprobación) una vez publicados los reportes trimestrales de
   Aeroméxico.
 - Refresco manual de AFAC (rezago típico 27–36 días tras el cierre de mes);
   agosto de 2026 se esperaba entre el 28 de septiembre y el 2 de octubre.
-- Mantener la cobertura internacional de Vuelos (AeroDataBox) al día, con la
-  ventana histórica de captura y las marginales AFAC ajustadas mes a mes.
+- Preparar la [continuidad de Vuelos sin capturas AeroDataBox recurrentes](docs/plan-salida-aerodatabox.md):
+  conservar agregados reportados por aerolínea y rutas observadas BTS; retirar
+  estimaciones dependientes de semilla en una migración posterior revisada.
+  La propuesta todavía no cambia el dashboard ni autoriza nuevas compras.
 
 ## Siguiente
 
