@@ -50,6 +50,14 @@ prioridades es un comodín de política, no otra fuente descargable. Todos los
 identificadores de fuente de las tablas inventariadas quedan mapeados en el
 anexo, con esa excepción de metadatos distinguida.
 
+Las fórmulas unitarias del anexo se contrastan con `stage6_facts.py` y las
+definiciones de parseo: SLA aplica `métrica × sqrt(etapa_km / 1834)` y conserva
+N/D si falta etapa; CASM usa ASM-milla y Yield reportado RPM-milla. Las
+derivaciones por kilómetro explicitan el factor 1,609344 y ×100 para centavos.
+`inventario.json` registra las correcciones documentales frente a fórmulas
+genéricas de la dimensión; **no se modifican Gold, código, cifras ni unidades
+reportadas**. Comparar siempre definición y denominador de la fuente.
+
 Se distinguen cuatro fechas: **periodo del dato, publicación del documento,
 captura y aceptación/publicación del tracker**. Un anuncio o una llamada de
 resultados no es el estado financiero. Una fecha de modificación del portal
