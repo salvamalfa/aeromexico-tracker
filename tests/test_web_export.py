@@ -144,3 +144,16 @@ def test_real_warehouse_has_all_four_required_flight_inputs() -> None:
     """With the local data restore in place, require_inputs must not raise."""
 
     require_inputs("flights")
+
+
+@pytest.mark.local_data
+def test_native_official_schedule_quarter_remains_queryable_with_monthly_files(tmp_path, flight_payload):
+    export_flights(flight_payload, tmp_path)
+    assert (tmp_path / "flights/domestic/2026Q2.json").is_file()
+    import json
+    quarter = json.loads((tmp_path / "flights/domestic/2026Q2.json").read_text())
+    assert quarter["mode"] == "scheduled_domestic"
+    assert quarter["observed_months"] == []
+    assert quarter["availability"] == "partial"
+    assert all(route["operation_status"] == "assigned_slot_not_flown" for route in quarter["routes"])
+    assert all(route["passengers"] is route["seats"] is route["load_factor"] is None for route in quarter["routes"])

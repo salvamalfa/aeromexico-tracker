@@ -151,7 +151,8 @@ def integration_flight_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "domestic_networks": {
             period_id: network(value)
             for period_id, value in payload.get("domestic_networks", {}).items()
-        } if not monthly_domestic else {},
+            if not monthly_domestic or value.get("mode") == "scheduled_domestic"
+        },
         "domestic_monthly_networks": monthly_domestic,
         **({"entity_networks": entity_networks} if entity_networks else {}),
     }
