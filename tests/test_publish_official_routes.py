@@ -53,7 +53,7 @@ def test_route_gate_rejects_changed_official_values_even_with_unchanged_aggregat
     old = tmp_path / "old"; new = tmp_path / "new"
     route = {"market_key":"LAX<>MEX", "source_label":"Estados Unidos · BTS T-100",
              "operation_status":"operated_observed", "passengers":10,"seats":20,
-             "departures":1,"load_factor":.5,"origin":{"iata":"MEX"},"destination":{"iata":"LAX"},"previous":{}}
+             "departures":1,"load_factor":.5,"passengers_estimated":False,"capacity_estimated":False,"origin":{"iata":"MEX"},"destination":{"iata":"LAX"},"previous":{}}
     for root in (old,new):
         base = root / "data/v1/flights"; (base / "international").mkdir(parents=True)
         (base / "quarters.json").write_text(json.dumps({"quarters":[],"monthly_passengers":{},"route_network":{}}))
@@ -104,7 +104,7 @@ def test_restored_directions_require_exact_trusted_gold_and_aena_stays_unchanged
     route={'market_key':'AMS<>MEX','source_label':'AICM · vuelos AM programados',
            'operation_status':'assigned_slot_not_flown','passengers':1000,'seats':2000,
            'departures':182,'load_factor':.5,'origin':{'iata':'AMS'},'destination':{'iata':'MEX'},
-           'passengers_estimated':True,'capacity_estimated':True,'directions':[],'previous':{}}
+           'passengers_estimated':True,'capacity_estimated':True,'coverage_note':'AICM · programado','directions':[],'previous':{}}
     for root in (old,new):
         base=root/'data/v1/flights';(base/'international').mkdir(parents=True)
         (base/'quarters.json').write_text(json.dumps({'quarters':[],'monthly_passengers':{},'route_network':{}}))
