@@ -58,9 +58,7 @@ const SOURCE_SHORT_LABELS: Record<string, string> = {
   "Colombia · Aerocivil": "Aerocivil",
   "AIFA · ruta de Aeroméxico identificada; volumen propio sin desglose": "AIFA",
   "AFAC · mercado con Aeroméxico como único operador identificado": "AFAC",
-  "AFAC + AeroDataBox + flota Aeroméxico · estimaciones": "AFAC + AeroDataBox + flota (estimación)",
   "OMA · rutas documentadas": "OMA",
-  "AFAC + AeroDataBox · Grupo Aeroméxico estimado": "AFAC + AeroDataBox (estimación)",
   "Reino Unido · CAA": "CAA",
 };
 

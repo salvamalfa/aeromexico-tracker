@@ -25,14 +25,13 @@ def _load_fixture(name: str) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def test_web_inputs_config_declares_the_four_estimate_tables() -> None:
+def test_web_inputs_require_official_gold_and_no_private_estimates() -> None:
     config = load_web_inputs_config()
     required = set(config["views"]["flights"]["required_for_publish"])
     assert required == {
-        "data/gold/fact_route_carrier_domestic_estimate.parquet",
-        "data/gold/fact_aeromexico_domestic_capacity_estimate.parquet",
-        "data/gold/fact_route_carrier_international_estimate.parquet",
-        "data/gold/fact_aeromexico_international_capacity_estimate.parquet",
+        "data/gold/fact_route_traffic.parquet",
+        "data/gold/fact_route_traffic_summary.parquet",
+        "data/gold/dim_airport.parquet",
     }
 
 

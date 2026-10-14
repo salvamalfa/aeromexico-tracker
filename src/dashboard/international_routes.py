@@ -273,22 +273,6 @@ def extend_networks(connection, networks):
         "SELECT count(*) FROM information_schema.tables WHERE table_name='fact_oma_documented_routes'"
     ).fetchone()[0]
     oma = connection.execute("SELECT * FROM fact_oma_documented_routes").df() if has_oma else pd.DataFrame()
-    has_estimate = connection.execute(
-        f"SELECT count(*) FROM information_schema.tables WHERE table_name='{ESTIMATE_TABLE}'"
-    ).fetchone()[0]
-    estimates = (
-        connection.execute(f"SELECT * FROM {ESTIMATE_TABLE} WHERE carrier_key IN {ESTIMATED_CARRIERS}").df()
-        if has_estimate
-        else pd.DataFrame()
-    )
-    has_capacity = connection.execute(
-        f"SELECT count(*) FROM information_schema.tables WHERE table_name='{CAPACITY_TABLE}'"
-    ).fetchone()[0]
-    capacity = (
-        connection.execute(f"SELECT * FROM {CAPACITY_TABLE} WHERE carrier_key IN {ESTIMATED_CARRIERS}").df()
-        if has_capacity
-        else pd.DataFrame()
-    )
     airports = connection.execute("SELECT * FROM dim_airport").df().set_index("airport_iata").to_dict("index")
 
     def endpoint(code):
@@ -501,91 +485,6 @@ def extend_networks(connection, networks):
                             agent_eligible=False,
                         )
                     )
-        # Estimated passengers fill only what no source measured. An observed
-        # market keeps its observation; a market with flights but no
-        # passengers gains the estimate beside its own flights; a market no
-        # source quantified is added, labelled as an estimate throughout.
-        for market, estimate in _estimated_routes(estimates, capacity, months, endpoint).items():
-            matching = next((r for r in network["routes"] if r["market_key"] == market), None)
-            months_text = ", ".join(sorted({m["period_id"][5:] for m in estimate["monthly"]}))
-            note = f"Pasajeros estimados de Grupo Aeroméxico (AFAC + AeroDataBox) · meses {months_text}"
-            if matching is not None and matching.get("passengers") is not None:
-                continue
-            payload = {k: estimate[k] for k in ROUTE_PAYLOAD_KEYS}
-            if matching is not None:
-                # The estimate covers only the months the route's own source
-                # covers, so passengers and flights describe the same window
-                # (CAA reports June alone; a quarter of passengers beside a
-                # month of flights would read as a load factor it is not).
-                own_months = set(
-                    matching.get("observed_months") or matching.get("scheduled_months") or months
-                )
-                monthly = [item for item in estimate["monthly"] if item["period_id"] in own_months]
-                if not monthly:
-                    continue
-                payload["monthly"] = monthly
-                payload["months_covered"] = len({item["period_id"] for item in monthly})
-                # Seats and occupancy are recomputed from just this route's own
-                # months: a route only priced from June onward must not read
-                # its completeness off the whole quarter's estimate.
-                for key, value in _route_capacity_metrics(monthly).items():
-                    payload[key] = value
-                # Each measured direction takes its own estimate, so the
-                # directions still add up to the route they belong to
-                # (passengers always; seats and occupancy whenever this
-                # route's own months make that direction's capacity usable).
-                by_direction = {}
-                by_direction_items = {}
-                for item in monthly:
-                    key = (item["origin_iata"], item["destination_iata"])
-                    by_direction_items.setdefault(key, []).append(item)
-                    sums = by_direction.setdefault(
-                        key, dict(passengers=0.0, passengers_low=0.0, passengers_high=0.0)
-                    )
-                    for metric in sums:
-                        sums[metric] += item[metric]
-                for direction in matching["directions"]:
-                    key = (direction["origin_iata"], direction["destination_iata"])
-                    direction.update(
-                        by_direction.get(key, dict(passengers=0.0, passengers_low=0.0, passengers_high=0.0))
-                    )
-                    direction_capacity = _route_capacity_metrics(by_direction_items.get(key, []))
-                    for metric in (
-                        "seats",
-                        "seats_low",
-                        "seats_high",
-                        "load_factor",
-                        "load_factor_low",
-                        "load_factor_high",
-                    ):
-                        direction[metric] = direction_capacity[metric]
-                matching.update(payload)
-                for metric in ("passengers", "passengers_low", "passengers_high"):
-                    matching[metric] = float(sum(d[metric] for d in matching["directions"]))
-                matching["coverage_note"] += (
-                    " · Pasajeros estimados de Grupo Aeroméxico (AFAC + AeroDataBox) · meses "
-                    + ", ".join(sorted({m["period_id"][5:] for m in monthly}))
-                )
-                continue
-            network["routes"].append(
-                dict(
-                    market_key=market,
-                    origin=estimate["origin"],
-                    destination=estimate["destination"],
-                    **payload,
-                    departures=round(estimate["departures_estimated_seed"]),
-                    previous={k: None for k in ("passengers", "seats", "departures")},
-                    directions=[],
-                    source_label=ESTIMATED_LABEL,
-                    observed_months=[],
-                    estimated_months=sorted({m["period_id"] for m in estimate["monthly"]}),
-                    coverage_note=note + " · vuelos: frecuencias de AeroDataBox",
-                    operation_status="estimated_from_afac_margins_and_aerodatabox_seed",
-                    carrier_role="operating_carrier_estimated",
-                    marketing_carrier=None,
-                    agent_eligible=False,
-                )
-            )
         # Aena's company exports identify an airport, not the Mexican endpoint.
         # Present them alongside the map, never as a carrier-route observation.
         activity = []
@@ -640,9 +539,6 @@ def extend_networks(connection, networks):
             )
             for label in sorted({r["source_label"] for r in network["routes"]})
         }
-        network["estimated_passenger_route_count"] = sum(
-            bool(r.get("passengers_estimated")) for r in network["routes"]
-        )
         # Different source windows and metric populations cannot form a worldwide total.
         network["totals"] = {k: None for k in ("passengers", "seats", "departures")}
         network["agent_eligible"] = False

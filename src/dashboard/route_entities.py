@@ -1,13 +1,7 @@
-"""Which carriers each Vuelos map entity covers (Dashboard v2, fase 3).
+"""Carrier groups for official BTS route views and retained historical analysis.
 
-Grupo Aeroméxico keeps every source and layer the page has always shown.
-Volaris, Viva and Industria (the three together) show, by the owner's
-decision of 30 Sep 2026: domestic routes estimated from AFAC + AeroDataBox
-(IPF), Mexico–United States observed by BTS T-100, and the rest of the
-international network estimated. They carry no Aeroméxico-only layer
-(AICM slots, AIFA single-operator markets, OMA releases, ANAC/Aerocivil/
-CAA/Aena authority observations). Their seat capacity (fase 4) is the
-fleet-average estimate of ``src.analytics.fleet_capacity``.
+The active dashboard uses t100_carriers; estimate/fleet identifiers support
+archived local derivations and do not grant active route coverage.
 """
 
 from __future__ import annotations

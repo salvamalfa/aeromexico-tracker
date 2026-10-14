@@ -81,8 +81,8 @@ describe("renderNetworkVolume (observed vs scheduled vs inferred flights)", () =
     const html = document.getElementById("network-volume")!.innerHTML;
     expect(html).toContain("<strong>1,000</strong>");
     expect(html).not.toContain("1,370");
-    expect(html).toContain("<small>Vuelos</small>");
-    expect(html).toContain("obs. · 1/4 rutas");
+    expect(html).toContain("<small>Vuelos realizados</small>");
+    expect(html).toContain("obs. · cobertura parcial · 1 rutas");
   });
 
   it("does not add presence-only routes to the observed total", () => {

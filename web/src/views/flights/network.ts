@@ -62,13 +62,13 @@ export function renderRouteMode(): void {
   const totalPassengers = all.reduce((sum, route) => sum + (finite(route.passengers) ? route.passengers : 0), 0);
   const shownPassengers = visible.reduce((sum, route) => sum + (finite(route.passengers) ? route.passengers : 0), 0);
   const share = totalPassengers > 0 && state.networkMode === "domestic"
-    ? ` · ${Math.round(shownPassengers / totalPassengers * 100)}% de los pasajeros estimados de la red` : "";
+    ? ` · ${Math.round(shownPassengers / totalPassengers * 100)}% de los pasajeros observados de la red` : "";
   const presence = state.presenceOnlyRouteCount > 0
     ? ` · ${state.presenceOnlyRouteCount} sin volumen atribuible` : "";
   const periodId = state.quarters[state.periodIndex]?.period_id ?? "";
   const previousLabel = state.byPeriod.get(priorPeriod(periodId, 1))?.period_label ?? "el año anterior";
   $("map-route-title")!.textContent = state.routeView === "change"
-    ? "Rutas con mayores cambios" : "Destinos que concentran el volumen";
+    ? "Rutas con mayores cambios" : "Rutas con datos oficiales";
   $("map-route-summary")!.textContent = state.routeView === "change"
     ? `${visible.filter((route) => routeChangePercent(route)! > 0).length} aumentos · ${visible.filter((route) => routeChangePercent(route)! < 0).length} caídas vs. ${previousLabel} · mismos meses disponibles`
     : `${visible.length} de ${all.length} rutas con volumen visible${state.routeView === "volume" ? share : ""}${presence}`;
@@ -96,8 +96,11 @@ export function routeTitle(route: Route): string {
   return `${cityLabel(route.origin.city || route.origin.iata)} ↔ ${cityLabel(route.destination.city || route.destination.iata)}`;
 }
 
-function domesticPeriodNetwork(periodId: string): PeriodNetworkDocument | undefined {
-  return aggregateDomesticMonths([...state.selectedDomesticMonths]) ?? state.domesticNetworks.get(periodId);
+function domesticPeriodNetwork(periodId: string): PeriodNetworkDocument {
+  return aggregateDomesticMonths([...state.selectedDomesticMonths]) ?? state.domesticNetworks.get(periodId) ?? {
+    mode: "scheduled_domestic", period_label: state.byPeriod.get(periodId)?.period_label ?? periodId,
+    expected_months: [], observed_months: [], availability: "unavailable", routes: [], airports: [],
+  };
 }
 
 function internationalPeriodNetwork(periodId: string): PeriodNetworkDocument {
@@ -113,29 +116,25 @@ function internationalPeriodNetwork(periodId: string): PeriodNetworkDocument {
 
 // Dashboard v2 (fase 3): what the map shows for each entity.
 function entityScopeNote(entity: string, domestic: boolean): string {
-  if (entity === "AEROMEXICO") {
-    return domestic
-      ? "Grupo Aeroméxico · combina Aerovías de México y Aeroméxico Connect"
-      : "Observado: Aerovías de México · estimaciones por ruta: Grupo Aeroméxico";
-  }
   const label = ENTITY_LABELS[entity as EntityKey] ?? entity;
-  const who = entity === "INDUSTRY" ? "Industria · Aeroméxico, Volaris y Viva sumadas por ruta" : label;
-  const caveat = entity === "VIVA_AEROBUS" && !domestic
-    ? " · estimación internacional con mayor incertidumbre (≈15 % de error medido)"
-    : "";
-  // Fase 4: Volaris/Viva seats = flights × T-100 seats per departure.
-  const seats = " · asientos por promedio de flota (ocupación por ruta ±9 pp)";
-  return domestic
-    ? `${who} · pasajeros y vuelos estimados (AFAC + AeroDataBox)${seats}`
-    : `${who} · EE. UU.: observado (BTS T-100) · resto: estimado${caveat}${seats}`;
+  if (domestic) return `${label} · sin vuelos realizados por ruta disponibles · programación AICM cuando existe`;
+  return entity === "AEROMEXICO"
+    ? "Aerovías de México · BTS, ANAC, Aerocivil y CAA observados · programación AICM/OMA separada · cobertura parcial"
+    : `${label} · México–EE. UU., operador/reportante BTS T-100 · cobertura parcial; meses disponibles por fuente`;
+
 }
 
+let networkRenderRequest = 0;
+
 export async function renderNetworkPeriod(periodId: string): Promise<void> {
+  const request = ++networkRenderRequest;
+  const entity = state.mapEntity;
   await ensureDomesticMonths(monthsInQuarter(state.domesticMonthsQuarterId));
+  if (request !== networkRenderRequest || entity !== state.mapEntity) return;
   const domesticAvailable = domesticAvailableForQuarter(periodId);
-  if (state.networkMode === "domestic" && !domesticAvailable) state.networkMode = "international";
   if (state.networkMode === "domestic") await ensureDomesticQuarter(periodId);
   else await ensureInternational(periodId);
+  if (request !== networkRenderRequest || entity !== state.mapEntity) return;
 
   const periodNetwork =
     state.networkMode === "domestic" ? domesticPeriodNetwork(periodId) : internationalPeriodNetwork(periodId);
@@ -167,7 +166,8 @@ export async function renderNetworkPeriod(periodId: string): Promise<void> {
   // clicables para poder alternar en cualquier sentido, cuantas veces sea.
   const domesticButton = $("network-mode-domestic") as HTMLButtonElement;
   const internationalButton = $("network-mode-international") as HTMLButtonElement;
-  domesticButton.disabled = !domesticAvailable;
+  domesticButton.disabled = false;
+  domesticButton.title = domesticAvailable ? "Programación oficial disponible; ejecución sin verificar" : "Sin vuelos realizados por ruta disponibles; los agregados AFAC se conservan";
   domesticButton.setAttribute("aria-pressed", String(state.networkMode === "domestic"));
   domesticButton.setAttribute("aria-checked", String(state.networkMode === "domestic"));
   internationalButton.setAttribute("aria-pressed", String(state.networkMode === "international"));

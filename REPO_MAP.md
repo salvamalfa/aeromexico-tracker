@@ -5,7 +5,7 @@ comunes. Ver también `CLAUDE.md`, `AGENTS.md`, `CHANGELOG.md` y `ROADMAP.md`.
 
 Para diseñar los siguientes lotes de datos, ver el
 [catálogo de fuentes/métricas y calendario](docs/catalogo-fuentes-calendario.md)
-y la [propuesta de salida de AeroDataBox](docs/plan-salida-aerodatabox.md).
+y el [cierre de AeroDataBox con capturas](docs/etapas/cierre-aerodatabox-20261014.md).
 Son entregables documentales de fase 1; no sustituyen contratos ni ejecutan
 actualizaciones.
 
@@ -137,12 +137,15 @@ un payload JSON, no HTML/CSS; el maquetado vive solo en `web/src/views/flights/t
 6. Corre `uv run pytest -q tests/test_international_routes.py tests/test_aicm_international_slots.py`
    y, en `web/`, `npm run check && npm run test`.
 
-### c) Agregar un nuevo mes de datos
+### c) Actualizar datos de Vuelos
 
-Sigue `docs/etapas/aerodatabox-agosto-captura-20260925.md` paso a paso
-(flujo privado AeroDataBox → repo de datos → `data/gold/` → warehouse →
-Vuelos → publicación). Ese documento es la referencia operativa; no la
-dupliques aquí.
+Seguir el [catálogo y calendario](docs/catalogo-fuentes-calendario.md) para las
+ediciones oficiales y reconstruir offline los Gold correspondientes.
+`config/web_inputs.yaml` exige tráfico BTS y aeropuertos; las cuatro
+estimaciones privadas históricas no son entradas de exportación. Los generadores
+activos conservan cada fuente en su grano y meses, sin enriquecimiento IPF.
+La historia del proveedor queda en el
+[cierre con capturas](docs/etapas/cierre-aerodatabox-20261014.md).
 
 ### d) Retomar trabajo pendiente
 

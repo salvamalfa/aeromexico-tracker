@@ -29,7 +29,7 @@ function routeRows(routes: Route[]): string {
       : index === 0 ? '<li class="executive-route-group">Aumentan</li>'
       : isDown && !downStarted ? '<li class="executive-route-group">Caen</li>' : "";
     if (isDown) downStarted = true;
-    const flights = finite(route.departures) ? integer.format(route.departures) : "N/D";
+    const flights = finite(route.departures) ? integer.format(route.departures) + (SCHEDULED_STATUSES.includes(route.operation_status ?? "") ? " prog." : "") : "N/D";
     const flightKind = route.operation_status && SCHEDULED_STATUSES.includes(route.operation_status)
       ? "programados" : route.capacity_estimated ? "estimados" : "observados";
     const occupancy = finite(route.load_factor) ? formatRouteMetric("load_factor", route.load_factor) : "N/D";
@@ -69,7 +69,7 @@ function render(title: string, routes: Route[], airportSelected: boolean): void 
   host.innerHTML = `<div class="airport-title-row"><h3>${esc(title)}</h3>${searchButton()}</div>
     ${searchBox()}
     ${airportSelected ? '<button type="button" class="route-overview-back" id="route-overview-back">← Toda la red</button>' : ""}
-    ${routes.length ? `<div class="executive-route-columns"><span>Ruta</span><span>Pasajeros</span><span>Vuelos</span><span>Ocupación</span></div><ol class="executive-route-list">${routeRows(routes)}</ol>` : '<p class="airport-tooltip-empty">No hay rutas con volumen atribuible en esta selección.</p>'}
+    ${routes.length ? `<div class="executive-route-columns"><span>Ruta</span><span>Pasajeros</span><span>Vuelos</span><span>Ocupación</span></div><ol class="executive-route-list">${routeRows(routes)}</ol>` : '<p class="airport-tooltip-empty">Sin vuelos realizados por ruta disponibles en esta selección. Los pasajeros agregados reportados se conservan.</p>'}
     ${sourceFooterHtml(routes)}`;
   bindAirportSearchControls();
   $("route-overview-back")?.addEventListener("click", () => {

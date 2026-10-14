@@ -52,7 +52,7 @@ export function renderNetworkVolume(): void {
 
   const domestic = state.networkMode === "domestic";
   const flightRoutes = routes.filter((route) =>
-    finite(route.departures) && (domestic ? route.capacity_estimated :
+    finite(route.departures) && (
       !route.passengers_estimated && !SCHEDULED_STATUSES.includes(route.operation_status ?? "") &&
       route.operation_status !== "carrier_inferred_market_observed")
   );
@@ -62,7 +62,7 @@ export function renderNetworkVolume(): void {
   const occupancyRoutes = routes.filter((route) =>
     finite(route.passengers) && finite(route.seats) && route.seats > 0 &&
     finite(route.load_factor) && route.load_factor >= 0 && route.load_factor <= 1 &&
-    (domestic ? route.capacity_estimated : !route.passengers_estimated &&
+    (!route.passengers_estimated &&
       !SCHEDULED_STATUSES.includes(route.operation_status ?? "") &&
       route.operation_status !== "carrier_inferred_market_observed")
   );
@@ -73,7 +73,7 @@ export function renderNetworkVolume(): void {
   host.innerHTML = `<div class="network-mini-heading"><span>Red ${networkLabel}</span><span>${esc(period)}</span></div>
     <div class="network-mini-kpi-grid">
       ${miniCard("Pasajeros", passengers === null ? "N/D" : integer.format(passengers), `AFAC · ${state.mapEntity === "AEROMEXICO" ? "Grupo" : ENTITY_LABELS[state.mapEntity as EntityKey] ?? state.mapEntity}`, `Total trimestral ${networkLabel} de AFAC; coincide con Mezcla nacional e internacional. El detalle por ruta tiene otra cobertura.`)}
-      ${miniCard("Vuelos", flightRoutes.length ? integer.format(flights) : "N/D", `${domestic ? "est." : "obs."} · ${flightRoutes.length}/${routes.length} rutas`, `${domestic ? "Estimación" : state.mapEntity === "AEROMEXICO" ? "Vuelos observados de Aerovías de México" : "Vuelos observados por BTS T-100"} en ${flightRoutes.length} rutas con dato; no representa necesariamente toda la red.`)}
-      ${miniCard("Ocupación", occupancy, `${domestic ? "est." : "obs."} · ${occupancyRoutes.length}/${routes.length} rutas`, `Pasajeros ÷ asientos en ${occupancyRoutes.length} rutas con ambos datos compatibles. No es la ocupación de toda la red.`)}
+      ${miniCard("Vuelos realizados", flightRoutes.length ? integer.format(flights) : "N/D", `obs. · cobertura parcial · ${flightRoutes.length} rutas`, `${state.mapEntity === "AEROMEXICO" ? "Vuelos observados de Aerovías de México" : "Vuelos observados por BTS T-100"} en ${flightRoutes.length} rutas con dato; no representa necesariamente toda la red.`)}
+      ${miniCard("Ocupación", occupancy, `obs. · ${occupancyRoutes.length}/${routes.length} rutas`, `Pasajeros ÷ asientos en ${occupancyRoutes.length} rutas con ambos datos compatibles. No es la ocupación de toda la red.`)}
     </div>`;
 }

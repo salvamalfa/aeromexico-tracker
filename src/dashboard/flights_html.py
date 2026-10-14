@@ -95,6 +95,9 @@ def integration_flight_payload(payload: dict[str, Any]) -> dict[str, Any]:
         }
 
     def network(value: dict[str, Any]) -> dict[str, Any]:
+        from src.dashboard.official_route_policy import official_network
+
+        value = official_network(value)
         return {
             key: value[key]
             for key in ("period_label", "expected_months", "observed_months")

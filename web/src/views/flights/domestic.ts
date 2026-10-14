@@ -3,7 +3,7 @@
 
 import { finite } from "./dom";
 import { DOMESTIC_MONTH_NAMES, monthsInQuarter, state } from "./state";
-import type { Airport, PeriodNetworkDocument, Route, RouteDirection } from "../../types/domain";
+import type { Airport, PeriodNetworkDocument, Route } from "../../types/domain";
 
 // Describe el periodo nacional mostrado, p. ej. "abril–junio 2026 ·
 // 3 meses seleccionados" o, si el trimestre solo tiene datos para parte de
@@ -23,127 +23,36 @@ export function domesticPeriodLabel(monthIds: string[], quarterId: string | null
   return label;
 }
 
-interface DomesticAggregate {
-  market_key: string;
-  origin: Airport;
-  destination: Airport;
-  passengers: number;
-  passengers_low: number | null;
-  passengers_high: number | null;
-  monthsCovered: number;
-  seats: number;
-  departures: number;
-  capacityMonthsCovered: number;
-  source_label?: string;
-  monthly: RouteDirection[];
-  repaired: boolean;
-  breakdown: Record<string, number> | null;
-}
-
-// Combina los meses nacionales seleccionados en un agregado de Grupo
-// Aeroméxico: pasajeros, vuelos y asientos suman; la ocupación se calcula
-// con los totales (nunca promediando porcentajes mensuales); una ruta sin
-// datos en alguno de los meses conserva los que sí tiene sin rellenar con
-// cero, y su ocupación solo se muestra cuando la cobertura de pasajeros y
-// de capacidad coincide exactamente en los mismos meses.
+// Official scheduling months are aggregated independently from performed flights.
+// A missing metric stays N/D; it is never supplied by a historical seed.
 export function aggregateDomesticMonths(monthIds: string[]): PeriodNetworkDocument | null {
   const sorted = [...monthIds].sort();
-  const monthNetworks = sorted
-    .map((id) => state.domesticMonthlyNetworks.get(id))
-    .filter((network): network is PeriodNetworkDocument => Boolean(network));
-  if (!monthNetworks.length) return null;
-  // El punto de cobertura por ruta siempre se mide contra los meses de
-  // calendario del trimestre completo (igual que en Internacional), no
-  // contra la selección manual actual: así no cambia de color solo
-  // porque el usuario deselecciona un mes.
-  const quarterMonths = monthsInQuarter(state.domesticMonthsQuarterId);
-  const quarterCoverage = new Map<string, number>();
-  for (const monthId of quarterMonths) {
-    const monthNetwork = state.domesticMonthlyNetworks.get(monthId);
-    if (!monthNetwork) continue;
-    for (const route of monthNetwork.routes || []) {
-      if (!finite(route.passengers)) continue;
-      quarterCoverage.set(route.market_key, (quarterCoverage.get(route.market_key) || 0) + 1);
-    }
+  const networks = sorted.map((id) => state.domesticMonthlyNetworks.get(id));
+  if (!networks.length || networks.some((network) => !network)) return null;
+  const markets = new Set(networks.flatMap((network) => network!.routes.map((route) => route.market_key)));
+  const routes: Route[] = [];
+  const airports = new Map<string, Airport>();
+  for (const market of markets) {
+    const parts = networks.map((network) => network!.routes.find((route) => route.market_key === market));
+    const base = parts.find((route) => route)!;
+    const sum = (key: "passengers" | "seats" | "departures"): number | null =>
+      parts.every((route) => route && finite(route[key]))
+        ? parts.reduce((total, route) => total + route![key]!, 0) : null;
+    const route: Route = {
+      ...base, passengers: sum("passengers"), seats: sum("seats"), departures: sum("departures"),
+      load_factor: null, previous: { passengers: null, seats: null, departures: null },
+      months_covered: parts.filter(Boolean).length, months_selected: 3,
+      coverage_note: "Meses programados: " + sorted.map((id) => id.slice(5)).join(", ") +
+        " · AICM · ejecución sin verificar",
+      directions: [], monthly: [],
+    };
+    routes.push(route);
+    for (const airport of [route.origin, route.destination]) airports.set(airport.iata, airport);
   }
-  const byMarket = new Map<string, DomesticAggregate>();
-  const airportsByIata = new Map<string, Airport>();
-  for (const monthNetwork of monthNetworks) {
-    for (const airport of monthNetwork.airports || []) airportsByIata.set(airport.iata, airport);
-    for (const route of monthNetwork.routes || []) {
-      if (!finite(route.passengers)) continue;
-      let agg = byMarket.get(route.market_key);
-      if (!agg) {
-        agg = {
-          market_key: route.market_key, origin: route.origin, destination: route.destination,
-          passengers: 0, passengers_low: 0, passengers_high: 0, monthsCovered: 0,
-          seats: 0, departures: 0, capacityMonthsCovered: 0,
-          source_label: route.source_label, monthly: [], repaired: false,
-          breakdown: route.carrier_breakdown ? {} : null,
-        };
-        byMarket.set(route.market_key, agg);
-      }
-      agg.passengers += route.passengers;
-      // Un mes sin rango de sensibilidad (p. ej. una celda reparada por IPF,
-      // que pierde la identidad del escenario) invalida el rango agregado
-      // completo: no se sustituye por el punto central ni se ignora el mes,
-      // porque cualquiera de las dos fabricaría un ancho que la fuente no
-      // respalda. Ver dom.ts::sensitivityRange.
-      agg.passengers_low =
-        finite(agg.passengers_low) && finite(route.passengers_low) ? agg.passengers_low! + route.passengers_low! : null;
-      agg.passengers_high =
-        finite(agg.passengers_high) && finite(route.passengers_high) ? agg.passengers_high! + route.passengers_high! : null;
-      agg.monthsCovered += 1;
-      agg.repaired = agg.repaired || Boolean(route.support_repair_applied);
-      if (route.capacity_estimated && finite(route.seats) && finite(route.departures)) {
-        agg.seats += route.seats;
-        agg.departures += route.departures;
-        agg.capacityMonthsCovered += 1;
-      }
-      agg.monthly.push(...(route.monthly || []));
-      // Industria: each airline's passengers add up across the months too.
-      if (agg.breakdown && route.carrier_breakdown) {
-        for (const [key, value] of Object.entries(route.carrier_breakdown)) {
-          agg.breakdown[key] = (agg.breakdown[key] ?? 0) + value;
-        }
-      }
-    }
-  }
-  const routes: Route[] = [...byMarket.values()]
-    .map((agg) => {
-      const capacityComplete = agg.capacityMonthsCovered > 0 && agg.capacityMonthsCovered === agg.monthsCovered;
-      const loadFactor = capacityComplete && agg.seats > 0 ? agg.passengers / agg.seats : null;
-      const plausible = finite(loadFactor) && loadFactor <= 1;
-      agg.monthly.sort(
-        (a, b) => a.period_id!.localeCompare(b.period_id!) || a.origin_iata.localeCompare(b.origin_iata)
-      );
-      return {
-        market_key: agg.market_key, origin: agg.origin, destination: agg.destination,
-        passengers: agg.passengers, passengers_low: agg.passengers_low, passengers_high: agg.passengers_high,
-        passengers_estimated: true,
-        seats: capacityComplete ? agg.seats : null,
-        departures: capacityComplete ? agg.departures : null,
-        capacity_estimated: capacityComplete,
-        load_factor: plausible ? loadFactor : null,
-        load_factor_status: !capacityComplete ? "capacity_incomplete" : (plausible ? "estimated" : "inconsistent_inputs"),
-        months_covered: quarterCoverage.get(agg.market_key) || 0, months_selected: quarterMonths.length,
-        capacity_months_covered: agg.capacityMonthsCovered,
-        support_repair_applied: agg.repaired,
-        source_label: agg.source_label,
-        monthly: agg.monthly,
-        ...(agg.breakdown ? { carrier_breakdown: agg.breakdown } : {}),
-        previous: { passengers: null, seats: null, departures: null },
-        directions: [],
-      };
-    })
-    .sort((a, b) => (b.passengers ?? 0) - (a.passengers ?? 0) || a.market_key.localeCompare(b.market_key));
   return {
-    mode: "estimated_domestic",
-    period_label: domesticPeriodLabel(sorted, state.domesticMonthsQuarterId),
-    expected_months: sorted,
-    observed_months: sorted,
-    routes,
-    airports: [...airportsByIata.values()].sort((a, b) => a.iata.localeCompare(b.iata)),
-    agent_eligible: false,
+    mode: "scheduled_domestic", period_label: domesticPeriodLabel(sorted, state.domesticMonthsQuarterId),
+    expected_months: sorted, observed_months: [], availability: "partial", routes,
+    airports: [...airports.values()], agent_eligible: false,
+    eligibility_reason: "Programación AICM; ejecución sin verificar y cobertura nacional parcial.",
   };
 }

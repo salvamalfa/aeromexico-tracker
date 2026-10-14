@@ -176,6 +176,11 @@ class Snapshot:
                 raise SnapshotError(
                     "published business metrics do not match the current approved proposal and receipt"
                 )
+        from src.dashboard.official_route_policy import official_network
+
+        for rel, payload in list(payloads.items()):
+            if rel.startswith("data/v1/flights/") and rel != "data/v1/flights/quarters.json":
+                payloads[rel] = official_network(payload)
         self._payloads = MappingProxyType(payloads)
         self._catalog = self._load_catalog()
         semantic_digest = hashlib.sha256()
@@ -188,6 +193,9 @@ class Snapshot:
             semantic_digest.update(b"\0")
             semantic_digest.update(path.read_bytes())
             semantic_digest.update(b"\0")
+        from src.dashboard import official_route_policy
+
+        semantic_digest.update(Path(official_route_policy.__file__).read_bytes())
         self.semantic_version = semantic_digest.hexdigest()
 
     @staticmethod

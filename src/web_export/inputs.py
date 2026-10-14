@@ -1,11 +1,7 @@
-"""Loud, declared failure for missing private Gold inputs.
+"""Fail explicitly when required official Gold inputs are missing.
 
-Replaces the silent ``if path.exists()`` pattern in
-``src/transform/stage6_warehouse.py`` and ``src/dashboard/*_routes.py`` *for
-the exporter only*: those keep tolerating a missing estimate table so the
-existing HTML build still works in a fresh clone without the private data
-repo. The
-exporter instead refuses to publish an incomplete view.
+Paid-provider estimates are historical optional warehouse extensions, never
+inputs to the active export.
 """
 
 from __future__ import annotations
@@ -20,11 +16,9 @@ from src.config import PATHS
 WEB_INPUTS_PATH = PATHS.root / "config" / "web_inputs.yaml"
 
 RESTORE_HINT = (
-    "Restore it from the private data repo "
-    "github.com/salvamalfa/aeromexico-tracker-data (Git LFS): copy the "
-    "matching file under derived/aerodatabox/ (domestic) or "
-    "derived/aerodatabox_international/ (international) to {path} — see "
-    "docs/etapas/aerodatabox-agosto-captura-20260925.md."
+    "Restore the verified official Gold from the repository or the private "
+    "github.com/salvamalfa/aeromexico-tracker-data snapshot to {path}, or rebuild "
+    "it offline from retained official sources. Paid-provider estimates are not required."
 )
 
 

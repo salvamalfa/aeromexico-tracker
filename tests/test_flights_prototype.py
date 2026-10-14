@@ -56,36 +56,13 @@ def test_monthly_passenger_chart_uses_complete_afac_gold_and_sums_segments(fligh
     assert not any(item["agent_eligible"] for item in series["records"])
 
 
-def test_domestic_passenger_estimates_are_monthly_retrospective_and_bounded(flight_payload) -> None:
-    payload = flight_payload
-    monthly = payload["domestic_monthly_networks"]
-    assert list(monthly) == ["2026M03", "2026M04", "2026M05", "2026M06", "2026M07"]
-    for period_id, network in monthly.items():
-        assert network["period_id"] == period_id
-        assert network["mode"] == "estimated_domestic"
-        assert network["agent_eligible"] is False
-        assert network["observed_months"] == [period_id]
-        assert all(route["passengers_estimated"] for route in network["routes"])
-        # Bounds may be withheld (None) when a cell of the route needed a
-        # support repair; when both are present they must bracket the point.
-        # The bounds and the point are separate float sums over the same
-        # cells, so equality can differ in the last bits (e.g.
-        # 38481.65409295874 vs 38481.654092958735, one ULP apart): allow a
-        # few ULPs of summation rounding and nothing more.
-        for route in network["routes"]:
-            low, high = route["passengers_low"], route["passengers_high"]
-            assert (low is None) == (high is None)
-            if low is not None:
-                slack = 16 * math.ulp(route["passengers"])
-                assert low - slack <= route["passengers"] <= high + slack
-        assert any(route["departures"] is not None for route in network["routes"])
-        assert all(route["departures_estimated"] == route["capacity_complete"]
-                   for route in network["routes"])
-        assert all(route["load_factor"] is None or 0 <= route["load_factor"] <= 1
-                   for route in network["routes"])
-    assert monthly["2026M03"]["routes"][0]["support_repair_applied"] is True
-    assert any(not item["support_observed_in_period"]
-               for route in monthly["2026M07"]["routes"] for item in route["monthly"])
+def test_domestic_views_do_not_publish_retired_model_metrics(flight_payload) -> None:
+    for network in flight_payload["domestic_monthly_networks"].values():
+        assert network["mode"] == "scheduled_domestic"
+        assert network["observed_months"] == []
+        assert all(route["passengers"] is None and route["seats"] is None
+                   and route["load_factor"] is None for route in network["routes"])
+        assert all(route["operation_status"] == "assigned_slot_not_flown" for route in network["routes"])
 
 
 def test_t100_network_is_bounded_and_never_claims_global_coverage(flight_payload) -> None:

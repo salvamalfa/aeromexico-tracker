@@ -1,7 +1,10 @@
 # Continuidad de Airline Tracker sin capturas AeroDataBox recurrentes
 
-Revisión: 13 de octubre de 2026. **Propuesta de alcance y migración; no aplicada
-al dashboard, datos, suscripción ni workflows.** Complementa el
+Revisión de alcance: 13 de octubre de 2026. La retirada está implementada en
+la versión candidata del 14 de octubre, pendiente de aprobación de publicación.
+El [cierre sencillo con capturas](etapas/cierre-aerodatabox-20261014.md) resume
+qué conseguimos y por qué dejamos la API. Las propuestas de captura de este
+plan quedaron abandonadas; no son instrucciones operativas vigentes. Complementa el
 [catálogo y calendario de fase 1](catalogo-fuentes-calendario.md).
 Los detalles de cuenta, saldo y eventual autorización de compra permanecen en
 el expediente privado; no se trasladan a este repositorio público.
