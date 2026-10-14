@@ -40,6 +40,16 @@ y ANAC/Aerocivil/CAA requieren subentradas operativas independientes.
 AeroDataBox es una dependencia privada adicional, tratada en
 [su plan de salida](plan-salida-aerodatabox.md), fuera de esas 29 claves.
 
+El anexo añade a `derived_gold` el alias documental
+`afac_od_exclusive_market_inference`, usado en la tabla pública de inferencias
+de mercados nacionales. No figura todavía en el catálogo técnico: se registra
+esa brecha sin modificar configuración ni datos. Su atribución combina AFAC
+con evidencia fechada de presencia/operador; **es inferencia, no observación
+empresa×ruta ni exclusividad actual garantizada**. El `*` de la tabla de
+prioridades es un comodín de política, no otra fuente descargable. Todos los
+identificadores de fuente de las tablas inventariadas quedan mapeados en el
+anexo, con esa excepción de metadatos distinguida.
+
 Se distinguen cuatro fechas: **periodo del dato, publicación del documento,
 captura y aceptación/publicación del tracker**. Un anuncio o una llamada de
 resultados no es el estado financiero. Una fecha de modificación del portal
