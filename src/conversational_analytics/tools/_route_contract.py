@@ -18,7 +18,7 @@ METRICS = ("passengers", "seats", "departures", "load_factor")
 PERIOD_RE = re.compile(r"^\d{4}(?:M(?:0[1-9]|1[0-2])|Q[1-4])$")
 MAX_TOP_N = 20
 ENTITY_LABELS = {
-    "AEROMEXICO_GROUP": "Grupo Aeroméxico (Aerovías + Connect)",
+    "AEROMEXICO_GROUP": "Grupo Aeroméxico · cobertura por fuente oficial",
     "VOLARIS": "Volaris",
     "VIVA_AEROBUS": "Viva Aerobus",
     "INDUSTRY": "Industria",
@@ -53,7 +53,7 @@ ROUTE_TOOL_SPECS = [
         "description": (
             "Consulta rutas publicadas por tramo, con filtros de aerolínea, segmento y periodo. "
             "Ordena el top N por valor actual o por cambio frente a un periodo comparable. "
-            "Las estimaciones, vuelos observados y programación se identifican por fila; "
+            "Las medidas oficiales observadas y la programación se identifican por fila; "
             "faltantes no se convierten en cero. Aeroméxico se consulta como Grupo Aeroméxico."
         ),
         "parameters": _schema(
@@ -77,7 +77,8 @@ ROUTE_TOOL_SPECS = [
         "description": (
             "Encuentra rutas publicadas que comparten al menos dos aerolíneas en un mismo periodo "
             "y segmento. Devuelve el valor por aerolínea, cobertura y tipo de valor. "
-            "Grupo Aeroméxico suma Aerovías y Connect porque la red publicada no los separa."
+            "Aeroméxico conserva el alcance del operador/reportante identificado por cada fuente; "
+            "no implica cobertura mundial ni desglose de Connect."
         ),
         "parameters": _schema(
             {

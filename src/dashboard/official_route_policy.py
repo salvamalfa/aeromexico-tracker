@@ -21,6 +21,7 @@ def official_network(network: dict[str, Any]) -> dict[str, Any]:
         if (
             network.get("mode") == "estimated_domestic"
             or status.startswith("estimated_")
+            or status == "carrier_inferred_market_observed"
             or "aerodatabox" in source
         ):
             changed = True
@@ -85,4 +86,11 @@ def official_network(network: dict[str, Any]) -> dict[str, Any]:
             if "aerodatabox" not in label.lower()
         }
         result["coverage"] = "Fuentes oficiales retenidas; cobertura parcial"
+        if network.get("mode") == "estimated_domestic":
+            result["mode"] = "official_domestic_unavailable"
+            result["availability"] = "unavailable"
+            result["observed_months"] = []
+            result["eligibility_reason"] = (
+                "Sin vuelos realizados por compañía y ruta disponibles en fuentes oficiales."
+            )
     return result

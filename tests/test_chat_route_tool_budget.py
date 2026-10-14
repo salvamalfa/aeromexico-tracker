@@ -161,7 +161,8 @@ def test_shared_route_queries_fit_presented_budget_and_display_contract() -> Non
                 assert result["truncated"] is (result["row_count"] < result["available_route_count"])
                 assert result["coverage"].keys() == set(entity_ids)
                 for carrier_coverage in result["coverage"].values():
-                    assert carrier_coverage["availability"] in {"complete", "partial"}
+                    assert carrier_coverage["availability"] in {"complete", "partial", "missing"}
+                    assert carrier_coverage["complete"] is False
                     assert isinstance(carrier_coverage["expected_months"], list)
                     assert isinstance(carrier_coverage["observed_months"], list)
                     assert carrier_coverage["eligibility_reason"]

@@ -31,6 +31,7 @@ PROTECTED = (
     "src/config.py",
     "uv.lock",
     "contracts/web/",
+    "sql/gold/",
     ".agents/skills/",
     "src/web_export/analysis.py",
     "src/web_export/executive.py",
@@ -64,7 +65,9 @@ def require_preserved_analysis_implementation(repo: Path, commit: str) -> None:
         raise ValueError("Official-route-only migration cannot change tracked Gold source editions")
 
 
-def verify_baseline_approvals(record_paths: list[Path], commit: str, ledger_root: Path):
+def verify_baseline_approvals(
+    record_paths: list[Path], commit: str, ledger_root: Path, *, include_public_payloads: bool = False
+):
     """Run the trusted implementation's complete handoff checks, without writes.
 
     Source/evidence/ledger paths point to the current private local inputs. Only
@@ -85,13 +88,24 @@ def verify_baseline_approvals(record_paths: list[Path], commit: str, ledger_root
         script = """import json,sys
 from pathlib import Path
 from src.analysis_agent import lifecycle
-from src.publish.gate import _verify_under_lock
+from src.publish.gate import _verify_under_lock, _analysis_payload
 records=[json.loads(Path(p).read_bytes()) for p in json.loads(sys.argv[1])]
 entries=_verify_under_lock(records,Path(sys.argv[2]))
-print(json.dumps([entry[1] for entry in entries],ensure_ascii=False))
+value=[entry[1] for entry in entries]
+if sys.argv[3]=="public":
+ value={"authorized":value,"payloads":[_analysis_payload(*entry) for entry in entries]}
+print(json.dumps(value,ensure_ascii=False))
 """
         result = subprocess.run(
-            [sys.executable, "-B", "-c", script, json.dumps(paths), str(ledger_root)],
+            [
+                sys.executable,
+                "-B",
+                "-c",
+                script,
+                json.dumps(paths),
+                str(ledger_root),
+                "public" if include_public_payloads else "authorized",
+            ],
             cwd=base,
             capture_output=True,
             text=True,
@@ -111,6 +125,74 @@ def data_identities(directory: Path, *, flights: bool = False):
         if item["path"].startswith("data/v1/")
         and (flights or not item["path"].startswith("data/v1/flights/"))
     }
+
+
+def require_type_only_domain_change(repo: Path, commit: str) -> None:
+    """A type-only exception must not change emitted shared runtime code."""
+    relative = "web/src/types/domain.ts"
+    before = subprocess.check_output(["git", "show", f"{commit}:{relative}"], cwd=repo, text=True)
+    after = (repo / relative).read_text()
+    if before == after:
+        return
+    script = """const ts=require('typescript'),fs=require('fs');
+const input=JSON.parse(fs.readFileSync(0,'utf8'));
+const emit=s=>ts.transpileModule(s,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext,verbatimModuleSyntax:true}}).outputText;
+process.exit(emit(input.before)===emit(input.after)?0:2);
+"""
+    result = subprocess.run(
+        ["node", "-e", script],
+        cwd=repo / "web",
+        input=json.dumps({"before": before, "after": after}),
+        text=True,
+        capture_output=True,
+    )
+    if result.returncode:
+        raise ValueError("Official-route-only migration changed shared domain runtime code")
+
+
+def require_retained_official_metrics(baseline: Path, candidate: Path) -> None:
+    """Compare every retained official route with the trusted public snapshot."""
+    from src.dashboard.official_route_policy import official_network
+
+    old_root = baseline / "data/v1/flights"
+    new_root = candidate / "data/v1/flights"
+    before = json.loads((old_root / "quarters.json").read_text())
+    after = json.loads((new_root / "quarters.json").read_text())
+    old_metadata = {key: value for key, value in before.get("metadata", {}).items() if key != "scope"}
+    new_metadata = {key: value for key, value in after.get("metadata", {}).items() if key != "scope"}
+    if old_metadata != new_metadata:
+        raise ValueError("Route withdrawal changed preserved flight metadata")
+    for key in ("quarters", "monthly_passengers", "route_network"):
+        if before[key] != after[key]:
+            raise ValueError(f"Route withdrawal changed retained flight aggregate/geometry: {key}")
+    old_paths = {p.relative_to(old_root) for p in old_root.rglob("*.json") if "international" in p.parts}
+    new_paths = {p.relative_to(new_root) for p in new_root.rglob("*.json") if "international" in p.parts}
+    if old_paths != new_paths:
+        raise ValueError("Route withdrawal changed official international periods")
+    for relative in old_paths:
+        old = official_network(json.loads((old_root / relative).read_text()))
+        new = json.loads((new_root / relative).read_text())
+        old_routes = {r["market_key"]: r for r in old["routes"]}
+        new_routes = {r["market_key"]: r for r in new["routes"]}
+        if old_routes.keys() != new_routes.keys():
+            raise ValueError(f"Route withdrawal changed retained official markets: {relative}")
+        for market, route in new_routes.items():
+            original = old_routes[market]
+            for key in (
+                "passengers",
+                "seats",
+                "departures",
+                "load_factor",
+                "source_label",
+                "operation_status",
+                "origin",
+                "destination",
+            ):
+                if original.get(key) != route.get(key):
+                    raise ValueError(f"Route withdrawal changed retained {key}: {relative}/{market}")
+            for key in ("passengers", "seats", "departures", "load_factor"):
+                if original.get("previous", {}).get(key) != route.get("previous", {}).get(key):
+                    raise ValueError(f"Route withdrawal changed an official comparison: {relative}/{market}")
 
 
 def publish_official_routes_only(record_paths: list[Path], out_dir: Path):
@@ -141,8 +223,13 @@ def publish_official_routes_only(record_paths: list[Path], out_dir: Path):
     if web_data.exists():
         shutil.rmtree(web_data)
     shutil.copytree(baseline / "data/v1", web_data)
+    from src.transform.stage6_warehouse import build_warehouse
+
+    build_warehouse(max_stage=9)
     export_flights(build_flight_payload(), web_data)
     dist = gate.build_web(gate.WEB_DIR)
+    require_type_only_domain_change(PATHS.root, commit)
+    require_retained_official_metrics(baseline, dist)
     if data_identities(dist) != preserved:
         raise gate.PublicationRefused("Route migration changed non-flight data or approved analysis bytes")
     contracts = manifest_mod.contract_hashes()
@@ -150,6 +237,9 @@ def publish_official_routes_only(record_paths: list[Path], out_dir: Path):
         raise gate.PublicationRefused("Route migration changed a published data contract")
 
     def validate_candidate(candidate):
+        if data_identities(candidate) != preserved:
+            raise ValueError("Candidate changed a trusted non-flight data file")
+        require_retained_official_metrics(baseline, candidate)
         problems = verify_site(candidate)
         if problems:
             raise ValueError(f"Official-route candidate failed verification: {problems[:3]}")

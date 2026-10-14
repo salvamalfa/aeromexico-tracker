@@ -576,8 +576,8 @@ class RouteTools:
             "available_route_count": count,
             "truncated": count > top_n,
             "aeromexico_scope": (
-                "AEROMEXICO_GROUP agrega Aerovías de México y Aeroméxico Connect; "
-                "la red pública exportada no permite separarlos."
+                "AEROMEXICO_GROUP identifica la selección del dashboard; la cobertura por operador/reportante depende de cada fuente oficial; "
+                "BTS y las observaciones actuales no acreditan un desglose de Aerovías y Connect ni la red mundial completa."
             ),
             "display": display,
         }

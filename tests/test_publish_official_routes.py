@@ -44,3 +44,46 @@ def test_data_comparison_binds_every_non_flight_payload_and_ignores_only_routes(
     assert data_identities(tmp_path)==before
     (data/'executive.json').write_text('{"passengers":11}')
     assert data_identities(tmp_path)!=before
+
+
+@pytest.mark.parametrize("metric", ["passengers", "seats", "departures", "load_factor"])
+def test_route_gate_rejects_changed_official_values_even_with_unchanged_aggregate_files(tmp_path, metric):
+    import json
+    from src.publish.official_routes import require_retained_official_metrics
+    old = tmp_path / "old"; new = tmp_path / "new"
+    route = {"market_key":"LAX<>MEX", "source_label":"Estados Unidos · BTS T-100",
+             "operation_status":"operated_observed", "passengers":10,"seats":20,
+             "departures":1,"load_factor":.5,"origin":{"iata":"MEX"},"destination":{"iata":"LAX"},"previous":{}}
+    for root in (old,new):
+        base = root / "data/v1/flights"; (base / "international").mkdir(parents=True)
+        (base / "quarters.json").write_text(json.dumps({"quarters":[],"monthly_passengers":{},"route_network":{}}))
+        (base / "international/2026Q2.json").write_text(json.dumps({"routes":[route]}))
+    require_retained_official_metrics(old,new)
+    route[metric] += 1
+    (new / "data/v1/flights/international/2026Q2.json").write_text(json.dumps({"routes":[route]}))
+    with pytest.raises(ValueError,match="changed retained"):
+        require_retained_official_metrics(old,new)
+
+
+@pytest.mark.parametrize("runtime_change", [False, True])
+def test_shared_domain_exception_accepts_only_type_erased_changes(tmp_path, runtime_change):
+    import shutil
+    from src.config import PATHS
+    from src.publish.official_routes import require_type_only_domain_change
+    compiler = PATHS.root / "web/node_modules"
+    if not (compiler / "typescript").is_dir() or not shutil.which("node"):
+        pytest.skip("Locked web TypeScript dependencies are not installed in the Python-only runner")
+    repo(tmp_path)
+    domain = tmp_path / "web/src/types/domain.ts";domain.parent.mkdir(parents=True,exist_ok=True)
+    domain.write_text("export interface Metric { value: number; }\n")
+    subprocess.run(['git','add','.'],cwd=tmp_path,check=True)
+    subprocess.run(['git','-c','user.name=Test','-c','user.email=test@example.invalid','commit','-qm','types'],cwd=tmp_path,check=True)
+    commit = subprocess.check_output(['git','rev-parse','HEAD'],cwd=tmp_path,text=True).strip()
+    (tmp_path / "web/node_modules").symlink_to(compiler,target_is_directory=True)
+    domain.write_text("export interface Metric { value: number; source?: string; }\n"+
+                      ("export const sideEffect = 1;\n" if runtime_change else ""))
+    if runtime_change:
+        with pytest.raises(ValueError,match="runtime code"):
+            require_type_only_domain_change(tmp_path,commit)
+    else:
+        require_type_only_domain_change(tmp_path,commit)

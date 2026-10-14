@@ -40,7 +40,9 @@ def test_enriched_authority_keeps_real_flights_and_loses_all_seed_metrics():
 
 
 def test_estimated_networks_and_routes_are_excluded_even_with_official_sounding_labels():
-    assert official_network({"mode":"estimated_domestic", "routes":[route()]})["routes"] == []
+    empty = official_network({"mode":"estimated_domestic", "availability":"complete", "observed_months":["2026M07"], "routes":[route()]})
+    assert empty["routes"] == []
+    assert empty["availability"] == "unavailable" and empty["observed_months"] == []
     assert official_network({"routes":[route(operation_status="estimated_from_afac_margins_and_aerodatabox_seed")]})["routes"] == []
 
 
