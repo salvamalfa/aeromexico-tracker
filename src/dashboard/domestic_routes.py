@@ -103,6 +103,7 @@ def load_domestic_networks(
                 })
             if len(directions) != 2:
                 continue
+            route_scheduled_months = sorted(group.period_id.unique().tolist())
             airport_codes.add(counterpart)
             routes.append({
                 "market_key": "<>".join(sorted(("MEX", counterpart))),
@@ -113,7 +114,10 @@ def load_domestic_networks(
                 "previous": {"passengers": None, "seats": None, "departures": None},
                 "directions": directions,
                 "source_label": SOURCE_LABEL,
-                "coverage_note": "Meses programados: " + ", ".join(m[5:] for m in scheduled_months) + " · AICM · ejecución sin verificar",
+                "coverage_note": (
+                    "Meses programados: " + ", ".join(m[5:] for m in route_scheduled_months)
+                    + " · AICM · ejecución sin verificar"
+                ),
                 "operation_status": "assigned_slot_not_flown",
                 "carrier_role": "AM_flight_number_slot_holder",
                 "agent_eligible": False,

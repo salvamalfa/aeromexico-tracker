@@ -82,6 +82,48 @@ def test_paid_estimates_never_create_a_domestic_route():
     ]) == {}
 
 
+def test_native_quarter_discloses_each_routes_actual_scheduling_months():
+    """A seasonal route must not inherit another route's June coverage."""
+    rows = []
+    for counterpart, months in [("ABC", ["04", "05", "06"]), ("DEF", ["04", "05"])]:
+        for month in months:
+            for origin, destination in [("MEX", counterpart), (counterpart, "MEX")]:
+                rows.append({
+                    "period_id": f"2026M{month}", "origin_iata": origin, "dest_iata": destination,
+                    "scheduled_movements": 10, "observation_status": "assigned_slot_not_flown",
+                    "source_hash": "official", "record_id": f"{month}-{origin}-{destination}",
+                    "source_url": "https://www.aicm.com.mx/",
+                })
+    airports = pd.DataFrame([
+        {"airport_iata": code, "name": code, "city": code, "country": "México",
+         "latitude": 20.0, "longitude": -100.0} for code in ["MEX", "ABC", "DEF"]
+    ])
+    observations = pd.DataFrame(rows)
+    with duckdb.connect(":memory:") as connection:
+        connection.register("airports", airports)
+        connection.register("observations", observations)
+        connection.execute("CREATE TABLE dim_airport AS SELECT * FROM airports")
+        connection.execute(
+            "CREATE TABLE fact_domestic_scheduled_route_movements AS SELECT * FROM observations"
+        )
+        quarter = load_domestic_networks(
+            connection, [{"period_id": "2026Q2", "period_label": "2T26"}]
+        )["2026Q2"]
+    routes = {route["market_key"]: route for route in quarter["routes"]}
+    assert quarter["coverage_by_source"] == {
+        "México · AICM, vuelos AM programados": ["2026M04", "2026M05", "2026M06"]
+    }
+    assert routes["ABC<>MEX"]["coverage_note"] == (
+        "Meses programados: 04, 05, 06 · AICM · ejecución sin verificar"
+    )
+    seasonal = routes["DEF<>MEX"]
+    assert seasonal["coverage_note"] == "Meses programados: 04, 05 · AICM · ejecución sin verificar"
+    assert seasonal["departures"] == 40
+    assert quarter["scheduled_movements"] == 100
+    assert quarter["observed_months"] == []
+    assert seasonal["passengers"] is seasonal["seats"] is seasonal["load_factor"] is None
+
+
 @pytest.mark.local_data
 def test_aicm_bronze_silver_gold_reconcile_and_preserve_scope():
     source_hash = hashlib.sha256(SOURCE.read_bytes()).hexdigest()
