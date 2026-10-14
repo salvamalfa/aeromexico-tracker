@@ -150,6 +150,64 @@ process.exit(emit(input.before)===emit(input.after)?0:2);
         raise ValueError("Official-route-only migration changed shared domain runtime code")
 
 
+def _normalized_official(value):
+    # Missing and explicit null/empty optional fields are equivalent; numeric
+    # zero and false remain values and cannot hide a changed official measure.
+    if isinstance(value, dict):
+        return {
+            key: _normalized_official(item) for key, item in value.items() if item is not None and item != []
+        }
+    if isinstance(value, list):
+        return [_normalized_official(item) for item in value]
+    return value
+
+
+def _verified_gold_directions(route, months, period):
+    """Allow only restored official direction detail verified in pinned Gold.
+
+    The older export suppressed all direction details on an IPF-enriched route.
+    Restoring these existing official details is intentional, never deriving
+    them from the former model or merely distributing a route aggregate.
+    """
+    import pandas as pd
+
+    source = route.get("source_label")
+    if source == "AICM · vuelos AM programados":
+        frame = pd.read_parquet(PATHS.gold / "fact_aicm_international_scheduled_route_movements.parquet")
+        frame = frame[frame.period_id.isin(months) & frame.observation_status.eq("assigned_slot_not_flown")]
+        fields = {"departures": "scheduled_movements"}
+    elif source == "OMA · rutas documentadas":
+        frame = pd.read_parquet(PATHS.gold / "fact_oma_documented_routes.parquet")
+        frame = frame[frame.period_id.eq(period)]
+        fields = {"departures": "scheduled_movements"}
+    elif source in {"Brasil · ANAC", "Colombia · Aerocivil", "Reino Unido · CAA"}:
+        source_key = {
+            "Brasil · ANAC": "anac",
+            "Colombia · Aerocivil": "aerocivil",
+            "Reino Unido · CAA": "caa",
+        }[source]
+        frame = pd.read_parquet(PATHS.gold / "fact_international_route_observations.parquet")
+        frame = frame[
+            frame.period_id.isin(months)
+            & frame.operator_icao.eq("AMX")
+            & frame.observation_scope.eq("carrier_route")
+            & frame.source_system.eq(source_key)
+        ]
+        fields = {key: key for key in ("passengers", "seats", "departures")}
+    else:
+        raise ValueError("Newly exposed direction detail is outside the official Gold allowlist")
+    endpoints = set(route["market_key"].split("<>"))
+    frame = frame[frame.origin_iata.isin(endpoints) & frame.dest_iata.isin(endpoints)]
+    result = []
+    for (origin, destination), rows in frame.groupby(["origin_iata", "dest_iata"]):
+        item = {"origin_iata": origin, "destination_iata": destination}
+        for key, column in fields.items():
+            if rows[column].notna().all():
+                item[key] = float(rows[column].sum())
+        result.append(item)
+    return sorted(result, key=lambda item: (item["origin_iata"], item["destination_iata"]))
+
+
 def require_retained_official_metrics(baseline: Path, candidate: Path) -> None:
     """Compare every retained official route with the trusted public snapshot."""
     from src.dashboard.official_route_policy import official_network
@@ -170,29 +228,42 @@ def require_retained_official_metrics(baseline: Path, candidate: Path) -> None:
     if old_paths != new_paths:
         raise ValueError("Route withdrawal changed official international periods")
     for relative in old_paths:
-        old = official_network(json.loads((old_root / relative).read_text()))
+        raw_old = json.loads((old_root / relative).read_text())
+        old = official_network(raw_old)
         new = json.loads((new_root / relative).read_text())
+        # Check the complete public network, including Aena airport activity,
+        # coverage, dates, geography, and eligibility. Policy-only helper keys
+        # added during normalization are not part of the public contract.
+        for key in (raw_old.keys() | new.keys()) - {"routes"}:
+            if _normalized_official(old.get(key)) != _normalized_official(new.get(key)):
+                raise ValueError(f"Route withdrawal changed official network {key}: {relative}")
         old_routes = {r["market_key"]: r for r in old["routes"]}
         new_routes = {r["market_key"]: r for r in new["routes"]}
         if old_routes.keys() != new_routes.keys():
             raise ValueError(f"Route withdrawal changed retained official markets: {relative}")
         for market, route in new_routes.items():
             original = old_routes[market]
-            for key in (
-                "passengers",
-                "seats",
-                "departures",
-                "load_factor",
-                "source_label",
-                "operation_status",
-                "origin",
-                "destination",
-            ):
-                if original.get(key) != route.get(key):
-                    raise ValueError(f"Route withdrawal changed retained {key}: {relative}/{market}")
-            for key in ("passengers", "seats", "departures", "load_factor"):
-                if original.get("previous", {}).get(key) != route.get("previous", {}).get(key):
-                    raise ValueError(f"Route withdrawal changed an official comparison: {relative}/{market}")
+            before = _normalized_official(original)
+            after = _normalized_official(route)
+            prior_directions = before.pop("directions", [])
+            new_directions = after.pop("directions", [])
+            if before != after:
+                raise ValueError(
+                    f"Route withdrawal changed retained official subdocument: {relative}/{market}"
+                )
+            if prior_directions:
+                expected_directions = sorted(
+                    prior_directions, key=lambda item: (item["origin_iata"], item["destination_iata"])
+                )
+            elif new_directions:
+                expected_directions = _verified_gold_directions(route, new["expected_months"], relative.stem)
+            else:
+                expected_directions = []
+            actual_directions = sorted(
+                new_directions, key=lambda item: (item["origin_iata"], item["destination_iata"])
+            )
+            if actual_directions != expected_directions:
+                raise ValueError(f"Route withdrawal changed official direction details: {relative}/{market}")
 
 
 def publish_official_routes_only(record_paths: list[Path], out_dir: Path):

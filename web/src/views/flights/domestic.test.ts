@@ -81,6 +81,21 @@ describe("aggregateDomesticMonths official scheduling", () => {
     expect(network.mode).toBe("scheduled_domestic");
     expect(network.observed_months).toEqual([]);
   });
+  it("keeps a seasonal route's known movements and discloses its partial months", () => {
+    const april = monthNetwork(0, null, 30); april.routes[0]!.passengers = null;
+    const may = monthNetwork(0, null, 40); may.routes[0]!.passengers = null;
+    const june = monthNetwork(0, null, 0); june.routes = [];
+    state.domesticMonthlyNetworks.set("2026M04", april);
+    state.domesticMonthlyNetworks.set("2026M05", may);
+    state.domesticMonthlyNetworks.set("2026M06", june);
+    const route = aggregateDomesticMonths(["2026M04", "2026M05", "2026M06"])!.routes[0]!;
+    expect(route.departures).toBe(70);
+    expect(route.months_covered).toBe(2);
+    expect(route.months_selected).toBe(3);
+    expect(route.passengers).toBeNull();
+    expect(route.coverage_note).toContain("04, 05");
+    expect(route.coverage_note).not.toContain("06");
+  });
   it("withholds an aggregate when a selected month has not been loaded", () => {
     state.domesticMonthlyNetworks.set("2026M04", monthNetwork(0, null, 30));
     expect(aggregateDomesticMonths(["2026M04", "2026M05"])).toBeNull();

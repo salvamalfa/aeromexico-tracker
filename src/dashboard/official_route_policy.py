@@ -52,6 +52,8 @@ def official_network(network: dict[str, Any]) -> dict[str, Any]:
                     direction.pop(metric + "_low", None)
                     direction.pop(metric + "_high", None)
             route.pop("monthly", None)
+            route.pop("months_covered", None)
+            route.pop("months_selected", None)
             route.pop("carrier_breakdown", None)
             route.pop("capacity_provenance", None)
             route.pop("metric_provenance", None)

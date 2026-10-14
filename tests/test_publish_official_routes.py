@@ -87,3 +87,43 @@ def test_shared_domain_exception_accepts_only_type_erased_changes(tmp_path, runt
             require_type_only_domain_change(tmp_path,commit)
     else:
         require_type_only_domain_change(tmp_path,commit)
+
+
+def test_restored_directions_require_exact_trusted_gold_and_aena_stays_unchanged(tmp_path, monkeypatch):
+    import json
+    from types import SimpleNamespace
+    import pandas as pd
+    from src.publish import official_routes as module
+    old=tmp_path/'old';new=tmp_path/'new';gold=tmp_path/'gold';gold.mkdir()
+    monkeypatch.setattr(module,'PATHS',SimpleNamespace(gold=gold))
+    pd.DataFrame([
+        {'period_id':'2026M04','origin_iata':origin,'dest_iata':dest,
+         'observation_status':'assigned_slot_not_flown','scheduled_movements':91}
+        for origin,dest in [('AMS','MEX'),('MEX','AMS')]
+    ]).to_parquet(gold/'fact_aicm_international_scheduled_route_movements.parquet',index=False)
+    route={'market_key':'AMS<>MEX','source_label':'AICM · vuelos AM programados',
+           'operation_status':'assigned_slot_not_flown','passengers':1000,'seats':2000,
+           'departures':182,'load_factor':.5,'origin':{'iata':'AMS'},'destination':{'iata':'MEX'},
+           'passengers_estimated':True,'capacity_estimated':True,'directions':[],'previous':{}}
+    for root in (old,new):
+        base=root/'data/v1/flights';(base/'international').mkdir(parents=True)
+        (base/'quarters.json').write_text(json.dumps({'quarters':[],'monthly_passengers':{},'route_network':{}}))
+    before={'expected_months':['2026M04'],'aena_airport_activity':[],'routes':[route]}
+    (old/'data/v1/flights/international/2026Q2.json').write_text(json.dumps(before))
+    actual=dict(route,passengers=None,seats=None,load_factor=None,passengers_estimated=False,capacity_estimated=False)
+    actual['directions']=[{'origin_iata':a,'destination_iata':b,'departures':91}
+                          for a,b in [('AMS','MEX'),('MEX','AMS')]]
+    document=dict(before,routes=[actual])
+    target=new/'data/v1/flights/international/2026Q2.json'
+    target.write_text(json.dumps(document))
+    module.require_retained_official_metrics(old,new)
+    actual['directions'][0]['departures']=90
+    actual['directions'][1]['departures']=92
+    target.write_text(json.dumps(document))
+    with pytest.raises(ValueError,match='direction details'):
+        module.require_retained_official_metrics(old,new)
+    actual['directions'][0]['departures']=actual['directions'][1]['departures']=91
+    document['aena_airport_activity']=[{'airport_iata':'MAD','operations':1}]
+    target.write_text(json.dumps(document))
+    with pytest.raises(ValueError,match='aena_airport_activity'):
+        module.require_retained_official_metrics(old,new)

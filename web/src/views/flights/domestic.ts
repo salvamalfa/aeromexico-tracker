@@ -35,14 +35,16 @@ export function aggregateDomesticMonths(monthIds: string[]): PeriodNetworkDocume
   for (const market of markets) {
     const parts = networks.map((network) => network!.routes.find((route) => route.market_key === market));
     const base = parts.find((route) => route)!;
+    const known = parts.filter((route): route is Route => Boolean(route));
+    const coveredMonths = sorted.filter((_, index) => Boolean(parts[index]));
     const sum = (key: "passengers" | "seats" | "departures"): number | null =>
-      parts.every((route) => route && finite(route[key]))
-        ? parts.reduce((total, route) => total + route![key]!, 0) : null;
+      known.every((route) => finite(route[key]))
+        ? known.reduce((total, route) => total + route[key]!, 0) : null;
     const route: Route = {
       ...base, passengers: sum("passengers"), seats: sum("seats"), departures: sum("departures"),
       load_factor: null, previous: { passengers: null, seats: null, departures: null },
       months_covered: parts.filter(Boolean).length, months_selected: 3,
-      coverage_note: "Meses programados: " + sorted.map((id) => id.slice(5)).join(", ") +
+      coverage_note: "Meses programados: " + coveredMonths.map((id) => id.slice(5)).join(", ") +
         " · AICM · ejecución sin verificar",
       directions: [], monthly: [],
     };
