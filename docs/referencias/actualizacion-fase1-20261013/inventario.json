@@ -10,7 +10,7 @@
   "archivos": {
     "fuentes.csv": "eb0c02452ad4d473df1a1c385bbf34cc990ef9c0d1281e3ff9355654afe11693",
     "metricas.csv": "5ee21410756ad42fec029b24c74ced75eaa91e3c17298c4b852c502f7a5fdcde",
-    "tablas-publicas.csv": "4b2349619deeea8ec900ff1056000570cd9da329b62920cd080a084fdd9092c8"
+    "tablas-publicas.csv": "5bf8094ad81211f4d8df25e9645354285c9300f1497411360364ad3962cbfac0"
   },
   "aliases_documentales_adicionales": {
     "afac_od_exclusive_market_inference": {
@@ -31,6 +31,18 @@
       "casm_ex_fuel": "(operating_expenses_total - jet_fuel_expense) / asm_total × 100; centavos USD por ASM-milla",
       "yield": "passenger_revenue / rpm_total × 100; centavos USD por RPM-milla; se conserva definición reportada",
       "yield_derived": "passenger_revenue / (rpm_total × 1.609344) × 100; centavos USD por RPK-km"
+    }
+  },
+  "procedencia_documental_heredada": {
+    "fact_route_traffic_summary": {
+      "sources": [
+        "bts_t100"
+      ],
+      "parents": [
+        "fact_route_traffic",
+        "dim_route"
+      ],
+      "basis": "src/dashboard/prepare.py:20-30; source_system no materializado en salida"
     }
   }
 }

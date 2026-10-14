@@ -58,6 +58,14 @@ derivaciones por kilómetro explicitan el factor 1,609344 y ×100 para centavos.
 genéricas de la dimensión; **no se modifican Gold, código, cifras ni unidades
 reportadas**. Comparar siempre definición y denominador de la fuente.
 
+`procedencia_fuentes` distingue fuente materializada de herencia verificada.
+El resumen `fact_route_traffic_summary` hereda BTS de `fact_route_traffic`
+según `src/dashboard/prepare.py`, aunque no guarda `source_system`. En otras
+tablas sin esa columna, el campo vacío indica fuente no materializada y obliga
+a consultar generador/linaje; **no significa tabla sin dependencias ni fuente
+libre**. Este inventario documental no sustituye el grafo de ejecución del
+pipeline ni declara completa la lista de padres de cada tabla.
+
 Se distinguen cuatro fechas: **periodo del dato, publicación del documento,
 captura y aceptación/publicación del tracker**. Un anuncio o una llamada de
 resultados no es el estado financiero. Una fecha de modificación del portal
