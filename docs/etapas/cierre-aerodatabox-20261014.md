@@ -43,9 +43,7 @@ la programación disponible no los reemplaza.
 Los históricos privados y su linaje se conservan. Esta retirada no consume la
 API, modifica credenciales ni cambia la suscripción.
 
-Verificación local: candidato firmado por el gate; datos ajenos a Vuelos y
-las cuatro tesis permanecen idénticos. Comparadas 5.130 rutas internacionales
-retenidas; veinte consultas de chat comprobadas sin proveedor externo.
-Navegador cloud Playwright/Chromium: cuatro entidades en escritorio y móvil,
-sin errores ni desbordamiento horizontal. CI/revisión del PR pendientes;
-integración y publicación requieren aprobación del dueño.
+Verificación: cuatro entidades revisadas en escritorio y móvil. Las cifras
+oficiales y las cuatro tesis permanecen iguales; ninguna llamada a la API.
+CI y revisión se registran en el [PR #133](https://github.com/salvamalfa/aeromexico-tracker/pull/133).
+Publicación pendiente de aprobación del dueño.
