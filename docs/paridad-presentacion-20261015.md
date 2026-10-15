@@ -31,4 +31,4 @@ uv run pytest --require-local-data -q tests/test_site_parity.py::test_site_fligh
 
 La segunda orden conserva los dos fallos mientras no exista una nueva versión técnica aprobada. El diagnóstico de la primera compara los componentes con el selector de producción para evitar atribuir el fallo a una aproximación distinta.
 
-Evidencia de esta rama: [JSON reproducible](referencias/presentation-parity-20261015/market.json).
+Evidencia de la rama actual: [directorio de reportes JSON reproducibles](referencias/presentation-parity-20261015/). Los insumos privados solo se describen por conteo y tamaño agregados; se omiten nombres, tamaños individuales y hashes.
