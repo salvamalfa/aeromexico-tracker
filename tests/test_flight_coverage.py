@@ -45,7 +45,7 @@ def test_coverage_separates_charter_estimates_partial_months_and_source_conflict
     gold.mkdir()
     (base / "quarters.json").write_text(json.dumps({"quarters": [{"period_id": "2026Q2"}]}))
     network = {"observed_months": ["2026M04", "2026M05"], "routes": [
-        {"market_key": "GDL<>LAX", "departures": 120, "source_label": "Estados Unidos · BTS T-100",
+        {"market_key": "GDL<>LAX", "departures": 130, "source_label": "Estados Unidos · BTS T-100",
          "operation_status": "operated_observed", "coverage_note": "Meses: 04, 05 · BTS T-100"},
         {"market_key": "BOG<>MEX", "departures": 70, "source_label": "AFAC + AeroDataBox",
          "operation_status": "estimated_from_existing_seed", "monthly": [
@@ -54,7 +54,7 @@ def test_coverage_separates_charter_estimates_partial_months_and_source_conflict
     pd.DataFrame([{"carrier_key": "VOLARIS", "period_id": month, "route_key": "r", "service_class": service,
                    "source_system": "bts_t100", "departures_performed": flights}
                   for month, service, flights in [("2026M04", "F", 50), ("2026M04", "L", 20),
-                                                  ("2026M05", "F", 50)]]).to_parquet(gold / "fact_route_traffic.parquet")
+                                                  ("2026M04", "G", 10), ("2026M05", "F", 50)]]).to_parquet(gold / "fact_route_traffic.parquet")
     pd.DataFrame([{"route_key": "r", "market_key": "GDL<>LAX"}]).to_parquet(gold / "dim_route.parquet")
     pd.DataFrame([{"source_system": "aerocivil", "operator_icao": "AMX", "period_id": "2026M04",
                    "origin_iata": "MEX", "dest_iata": "BOG", "departures": 5}]).to_parquet(
@@ -63,10 +63,10 @@ def test_coverage_separates_charter_estimates_partial_months_and_source_conflict
     rows = audit(site, official, gold)
     observed = next(r for r in rows if r["entity"] == "VOLARIS" and r["kind"] == "observed"
                     and r["scope"] == "international")
-    assert observed["map_flights"] == 120
-    assert observed["comparable_observed_regular_flights"] == 100
-    assert observed["observed_minimum_quarter_pct"] == pytest.approx(100 / 3)
-    assert observed["observed_share_represented_months_pct"] == 50
+    assert observed["map_flights"] == 130
+    assert observed["comparable_observed_regular_flights"] == 110
+    assert observed["observed_minimum_quarter_pct"] == pytest.approx(110 / 3)
+    assert observed["observed_share_represented_months_pct"] == 55
     assert observed["pending_calendar_months"] == "2026M06"
     assert all(r["estimated_coverage_pct"] is None for r in rows)
     conflicting = audit(site, {key: 20 for key in official}, gold)

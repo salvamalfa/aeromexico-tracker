@@ -22,3 +22,18 @@ it("keeps assigned movements separate and slices only known month/directions", (
   expect(officialDomesticNetwork("2026M07").routes).toEqual([]);
   expect(officialDomesticNetwork("2026Q2").routes[0]!.departures).toBe(30);
 });
+
+it("preserves presence without volume only in its documented month", () => {
+  const nlu = { iata: "NLU", city: "CDMX", lat: 19, lon: -99 };
+  const cun = { iata: "CUN", city: "Cancún", lat: 21, lon: -87 };
+  state.domesticNetworks = new Map([["2026Q2", { mode: "scheduled_domestic", period_label: "2T26",
+    airports: [nlu, cun], routes: [{ market_key: "CUN<>NLU", origin: nlu, destination: cun, departures: null,
+      operation_status: "carrier_route_present_volume_unresolved", directions: [],
+      monthly: [{ period_id: "2026M06", origin_iata: "NLU", destination_iata: "CUN", departures: null }] }],
+  } as PeriodNetworkDocument]]);
+  const june = officialDomesticNetwork("2026M06");
+  expect(june.routes).toHaveLength(1);
+  expect(june.routes[0]!.departures).toBeNull();
+  expect(june.routes[0]!.directions).toEqual([]);
+  for (const period of ["2026M04", "2026M05", "2026M07"]) expect(officialDomesticNetwork(period).routes).toEqual([]);
+});

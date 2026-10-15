@@ -140,7 +140,7 @@ def bts_index(gold: Path) -> dict:
     frame = frame.merge(routes, on="route_key", validate="many_to_one")
     keys = ["carrier_key", "period_id", "market_key"]
     all_counts = frame.groupby(keys).departures_performed.sum(min_count=1).to_dict()
-    regular = frame[frame.service_class.eq("F")].groupby(keys).departures_performed.sum(min_count=1).to_dict()
+    regular = frame[frame.service_class.isin(["F", "G"])].groupby(keys).departures_performed.sum(min_count=1).to_dict()
     return {key: (float(value), float(regular.get(key, 0))) for key, value in all_counts.items()}
 
 
@@ -150,7 +150,7 @@ def regular_observed(route: dict, months: list[str], entity: str, counts: dict, 
         pairs = [counts.get((entity, month, route["market_key"]), (0, 0)) for month in months]
         if abs(sum(pair[0] for pair in pairs) - route["departures"]) > .51:
             raise ValueError(f"BTS map/Gold count mismatch for {entity}/{route['market_key']}/{months}")
-        return sum(pair[1] for pair in pairs), "BTS class F only; L/G/P excluded from regular denominator"
+        return sum(pair[1] for pair in pairs), "BTS scheduled classes F/G; nonscheduled L/P excluded from comparable numerator"
     if "Aerocivil" in source:
         selected = observations[observations.source_system.eq("aerocivil")
                                 & observations.operator_icao.eq("AMX")

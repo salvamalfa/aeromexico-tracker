@@ -1,4 +1,4 @@
-import type { PeriodNetworkDocument, RouteDirection } from "../../types/domain";
+import type { PeriodNetworkDocument, Route, RouteDirection } from "../../types/domain";
 import { state } from "./state";
 import { mapPeriodLabel } from "./map-periods";
 
@@ -11,8 +11,12 @@ export function officialDomesticNetwork(period: string): PeriodNetworkDocument {
   const empty = { mode: "scheduled_domestic", period_label: mapPeriodLabel(period), expected_months: [], observed_months: [], routes: [], airports: [] };
   if (!network) return empty;
   if (period.includes("Q")) return network;
-  const routes = network.routes.flatMap((route) => {
-    const monthly = (route.monthly ?? []).filter((item) => item.period_id === period && item.departures != null);
+  const routes = network.routes.flatMap<Route>((route) => {
+    const dated = (route.monthly ?? []).filter((item) => item.period_id === period);
+    const monthly = dated.filter((item) => item.departures != null);
+    if (!monthly.length && dated.length && route.operation_status === "carrier_route_present_volume_unresolved") {
+      return [{ ...route, monthly: dated, departures: null, directions: [], months_covered: 1, months_selected: 1 }];
+    }
     if (!monthly.length) return [];
     const directions = new Map<string, RouteDirection>();
     for (const item of monthly) {

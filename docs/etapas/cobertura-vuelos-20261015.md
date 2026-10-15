@@ -26,8 +26,10 @@ Se comparan vuelos regulares del mismo operador, periodo y ámbito. Grupo
 Aeroméxico incluye Aerovías y Connect en AFAC, aunque BTS solo observa Aerovías.
 Volaris es **Y4/VOI México**: excluye Costa Rica Q6 y El Salvador N3. Viva es
 Aeroenlaces. Se cuentan ambos sentidos una sola vez, sin volver a sumar el
-total de mercado sobre sus direcciones. BTS clase `F` entra en el numerador
-regular; `L/G/P` no. Aerocivil declara operaciones regulares. ANAC/CAA cuyos
+total de mercado sobre sus direcciones. BTS clases `F/G` entran en el numerador
+regular (pasajeros/carga y solo carga); `L/P` son no regulares y quedan fuera.
+La clasificación procede de la [guía T-100 de BTS](https://www.bts.gov/sites/bts.dot.gov/files/docs/explore-topics-and-geography/topics/airlines-and-airports/219466/t100-guide-april-2007.pdf).
+Aerocivil declara operaciones regulares. ANAC/CAA cuyos
 registros no acreditan esa misma clasificación quedan fuera del numerador
 comparable, aunque sus vuelos observados permanezcan en el mapa.
 
