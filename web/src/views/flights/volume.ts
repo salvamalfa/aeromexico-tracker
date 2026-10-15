@@ -18,7 +18,7 @@ export function renderNetworkVolume(): void {
     if (!matching.length) return [];
     const total = matching.reduce((sum, route) => sum + route.departures!, 0);
     const label = `Vuelos ${FLIGHT_KIND_LABEL[kind]}`;
-    return [miniCard(label, integer.format(total), `${matching.length} rutas`,
+    return [miniCard(label, integer.format(total), `${matching.length} rutas · cobertura parcial`,
       kind === "scheduled" ? "Programación; no confirma ejecución" :
       kind === "estimated" ? "Estimación histórica de frecuencias; no acredita operaciones realizadas" :
       kind === "attributed" ? "Total de mercado atribuido; operador sin confirmación exhaustiva" :

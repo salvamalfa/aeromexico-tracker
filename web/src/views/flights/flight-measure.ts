@@ -14,8 +14,9 @@ export function flightKind(route: Route): FlightKind {
   const status = route.operation_status ?? "";
   if (status === "assigned_slot_not_flown" || status.startsWith("scheduled_")) return "scheduled";
   if (status === "carrier_inferred_market_observed") return "attributed";
+  if (status.startsWith("estimated_")) return "estimated";
   if (status.includes("observed") || (route.source_label ?? "").includes("T-100")) return "observed";
-  if (status.startsWith("estimated_") || route.capacity_estimated ||
+  if (route.capacity_estimated ||
       (route.source_label ?? "").toLowerCase().includes("aerodatabox")) return "estimated";
   return "observed";
 }

@@ -67,7 +67,7 @@ export function renderRouteMode(): void {
     ? "Rutas con mayores cambios" : "Rutas con vuelos en el histórico";
   $("map-route-summary")!.textContent = state.routeView === "change"
     ? `${visible.filter((route) => routeChangePercent(route)! > 0).length} aumentos · ${visible.filter((route) => routeChangePercent(route)! < 0).length} caídas vs. ${previousLabel} · mismos meses disponibles`
-    : `${visible.length} de ${all.length} rutas con volumen visible${presence}`;
+    : `${visible.length} de ${all.length} rutas con cifra de vuelos${presence}`;
   for (const [id, view] of [["map-routes-featured", "volume"], ["map-routes-change", "change"], ["map-routes-all", "all"]] as const) {
     $(id)!.setAttribute("aria-pressed", String(state.routeView === view));
   }
@@ -170,7 +170,8 @@ export async function renderNetworkPeriod(periodId: string): Promise<void> {
     // (nacional). Internacional solo tiene evidencia retenida de Aerovías
     // de México como operador; decirlo explícitamente evita presentar una
     // cifra más angosta como si fuera consolidada.
-    scopeNote.textContent = entityScopeNote(state.mapEntity, state.networkMode === "domestic");
+    scopeNote.textContent = entityScopeNote(state.mapEntity, state.networkMode === "domestic")
+      + (periodNetwork.period_label ? ` · ${periodNetwork.period_label}` : "");
   }
   renderRegionSwitch();
   renderNetworkVolume();

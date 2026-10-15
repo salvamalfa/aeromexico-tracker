@@ -39,6 +39,13 @@ describe("flight-only map totals", () => {
     expect(html).toContain("Vuelos observados");
     expect(html).not.toContain("Vuelos estimados");
   });
+  it("a BTS fleet reference never turns model frequencies into observed flights", () => {
+    state.routes = [route(25,"estimated_from_sample", {source_label:"AeroDataBox + BTS T-100 fleet gauge"})];
+    renderNetworkVolume();
+    const html = document.getElementById("network-volume")!.innerHTML;
+    expect(html).toContain("Vuelos estimados");
+    expect(html).not.toContain("Vuelos observados");
+  });
   it("keeps unknown flights as N/D and discloses routes without a value", () => {
     state.presenceOnlyRouteCount = 8;
     renderNetworkVolume();
