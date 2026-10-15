@@ -14,7 +14,15 @@ MONTHS = dict(
     )
 )
 ENTITIES = {
-    "Aeroméxico": ("aeromexico", "aeromexico connect", "amx"),
+    "Aeroméxico": ("aeromexico", "amx"),
+    "Aeroméxico Connect": (
+        "aeromexico connect",
+        "aeromexico_connect",
+        "aeromexicoconnect",
+        "amx connect",
+        "amxconnect",
+        "connect",
+    ),
     "Viva": ("viva", "viva aerobus", "viva_aerobus"),
     "Volaris": ("volaris",),
 }
@@ -46,7 +54,11 @@ STOP.update(
 
 
 def norm(value: str) -> str:
-    return "".join(c for c in unicodedata.normalize("NFD", value.lower()) if unicodedata.category(c) != "Mn")
+    return re.sub(
+        r"\s+",
+        " ",
+        "".join(c for c in unicodedata.normalize("NFD", value.lower()) if unicodedata.category(c) != "Mn"),
+    ).strip()
 
 
 def topic_key(value: str) -> str:
@@ -60,7 +72,13 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
     companies = [
         name
         for name, aliases in ENTITIES.items()
-        if any(re.search(r"\b" + re.escape(alias) + r"\b", text) for alias in aliases)
+        if any(
+            re.search(
+                r"\b" + re.escape(alias) + r"\b" + (r"(?![\s_-]+connect\b)" if name == "Aeroméxico" else ""),
+                text,
+            )
+            for alias in aliases
+        )
     ]
     if company:
         selected = next(
@@ -82,6 +100,16 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
     iso_dates = re.findall(r"\b\d{4}-\d{2}-\d{2}\b", text)
     if re.search(
         r"\b\d{4}-\d{2}-\d{2}[t ]\d{1,2}:\d{2}|\b(?:a las|antes de las|despues de las|entre las)\s+\d{1,2}:\d{2}",
+        text,
+    ):
+        raise ValueError("Solo se filtra fecha diaria de publicación; la hora no está documentada.")
+    if re.search(r"\bhoras?\b|\b\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?)\b|\b\d{1,2}h(?:\d{2})?\b", text):
+        raise ValueError("Solo se filtra fecha diaria de publicación; la hora no está documentada.")
+    hour_words = r"(?:\d{1,2}|cero|un[oa]?|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|dieci\w*|veinte|veinti\w*|veinticuatro)"
+    if re.search(
+        r"\b(?:a|antes de|despues de|hasta|desde|entre)\s+(?:la|las)\s+"
+        + hour_words
+        + r"\b|\b(?:mediodia|medianoche)\b|\b(?:de|por|en|durante)\s+(?:la\s+)?(?:manana|tarde|noche|madrugada)\b",
         text,
     ):
         raise ValueError("Solo se filtra fecha diaria de publicación; la hora no está documentada.")
@@ -230,7 +258,13 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
     topics = [
         key
         for key, aliases in TOPICS.items()
-        if any(re.search(r"\b" + re.escape(alias) + r"\b", text) for alias in aliases)
+        if any(
+            re.search(
+                r"\b" + re.escape(alias) + r"\b",
+                text,
+            )
+            for alias in aliases
+        )
     ]
     removed = STOP | set(MONTHS) | set(years) | set(WEEKDAYS)
     removed |= set(re.findall(r"\w+", " ".join(alias for aliases in ENTITIES.values() for alias in aliases)))

@@ -322,7 +322,7 @@ def test_explicit_year_range_never_silently_becomes_unbounded():
 def test_relative_time_units_require_explicit_dates(question):
     from src.conversational_analytics.news_query import resolve_news_query
 
-    with pytest.raises(ValueError, match="fechas explícitas"):
+    with pytest.raises(ValueError, match="fechas explícitas|hora no está documentada"):
         resolve_news_query(question)
 
 
