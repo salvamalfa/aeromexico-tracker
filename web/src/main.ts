@@ -42,6 +42,7 @@ export async function mount(dataRoot = "data/v1"): Promise<void> {
   }
   window.addEventListener("reader-tab-visible", (event) => {
     const panelId = (event as CustomEvent<{ panelId: string }>).detail?.panelId;
+    if (panelId === "panel-news") void import("./views/news/bootstrap").then(({ mountNews }) => mountNews(dataRoot));
     if (panelId === "panel-flights") void ensureFlightsMounted(dataRoot);
   });
   // Defensive only: today's markup always starts on the reading tab (see

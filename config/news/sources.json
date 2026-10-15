@@ -1,0 +1,14 @@
+{
+  "schema": "news_archive_sources_v1",
+  "review_status": "candidate_unapproved",
+  "policy": "Discovery and citation metadata with original summaries only. No article bodies or images redistributed. New records require independent owner review before chat activation; no cron is enabled.",
+  "sources": [
+    {"name":"Aeroméxico RI", "discovery_url":"https://ir.aeromexico.com/es/eventos-noticias/noticias", "method":"public_publisher_pdf", "company":"Aeroméxico"},
+    {"name":"Aeroméxico RSS", "discovery_url":"https://ir.aeromexico.com/ir-resources/rss-feeds", "method":"rss_discovery", "status":"Spanish page has a relative RSS link returning 404; do not treat as a complete feed"},
+    {"name":"Viva RI", "discovery_url":"https://ri.vivaaerobus.com/es/noticias-eventos", "method":"public_publisher_pdf", "company":"Viva", "citation_hosts":["investorcloud.s3.amazonaws.com"]},
+    {"name":"Volaris RI", "discovery_url":"https://ir.volaris.com/es/noticias-y-eventos/noticias/", "method":"public_site_filemanager_metadata_and_pdf", "company":"Volaris", "citation_hosts":["api.mziq.com","filemanager-cdn.mziq.com"], "note":"HTML alone does not contain the current archive; use the public filemanager request configured by the page"},
+    {"name":"RSS / GDELT", "method":"src.ingest.news.rss_gdelt", "status":"discovery_only", "note":"All retained snapshots are unioned. GDELT seendate is first observation, never an inferred publication date. Discovery volume/tone are not importance/satisfaction."},
+    {"name":"FlightGlobal", "discovery_url":"https://www.flightglobal.com/", "method":"existing_approved_index_only", "status":"Three previously approved records retained. Live verification of two historical article URLs returned 403 during this cut; no bypass or new approval."},
+    {"name":"AeroRoutes", "discovery_url":"https://www.aeroroutes.com/eng/260624-vbaug26us", "method":"public_article_metadata_and_original_summary", "status":"candidate_unapproved", "note":"Source describes scheduled changes; future owner/source review is still required. No images or copied article text retained in the public proposal."}
+  ]
+}

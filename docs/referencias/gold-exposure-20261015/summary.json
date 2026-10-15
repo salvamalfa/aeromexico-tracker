@@ -1,0 +1,20 @@
+{
+  "public_tables": 43,
+  "lineage_tables": 7,
+  "public_bytes": 53273203,
+  "denominator": "Todas las tablas fact_ públicas más dim_events, dim_cluster_assignments, dim_model_performance; excluye linaje, dimensiones de referencia y calendarios.",
+  "analytical_tables": 23,
+  "baseline_direct": 7,
+  "baseline_context_or_validation": 4,
+  "market_direct": 9,
+  "news_additional_gold_tables": 0,
+  "baseline_direct_pct": 30.4,
+  "market_direct_pct": 39.1,
+  "private_flight_gold_present": [
+    "fact_aeromexico_domestic_capacity_estimate.parquet",
+    "fact_aeromexico_international_capacity_estimate.parquet",
+    "fact_route_carrier_domestic_estimate.parquet",
+    "fact_route_carrier_international_estimate.parquet"
+  ],
+  "rubric_note": "Aproximación estática conservadora, no telemetría de usuarios ni porcentaje de filas/columnas expuestas. Directa puede ser un agregado o subconjunto; contexto/validación no equivale a visualización. La disponibilidad por periodo y tipo de cifra limita el mapa. Noticias usa JSON de evidencia y no aumenta este denominador."
+}
