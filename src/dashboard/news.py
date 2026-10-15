@@ -57,10 +57,6 @@ def project(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     for record in records:
         if record.get("kind") != "news":
             continue
-        published = record.get("published_at")
-        if not published:
-            continue  # Unknown publication cannot be month-bucketed.
-        date.fromisoformat(published)
         source = record["source"]
         url = canonical_news_url(source["url"])
         story = record.get("story_id", record["id"])
@@ -75,6 +71,10 @@ def project(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 )
             continue
         seen_urls[url] = (source["sha256"], metadata)
+        published = record.get("published_at")
+        if not published:
+            continue  # Unknown publication cannot be month-bucketed.
+        date.fromisoformat(published)
         if story in stories:
             stories[story]["sources"].append(source)
             # A reviewed story does not approve a newly associated source.

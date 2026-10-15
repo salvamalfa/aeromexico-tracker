@@ -36,7 +36,11 @@ def test_monthly_projection_deduplicates_urls_and_stories_without_changing_dates
             record(),
             record("copy"),
             record("second", source={"id": "b", "url": "https://ri.vivaaerobus.com/b", "sha256": "b" * 64}),
-            record("undated", published_at=None),
+            record(
+                "undated",
+                published_at=None,
+                source={"id": "undated", "url": "https://ri.vivaaerobus.com/undated", "sha256": "c" * 64},
+            ),
         ]
     )
     assert len(records) == 1
@@ -223,6 +227,7 @@ def test_changed_bytes_at_same_canonical_source_url_fail_closed(reverse, same_st
         {"title": "Titular revisado"},
         {"description": "Resumen original corregido"},
         {"published_at": "2026-09-01"},
+        {"published_at": None},
         {"event_date": "2026-08-01"},
         {"first_captured_at": "2026-10-14T00:00:00Z"},
         {"story_id": "another-story"},

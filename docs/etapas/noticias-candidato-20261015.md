@@ -149,3 +149,6 @@ semántica y el mismo estado; cualquier discrepancia exige revisar ambos registr
 y bloquea la proyección. No se descarta una corrección candidata ni se conserva
 una etiqueta aprobada que oculte esa corrección. Los manifiestos originales no
 se modifican; el corte real conserva sus catorce fichas sin cambio de bytes.
+La comprobación precede al filtro de publicación desconocida: quitar la fecha
+de una revisión tampoco permite ocultarla detrás de una ficha aprobada. Una
+fuente única sin fecha sigue excluida del agrupamiento mensual, sin inventarla.
