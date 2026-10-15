@@ -39,3 +39,16 @@ finales de CI y la prueba combinada quedan en el PR, sin merge ni deploy.
 Pendientes: revisión independiente, aprobación para integrar/publicar, corregir
 el parser OMA en un cambio revisable, y decidir las skills por fuente y el
 coordinador mensual/trimestral. No se habilita automatización en esta etapa.
+
+
+## Límite de aprobación comprobado en la validación final
+
+El guard `src/analysis_agent/entity_adapter.py::require_current_presentation`
+conserva una huella amplia que incluye `web/src`, los contratos y el código de
+exportación/publicación. Las tesis publicadas no cambian, pero una interfaz
+nueva no coincide con su versión técnica aprobada. La suite con datos privados
+lo detecta en dos pruebas de paridad de `tests/test_site_parity.py`; no se
+modificaron recibos, firmas ni aprobaciones para hacerlas pasar. El despliegue
+requiere resolver esa revisión técnica con el dueño, además de aprobar el PR.
+Las previews reutilizan los payloads ya publicados y se marcan candidatas;
+no equivalen a una regeneración aprobada del sitio.
