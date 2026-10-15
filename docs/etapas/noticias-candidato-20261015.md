@@ -123,3 +123,11 @@ retiene la respuesta de `executive.json`, abre Noticias y libera la carga para
 reproducir esa carrera. Además, al agrupar una historia con fuentes aprobadas
 y candidatas, toda la tarjeta conserva el estado candidato. Dos órdenes de
 entrada comprueban que una fuente nueva nunca herede una aprobación anterior.
+
+Los dos hilos quedaron respondidos y resueltos. La CI del head `2ae38e5`
+terminó con éxito (corrida 413); el ensamble local con Mercado pasó 196 pruebas
+web y 14 de navegador. Dos intentos de revisión final sobre ese head fallaron
+en el servicio con `Provided git ref ... does not exist`, aunque GitHub y CI
+resuelven la referencia. Se registra el límite y se vuelve a solicitar revisión
+sin tratar esos errores como aprobación. Este registro no cambia el producto,
+el índice de evidencia ni los límites de publicación.
