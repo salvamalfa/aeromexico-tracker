@@ -80,9 +80,24 @@ def monthly_brand_comparison(private: Path) -> dict:
     }
 
 
+def international_capture_paths(private: Path) -> list[Path]:
+    return sorted((private / "derived/aerodatabox_international").glob("*/international_capture_route_operator_*.parquet"))
+
+
+def private_input_hashes(private: Path) -> dict[str, str]:
+    paths = [
+        private / "derived/aerodatabox_international/2026M04/international_seed_2026M04.parquet",
+        private / "snapshot/data/silver/domestic_slots/aicm_amx_assigned_flight_days.parquet",
+        *[private / f"derived/aerodatabox/{period}/route_carrier_flight_counts_{period}.parquet"
+          for period in ["2026M04", "2026M05", "2026M06"]],
+        *international_capture_paths(private),
+    ]
+    return {path.relative_to(private).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest() for path in paths}
+
+
 def international_status_profile(private: Path) -> list[dict]:
     result = []
-    for path in sorted((private / "derived/aerodatabox_international").glob("*/international_capture_route_operator_*.parquet")):
+    for path in international_capture_paths(private):
         frame = pd.read_parquet(path)
         weight = float(frame.flights.sum())
         result.append({
@@ -181,14 +196,7 @@ def main() -> None:
             "data/gold/dim_route.parquet", "data/gold/fact_aicm_international_scheduled_route_movements.parquet",
         ]
     }
-    result["private_input_sha256"] = {
-        rel: hashlib.sha256((args.private_root / rel).read_bytes()).hexdigest() for rel in [
-            "derived/aerodatabox_international/2026M04/international_seed_2026M04.parquet",
-            "snapshot/data/silver/domestic_slots/aicm_amx_assigned_flight_days.parquet",
-            *[f"derived/aerodatabox/{period}/route_carrier_flight_counts_{period}.parquet"
-              for period in ["2026M04", "2026M05", "2026M06"]],
-        ]
-    }
+    result["private_input_sha256"] = private_input_hashes(args.private_root)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False) + "\n")
     print(f"Offline checks saved: {out}; provider calls: 0; no model activated")
