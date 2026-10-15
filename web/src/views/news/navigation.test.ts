@@ -24,3 +24,20 @@ test("bulk navigation fails closed for invented or candidate identifiers",async(
  expect(await news.openNewsMatches({...result,matching_ids:["known"]})).toBe(true);
  expect(document.querySelectorAll(".news-card")).toHaveLength(1);
 });
+test("news chat button sends selected filters without searchable instruction boilerplate",async()=>{
+ const news=await import("./bootstrap");await news.mountNews("data/v1");
+ const received=vi.fn();window.addEventListener("airline-chat-prompt",received,{once:true});
+ (document.getElementById("news-query") as HTMLInputElement).value="unicornios";
+ document.getElementById("news-chat")!.click();
+ expect(received.mock.calls[0]![0].detail.text).toBe("Busca noticias publicadas en 2026-04 sobre unicornios.");
+});
+test("secondary source target opens the primary story card with its verified citation",async()=>{
+ const response=await fetch("");const payload=await response.json();
+ const secondary={id:"secondary",url:"https://www.flightglobal.com/secondary",sha256:"c".repeat(64),publisher:"Otro editor"};
+ payload.records[0].sources.push(secondary);
+ vi.stubGlobal("fetch",vi.fn().mockResolvedValue({ok:true,json:async()=>payload}));
+ const news=await import("./bootstrap");await news.mountNews("data/v1");
+ expect(await news.openNewsResult(result,{...item,publisher:secondary.publisher,source_url:secondary.url,source_sha256:secondary.sha256})).toBe(true);
+ expect(document.querySelectorAll(".news-card")).toHaveLength(1);
+ expect(document.querySelectorAll(".news-card a")).toHaveLength(2);
+});

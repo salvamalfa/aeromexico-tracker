@@ -279,7 +279,7 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
                 before_count = len(sent_context)
                 page.click("#news-chat")
                 prompt = page.get_by_label("Pregunta sobre los datos publicados")
-                assert "Busca noticias aprobadas sobre capacidad de Viva" in prompt.input_value()
+                assert prompt.input_value() == "Busca noticias de Viva publicadas en 2026-09 sobre capacidad."
                 assert len(sent_context) == before_count  # Prefill does not submit.
                 password_field.fill(password)
                 page.get_by_role("button", name="Entrar").click()

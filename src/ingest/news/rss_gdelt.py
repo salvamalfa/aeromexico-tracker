@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from email.utils import parsedate_to_datetime
 import json
-from urllib.parse import quote_plus, urlsplit, urlunsplit, parse_qsl, urlencode
+from urllib.parse import quote_plus
+from src.conversational_analytics.news_projection import canonical_news_url
 import xml.etree.ElementTree as ET
 
 import httpx
@@ -111,17 +112,6 @@ def _parse_gdelt(path) -> list[dict[str, object]]:
     return rows
 
 
-def canonical_news_url(value: str) -> str:
-    """Drop tracking only; keep publisher identifiers and content query args."""
-    parts = urlsplit(value)
-    query = [
-        (k, v)
-        for k, v in parse_qsl(parts.query, keep_blank_values=True)
-        if not k.lower().startswith("utm_") and k.lower() not in {"fbclid", "gclid"}
-    ]
-    return urlunsplit(
-        (parts.scheme.lower(), parts.netloc.lower(), parts.path.rstrip("/"), urlencode(query), "")
-    )
 
 
 def _archive_paths(source_system: str, entity: str):

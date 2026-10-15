@@ -7,7 +7,6 @@ index, receipts, chat tools, theses or publication gate.
 from __future__ import annotations
 
 import argparse
-from datetime import date
 import hashlib
 import json
 from pathlib import Path
@@ -16,10 +15,9 @@ from urllib.parse import urlsplit
 
 from src.config import PATHS
 from src.conversational_analytics.evidence_index import EvidenceIndex
-from src.ingest.news.rss_gdelt import canonical_news_url
+from src.conversational_analytics.news_projection import COMPANIES, project
 from src.web_export.writer import write_json
 
-COMPANIES = {"Aeroméxico", "Volaris", "Viva"}
 CANDIDATE_HOSTS = {
     "ir.aeromexico.com",
     "investorcloud.s3.amazonaws.com",
@@ -28,82 +26,6 @@ CANDIDATE_HOSTS = {
     "www.aeroroutes.com",
 }
 
-
-def _review_metadata(record: dict[str, Any]) -> dict[str, Any]:
-    """Only exact semantic/review duplicates may share a source silently."""
-    return {
-        **{
-            key: record.get(key)
-            for key in (
-                "title",
-                "description",
-                "publisher",
-                "published_at",
-                "event_date",
-                "event_end_date",
-                "first_captured_at",
-                "review_status",
-            )
-        },
-        "story_id": record.get("story_id", record["id"]),
-        "companies": sorted("Viva" if value == "Viva Aerobus" else value for value in record["companies"]),
-        "topics": sorted(record.get("topics", [])),
-    }
-
-
-def project(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    stories = {}
-    seen_urls = {}
-    for record in records:
-        if record.get("kind") != "news":
-            continue
-        source = {**record["source"], "publisher": record["publisher"]}
-        url = canonical_news_url(source["url"])
-        story = record.get("story_id", record["id"])
-        metadata = _review_metadata(record)
-        if url in seen_urls:
-            previous_hash, previous_metadata = seen_urls[url]
-            if previous_hash != source["sha256"]:
-                raise ValueError("Conflicting source hashes at the same canonical URL")
-            if previous_metadata != metadata:
-                raise ValueError(
-                    "Conflicting news review metadata at the same canonical URL; review both records"
-                )
-            continue
-        seen_urls[url] = (source["sha256"], metadata)
-        published = record.get("published_at")
-        if not published:
-            continue  # Unknown publication cannot be month-bucketed.
-        date.fromisoformat(published)
-        if story in stories:
-            stories[story]["sources"].append(source)
-            # A reviewed story does not approve a newly associated source.
-            # Keep the entire mixed card closed until every source is reviewed.
-            if record["review_status"] != "owner_approved":
-                stories[story]["review_status"] = "candidate_unapproved"
-            continue
-        companies = ["Viva" if value == "Viva Aerobus" else value for value in record["companies"]]
-        if not set(companies).issubset(COMPANIES):
-            raise ValueError("Unknown company")
-        summary = record["description"]
-        if not summary or len(summary) > 320:
-            raise ValueError("Unbounded news summary")
-        stories[story] = {
-            "id": record["id"],
-            "story_id": story,
-            "title": record["title"],
-            "description": summary,
-            "companies": companies,
-            "topics": record.get("topics", []),
-            "publisher": record["publisher"],
-            "published_at": published,
-            "event_date": record.get("event_date"),
-            "event_end_date": record.get("event_end_date"),
-            "first_captured_at": record.get("first_captured_at"),
-            "sources": [source],
-            "review_status": record["review_status"],
-        }
-    return sorted(stories.values(), key=lambda row: (row["published_at"], row["id"]), reverse=True)
 
 
 def build_news_payload(candidate: Path | None = None) -> dict[str, Any]:

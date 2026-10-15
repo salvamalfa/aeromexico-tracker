@@ -35,12 +35,17 @@ def news_navigation(result):
             or not re.fullmatch(r"[a-f0-9]{64}", str(citation.get("source_sha256", "")))
         ):
             return None
+        card = row.get("card", row)
+        if not isinstance(card, dict) or any(
+            not isinstance(card.get(key), str) for key in ("id", "title", "published_at")
+        ):
+            return None
         items.append(
             {
-                "id": row["id"],
-                "story_id": row.get("story_id", row["id"]),
-                "title": row["title"],
-                "published_at": row["published_at"],
+                "id": card["id"],
+                "story_id": card.get("story_id", row.get("story_id", row["id"])),
+                "title": card["title"],
+                "published_at": card["published_at"],
                 "publisher": row["publisher"],
                 "source_url": citation["url"],
                 "source_sha256": citation["source_sha256"],

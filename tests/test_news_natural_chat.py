@@ -48,6 +48,8 @@ def approved_pins(monkeypatch):
             "flightglobal-volaris-q2-2026-07-22",
         ),
         ("¿Qué publicó Viva sobre tráfico en septiembre de 2026?", None),
+        ("Busca noticias de Aeroméxico publicadas en 2026-07 sobre unicornios.", None),
+        ("Muéstrame noticias de Viva de diciembre de 2025 a enero de 2026", None),
     ],
 )
 def test_complete_spanish_question_runs_api_worker_tool_and_persists_card_targets(
@@ -199,3 +201,63 @@ def test_iso_month_from_news_filter_remains_a_month():
 
     intent = resolve_news_query("Busca noticias de Viva publicadas en 2026-09")
     assert (intent["start_date"], intent["end_date"]) == ("2026-09-01", "2026-09-30")
+
+
+def test_explicit_company_alias_uses_the_canonical_intent():
+    index = EvidenceIndex(ROOT / "config/chat/evidence/approved-index.json")
+    original = next(r for r in index.records if r.get("kind") == "news")
+    index.records = [{**original, "companies": ["Viva"], "topics": ["tráfico"]}]
+    result = index.search_news("noticias de tráfico", company="Viva Aerobus")
+    assert result["count"] == 1
+    assert result["filters"]["companies"] == ["Viva"]
+
+
+def test_latest_questions_return_newest_matching_stories_first_and_do_not_drop_them():
+    index = EvidenceIndex(ROOT / "config/chat/evidence/approved-index.json")
+    original = next(r for r in index.records if r.get("kind") == "news")
+    index.records = [
+        {
+            **original,
+            "id": f"story-{month}",
+            "story_id": f"story-{month}",
+            "published_at": f"2026-{month:02d}-01",
+            "source": {**original["source"], "url": f"https://www.flightglobal.com/story-{month}"},
+        }
+        for month in range(1, 9)
+    ]
+    result = index.search_news("Muéstrame las últimas noticias de Aeroméxico")
+    assert result["total"] == 8
+    assert [r["published_at"] for r in result["results"]] == [
+        f"2026-{month:02d}-01" for month in range(8, 3, -1)
+    ]
+
+
+def test_cross_year_named_month_range_preserves_both_explicit_years():
+    from src.conversational_analytics.news_query import resolve_news_query
+
+    intent = resolve_news_query("Muéstrame noticias de Viva de diciembre de 2025 a enero de 2026")
+    assert (intent["start_date"], intent["end_date"]) == ("2025-12-01", "2026-01-31")
+
+
+def test_secondary_source_search_navigates_to_the_shared_projected_card():
+    index = EvidenceIndex(ROOT / "config/chat/evidence/approved-index.json")
+    records = sorted(
+        [r for r in index.records if r.get("kind") == "news" and "Aeroméxico" in r["companies"]],
+        key=lambda r: r["published_at"],
+    )
+    assert len(records) == 2
+    index.records = [{**r, "story_id": "shared-story"} for r in records]
+    result = index.search_news("noticias de Aeroméxico en julio de 2026")
+    assert result["count"] == 1
+    assert result["results"][0]["id"] == records[1]["id"]
+    assert result["matching_ids"] == [records[0]["id"]]
+    nav = news_navigation(result)
+    assert nav["items"][0]["id"] == records[0]["id"]
+    assert nav["items"][0]["title"] == records[0]["title"]
+    assert nav["items"][0]["source_url"] == records[1]["source"]["url"]
+    assert nav["items"][0]["source_sha256"] == records[1]["source"]["sha256"]
+
+
+def test_news_button_unrelated_term_does_not_match_instruction_boilerplate():
+    index = EvidenceIndex(ROOT / "config/chat/evidence/approved-index.json")
+    assert index.search_news("Busca noticias publicadas en 2026-07 sobre unicornios.")["count"] == 0

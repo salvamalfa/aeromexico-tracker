@@ -81,11 +81,17 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
                 int(last[0]), int(last[1]), calendar.monthrange(int(last[0]), int(last[1]))[1]
             ).isoformat()
         elif months:
-            if len(set(years)) != 1 or len(months) > 2:
-                raise ValueError("Indica el año y un mes o intervalo explícito para buscar noticias.")
-            year = int(years[0])
-            start_date = date(year, months[0], 1).isoformat()
-            end_date = date(year, months[-1], calendar.monthrange(year, months[-1])[1]).isoformat()
+            pairs = re.findall(r"\b(" + "|".join(MONTHS) + r")\s+(?:de\s+)?(20\d{2})\b", text)
+            if len(months) > 2:
+                raise ValueError("Indica un mes o un intervalo explícito de dos meses.")
+            if len(pairs) == len(months):
+                first_year, last_year = int(pairs[0][1]), int(pairs[-1][1])
+            elif len(set(years)) == 1:
+                first_year = last_year = int(years[0])
+            else:
+                raise ValueError("Indica el año de cada extremo del intervalo.")
+            start_date = date(first_year, months[0], 1).isoformat()
+            end_date = date(last_year, months[-1], calendar.monthrange(last_year, months[-1])[1]).isoformat()
         elif len(set(years)) == 1:
             start_date, end_date = f"{years[0]}-01-01", f"{years[0]}-12-31"
         elif re.search(r"\b(pasado|pasada|ayer|hoy)\b", text):

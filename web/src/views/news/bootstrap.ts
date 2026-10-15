@@ -57,8 +57,8 @@ async function loadNews(root:string):Promise<void> {
    const download=node("button","Descargar paquete de aprobación");download.type="button";download.addEventListener("click",()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(data.approval_package,null,2)],{type:"application/json"}));const a=document.createElement("a");a.href=url;a.download="noticias-paquete-aprobacion-20261015.json";a.click();URL.revokeObjectURL(url);});packageBox.append(download);eligibility.append(packageBox);}
   const ask=document.getElementById("news-chat") as HTMLButtonElement;
   ask.hidden=import.meta.env.VITE_CHAT_ENABLED!=="true";
-  ask.addEventListener("click",()=>{const entity=company.value||"las aerolíneas mexicanas";
-   const text=`Busca noticias aprobadas sobre ${query.value||topic.value||"estrategia"} de ${entity}${month.value?` publicadas en ${month.value}`:""}. Cita las fuentes y distingue fecha de publicación y del hecho. Indica si no hay cobertura aprobada.`;
+  ask.addEventListener("click",()=>{const term=query.value||topic.value;
+   const text=`Busca noticias${company.value?` de ${company.value}`:""}${month.value?` publicadas en ${month.value}`:""}${term?` sobre ${term}`:""}.`;
    window.dispatchEvent(new CustomEvent("airline-chat-prompt",{detail:{text,opener:ask}}));});
  }catch {status.textContent="El archivo mensual no está incluido en este build. La cobertura del chat conserva su índice aprobado.";pending=null;archive=null;}
 }

@@ -168,11 +168,15 @@ def report() -> dict:
             private_gold.append(path.stat().st_size)
 
     return {
-        "schema": "presentation_parity_diagnostic_v1",
+        "schema": "presentation_parity_diagnostic_v2",
         "authorizes_publication": False,
         "approved_code_commit": APPROVED_CODE,
         "base_commit": BASE,
-        "candidate_head": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
+        "evaluated_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
+        "evaluated_tree": subprocess.check_output(["git", "rev-parse", "HEAD^{tree}"], text=True).strip(),
+        "report_generator_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        "worktree_code_matches_evaluated_commit": current == git_components("HEAD"),
+        "provenance_note": "evaluated_commit is the checkout where this report was actually executed. Committing the generated report necessarily creates a later commit; verify its presentation-component fingerprint and generator SHA, not a circular self-reference to the artifact commit.",
         "fingerprints": {
             "approved_entity_code": digest(approved),
             "master_base": digest(baseline),
