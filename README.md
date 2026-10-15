@@ -44,7 +44,7 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
   ajuste final de R2 sin otra evaluación pagada. R2/Sol low y las capacidades
   de rutas, métricas financieras y evidencia están activos y verificados en
   Railway (ver [Chat analítico](#chat-analítico)).
-- **Datos:** AFAC y AeroDataBox se actualizan a mano mes a mes; lo pendiente
+- **Datos:** el candidato conserva el histórico publicado y muestra solo vuelos en el mapa, con su tipo y procedencia; no realiza nuevas capturas AeroDataBox. AFAC se actualiza manualmente. Lo pendiente
   está en [`ROADMAP.md`](ROADMAP.md).
 
 Conteos de tablas Gold y pruebas cambian con cada cambio; la cuenta vigente y
@@ -115,7 +115,8 @@ Las tablas gold sí se versionan porque son los extractos públicos y compactos 
 - [Catálogo completo y calendario de rondas mensuales/trimestrales](docs/catalogo-fuentes-calendario.md)
   (fase 1 documental: fechas, cobertura, dependencias y anexos métricos).
 - [Continuidad sin capturas AeroDataBox recurrentes](docs/plan-salida-aerodatabox.md)
-  (propuesta de alcance; todavía no modifica la vista publicada).
+  (histórico conservado, mapa solo de vuelos y prueba AFAC/AICM).
+- [Cierre de AeroDataBox, con capturas antes/después](docs/etapas/cierre-aerodatabox-20261014.md).
 
 El Analysis Agent tiene una [skill del proyecto](.agents/skills/aeromexico-tracker-analysis/SKILL.md)
 y [comandos de autoría](docs/analysis-agent/analista-v1.md). La revisión

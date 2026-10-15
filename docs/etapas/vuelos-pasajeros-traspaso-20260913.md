@@ -32,7 +32,7 @@ Vigente al 8 de octubre de 2026. Reemplaza el traspaso del 13 de septiembre de
   ensambla y firma `site/`. Ver [`REPO_MAP.md`](../../REPO_MAP.md) y
   [`AGENTS.md`](../../AGENTS.md).
 
-## Qué muestra hoy
+## Qué muestra el candidato del 15 de octubre de 2026
 
 - **Tarjetas** (pasajeros, ASM, RPM, ocupación) con selector de una
   aerolínea: Industria, Aeroméxico, Volaris o Viva. Aeroméxico usa la serie
@@ -42,18 +42,31 @@ Vigente al 8 de octubre de 2026. Reemplaza el traspaso del 13 de septiembre de
   varias aerolíneas: Aeroméxico sola usa la serie mensual AFAC Gold; cualquier
   otra selección usa AFAC por aerolínea.
 - **Red de vuelos:** mapa y tabla «Rutas destacadas / Mayores cambios / Todas»
-  con pasajeros, vuelos y ocupación por ruta; Nacional o Internacional;
+  solo con vuelos por ruta; Nacional o Internacional;
   regiones internacionales; búsqueda de aeropuerto; selector de aerolínea
-  (default Industria, que suma las tres y muestra el reparto por ruta).
-- **Nacional:** pasajeros, vuelos, asientos y ocupación estimados por ruta
-  (AFAC + AeroDataBox, IPF), por mes; en el `site/` vigente, 2026M03–2026M07.
+  (default Industria, que suma las tres; sin reparto basado en pasajeros).
+- **Nacional:** histórico estimado conservado, 2026M03–2026M07; el mapa muestra
+  sus frecuencias publicadas, sin convertir ausencias en cero. Los demás
+  campos históricos siguen en el snapshot y el chat.
 - **Internacional:** México–EE. UU. observado (BTS T-100); el resto,
   estimado y marcado «estim.». Solo Grupo Aeroméxico conserva capas propias:
   slots AICM, AIFA, anuncios OMA y observaciones ANAC/Aerocivil/CAA/Aena.
-- **Asientos y ocupación:** Aeroméxico por modelo de avión capturado;
-  Volaris y Viva por promedio de flota. Siempre estimados y con rango.
+- **Asientos y ocupación históricos:** conservados en los datos y ocultos en
+  el mapa. Las tarjetas agregadas reportadas permanecen.
 - Rutas solo con presencia, sin volumen atribuible, no se dibujan; la vista
   dice cuántas quedaron fuera.
+
+El candidato conserva íntegro el snapshot publicado, incluido el histórico
+nacional estimado. El mapa ordena y dimensiona rutas por vuelos; su tabla y
+resumen omiten pasajeros, ocupación y participaciones basadas en pasajeros.
+Las tarjetas oficiales y la mezcla de pasajeros permanecen fuera del mapa.
+Observado, programado, estimado y atribuido se distinguen por cifra; se suman
+solo valores del mismo tipo. Meses faltantes siguen N/D y la cobertura parcial
+se declara. El chat conserva todos los campos históricos y su procedencia.
+
+La retirada se refiere a nuevas capturas pagadas, sin eliminar el histórico.
+No hay meses nuevos activados. Ver [alcance y prueba AFAC/AICM](../plan-salida-aerodatabox.md)
+y [cierre con capturas](cierre-aerodatabox-20261014.md).
 
 ## Reglas de significado que más pesan aquí
 

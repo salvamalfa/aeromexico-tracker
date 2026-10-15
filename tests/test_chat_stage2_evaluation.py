@@ -92,7 +92,11 @@ def test_stage2_snapshot_audit_is_reproducible_and_does_not_grade_model_quality(
         "data_version": {
             "expected": payload["expected_versions"]["data_version"],
             "actual": snapshot.version,
-        }
+        },
+        "semantic_version": {
+            "expected": payload["expected_versions"]["semantic_version"],
+            "actual": snapshot.semantic_version,
+        },
     }
     assert report["snapshot_cases_failed"] == [{"id": "fixture-version", "failures": mismatch}]
     assert report["fixture_version_mismatches"] == mismatch

@@ -282,3 +282,10 @@
     .aena-activity-grid { grid-template-columns: 1fr; }
   }
 }
+
+/* The route map displays flights only; aggregate cards are unchanged. */
+#map-panel .executive-route-columns, #map-panel .executive-route-row {
+  grid-template-columns: 19px minmax(110px, 1fr) minmax(75px, .45fr);
+}
+#map-panel .network-mini-kpi-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+#map-panel .executive-route-value .executive-route-trend { display: block; margin-top: 2px; font-weight: 500; }

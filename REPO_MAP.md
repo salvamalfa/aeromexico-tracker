@@ -5,7 +5,7 @@ comunes. Ver también `CLAUDE.md`, `AGENTS.md`, `CHANGELOG.md` y `ROADMAP.md`.
 
 Para diseñar los siguientes lotes de datos, ver el
 [catálogo de fuentes/métricas y calendario](docs/catalogo-fuentes-calendario.md)
-y la [propuesta de salida de AeroDataBox](docs/plan-salida-aerodatabox.md).
+y el [cierre de las capturas AeroDataBox con histórico conservado](docs/etapas/cierre-aerodatabox-20261014.md).
 Son entregables documentales de fase 1; no sustituyen contratos ni ejecutan
 actualizaciones.
 
@@ -137,12 +137,15 @@ un payload JSON, no HTML/CSS; el maquetado vive solo en `web/src/views/flights/t
 6. Corre `uv run pytest -q tests/test_international_routes.py tests/test_aicm_international_slots.py`
    y, en `web/`, `npm run check && npm run test`.
 
-### c) Agregar un nuevo mes de datos
+### c) Actualizar datos de Vuelos
 
-Sigue `docs/etapas/aerodatabox-agosto-captura-20260925.md` paso a paso
-(flujo privado AeroDataBox → repo de datos → `data/gold/` → warehouse →
-Vuelos → publicación). Ese documento es la referencia operativa; no la
-dupliques aquí.
+Seguir el [catálogo y calendario](docs/catalogo-fuentes-calendario.md) para las
+ediciones oficiales y reconstruir offline los Gold correspondientes.
+La exportación completa conserva los cuatro Gold privados de estimaciones
+históricas como entradas ignoradas; no requiere nuevas capturas. Para cambiar
+solo el mapa, `src.publish --preserve-published-data` conserva todos los bytes
+de `site/data/v1/` y las cuatro tesis, sin reconstruir modelos ni actualizar
+fuentes. Ver [histórico conservado y prueba AFAC/AICM](docs/plan-salida-aerodatabox.md).
 
 ### d) Retomar trabajo pendiente
 

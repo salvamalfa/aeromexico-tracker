@@ -17,8 +17,13 @@ SEGMENTS = ("domestic", "international")
 METRICS = ("passengers", "seats", "departures", "load_factor")
 PERIOD_RE = re.compile(r"^\d{4}(?:M(?:0[1-9]|1[0-2])|Q[1-4])$")
 MAX_TOP_N = 20
+AEROMEXICO_SCOPE = (
+    "AEROMEXICO_GROUP es la selección del dashboard: el histórico estimado puede agregar "
+    "Aerovías y Connect; cada fuente oficial conserva su operador/reportante y su cobertura, "
+    "que puede ser parcial."
+)
 ENTITY_LABELS = {
-    "AEROMEXICO_GROUP": "Grupo Aeroméxico (Aerovías + Connect)",
+    "AEROMEXICO_GROUP": "Grupo Aeroméxico · cobertura según fuente",
     "VOLARIS": "Volaris",
     "VIVA_AEROBUS": "Viva Aerobus",
     "INDUSTRY": "Industria",
@@ -77,7 +82,8 @@ ROUTE_TOOL_SPECS = [
         "description": (
             "Encuentra rutas publicadas que comparten al menos dos aerolíneas en un mismo periodo "
             "y segmento. Devuelve el valor por aerolínea, cobertura y tipo de valor. "
-            "Grupo Aeroméxico suma Aerovías y Connect porque la red publicada no los separa."
+            "El histórico estimado puede agregar Aerovías y Connect; las observaciones "
+            "oficiales conservan el alcance de su operador/reportante."
         ),
         "parameters": _schema(
             {

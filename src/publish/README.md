@@ -40,6 +40,14 @@ as — a directory built from `web/` plus the exported v1 payloads. See
   remain byte-identical, validates the completed candidate site before swap,
   and rechecks both the trusted baseline and Analysis Agent approval under the
   ledger lock immediately before the atomic replacement.
+- `--preserve-published-data` prepara el mapa solo de vuelos con el histórico
+  completo. Toma el `site/` firmado exacto de `origin/master`, revalida las
+  cuatro aprobaciones con la implementación de esa base y los expedientes
+  actuales antes/después del build, y conserva **todos** los archivos de
+  `data/v1/` byte por byte. Protege los renderers de análisis, fuentes y
+  contratos; no reconstruye modelos, crea aprobaciones ni activa datos nuevos.
+  El gate normal conserva sus comprobaciones estrictas. El candidato se
+  verifica antes del reemplazo y no se despliega: #133 requiere aprobación.
 - `manifest.py`: builds and (de)serializes `publication_manifest.json` —
   the code commit (`git rev-parse HEAD`), each `contracts/web/*` file's own
   SHA-256 (its "version"), every other file under `site/` with its

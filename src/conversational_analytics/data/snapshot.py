@@ -188,6 +188,11 @@ class Snapshot:
             semantic_digest.update(b"\0")
             semantic_digest.update(path.read_bytes())
             semantic_digest.update(b"\0")
+        # Classification/provenance changes alter query meaning even when the
+        # frozen public data remain byte-identical.
+        semantic_digest.update(
+            (Path(__file__).resolve().parent.parent / "tools/_route_provenance.py").read_bytes()
+        )
         self.semantic_version = semantic_digest.hexdigest()
 
     @staticmethod

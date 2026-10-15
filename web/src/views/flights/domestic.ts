@@ -2,6 +2,7 @@
 // Ported from src/dashboard/assets/flights.js.
 
 import { finite } from "./dom";
+import { flightKind, type FlightKind } from "./flight-measure";
 import { DOMESTIC_MONTH_NAMES, monthsInQuarter, state } from "./state";
 import type { Airport, PeriodNetworkDocument, Route, RouteDirection } from "../../types/domain";
 
@@ -34,6 +35,8 @@ interface DomesticAggregate {
   seats: number;
   departures: number;
   capacityMonthsCovered: number;
+  departureMonthsCovered: number;
+  departureKinds: Set<FlightKind>;
   source_label?: string;
   monthly: RouteDirection[];
   repaired: boolean;
@@ -62,7 +65,7 @@ export function aggregateDomesticMonths(monthIds: string[]): PeriodNetworkDocume
     const monthNetwork = state.domesticMonthlyNetworks.get(monthId);
     if (!monthNetwork) continue;
     for (const route of monthNetwork.routes || []) {
-      if (!finite(route.passengers)) continue;
+      if (!finite(route.departures)) continue;
       quarterCoverage.set(route.market_key, (quarterCoverage.get(route.market_key) || 0) + 1);
     }
   }
@@ -71,19 +74,19 @@ export function aggregateDomesticMonths(monthIds: string[]): PeriodNetworkDocume
   for (const monthNetwork of monthNetworks) {
     for (const airport of monthNetwork.airports || []) airportsByIata.set(airport.iata, airport);
     for (const route of monthNetwork.routes || []) {
-      if (!finite(route.passengers)) continue;
+      if (!finite(route.passengers) && !finite(route.departures)) continue;
       let agg = byMarket.get(route.market_key);
       if (!agg) {
         agg = {
           market_key: route.market_key, origin: route.origin, destination: route.destination,
           passengers: 0, passengers_low: 0, passengers_high: 0, monthsCovered: 0,
-          seats: 0, departures: 0, capacityMonthsCovered: 0,
+          seats: 0, departures: 0, capacityMonthsCovered: 0, departureMonthsCovered: 0, departureKinds: new Set(),
           source_label: route.source_label, monthly: [], repaired: false,
           breakdown: route.carrier_breakdown ? {} : null,
         };
         byMarket.set(route.market_key, agg);
       }
-      agg.passengers += route.passengers;
+      if (finite(route.passengers)) agg.passengers += route.passengers;
       // Un mes sin rango de sensibilidad (p. ej. una celda reparada por IPF,
       // que pierde la identidad del escenario) invalida el rango agregado
       // completo: no se sustituye por el punto central ni se ignora el mes,
@@ -93,12 +96,16 @@ export function aggregateDomesticMonths(monthIds: string[]): PeriodNetworkDocume
         finite(agg.passengers_low) && finite(route.passengers_low) ? agg.passengers_low! + route.passengers_low! : null;
       agg.passengers_high =
         finite(agg.passengers_high) && finite(route.passengers_high) ? agg.passengers_high! + route.passengers_high! : null;
-      agg.monthsCovered += 1;
+      if (finite(route.passengers)) agg.monthsCovered += 1;
       agg.repaired = agg.repaired || Boolean(route.support_repair_applied);
       if (route.capacity_estimated && finite(route.seats) && finite(route.departures)) {
         agg.seats += route.seats;
-        agg.departures += route.departures;
         agg.capacityMonthsCovered += 1;
+      }
+      if (finite(route.departures)) {
+        agg.departures += route.departures;
+        agg.departureMonthsCovered += 1;
+        agg.departureKinds.add(flightKind(route));
       }
       agg.monthly.push(...(route.monthly || []));
       // Industria: each airline's passengers add up across the months too.
@@ -117,16 +124,22 @@ export function aggregateDomesticMonths(monthIds: string[]): PeriodNetworkDocume
       agg.monthly.sort(
         (a, b) => a.period_id!.localeCompare(b.period_id!) || a.origin_iata.localeCompare(b.origin_iata)
       );
+      const kind = agg.departureKinds.size === 1 ? [...agg.departureKinds][0] : null;
+      const operationStatus = kind === "scheduled" ? "scheduled_from_published_history"
+        : kind === "estimated" ? "estimated_from_frozen_published_history"
+        : kind === "attributed" ? "carrier_inferred_market_observed" : "operated_observed";
       return {
         market_key: agg.market_key, origin: agg.origin, destination: agg.destination,
-        passengers: agg.passengers, passengers_low: agg.passengers_low, passengers_high: agg.passengers_high,
+        passengers: agg.monthsCovered ? agg.passengers : null, passengers_low: agg.passengers_low, passengers_high: agg.passengers_high,
         passengers_estimated: true,
         seats: capacityComplete ? agg.seats : null,
-        departures: capacityComplete ? agg.departures : null,
+        departures: kind && agg.departureMonthsCovered ? agg.departures : null,
+        operation_status: operationStatus,
+        coverage_note: `${agg.departureMonthsCovered} de ${sorted.length} meses seleccionados con vuelos publicados; tipos de cifra separados`,
         capacity_estimated: capacityComplete,
         load_factor: plausible ? loadFactor : null,
         load_factor_status: !capacityComplete ? "capacity_incomplete" : (plausible ? "estimated" : "inconsistent_inputs"),
-        months_covered: quarterCoverage.get(agg.market_key) || 0, months_selected: quarterMonths.length,
+        months_covered: quarterCoverage.get(agg.market_key) || 0, months_selected: 3,
         capacity_months_covered: agg.capacityMonthsCovered,
         support_repair_applied: agg.repaired,
         source_label: agg.source_label,
@@ -136,7 +149,7 @@ export function aggregateDomesticMonths(monthIds: string[]): PeriodNetworkDocume
         directions: [],
       };
     })
-    .sort((a, b) => (b.passengers ?? 0) - (a.passengers ?? 0) || a.market_key.localeCompare(b.market_key));
+    .sort((a, b) => (b.departures ?? 0) - (a.departures ?? 0) || a.market_key.localeCompare(b.market_key));
   return {
     mode: "estimated_domestic",
     period_label: domesticPeriodLabel(sorted, state.domesticMonthsQuarterId),

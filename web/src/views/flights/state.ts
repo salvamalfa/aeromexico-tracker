@@ -82,7 +82,7 @@ export const state: FlightsState = {
   availablePeriods: { domestic: [], domestic_monthly: [], international: [] },
 
   periodIndex: 0,
-  importance: "passengers",
+  importance: "departures",
   routeView: "volume",
   selectedDomesticMonths: new Set(),
   domesticMonthsQuarterId: null,

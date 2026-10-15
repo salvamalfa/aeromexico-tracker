@@ -14,6 +14,7 @@ from urllib.parse import quote
 
 from src.conversational_analytics.semantic.plan import PlanValidationError
 from src.conversational_analytics.tools._route_contract import (
+    AEROMEXICO_SCOPE,
     AIRLINE_IDS as _AIRLINE_IDS,
 )
 from src.conversational_analytics.tools._route_contract import (
@@ -575,10 +576,7 @@ class RouteTools:
             "applied_top_n": len(rows),
             "available_route_count": count,
             "truncated": count > top_n,
-            "aeromexico_scope": (
-                "AEROMEXICO_GROUP agrega Aerovías de México y Aeroméxico Connect; "
-                "la red pública exportada no permite separarlos."
-            ),
+            "aeromexico_scope": AEROMEXICO_SCOPE,
             "display": display,
         }
         return bound_shared_result(

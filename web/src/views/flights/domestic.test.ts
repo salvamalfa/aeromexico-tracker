@@ -139,3 +139,40 @@ describe("aggregateDomesticMonths", () => {
     expect(route.passengers_high).toBeNull();
   });
 });
+
+
+describe("flight-only aggregation preserves partial published counts", () => {
+  beforeEach(() => {
+    state.domesticMonthlyNetworks.clear();
+    state.domesticMonthsQuarterId = "2026Q2";
+    state.availablePeriods.domestic_monthly = ["2026M04", "2026M05", "2026M06"];
+  });
+  it("does not require passengers or seat capacity to retain known flights", () => {
+    const month = monthNetwork(100, null, 30);
+    month.routes[0]!.passengers = null;
+    month.routes[0]!.operation_status = "estimated_from_sample";
+    state.domesticMonthlyNetworks.set("2026M04", month);
+    const aggregate = aggregateDomesticMonths(["2026M04"])!;
+    expect(aggregate.routes[0]!.departures).toBe(30);
+    expect(aggregate.routes[0]!.passengers).toBeNull();
+    expect(aggregate.routes[0]!.operation_status).toMatch(/^estimated_/);
+  });
+  it("sums only available months and reports 2/3 instead of inventing June", () => {
+    state.domesticMonthlyNetworks.set("2026M04", monthNetwork(100, 1000, 30));
+    state.domesticMonthlyNetworks.set("2026M05", monthNetwork(100, 1000, 40));
+    state.domesticMonthlyNetworks.set("2026M06", {...monthNetwork(0, null, null), routes: []});
+    const value = aggregateDomesticMonths(["2026M04", "2026M05", "2026M06"])!.routes[0]!;
+    expect(value.departures).toBe(70);
+    expect(value.months_covered).toBe(2);
+    expect(value.months_selected).toBe(3);
+  });
+  it("refuses an aggregate that would mix schedules with estimates", () => {
+    const april = monthNetwork(100, 1000, 30);
+    const may = monthNetwork(100, 1000, 40);
+    april.routes[0]!.operation_status = "assigned_slot_not_flown";
+    may.routes[0]!.operation_status = "estimated_from_sample";
+    state.domesticMonthlyNetworks.set("2026M04", april);
+    state.domesticMonthlyNetworks.set("2026M05", may);
+    expect(aggregateDomesticMonths(["2026M04", "2026M05"])!.routes[0]!.departures).toBeNull();
+  });
+});
