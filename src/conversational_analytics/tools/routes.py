@@ -69,7 +69,7 @@ from src.conversational_analytics.tools._route_provenance import (
 )
 from src.conversational_analytics.tools._route_provenance import value_kind as _value_kind
 from src.conversational_analytics.tools._route_query_display import bound_route_query_result
-from src.conversational_analytics.tools._route_rollup import rollup_complete_quarter
+from src.conversational_analytics.tools._route_rollup import quarter_months, rollup_complete_quarter
 from src.conversational_analytics.tools._route_shared_display import bound_shared_result
 from src.conversational_analytics.tools._route_shared_metadata import (
     build_shared_carrier_metadata,
@@ -91,24 +91,26 @@ class RouteTools:
         try:
             network = self.snapshot.payload(path)
         except (ValueError, KeyError):
-            if segment == "domestic" and "Q" in period:
-                year, quarter = int(period[:4]), int(period[-1])
-                first_month = (quarter - 1) * 3 + 1
-                month_periods = [f"{year:04d}M{month:02d}" for month in range(first_month, first_month + 3)]
-                month_networks = []
-                for month_period in month_periods:
-                    try:
-                        month_networks.append(
-                            self.snapshot.payload(path_for(entity_id, segment, month_period))
-                        )
-                    except (ValueError, KeyError):
-                        return None, path
-                rollup = rollup_complete_quarter(period, month_networks, _value_kind)
-                if rollup is not None:
-                    rollup["source_paths"] = [path_for(entity_id, segment, month) for month in month_periods]
-                return rollup, path
-            return None, path
-        return network, path
+            network = None
+        # Keep the map's official programming separate from chat's monthly estimates.
+        if network is not None and not (
+            segment == "domestic" and "Q" in period and network.get("mode") == "scheduled_domestic"
+        ):
+            return network, path
+        if segment == "domestic" and "Q" in period:
+            month_periods = quarter_months(period)
+            month_networks = []
+            for month_period in month_periods:
+                try:
+                    month_path = path_for(entity_id, segment, month_period)
+                    month_networks.append(self.snapshot.payload(month_path))
+                except (ValueError, KeyError):
+                    return None, path
+            rollup = rollup_complete_quarter(period, month_networks, _value_kind)
+            if rollup is not None:
+                rollup["source_paths"] = [path_for(entity_id, segment, month) for month in month_periods]
+            return rollup, path
+        return None, path
 
     def _metadata(self, query: dict[str, Any], networks: list[tuple[dict[str, Any], str]]) -> dict[str, Any]:
         refs = []

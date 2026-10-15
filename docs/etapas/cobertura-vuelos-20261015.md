@@ -126,3 +126,8 @@ no cambien durante la compilación. El control de Git incluye el propio script
 y los SQL del warehouse, y registra el hash del constructor; una edición sin
 commit o un cambio de revisión aborta.
 La evidencia de pruebas, navegador y revisión del commit exacto queda en el PR.
+
+El chat conserva su agregado trimestral nacional de los tres archivos mensuales
+estimados cuando el documento trimestral tiene modo `scheduled_domestic`, reservado
+para la capa oficial del mapa. Un mes ausente sigue siendo N/D. Las notas AICM
+internacionales se fechan con los meses de programación efectivamente seleccionados.
