@@ -3,15 +3,15 @@
   "authorizes_publication": false,
   "approved_code_commit": "6d8da2c4c0b96371c26521aedb5828610451d03a",
   "base_commit": "40a63d1905afde97ae8e3f8671c8217aafacc4aa",
-  "evaluated_commit": "ba2be4082e13bd8d72de1325a7833192cb54916b",
-  "evaluated_tree": "35f9a2b7d6aa9be34fecee05dff8d53088cb277a",
+  "evaluated_commit": "8ea3c3576ed922a987280f8a059217a2379b8572",
+  "evaluated_tree": "ea3159ab93039293568fdc107cd3c697084c9bc8",
   "report_generator_sha256": "e81f3b6f4de5c8a6105385a713b7399288b4a68e86ecc66d37c58b5e079b4a97",
   "worktree_code_matches_evaluated_commit": true,
   "provenance_note": "evaluated_commit is the checkout where this report was actually executed. Committing the generated report necessarily creates a later commit; verify its presentation-component fingerprint and generator SHA, not a circular self-reference to the artifact commit.",
   "fingerprints": {
     "approved_entity_code": "8fc1d53128ae8a0cc795f29ae944e37787bb280f6025ec66b6a8b1cbc1f6382f",
     "master_base": "29a4b6b87c52f29de1c450d23a335f82647af0b5285cba1f992bb9e2f99a693f",
-    "candidate": "885f195a80ec064fc59495b528748b76eed575c801183dc73cd60c1ec25cb633"
+    "candidate": "200c68ad269ddfd84e84bd33c54115d7f50d55a34fe3d883308302fe1a0ca89e"
   },
   "component_counts": {
     "approved": 130,
@@ -84,7 +84,7 @@
     {
       "path": "contracts/web/news.schema.json",
       "before_sha256": null,
-      "after_sha256": "0decc60f040c0f5e79d57d0f5db0606c53dfb8753cf1a31ec868eb1a7d0d4429"
+      "after_sha256": "f92171c3b85ff3367de00d8a883dc9992f15ffded16d4fe4742dcc3196da50dc"
     },
     {
       "path": "src/analysis_agent/entity_adapter.py",
@@ -94,7 +94,7 @@
     {
       "path": "src/conversational_analytics/news_projection.py",
       "before_sha256": null,
-      "after_sha256": "9456d0a0946240f552211e940043abc6c8df046503b763010c466d5d796d9a58"
+      "after_sha256": "f0849151ef997fd778fb79e251344d5917c32aa6f7e2379918c89268d4fca7c8"
     },
     {
       "path": "src/dashboard/news.py",
@@ -129,7 +129,7 @@
     {
       "path": "web/index.html",
       "before_sha256": "cd24a7d098f956153b6bfd7e2e4dc92974ab3cb5ab402baa7e6d4d7405131ad2",
-      "after_sha256": "129128b786f6045a7b925836f308c3c71eb6df25b01686f6ed1be06833163be0"
+      "after_sha256": "028fe335038e5f6a2f53034fc7fec8d18ada27ca20e53f88b82af34a1130022e"
     },
     {
       "path": "web/src/main.ts",
@@ -144,7 +144,7 @@
     {
       "path": "web/src/types/generated/news.ts",
       "before_sha256": null,
-      "after_sha256": "a179893d59c395c1481105ed87028fcc9a1f94ee1e60dedc8807603549f5be73"
+      "after_sha256": "7a9446e78d6cf3b97bf08c9a76852bf03617f6f7425a7b8c07e1f53ddf540fb5"
     },
     {
       "path": "web/src/types/vite-env.d.ts",
@@ -259,7 +259,7 @@
       "replayed_claims_sha256": "5df3e53d5665aa285a2dae8f2d407c0266a3a74acbdfef7a7e229295c698129f",
       "thesis_identical": true,
       "summary_identical": true,
-      "proposed_technical_version_unapproved_not_written": "002920efceee43d2f1d64ba60d7b755a1588e203627f4f184ca8b3cd1d5b7023"
+      "proposed_technical_version_unapproved_not_written": "8baa4695d99c4f988133ea633ee1f706d32bf849fccdddd08edaea273b037729"
     },
     {
       "entity": "VIVA_AEROBUS",
@@ -283,7 +283,7 @@
       "replayed_claims_sha256": "1063f46218d1f820161fa82ffec4e05b2f802598d6e0273bb1f8fc5c8c978397",
       "thesis_identical": true,
       "summary_identical": true,
-      "proposed_technical_version_unapproved_not_written": "f40cb60dda50b7a91c154f375cec9b6372b1f5ea5c9fb8a96e560fc3451bc53a"
+      "proposed_technical_version_unapproved_not_written": "b23c9ebd241ac387803e015ceea86de4c02345a560d81bed3524a0a2e899e62e"
     },
     {
       "entity": "VOLARIS",
@@ -307,7 +307,7 @@
       "replayed_claims_sha256": "a20bebc083729b958f34278c4fc5a402a23918110b191d95abceb0bb8a1ab745",
       "thesis_identical": true,
       "summary_identical": true,
-      "proposed_technical_version_unapproved_not_written": "e102e86b7d6126b7dd8273dc15fe06ce28086cd039737890b829693406dfe336"
+      "proposed_technical_version_unapproved_not_written": "7e969533038fea0de11feaf648c6364d8e9eb6ae23fa31ac8ddfa67d49888d96"
     }
   ],
   "decision": "Presentation remains blocked. Review/import/audit new technical entity versions and obtain explicit approval before export; retain the existing theses and evidence. This report is not an approval."
