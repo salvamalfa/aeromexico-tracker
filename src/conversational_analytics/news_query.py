@@ -121,11 +121,11 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
     ):
         raise ValueError("Solo se filtra fecha diaria de publicación; la hora no está documentada.")
     if re.search(
-        r"\b(?:antes|despues)\b|\b(?:anterior(?:es)?|posterior(?:es)?|previo[as]?|previa[as]?)\s+(?:a|al)\b",
+        r"\b(?:antes|despues)\b|\b(?:anterior(?:es)?|posterior(?:es)?|previo[as]?|previa[as]?)\s+(?:a|al)\b|\ba\s+(?:partir|contar)\s+de(?:l)?\b|\ben\s+(?:adelante|lo\s+sucesivo)\b",
         text,
     ):
         raise ValueError(
-            "Indica inicio y fin explícitos como fechas explícitas de publicación; no se admite antes/después."
+            "Indica inicio y fin explícitos como fechas explícitas de publicación; ese calificador direccional no está admitido."
         )
     month_names = "|".join(MONTHS)
     named_days = re.findall(r"\b(\d{1,2})\s+(?:de\s+)?(" + month_names + r")\s+(?:de\s+)?(\d{4})\b", text)

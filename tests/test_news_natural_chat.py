@@ -561,7 +561,15 @@ def test_explicit_tool_request_wins_over_news_tab_context(tmp_path, question, to
         assert [event["name"] for event in events if event["type"] == "tool.completed"] == [tool]
 
 
-def test_directional_date_question_clarifies_without_news_cards(tmp_path):
+@pytest.mark.parametrize(
+    "question",
+    [
+        "noticias antes de julio de 2026",
+        "noticias a partir de abril de 2026",
+        "noticias de abril de 2026 en adelante",
+    ],
+)
+def test_directional_date_question_clarifies_without_news_cards(tmp_path, question):
     from src.conversational_analytics.api import create_app
     from tests.test_chat_mock_conversation import _new_turn, _completed_events
 
@@ -580,7 +588,7 @@ def test_directional_date_question_clarifies_without_news_cards(tmp_path):
         turn = _new_turn(
             client,
             conversation["id"],
-            "noticias antes de julio de 2026",
+            question,
             {"tab": "news", "period": "2026M07"},
         )
         _completed_events(client, turn)

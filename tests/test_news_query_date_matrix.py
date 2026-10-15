@@ -161,3 +161,22 @@ def test_evidence_tool_enforces_relative_semantics_before_returning_records(monk
 def test_directional_qualifiers_require_explicit_supported_bounds_even_with_caller_dates(query, bounds):
     with pytest.raises(ValueError, match="inicio y fin explícitos"):
         resolve_news_query(query, start_date=bounds[0], end_date=bounds[1])
+
+
+@pytest.mark.parametrize("bounds", BOUNDS)
+@pytest.mark.parametrize(
+    "query",
+    [
+        "noticias a partir de abril de 2026",
+        "noticias a partir del 15 de julio de 2026",
+        "noticias a partir de 2026-04",
+        "noticias de abril de 2026 en adelante",
+        "noticias de 2026-04 en adelante",
+        "noticias de 2026-04-15 en adelante",
+        "noticias a contar de abril de 2026",
+        "noticias de abril de 2026 en lo sucesivo",
+    ],
+)
+def test_onward_qualifiers_are_not_narrowed_to_a_single_month(query, bounds):
+    with pytest.raises(ValueError, match="inicio y fin explícitos"):
+        resolve_news_query(query, start_date=bounds[0], end_date=bounds[1])
