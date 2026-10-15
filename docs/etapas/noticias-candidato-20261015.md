@@ -131,3 +131,12 @@ en el servicio con `Provided git ref ... does not exist`, aunque GitHub y CI
 resuelven la referencia. Se registra el límite y se vuelve a solicitar revisión
 sin tratar esos errores como aprobación. Este registro no cambia el producto,
 el índice de evidencia ni los límites de publicación.
+
+Una segunda revisión detectó dos casos adicionales de procedencia: reutilizar
+la misma URL canónica con otro hash descartaba el cambio, y una redirección al
+mismo host podía bajar de HTTPS. Ahora un conflicto de hash bloquea la
+proyección, incluso con distinto identificador de historia y en ambos órdenes;
+cada redirección debe conservar HTTPS, host permitido y ausencia de usuario o
+contraseña. Las pruebas usan transporte HTTP simulado: las URL rechazadas no
+reciben una segunda solicitud y no generan archivos; una redirección relativa
+HTTPS válida conserva su destino y estado candidato.

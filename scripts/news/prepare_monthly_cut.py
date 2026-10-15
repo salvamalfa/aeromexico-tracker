@@ -42,12 +42,16 @@ ALLOWED = {
 }
 
 
+def validate_source_url(url):
+    parsed = urlsplit(url)
+    if parsed.scheme != "https" or parsed.hostname not in HOSTS or parsed.username or parsed.password:
+        raise ValueError("Source outside bounded HTTPS candidate list")
+
+
 def validate(raw):
     if set(raw) - ALLOWED:
         raise ValueError("Unrecognized fields: article bodies are not accepted")
-    parsed = urlsplit(raw["source_url"])
-    if parsed.scheme != "https" or parsed.hostname not in HOSTS or parsed.username or parsed.password:
-        raise ValueError("Source outside bounded HTTPS candidate list")
+    validate_source_url(raw["source_url"])
     if not raw.get("description") or len(raw["description"]) > 320 or len(raw["title"]) > 240:
         raise ValueError("Summary/title outside bounds")
     for key in ["published_at", "event_date", "event_end_date"]:
@@ -87,15 +91,14 @@ def main():
     for raw in items:
         # No unrestricted redirects or authenticated calls. Follow only hosts
         # in this cut's public citation allowlist.
-        with httpx.Client(timeout=30) as client:
+        with httpx.Client(timeout=30, follow_redirects=False) as client:
             url = raw["source_url"]
             for _ in range(4):
                 response = client.get(url)
                 if not response.is_redirect:
                     break
                 url = str(response.url.join(response.headers["location"]))
-                if urlsplit(url).hostname not in HOSTS:
-                    raise ValueError("Redirect outside source list")
+                validate_source_url(url)
             response.raise_for_status()
         content = response.content
         if (

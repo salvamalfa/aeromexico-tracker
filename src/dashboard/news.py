@@ -31,7 +31,7 @@ CANDIDATE_HOSTS = {
 
 def project(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     stories = {}
-    seen_urls = set()
+    seen_urls = {}
     for record in records:
         if record.get("kind") != "news":
             continue
@@ -43,8 +43,10 @@ def project(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         url = canonical_news_url(source["url"])
         story = record.get("story_id", record["id"])
         if url in seen_urls:
+            if seen_urls[url] != source["sha256"]:
+                raise ValueError("Conflicting source hashes at the same canonical URL")
             continue
-        seen_urls.add(url)
+        seen_urls[url] = source["sha256"]
         if story in stories:
             stories[story]["sources"].append(source)
             # A reviewed story does not approve a newly associated source.
