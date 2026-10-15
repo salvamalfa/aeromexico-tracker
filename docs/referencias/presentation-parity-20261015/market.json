@@ -1,0 +1,279 @@
+{
+  "schema": "presentation_parity_diagnostic_v2",
+  "authorizes_publication": false,
+  "approved_code_commit": "6d8da2c4c0b96371c26521aedb5828610451d03a",
+  "base_commit": "40a63d1905afde97ae8e3f8671c8217aafacc4aa",
+  "evaluated_commit": "bf4f1a712d108cbff801a3230d53fdb89cc2d7ea",
+  "evaluated_tree": "6701b06a635dcd49cac9683d0376ed640a647049",
+  "report_generator_sha256": "e81f3b6f4de5c8a6105385a713b7399288b4a68e86ecc66d37c58b5e079b4a97",
+  "worktree_code_matches_evaluated_commit": true,
+  "provenance_note": "evaluated_commit is the checkout where this report was actually executed. Committing the generated report necessarily creates a later commit; verify its presentation-component fingerprint and generator SHA, not a circular self-reference to the artifact commit.",
+  "fingerprints": {
+    "approved_entity_code": "8fc1d53128ae8a0cc795f29ae944e37787bb280f6025ec66b6a8b1cbc1f6382f",
+    "master_base": "29a4b6b87c52f29de1c450d23a335f82647af0b5285cba1f992bb9e2f99a693f",
+    "candidate": "7aca3037e975bcefda51fabdf76706f0b01bfa60c73a95fcc46b4c2c686b0f7b"
+  },
+  "component_counts": {
+    "approved": 130,
+    "master_base": 132,
+    "candidate": 137
+  },
+  "inherited_changes": [
+    {
+      "path": "src/publish/frozen_data.py",
+      "before_sha256": null,
+      "after_sha256": "eaec0fb92a0874d64a661ca25cde662a5e7cc7c1d4ca0ec23e5101c5d13ea54f"
+    },
+    {
+      "path": "src/publish/gate.py",
+      "before_sha256": "d3ad4160f206f6aac291958dd12db97062412593e161ea1e11eeb1be934d8a26",
+      "after_sha256": "d4f8358089f9b8150b13245fc5ac4a615bd08b96f2c5ba4d650b58910d55ea38"
+    },
+    {
+      "path": "web/index.html",
+      "before_sha256": "5cbfd2f6bfa4c0c4b19473f4b678881e1fa428f9322659d06a4492a7b9b43549",
+      "after_sha256": "cd24a7d098f956153b6bfd7e2e4dc92974ab3cb5ab402baa7e6d4d7405131ad2"
+    },
+    {
+      "path": "web/src/views/flights/bootstrap.ts",
+      "before_sha256": "291d8a8db6bbacd37a2e2539a2fd249edf06da83ec16c42684a37c750a61b30f",
+      "after_sha256": "e863d8d9f3bfd8f97a689961328d48bf409c6104dc6170730ceacaef55e3c9b2"
+    },
+    {
+      "path": "web/src/views/flights/coverage.ts",
+      "before_sha256": "e87c2e3558586cf6c73479b6714d8f62e7356328207fec6d87ce176ebdd46062",
+      "after_sha256": "d5bc43b7fdcb5e881d925e2f349dbcdc27ba0a8f9fa5c6e8e2d4af51c7e7f5f5"
+    },
+    {
+      "path": "web/src/views/flights/domestic.ts",
+      "before_sha256": "80c2abc9e4c8c4d5b97bbfd214be16ec591585bf609ea9731ecd9acb77adf75f",
+      "after_sha256": "975177077151902ec384789be880d34a0dcadb46e1a90fb6fe2f4e839e8ab8a0"
+    },
+    {
+      "path": "web/src/views/flights/flight-measure.ts",
+      "before_sha256": null,
+      "after_sha256": "0950362d9585b3a1bd32ed0be3e688278d583296b0d75fb85fdee6188a402a09"
+    },
+    {
+      "path": "web/src/views/flights/flights.css",
+      "before_sha256": "803170ec254c15704fde59a2c59b5254c3032ad1678e38ee3cceaff89029a41a",
+      "after_sha256": "117ced5a366908adb3cc6ed1a68f7c452789511195a558cca10eb808b569688e"
+    },
+    {
+      "path": "web/src/views/flights/network.ts",
+      "before_sha256": "2e5227ae6d3b4a0597f735183ef05535b3ccd3b92dadd599dd8fc037ef198091",
+      "after_sha256": "29601992b062ccc0c2a2fa89f743cb1878237676e7d9c2675aa71a4b0d55cd1b"
+    },
+    {
+      "path": "web/src/views/flights/state.ts",
+      "before_sha256": "209b85581f190e41866813bf2cf9e254cc52d2508c107dd9c98ccbfd8e4ff1ad",
+      "after_sha256": "55a4057b2fc2ad130093d66a12a46e8b5e4a79c5d575d683904fee21dc94da85"
+    },
+    {
+      "path": "web/src/views/flights/table.ts",
+      "before_sha256": "6a79d2fa8aaa159c8b2e7fbfd4863739a02ca75f72ace74fac889904766a5a59",
+      "after_sha256": "492c8e4c8d48cad1a6d075c1a8d3969da1f4d0ebfd3ee84681cf8d38e6d0636f"
+    },
+    {
+      "path": "web/src/views/flights/volume.ts",
+      "before_sha256": "5c04831cd98047a65c3e363510037e441813771869b1755eb78ebd9945d269e5",
+      "after_sha256": "5523fd8392c8cd9a57241ef630258a8dd887e3521a3950370949ce6e214fb2cb"
+    }
+  ],
+  "candidate_changes": [
+    {
+      "path": "contracts/web/market_demand.schema.json",
+      "before_sha256": null,
+      "after_sha256": "420bdc05ef4035fe2f99a5e6e5fce3b0d4d5129abdfefa298a78a1c620dc95bf"
+    },
+    {
+      "path": "src/analysis_agent/entity_adapter.py",
+      "before_sha256": "c8223ba55026e6d5205fc89d5beba41ce7ba81e247a1e946cb90addcf6876abe",
+      "after_sha256": "9429cf91b493e8eca2c26bdc303aa47a179a94a6d87fd7f1fa3e82b55ce563de"
+    },
+    {
+      "path": "src/dashboard/market_demand.py",
+      "before_sha256": null,
+      "after_sha256": "5380bb7a17b8669fe287aa8d783f64ecc30ac03bbe7b2de5f8eb5ca7b534ecea"
+    },
+    {
+      "path": "src/publish/manifest.py",
+      "before_sha256": "8ab363e81b692325feb6666fe4495ccc6890f2f445aec574cc2ffc07672af0a7",
+      "after_sha256": "65b38197bf69a4395931eb039c4001e507a26e909f74f5ac32401e17394c4c64"
+    },
+    {
+      "path": "src/publish/verify.py",
+      "before_sha256": "e9ddfa86f08ffea240a3b9d0a666ac3938f41e96e799a191081da39f76ea6562",
+      "after_sha256": "973f2eeb0ac78598a7998adb3eb206d66e9d1299be9088cd2eab96b45ed71283"
+    },
+    {
+      "path": "src/web_export/market.py",
+      "before_sha256": "b6022e82a20341583cdaf3cd5d5441585b59ce03c905216209531c4b50320fca",
+      "after_sha256": "73686f528a7ac66e85f8ecf1fa6b017d85d7594e7b815afa48eae13707c84336"
+    },
+    {
+      "path": "web/index.html",
+      "before_sha256": "cd24a7d098f956153b6bfd7e2e4dc92974ab3cb5ab402baa7e6d4d7405131ad2",
+      "after_sha256": "97c44e5b09699629c939303f6cc3a3e152eb11088f141566bc50e4ae06ccdcd5"
+    },
+    {
+      "path": "web/src/styles/base.css",
+      "before_sha256": "ae17b594c384f1a7fc44e9326ebdfe4ee6fb09f7b151961fb24a6efbaa2d808e",
+      "after_sha256": "2e37d4f15e7fb44075676c5a784e46c81c37c8e80c034845fdf36ed931c9a106"
+    },
+    {
+      "path": "web/src/types/chat.ts",
+      "before_sha256": "991c975e963f9e372d64811a572cacaeaed4b00677b7f97427be372c3391b0be",
+      "after_sha256": "04d3f4c9d355760233583df5279d961ef3936b745acd16e6b4304c793a5d23e0"
+    },
+    {
+      "path": "web/src/types/generated/market_demand.ts",
+      "before_sha256": null,
+      "after_sha256": "8456327590c567611eb8288e73d1ee11ddabbddae2b6307a8ce42ccce75bdbfc"
+    },
+    {
+      "path": "web/src/views/chat/card-actions.ts",
+      "before_sha256": "eb0b5aed8cf8035563bb590745fdb1dc2acf245dbbaa5bb9c696cd6a64dfe847",
+      "after_sha256": "29b0f173fc5ea58fe2cd524e1e6a60d65e632d176fc69058d942598294556551"
+    },
+    {
+      "path": "web/src/views/chat/context.ts",
+      "before_sha256": "0da28093e4eb46fad3ad957aa0ba08ad2482e61dd1992d09d1b89ccba8a67766",
+      "after_sha256": "2582d8683eb0550757cb0d013943da84a874f2d6390069a7f6d4dcc41be9e402"
+    },
+    {
+      "path": "web/src/views/executive/bootstrap.ts",
+      "before_sha256": "96a2b20b4649f9f73cda06942d77a7b1234f580177c8b901cec4ed3a45cfbce5",
+      "after_sha256": "3ba100ba616a2fd4e06e741cff1114abc313553883e84d8a04670dbd02ab9567"
+    },
+    {
+      "path": "web/src/views/executive/market.ts",
+      "before_sha256": "348a0eb357c6df47eaa055afea174a759b515c6db50ddd9bbeee2f58d9b38df6",
+      "after_sha256": "305b0865a71a4329088996df57c037f88349f5bc2bed4d8ca733beed62d12c83"
+    },
+    {
+      "path": "web/src/views/market/calculations.ts",
+      "before_sha256": null,
+      "after_sha256": "6824b9acad969031e34439e7556d13cf1a4ab90c5b5fd3e4de23007b1d30101e"
+    },
+    {
+      "path": "web/src/views/market/demand.ts",
+      "before_sha256": null,
+      "after_sha256": "3e0f46567897ff0422fe7cbd1a8030f9bf4e6b102634528aba6ed8f82d079131"
+    }
+  ],
+  "protected_paths_changed_since_base": [
+    "src/analysis_agent/entity_adapter.py"
+  ],
+  "public_payload_parity_diagnostic": {
+    "flights_identical": true,
+    "executive_identical": true,
+    "fresh_flights_sha256": "615f821a455e8775ddcdba33f7b9541811205f0e077b300ce5021699d2128287",
+    "site_flights_sha256": "615f821a455e8775ddcdba33f7b9541811205f0e077b300ce5021699d2128287",
+    "fresh_executive_sha256": "387008fd1b9e747917b2a1114347cc620071dd1bad8b0b8a2f3f74408ed8bdbe",
+    "site_executive_sha256": "387008fd1b9e747917b2a1114347cc620071dd1bad8b0b8a2f3f74408ed8bdbe"
+  },
+  "private_gold_inputs": {
+    "count": 4,
+    "total_bytes": 348215,
+    "per_file_metadata_redacted": true
+  },
+  "selected_records": [
+    {
+      "entity": "AEROMEXICO",
+      "period": "2026Q2",
+      "version": "186ba823aea28830be12cb0293c5bb2890a433b173addc473c26aa8f89cab26f",
+      "content_hash": "10898ecf005d18b05629db99ab896843bc25a2888aac62eaee175d0e08845965",
+      "evidence_fingerprint": "808256bfb7420d221a3f2f2383c4b95d9889110ad1545fd85f24df8d442a9ff1",
+      "record_code_version": "6db7173fe801e9e5ccd9afc24baced556274a58eb8ea799aa9132361b1c2d5c8",
+      "prompt_unchanged": true,
+      "ledger_state": "approved",
+      "approval_event": "85cc3fd9541695992576871f732eeaa94a535d89e15060496d8f208fda78b6bd",
+      "presentation_gate": {
+        "passed": true
+      },
+      "source_calculation_replay": "passed",
+      "calculation_record_sha256": "1096064ffe4e5e3bfb3a29dd4479eecdfc8a58d6d38b8aca7ef5a4b02dfffc59",
+      "public_claims": 18,
+      "public_claims_identical": true,
+      "public_claims_sha256": "425f15f8f763ba45c3a689d51b21f9149e6c5bda0bf0acb52e13cf732bb37e71",
+      "replayed_claims_sha256": "425f15f8f763ba45c3a689d51b21f9149e6c5bda0bf0acb52e13cf732bb37e71",
+      "thesis_identical": true,
+      "summary_identical": true,
+      "proposed_technical_version_unapproved_not_written": null
+    },
+    {
+      "entity": "INDUSTRY",
+      "period": "2026Q2",
+      "version": "d7505561319532b7eb5bfbde87339a31e720bd7f9b6c358175a26587dffdf868",
+      "content_hash": "3dd2a4ff80f698deaba1257cb55859994ec06155f3fb4504918c889566be91ed",
+      "evidence_fingerprint": "4caa2aefd178328b955c5579b1e88375220ea658331ab109017be0d9f0da7686",
+      "record_code_version": "8fc1d53128ae8a0cc795f29ae944e37787bb280f6025ec66b6a8b1cbc1f6382f",
+      "prompt_unchanged": true,
+      "ledger_state": "approved",
+      "approval_event": "4149a71e7d8dd631ecb966541dd189c09f45553f43ee015d00f58979dcb958c4",
+      "presentation_gate": {
+        "passed": false,
+        "error": "Entity implementation changed: import and audit a new version"
+      },
+      "source_calculation_replay": "passed",
+      "calculation_record_sha256": "6dd678f020253046d4dc04398c2e0b4e408b68833704610122ab6317a14c5280",
+      "public_claims": 16,
+      "public_claims_identical": true,
+      "public_claims_sha256": "5df3e53d5665aa285a2dae8f2d407c0266a3a74acbdfef7a7e229295c698129f",
+      "replayed_claims_sha256": "5df3e53d5665aa285a2dae8f2d407c0266a3a74acbdfef7a7e229295c698129f",
+      "thesis_identical": true,
+      "summary_identical": true,
+      "proposed_technical_version_unapproved_not_written": "dbb55140efb4459829756dbf0ecf4a863a3d802cc548ef9feb28678421e3bdaa"
+    },
+    {
+      "entity": "VIVA_AEROBUS",
+      "period": "2026Q2",
+      "version": "49af5ded1f73b93270139e96fa7f168c8d119049db0e00468b13afda65db9fc2",
+      "content_hash": "27ac10c3dd89c04c2b7b317cc83238550fe4a92e5e33b8178604acfecefa43e2",
+      "evidence_fingerprint": "2d10ad214603e654490744a408b8827e08444fd9f934639748c30095fd3065d6",
+      "record_code_version": "8fc1d53128ae8a0cc795f29ae944e37787bb280f6025ec66b6a8b1cbc1f6382f",
+      "prompt_unchanged": true,
+      "ledger_state": "approved",
+      "approval_event": "d2cf24081836792823524b1c7a487f93e526a285ea68d0ebd0dcdf0ac7f818b5",
+      "presentation_gate": {
+        "passed": false,
+        "error": "Entity implementation changed: import and audit a new version"
+      },
+      "source_calculation_replay": "passed",
+      "calculation_record_sha256": "c20698abf0c59f31c1804b75621126866b901e39be4952e5b07501ae1de5259e",
+      "public_claims": 18,
+      "public_claims_identical": true,
+      "public_claims_sha256": "1063f46218d1f820161fa82ffec4e05b2f802598d6e0273bb1f8fc5c8c978397",
+      "replayed_claims_sha256": "1063f46218d1f820161fa82ffec4e05b2f802598d6e0273bb1f8fc5c8c978397",
+      "thesis_identical": true,
+      "summary_identical": true,
+      "proposed_technical_version_unapproved_not_written": "857868f922b2a809ca1dee0a16f7a984812e1086b629ab205c7b5c7a256e5c63"
+    },
+    {
+      "entity": "VOLARIS",
+      "period": "2026Q2",
+      "version": "591814bf16e6467d12f1716f5917a80d79610ed86d47f7a88398aba899d979d1",
+      "content_hash": "74b34102ba86a357509a0779a68b67ba4a240eb9ded4c31dff1362d29a15260a",
+      "evidence_fingerprint": "1c83bec4eba83bad999dca646ee6384654cbde6cef47d5bf9fac128646f5adea",
+      "record_code_version": "8fc1d53128ae8a0cc795f29ae944e37787bb280f6025ec66b6a8b1cbc1f6382f",
+      "prompt_unchanged": true,
+      "ledger_state": "approved",
+      "approval_event": "89cc4cc9a029c943c83de5f003f2d7a4ba9422ee182c486b6d2c4948ba58c4f2",
+      "presentation_gate": {
+        "passed": false,
+        "error": "Entity implementation changed: import and audit a new version"
+      },
+      "source_calculation_replay": "passed",
+      "calculation_record_sha256": "f7ec731d0740316e31676b5ca827550932853e3d8fd4329a2b2290a3ff08f2c6",
+      "public_claims": 16,
+      "public_claims_identical": true,
+      "public_claims_sha256": "a20bebc083729b958f34278c4fc5a402a23918110b191d95abceb0bb8a1ab745",
+      "replayed_claims_sha256": "a20bebc083729b958f34278c4fc5a402a23918110b191d95abceb0bb8a1ab745",
+      "thesis_identical": true,
+      "summary_identical": true,
+      "proposed_technical_version_unapproved_not_written": "8510955316cec8396fb928ebefc03f3bd728cdb465f0a6fd16b945e4f9566ab0"
+    }
+  ],
+  "decision": "Presentation remains blocked. Review/import/audit new technical entity versions and obtain explicit approval before export; retain the existing theses and evidence. This report is not an approval."
+}

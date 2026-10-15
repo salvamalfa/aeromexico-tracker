@@ -53,7 +53,7 @@ def test_catalog_and_context_are_versioned_and_allowlisted() -> None:
     with pytest.raises(PlanValidationError):
         validate_context({"tab": "reading", "entity": "AEROMEXICO", "filters": {"prompt": "anything"}})
     with pytest.raises(PlanValidationError):
-        validate_context({"tab": "market", "period": "2026Q2", "entity": "AEROMEXICO"})
+        validate_context({"tab": "unknown", "period": "2026Q2", "entity": "AEROMEXICO"})
 
 
 def test_plan_rejects_unlisted_metric_and_wrong_dimensions() -> None:
@@ -110,3 +110,8 @@ def test_data_version_ignores_interface_releases_but_tracks_data() -> None:
     first_contract = next(iter(contract_change["contracts"]))
     contract_change["contracts"][first_contract] = "3" * 64
     assert data_version(contract_change) != baseline
+
+
+def test_new_tabs_accept_context_without_expanding_metric_permissions():
+    for tab in ["market", "news"]:
+        assert validate_context({"tab":tab,"period":"2026M09","entity":"INDUSTRY"})["tab"] == tab

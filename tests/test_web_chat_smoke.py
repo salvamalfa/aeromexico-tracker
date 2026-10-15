@@ -72,6 +72,8 @@ def _public_fixtures() -> dict[str, object]:
     ]
     return {
         "/data/v1/executive.json": executive,
+        "/data/v1/market-demand.json": {"months":[],"airports":[],"groups":[],"quality_notes":[]},
+        "/data/v1/news.json": {"mode":"candidate_preview", "coverage_note":"Fixture parcial", "months":["2026-09"], "limits":[], "records":[]},
         "/data/v1/market.json": json.loads((WEB_FIXTURES / "market_sample.json").read_text()),
         "/data/v1/analysis/2026Q2.json": json.loads((WEB_FIXTURES / "analysis_sample.json").read_text()),
     }
@@ -231,12 +233,14 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
             assert sent_context[1]["entity"] == "VOLARIS"
             page.keyboard.press("Escape")
 
-            page.locator(".chart-card .chat-card-action").first.click()
+            if page.locator("#tab-market").count():
+                page.click("#tab-market")
+            page.locator(".chart-card .chat-card-action").filter(visible=True).first.click()
             page.get_by_label("Pregunta sobre los datos publicados").fill("Explícame esta gráfica")
             page.get_by_role("button", name="Enviar").click()
             page.get_by_text("Respuesta segura.").last.wait_for(timeout=10_000)
             market_index = len(sent_context) - 1
-            assert sent_context[market_index]["card_id"] == "market-chart"
+            assert sent_context[market_index]["card_id"] in {"market-chart", "market-card"}
             assert sent_context[market_index]["filters"]["segment"] == "total"  # type: ignore[index]
             page.keyboard.press("Escape")
 
