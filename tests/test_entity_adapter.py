@@ -162,6 +162,9 @@ def test_code_version_is_deterministic_and_uses_sorted_relative_paths(tmp_path, 
 @pytest.mark.parametrize(
     "name",
     [
+        "src/dashboard/market_demand.py",
+        "src/dashboard/news.py",
+        "src/conversational_analytics/news_projection.py",
         "src/analysis_agent/new.py",
         "src/publish/new.py",
         "src/web_export/new.py",
@@ -318,3 +321,16 @@ def test_normalization_rejects_same_excerpt_id_for_different_valid_sources():
     )
     with pytest.raises(ValueError, match="Duplicate excerpt_id"):
         adapter._normalize(package, context, evidence, candidate)
+
+
+@pytest.mark.parametrize("module", ["src/dashboard/market_demand.py", "src/dashboard/news.py", "src/conversational_analytics/news_projection.py"])
+def test_new_public_builder_mutation_invalidates_presentation(tmp_path, monkeypatch, module):
+    from src.analysis_agent.analyst import SKILL
+    _temporary_code_tree(tmp_path, monkeypatch)
+    path=tmp_path / module
+    path.parent.mkdir(parents=True,exist_ok=True)
+    path.write_text("initial approved calculation/projection")
+    record={"code_version":adapter.code_version(),"prompt_version":adapter.sha(SKILL)}
+    path.write_text("changed calculation/projection")
+    with pytest.raises(ValueError,match="implementation changed"):
+        adapter.require_current_presentation(record)
