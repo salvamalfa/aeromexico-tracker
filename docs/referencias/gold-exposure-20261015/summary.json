@@ -10,11 +10,10 @@
   "news_additional_gold_tables": 0,
   "baseline_direct_pct": 30.4,
   "market_direct_pct": 39.1,
-  "private_flight_gold_present": [
-    "fact_aeromexico_domestic_capacity_estimate.parquet",
-    "fact_aeromexico_international_capacity_estimate.parquet",
-    "fact_route_carrier_domestic_estimate.parquet",
-    "fact_route_carrier_international_estimate.parquet"
-  ],
-  "rubric_note": "Aproximación estática conservadora, no telemetría de usuarios ni porcentaje de filas/columnas expuestas. Directa puede ser un agregado o subconjunto; contexto/validación no equivale a visualización. La disponibilidad por periodo y tipo de cifra limita el mapa. Noticias usa JSON de evidencia y no aumenta este denominador."
+  "rubric_note": "Aproximación estática conservadora, no telemetría de usuarios ni porcentaje de filas/columnas expuestas. Directa puede ser un agregado o subconjunto; contexto/validación no equivale a visualización. La disponibilidad por periodo y tipo de cifra limita el mapa. Noticias usa JSON de evidencia y no aumenta este denominador.",
+  "private_flight_gold": {
+    "count": 4,
+    "total_bytes": 348215,
+    "per_file_metadata_redacted": true
+  }
 }
