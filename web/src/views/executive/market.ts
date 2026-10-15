@@ -140,4 +140,5 @@ export function mountMarketControls(dataRoot: string): void {
   window.addEventListener("reader-tab-visible", event => {
     if ((event as CustomEvent).detail?.panelId === "panel-market") void mountDemand(dataRoot);
   });
+  if (document.getElementById("panel-market")?.hidden === false) void mountDemand(dataRoot);
 }

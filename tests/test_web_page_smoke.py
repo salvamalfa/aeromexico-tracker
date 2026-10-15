@@ -181,3 +181,21 @@ def test_independent_tabs_and_mobile_navigation(page_with_console_capture, new_t
     assert page.is_visible(f"#panel-{new_tab}")
     page.wait_for_function("document.documentElement.scrollWidth <= innerWidth")
     assert errors == []
+
+
+def test_market_demand_mounts_when_selected_during_startup(web_server):
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(executable_path=_chromium_executable())
+        page = browser.new_page(viewport={"width": 390, "height": 844})
+        held = []
+        page.route("**/data/v1/executive.json", lambda route: held.append(route))
+        with page.expect_request("**/data/v1/executive.json"):
+            page.goto(web_server, wait_until="domcontentloaded")
+        page.click("#tab-market")
+        page.evaluate("() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))")
+        assert held
+        held[0].continue_()
+        page.wait_for_function("document.getElementById('airport-period').value === '2026M06'")
+        assert page.get_attribute("#tab-market", "aria-selected") == "true"
+        assert "Fixture" in page.text_content("#airport-quality")
+        browser.close()

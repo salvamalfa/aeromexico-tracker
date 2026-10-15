@@ -66,3 +66,9 @@ revisión limpia. Se conserva el PR draft y se solicita una revisión del nuevo
 head que registra este límite. El sitio existente pasó `src.publish.verify`;
 la combinación local de Mercado y Noticias pasó 196 pruebas web y 13 de
 navegador antes de las dos correcciones posteriores de Noticias.
+
+La revisión posterior de `b6b758e` sí terminó y encontró una carrera de inicio:
+abrir Mercado antes de recibir los datos iniciales perdía el evento que carga
+la demanda aeroportuaria. Se comprueba también la visibilidad actual al montar
+los controles. Una prueba móvil retiene `executive.json`, abre Mercado y libera
+la respuesta; falla sin la corrección y pasa al aplicarla.
