@@ -6,6 +6,7 @@ import pandas as pd
 
 from src.dashboard.route_entities import AEROMEXICO_ROUTES, RouteEntity, breakdown_totals
 from src.dashboard.map_periods import refresh_network_availability
+from src.dashboard.map_layers import supported_estimate_items
 
 LABELS = {"anac": "Brasil · ANAC", "aerocivil": "Colombia · Aerocivil", "caa": "Reino Unido · CAA"}
 AICM_LABEL = "AICM · vuelos AM programados"
@@ -518,7 +519,7 @@ def extend_networks(connection, networks, *, include_existing_us_estimates=False
                 own_months = set(
                     matching.get("observed_months") or matching.get("scheduled_months") or months
                 )
-                monthly = [item for item in estimate["monthly"] if item["period_id"] in own_months]
+                monthly = supported_estimate_items(estimate["monthly"], own_months, matching["directions"])
                 if not monthly:
                     continue
                 payload["monthly"] = monthly

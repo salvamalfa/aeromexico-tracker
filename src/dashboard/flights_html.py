@@ -76,7 +76,7 @@ def integration_flight_payload(payload: dict[str, Any]) -> dict[str, Any]:
             "destination": endpoint(value["destination"]),
             **metrics,
             "previous": {key: value["previous"].get(key) for key in metric_keys},
-            "directions": [] if estimated else [
+            "directions": [
                 {
                     key: direction.get(key)
                     for key in (
