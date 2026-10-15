@@ -1,7 +1,9 @@
 # Continuidad de Airline Tracker sin capturas AeroDataBox recurrentes
 
-Alcance vigente al **15 de octubre de 2026**, pendiente de aprobación en el
+Alcance vigente al **15 de octubre de 2026**, aprobado y publicado mediante el
 [PR #133](https://github.com/salvamalfa/aeromexico-tracker/pull/133).
+La [ampliación posterior de cobertura](etapas/cobertura-vuelos-20261015.md)
+permanece como una versión de prueba separada.
 El dueño sustituyó la propuesta de retirar el histórico: **se conserva todo el
 snapshot publicado y el mapa muestra únicamente vuelos**. Las tarjetas
 oficiales, pasajeros agregados, finanzas y cuatro tesis permanecen iguales.

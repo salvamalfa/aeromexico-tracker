@@ -33,6 +33,9 @@ export function scheduledIconHtml(route: Route): string {
 }
 
 export function coverageIndicator(route: Route): { variant: string; title: string } | null {
+  if ((route.operation_status ?? "").includes("partial_frequencies")) return {
+    variant: "is-partial", title: "Frecuencias conocidas; hay operadores o sentidos sin conteo, sin completar con cero",
+  };
   if (finite(route.months_covered) && finite(route.months_selected) && route.months_selected > 0) {
     // Agregado nacional multi-mes: mismo criterio que Internacional
     // (verde/amarillo/rojo según cuántos meses de calendario del

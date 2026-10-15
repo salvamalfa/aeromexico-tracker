@@ -152,6 +152,8 @@ export interface QuartersDocument {
 }
 
 export interface PeriodNetworkDocument {
+  eligibility_reason?: string | null;
+  coverage_by_source?: Record<string, string[]>;
   mode: string;
   period_label: string;
   routes: Route[];

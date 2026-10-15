@@ -335,17 +335,12 @@ def _load_world_geometry() -> dict[str, Any]:
     }
 
 
-def _quarter_months(period_id: str) -> list[str]:
-    year = int(period_id[:4])
-    quarter = int(period_id[-1])
-    first_month = (quarter - 1) * 3 + 1
-    return [f"{year}M{month:02d}" for month in range(first_month, first_month + 3)]
-
-
 def _load_routes(connection: duckdb.DuckDBPyConnection, period_id: str, entity: RouteEntity = AEROMEXICO_ROUTES) -> dict[str, Any]:
+    from src.dashboard.map_periods import mappable_routes, period_label, period_months
+
     # Another map entity reads its own T-100 carriers (see entity_routes.py).
     carriers_sql = ", ".join(f"'{key}'" for key in entity.t100_carriers)
-    expected_months = _quarter_months(period_id)
+    expected_months = period_months(period_id)
     available_months = {
         str(row[0])
         for row in connection.execute(
@@ -357,8 +352,8 @@ def _load_routes(connection: duckdb.DuckDBPyConnection, period_id: str, entity: 
     if not current_months:
         return {
             "period_id": period_id,
-            "period_label": _quarter_label(period_id),
-            "period_type": "quarter",
+            "period_label": period_label(period_id),
+            "period_type": "month" if "M" in period_id else "quarter",
             "availability": "unavailable",
             "expected_months": expected_months,
             "observed_months": [],
@@ -398,10 +393,7 @@ def _load_routes(connection: duckdb.DuckDBPyConnection, period_id: str, entity: 
     ).df()
     if current.empty or current["market_key"].duplicated().any():
         raise ValueError("Current T-100 route view must contain unique markets")
-    coord_columns = ["origin_lat", "origin_lon", "dest_lat", "dest_lon"]
-    if current[coord_columns].isna().any().any():
-        missing = current[current[coord_columns].isna().any(axis=1)]["market_key"].tolist()
-        raise ValueError(f"T-100 routes are missing airport coordinates: {missing[:5]}")
+    current, geography_note = mappable_routes(current)
     placeholders = ",".join("?" for _ in prior_months)
     prior = connection.execute(
         f"""
@@ -498,9 +490,9 @@ def _load_routes(connection: duckdb.DuckDBPyConnection, period_id: str, entity: 
     requested_end = str(pd.Timestamp(_month_date(expected_months[-1])) + pd.offsets.MonthEnd(0))[:10]
     return {
         "period_id": period_id,
-        "period_label": _quarter_label(period_id),
-        "period_type": "quarter" if len(current_months) == 3 else "quarter_to_date",
-        "availability": "complete" if len(current_months) == 3 else "partial",
+        "period_label": period_label(period_id),
+        "period_type": "month" if "M" in period_id else ("quarter" if len(current_months) == 3 else "quarter_to_date"),
+        "availability": "complete" if len(current_months) == len(expected_months) else "partial",
         "expected_months": expected_months,
         "observed_months": current_months,
         "requested_period_start": requested_start,
@@ -515,6 +507,7 @@ def _load_routes(connection: duckdb.DuckDBPyConnection, period_id: str, entity: 
         "cutoff_date": PILOT_CUTOFF,
         "agent_eligible": False,
         "eligibility_reason": (
+            geography_note +
             "La copia local fue descargada y revisada después del corte 2T26; "
             "no preserva la versión T-100 exacta disponible el 13 jul 2026."
         ),
@@ -578,7 +571,7 @@ def _load_forecast(connection: duckdb.DuckDBPyConnection) -> dict[str, Any]:
     }
 
 
-def build_flight_payload(database_path: str | Path | None = None) -> dict[str, Any]:
+def build_flight_payload(database_path: str | Path | None = None, *, include_existing_us_estimates: bool = False) -> dict[str, Any]:
     """Build the complete review payload without mutating Gold or approved evidence."""
 
     path = Path(database_path) if database_path is not None else PATHS.warehouse
@@ -586,9 +579,11 @@ def build_flight_payload(database_path: str | Path | None = None) -> dict[str, A
         quarters = _load_quarters(connection)
         mixes = _load_mix(connection)
         monthly_passengers = _load_monthly_passengers(connection)
+        from src.dashboard.map_periods import retained_map_periods
+        map_periods = retained_map_periods(connection)
         route_networks = {
             record["period_id"]: _load_routes(connection, record["period_id"])
-            for record in quarters
+            for record in map_periods
         }
         from src.dashboard.international_routes import extend_networks
         from src.dashboard.domestic_routes import (
@@ -596,11 +591,11 @@ def build_flight_payload(database_path: str | Path | None = None) -> dict[str, A
             load_domestic_networks,
         )
         from src.dashboard.entity_routes import build_entity_networks
-        international_networks = extend_networks(connection, route_networks)
-        domestic_networks = load_domestic_networks(connection, quarters)
+        international_networks = extend_networks(connection, route_networks, include_existing_us_estimates=include_existing_us_estimates)
+        domestic_networks = load_domestic_networks(connection, quarters, include_estimates=False)
         domestic_monthly_networks = load_domestic_monthly_networks(connection)
         # Dashboard v2 (fase 3): the same map for Industria, Volaris and Viva.
-        entity_networks = build_entity_networks(connection, quarters, _load_routes)
+        entity_networks = build_entity_networks(connection, map_periods, _load_routes, include_existing_us_estimates=include_existing_us_estimates)
         route_network = {
             **route_networks[PILOT_PERIOD],
             "world_geometry": _load_world_geometry(),

@@ -20,7 +20,7 @@ from src.dashboard.route_capacity import load_route_capacity
 from src.dashboard.route_entities import EXTRA_ROUTE_ENTITIES, RouteEntity, breakdown_totals
 
 
-def entity_international_networks(connection, networks, entity: RouteEntity):
+def entity_international_networks(connection, networks, entity: RouteEntity, *, include_existing_us_estimates=False):
     """International map of Volaris, Viva or Industria (Dashboard v2, fase 3).
 
     Mexico–United States comes from each entity's own BTS T-100 routes
@@ -64,7 +64,8 @@ def entity_international_networks(connection, networks, entity: RouteEntity):
             route["source_label"] = "Estados Unidos · BTS T-100"
             route["observed_months"] = original_months
             route["coverage_note"] = "Meses: " + ", ".join(m[5:] for m in original_months) + " · BTS T-100"
-        for market, estimate in _estimated_routes(estimates, capacity, months, endpoint, entity).items():
+        for market, estimate in _estimated_routes(estimates, capacity, months, endpoint, entity,
+                                                 include_us=include_existing_us_estimates).items():
             if any(r["market_key"] == market for r in network["routes"]):
                 continue
             months_text = ", ".join(sorted({m["period_id"][5:] for m in estimate["monthly"]}))
@@ -117,7 +118,8 @@ def entity_international_networks(connection, networks, entity: RouteEntity):
 
 
 def build_entity_networks(
-    connection, quarters: list[dict[str, Any]], load_routes: Callable[..., dict[str, Any]]
+    connection, quarters: list[dict[str, Any]], load_routes: Callable[..., dict[str, Any]], *,
+    include_existing_us_estimates=False,
 ) -> dict[str, dict[str, Any]]:
     """International (quarterly) and domestic (monthly) maps per extra entity.
 
@@ -135,7 +137,8 @@ def build_entity_networks(
             t100[record["period_id"]] = network
         result[entity.key] = {
             "label": entity.label,
-            "route_networks": entity_international_networks(connection, t100, entity),
+            "route_networks": entity_international_networks(connection, t100, entity,
+                include_existing_us_estimates=include_existing_us_estimates),
             "domestic_monthly_networks": load_domestic_monthly_networks(connection, entity),
         }
     return result

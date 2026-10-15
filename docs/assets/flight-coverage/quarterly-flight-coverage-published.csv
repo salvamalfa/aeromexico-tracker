@@ -1,0 +1,1129 @@
+entity,scope,quarter,kind,map_flights,mapped_route_records,represented_months,map_source_labels,pending_calendar_months,period_selectable,official_regular_quarter_flights,official_regular_represented_month_flights,comparable_observed_regular_flights,observed_minimum_quarter_pct,observed_share_represented_months_pct,estimated_coverage_pct,programmed_coverage_pct,definition,comparability_notes,coverage_status
+AEROMEXICO,domestic,2015Q1,observed,,0,,,2015M01|2015M02|2015M03,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2015Q1,scheduled,,0,,,2015M01|2015M02|2015M03,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2015Q1,estimated,,0,,,2015M01|2015M02|2015M03,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2015Q1,attributed,,0,,,2015M01|2015M02|2015M03,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2015Q2,observed,,0,,,2015M04|2015M05|2015M06,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2015Q2,scheduled,,0,,,2015M04|2015M05|2015M06,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2015Q2,estimated,,0,,,2015M04|2015M05|2015M06,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2015Q2,attributed,,0,,,2015M04|2015M05|2015M06,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2015Q3,observed,,0,,,2015M07|2015M08|2015M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2015Q3,scheduled,,0,,,2015M07|2015M08|2015M09,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2015Q3,estimated,,0,,,2015M07|2015M08|2015M09,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2015Q3,attributed,,0,,,2015M07|2015M08|2015M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2015Q4,observed,,0,,,2015M10|2015M11|2015M12,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2015Q4,scheduled,,0,,,2015M10|2015M11|2015M12,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2015Q4,estimated,,0,,,2015M10|2015M11|2015M12,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2015Q4,attributed,,0,,,2015M10|2015M11|2015M12,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2016Q1,observed,,0,,,2016M01|2016M02|2016M03,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2016Q1,scheduled,,0,,,2016M01|2016M02|2016M03,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2016Q1,estimated,,0,,,2016M01|2016M02|2016M03,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2016Q1,attributed,,0,,,2016M01|2016M02|2016M03,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2016Q2,observed,,0,,,2016M04|2016M05|2016M06,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2016Q2,scheduled,,0,,,2016M04|2016M05|2016M06,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2016Q2,estimated,,0,,,2016M04|2016M05|2016M06,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2016Q2,attributed,,0,,,2016M04|2016M05|2016M06,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2016Q3,observed,,0,,,2016M07|2016M08|2016M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2016Q3,scheduled,,0,,,2016M07|2016M08|2016M09,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2016Q3,estimated,,0,,,2016M07|2016M08|2016M09,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2016Q3,attributed,,0,,,2016M07|2016M08|2016M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2016Q4,observed,,0,,,2016M10|2016M11|2016M12,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2016Q4,scheduled,,0,,,2016M10|2016M11|2016M12,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2016Q4,estimated,,0,,,2016M10|2016M11|2016M12,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2016Q4,attributed,,0,,,2016M10|2016M11|2016M12,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2017Q1,observed,,0,,,2017M01|2017M02|2017M03,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2017Q1,scheduled,,0,,,2017M01|2017M02|2017M03,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2017Q1,estimated,,0,,,2017M01|2017M02|2017M03,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2017Q1,attributed,,0,,,2017M01|2017M02|2017M03,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2017Q2,observed,,0,,,2017M04|2017M05|2017M06,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2017Q2,scheduled,,0,,,2017M04|2017M05|2017M06,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2017Q2,estimated,,0,,,2017M04|2017M05|2017M06,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2017Q2,attributed,,0,,,2017M04|2017M05|2017M06,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2017Q3,observed,,0,,,2017M07|2017M08|2017M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2017Q3,scheduled,,0,,,2017M07|2017M08|2017M09,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2017Q3,estimated,,0,,,2017M07|2017M08|2017M09,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2017Q3,attributed,,0,,,2017M07|2017M08|2017M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2017Q4,observed,,0,,,2017M10|2017M11|2017M12,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2017Q4,scheduled,,0,,,2017M10|2017M11|2017M12,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2017Q4,estimated,,0,,,2017M10|2017M11|2017M12,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2017Q4,attributed,,0,,,2017M10|2017M11|2017M12,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2018Q1,observed,,0,,,2018M01|2018M02|2018M03,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2018Q1,scheduled,,0,,,2018M01|2018M02|2018M03,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2018Q1,estimated,,0,,,2018M01|2018M02|2018M03,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2018Q1,attributed,,0,,,2018M01|2018M02|2018M03,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2018Q2,observed,,0,,,2018M04|2018M05|2018M06,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2018Q2,scheduled,,0,,,2018M04|2018M05|2018M06,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2018Q2,estimated,,0,,,2018M04|2018M05|2018M06,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2018Q2,attributed,,0,,,2018M04|2018M05|2018M06,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2018Q3,observed,,0,,,2018M07|2018M08|2018M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2018Q3,scheduled,,0,,,2018M07|2018M08|2018M09,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2018Q3,estimated,,0,,,2018M07|2018M08|2018M09,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2018Q3,attributed,,0,,,2018M07|2018M08|2018M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2018Q4,observed,,0,,,2018M10|2018M11|2018M12,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2018Q4,scheduled,,0,,,2018M10|2018M11|2018M12,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2018Q4,estimated,,0,,,2018M10|2018M11|2018M12,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2018Q4,attributed,,0,,,2018M10|2018M11|2018M12,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2019Q1,observed,,0,,,2019M01|2019M02|2019M03,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2019Q1,scheduled,,0,,,2019M01|2019M02|2019M03,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2019Q1,estimated,,0,,,2019M01|2019M02|2019M03,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2019Q1,attributed,,0,,,2019M01|2019M02|2019M03,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2019Q2,observed,,0,,,2019M04|2019M05|2019M06,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2019Q2,scheduled,,0,,,2019M04|2019M05|2019M06,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2019Q2,estimated,,0,,,2019M04|2019M05|2019M06,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2019Q2,attributed,,0,,,2019M04|2019M05|2019M06,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2019Q3,observed,,0,,,2019M07|2019M08|2019M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2019Q3,scheduled,,0,,,2019M07|2019M08|2019M09,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2019Q3,estimated,,0,,,2019M07|2019M08|2019M09,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2019Q3,attributed,,0,,,2019M07|2019M08|2019M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2019Q4,observed,,0,,,2019M10|2019M11|2019M12,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2019Q4,scheduled,,0,,,2019M10|2019M11|2019M12,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2019Q4,estimated,,0,,,2019M10|2019M11|2019M12,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2019Q4,attributed,,0,,,2019M10|2019M11|2019M12,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2020Q1,observed,,0,,,2020M01|2020M02|2020M03,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2020Q1,scheduled,,0,,,2020M01|2020M02|2020M03,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2020Q1,estimated,,0,,,2020M01|2020M02|2020M03,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2020Q1,attributed,,0,,,2020M01|2020M02|2020M03,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2020Q2,observed,,0,,,2020M04|2020M05|2020M06,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2020Q2,scheduled,,0,,,2020M04|2020M05|2020M06,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2020Q2,estimated,,0,,,2020M04|2020M05|2020M06,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2020Q2,attributed,,0,,,2020M04|2020M05|2020M06,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2020Q3,observed,,0,,,2020M07|2020M08|2020M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2020Q3,scheduled,,0,,,2020M07|2020M08|2020M09,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2020Q3,estimated,,0,,,2020M07|2020M08|2020M09,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2020Q3,attributed,,0,,,2020M07|2020M08|2020M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2020Q4,observed,,0,,,2020M10|2020M11|2020M12,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2020Q4,scheduled,,0,,,2020M10|2020M11|2020M12,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2020Q4,estimated,,0,,,2020M10|2020M11|2020M12,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2020Q4,attributed,,0,,,2020M10|2020M11|2020M12,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2021Q1,observed,,0,,,2021M01|2021M02|2021M03,False,25599.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2021Q1,scheduled,,0,,,2021M01|2021M02|2021M03,False,25599.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2021Q1,estimated,,0,,,2021M01|2021M02|2021M03,False,25599.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2021Q1,attributed,,0,,,2021M01|2021M02|2021M03,False,25599.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2021Q2,observed,,0,,,2021M04|2021M05|2021M06,False,29288.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2021Q2,scheduled,,0,,,2021M04|2021M05|2021M06,False,29288.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2021Q2,estimated,,0,,,2021M04|2021M05|2021M06,False,29288.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2021Q2,attributed,,0,,,2021M04|2021M05|2021M06,False,29288.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2021Q3,observed,,0,,,2021M07|2021M08|2021M09,False,32060.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2021Q3,scheduled,,0,,,2021M07|2021M08|2021M09,False,32060.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2021Q3,estimated,,0,,,2021M07|2021M08|2021M09,False,32060.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2021Q3,attributed,,0,,,2021M07|2021M08|2021M09,False,32060.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2021Q4,observed,,0,,,2021M10|2021M11|2021M12,False,32649.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2021Q4,scheduled,,0,,,2021M10|2021M11|2021M12,False,32649.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2021Q4,estimated,,0,,,2021M10|2021M11|2021M12,False,32649.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2021Q4,attributed,,0,,,2021M10|2021M11|2021M12,False,32649.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2022Q1,observed,,0,,,2022M01|2022M02|2022M03,False,28669.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2022Q1,scheduled,,0,,,2022M01|2022M02|2022M03,False,28669.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2022Q1,estimated,,0,,,2022M01|2022M02|2022M03,False,28669.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2022Q1,attributed,,0,,,2022M01|2022M02|2022M03,False,28669.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2022Q2,observed,,0,,,2022M04|2022M05|2022M06,False,35122.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2022Q2,scheduled,,0,,,2022M04|2022M05|2022M06,False,35122.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2022Q2,estimated,,0,,,2022M04|2022M05|2022M06,False,35122.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2022Q2,attributed,,0,,,2022M04|2022M05|2022M06,False,35122.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2022Q3,observed,,0,,,2022M07|2022M08|2022M09,False,38309.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2022Q3,scheduled,,0,,,2022M07|2022M08|2022M09,False,38309.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2022Q3,estimated,,0,,,2022M07|2022M08|2022M09,False,38309.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2022Q3,attributed,,0,,,2022M07|2022M08|2022M09,False,38309.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2022Q4,observed,,0,,,2022M10|2022M11|2022M12,False,39298.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2022Q4,scheduled,,0,,,2022M10|2022M11|2022M12,False,39298.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2022Q4,estimated,,0,,,2022M10|2022M11|2022M12,False,39298.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2022Q4,attributed,,0,,,2022M10|2022M11|2022M12,False,39298.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2023Q1,observed,,0,,,2023M01|2023M02|2023M03,False,37772.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2023Q1,scheduled,,0,,,2023M01|2023M02|2023M03,False,37772.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2023Q1,estimated,,0,,,2023M01|2023M02|2023M03,False,37772.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2023Q1,attributed,,0,,,2023M01|2023M02|2023M03,False,37772.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2023Q2,observed,,0,,,2023M04|2023M05|2023M06,False,38050.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2023Q2,scheduled,,0,,,2023M04|2023M05|2023M06,False,38050.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2023Q2,estimated,,0,,,2023M04|2023M05|2023M06,False,38050.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2023Q2,attributed,,0,,,2023M04|2023M05|2023M06,False,38050.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2023Q3,observed,,0,,,2023M07|2023M08|2023M09,False,39363.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2023Q3,scheduled,,0,,,2023M07|2023M08|2023M09,False,39363.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2023Q3,estimated,,0,,,2023M07|2023M08|2023M09,False,39363.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2023Q3,attributed,,0,,,2023M07|2023M08|2023M09,False,39363.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2023Q4,observed,,0,,,2023M10|2023M11|2023M12,False,38238.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2023Q4,scheduled,,0,,,2023M10|2023M11|2023M12,False,38238.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2023Q4,estimated,,0,,,2023M10|2023M11|2023M12,False,38238.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2023Q4,attributed,,0,,,2023M10|2023M11|2023M12,False,38238.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2024Q1,observed,,0,,,2024M01|2024M02|2024M03,False,33218.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2024Q1,scheduled,,0,,,2024M01|2024M02|2024M03,False,33218.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2024Q1,estimated,,0,,,2024M01|2024M02|2024M03,False,33218.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2024Q1,attributed,,0,,,2024M01|2024M02|2024M03,False,33218.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2024Q2,observed,,0,,,2024M04|2024M05|2024M06,False,37100.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2024Q2,scheduled,,0,,,2024M04|2024M05|2024M06,False,37100.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2024Q2,estimated,,0,,,2024M04|2024M05|2024M06,False,37100.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2024Q2,attributed,,0,,,2024M04|2024M05|2024M06,False,37100.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2024Q3,observed,,0,,,2024M07|2024M08|2024M09,False,35677.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2024Q3,scheduled,,0,,,2024M07|2024M08|2024M09,False,35677.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2024Q3,estimated,,0,,,2024M07|2024M08|2024M09,False,35677.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2024Q3,attributed,,0,,,2024M07|2024M08|2024M09,False,35677.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2024Q4,observed,,0,,,2024M10|2024M11|2024M12,False,33585.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2024Q4,scheduled,,0,,,2024M10|2024M11|2024M12,False,33585.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2024Q4,estimated,,0,,,2024M10|2024M11|2024M12,False,33585.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2024Q4,attributed,,0,,,2024M10|2024M11|2024M12,False,33585.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2025Q1,observed,,0,,,2025M01|2025M02|2025M03,False,33084.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2025Q1,scheduled,,0,,,2025M01|2025M02|2025M03,False,33084.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2025Q1,estimated,,0,,,2025M01|2025M02|2025M03,False,33084.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2025Q1,attributed,,0,,,2025M01|2025M02|2025M03,False,33084.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2025Q2,observed,,0,,,2025M04|2025M05|2025M06,False,33664.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2025Q2,scheduled,,0,,,2025M04|2025M05|2025M06,False,33664.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2025Q2,estimated,,0,,,2025M04|2025M05|2025M06,False,33664.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2025Q2,attributed,,0,,,2025M04|2025M05|2025M06,False,33664.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2025Q3,observed,,0,,,2025M07|2025M08|2025M09,False,31800.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2025Q3,scheduled,,0,,,2025M07|2025M08|2025M09,False,31800.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2025Q3,estimated,,0,,,2025M07|2025M08|2025M09,False,31800.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2025Q3,attributed,,0,,,2025M07|2025M08|2025M09,False,31800.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2025Q4,observed,,0,,,2025M10|2025M11|2025M12,False,32753.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2025Q4,scheduled,,0,,,2025M10|2025M11|2025M12,False,32753.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2025Q4,estimated,,0,,,2025M10|2025M11|2025M12,False,32753.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,domestic,2025Q4,attributed,,0,,,2025M10|2025M11|2025M12,False,32753.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2026Q1,observed,,0,,,2026M01|2026M02|2026M03,False,32144.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2026Q1,scheduled,,0,,,2026M01|2026M02|2026M03,False,32144.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2026Q1,estimated,9814.0,54,2026M03,AFAC + AeroDataBox + flota · Grupo Aeroméxico estimado,2026M01|2026M02,True,32144.0,11150.0,,,,,,Estimated frequencies are not observed flight coverage,,bounded comparable universe
+AEROMEXICO,domestic,2026Q1,attributed,,0,,,2026M01|2026M02|2026M03,False,32144.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2026Q2,observed,,0,,,2026M04|2026M05|2026M06,False,32194.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2026Q2,scheduled,,0,,,2026M04|2026M05|2026M06,False,32194.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2026Q2,estimated,28896.0,158,2026M04|2026M05|2026M06,AFAC + AeroDataBox + flota · Grupo Aeroméxico estimado,,True,32194.0,32194.0,,,,,,Estimated frequencies are not observed flight coverage,,bounded comparable universe
+AEROMEXICO,domestic,2026Q2,attributed,,0,,,2026M04|2026M05|2026M06,False,32194.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,domestic,2026Q3,observed,,0,,,2026M07|2026M08|2026M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,domestic,2026Q3,scheduled,,0,,,2026M07|2026M08|2026M09,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,domestic,2026Q3,estimated,9023.0,51,2026M07,AFAC + AeroDataBox + flota · Grupo Aeroméxico estimado,2026M08|2026M09,False,,10468.0,,,,,,Estimated frequencies are not observed flight coverage,,partial official denominator
+AEROMEXICO,domestic,2026Q3,attributed,,0,,,2026M07|2026M08|2026M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2015Q1,observed,,0,,,2015M01|2015M02|2015M03,False,12553.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2015Q1,scheduled,,0,,,2015M01|2015M02|2015M03,False,12553.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2015Q1,estimated,,0,,,2015M01|2015M02|2015M03,False,12553.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2015Q1,attributed,,0,,,2015M01|2015M02|2015M03,False,12553.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2015Q2,observed,,0,,,2015M04|2015M05|2015M06,False,13696.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2015Q2,scheduled,,0,,,2015M04|2015M05|2015M06,False,13696.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2015Q2,estimated,,0,,,2015M04|2015M05|2015M06,False,13696.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2015Q2,attributed,,0,,,2015M04|2015M05|2015M06,False,13696.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2015Q3,observed,,0,,,2015M07|2015M08|2015M09,False,14000.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2015Q3,scheduled,,0,,,2015M07|2015M08|2015M09,False,14000.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2015Q3,estimated,,0,,,2015M07|2015M08|2015M09,False,14000.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2015Q3,attributed,,0,,,2015M07|2015M08|2015M09,False,14000.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2015Q4,observed,,0,,,2015M10|2015M11|2015M12,False,13499.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2015Q4,scheduled,,0,,,2015M10|2015M11|2015M12,False,13499.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2015Q4,estimated,,0,,,2015M10|2015M11|2015M12,False,13499.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2015Q4,attributed,,0,,,2015M10|2015M11|2015M12,False,13499.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2016Q1,observed,,0,,,2016M01|2016M02|2016M03,False,13455.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2016Q1,scheduled,,0,,,2016M01|2016M02|2016M03,False,13455.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2016Q1,estimated,,0,,,2016M01|2016M02|2016M03,False,13455.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2016Q1,attributed,,0,,,2016M01|2016M02|2016M03,False,13455.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2016Q2,observed,,0,,,2016M04|2016M05|2016M06,False,13461.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2016Q2,scheduled,,0,,,2016M04|2016M05|2016M06,False,13461.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2016Q2,estimated,,0,,,2016M04|2016M05|2016M06,False,13461.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2016Q2,attributed,,0,,,2016M04|2016M05|2016M06,False,13461.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2016Q3,observed,,0,,,2016M07|2016M08|2016M09,False,14243.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2016Q3,scheduled,,0,,,2016M07|2016M08|2016M09,False,14243.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2016Q3,estimated,,0,,,2016M07|2016M08|2016M09,False,14243.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2016Q3,attributed,,0,,,2016M07|2016M08|2016M09,False,14243.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2016Q4,observed,,0,,,2016M10|2016M11|2016M12,False,14236.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2016Q4,scheduled,,0,,,2016M10|2016M11|2016M12,False,14236.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2016Q4,estimated,,0,,,2016M10|2016M11|2016M12,False,14236.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2016Q4,attributed,,0,,,2016M10|2016M11|2016M12,False,14236.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2017Q1,observed,,0,,,2017M01|2017M02|2017M03,False,13974.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2017Q1,scheduled,,0,,,2017M01|2017M02|2017M03,False,13974.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2017Q1,estimated,,0,,,2017M01|2017M02|2017M03,False,13974.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2017Q1,attributed,,0,,,2017M01|2017M02|2017M03,False,13974.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2017Q2,observed,,0,,,2017M04|2017M05|2017M06,False,14730.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2017Q2,scheduled,,0,,,2017M04|2017M05|2017M06,False,14730.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2017Q2,estimated,,0,,,2017M04|2017M05|2017M06,False,14730.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2017Q2,attributed,,0,,,2017M04|2017M05|2017M06,False,14730.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2017Q3,observed,,0,,,2017M07|2017M08|2017M09,False,15703.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2017Q3,scheduled,,0,,,2017M07|2017M08|2017M09,False,15703.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2017Q3,estimated,,0,,,2017M07|2017M08|2017M09,False,15703.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2017Q3,attributed,,0,,,2017M07|2017M08|2017M09,False,15703.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2017Q4,observed,,0,,,2017M10|2017M11|2017M12,False,16848.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2017Q4,scheduled,,0,,,2017M10|2017M11|2017M12,False,16848.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2017Q4,estimated,,0,,,2017M10|2017M11|2017M12,False,16848.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2017Q4,attributed,,0,,,2017M10|2017M11|2017M12,False,16848.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2018Q1,observed,,0,,,2018M01|2018M02|2018M03,False,16366.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2018Q1,scheduled,,0,,,2018M01|2018M02|2018M03,False,16366.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2018Q1,estimated,,0,,,2018M01|2018M02|2018M03,False,16366.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2018Q1,attributed,,0,,,2018M01|2018M02|2018M03,False,16366.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2018Q2,observed,,0,,,2018M04|2018M05|2018M06,False,16050.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2018Q2,scheduled,,0,,,2018M04|2018M05|2018M06,False,16050.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2018Q2,estimated,,0,,,2018M04|2018M05|2018M06,False,16050.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2018Q2,attributed,,0,,,2018M04|2018M05|2018M06,False,16050.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2018Q3,observed,,0,,,2018M07|2018M08|2018M09,False,16505.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2018Q3,scheduled,,0,,,2018M07|2018M08|2018M09,False,16505.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2018Q3,estimated,,0,,,2018M07|2018M08|2018M09,False,16505.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2018Q3,attributed,,0,,,2018M07|2018M08|2018M09,False,16505.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2018Q4,observed,,0,,,2018M10|2018M11|2018M12,False,16111.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2018Q4,scheduled,,0,,,2018M10|2018M11|2018M12,False,16111.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2018Q4,estimated,,0,,,2018M10|2018M11|2018M12,False,16111.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2018Q4,attributed,,0,,,2018M10|2018M11|2018M12,False,16111.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2019Q1,observed,,0,,,2019M01|2019M02|2019M03,False,15549.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2019Q1,scheduled,,0,,,2019M01|2019M02|2019M03,False,15549.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2019Q1,estimated,,0,,,2019M01|2019M02|2019M03,False,15549.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2019Q1,attributed,,0,,,2019M01|2019M02|2019M03,False,15549.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2019Q2,observed,,0,,,2019M04|2019M05|2019M06,False,15713.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2019Q2,scheduled,,0,,,2019M04|2019M05|2019M06,False,15713.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2019Q2,estimated,,0,,,2019M04|2019M05|2019M06,False,15713.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2019Q2,attributed,,0,,,2019M04|2019M05|2019M06,False,15713.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2019Q3,observed,,0,,,2019M07|2019M08|2019M09,False,15667.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2019Q3,scheduled,,0,,,2019M07|2019M08|2019M09,False,15667.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2019Q3,estimated,,0,,,2019M07|2019M08|2019M09,False,15667.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2019Q3,attributed,,0,,,2019M07|2019M08|2019M09,False,15667.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2019Q4,observed,,0,,,2019M10|2019M11|2019M12,False,13145.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2019Q4,scheduled,,0,,,2019M10|2019M11|2019M12,False,13145.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2019Q4,estimated,,0,,,2019M10|2019M11|2019M12,False,13145.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2019Q4,attributed,,0,,,2019M10|2019M11|2019M12,False,13145.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2020Q1,observed,,0,,,2020M01|2020M02|2020M03,False,11653.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2020Q1,scheduled,,0,,,2020M01|2020M02|2020M03,False,11653.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2020Q1,estimated,,0,,,2020M01|2020M02|2020M03,False,11653.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2020Q1,attributed,,0,,,2020M01|2020M02|2020M03,False,11653.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2020Q2,observed,,0,,,2020M04|2020M05|2020M06,False,663.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2020Q2,scheduled,,0,,,2020M04|2020M05|2020M06,False,663.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2020Q2,estimated,,0,,,2020M04|2020M05|2020M06,False,663.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2020Q2,attributed,,0,,,2020M04|2020M05|2020M06,False,663.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2020Q3,observed,,0,,,2020M07|2020M08|2020M09,False,2967.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2020Q3,scheduled,,0,,,2020M07|2020M08|2020M09,False,2967.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2020Q3,estimated,,0,,,2020M07|2020M08|2020M09,False,2967.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2020Q3,attributed,,0,,,2020M07|2020M08|2020M09,False,2967.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2020Q4,observed,,0,,,2020M10|2020M11|2020M12,False,4607.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2020Q4,scheduled,,0,,,2020M10|2020M11|2020M12,False,4607.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2020Q4,estimated,,0,,,2020M10|2020M11|2020M12,False,4607.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2020Q4,attributed,,0,,,2020M10|2020M11|2020M12,False,4607.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2021Q1,observed,2616.0,19,2021M01|2021M02|2021M03,Brasil · ANAC|Estados Unidos · BTS T-100,,True,6234.0,6234.0,2408.0,38.62688482515239,38.62688482515239,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator|Regular-service comparability unverified; excluded from comparable numerator,bounded comparable universe
+AEROMEXICO,international,2021Q1,scheduled,,0,,,2021M01|2021M02|2021M03,False,6234.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2021Q1,estimated,,0,,,2021M01|2021M02|2021M03,False,6234.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2021Q1,attributed,,0,,,2021M01|2021M02|2021M03,False,6234.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2021Q2,observed,4269.0,20,2021M04|2021M05|2021M06,Brasil · ANAC|Estados Unidos · BTS T-100,,True,7319.0,7319.0,4087.0,55.84096188003826,55.84096188003826,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator|Regular-service comparability unverified; excluded from comparable numerator,bounded comparable universe
+AEROMEXICO,international,2021Q2,scheduled,,0,,,2021M04|2021M05|2021M06,False,7319.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2021Q2,estimated,,0,,,2021M04|2021M05|2021M06,False,7319.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2021Q2,attributed,,0,,,2021M04|2021M05|2021M06,False,7319.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2021Q3,observed,5535.0,20,2021M07|2021M08|2021M09,Brasil · ANAC|Estados Unidos · BTS T-100,,True,9822.0,9822.0,5352.0,54.48992058643861,54.48992058643861,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator|Regular-service comparability unverified; excluded from comparable numerator,bounded comparable universe
+AEROMEXICO,international,2021Q3,scheduled,,0,,,2021M07|2021M08|2021M09,False,9822.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2021Q3,estimated,,0,,,2021M07|2021M08|2021M09,False,9822.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2021Q3,attributed,,0,,,2021M07|2021M08|2021M09,False,9822.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2021Q4,observed,5019.0,26,2021M10|2021M11|2021M12,Brasil · ANAC|Estados Unidos · BTS T-100,,True,10028.0,10028.0,4805.0,47.91583566015158,47.91583566015158,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator|Regular-service comparability unverified; excluded from comparable numerator,bounded comparable universe
+AEROMEXICO,international,2021Q4,scheduled,,0,,,2021M10|2021M11|2021M12,False,10028.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2021Q4,estimated,,0,,,2021M10|2021M11|2021M12,False,10028.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2021Q4,attributed,,0,,,2021M10|2021M11|2021M12,False,10028.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2022Q1,observed,4752.0,24,2022M01|2022M02|2022M03,Brasil · ANAC|Estados Unidos · BTS T-100,,True,9929.0,9929.0,4459.0,44.908852855272436,44.908852855272436,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator|Regular-service comparability unverified; excluded from comparable numerator,bounded comparable universe
+AEROMEXICO,international,2022Q1,scheduled,,0,,,2022M01|2022M02|2022M03,False,9929.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2022Q1,estimated,,0,,,2022M01|2022M02|2022M03,False,9929.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2022Q1,attributed,,0,,,2022M01|2022M02|2022M03,False,9929.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2022Q2,observed,5621.0,21,2022M04|2022M05|2022M06,Brasil · ANAC|Estados Unidos · BTS T-100,,True,12353.0,12353.0,5439.0,44.02979033433174,44.02979033433174,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator|Regular-service comparability unverified; excluded from comparable numerator,bounded comparable universe
+AEROMEXICO,international,2022Q2,scheduled,,0,,,2022M04|2022M05|2022M06,False,12353.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2022Q2,estimated,,0,,,2022M04|2022M05|2022M06,False,12353.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2022Q2,attributed,,0,,,2022M04|2022M05|2022M06,False,12353.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2022Q3,observed,5689.0,20,2022M07|2022M08|2022M09,Brasil · ANAC|Estados Unidos · BTS T-100,,True,12631.0,12631.0,5505.0,43.58324756551342,43.58324756551342,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator|Regular-service comparability unverified; excluded from comparable numerator,bounded comparable universe
+AEROMEXICO,international,2022Q3,scheduled,,0,,,2022M07|2022M08|2022M09,False,12631.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2022Q3,estimated,,0,,,2022M07|2022M08|2022M09,False,12631.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2022Q3,attributed,,0,,,2022M07|2022M08|2022M09,False,12631.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2022Q4,observed,5443.0,21,2022M10|2022M11|2022M12,Brasil · ANAC|Estados Unidos · BTS T-100,,True,12763.0,12763.0,5225.0,40.93865078743242,40.93865078743242,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator|Regular-service comparability unverified; excluded from comparable numerator,bounded comparable universe
+AEROMEXICO,international,2022Q4,scheduled,,0,,,2022M10|2022M11|2022M12,False,12763.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2022Q4,estimated,,0,,,2022M10|2022M11|2022M12,False,12763.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2022Q4,attributed,,0,,,2022M10|2022M11|2022M12,False,12763.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2023Q1,observed,5253.0,21,2023M01|2023M02|2023M03,Brasil · ANAC|Estados Unidos · BTS T-100,,True,12276.0,12276.0,5047.0,41.11274030628869,41.11274030628869,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator|Regular-service comparability unverified; excluded from comparable numerator,bounded comparable universe
+AEROMEXICO,international,2023Q1,scheduled,,0,,,2023M01|2023M02|2023M03,False,12276.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2023Q1,estimated,,0,,,2023M01|2023M02|2023M03,False,12276.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2023Q1,attributed,,0,,,2023M01|2023M02|2023M03,False,12276.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2023Q2,observed,4871.0,27,2023M04|2023M05|2023M06,Brasil · ANAC|Estados Unidos · BTS T-100,,True,11630.0,11630.0,4691.0,40.335339638865,40.335339638865,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator|Regular-service comparability unverified; excluded from comparable numerator,bounded comparable universe
+AEROMEXICO,international,2023Q2,scheduled,,0,,,2023M04|2023M05|2023M06,False,11630.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2023Q2,estimated,,0,,,2023M04|2023M05|2023M06,False,11630.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2023Q2,attributed,,0,,,2023M04|2023M05|2023M06,False,11630.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2023Q3,observed,5585.0,22,2023M07|2023M08|2023M09,Brasil · ANAC|Estados Unidos · BTS T-100,,True,13351.0,13351.0,5401.0,40.4538985843757,40.4538985843757,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator|Regular-service comparability unverified; excluded from comparable numerator,bounded comparable universe
+AEROMEXICO,international,2023Q3,scheduled,,0,,,2023M07|2023M08|2023M09,False,13351.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2023Q3,estimated,,0,,,2023M07|2023M08|2023M09,False,13351.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2023Q3,attributed,,0,,,2023M07|2023M08|2023M09,False,13351.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2023Q4,observed,5489.0,27,2023M10|2023M11|2023M12,Brasil · ANAC|Estados Unidos · BTS T-100,,True,12823.0,12823.0,5307.0,41.38657100522499,41.38657100522499,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator|Regular-service comparability unverified; excluded from comparable numerator,bounded comparable universe
+AEROMEXICO,international,2023Q4,scheduled,,0,,,2023M10|2023M11|2023M12,False,12823.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2023Q4,estimated,,0,,,2023M10|2023M11|2023M12,False,12823.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2023Q4,attributed,,0,,,2023M10|2023M11|2023M12,False,12823.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2024Q1,observed,5491.0,22,2024M01|2024M02|2024M03,Brasil · ANAC|Estados Unidos · BTS T-100,,True,13924.0,13924.0,5309.0,38.12841137604137,38.12841137604137,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator|Regular-service comparability unverified; excluded from comparable numerator,bounded comparable universe
+AEROMEXICO,international,2024Q1,scheduled,,0,,,2024M01|2024M02|2024M03,False,13924.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2024Q1,estimated,,0,,,2024M01|2024M02|2024M03,False,13924.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2024Q1,attributed,,0,,,2024M01|2024M02|2024M03,False,13924.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2024Q2,observed,5753.0,32,2024M04|2024M05|2024M06,Brasil · ANAC|Estados Unidos · BTS T-100,,True,13462.0,13462.0,5571.0,41.38315257762591,41.38315257762591,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator|Regular-service comparability unverified; excluded from comparable numerator,bounded comparable universe
+AEROMEXICO,international,2024Q2,scheduled,,0,,,2024M04|2024M05|2024M06,False,13462.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2024Q2,estimated,,0,,,2024M04|2024M05|2024M06,False,13462.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2024Q2,attributed,,0,,,2024M04|2024M05|2024M06,False,13462.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2024Q3,observed,6771.0,26,2024M07|2024M08|2024M09,Brasil · ANAC|Estados Unidos · BTS T-100,,True,14786.0,14786.0,6587.0,44.548897605843365,44.548897605843365,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator|Regular-service comparability unverified; excluded from comparable numerator,bounded comparable universe
+AEROMEXICO,international,2024Q3,scheduled,,0,,,2024M07|2024M08|2024M09,False,14786.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2024Q3,estimated,,0,,,2024M07|2024M08|2024M09,False,14786.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2024Q3,attributed,,0,,,2024M07|2024M08|2024M09,False,14786.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2024Q4,observed,6722.0,42,2024M10|2024M11|2024M12,Brasil · ANAC|Estados Unidos · BTS T-100,,True,14021.0,14021.0,6506.0,46.40182583267955,46.40182583267955,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator|Regular-service comparability unverified; excluded from comparable numerator,bounded comparable universe
+AEROMEXICO,international,2024Q4,scheduled,,0,,,2024M10|2024M11|2024M12,False,14021.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2024Q4,estimated,,0,,,2024M10|2024M11|2024M12,False,14021.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2024Q4,attributed,,0,,,2024M10|2024M11|2024M12,False,14021.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2025Q1,observed,7742.0,46,2025M01|2025M02|2025M03,Brasil · ANAC|Colombia · Aerocivil|Estados Unidos · BTS T-100,,True,14372.0,14372.0,7561.0,52.60924018925689,52.60924018925689,,,Observed minimum share of official regular operations; no claim of full network capture,Aerocivil explicitly regular international operations|BTS class F only; L/G/P excluded from regular denominator|Regular-service comparability unverified; excluded from comparable numerator,bounded comparable universe
+AEROMEXICO,international,2025Q1,scheduled,,0,,,2025M01|2025M02|2025M03,False,14372.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2025Q1,estimated,,0,,,2025M01|2025M02|2025M03,False,14372.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2025Q1,attributed,,0,,,2025M01|2025M02|2025M03,False,14372.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2025Q2,observed,7789.0,44,2025M04|2025M05|2025M06,Brasil · ANAC|Colombia · Aerocivil|Estados Unidos · BTS T-100,,True,14378.0,14378.0,7605.0,52.89330922242315,52.89330922242315,,,Observed minimum share of official regular operations; no claim of full network capture,Aerocivil explicitly regular international operations|BTS class F only; L/G/P excluded from regular denominator|Regular-service comparability unverified; excluded from comparable numerator,bounded comparable universe
+AEROMEXICO,international,2025Q2,scheduled,,0,,,2025M04|2025M05|2025M06,False,14378.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2025Q2,estimated,,0,,,2025M04|2025M05|2025M06,False,14378.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2025Q2,attributed,,0,,,2025M04|2025M05|2025M06,False,14378.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2025Q3,observed,8297.0,61,2025M07|2025M08|2025M09,Brasil · ANAC|Colombia · Aerocivil|Estados Unidos · BTS T-100,,True,15409.0,15409.0,8112.0,52.64455837497567,52.64455837497567,,,Observed minimum share of official regular operations; no claim of full network capture,Aerocivil explicitly regular international operations|BTS class F only; L/G/P excluded from regular denominator|Regular-service comparability unverified; excluded from comparable numerator,bounded comparable universe
+AEROMEXICO,international,2025Q3,scheduled,,0,,,2025M07|2025M08|2025M09,False,15409.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2025Q3,estimated,,0,,,2025M07|2025M08|2025M09,False,15409.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2025Q3,attributed,,0,,,2025M07|2025M08|2025M09,False,15409.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2025Q4,observed,7652.0,56,2025M10|2025M11|2025M12,Brasil · ANAC|Colombia · Aerocivil|Estados Unidos · BTS T-100,,True,13987.0,13987.0,7463.0,53.35668835347108,53.35668835347108,,,Observed minimum share of official regular operations; no claim of full network capture,Aerocivil explicitly regular international operations|BTS class F only; L/G/P excluded from regular denominator|Regular-service comparability unverified; excluded from comparable numerator,bounded comparable universe
+AEROMEXICO,international,2025Q4,scheduled,,0,,,2025M10|2025M11|2025M12,False,13987.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2025Q4,estimated,,0,,,2025M10|2025M11|2025M12,False,13987.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2025Q4,attributed,,0,,,2025M10|2025M11|2025M12,False,13987.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2026Q1,observed,7498.0,52,2026M01|2026M02|2026M03,Brasil · ANAC|Colombia · Aerocivil|Estados Unidos · BTS T-100,,True,14022.0,14022.0,7318.0,52.18941663100841,52.18941663100841,,,Observed minimum share of official regular operations; no claim of full network capture,Aerocivil explicitly regular international operations|BTS class F only; L/G/P excluded from regular denominator|Regular-service comparability unverified; excluded from comparable numerator,bounded comparable universe
+AEROMEXICO,international,2026Q1,scheduled,,0,,,2026M01|2026M02|2026M03,False,14022.0,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2026Q1,estimated,,0,,,2026M01|2026M02|2026M03,False,14022.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2026Q1,attributed,,0,,,2026M01|2026M02|2026M03,False,14022.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2026Q2,observed,5721.0,46,2026M04|2026M05|2026M06,Brasil · ANAC|Colombia · Aerocivil|Estados Unidos · BTS T-100|Reino Unido · CAA,,True,14522.0,14522.0,5474.0,37.6945324335491,37.6945324335491,,,Observed minimum share of official regular operations; no claim of full network capture,Aerocivil explicitly regular international operations|BTS class F only; L/G/P excluded from regular denominator|Regular-service comparability unverified; excluded from comparable numerator,bounded comparable universe
+AEROMEXICO,international,2026Q2,scheduled,5486.0,26,2026M04|2026M05|2026M06,AICM · vuelos AM programados|OMA · rutas documentadas,,True,14522.0,14522.0,,,,,,Programmed is not performed,,bounded comparable universe
+AEROMEXICO,international,2026Q2,estimated,363.0,4,2026M04|2026M05|2026M06,AFAC + AeroDataBox · Grupo Aeroméxico estimado,,True,14522.0,14522.0,,,,,,Estimated frequencies are not observed flight coverage,,bounded comparable universe
+AEROMEXICO,international,2026Q2,attributed,,0,,,2026M04|2026M05|2026M06,False,14522.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+AEROMEXICO,international,2026Q3,observed,,0,,,2026M07|2026M08|2026M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+AEROMEXICO,international,2026Q3,scheduled,,0,,,2026M07|2026M08|2026M09,False,,,,,,,,Programmed is not performed,,no map figure
+AEROMEXICO,international,2026Q3,estimated,,0,,,2026M07|2026M08|2026M09,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+AEROMEXICO,international,2026Q3,attributed,,0,,,2026M07|2026M08|2026M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2015Q1,observed,,0,,,2015M01|2015M02|2015M03,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2015Q1,scheduled,,0,,,2015M01|2015M02|2015M03,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2015Q1,estimated,,0,,,2015M01|2015M02|2015M03,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2015Q1,attributed,,0,,,2015M01|2015M02|2015M03,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2015Q2,observed,,0,,,2015M04|2015M05|2015M06,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2015Q2,scheduled,,0,,,2015M04|2015M05|2015M06,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2015Q2,estimated,,0,,,2015M04|2015M05|2015M06,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2015Q2,attributed,,0,,,2015M04|2015M05|2015M06,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2015Q3,observed,,0,,,2015M07|2015M08|2015M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2015Q3,scheduled,,0,,,2015M07|2015M08|2015M09,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2015Q3,estimated,,0,,,2015M07|2015M08|2015M09,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2015Q3,attributed,,0,,,2015M07|2015M08|2015M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2015Q4,observed,,0,,,2015M10|2015M11|2015M12,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2015Q4,scheduled,,0,,,2015M10|2015M11|2015M12,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2015Q4,estimated,,0,,,2015M10|2015M11|2015M12,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2015Q4,attributed,,0,,,2015M10|2015M11|2015M12,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2016Q1,observed,,0,,,2016M01|2016M02|2016M03,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2016Q1,scheduled,,0,,,2016M01|2016M02|2016M03,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2016Q1,estimated,,0,,,2016M01|2016M02|2016M03,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2016Q1,attributed,,0,,,2016M01|2016M02|2016M03,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2016Q2,observed,,0,,,2016M04|2016M05|2016M06,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2016Q2,scheduled,,0,,,2016M04|2016M05|2016M06,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2016Q2,estimated,,0,,,2016M04|2016M05|2016M06,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2016Q2,attributed,,0,,,2016M04|2016M05|2016M06,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2016Q3,observed,,0,,,2016M07|2016M08|2016M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2016Q3,scheduled,,0,,,2016M07|2016M08|2016M09,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2016Q3,estimated,,0,,,2016M07|2016M08|2016M09,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2016Q3,attributed,,0,,,2016M07|2016M08|2016M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2016Q4,observed,,0,,,2016M10|2016M11|2016M12,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2016Q4,scheduled,,0,,,2016M10|2016M11|2016M12,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2016Q4,estimated,,0,,,2016M10|2016M11|2016M12,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2016Q4,attributed,,0,,,2016M10|2016M11|2016M12,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2017Q1,observed,,0,,,2017M01|2017M02|2017M03,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2017Q1,scheduled,,0,,,2017M01|2017M02|2017M03,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2017Q1,estimated,,0,,,2017M01|2017M02|2017M03,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2017Q1,attributed,,0,,,2017M01|2017M02|2017M03,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2017Q2,observed,,0,,,2017M04|2017M05|2017M06,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2017Q2,scheduled,,0,,,2017M04|2017M05|2017M06,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2017Q2,estimated,,0,,,2017M04|2017M05|2017M06,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2017Q2,attributed,,0,,,2017M04|2017M05|2017M06,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2017Q3,observed,,0,,,2017M07|2017M08|2017M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2017Q3,scheduled,,0,,,2017M07|2017M08|2017M09,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2017Q3,estimated,,0,,,2017M07|2017M08|2017M09,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2017Q3,attributed,,0,,,2017M07|2017M08|2017M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2017Q4,observed,,0,,,2017M10|2017M11|2017M12,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2017Q4,scheduled,,0,,,2017M10|2017M11|2017M12,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2017Q4,estimated,,0,,,2017M10|2017M11|2017M12,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2017Q4,attributed,,0,,,2017M10|2017M11|2017M12,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2018Q1,observed,,0,,,2018M01|2018M02|2018M03,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2018Q1,scheduled,,0,,,2018M01|2018M02|2018M03,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2018Q1,estimated,,0,,,2018M01|2018M02|2018M03,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2018Q1,attributed,,0,,,2018M01|2018M02|2018M03,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2018Q2,observed,,0,,,2018M04|2018M05|2018M06,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2018Q2,scheduled,,0,,,2018M04|2018M05|2018M06,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2018Q2,estimated,,0,,,2018M04|2018M05|2018M06,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2018Q2,attributed,,0,,,2018M04|2018M05|2018M06,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2018Q3,observed,,0,,,2018M07|2018M08|2018M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2018Q3,scheduled,,0,,,2018M07|2018M08|2018M09,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2018Q3,estimated,,0,,,2018M07|2018M08|2018M09,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2018Q3,attributed,,0,,,2018M07|2018M08|2018M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2018Q4,observed,,0,,,2018M10|2018M11|2018M12,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2018Q4,scheduled,,0,,,2018M10|2018M11|2018M12,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2018Q4,estimated,,0,,,2018M10|2018M11|2018M12,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2018Q4,attributed,,0,,,2018M10|2018M11|2018M12,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2019Q1,observed,,0,,,2019M01|2019M02|2019M03,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2019Q1,scheduled,,0,,,2019M01|2019M02|2019M03,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2019Q1,estimated,,0,,,2019M01|2019M02|2019M03,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2019Q1,attributed,,0,,,2019M01|2019M02|2019M03,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2019Q2,observed,,0,,,2019M04|2019M05|2019M06,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2019Q2,scheduled,,0,,,2019M04|2019M05|2019M06,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2019Q2,estimated,,0,,,2019M04|2019M05|2019M06,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2019Q2,attributed,,0,,,2019M04|2019M05|2019M06,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2019Q3,observed,,0,,,2019M07|2019M08|2019M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2019Q3,scheduled,,0,,,2019M07|2019M08|2019M09,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2019Q3,estimated,,0,,,2019M07|2019M08|2019M09,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2019Q3,attributed,,0,,,2019M07|2019M08|2019M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2019Q4,observed,,0,,,2019M10|2019M11|2019M12,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2019Q4,scheduled,,0,,,2019M10|2019M11|2019M12,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2019Q4,estimated,,0,,,2019M10|2019M11|2019M12,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2019Q4,attributed,,0,,,2019M10|2019M11|2019M12,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2020Q1,observed,,0,,,2020M01|2020M02|2020M03,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2020Q1,scheduled,,0,,,2020M01|2020M02|2020M03,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2020Q1,estimated,,0,,,2020M01|2020M02|2020M03,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2020Q1,attributed,,0,,,2020M01|2020M02|2020M03,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2020Q2,observed,,0,,,2020M04|2020M05|2020M06,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2020Q2,scheduled,,0,,,2020M04|2020M05|2020M06,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2020Q2,estimated,,0,,,2020M04|2020M05|2020M06,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2020Q2,attributed,,0,,,2020M04|2020M05|2020M06,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2020Q3,observed,,0,,,2020M07|2020M08|2020M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2020Q3,scheduled,,0,,,2020M07|2020M08|2020M09,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2020Q3,estimated,,0,,,2020M07|2020M08|2020M09,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2020Q3,attributed,,0,,,2020M07|2020M08|2020M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2020Q4,observed,,0,,,2020M10|2020M11|2020M12,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2020Q4,scheduled,,0,,,2020M10|2020M11|2020M12,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2020Q4,estimated,,0,,,2020M10|2020M11|2020M12,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2020Q4,attributed,,0,,,2020M10|2020M11|2020M12,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2021Q1,observed,,0,,,2021M01|2021M02|2021M03,False,23558.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2021Q1,scheduled,,0,,,2021M01|2021M02|2021M03,False,23558.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2021Q1,estimated,,0,,,2021M01|2021M02|2021M03,False,23558.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2021Q1,attributed,,0,,,2021M01|2021M02|2021M03,False,23558.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2021Q2,observed,,0,,,2021M04|2021M05|2021M06,False,30291.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2021Q2,scheduled,,0,,,2021M04|2021M05|2021M06,False,30291.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2021Q2,estimated,,0,,,2021M04|2021M05|2021M06,False,30291.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2021Q2,attributed,,0,,,2021M04|2021M05|2021M06,False,30291.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2021Q3,observed,,0,,,2021M07|2021M08|2021M09,False,32493.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2021Q3,scheduled,,0,,,2021M07|2021M08|2021M09,False,32493.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2021Q3,estimated,,0,,,2021M07|2021M08|2021M09,False,32493.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2021Q3,attributed,,0,,,2021M07|2021M08|2021M09,False,32493.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2021Q4,observed,,0,,,2021M10|2021M11|2021M12,False,34823.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2021Q4,scheduled,,0,,,2021M10|2021M11|2021M12,False,34823.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2021Q4,estimated,,0,,,2021M10|2021M11|2021M12,False,34823.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2021Q4,attributed,,0,,,2021M10|2021M11|2021M12,False,34823.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2022Q1,observed,,0,,,2022M01|2022M02|2022M03,False,35288.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2022Q1,scheduled,,0,,,2022M01|2022M02|2022M03,False,35288.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2022Q1,estimated,,0,,,2022M01|2022M02|2022M03,False,35288.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2022Q1,attributed,,0,,,2022M01|2022M02|2022M03,False,35288.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2022Q2,observed,,0,,,2022M04|2022M05|2022M06,False,36349.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2022Q2,scheduled,,0,,,2022M04|2022M05|2022M06,False,36349.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2022Q2,estimated,,0,,,2022M04|2022M05|2022M06,False,36349.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2022Q2,attributed,,0,,,2022M04|2022M05|2022M06,False,36349.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2022Q3,observed,,0,,,2022M07|2022M08|2022M09,False,39313.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2022Q3,scheduled,,0,,,2022M07|2022M08|2022M09,False,39313.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2022Q3,estimated,,0,,,2022M07|2022M08|2022M09,False,39313.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2022Q3,attributed,,0,,,2022M07|2022M08|2022M09,False,39313.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2022Q4,observed,,0,,,2022M10|2022M11|2022M12,False,39383.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2022Q4,scheduled,,0,,,2022M10|2022M11|2022M12,False,39383.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2022Q4,estimated,,0,,,2022M10|2022M11|2022M12,False,39383.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2022Q4,attributed,,0,,,2022M10|2022M11|2022M12,False,39383.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2023Q1,observed,,0,,,2023M01|2023M02|2023M03,False,38600.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2023Q1,scheduled,,0,,,2023M01|2023M02|2023M03,False,38600.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2023Q1,estimated,,0,,,2023M01|2023M02|2023M03,False,38600.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2023Q1,attributed,,0,,,2023M01|2023M02|2023M03,False,38600.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2023Q2,observed,,0,,,2023M04|2023M05|2023M06,False,38777.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2023Q2,scheduled,,0,,,2023M04|2023M05|2023M06,False,38777.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2023Q2,estimated,,0,,,2023M04|2023M05|2023M06,False,38777.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2023Q2,attributed,,0,,,2023M04|2023M05|2023M06,False,38777.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2023Q3,observed,,0,,,2023M07|2023M08|2023M09,False,39592.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2023Q3,scheduled,,0,,,2023M07|2023M08|2023M09,False,39592.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2023Q3,estimated,,0,,,2023M07|2023M08|2023M09,False,39592.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2023Q3,attributed,,0,,,2023M07|2023M08|2023M09,False,39592.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2023Q4,observed,,0,,,2023M10|2023M11|2023M12,False,34542.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2023Q4,scheduled,,0,,,2023M10|2023M11|2023M12,False,34542.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2023Q4,estimated,,0,,,2023M10|2023M11|2023M12,False,34542.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2023Q4,attributed,,0,,,2023M10|2023M11|2023M12,False,34542.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2024Q1,observed,,0,,,2024M01|2024M02|2024M03,False,27573.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2024Q1,scheduled,,0,,,2024M01|2024M02|2024M03,False,27573.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2024Q1,estimated,,0,,,2024M01|2024M02|2024M03,False,27573.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2024Q1,attributed,,0,,,2024M01|2024M02|2024M03,False,27573.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2024Q2,observed,,0,,,2024M04|2024M05|2024M06,False,30547.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2024Q2,scheduled,,0,,,2024M04|2024M05|2024M06,False,30547.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2024Q2,estimated,,0,,,2024M04|2024M05|2024M06,False,30547.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2024Q2,attributed,,0,,,2024M04|2024M05|2024M06,False,30547.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2024Q3,observed,,0,,,2024M07|2024M08|2024M09,False,32220.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2024Q3,scheduled,,0,,,2024M07|2024M08|2024M09,False,32220.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2024Q3,estimated,,0,,,2024M07|2024M08|2024M09,False,32220.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2024Q3,attributed,,0,,,2024M07|2024M08|2024M09,False,32220.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2024Q4,observed,,0,,,2024M10|2024M11|2024M12,False,31913.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2024Q4,scheduled,,0,,,2024M10|2024M11|2024M12,False,31913.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2024Q4,estimated,,0,,,2024M10|2024M11|2024M12,False,31913.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2024Q4,attributed,,0,,,2024M10|2024M11|2024M12,False,31913.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2025Q1,observed,,0,,,2025M01|2025M02|2025M03,False,31213.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2025Q1,scheduled,,0,,,2025M01|2025M02|2025M03,False,31213.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2025Q1,estimated,,0,,,2025M01|2025M02|2025M03,False,31213.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2025Q1,attributed,,0,,,2025M01|2025M02|2025M03,False,31213.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2025Q2,observed,,0,,,2025M04|2025M05|2025M06,False,33410.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2025Q2,scheduled,,0,,,2025M04|2025M05|2025M06,False,33410.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2025Q2,estimated,,0,,,2025M04|2025M05|2025M06,False,33410.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2025Q2,attributed,,0,,,2025M04|2025M05|2025M06,False,33410.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2025Q3,observed,,0,,,2025M07|2025M08|2025M09,False,33465.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2025Q3,scheduled,,0,,,2025M07|2025M08|2025M09,False,33465.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2025Q3,estimated,,0,,,2025M07|2025M08|2025M09,False,33465.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2025Q3,attributed,,0,,,2025M07|2025M08|2025M09,False,33465.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2025Q4,observed,,0,,,2025M10|2025M11|2025M12,False,34165.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2025Q4,scheduled,,0,,,2025M10|2025M11|2025M12,False,34165.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2025Q4,estimated,,0,,,2025M10|2025M11|2025M12,False,34165.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,domestic,2025Q4,attributed,,0,,,2025M10|2025M11|2025M12,False,34165.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2026Q1,observed,,0,,,2026M01|2026M02|2026M03,False,31910.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2026Q1,scheduled,,0,,,2026M01|2026M02|2026M03,False,31910.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2026Q1,estimated,10737.0,126,2026M03,AFAC + AeroDataBox + flota · Volaris estimado,2026M01|2026M02,True,31910.0,11057.0,,,,,,Estimated frequencies are not observed flight coverage,,bounded comparable universe
+VOLARIS,domestic,2026Q1,attributed,,0,,,2026M01|2026M02|2026M03,False,31910.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2026Q2,observed,,0,,,2026M04|2026M05|2026M06,False,34501.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2026Q2,scheduled,,0,,,2026M04|2026M05|2026M06,False,34501.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2026Q2,estimated,33952.0,406,2026M04|2026M05|2026M06,AFAC + AeroDataBox + flota · Volaris estimado,,True,34501.0,34501.0,,,,,,Estimated frequencies are not observed flight coverage,,bounded comparable universe
+VOLARIS,domestic,2026Q2,attributed,,0,,,2026M04|2026M05|2026M06,False,34501.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,domestic,2026Q3,observed,,0,,,2026M07|2026M08|2026M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,domestic,2026Q3,scheduled,,0,,,2026M07|2026M08|2026M09,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,domestic,2026Q3,estimated,13822.0,151,2026M07,AFAC + AeroDataBox + flota · Volaris estimado,2026M08|2026M09,False,,13928.0,,,,,,Estimated frequencies are not observed flight coverage,,partial official denominator
+VOLARIS,domestic,2026Q3,attributed,,0,,,2026M07|2026M08|2026M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2015Q1,observed,,0,,,2015M01|2015M02|2015M03,False,3685.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2015Q1,scheduled,,0,,,2015M01|2015M02|2015M03,False,3685.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2015Q1,estimated,,0,,,2015M01|2015M02|2015M03,False,3685.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2015Q1,attributed,,0,,,2015M01|2015M02|2015M03,False,3685.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2015Q2,observed,,0,,,2015M04|2015M05|2015M06,False,3911.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2015Q2,scheduled,,0,,,2015M04|2015M05|2015M06,False,3911.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2015Q2,estimated,,0,,,2015M04|2015M05|2015M06,False,3911.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2015Q2,attributed,,0,,,2015M04|2015M05|2015M06,False,3911.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2015Q3,observed,,0,,,2015M07|2015M08|2015M09,False,4789.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2015Q3,scheduled,,0,,,2015M07|2015M08|2015M09,False,4789.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2015Q3,estimated,,0,,,2015M07|2015M08|2015M09,False,4789.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2015Q3,attributed,,0,,,2015M07|2015M08|2015M09,False,4789.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2015Q4,observed,,0,,,2015M10|2015M11|2015M12,False,4671.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2015Q4,scheduled,,0,,,2015M10|2015M11|2015M12,False,4671.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2015Q4,estimated,,0,,,2015M10|2015M11|2015M12,False,4671.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2015Q4,attributed,,0,,,2015M10|2015M11|2015M12,False,4671.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2016Q1,observed,,0,,,2016M01|2016M02|2016M03,False,4733.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2016Q1,scheduled,,0,,,2016M01|2016M02|2016M03,False,4733.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2016Q1,estimated,,0,,,2016M01|2016M02|2016M03,False,4733.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2016Q1,attributed,,0,,,2016M01|2016M02|2016M03,False,4733.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2016Q2,observed,,0,,,2016M04|2016M05|2016M06,False,4642.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2016Q2,scheduled,,0,,,2016M04|2016M05|2016M06,False,4642.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2016Q2,estimated,,0,,,2016M04|2016M05|2016M06,False,4642.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2016Q2,attributed,,0,,,2016M04|2016M05|2016M06,False,4642.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2016Q3,observed,,0,,,2016M07|2016M08|2016M09,False,5569.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2016Q3,scheduled,,0,,,2016M07|2016M08|2016M09,False,5569.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2016Q3,estimated,,0,,,2016M07|2016M08|2016M09,False,5569.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2016Q3,attributed,,0,,,2016M07|2016M08|2016M09,False,5569.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2016Q4,observed,,0,,,2016M10|2016M11|2016M12,False,5670.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2016Q4,scheduled,,0,,,2016M10|2016M11|2016M12,False,5670.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2016Q4,estimated,,0,,,2016M10|2016M11|2016M12,False,5670.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2016Q4,attributed,,0,,,2016M10|2016M11|2016M12,False,5670.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2017Q1,observed,,0,,,2017M01|2017M02|2017M03,False,5636.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2017Q1,scheduled,,0,,,2017M01|2017M02|2017M03,False,5636.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2017Q1,estimated,,0,,,2017M01|2017M02|2017M03,False,5636.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2017Q1,attributed,,0,,,2017M01|2017M02|2017M03,False,5636.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2017Q2,observed,,0,,,2017M04|2017M05|2017M06,False,5958.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2017Q2,scheduled,,0,,,2017M04|2017M05|2017M06,False,5958.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2017Q2,estimated,,0,,,2017M04|2017M05|2017M06,False,5958.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2017Q2,attributed,,0,,,2017M04|2017M05|2017M06,False,5958.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2017Q3,observed,,0,,,2017M07|2017M08|2017M09,False,5714.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2017Q3,scheduled,,0,,,2017M07|2017M08|2017M09,False,5714.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2017Q3,estimated,,0,,,2017M07|2017M08|2017M09,False,5714.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2017Q3,attributed,,0,,,2017M07|2017M08|2017M09,False,5714.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2017Q4,observed,,0,,,2017M10|2017M11|2017M12,False,5680.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2017Q4,scheduled,,0,,,2017M10|2017M11|2017M12,False,5680.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2017Q4,estimated,,0,,,2017M10|2017M11|2017M12,False,5680.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2017Q4,attributed,,0,,,2017M10|2017M11|2017M12,False,5680.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2018Q1,observed,,0,,,2018M01|2018M02|2018M03,False,5771.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2018Q1,scheduled,,0,,,2018M01|2018M02|2018M03,False,5771.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2018Q1,estimated,,0,,,2018M01|2018M02|2018M03,False,5771.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2018Q1,attributed,,0,,,2018M01|2018M02|2018M03,False,5771.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2018Q2,observed,,0,,,2018M04|2018M05|2018M06,False,5377.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2018Q2,scheduled,,0,,,2018M04|2018M05|2018M06,False,5377.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2018Q2,estimated,,0,,,2018M04|2018M05|2018M06,False,5377.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2018Q2,attributed,,0,,,2018M04|2018M05|2018M06,False,5377.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2018Q3,observed,,0,,,2018M07|2018M08|2018M09,False,5751.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2018Q3,scheduled,,0,,,2018M07|2018M08|2018M09,False,5751.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2018Q3,estimated,,0,,,2018M07|2018M08|2018M09,False,5751.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2018Q3,attributed,,0,,,2018M07|2018M08|2018M09,False,5751.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2018Q4,observed,,0,,,2018M10|2018M11|2018M12,False,5708.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2018Q4,scheduled,,0,,,2018M10|2018M11|2018M12,False,5708.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2018Q4,estimated,,0,,,2018M10|2018M11|2018M12,False,5708.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2018Q4,attributed,,0,,,2018M10|2018M11|2018M12,False,5708.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2019Q1,observed,,0,,,2019M01|2019M02|2019M03,False,6035.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2019Q1,scheduled,,0,,,2019M01|2019M02|2019M03,False,6035.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2019Q1,estimated,,0,,,2019M01|2019M02|2019M03,False,6035.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2019Q1,attributed,,0,,,2019M01|2019M02|2019M03,False,6035.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2019Q2,observed,,0,,,2019M04|2019M05|2019M06,False,6626.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2019Q2,scheduled,,0,,,2019M04|2019M05|2019M06,False,6626.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2019Q2,estimated,,0,,,2019M04|2019M05|2019M06,False,6626.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2019Q2,attributed,,0,,,2019M04|2019M05|2019M06,False,6626.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2019Q3,observed,,0,,,2019M07|2019M08|2019M09,False,7127.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2019Q3,scheduled,,0,,,2019M07|2019M08|2019M09,False,7127.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2019Q3,estimated,,0,,,2019M07|2019M08|2019M09,False,7127.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2019Q3,attributed,,0,,,2019M07|2019M08|2019M09,False,7127.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2019Q4,observed,,0,,,2019M10|2019M11|2019M12,False,6894.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2019Q4,scheduled,,0,,,2019M10|2019M11|2019M12,False,6894.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2019Q4,estimated,,0,,,2019M10|2019M11|2019M12,False,6894.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2019Q4,attributed,,0,,,2019M10|2019M11|2019M12,False,6894.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2020Q1,observed,,0,,,2020M01|2020M02|2020M03,False,6394.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2020Q1,scheduled,,0,,,2020M01|2020M02|2020M03,False,6394.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2020Q1,estimated,,0,,,2020M01|2020M02|2020M03,False,6394.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2020Q1,attributed,,0,,,2020M01|2020M02|2020M03,False,6394.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2020Q2,observed,,0,,,2020M04|2020M05|2020M06,False,817.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2020Q2,scheduled,,0,,,2020M04|2020M05|2020M06,False,817.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2020Q2,estimated,,0,,,2020M04|2020M05|2020M06,False,817.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2020Q2,attributed,,0,,,2020M04|2020M05|2020M06,False,817.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2020Q3,observed,,0,,,2020M07|2020M08|2020M09,False,3980.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2020Q3,scheduled,,0,,,2020M07|2020M08|2020M09,False,3980.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2020Q3,estimated,,0,,,2020M07|2020M08|2020M09,False,3980.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2020Q3,attributed,,0,,,2020M07|2020M08|2020M09,False,3980.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2020Q4,observed,,0,,,2020M10|2020M11|2020M12,False,6023.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2020Q4,scheduled,,0,,,2020M10|2020M11|2020M12,False,6023.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2020Q4,estimated,,0,,,2020M10|2020M11|2020M12,False,6023.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2020Q4,attributed,,0,,,2020M10|2020M11|2020M12,False,6023.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2021Q1,observed,4606.0,60,2021M01|2021M02|2021M03,Estados Unidos · BTS T-100,,True,4761.0,4761.0,4606.0,96.74438143247217,96.74438143247217,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VOLARIS,international,2021Q1,scheduled,,0,,,2021M01|2021M02|2021M03,False,4761.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2021Q1,estimated,,0,,,2021M01|2021M02|2021M03,False,4761.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2021Q1,attributed,,0,,,2021M01|2021M02|2021M03,False,4761.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2021Q2,observed,7226.0,65,2021M04|2021M05|2021M06,Estados Unidos · BTS T-100,,True,7403.0,7403.0,7226.0,97.60907740105363,97.60907740105363,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VOLARIS,international,2021Q2,scheduled,,0,,,2021M04|2021M05|2021M06,False,7403.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2021Q2,estimated,,0,,,2021M04|2021M05|2021M06,False,7403.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2021Q2,attributed,,0,,,2021M04|2021M05|2021M06,False,7403.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2021Q3,observed,7970.0,63,2021M07|2021M08|2021M09,Estados Unidos · BTS T-100,,True,8260.0,8260.0,7970.0,96.48910411622276,96.48910411622276,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VOLARIS,international,2021Q3,scheduled,,0,,,2021M07|2021M08|2021M09,False,8260.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2021Q3,estimated,,0,,,2021M07|2021M08|2021M09,False,8260.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2021Q3,attributed,,0,,,2021M07|2021M08|2021M09,False,8260.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2021Q4,observed,8006.0,59,2021M10|2021M11|2021M12,Estados Unidos · BTS T-100,,True,8510.0,8510.0,8006.0,94.07755581668626,94.07755581668626,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VOLARIS,international,2021Q4,scheduled,,0,,,2021M10|2021M11|2021M12,False,8510.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2021Q4,estimated,,0,,,2021M10|2021M11|2021M12,False,8510.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2021Q4,attributed,,0,,,2021M10|2021M11|2021M12,False,8510.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2022Q1,observed,7755.0,61,2022M01|2022M02|2022M03,Estados Unidos · BTS T-100,,True,8228.0,8228.0,7755.0,94.25133689839572,94.25133689839572,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VOLARIS,international,2022Q1,scheduled,,0,,,2022M01|2022M02|2022M03,False,8228.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2022Q1,estimated,,0,,,2022M01|2022M02|2022M03,False,8228.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2022Q1,attributed,,0,,,2022M01|2022M02|2022M03,False,8228.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2022Q2,observed,7752.0,64,2022M04|2022M05|2022M06,Estados Unidos · BTS T-100,,True,8604.0,8604.0,7752.0,90.0976290097629,90.0976290097629,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VOLARIS,international,2022Q2,scheduled,,0,,,2022M04|2022M05|2022M06,False,8604.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2022Q2,estimated,,0,,,2022M04|2022M05|2022M06,False,8604.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2022Q2,attributed,,0,,,2022M04|2022M05|2022M06,False,8604.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2022Q3,observed,8006.0,62,2022M07|2022M08|2022M09,Estados Unidos · BTS T-100,,True,9064.0,9064.0,8006.0,88.32744924977935,88.32744924977935,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VOLARIS,international,2022Q3,scheduled,,0,,,2022M07|2022M08|2022M09,False,9064.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2022Q3,estimated,,0,,,2022M07|2022M08|2022M09,False,9064.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2022Q3,attributed,,0,,,2022M07|2022M08|2022M09,False,9064.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2022Q4,observed,8173.0,57,2022M10|2022M11|2022M12,Estados Unidos · BTS T-100,,True,9320.0,9320.0,8173.0,87.6931330472103,87.6931330472103,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VOLARIS,international,2022Q4,scheduled,,0,,,2022M10|2022M11|2022M12,False,9320.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2022Q4,estimated,,0,,,2022M10|2022M11|2022M12,False,9320.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2022Q4,attributed,,0,,,2022M10|2022M11|2022M12,False,9320.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2023Q1,observed,8276.0,57,2023M01|2023M02|2023M03,Estados Unidos · BTS T-100,,True,9383.0,9383.0,8276.0,88.20206756900778,88.20206756900778,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VOLARIS,international,2023Q1,scheduled,,0,,,2023M01|2023M02|2023M03,False,9383.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2023Q1,estimated,,0,,,2023M01|2023M02|2023M03,False,9383.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2023Q1,attributed,,0,,,2023M01|2023M02|2023M03,False,9383.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2023Q2,observed,8353.0,57,2023M04|2023M05|2023M06,Estados Unidos · BTS T-100,,True,9519.0,9519.0,8353.0,87.75081416115138,87.75081416115138,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VOLARIS,international,2023Q2,scheduled,,0,,,2023M04|2023M05|2023M06,False,9519.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2023Q2,estimated,,0,,,2023M04|2023M05|2023M06,False,9519.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2023Q2,attributed,,0,,,2023M04|2023M05|2023M06,False,9519.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2023Q3,observed,8459.0,57,2023M07|2023M08|2023M09,Estados Unidos · BTS T-100,,True,9689.0,9689.0,8459.0,87.30519145422645,87.30519145422645,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VOLARIS,international,2023Q3,scheduled,,0,,,2023M07|2023M08|2023M09,False,9689.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2023Q3,estimated,,0,,,2023M07|2023M08|2023M09,False,9689.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2023Q3,attributed,,0,,,2023M07|2023M08|2023M09,False,9689.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2023Q4,observed,8766.0,57,2023M10|2023M11|2023M12,Estados Unidos · BTS T-100,,True,9928.0,9928.0,8766.0,88.29572925060435,88.29572925060435,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VOLARIS,international,2023Q4,scheduled,,0,,,2023M10|2023M11|2023M12,False,9928.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2023Q4,estimated,,0,,,2023M10|2023M11|2023M12,False,9928.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2023Q4,attributed,,0,,,2023M10|2023M11|2023M12,False,9928.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2024Q1,observed,9503.0,57,2024M01|2024M02|2024M03,Estados Unidos · BTS T-100,,True,10243.0,10243.0,9503.0,92.77555403690324,92.77555403690324,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VOLARIS,international,2024Q1,scheduled,,0,,,2024M01|2024M02|2024M03,False,10243.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2024Q1,estimated,,0,,,2024M01|2024M02|2024M03,False,10243.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2024Q1,attributed,,0,,,2024M01|2024M02|2024M03,False,10243.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2024Q2,observed,9144.0,57,2024M04|2024M05|2024M06,Estados Unidos · BTS T-100,,True,9950.0,9950.0,9144.0,91.89949748743719,91.89949748743719,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VOLARIS,international,2024Q2,scheduled,,0,,,2024M04|2024M05|2024M06,False,9950.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2024Q2,estimated,,0,,,2024M04|2024M05|2024M06,False,9950.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2024Q2,attributed,,0,,,2024M04|2024M05|2024M06,False,9950.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2024Q3,observed,9552.0,56,2024M07|2024M08|2024M09,Estados Unidos · BTS T-100,,True,10338.0,10338.0,9552.0,92.39698200812536,92.39698200812536,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VOLARIS,international,2024Q3,scheduled,,0,,,2024M07|2024M08|2024M09,False,10338.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2024Q3,estimated,,0,,,2024M07|2024M08|2024M09,False,10338.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2024Q3,attributed,,0,,,2024M07|2024M08|2024M09,False,10338.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2024Q4,observed,10525.0,62,2024M10|2024M11|2024M12,Estados Unidos · BTS T-100,,True,11272.0,11272.0,10525.0,93.37295954577715,93.37295954577715,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VOLARIS,international,2024Q4,scheduled,,0,,,2024M10|2024M11|2024M12,False,11272.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2024Q4,estimated,,0,,,2024M10|2024M11|2024M12,False,11272.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2024Q4,attributed,,0,,,2024M10|2024M11|2024M12,False,11272.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2025Q1,observed,10274.0,66,2025M01|2025M02|2025M03,Estados Unidos · BTS T-100,,True,10958.0,10958.0,10274.0,93.75798503376528,93.75798503376528,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VOLARIS,international,2025Q1,scheduled,,0,,,2025M01|2025M02|2025M03,False,10958.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2025Q1,estimated,,0,,,2025M01|2025M02|2025M03,False,10958.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2025Q1,attributed,,0,,,2025M01|2025M02|2025M03,False,10958.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2025Q2,observed,13323.0,67,2025M04|2025M05|2025M06,Estados Unidos · BTS T-100,,True,10919.0,10919.0,13323.0,,,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,source totals inconsistent
+VOLARIS,international,2025Q2,scheduled,,0,,,2025M04|2025M05|2025M06,False,10919.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2025Q2,estimated,,0,,,2025M04|2025M05|2025M06,False,10919.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2025Q2,attributed,,0,,,2025M04|2025M05|2025M06,False,10919.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2025Q3,observed,11051.0,72,2025M07|2025M08|2025M09,Estados Unidos · BTS T-100,,True,11773.0,11773.0,11051.0,93.86732353690648,93.86732353690648,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VOLARIS,international,2025Q3,scheduled,,0,,,2025M07|2025M08|2025M09,False,11773.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2025Q3,estimated,,0,,,2025M07|2025M08|2025M09,False,11773.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2025Q3,attributed,,0,,,2025M07|2025M08|2025M09,False,11773.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2025Q4,observed,11884.0,72,2025M10|2025M11|2025M12,Estados Unidos · BTS T-100,,True,12508.0,12508.0,11884.0,95.01119283658458,95.01119283658458,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VOLARIS,international,2025Q4,scheduled,,0,,,2025M10|2025M11|2025M12,False,12508.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2025Q4,estimated,,0,,,2025M10|2025M11|2025M12,False,12508.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2025Q4,attributed,,0,,,2025M10|2025M11|2025M12,False,12508.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2026Q1,observed,11312.0,70,2026M01|2026M02|2026M03,Estados Unidos · BTS T-100,,True,11909.0,11909.0,11312.0,94.98698463347048,94.98698463347048,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VOLARIS,international,2026Q1,scheduled,,0,,,2026M01|2026M02|2026M03,False,11909.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2026Q1,estimated,,0,,,2026M01|2026M02|2026M03,False,11909.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2026Q1,attributed,,0,,,2026M01|2026M02|2026M03,False,11909.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2026Q2,observed,7216.0,69,2026M04|2026M05,Estados Unidos · BTS T-100,2026M06,True,11803.0,7732.0,7216.0,61.13699906803355,93.3264355923435,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VOLARIS,international,2026Q2,scheduled,,0,,,2026M04|2026M05|2026M06,False,11803.0,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2026Q2,estimated,772.0,8,2026M04|2026M05|2026M06,AFAC + AeroDataBox · Volaris estimado,,True,11803.0,11803.0,,,,,,Estimated frequencies are not observed flight coverage,,bounded comparable universe
+VOLARIS,international,2026Q2,attributed,,0,,,2026M04|2026M05|2026M06,False,11803.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VOLARIS,international,2026Q3,observed,,0,,,2026M07|2026M08|2026M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VOLARIS,international,2026Q3,scheduled,,0,,,2026M07|2026M08|2026M09,False,,,,,,,,Programmed is not performed,,no map figure
+VOLARIS,international,2026Q3,estimated,,0,,,2026M07|2026M08|2026M09,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VOLARIS,international,2026Q3,attributed,,0,,,2026M07|2026M08|2026M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2015Q1,observed,,0,,,2015M01|2015M02|2015M03,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2015Q1,scheduled,,0,,,2015M01|2015M02|2015M03,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2015Q1,estimated,,0,,,2015M01|2015M02|2015M03,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2015Q1,attributed,,0,,,2015M01|2015M02|2015M03,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2015Q2,observed,,0,,,2015M04|2015M05|2015M06,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2015Q2,scheduled,,0,,,2015M04|2015M05|2015M06,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2015Q2,estimated,,0,,,2015M04|2015M05|2015M06,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2015Q2,attributed,,0,,,2015M04|2015M05|2015M06,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2015Q3,observed,,0,,,2015M07|2015M08|2015M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2015Q3,scheduled,,0,,,2015M07|2015M08|2015M09,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2015Q3,estimated,,0,,,2015M07|2015M08|2015M09,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2015Q3,attributed,,0,,,2015M07|2015M08|2015M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2015Q4,observed,,0,,,2015M10|2015M11|2015M12,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2015Q4,scheduled,,0,,,2015M10|2015M11|2015M12,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2015Q4,estimated,,0,,,2015M10|2015M11|2015M12,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2015Q4,attributed,,0,,,2015M10|2015M11|2015M12,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2016Q1,observed,,0,,,2016M01|2016M02|2016M03,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2016Q1,scheduled,,0,,,2016M01|2016M02|2016M03,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2016Q1,estimated,,0,,,2016M01|2016M02|2016M03,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2016Q1,attributed,,0,,,2016M01|2016M02|2016M03,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2016Q2,observed,,0,,,2016M04|2016M05|2016M06,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2016Q2,scheduled,,0,,,2016M04|2016M05|2016M06,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2016Q2,estimated,,0,,,2016M04|2016M05|2016M06,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2016Q2,attributed,,0,,,2016M04|2016M05|2016M06,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2016Q3,observed,,0,,,2016M07|2016M08|2016M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2016Q3,scheduled,,0,,,2016M07|2016M08|2016M09,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2016Q3,estimated,,0,,,2016M07|2016M08|2016M09,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2016Q3,attributed,,0,,,2016M07|2016M08|2016M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2016Q4,observed,,0,,,2016M10|2016M11|2016M12,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2016Q4,scheduled,,0,,,2016M10|2016M11|2016M12,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2016Q4,estimated,,0,,,2016M10|2016M11|2016M12,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2016Q4,attributed,,0,,,2016M10|2016M11|2016M12,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2017Q1,observed,,0,,,2017M01|2017M02|2017M03,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2017Q1,scheduled,,0,,,2017M01|2017M02|2017M03,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2017Q1,estimated,,0,,,2017M01|2017M02|2017M03,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2017Q1,attributed,,0,,,2017M01|2017M02|2017M03,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2017Q2,observed,,0,,,2017M04|2017M05|2017M06,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2017Q2,scheduled,,0,,,2017M04|2017M05|2017M06,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2017Q2,estimated,,0,,,2017M04|2017M05|2017M06,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2017Q2,attributed,,0,,,2017M04|2017M05|2017M06,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2017Q3,observed,,0,,,2017M07|2017M08|2017M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2017Q3,scheduled,,0,,,2017M07|2017M08|2017M09,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2017Q3,estimated,,0,,,2017M07|2017M08|2017M09,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2017Q3,attributed,,0,,,2017M07|2017M08|2017M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2017Q4,observed,,0,,,2017M10|2017M11|2017M12,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2017Q4,scheduled,,0,,,2017M10|2017M11|2017M12,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2017Q4,estimated,,0,,,2017M10|2017M11|2017M12,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2017Q4,attributed,,0,,,2017M10|2017M11|2017M12,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2018Q1,observed,,0,,,2018M01|2018M02|2018M03,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2018Q1,scheduled,,0,,,2018M01|2018M02|2018M03,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2018Q1,estimated,,0,,,2018M01|2018M02|2018M03,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2018Q1,attributed,,0,,,2018M01|2018M02|2018M03,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2018Q2,observed,,0,,,2018M04|2018M05|2018M06,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2018Q2,scheduled,,0,,,2018M04|2018M05|2018M06,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2018Q2,estimated,,0,,,2018M04|2018M05|2018M06,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2018Q2,attributed,,0,,,2018M04|2018M05|2018M06,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2018Q3,observed,,0,,,2018M07|2018M08|2018M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2018Q3,scheduled,,0,,,2018M07|2018M08|2018M09,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2018Q3,estimated,,0,,,2018M07|2018M08|2018M09,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2018Q3,attributed,,0,,,2018M07|2018M08|2018M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2018Q4,observed,,0,,,2018M10|2018M11|2018M12,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2018Q4,scheduled,,0,,,2018M10|2018M11|2018M12,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2018Q4,estimated,,0,,,2018M10|2018M11|2018M12,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2018Q4,attributed,,0,,,2018M10|2018M11|2018M12,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2019Q1,observed,,0,,,2019M01|2019M02|2019M03,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2019Q1,scheduled,,0,,,2019M01|2019M02|2019M03,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2019Q1,estimated,,0,,,2019M01|2019M02|2019M03,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2019Q1,attributed,,0,,,2019M01|2019M02|2019M03,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2019Q2,observed,,0,,,2019M04|2019M05|2019M06,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2019Q2,scheduled,,0,,,2019M04|2019M05|2019M06,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2019Q2,estimated,,0,,,2019M04|2019M05|2019M06,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2019Q2,attributed,,0,,,2019M04|2019M05|2019M06,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2019Q3,observed,,0,,,2019M07|2019M08|2019M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2019Q3,scheduled,,0,,,2019M07|2019M08|2019M09,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2019Q3,estimated,,0,,,2019M07|2019M08|2019M09,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2019Q3,attributed,,0,,,2019M07|2019M08|2019M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2019Q4,observed,,0,,,2019M10|2019M11|2019M12,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2019Q4,scheduled,,0,,,2019M10|2019M11|2019M12,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2019Q4,estimated,,0,,,2019M10|2019M11|2019M12,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2019Q4,attributed,,0,,,2019M10|2019M11|2019M12,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2020Q1,observed,,0,,,2020M01|2020M02|2020M03,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2020Q1,scheduled,,0,,,2020M01|2020M02|2020M03,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2020Q1,estimated,,0,,,2020M01|2020M02|2020M03,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2020Q1,attributed,,0,,,2020M01|2020M02|2020M03,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2020Q2,observed,,0,,,2020M04|2020M05|2020M06,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2020Q2,scheduled,,0,,,2020M04|2020M05|2020M06,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2020Q2,estimated,,0,,,2020M04|2020M05|2020M06,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2020Q2,attributed,,0,,,2020M04|2020M05|2020M06,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2020Q3,observed,,0,,,2020M07|2020M08|2020M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2020Q3,scheduled,,0,,,2020M07|2020M08|2020M09,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2020Q3,estimated,,0,,,2020M07|2020M08|2020M09,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2020Q3,attributed,,0,,,2020M07|2020M08|2020M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2020Q4,observed,,0,,,2020M10|2020M11|2020M12,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2020Q4,scheduled,,0,,,2020M10|2020M11|2020M12,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2020Q4,estimated,,0,,,2020M10|2020M11|2020M12,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2020Q4,attributed,,0,,,2020M10|2020M11|2020M12,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2021Q1,observed,,0,,,2021M01|2021M02|2021M03,False,16099.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2021Q1,scheduled,,0,,,2021M01|2021M02|2021M03,False,16099.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2021Q1,estimated,,0,,,2021M01|2021M02|2021M03,False,16099.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2021Q1,attributed,,0,,,2021M01|2021M02|2021M03,False,16099.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2021Q2,observed,,0,,,2021M04|2021M05|2021M06,False,19909.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2021Q2,scheduled,,0,,,2021M04|2021M05|2021M06,False,19909.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2021Q2,estimated,,0,,,2021M04|2021M05|2021M06,False,19909.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2021Q2,attributed,,0,,,2021M04|2021M05|2021M06,False,19909.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2021Q3,observed,,0,,,2021M07|2021M08|2021M09,False,22719.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2021Q3,scheduled,,0,,,2021M07|2021M08|2021M09,False,22719.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2021Q3,estimated,,0,,,2021M07|2021M08|2021M09,False,22719.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2021Q3,attributed,,0,,,2021M07|2021M08|2021M09,False,22719.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2021Q4,observed,,0,,,2021M10|2021M11|2021M12,False,23488.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2021Q4,scheduled,,0,,,2021M10|2021M11|2021M12,False,23488.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2021Q4,estimated,,0,,,2021M10|2021M11|2021M12,False,23488.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2021Q4,attributed,,0,,,2021M10|2021M11|2021M12,False,23488.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2022Q1,observed,,0,,,2022M01|2022M02|2022M03,False,22031.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2022Q1,scheduled,,0,,,2022M01|2022M02|2022M03,False,22031.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2022Q1,estimated,,0,,,2022M01|2022M02|2022M03,False,22031.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2022Q1,attributed,,0,,,2022M01|2022M02|2022M03,False,22031.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2022Q2,observed,,0,,,2022M04|2022M05|2022M06,False,25421.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2022Q2,scheduled,,0,,,2022M04|2022M05|2022M06,False,25421.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2022Q2,estimated,,0,,,2022M04|2022M05|2022M06,False,25421.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2022Q2,attributed,,0,,,2022M04|2022M05|2022M06,False,25421.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2022Q3,observed,,0,,,2022M07|2022M08|2022M09,False,27721.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2022Q3,scheduled,,0,,,2022M07|2022M08|2022M09,False,27721.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2022Q3,estimated,,0,,,2022M07|2022M08|2022M09,False,27721.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2022Q3,attributed,,0,,,2022M07|2022M08|2022M09,False,27721.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2022Q4,observed,,0,,,2022M10|2022M11|2022M12,False,29536.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2022Q4,scheduled,,0,,,2022M10|2022M11|2022M12,False,29536.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2022Q4,estimated,,0,,,2022M10|2022M11|2022M12,False,29536.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2022Q4,attributed,,0,,,2022M10|2022M11|2022M12,False,29536.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2023Q1,observed,,0,,,2023M01|2023M02|2023M03,False,26315.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2023Q1,scheduled,,0,,,2023M01|2023M02|2023M03,False,26315.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2023Q1,estimated,,0,,,2023M01|2023M02|2023M03,False,26315.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2023Q1,attributed,,0,,,2023M01|2023M02|2023M03,False,26315.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2023Q2,observed,,0,,,2023M04|2023M05|2023M06,False,29946.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2023Q2,scheduled,,0,,,2023M04|2023M05|2023M06,False,29946.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2023Q2,estimated,,0,,,2023M04|2023M05|2023M06,False,29946.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2023Q2,attributed,,0,,,2023M04|2023M05|2023M06,False,29946.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2023Q3,observed,,0,,,2023M07|2023M08|2023M09,False,32946.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2023Q3,scheduled,,0,,,2023M07|2023M08|2023M09,False,32946.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2023Q3,estimated,,0,,,2023M07|2023M08|2023M09,False,32946.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2023Q3,attributed,,0,,,2023M07|2023M08|2023M09,False,32946.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2023Q4,observed,,0,,,2023M10|2023M11|2023M12,False,32902.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2023Q4,scheduled,,0,,,2023M10|2023M11|2023M12,False,32902.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2023Q4,estimated,,0,,,2023M10|2023M11|2023M12,False,32902.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2023Q4,attributed,,0,,,2023M10|2023M11|2023M12,False,32902.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2024Q1,observed,,0,,,2024M01|2024M02|2024M03,False,30793.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2024Q1,scheduled,,0,,,2024M01|2024M02|2024M03,False,30793.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2024Q1,estimated,,0,,,2024M01|2024M02|2024M03,False,30793.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2024Q1,attributed,,0,,,2024M01|2024M02|2024M03,False,30793.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2024Q2,observed,,0,,,2024M04|2024M05|2024M06,False,34901.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2024Q2,scheduled,,0,,,2024M04|2024M05|2024M06,False,34901.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2024Q2,estimated,,0,,,2024M04|2024M05|2024M06,False,34901.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2024Q2,attributed,,0,,,2024M04|2024M05|2024M06,False,34901.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2024Q3,observed,,0,,,2024M07|2024M08|2024M09,False,37093.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2024Q3,scheduled,,0,,,2024M07|2024M08|2024M09,False,37093.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2024Q3,estimated,,0,,,2024M07|2024M08|2024M09,False,37093.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2024Q3,attributed,,0,,,2024M07|2024M08|2024M09,False,37093.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2024Q4,observed,,0,,,2024M10|2024M11|2024M12,False,39712.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2024Q4,scheduled,,0,,,2024M10|2024M11|2024M12,False,39712.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2024Q4,estimated,,0,,,2024M10|2024M11|2024M12,False,39712.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2024Q4,attributed,,0,,,2024M10|2024M11|2024M12,False,39712.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2025Q1,observed,,0,,,2025M01|2025M02|2025M03,False,37607.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2025Q1,scheduled,,0,,,2025M01|2025M02|2025M03,False,37607.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2025Q1,estimated,,0,,,2025M01|2025M02|2025M03,False,37607.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2025Q1,attributed,,0,,,2025M01|2025M02|2025M03,False,37607.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2025Q2,observed,,0,,,2025M04|2025M05|2025M06,False,41500.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2025Q2,scheduled,,0,,,2025M04|2025M05|2025M06,False,41500.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2025Q2,estimated,,0,,,2025M04|2025M05|2025M06,False,41500.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2025Q2,attributed,,0,,,2025M04|2025M05|2025M06,False,41500.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2025Q3,observed,,0,,,2025M07|2025M08|2025M09,False,42502.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2025Q3,scheduled,,0,,,2025M07|2025M08|2025M09,False,42502.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2025Q3,estimated,,0,,,2025M07|2025M08|2025M09,False,42502.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2025Q3,attributed,,0,,,2025M07|2025M08|2025M09,False,42502.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2025Q4,observed,,0,,,2025M10|2025M11|2025M12,False,43387.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2025Q4,scheduled,,0,,,2025M10|2025M11|2025M12,False,43387.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2025Q4,estimated,,0,,,2025M10|2025M11|2025M12,False,43387.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,domestic,2025Q4,attributed,,0,,,2025M10|2025M11|2025M12,False,43387.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2026Q1,observed,,0,,,2026M01|2026M02|2026M03,False,38916.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2026Q1,scheduled,,0,,,2026M01|2026M02|2026M03,False,38916.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2026Q1,estimated,11742.0,142,2026M03,AFAC + AeroDataBox + flota · Viva estimado,2026M01|2026M02,True,38916.0,13265.0,,,,,,Estimated frequencies are not observed flight coverage,,bounded comparable universe
+VIVA_AEROBUS,domestic,2026Q1,attributed,,0,,,2026M01|2026M02|2026M03,False,38916.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2026Q2,observed,,0,,,2026M04|2026M05|2026M06,False,40430.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2026Q2,scheduled,,0,,,2026M04|2026M05|2026M06,False,40430.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2026Q2,estimated,35287.0,425,2026M04|2026M05|2026M06,AFAC + AeroDataBox + flota · Viva estimado,,True,40430.0,40430.0,,,,,,Estimated frequencies are not observed flight coverage,,bounded comparable universe
+VIVA_AEROBUS,domestic,2026Q2,attributed,,0,,,2026M04|2026M05|2026M06,False,40430.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,domestic,2026Q3,observed,,0,,,2026M07|2026M08|2026M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,domestic,2026Q3,scheduled,,0,,,2026M07|2026M08|2026M09,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,domestic,2026Q3,estimated,13498.0,147,2026M07,AFAC + AeroDataBox + flota · Viva estimado,2026M08|2026M09,False,,14677.0,,,,,,Estimated frequencies are not observed flight coverage,,partial official denominator
+VIVA_AEROBUS,domestic,2026Q3,attributed,,0,,,2026M07|2026M08|2026M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2015Q1,observed,,0,,,2015M01|2015M02|2015M03,False,422.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2015Q1,scheduled,,0,,,2015M01|2015M02|2015M03,False,422.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2015Q1,estimated,,0,,,2015M01|2015M02|2015M03,False,422.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2015Q1,attributed,,0,,,2015M01|2015M02|2015M03,False,422.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2015Q2,observed,,0,,,2015M04|2015M05|2015M06,False,583.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2015Q2,scheduled,,0,,,2015M04|2015M05|2015M06,False,583.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2015Q2,estimated,,0,,,2015M04|2015M05|2015M06,False,583.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2015Q2,attributed,,0,,,2015M04|2015M05|2015M06,False,583.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2015Q3,observed,,0,,,2015M07|2015M08|2015M09,False,422.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2015Q3,scheduled,,0,,,2015M07|2015M08|2015M09,False,422.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2015Q3,estimated,,0,,,2015M07|2015M08|2015M09,False,422.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2015Q3,attributed,,0,,,2015M07|2015M08|2015M09,False,422.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2015Q4,observed,,0,,,2015M10|2015M11|2015M12,False,150.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2015Q4,scheduled,,0,,,2015M10|2015M11|2015M12,False,150.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2015Q4,estimated,,0,,,2015M10|2015M11|2015M12,False,150.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2015Q4,attributed,,0,,,2015M10|2015M11|2015M12,False,150.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2016Q1,observed,,0,,,2016M01|2016M02|2016M03,False,88.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2016Q1,scheduled,,0,,,2016M01|2016M02|2016M03,False,88.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2016Q1,estimated,,0,,,2016M01|2016M02|2016M03,False,88.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2016Q1,attributed,,0,,,2016M01|2016M02|2016M03,False,88.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2016Q2,observed,,0,,,2016M04|2016M05|2016M06,False,104.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2016Q2,scheduled,,0,,,2016M04|2016M05|2016M06,False,104.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2016Q2,estimated,,0,,,2016M04|2016M05|2016M06,False,104.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2016Q2,attributed,,0,,,2016M04|2016M05|2016M06,False,104.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2016Q3,observed,,0,,,2016M07|2016M08|2016M09,False,102.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2016Q3,scheduled,,0,,,2016M07|2016M08|2016M09,False,102.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2016Q3,estimated,,0,,,2016M07|2016M08|2016M09,False,102.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2016Q3,attributed,,0,,,2016M07|2016M08|2016M09,False,102.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2016Q4,observed,,0,,,2016M10|2016M11|2016M12,False,130.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2016Q4,scheduled,,0,,,2016M10|2016M11|2016M12,False,130.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2016Q4,estimated,,0,,,2016M10|2016M11|2016M12,False,130.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2016Q4,attributed,,0,,,2016M10|2016M11|2016M12,False,130.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2017Q1,observed,,0,,,2017M01|2017M02|2017M03,False,96.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2017Q1,scheduled,,0,,,2017M01|2017M02|2017M03,False,96.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2017Q1,estimated,,0,,,2017M01|2017M02|2017M03,False,96.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2017Q1,attributed,,0,,,2017M01|2017M02|2017M03,False,96.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2017Q2,observed,,0,,,2017M04|2017M05|2017M06,False,78.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2017Q2,scheduled,,0,,,2017M04|2017M05|2017M06,False,78.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2017Q2,estimated,,0,,,2017M04|2017M05|2017M06,False,78.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2017Q2,attributed,,0,,,2017M04|2017M05|2017M06,False,78.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2017Q3,observed,,0,,,2017M07|2017M08|2017M09,False,60.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2017Q3,scheduled,,0,,,2017M07|2017M08|2017M09,False,60.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2017Q3,estimated,,0,,,2017M07|2017M08|2017M09,False,60.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2017Q3,attributed,,0,,,2017M07|2017M08|2017M09,False,60.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2017Q4,observed,,0,,,2017M10|2017M11|2017M12,False,217.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2017Q4,scheduled,,0,,,2017M10|2017M11|2017M12,False,217.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2017Q4,estimated,,0,,,2017M10|2017M11|2017M12,False,217.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2017Q4,attributed,,0,,,2017M10|2017M11|2017M12,False,217.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2018Q1,observed,,0,,,2018M01|2018M02|2018M03,False,448.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2018Q1,scheduled,,0,,,2018M01|2018M02|2018M03,False,448.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2018Q1,estimated,,0,,,2018M01|2018M02|2018M03,False,448.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2018Q1,attributed,,0,,,2018M01|2018M02|2018M03,False,448.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2018Q2,observed,,0,,,2018M04|2018M05|2018M06,False,411.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2018Q2,scheduled,,0,,,2018M04|2018M05|2018M06,False,411.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2018Q2,estimated,,0,,,2018M04|2018M05|2018M06,False,411.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2018Q2,attributed,,0,,,2018M04|2018M05|2018M06,False,411.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2018Q3,observed,,0,,,2018M07|2018M08|2018M09,False,464.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2018Q3,scheduled,,0,,,2018M07|2018M08|2018M09,False,464.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2018Q3,estimated,,0,,,2018M07|2018M08|2018M09,False,464.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2018Q3,attributed,,0,,,2018M07|2018M08|2018M09,False,464.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2018Q4,observed,,0,,,2018M10|2018M11|2018M12,False,717.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2018Q4,scheduled,,0,,,2018M10|2018M11|2018M12,False,717.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2018Q4,estimated,,0,,,2018M10|2018M11|2018M12,False,717.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2018Q4,attributed,,0,,,2018M10|2018M11|2018M12,False,717.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2019Q1,observed,,0,,,2019M01|2019M02|2019M03,False,526.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2019Q1,scheduled,,0,,,2019M01|2019M02|2019M03,False,526.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2019Q1,estimated,,0,,,2019M01|2019M02|2019M03,False,526.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2019Q1,attributed,,0,,,2019M01|2019M02|2019M03,False,526.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2019Q2,observed,,0,,,2019M04|2019M05|2019M06,False,795.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2019Q2,scheduled,,0,,,2019M04|2019M05|2019M06,False,795.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2019Q2,estimated,,0,,,2019M04|2019M05|2019M06,False,795.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2019Q2,attributed,,0,,,2019M04|2019M05|2019M06,False,795.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2019Q3,observed,,0,,,2019M07|2019M08|2019M09,False,888.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2019Q3,scheduled,,0,,,2019M07|2019M08|2019M09,False,888.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2019Q3,estimated,,0,,,2019M07|2019M08|2019M09,False,888.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2019Q3,attributed,,0,,,2019M07|2019M08|2019M09,False,888.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2019Q4,observed,,0,,,2019M10|2019M11|2019M12,False,1030.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2019Q4,scheduled,,0,,,2019M10|2019M11|2019M12,False,1030.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2019Q4,estimated,,0,,,2019M10|2019M11|2019M12,False,1030.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2019Q4,attributed,,0,,,2019M10|2019M11|2019M12,False,1030.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2020Q1,observed,,0,,,2020M01|2020M02|2020M03,False,887.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2020Q1,scheduled,,0,,,2020M01|2020M02|2020M03,False,887.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2020Q1,estimated,,0,,,2020M01|2020M02|2020M03,False,887.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2020Q1,attributed,,0,,,2020M01|2020M02|2020M03,False,887.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2020Q2,observed,,0,,,2020M04|2020M05|2020M06,False,84.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2020Q2,scheduled,,0,,,2020M04|2020M05|2020M06,False,84.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2020Q2,estimated,,0,,,2020M04|2020M05|2020M06,False,84.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2020Q2,attributed,,0,,,2020M04|2020M05|2020M06,False,84.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2020Q3,observed,,0,,,2020M07|2020M08|2020M09,False,746.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2020Q3,scheduled,,0,,,2020M07|2020M08|2020M09,False,746.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2020Q3,estimated,,0,,,2020M07|2020M08|2020M09,False,746.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2020Q3,attributed,,0,,,2020M07|2020M08|2020M09,False,746.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2020Q4,observed,,0,,,2020M10|2020M11|2020M12,False,1508.0,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2020Q4,scheduled,,0,,,2020M10|2020M11|2020M12,False,1508.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2020Q4,estimated,,0,,,2020M10|2020M11|2020M12,False,1508.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2020Q4,attributed,,0,,,2020M10|2020M11|2020M12,False,1508.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2021Q1,observed,1462.0,26,2021M01|2021M02|2021M03,Estados Unidos · BTS T-100,,True,1399.0,1399.0,1377.0,98.42744817726948,98.42744817726948,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VIVA_AEROBUS,international,2021Q1,scheduled,,0,,,2021M01|2021M02|2021M03,False,1399.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2021Q1,estimated,,0,,,2021M01|2021M02|2021M03,False,1399.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2021Q1,attributed,,0,,,2021M01|2021M02|2021M03,False,1399.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2021Q2,observed,4017.0,31,2021M04|2021M05|2021M06,Estados Unidos · BTS T-100,,True,3908.0,3908.0,3883.0,99.36028659160696,99.36028659160696,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VIVA_AEROBUS,international,2021Q2,scheduled,,0,,,2021M04|2021M05|2021M06,False,3908.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2021Q2,estimated,,0,,,2021M04|2021M05|2021M06,False,3908.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2021Q2,attributed,,0,,,2021M04|2021M05|2021M06,False,3908.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2021Q3,observed,4058.0,29,2021M07|2021M08|2021M09,Estados Unidos · BTS T-100,,True,3956.0,3956.0,3886.0,98.23053589484327,98.23053589484327,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VIVA_AEROBUS,international,2021Q3,scheduled,,0,,,2021M07|2021M08|2021M09,False,3956.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2021Q3,estimated,,0,,,2021M07|2021M08|2021M09,False,3956.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2021Q3,attributed,,0,,,2021M07|2021M08|2021M09,False,3956.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2021Q4,observed,3541.0,32,2021M10|2021M11|2021M12,Estados Unidos · BTS T-100,,True,3832.0,3832.0,3445.0,89.90083507306889,89.90083507306889,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VIVA_AEROBUS,international,2021Q4,scheduled,,0,,,2021M10|2021M11|2021M12,False,3832.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2021Q4,estimated,,0,,,2021M10|2021M11|2021M12,False,3832.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2021Q4,attributed,,0,,,2021M10|2021M11|2021M12,False,3832.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2022Q1,observed,2744.0,29,2022M01|2022M02|2022M03,Estados Unidos · BTS T-100,,True,3399.0,3399.0,2645.0,77.81700500147102,77.81700500147102,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VIVA_AEROBUS,international,2022Q1,scheduled,,0,,,2022M01|2022M02|2022M03,False,3399.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2022Q1,estimated,,0,,,2022M01|2022M02|2022M03,False,3399.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2022Q1,attributed,,0,,,2022M01|2022M02|2022M03,False,3399.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2022Q2,observed,3060.0,40,2022M04|2022M05|2022M06,Estados Unidos · BTS T-100,,True,3856.0,3856.0,2874.0,74.53319502074689,74.53319502074689,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VIVA_AEROBUS,international,2022Q2,scheduled,,0,,,2022M04|2022M05|2022M06,False,3856.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2022Q2,estimated,,0,,,2022M04|2022M05|2022M06,False,3856.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2022Q2,attributed,,0,,,2022M04|2022M05|2022M06,False,3856.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2022Q3,observed,3025.0,41,2022M07|2022M08|2022M09,Estados Unidos · BTS T-100,,True,3666.0,3666.0,2855.0,77.87779596290234,77.87779596290234,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VIVA_AEROBUS,international,2022Q3,scheduled,,0,,,2022M07|2022M08|2022M09,False,3666.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2022Q3,estimated,,0,,,2022M07|2022M08|2022M09,False,3666.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2022Q3,attributed,,0,,,2022M07|2022M08|2022M09,False,3666.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2022Q4,observed,3048.0,32,2022M10|2022M11|2022M12,Estados Unidos · BTS T-100,,True,3949.0,3949.0,3008.0,76.17118257786781,76.17118257786781,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VIVA_AEROBUS,international,2022Q4,scheduled,,0,,,2022M10|2022M11|2022M12,False,3949.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2022Q4,estimated,,0,,,2022M10|2022M11|2022M12,False,3949.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2022Q4,attributed,,0,,,2022M10|2022M11|2022M12,False,3949.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2023Q1,observed,2841.0,33,2023M01|2023M02|2023M03,Estados Unidos · BTS T-100,,True,3765.0,3765.0,2782.0,73.89110225763612,73.89110225763612,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VIVA_AEROBUS,international,2023Q1,scheduled,,0,,,2023M01|2023M02|2023M03,False,3765.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2023Q1,estimated,,0,,,2023M01|2023M02|2023M03,False,3765.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2023Q1,attributed,,0,,,2023M01|2023M02|2023M03,False,3765.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2023Q2,observed,3183.0,42,2023M04|2023M05|2023M06,Estados Unidos · BTS T-100,,True,4107.0,4107.0,3014.0,73.38690041392744,73.38690041392744,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VIVA_AEROBUS,international,2023Q2,scheduled,,0,,,2023M04|2023M05|2023M06,False,4107.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2023Q2,estimated,,0,,,2023M04|2023M05|2023M06,False,4107.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2023Q2,attributed,,0,,,2023M04|2023M05|2023M06,False,4107.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2023Q3,observed,3317.0,39,2023M07|2023M08|2023M09,Estados Unidos · BTS T-100,,True,4486.0,4486.0,3187.0,71.04324565314312,71.04324565314312,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VIVA_AEROBUS,international,2023Q3,scheduled,,0,,,2023M07|2023M08|2023M09,False,4486.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2023Q3,estimated,,0,,,2023M07|2023M08|2023M09,False,4486.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2023Q3,attributed,,0,,,2023M07|2023M08|2023M09,False,4486.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2023Q4,observed,3640.0,30,2023M10|2023M11|2023M12,Estados Unidos · BTS T-100,,True,4634.0,4634.0,3599.0,77.66508416055244,77.66508416055244,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VIVA_AEROBUS,international,2023Q4,scheduled,,0,,,2023M10|2023M11|2023M12,False,4634.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2023Q4,estimated,,0,,,2023M10|2023M11|2023M12,False,4634.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2023Q4,attributed,,0,,,2023M10|2023M11|2023M12,False,4634.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2024Q1,observed,3561.0,34,2024M01|2024M02|2024M03,Estados Unidos · BTS T-100,,True,4319.0,4319.0,3480.0,80.57420699235934,80.57420699235934,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VIVA_AEROBUS,international,2024Q1,scheduled,,0,,,2024M01|2024M02|2024M03,False,4319.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2024Q1,estimated,,0,,,2024M01|2024M02|2024M03,False,4319.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2024Q1,attributed,,0,,,2024M01|2024M02|2024M03,False,4319.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2024Q2,observed,3883.0,47,2024M04|2024M05|2024M06,Estados Unidos · BTS T-100,,True,4621.0,4621.0,3725.0,80.61025752001731,80.61025752001731,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VIVA_AEROBUS,international,2024Q2,scheduled,,0,,,2024M04|2024M05|2024M06,False,4621.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2024Q2,estimated,,0,,,2024M04|2024M05|2024M06,False,4621.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2024Q2,attributed,,0,,,2024M04|2024M05|2024M06,False,4621.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2024Q3,observed,4072.0,47,2024M07|2024M08|2024M09,Estados Unidos · BTS T-100,,True,4834.0,4834.0,3981.0,82.35415804716591,82.35415804716591,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VIVA_AEROBUS,international,2024Q3,scheduled,,0,,,2024M07|2024M08|2024M09,False,4834.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2024Q3,estimated,,0,,,2024M07|2024M08|2024M09,False,4834.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2024Q3,attributed,,0,,,2024M07|2024M08|2024M09,False,4834.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2024Q4,observed,4750.0,43,2024M10|2024M11|2024M12,Estados Unidos · BTS T-100,,True,5563.0,5563.0,4728.0,84.99011324824735,84.99011324824735,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VIVA_AEROBUS,international,2024Q4,scheduled,,0,,,2024M10|2024M11|2024M12,False,5563.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2024Q4,estimated,,0,,,2024M10|2024M11|2024M12,False,5563.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2024Q4,attributed,,0,,,2024M10|2024M11|2024M12,False,5563.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2025Q1,observed,4449.0,39,2025M01|2025M02|2025M03,Estados Unidos · BTS T-100,,True,5268.0,5268.0,4413.0,83.76993166287016,83.76993166287016,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VIVA_AEROBUS,international,2025Q1,scheduled,,0,,,2025M01|2025M02|2025M03,False,5268.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2025Q1,estimated,,0,,,2025M01|2025M02|2025M03,False,5268.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2025Q1,attributed,,0,,,2025M01|2025M02|2025M03,False,5268.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2025Q2,observed,4745.0,43,2025M04|2025M05|2025M06,Estados Unidos · BTS T-100,,True,5551.0,5551.0,4673.0,84.18303008466943,84.18303008466943,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VIVA_AEROBUS,international,2025Q2,scheduled,,0,,,2025M04|2025M05|2025M06,False,5551.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2025Q2,estimated,,0,,,2025M04|2025M05|2025M06,False,5551.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2025Q2,attributed,,0,,,2025M04|2025M05|2025M06,False,5551.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2025Q3,observed,4441.0,47,2025M07|2025M08|2025M09,Estados Unidos · BTS T-100,,True,5436.0,5436.0,4395.0,80.84988962472406,80.84988962472406,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VIVA_AEROBUS,international,2025Q3,scheduled,,0,,,2025M07|2025M08|2025M09,False,5436.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2025Q3,estimated,,0,,,2025M07|2025M08|2025M09,False,5436.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2025Q3,attributed,,0,,,2025M07|2025M08|2025M09,False,5436.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2025Q4,observed,4689.0,46,2025M10|2025M11|2025M12,Estados Unidos · BTS T-100,,True,5900.0,5900.0,4659.0,78.96610169491525,78.96610169491525,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VIVA_AEROBUS,international,2025Q4,scheduled,,0,,,2025M10|2025M11|2025M12,False,5900.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2025Q4,estimated,,0,,,2025M10|2025M11|2025M12,False,5900.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2025Q4,attributed,,0,,,2025M10|2025M11|2025M12,False,5900.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2026Q1,observed,4033.0,42,2026M01|2026M02|2026M03,Estados Unidos · BTS T-100,,True,5139.0,5139.0,4002.0,77.87507297139521,77.87507297139521,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VIVA_AEROBUS,international,2026Q1,scheduled,,0,,,2026M01|2026M02|2026M03,False,5139.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2026Q1,estimated,,0,,,2026M01|2026M02|2026M03,False,5139.0,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2026Q1,attributed,,0,,,2026M01|2026M02|2026M03,False,5139.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2026Q2,observed,2326.0,38,2026M04|2026M05,Estados Unidos · BTS T-100,2026M06,True,4878.0,3060.0,2302.0,47.191471914719145,75.22875816993464,,,Observed minimum share of official regular operations; no claim of full network capture,BTS class F only; L/G/P excluded from regular denominator,bounded comparable universe
+VIVA_AEROBUS,international,2026Q2,scheduled,,0,,,2026M04|2026M05|2026M06,False,4878.0,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2026Q2,estimated,890.0,12,2026M04|2026M05|2026M06,AFAC + AeroDataBox · Viva estimado,,True,4878.0,4878.0,,,,,,Estimated frequencies are not observed flight coverage,,bounded comparable universe
+VIVA_AEROBUS,international,2026Q2,attributed,,0,,,2026M04|2026M05|2026M06,False,4878.0,,,,,,,Market attribution does not establish carrier operations,,no map figure
+VIVA_AEROBUS,international,2026Q3,observed,,0,,,2026M07|2026M08|2026M09,False,,,,,,,,Observed minimum share of official regular operations; no claim of full network capture,,no map figure
+VIVA_AEROBUS,international,2026Q3,scheduled,,0,,,2026M07|2026M08|2026M09,False,,,,,,,,Programmed is not performed,,no map figure
+VIVA_AEROBUS,international,2026Q3,estimated,,0,,,2026M07|2026M08|2026M09,False,,,,,,,,Estimated frequencies are not observed flight coverage,,no map figure
+VIVA_AEROBUS,international,2026Q3,attributed,,0,,,2026M07|2026M08|2026M09,False,,,,,,,,Market attribution does not establish carrier operations,,no map figure

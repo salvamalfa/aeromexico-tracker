@@ -4,10 +4,11 @@
 // Ported from src/dashboard/assets/flights.js::renderNetworkPeriod.
 
 import { ENTITY_LABELS, type EntityKey } from "../shell/carriers";
-import { $, finite, priorPeriod } from "./dom";
+import { $, finite } from "./dom";
 import {
   domesticAvailableForQuarter, ensureDomesticMonths, ensureDomesticQuarter,
   ensureInternational, monthsInQuarter, state,
+  DOMESTIC_MONTH_NAMES,
 } from "./state";
 import { aggregateDomesticMonths } from "./domestic";
 import { normalizeSelectedRegion, regionRoutes, renderRegionSwitch } from "./regions";
@@ -15,6 +16,8 @@ import { renderNetworkVolume } from "./volume";
 import { flightKind } from "./flight-measure";
 import { renderRouteOverview } from "./table";
 import { renderFlowMap } from "./map";
+import { currentMapPeriod, mapPeriodLabel, renderMapPeriodControl } from "./map-periods";
+import { calendarQuarter, officialDomesticNetwork } from "./map-layers";
 import type { Network, PeriodNetworkDocument, Route } from "../../types/domain";
 
 export function routeValue(route: Route): number {
@@ -61,8 +64,9 @@ export function renderRouteMode(): void {
 
   const presence = state.presenceOnlyRouteCount > 0
     ? ` · ${state.presenceOnlyRouteCount} sin volumen atribuible` : "";
-  const periodId = state.quarters[state.periodIndex]?.period_id ?? "";
-  const previousLabel = state.byPeriod.get(priorPeriod(periodId, 1))?.period_label ?? "el año anterior";
+  const periodId = currentMapPeriod();
+  const previousLabel = periodId
+    ? mapPeriodLabel(`${Number(periodId.slice(0, 4)) - 1}${periodId.slice(4)}`) : "el año anterior";
   $("map-route-title")!.textContent = state.routeView === "change"
     ? "Rutas con mayores cambios" : "Rutas con vuelos en el histórico";
   $("map-route-summary")!.textContent = state.routeView === "change"
@@ -89,10 +93,17 @@ export function cityLabel(name: string): string {
 }
 
 export function routeTitle(route: Route): string {
+  if (route.directions?.length === 1) {
+    const direction = route.directions[0]!;
+    const [origin, destination] = direction.origin_iata === route.origin.iata
+      ? [route.origin, route.destination] : [route.destination, route.origin];
+    return `${cityLabel(origin.city || origin.iata)} → ${cityLabel(destination.city || destination.iata)}`;
+  }
   return `${cityLabel(route.origin.city || route.origin.iata)} ↔ ${cityLabel(route.destination.city || route.destination.iata)}`;
 }
 
 function domesticPeriodNetwork(periodId: string): PeriodNetworkDocument {
+  if (state.mapEntity === "AEROMEXICO" && state.domesticLayer === "official") return officialDomesticNetwork(periodId);
   return aggregateDomesticMonths([...state.selectedDomesticMonths]) ?? state.domesticNetworks.get(periodId) ?? {
     mode: "scheduled_domestic", period_label: state.byPeriod.get(periodId)?.period_label ?? periodId,
     expected_months: [], observed_months: [], routes: [], airports: [],
@@ -113,6 +124,9 @@ function internationalPeriodNetwork(periodId: string): PeriodNetworkDocument {
 // Dashboard v2 (fase 3): what the map shows for each entity.
 function entityScopeNote(entity: string, domestic: boolean): string {
   const label = ENTITY_LABELS[entity as EntityKey] ?? entity;
+  if (domestic && entity === "AEROMEXICO" && state.domesticLayer === "official") {
+    return "Aeroméxico · programación AICM y atribuciones AFAC separadas; no confirman vuelos realizados";
+  }
   if (domestic) return `${label} · histórico conservado · frecuencias estimadas identificadas por ruta; no acreditan vuelos realizados`;
   return `${label} · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente`;
 
@@ -121,12 +135,21 @@ function entityScopeNote(entity: string, domestic: boolean): string {
 let networkRenderRequest = 0;
 
 export async function renderNetworkPeriod(periodId: string): Promise<void> {
+  periodId = currentMapPeriod() || periodId;
+  if (state.domesticMonthsQuarterId !== periodId) {
+    state.domesticMonthsQuarterId = periodId;
+    state.selectedDomesticMonths = new Set(monthsInQuarter(periodId));
+  }
+  // Re-evaluate month support after entity changes, including July whose
+  // financial quarter has not been published.
+  state.selectedDomesticMonths = new Set([...state.selectedDomesticMonths].filter((id) => monthsInQuarter(periodId).includes(id)));
+  if (!state.selectedDomesticMonths.size) state.selectedDomesticMonths = new Set(monthsInQuarter(periodId));
   const request = ++networkRenderRequest;
   const entity = state.mapEntity;
   await ensureDomesticMonths(monthsInQuarter(state.domesticMonthsQuarterId));
   if (request !== networkRenderRequest || entity !== state.mapEntity) return;
   const domesticAvailable = domesticAvailableForQuarter(periodId);
-  if (state.networkMode === "domestic") await ensureDomesticQuarter(periodId);
+  if (state.networkMode === "domestic") await ensureDomesticQuarter(calendarQuarter(periodId));
   else await ensureInternational(periodId);
   if (request !== networkRenderRequest || entity !== state.mapEntity) return;
 
@@ -163,15 +186,24 @@ export async function renderNetworkPeriod(periodId: string): Promise<void> {
   internationalButton.setAttribute("aria-pressed", String(state.networkMode === "international"));
   internationalButton.setAttribute("aria-checked", String(state.networkMode === "international"));
   $("network-title")!.textContent = state.networkMode === "domestic" ? "Rutas nacionales" : "Rutas internacionales";
+  renderMapPeriodControl();
   const scopeNote = $("network-scope-note");
   if (scopeNote) {
+    const sourceMonths = Object.entries(periodNetwork.coverage_by_source ?? {}).map(([source, months]) => {
+      const name = source.includes("AeroDataBox") ? "Estimación histórica" : source.split("·").at(-1)!.trim();
+      const dates = [...new Set(months.map((month) => DOMESTIC_MONTH_NAMES[Number(month.slice(5)) - 1]))];
+      return dates.length ? `${name}: ${dates.join(", ")}` : "";
+    }).filter(Boolean).join(" · ");
     // La etiqueta de alcance nunca dice "Grupo Aeroméxico" salvo cuando el
     // dato realmente combina Aerovías de México y Aeroméxico Connect
     // (nacional). Internacional solo tiene evidencia retenida de Aerovías
     // de México como operador; decirlo explícitamente evita presentar una
     // cifra más angosta como si fuera consolidada.
     scopeNote.textContent = entityScopeNote(state.mapEntity, state.networkMode === "domestic")
-      + (periodNetwork.period_label ? ` · ${periodNetwork.period_label}` : "");
+      + ` · ${periodNetwork.period_label || mapPeriodLabel(periodId)}`
+      + (sourceMonths ? ` · ${sourceMonths}` : "")
+      + (periodNetwork.eligibility_reason?.startsWith("Mapa parcial:")
+        ? ` · ${periodNetwork.eligibility_reason.split(". ")[0]}` : "");
   }
   renderRegionSwitch();
   renderNetworkVolume();

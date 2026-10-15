@@ -36,6 +36,8 @@ export interface FlightsState {
   availablePeriods: AvailablePeriods;
 
   periodIndex: number;
+  mapPeriodId: string | null;
+  domesticLayer: "estimated" | "official";
   importance: string;
   routeView: "volume" | "change" | "all";
   selectedDomesticMonths: Set<string>;
@@ -82,6 +84,8 @@ export const state: FlightsState = {
   availablePeriods: { domestic: [], domestic_monthly: [], international: [] },
 
   periodIndex: 0,
+  mapPeriodId: null,
+  domesticLayer: "estimated",
   importance: "departures",
   routeView: "volume",
   selectedDomesticMonths: new Set(),
@@ -138,6 +142,8 @@ async function fetchJson<T>(path: string): Promise<T> {
 }
 
 export function initState(quartersDoc: QuartersDocument): void {
+  state.mapPeriodId = null;
+  state.domesticLayer = "estimated";
   state.metadata = quartersDoc.metadata;
   state.quarters = quartersDoc.quarters;
   state.byPeriod = new Map(state.quarters.map((item) => [item.period_id, item]));
@@ -159,6 +165,7 @@ export function initState(quartersDoc: QuartersDocument): void {
 // hace falta esperar un fetch para saberlo.
 export function monthsInQuarter(quarterId: string | null): string[] {
   if (!quarterId) return [];
+  if (quarterId.includes("M")) return state.availablePeriods.domestic_monthly.filter((id) => id === quarterId);
   return state.availablePeriods.domestic_monthly.filter(
     (periodId) =>
       `${periodId.slice(0, 4)}Q${Math.floor((Number(periodId.slice(5, 7)) - 1) / 3) + 1}` === quarterId

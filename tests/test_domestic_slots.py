@@ -70,6 +70,26 @@ def _capacity_row(period: str, market_key: str, origin: str, destination: str, c
     }
 
 
+@pytest.mark.parametrize("borrowed_cells,expected", [(0, 4.0), (1, 3.0), (4, None)])
+def test_frequency_survives_unknown_aircraft_without_borrowing_other_months(borrowed_cells, expected):
+    period, market = "2026M07", "ABC<>MEX"
+    rows = _synthetic_estimate_rows(period, market)
+    for row in rows[:borrowed_cells]:
+        row.update(support_observed_in_period=False, support_month_gap=1, support_source_periods="2026M06")
+    capacity = pd.DataFrame([
+        _capacity_row(period, market, row["origin_iata"], row["destination_iata"], row["carrier_key"],
+                      departures=float("nan"), seats=float("nan"), usable=False) for row in rows
+    ])
+    with _synthetic_domestic_connection(pd.DataFrame(rows), capacity) as connection:
+        route = load_domestic_networks(connection, [{"period_id": period, "period_label": "julio 2026",
+                                                    "expected_months": [period]}])[period]["routes"][0]
+    assert route["departures"] == expected
+    assert route["seats"] is None and route["load_factor"] is None
+    assert route["capacity_complete"] is False
+    if borrowed_cells:
+        assert route["operation_status"].endswith("partial_frequencies")
+
+
 def test_group_capacity_survives_a_single_carrier_without_invalidating_the_route():
     """A market where only Aerovías (never Connect) is present in the AeroDataBox
     capacity fact for one direction must still report Grupo Aeroméxico seats and
@@ -307,7 +327,9 @@ def test_domestic_map_shows_reconciled_estimates_for_every_queried_month(flight_
     }
     assert all(item["capacity_complete"] for item in gdl["monthly"])
     consumer = integration_flight_payload(payload)
-    assert consumer["domestic_networks"] == {}
+    assert set(consumer["domestic_networks"]) == {"2026Q2"}
+    assert any(route["operation_status"] == "assigned_slot_not_flown"
+               for route in consumer["domestic_networks"]["2026Q2"]["routes"])
     assert set(consumer["domestic_monthly_networks"]) == set(payload["domestic_monthly_networks"])
     assert consumer["domestic_monthly_networks"]["2026M07"]["routes"][0]["passengers_estimated"] is True
     assert {item["airport_iata"] for item in consumer["route_networks"]["2026Q2"]["aena_airport_activity"]} == {"MAD", "BCN"}
