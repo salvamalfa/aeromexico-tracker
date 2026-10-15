@@ -5,7 +5,7 @@ from datetime import date
 from typing import Any
 from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
 
-COMPANIES = {"Aeroméxico", "Volaris", "Viva"}
+COMPANIES = {"Aeroméxico", "Aeroméxico Connect", "Volaris", "Viva"}
 
 
 def canonical_news_url(value: str) -> str:

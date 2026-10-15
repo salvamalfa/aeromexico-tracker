@@ -17,7 +17,7 @@ export type ApprovedPublicMonthlyNewsV1CandidatesExcluded = {
     story_id: string;
     title: string;
     description: string;
-    companies: ("Aeroméxico" | "Viva" | "Volaris")[];
+    companies: ("Aeroméxico" | "Aeroméxico Connect" | "Viva" | "Volaris")[];
     topics: string[];
     publisher: string;
     published_at: string;

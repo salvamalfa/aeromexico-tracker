@@ -87,6 +87,7 @@
             "items": {
               "enum": [
                 "Aeroméxico",
+                "Aeroméxico Connect",
                 "Viva",
                 "Volaris"
               ]

@@ -1,0 +1,7 @@
+# Noticias: marca matriz y contrato de Connect (15 octubre 2026)
+
+Se atienden los dos hallazgos de `4d632b9`. «Grupo Aeroméxico» es un alias de la matriz: se retira completo de los términos de búsqueda y el argumento estructurado usa la misma canonicalización. No sustituye al operador Connect ni restringe una enumeración de ambas entidades.
+
+Aeroméxico Connect se admite por separado en la proyección pública, el contrato JSON y su tipo generado, y el selector de aerolínea. Una futura ficha correctamente revisada ya no bloquea el exportador por una compañía desconocida. La prueba usa datos sintéticos en memoria y valida proyección, contrato y coincidencia exacta del operador; no añade una ficha al índice real, no crea recibos y no concede aprobación. La matriz y Connect permanecen separados en los filtros de interfaz.
+
+Pasan 589 pruebas focalizadas, TypeScript y 197 Vitest. El recorrido API/worker/chat/ficha comprueba el nombre completo y el selector de Connect en escritorio y móvil. Los siete ejemplos de preview siguen iguales; se recompila la preview por el nuevo selector. Se regenera el diagnóstico de paridad después del commit de código y se solicita CI y revisión final. No hay llamadas a modelos, cambios de Gold, tesis, pins/recibos, cron o publicación. La actualización de Library de esta sesión encontró un error de autenticación; se conserva la identidad previa y la copia local final.

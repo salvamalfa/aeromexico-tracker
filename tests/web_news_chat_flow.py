@@ -104,7 +104,7 @@ def test_spanish_chat_question_opens_the_verified_news_card(news_chat_server, wi
         launcher = page.get_by_role("button", name="Abrir Airline Tracker chat analítico")
         launcher.click()
         page.get_by_label("Pregunta sobre los datos publicados").fill(
-            "¿Qué noticias de combustible de Aeroméxico se publicaron en abril de 2026?"
+            "¿Qué noticias de combustible de Grupo Aeroméxico se publicaron en abril de 2026?"
         )
         page.get_by_role("button", name="Enviar", exact=True).click()
         target = page.get_by_role("button", name="Ver ficha: Long-haul demand", exact=False)
@@ -130,6 +130,11 @@ def test_spanish_chat_question_opens_the_verified_news_card(news_chat_server, wi
         )
         assert page.locator(".news-card").count() == 1
         assert page.locator("#news-month").input_value() == "2026-07"
+        page.select_option("#news-company", "Aeroméxico Connect")
+        assert page.locator(".news-card").count() == 0
+        assert "Sin fichas" in page.locator("#news-stories").inner_text()
+        page.select_option("#news-company", "Aeroméxico")
+        assert page.locator(".news-card").count() == 1
         launcher.click()
         page.get_by_label("Pregunta sobre los datos publicados").fill(
             "¿Qué publicó Viva sobre tráfico en septiembre de 2026?"

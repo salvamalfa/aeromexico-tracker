@@ -134,3 +134,23 @@ def test_punctuated_operator_cannot_be_overridden_by_parent_argument(operator):
 )
 def test_explicit_conjunction_keeps_parent_and_operator_separate(query):
     assert set(resolve_news_query(query)["companies"]) == {"Aeroméxico", "Aeroméxico Connect"}
+
+
+@pytest.mark.parametrize("name", ["Grupo Aeroméxico", "GRUPO AEROMEXICO", "Grupo   Aeroméxico"])
+@pytest.mark.parametrize("same_argument", [False, True])
+def test_parent_full_name_does_not_leave_group_as_a_search_term(name, same_argument):
+    index = EvidenceIndex(ROOT / "config/chat/evidence/approved-index.json")
+    result = index.search_news("noticias de " + name, company=name if same_argument else None)
+    assert result["filters"]["companies"] == ["Aeroméxico"]
+    assert result["filters"]["terms"] == []
+    assert result["count"] == 2
+    assert all(row["companies"] == ["Aeroméxico"] for row in result["results"])
+
+
+def test_full_parent_name_does_not_replace_connect():
+    with pytest.raises(ValueError, match="no coincide"):
+        resolve_news_query("noticias de Aeroméxico Connect", company="Grupo Aeroméxico")
+    assert set(resolve_news_query("noticias de Grupo Aeroméxico y Connect")["companies"]) == {
+        "Aeroméxico",
+        "Aeroméxico Connect",
+    }

@@ -287,3 +287,23 @@ def test_news_cli_help_never_collects(monkeypatch, capsys):
         news.main()
     assert stopped.value.code == 0
     assert "--help" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("company", ["Aeroméxico", "Aeroméxico Connect", "Viva", "Volaris"])
+def test_supported_company_survives_approved_projection_and_web_contract(monkeypatch, company):
+    from jsonschema import Draft202012Validator
+    import src.dashboard.news as archive
+    from src.conversational_analytics.news_query import news_match, resolve_news_query
+
+    class Index:
+        records = [record(companies=[company], review_status="owner_approved")]
+        sha256 = "a" * 64
+
+    monkeypatch.setattr(archive, "EvidenceIndex", lambda _: Index())
+    payload = archive.build_news_payload()
+    schema = json.loads(Path("contracts/web/news.schema.json").read_text())
+    Draft202012Validator(schema).validate(payload)
+    assert payload["records"][0]["companies"] == [company]
+    assert news_match(
+        resolve_news_query("noticias de Aeroméxico Connect"), "Titular", "Resumen", [company], []
+    ) == (1 if company == "Aeroméxico Connect" else 0)

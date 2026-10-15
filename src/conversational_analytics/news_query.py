@@ -14,7 +14,7 @@ MONTHS = dict(
     )
 )
 ENTITIES = {
-    "Aeroméxico": ("aeromexico", "amx"),
+    "Aeroméxico": ("aeromexico", "amx", "grupo aeromexico"),
     "Aeroméxico Connect": (
         "aeromexico connect",
         "aeromexico_connect",
