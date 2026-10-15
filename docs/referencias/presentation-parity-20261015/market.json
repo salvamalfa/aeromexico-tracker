@@ -3,20 +3,20 @@
   "authorizes_publication": false,
   "approved_code_commit": "6d8da2c4c0b96371c26521aedb5828610451d03a",
   "base_commit": "40a63d1905afde97ae8e3f8671c8217aafacc4aa",
-  "evaluated_commit": "f56790f805e0ea26bfc4f3e9a6f9eb1f394a57d5",
-  "evaluated_tree": "4500f83ae12d0e5000253fa335f0b13fb5008b1c",
-  "report_generator_sha256": "b961f797d337fd06adaebc6487d12c87847f7316f2f2038958d78a6af3a41c0a",
+  "evaluated_commit": "bf4f1a712d108cbff801a3230d53fdb89cc2d7ea",
+  "evaluated_tree": "6701b06a635dcd49cac9683d0376ed640a647049",
+  "report_generator_sha256": "e81f3b6f4de5c8a6105385a713b7399288b4a68e86ecc66d37c58b5e079b4a97",
   "worktree_code_matches_evaluated_commit": true,
   "provenance_note": "evaluated_commit is the checkout where this report was actually executed. Committing the generated report necessarily creates a later commit; verify its presentation-component fingerprint and generator SHA, not a circular self-reference to the artifact commit.",
   "fingerprints": {
     "approved_entity_code": "8fc1d53128ae8a0cc795f29ae944e37787bb280f6025ec66b6a8b1cbc1f6382f",
     "master_base": "29a4b6b87c52f29de1c450d23a335f82647af0b5285cba1f992bb9e2f99a693f",
-    "candidate": "e24736c3143377d44e0d75ee45da1fed04048c42ab9fb8a32c3bbafc1ccbee5b"
+    "candidate": "7aca3037e975bcefda51fabdf76706f0b01bfa60c73a95fcc46b4c2c686b0f7b"
   },
   "component_counts": {
     "approved": 130,
     "master_base": 132,
-    "candidate": 136
+    "candidate": 137
   },
   "inherited_changes": [
     {
@@ -87,6 +87,16 @@
       "after_sha256": "420bdc05ef4035fe2f99a5e6e5fce3b0d4d5129abdfefa298a78a1c620dc95bf"
     },
     {
+      "path": "src/analysis_agent/entity_adapter.py",
+      "before_sha256": "c8223ba55026e6d5205fc89d5beba41ce7ba81e247a1e946cb90addcf6876abe",
+      "after_sha256": "9429cf91b493e8eca2c26bdc303aa47a179a94a6d87fd7f1fa3e82b55ce563de"
+    },
+    {
+      "path": "src/dashboard/market_demand.py",
+      "before_sha256": null,
+      "after_sha256": "5380bb7a17b8669fe287aa8d783f64ecc30ac03bbe7b2de5f8eb5ca7b534ecea"
+    },
+    {
       "path": "src/publish/manifest.py",
       "before_sha256": "8ab363e81b692325feb6666fe4495ccc6890f2f445aec574cc2ffc07672af0a7",
       "after_sha256": "65b38197bf69a4395931eb039c4001e507a26e909f74f5ac32401e17394c4c64"
@@ -152,7 +162,9 @@
       "after_sha256": "3e0f46567897ff0422fe7cbd1a8030f9bf4e6b102634528aba6ed8f82d079131"
     }
   ],
-  "protected_paths_changed_since_base": [],
+  "protected_paths_changed_since_base": [
+    "src/analysis_agent/entity_adapter.py"
+  ],
   "public_payload_parity_diagnostic": {
     "flights_identical": true,
     "executive_identical": true,
@@ -212,7 +224,7 @@
       "replayed_claims_sha256": "5df3e53d5665aa285a2dae8f2d407c0266a3a74acbdfef7a7e229295c698129f",
       "thesis_identical": true,
       "summary_identical": true,
-      "proposed_technical_version_unapproved_not_written": "f04bad9ac589e23029df166278b31bcb56adce185469b7b29e2f671b370dd621"
+      "proposed_technical_version_unapproved_not_written": "dbb55140efb4459829756dbf0ecf4a863a3d802cc548ef9feb28678421e3bdaa"
     },
     {
       "entity": "VIVA_AEROBUS",
@@ -236,7 +248,7 @@
       "replayed_claims_sha256": "1063f46218d1f820161fa82ffec4e05b2f802598d6e0273bb1f8fc5c8c978397",
       "thesis_identical": true,
       "summary_identical": true,
-      "proposed_technical_version_unapproved_not_written": "bb6cdeca687fc9e152257123e44c5b25a45d278a582e6a8d3b9c47f3dff0f67b"
+      "proposed_technical_version_unapproved_not_written": "857868f922b2a809ca1dee0a16f7a984812e1086b629ab205c7b5c7a256e5c63"
     },
     {
       "entity": "VOLARIS",
@@ -260,7 +272,7 @@
       "replayed_claims_sha256": "a20bebc083729b958f34278c4fc5a402a23918110b191d95abceb0bb8a1ab745",
       "thesis_identical": true,
       "summary_identical": true,
-      "proposed_technical_version_unapproved_not_written": "9c61265ec621ac0aa7b76f28cab05f63dc1868dc5c5989e44400256376117b0d"
+      "proposed_technical_version_unapproved_not_written": "8510955316cec8396fb928ebefc03f3bd728cdb465f0a6fd16b945e4f9566ab0"
     }
   ],
   "decision": "Presentation remains blocked. Review/import/audit new technical entity versions and obtain explicit approval before export; retain the existing theses and evidence. This report is not an approval."
