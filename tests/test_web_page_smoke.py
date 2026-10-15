@@ -107,6 +107,26 @@ def page_with_console_capture(web_server):
     assert external_requests == [], f"Synthetic smoke requested external resources: {external_requests}"
 
 
+def test_news_mounts_when_selected_while_executive_data_is_loading(web_server):
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(executable_path=_chromium_executable())
+        page = browser.new_page(viewport={"width":390,"height":844})
+        held = []
+        page.route("**/data/v1/executive.json", lambda route: held.append(route))
+        with page.expect_request("**/data/v1/executive.json"):
+            page.goto(web_server, wait_until="domcontentloaded")
+        page.click("#tab-news")
+        # Let the original tab-visible event fire while startup is suspended.
+        page.evaluate("() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))")
+        assert page.inner_text("#news-coverage") == "Cargando el archivo de evidencia…"
+        assert held
+        held[0].continue_()
+        page.wait_for_selector(".news-card")
+        assert page.get_attribute("#tab-news", "aria-selected") == "true"
+        assert "Viva ajusta capacidad" in page.inner_text("#news-stories")
+        browser.close()
+
+
 def test_reading_tab_renders_the_synthetic_analysis_by_default(page_with_console_capture) -> None:
     page, console_errors = page_with_console_capture
     assert page.get_attribute("#tab-reading", "aria-selected") == "true"
@@ -181,23 +201,3 @@ def test_independent_tabs_and_mobile_navigation(page_with_console_capture, new_t
     assert page.is_visible(f"#panel-{new_tab}")
     page.wait_for_function("document.documentElement.scrollWidth <= innerWidth")
     assert errors == []
-
-
-def test_news_mounts_when_selected_while_executive_data_is_loading(web_server):
-    with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(executable_path=_chromium_executable())
-        page = browser.new_page(viewport={"width":390,"height":844})
-        held = []
-        page.route("**/data/v1/executive.json", lambda route: held.append(route))
-        with page.expect_request("**/data/v1/executive.json"):
-            page.goto(web_server, wait_until="domcontentloaded")
-        page.click("#tab-news")
-        # Let the original tab-visible event fire while startup is suspended.
-        page.evaluate("() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))")
-        assert page.inner_text("#news-coverage") == "Cargando el archivo de evidencia…"
-        assert held
-        held[0].continue_()
-        page.wait_for_selector(".news-card")
-        assert page.get_attribute("#tab-news", "aria-selected") == "true"
-        assert "Viva ajusta capacidad" in page.inner_text("#news-stories")
-        browser.close()
