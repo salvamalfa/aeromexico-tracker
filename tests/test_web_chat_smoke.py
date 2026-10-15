@@ -73,6 +73,7 @@ def _public_fixtures() -> dict[str, object]:
     return {
         "/data/v1/executive.json": executive,
         "/data/v1/market-demand.json": {"months":[],"airports":[],"groups":[],"quality_notes":[]},
+        "/data/v1/news.json": {"mode":"candidate_preview", "coverage_note":"Fixture parcial", "months":["2026-09"], "limits":[], "records":[]},
         "/data/v1/market.json": json.loads((WEB_FIXTURES / "market_sample.json").read_text()),
         "/data/v1/analysis/2026Q2.json": json.loads((WEB_FIXTURES / "analysis_sample.json").read_text()),
     }
