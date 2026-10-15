@@ -179,5 +179,5 @@ def test_independent_tabs_and_mobile_navigation(page_with_console_capture, new_t
     page.click("#tab-economy")
     page.click(f"#tab-{new_tab}")
     assert page.is_visible(f"#panel-{new_tab}")
-    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+    page.wait_for_function("document.documentElement.scrollWidth <= innerWidth")
     assert errors == []
