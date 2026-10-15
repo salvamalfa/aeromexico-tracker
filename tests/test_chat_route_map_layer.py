@@ -34,5 +34,3 @@ def test_official_map_quarter_does_not_replace_chat_monthly_estimates(complete) 
     else:
         assert result["rows"] == []
         assert shared["rows"] == []
-
-
