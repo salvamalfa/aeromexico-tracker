@@ -120,6 +120,18 @@ def test_spanish_chat_question_opens_the_verified_news_card(news_chat_server, wi
         assert page.locator(".news-card a").count() == 1
         launcher.click()
         page.get_by_label("Pregunta sobre los datos publicados").fill(
+            "¿Qué noticias de Aeroméxico se publicaron el 15 de julio de 2026?"
+        )
+        page.get_by_role("button", name="Enviar", exact=True).click()
+        page.get_by_role("button", name="Ver ficha: Aeromexico sees", exact=False).wait_for(timeout=15000)
+        page.get_by_role("button", name="Ver ficha: Aeromexico sees", exact=False).click()
+        page.wait_for_selector(
+            '#panel-news:not([hidden]) .news-card[data-news-id="flightglobal-aeromexico-q2-2026-07-15"]'
+        )
+        assert page.locator(".news-card").count() == 1
+        assert page.locator("#news-month").input_value() == "2026-07"
+        launcher.click()
+        page.get_by_label("Pregunta sobre los datos publicados").fill(
             "¿Qué publicó Viva sobre tráfico en septiembre de 2026?"
         )
         page.get_by_role("button", name="Enviar", exact=True).click()

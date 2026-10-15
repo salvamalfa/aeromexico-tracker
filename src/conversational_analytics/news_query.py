@@ -14,9 +14,13 @@ MONTHS = dict(
     )
 )
 ENTITIES = {
-    "Aeroméxico": ("aeromexico", "aeromexico connect"),
-    "Viva": ("viva", "viva aerobus"),
+    "Aeroméxico": ("aeromexico", "aeromexico connect", "amx"),
+    "Viva": ("viva", "viva aerobus", "viva_aerobus"),
     "Volaris": ("volaris",),
+}
+WEEKDAYS = {
+    name: number
+    for number, name in enumerate(("lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"))
 }
 TOPICS = {
     "alianzas": ("alianza", "alianzas", "acuerdo", "acuerdos"),
@@ -67,11 +71,51 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
             ),
             company,
         )
+        if companies and set(companies) != {selected}:
+            raise ValueError(
+                "La aerolínea indicada no coincide con las aerolíneas explícitas de la consulta."
+            )
         companies = [selected]
     years = re.findall(r"\b(\d{4})\b", text)
     months = [MONTHS[m] for m in re.findall(r"\b(" + "|".join(MONTHS) + r")\b", text)]
     iso_months = re.findall(r"\b(\d{4})-(0[1-9]|1[0-2])(?!-\d{2})\b", text)
     iso_dates = re.findall(r"\b\d{4}-\d{2}-\d{2}\b", text)
+    if re.search(
+        r"\b\d{4}-\d{2}-\d{2}[t ]\d{1,2}:\d{2}|\b(?:a las|antes de las|despues de las|entre las)\s+\d{1,2}:\d{2}",
+        text,
+    ):
+        raise ValueError("Solo se filtra fecha diaria de publicación; la hora no está documentada.")
+    month_names = "|".join(MONTHS)
+    named_days = re.findall(r"\b(\d{1,2})\s+(?:de\s+)?(" + month_names + r")\s+(?:de\s+)?(\d{4})\b", text)
+    day_word = r"(?:\d{1,2}(?:[º°]|\.[º°])?|primer[oa]?|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|dieci\w*|veinte|veinti\w*|treinta(?:\s+y\s+uno)?)"
+    named_day_precision = bool(
+        re.search(
+            r"\b"
+            + day_word
+            + r"(?:\s+(?:de\s+)?|[/-])(?:"
+            + month_names
+            + r")\b|\b(?:"
+            + month_names
+            + r")(?:\s+|[/-])"
+            + day_word
+            + r"\b",
+            text,
+        )
+    )
+    if re.search(r"\b\d{1,2}[/-]\d{1,2}[/-]\d{4}\b", text):
+        raise ValueError("Usa fecha ISO YYYY-MM-DD para un día exacto.")
+    if named_day_precision and (
+        not named_days
+        or len(named_days) != len(months)
+        or len(named_days) != len(years)
+        or len(named_days) > 2
+        or len(re.findall(r"\b\d{1,2}\b", text)) != len(named_days)
+    ):
+        raise ValueError("Usa fechas ISO YYYY-MM-DD para ambos días exactos.")
+    if re.search(
+        r"\b(?:principios|mediados|finales|comienzos|fin)\s+de\s+(?:" + month_names + r"|\d{4})\b", text
+    ):
+        raise ValueError("Indica fechas explícitas para ese intervalo parcial.")
     supplied_start, supplied_end = start_date, end_date
     for value in (supplied_start, supplied_end):
         if value is not None:
@@ -109,12 +153,15 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
         raise ValueError("Indica fechas explícitas; no se infiere el periodo de una noticia.")
     complex_units = set(units) - {"dia", "dias", "mes", "meses", "ano", "anos"}
     if (
-        (complex_units and len(iso_dates) != 2)
+        (complex_units and (len(iso_dates) or len(named_days)) != 2)
         or (set(units) & {"mes", "meses"} and not (months or iso_months or iso_dates))
-        or (set(units) & {"dia", "dias"} and not iso_dates)
+        or (set(units) & {"dia", "dias"} and not (iso_dates or named_days))
     ):
         raise ValueError("Indica fechas explícitas de inicio y fin para ese periodo.")
-    if iso_dates:
+    if named_days:
+        points = [date(int(year), MONTHS[month], int(day)).isoformat() for day, month, year in named_days]
+        start_date, end_date = points[0], points[-1]
+    elif iso_dates:
         if len(iso_dates) > 2 or len(years) != len(iso_dates):
             raise ValueError("Indica ambos extremos con fechas explícitas de la misma precisión.")
         start_date, end_date = iso_dates[0], iso_dates[-1]
@@ -148,7 +195,7 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
     elif re.search(r"\b(pasado|pasada|ayer|hoy)\b", text):
         raise ValueError("Indica fechas explícitas; no se infiere el periodo de una noticia.")
     intrinsic = bool(iso_dates or iso_months or months or years)
-    periods = len(iso_dates) or len(iso_months) or len(months) or len(years)
+    periods = len(named_days) or len(iso_dates) or len(iso_months) or len(months) or len(years)
     if intrinsic:
         since = bool(re.search(r"\bdesde\b", text))
         until = bool(re.search(r"\bhasta\b", text))
@@ -172,12 +219,20 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
             date.fromisoformat(value)
     if start_date and end_date and start_date > end_date:
         raise ValueError("El inicio no puede ser posterior al fin.")
+    weekdays = {word for word in words if word in WEEKDAYS}
+    if weekdays:
+        if not intrinsic or start_date is None or start_date != end_date or len(weekdays) != 1:
+            raise ValueError(
+                "Indica una fecha exacta; no se infiere ni se filtra un día semanal dentro de un intervalo."
+            )
+        if date.fromisoformat(start_date).weekday() != WEEKDAYS[next(iter(weekdays))]:
+            raise ValueError("El día semanal no coincide con la fecha explícita.")
     topics = [
         key
         for key, aliases in TOPICS.items()
         if any(re.search(r"\b" + re.escape(alias) + r"\b", text) for alias in aliases)
     ]
-    removed = STOP | set(MONTHS) | set(years)
+    removed = STOP | set(MONTHS) | set(years) | set(WEEKDAYS)
     removed |= set(re.findall(r"\w+", " ".join(alias for aliases in ENTITIES.values() for alias in aliases)))
     removed |= set(re.findall(r"\w+", " ".join(alias for key in topics for alias in TOPICS[key])))
     terms = sorted(word for word in words - removed if len(word) > 1 and not word.isdigit())

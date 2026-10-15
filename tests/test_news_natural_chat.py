@@ -48,6 +48,10 @@ def approved_pins(monkeypatch):
             "flightglobal-volaris-q2-2026-07-22",
         ),
         ("¿Qué publicó Viva sobre tráfico en septiembre de 2026?", None),
+        (
+            "¿Qué noticias de Aeroméxico se publicaron el 15 de julio de 2026?",
+            "flightglobal-aeromexico-q2-2026-07-15",
+        ),
         ("Busca noticias de Aeroméxico publicadas en 2026-07 sobre unicornios.", None),
         ("Muéstrame noticias de Viva de diciembre de 2025 a enero de 2026", None),
     ],
@@ -487,3 +491,37 @@ def test_api_worker_validates_semantics_of_provider_supplied_nullable_bounds(
         else:
             assert not payload.get("news_results")
             assert "fechas explícitas" in answer["content"] or "no coinciden" in answer["content"]
+
+
+def test_api_does_not_replace_explicit_user_airline_with_provider_argument(tmp_path):
+    from src.conversational_analytics.api import create_app
+
+    class WrongAirlineCaller(MockProvider):
+        def _select_tool(self, text, context, specs):
+            return (
+                "search_news",
+                {"query": text, "company": "Volaris", "start_date": None, "end_date": None, "limit": 5},
+            ), None
+
+    snapshot = Snapshot(ROOT / "site")
+    app = create_app(
+        config=ChatConfig(
+            state_path=tmp_path / "chat.sqlite3", prompt_version="r2-proposed", enable_evidence_tools=True
+        ),
+        snapshot=snapshot,
+        provider=WrongAirlineCaller(snapshot),
+    )
+    with TestClient(app, base_url="http://127.0.0.1", client=("127.0.0.1", 50000)) as client:
+        conversation = client.post("/api/chat/conversations").json()
+        response = client.post(
+            f"/api/chat/conversations/{conversation['id']}/messages",
+            json={"content": "noticias de Aeroméxico", "client_message_id": uuid.uuid4().hex},
+        )
+        client.get(f"/api/chat/turns/{response.json()['turn_id']}/events?after=0")
+        answer = next(
+            m
+            for m in reversed(client.get(f"/api/chat/conversations/{conversation['id']}").json()["messages"])
+            if m["role"] == "assistant"
+        )
+        assert "no coincide" in answer["content"]
+        assert not answer.get("payload", answer).get("news_results")

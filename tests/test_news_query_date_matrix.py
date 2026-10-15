@@ -52,6 +52,10 @@ def test_invalid_or_mixed_query_dates_are_not_hidden_by_valid_arguments(question
 
 ABSOLUTE = [
     ("noticias en julio de 2026", "2026-07-01", "2026-07-31"),
+    ("noticias del 15 de julio de 2026", "2026-07-15", "2026-07-15"),
+    ("noticias del día 15 julio 2026", "2026-07-15", "2026-07-15"),
+    ("noticias del 1 de enero de 1900", "1900-01-01", "1900-01-01"),
+    ("noticias del 15 de julio de 2026 al 22 de julio de 2026", "2026-07-15", "2026-07-22"),
     ("noticias publicadas en 1900", "1900-01-01", "1900-12-31"),
     ("noticias publicadas en 2100", "2100-01-01", "2100-12-31"),
     ("noticias el 1999-12-31", "1999-12-31", "1999-12-31"),
