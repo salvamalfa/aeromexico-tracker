@@ -17,6 +17,7 @@ import httpx
 
 from src.config import PATHS
 from src.conversational_analytics.evidence_index import candidate_content_sha256
+from src.ingest.news.rss_gdelt import canonical_news_url
 
 HOSTS = {
     "ir.aeromexico.com",
@@ -61,6 +62,27 @@ def validate(raw):
     if raw.get("event_end_date") and raw["event_end_date"] < raw["event_date"]:
         raise ValueError("Event interval reversed")
     return raw
+
+
+def first_capture_for_url(folder, destination, url, sha, captured):
+    canonical = canonical_news_url(url)
+    metadata = folder / "captures" / (hashlib.sha256(canonical.encode()).hexdigest() + ".json")
+    metadata.parent.mkdir(parents=True, exist_ok=True)
+    if not metadata.exists():
+        first_capture = captured
+        legacy = destination.with_suffix(destination.suffix + ".meta.json")
+        if legacy.exists():
+            previous = json.loads(legacy.read_text())
+            if canonical_news_url(previous["url"]) == canonical:
+                first_capture = previous["first_captured_at"]
+        with metadata.open("x") as handle:
+            json.dump(
+                {"url": canonical, "first_source_sha256": sha, "first_captured_at": first_capture}, handle
+            )
+    stored = json.loads(metadata.read_text())
+    if stored["url"] != canonical:
+        raise ValueError("Capture metadata URL mismatch")
+    return stored["first_captured_at"]
 
 
 def main():
@@ -116,12 +138,7 @@ def main():
         destination = folder / (sha + (".pdf" if content.startswith(b"%PDF") else ".html"))
         if not destination.exists():
             destination.write_bytes(content)
-        metadata = destination.with_suffix(destination.suffix + ".meta.json")
-        if not metadata.exists():
-            metadata.write_text(
-                json.dumps({"url": url, "sha256": sha, "first_captured_at": captured}, indent=2) + "\n"
-            )
-        first_capture = json.loads(metadata.read_text())["first_captured_at"]
+        first_capture = first_capture_for_url(folder, destination, url, sha, captured)
         row = {k: v for k, v in raw.items() if k != "source_url"}
         row.update(
             source={"id": raw["id"], "url": url, "sha256": sha},

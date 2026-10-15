@@ -152,3 +152,22 @@ se modifican; el corte real conserva sus catorce fichas sin cambio de bytes.
 La comprobación precede al filtro de publicación desconocida: quitar la fecha
 de una revisión tampoco permite ocultarla detrás de una ficha aprobada. Una
 fuente única sin fecha sigue excluida del agrupamiento mensual, sin inventarla.
+
+La siguiente revisión atendió otras tres variantes: la proyección conserva el
+editor por fuente y cada enlace usa su propia atribución; el rebuild prioriza
+registros fechados y después la ingestión más reciente, incluso si corrige la
+publicación hacia atrás; la primera captura se guarda por URL canónica,
+deduplicando solo los bytes del original. Un sidecar histórico solo se hereda
+si documenta esa misma URL y nunca se sobrescribe. Los manifiestos candidatos
+no cambian; la proyección agrega la atribución por fuente a las mismas 14 fichas.
+
+Durante esta validación, invocar el módulo RSS con `--help` ejecutó su `run`
+porque no procesaba argumentos. Se consultaron cuatro fuentes gratuitas y se
+conservaron únicamente Bronze/Silver ignorados: 392 titulares de dos feeds RSS;
+El Economista y GDELT fallaron, sin captura exitosa de GDELT. No cambió Gold,
+el corte curado, las aprobaciones ni el expediente privado. La ayuda ahora se
+procesa antes de `run` y una prueba impide llamadas al pedir `--help`.
+Se conservó un expediente local ignorado con los manifiestos de esa ejecución,
+sus originales y el Silver de 392 filas. Los dos manifiestos versionados se
+dejaron idénticos a su base, y Silver se reconstruyó offline desde ellos: 201
+titulares. No se eliminó la evidencia nueva ni se añadió a los datos publicados.

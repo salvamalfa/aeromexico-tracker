@@ -57,7 +57,7 @@ def project(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     for record in records:
         if record.get("kind") != "news":
             continue
-        source = record["source"]
+        source = {**record["source"], "publisher": record["publisher"]}
         url = canonical_news_url(source["url"])
         story = record.get("story_id", record["id"])
         metadata = _review_metadata(record)

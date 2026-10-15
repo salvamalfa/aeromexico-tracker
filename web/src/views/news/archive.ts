@@ -1,7 +1,7 @@
 export interface NewsStory {
  id:string; story_id:string; title:string; description:string; companies:string[]; topics:string[]; publisher:string;
  published_at:string; event_date:string|null; event_end_date:string|null; first_captured_at:string|null;
- review_status:"owner_approved"|"candidate_unapproved"; sources:{id:string;url:string;sha256:string}[];
+ review_status:"owner_approved"|"candidate_unapproved"; sources:{id:string;url:string;sha256:string;publisher?:string}[];
 }
 export interface NewsArchive {mode:string; default_month?:string|null; coverage_note:string; months:string[]; records:NewsStory[]; limits:string[];}
 export function filterStories(records:NewsStory[], month:string, company:string, topic:string, query:string):NewsStory[]{

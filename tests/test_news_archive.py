@@ -80,35 +80,47 @@ def test_rebuild_unions_all_snapshots_and_preserves_first_capture(monkeypatch, t
     monkeypatch.setattr(news, "PATHS", paths)
     monkeypatch.setattr(news, "RSS_FEEDS", {"test": "https://example.com/rss"})
     entries = []
-    for key in ["older", "newer"]:
+    for key in ["older", "newer", "undated"]:
         file = paths.bronze / (key + ".xml")
         file.write_text("placeholder")
-        entries.append(dict(logical_key="rss|test|current|xml", source_file=file.name))
+        logical = "gdelt|aeromexico_articles|current|json" if key == "undated" else "rss|test|current|xml"
+        entries.append(dict(logical_key=logical, source_file=file.name))
     (paths.bronze / "_manifest.jsonl").write_text("\n".join(json.dumps(x) for x in entries))
 
     def parse(path, key):
-        capture = pd.Timestamp("2026-09-01" if path.stem == "older" else "2026-10-01", tz="UTC")
+        capture = pd.Timestamp(
+            {"older": "2026-09-01", "newer": "2026-10-01", "undated": "2026-11-01"}[path.stem], tz="UTC"
+        )
         base = dict(
-            published_at=pd.Timestamp("2026-08-30", tz="UTC"),
+            published_at=None
+            if path.stem == "undated"
+            else pd.Timestamp("2026-09-05" if path.stem == "older" else "2026-08-30", tz="UTC"),
             first_captured_at=capture,
             first_seen_at=capture,
             ingested_at=capture,
             gdelt_tone=None,
             query_term="Viva",
-            source_system="rss",
+            source_system="gdelt" if path.stem == "undated" else "rss",
+            source_file=path.name,
         )
+        shared = {**base, "url": "https://example.com/shared?utm_source=" + path.stem}
+        if path.stem == "undated":
+            return [shared]
         return [
-            {**base, "url": "https://example.com/shared?utm_source=" + path.stem},
+            shared,
             {**base, "url": "https://example.com/" + path.stem},
         ]
 
     monkeypatch.setattr(news, "_parse_rss", parse)
+    monkeypatch.setattr(news, "_parse_gdelt", lambda path: parse(path, "gdelt"))
     result = news.build_from_bronze()
     assert result["rows"] == 3
     frame = pd.read_parquet(paths.silver / "news_headlines.parquet")
     shared = frame[frame.url.eq("https://example.com/shared")].iloc[0]
     assert shared.first_captured_at == pd.Timestamp("2026-09-01T00:00:00Z")
     assert shared.ingested_at == pd.Timestamp("2026-10-01T00:00:00Z")
+    assert shared.published_at == pd.Timestamp("2026-08-30T00:00:00Z")
+    assert shared.source_file == "newer.xml"
 
 
 def test_candidate_cannot_claim_owner_approval_or_change_content(monkeypatch, tmp_path):
@@ -248,3 +260,30 @@ def test_same_bytes_cannot_hide_changed_review_status(reverse):
     rows = [candidate, approved] if reverse else [approved, candidate]
     with pytest.raises(ValueError, match="review metadata.*review both records"):
         project(rows)
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+def test_merged_story_retains_each_publishers_attribution(reverse):
+    first = record("one", publisher="Viva")
+    second = record(
+        "two",
+        publisher="Otro medio",
+        source={"id": "two", "url": "https://example.com/second", "sha256": "b" * 64},
+    )
+    stories = project([second, first] if reverse else [first, second])
+    assert len(stories) == 1
+    assert {source["url"]: source["publisher"] for source in stories[0]["sources"]} == {
+        "https://ri.vivaaerobus.com/a": "Viva",
+        "https://example.com/second": "Otro medio",
+    }
+
+
+def test_news_cli_help_never_collects(monkeypatch, capsys):
+    import sys
+
+    monkeypatch.setattr(sys, "argv", ["news", "--help"])
+    monkeypatch.setattr(news, "run", lambda: pytest.fail("Help must not call public sources"))
+    with pytest.raises(SystemExit) as stopped:
+        news.main()
+    assert stopped.value.code == 0
+    assert "--help" in capsys.readouterr().out

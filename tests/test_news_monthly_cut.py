@@ -68,3 +68,36 @@ def test_capture_validates_every_redirect_before_fetching(monkeypatch, tmp_path,
         payload = json.loads(output_path.read_text())
         assert payload["records"][0]["source"]["url"] == calls[-1]
         assert payload["records"][0]["review_status"] == "candidate_unapproved"
+
+
+def test_identical_bytes_keep_independent_url_first_capture(tmp_path):
+    blob = tmp_path / "same-hash.pdf"
+    blob.write_bytes(b"%PDF identical public bytes")
+    a = "https://ir.aeromexico.com/a"
+    b = "https://ir.aeromexico.com/b"
+    first = "2026-09-01T00:00:00Z"
+    second = "2026-10-15T00:00:00Z"
+    assert cut.first_capture_for_url(tmp_path, blob, a, "a" * 64, first) == first
+    assert cut.first_capture_for_url(tmp_path, blob, b, "a" * 64, second) == second
+    assert cut.first_capture_for_url(tmp_path, blob, a + "?utm_source=rss", "a" * 64, second) == first
+    assert blob.read_bytes() == b"%PDF identical public bytes"
+
+
+@pytest.mark.parametrize("same_url", [False, True])
+def test_legacy_capture_timestamp_only_transfers_to_its_own_url(tmp_path, same_url):
+    blob = tmp_path / "hash.pdf"
+    blob.write_bytes(b"%PDF source")
+    current = "https://ir.aeromexico.com/current"
+    legacy = blob.with_suffix(".pdf.meta.json")
+    legacy.write_text(
+        json.dumps(
+            {
+                "url": current if same_url else "https://ir.aeromexico.com/other",
+                "first_captured_at": "2026-09-01T00:00:00Z",
+            }
+        )
+    )
+    before = legacy.read_bytes()
+    result = cut.first_capture_for_url(tmp_path, blob, current, "a" * 64, "2026-10-15T00:00:00Z")
+    assert result == ("2026-09-01T00:00:00Z" if same_url else "2026-10-15T00:00:00Z")
+    assert legacy.read_bytes() == before

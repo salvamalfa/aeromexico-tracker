@@ -184,7 +184,16 @@ def build_from_bronze() -> dict[str, object]:
     first_seen = frame.groupby("url").first_seen_at.min()
     # Prefer actual publisher dates to an undated GDELT result; then latest
     # reviewed publisher metadata. Lineage of that selected row stays intact.
-    frame = frame.sort_values(["published_at", "ingested_at"], ascending=False, na_position="last")
+    frame = (
+        frame.assign(_publication_known=frame.published_at.notna())
+        .sort_values(
+            ["_publication_known", "ingested_at", "published_at"],
+            ascending=False,
+            na_position="last",
+            kind="stable",
+        )
+        .drop(columns="_publication_known")
+    )
     frame = frame.drop_duplicates(["url"], keep="first").reset_index(drop=True)
     frame["first_captured_at"] = frame.url.map(first_capture)
     frame["first_seen_at"] = frame.url.map(first_seen)
@@ -256,6 +265,9 @@ def run() -> dict[str, object]:
 
 
 def main() -> int:
+    import argparse
+
+    argparse.ArgumentParser(description=__doc__).parse_args()
     print(run())
     return 0
 

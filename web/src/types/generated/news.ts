@@ -31,11 +31,13 @@ export type ApprovedPublicMonthlyNewsV1CandidatesExcluded = {
         id: string;
         url: string;
         sha256: string;
+        publisher?: string;
       },
       ...{
         id: string;
         url: string;
         sha256: string;
+        publisher?: string;
       }[]
     ];
     review_status: "owner_approved";

@@ -10,7 +10,7 @@ function card(story:NewsStory) {
  for(const [label,value] of [["Publicación",story.published_at],["Fecha del hecho",story.event_date?`${story.event_date}${story.event_end_date?` a ${story.event_end_date}`:""}`:"No documentada"],["Primera captura",story.first_captured_at??"No documentada en el índice histórico"]])dl.append(node("dt",label!),node("dd",value!));
  article.append(dl);
  const details=node("details","");details.append(node("summary","Fuentes y trazabilidad"));
- for(const source of story.sources){const href=safeSourceUrl(source.url);if(!href)continue;const a=node("a",`Abrir fuente · ${story.publisher}`);a.href=href;a.target="_blank";a.rel="noopener noreferrer";details.append(a,node("p",`SHA-256: ${source.sha256}`,"news-hash"));}
+ for(const source of story.sources){const href=safeSourceUrl(source.url);if(!href)continue;const publisher=source.publisher??(story.sources.length===1?story.publisher:"editor no documentado");const a=node("a",`Abrir fuente · ${publisher}`);a.href=href;a.target="_blank";a.rel="noopener noreferrer";details.append(a,node("p",`SHA-256: ${source.sha256}`,"news-hash"));}
  article.append(details);return article;
 }
 export async function mountNews(root:string):Promise<void> {
