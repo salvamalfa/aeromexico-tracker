@@ -187,28 +187,11 @@
     "fresh_executive_sha256": "387008fd1b9e747917b2a1114347cc620071dd1bad8b0b8a2f3f74408ed8bdbe",
     "site_executive_sha256": "387008fd1b9e747917b2a1114347cc620071dd1bad8b0b8a2f3f74408ed8bdbe"
   },
-  "private_gold_inputs": [
-    {
-      "table": "fact_aeromexico_domestic_capacity_estimate",
-      "bytes": 25020,
-      "sha256": "bc0bb35ef2681685ca68a0e43babd61c4dda088a6b083d7324548220e8487b70"
-    },
-    {
-      "table": "fact_aeromexico_international_capacity_estimate",
-      "bytes": 21267,
-      "sha256": "7aca83b2ee8eb8fedfbdce0f763960645f73e5693f049244196129d86fd3b57f"
-    },
-    {
-      "table": "fact_route_carrier_domestic_estimate",
-      "bytes": 144571,
-      "sha256": "736c07a15feff4b61df1224136c17a88635e1845e9bca02526e8d1fae15b0dcc"
-    },
-    {
-      "table": "fact_route_carrier_international_estimate",
-      "bytes": 157357,
-      "sha256": "48dcf40b3e2668718cb693e5da5619d4e0907b71bb46f16835dda9a99b98b5d3"
-    }
-  ],
+  "private_gold_inputs": {
+    "count": 4,
+    "total_bytes": 348215,
+    "per_file_metadata_redacted": true
+  },
   "selected_records": [
     {
       "entity": "AEROMEXICO",

@@ -165,13 +165,8 @@ def report() -> dict:
         if subprocess.run(
             ["git", "ls-files", "--error-unmatch", str(path.relative_to(root))], capture_output=True
         ).returncode:
-            private_gold.append(
-                {
-                    "table": path.stem,
-                    "bytes": path.stat().st_size,
-                    "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-                }
-            )
+            private_gold.append(path.stat().st_size)
+
     return {
         "schema": "presentation_parity_diagnostic_v1",
         "authorizes_publication": False,
@@ -192,7 +187,11 @@ def report() -> dict:
         "candidate_changes": changes(baseline, current),
         "protected_paths_changed_since_base": changed_protected,
         "public_payload_parity_diagnostic": payloads,
-        "private_gold_inputs": private_gold,
+        "private_gold_inputs": {
+            "count": len(private_gold),
+            "total_bytes": sum(private_gold),
+            "per_file_metadata_redacted": True,
+        },
         "selected_records": records,
         "decision": "Presentation remains blocked. Review/import/audit new technical entity versions and obtain explicit approval before export; retain the existing theses and evidence. This report is not an approval.",
     }
