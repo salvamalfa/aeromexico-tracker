@@ -43,6 +43,13 @@ def read(path):
 def code_version():
     root = PATHS.root
     paths = {root / name for name in ("src/dashboard/entities.py", "src/config.py", "uv.lock")}
+    # New public payload builders are part of presentation approval too. An
+    # independent draft branch may not contain every optional builder yet;
+    # addition, deletion or mutation still changes the resulting fingerprint.
+    paths.update(root / name for name in (
+        "src/dashboard/market_demand.py", "src/dashboard/news.py",
+        "src/conversational_analytics/news_projection.py",
+    ))
     for directory in ("src/analysis_agent", "src/publish", "src/web_export"):
         paths.update((root / directory).rglob("*.py"))
     paths.update(path for path in (root / "contracts/web").rglob("*") if path.is_file())

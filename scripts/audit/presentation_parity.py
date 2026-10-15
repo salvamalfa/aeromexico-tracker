@@ -24,7 +24,14 @@ _CACHE: dict[str, str] = {}
 
 def included(name: str) -> bool:
     p = PurePosixPath(name)
-    if name in {"src/dashboard/entities.py", "src/config.py", "uv.lock"}:
+    if name in {
+        "src/dashboard/entities.py",
+        "src/dashboard/market_demand.py",
+        "src/dashboard/news.py",
+        "src/conversational_analytics/news_projection.py",
+        "src/config.py",
+        "uv.lock",
+    }:
         return True
     if any(
         name.startswith(folder + "/") for folder in ("src/analysis_agent", "src/publish", "src/web_export")
