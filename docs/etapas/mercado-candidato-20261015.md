@@ -52,3 +52,7 @@ modificaron recibos, firmas ni aprobaciones para hacerlas pasar. El despliegue
 requiere resolver esa revisión técnica con el dueño, además de aprobar el PR.
 Las previews reutilizan los payloads ya publicados y se marcan candidatas;
 no equivalen a una regeneración aprobada del sitio.
+
+La demanda aeroportuaria nueva no habilita herramientas del chat. Se omite su
+atajo contextual y no se envía un identificador de tarjeta que el backend
+rechazaría. El chat de participación conserva mes y segmento AFAC seleccionados.

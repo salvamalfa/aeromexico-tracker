@@ -32,7 +32,7 @@ function tabForCard(card: Element | null): "reading" | "economy" | "flights" | "
 }
 
 function cardIdFrom(node: Element | null): string | undefined {
-  if (!node) return undefined;
+  if (!node || node.closest("[data-chat-unavailable]")) return undefined;
   const card = node.closest<HTMLElement>(".chart-card, .flights-shell, .kpi-card, .flight-kpi, .narrative-card");
   if (!card) return node.closest(".flights-view") ? "flights" : undefined;
   if (card.id) return card.id;
@@ -80,7 +80,7 @@ export function buildChatContext(cardElement?: Element | null): ChatContext {
   const context: ChatContext = { tab, period, entity: picked };
   if (cardId) context.card_id = cardId;
   const filters: NonNullable<ChatContext["filters"]> = {};
-  if (cardId === "market-card" || cardId === "market-chart") {
+  if (tab === "market" || cardId === "market-card" || cardId === "market-chart") {
     const segment = document.querySelector<HTMLSelectElement>("#market-segment")?.value;
     if (segment === "total" || segment === "domestic" || segment === "international") filters.segment = segment;
     if (Array.isArray(picked)) filters.entities = picked as NonNullable<ChatContext["filters"]>["entities"];
