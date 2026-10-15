@@ -62,6 +62,10 @@ def web_server(tmp_path_factory, web_dist_dir):
     export_flights(flights_payload, out_dir, skip_input_check=True)
     export_executive(_load_fixture("executive_sample.json"), out_dir, skip_input_check=True)
     export_market(_load_fixture("market_sample.json"), out_dir, skip_input_check=True)
+    write_json(out_dir / "market-demand.json", {"months": ["2026M06"], "airports": [], "groups": [], "quality_notes": ["Fixture"]})
+    write_json(out_dir / "news.json", {
+        "mode":"candidate_preview", "coverage_note":"Fixture parcial", "months":["2026-09"], "limits":[],
+        "records":[{"id":"fixture", "story_id":"fixture", "title":"Viva ajusta capacidad", "description":"Resumen original de prueba", "publisher":"Viva", "companies":["Viva"], "topics":["capacidad"], "published_at":"2026-09-11", "event_date":"2026-08-01", "event_end_date":"2026-08-31", "first_captured_at":"2026-10-15T00:00:00Z", "review_status":"candidate_unapproved", "sources":[{"id":"fixture", "url":"https://ri.vivaaerobus.com/doc", "sha256":"a"*64}]}]})
     analysis = _load_fixture("analysis_sample.json")
     write_json(out_dir / "analysis" / f"{analysis['period_id']}.json", analysis)
 
@@ -146,3 +150,34 @@ def test_analysis_dialog_opens_and_closes(page_with_console_capture) -> None:
     page.click("#analysis-full .close")
     page.wait_for_function("!document.getElementById('analysis-full').hasAttribute('open')")
     assert console_errors == []
+
+
+@pytest.mark.parametrize("new_tab", ["market", "news"])
+def test_independent_tabs_and_mobile_navigation(page_with_console_capture, new_tab):
+    page, errors = page_with_console_capture
+    if page.locator(f"#tab-{new_tab}").count() == 0:
+        pytest.skip("Independent proposal is not part of this branch")
+    page.set_viewport_size({"width":390,"height":844})
+    page.click(f"#tab-{new_tab}")
+    if new_tab == "market":
+        page.wait_for_selector("#market-comparison tr")
+        assert not page.is_visible("#panel-reading #market-chart")
+        page.select_option("#market-grain","month")
+        page.select_option("#market-segment","domestic")
+        page.wait_for_function("document.getElementById('market-period').value.includes('M')")
+    else:
+        page.wait_for_selector(".news-card")
+        page.select_option("#news-company","Volaris")
+        assert "Sin fichas" in page.inner_text("#news-stories")
+        page.select_option("#news-company","Viva")
+        page.fill("#news-query","capacidad")
+        assert page.locator(".news-card").count() == 1
+        page.fill("#news-query","<img src=x>")
+        assert page.locator("#news-stories img").count() == 0
+        page.fill("#news-query","")
+    page.click("#tab-reading")
+    page.click("#tab-economy")
+    page.click(f"#tab-{new_tab}")
+    assert page.is_visible(f"#panel-{new_tab}")
+    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+    assert errors == []

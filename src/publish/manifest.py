@@ -62,6 +62,7 @@ CONTRACT_FILES = (
     "flights.schema.json",
     "executive.schema.json",
     "market.schema.json",
+    "market_demand.schema.json",
     "analysis.schema.json",
     "business_metrics.schema.json",
     "business_metrics_approval.schema.json",

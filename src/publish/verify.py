@@ -110,6 +110,8 @@ def _data_schema_for(rel_path: str) -> dict[str, Any] | None:
         return None
     if parts[2:] == ["executive.json"]:
         return EXECUTIVE_SCHEMA
+    if parts[2:] == ["market-demand.json"]:
+        return json.loads((CONTRACTS_DIR / "market_demand.schema.json").read_text())
     if parts[2:] == ["market.json"]:
         return MARKET_SCHEMA
     if parts[2:3] == ["flights"] and parts[3:] == ["quarters.json"]:
@@ -205,10 +207,15 @@ def verify_site(site_dir: Path) -> list[str]:
         manifest_contracts = manifest.get("contracts", {})
         has_business_metrics = "data/v1/business_metrics.json" in listed_paths
         business_contracts = {"business_metrics.schema.json", "business_metrics_approval.schema.json"}
+        optional_payload_contracts = {
+            "market_demand.schema.json": "data/v1/market-demand.json",
+            "news.schema.json": "data/v1/news.json",
+        }
         required_contracts = {
             name: digest
             for name, digest in expected_contracts.items()
-            if has_business_metrics or name not in business_contracts
+            if (has_business_metrics or name not in business_contracts)
+            and (name not in optional_payload_contracts or optional_payload_contracts[name] in listed_paths)
         }
         if has_business_metrics and not business_contracts <= set(manifest_contracts):
             problems.append("business metrics files require both business-metrics contract hashes")

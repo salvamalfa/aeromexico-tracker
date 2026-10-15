@@ -32,6 +32,7 @@
 
     <div class="reader-tabs" role="tablist" aria-label="Vistas del dashboard">
       <button type="button" id="tab-reading" role="tab" aria-selected="true" aria-controls="panel-reading">Lectura ejecutiva</button>
+      <button type="button" id="tab-market" role="tab" aria-selected="false" aria-controls="panel-market" tabindex="-1">Mercado</button>
       <button type="button" id="tab-economy" role="tab" aria-selected="false" aria-controls="panel-economy" tabindex="-1">Economía unitaria</button>
       <button type="button" id="tab-flights" role="tab" aria-selected="false" aria-controls="panel-flights" tabindex="-1">Vuelos</button>
     </div>
@@ -46,13 +47,20 @@
           <p class="analysis-placeholder" id="analysis-empty">Análisis pendiente de aprobación para este trimestre.</p>
         </div>
       </section>
-      <article class="chart-card market-card">
+
+    </section>
+
+    <section id="panel-market" role="tabpanel" aria-labelledby="tab-market" hidden>
+      <div class="section-heading"><div><p class="section-kicker">Mercado</p><h2>Tamaño, participación y demanda</h2></div></div>
+      <article class="chart-card market-card" id="market-card">
         <div class="chart-heading-row">
           <div>
-            <p class="chart-title">Participación de pasajeros (AFAC)</p>
+            <h2 class="chart-title">Participación de pasajeros (AFAC)</h2>
             <p class="chart-subtitle" id="market-subtitle">Pasajeros de cada aerolínea entre los de todas las aerolíneas mexicanas, por mes.</p>
           </div>
           <div class="chart-controls">
+            <label class="chart-range-control">Grano <select id="market-grain"><option value="quarter">Trimestre completo</option><option value="month">Mes</option></select></label>
+            <label class="chart-range-control">Corte AFAC <select id="market-period"></select></label>
             <label class="chart-range-control" for="market-segment">Segmento
               <select id="market-segment">
                 <option value="total" selected>Total</option>
@@ -64,6 +72,16 @@
           </div>
         </div>
         <div class="chart" id="market-chart" role="img" aria-label="Participación mensual de pasajeros por aerolínea"></div>
+        <p id="market-cut" class="chart-subtitle"></p>
+        <div class="market-kpis" id="market-kpis" aria-live="polite"></div>
+        <div class="market-table-wrap"><table class="market-table"><caption>Contribución al crecimiento interanual del universo AFAC seleccionado</caption><thead><tr><th>Aerolínea</th><th>Pasajeros</th><th>Crecimiento interanual</th><th>Participación</th><th>Cambio interanual (pp)</th><th>Contribución (pp)</th></tr></thead><tbody id="market-comparison"></tbody></table></div>
+        <details><summary>Universo y cálculo</summary><p id="market-method"></p><p>Contribución = cambio de pasajeros de la aerolínea / pasajeros de todas las aerolíneas mexicanas un año antes × 100. Las contribuciones, incluido el resto, suman el crecimiento del universo. Los pasajeros corresponden a tramos; una persona puede contarse más de una vez.</p></details>
+      </article>
+      <article class="chart-card" id="airport-demand-card">
+        <div class="chart-heading-row"><div><h2 class="chart-title">Demanda por aeropuerto</h2><p class="chart-subtitle">Tráfico de todas las compañías. Selección de aeropuertos mexicanos disponible en Gold; cada aeropuerto conserva su propio corte.</p></div><label class="chart-range-control">Mes aeroportuario <select id="airport-period"></select></label></div>
+        <p id="airport-note" class="chart-subtitle" role="status"></p>
+        <div class="market-table-wrap"><table class="market-table"><caption>Pasajeros reportados por aeropuerto · nacional + internacional</caption><thead><tr><th>Aeropuerto</th><th>Grupo</th><th>Pasajeros</th><th>Interanual</th><th>Base comparable</th></tr></thead><tbody id="airport-demand"></tbody></table></div>
+        <details><summary>Grupos y controles de calidad</summary><p id="airport-quality"></p><div class="market-table-wrap"><table class="market-table"><caption>Totales de grupos en México (no se suman a los aeropuertos)</caption><thead><tr><th>Grupo</th><th>Pasajeros</th><th>Interanual</th><th>Base comparable</th></tr></thead><tbody id="airport-groups"></tbody></table></div></details>
       </article>
     </section>
 
