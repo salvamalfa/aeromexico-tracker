@@ -592,7 +592,8 @@ def build_flight_payload(database_path: str | Path | None = None, *, include_exi
         )
         from src.dashboard.entity_routes import build_entity_networks
         international_networks = extend_networks(connection, route_networks, include_existing_us_estimates=include_existing_us_estimates)
-        domestic_networks = load_domestic_networks(connection, quarters, include_estimates=False)
+        domestic_networks = load_domestic_networks(connection, quarters)
+        domestic_official_networks = load_domestic_networks(connection, quarters, include_estimates=False)
         domestic_monthly_networks = load_domestic_monthly_networks(connection)
         # Dashboard v2 (fase 3): the same map for Industria, Volaris and Viva.
         entity_networks = build_entity_networks(connection, map_periods, _load_routes, include_existing_us_estimates=include_existing_us_estimates)
@@ -693,6 +694,7 @@ def build_flight_payload(database_path: str | Path | None = None, *, include_exi
         "route_networks": route_networks,
         "international_networks": international_networks,
         "domestic_networks": domestic_networks,
+        "domestic_official_networks": domestic_official_networks,
         "domestic_monthly_networks": domestic_monthly_networks,
         "entity_networks": entity_networks,
         "forecast": forecast,

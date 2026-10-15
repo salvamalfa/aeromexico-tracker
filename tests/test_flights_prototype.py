@@ -79,7 +79,7 @@ def test_domestic_passenger_estimates_are_monthly_retrospective_and_bounded(flig
                 slack = 16 * math.ulp(route["passengers"])
                 assert low - slack <= route["passengers"] <= high + slack
         assert any(route["departures"] is not None for route in network["routes"])
-        assert all(route["departures_estimated"] == route["capacity_complete"]
+        assert all(route["departures_estimated"] == (route["departures"] is not None)
                    for route in network["routes"])
         assert all(route["load_factor"] is None or 0 <= route["load_factor"] <= 1
                    for route in network["routes"])
@@ -160,12 +160,14 @@ def test_t100_network_is_bounded_and_never_claims_global_coverage(flight_payload
                 route["destination"]["lat"], route["destination"]["lon"],
             )
         )
-    assert set(payload["route_networks"]) == {quarter["period_id"] for quarter in payload["quarters"]}
+    assert {quarter["period_id"] for quarter in payload["quarters"]} <= set(payload["route_networks"])
+    assert "2015M01" in payload["route_networks"] and "2026M07" in payload["route_networks"]
     for period_id, period_network in payload["route_networks"].items():
         assert period_network["period_id"] == period_id
         assert set(period_network["observed_months"]).issubset(period_network["expected_months"])
         assert all(
-            f"{month[:4]}Q{(int(month[5:7]) - 1) // 3 + 1}" == period_id
+            (month == period_id if "M" in period_id else
+             f"{month[:4]}Q{(int(month[5:7]) - 1) // 3 + 1}" == period_id)
             for month in period_network["observed_months"]
         )
 

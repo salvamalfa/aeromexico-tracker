@@ -40,7 +40,10 @@ def test_international_map_adds_scheduled_destinations_with_observed_precedence(
     by_market = {route["market_key"]: route for route in network["routes"]}
     assert len(by_market) == len(network["routes"])
     sourced = [r for r in network["routes"] if r["source_label"] != ESTIMATED_LABEL]
-    assert len(sourced) == 73
+    assert len(sourced) == 74
+    isolated = by_market["BOG<>TGZ"]
+    assert isolated["departures"] == 1 and len(isolated["directions"]) == 1
+    assert "parcial" in isolated["coverage_note"]
     estimate_available = any(r.get("passengers_estimated") for r in network["routes"])
     for market in ("MEX<>NRT", "ICN<>MEX", "MEX<>YYZ", "MAD<>MEX", "BCN<>MEX", "EZE<>MEX"):
         route = by_market[market]

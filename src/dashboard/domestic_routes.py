@@ -576,7 +576,7 @@ def load_domestic_networks(
             "source_url": (str(current.source_url.iloc[0]) if not current.empty else
                            str(inferred.source_url.iloc[0]) if not inferred.empty else str(present.roster_source_url.iloc[0])),
             "route_count": len(routes),
-            "represented_movements": sum(route["departures"] or 0 for route in routes),
+            "represented_movements": None,  # Different kinds never become one performed-flight total.
             "scheduled_movements": sum(route["departures"] for route in routes if route["operation_status"] == "assigned_slot_not_flown"),
             "attributed_market_movements": sum(route["departures"] for route in routes if route["operation_status"] == "carrier_inferred_market_observed"),
             "presence_only_route_count": sum(route["operation_status"] == "carrier_route_present_volume_unresolved" for route in routes),
