@@ -120,5 +120,8 @@ python -m scripts.research.flight_coverage --private-root /ruta/al/respaldo \
 
 El constructor usa los pins externos ya aprobados del proyecto para verificar
 la publicación base. No los deriva de archivos nuevos. Requiere Gold restaurado,
-Python y dependencias web; no llama APIs ni escribe aprobaciones. La evidencia
-de pruebas, navegador y revisión del commit exacto queda en el PR de la ampliación.
+Python y dependencias web; no llama APIs ni escribe aprobaciones.
+Reconstruye primero el warehouse local desde Gold y comprueba que esos insumos
+no cambien durante la compilación. El control de Git incluye el propio script
+y registra su hash; una edición sin commit o un cambio de revisión aborta.
+La evidencia de pruebas, navegador y revisión del commit exacto queda en el PR.
