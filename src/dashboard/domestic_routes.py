@@ -581,5 +581,7 @@ def load_domestic_networks(
             "attributed_market_movements": sum(route["departures"] for route in routes if route["operation_status"] == "carrier_inferred_market_observed"),
             "presence_only_route_count": sum(route["operation_status"] == "carrier_route_present_volume_unresolved" for route in routes),
             "agent_eligible": False,
+            "availability": "complete" if set(observed_months) == set(months) else "partial",
+            "eligibility_reason": "Programación y atribuciones documentadas; no acreditan vuelos realizados por operador.",
         }
     return result
