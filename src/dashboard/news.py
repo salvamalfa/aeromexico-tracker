@@ -29,6 +29,28 @@ CANDIDATE_HOSTS = {
 }
 
 
+def _review_metadata(record: dict[str, Any]) -> dict[str, Any]:
+    """Only exact semantic/review duplicates may share a source silently."""
+    return {
+        **{
+            key: record.get(key)
+            for key in (
+                "title",
+                "description",
+                "publisher",
+                "published_at",
+                "event_date",
+                "event_end_date",
+                "first_captured_at",
+                "review_status",
+            )
+        },
+        "story_id": record.get("story_id", record["id"]),
+        "companies": sorted("Viva" if value == "Viva Aerobus" else value for value in record["companies"]),
+        "topics": sorted(record.get("topics", [])),
+    }
+
+
 def project(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     stories = {}
     seen_urls = {}
@@ -42,11 +64,17 @@ def project(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         source = record["source"]
         url = canonical_news_url(source["url"])
         story = record.get("story_id", record["id"])
+        metadata = _review_metadata(record)
         if url in seen_urls:
-            if seen_urls[url] != source["sha256"]:
+            previous_hash, previous_metadata = seen_urls[url]
+            if previous_hash != source["sha256"]:
                 raise ValueError("Conflicting source hashes at the same canonical URL")
+            if previous_metadata != metadata:
+                raise ValueError(
+                    "Conflicting news review metadata at the same canonical URL; review both records"
+                )
             continue
-        seen_urls[url] = source["sha256"]
+        seen_urls[url] = (source["sha256"], metadata)
         if story in stories:
             stories[story]["sources"].append(source)
             # A reviewed story does not approve a newly associated source.

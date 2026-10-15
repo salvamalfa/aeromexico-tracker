@@ -213,3 +213,33 @@ def test_changed_bytes_at_same_canonical_source_url_fail_closed(reverse, same_st
     rows = [candidate, approved] if reverse else [approved, candidate]
     with pytest.raises(ValueError, match="Conflicting source hashes"):
         project(rows)
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+@pytest.mark.parametrize("status", ["owner_approved", "candidate_unapproved"])
+@pytest.mark.parametrize(
+    "revision",
+    [
+        {"title": "Titular revisado"},
+        {"description": "Resumen original corregido"},
+        {"published_at": "2026-09-01"},
+        {"event_date": "2026-08-01"},
+        {"first_captured_at": "2026-10-14T00:00:00Z"},
+        {"story_id": "another-story"},
+    ],
+)
+def test_same_bytes_cannot_hide_semantic_revisions(reverse, status, revision):
+    original = record("original", review_status=status)
+    revised = record("revision", review_status=status, **revision)
+    rows = [revised, original] if reverse else [original, revised]
+    with pytest.raises(ValueError, match="review metadata.*review both records"):
+        project(rows)
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+def test_same_bytes_cannot_hide_changed_review_status(reverse):
+    approved = record("approved", review_status="owner_approved")
+    candidate = record("candidate")
+    rows = [candidate, approved] if reverse else [approved, candidate]
+    with pytest.raises(ValueError, match="review metadata.*review both records"):
+        project(rows)

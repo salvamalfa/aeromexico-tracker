@@ -142,3 +142,10 @@ reciben una segunda solicitud y no generan archivos; una redirección relativa
 HTTPS válida conserva su destino y estado candidato.
 El presupuesto de dry-run incluye hasta cuatro solicitudes por fuente contando
 redirecciones; treinta fuentes permiten como máximo 120 solicitudes públicas.
+
+La siguiente revisión encontró una variante con bytes idénticos pero metadatos
+o estado de revisión diferentes. Solo se deduplican alias con la misma ficha
+semántica y el mismo estado; cualquier discrepancia exige revisar ambos registros
+y bloquea la proyección. No se descarta una corrección candidata ni se conserva
+una etiqueta aprobada que oculte esa corrección. Los manifiestos originales no
+se modifican; el corte real conserva sus catorce fichas sin cambio de bytes.
