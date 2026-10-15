@@ -47,6 +47,10 @@ def project(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         seen_urls.add(url)
         if story in stories:
             stories[story]["sources"].append(source)
+            # A reviewed story does not approve a newly associated source.
+            # Keep the entire mixed card closed until every source is reviewed.
+            if record["review_status"] != "owner_approved":
+                stories[story]["review_status"] = "candidate_unapproved"
             continue
         companies = ["Viva" if value == "Viva Aerobus" else value for value in record["companies"]]
         if not set(companies).issubset(COMPANIES):

@@ -114,3 +114,12 @@ modificaron recibos, firmas ni aprobaciones para hacerlas pasar. El despliegue
 requiere resolver esa revisión técnica con el dueño, además de aprobar el PR.
 Las previews reutilizan los payloads ya publicados y se marcan candidatas;
 no equivalen a una regeneración aprobada del sitio.
+
+## Correcciones tras revisión Codex
+
+La revisión del head `ef2d40f` detectó dos casos P2. Se monta Noticias si ya
+estaba visible al terminar la carga inicial de Lectura ejecutiva; una prueba
+retiene la respuesta de `executive.json`, abre Noticias y libera la carga para
+reproducir esa carrera. Además, al agrupar una historia con fuentes aprobadas
+y candidatas, toda la tarjeta conserva el estado candidato. Dos órdenes de
+entrada comprueban que una fuente nueva nunca herede una aprobación anterior.

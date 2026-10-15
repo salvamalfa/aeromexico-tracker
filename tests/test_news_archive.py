@@ -185,3 +185,14 @@ def test_publication_schema_rejects_candidate_preview_and_unapproved_records():
         "limits": [],
     }
     assert list(Draft202012Validator(schema).iter_errors(payload))
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+def test_mixed_story_sources_never_inherit_owner_approval(reverse):
+    approved = record("approved", review_status="owner_approved")
+    candidate = record("candidate", source={"id":"candidate", "url":"https://ri.vivaaerobus.com/new-source", "sha256":"b"*64})
+    rows = [candidate, approved] if reverse else [approved, candidate]
+    stories = project(rows)
+    assert len(stories) == 1
+    assert len(stories[0]["sources"]) == 2
+    assert stories[0]["review_status"] == "candidate_unapproved"

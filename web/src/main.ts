@@ -25,6 +25,10 @@ import { mountExecutive } from "./views/executive/bootstrap";
 import { $ } from "./views/flights/dom";
 
 let flightsMount: Promise<void> | null = null;
+function ensureNewsMounted(dataRoot: string): Promise<void> {
+  // mountNews guards concurrent mounts and permits retry after a fetch error.
+  return import("./views/news/bootstrap").then(({ mountNews }) => mountNews(dataRoot));
+}
 
 function ensureFlightsMounted(dataRoot: string): Promise<void> {
   if (!flightsMount) {
@@ -42,12 +46,14 @@ export async function mount(dataRoot = "data/v1"): Promise<void> {
   }
   window.addEventListener("reader-tab-visible", (event) => {
     const panelId = (event as CustomEvent<{ panelId: string }>).detail?.panelId;
-    if (panelId === "panel-news") void import("./views/news/bootstrap").then(({ mountNews }) => mountNews(dataRoot));
+    if (panelId === "panel-news") void ensureNewsMounted(dataRoot);
     if (panelId === "panel-flights") void ensureFlightsMounted(dataRoot);
   });
   // Defensive only: today's markup always starts on the reading tab (see
   // index.html), so panel-flights starts hidden and this never fires on
   // load — but if that default ever changed, Vuelos must still mount.
+  const newsPanel = $("panel-news");
+  if (newsPanel && !newsPanel.hidden) await ensureNewsMounted(dataRoot);
   const panel = $("panel-flights");
   if (panel && !panel.hidden) await ensureFlightsMounted(dataRoot);
 }
