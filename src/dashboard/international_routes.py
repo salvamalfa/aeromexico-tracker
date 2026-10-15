@@ -5,6 +5,7 @@ from copy import deepcopy
 import pandas as pd
 
 from src.dashboard.route_entities import AEROMEXICO_ROUTES, RouteEntity, breakdown_totals
+from src.dashboard.map_periods import refresh_network_availability
 
 LABELS = {"anac": "Brasil · ANAC", "aerocivil": "Colombia · Aerocivil", "caa": "Reino Unido · CAA"}
 AICM_LABEL = "AICM · vuelos AM programados"
@@ -643,4 +644,5 @@ def extend_networks(connection, networks, *, include_existing_us_estimates=False
         # Different source windows and metric populations cannot form a worldwide total.
         network["totals"] = {k: None for k in ("passengers", "seats", "departures")}
         network["agent_eligible"] = False
+        refresh_network_availability(network)
     return result

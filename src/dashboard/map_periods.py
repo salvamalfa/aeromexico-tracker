@@ -51,3 +51,14 @@ def mappable_routes(frame):
     movements = float(frame.loc[missing, "departures"].sum())
     note = (f"Mapa parcial: {movements:g} vuelos sin coordenadas en {', '.join(markets)}. " if markets else "")
     return frame.loc[~missing].copy(), note
+
+
+def refresh_network_availability(network: dict) -> None:
+    """A retained non-BTS figure is available, without certifying the world network."""
+    quantified = any(route.get("departures") is not None for route in network.get("routes", []))
+    network["availability"] = "partial" if quantified else "unavailable"
+    if quantified and str(network.get("eligibility_reason", "")).startswith("T-100 no contiene"):
+        network["eligibility_reason"] = (
+            "Hay cifras retenidas de otras fuentes; cobertura parcial por fuente y mes, "
+            "sin acreditar red completa ni elegibilidad histórica."
+        )

@@ -17,6 +17,7 @@ import pandas as pd
 from src.dashboard.domestic_routes import load_domestic_monthly_networks
 from src.dashboard.international_routes import ESTIMATE_TABLE, ROUTE_PAYLOAD_KEYS, _estimated_routes
 from src.dashboard.route_capacity import load_route_capacity
+from src.dashboard.map_periods import refresh_network_availability
 from src.dashboard.route_entities import EXTRA_ROUTE_ENTITIES, RouteEntity, breakdown_totals
 
 
@@ -114,6 +115,7 @@ def entity_international_networks(connection, networks, entity: RouteEntity, *, 
         )
         network["totals"] = {k: None for k in ("passengers", "seats", "departures")}
         network["agent_eligible"] = False
+        refresh_network_availability(network)
     return result
 
 

@@ -363,7 +363,7 @@ def _load_routes(connection: duckdb.DuckDBPyConnection, period_id: str, entity: 
             "routes": [],
             "airports": [],
             "agent_eligible": False,
-            "eligibility_reason": "T-100 no contiene meses del trimestre seleccionado.",
+            "eligibility_reason": "T-100 no contiene meses del periodo seleccionado.",
         }
     prior_months = [f"{int(month[:4]) - 1}{month[4:]}" for month in current_months]
     current_placeholders = ",".join("?" for _ in current_months)

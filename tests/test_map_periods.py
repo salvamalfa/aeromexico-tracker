@@ -1,7 +1,7 @@
 import duckdb
 import pytest
 
-from src.dashboard.map_periods import period_months, retained_map_periods
+from src.dashboard.map_periods import period_months, retained_map_periods, refresh_network_availability
 
 
 def test_retained_periods_include_old_observations_and_partial_july_but_not_capture_only_august():
@@ -19,3 +19,14 @@ def test_retained_periods_include_old_observations_and_partial_july_but_not_capt
 def test_invalid_map_dates_are_not_silently_coerced(period):
     with pytest.raises(ValueError):
         period_months(period)
+
+
+def test_non_bts_july_is_available_without_claiming_complete_world_coverage():
+    network = {"expected_months": ["2026M07"], "observed_months": [], "availability": "unavailable",
+               "eligibility_reason": "T-100 no contiene meses del periodo seleccionado.",
+               "routes": [{"departures": 12, "operation_status": "estimated_from_existing_seed"}],
+               "agent_eligible": False}
+    refresh_network_availability(network)
+    assert network["availability"] == "partial"
+    assert "T-100 no contiene" not in network["eligibility_reason"]
+    assert network["agent_eligible"] is False
