@@ -35,6 +35,7 @@ TOPICS = {
 STOP = set(
     "que cuales cual paso ocurrio noticias noticia fichas ficha historias historia sobre de del la las el los en y o con para por al entre hasta desde durante publicadas publicados publicado muestra muestrame mostrar busca buscar quiero ver dame dime cuentame todas todos mas recientes ultimas ultimos aprobado aprobadas aprobados cita citas fuentes fuente favor me se su sus un una hubo cambios cambio mes meses ano anos".split()
 )
+STOP.update("es son ser esta estan hay ultima ultimo reciente".split())
 STOP.update(
     "fue fueron ha han habia como cuando donde acerca publico publicaron publica publicaciones publicacion notas nota dijo reporto informo comunico anuncio anuncios anuncia anunciaron principales".split()
 )
@@ -92,8 +93,11 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
                 raise ValueError("Indica el año de cada extremo del intervalo.")
             start_date = date(first_year, months[0], 1).isoformat()
             end_date = date(last_year, months[-1], calendar.monthrange(last_year, months[-1])[1]).isoformat()
-        elif len(set(years)) == 1:
-            start_date, end_date = f"{years[0]}-01-01", f"{years[0]}-12-31"
+        elif years:
+            endpoints = list(dict.fromkeys(years))
+            if len(endpoints) > 2:
+                raise ValueError("Indica un año o un intervalo de dos años explícitos.")
+            start_date, end_date = f"{endpoints[0]}-01-01", f"{endpoints[-1]}-12-31"
         elif re.search(r"\b(pasado|pasada|ayer|hoy)\b", text):
             raise ValueError("Indica fechas explícitas; no se infiere el periodo de una noticia.")
     for value in (start_date, end_date):

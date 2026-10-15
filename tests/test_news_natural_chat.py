@@ -261,3 +261,39 @@ def test_secondary_source_search_navigates_to_the_shared_projected_card():
 def test_news_button_unrelated_term_does_not_match_instruction_boilerplate():
     index = EvidenceIndex(ROOT / "config/chat/evidence/approved-index.json")
     assert index.search_news("Busca noticias publicadas en 2026-07 sobre unicornios.")["count"] == 0
+
+
+@pytest.mark.parametrize(
+    "question",
+    ["¿Cuál es la última noticia de Aeroméxico?", "Muéstrame la noticia más reciente de Aeroméxico"],
+)
+def test_singular_recency_questions_ignore_copulas_and_find_the_latest_story(question):
+    index = EvidenceIndex(ROOT / "config/chat/evidence/approved-index.json")
+    result = index.search_news(question)
+    assert result["count"] == 2
+    assert result["results"][0]["id"] == "flightglobal-aeromexico-q2-2026-07-15"
+    assert result["filters"]["terms"] == []
+
+
+def test_explicit_year_range_never_silently_becomes_unbounded():
+    from src.conversational_analytics.news_query import resolve_news_query
+
+    intent = resolve_news_query("Muéstrame noticias de Aeroméxico entre 2025 y 2026")
+    assert (intent["start_date"], intent["end_date"]) == ("2025-01-01", "2026-12-31")
+    index = EvidenceIndex(ROOT / "config/chat/evidence/approved-index.json")
+    original = next(r for r in index.records if r.get("kind") == "news")
+    index.records = [
+        {
+            **original,
+            "id": f"story-{year}",
+            "published_at": f"{year}-06-01",
+            "source": {**original["source"], "url": f"https://www.flightglobal.com/year-{year}"},
+        }
+        for year in range(2024, 2028)
+    ]
+    result = index.search_news("Muéstrame noticias de Aeroméxico entre 2025 y 2026")
+    assert [r["published_at"] for r in result["results"]] == ["2026-06-01", "2025-06-01"]
+    with pytest.raises(ValueError):
+        resolve_news_query("noticias entre 2026 y 2025")
+    with pytest.raises(ValueError):
+        resolve_news_query("noticias de 2024, 2025 y 2026")
