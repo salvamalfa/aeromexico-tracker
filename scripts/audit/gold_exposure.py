@@ -126,9 +126,11 @@ def main():
         "news_additional_gold_tables": 0,
         "baseline_direct_pct": round(len(DIRECT) / len(analytical) * 100, 1),
         "market_direct_pct": round((len(DIRECT) + 2) / len(analytical) * 100, 1),
-        "private_flight_gold_present": sorted(
-            p.name for p in PATHS.gold.glob("*.parquet") if p not in public
-        ),
+        "private_flight_gold": {
+            "count": sum(1 for p in PATHS.gold.glob("*.parquet") if p not in public),
+            "total_bytes": sum(p.stat().st_size for p in PATHS.gold.glob("*.parquet") if p not in public),
+            "per_file_metadata_redacted": True,
+        },
         "rubric_note": "Aproximación estática conservadora, no telemetría de usuarios ni porcentaje de filas/columnas expuestas. Directa puede ser un agregado o subconjunto; contexto/validación no equivale a visualización. La disponibilidad por periodo y tipo de cifra limita el mapa. Noticias usa JSON de evidencia y no aumenta este denominador.",
     }
     (out / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
