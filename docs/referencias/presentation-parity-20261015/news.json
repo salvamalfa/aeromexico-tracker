@@ -1,0 +1,310 @@
+{
+  "schema": "presentation_parity_diagnostic_v1",
+  "authorizes_publication": false,
+  "approved_code_commit": "6d8da2c4c0b96371c26521aedb5828610451d03a",
+  "base_commit": "40a63d1905afde97ae8e3f8671c8217aafacc4aa",
+  "candidate_head": "b0f7cebf7191ece557a8ac8ff4bf1c58b3b70082",
+  "fingerprints": {
+    "approved_entity_code": "8fc1d53128ae8a0cc795f29ae944e37787bb280f6025ec66b6a8b1cbc1f6382f",
+    "master_base": "29a4b6b87c52f29de1c450d23a335f82647af0b5285cba1f992bb9e2f99a693f",
+    "candidate": "b85d1826e3d26a82d5e44d0b4bba1c0dc7393cf0772690c22521fbc3da0ca94a"
+  },
+  "component_counts": {
+    "approved": 130,
+    "master_base": 132,
+    "candidate": 140
+  },
+  "inherited_changes": [
+    {
+      "path": "src/publish/frozen_data.py",
+      "before_sha256": null,
+      "after_sha256": "eaec0fb92a0874d64a661ca25cde662a5e7cc7c1d4ca0ec23e5101c5d13ea54f"
+    },
+    {
+      "path": "src/publish/gate.py",
+      "before_sha256": "d3ad4160f206f6aac291958dd12db97062412593e161ea1e11eeb1be934d8a26",
+      "after_sha256": "d4f8358089f9b8150b13245fc5ac4a615bd08b96f2c5ba4d650b58910d55ea38"
+    },
+    {
+      "path": "web/index.html",
+      "before_sha256": "5cbfd2f6bfa4c0c4b19473f4b678881e1fa428f9322659d06a4492a7b9b43549",
+      "after_sha256": "cd24a7d098f956153b6bfd7e2e4dc92974ab3cb5ab402baa7e6d4d7405131ad2"
+    },
+    {
+      "path": "web/src/views/flights/bootstrap.ts",
+      "before_sha256": "291d8a8db6bbacd37a2e2539a2fd249edf06da83ec16c42684a37c750a61b30f",
+      "after_sha256": "e863d8d9f3bfd8f97a689961328d48bf409c6104dc6170730ceacaef55e3c9b2"
+    },
+    {
+      "path": "web/src/views/flights/coverage.ts",
+      "before_sha256": "e87c2e3558586cf6c73479b6714d8f62e7356328207fec6d87ce176ebdd46062",
+      "after_sha256": "d5bc43b7fdcb5e881d925e2f349dbcdc27ba0a8f9fa5c6e8e2d4af51c7e7f5f5"
+    },
+    {
+      "path": "web/src/views/flights/domestic.ts",
+      "before_sha256": "80c2abc9e4c8c4d5b97bbfd214be16ec591585bf609ea9731ecd9acb77adf75f",
+      "after_sha256": "975177077151902ec384789be880d34a0dcadb46e1a90fb6fe2f4e839e8ab8a0"
+    },
+    {
+      "path": "web/src/views/flights/flight-measure.ts",
+      "before_sha256": null,
+      "after_sha256": "0950362d9585b3a1bd32ed0be3e688278d583296b0d75fb85fdee6188a402a09"
+    },
+    {
+      "path": "web/src/views/flights/flights.css",
+      "before_sha256": "803170ec254c15704fde59a2c59b5254c3032ad1678e38ee3cceaff89029a41a",
+      "after_sha256": "117ced5a366908adb3cc6ed1a68f7c452789511195a558cca10eb808b569688e"
+    },
+    {
+      "path": "web/src/views/flights/network.ts",
+      "before_sha256": "2e5227ae6d3b4a0597f735183ef05535b3ccd3b92dadd599dd8fc037ef198091",
+      "after_sha256": "29601992b062ccc0c2a2fa89f743cb1878237676e7d9c2675aa71a4b0d55cd1b"
+    },
+    {
+      "path": "web/src/views/flights/state.ts",
+      "before_sha256": "209b85581f190e41866813bf2cf9e254cc52d2508c107dd9c98ccbfd8e4ff1ad",
+      "after_sha256": "55a4057b2fc2ad130093d66a12a46e8b5e4a79c5d575d683904fee21dc94da85"
+    },
+    {
+      "path": "web/src/views/flights/table.ts",
+      "before_sha256": "6a79d2fa8aaa159c8b2e7fbfd4863739a02ca75f72ace74fac889904766a5a59",
+      "after_sha256": "492c8e4c8d48cad1a6d075c1a8d3969da1f4d0ebfd3ee84681cf8d38e6d0636f"
+    },
+    {
+      "path": "web/src/views/flights/volume.ts",
+      "before_sha256": "5c04831cd98047a65c3e363510037e441813771869b1755eb78ebd9945d269e5",
+      "after_sha256": "5523fd8392c8cd9a57241ef630258a8dd887e3521a3950370949ce6e214fb2cb"
+    }
+  ],
+  "candidate_changes": [
+    {
+      "path": "contracts/web/news.schema.json",
+      "before_sha256": null,
+      "after_sha256": "0decc60f040c0f5e79d57d0f5db0606c53dfb8753cf1a31ec868eb1a7d0d4429"
+    },
+    {
+      "path": "src/publish/gate.py",
+      "before_sha256": "d4f8358089f9b8150b13245fc5ac4a615bd08b96f2c5ba4d650b58910d55ea38",
+      "after_sha256": "da2048d6723ab6e3ec20c59472f6a1593c534ff62ec3929b82a80694b3b4189f"
+    },
+    {
+      "path": "src/publish/manifest.py",
+      "before_sha256": "8ab363e81b692325feb6666fe4495ccc6890f2f445aec574cc2ffc07672af0a7",
+      "after_sha256": "6201c217d42ca52fec67e17a8cba0c7afaa5a915c07d1c1896653e99ebc05022"
+    },
+    {
+      "path": "src/publish/verify.py",
+      "before_sha256": "e9ddfa86f08ffea240a3b9d0a666ac3938f41e96e799a191081da39f76ea6562",
+      "after_sha256": "ddef30633436c59942ecf8eac8f306dd26ccd235ef326dc8b5ddaa2c4c7c72a0"
+    },
+    {
+      "path": "src/web_export/__main__.py",
+      "before_sha256": "ac8764ffa07598280a33d5a04df5f686521a2f5144bab7a738b45167a0f2eed8",
+      "after_sha256": "0cae9a33fa028fa905d31773f002e41ff0a4e66b1408689364c44d710a4b03b0"
+    },
+    {
+      "path": "src/web_export/news.py",
+      "before_sha256": null,
+      "after_sha256": "95f4a1de5e24d73b32a04a20f2dc2149d6611816a8ecf9f0ac814aa3599bb1b9"
+    },
+    {
+      "path": "web/index.html",
+      "before_sha256": "cd24a7d098f956153b6bfd7e2e4dc92974ab3cb5ab402baa7e6d4d7405131ad2",
+      "after_sha256": "129128b786f6045a7b925836f308c3c71eb6df25b01686f6ed1be06833163be0"
+    },
+    {
+      "path": "web/src/main.ts",
+      "before_sha256": "6002d40957242c8ec48b2b18f5c27853163132f07fd160e3c0daed4b267801d7",
+      "after_sha256": "57c0b52952f535b46a64cfffd2ed48f050c1409cb45a47928a210f1c5cd7b568"
+    },
+    {
+      "path": "web/src/types/chat.ts",
+      "before_sha256": "991c975e963f9e372d64811a572cacaeaed4b00677b7f97427be372c3391b0be",
+      "after_sha256": "95e9f830c92fe80ba14ac3fbca1f9a43cbc89a39422fc2e7ba92133980cf9072"
+    },
+    {
+      "path": "web/src/types/generated/news.ts",
+      "before_sha256": null,
+      "after_sha256": "a179893d59c395c1481105ed87028fcc9a1f94ee1e60dedc8807603549f5be73"
+    },
+    {
+      "path": "web/src/types/vite-env.d.ts",
+      "before_sha256": "f1e6532add736c5495925fcfe06823614d344b466934cafda3d7045a6d8bf35b",
+      "after_sha256": "a5fcafd790347f2e5cf5968572e22999a049ccb98719fe9d81ac2da770731eb2"
+    },
+    {
+      "path": "web/src/views/chat/bootstrap.ts",
+      "before_sha256": "923fecb8adb8cbb09683f641e7a07adaf98b97344b42ed04291c450d5aa9e64b",
+      "after_sha256": "30fa56ce8e56d991150cbec541c786df2aa6d6bc99740a6a9b6b74df2fe7ecff"
+    },
+    {
+      "path": "web/src/views/chat/context.ts",
+      "before_sha256": "0da28093e4eb46fad3ad957aa0ba08ad2482e61dd1992d09d1b89ccba8a67766",
+      "after_sha256": "27d1d63b36ca08b22124c42f700522fbbc9ef40ef27f42735d5049f8d0a971fa"
+    },
+    {
+      "path": "web/src/views/chat/markdown.ts",
+      "before_sha256": "15718fb47cb27c782b4b57bc874a1b6e7fb82b56016b873114c99214f74c38b8",
+      "after_sha256": "d88e886790c9ac41ccfac76f64ed490fa67a74dd097d610f062eb27cac0e16b9"
+    },
+    {
+      "path": "web/src/views/chat/news-results.ts",
+      "before_sha256": null,
+      "after_sha256": "42187ca92ccf3f1c0b3d7a694aa358c7e954e5bd43f0a380164e46ff3cc5bfa4"
+    },
+    {
+      "path": "web/src/views/chat/prompt.ts",
+      "before_sha256": null,
+      "after_sha256": "a977ae54859e9d6493b17a8bb813ee86a576a0757fe3144e38419b1f0e13a980"
+    },
+    {
+      "path": "web/src/views/chat/render.ts",
+      "before_sha256": "c78254750048cbfddb99e594151ac7f0591654e0ea3ad30e35f2ee51568452f6",
+      "after_sha256": "94fc048e8cd027920c800a2b59fe6dde95520d937861846b4ab979c0d13d2344"
+    },
+    {
+      "path": "web/src/views/news/archive.ts",
+      "before_sha256": null,
+      "after_sha256": "5f0283de7bb558d8456733a089eaf0ac279f23718779b76948581f561745fb77"
+    },
+    {
+      "path": "web/src/views/news/bootstrap.ts",
+      "before_sha256": null,
+      "after_sha256": "dcc97e58b1d2b1fea6dbbf07c2fa21fdd24bff299b043526fc4332285f1299c8"
+    },
+    {
+      "path": "web/src/views/news/news.css",
+      "before_sha256": null,
+      "after_sha256": "920e4ae2a3e0fadc6a49f69b07e65558717a2dbfd551394178ca3b9e2d661d84"
+    }
+  ],
+  "protected_paths_changed_since_base": [],
+  "public_payload_parity_diagnostic": {
+    "flights_identical": true,
+    "executive_identical": true,
+    "fresh_flights_sha256": "615f821a455e8775ddcdba33f7b9541811205f0e077b300ce5021699d2128287",
+    "site_flights_sha256": "615f821a455e8775ddcdba33f7b9541811205f0e077b300ce5021699d2128287",
+    "fresh_executive_sha256": "387008fd1b9e747917b2a1114347cc620071dd1bad8b0b8a2f3f74408ed8bdbe",
+    "site_executive_sha256": "387008fd1b9e747917b2a1114347cc620071dd1bad8b0b8a2f3f74408ed8bdbe"
+  },
+  "private_gold_inputs": [
+    {
+      "table": "fact_aeromexico_domestic_capacity_estimate",
+      "bytes": 25020,
+      "sha256": "bc0bb35ef2681685ca68a0e43babd61c4dda088a6b083d7324548220e8487b70"
+    },
+    {
+      "table": "fact_aeromexico_international_capacity_estimate",
+      "bytes": 21267,
+      "sha256": "7aca83b2ee8eb8fedfbdce0f763960645f73e5693f049244196129d86fd3b57f"
+    },
+    {
+      "table": "fact_route_carrier_domestic_estimate",
+      "bytes": 144571,
+      "sha256": "736c07a15feff4b61df1224136c17a88635e1845e9bca02526e8d1fae15b0dcc"
+    },
+    {
+      "table": "fact_route_carrier_international_estimate",
+      "bytes": 157357,
+      "sha256": "48dcf40b3e2668718cb693e5da5619d4e0907b71bb46f16835dda9a99b98b5d3"
+    }
+  ],
+  "selected_records": [
+    {
+      "entity": "AEROMEXICO",
+      "period": "2026Q2",
+      "version": "186ba823aea28830be12cb0293c5bb2890a433b173addc473c26aa8f89cab26f",
+      "content_hash": "10898ecf005d18b05629db99ab896843bc25a2888aac62eaee175d0e08845965",
+      "evidence_fingerprint": "808256bfb7420d221a3f2f2383c4b95d9889110ad1545fd85f24df8d442a9ff1",
+      "record_code_version": "6db7173fe801e9e5ccd9afc24baced556274a58eb8ea799aa9132361b1c2d5c8",
+      "prompt_unchanged": true,
+      "ledger_state": "approved",
+      "approval_event": "85cc3fd9541695992576871f732eeaa94a535d89e15060496d8f208fda78b6bd",
+      "presentation_gate": {
+        "passed": true
+      },
+      "source_calculation_replay": "passed",
+      "calculation_record_sha256": "1096064ffe4e5e3bfb3a29dd4479eecdfc8a58d6d38b8aca7ef5a4b02dfffc59",
+      "public_claims": 18,
+      "public_claims_identical": true,
+      "public_claims_sha256": "425f15f8f763ba45c3a689d51b21f9149e6c5bda0bf0acb52e13cf732bb37e71",
+      "replayed_claims_sha256": "425f15f8f763ba45c3a689d51b21f9149e6c5bda0bf0acb52e13cf732bb37e71",
+      "thesis_identical": true,
+      "summary_identical": true,
+      "proposed_technical_version_unapproved_not_written": null
+    },
+    {
+      "entity": "INDUSTRY",
+      "period": "2026Q2",
+      "version": "d7505561319532b7eb5bfbde87339a31e720bd7f9b6c358175a26587dffdf868",
+      "content_hash": "3dd2a4ff80f698deaba1257cb55859994ec06155f3fb4504918c889566be91ed",
+      "evidence_fingerprint": "4caa2aefd178328b955c5579b1e88375220ea658331ab109017be0d9f0da7686",
+      "record_code_version": "8fc1d53128ae8a0cc795f29ae944e37787bb280f6025ec66b6a8b1cbc1f6382f",
+      "prompt_unchanged": true,
+      "ledger_state": "approved",
+      "approval_event": "4149a71e7d8dd631ecb966541dd189c09f45553f43ee015d00f58979dcb958c4",
+      "presentation_gate": {
+        "passed": false,
+        "error": "Entity implementation changed: import and audit a new version"
+      },
+      "source_calculation_replay": "passed",
+      "calculation_record_sha256": "6dd678f020253046d4dc04398c2e0b4e408b68833704610122ab6317a14c5280",
+      "public_claims": 16,
+      "public_claims_identical": true,
+      "public_claims_sha256": "5df3e53d5665aa285a2dae8f2d407c0266a3a74acbdfef7a7e229295c698129f",
+      "replayed_claims_sha256": "5df3e53d5665aa285a2dae8f2d407c0266a3a74acbdfef7a7e229295c698129f",
+      "thesis_identical": true,
+      "summary_identical": true,
+      "proposed_technical_version_unapproved_not_written": "0d4bff1ae8901f28b24054b16acc015f1a12361bf6f191f9fc353eb09e93e9df"
+    },
+    {
+      "entity": "VIVA_AEROBUS",
+      "period": "2026Q2",
+      "version": "49af5ded1f73b93270139e96fa7f168c8d119049db0e00468b13afda65db9fc2",
+      "content_hash": "27ac10c3dd89c04c2b7b317cc83238550fe4a92e5e33b8178604acfecefa43e2",
+      "evidence_fingerprint": "2d10ad214603e654490744a408b8827e08444fd9f934639748c30095fd3065d6",
+      "record_code_version": "8fc1d53128ae8a0cc795f29ae944e37787bb280f6025ec66b6a8b1cbc1f6382f",
+      "prompt_unchanged": true,
+      "ledger_state": "approved",
+      "approval_event": "d2cf24081836792823524b1c7a487f93e526a285ea68d0ebd0dcdf0ac7f818b5",
+      "presentation_gate": {
+        "passed": false,
+        "error": "Entity implementation changed: import and audit a new version"
+      },
+      "source_calculation_replay": "passed",
+      "calculation_record_sha256": "c20698abf0c59f31c1804b75621126866b901e39be4952e5b07501ae1de5259e",
+      "public_claims": 18,
+      "public_claims_identical": true,
+      "public_claims_sha256": "1063f46218d1f820161fa82ffec4e05b2f802598d6e0273bb1f8fc5c8c978397",
+      "replayed_claims_sha256": "1063f46218d1f820161fa82ffec4e05b2f802598d6e0273bb1f8fc5c8c978397",
+      "thesis_identical": true,
+      "summary_identical": true,
+      "proposed_technical_version_unapproved_not_written": "75895495efe8cb7ddcd98c6c1d981269227b804a3a05d8e920effc241a8bb45a"
+    },
+    {
+      "entity": "VOLARIS",
+      "period": "2026Q2",
+      "version": "591814bf16e6467d12f1716f5917a80d79610ed86d47f7a88398aba899d979d1",
+      "content_hash": "74b34102ba86a357509a0779a68b67ba4a240eb9ded4c31dff1362d29a15260a",
+      "evidence_fingerprint": "1c83bec4eba83bad999dca646ee6384654cbde6cef47d5bf9fac128646f5adea",
+      "record_code_version": "8fc1d53128ae8a0cc795f29ae944e37787bb280f6025ec66b6a8b1cbc1f6382f",
+      "prompt_unchanged": true,
+      "ledger_state": "approved",
+      "approval_event": "89cc4cc9a029c943c83de5f003f2d7a4ba9422ee182c486b6d2c4948ba58c4f2",
+      "presentation_gate": {
+        "passed": false,
+        "error": "Entity implementation changed: import and audit a new version"
+      },
+      "source_calculation_replay": "passed",
+      "calculation_record_sha256": "f7ec731d0740316e31676b5ca827550932853e3d8fd4329a2b2290a3ff08f2c6",
+      "public_claims": 16,
+      "public_claims_identical": true,
+      "public_claims_sha256": "a20bebc083729b958f34278c4fc5a402a23918110b191d95abceb0bb8a1ab745",
+      "replayed_claims_sha256": "a20bebc083729b958f34278c4fc5a402a23918110b191d95abceb0bb8a1ab745",
+      "thesis_identical": true,
+      "summary_identical": true,
+      "proposed_technical_version_unapproved_not_written": "9a9e0446a563981de12cda82be1514b0408783f2baba541b5e10beedb8cfbea6"
+    }
+  ],
+  "decision": "Presentation remains blocked. Review/import/audit new technical entity versions and obtain explicit approval before export; retain the existing theses and evidence. This report is not an approval."
+}

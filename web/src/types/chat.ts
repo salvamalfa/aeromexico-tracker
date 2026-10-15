@@ -51,6 +51,7 @@ export interface ChatMessage {
   chart?: ChatChart;
   displays?: ChatDisplay[];
   pending?: boolean;
+  news_results?: unknown;
   retryMessageId?: string;
   clientMessageId?: string;
 }

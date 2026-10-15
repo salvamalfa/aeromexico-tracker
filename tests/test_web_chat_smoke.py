@@ -296,3 +296,8 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
             server.wait(timeout=5)
         except subprocess.TimeoutExpired:
             server.kill()
+# Imported into this CI-selected module; the helper file is not independently collected.
+from web_news_chat_flow import (  # noqa: F401
+    news_chat_server,
+    test_spanish_chat_question_opens_the_verified_news_card,
+)

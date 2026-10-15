@@ -160,6 +160,7 @@ export function mountChat(): () => void {
       ...message,
       references: safeReferences(message.references ?? (message as ChatMessage & { payload?: { references?: unknown } }).payload?.references),
       chart: (message as ChatMessage & { payload?: { chart?: unknown } }).payload?.chart as ChatChart | undefined ?? message.chart,
+      news_results: message.news_results ?? (message as ChatMessage & {payload?: {news_results?:unknown}}).payload?.news_results,
     }));
     const unresolved = submissions.unresolved;
     if (unresolved?.conversationId === conversation.id) {

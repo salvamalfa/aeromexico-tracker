@@ -9,6 +9,7 @@ export type ApprovedPublicMonthlyNewsV1CandidatesExcluded = {
   coverage_note: string;
   approved_index_sha256?: string;
   candidate_sha256?: null;
+  approval_package?: null;
   default_month?: string | null;
   months: string[];
   records: {

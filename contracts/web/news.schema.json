@@ -31,6 +31,9 @@
     "candidate_sha256": {
       "type": "null"
     },
+    "approval_package": {
+      "type": "null"
+    },
     "default_month": {
       "type": [
         "string",

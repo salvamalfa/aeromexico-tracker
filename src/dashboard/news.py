@@ -109,8 +109,10 @@ def project(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def build_news_payload(candidate: Path | None = None) -> dict[str, Any]:
     index = EvidenceIndex(PATHS.root / "config/chat/evidence/approved-index.json")
     records = [{**r, "review_status": "owner_approved"} for r in index.records if r.get("kind") == "news"]
-    coverage = "Archivo aprobado parcial: tres noticias; dos de Aeroméxico y una de Volaris. Viva carece de noticias aprobadas."
+    counts = {company:sum(company in ["Viva" if c=="Viva Aerobus" else c for c in row["companies"]] for row in records) for company in sorted(COMPANIES)}
+    coverage = f"Archivo aprobado parcial: {len(records)} noticias. " + "; ".join(f"{company}: {count}" for company,count in counts.items()) + ". Cero fichas no demuestra ausencia de noticias."
     candidate_hash = None
+    approval_package = None
     default_month = None
     if candidate:
         payload = json.loads(candidate.read_text())
@@ -143,6 +145,21 @@ def build_news_payload(candidate: Path | None = None) -> dict[str, Any]:
             + " Los candidatos requieren aprobación independiente y no están disponibles para búsqueda del chat."
         )
         candidate_hash = hashlib.sha256(candidate.read_bytes()).hexdigest()
+        approval_package = {
+            "schema": "monthly_news_batch_approval_proposal_v1", "status": "owner_review_required",
+            "candidate_file_sha256": candidate_hash, "candidate_count": len(payload["records"]),
+            "scope": "Approve the News tab and these eleven short news records for approved chat search in one decision; no thesis, metric, scheduler or publication approval is implied.",
+            "decision_required": "One explicit owner decision bound to this complete candidate hash and its item content hashes; no approval is recorded by this proposal.",
+            "records": payload["records"],
+            "proposed_index_records": [
+                {"record": normalized, "candidate_content_sha256": candidate_content_sha256(normalized)}
+                for row in payload["records"]
+                for normalized in [{key: row[key] for key in (
+                    "id", "story_id", "kind", "published_at", "publisher", "title", "description", "companies", "topics", "source", "event_date", "event_end_date", "first_captured_at"
+                )}]
+            ],
+        }
+        approval_package["proposal_sha256"] = hashlib.sha256(json.dumps(approval_package,ensure_ascii=False,sort_keys=True,separators=(",",":")).encode()).hexdigest()
     stories = project(records)
     return {
         "schema_version": "monthly_news_v1",
@@ -150,6 +167,7 @@ def build_news_payload(candidate: Path | None = None) -> dict[str, Any]:
         "coverage_note": coverage,
         "approved_index_sha256": index.sha256,
         "candidate_sha256": candidate_hash,
+        "approval_package": approval_package,
         "months": sorted({row["published_at"][:7] for row in stories}, reverse=True),
         "default_month": default_month,
         "records": stories,

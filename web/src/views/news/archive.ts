@@ -3,7 +3,7 @@ export interface NewsStory {
  published_at:string; event_date:string|null; event_end_date:string|null; first_captured_at:string|null;
  review_status:"owner_approved"|"candidate_unapproved"; sources:{id:string;url:string;sha256:string;publisher?:string}[];
 }
-export interface NewsArchive {mode:string; default_month?:string|null; coverage_note:string; months:string[]; records:NewsStory[]; limits:string[];}
+export interface NewsArchive {mode:string; approved_index_sha256?:string;candidate_sha256?:string|null;approval_package?:Record<string,unknown>|null; default_month?:string|null; coverage_note:string; months:string[]; records:NewsStory[]; limits:string[];}
 export function filterStories(records:NewsStory[], month:string, company:string, topic:string, query:string):NewsStory[]{
  const norm=(x:string)=>x.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
  const tokens=norm(query).split(/\s+/).filter(Boolean);
