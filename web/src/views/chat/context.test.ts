@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildChatContext } from "./context";
+import { buildChatContext, describeChatContext } from "./context";
 
 describe("chat dashboard context", () => {
   it("drops a card from an inactive tab instead of mixing its filters with the active tab", () => {
@@ -22,4 +22,11 @@ describe("chat dashboard context", () => {
     expect(context.card_id).toBeUndefined();
     expect(context.filters).toBeUndefined();
   });
+});
+
+it("omits unsupported Connect context rather than substituting Industry or its parent",()=>{
+ document.body.innerHTML='<div class="reader-tabs"><button role="tab" aria-selected="true" aria-controls="panel-news"></button></div><select id="news-company"><option>Aeroméxico Connect</option></select><select id="news-month"><option>2026-07</option></select>';
+ const context=buildChatContext();expect(context.tab).toBe("news");expect(context.period).toBe("2026M07");expect(context).not.toHaveProperty("entity");expect(describeChatContext(context)).toContain("Sin aerolínea preseleccionada");
+ (document.getElementById("news-company") as HTMLSelectElement).innerHTML='<option value="">Todas</option>';
+ expect(buildChatContext().entity).toBe("INDUSTRY");
 });

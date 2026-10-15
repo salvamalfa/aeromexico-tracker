@@ -34,6 +34,7 @@
       <button type="button" id="tab-reading" role="tab" aria-selected="true" aria-controls="panel-reading">Lectura ejecutiva</button>
       <button type="button" id="tab-economy" role="tab" aria-selected="false" aria-controls="panel-economy" tabindex="-1">Economía unitaria</button>
       <button type="button" id="tab-flights" role="tab" aria-selected="false" aria-controls="panel-flights" tabindex="-1">Vuelos</button>
+      <button type="button" id="tab-news" role="tab" aria-selected="false" aria-controls="panel-news" tabindex="-1">Noticias y estrategia</button>
     </div>
 
     <section id="panel-reading" role="tabpanel" aria-labelledby="tab-reading">
@@ -187,6 +188,22 @@
           </table>
         </div>
       </details>
+    </section>
+
+    <section id="panel-news" role="tabpanel" aria-labelledby="tab-news" hidden>
+      <div class="section-heading"><div><p class="section-kicker">Archivo mensual</p><h2>Noticias y estrategia</h2></div></div>
+      <p class="news-intro" id="news-coverage" role="status">Cargando el archivo de evidencia…</p>
+      <div class="news-filters">
+        <label>Mes de publicación<select id="news-month"></select></label>
+        <label>Aerolínea<select id="news-company"><option value="">Todas las aerolíneas</option><option>Aeroméxico</option><option>Aeroméxico Connect</option><option>Viva</option><option>Volaris</option></select></label>
+        <label>Tema<select id="news-topic"></select></label>
+        <label class="news-search">Buscar palabras en el archivo<input id="news-query" type="search" maxlength="240" placeholder="Ej. combustible, capacidad, Delta"></label>
+        <button type="button" id="news-chat" hidden>Preguntar al chat</button>
+      </div>
+      <p class="news-count" id="news-count" aria-live="polite"></p>
+      <div class="news-grid" id="news-stories"></div>
+      <p class="news-limits" id="news-limits"></p>
+      <p class="news-limits">La búsqueda por palabras filtra este archivo. El chat interpreta preguntas en lenguaje natural y consulta hasta cinco coincidencias del índice aprobado; las candidatas requieren revisión antes de habilitarse allí.</p>
     </section>
 
     <section id="panel-flights" role="tabpanel" aria-labelledby="tab-flights" hidden>

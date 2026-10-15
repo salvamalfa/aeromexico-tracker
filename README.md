@@ -136,6 +136,13 @@ Fuentes principales: SEC EDGAR, BMV XBRL, AFAC, BTS T-100, Banxico, EIA, datos p
 
 Por la decisión explícita de **no versionar bronze**, una reconstrucción con nuevas descargas sigue ejecutándose localmente, donde existen los crudos. El workflow remoto valida y confirma (commit) el gold ya reconstruido; no finge poder recrear fuentes manuales ausentes ni publica el sitio.
 
+## Candidato Noticias y estrategia
+
+La pestaña mensual y su corte candidato se documentan en
+[la etapa del 15 de octubre](docs/etapas/noticias-candidato-20261015.md).
+Las candidatas siguen pendientes de revisión y no amplían la evidencia del chat.
+La [auditoría Gold](docs/gold-exposure.md) conserva los datos y sus dependencias.
+
 ## Chat analítico
 
 El chat responde preguntas sobre el snapshot público con una capa semántica

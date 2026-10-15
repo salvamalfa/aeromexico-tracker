@@ -72,6 +72,8 @@ def _public_fixtures() -> dict[str, object]:
     ]
     return {
         "/data/v1/executive.json": executive,
+        "/data/v1/market-demand.json": {"months":[],"airports":[],"groups":[],"quality_notes":[]},
+        "/data/v1/news.json": {"mode":"candidate_preview", "coverage_note":"Fixture parcial", "months":["2026-09"], "limits":[], "records":[]},
         "/data/v1/market.json": json.loads((WEB_FIXTURES / "market_sample.json").read_text()),
         "/data/v1/analysis/2026Q2.json": json.loads((WEB_FIXTURES / "analysis_sample.json").read_text()),
     }
@@ -231,12 +233,14 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
             assert sent_context[1]["entity"] == "VOLARIS"
             page.keyboard.press("Escape")
 
-            page.locator(".chart-card .chat-card-action").first.click()
+            if page.locator("#tab-market").count():
+                page.click("#tab-market")
+            page.locator(".chart-card .chat-card-action").filter(visible=True).first.click()
             page.get_by_label("Pregunta sobre los datos publicados").fill("Explícame esta gráfica")
             page.get_by_role("button", name="Enviar").click()
             page.get_by_text("Respuesta segura.").last.wait_for(timeout=10_000)
             market_index = len(sent_context) - 1
-            assert sent_context[market_index]["card_id"] == "market-chart"
+            assert sent_context[market_index]["card_id"] in {"market-chart", "market-card"}
             assert sent_context[market_index]["filters"]["segment"] == "total"  # type: ignore[index]
             page.keyboard.press("Escape")
 
@@ -266,6 +270,33 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
                 page.locator("#airline-chat-panel").evaluate("node => getComputedStyle(node).width")
                 == "390px"
             )
+            if page.locator("#tab-news").count():
+                page.keyboard.press("Escape")
+                page.click("#tab-news")
+                page.wait_for_selector("#news-count:text-is('0 historias · 0 aprobadas · 0 candidatas. Orden: publicación más reciente. La cantidad no mide importancia.')")
+                page.select_option("#news-company", "Viva")
+                page.fill("#news-query", "capacidad")
+                before_count = len(sent_context)
+                page.click("#news-chat")
+                prompt = page.get_by_label("Pregunta sobre los datos publicados")
+                assert prompt.input_value() == "Busca noticias de Viva publicadas en 2026-09 sobre capacidad."
+                assert len(sent_context) == before_count  # Prefill does not submit.
+                password_field.fill(password)
+                page.get_by_role("button", name="Entrar").click()
+                password_field.wait_for(state="hidden")
+                page.get_by_role("button", name="Enviar").click()
+                page.get_by_text("Respuesta segura.").last.wait_for(timeout=10_000)
+                assert sent_context[-1]["tab"] == "news"
+                assert sent_context[-1]["period"] == "2026M09"
+                assert sent_context[-1]["entity"] == "VIVA_AEROBUS"
+                page.keyboard.press("Escape")
+                page.select_option("#news-company", "Aeroméxico Connect")
+                page.click("#news-chat")
+                assert "Aeroméxico Connect" in prompt.input_value()
+                assert "Sin aerolínea preseleccionada" in page.locator("#airline-chat-panel").inner_text()
+                page.get_by_role("button", name="Enviar").click()
+                page.get_by_text("Respuesta segura.").last.wait_for(timeout=10_000)
+                assert "entity" not in sent_context[-1]
             browser.close()
     finally:
         server.terminate()
@@ -273,3 +304,8 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
             server.wait(timeout=5)
         except subprocess.TimeoutExpired:
             server.kill()
+# Imported into this CI-selected module; the helper file is not independently collected.
+from web_news_chat_flow import (  # noqa: F401
+    news_chat_server,
+    test_spanish_chat_question_opens_the_verified_news_card,
+)

@@ -19,16 +19,16 @@ const CARD_SELECTION: Record<string, string> = {
 };
 const SINGLE_SELECTIONS = new Set(["reading", "kpis", "flight-kpis", "map"]);
 
-function activeTab(): "reading" | "economy" | "flights" {
+function activeTab(): "reading" | "economy" | "flights" | "market" | "news" {
   const active = document.querySelector<HTMLButtonElement>('.reader-tabs [role="tab"][aria-selected="true"]');
   const tab = active?.getAttribute("aria-controls")?.replace("panel-", "");
-  return tab === "economy" || tab === "flights" ? tab : "reading";
+  return tab === "news" || tab === "market" || tab === "economy" || tab === "flights" ? tab : "reading";
 }
 
-function tabForCard(card: Element | null): "reading" | "economy" | "flights" | undefined {
+function tabForCard(card: Element | null): "reading" | "economy" | "flights" | "market" | "news" | undefined {
   const panelId = card?.closest<HTMLElement>('[role="tabpanel"]')?.id;
   const tab = panelId?.replace("panel-", "");
-  return tab === "reading" || tab === "economy" || tab === "flights" ? tab : undefined;
+  return tab === "reading" || tab === "news" || tab === "market" || tab === "economy" || tab === "flights" ? tab : undefined;
 }
 
 function cardIdFrom(node: Element | null): string | undefined {
@@ -47,7 +47,7 @@ function cardIdFrom(node: Element | null): string | undefined {
 
 function selectedEntities(cardId?: string): string | string[] {
   const selector = cardId ? CARD_SELECTION[cardId] :
-    activeTab() === "reading" ? "reading" : activeTab() === "economy" ? "kpis" : "flight-kpis";
+    activeTab() === "reading" ? "reading" : activeTab() === "economy" ? "kpis" : activeTab() === "market" ? "market" : "flight-kpis";
   if (selector) {
     const picked = selection(selector);
     if (picked.length) return SINGLE_SELECTIONS.has(selector) ? picked[0]! : picked;
@@ -69,11 +69,15 @@ export function buildChatContext(cardElement?: Element | null): ChatContext {
   const focusedCard = cardElement ?? document.activeElement;
   const cardTab = tabForCard(focusedCard);
   const cardId = cardTab && cardTab !== tab ? undefined : cardIdFrom(focusedCard);
+  const newsCompany = document.querySelector<HTMLSelectElement>("#news-company")?.value;
+  const newsEntities: Record<string,string> = { "Aeroméxico":"AEROMEXICO", "Volaris":"VOLARIS", "Viva":"VIVA_AEROBUS" };
+  const newsMonth = document.querySelector<HTMLSelectElement>("#news-month")?.value;
   const period = tab === "flights" && flightState.quarters[flightState.periodIndex]
     ? flightState.quarters[flightState.periodIndex]!.period_id
-    : currentPeriodId() ?? "";
-  const picked = selectedEntities(cardId);
-  const context: ChatContext = { tab, period, entity: picked };
+    : tab === "market" ? document.querySelector<HTMLSelectElement>("#market-period")?.value ?? currentPeriodId() ?? ""
+    : tab === "news" ? newsMonth?.replace("-","M") ?? "" : currentPeriodId() ?? "";
+  const picked = tab === "news" ? newsCompany ? newsEntities[newsCompany] : "INDUSTRY" : selectedEntities(cardId);
+  const context: ChatContext = { tab, period, ...(picked !== undefined ? {entity:picked} : {}) };
   if (cardId) context.card_id = cardId;
   const filters: NonNullable<ChatContext["filters"]> = {};
   if (cardId === "market-card" || cardId === "market-chart") {
@@ -113,7 +117,7 @@ export function isEntityKeyList(value: unknown): value is EntityKey[] {
 }
 
 export function describeChatContext(context: ChatContext): string {
-  const tabLabels = { reading: "Lectura ejecutiva", economy: "Economía unitaria", flights: "Vuelos" };
+  const tabLabels = { reading: "Lectura ejecutiva", economy: "Economía unitaria", flights: "Vuelos", market: "Mercado", news: "Noticias y estrategia" };
   const cardLabels: Record<string, string> = {
     "market-chart": "Participación de pasajeros", "market-card": "Participación de pasajeros",
     "unit-chart": "Economía unitaria", "volume-chart": "Pasajeros y RASK", "load-chart": "Ocupación y RASK",
@@ -121,11 +125,11 @@ export function describeChatContext(context: ChatContext): string {
   };
   const period = executiveState.records.find((record) => record.period_id === context.period)?.period_label ??
     flightState.byPeriod.get(context.period)?.period_label ?? context.period;
-  const entities = (Array.isArray(context.entity) ? context.entity : [context.entity]).map((entity) =>
+  const entities = (Array.isArray(context.entity) ? context.entity : context.entity ? [context.entity] : []).map((entity) =>
     ["INDUSTRY", "AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"].includes(entity)
       ? entityLabel(entity as EntityKey)
       : entity
-  ).join(", ");
+  ).join(", ") || "Sin aerolínea preseleccionada";
   const card = context.card_id ? cardLabels[context.card_id] : undefined;
   return `${tabLabels[context.tab]} · ${period || "periodo disponible"} · ${entities}${card ? ` · ${card}` : ""}`;
 }

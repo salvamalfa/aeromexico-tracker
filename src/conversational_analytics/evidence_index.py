@@ -26,7 +26,8 @@ MAX_EXCERPT_CHARS = 480
 MAX_NEWS_DESCRIPTION_CHARS = 320
 MAX_NEWS_QUOTE_CHARS = 200
 ALLOWED_HOSTS = frozenset(
-    {"sec.gov", "www.sec.gov", "ir.aeromexico.com", "cdn.investorcloud.net", "www.flightglobal.com"}
+    {"sec.gov", "www.sec.gov", "ir.aeromexico.com", "cdn.investorcloud.net", "www.flightglobal.com",
+     "investorcloud.s3.amazonaws.com", "filemanager-cdn.mziq.com", "api.mziq.com", "www.aeroroutes.com"}
 )
 _TOKEN_RE = re.compile(r"[^\w]+", re.UNICODE)
 _HASH_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -273,8 +274,7 @@ class EvidenceIndex:
         company: str | None = None, limit: int = 5,
     ) -> dict[str, Any]:
         query = _text(query, "query", MAX_QUERY_CHARS)
-        query_tokens = _tokens(query)
-        if not query_tokens:
+        if not _tokens(query):
             raise EvidenceIndexError("query no contiene términos buscables")
         if start_date is not None:
             start_date = _date(start_date, "start_date")
@@ -284,6 +284,12 @@ class EvidenceIndex:
             raise EvidenceIndexError("start_date no puede ser posterior a end_date")
         company_filter = _optional_filter(company, "company", 100)
         limit = _limit(limit)
+        from .news_query import resolve_news_query, news_match
+        try:
+            intent = resolve_news_query(query, start_date, end_date, company_filter)
+        except ValueError as error:
+            raise EvidenceIndexError(str(error)) from error
+        start_date, end_date = intent["start_date"], intent["end_date"]
         matches = []
         for record in self.records:
             if record.get("kind") != "news":
@@ -293,8 +299,6 @@ class EvidenceIndex:
             if not isinstance(companies, list) or len(companies) > 10:
                 raise EvidenceIndexError("news.companies debe tener como máximo 10 elementos")
             companies = [_text(item, "news.companies[]", 100) for item in companies]
-            if company_filter and all(_norm(item) != company_filter for item in companies):
-                continue
             if start_date and published < start_date or end_date and published > end_date:
                 continue
             title = _text(record.get("title"), "title", 300)
@@ -303,10 +307,18 @@ class EvidenceIndex:
             if not isinstance(topics, list) or len(topics) > 20:
                 raise EvidenceIndexError("news.topics debe tener como máximo 20 elementos")
             topics = [_text(item, "news.topics[]", 80) for item in topics]
-            score = _match_score(query_tokens, [title, description, " ".join(companies), " ".join(topics)])
+            score = news_match(intent, title, description, companies, topics)
             if score:
                 matches.append((score, published, record, title, description, companies, topics))
-        matches.sort(key=lambda item: (-item[0], item[1], str(item[2].get("id", ""))))
+        matches.sort(key=lambda item: (-item[0], -int(item[1].replace("-", "")), str(item[2].get("id", ""))))
+        from .news_projection import project
+        cards = {row["story_id"]: row for row in project([{**r, "review_status": "owner_approved"} for r in self.records if r.get("kind") == "news"], require_known_companies=False)}
+        unique = {}
+        for match in matches:
+            story_id = match[2].get("story_id", match[2]["id"])
+            if story_id not in unique:
+                unique[story_id] = match
+        matches = list(unique.values())
         results = []
         for score, published, record, title, description, companies, topics in matches[:limit]:
             source = _source(record)
@@ -315,6 +327,7 @@ class EvidenceIndex:
                 quote = _text(quote, "brief_quote", MAX_NEWS_QUOTE_CHARS, allow_empty=True)
             results.append({
                 "id": _text(record.get("id"), "id", 120), "published_at": published,
+                "story_id": record.get("story_id", record["id"]),
                 "publisher": _text(record.get("publisher"), "publisher", 120),
                 "title": title, "description": description, "companies": companies,
                 "topics": topics, "brief_quote": quote,
@@ -336,7 +349,10 @@ class EvidenceIndex:
             })
         for result in results:
             result.pop("_score", None)
-        return {"index_version": self.version, "count": len(results), "results": results}
+            card = cards[result["story_id"]]
+            if any(result[key] != card[key] for key in ("id", "title", "published_at")):
+                result["card"] = {key: card[key] for key in ("id", "story_id", "title", "published_at")}
+        return {"index_version": self.version, "index_sha256": self.sha256, "corpus": "approved_only", "filters": intent, "total": len(matches), "matching_ids":[cards[row[2].get("story_id", row[2]["id"])]["id"] for row in matches[:50]], "count": len(results), "results": results}
 
 
 def _limit(value: Any) -> int:
