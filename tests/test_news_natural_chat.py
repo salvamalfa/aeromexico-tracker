@@ -338,7 +338,11 @@ def test_mixed_date_precision_cannot_drop_an_explicit_year(question):
         resolve_news_query(question)
 
 
-def test_relative_question_reports_clarification_through_api_without_card_targets(tmp_path):
+@pytest.mark.parametrize(
+    "question",
+    ["Muéstrame noticias de Aeroméxico del último mes", "noticias de hace 3 meses sobre combustible"],
+)
+def test_relative_question_reports_clarification_through_api_without_card_targets(tmp_path, question):
     from src.conversational_analytics.api import create_app
 
     snapshot = Snapshot(ROOT / "site")
@@ -354,7 +358,7 @@ def test_relative_question_reports_clarification_through_api_without_card_target
         response = client.post(
             f"/api/chat/conversations/{conversation['id']}/messages",
             json={
-                "content": "Muéstrame noticias de Aeroméxico del último mes",
+                "content": question,
                 "client_message_id": uuid.uuid4().hex,
             },
         )
@@ -380,3 +384,52 @@ def test_invalid_explicit_numeric_dates_cannot_fall_back_to_a_whole_year(questio
 
     with pytest.raises(ValueError):
         resolve_news_query(question)
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "noticias de hace 3 meses sobre combustible",
+        "noticias de hace tres meses sobre combustible",
+        "noticias de hace diecinueve días sobre combustible",
+        "noticias de hace dos años y medio sobre combustible",
+        "noticias de hace varias semanas en 2026 sobre combustible",
+        "noticias de dentro de dos meses sobre combustible",
+        "noticias de los pasados tres meses sobre combustible",
+        "noticias de los próximos diecinueve días sobre combustible",
+    ],
+)
+def test_relative_quantity_cannot_become_unbounded_even_with_a_matching_topic(question):
+    index = EvidenceIndex(ROOT / "config/chat/evidence/approved-index.json")
+    with pytest.raises(ValueError, match="fechas explícitas"):
+        index.search_news(question)
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "noticias después de tres meses sobre combustible",
+        "noticias de anteayer sobre combustible",
+        "noticias de anoche sobre combustible",
+        "noticias del primer trimestre de 2026 sobre combustible",
+        "noticias de ayer en 2026 sobre combustible",
+    ],
+)
+def test_unsupported_time_phrase_cannot_fall_through_to_broad_topic_matches(question):
+    index = EvidenceIndex(ROOT / "config/chat/evidence/approved-index.json")
+    with pytest.raises(ValueError, match="fechas explícitas"):
+        index.search_news(question)
+
+
+def test_named_month_with_time_unit_remains_a_valid_absolute_query():
+    index = EvidenceIndex(ROOT / "config/chat/evidence/approved-index.json")
+    result = index.search_news("noticias del mes de julio de 2026 sobre combustible")
+    assert result["count"] == 2
+    assert all(r["published_at"].startswith("2026-07") for r in result["results"])
+
+
+def test_explicit_publication_year_can_coexist_with_a_loan_term():
+    from src.conversational_analytics.news_query import resolve_news_query
+
+    result = resolve_news_query("noticias de 2026 sobre crédito a tres años")
+    assert (result["start_date"], result["end_date"]) == ("2026-01-01", "2026-12-31")

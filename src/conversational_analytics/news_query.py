@@ -82,8 +82,29 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
             r"\b(?:ultim[oa]s?|este|esta|estos|estas|anterior(?:es)?)\s+(?:(?:\d+|un|una|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|quince|treinta)\s+)?(?:minutos?|horas?|dias?|semanas?|quincenas?|mes(?:es)?|bimestres?|trimestres?|cuatrimestres?|semestres?|anos?|ejercicios?)\b|\b(?:minutos?|horas?|dias?|semanas?|quincenas?|mes(?:es)?|bimestres?|trimestres?|cuatrimestres?|semestres?|anos?|ejercicios?)\s+(?:pasad[oa]s?|anterior(?:es)?)\b",
             text,
         )
-        if relative or re.search(r"\b(?:ayer|hoy)\b", text):
+        relative_quantity = re.search(
+            r"\b(?:hace|dentro\s+de|pasad[oa]s?|proxim[oa]s?)\s+(?:\w+\s+){0,12}(?:minutos?|horas?|dias?|semanas?|quincenas?|mes(?:es)?|bimestres?|trimestres?|cuatrimestres?|semestres?|anos?|ejercicios?)\b",
+            text,
+        )
+        units = re.findall(
+            r"\b(?:minutos?|horas?|dias?|semanas?|quincenas?|mes(?:es)?|bimestres?|trimestres?|cuatrimestres?|semestres?|anos?|ejercicios?)\b",
+            text,
+        )
+        absolute = bool(iso_dates or iso_months or months or years)
+        if (
+            relative
+            or relative_quantity
+            or (units and not absolute)
+            or re.search(r"\b(?:anteayer|antier|anoche|ayer|hoy|manana)\b", text)
+        ):
             raise ValueError("Indica fechas explícitas; no se infiere el periodo de una noticia.")
+        complex_units = set(units) - {"dia", "dias", "mes", "meses", "ano", "anos"}
+        if (
+            (complex_units and len(iso_dates) != 2)
+            or (set(units) & {"mes", "meses"} and not (months or iso_months or iso_dates))
+            or (set(units) & {"dia", "dias"} and not iso_dates)
+        ):
+            raise ValueError("Indica fechas explícitas de inicio y fin para ese periodo.")
         if iso_dates:
             if len(iso_dates) > 2 or len(years) != len(iso_dates):
                 raise ValueError("Indica ambos extremos con fechas explícitas de la misma precisión.")
