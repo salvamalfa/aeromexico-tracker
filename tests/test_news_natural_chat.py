@@ -297,3 +297,82 @@ def test_explicit_year_range_never_silently_becomes_unbounded():
         resolve_news_query("noticias entre 2026 y 2025")
     with pytest.raises(ValueError):
         resolve_news_query("noticias de 2024, 2025 y 2026")
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "noticias del último mes",
+        "noticias de las últimas dos semanas",
+        "noticias de los últimos 30 días",
+        "noticias de este mes",
+        "noticias del mes anterior",
+        "noticias del año pasado",
+        "noticias de hoy",
+    ],
+)
+def test_relative_time_units_require_explicit_dates(question):
+    from src.conversational_analytics.news_query import resolve_news_query
+
+    with pytest.raises(ValueError, match="fechas explícitas"):
+        resolve_news_query(question)
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "noticias de diciembre de 2025 a 2026",
+        "noticias de diciembre de 2025 y 2026",
+        "noticias de 2025-12 a 2026",
+        "noticias de 2025-12-01 a 2026",
+    ],
+)
+def test_mixed_date_precision_cannot_drop_an_explicit_year(question):
+    from src.conversational_analytics.news_query import resolve_news_query
+
+    with pytest.raises(ValueError):
+        resolve_news_query(question)
+
+
+def test_relative_question_reports_clarification_through_api_without_card_targets(tmp_path):
+    from src.conversational_analytics.api import create_app
+
+    snapshot = Snapshot(ROOT / "site")
+    app = create_app(
+        config=ChatConfig(
+            state_path=tmp_path / "chat.sqlite3", prompt_version="r2-proposed", enable_evidence_tools=True
+        ),
+        snapshot=snapshot,
+        provider=MockProvider(snapshot),
+    )
+    with TestClient(app, base_url="http://127.0.0.1", client=("127.0.0.1", 50000)) as client:
+        conversation = client.post("/api/chat/conversations").json()
+        response = client.post(
+            f"/api/chat/conversations/{conversation['id']}/messages",
+            json={
+                "content": "Muéstrame noticias de Aeroméxico del último mes",
+                "client_message_id": uuid.uuid4().hex,
+            },
+        )
+        client.get(f"/api/chat/turns/{response.json()['turn_id']}/events?after=0")
+        messages = client.get(f"/api/chat/conversations/{conversation['id']}").json()["messages"]
+        answer = next(m for m in reversed(messages) if m["role"] == "assistant")
+        assert "fechas explícitas" in answer["content"]
+        assert not answer.get("payload", answer).get("news_results")
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "noticias en 2026-13",
+        "noticias en 2026-00",
+        "noticias en 2026-1-1",
+        "noticias en 2026-12-1",
+        "noticias en 2026-12-15-10",
+    ],
+)
+def test_invalid_explicit_numeric_dates_cannot_fall_back_to_a_whole_year(question):
+    from src.conversational_analytics.news_query import resolve_news_query
+
+    with pytest.raises(ValueError):
+        resolve_news_query(question)

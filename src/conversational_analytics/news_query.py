@@ -73,9 +73,24 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
     iso_months = re.findall(r"\b(20\d{2})-(0[1-9]|1[0-2])(?!-\d{2})\b", text)
     iso_dates = re.findall(r"\b20\d{2}-\d{2}-\d{2}\b", text)
     if not start_date and not end_date:
+        # A malformed ISO-like token must not fall through to a broad year filter.
+        for token in re.findall(r"\b20\d{2}(?:-\d+)+\b", text):
+            if not re.fullmatch(r"20\d{2}-\d{2}(?:-\d{2})?", token):
+                raise ValueError("Usa fechas YYYY-MM-DD o meses YYYY-MM explícitos.")
+            date.fromisoformat(token + "-01" if len(token) == 7 else token)
+        relative = re.search(
+            r"\b(?:ultim[oa]s?|este|esta|estos|estas|anterior(?:es)?)\s+(?:(?:\d+|un|una|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|quince|treinta)\s+)?(?:mes(?:es)?|anos?|semanas?|dias?)\b|\b(?:mes(?:es)?|anos?|semanas?|dias?)\s+(?:pasad[oa]s?|anterior(?:es)?)\b",
+            text,
+        )
+        if relative or re.search(r"\b(?:ayer|hoy)\b", text):
+            raise ValueError("Indica fechas explícitas; no se infiere el periodo de una noticia.")
         if iso_dates:
+            if len(iso_dates) > 2 or len(years) != len(iso_dates):
+                raise ValueError("Indica ambos extremos con fechas explícitas de la misma precisión.")
             start_date, end_date = iso_dates[0], iso_dates[-1]
         elif iso_months:
+            if len(iso_months) > 2 or len(years) != len(iso_months):
+                raise ValueError("Indica ambos extremos con meses y años explícitos.")
             first, last = iso_months[0], iso_months[-1]
             start_date = date(int(first[0]), int(first[1]), 1).isoformat()
             end_date = date(
@@ -86,6 +101,8 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
             if len(months) > 2:
                 raise ValueError("Indica un mes o un intervalo explícito de dos meses.")
             if len(pairs) == len(months):
+                if len(years) != len(pairs) or set(years) != {year for _, year in pairs}:
+                    raise ValueError("Indica el mes y año de ambos extremos; hay un año sin asociar.")
                 first_year, last_year = int(pairs[0][1]), int(pairs[-1][1])
             elif len(set(years)) == 1:
                 first_year = last_year = int(years[0])
