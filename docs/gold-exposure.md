@@ -78,3 +78,7 @@ Archivar en el futuro exige revisar SQL `07_analytics_views.sql` y
 `08_dashboard_views.sql`, contratos, warehouse, validaciones, notebooks y
 consumidores; conservar manifiestos y evidencia, definir reproducción y recibir
 la decisión del dueño. No se borró ni archivó ningún archivo en este trabajo.
+
+Los tres estudios señalados para evaluar archivo futuro suman solo **74,703
+bytes (~73 KiB)** de Parquet. Ese ahorro potencial es pequeño; conservar su
+procedencia y resolver dependencias tiene prioridad sobre quitar tablas.

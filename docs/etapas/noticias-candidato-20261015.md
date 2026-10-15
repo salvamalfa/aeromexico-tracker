@@ -101,3 +101,16 @@ Skills por fuente; coordinador mensual/trimestral; revisión mensual de Noticias
 aprobación de fuentes y de cada ficha antes del chat; aprobación independiente
 para integrar y publicar; prueba real del chat sobre el código aprobado y su
 presupuesto existente; futura limpieza con dependencias. Nada se programa ahora.
+
+
+## Límite de aprobación comprobado en la validación final
+
+El guard `src/analysis_agent/entity_adapter.py::require_current_presentation`
+conserva una huella amplia que incluye `web/src`, los contratos y el código de
+exportación/publicación. Las tesis publicadas no cambian, pero una interfaz
+nueva no coincide con su versión técnica aprobada. La suite con datos privados
+lo detecta en dos pruebas de paridad de `tests/test_site_parity.py`; no se
+modificaron recibos, firmas ni aprobaciones para hacerlas pasar. El despliegue
+requiere resolver esa revisión técnica con el dueño, además de aprobar el PR.
+Las previews reutilizan los payloads ya publicados y se marcan candidatas;
+no equivalen a una regeneración aprobada del sitio.
