@@ -123,12 +123,16 @@ function internationalPeriodNetwork(periodId: string): PeriodNetworkDocument {
 
 // Dashboard v2 (fase 3): what the map shows for each entity.
 function entityScopeNote(entity: string, domestic: boolean): string {
-  const label = ENTITY_LABELS[entity as EntityKey] ?? entity;
+  const label = entity === "VOLARIS" ? "Volaris México (Y4/VOI; excluye Q6 y N3)"
+    : entity === "VIVA_AEROBUS" ? "Viva (Aeroenlaces)"
+    : entity === "INDUSTRY" ? "Industria: Aeroméxico, Volaris México y Viva"
+    : domestic ? "Grupo Aeroméxico (Aerovías + Connect)" : ENTITY_LABELS[entity as EntityKey] ?? entity;
   if (domestic && entity === "AEROMEXICO" && state.domesticLayer === "official") {
     return "Aeroméxico · programación AICM y atribuciones AFAC separadas; no confirman vuelos realizados";
   }
   if (domestic) return `${label} · histórico conservado · frecuencias estimadas identificadas por ruta; no acreditan vuelos realizados`;
-  return `${label} · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente`;
+  const roles = entity === "AEROMEXICO" ? " · observados: Aerovías; programación: marca AM; estimados: Grupo" : "";
+  return `${label}${roles} · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente`;
 
 }
 
