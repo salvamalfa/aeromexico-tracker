@@ -140,3 +140,5 @@ cada redirección debe conservar HTTPS, host permitido y ausencia de usuario o
 contraseña. Las pruebas usan transporte HTTP simulado: las URL rechazadas no
 reciben una segunda solicitud y no generan archivos; una redirección relativa
 HTTPS válida conserva su destino y estado candidato.
+El presupuesto de dry-run incluye hasta cuatro solicitudes por fuente contando
+redirecciones; treinta fuentes permiten como máximo 120 solicitudes públicas.

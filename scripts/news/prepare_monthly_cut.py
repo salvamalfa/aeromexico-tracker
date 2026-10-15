@@ -40,6 +40,7 @@ ALLOWED = {
     "publisher",
     "discovery_method",
 }
+MAX_REQUESTS_PER_SOURCE = 4
 
 
 def validate_source_url(url):
@@ -75,7 +76,8 @@ def main():
         json.dumps(
             {
                 "dry_run": not args.capture,
-                "calls_max": len(items),
+                "source_files": len(items),
+                "calls_max": len(items) * MAX_REQUESTS_PER_SOURCE,
                 "paid_units": 0,
                 "urls": [x["source_url"] for x in items],
                 "candidate_destination": str(args.out),
@@ -93,7 +95,7 @@ def main():
         # in this cut's public citation allowlist.
         with httpx.Client(timeout=30, follow_redirects=False) as client:
             url = raw["source_url"]
-            for _ in range(4):
+            for _ in range(MAX_REQUESTS_PER_SOURCE):
                 response = client.get(url)
                 if not response.is_redirect:
                     break
