@@ -65,13 +65,11 @@ def test_entity_maps_have_no_aeromexico_layers_and_industry_sums(flight_payload)
 
 
 @pytest.mark.local_data
-def test_extra_entities_keep_bts_and_no_domestic_model(flight_payload) -> None:
-    for key, expected_count in (("VOLARIS", 69), ("VIVA_AEROBUS", 38), ("INDUSTRY", 120)):
-        block = flight_payload["entity_networks"][key]
-        assert block["domestic_monthly_networks"] == {}
-        network = block["route_networks"]["2026Q2"]
-        assert len(network["routes"]) == expected_count
-        assert network["observed_months"] == ["2026M04", "2026M05"]
-        assert all(route["operation_status"] == "operated_observed" for route in network["routes"])
-        assert all(not route.get("capacity_estimated") and not route.get("passengers_estimated")
-                   for route in network["routes"])
+def test_fleet_capacity_fills_occupancy_for_volaris_and_viva(flight_payload) -> None:
+    for key in ("VOLARIS", "VIVA_AEROBUS"):
+        networks = flight_payload["entity_networks"][key]["domestic_monthly_networks"].values()
+        routes = [route for network in networks for route in network["routes"]]
+        shown = [route for route in routes if route.get("load_factor") is not None]
+        assert len(shown) > 0.6 * len(routes), key
+        assert all(0 < route["load_factor"] <= 1 for route in shown)
+        assert all(route["seats_low"] <= route["seats"] <= route["seats_high"] for route in shown)

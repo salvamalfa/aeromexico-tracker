@@ -1,6 +1,6 @@
 # Vuelos: guía de entrada
 
-Versión candidata al 14 de octubre de 2026; publicación pendiente de aprobación. Reemplaza el traspaso del 13 de septiembre de
+Vigente al 8 de octubre de 2026. Reemplaza el traspaso del 13 de septiembre de
 2026, que describía la app retirada; conserva la ruta del archivo porque
 `AGENTS.md`, `REPO_MAP.md` y comentarios de `web/src/views/flights/` la citan.
 
@@ -32,7 +32,7 @@ Versión candidata al 14 de octubre de 2026; publicación pendiente de aprobaci�
   ensambla y firma `site/`. Ver [`REPO_MAP.md`](../../REPO_MAP.md) y
   [`AGENTS.md`](../../AGENTS.md).
 
-## Qué muestra hoy
+## Qué muestra el candidato del 15 de octubre de 2026
 
 - **Tarjetas** (pasajeros, ASM, RPM, ocupación) con selector de una
   aerolínea: Industria, Aeroméxico, Volaris o Viva. Aeroméxico usa la serie
@@ -42,26 +42,36 @@ Versión candidata al 14 de octubre de 2026; publicación pendiente de aprobaci�
   varias aerolíneas: Aeroméxico sola usa la serie mensual AFAC Gold; cualquier
   otra selección usa AFAC por aerolínea.
 - **Red de vuelos:** mapa y tabla «Rutas destacadas / Mayores cambios / Todas»
-  con pasajeros, vuelos y ocupación por ruta; Nacional o Internacional;
+  solo con vuelos por ruta; Nacional o Internacional;
   regiones internacionales; búsqueda de aeropuerto; selector de aerolínea
-  (default Industria, que suma las tres y muestra el reparto por ruta).
-- **Nacional:** programación oficial AICM de Aeroméxico donde existe, identificada
-  como programada. No hay vuelos realizados ni pasajeros/asientos/ocupación
-  por ruta disponibles. Volaris, Viva e Industria muestran ese faltante; sus
-  pasajeros agregados AFAC y tarjetas reportadas permanecen.
-- **Internacional:** México–EE. UU. observado por BTS T-100; Aeroméxico agrega
-  observaciones ANAC/Aerocivil/CAA y actividad Aena en su grano de aeropuerto.
-  Slots AICM/anuncios OMA son programación y no se suman como vuelos realizados.
-  En 2T26, BTS local conserva abril–mayo y falta junio.
-- **Asientos y ocupación:** solo medidas oficiales compatibles, como BTS.
-  No se enriquecen fuentes con IPF ni frecuencias de AeroDataBox.
+  (default Industria, que suma las tres; sin reparto basado en pasajeros).
+- **Nacional:** histórico estimado conservado, 2026M03–2026M07; el mapa muestra
+  sus frecuencias publicadas, sin convertir ausencias en cero. Los demás
+  campos históricos siguen en el snapshot y el chat.
+- **Internacional:** México–EE. UU. observado (BTS T-100); el resto,
+  estimado y marcado «estim.». Solo Grupo Aeroméxico conserva capas propias:
+  slots AICM, AIFA, anuncios OMA y observaciones ANAC/Aerocivil/CAA/Aena.
+- **Asientos y ocupación históricos:** conservados en los datos y ocultos en
+  el mapa. Las tarjetas agregadas reportadas permanecen.
 - Rutas solo con presencia, sin volumen atribuible, no se dibujan; la vista
   dice cuántas quedaron fuera.
 
+El candidato conserva íntegro el snapshot publicado, incluido el histórico
+nacional estimado. El mapa ordena y dimensiona rutas por vuelos; su tabla y
+resumen omiten pasajeros, ocupación y participaciones basadas en pasajeros.
+Las tarjetas oficiales y la mezcla de pasajeros permanecen fuera del mapa.
+Observado, programado, estimado y atribuido se distinguen por cifra; se suman
+solo valores del mismo tipo. Meses faltantes siguen N/D y la cobertura parcial
+se declara. El chat conserva todos los campos históricos y su procedencia.
+
+La retirada se refiere a nuevas capturas pagadas, sin eliminar el histórico.
+No hay meses nuevos activados. Ver [alcance y prueba AFAC/AICM](../plan-salida-aerodatabox.md)
+y [cierre con capturas](cierre-aerodatabox-20261014.md).
+
 ## Reglas de significado que más pesan aquí
 
-- Las estimaciones históricas IPF quedan fuera de la vista activa y del chat.
-  Su metodología y linaje privado se conservan.
+- Pasajeros ruta×aerolínea son **estimación** (IPF sobre marginales AFAC) y
+  viajan como `passengers_estimated`, aunque reconcilien exacto.
 - Observado, programado y estimado no se suman. Slots AICM y anuncios OMA son
   programación (`operation_status`), no vuelos realizados.
 - Operador ≠ comercializador/codeshare. Aerovías y Connect se ajustan por
@@ -82,11 +92,9 @@ léelo antes de tocar el estimador y no lo reconstruyas desde reportes sueltos.
 
 - UI o columna nueva: recetas (a) y (b) de
   [`REPO_MAP.md` § Recetas](../../REPO_MAP.md#recetas).
-- Mes nuevo: obtener la edición oficial por la ronda documentada en
-  [catálogo y calendario](../catalogo-fuentes-calendario.md), preservando grano,
-  meses, linaje y comparación. Exportar no requiere los cuatro Gold privados
-  de estimaciones; `config/web_inputs.yaml` exige las tablas oficiales BTS y
-  aeropuertos. No llamar a AeroDataBox.
+- Mes nuevo de datos: receta (c), que remite a
+  [`aerodatabox-agosto-captura-20260925.md`](aerodatabox-agosto-captura-20260925.md)
+  (guía operativa; la API es pagada y requiere autorización específica).
 - Pruebas focalizadas (marcadas `local_data`: necesitan warehouse local):
   `tests/test_flights_prototype.py`, `tests/test_international_routes.py`,
   `tests/test_aicm_international_slots.py`, `tests/test_route_entities.py`,

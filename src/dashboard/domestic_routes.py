@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pandas as pd
 
-from src.dashboard.route_entities import AEROMEXICO_ROUTES, RouteEntity
+from src.dashboard.route_capacity import load_route_capacity
+from src.dashboard.route_entities import AEROMEXICO_ROUTES, RouteEntity, breakdown_totals
 
 
 SOURCE_LABEL = "México · AICM, vuelos AM programados"
@@ -22,28 +23,45 @@ MONTH_NAMES = (
 
 
 def load_domestic_monthly_networks(connection, entity: RouteEntity = AEROMEXICO_ROUTES) -> dict[str, dict]:
-    """Expose official AICM scheduling months without any paid-provider input."""
-    if not entity.aeromexico_layers:
-        return {}
+    """Expose every retained estimate month independently from financial quarters."""
+
     exists = connection.execute(
         "SELECT count(*) FROM information_schema.tables "
-        "WHERE table_name = 'fact_domestic_scheduled_route_movements'"
+        "WHERE table_name = 'fact_route_carrier_domestic_estimate'"
     ).fetchone()[0]
     if not exists:
         return {}
-    periods = [str(row[0]) for row in connection.execute(
-        "SELECT DISTINCT period_id FROM fact_domestic_scheduled_route_movements "
-        "WHERE observation_status = 'assigned_slot_not_flown' ORDER BY period_id"
-    ).fetchall()]
-    return load_domestic_networks(connection, [
-        {"period_id": period, "period_label": f"{MONTH_NAMES[int(period[5:])]} {period[:4]}",
-         "expected_months": [period]} for period in periods
-    ], entity=entity)
+    periods = [
+        str(row[0])
+        for row in connection.execute(
+            "SELECT DISTINCT period_id FROM fact_route_carrier_domestic_estimate "
+            "ORDER BY period_id"
+        ).fetchall()
+    ]
+    records = [
+        {
+            "period_id": period,
+            "period_label": f"{MONTH_NAMES[int(period[5:])]} {period[:4]}",
+            "expected_months": [period],
+        }
+        for period in periods
+    ]
+    return load_domestic_networks(connection, records, entity=entity)
 
 
 def load_domestic_networks(
     connection, quarters: list[dict], *, entity: RouteEntity = AEROMEXICO_ROUTES
 ) -> dict[str, dict]:
+    carrier_list = ", ".join(f"'{key}'" for key in entity.estimate_carriers)
+    estimate_exists = connection.execute(
+        "SELECT count(*) FROM information_schema.tables "
+        "WHERE table_name = 'fact_route_carrier_domestic_estimate'"
+    ).fetchone()[0]
+    estimates = connection.execute(
+        "SELECT * FROM fact_route_carrier_domestic_estimate "
+        f"WHERE carrier_key IN ({carrier_list})"
+    ).df() if estimate_exists else pd.DataFrame()
+    capacity = load_route_capacity(connection, entity, "domestic")
     exists = connection.execute(
         "SELECT count(*) FROM information_schema.tables WHERE table_name = 'fact_domestic_scheduled_route_movements'"
     ).fetchone()[0]
@@ -53,9 +71,19 @@ def load_domestic_networks(
     observations = connection.execute(
         "SELECT * FROM fact_domestic_scheduled_route_movements WHERE observation_status = 'assigned_slot_not_flown'"
     ).df() if exists and am_layers else pd.DataFrame()
-    # AFAC city-pair totals attributed through a roster are inferences, not
-    # observed company flights. Preserve their Gold history, exclude them here.
-    if observations.empty:
+    exclusive_exists = connection.execute(
+        "SELECT count(*) FROM information_schema.tables WHERE table_name = 'fact_domestic_exclusive_market_inferences'"
+    ).fetchone()[0]
+    exclusive = connection.execute(
+        "SELECT * FROM fact_domestic_exclusive_market_inferences WHERE attribution_status = 'inferred_exclusive_carrier_market'"
+    ).df() if exclusive_exists and am_layers else pd.DataFrame()
+    shared_exists = connection.execute(
+        "SELECT count(*) FROM information_schema.tables WHERE table_name = 'fact_aifa_shared_route_presence'"
+    ).fetchone()[0]
+    shared = connection.execute(
+        "SELECT * FROM fact_aifa_shared_route_presence WHERE attribution_status = 'carrier_route_present_volume_unresolved'"
+    ).df() if shared_exists and am_layers else pd.DataFrame()
+    if estimates.empty and observations.empty and exclusive.empty and shared.empty:
         return {}
     airports = connection.execute("SELECT * FROM dim_airport").df().set_index("airport_iata")
 
@@ -71,6 +99,331 @@ def load_domestic_networks(
             "lon": float(airport.longitude),
         }
 
+    def estimated_network(quarter: dict, frame: pd.DataFrame, months: list[str]) -> dict:
+        frame = frame.copy()
+        frame["carrier_label"] = frame["carrier_key"].map(entity.estimate_carriers)
+        if frame["carrier_label"].isna().any():
+            raise ValueError(f"Domestic estimate contains a carrier key outside {entity.key}")
+        estimated_label = entity.domestic_estimated_label
+        direction_keys = [
+            "period_id", "market_key", "origin_iata", "destination_iata",
+        ]
+        direction_metric_columns = [
+            "departures_estimated", "seats_estimated", "seats_estimated_low",
+            "seats_estimated_high", "aircraft_model_coverage", "capacity_usable",
+        ]
+        if capacity.empty:
+            capacity_by_direction = pd.DataFrame(
+                columns=direction_keys + direction_metric_columns
+            )
+        else:
+            # Group Aeroméxico capacity is the sum of whatever carriers AeroDataBox
+            # actually observed for a route/direction/month. A carrier missing from
+            # this table (no observation) contributes nothing to the sum, but never
+            # blocks the group total that the other carrier's evidence supports.
+            capacity_by_direction = (
+                capacity[capacity["period_id"].isin(months)]
+                .groupby(direction_keys, as_index=False)
+                .agg(
+                    departures_estimated=("departures_estimated", "sum"),
+                    seats_estimated=("seats_estimated", "sum"),
+                    seats_estimated_low=("seats_estimated_low", "sum"),
+                    seats_estimated_high=("seats_estimated_high", "sum"),
+                    aircraft_model_coverage=("aircraft_model_coverage", "min"),
+                    capacity_usable=("capacity_usable", "all"),
+                )
+            )
+
+        # One merge for the whole quarter's direction/period keys, instead of one
+        # merge per route/direction/month combination (previously up to
+        # thousands of `DataFrame.merge` calls; see the architecture audit
+        # §2.5). `capacity_lookup` has exactly one row per (period, market,
+        # origin, destination) -- the finest grain the payload needs -- and
+        # every coarser view (per direction across months, per route across
+        # both directions and all months) is a `groupby` over it.
+        capacity_lookup = (
+            frame[direction_keys]
+            .drop_duplicates()
+            .merge(
+                capacity_by_direction,
+                on=direction_keys,
+                how="left",
+                validate="one_to_one",
+            )
+        )
+        capacity_lookup["complete"] = (
+            capacity_lookup["capacity_usable"].eq(True)
+            & capacity_lookup[direction_metric_columns[:4]].notna().all(axis=1)
+        )
+
+        def capacity_agg(keys: list[str]) -> pd.DataFrame:
+            return capacity_lookup.groupby(keys).agg(
+                departures_estimated=("departures_estimated", "sum"),
+                seats_estimated=("seats_estimated", "sum"),
+                seats_estimated_low=("seats_estimated_low", "sum"),
+                seats_estimated_high=("seats_estimated_high", "sum"),
+                aircraft_model_coverage=("aircraft_model_coverage", "min"),
+                complete=("complete", "all"),
+            )
+
+        capacity_by_route_key = capacity_agg(["market_key"])
+        capacity_by_route_direction = capacity_agg(["market_key", "origin_iata", "destination_iata"])
+        capacity_by_route_month = capacity_agg(["market_key", "period_id", "origin_iata", "destination_iata"])
+
+        def passenger_sensitivity_bounds(keys: list[str]) -> pd.DataFrame:
+            """Sum the point estimate; only sum the low/high bounds when safe.
+
+            The IPF fixes each period's carrier marginals, so
+            ``passengers_estimated_low``/``_high`` only diverge from the point
+            estimate for a cell whose seed needed temporal repair -- and each
+            such cell's bound is picked independently, from whichever of
+            several re-fitted scenarios minimises or maximises that single
+            cell. Gold does not retain which scenario produced each cell's
+            bound, so summing bounds across cells that may come from
+            different, mutually exclusive scenarios produces a spread the
+            estimator never actually produced (see
+            docs/estimacion-pasajeros-ruta-aerolinea.md). Summing is exact,
+            and therefore safe, only when every cell in the group is
+            unrepaired (low == high == the point estimate there); otherwise
+            the bound is withheld (None) rather than published as a
+            fabricated range.
+            """
+
+            grouped = frame.groupby(keys)
+            bounds = grouped.agg(
+                passengers=("passengers_estimated", "sum"),
+                passengers_low=("passengers_estimated_low", "sum"),
+                passengers_high=("passengers_estimated_high", "sum"),
+                _any_repaired=("support_repair_applied", "any"),
+            )
+            safe = ~bounds["_any_repaired"]
+            bounds.loc[~safe, "passengers_low"] = None
+            bounds.loc[~safe, "passengers_high"] = None
+            return bounds.drop(columns="_any_repaired")
+
+        passenger_by_route_key = passenger_sensitivity_bounds(["market_key"])
+        passenger_by_route_direction = passenger_sensitivity_bounds(
+            ["market_key", "origin_iata", "destination_iata"]
+        )
+        passenger_by_route_month = frame.groupby(
+            ["market_key", "period_id", "origin_iata", "destination_iata"]
+        ).agg(
+            passengers=("passengers_estimated", "sum"),
+            passengers_low=("passengers_estimated_low", "sum"),
+            passengers_high=("passengers_estimated_high", "sum"),
+            support_observed_in_period=("support_observed_in_period", "any"),
+            support_source_periods=(
+                "support_source_periods",
+                lambda s: "|".join(sorted(set(s.astype(str)))),
+            ),
+            support_month_gap=("support_month_gap", "min"),
+            _any_repaired=("support_repair_applied", "any"),
+        )
+        _month_safe = ~passenger_by_route_month["_any_repaired"]
+        passenger_by_route_month.loc[~_month_safe, "passengers_low"] = None
+        passenger_by_route_month.loc[~_month_safe, "passengers_high"] = None
+        passenger_by_route_month = passenger_by_route_month.drop(columns="_any_repaired")
+
+        def capacity_result(row) -> dict:
+            if not bool(row["complete"]):
+                return {
+                    "departures": None, "seats": None, "seats_low": None,
+                    "seats_high": None, "load_factor": None, "load_factor_low": None,
+                    "load_factor_high": None, "capacity_complete": False,
+                    "load_factor_status": "capacity_incomplete",
+                    "aircraft_model_coverage": None,
+                }
+            passengers = float(row["passengers"])
+            passengers_low = float(row["passengers_low"])
+            passengers_high = float(row["passengers_high"])
+            seats = float(row["seats_estimated"])
+            seats_low = float(row["seats_estimated_low"])
+            seats_high = float(row["seats_estimated_high"])
+            load_factor = passengers / seats if seats > 0 else None
+            plausible = load_factor is not None and 0 <= load_factor <= 1
+            # The point estimate being plausible does not guarantee the
+            # sensitivity bounds are: the low/high scenarios recombine
+            # independent passenger and seat ranges, so a bound can still
+            # fall outside [0, 1] even when the point load factor does not
+            # (e.g. a route whose passenger sensitivity is wide relative to
+            # its seat sensitivity). Publishing such a bound would show an
+            # occupancy above 100% the model never actually produced, so an
+            # out-of-range bound is withheld (None) rather than clipped.
+            load_factor_low_raw = (
+                passengers_low / seats_high if plausible and seats_high > 0 else None
+            )
+            load_factor_high_raw = (
+                passengers_high / seats_low if plausible and seats_low > 0 else None
+            )
+            load_factor_low = (
+                load_factor_low_raw
+                if load_factor_low_raw is not None and 0 <= load_factor_low_raw <= 1
+                else None
+            )
+            load_factor_high = (
+                load_factor_high_raw
+                if load_factor_high_raw is not None and 0 <= load_factor_high_raw <= 1
+                else None
+            )
+            return {
+                "departures": float(row["departures_estimated"]),
+                "seats": seats,
+                "seats_low": seats_low,
+                "seats_high": seats_high,
+                "load_factor": load_factor if plausible else None,
+                "load_factor_low": load_factor_low,
+                "load_factor_high": load_factor_high,
+                "capacity_complete": True,
+                "load_factor_status": "estimated" if plausible else "inconsistent_inputs",
+                "aircraft_model_coverage": float(row["aircraft_model_coverage"]),
+            }
+
+        def optional_float(value) -> float | None:
+            return float(value) if pd.notna(value) else None
+
+        routes = []
+        airport_codes: set[str] = set()
+        observed_months = sorted(frame["period_id"].astype(str).unique().tolist())
+        coverage_note = "Meses: " + ", ".join(month[5:] for month in observed_months)
+        route_months_covered_by_key = frame.groupby("market_key")["period_id"].nunique()
+        for market_key, group in frame.groupby("market_key"):
+            endpoints = str(market_key).split("<>")
+            if len(endpoints) != 2:
+                raise ValueError(f"Invalid domestic estimated market key: {market_key}")
+            airport_codes.update(endpoints)
+            directions = []
+            for index, passenger_row in (
+                passenger_by_route_direction.loc[[market_key]].sort_index().iterrows()
+            ):
+                _, origin, destination = index
+                metrics = capacity_result(
+                    pd.concat([
+                        passenger_row,
+                        capacity_by_route_direction.loc[(market_key, origin, destination)],
+                    ])
+                )
+                directions.append(
+                    {
+                        "origin_iata": str(origin),
+                        "destination_iata": str(destination),
+                        "passengers": float(passenger_row["passengers"]),
+                        "passengers_low": optional_float(passenger_row["passengers_low"]),
+                        "passengers_high": optional_float(passenger_row["passengers_high"]),
+                        **metrics,
+                        "capacity_estimated": metrics["capacity_complete"],
+                    }
+                )
+            monthly = []
+            for index, passenger_row in (
+                passenger_by_route_month.loc[[market_key]].sort_index().iterrows()
+            ):
+                _, period_id, origin, destination = index
+                metrics = capacity_result(
+                    pd.concat([
+                        passenger_row,
+                        capacity_by_route_month.loc[(market_key, period_id, origin, destination)],
+                    ])
+                )
+                monthly.append(
+                    {
+                        "period_id": str(period_id),
+                        "carrier_key": entity.group_key,
+                        "carrier_label": entity.group_label,
+                        "origin_iata": str(origin),
+                        "destination_iata": str(destination),
+                        "passengers": float(passenger_row["passengers"]),
+                        "passengers_low": optional_float(passenger_row["passengers_low"]),
+                        "passengers_high": optional_float(passenger_row["passengers_high"]),
+                        **metrics,
+                        "capacity_estimated": metrics["capacity_complete"],
+                        "support_observed_in_period": bool(passenger_row["support_observed_in_period"]),
+                        "support_source_periods": str(passenger_row["support_source_periods"]),
+                        "support_month_gap": int(passenger_row["support_month_gap"]),
+                    }
+                )
+            route_key_bounds = passenger_by_route_key.loc[market_key]
+            route_passengers_low = route_key_bounds["passengers_low"]
+            route_passengers_high = route_key_bounds["passengers_high"]
+            route_metrics = capacity_result(
+                pd.concat([
+                    pd.Series({
+                        "passengers": float(group["passengers_estimated"].sum()),
+                        "passengers_low": route_passengers_low,
+                        "passengers_high": route_passengers_high,
+                    }),
+                    capacity_by_route_key.loc[market_key],
+                ])
+            )
+            route_months_covered = int(route_months_covered_by_key.loc[market_key])
+            route_months_selected = len(months)
+            routes.append(
+                {
+                    "market_key": str(market_key),
+                    "origin": endpoint(endpoints[0]),
+                    "destination": endpoint(endpoints[1]),
+                    "passengers": float(group["passengers_estimated"].sum()),
+                    "passengers_low": optional_float(route_passengers_low),
+                    "passengers_high": optional_float(route_passengers_high),
+                    "passengers_estimated": True,
+                    **route_metrics,
+                    "capacity_estimated": route_metrics["capacity_complete"],
+                    "departures_estimated": route_metrics["capacity_complete"],
+                    # A market with fewer months of estimate rows than the
+                    # quarter expects (e.g. a route only priced from June
+                    # onward) must never look like a full-quarter figure:
+                    # expose exactly how many of the quarter's months it
+                    # actually covers, even when its own capacity math is
+                    # internally consistent for those months.
+                    "months_covered": route_months_covered,
+                    "months_selected": route_months_selected,
+                    "previous": {"passengers": None, "seats": None, "departures": None},
+                    "directions": directions,
+                    "monthly": monthly,
+                    "source_label": estimated_label,
+                    "carrier_breakdown": breakdown_totals(
+                        entity,
+                        list(group.groupby("carrier_key")["passengers_estimated"].sum().items()),
+                    ),
+                    "coverage_note": coverage_note + (
+                        (" · pasajeros y vuelos estimados; asientos por promedio de flota (T-100)"
+                         if entity.fleet_capacity_carriers else " · pasajeros, vuelos y capacidad estimados")
+                        if entity.capacity else " · pasajeros estimados; asientos y ocupación N/D"
+                    )
+                        + (f" · cobertura parcial: {route_months_covered} de {route_months_selected} meses"
+                           if route_months_covered < route_months_selected else ""),
+                    "operation_status": "estimated_from_afac_margins_and_temporal_support",
+                    "carrier_role": "operating_carrier_estimated",
+                    "agent_eligible": False,
+                    "support_repair_applied": bool(group["support_repair_applied"].any()),
+                }
+            )
+        routes.sort(key=lambda route: (-route["passengers"], route["market_key"]))
+        return {
+            "period_id": quarter["period_id"],
+            "period_label": quarter["period_label"],
+            "mode": "estimated_domestic",
+            "expected_months": months,
+            "observed_months": observed_months,
+            "availability": "complete" if set(observed_months) == set(months) else "partial",
+            "routes": routes,
+            "airports": [endpoint(code) for code in sorted(airport_codes)],
+            "coverage_by_source": {estimated_label: observed_months},
+            "source_url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404",
+            "route_count": len(routes),
+            "represented_passengers": float(sum(route["passengers"] for route in routes)),
+            "represented_movements": None,
+            "represented_departures_estimated": float(sum(
+                route["departures"] for route in routes if route["departures"] is not None
+            )),
+            "capacity_complete_route_count": sum(route["capacity_complete"] for route in routes),
+            "load_factor_route_count": sum(route["load_factor"] is not None for route in routes),
+            "represented_seed_weight": float(frame["seed_weight"].sum()),
+            "agent_eligible": False,
+            "eligibility_reason": (
+                "Estimación retrospectiva generada después del corte histórico del 13 jul 2026."
+            ),
+        }
+
     result = {}
     for quarter in quarters:
         months = quarter["expected_months"] if "expected_months" in quarter else [
@@ -78,13 +431,21 @@ def load_domestic_networks(
             for month in range((int(quarter["period_id"][-1]) - 1) * 3 + 1,
                                (int(quarter["period_id"][-1]) - 1) * 3 + 4)
         ]
+        estimated = estimates[estimates.period_id.isin(months)].copy() if not estimates.empty else pd.DataFrame()
+        if not estimated.empty:
+            result[quarter["period_id"]] = estimated_network(quarter, estimated, months)
+            continue
         current = observations[observations.period_id.isin(months)].copy()
-        if current.empty:
+        inferred = exclusive[exclusive.period_id.isin(months)].copy() if not exclusive.empty else pd.DataFrame()
+        present = shared[shared.period_id.eq(quarter["period_id"])].copy() if not shared.empty else pd.DataFrame()
+        if current.empty and inferred.empty and present.empty:
             continue
         if not current.empty and current.duplicated(["period_id", "origin_iata", "dest_iata"]).any():
             raise ValueError("Duplicate AICM route/month/direction in Gold")
-        observed_months = []  # Slots do not certify performed flights.
-        scheduled_months = sorted(current.period_id.unique().tolist())
+        if not inferred.empty and inferred.duplicated(["period_id", "origin_iata", "dest_iata"]).any():
+            raise ValueError("Duplicate AFAC inferred route/month/direction in Gold")
+        observed_months = sorted(set(current.period_id.unique().tolist()) | set(inferred.period_id.unique().tolist())
+                                 | ({"2026M06"} if not present.empty else set()))
         routes = []
         airport_codes = {"MEX"}
         for counterpart, group in current.assign(
@@ -103,7 +464,6 @@ def load_domestic_networks(
                 })
             if len(directions) != 2:
                 continue
-            route_scheduled_months = sorted(group.period_id.unique().tolist())
             airport_codes.add(counterpart)
             routes.append({
                 "market_key": "<>".join(sorted(("MEX", counterpart))),
@@ -114,15 +474,69 @@ def load_domestic_networks(
                 "previous": {"passengers": None, "seats": None, "departures": None},
                 "directions": directions,
                 "source_label": SOURCE_LABEL,
-                "coverage_note": (
-                    "Meses programados: " + ", ".join(m[5:] for m in route_scheduled_months)
-                    + " · AICM · ejecución sin verificar"
-                ),
+                "coverage_note": "Abr–jun 2026 · slots AICM · programado",
                 "operation_status": "assigned_slot_not_flown",
                 "carrier_role": "AM_flight_number_slot_holder",
                 "agent_eligible": False,
                 "source_hashes": sorted(group.source_hash.unique().tolist()),
                 "record_ids": sorted(group.record_id.unique().tolist()),
+            })
+        if not inferred.empty:
+            inferred["market_key"] = inferred.apply(
+                lambda row: "<>".join(sorted((row.origin_iata, row.dest_iata))), axis=1
+            )
+            for market_key, group in inferred.groupby("market_key"):
+                if any(route["market_key"] == market_key for route in routes):
+                    raise ValueError(f"AFAC inferred market overlaps AICM slot route: {market_key}")
+                endpoints = market_key.split("<>")
+                if len(endpoints) != 2 or "NLU" not in endpoints and "CLQ" not in endpoints:
+                    raise ValueError(f"Unexpected inferred domestic market: {market_key}")
+                directions = [
+                    {"origin_iata": origin, "destination_iata": destination,
+                     "passengers": None, "seats": None,
+                     "departures": int(part.market_movements.sum())}
+                    for (origin, destination), part in group.groupby(["origin_iata", "dest_iata"])
+                ]
+                if len(directions) != 2:
+                    raise ValueError(f"Missing direction in inferred market: {market_key}")
+                airport_codes.update(endpoints)
+                routes.append({
+                    "market_key": market_key,
+                    "origin": endpoint(endpoints[0]), "destination": endpoint(endpoints[1]),
+                    "passengers": None, "seats": None,
+                    "departures": int(group.market_movements.sum()), "load_factor": None,
+                    "previous": {"passengers": None, "seats": None, "departures": None},
+                    "directions": directions,
+                    "source_label": EXCLUSIVE_LABEL,
+                    "coverage_note": "Abr–jun 2026 · AFAC: vuelos del mercado; atribución inferida por operador único",
+                    "operation_status": "carrier_inferred_market_observed",
+                    "carrier_role": "inferred_Aeromexico_or_Connect",
+                    "agent_eligible": False,
+                    "source_hashes": sorted(set(group.afac_source_hash) | set(group.roster_source_hash)),
+                    "record_ids": sorted(group.record_id.unique().tolist()),
+                })
+        for row in present.itertuples(index=False):
+            if any(route["market_key"] == row.market_key for route in routes):
+                raise ValueError(f"AIFA presence overlaps a quantified market: {row.market_key}")
+            if row.origin_iata != "NLU" or "NLU" not in row.market_key.split("<>"):
+                raise ValueError(f"Unexpected AIFA presence market: {row.market_key}")
+            if pd.notna(row.carrier_movements):
+                raise ValueError(f"AIFA shared market has unattributed carrier movements: {row.market_key}")
+            airport_codes.add(row.dest_iata)
+            routes.append({
+                "market_key": row.market_key,
+                "origin": endpoint("NLU"), "destination": endpoint(row.dest_iata),
+                "passengers": None, "seats": None, "departures": None,
+                "load_factor": None,
+                "previous": {"passengers": None, "seats": None, "departures": None},
+                "directions": [],
+                "source_label": SHARED_LABEL,
+                "coverage_note": "Junio 2026 · Aeroméxico presente · vuelos propios sin desglose",
+                "operation_status": "carrier_route_present_volume_unresolved",
+                "carrier_role": "Aeromexico_or_Connect_unresolved",
+                "agent_eligible": False,
+                "source_hashes": [row.afac_source_hash, row.roster_source_hash],
+                "record_ids": [row.record_id],
             })
         if not routes:
             continue
@@ -133,15 +547,16 @@ def load_domestic_networks(
             "expected_months": months, "observed_months": observed_months,
             "routes": routes,
             "airports": [endpoint(code) for code in sorted(airport_codes)],
-            "coverage_by_source": {SOURCE_LABEL: scheduled_months},
-            "source_url": str(current.source_url.iloc[0]),
-            "availability": "partial",
+            "coverage_by_source": ({SOURCE_LABEL: sorted(current.period_id.unique().tolist())} if not current.empty else {})
+                                  | ({EXCLUSIVE_LABEL: sorted(inferred.period_id.unique().tolist())} if not inferred.empty else {})
+                                  | ({SHARED_LABEL: ["2026M06"]} if not present.empty else {}),
+            "source_url": (str(current.source_url.iloc[0]) if not current.empty else
+                           str(inferred.source_url.iloc[0]) if not inferred.empty else str(present.roster_source_url.iloc[0])),
             "route_count": len(routes),
-            "represented_movements": None,
+            "represented_movements": sum(route["departures"] or 0 for route in routes),
             "scheduled_movements": sum(route["departures"] for route in routes if route["operation_status"] == "assigned_slot_not_flown"),
-            "attributed_market_movements": None,
+            "attributed_market_movements": sum(route["departures"] for route in routes if route["operation_status"] == "carrier_inferred_market_observed"),
             "presence_only_route_count": sum(route["operation_status"] == "carrier_route_present_volume_unresolved" for route in routes),
             "agent_eligible": False,
-            "eligibility_reason": "Programación AICM; no confirma vuelos realizados ni cobertura nacional exhaustiva.",
         }
     return result

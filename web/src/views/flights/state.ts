@@ -23,7 +23,7 @@ export const DOMESTIC_MONTH_NAMES = [
   "enero", "febrero", "marzo", "abril", "mayo", "junio",
   "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
 ];
-export const ESTIMATE_INFO_TITLE = "Dato estimado histórico retirado de la vista activa";
+export const ESTIMATE_INFO_TITLE = "Estimación AFAC + AeroDataBox; conserva rango de sensibilidad";
 export const DEFAULT_AIRPORT = "MEX";
 
 export interface FlightsState {
@@ -82,7 +82,7 @@ export const state: FlightsState = {
   availablePeriods: { domestic: [], domestic_monthly: [], international: [] },
 
   periodIndex: 0,
-  importance: "passengers",
+  importance: "departures",
   routeView: "volume",
   selectedDomesticMonths: new Set(),
   domesticMonthsQuarterId: null,
@@ -151,7 +151,7 @@ export function initState(quartersDoc: QuartersDocument): void {
   const startQuarter = state.quarters[state.periodIndex]!.period_id;
   state.selectedDomesticMonths = new Set(monthsInQuarter(startQuarter));
   state.domesticMonthsQuarterId = startQuarter;
-  state.networkMode = "international";
+  state.networkMode = domesticAvailableForQuarter(startQuarter) ? "domestic" : "international";
 }
 
 // Meses nacionales que le pertenecen por calendario a un trimestre dado

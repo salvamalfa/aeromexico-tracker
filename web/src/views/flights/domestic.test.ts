@@ -60,44 +60,119 @@ describe("domesticPeriodLabel", () => {
   });
 });
 
-describe("aggregateDomesticMonths official scheduling", () => {
+describe("aggregateDomesticMonths", () => {
   beforeEach(() => {
-    state.availablePeriods = { domestic: [], domestic_monthly: ["2026M04", "2026M05", "2026M06"], international: [] };
+    state.availablePeriods = { domestic: [], domestic_monthly: ["2026-04", "2026-05", "2026-06"], international: [] };
     state.domesticMonthsQuarterId = "2026Q2";
     state.domesticMonthlyNetworks = new Map();
   });
-  it("keeps scheduling counts without manufacturing passenger or capacity values", () => {
-    for (const [id, count] of [["2026M04", 30], ["2026M05", 40], ["2026M06", 50]] as const) {
-      const network = monthNetwork(0, null, count);
-      network.routes[0]!.passengers = null;
-      network.routes[0]!.operation_status = "assigned_slot_not_flown";
-      state.domesticMonthlyNetworks.set(id, network);
-    }
-    const network = aggregateDomesticMonths(["2026M04", "2026M05", "2026M06"])!;
-    expect(network.routes[0]!.departures).toBe(120);
-    expect(network.routes[0]!.passengers).toBeNull();
-    expect(network.routes[0]!.seats).toBeNull();
-    expect(network.routes[0]!.load_factor).toBeNull();
-    expect(network.mode).toBe("scheduled_domestic");
-    expect(network.observed_months).toEqual([]);
+
+  it("returns null when no requested month has been fetched yet", () => {
+    expect(aggregateDomesticMonths(["2026-04"])).toBeNull();
   });
-  it("keeps a seasonal route's known movements and discloses its partial months", () => {
-    const april = monthNetwork(0, null, 30); april.routes[0]!.passengers = null;
-    const may = monthNetwork(0, null, 40); may.routes[0]!.passengers = null;
-    const june = monthNetwork(0, null, 0); june.routes = [];
+
+  it("sums passengers, seats and departures across months (never averages percentages)", () => {
+    state.domesticMonthlyNetworks.set("2026-04", monthNetwork(100_000, 120_000, 800));
+    state.domesticMonthlyNetworks.set("2026-05", monthNetwork(110_000, 130_000, 820));
+    state.domesticMonthlyNetworks.set("2026-06", monthNetwork(120_000, 140_000, 840));
+
+    const network = aggregateDomesticMonths(["2026-04", "2026-05", "2026-06"])!;
+    const route = network.routes[0]!;
+    expect(route.passengers).toBe(330_000);
+    expect(route.seats).toBe(390_000);
+    expect(route.departures).toBe(2460);
+    // Ocupación con los totales, no con el promedio de razones mensuales.
+    expect(route.load_factor).toBeCloseTo(330_000 / 390_000, 10);
+    expect(route.capacity_estimated).toBe(true);
+  });
+
+  it("withholds the occupancy range when capacity coverage is incomplete across months", () => {
+    state.domesticMonthlyNetworks.set("2026-04", monthNetwork(100_000, 120_000, 800));
+    state.domesticMonthlyNetworks.set("2026-05", monthNetwork(110_000, null, null));
+
+    const network = aggregateDomesticMonths(["2026-04", "2026-05"])!;
+    const route = network.routes[0]!;
+    expect(route.passengers).toBe(210_000);
+    expect(route.load_factor).toBeNull();
+    expect(route.load_factor_status).toBe("capacity_incomplete");
+    expect(route.capacity_estimated).toBe(false);
+  });
+
+  it("never shows an implausible occupancy above 100%", () => {
+    state.domesticMonthlyNetworks.set("2026-04", monthNetwork(200_000, 100_000, 800));
+
+    const network = aggregateDomesticMonths(["2026-04"])!;
+    const route = network.routes[0]!;
+    expect(route.load_factor).toBeNull();
+    expect(route.load_factor_status).toBe("inconsistent_inputs");
+  });
+
+  it("sums the sensitivity range when every month carries one", () => {
+    state.domesticMonthlyNetworks.set(
+      "2026-04",
+      monthNetwork(100_000, null, null, { low: 90_000, high: 110_000 })
+    );
+    state.domesticMonthlyNetworks.set(
+      "2026-05",
+      monthNetwork(110_000, null, null, { low: 95_000, high: 125_000 })
+    );
+
+    const network = aggregateDomesticMonths(["2026-04", "2026-05"])!;
+    const route = network.routes[0]!;
+    expect(route.passengers_low).toBe(185_000);
+    expect(route.passengers_high).toBe(235_000);
+  });
+
+  it("withholds the aggregate sensitivity range when any month lacks one, without fabricating a bound", () => {
+    state.domesticMonthlyNetworks.set(
+      "2026-04",
+      monthNetwork(100_000, null, null, { low: 90_000, high: 110_000 })
+    );
+    // A repaired cell whose Gold record carries no scenario identity: no
+    // passengers_low/high at all for this month.
+    state.domesticMonthlyNetworks.set("2026-05", monthNetwork(110_000, null, null));
+
+    const network = aggregateDomesticMonths(["2026-04", "2026-05"])!;
+    const route = network.routes[0]!;
+    expect(route.passengers).toBe(210_000);
+    expect(route.passengers_low).toBeNull();
+    expect(route.passengers_high).toBeNull();
+  });
+});
+
+
+describe("flight-only aggregation preserves partial published counts", () => {
+  beforeEach(() => {
+    state.domesticMonthlyNetworks.clear();
+    state.domesticMonthsQuarterId = "2026Q2";
+    state.availablePeriods.domestic_monthly = ["2026M04", "2026M05", "2026M06"];
+  });
+  it("does not require passengers or seat capacity to retain known flights", () => {
+    const month = monthNetwork(100, null, 30);
+    month.routes[0]!.passengers = null;
+    month.routes[0]!.operation_status = "estimated_from_sample";
+    state.domesticMonthlyNetworks.set("2026M04", month);
+    const aggregate = aggregateDomesticMonths(["2026M04"])!;
+    expect(aggregate.routes[0]!.departures).toBe(30);
+    expect(aggregate.routes[0]!.passengers).toBeNull();
+    expect(aggregate.routes[0]!.operation_status).toMatch(/^estimated_/);
+  });
+  it("sums only available months and reports 2/3 instead of inventing June", () => {
+    state.domesticMonthlyNetworks.set("2026M04", monthNetwork(100, 1000, 30));
+    state.domesticMonthlyNetworks.set("2026M05", monthNetwork(100, 1000, 40));
+    state.domesticMonthlyNetworks.set("2026M06", {...monthNetwork(0, null, null), routes: []});
+    const value = aggregateDomesticMonths(["2026M04", "2026M05", "2026M06"])!.routes[0]!;
+    expect(value.departures).toBe(70);
+    expect(value.months_covered).toBe(2);
+    expect(value.months_selected).toBe(3);
+  });
+  it("refuses an aggregate that would mix schedules with estimates", () => {
+    const april = monthNetwork(100, 1000, 30);
+    const may = monthNetwork(100, 1000, 40);
+    april.routes[0]!.operation_status = "assigned_slot_not_flown";
+    may.routes[0]!.operation_status = "estimated_from_sample";
     state.domesticMonthlyNetworks.set("2026M04", april);
     state.domesticMonthlyNetworks.set("2026M05", may);
-    state.domesticMonthlyNetworks.set("2026M06", june);
-    const route = aggregateDomesticMonths(["2026M04", "2026M05", "2026M06"])!.routes[0]!;
-    expect(route.departures).toBe(70);
-    expect(route.months_covered).toBe(2);
-    expect(route.months_selected).toBe(3);
-    expect(route.passengers).toBeNull();
-    expect(route.coverage_note).toContain("04, 05");
-    expect(route.coverage_note).not.toContain("06");
-  });
-  it("withholds an aggregate when a selected month has not been loaded", () => {
-    state.domesticMonthlyNetworks.set("2026M04", monthNetwork(0, null, 30));
-    expect(aggregateDomesticMonths(["2026M04", "2026M05"])).toBeNull();
+    expect(aggregateDomesticMonths(["2026M04", "2026M05"])!.routes[0]!.departures).toBeNull();
   });
 });

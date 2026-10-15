@@ -105,6 +105,7 @@ def test_published_route_query_ranks_estimates_and_preserves_value_kind() -> Non
     assert result["missing_route_count"] == 1
     assert all(row["value"] is not None for row in result["rows"])
     assert result["display"]["rows"][0]["value_kind"] == "estimated"
+    assert result["sources"][0]["url"].endswith("domestic/2026M07.json")
 
 
 def test_null_metric_values_do_not_count_as_available_or_truncated_routes() -> None:
@@ -297,8 +298,10 @@ def test_queries_the_signed_public_snapshot_without_private_inputs() -> None:
             "top_n": 3,
         },
     )
-    assert result["rows"] == []
+    assert result["rows"]
+    assert result["rows"][0]["value_kind"] == "estimated"
     assert result["data_version"] == tools.snapshot.version
+    assert result["sources"][0]["url"].endswith("domestic/2026M07.json")
 
     international = tools.invoke(
         "query_routes",
@@ -324,7 +327,9 @@ def test_queries_the_signed_public_snapshot_without_private_inputs() -> None:
             "top_n": 3,
         },
     )
-    assert shared["rows"] == []
+    assert shared["rows"]
+    assert all(row["carriers"]["AEROMEXICO_GROUP"]["value"] > 0 for row in shared["rows"])
+    assert all(row["carriers"]["VIVA_AEROBUS"]["value"] > 0 for row in shared["rows"])
 
     international_shared = tools.invoke(
         "find_shared_routes",
@@ -344,13 +349,103 @@ def test_queries_the_signed_public_snapshot_without_private_inputs() -> None:
     assert "combined_value" not in [column["key"] for column in international_shared["display"]["columns"]]
 
 
-def test_domestic_quarter_cannot_roll_up_retired_estimates_from_an_older_signed_site() -> None:
-    tools = RouteTools(Snapshot(Path("site")))
-    result = tools.invoke("query_routes", {
-        "entity_id": "AEROMEXICO_GROUP", "segment": "domestic", "period": "2026Q2",
-        "metric": "passengers", "top_n": 1,
-    })
-    assert result["rows"] == []
+def test_domestic_quarter_rollup_uses_only_three_complete_published_months() -> None:
+    snapshot = Snapshot(Path("site"))
+    tools = RouteTools(snapshot)
+    months = ["2026M04", "2026M05", "2026M06"]
+    networks = [snapshot.payload(f"data/v1/flights/domestic/{period}.json") for period in months]
+    monthly_maps = [{route["market_key"]: route for route in network["routes"]} for network in networks]
+    passenger_keys = set.intersection(
+        *(
+            {
+                market
+                for market, route in routes.items()
+                if isinstance(route.get("passengers"), (int, float))
+            }
+            for routes in monthly_maps
+        )
+    )
+    complete_keys = set.intersection(
+        *(
+            set(
+                market
+                for market, route in routes.items()
+                if isinstance(route.get("passengers"), (int, float))
+                and isinstance(route.get("load_factor"), (int, float))
+                and route.get("load_factor_status") != "inconsistent_inputs"
+            )
+            for routes in monthly_maps
+        )
+    )
+    market_key = sorted(complete_keys)[0]
+    origin, destination = market_key.split("<>")
+    result = tools.invoke(
+        "query_routes",
+        {
+            "entity_id": "AEROMEXICO_GROUP",
+            "segment": "domestic",
+            "period": "2026Q2",
+            "metric": "passengers",
+            "origin_iata": origin,
+            "destination_iata": destination,
+            "top_n": 1,
+        },
+    )
+
+    assert result["rows"][0]["market_key"] == market_key
+    assert result["rows"][0]["value"] == sum(routes[market_key]["passengers"] for routes in monthly_maps)
+    assert result["rows"][0]["value_kind"] == "estimated"
+    assert result["coverage"]["2026Q2"]["expected_months"] == months
+    assert result["coverage"]["2026Q2"]["observed_months"] == months
+    assert result["coverage"]["2026Q2"]["agent_eligible"] is False
+    assert result["coverage"]["2026Q2"]["usage_scope"] == "published_dashboard_retrospective"
+    dashboard_sources = [
+        source["url"] for source in result["sources"] if "salvamalfa.github.io" in source["url"]
+    ]
+    assert {url.rsplit("/", 1)[-1] for url in dashboard_sources} == {f"{month}.json" for month in months}
+    assert not any(url.endswith("domestic/2026Q2.json") for url in dashboard_sources)
+
+    load_factor = tools.invoke(
+        "query_routes",
+        {
+            "entity_id": "AEROMEXICO_GROUP",
+            "segment": "domestic",
+            "period": "2026Q2",
+            "metric": "load_factor",
+            "origin_iata": origin,
+            "destination_iata": destination,
+            "top_n": 1,
+        },
+    )
+    passengers = sum(routes[market_key]["passengers"] for routes in monthly_maps)
+    seats = sum(routes[market_key]["seats"] for routes in monthly_maps)
+    assert load_factor["rows"][0]["value"] == pytest.approx(passengers / seats * 100)
+
+    published_rollup, _ = tools._load("AEROMEXICO_GROUP", "domestic", "2026Q2")
+    mex_vsa = next(row for row in published_rollup["routes"] if row["market_key"] == "MEX<>VSA")
+    assert mex_vsa["load_factor"] is None
+    assert mex_vsa["load_factor_status"] == "inconsistent_inputs"
+    assert mex_vsa["metric_value_kinds"]["load_factor"] == "missing"
+
+    partial_keys = set.union(*(set(routes) for routes in monthly_maps)) - passenger_keys
+    assert partial_keys
+    partial_key = sorted(partial_keys)[0]
+    origin, destination = partial_key.split("<>")
+    missing = tools.invoke(
+        "query_routes",
+        {
+            "entity_id": "AEROMEXICO_GROUP",
+            "segment": "domestic",
+            "period": "2026Q2",
+            "metric": "passengers",
+            "origin_iata": origin,
+            "destination_iata": destination,
+            "top_n": 1,
+        },
+    )
+    assert missing["rows"] == []
+    assert missing["missing_route_count"] == 1
+    assert "no significa cero" in missing["coverage"]["2026Q2"]["missing_value_reason"]
 
 
 def test_domestic_quarter_requires_all_months_and_prefers_native_quarter_payload() -> None:

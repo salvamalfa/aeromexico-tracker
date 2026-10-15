@@ -16,8 +16,7 @@ de recibirlos embebidos en el HTML.
 - Antes de exportar una vista, exige sus insumos Gold declarados como
   requeridos en `config/web_inputs.yaml` (`src/web_export/inputs.py`); si
   falta uno, falla con un mensaje que nombra el archivo exacto y cómo
-  restaurar el Gold oficial desde el repo o el snapshot privado. Los cuatro
-  Gold históricos de estimaciones no son requisitos de exportación. Nunca omite una sección en silencio.
+  restaurarlo desde el repo privado. Nunca omite una sección en silencio.
 - Escribe JSON determinista (`sort_keys=True`, separadores compactos, sin
   `NaN`): dos ejecuciones sobre el mismo warehouse producen bytes idénticos.
 - `analysis.py` es distinto de los otros dos: no llama a un generador de

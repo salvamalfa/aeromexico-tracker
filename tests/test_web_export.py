@@ -25,13 +25,14 @@ def _load_fixture(name: str) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def test_web_inputs_require_official_gold_and_no_private_estimates() -> None:
+def test_web_inputs_config_declares_the_four_estimate_tables() -> None:
     config = load_web_inputs_config()
     required = set(config["views"]["flights"]["required_for_publish"])
     assert required == {
-        "data/gold/fact_route_traffic.parquet",
-        "data/gold/fact_route_traffic_summary.parquet",
-        "data/gold/dim_airport.parquet",
+        "data/gold/fact_route_carrier_domestic_estimate.parquet",
+        "data/gold/fact_aeromexico_domestic_capacity_estimate.parquet",
+        "data/gold/fact_route_carrier_international_estimate.parquet",
+        "data/gold/fact_aeromexico_international_capacity_estimate.parquet",
     }
 
 
@@ -144,16 +145,3 @@ def test_real_warehouse_has_all_four_required_flight_inputs() -> None:
     """With the local data restore in place, require_inputs must not raise."""
 
     require_inputs("flights")
-
-
-@pytest.mark.local_data
-def test_native_official_schedule_quarter_remains_queryable_with_monthly_files(tmp_path, flight_payload):
-    export_flights(flight_payload, tmp_path)
-    assert (tmp_path / "flights/domestic/2026Q2.json").is_file()
-    import json
-    quarter = json.loads((tmp_path / "flights/domestic/2026Q2.json").read_text())
-    assert quarter["mode"] == "scheduled_domestic"
-    assert quarter["observed_months"] == []
-    assert quarter["availability"] == "partial"
-    assert all(route["operation_status"] == "assigned_slot_not_flown" for route in quarter["routes"])
-    assert all(route["passengers"] is route["seats"] is route["load_factor"] is None for route in quarter["routes"])

@@ -152,8 +152,6 @@ export interface QuartersDocument {
 }
 
 export interface PeriodNetworkDocument {
-  availability?: string | null;
-  eligibility_reason?: string | null;
   mode: string;
   period_label: string;
   routes: Route[];

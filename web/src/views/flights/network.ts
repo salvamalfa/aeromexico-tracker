@@ -12,14 +12,13 @@ import {
 import { aggregateDomesticMonths } from "./domestic";
 import { normalizeSelectedRegion, regionRoutes, renderRegionSwitch } from "./regions";
 import { renderNetworkVolume } from "./volume";
+import { flightKind } from "./flight-measure";
 import { renderRouteOverview } from "./table";
 import { renderFlowMap } from "./map";
-import type { AnyRecord, Network, PeriodNetworkDocument, Route } from "../../types/domain";
+import type { Network, PeriodNetworkDocument, Route } from "../../types/domain";
 
 export function routeValue(route: Route): number {
-  const key = state.network?.mode === "scheduled_domestic" ? "departures" : state.importance;
-  const value = (route as unknown as AnyRecord)[key];
-  return finite(value) ? value : 0;
+  return finite(route.departures) ? route.departures : 0;
 }
 
 export function orderedRoutes(): Route[] {
@@ -30,11 +29,11 @@ export function orderedRoutes(): Route[] {
 // one year earlier. A small-market floor keeps near-zero bases from dominating
 // a percentage ranking; it never changes the underlying route totals.
 export function routeChangePercent(route: Route): number | null {
-  const current = route.passengers;
-  const previous = route.previous?.passengers;
-  if (state.networkMode !== "international" || route.passengers_estimated ||
+  const current = route.departures;
+  const previous = route.previous?.departures;
+  if (state.networkMode !== "international" || flightKind(route) !== "observed" ||
       !finite(current) || !finite(previous) || previous <= 0 ||
-      Math.max(current, previous) < 5_000) return null;
+      Math.max(current, previous) < 50) return null;
   return (current / previous - 1) * 100;
 }
 
@@ -59,27 +58,24 @@ export function renderRouteMode(): void {
   if (state.routeView === "change" && !canShowChange) state.routeView = "volume";
   const visible = visibleRoutes();
   const all = orderedRoutes();
-  const totalPassengers = all.reduce((sum, route) => sum + (finite(route.passengers) ? route.passengers : 0), 0);
-  const shownPassengers = visible.reduce((sum, route) => sum + (finite(route.passengers) ? route.passengers : 0), 0);
-  const share = totalPassengers > 0 && state.networkMode === "domestic"
-    ? ` · ${Math.round(shownPassengers / totalPassengers * 100)}% de los pasajeros observados de la red` : "";
+
   const presence = state.presenceOnlyRouteCount > 0
     ? ` · ${state.presenceOnlyRouteCount} sin volumen atribuible` : "";
   const periodId = state.quarters[state.periodIndex]?.period_id ?? "";
   const previousLabel = state.byPeriod.get(priorPeriod(periodId, 1))?.period_label ?? "el año anterior";
   $("map-route-title")!.textContent = state.routeView === "change"
-    ? "Rutas con mayores cambios" : "Rutas con datos oficiales";
+    ? "Rutas con mayores cambios" : "Rutas con vuelos en el histórico";
   $("map-route-summary")!.textContent = state.routeView === "change"
     ? `${visible.filter((route) => routeChangePercent(route)! > 0).length} aumentos · ${visible.filter((route) => routeChangePercent(route)! < 0).length} caídas vs. ${previousLabel} · mismos meses disponibles`
-    : `${visible.length} de ${all.length} rutas con volumen visible${state.routeView === "volume" ? share : ""}${presence}`;
+    : `${visible.length} de ${all.length} rutas con volumen visible${presence}`;
   for (const [id, view] of [["map-routes-featured", "volume"], ["map-routes-change", "change"], ["map-routes-all", "all"]] as const) {
     $(id)!.setAttribute("aria-pressed", String(state.routeView === view));
   }
   const changeButton = $("map-routes-change") as HTMLButtonElement;
   changeButton.disabled = !canShowChange;
   changeButton.title = canShowChange
-    ? "Cambio de pasajeros por ruta frente a los mismos meses del año anterior; mínimo 5 mil pasajeros en uno de los periodos"
-    : "Sin comparación de pasajeros por ruta con cobertura equivalente";
+    ? "Cambio de vuelos observados frente a los mismos meses del año anterior; mínimo 50 vuelos en uno de los periodos"
+    : "Sin comparación de vuelos observados con cobertura equivalente";
   renderRouteOverview(visible);
 }
 
@@ -99,7 +95,7 @@ export function routeTitle(route: Route): string {
 function domesticPeriodNetwork(periodId: string): PeriodNetworkDocument {
   return aggregateDomesticMonths([...state.selectedDomesticMonths]) ?? state.domesticNetworks.get(periodId) ?? {
     mode: "scheduled_domestic", period_label: state.byPeriod.get(periodId)?.period_label ?? periodId,
-    expected_months: [], observed_months: [], availability: "unavailable", routes: [], airports: [],
+    expected_months: [], observed_months: [], routes: [], airports: [],
   };
 }
 
@@ -117,10 +113,8 @@ function internationalPeriodNetwork(periodId: string): PeriodNetworkDocument {
 // Dashboard v2 (fase 3): what the map shows for each entity.
 function entityScopeNote(entity: string, domestic: boolean): string {
   const label = ENTITY_LABELS[entity as EntityKey] ?? entity;
-  if (domestic) return `${label} · sin vuelos realizados por ruta disponibles · programación AICM cuando existe`;
-  return entity === "AEROMEXICO"
-    ? "Aerovías de México · BTS, ANAC, Aerocivil y CAA observados · programación AICM/OMA separada · cobertura parcial"
-    : `${label} · México–EE. UU., operador/reportante BTS T-100 · cobertura parcial; meses disponibles por fuente`;
+  if (domestic) return `${label} · histórico conservado · frecuencias estimadas identificadas por ruta; no acreditan vuelos realizados`;
+  return `${label} · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente`;
 
 }
 
@@ -142,11 +136,7 @@ export async function renderNetworkPeriod(periodId: string): Promise<void> {
   if (state.networkMode !== "international") state.selectedRegion = null;
   // Sin vuelos propios no hay registro que mostrar: son rutas donde la fuente
   // solo confirma presencia de Aeromexico, sin volumen atribuible.
-  const quantified = (state.network.routes || []).filter((route) =>
-    state.network!.mode === "estimated_domestic"
-      ? finite(route.passengers)
-      : finite(route.departures) || (route.passengers_estimated && finite(route.passengers))
-  );
+  const quantified = (state.network.routes || []).filter((route) => finite(route.departures));
   // Una región elegida en otro periodo puede no existir en este (p. ej.
   // Europa antes de 2T26): sin normalizar, el mapa y la tabla quedarían
   // vacíos y el botón activo ni siquiera se mostraría.
@@ -167,7 +157,7 @@ export async function renderNetworkPeriod(periodId: string): Promise<void> {
   const domesticButton = $("network-mode-domestic") as HTMLButtonElement;
   const internationalButton = $("network-mode-international") as HTMLButtonElement;
   domesticButton.disabled = false;
-  domesticButton.title = domesticAvailable ? "Programación oficial disponible; ejecución sin verificar" : "Sin vuelos realizados por ruta disponibles; los agregados AFAC se conservan";
+  domesticButton.title = domesticAvailable ? "Histórico nacional disponible; tipo de cifra indicado por ruta" : "Sin número de vuelos por ruta para este periodo";
   domesticButton.setAttribute("aria-pressed", String(state.networkMode === "domestic"));
   domesticButton.setAttribute("aria-checked", String(state.networkMode === "domestic"));
   internationalButton.setAttribute("aria-pressed", String(state.networkMode === "international"));

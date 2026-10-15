@@ -22,6 +22,10 @@ def value_kind(network: dict[str, Any], route: dict[str, Any], metric: str) -> s
     # an unrelated schedule alongside observed passengers.
     if metric == "departures" and (status.startswith("scheduled_") or status == "assigned_slot_not_flown"):
         return "scheduled"
+    if status == "carrier_inferred_market_observed":
+        return "estimated"
+    if status.startswith("estimated_"):
+        return "estimated"
     if "observed" in status or "t-100" in source:
         return "observed"
     if metric in {"passengers", "seats", "departures", "load_factor"} and route.get("capacity_estimated"):
@@ -45,7 +49,19 @@ def metric_provenance(
         "method": None,
         "version": None,
     }
-    if metric == "passengers" and route.get("passengers_estimated"):
+    if metric == "departures" and status == "carrier_inferred_market_observed":
+        result.update(
+            inputs=["AFAC all-carrier city-pair movements", "carrier-route attribution roster"],
+            method="market_total_attribution_not_observed_carrier_operations",
+        )
+    elif metric == "departures" and value_kind(network, route, metric) == "estimated":
+        result.update(
+            source_label=("AeroDataBox · frecuencias históricas estimadas"
+                          if "aerodatabox" in str(source).lower() else source),
+            inputs=["Published historical frequency estimate; no new provider retrieval"],
+            method="historical_frequency_estimate_as_published",
+        )
+    elif metric == "passengers" and route.get("passengers_estimated"):
         note = str(route.get("coverage_note") or "")
         if "Pasajeros estimados de " in note:
             result["source_label"] = "AFAC + AeroDataBox"

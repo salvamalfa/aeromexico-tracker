@@ -65,26 +65,7 @@ def _require_site(request: pytest.FixtureRequest) -> None:
 def _export_approved_entry(entry: dict) -> dict:
     """Use the exporter's canonical legacy/entity record loader for this identity."""
     entity_args = {"entity_key": entry["entity_key"]} if "entity_key" in entry else {}
-    try:
-        return export_period(entry["period_id"], entry["version"], root=flow.ROOT, **entity_args)
-    except MissingAnalysisInput:
-        # The withdrawal preserves existing approved thesis bytes. Revalidate
-        # them through the same pinned implementation used by the narrow gate;
-        # any changed analysis renderer or revoked approval still fails closed.
-        from src.config import PATHS
-        from src.publish.official_routes import (
-            require_preserved_analysis_implementation, verify_baseline_approvals,
-        )
-        from src.publish.gate import _trusted_site_commit
-
-        commit = _trusted_site_commit(PATHS.root)
-        require_preserved_analysis_implementation(PATHS.root, commit)
-        record = PATHS.root / "analysis_runs/drafts" / (entry.get("entity_key") or "") / entry["period_id"] / (entry["version"] + ".json")
-        with flow.writer(flow.ROOT):
-            checked = verify_baseline_approvals([record], commit, flow.ROOT, include_public_payloads=True)
-        assert manifest_mod.analysis_identity(checked["payloads"][0]) == manifest_mod.analysis_identity(entry)
-        return checked["payloads"][0]
-
+    return export_period(entry["period_id"], entry["version"], root=flow.ROOT, **entity_args)
 
 
 def test_site_flights_and_executive_data_match_a_fresh_export(

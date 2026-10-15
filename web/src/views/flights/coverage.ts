@@ -27,7 +27,7 @@ export function coverageMonths(route: Route): number | null {
 export const SCHEDULED_STATUSES = ["assigned_slot_not_flown", "scheduled_from_dated_release"];
 
 export function scheduledIconHtml(route: Route): string {
-  if (!route.operation_status || !SCHEDULED_STATUSES.includes(route.operation_status)) return "";
+  if (!route.operation_status || !(route.operation_status === "assigned_slot_not_flown" || route.operation_status.startsWith("scheduled_"))) return "";
   const title = "Vuelos programados: la fuente no confirma que se hayan realizado";
   return `<span class="route-scheduled-mark" title="${title}" aria-label="${title}" role="img"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 1.6 15 14H1z"></path><rect x="7.2" y="6" width="1.6" height="4" rx=".8"></rect><circle cx="8" cy="11.6" r=".95"></circle></svg></span>`;
 }
@@ -58,7 +58,9 @@ const SOURCE_SHORT_LABELS: Record<string, string> = {
   "Colombia · Aerocivil": "Aerocivil",
   "AIFA · ruta de Aeroméxico identificada; volumen propio sin desglose": "AIFA",
   "AFAC · mercado con Aeroméxico como único operador identificado": "AFAC",
+  "AFAC + AeroDataBox + flota Aeroméxico · estimaciones": "AFAC + AeroDataBox + flota (estimación)",
   "OMA · rutas documentadas": "OMA",
+  "AFAC + AeroDataBox · Grupo Aeroméxico estimado": "AFAC + AeroDataBox (estimación)",
   "Reino Unido · CAA": "CAA",
 };
 

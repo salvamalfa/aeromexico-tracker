@@ -95,9 +95,6 @@ def integration_flight_payload(payload: dict[str, Any]) -> dict[str, Any]:
         }
 
     def network(value: dict[str, Any]) -> dict[str, Any]:
-        from src.dashboard.official_route_policy import official_network
-
-        value = official_network(value)
         return {
             key: value[key]
             for key in ("period_label", "expected_months", "observed_months")
@@ -151,8 +148,7 @@ def integration_flight_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "domestic_networks": {
             period_id: network(value)
             for period_id, value in payload.get("domestic_networks", {}).items()
-            if not monthly_domestic or value.get("mode") == "scheduled_domestic"
-        },
+        } if not monthly_domestic else {},
         "domestic_monthly_networks": monthly_domestic,
         **({"entity_networks": entity_networks} if entity_networks else {}),
     }

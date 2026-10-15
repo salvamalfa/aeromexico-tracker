@@ -1,29 +1,9 @@
 """Keep only required chat configuration in the Docker build context."""
 
-import ast
 import fnmatch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-
-
-def test_snapshot_dashboard_dependencies_are_available_in_the_packaged_runtime():
-    """A valid site must not become unavailable because an import was excluded."""
-    snapshot = ROOT / "src/conversational_analytics/data/snapshot.py"
-    imports = {
-        node.module for node in ast.walk(ast.parse(snapshot.read_text(encoding="utf-8")))
-        if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith("src.dashboard.")
-    }
-    rules = set((ROOT / ".dockerignore").read_text(encoding="utf-8").splitlines())
-    copied_sources = set()
-    for line in (ROOT / "Dockerfile.chat").read_text(encoding="utf-8").splitlines():
-        parts = line.split()
-        if parts and parts[0] == "COPY" and not any(part.startswith("--from") for part in parts):
-            copied_sources.update(parts[1:-1])
-    for module in imports:
-        source = module.replace(".", "/") + ".py"
-        assert "!" + source in rules, f"snapshot import excluded from Docker context: {source}"
-        assert source in copied_sources, f"snapshot import omitted from runtime image: {source}"
 
 
 def test_chat_runtime_configuration_is_reincluded_in_docker_context():

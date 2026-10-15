@@ -1,49 +1,43 @@
-# AeroDataBox: qué conseguimos y por qué lo dejamos
+# AeroDataBox: conservamos el histórico y dejamos de capturar
 
-14 de octubre de 2026. Cambio preparado para revisión; pendiente de aprobación
-para integrarlo y publicarlo.
+Revisión del 15 de octubre de 2026. Versión candidata del
+[PR #133](https://github.com/salvamalfa/aeromexico-tracker/pull/133), pendiente de aprobación.
 
-AeroDataBox nos permitió conocer la estructura de vuelos por ruta y operador.
-La combinamos con los totales oficiales de AFAC para **estimar pasajeros por
-ruta**, y con referencias de flota para estimar asientos y ocupación. Así
-pudimos explorar mapas nacionales e internacionales de Aeroméxico, Volaris,
-Viva y su conjunto.
+AeroDataBox aportó una semilla de oferta por ruta y operador. Combinada con
+AFAC permitió estimar pasajeros; sus frecuencias y referencias de flota
+permitieron estimar vuelos, asientos y ocupación. Obtuvimos semillas nacionales
+marzo–agosto e internacionales abril–agosto de 2026; pasajeros ajustados hasta
+julio. Agosto se capturó el 25 de septiembre. No hay semilla de septiembre.
 
-Conservamos semillas nacionales de **marzo–agosto de 2026** e internacionales
-de **abril–agosto**; las estimaciones de pasajeros llegaron hasta julio.
-Agosto se capturó el **25 de septiembre**: fecha de captura y mes de operación
-son distintos. No hay una semilla de septiembre.
-
-El resultado era útil para explorar, pero **no observaba pasajeros por ruta**.
-Reconciliar totales con AFAC no convierte una estimación en dato observado;
-muestrear vuelos y expandirlos a un mes tampoco garantiza vuelos realizados.
-
-**Decidimos dejarlo por el costo recurrente de pagar la API.** La decisión no
-significa que el método fuera técnicamente inviable. El dashboard y el chat
-pasan a utilizar fuentes oficiales, con la cobertura que realmente ofrecen.
+**Dejamos las capturas por el costo recurrente de la API.** El método fue útil;
+la decisión de dejar de pagar no implica que fuera técnicamente inviable.
+Por decisión del dueño, **conservamos los datos que están publicados**, incluido
+el histórico nacional estimado. El mapa muestra solo vuelos y distingue cifras
+observadas, programadas, estimadas y atribuidas. Pasajeros, ocupación y reparto
+de pasajeros dejan de mostrarse en el mapa. Las tarjetas oficiales, mezcla,
+finanzas, tesis y datos históricos consultables por el chat se conservan.
 
 ## Antes
 
-Captura real del dashboard anterior, copia de la versión publicada en
-`ea88008`, tomada con Playwright/Chromium en el cloud. Aeroméxico, 2T26,
-red nacional: pasajeros, vuelos y ocupación por ruta estimados.
+Captura real de la versión publicada, Aeroméxico, 2T26, red nacional.
 
-![Antes: red nacional con estimaciones](../assets/aerodatabox-cierre/antes-red-estimada.png)
+![Antes: histórico nacional con pasajeros y ocupación](../assets/aerodatabox-cierre/antes-red-estimada.png)
 
 ## Después
 
-Vista candidata con fuentes oficiales: BTS México–EE. UU., ANAC, Aerocivil y
-CAA; programación AICM/OMA identificada aparte. En 2T26, BTS local cubre
-abril y mayo, y falta junio. Los pasajeros agregados y las finanzas reportadas
-se conservan. Nacional queda sin vuelos realizados por compañía y ruta;
-la programación disponible no los reemplaza.
+La misma selección y los mismos datos históricos, mostrando únicamente vuelos.
+Las estimaciones históricas siguen identificadas; no acreditan vuelos realizados.
 
-![Después: rutas con fuentes oficiales](../assets/aerodatabox-cierre/despues-fuentes-oficiales.png)
+![Después: histórico conservado y mapa solo de vuelos](../assets/aerodatabox-cierre/despues-mapa-vuelos.png)
 
-Los históricos privados y su linaje se conservan. Esta retirada no consume la
-API, modifica credenciales ni cambia la suscripción.
+AFAC sí publica pasajeros y vuelos por ruta agregada y por empresa por separado.
+Con una semilla congelada se pueden plantear estimaciones de vuelos por compañía;
+no se observan esas celdas. Un ensayo retrospectivo de un mes favoreció la semilla
+más AFAC frente a añadir programación AICM, con cobertura limitada MEX–EE. UU.
+Ver [prueba reproducible, límites y recomendación](../plan-salida-aerodatabox.md).
 
-Verificación: cuatro entidades revisadas en escritorio y móvil. Las cifras
-oficiales y las cuatro tesis permanecen iguales; ninguna llamada a la API.
-CI y revisión se registran en el [PR #133](https://github.com/salvamalfa/aeromexico-tracker/pull/133).
-Publicación pendiente de aprobación del dueño.
+Las capturas se toman con Playwright/Chromium del cloud. El gate exige conservar
+cada archivo de datos publicado byte por byte y las cuatro tesis. No hay nuevas
+llamadas AeroDataBox, cambios de credenciales, suscripción ni actualizaciones
+programadas. La reutilización futura de la semilla requiere revisar los términos
+aplicables; la clasificación técnica de un archivo no acredita derechos.

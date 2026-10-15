@@ -92,7 +92,7 @@ def test_stage3_derives_all_30_cases_from_real_tools_and_current_snapshot(monkey
     assert report["current_dashboard_period"] == {
         "economic": "2026Q2",
         "market": "2026Q2",
-        "domestic_routes": ["2026M06"],
+        "domestic_routes": ["2026M07"],
     }
     assert report["runtime_capabilities"]["candidate"] == CAMPAIGN_CANDIDATE
     assert report["runtime_capabilities"]["stage3_candidate_count"] == 1

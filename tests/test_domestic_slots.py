@@ -70,58 +70,187 @@ def _capacity_row(period: str, market_key: str, origin: str, destination: str, c
     }
 
 
-def test_paid_estimates_never_create_a_domestic_route():
+def test_group_capacity_survives_a_single_carrier_without_invalidating_the_route():
+    """A market where only Aerovías (never Connect) is present in the AeroDataBox
+    capacity fact for one direction must still report Grupo Aeroméxico seats and
+    departures for that direction, instead of falling back to N/D."""
+
     period = "2026M06"
-    market = "ABC<>MEX"
-    connection = _synthetic_domestic_connection(
-        pd.DataFrame(_synthetic_estimate_rows(period, market)),
-        pd.DataFrame([_capacity_row(period, market, "MEX", "ABC", "AEROMEXICO", departures=50, seats=10000)]),
+    market_key = "<>".join(sorted(("MEX", "ABC")))
+    estimates = pd.DataFrame(_synthetic_estimate_rows(period, market_key))
+    capacity = pd.DataFrame(
+        [
+            # MEX -> ABC: only Aerovías de México observed by AeroDataBox.
+            _capacity_row(period, market_key, "MEX", "ABC", "AEROMEXICO", departures=50.0, seats=10_000.0),
+            # ABC -> MEX: both carriers observed.
+            _capacity_row(period, market_key, "ABC", "MEX", "AEROMEXICO", departures=30.0, seats=6_000.0),
+            _capacity_row(period, market_key, "ABC", "MEX", "AEROMEXICO_CONNECT", departures=20.0, seats=4_000.0),
+        ]
     )
-    assert load_domestic_networks(connection, [
-        {"period_id": period, "period_label": "junio", "expected_months": [period]}
-    ]) == {}
+    connection = _synthetic_domestic_connection(estimates, capacity)
+    quarters = [{"period_id": period, "period_label": "junio 2026", "expected_months": [period]}]
+    route = load_domestic_networks(connection, quarters)[period]["routes"][0]
+
+    assert route["capacity_complete"] is True
+    assert route["passengers"] == pytest.approx(3_000.0)
+    # Both directions' capacity summed at the Grupo Aeroméxico level, without
+    # requiring both filiales to have their own capacity row.
+    assert route["seats"] == pytest.approx(20_000.0)
+    assert route["departures"] == pytest.approx(100.0)
+    assert route["load_factor"] == pytest.approx(3_000.0 / 20_000.0)
+    directions = {(d["origin_iata"], d["destination_iata"]): d for d in route["directions"]}
+    assert directions[("MEX", "ABC")]["capacity_complete"] is True
+    assert directions[("MEX", "ABC")]["seats"] == pytest.approx(10_000.0)
+    assert directions[("MEX", "ABC")]["departures"] == pytest.approx(50.0)
+    assert {item["carrier_label"] for item in route["monthly"]} == {"Grupo Aeroméxico"}
 
 
-def test_native_quarter_discloses_each_routes_actual_scheduling_months():
-    """A seasonal route must not inherit another route's June coverage."""
+def test_group_capacity_sums_both_carriers_exactly_once():
+    """When both filiales have AeroDataBox capacity for the same direction/month,
+    Grupo Aeroméxico totals must be their sum, not a duplicate or a single one."""
+
+    period = "2026M06"
+    market_key = "<>".join(sorted(("MEX", "ABC")))
+    estimates = pd.DataFrame(_synthetic_estimate_rows(period, market_key))
+    capacity = pd.DataFrame(
+        [
+            _capacity_row(period, market_key, "MEX", "ABC", "AEROMEXICO", departures=40.0, seats=8_000.0),
+            _capacity_row(period, market_key, "MEX", "ABC", "AEROMEXICO_CONNECT", departures=10.0, seats=1_000.0),
+            _capacity_row(period, market_key, "ABC", "MEX", "AEROMEXICO", departures=40.0, seats=8_000.0),
+            _capacity_row(period, market_key, "ABC", "MEX", "AEROMEXICO_CONNECT", departures=10.0, seats=1_000.0),
+        ]
+    )
+    connection = _synthetic_domestic_connection(estimates, capacity)
+    quarters = [{"period_id": period, "period_label": "junio 2026", "expected_months": [period]}]
+    route = load_domestic_networks(connection, quarters)[period]["routes"][0]
+
+    assert route["seats"] == pytest.approx(2 * (8_000.0 + 1_000.0))
+    assert route["departures"] == pytest.approx(2 * (40.0 + 10.0))
+
+
+def test_load_factor_above_100_percent_is_nd_but_keeps_flights_and_seats():
+    """An implausible estimated point (>100% occupancy) must hide the load factor
+    only; flights and seats must be preserved exactly as estimated, per AGENTS.md
+    ("no conviertas un faltante en cero")."""
+
+    period = "2026M06"
+    market_key = "<>".join(sorted(("MEX", "ABC")))
     rows = []
-    for counterpart, months in [("ABC", ["04", "05", "06"]), ("DEF", ["04", "05"])]:
-        for month in months:
-            for origin, destination in [("MEX", counterpart), (counterpart, "MEX")]:
-                rows.append({
-                    "period_id": f"2026M{month}", "origin_iata": origin, "dest_iata": destination,
-                    "scheduled_movements": 10, "observation_status": "assigned_slot_not_flown",
-                    "source_hash": "official", "record_id": f"{month}-{origin}-{destination}",
-                    "source_url": "https://www.aicm.com.mx/",
-                })
-    airports = pd.DataFrame([
-        {"airport_iata": code, "name": code, "city": code, "country": "México",
-         "latitude": 20.0, "longitude": -100.0} for code in ["MEX", "ABC", "DEF"]
-    ])
-    observations = pd.DataFrame(rows)
-    with duckdb.connect(":memory:") as connection:
-        connection.register("airports", airports)
-        connection.register("observations", observations)
-        connection.execute("CREATE TABLE dim_airport AS SELECT * FROM airports")
-        connection.execute(
-            "CREATE TABLE fact_domestic_scheduled_route_movements AS SELECT * FROM observations"
-        )
-        quarter = load_domestic_networks(
-            connection, [{"period_id": "2026Q2", "period_label": "2T26"}]
-        )["2026Q2"]
-    routes = {route["market_key"]: route for route in quarter["routes"]}
-    assert quarter["coverage_by_source"] == {
-        "México · AICM, vuelos AM programados": ["2026M04", "2026M05", "2026M06"]
-    }
-    assert routes["ABC<>MEX"]["coverage_note"] == (
-        "Meses programados: 04, 05, 06 · AICM · ejecución sin verificar"
+    for origin, destination in [("MEX", "ABC"), ("ABC", "MEX")]:
+        for carrier, passengers in [("AEROMEXICO", 100_000.0), ("AEROMEXICO_CONNECT", 50_000.0)]:
+            rows.append(
+                {
+                    "period_id": period, "market_key": market_key,
+                    "origin_iata": origin, "destination_iata": destination, "carrier_key": carrier,
+                    "passengers_estimated": passengers, "passengers_estimated_low": passengers * 0.9,
+                    "passengers_estimated_high": passengers * 1.1, "seed_weight": 1.0,
+                    "support_observed_in_period": True, "support_source_periods": period,
+                    "support_month_gap": 0, "support_repair_applied": False,
+                }
+            )
+    estimates = pd.DataFrame(rows)
+    capacity = pd.DataFrame(
+        [
+            _capacity_row(period, market_key, origin, destination, carrier, departures=dep, seats=seats)
+            for origin, destination in [("MEX", "ABC"), ("ABC", "MEX")]
+            for carrier, dep, seats in [("AEROMEXICO", 5.0, 1_000.0), ("AEROMEXICO_CONNECT", 3.0, 500.0)]
+        ]
     )
-    seasonal = routes["DEF<>MEX"]
-    assert seasonal["coverage_note"] == "Meses programados: 04, 05 · AICM · ejecución sin verificar"
-    assert seasonal["departures"] == 40
-    assert quarter["scheduled_movements"] == 100
-    assert quarter["observed_months"] == []
-    assert seasonal["passengers"] is seasonal["seats"] is seasonal["load_factor"] is None
+    connection = _synthetic_domestic_connection(estimates, capacity)
+    quarters = [{"period_id": period, "period_label": "junio 2026", "expected_months": [period]}]
+    route = load_domestic_networks(connection, quarters)[period]["routes"][0]
+
+    assert route["capacity_complete"] is True
+    assert route["seats"] == pytest.approx(3_000.0)
+    assert route["departures"] == pytest.approx(16.0)
+    assert route["load_factor"] is None
+    assert route["load_factor_status"] == "inconsistent_inputs"
+
+
+def test_route_sensitivity_bounds_do_not_sum_mismatched_scenarios():
+    """A route/network sensitivity range must never exceed what one complete
+    scenario could produce.
+
+    The IPF fixes each period's carrier marginals: a temporally-repaired
+    cell's ``passengers_estimated_low``/``_high`` are the min/max across a
+    handful of re-fitted scenarios, picked independently per cell. Two
+    repaired cells in the same route can have their low (or high) come from
+    *different* scenarios. Naively summing those already-collapsed columns
+    across cells therefore produces a route/network range the estimator never
+    actually produced (PR #19). This route has one unrepaired direction
+    (MEX->ABC, low == high == point, safe to sum) and one repaired direction
+    (ABC->MEX) whose low/high were picked from mismatched scenarios: the
+    fixed aggregation must withhold the ambiguous bound (None) instead of
+    publishing a fabricated, overly-wide range.
+    """
+
+    period = "2026M06"
+    market_key = "<>".join(sorted(("MEX", "ABC")))
+    rows = [
+        # Unrepaired direction: low == high == point for both carriers, so
+        # summing across this direction's two carrier cells is exact.
+        {
+            "period_id": period, "market_key": market_key,
+            "origin_iata": "MEX", "destination_iata": "ABC", "carrier_key": "AEROMEXICO",
+            "passengers_estimated": 1_000.0, "passengers_estimated_low": 1_000.0,
+            "passengers_estimated_high": 1_000.0, "seed_weight": 1.0,
+            "support_observed_in_period": True, "support_source_periods": period,
+            "support_month_gap": 0, "support_repair_applied": False,
+        },
+        {
+            "period_id": period, "market_key": market_key,
+            "origin_iata": "MEX", "destination_iata": "ABC", "carrier_key": "AEROMEXICO_CONNECT",
+            "passengers_estimated": 500.0, "passengers_estimated_low": 500.0,
+            "passengers_estimated_high": 500.0, "seed_weight": 1.0,
+            "support_observed_in_period": True, "support_source_periods": period,
+            "support_month_gap": 0, "support_repair_applied": False,
+        },
+        # Repaired direction: each cell's low/high independently picked from
+        # mismatched sensitivity scenarios (not additive across cells).
+        {
+            "period_id": period, "market_key": market_key,
+            "origin_iata": "ABC", "destination_iata": "MEX", "carrier_key": "AEROMEXICO",
+            "passengers_estimated": 900.0, "passengers_estimated_low": 200.0,
+            "passengers_estimated_high": 1_800.0, "seed_weight": 1.0,
+            "support_observed_in_period": False, "support_source_periods": "2026M05",
+            "support_month_gap": 1, "support_repair_applied": True,
+        },
+        {
+            "period_id": period, "market_key": market_key,
+            "origin_iata": "ABC", "destination_iata": "MEX", "carrier_key": "AEROMEXICO_CONNECT",
+            "passengers_estimated": 450.0, "passengers_estimated_low": 100.0,
+            "passengers_estimated_high": 900.0, "seed_weight": 1.0,
+            "support_observed_in_period": False, "support_source_periods": "2026M05",
+            "support_month_gap": 1, "support_repair_applied": True,
+        },
+    ]
+    estimates = pd.DataFrame(rows)
+    capacity = pd.DataFrame(
+        [
+            _capacity_row(period, market_key, "MEX", "ABC", "AEROMEXICO", departures=10.0, seats=2_000.0),
+            _capacity_row(period, market_key, "MEX", "ABC", "AEROMEXICO_CONNECT", departures=5.0, seats=800.0),
+            _capacity_row(period, market_key, "ABC", "MEX", "AEROMEXICO", departures=10.0, seats=2_000.0),
+            _capacity_row(period, market_key, "ABC", "MEX", "AEROMEXICO_CONNECT", departures=5.0, seats=800.0),
+        ]
+    )
+    connection = _synthetic_domestic_connection(estimates, capacity)
+    quarters = [{"period_id": period, "period_label": "junio 2026", "expected_months": [period]}]
+    route = load_domestic_networks(connection, quarters)[period]["routes"][0]
+
+    directions = {(d["origin_iata"], d["destination_iata"]): d for d in route["directions"]}
+    # The unrepaired direction sums exactly: no scenario ambiguity.
+    assert directions[("MEX", "ABC")]["passengers_low"] == pytest.approx(1_500.0)
+    assert directions[("MEX", "ABC")]["passengers_high"] == pytest.approx(1_500.0)
+    # The repaired direction mixes independently-chosen scenario extremes:
+    # its bound must be withheld, never a naive per-cell sum (300.0 / 2700.0).
+    assert directions[("ABC", "MEX")]["passengers_low"] is None
+    assert directions[("ABC", "MEX")]["passengers_high"] is None
+    # The whole-route (network) total mixes an unrepaired and a repaired
+    # direction, so it inherits the same ambiguity and must also be withheld,
+    # never the naive sum (1_800.0 / 4_200.0) the old code published.
+    assert route["passengers_low"] is None
+    assert route["passengers_high"] is None
+    assert route["passengers"] == pytest.approx(2_850.0)
 
 
 @pytest.mark.local_data
@@ -143,14 +272,42 @@ def test_aicm_bronze_silver_gold_reconcile_and_preserve_scope():
 
 
 @pytest.mark.local_data
-def test_domestic_map_keeps_official_slots_without_model_values(flight_payload):
-    network = flight_payload["domestic_networks"]["2026Q2"]
-    assert network["mode"] == "scheduled_domestic"
-    assert network["observed_months"] == []
-    gold = pd.read_parquet(GOLD)
-    assert network["scheduled_movements"] == gold.scheduled_movements.sum()
+def test_domestic_map_shows_reconciled_estimates_for_every_queried_month(flight_payload):
+    payload = flight_payload
+    network = payload["domestic_networks"]["2026Q2"]
+    assert network["mode"] == "estimated_domestic"
+    assert network["agent_eligible"] is False
+    assert len(network["routes"]) == 56
+    assert network["represented_passengers"] == pytest.approx(3_831_996.712046853)
     assert network["represented_movements"] is None
-    for route in network["routes"]:
-        assert route["operation_status"] == "assigned_slot_not_flown"
-        assert route["passengers"] is route["seats"] is route["load_factor"] is None
-        assert not route.get("passengers_estimated") and not route.get("capacity_estimated")
+    assert network["represented_departures_estimated"] > 0
+    assert network["availability"] == "complete"
+    assert set(payload["domestic_monthly_networks"]) == {
+        "2026M03", "2026M04", "2026M05", "2026M06", "2026M07",
+    }
+    assert all(route["passengers_estimated"] for route in network["routes"])
+    assert all(route["passengers"] > 0 for route in network["routes"])
+    assert network["capacity_complete_route_count"] > 0
+    assert network["load_factor_route_count"] > 0
+    assert any(route["departures"] is not None and route["seats"] is not None
+               for route in network["routes"])
+    assert all(route["load_factor"] is None or 0 <= route["load_factor"] <= 1
+               for route in network["routes"])
+    dual_operator = next(route for route in network["routes"] if route["market_key"] == "MEX<>MTY")
+    assert {item["carrier_label"] for item in dual_operator["monthly"]} == {
+        "Grupo Aeroméxico",
+    }
+    june = payload["domestic_monthly_networks"]["2026M06"]
+    gdl = next(route for route in june["routes"] if route["market_key"] == "GDL<>MEX")
+    assert gdl["departures"] == pytest.approx(745.0)
+    assert gdl["seats"] == pytest.approx(131_925.8)
+    assert gdl["load_factor"] == pytest.approx(gdl["passengers"] / gdl["seats"])
+    assert {item["carrier_label"] for item in gdl["monthly"]} == {
+        "Grupo Aeroméxico",
+    }
+    assert all(item["capacity_complete"] for item in gdl["monthly"])
+    consumer = integration_flight_payload(payload)
+    assert consumer["domestic_networks"] == {}
+    assert set(consumer["domestic_monthly_networks"]) == set(payload["domestic_monthly_networks"])
+    assert consumer["domestic_monthly_networks"]["2026M07"]["routes"][0]["passengers_estimated"] is True
+    assert {item["airport_iata"] for item in consumer["route_networks"]["2026Q2"]["aena_airport_activity"]} == {"MAD", "BCN"}

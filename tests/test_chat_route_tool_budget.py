@@ -63,12 +63,12 @@ def test_shared_route_size_limit_reports_applied_and_available_counts() -> None:
             "top_n": 20,
         },
     )
-    assert result["available_route_count"] == 0
+    assert result["available_route_count"] >= result["requested_top_n"]
     assert result["row_count"] <= result["requested_top_n"]
     assert result["applied_top_n"] == result["row_count"]
     if result["row_count"] < result["requested_top_n"]:
-        assert result["truncated"] is False
-        assert result["truncation_reason"] is None
+        assert result["truncated"] is True
+        assert result["truncation_reason"] == "tool_result_size_limit"
 
 
 def test_real_international_quarter_route_queries_fit_presented_tool_budget() -> None:
@@ -100,12 +100,11 @@ def test_real_international_quarter_route_queries_fit_presented_tool_budget() ->
         assert raw_bytes <= 15_000
         assert final_bytes <= 15_652
         assert result["requested_top_n"] == expected
-        assert result["available_route_count"] == 41
+        assert result["available_route_count"] == 75
         assert result["applied_top_n"] == len(result["rows"]) <= expected
-        assert result["truncated"] == (result["applied_top_n"] < result["available_route_count"])
-        if result["applied_top_n"] < expected:
-            assert result["truncation_reason"] == "tool_result_size_limit"
-        assert result["display"]["title"].endswith(f'{len(result["rows"])} de 41 mostradas')
+        assert result["truncated"] is True
+        assert result["truncation_reason"] == "tool_result_size_limit"
+        assert result["display"]["title"].endswith("75 mostradas")
         assert len(result["display"]["rows"]) == len(result["rows"])
         assert result["rows"]
         assert all(row["metric_provenance"] for row in result["rows"])
@@ -152,7 +151,7 @@ def test_shared_route_queries_fit_presented_budget_and_display_contract() -> Non
                 assert len(enriched["displays"]) == 1
                 display = enriched["displays"][0]
                 assert display["columns"]
-                assert display["rows"] == []
+                assert display["rows"]
                 assert len(display["columns"]) <= 12
                 assert all(len(row) == len(display["columns"]) for row in display["rows"])
                 assert result["requested_top_n"] == (top_n or 10)
@@ -161,8 +160,7 @@ def test_shared_route_queries_fit_presented_budget_and_display_contract() -> Non
                 assert result["truncated"] is (result["row_count"] < result["available_route_count"])
                 assert result["coverage"].keys() == set(entity_ids)
                 for carrier_coverage in result["coverage"].values():
-                    assert carrier_coverage["availability"] in {"complete", "partial", "missing"}
-                    assert carrier_coverage["complete"] is False
+                    assert carrier_coverage["availability"] in {"complete", "partial"}
                     assert isinstance(carrier_coverage["expected_months"], list)
                     assert isinstance(carrier_coverage["observed_months"], list)
                     assert carrier_coverage["eligibility_reason"]

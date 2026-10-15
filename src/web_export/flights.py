@@ -46,10 +46,6 @@ def export_flights(
 
     written: list[Path] = []
     base = out_dir / "flights"
-    # A repeated export must not leave retired month/entity files behind.
-    # This directory belongs exclusively to this exporter.
-    for stale in base.rglob("*.json") if base.exists() else []:
-        stale.unlink()
 
     domestic_periods = {**embedded["domestic_networks"], **embedded["domestic_monthly_networks"]}
     international_periods = embedded["route_networks"]

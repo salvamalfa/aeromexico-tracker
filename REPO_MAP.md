@@ -5,7 +5,7 @@ comunes. Ver también `CLAUDE.md`, `AGENTS.md`, `CHANGELOG.md` y `ROADMAP.md`.
 
 Para diseñar los siguientes lotes de datos, ver el
 [catálogo de fuentes/métricas y calendario](docs/catalogo-fuentes-calendario.md)
-y el [cierre de AeroDataBox con capturas](docs/etapas/cierre-aerodatabox-20261014.md).
+y el [cierre de las capturas AeroDataBox con histórico conservado](docs/etapas/cierre-aerodatabox-20261014.md).
 Son entregables documentales de fase 1; no sustituyen contratos ni ejecutan
 actualizaciones.
 
@@ -141,11 +141,11 @@ un payload JSON, no HTML/CSS; el maquetado vive solo en `web/src/views/flights/t
 
 Seguir el [catálogo y calendario](docs/catalogo-fuentes-calendario.md) para las
 ediciones oficiales y reconstruir offline los Gold correspondientes.
-`config/web_inputs.yaml` exige tráfico BTS y aeropuertos; las cuatro
-estimaciones privadas históricas no son entradas de exportación. Los generadores
-activos conservan cada fuente en su grano y meses, sin enriquecimiento IPF.
-La historia del proveedor queda en el
-[cierre con capturas](docs/etapas/cierre-aerodatabox-20261014.md).
+La exportación completa conserva los cuatro Gold privados de estimaciones
+históricas como entradas ignoradas; no requiere nuevas capturas. Para cambiar
+solo el mapa, `src.publish --preserve-published-data` conserva todos los bytes
+de `site/data/v1/` y las cuatro tesis, sin reconstruir modelos ni actualizar
+fuentes. Ver [histórico conservado y prueba AFAC/AICM](docs/plan-salida-aerodatabox.md).
 
 ### d) Retomar trabajo pendiente
 

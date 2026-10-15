@@ -24,16 +24,16 @@ def test_profile_dry_run_selects_all_business_cases_without_live_side_effects():
     assert plan["case_count"] == 30
     assert plan["messages_per_candidate"] == 34
     assert plan["repetitions"] == 1
-    # The prompt and measured usage stay frozen; current official-only route
-    # tool definitions change the size of the offline context projection.
-    assert plan["projection"]["projected_input_tokens_range"] == [2_056_408, 2_105_358]
-    assert plan["projection"]["projected_input_tokens"] == 2_105_358
+    # The completed campaign keeps its frozen R2 and measured usage.
+    # Only the projection uses the current route-tool descriptions.
+    assert plan["projection"]["projected_input_tokens_range"] == [2_056_297, 2_105_210]
+    assert plan["projection"]["projected_input_tokens"] == 2_105_210
     assert plan["projection"]["projected_output_tokens"] == 9_423
-    assert plan["projection"]["cost_before_margin_usd_range"] == [5.235245, 5.35762]
+    assert plan["projection"]["cost_before_margin_usd_range"] == [5.234968, 5.35725]
     assert plan["projection"]["historical_scaled_baseline_cost_before_margin_usd"] == 4.86812
-    assert plan["projection"]["context_delta_input_cost_before_margin_usd_range"] == [0.367125, 0.4895]
+    assert plan["projection"]["context_delta_input_cost_before_margin_usd_range"] == [0.366847, 0.48913]
     assert plan["projection"]["safety_margin_fraction"] == 0.35
-    assert plan["projection"]["cost_after_margin_usd_range"] == [7.0676, 7.2328]
+    assert plan["projection"]["cost_after_margin_usd_range"] == [7.0672, 7.2323]
     assert plan["projection"]["proposed_reserve_usd"] == 8.0
     context = plan["projection"]["context_delta"]
     assert context["prompt_r1_effective_utf8_bytes"] == 8_937
@@ -44,9 +44,9 @@ def test_profile_dry_run_selects_all_business_cases_without_live_side_effects():
     assert context["historical_tool_schema_sha256"] == (
         "1ff0d3a35647f7a0c2fc956884a4d267b0148065ccd3e2469139463f859bea19"
     )
-    assert context["current_tool_schema_utf8_bytes"] == 7_677
-    assert context["tool_schema_delta_utf8_bytes_per_request"] == 4_371
-    assert context["total_delta_utf8_bytes_per_request"] == 6_600
+    assert context["current_tool_schema_utf8_bytes"] == 7_672
+    assert context["tool_schema_delta_utf8_bytes_per_request"] == 4_366
+    assert context["total_delta_utf8_bytes_per_request"] == 6_595
     assert context["modeled_provider_requests"] == 89
     assert context["modeled_provider_request_hypothesis_range"] == [85, 89]
     assert context["tool_calls"] == 55

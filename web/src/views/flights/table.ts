@@ -1,24 +1,12 @@
 // Concise quarterly route ranking beside the map.
 
-import { $, esc, finite, formatRouteMetric, integer } from "./dom";
+import { $, esc, finite, integer } from "./dom";
 import { state } from "./state";
-import { coverageIndicator, scheduledIconHtml, sourceFooterHtml, SCHEDULED_STATUSES } from "./coverage";
+import { coverageIndicator, scheduledIconHtml } from "./coverage";
 import { bindAirportSearchControls } from "./search";
 import { cityLabel, routeChangePercent, routeTitle } from "./network";
 import type { Route } from "../../types/domain";
-import { ENTITY_LABELS, type EntityKey } from "../shell/carriers";
-
-// Industria: who carries the route (share of the route's passengers).
-export function breakdownText(route: Route): string {
-  const breakdown = route.carrier_breakdown;
-  const total = route.passengers;
-  if (!breakdown || !finite(total) || total <= 0) return "";
-  return Object.entries(breakdown)
-    .filter(([, value]) => value > 0)
-    .sort((a, b) => b[1] - a[1])
-    .map(([key, value]) => `${ENTITY_LABELS[key as EntityKey] ?? key} ${Math.round((value / total) * 100)}%`)
-    .join(" · ");
-}
+import { flightKind, flightSource, FLIGHT_KIND_LABEL } from "./flight-measure";
 
 function routeRows(routes: Route[]): string {
   let downStarted = false;
@@ -29,25 +17,23 @@ function routeRows(routes: Route[]): string {
       : index === 0 ? '<li class="executive-route-group">Aumentan</li>'
       : isDown && !downStarted ? '<li class="executive-route-group">Caen</li>' : "";
     if (isDown) downStarted = true;
-    const flights = finite(route.departures) ? integer.format(route.departures) + (SCHEDULED_STATUSES.includes(route.operation_status ?? "") ? " prog." : "") : "N/D";
-    const flightKind = route.operation_status && SCHEDULED_STATUSES.includes(route.operation_status)
-      ? "programados" : route.capacity_estimated ? "estimados" : "observados";
-    const occupancy = finite(route.load_factor) ? formatRouteMetric("load_factor", route.load_factor) : "N/D";
-    const sourceBadge = route.passengers_estimated && state.networkMode === "international"
-      ? '<span class="route-evidence-badge">estim.</span>' : "";
-    const breakdown = breakdownText(route);
-    const changeText = (change === null ? "" : `<small class="executive-route-trend ${change >= 0 ? "delta-up" : "delta-down"}">${change >= 0 ? "+" : ""}${change.toFixed(1)}% interanual</small>`)
-      + (breakdown ? `<small class="executive-route-trend route-breakdown">${esc(breakdown)}</small>` : "");
+    const kind = flightKind(route);
+    const flightLabel = FLIGHT_KIND_LABEL[kind];
+    const flights = finite(route.departures) ? integer.format(route.departures) : "N/D";
+    const changeText = change === null ? "" : `<small class="executive-route-trend ${change >= 0 ? "delta-up" : "delta-down"}">${change >= 0 ? "+" : ""}${change.toFixed(1)}% interanual</small>`;
     const coverage = coverageIndicator(route);
     const coverageLabel = coverage ? ` title="${esc(coverage.title)}" aria-label="Ruta ${index + 1}: ${esc(coverage.title)}"` : "";
     return `${group}<li class="executive-route-row">
       <span class="executive-route-rank${coverage ? ` ${coverage.variant}` : ""}"${coverageLabel}>${index + 1}</span>
-      <div class="executive-route-copy"><strong title="${esc(route.origin.iata)} ↔ ${esc(route.destination.iata)}">${esc(routeTitle(route))}${scheduledIconHtml(route)}${sourceBadge}</strong>${changeText}</div>
-      <div class="executive-route-value" title="Pasajeros ${route.passengers_estimated ? "estimados" : "observados"}">${finite(route.passengers) ? integer.format(route.passengers) : "N/D"}</div>
-      <div class="executive-route-value" title="Vuelos ${flightKind}">${flights}</div>
-      <div class="executive-route-value">${esc(occupancy)}</div>
+      <div class="executive-route-copy"><strong title="${esc(route.origin.iata)} ↔ ${esc(route.destination.iata)}">${esc(routeTitle(route))}${scheduledIconHtml(route)}</strong>${changeText}</div>
+      <div class="executive-route-value" title="Vuelos ${flightLabel}">${flights}<small class="executive-route-trend">${esc(flightLabel)}</small></div>
     </li>`;
   }).join("");
+}
+
+function flightSourceFooter(routes: Route[]): string {
+  const sources = [...new Set(routes.map(flightSource))].sort();
+  return sources.length ? `<p class="route-source-footer">Fuentes de vuelos: ${esc(sources.join(" · "))}</p>` : "";
 }
 
 function searchButton(): string {
@@ -69,8 +55,8 @@ function render(title: string, routes: Route[], airportSelected: boolean): void 
   host.innerHTML = `<div class="airport-title-row"><h3>${esc(title)}</h3>${searchButton()}</div>
     ${searchBox()}
     ${airportSelected ? '<button type="button" class="route-overview-back" id="route-overview-back">← Toda la red</button>' : ""}
-    ${routes.length ? `<div class="executive-route-columns"><span>Ruta</span><span>Pasajeros</span><span>Vuelos</span><span>Ocupación</span></div><ol class="executive-route-list">${routeRows(routes)}</ol>` : '<p class="airport-tooltip-empty">Sin vuelos realizados por ruta disponibles en esta selección. Los pasajeros agregados reportados se conservan.</p>'}
-    ${sourceFooterHtml(routes)}`;
+    ${routes.length ? `<div class="executive-route-columns"><span>Ruta</span><span>Vuelos</span></div><ol class="executive-route-list">${routeRows(routes)}</ol>` : '<p class="airport-tooltip-empty">Sin número de vuelos por ruta disponible en esta selección. El histórico original se conserva.</p>'}
+    ${flightSourceFooter(routes)}`;
   bindAirportSearchControls();
   $("route-overview-back")?.addEventListener("click", () => {
     state.pinnedAirport = null;
