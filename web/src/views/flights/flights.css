@@ -43,6 +43,7 @@
   .map-period-control { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 7px; margin: 3px 0 11px 10px; color: var(--muted); font-size: 11px; }
   .map-period-control select { max-width: 100%; min-height: 34px; border: 1px solid #dbe5f1; border-radius: 7px; padding: 5px; color: var(--brand-blue-dark); background: white; }
   .map-period-control span { flex-basis: 100%; font-size: 10px; }
+  .map-period-control[hidden] { display: none; }
   .source-inline { flex: 0 0 auto; margin: 0; color: var(--quiet); font-size: 9px; text-align: right; }
   .panel, .methodology { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
   .panel { min-width: 0; padding: 18px; }
