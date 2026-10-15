@@ -96,3 +96,41 @@ def test_non_time_reference_to_airlines_is_not_mistaken_for_an_hour():
         "noticias del 15 de julio de 2026 sobre combustible a las aerolíneas"
     )
     assert [r["id"] for r in result["results"]] == ["flightglobal-aeromexico-q2-2026-07-15"]
+
+
+@pytest.mark.parametrize(
+    "operator",
+    [
+        "Aeroméxico (Connect)",
+        "Aeroméxico/Connect",
+        "Aeroméxico — Connect",
+        "Aeroméxico – Connect",
+        "Aeroméxico: Connect",
+        "Aeroméxico [Connect]",
+        "Aeroméxico_(Connect)",
+        "AMX (Connect)",
+        "AMX/Connect",
+        "AMX—Connect",
+        "(Aeroméxico Connect)",
+    ],
+)
+@pytest.mark.parametrize("same_argument", [False, True])
+def test_punctuated_compound_is_resolved_before_generic_parent(operator, same_argument):
+    result = EvidenceIndex(ROOT / "config/chat/evidence/approved-index.json").search_news(
+        "noticias de " + operator + " sobre combustible", company=operator if same_argument else None
+    )
+    assert result["filters"]["companies"] == ["Aeroméxico Connect"]
+    assert result["count"] == 0 and result["matching_ids"] == []
+
+
+@pytest.mark.parametrize("operator", ["Aeroméxico (Connect)", "Aeroméxico/Connect", "AMX—Connect"])
+def test_punctuated_operator_cannot_be_overridden_by_parent_argument(operator):
+    with pytest.raises(ValueError, match="no coincide"):
+        resolve_news_query("noticias de " + operator, company="Aeroméxico")
+
+
+@pytest.mark.parametrize(
+    "query", ["noticias de Aeroméxico y Connect", "noticias de AMX y Aeroméxico Connect"]
+)
+def test_explicit_conjunction_keeps_parent_and_operator_separate(query):
+    assert set(resolve_news_query(query)["companies"]) == {"Aeroméxico", "Aeroméxico Connect"}

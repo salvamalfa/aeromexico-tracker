@@ -61,31 +61,38 @@ def norm(value: str) -> str:
     ).strip()
 
 
+def entity_text(value: str) -> str:
+    # Resolve the specific compound before matching a parent brand. Explicit
+    # conjunctions remain words and therefore retain a two-entity request.
+    return re.sub(r"\b(?:aeromexico|amx)[\W_]+connect\b(?:\s*[)\]}])?", "aeromexico_connect", norm(value))
+
+
 def topic_key(value: str) -> str:
     text = norm(value)
     return next((norm(key) for key, aliases in TOPICS.items() if text in aliases or text == norm(key)), text)
 
 
 def resolve_news_query(question: str, start_date=None, end_date=None, company=None) -> dict:
-    text = norm(question)
+    text = entity_text(question)
     words = set(re.findall(r"\w+", text))
     companies = [
         name
         for name, aliases in ENTITIES.items()
         if any(
             re.search(
-                r"\b" + re.escape(alias) + r"\b" + (r"(?![\s_-]+connect\b)" if name == "Aeroméxico" else ""),
+                r"\b" + re.escape(alias) + r"\b",
                 text,
             )
             for alias in aliases
         )
     ]
     if company:
+        company_key = entity_text(company).strip("()[]{} .,:;/—–-_")
         selected = next(
             (
                 name
                 for name, aliases in ENTITIES.items()
-                if norm(company) in aliases or norm(company) == norm(name)
+                if company_key in aliases or company_key == norm(name)
             ),
             company,
         )
