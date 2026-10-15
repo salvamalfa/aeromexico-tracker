@@ -72,72 +72,101 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
     months = [MONTHS[m] for m in re.findall(r"\b(" + "|".join(MONTHS) + r")\b", text)]
     iso_months = re.findall(r"\b(20\d{2})-(0[1-9]|1[0-2])(?!-\d{2})\b", text)
     iso_dates = re.findall(r"\b20\d{2}-\d{2}-\d{2}\b", text)
-    if not start_date and not end_date:
-        # A malformed ISO-like token must not fall through to a broad year filter.
-        for token in re.findall(r"\b20\d{2}(?:-\d+)+\b", text):
-            if not re.fullmatch(r"20\d{2}-\d{2}(?:-\d{2})?", token):
-                raise ValueError("Usa fechas YYYY-MM-DD o meses YYYY-MM explícitos.")
-            date.fromisoformat(token + "-01" if len(token) == 7 else token)
-        relative = re.search(
-            r"\b(?:ultim[oa]s?|este|esta|estos|estas|anterior(?:es)?)\s+(?:(?:\d+|un|una|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|quince|treinta)\s+)?(?:minutos?|horas?|dias?|semanas?|quincenas?|mes(?:es)?|bimestres?|trimestres?|cuatrimestres?|semestres?|anos?|ejercicios?)\b|\b(?:minutos?|horas?|dias?|semanas?|quincenas?|mes(?:es)?|bimestres?|trimestres?|cuatrimestres?|semestres?|anos?|ejercicios?)\s+(?:pasad[oa]s?|anterior(?:es)?)\b",
-            text,
-        )
-        relative_quantity = re.search(
-            r"\b(?:hace|dentro\s+de|pasad[oa]s?|proxim[oa]s?)\s+(?:\w+\s+){0,12}(?:minutos?|horas?|dias?|semanas?|quincenas?|mes(?:es)?|bimestres?|trimestres?|cuatrimestres?|semestres?|anos?|ejercicios?)\b",
-            text,
-        )
-        units = re.findall(
-            r"\b(?:minutos?|horas?|dias?|semanas?|quincenas?|mes(?:es)?|bimestres?|trimestres?|cuatrimestres?|semestres?|anos?|ejercicios?)\b",
-            text,
-        )
-        absolute = bool(iso_dates or iso_months or months or years)
-        if (
-            relative
-            or relative_quantity
-            or (units and not absolute)
-            or re.search(r"\b(?:anteayer|antier|anoche|ayer|hoy|manana)\b", text)
+    supplied_start, supplied_end = start_date, end_date
+    for value in (supplied_start, supplied_end):
+        if value is not None:
+            if not isinstance(value, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+                raise ValueError("Indica fechas explícitas YYYY-MM-DD.")
+            date.fromisoformat(value)
+    if supplied_start and supplied_end and supplied_start > supplied_end:
+        raise ValueError("El inicio no puede ser posterior al fin.")
+    # Query meaning is validated independently of nullable caller arguments.
+    start_date = end_date = None
+    # A malformed ISO-like token must not fall through to a broad year filter.
+    for token in re.findall(r"\b20\d{2}(?:-\d+)+\b", text):
+        if not re.fullmatch(r"20\d{2}-\d{2}(?:-\d{2})?", token):
+            raise ValueError("Usa fechas YYYY-MM-DD o meses YYYY-MM explícitos.")
+        date.fromisoformat(token + "-01" if len(token) == 7 else token)
+    relative = re.search(
+        r"\b(?:ultim[oa]s?|este|esta|estos|estas|anterior(?:es)?)\s+(?:(?:\d+|un|una|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|quince|treinta)\s+)?(?:minutos?|horas?|dias?|semanas?|quincenas?|mes(?:es)?|bimestres?|trimestres?|cuatrimestres?|semestres?|anos?|ejercicios?)\b|\b(?:minutos?|horas?|dias?|semanas?|quincenas?|mes(?:es)?|bimestres?|trimestres?|cuatrimestres?|semestres?|anos?|ejercicios?)\s+(?:pasad[oa]s?|anterior(?:es)?)\b",
+        text,
+    )
+    relative_quantity = re.search(
+        r"\b(?:hace|dentro\s+de|pasad[oa]s?|proxim[oa]s?)\s+(?:\w+\s+){0,12}(?:minutos?|horas?|dias?|semanas?|quincenas?|mes(?:es)?|bimestres?|trimestres?|cuatrimestres?|semestres?|anos?|ejercicios?)\b",
+        text,
+    )
+    units = re.findall(
+        r"\b(?:minutos?|horas?|dias?|semanas?|quincenas?|mes(?:es)?|bimestres?|trimestres?|cuatrimestres?|semestres?|anos?|ejercicios?)\b",
+        text,
+    )
+    absolute = bool(iso_dates or iso_months or months or years)
+    if (
+        relative
+        or relative_quantity
+        or (units and not absolute)
+        or re.search(r"\b(?:anteayer|antier|anoche|ayer|hoy|manana)\b", text)
+    ):
+        raise ValueError("Indica fechas explícitas; no se infiere el periodo de una noticia.")
+    complex_units = set(units) - {"dia", "dias", "mes", "meses", "ano", "anos"}
+    if (
+        (complex_units and len(iso_dates) != 2)
+        or (set(units) & {"mes", "meses"} and not (months or iso_months or iso_dates))
+        or (set(units) & {"dia", "dias"} and not iso_dates)
+    ):
+        raise ValueError("Indica fechas explícitas de inicio y fin para ese periodo.")
+    if iso_dates:
+        if len(iso_dates) > 2 or len(years) != len(iso_dates):
+            raise ValueError("Indica ambos extremos con fechas explícitas de la misma precisión.")
+        start_date, end_date = iso_dates[0], iso_dates[-1]
+    elif iso_months:
+        if len(iso_months) > 2 or len(years) != len(iso_months):
+            raise ValueError("Indica ambos extremos con meses y años explícitos.")
+        first, last = iso_months[0], iso_months[-1]
+        start_date = date(int(first[0]), int(first[1]), 1).isoformat()
+        end_date = date(
+            int(last[0]), int(last[1]), calendar.monthrange(int(last[0]), int(last[1]))[1]
+        ).isoformat()
+    elif months:
+        pairs = re.findall(r"\b(" + "|".join(MONTHS) + r")\s+(?:de\s+)?(20\d{2})\b", text)
+        if len(months) > 2:
+            raise ValueError("Indica un mes o un intervalo explícito de dos meses.")
+        if len(pairs) == len(months):
+            if len(years) != len(pairs) or set(years) != {year for _, year in pairs}:
+                raise ValueError("Indica el mes y año de ambos extremos; hay un año sin asociar.")
+            first_year, last_year = int(pairs[0][1]), int(pairs[-1][1])
+        elif len(set(years)) == 1:
+            first_year = last_year = int(years[0])
+        else:
+            raise ValueError("Indica el año de cada extremo del intervalo.")
+        start_date = date(first_year, months[0], 1).isoformat()
+        end_date = date(last_year, months[-1], calendar.monthrange(last_year, months[-1])[1]).isoformat()
+    elif years:
+        endpoints = list(dict.fromkeys(years))
+        if len(endpoints) > 2:
+            raise ValueError("Indica un año o un intervalo de dos años explícitos.")
+        start_date, end_date = f"{endpoints[0]}-01-01", f"{endpoints[-1]}-12-31"
+    elif re.search(r"\b(pasado|pasada|ayer|hoy)\b", text):
+        raise ValueError("Indica fechas explícitas; no se infiere el periodo de una noticia.")
+    intrinsic = bool(iso_dates or iso_months or months or years)
+    periods = len(iso_dates) or len(iso_months) or len(months) or len(years)
+    if intrinsic:
+        since = bool(re.search(r"\bdesde\b", text))
+        until = bool(re.search(r"\bhasta\b", text))
+        if re.search(r"\bentre\b", text) and periods != 2:
+            raise ValueError("Indica ambos extremos explícitos del intervalo.")
+        if periods == 1:
+            if since and not until:
+                end_date = None
+            elif until and not since:
+                start_date = None
+        if (supplied_start is not None and supplied_start != start_date) or (
+            supplied_end is not None and supplied_end != end_date
         ):
-            raise ValueError("Indica fechas explícitas; no se infiere el periodo de una noticia.")
-        complex_units = set(units) - {"dia", "dias", "mes", "meses", "ano", "anos"}
-        if (
-            (complex_units and len(iso_dates) != 2)
-            or (set(units) & {"mes", "meses"} and not (months or iso_months or iso_dates))
-            or (set(units) & {"dia", "dias"} and not iso_dates)
-        ):
-            raise ValueError("Indica fechas explícitas de inicio y fin para ese periodo.")
-        if iso_dates:
-            if len(iso_dates) > 2 or len(years) != len(iso_dates):
-                raise ValueError("Indica ambos extremos con fechas explícitas de la misma precisión.")
-            start_date, end_date = iso_dates[0], iso_dates[-1]
-        elif iso_months:
-            if len(iso_months) > 2 or len(years) != len(iso_months):
-                raise ValueError("Indica ambos extremos con meses y años explícitos.")
-            first, last = iso_months[0], iso_months[-1]
-            start_date = date(int(first[0]), int(first[1]), 1).isoformat()
-            end_date = date(
-                int(last[0]), int(last[1]), calendar.monthrange(int(last[0]), int(last[1]))[1]
-            ).isoformat()
-        elif months:
-            pairs = re.findall(r"\b(" + "|".join(MONTHS) + r")\s+(?:de\s+)?(20\d{2})\b", text)
-            if len(months) > 2:
-                raise ValueError("Indica un mes o un intervalo explícito de dos meses.")
-            if len(pairs) == len(months):
-                if len(years) != len(pairs) or set(years) != {year for _, year in pairs}:
-                    raise ValueError("Indica el mes y año de ambos extremos; hay un año sin asociar.")
-                first_year, last_year = int(pairs[0][1]), int(pairs[-1][1])
-            elif len(set(years)) == 1:
-                first_year = last_year = int(years[0])
-            else:
-                raise ValueError("Indica el año de cada extremo del intervalo.")
-            start_date = date(first_year, months[0], 1).isoformat()
-            end_date = date(last_year, months[-1], calendar.monthrange(last_year, months[-1])[1]).isoformat()
-        elif years:
-            endpoints = list(dict.fromkeys(years))
-            if len(endpoints) > 2:
-                raise ValueError("Indica un año o un intervalo de dos años explícitos.")
-            start_date, end_date = f"{endpoints[0]}-01-01", f"{endpoints[-1]}-12-31"
-        elif re.search(r"\b(pasado|pasada|ayer|hoy)\b", text):
-            raise ValueError("Indica fechas explícitas; no se infiere el periodo de una noticia.")
+            raise ValueError(
+                "Los límites no coinciden con las fechas de publicación expresadas; indica inicio y fin explícitos."
+            )
+    else:
+        start_date, end_date = supplied_start, supplied_end
     for value in (start_date, end_date):
         if value:
             date.fromisoformat(value)

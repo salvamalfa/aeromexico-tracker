@@ -119,11 +119,21 @@ def main():
             url = raw["source_url"]
             for _ in range(MAX_REQUESTS_PER_SOURCE):
                 response = client.get(url)
+                validate_source_url(str(response.url))
                 if not response.is_redirect:
+                    # Attribute bytes only to the response actually received.
+                    url = str(response.url)
                     break
-                url = str(response.url.join(response.headers["location"]))
+                location = response.headers.get("location")
+                if not location or not location.strip():
+                    raise ValueError("Redirect missing Location")
+                url = str(response.url.join(location))
                 validate_source_url(url)
+            if response.is_redirect:
+                raise ValueError("Redirect request limit exhausted; no source was captured")
             response.raise_for_status()
+            if response.status_code != 200:
+                raise ValueError("Expected HTTP 200 for a complete publisher document")
         content = response.content
         if (
             not content.startswith(b"%PDF")

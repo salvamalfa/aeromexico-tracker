@@ -433,3 +433,57 @@ def test_explicit_publication_year_can_coexist_with_a_loan_term():
 
     result = resolve_news_query("noticias de 2026 sobre crédito a tres años")
     assert (result["start_date"], result["end_date"]) == ("2026-01-01", "2026-12-31")
+
+
+@pytest.mark.parametrize(
+    "question,start,end,success",
+    [
+        ("noticias del último mes sobre combustible", None, None, False),
+        ("noticias del último mes sobre combustible", "2026-07-01", None, False),
+        ("noticias del último mes sobre combustible", None, "2026-07-31", False),
+        ("noticias del último mes sobre combustible", "2026-07-01", "2026-07-31", False),
+        ("noticias de Aeroméxico en julio de 2026 sobre combustible", "2026-07-01", None, True),
+        ("noticias de Aeroméxico en julio de 2026 sobre combustible", None, "2026-07-31", True),
+        ("noticias de Aeroméxico en julio de 2026 sobre combustible", "2026-06-01", "2026-06-30", False),
+    ],
+)
+def test_api_worker_validates_semantics_of_provider_supplied_nullable_bounds(
+    tmp_path, question, start, end, success
+):
+    from src.conversational_analytics.api import create_app
+
+    class BoundCaller(MockProvider):
+        def _select_tool(self, text, context, specs):
+            return (
+                "search_news",
+                {"query": text, "company": None, "start_date": start, "end_date": end, "limit": 5},
+            ), None
+
+    snapshot = Snapshot(ROOT / "site")
+    app = create_app(
+        config=ChatConfig(
+            state_path=tmp_path / "chat.sqlite3", prompt_version="r2-proposed", enable_evidence_tools=True
+        ),
+        snapshot=snapshot,
+        provider=BoundCaller(snapshot),
+    )
+    with TestClient(app, base_url="http://127.0.0.1", client=("127.0.0.1", 50000)) as client:
+        conversation = client.post("/api/chat/conversations").json()
+        response = client.post(
+            f"/api/chat/conversations/{conversation['id']}/messages",
+            json={"content": question, "client_message_id": uuid.uuid4().hex},
+        )
+        client.get(f"/api/chat/turns/{response.json()['turn_id']}/events?after=0")
+        answer = next(
+            m
+            for m in reversed(client.get(f"/api/chat/conversations/{conversation['id']}").json()["messages"])
+            if m["role"] == "assistant"
+        )
+        payload = answer.get("payload", answer)
+        if success:
+            nav = payload["news_results"][0]
+            assert nav["filters"]["start_date"] == "2026-07-01" and nav["filters"]["end_date"] == "2026-07-31"
+            assert [r["id"] for r in nav["items"]] == ["flightglobal-aeromexico-q2-2026-07-15"]
+        else:
+            assert not payload.get("news_results")
+            assert "fechas explícitas" in answer["content"] or "no coinciden" in answer["content"]
