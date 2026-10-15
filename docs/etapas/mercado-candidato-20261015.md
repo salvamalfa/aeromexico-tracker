@@ -56,3 +56,13 @@ no equivalen a una regeneración aprobada del sitio.
 La demanda aeroportuaria nueva no habilita herramientas del chat. Se omite su
 atajo contextual y no se envía un identificador de tarjeta que el backend
 rechazaría. El chat de participación conserva mes y segmento AFAC seleccionados.
+
+## Revisión automática y evidencia final
+
+Se solicitó revisión Codex tres veces sobre `517ba49`; el servicio informó
+`Provided git ref ... does not exist`. GitHub devuelve ese commit y la corrida
+CI 406 verificó sus checks `test` y `web` con éxito. No se considera una
+revisión limpia. Se conserva el PR draft y se solicita una revisión del nuevo
+head que registra este límite. El sitio existente pasó `src.publish.verify`;
+la combinación local de Mercado y Noticias pasó 196 pruebas web y 13 de
+navegador antes de las dos correcciones posteriores de Noticias.
