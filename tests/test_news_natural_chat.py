@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
 import uuid
 
@@ -524,4 +523,68 @@ def test_api_does_not_replace_explicit_user_airline_with_provider_argument(tmp_p
             if m["role"] == "assistant"
         )
         assert "no coincide" in answer["content"]
+        assert not answer.get("payload", answer).get("news_results")
+
+
+@pytest.mark.parametrize(
+    "question,tool",
+    [
+        ("¿Qué métricas están disponibles?", "get_data_catalog"),
+        ("Muestra el RASK de Aeroméxico en 2026Q2", "query_metrics"),
+        ("Fuentes del RASK de Aeroméxico", "get_source_references"),
+        ("Muéstrame noticias de Aeroméxico sobre resultados", "search_news"),
+    ],
+)
+def test_explicit_tool_request_wins_over_news_tab_context(tmp_path, question, tool):
+    from src.conversational_analytics.api import create_app
+    from tests.test_chat_mock_conversation import _RecordingMockProvider, _new_turn, _completed_events
+
+    snapshot = Snapshot(ROOT / "site")
+    provider = _RecordingMockProvider(snapshot)
+    app = create_app(
+        config=ChatConfig(
+            state_path=tmp_path / "routing.sqlite3", prompt_version="r2-proposed", enable_evidence_tools=True
+        ),
+        snapshot=snapshot,
+        provider=provider,
+    )
+    with TestClient(app, base_url="http://127.0.0.1", client=("127.0.0.1", 50000)) as client:
+        conversation = client.post("/api/chat/conversations").json()
+        turn = _new_turn(
+            client,
+            conversation["id"],
+            question,
+            {"tab": "news", "period": "2026M09", "entity": "VIVA_AEROBUS"},
+        )
+        events = _completed_events(client, turn)
+        assert provider.tool_calls[-1][0] == tool
+        assert [event["name"] for event in events if event["type"] == "tool.completed"] == [tool]
+
+
+def test_directional_date_question_clarifies_without_news_cards(tmp_path):
+    from src.conversational_analytics.api import create_app
+    from tests.test_chat_mock_conversation import _new_turn, _completed_events
+
+    snapshot = Snapshot(ROOT / "site")
+    app = create_app(
+        config=ChatConfig(
+            state_path=tmp_path / "direction.sqlite3",
+            prompt_version="r2-proposed",
+            enable_evidence_tools=True,
+        ),
+        snapshot=snapshot,
+        provider=MockProvider(snapshot),
+    )
+    with TestClient(app, base_url="http://127.0.0.1", client=("127.0.0.1", 50000)) as client:
+        conversation = client.post("/api/chat/conversations").json()
+        turn = _new_turn(
+            client,
+            conversation["id"],
+            "noticias antes de julio de 2026",
+            {"tab": "news", "period": "2026M07"},
+        )
+        _completed_events(client, turn)
+        messages = client.get(f"/api/chat/conversations/{conversation['id']}").json()["messages"]
+        answer = next(m for m in reversed(messages) if m["role"] == "assistant")
+        assert "inicio y fin explícitos" in answer["content"]
         assert not answer.get("payload", answer).get("news_results")

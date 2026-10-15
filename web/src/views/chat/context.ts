@@ -76,8 +76,8 @@ export function buildChatContext(cardElement?: Element | null): ChatContext {
     ? flightState.quarters[flightState.periodIndex]!.period_id
     : tab === "market" ? document.querySelector<HTMLSelectElement>("#market-period")?.value ?? currentPeriodId() ?? ""
     : tab === "news" ? newsMonth?.replace("-","M") ?? "" : currentPeriodId() ?? "";
-  const picked = tab === "news" ? newsEntities[newsCompany ?? ""] ?? "INDUSTRY" : selectedEntities(cardId);
-  const context: ChatContext = { tab, period, entity: picked };
+  const picked = tab === "news" ? newsCompany ? newsEntities[newsCompany] : "INDUSTRY" : selectedEntities(cardId);
+  const context: ChatContext = { tab, period, ...(picked !== undefined ? {entity:picked} : {}) };
   if (cardId) context.card_id = cardId;
   const filters: NonNullable<ChatContext["filters"]> = {};
   if (cardId === "market-card" || cardId === "market-chart") {
@@ -125,11 +125,11 @@ export function describeChatContext(context: ChatContext): string {
   };
   const period = executiveState.records.find((record) => record.period_id === context.period)?.period_label ??
     flightState.byPeriod.get(context.period)?.period_label ?? context.period;
-  const entities = (Array.isArray(context.entity) ? context.entity : [context.entity]).map((entity) =>
+  const entities = (Array.isArray(context.entity) ? context.entity : context.entity ? [context.entity] : []).map((entity) =>
     ["INDUSTRY", "AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"].includes(entity)
       ? entityLabel(entity as EntityKey)
       : entity
-  ).join(", ");
+  ).join(", ") || "Sin aerolínea preseleccionada";
   const card = context.card_id ? cardLabels[context.card_id] : undefined;
   return `${tabLabels[context.tab]} · ${period || "periodo disponible"} · ${entities}${card ? ` · ${card}` : ""}`;
 }

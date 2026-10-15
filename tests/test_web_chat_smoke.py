@@ -289,6 +289,14 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
                 assert sent_context[-1]["tab"] == "news"
                 assert sent_context[-1]["period"] == "2026M09"
                 assert sent_context[-1]["entity"] == "VIVA_AEROBUS"
+                page.keyboard.press("Escape")
+                page.select_option("#news-company", "Aeroméxico Connect")
+                page.click("#news-chat")
+                assert "Aeroméxico Connect" in prompt.input_value()
+                assert "Sin aerolínea preseleccionada" in page.locator("#airline-chat-panel").inner_text()
+                page.get_by_role("button", name="Enviar").click()
+                page.get_by_text("Respuesta segura.").last.wait_for(timeout=10_000)
+                assert "entity" not in sent_context[-1]
             browser.close()
     finally:
         server.terminate()

@@ -80,10 +80,13 @@ class MockProvider:
         lowered = text.casefold()
         if "get_data_catalog" not in specs:
             return None, "No hay herramientas cargadas para este snapshot."
-        if "search_news" in specs and (context.get("tab") == "news" or "noticia" in lowered):
+        if "search_news" in specs and "noticia" in lowered:
             if len(text) > 240:
                 return None, "La simulación de noticias acepta consultas de hasta 240 caracteres."
-            return ("search_news", {"query":text, "company":None, "start_date":None, "end_date":None, "limit":5}), None
+            return (
+                "search_news",
+                {"query": text, "company": None, "start_date": None, "end_date": None, "limit": 5},
+            ), None
         if any(
             word in lowered for word in ("catálogo", "catalogo", "qué métricas", "que metricas", "disponible")
         ):
@@ -97,6 +100,13 @@ class MockProvider:
             if matches:
                 candidates.append((max(matches, key=len), metric))
         if not candidates:
+            if context.get("tab") == "news" and "search_news" in specs:
+                if len(text) > 240:
+                    return None, "La simulación de noticias acepta consultas de hasta 240 caracteres."
+                return (
+                    "search_news",
+                    {"query": text, "company": None, "start_date": None, "end_date": None, "limit": 5},
+                ), None
             return (
                 None,
                 "El modo simulado solo responde métricas nombradas en el catálogo. "
@@ -173,9 +183,13 @@ class MockProvider:
             if "error" in result:
                 return str(result["error"]), []
             rows = result.get("results", [])
-            lines = [f"Modo simulado, sin respuesta generativa: {len(rows)} de {result.get('total', len(rows))} noticias del índice aprobado."]
+            lines = [
+                f"Modo simulado, sin respuesta generativa: {len(rows)} de {result.get('total', len(rows))} noticias del índice aprobado."
+            ]
             if not rows:
-                lines.append("No hay coincidencias aprobadas para estos filtros; no demuestra ausencia de noticias.")
+                lines.append(
+                    "No hay coincidencias aprobadas para estos filtros; no demuestra ausencia de noticias."
+                )
             lines += [f"- {row['title']} ({row['published_at']}): {row['description']}" for row in rows]
             return "\n".join(lines), [ref for row in rows for ref in row.get("references", [])]
         if tool_name == "get_data_catalog":

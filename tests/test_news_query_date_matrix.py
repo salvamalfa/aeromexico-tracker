@@ -142,3 +142,22 @@ def test_evidence_tool_enforces_relative_semantics_before_returning_records(monk
     index = EvidenceIndex(Path(__file__).resolve().parents[1] / "config/chat/evidence/approved-index.json")
     with pytest.raises(ValueError, match="fechas explícitas"):
         index.search_news(query, start_date=bounds[0], end_date=bounds[1])
+
+
+@pytest.mark.parametrize("bounds", BOUNDS)
+@pytest.mark.parametrize(
+    "query",
+    [
+        "noticias antes de julio de 2026",
+        "noticias después de julio de 2026",
+        "noticias antes de 2026-07",
+        "noticias después de 2026-07-15",
+        "noticias anteriores a julio de 2026",
+        "noticias posteriores al 15 de julio de 2026",
+        "noticias previas a julio de 2026",
+        "noticias después del anuncio sobre combustible",
+    ],
+)
+def test_directional_qualifiers_require_explicit_supported_bounds_even_with_caller_dates(query, bounds):
+    with pytest.raises(ValueError, match="inicio y fin explícitos"):
+        resolve_news_query(query, start_date=bounds[0], end_date=bounds[1])

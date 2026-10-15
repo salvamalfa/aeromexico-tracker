@@ -72,7 +72,7 @@ export interface ChatConversation {
 export interface ChatContext {
   tab: "reading" | "economy" | "flights" | "market" | "news";
   period: string;
-  entity: string | string[];
+  entity?: string | string[];
   card_id?: string;
   filters?: {
     segment?: "total" | "domestic" | "international";
