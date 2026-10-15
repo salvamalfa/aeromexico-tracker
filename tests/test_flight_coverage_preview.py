@@ -10,9 +10,13 @@ from scripts.research import build_flight_coverage_preview as preview
 from src.transform import stage6_warehouse as warehouse
 
 
-def test_preview_rejects_uncommitted_builder_before_reading_data(tmp_path, monkeypatch):
+@pytest.mark.parametrize("input_path", [
+    "scripts/research/build_flight_coverage_preview.py",
+    "sql/gold/06_route_views.sql",
+])
+def test_preview_rejects_uncommitted_input_before_reading_data(tmp_path, monkeypatch, input_path):
     root = tmp_path / "repo"
-    script = root / "scripts/research/build_flight_coverage_preview.py"
+    script = root / input_path
     script.parent.mkdir(parents=True)
     script.write_text("committed builder")
     subprocess.run(["git", "init", "-q", str(root)], check=True)
@@ -21,7 +25,7 @@ def test_preview_rejects_uncommitted_builder_before_reading_data(tmp_path, monke
                     "commit", "-qm", "baseline"], cwd=root, check=True)
     script.write_text("uncommitted builder")
     monkeypatch.setattr(preview, "PATHS", SimpleNamespace(root=root))
-    with pytest.raises(RuntimeError, match="build_flight_coverage_preview.py"):
+    with pytest.raises(RuntimeError, match=script.name):
         preview.build_preview(tmp_path / "output")
     assert not (tmp_path / "output").exists()
 

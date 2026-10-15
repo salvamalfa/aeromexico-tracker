@@ -29,6 +29,7 @@ def identities(directory: Path) -> dict[str, str]:
 def committed_preview_inputs() -> str:
     refuse_if_build_inputs_dirty(root=PATHS.root, paths=BUILD_INPUT_PATHS + (
         "scripts/research/build_flight_coverage_preview.py",
+        "sql",
     ))
     return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=PATHS.root, text=True).strip()
 
