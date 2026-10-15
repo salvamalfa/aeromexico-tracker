@@ -21,6 +21,8 @@ reproducirla sin descargar fuentes. Los denominadores se releyeron de `VLOSREG`
 de los Excel AFAC conservados de 2015–2026; no del CSV de pasajeros. Las 76
 celdas domésticas de los operadores objetivo presentes en el CSV vigente
 coinciden exactamente con esa relectura. No se modificaron las marginales.
+Los encabezados de sección se reconocen en cualquier columna: los workbooks
+2015–2020 los sitúan en B o D, aunque operadores y meses siguen en A y B:M.
 
 Se comparan vuelos regulares del mismo operador, periodo y ámbito. Grupo
 Aeroméxico incluye Aerovías y Connect en AFAC, aunque BTS solo observa Aerovías.

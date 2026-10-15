@@ -8,20 +8,23 @@ import pytest
 from scripts.research.flight_coverage import audit, carrier_key, denominator, official_rows
 
 
-def test_official_denominator_excludes_subsidiaries_charter_and_unknown_months(tmp_path: Path):
+@pytest.mark.parametrize("header_column", [0, 1, 3])
+def test_official_denominator_excludes_subsidiaries_charter_and_unknown_months(tmp_path: Path, header_column):
     path = tmp_path / "official.xlsx"
     workbook = openpyxl.Workbook()
     sheet = workbook.active
     sheet.title = "VLOSREG"
     for row in [
-        ["EMPRESAS NACIONALES / DOMESTIC AIR CARRIERS"],
-        ["EN SERVICIO REGULAR NACIONAL"],
+        [None] * header_column + ["EMPRESAS NACIONALES / DOMESTIC AIR CARRIERS"],
+        [None] * header_column + ["EN SERVICIO REGULAR NACIONAL"],
         ["Aeroméxico (Aerovías de México)", 100, None, 0],
         ["Aeroméxico Connect (Aerolitoral)", 20, None, 0],
         ["Volaris (Concesionaria Vuela Cia de Aviación)", 50, None, 0],
-        ["EMPRESAS NACIONALES"], ["EN SERVICIO REGULAR INTERNACIONAL"],
+        [None] * header_column + ["EMPRESAS NACIONALES"],
+        [None] * header_column + ["EN SERVICIO REGULAR INTERNACIONAL"],
         ["Volaris (Concesionaria Vuela Cia de Aviación)", 40],
-        ["EMPRESAS EXTRANJERAS"], ["EN SERVICIO REGULAR INTERNACIONAL"],
+        [None] * header_column + ["EMPRESAS EXTRANJERAS"],
+        [None] * header_column + ["EN SERVICIO REGULAR INTERNACIONAL"],
         ["Volaris Costa Rica", 900], ["Volaris El Salvador", 800],
     ]:
         sheet.append(row)

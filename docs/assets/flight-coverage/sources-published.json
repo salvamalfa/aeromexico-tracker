@@ -98,7 +98,7 @@
       "last_month": 7
     }
   ],
-  "script_sha256": "800f6113398ee9e9b4daa41ef4684dd04d63edd963efae43efeb32cb3a3059c9",
+  "script_sha256": "726012e78e5df5c83d981b64a45eb90d6887b69689f18aaa97232566c7636e44",
   "public_input_sha256": {
     "data/gold/fact_route_traffic.parquet": "713e3865f1b49335f4a172e6c1385519c2e7d1700a947d4a686fd221e7df5bea",
     "data/gold/dim_route.parquet": "4c06b453993501e7c4dba353ebe43de758a9ead194a61253b9535fc1be6ced64",

@@ -58,14 +58,16 @@ def official_rows(path: Path, year: int, maximum_month: int = 12) -> list[dict]:
     records, scope, mexican = [], None, False
     for row in rows:
         name = str(row[0]).strip() if row and row[0] is not None else ""
-        label = clean(name)
+        # Older VLOSREG files place merged section headings in B or D;
+        # carrier names and monthly values still begin in A and B.
+        label = clean(" ".join(cell for cell in row if isinstance(cell, str)))
         if label.startswith("EMPRESAS NACIONALES"):
             mexican, scope = True, None
         elif label.startswith("EMPRESAS EXTRANJERAS"):
             mexican, scope = False, None
-        elif "SERVICIO REGULAR INTERNACIONAL" in label:
+        elif "REGULAR INTERNACIONAL" in label:
             scope = "international" if mexican else None
-        elif "SERVICIO REGULAR NACIONAL" in label:
+        elif "REGULAR NACIONAL" in label:
             scope = "domestic" if mexican else None
         key = carrier_key(name)
         if scope is None or key is None:
