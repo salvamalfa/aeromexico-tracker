@@ -1,13 +1,17 @@
 {
-  "schema": "presentation_parity_diagnostic_v1",
+  "schema": "presentation_parity_diagnostic_v2",
   "authorizes_publication": false,
   "approved_code_commit": "6d8da2c4c0b96371c26521aedb5828610451d03a",
   "base_commit": "40a63d1905afde97ae8e3f8671c8217aafacc4aa",
-  "candidate_head": "b0f7cebf7191ece557a8ac8ff4bf1c58b3b70082",
+  "evaluated_commit": "97c1c777ec389b5cb4e5e995f5629f9e5423d9e2",
+  "evaluated_tree": "3d28f40016a70d8086da7682c6aa569e45e2d75c",
+  "report_generator_sha256": "b961f797d337fd06adaebc6487d12c87847f7316f2f2038958d78a6af3a41c0a",
+  "worktree_code_matches_evaluated_commit": true,
+  "provenance_note": "evaluated_commit is the checkout where this report was actually executed. Committing the generated report necessarily creates a later commit; verify its presentation-component fingerprint and generator SHA, not a circular self-reference to the artifact commit.",
   "fingerprints": {
     "approved_entity_code": "8fc1d53128ae8a0cc795f29ae944e37787bb280f6025ec66b6a8b1cbc1f6382f",
     "master_base": "29a4b6b87c52f29de1c450d23a335f82647af0b5285cba1f992bb9e2f99a693f",
-    "candidate": "b85d1826e3d26a82d5e44d0b4bba1c0dc7393cf0772690c22521fbc3da0ca94a"
+    "candidate": "6e74410c1e389e4f21ff34a4b0306e107e6d107a423501756fb5fa1953294574"
   },
   "component_counts": {
     "approved": 130,
@@ -170,7 +174,7 @@
     {
       "path": "web/src/views/news/bootstrap.ts",
       "before_sha256": null,
-      "after_sha256": "dcc97e58b1d2b1fea6dbbf07c2fa21fdd24bff299b043526fc4332285f1299c8"
+      "after_sha256": "a1145d70d5a4fa3c2403c131585eb773a7beecd3129bbe00310712f13b716b9e"
     },
     {
       "path": "web/src/views/news/news.css",
@@ -238,7 +242,7 @@
       "replayed_claims_sha256": "5df3e53d5665aa285a2dae8f2d407c0266a3a74acbdfef7a7e229295c698129f",
       "thesis_identical": true,
       "summary_identical": true,
-      "proposed_technical_version_unapproved_not_written": "0d4bff1ae8901f28b24054b16acc015f1a12361bf6f191f9fc353eb09e93e9df"
+      "proposed_technical_version_unapproved_not_written": "c973c9f447d413c0c9628e1af47fd70427e27d05efed0c901cddf8c4c31402e4"
     },
     {
       "entity": "VIVA_AEROBUS",
@@ -262,7 +266,7 @@
       "replayed_claims_sha256": "1063f46218d1f820161fa82ffec4e05b2f802598d6e0273bb1f8fc5c8c978397",
       "thesis_identical": true,
       "summary_identical": true,
-      "proposed_technical_version_unapproved_not_written": "75895495efe8cb7ddcd98c6c1d981269227b804a3a05d8e920effc241a8bb45a"
+      "proposed_technical_version_unapproved_not_written": "345e07a396247483d364a0874e05529af11f699dcb4e59985987f461cf17292e"
     },
     {
       "entity": "VOLARIS",
@@ -286,7 +290,7 @@
       "replayed_claims_sha256": "a20bebc083729b958f34278c4fc5a402a23918110b191d95abceb0bb8a1ab745",
       "thesis_identical": true,
       "summary_identical": true,
-      "proposed_technical_version_unapproved_not_written": "9a9e0446a563981de12cda82be1514b0408783f2baba541b5e10beedb8cfbea6"
+      "proposed_technical_version_unapproved_not_written": "fda6af0dd3ec578ae3b43c53695564ec62ba60f1f337e2693668894d5dd0729a"
     }
   ],
   "decision": "Presentation remains blocked. Review/import/audit new technical entity versions and obtain explicit approval before export; retain the existing theses and evidence. This report is not an approval."
