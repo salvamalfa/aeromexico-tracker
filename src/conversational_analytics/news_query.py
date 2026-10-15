@@ -68,10 +68,10 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
             company,
         )
         companies = [selected]
-    years = re.findall(r"\b(20\d{2})\b", text)
+    years = re.findall(r"\b(\d{4})\b", text)
     months = [MONTHS[m] for m in re.findall(r"\b(" + "|".join(MONTHS) + r")\b", text)]
-    iso_months = re.findall(r"\b(20\d{2})-(0[1-9]|1[0-2])(?!-\d{2})\b", text)
-    iso_dates = re.findall(r"\b20\d{2}-\d{2}-\d{2}\b", text)
+    iso_months = re.findall(r"\b(\d{4})-(0[1-9]|1[0-2])(?!-\d{2})\b", text)
+    iso_dates = re.findall(r"\b\d{4}-\d{2}-\d{2}\b", text)
     supplied_start, supplied_end = start_date, end_date
     for value in (supplied_start, supplied_end):
         if value is not None:
@@ -83,8 +83,8 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
     # Query meaning is validated independently of nullable caller arguments.
     start_date = end_date = None
     # A malformed ISO-like token must not fall through to a broad year filter.
-    for token in re.findall(r"\b20\d{2}(?:-\d+)+\b", text):
-        if not re.fullmatch(r"20\d{2}-\d{2}(?:-\d{2})?", token):
+    for token in re.findall(r"\b\d{4}(?:-\d+)+\b", text):
+        if not re.fullmatch(r"\d{4}-\d{2}(?:-\d{2})?", token):
             raise ValueError("Usa fechas YYYY-MM-DD o meses YYYY-MM explícitos.")
         date.fromisoformat(token + "-01" if len(token) == 7 else token)
     relative = re.search(
@@ -127,7 +127,7 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
             int(last[0]), int(last[1]), calendar.monthrange(int(last[0]), int(last[1]))[1]
         ).isoformat()
     elif months:
-        pairs = re.findall(r"\b(" + "|".join(MONTHS) + r")\s+(?:de\s+)?(20\d{2})\b", text)
+        pairs = re.findall(r"\b(" + "|".join(MONTHS) + r")\s+(?:de\s+)?(\d{4})\b", text)
         if len(months) > 2:
             raise ValueError("Indica un mes o un intervalo explícito de dos meses.")
         if len(pairs) == len(months):
