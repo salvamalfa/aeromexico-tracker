@@ -93,6 +93,9 @@ estimadas de EE. UU. cuando no gana una ruta observada. Está desactivada por
 defecto. No combina un trimestre BTS parcial con estimaciones de sus meses
 faltantes; esos meses se consultan por separado. Cambia una prioridad de fuente
 del mapa y requiere aprobación antes de producción; no constituye un modelo nuevo.
+La ampliación por defecto puede aprobarse con esta opción desactivada. Activar
+estimaciones de EE. UU. es una decisión adicional e independiente, y no es un
+requisito para aprobar el resto. Las previews base y opcional deben distinguirse.
 
 La preview no lleva `publication_manifest.json` ni recibo de publicación. Sus
 datos ampliados y su matriz permanecen privados; el PR público contiene código,

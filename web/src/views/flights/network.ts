@@ -92,14 +92,15 @@ export function cityLabel(name: string): string {
   })[name] || name;
 }
 
-export function routeTitle(route: Route): string {
+export function routeTitle(route: Route, airportCodes = false): string {
+  const label = (airport: Route["origin"]): string => airportCodes ? airport.iata : cityLabel(airport.city || airport.iata);
   if (route.directions?.length === 1) {
     const direction = route.directions[0]!;
     const [origin, destination] = direction.origin_iata === route.origin.iata
       ? [route.origin, route.destination] : [route.destination, route.origin];
-    return `${cityLabel(origin.city || origin.iata)} → ${cityLabel(destination.city || destination.iata)}`;
+    return `${label(origin)} → ${label(destination)}`;
   }
-  return `${cityLabel(route.origin.city || route.origin.iata)} ↔ ${cityLabel(route.destination.city || route.destination.iata)}`;
+  return `${label(route.origin)} ↔ ${label(route.destination)}`;
 }
 
 function domesticPeriodNetwork(periodId: string): PeriodNetworkDocument {
