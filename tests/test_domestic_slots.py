@@ -90,7 +90,8 @@ def test_frequency_survives_unknown_aircraft_without_borrowing_other_months(borr
         assert route["operation_status"].endswith("partial_frequencies")
 
 
-def test_group_capacity_survives_a_single_carrier_without_invalidating_the_route():
+@pytest.mark.parametrize("borrowed", [False, True])
+def test_group_capacity_survives_a_single_carrier_without_invalidating_the_route(borrowed):
     """A market where only Aerovías (never Connect) is present in the AeroDataBox
     capacity fact for one direction must still report Grupo Aeroméxico seats and
     departures for that direction, instead of falling back to N/D."""
@@ -98,6 +99,9 @@ def test_group_capacity_survives_a_single_carrier_without_invalidating_the_route
     period = "2026M06"
     market_key = "<>".join(sorted(("MEX", "ABC")))
     estimates = pd.DataFrame(_synthetic_estimate_rows(period, market_key))
+    if borrowed:
+        missing = estimates.origin_iata.eq("MEX") & estimates.carrier_key.eq("AEROMEXICO_CONNECT")
+        estimates.loc[missing, ["support_observed_in_period", "support_month_gap", "support_source_periods"]] = [False, 1, "2026M05"]
     capacity = pd.DataFrame(
         [
             # MEX -> ABC: only Aerovías de México observed by AeroDataBox.
@@ -117,6 +121,9 @@ def test_group_capacity_survives_a_single_carrier_without_invalidating_the_route
     # requiring both filiales to have their own capacity row.
     assert route["seats"] == pytest.approx(20_000.0)
     assert route["departures"] == pytest.approx(100.0)
+    assert route["operation_status"].endswith("partial_frequencies") is borrowed
+    if borrowed:
+        assert "frecuencias parciales" in route["coverage_note"]
     assert route["load_factor"] == pytest.approx(3_000.0 / 20_000.0)
     directions = {(d["origin_iata"], d["destination_iata"]): d for d in route["directions"]}
     assert directions[("MEX", "ABC")]["capacity_complete"] is True

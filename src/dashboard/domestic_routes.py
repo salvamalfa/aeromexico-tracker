@@ -287,6 +287,7 @@ def load_domestic_networks(
             )
             return {
                 "departures": float(row["departures_estimated"]),
+                "flight_count_partial": not bool(row["frequency_complete"]),
                 "seats": seats,
                 "seats_low": seats_low,
                 "seats_high": seats_high,
