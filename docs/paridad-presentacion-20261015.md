@@ -32,3 +32,5 @@ uv run pytest --require-local-data -q tests/test_site_parity.py::test_site_fligh
 La segunda orden conserva los dos fallos mientras no exista una nueva versión técnica aprobada. El diagnóstico de la primera compara los componentes con el selector de producción para evitar atribuir el fallo a una aproximación distinta.
 
 Evidencia de la rama actual: [directorio de reportes JSON reproducibles](referencias/presentation-parity-20261015/). Los insumos privados solo se describen por conteo y tamaño agregados; se omiten nombres, tamaños individuales y hashes.
+
+El reporte v2 registra `evaluated_commit`, su árbol y el SHA del propio generador; exige además que el código de presentación del worktree coincida con ese commit. Se regenera después de las correcciones de código. Guardar el JSON crea necesariamente un commit documental posterior: el artefacto no puede incluir su propio hash de commit. La huella de componentes y del generador permiten verificar que ese commit documental conserva exactamente el código evaluado.
