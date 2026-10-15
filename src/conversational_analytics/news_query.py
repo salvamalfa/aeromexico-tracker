@@ -79,7 +79,7 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
                 raise ValueError("Usa fechas YYYY-MM-DD o meses YYYY-MM explícitos.")
             date.fromisoformat(token + "-01" if len(token) == 7 else token)
         relative = re.search(
-            r"\b(?:ultim[oa]s?|este|esta|estos|estas|anterior(?:es)?)\s+(?:(?:\d+|un|una|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|quince|treinta)\s+)?(?:mes(?:es)?|anos?|semanas?|dias?)\b|\b(?:mes(?:es)?|anos?|semanas?|dias?)\s+(?:pasad[oa]s?|anterior(?:es)?)\b",
+            r"\b(?:ultim[oa]s?|este|esta|estos|estas|anterior(?:es)?)\s+(?:(?:\d+|un|una|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|quince|treinta)\s+)?(?:minutos?|horas?|dias?|semanas?|quincenas?|mes(?:es)?|bimestres?|trimestres?|cuatrimestres?|semestres?|anos?|ejercicios?)\b|\b(?:minutos?|horas?|dias?|semanas?|quincenas?|mes(?:es)?|bimestres?|trimestres?|cuatrimestres?|semestres?|anos?|ejercicios?)\s+(?:pasad[oa]s?|anterior(?:es)?)\b",
             text,
         )
         if relative or re.search(r"\b(?:ayer|hoy)\b", text):

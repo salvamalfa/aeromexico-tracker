@@ -309,6 +309,10 @@ def test_explicit_year_range_never_silently_becomes_unbounded():
         "noticias del mes anterior",
         "noticias del año pasado",
         "noticias de hoy",
+        "noticias de este trimestre",
+        "noticias de las últimas 24 horas",
+        "noticias del último semestre",
+        "noticias de la semana pasada",
     ],
 )
 def test_relative_time_units_require_explicit_dates(question):
