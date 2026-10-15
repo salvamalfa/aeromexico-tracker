@@ -3,15 +3,15 @@
   "authorizes_publication": false,
   "approved_code_commit": "6d8da2c4c0b96371c26521aedb5828610451d03a",
   "base_commit": "40a63d1905afde97ae8e3f8671c8217aafacc4aa",
-  "evaluated_commit": "8ea3c3576ed922a987280f8a059217a2379b8572",
-  "evaluated_tree": "ea3159ab93039293568fdc107cd3c697084c9bc8",
+  "evaluated_commit": "a3e41e9d9199563326d0698ee2a329d378fdb1ed",
+  "evaluated_tree": "2c8f841475417c595943baa69e61b43694a6ddf3",
   "report_generator_sha256": "e81f3b6f4de5c8a6105385a713b7399288b4a68e86ecc66d37c58b5e079b4a97",
   "worktree_code_matches_evaluated_commit": true,
   "provenance_note": "evaluated_commit is the checkout where this report was actually executed. Committing the generated report necessarily creates a later commit; verify its presentation-component fingerprint and generator SHA, not a circular self-reference to the artifact commit.",
   "fingerprints": {
     "approved_entity_code": "8fc1d53128ae8a0cc795f29ae944e37787bb280f6025ec66b6a8b1cbc1f6382f",
     "master_base": "29a4b6b87c52f29de1c450d23a335f82647af0b5285cba1f992bb9e2f99a693f",
-    "candidate": "200c68ad269ddfd84e84bd33c54115d7f50d55a34fe3d883308302fe1a0ca89e"
+    "candidate": "aaac84bf6c8db449b346da9c07cd1f27f62bbc4d489170d7b5ff4bbd759def14"
   },
   "component_counts": {
     "approved": 130,
@@ -139,7 +139,7 @@
     {
       "path": "web/src/types/chat.ts",
       "before_sha256": "991c975e963f9e372d64811a572cacaeaed4b00677b7f97427be372c3391b0be",
-      "after_sha256": "95e9f830c92fe80ba14ac3fbca1f9a43cbc89a39422fc2e7ba92133980cf9072"
+      "after_sha256": "99b6fafa3725e11de786d5bce42b3c8bae4cfe68458ad058f8a945385cd97084"
     },
     {
       "path": "web/src/types/generated/news.ts",
@@ -159,7 +159,7 @@
     {
       "path": "web/src/views/chat/context.ts",
       "before_sha256": "0da28093e4eb46fad3ad957aa0ba08ad2482e61dd1992d09d1b89ccba8a67766",
-      "after_sha256": "27d1d63b36ca08b22124c42f700522fbbc9ef40ef27f42735d5049f8d0a971fa"
+      "after_sha256": "478a7692b68038218430d45a82e2e01497d3224b0e46f3b30798311167d239ee"
     },
     {
       "path": "web/src/views/chat/markdown.ts",
@@ -259,7 +259,7 @@
       "replayed_claims_sha256": "5df3e53d5665aa285a2dae8f2d407c0266a3a74acbdfef7a7e229295c698129f",
       "thesis_identical": true,
       "summary_identical": true,
-      "proposed_technical_version_unapproved_not_written": "8baa4695d99c4f988133ea633ee1f706d32bf849fccdddd08edaea273b037729"
+      "proposed_technical_version_unapproved_not_written": "afa25071a66951e426fb6eb583f0c185af46dcd920ec472711ed13b0cf8d3bca"
     },
     {
       "entity": "VIVA_AEROBUS",
@@ -283,7 +283,7 @@
       "replayed_claims_sha256": "1063f46218d1f820161fa82ffec4e05b2f802598d6e0273bb1f8fc5c8c978397",
       "thesis_identical": true,
       "summary_identical": true,
-      "proposed_technical_version_unapproved_not_written": "b23c9ebd241ac387803e015ceea86de4c02345a560d81bed3524a0a2e899e62e"
+      "proposed_technical_version_unapproved_not_written": "eac92bd085490553d105b43065ea69c0f01d1972ad6be2dc128b9fcc3b5694be"
     },
     {
       "entity": "VOLARIS",
@@ -307,7 +307,7 @@
       "replayed_claims_sha256": "a20bebc083729b958f34278c4fc5a402a23918110b191d95abceb0bb8a1ab745",
       "thesis_identical": true,
       "summary_identical": true,
-      "proposed_technical_version_unapproved_not_written": "7e969533038fea0de11feaf648c6364d8e9eb6ae23fa31ac8ddfa67d49888d96"
+      "proposed_technical_version_unapproved_not_written": "39d3871067587c361ff82f4dd4a89a30f6be3457bba9fbe0a8fcb2368b1f74d6"
     }
   ],
   "decision": "Presentation remains blocked. Review/import/audit new technical entity versions and obtain explicit approval before export; retain the existing theses and evidence. This report is not an approval."
