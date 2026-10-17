@@ -45,8 +45,7 @@ function mountFlightPickers(): void {
       if (!key || !setMapEntity(key)) return;
       state.pinnedAirport = null;
       state.selectedMarket = null;
-      await renderNetworkPeriod(state.quarters[state.periodIndex]!.period_id);
-      renderFlowMap();
+      if (await renderNetworkPeriod(state.quarters[state.periodIndex]!.period_id)) renderFlowMap();
     });
     if (initial) setMapEntity(initial);
   }

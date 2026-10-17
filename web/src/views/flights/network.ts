@@ -139,7 +139,7 @@ function entityScopeNote(entity: string, domestic: boolean): string {
 
 let networkRenderRequest = 0;
 
-export async function renderNetworkPeriod(periodId: string): Promise<void> {
+export async function renderNetworkPeriod(periodId: string): Promise<boolean> {
   periodId = currentMapPeriod() || periodId;
   if (state.domesticMonthsQuarterId !== periodId) {
     state.domesticMonthsQuarterId = periodId;
@@ -152,11 +152,11 @@ export async function renderNetworkPeriod(periodId: string): Promise<void> {
   const request = ++networkRenderRequest;
   const entity = state.mapEntity;
   await ensureDomesticMonths(monthsInQuarter(state.domesticMonthsQuarterId));
-  if (request !== networkRenderRequest || entity !== state.mapEntity) return;
+  if (request !== networkRenderRequest || entity !== state.mapEntity) return false;
   const domesticAvailable = domesticAvailableForQuarter(periodId);
   if (state.networkMode === "domestic") await ensureDomesticQuarter(calendarQuarter(periodId));
   else await ensureInternational(periodId);
-  if (request !== networkRenderRequest || entity !== state.mapEntity) return;
+  if (request !== networkRenderRequest || entity !== state.mapEntity) return false;
 
   const periodNetwork =
     state.networkMode === "domestic" ? domesticPeriodNetwork(periodId) : internationalPeriodNetwork(periodId);
@@ -214,4 +214,5 @@ export async function renderNetworkPeriod(periodId: string): Promise<void> {
   state.selectedMarket = null;
   renderRouteMode();
   if (state.flowMapRendered) renderFlowMap();
+  return true;
 }
