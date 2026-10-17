@@ -54,9 +54,19 @@ def mappable_routes(frame):
 
 
 def refresh_network_availability(network: dict) -> None:
-    """A retained non-BTS figure is available, without certifying the world network."""
+    """Report temporal availability independently of geographic/source scope.
+
+    Complete means all expected observed months are retained, not that the
+    worldwide network or every route is complete. Source limits stay in
+    coverage/coverage_by_source and historical eligibility remains unchanged.
+    """
     quantified = any(route.get("departures") is not None for route in network.get("routes", []))
-    network["availability"] = "partial" if quantified else "unavailable"
+    expected = set(network.get("expected_months") or [])
+    observed = set(network.get("observed_months") or [])
+    network["availability"] = (
+        "complete" if quantified and expected and observed == expected
+        else "partial" if quantified else "unavailable"
+    )
     if quantified and str(network.get("eligibility_reason", "")).startswith("T-100 no contiene"):
         network["eligibility_reason"] = (
             "Hay cifras retenidas de otras fuentes; cobertura parcial por fuente y mes, "

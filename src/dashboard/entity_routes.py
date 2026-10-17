@@ -97,7 +97,9 @@ def entity_international_networks(connection, networks, entity: RouteEntity, *, 
             network["routes"].append(route)
         apply_flight_cells(network, international_cells(
             connection, months, entity, estimates, endpoint,
-            include_us=include_existing_us_estimates, allowed_us_estimate_cells=allowed_us_estimate_cells), endpoint)
+            include_us=include_existing_us_estimates, allowed_us_estimate_cells=allowed_us_estimate_cells), endpoint,
+            previous_cells=international_cells(connection, [f"{int(m[:4])-1}{m[4:]}" for m in months],
+                                              entity, pd.DataFrame(), endpoint))
         network["aena_airport_activity"] = []
         aps = {e["iata"]: e for r in network["routes"] for e in (r["origin"], r["destination"])}
         network["airports"] = sorted(aps.values(), key=lambda a: a["iata"])

@@ -11,6 +11,8 @@ import math
 
 import pandas as pd
 
+from src.web_export.route_support import comparable_previous_departures
+
 KINDS = ("observed", "estimated", "scheduled")
 
 
@@ -198,11 +200,14 @@ def international_cells(
     return resolve_cells(cells)
 
 
-def apply_flight_cells(network, cells, endpoint):
+def apply_flight_cells(network, cells, endpoint, *, previous_cells=None):
     """Replace only flight counts; retain the historical passenger payload intact."""
     by_market = defaultdict(list)
     for cell in cells:
         by_market["<>".join(sorted((cell["origin_iata"], cell["destination_iata"])))].append(cell)
+    previous_by_market = defaultdict(list)
+    for cell in previous_cells or []:
+        previous_by_market["<>".join(sorted((cell["origin_iata"], cell["destination_iata"])))].append(cell)
     routes = {r["market_key"]: r for r in network["routes"]}
     for market, components in sorted(by_market.items()):
         if market not in routes:
@@ -257,6 +262,9 @@ def apply_flight_cells(network, cells, endpoint):
         else:
             route["operation_status"] = "mixed_observed_estimated_cells"
             route["previous"] = {k: None for k in ("passengers", "seats", "departures")}
+        route["previous"]["departures"] = comparable_previous_departures(
+            network, components, previous_by_market.get(market, []), route["previous"].get("departures")
+        )
         route["source_label"] = " · ".join(sorted({c["source_label"] for c in selected}))
         route["observed_months"] = sorted({c["period_id"] for c in components if c["kind"] == "observed"})
         route["estimated_months"] = sorted({c["period_id"] for c in components if c["kind"] == "estimated"})

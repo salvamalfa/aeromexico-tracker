@@ -119,7 +119,7 @@ no es un dato disponible ni una autorización para completar la red.
 
 ## Resultado del candidato base, sin fallback de EE. UU.
 
-La preview base compilada en `c5bbfb4eddfcc0868aae869a848026c0c29e3aa8`
+La primera compilación base, en `c5bbfb4eddfcc0868aae869a848026c0c29e3aa8`,
 tiene el fallback de EE. UU. desactivado. El informe reproducible contrasta
 144 filas de publicación, borrador anterior, base nueva y variante acotada.
 Son resultados del
@@ -198,8 +198,7 @@ sólo describe la vista inicial, nunca el porcentaje de red.
 
 ### Variante opcional acotada: 14 celdas AM, 731 frecuencias
 
-Compilada en `6cd28741027ea288382bf91286574182b16172d7`, la segunda
-preview admite exactamente el selector privado revisado; no habilita todo el
+La primera compilación acotada, en `6cd28741027ea288382bf91286574182b16172d7`, admite exactamente el selector privado revisado; no habilita todo el
 fallback histórico de EE. UU. Su hash SHA-256 es
 `ca019c6c4ca925c4805e5c5cef990e15c639c5ddcaed16cccba3a75b03c88b2f`.
 La base puede revisarse y aprobarse con esta opción desactivada.
@@ -395,10 +394,10 @@ El resultado definitivo del head entregado se registra en
 y en su comentario de cierre y revisión. Ese registro debe identificar el
 commit, el conteo de la suite restante, sus dos exclusiones, la revisión
 independiente y Codex. Un resultado de otro commit no sustituye los checks
-vigentes. El head de código de las compilaciones es
-`6cd28741027ea288382bf91286574182b16172d7`; la base anterior difiere sólo por
-un refuerzo de admisión inerte con su opción US desactivada. Los cambios de
-cierre posteriores son documentales y se comprueban por separado.
+vigentes. Las compilaciones iniciales usaron `c5bbfb4`/`6cd2874`; las recompilaciones
+de cierre registran su propio commit en `preview-metadata.json` y en el
+comentario del PR. La corrección de soporte temporal no cambia los
+numeradores ni los denominadores de las tablas anteriores.
 
 Continúan vigentes los límites de no integrar, no publicar y no activar
 análisis. La revisión técnica y las previews no sustituyen la aprobación
@@ -411,3 +410,27 @@ Comando de la suite funcional restante, sin modificar los artefactos antiguos:
 python -m pytest -m 'not browser' \
   -k 'not test_site_flights_and_executive_data_match_a_fresh_export and not test_outputs_match_snapshot_and_are_reproducible' -q
 ```
+
+
+### Controles adicionales de la revisión de cierre
+
+La disponibilidad temporal se distingue del alcance geográfico: una red puede
+contener todos sus meses esperados y seguir representando sólo las fuentes y
+mercados declarados. Los periodos completos vuelven a permitir comparaciones,
+conservando `agent_eligible` y los límites de publicación retrospectiva.
+
+Para una comparación de salidas con desglose moderno, cada operador y sentido
+debe tener todos los meses esperados en ambos periodos, con fuentes y tipos
+comparables. Un mes ausente no se interpreta como cero ni se presenta como
+una caída de 20 frente a 60. Un cero explícito sí conserva soporte. Los
+rankings del chat y la comparación previa del mapa aplican esta restricción;
+el detalle de vuelos no se usa como prueba de soporte de pasajeros o asientos.
+En Q2 se conservan 12 comparaciones previas conciliadas y se retiran 25 sin soporte comparable; los valores actuales no cambian. Los payloads legados sin detalle mantienen su política explícita anterior.
+
+El auditor anterior `flight_coverage.py` también divide las rutas mixtas por
+componente. BTS se concilia de forma independiente contra Gold por operador,
+aeropuertos, dirección, mes, clase y hashes; Aerocivil por operador ICAO,
+dirección, mes y hashes. No basta que los números de un componente sumen sus
+propias clases. El CLI rechaza falta de evidencia o diferencias y conserva
+F/G como regular verificable, con L/P separados. Las celdas ANAC/CAA sin clase
+regular confirmada siguen excluidas de ese numerador.

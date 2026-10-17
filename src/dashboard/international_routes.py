@@ -559,6 +559,13 @@ def extend_networks(
                 allowed_us_estimate_cells=allowed_us_estimate_cells,
             ),
             endpoint,
+            previous_cells=international_cells(
+                connection,
+                [f"{int(m[:4]) - 1}{m[4:]}" for m in months],
+                AEROMEXICO_ROUTES,
+                pd.DataFrame(),
+                endpoint,
+            ),
         )
         # Aena's company exports identify an airport, not the Mexican endpoint.
         # Present them alongside the map, never as a carrier-route observation.

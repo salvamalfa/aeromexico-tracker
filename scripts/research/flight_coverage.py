@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import re
 import unicodedata
 from collections import defaultdict
@@ -115,7 +116,15 @@ def denominator(official: dict, entity: str, scope: str, months: list[str]) -> f
 def flight_kind(route: dict) -> str | None:
     if not isinstance(route.get("departures"), (int, float)):
         return None
+    components = route.get("flight_components", [])
+    if components:
+        kinds = {cell["kind"] for cell in components}
+        if not kinds <= set(KINDS):
+            raise ValueError("Unknown flight component kind")
+        return next(iter(kinds)) if len(kinds) == 1 else "mixed"
     status = route.get("operation_status", "")
+    if status.startswith("mixed"):
+        raise ValueError("Mixed flight route requires flight_components for a reliable audit")
     if status == "assigned_slot_not_flown" or status.startswith("scheduled_"):
         return "scheduled"
     if status == "carrier_inferred_market_observed":
@@ -123,6 +132,40 @@ def flight_kind(route: dict) -> str | None:
     if status.startswith("estimated_"):
         return "estimated"
     return "observed"
+
+
+def flight_parts(route: dict, network: dict, period: str) -> list[tuple]:
+    """Preserve operator/direction/month/source/kind before any audit sum."""
+    components = route.get("flight_components", [])
+    if not components:
+        kind = flight_kind(route)
+        months = [period] if "M" in period else route_months(route, network, period)
+        return [(kind, route, months)] if kind else []
+    expected, seen, operated, parts = set(period_months(period)), set(), set(), []
+    for cell in components:
+        kind, value = cell["kind"], cell["departures"]
+        if (kind not in KINDS or not isinstance(value, (int, float))
+                or isinstance(value, bool) or not math.isfinite(value) or value < 0):
+            raise ValueError("Invalid flight component kind or departures")
+        key = tuple(cell[field] for field in ("carrier_key", "origin_iata", "destination_iata", "period_id"))
+        if key[3] not in expected or "<>".join(sorted(key[1:3])) != route["market_key"]:
+            raise ValueError("Flight component differs from requested period or market")
+        if (*key, kind) in seen or (kind in ("observed", "estimated") and key in operated):
+            raise ValueError("Duplicate or overlapping flight component")
+        seen.add((*key, kind))
+        if kind in ("observed", "estimated"):
+            operated.add(key)
+        part = {k: v for k, v in route.items() if k != "flight_components"}
+        part.update(departures=value, source_label=cell.get("source_label", ""),
+                    _flight_component=cell, _audit_record=(route["market_key"], period))
+        parts.append((kind, part, [key[3]]))
+    active = [part["departures"] for kind, part, _ in parts if kind != "scheduled"]
+    total = sum(active) if active else sum(part["departures"] for _, part, _ in parts)
+    displayed = route.get("departures")
+    if (not isinstance(displayed, (int, float)) or isinstance(displayed, bool)
+            or not math.isfinite(displayed) or abs(total - displayed) > .01):
+        raise ValueError("Map departures differ from flight component total")
+    return parts
 
 
 def route_months(route: dict, network: dict, quarter: str) -> list[str]:
@@ -146,8 +189,67 @@ def bts_index(gold: Path) -> dict:
     return {key: (float(value), float(regular.get(key, 0))) for key, value in all_counts.items()}
 
 
-def regular_observed(route: dict, months: list[str], entity: str, counts: dict, observations: pd.DataFrame) -> tuple[float | None, str]:
+def bts_component_index(gold: Path) -> dict:
+    """Authoritative Gold counts at operator/directional airport/month grain."""
+    frame = pd.read_parquet(gold / "fact_route_traffic.parquet")
+    frame = frame[frame.source_system.eq("bts_t100")]
+    routes = pd.read_parquet(gold / "dim_route.parquet")[["route_key", "origin_iata", "dest_iata"]]
+    frame = frame.merge(routes, on="route_key", validate="many_to_one")
+    result = {}
+    for key, group in frame.groupby(["carrier_key", "origin_iata", "dest_iata", "period_id"]):
+        result[key] = {
+            "departures": float(group.departures_performed.sum(min_count=1)),
+            "classes": group.groupby("service_class").departures_performed.sum(min_count=1).to_dict(),
+            "hashes": sorted(set(group.source_hash.dropna().astype(str))) if "source_hash" in group else [],
+        }
+    return result
+
+
+def match_component_hashes(component: dict, expected: list[str]) -> None:
+    actual = component.get("source_hashes", [])
+    if not isinstance(actual, list) or sorted(set(actual)) != expected:
+        raise ValueError("Flight component source hashes differ from authoritative Gold")
+
+
+def regular_observed(route: dict, months: list[str], entity: str, counts: dict,
+                     observations: pd.DataFrame, *, component_counts: dict | None = None) -> tuple[float | None, str]:
     source = route.get("source_label", "")
+    if component := route.get("_flight_component"):
+        carrier = component["carrier_key"]
+        if carrier not in ENTITIES[entity]:
+            raise ValueError("Observed component operator differs from requested entity")
+        key = tuple(component[field] for field in
+                    ("carrier_key", "origin_iata", "destination_iata", "period_id"))
+        if "BTS T-100" in source:
+            expected = component_counts.get(key) if component_counts is not None else None
+            if expected is None:
+                raise ValueError("BTS component lacks matching authoritative Gold cell")
+            classes = component.get("service_class_departures")
+            if (not classes or any(not isinstance(v, (int, float)) or isinstance(v, bool)
+                                   or not math.isfinite(v) or v < 0 for v in classes.values())
+                    or abs(sum(classes.values()) - component["departures"]) > .01):
+                raise ValueError("BTS component needs reconciled service-class departures")
+            if classes != expected["classes"] or abs(component["departures"] - expected["departures"]) > .01:
+                raise ValueError("BTS component count/classes differ from authoritative Gold")
+            match_component_hashes(component, expected["hashes"])
+            return sum(expected["classes"].get(k, 0) for k in ("F", "G")), "BTS Gold component F/G; L/P excluded"
+        if "Aerocivil" in source:
+            operator = {"AEROMEXICO": "AMX", "AEROMEXICO_CONNECT": "SLI",
+                        "VOLARIS": "VOI", "VIVA_AEROBUS": "VIV"}[carrier]
+            selected = observations[observations.source_system.eq("aerocivil")
+                                    & observations.operator_icao.eq(operator)
+                                    & observations.period_id.eq(key[3])
+                                    & observations.origin_iata.eq(key[1])
+                                    & observations.dest_iata.eq(key[2])]
+            value = selected.departures.sum(min_count=1)
+            if pd.isna(value) or abs(value - component["departures"]) > .01:
+                raise ValueError("Aerocivil component count differs from authoritative Gold")
+            hashes = sorted(set(selected.source_hash.dropna().astype(str))) if "source_hash" in selected else []
+            match_component_hashes(component, hashes)
+            return float(value), "Aerocivil Gold explicitly regular international operations"
+        return None, "Regular-service comparability unverified; excluded from comparable numerator"
+    if route.get("flight_components"):
+        raise ValueError("Split flight_components before comparing observed regular flights")
     if "BTS T-100" in source:
         pairs = [counts.get((entity, month, route["market_key"]), (0, 0)) for month in months]
         if abs(sum(pair[0] for pair in pairs) - route["departures"]) > .51:
@@ -169,6 +271,7 @@ def audit(site: Path, official: dict, gold: Path, *, independent_map_periods: bo
     metadata = json.loads((base / "quarters.json").read_text())
     financial = {r["period_id"] for r in metadata["quarters"]}
     counts = bts_index(gold)
+    component_counts = None
     observations = pd.read_parquet(gold / "fact_international_route_observations.parquet")
     observations["market_key"] = observations.apply(
         lambda row: "<>".join(sorted((str(row.origin_iata), str(row.dest_iata)))), axis=1)
@@ -184,17 +287,18 @@ def audit(site: Path, official: dict, gold: Path, *, independent_map_periods: bo
                 if scope == "domestic":
                     for month in expected:
                         for route in documents.get(month, {}).get("routes", []):
-                            if (kind := flight_kind(route)):
-                                rows[kind].append((route, [month]))
+                            for kind, part, represented in flight_parts(route, documents[month], month):
+                                rows[kind].append((part, represented))
                     native = documents.get(quarter, {})
                     for route in native.get("routes", []):
-                        if (kind := flight_kind(route)) and kind != "estimated":
-                            rows[kind].append((route, route_months(route, native, quarter)))
+                        for kind, part, represented in flight_parts(route, native, quarter):
+                            if kind != "estimated":
+                                rows[kind].append((part, represented))
                 else:
                     network = documents.get(quarter, {})
                     for route in network.get("routes", []):
-                        if (kind := flight_kind(route)):
-                            rows[kind].append((route, route_months(route, network, quarter)))
+                        for kind, part, represented in flight_parts(route, network, quarter):
+                            rows[kind].append((part, represented))
                 full_denom = denominator(official, entity, scope, expected)
                 for kind in KINDS:
                     selected = rows[kind]
@@ -202,7 +306,11 @@ def audit(site: Path, official: dict, gold: Path, *, independent_map_periods: bo
                     comparable, definitions, comparable_sources = 0.0, set(), 0
                     if kind == "observed":
                         for route, represented in selected:
-                            value, definition = regular_observed(route, represented, entity, counts, observations)
+                            if route.get("_flight_component") and "BTS T-100" in route.get("source_label", ""):
+                                if component_counts is None:
+                                    component_counts = bts_component_index(gold)
+                            value, definition = regular_observed(
+                                route, represented, entity, counts, observations, component_counts=component_counts)
                             if value is not None:
                                 comparable += value
                                 comparable_sources += 1
@@ -216,7 +324,8 @@ def audit(site: Path, official: dict, gold: Path, *, independent_map_periods: bo
                     result.append({
                         "entity": entity, "scope": scope, "quarter": quarter, "kind": kind,
                         "map_flights": sum(route["departures"] for route, _ in selected) if selected else None,
-                        "mapped_route_records": len(selected), "represented_months": "|".join(months),
+                        "mapped_route_records": len({route.get("_audit_record", (route["market_key"], tuple(represented)))
+                                                     for route, represented in selected}), "represented_months": "|".join(months),
                         "map_source_labels": "|".join(sorted({route.get("source_label", "") for route, _ in selected})),
                         "pending_calendar_months": "|".join(month for month in expected if month not in months),
                         "period_selectable": bool(selected) and (independent_map_periods or quarter in financial or quarter in documents),
