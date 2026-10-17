@@ -117,11 +117,83 @@ internacional AFAC, es 88,66%; faltan al menos 2.874 vuelos nacionales
 sustentados para alcanzar el objetivo. El supuesto de internacional completo
 no es un dato disponible ni una autorización para completar la red.
 
-**Resultados del nuevo mapa pendientes:** los inventarios previos al export
-no sustituyen el resultado del generador integrado. La tabla final debe
-contrastarse con las dos previews compiladas, por mes y trimestre, nacional e
-internacional, con todas sus rutas seleccionables y la vista inicial de 12
-rutas por separado. No se promete un 95% para las tres aerolíneas.
+## Resultado del candidato base, sin fallback de EE. UU.
+
+La preview base compilada en `c5bbfb4eddfcc0868aae869a848026c0c29e3aa8`
+tiene el fallback de EE. UU. desactivado. El informe reproducible contrasta
+108 filas de publicación, borrador anterior y base nueva. Son resultados del
+export real, después de la precedencia por celda; no el inventario previo.
+No se integraron ni publicaron estos datos.
+
+| 2T26 | Publicado amplio | Base amplia / AFAC | Aumento frente a publicación | Regular verificable + estimado / AFAC | Faltan para 95%, amplio / regular + estimado |
+|---|---:|---:|---:|---:|---:|
+| Grupo Aeroméxico | 34.980 (74,88%) | 43.595 / 46.716 (93,32%) | +8.615 | 43.302 / 46.716 (92,69%) | 786 / 1.079 |
+| Viva | 38.503 (84,98%) | 39.869 / 45.308 (88,00%) | +1.366 | 39.828 / 45.308 (87,91%) | 3.174 / 3.215 |
+| Volaris México | 41.940 (90,58%) | 45.753 / 46.304 (98,81%) | +3.813 | 45.753 / 46.304 (98,81%) | 0 / 0 |
+
+**Volaris supera el 95% en ambas sumas con estimados; AM y Viva no.** Eso no
+valida una cobertura observada del 95%: el nacional sigue siendo estimado y
+persisten celdas en revisión. Las observaciones regulares verificables son
+7.983 AM, 3.647 Viva y 11.029 Volaris: 17,09%, 8,05% y 23,82% del respectivo
+AFAC combinado. No disponer de observado nacional no significa cero vuelos.
+
+AM internacional pasa del inventario preliminar 13.483 a **13.540** amplios.
+Ese inventario contenía sólo BTS F y estimaciones: los +57 se descomponen en
+51 BTS L más un efecto neto de +6 al sustituir 1.265 estimados por 1.271
+observados de autoridades, con precedencia por dirección y mes. No son 57
+vuelos adicionales de autoridad. El export contiene 8.276 observados de toda
+clase más 5.264 estimados; 293 observados no entran en la suma regular
+verificada (51 BTS L y 242 ANAC/CAA de clase sin confirmar). Viva internacional
+representa **4.578** amplios frente a 4.537 regulares + estimados; la diferencia
+son 41 BTS L. Volaris internacional representa 11.801 en ambas sumas. No se
+reclasifica esa diferencia de clase ni se cambia el objetivo solicitado.
+
+Los programados AM son **1.212 internacionales** en la base, más **31.098**
+en la capa nacional oficial separada; esta última conserva además 364 vuelos
+atribuidos a la marca. No se suman al numerador del 95% ni a la capa nacional
+estimada. La caída de programados internacionales frente a la publicación se
+debe a la prioridad de celdas observadas/estimadas, no a una afirmación de
+cancelaciones o menor operación.
+
+### Desglose mensual y trimestral del candidato base
+
+Cada celda nacional/internacional presenta el numerador amplio sobre AFAC y
+su porcentaje. Las dos últimas columnas comparan ambos numeradores con el
+AFAC combinado del periodo. No se extrapolan meses ni se recortan los excesos.
+
+| Aerolínea | Periodo | Nacional amplio / AFAC | Internacional amplio / AFAC | Combinado amplio | Combinado regular verificable + estimado |
+|---|---|---:|---:|---:|---:|
+| Grupo Aeroméxico | 2026M04 | 11.023 / 10.967 (100,51%) | 4.935 / 4.840 (101,96%) | 100,96% | 100,54% |
+| Grupo Aeroméxico | 2026M05 | 10.170 / 11.219 (90,65%) | 4.821 / 4.833 (99,75%) | 93,39% | 93,00% |
+| Grupo Aeroméxico | 2026M06 | 8.862 / 10.008 (88,55%) | 3.784 / 4.849 (78,04%) | 85,12% | 84,00% |
+| Grupo Aeroméxico | 2026Q2 | 30.055 / 32.194 (93,36%) | 13.540 / 14.522 (93,24%) | 93,32% | 92,69% |
+| Viva | 2026M04 | 11.810 / 13.502 (87,47%) | 1.512 / 1.605 (94,21%) | 88,18% | 88,12% |
+| Viva | 2026M05 | 11.864 / 13.625 (87,08%) | 1.363 / 1.455 (93,68%) | 87,71% | 87,62% |
+| Viva | 2026M06 | 11.617 / 13.303 (87,33%) | 1.703 / 1.818 (93,67%) | 88,09% | 87,98% |
+| Viva | 2026Q2 | 35.291 / 40.430 (87,29%) | 4.578 / 4.878 (93,85%) | 88,00% | 87,91% |
+| Volaris México | 2026M04 | 11.218 / 11.446 (98,01%) | 3.889 / 3.894 (99,87%) | 98,48% | 98,48% |
+| Volaris México | 2026M05 | 10.990 / 11.343 (96,89%) | 3.841 / 3.838 (100,08%) | 97,69% | 97,69% |
+| Volaris México | 2026M06 | 11.744 / 11.712 (100,27%) | 4.071 / 4.071 (100,00%) | 100,20% | 100,20% |
+| Volaris México | 2026Q2 | 33.952 / 34.501 (98,41%) | 11.801 / 11.803 (99,98%) | 98,81% | 98,81% |
+
+Los excesos de abril AM y junio nacional Volaris permanecen visibles como
+inconsistencias de representación frente a AFAC. La coincidencia exacta de
+junio internacional Volaris con AFAC no prueba coincidencia vuelo a vuelo.
+La variante opcional acotada todavía requiere su export y contraste final;
+ninguna cifra de esta tabla incorpora sus 731 frecuencias propuestas.
+
+### Todas las rutas frente a las 12 iniciales
+
+La tabla siguiente corresponde a 2T26 base. «Todas» cuenta únicamente rutas
+con cifra de vuelos. La presencia exportada sin volumen permanece N/D y se
+informa aparte; no se usa para inflar la representación. El subtotal top 12
+sólo describe la vista inicial, nunca el porcentaje de red.
+
+| Aerolínea | Rutas «Todas» nacional / internacional | Vuelos amplios de las 12 iniciales, nacional / internacional |
+|---|---:|---:|
+| Grupo Aeroméxico | 56 / 104 | 17.074 / 4.894 |
+| Viva | 147 / 55 | 11.269 / 2.507 |
+| Volaris México | 151 / 88 | 9.495 / 4.405 |
 
 ## Precedencia y trazabilidad de los vuelos
 
@@ -227,3 +299,28 @@ tesis aprobadas. Ni este reporte, ni la compilación de una preview, ni una
 revisión técnica equivalen a integración, aprobación o publicación. El PR de
 vuelos continúa separado de Mercado #135 y Noticias #136, sin activar
 agosto ni alterar secretos o protecciones.
+
+
+## Verificación de la preview base y pendientes de cierre
+
+Navegador del entorno cloud `airlines-tracker`, manejado por el agente con
+Playwright Python y Chromium headless; no es el equipo del usuario. La base
+pasa **134 casos HTTP** entre las cuatro entidades y anchos 1440/390, con
+**14.244 registros de rutas** contrastados en las selecciones. El inventario
+estático revisa 765 documentos de periodo, 41.267 rutas exportadas y 118.846
+componentes; 44 rutas no tienen cifra de vuelos. La prueba distingue «Todas»,
+las 12 iniciales, capas y tipos de cifra.
+
+La primera suite completa con el warehouse actualizado reprodujo un fallo
+esperado de `test_stage12_diagnosis::test_outputs_match_snapshot_and_are_reproducible`:
+el diagnóstico histórico exige el HTML, JSON y CSV fijados con el warehouse
+anterior. No se regeneran ese expediente, las tesis ni sus aprobaciones para
+adaptarlos a BTS nuevo. La paridad
+`test_site_flights_and_executive_data_match_a_fresh_export` exige asimismo que
+el export candidato coincida con `site/` aprobado, que se conserva intacto.
+Ambos checks se informan como exclusiones justificadas, no como aprobados.
+
+**Pendiente de cierre:** resultados de la variante opcional acotada, conteo de
+la suite restante, CI y revisión del head final. Los resultados anteriores de
+la rama auxiliar no sustituyen esas comprobaciones. Continúan vigentes los
+límites de no integrar, no publicar y no activar análisis.
