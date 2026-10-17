@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import math
 
+import pandas as pd
+from src.config import PATHS
+
 import pytest
 
 from src.analysis_agent.flight_evidence import build_flight_evidence
@@ -92,63 +95,54 @@ def test_t100_network_is_bounded_and_never_claims_global_coverage(flight_payload
     payload = flight_payload
     network = payload["route_network"]
     assert network["period_id"] == "2026Q2"
-    assert network["period_type"] == "quarter_to_date"
-    assert network["availability"] == "partial"
-    assert network["expected_months"] == ["2026M04", "2026M05", "2026M06"]
-    assert network["observed_months"] == ["2026M04", "2026M05"]
-    assert (network["period_start"], network["period_end"]) == ("2026-04-01", "2026-05-31")
-    assert (network["comparison_period_start"], network["comparison_period_end"]) == ("2025-04-01", "2025-05-31")
-    assert network["route_count"] == 40
-    assert network["airport_count"] == 33
-    assert network["totals"] == {
-        "passengers": 612_660.0,
-        "seats": 758_735.0,
-        "departures": 4_451.0,
+    assert network["period_type"] == "quarter"
+    assert network["availability"] == "complete"
+    months = ["2026M04", "2026M05", "2026M06"]
+    assert network["expected_months"] == network["observed_months"] == months
+    assert (network["period_start"], network["period_end"]) == ("2026-04-01", "2026-06-30")
+    assert (network["comparison_period_start"], network["comparison_period_end"]) == ("2025-04-01", "2025-06-30")
+    # Read the refreshed directional source, independently of the dashboard's
+    # aggregate view. June and Connect must contribute their own records.
+    traffic = pd.read_parquet(PATHS.gold / "fact_route_traffic.parquet")
+    source = traffic[traffic.carrier_key.isin(["AEROMEXICO", "AEROMEXICO_CONNECT"])
+                     & traffic.period_id.isin(months) & traffic.departures_performed.gt(0)]
+    assert set(source.carrier_key) == {"AEROMEXICO", "AEROMEXICO_CONNECT"}
+    assert set(source.period_id) == set(months)
+    routes = pd.read_parquet(PATHS.gold / "dim_route.parquet")
+    source = source.merge(routes[["route_key", "market_key", "origin_iata", "dest_iata"]],
+                          on="route_key", validate="many_to_one")
+    airports = pd.read_parquet(PATHS.gold / "dim_airport.parquet")
+    located = set(airports.loc[airports.latitude.notna() & airports.longitude.notna(), "airport_iata"])
+    source = source[source.origin_iata.isin(located) & source.dest_iata.isin(located)]
+    source = source.rename(columns={"departures_performed": "departures"})
+    # The historical map retains all BTS classes. Regular-flight coverage
+    # must use F/G separately; 51 L-class non-scheduled departures stay explicit.
+    assert source.groupby(["carrier_key", "service_class"]).departures.sum().to_dict() == {
+        ("AEROMEXICO", "F"): 5725.0,
+        ("AEROMEXICO", "L"): 51.0,
+        ("AEROMEXICO_CONNECT", "F"): 1229.0,
     }
+    metrics = ["passengers", "seats", "departures"]
+    directions = source.groupby(["market_key", "origin_iata", "dest_iata"])[metrics].sum()
+    expected_markets = set(source.market_key)
+    assert network["route_count"] == len(expected_markets)
+    assert network["airport_count"] == len(set(source.origin_iata) | set(source.dest_iata))
+    assert network["totals"] == source[metrics].sum().to_dict()
     assert "México–Estados Unidos" in network["coverage"]
     assert network["agent_eligible"] is False
     assert network["announced_routes_available"] is False
     assert network["marketing_carrier"] is None
-    assert len({route["market_key"] for route in network["routes"]}) == 40
-    assert all(route["departures"] > 0 for route in network["routes"])
-    assert all(route["operation_status"] == "operated_observed" for route in network["routes"])
-    routes_by_airport = {
-        code: [route for route in network["routes"] if code in (route["origin"]["iata"], route["destination"]["iata"])]
-        for code in ("SEA", "ACA")
-    }
-    assert len(routes_by_airport["SEA"]) == 3
-    assert len(routes_by_airport["ACA"]) == 1
-    mia_mex = next(route for route in network["routes"] if route["market_key"] == "MEX<>MIA")
-    directions = {
-        (direction["origin_iata"], direction["destination_iata"]): direction
-        for direction in mia_mex["directions"]
-    }
-    assert directions[("MIA", "MEX")]["passengers"] == 26_180.0
-    assert directions[("MEX", "MIA")]["passengers"] == 24_371.0
-    for direction in directions.values():
-        assert direction["seats"] > 0
-        assert direction["departures"] > 0
-        assert 0 < direction["passengers"] / direction["seats"] <= 1
-    lax_mex = next(route for route in network["routes"] if route["market_key"] == "LAX<>MEX")
-    lax_directions = {
-        (direction["origin_iata"], direction["destination_iata"]): direction
-        for direction in lax_mex["directions"]
-    }
-    assert lax_directions[("LAX", "MEX")] == {
-        "origin_iata": "LAX", "destination_iata": "MEX",
-        "passengers": 37_143.0, "seats": 44_671.0, "departures": 243.0,
-    }
-    assert lax_directions[("MEX", "LAX")] == {
-        "origin_iata": "MEX", "destination_iata": "LAX",
-        "passengers": 38_141.0, "seats": 44_945.0, "departures": 244.0,
-    }
+    assert {route["market_key"] for route in network["routes"]} == expected_markets
     for route in network["routes"]:
-        for metric in ("passengers", "seats", "departures"):
-            assert math.isclose(
-                sum(direction[metric] for direction in route["directions"]),
-                route[metric],
-                abs_tol=0.5,
-            )
+        assert route["departures"] > 0 and route["operation_status"] == "operated_observed"
+        expected_directions = directions.loc[route["market_key"]]
+        assert {(d["origin_iata"], d["destination_iata"]) for d in route["directions"]} == set(expected_directions.index)
+        for direction in route["directions"]:
+            expected = expected_directions.loc[(direction["origin_iata"], direction["destination_iata"])]
+            for metric in metrics:
+                assert direction[metric] == pytest.approx(expected[metric])
+        for metric in metrics:
+            assert sum(direction[metric] for direction in route["directions"]) == pytest.approx(route[metric])
     assert network["world_geometry"]["version"] == "Natural Earth 5.1.2 / 1:110m"
     assert network["world_geometry"]["license"] == "public domain"
     assert network["world_geometry"]["sha256"] == "6866c877d39cba9c357620878839b336d569f8c662d3cfab4cb1dbe2d39c977f"

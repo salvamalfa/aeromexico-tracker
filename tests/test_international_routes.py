@@ -1,4 +1,3 @@
-import copy
 import pandas as pd
 import pytest
 from src.transform.international_routes import aena_period,normalize,validate
@@ -96,7 +95,10 @@ def test_gold_consumption_and_month_windows(flight_payload):
         else:
             assert uk['seats'] is None and uk['load_factor'] is None
             assert uk['load_factor_status']=='capacity_incomplete'
-    assert payload['route_network']['route_count']==40  # Original BTS scope preserved.
+    bts=payload['route_network']
+    assert bts['observed_months']==['2026M04','2026M05','2026M06']
+    assert bts['route_count']==len({r['market_key'] for r in bts['routes']})
+    assert all(r['operation_status']=='operated_observed' for r in bts['routes'])
     assert {r['market_key'] for r in network['routes'] if 'AICM' in r['coverage_note']} >= {'MAD<>MEX','BCN<>MEX'}
     assert not any(r.get('operation_status')=='carrier_presence_and_market_observed' for r in network['routes'])
     activity={item['airport_iata']:item for item in network['aena_airport_activity']}
