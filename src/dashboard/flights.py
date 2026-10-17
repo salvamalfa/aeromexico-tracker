@@ -512,7 +512,7 @@ def _load_routes(connection: duckdb.DuckDBPyConnection, period_id: str, entity: 
             "no preserva la versión T-100 exacta disponible el 13 jul 2026."
         ),
         "coverage": "México–Estados Unidos; segmentos internacionales sin escala con al menos un punto en EE.UU.",
-        "operator": "Aeromexico (AM), operador/reportante BTS",
+        "operator": f"{entity.group_label}: " + " + ".join(entity.estimate_carriers.get(key, key) for key in entity.t100_carriers) + "; operadores/reportantes BTS",
         "marketing_carrier": None,
         "announced_routes_available": False,
         "route_count": len(routes),

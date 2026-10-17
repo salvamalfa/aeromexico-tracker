@@ -132,6 +132,9 @@ def test_t100_network_is_bounded_and_never_claims_global_coverage(flight_payload
     assert network["agent_eligible"] is False
     assert network["announced_routes_available"] is False
     assert network["marketing_carrier"] is None
+    assert network["operator"] == (
+        "Grupo Aeroméxico: Aerovías de México + Aeroméxico Connect; operadores/reportantes BTS"
+    )
     assert {route["market_key"] for route in network["routes"]} == expected_markets
     for route in network["routes"]:
         assert route["departures"] > 0 and route["operation_status"] == "operated_observed"
