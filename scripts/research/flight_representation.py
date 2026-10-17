@@ -172,6 +172,7 @@ def summarize_network(network, entity, period, counts, observations):
         return {
             **fields,
             "strict_observed_regular_flights": None,
+            "all_exported_routes": None,
             "all_selectable_routes": None,
             "quantified_routes": None,
             "routes_with_unknown_flights": None,
@@ -205,7 +206,8 @@ def summarize_network(network, entity, period, counts, observations):
     return {
         **fields,
         "strict_observed_regular_flights": sum_known(strict),
-        "all_selectable_routes": len(routes),
+        "all_exported_routes": len(routes),
+        "all_selectable_routes": len(quantified),
         "quantified_routes": len(quantified),
         "routes_with_unknown_flights": sum(not finite(route.get("departures")) for route in routes),
         "initial_top12_routes": len(top),
@@ -301,6 +303,9 @@ def audit_snapshot(label, site, gold, official, periods):
                 combined["strict_observed_regular_flights"] = None
             combined.update(
                 {
+                    "all_exported_routes": sum(r["all_exported_routes"] for r in scoped)
+                    if combined["period_export_available"]
+                    else None,
                     "all_selectable_routes": sum(r["all_selectable_routes"] for r in scoped)
                     if combined["period_export_available"]
                     else None,
