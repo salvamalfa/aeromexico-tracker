@@ -277,6 +277,7 @@ def apply_flight_cells(network, cells, endpoint):
                 "departures": count,
             }
             for pair, count in sorted(directions.items())
+            if count > 0
         ]
     coverage = defaultdict(set)
     for cell in cells:

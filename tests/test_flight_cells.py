@@ -247,3 +247,21 @@ def test_entity_export_fills_missing_us_cells_only_under_opt_in(monkeypatch):
             c, {"2026Q2": network}, VIVA_ROUTES, allowed_us_estimate_cells=admitted
         )["2026Q2"]["routes"][0]
         assert disabled["departures"] == 5
+
+
+def test_explicit_zero_return_blocks_estimate_without_drawing_a_return():
+    selected = resolve_cells(
+        [
+            cell(count=10),
+            cell(origin="JFK", dest="MEX", count=0),
+            cell(origin="JFK", dest="MEX", kind="estimated", count=99),
+        ]
+    )
+    network = dict(routes=[])
+    apply_flight_cells(network, selected, endpoint)
+    route = network["routes"][0]
+    assert route["departures"] == 10
+    assert len(route["flight_components"]) == 2
+    assert [(d["origin_iata"], d["destination_iata"], d["departures"]) for d in route["directions"]] == [
+        ("MEX", "JFK", 10)
+    ]
