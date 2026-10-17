@@ -565,6 +565,7 @@ def extend_networks(
                 AEROMEXICO_ROUTES,
                 pd.DataFrame(),
                 endpoint,
+                authorities=route_frame,
             ),
         )
         # Aena's company exports identify an airport, not the Mexican endpoint.

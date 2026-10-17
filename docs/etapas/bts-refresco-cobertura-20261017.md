@@ -358,15 +358,16 @@ agosto ni alterar secretos o protecciones.
 ## Verificación y registro de cierre
 
 Navegador del entorno cloud `airlines-tracker`, manejado por el agente con
-Playwright Python y Chromium headless; no es el equipo del usuario. La base
-pasa **134 casos HTTP** entre las cuatro entidades y anchos 1440/390, con
-**14.244 registros de rutas** contrastados en las selecciones. El inventario
-estático revisa 765 documentos de periodo, 41.267 rutas exportadas y 118.846
-componentes; 44 rutas no tienen cifra de vuelos. La prueba distingue «Todas»,
-las 12 iniciales, capas y tipos de cifra. La variante acotada pasa asimismo
-134 casos HTTP y 14.246 registros de rutas; contiene 765 documentos,
-41.268 rutas y 118.874 componentes. Las ocho piezas JSON ajenas a Vuelos y
-los nueve bundles JavaScript coinciden entre variantes.
+Playwright Python y Chromium headless; no es el equipo del usuario. El cierre
+repite **134 casos HTTP y 134 offline por variante** entre las cuatro entidades
+y anchos 1440/390, contrastando todas las rutas con sus archivos de datos.
+El inventario estático revisa los 765 documentos de periodo por variante y sus
+componentes. La prueba distingue «Todas», las 12 iniciales, capas y tipos de
+cifra; el registro final conserva los conteos exactos tras retirar mercados
+nuevos que sólo tenían cero. Se verifican además los rankings comparables y
+el cambio desde un periodo histórico internacional a un ámbito que no lo ofrece.
+Las ocho piezas JSON ajenas a Vuelos y los nueve bundles JavaScript coinciden
+entre variantes.
 
 En ambas versiones autocontenidas se comprobaron las cuatro tesis aprobadas
 con sus afirmaciones y citas, y los dos archivos de evidencia descargables;
@@ -425,7 +426,7 @@ comparables. Un mes ausente no se interpreta como cero ni se presenta como
 una caída de 20 frente a 60. Un cero explícito sí conserva soporte. Los
 rankings del chat y la comparación previa del mapa aplican esta restricción;
 el detalle de vuelos no se usa como prueba de soporte de pasajeros o asientos.
-En Q2 se conservan 12 comparaciones previas conciliadas y se retiran 25 sin soporte comparable; los valores actuales no cambian. Los payloads legados sin detalle mantienen su política explícita anterior.
+En Q2 se conservan las comparaciones BTS conciliadas y se recuperan las de ANAC y Aerocivil con evidencia completa en ambos años. Las pruebas cubren también CAA mensual, cero explícito y soporte parcial; los valores actuales no cambian. Los payloads legados sin detalle mantienen su política explícita anterior.
 
 El auditor anterior `flight_coverage.py` también divide las rutas mixtas por
 componente. BTS se concilia de forma independiente contra Gold por operador,
@@ -434,3 +435,10 @@ dirección, mes y hashes. No basta que los números de un componente sumen sus
 propias clases. El CLI rechaza falta de evidencia o diferencias y conserva
 F/G como regular verificable, con L/P separados. Las celdas ANAC/CAA sin clase
 regular confirmada siguen excluidas de ese numerador.
+
+
+Los mercados nuevos compuestos únicamente por celdas BTS observadas de cero no
+se dibujan como rutas con vuelos. Las celdas cero siguen bloqueando el fallback estimado y permanecen
+en los mercados con otras celdas positivas. Al cambiar aerolínea o ámbito,
+el selector del mapa conserva únicamente periodos disponibles y vuelve a una
+opción válida si el periodo anterior queda fuera del nuevo manifiesto.

@@ -1,5 +1,5 @@
 import { beforeEach, expect, it } from "vitest";
-import { state, monthsInQuarter } from "./state";
+import { state, monthsInQuarter, setMapEntity } from "./state";
 import { currentMapPeriod, mapPeriodLabel, mapPeriodOptions, mountMapPeriodControl, renderMapPeriodControl } from "./map-periods";
 
 beforeEach(() => {
@@ -7,6 +7,8 @@ beforeEach(() => {
   state.periodIndex = 0;
   state.quarters = [{ period_id: "2026Q2" } as typeof state.quarters[number]];
   state.networkMode = "domestic";
+  state.mapEntity = "AEROMEXICO";
+  state.baseAvailablePeriods = null;
   state.availablePeriods = { domestic: [], domestic_monthly: ["2026M03", "2026M04", "2026M05", "2026M06", "2026M07"], international: ["2015M01", "2026Q2", "2026M07"] };
   document.body.innerHTML = '<div class="network-mode-switch"></div>';
 });
@@ -42,4 +44,71 @@ it("changes only the map and can return to the general quarter", () => {
   select.dispatchEvent(new Event("change"));
   expect(currentMapPeriod()).toBe("2026Q2");
   expect(changes).toBe(2);
+});
+
+it("returns a historical international selection to the general quarter before fetching domestic data", () => {
+  mountMapPeriodControl(() => {});
+  state.networkMode = "international";
+  state.mapPeriodId = "2015M01";
+  expect(currentMapPeriod()).toBe("2015M01");
+  state.networkMode = "domestic";
+  expect(currentMapPeriod()).toBe("2026Q2");
+  expect(state.mapPeriodId).toBeNull();
+  renderMapPeriodControl();
+  const select = document.querySelector<HTMLSelectElement>("#map-period")!;
+  expect(select.value).toBe("");
+  expect([...select.options].map((option) => option.value)).not.toContain("2015M01");
+  expect(monthsInQuarter(currentMapPeriod())).toEqual(["2026M04", "2026M05", "2026M06"]);
+  expect(state.periodIndex).toBe(0);
+});
+
+it("resets an unavailable period when the map entity changes", () => {
+  state.networkMode = "international";
+  state.mapPeriodId = "2015M01";
+  state.availablePeriods.entities = {
+    VOLARIS: { label: "Volaris", domestic_monthly: ["2026M04"], international: ["2026Q2"] },
+  };
+  expect(setMapEntity("VOLARIS")).toBe(true);
+  expect(currentMapPeriod()).toBe("2026Q2");
+  expect(state.mapPeriodId).toBeNull();
+  expect(state.quarters.map((record) => record.period_id)).toEqual(["2026Q2"]);
+});
+
+it("preserves a valid historical period when the map entity changes", () => {
+  state.networkMode = "international";
+  state.mapPeriodId = "2015M01";
+  state.availablePeriods.entities = {
+    VOLARIS: { label: "Volaris", domestic_monthly: [], international: ["2015M01", "2026Q2"] },
+  };
+  expect(setMapEntity("VOLARIS")).toBe(true);
+  expect(currentMapPeriod()).toBe("2015M01");
+  expect(state.mapPeriodId).toBe("2015M01");
+});
+
+it("preserves July when it is valid in both scopes", () => {
+  state.networkMode = "international";
+  state.mapPeriodId = "2026M07";
+  expect(currentMapPeriod()).toBe("2026M07");
+  state.networkMode = "domestic";
+  expect(currentMapPeriod()).toBe("2026M07");
+  expect(state.mapPeriodId).toBe("2026M07");
+});
+
+it("falls back to a listed map period when the general quarter is unavailable", () => {
+  mountMapPeriodControl(() => {});
+  state.networkMode = "international";
+  state.availablePeriods.international = ["2015M01", "2016M01"];
+  state.mapPeriodId = "2026M07";
+  expect(currentMapPeriod()).toBe("2016M01");
+  renderMapPeriodControl();
+  expect(document.querySelector<HTMLSelectElement>("#map-period")!.value).toBe("2016M01");
+  expect(state.quarters[0]!.period_id).toBe("2026Q2");
+});
+
+it("clears an obsolete explicit selection when the new scope has no data", () => {
+  state.mapPeriodId = "2015M01";
+  state.availablePeriods = { domestic: [], domestic_monthly: [], international: [] };
+  expect(currentMapPeriod()).toBe("2026Q2");
+  expect(state.mapPeriodId).toBeNull();
+  expect(mapPeriodOptions()).toEqual([]);
 });

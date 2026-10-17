@@ -15,14 +15,23 @@ export function mapPeriodOptions(): string[] {
 }
 
 export function currentMapPeriod(): string {
-  return state.mapPeriodId ?? state.quarters[state.periodIndex]?.period_id ?? "";
+  const general = state.quarters[state.periodIndex]?.period_id ?? "";
+  const ids = mapPeriodOptions();
+  // Resolve against the new scope/entity before its data fetch starts. A
+  // historic international month must not survive as an empty domestic option.
+  if (ids.length && !ids.includes(state.mapPeriodId ?? general)) {
+    state.mapPeriodId = ids.includes(general) ? null : ids.at(-1)!;
+  } else if (!ids.length) {
+    state.mapPeriodId = null;
+  }
+  return state.mapPeriodId ?? general;
 }
 
 export function renderMapPeriodControl(): void {
   const select = document.querySelector<HTMLSelectElement>("#map-period");
   if (!select) return;
+  currentMapPeriod();
   const ids = mapPeriodOptions();
-  if (state.mapPeriodId && !ids.includes(state.mapPeriodId)) ids.push(state.mapPeriodId);
   const option = (id: string) => `<option value="${esc(id)}">${esc(mapPeriodLabel(id))}</option>`;
   select.innerHTML = `<option value="">Trimestre general (${esc(mapPeriodLabel(state.quarters[state.periodIndex]!.period_id))})</option>`
     + `<optgroup label="Trimestres del mapa">${ids.filter((id) => id.includes("Q")).map(option).join("")}</optgroup>`

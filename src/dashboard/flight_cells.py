@@ -211,6 +211,15 @@ def apply_flight_cells(network, cells, endpoint, *, previous_cells=None):
     routes = {r["market_key"]: r for r in network["routes"]}
     for market, components in sorted(by_market.items()):
         if market not in routes:
+            # Zero BTS cells still block fallback, but do not establish a flown
+            # market. Keep every component when another source/cell contributes.
+            if all(
+                c["kind"] == "observed"
+                and c["departures"] == 0
+                and c["source_label"] == "Estados Unidos · BTS T-100"
+                for c in components
+            ):
+                continue
             a, b = market.split("<>")
             try:
                 origin, destination = endpoint(a), endpoint(b)
