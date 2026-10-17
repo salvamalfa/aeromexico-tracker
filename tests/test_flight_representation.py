@@ -198,3 +198,16 @@ def test_missing_candidate_tree_fails_instead_of_reporting_empty_success(tmp_pat
 
     with pytest.raises(ValueError, match="lacks exported"):
         audit_snapshot("after", tmp_path / "missing", tmp_path / "gold", {}, ["2026Q2"])
+
+
+def test_presence_without_flight_count_is_searchable_but_not_in_initial_top12():
+    quantified = route([component()])
+    presence = dict(market_key="MEX<>XXX", departures=None, operation_status="presence_only")
+    summary = summarize_network(
+        {"routes": [quantified, presence]}, "AEROMEXICO", "2026Q2", {}, pd.DataFrame()
+    )
+    assert summary["all_selectable_routes"] == 2
+    assert summary["quantified_routes"] == 1
+    assert summary["routes_with_unknown_flights"] == 1
+    assert summary["initial_top12_routes"] == 1
+    assert summary["observed_flights"] == 10

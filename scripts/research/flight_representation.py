@@ -173,6 +173,7 @@ def summarize_network(network, entity, period, counts, observations):
             **fields,
             "strict_observed_regular_flights": None,
             "all_selectable_routes": None,
+            "quantified_routes": None,
             "routes_with_unknown_flights": None,
             "initial_top12_routes": None,
             "initial_top12_represented_flights": None,
@@ -199,11 +200,13 @@ def summarize_network(network, entity, period, counts, observations):
         notes.update(explanations)
     for kind in KINDS:
         fields[f"{kind}_flights"] = sum_known(value[kind] for value in values.values())
-    top = sorted(routes, key=lambda route: (-(route.get("departures") or 0), route["market_key"]))[:12]
+    quantified = [route for route in routes if finite(route.get("departures"))]
+    top = sorted(quantified, key=lambda route: (-(route.get("departures") or 0), route["market_key"]))[:12]
     return {
         **fields,
         "strict_observed_regular_flights": sum_known(strict),
         "all_selectable_routes": len(routes),
+        "quantified_routes": len(quantified),
         "routes_with_unknown_flights": sum(not finite(route.get("departures")) for route in routes),
         "initial_top12_routes": len(top),
         "initial_top12_represented_flights": sum_known(
@@ -299,6 +302,9 @@ def audit_snapshot(label, site, gold, official, periods):
             combined.update(
                 {
                     "all_selectable_routes": sum(r["all_selectable_routes"] for r in scoped)
+                    if combined["period_export_available"]
+                    else None,
+                    "quantified_routes": sum(r["quantified_routes"] for r in scoped)
                     if combined["period_export_available"]
                     else None,
                     "routes_with_unknown_flights": sum(r["routes_with_unknown_flights"] for r in scoped)
@@ -408,6 +414,10 @@ def main():
         "official_sources": sources,
         "snapshots": snapshots,
         "script_sha256": digest(Path(__file__)),
+        "method_sha256": {
+            name: digest(Path(__file__).resolve().parents[2] / name)
+            for name in ("scripts/research/flight_coverage.py", "src/dashboard/map_periods.py")
+        },
         "query_grain": (
             "snapshot/entity/scope/calendar period; component grain operator/directional route/month/kind"
         ),
