@@ -42,12 +42,15 @@ def resolve_cells(cells):
     # Brand-level schedules cannot identify Aerovías versus Connect. Exclude an
     # overlapping cell if either actual operator has evidence; never add both.
     operative = {
-        (c["origin_iata"], c["destination_iata"], c["period_id"]) for c in result if c["kind"] != "scheduled"
+        (c["origin_iata"], c["destination_iata"], c["period_id"])
+        for c in result
+        if c["kind"] != "scheduled" and c["carrier_key"] in {"AEROMEXICO", "AEROMEXICO_CONNECT"}
     }
     return [
         c
         for c in result
         if c["kind"] != "scheduled"
+        or c["carrier_key"] != "AEROMEXICO_GROUP"
         or (c["origin_iata"], c["destination_iata"], c["period_id"]) not in operative
     ]
 

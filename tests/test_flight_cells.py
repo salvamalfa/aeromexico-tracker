@@ -265,3 +265,14 @@ def test_explicit_zero_return_blocks_estimate_without_drawing_a_return():
     assert [(d["origin_iata"], d["destination_iata"], d["departures"]) for d in route["directions"]] == [
         ("MEX", "JFK", 10)
     ]
+
+
+def test_schedule_of_another_operator_is_not_suppressed_by_shared_market():
+    selected = resolve_cells(
+        [
+            cell(carrier="VIVA_AEROBUS", kind="estimated", count=10),
+            cell(carrier="AEROMEXICO_GROUP", kind="scheduled", count=20),
+            cell(carrier="VOLARIS", kind="scheduled", count=30),
+        ]
+    )
+    assert {c["carrier_key"] for c in selected} == {"VIVA_AEROBUS", "AEROMEXICO_GROUP", "VOLARIS"}
