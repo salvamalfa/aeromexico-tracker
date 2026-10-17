@@ -9,6 +9,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -46,13 +48,52 @@ def refresh_retained_warehouse() -> dict[str, str]:
     return inputs
 
 
-def build_preview(out: Path, *, include_existing_us_estimates: bool = False) -> dict:
+def load_us_admission(path: Path | None, *, enabled: bool) -> tuple[set | None, dict]:
+    """An opt-in preview must name its frozen, reviewable cell screen."""
+    if enabled != (path is not None):
+        raise ValueError("US estimates require both explicit opt-in and a cell admission policy")
+    if path is None:
+        return None, {}
+    raw = path.read_bytes()
+    policy = json.loads(raw)
+    if policy.get("default_enabled") is not False or policy.get("review_or_rejected_cells_included") != 0:
+        raise ValueError("US admission policy must exclude review/rejected cells and remain default-off")
+    if policy.get("new_calls") != 0 or policy.get("fits") != 0 or policy.get("activates_analysis") is not False:
+        raise ValueError("US admission policy cannot authorize calls, fits or analysis activation")
+    cells, total = set(), 0.0
+    for row in policy.get("cells", []):
+        key = (row["carrier_key"], row["period_id"], row["origin_iata"], row["destination_iata"])
+        if key[0] not in {"AEROMEXICO", "AEROMEXICO_CONNECT", "VOLARIS", "VIVA_AEROBUS"}:
+            raise ValueError("Unknown US admission operator")
+        if not re.fullmatch(r"\d{4}M(?:0[1-9]|1[0-2])", key[1]):
+            raise ValueError("Invalid US admission month")
+        if any(not re.fullmatch(r"[A-Z]{3}", value) for value in key[2:]) or key[2] == key[3]:
+            raise ValueError("Invalid US admission directional route")
+        value = row["estimated_flights_retained"]
+        if type(value) not in (int, float) or not math.isfinite(value) or value <= 0 or key in cells:
+            raise ValueError("Invalid or duplicate US admission cell")
+        cells.add(key)
+        total += value
+    declared_total = policy.get("retained_estimated_flights")
+    if (not cells or type(declared_total) not in (int, float)
+            or not math.isfinite(declared_total) or abs(total - declared_total) > 1e-8):
+        raise ValueError("US admission total does not match its cells")
+    return cells, {
+        "us_estimate_admission_sha256": hashlib.sha256(raw).hexdigest(),
+        "admitted_us_estimate_cell_count": len(cells),
+        "retained_us_frequencies_admitted": total,
+    }
+
+
+def build_preview(out: Path, *, include_existing_us_estimates: bool = False,
+                  us_estimate_admission: Path | None = None) -> dict:
     out = out.resolve()
     if out.exists():
         raise ValueError("Preview destination already exists; preserve it and choose a fresh path")
     if out.is_relative_to(PATHS.root) and not out.is_relative_to(PATHS.root / "analysis_runs/research"):
         raise ValueError("A private preview cannot replace a tracked site or another repository path")
     code_commit = committed_preview_inputs()
+    allowed_cells, admission = load_us_admission(us_estimate_admission, enabled=include_existing_us_estimates)
     baseline = PATHS.root / "site"
     problems = verify_site(baseline)
     if problems:
@@ -64,7 +105,8 @@ def build_preview(out: Path, *, include_existing_us_estimates: bool = False) -> 
         shutil.rmtree(data)
     shutil.copytree(baseline / "data/v1", data)
     shutil.rmtree(data / "flights")
-    payload = build_flight_payload(include_existing_us_estimates=include_existing_us_estimates)
+    payload = build_flight_payload(include_existing_us_estimates=include_existing_us_estimates,
+                                   allowed_us_estimate_cells=allowed_cells)
     written = export_flights(payload, data)
     if identities(data) != before:
         raise ValueError("Preview changed financial data or an approved analysis")
@@ -75,6 +117,8 @@ def build_preview(out: Path, *, include_existing_us_estimates: bool = False) -> 
         raise ValueError("Frontend build changed financial data or an approved analysis")
     if retained_gold_hashes() != gold_inputs or committed_preview_inputs() != code_commit:
         raise ValueError("Preview inputs changed during the build")
+    if us_estimate_admission is not None and load_us_admission(us_estimate_admission, enabled=True)[1] != admission:
+        raise ValueError("US admission policy changed during the build")
     shutil.copytree(dist, out)
     if (out / "publication_manifest.json").exists():
         raise ValueError("An unapproved preview must not carry a production publication manifest")
@@ -87,6 +131,7 @@ def build_preview(out: Path, *, include_existing_us_estimates: bool = False) -> 
         "warehouse_rebuilt_from_gold": True,
         "map_file_count": len(written), "nonflight_data_sha256": before,
         "retained_gold_sha256": gold_inputs,
+        **admission,
     }
     (out / "preview-metadata.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n")
     return metadata
@@ -96,9 +141,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--include-existing-us-estimates", action="store_true",
-                        help="Preview an explicit policy proposal: retained estimates only where no observed route wins")
+                        help="Preview screened retained US cells where no observed cell wins")
+    parser.add_argument("--us-estimate-admission", type=Path,
+                        help="Private, frozen admission JSON required with the explicit US opt-in")
     args = parser.parse_args()
-    result = build_preview(args.out, include_existing_us_estimates=args.include_existing_us_estimates)
+    result = build_preview(args.out, include_existing_us_estimates=args.include_existing_us_estimates,
+                           us_estimate_admission=args.us_estimate_admission)
     print(f"Private preview: {result['map_file_count']} map files; no publication or new model activation")
 
 
