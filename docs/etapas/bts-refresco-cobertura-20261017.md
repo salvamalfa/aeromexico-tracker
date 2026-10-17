@@ -204,6 +204,14 @@ fallback histórico de EE. UU. Su hash SHA-256 es
 `ca019c6c4ca925c4805e5c5cef990e15c639c5ddcaed16cccba3a75b03c88b2f`.
 La base puede revisarse y aprobarse con esta opción desactivada.
 
+Los nueve bundles JavaScript de ambas previews son idénticos byte a byte,
+al igual que los ocho JSON ajenos a Vuelos. Sólo cambian cuatro documentos
+internacionales: AM e Industria, junio y 2T26. Fuera de las direcciones/meses
+del selector, sus componentes conservan los mismos valores y procedencia.
+El control adicional del constructor valida la admisión opcional; con la
+opción desactivada permanece inerte. La diferencia de commit de compilación
+no representa dos versiones distintas del frontend ni cambios no relacionados.
+
 | Grupo Aeroméxico, variante acotada | Amplio / AFAC | Regular verificable + estimado / AFAC | Faltan para 95%, amplio / regular + estimado |
 |---|---:|---:|---:|
 | Junio internacional | 4.515 / 4.849 (93,11%) | 4.349 / 4.849 (89,69%) | 92 / 258 |
@@ -305,6 +313,17 @@ no acredita por sí solo vuelos realizados y no resuelve estas lagunas.
 
 ## Reproducir la comparación y criterios de cierre
 
+Las previews se construyen desde entradas confirmadas y los pins externos
+ya aprobados, sin generar recibos de producción ni nuevas aprobaciones:
+
+```bash
+python -m scripts.research.build_flight_coverage_preview \
+  --out /ruta/privada/preview-base
+python -m scripts.research.build_flight_coverage_preview \
+  --out /ruta/privada/preview-acotada --include-existing-us-estimates \
+  --us-estimate-admission /ruta/privada/selector-revisado.json
+```
+
 ```bash
 python -m scripts.research.flight_representation \
   --private-root /ruta/al/respaldo \
@@ -360,3 +379,20 @@ Ambos checks se informan como exclusiones justificadas, no como aprobados.
 conteo de la suite restante, CI y revisión del head final. Los resultados anteriores de
 la rama auxiliar no sustituyen esas comprobaciones. Continúan vigentes los
 límites de no integrar, no publicar y no activar análisis.
+
+
+Los resultados definitivos de CI y la revisión automática deben consultarse en
+[los checks del PR #134](https://github.com/salvamalfa/aeromexico-tracker/pull/134/checks)
+y [su revisión](https://github.com/salvamalfa/aeromexico-tracker/pull/134).
+El head de código verificado para estas compilaciones es `6cd28741027ea288382bf91286574182b16172d7`;
+**CI y revisión de ese head siguen pendientes en este corte**. No se atribuye
+un resultado verde al head nuevo por haberlo obtenido en una entrega anterior.
+El conteo final de la suite se incorporará al terminar la ejecución, conservando
+los dos checks excluidos y la evidencia de sus insumos históricos.
+
+Comando de la suite funcional restante, sin modificar los artefactos antiguos:
+
+```bash
+python -m pytest -m 'not browser' \
+  -k 'not test_site_flights_and_executive_data_match_a_fresh_export and not test_outputs_match_snapshot_and_are_reproducible' -q
+```
