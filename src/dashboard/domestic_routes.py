@@ -23,6 +23,22 @@ MONTH_NAMES = (
 )
 
 
+def _retained_monthly_frequencies(lookup: pd.DataFrame) -> pd.Series:
+    """Freeze the existing monthly route's frequency basis before aggregation.
+
+    This preserves the retained monthly admission, including its unresolved
+    aircraft-model limitations; capacity completeness is not new evidence of
+    carrier identity. A complete monthly market previously used its retained
+    departures, while an incomplete one used same-month seed frequencies.
+    Choose that basis once for the whole market/month, then add its directional
+    values at every grain. Rechoosing it per direction or quarter both changes
+    the accepted total and makes a route disagree with its own breakdown.
+    """
+
+    retained_basis = lookup.groupby(["market_key", "period_id"])["complete"].transform("all")
+    return lookup["departures_estimated"].where(retained_basis, lookup["frequency_estimated"])
+
+
 def load_domestic_monthly_networks(connection, entity: RouteEntity = AEROMEXICO_ROUTES) -> dict[str, dict]:
     """Expose every retained estimate month independently from financial quarters."""
 
@@ -170,6 +186,7 @@ def load_domestic_networks(
             frequency_complete=("_frequency", lambda values: values.notna().all()),
         ).reset_index()
         capacity_lookup = capacity_lookup.merge(frequencies, on=direction_keys, validate="one_to_one")
+        capacity_lookup["retained_frequency"] = _retained_monthly_frequencies(capacity_lookup)
 
         def capacity_agg(keys: list[str]) -> pd.DataFrame:
             return capacity_lookup.groupby(keys).agg(
@@ -181,6 +198,7 @@ def load_domestic_networks(
                 complete=("complete", "all"),
                 frequency_estimated=("frequency_estimated", lambda values: values.sum(min_count=1)),
                 frequency_complete=("frequency_complete", "all"),
+                retained_frequency=("retained_frequency", lambda values: values.sum(min_count=1)),
             )
 
         capacity_by_route_key = capacity_agg(["market_key"])
@@ -242,10 +260,11 @@ def load_domestic_networks(
         passenger_by_route_month = passenger_by_route_month.drop(columns="_any_repaired")
 
         def capacity_result(row) -> dict:
+            frequency = row["retained_frequency"]
+            departures = float(frequency) if pd.notna(frequency) else None
             if not bool(row["complete"]):
-                frequency = row["frequency_estimated"]
                 return {
-                    "departures": float(frequency) if pd.notna(frequency) else None,
+                    "departures": departures,
                     "flight_count_partial": not bool(row["frequency_complete"]),
                     "seats": None, "seats_low": None,
                     "seats_high": None, "load_factor": None, "load_factor_low": None,
@@ -286,7 +305,7 @@ def load_domestic_networks(
                 else None
             )
             return {
-                "departures": float(row["departures_estimated"]),
+                "departures": departures,
                 "flight_count_partial": not bool(row["frequency_complete"]),
                 "seats": seats,
                 "seats_low": seats_low,
