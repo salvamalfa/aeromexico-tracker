@@ -211,3 +211,56 @@ def test_presence_without_flight_count_is_searchable_but_not_in_initial_top12():
     assert summary["routes_with_unknown_flights"] == 1
     assert summary["initial_top12_routes"] == 1
     assert summary["observed_flights"] == 10
+
+
+def test_broad_requested_ratio_and_regular_comparable_ratio_remain_distinct():
+    r = route([component(value=100, service_class_departures={"F": 80, "L": 20})])
+    totals, regular, _, _ = values(r)
+    row = {
+        **{f"{kind}_flights": value for kind, value in totals.items()},
+        "strict_observed_regular_flights": regular,
+        "official_regular_flights": 100,
+    }
+    finalize(row)
+    assert row["represented_observed_plus_estimated_flights"] == 100
+    assert row["representation_pct"] == 100
+    assert row["additional_flights_to_95"] == 0
+    assert row["strict_regular_observed_plus_estimated_flights"] == 80
+    assert row["strict_regular_representation_pct"] == 80
+    assert row["additional_strict_regular_flights_to_95"] == 15
+    assert row["observed_nonregular_or_unconfirmed_flights"] == 20
+    assert "estimates remain estimates" in row["strict_regular_metric_definition"]
+
+
+def test_regular_comparable_representation_includes_estimates_without_relabeling():
+    r = route(
+        [
+            component(value=100, service_class_departures={"F": 80, "L": 20}),
+            component("estimated", value=10, month="2026M05"),
+        ]
+    )
+    totals, regular, _, _ = values(r)
+    row = {
+        **{f"{kind}_flights": value for kind, value in totals.items()},
+        "strict_observed_regular_flights": regular,
+        "official_regular_flights": 100,
+    }
+    finalize(row)
+    assert row["representation_pct"] == 110
+    assert row["strict_regular_representation_pct"] == 90
+    assert row["strict_observed_regular_pct"] == 80
+    assert row["estimated_flights"] == 10
+    assert row["additional_strict_regular_flights_to_95"] == 5
+
+
+def test_regular_representation_remains_unknown_when_all_inputs_are_missing():
+    row = dict(
+        observed_flights=None,
+        estimated_flights=None,
+        strict_observed_regular_flights=None,
+        official_regular_flights=100,
+    )
+    finalize(row)
+    assert row["strict_regular_observed_plus_estimated_flights"] is None
+    assert row["strict_regular_representation_pct"] is None
+    assert row["additional_strict_regular_flights_to_95"] is None

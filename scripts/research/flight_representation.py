@@ -328,11 +328,24 @@ def finalize(row):
     row["represented_observed_plus_estimated_flights"] = represented
     row["representation_pct"] = percent(represented, base)
     row["strict_observed_regular_pct"] = percent(row["strict_observed_regular_flights"], base)
+    regular_represented = sum_known([row["strict_observed_regular_flights"], row["estimated_flights"]])
+    row["strict_regular_observed_plus_estimated_flights"] = regular_represented
+    row["strict_regular_representation_pct"] = percent(regular_represented, base)
     row["target_95_required_flights"] = math.ceil(0.95 * base - 1e-9) if base is not None else None
     row["additional_flights_to_95"] = (
         max(0, row["target_95_required_flights"] - represented)
         if represented is not None and base is not None
         else None
+    )
+    row["additional_strict_regular_flights_to_95"] = (
+        max(0, row["target_95_required_flights"] - regular_represented)
+        if regular_represented is not None and base is not None
+        else None
+    )
+    row["strict_regular_metric_definition"] = (
+        "Regular-class observed + retained estimated flights / AFAC regular; "
+        "nonregular/unconfirmed observations excluded; estimates remain estimates, "
+        "not verified performed regular coverage; schedules/attribution excluded"
     )
     row["above_official_regular_total"] = represented is not None and base is not None and represented > base
     row["observed_nonregular_or_unconfirmed_flights"] = (
@@ -363,8 +376,10 @@ def add_baseline_deltas(rows):
         for metric, column in (
             ("represented_observed_plus_estimated_flights", "delta_vs_baseline_flights"),
             ("representation_pct", "delta_vs_baseline_percentage_points"),
+            ("strict_regular_observed_plus_estimated_flights", "delta_vs_baseline_strict_regular_flights"),
+            ("strict_regular_representation_pct", "delta_vs_baseline_strict_regular_percentage_points"),
         ):
-            value, old = row[metric], previous.get(metric)
+            value, old = row.get(metric), previous.get(metric)
             row[column] = value - old if value is not None and old is not None else None
 
 
