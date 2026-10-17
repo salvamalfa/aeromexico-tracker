@@ -79,9 +79,21 @@ del PR de vuelos. No se activa ningún dato con este refresco.
 El encargo del dueño es aumentar la **representación de vuelos observados y
 estimados**, nacionales e internacionales, frente a los vuelos regulares AFAC
 del mismo trimestre y operador. No es una afirmación de cobertura observada
-vuelo a vuelo. El informe conserva una segunda proporción estricta: únicamente
-observaciones cuya clase regular sea verificable. Programación AICM y
-atribuciones de mercado se informan aparte; ninguna contribuye al objetivo.
+vuelo a vuelo. El informe presenta tres medidas separadas:
+
+1. La solicitada: todos los vuelos observados más estimados representados sobre
+   AFAC regular. Puede contener observaciones no regulares o de clase no
+   confirmada; esa diferencia de universo se declara, sin alterar el encargo.
+2. Una comparación adicional: observaciones de clase regular verificable más
+   estimados retenidos sobre AFAC regular, con su propia brecha al 95%. Excluye
+   L/P y observaciones de clase sin confirmar; los estimados siguen siendo
+   estimados y no acreditan realización ni regularidad verificadas.
+3. La proporción estrictamente observada: únicamente observaciones de clase
+   regular verificable sobre AFAC regular, sin estimados.
+
+Programación AICM y atribuciones de mercado se informan aparte; ninguna
+contribuye a esos numeradores. Un 95% en una suma con estimados no equivale a
+95% de vuelos regulares observados o validados.
 
 La línea base es la publicación `40a63d1905`, no el borrador previo del PR #134:
 
@@ -196,10 +208,13 @@ python -m scripts.research.flight_representation \
 ```
 
 El CSV y JSON privados contienen cifras por entidad/ámbito/mes/trimestre,
-desglose de clases, denominador AFAC, proporción mixta y estricta, diferencia
-respecto a la primera versión, brecha al 95%, número de rutas y subtotal de las
-12 iniciales con cifra de vuelos; la presencia seleccionable sin volumen queda
-N/D y se cuenta aparte. El JSON registra hashes de mapas, insumos Gold consultados,
+desglose de clases, denominador AFAC, las tres proporciones y brechas separadas
+al 95% para los dos numeradores que incluyen estimados, diferencia respecto a
+la primera versión, número de rutas y subtotal de las 12 iniciales con cifra
+de vuelos. `all_exported_routes` cuenta todo el JSON;
+`all_selectable_routes`/`quantified_routes` corresponden a «Todas» en la tabla.
+Las rutas exportadas sin volumen quedan N/D, se cuentan aparte y no entran en
+«Todas» ni en las 12 iniciales. El JSON registra hashes de mapas, insumos Gold consultados,
 script y workbooks oficiales. La exportación internacional publicada no
 permite descomponer todos sus totales trimestrales por mes: esos comparativos
 mensuales quedan N/D, sin distribuirlos. Los agregados recuperados del

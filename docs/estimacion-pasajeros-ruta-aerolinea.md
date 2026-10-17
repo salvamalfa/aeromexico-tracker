@@ -1615,11 +1615,16 @@ como GDL–TIJ, algún mes supera 100 % y la ocupación de esa ruta queda en
 El objetivo de representar al menos el 95% de vuelos AFAC se audita por
 separado del ajuste de pasajeros y de la aceptación de asientos. La proporción
 solicitada es vuelos observados más frecuencias estimadas del mapa sobre
-operaciones regulares AFAC del mismo operador, periodo y ámbito. Programación
-y atribución no entran en ese numerador. Una segunda proporción usa únicamente
-observaciones regulares verificables; ninguna convierte un estimado en vuelo
-realizado. Los resultados superiores al total oficial se exponen sin recorte
-ni ajuste proporcional.
+operaciones regulares AFAC del mismo operador, periodo y ámbito. Esa medida
+amplia puede incluir observaciones no regulares o de clase no confirmada y se
+identifica como tal. Como comparación adicional se presenta observado regular
+verificable más estimado, con numerador, porcentaje y brecha al 95% propios;
+los estimados siguen sin demostrar realización ni regularidad. Una tercera
+proporción usa sólo observaciones regulares verificables, sin estimados.
+Programación y atribución no entran en ninguno de esos numeradores. Ninguna
+medida convierte un estimado en vuelo realizado ni certifica un 95% observado.
+Los resultados superiores al total oficial se exponen sin recorte ni ajuste
+proporcional.
 
 El candidato decide fuente al grano operador–aeropuerto origen–aeropuerto
 destino–mes. Observado, incluido cero explícito, precede a estimado en la misma
