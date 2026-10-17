@@ -121,7 +121,8 @@ no es un dato disponible ni una autorización para completar la red.
 
 La preview base compilada en `c5bbfb4eddfcc0868aae869a848026c0c29e3aa8`
 tiene el fallback de EE. UU. desactivado. El informe reproducible contrasta
-108 filas de publicación, borrador anterior y base nueva. Son resultados del
+144 filas de publicación, borrador anterior, base nueva y variante acotada.
+Son resultados del
 export real, después de la precedencia por celda; no el inventario previo.
 No se integraron ni publicaron estos datos.
 
@@ -179,8 +180,8 @@ AFAC combinado del periodo. No se extrapolan meses ni se recortan los excesos.
 Los excesos de abril AM y junio nacional Volaris permanecen visibles como
 inconsistencias de representación frente a AFAC. La coincidencia exacta de
 junio internacional Volaris con AFAC no prueba coincidencia vuelo a vuelo.
-La variante opcional acotada todavía requiere su export y contraste final;
-ninguna cifra de esta tabla incorpora sus 731 frecuencias propuestas.
+Ninguna cifra de esta tabla base incorpora las 731 frecuencias de la variante
+opcional, cuyos resultados se presentan por separado a continuación.
 
 ### Todas las rutas frente a las 12 iniciales
 
@@ -194,6 +195,41 @@ sólo describe la vista inicial, nunca el porcentaje de red.
 | Grupo Aeroméxico | 56 / 104 | 17.074 / 4.894 |
 | Viva | 147 / 55 | 11.269 / 2.507 |
 | Volaris México | 151 / 88 | 9.495 / 4.405 |
+
+### Variante opcional acotada: 14 celdas AM, 731 frecuencias
+
+Compilada en `6cd28741027ea288382bf91286574182b16172d7`, la segunda
+preview admite exactamente el selector privado revisado; no habilita todo el
+fallback histórico de EE. UU. Su hash SHA-256 es
+`ca019c6c4ca925c4805e5c5cef990e15c639c5ddcaed16cccba3a75b03c88b2f`.
+La base puede revisarse y aprobarse con esta opción desactivada.
+
+| Grupo Aeroméxico, variante acotada | Amplio / AFAC | Regular verificable + estimado / AFAC | Faltan para 95%, amplio / regular + estimado |
+|---|---:|---:|---:|
+| Junio internacional | 4.515 / 4.849 (93,11%) | 4.349 / 4.849 (89,69%) | 92 / 258 |
+| Junio nacional + internacional | 13.377 / 14.857 (90,04%) | 13.211 / 14.857 (88,92%) | 738 / 904 |
+| 2T26 internacional | 14.271 / 14.522 (98,27%) | 13.978 / 14.522 (96,25%) | 0 / 0 |
+| 2T26 nacional + internacional | 44.326 / 46.716 (94,88%) | 44.033 / 46.716 (94,26%) | 55 / 348 |
+
+Abril y mayo AM, todo el nacional y los resultados de Viva/Volaris permanecen
+idénticos a la base. AM conserva 8.276 observados de toda clase y 7.983
+observados regulares verificables en 2T26. Sus estimados combinados pasan de
+35.319 a 36.050; ninguna de esas 731 frecuencias nuevas se etiqueta observada.
+
+Los programados internacionales AM bajan de 1.212 a **332**: las 14 celdas
+sustituyen 880 programados por 731 estimados de otra fuente. Es precedencia
+entre fuentes con cifras distintas, sin sumarlas ni interpretar su diferencia
+como cancelaciones. Los 332 programados restantes tampoco completan el 95%.
+El mapa conserva 104 rutas internacionales con cifra en 2T26; sus 12 iniciales
+representan 5.391 vuelos amplios, frente a 4.894 en la base.
+
+**La variante acotada tampoco alcanza el 95% combinado AM:** faltan 55 vuelos
+en la medida amplia o 348 en regular verificable + estimados. No hay evidencia
+admitida para fabricarlos, redistribuirlos o aceptarlos sólo por su proximidad
+al objetivo. Viva sigue con una brecha de 3.174/3.215 y requiere mejorar el
+nacional. Volaris supera el objetivo en ambas sumas mixtas, manteniendo los
+límites de calidad ya expuestos. La conclusión no es que las tres aerolíneas
+hayan logrado una cobertura observada del 95%.
 
 ## Precedencia y trazabilidad de los vuelos
 
@@ -320,7 +356,7 @@ adaptarlos a BTS nuevo. La paridad
 el export candidato coincida con `site/` aprobado, que se conserva intacto.
 Ambos checks se informan como exclusiones justificadas, no como aprobados.
 
-**Pendiente de cierre:** resultados de la variante opcional acotada, conteo de
-la suite restante, CI y revisión del head final. Los resultados anteriores de
+**Pendiente de cierre:** QA de navegador de la variante opcional acotada,
+conteo de la suite restante, CI y revisión del head final. Los resultados anteriores de
 la rama auxiliar no sustituyen esas comprobaciones. Continúan vigentes los
 límites de no integrar, no publicar y no activar análisis.
