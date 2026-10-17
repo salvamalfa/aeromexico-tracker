@@ -48,7 +48,7 @@ def refresh_retained_warehouse() -> dict[str, str]:
     return inputs
 
 
-def load_us_admission(path: Path | None, *, enabled: bool) -> tuple[set | None, dict]:
+def load_us_admission(path: Path | None, *, enabled: bool) -> tuple[dict | None, dict]:
     """An opt-in preview must name its frozen, reviewable cell screen."""
     if enabled != (path is not None):
         raise ValueError("US estimates require both explicit opt-in and a cell admission policy")
@@ -60,7 +60,7 @@ def load_us_admission(path: Path | None, *, enabled: bool) -> tuple[set | None, 
         raise ValueError("US admission policy must exclude review/rejected cells and remain default-off")
     if policy.get("new_calls") != 0 or policy.get("fits") != 0 or policy.get("activates_analysis") is not False:
         raise ValueError("US admission policy cannot authorize calls, fits or analysis activation")
-    cells, total = set(), 0.0
+    cells, total = {}, 0.0
     for row in policy.get("cells", []):
         key = (row["carrier_key"], row["period_id"], row["origin_iata"], row["destination_iata"])
         if key[0] not in {"AEROMEXICO", "AEROMEXICO_CONNECT", "VOLARIS", "VIVA_AEROBUS"}:
@@ -72,7 +72,7 @@ def load_us_admission(path: Path | None, *, enabled: bool) -> tuple[set | None, 
         value = row["estimated_flights_retained"]
         if type(value) not in (int, float) or not math.isfinite(value) or value <= 0 or key in cells:
             raise ValueError("Invalid or duplicate US admission cell")
-        cells.add(key)
+        cells[key] = float(value)
         total += value
     declared_total = policy.get("retained_estimated_flights")
     if (not cells or type(declared_total) not in (int, float)
@@ -85,6 +85,36 @@ def load_us_admission(path: Path | None, *, enabled: bool) -> tuple[set | None, 
     }
 
 
+def validate_us_admission(cells: dict | None, gold: Path) -> None:
+    """Require the exact screened value once per retained operator/direction/month.
+
+    Validate Gold before rebuilding or writing preview files. Unrelated cells
+    and later BTS observations cannot change the frozen frequency screen.
+    """
+    if cells is None:
+        return
+    import pandas as pd
+
+    keys = ("carrier_key", "period_id", "origin_iata", "destination_iata")
+    frame = pd.read_parquet(
+        gold / "fact_route_carrier_international_estimate.parquet",
+        columns=[*keys, "departures_estimated"],
+    )
+    found = set()
+    for row in frame.itertuples(index=False):
+        key = tuple(str(getattr(row, field)) for field in keys)
+        if key not in cells:
+            continue
+        if key in found:
+            raise ValueError("Duplicate retained US admission cell")
+        found.add(key)
+        value = row.departures_estimated
+        if pd.isna(value) or isinstance(value, bool) or not math.isfinite(value) or value != cells[key]:
+            raise ValueError("Retained US admission value differs from the frozen cell screen")
+    if found != set(cells):
+        raise ValueError("Retained US admission cell is missing from Gold")
+
+
 def build_preview(out: Path, *, include_existing_us_estimates: bool = False,
                   us_estimate_admission: Path | None = None) -> dict:
     out = out.resolve()
@@ -94,6 +124,7 @@ def build_preview(out: Path, *, include_existing_us_estimates: bool = False,
         raise ValueError("A private preview cannot replace a tracked site or another repository path")
     code_commit = committed_preview_inputs()
     allowed_cells, admission = load_us_admission(us_estimate_admission, enabled=include_existing_us_estimates)
+    validate_us_admission(allowed_cells, PATHS.gold)
     baseline = PATHS.root / "site"
     problems = verify_site(baseline)
     if problems:
