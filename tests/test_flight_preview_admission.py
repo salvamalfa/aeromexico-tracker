@@ -123,3 +123,36 @@ def test_changed_screen_value_fails_before_any_preview_build_or_write(tmp_path, 
                               us_estimate_admission=tmp_path / "policy.json")
     assert not out.exists()
     assert not (tmp_path / "web").exists()
+
+
+@pytest.mark.parametrize("changed_during", ["baseline_verification", "warehouse_refresh"])
+def test_admission_is_rechecked_inside_the_retained_gold_hash_window(tmp_path, monkeypatch, changed_during):
+    from types import SimpleNamespace
+    from scripts.research import build_flight_coverage_preview as preview
+
+    _screen_and_gold(tmp_path)
+    monkeypatch.setattr(preview, "PATHS", SimpleNamespace(root=tmp_path, gold=tmp_path))
+    monkeypatch.setattr(preview, "committed_preview_inputs", lambda: "a" * 40)
+
+    def verify_baseline(_):
+        if changed_during == "baseline_verification":
+            _screen_and_gold(tmp_path, actual=3000)
+        return []
+
+    def refresh():
+        if changed_during == "warehouse_refresh":
+            _screen_and_gold(tmp_path, actual=3000)
+        return preview.retained_gold_hashes()
+
+    def must_not_generate(*args, **kwargs):
+        pytest.fail("A changed, unscreened count reached payload generation")
+
+    monkeypatch.setattr(preview, "verify_site", verify_baseline)
+    monkeypatch.setattr(preview, "refresh_retained_warehouse", refresh)
+    monkeypatch.setattr(preview, "build_flight_payload", must_not_generate)
+    out = tmp_path / "analysis_runs/research/candidate"
+    with pytest.raises(ValueError, match="differs from the frozen"):
+        preview.build_preview(out, include_existing_us_estimates=True,
+                              us_estimate_admission=tmp_path / "policy.json")
+    assert not out.exists()
+    assert not (tmp_path / "web").exists()

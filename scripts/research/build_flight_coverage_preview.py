@@ -130,6 +130,7 @@ def build_preview(out: Path, *, include_existing_us_estimates: bool = False,
     if problems:
         raise ValueError(f"Published baseline is invalid: {problems[:3]}")
     gold_inputs = refresh_retained_warehouse()
+    validate_us_admission(allowed_cells, PATHS.gold)
     before = identities(baseline / "data/v1")
     data = PATHS.root / "web/public/data/v1"
     if data.exists():
