@@ -191,3 +191,10 @@ def test_deltas_preserve_unavailable_monthly_baseline():
     assert rows[2]["delta_vs_baseline_flights"] == 30
     assert rows[2]["delta_vs_baseline_percentage_points"] == 30
     assert rows[3]["delta_vs_baseline_flights"] is None
+
+
+def test_missing_candidate_tree_fails_instead_of_reporting_empty_success(tmp_path):
+    from scripts.research.flight_representation import audit_snapshot
+
+    with pytest.raises(ValueError, match="lacks exported"):
+        audit_snapshot("after", tmp_path / "missing", tmp_path / "gold", {}, ["2026Q2"])

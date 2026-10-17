@@ -238,6 +238,8 @@ def summarize_network(network, entity, period, counts, observations):
 
 
 def audit_snapshot(label, site, gold, official, periods):
+    if not (site / "data/v1/flights/quarters.json").is_file():
+        raise ValueError("Snapshot lacks exported flights metadata")
     counts = bts_index(gold)
     observations = pd.read_parquet(gold / "fact_international_route_observations.parquet")
     observations["market_key"] = observations.apply(
