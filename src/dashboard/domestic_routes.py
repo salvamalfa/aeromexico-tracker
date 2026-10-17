@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+from src.dashboard.domestic_frequencies import retained_monthly_frequencies
 from src.dashboard.route_capacity import load_route_capacity
 from src.dashboard.route_entities import AEROMEXICO_ROUTES, RouteEntity, breakdown_totals
 from src.dashboard.map_layers import dated_movements
@@ -21,22 +22,6 @@ MONTH_NAMES = (
     "", "enero", "febrero", "marzo", "abril", "mayo", "junio",
     "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
 )
-
-
-def _retained_monthly_frequencies(lookup: pd.DataFrame) -> pd.Series:
-    """Freeze the existing monthly route's frequency basis before aggregation.
-
-    This preserves the retained monthly admission, including its unresolved
-    aircraft-model limitations; capacity completeness is not new evidence of
-    carrier identity. A complete monthly market previously used its retained
-    departures, while an incomplete one used same-month seed frequencies.
-    Choose that basis once for the whole market/month, then add its directional
-    values at every grain. Rechoosing it per direction or quarter both changes
-    the accepted total and makes a route disagree with its own breakdown.
-    """
-
-    retained_basis = lookup.groupby(["market_key", "period_id"])["complete"].transform("all")
-    return lookup["departures_estimated"].where(retained_basis, lookup["frequency_estimated"])
 
 
 def load_domestic_monthly_networks(connection, entity: RouteEntity = AEROMEXICO_ROUTES) -> dict[str, dict]:
@@ -186,7 +171,7 @@ def load_domestic_networks(
             frequency_complete=("_frequency", lambda values: values.notna().all()),
         ).reset_index()
         capacity_lookup = capacity_lookup.merge(frequencies, on=direction_keys, validate="one_to_one")
-        capacity_lookup["retained_frequency"] = _retained_monthly_frequencies(capacity_lookup)
+        capacity_lookup["retained_frequency"] = retained_monthly_frequencies(capacity_lookup)
 
         def capacity_agg(keys: list[str]) -> pd.DataFrame:
             return capacity_lookup.groupby(keys).agg(
