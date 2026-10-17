@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { coverageMonths, shortSourceLabel } from "./coverage";
+import { coverageIndicator, coverageMonths, shortSourceLabel } from "./coverage";
 import type { Route } from "../../types/domain";
 
 const route = (coverage_note: string): Route =>
@@ -30,4 +30,17 @@ describe("shortSourceLabel", () => {
   it("returns an empty string for an undefined label", () => {
     expect(shortSourceLabel(undefined)).toBe("");
   });
+});
+
+it("uses the selected month's denominator for dated international observations", () => {
+  expect(coverageIndicator(route("Meses: 01 · BTS T-100"), 1)).toEqual({
+    variant: "is-full", title: "1 de 1 mes del periodo seleccionado con datos de la fuente",
+  });
+  expect(coverageIndicator(route("Meses: 04, 05 · BTS T-100"), 3)?.variant).toBe("is-partial");
+});
+
+it("keeps incomplete frequencies partial even within a complete calendar month", () => {
+  const partial = { ...route("Meses: 07"), months_covered: 1, months_selected: 1,
+    operation_status: "estimated_from_afac_margins_and_temporal_support_partial_frequencies" };
+  expect(coverageIndicator(partial, 1)?.variant).toBe("is-partial");
 });

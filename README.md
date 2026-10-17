@@ -44,7 +44,7 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
   ajuste final de R2 sin otra evaluación pagada. R2/Sol low y las capacidades
   de rutas, métricas financieras y evidencia están activos y verificados en
   Railway (ver [Chat analítico](#chat-analítico)).
-- **Datos:** el candidato conserva el histórico publicado y muestra solo vuelos en el mapa, con su tipo y procedencia; no realiza nuevas capturas AeroDataBox. AFAC se actualiza manualmente. Lo pendiente
+- **Datos:** la versión publicada conserva el histórico y muestra solo vuelos en el mapa, con su tipo y procedencia; no realiza nuevas capturas AeroDataBox. La [ampliación de cobertura](docs/etapas/cobertura-vuelos-20261015.md) sigue en prueba. AFAC se actualiza manualmente. Lo pendiente
   está en [`ROADMAP.md`](ROADMAP.md).
 
 Conteos de tablas Gold y pruebas cambian con cada cambio; la cuenta vigente y

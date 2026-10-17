@@ -1,6 +1,6 @@
 import { beforeEach, expect, it } from "vitest";
 import type { Route } from "../../types/domain";
-import { orderedRoutes, routeChangePercent, routeValue } from "./network";
+import { orderedRoutes, routeChangePercent, routeTitle, routeValue } from "./network";
 import { state } from "./state";
 
 const route = (market_key: string, passengers: number, departures: number, operation_status = "operated_observed"): Route => ({
@@ -23,4 +23,12 @@ it("changes are flight changes and do not compare schedules with performed opera
   expect(routeChangePercent(observed)).toBe(25);
   expect(routeChangePercent({...observed, operation_status: "assigned_slot_not_flown"})).toBeNull();
   expect(routeChangePercent({...observed, operation_status: "estimated_from_sample"})).toBeNull();
+});
+
+it("uses the same observed direction for visible city names and airport tooltips", () => {
+  const oneWay = { ...route("BAQ<>MEX", 0, 1), origin: { iata: "BAQ", city: "Barranquilla" },
+    destination: { iata: "MEX", city: "Mexico City" },
+    directions: [{ origin_iata: "MEX", destination_iata: "BAQ", departures: 1 }] } as Route;
+  expect(routeTitle(oneWay)).toBe("CDMX → Barranquilla");
+  expect(routeTitle(oneWay, true)).toBe("MEX → BAQ");
 });
