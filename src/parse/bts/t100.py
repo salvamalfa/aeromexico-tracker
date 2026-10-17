@@ -2,19 +2,18 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 import io
 import json
 import re
 import zipfile
+from datetime import datetime
 
 import polars as pl
 
 from src.config import CARRIERS, PATHS
 from src.parse.sec.common import read_bronze_verified, write_parquet_atomic
 
-
-PARSER_VERSION = "bts_t100_v1.0.0"
+PARSER_VERSION = "bts_t100_v1.1.0"
 NUMERIC_COLUMNS = (
     "departures_scheduled",
     "departures_performed",
@@ -30,11 +29,7 @@ NUMERIC_COLUMNS = (
 
 def _manifest_records() -> list[dict[str, object]]:
     path = PATHS.bronze / "_manifest.jsonl"
-    records = [
-        json.loads(line)
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
+    records = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
     selected: dict[str, dict[str, object]] = {}
     for record in records:
         if record.get("source_system") != "bts_t100":
@@ -66,6 +61,10 @@ def _generic_carrier_key(identity: str, name: str) -> str:
 
 def _map_carrier(identity: str, name: str) -> str:
     upper = name.upper()
+    # BTS reports Aerolitoral (5D) separately from Aerovías (AM). Keep the
+    # operator identity here; the dashboard may explicitly aggregate the group.
+    if identity == "AIRLINE_ID_20250" or "AEROLITORAL" in upper or "AEROMEXICO CONNECT" in upper:
+        return "AEROMEXICO_CONNECT"
     if "AEROMEXICO" in upper or "AERO MEXICO" in upper:
         return "AEROMEXICO"
     if "DELTA AIR LINES" in upper:
@@ -90,9 +89,7 @@ def build_t100() -> tuple[pl.DataFrame, pl.DataFrame]:
         ).with_columns(
             pl.lit(source_file).alias("source_file"),
             pl.lit(str(record["sha256"])).alias("source_hash"),
-            pl.lit(datetime.fromisoformat(str(record["downloaded_at"]))).alias(
-                "ingested_at"
-            ),
+            pl.lit(datetime.fromisoformat(str(record["downloaded_at"]))).alias("ingested_at"),
         )
         frames.append(frame)
     combined = pl.concat(frames, how="vertical_relaxed").with_columns(
@@ -137,9 +134,7 @@ def build_t100() -> tuple[pl.DataFrame, pl.DataFrame]:
     mapping = [
         {
             **row,
-            "carrier_key": _map_carrier(
-                str(row["carrier_identity"]), str(row["unique_carrier_name"])
-            ),
+            "carrier_key": _map_carrier(str(row["carrier_identity"]), str(row["unique_carrier_name"])),
         }
         for row in identities.iter_rows(named=True)
     ]
@@ -155,14 +150,14 @@ def build_t100() -> tuple[pl.DataFrame, pl.DataFrame]:
             "carrier_name",
         ]
     )
-    duplicates = crosswalk.group_by(
-        ["carrier_identity"]
-    ).agg(pl.col("carrier_key").n_unique().alias("keys")).filter(pl.col("keys") != 1)
+    duplicates = (
+        crosswalk.group_by(["carrier_identity"])
+        .agg(pl.col("carrier_key").n_unique().alias("keys"))
+        .filter(pl.col("keys") != 1)
+    )
     if duplicates.height:
         raise ValueError("T-100 crosswalk has ambiguous carrier identities")
-    identity_mapping = crosswalk.select("carrier_identity", "carrier_key").unique(
-        subset=["carrier_identity"]
-    )
+    identity_mapping = crosswalk.select("carrier_identity", "carrier_key").unique(subset=["carrier_identity"])
 
     combined = combined.join(
         identity_mapping,
@@ -172,9 +167,8 @@ def build_t100() -> tuple[pl.DataFrame, pl.DataFrame]:
     )
     if combined["carrier_key"].null_count():
         raise ValueError("T-100 contains unmapped carriers")
-    known_codes = {
-        key: (value.get("iata"), value.get("icao")) for key, value in CARRIERS.items()
-    }
+    known_codes = {key: (value.get("iata"), value.get("icao")) for key, value in CARRIERS.items()}
+    known_codes["AEROMEXICO_CONNECT"] = ("5D", "SLI")
     code_rows = [
         {
             "carrier_key": key,
