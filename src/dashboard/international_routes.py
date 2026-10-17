@@ -6,6 +6,7 @@ import pandas as pd
 
 from src.dashboard.route_entities import AEROMEXICO_ROUTES, RouteEntity, breakdown_totals
 from src.dashboard.map_periods import refresh_network_availability
+from src.dashboard.flight_cells import admitted_estimates, apply_flight_cells, international_cells
 from src.dashboard.aicm_map import add_aicm_schedules
 from src.dashboard.map_layers import supported_estimate_items
 
@@ -246,7 +247,7 @@ def _estimated_routes(
     return routes
 
 
-def extend_networks(connection, networks, *, include_existing_us_estimates=False):
+def extend_networks(connection, networks, *, include_existing_us_estimates=False, allowed_us_estimate_cells=None):
     exists = connection.execute(
         "SELECT count(*) FROM information_schema.tables WHERE table_name='fact_international_route_observations'"
     ).fetchone()[0]
@@ -303,6 +304,8 @@ def extend_networks(connection, networks, *, include_existing_us_estimates=False
             lat=float(a["latitude"]),
             lon=float(a["longitude"]),
         )
+
+    estimates = admitted_estimates(estimates, endpoint, include_us=include_existing_us_estimates, allowed_us_estimate_cells=allowed_us_estimate_cells)
 
     def total(group, key):
         if group.empty or group[key].isna().any():
@@ -535,6 +538,10 @@ def extend_networks(connection, networks, *, include_existing_us_estimates=False
                     agent_eligible=False,
                 )
             )
+        apply_flight_cells(network, international_cells(
+            connection, months, AEROMEXICO_ROUTES, estimates, endpoint,
+            include_us=include_existing_us_estimates, authorities=route_frame, scheduled=scheduled,
+            allowed_us_estimate_cells=allowed_us_estimate_cells), endpoint)
         # Aena's company exports identify an airport, not the Mexican endpoint.
         # Present them alongside the map, never as a carrier-route observation.
         activity = []
@@ -576,19 +583,6 @@ def extend_networks(connection, networks, *, include_existing_us_estimates=False
         network["coverage"] = (
             "Mercados observados y programados por fuente; cobertura parcial de la red internacional"
         )
-        network["coverage_by_source"] = {
-            label: sorted(
-                {
-                    m
-                    for r in network["routes"]
-                    if r.get("source_label") == label
-                    for m in (
-                        r.get("observed_months") or r.get("scheduled_months") or r.get("estimated_months", [])
-                    )
-                }
-            )
-            for label in sorted({r["source_label"] for r in network["routes"]})
-        }
         network["estimated_passenger_route_count"] = sum(
             bool(r.get("passengers_estimated")) for r in network["routes"]
         )

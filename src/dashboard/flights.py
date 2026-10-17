@@ -571,7 +571,7 @@ def _load_forecast(connection: duckdb.DuckDBPyConnection) -> dict[str, Any]:
     }
 
 
-def build_flight_payload(database_path: str | Path | None = None, *, include_existing_us_estimates: bool = False) -> dict[str, Any]:
+def build_flight_payload(database_path: str | Path | None = None, *, include_existing_us_estimates: bool = False, allowed_us_estimate_cells=None) -> dict[str, Any]:
     """Build the complete review payload without mutating Gold or approved evidence."""
 
     path = Path(database_path) if database_path is not None else PATHS.warehouse
@@ -591,12 +591,12 @@ def build_flight_payload(database_path: str | Path | None = None, *, include_exi
             load_domestic_networks,
         )
         from src.dashboard.entity_routes import build_entity_networks
-        international_networks = extend_networks(connection, route_networks, include_existing_us_estimates=include_existing_us_estimates)
+        international_networks = extend_networks(connection, route_networks, include_existing_us_estimates=include_existing_us_estimates, allowed_us_estimate_cells=allowed_us_estimate_cells)
         domestic_networks = load_domestic_networks(connection, quarters)
         domestic_official_networks = load_domestic_networks(connection, quarters, include_estimates=False)
         domestic_monthly_networks = load_domestic_monthly_networks(connection)
         # Dashboard v2 (fase 3): the same map for Industria, Volaris and Viva.
-        entity_networks = build_entity_networks(connection, map_periods, _load_routes, include_existing_us_estimates=include_existing_us_estimates)
+        entity_networks = build_entity_networks(connection, map_periods, _load_routes, include_existing_us_estimates=include_existing_us_estimates, allowed_us_estimate_cells=allowed_us_estimate_cells)
         route_network = {
             **route_networks[PILOT_PERIOD],
             "world_geometry": _load_world_geometry(),

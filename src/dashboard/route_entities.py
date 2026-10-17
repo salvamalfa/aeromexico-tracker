@@ -21,7 +21,7 @@ class RouteEntity:
     label: str
     # Estimate-table carrier keys -> label (the IPF keeps Aerovías and Connect apart).
     estimate_carriers: dict[str, str]
-    # T-100 carrier keys (Connect does not report to BTS separately).
+    # T-100 operator/reporting keys; Connect remains a separate operator.
     t100_carriers: tuple[str, ...]
     group_key: str
     group_label: str
@@ -48,7 +48,7 @@ AEROMEXICO_ROUTES = RouteEntity(
     key="AEROMEXICO",
     label="Grupo Aeroméxico",
     estimate_carriers={"AEROMEXICO": "Aerovías de México", "AEROMEXICO_CONNECT": "Aeroméxico Connect"},
-    t100_carriers=("AEROMEXICO",),
+    t100_carriers=("AEROMEXICO", "AEROMEXICO_CONNECT"),
     group_key="AEROMEXICO_GROUP",
     group_label="Grupo Aeroméxico",
     aeromexico_layers=True,
@@ -87,7 +87,7 @@ INDUSTRY_ROUTES = RouteEntity(
         **VOLARIS_ROUTES.estimate_carriers,
         **VIVA_ROUTES.estimate_carriers,
     },
-    t100_carriers=("AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"),
+    t100_carriers=("AEROMEXICO", "AEROMEXICO_CONNECT", "VOLARIS", "VIVA_AEROBUS"),
     group_key="INDUSTRY",
     group_label="Industria",
     aeromexico_layers=False,

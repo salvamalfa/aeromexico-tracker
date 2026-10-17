@@ -11,6 +11,10 @@ const MONTH_ABBR = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep
 const MONTH_NAMES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 
 export function coverageMonths(route: Route): number | null {
+  if (route.flight_components?.length) {
+    const operative = route.flight_components.filter((c) => c.kind !== "scheduled");
+    return new Set((operative.length ? operative : route.flight_components).map((c) => c.period_id)).size;
+  }
   const note = route.coverage_note || "";
   const listed = /^Meses:\s*([\d,\s]+)/.exec(note);
   if (listed) return listed[1]!.split(",").map((part) => part.trim()).filter(Boolean).length || null;
@@ -36,6 +40,12 @@ export function coverageIndicator(route: Route, selectedMonthCount = 3): { varia
   if ((route.operation_status ?? "").includes("partial_frequencies")) return {
     variant: "is-partial", title: "Frecuencias conocidas; hay operadores o sentidos sin conteo, sin completar con cero",
   };
+  if (route.flight_components?.length) {
+    const months = coverageMonths(route)!;
+    const ratio = months / selectedMonthCount;
+    return { variant: ratio >= 1 ? "is-full" : ratio >= 0.5 ? "is-partial" : "is-thin",
+      title: `${months} de ${selectedMonthCount} ${selectedMonthCount === 1 ? "mes" : "meses"} con frecuencias por celda; no acredita cobertura completa de vuelos` };
+  }
   if (finite(route.months_covered) && finite(route.months_selected) && route.months_selected > 0) {
     // Agregado nacional multi-mes: mismo criterio que Internacional
     // (verde/amarillo/rojo según cuántos meses de calendario del

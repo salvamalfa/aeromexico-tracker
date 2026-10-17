@@ -37,7 +37,21 @@ export interface RouteDirection {
   support_source_periods?: string;
 }
 
+export interface FlightComponent {
+  carrier_key: string;
+  origin_iata: string;
+  destination_iata: string;
+  period_id: string;
+  kind: "observed" | "estimated" | "scheduled";
+  source_label: string;
+  departures: number;
+  source_hashes: string[];
+  service_class_departures?: Record<string, number>;
+  estimator_version?: string;
+}
+
 export interface Route {
+  flight_components?: FlightComponent[];
   market_key: string;
   origin: Airport;
   destination: Airport;

@@ -132,7 +132,7 @@ function entityScopeNote(entity: string, domestic: boolean): string {
     return "Aeroméxico · programación AICM y atribuciones AFAC separadas; no confirman vuelos realizados";
   }
   if (domestic) return `${label} · histórico conservado · frecuencias estimadas identificadas por ruta; no acreditan vuelos realizados`;
-  const roles = entity === "AEROMEXICO" ? " · observados: Aerovías; programación: marca AM; estimados: Grupo" : "";
+  const roles = entity === "AEROMEXICO" ? " · observados: Aerovías y Connect separados por operador; programación: marca AM; estimados: Grupo" : "";
   return `${label}${roles} · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente`;
 
 }
@@ -199,11 +199,7 @@ export async function renderNetworkPeriod(periodId: string): Promise<void> {
       const dates = [...new Set(months.map((month) => DOMESTIC_MONTH_NAMES[Number(month.slice(5)) - 1]))];
       return dates.length ? `${name}: ${dates.join(", ")}` : "";
     }).filter(Boolean).join(" · ");
-    // La etiqueta de alcance nunca dice "Grupo Aeroméxico" salvo cuando el
-    // dato realmente combina Aerovías de México y Aeroméxico Connect
-    // (nacional). Internacional solo tiene evidencia retenida de Aerovías
-    // de México como operador; decirlo explícitamente evita presentar una
-    // cifra más angosta como si fuera consolidada.
+    // Each component retains its actual reporting operator, including Connect.
     scopeNote.textContent = entityScopeNote(state.mapEntity, state.networkMode === "domestic")
       + ` · ${periodNetwork.period_label || mapPeriodLabel(periodId)}`
       + (sourceMonths ? ` · ${sourceMonths}` : "")

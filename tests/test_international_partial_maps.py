@@ -53,16 +53,23 @@ def test_one_reported_direction_is_retained_without_inventing_the_return(enrich)
         network = {"period_label": "julio 2026", "expected_months": ["2026M07"], "observed_months": [], "routes": [], "airports": []}
         expanded = extend_networks(connection, {"2026M07": network})
         route = expanded["2026M07"]["routes"][0]
-    assert route["departures"] == 3
-    assert len(route["directions"]) == 1
+    assert route["departures"] == (15 if enrich else 3)
+    assert len(route["directions"]) == (2 if enrich else 1)
     assert route["previous"]["departures"] is None
     assert "parcial" in route["coverage_note"]
     from src.dashboard.flights_html import integration_flight_payload
     normalized = integration_flight_payload({"schema_version": "flight_dashboard_payload_v1",
         "metadata": {}, "quarters": [], "monthly_passengers": {}, "route_network": {"world_geometry": {}},
         "route_networks": {}, "international_networks": expanded})["route_networks"]["2026M07"]["routes"][0]
-    assert [(item["origin_iata"], item["destination_iata"]) for item in normalized["directions"]] == [("MEX", "BOG")]
-    assert normalized["directions"][0]["departures"] == normalized["departures"] == 3
+    assert sum(item["departures"] for item in normalized["directions"]) == normalized["departures"]
+    observed = [c for c in normalized["flight_components"] if c["kind"] == "observed"]
+    assert [(c["origin_iata"], c["destination_iata"], c["departures"]) for c in observed] == [("MEX", "BOG", 3)]
+    if not enrich:
+        assert len(normalized["directions"]) == 1
+    else:
+        # The return is retained estimated evidence, never a fabricated observation.
+        assert normalized["operation_status"] == "mixed_observed_estimated_cells"
+        assert [(c["origin_iata"], c["destination_iata"], c["departures"]) for c in normalized["flight_components"] if c["kind"] == "estimated"] == [("BOG", "MEX", 12)]
     if enrich:
         assert normalized["passengers_estimated"] is True
         assert normalized["passengers"] == 100

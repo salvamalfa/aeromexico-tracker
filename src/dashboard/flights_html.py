@@ -39,6 +39,8 @@ def integration_flight_payload(payload: dict[str, Any]) -> dict[str, Any]:
 
     def route(value: dict[str, Any]) -> dict[str, Any]:
         result = _route(value)
+        if value.get("flight_components") is not None:
+            result["flight_components"] = value["flight_components"]
         # Dashboard v2: Industria keeps each airline's passengers per route.
         if value.get("carrier_breakdown") is not None:
             result["carrier_breakdown"] = value["carrier_breakdown"]
