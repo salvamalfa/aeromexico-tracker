@@ -60,6 +60,26 @@ warehouse local); los demás corren en CI contra
 
 ## Evolucionar el contrato
 
+Los manifiestos publicados identifican cada contrato por SHA-256 de sus bytes.
+`src/web_export/contract_versions.py` resuelve primero el archivo vigente si su
+hash coincide; para vuelos también reconoce explícitamente la versión conservada
+en `versions/17fb7e131da94435190bea925fe9733e298754d04e9b9c5e76fbbea8bef119a7/flights.schema.json`.
+Es la copia exacta de `4caae0f7`, cuyo hash coincide con el manifiesto publicado
+en `40a63d1905`. `Snapshot` y `src.publish.verify` derivan los subesquemas de
+vuelos del contrato resuelto, no del vigente cuando el manifiesto pide el antiguo.
+Así un payload con `flight_components` no pasa bajo el contrato anterior,
+aunque alguien actualice su hash de archivo en una copia del manifiesto.
+
+No hay búsqueda aproximada de versiones ni registro automático de archivos:
+se rechazan hashes desconocidos, archivos alterados, rutas inseguras y enlaces
+simbólicos. Privacidad y contratos de aprobación siguen exigiendo sus hashes
+vigentes exactos. El constructor de manifiestos nuevos continúa usando el
+contrato vigente; conservar uno anterior no aprueba datos, análisis ni una
+publicación y no reescribe manifiestos o recibos existentes.
+
+Regresiones: `tests/test_contract_versions.py`, `tests/test_chat_semantic.py`
+y `tests/test_publish_verify*.py`.
+
 1. Cambia el generador en `src/dashboard/` (nunca el HTML producido).
 2. Actualiza el `.schema.json` correspondiente para que describa la nueva
    forma; si agregas un campo sensible, agrégalo también a
