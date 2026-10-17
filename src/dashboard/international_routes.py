@@ -247,7 +247,9 @@ def _estimated_routes(
     return routes
 
 
-def extend_networks(connection, networks, *, include_existing_us_estimates=False, allowed_us_estimate_cells=None):
+def extend_networks(
+    connection, networks, *, include_existing_us_estimates=False, allowed_us_estimate_cells=None
+):
     exists = connection.execute(
         "SELECT count(*) FROM information_schema.tables WHERE table_name='fact_international_route_observations'"
     ).fetchone()[0]
@@ -305,7 +307,12 @@ def extend_networks(connection, networks, *, include_existing_us_estimates=False
             lon=float(a["longitude"]),
         )
 
-    estimates = admitted_estimates(estimates, endpoint, include_us=include_existing_us_estimates, allowed_us_estimate_cells=allowed_us_estimate_cells)
+    estimates = admitted_estimates(
+        estimates,
+        endpoint,
+        include_us=include_existing_us_estimates,
+        allowed_us_estimate_cells=allowed_us_estimate_cells,
+    )
 
     def total(group, key):
         if group.empty or group[key].isna().any():
@@ -538,10 +545,21 @@ def extend_networks(connection, networks, *, include_existing_us_estimates=False
                     agent_eligible=False,
                 )
             )
-        apply_flight_cells(network, international_cells(
-            connection, months, AEROMEXICO_ROUTES, estimates, endpoint,
-            include_us=include_existing_us_estimates, authorities=route_frame, scheduled=scheduled,
-            allowed_us_estimate_cells=allowed_us_estimate_cells), endpoint)
+        apply_flight_cells(
+            network,
+            international_cells(
+                connection,
+                months,
+                AEROMEXICO_ROUTES,
+                estimates,
+                endpoint,
+                include_us=include_existing_us_estimates,
+                authorities=route_frame,
+                scheduled=scheduled,
+                allowed_us_estimate_cells=allowed_us_estimate_cells,
+            ),
+            endpoint,
+        )
         # Aena's company exports identify an airport, not the Mexican endpoint.
         # Present them alongside the map, never as a carrier-route observation.
         activity = []
