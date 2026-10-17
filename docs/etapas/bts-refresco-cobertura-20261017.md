@@ -442,3 +442,67 @@ se dibujan como rutas con vuelos. Las celdas cero siguen bloqueando el fallback 
 en los mercados con otras celdas positivas. Al cambiar aerolínea o ámbito,
 el selector del mapa conserva únicamente periodos disponibles y vuelve a una
 opción válida si el periodo anterior queda fuera del nuevo manifiesto.
+
+
+### Comprobaciones locales posteriores con insumos idénticos
+
+La verificación adicional del 17 de octubre sustituye el criterio anterior de
+excluir dos checks. Se comparó `master 40a63d1905` con el candidato `30b82fd7cc`
+usando los mismos **2,319 archivos** de `data/` y `analysis_runs/`, incluidos
+warehouse, Gold y expediente. El checkout de master conservó su código exacto,
+con los datos del candidato superpuestos deliberadamente para esta comparación;
+no es una reproducción del warehouse histórico de producción. Los artefactos
+esperados de Stage12 y `site/` eran idénticos en ambos árboles. Las dos pruebas
+fallaron en ambos antes de regenerar. Se verificaron nuevamente los 2,319
+hashes al terminar la comparación.
+
+Se ejecutó el generador canónico `python -m src.analysis_agent.stage12`.
+El único cambio semántico es `input_sha256.warehouse_content`, de
+`116acd74a4352283f6cd477a46622e679cff1f13a3d214a5d7c5495269b36212` a
+`d7c6497de5cec829f083f461613550ce5ce113280b91847f8398de0bc9f6e493`.
+JSON y HTML se regeneran juntos; CSV, filas, cifras, conclusiones y estados
+permanecen idénticos. El artefacto declara `diagnosis_not_analysis` y
+`current_warehouse_not_point_in_time`; esta regeneración diagnóstica no importa,
+audita, aprueba ni publica una tesis.
+
+El export nuevo de Vuelos coincide byte a byte con la preview base entregada.
+El export ejecutivo sólo cambia `/metadata/data_as_of`, de `13 sep 2026` a
+`17 oct 2026`; sus cifras no cambian. La preview conserva los bytes ejecutivos
+aprobados, incluidas esa fecha y las cuatro tesis. Se conserva fuera de `site/`
+el diff exacto propuesto de vuelos/ejecutivo, con hashes antes/después, en el
+expediente privado del PR de datos. No es un sitio firmado ni publicable.
+
+La paridad de `site/` sigue siendo un fallo real: el sitio aprobado todavía
+contiene los datos previos. El gate normal exige además la huella actual de
+implementación para Industria, Viva y Volaris; sus registros históricos siguen
+aprobados, pero sus huellas ya no coinciden en master ni en el candidato.
+El contrato sólo admite `approve_analysis` para versión y `content_hash`
+exactos: no existe aprobación separada de compilación. Reimportar con la nueva
+huella crea una versión nueva, aun conservando la tesis. No se cambian el
+ledger, las aprobaciones, `site/` ni los recibos para hacer pasar esa prueba.
+La decisión mínima para la vía actual es preparar y auditar esas tres versiones
+técnicas y obtener sus aprobaciones exactas; una autorización genérica para
+Vuelos o para publicar no satisface ese contrato. Esta preparación no aplica
+dicha parte y no declara listo el gate.
+
+La suite local se vuelve a ejecutar con `--require-local-data -m 'not browser'`,
+sin filtros `-k`: incluye ambas comprobaciones. Los conteos y el fallo pendiente
+se registran con el commit en el comentario actualizado del PR. La cobertura de
+navegador HTTP/offline y las entregas Library conservan sus identidades y
+versiones: esta regeneración diagnóstica no cambia el dashboard entregado.
+
+Para interpretar Q2 se distinguen dos numeradores sobre el mismo denominador
+AFAC regular de cada aerolínea (AM 46,716; Viva 45,308; Volaris 46,304):
+
+| Variante | AM amplia / regular comparable | Viva amplia / regular comparable | Volaris amplia / regular comparable |
+| --- | ---: | ---: | ---: |
+| Base | 43,595 / 43,302 | 39,869 / 39,828 | 45,753 / 45,753 |
+| EEUU revisado | 44,326 / 44,033 | 39,869 / 39,828 | 45,753 / 45,753 |
+
+«Amplia» suma observados y estimados aunque una parte observada sea no regular
+o de clase sin confirmar. «Regular comparable» excluye esa parte observada;
+conserva estimaciones declaradas, que no se convierten en operaciones regulares
+verificadas. Así, AM EEUU es **94.88% amplio y 94.26% comparable**, Viva
+**88.00% y 87.91%**, y Volaris **98.81% en ambos**. Ninguna de esas razones es
+cobertura observada: sólo regular observado representa 17.09%, 8.05% y 23.82%,
+respectivamente. La programación no entra en esos numeradores.
