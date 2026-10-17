@@ -20,6 +20,13 @@ enero–julio, frente al original retenido de enero–mayo. No se borra el origi
 - Nuevo: 2026-10-17T18:33:40.420808Z, 259,152 bytes,
   SHA-256 `bda94a69b9d8430163a96b33521300cf8f76ac6f0aa0761d67ce3250a184d568`.
 
+Una segunda captura conservada a las 18:39:47 UTC devuelve el CSV de datos
+idéntico byte a byte: SHA-256
+`c14ab5dfa6e993115e5974f6aecd4fcaf0c90839b8192a4e166c1f3abbd3f5e5`.
+El SHA del ZIP sí cambia porque BTS fecha sus miembros al construirlo; comparar
+solo el contenedor no demuestra una revisión de cifras. La comparación de
+celdas y CSV evita ese falso positivo. La asimetría de junio persiste.
+
 `scripts/research/audit_bts_refresh.py --old <ZIP> --new <ZIP> --out <directorio>`
 produce conteos por operador, mes, clase, ruta y sentido, además de comparar
 las ediciones sin convertir celdas ausentes en cero. Usa `DEPARTURES_PERFORMED`;
