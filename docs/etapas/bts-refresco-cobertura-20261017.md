@@ -356,7 +356,7 @@ vuelos continúa separado de Mercado #135 y Noticias #136, sin activar
 agosto ni alterar secretos o protecciones.
 
 
-## Verificación de la preview base y pendientes de cierre
+## Verificación y registro de cierre
 
 Navegador del entorno cloud `airlines-tracker`, manejado por el agente con
 Playwright Python y Chromium headless; no es el equipo del usuario. La base
@@ -364,7 +364,22 @@ pasa **134 casos HTTP** entre las cuatro entidades y anchos 1440/390, con
 **14.244 registros de rutas** contrastados en las selecciones. El inventario
 estático revisa 765 documentos de periodo, 41.267 rutas exportadas y 118.846
 componentes; 44 rutas no tienen cifra de vuelos. La prueba distingue «Todas»,
-las 12 iniciales, capas y tipos de cifra.
+las 12 iniciales, capas y tipos de cifra. La variante acotada pasa asimismo
+134 casos HTTP y 14.246 registros de rutas; contiene 765 documentos,
+41.268 rutas y 118.874 componentes. Las ocho piezas JSON ajenas a Vuelos y
+los nueve bundles JavaScript coinciden entre variantes.
+
+En ambas versiones autocontenidas se comprobaron las cuatro tesis aprobadas
+con sus afirmaciones y citas, y los dos archivos de evidencia descargables;
+no hubo peticiones externas. El QA de las rutas del archivo entregable usa
+el mismo contraste que la versión HTTP.
+
+El dashboard de producción responde HTTP 200 y sus seis totales Q2 por
+aerolínea/ámbito coinciden con el informe publicado. Alternar aerolínea y
+ámbito rápidamente reproduce un acceso a `world_geometry` con red nula.
+El candidato cancela el render obsoleto y espera una red instalada: cinco
+regresiones nuevas, 202 pruebas web y TypeScript pasan. La reparación sólo
+forma parte del borrador; producción conserva su versión hasta aprobación.
 
 La primera suite completa con el warehouse actualizado reprodujo un fallo
 esperado de `test_stage12_diagnosis::test_outputs_match_snapshot_and_are_reproducible`:
@@ -375,20 +390,20 @@ adaptarlos a BTS nuevo. La paridad
 el export candidato coincida con `site/` aprobado, que se conserva intacto.
 Ambos checks se informan como exclusiones justificadas, no como aprobados.
 
-**Pendiente de cierre:** QA de navegador de la variante opcional acotada,
-conteo de la suite restante, CI y revisión del head final. Los resultados anteriores de
-la rama auxiliar no sustituyen esas comprobaciones. Continúan vigentes los
-límites de no integrar, no publicar y no activar análisis.
-
-
-Los resultados definitivos de CI y la revisión automática deben consultarse en
+El resultado definitivo del head entregado se registra en
 [los checks del PR #134](https://github.com/salvamalfa/aeromexico-tracker/pull/134/checks)
-y [su revisión](https://github.com/salvamalfa/aeromexico-tracker/pull/134).
-El head de código verificado para estas compilaciones es `6cd28741027ea288382bf91286574182b16172d7`;
-**CI y revisión de ese head siguen pendientes en este corte**. No se atribuye
-un resultado verde al head nuevo por haberlo obtenido en una entrega anterior.
-El conteo final de la suite se incorporará al terminar la ejecución, conservando
-los dos checks excluidos y la evidencia de sus insumos históricos.
+y en su comentario de cierre y revisión. Ese registro debe identificar el
+commit, el conteo de la suite restante, sus dos exclusiones, la revisión
+independiente y Codex. Un resultado de otro commit no sustituye los checks
+vigentes. El head de código de las compilaciones es
+`6cd28741027ea288382bf91286574182b16172d7`; la base anterior difiere sólo por
+un refuerzo de admisión inerte con su opción US desactivada. Los cambios de
+cierre posteriores son documentales y se comprueban por separado.
+
+Continúan vigentes los límites de no integrar, no publicar y no activar
+análisis. La revisión técnica y las previews no sustituyen la aprobación
+explícita del propietario, incluida una decisión independiente para habilitar
+el selector US. El expediente histórico del 15 de octubre no se reescribe.
 
 Comando de la suite funcional restante, sin modificar los artefactos antiguos:
 
