@@ -1608,3 +1608,30 @@ La ocupación agregada del 2T26 cuadra con la reportada:
 **Límite:** en rutas densas que operan aviones más grandes que el promedio,
 como GDL–TIJ, algún mes supera 100 % y la ocupación de esa ruta queda en
 `N/D`. Detalle: `docs/etapas/dashboard-v2-fase4-capacidad-20260930.md`.
+
+
+### 9.16 Representación de vuelos y precedencia del candidato de octubre
+
+El objetivo de representar al menos el 95% de vuelos AFAC se audita por
+separado del ajuste de pasajeros y de la aceptación de asientos. La proporción
+solicitada es vuelos observados más frecuencias estimadas del mapa sobre
+operaciones regulares AFAC del mismo operador, periodo y ámbito. Programación
+y atribución no entran en ese numerador. Una segunda proporción usa únicamente
+observaciones regulares verificables; ninguna convierte un estimado en vuelo
+realizado. Los resultados superiores al total oficial se exponen sin recorte
+ni ajuste proporcional.
+
+El candidato decide fuente al grano operador–aeropuerto origen–aeropuerto
+destino–mes. Observado, incluido cero explícito, precede a estimado en la misma
+celda; ausencia no es cero. Se conserva clase y procedencia de cada componente
+antes de agregar mercados y Grupo Aeroméxico. Aerovías y Connect permanecen
+separados en BTS; los programados de marca no se distribuyen entre ambos.
+La coherencia de frecuencias entre mes y trimestre no modifica la estimación
+de pasajeros ni constituye una nueva aprobación de la semilla.
+
+La actualización de BTS, las limitaciones de la semilla y la propuesta privada
+acotada de fallback de EE. UU. están en
+[el reporte del 17 de octubre](etapas/bts-refresco-cobertura-20261017.md).
+El fallback sigue desactivado por defecto. La pantalla conservadora propuesta
+no es una calibración estadística, no elimina el estado de revisión de la
+semilla y no garantiza el 95%. Su aceptación es independiente de la base.

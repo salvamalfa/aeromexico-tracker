@@ -73,3 +73,142 @@ de clase y vuelos realizados frente a programados. Contrato del fact validado,
 Ruff y `git diff --check` correctos. No se ejecutó la suite completa ni CI en
 esta rama auxiliar; la entrega funcional debe verificarlos en el head integrado
 del PR de vuelos. No se activa ningún dato con este refresco.
+
+## Objetivo del 95% y línea base
+
+El encargo del dueño es aumentar la **representación de vuelos observados y
+estimados**, nacionales e internacionales, frente a los vuelos regulares AFAC
+del mismo trimestre y operador. No es una afirmación de cobertura observada
+vuelo a vuelo. El informe conserva una segunda proporción estricta: únicamente
+observaciones cuya clase regular sea verificable. Programación AICM y
+atribuciones de mercado se informan aparte; ninguna contribuye al objetivo.
+
+La línea base es la publicación `40a63d1905`, no el borrador previo del PR #134:
+
+| 2T26 publicado | Observados + estimados representados | AFAC regular nacional + internacional | Representación | Vuelos adicionales para ≥95% |
+|---|---:|---:|---:|---:|
+| Grupo Aeroméxico | 34.980 | 46.716 | 74,88% | 9.401 |
+| Viva | 38.503 | 45.308 | 84,98% | 4.540 |
+| Volaris México | 41.940 | 46.304 | 90,58% | 2.049 |
+
+Los 5.486 programados internacionales AM publicados permanecen separados. El
+objetivo entero se calcula con `ceil(0,95 × AFAC)`; no se ajusta la frecuencia
+para alcanzarlo. Un resultado superior al 100% se conserva y señala como
+inconsistencia entre universos/fuentes, sin truncar ni repartir diferencias.
+
+Con el nacional **publicado**, incluso sustituir internacional por el total
+AFAC sólo daría 92,94% para AM y 88,65% para Viva. El borrador anterior ya
+recuperaba frecuencias nacionales del mismo mes: 30.055 AM, 35.291 Viva y
+33.952 Volaris. Esos valores son estimaciones retenidas, no vuelos adicionales
+observados. Con ese nacional, el techo teórico de Viva, aun suponiendo todo el
+internacional AFAC, es 88,66%; faltan al menos 2.874 vuelos nacionales
+sustentados para alcanzar el objetivo. El supuesto de internacional completo
+no es un dato disponible ni una autorización para completar la red.
+
+**Resultados del nuevo mapa pendientes:** los inventarios previos al export
+no sustituyen el resultado del generador integrado. La tabla final debe
+contrastarse con las dos previews compiladas, por mes y trimestre, nacional e
+internacional, con todas sus rutas seleccionables y la vista inicial de 12
+rutas por separado. No se promete un 95% para las tres aerolíneas.
+
+## Precedencia y trazabilidad de los vuelos
+
+La unidad de decisión es **operador × aeropuerto origen × aeropuerto destino
+× mes**, antes de agregar mercado, trimestre o Grupo Aeroméxico. Una
+observación gana a una estimación de esa misma celda. Un cero observado
+explícito también gana; una fila ausente conserva su carácter de faltante.
+Así, BTS de abril/mayo no impide representar un estimado admitido de junio ni
+justifica duplicar ese estimado donde BTS ya observa el mismo sentido y mes.
+Un sentido observado no genera su vuelta. La programación tampoco completa
+una celda realizada; las programaciones de marca AM no se asignan a Aerovías o
+Connect sin evidencia del operador.
+
+`flight_components` conserva operador, ambos aeropuertos, mes, clase de cifra,
+fuente, hashes disponibles y versión del estimador. BTS conserva además el
+desglose por clase de servicio. El total mixto de un mercado no se etiqueta
+íntegramente como observado. La suma estrictamente comparable a AFAC usa BTS
+F/G y operaciones regulares identificadas de Aerocivil; L/P y observaciones
+ANAC/CAA sin clase regular confirmada permanecen fuera de esa segunda suma.
+El backtest de frecuencias de pasajeros usa sólo F, un universo más estrecho
+que el numerador regular F/G del informe.
+
+El nacional mantiene la admisión histórica por mercado–mes y usa una única
+base de frecuencias direccionales en mes, ruta y trimestre. La corrección de
+coherencia no acepta por sí sola 35 frecuencias AM adicionales cuya identidad
+o modelo no puede verificarse, ni la celda Viva de cinco frecuencias sin
+marginal de pasajeros. La semilla prestada de otro mes no se convierte en
+frecuencia del mes seleccionado. Pasajeros, asientos y ocupación siguen sus
+reglas previas; sus tasas de cobertura no miden vuelos.
+
+## Semilla retenida y propuesta acotada de EE. UU.
+
+Se verificaron el snapshot privado y los 11 manifiestos derivados. El cubo
+nacional conserva 3.721 celdas direccionales marzo–julio y el internacional
+4.018 abril–julio. Los registros individuales del proveedor expiraron; no se
+hacen nuevas llamadas AeroDataBox ni nuevos ajustes. Frecuencias ponderadas
+de muestreo, incluso las que tienen `completed_weight`, siguen siendo
+**estimadas**, no una lista de vuelos individuales realizados.
+
+Junio internacional conserva estado `review`: 38,84% del peso de semilla sin
+estado completado y 29 rutas por encima del 120% de vuelos AFAC al comparar
+el mismo universo del gate. El buen error en las celdas emparejadas con BTS no
+valida las celdas sin fila BTS. Tampoco se añade la diferencia captura–Gold
+completa: puede repetir observaciones existentes, mezclar aeropuertos de una
+misma ciudad o incluir soporte aún no aceptado.
+
+La variante base mantiene **desactivado** el fallback estimado de EE. UU. La
+propuesta opcional acotada conserva sólo 14 celdas AM, con **731 frecuencias
+estimadas retenidas**, que superan esta pantalla para revisión:
+
+- Mismo operador, aeropuertos y sentido con BTS F tanto en abril como en mayo.
+- Peso `completed` retenido positivo, sin reclasificarlo como observado.
+- Semilla de la ruta entre todos los operadores no superior al 120% de AFAC.
+- Frecuencia no superior al 120% del máximo BTS de abril/mayo, sin reescalarla.
+- Sin observación de otro operador del grupo AM en esa misma dirección y mes.
+- Sin códigos aeroportuarios de procedencia sin resolver; no se remapean SDM,
+  IWS o CHA para introducir vuelos adicionales.
+
+El umbral ruta/AFAC 1,20 ya existe en `assess_international_seed`; el límite
+individual respecto a abril/mayo es una pantalla nueva, conservadora y no
+calibrada. Ninguno es una probabilidad, un intervalo de confianza ni una
+regla ajustada para llegar al 95%. La lista privada exacta y su recibo deben
+acompañar la preview para reproducir su admisión. Las otras 294 frecuencias AM
+permanecen en revisión; no se aceptan las 216 Viva ni las 44 Volaris de la
+alternativa íntegra de EE. UU. Revisar esa opción es independiente de aprobar
+la ampliación base.
+
+La auditoría también identifica estimaciones **ya presentes** en la variante
+base sobre rutas en revisión por exceso frente a AFAC. Mantenerlas como
+histórico no certifica su calidad ni elimina el riesgo del numerador mixto.
+AICM publica series y cumplimiento de slots, con excepciones de cancelaciones:
+no acredita por sí solo vuelos realizados y no resuelve estas lagunas.
+
+## Reproducir la comparación y criterios de cierre
+
+```bash
+python -m scripts.research.flight_representation \
+  --private-root /ruta/al/respaldo \
+  --snapshot publicada /ruta/al/site-aprobado /ruta/al/gold-anterior \
+  --snapshot pr-anterior /ruta/a/preview-anterior /ruta/al/gold-anterior \
+  --snapshot base /ruta/a/preview-base /ruta/al/gold-nuevo \
+  --snapshot apoyo-us /ruta/a/preview-acotada /ruta/al/gold-nuevo \
+  --out /ruta/privada/fuera-del-checkout/informe
+```
+
+El CSV y JSON privados contienen cifras por entidad/ámbito/mes/trimestre,
+desglose de clases, denominador AFAC, proporción mixta y estricta, diferencia
+respecto a la primera versión, brecha al 95%, número de rutas y subtotal de las
+12 iniciales con cifra de vuelos; la presencia seleccionable sin volumen queda
+N/D y se cuenta aparte. El JSON registra hashes de mapas, insumos Gold consultados,
+script y workbooks oficiales. La exportación internacional publicada no
+permite descomponer todos sus totales trimestrales por mes: esos comparativos
+mensuales quedan N/D, sin distribuirlos. Los agregados recuperados del
+borrador anterior sí se contrastan donde existe el archivo mensual.
+
+La entrega requiere pruebas de conservación y precedencia, CI y revisión del
+head final, más navegador en escritorio/móvil y contraste de todas las rutas
+seleccionables. Debe mantener idénticos los datos ajenos a Vuelos y las cuatro
+tesis aprobadas. Ni este reporte, ni la compilación de una preview, ni una
+revisión técnica equivalen a integración, aprobación o publicación. El PR de
+vuelos continúa separado de Mercado #135 y Noticias #136, sin activar
+agosto ni alterar secretos o protecciones.
