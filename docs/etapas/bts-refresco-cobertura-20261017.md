@@ -601,3 +601,16 @@ modifica la huella de presentación de las tres tesis por entidad: requiere
 versiones técnicas nuevas, auditoría independiente y aprobación humana de sus
 pares exactos. El PR vuelve a borrador; el sitio firmado anterior se conserva
 como evidencia histórica y no se regenera ni integra con esas aprobaciones.
+
+Después de fijar la corrección, Codex revisó el commit exacto sin hallazgos.
+Las tres propuestas nuevas conservan texto, cifras, citas, prompt y cálculos;
+la auditoría independiente revisó de nuevo 50 claims, 262 inputs y 577 nodos,
+con tres dictámenes `pass`, 12 advertencias conservadas y cero bloqueos.
+El expediente registra únicamente las auditorías 79–81 y, tras la decisión
+humana posterior sobre esos pares exactos, las aprobaciones 82–84. El gate
+normal regeneró 791 archivos desde `8992ad5` y el verificador del sitio pasó.
+Los 770 JSON ajenos al análisis quedan idénticos a la base anterior; las cuatro
+tesis conservan su contenido y sólo cambian los metadatos técnicos autorizados
+de las tres versiones renovadas. La proyección privada incorpora 45 registros
+canónicos válidos, conservando el historial y la exclusión documentada del
+wrapper histórico inválido. No cambian Gold, modelos, capturas ni la opción US.
