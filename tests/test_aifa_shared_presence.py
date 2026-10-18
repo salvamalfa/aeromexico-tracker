@@ -39,9 +39,21 @@ def test_aifa_routes_are_estimated_without_reusing_all_carrier_movements(flight_
     assert network["represented_movements"] is None
     for key in expected:
         assert routes[key]["passengers"] > 0
-        assert routes[key]["capacity_estimated"] == (routes[key]["departures"] is not None)
-        if routes[key]["departures"] is not None:
+        if routes[key]["capacity_estimated"]:
             assert routes[key]["departures_estimated"] is True
             assert routes[key]["seats"] > 0
+        else:
+            assert routes[key]["seats"] is None
         assert "AeroDataBox" in routes[key]["source_label"]
-        assert routes[key]["operation_status"] == "estimated_from_afac_margins_and_temporal_support"
+        assert routes[key]["operation_status"].startswith("estimated_from_afac_margins_and_temporal_support")
+
+
+def test_official_presence_has_only_its_documented_month_and_no_volume(flight_payload):
+    routes = flight_payload["domestic_official_networks"]["2026Q2"]["routes"]
+    presence = [route for route in routes if route["operation_status"] == "carrier_route_present_volume_unresolved"]
+    assert len(presence) == 8
+    for route in presence:
+        assert route["departures"] is None and route["directions"] == []
+        assert len(route["monthly"]) == 1
+        assert route["monthly"][0]["period_id"] == "2026M06"
+        assert route["monthly"][0]["departures"] is None

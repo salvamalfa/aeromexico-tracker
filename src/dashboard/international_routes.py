@@ -5,9 +5,12 @@ from copy import deepcopy
 import pandas as pd
 
 from src.dashboard.route_entities import AEROMEXICO_ROUTES, RouteEntity, breakdown_totals
+from src.dashboard.map_periods import refresh_network_availability
+from src.dashboard.flight_cells import admitted_estimates, apply_flight_cells, international_cells
+from src.dashboard.aicm_map import add_aicm_schedules
+from src.dashboard.map_layers import supported_estimate_items
 
 LABELS = {"anac": "Brasil · ANAC", "aerocivil": "Colombia · Aerocivil", "caa": "Reino Unido · CAA"}
-AICM_LABEL = "AICM · vuelos AM programados"
 OMA_LABEL = "OMA · rutas documentadas"
 ESTIMATED_LABEL = "AFAC + AeroDataBox · Grupo Aeroméxico estimado"
 ESTIMATED_CARRIERS = ("AEROMEXICO", "AEROMEXICO_CONNECT")
@@ -68,15 +71,7 @@ def _capacity_by_direction(capacity, months):
 
 
 def _capacity_cell_index(capacity_by_direction):
-    """Index ``capacity_by_direction`` once for O(1) per-cell lookup.
-
-    ``_capacity_cell`` used to re-filter the whole (period, origin,
-    destination) frame with a boolean mask on every call -- one linear scan
-    per estimated route cell. Building this index once per
-    ``_estimated_routes`` call and doing a hash lookup per cell instead
-    reads the exact same stored values, so it changes nothing about the
-    output, only how many times the same data gets scanned.
-    """
+    """Index monthly direction capacity for constant-time cell lookups."""
     keys = ["period_id", "origin_iata", "destination_iata"]
     return capacity_by_direction.set_index(keys)
 
@@ -178,26 +173,28 @@ def _route_capacity_metrics(items):
     )
 
 
-def _estimated_routes(estimates, capacity, months, endpoint, entity: RouteEntity = AEROMEXICO_ROUTES):
+def _estimated_routes(
+    estimates, capacity, months, endpoint, entity: RouteEntity = AEROMEXICO_ROUTES, *, include_us=False
+):
     """Grupo Aeroméxico routes estimated from AFAC margins, one per airport market.
 
-    Only a quarter whose every month was fitted is used: a partial quarter
-    would read as a full one on the map. Seats and occupancy come from the
+    Retain only fitted months actually present; disclose partial periods
+    rather than discarding a known month or inventing its neighbours.
+    Seats and occupancy come from the
     AFAC+AeroDataBox+flota seat-capacity estimate, gated cell by cell: a
     period/direction with usable capacity shows a number, one without stays
     N/D, the same completeness rule as domestic.
     """
-    if estimates.empty or not set(months) <= set(estimates.period_id):
+    if estimates.empty:
         return {}
     frame = estimates[estimates.period_id.isin(months)]
     capacity_index = _capacity_cell_index(_capacity_by_direction(capacity, months))
     routes = {}
     for market, group in frame.groupby("market_key"):
         a, b = market.split("<>")
-        # Mexico-United States belongs to T-100, which observes it; the map
-        # shows that observation (Aerovías only) and is never filled from an
-        # estimate, even for a carrier T-100 reports but the map leaves out.
-        if "US" in (endpoint(a)["country"], endpoint(b)["country"]):
+        # T-100 owns US markets by default. An explicit preview-only policy
+        # may expose retained estimates when the caller has no observed route.
+        if not include_us and "US" in (endpoint(a)["country"], endpoint(b)["country"]):
             continue
         monthly = []
         for (period, origin, dest), part in group.groupby(
@@ -221,6 +218,10 @@ def _estimated_routes(estimates, capacity, months, endpoint, entity: RouteEntity
                 support_month_gap=0,
             )
             item.update(_item_capacity_metrics(cell, passengers, passengers_low, passengers_high))
+            # Frequency is retained in the historical estimate independently
+            # of a usable aircraft/seat configuration.
+            frequency = part.departures_estimated.sum(min_count=1)
+            item["departures"] = float(frequency) if pd.notna(frequency) else None
             monthly.append(item)
         route_capacity = _route_capacity_metrics(monthly)
         covered = int(group.period_id.nunique())
@@ -246,7 +247,9 @@ def _estimated_routes(estimates, capacity, months, endpoint, entity: RouteEntity
     return routes
 
 
-def extend_networks(connection, networks):
+def extend_networks(
+    connection, networks, *, include_existing_us_estimates=False, allowed_us_estimate_cells=None
+):
     exists = connection.execute(
         "SELECT count(*) FROM information_schema.tables WHERE table_name='fact_international_route_observations'"
     ).fetchone()[0]
@@ -304,6 +307,13 @@ def extend_networks(connection, networks):
             lon=float(a["longitude"]),
         )
 
+    estimates = admitted_estimates(
+        estimates,
+        endpoint,
+        include_us=include_existing_us_estimates,
+        allowed_us_estimate_cells=allowed_us_estimate_cells,
+    )
+
     def total(group, key):
         if group.empty or group[key].isna().any():
             return None
@@ -343,10 +353,6 @@ def extend_networks(connection, networks):
             ]
             # All directions in each month must be present on both sides for comparable totals.
             directions_set = set(zip(group.origin_iata, group.dest_iata))
-            # Isolated one-way observations may be diversions. Keep them in Gold
-            # without presenting a bidirectional commercial market on the map.
-            if len(directions_set) < 2:
-                continue
 
             def both_directions(g, month):
                 return (
@@ -366,10 +372,7 @@ def extend_networks(connection, networks):
                     market_key=market,
                     origin=endpoint(a),
                     destination=endpoint(b),
-                    **{
-                        k: total(group, k) if complete else None
-                        for k in ("passengers", "seats", "departures")
-                    },
+                    **{k: total(group, k) for k in ("passengers", "seats", "departures")},
                     load_factor=None,
                     previous={
                         k: total(prior, k) if comparable else None
@@ -382,7 +385,11 @@ def extend_networks(connection, networks):
                     + ", ".join(m[5:] for m in observed)
                     + " · "
                     + LABELS[source]
-                    + (" · falta un sentido" if not complete else ""),
+                    + (
+                        " · cobertura parcial de sentidos; puede incluir observaciones aisladas"
+                        if not complete
+                        else ""
+                    ),
                     source_hashes=sorted(group.source_hash.unique()),
                     record_ids=sorted(group.record_id.unique()),
                     operation_status="operated_observed",
@@ -391,57 +398,7 @@ def extend_networks(connection, networks):
                     agent_eligible=False,
                 )
             )
-        # Add scheduled AICM markets missing from the observed network. If a
-        # market is already observed, keep its measured metrics and attach the
-        # full-quarter schedule separately; never sum the two populations.
-        if not scheduled.empty:
-            current_slots = scheduled[scheduled.period_id.isin(months)].copy()
-            if not current_slots.empty:
-                current_slots["market_key"] = current_slots.apply(
-                    lambda r: "<>".join(sorted((r.origin_iata, r.dest_iata))), axis=1
-                )
-                for market, group in current_slots.groupby("market_key"):
-                    scheduled_count = int(group.scheduled_movements.sum())
-                    matching = next((r for r in network["routes"] if r["market_key"] == market), None)
-                    if matching is not None:
-                        matching["scheduled_movements_q2"] = scheduled_count
-                        matching["scheduled_source_label"] = AICM_LABEL
-                        matching["coverage_note"] += f" · AICM abr–jun: {scheduled_count:,} programados"
-                        continue
-                    a, b = market.split("<>")
-                    directions = [
-                        dict(
-                            origin_iata=origin,
-                            destination_iata=dest,
-                            passengers=None,
-                            seats=None,
-                            departures=int(part.scheduled_movements.sum()),
-                        )
-                        for (origin, dest), part in group.groupby(["origin_iata", "dest_iata"])
-                    ]
-                    network["routes"].append(
-                        dict(
-                            market_key=market,
-                            origin=endpoint(a),
-                            destination=endpoint(b),
-                            passengers=None,
-                            seats=None,
-                            departures=scheduled_count,
-                            load_factor=None,
-                            previous={k: None for k in ("passengers", "seats", "departures")},
-                            directions=directions,
-                            source_label=AICM_LABEL,
-                            observed_months=[],
-                            scheduled_months=sorted(group.period_id.unique()),
-                            coverage_note="Abr–jun 2026 · AICM · programado, ejecución sin verificar",
-                            source_hashes=sorted(group.source_hash.unique()),
-                            record_ids=sorted(group.record_id.unique()),
-                            operation_status="assigned_slot_not_flown",
-                            carrier_role="AM_flight_number_slot_holder",
-                            marketing_carrier=None,
-                            agent_eligible=False,
-                        )
-                    )
+        add_aicm_schedules(network, scheduled, months, endpoint)
         if not oma.empty:
             quarter_routes = oma[oma.period_id.eq(period)].copy()
             if not quarter_routes.empty:
@@ -505,7 +462,9 @@ def extend_networks(connection, networks):
         # market keeps its observation; a market with flights but no
         # passengers gains the estimate beside its own flights; a market no
         # source quantified is added, labelled as an estimate throughout.
-        for market, estimate in _estimated_routes(estimates, capacity, months, endpoint).items():
+        for market, estimate in _estimated_routes(
+            estimates, capacity, months, endpoint, include_us=include_existing_us_estimates
+        ).items():
             matching = next((r for r in network["routes"] if r["market_key"] == market), None)
             months_text = ", ".join(sorted({m["period_id"][5:] for m in estimate["monthly"]}))
             note = f"Pasajeros estimados de Grupo Aeroméxico (AFAC + AeroDataBox) · meses {months_text}"
@@ -520,7 +479,7 @@ def extend_networks(connection, networks):
                 own_months = set(
                     matching.get("observed_months") or matching.get("scheduled_months") or months
                 )
-                monthly = [item for item in estimate["monthly"] if item["period_id"] in own_months]
+                monthly = supported_estimate_items(estimate["monthly"], own_months, matching["directions"])
                 if not monthly:
                     continue
                 payload["monthly"] = monthly
@@ -586,6 +545,29 @@ def extend_networks(connection, networks):
                     agent_eligible=False,
                 )
             )
+        apply_flight_cells(
+            network,
+            international_cells(
+                connection,
+                months,
+                AEROMEXICO_ROUTES,
+                estimates,
+                endpoint,
+                include_us=include_existing_us_estimates,
+                authorities=route_frame,
+                scheduled=scheduled,
+                allowed_us_estimate_cells=allowed_us_estimate_cells,
+            ),
+            endpoint,
+            previous_cells=international_cells(
+                connection,
+                [f"{int(m[:4]) - 1}{m[4:]}" for m in months],
+                AEROMEXICO_ROUTES,
+                pd.DataFrame(),
+                endpoint,
+                authorities=route_frame,
+            ),
+        )
         # Aena's company exports identify an airport, not the Mexican endpoint.
         # Present them alongside the map, never as a carrier-route observation.
         activity = []
@@ -627,23 +609,11 @@ def extend_networks(connection, networks):
         network["coverage"] = (
             "Mercados observados y programados por fuente; cobertura parcial de la red internacional"
         )
-        network["coverage_by_source"] = {
-            label: sorted(
-                {
-                    m
-                    for r in network["routes"]
-                    if r.get("source_label") == label
-                    for m in (
-                        r.get("observed_months") or r.get("scheduled_months") or r.get("estimated_months", [])
-                    )
-                }
-            )
-            for label in sorted({r["source_label"] for r in network["routes"]})
-        }
         network["estimated_passenger_route_count"] = sum(
             bool(r.get("passengers_estimated")) for r in network["routes"]
         )
         # Different source windows and metric populations cannot form a worldwide total.
         network["totals"] = {k: None for k in ("passengers", "seats", "departures")}
         network["agent_eligible"] = False
+        refresh_network_availability(network)
     return result

@@ -7,8 +7,9 @@ exiting non-zero, so one run names everything wrong):
    ``contracts/web/publication_manifest.schema.json``.
 2. The manifest's own structure is trustworthy: every listed ``contracts/
    web/*`` hash matches ``src.publish.manifest.contract_hashes()`` computed
-   fresh from this checkout, ``files`` includes ``index.html`` and at least
-   one other asset, ``analysis_manifest`` is non-empty, and neither list
+   from this checkout or an explicitly retained exact version, ``files``
+   includes ``index.html`` and at least one other asset,
+   ``analysis_manifest`` is non-empty, and neither list
    contains a duplicate key (``path`` for ``files``, entity/period for
    ``analysis_manifest``).
 3. Every file the manifest lists exists under ``site/`` with the exact
@@ -55,6 +56,7 @@ from jsonschema import Draft202012Validator
 from src.config import PATHS
 from src.dashboard.route_entities import EXTRA_ROUTE_ENTITIES
 from src.web_export.business_metrics import build_approved_payload
+from src.web_export.contract_versions import resolve_contract
 from src.web_export.privacy import (
     PrivacyViolation,
     check_file_size,
@@ -70,6 +72,7 @@ from src.web_export.schemas import (
     MARKET_SCHEMA,
     NETWORK_FILE_SCHEMA,
     QUARTERS_FILE_SCHEMA,
+    split_flight_schemas,
 )
 
 from . import manifest as manifest_mod
@@ -100,7 +103,11 @@ def _sha256_file(path: Path) -> str:
     return manifest_mod.sha256_file(path)
 
 
-def _data_schema_for(rel_path: str) -> dict[str, Any] | None:
+def _data_schema_for(
+    rel_path: str,
+    quarters_schema: dict[str, Any] = QUARTERS_FILE_SCHEMA,
+    network_schema: dict[str, Any] = NETWORK_FILE_SCHEMA,
+) -> dict[str, Any] | None:
     """Which contracts/web sub-schema this data/v1 file must satisfy, or
     None if it is not a data file this gate validates (e.g. it is part of
     the built web/ bundle, not exported data)."""
@@ -110,12 +117,14 @@ def _data_schema_for(rel_path: str) -> dict[str, Any] | None:
         return None
     if parts[2:] == ["executive.json"]:
         return EXECUTIVE_SCHEMA
+    if parts[2:] == ["market-demand.json"]:
+        return json.loads((CONTRACTS_DIR / "market_demand.schema.json").read_text())
     if parts[2:] == ["market.json"]:
         return MARKET_SCHEMA
     if parts[2:3] == ["flights"] and parts[3:] == ["quarters.json"]:
-        return QUARTERS_FILE_SCHEMA
+        return quarters_schema
     if parts[2:3] == ["flights"] and parts[3:4] in (["domestic"], ["international"]) and len(parts) == 5:
-        return NETWORK_FILE_SCHEMA
+        return network_schema
     # Dashboard v2: flights/entities/<KEY>/{domestic,international}/<period>.json,
     # only for the map entities src.web_export.flights writes.
     if (
@@ -124,7 +133,7 @@ def _data_schema_for(rel_path: str) -> dict[str, Any] | None:
         and parts[4] in ENTITY_KEYS
         and parts[5] in ("domestic", "international")
     ):
-        return NETWORK_FILE_SCHEMA
+        return network_schema
     if parts[2:3] == ["analysis"] and len(parts) == 4:
         return ANALYSIS_SCHEMA
     if parts[2:3] == ["analysis"] and len(parts) == 5 and parts[3] in manifest_mod.ANALYSIS_ENTITIES:
@@ -198,8 +207,9 @@ def verify_site(site_dir: Path) -> list[str]:
     if not manifest["analysis_manifest"]:
         problems.append("manifest 'analysis_manifest' is empty")
 
+    quarters_schema, network_schema = QUARTERS_FILE_SCHEMA, NETWORK_FILE_SCHEMA
     try:
-        expected_contracts = manifest_mod.contract_hashes()
+        expected_contracts = manifest_mod.contract_hashes(manifest_mod.CONTRACTS_DIR)
     except FileNotFoundError as error:
         problems.append(f"cannot verify manifest 'contracts': {error}")
         expected_contracts = None
@@ -219,13 +229,20 @@ def verify_site(site_dir: Path) -> list[str]:
         }
         if has_business_metrics and not business_contracts <= set(manifest_contracts):
             problems.append("business metrics files require both business-metrics contract hashes")
-        for name, expected_hash in sorted(required_contracts.items()):
+        for name, current_hash in sorted(required_contracts.items()):
             actual_hash = manifest_contracts.get(name)
-            if actual_hash != expected_hash:
+            try:
+                resolved = resolve_contract(manifest_mod.CONTRACTS_DIR, name, actual_hash)
+            except ValueError as error:
                 problems.append(
-                    f"contracts[{name!r}]: manifest says {actual_hash!r}, but "
-                    f"contracts/web/{name} in this checkout hashes to {expected_hash!r}"
+                    f"contracts[{name!r}]: manifest says {actual_hash!r}, but current contract "
+                    f"hashes to {current_hash!r}; {error}"
                 )
+            else:
+                if name == "flights.schema.json":
+                    quarters_schema, network_schema = split_flight_schemas(
+                        json.loads(resolved.read_text(encoding="utf-8"))
+                    )
         for name in sorted(manifest_contracts):
             if name not in expected_contracts:
                 problems.append(f"contracts[{name!r}]: not a contract file this checkout expects")
@@ -258,7 +275,7 @@ def verify_site(site_dir: Path) -> list[str]:
     for rel in sorted(actual_paths):
         parts = rel.split("/")
         is_data_file = parts[:2] == ["data", "v1"] and rel.endswith(".json")
-        schema = _data_schema_for(rel)
+        schema = _data_schema_for(rel, quarters_schema, network_schema)
         if schema is None:
             if is_data_file:
                 problems.append(

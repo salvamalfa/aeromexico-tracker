@@ -1,4 +1,4 @@
-# Exposición de Gold al 15 de octubre de 2026
+# Exposición de Gold · revisión de interfaz del 18 de octubre de 2026
 
 Esta auditoría describe el dashboard real y los candidatos independientes de
 Mercado y Noticias. No aprueba ni publica ninguno. La rama de Vuelos de otro
@@ -27,11 +27,14 @@ cuenta también ese contexto, el alcance amplio es **11/23 (~48%)**. Eso no
 significa que todas las filas/campos de esas tablas se vean ni que tengan una
 gráfica exclusiva. La cobertura y los tipos de cifra filtran las rutas visibles.
 
-Mercado agrega dos tablas de demanda: exposición directa candidata **9/23
-(~39%)**, o **13/23 (~57%)** incluyendo contexto/validación. Su exposición es
-parcial: solo aeropuertos mexicanos, cortes disponibles y detalle OMA retenido
-por calidad. Noticias consume evidencia JSON; añade **cero tablas Gold** a esta
-cuenta. Antes y después son escenarios revisables; producción permanece igual.
+La revisión de Mercado del 18 de octubre retira la sección de demanda por
+aeropuerto. Su exposición directa vuelve a **7/23 (~30%)**, o **11/23 (~48%)**
+incluyendo contexto/validación. Se conservan las dos tablas aeroportuarias,
+sus fuentes, controles y exportación; disponer de un JSON no equivale a
+mostrarlo en la UI. Noticias usa evidencia JSON y añade **cero tablas Gold**.
+El inventario CSV, el JSON y el script fechados al 15 de octubre documentan
+el escenario anterior de 9/23; no se reescribe ese corte histórico.
+Producción permanece igual.
 
 Las **99 definiciones**, **93 claves presentes** y **34 banderas seleccionadas**
 del inventario métrico previo describen catálogo/configuración, no uso real de
@@ -42,8 +45,8 @@ para encontrar dependencias; por sí solas no demuestran exposición.
 
 | Tabla | Qué contiene | Decisión propuesta y dependencias |
 |---|---|---|
-| `fact_airport_traffic` | 566 observaciones aeropuerto/mes | Visualizar parcialmente en Mercado; excluir Jamaica y retener detalle OMA. No atribuir totales a Aeroméxico. |
-| `fact_airport_group_traffic` | 47 observaciones grupo/mes, total y segmentos en México | Mostrar grupos por separado; nunca sumarlos al detalle aeroportuario. |
+| `fact_airport_traffic` | 566 observaciones aeropuerto/mes | Conservar sin vista en Mercado; excluir Jamaica y retener detalle OMA en su exportación. No atribuir totales a Aeroméxico. |
+| `fact_airport_group_traffic` | 47 observaciones grupo/mes, total y segmentos en México | Conservar sin vista en Mercado; no sumar grupos al detalle aeroportuario. |
 | `fact_macro` | 1,494 observaciones de combustible, FX y macro | Conservar: alimenta calendarios, análisis y contrastes; estudiar una vista de costes/contexto. |
 | `fact_market_data` | 11,897 observaciones de precios/volumen financieros | Conservar; posible vista de contexto financiero con unidades y activos explícitos. |
 | `dim_events` | 22 eventos regulatorios/corporativos | Conservar como contexto de anomalías; una coincidencia temporal no prueba causalidad. |

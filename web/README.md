@@ -330,6 +330,15 @@ se pidió publicar el cambio de dependencias; para una petición futura de
 cambio rutinario visible, el agente ejecuta `src.publish`, incorpora `site/`
 al PR y comprueba Pages según `AGENTS.md`.
 
+### Mercado · candidato del PR #135
+
+Mercado usa exclusivamente el trimestre global superior: indicadores y tabla
+comparan ese trimestre con el mismo del año anterior; la serie mensual termina
+al final del corte seleccionado. Segmento y aerolíneas conservan ese corte. El
+botón de información reúne universo, fuente y salvedades. La demanda por
+aeropuerto conserva su exportación y controles, pero ya no tiene sección en
+esta pestaña. Decisiones de revisión: `docs/etapas/mercado-ajustes-ui-20261018.md`.
+
 ### Noticias · candidato del PR #136
 
 El archivo mensual mantiene tarjetas con resúmenes originales, tres fechas y

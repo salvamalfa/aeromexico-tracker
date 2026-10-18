@@ -6,6 +6,11 @@ from typing import Any
 
 
 def value_kind(network: dict[str, Any], route: dict[str, Any], metric: str) -> str:
+    if metric == "departures" and route.get("flight_components"):
+        components = route["flight_components"]
+        active = [c for c in components if c["kind"] != "scheduled"] or components
+        kinds = {c["kind"] for c in active}
+        return next(iter(kinds)) if len(kinds) == 1 else "mixed"
     override = (route.get("metric_value_kinds") or {}).get(metric)
     if override in {"reported", "observed", "estimated", "scheduled", "mixed", "missing"}:
         return override
@@ -41,6 +46,27 @@ def metric_provenance(
     if isinstance(declared, dict):
         return dict(declared)
 
+    if metric == "departures" and route.get("flight_components"):
+        components = route["flight_components"]
+        active = [c for c in components if c["kind"] != "scheduled"] or components
+        return {
+            "source_label": " · ".join(sorted({c["source_label"] for c in active})),
+            "inputs": sorted({c["source_label"] for c in active}),
+            "method": "operator_direction_month_source_precedence_v1",
+            "version": "v1",
+            "component_totals": {
+                kind: sum(c["departures"] for c in components if c["kind"] == kind)
+                for kind in ("observed", "estimated", "scheduled")
+            },
+            "component_count": len(active),
+            "operators": sorted({c["carrier_key"] for c in active}),
+            "months": sorted({c["period_id"] for c in active}),
+            "scheduled_excluded_from_value": bool(
+                any(c["kind"] == "scheduled" for c in components)
+                and any(c["kind"] != "scheduled" for c in components)
+            ),
+        }
+
     status = str(route.get("operation_status") or "")
     source = route.get("source_label")
     result: dict[str, Any] = {
@@ -56,8 +82,11 @@ def metric_provenance(
         )
     elif metric == "departures" and value_kind(network, route, metric) == "estimated":
         result.update(
-            source_label=("AeroDataBox · frecuencias históricas estimadas"
-                          if "aerodatabox" in str(source).lower() else source),
+            source_label=(
+                "AeroDataBox · frecuencias históricas estimadas"
+                if "aerodatabox" in str(source).lower()
+                else source
+            ),
             inputs=["Published historical frequency estimate; no new provider retrieval"],
             method="historical_frequency_estimate_as_published",
         )
@@ -80,14 +109,20 @@ def metric_provenance(
             elif entity_id in {"VOLARIS", "VIVA_AEROBUS"}:
                 result.update(
                     source_label="AeroDataBox + BTS T-100 fleet gauge",
-                    inputs=["AeroDataBox estimated departures", "prior 12 months of carrier BTS T-100 seats/departures"],
+                    inputs=[
+                        "AeroDataBox estimated departures",
+                        "prior 12 months of carrier BTS T-100 seats/departures",
+                    ],
                     method="departures_x_t100_fleet_gauge_v1",
                     version="v1",
                 )
             elif entity_id == "INDUSTRY":
                 result.update(
                     source_label="AeroDataBox + carrier capacity methods",
-                    inputs=["AeroDataBox route estimates", "carrier-specific aircraft or fleet capacity evidence"],
+                    inputs=[
+                        "AeroDataBox route estimates",
+                        "carrier-specific aircraft or fleet capacity evidence",
+                    ],
                     method="carrier_specific_capacity_methods_v1",
                     version="v1",
                 )

@@ -432,7 +432,9 @@ class ToolRegistry:
         if name == "get_data_catalog":
             if arguments:
                 raise PlanValidationError("get_data_catalog no acepta argumentos")
-            return self.catalog()
+            from ._catalog_periods import compact_catalog_periods
+
+            return compact_catalog_periods(self.catalog())
         if name == "get_metric_definition":
             if set(arguments) != {"metric_id"}:
                 raise PlanValidationError("Se requiere solo metric_id")

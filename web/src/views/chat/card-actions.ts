@@ -3,7 +3,7 @@ export function mountChatCardActions(
   onCardFocus: (card: Element) => void,
 ): () => void {
   const cardButton = (card: HTMLElement, label: string) => {
-    if (card.querySelector(":scope > .chat-card-action")) return;
+    if (card.hasAttribute("data-chat-unavailable") || card.querySelector(":scope > .chat-card-action")) return;
     card.classList.add("chat-card-host");
     const button = document.createElement("button");
     button.type = "button";

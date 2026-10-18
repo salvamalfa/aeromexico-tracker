@@ -100,11 +100,11 @@ def test_real_international_quarter_route_queries_fit_presented_tool_budget() ->
         assert raw_bytes <= 15_000
         assert final_bytes <= 15_652
         assert result["requested_top_n"] == expected
-        assert result["available_route_count"] == 75
+        assert result["available_route_count"] == 102
         assert result["applied_top_n"] == len(result["rows"]) <= expected
         assert result["truncated"] is True
         assert result["truncation_reason"] == "tool_result_size_limit"
-        assert result["display"]["title"].endswith("75 mostradas")
+        assert result["display"]["title"].endswith("102 mostradas")
         assert len(result["display"]["rows"]) == len(result["rows"])
         assert result["rows"]
         assert all(row["metric_provenance"] for row in result["rows"])

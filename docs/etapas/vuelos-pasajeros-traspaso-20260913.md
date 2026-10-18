@@ -68,6 +68,12 @@ La retirada se refiere a nuevas capturas pagadas, sin eliminar el histórico.
 No hay meses nuevos activados. Ver [alcance y prueba AFAC/AICM](../plan-salida-aerodatabox.md)
 y [cierre con capturas](cierre-aerodatabox-20261014.md).
 
+La actualización candidata del 17 de octubre está documentada en
+[BTS y objetivo de representación del 95%](bts-refresco-cobertura-20261017.md):
+refresco público, identidad Aerovías/Connect y prioridad por operador, sentido
+y mes. Su informe separa observados, estimados, programados y atribuidos;
+no activa ni publica los datos de la preview.
+
 ## Reglas de significado que más pesan aquí
 
 - Pasajeros ruta×aerolínea son **estimación** (IPF sobre marginales AFAC) y

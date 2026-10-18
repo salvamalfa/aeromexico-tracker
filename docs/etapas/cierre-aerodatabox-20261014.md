@@ -1,7 +1,10 @@
 # AeroDataBox: conservamos el histórico y dejamos de capturar
 
-Revisión del 15 de octubre de 2026. Versión candidata del
-[PR #133](https://github.com/salvamalfa/aeromexico-tracker/pull/133), pendiente de aprobación.
+Revisión del 15 de octubre de 2026. El
+[PR #133](https://github.com/salvamalfa/aeromexico-tracker/pull/133) fue aprobado,
+integrado como `40a63d1905` y verificado en Pages y Railway.
+La [ampliación posterior de cobertura](cobertura-vuelos-20261015.md) es otra
+versión de prueba y requiere su propia aprobación.
 
 AeroDataBox aportó una semilla de oferta por ruta y operador. Combinada con
 AFAC permitió estimar pasajeros; sus frecuencias y referencias de flota

@@ -14,8 +14,10 @@ Propuesta — el dueño decide prioridades.
   Aeroméxico.
 - Refresco manual de AFAC (rezago típico 27–36 días tras el cierre de mes);
   agosto de 2026 se esperaba entre el 28 de septiembre y el 2 de octubre.
-- Revisar y publicar, con aprobación del dueño, el [mapa solo de vuelos con histórico conservado](docs/etapas/cierre-aerodatabox-20261014.md).
-  No hay nuevos meses activados. La [prueba AFAC/AICM](docs/plan-salida-aerodatabox.md)
+- La [base BTS del 18 de octubre](docs/etapas/bts-refresco-cobertura-20261017.md)
+  incorpora los meses retenidos de 2026 y conserva estimaciones declaradas.
+  La opción adicional de estimaciones de EEUU sigue pendiente de decisión
+  independiente; no se activa con esta base. La [prueba AFAC/AICM](docs/plan-salida-aerodatabox.md)
   documenta la viabilidad condicional de una semilla congelada y sus límites.
 
 ## Siguiente

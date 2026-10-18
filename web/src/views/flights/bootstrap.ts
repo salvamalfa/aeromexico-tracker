@@ -20,6 +20,7 @@ import { renderNetworkPeriod, renderRouteMode } from "./network";
 import { alignRouteDetailToGeo, canvasSize, mapFittedCanvasSize, renderFlowMap } from "./map";
 import { mountPicker } from "../shell/carriers";
 import { setMapEntity } from "./state";
+import { mountMapPeriodControl } from "./map-periods";
 import { state as executiveState } from "../executive/state";
 
 function syncPeriodIndex(periodId: string): boolean {
@@ -44,8 +45,7 @@ function mountFlightPickers(): void {
       if (!key || !setMapEntity(key)) return;
       state.pinnedAirport = null;
       state.selectedMarket = null;
-      await renderNetworkPeriod(state.quarters[state.periodIndex]!.period_id);
-      renderFlowMap();
+      if (await renderNetworkPeriod(state.quarters[state.periodIndex]!.period_id)) renderFlowMap();
     });
     if (initial) setMapEntity(initial);
   }
@@ -57,6 +57,7 @@ function mountFlightPickers(): void {
 
 function wireControls(): void {
   mountFlightPickers();
+  mountMapPeriodControl(() => void renderNetworkPeriod(state.quarters[state.periodIndex]!.period_id));
   subscribe((periodId) => {
     if (syncPeriodIndex(periodId)) void renderQuarter();
   });
