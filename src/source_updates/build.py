@@ -78,7 +78,7 @@ def build_plan(workspace: Path, steps: list[str]) -> dict:
         "prerequisites": {
             name: requirements
             for name, requirements in {
-                "parse.fx": ["All three Banxico CSVs: SF43718, SP1, SF61745; H.10 offline adapter pending"],
+                "parse.fx": ["All three Banxico CSVs: SF43718, SP1, SF61745; H.10 uses separate parse.h10"],
                 "parse.market": [
                     "Candidate data/silver/sec_report_text.parquet from preserved SEC evidence",
                     "Normalized Yahoo CSVs for AERO, VLRS, RYAAY, DAL, ICAGY",

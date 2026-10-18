@@ -18,8 +18,11 @@ Distinguir fecha del evento, publicación y captura; noticias no sustituyen
 fuentes financieras oficiales. `news_http_error` nunca cuenta como noticia ni
 ausencia de noticias. Reutilizar el archivo mensual de PR136 tras integrarlo;
 no cambiar su rama ni activar candidatos. El contrato Silver conserva un
-representante por noticia y `provenance_json` registra sus fuentes; una fuente
-sin representante debe revisarse en esa procedencia antes de afirmar cobertura.
+representante por noticia y `provenance_json` conserva los metadatos de cada
+fuente. `check` proyecta cada contribución, exige la misma URL canónica y fecha
+local, y verifica su propio archivo/hash Bronze. Los valores y revisiones de
+GDELT no se toman del representante RSS ni viceversa. Esto no certifica que el
+mes esté completo.
 
 ## Ejecución
 

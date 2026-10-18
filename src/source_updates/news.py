@@ -34,8 +34,9 @@ def deduplicate(records: list[dict]) -> list[dict]:
         # or to identify two different URLs as the same article.
         key = (canonical_url(record["url"]), stamp.tz_convert("America/Mexico_City").date().isoformat())
         provenance = {
-            field: str(record[field])
-            for field in ("source_system", "source_file", "source_hash", "url", "published_at", "title")
+            field: None if pd.api.types.is_scalar(value) and pd.isna(value) else value
+            for field, value in record.items()
+            if field not in {"canonical_url", "provenance_json"}
         }
         if key not in grouped:
             grouped[key] = {**record, "canonical_url": key[0], "provenance": []}
@@ -44,9 +45,57 @@ def deduplicate(records: list[dict]) -> list[dict]:
     output = []
     for row in grouped.values():
         provenance = row.pop("provenance")
-        row["provenance_json"] = json.dumps(provenance, sort_keys=True, ensure_ascii=False)
+        row["provenance_json"] = json.dumps(provenance, sort_keys=True, ensure_ascii=False, default=str)
         output.append(row)
     return output
+
+
+def checkable_contributors(frame):
+    """Project each contributor for source-specific checks without duplicating stored news."""
+    import pandas as pd
+
+    if "provenance_json" not in frame:
+        return frame  # Legacy direct rows only certify their own top-level source.
+    projected = []
+    required = {"source_system", "source_file", "source_hash", "url", "published_at", "title"}
+    for row in frame.to_dict("records"):
+        provenance = json.loads(row["provenance_json"])
+        if not isinstance(provenance, list) or not provenance:
+            raise ValueError("News contributors require nonempty provenance")
+        lineage_fields = ("source_system", "source_file", "source_hash")
+        if not any(
+            isinstance(part, dict) and all(part.get(field) == row[field] for field in lineage_fields)
+            for part in provenance
+        ):
+            raise ValueError("Top-level news lineage is absent from its contributors")
+        canonical = canonical_url(row["url"])
+        stamp = pd.Timestamp(row["published_at"])
+        if stamp.tzinfo is None:
+            raise ValueError("News publication requires a timezone")
+        day = stamp.tz_convert("America/Mexico_City").date()
+        for contributor in provenance:
+            if not isinstance(contributor, dict) or not required <= contributor.keys():
+                raise ValueError("News contributor lacks direct lineage or metadata")
+            observed = pd.Timestamp(contributor["published_at"])
+            if (
+                contributor["source_system"] not in {"rss", "gdelt"}
+                or canonical_url(contributor["url"]) != canonical
+                or observed.tzinfo is None
+                or observed.tz_convert("America/Mexico_City").date() != day
+            ):
+                raise ValueError("News contributor does not match the deduplicated dated URL")
+            # Unknown contributor fields stay absent, rather than inheriting
+            # another source's title, language or GDELT tone.
+            projected.append(
+                {
+                    **dict.fromkeys(frame.columns),
+                    **contributor,
+                    "published_at": observed,
+                    "canonical_url": canonical,
+                    "provenance_json": row["provenance_json"],
+                }
+            )
+    return pd.DataFrame(projected)
 
 
 def build_from_bronze() -> dict:

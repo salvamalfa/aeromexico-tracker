@@ -101,6 +101,10 @@ def check_candidate(workspace: Path, specification: dict) -> dict:
                 from src.transform.stage6_contracts import validate_table
 
                 validate_table(item["table"], frame)
+            if item["table"] == "news_headlines":
+                from src.source_updates.news import checkable_contributors
+
+                frame = checkable_contributors(frame)
             filters = dict(item.get("filters", {}))
             required_entity = {
                 "am_sec": "AEROMEXICO",
@@ -170,6 +174,8 @@ def check_candidate(workspace: Path, specification: dict) -> dict:
                 if not baseline.is_relative_to(workspace):
                     raise ValueError("Baseline must remain in candidate workspace")
                 before = pd.read_parquet(baseline)
+                if item["table"] == "news_headlines":
+                    before = checkable_contributors(before)
                 for column, value in filters.items():
                     before = before.loc[before[column].eq(value)]
                 # Baseline scope must match the exact selected period and source.
