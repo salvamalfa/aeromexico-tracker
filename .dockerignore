@@ -16,6 +16,9 @@
 !src/conversational_analytics/**
 !src/web_export/
 !src/web_export/**
+!src/publish/
+!src/publish/__init__.py
+!src/publish/manifest.py
 !src/dashboard/
 !src/dashboard/__init__.py
 !src/dashboard/flights_html.py
