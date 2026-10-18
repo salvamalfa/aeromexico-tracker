@@ -17,10 +17,12 @@ import pandas as pd
 from src.dashboard.domestic_routes import load_domestic_monthly_networks
 from src.dashboard.international_routes import ESTIMATE_TABLE, ROUTE_PAYLOAD_KEYS, _estimated_routes
 from src.dashboard.route_capacity import load_route_capacity
+from src.dashboard.map_periods import refresh_network_availability
+from src.dashboard.flight_cells import admitted_estimates, apply_flight_cells, international_cells
 from src.dashboard.route_entities import EXTRA_ROUTE_ENTITIES, RouteEntity, breakdown_totals
 
 
-def entity_international_networks(connection, networks, entity: RouteEntity):
+def entity_international_networks(connection, networks, entity: RouteEntity, *, include_existing_us_estimates=False, allowed_us_estimate_cells=None):
     """International map of Volaris, Viva or Industria (Dashboard v2, fase 3).
 
     Mexico–United States comes from each entity's own BTS T-100 routes
@@ -54,6 +56,7 @@ def entity_international_networks(connection, networks, entity: RouteEntity):
             lat=float(a["latitude"]), lon=float(a["longitude"]),
         )
 
+    estimates = admitted_estimates(estimates, endpoint, include_us=include_existing_us_estimates, allowed_us_estimate_cells=allowed_us_estimate_cells)
     label = entity.international_estimated_label
     capacity = load_route_capacity(connection, entity, "international")
     result = deepcopy(networks)
@@ -64,7 +67,8 @@ def entity_international_networks(connection, networks, entity: RouteEntity):
             route["source_label"] = "Estados Unidos · BTS T-100"
             route["observed_months"] = original_months
             route["coverage_note"] = "Meses: " + ", ".join(m[5:] for m in original_months) + " · BTS T-100"
-        for market, estimate in _estimated_routes(estimates, capacity, months, endpoint, entity).items():
+        for market, estimate in _estimated_routes(estimates, capacity, months, endpoint, entity,
+                                                 include_us=include_existing_us_estimates).items():
             if any(r["market_key"] == market for r in network["routes"]):
                 continue
             months_text = ", ".join(sorted({m["period_id"][5:] for m in estimate["monthly"]}))
@@ -91,33 +95,29 @@ def entity_international_networks(connection, networks, entity: RouteEntity):
             if "carrier_breakdown" in estimate:
                 route["carrier_breakdown"] = estimate["carrier_breakdown"]
             network["routes"].append(route)
+        apply_flight_cells(network, international_cells(
+            connection, months, entity, estimates, endpoint,
+            include_us=include_existing_us_estimates, allowed_us_estimate_cells=allowed_us_estimate_cells), endpoint,
+            previous_cells=international_cells(connection, [f"{int(m[:4])-1}{m[4:]}" for m in months],
+                                              entity, pd.DataFrame(), endpoint))
         network["aena_airport_activity"] = []
         aps = {e["iata"]: e for r in network["routes"] for e in (r["origin"], r["destination"])}
         network["airports"] = sorted(aps.values(), key=lambda a: a["iata"])
         network["route_count"] = len(network["routes"])
         network["airport_count"] = len(aps)
         network["coverage"] = "México–EE. UU. observado por T-100; resto de la red internacional estimado"
-        network["coverage_by_source"] = {
-            source: sorted(
-                {
-                    m
-                    for r in network["routes"]
-                    if r.get("source_label") == source
-                    for m in (r.get("observed_months") or r.get("estimated_months", []))
-                }
-            )
-            for source in sorted({r["source_label"] for r in network["routes"]})
-        }
         network["estimated_passenger_route_count"] = sum(
             bool(r.get("passengers_estimated")) for r in network["routes"]
         )
         network["totals"] = {k: None for k in ("passengers", "seats", "departures")}
         network["agent_eligible"] = False
+        refresh_network_availability(network)
     return result
 
 
 def build_entity_networks(
-    connection, quarters: list[dict[str, Any]], load_routes: Callable[..., dict[str, Any]]
+    connection, quarters: list[dict[str, Any]], load_routes: Callable[..., dict[str, Any]], *,
+    include_existing_us_estimates=False, allowed_us_estimate_cells=None,
 ) -> dict[str, dict[str, Any]]:
     """International (quarterly) and domestic (monthly) maps per extra entity.
 
@@ -135,7 +135,8 @@ def build_entity_networks(
             t100[record["period_id"]] = network
         result[entity.key] = {
             "label": entity.label,
-            "route_networks": entity_international_networks(connection, t100, entity),
+            "route_networks": entity_international_networks(connection, t100, entity,
+                include_existing_us_estimates=include_existing_us_estimates, allowed_us_estimate_cells=allowed_us_estimate_cells),
             "domestic_monthly_networks": load_domestic_monthly_networks(connection, entity),
         }
     return result

@@ -68,8 +68,10 @@ from src.conversational_analytics.tools._route_provenance import (
     metric_source_label as _metric_source_label,
 )
 from src.conversational_analytics.tools._route_provenance import value_kind as _value_kind
+from src.conversational_analytics.tools._route_comparison import comparability_reason
+from src.web_export.route_support import metric_support, route_metric_support_reason
 from src.conversational_analytics.tools._route_query_display import bound_route_query_result
-from src.conversational_analytics.tools._route_rollup import rollup_complete_quarter
+from src.conversational_analytics.tools._route_rollup import quarter_months, rollup_complete_quarter
 from src.conversational_analytics.tools._route_shared_display import bound_shared_result
 from src.conversational_analytics.tools._route_shared_metadata import (
     build_shared_carrier_metadata,
@@ -91,24 +93,26 @@ class RouteTools:
         try:
             network = self.snapshot.payload(path)
         except (ValueError, KeyError):
-            if segment == "domestic" and "Q" in period:
-                year, quarter = int(period[:4]), int(period[-1])
-                first_month = (quarter - 1) * 3 + 1
-                month_periods = [f"{year:04d}M{month:02d}" for month in range(first_month, first_month + 3)]
-                month_networks = []
-                for month_period in month_periods:
-                    try:
-                        month_networks.append(
-                            self.snapshot.payload(path_for(entity_id, segment, month_period))
-                        )
-                    except (ValueError, KeyError):
-                        return None, path
-                rollup = rollup_complete_quarter(period, month_networks, _value_kind)
-                if rollup is not None:
-                    rollup["source_paths"] = [path_for(entity_id, segment, month) for month in month_periods]
-                return rollup, path
-            return None, path
-        return network, path
+            network = None
+        # Keep the map's official programming separate from chat's monthly estimates.
+        if network is not None and not (
+            segment == "domestic" and "Q" in period and network.get("mode") == "scheduled_domestic"
+        ):
+            return network, path
+        if segment == "domestic" and "Q" in period:
+            month_periods = quarter_months(period)
+            month_networks = []
+            for month_period in month_periods:
+                try:
+                    month_path = path_for(entity_id, segment, month_period)
+                    month_networks.append(self.snapshot.payload(month_path))
+                except (ValueError, KeyError):
+                    return None, path
+            rollup = rollup_complete_quarter(period, month_networks, _value_kind)
+            if rollup is not None:
+                rollup["source_paths"] = [path_for(entity_id, segment, month) for month in month_periods]
+            return rollup, path
+        return None, path
 
     def _metadata(self, query: dict[str, Any], networks: list[tuple[dict[str, Any], str]]) -> dict[str, Any]:
         refs = []
@@ -263,6 +267,7 @@ class RouteTools:
                 and value is not None
                 and previous_value is not None
                 and current_kind == previous_kind
+                and route_metric_support_reason(current_network, previous_network, route, previous_route, metric) is None
                 and _metric_source_label(current_network, route, metric, entity_id)
                 == _metric_source_label(previous_network, previous_route, metric, entity_id)
             )
@@ -363,35 +368,7 @@ class RouteTools:
         }
         return bound_route_query_result(result, available_route_count, top_n)
 
-    @staticmethod
-    def _comparability_reason(
-        current,
-        previous,
-        route,
-        previous_route,
-        value,
-        previous_value,
-        current_kind,
-        previous_kind,
-        comparison_period,
-        metric,
-        entity_id,
-    ):
-        if previous is None:
-            return "El periodo comparativo no está publicado"
-        if not _coverage(current)["complete"] or not _coverage(previous)["complete"]:
-            return "La cobertura de uno o ambos periodos es parcial"
-        if previous_route is None:
-            return "La ruta no aparece en ambos periodos; no se asume valor cero"
-        if value is None or previous_value is None:
-            return "Falta el valor de la ruta en al menos un periodo"
-        if current_kind != previous_kind:
-            return "Cambió el tipo de valor (observado, estimado o programado)"
-        if _metric_source_label(current, route, metric, entity_id) != _metric_source_label(
-            previous, previous_route, metric, entity_id
-        ):
-            return "Cambió la fuente de la ruta"
-        return f"No hay comparación válida contra {comparison_period}"
+    _comparability_reason = staticmethod(comparability_reason)
 
     def find_shared_routes(self, arguments: dict[str, Any]) -> dict[str, Any]:
         allowed = {"entity_ids", "segment", "period", "metric", "top_n"}
@@ -497,6 +474,8 @@ class RouteTools:
                     comparability_reasons.append("coverage_incomplete")
                 if len(expected_universes) != 1 or len(observed_universes) != 1:
                     comparability_reasons.append("period_universe_differs")
+                if any(metric_support(network_by_entity[e], route_maps[e][market_key], metric)[2] for e in entity_ids):
+                    comparability_reasons.append("route_metric_coverage_incomplete")
                 if len(kinds) != 1:
                     comparability_reasons.append("value_kind_differs")
                 if len(source_families) != 1:

@@ -1,4 +1,3 @@
-import copy
 import pandas as pd
 import pytest
 from src.transform.international_routes import aena_period,normalize,validate
@@ -54,8 +53,9 @@ def test_gold_consumption_and_month_windows(flight_payload):
     network=payload['international_networks']['2026Q2']
     assert network['totals']==dict(passengers=None,seats=None,departures=None)
     assert network['agent_eligible'] is False
-    additions=[r for r in network['routes'] if r['source_label'] in {'Brasil · ANAC','Colombia · Aerocivil','Reino Unido · CAA'}]
-    assert {r['source_label'] for r in additions}=={'Brasil · ANAC','Colombia · Aerocivil','Reino Unido · CAA'}
+    sources={'Brasil · ANAC','Colombia · Aerocivil','Reino Unido · CAA'}
+    additions=[r for r in network['routes'] if any(c['kind']=='observed' and c['source_label'] in sources for c in r.get('flight_components',[]))]
+    assert {c['source_label'] for r in additions for c in r['flight_components'] if c['kind']=='observed'}==sources
     for route in additions:
         assert set(route['observed_months'])<=set(network['expected_months'])
         if route.get('passengers_estimated'):
@@ -71,9 +71,11 @@ def test_gold_consumption_and_month_windows(flight_payload):
             assert route['load_factor'] is None
         for metric in ('passengers','seats','departures'):
             if route[metric] is not None:
-                assert sum(d[metric] for d in route['directions'])==pytest.approx(route[metric])
+                assert sum(d.get(metric) or 0 for d in route['directions'])==pytest.approx(route[metric])
     uk=next(r for r in additions if 'CAA' in r['source_label'])
-    assert uk['observed_months']==['2026M06'] and uk['departures']==60
+    assert uk['observed_months']==['2026M06']
+    assert sum(c['departures'] for c in uk['flight_components'] if c['kind']=='observed')==60
+    assert uk['departures']==sum(c['departures'] for c in uk['flight_components'] if c['kind']!='scheduled')
     assert uk['previous']['departures'] is None
     # CAA publishes flights, not passengers. When the private estimate is
     # present it fills passengers for June alone, the month CAA covers.
@@ -93,8 +95,11 @@ def test_gold_consumption_and_month_windows(flight_payload):
         else:
             assert uk['seats'] is None and uk['load_factor'] is None
             assert uk['load_factor_status']=='capacity_incomplete'
-    assert payload['route_network']['route_count']==40  # Original BTS scope preserved.
-    assert {r['market_key'] for r in network['routes'] if r['source_label']=='AICM · vuelos AM programados'} >= {'MAD<>MEX','BCN<>MEX'}
+    bts=payload['route_network']
+    assert bts['observed_months']==['2026M04','2026M05','2026M06']
+    assert bts['route_count']==len({r['market_key'] for r in bts['routes']})
+    assert all(r['operation_status']=='operated_observed' for r in bts['routes'])
+    assert {r['market_key'] for r in network['routes'] if 'AICM' in r['coverage_note']} >= {'MAD<>MEX','BCN<>MEX'}
     assert not any(r.get('operation_status')=='carrier_presence_and_market_observed' for r in network['routes'])
     activity={item['airport_iata']:item for item in network['aena_airport_activity']}
     assert {airport:(item['passengers'],item['operations']) for airport,item in activity.items()}=={
@@ -105,7 +110,10 @@ def test_gold_consumption_and_month_windows(flight_payload):
     from src.dashboard.flights_html import integration_flight_payload
     consumer=integration_flight_payload(payload)['route_networks']['2026Q2']
     assert {item['airport_iata'] for item in consumer['aena_airport_activity']}=={'MAD','BCN'}
-    assert all(next(route for route in consumer['routes'] if route['market_key']==market)['operation_status']=='assigned_slot_not_flown' for market in ('MAD<>MEX','BCN<>MEX'))
+    for market in ('MAD<>MEX','BCN<>MEX'):
+        route=next(route for route in consumer['routes'] if route['market_key']==market)
+        assert route['operation_status'].startswith(('estimated_', 'assigned_slot_'))
+        assert all(c['kind']!='observed' for c in route['flight_components'])
     first_quarter={item['airport_iata']:item for item in payload['international_networks']['2026Q1']['aena_airport_activity']}
     assert first_quarter['MAD']['coverage_status']=='complete'
     assert first_quarter['BCN']['coverage_status']=='partial'

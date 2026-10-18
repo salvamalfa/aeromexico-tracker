@@ -44,7 +44,14 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
   ajuste final de R2 sin otra evaluación pagada. R2/Sol low y las capacidades
   de rutas, métricas financieras y evidencia están activos y verificados en
   Railway (ver [Chat analítico](#chat-analítico)).
-- **Datos:** el candidato conserva el histórico publicado y muestra solo vuelos en el mapa, con su tipo y procedencia; no realiza nuevas capturas AeroDataBox. AFAC se actualiza manualmente. Lo pendiente
+- **Datos:** la base de Vuelos del 18 de octubre conserva el histórico e incorpora
+  el BTS retenido de enero–julio de 2026, con operador y clase de servicio
+  separados, y precedencia por celda entre observaciones y estimaciones retenidas.
+  El mapa muestra solo vuelos, con su tipo y procedencia. No realiza nuevas
+  capturas AeroDataBox ni ajustes de modelos. La opción adicional de estimaciones
+  de EEUU permanece desactivada y requiere aprobación independiente.
+  El [reporte BTS y sus límites](docs/etapas/bts-refresco-cobertura-20261017.md)
+  distingue representación mixta de cobertura observada. AFAC se actualiza manualmente. Lo pendiente
   está en [`ROADMAP.md`](ROADMAP.md).
 
 Conteos de tablas Gold y pruebas cambian con cada cambio; la cuenta vigente y

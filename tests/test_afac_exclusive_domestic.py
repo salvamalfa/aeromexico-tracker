@@ -40,7 +40,11 @@ def test_domestic_consumer_replaces_inference_with_disclosed_passenger_estimates
     assert {"CLQ<>MEX", "CLQ<>NLU", "DGO<>NLU"}.issubset(routes)
     for key in ("CLQ<>MEX", "CLQ<>NLU", "DGO<>NLU"):
         route = routes[key]
-        assert route["operation_status"] == "estimated_from_afac_margins_and_temporal_support"
+        base = "estimated_from_afac_margins_and_temporal_support"
+        assert route["operation_status"] in {base, base + "_partial_frequencies"}
+        partial = any(direction["flight_count_partial"] for direction in route["directions"])
+        assert route["operation_status"].endswith("partial_frequencies") is partial
+        assert ("frecuencias parciales" in route["coverage_note"]) is partial
         assert route["passengers"] > 0
         assert route["capacity_estimated"] == (route["departures"] is not None)
         if route["capacity_estimated"]:
