@@ -137,6 +137,13 @@ auditada de 2T26 se conserva en `prototypes/etapa-17/audited_analysis.html`.
 
 Fuentes principales: SEC EDGAR, BMV XBRL, AFAC, BTS T-100, Banxico, EIA, datos públicos de mercado, reportes de aerolíneas, grupos aeroportuarios y fuentes regulatorias abiertas. Las limitaciones y bloqueos de cada fuente están documentados en los reportes de etapa.
 
+## Candidato Mercado
+
+La rama de revisión incorpora Mercado; su alcance y límites están en
+[la etapa del 15 de octubre](docs/etapas/mercado-candidato-20261015.md).
+La [auditoría Gold](docs/gold-exposure.md) distingue exposición, contexto y linaje.
+Producción conserva su estado hasta aprobación independiente.
+
 ## Actualización
 
 `.github/workflows/refresh.yml` se ejecuta trimestralmente y también de forma manual. Solo monitorea frescura y valida/confirma (commit) el gold ya reconstruido en el runner — no publica el sitio: eso es `.github/workflows/pages.yml`, sobre `site/`. Corre la suite completa y `src.dashboard.validate_stage8` (definición de terminado de Stage 8, sobre el gold público versionado); si algo falla abre un issue y no hace commit. También revisa la fecha de AFAC y abre un recordatorio cuando la fuente manual rebasa 62 días.

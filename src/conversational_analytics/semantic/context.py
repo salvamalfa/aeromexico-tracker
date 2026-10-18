@@ -6,7 +6,7 @@ from typing import Any
 
 from src.conversational_analytics.semantic.plan import ENTITY_IDS, PERIOD_RE, SEGMENTS, PlanValidationError
 
-TABS = {"reading", "economy", "flights"}
+TABS = {"reading", "economy", "flights", "market", "news"}
 REGIONS = {"norteamerica", "sudamerica", "europa", "asia"}
 CONTEXT_ENTITY_IDS = ENTITY_IDS - {"MEXICAN_CARRIERS"}
 CARD_IDS = {

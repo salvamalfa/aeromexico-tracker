@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildChatContext } from "./context";
+import { initPeriods } from "../../state/period";
 
 describe("chat dashboard context", () => {
   it("drops a card from an inactive tab instead of mixing its filters with the active tab", () => {
@@ -22,4 +23,12 @@ describe("chat dashboard context", () => {
     expect(context.card_id).toBeUndefined();
     expect(context.filters).toBeUndefined();
   });
+});
+
+
+it("keeps the global quarter and AFAC segment while withholding unsupported airport card context",()=>{
+ initPeriods(["2026Q1", "2026Q2"], "2026Q2");
+ document.body.innerHTML=`<div class="reader-tabs"><button role="tab" aria-selected="true" aria-controls="panel-market"></button></div><section id="panel-market" role="tabpanel"><select id="market-segment"><option selected>international</option></select><article class="chart-card" id="airport-demand-card" data-chat-unavailable><button id="airport-source">Source</button></article></section>`;
+ const context=buildChatContext(document.getElementById("airport-source"));
+ expect(context.tab).toBe("market");expect(context.period).toBe("2026Q2");expect(context.filters?.segment).toBe("international");expect(context.card_id).toBeUndefined();
 });
