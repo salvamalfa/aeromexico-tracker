@@ -1,6 +1,146 @@
 # Catálogo de fuentes, métricas y rondas de actualización
 
-Revisión: 13 de octubre de 2026. Estado: **fase 1 documental; calendario propuesto, sin automatizaciones ni ingestas nuevas**.
+Revisión: 18 de octubre de 2026. **Calendario aprobado; skills y coordinador
+preparados para pruebas. Sin nuevas ejecuciones automáticas ni publicación.**
+
+## Resumen
+
+Ya hay una herramienta ejecutable para preparar las actualizaciones por fuente.
+Incluye ocho skills por familia y un coordinador. Primero muestra qué haría.
+Después puede capturar y comprobar un lote candidato en una carpeta separada.
+La aprobación del calendario ya está recibida. La revisión del contenido y su
+publicación conservan sus permisos separados.
+
+## Qué cambia para ti
+
+La ronda mensual será el primer día hábil bancario mexicano en o después del
+15. Noticias se revisa en esa misma ronda. La muestra de 2026 da **15 de
+octubre, 17 de noviembre y 15 de diciembre**. Octubre ya pasó; esta muestra no
+crea una ejecución retroactiva. [Ver calendario reproducible](referencias/source-updates-20261018/calendar.json).
+
+La ronda trimestral será dos días hábiles después del último reporte financiero
+confirmado de Aeroméxico, Volaris y Viva. El día del reporte no cuenta. Si queda
+a siete días naturales o menos de una mensual, ambas se hacen en la fecha
+posterior. Los días se calculan en **America/Mexico_City**. La hora de captura
+se conserva en UTC, y cada anuncio conserva su zona original.
+
+El **2 de noviembre de 2026 es inhábil bancario**. El 16 también lo es. Se usa
+el calendario oficial de 2026, contrastado con BMV. Un año aún no verificado
+queda bloqueado; no se extrapolan sus festivos.
+[DOF](https://www.dof.gob.mx/nota_detalle.php?codigo=5775684&fecha=10%2F12%2F2025),
+[BMV](https://www.bmv.com.mx/es/grupo-bmv/calendario-de-dias-festivos).
+
+## Qué necesitas hacer
+
+Para probarlo, ejecuta la vista previa del apéndice. El resultado muestra las
+fuentes y los pasos previstos. No hace falta aprobar otra vez el calendario.
+La siguiente revisión útil será un lote candidato con sus datos y faltantes.
+
+## Riesgos
+
+Capturar un archivo no demuestra que sus cifras se hayan incorporado. La
+herramienta comprueba el periodo que aparece en las filas. Si el formato nuevo
+supera el parser disponible, lo deja pendiente. En particular, persisten los
+límites históricos del parser AFAC y de algunos reportes corporativos.
+
+Un error de acceso no significa que no exista un reporte. Una fecha desconocida
+permanece sin fecha. Las noticias pueden tener cobertura parcial del mes.
+Los datos retenidos de AeroDataBox se conservan; esta entrega no los consulta
+ni modifica.
+
+## Apéndice técnico
+
+La implementación vive en [`src/source_updates/`](../src/source_updates/).
+Las instrucciones están en la [skill del coordinador](../.agents/skills/airline-update-coordinator/SKILL.md)
+y el [contrato común](../.agents/skills/source-updates-common.md). El mapa
+operativo cubre las 29 claves del catálogo en 42 productos, con brechas
+explícitas y comprobación de cambios en el catálogo. No sustituye los contratos.
+
+### Prueba en seco
+
+Desde la raíz del repositorio, con las dependencias instaladas:
+
+```bash
+uv run python -m src.source_updates calendar --start 2026-10 --months 3 --quarter 2026Q3 --as-of 2026-10-18T12:00:00-06:00
+uv run python -m src.source_updates plan --round combined --quarter 2026Q3 --as-of 2026-10-18T12:00:00-06:00
+uv run python -m src.source_updates round --recipe config/source_update_round.example.json --workspace tmp/source-updates/prueba --dry-run
+uv run pytest -q tests/test_source_updates.py
+```
+
+Salidas conservadas: [calendario](referencias/source-updates-20261018/calendar.json),
+[plan por producto](referencias/source-updates-20261018/plan.json) y
+[prueba en seco del lote](referencias/source-updates-20261018/dry-run.json).
+La receta es un ejemplo EIA, no una captura realizada ni una ronda completa.
+La muestra anuncia un GET previsto, hasta cinco llamadas contando redirecciones,
+cero llamadas pagadas y ningún periodo validado. El modo en seco no escribe.
+Para fechar la trimestral, pasar `--releases` con una copia de
+[`source_update_releases.example.json`](../config/source_update_releases.example.json)
+completada con reportes reales. La plantilla no afirma fechas de publicación.
+
+Validación de esta entrega: **67 controles focalizados aprobados** y suite
+general con **1.458 pruebas y 29 subpruebas aprobadas**, sin fallos; 75 pruebas
+omitidas por insumos locales ausentes o vista previa sin fijar. Las capturas de
+prueba son sintéticas. [Recibo de validación](referencias/source-updates-20261018/validation.json).
+
+### Captura y comprobación
+
+`collect` acepta GET público, importación manual con SHA-256 y BTS por año
+explícito (GET del formulario + POST). `purpose=catalog` preserva el catálogo y
+descubre enlaces; no descarga los documentos encontrados. Una segunda selección
+explícita captura documentos nuevos y revisiones. Revalida las URLs elegidas,
+incluidos catálogos `current` y años BTS históricos. No inventa futuros enlaces.
+SEC y Aena requieren importaciones manuales aquí; no se leen credenciales.
+
+`build` reutiliza parsers y transformaciones permitidas en otro proceso, sin
+red y con rutas del candidato. Un bloqueo exclusivo evita escritores simultáneos
+del mismo lote. No ejecuta analítica, modelos, aprobaciones ni publicación.
+Necesita sus insumos completos: no restaura automáticamente el respaldo privado.
+Los pasos disponibles aparecen en `python -m src.source_updates build --help` y
+en `src/source_updates/build.py`; se solicitan de forma explícita y ordenada.
+
+`check` verifica hashes Bronze, contratos Silver/Gold, grano, fuente, entidad,
+periodo real y valores faltantes. El último periodo del archivo no demuestra
+completitud: la skill debe comprobar meses, días y universos requeridos.
+`baseline_file`, `revision_keys` y `value_columns` permiten comparar altas,
+bajas y cifras revisadas. No se rellenan faltantes con cero. Se distingue edad
+del dato de rezago de publicación; este último queda nulo sin fecha conocida.
+El periodo publicado por Tracker permanece sin inferir hasta consultar el
+expediente autorizado. Un hash Gold agregado exige el gate de linaje existente;
+no pasa por tener una cadena de hash. Los controles solo acreditan su alcance.
+
+`round` encadena captura → construcción → controles y se detiene ante fallos.
+`retry` calcula propuestas puntuales: +2 hábiles tras fecha oficial, siguiente
+hábil tras fallo técnico, o un intento dentro de siete días/siguiente mensual
+sin fecha. Máximo dos reprogramaciones por lote; después, decisión del dueño.
+No instala ningún horario ni seguimiento automático.
+
+### Integración y permisos
+
+La rama parte de `40a63d1`. No modifica las ramas de Vuelos (PR134/privado33),
+Mercado (PR135) o Noticias (PR136). Antes de integrar debe revisar la versión
+final del adaptador BTS de PR134 y conectar el archivo mensual de Noticias de
+PR136. No se abre un PR privado: no hay cambios necesarios en el respaldo.
+
+Viva, Volaris e Industria siguen requiriendo aprobación exacta de entidad,
+periodo y versión para sus tesis. Captura y pruebas verdes no la sustituyen.
+Tampoco se activan noticias candidatas, cron, Pages, Railway o auto-merge.
+El cron trimestral antiguo de `refresh.yml` sigue siendo una comprobación de
+frescura/Gold; no implementa este calendario ni captura fuentes.
+
+### Referencia técnica del inventario aprobado
+
+La auditoría documental inicial fue de solo lectura. Encontró 124 Markdown
+públicos, de los que 50 están relacionados con chat. La política existe y ya se
+ha aplicado; quedan cierres históricos por revisar. Algunos documentos son
+entradas de pruebas o generadores y deben conservarse. Los siete candidatos
+concretos para archivo suman 13.025 bytes: el beneficio principal sería claridad,
+no espacio. [Inventario y referencias](referencias/source-updates-20261018/lifecycle-audit.json).
+No se retiró ningún documento. La convención de audiencia vive en `AGENTS.md`.
+
+El resto de este documento conserva el inventario y las observaciones de la
+fase 1 del 13 de octubre. Sus fechas de disponibilidad y sus brechas son de ese
+corte; no prueban una consulta nueva. La aprobación del calendario y el estado
+ejecutable de esta entrega se describen arriba.
 
 El objetivo es actualizar Airline Tracker en lotes mensuales y trimestrales,
 agrupando publicaciones cercanas. Se reutilizan las ingestas y contratos
@@ -177,8 +317,8 @@ que AFAC/BTS ya cubran ese mismo trimestre. Si la ronda trimestral queda a
 posterior; si esa espera afectaría materialmente una entrega, decidir el alcance
 con el dueño. Ninguna fecha de esta sección está programada.
 
-Calendario operativo en UTC con zona del emisor en cada evidencia. Para
-agrupar días hábiles se usa calendario bancario mexicano; las horas de anuncio
+El calendario aprobado calcula los días en America/Mexico_City con calendario
+bancario mexicano. Las capturas se registran en UTC; las horas de anuncio
 conservan su zona original (incluidas ET y sus cambios de horario).
 
 ### Espera, revisiones y reprogramación puntual
@@ -229,6 +369,9 @@ manifiestos en paralelo. El analista recibe evidencia/cálculo congelados y el
 auditor independiente verifica la misma versión. No implementar esos agentes
 ni sus schedules durante fase 1.
 
+La entrega del 18 de octubre añade el coordinador candidato descrito en el
+apéndice inicial. Conserva esas brechas por producto, sin activar schedules.
+
 `refresh.yml` solo valida frescura/Gold, con cron trimestral; no ingiere ni
 construye el sitio. Noticias del chat es manual y consume metadatos ya
 comprometidos. Pages despliega `site/` revisado sin regenerarlo; Railway atiende
@@ -249,5 +392,13 @@ el chat. La cadena futura sigue siendo detección → captura → validación �
   aprobaciones ni despliegues. Validación documental/consistencia de anexos;
   no ejecución de pruebas de producto por un cambio exclusivamente documental.
 
-La fase siguiente debe acordar qué lotes de datos y análisis requieren revisión
-humana antes de publicación. Preparar este catálogo no altera el límite vigente.
+## Pendientes
+
+- Confirmar los tres reportes financieros de 3T26. La fecha trimestral permanece
+  sin fijar al corte de la muestra; el 2 de noviembre no es una fecha aprobada.
+- Seleccionar documentos nuevos y probar sus formatos. Los parsers con límites
+  históricos necesitan un adaptador validado antes de incorporar esos periodos.
+- Integrar las dependencias de Vuelos y Noticias sin sobrescribir su trabajo.
+- Verificar el calendario bancario de 2027 antes de calcular rondas de ese año.
+- Revisar y aprobar cada lote según su alcance antes de publicar o activar una
+  ejecución automática. Esta entrega termina en un PR revisable.

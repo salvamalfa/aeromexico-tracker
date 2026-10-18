@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-10-18 · Skills de fuentes y coordinador candidato
+
+- Ocho skills por familia y un coordinador con calendario bancario mexicano,
+  captura aislada, construcción offline y controles explícitos por periodo.
+  [Guía y muestras](docs/catalogo-fuentes-calendario.md).
+- Calendario aprobado, sin nuevas automatizaciones, datos activados ni
+  publicación. AeroDataBox retenido permanece sin cambios; adaptadores con
+  límites históricos y dependencias PR134/PR136 se declaran pendientes.
+- Convención de audiencia añadida a `AGENTS.md`; auditoría inicial del lifecycle
+  de solo lectura, sin retirar ni reescribir documentos históricos.
+
 ## 2026-10-12 · Chat: cierre operativo de fase 2 (fecha México)
 
 - PR #129 integrado; Railway `SUCCESS` y health 200 confirman R2/Sol low/medium,

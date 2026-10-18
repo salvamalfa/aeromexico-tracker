@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "source_tests": "tests/test_source_updates.py",
+  "fixture_data_only": true,
+  "source_network_acquisitions": 0,
+  "paid_requests": 0,
+  "activation": "none",
+  "publication": "none",
+  "baseline_commit": "40a63d1905afde97ae8e3f8671c8217aafacc4aa",
+  "runs": {
+    "focused": {
+      "tests": 67,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 67,
+      "seconds": 3.764
+    },
+    "full": {
+      "tests": 1533,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 75,
+      "passed": 1458,
+      "seconds": 156.974,
+      "xml_testcases_including_subtests": 1562,
+      "passed_subtests": 29
+    }
+  },
+  "skip_reasons": [
+    "69 local_data tests: isolated checkout has no ignored warehouse/private inputs",
+    "5 Stage 4 tests: local artifacts intentionally not versioned",
+    "1 Pages preview test: no preview pin"
+  ],
+  "environment_preparation": [
+    "Locked Python all-extras/all-groups installed in isolated .venv",
+    "npm ci with writable cache",
+    "Matching Chromium headless shell 1243; browser tests included",
+    "Existing public approval pins from d456eb8dc05e586d7119161c710db5ff47af0da3 used only in test subprocess; no new pins or external configuration changed"
+  ],
+  "additional_checks": [
+    "ruff check src/source_updates tests/test_source_updates.py",
+    "ruff check --select F src scripts",
+    "git diff --check",
+    "Original public and private checkouts remain clean",
+    "No differences in Gold, site, config/chat or workflows"
+  ]
+}

@@ -4,10 +4,12 @@ Propuesta — el dueño decide prioridades.
 
 ## Ahora
 
-- Fase 1 de actualización por lotes: revisar el
+- Actualización por lotes: probar el
   [catálogo de fuentes/métricas y calendario](docs/catalogo-fuentes-calendario.md).
   Una ronda mensual desde el 15 y una trimestral según publicaciones reales;
-  propuesta documental, sin coordinador ni nuevas automatizaciones.
+  calendario aprobado y coordinador candidato con skills por familia y pruebas
+  en seco. Falta validar formatos nuevos e integrar dependencias; sin nuevas
+  ejecuciones automáticas ni publicación.
 
 - Ciclo de análisis de 3T26 con el Analysis Agent (evidencia, cálculo,
   revisión y aprobación) una vez publicados los reportes trimestrales de
