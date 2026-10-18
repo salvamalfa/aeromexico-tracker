@@ -39,6 +39,9 @@
 !contracts/web/
 !contracts/web/*.json
 !contracts/web/privacy.yaml
+!contracts/web/versions/
+!contracts/web/versions/17fb7e131da94435190bea925fe9733e298754d04e9b9c5e76fbbea8bef119a7/
+!contracts/web/versions/17fb7e131da94435190bea925fe9733e298754d04e9b9c5e76fbbea8bef119a7/flights.schema.json
 
 !site/
 !site/publication_manifest.json
