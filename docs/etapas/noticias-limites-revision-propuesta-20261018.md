@@ -48,3 +48,19 @@ El manifiesto firmado conserva SHA256
 `b33d97eb52e0dc744ee7d029eddb5c0b3edfa43f67a0484f9ca0466cc7ab2a84`,
 el ledger continúa en 90 y los respaldos privados #33/#34 permanecen íntegros.
 No se activan candidatas, skills #137, cron ni estimaciones adicionales.
+
+## Revisión de la propuesta · 22:45 UTC
+
+Codex señaló que el detector inicial también rechazaba `T2` del AICM y el
+modelo `Q400`. Se restringió a las estructuras trimestrales con año y a
+`Q` con un solo dígito de trimestre; `T1`/`T2` solas y los modelos de avión
+conservan su búsqueda de texto. Las 28 regresiones pasan, incluidas las
+cinco nuevas de terminales/modelos. La suite anterior de Noticias pasó
+725 pruebas en 181.42 s antes de este ajuste; no se le atribuye el ajuste
+posterior sin volver a comprobarlo.
+
+La primera huella propuesta `5675b289…` queda superada. La propuesta actual
+es `c4c46c392f7827e8d5043b43521c1929c77d7a3d263ffde0f4a8afec8dead713`;
+ninguna de las dos está aprobada. Se requieren CI y Codex del HEAD nuevo.
+La huella aprobada6534f876, sus tres pares, ledger90 y el sitio firmado
+permanecen intactos en #136.

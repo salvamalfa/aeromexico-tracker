@@ -75,3 +75,18 @@ def test_explicit_publication_quarter_dates_keep_july_outside_results(approved_i
     result = approved_index.search_news("noticias publicadas entre 2026-04-01 y 2026-06-30")
     assert result["count"] == 1
     assert [row["published_at"] for row in result["results"]] == ["2026-04-30"]
+
+
+@pytest.mark.parametrize(
+    "question,term",
+    [
+        ("noticias de la T2 del AICM", "t2"),
+        ("noticias de T1 y T2", "t1"),
+        ("noticias publicadas en T2 del AICM", "t2"),
+        ("noticias sobre Q400", "q400"),
+        ("noticias de Q400 en 2026", "q400"),
+    ],
+)
+def test_airport_terminals_and_aircraft_models_remain_searchable(question, term):
+    intent = resolve_news_query(question)
+    assert term in intent["terms"]
