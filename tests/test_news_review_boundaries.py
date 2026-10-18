@@ -63,7 +63,29 @@ def test_secondary_story_source_cannot_bypass_company_validation(approved_index,
 
 
 @pytest.mark.parametrize(
-    "notation", ["2026Q2", "Q2 2026", "2T26", "2T2026", "2026T2", "Q22026", "Q2", "2026Q5", "0T26"]
+    "notation",
+    [
+        "2026Q2",
+        "2026 Q2",
+        "2026-Q2",
+        "Q2 2026",
+        "Q2 de 2026",
+        "Q22026",
+        "Q2/2026",
+        "2T26",
+        "2 T26",
+        "2T2026",
+        "2026T2",
+        "2026 T2",
+        "2026-T2",
+        "T2 2026",
+        "T2 de 2026",
+        "T22026",
+        "T2/2026",
+        "Q2",
+        "2026Q5",
+        "0T26",
+    ],
 )
 @pytest.mark.parametrize("bounds", [{}, {"start_date": "2026-04-01", "end_date": "2026-06-30"}])
 def test_compact_publication_quarter_never_becomes_an_unbounded_or_topic_search(notation, bounds):
@@ -85,6 +107,8 @@ def test_explicit_publication_quarter_dates_keep_july_outside_results(approved_i
         ("noticias publicadas en T2 del AICM", "t2"),
         ("noticias sobre Q400", "q400"),
         ("noticias de Q400 en 2026", "q400"),
+        ("noticias de la T2 del AICM en 2026", "t2"),
+        ("noticias de T2 en 2026", "t2"),
     ],
 )
 def test_airport_terminals_and_aircraft_models_remain_searchable(question, term):

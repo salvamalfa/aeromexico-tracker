@@ -64,3 +64,18 @@ es `c4c46c392f7827e8d5043b43521c1929c77d7a3d263ffde0f4a8afec8dead713`;
 ninguna de las dos está aprobada. Se requieren CI y Codex del HEAD nuevo.
 La huella aprobada6534f876, sus tres pares, ledger90 y el sitio firmado
 permanecen intactos en #136.
+
+## Cierre de variantes separadas
+
+La revisión siguiente pidió cubrir también `2026 T2`, `T2 2026` y
+`T2 de 2026`. El detector admite ambos órdenes con separadores cuando el
+token lleva año; las terminales `T2 del AICM`, `T2 en 2026` y el modelo
+`Q400` siguen siendo texto libre. Se amplió la matriz a veinte notaciones,
+con y sin límites suministrados, y siete consultas aeronáuticas: **52
+regresiones aprobadas**. La suite previa de 730 pruebas pasó en 180.51 s
+con el HEAD anterior; la suite y CI del ajuste actual se informan por separado.
+
+La huella propuesta vigente es
+`47e5ceea0ed632a4c7a342b58e39b6d1b1bb48e59a3c50e65e3bf7807b89313d`.
+Las propuestas5675b289 y c4c46c39 quedan superadas sin aprobación. El alcance
+de activación continúa detenido y no se traslada el consentimiento6534f876.
