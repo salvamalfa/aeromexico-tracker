@@ -9,22 +9,22 @@
   "baseline_commit": "40a63d1905afde97ae8e3f8671c8217aafacc4aa",
   "runs": {
     "focused": {
-      "tests": 82,
+      "tests": 86,
       "errors": 0,
       "failures": 0,
       "skipped": 0,
-      "passed": 82,
-      "seconds": 6.338
+      "passed": 86,
+      "seconds": 6.384
     },
     "full": {
-      "tests": 1545,
+      "tests": 1549,
       "errors": 0,
       "failures": 0,
       "skipped": 75,
-      "xml_testcases_including_subtests": 1574,
-      "passed_subtests": 29,
-      "passed": 1470,
-      "seconds": 177.364
+      "passed": 1474,
+      "seconds": 165.918,
+      "xml_testcases_including_subtests": 1578,
+      "passed_subtests": 29
     }
   },
   "skip_reasons": [

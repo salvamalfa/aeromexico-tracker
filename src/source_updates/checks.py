@@ -112,6 +112,14 @@ def check_candidate(workspace: Path, specification: dict) -> dict:
             }.get(item["product"])
             if required_entity and filters.get("carrier_key") != required_entity:
                 raise ValueError("Entity-specific product requires its exact carrier_key filter")
+            required_group = {"gap_traffic": "GAP", "asur_traffic": "ASUR", "oma_traffic": "OMA"}.get(
+                item["product"]
+            )
+            group_column = (
+                "airport_group_key" if item["table"] == "fact_airport_group_traffic" else "operator_group"
+            )
+            if required_group and filters.get(group_column) != required_group:
+                raise ValueError(f"Group-specific product requires {group_column}={required_group}")
             selected = frame.copy()
             for column, value in filters.items():
                 selected = selected.loc[selected[column].eq(value)]

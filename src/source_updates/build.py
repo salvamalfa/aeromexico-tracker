@@ -53,7 +53,7 @@ GRANULAR = {
     "parse.market": ("src.ingest.market.prices:build_from_bronze", ("yahoo_finance",), ("market_prices",)),
     "parse.airports": (
         "src.ingest.airports.groups:build_from_bronze",
-        ("oma_ir", "aicm", "aifa", "sec"),
+        ("oma_ir", "aicm", "aifa", "sec", "sec_edgar", "sec_filing"),
         ("airport_traffic",),
     ),
     "parse.airport_reference": (

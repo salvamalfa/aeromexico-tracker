@@ -57,13 +57,33 @@
       "entry_ref": "sec_group:GAP",
       "state": "manual",
       "format": "JSON SEC → anexo HTML",
-      "procedure": "CIK desde SEC_GROUPS de airports.groups. Filtrar anexos de tráfico del mes; alias sec_edgar, grupo GAP. No mezclar aeropuertos mexicanos con Jamaica; parser conjunto requiere otros originales seleccionados."
+      "procedure": "CIK desde SEC_GROUPS de airports.groups. Filtrar anexos de tráfico del mes; alias sec_edgar, grupo GAP. No mezclar aeropuertos mexicanos con Jamaica; parser conjunto requiere otros originales seleccionados.",
+      "selection_contract": {
+        "source_system": "sec_edgar",
+        "entity": "GAP_traffic_<accession>",
+        "relative_dir": "airports/gap",
+        "extension": "htm",
+        "check_table": "airport_traffic",
+        "required_filters": {
+          "operator_group": "GAP"
+        }
+      }
     },
     "asur_traffic": {
       "entry_ref": "sec_group:ASUR",
       "state": "manual",
       "format": "JSON SEC → anexo HTML",
-      "procedure": "CIK desde SEC_GROUPS. Seleccionar resumen y tabla Mexico Passenger Traffic; grupo ASUR, mantener México separado de Colombia/Puerto Rico y adquisiciones."
+      "procedure": "CIK desde SEC_GROUPS. Seleccionar resumen y tabla Mexico Passenger Traffic; grupo ASUR, mantener México separado de Colombia/Puerto Rico y adquisiciones.",
+      "selection_contract": {
+        "source_system": "sec_edgar",
+        "entity": "ASUR_traffic_<accession>",
+        "relative_dir": "airports/asur",
+        "extension": "htm",
+        "check_table": "airport_traffic",
+        "required_filters": {
+          "operator_group": "ASUR"
+        }
+      }
     },
     "bmv_xbrl": {
       "entry_ref": "constant:src.config:SOURCE_URLS:bmv_xbrl",
@@ -93,7 +113,14 @@
       "entry_ref": "constant:src.ingest.afac.download:DATATUR_CATALOG_URL",
       "state": "discovery_only",
       "format": "HTML → PDF/XLS/ZIP DATATUR",
-      "procedure": "Ejecutar parse_datatur_catalog sobre HTML preservado; elegir enlaces realmente presentes. Guardar PDF en afac/año/mes y workbooks con sus nombres lógicos. No formar AFAC_YYYY_MM.pdf para meses no descubiertos. Parser/validación PDF 2026 terminan en junio; un archivo posterior no acredita Silver."
+      "procedure": "Ejecutar parse_datatur_catalog sobre HTML preservado; elegir enlaces realmente presentes. Guardar PDF en afac/año/mes y workbooks con sus nombres lógicos. No formar AFAC_YYYY_MM.pdf para meses no descubiertos. Parser/validación PDF 2026 terminan en junio; un archivo posterior no acredita Silver.",
+      "selection_contract": {
+        "source_system": "afac",
+        "monthly_pdf_relative_dir": "afac/<year>/<month-2-digits>",
+        "annual_workbook_entity": "afac_annual_workbook",
+        "annual_workbook_relative_dir": "afac/<year>",
+        "note": "Directories derive from the verified document period; do not generate future source URLs. Legacy parser needs its other baseline inputs and remains capped."
+      }
     },
     "afac_airports": {
       "entry_ref": "url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404",
@@ -123,13 +150,33 @@
       "entry_ref": "constant:src.ingest.airports.groups:OMA_IR_URL",
       "state": "discovery_only",
       "format": "HTML → PDF",
-      "procedure": "Capturar índice, seleccionar href del mes y PDF real. Entidad/nombre esperados se consultan en _oma_documents y _parse_oma_pdf; no generar URL de PDF futura. Separar ALL_OMA de aeropuertos; parse.airports es conjunto, exigir periodo/grupo."
+      "procedure": "Capturar índice, seleccionar href del mes y PDF real. Entidad/nombre esperados se consultan en _oma_documents y _parse_oma_pdf; no generar URL de PDF futura. Separar ALL_OMA de aeropuertos; parse.airports es conjunto, exigir periodo/grupo.",
+      "selection_contract": {
+        "source_system": "oma_ir",
+        "entity": "oma_traffic_<document>",
+        "relative_dir": "airports/oma",
+        "extension": "pdf",
+        "check_table": "airport_traffic",
+        "required_filters": {
+          "operator_group": "OMA"
+        }
+      }
     },
     "aicm_traffic": {
       "entry_ref": "constant:src.ingest.airports.groups:AICM_STATS_INDEX",
       "state": "discovery_only",
       "format": "HTML → PDF",
-      "procedure": "Buscar enlace publicado del mes y confirmar año/mes dentro del PDF. source_system aicm; revisar _government_documents/_parse_aicm_pdf para nombres lógicos. Total aeroportuario, no cifra de Aeroméxico."
+      "procedure": "Buscar enlace publicado del mes y confirmar año/mes dentro del PDF. source_system aicm; revisar _government_documents/_parse_aicm_pdf para nombres lógicos. Total aeroportuario, no cifra de Aeroméxico.",
+      "selection_contract": {
+        "source_system": "aicm",
+        "entity": "traffic",
+        "relative_dir": "airports/government",
+        "extension": "pdf",
+        "check_table": "airport_traffic",
+        "required_filters": {
+          "airport_iata": "MEX"
+        }
+      }
     },
     "aicm_slots": {
       "entry_ref": "constant:src.ingest.airports.groups:AICM_STATS_INDEX",
@@ -141,7 +188,17 @@
       "entry_ref": "constant:src.ingest.airports.groups:AIFA_STATS_INDEX",
       "state": "discovery_only",
       "format": "HTML → XLSX",
-      "procedure": "Buscar numeralia publicada y confirmar año/mes en workbook, no solo nombre. source_system aifa; revisar _parse_aifa_xlsx. No formar nombres futuros de S3; esquema puede cambiar."
+      "procedure": "Buscar numeralia publicada y confirmar año/mes en workbook, no solo nombre. source_system aifa; revisar _parse_aifa_xlsx. No formar nombres futuros de S3; esquema puede cambiar.",
+      "selection_contract": {
+        "source_system": "aifa",
+        "entity": "traffic",
+        "relative_dir": "airports/government",
+        "extension": "xlsx",
+        "check_table": "airport_traffic",
+        "required_filters": {
+          "airport_iata": "NLU"
+        }
+      }
     },
     "banxico": {
       "entry_ref": "constant:src.ingest.macro.banxico:SIE_EXPORT_URL",
@@ -165,7 +222,23 @@
       "entry_ref": "catalogue:yahoo_finance",
       "state": "manual",
       "format": "CSV normalizado de yfinance, no JSON chart directo",
-      "procedure": "TICKERS en src.ingest.market.prices: AERO, VLRS, RYAAY, DAL, ICAGY. Preservar capturas CSV con date/open/high/low/close/adj_close/volume y fuente real. No ejecutar run() porque escribe datos activos. parse.market requiere evidencia SEC local de AERO y las cinco series; primer precio AERO 2025-11-06. Adaptador de captura aislada Yahoo pendiente."
+      "procedure": "TICKERS en src.ingest.market.prices: AERO, VLRS, RYAAY, DAL, ICAGY. Preservar capturas CSV con date/open/high/low/close/adj_close/volume y fuente real. No ejecutar run() porque escribe datos activos. parse.market requiere evidencia SEC local de AERO y las cinco series; primer precio AERO 2025-11-06. Adaptador de captura aislada Yahoo pendiente.",
+      "selection_contract": {
+        "source_system": "yahoo_finance",
+        "entity": "each key of src.ingest.market.prices:TICKERS",
+        "relative_dir": "market",
+        "extension": "csv",
+        "columns": [
+          "date",
+          "open",
+          "high",
+          "low",
+          "close",
+          "adj_close",
+          "volume"
+        ],
+        "prerequisite": "candidate data/silver/sec_report_text.parquet from preserved SEC identity evidence"
+      }
     },
     "anac": {
       "entry_ref": "constant:src.ingest.international_routes:ANAC_URL",
@@ -219,13 +292,25 @@
       "entry_ref": "constant:src.ingest.airports.reference:OURAIRPORTS_URL",
       "state": "conditional",
       "format": "GET → CSV",
-      "procedure": "Entidad airports, source_system ourairports, periodo current. Revalidar URL y comparar crosswalk/filas no mapeadas. parse.airport_reference necesita data/reference y escribe dim_airport candidato; validación geográfica/contrato final pendiente, no observación de tráfico."
+      "procedure": "Entidad airports, source_system ourairports, periodo current. Revalidar URL y comparar crosswalk/filas no mapeadas. parse.airport_reference necesita data/reference y escribe dim_airport candidato; validación geográfica/contrato final pendiente, no observación de tráfico.",
+      "selection_contract": {
+        "source_system": "ourairports",
+        "entity": "airports",
+        "period": "current",
+        "extension": "csv"
+      }
     },
     "iasa": {
       "entry_ref": "catalogue:faa_iasa",
       "state": "discovery_only",
       "format": "PDF FAA",
-      "procedure": "Revalidar archivo conocido y comprobar edición/categoría dentro del PDF; consultar IASA oficial antes de afirmar que es último. No hay parser candidato genérico ni inferencia causal automática."
+      "procedure": "Revalidar archivo conocido y comprobar edición/categoría dentro del PDF; consultar IASA oficial antes de afirmar que es último. No hay parser candidato genérico ni inferencia causal automática.",
+      "selection_contract": {
+        "source_system": "faa_iasa",
+        "entity": "country_results",
+        "period": "current",
+        "extension": "pdf"
+      }
     },
     "dictionary": {
       "entry_ref": "catalogue:loughran_mcdonald",
@@ -237,13 +322,28 @@
       "entry_ref": "mapping:src.ingest.news.rss_gdelt:RSS_FEEDS:google_es",
       "state": "conditional",
       "format": "RSS XML de metadatos",
-      "procedure": "RSS_FEEDS google_es/google_en contiene consultas exactas actuales de Aeroméxico. Guardar feed, consulta y fecha. No recupera mes completo de forma garantizada. parse.news conserva procedencias; PR136 prepara corte mensual desde metadatos revisados, sin activar índice."
+      "procedure": "RSS_FEEDS google_es/google_en contiene consultas exactas actuales de Aeroméxico. Guardar feed, consulta y fecha. No recupera mes completo de forma garantizada. parse.news conserva procedencias; PR136 prepara corte mensual desde metadatos revisados, sin activar índice.",
+      "selection_contract": {
+        "source_system": "rss",
+        "entity": "google_es (or google_en for that canonical feed)",
+        "extension": "xml",
+        "relative_dir": "news/rss",
+        "check_table": "news_headlines"
+      }
     },
     "gdelt": {
-      "entry_ref": "catalogue:gdelt",
+      "entry_ref": "constant:src.ingest.news.rss_gdelt:GDELT_API_URL",
       "state": "conditional",
       "format": "GET Doc API → JSON articles",
-      "procedure": "Consulta canónica de Aeroméxico; parámetros actuales en rss_gdelt.run(): mode artlist, maxrecords 250, format json, sort datedesc. No prometer recuperación completa ni inventar paginación/fechas. Entidad aeromexico_articles; parse.news, revisión mensual y unión futura PR136."
+      "procedure": "Consulta canónica de Aeroméxico; parámetros actuales en rss_gdelt.run(): mode artlist, maxrecords 250, format json, sort datedesc. No prometer recuperación completa ni inventar paginación/fechas. Entidad aeromexico_articles; parse.news, revisión mensual y unión futura PR136.",
+      "selection_contract": {
+        "source_system": "gdelt",
+        "entity": "aeromexico_articles",
+        "extension": "json",
+        "relative_dir": "news/gdelt",
+        "check_table": "news_headlines",
+        "request_parameters_ref": "src.ingest.news.rss_gdelt:GDELT_QUERY_PARAMS"
+      }
     },
     "news_errors": {
       "entry_ref": "catalogue:news_http_error",

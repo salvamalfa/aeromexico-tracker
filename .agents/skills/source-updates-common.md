@@ -43,8 +43,10 @@ principio del catálogo; estas instrucciones son referencia interna.
    analítica/modelos completos como sustituto de una actualización acotada.
 7. Ejecutar `check --workspace <ruta> --specification <controles.json>`.
    Bronze: verificar hashes. Silver: contrato, grano, dominio, linaje, fuente,
-   entidad y periodo realmente presente. Gold: contrato y linaje directo;
-   un hash agregado exige el gate de linaje existente y queda bloqueado aquí.
+   entidad y periodo realmente presente. Gold: contrato y linaje directo.
+   En aeropuertos, declarar `operator_group=GAP/ASUR/OMA`; para
+   `fact_airport_group_traffic`, usar `airport_group_key` con ese valor.
+   Un hash agregado exige el gate de linaje existente y queda bloqueado aquí.
    Declarar `value_columns`; conservar N/D, no llenar con cero. Comparar
    contra una copia previa explícita con `baseline_file`, `revision_keys`
    naturales y valores: altas, bajas, cambios y sin cambios. Los cambios de

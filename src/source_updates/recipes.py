@@ -76,7 +76,12 @@ def catalog_selection(product_id: str) -> dict:
         "gdelt": ("aeromexico_articles", "json"),
     }
     if product_id in direct:
-        validate_url(recipe["entry_url"], source["allowed_hosts"])
+        url = recipe["entry_url"]
+        if product_id == "gdelt":
+            from src.ingest.news.rss_gdelt import GDELT_API_URL, GDELT_QUERY_PARAMS
+
+            url = GDELT_API_URL + "?" + urlencode(GDELT_QUERY_PARAMS)
+        validate_url(url, source["allowed_hosts"])
         entity, extension = direct[product_id]
         return {
             "version": 1,
@@ -88,7 +93,7 @@ def catalog_selection(product_id: str) -> dict:
                     "entity": entity,
                     "period": "current",
                     "purpose": "data",
-                    "url": recipe["entry_url"],
+                    "url": url,
                     "extension": extension,
                     "mode": "get",
                 }

@@ -46,7 +46,7 @@ python -m src.source_updates recipe --product rss
 Consultar cada producto de esta familia:
 
 - `rss` — condicionado a insumos/formato. Entrada canónica: `mapping:src.ingest.news.rss_gdelt:RSS_FEEDS:google_es`. Formato: RSS XML de metadatos.
-- `gdelt` — condicionado a insumos/formato. Entrada canónica: `catalogue:gdelt`. Formato: GET Doc API → JSON articles.
+- `gdelt` — condicionado a insumos/formato. Entrada canónica: `constant:src.ingest.news.rss_gdelt:GDELT_API_URL`. Formato: GET Doc API → JSON articles.
 - `news_errors` — inactivo. Entrada canónica: `catalogue:news_http_error`. Formato: evidencia de fallo.
 
 ### Procedimiento verificable
