@@ -19,7 +19,7 @@ la interfaz revisada; no concede aprobación a pares técnicos todavía no audit
    y verificar commits, manifiestos y UI desktop/móvil desplegados.
 
 La huella de presentación candidata final es
-`a1de7512359e894a2a8076e822134fc8313a47ac284c7501d63eedd4edd5cfdb`,
+`6534f8760546e9649996ffbd75fc5cbe73ecbcd3d96c58de3c4b9b14782e9aee`,
 con Vuelos `8b5dd73a3c827b6e6cdee12addc4e4bbd73eede6` y los ajustes visuales
 v6 de ambas pestañas. Los merges documentales, pruebas excluidas de la huella
 y `site/` generado conservan esa identidad; cualquier cambio a componentes
@@ -44,10 +44,12 @@ skills ni calendarios. Las nuevas propuestas técnicas no trasladan la aprobaci�
 82–84 de Vuelos a una huella distinta. Aeroméxico conserva su registro histórico.
 
 Estado: preparación y auditoría; sin merge a master ni despliegue de las pestañas.
-Las propuestas de huellas fd41 y abbcf12 quedaron superadas antes de importar
+Las propuestas de huellas fd41, abbcf12 y a1de751 quedaron superadas antes de importar
 auditorías; el ledger permanece en 84. La huella indicada arriba incorpora la
 corrección final de períodos de Vuelos y el cierre reforzado de dependencias:
-todo `src/dashboard/**/*.py` participa en la identidad de aprobación. Se prueban
+todo `src/**/*.py` participa en la identidad de aprobación, incluidas
+dependencias transitivas de evidencia y capacidad. El alcance conservador también
+exige nueva revisión ante cambios Python ajenos a la presentación. Se prueban
 mutaciones, altas y bajas de módulos para invalidar identidades obsoletas. El cierre de CI contempla los perfiles
 firmados histórico y candidato, con expectativas exactas y sin omitir pruebas.
 Pendientes: cierre de la cohorte y aprobación específica, CI/revisión exactos,
