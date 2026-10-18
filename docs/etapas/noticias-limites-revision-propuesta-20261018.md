@@ -153,3 +153,20 @@ las ejecuciones locales previas sobre árbol modificado. La siguiente suite
 se inicia de igual modo después del commit actual. Su huella propuesta es
 `582ae0f80b7aaa67a2256f57ea504f307ee83a483abe82d94baba2d9c18ad2d6`,
 sin aprobación ni promoción;6534f876/88–90 permanecen íntegros en136.
+
+## Identificadores literales y año corto
+
+La misma comprobación conserva T100 (BTS), T-100 y Q-400 como identificadores
+de texto. Para un año corto después de T/Q se exige un separador o conector:
+T100 y Q400 no se interpretan como trimestre de2000; T1 de00 y Q4/00 sí piden
+fechas explícitas. Un año de cuatro dígitos puede permanecer unido, como
+T22026. Esto evita una lista especial de modelos: se distingue la estructura
+del año de un identificador numérico literal. Pasan **104 regresiones**;
+Ruff pasa. La normalización conserva espacios y guiones en esos identificadores
+sin perder su token de búsqueda.
+
+Huella propuesta actual:
+`c42824ba16c2a2e48bd1c4953b0f878cc4cab56bcc401ff6d8f235af87b89b81`.
+Se inician suite y CI del commit siguiente; no se atribuyen a esta huella
+los793resultados del HEAD51352d9. La aprobación6534f876 sigue vigente para
+su cohorte original, no trasladada a ninguna propuesta.

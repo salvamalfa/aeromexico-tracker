@@ -75,22 +75,24 @@ def topic_key(value: str) -> str:
 def resolve_news_query(question: str, start_date=None, end_date=None, company=None) -> dict:
     # Keep numbered identifiers intact for both temporal guards and text
     # search: T 2 / Q 400 must not disappear as one letter plus a number.
-    text = re.sub(r"\b([qt])\s+(\d+)\b", r"\1\2", entity_text(question))
+    text = re.sub(r"\b([qt])[-\s]+(\d+)\b", r"\1\2", entity_text(question))
     # Compact quarter labels are not publication dates or free-text topics.
     # Require explicit endpoints until quarter precision has its own contract.
-    # Preserve the Q100/Q200/Q300/Q400 search tokens before recognizing Q+year.
-    quarter_text = re.sub(r"\bq\s*[1-4]00\b", "", text)
     separator = r"[-/\s]*(?:(?:de|del)[-/\s]*)?"
     quarter_year = r"\d{2}(?:\d{2})?"
+    # A short year after T/Q needs a separator or connector: T100 and Q400
+    # are literal identifiers, while T1 de 00 and Q4/00 request a period.
+    separated_year = r"(?:[-/\s]+(?:(?:de|del)[-/\s]*)?|(?:de|del)[-/\s]*)" + quarter_year
+    prefix_period = r"[qt]\s*\d(?:" + separator + r"\d{4}|" + separated_year + r")"
     ambiguous_t_period = (
         re.search(r"\b\d{4}\b", text)
         and re.search(r"\bt[1-4]\b", text)
         and not re.search(r"\b(?:terminal(?:es)?|aicm|aifa|aeropuerto(?:s)?)\b", text)
     )
     if ambiguous_t_period or re.search(
-        r"\b(?:\d{4}" + separator + r"[qt]\s*\d|[qt]\s*\d" + separator
-        + quarter_year + r"|q\s*\d|\d\s*[qt](?:" + separator + quarter_year + r")?)\b",
-        quarter_text,
+        r"\b(?:\d{4}" + separator + r"[qt]\s*\d|" + prefix_period
+        + r"|q\s*\d|\d\s*[qt](?:" + separator + quarter_year + r")?)\b",
+        text,
     ):
         raise ValueError(
             "Indica inicio y fin de publicación como fechas ISO YYYY-MM-DD; la notación trimestral compacta no está admitida."

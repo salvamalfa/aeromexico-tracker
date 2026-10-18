@@ -145,6 +145,10 @@ def test_explicit_publication_quarter_dates_keep_july_outside_results(approved_i
         ("noticias de la terminal T 2 en 2026", "t2"),
         ("noticias de la T 2 del AICM en 2026", "t2"),
         ("noticias sobre Q 400 en 2026", "q400"),
+        ("noticias sobre Q-400 en 2026", "q400"),
+        ("noticias de BTS T100 en 2026", "t100"),
+        ("noticias de BTS T 100 en 2026", "t100"),
+        ("noticias de BTS T-100 en 2026", "t100"),
     ],
 )
 def test_airport_terminals_and_aircraft_models_remain_searchable(approved_index, question, term):
