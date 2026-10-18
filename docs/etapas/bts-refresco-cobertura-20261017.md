@@ -564,3 +564,13 @@ además de Ruff. La repetición del gate normal desde el commit corregido conser
 byte a byte todos los assets y datos del sitio: sólo cambia `code_commit` en el
 manifest firmado. La versión de datos de las conversaciones también se conserva;
 la copia base de Library no necesita otra sustitución por este cambio del backend.
+
+Al marcar el PR listo, una segunda revisión automática detectó que el agregado
+trimestral nacional conservaba el detalle mensual sólo del primer mes. Se
+reprodujeron tres fallos y se concatenan ahora los detalles de los tres meses,
+con copias independientes de `monthly` y `flight_components`. Las regresiones
+comprueban comparación trimestral válida, mezcla de tipos de vuelos, rechazo
+de detalle incompleto y meses/rutas ausentes como N/D; no inventan detalle para
+los payloads históricos que carecen de él. Pasan las cuatro regresiones, los
+tres presupuestos y una ronda ampliada de 83 pruebas. La matriz F2.9 queda
+idéntica tras regenerarla y la huella aprobada permanece inalterada.
