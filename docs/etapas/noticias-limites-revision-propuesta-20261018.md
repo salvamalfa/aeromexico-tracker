@@ -98,3 +98,21 @@ como nuevas aprobaciones. La aprobación6534f876 sigue vigente exclusivamente
 para sus pares88–90 y el sitio firmado anterior. Los pares prospectivos
 calculados durante la revisión no se deben presentar como solicitud de
 aprobación: primero se congela la corrección y se completan sus auditorías.
+
+## Atribución conservadora de operadores · 23:03 UTC
+
+La unión de compañías propuesta inicialmente podía hacer que archivo y chat
+combinaran compañía de una fuente con tema de otra. Se adopta la otra salida
+aceptada por la revisión original: **rechazar una historia con conjuntos de
+compañías incompatibles**, para que se revise su agrupación antes de exportar
+o buscar. Las fuentes con atribución consistente conservan la unión de temas,
+buscables con esa misma compañía. No se cambia la API ni se atribuye una
+noticia del grupo a Connect.
+
+Pasan las **66 regresiones**, incluidos ambos órdenes de fuentes y el rechazo
+en archivo/chat del caso Connect/combustible cruzado. La suite anterior766
+pasó en179.28s sobre8f19638; la nueva suite y CI/revisión del ajuste actual
+se comprueban por separado. La huella propuesta actual es
+`4c2e9fa9f34eeeda5c82e6b958ca9e893a995da808e9c0724d705000b390ddbc`.
+Todas las propuestas anteriores siguen superadas y sin aprobación. El
+expediente autorizado6534f876 permanece íntegro, sin nuevo gate ni promoción.

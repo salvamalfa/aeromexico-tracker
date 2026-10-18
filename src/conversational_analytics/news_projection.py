@@ -72,10 +72,13 @@ def project(records: list[dict[str, Any]], *, require_known_companies: bool = Tr
             continue  # Unknown publication cannot be month-bucketed.
         date.fromisoformat(published)
         if story in stories:
+            if set(stories[story]["companies"]) != set(companies):
+                raise ValueError(
+                    "Conflicting company attribution within one story; review source grouping"
+                )
             stories[story]["sources"].append(source)
-            # Every source can carry reviewed airline/topic attribution. The
-            # archive and chat must expose the same tags for the shared card.
-            stories[story]["companies"] = sorted(set(stories[story]["companies"]) | set(companies))
+            # Mixed operator attribution cannot silently become a shared card.
+            # Consistent company sets keep topic filters searchable per source.
             stories[story]["topics"] = sorted(set(stories[story]["topics"]) | set(topics))
             # A reviewed story does not approve a newly associated source.
             # Keep the entire mixed card closed until every source is reviewed.

@@ -40,18 +40,30 @@ def grouped_records(index):
 
 
 @pytest.mark.parametrize("reverse", [False, True])
-def test_shared_card_retains_company_and_topic_filters_from_every_source(approved_index, reverse):
+def test_shared_card_retains_topics_with_consistent_company_attribution(approved_index, reverse):
     rows = grouped_records(approved_index)
+    rows[1]["companies"] = ["Aeroméxico"]
     cards = project(rows[::-1] if reverse else rows)
     assert len(cards) == 1
-    assert cards[0]["companies"] == ["Aeroméxico", "Aeroméxico Connect"]
+    assert cards[0]["companies"] == ["Aeroméxico"]
     assert cards[0]["topics"] == ["capacidad", "combustible"]
     assert len(cards[0]["sources"]) == 2
     approved_index.records = rows[::-1] if reverse else rows
-    result = approved_index.search_news("noticias de Aeroméxico Connect en julio de 2026")
+    result = approved_index.search_news("noticias de Aeroméxico sobre capacidad en julio de 2026")
     assert result["count"] == 1
     assert result["matching_ids"] == [cards[0]["id"]]
-    assert "Aeroméxico Connect" in cards[0]["companies"]
+    assert "Aeroméxico" in cards[0]["companies"]
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+def test_conflicting_story_operators_fail_closed_in_archive_and_chat(approved_index, reverse):
+    rows = grouped_records(approved_index)
+    rows = rows[::-1] if reverse else rows
+    with pytest.raises(ValueError, match="Conflicting company attribution"):
+        project(rows)
+    approved_index.records = rows
+    with pytest.raises(ValueError, match="Conflicting company attribution"):
+        approved_index.search_news("noticias de Aeroméxico Connect sobre combustible")
 
 
 @pytest.mark.parametrize("reverse", [False, True])
