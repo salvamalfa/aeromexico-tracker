@@ -65,5 +65,8 @@ export function flightScheduleNote(route: Route): string {
   if (totals.scheduled === undefined || !Object.keys(totals).some((kind) => kind !== "scheduled")) return "";
   const sources = [...new Set(route.flight_components?.filter(c => c.kind === "scheduled")
     .map(c => shortSourceLabel(c.source_label)) ?? [])].filter(Boolean).sort();
-  return `${new Intl.NumberFormat("es-MX", { maximumFractionDigits: 1 }).format(totals.scheduled)} programados · ${sources.join(" / ") || "fuente no detallada"} (fuera del total)`;
+  const directions = [...new Set(route.flight_components?.filter(c => c.kind === "scheduled")
+    .map(c => `${c.origin_iata} → ${c.destination_iata}`) ?? [])].sort();
+  const scope = directions.length === 1 ? directions[0] : "ambos sentidos";
+  return `${new Intl.NumberFormat("es-MX", { maximumFractionDigits: 1 }).format(totals.scheduled)} programados · ${sources.join(" / ") || "fuente no detallada"} · ${scope} (fuera del total)`;
 }

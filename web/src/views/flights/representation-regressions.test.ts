@@ -40,8 +40,15 @@ describe("operator/direction coverage and programming provenance", () => {
     const r = route([component("2026M06"), component("2026M06", "MEX", "LAX", "scheduled", "AEROMEXICO_GROUP", 296)]);
     expect(flightScheduleNote(r)).toContain("296 programados");
     expect(flightScheduleNote(r)).toContain("AICM");
+    expect(flightScheduleNote(r)).toContain("MEX → LAX");
     expect(flightSource(r)).toContain("AICM");
     expect(flightSource(r)).toContain("BTS T-100");
+  });
+  it("distinguishes a two-direction schedule from a one-direction operative headline", () => {
+    const r = route([component("2026M06", "LAX", "MEX", "observed", "AEROMEXICO", 143),
+      component("2026M06", "LAX", "MEX", "scheduled", "AEROMEXICO_GROUP", 149),
+      component("2026M06", "MEX", "LAX", "scheduled", "AEROMEXICO_GROUP", 147)]);
+    expect(flightScheduleNote(r)).toBe("296 programados · AICM · ambos sentidos (fuera del total)");
   });
   it("counts an explicit observed zero as reported scope coverage", () => {
     const r = route([component("2026M06", "LAX", "MEX", "observed", "AEROMEXICO", 0)]);

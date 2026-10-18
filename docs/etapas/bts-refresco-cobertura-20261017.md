@@ -625,9 +625,12 @@ Se conserva una fuente programada por celda como medida independiente, sin
 sumarla a operaciones/estimaciones; la cobertura usa el mínimo por operador y
 sentido conocidos, y la fila/pie nombran las fuentes de todos los componentes.
 Las regresiones reprodujeron tres fallos Python y cuatro de frontend antes de
-corregirlos. Después pasan 52 pruebas focalizadas Python, 217 de frontend,
+corregirlos. Después pasan 52 pruebas focalizadas Python, 218 de frontend,
 TypeScript, Ruff y los tres presupuestos del repositorio. Los cambios de
 interfaz vuelven a modificar la huella técnica: las aprobaciones 82–84 se
 conservan para sus pares anteriores y no se trasladan. El sitio firmado de
 `d9da4b7` queda como evidencia histórica, sin integrar ni publicar; la preview
 corregida es explícitamente no firmada y no sustituye al gate normal.
+
+La leyenda de programación también explicita su sentido: el total de ambos
+sentidos permanece distinguible de un headline operativo unidireccional.

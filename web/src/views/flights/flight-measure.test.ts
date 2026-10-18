@@ -17,7 +17,7 @@ describe("flight cell presentation", () => {
     expect(flightKind(route)).toBe("mixed");
     expect(flightTotals(route)).toEqual({ observed: 30, estimated: 15, scheduled: 8 });
     expect(flightBreakdown(route)).toBe("30 observados · 15 estimados");
-    expect(flightScheduleNote(route)).toBe("8 programados · AICM (fuera del total)");
+    expect(flightScheduleNote(route)).toBe("8 programados · AICM · JFK → MEX (fuera del total)");
   });
   it("does not classify an explicit observed zero as missing", () => {
     const zero = { ...route, departures: 0, flight_components: [{ ...route.flight_components![0]!, departures: 0 }] };
@@ -35,7 +35,7 @@ describe("schedule headline boundary", () => {
   it("does not treat an observed zero as absence of performed information", () => {
     const zero = { ...route, departures: 0, flight_components: [{ ...route.flight_components![0]!, departures: 0 }, route.flight_components![2]!] };
     expect(flightBreakdown(zero)).toBe("0 observados");
-    expect(flightScheduleNote(zero)).toBe("8 programados · AICM (fuera del total)");
+    expect(flightScheduleNote(zero)).toBe("8 programados · AICM · JFK → MEX (fuera del total)");
   });
   it("does not invent a schedule note for legacy observed routes", () => {
     const legacy = { ...route, departures: 143, flight_components: undefined, operation_status: "observed_flights" };
@@ -49,6 +49,6 @@ describe("schedule headline boundary", () => {
     ] };
     expect(flightTotals(actual)).toEqual({ observed: 143, scheduled: 147 });
     expect(flightBreakdown(actual)).toBe("143 observados");
-    expect(flightScheduleNote(actual)).toBe("147 programados · AICM (fuera del total)");
+    expect(flightScheduleNote(actual)).toBe("147 programados · AICM · JFK → MEX (fuera del total)");
   });
 });
