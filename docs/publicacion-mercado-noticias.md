@@ -19,8 +19,8 @@ la interfaz revisada; no concede aprobación a pares técnicos todavía no audit
    y verificar commits, manifiestos y UI desktop/móvil desplegados.
 
 La huella de presentación candidata final es
-`fd41a49463d985c4c6668a54be66b090cab32e6588181c1f1c794ebaf4a81571`,
-con Vuelos `c3aec696228434e32a4290233f313d1e38deee38` y los ajustes visuales
+`abbcf12fc8d20764082b48151341837be6b12b0de4a2ec4337e3f7e80ace0895`,
+con Vuelos `7f6adeb1f37303923d2d054069980d14a67c67ec` y los ajustes visuales
 v6 de ambas pestañas. Los merges documentales, pruebas excluidas de la huella
 y `site/` generado conservan esa identidad; cualquier cambio a componentes
 incluidos exige detenerse y revisar la cohorte exacta antes de exportar.
@@ -44,6 +44,10 @@ skills ni calendarios. Las nuevas propuestas técnicas no trasladan la aprobaci�
 82–84 de Vuelos a una huella distinta. Aeroméxico conserva su registro histórico.
 
 Estado: preparación y auditoría; sin merge a master ni despliegue de las pestañas.
+Las primeras propuestas de huella fd41 quedaron superadas antes de importar
+auditorías; el ledger permanece en84. La huella indicada arriba incorpora la
+corrección final de períodos de Vuelos. El cierre de CI contempla los perfiles
+firmados histórico y candidato, con expectativas exactas y sin omitir pruebas.
 Pendientes: cierre de la cohorte y aprobación específica, CI/revisión exactos,
 publicación/verificación, skills por fuente, coordinador mensual/trimestral,
 Noticias mensual y limpieza futura con dependencias.
