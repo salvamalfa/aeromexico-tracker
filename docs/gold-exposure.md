@@ -8,11 +8,17 @@ encargo queda fuera del cambio. Inventario reproducible:
 
 ## Denominador y aproximación
 
-Se verifican **43 Parquet públicos versionados**, **7 tablas puente de linaje**
-y **4 Gold privados de Vuelos** restaurados en destinos ignorados. Los públicos
-ocupan **53,273,203 bytes (~50.8 MiB)** comprimidos; el CSV da filas, bytes,
-periodos y referencias de código de cada tabla. Ese tamaño corresponde a los
-Parquet, no a su duplicación en el warehouse ni al coste total de respaldos LFS.
+El inventario original del 15 de octubre verifica **43 Parquet públicos**,
+**7 tablas puente de linaje** y **4 Gold privados de Vuelos**, con
+**53,273,203 bytes (~50.8 MiB)** públicos comprimidos. El CSV conserva las filas,
+bytes, periodos y dependencias de ese corte histórico.
+
+La integración candidata con Vuelos `c3aec69`, verificada el 18 de octubre,
+conserva **43 tablas públicas** y ocupa **60,667,807 bytes (~57.9 MiB)**. Los
+**4 Gold privados** suman **348,215 bytes (~340 KiB)** y siguen en destinos
+ignorados. La ampliación BTS cambia filas y tamaños de tablas existentes;
+no cambia el denominador analítico de 23. Los tamaños corresponden a Parquet,
+sin duplicación de warehouse ni coste total de respaldos LFS.
 
 El denominador analítico público es **23 tablas**: todas las `fact_` más
 `dim_events`, `dim_cluster_assignments` y `dim_model_performance`. Excluye las
