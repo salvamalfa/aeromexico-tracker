@@ -1,5 +1,10 @@
 from pathlib import Path
 
+from _published_flight_profiles import (
+    LEGACY_SCHEDULED_DEPARTURES,
+    LEGACY_SHARED_PASSENGERS,
+    has_signed_flight_components,
+)
 from src.conversational_analytics.data.snapshot import Snapshot
 from src.conversational_analytics.tools.routes import RouteTools
 
@@ -22,10 +27,12 @@ def _route_query(tools: RouteTools, market: str, metric: str) -> dict:
 
 def test_published_international_metric_provenance_is_component_specific() -> None:
     tools = RouteTools(Snapshot(Path("site")))
+    components = has_signed_flight_components(tools.snapshot)
+    frequency_kind = "estimated" if components else "scheduled"
     expected = {
         "LAX<>MEX": ("observed", "observed", "observed"),
-        "GUA<>MEX": ("estimated", "estimated", "estimated"),
-        "CDG<>MTY": ("estimated", "estimated", "estimated"),
+        "GUA<>MEX": ("estimated", frequency_kind, "estimated"),
+        "CDG<>MTY": ("estimated", frequency_kind, "estimated"),
     }
     for market, kinds in expected.items():
         rows = {
@@ -52,20 +59,35 @@ def test_published_international_metric_provenance_is_component_specific() -> No
 
 def test_published_scheduled_statuses_classify_departures_not_capacity() -> None:
     tools = RouteTools(Snapshot(Path("site")))
+    components = has_signed_flight_components(tools.snapshot)
     network, _ = tools._load("AEROMEXICO_GROUP", "international", "2026Q2")
     scheduled = [
         route
         for route in network["routes"]
-        if route.get("flight_components")
-        and all(cell["kind"] == "scheduled" for cell in route["flight_components"])
+        if (
+            route.get("flight_components")
+            and all(cell["kind"] == "scheduled" for cell in route["flight_components"])
+        )
+        or (
+            not route.get("flight_components")
+            and (
+                route["operation_status"].startswith("scheduled_")
+                or route["operation_status"] == "assigned_slot_not_flown"
+            )
+        )
     ]
-    assert {route["market_key"] for route in scheduled} == {"MEX<>SNA"}
-    assert scheduled[0]["operation_status"] == "assigned_slot_not_flown"
-    assert scheduled[0]["departures"] == 182
+    expected = {"MEX<>SNA": 182} if components else LEGACY_SCHEDULED_DEPARTURES
+    assert {route["market_key"]: route["departures"] for route in scheduled} == expected
     for route in scheduled:
+        assert bool(route.get("flight_components")) is components
+        assert route["operation_status"] == (
+            "scheduled_from_dated_release" if route["market_key"] == "CDG<>MTY" else "assigned_slot_not_flown"
+        )
         row = _route_query(tools, route["market_key"], "departures")
         assert row["value_kind"] == "scheduled"
-        assert row["value"] == sum(cell["departures"] for cell in route["flight_components"])
+        assert row["value"] == expected[route["market_key"]]
+        if components:
+            assert row["value"] == sum(cell["departures"] for cell in route["flight_components"])
 
 
 def test_legacy_scheduled_statuses_keep_capacity_estimated():
@@ -182,6 +204,7 @@ def test_chat_query_and_shared_routes_preserve_mixed_flight_cell_kinds():
 
 def test_queries_the_signed_public_snapshot_without_private_inputs() -> None:
     tools = RouteTools(Snapshot(Path("site")))
+    components = has_signed_flight_components(tools.snapshot)
     result = tools.invoke(
         "query_routes",
         {
@@ -209,8 +232,9 @@ def test_queries_the_signed_public_snapshot_without_private_inputs() -> None:
     )
     assert international["rows"]
     # Calendar completeness does not certify worldwide or historical evidence coverage.
-    assert international["coverage"]["2026Q2"]["complete"] is True
-    assert international["coverage"]["2026Q2"]["observed_months"] == ["2026M04", "2026M05", "2026M06"]
+    expected_months = ["2026M04", "2026M05", "2026M06"] if components else ["2026M04", "2026M05"]
+    assert international["coverage"]["2026Q2"]["complete"] is components
+    assert international["coverage"]["2026Q2"]["observed_months"] == expected_months
     assert international["coverage"]["2026Q2"]["agent_eligible"] is False
     assert {row["value_kind"] for row in international["rows"]} <= {"observed", "estimated", "scheduled"}
     assert all(row["source_label"] and row["operation_status"] for row in international["rows"])
@@ -238,22 +262,38 @@ def test_queries_the_signed_public_snapshot_without_private_inputs() -> None:
         },
     )
     assert international_shared["rows"]
-    assert all(coverage["complete"] for coverage in international_shared["coverage"].values())
-    assert all(coverage["agent_eligible"] is False for coverage in international_shared["coverage"].values())
-    assert all(row["comparable"] for row in international_shared["rows"])
-    assert all(row["comparability_reason"] == [] for row in international_shared["rows"])
+    assert all(coverage["complete"] is components for coverage in international_shared["coverage"].values())
     assert all(
-        row["combined_value"] == sum(carrier["value"] for carrier in row["carriers"].values())
+        coverage["observed_months"] == expected_months
+        for coverage in international_shared["coverage"].values()
+    )
+    assert all(coverage["agent_eligible"] is False for coverage in international_shared["coverage"].values())
+    assert all(row["comparable"] is components for row in international_shared["rows"])
+    assert all(
+        row["comparability_reason"] == ([] if components else ["coverage_incomplete"])
         for row in international_shared["rows"]
     )
-    assert {row["market_key"]: row["combined_value"] for row in international_shared["rows"]} == {
-        "GDL<>LAX": 212017,
-        "LAX<>MEX": 190570,
-        "MEX<>ORD": 141042,
-        "GDL<>ORD": 104189,
-        "IAH<>MEX": 99090,
-        "LAS<>MEX": 88760,
-        "MEX<>SAT": 64284,
-    }
+    if not components:
+        assert {
+            row["market_key"]: tuple(
+                row["carriers"][entity]["value"] for entity in ("AEROMEXICO_GROUP", "VOLARIS", "VIVA_AEROBUS")
+            )
+            for row in international_shared["rows"]
+        } == LEGACY_SHARED_PASSENGERS
+        assert all(row["combined_value"] is None for row in international_shared["rows"])
+    else:
+        assert all(
+            row["combined_value"] == sum(carrier["value"] for carrier in row["carriers"].values())
+            for row in international_shared["rows"]
+        )
+        assert {row["market_key"]: row["combined_value"] for row in international_shared["rows"]} == {
+            "GDL<>LAX": 212017,
+            "LAX<>MEX": 190570,
+            "MEX<>ORD": 141042,
+            "GDL<>ORD": 104189,
+            "IAH<>MEX": 99090,
+            "LAS<>MEX": 88760,
+            "MEX<>SAT": 64284,
+        }
     assert len(international_shared["display"]["columns"]) <= 12
     assert "combined_value" not in [column["key"] for column in international_shared["display"]["columns"]]

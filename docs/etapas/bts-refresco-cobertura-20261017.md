@@ -657,3 +657,14 @@ redesplegar el backend por sus patrones de entrada: cada integración debe
 verificar su salud y conservar ese snapshot hasta el sitio conjunto final.
 El gate normal, la suite completa y la comprobación productiva corresponden
 al árbol final conjunto una vez aprobadas sus nuevas identidades exactas.
+
+La CI de esa transición reprodujo cuatro expectativas de chat ligadas sólo
+al sitio nuevo y una matriz documental desactualizada. Las pruebas distinguen
+ahora los dos hashes de contrato firmados: el baseline conserva 75 rutas
+consultables, cobertura BTS parcial y sumas no comparables N/D; el contrato
+por componentes conserva 102 rutas y cobertura trimestral completa. Se
+comprueban los conteos programados y valores por aerolínea exactos de cada
+perfil, sin omisiones ni ampliar límites de tamaño. Pasan 34 pruebas con el
+baseline (incluida la matriz regenerada con su generador) y las cuatro pruebas
+afectadas contra el sitio D9 firmado preservado. Sólo cambian tests y
+documentación: la huella de presentación corregida permanece congelada.
