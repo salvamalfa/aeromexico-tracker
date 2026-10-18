@@ -16,6 +16,9 @@
 !src/conversational_analytics/**
 !src/web_export/
 !src/web_export/**
+!src/publish/
+!src/publish/__init__.py
+!src/publish/manifest.py
 !src/dashboard/
 !src/dashboard/__init__.py
 !src/dashboard/flights_html.py
@@ -39,6 +42,9 @@
 !contracts/web/
 !contracts/web/*.json
 !contracts/web/privacy.yaml
+!contracts/web/versions/
+!contracts/web/versions/17fb7e131da94435190bea925fe9733e298754d04e9b9c5e76fbbea8bef119a7/
+!contracts/web/versions/17fb7e131da94435190bea925fe9733e298754d04e9b9c5e76fbbea8bef119a7/flights.schema.json
 
 !site/
 !site/publication_manifest.json
