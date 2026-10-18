@@ -24,8 +24,8 @@ def test_published_international_metric_provenance_is_component_specific() -> No
     tools = RouteTools(Snapshot(Path("site")))
     expected = {
         "LAX<>MEX": ("observed", "observed", "observed"),
-        "GUA<>MEX": ("estimated", "scheduled", "estimated"),
-        "CDG<>MTY": ("estimated", "scheduled", "estimated"),
+        "GUA<>MEX": ("estimated", "estimated", "estimated"),
+        "CDG<>MTY": ("estimated", "estimated", "estimated"),
     }
     for market, kinds in expected.items():
         rows = {
@@ -53,21 +53,28 @@ def test_published_international_metric_provenance_is_component_specific() -> No
 def test_published_scheduled_statuses_classify_departures_not_capacity() -> None:
     tools = RouteTools(Snapshot(Path("site")))
     network, _ = tools._load("AEROMEXICO_GROUP", "international", "2026Q2")
-    scheduled = {
-        route["operation_status"]
+    scheduled = [
+        route
         for route in network["routes"]
-        if str(route.get("operation_status", "")).startswith("scheduled_")
-    }
-    assert "scheduled_from_dated_release" in scheduled
-    assert "assigned_slot_not_flown" in {route["operation_status"] for route in network["routes"]}
-    for route in network["routes"]:
-        if route.get("departures") is not None and str(route.get("operation_status", "")).startswith(
-            "scheduled_"
-        ):
-            row = _route_query(tools, route["market_key"], "departures")
-            assert row["value_kind"] == "scheduled"
-            if route.get("capacity_estimated"):
-                assert _route_query(tools, route["market_key"], "seats")["value_kind"] == "estimated"
+        if route.get("flight_components")
+        and all(cell["kind"] == "scheduled" for cell in route["flight_components"])
+    ]
+    assert {route["market_key"] for route in scheduled} == {"MEX<>SNA"}
+    assert scheduled[0]["operation_status"] == "assigned_slot_not_flown"
+    assert scheduled[0]["departures"] == 182
+    for route in scheduled:
+        row = _route_query(tools, route["market_key"], "departures")
+        assert row["value_kind"] == "scheduled"
+        assert row["value"] == sum(cell["departures"] for cell in route["flight_components"])
+
+
+def test_legacy_scheduled_statuses_keep_capacity_estimated():
+    from src.conversational_analytics.tools._route_provenance import value_kind
+
+    for status in ("scheduled_from_dated_release", "scheduled_authority", "assigned_slot_not_flown"):
+        route = {"operation_status": status, "capacity_estimated": True, "departures": 20, "seats": 2000}
+        assert value_kind({}, route, "departures") == "scheduled"
+        assert value_kind({}, route, "seats") == "estimated"
 
 
 def test_attributed_market_counts_are_never_observed_company_flights():
@@ -171,3 +178,82 @@ def test_chat_query_and_shared_routes_preserve_mixed_flight_cell_kinds():
             )
             == kind
         )
+
+
+def test_queries_the_signed_public_snapshot_without_private_inputs() -> None:
+    tools = RouteTools(Snapshot(Path("site")))
+    result = tools.invoke(
+        "query_routes",
+        {
+            "entity_id": "AEROMEXICO_GROUP",
+            "segment": "domestic",
+            "period": "2026M07",
+            "metric": "passengers",
+            "top_n": 3,
+        },
+    )
+    assert result["rows"]
+    assert result["rows"][0]["value_kind"] == "estimated"
+    assert result["data_version"] == tools.snapshot.version
+    assert result["sources"][0]["url"].endswith("domestic/2026M07.json")
+
+    international = tools.invoke(
+        "query_routes",
+        {
+            "entity_id": "AEROMEXICO_GROUP",
+            "segment": "international",
+            "period": "2026Q2",
+            "metric": "passengers",
+            "top_n": 3,
+        },
+    )
+    assert international["rows"]
+    # Calendar completeness does not certify worldwide or historical evidence coverage.
+    assert international["coverage"]["2026Q2"]["complete"] is True
+    assert international["coverage"]["2026Q2"]["observed_months"] == ["2026M04", "2026M05", "2026M06"]
+    assert international["coverage"]["2026Q2"]["agent_eligible"] is False
+    assert {row["value_kind"] for row in international["rows"]} <= {"observed", "estimated", "scheduled"}
+    assert all(row["source_label"] and row["operation_status"] for row in international["rows"])
+
+    shared = tools.invoke(
+        "find_shared_routes",
+        {
+            "entity_ids": ["AEROMEXICO_GROUP", "VIVA_AEROBUS"],
+            "segment": "domestic",
+            "period": "2026M07",
+            "top_n": 3,
+        },
+    )
+    assert shared["rows"]
+    assert all(row["carriers"]["AEROMEXICO_GROUP"]["value"] > 0 for row in shared["rows"])
+    assert all(row["carriers"]["VIVA_AEROBUS"]["value"] > 0 for row in shared["rows"])
+
+    international_shared = tools.invoke(
+        "find_shared_routes",
+        {
+            "entity_ids": ["AEROMEXICO_GROUP", "VOLARIS", "VIVA_AEROBUS"],
+            "segment": "international",
+            "period": "2026Q2",
+            "top_n": 20,
+        },
+    )
+    assert international_shared["rows"]
+    assert all(coverage["complete"] for coverage in international_shared["coverage"].values())
+    assert all(coverage["agent_eligible"] is False for coverage in international_shared["coverage"].values())
+    assert all(row["comparable"] for row in international_shared["rows"])
+    assert all(row["comparability_reason"] == [] for row in international_shared["rows"])
+    assert all(
+        row["combined_value"] == sum(carrier["value"] for carrier in row["carriers"].values())
+        for row in international_shared["rows"]
+    )
+    assert {row["market_key"]: row["combined_value"] for row in international_shared["rows"]} == {
+        "GDL<>LAX": 212017,
+        "LAX<>MEX": 190570,
+        "MEX<>ORD": 141042,
+        "GDL<>ORD": 104189,
+        "IAH<>MEX": 99090,
+        "LAS<>MEX": 88760,
+        "MEX<>SAT": 64284,
+    }
+    assert len(international_shared["display"]["columns"]) <= 12
+    assert "combined_value" not in [column["key"] for column in international_shared["display"]["columns"]]

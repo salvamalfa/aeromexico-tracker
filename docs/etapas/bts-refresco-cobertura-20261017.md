@@ -535,3 +535,26 @@ El PR #134 registra la ejecución completa de pruebas, CI, revisión y
 comprobación online del commit integrado. El respaldo privado conserva los
 registros exactos, autorizaciones, cadena de eventos y recibos del gate; su
 actualización es acotada y no rejuvenece el warehouse ni los modelos originales.
+
+La primera suite completa del sitio firmado ejecutó las 1.696 pruebas sin
+exclusiones: 1.689 pasaron, seis fallaron y una se omitió por no existir un pin
+de preview Pages; 29 subtests pasaron. Paridad y narrativa aprobada quedaron
+cerradas. El catálogo del chat alcanzó 28.580 bytes por la nueva lista mensual,
+por encima de su límite de 16.000. Los otros fallos eran expectativas del sitio
+anterior y la métrica de tamaño de la matriz diagnóstica F2.9.
+
+La respuesta interna de `get_data_catalog` representa las listas largas como
+rangos inclusivos de un mismo grano; separa huecos y conserva todos los IDs,
+alias, unidades y límites. El catálogo HTTP y la selección interna de escenarios
+siguen usando IDs individuales. No cambia el esquema de herramientas, el prompt,
+el límite de transporte ni los fixtures/pins de la campaña histórica. La matriz
+F2.9 se regenera sólo en la línea que mide bytes de herramientas offline; no se
+recalifica una evaluación humana ni se ejecuta una campaña pagada.
+
+Las expectativas reales de rutas se contrastan con la nueva base: GUA–MEX y
+CDG–MTY usan estimaciones retenidas; MEX–SNA conserva 182 vuelos programados;
+102 rutas tienen asientos para la consulta internacional de AM. El calendario
+Q2 contiene los tres meses, con elegibilidad histórica todavía falsa; esto no
+certifica cobertura mundial. Las pruebas sintéticas mantienen las restricciones
+por métrica, operador/sentido, fuente y meses incompletos. La huella técnica de
+las tres tesis permanece exactamente igual tras estas correcciones del backend.
