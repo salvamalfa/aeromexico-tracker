@@ -558,3 +558,9 @@ Q2 contiene los tres meses, con elegibilidad histórica todavía falsa; esto no
 certifica cobertura mundial. Las pruebas sintéticas mantienen las restricciones
 por métrica, operador/sentido, fuente y meses incompletos. La huella técnica de
 las tres tesis permanece exactamente igual tras estas correcciones del backend.
+
+La corrección pasa 79 pruebas focalizadas y los tres presupuestos del repositorio,
+además de Ruff. La repetición del gate normal desde el commit corregido conserva
+byte a byte todos los assets y datos del sitio: sólo cambia `code_commit` en el
+manifest firmado. La versión de datos de las conversaciones también se conserva;
+la copia base de Library no necesita otra sustitución por este cambio del backend.
