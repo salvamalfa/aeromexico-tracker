@@ -23,4 +23,3 @@ Pasos existentes disponibles: parse.peer_discovery,parse.sec,parse.peers,parse.b
 Consultar `src/source_updates/catalog.py` para subproductos y brechas.
 No confundir esos pasos disponibles con un adaptador aprobado para cualquier
 formato o periodo nuevo. Entregar recibos y periodos realmente comprobados.
-

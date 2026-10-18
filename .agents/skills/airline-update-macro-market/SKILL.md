@@ -23,4 +23,3 @@ Pasos existentes disponibles: parse.fx,parse.fuel,parse.market
 Consultar `src/source_updates/catalog.py` para subproductos y brechas.
 No confundir esos pasos disponibles con un adaptador aprobado para cualquier
 formato o periodo nuevo. Entregar recibos y periodos realmente comprobados.
-

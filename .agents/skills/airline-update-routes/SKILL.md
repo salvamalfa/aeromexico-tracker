@@ -23,4 +23,3 @@ Pasos existentes disponibles: Sin parser genérico certificado para novedades; c
 Consultar `src/source_updates/catalog.py` para subproductos y brechas.
 No confundir esos pasos disponibles con un adaptador aprobado para cualquier
 formato o periodo nuevo. Entregar recibos y periodos realmente comprobados.
-

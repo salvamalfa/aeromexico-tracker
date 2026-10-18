@@ -38,4 +38,3 @@ python -m src.source_updates calendar --start 2026-10 --months 3 --quarter 2026Q
 python -m src.source_updates plan --round combined --quarter 2026Q3 --as-of 2026-10-18T12:00:00-06:00
 python -m src.source_updates round --recipe config/source_update_round.example.json --workspace tmp/source-updates/prueba --dry-run
 ```
-

@@ -71,4 +71,3 @@ principio del catálogo; estas instrucciones son referencia interna.
   de tres reportes compatibles permite preparar Industria, no aprobarla.
 - No activar noticias candidatas/evidencia, cron, Pages, Railway o auto-merge.
   Separar captura, candidato, aprobación y publicación en cada entrega.
-
