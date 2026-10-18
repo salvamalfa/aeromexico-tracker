@@ -170,3 +170,21 @@ Huella propuesta actual:
 Se inician suite y CI del commit siguiente; no se atribuyen a esta huella
 los793resultados del HEAD51352d9. La aprobación6534f876 sigue vigente para
 su cohorte original, no trasladada a ninguna propuesta.
+
+## Puntuación tipográfica · 23:29 UTC
+
+La revisión añadió T–2/Q–400. Se normalizan los caracteres Unicode de guion
+y el signo menos antes de reconocer fechas e identificadores, y se conserva
+el token Q/T numerado cuando el separador es otra puntuación o guion bajo.
+La matriz comprueba ocho guiones en trimestres, modelos, terminales y rangos
+de publicación, además de identificadores con punto/guion bajo. Pasan
+**139 regresiones**. El rango abril–junio conserva sus extremos exactos y
+excluye julio; las consultas de modelos sin evidencia siguen dando cero,
+sin perder el token y devolver todo el año.
+
+La suite anterior sobrea66c416 pasó **806 pruebas en180.17s**, con recibos
+de HEAD limpio al inicio/final. Huella propuesta actual:
+`7b4f369da6737c267d5dfa1f39eafd616cd7ea66318ebfb11be5f2bcab26679b`.
+Se ejecutan de nuevo suite y revisión del commit actual por este cambio de
+código; no es una duplicación de revisión sobre el mismo HEAD. La cohorte
+aprobada6534f876/88–90 sigue intacta y no se traslada.

@@ -171,3 +171,42 @@ def test_airport_terminals_and_aircraft_models_remain_searchable(approved_index,
 def test_ambiguous_year_and_t_label_requires_explicit_dates(question):
     with pytest.raises(ValueError, match="notación trimestral"):
         resolve_news_query(question)
+
+
+DASHES = ["-", "‐", "‑", "‒", "–", "—", "―", "−"]
+
+
+@pytest.mark.parametrize("dash", DASHES)
+def test_typographic_quarter_identifier_cannot_become_a_year_filter(dash):
+    with pytest.raises(ValueError, match="notación trimestral"):
+        resolve_news_query(f"noticias publicadas en T{dash}2 de 2026")
+
+
+@pytest.mark.parametrize("dash", DASHES)
+def test_typographic_aircraft_identifier_is_not_an_unfiltered_query(approved_index, dash):
+    result = approved_index.search_news(f"noticias de Q{dash}400 en 2026")
+    assert result["filters"]["terms"] == ["q400"]
+    assert result["count"] == 0
+
+
+@pytest.mark.parametrize("dash", DASHES)
+def test_typographic_terminal_identifier_stays_searchable(approved_index, dash):
+    result = approved_index.search_news(f"noticias de la terminal T{dash}2 en 2026")
+    assert "t2" in result["filters"]["terms"]
+    assert result["count"] == 0
+
+
+@pytest.mark.parametrize("dash", DASHES)
+def test_typographic_date_delimiters_preserve_exact_publication_range(approved_index, dash):
+    result = approved_index.search_news(
+        f"noticias publicadas entre 2026{dash}04{dash}01 y 2026{dash}06{dash}30"
+    )
+    assert (result["filters"]["start_date"], result["filters"]["end_date"]) == ("2026-04-01", "2026-06-30")
+    assert [row["published_at"] for row in result["results"]] == ["2026-04-30"]
+
+
+@pytest.mark.parametrize("identifier,term", [("Q.400", "q400"), ("Q_400", "q400"), ("T_2", "t2")])
+def test_punctuated_identifiers_keep_a_specific_search_token(approved_index, identifier, term):
+    result = approved_index.search_news(f"noticias de la terminal {identifier} en 2026")
+    assert term in result["filters"]["terms"]
+    assert result["count"] == 0
