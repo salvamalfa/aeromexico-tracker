@@ -73,6 +73,8 @@ def test_secondary_story_source_cannot_bypass_company_validation(approved_index,
         "Q22026",
         "Q2/2026",
         "2T26",
+        "2Q26",
+        "2Q2026",
         "2 T26",
         "2T2026",
         "2026T2",
@@ -82,6 +84,9 @@ def test_secondary_story_source_cannot_bypass_company_validation(approved_index,
         "T2 de 2026",
         "T22026",
         "T2/2026",
+        "2026 de T2",
+        "2026 del T2",
+        "T2 del 2026",
         "Q2",
         "2026Q5",
         "0T26",
@@ -108,9 +113,15 @@ def test_explicit_publication_quarter_dates_keep_july_outside_results(approved_i
         ("noticias sobre Q400", "q400"),
         ("noticias de Q400 en 2026", "q400"),
         ("noticias de la T2 del AICM en 2026", "t2"),
-        ("noticias de T2 en 2026", "t2"),
+        ("noticias de la terminal T2 en 2026", "t2"),
     ],
 )
 def test_airport_terminals_and_aircraft_models_remain_searchable(question, term):
     intent = resolve_news_query(question)
     assert term in intent["terms"]
+
+
+@pytest.mark.parametrize("question", ["noticias de T2 en 2026", "noticias de 2026 correspondientes a T2"])
+def test_ambiguous_year_and_t_label_requires_explicit_dates(question):
+    with pytest.raises(ValueError, match="notación trimestral"):
+        resolve_news_query(question)

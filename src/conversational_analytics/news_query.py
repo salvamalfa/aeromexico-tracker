@@ -76,8 +76,13 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
     text = entity_text(question)
     # Compact quarter labels are not publication dates or free-text topics.
     # Require explicit endpoints until quarter precision has its own contract.
-    if re.search(
-        r"\b(?:\d{4}[-/\s]*[qt]\s*\d|[qt]\s*\d[-/\s]*(?:de\s*)?\d{4}|q\s*\d|\d\s*t[-/\s]*\d{2}(?:\d{2})?)\b",
+    ambiguous_t_period = (
+        re.search(r"\b\d{4}\b", text)
+        and re.search(r"\bt[1-4]\b", text)
+        and not re.search(r"\b(?:terminal(?:es)?|aicm|aifa|aeropuerto(?:s)?)\b", text)
+    )
+    if ambiguous_t_period or re.search(
+        r"\b(?:\d{4}[-/\s]*(?:(?:de|del)\s+)?[qt]\s*\d|[qt]\s*\d[-/\s]*(?:de\s*)?\d{4}|q\s*\d|\d\s*[qt][-/\s]*\d{2}(?:\d{2})?)\b",
         text,
     ):
         raise ValueError(

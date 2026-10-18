@@ -79,3 +79,22 @@ La huella propuesta vigente es
 `47e5ceea0ed632a4c7a342b58e39b6d1b1bb48e59a3c50e65e3bf7807b89313d`.
 Las propuestas5675b289 y c4c46c39 quedan superadas sin aprobación. El alcance
 de activación continúa detenido y no se traslada el consentimiento6534f876.
+
+## Guardia de periodo ambiguo · 22:58 UTC
+
+La revisión añadió `2026 de T2`. Se cubren `de`/`del` después del año y
+se pide aclaración cuando coexisten un año y una etiqueta T sin contexto
+explícito de terminal/aeropuerto. Así, otras palabras de unión no amplían
+silenciosamente al año. `T2 del AICM en 2026` y `terminal T2 en 2026`
+conservan texto libre, al igual que Q400. Se añaden también 2Q26/2Q2026.
+Pasan **64 regresiones** (0.07 s), con veinticinco formatos, límites
+opcionales, siete consultas aeronáuticas y dos consultas ambiguas.
+
+La suite previa754 pasó en 180.99 s sobre0e66a47. El código candidato
+actual cambia la huella a
+`8234f2d6bf1d68c3f264443efcdcad6d09ae2795baf2f16183e11325104f3425`;
+las huellas de las propuestas anteriores quedan superadas, nunca importadas
+como nuevas aprobaciones. La aprobación6534f876 sigue vigente exclusivamente
+para sus pares88–90 y el sitio firmado anterior. Los pares prospectivos
+calculados durante la revisión no se deben presentar como solicitud de
+aprobación: primero se congela la corrección y se completan sus auditorías.
