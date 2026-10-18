@@ -237,6 +237,42 @@ aprobar datos nuevos.
 
 ## Ciclo de vida de la documentación
 
+### Audiencia y documentos para revisión del dueño
+
+Convención solicitada por Salva el 18 de octubre de 2026. La documentación
+técnica de implementación y referencia puede conservar el detalle y precisión
+necesarios para desarrollar el dashboard y para los agentes. No simplifiques
+contratos, fórmulas, instrucciones ejecutables ni evidencia histórica al punto
+de perder su significado.
+
+Todo documento que entregues a Salva para revisión en el repositorio debe usar
+español claro: resultado y decisión primero, frases cortas, términos coherentes,
+siglas explicadas y una acción por paso. La inspiración es una adaptación
+flexible «80 % ASD-STE100», no una medida verificable ni cumplimiento formal
+del [estándar en inglés](https://www.asd-ste100.org/about_STE.html). Conserva
+incertidumbres, riesgos y límites de autorización.
+
+Usa solo las secciones aplicables: **Resumen**, **Qué cambia para ti**,
+**Qué necesitas hacer**, **Riesgos** y **Pendientes**. Pon las fuentes junto a
+las afirmaciones. Separa comandos, identificadores, pruebas y evidencia extensa
+en un **Apéndice técnico** antes de **Pendientes**, que debe ser la última
+sección. Evita tablas grandes en la narración principal.
+
+Ejemplo breve:
+
+> **Resumen.** La actualización está preparada para pruebas. No está activada.
+>
+> **Qué necesitas hacer.** Revisa la muestra del calendario.
+>
+> **Apéndice técnico.** Comando reproducible y enlace al resultado de pruebas.
+>
+> **Pendientes.** Confirmar las publicaciones que aún no tienen fecha.
+
+Aplica esta convención en la guía canónica correspondiente. No crees otra
+política, reporte de estado ni copia del mismo contenido para cada audiencia.
+No reescribas bitácoras históricas: su conservación y retiro siguen las reglas
+de lifecycle de abajo. Esta pauta no autoriza borrar documentos ni evidencia.
+
 El repositorio documenta el estado actual. La historia se resume en
 `docs/archivo/README.md` y los documentos originales viven en Git: se borran
 del árbol, no se acumulan.
