@@ -76,14 +76,19 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
     text = entity_text(question)
     # Compact quarter labels are not publication dates or free-text topics.
     # Require explicit endpoints until quarter precision has its own contract.
+    # Preserve the Q100/Q200/Q300/Q400 search tokens before recognizing Q+year.
+    quarter_text = re.sub(r"\bq\s*[1-4]00\b", "", text)
+    separator = r"[-/\s]*(?:(?:de|del)[-/\s]*)?"
+    quarter_year = r"\d{2}(?:\d{2})?"
     ambiguous_t_period = (
         re.search(r"\b\d{4}\b", text)
         and re.search(r"\bt[1-4]\b", text)
         and not re.search(r"\b(?:terminal(?:es)?|aicm|aifa|aeropuerto(?:s)?)\b", text)
     )
     if ambiguous_t_period or re.search(
-        r"\b(?:\d{4}[-/\s]*(?:(?:de|del)\s+)?[qt]\s*\d|[qt]\s*\d[-/\s]*(?:de\s*)?\d{4}|q\s*\d|\d\s*[qt][-/\s]*\d{2}(?:\d{2})?)\b",
-        text,
+        r"\b(?:\d{4}" + separator + r"[qt]\s*\d|[qt]\s*\d" + separator
+        + quarter_year + r"|q\s*\d|\d\s*[qt](?:" + separator + quarter_year + r")?)\b",
+        quarter_text,
     ):
         raise ValueError(
             "Indica inicio y fin de publicación como fechas ISO YYYY-MM-DD; la notación trimestral compacta no está admitida."

@@ -116,3 +116,24 @@ se comprueban por separado. La huella propuesta actual es
 `4c2e9fa9f34eeeda5c82e6b958ca9e893a995da808e9c0724d705000b390ddbc`.
 Todas las propuestas anteriores siguen superadas y sin aprobación. El
 expediente autorizado6534f876 permanece íntegro, sin nuevo gate ni promoción.
+
+## Conectores compartidos en las etiquetas
+
+La revisión pidió también `2T de 2026`/`2Q del 2026`. Los tres órdenes de
+etiqueta usan ahora el mismo conector opcional `de`/`del`, espacios, barras
+y guiones, y se rechaza la etiqueta número+T/Q sin ampliar a un año cuando
+hay palabras intermedias. Se preservan los términos Q100/Q200/Q300/Q400
+antes de reconocer Q con año. Pasan **91 regresiones** (0.08 s); Ruff pasa.
+La suite previa768 pasó en181.77s con el código4c2e9fa9. La suite siguiente
+se inicia después del commit, sobre checkout limpio, y no se anticipa su
+resultado en este corte.
+
+Huella propuesta vigente:
+`7efbf4d5061b6395d50e2ac131a3f18281073b292375e16e41964cf24e6031f7`.
+La autorización original6534f876 y sus pares88–90 siguen íntegros; no
+autoriza esta propuesta distinta y no se ha pedido todavía consentimiento
+sobre pares nuevos sin auditoría. Las referencias a commits de las suites
+locales anteriores identifican el código equivalente: se iniciaron con las
+modificaciones en el árbol de trabajo y se comprometieron después; no son
+afirmaciones de HEAD limpio al inicio. El expediente de cierre registra esa
+procedencia por huella de runtime y las comprobaciones de CI de HEAD exacto.
