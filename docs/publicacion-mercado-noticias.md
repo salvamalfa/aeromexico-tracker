@@ -19,8 +19,8 @@ la interfaz revisada; no concede aprobación a pares técnicos todavía no audit
    y verificar commits, manifiestos y UI desktop/móvil desplegados.
 
 La huella de presentación candidata final es
-`abbcf12fc8d20764082b48151341837be6b12b0de4a2ec4337e3f7e80ace0895`,
-con Vuelos `7f6adeb1f37303923d2d054069980d14a67c67ec` y los ajustes visuales
+`a1de7512359e894a2a8076e822134fc8313a47ac284c7501d63eedd4edd5cfdb`,
+con Vuelos `8b5dd73a3c827b6e6cdee12addc4e4bbd73eede6` y los ajustes visuales
 v6 de ambas pestañas. Los merges documentales, pruebas excluidas de la huella
 y `site/` generado conservan esa identidad; cualquier cambio a componentes
 incluidos exige detenerse y revisar la cohorte exacta antes de exportar.
@@ -44,9 +44,11 @@ skills ni calendarios. Las nuevas propuestas técnicas no trasladan la aprobaci�
 82–84 de Vuelos a una huella distinta. Aeroméxico conserva su registro histórico.
 
 Estado: preparación y auditoría; sin merge a master ni despliegue de las pestañas.
-Las primeras propuestas de huella fd41 quedaron superadas antes de importar
-auditorías; el ledger permanece en84. La huella indicada arriba incorpora la
-corrección final de períodos de Vuelos. El cierre de CI contempla los perfiles
+Las propuestas de huellas fd41 y abbcf12 quedaron superadas antes de importar
+auditorías; el ledger permanece en 84. La huella indicada arriba incorpora la
+corrección final de períodos de Vuelos y el cierre reforzado de dependencias:
+todo `src/dashboard/**/*.py` participa en la identidad de aprobación. Se prueban
+mutaciones, altas y bajas de módulos para invalidar identidades obsoletas. El cierre de CI contempla los perfiles
 firmados histórico y candidato, con expectativas exactas y sin omitir pruebas.
 Pendientes: cierre de la cohorte y aprobación específica, CI/revisión exactos,
 publicación/verificación, skills por fuente, coordinador mensual/trimestral,
