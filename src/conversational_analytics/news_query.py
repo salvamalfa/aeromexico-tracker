@@ -72,6 +72,29 @@ def topic_key(value: str) -> str:
     return next((norm(key) for key, aliases in TOPICS.items() if text in aliases or text == norm(key)), text)
 
 
+def _publication_scope(text: str) -> str:
+    """Keep explicit archive topic text out of publication-period extraction."""
+    characters = list(text)
+    for marker in re.finditer(r"\bsobre\b", text):
+        start = marker.end()
+        explicit_period = bool(re.search(r"\b\d{4}-\d{2}(?:-\d{2})?\b", text[:marker.start()]))
+        boundary = (
+            r"\bpublicad[oa]s?\b" if explicit_period else
+            r"\b(?:publicad[oa]s?|desde|hasta|entre|durante|en)\b"
+        )
+        following = re.search(boundary, text[start:])
+        end = start + following.start() if following else len(text)
+        spans = [(start, end)] if explicit_period else [
+            (start + match.start(), start + match.end())
+            for match in re.finditer(
+                r"\b(?:[1-4][tq]\d{2}(?:\d{2})?|[qt][1-4](?:\d{4})?)\b", text[start:end]
+            )
+        ]
+        for first, last in spans:
+            characters[first:last] = " " * (last - first)
+    return "".join(characters)
+
+
 def resolve_news_query(question: str, start_date=None, end_date=None, company=None) -> dict:
     # Keep numbered identifiers intact for both temporal guards and text
     # search: T 2 / Q 400 must not disappear as one letter plus a number.
@@ -82,21 +105,24 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
     text = re.sub(r"\b([qt])[\W_]+(\d+)\b", r"\1\2", text)
     # Compact quarter labels are not publication dates or free-text topics.
     # Require explicit endpoints until quarter precision has its own contract.
-    separator = r"[-/\s]*(?:(?:de|del)[-/\s]*)?"
+    separator = r"[\W_]*(?:(?:de|del)[\W_]*)?"
     quarter_year = r"\d{2}(?:\d{2})?"
     # A short year after T/Q needs a separator or connector: T100 and Q400
     # are literal identifiers, while T1 de 00 and Q4/00 request a period.
-    separated_year = r"(?:[-/\s]+(?:(?:de|del)[-/\s]*)?|(?:de|del)[-/\s]*)" + quarter_year
+    separated_year = r"(?:[\W_]+(?:(?:de|del)[\W_]*)?|(?:de|del)[\W_]*)" + quarter_year
     prefix_period = r"[qt]\s*\d(?:" + separator + r"\d{4}|" + separated_year + r")"
+    # The archive's existing topic tag (e.g. "sobre 2T26") describes report
+    # content. Keep it searchable without treating it as publication dates.
+    period_text = _publication_scope(text)
     ambiguous_t_period = (
-        re.search(r"\b\d{4}\b", text)
-        and re.search(r"\bt[1-4]\b", text)
-        and not re.search(r"\b(?:terminal(?:es)?|aicm|aifa|aeropuerto(?:s)?)\b", text)
+        re.search(r"\b\d{4}\b", period_text)
+        and re.search(r"\b[qt](?:[1-4])?\b", period_text)
+        and not re.search(r"\b(?:terminal(?:es)?|aicm|aifa|aeropuerto(?:s)?)\b", period_text)
     )
     if ambiguous_t_period or re.search(
         r"\b(?:\d{4}" + separator + r"[qt]\s*\d|" + prefix_period
-        + r"|q\s*\d|\d\s*[qt](?:" + separator + quarter_year + r")?)\b",
-        text,
+        + r"|q\s*\d|\d" + separator + r"[qt](?:" + separator + quarter_year + r")?)\b",
+        period_text,
     ):
         raise ValueError(
             "Indica inicio y fin de publicación como fechas ISO YYYY-MM-DD; la notación trimestral compacta no está admitida."
@@ -128,6 +154,7 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
                 "La aerolínea indicada no coincide con las aerolíneas explícitas de la consulta."
             )
         companies = [selected]
+    semantic_text, text = text, period_text
     years = re.findall(r"\b(\d{4})\b", text)
     months = [MONTHS[m] for m in re.findall(r"\b(" + "|".join(MONTHS) + r")\b", text)]
     iso_months = re.findall(r"\b(\d{4})-(0[1-9]|1[0-2])(?!-\d{2})\b", text)
@@ -307,7 +334,7 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
             date.fromisoformat(value)
     if start_date and end_date and start_date > end_date:
         raise ValueError("El inicio no puede ser posterior al fin.")
-    weekdays = {word for word in words if word in WEEKDAYS}
+    weekdays = {word for word in re.findall(r"\w+", period_text) if word in WEEKDAYS}
     if weekdays:
         if not intrinsic or start_date is None or start_date != end_date or len(weekdays) != 1:
             raise ValueError(
@@ -315,6 +342,7 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
             )
         if date.fromisoformat(start_date).weekday() != WEEKDAYS[next(iter(weekdays))]:
             raise ValueError("El día semanal no coincide con la fecha explícita.")
+    text = semantic_text
     topics = [
         key
         for key, aliases in TOPICS.items()

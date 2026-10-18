@@ -188,3 +188,28 @@ de HEAD limpio al inicio/final. Huella propuesta actual:
 Se ejecutan de nuevo suite y revisión del commit actual por este cambio de
 código; no es una duplicación de revisión sobre el mismo HEAD. La cohorte
 aprobada6534f876/88–90 sigue intacta y no se traslada.
+
+## Separadores anteriores y tema del archivo · 23:57 UTC
+
+La revisión pidió `2-T`/`2/T`; el mismo separador de puntuación y conectores
+se aplica ahora también entre el número y T/Q. Se comprueba que una cantidad
+antes de Q400/T100 sigue siendo una búsqueda literal de ese identificador.
+
+Se conserva además el flujo real del botón del archivo: `sobre 2T26` es el
+tema de un reporte, y `sobre Q2 challenges` busca un titular aprobado;
+`publicadas en 2T26` sigue exigiendo fechas de publicación explícitas. Cuando
+el archivo ya seleccionó un mes ISO antes de `sobre`, ese texto de tema no
+reabre el intervalo por contener `desde`, otro día o un día semanal. Una
+segunda cláusula `publicadas` permanece visible y se valida como periodo.
+La extracción de aerolíneas y temas conserva la consulta completa.
+
+Pasan **183 regresiones nuevas** y **642 pruebas** junto con las matrices
+anteriores de fecha/aerolínea/hora (0.54s), Ruff y diff-check. La suite limpia
+previa sobre9fc24e4 pasó **841 pruebas en177.45s**. La suite completa actual
+se ejecuta después del commit, con recibos de HEAD limpio al inicio/final.
+
+Huella propuesta actual:
+`be03c5ad3d40b1edef54d45163e6cfea96182821a41b469a238ebf71507898be`.
+La propuesta sigue sin auditar como nueva cohorte canónica ni aprobar; la
+autorización6534f876 de21:16:59 y sus pares88–90 permanecen vigentes e intactos.
+No se ejecuta un nuevo gate ni se integran136/139.

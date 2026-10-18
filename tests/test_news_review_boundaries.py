@@ -210,3 +210,101 @@ def test_punctuated_identifiers_keep_a_specific_search_token(approved_index, ide
     result = approved_index.search_news(f"noticias de la terminal {identifier} en 2026")
     assert term in result["filters"]["terms"]
     assert result["count"] == 0
+
+
+@pytest.mark.parametrize("separator", ["-", "/", "–", "—", "_", "."])
+@pytest.mark.parametrize("letter", ["T", "Q"])
+@pytest.mark.parametrize("connector", ["de", "del"])
+def test_separator_before_quarter_letter_cannot_drop_the_period(separator, letter, connector):
+    with pytest.raises(ValueError, match="notación trimestral"):
+        resolve_news_query(f"noticias publicadas en 2{separator}{letter} {connector} 2026")
+
+
+@pytest.mark.parametrize("notation", ["2 de T de 2026", "2delQdel2026"])
+def test_connectors_before_quarter_letter_are_also_closed(notation):
+    with pytest.raises(ValueError, match="notación trimestral"):
+        resolve_news_query(f"noticias publicadas en {notation}")
+
+
+@pytest.mark.parametrize("identifier", ["Q400", "T100"])
+def test_quantity_before_literal_identifier_is_not_a_quarter(approved_index, identifier):
+    result = approved_index.search_news(f"noticias sobre 2 {identifier} en 2026")
+    assert identifier.lower() in result["filters"]["terms"]
+    assert result["count"] == 0
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "Busca noticias sobre 2T26.",
+        "Busca noticias publicadas en 2026-07 sobre 2T26.",
+        "Busca noticias sobre 2T26 publicadas en 2026-07.",
+    ],
+)
+def test_existing_archive_report_topic_is_not_a_publication_quarter(approved_index, question):
+    result = approved_index.search_news(question)
+    assert result["count"] == 2
+    assert {row["published_at"] for row in result["results"]} == {"2026-07-15", "2026-07-22"}
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "noticias publicadas en 2T26 sobre combustible",
+        "noticias publicadas en 2-Tde2026 sobre 2T26",
+    ],
+)
+def test_report_topic_does_not_override_a_publication_period_request(question):
+    with pytest.raises(ValueError, match="notación trimestral"):
+        resolve_news_query(question)
+
+
+@pytest.mark.parametrize(
+    "topic",
+    [
+        "combustible 2T26",
+        "combustible desde 2T26",
+        "el reporte fechado 2026-04-30 y 2T26",
+    ],
+)
+def test_archive_topic_text_cannot_reopen_selected_publication_month(approved_index, topic):
+    result = approved_index.search_news(f"Busca noticias publicadas en 2026-07 sobre {topic}.")
+    assert (result["filters"]["start_date"], result["filters"]["end_date"]) == ("2026-07-01", "2026-07-31")
+    assert all(row["published_at"].startswith("2026-07-") for row in result["results"])
+
+
+def test_weekday_in_an_archive_topic_is_not_a_publication_weekday(approved_index):
+    result = approved_index.search_news("Busca noticias publicadas en 2026-07 sobre lunes negro.")
+    assert (result["filters"]["start_date"], result["filters"]["end_date"]) == ("2026-07-01", "2026-07-31")
+    assert result["count"] == 0
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "noticias sobre Aeroméxico en 2T26",
+        "noticias publicadas en 2026-07 sobre 2T26 publicadas en 2T26",
+    ],
+)
+def test_topic_scope_never_hides_another_publication_period(question):
+    with pytest.raises(ValueError, match="notación trimestral"):
+        resolve_news_query(question)
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "Busca noticias sobre Q2 challenges.",
+        "Busca noticias publicadas en 2026-07 sobre Q2 challenges.",
+        "Busca noticias sobre Q2 challenges publicadas en 2026-07.",
+    ],
+)
+def test_approved_headline_quarter_words_remain_searchable(approved_index, question):
+    result = approved_index.search_news(question)
+    assert [row["id"] for row in result["results"]] == ["flightglobal-aeromexico-q2-2026-07-15"]
+
+
+@pytest.mark.parametrize("marker", ["T", "Q"])
+def test_incomplete_period_marker_cannot_disappear_into_an_unfiltered_year(marker):
+    with pytest.raises(ValueError, match="notación trimestral"):
+        resolve_news_query(f"noticias publicadas en {marker} de 2026")
