@@ -2,6 +2,8 @@
 import { DOMESTIC_MONTH_NAMES, state } from "./state";
 import { esc } from "./dom";
 
+const quarterForMonth = (id: string): string => `${id.slice(0, 4)}Q${Math.floor((Number(id.slice(5)) - 1) / 3) + 1}`;
+
 export function mapPeriodLabel(period: string): string {
   if (period.includes("M")) return `${DOMESTIC_MONTH_NAMES[Number(period.slice(5)) - 1]} ${period.slice(0, 4)}`;
   return `${period.at(-1)}T${period.slice(2, 4)}`;
@@ -9,9 +11,17 @@ export function mapPeriodLabel(period: string): string {
 
 export function mapPeriodOptions(): string[] {
   if (state.networkMode === "international") return [...state.availablePeriods.international].sort();
+  if (state.mapEntity === "AEROMEXICO" && state.domesticLayer === "official") {
+    const quarters = state.availablePeriods.domestic;
+    const months = quarters.flatMap(quarter =>
+      (state.domesticNetworks.get(quarter)?.routes ?? []).flatMap(route =>
+        (route.monthly ?? []).map(row => row.period_id)
+          .filter((id): id is string => typeof id === "string" && id.includes("M") && quarterForMonth(id) === quarter)));
+    return [...new Set([...quarters, ...months])].sort();
+  }
   const months = state.availablePeriods.domestic_monthly;
   return [...new Set([...months, ...state.availablePeriods.domestic,
-    ...months.map((id) => `${id.slice(0, 4)}Q${Math.floor((Number(id.slice(5)) - 1) / 3) + 1}`)])].sort();
+    ...months.map(quarterForMonth)])].sort();
 }
 
 export function currentMapPeriod(): string {

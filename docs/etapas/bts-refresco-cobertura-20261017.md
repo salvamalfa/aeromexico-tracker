@@ -634,3 +634,26 @@ corregida es explícitamente no firmada y no sustituye al gate normal.
 
 La leyenda de programación también explicita su sentido: el total de ambos
 sentidos permanece distinguible de un headline operativo unidireccional.
+
+Una revisión adicional encontró que julio, disponible en las estimaciones,
+seguía seleccionable al cambiar a la capa nacional oficial aunque esta sólo
+tenía el segundo trimestre. El selector oficial ofrece ahora los trimestres
+disponibles y los meses fechados de sus propias filas, y vuelve a un período
+válido al cambiar de capa. Las otras entidades conservan julio estimado. Dos
+regresiones fallaban antes; pasan las 221 pruebas de frontend, TypeScript y
+la compilación. Chromium del entorno cloud comprobó el cambio de capa y de
+entidad a 1440 y 390 píxeles, con rutas visibles y sin modificar el trimestre
+financiero. Esta corrección se incorpora antes de congelar la huella conjunta
+con las otras pestañas; no genera nuevas aprobaciones ni publica el sitio.
+
+Para preparar una sola publicación conjunta, este PR conserva `site/` idéntico
+al `master` productivo `40a63d1`. El sitio aprobado anterior de `d9da4b7` se
+preserva íntegro en el expediente privado, con hash del archivo y commit de
+origen; no se usa como artefacto de estas correcciones. El lector de snapshot
+y el runtime real local (autenticación, worker y consulta con proveedor mock)
+aceptan los 134 archivos firmados del baseline con sus pins ya aprobados.
+Esto permite revisar primero el código sin disparar Pages. Railway puede
+redesplegar el backend por sus patrones de entrada: cada integración debe
+verificar su salud y conservar ese snapshot hasta el sitio conjunto final.
+El gate normal, la suite completa y la comprobación productiva corresponden
+al árbol final conjunto una vez aprobadas sus nuevas identidades exactas.
