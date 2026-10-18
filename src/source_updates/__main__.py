@@ -12,6 +12,7 @@ from src.source_updates.build import build
 from src.source_updates.catalog import FAMILIES, ROOT, plan
 from src.source_updates.checks import check_candidate
 from src.source_updates.collection import collect
+from src.source_updates.recipes import catalog_selection, describe, macro_round
 
 
 def read_json(path: Path) -> dict:
@@ -26,6 +27,11 @@ def main(argv: list[str] | None = None) -> int:
     planned.add_argument("--as-of", required=True)
     planned.add_argument("--quarter")
     planned.add_argument("--family", choices=list(FAMILIES))
+    recipes = commands.add_parser("recipe")
+    recipes.add_argument("--product", required=True)
+    recipes.add_argument("--output", choices=["instructions", "selection", "round"], default="instructions")
+    recipes.add_argument("--period")
+    recipes.add_argument("--as-of")
     dates = commands.add_parser("calendar")
     dates.add_argument("--start", required=True, help="YYYY-MM")
     dates.add_argument("--months", type=int, default=3)
@@ -56,6 +62,15 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "plan":
             result = plan(args.round, args.as_of, args.quarter, args.family)
+        elif args.command == "recipe":
+            if args.output == "selection":
+                result = catalog_selection(args.product)
+            elif args.output == "round":
+                if not args.period or not args.as_of:
+                    raise ValueError("A runnable recipe requires --period and --as-of")
+                result = macro_round(args.product, args.period, args.as_of)
+            else:
+                result = describe(args.product)
         elif args.command == "calendar":
             cutoff = calendar.local_time(args.as_of)
             if not 1 <= args.months <= 12:

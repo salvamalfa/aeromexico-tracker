@@ -87,8 +87,8 @@ def selection_plan(selection: dict, workspace: Path) -> dict:
             ):
                 raise ValueError("relative_dir must be a safe Bronze-relative directory")
         mode = item.get("mode", "get")
-        if mode not in {"get", "manual", "bts_year"}:
-            raise ValueError("Only get, manual or bounded bts_year modes are supported")
+        if mode not in {"get", "manual", "bts_year", "banxico_series"}:
+            raise ValueError("Only get, manual, bts_year or banxico_series modes are supported")
         if mode != "manual" and product["source_key"] in {"sec_edgar", "aena_spain"}:
             raise ValueError("SEC identity / Aena authenticated exports require manual import here")
         if mode == "manual":
@@ -117,6 +117,24 @@ def selection_plan(selection: dict, workspace: Path) -> dict:
             ):
                 raise ValueError("BTS requires an explicit year/ZIP with the exact T-100 form URL")
             calls += 2
+        elif mode == "banxico_series":
+            from src.ingest.macro.banxico import BANXICO_SERIES, SIE_EXPORT_URL, START_DATE
+
+            end = item.get("end_date", "")
+            # Validate the ISO date before constructing the public export form.
+            from datetime import date
+
+            date.fromisoformat(end)
+            if (
+                item["product"] != "banxico"
+                or item["url"] != SIE_EXPORT_URL
+                or item["entity"] not in BANXICO_SERIES
+                or item["extension"] != "csv"
+                or item["period"] != f"{START_DATE}_{end}"
+                or item["purpose"] != "data"
+            ):
+                raise ValueError("Banxico public export requires an exact known series and date window")
+            calls += 1
         else:
             calls += 1
     return {
@@ -197,9 +215,13 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
                     if hashlib.sha256(content).hexdigest() != item["sha256"]:
                         raise ValueError("Manual input hash mismatch")
                 else:
-                    rate = {"bts_t100": "bts", "afac": "afac", "bmv": "bmv"}.get(
-                        product["source_key"], "default"
-                    )
+                    rate = {
+                        "bts_t100": "bts",
+                        "afac": "afac",
+                        "bmv": "bmv",
+                        "banxico_sie": "banxico",
+                        "aeromexico_ir": "aeromexico_ir",
+                    }.get(product["source_key"], "default")
                     with factory(rate, max_attempts=1) as client:
                         # Redirect targets are checked BEFORE each request. Five total
                         # calls per operation, including redirects. TLS stays enabled.
@@ -228,7 +250,14 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
                                 return response
                             raise ValueError("Redirect limit exceeded")
 
-                        response = request("GET", url)
+                        if item.get("mode") == "banxico_series":
+                            from src.ingest.macro.banxico import sie_export_form
+
+                            form = sie_export_form(item["entity"], item["end_date"])
+                            result["public_request_form"] = form
+                            response = request("POST", url, data=form)
+                        else:
+                            response = request("GET", url)
                         if item.get("mode") == "bts_year":
                             from src.ingest.bts.t100 import _post_payload
 
@@ -236,6 +265,7 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
                             response = request("POST", action, data=payload)
                         content, status = response.content, response.status_code
                         content_type = response.headers.get("content-type", content_type)
+                        result["http_status"] = status
                 _payload(content, item["extension"])
                 directory = item.get("relative_dir")
                 if item.get("mode") == "bts_year":

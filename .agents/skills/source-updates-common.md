@@ -14,6 +14,12 @@ principio del catálogo; estas instrucciones son referencia interna.
    --family <familia>` (para trimestral añadir `--quarter YYYYQn`). El plan
    muestra cobertura y brechas; no descarga ni comprueba frescura Gold.
 3. Seleccionar catálogos y documentos con URLs reales del dominio permitido.
+   Consultar primero `recipe --product <producto>`: resuelve la entrada canónica,
+   formato, procedimiento y limitaciones de `config/source_update_acquisition.json`.
+   Para `fuel`, `banxico` y `h10`, `recipe --output round --period <periodo>
+   --as-of <corte>` emite selección, parámetros y controles listos para probar.
+   Para índices HTML admitidos, `recipe --output selection` evita redactar la
+   selección a mano; no descarga los documentos descubiertos ni certifica su mes.
    Para descubrir enlaces, usar `purpose=catalog` y `extension=html`;
    la captura guarda los enlaces, pero no sigue ni inventa publicaciones.
    Para nuevas publicaciones seleccionar después `purpose=data`.

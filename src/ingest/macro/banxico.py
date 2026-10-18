@@ -19,7 +19,6 @@ from src.ingest.stage4_common import (
     write_parquet_atomic,
 )
 
-
 START_DATE = "2015-01-01"
 BANXICO_SERIES = {
     "SF43718": "usd_mxn_fix",
@@ -28,16 +27,50 @@ BANXICO_SERIES = {
 }
 FED_H10_SERIES_ID = "H10/H10/RXI_N.B.MX"
 FED_H10_PACKAGE = "60f32914ab61dfab590e0e470153e3ae"
+SIE_EXPORT_URL = (
+    "https://www.banxico.org.mx/SieInternet/consultarDirectorioInternetAction.do?accion=consultarSeries"
+)
+H10_EXPORT_URL = "https://www.federalreserve.gov/datadownload/Output.aspx"
 
 
-def _parse_sie_file(
-    path: Path, series_id: str, end_date: str | None = None
-) -> list[dict[str, object]]:
+def sie_export_form(series_id: str, end_date: str) -> dict[str, str]:
+    """Public CSV export form; never an API token or authenticated endpoint."""
+    if series_id not in BANXICO_SERIES:
+        raise ValueError("Unknown Banxico series")
+    return {
+        "idCuadro": "CF373",
+        "sector": "6",
+        "version": "3",
+        "locale": "es",
+        "anoInicial": "2015",
+        "anoFinal": str(pd.Timestamp(end_date).year),
+        "tipoInformacion": "4,1",
+        "formatoHorizontal": "false",
+        "metadatosWeb": "true",
+        "formatoCSV.x": "1",
+        "formatoCSV.y": "1",
+        "series": series_id,
+    }
+
+
+def h10_export_params(end_date: str) -> dict[str, str]:
+    return {
+        "rel": "H10",
+        "series": FED_H10_PACKAGE,
+        "lastobs": "",
+        "from": pd.Timestamp(START_DATE).strftime("%m/%d/%Y"),
+        "to": pd.Timestamp(end_date).strftime("%m/%d/%Y"),
+        "filetype": "csv",
+        "label": "include",
+        "layout": "seriescolumn",
+        "type": "package",
+    }
+
+
+def _parse_sie_file(path: Path, series_id: str, end_date: str | None = None) -> list[dict[str, object]]:
     decoded = path.read_bytes().decode("latin1")
     lines = decoded.splitlines()
-    header_index = next(
-        index for index, line in enumerate(lines) if line == f'"Fecha","{series_id}"'
-    )
+    header_index = next(index for index, line in enumerate(lines) if line == f'"Fecha","{series_id}"')
     data = pd.read_csv(
         BytesIO(("\n".join(lines[header_index:]) + "\n").encode("latin1")),
         encoding="latin1",
@@ -62,22 +95,13 @@ def _parse_sie_file(
 
 
 def _try_banxico(end_date: str) -> tuple[list[dict[str, object]], Path | None, str | None]:
-    url = (
-        "https://www.banxico.org.mx/SieInternet/"
-        "consultarDirectorioInternetAction.do?accion=consultarSeries"
-    )
-    base_form = {
-        "idCuadro": "CF373", "sector": "6", "version": "3", "locale": "es",
-        "anoInicial": "2015", "anoFinal": str(pd.Timestamp(end_date).year),
-        "tipoInformacion": "4,1", "formatoHorizontal": "false",
-        "metadatosWeb": "true", "formatoCSV.x": "1", "formatoCSV.y": "1",
-    }
+    url = SIE_EXPORT_URL
     rows: list[dict[str, object]] = []
     first_path: Path | None = None
     try:
         with SourceHttpClient("banxico") as client:
             for series_id in BANXICO_SERIES:
-                response = client.request("POST", url, data={**base_form, "series": series_id})
+                response = client.request("POST", url, data=sie_export_form(series_id, end_date))
                 content_type = response.headers.get("content-type", "")
                 if "csv" not in content_type.lower():
                     raise ValueError(f"Banxico export for {series_id} did not return CSV")
@@ -102,14 +126,8 @@ def _try_banxico(end_date: str) -> tuple[list[dict[str, object]], Path | None, s
 
 
 def _fed_h10_fx(end_date: str) -> tuple[pd.DataFrame, Path]:
-    url = "https://www.federalreserve.gov/datadownload/Output.aspx"
-    params = {
-        "rel": "H10", "series": FED_H10_PACKAGE, "lastobs": "",
-        "from": pd.Timestamp(START_DATE).strftime("%m/%d/%Y"),
-        "to": pd.Timestamp(end_date).strftime("%m/%d/%Y"),
-        "filetype": "csv", "label": "include", "layout": "seriescolumn",
-        "type": "package",
-    }
+    url = H10_EXPORT_URL
+    params = h10_export_params(end_date)
     with SourceHttpClient("fred") as client:
         path = fetch_bronze(
             client,
@@ -122,6 +140,11 @@ def _fed_h10_fx(end_date: str) -> tuple[pd.DataFrame, Path]:
             params=params,
             notes="Federal Reserve H.10 Mexican-peso series; explicit fallback for unavailable Banxico FIX.",
         )
+    return parse_h10_file(path, end_date), path
+
+
+def parse_h10_file(path: Path, end_date: str) -> pd.DataFrame:
+    """Parse a preserved H.10 CSV without network or relabeling it as FIX."""
     raw = pd.read_csv(BytesIO(path.read_bytes()), header=None)
     header_index = raw.index[raw.iloc[:, 0].eq("Time Period")]
     if len(header_index) != 1:
@@ -134,12 +157,13 @@ def _fed_h10_fx(end_date: str) -> tuple[pd.DataFrame, Path]:
     frame["date"] = pd.to_datetime(frame["date"])
     frame["value"] = pd.to_numeric(frame["value"].replace("ND", pd.NA), errors="coerce")
     frame = frame.dropna(subset=["value"])
+    frame = frame.loc[(frame["date"] >= pd.Timestamp(START_DATE)) & (frame["date"] <= pd.Timestamp(end_date))]
     frame["series_id"] = FED_H10_SERIES_ID
     frame["indicator_key"] = "usd_mxn"
     frame["source"] = "federal_reserve_h10"
     for key, value in lineage(path).items():
         frame[key] = value
-    return frame, path
+    return frame
 
 
 def _publish(macro: pd.DataFrame) -> dict[str, object]:
@@ -153,8 +177,16 @@ def _publish(macro: pd.DataFrame) -> dict[str, object]:
     fx["currency_pair"] = "USD/MXN"
     fx = fx[
         [
-            "date", "currency_pair", "rate_close", "source", "series_id", "source_system",
-            "source_file", "source_hash", "ingested_at", "parser_version",
+            "date",
+            "currency_pair",
+            "rate_close",
+            "source",
+            "series_id",
+            "source_system",
+            "source_file",
+            "source_hash",
+            "ingested_at",
+            "parser_version",
         ]
     ]
     write_parquet_atomic(fx, PATHS.silver / "fx_rates.parquet")
@@ -186,7 +218,8 @@ def run(end_date: str | None = None) -> dict[str, object]:
             "",
             "warning",
             "source_conflict",
-            f"Banxico FIX was unavailable ({banxico_error}); Federal Reserve H.10 MXN/USD is used as an explicitly labelled fallback.",
+            f"Banxico FIX was unavailable ({banxico_error}); Federal Reserve H.10 MXN/USD "
+            "is used as an explicitly labelled fallback.",
             0,
         )
     result = _publish(macro)

@@ -18,8 +18,45 @@ python -m src.source_updates plan --round monthly --as-of 2026-10-18T12:00:00-06
 
 Si la familia es trimestral, usar `--round quarterly --quarter 2026Q3`.
 La fecha del ejemplo solo reproduce el corte; cambiarla deliberadamente.
-Pasos existentes disponibles: parse.peer_discovery,parse.sec,parse.peers,parse.bmv,parse.aeromexico_ir,parse.aeromexico_ir_financial
+Pasos existentes disponibles: parse.peer_discovery,parse.sec,parse.peers,parse.aeromexico_ir,parse.aeromexico_ir_financial.
+BMV permite capturar catálogo y ZIP. Su parseo queda bloqueado en este
+coordinador hasta registrar offline los miembros del ZIP y acotar el índice a
+los paquetes seleccionados. No introducir URLs con fragmentos como descargas.
 
 Consultar `src/source_updates/catalog.py` para subproductos y brechas.
 No confundir esos pasos disponibles con un adaptador aprobado para cualquier
 formato o periodo nuevo. Entregar recibos y periodos realmente comprobados.
+
+## Adquisición por producto
+
+La entrada exacta y el procedimiento están en el [catálogo operativo](../../../config/source_update_acquisition.json), enlazado al [catálogo de instituciones](../../../config/source_catalog.yaml). El comando resuelve la URL o API desde su configuración canónica; no hay que inventarla.
+
+```bash
+python -m src.source_updates recipe --product am_financials
+```
+
+Consultar cada producto de esta familia:
+
+- `am_financials` — solo descubrimiento. Entrada canónica: `catalogue:aeromexico_ir`. Formato: HTML → PDF.
+- `am_traffic_ir` — solo descubrimiento. Entrada canónica: `url:https://ir.aeromexico.com/news-events/traffic-reports`. Formato: HTML → comunicado.
+- `am_sec` — selección/importación manual. Entrada canónica: `sec:AEROMEXICO`. Formato: JSON submissions/companyfacts → index.json → anexos HTML.
+- `volaris_sec` — selección/importación manual. Entrada canónica: `sec:VOLARIS`. Formato: JSON → anexos HTML.
+- `delta_sec` — selección/importación manual. Entrada canónica: `sec:DELTA`. Formato: JSON → 10-Q/10-K/anexos.
+- `ryanair_sec` — selección/importación manual. Entrada canónica: `sec:RYANAIR`. Formato: JSON → 20-F/6-K/anexos.
+- `gap_traffic` — selección/importación manual. Entrada canónica: `sec_group:GAP`. Formato: JSON SEC → anexo HTML.
+- `asur_traffic` — selección/importación manual. Entrada canónica: `sec_group:ASUR`. Formato: JSON SEC → anexo HTML.
+- `bmv_xbrl` — solo descubrimiento. Entrada canónica: `constant:src.config:SOURCE_URLS:bmv_xbrl`. Formato: HTML → visor → ZIP con JSON.
+- `viva_financials` — selección/importación manual. Entrada canónica: `url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD`. Formato: HTML → PDF InvestorCloud.
+- `viva_traffic` — adaptador pendiente. Entrada canónica: `url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD`. Formato: publicación mensual por confirmar.
+- `ryanair_ir` — solo descubrimiento. Entrada canónica: `constant:src.ingest.peers.stage5:RYANAIR_KEY_STATS_URL`. Formato: HTML.
+
+### Procedimiento verificable
+
+1. Ejecutar `recipe --product <producto>` y leer su procedimiento, URL resuelta, formato y bloqueo.
+2. Para un índice HTML admitido, emitir la selección con `recipe --product <producto> --output selection > tmp/seleccion.json`. Revisarla con `collect --selection tmp/seleccion.json --workspace tmp/source-updates/<lote> --dry-run`. Capturar solo dentro del alcance autorizado.
+3. Leer los enlaces y el contexto del catálogo preservado. Elegir el documento real y comprobar su periodo dentro del contenido. No transformar una plantilla histórica en una URL futura. Para importación manual, colocar el original en `imports/` del candidato, calcular SHA-256 y declarar URL, entidad, periodo, formato y directorio que espera el parser.
+4. Revalidar documentos/URLs seleccionados en la ronda. Conservar original y revisión por hash. Comparar filas contra una copia previa explícita; sin baseline, registrar que no se compararon revisiones.
+5. Ejecutar solo el paso de construcción que el plan declare y cuyos insumos estén presentes. Aplicar `check` al producto, tabla, fuente, entidad y periodo solicitados; compartir institución no permite intercambiar productos.
+6. Acreditar éxito solo en la capa comprobada: hash Bronze, contrato/grano/linaje Silver y controles Gold/meses/días/reconciliaciones que correspondan. Si no existe adaptador, terminar en captura o descubrimiento y declarar ese límite. No llenar faltantes ni activar/publicar.
+
+Un 403, TLS, timeout o archivo inválido es un fallo de acceso/contenido; no prueba ausencia de publicación. Registrar pendiente y conservar el dato aceptado. Las fechas de publicación desconocidas siguen nulas.

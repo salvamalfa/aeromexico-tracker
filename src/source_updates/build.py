@@ -20,11 +20,11 @@ ALLOWED = frozenset(
         "parse.sec",
         "parse.aeromexico_ir",
         "parse.aeromexico_ir_financial",
-        "parse.bmv",
         "parse.afac",
         "parse.peers",
         "parse.bts",
         "parse.fx",
+        "parse.h10",
         "parse.fuel",
         "parse.market",
         "parse.airports",
@@ -41,10 +41,15 @@ ALLOWED = frozenset(
 GRANULAR = {
     "parse.fx": (
         "src.ingest.macro.banxico:build_from_bronze",
-        ("banxico_sie", "federal_reserve_h10"),
+        ("banxico_sie",),
         ("fx_rates", "macro_indicators"),
     ),
     "parse.fuel": ("src.ingest.macro.fuel:build_from_bronze", ("eia",), ("fuel_prices",)),
+    "parse.h10": (
+        "src.source_updates.adapters:parse_h10",
+        ("federal_reserve_h10",),
+        ("fx_rates", "macro_indicators"),
+    ),
     "parse.market": ("src.ingest.market.prices:build_from_bronze", ("yahoo_finance",), ("market_prices",)),
     "parse.airports": (
         "src.ingest.airports.groups:build_from_bronze",
@@ -62,12 +67,25 @@ GRANULAR = {
 
 def build_plan(workspace: Path, steps: list[str]) -> dict:
     workspace = safe_workspace(workspace)
+    if "parse.bmv" in steps:
+        raise ValueError("BMV is collection-only here until bounded ZIP-member registration is implemented")
     if not steps or len(steps) != len(set(steps)) or set(steps) - ALLOWED:
         raise ValueError("Select unique, explicitly allowed offline parse/transform steps")
     return {
         "mode": "dry_run",
         "workspace": str(workspace),
         "steps": steps,
+        "prerequisites": {
+            name: requirements
+            for name, requirements in {
+                "parse.fx": ["All three Banxico CSVs: SF43718, SP1, SF61745; H.10 offline adapter pending"],
+                "parse.market": [
+                    "Candidate data/silver/sec_report_text.parquet from preserved SEC evidence",
+                    "Normalized Yahoo CSVs for AERO, VLRS, RYAAY, DAL, ICAGY",
+                ],
+            }.items()
+            if name in steps
+        },
         "network_requests": 0,
         "paid_requests": 0,
         "activation": "none",
@@ -147,14 +165,35 @@ def worker(workspace: Path, requested: list[str], report: Path) -> int:
 
     registry = {step.step_id: step for step in PIPELINE_STEPS}
     for name, (action, sources, outputs) in GRANULAR.items():
+        inputs = [InputRequirement(name, bronze_source_systems=sources)]
+        if name == "parse.market":
+            inputs.append(
+                InputRequirement(
+                    "Candidate SEC evidence for AERO ticker identity",
+                    path_patterns=("data/silver/sec_report_text.parquet",),
+                    require_all_paths=True,
+                )
+            )
+        if name == "parse.fx":
+            inputs.append(
+                InputRequirement(
+                    "All three Banxico series (H.10 is not an offline parser input)",
+                    path_patterns=tuple(
+                        f"data/bronze/**/banxico_sie_{series}_*.csv"
+                        for series in ("SF43718", "SP1", "SF61745")
+                    ),
+                    require_all_paths=True,
+                )
+            )
         registry[name] = PipelineStep(
             name,
             PipelinePhase.PARSE,
             name,
             action,
             RequirementLevel.REQUIRED,
-            (InputRequirement(name, bronze_source_systems=sources),),
+            tuple(inputs),
             tuple(f"data/silver/{table}.parquet" for table in outputs),
+            depends_on=("parse.sec",) if name == "parse.market" else (),
         )
     # Requested order is deliberate. Selected dependencies must precede children.
     seen = set()

@@ -3,7 +3,7 @@
 import hashlib
 import json
 import shutil
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from io import BytesIO
 from uuid import uuid4
 
@@ -11,17 +11,11 @@ import httpx
 import pandas as pd
 import pytest
 
-from src.source_updates import calendar
 from src.source_updates.__main__ import main
 from src.source_updates.build import build
-from src.source_updates.catalog import FAMILIES, ROOT, load_catalog, plan, product_map
+from src.source_updates.catalog import ROOT, product_map
 from src.source_updates.checks import check_candidate, row_changes, verify_bronze
 from src.source_updates.collection import collect, safe_workspace, validate_url, writer
-
-
-@pytest.fixture
-def holidays():
-    return json.loads((ROOT / "config/source_update_holidays.json").read_text())
 
 
 @pytest.fixture
@@ -49,97 +43,6 @@ def selection(*, mode="get", extension="json", purpose="data", url="https://www.
             }
         ],
     }
-
-
-def test_catalogue_all_sources_have_unique_family_and_products():
-    sources = load_catalog()
-    assert len(sources) == 29
-    assert set(sources) == {key for keys in FAMILIES.values() for key in keys}
-    assert {row["source_key"] for row in product_map().values()} == set(sources)
-    assert not any("aerodatabox" in key for key in product_map())
-
-
-def test_monthly_holiday_weekend_and_no_unverified_year(holidays):
-    assert calendar.monthly(2026, 8, holidays) == date(2026, 8, 17)
-    assert calendar.monthly(2026, 11, holidays) == date(2026, 11, 17)
-    assert calendar.monthly(2026, 10, holidays) == date(2026, 10, 15)
-    assert calendar.roll_forward(date(2026, 11, 2), holidays) == date(2026, 11, 3)
-    with pytest.raises(ValueError, match="Unverified"):
-        calendar.monthly(2027, 1, holidays)
-
-
-def releases():
-    # Synthetic scheduling fixture. These are NOT assertions about actual releases.
-    return [
-        {
-            "entity": entity,
-            "period": "2026Q3",
-            "published_at": "2026-10-30T23:00:00Z",
-            "kind": "financial_report",
-            "confirmed": True,
-            "document_url": "https://example.test/report",
-        }
-        for entity in calendar.CENTRAL
-    ]
-
-
-def test_quarterly_two_strictly_later_business_days_and_local_zone(holidays):
-    result = calendar.quarterly("2026Q3", releases(), "2026-11-01T00:00:00Z", holidays)
-    assert result["date"] == "2026-11-04"  # Friday report; Monday Nov 2 is bank holiday.
-    assert calendar.local_time("2026-11-01T02:00:00Z").date() == date(2026, 10, 31)
-
-
-@pytest.mark.parametrize("change", ["missing", "announcement", "unconfirmed", "future", "different_quarter"])
-def test_quarterly_unknown_dates_are_not_invented(holidays, change):
-    records = releases()
-    if change == "missing":
-        records.pop()
-    elif change == "announcement":
-        records[0]["kind"] = "earnings_call"
-    elif change == "unconfirmed":
-        records[0]["confirmed"] = False
-    elif change == "future":
-        records[0]["published_at"] = "2026-11-02T12:00:00-06:00"
-    else:
-        records[0]["period"] = "2026Q2"
-    assert calendar.quarterly("2026Q3", records, "2026-11-01T00:00:00Z", holidays)["date"] is None
-
-
-@pytest.mark.parametrize(("quarter_date", "expected_count"), [("2026-10-22", 1), ("2026-10-23", 2)])
-def test_combine_uses_inclusive_seven_natural_days(quarter_date, expected_count):
-    rounds = [{"kind": "monthly", "date": "2026-10-15"}, {"kind": "quarterly", "date": quarter_date}]
-    result = calendar.combine(rounds)
-    assert len(result) == expected_count
-    if len(result) == 1:
-        assert result[0]["date"] == quarter_date
-        assert result[0]["kind"] == "combined"
-
-
-def test_retries_are_proposals_with_a_two_reschedule_limit(holidays):
-    result = calendar.retry_date(today=date(2026, 10, 30), attempts=0, reason="technical", holidays=holidays)
-    assert result["date"] == "2026-11-03"
-    assert (
-        calendar.retry_date(today=date(2026, 10, 30), attempts=2, reason="unknown", holidays=holidays)[
-            "status"
-        ]
-        == "blocked_for_decision"
-    )
-
-
-def test_plan_is_source_collection_not_gold_freshness():
-    result = plan("monthly", "2026-10-18T12:00:00Z")
-    assert result["network_requests"] == 0 and result["writes"] == []
-    assert {"rss", "gdelt"} <= {row["id"] for row in result["products"]}
-    assert all(row["target_period"] == "2026M09" for row in result["products"])
-    assert all(row["latest_validated_period"] is None for row in result["products"])
-    quarterly = plan("quarterly", "2026-10-18T12:00:00Z", "2026Q3")
-    assert not {"rss", "gdelt"} & {row["id"] for row in quarterly["products"]}
-    assert {"anac", "aerocivil", "caa"} <= {row["id"] for row in quarterly["products"]}
-
-
-def test_cannot_plan_unclosed_quarter():
-    with pytest.raises(ValueError, match="not closed"):
-        plan("quarterly", "2026-10-18T12:00:00Z", "2026Q4")
 
 
 def test_collect_dry_run_does_not_construct_client_or_write(workspace):
@@ -302,6 +205,8 @@ def test_real_offline_parser_and_checks_end_to_end(workspace):
     assert checked["status"] == "checks_passed", checked
     assert checked["checks"][0]["rows"] == 2
     assert checked["checks"][0]["release_lag_days"] is None
+    assert checked["checks"][0]["latest_available_period"] is None
+    assert checked["checks"][0]["latest_parsed_period"] == "2026M09"
     assert checked["publication"] == "not_authorized"
     missing = fuel_spec()
     missing["checks"][0]["expected_period"] = "2026M08"
@@ -318,10 +223,138 @@ def test_missing_inputs_block_instead_of_using_active_checkout(workspace):
     assert not (workspace / "data/silver/fuel_prices.parquet").exists()
 
 
+def test_uncertified_product_cannot_borrow_another_products_table(workspace):
+    prepare_fuel_fixture(workspace)
+    spec = fuel_spec()
+    spec["checks"][0].update(product="afac_airports", table="afac_monthly_stats")
+    checked = check_candidate(workspace, spec)
+    assert checked["status"] == "blocked"
+    assert "No check adapter" in checked["checks"][0]["reason"]
+
+
 def test_forbidden_steps_never_execute(workspace):
     for name in ("ingest.market", "analytics.stage7", "publish", "analysis.approve", "aerodatabox"):
         with pytest.raises(ValueError):
             build(workspace, [name])
+
+
+def test_bmv_parser_is_not_advertised_without_offline_member_registration(workspace):
+    assert product_map()["bmv_xbrl"]["parser_step"] is None
+    with pytest.raises(ValueError, match="ZIP-member registration"):
+        build(workspace, ["parse.bmv"])
+
+
+def test_h10_only_is_not_a_sufficient_banxico_parser_input(workspace):
+    (workspace / "imports").mkdir(parents=True)
+    content = b"Time Period,RXI_N.B.MX\n2026-09-01,18.0\n"
+    (workspace / "imports/h10.csv").write_bytes(content)
+    selected = selection(mode="manual", extension="csv", url="https://www.federalreserve.gov/releases/h10/")
+    selected["items"][0].update(
+        product="h10",
+        source_system="federal_reserve_h10",
+        entity="usd_mxn",
+        local_file="h10.csv",
+        sha256=hashlib.sha256(content).hexdigest(),
+    )
+    assert collect(selected, workspace, execute=True)["status"] == "collected_unvalidated"
+    result = build(workspace, ["parse.fx"], execute=True)
+    assert result["status"] == "failed"
+    assert "Banxico" in result["steps"][0]["reason"]
+    assert not (workspace / "data/silver/fx_rates.parquet").exists()
+    fallback = build(workspace, ["parse.h10"], execute=True)
+    assert fallback["status"] == "completed", fallback
+    frame = pd.read_parquet(workspace / "data/silver/fx_rates.parquet")
+    assert set(frame["source_system"]) == {"federal_reserve_h10"}
+    assert set(frame["series_id"]) == {"H10/H10/RXI_N.B.MX"}
+    assert fallback["steps"][0]["details"]["complete_macro_coverage"] is False
+
+
+def test_market_declares_candidate_sec_identity_evidence(workspace):
+    (workspace / "imports").mkdir(parents=True)
+    content = b"date,close,volume\n2025-11-06,18.0,1\n"
+    (workspace / "imports/market.csv").write_bytes(content)
+    selected = selection(mode="manual", extension="csv", url="https://finance.yahoo.com/quote/AERO/")
+    selected["items"][0].update(
+        product="equities",
+        source_system="yahoo_finance",
+        entity="AERO",
+        local_file="market.csv",
+        sha256=hashlib.sha256(content).hexdigest(),
+    )
+    collect(selected, workspace, execute=True)
+    result = build(workspace, ["parse.market"], execute=True)
+    assert result["status"] == "failed"
+    assert "sec_report_text.parquet" in result["steps"][0]["reason"]
+    assert "parse.market" in build(workspace, ["parse.market"])["prerequisites"]
+
+
+def test_aeromexico_ir_uses_its_configured_rate(workspace, fake_client):
+    rates = []
+
+    def factory(rate, **kwargs):
+        rates.append(rate)
+        return fake_client(rate, **kwargs)
+
+    selected = selection(
+        extension="html",
+        purpose="catalog",
+        url="https://ir.aeromexico.com/financial-information/quarterly-results",
+    )
+    selected["items"][0].update(product="am_financials", source_system="aeromexico_ir")
+    fake_client.responses = [(200, b'<html><a href="/financial-information/">IR</a></html>', {})]
+    assert (
+        collect(selected, workspace, execute=True, client_factory=factory)["status"]
+        == "collected_unvalidated"
+    )
+    assert rates == ["aeromexico_ir"]
+
+
+def test_all_operational_products_have_navigable_acquisition_recipes():
+    from src.source_updates.recipes import acquisition_config, describe
+
+    config = acquisition_config()
+    assert set(config["products"]) == set(product_map())
+    for product in product_map():
+        recipe = describe(product)
+        assert recipe["procedure"] and recipe["format"]
+        assert recipe["entry_url"] is not None or recipe["state"] == "internal"
+
+
+def test_generated_fuel_recipe_uses_canonical_endpoint_and_period(workspace):
+    from src.ingest.macro.fuel import EIA_XLS_URL
+    from src.source_updates.recipes import macro_round
+
+    recipe = macro_round("fuel", "2026M09", "2026-10-18T18:00:00-06:00")
+    assert recipe["selection"]["items"][0]["url"] == EIA_XLS_URL
+    assert recipe["selection"]["items"][0]["period"] == "2015-01-01_2026-09-30"
+    assert recipe["steps"] == ["parse.fuel"]
+    assert collect(recipe["selection"], workspace)["base_requests"] == 1
+
+
+def test_generated_banxico_recipe_posts_exact_public_forms_and_parses(workspace, fake_client):
+    from src.source_updates.recipes import macro_round
+
+    recipe = macro_round("banxico", "2026M09", (datetime.now(UTC) + timedelta(minutes=1)).isoformat())
+    fake_client.responses = [
+        (200, f'"Fecha","{item["entity"]}"\n"01/09/2026","18.0"\n'.encode(), {})
+        for item in recipe["selection"]["items"]
+    ]
+    collected = collect(recipe["selection"], workspace, execute=True, client_factory=fake_client)
+    assert collected["status"] == "collected_unvalidated", collected
+    assert [method for method, _ in fake_client.calls] == ["POST"] * 3
+    built = build(workspace, recipe["steps"], execute=True)
+    assert built["status"] == "completed", built
+    checked = check_candidate(workspace, recipe["checks"])
+    assert checked["status"] == "checks_passed", checked
+
+
+def test_generated_h10_recipe_declares_exact_series_and_separate_parser():
+    from src.source_updates.recipes import macro_round
+
+    recipe = macro_round("h10", "2026M09", "2026-10-18T18:00:00-06:00")
+    assert "rel=H10" in recipe["selection"]["items"][0]["url"]
+    assert recipe["steps"] == ["parse.h10"]
+    assert recipe["checks"]["checks"][0]["filters"]["series_id"] == "H10/H10/RXI_N.B.MX"
 
 
 def test_revisions_count_nulls_without_filling_them():

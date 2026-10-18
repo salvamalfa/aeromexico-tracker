@@ -8,7 +8,7 @@ from datetime import date, timedelta
 from pathlib import Path
 
 from src.source_updates.calendar import local_time
-from src.source_updates.catalog import load_catalog, product_map
+from src.source_updates.catalog import CHECK_TABLES, load_catalog, product_map
 from src.source_updates.collection import safe_workspace
 
 
@@ -88,6 +88,8 @@ def check_candidate(workspace: Path, specification: dict) -> dict:
         }
         try:
             product = products[item["product"]]
+            if item["table"] not in CHECK_TABLES.get(item["product"], ()):
+                raise ValueError("No check adapter for this product/table; shared source is insufficient")
             if item["layer"] not in {"silver", "gold"} or not item["table"].replace("_", "").isalnum():
                 raise ValueError("Use an explicit Silver/Gold table")
             frame = pd.read_parquet(workspace / "data" / item["layer"] / f"{item['table']}.parquet")
@@ -193,7 +195,10 @@ def check_candidate(workspace: Path, specification: dict) -> dict:
             result.update(
                 status="checks_passed",
                 rows=len(selected),
-                latest_available_period=max(observed),
+                # A parser may deliberately cap its window before the newest
+                # source observation. Source availability needs discovery evidence.
+                latest_available_period=None,
+                latest_parsed_period=max(observed),
                 latest_validated_period=expected,
                 release_lag_days=lag,
                 observation_age_days=(cutoff.date() - target_end).days,

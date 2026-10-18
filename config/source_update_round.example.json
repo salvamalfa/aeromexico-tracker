@@ -1,24 +1,50 @@
 {
   "version": 1,
+  "product": "fuel",
+  "pipeline_state": "candidate_executable_not_approved",
+  "acquisition": {
+    "id": "fuel",
+    "source_key": "eia",
+    "cadence": "both",
+    "limitation": "market_reference_report_days_covered",
+    "parser_step": "parse.fuel",
+    "family": "macro_market",
+    "entry_ref": "constant:src.ingest.macro.fuel:EIA_XLS_URL",
+    "state": "implemented",
+    "format": "GET → XLS histórico, Data 1/header=2",
+    "procedure": "Serie EER_EPJK_PF4_RGC_DPG, entidad idéntica, periodo 2015-01-01_fin. Revalidar la misma URL; parser limita ventana al fin solicitado. parse.fuel y check por date/series_id. Última fecha del XLS original y última parseada son distintas; publicación desconocida queda nula. Piloto real documentado.",
+    "entry_url": "https://www.eia.gov/dnav/pet/hist_xls/EER_EPJK_PF4_RGC_DPGd.xls",
+    "canonical_config": "config/source_update_acquisition.json",
+    "institution_catalogue": "config/source_catalog.yaml",
+    "pilot_evidence": {
+      "as_of": "2026-10-18T20:47:57.743550+00:00",
+      "capture_status": "collected_unvalidated",
+      "parser_checks": "checks_passed",
+      "reference": "docs/referencias/source-updates-20261018/real-source-pilot.json"
+    },
+    "activation": "none"
+  },
   "selection": {
     "version": 1,
     "items": [
       {
-        "id": "eia-history",
         "product": "fuel",
-        "source_system": "eia",
-        "entity": "EER_EPJK_PF4_RGC_DPG",
         "period": "2015-01-01_2026-09-30",
         "purpose": "data",
+        "id": "eia-history",
+        "source_system": "eia",
+        "entity": "EER_EPJK_PF4_RGC_DPG",
         "url": "https://www.eia.gov/dnav/pet/hist_xls/EER_EPJK_PF4_RGC_DPGd.xls",
         "extension": "xls",
         "mode": "get"
       }
     ]
   },
-  "steps": ["parse.fuel"],
+  "steps": [
+    "parse.fuel"
+  ],
   "checks": {
-    "as_of": "2026-10-18T23:59:59-06:00",
+    "as_of": "2026-10-18T18:00:00-06:00",
     "checks": [
       {
         "product": "fuel",
@@ -26,9 +52,16 @@
         "table": "fuel_prices",
         "period_column": "date",
         "expected_period": "2026M09",
-        "filters": {"series_id": "EER_EPJK_PF4_RGC_DPG"},
-        "value_columns": ["price_usd_per_gallon"]
+        "filters": {
+          "series_id": "EER_EPJK_PF4_RGC_DPG"
+        },
+        "value_columns": [
+          "price_usd_per_gallon"
+        ]
       }
     ]
-  }
+  },
+  "coverage": "explicit_period_checks_only_no_day_completeness_or_Gold_certification",
+  "activation": "none",
+  "publication": "not_authorized"
 }

@@ -1,0 +1,273 @@
+{
+  "version": 1,
+  "catalogue": "config/source_catalog.yaml",
+  "note": "Recetas operativas por producto. Un estado implemented describe un adaptador candidato; no certifica acceso actual, cobertura completa, aprobación ni publicación.",
+  "states": {
+    "implemented": "Receta ejecutable candidata; comprobar resultado real",
+    "conditional": "Existe código, con insumos/formatos específicos y sin certificación general",
+    "discovery_only": "Entrada y descubrimiento conocidos; incorporación nueva no certificada",
+    "manual": "Exige documento/exportación seleccionada e importación con hash",
+    "missing_adapter": "Entrada conocida; adaptador candidato pendiente",
+    "internal": "Sin descarga; requiere padres y revisión",
+    "disabled": "Fuente inactiva o evidencia de error"
+  },
+  "common": {
+    "revisions": "Revalidar URLs seleccionadas en la ronda, conservar SHA/versiones y comparar filas contra baseline. No crear futuras URLs a partir de plantillas.",
+    "success": "Bronze hash válido + parser sin red + contrato/grano/fuente/entidad/periodo; días/meses y reconciliación requeridos se revisan por separado. Gold heredado exige gate de linaje.",
+    "failure": "403/TLS/timeout/HTML de bloqueo no prueba ausencia. Conservar dato aceptado y registrar pendiente. No nuevas credenciales, TLS desactivado ni pagos."
+  },
+  "products": {
+    "am_financials": {
+      "entry_ref": "catalogue:aeromexico_ir",
+      "state": "discovery_only",
+      "format": "HTML → PDF",
+      "procedure": "Abrir quarterly results; identificar trimestre por encabezado y texto del reporte, no por orden del enlace. Capturar earnings release y estados financieros. Parsers IR históricos; no certifican automáticamente periodos nuevos."
+    },
+    "am_traffic_ir": {
+      "entry_ref": "url:https://ir.aeromexico.com/news-events/traffic-reports",
+      "state": "discovery_only",
+      "format": "HTML → comunicado",
+      "procedure": "Encontrar el mes cerrado en el archivo Traffic Reports. El reporte de tráfico no sustituye finanzas. Falta adaptador IR mensual; usar anexos SEC preservados si existen."
+    },
+    "am_sec": {
+      "entry_ref": "sec:AEROMEXICO",
+      "state": "manual",
+      "format": "JSON submissions/companyfacts → index.json → anexos HTML",
+      "procedure": "CIK desde src.config.CARRIERS; filtrar 6-K/20-F/F-1, revisar filingDate y accessionNumber, obtener index.json de la presentación y anexos. Conservar catálogos/índices/documentos necesarios; no basta un HTML aislado. Importación manual con URL SEC y hash; no configurar identidad ni credenciales."
+    },
+    "volaris_sec": {
+      "entry_ref": "sec:VOLARIS",
+      "state": "manual",
+      "format": "JSON → anexos HTML",
+      "procedure": "CIK 0001520504 en CARRIERS. Revalidar submissions y companyfacts, seleccionar anexos de tráfico y resultados por publicación real. parse.peers requiere identidades SEC, Viva y Ryanair además del documento solicitado; no prometer parseo aislado."
+    },
+    "delta_sec": {
+      "entry_ref": "sec:DELTA",
+      "state": "manual",
+      "format": "JSON → 10-Q/10-K/anexos",
+      "procedure": "CIK 0000027904 en CARRIERS. Seleccionar periodo fiscal y documentos reales; preservar US-GAAP. Misma cadena de índices SEC y requisitos de parse.peers."
+    },
+    "ryanair_sec": {
+      "entry_ref": "sec:RYANAIR",
+      "state": "manual",
+      "format": "JSON → 20-F/6-K/anexos",
+      "procedure": "CIK 0001038683 en CARRIERS. Confirmar periodo fiscal antes de compararlo con trimestre calendario. Preservar índices y anexos SEC; no solicitar credenciales."
+    },
+    "gap_traffic": {
+      "entry_ref": "sec_group:GAP",
+      "state": "manual",
+      "format": "JSON SEC → anexo HTML",
+      "procedure": "CIK desde SEC_GROUPS de airports.groups. Filtrar anexos de tráfico del mes; alias sec_edgar, grupo GAP. No mezclar aeropuertos mexicanos con Jamaica; parser conjunto requiere otros originales seleccionados."
+    },
+    "asur_traffic": {
+      "entry_ref": "sec_group:ASUR",
+      "state": "manual",
+      "format": "JSON SEC → anexo HTML",
+      "procedure": "CIK desde SEC_GROUPS. Seleccionar resumen y tabla Mexico Passenger Traffic; grupo ASUR, mantener México separado de Colombia/Puerto Rico y adquisiciones."
+    },
+    "bmv_xbrl": {
+      "entry_ref": "constant:src.config:SOURCE_URLS:bmv_xbrl",
+      "state": "discovery_only",
+      "format": "HTML → visor → ZIP con JSON",
+      "procedure": "Usar parse_catalog_html en src.ingest.bmv.download para resolver docins a ZIP de AERO/VOLAR. Capturar catálogo y ZIP explícitos. Falta registro offline acotado de zip_url#member y selección de paquetes; parse.bmv está bloqueado aquí. No descargar todo el catálogo ni enviar fragmentos por HTTP."
+    },
+    "viva_financials": {
+      "entry_ref": "url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD",
+      "state": "manual",
+      "format": "HTML → PDF InvestorCloud",
+      "procedure": "Localizar release real de GVIVA y enlace InvestorCloud. No sustituir números en VIVA_REPORT_URL: es plantilla histórica, no prueba de disponibilidad. Preservar trimestre, preliminar/auditado y H1−Q2. Parser peers requiere paquete de comparables completo."
+    },
+    "viva_traffic": {
+      "entry_ref": "url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD",
+      "state": "missing_adapter",
+      "format": "publicación mensual por confirmar",
+      "procedure": "Buscar producto mensual oficial distinto del reporte financiero. No hay descubridor/parser mensual certificado. El catálogo técnico de viva_ir solo admite InvestorCloud para captura: BMV es referencia de descubrimiento, no un permiso para cambiar hosts."
+    },
+    "ryanair_ir": {
+      "entry_ref": "constant:src.ingest.peers.stage5:RYANAIR_KEY_STATS_URL",
+      "state": "discovery_only",
+      "format": "HTML",
+      "procedure": "Revalidar key stats y preservar versión. Identificar meses y año fiscal en contenido; parse.peers necesita también Viva/SEC. No inferir trimestre calendario de cifras fiscales."
+    },
+    "afac_carriers": {
+      "entry_ref": "constant:src.ingest.afac.download:DATATUR_CATALOG_URL",
+      "state": "discovery_only",
+      "format": "HTML → PDF/XLS/ZIP DATATUR",
+      "procedure": "Ejecutar parse_datatur_catalog sobre HTML preservado; elegir enlaces realmente presentes. Guardar PDF en afac/año/mes y workbooks con sus nombres lógicos. No formar AFAC_YYYY_MM.pdf para meses no descubiertos. Parser/validación PDF 2026 terminan en junio; un archivo posterior no acredita Silver."
+    },
+    "afac_airports": {
+      "entry_ref": "url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404",
+      "state": "missing_adapter",
+      "format": "archivo independiente por edición",
+      "procedure": "Elegir producto de aeropuerto, no resumen por aerolínea. Preservar edición y fechas. Si 403/TLS, registrar fallo y usar descarga asistida autorizada con URL/hash; no omitir TLS. No hay parser candidato certificado."
+    },
+    "afac_countries": {
+      "entry_ref": "url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404",
+      "state": "missing_adapter",
+      "format": "boletín/archivo de países",
+      "procedure": "Elegir producto de países y su edición. No convertir país en ruta o empresa. Captura explícita/manual; parser y reconciliación candidatos pendientes."
+    },
+    "afac_margins": {
+      "entry_ref": "url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404",
+      "state": "manual",
+      "format": "XLSX sase/resumen de la misma edición",
+      "procedure": "Seleccionar O-D y marginal por aerolínea de la misma edición acumulada. Referencias técnicas: src.ingest.afac.margins e international_margins. No inventar edición nueva; verificar ambos archivos y total compatible antes de usar. No son observaciones empresa×ruta."
+    },
+    "bts_segments": {
+      "entry_ref": "constant:src.ingest.bts.t100:FORM_URL",
+      "state": "conditional",
+      "format": "formulario GET + POST → ZIP CSV",
+      "procedure": "Seleccionar años explícitos, incluidos los revisados en el historial BTS. mode=bts_year usa Mexico, todos los meses y FIELDS del módulo. No llamar ingest_t100 con historia completa. Confirmar meses reales y direcciones MX↔US tras parse.bts; coordinar PR134 antes de otra captura."
+    },
+    "oma_traffic": {
+      "entry_ref": "constant:src.ingest.airports.groups:OMA_IR_URL",
+      "state": "discovery_only",
+      "format": "HTML → PDF",
+      "procedure": "Capturar índice, seleccionar href del mes y PDF real. Entidad/nombre esperados se consultan en _oma_documents y _parse_oma_pdf; no generar URL de PDF futura. Separar ALL_OMA de aeropuertos; parse.airports es conjunto, exigir periodo/grupo."
+    },
+    "aicm_traffic": {
+      "entry_ref": "constant:src.ingest.airports.groups:AICM_STATS_INDEX",
+      "state": "discovery_only",
+      "format": "HTML → PDF",
+      "procedure": "Buscar enlace publicado del mes y confirmar año/mes dentro del PDF. source_system aicm; revisar _government_documents/_parse_aicm_pdf para nombres lógicos. Total aeroportuario, no cifra de Aeroméxico."
+    },
+    "aicm_slots": {
+      "entry_ref": "constant:src.ingest.airports.groups:AICM_STATS_INDEX",
+      "state": "manual",
+      "format": "PDF estacional de slots",
+      "procedure": "Seleccionar horario estacional real y vigencia; el índice estadístico es punto de entrada, no prueba de enlace de slots. No hay adaptador genérico nuevo. Mantener movimientos programados separados de realizados."
+    },
+    "aifa_traffic": {
+      "entry_ref": "constant:src.ingest.airports.groups:AIFA_STATS_INDEX",
+      "state": "discovery_only",
+      "format": "HTML → XLSX",
+      "procedure": "Buscar numeralia publicada y confirmar año/mes en workbook, no solo nombre. source_system aifa; revisar _parse_aifa_xlsx. No formar nombres futuros de S3; esquema puede cambiar."
+    },
+    "banxico": {
+      "entry_ref": "constant:src.ingest.macro.banxico:SIE_EXPORT_URL",
+      "state": "implemented",
+      "format": "POST público → CSV latino-1",
+      "procedure": "Usar sie_export_form por SF43718 (FIX), SP1 (INPC), SF61745 (tasa). Campos y ventana exactos en helper compartido; no usa token. Revalidar cada CSV en ronda, nunca diario. parse.fx requiere los tres; 403/HTML/error = acceso fallido. Fallback FX separado: receta h10, sin inventar INPC/tasa."
+    },
+    "h10": {
+      "entry_ref": "constant:src.ingest.macro.banxico:H10_EXPORT_URL",
+      "state": "implemented",
+      "format": "GET con parámetros DDP → CSV",
+      "procedure": "Usar h10_export_params: rel H10, paquete FED_H10_PACKAGE, layout seriescolumn, filetype csv, fechas desde 2015 hasta corte. Columna RXI_N.B.MX, serie H10/H10/RXI_N.B.MX. parse.h10 procesa solo FX rotulado, no FIX ni INPC/tasa. Endpoint puede cambiar; fallo no habilita un endpoint inventado."
+    },
+    "fuel": {
+      "entry_ref": "constant:src.ingest.macro.fuel:EIA_XLS_URL",
+      "state": "implemented",
+      "format": "GET → XLS histórico, Data 1/header=2",
+      "procedure": "Serie EER_EPJK_PF4_RGC_DPG, entidad idéntica, periodo 2015-01-01_fin. Revalidar la misma URL; parser limita ventana al fin solicitado. parse.fuel y check por date/series_id. Última fecha del XLS original y última parseada son distintas; publicación desconocida queda nula. Piloto real documentado."
+    },
+    "equities": {
+      "entry_ref": "catalogue:yahoo_finance",
+      "state": "manual",
+      "format": "CSV normalizado de yfinance, no JSON chart directo",
+      "procedure": "TICKERS en src.ingest.market.prices: AERO, VLRS, RYAAY, DAL, ICAGY. Preservar capturas CSV con date/open/high/low/close/adj_close/volume y fuente real. No ejecutar run() porque escribe datos activos. parse.market requiere evidencia SEC local de AERO y las cinco series; primer precio AERO 2025-11-06. Adaptador de captura aislada Yahoo pendiente."
+    },
+    "anac": {
+      "entry_ref": "constant:src.ingest.international_routes:ANAC_URL",
+      "state": "missing_adapter",
+      "format": "JSON 2021–2030 con rangos HTTP",
+      "procedure": "Archivo exacto en ANAC_URL; puede ser muy grande y devolver desafíos. Adaptador histórico anac_content usa rangos y mismo ETag/Last-Modified, pero tiene destino/selección congelados. No invocarlo sobre datos activos ni convertirlo en GET genérico sin límite. Nueva captura acotada y parser candidatos pendientes."
+    },
+    "aerocivil": {
+      "entry_ref": "constant:src.ingest.international_routes:CO_URL",
+      "state": "missing_adapter",
+      "format": "Socrata JSON operaciones",
+      "procedure": "Revisar consulta en download(): $where anio 2025–2026 y explotador AMX/SLI; count(*) antes de $limit 50000 y orden explícito. Es una selección histórica, no fecha de release. Cambiar ventana exige conteo/paginación probados y adaptador candidato; no pasajeros ni red mundial."
+    },
+    "caa": {
+      "entry_ref": "url:https://www.caa.co.uk/data-and-analysis/uk-aviation-market/flight-punctuality/uk-flight-punctuality-statistics/2026/",
+      "state": "discovery_only",
+      "format": "HTML → CSV Flight Punctuality",
+      "procedure": "Descubrir CSV realmente presente del mes y confirmar producto. CAA_URL del adaptador apunta a captura puntual de junio, no endpoint de próximos meses. Airport Data es otro producto. No hay parser candidato genérico de novedades."
+    },
+    "aena": {
+      "entry_ref": "constant:src.ingest.international_routes:AENA_URL",
+      "state": "manual",
+      "format": "cuatro CSV UTF-16 exportados",
+      "procedure": "Exportaciones: aena_company_operations, aena_company_passengers, aena_market_operations, aena_market_passengers. Consulta personalizada mediante sesión autorizada del usuario; no login/credenciales nuevos. No hay compañía×ambos extremos. import_aena_exports escribe selección activa: no invocarlo aquí; conservar candidatos y revisar adaptador."
+    },
+    "am_routes": {
+      "entry_ref": "catalogue:aeromexico_route_press",
+      "state": "manual",
+      "format": "comunicado HTML fechado",
+      "procedure": "La URL del catálogo es evidencia histórica puntual. Buscar un comunicado real nuevo solo cuando el alcance lo requiera; no inferir actualización mensual ni vigencia actual de frecuencias antiguas. Capturar original/fecha y revisar manualmente."
+    },
+    "oma_routes": {
+      "entry_ref": "catalogue:oma_route_newsroom",
+      "state": "discovery_only",
+      "format": "sala de prensa → PDF",
+      "procedure": "Elegir comunicado oficial por ruta, operador, fecha de inicio y frecuencia anunciada. No confundir nota con vuelos realizados. Pipeline histórico usa selección fija; nuevas notas requieren adaptador/validación manual."
+    },
+    "colima": {
+      "entry_ref": "catalogue:colima_route_statement",
+      "state": "manual",
+      "format": "republicación HTML fechada",
+      "procedure": "URL puntual del catálogo. Revalidar para revisión de esa evidencia; no buscar volumen o exclusividad actual en ella. Original institucional no localizado; mantener condición de mirror/atribución."
+    },
+    "aifa_roster": {
+      "entry_ref": "catalogue:expansion_aifa_roster",
+      "state": "manual",
+      "format": "artículo/listado secundario fechado",
+      "procedure": "URL puntual de junio 2026; guardar fuente y fecha. No expandirlo a presencia actual ni pasajeros por operador. Nueva lista requiere selección explícita y revisión de inferencia."
+    },
+    "airports_reference": {
+      "entry_ref": "constant:src.ingest.airports.reference:OURAIRPORTS_URL",
+      "state": "conditional",
+      "format": "GET → CSV",
+      "procedure": "Entidad airports, source_system ourairports, periodo current. Revalidar URL y comparar crosswalk/filas no mapeadas. parse.airport_reference necesita data/reference y escribe dim_airport candidato; validación geográfica/contrato final pendiente, no observación de tráfico."
+    },
+    "iasa": {
+      "entry_ref": "catalogue:faa_iasa",
+      "state": "discovery_only",
+      "format": "PDF FAA",
+      "procedure": "Revalidar archivo conocido y comprobar edición/categoría dentro del PDF; consultar IASA oficial antes de afirmar que es último. No hay parser candidato genérico ni inferencia causal automática."
+    },
+    "dictionary": {
+      "entry_ref": "catalogue:loughran_mcdonald",
+      "state": "manual",
+      "format": "CSV de diccionario versionado",
+      "procedure": "Fuente de versión: LANDING_PAGE y FILE_ID en src.ingest.nlp.loughran_mcdonald. No asumir que el ID antiguo es última edición. Si Drive pide confirmación/autenticación, registrar bloqueo o importar descarga autorizada. Mantener versión; no recalcular tono/modelos."
+    },
+    "rss": {
+      "entry_ref": "mapping:src.ingest.news.rss_gdelt:RSS_FEEDS:google_es",
+      "state": "conditional",
+      "format": "RSS XML de metadatos",
+      "procedure": "RSS_FEEDS google_es/google_en contiene consultas exactas actuales de Aeroméxico. Guardar feed, consulta y fecha. No recupera mes completo de forma garantizada. parse.news conserva procedencias; PR136 prepara corte mensual desde metadatos revisados, sin activar índice."
+    },
+    "gdelt": {
+      "entry_ref": "catalogue:gdelt",
+      "state": "conditional",
+      "format": "GET Doc API → JSON articles",
+      "procedure": "Consulta canónica de Aeroméxico; parámetros actuales en rss_gdelt.run(): mode artlist, maxrecords 250, format json, sort datedesc. No prometer recuperación completa ni inventar paginación/fechas. Entidad aeromexico_articles; parse.news, revisión mensual y unión futura PR136."
+    },
+    "news_errors": {
+      "entry_ref": "catalogue:news_http_error",
+      "state": "disabled",
+      "format": "evidencia de fallo",
+      "procedure": "No recolectar como noticia válida. Mantener último error solo para auditoría de acceso; ningún contador de noticias o ausencia se deriva de él."
+    },
+    "peer_profiles": {
+      "entry_ref": "catalogue:peer_profile",
+      "state": "internal",
+      "format": "curación con padres",
+      "procedure": "Sin endpoint. Revisar perfiles y fuentes contribuyentes; conservar versión y justificación. No inventar una descarga ni una aprobación."
+    },
+    "curated_context": {
+      "entry_ref": "catalogue:curated_primary_sources",
+      "state": "internal",
+      "format": "curación con fuentes primarias",
+      "procedure": "Sin endpoint. Cada evento exige documento original/fecha/linaje. No genera activación ni causalidad automática."
+    },
+    "derived": {
+      "entry_ref": "catalogue:derived_gold",
+      "state": "internal",
+      "format": "transformaciones offline",
+      "procedure": "Sin endpoint. Ejecutar solo pasos permitidos con padres validados; fórmulas/unidades/versiones y puente de linaje. Sin reentrenamiento, activación ni publicación."
+    }
+  }
+}

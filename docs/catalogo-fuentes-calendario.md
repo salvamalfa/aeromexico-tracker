@@ -13,6 +13,37 @@ publicación conservan sus permisos separados.
 
 ## Qué cambia para ti
 
+Estas son las ocho skills. Cada enlace abre instrucciones técnicas para un
+agente, con su alcance y sus límites:
+
+- [Reportes de empresas](../.agents/skills/airline-update-corporate/SKILL.md): resultados, tráfico corporativo y documentos regulatorios.
+- [Tráfico AFAC y BTS](../.agents/skills/airline-update-traffic/SKILL.md): estadísticas de las autoridades de México y Estados Unidos.
+- [Aeropuertos](../.agents/skills/airline-update-airports/SKILL.md): tráfico de aeropuertos y grupos aeroportuarios.
+- [Macro y mercado](../.agents/skills/airline-update-macro-market/SKILL.md): tipo de cambio, combustible y precios bursátiles.
+- [Rutas](../.agents/skills/airline-update-routes/SKILL.md): datos de autoridades y evidencia fechada de presencia o programación.
+- [Referencias y contexto](../.agents/skills/airline-update-context/SKILL.md): códigos de aeropuertos, regulación y diccionarios.
+- [Noticias](../.agents/skills/airline-update-news/SKILL.md): revisión mensual de titulares y enlaces, con sus fuentes.
+- [Derivados y curación](../.agents/skills/airline-update-internal/SKILL.md): cálculos internos y contexto revisado.
+
+El [coordinador](../.agents/skills/airline-update-coordinator/SKILL.md) organiza
+esas familias en rondas. Las skills dan instrucciones; el programa ejecuta los
+pasos permitidos. Sus comandos están en el apéndice. Tener una skill no implica
+que todos sus adaptadores estén terminados ni que la fuente esté actualizada.
+
+La receta devuelve la entrada exacta, los identificadores, el formato y los
+pasos de cada fuente. Este es el alcance comprobado por familia:
+
+| Familia | Alcance actual |
+|---|---|
+| Empresas | Descubrimiento IR real. SEC/importación manual; BMV y formatos nuevos pendientes. |
+| Tráfico AFAC y BTS | Procedimientos y pruebas de código. Falta certificar nuevas capturas y periodos. |
+| Aeropuertos | Entradas y parsers existentes, condicionados al formato y a los insumos del grupo. |
+| Macro y mercado | Combustible y tres series Banxico probados con datos reales hasta Silver. H.10 respondió vacío; bolsa exige insumos manuales y evidencia SEC. |
+| Rutas | Entradas identificadas; selección manual y adaptadores de novedades pendientes. |
+| Referencias y contexto | Descargas o curación según producto; verificación manual de versión y correspondencias. |
+| Noticias | Captura de metadatos y parser probado con muestras. Falta conectar el corte mensual de PR136 y certificar cobertura. |
+| Derivados y curación | Sin descarga propia. Requieren fuentes padre y controles de linaje. |
+
 La ronda mensual será el primer día hábil bancario mexicano en o después del
 15. Noticias se revisa en esa misma ronda. La muestra de 2026 da **15 de
 octubre, 17 de noviembre y 15 de diciembre**. Octubre ya pasó; esta muestra no
@@ -23,6 +54,15 @@ confirmado de Aeroméxico, Volaris y Viva. El día del reporte no cuenta. Si que
 a siete días naturales o menos de una mensual, ambas se hacen en la fecha
 posterior. Los días se calculan en **America/Mexico_City**. La hora de captura
 se conserva en UTC, y cada anuncio conserva su zona original.
+
+La propuesta aprobada sí especifica días bancarios mexicanos y un lote de las
+tres entidades. El código concreta «última publicación central confirmada» como
+**los tres reportes financieros del trimestre realmente publicados**. Excluir
+anuncios y llamadas, y esperar esos tres documentos, es una interpretación
+operativa conservadora; no es una definición literal adicional aprobada por el
+dueño. Debe revisarse antes de activar el coordinador. La zona de México procede
+del encargo actual; el texto original registraba el calendario operativo en UTC.
+[Propuesta aprobada, líneas 169–182](https://github.com/salvamalfa/aeromexico-tracker/blob/6d8da2c4c0b96371c26521aedb5828610451d03a/docs/catalogo-fuentes-calendario.md#L169).
 
 El **2 de noviembre de 2026 es inhábil bancario**. El 16 también lo es. Se usa
 el calendario oficial de 2026, contrastado con BMV. Un año aún no verificado
@@ -42,6 +82,10 @@ Capturar un archivo no demuestra que sus cifras se hayan incorporado. La
 herramienta comprueba el periodo que aparece en las filas. Si el formato nuevo
 supera el parser disponible, lo deja pendiente. En particular, persisten los
 límites históricos del parser AFAC y de algunos reportes corporativos.
+BMV permite captura, pero su parseo está bloqueado hasta registrar los miembros
+del ZIP de forma acotada. H.10 tiene un paso candidato separado, solo para tipo
+de cambio; no sustituye FIX, INPC o tasa. Para precios bursátiles se necesitan las
+cinco series previstas y evidencia SEC local de la identidad de AERO.
 
 Un error de acceso no significa que no exista un reporte. Una fecha desconocida
 permanece sin fecha. Las noticias pueden tener cobertura parcial del mes.
@@ -64,8 +108,25 @@ Desde la raíz del repositorio, con las dependencias instaladas:
 uv run python -m src.source_updates calendar --start 2026-10 --months 3 --quarter 2026Q3 --as-of 2026-10-18T12:00:00-06:00
 uv run python -m src.source_updates plan --round combined --quarter 2026Q3 --as-of 2026-10-18T12:00:00-06:00
 uv run python -m src.source_updates round --recipe config/source_update_round.example.json --workspace tmp/source-updates/prueba --dry-run
-uv run pytest -q tests/test_source_updates.py
+uv run pytest -q tests/test_source_update*.py tests/test_document_lifecycle.py tests/test_pipeline_orchestration.py tests/test_pipeline_route_extension_steps.py tests/test_repo_budgets.py
 ```
+
+Para que el agente obtenga los sitios y parámetros sin adivinarlos:
+
+```bash
+uv run python -m src.source_updates recipe --product fuel
+uv run python -m src.source_updates recipe --product fuel --output round --period 2026M09 --as-of 2026-10-18T18:00:00-06:00 > tmp/combustible.json
+uv run python -m src.source_updates round --recipe tmp/combustible.json --workspace tmp/source-updates/combustible --dry-run
+```
+
+`recipe` consulta el [catálogo operativo por producto](../config/source_update_acquisition.json)
+y las constantes de los adaptadores existentes. Ese catálogo enlaza al
+[catálogo de instituciones](../config/source_catalog.yaml). Incluye también
+procedimientos de descubrimiento, revisiones y bloqueos de las ocho familias.
+Los productos `banxico` y `h10` emiten recetas candidatas completas con
+parámetros exactos. Los demás muestran su estado real y, cuando corresponde,
+una selección de catálogo o descarga; no se ofrecen como ocho procesos
+autónomos completos.
 
 Salidas conservadas: [calendario](referencias/source-updates-20261018/calendar.json),
 [plan por producto](referencias/source-updates-20261018/plan.json) y
@@ -77,14 +138,31 @@ Para fechar la trimestral, pasar `--releases` con una copia de
 [`source_update_releases.example.json`](../config/source_update_releases.example.json)
 completada con reportes reales. La plantilla no afirma fechas de publicación.
 
-Validación de esta entrega: **67 controles focalizados aprobados** y suite
-general con **1.458 pruebas y 29 subpruebas aprobadas**, sin fallos; 75 pruebas
+Validación de esta entrega: **82 controles focalizados aprobados** y suite
+general con **1.470 pruebas y 29 subpruebas aprobadas**, sin fallos; 75 pruebas
 omitidas por insumos locales ausentes o vista previa sin fijar. Las capturas de
 prueba son sintéticas. [Recibo de validación](referencias/source-updates-20261018/validation.json).
 
+Después se ejercitaron fuentes públicas reales, sin publicar sus datos.
+EIA se capturó y pasó Bronze y Silver para septiembre: 21 observaciones. El XLS
+original contiene datos hasta el 14 de octubre; la receta limita el parseo al
+30 de septiembre. Por ello, el último periodo parseado no se presenta como el
+último disponible de la fuente. La fecha de publicación sigue sin verificarse.
+Del catálogo IR de Aeroméxico se capturó HTML y se extrajeron 69 enlaces; esto
+solo acredita descubrimiento, sin certificar reportes nuevos. Gold y los
+controles de una ronda completa siguen pendientes.
+Las recetas generadas también capturaron y procesaron las tres series Banxico:
+21 filas FIX, una INPC y 30 de tasa en septiembre. El endpoint H.10 devolvió
+contenido vacío para la consulta explícita; quedó bloqueado y no produjo datos.
+Su parser solo está probado con muestras controladas. No se sustituyó FIX ni
+se rellenaron datos ausentes. Las demás familias no tienen un piloto real
+completo en esta entrega.
+[Evidencia del piloto real](referencias/source-updates-20261018/real-source-pilot.json).
+
 ### Captura y comprobación
 
-`collect` acepta GET público, importación manual con SHA-256 y BTS por año
+`collect` acepta GET público, exportación CSV pública de Banxico mediante POST,
+importación manual con SHA-256 y BTS por año
 explícito (GET del formulario + POST). `purpose=catalog` preserva el catálogo y
 descubre enlaces; no descarga los documentos encontrados. Una segunda selección
 explícita captura documentos nuevos y revisiones. Revalida las URLs elegidas,

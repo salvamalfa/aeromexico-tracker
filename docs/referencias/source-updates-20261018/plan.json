@@ -19,7 +19,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product am_financials"
     },
     {
       "id": "am_traffic_ir",
@@ -34,7 +35,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product am_traffic_ir"
     },
     {
       "id": "am_sec",
@@ -49,7 +51,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product am_sec"
     },
     {
       "id": "volaris_sec",
@@ -64,7 +67,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product volaris_sec"
     },
     {
       "id": "delta_sec",
@@ -79,7 +83,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product delta_sec"
     },
     {
       "id": "ryanair_sec",
@@ -94,7 +99,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product ryanair_sec"
     },
     {
       "id": "gap_traffic",
@@ -109,7 +115,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product gap_traffic"
     },
     {
       "id": "asur_traffic",
@@ -124,14 +131,15 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product asur_traffic"
     },
     {
       "id": "bmv_xbrl",
       "source_key": "bmv",
       "cadence": "quarterly",
-      "limitation": "select_packages_duration_instant_ttm_currency",
-      "parser_step": "parse.bmv",
+      "limitation": "offline_zip_member_registration_adapter_pending",
+      "parser_step": null,
       "family": "corporate",
       "target_period": "2026Q3",
       "status": "selection_required",
@@ -139,7 +147,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product bmv_xbrl"
     },
     {
       "id": "viva_financials",
@@ -154,7 +163,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product viva_financials"
     },
     {
       "id": "viva_traffic",
@@ -169,7 +179,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product viva_traffic"
     },
     {
       "id": "ryanair_ir",
@@ -184,7 +195,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product ryanair_ir"
     },
     {
       "id": "afac_carriers",
@@ -199,7 +211,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product afac_carriers"
     },
     {
       "id": "afac_airports",
@@ -214,7 +227,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product afac_airports"
     },
     {
       "id": "afac_countries",
@@ -229,7 +243,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product afac_countries"
     },
     {
       "id": "afac_margins",
@@ -244,7 +259,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product afac_margins"
     },
     {
       "id": "bts_segments",
@@ -259,7 +275,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product bts_segments"
     },
     {
       "id": "oma_traffic",
@@ -274,7 +291,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product oma_traffic"
     },
     {
       "id": "aicm_traffic",
@@ -289,7 +307,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product aicm_traffic"
     },
     {
       "id": "aicm_slots",
@@ -304,7 +323,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product aicm_slots"
     },
     {
       "id": "aifa_traffic",
@@ -319,7 +339,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product aifa_traffic"
     },
     {
       "id": "banxico",
@@ -334,14 +355,15 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product banxico"
     },
     {
       "id": "h10",
       "source_key": "federal_reserve_h10",
       "cadence": "both",
-      "limitation": "fallback_only_label_separately_from_fix",
-      "parser_step": "parse.fx",
+      "limitation": "explicit_fx_fallback_not_fix_no_inpc_or_policy_rate",
+      "parser_step": "parse.h10",
       "family": "macro_market",
       "target_period": "2026M09",
       "status": "selection_required",
@@ -349,7 +371,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product h10"
     },
     {
       "id": "fuel",
@@ -364,7 +387,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product fuel"
     },
     {
       "id": "equities",
@@ -379,7 +403,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product equities"
     },
     {
       "id": "anac",
@@ -394,7 +419,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product anac"
     },
     {
       "id": "aerocivil",
@@ -409,7 +435,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product aerocivil"
     },
     {
       "id": "caa",
@@ -424,7 +451,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product caa"
     },
     {
       "id": "aena",
@@ -439,7 +467,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product aena"
     },
     {
       "id": "am_routes",
@@ -454,7 +483,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product am_routes"
     },
     {
       "id": "oma_routes",
@@ -469,7 +499,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product oma_routes"
     },
     {
       "id": "colima",
@@ -484,7 +515,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product colima"
     },
     {
       "id": "aifa_roster",
@@ -499,7 +531,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product aifa_roster"
     },
     {
       "id": "airports_reference",
@@ -514,7 +547,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product airports_reference"
     },
     {
       "id": "iasa",
@@ -529,7 +563,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product iasa"
     },
     {
       "id": "dictionary",
@@ -544,7 +579,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product dictionary"
     },
     {
       "id": "rss",
@@ -559,7 +595,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product rss"
     },
     {
       "id": "gdelt",
@@ -574,7 +611,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product gdelt"
     },
     {
       "id": "peer_profiles",
@@ -589,7 +627,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product peer_profiles"
     },
     {
       "id": "curated_context",
@@ -604,7 +643,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product curated_context"
     },
     {
       "id": "derived",
@@ -619,7 +659,8 @@
       "latest_available_period": null,
       "latest_validated_period": null,
       "latest_published_period": null,
-      "release_lag_days": null
+      "release_lag_days": null,
+      "acquisition_instructions": "python -m src.source_updates recipe --product derived"
     }
   ],
   "network_requests": 0,

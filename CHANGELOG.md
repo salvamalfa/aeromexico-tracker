@@ -10,6 +10,12 @@
   límites históricos y dependencias PR134/PR136 se declaran pendientes.
 - Convención de audiencia añadida a `AGENTS.md`; auditoría inicial del lifecycle
   de solo lectura, sin retirar ni reescribir documentos históricos.
+- Recetas de adquisición por producto, índice visible de las ocho skills y
+  ejemplo macro ejecutable. EIA y las tres series Banxico pasaron hasta Silver
+  en pilotos reales; H.10 respondió vacío. BMV queda en captura y bolsa requiere
+  evidencia SEC local. Se atendieron cuatro hallazgos de la revisión Codex.
+- Cierre documental obligatorio en `AGENTS.md` y comprobación de disposiciones
+  y enlaces en el CI existente; se conservan sus permisos y eventos.
 
 ## 2026-10-12 · Chat: cierre operativo de fase 2 (fecha México)
 

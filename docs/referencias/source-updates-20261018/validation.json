@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "source_tests": "tests/test_source_updates.py",
+  "source_tests": "tests/test_source_update*.py, tests/test_document_lifecycle.py and pipeline/budget checks",
   "fixture_data_only": true,
   "source_network_acquisitions": 0,
   "paid_requests": 0,
@@ -9,22 +9,22 @@
   "baseline_commit": "40a63d1905afde97ae8e3f8671c8217aafacc4aa",
   "runs": {
     "focused": {
-      "tests": 67,
-      "failures": 0,
+      "tests": 82,
       "errors": 0,
+      "failures": 0,
       "skipped": 0,
-      "passed": 67,
-      "seconds": 3.764
+      "passed": 82,
+      "seconds": 6.338
     },
     "full": {
-      "tests": 1533,
-      "failures": 0,
+      "tests": 1545,
       "errors": 0,
+      "failures": 0,
       "skipped": 75,
-      "passed": 1458,
-      "seconds": 156.974,
-      "xml_testcases_including_subtests": 1562,
-      "passed_subtests": 29
+      "xml_testcases_including_subtests": 1574,
+      "passed_subtests": 29,
+      "passed": 1470,
+      "seconds": 177.364
     }
   },
   "skip_reasons": [
@@ -39,10 +39,11 @@
     "Existing public approval pins from d456eb8dc05e586d7119161c710db5ff47af0da3 used only in test subprocess; no new pins or external configuration changed"
   ],
   "additional_checks": [
-    "ruff check src/source_updates tests/test_source_updates.py",
+    "ruff check src/source_updates src/ingest/macro/banxico.py scripts/check_document_lifecycle.py tests/test_source_update*.py tests/test_document_lifecycle.py",
     "ruff check --select F src scripts",
     "git diff --check",
     "Original public and private checkouts remain clean",
-    "No differences in Gold, site, config/chat or workflows"
-  ]
+    "Gold, site, config/chat and data/schedule workflows unchanged; existing CI gains a lifecycle/link validation step"
+  ],
+  "real_source_pilot": "real-source-pilot.json (separate from fixture-only tests)"
 }

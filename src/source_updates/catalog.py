@@ -58,7 +58,7 @@ PRODUCTS = (
         "parse.airports",
     ),
     ("asur_traffic", "sec_edgar", "monthly", "separate_mexico_from_other_countries", "parse.airports"),
-    ("bmv_xbrl", "bmv", "quarterly", "select_packages_duration_instant_ttm_currency", "parse.bmv"),
+    ("bmv_xbrl", "bmv", "quarterly", "offline_zip_member_registration_adapter_pending", None),
     (
         "viva_financials",
         "viva_ir",
@@ -84,7 +84,13 @@ PRODUCTS = (
     ("aicm_slots", "aicm", "quarterly", "seasonal_schedule_is_not_observed_flights", None),
     ("aifa_traffic", "aifa", "monthly", "select_latest_workbook_schema_may_drift", "parse.airports"),
     ("banxico", "banxico_sie", "both", "fix_inpc_rate_independent_series_history_to_cutoff", "parse.fx"),
-    ("h10", "federal_reserve_h10", "both", "fallback_only_label_separately_from_fix", "parse.fx"),
+    (
+        "h10",
+        "federal_reserve_h10",
+        "both",
+        "explicit_fx_fallback_not_fix_no_inpc_or_policy_rate",
+        "parse.h10",
+    ),
     ("fuel", "eia", "both", "market_reference_report_days_covered", "parse.fuel"),
     (
         "equities",
@@ -141,6 +147,33 @@ PRODUCTS = (
     ),
     ("derived", "derived_gold", "both", "offline_formula_parent_lineage_no_models_or_activation", None),
 )
+
+# A shared institution is not an interchangeable data product. Unknown product
+# adapters stay blocked instead of borrowing another table from that institution.
+CHECK_TABLES = {
+    "am_financials": ("aeromexico_ir_financial_history", "fact_carrier_metrics"),
+    "am_sec": ("sec_operating_metrics", "sec_financials", "fact_carrier_metrics"),
+    "volaris_sec": ("peer_operating_metrics", "peer_financials", "fact_carrier_metrics"),
+    "delta_sec": ("peer_operating_metrics", "peer_financials", "fact_carrier_metrics"),
+    "ryanair_sec": ("peer_operating_metrics", "peer_financials", "fact_carrier_metrics"),
+    "bmv_xbrl": ("bmv_financials", "fact_carrier_metrics"),
+    "viva_financials": ("peer_operating_metrics", "peer_financials", "fact_carrier_metrics"),
+    "ryanair_ir": ("peer_operating_metrics", "peer_financials", "fact_carrier_metrics"),
+    "afac_carriers": ("afac_monthly_stats", "fact_carrier_metrics"),
+    "bts_segments": ("bts_t100_segment", "fact_route_traffic"),
+    "oma_traffic": ("airport_traffic", "fact_airport_traffic", "fact_airport_group_traffic"),
+    "gap_traffic": ("airport_traffic", "fact_airport_traffic", "fact_airport_group_traffic"),
+    "asur_traffic": ("airport_traffic", "fact_airport_traffic", "fact_airport_group_traffic"),
+    "aicm_traffic": ("airport_traffic", "fact_airport_traffic"),
+    "aifa_traffic": ("airport_traffic", "fact_airport_traffic"),
+    "banxico": ("fx_rates", "macro_indicators", "fact_macro"),
+    "h10": ("fx_rates", "fact_macro"),
+    "fuel": ("fuel_prices", "fact_macro"),
+    "equities": ("market_prices", "fact_market_data"),
+    "airports_reference": ("dim_airport",),
+    "rss": ("news_headlines",),
+    "gdelt": ("news_headlines",),
+}
 
 
 def load_catalog() -> dict:
@@ -209,6 +242,7 @@ def plan(round_kind: str, as_of: str, quarter: str | None = None, family: str | 
                 "latest_validated_period": None,
                 "latest_published_period": None,
                 "release_lag_days": None,
+                "acquisition_instructions": f"python -m src.source_updates recipe --product {product['id']}",
             }
         )
     return {
