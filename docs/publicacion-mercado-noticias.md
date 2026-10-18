@@ -43,7 +43,17 @@ candidatas. El índice, recibos y pins permanecen intactos. No se habilitan cron
 skills ni calendarios. Las nuevas propuestas técnicas no trasladan la aprobación
 82–84 de Vuelos a una huella distinta. Aeroméxico conserva su registro histórico.
 
-Estado: preparación y auditoría; sin merge a master ni despliegue de las pestañas.
+El dueño aprobó los tres pares técnicos exactos después de sus auditorías,
+el 18 de octubre a las 21:16:59 UTC. El expediente conserva el mensaje real;
+la aprobación se registró mediante el ciclo oficial como eventos 88–90.
+Industria `e2906ca73927d3f57d74df264446841f4da23967730532fb478cfe126477a84a`,
+Viva `afb0f464133f5a01fc6d42ebbd0a2fcdac79e2180f3e7481ad3fa6406b78041c`
+y Volaris `1c96fa4d8fdd1238cd8b4dfe64ad245a0723227efdf093657efc2e4e6dd6fbcb`
+conservan el contenido financiero auditado. Las auditorías 85–87 y aprobaciones
+históricas permanecen intactas. La autorización no cubre otra huella.
+
+Estado al preparar el artefacto: gate normal en ejecución; integración y
+comprobación productiva pendientes del cierre de validación del sitio firmado.
 Las propuestas de huellas fd41, abbcf12 y a1de751 quedaron superadas antes de importar
 auditorías; el ledger permanece en 84. La huella indicada arriba incorpora la
 corrección final de períodos de Vuelos y el cierre reforzado de dependencias:
@@ -52,6 +62,6 @@ dependencias transitivas de evidencia y capacidad. El alcance conservador tambi�
 exige nueva revisión ante cambios Python ajenos a la presentación. Se prueban
 mutaciones, altas y bajas de módulos para invalidar identidades obsoletas. El cierre de CI contempla los perfiles
 firmados histórico y candidato, con expectativas exactas y sin omitir pruebas.
-Pendientes: cierre de la cohorte y aprobación específica, CI/revisión exactos,
+Pendientes: suite del sitio firmado, CI/revisión del artefacto exacto,
 publicación/verificación, skills por fuente, coordinador mensual/trimestral,
 Noticias mensual y limpieza futura con dependencias.
