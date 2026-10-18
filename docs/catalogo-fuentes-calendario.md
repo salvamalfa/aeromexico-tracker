@@ -143,8 +143,8 @@ Para fechar la trimestral, pasar `--releases` con una copia de
 [`source_update_releases.example.json`](../config/source_update_releases.example.json)
 completada con reportes reales. La plantilla no afirma fechas de publicación.
 
-Validación de esta entrega: **118 controles focalizados aprobados** y suite
-general con **1.506 pruebas y 29 subpruebas aprobadas**, sin fallos; 75 pruebas
+Validación de esta entrega: **130 controles focalizados aprobados** y suite
+general con **1.518 pruebas y 29 subpruebas aprobadas**, sin fallos; 75 pruebas
 omitidas por insumos locales ausentes o vista previa sin fijar. Las capturas de
 prueba son sintéticas. [Recibo de validación](referencias/source-updates-20261018/validation.json).
 

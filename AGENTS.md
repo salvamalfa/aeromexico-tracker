@@ -331,7 +331,10 @@ termina con candidatos y evidencia, sin moverlos ni borrarlos.
 Los PR con documentación modificada deben incluir en su resumen un bloque
 `document-lifecycle:v1`. El check `scripts/check_document_lifecycle.py` exige
 disposición y motivo por archivo y revisa enlaces locales de los Markdown
-afectados. El bloque es evidencia de revisión, no autorización de eliminación.
+afectados. Ante un retiro o traslado, también busca referencias entrantes en
+archivos versionados sin modificar: guías, código, pruebas e índices. Es un
+control estático de enlaces y rutas literales; las rutas calculadas requieren
+verificar sus consumidores. El bloque no autoriza la eliminación.
 Ejemplo técnico mínimo, dentro del cuerpo del PR:
 
 ```text

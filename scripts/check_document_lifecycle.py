@@ -16,7 +16,9 @@ BLOCK = re.compile(r"<!--\s*document-lifecycle:v1\s*(\{.*?\})\s*-->", re.S)
 
 def changed_documents(root: Path, base: str) -> list[str]:
     changed = (
-        subprocess.check_output(["git", "diff", "--name-only", "-z", base, "HEAD", "--"], cwd=root)
+        subprocess.check_output(
+            ["git", "diff", "--no-renames", "--name-only", "-z", base, "HEAD", "--"], cwd=root
+        )
         .decode()
         .split("\0")
     )
@@ -30,6 +32,91 @@ def changed_documents(root: Path, base: str) -> list[str]:
             or (path.startswith("docs/") and Path(path).suffix in {".json", ".csv", ".html", ".ipynb"})
         )
     )
+
+
+def markdown_targets(text: str) -> list[str]:
+    return re.findall(r"\]\(([^)]+)\)", text) + re.findall(r"(?m)^\s{0,3}\[[^\]]+\]:\s*(.+)", text)
+
+
+def markdown_url(target: str):
+    target = target.strip()
+    if target.startswith("<") and ">" in target:
+        target = target[1 : target.index(">")]
+    else:
+        target = target.split(maxsplit=1)[0] if target else ""
+    return urlsplit(target)
+
+
+def mutable_repo_document(value, root: Path) -> Path | None:
+    repository = os.getenv("GITHUB_REPOSITORY", "salvamalfa/aeromexico-tracker")
+    match = re.fullmatch(
+        "/" + re.escape(repository) + r"/(?:blob|tree)/(?:master|main|HEAD)/(.+)", value.path
+    )
+    if value.hostname == "github.com" and match:
+        return (root / unquote(match[1])).resolve()
+    return None
+
+
+def inbound_references(root: Path, paths: list[str]) -> list[str]:
+    """Inspect unchanged tracked consumers when a document was deleted or moved."""
+    removed = {(root / path).resolve(): path for path in paths if not (root / path).exists()}
+    if not removed:
+        return []
+    tracked = subprocess.check_output(["git", "ls-files", "-z"], cwd=root).decode().split("\0")
+    errors = []
+    for name in tracked:
+        file = root / name
+        if not name or file.is_symlink() or not file.is_file():
+            continue
+        with file.open("rb") as stream:
+            prefix = stream.read(8192)
+            if b"\0" in prefix:
+                continue
+            try:
+                text = (prefix + stream.read()).decode("utf-8")
+            except UnicodeDecodeError:
+                continue
+        referenced = set()
+        for target in markdown_targets(text):
+            value = markdown_url(target)
+            if value.scheme:
+                destination = mutable_repo_document(value, root)
+                if destination in removed:
+                    referenced.add(removed[destination])
+                continue
+            if not value.path:
+                continue
+            path = unquote(value.path)
+            destination = root / path.lstrip("/") if path.startswith("/") else file.parent / path
+            if destination.resolve() in removed:
+                referenced.add(removed[destination.resolve()])
+        for url in re.findall(r"https?://[^\s<>\"'`)]+", text):
+            destination = mutable_repo_document(urlsplit(url), root)
+            if destination in removed:
+                referenced.add(removed[destination])
+        # Immutable Git archive links are valid after retirement. Strip whole
+        # links, including labels, before checking code/config/path literals.
+        plain = re.sub(r"!?\[[^\]]*\]\([^)]+\)|!?\[[^\]]*\]\[[^\]]*\]", "", text)
+        plain = re.sub(r"(?m)^\s{0,3}\[[^\]]+\]:.*$", "", plain)
+        plain = re.sub(r"https?://[^\s<>\"'`]+", "", plain)
+        normalized = plain.replace("\\", "/")
+        normalized = re.sub(r"/{2,}", "/", normalized)
+        for path in removed.values():
+            if re.search(r"(?<![\w./-])" + re.escape(path) + r"(?![\w./-])", normalized):
+                referenced.add(path)
+        for target in re.findall(r"[\"'`]([^\"'`\n]+?\.[A-Za-z0-9]+(?:#[^\"'`\n]*)?)[\"'`]", plain):
+            value = urlsplit(target)
+            if value.scheme or not value.path:
+                continue
+            path = unquote(value.path.replace("\\", "/"))
+            for base in (root, file.parent):
+                destination = (base / path).resolve()
+                if destination in removed:
+                    referenced.add(removed[destination])
+        errors.extend(
+            f"Inbound reference to retired document {path} in {name}" for path in sorted(referenced)
+        )
+    return errors
 
 
 def validate_dispositions(root: Path, paths: list[str], summary: str) -> list[str]:
@@ -54,14 +141,14 @@ def validate_dispositions(root: Path, paths: list[str], summary: str) -> list[st
         if file.suffix != ".md" or not file.is_file():
             continue
         text = re.sub(r"```.*?```", "", file.read_text(encoding="utf-8"), flags=re.S)
-        for target in re.findall(r"\]\(([^)]+)\)", text):
-            value = urlsplit(target.strip().strip("<>"))
+        for target in markdown_targets(text):
+            value = markdown_url(target)
             if value.scheme or not value.path:
                 continue
             resolved = (file.parent / unquote(value.path)).resolve()
             if not resolved.is_relative_to(root.resolve()) or not resolved.exists():
                 errors.append(f"Broken/outside local reference in {path}: {target}")
-    return errors
+    return errors + inbound_references(root, paths)
 
 
 def main(argv=None) -> int:
