@@ -158,6 +158,25 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
         r"\b(?:principios|mediados|finales|comienzos|fin)\s+de\s+(?:" + month_names + r"|\d{4})\b", text
     ):
         raise ValueError("Indica fechas explícitas para ese intervalo parcial.")
+    # A list names discrete publication windows. Converting its endpoints to
+    # a continuous interval would silently include unrequested dates/months.
+    temporal_points = (
+        (named_days, r"\d{1,2}\s+(?:de\s+)?(?:" + month_names + r")\s+(?:de\s+)?\d{4}")
+        if named_days else
+        (iso_dates, r"\d{4}-\d{2}-\d{2}") if iso_dates else
+        (iso_months, r"\d{4}-(?:0[1-9]|1[0-2])(?!-\d{2})") if iso_months else
+        (months, r"(?:" + month_names + r")(?:\s+(?:de\s+)?\d{4})?") if months else
+        (years, r"\d{4}")
+    )
+    points, endpoint = temporal_points
+    if len(points) > 1:
+        point = r"(?:el\s+)?" + endpoint
+        between = r"\bentre\s+(?:los\s+(?:meses|anos|dias)\s+de\s+)?" + point + r"\s+y\s+" + point + r"\b"
+        span = r"\b" + point + r"(?:\s+(?:a|al|hasta)\s+|\s*[-–—]\s*)" + point + r"\b"
+        if len(points) != 2 or not (re.search(between, text) or re.search(span, text)):
+            raise ValueError(
+                "Indica un intervalo explícito de publicación; no se admiten listas de fechas o meses separados."
+            )
     supplied_start, supplied_end = start_date, end_date
     for value in (supplied_start, supplied_end):
         if value is not None:
