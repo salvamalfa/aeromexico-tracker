@@ -645,3 +645,15 @@ la compilación. Chromium del entorno cloud comprobó el cambio de capa y de
 entidad a 1440 y 390 píxeles, con rutas visibles y sin modificar el trimestre
 financiero. Esta corrección se incorpora antes de congelar la huella conjunta
 con las otras pestañas; no genera nuevas aprobaciones ni publica el sitio.
+
+Para preparar una sola publicación conjunta, este PR conserva `site/` idéntico
+al `master` productivo `40a63d1`. El sitio aprobado anterior de `d9da4b7` se
+preserva íntegro en el expediente privado, con hash del archivo y commit de
+origen; no se usa como artefacto de estas correcciones. El lector de snapshot
+y el runtime real local (autenticación, worker y consulta con proveedor mock)
+aceptan los 134 archivos firmados del baseline con sus pins ya aprobados.
+Esto permite revisar primero el código sin disparar Pages. Railway puede
+redesplegar el backend por sus patrones de entrada: cada integración debe
+verificar su salud y conservar ese snapshot hasta el sitio conjunto final.
+El gate normal, la suite completa y la comprobación productiva corresponden
+al árbol final conjunto una vez aprobadas sus nuevas identidades exactas.
