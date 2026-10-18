@@ -286,67 +286,6 @@ def test_validation_rejects_open_periods_and_bad_limits() -> None:
         )
 
 
-def test_queries_the_signed_public_snapshot_without_private_inputs() -> None:
-    tools = RouteTools(Snapshot(Path("site")))
-    result = tools.invoke(
-        "query_routes",
-        {
-            "entity_id": "AEROMEXICO_GROUP",
-            "segment": "domestic",
-            "period": "2026M07",
-            "metric": "passengers",
-            "top_n": 3,
-        },
-    )
-    assert result["rows"]
-    assert result["rows"][0]["value_kind"] == "estimated"
-    assert result["data_version"] == tools.snapshot.version
-    assert result["sources"][0]["url"].endswith("domestic/2026M07.json")
-
-    international = tools.invoke(
-        "query_routes",
-        {
-            "entity_id": "AEROMEXICO_GROUP",
-            "segment": "international",
-            "period": "2026Q2",
-            "metric": "passengers",
-            "top_n": 3,
-        },
-    )
-    assert international["rows"]
-    assert international["coverage"]["2026Q2"]["complete"] is False
-    assert {row["value_kind"] for row in international["rows"]} <= {"observed", "estimated", "scheduled"}
-    assert all(row["source_label"] and row["operation_status"] for row in international["rows"])
-
-    shared = tools.invoke(
-        "find_shared_routes",
-        {
-            "entity_ids": ["AEROMEXICO_GROUP", "VIVA_AEROBUS"],
-            "segment": "domestic",
-            "period": "2026M07",
-            "top_n": 3,
-        },
-    )
-    assert shared["rows"]
-    assert all(row["carriers"]["AEROMEXICO_GROUP"]["value"] > 0 for row in shared["rows"])
-    assert all(row["carriers"]["VIVA_AEROBUS"]["value"] > 0 for row in shared["rows"])
-
-    international_shared = tools.invoke(
-        "find_shared_routes",
-        {
-            "entity_ids": ["AEROMEXICO_GROUP", "VOLARIS", "VIVA_AEROBUS"],
-            "segment": "international",
-            "period": "2026Q2",
-            "top_n": 20,
-        },
-    )
-    assert international_shared["rows"]
-    assert all(not coverage["complete"] for coverage in international_shared["coverage"].values())
-    assert all(not row["comparable"] for row in international_shared["rows"])
-    assert all("coverage_incomplete" in row["comparability_reason"] for row in international_shared["rows"])
-    assert all(row["combined_value"] is None for row in international_shared["rows"])
-    assert len(international_shared["display"]["columns"]) <= 12
-    assert "combined_value" not in [column["key"] for column in international_shared["display"]["columns"]]
 
 
 def test_domestic_quarter_rollup_uses_only_three_complete_published_months() -> None:

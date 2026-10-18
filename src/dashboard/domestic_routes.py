@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import pandas as pd
 
+from src.dashboard.domestic_frequencies import retained_monthly_frequencies
 from src.dashboard.route_capacity import load_route_capacity
 from src.dashboard.route_entities import AEROMEXICO_ROUTES, RouteEntity, breakdown_totals
+from src.dashboard.map_layers import dated_movements
 
 
 SOURCE_LABEL = "México · AICM, vuelos AM programados"
@@ -50,7 +52,7 @@ def load_domestic_monthly_networks(connection, entity: RouteEntity = AEROMEXICO_
 
 
 def load_domestic_networks(
-    connection, quarters: list[dict], *, entity: RouteEntity = AEROMEXICO_ROUTES
+    connection, quarters: list[dict], *, entity: RouteEntity = AEROMEXICO_ROUTES, include_estimates=True
 ) -> dict[str, dict]:
     carrier_list = ", ".join(f"'{key}'" for key in entity.estimate_carriers)
     estimate_exists = connection.execute(
@@ -155,6 +157,21 @@ def load_domestic_networks(
             capacity_lookup["capacity_usable"].eq(True)
             & capacity_lookup[direction_metric_columns[:4]].notna().all(axis=1)
         )
+        # A borrowed IPF support weight is not a flight count. Only retain
+        # frequencies captured in this same month, independently of whether
+        # an aircraft configuration can support a seat estimate.
+        frame["_frequency"] = frame["seed_weight"].where(
+            frame["support_observed_in_period"].eq(True)
+            & frame["support_month_gap"].eq(0)
+            & frame["seed_weight"].notna()
+            & frame["seed_weight"].ge(0)
+        )
+        frequencies = frame.groupby(direction_keys).agg(
+            frequency_estimated=("_frequency", lambda values: values.sum(min_count=1)),
+            frequency_complete=("_frequency", lambda values: values.notna().all()),
+        ).reset_index()
+        capacity_lookup = capacity_lookup.merge(frequencies, on=direction_keys, validate="one_to_one")
+        capacity_lookup["retained_frequency"] = retained_monthly_frequencies(capacity_lookup)
 
         def capacity_agg(keys: list[str]) -> pd.DataFrame:
             return capacity_lookup.groupby(keys).agg(
@@ -164,6 +181,9 @@ def load_domestic_networks(
                 seats_estimated_high=("seats_estimated_high", "sum"),
                 aircraft_model_coverage=("aircraft_model_coverage", "min"),
                 complete=("complete", "all"),
+                frequency_estimated=("frequency_estimated", lambda values: values.sum(min_count=1)),
+                frequency_complete=("frequency_complete", "all"),
+                retained_frequency=("retained_frequency", lambda values: values.sum(min_count=1)),
             )
 
         capacity_by_route_key = capacity_agg(["market_key"])
@@ -225,9 +245,13 @@ def load_domestic_networks(
         passenger_by_route_month = passenger_by_route_month.drop(columns="_any_repaired")
 
         def capacity_result(row) -> dict:
+            frequency = row["retained_frequency"]
+            departures = float(frequency) if pd.notna(frequency) else None
             if not bool(row["complete"]):
                 return {
-                    "departures": None, "seats": None, "seats_low": None,
+                    "departures": departures,
+                    "flight_count_partial": not bool(row["frequency_complete"]),
+                    "seats": None, "seats_low": None,
                     "seats_high": None, "load_factor": None, "load_factor_low": None,
                     "load_factor_high": None, "capacity_complete": False,
                     "load_factor_status": "capacity_incomplete",
@@ -266,7 +290,8 @@ def load_domestic_networks(
                 else None
             )
             return {
-                "departures": float(row["departures_estimated"]),
+                "departures": departures,
+                "flight_count_partial": not bool(row["frequency_complete"]),
                 "seats": seats,
                 "seats_low": seats_low,
                 "seats_high": seats_high,
@@ -367,7 +392,7 @@ def load_domestic_networks(
                     "passengers_estimated": True,
                     **route_metrics,
                     "capacity_estimated": route_metrics["capacity_complete"],
-                    "departures_estimated": route_metrics["capacity_complete"],
+                    "departures_estimated": route_metrics["departures"] is not None,
                     # A market with fewer months of estimate rows than the
                     # quarter expects (e.g. a route only priced from June
                     # onward) must never look like a full-quarter figure:
@@ -390,8 +415,11 @@ def load_domestic_networks(
                         if entity.capacity else " · pasajeros estimados; asientos y ocupación N/D"
                     )
                         + (f" · cobertura parcial: {route_months_covered} de {route_months_selected} meses"
-                           if route_months_covered < route_months_selected else ""),
-                    "operation_status": "estimated_from_afac_margins_and_temporal_support",
+                           if route_months_covered < route_months_selected else "")
+                        + (" · frecuencias parciales: operadores/sentidos restantes N/D"
+                           if route_metrics.get("flight_count_partial") else ""),
+                    "operation_status": "estimated_from_afac_margins_and_temporal_support"
+                        + ("_partial_frequencies" if route_metrics.get("flight_count_partial") else ""),
                     "carrier_role": "operating_carrier_estimated",
                     "agent_eligible": False,
                     "support_repair_applied": bool(group["support_repair_applied"].any()),
@@ -432,7 +460,7 @@ def load_domestic_networks(
                                (int(quarter["period_id"][-1]) - 1) * 3 + 4)
         ]
         estimated = estimates[estimates.period_id.isin(months)].copy() if not estimates.empty else pd.DataFrame()
-        if not estimated.empty:
+        if include_estimates and not estimated.empty:
             result[quarter["period_id"]] = estimated_network(quarter, estimated, months)
             continue
         current = observations[observations.period_id.isin(months)].copy()
@@ -462,8 +490,6 @@ def load_domestic_networks(
                     "passengers": None, "seats": None,
                     "departures": int(part.scheduled_movements.sum()),
                 })
-            if len(directions) != 2:
-                continue
             airport_codes.add(counterpart)
             routes.append({
                 "market_key": "<>".join(sorted(("MEX", counterpart))),
@@ -473,6 +499,7 @@ def load_domestic_networks(
                 "load_factor": None,
                 "previous": {"passengers": None, "seats": None, "departures": None},
                 "directions": directions,
+                "monthly": dated_movements(group, "scheduled_movements"),
                 "source_label": SOURCE_LABEL,
                 "coverage_note": "Abr–jun 2026 · slots AICM · programado",
                 "operation_status": "assigned_slot_not_flown",
@@ -507,6 +534,7 @@ def load_domestic_networks(
                     "departures": int(group.market_movements.sum()), "load_factor": None,
                     "previous": {"passengers": None, "seats": None, "departures": None},
                     "directions": directions,
+                    "monthly": dated_movements(group, "market_movements"),
                     "source_label": EXCLUSIVE_LABEL,
                     "coverage_note": "Abr–jun 2026 · AFAC: vuelos del mercado; atribución inferida por operador único",
                     "operation_status": "carrier_inferred_market_observed",
@@ -530,6 +558,10 @@ def load_domestic_networks(
                 "load_factor": None,
                 "previous": {"passengers": None, "seats": None, "departures": None},
                 "directions": [],
+                "monthly": [{"period_id": pd.Timestamp(row.carrier_presence_as_of).strftime("%YM%m"),
+                             "origin_iata": "NLU", "destination_iata": row.dest_iata,
+                             "departures": None, "passengers": None, "seats": None,
+                             "load_factor": None, "capacity_estimated": False}],
                 "source_label": SHARED_LABEL,
                 "coverage_note": "Junio 2026 · Aeroméxico presente · vuelos propios sin desglose",
                 "operation_status": "carrier_route_present_volume_unresolved",
@@ -553,10 +585,12 @@ def load_domestic_networks(
             "source_url": (str(current.source_url.iloc[0]) if not current.empty else
                            str(inferred.source_url.iloc[0]) if not inferred.empty else str(present.roster_source_url.iloc[0])),
             "route_count": len(routes),
-            "represented_movements": sum(route["departures"] or 0 for route in routes),
+            "represented_movements": None,  # Different kinds never become one performed-flight total.
             "scheduled_movements": sum(route["departures"] for route in routes if route["operation_status"] == "assigned_slot_not_flown"),
             "attributed_market_movements": sum(route["departures"] for route in routes if route["operation_status"] == "carrier_inferred_market_observed"),
             "presence_only_route_count": sum(route["operation_status"] == "carrier_route_present_volume_unresolved" for route in routes),
             "agent_eligible": False,
+            "availability": "complete" if set(observed_months) == set(months) else "partial",
+            "eligibility_reason": "Programación y atribuciones documentadas; no acreditan vuelos realizados por operador.",
         }
     return result

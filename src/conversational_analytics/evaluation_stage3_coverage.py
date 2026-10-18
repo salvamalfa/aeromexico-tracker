@@ -211,8 +211,9 @@ def derive_stage3_coverage(
     snapshot = Snapshot(snapshot_root)
     fixture_expected_versions = fixture["expected_versions"]
     tools = _Tools(snapshot)
-    catalog_result = tools.call("get_data_catalog", {})
-    periods = catalog_result["periods"]
+    # Offline scenario selection needs individual IDs, while the model-facing
+    # catalog may encode long lists as lossless calendar ranges.
+    periods = tools.registry.catalog()["periods"]
     toolspecs = tools.registry.tool_specs()
     toolspec_hash = _canonical_hash(toolspecs)
     snapshot_manifest_sha = _file_hash(snapshot.root / "publication_manifest.json")

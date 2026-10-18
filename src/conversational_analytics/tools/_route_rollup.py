@@ -41,6 +41,14 @@ def rollup_complete_quarter(
         route = copy.deepcopy(base)
         route["market_key"] = market_key
         route["quarter_rollup"] = True
+        for detail in ("monthly", "flight_components"):
+            if any(detail in item for item in month_routes if item is not None):
+                route[detail] = [
+                    copy.deepcopy(cell)
+                    for item in month_routes
+                    if item is not None
+                    for cell in (item.get(detail) or [])
+                ]
         route["source_periods"] = [
             {
                 "period": month,
@@ -90,11 +98,15 @@ def rollup_complete_quarter(
             and status in {None, "estimated", "reported", "observed"}
             for value, status in zip(monthly_load_factors, monthly_load_factor_statuses, strict=True)
         )
-        if valid_monthly_load_factors and all(
-            isinstance(value, (int, float)) and not isinstance(value, bool) for value in passenger_values
-        ) and all(
-            isinstance(value, (int, float)) and not isinstance(value, bool) and value > 0
-            for value in seat_values
+        if (
+            valid_monthly_load_factors
+            and all(
+                isinstance(value, (int, float)) and not isinstance(value, bool) for value in passenger_values
+            )
+            and all(
+                isinstance(value, (int, float)) and not isinstance(value, bool) and value > 0
+                for value in seat_values
+            )
         ):
             route["load_factor"] = sum(passenger_values) / sum(seat_values)
         else:

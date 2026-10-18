@@ -6,7 +6,7 @@ import { coverageIndicator, scheduledIconHtml } from "./coverage";
 import { bindAirportSearchControls } from "./search";
 import { cityLabel, routeChangePercent, routeTitle } from "./network";
 import type { Route } from "../../types/domain";
-import { flightKind, flightSource, FLIGHT_KIND_LABEL } from "./flight-measure";
+import { flightKind, flightSources, flightBreakdown, flightScheduleNote, FLIGHT_KIND_LABEL } from "./flight-measure";
 
 function routeRows(routes: Route[]): string {
   let downStarted = false;
@@ -18,21 +18,23 @@ function routeRows(routes: Route[]): string {
       : isDown && !downStarted ? '<li class="executive-route-group">Caen</li>' : "";
     if (isDown) downStarted = true;
     const kind = flightKind(route);
-    const flightLabel = FLIGHT_KIND_LABEL[kind];
+    const flightLabel = (route.flight_components?.length ? flightBreakdown(route) : FLIGHT_KIND_LABEL[kind])
+      + ((route.operation_status ?? "").includes("partial_frequencies") ? " · parcial" : "");
+    const scheduleNote = flightScheduleNote(route);
     const flights = finite(route.departures) ? integer.format(route.departures) : "N/D";
     const changeText = change === null ? "" : `<small class="executive-route-trend ${change >= 0 ? "delta-up" : "delta-down"}">${change >= 0 ? "+" : ""}${change.toFixed(1)}% interanual</small>`;
-    const coverage = coverageIndicator(route);
+    const coverage = coverageIndicator(route, state.mapPeriodId?.includes("M") ? 1 : 3);
     const coverageLabel = coverage ? ` title="${esc(coverage.title)}" aria-label="Ruta ${index + 1}: ${esc(coverage.title)}"` : "";
     return `${group}<li class="executive-route-row">
       <span class="executive-route-rank${coverage ? ` ${coverage.variant}` : ""}"${coverageLabel}>${index + 1}</span>
-      <div class="executive-route-copy"><strong title="${esc(route.origin.iata)} ↔ ${esc(route.destination.iata)}">${esc(routeTitle(route))}${scheduledIconHtml(route)}</strong>${changeText}</div>
-      <div class="executive-route-value" title="Vuelos ${flightLabel}">${flights}<small class="executive-route-trend">${esc(flightLabel)}</small></div>
+      <div class="executive-route-copy"><strong title="${esc(routeTitle(route, true))}">${esc(routeTitle(route))}${scheduledIconHtml(route)}</strong>${changeText}</div>
+      <div class="executive-route-value" title="Vuelos ${flightLabel}">${flights}<small class="executive-route-trend">${esc(flightLabel)}</small>${scheduleNote ? `<small class="executive-route-trend">${esc(scheduleNote)}</small>` : ""}</div>
     </li>`;
   }).join("");
 }
 
 function flightSourceFooter(routes: Route[]): string {
-  const sources = [...new Set(routes.map(flightSource))].sort();
+  const sources = [...new Set(routes.flatMap(flightSources))].sort();
   return sources.length ? `<p class="route-source-footer">Fuentes de vuelos: ${esc(sources.join(" · "))}</p>` : "";
 }
 

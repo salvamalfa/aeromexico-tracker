@@ -1,8 +1,10 @@
 carrier_identity,airline_id,unique_carrier,unique_carrier_name,unique_carrier_entity,carrier,carrier_name,carrier_key
 AIRLINE_ID_19534,19534,AM,Aeromexico,9148B,AM,Aeromexico,AEROMEXICO
+AIRLINE_ID_20250,20250,5D,Aerolitoral,9148W,5D,Aerolitoral,AEROMEXICO_CONNECT
 AIRLINE_ID_19393,19393,WN,Southwest Airlines Co.,11033,WN,Southwest Airlines Co.,BTS_AIRLINE_ID_19393
 AIRLINE_ID_19531,19531,AC,Air Canada,9900A,AC,Air Canada,BTS_AIRLINE_ID_19531
 AIRLINE_ID_19532,19532,AF,Compagnie Natl Air France,9427B,AF,Compagnie Natl Air France,BTS_AIRLINE_ID_19532
+AIRLINE_ID_19537,19537,AV,Aerovias Nacl De Colombia,9327A,AV,Aerovias Nacl De Colombia,BTS_AIRLINE_ID_19537
 AIRLINE_ID_19540,19540,BA,British Airways Plc,9493E,BA,British Airways Plc,BTS_AIRLINE_ID_19540
 AIRLINE_ID_19543,19543,CA,Air China,9713A,CA,Air China,BTS_AIRLINE_ID_19543
 AIRLINE_ID_19545,19545,CV,Cargolux Airlines International S.A,9454A,CV,Cargolux Airlines International S.A,BTS_AIRLINE_ID_19545
@@ -27,6 +29,7 @@ AIRLINE_ID_19961,19961,TS,Air Transat,9900C,TS,Air Transat,BTS_AIRLINE_ID_19961
 AIRLINE_ID_19977,19977,UA,United Air Lines Inc.,10876,UA,United Air Lines Inc.,BTS_AIRLINE_ID_19977
 AIRLINE_ID_20007,20007,5Y,Atlas Air Inc.,06087,5Y,Atlas Air Inc.,BTS_AIRLINE_ID_20007
 AIRLINE_ID_20007,20007,5Y,Atlas Air Inc.,16087,5Y,Atlas Air Inc.,BTS_AIRLINE_ID_20007
+AIRLINE_ID_20046,20046,ZW,Air Wisconsin Airlines Corp,06024,ZW,Air Wisconsin Airlines Corp,BTS_AIRLINE_ID_20046
 AIRLINE_ID_20100,20100,PO,Polar Air Cargo Airways,16757,PO,Polar Air Cargo Airways,BTS_AIRLINE_ID_20100
 AIRLINE_ID_20100,20100,PO,Polar Air Cargo Airways,16758,PO,Polar Air Cargo Airways,BTS_AIRLINE_ID_20100
 AIRLINE_ID_20107,20107,FX,Federal Express Corporation,16195,FX,Federal Express Corporation,BTS_AIRLINE_ID_20107
@@ -54,7 +57,6 @@ AIRLINE_ID_20207,20207,XP,TEM Enterprises dba  Avelo Airlines,11034,XP,XTRA Airw
 AIRLINE_ID_20207,20207,XP,TEM Enterprises dba  Avelo Airlines,16144,XP,TEM Enterprises dba  Avelo Airlines,BTS_AIRLINE_ID_20207
 AIRLINE_ID_20222,20222,E7,Estafeta Carga Aereas,9148U,E7,Estafeta Carga Aereas,BTS_AIRLINE_ID_20222
 AIRLINE_ID_20229,20229,WS,Westjet,9900Y,WS,Westjet,BTS_AIRLINE_ID_20229
-AIRLINE_ID_20250,20250,5D,Aerolitoral,9148W,5D,Aerolitoral,BTS_AIRLINE_ID_20250
 AIRLINE_ID_20304,20304,OO,SkyWest Airlines Inc.,11025,OO,SkyWest Airlines Inc.,BTS_AIRLINE_ID_20304
 AIRLINE_ID_20308,20308,WE,Centurion Cargo Inc.,16180,WE,Centurion Cargo Inc.,BTS_AIRLINE_ID_20308
 AIRLINE_ID_20310,20310,WL,"Caribbean Sun Airlines, Inc. d/b/a World Atlantic Airlines",16076,K8,"Caribbean Sun Airlines, Inc. d/b/a World Atlantic Airlines",BTS_AIRLINE_ID_20310
@@ -197,14 +199,17 @@ AIRLINE_ID_22081,22081,TQ,"Tailwind Air, LLC",01269,TQ,"Tailwind Air, LLC",BTS_A
 AIRLINE_ID_22085,22085,GCA,"Global Crossing Airlines, Inc.",01287,GCA,"Global Crossing Airlines, Inc.",BTS_AIRLINE_ID_22085
 AIRLINE_ID_22085,22085,GCA,"Global Crossing Airlines, Inc.",19768,GCA,"Global Crossing Airlines, Inc.",BTS_AIRLINE_ID_22085
 AIRLINE_ID_22090,22090,4Y,Eurowings Discover GmbH,71256,4Y,Eurowings Discover GmbH,BTS_AIRLINE_ID_22090
+AIRLINE_ID_22093,22093,CT,Air Atlanta Europe Limited,71259,CT,Air Atlanta Europe Limited,BTS_AIRLINE_ID_22093
 AIRLINE_ID_22097,22097,GJQ,GainJet Ireland Ltd,71263,GJQ,GainJet Ireland Ltd,BTS_AIRLINE_ID_22097
 AIRLINE_ID_22099,22099,PTQ,Pontair Ltd.,71265,PTQ,Pontair Ltd.,BTS_AIRLINE_ID_22099
+AIRLINE_ID_22108,22108,ARQ,Flightworx Aviation Ltd,71272,ARQ,Flightworx Aviation Ltd,BTS_AIRLINE_ID_22108
 AIRLINE_ID_22115,22115,SWQ,Swiss Private Jet S.A.,71279,SWQ,Swiss Private Jet S.A.,BTS_AIRLINE_ID_22115
 AIRLINE_ID_22120,22120,QFX,Sparfell Malta Ltd,71283,QFX,Sparfell Malta Ltd,BTS_AIRLINE_ID_22120
 AIRLINE_ID_22121,22121,HUQ,Haute Aviation,71284,HUQ,Haute Aviation,BTS_AIRLINE_ID_22121
 AIRLINE_ID_22122,22122,XQQ,AXIS Aviation Switzerland AG,71285,XQQ,AXIS Aviation Switzerland AG,BTS_AIRLINE_ID_22122
 AIRLINE_ID_22125,22125,AQX,Axis Aviation GmbH,71289,AQX,Axis Aviation GmbH,BTS_AIRLINE_ID_22125
 AIRLINE_ID_22129,22129,W2,FlexFlight AsP,71293,W2,FlexFlight AsP,BTS_AIRLINE_ID_22129
+AIRLINE_ID_22169,22169,PGQ,Sparfell Luxembourg SA,71339,PGQ,Sparfell Luxembourg SA,BTS_AIRLINE_ID_22169
 ENTITY_K8,,,,,K8,,BTS_ENTITY_K8
 AIRLINE_ID_19790,19790,DL,Delta Air Lines Inc.,10260,DL,Delta Air Lines Inc.,DELTA
 AIRLINE_ID_21342,21342,VB,"Aeroenlaces Nacionales, S.A. de C.V. d/b/a VivaAerobus",71070,VB,"Aeroenlaces Nacionales, S.A. de C.V. d/b/a VivaAerobus",VIVA_AEROBUS
