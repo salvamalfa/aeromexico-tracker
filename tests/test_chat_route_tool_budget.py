@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+from _published_flight_profiles import has_signed_flight_components
 from src.conversational_analytics.data.snapshot import Snapshot
 from src.conversational_analytics.tools.routes import RouteTools
 
@@ -29,8 +30,7 @@ def test_default_shared_route_result_fits_provider_budget_and_keeps_display_vali
 
     display = result["display"]
     assert display["title"] == (
-        f"Rutas compartidas · 2026Q2 · {result['row_count']} de "
-        f"{result['available_route_count']} mostradas"
+        f"Rutas compartidas · 2026Q2 · {result['row_count']} de {result['available_route_count']} mostradas"
     )
     assert len(display["columns"]) == len({column["key"] for column in display["columns"]})
     keys = {column["key"] for column in display["columns"]}
@@ -80,6 +80,7 @@ def test_real_international_quarter_route_queries_fit_presented_tool_budget() ->
 
     snapshot = Snapshot(Path("site"))
     registry = ToolRegistry(snapshot, SimpleNamespace(enable_route_tools=True))
+    available_routes = 102 if has_signed_flight_components(snapshot) else 75
     for top_n, comparison_period in ((None, None), (20, None), (None, "2026Q1"), (20, "2026Q1")):
         query = {
             "entity_id": "AEROMEXICO_GROUP",
@@ -100,11 +101,11 @@ def test_real_international_quarter_route_queries_fit_presented_tool_budget() ->
         assert raw_bytes <= 15_000
         assert final_bytes <= 15_652
         assert result["requested_top_n"] == expected
-        assert result["available_route_count"] == 102
+        assert result["available_route_count"] == available_routes
         assert result["applied_top_n"] == len(result["rows"]) <= expected
         assert result["truncated"] is True
         assert result["truncation_reason"] == "tool_result_size_limit"
-        assert result["display"]["title"].endswith("102 mostradas")
+        assert result["display"]["title"].endswith(f"{available_routes} mostradas")
         assert len(result["display"]["rows"]) == len(result["rows"])
         assert result["rows"]
         assert all(row["metric_provenance"] for row in result["rows"])
@@ -143,9 +144,7 @@ def test_shared_route_queries_fit_presented_budget_and_display_contract() -> Non
                     query["top_n"] = top_n
                 result = registry.invoke("find_shared_routes", query)
                 enriched = DisplayRegistry().add_tool_result(result, "find_shared_routes", "shared-call")
-                final_bytes = len(
-                    json.dumps(enriched, ensure_ascii=False, separators=(",", ":")).encode()
-                )
+                final_bytes = len(json.dumps(enriched, ensure_ascii=False, separators=(",", ":")).encode())
                 assert final_bytes < 16_000
                 assert len(result["display"]["columns"]) <= 12
                 assert len(enriched["displays"]) == 1
