@@ -2,6 +2,7 @@
 // turn an official flight count into an estimated one.
 import type { Route } from "../../types/domain";
 import { finite } from "./dom";
+import { shortSourceLabel } from "./coverage";
 
 export type FlightKind = "observed" | "scheduled" | "estimated" | "attributed" | "mixed" | "missing";
 export const FLIGHT_KIND_LABEL: Record<FlightKind, string> = {
@@ -28,10 +29,17 @@ export function flightKind(route: Route): FlightKind {
 }
 
 export function flightSource(route: Route): string {
-  if (flightKind(route) === "estimated" && (route.source_label ?? "").includes("AeroDataBox")) {
-    return "AeroDataBox · frecuencias históricas estimadas";
+  return flightSources(route).join(" · ");
+}
+
+export function flightSources(route: Route): string[] {
+  if (route.flight_components?.length) {
+    return [...new Set(route.flight_components.map(c => c.source_label))].filter(Boolean).sort();
   }
-  return route.source_label ?? "Fuente no detallada";
+  if (flightKind(route) === "estimated" && (route.source_label ?? "").includes("AeroDataBox")) {
+    return ["AeroDataBox · frecuencias históricas estimadas"];
+  }
+  return [route.source_label ?? "Fuente no detallada"];
 }
 
 // Components, rather than a market-wide status, drive sums and labels.
@@ -55,5 +63,7 @@ export function flightBreakdown(route: Route): string {
 export function flightScheduleNote(route: Route): string {
   const totals = flightTotals(route);
   if (totals.scheduled === undefined || !Object.keys(totals).some((kind) => kind !== "scheduled")) return "";
-  return `${new Intl.NumberFormat("es-MX", { maximumFractionDigits: 1 }).format(totals.scheduled)} programados (fuera del total)`;
+  const sources = [...new Set(route.flight_components?.filter(c => c.kind === "scheduled")
+    .map(c => shortSourceLabel(c.source_label)) ?? [])].filter(Boolean).sort();
+  return `${new Intl.NumberFormat("es-MX", { maximumFractionDigits: 1 }).format(totals.scheduled)} programados · ${sources.join(" / ") || "fuente no detallada"} (fuera del total)`;
 }

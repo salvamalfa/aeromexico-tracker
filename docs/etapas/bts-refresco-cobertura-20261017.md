@@ -614,3 +614,20 @@ tesis conservan su contenido y sólo cambian los metadatos técnicos autorizados
 de las tres versiones renovadas. La proyección privada incorpora 45 registros
 canónicos válidos, conservando el historial y la exclusión documentada del
 wrapper histórico inválido. No cambian Gold, modelos, capturas ni la opción US.
+
+La suite completa de `d9da4b7` cerró con 1.733 pruebas y 29 subtests pasados,
+más una omisión por preview Pages sin fijar. La revisión automática posterior
+a marcar el PR listo detectó tres fallos que impidieron integrar ese artefacto:
+la programación AICM se reducía a las celdas sin operación, la cobertura usaba
+la unión de meses de operadores/sentidos distintos, y la cifra programada no
+identificaba su fuente en la fila. Las correcciones se agrupan en el borrador.
+Se conserva una fuente programada por celda como medida independiente, sin
+sumarla a operaciones/estimaciones; la cobertura usa el mínimo por operador y
+sentido conocidos, y la fila/pie nombran las fuentes de todos los componentes.
+Las regresiones reprodujeron tres fallos Python y cuatro de frontend antes de
+corregirlos. Después pasan 52 pruebas focalizadas Python, 217 de frontend,
+TypeScript, Ruff y los tres presupuestos del repositorio. Los cambios de
+interfaz vuelven a modificar la huella técnica: las aprobaciones 82–84 se
+conservan para sus pares anteriores y no se trasladan. El sitio firmado de
+`d9da4b7` queda como evidencia histórica, sin integrar ni publicar; la preview
+corregida es explícitamente no firmada y no sustituye al gate normal.

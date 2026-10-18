@@ -17,7 +17,7 @@ KINDS = ("observed", "estimated", "scheduled")
 
 
 def resolve_cells(cells):
-    """Choose one source per exact cell; explicit observed zero blocks fallback.
+    """Choose one source per measure/cell; observed zero blocks estimates.
 
     Duplicate source cells are an input error, not an invitation to sum twice.
     Scheduled evidence stays separate and cannot add to observed/estimated flights.
@@ -40,21 +40,16 @@ def resolve_cells(cells):
     for key, candidates in sorted(grouped.items()):
         rank = {"observed": 0, "estimated": 1, "scheduled": 2}
         candidates.sort(key=lambda c: (rank[c["kind"]], c.get("priority", 0), c["source_label"]))
-        result.append(candidates[0])
-    # Brand-level schedules cannot identify Aerovías versus Connect. Exclude an
-    # overlapping cell if either actual operator has evidence; never add both.
-    operative = {
-        (c["origin_iata"], c["destination_iata"], c["period_id"])
-        for c in result
-        if c["kind"] != "scheduled" and c["carrier_key"] in {"AEROMEXICO", "AEROMEXICO_CONNECT"}
-    }
-    return [
-        c
-        for c in result
-        if c["kind"] != "scheduled"
-        or c["carrier_key"] != "AEROMEXICO_GROUP"
-        or (c["origin_iata"], c["destination_iata"], c["period_id"]) not in operative
-    ]
+        operative = [c for c in candidates if c["kind"] != "scheduled"]
+        scheduled = [c for c in candidates if c["kind"] == "scheduled"]
+        if operative:
+            result.append(operative[0])
+        if scheduled:
+            result.append(scheduled[0])
+    # Programming is an independent source measure, including brand schedules
+    # overlapping observed operator cells. apply_flight_cells excludes it from
+    # the operative headline; retaining it here avoids a residual schedule total.
+    return result
 
 
 def _rows(connection, table, months, carriers=None):

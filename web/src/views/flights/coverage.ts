@@ -13,7 +13,14 @@ const MONTH_NAMES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "jul
 export function coverageMonths(route: Route): number | null {
   if (route.flight_components?.length) {
     const operative = route.flight_components.filter((c) => c.kind !== "scheduled");
-    return new Set((operative.length ? operative : route.flight_components).map((c) => c.period_id)).size;
+    const scopes = new Map<string, Set<string>>();
+    for (const c of operative.length ? operative : route.flight_components) {
+      const key = `${c.carrier_key}|${c.origin_iata}|${c.destination_iata}`;
+      const months = scopes.get(key) ?? new Set<string>();
+      months.add(c.period_id);
+      scopes.set(key, months);
+    }
+    return Math.min(...[...scopes.values()].map((months) => months.size));
   }
   const note = route.coverage_note || "";
   const listed = /^Meses:\s*([\d,\s]+)/.exec(note);
@@ -44,7 +51,7 @@ export function coverageIndicator(route: Route, selectedMonthCount = 3): { varia
     const months = coverageMonths(route)!;
     const ratio = months / selectedMonthCount;
     return { variant: ratio >= 1 ? "is-full" : ratio >= 0.5 ? "is-partial" : "is-thin",
-      title: `${months} de ${selectedMonthCount} ${selectedMonthCount === 1 ? "mes" : "meses"} con frecuencias por celda; no acredita cobertura completa de vuelos` };
+      title: `${months} de ${selectedMonthCount} ${selectedMonthCount === 1 ? "mes" : "meses"} como mínimo por operador y sentido con cifras; no acredita cobertura completa de vuelos` };
   }
   if (finite(route.months_covered) && finite(route.months_selected) && route.months_selected > 0) {
     // Agregado nacional multi-mes: mismo criterio que Internacional

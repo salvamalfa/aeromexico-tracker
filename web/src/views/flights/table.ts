@@ -6,7 +6,7 @@ import { coverageIndicator, scheduledIconHtml } from "./coverage";
 import { bindAirportSearchControls } from "./search";
 import { cityLabel, routeChangePercent, routeTitle } from "./network";
 import type { Route } from "../../types/domain";
-import { flightKind, flightSource, flightBreakdown, flightScheduleNote, FLIGHT_KIND_LABEL } from "./flight-measure";
+import { flightKind, flightSources, flightBreakdown, flightScheduleNote, FLIGHT_KIND_LABEL } from "./flight-measure";
 
 function routeRows(routes: Route[]): string {
   let downStarted = false;
@@ -34,7 +34,7 @@ function routeRows(routes: Route[]): string {
 }
 
 function flightSourceFooter(routes: Route[]): string {
-  const sources = [...new Set(routes.map(flightSource))].sort();
+  const sources = [...new Set(routes.flatMap(flightSources))].sort();
   return sources.length ? `<p class="route-source-footer">Fuentes de vuelos: ${esc(sources.join(" · "))}</p>` : "";
 }
 

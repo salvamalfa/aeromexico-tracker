@@ -63,12 +63,16 @@ def test_schedule_does_not_add_to_observed_or_estimated_cell():
             cell(carrier="AEROMEXICO_GROUP", month="2026M06", kind="scheduled", count=20),
         ]
     )
-    assert [(c["kind"], c["departures"]) for c in selected] == [("observed", 10), ("scheduled", 20)]
+    assert [(c["kind"], c["departures"]) for c in selected] == [
+        ("observed", 10),
+        ("scheduled", 100),
+        ("scheduled", 20),
+    ]
     network = dict(routes=[])
     apply_flight_cells(network, selected, endpoint)
     route = network["routes"][0]
     assert route["departures"] == 10
-    assert sum(c["departures"] for c in route["flight_components"] if c["kind"] == "scheduled") == 20
+    assert sum(c["departures"] for c in route["flight_components"] if c["kind"] == "scheduled") == 120
     assert len(route["directions"]) == 1  # Never invent a return.
 
 
