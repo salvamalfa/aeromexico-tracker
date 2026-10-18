@@ -588,3 +588,16 @@ conservan su fecha y generador originales y la comprobación adicional queda
 en el expediente privado. El cambio sólo afecta auditoría offline: no cambia
 inputs de compilación, assets, datos publicados, backend ni aprobaciones, por
 lo que conserva el sitio firmado del commit de código que lo generó.
+
+La revisión siguiente detectó una ambigüedad de presentación: LAX–MEX en junio
+mostraba 143 como total y «143 observados · 147 programados» como desglose.
+La leyenda principal usa ahora los mismos componentes activos que el total;
+la programación se conserva en una línea separada, «147 programados (fuera
+del total)». Las rutas con sólo programación mantienen su propia cifra, y un
+cero observado conserva su significado. Pasan 212 pruebas de frontend,
+TypeScript y la compilación; se contrastó la fila real a 1440 y 390 píxeles.
+Los totales de tarjetas y los datos permanecen intactos. Esta corrección sí
+modifica la huella de presentación de las tres tesis por entidad: requiere
+versiones técnicas nuevas, auditoría independiente y aprobación humana de sus
+pares exactos. El PR vuelve a borrador; el sitio firmado anterior se conserva
+como evidencia histórica y no se regenera ni integra con esas aprobaciones.

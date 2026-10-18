@@ -45,6 +45,15 @@ export function flightTotals(route: Route): Partial<Record<FlightKind, number>> 
 }
 
 export function flightBreakdown(route: Route): string {
-  return Object.entries(flightTotals(route)).map(([kind, count]) =>
+  const totals = flightTotals(route);
+  const active = Object.entries(totals).filter(([kind]) => kind !== "scheduled");
+  return (active.length ? active : Object.entries(totals)).map(([kind, count]) =>
     `${new Intl.NumberFormat("es-MX", { maximumFractionDigits: 1 }).format(count)} ${FLIGHT_KIND_LABEL[kind as FlightKind]}`).join(" · ");
+}
+
+// Schedules remain visible, explicitly outside a performed/estimated headline.
+export function flightScheduleNote(route: Route): string {
+  const totals = flightTotals(route);
+  if (totals.scheduled === undefined || !Object.keys(totals).some((kind) => kind !== "scheduled")) return "";
+  return `${new Intl.NumberFormat("es-MX", { maximumFractionDigits: 1 }).format(totals.scheduled)} programados (fuera del total)`;
 }
