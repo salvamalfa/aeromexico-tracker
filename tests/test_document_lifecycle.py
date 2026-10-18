@@ -106,6 +106,20 @@ def retire_fixture(root, consumer, content):
         ("tests/test_prompt.py", 'Path("docs\\\\retired.md").read_text()'),
         ("src/consumer.py", 'Path("../docs/retired.md").read_text()'),
         ("config/prompts.yaml", "prompt_file: docs/retired.md"),
+        ("config/prompts.yaml", "prompt_file: ../docs/retired.md"),
+        ("scripts/check.sh", "check --input ../docs/retired.md"),
+        (
+            "README.md",
+            "[guide](https://raw.githubusercontent.com/salvamalfa/aeromexico-tracker/master/docs/retired.md)",
+        ),
+        (
+            "config/prompts.yaml",
+            "url: https://raw.githubusercontent.com/salvamalfa/aeromexico-tracker/refs/heads/master/docs/retired.md",
+        ),
+        (
+            "README.md",
+            "[guide](https://github.com/salvamalfa/aeromexico-tracker/raw/refs/heads/master/docs/retired.md)",
+        ),
     ],
 )
 def test_deleted_doc_checks_unchanged_inbound_consumers(tmp_path, consumer, content):
@@ -151,6 +165,9 @@ def test_immutable_archive_link_and_other_same_name_doc_remain_valid(tmp_path):
     consumer = (
         "[docs/retired.md](https://github.com/example/repo/blob/" + "a" * 40 + "/docs/retired.md)\n"
         "[current](reference/retired.md)\n[unrelated old debt](other-missing.md)"
+        "\n[raw history](https://raw.githubusercontent.com/salvamalfa/aeromexico-tracker/"
+        + "a" * 40
+        + "/docs/retired.md)"
     )
     baseline = retire_fixture(tmp_path, "README.md", consumer)
     (tmp_path / "reference").mkdir()
@@ -161,3 +178,21 @@ def test_immutable_archive_link_and_other_same_name_doc_remain_valid(tmp_path):
         {"path": "reference/retired.md", "disposition": "keep", "reason": "Different guide"},
     )
     assert not validate_dispositions(tmp_path, changed_documents(tmp_path, baseline), disposition)
+
+
+def test_pr_diff_excludes_upstream_changes_from_github_merge_checkout(tmp_path):
+    git(tmp_path, "init", "-q")
+    (tmp_path / "README.md").write_text("Synthetic base")
+    baseline = commit(tmp_path)
+    git(tmp_path, "checkout", "-qb", "upstream")
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs/upstream.md").write_text("Another task's document")
+    upstream = commit(tmp_path)
+    git(tmp_path, "checkout", "-qb", "candidate", baseline)
+    (tmp_path / "docs").mkdir(exist_ok=True)
+    (tmp_path / "docs/ours.md").write_text("This task's document")
+    head = commit(tmp_path)
+    git(tmp_path, "merge", "--no-ff", "--no-edit", upstream)
+    assert changed_documents(tmp_path, baseline) == ["docs/ours.md", "docs/upstream.md"]
+    assert changed_documents(tmp_path, baseline, head) == ["docs/ours.md"]
+    assert changed_documents(tmp_path, upstream, head) == ["docs/ours.md"]

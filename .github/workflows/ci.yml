@@ -25,6 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v10.2.0
         with:
           python-version: "3.13"
@@ -50,10 +52,11 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           DOC_LIFECYCLE_BASE: ${{ github.event.pull_request.base.sha }}
+          DOC_LIFECYCLE_HEAD: ${{ github.event.pull_request.head.sha }}
           DOC_LIFECYCLE_SUMMARY: ${{ github.event.pull_request.body }}
         run: |
-          git fetch --no-tags --depth=1 origin "$DOC_LIFECYCLE_BASE"
-          uv run python scripts/check_document_lifecycle.py --base "$DOC_LIFECYCLE_BASE"
+          git fetch --no-tags origin "$DOC_LIFECYCLE_BASE" "$DOC_LIFECYCLE_HEAD"
+          uv run python scripts/check_document_lifecycle.py --base "$DOC_LIFECYCLE_BASE" --head "$DOC_LIFECYCLE_HEAD"
 
       # A second, isolated venv proves the owner-facing API can install and
       # start without the pipeline, analytics, test, or browser dependencies.

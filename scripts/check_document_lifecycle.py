@@ -14,10 +14,10 @@ DISPOSITIONS = {"keep", "update", "archive", "delete_candidate", "pending"}
 BLOCK = re.compile(r"<!--\s*document-lifecycle:v1\s*(\{.*?\})\s*-->", re.S)
 
 
-def changed_documents(root: Path, base: str) -> list[str]:
+def changed_documents(root: Path, base: str, head: str = "HEAD") -> list[str]:
     changed = (
         subprocess.check_output(
-            ["git", "diff", "--no-renames", "--name-only", "-z", base, "HEAD", "--"], cwd=root
+            ["git", "diff", "--no-renames", "--name-only", "-z", f"{base}...{head}", "--"], cwd=root
         )
         .decode()
         .split("\0")
@@ -49,10 +49,15 @@ def markdown_url(target: str):
 
 def mutable_repo_document(value, root: Path) -> Path | None:
     repository = os.getenv("GITHUB_REPOSITORY", "salvamalfa/aeromexico-tracker")
-    match = re.fullmatch(
-        "/" + re.escape(repository) + r"/(?:blob|tree)/(?:master|main|HEAD)/(.+)", value.path
-    )
-    if value.hostname == "github.com" and match:
+    prefix = "/" + re.escape(repository)
+    branch = r"/(?:refs/heads/)?(?:master|main|HEAD)/(.+)"
+    if value.hostname == "github.com":
+        match = re.fullmatch(prefix + r"/(?:blob|tree|raw)" + branch, value.path)
+    elif value.hostname in {"raw.githubusercontent.com", "raw.github.com"}:
+        match = re.fullmatch(prefix + branch, value.path)
+    else:
+        match = None
+    if match:
         return (root / unquote(match[1])).resolve()
     return None
 
@@ -104,7 +109,11 @@ def inbound_references(root: Path, paths: list[str]) -> list[str]:
         for path in removed.values():
             if re.search(r"(?<![\w./-])" + re.escape(path) + r"(?![\w./-])", normalized):
                 referenced.add(path)
-        for target in re.findall(r"[\"'`]([^\"'`\n]+?\.[A-Za-z0-9]+(?:#[^\"'`\n]*)?)[\"'`]", plain):
+        literals = re.findall(r"[\"'`]([^\"'`\n]+?\.[A-Za-z0-9]+(?:#[^\"'`\n]*)?)[\"'`]", plain)
+        # YAML values and shell arguments need not be quoted. Resolve their
+        # relative tokens from both the repository and the consumer directory.
+        literals += re.findall(r"[^\s\"'`<>:=;,|()\[\]{}]+", plain)
+        for target in literals:
             value = urlsplit(target)
             if value.scheme or not value.path:
                 continue
@@ -154,11 +163,12 @@ def validate_dispositions(root: Path, paths: list[str], summary: str) -> list[st
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base", required=True)
+    parser.add_argument("--head", default="HEAD", help="PR head, not GitHub's synthetic merge commit")
     parser.add_argument("--summary-file", type=Path)
     parser.add_argument("--list", action="store_true")
     args = parser.parse_args(argv)
     root = Path(__file__).resolve().parents[1]
-    paths = changed_documents(root, args.base)
+    paths = changed_documents(root, args.base, args.head)
     if args.list:
         print(json.dumps(paths, indent=2))
         return 0

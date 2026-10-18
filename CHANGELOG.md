@@ -7,13 +7,14 @@
   [Guía y muestras](docs/catalogo-fuentes-calendario.md).
 - Calendario aprobado, sin nuevas automatizaciones, datos activados ni
   publicación. AeroDataBox retenido permanece sin cambios; adaptadores con
-  límites históricos y dependencias PR134/PR136 se declaran pendientes.
+  límites históricos y conexión mensual de PR136 se declaran pendientes.
+  PR134 ya está integrado por sus responsables; esta rama sigue aislada.
 - Convención de audiencia añadida a `AGENTS.md`; auditoría inicial del lifecycle
   de solo lectura, sin retirar ni reescribir documentos históricos.
 - Recetas de adquisición por producto, índice visible de las ocho skills y
   ejemplo macro ejecutable. EIA y las tres series Banxico pasaron hasta Silver
   en pilotos reales; H.10 respondió vacío. BMV queda en captura y bolsa requiere
-  evidencia SEC local. Se atendieron once hallazgos de cinco rondas de revisión Codex.
+  evidencia SEC local. Se atendieron trece hallazgos de seis rondas de revisión Codex.
 - Noticias deduplicadas conservan metadatos por contribuyente; sus controles y
   revisiones verifican la procedencia RSS/GDELT propia contra Bronze.
 - Captura con alias Bronze compatibles por producto; dependencias obligatorias
@@ -21,6 +22,9 @@
 - Cierre documental obligatorio en `AGENTS.md` y comprobación de disposiciones
   y enlaces en el CI existente, incluidos consumidores sin modificar de un
   documento retirado o movido; se conservan sus permisos y eventos.
+- El cierre incluye rutas relativas sin comillas y enlaces raw al branch
+  principal. En CI compara el head real del PR desde su ancestro común;
+  excluye cambios ajenos del commit de mezcla preparado por GitHub.
 
 ## 2026-10-12 · Chat: cierre operativo de fase 2 (fecha México)
 

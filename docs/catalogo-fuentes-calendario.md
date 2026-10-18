@@ -143,8 +143,8 @@ Para fechar la trimestral, pasar `--releases` con una copia de
 [`source_update_releases.example.json`](../config/source_update_releases.example.json)
 completada con reportes reales. La plantilla no afirma fechas de publicación.
 
-Validación de esta entrega: **130 controles focalizados aprobados** y suite
-general con **1.518 pruebas y 29 subpruebas aprobadas**, sin fallos; 75 pruebas
+Validación de esta entrega: **136 controles focalizados aprobados** y suite
+general con **1.524 pruebas y 29 subpruebas aprobadas**, sin fallos; 75 pruebas
 omitidas por insumos locales ausentes o vista previa sin fijar. Las capturas de
 prueba son sintéticas. [Recibo de validación](referencias/source-updates-20261018/validation.json).
 
@@ -199,10 +199,12 @@ No instala ningún horario ni seguimiento automático.
 
 ### Integración y permisos
 
-La rama parte de `40a63d1`. No modifica las ramas de Vuelos (PR134/privado33),
-Mercado (PR135) o Noticias (PR136). Antes de integrar debe revisar la versión
-final del adaptador BTS de PR134 y conectar el archivo mensual de Noticias de
-PR136. No se abre un PR privado: no hay cambios necesarios en el respaldo.
+La rama parte de `40a63d1` y permanece aislada. Vuelos (PR134 y su contraparte
+privada33) ya está integrado por sus responsables; sus imports BTS se comprobaron
+contra `8b5dd73`. Mercado (PR135) y Noticias (PR136) siguen abiertos. Antes de
+integrar debe validar sus versiones finales y conectar el archivo mensual de
+Noticias. No se modifican esas ramas ni se abre un PR privado: no hay cambios
+necesarios en el respaldo.
 
 Viva, Volaris e Industria siguen requiriendo aprobación exacta de entidad,
 periodo y versión para sus tesis. Captura y pruebas verdes no la sustituyen.
