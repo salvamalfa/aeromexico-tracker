@@ -1,9 +1,59 @@
 """Keep only required chat configuration in the Docker build context."""
 
 import fnmatch
+import shlex
+import shutil
 from pathlib import Path
 
+from src.web_export.contract_versions import ARCHIVED_CONTRACTS, resolve_contract
+
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_runtime_image_contains_every_exact_retained_contract(tmp_path):
+    """Exercise the resolver against files actually admitted by Docker COPY."""
+    rules = (ROOT / ".dockerignore").read_text().splitlines()
+
+    def admitted(path):
+        from pathlib import PurePosixPath
+
+        for candidate in (path, *path.parents):
+            if candidate == ROOT:
+                break
+            relative = candidate.relative_to(ROOT).as_posix()
+            allowed = True
+            for rule in rules:
+                if not rule or rule.startswith("#"):
+                    continue
+                pattern = rule.lstrip("!").rstrip("/")
+                if PurePosixPath(relative).match(pattern):
+                    allowed = rule.startswith("!")
+            if not allowed:
+                return False
+        return True
+
+    for line in (ROOT / "Dockerfile.chat").read_text().splitlines():
+        if not line.startswith("COPY "):
+            continue
+        parts = shlex.split(line)
+        if not parts or parts[0] != "COPY" or parts[1].startswith("--"):
+            continue
+        destination = tmp_path / parts[-1]
+        for source in parts[1:-1]:
+            if not source.startswith("contracts/web"):
+                continue
+            for match in ROOT.glob(source):
+                files = list(match.rglob("*")) if match.is_dir() else [match]
+                for file in files:
+                    if file.is_file() and admitted(file):
+                        suffix = file.relative_to(match) if match.is_dir() else Path(file.name)
+                        target = destination / suffix
+                        target.parent.mkdir(parents=True, exist_ok=True)
+                        shutil.copy2(file, target)
+    for name, versions in ARCHIVED_CONTRACTS.items():
+        for digest in versions:
+            resolved = resolve_contract(tmp_path / "contracts/web", name, digest)
+            assert resolved == tmp_path / "contracts/web/versions" / digest / name
 
 
 def test_chat_runtime_configuration_is_reincluded_in_docker_context():
