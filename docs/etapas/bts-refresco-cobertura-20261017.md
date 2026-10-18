@@ -634,3 +634,14 @@ corregida es explícitamente no firmada y no sustituye al gate normal.
 
 La leyenda de programación también explicita su sentido: el total de ambos
 sentidos permanece distinguible de un headline operativo unidireccional.
+
+Una revisión adicional encontró que julio, disponible en las estimaciones,
+seguía seleccionable al cambiar a la capa nacional oficial aunque esta sólo
+tenía el segundo trimestre. El selector oficial ofrece ahora los trimestres
+disponibles y los meses fechados de sus propias filas, y vuelve a un período
+válido al cambiar de capa. Las otras entidades conservan julio estimado. Dos
+regresiones fallaban antes; pasan las 221 pruebas de frontend, TypeScript y
+la compilación. Chromium del entorno cloud comprobó el cambio de capa y de
+entidad a 1440 y 390 píxeles, con rutas visibles y sin modificar el trimestre
+financiero. Esta corrección se incorpora antes de congelar la huella conjunta
+con las otras pestañas; no genera nuevas aprobaciones ni publica el sitio.
