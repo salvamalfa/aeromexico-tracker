@@ -39,7 +39,13 @@ def news_chat_server(tmp_path_factory):
         text=True,
     )
     assert build.returncode == 0, build.stderr
-    shutil.copytree(ROOT / "site/data", dist / "data", dirs_exist_ok=True)
+    shutil.copytree(ROOT / "tests/fixtures/chat/site/data", dist / "data", dirs_exist_ok=True)
+    # This browser smoke exercises approved news, not the full production map.
+    # Keep both server and UI on the bounded, signed public test fixture.
+    analysis = json.loads((ROOT / "tests/fixtures/web/analysis_sample.json").read_text())
+    analysis_dir = dist / "data/v1/analysis"
+    analysis_dir.mkdir(parents=True, exist_ok=True)
+    (analysis_dir / f"{analysis['period_id']}.json").write_text(json.dumps(analysis))
     # Public approved news projection; it does not rely on ignored local data.
     from src.dashboard.news import build_news_payload
 
@@ -55,6 +61,7 @@ def news_chat_server(tmp_path_factory):
         port = sock.getsockname()[1]
     env.update(
         CHAT_PROVIDER="mock",
+        CHAT_SNAPSHOT_ROOT=str(ROOT / "tests/fixtures/chat/site"),
         CHAT_STATE_PATH=str(folder / "chat.sqlite3"),
         CHAT_PROMPT_VERSION="r2-proposed",
         CHAT_ENABLE_EVIDENCE_TOOLS="true",
