@@ -175,7 +175,7 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
         span = r"\b" + point + r"(?:\s+(?:a|al|hasta)\s+|\s*[-–—]\s*)" + point + r"\b"
         if len(points) != 2 or not (re.search(between, text) or re.search(span, text)):
             raise ValueError(
-                "Indica un intervalo explícito de publicación; no se admiten listas de fechas o meses separados."
+                "Indica un intervalo explícito de publicación con inicio y fin explícitos; no se admiten listas de fechas o meses separados."
             )
     supplied_start, supplied_end = start_date, end_date
     for value in (supplied_start, supplied_end):

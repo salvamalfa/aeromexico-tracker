@@ -163,6 +163,14 @@ def test_code_version_is_deterministic_and_uses_sorted_relative_paths(tmp_path, 
     "name",
     [
         "src/dashboard/market_demand.py",
+        "src/dashboard/flights.py",
+        "src/dashboard/flight_cells.py",
+        "src/dashboard/domestic_routes.py",
+        "src/dashboard/international_routes.py",
+        "src/dashboard/entity_routes.py",
+        "src/dashboard/route_capacity.py",
+        "src/dashboard/executive_summary.py",
+        "src/dashboard/new_package/new_builder.py",
         "src/dashboard/news.py",
         "src/conversational_analytics/news_projection.py",
         "src/analysis_agent/new.py",
@@ -323,7 +331,7 @@ def test_normalization_rejects_same_excerpt_id_for_different_valid_sources():
         adapter._normalize(package, context, evidence, candidate)
 
 
-@pytest.mark.parametrize("module", ["src/dashboard/market_demand.py", "src/dashboard/news.py", "src/conversational_analytics/news_projection.py"])
+@pytest.mark.parametrize("module", ["src/dashboard/market_demand.py", "src/dashboard/news.py", "src/dashboard/flights.py", "src/dashboard/flight_cells.py", "src/dashboard/domestic_routes.py", "src/dashboard/international_routes.py", "src/dashboard/entity_routes.py", "src/dashboard/route_capacity.py", "src/dashboard/executive_summary.py", "src/dashboard/new_package/new_builder.py", "src/conversational_analytics/news_projection.py"])
 def test_new_public_builder_mutation_invalidates_presentation(tmp_path, monkeypatch, module):
     from src.analysis_agent.analyst import SKILL
     _temporary_code_tree(tmp_path, monkeypatch)

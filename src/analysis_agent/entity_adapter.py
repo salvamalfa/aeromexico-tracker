@@ -50,7 +50,9 @@ def code_version():
         "src/dashboard/market_demand.py", "src/dashboard/news.py",
         "src/conversational_analytics/news_projection.py",
     ))
-    for directory in ("src/analysis_agent", "src/publish", "src/web_export"):
+    # Every dashboard builder contributes to normal publication, including
+    # transitive flight calculations and future modules added to the package.
+    for directory in ("src/analysis_agent", "src/publish", "src/web_export", "src/dashboard"):
         paths.update((root / directory).rglob("*.py"))
     paths.update(path for path in (root / "contracts/web").rglob("*") if path.is_file())
     test_directories = {"test", "tests", "spec", "specs", "__tests__", "__specs__"}

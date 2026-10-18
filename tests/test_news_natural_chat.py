@@ -567,6 +567,8 @@ def test_explicit_tool_request_wins_over_news_tab_context(tmp_path, question, to
         "noticias antes de julio de 2026",
         "noticias a partir de abril de 2026",
         "noticias de abril de 2026 en adelante",
+        "noticias de junio y septiembre de 2026",
+        "noticias de junio o septiembre de 2026",
     ],
 )
 def test_directional_date_question_clarifies_without_news_cards(tmp_path, question):

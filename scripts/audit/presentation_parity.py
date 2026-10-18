@@ -34,7 +34,7 @@ def included(name: str) -> bool:
     }:
         return True
     if any(
-        name.startswith(folder + "/") for folder in ("src/analysis_agent", "src/publish", "src/web_export")
+        name.startswith(folder + "/") for folder in ("src/analysis_agent", "src/publish", "src/web_export", "src/dashboard")
     ):
         return p.suffix == ".py"
     if name.startswith("contracts/web/"):
