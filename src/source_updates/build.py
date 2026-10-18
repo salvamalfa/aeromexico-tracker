@@ -71,7 +71,10 @@ def build_plan(workspace: Path, steps: list[str]) -> dict:
         "network_requests": 0,
         "paid_requests": 0,
         "activation": "none",
-        "writes": [str(workspace / "data"), str(workspace / "docs"), str(workspace / "receipts")],
+        "writes": [
+            str(workspace / name)
+            for name in ("config", "data", "docs", "logs", "receipts", ".source-update.lock")
+        ],
         "status": "candidate_build_requires_existing_inputs_and_period_checks",
     }
 

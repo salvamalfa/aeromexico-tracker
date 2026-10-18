@@ -38,9 +38,12 @@
     "paid_requests": 0,
     "activation": "none",
     "writes": [
+      "/workspace/airline-source-skills/tmp/source-updates/prueba/config",
       "/workspace/airline-source-skills/tmp/source-updates/prueba/data",
       "/workspace/airline-source-skills/tmp/source-updates/prueba/docs",
-      "/workspace/airline-source-skills/tmp/source-updates/prueba/receipts"
+      "/workspace/airline-source-skills/tmp/source-updates/prueba/logs",
+      "/workspace/airline-source-skills/tmp/source-updates/prueba/receipts",
+      "/workspace/airline-source-skills/tmp/source-updates/prueba/.source-update.lock"
     ],
     "status": "candidate_build_requires_existing_inputs_and_period_checks"
   },
