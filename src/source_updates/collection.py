@@ -14,7 +14,7 @@ from uuid import uuid4
 
 import httpx
 
-from src.source_updates.catalog import ROOT, load_catalog, product_map
+from src.source_updates.catalog import ROOT, bronze_aliases, load_catalog, product_map
 
 
 def safe_workspace(path: Path) -> Path:
@@ -72,8 +72,8 @@ def selection_plan(selection: dict, workspace: Path) -> dict:
         if not source["is_active"] or not source["artifact_expected"]:
             raise ValueError("Inactive/error/internal sources cannot be collected")
         validate_url(item["url"], source["allowed_hosts"])
-        if item.get("source_system") not in source["source_systems"]:
-            raise ValueError("source_system must be an exact catalogue alias")
+        if item.get("source_system") not in bronze_aliases(item["product"]):
+            raise ValueError("source_system must be a parser-compatible Bronze alias for this product")
         if item.get("purpose") not in {"catalog", "data"}:
             raise ValueError("Declare catalog discovery or data acquisition explicitly")
         if not re.fullmatch(r"[a-z0-9]+", item.get("extension", "")):

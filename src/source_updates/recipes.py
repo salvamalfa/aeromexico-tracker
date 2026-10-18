@@ -7,7 +7,7 @@ import json
 from urllib.parse import urlencode
 
 from src.source_updates.calendar import local_time
-from src.source_updates.catalog import ROOT, load_catalog, product_map
+from src.source_updates.catalog import ROOT, bronze_aliases, load_catalog, product_map
 from src.source_updates.checks import period_end
 from src.source_updates.collection import validate_url
 
@@ -56,6 +56,7 @@ def describe(product_id: str) -> dict:
         "entry_url": resolve_entry(instructions["entry_ref"]),
         "canonical_config": "config/source_update_acquisition.json",
         "institution_catalogue": "config/source_catalog.yaml",
+        "bronze_source_systems": list(bronze_aliases(product_id)),
         "pilot_evidence": {
             "as_of": evidence.get("finished_at"),
             "capture_status": captured.get("status", "not_exercised"),

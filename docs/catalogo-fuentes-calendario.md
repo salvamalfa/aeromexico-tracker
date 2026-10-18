@@ -86,6 +86,11 @@ BMV permite captura, pero su parseo está bloqueado hasta registrar los miembros
 del ZIP de forma acotada. H.10 tiene un paso candidato separado, solo para tipo
 de cambio; no sustituye FIX, INPC o tasa. Para precios bursátiles se necesitan las
 cinco series previstas y evidencia SEC local de la identidad de AERO.
+Las transformaciones heredadas requieren su cadena completa, en orden. Gold
+queda bloqueado aquí mientras esa cadena incluya adaptadores no disponibles
+(`parse.bmv` o el paso compuesto `parse.complementary`). Tener archivos Silver
+no sustituye sus validaciones. Los controles Gold por tabla siguen disponibles
+para candidatos con contrato y linaje verificables; no certifican una ronda.
 
 Un error de acceso no significa que no exista un reporte. Una fecha desconocida
 permanece sin fecha. Las noticias pueden tener cobertura parcial del mes.
@@ -138,8 +143,8 @@ Para fechar la trimestral, pasar `--releases` con una copia de
 [`source_update_releases.example.json`](../config/source_update_releases.example.json)
 completada con reportes reales. La plantilla no afirma fechas de publicación.
 
-Validación de esta entrega: **96 controles focalizados aprobados** y suite
-general con **1.484 pruebas y 29 subpruebas aprobadas**, sin fallos; 75 pruebas
+Validación de esta entrega: **118 controles focalizados aprobados** y suite
+general con **1.506 pruebas y 29 subpruebas aprobadas**, sin fallos; 75 pruebas
 omitidas por insumos locales ausentes o vista previa sin fijar. Las capturas de
 prueba son sintéticas. [Recibo de validación](referencias/source-updates-20261018/validation.json).
 

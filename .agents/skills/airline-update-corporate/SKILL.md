@@ -29,6 +29,13 @@ formato o periodo nuevo. Entregar recibos y periodos realmente comprobados.
 
 ## Adquisición por producto
 
+Las capturas SEC corporativas usan `source_system=sec`; `sec_edgar` y
+`sec_filing` son alias de otras capas o productos y no satisfacen estos parsers.
+Seleccionar `parse.peer_discovery` antes de `parse.sec` o `parse.peers`, con el
+paquete de catálogos y documentos que esos pasos requieren. El tráfico GAP/ASUR
+usa su contrato aeroportuario separado. `recipe` muestra los alias Bronze por
+producto; los controles Silver mantienen los alias de procedencia del catálogo.
+
 La entrada exacta y el procedimiento están en el [catálogo operativo](../../../config/source_update_acquisition.json), enlazado al [catálogo de instituciones](../../../config/source_catalog.yaml). El comando resuelve la URL o API desde su configuración canónica; no hay que inventarla.
 
 ```bash

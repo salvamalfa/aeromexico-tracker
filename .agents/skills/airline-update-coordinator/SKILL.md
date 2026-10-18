@@ -27,6 +27,9 @@ y su apéndice en `docs/catalogo-fuentes-calendario.md`.
    solo con alcance autorizado. Un escritor por lote, sin escrituras activas.
 6. Inspeccionar recibos, faltantes, hashes, cambios de filas y cobertura; el
    coordinador no inventa periodos ni mide disponibilidad desde nombres Gold.
+   Incluir todos los predecesores de pipeline en orden. Una transformación no
+   puede omitir la validación Silver. Si la cadena exige un adaptador aún no
+   disponible aquí, dejar Gold pendiente; no simular su cumplimiento con archivos.
 7. Proponer reintentos con `retry`, máximo dos reprogramaciones por lote.
    Ningún comando instala tareas, cron o automatizaciones. Mantener cuenta de
    reprogramaciones en el expediente del lote; no reiniciarla para eludir límite.

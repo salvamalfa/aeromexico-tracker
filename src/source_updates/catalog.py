@@ -176,6 +176,22 @@ CHECK_TABLES = {
 }
 
 
+def bronze_aliases(product_id: str) -> tuple[str, ...]:
+    """Institution aliases span layers; collection must match the advertised parser."""
+    legacy = {
+        "am_sec": ("sec",),
+        "volaris_sec": ("sec",),
+        "delta_sec": ("sec",),
+        "ryanair_sec": ("sec",),
+        "afac_carriers": ("afac",),
+    }
+    declared = tuple(load_catalog()[product_map()[product_id]["source_key"]]["source_systems"])
+    supported = legacy.get(product_id, declared)
+    if not set(supported) <= set(declared):
+        raise ValueError("Parser-compatible Bronze alias is absent from the institution catalogue")
+    return supported
+
+
 def load_catalog() -> dict:
     sources = yaml.safe_load((ROOT / "config/source_catalog.yaml").read_text())["sources"]
     mapped = [key for keys in FAMILIES.values() for key in keys]

@@ -65,16 +65,37 @@ GRANULAR = {
 }
 
 
+def required_predecessors(steps: list[str]) -> dict[str, tuple[str, ...]]:
+    from src.pipeline.registry import PIPELINE_STEPS
+
+    dependencies = {step.step_id: step.depends_on for step in PIPELINE_STEPS}
+    dependencies.update({name: () for name in GRANULAR})
+    # This granular parser accepts preserved SEC evidence as an explicit file
+    # input. If SEC is rebuilt in this run, it must precede the market parser.
+    dependencies["parse.market"] = ("parse.sec",) if "parse.sec" in steps else ()
+    seen = set()
+    for name in steps:
+        missing = set(dependencies[name]) - seen
+        if missing:
+            unavailable = sorted(missing - ALLOWED)
+            detail = f"; unavailable in this candidate runner: {unavailable}" if unavailable else ""
+            raise ValueError(f"{name} requires earlier pipeline steps: {sorted(missing)}{detail}")
+        seen.add(name)
+    return {name: dependencies[name] for name in steps}
+
+
 def build_plan(workspace: Path, steps: list[str]) -> dict:
     workspace = safe_workspace(workspace)
     if "parse.bmv" in steps:
         raise ValueError("BMV is collection-only here until bounded ZIP-member registration is implemented")
     if not steps or len(steps) != len(set(steps)) or set(steps) - ALLOWED:
         raise ValueError("Select unique, explicitly allowed offline parse/transform steps")
+    dependencies = required_predecessors(steps)
     return {
         "mode": "dry_run",
         "workspace": str(workspace),
         "steps": steps,
+        "required_predecessors": dependencies,
         "prerequisites": {
             name: requirements
             for name, requirements in {
@@ -146,7 +167,8 @@ def worker(workspace: Path, requested: list[str], report: Path) -> int:
     if not report.resolve().is_relative_to((workspace / "receipts").resolve()):
         raise ValueError("Build receipt must remain inside the candidate workspace")
     # These modules import PATHS by value. Set the candidate root BEFORE loading
-    # any parser/transform/registry, in a fresh interpreter for every build.
+    # any parser/transform, in a fresh interpreter for every build. Registry
+    # dependency metadata is pure and may already be loaded by preflight.
     import src.config as config
 
     config.PATHS = config.ProjectPaths(root=workspace)
@@ -164,6 +186,7 @@ def worker(workspace: Path, requested: list[str], report: Path) -> int:
     from src.pipeline.runner import run_pipeline
 
     registry = {step.step_id: step for step in PIPELINE_STEPS}
+    dependencies = required_predecessors(requested)
     for name, (action, sources, outputs) in GRANULAR.items():
         inputs = [InputRequirement(name, bronze_source_systems=sources)]
         if name == "parse.market":
@@ -193,15 +216,8 @@ def worker(workspace: Path, requested: list[str], report: Path) -> int:
             RequirementLevel.REQUIRED,
             tuple(inputs),
             tuple(f"data/silver/{table}.parquet" for table in outputs),
-            depends_on=("parse.sec",) if name == "parse.market" else (),
+            depends_on=dependencies.get(name, ()),
         )
-    # Requested order is deliberate. Selected dependencies must precede children.
-    seen = set()
-    for name in requested:
-        step = registry[name]
-        if (set(step.depends_on) & set(requested)) - seen:
-            raise ValueError("Selected dependency must precede its consumer")
-        seen.add(name)
     selected = [replace(registry[name], requirement=RequirementLevel.REQUIRED) for name in requested]
     try:
         run_pipeline(

@@ -33,25 +33,61 @@
       "entry_ref": "sec:AEROMEXICO",
       "state": "manual",
       "format": "JSON submissions/companyfacts → index.json → anexos HTML",
-      "procedure": "CIK desde src.config.CARRIERS; filtrar 6-K/20-F/F-1, revisar filingDate y accessionNumber, obtener index.json de la presentación y anexos. Conservar catálogos/índices/documentos necesarios; no basta un HTML aislado. Importación manual con URL SEC y hash; no configurar identidad ni credenciales."
+      "procedure": "CIK desde src.config.CARRIERS; filtrar 6-K/20-F/F-1, revisar filingDate y accessionNumber, obtener index.json de la presentación y anexos. Conservar catálogos/índices/documentos necesarios; no basta un HTML aislado. Importación manual con URL SEC y hash; no configurar identidad ni credenciales. Bronze exige source_system=sec; sec_edgar es etiqueta Silver, no un alias de captura intercambiable. Seleccionar parse.peer_discovery antes de parse.sec/parse.peers; se exige el catálogo de identidades de comparables completo.",
+      "selection_contract": {
+        "source_system": "sec",
+        "companyfacts_relative_dir": "sec/companyfacts",
+        "identity_catalog_ref": "constant:src.ingest.peers.stage5:COMPANY_TICKERS_URL",
+        "required_steps": [
+          "parse.peer_discovery",
+          "parse.sec"
+        ]
+      }
     },
     "volaris_sec": {
       "entry_ref": "sec:VOLARIS",
       "state": "manual",
       "format": "JSON → anexos HTML",
-      "procedure": "CIK 0001520504 en CARRIERS. Revalidar submissions y companyfacts, seleccionar anexos de tráfico y resultados por publicación real. parse.peers requiere identidades SEC, Viva y Ryanair además del documento solicitado; no prometer parseo aislado."
+      "procedure": "CIK 0001520504 en CARRIERS. Revalidar submissions y companyfacts, seleccionar anexos de tráfico y resultados por publicación real. parse.peers requiere identidades SEC, Viva y Ryanair además del documento solicitado; no prometer parseo aislado. Bronze exige source_system=sec; sec_edgar es etiqueta Silver, no un alias de captura intercambiable. Seleccionar parse.peer_discovery antes de parse.sec/parse.peers; se exige el catálogo de identidades de comparables completo.",
+      "selection_contract": {
+        "source_system": "sec",
+        "companyfacts_relative_dir": "sec/volaris/companyfacts",
+        "identity_catalog_ref": "constant:src.ingest.peers.stage5:COMPANY_TICKERS_URL",
+        "required_steps": [
+          "parse.peer_discovery",
+          "parse.peers"
+        ]
+      }
     },
     "delta_sec": {
       "entry_ref": "sec:DELTA",
       "state": "manual",
       "format": "JSON → 10-Q/10-K/anexos",
-      "procedure": "CIK 0000027904 en CARRIERS. Seleccionar periodo fiscal y documentos reales; preservar US-GAAP. Misma cadena de índices SEC y requisitos de parse.peers."
+      "procedure": "CIK 0000027904 en CARRIERS. Seleccionar periodo fiscal y documentos reales; preservar US-GAAP. Misma cadena de índices SEC y requisitos de parse.peers. Bronze exige source_system=sec; sec_edgar es etiqueta Silver, no un alias de captura intercambiable. Seleccionar parse.peer_discovery antes de parse.sec/parse.peers; se exige el catálogo de identidades de comparables completo.",
+      "selection_contract": {
+        "source_system": "sec",
+        "companyfacts_relative_dir": "sec/delta/companyfacts",
+        "identity_catalog_ref": "constant:src.ingest.peers.stage5:COMPANY_TICKERS_URL",
+        "required_steps": [
+          "parse.peer_discovery",
+          "parse.peers"
+        ]
+      }
     },
     "ryanair_sec": {
       "entry_ref": "sec:RYANAIR",
       "state": "manual",
       "format": "JSON → 20-F/6-K/anexos",
-      "procedure": "CIK 0001038683 en CARRIERS. Confirmar periodo fiscal antes de compararlo con trimestre calendario. Preservar índices y anexos SEC; no solicitar credenciales."
+      "procedure": "CIK 0001038683 en CARRIERS. Confirmar periodo fiscal antes de compararlo con trimestre calendario. Preservar índices y anexos SEC; no solicitar credenciales. Bronze exige source_system=sec; sec_edgar es etiqueta Silver, no un alias de captura intercambiable. Seleccionar parse.peer_discovery antes de parse.sec/parse.peers; se exige el catálogo de identidades de comparables completo.",
+      "selection_contract": {
+        "source_system": "sec",
+        "companyfacts_relative_dir": "sec/ryanair/companyfacts",
+        "identity_catalog_ref": "constant:src.ingest.peers.stage5:COMPANY_TICKERS_URL",
+        "required_steps": [
+          "parse.peer_discovery",
+          "parse.peers"
+        ]
+      }
     },
     "gap_traffic": {
       "entry_ref": "sec_group:GAP",
@@ -113,7 +149,7 @@
       "entry_ref": "constant:src.ingest.afac.download:DATATUR_CATALOG_URL",
       "state": "discovery_only",
       "format": "HTML → PDF/XLS/ZIP DATATUR",
-      "procedure": "Ejecutar parse_datatur_catalog sobre HTML preservado; elegir enlaces realmente presentes. Guardar PDF en afac/año/mes y workbooks con sus nombres lógicos. No formar AFAC_YYYY_MM.pdf para meses no descubiertos. Parser/validación PDF 2026 terminan en junio; un archivo posterior no acredita Silver.",
+      "procedure": "Ejecutar parse_datatur_catalog sobre HTML preservado; elegir enlaces realmente presentes. Guardar PDF en afac/año/mes y workbooks con sus nombres lógicos. No formar AFAC_YYYY_MM.pdf para meses no descubiertos. Parser/validación PDF 2026 terminan en junio; un archivo posterior no acredita Silver. Este adaptador de captura exige alias Bronze afac; afac_datatur es una etiqueta de otros productos/capas y no satisface su requisito heredado.",
       "selection_contract": {
         "source_system": "afac",
         "monthly_pdf_relative_dir": "afac/<year>/<month-2-digits>",

@@ -6,6 +6,14 @@ ni publicación. Leer primero `AGENTS.md`, el catálogo aprobado en
 política ejecutable `src/source_updates/catalog.py`. La guía para Salva está al
 principio del catálogo; estas instrucciones son referencia interna.
 
+Los alias de una institución abarcan varias capas. Para capturar, usar
+`bronze_source_systems` de `recipe`: empresas SEC requieren `sec`; tráfico
+GAP/ASUR admite sus alias aeroportuarios, con `sec_edgar` en la receta; el
+adaptador de aerolíneas AFAC requiere `afac`. No intercambiar una etiqueta
+Silver por un alias Bronze ni renombrar originales para eludir el control.
+Los pasos deben incluir sus predecesores en orden. Un archivo preexistente no
+sustituye una validación; una dependencia no disponible bloquea la construcción.
+
 ## Procedimiento
 
 1. Confirmar rama, alcance, periodo cerrado y corte con zona explícita. Trabajar
