@@ -10,7 +10,8 @@ la interfaz revisada; no concede aprobación a pares técnicos todavía no audit
 1. Cerrar las comprobaciones y coordinación de Vuelos #134 y su respaldo #33.
    Conservar el sitio publicado de master hasta la entrega conjunta; los
    artefactos firmados intermedios quedan como evidencia histórica.
-2. Integrar el código de Vuelos #134 y después Mercado #135, con `site/`
+2. Integrar el código de Vuelos #134, la corrección de empaquetado #138 y
+   después Mercado #135, con `site/`
    idéntico al baseline publicado. Esos pasos no disparan Pages por sí solos.
 3. Noticias #136 incorpora la resolución de contexto y ambas pestañas. Congelar
    el código conjunto, auditar una única cohorte técnica Industria/Viva/Volaris,
@@ -54,19 +55,23 @@ históricas permanecen intactas. La autorización no cubre otra huella.
 
 El gate normal produjo 795 archivos desde `e69cfe0` y el verificador pasó.
 La UI firmada pasa a 1440/390 con API/worker y proveedor mock. La suite completa
-del sitio firmado está en ejecución. Una prueba histórica que descartaba
+del sitio firmado pasa: 2478 pruebas y 29 subpruebas, una omisión prevista
+por ausencia de un preview Pages fijado (1429.72 s). El proceso comenzó en
+`c1bfc945`; las tres pruebas del empaquetado final se comprobaron además
+por separado sobre los 795 archivos firmados (33.86 s), con las dos de
+watchPatterns también aprobadas. Una prueba histórica que descartaba
 programación en celdas observadas se corrigió para comprobar la retención
 independiente y reconciliar los 897 movimientos programados LAX–MEX con Gold;
 el código de producto, las identidades aprobadas y los datos permanecen iguales.
 Integración y comprobación productiva esperan el cierre de esta validación.
 Las propuestas de huellas fd41, abbcf12 y a1de751 quedaron superadas antes de importar
-auditorías; el ledger permanece en 84. La huella indicada arriba incorpora la
+auditorías; el ledger vigente llega al evento 90. La huella indicada arriba incorpora la
 corrección final de períodos de Vuelos y el cierre reforzado de dependencias:
 todo `src/**/*.py` participa en la identidad de aprobación, incluidas
 dependencias transitivas de evidencia y capacidad. El alcance conservador también
 exige nueva revisión ante cambios Python ajenos a la presentación. Se prueban
 mutaciones, altas y bajas de módulos para invalidar identidades obsoletas. El cierre de CI contempla los perfiles
 firmados histórico y candidato, con expectativas exactas y sin omitir pruebas.
-Pendientes: suite del sitio firmado, CI/revisión del artefacto exacto,
+Pendientes: CI/revisión del artefacto exacto,
 publicación/verificación, skills por fuente, coordinador mensual/trimestral,
 Noticias mensual y limpieza futura con dependencias.
