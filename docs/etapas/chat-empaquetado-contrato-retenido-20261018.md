@@ -52,3 +52,11 @@ su CI/revisión y la verificación real de Pages y Railway. Los recibos finales
 y resultados de integración se conservan en el PR y en el respaldo privado.
 
 No se ejecutaron turnos pagados, capturas, cron ni activaciones de evidencia.
+
+### Cierre de entradas observadas, 22:12 UTC
+
+La revisión detectó que los dos módulos nuevos de COPY también debían aparecer
+en `railway.toml`. Se añaden sus dos rutas exactas a `watchPatterns`, sin
+incorporar el gate ni ampliar el patrón al paquete completo. La regresión
+existente de entradas copiadas reprodujo ambas rutas sin vigilancia antes del
+ajuste. Esa prueba se ejecuta junto con las del contexto y carga del snapshot.
