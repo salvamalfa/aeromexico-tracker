@@ -506,3 +506,32 @@ verificadas. Así, AM EEUU es **94.88% amplio y 94.26% comparable**, Viva
 **88.00% y 87.91%**, y Volaris **98.81% en ambos**. Ninguna de esas razones es
 cobertura observada: sólo regular observado representa 17.09%, 8.05% y 23.82%,
 respectivamente. La programación no entra en esos numeradores.
+
+## Continuación autorizada, 18 de octubre
+
+El propietario aprobó las tres identidades técnicas exactas de Industria,
+Viva y Volaris para 2T26 después de sus auditorías independientes. El expediente
+privado registra el consentimiento auténtico y los eventos 76–78. Se conserva
+la precisión de la fecha fuente y se distingue de la hora real de recepción y
+verificación; no se inventa una hora original del mensaje.
+
+La huella de implementación sigue siendo
+`140b79971bfbcc318e18fd1eeb18a3f071128c6764d891475565329a68e756bd`.
+Se materializaron byte a byte los tres registros auditados y se ejecutó el gate
+normal con cuatro `--record`, incluido el histórico de Aeroméxico. El sitio
+firmado contiene 791 archivos y pasa `python -m src.publish.verify site/`.
+El primer intento se detuvo en la caché npm no escribible antes del reemplazo;
+la repetición completa usa la caché del workspace documentada en la guía cloud.
+
+La comparación contra el sitio anterior confirma las cuatro tesis y sus
+cifras/fuentes intactas. Aeroméxico conserva su payload exacto; las otras tres
+sólo cambian versión, aprobación, auditoría y cabeza de eventos de su versión.
+Los payloads financieros y de mercado son idénticos; en Ejecutivo sólo cambia
+la fecha de actualización. El mapa usa la base; la opción adicional de
+estimaciones de EEUU sigue desactivada. No hubo capturas pagadas, nuevos ajustes
+de modelos ni activación de evidencia candidata.
+
+El PR #134 registra la ejecución completa de pruebas, CI, revisión y
+comprobación online del commit integrado. El respaldo privado conserva los
+registros exactos, autorizaciones, cadena de eventos y recibos del gate; su
+actualización es acotada y no rejuvenece el warehouse ni los modelos originales.

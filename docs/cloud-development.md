@@ -154,6 +154,7 @@ aunque la activación exporte `UV_NO_SYNC=1`.
 export UV_CACHE_DIR=/workspace/.cache/uv
 export UV_PYTHON_INSTALL_DIR=/workspace/.local/share/uv/python
 export PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright
+export npm_config_cache=/workspace/.cache/npm
 uv sync --all-extras --all-groups --locked
 uv run --no-sync playwright install chromium
 cd web
