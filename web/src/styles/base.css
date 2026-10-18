@@ -129,3 +129,7 @@ h1 { margin: 0; max-width: 730px; font-size: clamp(25px, 3.4vw, 40px); line-heig
 
 /* Contain the old Plotly canvas during a tab/viewport resize. */
 #panel-market .chart { width:100%; min-width:0; overflow:hidden; }
+
+.market-source-info { color:var(--muted); font-size:14px; font-weight:400; cursor:pointer; border:0; background:transparent; padding:3px; }
+
+.market-source-note { max-width:min(500px,85vw); padding:18px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--muted); font-size:13px; line-height:1.6; box-shadow:var(--shadow); }

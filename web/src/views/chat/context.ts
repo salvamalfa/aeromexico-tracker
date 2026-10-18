@@ -74,7 +74,6 @@ export function buildChatContext(cardElement?: Element | null): ChatContext {
   const newsMonth = document.querySelector<HTMLSelectElement>("#news-month")?.value;
   const period = tab === "flights" && flightState.quarters[flightState.periodIndex]
     ? flightState.quarters[flightState.periodIndex]!.period_id
-    : tab === "market" ? document.querySelector<HTMLSelectElement>("#market-period")?.value ?? currentPeriodId() ?? ""
     : tab === "news" ? newsMonth?.replace("-","M") ?? "" : currentPeriodId() ?? "";
   const picked = tab === "news" ? newsEntities[newsCompany ?? ""] ?? "INDUSTRY" : selectedEntities(cardId);
   const context: ChatContext = { tab, period, entity: picked };

@@ -1,5 +1,5 @@
-// "Participación de pasajeros (AFAC)" card under the executive reading
-// (Dashboard v2): monthly share of each selected airline over all Mexican
+// Mercado: monthly share through the globally selected quarter,
+// with quarterly comparisons over all Mexican
 // carriers, from market.json (src/dashboard/market.py). Industria is the
 // sum of the three and is drawn dashed; a month AFAC does not publish for a
 // carrier is a gap, never zero.
@@ -10,14 +10,8 @@ import { $ } from "../flights/dom";
 import { entityState, entityLabel } from "./entities";
 import { ENTITY_COLORS, type EntityKey } from "../shell/carriers";
 import { marketSnapshot, formatMarketNumber } from "../market/calculations";
-import { mountDemand } from "../market/demand";
+import { currentPeriodId } from "../../state/period";
 import type { MarketSegmentKey } from "../../types/domain";
-
-const SEGMENT_LABELS: Record<MarketSegmentKey, string> = {
-  total: "total",
-  domestic: "nacional",
-  international: "internacional",
-};
 
 let marketEntities: EntityKey[] = ["AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"];
 
@@ -45,30 +39,21 @@ export function renderMarket(periodId: string | undefined): void {
     return;
   }
   const segment = (($("market-segment") as HTMLSelectElement | null)?.value ?? "total") as MarketSegmentKey;
-  const grain = (document.getElementById("market-grain") as HTMLSelectElement | null)?.value ?? "quarter";
-  const periods = grain === "month" ? market.months : market.quarters;
-  const picker = document.getElementById("market-period") as HTMLSelectElement | null;
-  if (picker && (picker.dataset.grain !== grain || !picker.options.length)) {
-    picker.replaceChildren(...periods.map(row => new Option(row.period_label, row.period_id)));
-    picker.value = periods.at(-1)?.period_id ?? "";
-    picker.dataset.grain = grain;
+  const selected = periodId ?? currentPeriodId() ?? market.metadata.default_quarter;
+  renderComparison(marketSnapshot(market.quarters, selected, segment));
+  const [, quarterEnd] = quarterBounds(selected);
+  const throughCut = market.months.filter(row => monthDate(row.period_id) < quarterEnd);
+  const firstAvailable = throughCut.findIndex(row => row.segments[segment].mexican_carriers_passengers != null);
+  const months = firstAvailable < 0 ? throughCut : throughCut.slice(firstAvailable);
+  host.setAttribute("aria-label", `Participación mensual de pasajeros por aerolínea hasta ${selected}`);
+  const source = document.getElementById("market-source");
+  if (source) {
+    const note = `Fuente: AFAC. Universo: aerolíneas mexicanas; Aeroméxico incluye Connect. Pasajeros por tramo, no personas únicas. Comparaciones del trimestre ${selected} contra el mismo trimestre del año anterior; N/D indica falta de base comparable. Contribución: cambio de pasajeros de la aerolínea / total mexicano un año antes × 100. Última observación: ${market.metadata.last_period}; captura: ${market.metadata.data_as_of ?? "N/D"}.`;
+    source.title = note;
+    source.setAttribute("aria-label", "Fuente y alcance del mercado");
+    const detail = document.getElementById("market-source-note");
+    if (detail) detail.textContent = note;
   }
-  if (picker && periodId) {
-    const matching = grain === "quarter" ? periodId : market.months.filter(row => {
-      const q = Math.ceil(Number(row.period_id.slice(5)) / 3);
-      return `${row.period_id.slice(0,4)}Q${q}` === periodId;
-    }).at(-1)?.period_id;
-    if (matching && periods.some(row => row.period_id === matching)) picker.value = matching;
-  }
-  const selected = picker?.value ?? periodId ?? market.metadata.default_quarter;
-  const snapshot = marketSnapshot(periods, selected, segment);
-  renderComparison(snapshot);
-  const cut = document.getElementById("market-cut");
-  if (cut) cut.textContent = `Corte seleccionado: ${selected} · última observación AFAC: ${market.metadata.last_period} · captura: ${market.metadata.data_as_of ?? "N/D"}.`;
-  const method = document.getElementById("market-method");
-  if (method) method.textContent = market.metadata.method_note;
-  const firstAvailable = market.months.findIndex(row => row.segments[segment].mexican_carriers_passengers != null);
-  const months = firstAvailable < 0 ? market.months : market.months.slice(firstAvailable);
   const x = months.map((month) => monthDate(month.period_id));
   const traces: Data[] = marketEntities.map((key) => {
     const color = ENTITY_COLORS[key];
@@ -87,15 +72,9 @@ export function renderMarket(periodId: string | undefined): void {
       hovertemplate: `${entityLabel(key)} %{y:.1f}%<extra>%{x|%b %Y}</extra>`,
     } as Data;
   });
-  const subtitle = $("market-subtitle");
-  if (subtitle) {
-    subtitle.textContent =
-      `Pasajeros de cada aerolínea entre los de todas las aerolíneas mexicanas, por mes (segmento ${SEGMENT_LABELS[segment]}). ` +
-      "Aeroméxico incluye a Aeroméxico Connect; las aerolíneas extranjeras no se incluyen porque AFAC no las publica por aerolínea.";
-  }
   const shapes: Layout["shapes"] = [];
   if (selected) {
-    const [x0, x1] = selected.includes("Q") ? quarterBounds(selected) : [monthDate(selected), new Date(Date.UTC(Number(selected.slice(0,4)), Number(selected.slice(5)), 1)).toISOString().slice(0,10)];
+    const [x0, x1] = quarterBounds(selected);
     shapes.push({
       type: "rect", xref: "x", yref: "paper", x0, x1, y0: 0, y1: 1,
       fillcolor: "rgba(0,48,135,.06)", line: { color: "rgba(0,48,135,.32)", width: 1, dash: "dot" }, layer: "below",
@@ -135,10 +114,6 @@ function renderComparison(snapshot: ReturnType<typeof marketSnapshot>): void {
   }));
 }
 
-export function mountMarketControls(dataRoot: string): void {
-  for (const id of ["market-period", "market-grain", "market-segment"]) document.getElementById(id)?.addEventListener("change", () => renderMarket(undefined));
-  window.addEventListener("reader-tab-visible", event => {
-    if ((event as CustomEvent).detail?.panelId === "panel-market") void mountDemand(dataRoot);
-  });
-  if (document.getElementById("panel-market")?.hidden === false) void mountDemand(dataRoot);
+export function mountMarketControls(): void {
+  document.getElementById("market-segment")?.addEventListener("change", () => renderMarket(undefined));
 }

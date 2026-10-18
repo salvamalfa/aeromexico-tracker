@@ -132,7 +132,7 @@ export async function mountExecutive(dataRoot = "data/v1"): Promise<void> {
   subscribe((periodId) => void render(periodId));
   $("unit-range")!.addEventListener("change", renderUnitEconomics);
   $("unit-metric")?.addEventListener("change", renderUnitEconomics);
-  mountMarketControls(state.dataRoot);
+  mountMarketControls();
   window.addEventListener("resize", renderUnitEconomics);
   renderUnitEconomics();
   const periodId = currentPeriodId();
