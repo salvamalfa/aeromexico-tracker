@@ -191,8 +191,8 @@
     </section>
 
     <section id="panel-news" role="tabpanel" aria-labelledby="tab-news" hidden>
-      <div class="section-heading"><div><p class="section-kicker">Archivo mensual</p><h2>Noticias y estrategia</h2></div></div>
-      <p class="news-intro" id="news-coverage" role="status">Cargando el archivo de evidencia…</p>
+      <div class="section-heading"><div><p class="section-kicker">Archivo mensual</p><h2>Noticias y estrategia <button type="button" id="news-source" class="news-source-info" popovertarget="news-source-note" title="Archivo parcial de noticias verificadas" aria-label="Archivo parcial de noticias verificadas">ⓘ</button></h2></div></div>
+      <p id="news-source-note" class="news-source-note" popover></p>
       <div class="news-filters">
         <label>Mes de publicación<select id="news-month"></select></label>
         <label>Aerolínea<select id="news-company"><option value="">Todas las aerolíneas</option><option>Aeroméxico</option><option>Aeroméxico Connect</option><option>Viva</option><option>Volaris</option></select></label>
@@ -200,10 +200,8 @@
         <label class="news-search">Buscar palabras en el archivo<input id="news-query" type="search" maxlength="240" placeholder="Ej. combustible, capacidad, Delta"></label>
         <button type="button" id="news-chat" hidden>Preguntar al chat</button>
       </div>
-      <p class="news-count" id="news-count" aria-live="polite"></p>
+      <p class="news-count" id="news-count" aria-live="polite">Cargando noticias…</p>
       <div class="news-grid" id="news-stories"></div>
-      <p class="news-limits" id="news-limits"></p>
-      <p class="news-limits">La búsqueda por palabras filtra este archivo. El chat interpreta preguntas en lenguaje natural y consulta hasta cinco coincidencias del índice aprobado; las candidatas requieren revisión antes de habilitarse allí.</p>
     </section>
 
     <section id="panel-flights" role="tabpanel" aria-labelledby="tab-flights" hidden>

@@ -273,7 +273,7 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
             if page.locator("#tab-news").count():
                 page.keyboard.press("Escape")
                 page.click("#tab-news")
-                page.wait_for_selector("#news-count:text-is('0 historias · 0 aprobadas · 0 candidatas. Orden: publicación más reciente. La cantidad no mide importancia.')")
+                page.wait_for_selector("#news-count:text-is('0 noticias')")
                 page.select_option("#news-company", "Viva")
                 page.fill("#news-query", "capacidad")
                 before_count = len(sent_context)

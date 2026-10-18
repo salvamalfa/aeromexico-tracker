@@ -8,7 +8,7 @@ function node<K extends keyof HTMLElementTagNameMap>(tag:K,text:string,className
 function card(story:NewsStory) {
  const article=node("article","","news-card");article.id=`news-story-${story.id}`;article.dataset.newsId=story.id;article.tabIndex=-1;article.append(node("p",`${story.companies.join(" · ")} · ${story.publisher}`,"news-kicker"),node("h3",story.title),node("p",story.description,"news-description"));
  article.append(node("p",story.topics.join(" · "),"news-topics"));
- const status=node("p",story.review_status==="owner_approved"?"Buscable hoy · índice aprobado del chat":"No buscable en producción · espera aprobación del paquete",`news-status ${story.review_status}`);article.append(status);
+ const status=node("p",story.review_status==="owner_approved"?"Buscable en chat":"Pendiente de aprobación",`news-status ${story.review_status}`);article.append(status);
  const dl=node("dl","");
  for(const [label,value] of [["Publicación",story.published_at],["Fecha del hecho",story.event_date?`${story.event_date}${story.event_end_date?` a ${story.event_end_date}`:""}`:"No documentada"],["Primera captura",story.first_captured_at??"No documentada en el índice histórico"]])dl.append(node("dt",label!),node("dd",value!));
  article.append(dl);
@@ -20,16 +20,14 @@ export function mountNews(root:string):Promise<void> {
  if(!pending)pending=loadNews(root);return pending;
 }
 async function loadNews(root:string):Promise<void> {
- const status=document.getElementById("news-coverage")!;
+ const status=document.getElementById("news-count")!;
+ status.textContent="Cargando noticias…";
  try {
   const response=await fetch(`${root}/news.json`);if(!response.ok)throw Error("No disponible");
   const data=await response.json() as NewsArchive;
   archive=data;
-  status.textContent=data.coverage_note;
-  const eligibility=node("div","","news-chat-eligibility");
-  const available=data.records.filter(r=>r.review_status==="owner_approved").length;
-  eligibility.append(node("p",`Chat aprobado: ${available} fichas buscables hoy. Las ${data.records.length-available} candidatas esperan una sola decisión sobre el paquete; no están activadas en producción.`));
-  const eligibleButton=node("button",`Ver las ${available} fichas buscables`);eligibleButton.type="button";eligibility.append(eligibleButton);status.after(eligibility);
+  const source=document.getElementById("news-source");
+  if(source){const note=`${data.coverage_note} Los indicadores de cada ficha distinguen disponibilidad en el chat. Resúmenes originales; consulta las fuentes para el contenido completo.`;source.title=note;source.setAttribute("aria-label","Cobertura del archivo de noticias");const detail=document.getElementById("news-source-note");if(detail)detail.textContent=note;}
   const month=document.getElementById("news-month") as HTMLSelectElement;
   const company=document.getElementById("news-company") as HTMLSelectElement;
   const topic=document.getElementById("news-topic") as HTMLSelectElement;
@@ -38,29 +36,24 @@ async function loadNews(root:string):Promise<void> {
   let focusedIds:Set<string>|undefined;
   month.replaceChildren(new Option("Todos los meses",""),...data.months.map(m=>new Option(m,m)));month.value=(data.default_month && data.months.includes(data.default_month) ? data.default_month : data.months[0])??"";
   const topics=[...new Set(data.records.flatMap(r=>r.topics))].sort();topic.replaceChildren(new Option("Todos los temas",""),...topics.map(t=>new Option(t,t)));
-  document.getElementById("news-limits")!.textContent=data.limits.join(" ");
   const grid=document.getElementById("news-stories")!;
   const resetFocus=node("button","Volver a todas las fichas");resetFocus.type="button";resetFocus.hidden=true;grid.before(resetFocus);
   function render(){const stories=filterStories(data.records,month.value,company.value,topic.value,query.value).filter(r=>(!stateFilter.value||r.review_status===stateFilter.value)&&(!focusedIds||focusedIds.has(r.id)));
    grid.replaceChildren(...stories.map(card));
-   const approved=stories.filter(s=>s.review_status==="owner_approved").length;
-   document.getElementById("news-count")!.textContent=`${stories.length} historias · ${approved} aprobadas · ${stories.length-approved} candidatas. Orden: publicación más reciente. La cantidad no mide importancia.`;
+   status.textContent=`${stories.length} ${stories.length===1?"noticia":"noticias"}`;
    if(!stories.length) grid.append(node("p","Sin fichas para estos filtros en el archivo parcial. No permite concluir que no ocurrieron noticias.","news-empty"));
    window.dispatchEvent(new CustomEvent("news-filter-changed"));
   }
   const changed=()=>{focusedIds=undefined;resetFocus.hidden=true;render();};
   for(const select of [month,company,topic,stateFilter])select.addEventListener("change",changed);query.addEventListener("input",changed);render();
   resetFocus.addEventListener("click",changed);
-  eligibleButton.addEventListener("click",()=>{month.value="";company.value="";topic.value="";query.value="";stateFilter.value="owner_approved";changed();});
   selectResult=ids=>{const story=ids.length===1?data.records.find(r=>r.id===ids[0]):undefined;month.value=story?.published_at.slice(0,7)??"";company.value=story?.companies.length===1?story.companies[0]!:"";topic.value="";query.value="";stateFilter.value="";focusedIds=new Set(ids);resetFocus.hidden=false;render();};
-  if(data.approval_package){const packageBox=node("details","");packageBox.append(node("summary","Revisar y aprobar juntas las once candidatas"));packageBox.append(node("p","La decisión puede referirse al paquete completo y su hash. No se activa ninguna ficha desde esta preview."));
-   const download=node("button","Descargar paquete de aprobación");download.type="button";download.addEventListener("click",()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(data.approval_package,null,2)],{type:"application/json"}));const a=document.createElement("a");a.href=url;a.download="noticias-paquete-aprobacion-20261015.json";a.click();URL.revokeObjectURL(url);});packageBox.append(download);eligibility.append(packageBox);}
   const ask=document.getElementById("news-chat") as HTMLButtonElement;
   ask.hidden=import.meta.env.VITE_CHAT_ENABLED!=="true";
   ask.addEventListener("click",()=>{const term=query.value||topic.value;
    const text=`Busca noticias${company.value?` de ${company.value}`:""}${month.value?` publicadas en ${month.value}`:""}${term?` sobre ${term}`:""}.`;
    window.dispatchEvent(new CustomEvent("airline-chat-prompt",{detail:{text,opener:ask}}));});
- }catch {status.textContent="El archivo mensual no está incluido en este build. La cobertura del chat conserva su índice aprobado.";pending=null;archive=null;}
+ }catch {status.textContent="No se pudo cargar el archivo de noticias. Intenta de nuevo más tarde.";pending=null;archive=null;}
 }
 
 export async function openNewsResult(result:NewsNavigation,item:NewsNavigationItem):Promise<boolean>{

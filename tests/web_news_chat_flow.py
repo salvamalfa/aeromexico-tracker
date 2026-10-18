@@ -116,7 +116,7 @@ def test_spanish_chat_question_opens_the_verified_news_card(news_chat_server, wi
         )
         assert page.locator(".news-card").count() == 1
         assert page.locator("#news-month").input_value() == "2026-04"
-        assert "Buscable hoy" in page.locator(".news-card").inner_text()
+        assert "Buscable en chat" in page.locator(".news-card").inner_text()
         assert page.locator(".news-card a").count() == 1
         launcher.click()
         page.get_by_label("Pregunta sobre los datos publicados").fill(

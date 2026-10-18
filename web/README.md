@@ -329,3 +329,12 @@ Pages sigue sirviendo el `site/` ya committeado. En ese trabajo histórico no
 se pidió publicar el cambio de dependencias; para una petición futura de
 cambio rutinario visible, el agente ejecuta `src.publish`, incorpora `site/`
 al PR y comprueba Pages según `AGENTS.md`.
+
+### Noticias · candidato del PR #136
+
+El archivo mensual mantiene tarjetas con resúmenes originales, tres fechas y
+fuentes trazables. Los filtros incluyen disponibilidad en el chat; la cobertura
+parcial se consulta con el botón de información del título. Los controles de
+aprobación pertenecen al expediente, fuera de la pestaña. La navegación desde
+el chat valida corpus y cita. Decisiones de revisión:
+`docs/etapas/noticias-ajustes-ui-20261018.md`.

@@ -118,7 +118,7 @@ def test_news_mounts_when_selected_while_executive_data_is_loading(web_server):
         page.click("#tab-news")
         # Let the original tab-visible event fire while startup is suspended.
         page.evaluate("() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))")
-        assert page.inner_text("#news-coverage") == "Cargando el archivo de evidencia…"
+        assert page.inner_text("#news-count") == "Cargando noticias…"
         assert held
         held[0].continue_()
         page.wait_for_selector(".news-card")
