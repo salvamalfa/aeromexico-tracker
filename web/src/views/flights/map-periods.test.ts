@@ -1,4 +1,5 @@
 import { beforeEach, expect, it } from "vitest";
+import type { PeriodNetworkDocument } from "../../types/domain";
 import { state, monthsInQuarter, setMapEntity } from "./state";
 import { currentMapPeriod, mapPeriodLabel, mapPeriodOptions, mountMapPeriodControl, renderMapPeriodControl } from "./map-periods";
 
@@ -8,6 +9,8 @@ beforeEach(() => {
   state.quarters = [{ period_id: "2026Q2" } as typeof state.quarters[number]];
   state.networkMode = "domestic";
   state.mapEntity = "AEROMEXICO";
+  state.domesticLayer = "estimated";
+  state.domesticNetworks.clear();
   state.baseAvailablePeriods = null;
   state.availablePeriods = { domestic: [], domestic_monthly: ["2026M03", "2026M04", "2026M05", "2026M06", "2026M07"], international: ["2015M01", "2026Q2", "2026M07"] };
   document.body.innerHTML = '<div class="network-mode-switch"></div>';
@@ -111,4 +114,29 @@ it("clears an obsolete explicit selection when the new scope has no data", () =>
   expect(currentMapPeriod()).toBe("2026Q2");
   expect(state.mapPeriodId).toBeNull();
   expect(mapPeriodOptions()).toEqual([]);
+});
+
+it("falls back from estimate-only July to the available official quarter", () => {
+  state.availablePeriods.domestic = ["2026Q2"];
+  state.domesticNetworks.set("2026Q2", { routes: [{ monthly: ["2026M04", "2026M05", "2026M06"].map(period_id => ({ period_id })) }] } as unknown as PeriodNetworkDocument);
+  state.mapPeriodId = "2026M07";
+  state.domesticLayer = "official";
+  expect(mapPeriodOptions()).toEqual(["2026M04", "2026M05", "2026M06", "2026Q2"]);
+  expect(currentMapPeriod()).toBe("2026Q2");
+  expect(state.mapPeriodId).toBeNull();
+  state.domesticLayer = "estimated";
+  expect(mapPeriodOptions()).toContain("2026M07");
+});
+
+it("lists official months from dated official rows rather than estimate months", () => {
+  state.availablePeriods.domestic = ["2026Q2"];
+  state.domesticNetworks.set("2026Q2", { routes: [{ monthly: [{ period_id: "2026M06" }] }] } as unknown as PeriodNetworkDocument);
+  state.domesticLayer = "official";
+  expect(mapPeriodOptions()).toEqual(["2026M06", "2026Q2"]);
+});
+
+it("keeps other entities on their estimate periods even after the AM layer was official", () => {
+  state.mapEntity = "VIVA_AEROBUS";
+  state.domesticLayer = "official";
+  expect(mapPeriodOptions()).toContain("2026M07");
 });
