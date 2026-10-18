@@ -7,6 +7,7 @@ import json
 import os
 import re
 import subprocess
+import unicodedata
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
@@ -62,6 +63,14 @@ def mutable_repo_document(value, root: Path) -> Path | None:
     return None
 
 
+def prose_targets(target: str) -> tuple[str, ...]:
+    """Keep literal filenames and also recognize punctuation at sentence endings."""
+    trimmed = target
+    while trimmed and trimmed[-1] not in "/\\_-" and unicodedata.category(trimmed[-1]).startswith("P"):
+        trimmed = trimmed[:-1]
+    return (target, trimmed) if trimmed and trimmed != target else (target,)
+
+
 def inbound_references(root: Path, paths: list[str]) -> list[str]:
     """Inspect unchanged tracked consumers when a document was deleted or moved."""
     removed = {(root / path).resolve(): path for path in paths if not (root / path).exists()}
@@ -96,9 +105,10 @@ def inbound_references(root: Path, paths: list[str]) -> list[str]:
             if destination.resolve() in removed:
                 referenced.add(removed[destination.resolve()])
         for url in re.findall(r"https?://[^\s<>\"'`)]+", text):
-            destination = mutable_repo_document(urlsplit(url), root)
-            if destination in removed:
-                referenced.add(removed[destination])
+            for target in prose_targets(url):
+                destination = mutable_repo_document(urlsplit(target), root)
+                if destination in removed:
+                    referenced.add(removed[destination])
         # Immutable Git archive links are valid after retirement. Strip whole
         # links, including labels, before checking code/config/path literals.
         plain = re.sub(r"!?\[[^\]]*\]\([^)]+\)|!?\[[^\]]*\]\[[^\]]*\]", "", text)
@@ -113,7 +123,7 @@ def inbound_references(root: Path, paths: list[str]) -> list[str]:
         # YAML values and shell arguments need not be quoted. Resolve their
         # relative tokens from both the repository and the consumer directory.
         literals += re.findall(r"[^\s\"'`<>:=;,|()\[\]{}]+", plain)
-        for target in literals:
+        for target in {value for literal in literals for value in prose_targets(literal)}:
             value = urlsplit(target)
             if value.scheme or not value.path:
                 continue

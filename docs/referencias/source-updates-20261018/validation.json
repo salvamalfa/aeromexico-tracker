@@ -9,12 +9,12 @@
   "baseline_commit": "40a63d1905afde97ae8e3f8671c8217aafacc4aa",
   "runs": {
     "focused": {
-      "tests": 136,
+      "tests": 140,
       "errors": 0,
       "failures": 0,
       "skipped": 0,
-      "passed": 136,
-      "seconds": 10.838
+      "passed": 140,
+      "seconds": 10.726
     },
     "full": {
       "tests": 1599,
@@ -24,7 +24,8 @@
       "passed": 1524,
       "seconds": 170.077,
       "xml_testcases_including_subtests": 1628,
-      "passed_subtests": 29
+      "passed_subtests": 29,
+      "validated_commit": "b9e1d338a0ad8539aca21b6e0936466121e1df64"
     }
   },
   "skip_reasons": [
@@ -46,5 +47,6 @@
     "Gold, site, config/chat and data/schedule workflows unchanged; existing CI gains a lifecycle/link validation step",
     "CI lifecycle scopes the real PR head from its merge base; synthetic merge/base advances are regression-tested"
   ],
-  "real_source_pilot": "real-source-pilot.json (separate from fixture-only tests)"
+  "real_source_pilot": "real-source-pilot.json (separate from fixture-only tests)",
+  "final_change_scope": "Only document-reference terminal punctuation after the full run; application/source-update code unchanged, final targeted regressions and exact-head CI required"
 }

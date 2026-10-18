@@ -14,7 +14,7 @@
 - Recetas de adquisición por producto, índice visible de las ocho skills y
   ejemplo macro ejecutable. EIA y las tres series Banxico pasaron hasta Silver
   en pilotos reales; H.10 respondió vacío. BMV queda en captura y bolsa requiere
-  evidencia SEC local. Se atendieron trece hallazgos de seis rondas de revisión Codex.
+  evidencia SEC local. Se atendieron catorce hallazgos de siete rondas de revisión Codex.
 - Noticias deduplicadas conservan metadatos por contribuyente; sus controles y
   revisiones verifican la procedencia RSS/GDELT propia contra Bronze.
 - Captura con alias Bronze compatibles por producto; dependencias obligatorias
@@ -25,6 +25,8 @@
 - El cierre incluye rutas relativas sin comillas y enlaces raw al branch
   principal. En CI compara el head real del PR desde su ancestro común;
   excluye cambios ajenos del commit de mezcla preparado por GitHub.
+- Las referencias en prosa admiten puntuación final sin perder la comprobación
+  de su ruta literal original.
 
 ## 2026-10-12 · Chat: cierre operativo de fase 2 (fecha México)
 

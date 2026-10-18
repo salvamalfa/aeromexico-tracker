@@ -143,10 +143,12 @@ Para fechar la trimestral, pasar `--releases` con una copia de
 [`source_update_releases.example.json`](../config/source_update_releases.example.json)
 completada con reportes reales. La plantilla no afirma fechas de publicación.
 
-Validación de esta entrega: **136 controles focalizados aprobados** y suite
-general con **1.524 pruebas y 29 subpruebas aprobadas**, sin fallos; 75 pruebas
-omitidas por insumos locales ausentes o vista previa sin fijar. Las capturas de
-prueba son sintéticas. [Recibo de validación](referencias/source-updates-20261018/validation.json).
+Validación local: **140 controles focalizados aprobados**. La suite general de
+`b9e1d33` pasó **1.524 pruebas y 29 subpruebas**, con 75 omisiones por insumos
+locales ausentes o vista previa sin fijar. La corrección documental posterior
+añade cuatro pruebas de puntuación; CI comprueba la cabeza final del PR.
+Las capturas de prueba son sintéticas.
+[Recibo de validación](referencias/source-updates-20261018/validation.json).
 
 Después se ejercitaron fuentes públicas reales, sin publicar sus datos.
 EIA se capturó y pasó Bronze y Silver para septiembre: 21 observaciones. El XLS
