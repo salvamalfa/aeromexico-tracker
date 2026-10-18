@@ -184,6 +184,7 @@ def report() -> dict:
         "report_generator_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "worktree_code_matches_evaluated_commit": current == git_components("HEAD"),
         "provenance_note": "evaluated_commit is the checkout where this report was actually executed. Committing the generated report necessarily creates a later commit; verify its presentation-component fingerprint and generator SHA, not a circular self-reference to the artifact commit.",
+        "fingerprints_scope": "Component fingerprints apply the current reinforced selector to every historical tree; each record retains its original code_version separately. They are not retroactive approvals.",
         "fingerprints": {
             "approved_entity_code": digest(approved),
             "master_base": digest(baseline),
