@@ -143,10 +143,10 @@ Para fechar la trimestral, pasar `--releases` con una copia de
 [`source_update_releases.example.json`](../config/source_update_releases.example.json)
 completada con reportes reales. La plantilla no afirma fechas de publicación.
 
-Validación local: **140 controles focalizados aprobados**. La suite general de
+Validación local: **143 controles focalizados aprobados**. La suite general de
 `b9e1d33` pasó **1.524 pruebas y 29 subpruebas**, con 75 omisiones por insumos
-locales ausentes o vista previa sin fijar. La corrección documental posterior
-añade cuatro pruebas de puntuación; CI comprueba la cabeza final del PR.
+locales ausentes o vista previa sin fijar. Los ajustes documentales posteriores
+añaden siete pruebas de puntuación; CI comprueba la cabeza final del PR.
 Las capturas de prueba son sintéticas.
 [Recibo de validación](referencias/source-updates-20261018/validation.json).
 

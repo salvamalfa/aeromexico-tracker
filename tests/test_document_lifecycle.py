@@ -107,6 +107,9 @@ def retire_fixture(root, consumer, content):
         ("src/consumer.py", 'Path("../docs/retired.md").read_text()'),
         ("config/prompts.yaml", "prompt_file: docs/retired.md"),
         ("README.md", "See docs/retired.md."),
+        ("README.md", "See docs/retired.md-"),
+        ("README.md", "See docs/retired.md--"),
+        ("README.md", "See docs/retired.md_"),
         ("README.md", "Ver docs/retired.md…"),
         ("docs/index.md", "Ver ../docs/retired.md?!"),
         (

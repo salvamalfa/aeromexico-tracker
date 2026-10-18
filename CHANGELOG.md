@@ -14,7 +14,7 @@
 - Recetas de adquisición por producto, índice visible de las ocho skills y
   ejemplo macro ejecutable. EIA y las tres series Banxico pasaron hasta Silver
   en pilotos reales; H.10 respondió vacío. BMV queda en captura y bolsa requiere
-  evidencia SEC local. Se atendieron catorce hallazgos de siete rondas de revisión Codex.
+  evidencia SEC local. Se atendieron quince hallazgos de ocho rondas de revisión Codex.
 - Noticias deduplicadas conservan metadatos por contribuyente; sus controles y
   revisiones verifican la procedencia RSS/GDELT propia contra Bronze.
 - Captura con alias Bronze compatibles por producto; dependencias obligatorias

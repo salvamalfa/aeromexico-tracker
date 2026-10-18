@@ -9,12 +9,12 @@
   "baseline_commit": "40a63d1905afde97ae8e3f8671c8217aafacc4aa",
   "runs": {
     "focused": {
-      "tests": 140,
+      "tests": 143,
       "errors": 0,
       "failures": 0,
       "skipped": 0,
-      "passed": 140,
-      "seconds": 10.726
+      "passed": 143,
+      "seconds": 10.867
     },
     "full": {
       "tests": 1599,

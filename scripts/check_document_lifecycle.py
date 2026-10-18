@@ -66,7 +66,7 @@ def mutable_repo_document(value, root: Path) -> Path | None:
 def prose_targets(target: str) -> tuple[str, ...]:
     """Keep literal filenames and also recognize punctuation at sentence endings."""
     trimmed = target
-    while trimmed and trimmed[-1] not in "/\\_-" and unicodedata.category(trimmed[-1]).startswith("P"):
+    while trimmed and trimmed[-1] not in "/\\" and unicodedata.category(trimmed[-1]).startswith("P"):
         trimmed = trimmed[:-1]
     return (target, trimmed) if trimmed and trimmed != target else (target,)
 
