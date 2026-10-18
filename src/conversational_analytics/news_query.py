@@ -73,7 +73,9 @@ def topic_key(value: str) -> str:
 
 
 def resolve_news_query(question: str, start_date=None, end_date=None, company=None) -> dict:
-    text = entity_text(question)
+    # Keep numbered identifiers intact for both temporal guards and text
+    # search: T 2 / Q 400 must not disappear as one letter plus a number.
+    text = re.sub(r"\b([qt])\s+(\d+)\b", r"\1\2", entity_text(question))
     # Compact quarter labels are not publication dates or free-text topics.
     # Require explicit endpoints until quarter precision has its own contract.
     # Preserve the Q100/Q200/Q300/Q400 search tokens before recognizing Q+year.

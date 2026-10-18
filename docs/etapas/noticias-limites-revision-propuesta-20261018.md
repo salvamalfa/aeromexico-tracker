@@ -137,3 +137,19 @@ locales anteriores identifican el código equivalente: se iniciaron con las
 modificaciones en el árbol de trabajo y se comprometieron después; no son
 afirmaciones de HEAD limpio al inicio. El expediente de cierre registra esa
 procedencia por huella de runtime y las comprobaciones de CI de HEAD exacto.
+
+## Identificadores numerados separados · 23:17 UTC
+
+La revisión añadió `T 2 en 2026`. Se normalizan identificadores Q/T separados
+de su número antes de la guardia temporal y de la búsqueda de texto. Así,
+T 2 conserva `t2` y Q 400 conserva `q400`: las consultas válidas de terminal
+o modelo no se convierten en todas las noticias del año por perder ambos
+tokens. Pasan **100 regresiones**, que comprueban también cero coincidencias
+en el índice aprobado cuando no existe evidencia de esos identificadores.
+
+La suite sobre51352d9 terminó con **793 pruebas aprobadas en179.11s**,
+verificando HEAD limpio y huella idénticos antes/después. Es distinta de
+las ejecuciones locales previas sobre árbol modificado. La siguiente suite
+se inicia de igual modo después del commit actual. Su huella propuesta es
+`582ae0f80b7aaa67a2256f57ea504f307ee83a483abe82d94baba2d9c18ad2d6`,
+sin aprobación ni promoción;6534f876/88–90 permanecen íntegros en136.

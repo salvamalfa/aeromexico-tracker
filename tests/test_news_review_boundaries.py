@@ -110,6 +110,8 @@ def test_secondary_story_source_cannot_bypass_company_validation(approved_index,
         "2026delT2",
         "2026 de Q2",
         "T2del2026",
+        "T 2 en 2026",
+        "2026 T 2",
         "Q2",
         "2026Q5",
         "0T26",
@@ -140,14 +142,28 @@ def test_explicit_publication_quarter_dates_keep_july_outside_results(approved_i
         ("noticias de Q100 en 2026", "q100"),
         ("noticias de Q200 en 2026", "q200"),
         ("noticias de Q300 en 2026", "q300"),
+        ("noticias de la terminal T 2 en 2026", "t2"),
+        ("noticias de la T 2 del AICM en 2026", "t2"),
+        ("noticias sobre Q 400 en 2026", "q400"),
     ],
 )
-def test_airport_terminals_and_aircraft_models_remain_searchable(question, term):
+def test_airport_terminals_and_aircraft_models_remain_searchable(approved_index, question, term):
     intent = resolve_news_query(question)
     assert term in intent["terms"]
+    # None of the three approved records covers these identifiers. Losing
+    # their tokens must not turn the request into every record from 2026.
+    assert approved_index.search_news(question)["count"] == 0
 
 
-@pytest.mark.parametrize("question", ["noticias de T2 en 2026", "noticias de 2026 correspondientes a T2"])
+@pytest.mark.parametrize(
+    "question",
+    [
+        "noticias de T2 en 2026",
+        "noticias de 2026 correspondientes a T2",
+        "noticias de T 2 en 2026",
+        "noticias de 2026 correspondientes a T 2",
+    ],
+)
 def test_ambiguous_year_and_t_label_requires_explicit_dates(question):
     with pytest.raises(ValueError, match="notación trimestral"):
         resolve_news_query(question)
