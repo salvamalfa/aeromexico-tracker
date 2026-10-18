@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import calendar
 import re
 import threading
 from typing import Any
@@ -19,6 +20,33 @@ ENTITY_ALIASES = {
         "todas las aerolineas mexicanas",
     ),
 }
+
+
+def _news_arguments(text: str, context: dict[str, Any]) -> dict[str, Any]:
+    args: dict[str, Any] = {"query": text, "company": None, "start_date": None, "end_date": None, "limit": 5}
+    if context.get("tab") != "news":
+        return args
+    from ..news_query import norm, resolve_news_query
+
+    try:
+        intent = resolve_news_query(text)
+    except ValueError:
+        # The tool owns bounded-language validation and will return its precise
+        # clarification; context must not rescue an unsupported explicit date.
+        return args
+    explicit_all = re.search(r"\b(?:todas las aerolineas|todas las companias|las tres aerolineas)\b", norm(text))
+    if not intent["companies"] and not explicit_all:
+        companies = {"AEROMEXICO": "Aeroméxico", "VOLARIS": "Volaris", "VIVA_AEROBUS": "Viva"}
+        entity = context.get("entity")
+        if isinstance(entity, str):
+            args["company"] = companies.get(entity)
+    if not intent["start_date"] and not intent["end_date"]:
+        period = re.fullmatch(r"(20\d{2})M(0[1-9]|1[0-2])", str(context.get("period", "")))
+        if period:
+            year, month = map(int, period.groups())
+            args["start_date"] = f"{year:04}-{month:02}-01"
+            args["end_date"] = f"{year:04}-{month:02}-{calendar.monthrange(year, month)[1]:02}"
+    return args
 
 
 class MockProvider:
@@ -85,7 +113,7 @@ class MockProvider:
                 return None, "La simulación de noticias acepta consultas de hasta 240 caracteres."
             return (
                 "search_news",
-                {"query": text, "company": None, "start_date": None, "end_date": None, "limit": 5},
+                _news_arguments(text, context),
             ), None
         if any(
             word in lowered for word in ("catálogo", "catalogo", "qué métricas", "que metricas", "disponible")
@@ -105,7 +133,7 @@ class MockProvider:
                     return None, "La simulación de noticias acepta consultas de hasta 240 caracteres."
                 return (
                     "search_news",
-                    {"query": text, "company": None, "start_date": None, "end_date": None, "limit": 5},
+                    _news_arguments(text, context),
                 ), None
             return (
                 None,
