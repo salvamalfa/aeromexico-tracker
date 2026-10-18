@@ -74,6 +74,15 @@ def topic_key(value: str) -> str:
 
 def resolve_news_query(question: str, start_date=None, end_date=None, company=None) -> dict:
     text = entity_text(question)
+    # Compact quarter labels are not publication dates or free-text topics.
+    # Require explicit endpoints until quarter precision has its own contract.
+    if re.search(
+        r"\b(?:\d{4}[-/\s]*[qt]\s*\d|[qt]\s*\d(?:[-/\s]*(?:de\s*)?\d{2,4})?|\d\s*[qt](?:[-/\s]*(?:de\s*)?\d{2,4})?)\b",
+        text,
+    ):
+        raise ValueError(
+            "Indica inicio y fin de publicación como fechas ISO YYYY-MM-DD; la notación trimestral compacta no está admitida."
+        )
     words = set(re.findall(r"\w+", text))
     companies = [
         name

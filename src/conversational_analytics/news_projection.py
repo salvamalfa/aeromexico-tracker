@@ -49,6 +49,10 @@ def project(records: list[dict[str, Any]], *, require_known_companies: bool = Tr
     for record in records:
         if record.get("kind") != "news":
             continue
+        companies = ["Viva" if value == "Viva Aerobus" else value for value in record["companies"]]
+        if require_known_companies and not set(companies).issubset(COMPANIES):
+            raise ValueError("Unknown company")
+        topics = record.get("topics", [])
         source = {**record["source"], "publisher": record["publisher"]}
         url = canonical_news_url(source["url"])
         story = record.get("story_id", record["id"])
@@ -69,14 +73,15 @@ def project(records: list[dict[str, Any]], *, require_known_companies: bool = Tr
         date.fromisoformat(published)
         if story in stories:
             stories[story]["sources"].append(source)
+            # Every source can carry reviewed airline/topic attribution. The
+            # archive and chat must expose the same tags for the shared card.
+            stories[story]["companies"] = sorted(set(stories[story]["companies"]) | set(companies))
+            stories[story]["topics"] = sorted(set(stories[story]["topics"]) | set(topics))
             # A reviewed story does not approve a newly associated source.
             # Keep the entire mixed card closed until every source is reviewed.
             if record["review_status"] != "owner_approved":
                 stories[story]["review_status"] = "candidate_unapproved"
             continue
-        companies = ["Viva" if value == "Viva Aerobus" else value for value in record["companies"]]
-        if require_known_companies and not set(companies).issubset(COMPANIES):
-            raise ValueError("Unknown company")
         summary = record["description"]
         if not summary or len(summary) > 320:
             raise ValueError("Unbounded news summary")
@@ -86,7 +91,7 @@ def project(records: list[dict[str, Any]], *, require_known_companies: bool = Tr
             "title": record["title"],
             "description": summary,
             "companies": companies,
-            "topics": record.get("topics", []),
+            "topics": topics,
             "publisher": record["publisher"],
             "published_at": published,
             "event_date": record.get("event_date"),
