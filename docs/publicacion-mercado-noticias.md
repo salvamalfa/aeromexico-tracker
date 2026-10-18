@@ -52,8 +52,13 @@ y Volaris `1c96fa4d8fdd1238cd8b4dfe64ad245a0723227efdf093657efc2e4e6dd6fbcb`
 conservan el contenido financiero auditado. Las auditorías 85–87 y aprobaciones
 históricas permanecen intactas. La autorización no cubre otra huella.
 
-Estado al preparar el artefacto: gate normal en ejecución; integración y
-comprobación productiva pendientes del cierre de validación del sitio firmado.
+El gate normal produjo 795 archivos desde `e69cfe0` y el verificador pasó.
+La UI firmada pasa a 1440/390 con API/worker y proveedor mock. La suite completa
+del sitio firmado está en ejecución. Una prueba histórica que descartaba
+programación en celdas observadas se corrigió para comprobar la retención
+independiente y reconciliar los 897 movimientos programados LAX–MEX con Gold;
+el código de producto, las identidades aprobadas y los datos permanecen iguales.
+Integración y comprobación productiva esperan el cierre de esta validación.
 Las propuestas de huellas fd41, abbcf12 y a1de751 quedaron superadas antes de importar
 auditorías; el ledger permanece en 84. La huella indicada arriba incorpora la
 corrección final de períodos de Vuelos y el cierre reforzado de dependencias:
