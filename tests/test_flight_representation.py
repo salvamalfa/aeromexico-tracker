@@ -15,6 +15,8 @@ from scripts.research.flight_representation import (
 
 
 def component(kind="observed", value=10, carrier="AEROMEXICO", month="2026M04", **extra):
+    if kind == "observed":
+        extra.setdefault("service_class_departures", {"F": value})
     return dict(
         carrier_key=carrier,
         origin_iata="MEX",
@@ -35,8 +37,24 @@ def route(components, market="LAX<>MEX"):
     )
 
 
+def arithmetic_fixture_gold(routes):
+    """Matching inputs for arithmetic-only cases; adversarial tests freeze separate parquet Gold."""
+    return {
+        tuple(c[k] for k in ("carrier_key", "origin_iata", "destination_iata", "period_id")): {
+            "departures": c["departures"],
+            "classes": deepcopy(c["service_class_departures"]),
+            "hashes": list(c["source_hashes"]),
+        }
+        for r in routes
+        for c in r.get("flight_components", [])
+        if c["kind"] == "observed"
+    }
+
+
 def values(r):
-    return route_values(r, "AEROMEXICO", "2026Q2", {}, {}, pd.DataFrame())
+    return route_values(
+        r, "AEROMEXICO", "2026Q2", {}, {}, pd.DataFrame(), component_counts=arithmetic_fixture_gold([r])
+    )
 
 
 def test_mixed_components_keep_scheduling_and_service_classes_separate():
@@ -117,14 +135,29 @@ def test_all_selectable_routes_are_not_initial_top12():
         c = component(value=i)
         c["destination_iata"] = f"X{i:02d}"
         routes.append(route([c], market=f"MEX<>X{i:02d}"))
-    result = summarize_network({"routes": routes}, "AEROMEXICO", "2026Q2", {}, pd.DataFrame())
+    result = summarize_network(
+        {"routes": routes},
+        "AEROMEXICO",
+        "2026Q2",
+        {},
+        pd.DataFrame(),
+        component_counts=arithmetic_fixture_gold(routes),
+    )
     assert result["all_selectable_routes"] == 13
     assert result["initial_top12_routes"] == 12
     assert result["observed_flights"] == sum(range(13))
     # Replace the zero tail with one positive movement, preserving deterministic order.
     routes[0]["departures"] = 1
     routes[0]["flight_components"][0]["departures"] = 1
-    result = summarize_network({"routes": routes}, "AEROMEXICO", "2026Q2", {}, pd.DataFrame())
+    routes[0]["flight_components"][0]["service_class_departures"] = {"F": 1}
+    result = summarize_network(
+        {"routes": routes},
+        "AEROMEXICO",
+        "2026Q2",
+        {},
+        pd.DataFrame(),
+        component_counts=arithmetic_fixture_gold(routes),
+    )
     assert result["observed_flights"] == 79
     assert result["initial_top12_represented_flights"] == 78
 
@@ -204,7 +237,12 @@ def test_presence_without_flight_count_is_not_in_all_routes_table_or_initial_top
     quantified = route([component()])
     presence = dict(market_key="MEX<>XXX", departures=None, operation_status="presence_only")
     summary = summarize_network(
-        {"routes": [quantified, presence]}, "AEROMEXICO", "2026Q2", {}, pd.DataFrame()
+        {"routes": [quantified, presence]},
+        "AEROMEXICO",
+        "2026Q2",
+        {},
+        pd.DataFrame(),
+        component_counts=arithmetic_fixture_gold([quantified]),
     )
     assert summary["all_exported_routes"] == 2
     assert summary["all_selectable_routes"] == 1

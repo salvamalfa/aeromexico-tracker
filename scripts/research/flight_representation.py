@@ -18,6 +18,7 @@ import pandas as pd
 
 from scripts.research.flight_coverage import (
     ENTITIES,
+    bts_component_index,
     bts_index,
     denominator,
     flight_kind,
@@ -52,7 +53,7 @@ def allowed_carriers(entity):
     return set(ENTITIES[entity]) | ({"AEROMEXICO_GROUP"} if entity == "AEROMEXICO" else set())
 
 
-def route_values(route, entity, period, network, counts, observations):
+def route_values(route, entity, period, network, counts, observations, *, component_counts=None):
     """Validate exported components; never reweight or resolve source conflicts."""
     totals = {kind: None for kind in KINDS}
     strict, notes = [], set()
@@ -84,16 +85,20 @@ def route_values(route, entity, period, network, counts, observations):
             if kind == "observed":
                 source = cell.get("source_label", "")
                 classes = cell.get("service_class_departures")
+                regular, _ = regular_observed(
+                    {"source_label": source, "_flight_component": cell},
+                    [key[3]], entity, counts, observations, component_counts=component_counts,
+                )
                 if "T-100" in source and classes:
                     if (
                         any(not finite(v) or v < 0 for v in classes.values())
                         or abs(sum(classes.values()) - value) > 0.01
                     ):
                         raise ValueError("BTS service classes do not reconcile to component")
-                    strict.append(sum(classes.get(k, 0) for k in ("F", "G")))
+                    strict.append(regular)
                     notes.add("BTS F/G regular; L/P excluded")
                 elif "Aerocivil" in source:
-                    strict.append(value)
+                    strict.append(regular)
                     notes.add("Aerocivil regular service")
                 else:
                     notes.add("Observed service class unconfirmed; excluded from strict numerator")
@@ -166,7 +171,7 @@ def select_network(documents, scope, period):
     return {"routes": list(grouped.values()), "observed_months": months}, documents.get(period)
 
 
-def summarize_network(network, entity, period, counts, observations):
+def summarize_network(network, entity, period, counts, observations, *, component_counts=None):
     fields = {f"{kind}_flights": None for kind in KINDS}
     if network is None:
         return {
@@ -191,7 +196,7 @@ def summarize_network(network, entity, period, counts, observations):
         raise ValueError("Duplicate selectable market")
     for route in routes:
         totals, comparable, explanations, identities = route_values(
-            route, entity, period, network, counts, observations
+            route, entity, period, network, counts, observations, component_counts=component_counts
         )
         if seen.intersection(identities):
             raise ValueError("Duplicate component across selectable routes")
@@ -246,6 +251,7 @@ def audit_snapshot(label, site, gold, official, periods):
     if not (site / "data/v1/flights/quarters.json").is_file():
         raise ValueError("Snapshot lacks exported flights metadata")
     counts = bts_index(gold)
+    component_counts = bts_component_index(gold)
     observations = pd.read_parquet(gold / "fact_international_route_observations.parquet")
     observations["market_key"] = observations.apply(
         lambda row: "<>".join(sorted((str(row.origin_iata), str(row.dest_iata)))), axis=1
@@ -257,8 +263,8 @@ def audit_snapshot(label, site, gold, official, periods):
             for scope in ("domestic", "international"):
                 documents = load_networks(site, entity, scope)
                 network, native = select_network(documents, scope, period)
-                row = summarize_network(network, entity, period, counts, observations)
-                native_summary = summarize_network(native, entity, period, counts, observations)
+                row = summarize_network(network, entity, period, counts, observations, component_counts=component_counts)
+                native_summary = summarize_network(native, entity, period, counts, observations, component_counts=component_counts)
                 row.update(
                     {
                         "snapshot": label,

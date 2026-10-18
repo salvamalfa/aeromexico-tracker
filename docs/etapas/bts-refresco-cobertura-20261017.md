@@ -574,3 +574,17 @@ de detalle incompleto y meses/rutas ausentes como N/D; no inventan detalle para
 los payloads históricos que carecen de él. Pasan las cuatro regresiones, los
 tres presupuestos y una ronda ampliada de 83 pruebas. La matriz F2.9 queda
 idéntica tras regenerarla y la huella aprobada permanece inalterada.
+
+La revisión posterior señaló que el informe de representación comprobaba la
+coherencia interna de componentes observados sin reconciliarlos con el Gold
+proporcionado. Reutiliza ahora la comprobación independiente del auditor de
+cobertura: operador, aeropuerto/sentido, mes, conteo, hashes y clases BTS. ANAC
+y CAA también concilian conteos/hashes con Gold, conservando la regularidad
+como no confirmada. Una celda BTS coherente de 101 vuelos frente a 100 en Gold
+pasaba antes y se rechaza ahora. Pasan 72 pruebas focalizadas, incluidas 26
+pruebas con Gold Parquet separado del candidato y falsificaciones coherentes.
+Los 36 resultados reales y su CSV quedan idénticos; los artefactos de revisión
+conservan su fecha y generador originales y la comprobación adicional queda
+en el expediente privado. El cambio sólo afecta auditoría offline: no cambia
+inputs de compilación, assets, datos publicados, backend ni aprobaciones, por
+lo que conserva el sitio firmado del commit de código que lo generó.

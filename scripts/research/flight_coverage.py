@@ -233,21 +233,27 @@ def regular_observed(route: dict, months: list[str], entity: str, counts: dict,
                 raise ValueError("BTS component count/classes differ from authoritative Gold")
             match_component_hashes(component, expected["hashes"])
             return sum(expected["classes"].get(k, 0) for k in ("F", "G")), "BTS Gold component F/G; L/P excluded"
-        if "Aerocivil" in source:
+        authority = next(((label, system) for label, system in (
+            ("Aerocivil", "aerocivil"), ("ANAC", "anac"), ("CAA", "caa")
+        ) if label in source), None)
+        if authority:
+            label, system = authority
             operator = {"AEROMEXICO": "AMX", "AEROMEXICO_CONNECT": "SLI",
                         "VOLARIS": "VOI", "VIVA_AEROBUS": "VIV"}[carrier]
-            selected = observations[observations.source_system.eq("aerocivil")
+            selected = observations[observations.source_system.eq(system)
                                     & observations.operator_icao.eq(operator)
                                     & observations.period_id.eq(key[3])
                                     & observations.origin_iata.eq(key[1])
                                     & observations.dest_iata.eq(key[2])]
             value = selected.departures.sum(min_count=1)
             if pd.isna(value) or abs(value - component["departures"]) > .01:
-                raise ValueError("Aerocivil component count differs from authoritative Gold")
+                raise ValueError(f"{label} component count differs from authoritative Gold")
             hashes = sorted(set(selected.source_hash.dropna().astype(str))) if "source_hash" in selected else []
             match_component_hashes(component, hashes)
-            return float(value), "Aerocivil Gold explicitly regular international operations"
-        return None, "Regular-service comparability unverified; excluded from comparable numerator"
+            if system == "aerocivil":
+                return float(value), "Aerocivil Gold explicitly regular international operations"
+            return None, "Regular-service comparability unverified; excluded from comparable numerator"
+        raise ValueError("Observed component source lacks an authoritative Gold resolver")
     if route.get("flight_components"):
         raise ValueError("Split flight_components before comparing observed regular flights")
     if "BTS T-100" in source:
