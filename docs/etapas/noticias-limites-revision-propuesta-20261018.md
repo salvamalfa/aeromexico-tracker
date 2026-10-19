@@ -471,3 +471,16 @@ sin ampliar allowlist. Huella propuesta
 `5990be0c25ec75b014decb8b708a61ed347f21d25afbee69e2aa28dcbeafb3af`.
 La suite1095/180.59s sigue siendo de3c7533a/ac07bb9d; la corrección actual
 se valida aparte.6534/88–90 intactos, sin fase canónica/gate ni M11/Skills.
+
+## Artículos y formas de los mismos actores · 19 de octubre, 02:28 UTC
+
+La revisión debbd708b pidió un analista. Los actores ya enumerados admiten
+el/la/los/las/un/una/unos/unas y sus formas de género/número; no se aceptan
+sintagmas nominales arbitrarios. Once casos conservan el tema y tres con
+un parecer/una espera/unas estimas mantienen visible la relativa temporal.
+428regresiones en887casos de matrices más tres presupuestos:890PASS0.77s;
+RuffF/diff-checkPASS. Huella propuesta
+`0902de143cc3b58f44a05d277623c67acfacb6c126878ab07013004749870666`.
+La suite1116/177.35s pertenece exclusivamente abbd708b/5990be0c, con recibos
+de HEAD limpio al inicio/final. La nueva versión se valida aparte.6534/88–90
+intactos; sin fase canónica/gate ni M11/Skills.

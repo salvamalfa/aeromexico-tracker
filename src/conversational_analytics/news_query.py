@@ -122,8 +122,8 @@ def _publication_scope(text: str) -> str:
             key=lambda alias: (-len(alias), alias),
         ))
         actor = (
-            r"(?:(?:el|la|los|las)[\W_]+(?:analistas?|expertos?|medios|directivos?|inversores?|"
-            r"inversionistas?|pasajeros?|aerolineas?|empresas?|companias?|fuentes)|"
+            r"(?:(?:el|la|los|las|un|una|unos|unas)[\W_]+(?:analistas?|expert[oa]s?|medios?|directiv[oa]s?|inversor(?:a|as|es)?|"
+            r"inversionistas?|pasajer[oa]s?|aerolineas?|empresas?|companias?|fuentes?)|"
             + company_actor + r")"
         )
         pre_modifier = (

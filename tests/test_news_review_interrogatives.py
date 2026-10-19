@@ -248,3 +248,33 @@ def test_cognitive_company_subject_reuses_existing_entity_aliases(actor, company
     assert intent["companies"] == [company]
     assert "2t26" in intent["terms"]
     assert (intent["start_date"], intent["end_date"]) == ("2026-07-01", "2026-07-31")
+
+
+@pytest.mark.parametrize(
+    "actor",
+    [
+        "un analista",
+        "una analista",
+        "unos analistas",
+        "unas analistas",
+        "la experta",
+        "una directiva",
+        "las inversoras",
+        "unas pasajeras",
+        "un medio",
+        "una fuente",
+        "un inversor",
+    ],
+)
+def test_existing_cognitive_subject_classes_admit_indefinites_gender_and_number(actor):
+    intent = resolve_news_query(
+        f"Busca noticias publicadas en 2026-07 sobre por qué {actor} cree que cayeron resultados en 2T26"
+    )
+    assert "2t26" in intent["terms"]
+    assert (intent["start_date"], intent["end_date"]) == ("2026-07-01", "2026-07-31")
+
+
+@pytest.mark.parametrize("noun", ["un parecer", "una espera", "unas estimas"])
+def test_indefinite_article_does_not_admit_nominal_homographs(noun):
+    with pytest.raises(ValueError):
+        resolve_news_query(f"Busca noticias publicadas en 2026-07 sobre por qué {noun} que salió en 2T26")
