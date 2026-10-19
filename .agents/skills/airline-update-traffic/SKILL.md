@@ -56,7 +56,7 @@ Un 403, TLS, timeout o archivo inválido es un fallo de acceso/contenido; no pru
 `parse.afac` del coordinador exige el ZIP DATATUR verificado y los PDF de todos
 sus meses contiguos, además de los libros anuales, crosswalk y SEC preservados.
 Extrae un único XLSX offline; contrasta meses regular/fletamento y el mes
-comparado en ambas páginas PDF. Conserva las notas de cobertura y estimación.
+comparado en ambas páginas PDF. Conserva las notas de cobertura y estimación. Las notas PDF se añaden solo a sus filas de vuelos regulares; el fletamento mantiene las notas de su propio artefacto.
 No basta el nombre del PDF. El límite se deriva de esas observaciones, sin
 corte fijo de junio. El parser nuevo se limita al formato 2026; otro año o
 esquema exige revisión. La ruta heredada fuera del coordinador conserva su

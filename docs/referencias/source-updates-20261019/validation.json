@@ -171,5 +171,17 @@
     "focused_regressions": "184 passed, 2 local-data skips; all source-update/AFAC/BMV/period/budget tests",
     "full_suite_evidence": "This archived full-suite receipt pins 2cc3ff1; PR141 tracks later exact-head CI and review.",
     "offline_cli_round": "Passed at 54639ca: retained real EIA XLS import -> offline parser -> 21 September observations, completion cutoff retained, zero HTTP requests"
+  },
+  "review_correction": {
+    "initial_review_head": "decfdfddd948c02726ae62c9bc0ab150b1e8131d",
+    "source_code_fix": "d7f0f6e",
+    "finding": "P2: PDF notes were also added to charter workbook rows",
+    "affected_artifact": "afac-notes-review-fix.json",
+    "changed_column": "footnote_text",
+    "changed_rows": 296,
+    "other_columns_equal": true,
+    "gold_contracts_and_lineage_rechecked": "passed",
+    "focused_test": "4 passed; scheduled and charter attribution tested together",
+    "full_suite_evidence": "Previous green full suite belongs to 86a05df; next exact-head CI/review and local rerun are tracked by PR141"
   }
 }

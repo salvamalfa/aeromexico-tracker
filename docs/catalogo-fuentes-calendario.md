@@ -184,6 +184,12 @@ filas con alguna diferencia exacta frente al original retenido; 5.851 cierres
 ajustados difieren en más de USD 0,01. Se conserva el [diagnóstico de magnitud](referencias/source-updates-20261019/market-revisions.json),
 sin atribuir una causa ni aprobar revisiones automáticamente.
 
+La revisión inicial de PR141 detectó notas de vuelos regulares también presentes
+en filas de fletamento. Se corrigió la atribución: las notas PDF solo acompañan
+sus propias filas. Se regeneró AFAC y cambiaron únicamente las notas de 296
+filas; todos los demás campos quedaron iguales. Los contratos Gold y el puente
+volvieron a pasar. [Evidencia de la corrección](referencias/source-updates-20261019/afac-notes-review-fix.json).
+
 No se copiaron insumos privados ni se consultó AeroDataBox.
 
 Para una captura nueva, `round --execute --check-at-completion` registra el
