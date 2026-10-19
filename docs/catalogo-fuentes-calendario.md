@@ -38,10 +38,10 @@ pasos de cada fuente. Este es el alcance comprobado por familia:
 | Empresas | BMV: catálogo y ZIP oficiales capturados; parseo offline acotado implementado. SEC preservado reconstruido. Periodos nuevos IR/SEC siguen condicionados. |
 | Tráfico AFAC y BTS | AFAC: boletines y base de julio/agosto capturados; ampliación del parser candidato. BTS: reproducción histórica preservada; no se acredita una captura nueva. |
 | Aeropuertos | Descubrimiento por enlaces reales: AICM agosto y AIFA julio descargados. OMA septiembre enlazado pero devuelve 404. No se acredita septiembre completo. |
-| Macro y mercado | EIA y tres series Banxico verificadas hasta Gold para septiembre. Cinco JSON bursátiles capturados y parser candidato implementado; comprobar el recibo del lote. H.10 respondió vacío. |
+| Macro y mercado | EIA, tres series Banxico y cinco series bursátiles verificadas hasta Gold para septiembre. H.10 tiene una cadena dedicada de certificación mensual aislada; véase su alcance y evidencia abajo. La familia completa no está certificada. |
 | Rutas | Entradas identificadas; selección manual y adaptadores de novedades pendientes. |
 | Referencias y contexto | OurAirports: 9.051 referencias verificadas con 39 códigos requeridos. FAA solo captura PDF; diccionario y curación pendientes. |
-| Noticias | Captura de metadatos y parser probado con muestras. Falta conectar el corte mensual de PR136 y certificar cobertura. |
+| Noticias | Captura de metadatos y parser probado con muestras. La integración del corte mensual continúa en PR142; no acredita cobertura completa ni activación. |
 | Derivados y curación | Sin descarga propia. Requieren fuentes padre y controles de linaje. |
 
 La ronda mensual será el primer día hábil bancario mexicano en o después del
@@ -197,6 +197,74 @@ volvieron a pasar. [Evidencia de la corrección](referencias/source-updates-2026
 
 No se copiaron insumos privados ni se consultó AeroDataBox.
 
+### Certificación mensual aislada H.10
+
+El comando dedicado `h10` certifica un mes cerrado desde seis originales de la
+Reserva Federal: CSV, histórico HTML de México, calendario K.8, definición,
+release que explica `ND` y aviso de transición del portal. La prueba de septiembre
+de 2026 conserva 22 fechas hábiles: 21 cotizaciones y `ND` el 7 de septiembre.
+El 16 de septiembre sí tiene cotización. No se aplica el calendario bancario
+mexicano a esta serie ni se exige un número fijo de 21 observaciones por mes.
+
+H.10 expresa **pesos mexicanos por un dólar estadounidense**, par `USD/MXN`.
+Es la cotización compradora de mediodía en Nueva York, distinta del FIX de
+Banxico. `rate_close` y la agregación Gold `close` conservan sus nombres de
+contrato, pero significan la última cotización H.10 observada del mes; no un
+cierre bursátil. El promedio utiliza únicamente valores observados. `ND` queda
+explícito, con valor numérico nulo; nunca se convierte en cero.
+[Definición oficial](https://www.federalreserve.gov/releases/h10/about.htm),
+[histórico de México](https://www.federalreserve.gov/releases/h10/hist/dat00_mx.htm).
+
+Se comparan todas las fechas, valores decimales y estados entre CSV y HTML.
+Son dos representaciones de la misma institución, no dos proveedores
+independientes. Fechas duplicadas, faltantes, valores invertidos, unidades o
+metadatos incompatibles bloquean la certificación antes de escribir Silver o
+Gold. Deben estar todas las fechas de lunes a viernes, incluso las que contienen
+`ND`; no se inventan filas. K.8 aporta contexto para un `ND` que ambas fuentes
+ya reportan. Distingue la observancia del Board y de los Federal Reserve Banks;
+no prueba la causa del faltante ni define un calendario universal de divisas.
+Un `ND` en otro día requiere evidencia y revisión adicionales.
+[K.8](https://www.federalreserve.gov/aboutthefed/k8.htm),
+[definición de ND](https://www.federalreserve.gov/releases/h10/current/default.htm).
+
+La captura oficial del 19 de octubre respondió HTTP 200 en los seis originales.
+El histórico HTML declara versión del 13 de octubre y observaciones hasta el
+9 de octubre; el CSV consultado termina el 30 de septiembre. Esa versión no
+demuestra la primera publicación de septiembre: su fecha y rezago permanecen
+nulos. Las revisiones futuras se capturan en otro candidato, sin sustituir los
+originales aceptados. Una diferencia entre versiones bloquea el cruce; no se
+atribuye automáticamente a un error del proveedor. Los releases archivados no
+se revisan, mientras el histórico puede incorporar revisiones.
+
+La alternativa HTML está comprobada para este cruce, con límite de 2 MB
+decodificados por respuesta. No se activa como sustitución automática. El aviso
+anuncia retirar «Build Your Package» en la semana del 9 de noviembre de 2026 y
+una transición posterior; no demuestra que este endpoint CSV deje de responder
+ese día. Debe revalidarse antes de otra captura.
+[Aviso oficial](https://www.federalreserve.gov/data/data-download-fred-information.htm).
+
+```bash
+uv run python -m src.source_updates h10 --period 2026M09 --as-of 2026-10-19T12:00:00-06:00 --workspace tmp/source-updates/h10-prueba --dry-run
+uv run python -m src.source_updates h10 --period 2026M09 --as-of 2026-10-19T12:00:00-06:00 --workspace tmp/source-updates/h10-prueba --execute --check-at-completion
+uv run python -m src.source_updates h10 --period 2026M09 --as-of 2026-10-19T12:00:00-06:00 --workspace tmp/source-updates/h10-prueba --check
+```
+
+La vista previa declara seis GET públicos, hasta 30 solicitudes contando
+redirecciones, cero pagadas y cero escrituras. `--from-collection <id>` sustituye
+`--execute` para certificar una captura local existente sin red. `--check`
+reconstruye sin red y verifica hashes de originales, recibo de captura y las seis
+tablas candidatas: dos Silver, `fact_macro`, `dim_period`,
+`dim_source_artifact` y `bridge_record_lineage`. Gold contiene solo dos registros
+mensuales, promedio y última cotización, con seis artefactos y 12 enlaces
+documentales exactos. No construye un trimestre a partir de un mes.
+
+Esta certificación corresponde únicamente al comando dedicado, al producto y
+al mes comprobados. La receta genérica `recipe --product h10` y el parser
+histórico no adquieren por ello esa certificación; tampoco queda certificada
+la familia macro ni una ronda del coordinador. Los recibos locales conservan
+commit y hashes del código, originales, corte, faltantes y salidas. La revisión
+humana sigue pendiente antes de publicar datos o activar cualquier ejecución.
+
 Para una captura nueva, `round --execute --check-at-completion` registra el
 corte de comprobación al terminar. Conserva también el corte pedido en la
 receta. Sin esa opción respeta el corte histórico: una captura posterior queda
@@ -250,12 +318,12 @@ No instala ningún horario ni seguimiento automático.
 
 ### Integración y permisos
 
-La rama parte de `40a63d1` y permanece aislada. Vuelos (PR134 y su contraparte
-privada33) ya está integrado por sus responsables; sus imports BTS se comprobaron
-contra `8b5dd73`. Mercado (PR135) y Noticias (PR136) siguen abiertos. Antes de
-integrar debe validar sus versiones finales y conectar el archivo mensual de
-Noticias. No se modifican esas ramas ni se abre un PR privado: no hay cambios
-necesarios en el respaldo.
+PR137 y PR141 ya están integrados; la certificación local H.10 parte de
+`dfa207c` y permanece en una rama separada. Vuelos (PR134 y su contraparte
+privada33) fue integrado por sus responsables. La publicación de mercado y
+noticias continúa en PR142 y su contraparte privada35. Su integración y el
+trabajo M11 de PR140 conservan sus responsables. No se modifican esas ramas,
+el sitio publicado ni el respaldo privado desde esta certificación.
 
 Viva, Volaris e Industria siguen requiriendo aprobación exacta de entidad,
 periodo y versión para sus tesis. Captura y pruebas verdes no la sustituyen.
