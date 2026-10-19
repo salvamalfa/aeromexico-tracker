@@ -626,3 +626,20 @@ def test_fixed_postverbal_adverbs_remain_part_of_cognitive_prelude(modifier):
     )
     assert "2t26" in intent["terms"]
     assert (intent["start_date"], intent["end_date"]) == ("2026-07-01", "2026-07-31")
+
+
+@pytest.mark.parametrize("adverb", ["quizá", "quizás", "quiza", "quizas"])
+def test_singular_and_plural_quiza_adverb_family_stays_in_cognitive_prelude(adverb):
+    intent = resolve_news_query(
+        f"Busca noticias publicadas en 2026-07 sobre por qué crees {adverb} que cayeron resultados en 2T26"
+    )
+    assert "2t26" in intent["terms"]
+    assert (intent["start_date"], intent["end_date"]) == ("2026-07-01", "2026-07-31")
+
+
+@pytest.mark.parametrize("period", ["2T26", "agosto de 2026"])
+def test_quiza_does_not_hide_a_later_publication_relative(period):
+    with pytest.raises(ValueError):
+        resolve_news_query(
+            f"Busca noticias publicadas en 2026-07 sobre por qué crees quizá que cayeron resultados que salieron en {period}"
+        )

@@ -97,7 +97,7 @@ def _publication_scope(text: str) -> str:
         cognition = r"(?:cre|piens|pens|opin|consider|estim|supon|esper|parec)\w*"
         post_modifier = (
             r"(?:yo|tu|vos|el|ella|usted|ustedes|nosotros|nosotras|vosotros|vosotras|ellos|ellas"
-            r"|no|ya|aun|todavia|tambien|nunca|siempre|ahora|entonces|quizas|solo|solamente|acaso|asi"
+            r"|no|ya|aun|todavia|tambien|nunca|siempre|ahora|entonces|quizas?|solo|solamente|acaso|asi"
             r"|[^\W\d_]+mente|de[\W_]+verdad|en[\W_]+realidad|tal[\W_]+vez)"
         )
         post_modifiers = r"(?:[\W_]+" + post_modifier + r"){0,16}"
