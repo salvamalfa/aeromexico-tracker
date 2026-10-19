@@ -34,7 +34,9 @@ no hay activación nueva, y los contratos y gates existentes siguen vigentes.
 **Gold tables:** 43 Parquet en `data/gold/` versionados en git (ver
 `docs/diccionario-datos.md`). Cuatro estimaciones adicionales
 (`fact_route_carrier_*_estimate.parquet`, `fact_aeromexico_*_capacity_estimate.parquet`)
-son locales y regenerables, no versionadas.
+son locales y regenerables, no versionadas en el público. El
+[mapa de aprovechamiento](docs/gold-exposure.md) verifica su cuenta y distingue
+interfaz, derivados, controles, tesis y skills; incluye el cierre documental.
 
 **Dashboard/Vuelos:** `web/` es la única vista publicada (ver arriba). Sus
 datos vienen de `src/dashboard/executive_summary.py::build_executive_payload()`
@@ -162,8 +164,17 @@ resume en `docs/archivo/README.md` y no se retoma.
 
 ### e) Cerrar un esfuerzo y retirar su documentación
 
-Sigue la sección «Ciclo de vida de la documentación» de `AGENTS.md`: pasa lo
-que sigue vigente a la documentación permanente, resume el esfuerzo en
-`docs/archivo/README.md` con un enlace permanente a los originales en un
-commit fijo, borra los originales con `git rm` y cambia los enlaces que
-apuntaban a ellos por ese enlace permanente.
+Sigue el [cierre documental obligatorio](AGENTS.md#cierre-documental-obligatorio-por-tarea),
+también en una entrega local. Inventaría los documentos y salidas generadas;
+clasifica conservar, actualizar, archivar, candidato a eliminar o pendiente,
+con motivo y dependencias desde código, pruebas, skills e índices. Pasa lo
+vigente a la guía canónica antes de retirar un plan reemplazado. Conserva
+fuentes, decisiones, aprobaciones y evidencia.
+
+Para archivar, comprueba primero que el original íntegro existe en un commit
+fijo; enlázalo desde `docs/archivo/README.md` y actualiza referencias entrantes.
+Retíralo del árbol solo si el encargo lo permite. Registra la disposición por
+archivo en el resumen existente con `document-lifecycle:v1` y valida con
+`scripts/check_document_lifecycle.py --base <base> --summary-file <resumen>`.
+No crees otro Markdown de estado para acreditar el cierre. Un pendiente exige
+archivo y motivo; la edad o el número de documentos no justifican un retiro.
