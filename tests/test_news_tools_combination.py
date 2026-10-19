@@ -28,14 +28,16 @@ def closed_candidate(tmp_path, monkeypatch):
     return paths
 
 
+@pytest.mark.parametrize("tone", [None, "NaN", "Infinity", "-Infinity"])
 @pytest.mark.parametrize("seen", ["20260831T235900Z", "20260901T120000Z", "20261001T000000Z"])
 def test_undated_gdelt_keeps_observation_and_capture_without_overwriting_accepted_silver(
-    closed_candidate, seen
+    closed_candidate, seen, tone
 ):
     paths = closed_candidate
-    content = json.dumps(
-        {"articles": [{"title": "Fixture", "url": "https://example.test/story", "seendate": seen}]}
-    ).encode()
+    article = {"title": "Fixture", "url": "https://example.test/story", "seendate": seen}
+    if tone is not None:
+        article["tone"] = tone
+    content = json.dumps({"articles": [article]}).encode()
     original = save_bronze(
         content,
         "gdelt",
@@ -52,9 +54,13 @@ def test_undated_gdelt_keeps_observation_and_capture_without_overwriting_accepte
         build_from_bronze()
     assert accepted.read_bytes() == b"previous accepted output remains untouched"
     assert original.read_bytes() == content
-    receipt = json.loads((paths.quality / "news_metadata_selection.json").read_text())
+    receipt = json.loads(
+        (paths.quality / "news_metadata_selection_attempt.json").read_text(),
+        parse_constant=lambda value: pytest.fail("Non-finite JSON: " + value),
+    )
     unknown = receipt["publication_unknown_metadata"]
     assert len(unknown) == 1 and unknown[0]["published_at"] is None
+    assert unknown[0]["gdelt_tone"] is None
     assert pd.Timestamp(unknown[0]["first_seen_at"]) == pd.to_datetime(seen, utc=True)
     assert unknown[0]["first_captured_at"] == unknown[0]["ingested_at"]
     assert (
@@ -162,10 +168,76 @@ def test_news_offline_parser_preserves_undated_gdelt_without_borrowing_rss_date(
     assert output.iloc[0]["language"] == "en"
     assert len(json.loads(output.iloc[0]["provenance_json"])) == 1
     assert output.iloc[0]["source_system"] == "rss"
-    receipt = json.loads((workspace / "data/quality/news_metadata_selection.json").read_text())
+    receipt = json.loads(
+        (workspace / "data/quality/news_metadata_selection.json").read_text(),
+        parse_constant=lambda value: pytest.fail("Non-finite JSON: " + value),
+    )
     unknown = receipt["publication_unknown_metadata"]
     assert len(unknown) == 1 and unknown[0]["source_system"] == "gdelt"
     assert unknown[0]["published_at"] is None
     assert pd.Timestamp(unknown[0]["first_seen_at"]) == pd.Timestamp("2026-09-01T12:00:00Z")
     assert unknown[0]["first_captured_at"] != unknown[0]["first_seen_at"]
     assert (workspace / "data/bronze" / unknown[0]["source_file"]).is_file()
+
+
+def test_failed_deduplication_preserves_the_accepted_selection_receipt(closed_candidate):
+    paths = closed_candidate
+    rss = b"""<rss><channel>
+    <item><title>First edition</title><link>https://example.test/story</link>
+    <pubDate>Tue, 01 Sep 2026 12:00:00 GMT</pubDate></item>
+    <item><title>Second edition</title><link>https://example.test/story</link>
+    <pubDate>Wed, 02 Sep 2026 12:00:00 GMT</pubDate></item></channel></rss>"""
+    save_bronze(
+        rss,
+        "rss",
+        "google_en",
+        "current",
+        "xml",
+        "https://news.google.com/rss/search",
+        "manual",
+        bronze_root=paths.bronze,
+    )
+    build_from_bronze()
+    silver = paths.silver / "news_headlines.parquet"
+    receipt = paths.quality / "news_metadata_selection.json"
+    accepted_silver, accepted_receipt = silver.read_bytes(), receipt.read_bytes()
+    assert len(json.loads(accepted_receipt)["superseded_editions"]) == 1
+    bad = b"""<rss><channel><item><title>Invalid link</title><link>relative-story</link>
+    <pubDate>Thu, 03 Sep 2026 12:00:00 GMT</pubDate></item></channel></rss>"""
+    save_bronze(
+        bad,
+        "rss",
+        "google_es",
+        "current",
+        "xml",
+        "https://news.google.com/rss/search",
+        "manual",
+        bronze_root=paths.bronze,
+    )
+    gdelt = json.dumps(
+        {
+            "articles": [
+                {"title": "Undated", "url": "https://example.test/undated", "seendate": "20260901T120000Z"}
+            ]
+        }
+    ).encode()
+    save_bronze(
+        gdelt,
+        "gdelt",
+        "aeromexico_articles",
+        "current",
+        "json",
+        "https://api.gdeltproject.org/api/v2/doc/doc",
+        "manual",
+        bronze_root=paths.bronze,
+    )
+    with pytest.raises(ValueError, match="Invalid article metadata URL"):
+        build_from_bronze()
+    assert silver.read_bytes() == accepted_silver
+    assert receipt.read_bytes() == accepted_receipt
+    attempt = json.loads(
+        (paths.quality / "news_metadata_selection_attempt.json").read_text(),
+        parse_constant=lambda value: pytest.fail("Non-finite JSON: " + value),
+    )
+    assert attempt["status"] == "blocked" and "Invalid article metadata URL" in attempt["reason"]
+    assert attempt["publication_unknown_metadata"][0]["published_at"] is None

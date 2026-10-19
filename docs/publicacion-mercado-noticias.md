@@ -82,8 +82,10 @@ una continuación divergente del ledger.
 `data/quality/news_metadata_selection.json`, campo
 `publication_unknown_metadata`. No los mezcla con una edición RSS fechada aunque
 compartan URL. Si no existe ninguna publicación fechada, `parse.news` se detiene
-sin sobrescribir Silver aceptado. Las capturas originales y el recibo permanecen
-para revisión. Las consultas directa y mensual reutilizan
+sin sobrescribir Silver ni el recibo aceptados. El intento bloqueado se guarda
+en `data/quality/news_metadata_selection_attempt.json`; las capturas originales
+permanecen para revisión. Ambos recibos usan JSON estricto y conservan nulos
+para los valores numéricos no finitos. Las consultas directa y mensual reutilizan
 `GDELT_QUERY_PARAMS`; no realizan capturas por importar o probar el módulo.
 
 ## Pendientes

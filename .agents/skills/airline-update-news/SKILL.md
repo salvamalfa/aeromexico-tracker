@@ -76,5 +76,7 @@ con Noticias conserva esos metadatos con publicación nula en
 `data/quality/news_metadata_selection.json`, campo `publication_unknown_metadata`.
 No los mezcla con una edición RSS fechada aunque compartan URL. Si solo hay
 metadatos sin fecha de publicación, `parse.news` se detiene sin sobrescribir
-Silver aceptado; el recibo y los originales permanecen para revisión. La consulta
+Silver ni su recibo aceptados; guarda el intento bloqueado en
+`data/quality/news_metadata_selection_attempt.json`. Los originales permanecen
+para revisión y los recibos usan JSON estricto, con nulos para los no finitos. La consulta
 canónica compartida cubre Aeroméxico, Viva y Volaris; no acredita cobertura total.
