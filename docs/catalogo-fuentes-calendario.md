@@ -584,6 +584,39 @@ python -m src.source_updates.primary_review --bundle docs/referencias/source-upd
 
 Cada raíz es una carpeta local de originales seleccionados. El mapa contiene
 rutas relativas y hashes; no descarga faltantes ni acepta documentos fallidos.
+El mapa de eventos exige además tres recibos bajo `tmp/`, declarados en
+`local_inputs`. El respaldo privado separado los conserva en
+`review/operacion/20261019/source-updates/payload/`. Después de materializar y
+verificar ese paquete según su README, restaurarlos en este checkout aislado:
+
+```python
+from pathlib import Path
+import hashlib, json
+
+package = Path("../aeromexico-tracker-data/review/operacion/20261019/source-updates")
+bundle = json.loads(Path("docs/referencias/source-updates-20261019/event-primary-review.json").read_text(encoding="utf-8"))
+receipts = {
+    "tmp/primary-events-result.json": "payload/proofs/primary-events-result.json",
+    "tmp/primary-extra-result.json": "payload/proofs/primary-extra-result.json",
+    "tmp/source-updates/dot-primary-review-20261019/capture-results.json": "payload/diagnostics/dot_review/capture-results.json",
+}
+for target, source in receipts.items():
+    content = (package / source).read_bytes()
+    assert hashlib.sha256(content).hexdigest() == bundle["local_inputs"][target]
+    destination = Path(target)
+    if destination.exists():
+        assert destination.read_bytes() == content, "Conservar el recibo distinto e investigar"
+    else:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        with destination.open("xb") as stream:
+            stream.write(content)
+```
+
+Para `old_public`, `context_primary`, `context_extra` y `am_july`, usar las
+carpetas homónimas bajo `payload/originals/`; para `dot_review`, usar
+`payload/diagnostics/dot_review/`. Los candidatos completos viven en
+`payload/candidates/` y conservan sus rutas internas y recibos. No copiar esos
+Gold a producción ni interpretar el respaldo como una aprobación nueva.
 Un pasaje localizado no aprueba la interpretación del revisor. Se conservan
 `agent_eligible=false`, `silver_gold_certification=false` y `activation=none`.
 [Muestra verificable de los auditores y fallos](referencias/source-updates-20261019/curation-news-verification.json).
