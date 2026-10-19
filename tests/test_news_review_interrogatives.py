@@ -314,3 +314,12 @@ def test_topic_quarter_variants_keep_only_the_explicit_publication_month(label):
 def test_topic_release_cues_keep_separate_quarter_constraints_visible(label, cue):
     with pytest.raises(ValueError, match="notación trimestral"):
         resolve_news_query(f"noticias publicadas en 2026-07 sobre resultados que {cue} en {label}")
+
+
+@pytest.mark.parametrize("label", ["2T26", "2-T26", "T2 de 2026", "Q2 FY26", "2026-Q2"])
+@pytest.mark.parametrize("period", ["en 2026-07", "entre 2026-07-01 y 2026-07-31", "en julio de 2026"])
+def test_explicit_publication_filter_after_literal_topic_matches_filter_before_it(label, period):
+    before = resolve_news_query(f"noticias publicadas {period} sobre resultados en {label}")
+    after = resolve_news_query(f"noticias sobre resultados en {label} publicadas {period}")
+    assert (after["start_date"], after["end_date"]) == (before["start_date"], before["end_date"])
+    assert (after["start_date"], after["end_date"]) == ("2026-07-01", "2026-07-31")

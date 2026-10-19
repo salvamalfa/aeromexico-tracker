@@ -80,7 +80,11 @@ def _publication_scope(text: str) -> str:
         # Only quarter labels within the subject are exempt from period
         # detection. Keep all calendar constraints visible, including an
         # additional publication clause expressed with another verb/noun.
-        selected_period = bool(re.search(r"\b\d{4}\b", text[:marker.start()]))
+        publication = r"\b(?:publica\w*|publico|publique\w*)\b"
+        selected_period = bool(
+            re.search(r"\b\d{4}\b", text[:marker.start()])
+            or re.search(publication + r".*\b\d{4}\b", text[start:])
+        )
         # With an explicitly selected archive period, "en 2T26" can name
         # the report's subject. Other calendar constraints remain visible;
         # a publication verb always starts a separate period clause.

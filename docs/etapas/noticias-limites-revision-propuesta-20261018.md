@@ -534,3 +534,21 @@ La suite **1136PASS/178.61s** es exclusivamente de90ef4f2/f4c29f08, con
 recibos limpios. La nueva suite, CI y revisión se ejecutan sobre el nuevo
 HEAD congelado.6534/88–90 siguen intactos; sin nueva fase canónica, gate,
 publicación ni cambios de M11/Skills.
+
+## Orden de filtros explícitos · 19 de octubre, 03:00 UTC
+
+La revisión de690027a encontró que el filtro explícito de publicación tras
+el tema se interpretaba distinto del mismo filtro anterior al tema.
+Se detecta la cláusula explícita con año en ambos lados de `sobre`; la
+frontera de publicación sigue visible y se valida normalmente. No se añade
+gramática cognitiva ni de actores. Quince combinaciones de etiqueta y mes,
+rango ISO o mes escrito conservan julio en los dos órdenes. Los930casos
+anteriores de matriz/presupuesto siguen pasando: **945PASS0.79s** en total
+(942matrices+3presupuestos,483regresiones nuevas incluidas). RuffF ydiff-check
+pasan.
+
+La huella propuesta es
+`558842c4547dcc2976993934622d4ea8391f5f21670d841e7b9ddd90822c1454`.
+Los1170PASS/176.76s y UI local1440/390 de690027a/1250d99f conservan su
+procedencia, sin trasladarlos al ajuste nuevo. Se valida de nuevo el HEAD
+congelado. Aprobación6534/88–90 intacta; sin cohorte canónica/gate ni M11/Skills.
