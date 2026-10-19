@@ -36,7 +36,7 @@ PRODUCTS = (
         "am_financials",
         "aeromexico_ir",
         "quarterly",
-        "discover_new_ir_links_parser_historical_only",
+        "reviewed_retained_2026Q2_source_units_no_new_Q3_or_generic_build",
         "parse.aeromexico_ir_financial",
     ),
     (

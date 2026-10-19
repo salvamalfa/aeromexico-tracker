@@ -36,6 +36,7 @@ def spec(product: str) -> dict:
         afac_margins,
         authorities,
         context_snapshots,
+        financials,
         oma_traffic,
         route_documents,
         slots,
@@ -86,6 +87,19 @@ def spec(product: str) -> dict:
             "parse": getattr(context_snapshots, name),
             "code_files": [Path(context_snapshots.__file__)],
         }
+    registry["am_financials"] = {
+        "roles": {"pdf": ("aeromexico_ir",)},
+        "primary": "pdf",
+        "table": financials.TABLE,
+        "grain": financials.GRAIN,
+        "parse": financials.parse,
+        "revision_values": ["value", "unit", "is_preliminary", "is_unaudited"],
+        "code_files": [
+            Path(financials.__file__),
+            ROOT / "src/parse/aeromexico_ir_financial.py",
+            ROOT / "src/parse/aeromexico_ir.py",
+        ],
+    }
     registry["oma_traffic"] = {
         "roles": {"pdf": ("oma_ir",)},
         "primary": "pdf",
