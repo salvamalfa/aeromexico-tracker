@@ -535,5 +535,29 @@
       "url": "https://github.com/salvamalfa/aeromexico-tracker-data/pull/35"
     },
     "functional_Pages_Railway_verification": false
+  },
+  "validation": {
+    "source_head": "b5def06b950b34aa4371e9f258acbef3d763a958",
+    "full_suite": {
+      "passed": 2224,
+      "skipped": 78,
+      "subtests_passed": 29,
+      "seconds": 238.44,
+      "skip_reasons": {
+        "warehouse_absent": 71,
+        "Stage4_local_artifacts_absent": 5,
+        "Pages_preview_not_pinned": 1,
+        "independent_proposal_absent": 1
+      }
+    },
+    "focused_tests": 20,
+    "independent_review_open_findings": 0,
+    "ruff_F": "pass_src_scripts_new_test",
+    "format": "pass_2migrated_3new",
+    "document_lifecycle": {
+      "documents": 7,
+      "errors": []
+    },
+    "source_inputs_changed_after_source_head": false
   }
 }

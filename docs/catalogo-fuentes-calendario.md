@@ -588,6 +588,15 @@ Un pasaje localizado no aprueba la interpretación del revisor. Se conservan
 `agent_eligible=false`, `silver_gold_certification=false` y `activation=none`.
 [Muestra verificable de los auditores y fallos](referencias/source-updates-20261019/curation-news-verification.json).
 
+El código de esta continuación, `b5def06`, pasó **2.224 pruebas y 29
+subpruebas**, con las mismas 78 omisiones por insumos locales o vistas previas
+ausentes descritas arriba. La revisión independiente repitió las 20 pruebas
+focalizadas y los mapas reales con red bloqueada, sin hallazgos abiertos.
+Treinta y tres originales documentales conservaron hash, tamaño y fecha de
+modificación durante la reproducción. Estas pruebas no certifican Silver/Gold
+para los mapas ni aprueban decisiones curadas. Los commits posteriores solo
+actualizan documentación y muestras; no cambian esos insumos de código.
+
 Estas condiciones no se sustituyen por una prueba de frescura de Gold ni por
 una aprobación inventada. El calendario aprobado no aprueba tesis, datos nuevos
 o publicación.
