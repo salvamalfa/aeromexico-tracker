@@ -64,8 +64,8 @@ def write_concept_dictionary(concepts: pl.DataFrame) -> Path:
     return target
 
 
-def run_bmv_parse() -> dict[str, object]:
-    packages = rebuild_package_index_from_bronze()
+def run_bmv_parse(*, zip_urls: tuple[str, ...] | None = None) -> dict[str, object]:
+    packages = rebuild_package_index_from_bronze(zip_urls=zip_urls)
     write_parquet_atomic(packages, PATHS.silver / "bmv_packages_index.parquet")
     source_facts, concepts = parse_all_packages(packages)
     facts = derive_quarters_from_ytd(source_facts)

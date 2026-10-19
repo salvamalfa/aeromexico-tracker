@@ -21,6 +21,8 @@ ALLOWED = frozenset(
         "parse.aeromexico_ir",
         "parse.aeromexico_ir_financial",
         "parse.afac",
+        "parse.bmv",
+        "parse.complementary",
         "parse.peers",
         "parse.bts",
         "parse.fx",
@@ -36,9 +38,15 @@ ALLOWED = frozenset(
         "transform.validate_silver",
         "transform.stage6",
         "transform.validate_stage6",
+        "transform.gold_lineage",
     }
 )
 GRANULAR = {
+    "parse.bmv": ("src.source_updates.bmv:parse_selected", ("bmv",), ("bmv_financials", "bmv_packages_index")),
+    "transform.gold_lineage": (
+        "src.source_updates.gold:materialize_lineage", (),
+        ("../gold/dim_source_artifact", "../gold/bridge_record_lineage"),
+    ),
     "parse.fx": (
         "src.ingest.macro.banxico:build_from_bronze",
         ("banxico_sie",),
@@ -70,6 +78,8 @@ def required_predecessors(steps: list[str]) -> dict[str, tuple[str, ...]]:
 
     dependencies = {step.step_id: step.depends_on for step in PIPELINE_STEPS}
     dependencies.update({name: () for name in GRANULAR})
+    dependencies["parse.complementary"] = ("parse.sec",)
+    dependencies["transform.gold_lineage"] = ("transform.validate_stage6",)
     # This granular parser accepts preserved SEC evidence as an explicit file
     # input. If SEC is rebuilt in this run, it must precede the market parser.
     dependencies["parse.market"] = ("parse.sec",) if "parse.sec" in steps else ()
@@ -86,8 +96,6 @@ def required_predecessors(steps: list[str]) -> dict[str, tuple[str, ...]]:
 
 def build_plan(workspace: Path, steps: list[str]) -> dict:
     workspace = safe_workspace(workspace)
-    if "parse.bmv" in steps:
-        raise ValueError("BMV is collection-only here until bounded ZIP-member registration is implemented")
     if not steps or len(steps) != len(set(steps)) or set(steps) - ALLOWED:
         raise ValueError("Select unique, explicitly allowed offline parse/transform steps")
     dependencies = required_predecessors(steps)
@@ -136,6 +144,14 @@ def build(workspace: Path, steps: list[str], *, execute: bool = False) -> dict:
         if reference.exists() and not (workspace / "data/reference").exists():
             shutil.copytree(reference, workspace / "data/reference")
         (workspace / "docs").mkdir(exist_ok=True)
+        # Static public inputs used by the normal Gold builders and SQL views.
+        for path in [ROOT / "docs/glosario-kpis.md", *(ROOT / "sql/gold").rglob("*.sql")]:
+            destination = workspace / path.relative_to(ROOT)
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            if destination.exists() and destination.read_bytes() != path.read_bytes():
+                raise ValueError(f"Candidate static input differs: {path.relative_to(ROOT)}")
+            if not destination.exists():
+                shutil.copyfile(path, destination)
         report = workspace / "receipts" / f"build-{uuid4().hex}.json"
         report.parent.mkdir(exist_ok=True)
         completed = subprocess.run(
@@ -188,7 +204,11 @@ def worker(workspace: Path, requested: list[str], report: Path) -> int:
     registry = {step.step_id: step for step in PIPELINE_STEPS}
     dependencies = required_predecessors(requested)
     for name, (action, sources, outputs) in GRANULAR.items():
-        inputs = [InputRequirement(name, bronze_source_systems=sources)]
+        inputs = (
+            [InputRequirement(name, bronze_source_systems=sources)]
+            if sources
+            else [InputRequirement("Validated Gold", path_patterns=("data/gold/fact_carrier_metrics.parquet", "data/gold/fact_macro.parquet"), require_all_paths=True)]
+        )
         if name == "parse.market":
             inputs.append(
                 InputRequirement(
@@ -210,7 +230,7 @@ def worker(workspace: Path, requested: list[str], report: Path) -> int:
             )
         registry[name] = PipelineStep(
             name,
-            PipelinePhase.PARSE,
+            PipelinePhase.TRANSFORM if name.startswith("transform.") else PipelinePhase.PARSE,
             name,
             action,
             RequirementLevel.REQUIRED,

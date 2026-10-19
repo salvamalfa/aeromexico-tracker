@@ -153,7 +153,7 @@ def save_bronze(
         raise TypeError("content must be bytes")
     if not source_url.strip():
         raise ValueError("source_url cannot be empty")
-    if download_method not in {"httpx", "playwright", "computer_use", "manual"}:
+    if download_method not in {"httpx", "playwright", "computer_use", "manual", "offline_zip_member"}:
         raise ValueError("unsupported download_method")
 
     timestamp = downloaded_at or _utc_now()

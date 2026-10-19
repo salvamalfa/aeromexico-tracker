@@ -13,7 +13,7 @@
   },
   "common": {
     "revisions": "Revalidar URLs seleccionadas en la ronda, conservar SHA/versiones y comparar filas contra baseline. No crear futuras URLs a partir de plantillas.",
-    "success": "Bronze hash válido + parser sin red + contrato/grano/fuente/entidad/periodo; días/meses y reconciliación requeridos se revisan por separado. Gold heredado exige gate de linaje.",
+    "success": "Bronze verificado, parseo offline y contratos/grano/fuente/entidad/periodo. Gold agregado usa artefactos y puente de linaje recomprobados; no basta su hash heredado. La cobertura de meses/días y el último publicado se acreditan por separado.",
     "failure": "403/TLS/timeout/HTML de bloqueo no prueba ausencia. Conservar dato aceptado y registrar pendiente. No nuevas credenciales, TLS desactivado ni pagos."
   },
   "products": {
@@ -123,9 +123,9 @@
     },
     "bmv_xbrl": {
       "entry_ref": "constant:src.config:SOURCE_URLS:bmv_xbrl",
-      "state": "discovery_only",
+      "state": "conditional",
       "format": "HTML → visor → ZIP con JSON",
-      "procedure": "Usar parse_catalog_html en src.ingest.bmv.download para resolver docins a ZIP de AERO/VOLAR. Capturar catálogo y ZIP explícitos. Falta registro offline acotado de zip_url#member y selección de paquetes; parse.bmv está bloqueado aquí. No descargar todo el catálogo ni enviar fragmentos por HTTP."
+      "procedure": "Capturar catálogo y seleccionar ZIPs realmente presentes por periodo/emisora con recipe --catalog-file --period --ticker. parse.bmv verifica hashes, límites de tamaño/rutas y un único JSON por ZIP; registra el miembro offline y acota el índice a paquetes seleccionados. Conserva versiones, comparativos, duración/instante y reconciliación SEC; no infiere periodos nuevos."
     },
     "viva_financials": {
       "entry_ref": "url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD",

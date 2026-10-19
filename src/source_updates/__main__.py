@@ -32,6 +32,8 @@ def main(argv: list[str] | None = None) -> int:
     recipes.add_argument("--output", choices=["instructions", "selection", "round"], default="instructions")
     recipes.add_argument("--period")
     recipes.add_argument("--as-of")
+    recipes.add_argument("--catalog-file", type=Path)
+    recipes.add_argument("--ticker", action="append", choices=["AERO", "VOLAR"])
     dates = commands.add_parser("calendar")
     dates.add_argument("--start", required=True, help="YYYY-MM")
     dates.add_argument("--months", type=int, default=3)
@@ -64,7 +66,14 @@ def main(argv: list[str] | None = None) -> int:
             result = plan(args.round, args.as_of, args.quarter, args.family)
         elif args.command == "recipe":
             if args.output == "selection":
-                result = catalog_selection(args.product)
+                if args.catalog_file:
+                    from src.source_updates.bmv import selection
+
+                    if args.product != "bmv_xbrl" or not args.period:
+                        raise ValueError("Catalogue-file selection requires bmv_xbrl and --period")
+                    result = selection(args.catalog_file, args.period, tuple(args.ticker or ["AERO", "VOLAR"]))
+                else:
+                    result = catalog_selection(args.product)
             elif args.output == "round":
                 if not args.period or not args.as_of:
                     raise ValueError("A runnable recipe requires --period and --as-of")
