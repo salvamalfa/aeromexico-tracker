@@ -82,6 +82,12 @@ def test_bmv_selection_uses_only_actual_catalog_period_and_requested_issuer(tmp_
         bmv.selection(path, "2026Q3", ("AERO",))
 
 
+@pytest.mark.parametrize("period", ["2025", "2026M01", "2026Q5"])
+def test_bmv_unsupported_frequency_is_rejected_before_catalogue_read(tmp_path, period):
+    with pytest.raises(ValueError, match="YYYYQn only"):
+        bmv.selection(tmp_path / "not-read.html", period, ("AERO",))
+
+
 def test_new_catalogue_cannot_discard_retained_published_packages(candidate):
     preserve_zip(candidate, (Path(__file__).parent / "fixtures/bmv/AERO_2026Q2.zip").read_bytes())
     newer = b"<table>" + CATALOG[CATALOG.index(b"<tr><td>VOLAR") :]

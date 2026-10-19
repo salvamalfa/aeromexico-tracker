@@ -14,10 +14,9 @@ from src.source_updates.checks import period_end, verify_bronze
 
 
 def selection(catalog_file: Path, period: str, tickers: tuple[str, ...] = ("AERO", "VOLAR")) -> dict:
-    if len(period) == 4 and period.isdigit():
-        period_end(period + "Q4")
-    else:
-        period_end(period)
+    if len(period) != 6 or period[4] != "Q" or period[-1] not in "1234":
+        raise ValueError("BMV candidate selection supports YYYYQn only; annual checks are not implemented")
+    period_end(period)
     if not tickers or not set(tickers) <= {"AERO", "VOLAR"}:
         raise ValueError("Select AERO and/or VOLAR explicitly")
     reports = [

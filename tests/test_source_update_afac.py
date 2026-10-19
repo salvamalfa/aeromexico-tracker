@@ -43,7 +43,10 @@ def test_pdf_period_comes_from_monthly_comparison_and_preserves_source_caveats(m
             pages=[SimpleNamespace(extract_text=lambda text=text: text) for text in texts]
         ),
     )
-    assert "China Southern" in bulletin_notes(b"fixture", 8)
+    notes = bulletin_notes(b"fixture", 8)
+    assert "China Southern" in notes["international"]
+    assert "China Southern" not in notes["domestic"]
+    assert notes["domestic"] == "Las cifras pueden variar."
     with pytest.raises(ValueError, match="does not confirm"):
         bulletin_notes(b"fixture", 7)
     texts[1] = "Acumulado enero-agosto 2026; Notas: missing monthly comparison. Fuente AFAC"
@@ -62,7 +65,7 @@ def test_january_bulletin_has_no_cumulative_month_or_de_before_years(monkeypatch
             pages=[SimpleNamespace(extract_text=lambda: text), SimpleNamespace(extract_text=lambda: text)]
         ),
     )
-    assert "Preliminar" in bulletin_notes(b"fixture", 1)
+    assert all("Preliminar" in note for note in bulletin_notes(b"fixture", 1).values())
     with pytest.raises(ValueError, match="does not confirm"):
         bulletin_notes(b"fixture", 2)
 
@@ -109,7 +112,9 @@ def test_candidate_extracts_database_offline_with_original_capture_time(tmp_path
         bronze_root=paths.bronze,
         relative_dir="afac/2026/01",
     )
-    monkeypatch.setattr(afac, "bulletin_notes", lambda content, month: "Source caveat retained")
+    monkeypatch.setattr(afac, "bulletin_notes", lambda content, month: {
+        "domestic": "Domestic caveat retained", "international": "China Southern caveat retained"
+    })
 
     def parse(**kwargs):
         metadata = json.loads(kwargs["database"].with_suffix(".xlsx.meta.json").read_text())
@@ -118,9 +123,10 @@ def test_candidate_extracts_database_offline_with_original_capture_time(tmp_path
         assert kwargs["through_month"] == 1 and set(kwargs["documents"]) == {1}
         pl.DataFrame(
             {
-                "period_id": ["2026M01", "2026M01"],
-                "source_family": ["datatur_monthly_bulletin_pdf", "datatur_long_database"],
-                "footnote_text": ["estimated detail", "charter estimate retained"],
+                "period_id": ["2026M01"] * 4,
+                "market": ["domestic", "international", "domestic", "international"],
+                "source_family": ["datatur_monthly_bulletin_pdf"] * 2 + ["datatur_long_database"] * 2,
+                "footnote_text": ["estimated detail", None, "charter estimate retained", None],
             }
         ).write_parquet(paths.silver / "afac_monthly_stats.parquet")
         return {"period_max": "2026M01"}
@@ -130,6 +136,9 @@ def test_candidate_extracts_database_offline_with_original_capture_time(tmp_path
     assert result["period_max"] == "2026M01"
     facts = pl.read_parquet(paths.silver / "afac_monthly_stats.parquet")
     assert facts["footnote_text"].to_list() == [
-        "estimated detail\nSource caveat retained",
+        "estimated detail\nDomestic caveat retained",
+        "\nChina Southern caveat retained",
         "charter estimate retained",
+        None,
     ]
+    assert "_bulletin_note" not in facts.columns

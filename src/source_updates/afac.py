@@ -46,12 +46,13 @@ def database_months(content: bytes) -> set[int]:
         book.close()
 
 
-def bulletin_notes(content: bytes, month: int) -> str:
+def bulletin_notes(content: bytes, month: int) -> dict[str, str]:
     pages = PdfReader(io.BytesIO(content)).pages
     if len(pages) != 2:
         raise ValueError("Expected the two-page AFAC scheduled-passenger bulletin")
-    notes = []
-    for page in pages:
+    notes = {}
+    # Match the canonical PDF parser: page 1 is domestic, page 2 international.
+    for market, page in zip(("domestic", "international"), pages, strict=True):
         text = page.extract_text() or ""
         # The document explicitly names its current monthly comparison. A file
         # label or a cumulative month name alone cannot establish the period.
@@ -60,8 +61,8 @@ def bulletin_notes(content: bytes, month: int) -> str:
             raise ValueError("AFAC PDF content does not confirm the requested 2026 monthly comparison")
         if "Notas:" not in text or "Fuente" not in text:
             raise ValueError("AFAC bulletin notes/source section missing")
-        notes.append(text.split("Notas:", 1)[1].split("Fuente", 1)[0].strip())
-    return "\n".join(dict.fromkeys(notes))
+        notes[market] = text.split("Notas:", 1)[1].split("Fuente", 1)[0].strip()
+    return notes
 
 
 def run() -> dict:
@@ -125,25 +126,34 @@ def run() -> dict:
     result = run_afac_parse(documents=documents, database=database, through_month=max(months))
     path = PATHS.silver / "afac_monthly_stats.parquet"
     facts = pl.read_parquet(path)
+    page_notes = pl.DataFrame(
+        [
+            {"period_id": f"2026M{month:02d}", "market": market, "_bulletin_note": note}
+            for month, by_market in notes.items()
+            for market, note in by_market.items()
+        ]
+    )
+    facts = facts.join(page_notes, on=["period_id", "market"], how="left", validate="m:1", maintain_order="left")
+    eligible = (
+        pl.col("period_id").is_in([f"2026M{m:02d}" for m in months])
+        & pl.col("source_family").eq("datatur_monthly_bulletin_pdf")
+    )
+    if facts.filter(eligible & pl.col("_bulletin_note").is_null()).height:
+        raise ValueError("AFAC PDF market has no matching page notes")
     facts = facts.with_columns(
-        pl.when(
-            pl.col("period_id").is_in([f"2026M{m:02d}" for m in months])
-            & pl.col("source_family").eq("datatur_monthly_bulletin_pdf")
-        )
+        pl.when(eligible)
         .then(
             pl.concat_str(
                 [
                     pl.col("footnote_text").fill_null(""),
-                    pl.col("period_id").replace_strict(
-                        {f"2026M{m:02d}": note for m, note in notes.items()}, default=""
-                    ),
+                    pl.col("_bulletin_note"),
                 ],
                 separator="\n",
             )
         )
         .otherwise(pl.col("footnote_text"))
         .alias("footnote_text")
-    )
+    ).drop("_bulletin_note")
     write_parquet_atomic(facts, path)
     return {
         **result,
