@@ -24,7 +24,7 @@ def workbook(*, mutate=None, edit=None):
     graph.title = "graficos_graphics"
     graph.cell(1, 23, "Julio 26 / July 26")
     graph.cell(2, 1, "FUENTE: Cifras proporcionadas por los grupos aeroportuarios")
-    graph.cell(3, 1, "Nota: No incluye operaciones oficiales o de Estado")
+    graph.cell(3, 1, "Nota: No se contabiliza información de operaciones oficiales o de Estado")
     rows = []
     for metric, (_, unit) in airport.METRICS.items():
         for market in airport.MARKETS:
@@ -140,6 +140,7 @@ def test_duplicate_grain_and_missing_domain_block():
         ("graficos_graphics", 1, 23, "Agosto 26 / August 26"),
         ("graficos_graphics", 2, 1, "FUENTE: unknown"),
         ("graficos_graphics", 3, 1, "Nota: unknown"),
+        ("graficos_graphics", 3, 1, "Nota: Incluye operaciones oficiales o de Estado"),
         ("graficos_graphics", 12, 1, "count"),
         ("graficos_graphics", 13, 3, 2025),
         ("graficos_graphics", 15, 7, 0.01),
@@ -161,3 +162,53 @@ def test_wrong_period_and_explicit_zero_preserved():
 
     frame, _ = airport.parse(workbook(mutate=zero), "2026M07", ORIGINAL)
     assert len(frame) == 42 and frame.value.eq(0).sum() == 1
+
+
+def rewrite_cache(content, transform):
+    output = io.BytesIO()
+    with ZipFile(io.BytesIO(content)) as source, ZipFile(output, "w", ZIP_DEFLATED) as target:
+        members = {name: source.read(name) for name in source.namelist()}
+        transform(members)
+        for name, value in members.items():
+            target.writestr(name, value)
+    return output.getvalue()
+
+
+@pytest.mark.parametrize("shared_type", ["b", "m", "e", "s"])
+def test_shared_boolean_missing_error_and_text_cannot_become_numeric_zero(shared_type):
+    def transform(members):
+        key = "xl/pivotCache/pivotCacheDefinition1.xml"
+        root = ET.fromstring(members[key])
+        field = root.findall("{*}cacheFields/{*}cacheField")[5]
+        items = ET.SubElement(field, "sharedItems")
+        ET.SubElement(items, shared_type, v="0")
+        members[key] = ET.tostring(root)
+        key = "xl/pivotCache/pivotCacheRecords1.xml"
+        root = ET.fromstring(members[key])
+        root[0][5].tag = "x"
+        root[0][5].set("v", "0")
+        root[0][17].set("v", "60")
+        root[0][18].set("v", "60")
+        members[key] = ET.tostring(root)
+
+    with pytest.raises(ValueError):
+        airport.parse(rewrite_cache(workbook(), transform), "2026M07", ORIGINAL)
+
+
+def test_mixed_coverage_polarities_block():
+    with pytest.raises(ValueError, match="contradictory"):
+        airport.parse(
+            workbook(
+                edit=lambda book: book["graficos_graphics"].cell(
+                    4, 1, "Nota: Incluye operaciones oficiales o de Estado"
+                )
+            ),
+            "2026M07",
+            ORIGINAL,
+        )
+
+
+@pytest.mark.parametrize("token,is_count", [(str(2**53 + 1), True), ("1e999", False)])
+def test_nonrepresentable_numeric_value_blocks(token, is_count):
+    with pytest.raises(ValueError):
+        airport.number(token, count=is_count)

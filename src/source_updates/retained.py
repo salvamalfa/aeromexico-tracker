@@ -30,12 +30,13 @@ from src.transform.validate_stage9 import validate_lineage_frames
 
 
 def spec(product: str) -> dict:
-    from src.source_updates import afac_airports
+    from src.source_updates import afac_airports, authorities
 
     registry = {
         "afac_airports": {
             "roles": {"workbook": ("afac",)},
             "primary": "workbook",
+            "code_files": [Path(afac_airports.__file__)],
             "table": afac_airports.TABLE,
             "grain": afac_airports.BUSINESS_GRAIN,
             "parse": lambda originals, period: afac_airports.parse(
@@ -43,6 +44,22 @@ def spec(product: str) -> dict:
             ),
         }
     }
+    for name, roles in {
+        "anac": {"json": ("international_routes",)},
+        "caa": {"csv": ("route_authority_research", "international_routes")},
+        "aena": {
+            role: ("aena",)
+            for role in ("company_operations", "company_passengers", "market_operations", "market_passengers")
+        },
+    }.items():
+        registry[name] = {
+            "roles": roles,
+            "primary": next(iter(roles)),
+            "code_files": [Path(authorities.__file__), ROOT / "src/transform/international_routes.py"],
+            "table": authorities.TABLES[name],
+            "grain": authorities.GRAIN,
+            "parse": getattr(authorities, name),
+        }
     if product not in registry:
         raise ValueError("No reviewed retained-product adapter")
     return registry[product]
@@ -128,6 +145,8 @@ def retain(workspace: Path, source_root: Path, product: str, selected: dict, *, 
             destination = workspace / "data/bronze" / relative
             if not destination.resolve().is_relative_to((workspace / "data/bronze").resolve()):
                 raise ValueError("Retention destination escapes candidate")
+            if destination.exists() or Path(str(destination) + ".meta.json").exists():
+                raise ValueError("Retention destination already exists; preserve partial evidence")
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source, destination)
             shutil.copyfile(Path(str(source) + ".meta.json"), Path(str(destination) + ".meta.json"))
@@ -328,8 +347,7 @@ def run(
         checked_at=datetime.now(UTC).isoformat(),
         code_head=subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
         code_files={
-            p.relative_to(ROOT).as_posix(): digest(p)
-            for p in [Path(__file__), ROOT / "src/source_updates/afac_airports.py"]
+            p.relative_to(ROOT).as_posix(): digest(p) for p in [Path(__file__), *definition["code_files"]]
         },
     )
     result["revisions"] = {"status": "not_compared_no_baseline"}

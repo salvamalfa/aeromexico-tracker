@@ -6,6 +6,7 @@ from collections import defaultdict
 from contextlib import closing
 from decimal import Decimal, InvalidOperation
 import io
+import math
 import re
 import unicodedata
 from xml.etree import ElementTree as ET
@@ -69,7 +70,12 @@ def number(token, *, count=False) -> Decimal:
         result = Decimal(str(token))
     except InvalidOperation as exc:
         raise ValueError("Unverified AFAC numeric token") from exc
-    if not result.is_finite() or result < 0 or (count and result != result.to_integral_value()):
+    if (
+        not result.is_finite()
+        or result < 0
+        or not math.isfinite(float(result))
+        or (count and (result != result.to_integral_value() or result > 2**53 - 1))
+    ):
         raise ValueError("AFAC value must be nonnegative, finite and in its reported unit")
     return result
 
@@ -91,7 +97,9 @@ def cache(content: bytes) -> tuple[list[list[str]], list[list[str]]]:
     fields = definition.findall("{*}cacheFields/{*}cacheField")
     if [f.get("name") for f in fields] != FIELDS:
         raise ValueError("Airport cache fields or month order changed")
-    shared = [[entry.get("v") for entry in field.findall("{*}sharedItems/*")] for field in fields]
+    shared = [[entry for entry in field.findall("{*}sharedItems/*")] for field in fields]
+    if any(entry.tag.rsplit("}", 1)[-1] not in {"s", "n"} for values in shared for entry in values):
+        raise ValueError("Unknown or missing shared airport cache item type")
     if (
         len(records) != int(definition.get("recordCount", -1))
         or len(records) != int(records.get("count", -1))
@@ -110,13 +118,17 @@ def cache(content: bytes) -> tuple[list[list[str]], list[list[str]]]:
                     reference = int(cell.get("v"))
                     if reference < 0:
                         raise ValueError("Negative shared-item reference")
-                    value = shared[index][reference]
+                    referenced = shared[index][reference]
+                    kind = referenced.tag.rsplit("}", 1)[-1]
+                    value = referenced.get("v")
                 except (IndexError, TypeError, ValueError) as exc:
                     raise ValueError("Invalid shared-item reference") from exc
             elif kind in {"n", "s"}:
                 value = cell.get("v")
             else:
                 raise ValueError("Unknown or missing airport cache cell type")
+            if index >= 5 and kind != "n":
+                raise ValueError("Numeric airport cache field must retain numeric source type")
             if value is None:
                 raise ValueError("Missing airport cache token")
             row.append(value)
@@ -267,10 +279,14 @@ def parse(content: bytes, period: str, original: dict) -> tuple[pd.DataFrame, di
             for row in graph
             if isinstance(row[0], str) and row[0].startswith(("FUENTE:", "Nota:"))
         ]
-        if not any("Cifras proporcionadas por los grupos aeroportuarios" in n for n in notes) or not any(
-            "operaciones oficiales o de Estado" in n for n in notes
+        state_notes = [n.split(" / ")[0].strip() for n in notes if "operaciones oficiales o de Estado" in n]
+        if (
+            not any("Cifras proporcionadas por los grupos aeroportuarios" in n for n in notes)
+            or not state_notes
+            or set(state_notes)
+            != {"Nota: No se contabiliza información de operaciones oficiales o de Estado"}
         ):
-            raise ValueError("Airport source/coverage notes missing")
+            raise ValueError("Airport source/coverage notes missing or contradictory")
         selected = [row for row in rows if int(row[2]) == year]
         domains = {}
         seen = set()

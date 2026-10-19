@@ -131,3 +131,13 @@ def test_baseline_hash_is_pinned_and_replayed(candidate):
     frame.to_parquet(baseline, index=False)
     with pytest.raises(ValueError, match="baseline or revisions changed"):
         retained.run(*args, check=True)
+
+
+def test_retention_preserves_preexisting_partial_destination(candidate):
+    workspace, source, selected = candidate
+    destination = workspace / "data/bronze" / selected["workbook"]
+    destination.parent.mkdir(parents=True)
+    destination.write_bytes(b"partial prior evidence")
+    with pytest.raises(ValueError, match="already exists"):
+        retained.retain(workspace, source, "afac_airports", selected, execute=True)
+    assert destination.read_bytes() == b"partial prior evidence"
