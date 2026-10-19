@@ -76,9 +76,9 @@
     },
     "ryanair_sec": {
       "entry_ref": "sec:RYANAIR",
-      "state": "manual",
+      "state": "conditional",
       "format": "JSON → 20-F/6-K/anexos",
-      "procedure": "CIK 0001038683 en CARRIERS. Confirmar periodo fiscal antes de compararlo con trimestre calendario. Preservar índices y anexos SEC; no solicitar credenciales. Bronze exige source_system=sec; sec_edgar es etiqueta Silver, no un alias de captura intercambiable. Seleccionar parse.peer_discovery antes de parse.sec/parse.peers; se exige el catálogo de identidades de comparables completo.",
+      "procedure": "CIK 0001038683 en CARRIERS. Confirmar periodo fiscal antes de compararlo con trimestre calendario. Preservar índices y anexos SEC; no solicitar credenciales. Bronze exige source_system=sec; sec_edgar es etiqueta Silver, no un alias de captura intercambiable. Seleccionar parse.peer_discovery antes de parse.sec/parse.peers; se exige el catálogo de identidades de comparables completo. Adaptador dedicado retained para 20-F FY2026: roles html/submissions/index originales, revisión 2026Q2; seis conceptos consolidados IFRS en EUR. Conserva año fiscal 2025-04-01–2026-03-31 e instantes de balance; no los llama trimestre calendario ni usa IR como SEC. Otras ediciones requieren revisión; no modifica el runner heredado.",
       "selection_contract": {
         "source_system": "sec",
         "companyfacts_relative_dir": "sec/ryanair/companyfacts",

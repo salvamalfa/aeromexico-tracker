@@ -39,6 +39,7 @@ def spec(product: str) -> dict:
         financials,
         oma_traffic,
         route_documents,
+        sec_fiscal,
         slots,
     )
 
@@ -99,6 +100,16 @@ def spec(product: str) -> dict:
             ROOT / "src/parse/aeromexico_ir_financial.py",
             ROOT / "src/parse/aeromexico_ir.py",
         ],
+    }
+    registry["ryanair_sec"] = {
+        "roles": {role: ("sec",) for role in ("html", "submissions", "index")},
+        "primary": "html",
+        "table": sec_fiscal.TABLE,
+        "grain": sec_fiscal.GRAIN,
+        "parse": sec_fiscal.parse,
+        "support_all_originals": True,
+        "revision_values": ["value", "unit", "source_decimals", "period_start_date", "period_end_date"],
+        "code_files": [Path(sec_fiscal.__file__)],
     }
     registry["oma_traffic"] = {
         "roles": {"pdf": ("oma_ir",)},

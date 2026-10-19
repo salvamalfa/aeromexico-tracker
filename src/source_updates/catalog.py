@@ -49,7 +49,13 @@ PRODUCTS = (
     ("am_sec", "sec_edgar", "both", "sec_identity_requires_dedicated_adapter_or_manual_import", "parse.sec"),
     ("volaris_sec", "sec_edgar", "both", "refresh_current_catalog_then_select_exhibits", "parse.peers"),
     ("delta_sec", "sec_edgar", "quarterly", "refresh_catalog_preserve_us_gaap", "parse.peers"),
-    ("ryanair_sec", "sec_edgar", "quarterly", "refresh_catalog_preserve_fiscal_year", "parse.peers"),
+    (
+        "ryanair_sec",
+        "sec_edgar",
+        "quarterly",
+        "retained_FY2026_inline_XBRL_candidate_not_calendar_quarter_other_editions_require_review",
+        "parse.peers",
+    ),
     (
         "gap_traffic",
         "sec_edgar",
