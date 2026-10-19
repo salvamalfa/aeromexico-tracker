@@ -125,3 +125,62 @@ def test_quiza_does_not_hide_a_later_publication_relative(period):
         resolve_news_query(
             f"Busca noticias publicadas en 2026-07 sobre por qué crees quizá que cayeron resultados que salieron en {period}"
         )
+
+
+@pytest.mark.parametrize(
+    "noun",
+    [
+        "crédito",
+        "créditos",
+        "pensiones",
+        "pensamiento",
+        "opinión",
+        "opiniones",
+        "consideraciones",
+        "estimaciones",
+        "esperanza",
+        "parecido",
+        "creído",
+    ],
+)
+def test_cognitive_stem_nouns_cannot_hide_a_relative_period(noun):
+    with pytest.raises(ValueError):
+        resolve_news_query(f"Busca noticias publicadas en 2026-07 sobre por qué el {noun} que salió en 2T26")
+
+
+@pytest.mark.parametrize(
+    "verb",
+    [
+        "crees",
+        "creerías",
+        "creías",
+        "creí",
+        "creyeron",
+        "piensas",
+        "pensaste",
+        "opinas",
+        "consideraron",
+        "estimarían",
+        "supones",
+        "supusieron",
+        "supondrías",
+        "esperabas",
+        "parecía",
+        "parezcan",
+    ],
+)
+def test_admitted_finite_cognitive_forms_keep_report_quarter_in_subject(verb):
+    intent = resolve_news_query(
+        f"Busca noticias publicadas en 2026-07 sobre por qué {verb} que cayeron resultados en 2T26"
+    )
+    assert "2t26" in intent["terms"]
+    assert (intent["start_date"], intent["end_date"]) == ("2026-07-01", "2026-07-31")
+
+
+@pytest.mark.parametrize("phrase", ["se ha creído", "ha parecido", "habían pensado", "hemos estimado"])
+def test_cognitive_participle_requires_its_auxiliary(phrase):
+    intent = resolve_news_query(
+        f"Busca noticias publicadas en 2026-07 sobre por qué {phrase} que cayeron resultados en 2T26"
+    )
+    assert "2t26" in intent["terms"]
+    assert (intent["start_date"], intent["end_date"]) == ("2026-07-01", "2026-07-31")

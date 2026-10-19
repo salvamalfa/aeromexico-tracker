@@ -434,3 +434,21 @@ ejecución, sin atribuir su HEAD al siguiente commit de organización de tests.
 Se repite CI del nuevo HEAD. Codex de4fcfb04 sigue pendiente de conclusión;
 no se declara limpio ni se traslada una revisión no terminada.6534/88–90
 intactos, sin fase canónica/gate ni cambios de M11/Skills.
+
+## Formas verbales admitidas · 19 de octubre, 01:59 UTC
+
+La revisión def648297 encontró que cre\\w* también aceptaba crédito.
+Se reemplazan los radicales abiertos por formas verbales normalizadas
+admitidas. Un participio solo se reconoce con auxiliar de haber; no se
+clasifica un parecido/creído nominal como preámbulo verbal. El parser sigue
+siendo acotado y pide aclaración cuando no reconoce la sintaxis temporal.
+Once sustantivos, dieciséis formas verbales y cuatro compuestas verifican
+la frontera sin cambiar el texto/fechas de búsqueda.
+
+Se incluyen393regresiones en852casos de matrices, más tres presupuestos:
+855PASS0.73s; RuffF/diff-checkPASS. Los módulos miden443/523/186líneas y no
+se modifica la allowlist. La nueva huella propuesta es
+`ac07bb9d59061166400306028f0b84f7b267d2218c1b23bf77ae221a1c0644c0`.
+La suite1064/177.70s corresponde exclusivamente af648297/a1aeffb5 antes de
+este cambio, con recibos limpios. Se valida el nuevo HEAD por separado.
+6534/88–90 intactos, sin fase canónica/gate ni cambios de M11/Skills.

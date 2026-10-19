@@ -53,6 +53,31 @@ STOP.update(
 )
 
 
+def _cognition_pattern() -> str:
+    # Closed normalized verb forms, rather than stems that also match nouns
+    # such as credito, pensiones, opinion or estimaciones.
+    ar = set("o as a amos ais an aba abas abamos abais aban e aste asteis aron are aras ara aremos areis aran aria arias ariamos ariais arian es emos eis en aramos arais ase ases asemos aseis asen ad ar ando".split())
+    forms = {stem + ending for stem in ("opin", "consider", "estim", "esper", "pens") for ending in ar}
+    forms.difference_update({"pensan", "pensen"})
+    forms.update("pienso piensas piensa piensan piense pienses piensen".split())
+    er = set("es e emos eis en ia ias iamos iais ian i iste io imos isteis ieron ere eras era eremos ereis eran eria erias eriamos eriais erian iera ieras ieramos ierais ieran iese ieses iesemos ieseis iesen ed er iendo".split())
+    forms.update("parec" + ending for ending in er)
+    forms.update("parezco parezca parezcas parezcamos parezcais parezcan".split())
+    irregular_creer = {"io", "ieron", "iera", "ieras", "ieramos", "ierais", "ieran", "iese", "ieses", "iesemos", "ieseis", "iesen", "iendo"}
+    forms.update("cre" + ending for ending in er - irregular_creer)
+    forms.update("creo crea creas creamos creais crean creyo creyeron creyera creyeras creyeramos creyerais creyeran creyese creyeses creyesemos creyeseis creyesen creyendo".split())
+    forms.update("supongo suponga supongas supongamos supongais supongan supones supone suponemos suponeis suponen suponia suponias suponiamos suponiais suponian suponed suponer suponiendo supuse supusiste supuso supusimos supusisteis supusieron supusiera supusieras supusieramos supusierais supusieran supusiese supusieses supusiesemos supusieseis supusiesen supondre supondras supondra supondremos supondreis supondran supondria supondrias supondriamos supondriais supondrian".split())
+    finite = r"(?:" + "|".join(re.escape(word) for word in sorted(forms, key=lambda word: (-len(word), word))) + r")"
+    # A participle needs an auxiliary, so a nominal parecido/creido cannot
+    # itself absorb a following relative clause.
+    haber = "he has ha hemos habeis han habia habias habiamos habiais habian hubo hubiste hubimos hubisteis hubieron habre habras habra habremos habreis habran habria habrias habriamos habriais habrian haya hayas hayamos hayais hayan hubiera hubieras hubieramos hubierais hubieran hubiese hubieses hubiesemos hubieseis hubiesen haber habiendo"
+    compound = r"(?:" + "|".join(haber.split()) + r")[\W_]+(?:creido|pensado|opinado|considerado|estimado|supuesto|esperado|parecido)"
+    return r"(?:" + finite + r"|" + compound + r")\b"
+
+
+COGNITION = _cognition_pattern()
+
+
 def norm(value: str) -> str:
     return re.sub(
         r"\s+",
@@ -94,7 +119,7 @@ def _publication_scope(text: str) -> str:
         # crossing another "que" or a numeric calendar label.
         modifier_word = r"(?!que\b)[^\W\d_]+"
         modifiers = r"(?:[\W_]+" + modifier_word + r"){0,16}"
-        cognition = r"(?:cre|piens|pens|opin|consider|estim|supon|esper|parec)\w*"
+        cognition = COGNITION
         post_modifier = (
             r"(?:yo|tu|vos|el|ella|usted|ustedes|nosotros|nosotras|vosotros|vosotras|ellos|ellas"
             r"|no|ya|aun|todavia|tambien|nunca|siempre|ahora|entonces|quizas?|solo|solamente|acaso|asi"
