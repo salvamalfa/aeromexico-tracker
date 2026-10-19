@@ -1,0 +1,48 @@
+{
+  "baseline": "preserved original public Silver; not a new approval",
+  "comparison": {
+    "added": 140,
+    "removed": 0,
+    "changed": 9105,
+    "unchanged": 2792
+  },
+  "column_diagnostics": {
+    "open": {
+      "exact_different_rows": 1511,
+      "maximum_absolute_difference": 10.49220137329101,
+      "rows_absolute_difference_gt_1e_6": 10,
+      "rows_absolute_difference_gt_0_01": 9
+    },
+    "high": {
+      "exact_different_rows": 1528,
+      "maximum_absolute_difference": 9.362200305175776,
+      "rows_absolute_difference_gt_1e_6": 13,
+      "rows_absolute_difference_gt_0_01": 12
+    },
+    "low": {
+      "exact_different_rows": 1533,
+      "maximum_absolute_difference": 1.07230030517578,
+      "rows_absolute_difference_gt_1e_6": 6,
+      "rows_absolute_difference_gt_0_01": 6
+    },
+    "close": {
+      "exact_different_rows": 1550,
+      "maximum_absolute_difference": 0.31000167846679716,
+      "rows_absolute_difference_gt_1e_6": 3,
+      "rows_absolute_difference_gt_0_01": 3
+    },
+    "adj_close": {
+      "exact_different_rows": 8014,
+      "maximum_absolute_difference": 0.799057312011719,
+      "rows_absolute_difference_gt_1e_6": 6085,
+      "rows_absolute_difference_gt_0_01": 5851
+    },
+    "volume": {
+      "exact_different_rows": 16,
+      "maximum_absolute_difference": 246007.0,
+      "rows_absolute_difference_gt_1e_6": 16,
+      "rows_absolute_difference_gt_0_01": 16
+    }
+  },
+  "interpretation": "Exact floating-point comparisons. Thresholds diagnose magnitude only; neither ignore changes nor establish their cause. Source vintages retained; new observations/revisions require content review."
+}

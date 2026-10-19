@@ -49,21 +49,23 @@ adaptadores se declara accesible en vivo sin el recibo correspondiente.
 
 ### Precios bursátiles
 
-Consultar `recipe --product equities`. La captura aislada Yahoo sigue siendo
-manual: el parser espera CSV normalizados, no JSON bruto del chart API.
-Los tickers y el esquema están en `src.ingest.market.prices`. Se requieren las
-cinco series y evidencia SEC local de la identidad/IPO de AERO. No invocar su
-`run()`, que escribe datos activos. Con los originales preservados, preparar
-SEC dentro del candidato y después `parse.market`; sin ellos, registrar el
-bloqueo. Reconciliar identidad, ajustes históricos, fecha inicial e intervalos.
-
+`recipe --product equities --output round --period 2026M09 --as-of <ISO>`
+emite cinco GET públicos acotados. `parse.market_chart` lee los JSON originales,
+exige ticker/USD/EQUITY, precios y ajustes explícitos, volumen entero observado
+y SEC local verificable. AERO comienza el 6 de noviembre de 2025; no empalmar
+su acción anterior. Una serie faltante bloquea el conjunto. Conservar los JSON
+y comparar revisiones por fecha/ticker; no convertir faltantes en cero.
+El parser `parse.market` conserva la alternativa histórica de cinco CSV
+normalizados. No invocar `run()` activo. `parse.complementary` candidato usa
+JSON si hay alguna selección chart, y exige entonces las cinco; nunca oculta
+un lote incompleto con CSV anteriores.
 ```bash
 python -m src.source_updates plan --round monthly --as-of 2026-10-18T12:00:00-06:00 --family macro_market
 ```
 
 Si la familia es trimestral, usar `--round quarterly --quarter 2026Q3`.
 La fecha del ejemplo solo reproduce el corte; cambiarla deliberadamente.
-Pasos existentes disponibles: parse.fx,parse.h10,parse.fuel,parse.market
+Pasos existentes disponibles: parse.fx,parse.h10,parse.fuel,parse.market,parse.market_chart
 
 Consultar `src/source_updates/catalog.py` para subproductos y brechas.
 `parse.fx` exige los tres CSV Banxico SF43718, SP1 y SF61745. H.10 usa el paso
@@ -89,7 +91,7 @@ Consultar cada producto de esta familia:
 - `banxico` — adaptador candidato implementado. Entrada canónica: `constant:src.ingest.macro.banxico:SIE_EXPORT_URL`. Formato: POST público → CSV latino-1.
 - `h10` — adaptador candidato implementado. Entrada canónica: `constant:src.ingest.macro.banxico:H10_EXPORT_URL`. Formato: GET con parámetros DDP → CSV.
 - `fuel` — adaptador candidato implementado. Entrada canónica: `constant:src.ingest.macro.fuel:EIA_XLS_URL`. Formato: GET → XLS histórico, Data 1/header=2.
-- `equities` — selección/importación manual. Entrada canónica: `catalogue:yahoo_finance`. Formato: CSV normalizado de yfinance, no JSON chart directo.
+- `equities` — captura pública candidata y parseo offline del JSON chart; exige las cinco series y evidencia SEC local.
 
 ### Procedimiento verificable
 
@@ -101,3 +103,5 @@ Consultar cada producto de esta familia:
 6. Acreditar éxito solo en la capa comprobada: hash Bronze, contrato/grano/linaje Silver y controles Gold/meses/días/reconciliaciones que correspondan. Si no existe adaptador, terminar en captura o descubrimiento y declarar ese límite. No llenar faltantes ni activar/publicar.
 
 Un 403, TLS, timeout o archivo inválido es un fallo de acceso/contenido; no prueba ausencia de publicación. Registrar pendiente y conservar el dato aceptado. Las fechas de publicación desconocidas siguen nulas.
+
+Los agregados Gold usan periodo observado y puente verificado. La tasa objetivo se expresa en `percent`, FX en `mxn_per_usd`; no reescalar el valor reportado.

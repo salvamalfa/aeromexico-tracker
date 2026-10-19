@@ -1,6 +1,6 @@
 # Catálogo de fuentes, métricas y rondas de actualización
 
-Revisión: 18 de octubre de 2026. **Calendario aprobado; skills y coordinador
+Revisión: 19 de octubre de 2026. **Calendario aprobado; skills y coordinador
 preparados para pruebas. Sin nuevas ejecuciones automáticas ni publicación.**
 
 ## Resumen
@@ -35,19 +35,19 @@ pasos de cada fuente. Este es el alcance comprobado por familia:
 
 | Familia | Alcance actual |
 |---|---|
-| Empresas | Descubrimiento IR real. SEC/importación manual; BMV y formatos nuevos pendientes. |
-| Tráfico AFAC y BTS | Procedimientos y pruebas de código. Falta certificar nuevas capturas y periodos. |
-| Aeropuertos | Entradas y parsers existentes, condicionados al formato y a los insumos del grupo. |
-| Macro y mercado | Combustible y tres series Banxico probados con datos reales hasta Silver. H.10 respondió vacío; bolsa exige insumos manuales y evidencia SEC. |
+| Empresas | BMV: catálogo y ZIP oficiales capturados; parseo offline acotado implementado. SEC preservado reconstruido. Periodos nuevos IR/SEC siguen condicionados. |
+| Tráfico AFAC y BTS | AFAC: boletines y base de julio/agosto capturados; ampliación del parser candidato. BTS: reproducción histórica preservada; no se acredita una captura nueva. |
+| Aeropuertos | Descubrimiento por enlaces reales: AICM agosto y AIFA julio descargados. OMA septiembre enlazado pero devuelve 404. No se acredita septiembre completo. |
+| Macro y mercado | EIA y tres series Banxico verificadas hasta Gold para septiembre. Cinco JSON bursátiles capturados y parser candidato implementado; comprobar el recibo del lote. H.10 respondió vacío. |
 | Rutas | Entradas identificadas; selección manual y adaptadores de novedades pendientes. |
-| Referencias y contexto | Descargas o curación según producto; verificación manual de versión y correspondencias. |
+| Referencias y contexto | OurAirports: 9.051 referencias verificadas con 39 códigos requeridos. FAA solo captura PDF; diccionario y curación pendientes. |
 | Noticias | Captura de metadatos y parser probado con muestras. Falta conectar el corte mensual de PR136 y certificar cobertura. |
 | Derivados y curación | Sin descarga propia. Requieren fuentes padre y controles de linaje. |
 
 La ronda mensual será el primer día hábil bancario mexicano en o después del
 15. Noticias se revisa en esa misma ronda. La muestra de 2026 da **15 de
 octubre, 17 de noviembre y 15 de diciembre**. Octubre ya pasó; esta muestra no
-crea una ejecución retroactiva. [Ver calendario reproducible](referencias/source-updates-20261018/calendar.json).
+crea una ejecución retroactiva. [Ver calendario reproducible](referencias/source-updates-20261019/calendar.json).
 
 La ronda trimestral será dos días hábiles después del último reporte financiero
 confirmado de Aeroméxico, Volaris y Viva. El día del reporte no cuenta. Si queda
@@ -80,17 +80,21 @@ La siguiente revisión útil será un lote candidato con sus datos y faltantes.
 
 Capturar un archivo no demuestra que sus cifras se hayan incorporado. La
 herramienta comprueba el periodo que aparece en las filas. Si el formato nuevo
-supera el parser disponible, lo deja pendiente. En particular, persisten los
-límites históricos del parser AFAC y de algunos reportes corporativos.
-BMV permite captura, pero su parseo está bloqueado hasta registrar los miembros
-del ZIP de forma acotada. H.10 tiene un paso candidato separado, solo para tipo
-de cambio; no sustituye FIX, INPC o tasa. Para precios bursátiles se necesitan las
-cinco series previstas y evidencia SEC local de la identidad de AERO.
-Las transformaciones heredadas requieren su cadena completa, en orden. Gold
-queda bloqueado aquí mientras esa cadena incluya adaptadores no disponibles
-(`parse.bmv` o el paso compuesto `parse.complementary`). Tener archivos Silver
-no sustituye sus validaciones. Los controles Gold por tabla siguen disponibles
-para candidatos con contrato y linaje verificables; no certifican una ronda.
+supera el parser disponible, lo deja pendiente. El adaptador AFAC candidato admite el formato de boletines 2026 y requiere
+todos los PDF y fletamento de sus meses. Otros años y formatos corporativos
+requieren revisión.
+BMV registra miembros ZIP sin red y conserva los catálogos históricos. La cadena
+de selección nueva solo admite trimestres; los años se rechazan antes de la
+captura hasta contar con comprobador anual. Los anuales retenidos se conservan.
+Las notas AFAC de cada página acompañan únicamente a las filas regulares de su
+mes y mercado; no se trasladan entre doméstico e internacional ni a fletamento.
+La cadena
+completa de parseo y validación ya permite reconstruir Gold candidato. Los
+periodos se derivan de las observaciones, sin corte fijo de agosto; la tasa
+objetivo conserva unidad `percent` y su valor original. El puente de linaje se
+reconstruye y se contrasta con Bronze. Algunas incidencias de calidad heredadas
+solo tienen declaración; se reportan y no pasan como trazabilidad documental.
+La validación de una tabla no certifica todas las fuentes de una familia.
 
 Un error de acceso no significa que no exista un reporte. Una fecha desconocida
 permanece sin fecha. Las noticias pueden tener cobertura parcial del mes.
@@ -128,7 +132,7 @@ uv run python -m src.source_updates round --recipe tmp/combustible.json --worksp
 y las constantes de los adaptadores existentes. Ese catálogo enlaza al
 [catálogo de instituciones](../config/source_catalog.yaml). Incluye también
 procedimientos de descubrimiento, revisiones y bloqueos de las ocho familias.
-Los productos `banxico` y `h10` emiten recetas candidatas completas con
+Los productos `fuel`, `banxico`, `h10` y `equities` emiten recetas candidatas con
 parámetros exactos. Los demás muestran su estado real y, cuando corresponde,
 una selección de catálogo o descarga; no se ofrecen como ocho procesos
 autónomos completos.
@@ -136,7 +140,7 @@ autónomos completos.
 Salidas conservadas: [calendario](referencias/source-updates-20261018/calendar.json),
 [plan por producto](referencias/source-updates-20261018/plan.json) y
 [prueba en seco del lote](referencias/source-updates-20261018/dry-run.json).
-La receta es un ejemplo EIA, no una captura realizada ni una ronda completa.
+La receta es un ejemplo EIA, no una captura realizada ni una ronda completa. La [muestra bursátil nueva](referencias/source-updates-20261019/market-round-dry-run.json) declara cinco GET, hasta 25 llamadas contando redirecciones, cero llamadas pagadas y la evidencia SEC previa requerida.
 La muestra anuncia un GET previsto, hasta cinco llamadas contando redirecciones,
 cero llamadas pagadas y ningún periodo validado. El modo en seco no escribe.
 Para fechar la trimestral, pasar `--releases` con una copia de
@@ -145,9 +149,8 @@ completada con reportes reales. La plantilla no afirma fechas de publicación.
 
 Validación local: **143 controles focalizados aprobados**. La suite general de
 `b9e1d33` pasó **1.524 pruebas y 29 subpruebas**, con 75 omisiones por insumos
-locales ausentes o vista previa sin fijar. Los ajustes documentales posteriores
-añaden siete pruebas de puntuación; CI comprueba la cabeza final del PR.
-Las capturas de prueba son sintéticas.
+locales ausentes o vista previa sin fijar. Ese recibo es histórico de PR137; la propuesta de Gold lleva pruebas y evidencia
+propias. Las pruebas unitarias usan muestras controladas.
 [Recibo de validación](referencias/source-updates-20261018/validation.json).
 
 Después se ejercitaron fuentes públicas reales, sin publicar sus datos.
@@ -156,15 +159,61 @@ original contiene datos hasta el 14 de octubre; la receta limita el parseo al
 30 de septiembre. Por ello, el último periodo parseado no se presenta como el
 último disponible de la fuente. La fecha de publicación sigue sin verificarse.
 Del catálogo IR de Aeroméxico se capturó HTML y se extrajeron 69 enlaces; esto
-solo acredita descubrimiento, sin certificar reportes nuevos. Gold y los
-controles de una ronda completa siguen pendientes.
+solo acredita descubrimiento, sin certificar reportes nuevos. Ese recibo inicial llegó hasta Silver; la prueba posterior de Gold se describe abajo.
 Las recetas generadas también capturaron y procesaron las tres series Banxico:
 21 filas FIX, una INPC y 30 de tasa en septiembre. El endpoint H.10 devolvió
 contenido vacío para la consulta explícita; quedó bloqueado y no produjo datos.
 Su parser solo está probado con muestras controladas. No se sustituyó FIX ni
-se rellenaron datos ausentes. Las demás familias no tienen un piloto real
-completo en esta entrega.
+se rellenaron datos ausentes. Las demás familias conservan límites por producto; no se certifican como rondas completas.
 [Evidencia del piloto real](referencias/source-updates-20261018/real-source-pilot.json).
+
+### Reconstrucción aislada del 19 de octubre
+
+La propuesta posterior a PR137 conserva su recibo limpio del commit `f20c244`.
+Las correcciones de Gold y los nuevos adaptadores tienen rama y revisión
+separadas en [PR141](https://github.com/salvamalfa/aeromexico-tracker/pull/141). Un rebuild público offline pasó los contratos Stage 6 y cuatro
+controles Gold de septiembre (EIA, FIX, INPC y tasa). La evidencia posterior por
+producto y sus límites está en el [recibo del candidato](referencias/source-updates-20261019/validation.json)
+y el [inventario de los 42 productos](referencias/source-updates-20261019/product-coverage.json).
+Los 16 pasos offline, 25 controles Stage 6 y 19 controles por producto pasaron.
+AFAC llegó a agosto; AICM a agosto y AIFA a julio. Las cinco series bursátiles
+llegaron al 30 de septiembre. OurAirports tiene su comprobación de referencia
+separada. Eso no acredita ocho familias completas ni periodos nuevos de las
+fuentes solo reproducidas desde originales retenidos.
+
+El puente declara 211.074 registros: 209.282 con artefacto y 1.766 mediante
+padres; 26 incidencias de calidad carecen de vínculo documental exacto. No se
+presentan como trazabilidad documental completa. La prueba negativa rechaza
+AFAC septiembre. El historial bursátil añade 140 días/ticker y muestra 9.105
+filas con alguna diferencia exacta frente al original retenido; 5.851 cierres
+ajustados difieren en más de USD 0,01. Se conserva el [diagnóstico de magnitud](referencias/source-updates-20261019/market-revisions.json),
+sin atribuir una causa ni aprobar revisiones automáticamente.
+
+La revisión inicial de PR141 detectó notas de vuelos regulares también presentes
+en filas de fletamento. Se corrigió la atribución: las notas PDF solo acompañan
+sus propias filas. Se regeneró AFAC y cambiaron únicamente las notas de 296
+filas; todos los demás campos quedaron iguales. Los contratos Gold y el puente
+volvieron a pasar. [Evidencia de la corrección](referencias/source-updates-20261019/afac-notes-review-fix.json).
+
+No se copiaron insumos privados ni se consultó AeroDataBox.
+
+Para una captura nueva, `round --execute --check-at-completion` registra el
+corte de comprobación al terminar. Conserva también el corte pedido en la
+receta. Sin esa opción respeta el corte histórico: una captura posterior queda
+rechazada. La opción no autoriza la captura ni modifica las fechas observadas. Se probó
+la cadena CLI completa con una [reimportación offline del XLS EIA real](referencias/source-updates-20261019/offline-round.json):
+21 filas Silver de septiembre, sin nueva petición de red. Eso acredita la
+orquestación; no equivale a revalidar la URL de origen.
+
+Para BMV o catálogos AFAC/aeroportuarios soportados:
+
+```bash
+uv run python -m src.source_updates recipe --product bmv_xbrl --output selection --catalog-file <catalogo-preservado.html> --period 2026Q2 --ticker AERO
+uv run python -m src.source_updates recipe --product aicm_traffic --output selection --catalog-file <catalogo-preservado.html> --period latest
+```
+
+La selección exige enlaces presentes y periodo no ambiguo. Una URL enlazada
+puede fallar al descargar. No se generan nombres de próximos reportes.
 
 ### Captura y comprobación
 
@@ -485,7 +534,7 @@ el chat. La cadena futura sigue siendo detección → captura → validación �
   sin fijar al corte de la muestra; el 2 de noviembre no es una fecha aprobada.
 - Seleccionar documentos nuevos y probar sus formatos. Los parsers con límites
   históricos necesitan un adaptador validado antes de incorporar esos periodos.
-- Integrar las dependencias de Vuelos y Noticias sin sobrescribir su trabajo.
+- Integrar con master los cambios de Vuelos y Mercado ya recibidos por sus responsables; conectar el archivo mensual de Noticias de PR136, que sigue en borrador. Esta rama no hace esos merges.
 - Verificar el calendario bancario de 2027 antes de calcular rondas de ese año.
 - Revisar y aprobar cada lote según su alcance antes de publicar o activar una
   ejecución automática. Esta entrega termina en un PR revisable.

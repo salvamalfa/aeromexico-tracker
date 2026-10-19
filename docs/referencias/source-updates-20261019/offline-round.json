@@ -1,0 +1,96 @@
+{
+  "mode": "round",
+  "collection": {
+    "version": 1,
+    "run_id": "3f4a3156143a4b808967a2f77e75fcbe",
+    "mode": "collection",
+    "started_at": "2026-10-19T02:17:57.150703+00:00",
+    "items": [
+      {
+        "id": "eia-history",
+        "product": "fuel",
+        "requested_period": "2015-01-01_2026-09-30",
+        "source_url": "https://www.eia.gov/dnav/pet/hist_xls/EER_EPJK_PF4_RGC_DPGd.xls",
+        "published_at": null,
+        "latest_available_period": null,
+        "latest_validated_period": null,
+        "latest_published_period": null,
+        "release_lag_days": null,
+        "status": "collected_unvalidated",
+        "sha256": "1c09765de4f1fb5ef63312557b51c95b83f841c9b12f10dab9837f319dd1224d",
+        "source_file": "eia/eia_EER_EPJK_PF4_RGC_DPG_2015-01-01_2026-09-30_20261019T021757Z.xls",
+        "bytes": 460800
+      }
+    ],
+    "activation": "none",
+    "publication": "not_authorized",
+    "paid_requests": 0,
+    "status": "collected_unvalidated",
+    "finished_at": "2026-10-19T02:17:57.157053+00:00"
+  },
+  "activation": "none",
+  "publication": "not_authorized",
+  "requested_as_of": "2026-10-18T20:17:56.496833-06:00",
+  "check_time_policy": "completion",
+  "build": {
+    "run_id": "build-391b29d71f4b4751882d02ed765c548f",
+    "root": "/workspace/airline-source-skills-gold/tmp/source-updates/round-eia-retained-20261019",
+    "offline": true,
+    "started_at": "2026-10-19T02:17:57.343974+00:00",
+    "finished_at": "2026-10-19T02:17:57.811735+00:00",
+    "status": "completed",
+    "steps": [
+      {
+        "step_id": "parse.fuel",
+        "phase": "parse",
+        "requirement": "required",
+        "status": "completed",
+        "started_at": "2026-10-19T02:17:57.344021+00:00",
+        "finished_at": "2026-10-19T02:17:57.811460+00:00",
+        "duration_ms": 467.461,
+        "reason": "completed",
+        "details": {
+          "rows": 2937,
+          "source": "official_eia_xls"
+        }
+      }
+    ],
+    "activation": "none",
+    "publication": "not_authorized",
+    "period_acceptance": "not_checked",
+    "returncode": 0
+  },
+  "checks": {
+    "version": 1,
+    "mode": "candidate_checks",
+    "as_of": "2026-10-18T20:17:57.899933-06:00",
+    "checks": [
+      {
+        "product": "fuel",
+        "layer": "silver",
+        "table": "fuel_prices",
+        "expected_period": "2026M09",
+        "latest_published_period": null,
+        "status": "checks_passed",
+        "rows": 21,
+        "latest_available_period": null,
+        "latest_parsed_period": "2026M09",
+        "latest_validated_period": "2026M09",
+        "release_lag_days": null,
+        "observation_age_days": 18,
+        "capture_age_days": 0,
+        "null_values": 0,
+        "revisions": {
+          "status": "not_compared_no_baseline"
+        }
+      }
+    ],
+    "status": "checks_passed",
+    "scope": "only_explicit_checks_not_complete_round_certification",
+    "approval": "human_review_required",
+    "activation": "none",
+    "publication": "not_authorized"
+  },
+  "status": "checks_passed",
+  "evidence_scope": "Offline end-to-end replay of preserved real public EIA XLS, not fresh retrieval"
+}

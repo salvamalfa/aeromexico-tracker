@@ -86,8 +86,8 @@ def test_predecessor_must_be_before_its_consumer():
         build(ROOT / "tmp/source-updates/dependency-preflight", ["parse.sec", "parse.peer_discovery"])
 
 
-def test_unavailable_composite_parser_is_not_silently_omitted():
-    with pytest.raises(ValueError, match="unavailable.*parse.complementary"):
+def test_composite_parser_is_not_silently_omitted():
+    with pytest.raises(ValueError, match="parse.complementary"):
         build(ROOT / "tmp/source-updates/dependency-preflight", ["parse.afac", "transform.stage4"])
 
 

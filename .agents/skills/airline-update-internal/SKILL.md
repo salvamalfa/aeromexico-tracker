@@ -48,3 +48,10 @@ Consultar cada producto de esta familia:
 6. Acreditar éxito solo en la capa comprobada: hash Bronze, contrato/grano/linaje Silver y controles Gold/meses/días/reconciliaciones que correspondan. Si no existe adaptador, terminar en captura o descubrimiento y declarar ese límite. No llenar faltantes ni activar/publicar.
 
 Un 403, TLS, timeout o archivo inválido es un fallo de acceso/contenido; no prueba ausencia de publicación. Registrar pendiente y conservar el dato aceptado. Las fechas de publicación desconocidas siguen nulas.
+
+Para Stage 6 candidato, `transform.gold_lineage` debe seguir a
+`transform.validate_stage6`. Reconstruye catálogo y puente mediante los gates
+existentes y verifica los archivos Bronze. Reportar aparte declaraciones sin
+artefacto exacto; no son trazabilidad documental. `check` no las acepta como
+respaldo de cifras solicitadas. No ejecutar Stage 7/modelos/publicación para
+superar un control de actualización por fuente.

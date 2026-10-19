@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import date
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 from src.source_updates import calendar
@@ -32,6 +32,8 @@ def main(argv: list[str] | None = None) -> int:
     recipes.add_argument("--output", choices=["instructions", "selection", "round"], default="instructions")
     recipes.add_argument("--period")
     recipes.add_argument("--as-of")
+    recipes.add_argument("--catalog-file", type=Path)
+    recipes.add_argument("--ticker", action="append", choices=["AERO", "VOLAR"])
     dates = commands.add_parser("calendar")
     dates.add_argument("--start", required=True, help="YYYY-MM")
     dates.add_argument("--months", type=int, default=3)
@@ -55,6 +57,12 @@ def main(argv: list[str] | None = None) -> int:
             command.add_argument("--steps", required=True)
         else:
             command.add_argument("--selection" if name == "collect" else "--recipe", type=Path, required=True)
+        if name == "round":
+            command.add_argument(
+                "--check-at-completion",
+                action="store_true",
+                help="Use the recorded completion time for checks; retain the recipe cutoff separately",
+            )
     checks = commands.add_parser("check")
     checks.add_argument("--workspace", type=Path, required=True)
     checks.add_argument("--specification", type=Path, required=True)
@@ -64,7 +72,14 @@ def main(argv: list[str] | None = None) -> int:
             result = plan(args.round, args.as_of, args.quarter, args.family)
         elif args.command == "recipe":
             if args.output == "selection":
-                result = catalog_selection(args.product)
+                if args.catalog_file:
+                    from src.source_updates.discovery import select_documents
+
+                    if not args.period:
+                        raise ValueError("Catalogue-file selection requires --period")
+                    result = select_documents(args.product, args.catalog_file, args.period, args.ticker)
+                else:
+                    result = catalog_selection(args.product)
             elif args.output == "round":
                 if not args.period or not args.as_of:
                     raise ValueError("A runnable recipe requires --period and --as-of")
@@ -121,6 +136,8 @@ def main(argv: list[str] | None = None) -> int:
                 "collection": collected,
                 "activation": "none",
                 "publication": "not_authorized",
+                "requested_as_of": recipe["checks"]["as_of"],
+                "check_time_policy": "completion" if args.check_at_completion else "recipe_cutoff",
             }
             if args.execute and collected["status"] != "collected_unvalidated":
                 result["status"] = "blocked_collection"
@@ -131,7 +148,10 @@ def main(argv: list[str] | None = None) -> int:
                     if built.get("status") != "completed":
                         result["status"] = "blocked_build"
                     else:
-                        result["checks"] = check_candidate(args.workspace, recipe["checks"])
+                        specification = dict(recipe["checks"])
+                        if args.check_at_completion:
+                            specification["as_of"] = datetime.now(UTC).isoformat()
+                        result["checks"] = check_candidate(args.workspace, specification)
                         result["status"] = result["checks"]["status"]
                 else:
                     result["period_checks"] = recipe["checks"]

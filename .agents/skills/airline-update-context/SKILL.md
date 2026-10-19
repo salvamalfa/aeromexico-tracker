@@ -48,3 +48,10 @@ Consultar cada producto de esta familia:
 6. Acreditar éxito solo en la capa comprobada: hash Bronze, contrato/grano/linaje Silver y controles Gold/meses/días/reconciliaciones que correspondan. Si no existe adaptador, terminar en captura o descubrimiento y declarar ese límite. No llenar faltantes ni activar/publicar.
 
 Un 403, TLS, timeout o archivo inválido es un fallo de acceso/contenido; no prueba ausencia de publicación. Registrar pendiente y conservar el dato aceptado. Las fechas de publicación desconocidas siguen nulas.
+
+Para OurAirports, `check` admite `kind=reference`, tabla Gold `dim_airport`,
+`sha256` exacto, `required_codes`, `countries` y
+`baseline_file` (comparación por código IATA). Revisar los nombres exactos del contrato
+`src/source_updates/reference.py`. No asignar un mes de observación ni rezago
+de publicación a un snapshot de referencia. IASA capturado no certifica por sí
+solo una categoría de país.
