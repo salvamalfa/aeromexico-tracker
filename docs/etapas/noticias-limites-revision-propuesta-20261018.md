@@ -452,3 +452,22 @@ se modifica la allowlist. La nueva huella propuesta es
 La suite1064/177.70s corresponde exclusivamente af648297/a1aeffb5 antes de
 este cambio, con recibos limpios. Se valida el nuevo HEAD por separado.
 6534/88–90 intactos, sin fase canónica/gate ni cambios de M11/Skills.
+
+## Contexto nominal y sujetos admitidos · 19 de octubre, 02:21 UTC
+
+La revisión de3c7533a encontró el parecer y la espera. En vez de aceptar
+cualquier palabra antes del verbo, el preámbulo admite clases acotadas de
+sujetos, clíticos y adverbios; no absorbe sintagmas nominales arbitrarios.
+Los sujetos de aerolínea reutilizan ENTITIES, sin duplicar ni mezclar alias
+de Aerovías/Connect. Los pronombres explícitos él/tú se distinguen del
+contexto nominal únicamente para clasificar tiempo; el texto original
+normalizado se conserva para aerolíneas/temas/términos, sin sustituciones
+en la búsqueda ni cambios de fechas.
+
+Se prueban nominales simples/modificados, pronombres y sujetos/alias ya
+admitidos.414regresiones incluidas en873casos de matrices, más tres
+presupuestos:876PASS0.76s; RuffF/diff-checkPASS. Módulos467/523/250líneas,
+sin ampliar allowlist. Huella propuesta
+`5990be0c25ec75b014decb8b708a61ed347f21d25afbee69e2aa28dcbeafb3af`.
+La suite1095/180.59s sigue siendo de3c7533a/ac07bb9d; la corrección actual
+se valida aparte.6534/88–90 intactos, sin fase canónica/gate ni M11/Skills.

@@ -184,3 +184,67 @@ def test_cognitive_participle_requires_its_auxiliary(phrase):
     )
     assert "2t26" in intent["terms"]
     assert (intent["start_date"], intent["end_date"]) == ("2026-07-01", "2026-07-31")
+
+
+@pytest.mark.parametrize(
+    "noun",
+    [
+        "el parecer",
+        "la espera",
+        "la estima",
+        "el pienso",
+        "mi parecer",
+        "su estima",
+        "esa espera",
+        'el "parecer"',
+    ],
+)
+def test_nominal_context_does_not_absorb_relative_quarter(noun):
+    with pytest.raises(ValueError):
+        resolve_news_query(f"Busca noticias publicadas en 2026-07 sobre por qué {noun} que salió en 2T26")
+
+
+@pytest.mark.parametrize(
+    "pronoun,verb", [("él", "espera"), ("tú", "estimas"), ("él", "cree"), ("tú", "piensas")]
+)
+def test_explicit_personal_pronoun_keeps_cognitive_prelude_and_original_search_terms(pronoun, verb):
+    intent = resolve_news_query(
+        f"Busca noticias publicadas en 2026-07 sobre por qué {pronoun} {verb} que cayeron resultados en 2T26"
+    )
+    assert "2t26" in intent["terms"]
+    assert "usted" not in intent["terms"]
+    assert (intent["start_date"], intent["end_date"]) == ("2026-07-01", "2026-07-31")
+
+
+@pytest.mark.parametrize("noun", ["el nuevo parecer", "la antigua espera", "mi gran estima"])
+def test_modified_nominal_phrase_cannot_be_a_cognitive_prelude(noun):
+    with pytest.raises(ValueError):
+        resolve_news_query(f"Busca noticias publicadas en 2026-07 sobre por qué {noun} que salió en 2T26")
+
+
+@pytest.mark.parametrize(
+    "actor,verb", [("los analistas", "creen"), ("Aeroméxico", "supone"), ("el experto", "cree")]
+)
+def test_admitted_cognitive_subjects_keep_the_report_topic(actor, verb):
+    intent = resolve_news_query(
+        f"Busca noticias publicadas en 2026-07 sobre por qué {actor} {verb} que cayeron resultados en 2T26"
+    )
+    assert "2t26" in intent["terms"]
+    assert (intent["start_date"], intent["end_date"]) == ("2026-07-01", "2026-07-31")
+
+
+@pytest.mark.parametrize(
+    "actor,company",
+    [
+        ("AMXConnect", "Aeroméxico Connect"),
+        ("AeroméxicoConnect", "Aeroméxico Connect"),
+        ("Viva Aerobus", "Viva"),
+    ],
+)
+def test_cognitive_company_subject_reuses_existing_entity_aliases(actor, company):
+    intent = resolve_news_query(
+        f"Busca noticias publicadas en 2026-07 sobre por qué {actor} cree que cayeron resultados en 2T26"
+    )
+    assert intent["companies"] == [company]
+    assert "2t26" in intent["terms"]
+    assert (intent["start_date"], intent["end_date"]) == ("2026-07-01", "2026-07-31")

@@ -115,13 +115,28 @@ def _publication_scope(text: str) -> str:
         # A topic beginning with interrogative "que" has no prior word.
         boundary += r"|(?<=\w)[\W_]+que\b"
         subject = text[start:]
-        # Allow bounded pronouns/adverbs around the cognitive verb, without
-        # crossing another "que" or a numeric calendar label.
-        modifier_word = r"(?!que\b)[^\W\d_]+"
-        modifiers = r"(?:[\W_]+" + modifier_word + r"){0,16}"
+        # Only admitted subjects, clitics and adverbs form a prelude. An
+        # arbitrary nominal phrase must leave its relative clause visible.
+        company_actor = "|".join(re.escape(alias) for alias in sorted(
+            {entity_text(alias) for aliases in ENTITIES.values() for alias in aliases},
+            key=lambda alias: (-len(alias), alias),
+        ))
+        actor = (
+            r"(?:(?:el|la|los|las)[\W_]+(?:analistas?|expertos?|medios|directivos?|inversores?|"
+            r"inversionistas?|pasajeros?|aerolineas?|empresas?|companias?|fuentes)|"
+            + company_actor + r")"
+        )
+        pre_modifier = (
+            r"(?:yo|vos|ella|usted|ustedes|nosotros|nosotras|vosotros|vosotras|ellos|ellas|"
+            r"se|me|te|nos|os|le|les|no|ya|aun|todavia|tambien|nunca|siempre|ahora|entonces|"
+            r"quizas?|solo|solamente|acaso|asi|[^\W\d_]+mente|de[\W_]+verdad|"
+            r"en[\W_]+realidad|tal[\W_]+vez|(?:segun[\W_]+)?" + actor + r")"
+        )
+        modifiers = r"(?:[\W_]+" + pre_modifier + r"){0,16}"
+        boundary_subject = subject
         cognition = COGNITION
         post_modifier = (
-            r"(?:yo|tu|vos|el|ella|usted|ustedes|nosotros|nosotras|vosotros|vosotras|ellos|ellas"
+            r"(?:yo|tu|vos|ella|usted|ustedes|nosotros|nosotras|vosotros|vosotras|ellos|ellas"
             r"|no|ya|aun|todavia|tambien|nunca|siempre|ahora|entonces|quizas?|solo|solamente|acaso|asi"
             r"|[^\W\d_]+mente|de[\W_]+verdad|en[\W_]+realidad|tal[\W_]+vez)"
         )
@@ -129,11 +144,10 @@ def _publication_scope(text: str) -> str:
         interrogative = re.match(
             r"[\W_]*(?:(?:por|para|a|de|con|en)[\W_]+)?que\b"
             + r"(?:" + modifiers + r"[\W_]+" + cognition + post_modifiers + r"[\W_]+que\b)*",
-            subject,
+            boundary_subject,
         )
-        boundary_subject = subject
         if interrogative:
-            boundary_subject = " " * interrogative.end() + subject[interrogative.end():]
+            boundary_subject = " " * interrogative.end() + boundary_subject[interrogative.end():]
         following = re.search(boundary, boundary_subject)
         end = start + following.start() if following else len(text)
         spans = [
@@ -155,7 +169,7 @@ def _publication_scope(text: str) -> str:
     return "".join(characters)
 
 
-def resolve_news_query(question: str, start_date=None, end_date=None, company=None) -> dict:
+def _news_input_text(question: str) -> str:
     # Keep numbered identifiers intact for both temporal guards and text
     # search: T 2 / Q 400 must not disappear as one letter plus a number.
     text = "".join(
@@ -163,6 +177,16 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
         for char in entity_text(question)
     )
     text = re.sub(r"\b([qt])[\W_]+(\d+)\b", r"\1\2", text)
+    return text
+
+
+def resolve_news_query(question: str, start_date=None, end_date=None, company=None) -> dict:
+    text = _news_input_text(question)
+    # Accent marks distinguish personal pronouns from nominal determiners.
+    # Equivalent pronouns are used only for temporal classification; all
+    # entity/topic/search terms keep the original normalized question.
+    scope_question = re.sub(r"\b(?:él|tú)\b", "usted", question, flags=re.I)
+    scope_text = text if scope_question == question else _news_input_text(scope_question)
     # Compact quarter labels are not publication dates or free-text topics.
     # Require explicit endpoints until quarter precision has its own contract.
     separator = r"[\W_]*(?:(?:de|del)[\W_]*)?"
@@ -175,7 +199,7 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
     prefix_period = r"[qt]\s*\d(?:" + separator + explicit_year + r"|" + separated_year + r")"
     # The archive's existing topic tag (e.g. "sobre 2T26") describes report
     # content. Keep it searchable without treating it as publication dates.
-    period_text = _publication_scope(text)
+    period_text = _publication_scope(scope_text)
     ambiguous_t_period = (
         re.search(r"\b" + explicit_year + r"\b", period_text)
         and re.search(r"\b[qt](?:[1-4])?\b", period_text)
