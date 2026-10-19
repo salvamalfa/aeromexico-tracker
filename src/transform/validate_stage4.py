@@ -20,6 +20,15 @@ SILVER_KEYS = {
 LINEAGE = ["source_system", "source_file", "source_hash", "ingested_at", "parser_version"]
 
 
+def government_hub_complete(hub: dict) -> bool:
+    return (
+        isinstance(hub.get("rows"), int)
+        and 7 <= hub["rows"] <= 12
+        and hub.get("first_period") == "2026M01"
+        and hub.get("last_period") == f"2026M{hub['rows']:02d}"
+    )
+
+
 def run() -> pd.DataFrame:
     evidence = json.loads((PATHS.quality / "stage4_acceptance.json").read_text(encoding="utf-8"))
     checks: list[dict[str, object]] = []
@@ -38,16 +47,12 @@ def run() -> pd.DataFrame:
     add("airport_correlation_sample", evidence["airport_correlation"]["matched_months"] >= 6, evidence["airport_correlation"]["matched_months"], ">=6")
     for code in ["MEX", "NLU"]:
         hub = evidence["government_hubs"].get(code, {})
-        complete = (
-            hub.get("rows") == 7
-            and hub.get("first_period") == "2026M01"
-            and hub.get("last_period") == "2026M07"
-        )
+        complete = government_hub_complete(hub)
         add(
             f"{code.lower()}_government_hub_complete",
             complete,
             hub,
-            "7 months from 2026M01 through 2026M07",
+            "Contiguous 2026 months from January, with at least the seven accepted baseline months",
         )
     add("events_minimum", evidence["events"] >= 15, evidence["events"], ">=15")
     add("faa_current_category", evidence["faa"]["category"] == 1, evidence["faa"]["category"], 1)

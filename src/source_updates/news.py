@@ -132,8 +132,22 @@ def build_from_bronze() -> dict:
     if not rows:
         raise ValueError("No valid news metadata; access failure is not an empty successful month")
     output = pd.DataFrame(deduplicate(rows)).sort_values("published_at", ascending=False)
+    # Silver's existing grain is URL/query. Dated editions stay separate during
+    # provenance grouping; select the latest edition without borrowing an older
+    # edition's date or lineage. Originals and the discarded edition identities
+    # remain inspectable, including for the separate monthly archive adapter.
+    superseded = output.loc[output.duplicated(["url", "query_term"], keep="first")]
+    output = output.drop_duplicates(["url", "query_term"], keep="first")
     output["gdelt_tone"] = pd.to_numeric(output["gdelt_tone"], errors="coerce").astype("Float64")
     write_parquet_atomic(output, PATHS.silver / "news_headlines.parquet")
+    edition_selection = superseded[["url", "published_at", "source_file", "source_hash"]].to_dict("records")
+    PATHS.quality.mkdir(parents=True, exist_ok=True)
+    (PATHS.quality / "news_metadata_selection.json").write_text(
+        json.dumps(
+            {"superseded_editions": edition_selection, "invalid_artifacts": rejected}, default=str, indent=2
+        )
+        + "\n"
+    )
     return {
         "input_rows": len(rows),
         "deduplicated_rows": len(output),
@@ -142,4 +156,5 @@ def build_from_bronze() -> dict:
         "activation": "none",
         "invalid_artifacts_preserved": rejected,
         "source_completeness": "partial_invalid_captures" if rejected else "not_certified",
+        "superseded_editions_preserved_in_bronze": len(superseded),
     }

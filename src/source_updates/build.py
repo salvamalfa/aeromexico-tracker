@@ -223,6 +223,7 @@ def worker(workspace: Path, requested: list[str], report: Path) -> int:
     registry["parse.complementary"] = replace(
         registry["parse.complementary"], callable_ref="src.source_updates.complementary:run"
     )
+    registry["parse.afac"] = replace(registry["parse.afac"], callable_ref="src.source_updates.afac:run")
     dependencies = required_predecessors(requested)
     for name, (action, sources, outputs) in GRANULAR.items():
         inputs = (

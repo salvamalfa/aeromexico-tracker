@@ -56,3 +56,20 @@ def test_historical_http_200_gdelt_error_is_preserved_and_never_successful_empty
     frame = pd.read_parquet(paths.silver / "news_headlines.parquet")
     assert set(frame.source_system) == {"rss"}
     assert all(item["source_system"] == "rss" for item in json.loads(frame.provenance_json.iloc[0]))
+    newer = rss.replace(b"Tue, 01 Sep 2026 12:00:00 GMT", b"Wed, 02 Sep 2026 12:00:00 GMT")
+    save_bronze(
+        newer,
+        "rss",
+        "google_es",
+        "current",
+        "xml",
+        "https://news.google.com/rss/search",
+        "manual",
+        bronze_root=paths.bronze,
+    )
+    result = build_from_bronze()
+    assert result["superseded_editions_preserved_in_bronze"] == 1
+    latest = pd.read_parquet(paths.silver / "news_headlines.parquet")
+    assert len(latest) == 1 and latest.published_at.iloc[0].day == 2
+    receipt = json.loads((paths.quality / "news_metadata_selection.json").read_text())
+    assert "2026-09-01" in receipt["superseded_editions"][0]["published_at"]
