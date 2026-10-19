@@ -300,6 +300,63 @@
       }
     },
 
+    "flight_component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "carrier_key",
+        "origin_iata",
+        "destination_iata",
+        "period_id",
+        "kind",
+        "source_label",
+        "departures",
+        "source_hashes"
+      ],
+      "properties": {
+        "carrier_key": {
+          "type": "string"
+        },
+        "origin_iata": {
+          "type": "string"
+        },
+        "destination_iata": {
+          "type": "string"
+        },
+        "period_id": {
+          "type": "string"
+        },
+        "source_label": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "observed",
+            "estimated",
+            "scheduled"
+          ]
+        },
+        "departures": {
+          "type": "number",
+          "minimum": 0
+        },
+        "source_hashes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "estimator_version": { "type": "string" },
+        "service_class_departures": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      }
+    },
+
     "route_previous": {
       "type": "object",
       "additionalProperties": false,
@@ -351,6 +408,7 @@
         "previous": { "$ref": "#/$defs/route_previous" },
         "directions": { "type": "array", "items": { "$ref": "#/$defs/direction" } },
         "monthly": { "type": "array", "items": { "$ref": "#/$defs/monthly_item" } },
+        "flight_components": { "type": "array", "items": { "$ref": "#/$defs/flight_component" } },
         "carrier_breakdown": {
           "type": "object",
           "description": "Industria only: passengers of each airline (dashboard entity key) on this route.",

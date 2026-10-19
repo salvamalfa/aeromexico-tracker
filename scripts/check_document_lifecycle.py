@@ -36,7 +36,28 @@ def changed_documents(root: Path, base: str, head: str = "HEAD") -> list[str]:
 
 
 def markdown_targets(text: str) -> list[str]:
-    return re.findall(r"\]\(([^)]+)\)", text) + re.findall(r"(?m)^\s{0,3}\[[^\]]+\]:\s*(.+)", text)
+    targets = []
+    for match in re.finditer(r"\]\(", text):
+        depth, angle, escaped = 1, False, False
+        for index in range(match.end(), len(text)):
+            char = text[index]
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == "<":
+                angle = True
+            elif char == ">":
+                angle = False
+            elif not angle:
+                if char == "(":
+                    depth += 1
+                elif char == ")":
+                    depth -= 1
+                    if depth == 0:
+                        targets.append(text[match.end() : index])
+                        break
+    return targets + re.findall(r"(?m)^\s{0,3}\[[^\]]+\]:\s*(.+)", text)
 
 
 def markdown_url(target: str):
@@ -45,7 +66,7 @@ def markdown_url(target: str):
         target = target[1 : target.index(">")]
     else:
         target = target.split(maxsplit=1)[0] if target else ""
-    return urlsplit(target)
+    return urlsplit(re.sub(r"\\([()<>])", r"\1", target))
 
 
 def mutable_repo_document(value, root: Path) -> Path | None:
@@ -93,7 +114,7 @@ def inbound_references(root: Path, paths: list[str]) -> list[str]:
         referenced = set()
         for target in markdown_targets(text):
             value = markdown_url(target)
-            if value.scheme:
+            if value.scheme or value.netloc:
                 destination = mutable_repo_document(value, root)
                 if destination in removed:
                     referenced.add(removed[destination])
@@ -162,9 +183,12 @@ def validate_dispositions(root: Path, paths: list[str], summary: str) -> list[st
         text = re.sub(r"```.*?```", "", file.read_text(encoding="utf-8"), flags=re.S)
         for target in markdown_targets(text):
             value = markdown_url(target)
-            if value.scheme or not value.path:
+            if value.scheme or value.netloc or not value.path:
                 continue
-            resolved = (file.parent / unquote(value.path)).resolve()
+            local_path = unquote(value.path)
+            resolved = (
+                root / local_path.lstrip("/") if local_path.startswith("/") else file.parent / local_path
+            ).resolve()
             if not resolved.is_relative_to(root.resolve()) or not resolved.exists():
                 errors.append(f"Broken/outside local reference in {path}: {target}")
     return errors + inbound_references(root, paths)

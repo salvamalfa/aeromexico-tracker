@@ -110,6 +110,12 @@ export function mapFittedCanvasSize(): string {
 }
 
 export function renderFlowMap(): void {
+  // A cancelled picker request or a queued tab/resize callback can arrive
+  // before the first network finishes loading. There is no map to draw yet.
+  const network = state.network;
+  if (!network) return;
+  const worldGeometry = network.world_geometry;
+  if (!worldGeometry?.geojson) throw new Error("La red de vuelos no contiene la geometría del mapa");
   fittedCanvasSize = canvasSize();
   const ordered = visibleRoutes();
   const routeColor = (route: Route) => state.routeView === "change"
@@ -133,7 +139,6 @@ export function renderFlowMap(): void {
       ? { ...fitViewToCanvas([13, 34], [-119, -86]), latDtick: 5, lonDtick: 5 }
       : { lat: [-60, 85] as [number, number], lon: [-180, 180] as [number, number], latDtick: 30, lonDtick: 45 };
   const maxValue = Math.max(...ordered.map(routeValue), 1);
-  const worldGeometry = state.network!.world_geometry!;
   const geometry = worldGeometry.geojson;
   // Pin the base-map topology Plotly would otherwise fetch from cdn.plot.ly,
   // as the legacy page did: the site makes no third-party requests.
@@ -164,7 +169,7 @@ export function renderFlowMap(): void {
     } as Data);
   });
   const visibleAirports = new Set(ordered.flatMap((route) => [route.origin.iata, route.destination.iata]));
-  const airports = state.network!.airports.filter((airport) => visibleAirports.has(airport.iata));
+  const airports = network.airports.filter((airport) => visibleAirports.has(airport.iata));
   traces.push({
     type: "scattergeo", mode: "markers", name: "Aeropuertos",
     lat: airports.map((airport) => airport.lat), lon: airports.map((airport) => airport.lon),

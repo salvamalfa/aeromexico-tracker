@@ -44,7 +44,14 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
   ajuste final de R2 sin otra evaluación pagada. R2/Sol low y las capacidades
   de rutas, métricas financieras y evidencia están activos y verificados en
   Railway (ver [Chat analítico](#chat-analítico)).
-- **Datos:** el candidato conserva el histórico publicado y muestra solo vuelos en el mapa, con su tipo y procedencia; no realiza nuevas capturas AeroDataBox. AFAC se actualiza manualmente. Lo pendiente
+- **Datos:** la base de Vuelos del 18 de octubre conserva el histórico e incorpora
+  el BTS retenido de enero–julio de 2026, con operador y clase de servicio
+  separados, y precedencia por celda entre observaciones y estimaciones retenidas.
+  El mapa muestra solo vuelos, con su tipo y procedencia. No realiza nuevas
+  capturas AeroDataBox ni ajustes de modelos. La opción adicional de estimaciones
+  de EEUU permanece desactivada y requiere aprobación independiente.
+  El [reporte BTS y sus límites](docs/etapas/bts-refresco-cobertura-20261017.md)
+  distingue representación mixta de cobertura observada. AFAC se actualiza manualmente. Lo pendiente
   está en [`ROADMAP.md`](ROADMAP.md).
 
 Conteos de tablas Gold y pruebas cambian con cada cambio; la cuenta vigente y
@@ -130,6 +137,13 @@ auditada de 2T26 se conserva en `prototypes/etapa-17/audited_analysis.html`.
 - [Plan original (histórico)](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/plan-original/README.md)
 
 Fuentes principales: SEC EDGAR, BMV XBRL, AFAC, BTS T-100, Banxico, EIA, datos públicos de mercado, reportes de aerolíneas, grupos aeroportuarios y fuentes regulatorias abiertas. Las limitaciones y bloqueos de cada fuente están documentados en los reportes de etapa.
+
+## Candidato Mercado
+
+La rama de revisión incorpora Mercado; su alcance y límites están en
+[la etapa del 15 de octubre](docs/etapas/mercado-candidato-20261015.md).
+La [auditoría Gold](docs/gold-exposure.md) distingue exposición, contexto y linaje.
+Producción conserva su estado hasta aprobación independiente.
 
 ## Actualización
 

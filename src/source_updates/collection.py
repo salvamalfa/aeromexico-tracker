@@ -9,7 +9,7 @@ import re
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import parse_qsl, urljoin, urlsplit
 from uuid import uuid4
 
 import httpx
@@ -51,9 +51,23 @@ def validate_url(url: str, allowed_hosts: list[str]) -> None:
         or value.port not in {None, 443}
         or not value.hostname
         or not any(value.hostname == host or value.hostname.endswith("." + host) for host in allowed_hosts)
-        or re.search(r"(?i)(api[_-]?key|token|password|secret|signature|credential)=", value.query)
+        or any(_credential_query_key(key) for key, _ in parse_qsl(value.query, keep_blank_values=True))
     ):
         raise ValueError("Only public HTTPS URLs on catalogue hosts without credentials are allowed")
+
+
+def _credential_query_key(key: str) -> bool:
+    # Bracket/dot nesting and qualifiers must not hide an inner credential.
+    key = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", key)
+    return any(
+        component.casefold() in {"key", "auth", "pwd"}
+        or re.search(
+            r"(?i)(api[_-]?key|access[_-]?key|secret[_-]?key|token|password|passwd|secret|signature|credential|authorization)(?:s|[0-9]+)?$",
+            component,
+        )
+        for component in re.split(r"[\W_]+", key)
+        if component
+    )
 
 
 def selection_plan(selection: dict, workspace: Path) -> dict:
@@ -210,6 +224,7 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
             try:
                 status, content_type = 200, "application/octet-stream"
                 url = item["url"]
+                response_url = None
                 if item.get("mode") == "manual":
                     content = (workspace / "imports" / item["local_file"]).read_bytes()
                     if hashlib.sha256(content).hexdigest() != item["sha256"]:
@@ -264,6 +279,9 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
                             action, payload = _post_payload(response.text, year=item["year"])
                             response = request("POST", action, data=payload)
                         content, status = response.content, response.status_code
+                        response_url = str(response.url)
+                        validate_url(response_url, source["allowed_hosts"])
+                        result["response_url"] = response_url
                         content_type = response.headers.get("content-type", content_type)
                         result["http_status"] = status
                 _payload(content, item["extension"])
@@ -291,6 +309,7 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
                     content_type=content_type,
                     notes=(
                         f"Candidate only; product={item['product']}; purpose={item['purpose']}; unvalidated"
+                        + (f"; response_url={response_url}" if response_url else "")
                     ),
                 )
                 result.update(
@@ -303,8 +322,13 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
                     from bs4 import BeautifulSoup
 
                     links = []
-                    for anchor in BeautifulSoup(content, "html.parser").find_all("a", href=True):
-                        candidate = urljoin(url, anchor["href"])
+                    soup = BeautifulSoup(content, "html.parser")
+                    link_base = response_url or url
+                    base = soup.find("base", href=True)
+                    if base:
+                        link_base = urljoin(link_base, base["href"])
+                    for anchor in soup.find_all("a", href=True):
+                        candidate = urljoin(link_base, anchor["href"])
                         try:
                             validate_url(candidate, source["allowed_hosts"])
                         except ValueError:

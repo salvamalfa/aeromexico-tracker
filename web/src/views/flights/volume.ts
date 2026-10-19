@@ -1,7 +1,7 @@
 // Flight counts only in the map; official aggregate cards remain elsewhere.
 import { $, esc, integer } from "./dom";
 import { state } from "./state";
-import { flightKind, FLIGHT_KIND_LABEL } from "./flight-measure";
+import { flightTotals, FLIGHT_KIND_LABEL } from "./flight-measure";
 
 function miniCard(label: string, value: string, note: string, title: string): string {
   return `<div class="network-mini-kpi" title="${esc(title)}"><small>${esc(label)}</small><strong>${esc(value)}</strong><span>${esc(note)}</span></div>`;
@@ -14,9 +14,9 @@ export function renderNetworkVolume(): void {
   host.hidden = !routes.length && !state.presenceOnlyRouteCount;
   if (host.hidden) { host.innerHTML = ""; return; }
   const cards = (["observed", "scheduled", "estimated", "attributed"] as const).flatMap((kind) => {
-    const matching = routes.filter((route) => flightKind(route) === kind);
+    const matching = routes.filter((route) => flightTotals(route)[kind] !== undefined);
     if (!matching.length) return [];
-    const total = matching.reduce((sum, route) => sum + route.departures!, 0);
+    const total = matching.reduce((sum, route) => sum + (flightTotals(route)[kind] ?? 0), 0);
     const label = `Vuelos ${FLIGHT_KIND_LABEL[kind]}`;
     return [miniCard(label, integer.format(total), `${matching.length} rutas · cobertura parcial`,
       kind === "scheduled" ? "Programación; no confirma ejecución" :

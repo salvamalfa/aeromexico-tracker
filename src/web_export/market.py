@@ -35,4 +35,16 @@ def export_market(
         raise ValueError(f"market.json does not match its schema: {errors[:5]}")
 
     check_privacy(payload, load_privacy_rules())
-    return [write_json(out_dir / "market.json", payload)]
+    from src.dashboard.market_demand import build_market_demand
+
+    written = [write_json(out_dir / "market.json", payload)]
+    if not skip_input_check:
+        import json
+        from src.config import PATHS
+
+        demand = build_market_demand()
+        schema = json.loads((PATHS.root / "contracts/web/market_demand.schema.json").read_text())
+        Draft202012Validator(schema).validate(demand)
+        check_privacy(demand, load_privacy_rules())
+        written.append(write_json(out_dir / "market-demand.json", demand))
+    return written

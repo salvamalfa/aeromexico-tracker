@@ -20,7 +20,7 @@ export function domesticPeriodLabel(monthIds: string[], quarterId: string | null
   const noun = n === 1 ? "mes seleccionado" : "meses seleccionados";
   let label = `${base} · ${n} ${noun}`;
   const available = monthsInQuarter(quarterId).length;
-  if (available > 0 && available < 3) label += ` · cobertura parcial: ${available} de 3 meses`;
+  if (!quarterId?.includes("M") && available > 0 && available < 3) label += ` · cobertura parcial: ${available} de 3 meses`;
   return label;
 }
 
@@ -37,6 +37,7 @@ interface DomesticAggregate {
   capacityMonthsCovered: number;
   departureMonthsCovered: number;
   departureKinds: Set<FlightKind>;
+  departurePartial: boolean;
   source_label?: string;
   monthly: RouteDirection[];
   repaired: boolean;
@@ -81,7 +82,7 @@ export function aggregateDomesticMonths(monthIds: string[]): PeriodNetworkDocume
           market_key: route.market_key, origin: route.origin, destination: route.destination,
           passengers: 0, passengers_low: 0, passengers_high: 0, monthsCovered: 0,
           seats: 0, departures: 0, capacityMonthsCovered: 0, departureMonthsCovered: 0, departureKinds: new Set(),
-          source_label: route.source_label, monthly: [], repaired: false,
+          source_label: route.source_label, monthly: [], repaired: false, departurePartial: false,
           breakdown: route.carrier_breakdown ? {} : null,
         };
         byMarket.set(route.market_key, agg);
@@ -103,6 +104,7 @@ export function aggregateDomesticMonths(monthIds: string[]): PeriodNetworkDocume
         agg.capacityMonthsCovered += 1;
       }
       if (finite(route.departures)) {
+        agg.departurePartial ||= (route.operation_status ?? "").includes("partial_frequencies");
         agg.departures += route.departures;
         agg.departureMonthsCovered += 1;
         agg.departureKinds.add(flightKind(route));
@@ -126,7 +128,7 @@ export function aggregateDomesticMonths(monthIds: string[]): PeriodNetworkDocume
       );
       const kind = agg.departureKinds.size === 1 ? [...agg.departureKinds][0] : null;
       const operationStatus = kind === "scheduled" ? "scheduled_from_published_history"
-        : kind === "estimated" ? "estimated_from_frozen_published_history"
+        : kind === "estimated" ? "estimated_from_frozen_published_history" + (agg.departurePartial ? "_partial_frequencies" : "")
         : kind === "attributed" ? "carrier_inferred_market_observed" : "operated_observed";
       return {
         market_key: agg.market_key, origin: agg.origin, destination: agg.destination,
@@ -139,7 +141,8 @@ export function aggregateDomesticMonths(monthIds: string[]): PeriodNetworkDocume
         capacity_estimated: capacityComplete,
         load_factor: plausible ? loadFactor : null,
         load_factor_status: !capacityComplete ? "capacity_incomplete" : (plausible ? "estimated" : "inconsistent_inputs"),
-        months_covered: quarterCoverage.get(agg.market_key) || 0, months_selected: 3,
+        months_covered: quarterCoverage.get(agg.market_key) || 0,
+        months_selected: state.domesticMonthsQuarterId?.includes("M") ? 1 : 3,
         capacity_months_covered: agg.capacityMonthsCovered,
         support_repair_applied: agg.repaired,
         source_label: agg.source_label,

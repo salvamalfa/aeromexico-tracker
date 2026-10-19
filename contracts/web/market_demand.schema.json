@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Public airport demand v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "universe",
+    "months",
+    "airports",
+    "groups",
+    "quality_notes",
+    "quarantined_group_months"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "market_demand_v1"
+    },
+    "universe": {
+      "type": "string"
+    },
+    "months": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "airports": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/row"
+      }
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/row"
+      }
+    },
+    "quality_notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "quarantined_group_months": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "group",
+        "period_id",
+        "passengers",
+        "previous_period",
+        "previous_passengers",
+        "yoy_pct",
+        "source_system",
+        "source_hash",
+        "source_url",
+        "captured_at"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "group": {
+          "type": "string"
+        },
+        "period_id": {
+          "type": "string",
+          "pattern": "^\\d{4}M(0[1-9]|1[0-2])$"
+        },
+        "passengers": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "previous_period": {
+          "type": "string"
+        },
+        "previous_passengers": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "yoy_pct": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "source_system": {
+          "type": "string"
+        },
+        "source_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "source_url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "captured_at": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

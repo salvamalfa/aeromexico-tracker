@@ -32,6 +32,7 @@
 
     <div class="reader-tabs" role="tablist" aria-label="Vistas del dashboard">
       <button type="button" id="tab-reading" role="tab" aria-selected="true" aria-controls="panel-reading">Lectura ejecutiva</button>
+      <button type="button" id="tab-market" role="tab" aria-selected="false" aria-controls="panel-market" tabindex="-1">Mercado</button>
       <button type="button" id="tab-economy" role="tab" aria-selected="false" aria-controls="panel-economy" tabindex="-1">Economía unitaria</button>
       <button type="button" id="tab-flights" role="tab" aria-selected="false" aria-controls="panel-flights" tabindex="-1">Vuelos</button>
     </div>
@@ -46,11 +47,16 @@
           <p class="analysis-placeholder" id="analysis-empty">Análisis pendiente de aprobación para este trimestre.</p>
         </div>
       </section>
-      <article class="chart-card market-card">
+
+    </section>
+
+    <section id="panel-market" role="tabpanel" aria-labelledby="tab-market" hidden>
+      <div class="section-heading"><div><p class="section-kicker">Mercado</p><h2>Tamaño y participación</h2></div></div>
+      <article class="chart-card market-card" id="market-card">
         <div class="chart-heading-row">
           <div>
-            <p class="chart-title">Participación de pasajeros (AFAC)</p>
-            <p class="chart-subtitle" id="market-subtitle">Pasajeros de cada aerolínea entre los de todas las aerolíneas mexicanas, por mes.</p>
+            <h2 class="chart-title">Participación de pasajeros (AFAC) <button type="button" id="market-source" class="market-source-info" popovertarget="market-source-note" title="Fuente: AFAC" aria-label="Fuente: AFAC">ⓘ</button></h2>
+            <p id="market-source-note" class="market-source-note" popover></p>
           </div>
           <div class="chart-controls">
             <label class="chart-range-control" for="market-segment">Segmento
@@ -64,6 +70,8 @@
           </div>
         </div>
         <div class="chart" id="market-chart" role="img" aria-label="Participación mensual de pasajeros por aerolínea"></div>
+        <div class="market-kpis" id="market-kpis" aria-live="polite"></div>
+        <div class="market-table-wrap"><table class="market-table"><caption>Contribución al crecimiento interanual del universo AFAC seleccionado</caption><thead><tr><th>Aerolínea</th><th>Pasajeros</th><th>Crecimiento interanual</th><th>Participación</th><th>Cambio interanual (pp)</th><th>Contribución (pp)</th></tr></thead><tbody id="market-comparison"></tbody></table></div>
       </article>
     </section>
 

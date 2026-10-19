@@ -43,8 +43,12 @@ def read(path):
 def code_version():
     root = PATHS.root
     paths = {root / name for name in ("src/dashboard/entities.py", "src/config.py", "uv.lock")}
-    for directory in ("src/analysis_agent", "src/publish", "src/web_export"):
-        paths.update((root / directory).rglob("*.py"))
+    # Conservatively bind all first-party Python runtime code, including
+    # transitive imports (analytics, evidence filtering, lazy/relative imports)
+    # and future packages. A directory allowlist can miss a dependency outside
+    # dashboard/export; static import traversal can miss dynamic imports.
+    # Unrelated Python changes intentionally require a fresh technical review.
+    paths.update((root / "src").rglob("*.py"))
     paths.update(path for path in (root / "contracts/web").rglob("*") if path.is_file())
     test_directories = {"test", "tests", "spec", "specs", "__tests__", "__specs__"}
     web_root = root / "web/src"

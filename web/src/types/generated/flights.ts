@@ -178,6 +178,7 @@ export interface Route {
   previous: RoutePrevious;
   directions: Direction[];
   monthly: MonthlyItem[];
+  flight_components?: FlightComponent[];
   /**
    * Industria only: passengers of each airline (dashboard entity key) on this route.
    */
@@ -224,6 +225,20 @@ export interface MonthlyItem {
   departures: NullableNumber;
   load_factor: NullableNumber;
   capacity_estimated: boolean;
+}
+export interface FlightComponent {
+  carrier_key: string;
+  origin_iata: string;
+  destination_iata: string;
+  period_id: string;
+  source_label: string;
+  kind: "observed" | "estimated" | "scheduled";
+  departures: number;
+  source_hashes: string[];
+  estimator_version?: string;
+  service_class_departures?: {
+    [k: string]: number;
+  };
 }
 export interface AenaAirportActivity {
   airport_iata: string;

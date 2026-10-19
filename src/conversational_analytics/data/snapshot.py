@@ -12,6 +12,8 @@ from typing import Any
 import yaml
 from jsonschema import Draft202012Validator
 
+from src.publish.manifest import CONTRACT_FILES
+from src.web_export.contract_versions import resolve_contract
 from src.web_export.privacy import check_file_size, check_privacy, load_privacy_rules
 from src.web_export.schemas import (
     ANALYSIS_SCHEMA,
@@ -19,8 +21,7 @@ from src.web_export.schemas import (
     BUSINESS_METRICS_SCHEMA,
     EXECUTIVE_SCHEMA,
     MARKET_SCHEMA,
-    NETWORK_FILE_SCHEMA,
-    QUARTERS_FILE_SCHEMA,
+    split_flight_schemas,
 )
 
 
@@ -94,13 +95,20 @@ class Snapshot:
                 raise SnapshotError(f"Ruta duplicada en manifiesto: {rel}")
             paths[rel] = entry
         contracts_dir = self.project_root / "contracts/web"
+        resolved_contracts: dict[str, Path] = {}
         for name, expected in manifest["contracts"].items():
-            contract = (contracts_dir / name).resolve()
-            if contracts_dir.resolve() not in contract.parents or not contract.is_file():
-                raise SnapshotError(f"Contrato de publicación no disponible: {name}")
-            if hashlib.sha256(contract.read_bytes()).hexdigest() != expected:
-                raise SnapshotError(f"Hash de contrato distinto al manifiesto: {name}")
-        privacy_rules = load_privacy_rules(contracts_dir / "privacy.yaml")
+            if name not in CONTRACT_FILES:
+                raise SnapshotError(f"Contrato de publicación no reconocido: {name}")
+            try:
+                resolved_contracts[name] = resolve_contract(contracts_dir, name, expected)
+            except ValueError as exc:
+                raise SnapshotError(f"Hash de contrato distinto al manifiesto: {name}: {exc}") from exc
+        if "flights.schema.json" not in resolved_contracts or "privacy.yaml" not in resolved_contracts:
+            raise SnapshotError("Faltan hashes de contratos de vuelos o privacidad")
+        quarters_schema, network_schema = split_flight_schemas(
+            json.loads(resolved_contracts["flights.schema.json"].read_text(encoding="utf-8"))
+        )
+        privacy_rules = load_privacy_rules(resolved_contracts["privacy.yaml"])
         actual_data_files = {
             p.relative_to(self.root).as_posix() for p in (self.root / "data/v1").rglob("*") if p.is_file()
         }
@@ -137,7 +145,7 @@ class Snapshot:
         schema_map = {
             "data/v1/executive.json": EXECUTIVE_SCHEMA,
             "data/v1/market.json": MARKET_SCHEMA,
-            "data/v1/flights/quarters.json": QUARTERS_FILE_SCHEMA,
+            "data/v1/flights/quarters.json": quarters_schema,
             "data/v1/business_metrics.json": BUSINESS_METRICS_SCHEMA,
             "data/v1/business_metrics.approval.json": BUSINESS_METRICS_APPROVAL_SCHEMA,
         }
@@ -148,7 +156,7 @@ class Snapshot:
             if rel.startswith("data/v1/analysis/"):
                 self._validate_payload(paths[rel]["sha256"], ANALYSIS_SCHEMA, payload)
             if rel.startswith("data/v1/flights/") and rel != "data/v1/flights/quarters.json":
-                self._validate_payload(paths[rel]["sha256"], NETWORK_FILE_SCHEMA, payload)
+                self._validate_payload(paths[rel]["sha256"], network_schema, payload)
         metrics_path = "data/v1/business_metrics.json"
         approval_path = "data/v1/business_metrics.approval.json"
         if (metrics_path in payloads) != (approval_path in payloads):

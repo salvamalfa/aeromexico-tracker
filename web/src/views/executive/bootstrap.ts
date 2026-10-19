@@ -18,7 +18,7 @@ import { currentIndex, currentPeriodId, periodCount, subscribe, wireStepper } fr
 import { loadExecutive, state } from "./state";
 import { renderNarrative } from "./narrative";
 import { entityLabel, entityState, loadMarket } from "./entities";
-import { renderMarket, setMarketEntities } from "./market";
+import { renderMarket, setMarketEntities, mountMarketControls } from "./market";
 import { updateKpis } from "../economy/kpis";
 import {
   renderLoadMonetization,
@@ -85,7 +85,7 @@ function mountPickers(): void {
     setMarketEntities(
       mountPicker(market, { card: "market", multi: true, defaults: ["AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"] }, (keys) => {
         setMarketEntities(keys);
-        renderMarket(periodId());
+        renderMarket(undefined);
       })
     );
   }
@@ -132,7 +132,7 @@ export async function mountExecutive(dataRoot = "data/v1"): Promise<void> {
   subscribe((periodId) => void render(periodId));
   $("unit-range")!.addEventListener("change", renderUnitEconomics);
   $("unit-metric")?.addEventListener("change", renderUnitEconomics);
-  $("market-segment")?.addEventListener("change", () => renderMarket(currentPeriodId()));
+  mountMarketControls();
   window.addEventListener("resize", renderUnitEconomics);
   renderUnitEconomics();
   const periodId = currentPeriodId();
