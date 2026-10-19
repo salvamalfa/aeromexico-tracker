@@ -335,3 +335,16 @@ RuffF/diff-checkPASS. La suite completa sigue pendiente de congelar revisión:
 la última972/178.99s corresponde a3e15f15, no a los cortes posteriores.
 Huella propuesta `ecc6b54fd6aabb4d4bd80238e3af0609a1b9f167498a2455932ca222a6bb6113`.
 6534/88–90 intactos; sin fase canónica, aprobación o gate nuevos.
+
+## Puntuación de la cláusula relativa · 19 de octubre, 00:59 UTC
+
+La revisión de4797af5 encontró que entre el antecedente y que podía haber
+paréntesis o raya. La frontera admite puntuación envolvente y guion bajo,
+manteniendo la exigencia de una palabra previa dentro del tema. Ocho
+variantes conservan visible el trimestre posterior; dos preguntas iniciales
+con ¿qué y paréntesis conservan las fichas reales y mes seleccionado.
+Se incluyen310regresiones en769casos de matrices, PASS0.64s; RuffF y
+diff-checkPASS. Suite completa pendiente de congelar revisión; la última
+972/178.99s es de3e15f15. Huella propuesta
+`5c04ff562d5b2ebec91917b4e8f3fff8c7d751a76da631a08d85aecdd7c6a631`.
+Sin fase canónica, aprobación ni gate nuevos;6534/88–90 intactos.

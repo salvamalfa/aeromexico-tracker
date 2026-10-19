@@ -494,3 +494,30 @@ def test_interrogative_topic_at_its_start_stays_searchable(approved_index, verb)
     result = approved_index.search_news(f"Busca noticias publicadas en 2026-07 sobre qué {verb} en 2T26")
     assert result["count"] == 2
     assert (result["filters"]["start_date"], result["filters"]["end_date"]) == ("2026-07-01", "2026-07-31")
+
+
+@pytest.mark.parametrize(
+    "opening,closing",
+    [
+        (" (", ")"),
+        (" — ", ""),
+        (": ", ""),
+        ("; ", ""),
+        (" [", "]"),
+        (" {", "}"),
+        (' "', '"'),
+        (" '", "'"),
+    ],
+)
+def test_wrapped_relative_clause_preserves_quarter_constraint(opening, closing):
+    with pytest.raises(ValueError, match="notación trimestral"):
+        resolve_news_query(
+            f"Busca noticias publicadas en 2026-07 sobre combustible{opening}que salieron en 2T26{closing}"
+        )
+
+
+@pytest.mark.parametrize("verb", ["pasó", "ocurrió"])
+def test_wrapped_interrogative_topic_stays_literal(approved_index, verb):
+    result = approved_index.search_news(f"Busca noticias publicadas en 2026-07 sobre (¿qué {verb} en 2T26?)")
+    assert result["count"] == 2
+    assert (result["filters"]["start_date"], result["filters"]["end_date"]) == ("2026-07-01", "2026-07-31")

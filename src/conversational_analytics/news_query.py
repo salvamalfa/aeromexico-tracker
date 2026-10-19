@@ -88,7 +88,7 @@ def _publication_scope(text: str) -> str:
         # A relative clause can introduce another publication constraint
         # with verbs outside the publication vocabulary ("que salieron").
         # A topic beginning with interrogative "que" has no prior word.
-        boundary += r"|(?<=\w)[\s,]+que\b"
+        boundary += r"|(?<=\w)[\W_]+que\b"
         following = re.search(boundary, text[start:])
         end = start + following.start() if following else len(text)
         spans = [
