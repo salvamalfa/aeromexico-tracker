@@ -24,12 +24,11 @@ y su apéndice en `docs/catalogo-fuentes-calendario.md`.
 5. Ejecutar `plan` por familia y selección real de documentos. Unir una receta
    explícita de adquisición, pasos offline y controles por fuente/entidad/periodo.
    Ejecutar `round --recipe ... --workspace ... --dry-run`; ejecutar candidato
-   solo con alcance autorizado. Un escritor por lote, sin escrituras activas.
+   solo con alcance autorizado. Para captura nueva añadir `--check-at-completion`; sin ello se conserva el corte histórico. Un escritor por lote, sin escrituras activas.
 6. Inspeccionar recibos, faltantes, hashes, cambios de filas y cobertura; el
    coordinador no inventa periodos ni mide disponibilidad desde nombres Gold.
    Incluir todos los predecesores de pipeline en orden. Una transformación no
-   puede omitir la validación Silver. Si la cadena exige un adaptador aún no
-   disponible aquí, dejar Gold pendiente; no simular su cumplimiento con archivos.
+   puede omitir la validación Silver. BMV y el compuesto offline están habilitados en candidatos. Añadir `transform.gold_lineage` después de `transform.validate_stage6` para reconstruir catálogo y puente. Si faltan otros insumos, dejar el producto pendiente; no simular validación con archivos.
 7. Proponer reintentos con `retry`, máximo dos reprogramaciones por lote.
    Ningún comando instala tareas, cron o automatizaciones. Mantener cuenta de
    reprogramaciones en el expediente del lote; no reiniciarla para eludir límite.

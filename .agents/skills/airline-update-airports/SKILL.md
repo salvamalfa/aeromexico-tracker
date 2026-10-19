@@ -49,3 +49,10 @@ Consultar cada producto de esta familia:
 6. Acreditar éxito solo en la capa comprobada: hash Bronze, contrato/grano/linaje Silver y controles Gold/meses/días/reconciliaciones que correspondan. Si no existe adaptador, terminar en captura o descubrimiento y declarar ese límite. No llenar faltantes ni activar/publicar.
 
 Un 403, TLS, timeout o archivo inválido es un fallo de acceso/contenido; no prueba ausencia de publicación. Registrar pendiente y conservar el dato aceptado. Las fechas de publicación desconocidas siguen nulas.
+
+Para OMA, AICM y AIFA, `recipe --output selection --catalog-file <html>
+--period <YYYYMmm|latest>` elige un enlace visible y no ambiguo. La fecha de
+ese enlace es descubrimiento; el PDF/XLSX debe acreditar el periodo en filas.
+Un 404 en el documento enlazado es fallo de acceso. No sustituirlo por una
+URL construida. El control Stage 4 conserva el mínimo histórico de siete
+meses contiguos AICM/AIFA y admite meses posteriores realmente parseados.

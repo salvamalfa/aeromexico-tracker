@@ -24,7 +24,7 @@ sustituye una validación; una dependencia no disponible bloquea la construcció
 3. Seleccionar catálogos y documentos con URLs reales del dominio permitido.
    Consultar primero `recipe --product <producto>`: resuelve la entrada canónica,
    formato, procedimiento y limitaciones de `config/source_update_acquisition.json`.
-   Para `fuel`, `banxico` y `h10`, `recipe --output round --period <periodo>
+   Para `fuel`, `banxico`, `h10` y `equities`, `recipe --output round --period <periodo>
    --as-of <corte>` emite selección, parámetros y controles listos para probar.
    Para índices HTML admitidos, `recipe --output selection` evita redactar la
    selección a mano; no descarga los documentos descubiertos ni certifica su mes.
@@ -37,8 +37,7 @@ sustituye una validación; una dependencia no disponible bloquea la construcció
    ejemplo `afac/2026/06`); conservar los nombres lógicos esperados por el parser.
 4. Ejecutar `collect --selection <seleccion.json> --workspace <ruta> --dry-run`.
    Revisar llamadas máximas y destinos. Si el alcance de la sesión autoriza
-   capturar esa fuente pública, usar `--execute`. En esta entrega de
-   implementación se prueban fixtures; no se capturan fuentes vivas.
+   capturar esa fuente pública, usar `--execute`. Las pruebas públicas reales conservan sus recibos; no generalizar su alcance a fuentes no probadas.
 5. Registrar en el recibo periodo solicitado, publicación conocida o nula,
    captura UTC, URL, SHA-256, original y estado. Un catálogo no es un reporte.
    Revalidar URLs seleccionadas aunque existan: el contenido igual se deduplica;
@@ -51,10 +50,10 @@ sustituye una validación; una dependencia no disponible bloquea la construcció
    analítica/modelos completos como sustituto de una actualización acotada.
 7. Ejecutar `check --workspace <ruta> --specification <controles.json>`.
    Bronze: verificar hashes. Silver: contrato, grano, dominio, linaje, fuente,
-   entidad y periodo realmente presente. Gold: contrato y linaje directo.
+   entidad y periodo realmente presente. Gold: contrato y linaje directo o puente completo validado con `transform.gold_lineage`.
    En aeropuertos, declarar `operator_group=GAP/ASUR/OMA`; para
    `fact_airport_group_traffic`, usar `airport_group_key` con ese valor.
-   Un hash agregado exige el gate de linaje existente y queda bloqueado aquí.
+   Un hash agregado exige reconstruir catálogo y puente contra Bronze mediante el gate existente. Las declaraciones sin artefacto no acreditan linaje documental.
    Declarar `value_columns`; conservar N/D, no llenar con cero. Comparar
    contra una copia previa explícita con `baseline_file`, `revision_keys`
    naturales y valores: altas, bajas, cambios y sin cambios. Los cambios de
@@ -67,7 +66,7 @@ sustituye una validación; una dependencia no disponible bloquea la construcció
    comprobar meses esperados, universos, días cubiertos y reconciliaciones.
 9. Entregar resultados y bloqueos para revisión. `round --recipe <receta.json>
    --workspace <ruta> --dry-run` reúne captura, construcción y controles;
-   con `--execute` se detiene al fallar captura o construcción. Los controles
+   con `--execute` se detiene al fallar captura o construcción. Para captura nueva usar explícitamente `--check-at-completion`; conserva el corte pedido y registra el corte efectivo. Sin esa opción el corte histórico rechaza capturas posteriores. Los controles
    solo certifican su alcance explícito, no una ronda completa ni su publicación.
 
 ## Fallos y permisos

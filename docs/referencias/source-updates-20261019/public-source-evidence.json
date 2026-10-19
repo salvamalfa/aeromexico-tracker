@@ -1,0 +1,669 @@
+{
+  "institutional_collection": {
+    "receipt_sha256": "425da6f27772469afa8e062fe874ed42d8b34d95b41913c05f9ca04d445c39c2",
+    "local_receipt": "tmp/source-updates/public-discovery-20261019/collection.json",
+    "receipt": {
+      "version": 1,
+      "run_id": "636036b45d704c24940d93f0552b1bee",
+      "mode": "collection",
+      "started_at": "2026-10-19T01:25:12.460687+00:00",
+      "activation": "none",
+      "publication": "not_authorized",
+      "paid_requests": 0,
+      "status": "incomplete",
+      "finished_at": "2026-10-19T01:25:56.537492+00:00",
+      "items": [
+        {
+          "id": "bmv_xbrl-catalog",
+          "product": "bmv_xbrl",
+          "requested_period": "current",
+          "source_url": "https://www.bmv.com.mx/es/emisoras/archivos-estadar-xbrl",
+          "published_at": null,
+          "release_lag_days": null,
+          "http_status": 200,
+          "status": "collected_catalog",
+          "sha256": "d2871a1638150a890c861097b6c7319591949df3c5384720e7e0345b63c9b95e",
+          "source_file": "bmv/bmv_bmv_xbrl_catalog_current_20261019T012513Z.html",
+          "bytes": 4104357
+        },
+        {
+          "id": "afac_carriers-catalog",
+          "product": "afac_carriers",
+          "requested_period": "current",
+          "source_url": "https://datatur.sectur.gob.mx/SitePages/afac.aspx",
+          "published_at": null,
+          "release_lag_days": null,
+          "http_status": 200,
+          "status": "collected_catalog",
+          "sha256": "59c94e3d8eef4ee6c6d7c224a9a8b391748b13d556a8beb03d142d15602884de",
+          "source_file": "afac/afac_afac_carriers_catalog_current_20261019T012516Z.html",
+          "bytes": 58909
+        },
+        {
+          "id": "oma_traffic-catalog",
+          "product": "oma_traffic",
+          "requested_period": "current",
+          "source_url": "https://ir.oma.aero/en/traffic-reports/",
+          "published_at": null,
+          "release_lag_days": null,
+          "http_status": 200,
+          "status": "collected_catalog",
+          "sha256": "9dd4be8e66a02ad538a64ebc53691708a2e19f0abba5f2885e9c8c342435bac8",
+          "source_file": "oma_ir/oma_ir_oma_traffic_catalog_current_20261019T012525Z.html",
+          "bytes": 312173
+        },
+        {
+          "id": "aicm_traffic-catalog",
+          "product": "aicm_traffic",
+          "requested_period": "current",
+          "source_url": "https://www.aicm.com.mx/estadisticas-del-aicm/17-09-2013",
+          "published_at": null,
+          "release_lag_days": null,
+          "http_status": 200,
+          "status": "collected_catalog",
+          "sha256": "529c80b0278292d8f696beb183b67b7250bec88e8c0e5092581e29ddd61fe3f1",
+          "source_file": "aicm/aicm_aicm_traffic_catalog_current_20261019T012529Z.html",
+          "bytes": 78775
+        },
+        {
+          "id": "aifa_traffic-catalog",
+          "product": "aifa_traffic",
+          "requested_period": "current",
+          "source_url": "https://aifa.aero/normateca",
+          "published_at": null,
+          "release_lag_days": null,
+          "http_status": 200,
+          "status": "collected_catalog",
+          "sha256": "8bdb23eb2cd36958aaddb59af8330e37d071f1ec1f107939cf84f88ba5049011",
+          "source_file": "aifa/aifa_aifa_traffic_catalog_current_20261019T012539Z.html",
+          "bytes": 71885
+        },
+        {
+          "id": "airports_reference",
+          "product": "airports_reference",
+          "requested_period": "current",
+          "source_url": "https://davidmegginson.github.io/ourairports-data/airports.csv",
+          "published_at": null,
+          "release_lag_days": null,
+          "http_status": 200,
+          "status": "collected_unvalidated",
+          "sha256": "0499dbd88de2fc735ac5c09f59796ccc3af544e17ffda807f793c0c6fe6c3d75",
+          "source_file": "ourairports/ourairports_airports_current_20261019T012540Z.csv",
+          "bytes": 12748669
+        },
+        {
+          "id": "iasa",
+          "product": "iasa",
+          "requested_period": "current",
+          "source_url": "https://www.faa.gov/sites/faa.gov/files/IASAWSR119r.pdf",
+          "published_at": null,
+          "release_lag_days": null,
+          "http_status": 200,
+          "status": "collected_unvalidated",
+          "sha256": "73ef0e78c2d17454d89393f3eb1159081c9bc14833e32289da01cfd2e0b23294",
+          "source_file": "faa_iasa/faa_iasa_country_results_current_20261019T012541Z.pdf",
+          "bytes": 146803
+        },
+        {
+          "id": "rss",
+          "product": "rss",
+          "requested_period": "current",
+          "source_url": "https://news.google.com/rss/search?q=Aerom%C3%A9xico+OR+Aeromexico+airline&hl=es-419&gl=MX&ceid=MX:es-419",
+          "published_at": null,
+          "release_lag_days": null,
+          "http_status": 200,
+          "status": "collected_unvalidated",
+          "sha256": "6a5ccba5f7ab386a3bec184fd825bbeb2ca53595504dfc51192dbc00e64e8d16",
+          "source_file": "rss/rss_google_es_current_20261019T012542Z.xml",
+          "bytes": 165492
+        },
+        {
+          "id": "gdelt",
+          "product": "gdelt",
+          "requested_period": "current",
+          "source_url": "https://api.gdeltproject.org/api/v2/doc/doc?query=%28Aeromexico+OR+%22Aerom%C3%A9xico%22%29&mode=artlist&maxrecords=250&format=json&sort=datedesc",
+          "published_at": null,
+          "release_lag_days": null,
+          "status": "access_or_payload_failed",
+          "error_type": "RetryableHttpStatusError",
+          "http_status": 503
+        },
+        {
+          "id": "am_financials-catalog",
+          "product": "am_financials",
+          "requested_period": "current",
+          "source_url": "https://ir.aeromexico.com/financial-information/quarterly-results",
+          "published_at": null,
+          "release_lag_days": null,
+          "http_status": 200,
+          "status": "collected_catalog",
+          "sha256": "eaa5dc81cafba9e2f7c310db2f9a677111fbdd8be605676ffe94ab1e56a277d6",
+          "source_file": "aeromexico_ir/aeromexico_ir_am_financials_catalog_current_20261019T012556Z.html",
+          "bytes": 85753
+        }
+      ]
+    }
+  },
+  "selected_documents": {
+    "receipt_sha256": "9a29097484b9743520a3adce18660661be8519cdbba6bf3f660d23c3cb5e252f",
+    "local_receipt": "tmp/source-updates/public-discovery-20261019/selected-documents-result.json",
+    "receipt": {
+      "version": 1,
+      "run_id": "f4ae6da4cb5a491588bc8a008541f3e7",
+      "mode": "collection",
+      "started_at": "2026-10-19T01:39:02.841170+00:00",
+      "activation": "none",
+      "publication": "not_authorized",
+      "paid_requests": 0,
+      "status": "incomplete",
+      "finished_at": "2026-10-19T01:39:23.687514+00:00",
+      "items": [
+        {
+          "id": "bmv-AERO-2026Q2",
+          "product": "bmv_xbrl",
+          "requested_period": "2026Q2",
+          "source_url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1573911_2026-02_1.zip",
+          "published_at": null,
+          "release_lag_days": null,
+          "http_status": 200,
+          "status": "collected_unvalidated",
+          "sha256": "4c5b73eaf7b70d7ffc1d23964176a53d86346415544c6d8ef5afa16dbcf38fa8",
+          "source_file": "bmv/xbrl/AERO/2026Q2/bmv_AERO_xbrl_package_2026Q2_20261019T013904Z.zip",
+          "bytes": 1263900
+        },
+        {
+          "id": "bmv-VOLAR-2026Q2",
+          "product": "bmv_xbrl",
+          "requested_period": "2026Q2",
+          "source_url": "https://www.bmv.com.mx/docs-pub/ifrsxbrl/ifrsxbrl_1575692_2026-02_1.zip",
+          "published_at": null,
+          "release_lag_days": null,
+          "http_status": 200,
+          "status": "collected_unvalidated",
+          "sha256": "0aad80c97fa9936006602ba2c556c997e0c49e7b123249e036ad2d1b2d052959",
+          "source_file": "bmv/xbrl/VOLAR/2026Q2/bmv_VOLAR_xbrl_package_2026Q2_20261019T013908Z.zip",
+          "bytes": 933379
+        },
+        {
+          "id": "afac-2026M08",
+          "product": "afac_carriers",
+          "requested_period": "2026M08",
+          "source_url": "https://datatur.sectur.gob.mx/Documentoscompartidos/afac/AFAC_2026_08.pdf",
+          "published_at": null,
+          "release_lag_days": null,
+          "http_status": 200,
+          "status": "collected_unvalidated",
+          "sha256": "750cf336fd3acdabac3dbb3eea052fb892cbea41883f90d2918a79e5d03c1fda",
+          "source_file": "afac/2026/08/afac_datatur_monthly_bulletin_2026M08_20261019T013909Z.pdf",
+          "bytes": 257103
+        },
+        {
+          "id": "oma_traffic-2026M09",
+          "product": "oma_traffic",
+          "requested_period": "2026M09",
+          "source_url": "https://ir.oma.aero/wp-content/uploads/2026/10/OMA_September_2026_Traffic_Report_vf.pdf",
+          "published_at": null,
+          "release_lag_days": null,
+          "status": "access_or_payload_failed",
+          "error_type": "HTTPStatusError",
+          "http_status": 404
+        },
+        {
+          "id": "aicm_traffic-2026M08",
+          "product": "aicm_traffic",
+          "requested_period": "2026M08",
+          "source_url": "https://www.aicm.com.mx/acercadelaicm/archivos/files/Estadisticas/EstadisticasAgo2026.pdf",
+          "published_at": null,
+          "release_lag_days": null,
+          "http_status": 200,
+          "status": "collected_unvalidated",
+          "sha256": "8ef46795b2e3b690131b2e38a629aba4271c71f974c92ca25e3201b2503a3273",
+          "source_file": "airports/government/aicm_traffic_statistics_2026M08_20261019T013918Z.pdf",
+          "bytes": 1210496
+        },
+        {
+          "id": "aifa_traffic-2026M07",
+          "product": "aifa_traffic",
+          "requested_period": "2026M07",
+          "source_url": "https://aifa-repositorio.s3.us-east-1.amazonaws.com/PyE/Numeralia-Aeroportuaria-Jul-2026.xlsx",
+          "published_at": null,
+          "release_lag_days": null,
+          "http_status": 200,
+          "status": "collected_unvalidated",
+          "sha256": "8585dc7bf86a276d3fd2e0d1d2e874dde57bd51057fcc4b8fc53af878b465243",
+          "source_file": "airports/government/aifa_airport_statistics_2026M07_20261019T013918Z.xlsx",
+          "bytes": 308015
+        },
+        {
+          "id": "yahoo-AERO",
+          "product": "equities",
+          "requested_period": "2015-01-01_2026-09-30",
+          "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/AERO?period1=1420070400&period2=1790812800&interval=1d&events=div%2Csplits",
+          "published_at": null,
+          "release_lag_days": null,
+          "http_status": 200,
+          "status": "collected_unvalidated",
+          "sha256": "e4b1513d1523995aa80148dc33838bd47f82e90b022783f9e99d2c0d25e2dbd1",
+          "source_file": "yahoo_finance/yahoo_finance_AERO_chart_2015-01-01_2026-09-30_20261019T013919Z.json",
+          "bytes": 24959
+        },
+        {
+          "id": "yahoo-VLRS",
+          "product": "equities",
+          "requested_period": "2015-01-01_2026-09-30",
+          "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/VLRS?period1=1420070400&period2=1790812800&interval=1d&events=div%2Csplits",
+          "published_at": null,
+          "release_lag_days": null,
+          "http_status": 200,
+          "status": "collected_unvalidated",
+          "sha256": "65e23a1792f6461c4c9f31b784d55c109f5b9d48a6a655551f9d4723cd250f07",
+          "source_file": "yahoo_finance/yahoo_finance_VLRS_chart_2015-01-01_2026-09-30_20261019T013920Z.json",
+          "bytes": 314226
+        },
+        {
+          "id": "yahoo-RYAAY",
+          "product": "equities",
+          "requested_period": "2015-01-01_2026-09-30",
+          "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/RYAAY?period1=1420070400&period2=1790812800&interval=1d&events=div%2Csplits",
+          "published_at": null,
+          "release_lag_days": null,
+          "http_status": 200,
+          "status": "collected_unvalidated",
+          "sha256": "4073e03c8ffc50784213bdf767f7fe13253487d134343c33bd2edeac0fae60a7",
+          "source_file": "yahoo_finance/yahoo_finance_RYAAY_chart_2015-01-01_2026-09-30_20261019T013921Z.json",
+          "bytes": 325182
+        },
+        {
+          "id": "yahoo-DAL",
+          "product": "equities",
+          "requested_period": "2015-01-01_2026-09-30",
+          "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/DAL?period1=1420070400&period2=1790812800&interval=1d&events=div%2Csplits",
+          "published_at": null,
+          "release_lag_days": null,
+          "http_status": 200,
+          "status": "collected_unvalidated",
+          "sha256": "2cadcff1178314506e1094f3960d02c151852db749edaaa627cb33353193299f",
+          "source_file": "yahoo_finance/yahoo_finance_DAL_chart_2015-01-01_2026-09-30_20261019T013922Z.json",
+          "bytes": 319944
+        },
+        {
+          "id": "yahoo-ICAGY",
+          "product": "equities",
+          "requested_period": "2015-01-01_2026-09-30",
+          "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/ICAGY?period1=1420070400&period2=1790812800&interval=1d&events=div%2Csplits",
+          "published_at": null,
+          "release_lag_days": null,
+          "http_status": 200,
+          "status": "collected_unvalidated",
+          "sha256": "71c997731fece13280dbf5c43477f7de27a5b65fed50e1aa87c525258d662c8d",
+          "source_file": "yahoo_finance/yahoo_finance_ICAGY_chart_2015-01-01_2026-09-30_20261019T013923Z.json",
+          "bytes": 318337
+        }
+      ]
+    }
+  },
+  "afac_current_collection": {
+    "receipt_sha256": "cbe27cfe4007a79f6681658cd8f61829198b6bcca3fec01bad6002b98428200e",
+    "local_receipt": "tmp/source-updates/afac-current-20261019/collection.json",
+    "receipt": {
+      "version": 1,
+      "run_id": "8bfc1966ab3f41708412c5b8db019378",
+      "mode": "collection",
+      "started_at": "2026-10-19T01:59:24.769873+00:00",
+      "activation": "none",
+      "publication": "not_authorized",
+      "paid_requests": 0,
+      "status": "collected_unvalidated",
+      "finished_at": "2026-10-19T01:59:28.532715+00:00",
+      "items": [
+        {
+          "id": "afac-2026M07",
+          "product": "afac_carriers",
+          "requested_period": "2026M07",
+          "source_url": "https://datatur.sectur.gob.mx/Documentoscompartidos/afac/AFAC_2026_07.pdf",
+          "published_at": null,
+          "release_lag_days": null,
+          "http_status": 200,
+          "status": "collected_unvalidated",
+          "sha256": "80fad0490611d72faa9dc4937f468774705eb86cbb08f2f71bd55c4ef1f2c080",
+          "source_file": "afac/2026/07/afac_datatur_monthly_bulletin_2026M07_20261019T015925Z.pdf",
+          "bytes": 257040
+        },
+        {
+          "id": "afac-database-current",
+          "product": "afac_carriers",
+          "requested_period": "current",
+          "source_url": "https://datatur.sectur.gob.mx/Documentoscompartidos/afac/DB_AFAC.zip",
+          "published_at": null,
+          "release_lag_days": null,
+          "http_status": 200,
+          "status": "collected_unvalidated",
+          "sha256": "4c47c52a4ec05af37d8bc488fb2985f74a4fc47cbaf5a91c9b1589f0aa9425f2",
+          "source_file": "afac/database/afac_datatur_database_current_20261019T015928Z.zip",
+          "bytes": 735146
+        }
+      ]
+    }
+  },
+  "reference_and_rss_checks": {
+    "receipt_sha256": "40973377dd17b6675d9137436d095f179bd3b5725bc2443c800e1f6bbb9d2840",
+    "local_receipt": "tmp/source-updates/public-discovery-20261019/reference-news-checks.json",
+    "receipt": {
+      "version": 1,
+      "mode": "candidate_checks",
+      "as_of": "2026-10-18T19:39:31.168299-06:00",
+      "checks": [
+        {
+          "product": "airports_reference",
+          "layer": "gold",
+          "table": "dim_airport",
+          "expected_period": "reference_snapshot",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 9051,
+          "validated_snapshot_sha256": "0499dbd88de2fc735ac5c09f59796ccc3af544e17ffda807f793c0c6fe6c3d75",
+          "captured_at": "2026-10-18T19:25:40.425826-06:00",
+          "capture_age_days": 0,
+          "required_codes": [
+            "ACA",
+            "AGU",
+            "BJX",
+            "CJS",
+            "CUL",
+            "CUN",
+            "CUU",
+            "CZM",
+            "DGO",
+            "GDL",
+            "HMO",
+            "HUX",
+            "KIN",
+            "LAP",
+            "LMM",
+            "MBJ",
+            "MEX",
+            "MID",
+            "MLM",
+            "MTT",
+            "MTY",
+            "MXL",
+            "MZT",
+            "NLU",
+            "OAX",
+            "PVR",
+            "REX",
+            "SJD",
+            "SLP",
+            "SLW",
+            "TAM",
+            "TAP",
+            "TIJ",
+            "TRC",
+            "VER",
+            "VSA",
+            "ZCL",
+            "ZIH",
+            "ZLO"
+          ],
+          "revisions": {
+            "added": 6,
+            "removed": 8,
+            "changed": 41,
+            "unchanged": 9004
+          },
+          "latest_available_period": null,
+          "latest_parsed_period": null,
+          "latest_validated_period": null,
+          "release_lag_days": null,
+          "scope": "Reference snapshot at capture time; no traffic/month completeness or country-safety inference"
+        },
+        {
+          "product": "rss",
+          "layer": "silver",
+          "table": "news_headlines",
+          "expected_period": "2026M09",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 12,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M10",
+          "latest_validated_period": "2026M09",
+          "release_lag_days": null,
+          "observation_age_days": 18,
+          "capture_age_days": 0,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          }
+        }
+      ],
+      "status": "checks_passed",
+      "scope": "only_explicit_checks_not_complete_round_certification",
+      "approval": "human_review_required",
+      "activation": "none",
+      "publication": "not_authorized"
+    }
+  },
+  "afac_database_coverage": {
+    "receipt_sha256": "09925da0d55fe45899f65350929afe863ea2e66ef091220fe52285406e50e4f8",
+    "local_receipt": "tmp/source-updates/afac-current-20261019/database-coverage.json",
+    "receipt": {
+      "source_file": "afac/database/afac_datatur_database_current_20261019T015928Z.zip",
+      "sha256": "4c47c52a4ec05af37d8bc488fb2985f74a4fc47cbaf5a91c9b1589f0aa9425f2",
+      "rows_by_month_service": [
+        {
+          "month": 1,
+          "service": "Fletamento ",
+          "rows": 37
+        },
+        {
+          "month": 1,
+          "service": "Regular",
+          "rows": 70
+        },
+        {
+          "month": 2,
+          "service": "Fletamento ",
+          "rows": 37
+        },
+        {
+          "month": 2,
+          "service": "Regular",
+          "rows": 70
+        },
+        {
+          "month": 3,
+          "service": "Fletamento ",
+          "rows": 37
+        },
+        {
+          "month": 3,
+          "service": "Regular",
+          "rows": 70
+        },
+        {
+          "month": 4,
+          "service": "Fletamento ",
+          "rows": 37
+        },
+        {
+          "month": 4,
+          "service": "Regular",
+          "rows": 70
+        },
+        {
+          "month": 5,
+          "service": "Fletamento ",
+          "rows": 37
+        },
+        {
+          "month": 5,
+          "service": "Regular",
+          "rows": 70
+        },
+        {
+          "month": 6,
+          "service": "Fletamento ",
+          "rows": 37
+        },
+        {
+          "month": 6,
+          "service": "Regular",
+          "rows": 70
+        },
+        {
+          "month": 7,
+          "service": "Fletamento ",
+          "rows": 37
+        },
+        {
+          "month": 7,
+          "service": "Regular",
+          "rows": 70
+        },
+        {
+          "month": 8,
+          "service": "Fletamento ",
+          "rows": 37
+        },
+        {
+          "month": 8,
+          "service": "Regular",
+          "rows": 70
+        }
+      ]
+    }
+  },
+  "preflight_source_policy_blocks": [
+    {
+      "product": "viva_traffic",
+      "status": "blocked_by_existing_source_policy",
+      "url": "https://investorcloud.s3.amazonaws.com/VivaAerobus/InformacionFinanciera/SalaPrensa/2026-10-09-Trafico-septiembre-2026.pdf",
+      "reason": "Only public HTTPS URLs on catalogue hosts without credentials are allowed"
+    }
+  ],
+  "fresh_macro_capture_before_gold_repairs": {
+    "capture_code_head": "f20c244f17b69522c65dc17e0a9356b81e162c2b",
+    "receipt_sha256": "374083c292917164de054a8f2130683f3997f84969eb8b2ece8bb95cee039b44",
+    "local_receipt": "/workspace/airline-source-skills/tmp/source-updates/public-macro-20261019T0050/collection-result.json",
+    "receipt": {
+      "version": 1,
+      "run_id": "a3e290ede5094adba9858855b74cd3cb",
+      "mode": "collection",
+      "started_at": "2026-10-19T00:50:22.234262+00:00",
+      "items": [
+        {
+          "id": "eia-history",
+          "product": "fuel",
+          "requested_period": "2015-01-01_2026-09-30",
+          "source_url": "https://www.eia.gov/dnav/pet/hist_xls/EER_EPJK_PF4_RGC_DPGd.xls",
+          "published_at": null,
+          "latest_available_period": null,
+          "latest_validated_period": null,
+          "latest_published_period": null,
+          "release_lag_days": null,
+          "http_status": 200,
+          "status": "collected_unvalidated",
+          "sha256": "1c09765de4f1fb5ef63312557b51c95b83f841c9b12f10dab9837f319dd1224d",
+          "source_file": "eia/eia_EER_EPJK_PF4_RGC_DPG_2015-01-01_2026-09-30_20261019T005022Z.xls",
+          "bytes": 460800
+        },
+        {
+          "id": "SF43718",
+          "product": "banxico",
+          "requested_period": "2015-01-01_2026-09-30",
+          "source_url": "https://www.banxico.org.mx/SieInternet/consultarDirectorioInternetAction.do?accion=consultarSeries",
+          "published_at": null,
+          "latest_available_period": null,
+          "latest_validated_period": null,
+          "latest_published_period": null,
+          "release_lag_days": null,
+          "public_request_form": {
+            "idCuadro": "CF373",
+            "sector": "6",
+            "version": "3",
+            "locale": "es",
+            "anoInicial": "2015",
+            "anoFinal": "2026",
+            "tipoInformacion": "4,1",
+            "formatoHorizontal": "false",
+            "metadatosWeb": "true",
+            "formatoCSV.x": "1",
+            "formatoCSV.y": "1",
+            "series": "SF43718"
+          },
+          "http_status": 200,
+          "status": "collected_unvalidated",
+          "sha256": "ced2f59449f18abf17ed8e150be24714990ce71f3a2ce6428c0818d82d4b941b",
+          "source_file": "banxico_sie/banxico_sie_SF43718_2015-01-01_2026-09-30_20261019T005023Z.csv",
+          "bytes": 59871
+        },
+        {
+          "id": "SP1",
+          "product": "banxico",
+          "requested_period": "2015-01-01_2026-09-30",
+          "source_url": "https://www.banxico.org.mx/SieInternet/consultarDirectorioInternetAction.do?accion=consultarSeries",
+          "published_at": null,
+          "latest_available_period": null,
+          "latest_validated_period": null,
+          "latest_published_period": null,
+          "release_lag_days": null,
+          "public_request_form": {
+            "idCuadro": "CF373",
+            "sector": "6",
+            "version": "3",
+            "locale": "es",
+            "anoInicial": "2015",
+            "anoFinal": "2026",
+            "tipoInformacion": "4,1",
+            "formatoHorizontal": "false",
+            "metadatosWeb": "true",
+            "formatoCSV.x": "1",
+            "formatoCSV.y": "1",
+            "series": "SP1"
+          },
+          "http_status": 200,
+          "status": "collected_unvalidated",
+          "sha256": "e22b5d1e25f9563ed4e549c083f0503cfb25a69e6cd8ddfe413818881b07decf",
+          "source_file": "banxico_sie/banxico_sie_SP1_2015-01-01_2026-09-30_20261019T005023Z.csv",
+          "bytes": 5224
+        },
+        {
+          "id": "SF61745",
+          "product": "banxico",
+          "requested_period": "2015-01-01_2026-09-30",
+          "source_url": "https://www.banxico.org.mx/SieInternet/consultarDirectorioInternetAction.do?accion=consultarSeries",
+          "published_at": null,
+          "latest_available_period": null,
+          "latest_validated_period": null,
+          "latest_published_period": null,
+          "release_lag_days": null,
+          "public_request_form": {
+            "idCuadro": "CF373",
+            "sector": "6",
+            "version": "3",
+            "locale": "es",
+            "anoInicial": "2015",
+            "anoFinal": "2026",
+            "tipoInformacion": "4,1",
+            "formatoHorizontal": "false",
+            "metadatosWeb": "true",
+            "formatoCSV.x": "1",
+            "formatoCSV.y": "1",
+            "series": "SF61745"
+          },
+          "http_status": 200,
+          "status": "collected_unvalidated",
+          "sha256": "aa2462ca454595c1f1abf4d8d9de7ca9ace9645eb32c544ed84f3ccd61748cac",
+          "source_file": "banxico_sie/banxico_sie_SF61745_2015-01-01_2026-09-30_20261019T005024Z.csv",
+          "bytes": 82889
+        }
+      ],
+      "activation": "none",
+      "publication": "not_authorized",
+      "paid_requests": 0,
+      "status": "collected_unvalidated",
+      "finished_at": "2026-10-19T00:50:24.309460+00:00"
+    }
+  }
+}

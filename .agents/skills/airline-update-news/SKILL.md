@@ -62,3 +62,11 @@ Consultar cada producto de esta familia:
 6. Acreditar éxito solo en la capa comprobada: hash Bronze, contrato/grano/linaje Silver y controles Gold/meses/días/reconciliaciones que correspondan. Si no existe adaptador, terminar en captura o descubrimiento y declarar ese límite. No llenar faltantes ni activar/publicar.
 
 Un 403, TLS, timeout o archivo inválido es un fallo de acceso/contenido; no prueba ausencia de publicación. Registrar pendiente y conservar el dato aceptado. Las fechas de publicación desconocidas siguen nulas.
+
+El candidato rechaza los textos de error GDELT aunque su captura histórica tenga
+HTTP 200. Conserva el original y el motivo en el recibo; RSS válido no acredita
+que GDELT funcionó. Silver mantiene la edición fechada más reciente por URL y
+consulta para respetar su grano. Las anteriores quedan en Bronze y
+`data/quality/news_metadata_selection.json`, con fecha, archivo y hash. No
+fusionar fechas distintas bajo una procedencia prestada. El archivo mensual de
+PR136 necesita leer ese historial; esta selección no acredita un mes completo.

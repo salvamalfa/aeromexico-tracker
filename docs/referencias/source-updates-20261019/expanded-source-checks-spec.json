@@ -1,0 +1,275 @@
+{
+  "as_of": "2026-10-19T02:14:33.254462+00:00",
+  "checks": [
+    {
+      "product": "equities",
+      "layer": "silver",
+      "table": "market_prices",
+      "expected_period": "2026M09",
+      "period_column": "date",
+      "filters": {
+        "ticker": "AERO",
+        "carrier_key": "AEROMEXICO"
+      },
+      "value_columns": [
+        "close",
+        "adj_close",
+        "volume"
+      ]
+    },
+    {
+      "product": "equities",
+      "layer": "gold",
+      "table": "fact_market_data",
+      "expected_period": "2026M09",
+      "period_column": "date",
+      "filters": {
+        "ticker": "AERO",
+        "carrier_key": "AEROMEXICO"
+      },
+      "value_columns": [
+        "close",
+        "adj_close",
+        "volume"
+      ]
+    },
+    {
+      "product": "equities",
+      "layer": "silver",
+      "table": "market_prices",
+      "expected_period": "2026M09",
+      "period_column": "date",
+      "filters": {
+        "ticker": "VLRS",
+        "carrier_key": "VOLARIS"
+      },
+      "value_columns": [
+        "close",
+        "adj_close",
+        "volume"
+      ]
+    },
+    {
+      "product": "equities",
+      "layer": "gold",
+      "table": "fact_market_data",
+      "expected_period": "2026M09",
+      "period_column": "date",
+      "filters": {
+        "ticker": "VLRS",
+        "carrier_key": "VOLARIS"
+      },
+      "value_columns": [
+        "close",
+        "adj_close",
+        "volume"
+      ]
+    },
+    {
+      "product": "equities",
+      "layer": "silver",
+      "table": "market_prices",
+      "expected_period": "2026M09",
+      "period_column": "date",
+      "filters": {
+        "ticker": "RYAAY",
+        "carrier_key": "RYANAIR"
+      },
+      "value_columns": [
+        "close",
+        "adj_close",
+        "volume"
+      ]
+    },
+    {
+      "product": "equities",
+      "layer": "gold",
+      "table": "fact_market_data",
+      "expected_period": "2026M09",
+      "period_column": "date",
+      "filters": {
+        "ticker": "RYAAY",
+        "carrier_key": "RYANAIR"
+      },
+      "value_columns": [
+        "close",
+        "adj_close",
+        "volume"
+      ]
+    },
+    {
+      "product": "equities",
+      "layer": "silver",
+      "table": "market_prices",
+      "expected_period": "2026M09",
+      "period_column": "date",
+      "filters": {
+        "ticker": "DAL",
+        "carrier_key": "DELTA"
+      },
+      "value_columns": [
+        "close",
+        "adj_close",
+        "volume"
+      ]
+    },
+    {
+      "product": "equities",
+      "layer": "gold",
+      "table": "fact_market_data",
+      "expected_period": "2026M09",
+      "period_column": "date",
+      "filters": {
+        "ticker": "DAL",
+        "carrier_key": "DELTA"
+      },
+      "value_columns": [
+        "close",
+        "adj_close",
+        "volume"
+      ]
+    },
+    {
+      "product": "equities",
+      "layer": "silver",
+      "table": "market_prices",
+      "expected_period": "2026M09",
+      "period_column": "date",
+      "filters": {
+        "ticker": "ICAGY",
+        "carrier_key": "IAG"
+      },
+      "value_columns": [
+        "close",
+        "adj_close",
+        "volume"
+      ]
+    },
+    {
+      "product": "equities",
+      "layer": "gold",
+      "table": "fact_market_data",
+      "expected_period": "2026M09",
+      "period_column": "date",
+      "filters": {
+        "ticker": "ICAGY",
+        "carrier_key": "IAG"
+      },
+      "value_columns": [
+        "close",
+        "adj_close",
+        "volume"
+      ]
+    },
+    {
+      "product": "afac_carriers",
+      "layer": "silver",
+      "table": "afac_monthly_stats",
+      "expected_period": "2026M08",
+      "filters": {
+        "service_type": "scheduled"
+      },
+      "value_columns": [
+        "value"
+      ]
+    },
+    {
+      "product": "afac_carriers",
+      "layer": "silver",
+      "table": "afac_monthly_stats",
+      "expected_period": "2026M08",
+      "filters": {
+        "service_type": "charter"
+      },
+      "value_columns": [
+        "value"
+      ]
+    },
+    {
+      "product": "afac_carriers",
+      "layer": "gold",
+      "table": "fact_carrier_metrics",
+      "expected_period": "2026M08",
+      "filters": {
+        "is_current": true
+      },
+      "value_columns": [
+        "value"
+      ]
+    },
+    {
+      "product": "aicm_traffic",
+      "layer": "silver",
+      "table": "airport_traffic",
+      "expected_period": "2026M08",
+      "filters": {
+        "airport_iata": "MEX"
+      },
+      "value_columns": [
+        "passengers_total"
+      ]
+    },
+    {
+      "product": "aicm_traffic",
+      "layer": "gold",
+      "table": "fact_airport_traffic",
+      "expected_period": "2026M08",
+      "filters": {
+        "airport_iata": "MEX"
+      },
+      "value_columns": [
+        "passengers_total"
+      ]
+    },
+    {
+      "product": "aifa_traffic",
+      "layer": "silver",
+      "table": "airport_traffic",
+      "expected_period": "2026M07",
+      "filters": {
+        "airport_iata": "NLU"
+      },
+      "value_columns": [
+        "passengers_total"
+      ]
+    },
+    {
+      "product": "aifa_traffic",
+      "layer": "gold",
+      "table": "fact_airport_traffic",
+      "expected_period": "2026M07",
+      "filters": {
+        "airport_iata": "NLU"
+      },
+      "value_columns": [
+        "passengers_total"
+      ]
+    },
+    {
+      "product": "bmv_xbrl",
+      "layer": "gold",
+      "table": "fact_carrier_metrics",
+      "expected_period": "2026Q2",
+      "filters": {
+        "carrier_key": "AEROMEXICO",
+        "is_current": true
+      },
+      "value_columns": [
+        "value"
+      ]
+    },
+    {
+      "product": "bmv_xbrl",
+      "layer": "gold",
+      "table": "fact_carrier_metrics",
+      "expected_period": "2026Q2",
+      "filters": {
+        "carrier_key": "VOLARIS",
+        "is_current": true
+      },
+      "value_columns": [
+        "value"
+      ]
+    }
+  ]
+}

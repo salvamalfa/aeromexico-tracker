@@ -1,0 +1,191 @@
+{
+  "mode": "dry_run",
+  "collection": {
+    "mode": "dry_run",
+    "items": [
+      {
+        "id": "yahoo-AERO",
+        "product": "equities",
+        "source_system": "yahoo_finance",
+        "entity": "AERO_chart",
+        "period": "2015-01-01_2026-09-30",
+        "purpose": "data",
+        "url": "https://query1.finance.yahoo.com/v8/finance/chart/AERO?period1=1420070400&period2=1790812800&interval=1d&events=div%2Csplits",
+        "extension": "json",
+        "mode": "get"
+      },
+      {
+        "id": "yahoo-VLRS",
+        "product": "equities",
+        "source_system": "yahoo_finance",
+        "entity": "VLRS_chart",
+        "period": "2015-01-01_2026-09-30",
+        "purpose": "data",
+        "url": "https://query1.finance.yahoo.com/v8/finance/chart/VLRS?period1=1420070400&period2=1790812800&interval=1d&events=div%2Csplits",
+        "extension": "json",
+        "mode": "get"
+      },
+      {
+        "id": "yahoo-RYAAY",
+        "product": "equities",
+        "source_system": "yahoo_finance",
+        "entity": "RYAAY_chart",
+        "period": "2015-01-01_2026-09-30",
+        "purpose": "data",
+        "url": "https://query1.finance.yahoo.com/v8/finance/chart/RYAAY?period1=1420070400&period2=1790812800&interval=1d&events=div%2Csplits",
+        "extension": "json",
+        "mode": "get"
+      },
+      {
+        "id": "yahoo-DAL",
+        "product": "equities",
+        "source_system": "yahoo_finance",
+        "entity": "DAL_chart",
+        "period": "2015-01-01_2026-09-30",
+        "purpose": "data",
+        "url": "https://query1.finance.yahoo.com/v8/finance/chart/DAL?period1=1420070400&period2=1790812800&interval=1d&events=div%2Csplits",
+        "extension": "json",
+        "mode": "get"
+      },
+      {
+        "id": "yahoo-ICAGY",
+        "product": "equities",
+        "source_system": "yahoo_finance",
+        "entity": "ICAGY_chart",
+        "period": "2015-01-01_2026-09-30",
+        "purpose": "data",
+        "url": "https://query1.finance.yahoo.com/v8/finance/chart/ICAGY?period1=1420070400&period2=1790812800&interval=1d&events=div%2Csplits",
+        "extension": "json",
+        "mode": "get"
+      }
+    ],
+    "base_requests": 5,
+    "maximum_http_requests": 25,
+    "paid_requests": 0,
+    "destinations": [
+      "/workspace/airline-source-skills-gold/tmp/source-updates/market-review-sample/data/bronze",
+      "/workspace/airline-source-skills-gold/tmp/source-updates/market-review-sample/receipts"
+    ],
+    "revalidation": "every_selected_url_including_current_and_historical_bts_years",
+    "activation": "none",
+    "latest_validated_period": null
+  },
+  "activation": "none",
+  "publication": "not_authorized",
+  "requested_as_of": "2026-10-19T02:00:00Z",
+  "check_time_policy": "completion",
+  "build": {
+    "mode": "dry_run",
+    "workspace": "/workspace/airline-source-skills-gold/tmp/source-updates/market-review-sample",
+    "steps": [
+      "parse.market_chart"
+    ],
+    "required_predecessors": {
+      "parse.market_chart": []
+    },
+    "prerequisites": {
+      "parse.market_chart": [
+        "Candidate verified SEC identity evidence and original SEC Bronze artifact",
+        "All five preserved Yahoo raw JSON charts with exact ticker/USD/EQUITY identity"
+      ]
+    },
+    "network_requests": 0,
+    "paid_requests": 0,
+    "activation": "none",
+    "writes": [
+      "/workspace/airline-source-skills-gold/tmp/source-updates/market-review-sample/config",
+      "/workspace/airline-source-skills-gold/tmp/source-updates/market-review-sample/data",
+      "/workspace/airline-source-skills-gold/tmp/source-updates/market-review-sample/docs",
+      "/workspace/airline-source-skills-gold/tmp/source-updates/market-review-sample/logs",
+      "/workspace/airline-source-skills-gold/tmp/source-updates/market-review-sample/receipts",
+      "/workspace/airline-source-skills-gold/tmp/source-updates/market-review-sample/.source-update.lock"
+    ],
+    "status": "candidate_build_requires_existing_inputs_and_period_checks"
+  },
+  "period_checks": {
+    "as_of": "2026-10-19T02:00:00Z",
+    "checks": [
+      {
+        "product": "equities",
+        "layer": "silver",
+        "table": "market_prices",
+        "expected_period": "2026M09",
+        "period_column": "date",
+        "filters": {
+          "ticker": "AERO",
+          "carrier_key": "AEROMEXICO"
+        },
+        "value_columns": [
+          "close",
+          "adj_close",
+          "volume"
+        ]
+      },
+      {
+        "product": "equities",
+        "layer": "silver",
+        "table": "market_prices",
+        "expected_period": "2026M09",
+        "period_column": "date",
+        "filters": {
+          "ticker": "VLRS",
+          "carrier_key": "VOLARIS"
+        },
+        "value_columns": [
+          "close",
+          "adj_close",
+          "volume"
+        ]
+      },
+      {
+        "product": "equities",
+        "layer": "silver",
+        "table": "market_prices",
+        "expected_period": "2026M09",
+        "period_column": "date",
+        "filters": {
+          "ticker": "RYAAY",
+          "carrier_key": "RYANAIR"
+        },
+        "value_columns": [
+          "close",
+          "adj_close",
+          "volume"
+        ]
+      },
+      {
+        "product": "equities",
+        "layer": "silver",
+        "table": "market_prices",
+        "expected_period": "2026M09",
+        "period_column": "date",
+        "filters": {
+          "ticker": "DAL",
+          "carrier_key": "DELTA"
+        },
+        "value_columns": [
+          "close",
+          "adj_close",
+          "volume"
+        ]
+      },
+      {
+        "product": "equities",
+        "layer": "silver",
+        "table": "market_prices",
+        "expected_period": "2026M09",
+        "period_column": "date",
+        "filters": {
+          "ticker": "ICAGY",
+          "carrier_key": "IAG"
+        },
+        "value_columns": [
+          "close",
+          "adj_close",
+          "volume"
+        ]
+      }
+    ]
+  },
+  "status": "planned_not_executed"
+}
