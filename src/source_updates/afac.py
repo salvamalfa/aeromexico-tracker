@@ -5,6 +5,7 @@ from __future__ import annotations
 import io
 import re
 import zipfile
+from datetime import datetime
 from pathlib import PurePosixPath
 
 import openpyxl
@@ -117,7 +118,7 @@ def run() -> dict:
         f"{DATATUR_DATABASE_URL}#member={member.filename}",
         "offline_zip_member",
         "Exact verified database ZIP member; no fragment URL request.",
-        downloaded_at=metadata["downloaded_at"],
+        downloaded_at=datetime.fromisoformat(metadata["downloaded_at"]),
         relative_dir="afac/database/extracted",
     )
     result = run_afac_parse(documents=documents, database=database, through_month=max(months))
