@@ -1,5 +1,6 @@
 """IR traffic monthly-column, service-basis, completeness and candidate regressions."""
 
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 import json
 import re
@@ -310,6 +311,3 @@ def test_original_hash_and_cutoff_reject_before_parsing(workspace):
     path.write_bytes(b"changed")
     with pytest.raises(ValueError, match="SHA-256 mismatch"):
         candidate.run(workspace, "2026M09", cutoff(), receipt, execute=True)
-
-
-from contextlib import contextmanager

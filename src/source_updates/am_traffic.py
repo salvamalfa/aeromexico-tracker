@@ -226,6 +226,8 @@ def parse(text: str, period: str, original: dict) -> tuple[pd.DataFrame, dict]:
     validate(frame)
     return frame, {
         "published_date": published.isoformat(),
+        "publication_time": None,
+        "first_available_at": None,
         "release_lag_days": (published - period_end(period)).days,
         "rows": len(frame),
         "observation_months": sorted(frame.period_id.unique()),
