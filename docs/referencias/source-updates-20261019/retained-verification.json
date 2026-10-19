@@ -1,0 +1,2107 @@
+{
+  "version": 1,
+  "scope": "local_only_retained_source_candidates_and_explicit_baseline_checks_not_publication",
+  "new_source_capture": false,
+  "network_requests": 0,
+  "paid_requests": 0,
+  "activation": "none",
+  "scheduled_executions": 0,
+  "validation": {
+    "pipeline_tested_head": "0096e2d5165021e066b49d0b6f8efde6a703c984",
+    "full_suite": {
+      "passed": 2204,
+      "skipped": 78,
+      "subtests_passed": 29,
+      "seconds": 247.9,
+      "log": "tmp/adapters-full-suite-0096e2d.log",
+      "log_sha256": "4c756ff25693e519e6d63e1eb94e2f131cd0a789491d9da809d495acf090bdc3",
+      "skip_reasons": {
+        "local_warehouse_absent": 71,
+        "stage4_local_inputs_absent": 5,
+        "un_pinned_Pages_preview": 1,
+        "independent_proposal_absent": 1
+      }
+    },
+    "lint_F": "passed",
+    "migrated_format": "passed",
+    "source_inputs_committed_before_materialization": true,
+    "independent_review": "passed_no_open_findings"
+  },
+  "retained_product_count": 16,
+  "retained_records": 115946,
+  "retained_results": [
+    {
+      "product": "afac_airports",
+      "review_period": "2026M07",
+      "status": "checks_passed",
+      "workspace": "/workspace/airline-source-adapters/tmp/source-updates/retained-final-20261019-10885a6/afac_airports-2026M07",
+      "rows": 2730,
+      "scope": "retained_report_months_airport_statistics_not_airline_or_network_passengers",
+      "output_sha256": {
+        "silver/source_products/afac_airports": "fe46839a41f9095a8852cc2936afdf9dd71ff285ad35c2b2bec45fc8bbb4ffd5",
+        "gold/fact_afac_airport_observations": "fe46839a41f9095a8852cc2936afdf9dd71ff285ad35c2b2bec45fc8bbb4ffd5",
+        "gold/dim_source_artifact": "59313280572d7adee959f695e59b5a0c6e8c1bb2eb204486e2be92a3f61982a8",
+        "gold/bridge_record_lineage": "52aa0794841d272cbb1b3b4464b569992f376278dd8d70a4aa8fd3086a3a7943"
+      },
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "records": 2730,
+      "artifacts": 1,
+      "retention_run_id": "b9890f0f5c4c47b289898dae5370ff96",
+      "offline_replay_identical": true
+    },
+    {
+      "product": "afac_margins",
+      "review_period": "2026M07",
+      "status": "checks_passed",
+      "workspace": "/workspace/airline-source-adapters/tmp/source-updates/retained-final-20261019-10885a6/afac_margins-2026M07",
+      "rows": 23331,
+      "scope": "same_edition_regular_city_pair_and_reporting_company_margins_not_company_by_route",
+      "output_sha256": {
+        "silver/source_products/afac_margins": "886cc189985074f9a672d6817b0fc3aaa038d634d86af0fab8c00b58419a1887",
+        "gold/fact_afac_retained_margins": "886cc189985074f9a672d6817b0fc3aaa038d634d86af0fab8c00b58419a1887",
+        "gold/dim_source_artifact": "67b1b9d44bb67ba4bf459fee2bbe8e27707debb97d4fafb1614c33dd686ee684",
+        "gold/bridge_record_lineage": "e9f97d3ba2f29607d0219c3c20433c3e018b5cdfba28c842fb9590bbcfe65b74"
+      },
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "records": 23331,
+      "artifacts": 2,
+      "retention_run_id": "97e8950bf82a4dd49ab7c520d2fe4dd1",
+      "offline_replay_identical": true
+    },
+    {
+      "product": "afac_countries",
+      "review_period": "2026M07",
+      "status": "checks_passed",
+      "workspace": "/workspace/airline-source-adapters/tmp/source-updates/retained-final-20261019-10885a6/afac_countries-2026M07",
+      "rows": 116,
+      "scope": "retained_country_bulletin_exact_current_prior_YTD_boxes_only_not_monthly_country_series",
+      "output_sha256": {
+        "silver/source_products/afac_countries": "9ee24cdb3b61450eaf89df7f506c15fbfc1f30b04a019b09098778cea8b7e629",
+        "gold/fact_afac_country_bulletin_ytd": "9ee24cdb3b61450eaf89df7f506c15fbfc1f30b04a019b09098778cea8b7e629",
+        "gold/dim_source_artifact": "892e821fe1ede3b4e5313f306e13c59fae8e6350eabdc5e88bae036f56adfcc2",
+        "gold/bridge_record_lineage": "2046ca5351ddceeef82ad5d711433e8f884d62156b709cd051cb393c800c609f"
+      },
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "records": 116,
+      "artifacts": 2,
+      "retention_run_id": "a45efd40cc564e058dcdad567c01e25d",
+      "offline_replay_identical": true
+    },
+    {
+      "product": "anac",
+      "review_period": "2026M06",
+      "status": "checks_passed",
+      "workspace": "/workspace/airline-source-adapters/tmp/source-updates/retained-final-20261019-10885a6/anac-2026M06",
+      "rows": 36,
+      "scope": "retained_ANAC_selected_companies_regular_Mexico_Brazil_only",
+      "output_sha256": {
+        "silver/source_products/anac": "76d32a1b77aa61c9fef8ccb2f130742dc8b0c649969ad0eee8ec60e5d451c162",
+        "gold/fact_anac_retained_observations": "76d32a1b77aa61c9fef8ccb2f130742dc8b0c649969ad0eee8ec60e5d451c162",
+        "gold/dim_source_artifact": "ee9207755a038c565cc36397b1423eada35d185dd41977f8444f0bf9d4c187e4",
+        "gold/bridge_record_lineage": "cd781aa5ae2c02afd0c413c5c6f65c03d566335f2595fae71155599b16fe99f4"
+      },
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "records": 36,
+      "artifacts": 1,
+      "retention_run_id": "c21090d4945d41c19335ceb847c39baa",
+      "offline_replay_identical": true
+    },
+    {
+      "product": "caa",
+      "review_period": "2026M06",
+      "status": "checks_passed",
+      "workspace": "/workspace/airline-source-adapters/tmp/source-updates/retained-final-20261019-10885a6/caa-2026M06",
+      "rows": 6,
+      "scope": "retained_CAA_punctuality_Aeromexico_Heathrow_Mexico_City_only",
+      "output_sha256": {
+        "silver/source_products/caa": "3e63ae02e8e65823de2a5c2c5fcc84f4750529ccbbea6f71523aef6e59edc717",
+        "gold/fact_caa_retained_observations": "3e63ae02e8e65823de2a5c2c5fcc84f4750529ccbbea6f71523aef6e59edc717",
+        "gold/dim_source_artifact": "39510213f84ffd493a0098a9abf0ff4ecfd78dc67f438473e5892a707505f0e6",
+        "gold/bridge_record_lineage": "2261c1d6997d37e48f783b70e5d0f3c6e281d45b5901c6592d985b83b8aaf27f"
+      },
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "records": 6,
+      "artifacts": 1,
+      "retention_run_id": "76bf7485438f4be4ba3fc15b8c78d452",
+      "offline_replay_identical": true
+    },
+    {
+      "product": "aena",
+      "review_period": "2026M07",
+      "status": "checks_passed",
+      "workspace": "/workspace/airline-source-adapters/tmp/source-updates/retained-final-20261019-10885a6/aena-2026M07",
+      "rows": 54,
+      "scope": "retained_Aena_Aerovias_airport_and_all_carrier_MEX_market_scopes_separate",
+      "output_sha256": {
+        "silver/source_products/aena": "00ede2ea1a3601667f17933c0b9fd0658dd1654231aa5695edb3a5416df1d972",
+        "gold/fact_aena_retained_observations": "00ede2ea1a3601667f17933c0b9fd0658dd1654231aa5695edb3a5416df1d972",
+        "gold/dim_source_artifact": "5ed721b0073a394859819cb33fcdc6e597abfcd524a5be01f44824adaba481bb",
+        "gold/bridge_record_lineage": "f3f5153f9231c999b2bdb99f5b66791530e382ee132c674318f85fd71685fb65"
+      },
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "records": 54,
+      "artifacts": 4,
+      "retention_run_id": "299bf6852c964648a985ce74fd1da909",
+      "offline_replay_identical": true
+    },
+    {
+      "product": "iasa",
+      "review_period": "2026Q3",
+      "status": "checks_passed",
+      "workspace": "/workspace/airline-source-adapters/tmp/source-updates/retained-final-20261019-10885a6/iasa-2026Q3",
+      "rows": 84,
+      "scope": "retained_FAA_IASA_country_or_authority_categories_only",
+      "output_sha256": {
+        "silver/source_products/iasa": "60c34caa8a4848358181433b0ee04ae036dbd8950ca472dee721c67d6e043564",
+        "gold/fact_iasa_retained_categories": "60c34caa8a4848358181433b0ee04ae036dbd8950ca472dee721c67d6e043564",
+        "gold/dim_source_artifact": "76fac1509fddcb8afecf3c8eff661e9dcf21f21e17b351d3e725a8f22cc1d421",
+        "gold/bridge_record_lineage": "3b8d89ca617296be14ca71a1ad4eb3a450a472abc58adcce73f9598ba380646f"
+      },
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "records": 84,
+      "artifacts": 1,
+      "retention_run_id": "bfe9a8b269c04a01a65180910ae74561",
+      "offline_replay_identical": true
+    },
+    {
+      "product": "dictionary",
+      "review_period": "2026Q3",
+      "status": "checks_passed",
+      "workspace": "/workspace/airline-source-adapters/tmp/source-updates/retained-final-20261019-10885a6/dictionary-2026Q3",
+      "rows": 86553,
+      "scope": "retained_Loughran_McDonald_full_dictionary_snapshot_not_company_tone",
+      "output_sha256": {
+        "silver/source_products/dictionary": "8fa7d193c94f0ea2f78c0bfe7a33f4ab2633661c4dbf2c75e32a91afb0978948",
+        "gold/dim_retained_financial_dictionary": "8fa7d193c94f0ea2f78c0bfe7a33f4ab2633661c4dbf2c75e32a91afb0978948",
+        "gold/dim_source_artifact": "05eb3f0b41f8c5106d1a0b51533ef84298828b861ea7596be01bc8cf12dc7944",
+        "gold/bridge_record_lineage": "40c55d6c10d2d1e2db2e64f86bebb0b02610bb8620d812d947e2aea0bb3b8a4e"
+      },
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "records": 86553,
+      "artifacts": 1,
+      "retention_run_id": "b51b6124974d49cb98a81de3448b6aae",
+      "offline_replay_identical": true
+    },
+    {
+      "product": "aicm_slots",
+      "review_period": "2026Q3",
+      "status": "checks_passed",
+      "workspace": "/workspace/airline-source-adapters/tmp/source-updates/retained-final-20261019-10885a6/aicm_slots-2026Q3",
+      "rows": 2836,
+      "scope": "retained_full_summer_2026_AM_numbered_assignment_rows_not_quarter_traffic",
+      "output_sha256": {
+        "silver/source_products/aicm_slots": "48aedb3e7c7f7cb8e0d5f3c94cd3bf57fb07392f0c3d6e1a0bbe88603619ae7b",
+        "gold/fact_aicm_retained_slot_assignments": "48aedb3e7c7f7cb8e0d5f3c94cd3bf57fb07392f0c3d6e1a0bbe88603619ae7b",
+        "gold/dim_source_artifact": "f6b066361684da08c909c5f3e5b5420a1445b1f56f90306c9100ec35fcdf50dd",
+        "gold/bridge_record_lineage": "3efdb1fda7cac810bd433734f6baf340d30afe8bccd1cd1c5db0afb692f15a95"
+      },
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "records": 2836,
+      "artifacts": 1,
+      "retention_run_id": "85c0e31149884e108707463fb31612d4",
+      "offline_replay_identical": true
+    },
+    {
+      "product": "oma_traffic",
+      "review_period": "2026M07",
+      "status": "checks_passed",
+      "workspace": "/workspace/airline-source-adapters/tmp/source-updates/retained-final-20261019-10885a6/oma_traffic-2026M07",
+      "rows": 168,
+      "scope": "retained_OMA_terminal_passengers_13_airports_group_and_markets_month_vs_YTD_separate_not_airline_traffic",
+      "output_sha256": {
+        "silver/source_products/oma_traffic": "2bcc4c31334d40d1caecf1ab5e2ff374920c06368e89152423af69b63d871f12",
+        "gold/fact_oma_retained_terminal_traffic": "2bcc4c31334d40d1caecf1ab5e2ff374920c06368e89152423af69b63d871f12",
+        "gold/dim_source_artifact": "e933682977f818cefec90b4433e854e19bccb2713bc5ff54607a919531bde27f",
+        "gold/bridge_record_lineage": "735f44b8bc80c88ba8f692b8360bb9686c2ef6fbee5bbbdfaf29c7dd1e7945bf"
+      },
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "records": 168,
+      "artifacts": 1,
+      "retention_run_id": "48e373cf22f4428cacc6e5a704c30dd2",
+      "offline_replay_identical": true
+    },
+    {
+      "product": "am_routes",
+      "review_period": "2023M09",
+      "status": "checks_passed",
+      "workspace": "/workspace/airline-source-adapters/tmp/source-updates/retained-final-20261019-10885a6/am_routes-2023M09",
+      "rows": 2,
+      "scope": "retained_dated_text_passages_only_not_monthly_route_traffic_or_complete_network",
+      "output_sha256": {
+        "silver/source_products/am_routes": "3ac7399003d699f21b5059f900bec5a59361da098b4588602bfeb22cf5b99e95",
+        "gold/fact_am_routes_retained_passages": "3ac7399003d699f21b5059f900bec5a59361da098b4588602bfeb22cf5b99e95",
+        "gold/dim_source_artifact": "758b5d7a3a960983ab75ef6b134fc2f8960f639c0f5e96fe48f55ed14e647451",
+        "gold/bridge_record_lineage": "53efaf9b7157bdf0a3c57e74c01efa56a52960d78f2ef330530e2bc3a84fb93e"
+      },
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "records": 2,
+      "artifacts": 1,
+      "retention_run_id": "5c31299c963240acb505eea238a710b1",
+      "offline_replay_identical": true
+    },
+    {
+      "product": "oma_routes",
+      "review_period": "2026M04",
+      "status": "checks_passed",
+      "workspace": "/workspace/airline-source-adapters/tmp/source-updates/retained-final-20261019-10885a6/oma_routes-2026M04",
+      "rows": 2,
+      "scope": "retained_dated_text_passages_only_not_monthly_route_traffic_or_complete_network",
+      "output_sha256": {
+        "silver/source_products/oma_routes": "343d8a792f38c6299a709bda5c59d899c37813039d03c6fdb223079c3aec4863",
+        "gold/fact_oma_routes_retained_passages": "343d8a792f38c6299a709bda5c59d899c37813039d03c6fdb223079c3aec4863",
+        "gold/dim_source_artifact": "f05f90addc5ad5cdf980123965811f31f40ff5a24f06b374804237bfba23fafb",
+        "gold/bridge_record_lineage": "f9bbbfd113afcc516f071f56427f06718eb66da6cdc6594acc98210cf6350b6f"
+      },
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "records": 2,
+      "artifacts": 1,
+      "retention_run_id": "7fafd97502ce45559d5fea627ba9e13e",
+      "offline_replay_identical": true
+    },
+    {
+      "product": "colima",
+      "review_period": "2026M05",
+      "status": "checks_passed",
+      "workspace": "/workspace/airline-source-adapters/tmp/source-updates/retained-final-20261019-10885a6/colima-2026M05",
+      "rows": 1,
+      "scope": "retained_dated_text_passages_only_not_monthly_route_traffic_or_complete_network",
+      "output_sha256": {
+        "silver/source_products/colima": "13f26ef255c6df0ea8dd3380746b532d90ed23fa81566ddc766e8c2e5fbc2e66",
+        "gold/fact_colima_retained_passages": "13f26ef255c6df0ea8dd3380746b532d90ed23fa81566ddc766e8c2e5fbc2e66",
+        "gold/dim_source_artifact": "fa811c96a112020b5b8aedb3823ff942fa1b6ec2233d179bcc54e61622e8b4e5",
+        "gold/bridge_record_lineage": "0083afa38dc0b2c95a3eeace788b1b40cb275ebba0dd2ad97dfc048e97c936a0"
+      },
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "records": 1,
+      "artifacts": 1,
+      "retention_run_id": "a0dae676eeca47a4b0b31379c0c63b50",
+      "offline_replay_identical": true
+    },
+    {
+      "product": "aifa_roster",
+      "review_period": "2026M06",
+      "status": "checks_passed",
+      "workspace": "/workspace/airline-source-adapters/tmp/source-updates/retained-final-20261019-10885a6/aifa_roster-2026M06",
+      "rows": 1,
+      "scope": "retained_dated_text_passages_only_not_monthly_route_traffic_or_complete_network",
+      "output_sha256": {
+        "silver/source_products/aifa_roster": "e357cc0ab0142e11c44e86910e846af108e5367e201a9251aa1c2093d5409691",
+        "gold/fact_aifa_roster_retained_passages": "e357cc0ab0142e11c44e86910e846af108e5367e201a9251aa1c2093d5409691",
+        "gold/dim_source_artifact": "4a1f8cfbd544b0d0453b78f3dd8194ba05980335cf1ddc9dab633e878c761129",
+        "gold/bridge_record_lineage": "241f58e5a6eda2df3b5016806e9ea26525b39c66aa24b5db3d65941796b6cf3f"
+      },
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "records": 1,
+      "artifacts": 1,
+      "retention_run_id": "a8f63be975334c32ba69b545a6e683c1",
+      "offline_replay_identical": true
+    },
+    {
+      "product": "am_financials",
+      "review_period": "2026Q2",
+      "status": "checks_passed",
+      "workspace": "/workspace/airline-source-adapters/tmp/source-updates/financial-final-20261019-6dbc3d0/am_financials-2026Q2",
+      "rows": 20,
+      "scope": "retained_AM_2026Q2_preliminary_unaudited_reported_quarter_units_only_not_new_Q3_or_historical_harmonization",
+      "output_sha256": {
+        "silver/source_products/am_financials": "8e76a05451f56332d33d037438717394fb38265fd41932bff2dccf3b235e3fc4",
+        "gold/fact_am_retained_quarterly_source_metrics": "8e76a05451f56332d33d037438717394fb38265fd41932bff2dccf3b235e3fc4",
+        "gold/dim_source_artifact": "7ce40df219da847b76973e24094684277a72379084214d1944739f9052f5b082",
+        "gold/bridge_record_lineage": "2480495651cd04033dade768eb85added925d0d7da8d731fc8f0b7bf5138887a"
+      },
+      "code_head": "6dbc3d0f25f83b9f487dab810c82606e82be90be",
+      "records": 20,
+      "artifacts": 1,
+      "retention_run_id": "bdc6c5823f254c5eba52af484c2868a2",
+      "offline_replay_identical": true
+    },
+    {
+      "product": "ryanair_sec",
+      "review_period": "2026Q2",
+      "status": "checks_passed",
+      "workspace": "/workspace/airline-source-adapters/tmp/source-updates/ryanair-sec-final-20261019-0096e2d/ryanair_sec-2026Q2",
+      "rows": 6,
+      "scope": "retained_SEC_FY2026_consolidated_IFRS_EUR_not_calendar_quarter_not_latest_filing",
+      "output_sha256": {
+        "silver/source_products/ryanair_sec": "22e1c0907e3a8c3a0e5941c839e1c1a02e20d0e8928d416b98343f908109b32e",
+        "gold/fact_ryanair_retained_fiscal_xbrl": "22e1c0907e3a8c3a0e5941c839e1c1a02e20d0e8928d416b98343f908109b32e",
+        "gold/dim_source_artifact": "ee7d1b2297189422768edea6038edb0aca38fd959e3d2a0de11cd5db6915724c",
+        "gold/bridge_record_lineage": "b8f94899624f7ab30789ea2d262e3431da6803621d133262310a7a4d81aba4b7"
+      },
+      "code_head": "0096e2d5165021e066b49d0b6f8efde6a703c984",
+      "records": 6,
+      "artifacts": 3,
+      "retention_run_id": "b087971467744533a7e85cec9bab8af9",
+      "offline_replay_identical": true
+    }
+  ],
+  "retained_evidence": {
+    "afac_airports": {
+      "certification_receipt_sha256": "b2c69caa62f3588043152a359284c3742eabd4a900ac1b23a6b3f61cec4ef99c",
+      "retention_receipt_sha256": "9dda540edabc213413b4bc2c638e68898badd6d69245322010bf11e608015159",
+      "originals": {
+        "workbook": {
+          "bytes": 702219,
+          "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "download_method": "httpx",
+          "downloaded_at": "2026-09-13T00:47:55.040152+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "afac|airports_2006_2026_july|2026M07|xlsx",
+          "logical_version": 1,
+          "notes": "Investigacion de cobertura domestica; no integrado en Silver/Gold",
+          "sha256": "cd522d69241fce9c32c5ab0c126fa2927efc4ff84a06dc5b912fac2b96fda6eb",
+          "source_file": "domestic_routes_research/afac_airports_2006_2026_july_2026M07_20260913T004755Z.xlsx",
+          "source_system": "afac",
+          "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1100275/producto-aeropuerto-2006-2026-jul-27082026.xlsx"
+        }
+      },
+      "code_files": {
+        "src/source_updates/retained.py": "652bfab1964c84e2d138d2d8faa822cf8c8e016f0faf8c490607b33b38e93db4",
+        "src/source_updates/afac_airports.py": "27d4bafa0a6390c60a32243cd211330a8e68bf892de3076fd6c10490ea381383"
+      },
+      "lineage": {
+        "status": "passed",
+        "record_tables": {
+          "fact_afac_airport_observations": 2730
+        },
+        "records_expected": 2730,
+        "records_declared": 2730,
+        "coverage_pct": 1.0,
+        "artifact_records": 2730,
+        "parent_records": 0,
+        "declared_without_exact_link_records": 0,
+        "artifact_count": 1,
+        "unknown_parent_records": 0,
+        "unknown_artifact_records": 0
+      },
+      "capture_dates": [
+        "2026-09-13T00:47:55.040152+00:00"
+      ],
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      },
+      "published_at": null,
+      "release_lag_days": null
+    },
+    "afac_margins": {
+      "certification_receipt_sha256": "98ee9f3f6343d8ba6249fcaf7bcd37acf39ac958f4e4f258c53fc6296ee35040",
+      "retention_receipt_sha256": "987cd5455d8f976bd1f0c9b3c41304694d64edc24e4876cb3b8608388f3c603c",
+      "originals": {
+        "routes": {
+          "bytes": 629664,
+          "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "download_method": "httpx",
+          "downloaded_at": "2026-09-08T18:20:59.480453+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "afac_research|city_pairs|2026M07|xlsx",
+          "logical_version": 1,
+          "notes": "Investigacion de rutas; sin integracion en Silver/Gold; disponibilidad al corte no verificada.",
+          "sha256": "6f81b242fcb84ec04fa74236b7fd52b91c6e99b64eab7945d9eed299a86cf9fd",
+          "source_file": "afac_research/afac_research_city_pairs_2026M07_20260908T182059Z.xlsx",
+          "source_system": "afac_research",
+          "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1100280/sase-julio-2026-27082026.xlsx"
+        },
+        "carriers": {
+          "bytes": 249236,
+          "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "download_method": "httpx",
+          "downloaded_at": "2026-09-08T18:21:33.419201+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "afac_research|airline_summary|2026M07|xlsx",
+          "logical_version": 1,
+          "notes": "Research only; historical cutoff unverified",
+          "sha256": "479df73d3565cfda19d7445e17233478acf89c75a098cc75ea6269b2e9214bba",
+          "source_file": "afac_research/afac_research_airline_summary_2026M07_20260908T182133Z.xlsx",
+          "source_system": "afac_research",
+          "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1100279/resumen-julio-2026-27082026.xlsx"
+        }
+      },
+      "code_files": {
+        "src/source_updates/retained.py": "652bfab1964c84e2d138d2d8faa822cf8c8e016f0faf8c490607b33b38e93db4",
+        "src/source_updates/afac_margins.py": "c84d05e519639feb5817ecccfe5379350e1f0eab7eb1675a8c1ea32d7e1558fb",
+        "src/source_updates/afac_airports.py": "27d4bafa0a6390c60a32243cd211330a8e68bf892de3076fd6c10490ea381383"
+      },
+      "lineage": {
+        "status": "passed",
+        "record_tables": {
+          "fact_afac_retained_margins": 23331
+        },
+        "records_expected": 23331,
+        "records_declared": 23331,
+        "coverage_pct": 1.0,
+        "artifact_records": 23331,
+        "parent_records": 0,
+        "declared_without_exact_link_records": 0,
+        "artifact_count": 2,
+        "unknown_parent_records": 0,
+        "unknown_artifact_records": 0
+      },
+      "capture_dates": [
+        "2026-09-08T18:20:59.480453+00:00",
+        "2026-09-08T18:21:33.419201+00:00"
+      ],
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      },
+      "published_at": null,
+      "release_lag_days": null
+    },
+    "afac_countries": {
+      "certification_receipt_sha256": "362a92f729cdb20fdaa9d34d24b31f623609c030df5c7e26e4ad575137f9b980",
+      "retention_receipt_sha256": "1ced99d2e9374199d835041e5d3f012702dabd6d22899f5d601afde33a45b072",
+      "originals": {
+        "pdf": {
+          "bytes": 2084412,
+          "content_type": "application/pdf",
+          "download_method": "httpx",
+          "downloaded_at": "2026-09-08T18:21:36.538484+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "afac_research|country_bulletin|2026M07|pdf",
+          "logical_version": 1,
+          "notes": "Research only; historical cutoff unverified",
+          "sha256": "c3ccfd9589b3a7a770d20a6c00a214825094a8405ea8b7a91bdf88eddbac10eb",
+          "source_file": "afac_research/afac_research_country_bulletin_2026M07_20260908T182136Z.pdf",
+          "source_system": "afac_research",
+          "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1100282/stats-por-pais-es-jul2026-27082026.pdf"
+        },
+        "routes": {
+          "bytes": 629664,
+          "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "download_method": "httpx",
+          "downloaded_at": "2026-09-08T18:20:59.480453+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "afac_research|city_pairs|2026M07|xlsx",
+          "logical_version": 1,
+          "notes": "Investigacion de rutas; sin integracion en Silver/Gold; disponibilidad al corte no verificada.",
+          "sha256": "6f81b242fcb84ec04fa74236b7fd52b91c6e99b64eab7945d9eed299a86cf9fd",
+          "source_file": "afac_research/afac_research_city_pairs_2026M07_20260908T182059Z.xlsx",
+          "source_system": "afac_research",
+          "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1100280/sase-julio-2026-27082026.xlsx"
+        }
+      },
+      "code_files": {
+        "src/source_updates/retained.py": "652bfab1964c84e2d138d2d8faa822cf8c8e016f0faf8c490607b33b38e93db4",
+        "src/source_updates/afac_countries.py": "a3158aea0e009c1680a8c2b6d2415cbefdcb087a5a8f70aefaf8d95d777efb7f",
+        "src/source_updates/afac_margins.py": "c84d05e519639feb5817ecccfe5379350e1f0eab7eb1675a8c1ea32d7e1558fb",
+        "src/source_updates/afac_airports.py": "27d4bafa0a6390c60a32243cd211330a8e68bf892de3076fd6c10490ea381383"
+      },
+      "lineage": {
+        "status": "passed",
+        "record_tables": {
+          "fact_afac_country_bulletin_ytd": 116
+        },
+        "records_expected": 116,
+        "records_declared": 116,
+        "coverage_pct": 1.0,
+        "artifact_records": 116,
+        "parent_records": 0,
+        "declared_without_exact_link_records": 0,
+        "artifact_count": 2,
+        "unknown_parent_records": 0,
+        "unknown_artifact_records": 0
+      },
+      "capture_dates": [
+        "2026-09-08T18:20:59.480453+00:00",
+        "2026-09-08T18:21:36.538484+00:00"
+      ],
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      },
+      "published_at": null,
+      "release_lag_days": null
+    },
+    "anac": {
+      "certification_receipt_sha256": "8ded8f3c1a117e6ef2485f9fa72cdf591fc3ab0a82ab3b13b8d87c62594f6ade",
+      "retention_receipt_sha256": "f930748d625fb46db908c4c2021614390f6724019d4046b5a329edcbe9169f02",
+      "originals": {
+        "json": {
+          "bytes": 208844798,
+          "content_type": "application/json",
+          "download_method": "httpx",
+          "downloaded_at": "2026-09-08T23:45:31.963708+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "international_routes|anac|20260908|json",
+          "logical_version": 1,
+          "notes": "Complete original assembled from contiguous HTTP ranges; same version validator and exact byte count. Historical publication unverified.",
+          "sha256": "9d52244e77c832bedc0740de3cf54da83ecdf4d13faa7fc7d343a349ab17ebca",
+          "source_file": "international_routes/international_routes_anac_20260908_20260908T234531Z.json",
+          "source_system": "international_routes",
+          "source_url": "https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Dados%20Estat%C3%ADsticos%20do%20Transporte%20A%C3%A9reo/Dados_Estatisticos_2021_a_2030.json"
+        }
+      },
+      "code_files": {
+        "src/source_updates/retained.py": "652bfab1964c84e2d138d2d8faa822cf8c8e016f0faf8c490607b33b38e93db4",
+        "src/source_updates/authorities.py": "841f03f1dc531c7d7e93a8e96b962989a777d5eeb88aa2a4e9460c87b9067e98",
+        "src/transform/international_routes.py": "a50590caac03f894955a8197b8b549d6987697cebdc56c5c8c63de4068266000"
+      },
+      "lineage": {
+        "status": "passed",
+        "record_tables": {
+          "fact_anac_retained_observations": 36
+        },
+        "records_expected": 36,
+        "records_declared": 36,
+        "coverage_pct": 1.0,
+        "artifact_records": 36,
+        "parent_records": 0,
+        "declared_without_exact_link_records": 0,
+        "artifact_count": 1,
+        "unknown_parent_records": 0,
+        "unknown_artifact_records": 0
+      },
+      "capture_dates": [
+        "2026-09-08T23:45:31.963708+00:00"
+      ],
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      },
+      "published_at": null,
+      "release_lag_days": null
+    },
+    "caa": {
+      "certification_receipt_sha256": "b92bb4958006413c1d7fc4ce518aa99dff3be78c78752357ed81382224144c3e",
+      "retention_receipt_sha256": "8af7abb60d255f37e057ffa24fa35daad1185606491355b8ea72faa24c361d52",
+      "originals": {
+        "csv": {
+          "bytes": 1467258,
+          "content_type": "application/octet-stream",
+          "download_method": "httpx",
+          "downloaded_at": "2026-09-08T18:44:02.839787+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "route_authority_research|caa_arrival_departure|2026M06|csv",
+          "logical_version": 1,
+          "notes": "Research sample; historical availability unverified",
+          "sha256": "f15e09d2a3b3aec527b84f2adb595731352e80db27fc019c76427beba8e34409",
+          "source_file": "route_authority_research/route_authority_research_caa_arrival_departure_2026M06_20260908T184402Z.csv",
+          "source_system": "route_authority_research",
+          "source_url": "https://www.caa.co.uk/Documents/Download/26825/de96ee2c-f138-4043-b7d5-08a1edf7a5c8/1744"
+        }
+      },
+      "code_files": {
+        "src/source_updates/retained.py": "652bfab1964c84e2d138d2d8faa822cf8c8e016f0faf8c490607b33b38e93db4",
+        "src/source_updates/authorities.py": "841f03f1dc531c7d7e93a8e96b962989a777d5eeb88aa2a4e9460c87b9067e98",
+        "src/transform/international_routes.py": "a50590caac03f894955a8197b8b549d6987697cebdc56c5c8c63de4068266000"
+      },
+      "lineage": {
+        "status": "passed",
+        "record_tables": {
+          "fact_caa_retained_observations": 6
+        },
+        "records_expected": 6,
+        "records_declared": 6,
+        "coverage_pct": 1.0,
+        "artifact_records": 6,
+        "parent_records": 0,
+        "declared_without_exact_link_records": 0,
+        "artifact_count": 1,
+        "unknown_parent_records": 0,
+        "unknown_artifact_records": 0
+      },
+      "capture_dates": [
+        "2026-09-08T18:44:02.839787+00:00"
+      ],
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      },
+      "published_at": null,
+      "release_lag_days": null
+    },
+    "aena": {
+      "certification_receipt_sha256": "f1e60143c8891517ce50eca1748aabc70b638de5b326e389dd29428f1c2f6676",
+      "retention_receipt_sha256": "ea2e1debb89c3fc54b9888e896437ffcdb9b76c32c6af67672466492927b0cc0",
+      "originals": {
+        "company_operations": {
+          "bytes": 3243220,
+          "content_type": "text/csv; charset=utf-16",
+          "download_method": "computer_use",
+          "downloaded_at": "2026-09-12T13:59:52.311177+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "aena|company_operations|2026M01-2026M07|csv",
+          "logical_version": 1,
+          "notes": "Aena authenticated custom-query export for 2026, downloaded through Chrome. Carrier and market route tables are separate and must not be joined to assign market traffic to Aeromexico. Historical availability at 2026-07-13 unverified.",
+          "sha256": "a701b141e5dc239607d161b5b1c3c6216d8c1dc9d013c5f6af39201abf58107c",
+          "source_file": "international_routes/aena_company_operations_2026M01-2026M07_20260912T135952Z.csv",
+          "source_system": "aena",
+          "source_url": "https://www.aena.es/es/estadisticas/consultas-personalizadas.html"
+        },
+        "company_passengers": {
+          "bytes": 2298030,
+          "content_type": "text/csv; charset=utf-16",
+          "download_method": "computer_use",
+          "downloaded_at": "2026-09-12T13:59:52.395688+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "aena|company_passengers|2026M01-2026M07|csv",
+          "logical_version": 1,
+          "notes": "Aena authenticated custom-query export for 2026, downloaded through Chrome. Carrier and market route tables are separate and must not be joined to assign market traffic to Aeromexico. Historical availability at 2026-07-13 unverified.",
+          "sha256": "c768509585ec02f955e4cf122dc2ad8b58f0b9477c195b7f24a0ff70be205294",
+          "source_file": "international_routes/aena_company_passengers_2026M01-2026M07_20260912T135952Z.csv",
+          "source_system": "aena",
+          "source_url": "https://www.aena.es/es/estadisticas/consultas-personalizadas.html"
+        },
+        "market_operations": {
+          "bytes": 4469420,
+          "content_type": "text/csv; charset=utf-16",
+          "download_method": "computer_use",
+          "downloaded_at": "2026-09-12T13:59:52.429956+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "aena|market_operations|2026M01-2026M07|csv",
+          "logical_version": 1,
+          "notes": "Aena authenticated custom-query export for 2026, downloaded through Chrome. Carrier and market route tables are separate and must not be joined to assign market traffic to Aeromexico. Historical availability at 2026-07-13 unverified.",
+          "sha256": "e5340c1ac887fc0ef4c7dc2249400625de2cf4085591092ca03bc13b3d8487c8",
+          "source_file": "international_routes/aena_market_operations_2026M01-2026M07_20260912T135952Z.csv",
+          "source_system": "aena",
+          "source_url": "https://www.aena.es/es/estadisticas/consultas-personalizadas.html"
+        },
+        "market_passengers": {
+          "bytes": 3405942,
+          "content_type": "text/csv; charset=utf-16",
+          "download_method": "computer_use",
+          "downloaded_at": "2026-09-12T13:59:52.534885+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "aena|market_passengers|2026M01-2026M07|csv",
+          "logical_version": 1,
+          "notes": "Aena authenticated custom-query export for 2026, downloaded through Chrome. Carrier and market route tables are separate and must not be joined to assign market traffic to Aeromexico. Historical availability at 2026-07-13 unverified.",
+          "sha256": "678d11544eb48f4c8d76117f363eb830bde76eacb5a3b77dc0a27ef7a9de4c73",
+          "source_file": "international_routes/aena_market_passengers_2026M01-2026M07_20260912T135952Z.csv",
+          "source_system": "aena",
+          "source_url": "https://www.aena.es/es/estadisticas/consultas-personalizadas.html"
+        }
+      },
+      "code_files": {
+        "src/source_updates/retained.py": "652bfab1964c84e2d138d2d8faa822cf8c8e016f0faf8c490607b33b38e93db4",
+        "src/source_updates/authorities.py": "841f03f1dc531c7d7e93a8e96b962989a777d5eeb88aa2a4e9460c87b9067e98",
+        "src/transform/international_routes.py": "a50590caac03f894955a8197b8b549d6987697cebdc56c5c8c63de4068266000"
+      },
+      "lineage": {
+        "status": "passed",
+        "record_tables": {
+          "fact_aena_retained_observations": 54
+        },
+        "records_expected": 54,
+        "records_declared": 54,
+        "coverage_pct": 1.0,
+        "artifact_records": 54,
+        "parent_records": 0,
+        "declared_without_exact_link_records": 0,
+        "artifact_count": 4,
+        "unknown_parent_records": 0,
+        "unknown_artifact_records": 0
+      },
+      "capture_dates": [
+        "2026-09-12T13:59:52.311177+00:00",
+        "2026-09-12T13:59:52.395688+00:00",
+        "2026-09-12T13:59:52.429956+00:00",
+        "2026-09-12T13:59:52.534885+00:00"
+      ],
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      },
+      "published_at": null,
+      "release_lag_days": null
+    },
+    "iasa": {
+      "certification_receipt_sha256": "62ba445774cef1251db07d33c51560dbb27bbdd11163f27b22e00b61e58d38a0",
+      "retention_receipt_sha256": "fcec922928cc6eca02a6dd02122c285e09e5d7d41a57f74bcc6340cdd300bb68",
+      "originals": {
+        "pdf": {
+          "bytes": 146803,
+          "content_type": "application/pdf",
+          "download_method": "httpx",
+          "downloaded_at": "2026-10-19T01:25:41.596356+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "faa_iasa|country_results|current|pdf",
+          "logical_version": 1,
+          "notes": "Candidate only; product=iasa; purpose=data; unvalidated",
+          "sha256": "73ef0e78c2d17454d89393f3eb1159081c9bc14833e32289da01cfd2e0b23294",
+          "source_file": "faa_iasa/faa_iasa_country_results_current_20261019T012541Z.pdf",
+          "source_system": "faa_iasa",
+          "source_url": "https://www.faa.gov/sites/faa.gov/files/IASAWSR119r.pdf"
+        }
+      },
+      "code_files": {
+        "src/source_updates/retained.py": "652bfab1964c84e2d138d2d8faa822cf8c8e016f0faf8c490607b33b38e93db4",
+        "src/source_updates/context_snapshots.py": "dbf80215207139aa70f1069940b13d0baf6c9f7b9a8e466f146ac61da6d3708c"
+      },
+      "lineage": {
+        "status": "passed",
+        "record_tables": {
+          "fact_iasa_retained_categories": 84
+        },
+        "records_expected": 84,
+        "records_declared": 84,
+        "coverage_pct": 1.0,
+        "artifact_records": 84,
+        "parent_records": 0,
+        "declared_without_exact_link_records": 0,
+        "artifact_count": 1,
+        "unknown_parent_records": 0,
+        "unknown_artifact_records": 0
+      },
+      "capture_dates": [
+        "2026-10-19T01:25:41.596356+00:00"
+      ],
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      },
+      "published_at": null,
+      "release_lag_days": null
+    },
+    "dictionary": {
+      "certification_receipt_sha256": "3a2748b05fbccf2b9f94ba0ac39296033b712844bf04bab12b0aec712088b9e1",
+      "retention_receipt_sha256": "32600148d5b40ce59438f9a7c782cc1e4f8b9cbb37e2bea61b3ecf14a0a85f4c",
+      "originals": {
+        "csv": {
+          "bytes": 9093460,
+          "content_type": "application/octet-stream",
+          "download_method": "httpx",
+          "downloaded_at": "2026-08-24T04:54:39.112378+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "loughran_mcdonald|master_dictionary|1993_2025|csv",
+          "logical_version": 1,
+          "notes": "Official March 2026 release linked by the University of Notre Dame; landing page: https://sraf.nd.edu/loughranmcdonald-master-dictionary/",
+          "sha256": "e2d1328682bab7d2187684fb9f5420bb730401c9eefc00daf835edd203f4859d",
+          "source_file": "loughran_mcdonald/loughran_mcdonald_master_dictionary_1993_2025_20260824T045439Z.csv",
+          "source_system": "loughran_mcdonald",
+          "source_url": "https://drive.google.com/uc?export=download&id=1iq2RUf8qGFEAk1g8wQntP3habOnR3fXF"
+        }
+      },
+      "code_files": {
+        "src/source_updates/retained.py": "652bfab1964c84e2d138d2d8faa822cf8c8e016f0faf8c490607b33b38e93db4",
+        "src/source_updates/context_snapshots.py": "dbf80215207139aa70f1069940b13d0baf6c9f7b9a8e466f146ac61da6d3708c"
+      },
+      "lineage": {
+        "status": "passed",
+        "record_tables": {
+          "dim_retained_financial_dictionary": 86553
+        },
+        "records_expected": 86553,
+        "records_declared": 86553,
+        "coverage_pct": 1.0,
+        "artifact_records": 86553,
+        "parent_records": 0,
+        "declared_without_exact_link_records": 0,
+        "artifact_count": 1,
+        "unknown_parent_records": 0,
+        "unknown_artifact_records": 0
+      },
+      "capture_dates": [
+        "2026-08-24T04:54:39.112378+00:00"
+      ],
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      },
+      "published_at": null,
+      "release_lag_days": null
+    },
+    "aicm_slots": {
+      "certification_receipt_sha256": "f27fc22c73a74e18a30619291bec6d16d6e621e672b7f5b62cb19dd8bc46c5a9",
+      "retention_receipt_sha256": "1767e8e68d4c700b736a679f40b46645b14df52495825a6ea7797b9254b4face",
+      "originals": {
+        "pdf": {
+          "bytes": 3262398,
+          "content_type": "application/pdf",
+          "download_method": "httpx",
+          "downloaded_at": "2026-09-13T00:46:29.656831+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "aicm|aeromexico_summer_slots|2026S26|pdf",
+          "logical_version": 1,
+          "notes": "Investigacion de cobertura domestica; no integrado en Silver/Gold",
+          "sha256": "d97364b9eee36936ca8f21b60b3ad1ff308c3deb2fbe19d5bf53550fbc4d7ef9",
+          "source_file": "domestic_routes_research/aicm_aeromexico_summer_slots_2026S26_20260913T004629Z.pdf",
+          "source_system": "aicm",
+          "source_url": "https://www.aicm.com.mx/archivos/Negocios/Slots/verano/2026/amx.pdf"
+        }
+      },
+      "code_files": {
+        "src/source_updates/retained.py": "652bfab1964c84e2d138d2d8faa822cf8c8e016f0faf8c490607b33b38e93db4",
+        "src/source_updates/slots.py": "fa6a1b331c0f5c6e8a862a27304508d43fbfa6b04e043073ef843b1fcab1d728"
+      },
+      "lineage": {
+        "status": "passed",
+        "record_tables": {
+          "fact_aicm_retained_slot_assignments": 2836
+        },
+        "records_expected": 2836,
+        "records_declared": 2836,
+        "coverage_pct": 1.0,
+        "artifact_records": 2836,
+        "parent_records": 0,
+        "declared_without_exact_link_records": 0,
+        "artifact_count": 1,
+        "unknown_parent_records": 0,
+        "unknown_artifact_records": 0
+      },
+      "capture_dates": [
+        "2026-09-13T00:46:29.656831+00:00"
+      ],
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      },
+      "published_at": null,
+      "release_lag_days": null
+    },
+    "oma_traffic": {
+      "certification_receipt_sha256": "d3ad1bfd69cbb064b317b30839de4f2886eb48aa91ef9ea4c274f7060f04a073",
+      "retention_receipt_sha256": "b66a341f5a7854a708839cedd3096d289deb9bcb248a2c3c13fbf5bae5dda9ba",
+      "originals": {
+        "pdf": {
+          "bytes": 169060,
+          "content_type": "application/pdf",
+          "download_method": "httpx",
+          "downloaded_at": "2026-08-21T00:16:49.173257+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "oma_ir|OMA_s_July_2026_Total_Passenger_Traffic|OMA_s_July_2026_Total_Passenger_Traffic|pdf",
+          "logical_version": 1,
+          "notes": "Official OMA monthly traffic report linked from its IR index.",
+          "sha256": "4d822e3b68584260a0ed3920737fcd6a98b18cb645fc174dfa5eb244086c2e0e",
+          "source_file": "airports/oma/oma_ir_OMA_s_July_2026_Total_Passenger_Traffic_OMA_s_July_2026_Total_Passenger_Traffic_20260821T001649Z.pdf",
+          "source_system": "oma_ir",
+          "source_url": "https://miranda-newswire.com/wp-content/uploads/2026/08/OMA_July_2026_Traffic_Report_vf.pdf"
+        }
+      },
+      "code_files": {
+        "src/source_updates/retained.py": "652bfab1964c84e2d138d2d8faa822cf8c8e016f0faf8c490607b33b38e93db4",
+        "src/source_updates/oma_traffic.py": "d4daf0e335ab478563e36e8e37bed28b867e71c16fee8e2a238d729aaefcb0e7",
+        "src/source_updates/authorities.py": "841f03f1dc531c7d7e93a8e96b962989a777d5eeb88aa2a4e9460c87b9067e98",
+        "src/source_updates/afac_airports.py": "27d4bafa0a6390c60a32243cd211330a8e68bf892de3076fd6c10490ea381383",
+        "src/transform/international_routes.py": "a50590caac03f894955a8197b8b549d6987697cebdc56c5c8c63de4068266000"
+      },
+      "lineage": {
+        "status": "passed",
+        "record_tables": {
+          "fact_oma_retained_terminal_traffic": 168
+        },
+        "records_expected": 168,
+        "records_declared": 168,
+        "coverage_pct": 1.0,
+        "artifact_records": 168,
+        "parent_records": 0,
+        "declared_without_exact_link_records": 0,
+        "artifact_count": 1,
+        "unknown_parent_records": 0,
+        "unknown_artifact_records": 0
+      },
+      "capture_dates": [
+        "2026-08-21T00:16:49.173257+00:00"
+      ],
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      },
+      "published_at": null,
+      "release_lag_days": null
+    },
+    "am_routes": {
+      "certification_receipt_sha256": "00577ee6ab6acc6e7123a8d63ba86fa066ac58959c129e5d233b52da61f403f6",
+      "retention_receipt_sha256": "68f2666b990481d87ceabcd67da38cf15fa4e3f45247760216c29c64619321b6",
+      "originals": {
+        "document": {
+          "bytes": 54874,
+          "content_type": "text/html; charset=utf-8",
+          "download_method": "httpx",
+          "downloaded_at": "2026-09-13T20:03:37.318556+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "aeromexico_press|aifa_colima_2023|2023M09|html",
+          "logical_version": 1,
+          "notes": "Aeromexico 2023 press release, historical frequency only",
+          "sha256": "7fda714cc6f53972c6e67d55248ad3981432697fcd0dd3d0ba1cfec1fdf64961",
+          "source_file": "domestic_routes_research/aeromexico_press_aifa_colima_2023_2023M09_20260913T200337Z.html",
+          "source_system": "aeromexico_press",
+          "source_url": "https://www.globenewswire.com/news-release/2023/09/07/2738937/0/en/AEROMEXICO-INCREASES-OPERATIONS-AT-AIFA-BY-UP-TO-40-IT-WILL-INCREASE-TO-MORE-THAN-1-000-FLIGHTS-PER-MONTH.html"
+        }
+      },
+      "code_files": {
+        "src/source_updates/retained.py": "652bfab1964c84e2d138d2d8faa822cf8c8e016f0faf8c490607b33b38e93db4",
+        "src/source_updates/route_documents.py": "a64fad7cd5f6872a403dc73cdcf370b312dc633e5dc526fc8e918ccf9ad7a16f"
+      },
+      "lineage": {
+        "status": "passed",
+        "record_tables": {
+          "fact_am_routes_retained_passages": 2
+        },
+        "records_expected": 2,
+        "records_declared": 2,
+        "coverage_pct": 1.0,
+        "artifact_records": 2,
+        "parent_records": 0,
+        "declared_without_exact_link_records": 0,
+        "artifact_count": 1,
+        "unknown_parent_records": 0,
+        "unknown_artifact_records": 0
+      },
+      "capture_dates": [
+        "2026-09-13T20:03:37.318556+00:00"
+      ],
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      },
+      "published_at": null,
+      "release_lag_days": null
+    },
+    "oma_routes": {
+      "certification_receipt_sha256": "6786b59bc799bc8fa889631d391926a9cc929b3aba7c480f8565368333b4b7b3",
+      "retention_receipt_sha256": "153402517a215815effa32be84fcb38726a80b94298fcc4f4fd445a565e8aca9",
+      "originals": {
+        "document": {
+          "bytes": 269990,
+          "content_type": "application/pdf",
+          "download_method": "httpx",
+          "downloaded_at": "2026-09-13T14:30:58.053042+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "oma|mty_cdg_route_launch|2026Q2|pdf",
+          "logical_version": 1,
+          "notes": "Official OMA release dated 2026-04-13; MTY-CDG days and existing MTY-MAD route.",
+          "sha256": "47b2cb4e2838ca6015205b17b81a20256f84d22be20318c16df9e9ee1efaa7e8",
+          "source_file": "international_routes/oma_mty_cdg_route_launch_2026Q2_20260913T143058Z.pdf",
+          "source_system": "oma",
+          "source_url": "https://noticias.oma.aero/assets/del-cerro-de-la-silla-a-la-torre-eiffel-y-sin-escalas-inicia-nueva-ruta-directa-monterrey-paris-final-pdf-b3831-5f19f.html?dl=1"
+        }
+      },
+      "code_files": {
+        "src/source_updates/retained.py": "652bfab1964c84e2d138d2d8faa822cf8c8e016f0faf8c490607b33b38e93db4",
+        "src/source_updates/route_documents.py": "a64fad7cd5f6872a403dc73cdcf370b312dc633e5dc526fc8e918ccf9ad7a16f"
+      },
+      "lineage": {
+        "status": "passed",
+        "record_tables": {
+          "fact_oma_routes_retained_passages": 2
+        },
+        "records_expected": 2,
+        "records_declared": 2,
+        "coverage_pct": 1.0,
+        "artifact_records": 2,
+        "parent_records": 0,
+        "declared_without_exact_link_records": 0,
+        "artifact_count": 1,
+        "unknown_parent_records": 0,
+        "unknown_artifact_records": 0
+      },
+      "capture_dates": [
+        "2026-09-13T14:30:58.053042+00:00"
+      ],
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      },
+      "published_at": null,
+      "release_lag_days": null
+    },
+    "colima": {
+      "certification_receipt_sha256": "182617411b99063fd55ade6bba7731410b375fe17abb77bdcf428fc42e4b3714",
+      "retention_receipt_sha256": "617f6ee182b4be328e9b2ec7511c0a8fe998e6ef256f05fb93f1a8a8f44a60c7",
+      "originals": {
+        "document": {
+          "bytes": 20189,
+          "content_type": "text/html; charset=utf-8",
+          "download_method": "httpx",
+          "downloaded_at": "2026-09-13T20:03:38.042640+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "colima_subsectur_mirror|colima_aicm_transfer|2026M05|html",
+          "logical_version": 1,
+          "notes": "May 28 2026 press statement attributed to Colima Subsectur, republished by ColimaPM",
+          "sha256": "697dd5c7ae907fe92eb7df2f99cafefe706f724c84f6c896fcd5b4704ccffa53",
+          "source_file": "domestic_routes_research/colima_subsectur_mirror_colima_aicm_transfer_2026M05_20260913T200338Z.html",
+          "source_system": "colima_subsectur_mirror",
+          "source_url": "https://colimapm.com/Inicio/Noticia/216987"
+        }
+      },
+      "code_files": {
+        "src/source_updates/retained.py": "652bfab1964c84e2d138d2d8faa822cf8c8e016f0faf8c490607b33b38e93db4",
+        "src/source_updates/route_documents.py": "a64fad7cd5f6872a403dc73cdcf370b312dc633e5dc526fc8e918ccf9ad7a16f"
+      },
+      "lineage": {
+        "status": "passed",
+        "record_tables": {
+          "fact_colima_retained_passages": 1
+        },
+        "records_expected": 1,
+        "records_declared": 1,
+        "coverage_pct": 1.0,
+        "artifact_records": 1,
+        "parent_records": 0,
+        "declared_without_exact_link_records": 0,
+        "artifact_count": 1,
+        "unknown_parent_records": 0,
+        "unknown_artifact_records": 0
+      },
+      "capture_dates": [
+        "2026-09-13T20:03:38.042640+00:00"
+      ],
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      },
+      "published_at": null,
+      "release_lag_days": null
+    },
+    "aifa_roster": {
+      "certification_receipt_sha256": "6222c9308794f5f9e37a527a7263bde31e95cfae25debb5e1dc57f684e9489df",
+      "retention_receipt_sha256": "15e967bab6eb9675498e6fc72d561e8e53c386a7449831276055503b87d7f3b4",
+      "originals": {
+        "document": {
+          "bytes": 65248,
+          "content_type": "text/html;charset=UTF-8",
+          "download_method": "httpx",
+          "downloaded_at": "2026-09-13T20:07:13.553194+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "expansion|aifa_airline_destinations|2026M06|html",
+          "logical_version": 1,
+          "notes": "Dated June 8, 2026 secondary route list by airline; route-presence and exclusive-market inference, not official route traffic",
+          "sha256": "1a537be09799c27c1cce9a72616a225e227badf84dc16d218807f060556528e7",
+          "source_file": "domestic_routes_research/expansion_aifa_airline_destinations_2026M06_20260913T200713Z.html",
+          "source_system": "expansion",
+          "source_url": "https://expansion.mx/empresas/2026/06/08/aerolineas-aifa-vuelos-nacionales-e-internacionales?_amp=true"
+        }
+      },
+      "code_files": {
+        "src/source_updates/retained.py": "652bfab1964c84e2d138d2d8faa822cf8c8e016f0faf8c490607b33b38e93db4",
+        "src/source_updates/route_documents.py": "a64fad7cd5f6872a403dc73cdcf370b312dc633e5dc526fc8e918ccf9ad7a16f"
+      },
+      "lineage": {
+        "status": "passed",
+        "record_tables": {
+          "fact_aifa_roster_retained_passages": 1
+        },
+        "records_expected": 1,
+        "records_declared": 1,
+        "coverage_pct": 1.0,
+        "artifact_records": 1,
+        "parent_records": 0,
+        "declared_without_exact_link_records": 0,
+        "artifact_count": 1,
+        "unknown_parent_records": 0,
+        "unknown_artifact_records": 0
+      },
+      "capture_dates": [
+        "2026-09-13T20:07:13.553194+00:00"
+      ],
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      },
+      "published_at": null,
+      "release_lag_days": null
+    },
+    "am_financials": {
+      "certification_receipt_sha256": "1cae2ac19990b86800f56ff2d7918604d98968cbe885a0a0a6807d34b5596c73",
+      "retention_receipt_sha256": "d8313b05b88ff83f3279e86945fc835689311a3a7fdaaa854592e5fc310896f4",
+      "originals": {
+        "pdf": {
+          "bytes": 524551,
+          "content_type": "application/pdf",
+          "download_method": "computer_use",
+          "downloaded_at": "2026-09-04T20:19:31.054494+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "aeromexico_ir|quarterly_results|2026Q2|pdf",
+          "logical_version": 1,
+          "notes": "Official Spanish quarterly earnings release from Aeromexico Investor Relations.",
+          "sha256": "44197a884b3e3996122d188744bd5298d30fa527412a4f996a18585e839adb9e",
+          "source_file": "aeromexico_ir/aeromexico_ir_quarterly_results_2026Q2_20260904T201931Z.pdf",
+          "source_system": "aeromexico_ir",
+          "source_url": "https://ir.aeromexico.com/static-files/d780da89-7da6-4360-adae-7ad65f49333e"
+        }
+      },
+      "code_files": {
+        "src/source_updates/retained.py": "d90986d7c80960da8a961d71853e86b7caa56199a06559320d12f800ae9dae2b",
+        "src/source_updates/financials.py": "b4f8bc9443d20ec492232ec1d4872f5859d8f74a899cec8654ddec4b06d3ddb3",
+        "src/parse/aeromexico_ir_financial.py": "1ff4a311707a1c7f1096f1e1205629d045f7623a31aa06704b1b7220194f9939",
+        "src/parse/aeromexico_ir.py": "328810065e39fbefbf323b4f03ba5e95a37310e34b9a11ceaabf562a7dcb3eef"
+      },
+      "lineage": {
+        "status": "passed",
+        "record_tables": {
+          "fact_am_retained_quarterly_source_metrics": 20
+        },
+        "records_expected": 20,
+        "records_declared": 20,
+        "coverage_pct": 1.0,
+        "artifact_records": 20,
+        "parent_records": 0,
+        "declared_without_exact_link_records": 0,
+        "artifact_count": 1,
+        "unknown_parent_records": 0,
+        "unknown_artifact_records": 0
+      },
+      "capture_dates": [
+        "2026-09-04T20:19:31.054494+00:00"
+      ],
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      },
+      "published_at": null,
+      "release_lag_days": null
+    },
+    "ryanair_sec": {
+      "certification_receipt_sha256": "fbd4bced41a4c054f4a21f964e45f5abdfb8fe0bda39d641cf99ac363719736d",
+      "retention_receipt_sha256": "616dfe96c107a7b735cafdaed7e6527a5a6b9981250027e55a77f854595f71f1",
+      "originals": {
+        "html": {
+          "bytes": 6752858,
+          "content_type": "text/html",
+          "download_method": "httpx",
+          "downloaded_at": "2026-08-24T03:14:57.675582+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "sec|0001104659-26-076131_tmb-20260331x20f|0001104659-26-076131|htm",
+          "logical_version": 1,
+          "notes": "SEC 20-F document tmb-20260331x20f.htm from accession 0001104659-26-076131; archive type=text.gif.",
+          "sha256": "2d82d224df2c0379dfcc69c11c1cf8828c55db57599b01fa912b70aa2e6bed5d",
+          "source_file": "sec/filings/ryanair/0001104659-26-076131/sec_0001104659-26-076131_tmb-20260331x20f_0001104659-26-076131_20260824T031457Z.htm",
+          "source_system": "sec",
+          "source_url": "https://www.sec.gov/Archives/edgar/data/1038683/000110465926076131/tmb-20260331x20f.htm"
+        },
+        "index": {
+          "bytes": 15008,
+          "content_type": "text/html; charset=UTF-8",
+          "download_method": "httpx",
+          "downloaded_at": "2026-08-24T03:14:57.472193+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "sec|0001104659-26-076131_index|0001104659-26-076131|json",
+          "logical_version": 1,
+          "notes": "SEC filing directory index for accession 0001104659-26-076131.",
+          "sha256": "d3d8cd65de1e9ce374fa6781dd47a1e7c25ea897cb309ce7d6c16152c092007e",
+          "source_file": "sec/filings/ryanair/0001104659-26-076131/sec_0001104659-26-076131_index_0001104659-26-076131_20260824T031457Z.json",
+          "source_system": "sec",
+          "source_url": "https://www.sec.gov/Archives/edgar/data/1038683/000110465926076131/index.json"
+        },
+        "submissions": {
+          "bytes": 179029,
+          "content_type": "application/json",
+          "download_method": "httpx",
+          "downloaded_at": "2026-08-24T03:14:55.863623+00:00",
+          "filename_version": 1,
+          "http_status": 200,
+          "logical_key": "sec|ryanair_submissions|current|json",
+          "logical_version": 1,
+          "notes": "SEC submissions catalog for RYANAIR.",
+          "sha256": "38703be87d94ff2324dbf259e23880347982104c78d0723365ce249f9983d39c",
+          "source_file": "sec/ryanair/submissions/sec_ryanair_submissions_current_20260824T031455Z.json",
+          "source_system": "sec",
+          "source_url": "https://data.sec.gov/submissions/CIK0001038683.json"
+        }
+      },
+      "code_files": {
+        "src/source_updates/retained.py": "93f8478b4c908ab63f98cdebc1cd47fc6b09d77f5543c58f50eda6b86d516d96",
+        "src/source_updates/sec_fiscal.py": "9122c163b095a436a39abc57746e9d3d7c215849e1398271248e9d80266d0707"
+      },
+      "lineage": {
+        "status": "passed",
+        "record_tables": {
+          "fact_ryanair_retained_fiscal_xbrl": 6
+        },
+        "records_expected": 6,
+        "records_declared": 6,
+        "coverage_pct": 1.0,
+        "artifact_records": 6,
+        "parent_records": 0,
+        "declared_without_exact_link_records": 0,
+        "artifact_count": 3,
+        "unknown_parent_records": 0,
+        "unknown_artifact_records": 0
+      },
+      "capture_dates": [
+        "2026-08-24T03:14:55.863623+00:00",
+        "2026-08-24T03:14:57.472193+00:00",
+        "2026-08-24T03:14:57.675582+00:00"
+      ],
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      },
+      "published_at": null,
+      "release_lag_days": null,
+      "source_filing_date": "2026-06-22",
+      "sec_accepted_at": "2026-06-22T12:47:18.000Z",
+      "sec_filing_lag_days": 83,
+      "fiscal_year_start": "2025-04-01",
+      "fiscal_year_end": "2026-03-31"
+    }
+  },
+  "retained_receipt_sha256": {
+    "retained-final-result": "700a62614bf17331a688e66662ec2ec9a37239f82541d8e68ed82746ac0f9a9b",
+    "financial-retained-result": "8692fd3d22e03c798721997641cf96060faec7284df8167133d9c28066cdaa60",
+    "ryanair-sec-retained-result": "c75c0544829a74d26264298e20318718529117a64df2a1439fc78b3dab4ac661"
+  },
+  "baseline_retention": {
+    "source": "/workspace/airline-source-gold-integration/tmp/source-updates/afac-market-review-20261019",
+    "candidate": "/workspace/airline-source-adapters/tmp/source-updates/baseline-product-recheck-20261019-6dbc3d0",
+    "scope": "existing836_public_baseline_artifacts_not_new_capture",
+    "source_manifest_sha256": "1d60287b10c20e9ce5a2bf42183686e327533ead4e4c512b0ab51aa17e742ef1",
+    "selected_manifest_sha256": "1d60287b10c20e9ce5a2bf42183686e327533ead4e4c512b0ab51aa17e742ef1",
+    "manifest_rows": 837,
+    "unique_retained_originals": 836,
+    "capture_dates_preserved": true,
+    "paid_requests": 0,
+    "network_requests": 0,
+    "activation": "none",
+    "verified_source_paths_sha256": "9798e7ef98a334d1aaf6dba9e72db4c942582a6b4cdf36f3c4eccc970b3229bc",
+    "local_full_proof": "tmp/baseline-product-retention-proof.json",
+    "content_alias_records": 1
+  },
+  "baseline_specification": {
+    "as_of": "2026-10-19T12:00:00-06:00",
+    "checks": [
+      {
+        "product": "am_sec",
+        "layer": "silver",
+        "table": "sec_financials",
+        "expected_period": "2026Q2",
+        "filters": {
+          "carrier_key": "AEROMEXICO"
+        },
+        "value_columns": [
+          "value_normalized"
+        ]
+      },
+      {
+        "product": "am_sec",
+        "layer": "gold",
+        "table": "fact_carrier_metrics",
+        "expected_period": "2026Q2",
+        "filters": {
+          "carrier_key": "AEROMEXICO"
+        },
+        "value_columns": [
+          "value"
+        ]
+      },
+      {
+        "product": "volaris_sec",
+        "layer": "silver",
+        "table": "peer_financials",
+        "expected_period": "2026Q2",
+        "filters": {
+          "carrier_key": "VOLARIS"
+        },
+        "value_columns": [
+          "value_normalized"
+        ]
+      },
+      {
+        "product": "volaris_sec",
+        "layer": "gold",
+        "table": "fact_carrier_metrics",
+        "expected_period": "2026Q2",
+        "filters": {
+          "carrier_key": "VOLARIS"
+        },
+        "value_columns": [
+          "value"
+        ]
+      },
+      {
+        "product": "delta_sec",
+        "layer": "silver",
+        "table": "peer_financials",
+        "expected_period": "2026Q2",
+        "filters": {
+          "carrier_key": "DELTA"
+        },
+        "value_columns": [
+          "value_normalized"
+        ]
+      },
+      {
+        "product": "delta_sec",
+        "layer": "gold",
+        "table": "fact_carrier_metrics",
+        "expected_period": "2026Q2",
+        "filters": {
+          "carrier_key": "DELTA"
+        },
+        "value_columns": [
+          "value"
+        ]
+      },
+      {
+        "product": "viva_financials",
+        "layer": "silver",
+        "table": "peer_financials",
+        "expected_period": "2026Q2",
+        "filters": {
+          "carrier_key": "VIVA_AEROBUS"
+        },
+        "value_columns": [
+          "value_normalized"
+        ]
+      },
+      {
+        "product": "viva_financials",
+        "layer": "gold",
+        "table": "fact_carrier_metrics",
+        "expected_period": "2026Q2",
+        "filters": {
+          "carrier_key": "VIVA_AEROBUS"
+        },
+        "value_columns": [
+          "value"
+        ]
+      },
+      {
+        "product": "ryanair_ir",
+        "layer": "silver",
+        "table": "peer_operating_metrics",
+        "expected_period": "2026Q2",
+        "filters": {
+          "carrier_key": "RYANAIR"
+        },
+        "value_columns": [
+          "value_normalized"
+        ]
+      },
+      {
+        "product": "ryanair_ir",
+        "layer": "gold",
+        "table": "fact_carrier_metrics",
+        "expected_period": "2026Q2",
+        "filters": {
+          "carrier_key": "RYANAIR"
+        },
+        "value_columns": [
+          "value"
+        ]
+      },
+      {
+        "product": "gap_traffic",
+        "layer": "silver",
+        "table": "airport_traffic",
+        "expected_period": "2026M07",
+        "filters": {
+          "operator_group": "GAP"
+        },
+        "value_columns": [
+          "passengers_total"
+        ]
+      },
+      {
+        "product": "gap_traffic",
+        "layer": "gold",
+        "table": "fact_airport_group_traffic",
+        "expected_period": "2026M07",
+        "filters": {
+          "airport_group_key": "GAP"
+        },
+        "value_columns": [
+          "passengers_total"
+        ]
+      },
+      {
+        "product": "asur_traffic",
+        "layer": "silver",
+        "table": "airport_traffic",
+        "expected_period": "2026M06",
+        "filters": {
+          "operator_group": "ASUR"
+        },
+        "value_columns": [
+          "passengers_total"
+        ]
+      },
+      {
+        "product": "asur_traffic",
+        "layer": "gold",
+        "table": "fact_airport_group_traffic",
+        "expected_period": "2026M06",
+        "filters": {
+          "airport_group_key": "ASUR"
+        },
+        "value_columns": [
+          "passengers_total"
+        ]
+      },
+      {
+        "product": "bts_segments",
+        "layer": "silver",
+        "table": "bts_t100_segment",
+        "expected_period": "2026M05",
+        "filters": {},
+        "period_column": "year_month",
+        "value_columns": [
+          "passengers",
+          "departures_performed"
+        ]
+      },
+      {
+        "product": "bts_segments",
+        "layer": "gold",
+        "table": "fact_route_traffic",
+        "expected_period": "2026M05",
+        "filters": {},
+        "value_columns": [
+          "passengers",
+          "departures_performed"
+        ]
+      }
+    ]
+  },
+  "baseline_checks": {
+    "version": 1,
+    "mode": "candidate_checks",
+    "as_of": "2026-10-19T12:00:00-06:00",
+    "checks": [
+      {
+        "product": "am_sec",
+        "layer": "silver",
+        "table": "sec_financials",
+        "expected_period": "2026Q2",
+        "latest_published_period": null,
+        "status": "checks_passed",
+        "rows": 25,
+        "latest_available_period": null,
+        "latest_parsed_period": "2026Q2",
+        "latest_validated_period": "2026Q2",
+        "release_lag_days": null,
+        "observation_age_days": 111,
+        "capture_age_days": 60,
+        "null_values": 2,
+        "revisions": {
+          "status": "not_compared_no_baseline"
+        }
+      },
+      {
+        "product": "am_sec",
+        "layer": "gold",
+        "table": "fact_carrier_metrics",
+        "expected_period": "2026Q2",
+        "latest_published_period": null,
+        "status": "checks_passed",
+        "rows": 37,
+        "latest_available_period": null,
+        "latest_parsed_period": "2026Q2",
+        "latest_validated_period": "2026Q2",
+        "release_lag_days": null,
+        "observation_age_days": 111,
+        "capture_age_days": 60,
+        "null_values": 2,
+        "revisions": {
+          "status": "not_compared_no_baseline"
+        }
+      },
+      {
+        "product": "volaris_sec",
+        "layer": "silver",
+        "table": "peer_financials",
+        "expected_period": "2026Q2",
+        "latest_published_period": null,
+        "status": "checks_passed",
+        "rows": 1,
+        "latest_available_period": null,
+        "latest_parsed_period": "2026Q2",
+        "latest_validated_period": "2026Q2",
+        "release_lag_days": null,
+        "observation_age_days": 111,
+        "capture_age_days": 57,
+        "null_values": 0,
+        "revisions": {
+          "status": "not_compared_no_baseline"
+        }
+      },
+      {
+        "product": "volaris_sec",
+        "layer": "gold",
+        "table": "fact_carrier_metrics",
+        "expected_period": "2026Q2",
+        "latest_published_period": null,
+        "status": "checks_passed",
+        "rows": 8,
+        "latest_available_period": null,
+        "latest_parsed_period": "2026Q2",
+        "latest_validated_period": "2026Q2",
+        "release_lag_days": null,
+        "observation_age_days": 111,
+        "capture_age_days": 57,
+        "null_values": 0,
+        "revisions": {
+          "status": "not_compared_no_baseline"
+        }
+      },
+      {
+        "product": "delta_sec",
+        "layer": "silver",
+        "table": "peer_financials",
+        "expected_period": "2026Q2",
+        "latest_published_period": null,
+        "status": "checks_passed",
+        "rows": 3,
+        "latest_available_period": null,
+        "latest_parsed_period": "2026Q2",
+        "latest_validated_period": "2026Q2",
+        "release_lag_days": null,
+        "observation_age_days": 111,
+        "capture_age_days": 57,
+        "null_values": 0,
+        "revisions": {
+          "status": "not_compared_no_baseline"
+        }
+      },
+      {
+        "product": "delta_sec",
+        "layer": "gold",
+        "table": "fact_carrier_metrics",
+        "expected_period": "2026Q2",
+        "latest_published_period": null,
+        "status": "checks_passed",
+        "rows": 6,
+        "latest_available_period": null,
+        "latest_parsed_period": "2026Q2",
+        "latest_validated_period": "2026Q2",
+        "release_lag_days": null,
+        "observation_age_days": 111,
+        "capture_age_days": 57,
+        "null_values": 0,
+        "revisions": {
+          "status": "not_compared_no_baseline"
+        }
+      },
+      {
+        "product": "viva_financials",
+        "layer": "silver",
+        "table": "peer_financials",
+        "expected_period": "2026Q2",
+        "latest_published_period": null,
+        "status": "checks_passed",
+        "rows": 1,
+        "latest_available_period": null,
+        "latest_parsed_period": "2026Q2",
+        "latest_validated_period": "2026Q2",
+        "release_lag_days": null,
+        "observation_age_days": 111,
+        "capture_age_days": 57,
+        "null_values": 0,
+        "revisions": {
+          "status": "not_compared_no_baseline"
+        }
+      },
+      {
+        "product": "viva_financials",
+        "layer": "gold",
+        "table": "fact_carrier_metrics",
+        "expected_period": "2026Q2",
+        "latest_published_period": null,
+        "status": "checks_passed",
+        "rows": 8,
+        "latest_available_period": null,
+        "latest_parsed_period": "2026Q2",
+        "latest_validated_period": "2026Q2",
+        "release_lag_days": null,
+        "observation_age_days": 111,
+        "capture_age_days": 57,
+        "null_values": 0,
+        "revisions": {
+          "status": "not_compared_no_baseline"
+        }
+      },
+      {
+        "product": "ryanair_ir",
+        "layer": "silver",
+        "table": "peer_operating_metrics",
+        "expected_period": "2026Q2",
+        "latest_published_period": null,
+        "status": "checks_passed",
+        "rows": 2,
+        "latest_available_period": null,
+        "latest_parsed_period": "2026Q2",
+        "latest_validated_period": "2026Q2",
+        "release_lag_days": null,
+        "observation_age_days": 111,
+        "capture_age_days": 57,
+        "null_values": 0,
+        "revisions": {
+          "status": "not_compared_no_baseline"
+        }
+      },
+      {
+        "product": "ryanair_ir",
+        "layer": "gold",
+        "table": "fact_carrier_metrics",
+        "expected_period": "2026Q2",
+        "latest_published_period": null,
+        "status": "checks_passed",
+        "rows": 2,
+        "latest_available_period": null,
+        "latest_parsed_period": "2026Q2",
+        "latest_validated_period": "2026Q2",
+        "release_lag_days": null,
+        "observation_age_days": 111,
+        "capture_age_days": 57,
+        "null_values": 0,
+        "revisions": {
+          "status": "not_compared_no_baseline"
+        }
+      },
+      {
+        "product": "gap_traffic",
+        "layer": "silver",
+        "table": "airport_traffic",
+        "expected_period": "2026M07",
+        "latest_published_period": null,
+        "status": "checks_passed",
+        "rows": 15,
+        "latest_available_period": null,
+        "latest_parsed_period": "2026M07",
+        "latest_validated_period": "2026M07",
+        "release_lag_days": null,
+        "observation_age_days": 80,
+        "capture_age_days": 60,
+        "null_values": 0,
+        "revisions": {
+          "status": "not_compared_no_baseline"
+        }
+      },
+      {
+        "product": "gap_traffic",
+        "layer": "gold",
+        "table": "fact_airport_group_traffic",
+        "expected_period": "2026M07",
+        "latest_published_period": null,
+        "status": "checks_passed",
+        "rows": 1,
+        "latest_available_period": null,
+        "latest_parsed_period": "2026M07",
+        "latest_validated_period": "2026M07",
+        "release_lag_days": null,
+        "observation_age_days": 80,
+        "capture_age_days": 60,
+        "null_values": 0,
+        "revisions": {
+          "status": "not_compared_no_baseline"
+        }
+      },
+      {
+        "product": "asur_traffic",
+        "layer": "silver",
+        "table": "airport_traffic",
+        "expected_period": "2026M06",
+        "latest_published_period": null,
+        "status": "checks_passed",
+        "rows": 10,
+        "latest_available_period": null,
+        "latest_parsed_period": "2026M06",
+        "latest_validated_period": "2026M06",
+        "release_lag_days": null,
+        "observation_age_days": 111,
+        "capture_age_days": 60,
+        "null_values": 0,
+        "revisions": {
+          "status": "not_compared_no_baseline"
+        }
+      },
+      {
+        "product": "asur_traffic",
+        "layer": "gold",
+        "table": "fact_airport_group_traffic",
+        "expected_period": "2026M06",
+        "latest_published_period": null,
+        "status": "checks_passed",
+        "rows": 1,
+        "latest_available_period": null,
+        "latest_parsed_period": "2026M06",
+        "latest_validated_period": "2026M06",
+        "release_lag_days": null,
+        "observation_age_days": 111,
+        "capture_age_days": 60,
+        "null_values": 0,
+        "revisions": {
+          "status": "not_compared_no_baseline"
+        }
+      },
+      {
+        "product": "bts_segments",
+        "layer": "silver",
+        "table": "bts_t100_segment",
+        "expected_period": "2026M05",
+        "latest_published_period": null,
+        "status": "checks_passed",
+        "rows": 1660,
+        "latest_available_period": null,
+        "latest_parsed_period": "2026M05",
+        "latest_validated_period": "2026M05",
+        "release_lag_days": null,
+        "observation_age_days": 141,
+        "capture_age_days": 57,
+        "null_values": 0,
+        "revisions": {
+          "status": "not_compared_no_baseline"
+        }
+      },
+      {
+        "product": "bts_segments",
+        "layer": "gold",
+        "table": "fact_route_traffic",
+        "expected_period": "2026M05",
+        "latest_published_period": null,
+        "status": "checks_passed",
+        "rows": 1660,
+        "latest_available_period": null,
+        "latest_parsed_period": "2026M05",
+        "latest_validated_period": "2026M05",
+        "release_lag_days": null,
+        "observation_age_days": 141,
+        "capture_age_days": 57,
+        "null_values": 0,
+        "revisions": {
+          "status": "not_compared_no_baseline"
+        }
+      }
+    ],
+    "status": "checks_passed",
+    "scope": "only_explicit_checks_not_complete_round_certification",
+    "approval": "human_review_required",
+    "activation": "none",
+    "publication": "not_authorized"
+  },
+  "baseline_derived": {
+    "product": "derived",
+    "status": "checks_passed",
+    "scope": "1766_existing_Stage6_carrier_derived_records_only_no_models_no_new_formula_no_publication",
+    "rows": 1766,
+    "null_values": 113,
+    "missing_data": "preserved_not_zero_or_invented",
+    "lineage_links": 3713,
+    "documentary_ancestor_files": 99,
+    "periods": [
+      "2015M01",
+      "2015M02",
+      "2015M03",
+      "2015M04",
+      "2015M05",
+      "2015M06",
+      "2015M07",
+      "2015M08",
+      "2015M09",
+      "2015M10",
+      "2015M11",
+      "2015M12",
+      "2016M01",
+      "2016M02",
+      "2016M03",
+      "2016M04",
+      "2016M05",
+      "2016M06",
+      "2016M07",
+      "2016M08",
+      "2016M09",
+      "2016M10",
+      "2016M11",
+      "2016M12",
+      "2017M01",
+      "2017M02",
+      "2017M03",
+      "2017M04",
+      "2017M05",
+      "2017M06",
+      "2017M07",
+      "2017M08",
+      "2017M09",
+      "2017M10",
+      "2017M11",
+      "2017M12",
+      "2018M01",
+      "2018M02",
+      "2018M03",
+      "2018M04",
+      "2018M05",
+      "2018M06",
+      "2018M07",
+      "2018M08",
+      "2018M09",
+      "2018M10",
+      "2018M11",
+      "2018M12",
+      "2019M01",
+      "2019M02",
+      "2019M03",
+      "2019M04",
+      "2019M05",
+      "2019M06",
+      "2019M07",
+      "2019M08",
+      "2019M09",
+      "2019M10",
+      "2019M11",
+      "2019M12",
+      "2020M01",
+      "2020M02",
+      "2020M03",
+      "2020M04",
+      "2020M05",
+      "2020M06",
+      "2020M07",
+      "2020M08",
+      "2020M09",
+      "2020M10",
+      "2020M11",
+      "2020M12",
+      "2020Q4",
+      "2021M01",
+      "2021M02",
+      "2021M03",
+      "2021M04",
+      "2021M05",
+      "2021M06",
+      "2021M07",
+      "2021M08",
+      "2021M09",
+      "2021M10",
+      "2021M11",
+      "2021M12",
+      "2021Q1",
+      "2021Q2",
+      "2021Q3",
+      "2021Q4",
+      "2022M01",
+      "2022M02",
+      "2022M03",
+      "2022M04",
+      "2022M05",
+      "2022M06",
+      "2022M07",
+      "2022M08",
+      "2022M09",
+      "2022M10",
+      "2022M11",
+      "2022M12",
+      "2022Q1",
+      "2022Q2",
+      "2022Q3",
+      "2022Q4",
+      "2023M01",
+      "2023M02",
+      "2023M03",
+      "2023M04",
+      "2023M05",
+      "2023M06",
+      "2023M07",
+      "2023M08",
+      "2023M09",
+      "2023M10",
+      "2023M11",
+      "2023M12",
+      "2023Q1",
+      "2023Q2",
+      "2023Q3",
+      "2023Q4",
+      "2024M01",
+      "2024M02",
+      "2024M03",
+      "2024M04",
+      "2024M05",
+      "2024M06",
+      "2024M07",
+      "2024M08",
+      "2024M09",
+      "2024M10",
+      "2024M11",
+      "2024M12",
+      "2024Q1",
+      "2024Q2",
+      "2024Q3",
+      "2024Q4",
+      "2025M01",
+      "2025M02",
+      "2025M03",
+      "2025M04",
+      "2025M05",
+      "2025M06",
+      "2025M07",
+      "2025M08",
+      "2025M09",
+      "2025M10",
+      "2025M11",
+      "2025M12",
+      "2025Q1",
+      "2025Q2",
+      "2025Q3",
+      "2025Q4",
+      "2026M01",
+      "2026M02",
+      "2026M03",
+      "2026M04",
+      "2026M05",
+      "2026M06",
+      "2026M07",
+      "2026M08",
+      "2026Q1",
+      "2026Q2"
+    ],
+    "gold_table_sha256": "ba14a602aaae657773c7a09bbad65d6166aa8faf93dfb9b389ce9e8e55459a9b",
+    "all_records_exact_parent_ancestry": true,
+    "all_inputs_preexisting_public": true,
+    "network_requests": 0,
+    "activation": "none",
+    "latest_available_period": null,
+    "revisions": "not_compared_no_baseline",
+    "source_files_sha256": "5cde38e05a2335636e39d73afc0af9f3f33402b59098f6126087e8985c0f0875",
+    "formula_versions": [
+      "(operating_expenses_total - jet_fuel_expense) / (asm_total × 1.609344) × 100",
+      "STL(period=12, robust=True); Aeroméxico + Aeroméxico Connect; observed - seasonal",
+      "adjusted_ebitdar(t) / adjusted_ebitdar(t-1) - 1",
+      "adjusted_ebitdar(t) / adjusted_ebitdar(t-4) - 1",
+      "asm_total / fleet_size",
+      "asm_total(t) / asm_total(t-1) - 1",
+      "asm_total(t) / asm_total(t-4) - 1",
+      "cask / yield",
+      "cask × sqrt(average_stage_length / 1834); NULL when stage length is unavailable",
+      "cask(t) / cask(t-1) - 1",
+      "cask(t) / cask(t-4) - 1",
+      "jet_fuel_expense / operating_expenses_total",
+      "load_factor_total(t) / load_factor_total(t-1) - 1",
+      "load_factor_total(t) / load_factor_total(t-4) - 1",
+      "net_income(t) / net_income(t-1) - 1",
+      "net_income(t) / net_income(t-4) - 1",
+      "operating_expenses_total / (asm_total × 1.609344) × 100",
+      "operating_income(t) / operating_income(t-1) - 1",
+      "operating_income(t) / operating_income(t-4) - 1",
+      "passenger_revenue / (asm_total × 1.609344) × 100",
+      "passenger_revenue / (rpm_total × 1.609344) × 100",
+      "passengers(t) / passengers(t-1) - 1",
+      "passengers(t) / passengers(t-4) - 1",
+      "rask - cask",
+      "rask × sqrt(average_stage_length / 1834); NULL when stage length is unavailable",
+      "rask(t) / rask(t-1) - 1",
+      "rask(t) / rask(t-4) - 1",
+      "reported CASM / 1.609344",
+      "reported CASM ex fuel / 1.609344",
+      "reported PRASM / 1.609344",
+      "reported TRASM / 1.609344",
+      "rolling sum of four quarters of adjusted_ebitdar",
+      "rolling sum of four quarters of asm_total",
+      "rolling sum of four quarters of net_income",
+      "rolling sum of four quarters of operating_income",
+      "rolling sum of four quarters of passengers",
+      "rolling sum of four quarters of rpm_total",
+      "rolling sum of four quarters of total_revenue",
+      "rpm_total / asm_total",
+      "rpm_total(t) / rpm_total(t-1) - 1",
+      "rpm_total(t) / rpm_total(t-4) - 1",
+      "total_revenue / (asm_total × 1.609344) × 100",
+      "total_revenue / passengers",
+      "total_revenue(t) / total_revenue(t-1) - 1",
+      "total_revenue(t) / total_revenue(t-4) - 1"
+    ],
+    "local_full_proof": "tmp/derived-baseline-check-result.json"
+  },
+  "blocked_products": {
+    "viva_traffic": {
+      "action": "collect_selected_monthly_PDF",
+      "target": "https://investorcloud.s3.amazonaws.com/VivaAerobus/InformacionFinanciera/SalaPrensa/2026-10-09-Trafico-septiembre-2026.pdf",
+      "reason": "Host outside existing viva_ir source policy; stopped before HTTP; not retried by alternate path or source alias.",
+      "completed": "Catalogue discovery and exact URL evidence retained; earlier accepted data preserved.",
+      "outcome": "denied_by_existing_source_policy_before_network",
+      "required_input": "A source selection admissible under existing policy; any source-policy change is outside this task."
+    },
+    "aerocivil": {
+      "action": "accept_interpretation_of_literal_S_I_codes",
+      "target": "https://www.datos.gov.co/api/views/jh8x-n6h6.json",
+      "reason": "Same-dataset official definitions contain no explicit S/N/I code legend. Codes from a different official dataset cannot be transferred.",
+      "completed": "10 raw rows;8 literal S/I rows,347 movements and exact lineage verified; no passenger/operator marketing inference.",
+      "outcome": "pending_primary_legend_and_entity_review",
+      "required_input": "Primary clarification for this dataset, not a guessed mapping. Metadata and official same-dataset landing checked; no legend found."
+    },
+    "rss": {
+      "action": "certify_complete_monthly_news_round",
+      "target": "Market/News integration PR142/private35",
+      "reason": "Retained feed is partial metadata, not a full-month archive; integration belongs to the active Market/News owner.",
+      "completed": "100 feed records parsed,12 selected September metadata records; no activation.",
+      "outcome": "pending_integration_and_archive_coverage",
+      "required_input": "Owner-integrated monthly archive with source-by-source coverage; preserve existing candidate controls."
+    },
+    "gdelt": {
+      "action": "certify_selected_monthly_news_response",
+      "target": "GDELT selected monthly request",
+      "reason": "Prior live request returned503; older HTTP200 error text is retained error evidence, not news. No recapture in this continuation.",
+      "completed": "Error bodies preserved and rejected as news; parser/error classification tested.",
+      "outcome": "pending_valid_source_response",
+      "required_input": "Successful, valid response in an authorized later collection round; no credentials or bypass assumed."
+    },
+    "news_errors": {
+      "action": "use_failed_capture_as_news",
+      "target": "news_http_error retained evidence",
+      "reason": "Intentionally disabled error-evidence product; never a news source and never proof of no news.",
+      "completed": "Audit evidence preserved; failed contents excluded from news.",
+      "outcome": "blocked_by_design",
+      "required_input": "None: retain audit-only status."
+    },
+    "peer_profiles": {
+      "action": "certify_curated_profile_parent_lineage",
+      "target": "peer_profile curated attributes",
+      "reason": "No unique download endpoint or exact per-attribute parent evidence supplied for new certification. Existing dimension schema alone is insufficient.",
+      "completed": "Retained baseline dimensions preserved; no profile or approval invented.",
+      "outcome": "pending_documented_curated_parents",
+      "required_input": "Versioned attribute-to-primary-source decisions with documented dates/lineage."
+    },
+    "curated_context": {
+      "action": "certify_curated_event_documentary_lineage",
+      "target": "curated_primary_sources events",
+      "reason": "Some existing event rows have URL declarations without retained primary artifact/hash; declaring a URL does not certify a document.",
+      "completed": "Existing events preserved; FAA category snapshot certified separately; no new causal/activation inference.",
+      "outcome": "pending_primary_artifacts_and_reviewed_curation",
+      "required_input": "Retained primary originals for the events and explicit curated selection/lineage; no fabricated downloads."
+    }
+  },
+  "calendar": {
+    "mode": "dry_run",
+    "as_of": "2026-10-19T12:00:00-06:00",
+    "timezone": "America/Mexico_City",
+    "rounds": [
+      {
+        "kind": "monthly",
+        "date": "2026-10-15"
+      },
+      {
+        "kind": "monthly",
+        "date": "2026-11-17"
+      },
+      {
+        "kind": "monthly",
+        "date": "2026-12-15"
+      },
+      {
+        "kind": "quarterly",
+        "period": "2026Q3",
+        "date": null,
+        "missing_central_reports": [
+          "AEROMEXICO",
+          "VIVA_AEROBUS",
+          "VOLARIS"
+        ],
+        "status": "waiting_for_reports",
+        "available_entities": []
+      }
+    ],
+    "scheduled_executions": 0,
+    "holiday_years_verified": [
+      "2026"
+    ]
+  },
+  "coordinator_plan_summary": {
+    "operations": 48,
+    "distinct_active_products": 41,
+    "catalogued_products": 42,
+    "excluded_inactive_products": [
+      "news_errors"
+    ],
+    "network_requests": 0,
+    "paid_requests": 0,
+    "writes": [],
+    "activation": "none"
+  },
+  "local_evidence_root": "/workspace/airline-source-adapters/tmp",
+  "independent_review": "h10_independent_review; originals/code/outputs/offline replay and scoped baseline checked; no activation"
+}

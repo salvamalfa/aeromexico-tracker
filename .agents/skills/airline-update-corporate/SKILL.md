@@ -8,7 +8,7 @@ description: "Actualizar candidatos de la familia fuentes corporativas y regulat
 Leer y aplicar [el contrato común](../source-updates-common.md).
 Familia ejecutable: `corporate`. Alcance: SEC/IR/BMV: Aeroméxico, Volaris, Viva, Delta y Ryanair; GAP/ASUR se separan como tráfico aeroportuario.
 
-Revalidar catálogos current y seleccionar anexos reales. No tratar llamadas o anuncios como estados financieros. Preservar moneda, escala, trimestre/acumulado/TTM, instante/duración, preliminar/auditado e IFRS/US-GAAP. Los parsers IR de Aeroméxico son históricos; el descargador Viva termina en 2026Q2. Capturar un documento nuevo no demuestra que esos parsers lo incorporen. Para SEC usar importación manual con URL y hash. No ejecutar la ingesta heredada de peers como actualizador genérico.
+Revalidar catálogos current y seleccionar anexos reales. No tratar llamadas o anuncios como estados financieros. Preservar moneda, escala, trimestre/acumulado/TTM, instante/duración, preliminar/auditado e IFRS/US-GAAP. Los parsers IR heredados de Aeroméxico son históricos; el descargador Viva termina en 2026Q2. Capturar un documento nuevo no demuestra que esos parsers lo incorporen. Para SEC usar importación manual con URL y hash. No ejecutar la ingesta heredada de peers como actualizador genérico.
 
 ## Ejecución
 
@@ -42,12 +42,12 @@ python -m src.source_updates recipe --product am_financials
 
 Consultar cada producto de esta familia:
 
-- `am_financials` — solo descubrimiento. Entrada canónica: `catalogue:aeromexico_ir`. Formato: HTML → PDF.
+- `am_financials` — candidato offline acotado de 2026Q2; otras ediciones requieren adaptación. Entrada canónica: `catalogue:aeromexico_ir`. Formato: HTML → PDF.
 - `am_traffic_ir` — adaptador mensual candidato dedicado. Entrada canónica: `url:https://ir.aeromexico.com/news-events/traffic-reports`. Formato: HTML → PDF inglés seleccionado por enlace real.
 - `am_sec` — selección/importación manual. Entrada canónica: `sec:AEROMEXICO`. Formato: JSON submissions/companyfacts → index.json → anexos HTML.
 - `volaris_sec` — selección/importación manual. Entrada canónica: `sec:VOLARIS`. Formato: JSON → anexos HTML.
 - `delta_sec` — selección/importación manual. Entrada canónica: `sec:DELTA`. Formato: JSON → 10-Q/10-K/anexos.
-- `ryanair_sec` — selección/importación manual. Entrada canónica: `sec:RYANAIR`. Formato: JSON → 20-F/6-K/anexos.
+- `ryanair_sec` — adaptador retenido acotado de FY2026; otras ediciones con selección/importación manual. Entrada canónica: `sec:RYANAIR`. Formato: JSON → 20-F/6-K/anexos.
 - `gap_traffic` — selección/importación manual. Entrada canónica: `sec_group:GAP`. Formato: JSON SEC → anexo HTML.
 - `asur_traffic` — selección/importación manual. Entrada canónica: `sec_group:ASUR`. Formato: JSON SEC → anexo HTML.
 - `bmv_xbrl` — solo descubrimiento. Entrada canónica: `constant:src.config:SOURCE_URLS:bmv_xbrl`. Formato: HTML → visor → ZIP con JSON.
@@ -73,3 +73,40 @@ Seleccionar un mes cerrado mediante `recipe --product am_traffic_ir --output sel
 Exigir título y entidad Grupo Aeroméxico, orden mes/acumulado y años actual/anterior, cuatro métricas y tres segmentos completos. No importar acumulados como mes. Conservar 12 cifras del mes y 12 comparativos del mismo mes del año anterior, con fecha de publicación dentro del documento. Pasajeros están en miles; ASM/RPM en millones de millas; ocupación en porcentaje. Los tres primeros incluyen itinerario/fletamento; ocupación es itinerario y no se calcula desde ese RPM/ASM. Conservar estado no auditado, unidad literal, token, extracto, página, captura y SHA-256. No equiparar no auditado con preliminar.
 
 El candidato aislado `aeromexico_ir_monthly_metrics` reutiliza el contrato estructural de observaciones operativas y añade su dominio explícito IR; no es una presentación SEC ni se registra automáticamente como tabla del warehouse productivo. Gold aplica su contrato existente, dimensiones y puente exacto. Esta cadena dedicada no añade `parse.am_traffic_ir` al runner genérico, no suma trimestres ni activa reportes/tesis. La certificación se limita al formato y los meses realmente comprobados. Documentar cualquier cambio de formato y mantener el fallo cerrado.
+
+## Finanzas IR retenidas de Aeroméxico
+
+Aplicar el [flujo común de retención](../source-updates-common.md#originales-retenidos-y-lote-offline)
+con `am_financials`, rol `pdf` y periodo `2026Q2`. El adaptador dedicado
+[`financials.py`](../../../src/source_updates/financials.py) verifica 13 páginas,
+20 cifras del trimestre, encabezados y columnas trimestral/acumulado y
+actual/comparativo, unicidad de cada fila y dos identidades contables. Cambios
+de edición o formato se bloquean para revisión; no es un parser genérico de Q3.
+
+Conservar preliminar/no auditado y la precisión redondeada de los estados.
+Importes en millones de USD, pasajeros en miles, ASM/RPM en millones de millas,
+combustible en miles de litros y CASM sin combustible en centavos USD por ASM.
+No renombrar ASM/CASM como ASK/CASK ni armonizar históricos automáticamente.
+La fecha impresa 13 de julio de 2026 no prueba primera disponibilidad:
+publicación inicial y rezago siguen nulos. El candidato conserva captura, SHA,
+página, token y extracto. No modifica M11, parsers heredados, warehouse
+productivo, elegibilidad, tesis ni aprobaciones.
+
+## 20-F retenido de Ryanair
+
+El comando `retained` admite `ryanair_sec`, roles `html`, `submissions` e
+`index`, para la presentación `0001104659-26-076131`. Usar `--period 2026Q2`
+como periodo de revisión. Las seis filas siguen siendo **FY2026, del 1 de abril
+de 2025 al 31 de marzo de 2026**, o instantes de balance de ese cierre. No son
+cifras trimestrales. El lector inline XBRL comprueba CIK, entidad, DEI, contextos
+consolidados sin dimensiones, taxonomía IFRS, EUR, escala y precisión. Comprueba
+los 14 hechos repetidos del documento y la identidad del balance; un conflicto
+se bloquea. Conserva cada identificador y la escala original.
+
+La presentación SEC fue el 22 de junio, con aceptación a las 12:47:18 UTC:
+83 días desde el cierre fiscal. Eso es rezago de presentación SEC, no primera
+publicación IR. Esta última y su rezago permanecen desconocidos. No sustituir
+un 20-F por la página IR mensual: el comprobador heredado no tiene filas SEC
+Ryanair para ese trimestre. La copia retenida de companyfacts llega a FY2025 y
+no sustituye los hechos del 20-F FY2026. No modificar el parser histórico ni
+incorporar estas filas automáticamente al warehouse o a comparaciones.

@@ -1,468 +1,2053 @@
 {
+  "version": 2,
+  "as_of": "2026-10-19T12:00:00-06:00",
+  "timezone": "America/Mexico_City",
   "products": [
     {
       "product": "am_financials",
       "family": "corporate",
-      "adapter_state": "discovery_only",
-      "state": "fresh_catalog_only",
-      "scope": "IR HTML captured; linked reports are not newly certified",
+      "scope": "retained_AM_2026Q2_preliminary_unaudited_reported_quarter_units_only_not_new_Q3_or_historical_harmonization",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "fresh_catalog_only",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "certified_selected_retained_source_candidate",
+      "certification_basis": "retained_source_candidate",
+      "review_period": "2026Q2",
+      "rows": 20,
+      "records": 20,
+      "code_head": "6dbc3d0f25f83b9f487dab810c82606e82be90be",
+      "output_sha256": {
+        "silver/source_products/am_financials": "8e76a05451f56332d33d037438717394fb38265fd41932bff2dccf3b235e3fc4",
+        "gold/fact_am_retained_quarterly_source_metrics": "8e76a05451f56332d33d037438717394fb38265fd41932bff2dccf3b235e3fc4",
+        "gold/dim_source_artifact": "7ce40df219da847b76973e24094684277a72379084214d1944739f9052f5b082",
+        "gold/bridge_record_lineage": "2480495651cd04033dade768eb85added925d0d7da8d731fc8f0b7bf5138887a"
+      },
+      "offline_replay_identical": true,
+      "layers": [
+        "Bronze_hash_metadata",
+        "Silver_native_grain_units",
+        "candidate_Gold_and_exact_lineage"
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "am_traffic_ir",
       "family": "corporate",
-      "adapter_state": "discovery_only",
-      "state": "not_newly_certified",
-      "scope": "Encontrar el mes cerrado en el archivo Traffic Reports. El reporte de tráfico no sustituye finanzas. Falta adaptador IR mensual; usar anexos SEC preservados si existen.",
+      "scope": "2026M07/M08/M09 separately;24rows each (12month+12prior-year),no YTD/quarter;no automated warehouse registration",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "local_candidate_three_individual_months_certified",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "local_candidate_three_individual_months_certified",
+      "certification_basis": "dedicated_selected_period_candidate",
+      "evidence": "/workspace/airline-corporate-monthly/tmp/corporate-verification-proof.json",
+      "layers": [
+        "Bronze_original",
+        "dedicated_Silver",
+        "candidate_Gold_exact_lineage",
+        "offline_replay"
+      ]
     },
     {
       "product": "am_sec",
       "family": "corporate",
-      "adapter_state": "manual",
-      "state": "retained_public_inputs_rebuilt",
-      "scope": "Offline contracts/lineage of retained baseline; no fresh source capture certified",
+      "scope": "Only explicit selected rows/layers/period; underlying offline baseline was rebuilt previously. Not a fresh capture, full report, complete quarter/family, or new latest availability.",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "retained_public_inputs_rebuilt",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "retained_baseline_product_rechecked_no_new_capture_or_full_report_claim",
+      "certification_basis": "retained_baseline_explicit_checks",
+      "checks": [
+        {
+          "product": "am_sec",
+          "layer": "silver",
+          "table": "sec_financials",
+          "expected_period": "2026Q2",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 25,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026Q2",
+          "latest_validated_period": "2026Q2",
+          "release_lag_days": null,
+          "observation_age_days": 111,
+          "capture_age_days": 60,
+          "null_values": 2,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          }
+        },
+        {
+          "product": "am_sec",
+          "layer": "gold",
+          "table": "fact_carrier_metrics",
+          "expected_period": "2026Q2",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 37,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026Q2",
+          "latest_validated_period": "2026Q2",
+          "release_lag_days": null,
+          "observation_age_days": 111,
+          "capture_age_days": 60,
+          "null_values": 2,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          }
+        }
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "volaris_sec",
       "family": "corporate",
-      "adapter_state": "manual",
-      "state": "retained_public_inputs_rebuilt",
-      "scope": "Offline contracts/lineage of retained baseline; no fresh source capture certified",
+      "scope": "Only explicit selected rows/layers/period; underlying offline baseline was rebuilt previously. Not a fresh capture, full report, complete quarter/family, or new latest availability.",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "retained_public_inputs_rebuilt",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "retained_baseline_product_rechecked_no_new_capture_or_full_report_claim",
+      "certification_basis": "retained_baseline_explicit_checks",
+      "checks": [
+        {
+          "product": "volaris_sec",
+          "layer": "silver",
+          "table": "peer_financials",
+          "expected_period": "2026Q2",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 1,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026Q2",
+          "latest_validated_period": "2026Q2",
+          "release_lag_days": null,
+          "observation_age_days": 111,
+          "capture_age_days": 57,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          }
+        },
+        {
+          "product": "volaris_sec",
+          "layer": "gold",
+          "table": "fact_carrier_metrics",
+          "expected_period": "2026Q2",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 8,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026Q2",
+          "latest_validated_period": "2026Q2",
+          "release_lag_days": null,
+          "observation_age_days": 111,
+          "capture_age_days": 57,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          }
+        }
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "delta_sec",
       "family": "corporate",
-      "adapter_state": "manual",
-      "state": "retained_public_inputs_rebuilt",
-      "scope": "Offline contracts/lineage of retained baseline; no fresh source capture certified",
+      "scope": "Only explicit selected rows/layers/period; underlying offline baseline was rebuilt previously. Not a fresh capture, full report, complete quarter/family, or new latest availability.",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "retained_public_inputs_rebuilt",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "retained_baseline_product_rechecked_no_new_capture_or_full_report_claim",
+      "certification_basis": "retained_baseline_explicit_checks",
+      "checks": [
+        {
+          "product": "delta_sec",
+          "layer": "silver",
+          "table": "peer_financials",
+          "expected_period": "2026Q2",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 3,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026Q2",
+          "latest_validated_period": "2026Q2",
+          "release_lag_days": null,
+          "observation_age_days": 111,
+          "capture_age_days": 57,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          }
+        },
+        {
+          "product": "delta_sec",
+          "layer": "gold",
+          "table": "fact_carrier_metrics",
+          "expected_period": "2026Q2",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 6,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026Q2",
+          "latest_validated_period": "2026Q2",
+          "release_lag_days": null,
+          "observation_age_days": 111,
+          "capture_age_days": 57,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          }
+        }
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "ryanair_sec",
       "family": "corporate",
-      "adapter_state": "manual",
-      "state": "retained_public_inputs_rebuilt",
-      "scope": "Offline contracts/lineage of retained baseline; no fresh source capture certified",
+      "scope": "retained_SEC_FY2026_consolidated_IFRS_EUR_not_calendar_quarter_not_latest_filing",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "retained_public_inputs_rebuilt",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "certified_selected_retained_source_candidate",
+      "certification_basis": "retained_source_candidate",
+      "review_period": "2026Q2",
+      "rows": 6,
+      "records": 6,
+      "code_head": "0096e2d5165021e066b49d0b6f8efde6a703c984",
+      "output_sha256": {
+        "silver/source_products/ryanair_sec": "22e1c0907e3a8c3a0e5941c839e1c1a02e20d0e8928d416b98343f908109b32e",
+        "gold/fact_ryanair_retained_fiscal_xbrl": "22e1c0907e3a8c3a0e5941c839e1c1a02e20d0e8928d416b98343f908109b32e",
+        "gold/dim_source_artifact": "ee7d1b2297189422768edea6038edb0aca38fd959e3d2a0de11cd5db6915724c",
+        "gold/bridge_record_lineage": "b8f94899624f7ab30789ea2d262e3431da6803621d133262310a7a4d81aba4b7"
+      },
+      "offline_replay_identical": true,
+      "layers": [
+        "Bronze_hash_metadata",
+        "Silver_native_grain_units",
+        "candidate_Gold_and_exact_lineage"
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "gap_traffic",
       "family": "corporate",
-      "adapter_state": "manual",
-      "state": "retained_public_inputs_rebuilt",
-      "scope": "Offline contracts/lineage of retained baseline; no fresh source capture certified",
+      "scope": "Only explicit selected rows/layers/period; underlying offline baseline was rebuilt previously. Not a fresh capture, full report, complete quarter/family, or new latest availability.",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "retained_public_inputs_rebuilt",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "retained_baseline_product_rechecked_no_new_capture_or_full_report_claim",
+      "certification_basis": "retained_baseline_explicit_checks",
+      "checks": [
+        {
+          "product": "gap_traffic",
+          "layer": "silver",
+          "table": "airport_traffic",
+          "expected_period": "2026M07",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 15,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M07",
+          "latest_validated_period": "2026M07",
+          "release_lag_days": null,
+          "observation_age_days": 80,
+          "capture_age_days": 60,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          }
+        },
+        {
+          "product": "gap_traffic",
+          "layer": "gold",
+          "table": "fact_airport_group_traffic",
+          "expected_period": "2026M07",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 1,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M07",
+          "latest_validated_period": "2026M07",
+          "release_lag_days": null,
+          "observation_age_days": 80,
+          "capture_age_days": 60,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          }
+        }
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "asur_traffic",
       "family": "corporate",
-      "adapter_state": "manual",
-      "state": "retained_public_inputs_rebuilt",
-      "scope": "Offline contracts/lineage of retained baseline; no fresh source capture certified",
+      "scope": "Only explicit selected rows/layers/period; underlying offline baseline was rebuilt previously. Not a fresh capture, full report, complete quarter/family, or new latest availability.",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "retained_public_inputs_rebuilt",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "retained_baseline_product_rechecked_no_new_capture_or_full_report_claim",
+      "certification_basis": "retained_baseline_explicit_checks",
+      "checks": [
+        {
+          "product": "asur_traffic",
+          "layer": "silver",
+          "table": "airport_traffic",
+          "expected_period": "2026M06",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 10,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M06",
+          "latest_validated_period": "2026M06",
+          "release_lag_days": null,
+          "observation_age_days": 111,
+          "capture_age_days": 60,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          }
+        },
+        {
+          "product": "asur_traffic",
+          "layer": "gold",
+          "table": "fact_airport_group_traffic",
+          "expected_period": "2026M06",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 1,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M06",
+          "latest_validated_period": "2026M06",
+          "release_lag_days": null,
+          "observation_age_days": 111,
+          "capture_age_days": 60,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          }
+        }
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "bmv_xbrl",
       "family": "corporate",
-      "adapter_state": "conditional",
-      "state": "fresh_gold_selected_period",
       "scope": "AERO/VOLAR Q2 2026 public ZIPs; selected catalogue/member checks; no Q3 report/date invented",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "fresh_gold_selected_period",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "prior_selected_product_period_checks_preserved",
+      "certification_basis": "selected_product_period_checks",
+      "checks": [
+        {
+          "product": "bmv_xbrl",
+          "layer": "gold",
+          "table": "fact_carrier_metrics",
+          "expected_period": "2026Q2",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 7,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026Q2",
+          "latest_validated_period": "2026Q2",
+          "release_lag_days": null,
+          "observation_age_days": 110,
+          "capture_age_days": 59,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:33.254462-06:00",
+          "evidence_file": "expanded-source-checks.json"
+        },
+        {
+          "product": "bmv_xbrl",
+          "layer": "gold",
+          "table": "fact_carrier_metrics",
+          "expected_period": "2026Q2",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 7,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026Q2",
+          "latest_validated_period": "2026Q2",
+          "release_lag_days": null,
+          "observation_age_days": 110,
+          "capture_age_days": 59,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:33.254462-06:00",
+          "evidence_file": "expanded-source-checks.json"
+        }
+      ],
+      "evidence_as_of": [
+        "2026-10-18T20:14:33.254462-06:00"
+      ],
+      "age_fields_policy": "Preserved at each evidence_as_of; not recalculated at consolidated inventory as_of.",
+      "evidence": [
+        "expanded-source-checks.json",
+        "macro-gold-checks.json",
+        "public-source-evidence.json"
+      ]
     },
     {
       "product": "viva_financials",
       "family": "corporate",
-      "adapter_state": "manual",
-      "state": "retained_public_inputs_rebuilt",
-      "scope": "Offline contracts/lineage of retained baseline; no fresh source capture certified",
+      "scope": "Only explicit selected rows/layers/period; underlying offline baseline was rebuilt previously. Not a fresh capture, full report, complete quarter/family, or new latest availability.",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "retained_public_inputs_rebuilt",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "retained_baseline_product_rechecked_no_new_capture_or_full_report_claim",
+      "certification_basis": "retained_baseline_explicit_checks",
+      "checks": [
+        {
+          "product": "viva_financials",
+          "layer": "silver",
+          "table": "peer_financials",
+          "expected_period": "2026Q2",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 1,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026Q2",
+          "latest_validated_period": "2026Q2",
+          "release_lag_days": null,
+          "observation_age_days": 111,
+          "capture_age_days": 57,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          }
+        },
+        {
+          "product": "viva_financials",
+          "layer": "gold",
+          "table": "fact_carrier_metrics",
+          "expected_period": "2026Q2",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 8,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026Q2",
+          "latest_validated_period": "2026Q2",
+          "release_lag_days": null,
+          "observation_age_days": 111,
+          "capture_age_days": 57,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          }
+        }
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "viva_traffic",
       "family": "corporate",
-      "adapter_state": "missing_adapter",
-      "state": "blocked_before_network_by_source_policy",
       "scope": "Catalogue S3 PDF host outside current viva_ir allowlist. No bypass or source relabelling. No thesis activation",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "blocked_before_network_by_source_policy",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "blocked",
+      "state": "denied_by_existing_source_policy_before_network",
+      "blocker": {
+        "action": "collect_selected_monthly_PDF",
+        "target": "https://investorcloud.s3.amazonaws.com/VivaAerobus/InformacionFinanciera/SalaPrensa/2026-10-09-Trafico-septiembre-2026.pdf",
+        "reason": "Host outside existing viva_ir source policy; stopped before HTTP; not retried by alternate path or source alias.",
+        "completed": "Catalogue discovery and exact URL evidence retained; earlier accepted data preserved.",
+        "outcome": "denied_by_existing_source_policy_before_network",
+        "required_input": "A source selection admissible under existing policy; any source-policy change is outside this task."
+      },
+      "evidence": "retained-verification.json"
     },
     {
       "product": "ryanair_ir",
       "family": "corporate",
-      "adapter_state": "discovery_only",
-      "state": "retained_public_inputs_rebuilt",
-      "scope": "Offline contracts/lineage of retained baseline; no fresh source capture certified",
+      "scope": "Only explicit selected rows/layers/period; underlying offline baseline was rebuilt previously. Not a fresh capture, full report, complete quarter/family, or new latest availability.",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "retained_public_inputs_rebuilt",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "retained_baseline_product_rechecked_no_new_capture_or_full_report_claim",
+      "certification_basis": "retained_baseline_explicit_checks",
+      "checks": [
+        {
+          "product": "ryanair_ir",
+          "layer": "silver",
+          "table": "peer_operating_metrics",
+          "expected_period": "2026Q2",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 2,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026Q2",
+          "latest_validated_period": "2026Q2",
+          "release_lag_days": null,
+          "observation_age_days": 111,
+          "capture_age_days": 57,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          }
+        },
+        {
+          "product": "ryanair_ir",
+          "layer": "gold",
+          "table": "fact_carrier_metrics",
+          "expected_period": "2026Q2",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 2,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026Q2",
+          "latest_validated_period": "2026Q2",
+          "release_lag_days": null,
+          "observation_age_days": 111,
+          "capture_age_days": 57,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          }
+        }
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "afac_carriers",
       "family": "traffic",
-      "adapter_state": "conditional",
-      "state": "fresh_gold_selected_period",
       "scope": "2026M08 scheduled PDF and charter database; source caveats preserved. Silver retains unmapped carriers; Gold mapped entities only. Not complete Q3",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "fresh_gold_selected_period",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "prior_selected_product_period_checks_preserved",
+      "certification_basis": "selected_product_period_checks",
+      "checks": [
+        {
+          "product": "afac_carriers",
+          "layer": "silver",
+          "table": "afac_monthly_stats",
+          "expected_period": "2026M08",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 75,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M08",
+          "latest_validated_period": "2026M08",
+          "release_lag_days": null,
+          "observation_age_days": 48,
+          "capture_age_days": 0,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:33.254462-06:00",
+          "evidence_file": "expanded-source-checks.json"
+        },
+        {
+          "product": "afac_carriers",
+          "layer": "silver",
+          "table": "afac_monthly_stats",
+          "expected_period": "2026M08",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 37,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M08",
+          "latest_validated_period": "2026M08",
+          "release_lag_days": null,
+          "observation_age_days": 48,
+          "capture_age_days": 0,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:33.254462-06:00",
+          "evidence_file": "expanded-source-checks.json"
+        },
+        {
+          "product": "afac_carriers",
+          "layer": "gold",
+          "table": "fact_carrier_metrics",
+          "expected_period": "2026M08",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 25,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M08",
+          "latest_validated_period": "2026M08",
+          "release_lag_days": null,
+          "observation_age_days": 48,
+          "capture_age_days": 0,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:33.254462-06:00",
+          "evidence_file": "expanded-source-checks.json"
+        }
+      ],
+      "evidence_as_of": [
+        "2026-10-18T20:14:33.254462-06:00"
+      ],
+      "age_fields_policy": "Preserved at each evidence_as_of; not recalculated at consolidated inventory as_of.",
+      "evidence": [
+        "expanded-source-checks.json",
+        "macro-gold-checks.json",
+        "public-source-evidence.json"
+      ]
     },
     {
       "product": "afac_airports",
       "family": "traffic",
-      "adapter_state": "missing_adapter",
-      "state": "not_newly_certified",
-      "scope": "Elegir producto de aeropuerto, no resumen por aerolínea. Preservar edición y fechas. Si 403/TLS, registrar fallo y usar descarga asistida autorizada con URL/hash; no omitir TLS. No hay parser candidato certificado.",
+      "scope": "retained_report_months_airport_statistics_not_airline_or_network_passengers",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "not_newly_certified",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "certified_selected_retained_source_candidate",
+      "certification_basis": "retained_source_candidate",
+      "review_period": "2026M07",
+      "rows": 2730,
+      "records": 2730,
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "output_sha256": {
+        "silver/source_products/afac_airports": "fe46839a41f9095a8852cc2936afdf9dd71ff285ad35c2b2bec45fc8bbb4ffd5",
+        "gold/fact_afac_airport_observations": "fe46839a41f9095a8852cc2936afdf9dd71ff285ad35c2b2bec45fc8bbb4ffd5",
+        "gold/dim_source_artifact": "59313280572d7adee959f695e59b5a0c6e8c1bb2eb204486e2be92a3f61982a8",
+        "gold/bridge_record_lineage": "52aa0794841d272cbb1b3b4464b569992f376278dd8d70a4aa8fd3086a3a7943"
+      },
+      "offline_replay_identical": true,
+      "layers": [
+        "Bronze_hash_metadata",
+        "Silver_native_grain_units",
+        "candidate_Gold_and_exact_lineage"
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "afac_countries",
       "family": "traffic",
-      "adapter_state": "missing_adapter",
-      "state": "not_newly_certified",
-      "scope": "Elegir producto de países y su edición. No convertir país en ruta o empresa. Captura explícita/manual; parser y reconciliación candidatos pendientes.",
+      "scope": "retained_country_bulletin_exact_current_prior_YTD_boxes_only_not_monthly_country_series",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "not_newly_certified",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "certified_selected_retained_source_candidate",
+      "certification_basis": "retained_source_candidate",
+      "review_period": "2026M07",
+      "rows": 116,
+      "records": 116,
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "output_sha256": {
+        "silver/source_products/afac_countries": "9ee24cdb3b61450eaf89df7f506c15fbfc1f30b04a019b09098778cea8b7e629",
+        "gold/fact_afac_country_bulletin_ytd": "9ee24cdb3b61450eaf89df7f506c15fbfc1f30b04a019b09098778cea8b7e629",
+        "gold/dim_source_artifact": "892e821fe1ede3b4e5313f306e13c59fae8e6350eabdc5e88bae036f56adfcc2",
+        "gold/bridge_record_lineage": "2046ca5351ddceeef82ad5d711433e8f884d62156b709cd051cb393c800c609f"
+      },
+      "offline_replay_identical": true,
+      "layers": [
+        "Bronze_hash_metadata",
+        "Silver_native_grain_units",
+        "candidate_Gold_and_exact_lineage"
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "afac_margins",
       "family": "traffic",
-      "adapter_state": "manual",
-      "state": "not_newly_certified",
-      "scope": "Seleccionar O-D y marginal por aerolínea de la misma edición acumulada. Referencias técnicas: src.ingest.afac.margins e international_margins. No inventar edición nueva; verificar ambos archivos y total compatible antes de usar. No son observaciones empresa×ruta.",
+      "scope": "same_edition_regular_city_pair_and_reporting_company_margins_not_company_by_route",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "not_newly_certified",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "certified_selected_retained_source_candidate",
+      "certification_basis": "retained_source_candidate",
+      "review_period": "2026M07",
+      "rows": 23331,
+      "records": 23331,
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "output_sha256": {
+        "silver/source_products/afac_margins": "886cc189985074f9a672d6817b0fc3aaa038d634d86af0fab8c00b58419a1887",
+        "gold/fact_afac_retained_margins": "886cc189985074f9a672d6817b0fc3aaa038d634d86af0fab8c00b58419a1887",
+        "gold/dim_source_artifact": "67b1b9d44bb67ba4bf459fee2bbe8e27707debb97d4fafb1614c33dd686ee684",
+        "gold/bridge_record_lineage": "e9f97d3ba2f29607d0219c3c20433c3e018b5cdfba28c842fb9590bbcfe65b74"
+      },
+      "offline_replay_identical": true,
+      "layers": [
+        "Bronze_hash_metadata",
+        "Silver_native_grain_units",
+        "candidate_Gold_and_exact_lineage"
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "bts_segments",
       "family": "traffic",
-      "adapter_state": "conditional",
-      "state": "retained_public_inputs_rebuilt",
-      "scope": "Offline contracts/lineage of retained baseline; no fresh source capture certified",
+      "scope": "Only explicit selected rows/layers/period; underlying offline baseline was rebuilt previously. Not a fresh capture, full report, complete quarter/family, or new latest availability.",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "retained_public_inputs_rebuilt",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "retained_baseline_product_rechecked_no_new_capture_or_full_report_claim",
+      "certification_basis": "retained_baseline_explicit_checks",
+      "checks": [
+        {
+          "product": "bts_segments",
+          "layer": "silver",
+          "table": "bts_t100_segment",
+          "expected_period": "2026M05",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 1660,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M05",
+          "latest_validated_period": "2026M05",
+          "release_lag_days": null,
+          "observation_age_days": 141,
+          "capture_age_days": 57,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          }
+        },
+        {
+          "product": "bts_segments",
+          "layer": "gold",
+          "table": "fact_route_traffic",
+          "expected_period": "2026M05",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 1660,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M05",
+          "latest_validated_period": "2026M05",
+          "release_lag_days": null,
+          "observation_age_days": 141,
+          "capture_age_days": 57,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          }
+        }
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "oma_traffic",
       "family": "airports",
-      "adapter_state": "discovery_only",
-      "state": "document_access_failed",
-      "scope": "Official index links September PDF; GET returned 404. Preserve retained data; no claim report absent",
+      "scope": "retained_OMA_terminal_passengers_13_airports_group_and_markets_month_vs_YTD_separate_not_airline_traffic",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "document_access_failed",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "certified_selected_retained_source_candidate",
+      "certification_basis": "retained_source_candidate",
+      "review_period": "2026M07",
+      "rows": 168,
+      "records": 168,
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "output_sha256": {
+        "silver/source_products/oma_traffic": "2bcc4c31334d40d1caecf1ab5e2ff374920c06368e89152423af69b63d871f12",
+        "gold/fact_oma_retained_terminal_traffic": "2bcc4c31334d40d1caecf1ab5e2ff374920c06368e89152423af69b63d871f12",
+        "gold/dim_source_artifact": "e933682977f818cefec90b4433e854e19bccb2713bc5ff54607a919531bde27f",
+        "gold/bridge_record_lineage": "735f44b8bc80c88ba8f692b8360bb9686c2ef6fbee5bbbdfaf29c7dd1e7945bf"
+      },
+      "offline_replay_identical": true,
+      "layers": [
+        "Bronze_hash_metadata",
+        "Silver_native_grain_units",
+        "candidate_Gold_and_exact_lineage"
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "aicm_traffic",
       "family": "airports",
-      "adapter_state": "discovery_only",
-      "state": "fresh_gold_selected_period",
       "scope": "2026M08 airport total; not Aeromexico-specific. September not certified",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "fresh_gold_selected_period",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "prior_selected_product_period_checks_preserved",
+      "certification_basis": "selected_product_period_checks",
+      "checks": [
+        {
+          "product": "aicm_traffic",
+          "layer": "silver",
+          "table": "airport_traffic",
+          "expected_period": "2026M08",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 1,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M08",
+          "latest_validated_period": "2026M08",
+          "release_lag_days": null,
+          "observation_age_days": 48,
+          "capture_age_days": 0,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:33.254462-06:00",
+          "evidence_file": "expanded-source-checks.json"
+        },
+        {
+          "product": "aicm_traffic",
+          "layer": "gold",
+          "table": "fact_airport_traffic",
+          "expected_period": "2026M08",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 1,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M08",
+          "latest_validated_period": "2026M08",
+          "release_lag_days": null,
+          "observation_age_days": 48,
+          "capture_age_days": 0,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:33.254462-06:00",
+          "evidence_file": "expanded-source-checks.json"
+        }
+      ],
+      "evidence_as_of": [
+        "2026-10-18T20:14:33.254462-06:00"
+      ],
+      "age_fields_policy": "Preserved at each evidence_as_of; not recalculated at consolidated inventory as_of.",
+      "evidence": [
+        "expanded-source-checks.json",
+        "macro-gold-checks.json",
+        "public-source-evidence.json"
+      ]
     },
     {
       "product": "aicm_slots",
       "family": "airports",
-      "adapter_state": "manual",
-      "state": "not_newly_certified",
-      "scope": "Seleccionar horario estacional real y vigencia; el índice estadístico es punto de entrada, no prueba de enlace de slots. No hay adaptador genérico nuevo. Mantener movimientos programados separados de realizados.",
+      "scope": "retained_full_summer_2026_AM_numbered_assignment_rows_not_quarter_traffic",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "not_newly_certified",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "certified_selected_retained_source_candidate",
+      "certification_basis": "retained_source_candidate",
+      "review_period": "2026Q3",
+      "rows": 2836,
+      "records": 2836,
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "output_sha256": {
+        "silver/source_products/aicm_slots": "48aedb3e7c7f7cb8e0d5f3c94cd3bf57fb07392f0c3d6e1a0bbe88603619ae7b",
+        "gold/fact_aicm_retained_slot_assignments": "48aedb3e7c7f7cb8e0d5f3c94cd3bf57fb07392f0c3d6e1a0bbe88603619ae7b",
+        "gold/dim_source_artifact": "f6b066361684da08c909c5f3e5b5420a1445b1f56f90306c9100ec35fcdf50dd",
+        "gold/bridge_record_lineage": "3efdb1fda7cac810bd433734f6baf340d30afe8bccd1cd1c5db0afb692f15a95"
+      },
+      "offline_replay_identical": true,
+      "layers": [
+        "Bronze_hash_metadata",
+        "Silver_native_grain_units",
+        "candidate_Gold_and_exact_lineage"
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "aifa_traffic",
       "family": "airports",
-      "adapter_state": "discovery_only",
-      "state": "fresh_gold_selected_period",
       "scope": "Latest selected catalogue XLSX: 2026M07; not September or Aeromexico-specific",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "fresh_gold_selected_period",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "prior_selected_product_period_checks_preserved",
+      "certification_basis": "selected_product_period_checks",
+      "checks": [
+        {
+          "product": "aifa_traffic",
+          "layer": "silver",
+          "table": "airport_traffic",
+          "expected_period": "2026M07",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 1,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M07",
+          "latest_validated_period": "2026M07",
+          "release_lag_days": null,
+          "observation_age_days": 79,
+          "capture_age_days": 0,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:33.254462-06:00",
+          "evidence_file": "expanded-source-checks.json"
+        },
+        {
+          "product": "aifa_traffic",
+          "layer": "gold",
+          "table": "fact_airport_traffic",
+          "expected_period": "2026M07",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 1,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M07",
+          "latest_validated_period": "2026M07",
+          "release_lag_days": null,
+          "observation_age_days": 79,
+          "capture_age_days": 0,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:33.254462-06:00",
+          "evidence_file": "expanded-source-checks.json"
+        }
+      ],
+      "evidence_as_of": [
+        "2026-10-18T20:14:33.254462-06:00"
+      ],
+      "age_fields_policy": "Preserved at each evidence_as_of; not recalculated at consolidated inventory as_of.",
+      "evidence": [
+        "expanded-source-checks.json",
+        "macro-gold-checks.json",
+        "public-source-evidence.json"
+      ]
     },
     {
       "product": "banxico",
       "family": "macro_market",
-      "adapter_state": "implemented",
-      "state": "fresh_gold_selected_period",
       "scope": "2026M09 only; raw capture, contracts and documentary lineage. Daily quotes/observations collected in a round; no daily schedule",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "fresh_gold_selected_period",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "prior_selected_product_period_checks_preserved",
+      "certification_basis": "selected_product_period_checks",
+      "checks": [
+        {
+          "product": "banxico",
+          "layer": "gold",
+          "table": "fact_macro",
+          "expected_period": "2026M09",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 2,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M09",
+          "latest_validated_period": "2026M09",
+          "release_lag_days": null,
+          "observation_age_days": 18,
+          "capture_age_days": 0,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:08.355943-06:00",
+          "evidence_file": "macro-gold-checks.json"
+        },
+        {
+          "product": "banxico",
+          "layer": "gold",
+          "table": "fact_macro",
+          "expected_period": "2026M09",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 2,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M09",
+          "latest_validated_period": "2026M09",
+          "release_lag_days": null,
+          "observation_age_days": 18,
+          "capture_age_days": 0,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:08.355943-06:00",
+          "evidence_file": "macro-gold-checks.json"
+        },
+        {
+          "product": "banxico",
+          "layer": "gold",
+          "table": "fact_macro",
+          "expected_period": "2026M09",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 2,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M09",
+          "latest_validated_period": "2026M09",
+          "release_lag_days": null,
+          "observation_age_days": 18,
+          "capture_age_days": 0,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:08.355943-06:00",
+          "evidence_file": "macro-gold-checks.json"
+        }
+      ],
+      "evidence_as_of": [
+        "2026-10-18T20:14:08.355943-06:00"
+      ],
+      "age_fields_policy": "Preserved at each evidence_as_of; not recalculated at consolidated inventory as_of.",
+      "evidence": [
+        "expanded-source-checks.json",
+        "macro-gold-checks.json",
+        "public-source-evidence.json"
+      ]
     },
     {
       "product": "h10",
       "family": "macro_market",
-      "adapter_state": "implemented",
-      "state": "access_or_payload_failed",
-      "scope": "Earlier explicit endpoint response empty. No fallback substituted for FIX/INPC/rate",
+      "scope": "2026M09 only;22weekdays21quotesND7Sep;no quarterly/FIX/fallback activation",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "local_candidate_month_certified",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "local_candidate_month_certified",
+      "certification_basis": "dedicated_selected_period_candidate",
+      "evidence": "/workspace/airline-h10-certification/tmp/source-updates/h10-september-20261019/verification-proof-final.json",
+      "layers": [
+        "Bronze_original",
+        "dedicated_Silver",
+        "candidate_Gold_exact_lineage",
+        "offline_replay"
+      ]
     },
     {
       "product": "fuel",
       "family": "macro_market",
-      "adapter_state": "implemented",
-      "state": "fresh_gold_selected_period",
       "scope": "2026M09 only; raw capture, contracts and documentary lineage. Daily quotes/observations collected in a round; no daily schedule",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "fresh_gold_selected_period",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "prior_selected_product_period_checks_preserved",
+      "certification_basis": "selected_product_period_checks",
+      "checks": [
+        {
+          "product": "fuel",
+          "layer": "gold",
+          "table": "fact_macro",
+          "expected_period": "2026M09",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 2,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M09",
+          "latest_validated_period": "2026M09",
+          "release_lag_days": null,
+          "observation_age_days": 18,
+          "capture_age_days": 0,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:08.355943-06:00",
+          "evidence_file": "macro-gold-checks.json"
+        }
+      ],
+      "evidence_as_of": [
+        "2026-10-18T20:14:08.355943-06:00"
+      ],
+      "age_fields_policy": "Preserved at each evidence_as_of; not recalculated at consolidated inventory as_of.",
+      "evidence": [
+        "expanded-source-checks.json",
+        "macro-gold-checks.json",
+        "public-source-evidence.json"
+      ]
     },
     {
       "product": "equities",
       "family": "macro_market",
-      "adapter_state": "conditional",
-      "state": "fresh_gold_selected_period",
       "scope": "2026M09 only; raw capture, contracts and documentary lineage. Daily quotes/observations collected in a round; no daily schedule",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "fresh_gold_selected_period",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "prior_selected_product_period_checks_preserved",
+      "certification_basis": "selected_product_period_checks",
+      "checks": [
+        {
+          "product": "equities",
+          "layer": "silver",
+          "table": "market_prices",
+          "expected_period": "2026M09",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 21,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M09",
+          "latest_validated_period": "2026M09",
+          "release_lag_days": null,
+          "observation_age_days": 18,
+          "capture_age_days": 0,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:33.254462-06:00",
+          "evidence_file": "expanded-source-checks.json"
+        },
+        {
+          "product": "equities",
+          "layer": "gold",
+          "table": "fact_market_data",
+          "expected_period": "2026M09",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 21,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M09",
+          "latest_validated_period": "2026M09",
+          "release_lag_days": null,
+          "observation_age_days": 18,
+          "capture_age_days": 0,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:33.254462-06:00",
+          "evidence_file": "expanded-source-checks.json"
+        },
+        {
+          "product": "equities",
+          "layer": "silver",
+          "table": "market_prices",
+          "expected_period": "2026M09",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 21,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M09",
+          "latest_validated_period": "2026M09",
+          "release_lag_days": null,
+          "observation_age_days": 18,
+          "capture_age_days": 0,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:33.254462-06:00",
+          "evidence_file": "expanded-source-checks.json"
+        },
+        {
+          "product": "equities",
+          "layer": "gold",
+          "table": "fact_market_data",
+          "expected_period": "2026M09",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 21,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M09",
+          "latest_validated_period": "2026M09",
+          "release_lag_days": null,
+          "observation_age_days": 18,
+          "capture_age_days": 0,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:33.254462-06:00",
+          "evidence_file": "expanded-source-checks.json"
+        },
+        {
+          "product": "equities",
+          "layer": "silver",
+          "table": "market_prices",
+          "expected_period": "2026M09",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 21,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M09",
+          "latest_validated_period": "2026M09",
+          "release_lag_days": null,
+          "observation_age_days": 18,
+          "capture_age_days": 0,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:33.254462-06:00",
+          "evidence_file": "expanded-source-checks.json"
+        },
+        {
+          "product": "equities",
+          "layer": "gold",
+          "table": "fact_market_data",
+          "expected_period": "2026M09",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 21,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M09",
+          "latest_validated_period": "2026M09",
+          "release_lag_days": null,
+          "observation_age_days": 18,
+          "capture_age_days": 0,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:33.254462-06:00",
+          "evidence_file": "expanded-source-checks.json"
+        },
+        {
+          "product": "equities",
+          "layer": "silver",
+          "table": "market_prices",
+          "expected_period": "2026M09",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 21,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M09",
+          "latest_validated_period": "2026M09",
+          "release_lag_days": null,
+          "observation_age_days": 18,
+          "capture_age_days": 0,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:33.254462-06:00",
+          "evidence_file": "expanded-source-checks.json"
+        },
+        {
+          "product": "equities",
+          "layer": "gold",
+          "table": "fact_market_data",
+          "expected_period": "2026M09",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 21,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M09",
+          "latest_validated_period": "2026M09",
+          "release_lag_days": null,
+          "observation_age_days": 18,
+          "capture_age_days": 0,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:33.254462-06:00",
+          "evidence_file": "expanded-source-checks.json"
+        },
+        {
+          "product": "equities",
+          "layer": "silver",
+          "table": "market_prices",
+          "expected_period": "2026M09",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 21,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M09",
+          "latest_validated_period": "2026M09",
+          "release_lag_days": null,
+          "observation_age_days": 18,
+          "capture_age_days": 0,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:33.254462-06:00",
+          "evidence_file": "expanded-source-checks.json"
+        },
+        {
+          "product": "equities",
+          "layer": "gold",
+          "table": "fact_market_data",
+          "expected_period": "2026M09",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 21,
+          "latest_available_period": null,
+          "latest_parsed_period": "2026M09",
+          "latest_validated_period": "2026M09",
+          "release_lag_days": null,
+          "observation_age_days": 18,
+          "capture_age_days": 0,
+          "null_values": 0,
+          "revisions": {
+            "status": "not_compared_no_baseline"
+          },
+          "evidence_as_of": "2026-10-18T20:14:33.254462-06:00",
+          "evidence_file": "expanded-source-checks.json"
+        }
+      ],
+      "evidence_as_of": [
+        "2026-10-18T20:14:33.254462-06:00"
+      ],
+      "age_fields_policy": "Preserved at each evidence_as_of; not recalculated at consolidated inventory as_of.",
+      "evidence": [
+        "expanded-source-checks.json",
+        "macro-gold-checks.json",
+        "public-source-evidence.json"
+      ]
     },
     {
       "product": "anac",
       "family": "routes",
-      "adapter_state": "missing_adapter",
-      "state": "not_newly_certified",
-      "scope": "Archivo exacto en ANAC_URL; puede ser muy grande y devolver desafíos. Adaptador histórico anac_content usa rangos y mismo ETag/Last-Modified, pero tiene destino/selección congelados. No invocarlo sobre datos activos ni convertirlo en GET genérico sin límite. Nueva captura acotada y parser candidatos pendientes.",
+      "scope": "retained_ANAC_selected_companies_regular_Mexico_Brazil_only",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "not_newly_certified",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "certified_selected_retained_source_candidate",
+      "certification_basis": "retained_source_candidate",
+      "review_period": "2026M06",
+      "rows": 36,
+      "records": 36,
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "output_sha256": {
+        "silver/source_products/anac": "76d32a1b77aa61c9fef8ccb2f130742dc8b0c649969ad0eee8ec60e5d451c162",
+        "gold/fact_anac_retained_observations": "76d32a1b77aa61c9fef8ccb2f130742dc8b0c649969ad0eee8ec60e5d451c162",
+        "gold/dim_source_artifact": "ee9207755a038c565cc36397b1423eada35d185dd41977f8444f0bf9d4c187e4",
+        "gold/bridge_record_lineage": "cd781aa5ae2c02afd0c413c5c6f65c03d566335f2595fae71155599b16fe99f4"
+      },
+      "offline_replay_identical": true,
+      "layers": [
+        "Bronze_hash_metadata",
+        "Silver_native_grain_units",
+        "candidate_Gold_and_exact_lineage"
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "aerocivil",
       "family": "routes",
-      "adapter_state": "missing_adapter",
-      "state": "not_newly_certified",
-      "scope": "Revisar consulta en download(): $where anio 2025–2026 y explotador AMX/SLI; count(*) antes de $limit 50000 y orden explícito. Es una selección histórica, no fecha de release. Cambiar ventana exige conteo/paginación probados y adaptador candidato; no pasajeros ni red mundial.",
+      "scope": "2026M07 query only;10raw8S/I-coded347movements;dictionary/retained airport reference;literal code interpretation pending;not passengers/departures, eligibilityfalse",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "local_numeric_candidate_verified_interpretation_pending",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "blocked",
+      "state": "pending_primary_legend_and_entity_review",
+      "blocker": {
+        "action": "accept_interpretation_of_literal_S_I_codes",
+        "target": "https://www.datos.gov.co/api/views/jh8x-n6h6.json",
+        "reason": "Same-dataset official definitions contain no explicit S/N/I code legend. Codes from a different official dataset cannot be transferred.",
+        "completed": "10 raw rows;8 literal S/I rows,347 movements and exact lineage verified; no passenger/operator marketing inference.",
+        "outcome": "pending_primary_legend_and_entity_review",
+        "required_input": "Primary clarification for this dataset, not a guessed mapping. Metadata and official same-dataset landing checked; no legend found."
+      },
+      "evidence": "retained-verification.json"
     },
     {
       "product": "caa",
       "family": "routes",
-      "adapter_state": "discovery_only",
-      "state": "not_newly_certified",
-      "scope": "Descubrir CSV realmente presente del mes y confirmar producto. CAA_URL del adaptador apunta a captura puntual de junio, no endpoint de próximos meses. Airport Data es otro producto. No hay parser candidato genérico de novedades.",
+      "scope": "retained_CAA_punctuality_Aeromexico_Heathrow_Mexico_City_only",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "not_newly_certified",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "certified_selected_retained_source_candidate",
+      "certification_basis": "retained_source_candidate",
+      "review_period": "2026M06",
+      "rows": 6,
+      "records": 6,
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "output_sha256": {
+        "silver/source_products/caa": "3e63ae02e8e65823de2a5c2c5fcc84f4750529ccbbea6f71523aef6e59edc717",
+        "gold/fact_caa_retained_observations": "3e63ae02e8e65823de2a5c2c5fcc84f4750529ccbbea6f71523aef6e59edc717",
+        "gold/dim_source_artifact": "39510213f84ffd493a0098a9abf0ff4ecfd78dc67f438473e5892a707505f0e6",
+        "gold/bridge_record_lineage": "2261c1d6997d37e48f783b70e5d0f3c6e281d45b5901c6592d985b83b8aaf27f"
+      },
+      "offline_replay_identical": true,
+      "layers": [
+        "Bronze_hash_metadata",
+        "Silver_native_grain_units",
+        "candidate_Gold_and_exact_lineage"
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "aena",
       "family": "routes",
-      "adapter_state": "manual",
-      "state": "not_newly_certified",
-      "scope": "Exportaciones: aena_company_operations, aena_company_passengers, aena_market_operations, aena_market_passengers. Consulta personalizada mediante sesión autorizada del usuario; no login/credenciales nuevos. No hay compañía×ambos extremos. import_aena_exports escribe selección activa: no invocarlo aquí; conservar candidatos y revisar adaptador.",
+      "scope": "retained_Aena_Aerovias_airport_and_all_carrier_MEX_market_scopes_separate",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "not_newly_certified",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "certified_selected_retained_source_candidate",
+      "certification_basis": "retained_source_candidate",
+      "review_period": "2026M07",
+      "rows": 54,
+      "records": 54,
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "output_sha256": {
+        "silver/source_products/aena": "00ede2ea1a3601667f17933c0b9fd0658dd1654231aa5695edb3a5416df1d972",
+        "gold/fact_aena_retained_observations": "00ede2ea1a3601667f17933c0b9fd0658dd1654231aa5695edb3a5416df1d972",
+        "gold/dim_source_artifact": "5ed721b0073a394859819cb33fcdc6e597abfcd524a5be01f44824adaba481bb",
+        "gold/bridge_record_lineage": "f3f5153f9231c999b2bdb99f5b66791530e382ee132c674318f85fd71685fb65"
+      },
+      "offline_replay_identical": true,
+      "layers": [
+        "Bronze_hash_metadata",
+        "Silver_native_grain_units",
+        "candidate_Gold_and_exact_lineage"
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "am_routes",
       "family": "routes",
-      "adapter_state": "manual",
-      "state": "not_newly_certified",
-      "scope": "La URL del catálogo es evidencia histórica puntual. Buscar un comunicado real nuevo solo cuando el alcance lo requiera; no inferir actualización mensual ni vigencia actual de frecuencias antiguas. Capturar original/fecha y revisar manualmente.",
+      "scope": "retained_dated_text_passages_only_not_monthly_route_traffic_or_complete_network",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "not_newly_certified",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "certified_selected_retained_source_candidate",
+      "certification_basis": "retained_source_candidate",
+      "review_period": "2023M09",
+      "rows": 2,
+      "records": 2,
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "output_sha256": {
+        "silver/source_products/am_routes": "3ac7399003d699f21b5059f900bec5a59361da098b4588602bfeb22cf5b99e95",
+        "gold/fact_am_routes_retained_passages": "3ac7399003d699f21b5059f900bec5a59361da098b4588602bfeb22cf5b99e95",
+        "gold/dim_source_artifact": "758b5d7a3a960983ab75ef6b134fc2f8960f639c0f5e96fe48f55ed14e647451",
+        "gold/bridge_record_lineage": "53efaf9b7157bdf0a3c57e74c01efa56a52960d78f2ef330530e2bc3a84fb93e"
+      },
+      "offline_replay_identical": true,
+      "layers": [
+        "Bronze_hash_metadata",
+        "Silver_native_grain_units",
+        "candidate_Gold_and_exact_lineage"
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "oma_routes",
       "family": "routes",
-      "adapter_state": "discovery_only",
-      "state": "not_newly_certified",
-      "scope": "Elegir comunicado oficial por ruta, operador, fecha de inicio y frecuencia anunciada. No confundir nota con vuelos realizados. Pipeline histórico usa selección fija; nuevas notas requieren adaptador/validación manual.",
+      "scope": "retained_dated_text_passages_only_not_monthly_route_traffic_or_complete_network",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "not_newly_certified",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "certified_selected_retained_source_candidate",
+      "certification_basis": "retained_source_candidate",
+      "review_period": "2026M04",
+      "rows": 2,
+      "records": 2,
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "output_sha256": {
+        "silver/source_products/oma_routes": "343d8a792f38c6299a709bda5c59d899c37813039d03c6fdb223079c3aec4863",
+        "gold/fact_oma_routes_retained_passages": "343d8a792f38c6299a709bda5c59d899c37813039d03c6fdb223079c3aec4863",
+        "gold/dim_source_artifact": "f05f90addc5ad5cdf980123965811f31f40ff5a24f06b374804237bfba23fafb",
+        "gold/bridge_record_lineage": "f9bbbfd113afcc516f071f56427f06718eb66da6cdc6594acc98210cf6350b6f"
+      },
+      "offline_replay_identical": true,
+      "layers": [
+        "Bronze_hash_metadata",
+        "Silver_native_grain_units",
+        "candidate_Gold_and_exact_lineage"
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "colima",
       "family": "routes",
-      "adapter_state": "manual",
-      "state": "not_newly_certified",
-      "scope": "URL puntual del catálogo. Revalidar para revisión de esa evidencia; no buscar volumen o exclusividad actual en ella. Original institucional no localizado; mantener condición de mirror/atribución.",
+      "scope": "retained_dated_text_passages_only_not_monthly_route_traffic_or_complete_network",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "not_newly_certified",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "certified_selected_retained_source_candidate",
+      "certification_basis": "retained_source_candidate",
+      "review_period": "2026M05",
+      "rows": 1,
+      "records": 1,
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "output_sha256": {
+        "silver/source_products/colima": "13f26ef255c6df0ea8dd3380746b532d90ed23fa81566ddc766e8c2e5fbc2e66",
+        "gold/fact_colima_retained_passages": "13f26ef255c6df0ea8dd3380746b532d90ed23fa81566ddc766e8c2e5fbc2e66",
+        "gold/dim_source_artifact": "fa811c96a112020b5b8aedb3823ff942fa1b6ec2233d179bcc54e61622e8b4e5",
+        "gold/bridge_record_lineage": "0083afa38dc0b2c95a3eeace788b1b40cb275ebba0dd2ad97dfc048e97c936a0"
+      },
+      "offline_replay_identical": true,
+      "layers": [
+        "Bronze_hash_metadata",
+        "Silver_native_grain_units",
+        "candidate_Gold_and_exact_lineage"
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "aifa_roster",
       "family": "routes",
-      "adapter_state": "manual",
-      "state": "not_newly_certified",
-      "scope": "URL puntual de junio 2026; guardar fuente y fecha. No expandirlo a presencia actual ni pasajeros por operador. Nueva lista requiere selección explícita y revisión de inferencia.",
+      "scope": "retained_dated_text_passages_only_not_monthly_route_traffic_or_complete_network",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "not_newly_certified",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "certified_selected_retained_source_candidate",
+      "certification_basis": "retained_source_candidate",
+      "review_period": "2026M06",
+      "rows": 1,
+      "records": 1,
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "output_sha256": {
+        "silver/source_products/aifa_roster": "e357cc0ab0142e11c44e86910e846af108e5367e201a9251aa1c2093d5409691",
+        "gold/fact_aifa_roster_retained_passages": "e357cc0ab0142e11c44e86910e846af108e5367e201a9251aa1c2093d5409691",
+        "gold/dim_source_artifact": "4a1f8cfbd544b0d0453b78f3dd8194ba05980335cf1ddc9dab633e878c761129",
+        "gold/bridge_record_lineage": "241f58e5a6eda2df3b5016806e9ea26525b39c66aa24b5db3d65941796b6cf3f"
+      },
+      "offline_replay_identical": true,
+      "layers": [
+        "Bronze_hash_metadata",
+        "Silver_native_grain_units",
+        "candidate_Gold_and_exact_lineage"
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "airports_reference",
       "family": "context",
-      "adapter_state": "conditional",
-      "state": "fresh_gold_reference_snapshot",
       "scope": "9051 rows, 39 required codes and geographic/country checks; no monthly observation or publication date",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "fresh_gold_reference_snapshot",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "prior_selected_product_period_checks_preserved",
+      "certification_basis": "selected_product_period_checks",
+      "checks": [
+        {
+          "product": "airports_reference",
+          "layer": "gold",
+          "table": "dim_airport",
+          "expected_period": "reference_snapshot",
+          "latest_published_period": null,
+          "status": "checks_passed",
+          "rows": 9051,
+          "validated_snapshot_sha256": "0499dbd88de2fc735ac5c09f59796ccc3af544e17ffda807f793c0c6fe6c3d75",
+          "captured_at": "2026-10-18T19:25:40.425826-06:00",
+          "capture_age_days": 0,
+          "required_codes": [
+            "ACA",
+            "AGU",
+            "BJX",
+            "CJS",
+            "CUL",
+            "CUN",
+            "CUU",
+            "CZM",
+            "DGO",
+            "GDL",
+            "HMO",
+            "HUX",
+            "KIN",
+            "LAP",
+            "LMM",
+            "MBJ",
+            "MEX",
+            "MID",
+            "MLM",
+            "MTT",
+            "MTY",
+            "MXL",
+            "MZT",
+            "NLU",
+            "OAX",
+            "PVR",
+            "REX",
+            "SJD",
+            "SLP",
+            "SLW",
+            "TAM",
+            "TAP",
+            "TIJ",
+            "TRC",
+            "VER",
+            "VSA",
+            "ZCL",
+            "ZIH",
+            "ZLO"
+          ],
+          "revisions": {
+            "added": 6,
+            "removed": 8,
+            "changed": 41,
+            "unchanged": 9004
+          },
+          "latest_available_period": null,
+          "latest_parsed_period": null,
+          "latest_validated_period": null,
+          "release_lag_days": null,
+          "scope": "Reference snapshot at capture time; no traffic/month completeness or country-safety inference",
+          "evidence_as_of": "2026-10-18T19:39:31.168299-06:00",
+          "evidence_file": "public-source-evidence.json"
+        }
+      ],
+      "evidence_as_of": [
+        "2026-10-18T19:39:31.168299-06:00"
+      ],
+      "age_fields_policy": "Preserved at each evidence_as_of; not recalculated at consolidated inventory as_of.",
+      "evidence": [
+        "expanded-source-checks.json",
+        "macro-gold-checks.json",
+        "public-source-evidence.json"
+      ]
     },
     {
       "product": "iasa",
       "family": "context",
-      "adapter_state": "discovery_only",
-      "state": "fresh_capture_only",
-      "scope": "FAA PDF captured/hash verified; no new country-category certification",
+      "scope": "retained_FAA_IASA_country_or_authority_categories_only",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "fresh_capture_only",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "certified_selected_retained_source_candidate",
+      "certification_basis": "retained_source_candidate",
+      "review_period": "2026Q3",
+      "rows": 84,
+      "records": 84,
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "output_sha256": {
+        "silver/source_products/iasa": "60c34caa8a4848358181433b0ee04ae036dbd8950ca472dee721c67d6e043564",
+        "gold/fact_iasa_retained_categories": "60c34caa8a4848358181433b0ee04ae036dbd8950ca472dee721c67d6e043564",
+        "gold/dim_source_artifact": "76fac1509fddcb8afecf3c8eff661e9dcf21f21e17b351d3e725a8f22cc1d421",
+        "gold/bridge_record_lineage": "3b8d89ca617296be14ca71a1ad4eb3a450a472abc58adcce73f9598ba380646f"
+      },
+      "offline_replay_identical": true,
+      "layers": [
+        "Bronze_hash_metadata",
+        "Silver_native_grain_units",
+        "candidate_Gold_and_exact_lineage"
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "dictionary",
       "family": "context",
-      "adapter_state": "manual",
-      "state": "not_newly_certified",
-      "scope": "Fuente de versión: LANDING_PAGE y FILE_ID en src.ingest.nlp.loughran_mcdonald. No asumir que el ID antiguo es última edición. Si Drive pide confirmación/autenticación, registrar bloqueo o importar descarga autorizada. Mantener versión; no recalcular tono/modelos.",
+      "scope": "retained_Loughran_McDonald_full_dictionary_snapshot_not_company_tone",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "not_newly_certified",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "certified_selected_retained_source_candidate",
+      "certification_basis": "retained_source_candidate",
+      "review_period": "2026Q3",
+      "rows": 86553,
+      "records": 86553,
+      "code_head": "10885a60bf2712c6c1fab8b851998ac639118a4c",
+      "output_sha256": {
+        "silver/source_products/dictionary": "8fa7d193c94f0ea2f78c0bfe7a33f4ab2633661c4dbf2c75e32a91afb0978948",
+        "gold/dim_retained_financial_dictionary": "8fa7d193c94f0ea2f78c0bfe7a33f4ab2633661c4dbf2c75e32a91afb0978948",
+        "gold/dim_source_artifact": "05eb3f0b41f8c5106d1a0b51533ef84298828b861ea7596be01bc8cf12dc7944",
+        "gold/bridge_record_lineage": "40c55d6c10d2d1e2db2e64f86bebb0b02610bb8620d812d947e2aea0bb3b8a4e"
+      },
+      "offline_replay_identical": true,
+      "layers": [
+        "Bronze_hash_metadata",
+        "Silver_native_grain_units",
+        "candidate_Gold_and_exact_lineage"
+      ],
+      "evidence": "retained-verification.json"
     },
     {
       "product": "rss",
       "family": "news",
-      "adapter_state": "conditional",
-      "state": "fresh_silver_partial_metadata",
       "scope": "100 rows in standalone feed; 12 September rows. Metadata only, no full-month archive, no index activation",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "fresh_silver_partial_metadata",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "blocked",
+      "state": "pending_integration_and_archive_coverage",
+      "blocker": {
+        "action": "certify_complete_monthly_news_round",
+        "target": "Market/News integration PR142/private35",
+        "reason": "Retained feed is partial metadata, not a full-month archive; integration belongs to the active Market/News owner.",
+        "completed": "100 feed records parsed,12 selected September metadata records; no activation.",
+        "outcome": "pending_integration_and_archive_coverage",
+        "required_input": "Owner-integrated monthly archive with source-by-source coverage; preserve existing candidate controls."
+      },
+      "evidence": "retained-verification.json"
     },
     {
       "product": "gdelt",
       "family": "news",
-      "adapter_state": "conditional",
-      "state": "access_failed",
       "scope": "503 on selected live request. Historical HTTP-200 error text retained and rejected as news",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "access_failed",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "blocked",
+      "state": "pending_valid_source_response",
+      "blocker": {
+        "action": "certify_selected_monthly_news_response",
+        "target": "GDELT selected monthly request",
+        "reason": "Prior live request returned503; older HTTP200 error text is retained error evidence, not news. No recapture in this continuation.",
+        "completed": "Error bodies preserved and rejected as news; parser/error classification tested.",
+        "outcome": "pending_valid_source_response",
+        "required_input": "Successful, valid response in an authorized later collection round; no credentials or bypass assumed."
+      },
+      "evidence": "retained-verification.json"
     },
     {
       "product": "news_errors",
       "family": "news",
-      "adapter_state": "disabled",
-      "state": "disabled_error_evidence",
       "scope": "Preserve failed captures for audit; never news or proof of no news",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "disabled_error_evidence",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "blocked",
+      "state": "blocked_by_design",
+      "blocker": {
+        "action": "use_failed_capture_as_news",
+        "target": "news_http_error retained evidence",
+        "reason": "Intentionally disabled error-evidence product; never a news source and never proof of no news.",
+        "completed": "Audit evidence preserved; failed contents excluded from news.",
+        "outcome": "blocked_by_design",
+        "required_input": "None: retain audit-only status."
+      },
+      "evidence": "retained-verification.json"
     },
     {
       "product": "peer_profiles",
       "family": "internal",
-      "adapter_state": "internal",
-      "state": "not_newly_certified",
       "scope": "Sin endpoint. Revisar perfiles y fuentes contribuyentes; conservar versión y justificación. No inventar una descarga ni una aprobación.",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "not_newly_certified",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "blocked",
+      "state": "pending_documented_curated_parents",
+      "blocker": {
+        "action": "certify_curated_profile_parent_lineage",
+        "target": "peer_profile curated attributes",
+        "reason": "No unique download endpoint or exact per-attribute parent evidence supplied for new certification. Existing dimension schema alone is insufficient.",
+        "completed": "Retained baseline dimensions preserved; no profile or approval invented.",
+        "outcome": "pending_documented_curated_parents",
+        "required_input": "Versioned attribute-to-primary-source decisions with documented dates/lineage."
+      },
+      "evidence": "retained-verification.json"
     },
     {
       "product": "curated_context",
       "family": "internal",
-      "adapter_state": "internal",
-      "state": "not_newly_certified",
       "scope": "Sin endpoint. Cada evento exige documento original/fecha/linaje. No genera activación ni causalidad automática.",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "not_newly_certified",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "blocked",
+      "state": "pending_primary_artifacts_and_reviewed_curation",
+      "blocker": {
+        "action": "certify_curated_event_documentary_lineage",
+        "target": "curated_primary_sources events",
+        "reason": "Some existing event rows have URL declarations without retained primary artifact/hash; declaring a URL does not certify a document.",
+        "completed": "Existing events preserved; FAA category snapshot certified separately; no new causal/activation inference.",
+        "outcome": "pending_primary_artifacts_and_reviewed_curation",
+        "required_input": "Retained primary originals for the events and explicit curated selection/lineage; no fabricated downloads."
+      },
+      "evidence": "retained-verification.json"
     },
     {
       "product": "derived",
       "family": "internal",
-      "adapter_state": "internal",
-      "state": "candidate_core_rebuilt",
-      "scope": "Stage6 only, with retained parents and explicit exceptions; no analytics training or publication",
+      "scope": "1766_existing_Stage6_carrier_derived_records_only_no_models_no_new_formula_no_publication",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
-      "activation": "none"
+      "activation": "none",
+      "prior_evidence_state": "candidate_core_rebuilt",
+      "new_source_capture_in_this_continuation": false,
+      "latest_source_availability_verified": false,
+      "publication": "not_authorized",
+      "automatic_execution_active": false,
+      "category": "certified",
+      "state": "retained_stage6_derived_parent_lineage_rechecked",
+      "certification_basis": "retained_derived_parent_ancestry",
+      "rows": 1766,
+      "null_values": 113,
+      "lineage_links": 3713,
+      "documentary_ancestor_files": 99,
+      "evidence": "retained-verification.json",
+      "models_retrained": false,
+      "new_formula": false
     }
   ],
-  "families_fully_certified": [],
-  "note": "Product-specific evidence, not eight autonomous complete refreshes or permission to publish."
+  "counts": {
+    "certified": 35,
+    "blocked": 7,
+    "pending_repairable": 0
+  },
+  "certification_basis_counts": {
+    "retained_source_candidate": 16,
+    "dedicated_selected_period_candidate": 2,
+    "retained_baseline_explicit_checks": 8,
+    "selected_product_period_checks": 8,
+    "blocked": 7,
+    "retained_derived_parent_ancestry": 1
+  },
+  "families_fully_certified": false,
+  "note": "35 limited product scopes, not35 fresh sources or35 complete reports.16 retained-source adapters +2 dedicated period candidates +8 prior selected-product checks +8 explicitly rechecked retained baseline products +1 retained derived-parent check.7 blocked scopes include intentional error evidence. No currently reachable local parser gap left pending; future source editions/manual source/curation inputs and independent integrations remain conditional.",
+  "activation": "none",
+  "publication": "not_authorized",
+  "scheduled_executions": 0
 }

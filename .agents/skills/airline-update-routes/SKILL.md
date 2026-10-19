@@ -18,7 +18,7 @@ python -m src.source_updates plan --round monthly --as-of 2026-10-18T12:00:00-06
 
 Si la familia es trimestral, usar `--round quarterly --quarter 2026Q3`.
 La fecha del ejemplo solo reproduce el corte; cambiarla deliberadamente.
-Pasos existentes disponibles: Sin parser genérico certificado para novedades; capturar candidato y dejar bloqueada la incorporación hasta disponer de adaptador probado.
+Pasos existentes disponibles: comandos dedicados para snapshots retenidos y Aerocivil; no se añade un parser universal de novedades al build genérico.
 
 Consultar `src/source_updates/catalog.py` para subproductos y brechas.
 No confundir esos pasos disponibles con un adaptador aprobado para cualquier
@@ -34,10 +34,10 @@ python -m src.source_updates recipe --product anac
 
 Consultar cada producto de esta familia:
 
-- `anac` — adaptador pendiente. Entrada canónica: `constant:src.ingest.international_routes:ANAC_URL`. Formato: JSON 2021–2030 con rangos HTTP.
+- `anac` — adaptador offline de JSON completo retenido. Entrada canónica: `constant:src.ingest.international_routes:ANAC_URL`. Formato: JSON 2021–2030 con rangos HTTP.
 - `aerocivil` — candidato numérico dedicado; interpretación de códigos pendiente. Entrada canónica: `constant:src.ingest.international_routes:CO_URL`. Formato: Socrata JSON de movimientos.
-- `caa` — solo descubrimiento. Entrada canónica: `url:https://www.caa.co.uk/data-and-analysis/uk-aviation-market/flight-punctuality/uk-flight-punctuality-statistics/2026/`. Formato: HTML → CSV Flight Punctuality.
-- `aena` — selección/importación manual. Entrada canónica: `constant:src.ingest.international_routes:AENA_URL`. Formato: cuatro CSV UTF-16 exportados.
+- `caa` — adaptador offline de Flight Punctuality retenido. Entrada canónica: `url:https://www.caa.co.uk/data-and-analysis/uk-aviation-market/flight-punctuality/uk-flight-punctuality-statistics/2026/`. Formato: HTML → CSV Flight Punctuality.
+- `aena` — adaptador offline de cuatro exportaciones retenidas; nueva exportación manual autorizada. Entrada canónica: `constant:src.ingest.international_routes:AENA_URL`. Formato: cuatro CSV UTF-16 exportados.
 - `am_routes` — selección/importación manual. Entrada canónica: `catalogue:aeromexico_route_press`. Formato: comunicado HTML fechado.
 - `oma_routes` — solo descubrimiento. Entrada canónica: `catalogue:oma_route_newsroom`. Formato: sala de prensa → PDF.
 - `colima` — selección/importación manual. Entrada canónica: `catalogue:colima_route_statement`. Formato: republicación HTML fechada.
@@ -63,3 +63,26 @@ Importar además un original público OurAirports retenido, por URL y SHA-256, p
 El producto selecciona literalmente `tipo_vuelo=S` y `trafico=I`. Falta una leyenda oficial comprobada: no traducir N como chárter ni certificar S como regular. Los campos empresa y explotador son derivados del callsign y matrícula por el proveedor. Conservar el designador comercial reportado en su propia columna; `marketing_carrier` queda nulo. El AOC de fuente no establece elegibilidad histórica ni codeshare.
 
 La cifra mide movimientos aeroportuarios reportados en Colombia. Pasajeros, asientos, despegues y ocupación permanecen nulos; no son cero. Verificar aeropuerto colombiano que registra y dirección, país de ambos extremos, grano nativo, códigos IATA únicos y faltantes. Conservar exclusiones por código y ceros que sí reporta la fuente. Silver y Gold candidatos usan la validación de rutas existente y una declaración local explícita del grano de linaje. No se añade esta tabla al catálogo general ni al warehouse publicado. La comprobación numérica/linaje no cierra la interpretación de códigos, la familia, la cobertura de tres aerolíneas ni un trimestre.
+
+
+### Autoridades y documentos retenidos
+
+Aplicar el [flujo común](../source-updates-common.md#originales-retenidos-y-lote-offline).
+ANAC exige `json`, consume todos los arrays y conserva compañía literal, par
+dirigido, servicio regular y métricas separadas. La edición retenida llega a
+junio: meses/operadores ausentes no son cero ni prueba de cobertura completa.
+CAA exige `csv`; separa vuelos cotejados, no cotejados y cancelados por llegada/
+salida, sin renombrarlos como todos los vuelos realizados.
+
+Aena exige `company_operations`, `company_passengers`, `market_operations` y
+`market_passengers`. No unir compañía×aeropuerto con totales de mercado para
+atribuir compañía×ruta. Dos filas de pasajeros de Barcelona en enero/febrero
+faltan en la fuente y siguen N/D, aunque operaciones de otro CSV sean cero.
+
+Los productos `am_routes`, `oma_routes`, `colima` y `aifa_roster` exigen rol
+`document`. Solo normalizan pasajes literales y sus fechas; distinguen
+comunicado oficial, republicación y listado secundario. El periodo se refiere
+al documento, no a vuelos del mes. No expanden programación a fechas futuras,
+no demuestran operación continuada, no aportan pasajeros/asientos y no activan
+noticias ni evidencia. La leyenda Aerocivil continúa pendiente: la leyenda de
+un dataset diferente no puede transferirse a los códigos S/N/I usados aquí.
