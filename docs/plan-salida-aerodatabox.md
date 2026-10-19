@@ -1,14 +1,18 @@
 # Continuidad de Airline Tracker sin capturas AeroDataBox recurrentes
 
-Alcance vigente al **15 de octubre de 2026**, aprobado y publicado mediante el
+Este plan conserva la decisión del **15 de octubre de 2026**, aprobada mediante el
 [PR #133](https://github.com/salvamalfa/aeromexico-tracker/pull/133).
-La [ampliación posterior de cobertura](etapas/cobertura-vuelos-20261015.md)
-permanece como una versión de prueba separada.
+La procedencia de la
+[ampliación posterior de cobertura](etapas/cobertura-vuelos-20261015.md)
+se conserva en su bitácora. Para el estado publicado, consultar el
+[README](../README.md) y el manifiesto del sitio; esta guía no sustituye las
+aprobaciones de cada entrega.
 El dueño sustituyó la propuesta de retirar el histórico: **se conserva todo el
 snapshot publicado y el mapa muestra únicamente vuelos**. Las tarjetas
 oficiales, pasajeros agregados, finanzas y cuatro tesis permanecen iguales.
 El chat conserva el histórico con su procedencia y tipo de cifra. No hay
-nuevas capturas, contrataciones, actualizaciones programadas ni modelo activado.
+capturas AeroDataBox recurrentes, contrataciones ni activación automática de
+modelos o actualizaciones programadas.
 
 ## Qué sabemos de AFAC y de la semilla
 
@@ -105,6 +109,67 @@ local en MEX. No añadirlo como una corrección validada de vuelos realizados.
 Antes de reutilizar la semilla tras cancelar, revisar la
 [frontera contractual documentada](cloud-development.md#proveedores-pagados-y-github).
 
+## Auditoría de fuentes y uso de Gold
+
+La meta de representación se comprueba con un denominador fijo de vuelos
+regulares AFAC. Se muestran por separado observaciones, estimaciones y
+programación. Una estimación conserva ese nombre aunque el total supere el
+umbral. No se activa el calendario por completar una captura: faltan la
+validación de capas, la revisión de cobertura y la aprobación de cifras nuevas.
+El inventario general sigue en el
+[catálogo de fuentes y calendario](catalogo-fuentes-calendario.md); esta sección
+solo precisa su uso para vuelos.
+
+- `fact_international_route_observations` ya aporta observaciones al mapa.
+  Antes de ampliar operadores, se comprueban operador efectivo, servicio
+  regular, dirección, mes, original y precedencia. Colombia puede sustituir una
+  estimación existente; se conservan también las sustituciones que reducen el
+  conteo. Una fila ausente no se convierte en cero.
+- Para ANAC Brasil, verificar `GRUPO_DE_VOO=REGULAR`, `NATUREZA=INTERNACIONAL`
+  y `DECOLAGENS` en el original permite revisar la clasificación de una
+  observación ya contada. No añade vuelos al total amplio. Se conserva el
+  calendario nativo descrito por la
+  [metodología de ANAC](https://www.anac.gov.br/acesso-a-informacao/dados-abertos/areas-de-atuacao/voos-e-operacoes-aereas/dados-estatisticos-do-transporte-aereo/48-dados-estatisticos-do-transporte-aereo).
+- Los datos de puntualidad CAA requieren cautela: sus
+  [notas metodológicas](https://www.caa.co.uk/data-and-analysis/uk-aviation-market/flight-punctuality/uk-flight-punctuality-statistics-notes/)
+  permiten atribución al responsable comercial y destinos finales con escalas.
+  La marca comercial no acredita por sí sola el operador físico de un tramo.
+- Aena aporta agregados por aerolínea y aeropuerto, o por mercado de todas las
+  aerolíneas. No se cruzan para inventar una celda de operador y ruta. Una
+  columna de salidas completamente nula sigue siendo no disponible.
+- AICM y OMA aportan programación; AIFA y AFAC aportan márgenes o presencia
+  cuando falta el cruce de operador y ruta. Esos productos sirven para
+  contraste, pero no rellenan vuelos realizados sin evidencia adicional.
+- Una nueva fuente de movimientos, como
+  [ANAC Argentina](https://datos.transporte.gob.ar/dataset/aterrizajes-y-despegues-procesados-por-la-administracion-nacional-de-aviacion-civil-anac/archivo/7b6d0103-0a69-4c67-aed9-33cb58ae12f5),
+  requiere comprobar calendario, operador y continuidad física. No se corrigen
+  movimientos incompatibles por inferencia ni se toma la fecha de llegada
+  extranjera como fecha de salida mexicana.
+
+### Apéndice técnico: comparar candidatos sin activarlos
+
+`scripts.research.flight_gap_options` ejecuta una comparación privada y sin red
+con la misma base que `scripts.research.flight_representation`. Comprueba hashes
+de capturas, conteo independiente de Colombia, registros originales de Brasil y
+coincidencia con las celdas del mapa. Mantiene el denominador y el estimador;
+no modifica Gold, el warehouse, exportadores, aprobaciones ni `site/`.
+
+```bash
+python -m scripts.research.flight_gap_options \
+  --site /ruta/exportacion-retenida \
+  --gold data/gold \
+  --private-root /ruta/respaldo-privado \
+  --bronze /ruta/bronze-retenido \
+  --colombia /ruta/captura-colombia.json \
+  --colombia-count /ruta/conteo-colombia.json \
+  --out /ruta/privada/fuera-del-checkout-publico
+```
+
+Ambas capturas colombianas requieren su `.meta.json` con SHA-256. La ejecución
+no sustituye la validación de linaje ni la integración del operador en el
+exportador: esas tareas preceden a cualquier activación. Los resultados y
+originales nuevos se revisan en el respaldo privado. No se copian a este plan.
+
 ## Reproducir sin red ni nuevas capturas
 
 ```bash
@@ -120,3 +185,11 @@ python -m scripts.research.afac_frozen_flights \
 El script queda versionado; resultados detallados y agregados del proveedor
 permanecen ignorados/privados. Registra hashes de inputs públicos, agregados privados y de su código.
 No exporta datos al dashboard, no escribe aprobaciones ni consume APIs.
+
+## Pendientes
+
+Completar fuentes de vuelos por operador y ruta; comprobar la cobertura con el
+mismo universo antes de activar el calendario; revisar por separado los
+candidatos y su integración. Conservar las bitácoras enlazadas mientras sean
+procedencia del histórico o evidencia de un esfuerzo abierto. No retirar una
+fuente por edad ni duplicar el catálogo general en nuevos reportes de estado.
