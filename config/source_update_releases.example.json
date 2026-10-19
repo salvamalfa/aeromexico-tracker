@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "releases": [],
+  "record_fields": {
+    "entity": "AEROMEXICO, VOLARIS or VIVA_AEROBUS",
+    "period": "YYYYQn",
+    "kind": "financial_report (announcements and calls do not qualify)",
+    "confirmed": "boolean true only after checking the actual report",
+    "published_at": "ISO-8601 timestamp with the publisher's explicit timezone offset",
+    "document_url": "Actual HTTPS report URL; never a guessed future link"
+  },
+  "note": "No release dates asserted. Add verified reports to releases; an empty list leaves the quarterly date unknown."
+}

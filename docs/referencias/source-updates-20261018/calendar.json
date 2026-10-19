@@ -1,0 +1,35 @@
+{
+  "mode": "dry_run",
+  "as_of": "2026-10-18T12:00:00-06:00",
+  "timezone": "America/Mexico_City",
+  "rounds": [
+    {
+      "kind": "monthly",
+      "date": "2026-10-15"
+    },
+    {
+      "kind": "monthly",
+      "date": "2026-11-17"
+    },
+    {
+      "kind": "monthly",
+      "date": "2026-12-15"
+    },
+    {
+      "kind": "quarterly",
+      "period": "2026Q3",
+      "date": null,
+      "missing_central_reports": [
+        "AEROMEXICO",
+        "VIVA_AEROBUS",
+        "VOLARIS"
+      ],
+      "status": "waiting_for_reports",
+      "available_entities": []
+    }
+  ],
+  "scheduled_executions": 0,
+  "holiday_years_verified": [
+    "2026"
+  ]
+}

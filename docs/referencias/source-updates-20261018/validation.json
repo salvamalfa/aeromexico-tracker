@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "source_tests": "tests/test_source_update*.py, tests/test_document_lifecycle.py and pipeline/budget checks",
+  "fixture_data_only": true,
+  "source_network_acquisitions": 0,
+  "paid_requests": 0,
+  "activation": "none",
+  "publication": "none",
+  "baseline_commit": "40a63d1905afde97ae8e3f8671c8217aafacc4aa",
+  "runs": {
+    "focused": {
+      "tests": 143,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "passed": 143,
+      "seconds": 10.867
+    },
+    "full": {
+      "tests": 1599,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 75,
+      "passed": 1524,
+      "seconds": 170.077,
+      "xml_testcases_including_subtests": 1628,
+      "passed_subtests": 29,
+      "validated_commit": "b9e1d338a0ad8539aca21b6e0936466121e1df64"
+    }
+  },
+  "skip_reasons": [
+    "69 local_data tests: isolated checkout has no ignored warehouse/private inputs",
+    "5 Stage 4 tests: local artifacts intentionally not versioned",
+    "1 Pages preview test: no preview pin"
+  ],
+  "environment_preparation": [
+    "Locked Python all-extras/all-groups installed in isolated .venv",
+    "npm ci with writable cache",
+    "Matching Chromium headless shell 1243; browser tests included",
+    "Existing public approval pins from d456eb8dc05e586d7119161c710db5ff47af0da3 used only in test subprocess; no new pins or external configuration changed"
+  ],
+  "additional_checks": [
+    "ruff check src/source_updates src/ingest/macro/banxico.py scripts/check_document_lifecycle.py tests/test_source_update*.py tests/test_document_lifecycle.py",
+    "ruff check --select F src scripts",
+    "git diff --check",
+    "Original public and private checkouts remain clean",
+    "Gold, site, config/chat and data/schedule workflows unchanged; existing CI gains a lifecycle/link validation step",
+    "CI lifecycle scopes the real PR head from its merge base; synthetic merge/base advances are regression-tested"
+  ],
+  "real_source_pilot": "real-source-pilot.json (separate from fixture-only tests)",
+  "final_change_scope": "Only document-reference terminal punctuation after the full run; application/source-update code unchanged, final targeted regressions and exact-head CI required"
+}
