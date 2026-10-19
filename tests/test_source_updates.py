@@ -529,7 +529,7 @@ def test_gold_contract_and_direct_lineage_are_checked(workspace):
     assert "lineage" in blocked["checks"][0]["reason"]
 
 
-def test_news_offline_parser_keeps_cross_source_provenance(workspace):
+def test_news_offline_parser_preserves_undated_gdelt_without_borrowing_rss_date(workspace):
     (workspace / "imports").mkdir(parents=True)
     rss = (
         b"<rss><channel><item><title>Synthetic headline</title>"
@@ -585,7 +585,15 @@ def test_news_offline_parser_keeps_cross_source_provenance(workspace):
     output = pd.read_parquet(workspace / "data/silver/news_headlines.parquet")
     assert len(output) == 1
     assert output.iloc[0]["language"] == "en"
-    assert len(json.loads(output.iloc[0]["provenance_json"])) == 2
+    assert len(json.loads(output.iloc[0]["provenance_json"])) == 1
+    assert output.iloc[0]["source_system"] == "rss"
+    receipt = json.loads((workspace / "data/quality/news_metadata_selection.json").read_text())
+    unknown = receipt["publication_unknown_metadata"]
+    assert len(unknown) == 1 and unknown[0]["source_system"] == "gdelt"
+    assert unknown[0]["published_at"] is None
+    assert pd.Timestamp(unknown[0]["first_seen_at"]) == pd.Timestamp("2026-09-01T12:00:00Z")
+    assert unknown[0]["first_captured_at"] != unknown[0]["first_seen_at"]
+    assert (workspace / "data/bronze" / unknown[0]["source_file"]).is_file()
 
 
 def test_symlink_inside_candidate_is_rejected(workspace):

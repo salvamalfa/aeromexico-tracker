@@ -157,12 +157,16 @@ Por la decisión explícita de **no versionar bronze**, una reconstrucción con 
 
 ## Noticias y estrategia
 
-El archivo mensual presenta las tres fichas aprobadas con fuentes, resúmenes
+El código preparado del archivo mensual presenta las tres fichas aprobadas con fuentes, resúmenes
 breves y fechas de publicación, hecho y primera captura separadas. Permite
 filtrar por mes, tema y aerolínea, y buscar desde el chat con navegación citada.
 La cobertura es parcial. Las once candidatas del [corte de investigación](docs/etapas/noticias-candidato-20261015.md)
 siguen pendientes de revisión y no amplían la evidencia del chat.
 La [auditoría Gold](docs/gold-exposure.md) conserva los datos y sus dependencias.
+La combinación de Noticias y las herramientas de actualización requiere una cohorte
+técnica propia y consentimiento exacto antes del gate. La integración de herramientas
+no publica datos ni activa calendarios; el sitio anterior se conserva hasta ese paso.
+GDELT conserva primera observación y captura sin inventar publicación mensual.
 
 ## Chat analítico
 

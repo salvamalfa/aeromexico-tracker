@@ -129,9 +129,33 @@ def build_from_bronze() -> dict:
                 rejected.append({"source_file": artifact["source_file"], "reason": str(exc)})
                 continue
             rows.extend(_parse_gdelt(path))
+    undated = [row for row in rows if pd.isna(row["published_at"])]
+    dated = [row for row in rows if not pd.isna(row["published_at"])]
+    PATHS.quality.mkdir(parents=True, exist_ok=True)
+
+    def preserve_selection(superseded):
+        # Observation/capture dates never supply a missing publication date.
+        # Keep the original contributor, including its own lineage, outside
+        # dated editions even when a publisher RSS item shares the same URL.
+        (PATHS.quality / "news_metadata_selection.json").write_text(
+            json.dumps(
+                {
+                    "superseded_editions": superseded,
+                    "invalid_artifacts": rejected,
+                    "publication_unknown_metadata": undated,
+                },
+                default=str,
+                indent=2,
+            )
+            + "\n"
+        )
+
+    preserve_selection([])
     if not rows:
         raise ValueError("No valid news metadata; access failure is not an empty successful month")
-    output = pd.DataFrame(deduplicate(rows)).sort_values("published_at", ascending=False)
+    if not dated:
+        raise ValueError("No dated news metadata; observation/capture dates are not publication")
+    output = pd.DataFrame(deduplicate(dated)).sort_values("published_at", ascending=False)
     # Silver's existing grain is URL/query. Dated editions stay separate during
     # provenance grouping; select the latest edition without borrowing an older
     # edition's date or lineage. Originals and the discarded edition identities
@@ -141,13 +165,7 @@ def build_from_bronze() -> dict:
     output["gdelt_tone"] = pd.to_numeric(output["gdelt_tone"], errors="coerce").astype("Float64")
     write_parquet_atomic(output, PATHS.silver / "news_headlines.parquet")
     edition_selection = superseded[["url", "published_at", "source_file", "source_hash"]].to_dict("records")
-    PATHS.quality.mkdir(parents=True, exist_ok=True)
-    (PATHS.quality / "news_metadata_selection.json").write_text(
-        json.dumps(
-            {"superseded_editions": edition_selection, "invalid_artifacts": rejected}, default=str, indent=2
-        )
-        + "\n"
-    )
+    preserve_selection(edition_selection)
     return {
         "input_rows": len(rows),
         "deduplicated_rows": len(output),
@@ -155,6 +173,13 @@ def build_from_bronze() -> dict:
         "coverage": "selected_metadata_only_not_complete_month",
         "activation": "none",
         "invalid_artifacts_preserved": rejected,
-        "source_completeness": "partial_invalid_captures" if rejected else "not_certified",
+        "source_completeness": (
+            "partial_invalid_captures"
+            if rejected
+            else "partial_unknown_publication_dates"
+            if undated
+            else "not_certified"
+        ),
+        "publication_unknown_rows": len(undated),
         "superseded_editions_preserved_in_bronze": len(superseded),
     }
