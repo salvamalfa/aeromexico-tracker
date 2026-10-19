@@ -113,7 +113,12 @@ def inbound_references(root: Path, paths: list[str]) -> list[str]:
                 continue
         referenced = set()
         for target in markdown_targets(text):
-            value = markdown_url(target)
+            try:
+                value = markdown_url(target)
+            except ValueError:
+                if file.suffix == ".md":
+                    errors.append(f"Malformed Markdown target in {name}: {target}")
+                continue
             if value.scheme or value.netloc:
                 destination = mutable_repo_document(value, root)
                 if destination in removed:
@@ -127,7 +132,12 @@ def inbound_references(root: Path, paths: list[str]) -> list[str]:
                 referenced.add(removed[destination.resolve()])
         for url in re.findall(r"https?://[^\s<>\"'`)]+", text):
             for target in prose_targets(url):
-                destination = mutable_repo_document(urlsplit(target), root)
+                try:
+                    destination = mutable_repo_document(urlsplit(target), root)
+                except ValueError:
+                    # Python f-strings (e.g. server_address[1]) are not URLs
+                    # until runtime. Continue checking literal paths below.
+                    continue
                 if destination in removed:
                     referenced.add(removed[destination])
         # Immutable Git archive links are valid after retirement. Strip whole
@@ -145,7 +155,10 @@ def inbound_references(root: Path, paths: list[str]) -> list[str]:
         # relative tokens from both the repository and the consumer directory.
         literals += re.findall(r"[^\s\"'`<>:=;,|()\[\]{}]+", plain)
         for target in {value for literal in literals for value in prose_targets(literal)}:
-            value = urlsplit(target)
+            try:
+                value = urlsplit(target)
+            except ValueError:
+                continue  # Dynamic source-code tokens are not concrete URLs.
             if value.scheme or not value.path:
                 continue
             path = unquote(value.path.replace("\\", "/"))
@@ -182,7 +195,11 @@ def validate_dispositions(root: Path, paths: list[str], summary: str) -> list[st
             continue
         text = re.sub(r"```.*?```", "", file.read_text(encoding="utf-8"), flags=re.S)
         for target in markdown_targets(text):
-            value = markdown_url(target)
+            try:
+                value = markdown_url(target)
+            except ValueError:
+                errors.append(f"Malformed Markdown target in {path}: {target}")
+                continue
             if value.scheme or value.netloc or not value.path:
                 continue
             local_path = unquote(value.path)

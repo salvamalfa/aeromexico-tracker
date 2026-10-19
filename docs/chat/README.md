@@ -174,3 +174,29 @@ Se conservan los topes actuales. Las conversaciones
 OpenAI existentes requieren una nueva conversación para aplicar cambios de
 configuración. El default local sigue siendo `CHAT_MAX_TOOL_CALLS=8`; producción
 documenta 16. No se ejecutaron consultas de pago.
+
+
+## Cierre documental del 19 de octubre
+
+La fase 2 ya tiene cierre operativo. Se archivaron el brief candidato F2.5–F2.7,
+la solicitud de revisión ciega de etapa 2 y el estado preparatorio de integración.
+Sus originales están en el [índice histórico](../archivo/README.md#retiro-de-instrucciones-reemplazadas-del-chat-19-de-octubre-de-2026),
+con enlaces a un commit fijo. Este retiro no cambia aprobaciones ni runtime.
+
+La [auditoría inicial y su seguimiento](../referencias/source-updates-20261018/lifecycle-audit.json)
+clasifican los siete candidatos originales. Se conserva el presupuesto de
+etapa 2 porque acredita autorización y financiación. La entrega técnica de
+PR120 y las dos bitácoras F2.5–F2.7 conservan procedencia y pruebas históricas.
+Las fechas y banderas de esas bitácoras describen su corte, no una tarea abierta.
+Solo se actualizó el enlace del cierre técnico al brief archivado.
+
+También se conservan las decisiones, recibos, JSON presupuestales, prompt
+aprobado, conjunto de preguntas, matriz final y estimación offline. Scripts y
+pruebas aún usan varios de esos archivos. El brief corto de cierre sigue como
+entrada del dueño y mantiene su trazabilidad de pins en Git. Las guías de
+operación, Railway, Data Sharing y revisión de respuestas siguen activas.
+
+Las instrucciones de evaluación histórica se consultan para reproducir su
+expediente. Una nueva campaña requiere alcance y presupuesto propios. La
+[guía de evaluación](evaluaciones-presupuesto.md#ejecución-live-y-continuidad)
+lo declara al principio del procedimiento.

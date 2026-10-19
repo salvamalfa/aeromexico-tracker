@@ -206,3 +206,40 @@ def test_pr_diff_excludes_upstream_changes_from_github_merge_checkout(tmp_path):
     assert changed_documents(tmp_path, baseline) == ["docs/ours.md", "docs/upstream.md"]
     assert changed_documents(tmp_path, baseline, head) == ["docs/ours.md"]
     assert changed_documents(tmp_path, upstream, head) == ["docs/ours.md"]
+
+
+def test_dynamic_source_url_does_not_abort_retirement_scan_or_hide_paths(tmp_path):
+    baseline = retire_fixture(
+        tmp_path,
+        "tests/test_server.py",
+        'url = f"http://127.0.0.1:{server.server_address[1]}/review.html"\n'
+        'Path("docs/retired.md").read_text()\n',
+    )
+    paths = changed_documents(tmp_path, baseline)
+    result = validate_dispositions(
+        tmp_path,
+        paths,
+        summary({"path": "docs/retired.md", "disposition": "archive", "reason": "Replaced guide"}),
+    )
+    assert any("Inbound reference" in error and "tests/test_server.py" in error for error in result)
+    (tmp_path / "tests/test_server.py").write_text(
+        'url = f"http://127.0.0.1:{server.server_address[1]}/review.html"\n'
+    )
+    assert (
+        validate_dispositions(
+            tmp_path,
+            paths,
+            summary({"path": "docs/retired.md", "disposition": "archive", "reason": "Replaced guide"}),
+        )
+        == []
+    )
+
+
+def test_malformed_markdown_url_is_reported_as_a_validation_error(tmp_path):
+    (tmp_path / "README.md").write_text("[bad](http://[broken/file.md)")
+    result = validate_dispositions(
+        tmp_path,
+        ["README.md"],
+        summary({"path": "README.md", "disposition": "update", "reason": "Updated guide"}),
+    )
+    assert any("Malformed Markdown target" in error for error in result)
