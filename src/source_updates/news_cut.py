@@ -22,6 +22,13 @@ from src.source_updates.primary_review import no_activation, original
 ZONE = ZoneInfo("America/Mexico_City")
 
 
+def calendar_date(value: str) -> date:
+    parsed = date.fromisoformat(value)
+    if parsed.isoformat() != value:
+        raise ValueError("Expected canonical calendar date YYYY-MM-DD")
+    return parsed
+
+
 def rss_cut(root: Path, month: str, as_of: str) -> dict:
     if not re.fullmatch(r"20\d{2}-\d{2}", month):
         raise ValueError("Expected YYYY-MM")
@@ -152,14 +159,20 @@ def candidate_cut(payload: dict) -> dict:
         if not re.fullmatch(r"[a-f0-9]{64}", source["sha256"]):
             raise ValueError("Invalid source hash")
         canonical_url(source["url"])
-        published = date.fromisoformat(row["published_at"])
+        published = calendar_date(row["published_at"])
         captured = local_time(row["first_captured_at"])
         verified = local_time(row["verified_at"])
         if published > captured.date() or not captured <= verified <= cut:
             raise ValueError("Candidate date order invalid")
         for name in ("event_date", "event_end_date"):
             if row.get(name) is not None:
-                date.fromisoformat(row[name])
+                calendar_date(row[name])
+        if (
+            row.get("event_date")
+            and row.get("event_end_date")
+            and calendar_date(row["event_end_date"]) < calendar_date(row["event_date"])
+        ):
+            raise ValueError("Candidate event end precedes start")
     return {
         "mode": "upstream_candidate_metadata_audit",
         "records": len(records),

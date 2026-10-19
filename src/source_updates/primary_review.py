@@ -7,6 +7,7 @@ The result deliberately retains unresolved mappings and curated decisions.
 from __future__ import annotations
 
 import argparse
+from datetime import date
 import hashlib
 import json
 from pathlib import Path
@@ -46,11 +47,15 @@ def original(root: Path, source: dict) -> Path:
     matches = [row for row in rows if all(row.get(k) == source[k] for k in keys)]
     if not matches:
         raise ValueError("Review original absent from manifest")
+    if matches[0].get("http_status") not in {None, 200}:
+        raise ValueError("Failed HTTP response cannot support documentary facts")
     public_original(matches[0])
     sidecar = within(root, source["source_file"] + ".meta.json")
     meta = json.loads(sidecar.read_text())
     if any(meta.get(k) != source[k] for k in keys):
         raise ValueError("Review sidecar identity mismatch")
+    if meta.get("http_status") != matches[0].get("http_status"):
+        raise ValueError("Review sidecar HTTP status mismatch")
     if source.get("sidecar_sha256") and sha(sidecar) != source["sidecar_sha256"]:
         raise ValueError("Review sidecar hash mismatch")
     return path
@@ -159,6 +164,8 @@ def verify(bundle: dict, roots: dict[str, Path], repository: Path) -> dict:
             if len(match) != 1 or source.get("catalogue_registration") != "not_active_no_alias_relabelling":
                 raise ValueError("DOT audit capture missing, failed or mislabelled")
             path = within(root, source["source_file"])
+            if any(match[0].get(k) != source[k] for k in ("captured_at", "bytes")):
+                raise ValueError("DOT audit capture timestamp/size mismatch")
             if sha(path) != source["sha256"] or path.stat().st_size != source["bytes"]:
                 raise ValueError("DOT audit body mismatch")
         else:
@@ -177,6 +184,25 @@ def verify(bundle: dict, roots: dict[str, Path], repository: Path) -> dict:
             raise ValueError("Every assessment must remain ineligible")
         if any(key not in bundle["evidence"] for key in item.get("evidence_ids", [])):
             raise ValueError("Assessment references missing evidence")
+        for dated in item.get("date_kinds", []):
+            kind, value = dated["kind"], dated["value"]
+            if kind == "reported_traffic_month":
+                if len(value) != 7:
+                    raise ValueError("Expected reported month YYYY-MM")
+                date.fromisoformat(value + "-01")
+            elif kind == "SEC_acceptance_timestamp":
+                local_time(value)
+            else:
+                if len(value) != 10:
+                    raise ValueError("Expected typed calendar date YYYY-MM-DD")
+                if date.fromisoformat(value).isoformat() != value:
+                    raise ValueError("Expected canonical typed calendar date")
+            if (
+                not kind
+                or not dated.get("evidence_ids")
+                or any(key not in bundle["evidence"] for key in dated["evidence_ids"])
+            ):
+                raise ValueError("Typed date references missing evidence")
     return {
         "mode": "offline_documentary_review",
         "status": "verified_document_locations_only",

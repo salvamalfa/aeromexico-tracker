@@ -197,3 +197,90 @@ def test_candidate_rejects_activation_duplicates_and_false_date_order(mutation):
         )
     with pytest.raises(ValueError):
         news_cut.candidate_cut(payload)
+
+
+def test_failed_http_body_is_diagnostic_even_when_all_hashes_match(tmp_path):
+    root, row = retained(tmp_path, b"404 Not Found")
+    row["http_status"] = 404
+    (root / "_manifest.jsonl").write_text(json.dumps(row) + "\n")
+    (root / "feed.xml.meta.json").write_text(json.dumps(row))
+    with pytest.raises(ValueError, match="Failed HTTP"):
+        review.original(root, row)
+
+
+def documentary_bundle(tmp_path):
+    (tmp_path / "input.py").write_text("# reviewed\n")
+    return {
+        "schema_version": 1,
+        "agent_eligible": False,
+        "local_inputs": {"input.py": review.sha(tmp_path / "input.py")},
+        "sources": {},
+        "evidence": {},
+        "events": [],
+    }
+
+
+@pytest.mark.parametrize("value,ids", [("not-a-date", ["a"]), ("2026-09-01", ["absent"])])
+def test_event_typed_dates_require_valid_value_and_resolved_evidence(tmp_path, value, ids):
+    root, row = retained(tmp_path, b'{"a":1}', "a.json")
+    bundle = documentary_bundle(tmp_path)
+    bundle["sources"]["a"] = row
+    bundle["evidence"]["a"] = {"source_id": "a", "locator": {"json_pointer": "/a"}, "value": 1}
+    bundle["events"] = [
+        {
+            "agent_eligible": False,
+            "evidence_ids": ["a"],
+            "date_kinds": [{"kind": "event_date", "value": value, "evidence_ids": ids}],
+        }
+    ]
+    with pytest.raises(ValueError):
+        review.verify(bundle, {"old_public": root}, tmp_path)
+
+
+@pytest.mark.parametrize("mutation", ["timestamp", "size", "receipt_hash"])
+def test_unregistered_dot_audit_pins_capture_receipt_and_identity(tmp_path, mutation):
+    root = tmp_path / "dot"
+    root.mkdir()
+    (root / "body.json").write_text('{"a":1}')
+    digest = review.sha(root / "body.json")
+    capture = {
+        "source_file": "body.json",
+        "source_url": "https://www.transportation.gov/order.pdf",
+        "source_hash": digest,
+        "http_status": 200,
+        "bytes": 7,
+        "captured_at": "2026-10-19T17:28:25Z",
+    }
+    (root / "capture-results.json").write_text(json.dumps({"results": [capture]}))
+    source = {
+        **capture,
+        "sha256": digest,
+        "source_system": "dot_primary_review_candidate",
+        "root_id": "dot_review",
+        "catalogue_registration": "not_active_no_alias_relabelling",
+        "capture_results_sha256": review.sha(root / "capture-results.json"),
+    }
+    bundle = documentary_bundle(tmp_path)
+    bundle["sources"]["a"] = source
+    bundle["evidence"]["a"] = {"source_id": "a", "locator": {"json_pointer": "/a"}, "value": 1}
+    assert review.verify(bundle, {"dot_review": root}, tmp_path)["sources"] == 1
+    if mutation == "timestamp":
+        source["captured_at"] = "2099-01-01T00:00:00Z"
+    elif mutation == "size":
+        source["bytes"] = 999
+    else:
+        source["capture_results_sha256"] = "0" * 64
+    with pytest.raises(ValueError, match="capture"):
+        review.verify(bundle, {"dot_review": root}, tmp_path)
+
+
+@pytest.mark.parametrize("end", ["2026-09-10", "20260910", "2026-W37-4"])
+def test_candidate_inverted_event_interval_rejected_even_with_valid_self_hash(end):
+    payload = candidate()
+    row = payload["records"][0]
+    row.update(event_date="2026-10-10", event_end_date=end)
+    row["candidate_content_sha256"] = candidate_content_sha256(
+        {k: v for k, v in row.items() if k != "candidate_content_sha256"}
+    )
+    with pytest.raises(ValueError):
+        news_cut.candidate_cut(payload)
