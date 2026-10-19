@@ -19,7 +19,7 @@ import { renderMix } from "./mix";
 import { renderNetworkPeriod, renderRouteMode } from "./network";
 import { alignRouteDetailToGeo, canvasSize, mapFittedCanvasSize, renderFlowMap } from "./map";
 import { mountPicker } from "../shell/carriers";
-import { setMapEntity } from "./state";
+import { setMapEntities } from "./state";
 import { mountMapPeriodControl } from "./map-periods";
 import { state as executiveState } from "../executive/state";
 
@@ -41,13 +41,28 @@ function mountFlightPickers(): void {
   // Route map (fase 3): one entity at a time, Industria by default.
   const mapHost = $("pick-map") as HTMLElement | null;
   if (mapHost && state.availablePeriods.entities) {
-    const [initial] = mountPicker(mapHost, { card: "map", multi: false, defaults: ["INDUSTRY"] }, async ([key]) => {
-      if (!key || !setMapEntity(key)) return;
+    const mapUrl = new URL(window.location.href);
+    const incoming = mapUrl.searchParams.get("sel_map")?.split(",") ?? [];
+    if (incoming.includes("INDUSTRY") && incoming.length > 1) {
+      mapUrl.searchParams.set("sel_map", "INDUSTRY");
+      window.history.replaceState(null, "", mapUrl);
+    }
+    const initial = mountPicker(mapHost, { card: "map", multi: true, defaults: ["INDUSTRY"] }, async (keys) => {
+      if (!setMapEntities(keys)) return;
       state.pinnedAirport = null;
       state.selectedMarket = null;
       if (await renderNetworkPeriod(state.quarters[state.periodIndex]!.period_id)) renderFlowMap();
     });
-    if (initial) setMapEntity(initial);
+    setMapEntities(initial);
+    // In this map picker, Industry means all three carriers and is exclusive.
+    // Capture runs before the shared checkbox listener reads/paints selection.
+    mapHost.addEventListener("change", (event) => {
+      const box = event.target as HTMLInputElement;
+      if (box.type !== "checkbox" || !box.checked) return;
+      for (const other of mapHost.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')) {
+        if (other !== box && (box.value === "INDUSTRY" || other.value === "INDUSTRY")) other.checked = false;
+      }
+    }, true);
   }
   const mixHost = $("pick-mix") as HTMLElement | null;
   if (mixHost) {

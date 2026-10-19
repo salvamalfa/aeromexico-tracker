@@ -14,6 +14,47 @@ El chat conserva el histórico con su procedencia y tipo de cifra. No hay
 capturas AeroDataBox recurrentes, contrataciones ni activación automática de
 modelos o actualizaciones programadas.
 
+## Cobertura aceptada del mapa · 2T26
+
+El 19 de octubre se aceptó la cobertura alcanzada y se canceló perseguir el
+95 %. La entrega autorizada representa Grupo Aeroméxico 43.484 / 46.716
+(93,08 %), Viva 39.838 / 45.308 (87,93 %) y Volaris México 45.752 / 46.304
+(98,81 %). El numerador suma observados regulares y frecuencias estimadas
+retenidas; no acredita que toda estimación sea un vuelo realizado. El
+denominador conserva VLOSREG AFAC, abril–junio, nacional más internacional.
+Connect se mantiene separado en las celdas de operador y se agrega al Grupo;
+Volaris excluye los operadores extranjeros Q6/N3.
+
+La tarjeta «Cobertura del mapa», junto a Pasajeros, sigue las aerolíneas y el
+periodo del mapa. Varias aerolíneas usan razón de sumas, nunca media simple de
+porcentajes. La red completa de las tres representa 129.074 / 138.328 =
+93,31 %. El tooltip declara nacional más internacional: los recortes
+geográficos, la capa Nacional/Internacional y las doce rutas destacadas no
+redefinen ese universo total. Una selección de meses usa los mismos meses en
+ambos ámbitos. Sin todas las cifras comparables se muestra «No disponible»;
+la capa de programación tampoco acredita cobertura. Los valores estimados
+que superen una marginal AFAC no se recortan artificialmente a 100 %.
+
+La proyección `src.web_export.flight_projection` parte de los 766 JSON
+congelados del sitio auditado y de `config/flights/2026Q2-accepted.json`.
+Comprueba la edición completa y el valor anterior de cada sustitución
+colombiana, incluidos deltas negativos y ceros explícitos; mantiene faltantes
+como tales. ANAC acredita regularidad sin sumar vuelos nuevos. BTS conserva
+solo clases F/G para este numerador y CAA queda fuera mientras no pruebe el
+operador efectivo. Las celdas son únicas por operador, sentido y mes; los
+slots permanecen separados. Industria se reconstruye desde las tres redes
+resueltas. Cada mes, trimestre y ámbito se concilia contra el expediente
+aceptado antes de exportar.
+
+`python -m src.publish --flights-only --record <registro-aprobado> ... --out site`
+verifica las cuatro aprobaciones originales con su implementación publicada,
+conserva sus identidades y todos los datos ajenos a vuelos byte por byte,
+y vuelve a comprobarlos antes del reemplazo. No renueva consentimientos ni
+recalcula tesis, News, pasajeros, Gold o modelos. El contrato anterior se
+conserva por su hash exacto; no se sustituyen contratos de privacidad o
+aprobación. El candidato y el despliegue requieren sus propios checks y
+verificación; la autorización no activa periodos nuevos ni calendarios.
+
 ## Qué sabemos de AFAC y de la semilla
 
 AFAC publica vuelos y pasajeros por **mes × par direccional de ciudades,
@@ -188,8 +229,9 @@ No exporta datos al dashboard, no escribe aprobaciones ni consume APIs.
 
 ## Pendientes
 
-Completar fuentes de vuelos por operador y ruta; comprobar la cobertura con el
-mismo universo antes de activar el calendario; revisar por separado los
-candidatos y su integración. Conservar las bitácoras enlazadas mientras sean
+Conservar en cada publicación el mismo universo y las identidades aprobadas;
+comprobar también el sitio servido. No continuar la búsqueda de fuentes para alcanzar el
+95 %. Futuras actualizaciones, periodos y calendarios requieren su alcance y
+validación propios. Conservar las bitácoras enlazadas mientras sean
 procedencia del histórico o evidencia de un esfuerzo abierto. No retirar una
 fuente por edad ni duplicar el catálogo general en nuevos reportes de estado.

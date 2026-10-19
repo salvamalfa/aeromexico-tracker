@@ -48,6 +48,13 @@ as — a directory built from `web/` plus the exported v1 payloads. See
   contratos; no reconstruye modelos, crea aprobaciones ni activa datos nuevos.
   El gate normal conserva sus comprobaciones estrictas. El candidato se
   verifica antes del reemplazo y no se despliega: #133 requiere aprobación.
+- `--flights-only` proyecta las celdas aceptadas de 2T26 sobre el sitio público
+  auditado, sin reconstruir el warehouse ni los otros exportadores. Exige la
+  edición exacta de vuelos, el valor anterior de cada sustitución y la
+  conciliación por operador/mes/ámbito. Revalida las cuatro aprobaciones con su
+  implementación publicada y conserva el resto de payloads e identidades antes
+  y después del build. La autorización específica del 19 de octubre cubre esta
+  proyección y su tarjeta ponderada; no aprueba tesis nuevas, M11 ni calendarios.
 - `manifest.py`: builds and (de)serializes `publication_manifest.json` —
   the code commit (`git rev-parse HEAD`), each `contracts/web/*` file's own
   SHA-256 (its "version"), every other file under `site/` with its

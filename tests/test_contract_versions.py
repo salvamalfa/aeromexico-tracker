@@ -15,7 +15,8 @@ from src.publish.verify import verify_site
 from src.web_export.contract_versions import ARCHIVED_CONTRACTS, resolve_contract
 
 ROOT = Path(__file__).resolve().parents[1]
-OLD_SHA = next(iter(ARCHIVED_CONTRACTS["flights.schema.json"]))
+OLD_SHA = "17fb7e131da94435190bea925fe9733e298754d04e9b9c5e76fbbea8bef119a7"
+COMPONENT_SHA = "15768d277f9cb31d361d2b976602e4b65e7ed20d6419a38699557b0c13aafef6"
 
 
 @pytest.mark.parametrize("name", manifest_mod.CONTRACT_FILES)
@@ -67,6 +68,29 @@ def test_both_readers_validate_the_exact_manifest_version(isolated_site, histori
         _with_component(site)
     assert verify_site(site) == []
     assert Snapshot(site).payload("data/v1/flights/quarters.json")
+
+
+def test_component_edition_is_retained_but_cannot_accept_new_coverage(isolated_site) -> None:
+    site, _ = isolated_site
+    assert COMPONENT_SHA in ARCHIVED_CONTRACTS["flights.schema.json"]
+    _set_contract(site, COMPONENT_SHA)
+    _with_component(site)
+    assert verify_site(site) == []
+    path = site / "data/v1/flights/quarters.json"
+    payload = json.loads(path.read_bytes())
+    payload["map_coverage"] = {
+        "source": "AFAC",
+        "source_url": "https://example.invalid/afac",
+        "source_sha256": "a" * 64,
+        "rows": [],
+    }
+    path.write_text(json.dumps(payload))
+    manifest = manifest_mod.load_manifest(site)
+    manifest["files"] = manifest_mod.file_entries(site)
+    manifest_mod.write_manifest(site, manifest)
+    assert any("map_coverage" in problem for problem in verify_site(site))
+    with pytest.raises(SnapshotError, match="map_coverage"):
+        Snapshot(site)
 
 
 def test_new_component_cannot_be_validated_under_old_manifest(isolated_site) -> None:

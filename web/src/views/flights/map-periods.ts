@@ -59,7 +59,7 @@ export function mountMapPeriodControl(onChange: () => void): void {
   if (!switcher || document.querySelector("#map-period")) return;
   const label = document.createElement("label");
   label.className = "map-period-control";
-  label.innerHTML = 'Periodo del mapa <select id="map-period" aria-label="Periodo del mapa"></select><span>Las tarjetas y tesis conservan el trimestre general.</span>';
+  label.innerHTML = 'Periodo del mapa <select id="map-period" aria-label="Periodo del mapa"></select><span>Las tarjetas financieras y tesis conservan el trimestre general.</span>';
   switcher.insertAdjacentElement("afterend", label);
   const layer = document.createElement("label");
   layer.className = "map-period-control";

@@ -59,6 +59,7 @@
       "type": "object",
       "additionalProperties": { "$ref": "#/$defs/network" }
     },
+    "map_coverage": { "$ref": "#/$defs/map_coverage" },
     "entity_networks": {
       "type": "object",
       "description": "Dashboard v2: the same map for Industria, Volaris and Viva, keyed by entity.",
@@ -75,6 +76,78 @@
     }
   },
   "$defs": {
+    "map_coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "source_url",
+        "source_sha256",
+        "rows"
+      ],
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "source_url": {
+          "type": "string"
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "entity",
+              "scope",
+              "period_id",
+              "observed_regular",
+              "estimated",
+              "official_regular"
+            ],
+            "properties": {
+              "entity": {
+                "enum": [
+                  "AEROMEXICO",
+                  "VIVA_AEROBUS",
+                  "VOLARIS"
+                ]
+              },
+              "scope": {
+                "enum": [
+                  "domestic",
+                  "international"
+                ]
+              },
+              "period_id": {
+                "type": "string",
+                "pattern": "^2026(?:M0[456]|Q2)$"
+              },
+              "observed_regular": {
+                "type": "number",
+                "minimum": 0
+              },
+              "estimated": {
+                "type": "number",
+                "minimum": 0
+              },
+              "official_regular": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+
     "nullable_number": { "type": ["number", "null"] },
     "nullable_string": { "type": ["string", "null"] },
     "nullable_integer": { "type": ["integer", "null"] },
@@ -346,6 +419,7 @@
             "type": "string"
           }
         },
+        "regularity": { "const": "regular" },
         "estimator_version": { "type": "string" },
         "service_class_departures": {
           "type": "object",
