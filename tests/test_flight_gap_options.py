@@ -255,3 +255,43 @@ def test_anac_original_cannot_be_reused_for_another_gold_row(tmp_path):
     gold, baseline = anac_fixture(tmp_path)
     with pytest.raises(ValueError, match="Duplicate ANAC original"):
         verified_anac(pd.concat([gold, gold], ignore_index=True), tmp_path, baseline)
+
+
+@pytest.mark.parametrize("scope", ["international", "combined"])
+@pytest.mark.parametrize("period", ["2026M04", "2026M05", "2026M06"])
+def test_missing_monthly_baseline_stays_unavailable(scope, period):
+    row = {"entity": "VIVA_AEROBUS", "scope": scope, "period_id": period,
+           "period_export_available": False, "observed_flights": None,
+           "estimated_flights": None, "strict_observed_regular_flights": None,
+           "official_regular_flights": 100,
+           "represented_observed_plus_estimated_flights": None,
+           "strict_regular_observed_plus_estimated_flights": None,
+           "strict_regular_representation_pct": None}
+    change = {**candidate(3), "period_id": period, "previous_kind": None,
+              "previous_departures": 0, "delta": 3}
+    result = apply_options([row], [change], [candidate(2)])[0]
+    for name in ("observed_flights", "estimated_flights", "strict_observed_regular_flights",
+                 "represented_observed_plus_estimated_flights",
+                 "strict_regular_observed_plus_estimated_flights", "strict_regular_representation_pct"):
+        assert result[name] is None
+    assert result["official_regular_flights"] == 100
+    assert result["period_export_available"] is False
+    assert row.get("candidate_update_status") is None
+
+
+def test_missing_months_do_not_reduce_known_quarter_or_create_weighted_monthly_total():
+    month = {"entity": "VIVA_AEROBUS", "scope": "combined", "period_id": "2026M04",
+             "period_export_available": False, "observed_flights": None,
+             "estimated_flights": None, "strict_observed_regular_flights": None,
+             "official_regular_flights": 40,
+             "strict_regular_observed_plus_estimated_flights": None}
+    quarter = {**month, "period_id": "2026Q2", "period_export_available": True,
+               "observed_flights": 20, "estimated_flights": 50,
+               "strict_observed_regular_flights": 20, "official_regular_flights": 100}
+    change = {**candidate(3), "previous_kind": "estimated", "previous_departures": 2, "delta": 1}
+    result = apply_options([month, quarter], [change], [])
+    assert result[0]["strict_regular_observed_plus_estimated_flights"] is None
+    assert result[1]["strict_regular_observed_plus_estimated_flights"] == 71
+    # No partial weighted total: an unidentified month cannot be zero-weighted
+    # or contribute just its newly retrieved source rows.
+    assert not all(r["strict_regular_observed_plus_estimated_flights"] is not None for r in result)

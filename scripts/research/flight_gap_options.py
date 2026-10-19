@@ -217,6 +217,12 @@ def apply_options(rows, changes, regularity):
         row["snapshot"] = "candidate_not_activated"
         if row["scope"] == "domestic":
             continue
+        if row.get("period_export_available") is False:
+            # A quarter's observations do not identify a missing monthly
+            # baseline automatically. Do not turn N/D into a Colombia-only
+            # numerator or discard the retained domestic part of a total.
+            row["candidate_update_status"] = "Not applied: baseline period/scope unavailable"
+            continue
         # A totals-only scenario does not rebuild routes, top-12 or source labels.
         # Retain these only in the separately labelled baseline, never as candidate facts.
         for key in list(row):
