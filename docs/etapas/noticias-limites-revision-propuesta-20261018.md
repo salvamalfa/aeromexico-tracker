@@ -484,3 +484,19 @@ RuffF/diff-checkPASS. Huella propuesta
 La suite1116/177.35s pertenece exclusivamente abbd708b/5990be0c, con recibos
 de HEAD limpio al inicio/final. La nueva versión se valida aparte.6534/88–90
 intactos; sin fase canónica/gate ni M11/Skills.
+
+## Artículo opcional sobre los alias existentes · 19 de octubre, 02:41 UTC
+
+La revisión de5734c81 encontró el Grupo Aeroméxico. El artículo opcional se
+aplica a toda la unión de actores ya admitidos: roles enumerados y alias
+corporativos de ENTITIES. No se aceptan sintagmas arbitrarios. Seis casos
+conservan compañía/operador,2T26 y julio, incluidos GrupoAeroméxico,Connect,
+VivaAerobus y roles sin artículo. Los casos nominales anteriores siguen
+pidiendo aclaración.
+434regresiones en893casos de matrices más tres presupuestos:896PASS0.81s;
+RuffF/diff-checkPASS. Huella propuesta
+`f4c29f08e804be69ca4b5430d57435cae89853c4209f04565be0c3137500479a`.
+La suite1130/178.82s pertenece a5734c81/0902de14, con recibos limpios; se
+valida el nuevo HEAD aparte. CI532 de3c7533a/ac07bb9d pasó2778pruebas,
+29subpruebas,runtime aislado yweb; no se atribuye a otra huella.
+6534/88–90 intactos, sin fase canónica/gate ni cambios de M11/Skills.

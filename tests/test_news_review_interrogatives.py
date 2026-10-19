@@ -278,3 +278,23 @@ def test_existing_cognitive_subject_classes_admit_indefinites_gender_and_number(
 def test_indefinite_article_does_not_admit_nominal_homographs(noun):
     with pytest.raises(ValueError):
         resolve_news_query(f"Busca noticias publicadas en 2026-07 sobre por qué {noun} que salió en 2T26")
+
+
+@pytest.mark.parametrize(
+    "actor,companies",
+    [
+        ("el Grupo Aeroméxico", ["Aeroméxico"]),
+        ("la AeroméxicoConnect", ["Aeroméxico Connect"]),
+        ("la Viva Aerobus", ["Viva"]),
+        ("el AMX", ["Aeroméxico"]),
+        ("la Volaris", ["Volaris"]),
+        ("analistas", []),
+    ],
+)
+def test_optional_article_applies_to_existing_company_aliases_and_subject_roles(actor, companies):
+    intent = resolve_news_query(
+        f"Busca noticias publicadas en 2026-07 sobre por qué {actor} cree que cayeron resultados en 2T26"
+    )
+    assert intent["companies"] == companies
+    assert "2t26" in intent["terms"]
+    assert (intent["start_date"], intent["end_date"]) == ("2026-07-01", "2026-07-31")
