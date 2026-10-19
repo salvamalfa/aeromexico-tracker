@@ -140,6 +140,8 @@ def _data_schema_for(
         return ANALYSIS_SCHEMA
     if parts[2:] == ["business_metrics.json"]:
         return BUSINESS_METRICS_SCHEMA
+    if parts[2:] == ["news.json"]:
+        return json.loads((CONTRACTS_DIR / "news.schema.json").read_text())
     if parts[2:] == ["business_metrics.approval.json"]:
         return BUSINESS_METRICS_APPROVAL_SCHEMA
     return None
@@ -294,6 +296,14 @@ def verify_site(site_dir: Path) -> list[str]:
             continue
         if isinstance(payload, dict):
             data_payloads[rel] = payload
+        if rel == "data/v1/news.json":
+            from src.web_export.news import news_export_payload
+            try:
+                if payload != news_export_payload():
+                    problems.append("news.json differs from the pinned approved index projection")
+            except ValueError as error:
+                problems.append(f"news approval could not be revalidated: {error}")
+
         clean_key = (hashlib.sha256(raw).hexdigest(), _schema_digest(schema))
         if clean_key not in _CLEAN_DATA_FILES:
             data_validator = Draft202012Validator(schema)

@@ -1,0 +1,221 @@
+[
+  {
+    "id": "amx-credit-20260930",
+    "story_id": "amx-credit-20260930",
+    "kind": "news",
+    "companies": [
+      "Aeroméxico"
+    ],
+    "title": "Aeroméxico amplía su crédito revolvente con BBVA",
+    "description": "La empresa informa que renovó y amplió a US$250 millones una línea de crédito sindicada por tres años. El anuncio aporta contexto sobre liquidez y financiamiento.",
+    "source_url": "https://ir.aeromexico.com/static-files/1547f4f4-c641-47f0-89d0-723930d1f1d2",
+    "published_at": "2026-09-30",
+    "event_date": "2026-09-30",
+    "event_end_date": null,
+    "topics": [
+      "financiamiento"
+    ],
+    "publisher": "Aeroméxico",
+    "discovery_method": "publisher_archive_review"
+  },
+  {
+    "id": "amx-delta-20260820",
+    "story_id": "amx-delta-20260820",
+    "kind": "news",
+    "companies": [
+      "Aeroméxico"
+    ],
+    "title": "Aeroméxico comunica una resolución favorable sobre su alianza con Delta",
+    "description": "Aeroméxico informa que una corte de apelaciones dejó sin efectos la orden que terminaba su acuerdo con Delta. La ficha refleja la comunicación de la compañía; el seguimiento regulatorio requiere revisar actuaciones posteriores.",
+    "source_url": "https://ir.aeromexico.com/static-files/78083f4d-fb27-4e6c-b354-caee48aacfd2",
+    "published_at": "2026-08-20",
+    "event_date": "2026-08-20",
+    "event_end_date": null,
+    "topics": [
+      "regulación",
+      "alianzas"
+    ],
+    "publisher": "Aeroméxico",
+    "discovery_method": "publisher_archive_review"
+  },
+  {
+    "id": "amx-buyback-20260824",
+    "story_id": "amx-buyback-20260824",
+    "kind": "news",
+    "companies": [
+      "Aeroméxico"
+    ],
+    "title": "Aeroméxico propone someter una recompra a sus accionistas",
+    "description": "La compañía anuncia su intención de solicitar autorización para un programa de recompra. La propuesta todavía exige las decisiones corporativas descritas en el comunicado.",
+    "source_url": "https://ir.aeromexico.com/static-files/83234c17-7a28-4040-bc9d-4d7dd0ecc217",
+    "published_at": "2026-08-24",
+    "event_date": "2026-08-24",
+    "event_end_date": null,
+    "topics": [
+      "capital",
+      "estrategia"
+    ],
+    "publisher": "Aeroméxico",
+    "discovery_method": "publisher_archive_review"
+  },
+  {
+    "id": "amx-call-20260930",
+    "story_id": "amx-call-20260930",
+    "kind": "news",
+    "companies": [
+      "Aeroméxico"
+    ],
+    "title": "Aeroméxico anuncia su próxima llamada de resultados",
+    "description": "Aeroméxico anuncia una llamada programada para el 20 de octubre para comentar el tercer trimestre. La publicación de resultados está prevista para el día anterior; los resultados aún no forman parte de esta ficha.",
+    "source_url": "https://ir.aeromexico.com/static-files/33160b9a-3c0e-498a-bc14-1c08a6c283be",
+    "published_at": "2026-09-30",
+    "event_date": "2026-10-20",
+    "event_end_date": null,
+    "topics": [
+      "resultados",
+      "calendario"
+    ],
+    "publisher": "Aeroméxico",
+    "discovery_method": "publisher_archive_review"
+  },
+  {
+    "id": "viva-traffic-2026-10-09",
+    "story_id": "viva-traffic-2026-10-09",
+    "kind": "news",
+    "companies": [
+      "Viva"
+    ],
+    "title": "Viva publica su tráfico de septiembre",
+    "description": "Viva reporta una reducción interanual de pasajeros y capacidad en septiembre, acompañada de mayor ocupación. Son resultados preliminares atribuidos a la aerolínea.",
+    "source_url": "https://investorcloud.s3.amazonaws.com/VivaAerobus/InformacionFinanciera/SalaPrensa/2026-10-09-Trafico-septiembre-2026.pdf",
+    "published_at": "2026-10-09",
+    "event_date": "2026-09-01",
+    "event_end_date": "2026-09-30",
+    "topics": [
+      "tráfico",
+      "capacidad"
+    ],
+    "publisher": "Viva",
+    "discovery_method": "publisher_archive_review"
+  },
+  {
+    "id": "viva-traffic-2026-09-11",
+    "story_id": "viva-traffic-2026-09-11",
+    "kind": "news",
+    "companies": [
+      "Viva"
+    ],
+    "title": "Viva publica su tráfico de agosto",
+    "description": "Viva comunica menos pasajeros que un año antes en agosto y una mayor ocupación. La publicación ocurre en septiembre; el periodo operativo es agosto.",
+    "source_url": "https://investorcloud.s3.amazonaws.com/VivaAerobus/InformacionFinanciera/SalaPrensa/2026-09-11-Trafico-agosto-2026.pdf",
+    "published_at": "2026-09-11",
+    "event_date": "2026-08-01",
+    "event_end_date": "2026-08-31",
+    "topics": [
+      "tráfico",
+      "capacidad"
+    ],
+    "publisher": "Viva",
+    "discovery_method": "publisher_archive_review"
+  },
+  {
+    "id": "viva-traffic-2026-08-12",
+    "story_id": "viva-traffic-2026-08-12",
+    "kind": "news",
+    "companies": [
+      "Viva"
+    ],
+    "title": "Viva publica su tráfico de julio",
+    "description": "Viva informa un aumento interanual de pasajeros en julio y detalla ocupación y capacidad. El dato operativo corresponde a julio y el comunicado se publicó en agosto.",
+    "source_url": "https://investorcloud.s3.amazonaws.com/VivaAerobus/InformacionFinanciera/SalaPrensa/2026-08-12-Trafico-julio-2026.pdf",
+    "published_at": "2026-08-12",
+    "event_date": "2026-07-01",
+    "event_end_date": "2026-07-31",
+    "topics": [
+      "tráfico",
+      "capacidad"
+    ],
+    "publisher": "Viva",
+    "discovery_method": "publisher_archive_review"
+  },
+  {
+    "id": "volaris-traffic-2026-10-06",
+    "story_id": "volaris-traffic-2026-10-06",
+    "kind": "news",
+    "companies": [
+      "Volaris"
+    ],
+    "title": "Volaris publica su tráfico de septiembre",
+    "description": "Volaris presenta sus resultados preliminares de tráfico de septiembre, incluidos capacidad, demanda y ocupación. El mes de publicación y el periodo operativo se conservan por separado.",
+    "source_url": "https://filemanager-cdn.mziq.com/published/ea52c1bb-e8e2-457e-820a-98ca17753a37/d13b9b6b-4e2e-471f-a6db-60f23a9f2262",
+    "published_at": "2026-10-06",
+    "event_date": "2026-09-01",
+    "event_end_date": "2026-09-30",
+    "topics": [
+      "tráfico",
+      "capacidad"
+    ],
+    "publisher": "Volaris",
+    "discovery_method": "publisher_archive_review"
+  },
+  {
+    "id": "volaris-traffic-2026-09-03",
+    "story_id": "volaris-traffic-2026-09-03",
+    "kind": "news",
+    "companies": [
+      "Volaris"
+    ],
+    "title": "Volaris publica su tráfico de agosto",
+    "description": "Volaris presenta sus resultados preliminares de tráfico de agosto, incluidos capacidad, demanda y ocupación. El mes de publicación y el periodo operativo se conservan por separado.",
+    "source_url": "https://api.mziq.com/mzfilemanager/v2/d/ea52c1bb-e8e2-457e-820a-98ca17753a37/b0e62e2d-7edc-7d8d-c181-b69c74880565?origin=2",
+    "published_at": "2026-09-03",
+    "event_date": "2026-08-01",
+    "event_end_date": "2026-08-31",
+    "topics": [
+      "tráfico",
+      "capacidad"
+    ],
+    "publisher": "Volaris",
+    "discovery_method": "publisher_archive_review"
+  },
+  {
+    "id": "volaris-traffic-2026-08-05",
+    "story_id": "volaris-traffic-2026-08-05",
+    "kind": "news",
+    "companies": [
+      "Volaris"
+    ],
+    "title": "Volaris publica su tráfico de julio",
+    "description": "Volaris presenta sus resultados preliminares de tráfico de julio, incluidos capacidad, demanda y ocupación. El mes de publicación y el periodo operativo se conservan por separado.",
+    "source_url": "https://api.mziq.com/mzfilemanager/v2/d/ea52c1bb-e8e2-457e-820a-98ca17753a37/fcd9e32d-9ce7-9e8c-b988-a22d889fbeb2?origin=2",
+    "published_at": "2026-08-05",
+    "event_date": "2026-07-01",
+    "event_end_date": "2026-07-31",
+    "topics": [
+      "tráfico",
+      "capacidad"
+    ],
+    "publisher": "Volaris",
+    "discovery_method": "publisher_archive_review"
+  },
+  {
+    "id": "viva-us-schedule-20260624",
+    "story_id": "viva-us-schedule-20260624",
+    "kind": "news",
+    "companies": [
+      "Viva"
+    ],
+    "title": "AeroRoutes identifica suspensiones programadas de Viva en Estados Unidos",
+    "description": "AeroRoutes describe ajustes temporales en tres rutas de Viva entre agosto y septiembre. La nota informa cambios de programación; confirmar su realización requiere evidencia operativa posterior.",
+    "source_url": "https://www.aeroroutes.com/eng/260624-vbaug26us",
+    "published_at": "2026-06-24",
+    "event_date": "2026-08-09",
+    "event_end_date": "2026-09-30",
+    "topics": [
+      "red",
+      "programación"
+    ],
+    "publisher": "AeroRoutes",
+    "discovery_method": "publisher_archive_review"
+  }
+]

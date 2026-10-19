@@ -18,6 +18,7 @@ ALLOWED_REFERENCE_HOSTS = frozenset(
         "cdn.investorcloud.net",
         "www.flightglobal.com",
         "www.bmv.com.mx",
+        "investorcloud.s3.amazonaws.com", "filemanager-cdn.mziq.com", "api.mziq.com", "www.aeroroutes.com",
     }
 )
 

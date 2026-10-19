@@ -3,7 +3,27 @@
 from __future__ import annotations
 
 import json
+import math
+import xml.etree.ElementTree as ET
+from numbers import Real
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+
+
+def _strict_metadata_json(value):
+    import pandas as pd
+
+    def normalized(item):
+        if isinstance(item, dict):
+            return {key: normalized(value) for key, value in item.items()}
+        if isinstance(item, (list, tuple)):
+            return [normalized(value) for value in item]
+        if pd.api.types.is_scalar(item) and pd.isna(item):
+            return None
+        if isinstance(item, Real) and not math.isfinite(item):
+            return None
+        return item
+
+    return json.dumps(normalized(value), default=str, allow_nan=False, indent=2) + "\n"
 
 
 def canonical_url(url: str) -> str:
@@ -117,7 +137,11 @@ def build_from_bronze() -> dict:
         path = PATHS.bronze / artifact["source_file"]
         if artifact["source_system"] == "rss":
             feed_key = artifact["logical_key"].split("|")[1]
-            rows.extend(_parse_rss(path, feed_key))
+            try:
+                rows.extend(_parse_rss(path, feed_key))
+            except (ET.ParseError, ValueError, OSError) as exc:
+                rejected.append({"source_file": artifact["source_file"], "reason": str(exc)})
+                continue
         else:
             # Historical HTTP-200 aggregator errors are retained in Bronze.
             # They are access evidence, never successful empty news captures.
@@ -129,9 +153,39 @@ def build_from_bronze() -> dict:
                 rejected.append({"source_file": artifact["source_file"], "reason": str(exc)})
                 continue
             rows.extend(_parse_gdelt(path))
+    undated = [row for row in rows if pd.isna(row["published_at"])]
+    dated = [row for row in rows if not pd.isna(row["published_at"])]
+    PATHS.quality.mkdir(parents=True, exist_ok=True)
+
+    def selection(superseded):
+        # Observation/capture dates never supply a missing publication date.
+        # Keep the original contributor, including its own lineage, outside
+        # dated editions even when a publisher RSS item shares the same URL.
+        return {
+            "superseded_editions": superseded,
+            "invalid_artifacts": rejected,
+            "publication_unknown_metadata": undated,
+        }
+
+    def blocked(reason):
+        # A failed attempt must never replace the receipt of accepted Silver.
+        (PATHS.quality / "news_metadata_selection_attempt.json").write_text(
+            _strict_metadata_json({**selection([]), "status": "blocked", "reason": reason})
+        )
+
     if not rows:
-        raise ValueError("No valid news metadata; access failure is not an empty successful month")
-    output = pd.DataFrame(deduplicate(rows)).sort_values("published_at", ascending=False)
+        reason = "No valid news metadata; access failure is not an empty successful month"
+        blocked(reason)
+        raise ValueError(reason)
+    if not dated:
+        reason = "No dated news metadata; observation/capture dates are not publication"
+        blocked(reason)
+        raise ValueError(reason)
+    try:
+        output = pd.DataFrame(deduplicate(dated)).sort_values("published_at", ascending=False)
+    except (ValueError, TypeError) as exc:
+        blocked(str(exc))
+        raise
     # Silver's existing grain is URL/query. Dated editions stay separate during
     # provenance grouping; select the latest edition without borrowing an older
     # edition's date or lineage. Originals and the discarded edition identities
@@ -139,15 +193,10 @@ def build_from_bronze() -> dict:
     superseded = output.loc[output.duplicated(["url", "query_term"], keep="first")]
     output = output.drop_duplicates(["url", "query_term"], keep="first")
     output["gdelt_tone"] = pd.to_numeric(output["gdelt_tone"], errors="coerce").astype("Float64")
-    write_parquet_atomic(output, PATHS.silver / "news_headlines.parquet")
     edition_selection = superseded[["url", "published_at", "source_file", "source_hash"]].to_dict("records")
-    PATHS.quality.mkdir(parents=True, exist_ok=True)
-    (PATHS.quality / "news_metadata_selection.json").write_text(
-        json.dumps(
-            {"superseded_editions": edition_selection, "invalid_artifacts": rejected}, default=str, indent=2
-        )
-        + "\n"
-    )
+    receipt = _strict_metadata_json(selection(edition_selection))
+    write_parquet_atomic(output, PATHS.silver / "news_headlines.parquet")
+    (PATHS.quality / "news_metadata_selection.json").write_text(receipt)
     return {
         "input_rows": len(rows),
         "deduplicated_rows": len(output),
@@ -155,6 +204,13 @@ def build_from_bronze() -> dict:
         "coverage": "selected_metadata_only_not_complete_month",
         "activation": "none",
         "invalid_artifacts_preserved": rejected,
-        "source_completeness": "partial_invalid_captures" if rejected else "not_certified",
+        "source_completeness": (
+            "partial_invalid_captures"
+            if rejected
+            else "partial_unknown_publication_dates"
+            if undated
+            else "not_certified"
+        ),
+        "publication_unknown_rows": len(undated),
         "superseded_editions_preserved_in_bronze": len(superseded),
     }

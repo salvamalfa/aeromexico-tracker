@@ -94,8 +94,21 @@ def test_international_map_adds_scheduled_destinations_with_observed_precedence(
     assert observed["departures"] == sum(cell["departures"] for cell in components if cell["kind"] == "observed")
     actual_cells = {(cell["period_id"], cell["origin_iata"], cell["destination_iata"])
                     for cell in components if cell["kind"] == "observed"}
-    assert all((cell["period_id"], cell["origin_iata"], cell["destination_iata"]) not in actual_cells
-               for cell in components if cell["kind"] == "scheduled")
+    scheduled_cells = [cell for cell in components if cell["kind"] == "scheduled"]
+    # The retained program is an independent measure, including the same
+    # operator/month/direction as an observation. Operational departures above
+    # still sum only observed cells; precedence must not erase programming.
+    assert any((cell["period_id"], cell["origin_iata"], cell["destination_iata"]) in actual_cells
+               for cell in scheduled_cells)
+    with duckdb.connect(str(PATHS.warehouse), read_only=True) as connection:
+        scheduled_lax_mex = connection.execute("""
+            SELECT sum(scheduled_movements)
+            FROM fact_aicm_international_scheduled_route_movements
+            WHERE period_id IN ('2026M04', '2026M05', '2026M06')
+              AND ((origin_iata='MEX' AND dest_iata='LAX')
+                OR (origin_iata='LAX' AND dest_iata='MEX'))
+        """).fetchone()[0]
+    assert sum(cell["departures"] for cell in scheduled_cells) == scheduled_lax_mex == 897
     for route in network["routes"]:
         if route.get("passengers_estimated"):
             countries = {route["origin"]["country"], route["destination"]["country"]}

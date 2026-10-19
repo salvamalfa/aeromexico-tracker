@@ -172,6 +172,11 @@ def test_site_without_financial_payload_keeps_its_existing_manifest_without_a_pi
     source_manifest = ROOT / "site/publication_manifest.json"
     source_manifest_before = source_manifest.read_bytes()
     source_entries = json.loads(source_manifest_before)["files"]
+    expected_contracts = {
+        name: digest
+        for name, digest in json.loads(source_manifest_before)["contracts"].items()
+        if name not in {"business_metrics.schema.json", "business_metrics_approval.schema.json"}
+    }
     overlay_paths = {"data/v1/business_metrics.json", "data/v1/business_metrics.approval.json"}
     expected_entries = [entry for entry in source_entries if entry["path"] not in overlay_paths]
     site = copy_pre_financial_snapshot(tmp_path / "pre-financial")
@@ -190,7 +195,7 @@ def test_site_without_financial_payload_keeps_its_existing_manifest_without_a_pi
     assert sum(item["path"].startswith("data/") for item in manifest["files"]) == sum(
         item["path"].startswith("data/") for item in expected_entries
     )
-    assert len(manifest["contracts"]) == 6
+    assert manifest["contracts"] == expected_contracts
     assert not any("business_metrics" in item["path"] for item in manifest["files"])
     assert verify_site(site) == []
     Snapshot(site)

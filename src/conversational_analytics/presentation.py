@@ -40,6 +40,7 @@ _SAFE_HOSTS = {
     "cdn.investorcloud.net",
     "www.flightglobal.com",
     "www.bmv.com.mx",
+    "investorcloud.s3.amazonaws.com", "filemanager-cdn.mziq.com", "api.mziq.com", "www.aeroroutes.com",
 }
 _BMV_ZIP_PATH = re.compile(r"^/docs-pub/ifrsxbrl/[A-Za-z0-9._-]+\.zip$")
 _BMV_MEMBER = re.compile(r"^member=([A-Za-z0-9][A-Za-z0-9._-]*\.json)$")
@@ -78,7 +79,8 @@ def _safe_sources(*candidates: Any) -> list[dict[str, str]]:
                         label = f"{label.strip()} · miembro ZIP {member.group(1)}"
                     url = parsed._replace(fragment="").geturl()
                 else:
-                    if parsed.query or parsed.fragment:
+                    approved_query = parsed.hostname == "api.mziq.com" and parsed.query == "origin=2" and re.fullmatch(r"/mzfilemanager/v2/d/[a-f0-9-]+/[a-f0-9-]+", parsed.path)
+                    if (parsed.query and not approved_query) or parsed.fragment:
                         continue
                     url = parsed.geturl()
             except ValueError:
@@ -470,6 +472,8 @@ class DisplayRegistry:
     def __init__(self, catalog: dict[str, Any] | None = None) -> None:
         self._items: dict[str, dict[str, Any]] = {}
         self._catalog = catalog or {}
+        self.news_results: list[dict[str, Any]] = []
+        self._news_calls: set[str] = set()
 
     def add(self, raw: Any) -> dict[str, Any] | None:
         display = _validated_display(raw)
@@ -483,6 +487,12 @@ class DisplayRegistry:
         return display
 
     def add_tool_result(self, result: dict[str, Any], tool_name: str, call_id: str) -> dict[str, Any]:
+        if tool_name == "search_news":
+            from .news_navigation import news_navigation
+            navigation = news_navigation(result)
+            if navigation is not None and call_id not in self._news_calls and len(self.news_results) < 8:
+                self.news_results.append(navigation)
+                self._news_calls.add(call_id)
         candidates = result.get("displays")
         if not isinstance(candidates, list):
             candidates = [result.get("display")] if result.get("display") is not None else []
@@ -562,6 +572,7 @@ def finalize_turn_presentation(
         "references": references,
         "chart": None if displays else result.chart,
         "displays": displays,
+        **({"news_results": registry.news_results} if registry.news_results else {}),
     }
 
 
