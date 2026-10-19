@@ -256,6 +256,10 @@ def run(
     effective = datetime.now(UTC).isoformat() if check_at_completion else as_of
     try:
         with writer(workspace):
+            if (workspace / "receipts" / f"h10-{period}.json").exists():
+                raise ValueError(
+                    "Accepted H.10 candidates are immutable; use a new workspace for a new capture"
+                )
             result = certify(workspace, period, effective, collected["run_id"], write=True)
             result["requested_as_of"] = as_of
             receipt = json.dumps(result, indent=2, ensure_ascii=False) + "\n"

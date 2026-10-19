@@ -1,6 +1,7 @@
 """H.10 contract failures and isolated candidate lifecycle, using synthetic official layouts."""
 
 import csv
+from contextlib import contextmanager
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 import io
@@ -235,6 +236,24 @@ def test_failed_http_never_builds_silver_or_gold(workspace):
     assert result["status"] == "blocked_collection"
     assert not (workspace / "data/gold").exists()
     assert not (workspace / "data/silver").exists()
+
+
+def test_concurrent_acceptance_is_rechecked_under_writer_lock(workspace, monkeypatch):
+    real_writer = h10.writer
+    path = workspace / "receipts/h10-2026M09.json"
+
+    @contextmanager
+    def competing_writer(root):
+        with real_writer(root):
+            if not path.exists():
+                path.write_text("accepted by another invocation")
+            yield
+
+    monkeypatch.setattr(h10, "writer", competing_writer)
+    result = accepted(workspace)
+    assert result["status"] == "blocked_certification" and "immutable" in result["reason"]
+    assert path.read_text() == "accepted by another invocation"
+    assert not (workspace / "data/gold").exists()
 
 
 def test_other_macro_source_is_never_overwritten(workspace):
