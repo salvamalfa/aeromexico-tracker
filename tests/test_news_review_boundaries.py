@@ -314,3 +314,36 @@ def test_approved_headline_quarter_words_remain_searchable(approved_index, quest
 def test_incomplete_period_marker_cannot_disappear_into_an_unfiltered_year(marker):
     with pytest.raises(ValueError, match="notación trimestral"):
         resolve_news_query(f"noticias publicadas en {marker} de 2026")
+
+
+@pytest.mark.parametrize(
+    "notation",
+    [
+        "Q2FY26",
+        "2QFY26",
+        "FY26Q2",
+        "T2FY26",
+        "2TFY26",
+        "FY26T2",
+        "Q2FY2026",
+        "2QFY2026",
+        "FY2026Q2",
+        "Q2 FY26",
+        "2Q FY26",
+        "FY26 Q2",
+        "Q2 de FY26",
+        "FY26 del Q2",
+        "Q2-FY-2026",
+    ],
+)
+@pytest.mark.parametrize("bounds", [{}, {"start_date": "2026-04-01", "end_date": "2026-06-30"}])
+def test_fiscal_quarter_period_requires_explicit_iso_request(notation, bounds):
+    with pytest.raises(ValueError, match="notación trimestral"):
+        resolve_news_query(f"noticias publicadas en {notation}", **bounds)
+
+
+@pytest.mark.parametrize("notation", ["Q2FY26", "2QFY26", "FY26Q2"])
+def test_compact_fiscal_report_subject_stays_a_literal_search(approved_index, notation):
+    result = approved_index.search_news(f"noticias publicadas en 2026-07 sobre {notation}")
+    assert result["count"] == 0
+    assert notation.lower() in result["filters"]["terms"]

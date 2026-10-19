@@ -86,7 +86,7 @@ def _publication_scope(text: str) -> str:
         spans = [
             (start + match.start(), start + match.end())
             for match in re.finditer(
-                r"\b(?:[1-4][tq]\d{2}(?:\d{2})?|[qt][1-4](?:\d{4})?)\b", text[start:end]
+                r"\b(?:[1-4][tq](?:fy)?\d{2}(?:\d{2})?|[qt][1-4](?:fy\d{2}(?:\d{2})?|\d{4})?|fy\d{2}(?:\d{2})?[qt][1-4])\b", text[start:end]
             )
         ]
         for first, last in spans:
@@ -105,11 +105,13 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
     # Compact quarter labels are not publication dates or free-text topics.
     # Require explicit endpoints until quarter precision has its own contract.
     separator = r"[\W_]*(?:(?:de|del)[\W_]*)?"
-    quarter_year = r"\d{2}(?:\d{2})?"
+    quarter_year = r"(?:fy[\W_]*)?\d{2}(?:\d{2})?"
+    fiscal_year = r"fy[\W_]*\d{2}(?:\d{2})?"
+    explicit_year = r"(?:\d{4}|" + fiscal_year + r")"
     # A short year after T/Q needs a separator or connector: T100 and Q400
     # are literal identifiers, while T1 de 00 and Q4/00 request a period.
     separated_year = r"(?:[\W_]+(?:(?:de|del)[\W_]*)?|(?:de|del)[\W_]*)" + quarter_year
-    prefix_period = r"[qt]\s*\d(?:" + separator + r"\d{4}|" + separated_year + r")"
+    prefix_period = r"[qt]\s*\d(?:" + separator + explicit_year + r"|" + separated_year + r")"
     # The archive's existing topic tag (e.g. "sobre 2T26") describes report
     # content. Keep it searchable without treating it as publication dates.
     period_text = _publication_scope(text)
@@ -119,7 +121,7 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
         and not re.search(r"\b(?:terminal(?:es)?|aicm|aifa|aeropuerto(?:s)?)\b", period_text)
     )
     if ambiguous_t_period or re.search(
-        r"\b(?:\d{4}" + separator + r"[qt]\s*\d|" + prefix_period
+        r"\b(?:" + explicit_year + separator + r"[qt]\s*\d|" + prefix_period
         + r"|q\s*\d|\d" + separator + r"[qt](?:" + separator + quarter_year + r")?)\b",
         period_text,
     ):

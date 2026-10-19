@@ -232,3 +232,16 @@ exclusivamente a19267cd; la siguiente se ejecuta después del nuevo commit.
 Huella propuesta `7adcf2ea8f9120571cc1ab78b3de0111c7e0bbfc1078da0f73fac039dffa0c10`.
 No se crean registros, auditorías ni aprobaciones financieras, ni otro gate.
 La autorización original6534f876/88–90 sigue vigente para sus pares exactos.
+
+## Marcador fiscal FY · 19 de octubre, 00:24 UTC
+
+La revisión de552590b añadió Q2FY26,2QFY26 yFY26Q2. Los tres órdenes
+reconocen FY con año corto/largo y sus separadores, también para T; no se
+infiere un calendario fiscal. Un periodo fiscal de publicación exige extremos
+ISO, incluso si la llamada suministra límites adicionales. Como tema simple,
+la etiqueta compacta conserva la búsqueda literal y da cero sin evidencia.
+Pasan224regresiones,683casos con las matrices previas (0.57s), Ruff F y
+diff-check. Los893resultados limpios de552590b/179.15s siguen vinculados solo
+a ese HEAD. Huella propuesta actual
+`8c0c445c9c1c6dd5c79894da421071b2fcc6573dc27ad9d22ca16214ab218dee`.
+La nueva suite se ejecuta después del commit; ninguna fase canónica ni gate.
