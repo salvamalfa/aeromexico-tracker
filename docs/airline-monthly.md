@@ -11,8 +11,14 @@ conservan el alcance solicitado por Salva.
 
 Es un borrador editorial. Preparar el código y el HTML no aprueba sus cifras,
 no activa tesis ni autoriza publicarlo. El build habitual excluye la página,
-sus datos y el enlace de producto. Noticias y las skills de actualización
-permanecen en sus propios PRs.
+sus datos y el enlace de producto. Noticias permanece en su propio PR.
+Las herramientas de actualización de fuentes ya integradas forman parte de
+la base de revisión de M11.
+
+La rama se actualizó con `master` en `dfa207c`. Solo hubo conflictos en la
+bitácora de cambios y la hoja de ruta; se conservaron las entradas de ambos
+trabajos. La interfaz, el JSON editorial y el HTML entregado mantienen los
+mismos bytes de `29f006b`. No se reemplaza el HTML enviado a Library.
 
 La estructura pública de [Airline Weekly](https://airlineweekly.skift.com/)
 y su [archivo](https://airlineweekly.skift.com/issues/) sirven de referencia

@@ -8,6 +8,51 @@
   borrador. Sin cambios de datos aprobados ni publicación de producción.
   [Acuerdo y límites](docs/airline-monthly-plan-20261019.md).
 
+## 2026-10-19 · Candidato Gold y nuevas capturas públicas
+
+- Dimensión de periodos derivada de observaciones y tasa objetivo con unidad
+  `percent`, sin reescalar cifras. Regresiones de septiembre y cambio de año.
+- BMV con miembros ZIP offline acotados, historia de catálogos conservada y
+  puente Gold contrastado con Bronze. Yahoo chart público preservado y cinco
+  identidades verificadas; no se empalma AERO anterior a su IPO.
+- AFAC candidato usa meses comunes de PDF y fletamento 2026, conserva notas de
+  cobertura y elimina el corte fijo de junio. AICM admite meses nuevos contiguos.
+- Selección de documentos por enlaces reales y control de snapshot OurAirports.
+  Noticias conserva fallos HTTP-200 y ediciones anteriores en Bronze con recibo;
+  no activa el índice mensual ni declara cobertura completa.
+- `round --check-at-completion` optativo registra el corte efectivo de una
+  captura nueva y conserva el corte solicitado. Sin él se respeta el histórico.
+- Propuesta separada sobre PR137; sin merge, publicación ni automatización.
+  [Guía y evidencia por producto](docs/catalogo-fuentes-calendario.md).
+
+## 2026-10-18 · Skills de fuentes y coordinador candidato
+
+- Ocho skills por familia y un coordinador con calendario bancario mexicano,
+  captura aislada, construcción offline y controles explícitos por periodo.
+  [Guía y muestras](docs/catalogo-fuentes-calendario.md).
+- Calendario aprobado, sin nuevas automatizaciones, datos activados ni
+  publicación. AeroDataBox retenido permanece sin cambios; adaptadores con
+  límites históricos y conexión mensual de PR136 se declaran pendientes.
+  PR134 ya está integrado por sus responsables; esta rama sigue aislada.
+- Convención de audiencia añadida a `AGENTS.md`; auditoría inicial del lifecycle
+  de solo lectura, sin retirar ni reescribir documentos históricos.
+- Recetas de adquisición por producto, índice visible de las ocho skills y
+  ejemplo macro ejecutable. EIA y las tres series Banxico pasaron hasta Silver
+  en pilotos reales; H.10 respondió vacío. BMV queda en captura y bolsa requiere
+  evidencia SEC local. Se atendieron quince hallazgos de ocho rondas de revisión Codex.
+- Noticias deduplicadas conservan metadatos por contribuyente; sus controles y
+  revisiones verifican la procedencia RSS/GDELT propia contra Bronze.
+- Captura con alias Bronze compatibles por producto; dependencias obligatorias
+  en orden. Gold se bloquea si falta la cadena completa, sin omitir validaciones.
+- Cierre documental obligatorio en `AGENTS.md` y comprobación de disposiciones
+  y enlaces en el CI existente, incluidos consumidores sin modificar de un
+  documento retirado o movido; se conservan sus permisos y eventos.
+- El cierre incluye rutas relativas sin comillas y enlaces raw al branch
+  principal. En CI compara el head real del PR desde su ancestro común;
+  excluye cambios ajenos del commit de mezcla preparado por GitHub.
+- Las referencias en prosa admiten puntuación final sin perder la comprobación
+  de su ruta literal original.
+
 ## 2026-10-12 · Chat: cierre operativo de fase 2 (fecha México)
 
 - PR #129 integrado; Railway `SUCCESS` y health 200 confirman R2/Sol low/medium,

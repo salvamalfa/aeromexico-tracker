@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "product": "fuel",
+  "pipeline_state": "candidate_executable_not_approved",
+  "acquisition": {
+    "id": "fuel",
+    "source_key": "eia",
+    "cadence": "both",
+    "limitation": "market_reference_report_days_covered",
+    "parser_step": "parse.fuel",
+    "family": "macro_market",
+    "entry_ref": "constant:src.ingest.macro.fuel:EIA_XLS_URL",
+    "state": "implemented",
+    "format": "GET \u2192 XLS hist\u00f3rico, Data 1/header=2",
+    "procedure": "Serie EER_EPJK_PF4_RGC_DPG, entidad id\u00e9ntica, periodo 2015-01-01_fin. Revalidar la misma URL; parser limita ventana al fin solicitado. parse.fuel y check por date/series_id. \u00daltima fecha del XLS original y \u00faltima parseada son distintas; publicaci\u00f3n desconocida queda nula. Piloto real documentado.",
+    "entry_url": "https://www.eia.gov/dnav/pet/hist_xls/EER_EPJK_PF4_RGC_DPGd.xls",
+    "canonical_config": "config/source_update_acquisition.json",
+    "institution_catalogue": "config/source_catalog.yaml",
+    "bronze_source_systems": [
+      "eia"
+    ],
+    "pilot_evidence": {
+      "as_of": "2026-10-18T20:47:57.743550+00:00",
+      "capture_status": "collected_unvalidated",
+      "parser_checks": "checks_passed",
+      "reference": "docs/referencias/source-updates-20261018/real-source-pilot.json"
+    },
+    "activation": "none"
+  },
+  "selection": {
+    "version": 1,
+    "items": [
+      {
+        "product": "fuel",
+        "period": "2015-01-01_2026-09-30",
+        "purpose": "data",
+        "id": "eia-history",
+        "source_system": "eia",
+        "entity": "EER_EPJK_PF4_RGC_DPG",
+        "url": "https://www.eia.gov/dnav/pet/hist_xls/EER_EPJK_PF4_RGC_DPGd.xls",
+        "extension": "xls",
+        "mode": "manual",
+        "local_file": "eia.xls",
+        "sha256": "1c09765de4f1fb5ef63312557b51c95b83f841c9b12f10dab9837f319dd1224d"
+      }
+    ]
+  },
+  "steps": [
+    "parse.fuel"
+  ],
+  "checks": {
+    "as_of": "2026-10-18T20:17:56.496833-06:00",
+    "checks": [
+      {
+        "product": "fuel",
+        "layer": "silver",
+        "table": "fuel_prices",
+        "period_column": "date",
+        "expected_period": "2026M09",
+        "filters": {
+          "series_id": "EER_EPJK_PF4_RGC_DPG"
+        },
+        "value_columns": [
+          "price_usd_per_gallon"
+        ]
+      }
+    ]
+  },
+  "coverage": "explicit_period_checks_only_no_day_completeness_or_Gold_certification",
+  "activation": "none",
+  "publication": "not_authorized",
+  "evidence_scope": "Offline end-to-end replay of preserved real public XLS; not a fresh source request"
+}

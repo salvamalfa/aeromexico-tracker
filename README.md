@@ -120,7 +120,8 @@ Las tablas gold sí se versionan porque son los extractos públicos y compactos 
 ## Datos y documentación
 
 - [Catálogo completo y calendario de rondas mensuales/trimestrales](docs/catalogo-fuentes-calendario.md)
-  (fase 1 documental: fechas, cobertura, dependencias y anexos métricos).
+  (calendario aprobado, skills y coordinador candidato con pruebas en seco;
+  sin nuevas ejecuciones automáticas ni publicación).
 - [Continuidad sin capturas AeroDataBox recurrentes](docs/plan-salida-aerodatabox.md)
   (histórico conservado, mapa solo de vuelos y prueba AFAC/AICM).
 - [Cierre de AeroDataBox, con capturas antes/después](docs/etapas/cierre-aerodatabox-20261014.md).

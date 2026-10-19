@@ -1,0 +1,249 @@
+{
+  "version": 1,
+  "kind": "read_only_real_source_pilot_in_isolated_candidate",
+  "started_at": "2026-10-18T20:19:51.298210+00:00",
+  "finished_at": "2026-10-18T20:47:57.743550+00:00",
+  "acquisitions": [
+    {
+      "id": "eia-history",
+      "product": "fuel",
+      "source_url": "https://www.eia.gov/dnav/pet/hist_xls/EER_EPJK_PF4_RGC_DPGd.xls",
+      "status": "collected_unvalidated",
+      "sha256": "1c09765de4f1fb5ef63312557b51c95b83f841c9b12f10dab9837f319dd1224d",
+      "bytes": 460800,
+      "raw_observations": {
+        "first_date": "1990-04-02",
+        "last_date": "2026-10-14",
+        "rows": 8057,
+        "period_of_latest_observation": "2026M10"
+      },
+      "parser_window": {
+        "from": "2015-01-01",
+        "through": "2026-09-30"
+      },
+      "first_publication_date_verified": false
+    },
+    {
+      "id": "am-ir-catalog",
+      "product": "am_financials",
+      "source_url": "https://ir.aeromexico.com/financial-information/quarterly-results",
+      "status": "collected_catalog",
+      "sha256": "eaa5dc81cafba9e2f7c310db2f9a677111fbdd8be605676ffe94ab1e56a277d6",
+      "bytes": 85753,
+      "discovered_links": 69,
+      "new_financial_reports_certified": 0,
+      "first_publication_date_verified": false
+    },
+    {
+      "id": "SF43718",
+      "product": "banxico",
+      "source_url": "https://www.banxico.org.mx/SieInternet/consultarDirectorioInternetAction.do?accion=consultarSeries",
+      "status": "collected_unvalidated",
+      "sha256": "52bd225053674f3cb8cb183ab1ca288cb71766b2e5cbc17859e9ab53c1d25447",
+      "bytes": 59871,
+      "public_request_form": {
+        "idCuadro": "CF373",
+        "sector": "6",
+        "version": "3",
+        "locale": "es",
+        "anoInicial": "2015",
+        "anoFinal": "2026",
+        "tipoInformacion": "4,1",
+        "formatoHorizontal": "false",
+        "metadatosWeb": "true",
+        "formatoCSV.x": "1",
+        "formatoCSV.y": "1",
+        "series": "SF43718"
+      },
+      "first_publication_date_verified": false
+    },
+    {
+      "id": "SP1",
+      "product": "banxico",
+      "source_url": "https://www.banxico.org.mx/SieInternet/consultarDirectorioInternetAction.do?accion=consultarSeries",
+      "status": "collected_unvalidated",
+      "sha256": "851ec3a4c14250d863a9d1b15ac4fb7ee315d4ce459efddaa1febb22a2dd77f8",
+      "bytes": 5224,
+      "public_request_form": {
+        "idCuadro": "CF373",
+        "sector": "6",
+        "version": "3",
+        "locale": "es",
+        "anoInicial": "2015",
+        "anoFinal": "2026",
+        "tipoInformacion": "4,1",
+        "formatoHorizontal": "false",
+        "metadatosWeb": "true",
+        "formatoCSV.x": "1",
+        "formatoCSV.y": "1",
+        "series": "SP1"
+      },
+      "first_publication_date_verified": false
+    },
+    {
+      "id": "SF61745",
+      "product": "banxico",
+      "source_url": "https://www.banxico.org.mx/SieInternet/consultarDirectorioInternetAction.do?accion=consultarSeries",
+      "status": "collected_unvalidated",
+      "sha256": "0bd8aa72e3b3c4472766c14b9f4fc447df77d101bae3de9e002119f6327ddf75",
+      "bytes": 82889,
+      "public_request_form": {
+        "idCuadro": "CF373",
+        "sector": "6",
+        "version": "3",
+        "locale": "es",
+        "anoInicial": "2015",
+        "anoFinal": "2026",
+        "tipoInformacion": "4,1",
+        "formatoHorizontal": "false",
+        "metadatosWeb": "true",
+        "formatoCSV.x": "1",
+        "formatoCSV.y": "1",
+        "series": "SF61745"
+      },
+      "first_publication_date_verified": false
+    },
+    {
+      "id": "h10-usd-mxn",
+      "product": "h10",
+      "source_url": "https://www.federalreserve.gov/datadownload/Output.aspx?rel=H10&series=60f32914ab61dfab590e0e470153e3ae&lastobs=&from=01%2F01%2F2015&to=09%2F30%2F2026&filetype=csv&label=include&layout=seriescolumn&type=package",
+      "status": "access_or_payload_failed",
+      "error_type": "ValueError",
+      "reason": "Empty response",
+      "http_status_inferred_from_validated_response_branch": 200,
+      "first_publication_date_verified": false
+    }
+  ],
+  "bronze_hash_verification": "passed",
+  "silver_checks": {
+    "version": 1,
+    "mode": "candidate_checks",
+    "as_of": "2026-10-18T20:47:57.743550+00:00",
+    "checks": [
+      {
+        "product": "fuel",
+        "layer": "silver",
+        "table": "fuel_prices",
+        "expected_period": "2026M09",
+        "latest_published_period": null,
+        "status": "checks_passed",
+        "rows": 21,
+        "latest_available_period": null,
+        "latest_parsed_period": "2026M09",
+        "latest_validated_period": "2026M09",
+        "release_lag_days": null,
+        "observation_age_days": 18,
+        "capture_age_days": 0,
+        "null_values": 0,
+        "revisions": {
+          "status": "not_compared_no_baseline"
+        }
+      },
+      {
+        "product": "banxico",
+        "layer": "silver",
+        "table": "macro_indicators",
+        "expected_period": "2026M09",
+        "latest_published_period": null,
+        "status": "checks_passed",
+        "rows": 21,
+        "latest_available_period": null,
+        "latest_parsed_period": "2026M09",
+        "latest_validated_period": "2026M09",
+        "release_lag_days": null,
+        "observation_age_days": 18,
+        "capture_age_days": 0,
+        "null_values": 0,
+        "revisions": {
+          "status": "not_compared_no_baseline"
+        }
+      },
+      {
+        "product": "banxico",
+        "layer": "silver",
+        "table": "macro_indicators",
+        "expected_period": "2026M09",
+        "latest_published_period": null,
+        "status": "checks_passed",
+        "rows": 1,
+        "latest_available_period": null,
+        "latest_parsed_period": "2026M09",
+        "latest_validated_period": "2026M09",
+        "release_lag_days": null,
+        "observation_age_days": 18,
+        "capture_age_days": 0,
+        "null_values": 0,
+        "revisions": {
+          "status": "not_compared_no_baseline"
+        }
+      },
+      {
+        "product": "banxico",
+        "layer": "silver",
+        "table": "macro_indicators",
+        "expected_period": "2026M09",
+        "latest_published_period": null,
+        "status": "checks_passed",
+        "rows": 30,
+        "latest_available_period": null,
+        "latest_parsed_period": "2026M09",
+        "latest_validated_period": "2026M09",
+        "release_lag_days": null,
+        "observation_age_days": 18,
+        "capture_age_days": 0,
+        "null_values": 0,
+        "revisions": {
+          "status": "not_compared_no_baseline"
+        }
+      }
+    ],
+    "status": "checks_passed",
+    "scope": "only_explicit_checks_not_complete_round_certification",
+    "approval": "human_review_required",
+    "activation": "none",
+    "publication": "not_authorized"
+  },
+  "gold_built_or_certified": false,
+  "complete_month_or_round_certified": false,
+  "other_products": "No new live pilot beyond EIA, Banxico, H10 and Aeromexico IR discovery",
+  "revisions": "not_compared_no_baseline",
+  "publication": "none",
+  "activation": "none",
+  "paid_requests": 0,
+  "baseline_public_commit": "40a63d1905afde97ae8e3f8671c8217aafacc4aa",
+  "protected_tracked_paths_changed": [],
+  "original_checkouts_clean": true,
+  "raw_inputs": "remain ignored in tmp/source-updates/live-20261018; not committed",
+  "flight_import_compatibility": {
+    "head": "8b5dd73a3c827b6e6cdee12addc4e4bbd73eede6",
+    "FORM_URL_logical_source_url_post_payload": "AST-identical_to_base"
+  },
+  "calendar_semantics": {
+    "banking_holidays": "explicit_in_approved_proposal_lines_180_182",
+    "three_entities": "explicit_lot_and_industry_inputs_in_proposal_lines_174_and_198_200",
+    "all_three_published_financial_reports_gate": "conservative_implementation_interpretation_not_extra_literal_approval",
+    "America_Mexico_City": "explicit_current_task_instruction_original_proposal_recorded_UTC"
+  },
+  "generated_recipe_runs": {
+    "fuel": {
+      "collection_status": "collected_unvalidated",
+      "build_status": "completed",
+      "check_status": "checks_passed",
+      "recipe_command": "python -m src.source_updates recipe --product fuel --output round --period 2026M09 --as-of <cutoff-with-timezone>"
+    },
+    "banxico": {
+      "collection_status": "collected_unvalidated",
+      "build_status": "completed",
+      "check_status": "checks_passed",
+      "recipe_command": "python -m src.source_updates recipe --product banxico --output round --period 2026M09 --as-of <cutoff-with-timezone>"
+    },
+    "h10": {
+      "collection_status": "incomplete",
+      "build_status": null,
+      "check_status": null,
+      "recipe_command": "python -m src.source_updates recipe --product h10 --output round --period 2026M09 --as-of <cutoff-with-timezone>"
+    }
+  },
+  "eia_revalidation_same_sha256": true,
+  "ci_change": "Existing CI gains documentation lifecycle/link check; no schedule, permission or credential changes"
+}

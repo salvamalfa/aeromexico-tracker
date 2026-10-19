@@ -9,8 +9,10 @@ comunes. Ver también `CLAUDE.md`, `AGENTS.md`, `CHANGELOG.md` y `ROADMAP.md`.
 Para diseñar los siguientes lotes de datos, ver el
 [catálogo de fuentes/métricas y calendario](docs/catalogo-fuentes-calendario.md)
 y el [cierre de las capturas AeroDataBox con histórico conservado](docs/etapas/cierre-aerodatabox-20261014.md).
-Son entregables documentales de fase 1; no sustituyen contratos ni ejecutan
-actualizaciones.
+El catálogo incluye la guía de skills y del coordinador candidato
+(`src/source_updates/`, `python -m src.source_updates --help`). Hay planificación,
+captura aislada, pasos offline y controles explícitos. Sus ejemplos están en seco;
+no hay activación nueva, y los contratos y gates existentes siguen vigentes.
 
 ## Qué vive dónde
 

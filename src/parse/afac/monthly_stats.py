@@ -346,16 +346,16 @@ def _pdf_line_values(line: str) -> tuple[str, list[int]] | None:
 
 
 def _pdf_2026_facts(
-    crosswalk: dict[str, list[dict[str, str]]]
+    crosswalk: dict[str, list[dict[str, str]]], documents=None
 ) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
     """Parse scheduled passengers from each contemporaneous 2026 DATATUR PDF."""
 
     records: list[dict[str, object]] = []
     checks: list[dict[str, object]] = []
     estimates = _estimate_rules()
-    for month in range(1, 7):
+    for month in (sorted(documents) if documents is not None else range(1, 7)):
         directory = PATHS.bronze / "afac" / "2026" / f"{month:02d}"
-        path = next(directory.glob("*.pdf"), None)
+        path = documents[month] if documents is not None else next(directory.glob("*.pdf"), None)
         if path is None:
             raise FileNotFoundError(f"Missing DATATUR PDF for 2026M{month:02d}")
         metadata = _metadata(path)
@@ -460,12 +460,12 @@ def _pdf_2026_facts(
 
 
 def _datatur_2026_facts(
-    crosswalk: dict[str, list[dict[str, str]]]
+    crosswalk: dict[str, list[dict[str, str]]], path=None, through_month=6
 ) -> tuple[list[dict[str, object]], int]:
     candidates = list((PATHS.bronze / "afac" / "database" / "extracted").glob("*.xlsx"))
     if not candidates:
         raise FileNotFoundError("Missing extracted DATATUR database workbook")
-    path = max(candidates, key=lambda item: item.stat().st_mtime_ns)
+    path = path or max(candidates, key=lambda item: item.stat().st_mtime_ns)
     metadata = _metadata(path)
     book = openpyxl.load_workbook(path, read_only=True, data_only=True)
     try:
@@ -495,6 +495,7 @@ def _datatur_2026_facts(
     )
     frame_2026 = renamed.filter(
         (pl.col("year") == 2026)
+        & (pl.col("month") <= through_month)
         & (_normalize_expression(pl.col("service_raw")) != "REGULAR")
     )
     key = ["year", "month", "market_raw", "service_raw", "region_raw", "source_carrier_name"]
@@ -637,94 +638,19 @@ def _format_family(year: int) -> str:
     return "ooxml_modern"
 
 
-def write_inventory() -> Path:
-    """Write the reproducible AFAC source and format-family inventory."""
+def write_inventory(through_month=6, database=None) -> Path:
+    from src.parse.afac.inventory import write_inventory as generate
 
-    lines = [
-        "# Inventario de fuentes AFAC",
-        "",
-        "Inventario generado a partir de la capa bronze. La serie anual oficial de gob.mx",
-        "está completa para 1992–2025; DATATUR aporta boletines mensuales 2024M01–2026M06",
-        "y una base larga 2016M01–2026M06. Todos los archivos tienen SHA-256 y metadatos",
-        "inmutables en `data/bronze/_manifest.jsonl`.",
-        "",
-        "## Familias de formato",
-        "",
-        "| Familia | Periodos | Rasgos | Uso en silver |",
-        "|---|---|---|---|",
-        "| `legacy_biff_wide` | 1992–2008 | `.xls`, hojas PAX/PAS por servicio, bloques apilados y meses en columnas | Fixture y archivo histórico; no entra al corte analítico 2015+ |",
-        "| `biff_wide_plus_hours` | 2009 | Agrega hojas de horas | Inventariada |",
-        "| `biff_wide_plus_operational` | 2010–2011 | Agrega OPREG/OPFLET en formato largo | Inventariada |",
-        "| `ooxml_wide_plus_operational` | 2012–2016 | Migración a `.xlsx`; PAX ancho y operación larga | Pasajeros desde 2015 |",
-        "| `ooxml_summary_plus_operational` | 2017–2019 | Incorpora hoja Resumen | Pasajeros |",
-        "| `ooxml_with_revision_history` | 2020–2024 | Incorpora historial explícito de revisiones | Pasajeros |",
-        "| `ooxml_modern` | 2025 | Misma topología moderna; sin hoja de revisiones en la descarga actual | Pasajeros preliminares |",
-        "| `datatur_monthly_bulletin_pdf` | 2024M01–2026M06 | Tablas mensuales, participación y notas de estimación | Canónico para vuelos regulares 2026 |",
-        "| `datatur_long_database` | 2016M01–2026M06 | Una fila por mes/mercado/servicio/región/aerolínea | Canónico para fletamento 2026; solape usado para QA |",
-        "",
-        "## Archivos",
-        "",
-        "| Periodo | Archivo bronze | Formato | Tamaño (bytes) | Hojas/páginas | Descargado | Método | Familia |",
-        "|---|---|---|---:|---|---|---|---|",
-    ]
-    for year in range(1992, 2026):
-        path = _latest_annual_workbook(year)
-        metadata = _metadata(path)
-        sheets = ", ".join(_sheet_names(path))
-        lines.append(
-            f"| {year} | `{path.relative_to(PATHS.bronze).as_posix()}` | {path.suffix[1:]} | "
-            f"{path.stat().st_size:,} | {sheets} | Sí | {metadata['download_method']} | `{_format_family(year)}` |"
-        )
-    for year in range(2024, 2027):
-        for month in range(1, 13):
-            if (year, month) > (2026, 6):
-                break
-            directory = PATHS.bronze / "afac" / str(year) / f"{month:02d}"
-            pdf = next(directory.glob("*.pdf"), None)
-            if pdf is None:
-                lines.append(
-                    f"| {year}M{month:02d} | — | pdf | — | — | No | — | `datatur_monthly_bulletin_pdf` |"
-                )
-                continue
-            metadata = _metadata(pdf)
-            page_count = len(PdfReader(pdf).pages)
-            lines.append(
-                f"| {year}M{month:02d} | `{pdf.relative_to(PATHS.bronze).as_posix()}` | pdf | "
-                f"{pdf.stat().st_size:,} | {page_count} páginas | Sí | {metadata['download_method']} | `datatur_monthly_bulletin_pdf` |"
-            )
-    database = max(
-        (PATHS.bronze / "afac" / "database" / "extracted").glob("*.xlsx"),
-        key=lambda item: item.stat().st_mtime_ns,
-    )
-    database_metadata = _metadata(database)
-    lines.append(
-        f"| 2016M01–2026M06 | `{database.relative_to(PATHS.bronze).as_posix()}` | xlsx | "
-        f"{database.stat().st_size:,} | AFAC | Sí | {database_metadata['download_method']} | `datatur_long_database` |"
-    )
-    lines.extend(
-        [
-            "",
-            "## Precedencia de fuentes",
-            "",
-            "- 2015–2025: libros anuales oficiales AFAC, porque conservan bloques y filas TOTAL.",
-            "- 2026 vuelos regulares: boletín mensual DATATUR/AFAC del mismo periodo.",
-            "- 2026 fletamento: base larga DATATUR, ya que el boletín no publica ese desglose.",
-            "- Los solapes no se concatenan: se usan para detectar revisiones y diferencias de versión.",
-            "",
-        ]
-    )
-    target = PATHS.root / "docs" / "afac-inventario.md"
-    target.write_text("\n".join(lines), encoding="utf-8")
-    return target
+    return generate(through_month, database)
 
 
-def run_afac_parse() -> dict[str, object]:
+def run_afac_parse(*, documents=None, database=None, through_month=6) -> dict[str, object]:
     """Build AFAC silver, strict workbook checks, and the SEC reconciliation."""
 
     crosswalk = _load_crosswalk()
     annual_records, total_checks = _annual_facts(crosswalk)
-    pdf_records, pdf_checks = _pdf_2026_facts(crosswalk)
-    datatur_records, duplicate_groups = _datatur_2026_facts(crosswalk)
+    pdf_records, pdf_checks = _pdf_2026_facts(crosswalk, documents)
+    datatur_records, duplicate_groups = _datatur_2026_facts(crosswalk, database, through_month)
     facts = _frame(annual_records + pdf_records + datatur_records)
     checks = pl.DataFrame(total_checks + pdf_checks).sort(
         ["period_id", "sheet", "block_start_row"]
@@ -739,7 +665,7 @@ def run_afac_parse() -> dict[str, object]:
         f"{year}M{month:02d}"
         for year in range(ANNUAL_START_YEAR, 2027)
         for month in range(1, 13)
-        if (year, month) <= (2026, 6)
+        if (year, month) <= (2026, through_month)
     ]
     missing_periods = sorted(set(expected_periods) - set(observed_periods))
     if missing_periods:
@@ -755,7 +681,7 @@ def run_afac_parse() -> dict[str, object]:
         raise ValueError(f"AFAC/SEC passenger correlation is too low: {reconciliation_stats}")
 
     unmapped_path, unmapped_count = _write_unmapped(facts)
-    inventory_path = write_inventory()
+    inventory_path = write_inventory(through_month, database)
     for row in (
         facts.filter(pl.col("carrier_key").is_null())
         .group_by("source_carrier_name")

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from email.utils import parsedate_to_datetime
 import json
-from urllib.parse import quote_plus
 import xml.etree.ElementTree as ET
+from email.utils import parsedate_to_datetime
+from urllib.parse import quote_plus
 
 import httpx
 import pandas as pd
@@ -16,19 +16,26 @@ from src.common.storage import save_bronze
 from src.config import PATHS
 from src.ingest.stage4_common import fetch_bronze, latest_bronze, lineage, write_parquet_atomic
 
-
 RSS_FEEDS = {
     "google_es": (
         "https://news.google.com/rss/search?q="
-        + quote_plus('Aeroméxico OR Aeromexico airline')
+        + quote_plus("Aeroméxico OR Aeromexico airline")
         + "&hl=es-419&gl=MX&ceid=MX:es-419"
     ),
     "google_en": (
         "https://news.google.com/rss/search?q="
-        + quote_plus('Aeromexico airline')
+        + quote_plus("Aeromexico airline")
         + "&hl=en-US&gl=US&ceid=US:en"
     ),
     "el_economista_empresas": "https://www.eleconomista.com.mx/rss/empresas.xml",
+}
+GDELT_API_URL = "https://api.gdeltproject.org/api/v2/doc/doc"
+GDELT_QUERY_PARAMS = {
+    "query": '(Aeromexico OR "Aeroméxico")',
+    "mode": "artlist",
+    "maxrecords": "250",
+    "format": "json",
+    "sort": "datedesc",
 }
 
 
@@ -61,9 +68,7 @@ def _parse_rss(path, feed_key: str) -> list[dict[str, object]]:
         if not title or not url or not published:
             continue
         source_node = item.find("source")
-        source_name = (
-            (source_node.text or "").strip() if source_node is not None else feed_key
-        )
+        source_name = (source_node.text or "").strip() if source_node is not None else feed_key
         rows.append(
             {
                 "published_at": pd.Timestamp(parsedate_to_datetime(published)).tz_convert("UTC"),
@@ -161,7 +166,7 @@ def run() -> dict[str, object]:
                 failures.append(f"{feed_key}:{type(exc).__name__}")
                 _preserve_http_failure(exc, feed_key, "news/rss/errors")
 
-        gdelt_url = "https://api.gdeltproject.org/api/v2/doc/doc"
+        gdelt_url = GDELT_API_URL
         try:
             gdelt_path = fetch_bronze(
                 client,
@@ -171,13 +176,7 @@ def run() -> dict[str, object]:
                 period="current",
                 ext="json",
                 relative_dir="news/gdelt",
-                params={
-                    "query": '(Aeromexico OR "Aeroméxico")',
-                    "mode": "artlist",
-                    "maxrecords": "250",
-                    "format": "json",
-                    "sort": "datedesc",
-                },
+                params=dict(GDELT_QUERY_PARAMS),
                 notes="GDELT media-coverage results; tone is not customer satisfaction.",
             )
             rows.extend(_parse_gdelt(gdelt_path))

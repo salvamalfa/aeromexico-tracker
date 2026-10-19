@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "timezone": "America/Mexico_City",
+  "years": {
+    "2026": {
+      "source_url": "https://www.dof.gob.mx/nota_detalle.php?codigo=5775684&fecha=10%2F12%2F2025",
+      "crosscheck_url": "https://www.bmv.com.mx/es/grupo-bmv/calendario-de-dias-festivos",
+      "verified_on": "2026-10-18",
+      "dates": ["2026-01-01", "2026-02-02", "2026-03-16", "2026-04-02", "2026-04-03", "2026-05-01", "2026-09-16", "2026-11-02", "2026-11-16", "2026-12-12", "2026-12-25"]
+    }
+  }
+}

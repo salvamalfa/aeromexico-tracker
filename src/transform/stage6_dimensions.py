@@ -120,9 +120,12 @@ def gregorian_easter(year: int) -> date:
 
 
 def build_dim_period() -> pd.DataFrame:
-    monthly = pd.period_range("2015-01", "2026-08", freq="M")
-    quarterly = pd.period_range("2015Q1", "2026Q3", freq="Q")
-    yearly = pd.period_range("2015", "2026", freq="Y")
+    from src.transform.stage6_periods import observation_bounds
+
+    first, last = observation_bounds(PATHS.silver)
+    monthly = pd.period_range(first, last, freq="M")
+    quarterly = pd.period_range(first, last, freq="Q")
+    yearly = pd.period_range(first, last, freq="Y")
     rows: list[dict[str, Any]] = []
     for period_type, periods in (("month", monthly), ("quarter", quarterly), ("year", yearly)):
         for period in periods:
@@ -157,8 +160,8 @@ def build_dim_period() -> pd.DataFrame:
                     "month": month,
                     "days_in_period": (end - start).days + 1,
                     "is_covid_period": start <= date(2021, 12, 31) and end >= date(2020, 3, 1),
-                    "prior_period_id": prior if start > date(2015, 1, 1) else None,
-                    "prior_year_period_id": prior_year if year > 2015 else None,
+                    "prior_period_id": prior,
+                    "prior_year_period_id": prior_year,
                     "fiscal_period_id": period_id,
                     "calendar_period_id": period_id,
                     "easter_date": easter,
@@ -167,7 +170,10 @@ def build_dim_period() -> pd.DataFrame:
                     "easter_days_in_q2": sum(day.month >= 4 for day in window),
                 }
             )
-    return pd.DataFrame(rows).sort_values(["period_start_date", "period_type"]).reset_index(drop=True)
+    output = pd.DataFrame(rows).sort_values(["period_start_date", "period_type"]).reset_index(drop=True)
+    for column in ("prior_period_id", "prior_year_period_id"):
+        output[column] = output[column].where(output[column].isin(output["period_id"]), None)
+    return output
 
 
 def build_dim_carrier() -> pd.DataFrame:
