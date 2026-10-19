@@ -157,3 +157,25 @@ def test_missing_or_unmatched_source_estimation_notes_cannot_become_false():
 
     with pytest.raises(ValueError, match="lacks matching"):
         source.parse(inputs(unmatched), "2026M07")
+
+
+def test_source_carrier_rows_after_first_total_are_not_silently_omitted():
+    def edit(route, carrier):
+        sheet = carrier["PAXREG"]
+        sheet.insert_rows(9)
+        for col, value in enumerate(["Unexpected carrier"] + [10] * 7 + [0] * 5 + [70], 1):
+            sheet.cell(9, col, value)
+
+    with pytest.raises(ValueError, match="after block total"):
+        source.parse(inputs(edit), "2026M07")
+
+
+def test_unstarred_company_cannot_borrow_other_carrier_estimate_notes():
+    def edit(route, carrier):
+        for sn in ["PAXREG", "VLOSREG"]:
+            for row in carrier[sn]:
+                if row[0].value == "Aerovías de México":
+                    row[0].value = "Spirit Air Services"
+
+    f, _ = source.parse(inputs(edit), "2026M07")
+    assert not f.loc[f.carrier_name_as_reported.eq("Spirit Air Services"), "source_cell_estimated"].any()

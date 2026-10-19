@@ -61,7 +61,13 @@ class Page:
                 65,
                 960,
                 104,
-            ): "Pasajeros transportados por empresas nacionales y extranjeras en servicio regular",
+            ): (
+                "Pasajeros transportados por empresas nacionales y extranjeras Vuelos realizados y pasajeros transportados entre México y "
+                + ("EAU" if self.number == 35 else source.PAGES.get(self.number, ""))
+                + "\nhacia y desde "
+                + ("EAU" if self.number == 35 else source.PAGES.get(self.number, ""))
+                + " en servicio regular por empresas nacionales y extranjeras en servicio regular"
+            ),
             (
                 0,
                 505,
@@ -92,6 +98,7 @@ def test_pdf_observations_preserve_ytd_period_type_not_month(monkeypatch):
     [
         ((0, 0, 960, 65), "UNKNOWN COUNTRY"),
         ((0, 65, 960, 104), "empresas nacionales en servicio fletamento"),
+        ((0, 65, 960, 104), "No incluye empresas nacionales y extranjeras en servicio regular"),
         ((0, 505, 960, 540), "Fuente: unknown Julio 2026"),
         ((760, 100, 940, 260), BOX.replace("2026 4,291,849", "2026 4.3")),
     ],

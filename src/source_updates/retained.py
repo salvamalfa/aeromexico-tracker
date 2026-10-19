@@ -30,7 +30,16 @@ from src.transform.validate_stage9 import validate_lineage_frames
 
 
 def spec(product: str) -> dict:
-    from src.source_updates import afac_airports, afac_countries, afac_margins, authorities
+    from src.source_updates import (
+        afac_airports,
+        afac_countries,
+        afac_margins,
+        authorities,
+        context_snapshots,
+        oma_traffic,
+        route_documents,
+        slots,
+    )
 
     registry = {
         "afac_airports": {
@@ -45,8 +54,16 @@ def spec(product: str) -> dict:
         }
     }
     for name, module, roles in [
-        ("afac_margins", afac_margins, {"routes": ("afac_research",), "carriers": ("afac_research",)}),
-        ("afac_countries", afac_countries, {"pdf": ("afac_research",), "routes": ("afac_research",)}),
+        (
+            "afac_margins",
+            afac_margins,
+            {"routes": ("afac_research", "afac"), "carriers": ("afac_research", "afac")},
+        ),
+        (
+            "afac_countries",
+            afac_countries,
+            {"pdf": ("afac_research", "afac"), "routes": ("afac_research", "afac")},
+        ),
     ]:
         registry[name] = {
             "roles": roles,
@@ -56,6 +73,53 @@ def spec(product: str) -> dict:
             "table": module.TABLE,
             "grain": module.GRAIN,
             "parse": module.parse,
+        }
+    for name, role, aliases in [
+        ("iasa", "pdf", ("faa_iasa",)),
+        ("dictionary", "csv", ("loughran_mcdonald",)),
+    ]:
+        registry[name] = {
+            "roles": {role: aliases},
+            "primary": role,
+            "table": context_snapshots.TABLES[name],
+            "grain": context_snapshots.GRAINS[name],
+            "parse": getattr(context_snapshots, name),
+            "code_files": [Path(context_snapshots.__file__)],
+        }
+    registry["oma_traffic"] = {
+        "roles": {"pdf": ("oma_ir",)},
+        "primary": "pdf",
+        "table": oma_traffic.TABLE,
+        "grain": oma_traffic.GRAIN,
+        "parse": oma_traffic.parse,
+        "code_files": [
+            Path(oma_traffic.__file__),
+            Path(authorities.__file__),
+            Path(afac_airports.__file__),
+            ROOT / "src/transform/international_routes.py",
+        ],
+    }
+    registry["aicm_slots"] = {
+        "roles": {"pdf": ("aicm",)},
+        "primary": "pdf",
+        "table": slots.TABLE,
+        "grain": slots.GRAIN,
+        "parse": slots.parse,
+        "code_files": [Path(slots.__file__)],
+    }
+    for name, aliases in {
+        "am_routes": ("aeromexico_press",),
+        "oma_routes": ("oma",),
+        "colima": ("colima_subsectur_mirror",),
+        "aifa_roster": ("expansion",),
+    }.items():
+        registry[name] = {
+            "roles": {"document": aliases},
+            "primary": "document",
+            "table": route_documents.TABLES[name],
+            "grain": route_documents.GRAIN,
+            "parse": lambda inputs, period, name=name: route_documents.parse(name, inputs, period),
+            "code_files": [Path(route_documents.__file__)],
         }
     for name, roles in {
         "anac": {"json": ("international_routes",)},
@@ -73,6 +137,8 @@ def spec(product: str) -> dict:
             "grain": authorities.GRAIN,
             "parse": getattr(authorities, name),
         }
+    registry["afac_margins"]["revision_values"] = ["value", "unit", "source_cell_estimated", "source_notes"]
+    registry["dictionary"]["revision_values"] = [*context_snapshots.FIELDS[1:], "unit"]
     if product not in registry:
         raise ValueError("No reviewed retained-product adapter")
     return registry[product]
@@ -266,13 +332,11 @@ def frames(workspace: Path, product: str, period: str, cutoff: str, run_id: str)
                     artifact_ids=tuple(by_file.values())
                     if definition.get("support_all_originals")
                     else (by_file[row.source_file],),
-                    lineage_note=f"Direct value artifact: {row.source_file}. "
-                    + (
-                        "Other selected artifacts support reconciliation, not allocation. "
+                    lineage_note=(
+                        f"Direct value artifact: {row.source_file}. Other selected artifacts support reconciliation, not allocation. Retained snapshot; source locator/units/scope preserved. Not new capture or human publication approval."
                         if definition.get("support_all_originals")
-                        else ""
-                    )
-                    + "Retained snapshot; source locator/units/scope preserved. Not new capture or human publication approval.",
+                        else "Retained source snapshot; source locator/units/scope preserved. Not a new capture or human publication approval."
+                    ),
                 )
                 for row in frame.itertuples(index=False)
             ],
@@ -380,7 +444,12 @@ def run(
         result["revisions"] = {
             "baseline_file": baseline,
             "baseline_sha256": digest(path),
-            **row_changes(before, outputs[output_names[0]], definition["grain"], ["value", "unit"]),
+            **row_changes(
+                before,
+                outputs[output_names[0]],
+                definition["grain"],
+                definition.get("revision_values", ["value", "unit"]),
+            ),
         }
     if check:
         if result["revisions"] != prior["revisions"]:

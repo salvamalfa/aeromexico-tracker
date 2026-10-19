@@ -141,3 +141,26 @@ def test_retention_preserves_preexisting_partial_destination(candidate):
     with pytest.raises(ValueError, match="already exists"):
         retained.retain(workspace, source, "afac_airports", selected, execute=True)
     assert destination.read_bytes() == b"partial prior evidence"
+
+
+def test_dictionary_and_margin_revisions_include_semantic_flags_not_only_counts():
+    from src.source_updates.checks import row_changes
+    from src.source_updates import context_snapshots
+
+    before = pd.DataFrame(
+        [
+            {
+                **{field: 0 for field in context_snapshots.FIELDS},
+                "Word": "WORD",
+                "Source": "reference",
+                "unit": "reference_corpus_occurrences",
+            }
+        ]
+    )
+    after = before.copy()
+    after.loc[0, "Negative"] = -2020
+    d = retained.spec("dictionary")
+    assert row_changes(before, after, d["grain"], d["revision_values"])["changed"] == 1
+    assert {"source_cell_estimated", "source_notes"}.issubset(
+        retained.spec("afac_margins")["revision_values"]
+    )

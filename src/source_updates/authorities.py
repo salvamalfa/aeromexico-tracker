@@ -372,4 +372,8 @@ def anac(inputs, period):
         excluded=scanned - selected,
         companies_present=sorted(companies),
         latest_month_inside_selected_original=latest,
+        selected_scope_months_absent=sorted(
+            {f"{year}M{m:02d}" for m in range(1, last + 1)} - {row["period_id"] for row in output}
+        ),
+        selected_scope_presence_is_not_proof_of_complete_operator_or_direction_coverage=True,
     )

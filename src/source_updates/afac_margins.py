@@ -129,7 +129,7 @@ def routes(book, original, year, last):
         closed = False
         for index, row in enumerate(rows[6:], 7):
             if row[0] is None:
-                if any(v is not None for v in row[:keys]):
+                if any(v is not None for v in row):
                     raise ValueError("Partial AFAC city-pair identifiers")
                 continue
             if str(row[0]).startswith("FUENTE:"):
@@ -259,6 +259,8 @@ def carriers(book, original, year, last):
                 row = rows[index]
                 name = row[0]
                 if name is None:
+                    if any(v is not None for v in row):
+                        raise ValueError("AFAC carrier numeric row lacks reporting company")
                     continue
                 name = str(name)
                 if folded(name) == "TOTAL":
@@ -288,9 +290,7 @@ def carriers(book, original, year, last):
                 observed = values(row, 1, last)
                 sums = [a + b for a, b in zip(sums, observed, strict=True)]
                 for m, value in enumerate(observed[:last], 1):
-                    matching = [
-                        note for fragment, months, note in rules if fragment in folded(name) and m in months
-                    ]
+                    matching = [note for fragment, months, note in applicable_rules if m in months]
                     output.append(
                         observation(
                             original,
@@ -309,6 +309,15 @@ def carriers(book, original, year, last):
                     )
             if not closed or not seen:
                 raise ValueError("AFAC carrier block total missing")
+            stop = min((next_start for _, _, next_start in blocks if next_start > start), default=len(rows))
+            for trailing in rows[index + 1 : stop]:
+                if all(v is None for v in trailing):
+                    continue
+                if trailing[0] == SOURCE_NOTE or trailing[0] in {note for _, _, note in rules}:
+                    if any(v is not None for v in trailing[1:]):
+                        raise ValueError("Numeric content attached to AFAC footer")
+                    continue
+                raise ValueError("Unexpected AFAC carrier data after block total")
         if matched_notes != {note for _, _, note in rules} or any(
             max(months) > last for _, months, _ in rules
         ):

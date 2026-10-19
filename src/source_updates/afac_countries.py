@@ -102,10 +102,15 @@ def pdf_rows(content, original, period):
             heading = (page.crop((0, 0, 960, 65)).extract_text() or "").strip()
             context = page.crop((0, 65, 960, 104)).extract_text() or ""
             footer = page.crop((0, 505, 960, 540)).extract_text() or ""
+            coverage = re.fullmatch(
+                r"Pasajeros transportados por empresas nacionales y extranjeras Vuelos realizados y pasajeros transportados entre México y (.+)\nhacia y desde (.+) en servicio regular por empresas nacionales y extranjeras en servicio regular",
+                context,
+            )
+            expected_country = "EAU" if country == "EMIRATOS ÁRABES UNIDOS" else country
             if (
                 heading != country
-                or "empresas nacionales y extranjeras" not in context
-                or "servicio regular" not in context
+                or not coverage
+                or {folded(value) for value in coverage.groups()} != {folded(expected_country)}
                 or "Fuente: SICT, AFAC, DREE. Información proporcionada por las aerolíneas." not in footer
                 or f"{SPANISH[month - 1].title()} {year}" not in footer
             ):
