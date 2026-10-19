@@ -435,3 +435,46 @@ def test_terminal_apposition_article_does_not_require_a_preposition(description)
     intent = resolve_news_query(f"noticias de T2{description} en 2026")
     assert "t2" in intent["terms"]
     assert (intent["start_date"], intent["end_date"]) == ("2026-01-01", "2026-12-31")
+
+
+@pytest.mark.parametrize("connector", ["en", "del"])
+def test_selected_publication_month_preserves_report_quarter_in_subject(approved_index, connector):
+    result = approved_index.search_news(
+        f"Busca noticias publicadas en 2026-07 sobre resultados de Aeroméxico {connector} 2T26"
+    )
+    assert [row["id"] for row in result["results"]] == ["flightglobal-aeromexico-q2-2026-07-15"]
+    assert (result["filters"]["start_date"], result["filters"]["end_date"]) == ("2026-07-01", "2026-07-31")
+
+
+@pytest.mark.parametrize(
+    "terminal",
+    [
+        "aeropuerto T2",
+        "aeropuertos T2",
+        "el aeropuerto (T2)",
+        "T2, una terminal del AICM",
+        "T2 en un aeropuerto",
+        "T2 (una terminal del AICM)",
+        "T2, unas terminales del AICM",
+        "T2 en unos aeropuertos",
+    ],
+)
+def test_airport_prefix_and_indefinite_terminal_appositions_remain_literal(terminal):
+    intent = resolve_news_query(f"noticias de {terminal} en 2026")
+    assert "t2" in intent["terms"]
+    assert (intent["start_date"], intent["end_date"]) == ("2026-01-01", "2026-12-31")
+
+
+@pytest.mark.parametrize(
+    "period,bounds",
+    [
+        ("julio de 2026", ("2026-07-01", "2026-07-31")),
+        ("2026", ("2026-01-01", "2026-12-31")),
+    ],
+)
+def test_named_month_or_year_before_subject_also_anchors_publication(approved_index, period, bounds):
+    result = approved_index.search_news(
+        f"noticias publicadas en {period} sobre resultados de Aeroméxico en 2T26"
+    )
+    assert [row["id"] for row in result["results"]] == ["flightglobal-aeromexico-q2-2026-07-15"]
+    assert (result["filters"]["start_date"], result["filters"]["end_date"]) == bounds

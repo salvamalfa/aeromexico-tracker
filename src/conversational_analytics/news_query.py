@@ -80,7 +80,11 @@ def _publication_scope(text: str) -> str:
         # Only quarter labels within the subject are exempt from period
         # detection. Keep all calendar constraints visible, including an
         # additional publication clause expressed with another verb/noun.
-        boundary = r"\b(?:publica\w*|publico|publique\w*|desde|hasta|entre|durante|en)\b"
+        selected_period = bool(re.search(r"\b\d{4}\b", text[:marker.start()]))
+        # With an explicitly selected archive period, "en 2T26" can name
+        # the report's subject. Other calendar constraints remain visible;
+        # a publication verb always starts a separate period clause.
+        boundary = r"\b(?:publica\w*|publico|publique\w*|desde|hasta|entre|durante" + ("" if selected_period else "|en") + r")\b"
         following = re.search(boundary, text[start:])
         end = start + following.start() if following else len(text)
         spans = [
@@ -95,8 +99,8 @@ def _publication_scope(text: str) -> str:
     # into a terminal. Exempt only a T token with its own explicit context.
     for token in re.finditer(r"\bt[1-4]\b", text):
         before, after = text[:token.start()], text[token.end():]
-        terminal = re.search(r"\b(?:terminal(?:es)?(?:\s+(?:aerea|aereas|numero|num))*|aicm|aifa)[\W_]*$", before)
-        airport = re.match(r"[\W_]*(?:(?:de|del|en)\s+)?(?:(?:el|la|los|las)\s+)?(?:aicm|aifa|aeropuerto(?:s)?|terminal(?:es)?)\b", after)
+        terminal = re.search(r"\b(?:terminal(?:es)?(?:\s+(?:aerea|aereas|numero|num))*|aicm|aifa|aeropuerto(?:s)?)[\W_]*$", before)
+        airport = re.match(r"[\W_]*(?:(?:de|del|en)\s+)?(?:(?:el|la|los|las|un|una|unos|unas)\s+)?(?:aicm|aifa|aeropuerto(?:s)?|terminal(?:es)?)\b", after)
         if terminal or airport:
             characters[token.start():token.end()] = " " * len(token.group())
     return "".join(characters)

@@ -299,3 +299,23 @@ limpia972/178.99s sigue siendo exclusivamente de3e15f15. Huella propuesta
 Se repetirá la suite completa al congelar el código después de revisión;
 no se atribuyen los resultados anteriores a este commit. Sin fase canónica,
 aprobación o gate nuevos.
+
+## Periodo seleccionado y artículos indefinidos · 19 de octubre, 00:49 UTC
+
+La revisión exacta de0cf7a2a encontró tres casos. Si la consulta ya seleccionó
+un periodo de calendario antes de sobre, en2T26 puede describir el reporte,
+igual que del2T26. Se conserva esa etiqueta de contenido para mes ISO, mes
+escrito y año. Solo se exceptúa la etiqueta trimestral: otros meses/días
+siguen visibles y una nueva cláusula de publicación termina el tema.
+Se conserva el rechazo de trimestre ambiguo sin periodo seleccionado y de
+calificadores desde/hasta/entre/durante.
+
+La atribución local reconoce aeropuerto antes del token y artículos
+indefinidos en aposiciones, con la misma frontera local. Se incluyen288
+regresiones en747casos de matrices, PASS0.62s; RuffF/diff-checkPASS. Se
+comprueba la ficha real del15jul con en/del2T26 y los límites exactos de mes
+y año, más prefijos aeroportuarios/artículos. La suite completa de0cf7a2a no
+se ejecutó: la anterior972/178.99s es de3e15f15. La siguiente suite completa
+se inicia al congelar el código revisado. Huella propuesta actual
+`05f44ea54f55921e4c9713875b3143f91192ae9cbbae09073e07660fa89d4944`.
+Sin nueva fase canónica, aprobación ni gate;6534/88–90 siguen intactos.
