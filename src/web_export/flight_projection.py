@@ -123,13 +123,17 @@ def project_network(network, members, periods, config, endpoint):
 
 def rebuild_network(network, cells, endpoint):
     result = deepcopy(network)
+    historical = {r["market_key"]: deepcopy(r) for r in network["routes"]}
     # Clear stale flight values before re-aggregation, retaining historical
     # passenger/capacity fields and the separately identified scheduling cells.
     for route in result["routes"]:
         route["departures"] = None
         route["flight_components"] = []
         route["previous"]["departures"] = None
-        route["coverage_note"] = "Observados regulares y frecuencias estimadas; programación separada"
+        note = route.get("coverage_note", "").split(" · Vuelos por celda operador/ruta/sentido/mes:", 1)[0]
+        route["coverage_note"] = (
+            note + " · Observados regulares y frecuencias estimadas; programación separada"
+        )
         for direction in route.get("directions", []):
             direction["departures"] = None
         for month in route.get("monthly", []):
@@ -144,6 +148,26 @@ def rebuild_network(network, cells, endpoint):
         # is retained as evidence, never used as this projection's headline.
         active = [c for c in components if c["kind"] != "scheduled"]
         route["departures"] = sum(c["departures"] for c in active) if active else None
+        old = historical.get(route["market_key"])
+        if old:
+            # Shared route metadata also serves passenger/capacity queries.
+            # Flight sources live in components; do not replace their context.
+            if "source_label" in old:
+                route["source_label"] = old["source_label"]
+            route["previous"] = {**old["previous"], "departures": None}
+            directional = defaultdict(float)
+            for component in active:
+                directional[(component["origin_iata"], component["destination_iata"])] += component[
+                    "departures"
+                ]
+            old_directions = {(d["origin_iata"], d["destination_iata"]): d for d in old.get("directions", [])}
+            new_directions = {
+                (d["origin_iata"], d["destination_iata"]): d for d in route.get("directions", [])
+            }
+            route["directions"] = [
+                {**(old_directions.get(pair) or new_directions[pair]), "departures": directional.get(pair)}
+                for pair in sorted(old_directions.keys() | new_directions.keys())
+            ]
         for projected, original in zip(route.get("flight_components", []), components):
             if original.get("regularity"):
                 projected["regularity"] = original["regularity"]

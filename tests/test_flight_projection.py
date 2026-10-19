@@ -72,6 +72,41 @@ def test_regular_bts_excludes_nonregular_without_filling_retained_estimates():
     assert source == before
 
 
+def test_mixed_flights_preserve_passenger_context_comparisons_and_zero_direction():
+    observed = cell(service_class_departures={"L": 5})
+    estimated = cell(
+        carrier_key="AEROMEXICO_CONNECT",
+        kind="estimated",
+        departures=7,
+        source_label="Retained estimate",
+        estimator_version="frozen",
+    )
+    source = network([observed, estimated])
+    original = source["routes"][0]
+    original.update(
+        source_label="AFAC + AeroDataBox",
+        coverage_note=(
+            "Pasajeros estimados de Grupo Aeroméxico (AFAC + AeroDataBox)"
+            " · Vuelos por celda operador/ruta/sentido/mes: old"
+        ),
+    )
+    original["directions"] = [
+        dict(origin_iata="MEX", destination_iata="BOG", passengers=23, seats=30),
+        dict(origin_iata="BOG", destination_iata="MEX", passengers=4, seats=8),
+    ]
+    result = project_network(source, {"AEROMEXICO", "AEROMEXICO_CONNECT"}, ["2026M04"], config(), endpoint)
+    route = result["routes"][0]
+    assert route["departures"] == 7
+    assert route["previous"]["passengers"] == 20 and route["previous"]["seats"] == 28
+    assert route["source_label"] == original["source_label"]
+    assert "Pasajeros estimados de Grupo Aeroméxico (AFAC + AeroDataBox)" in route["coverage_note"]
+    assert ": old" not in route["coverage_note"]
+    assert {
+        (d["origin_iata"], d["destination_iata"]): (d["passengers"], d["seats"], d["departures"])
+        for d in route["directions"]
+    } == {("MEX", "BOG"): (23, 30, 7), ("BOG", "MEX"): (4, 8, None)}
+
+
 def test_zero_colombia_replaces_exact_estimate_and_negative_delta_is_applied():
     old = cell(kind="estimated", departures=5, source_label="Retained estimate", estimator_version="frozen")
     change = {

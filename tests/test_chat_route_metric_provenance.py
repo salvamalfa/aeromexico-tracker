@@ -103,7 +103,7 @@ def test_published_scheduled_statuses_classify_departures_not_capacity() -> None
                 ),
             )
             assert result["rows"] == [] and result["missing_route_count"] == 1
-            assert _route_query(tools, route["market_key"], "seats")["value_kind"] == "estimated"
+            assert route["seats"] is None  # Preserve the original missing capacity.
             continue
         row = _route_query(tools, route["market_key"], "departures")
         assert row["value_kind"] == "scheduled"
