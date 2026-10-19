@@ -30,7 +30,7 @@ from src.transform.validate_stage9 import validate_lineage_frames
 
 
 def spec(product: str) -> dict:
-    from src.source_updates import afac_airports, authorities
+    from src.source_updates import afac_airports, afac_countries, afac_margins, authorities
 
     registry = {
         "afac_airports": {
@@ -44,6 +44,19 @@ def spec(product: str) -> dict:
             ),
         }
     }
+    for name, module, roles in [
+        ("afac_margins", afac_margins, {"routes": ("afac_research",), "carriers": ("afac_research",)}),
+        ("afac_countries", afac_countries, {"pdf": ("afac_research",), "routes": ("afac_research",)}),
+    ]:
+        registry[name] = {
+            "roles": roles,
+            "primary": next(iter(roles)),
+            "code_files": [Path(module.__file__), Path(afac_margins.__file__), Path(afac_airports.__file__)],
+            "support_all_originals": True,
+            "table": module.TABLE,
+            "grain": module.GRAIN,
+            "parse": module.parse,
+        }
     for name, roles in {
         "anac": {"json": ("international_routes",)},
         "caa": {"csv": ("route_authority_research", "international_routes")},
@@ -250,8 +263,16 @@ def frames(workspace: Path, product: str, period: str, cutoff: str, run_id: str)
                     record_id=row.record_id,
                     table_name=definition["table"],
                     lineage_type="direct_artifact",
-                    artifact_ids=(by_file[row.source_file],),
-                    lineage_note="Retained source snapshot; source locator/units/scope preserved. Not a new capture or human publication approval.",
+                    artifact_ids=tuple(by_file.values())
+                    if definition.get("support_all_originals")
+                    else (by_file[row.source_file],),
+                    lineage_note=f"Direct value artifact: {row.source_file}. "
+                    + (
+                        "Other selected artifacts support reconciliation, not allocation. "
+                        if definition.get("support_all_originals")
+                        else ""
+                    )
+                    + "Retained snapshot; source locator/units/scope preserved. Not new capture or human publication approval.",
                 )
                 for row in frame.itertuples(index=False)
             ],
