@@ -500,3 +500,37 @@ La suite1130/178.82s pertenece a5734c81/0902de14, con recibos limpios; se
 valida el nuevo HEAD aparte. CI532 de3c7533a/ac07bb9d pasó2778pruebas,
 29subpruebas,runtime aislado yweb; no se atribuye a otra huella.
 6534/88–90 intactos, sin fase canónica/gate ni cambios de M11/Skills.
+
+## Solución acotada y comparación completa · 19 de octubre, 02:56 UTC
+
+Por instrucción del coordinador se detiene la ampliación de gramática caso
+por caso. Un prototipo aislado en memoria conservó las **896 comprobaciones
+existentes (0.73s)** sin inferir verbos cognitivos, actores, pronombres ni
+relativas. Se aplica esa simplificación: después de `sobre`, el texto se
+trata como tema literal; solo las etiquetas de trimestre se excluyen del
+filtro de publicación. Los demás años, fechas, meses, días y calificadores
+siguen visibles para la validación habitual. Las señales de publicación y
+un vocabulario acotado de salida/difusión cierran ese ámbito temático;
+una restricción trimestral posterior pide fechas ISO explícitas.
+
+Se mantienen los filtros explícitos de fecha y aerolínea y todas las
+regresiones anteriores, sin retirar comportamientos requeridos. El chat
+sigue siendo un extractor acotado: una oración libre no garantiza análisis
+gramatical completo. Para una fecha de publicación precisa se usan los
+filtros o los límites ISO, y las señales temporales incompatibles que
+reconoce el contrato piden aclaración.
+
+Se atiende además el hallazgo de90ef4f2: las tres posiciones de etiqueta
+trimestral temática consumen también separadores, de/del y año fiscal.
+`publicadas en2026-07 sobre resultados en T2 de2026` conserva exclusivamente
+julio. Esas etiquetas después de una señal de publicación siguen solicitando
+aclaración. Se añaden34casos; pasan **930 comprobaciones en0.86s**, incluidas
+las tres de presupuesto. RuffF ydiff-check pasan. Se eliminan74líneas de la
+implementación previa; no se cambia la allowlist ni ningún dato aprobado.
+
+La huella propuesta es
+`1250d99fe685d4ed3f276d72321331be096e0360afb7553779eb331678b61f4a`.
+La suite **1136PASS/178.61s** es exclusivamente de90ef4f2/f4c29f08, con
+recibos limpios. La nueva suite, CI y revisión se ejecutan sobre el nuevo
+HEAD congelado.6534/88–90 siguen intactos; sin nueva fase canónica, gate,
+publicación ni cambios de M11/Skills.

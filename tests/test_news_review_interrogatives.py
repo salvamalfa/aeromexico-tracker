@@ -298,3 +298,19 @@ def test_optional_article_applies_to_existing_company_aliases_and_subject_roles(
     assert intent["companies"] == companies
     assert "2t26" in intent["terms"]
     assert (intent["start_date"], intent["end_date"]) == ("2026-07-01", "2026-07-31")
+
+
+@pytest.mark.parametrize(
+    "label",
+    ["2T26", "2-T26", "2 T de 2026", "2Q del 2026", "T2 de 2026", "Q2/2026", "2026-Q2", "FY26 Q2", "Q2 FY26", "2T FY2026"],
+)
+def test_topic_quarter_variants_keep_only_the_explicit_publication_month(label):
+    intent = resolve_news_query(f"noticias publicadas en 2026-07 sobre resultados en {label}")
+    assert (intent["start_date"], intent["end_date"]) == ("2026-07-01", "2026-07-31")
+
+
+@pytest.mark.parametrize("label", ["2-T26", "T2 de 2026", "Q2 FY26", "2026-Q2"])
+@pytest.mark.parametrize("cue", ["publicados", "salieron", "aparecieron", "difundieron", "emitieron", "divulgaron"])
+def test_topic_release_cues_keep_separate_quarter_constraints_visible(label, cue):
+    with pytest.raises(ValueError, match="notación trimestral"):
+        resolve_news_query(f"noticias publicadas en 2026-07 sobre resultados que {cue} en {label}")
