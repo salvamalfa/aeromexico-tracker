@@ -32,3 +32,25 @@ def test_valid_balanced_parentheses_targets_are_resolved_and_missing_files_still
     assert validate_dispositions(tmp_path, ["README.md"], body) == []
     path.unlink()
     assert any("Broken/outside" in error for error in validate_dispositions(tmp_path, ["README.md"], body))
+
+
+def test_repository_root_links_resolve_from_checkout_in_nested_documents(tmp_path):
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "LICENSE.md").write_text("Synthetic license")
+    (tmp_path / "docs/guide.md").write_text("[license](/LICENSE.md)\n[external](//example.test/guide.md)")
+    body = (
+        "<!-- document-lifecycle:v1\n"
+        + json.dumps(
+            {"files": [{"path": "docs/guide.md", "disposition": "update", "reason": "Synthetic fixture"}]}
+        )
+        + "\n-->"
+    )
+    assert validate_dispositions(tmp_path, ["docs/guide.md"], body) == []
+    (tmp_path / "LICENSE.md").unlink()
+    assert any(
+        "Broken/outside" in error for error in validate_dispositions(tmp_path, ["docs/guide.md"], body)
+    )
+    (tmp_path / "docs/guide.md").write_text("[outside](/../outside.md)")
+    assert any(
+        "Broken/outside" in error for error in validate_dispositions(tmp_path, ["docs/guide.md"], body)
+    )

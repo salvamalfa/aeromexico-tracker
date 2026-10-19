@@ -243,14 +243,19 @@ def plan(round_kind: str, as_of: str, quarter: str | None = None, family: str | 
         if round_kind != "combined" and cadence not in {"both", round_kind}:
             continue
         source = sources[product["source_key"]]
-        target = (
-            quarter
-            if cadence == "quarterly" or (cadence == "both" and round_kind == "quarterly")
-            else previous.strftime("%YM%m")
+        monthly_target = previous.strftime("%YM%m")
+        targets = (
+            [("monthly", monthly_target), ("quarterly", quarter)]
+            if cadence == "both" and round_kind == "combined"
+            else [("quarterly", quarter)]
+            if cadence == "quarterly" or round_kind == "quarterly"
+            else [("monthly", monthly_target)]
         )
-        products.append(
+        products.extend(
             {
                 **product,
+                "plan_item_id": f"{product['id']}-{target}",
+                "target_cadence": target_cadence,
                 "target_period": target,
                 "status": "selection_required" if source["artifact_expected"] else "offline_or_curated",
                 "discovery_url": source["official_page_url"],
@@ -260,6 +265,7 @@ def plan(round_kind: str, as_of: str, quarter: str | None = None, family: str | 
                 "release_lag_days": None,
                 "acquisition_instructions": f"python -m src.source_updates recipe --product {product['id']}",
             }
+            for target_cadence, target in targets
         )
     return {
         "version": 1,

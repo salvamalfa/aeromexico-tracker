@@ -48,3 +48,30 @@ def test_encoded_credential_parameter_names_block_before_client_or_receipt(key):
 
 def test_encoded_public_keys_and_credential_words_in_query_values_are_not_credentials():
     validate_url("https://www.eia.gov/fixture.json?q%75ery=token%3Dexample&format=json", ["eia.gov"])
+
+
+@pytest.mark.parametrize(
+    "key",
+    [
+        "auth[token]",
+        "credentials[api_key]",
+        "auth[credentials][token][]",
+        "auth%5Btoken%5D",
+        "credentials%5Bapi%5Fkey%5D",
+        "auth.token",
+        "token[value]",
+        "auth[password][0]",
+        "credentials",
+        "clientSecret",
+        "secret_key",
+        "key",
+    ],
+)
+def test_nested_credential_keys_cannot_bypass_the_same_preflight(key):
+    test_encoded_credential_parameter_names_block_before_client_or_receipt(key)
+
+
+def test_unrelated_public_parameter_names_are_not_credential_components():
+    validate_url(
+        "https://www.eia.gov/fixture.json?tokenizer=fixture&monkey=fixture&secretary=fixture", ["eia.gov"]
+    )

@@ -114,7 +114,7 @@ def inbound_references(root: Path, paths: list[str]) -> list[str]:
         referenced = set()
         for target in markdown_targets(text):
             value = markdown_url(target)
-            if value.scheme:
+            if value.scheme or value.netloc:
                 destination = mutable_repo_document(value, root)
                 if destination in removed:
                     referenced.add(removed[destination])
@@ -183,9 +183,12 @@ def validate_dispositions(root: Path, paths: list[str], summary: str) -> list[st
         text = re.sub(r"```.*?```", "", file.read_text(encoding="utf-8"), flags=re.S)
         for target in markdown_targets(text):
             value = markdown_url(target)
-            if value.scheme or not value.path:
+            if value.scheme or value.netloc or not value.path:
                 continue
-            resolved = (file.parent / unquote(value.path)).resolve()
+            local_path = unquote(value.path)
+            resolved = (
+                root / local_path.lstrip("/") if local_path.startswith("/") else file.parent / local_path
+            ).resolve()
             if not resolved.is_relative_to(root.resolve()) or not resolved.exists():
                 errors.append(f"Broken/outside local reference in {path}: {target}")
     return errors + inbound_references(root, paths)
