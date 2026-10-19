@@ -659,8 +659,11 @@ La aprobación posterior permite ahora un PR borrador para revisión y CI. Su in
 trabajo M11 de PR140 conservan sus responsables. La rama de revisión ya incorpora
 PR142 y conserva sus correcciones de fechas GDELT y de noticias. Los commits
 locales anteriores y sus recibos mantienen su fecha y alcance históricos.
-PR142 no es un PR pendiente ni una razón para dar por exhaustivo RSS. No se modifican esas ramas,
-el sitio publicado ni el respaldo privado desde esta certificación.
+PR142 no es un PR pendiente ni una razón para dar por exhaustivo RSS.
+PR144 y su contraparte privada37 también están integrados; se conservan sus
+cierres de documentación y su verificador de lifecycle. No se modifica el
+sitio publicado. El respaldo nuevo de candidatos se mantiene separado del
+snapshot privado y no modifica expedientes activos ni datos de producción.
 
 Viva, Volaris e Industria siguen requiriendo aprobación exacta de entidad,
 periodo y versión para sus tesis. Captura y pruebas verdes no la sustituyen.
@@ -670,13 +673,14 @@ frescura/Gold; no implementa este calendario ni captura fuentes.
 
 ### Referencia técnica del inventario aprobado
 
-La auditoría documental inicial fue de solo lectura. Encontró 124 Markdown
-públicos, de los que 50 están relacionados con chat. La política existe y ya se
-ha aplicado; quedan cierres históricos por revisar. Algunos documentos son
-entradas de pruebas o generadores y deben conservarse. Los siete candidatos
-concretos para archivo suman 13.025 bytes: el beneficio principal sería claridad,
-no espacio. [Inventario y referencias](referencias/source-updates-20261018/lifecycle-audit.json).
-No se retiró ningún documento. La convención de audiencia vive en `AGENTS.md`.
+La auditoría inicial del 18 fue de solo lectura: registró 124 Markdown
+públicos, 50 relacionados con chat y siete candidatos a archivo (13.025 bytes).
+Esos conteos conservan su corte histórico. La continuación integrada en PR144
+archivó tres instrucciones reemplazadas con enlaces a sus originales en Git;
+conservó cuatro candidatos por su utilidad y evidencia. No se repiten esos
+retiros en este PR de fuentes. El [inventario](referencias/source-updates-20261018/lifecycle-audit.json)
+y el [cierre canónico](chat/README.md#cierre-documental-del-19-de-octubre)
+registran las disposiciones. La convención de audiencia vive en `AGENTS.md`.
 
 El resto de este documento conserva el inventario y las observaciones de la
 fase 1 del 13 de octubre. Sus fechas de disponibilidad y sus brechas son de ese
@@ -948,7 +952,7 @@ implementación local descrita arriba; no son el recibo de pruebas de esta entre
   Para una edición nueva, seleccionar el documento real y revisar su formato,
   cobertura y revisiones antes de incorporarlo. Países no aporta una serie
   mensual exacta desde las gráficas del boletín; Aerocivil conserva su leyenda pendiente.
-- PR142/privada35 y Vuelos PR134/privada33 ya están integrados. M11 PR140
+- PR142/privada35, PR144/privada37 y Vuelos PR134/privada33 ya están integrados. M11 PR140
   conserva su responsable. Integrar este cambio sobre la base vigente y
   conservar sus controles; esta rama no hace esos merges ni altera sus salidas.
 - Resolver las decisiones curadas de perfiles y eventos descritas arriba antes
