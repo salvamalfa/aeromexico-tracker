@@ -70,3 +70,18 @@ consulta para respetar su grano. Las anteriores quedan en Bronze y
 `data/quality/news_metadata_selection.json`, con fecha, archivo y hash. No
 fusionar fechas distintas bajo una procedencia prestada. El archivo mensual de
 PR136 necesita leer ese historial; esta selección no acredita un mes completo.
+
+GDELT aporta primera observación, no fecha de publicación verificada. La integración
+con Noticias conserva esos metadatos con publicación nula en
+`data/quality/news_metadata_selection.json`, campo `publication_unknown_metadata`.
+No los mezcla con una edición RSS fechada aunque compartan URL. Si solo hay
+metadatos sin fecha de publicación, `parse.news` se detiene sin sobrescribir
+Silver ni su recibo aceptados; guarda el intento bloqueado en
+`data/quality/news_metadata_selection_attempt.json`. Los originales permanecen
+para revisión y los recibos usan JSON estricto, con nulos para los no finitos. La consulta
+canónica compartida cubre Aeroméxico, Viva y Volaris; no acredita cobertura total.
+
+Los RSS con XML o fecha malformados se conservan como artefactos rechazados,
+con archivo y motivo. Otras capturas válidas pueden construirse como cobertura
+parcial; si no queda ninguna, se registra un intento bloqueado y se conservan
+Silver y su recibo aceptados. Un archivo rechazado no acredita ausencia de noticias.

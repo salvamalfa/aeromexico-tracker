@@ -1,4 +1,5 @@
 import type { ChatChart, ChatConversation, ChatEvent, ChatMessage } from "../../types/chat";
+import { mountChatPrompt } from "./prompt";
 import { mountChatCardActions } from "./card-actions";
 import { buildChatContext, describeChatContext } from "./context";
 import { messageFromPayload, safeReferences } from "./markdown";
@@ -29,7 +30,6 @@ interface ChatUiState {
 }
 
 export function mountChat(): () => void {
-  // The login session lives only in memory: a reload asks for the password again.
   let session: string | undefined;
   let authMode: "local" | "password" | undefined;
   const transport = new ChatTransport(API_URL, () => session);
@@ -66,7 +66,6 @@ export function mountChat(): () => void {
   const passwordInput = query<HTMLInputElement>("#chat-password");
   const accessError = query<HTMLElement>("[data-chat-access-error]");
   const logoutButton = query<HTMLButtonElement>("[data-chat-logout]");
-
   const turns = new Map<string, string>();
   const turnErrors = new Map<string, string>();
   const submissions = new ChatSubmissionLedger();
@@ -161,6 +160,7 @@ export function mountChat(): () => void {
       ...message,
       references: safeReferences(message.references ?? (message as ChatMessage & { payload?: { references?: unknown } }).payload?.references),
       chart: (message as ChatMessage & { payload?: { chart?: unknown } }).payload?.chart as ChatChart | undefined ?? message.chart,
+      news_results: message.news_results ?? (message as ChatMessage & {payload?: {news_results?:unknown}}).payload?.news_results,
     }));
     const unresolved = submissions.unresolved;
     if (unresolved?.conversationId === conversation.id) {
@@ -343,6 +343,7 @@ export function mountChat(): () => void {
     modal.close();
   }
 
+  const disposePrompt = mountChatPrompt(input, opener => void openChat(undefined, opener));
   launcher.addEventListener("click", () => void openChat(undefined, launcher));
   closeButton.addEventListener("click", closeChat);
   form.addEventListener("submit", (event) => { event.preventDefault(); void submitMessage(input.value); });
@@ -379,8 +380,6 @@ export function mountChat(): () => void {
     }
   });
 
-  // Context follows an explicit click or keyboard focus on a card, never hover:
-  // moving the pointer toward the panel must not change the question's context.
   const disposeCardActions = mountChatCardActions((card, opener) => void openChat(card, opener), (card) => {
     if (panel.contains(card) || launcher.contains(card)) return;
     state.focusedCard = card;
@@ -390,6 +389,7 @@ export function mountChat(): () => void {
   setContextLabel();
   return () => {
     state.abort?.abort();
+    disposePrompt();
     modal.dispose();
     disposeCardActions();
     disposePanelControls();

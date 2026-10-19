@@ -2,6 +2,7 @@ import type { ChatMessage } from "../../types/chat";
 import { renderSafeChart } from "./chart";
 import { renderSafeMarkdown, safeReferences } from "./markdown";
 import { safeDisplays } from "./display";
+import { renderNewsResults } from "./news-results";
 
 export interface RenderOptions {
   canRetry: (message: ChatMessage) => boolean;
@@ -71,6 +72,8 @@ export function renderMessages(node: HTMLOListElement, messages: readonly ChatMe
     }
     const refs = referenceList(message);
     if (refs) item.append(refs);
+    const news = renderNewsResults(message.news_results);
+    if (news) item.append(news);
     if (message.role === "assistant" && !message.pending && options.canRetry(message)) {
       const retry = document.createElement("button"); retry.type = "button"; retry.className = "chat-retry"; retry.textContent = "Reintentar";
       retry.addEventListener("click", () => options.onRetry(message));

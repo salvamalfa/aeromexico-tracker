@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-10-19 · Publicación autorizada de Mercado y Noticias
+
+- Cinco vistas en el mismo dashboard: Mercado reúne participación y crecimiento;
+  Noticias ofrece tres fichas aprobadas, filtros y navegación desde el chat.
+  Las once candidatas conservan su revisión independiente y la cobertura es parcial.
+- Tres pares técnicos de Industria, Viva y Volaris de 2T26 con auditoría nueva
+  y consentimiento específico. Se conservan las cuatro tesis y las 68
+  afirmaciones originales; el gate verifica todas las autorizaciones vigentes.
+- La integración incluye las herramientas aprobadas 137/141 sin activar
+  calendarios, M11, H.10 separado ni capturas nuevas. Gold y sus originales
+  históricos permanecen sin cambios.
+- [Procedimiento y límites](docs/publicacion-mercado-noticias.md).
+
 ## 2026-10-19 · Candidato Gold y nuevas capturas públicas
 
 - Dimensión de periodos derivada de observaciones y tasa objetivo con unidad

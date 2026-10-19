@@ -23,6 +23,7 @@ from src.web_export.executive import export_executive
 from src.web_export.flights import export_flights
 from src.web_export.inputs import MissingWebInput
 from src.web_export.market import export_market
+from src.web_export.news import export_news
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -63,6 +64,7 @@ def main(argv: list[str] | None = None) -> int:
         executive_payload = build_executive_payload()
         written += export_executive(executive_payload, args.out)
         written += export_market(build_market_payload(), args.out)
+        written += export_news(args.out)
         written += export_analysis(
             args.out,
             allow_missing=args.allow_missing_analysis,
