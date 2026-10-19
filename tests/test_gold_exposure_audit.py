@@ -7,6 +7,10 @@ from pathlib import Path
 import subprocess
 import sys
 
+import pytest
+
+from scripts.audit.gold_exposure import SEARCH_ROOTS, dependency_references
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -30,12 +34,14 @@ def test_gold_audit_preserves_existing_cut(tmp_path):
 
 def test_gold_audit_counts_actual_tables_and_leaves_private_unknown(tmp_path):
     out = tmp_path / "fresh"
-    subprocess.run(
+    run = subprocess.run(
         [sys.executable, "-m", "scripts.audit.gold_exposure", "--out", str(out)],
         cwd=ROOT,
         capture_output=True,
         text=True,
-        check=True,
+    )
+    assert run.returncode == 0, (
+        f"Gold audit exited {run.returncode}\nstdout:\n{run.stdout}\nstderr:\n{run.stderr}"
     )
     summary = json.loads((out / "summary.json").read_text())
     tracked = subprocess.check_output(["git", "ls-files", "data/gold"], cwd=ROOT, text=True)
@@ -70,3 +76,42 @@ def test_gold_audit_rejects_unverified_private_input(tmp_path):
     assert run.returncode != 0
     assert not (out / "summary.json").exists()
     assert not (out / "tables.csv").exists()
+
+
+def test_dependency_search_needs_only_git_and_keeps_working_tree_candidates(tmp_path, monkeypatch):
+    subprocess.run(["git", "init", "--quiet", str(tmp_path)], check=True)
+    for relative in SEARCH_ROOTS:
+        (tmp_path / relative).mkdir(parents=True, exist_ok=True)
+    tracked = tmp_path / "src/tracked.py"
+    tracked.write_text("fact_fixture\n", encoding="utf-8")
+    subprocess.run(["git", "add", "src/tracked.py"], cwd=tmp_path, check=True)
+    tracked.write_text("fact_fixture\nfact_fixture\n", encoding="utf-8")
+    (tmp_path / "src/candidate.py").write_text("fact_fixture\n", encoding="utf-8")
+    (tmp_path / ".agents/skills/SKILL.md").write_text("fact_fixture\n", encoding="utf-8")
+    (tmp_path / "src/other.py").write_text("fact_fixture_suffix\n", encoding="utf-8")
+    (tmp_path / ".gitignore").write_text("src/ignored.py\n", encoding="utf-8")
+    (tmp_path / "src/ignored.py").write_text("fact_fixture\n", encoding="utf-8")
+    actual_run = subprocess.run
+
+    def git_only(command, **kwargs):
+        assert command[0] == "git", "No optional search executable may be required"
+        return actual_run(command, **kwargs)
+
+    monkeypatch.setattr("scripts.audit.gold_exposure.subprocess.run", git_only)
+    references = dependency_references(tmp_path, "fact_fixture")
+    assert set(references) == {
+        "src/tracked.py:1:fact_fixture",
+        "src/tracked.py:2:fact_fixture",
+        "src/candidate.py:1:fact_fixture",
+        ".agents/skills/SKILL.md:1:fact_fixture",
+    }
+    assert dependency_references(tmp_path, "fact_missing") == []
+
+
+def test_dependency_search_does_not_hide_git_errors(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "scripts.audit.gold_exposure.subprocess.run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 2, stdout="", stderr="search denied"),
+    )
+    with pytest.raises(RuntimeError, match="Dependency search failed: search denied"):
+        dependency_references(tmp_path, "fact_fixture")

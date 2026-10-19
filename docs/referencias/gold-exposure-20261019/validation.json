@@ -48,5 +48,23 @@
     "Snapshot privado LFS no usado, restaurado ni certificado.",
     "Sin suite de pipeline o navegador porque no cambian pipeline, datos, contratos ni interfaz.",
     "Resultados de otros hilos posteriores a las bases declaradas quedan fuera."
-  ]
+  ],
+  "ci_followup": {
+    "previous_head": "e20b7532099e6c07f4a084b4b280fa8c0fbd327a",
+    "reported_run": 39283037188,
+    "reported_job": 118161197151,
+    "reported_failed_test": "tests/test_gold_exposure_audit.py::test_gold_audit_counts_actual_tables_and_leaves_private_unknown",
+    "local_reproduction": "Con PATH que contiene Git y no rg: exit 1, FileNotFoundError rg. Las huellas de aprobación no intervienen en este auditor.",
+    "change": "Usar git grep sobre archivos de trabajo, incluidos nuevos y skills ocultas; mantener errores inesperados como fallo. Mostrar stdout/stderr del auditor en el assert de la prueba.",
+    "regressions": {
+      "passed": 41,
+      "command": "python -m pytest -q tests/test_gold_exposure_audit.py tests/test_document_lifecycle.py tests/test_document_lifecycle_parentheses.py",
+      "no_rg_audit_exit": 0,
+      "public_inventory_unchanged_tables": 43,
+      "dependency_leads_lost": 0
+    },
+    "independent_review": "Sin hallazgos. Comparación independiente de las 43 tablas: conjuntos de referencias idénticos entre rg anterior y git grep nuevo.",
+    "auditor_sha256": "7195170ae99f2c57c3e9c0a13cdc329f056c5fcb66106c04c9104f7b48d6a374",
+    "remote_ci": "Se requiere comprobar el head corregido; no se convierte una reproducción local en resultado remoto."
+  }
 }

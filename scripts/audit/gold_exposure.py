@@ -49,6 +49,38 @@ EXPLAIN = {
 ARCHIVE_REVIEW = {"dim_cluster_assignments", "fact_study_results", "fact_report_language"}
 
 
+SEARCH_ROOTS = ("src", "sql", "config", "tests", "scripts/chat", ".agents/skills", "web/src")
+
+
+def dependency_references(root: Path, name: str) -> list[str]:
+    """Search working files with Git, already required by the inventory.
+
+    Include untracked candidates and hidden skills; standard excludes apply to
+    untracked files. Unexpected Git errors invalidate the audit.
+    """
+    result = subprocess.run(
+        [
+            "git",
+            "grep",
+            "--untracked",
+            "--exclude-standard",
+            "-n",
+            "-w",
+            "-I",
+            "-e",
+            name,
+            "--",
+            *SEARCH_ROOTS,
+        ],
+        cwd=root,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode not in (0, 1):
+        raise RuntimeError(f"Dependency search failed: {result.stderr}")
+    return result.stdout.splitlines()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -92,28 +124,7 @@ def main():
             if name.startswith("bridge_")
             else "referencia_calendario"
         )
-        refs = subprocess.run(
-            [
-                "rg",
-                "--hidden",
-                "-n",
-                "-w",
-                name,
-                "src",
-                "sql",
-                "config",
-                "tests",
-                "scripts/chat",
-                ".agents/skills",
-                "web/src",
-            ],
-            cwd=PATHS.root,
-            capture_output=True,
-            text=True,
-        )
-        if refs.returncode not in (0, 1):
-            raise RuntimeError(f"Dependency search failed: {refs.stderr}")
-        refs = refs.stdout.splitlines()
+        refs = dependency_references(PATHS.root, name)
 
         # Categories may overlap; a literal is only a dependency lead.
         def locations(prefixes=(), contains=None):
