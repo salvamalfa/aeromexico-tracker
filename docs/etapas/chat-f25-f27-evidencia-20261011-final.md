@@ -5,7 +5,7 @@ de scaffold descrito en
 [`chat-f25-f27-evidencia-20261011.md`](chat-f25-f27-evidencia-20261011.md).
 La bitácora inicial se mantiene inalterada como fotografía histórica; el estado
 vigente está resumido en
-[`F2.5–F2.7: revisión de candidatos`](../chat/revision-fase-2/F2.5-F2.7-candidatos-20261011.md).
+[`F2.5–F2.7: revisión de candidatos`](https://github.com/salvamalfa/aeromexico-tracker/blob/dfa207c73d2eef4fa1b9de2bacd9da56d8586063/docs/chat/revision-fase-2/F2.5-F2.7-candidatos-20261011.md).
 
 ## Artefactos preparados
 
