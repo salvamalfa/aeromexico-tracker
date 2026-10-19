@@ -9,7 +9,7 @@ import re
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import parse_qsl, urljoin, urlsplit
 from uuid import uuid4
 
 import httpx
@@ -51,7 +51,13 @@ def validate_url(url: str, allowed_hosts: list[str]) -> None:
         or value.port not in {None, 443}
         or not value.hostname
         or not any(value.hostname == host or value.hostname.endswith("." + host) for host in allowed_hosts)
-        or re.search(r"(?i)(api[_-]?key|token|password|secret|signature|credential)=", value.query)
+        or any(
+            re.search(
+                r"(?i)(api[_-]?key|token|password|secret|signature|credential)(?:\[\])?$",
+                key.strip(),
+            )
+            for key, _ in parse_qsl(value.query, keep_blank_values=True)
+        )
     ):
         raise ValueError("Only public HTTPS URLs on catalogue hosts without credentials are allowed")
 

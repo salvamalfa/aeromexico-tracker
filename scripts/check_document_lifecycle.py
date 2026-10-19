@@ -36,7 +36,28 @@ def changed_documents(root: Path, base: str, head: str = "HEAD") -> list[str]:
 
 
 def markdown_targets(text: str) -> list[str]:
-    return re.findall(r"\]\(([^)]+)\)", text) + re.findall(r"(?m)^\s{0,3}\[[^\]]+\]:\s*(.+)", text)
+    targets = []
+    for match in re.finditer(r"\]\(", text):
+        depth, angle, escaped = 1, False, False
+        for index in range(match.end(), len(text)):
+            char = text[index]
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == "<":
+                angle = True
+            elif char == ">":
+                angle = False
+            elif not angle:
+                if char == "(":
+                    depth += 1
+                elif char == ")":
+                    depth -= 1
+                    if depth == 0:
+                        targets.append(text[match.end() : index])
+                        break
+    return targets + re.findall(r"(?m)^\s{0,3}\[[^\]]+\]:\s*(.+)", text)
 
 
 def markdown_url(target: str):
@@ -45,7 +66,7 @@ def markdown_url(target: str):
         target = target[1 : target.index(">")]
     else:
         target = target.split(maxsplit=1)[0] if target else ""
-    return urlsplit(target)
+    return urlsplit(re.sub(r"\\([()<>])", r"\1", target))
 
 
 def mutable_repo_document(value, root: Path) -> Path | None:
