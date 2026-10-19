@@ -116,7 +116,7 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
     # content. Keep it searchable without treating it as publication dates.
     period_text = _publication_scope(text)
     ambiguous_t_period = (
-        re.search(r"\b\d{4}\b", period_text)
+        re.search(r"\b" + explicit_year + r"\b", period_text)
         and re.search(r"\b[qt](?:[1-4])?\b", period_text)
         and not re.search(r"\b(?:terminal(?:es)?|aicm|aifa|aeropuerto(?:s)?)\b", period_text)
     )

@@ -245,3 +245,16 @@ diff-check. Los893resultados limpios de552590b/179.15s siguen vinculados solo
 a ese HEAD. Huella propuesta actual
 `8c0c445c9c1c6dd5c79894da421071b2fcc6573dc27ad9d22ca16214ab218dee`.
 La nueva suite se ejecuta después del commit; ninguna fase canónica ni gate.
+
+## Año fiscal en la guardia ambigua · 19 de octubre, 00:29 UTC
+
+La revisión de5910b65 encontró FY2026 correspondientes a T2. La guardia de
+ambigüedad usa ahora `explicit_year`, la misma definición compartida de año
+natural/fiscal corto/largo, en lugar de cuatro dígitos aislados. La matriz
+incluye16variantes fiscales con conectores no estándar y dos terminales
+AICM que conservan términos concretos. Se incluyen242regresiones en701casos
+con las matrices previas, todos PASS (0.56s); Ruff F y diff-check PASS.
+La suite limpia926/175.86s sigue vinculada a5910b65. La huella nueva propuesta
+es `3f2ed2be9981fe34b1ee1b9abc1f771b9459c9d4a1996c771575129fef442db7`;
+la siguiente suite corre después del commit.6534/88–90 no cambian y no hay
+nueva fase canónica, aprobación o gate.

@@ -347,3 +347,17 @@ def test_compact_fiscal_report_subject_stays_a_literal_search(approved_index, no
     result = approved_index.search_news(f"noticias publicadas en 2026-07 sobre {notation}")
     assert result["count"] == 0
     assert notation.lower() in result["filters"]["terms"]
+
+
+@pytest.mark.parametrize("year", ["FY26", "FY2026", "FY-26", "FY 2026"])
+@pytest.mark.parametrize("identifier", ["T2", "T 2", "T–2", "T"])
+def test_fiscal_year_and_nonstandard_quarter_connector_need_clarification(year, identifier):
+    with pytest.raises(ValueError, match="notación trimestral"):
+        resolve_news_query(f"noticias publicadas en {year} correspondientes a {identifier}")
+
+
+@pytest.mark.parametrize("year", ["FY26", "FY2026"])
+def test_fiscal_year_does_not_make_explicit_airport_terminal_a_quarter(year):
+    result = resolve_news_query(f"noticias sobre T2 del AICM en {year}")
+    assert "t2" in result["terms"]
+    assert "aicm" in result["terms"]
