@@ -540,3 +540,31 @@ def test_interrogative_prefix_does_not_hide_later_relative_publication_clause(pe
         resolve_news_query(
             f"Busca noticias publicadas en 2026-07 sobre por qué cayeron los resultados que salieron en {period}"
         )
+
+
+@pytest.mark.parametrize(
+    "prelude",
+    [
+        "crees que",
+        "piensas que",
+        "opinas que",
+        "consideras que",
+        "creerías que",
+        "supones que",
+        "crees que piensas que",
+    ],
+)
+def test_interrogative_cognitive_prelude_keeps_its_complement_in_the_topic(prelude):
+    intent = resolve_news_query(
+        f"Busca noticias publicadas en 2026-07 sobre por qué {prelude} cayeron los resultados en 2T26"
+    )
+    assert "2t26" in intent["terms"]
+    assert (intent["start_date"], intent["end_date"]) == ("2026-07-01", "2026-07-31")
+
+
+@pytest.mark.parametrize("period", ["2T26", "agosto de 2026"])
+def test_cognitive_prelude_does_not_hide_a_later_publication_relative(period):
+    with pytest.raises(ValueError):
+        resolve_news_query(
+            f"Busca noticias publicadas en 2026-07 sobre por qué crees que cayeron los resultados que salieron en {period}"
+        )

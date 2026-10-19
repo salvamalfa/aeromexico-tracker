@@ -90,7 +90,11 @@ def _publication_scope(text: str) -> str:
         # A topic beginning with interrogative "que" has no prior word.
         boundary += r"|(?<=\w)[\W_]+que\b"
         subject = text[start:]
-        interrogative = re.match(r"[\W_]*(?:(?:por|para|a|de|con|en)\s+)?que\b", subject)
+        interrogative = re.match(
+            r"[\W_]*(?:(?:por|para|a|de|con|en)\s+)?que\b"
+            r"(?:\s+(?:cre|piens|pens|opin|consider|estim|supon|esper|parec)\w*\s+que\b)*",
+            subject,
+        )
         boundary_subject = subject
         if interrogative:
             boundary_subject = " " * interrogative.end() + subject[interrogative.end():]

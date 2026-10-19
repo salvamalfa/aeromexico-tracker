@@ -362,3 +362,17 @@ diff-checkPASS. Suite completa pendiente de congelar revisión. Huella
 `81e6e1bacfdfb049d715b9b9d6952ed1e2d918a27f837efa0131da28a7607a17`.
 La última suite completa972/178.99s sigue vinculada a3e15f15. Sin fase
 canónica, aprobación ni gate nuevos;6534/88–90 intactos.
+
+## Completiva del preámbulo interrogativo · 19 de octubre, 01:11 UTC
+
+La revisión dee790313 encontró por qué crees que. Se amplía solo el prefijo
+interrogativo inicial con preámbulos cognitivos consecutivos (crees/piensas/
+opinas/consideras/estimas/supones/esperas/parece y sus formas), únicamente
+para detectar fronteras. El texto y los calendarios siguen íntegros. Una
+relativa posterior de publicación aún termina el tema y valida su periodo.
+Siete casos conservan2T26/julio, incluido un preámbulo anidado; dos prueban
+que la publicación posterior con trimestre/otro mes sigue pidiendo claridad.
+Se incluyen329regresiones en788casos con matrices previas, PASS0.71s;
+RuffF/diff-checkPASS. Suite completa pendiente de congelar revisión. Huella
+`89731a4c4a9a3e70d3187e90e26ac753e00549d56f0c73d14157625d156e64e1`.
+Sin fase canónica, aprobación o gate nuevos;6534/88–90 intactos.
