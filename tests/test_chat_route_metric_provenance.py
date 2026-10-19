@@ -3,8 +3,10 @@ from pathlib import Path
 from _published_flight_profiles import (
     LEGACY_SCHEDULED_DEPARTURES,
     LEGACY_SHARED_PASSENGERS,
+    has_regular_map_projection,
     has_signed_flight_components,
 )
+
 from src.conversational_analytics.data.snapshot import Snapshot
 from src.conversational_analytics.tools.routes import RouteTools
 
@@ -76,13 +78,33 @@ def test_published_scheduled_statuses_classify_departures_not_capacity() -> None
             )
         )
     ]
-    expected = {"MEX<>SNA": 182} if components else LEGACY_SCHEDULED_DEPARTURES
+    regular = has_regular_map_projection(tools.snapshot)
+    expected = {"MEX<>SNA": None if regular else 182} if components else LEGACY_SCHEDULED_DEPARTURES
     assert {route["market_key"]: route["departures"] for route in scheduled} == expected
     for route in scheduled:
         assert bool(route.get("flight_components")) is components
         assert route["operation_status"] == (
             "scheduled_from_dated_release" if route["market_key"] == "CDG<>MTY" else "assigned_slot_not_flown"
         )
+        if regular:
+            # Programming remains explicit evidence, never a performed-flight
+            # headline or a queryable departure value. Capacity stays distinct.
+            assert sum(cell["departures"] for cell in route["flight_components"]) == 182
+            result = tools.invoke(
+                "query_routes",
+                dict(
+                    entity_id="AEROMEXICO_GROUP",
+                    segment="international",
+                    period="2026Q2",
+                    metric="departures",
+                    origin_iata="MEX",
+                    destination_iata="SNA",
+                    top_n=1,
+                ),
+            )
+            assert result["rows"] == [] and result["missing_route_count"] == 1
+            assert _route_query(tools, route["market_key"], "seats")["value_kind"] == "estimated"
+            continue
         row = _route_query(tools, route["market_key"], "departures")
         assert row["value_kind"] == "scheduled"
         assert row["value"] == expected[route["market_key"]]
@@ -131,6 +153,7 @@ def test_frozen_domestic_flight_estimates_remain_queryable_without_relabelling_a
 
 def test_chat_query_and_shared_routes_preserve_mixed_flight_cell_kinds():
     from test_chat_route_tools import MemorySnapshot, _network, _paths, _route
+
     from src.conversational_analytics.tools._route_provenance import value_kind
 
     route = _route("JFK<>MEX", 100)
