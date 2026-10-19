@@ -521,3 +521,18 @@ def test_wrapped_interrogative_topic_stays_literal(approved_index, verb):
     result = approved_index.search_news(f"Busca noticias publicadas en 2026-07 sobre (¿qué {verb} en 2T26?)")
     assert result["count"] == 2
     assert (result["filters"]["start_date"], result["filters"]["end_date"]) == ("2026-07-01", "2026-07-31")
+
+
+@pytest.mark.parametrize("cue", ["publicadas", "publicó", "publiquen", "salieron", "aparecieron", "difundidas", "emitidas", "divulgadas"])
+def test_publication_cues_do_not_become_false_news_keywords(approved_index, cue):
+    expected = approved_index.search_news("noticias publicadas en julio de 2026")
+    actual = approved_index.search_news(f"noticias que {cue} en julio de 2026")
+    assert actual["matching_ids"] == expected["matching_ids"]
+    assert actual["count"] == expected["count"] == 2
+    assert resolve_news_query(f"noticias que {cue} en julio de 2026")["terms"] == []
+
+
+@pytest.mark.parametrize("cue", ["salieron", "aparecieron", "difundidas", "emitidas", "divulgadas", "divulgación"])
+def test_literal_topic_cue_after_selected_publication_date_stays_searchable(cue):
+    intent = resolve_news_query(f"noticias publicadas en julio de 2026 sobre {cue}")
+    assert intent["terms"] == [cue.replace("ó", "o")]

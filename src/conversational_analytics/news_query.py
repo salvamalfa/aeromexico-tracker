@@ -395,6 +395,14 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
         )
     ]
     removed = STOP | set(MONTHS) | set(years) | set(WEEKDAYS)
+    # A cue used with a following calendar filter is syntax, not a keyword.
+    # Keep a literal topic cue after the selected date searchable.
+    calendar_marker = r"\b(?:\d{4}|" + "|".join(MONTHS) + r")\b"
+    removed |= {
+        cue.group()
+        for cue in re.finditer(PUBLICATION_CUES, period_text)
+        if re.search(calendar_marker, period_text[cue.end():])
+    }
     removed |= set(re.findall(r"\w+", " ".join(alias for aliases in ENTITIES.values() for alias in aliases)))
     removed |= set(re.findall(r"\w+", " ".join(alias for key in topics for alias in TOPICS[key])))
     terms = sorted(word for word in words - removed if len(word) > 1 and not word.isdigit())

@@ -568,3 +568,20 @@ RuffF ydiff-check pasan. La propuesta tiene huella
 el nuevo HEAD congelado.6534/88–90 se conservan, sin fase canónica/gate ni
 M11/Skills. Las señales admitidas constituyen un contrato acotado, sin
 prometer clasificación gramatical de cualquier oración.
+
+## Señales temporales y palabras de búsqueda · 19 de octubre, 03:16 UTC
+
+La revisión debac2076 encontró que la señal salieron resolvía julio pero
+seguía como término obligatorio y devolvía cero fichas. La familia compartida
+PUBLICATION_CUES también identifica las palabras usadas con un filtro
+calendario posterior y las excluye de términos. Una palabra literal del tema
+situada después del periodo conserva su búsqueda. No se amplía vocabulario
+ni gramática. Ocho variantes devuelven exactamente las dos fichas aprobadas
+de julio, igual que publicadas; seis casos conservan las palabras literales.
+
+Los993casos anteriores se mantienen: **1007PASS0.94s**,1004matrices y tres
+presupuestos,545regresiones incluidas. RuffF/diff-check correctos. Huella
+propuesta `1c2fd61dcbb99cf0856aeb3b6901499fee9d0d8f5afd2523b1ff6901fae80cb1`.
+1233PASS/178.68s/UI1440/390 pertenecen exclusivamente abac2076/6479b2e5.
+El nuevo HEAD queda congelado para sus propios checks;6534/88–90 intactos,
+sin fase canónica/gate ni cambios M11/Skills.
