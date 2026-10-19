@@ -35,7 +35,7 @@ python -m src.source_updates recipe --product anac
 Consultar cada producto de esta familia:
 
 - `anac` — adaptador pendiente. Entrada canónica: `constant:src.ingest.international_routes:ANAC_URL`. Formato: JSON 2021–2030 con rangos HTTP.
-- `aerocivil` — adaptador pendiente. Entrada canónica: `constant:src.ingest.international_routes:CO_URL`. Formato: Socrata JSON operaciones.
+- `aerocivil` — candidato numérico dedicado; interpretación de códigos pendiente. Entrada canónica: `constant:src.ingest.international_routes:CO_URL`. Formato: Socrata JSON de movimientos.
 - `caa` — solo descubrimiento. Entrada canónica: `url:https://www.caa.co.uk/data-and-analysis/uk-aviation-market/flight-punctuality/uk-flight-punctuality-statistics/2026/`. Formato: HTML → CSV Flight Punctuality.
 - `aena` — selección/importación manual. Entrada canónica: `constant:src.ingest.international_routes:AENA_URL`. Formato: cuatro CSV UTF-16 exportados.
 - `am_routes` — selección/importación manual. Entrada canónica: `catalogue:aeromexico_route_press`. Formato: comunicado HTML fechado.
@@ -53,3 +53,13 @@ Consultar cada producto de esta familia:
 6. Acreditar éxito solo en la capa comprobada: hash Bronze, contrato/grano/linaje Silver y controles Gold/meses/días/reconciliaciones que correspondan. Si no existe adaptador, terminar en captura o descubrimiento y declarar ese límite. No llenar faltantes ni activar/publicar.
 
 Un 403, TLS, timeout o archivo inválido es un fallo de acceso/contenido; no prueba ausencia de publicación. Registrar pendiente y conservar el dato aceptado. Las fechas de publicación desconocidas siguen nulas.
+
+## Candidato Aerocivil por mes
+
+`python -m src.source_updates.aerocivil recipe --period YYYYMmm` produce tres GET públicos: conteo, filas y conteo posterior. Un solo mes, operadores de fuente AMX/SLI, hasta 1.000 filas y 15 solicitudes contando redirecciones; sin paginación implícita. La misma receta con `--metadata` emite el diccionario oficial. Capturar ambas selecciones mediante `collect` y conservar sus recibos. El conteo debe coincidir antes/después y con todas las filas. Esto no demuestra aislamiento transaccional de versiones del proveedor.
+
+Importar además un original público OurAirports retenido, por URL y SHA-256, para mapear ICAO/IATA y país; no reutilizar solo la frescura de Gold. `python -m src.source_updates.aerocivil certify --workspace <candidato> --period <mes> --as-of <corte-con-zona> --collection <id-del-recibo-de-tres-consultas> --dry-run` muestra la construcción. `--execute` escribe el candidato offline y `--check` reproduce sin red ni escrituras. Usar una carpeta por mes. Se preservan originales, diccionario, referencia y hashes del código/recibo/salidas.
+
+El producto selecciona literalmente `tipo_vuelo=S` y `trafico=I`. Falta una leyenda oficial comprobada: no traducir N como chárter ni certificar S como regular. Los campos empresa y explotador son derivados del callsign y matrícula por el proveedor. Conservar el designador comercial reportado en su propia columna; `marketing_carrier` queda nulo. El AOC de fuente no establece elegibilidad histórica ni codeshare.
+
+La cifra mide movimientos aeroportuarios reportados en Colombia. Pasajeros, asientos, despegues y ocupación permanecen nulos; no son cero. Verificar aeropuerto colombiano que registra y dirección, país de ambos extremos, grano nativo, códigos IATA únicos y faltantes. Conservar exclusiones por código y ceros que sí reporta la fuente. Silver y Gold candidatos usan la validación de rutas existente y una declaración local explícita del grano de linaje. No se añade esta tabla al catálogo general ni al warehouse publicado. La comprobación numérica/linaje no cierra la interpretación de códigos, la familia, la cobertura de tres aerolíneas ni un trimestre.

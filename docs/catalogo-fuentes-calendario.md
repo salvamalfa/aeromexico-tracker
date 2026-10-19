@@ -39,7 +39,7 @@ pasos de cada fuente. Este es el alcance comprobado por familia:
 | Tráfico AFAC y BTS | AFAC: boletines y base de julio/agosto capturados; ampliación del parser candidato. BTS: reproducción histórica preservada; no se acredita una captura nueva. |
 | Aeropuertos | Descubrimiento por enlaces reales: AICM agosto y AIFA julio descargados. OMA septiembre enlazado pero devuelve 404. No se acredita septiembre completo. |
 | Macro y mercado | EIA, tres series Banxico y cinco series bursátiles verificadas hasta Gold para septiembre. H.10 tiene una cadena dedicada de certificación mensual aislada; véase su alcance y evidencia abajo. La familia completa no está certificada. |
-| Rutas | Entradas identificadas; selección manual y adaptadores de novedades pendientes. |
+| Rutas | Aerocivil tiene consulta mensual acotada y candidato numérico con linaje; falta comprobar su leyenda de códigos. Las demás autoridades y documentos conservan límites por producto. |
 | Referencias y contexto | OurAirports: 9.051 referencias verificadas con 39 códigos requeridos. FAA solo captura PDF; diccionario y curación pendientes. |
 | Noticias | Captura de metadatos y parser probado con muestras. La integración del corte mensual continúa en PR142; no acredita cobertura completa ni activación. |
 | Derivados y curación | Sin descarga propia. Requieren fuentes padre y controles de linaje. |
@@ -335,6 +335,52 @@ del mes es de 3, 3 y 6 días. La hora de publicación y la primera disponibilida
 en el portal no se conocen y permanecen nulas. Los tres originales suman
 1.025.796 bytes. Estos candidatos no certifican finanzas, otros emisores,
 otros formatos ni cobertura de las tres aerolíneas.
+
+Aerocivil tiene una cadena candidata propia. `python -m
+src.source_updates.aerocivil recipe --period 2026M07` emite una selección con
+tres GET: conteo, datos y conteo posterior. El límite es 1.000 filas de un solo
+mes para los designadores de explotador AMX/SLI, hasta 15 solicitudes con
+redirecciones y cero pagadas. No usa el descargador histórico completo.
+La misma receta con `--metadata` produce la selección del diccionario oficial.
+Ambas selecciones se capturan con `collect`. Se importa por hash el original
+OurAirports retenido, para códigos y países; esa referencia no se vuelve a
+descargar en el piloto.
+
+```bash
+uv run python -m src.source_updates.aerocivil certify --workspace <candidato> --period 2026M07 --as-of <corte-ISO-con-zona> --collection <id-de-las-tres-consultas> --dry-run
+uv run python -m src.source_updates.aerocivil certify --workspace <candidato> --period 2026M07 --as-of <corte-ISO-con-zona> --collection <id-de-las-tres-consultas> --execute
+uv run python -m src.source_updates.aerocivil certify --workspace <candidato> --period 2026M07 --as-of <corte-ISO-con-zona> --collection <id-de-las-tres-consultas> --check
+```
+
+La certificación y su reproducción solo leen originales locales, sin red. El
+primer modo no escribe. Se rechazan conteos discordantes, truncación, grano
+duplicado, mes u operador distinto, aeropuerto sin referencia y dirección
+incompatible. Los candidatos aceptados son inmutables. Que ambos conteos sean
+iguales no demuestra una versión transaccional del proveedor.
+
+La consulta oficial del 19 de octubre para AMX/SLI en 2026 devolvió meses de
+enero a julio. No acredita agosto/septiembre ni demuestra ausencia global de
+otros datos. Julio devolvió diez filas; ocho cumplen los códigos literales
+S/I y suman **347 movimientos**. Otras dos filas con código N suman tres
+movimientos y se conservan como exclusiones, sin llamarlas chárter. No hay
+filas SLI en ese resultado; eso no convierte su actividad en cero.
+
+El [diccionario oficial](https://www.datos.gov.co/api/views/jh8x-n6h6.json)
+define la medida como movimientos aeroportuarios. Advierte que empresa y
+explotador se derivan del callsign y la matrícula. El candidato conserva ese
+origen y el designador comercial reportado; no afirma un comercializador
+codeshare. La leyenda de S/N/I no quedó comprobada: la aceptación de su
+interpretación sigue pendiente. Se mantienen nulos pasajeros, asientos,
+despegues y ocupación, y `agent_eligible=false`.
+
+Silver y Gold candidatos conservan ocho observaciones, cuatro artefactos y
+24 enlaces exactos. Se aplica la validación de rutas existente y se declara
+el grano local del registro al validador de linaje. La tabla heredada no forma
+parte del catálogo general de contratos Gold; este comando no cambia ese
+catálogo ni acredita su validación completa. La fecha de publicación, su
+rezago y comparación de revisiones siguen sin acreditar. La metadata declara
+actualización trimestral del proveedor; aquí no se activa ninguna ejecución.
+No se cambia Gold de Vuelos, su cohorte, M11 ni datos publicados.
 
 `collect` acepta GET público, exportación CSV pública de Banxico mediante POST,
 importación manual con SHA-256 y BTS por año

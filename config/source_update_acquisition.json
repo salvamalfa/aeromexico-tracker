@@ -284,9 +284,9 @@
     },
     "aerocivil": {
       "entry_ref": "constant:src.ingest.international_routes:CO_URL",
-      "state": "missing_adapter",
+      "state": "conditional",
       "format": "Socrata JSON operaciones",
-      "procedure": "Revisar consulta en download(): $where anio 2025–2026 y explotador AMX/SLI; count(*) antes de $limit 50000 y orden explícito. Es una selección histórica, no fecha de release. Cambiar ventana exige conteo/paginación probados y adaptador candidato; no pasajeros ni red mundial."
+      "procedure": "python -m src.source_updates.aerocivil recipe --period YYYYMmm emite count-before/rows/count-after con AMX/SLI y límite1000; --metadata emite la selección del diccionario oficial requerido. collect captura cada selección. Importar por hash un original OurAirports retenido y ejecutar certify --workspace <candidato> --period <mes> --as-of <corte> --collection <id> con --dry-run/--execute/--check. Se comparan ambos conteos y se valida todo el grano nativo. Candidato de movimientos en aeropuertos colombianos bajo códigos literales S/I; la leyenda de códigos y atribución de entidad siguen pendientes. EMPRESA/EXPLOTADOR son derivados por el proveedor; no se infiere comercializador/codeshare. Sin pasajeros, asientos, despegues ni red mundial; agent_eligible=false. No añade pasos al runner genérico ni publica."
     },
     "caa": {
       "entry_ref": "url:https://www.caa.co.uk/data-and-analysis/uk-aviation-market/flight-punctuality/uk-flight-punctuality-statistics/2026/",
