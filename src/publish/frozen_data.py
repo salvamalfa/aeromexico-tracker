@@ -18,6 +18,7 @@ from pathlib import Path
 from src.config import PATHS
 from . import manifest as manifest_mod
 from .verify import verify_site
+from .approval_anchor import approval_implementation
 
 
 PROTECTED = (
@@ -166,9 +167,10 @@ def publish_preserved_data(record_paths: list[Path], out_dir: Path):
     if problems:
         raise gate.PublicationRefused(f"Trusted baseline failed verification: {problems[:3]}")
     expected = manifest_mod.load_manifest(baseline)
+    approved_code = approval_implementation(PATHS.root, commit, expected)
     root = gate.flow.ROOT
     with gate.flow.writer(root):
-        authorized = verify_baseline_approvals(record_paths, commit, root)
+        authorized = verify_baseline_approvals(record_paths, approved_code, root)
     analysis_manifest = [gate._analysis_manifest_entry(item) for item in authorized]
     if sorted(analysis_manifest, key=manifest_mod.analysis_sort_key) != expected["analysis_manifest"]:
         raise gate.PublicationRefused("Existing approvals differ from the exact published thesis identities")
@@ -193,7 +195,9 @@ def publish_preserved_data(record_paths: list[Path], out_dir: Path):
     with gate.flow.writer(root):
         gate.require_trusted_site_baseline(baseline, trusted_commit=commit)
         require_preserved_analysis_implementation(PATHS.root, commit)
-        current = verify_baseline_approvals(record_paths, commit, root)
+        if approval_implementation(PATHS.root, commit, expected) != approved_code:
+            raise gate.PublicationRefused("Original approval anchor changed during the build")
+        current = verify_baseline_approvals(record_paths, approved_code, root)
         if [gate._analysis_manifest_entry(item) for item in current] != analysis_manifest:
             raise gate.PublicationRefused("Existing approval changed during the build")
         result = gate.assemble_site(
