@@ -60,6 +60,7 @@ from src.web_export.executive import export_executive
 from src.web_export.flights import export_flights
 from src.web_export.inputs import MissingWebInput
 from src.web_export.market import export_market
+from src.web_export.news import export_news
 from src.web_export.privacy import PrivacyViolation, check_privacy, load_privacy_rules
 from src.web_export.schemas import ANALYSIS_SCHEMA
 from src.web_export.writer import write_json
@@ -231,6 +232,7 @@ def export_data(entries: list[tuple[Any, Any, Any, Any]], out_dir: Path) -> None
         export_flights(build_flight_payload(), out_dir)
         export_executive(build_executive_payload(), out_dir)
         export_market(build_market_payload(), out_dir)
+        export_news(out_dir)
     except MissingWebInput as error:
         raise PublicationRefused(str(error)) from error
 

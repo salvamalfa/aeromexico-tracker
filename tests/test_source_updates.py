@@ -529,65 +529,6 @@ def test_gold_contract_and_direct_lineage_are_checked(workspace):
     assert "lineage" in blocked["checks"][0]["reason"]
 
 
-def test_news_offline_parser_keeps_cross_source_provenance(workspace):
-    (workspace / "imports").mkdir(parents=True)
-    rss = (
-        b"<rss><channel><item><title>Synthetic headline</title>"
-        b"<link>https://example.test/article?utm_source=google</link>"
-        b"<pubDate>Tue, 01 Sep 2026 12:00:00 GMT</pubDate><source>Fixture</source>"
-        b"</item></channel></rss>"
-    )
-    gdelt = json.dumps(
-        {
-            "articles": [
-                {
-                    "title": "Synthetic headline",
-                    "url": "https://example.test/article",
-                    "seendate": "20260901T120000Z",
-                    "language": "English",
-                }
-            ]
-        }
-    ).encode()
-    selected = {"version": 1, "items": []}
-    for name, product, source, entity, url, extension, content in [
-        ("rss", "rss", "rss", "google_en", "https://news.google.com/rss/search?q=fixture", "xml", rss),
-        (
-            "gdelt",
-            "gdelt",
-            "gdelt",
-            "aeromexico_articles",
-            "https://api.gdeltproject.org/api/v2/doc/doc?query=fixture",
-            "json",
-            gdelt,
-        ),
-    ]:
-        filename = name + "." + extension
-        (workspace / "imports" / filename).write_bytes(content)
-        selected["items"].append(
-            {
-                "id": name,
-                "product": product,
-                "source_system": source,
-                "entity": entity,
-                "period": "2026M09",
-                "purpose": "data",
-                "url": url,
-                "extension": extension,
-                "mode": "manual",
-                "local_file": filename,
-                "sha256": hashlib.sha256(content).hexdigest(),
-            }
-        )
-    assert collect(selected, workspace, execute=True)["status"] == "collected_unvalidated"
-    built = build(workspace, ["parse.news"], execute=True)
-    assert built["status"] == "completed", built
-    output = pd.read_parquet(workspace / "data/silver/news_headlines.parquet")
-    assert len(output) == 1
-    assert output.iloc[0]["language"] == "en"
-    assert len(json.loads(output.iloc[0]["provenance_json"])) == 2
-
-
 def test_symlink_inside_candidate_is_rejected(workspace):
     workspace.mkdir(parents=True)
     (workspace / "data").symlink_to(ROOT / "data", target_is_directory=True)

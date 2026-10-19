@@ -109,6 +109,39 @@ def page_with_console_capture(web_server):
     assert external_requests == [], f"Synthetic smoke requested external resources: {external_requests}"
 
 
+def test_news_mounts_when_selected_while_executive_data_is_loading(web_server):
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(executable_path=_chromium_executable())
+        page = browser.new_page(viewport={"width":390,"height":844})
+        held = []
+        page.route("**/data/v1/executive.json", lambda route: held.append(route))
+        with page.expect_request("**/data/v1/executive.json"):
+            page.goto(web_server, wait_until="domcontentloaded")
+        page.click("#tab-news")
+        # Let the original tab-visible event fire while startup is suspended.
+        page.evaluate("() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))")
+        assert page.inner_text("#news-count") == "Cargando noticias…"
+        assert held
+        held[0].continue_()
+        page.wait_for_selector(".news-card")
+        assert page.get_attribute("#tab-news", "aria-selected") == "true"
+        assert "Viva ajusta capacidad" in page.inner_text("#news-stories")
+        browser.close()
+
+
+def test_news_source_links_keep_their_own_publisher(page_with_console_capture, web_server):
+    page, errors = page_with_console_capture
+    payload = page.request.get(web_server + "data/v1/news.json").json()
+    payload["records"][0]["sources"][0]["publisher"] = "Viva"
+    payload["records"][0]["sources"].append({"id":"other", "url":"https://example.com/second", "sha256":"b"*64, "publisher":"Otro medio"})
+    page.route("**/data/v1/news.json", lambda route: route.fulfill(json=payload))
+    page.click("#tab-news")
+    page.wait_for_selector(".news-card")
+    assert page.locator('a[href="https://example.com/second"]').text_content() == "Abrir fuente · Otro medio"
+    assert page.locator('a[href="https://ri.vivaaerobus.com/doc"]').text_content() == "Abrir fuente · Viva"
+    assert errors == []
+
+
 def test_reading_tab_renders_the_synthetic_analysis_by_default(page_with_console_capture) -> None:
     page, console_errors = page_with_console_capture
     assert page.get_attribute("#tab-reading", "aria-selected") == "true"

@@ -343,3 +343,12 @@ al final del corte seleccionado. Segmento y aerolíneas conservan ese corte. El
 botón de información reúne universo, fuente y salvedades. La demanda por
 aeropuerto conserva su exportación y controles, pero ya no tiene sección en
 esta pestaña. Decisiones de revisión: `docs/etapas/mercado-ajustes-ui-20261018.md`.
+
+### Noticias · candidato del PR #136
+
+El archivo mensual mantiene tarjetas con resúmenes originales, tres fechas y
+fuentes trazables. Los filtros incluyen disponibilidad en el chat; la cobertura
+parcial se consulta con el botón de información del título. Los controles de
+aprobación pertenecen al expediente, fuera de la pestaña. La navegación desde
+el chat valida corpus y cita. Decisiones de revisión:
+`docs/etapas/noticias-ajustes-ui-20261018.md`.

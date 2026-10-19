@@ -371,7 +371,7 @@
       "entry_ref": "constant:src.ingest.news.rss_gdelt:GDELT_API_URL",
       "state": "conditional",
       "format": "GET Doc API → JSON articles",
-      "procedure": "Consulta canónica de Aeroméxico; parámetros actuales en rss_gdelt.run(): mode artlist, maxrecords 250, format json, sort datedesc. No prometer recuperación completa ni inventar paginación/fechas. Entidad aeromexico_articles; parse.news, revisión mensual y unión futura PR136.",
+      "procedure": "Consulta canónica de Aeroméxico, Viva y Volaris; parámetros compartidos en GDELT_QUERY_PARAMS y rss_gdelt.run(): mode artlist, maxrecords 250, format json, sort datedesc. No prometer recuperación completa ni inventar paginación/fechas. Entidad histórica aeromexico_articles; parse.news conserva primera observación y captura sin usarlas como publicación. Metadatos sin fecha quedan en quality/news_metadata_selection.json para revisión, fuera de ediciones mensuales fechadas.",
       "selection_contract": {
         "source_system": "gdelt",
         "entity": "aeromexico_articles",
