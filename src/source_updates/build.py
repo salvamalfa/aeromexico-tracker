@@ -188,7 +188,10 @@ def build(workspace: Path, steps: list[str], *, execute: bool = False) -> dict:
             }
         result = json.loads(report.read_text())
         if completed.returncode != 0 or not result.get("finished_at"):
-            result["status"] = "failed_incomplete_worker" if not result.get("finished_at") else "failed_worker"
+            result["status"] = "failed"
+            result["worker_failure_reason"] = (
+                "incomplete_receipt" if not result.get("finished_at") else "nonzero_exit"
+            )
         result.update(
             activation="none",
             publication="not_authorized",
