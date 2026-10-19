@@ -521,3 +521,22 @@ def test_wrapped_interrogative_topic_stays_literal(approved_index, verb):
     result = approved_index.search_news(f"Busca noticias publicadas en 2026-07 sobre (¿qué {verb} en 2T26?)")
     assert result["count"] == 2
     assert (result["filters"]["start_date"], result["filters"]["end_date"]) == ("2026-07-01", "2026-07-31")
+
+
+@pytest.mark.parametrize(
+    "prefix", ["por qué", "para qué", "a qué", "de qué", "con qué", "en qué", "(¿por qué", "¿por qué"]
+)
+def test_compound_interrogative_prefix_is_part_of_the_topic(prefix):
+    intent = resolve_news_query(
+        f"Busca noticias publicadas en 2026-07 sobre {prefix} cayeron los resultados en 2T26"
+    )
+    assert "2t26" in intent["terms"]
+    assert (intent["start_date"], intent["end_date"]) == ("2026-07-01", "2026-07-31")
+
+
+@pytest.mark.parametrize("period", ["2T26", "agosto de 2026"])
+def test_interrogative_prefix_does_not_hide_later_relative_publication_clause(period):
+    with pytest.raises(ValueError):
+        resolve_news_query(
+            f"Busca noticias publicadas en 2026-07 sobre por qué cayeron los resultados que salieron en {period}"
+        )

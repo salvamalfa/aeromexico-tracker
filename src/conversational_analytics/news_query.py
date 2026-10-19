@@ -89,7 +89,12 @@ def _publication_scope(text: str) -> str:
         # with verbs outside the publication vocabulary ("que salieron").
         # A topic beginning with interrogative "que" has no prior word.
         boundary += r"|(?<=\w)[\W_]+que\b"
-        following = re.search(boundary, text[start:])
+        subject = text[start:]
+        interrogative = re.match(r"[\W_]*(?:(?:por|para|a|de|con|en)\s+)?que\b", subject)
+        boundary_subject = subject
+        if interrogative:
+            boundary_subject = " " * interrogative.end() + subject[interrogative.end():]
+        following = re.search(boundary, boundary_subject)
         end = start + following.start() if following else len(text)
         spans = [
             (start + match.start(), start + match.end())

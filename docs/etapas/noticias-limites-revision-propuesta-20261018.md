@@ -348,3 +348,17 @@ diff-checkPASS. Suite completa pendiente de congelar revisión; la última
 972/178.99s es de3e15f15. Huella propuesta
 `5c04ff562d5b2ebec91917b4e8f3fff8c7d751a76da631a08d85aecdd7c6a631`.
 Sin fase canónica, aprobación ni gate nuevos;6534/88–90 intactos.
+
+## Prefijo interrogativo compuesto · 19 de octubre, 01:05 UTC
+
+La revisión de1be5837 encontró por qué al inicio del tema. El detector de
+fronteras aparta solo ese prefijo interrogativo inicial (con preposición
+opcional por/para/a/de/con/en y puntuación envolvente), sin ocultar calendarios
+ni modificar el texto de búsqueda. Una relativa posterior sigue siendo
+frontera. Ocho casos conservan2T26 y julio; dos comprueban que una cláusula
+posterior con trimestre/otro mes sigue pidiendo aclaración.
+Se incluyen320regresiones en779casos de matrices, PASS0.63s; RuffF y
+diff-checkPASS. Suite completa pendiente de congelar revisión. Huella
+`81e6e1bacfdfb049d715b9b9d6952ed1e2d918a27f837efa0131da28a7607a17`.
+La última suite completa972/178.99s sigue vinculada a3e15f15. Sin fase
+canónica, aprobación ni gate nuevos;6534/88–90 intactos.
