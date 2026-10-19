@@ -45,3 +45,12 @@ python -m src.source_updates round --recipe config/source_update_round.example.j
 producto con ambas cadencias. Devuelve una fila por producto y periodo, con
 `plan_item_id` único; `id` sigue identificando el producto. Conservar ambas filas:
 deduplicar solo por `id` perdería trabajo trimestral. El plan no agenda ni ejecuta.
+
+
+Para un lote explícito de originales ya retenidos, aplicar
+`python -m src.source_updates.retained_round --recipe <receta.json>
+--workspace tmp/source-updates/<lote> --dry-run` y el
+[contrato común](../source-updates-common.md#originales-retenidos-y-lote-offline).
+El modo `--execute` certifica y reproduce por producto, deteniéndose ante el
+primer fallo. No sustituye colección de fuente ni comprueba última disponibilidad;
+no llama a red, no programa este calendario y no activa datos/tesis/noticias.

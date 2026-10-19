@@ -86,3 +86,42 @@ sustituye una validación; una dependencia no disponible bloquea la construcció
   de tres reportes compatibles permite preparar Industria, no aprobarla.
 - No activar noticias candidatas/evidencia, cron, Pages, Railway o auto-merge.
   Separar captura, candidato, aprobación y publicación en cada entrega.
+
+
+## Originales retenidos y lote offline
+
+`python -m src.source_updates.retained` dispone de adaptadores dedicados para
+AFAC aeropuertos/países/marginales, ANAC, CAA, Aena, OMA, slots AICM, referencias
+IASA/diccionario y cuatro documentos de rutas. La tabla de alcances y los roles
+están en el [catálogo canónico](../../docs/catalogo-fuentes-calendario.md#certificación-de-originales-retenidos).
+Son candidatos con contratos locales y linaje comprobado; no añaden tablas al
+warehouse ni amplían los pasos del `build` genérico.
+
+1. Seleccionar rutas exactas en `_manifest.jsonl` de Bronze. `retain` exige
+   producto, roles y alias compatibles, URL pública admitida, bytes con el SHA
+   original y sidecar coincidente. No relabelar `afac_research` ni otros alias.
+2. Mostrar `retain --dry-run`; después `--execute` si el trabajo autoriza el
+   candidato. Copia los originales sin cambiar `downloaded_at`; `retained_at`
+   es otra fecha. No hace una captura, no revalida URLs ni comprueba la última
+   publicación disponible. Nunca usar AeroDataBox ni fuentes privadas/inactivas.
+3. `certify --retention <id> --period <periodo> --as-of <corte>` muestra el plan.
+   `--execute` construye Silver/Gold aislados y un recibo inmutable. `--check`
+   reconstruye en memoria y contrasta filas, hashes y linaje, sin red/escrituras.
+   Los originales, notas de la fuente y roles de soporte se vuelven a verificar.
+4. Para revisiones, seleccionar `--baseline baselines/<archivo.parquet>` en el
+   comando individual. La comparación usa claves naturales y campos de valor;
+   también las marcas y notas de estimación AFAC y todos los campos nativos del diccionario. El
+   hash y selección del baseline quedan fijados en el recibo y en cada replay.
+   Sin baseline se declara que no se compararon revisiones, aunque cambie SHA.
+5. `python -m src.source_updates.retained_round --recipe <receta.json>
+   --workspace tmp/source-updates/<lote-nuevo> --dry-run` orquesta el lote.
+   `--execute` encadena retención → Bronze → Silver → Gold/linaje → replay por
+   producto. Se detiene en el primer fallo y conserva salidas previas y recibo
+   con etapa/objetivo/error. No reusa candidatos ni instala tareas. El lote no
+   acepta baseline implícito: las comparaciones se preparan individualmente.
+
+La revisión de periodo en snapshots de referencia o programación no convierte
+su contenido en tráfico del mes/trimestre. FAA conserva la fecha de su propio
+documento; slots conserva toda la temporada; países solo cajas acumuladas
+exactas y documentos de rutas solo pasajes fechados. Un formato/edición fuera
+del alcance revisado queda bloqueado para adaptar y probar antes de ejecutar.

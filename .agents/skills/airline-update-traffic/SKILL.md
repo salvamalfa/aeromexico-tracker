@@ -35,9 +35,9 @@ python -m src.source_updates recipe --product afac_carriers
 Consultar cada producto de esta familia:
 
 - `afac_carriers` — parser candidato de boletines y base 2026, condicionado a sus insumos. Entrada canónica: `constant:src.ingest.afac.download:DATATUR_CATALOG_URL`. Formato: HTML → PDF/XLS/ZIP DATATUR.
-- `afac_airports` — adaptador pendiente. Entrada canónica: `url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404`. Formato: archivo independiente por edición.
-- `afac_countries` — adaptador pendiente. Entrada canónica: `url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404`. Formato: boletín/archivo de países.
-- `afac_margins` — selección/importación manual. Entrada canónica: `url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404`. Formato: XLSX sase/resumen de la misma edición.
+- `afac_airports` — adaptador offline de original retenido revisado. Entrada canónica: `url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404`. Formato: archivo independiente por edición.
+- `afac_countries` — adaptador offline de cajas exactas acumuladas; no serie mensual desde gráficas. Entrada canónica: `url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404`. Formato: boletín/archivo de países.
+- `afac_margins` — adaptador offline de dos libros de la misma edición. Entrada canónica: `url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404`. Formato: XLSX sase/resumen de la misma edición.
 - `bts_segments` — condicionado a insumos/formato. Entrada canónica: `constant:src.ingest.bts.t100:FORM_URL`. Formato: formulario GET + POST → ZIP CSV.
 
 ### Procedimiento verificable
@@ -61,3 +61,24 @@ No basta el nombre del PDF. El límite se deriva de esas observaciones, sin
 corte fijo de junio. El parser nuevo se limita al formato 2026; otro año o
 esquema exige revisión. La ruta heredada fuera del coordinador conserva su
 corte por defecto. Septiembre ausente del catálogo no se inventa.
+
+
+### Productos AFAC retenidos
+
+Aplicar el [flujo común de retención](../source-updates-common.md#originales-retenidos-y-lote-offline).
+`afac_airports` exige rol `workbook`: 65 nombres de aeropuerto, tres métricas,
+dos mercados y meses enero–julio de la edición julio 2026, con 173 cruces
+visibles. Son totales de aeropuerto, sin operador. Los ceros futuros de plantilla
+no se importan; los ceros de meses cubiertos se conservan como reportados.
+
+`afac_margins` exige `routes` y `carriers`. La edición se comprueba en el
+contenido del resumen, año/tablas O-D y 28 reconciliaciones exactas entre
+marginales; 120 controles contrastan totales de las tablas. Se conservan las
+notas por empresa/métrica/mes: cinco celdas estimadas por la fuente. No se
+estima ninguna celda empresa×ruta ni se modifica la cohorte de Vuelos.
+
+`afac_countries` exige `pdf` y `routes`. Solo se extraen las cajas exactas
+acumuladas actuales/comparativas de 29 países. Los pasajeros actuales cuadran
+con O-D; los vuelos literales del boletín no se armonizan con vuelos O-D que
+incluyen otro universo. El acumulado no se presenta como julio mensual; las
+gráficas redondeadas y los países ausentes no se rellenan.

@@ -69,6 +69,10 @@ def airport_selection(product: str, catalog_file: Path, period: str) -> dict:
 
 
 def select_documents(product: str, catalog_file: Path, period: str, tickers=None) -> dict:
+    if product == "am_traffic_ir":
+        from src.source_updates.am_traffic import select
+
+        return select(catalog_file, period)
     if product in {"oma_traffic", "aicm_traffic", "aifa_traffic"}:
         return airport_selection(product, catalog_file, period)
     if product == "bmv_xbrl":
