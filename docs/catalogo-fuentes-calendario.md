@@ -617,11 +617,12 @@ y [workflow Pages](https://github.com/salvamalfa/aeromexico-tracker/actions/runs
 verificación funcional de Pages o Railway desde esta continuación. Privada35
 se fusionó a las 17:20 UTC del mismo día. La base local probada
 `03a06b8` se conserva; los adaptadores retenidos están en una rama local
-distinta, sin push, PR nuevo, merge ni activación durante esta continuación. Su integración y el
-trabajo M11 de PR140 conservan sus responsables. La base aislada precede a
-PR142: al integrar deberán conservarse sus correcciones de fechas GDELT y de
-noticias, sin ejecutar el parser legado sobre GDELT. No es un PR pendiente ni
-una razón para dar por exhaustivo RSS. No se modifican esas ramas,
+distinta, sin push, PR nuevo, merge ni activación durante la preparación local.
+La aprobación posterior permite ahora un PR borrador para revisión y CI. Su integración y el
+trabajo M11 de PR140 conservan sus responsables. La rama de revisión ya incorpora
+PR142 y conserva sus correcciones de fechas GDELT y de noticias. Los commits
+locales anteriores y sus recibos mantienen su fecha y alcance históricos.
+PR142 no es un PR pendiente ni una razón para dar por exhaustivo RSS. No se modifican esas ramas,
 el sitio publicado ni el respaldo privado desde esta certificación.
 
 Viva, Volaris e Industria siguen requiriendo aprobación exacta de entidad,
@@ -917,4 +918,6 @@ implementación local descrita arriba; no son el recibo de pruebas de esta entre
   de cambiar su significado o elegibilidad. Las pruebas no las aprueban.
 - Verificar el calendario bancario de 2027 antes de calcular rondas de ese año.
 - Revisar y aprobar cada lote según su alcance antes de publicar o activar una
-  ejecución automática. Esta continuación termina en commits locales revisables; no publica PR, merge ni ejecución automática.
+  ejecución automática. El dueño aprobó subir esta ampliación como PR borrador
+  para revisión y CI el 19 de octubre. Esa aprobación no autoriza merge,
+  publicación de datos, calendario ni activación de noticias o tesis.
