@@ -237,6 +237,42 @@ aprobar datos nuevos.
 
 ## Ciclo de vida de la documentación
 
+### Audiencia y documentos para revisión del dueño
+
+Convención solicitada por Salva el 18 de octubre de 2026. La documentación
+técnica de implementación y referencia puede conservar el detalle y precisión
+necesarios para desarrollar el dashboard y para los agentes. No simplifiques
+contratos, fórmulas, instrucciones ejecutables ni evidencia histórica al punto
+de perder su significado.
+
+Todo documento que entregues a Salva para revisión en el repositorio debe usar
+español claro: resultado y decisión primero, frases cortas, términos coherentes,
+siglas explicadas y una acción por paso. La inspiración es una adaptación
+flexible «80 % ASD-STE100», no una medida verificable ni cumplimiento formal
+del [estándar en inglés](https://www.asd-ste100.org/about_STE.html). Conserva
+incertidumbres, riesgos y límites de autorización.
+
+Usa solo las secciones aplicables: **Resumen**, **Qué cambia para ti**,
+**Qué necesitas hacer**, **Riesgos** y **Pendientes**. Pon las fuentes junto a
+las afirmaciones. Separa comandos, identificadores, pruebas y evidencia extensa
+en un **Apéndice técnico** antes de **Pendientes**, que debe ser la última
+sección. Evita tablas grandes en la narración principal.
+
+Ejemplo breve:
+
+> **Resumen.** La actualización está preparada para pruebas. No está activada.
+>
+> **Qué necesitas hacer.** Revisa la muestra del calendario.
+>
+> **Apéndice técnico.** Comando reproducible y enlace al resultado de pruebas.
+>
+> **Pendientes.** Confirmar las publicaciones que aún no tienen fecha.
+
+Aplica esta convención en la guía canónica correspondiente. No crees otra
+política, reporte de estado ni copia del mismo contenido para cada audiencia.
+No reescribas bitácoras históricas: su conservación y retiro siguen las reglas
+de lifecycle de abajo. Esta pauta no autoriza borrar documentos ni evidencia.
+
 El repositorio documenta el estado actual. La historia se resume en
 `docs/archivo/README.md` y los documentos originales viven en Git: se borran
 del árbol, no se acumulan.
@@ -265,6 +301,52 @@ del árbol, no se acumulan.
 - No borres ni muevas un documento que citen el código, una prueba o un
   contrato sin actualizar esa referencia en el mismo PR.
 
+### Cierre documental obligatorio por tarea
+
+Antes de declarar terminada una tarea, aplica las
+[reglas de lifecycle anteriores](#ciclo-de-vida-de-la-documentación) a los
+documentos que creaste o modificaste, incluidas sus salidas generadas:
+
+1. Inventaría los archivos afectados. Comprueba su utilidad actual y sus
+   dependencias desde código, pruebas, skills, README e índices.
+2. Clasifica cada documento: **conservar**, **actualizar**, **archivar**,
+   **candidato a eliminar** o **pendiente**. Justifica la disposición con su
+   utilidad o evidencia; la edad y el número de archivos no bastan para borrar.
+3. Aplica las acciones permitidas por el encargo y esta política. Conserva
+   fuentes, decisiones, aprobaciones y evidencia de auditoría necesarias.
+   Archivar sigue el procedimiento de índice y enlace a un commit fijo;
+   no exige copiar todo a otra carpeta.
+4. Actualiza índices y enlaces afectados. Comprueba que no queden referencias
+   rotas. Una entrada ejecutable requiere ajustar y verificar sus consumidores
+   antes de retirarla.
+5. Registra la disposición y los pendientes en el resumen de la tarea o del PR
+   existente. No crees otro Markdown de estado para acreditar este cierre.
+   No declares cierre completo dejando documentación obsoleta sin clasificar.
+
+Esta comprobación no concede permiso para purgar historia ni borrar documentos
+en bloque. Una acción destructiva o fuera de alcance queda **pendiente**, con
+archivo, motivo y autorización necesaria. Un encargo de auditoría de solo lectura
+termina con candidatos y evidencia, sin moverlos ni borrarlos.
+
+Los PR con documentación modificada deben incluir en su resumen un bloque
+`document-lifecycle:v1`. El check `scripts/check_document_lifecycle.py` exige
+disposición y motivo por archivo y revisa enlaces locales de los Markdown
+afectados. Ante un retiro o traslado, también busca referencias entrantes en
+archivos versionados sin modificar: guías, código, pruebas e índices. Es un
+control estático de enlaces y rutas literales; las rutas calculadas requieren
+verificar sus consumidores. El bloque no autoriza la eliminación.
+Ejemplo técnico mínimo, dentro del cuerpo del PR:
+
+```text
+<!-- document-lifecycle:v1
+{"files":[{"path":"README.md","disposition":"update","reason":"Describe el comportamiento vigente."}]}
+-->
+```
+
+Valores del check: `keep`, `update`, `archive`, `delete_candidate`, `pending`.
+Para enumerar los archivos del PR usa `--list --base <commit-base>`; para
+validar un resumen local, añade `--summary-file <archivo-del-resumen>`.
+
 ## Criterio de cierre
 
 Antes de entregar:
@@ -274,7 +356,9 @@ Antes de entregar:
    pipeline, warehouse, generadores o contratos.
 3. Ejecuta `git diff --check` y revisa `git status` para no incluir secretos,
    temporales ni cambios ajenos.
-4. Documenta en `docs/etapas/` qué cambió, por qué, cómo se validó y qué límites
-   permanecen.
+4. Completa el cierre documental obligatorio. Registra cambios, validación,
+   límites y disposición en la documentación canónica y el resumen existente.
+   Añade una bitácora de etapa solo cuando aporte evidencia necesaria y no
+   duplique otro documento vigente.
 5. Reporta por separado código preparado, datos activados, aprobación y
    publicación. Ninguno implica automáticamente los otros.

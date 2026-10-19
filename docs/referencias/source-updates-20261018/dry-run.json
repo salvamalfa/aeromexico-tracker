@@ -1,0 +1,73 @@
+{
+  "mode": "dry_run",
+  "collection": {
+    "mode": "dry_run",
+    "items": [
+      {
+        "product": "fuel",
+        "period": "2015-01-01_2026-09-30",
+        "purpose": "data",
+        "id": "eia-history",
+        "source_system": "eia",
+        "entity": "EER_EPJK_PF4_RGC_DPG",
+        "url": "https://www.eia.gov/dnav/pet/hist_xls/EER_EPJK_PF4_RGC_DPGd.xls",
+        "extension": "xls",
+        "mode": "get"
+      }
+    ],
+    "base_requests": 1,
+    "maximum_http_requests": 5,
+    "paid_requests": 0,
+    "destinations": [
+      "/workspace/airline-source-skills/tmp/source-updates/prueba/data/bronze",
+      "/workspace/airline-source-skills/tmp/source-updates/prueba/receipts"
+    ],
+    "revalidation": "every_selected_url_including_current_and_historical_bts_years",
+    "activation": "none",
+    "latest_validated_period": null
+  },
+  "activation": "none",
+  "publication": "not_authorized",
+  "build": {
+    "mode": "dry_run",
+    "workspace": "/workspace/airline-source-skills/tmp/source-updates/prueba",
+    "steps": [
+      "parse.fuel"
+    ],
+    "required_predecessors": {
+      "parse.fuel": []
+    },
+    "prerequisites": {},
+    "network_requests": 0,
+    "paid_requests": 0,
+    "activation": "none",
+    "writes": [
+      "/workspace/airline-source-skills/tmp/source-updates/prueba/config",
+      "/workspace/airline-source-skills/tmp/source-updates/prueba/data",
+      "/workspace/airline-source-skills/tmp/source-updates/prueba/docs",
+      "/workspace/airline-source-skills/tmp/source-updates/prueba/logs",
+      "/workspace/airline-source-skills/tmp/source-updates/prueba/receipts",
+      "/workspace/airline-source-skills/tmp/source-updates/prueba/.source-update.lock"
+    ],
+    "status": "candidate_build_requires_existing_inputs_and_period_checks"
+  },
+  "period_checks": {
+    "as_of": "2026-10-18T18:00:00-06:00",
+    "checks": [
+      {
+        "product": "fuel",
+        "layer": "silver",
+        "table": "fuel_prices",
+        "period_column": "date",
+        "expected_period": "2026M09",
+        "filters": {
+          "series_id": "EER_EPJK_PF4_RGC_DPG"
+        },
+        "value_columns": [
+          "price_usd_per_gallon"
+        ]
+      }
+    ]
+  },
+  "status": "planned_not_executed"
+}
