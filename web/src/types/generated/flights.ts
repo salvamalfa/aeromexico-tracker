@@ -33,6 +33,7 @@ export interface VuelosPayloadIntegradoV1 {
   domestic_monthly_networks: {
     [k: string]: Network;
   };
+  map_coverage?: MapCoverage;
   /**
    * Dashboard v2: the same map for Industria, Volaris and Viva, keyed by entity.
    */
@@ -235,6 +236,7 @@ export interface FlightComponent {
   kind: "observed" | "estimated" | "scheduled";
   departures: number;
   source_hashes: string[];
+  regularity?: "regular";
   estimator_version?: string;
   service_class_departures?: {
     [k: string]: number;
@@ -247,4 +249,17 @@ export interface AenaAirportActivity {
   observed_months: string[];
   expected_months: string[];
   coverage_status: string;
+}
+export interface MapCoverage {
+  source: string;
+  source_url: string;
+  source_sha256: string;
+  rows: {
+    entity: "AEROMEXICO" | "VIVA_AEROBUS" | "VOLARIS";
+    scope: "domestic" | "international";
+    period_id: string;
+    observed_regular: number;
+    estimated: number;
+    official_regular: number | null;
+  }[];
 }

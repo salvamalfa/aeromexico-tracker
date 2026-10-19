@@ -524,7 +524,13 @@ def main(argv: list[str] | None = None) -> int:
     )
     publish_modes.add_argument(
         "--preserve-published-data", action="store_true",
-        help="rebuild the flight presentation while preserving every trusted public data byte and approval identity",
+        help=("rebuild the flight presentation while preserving every trusted public data byte "
+              "and approval identity"),
+    )
+    publish_modes.add_argument(
+        "--flights-only", action="store_true",
+        help=("publish the accepted Q2 flight projection while preserving every non-flight payload "
+              "and thesis identity"),
     )
     publish_modes.add_argument(
         "--business-metrics-only",
@@ -534,7 +540,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        if args.preserve_published_data:
+        if args.flights_only:
+            from .flight_overlay import publish_flights_only
+
+            result = publish_flights_only(args.records, args.out)
+        elif args.preserve_published_data:
             from .frozen_data import publish_preserved_data
 
             result = publish_preserved_data(args.records, args.out)

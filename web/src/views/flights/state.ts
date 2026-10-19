@@ -9,6 +9,7 @@
 
 import type {
   AvailablePeriods,
+  MapCoverage,
   FlightsMetadata,
   MonthlyPassengerSeries,
   Network,
@@ -18,6 +19,8 @@ import type {
   Route,
   WorldGeometry,
 } from "../../types/domain";
+
+import { MAP_CARRIERS, mergeCarrierNetworks } from "./map-selection";
 
 export const DOMESTIC_MONTH_NAMES = [
   "enero", "febrero", "marzo", "abril", "mayo", "junio",
@@ -29,6 +32,7 @@ export const DEFAULT_AIRPORT = "MEX";
 export interface FlightsState {
   dataRoot: string;
   metadata: FlightsMetadata | null;
+  mapCoverage: MapCoverage | null;
   quarters: QuarterRecord[];
   byPeriod: Map<string, QuarterRecord>;
   monthlyPassengers: MonthlyPassengerSeries | null;
@@ -77,6 +81,7 @@ export interface FlightsState {
 export const state: FlightsState = {
   dataRoot: "data/v1",
   metadata: null,
+  mapCoverage: null,
   quarters: [],
   byPeriod: new Map(),
   monthlyPassengers: null,
@@ -113,8 +118,8 @@ export const state: FlightsState = {
   internationalNetworks: new Map(),
 };
 
-function networkPath(kind: "domestic" | "international", periodId: string): string {
-  const folder = state.mapEntity === "AEROMEXICO" ? `flights/${kind}` : `flights/entities/${state.mapEntity}/${kind}`;
+function networkPath(kind: "domestic" | "international", periodId: string, entity = state.mapEntity): string {
+  const folder = entity === "AEROMEXICO" ? `flights/${kind}` : `flights/entities/${entity}/${kind}`;
   return `${state.dataRoot}/${folder}/${periodId}.json`;
 }
 
@@ -135,6 +140,24 @@ export function setMapEntity(key: string): boolean {
   return true;
 }
 
+export function setMapEntities(keys: string[]): boolean {
+  const carriers = [...new Set(keys)].filter((key) => key !== "INDUSTRY").sort();
+  if (keys.includes("INDUSTRY") || carriers.length === MAP_CARRIERS.length) return setMapEntity("INDUSTRY");
+  if (carriers.length === 1) return setMapEntity(carriers[0]!);
+  const base = state.baseAvailablePeriods ?? state.availablePeriods;
+  if (!carriers.length || carriers.some((key) => key !== "AEROMEXICO" && !base.entities?.[key])) return false;
+  const listings = carriers.map((key) => key === "AEROMEXICO" ? base : {
+    domestic_monthly: base.entities![key]!.domestic_monthly, international: base.entities![key]!.international,
+  });
+  state.baseAvailablePeriods = base;
+  state.mapEntity = carriers.join("+");
+  state.availablePeriods = { domestic: [],
+    domestic_monthly: listings[0]!.domestic_monthly.filter((p) => listings.every((l) => l.domestic_monthly.includes(p))),
+    international: listings[0]!.international.filter((p) => listings.every((l) => l.international.includes(p))), entities: base.entities };
+  state.domesticNetworks.clear(); state.domesticMonthlyNetworks.clear(); state.internationalNetworks.clear();
+  return true;
+}
+
 async function fetchJson<T>(path: string): Promise<T> {
   const response = await fetch(path);
   if (!response.ok) throw new Error(`No se pudo cargar ${path} (HTTP ${response.status})`);
@@ -145,6 +168,7 @@ export function initState(quartersDoc: QuartersDocument): void {
   state.mapPeriodId = null;
   state.domesticLayer = "estimated";
   state.metadata = quartersDoc.metadata;
+  state.mapCoverage = quartersDoc.map_coverage ?? null;
   state.quarters = quartersDoc.quarters;
   state.byPeriod = new Map(state.quarters.map((item) => [item.period_id, item]));
   state.monthlyPassengers = quartersDoc.monthly_passengers;
@@ -184,7 +208,8 @@ async function loadNetwork(
   periodId: string
 ): Promise<void> {
   const entity = state.mapEntity;
-  const document = await fetchJson<PeriodNetworkDocument>(networkPath(kind, periodId));
+  const documents = await Promise.all(entity.split("+").map((key) => fetchJson<PeriodNetworkDocument>(networkPath(kind, periodId, key))));
+  const document = documents.length === 1 ? documents[0]! : mergeCarrierNetworks(documents);
   if (state.mapEntity === entity) cache.set(periodId, document);
 }
 

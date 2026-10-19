@@ -38,6 +38,7 @@ export interface RouteDirection {
 }
 
 export interface FlightComponent {
+  regularity?: "regular";
   carrier_key: string;
   origin_iata: string;
   destination_iata: string;
@@ -157,7 +158,16 @@ export interface MonthlyPassengerSeries {
   records: MonthlyPassengerPoint[];
 }
 
+export interface MapCoverage {
+  source: string;
+  source_url: string;
+  source_sha256: string;
+  rows: Array<{ entity: string; scope: "domestic" | "international"; period_id: string;
+    observed_regular: number; estimated: number; official_regular: number | null }>;
+}
+
 export interface QuartersDocument {
+  map_coverage?: MapCoverage;
   metadata: FlightsMetadata;
   quarters: QuarterRecord[];
   monthly_passengers: MonthlyPassengerSeries;

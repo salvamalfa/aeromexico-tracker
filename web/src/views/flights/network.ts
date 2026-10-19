@@ -12,6 +12,8 @@ import {
 } from "./state";
 import { aggregateDomesticMonths } from "./domestic";
 import { normalizeSelectedRegion, regionRoutes, renderRegionSwitch } from "./regions";
+import { renderMapCoverage } from "./map-coverage";
+import { mapCarriers } from "./map-selection";
 import { renderNetworkVolume } from "./volume";
 import { flightKind } from "./flight-measure";
 import { renderRouteOverview } from "./table";
@@ -124,6 +126,7 @@ function internationalPeriodNetwork(periodId: string): PeriodNetworkDocument {
 
 // Dashboard v2 (fase 3): what the map shows for each entity.
 function entityScopeNote(entity: string, domestic: boolean): string {
+  if (entity.includes("+")) return `${mapCarriers(entity).map((key) => ENTITY_LABELS[key as EntityKey]).join(", ")} · observados regulares y estimados separados`;
   const label = entity === "VOLARIS" ? "Volaris México (Y4/VOI; excluye Q6 y N3)"
     : entity === "VIVA_AEROBUS" ? "Viva (Aeroenlaces)"
     : entity === "INDUSTRY" ? "Industria: Aeroméxico, Volaris México y Viva"
@@ -207,6 +210,7 @@ export async function renderNetworkPeriod(periodId: string): Promise<boolean> {
         ? ` · ${periodNetwork.eligibility_reason.split(". ")[0]}` : "");
   }
   renderRegionSwitch();
+  renderMapCoverage();
   renderNetworkVolume();
   state.pinnedAirport = null;
   state.hoveredAirport = null;
