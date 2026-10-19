@@ -224,6 +224,7 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
             try:
                 status, content_type = 200, "application/octet-stream"
                 url = item["url"]
+                response_url = None
                 if item.get("mode") == "manual":
                     content = (workspace / "imports" / item["local_file"]).read_bytes()
                     if hashlib.sha256(content).hexdigest() != item["sha256"]:
@@ -278,6 +279,9 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
                             action, payload = _post_payload(response.text, year=item["year"])
                             response = request("POST", action, data=payload)
                         content, status = response.content, response.status_code
+                        response_url = str(response.url)
+                        validate_url(response_url, source["allowed_hosts"])
+                        result["response_url"] = response_url
                         content_type = response.headers.get("content-type", content_type)
                         result["http_status"] = status
                 _payload(content, item["extension"])
@@ -305,6 +309,7 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
                     content_type=content_type,
                     notes=(
                         f"Candidate only; product={item['product']}; purpose={item['purpose']}; unvalidated"
+                        + (f"; response_url={response_url}" if response_url else "")
                     ),
                 )
                 result.update(
@@ -317,8 +322,13 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
                     from bs4 import BeautifulSoup
 
                     links = []
-                    for anchor in BeautifulSoup(content, "html.parser").find_all("a", href=True):
-                        candidate = urljoin(url, anchor["href"])
+                    soup = BeautifulSoup(content, "html.parser")
+                    link_base = response_url or url
+                    base = soup.find("base", href=True)
+                    if base:
+                        link_base = urljoin(link_base, base["href"])
+                    for anchor in soup.find_all("a", href=True):
+                        candidate = urljoin(link_base, anchor["href"])
                         try:
                             validate_url(candidate, source["allowed_hosts"])
                         except ValueError:
