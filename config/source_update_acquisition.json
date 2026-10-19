@@ -147,15 +147,15 @@
     },
     "afac_carriers": {
       "entry_ref": "constant:src.ingest.afac.download:DATATUR_CATALOG_URL",
-      "state": "discovery_only",
+      "state": "conditional",
       "format": "HTML → PDF/XLS/ZIP DATATUR",
-      "procedure": "Ejecutar parse_datatur_catalog sobre HTML preservado; elegir enlaces realmente presentes. Guardar PDF en afac/año/mes y workbooks con sus nombres lógicos. No formar AFAC_YYYY_MM.pdf para meses no descubiertos. Parser/validación PDF 2026 terminan en junio; un archivo posterior no acredita Silver. Este adaptador de captura exige alias Bronze afac; afac_datatur es una etiqueta de otros productos/capas y no satisface su requisito heredado.",
+      "procedure": "Seleccionar boletines realmente presentes con recipe --catalog-file --period. El candidato parse.afac verifica Bronze, extrae un único miembro XLSX de DB_AFAC.zip sin red y exige meses contiguos con regular y fletamento más sus dos páginas PDF. El contenido confirma cada comparación mensual de 2026; conserva notas, preliminar y separación Aerovías/Connect. Amplía hasta el último mes común disponible, sin inferir cero ni fecha de publicación. Requiere libros anuales/crosswalk/SEC preservados; no es un parser genérico para 2027 ni para aeropuertos/rutas.",
       "selection_contract": {
         "source_system": "afac",
         "monthly_pdf_relative_dir": "afac/<year>/<month-2-digits>",
         "annual_workbook_entity": "afac_annual_workbook",
         "annual_workbook_relative_dir": "afac/<year>",
-        "note": "Directories derive from the verified document period; do not generate future source URLs. Legacy parser needs its other baseline inputs and remains capped."
+        "note": "The candidate requires the verified current DATATUR database ZIP, matching contiguous monthly PDFs, annual baseline and crosswalk. No future URLs."
       }
     },
     "afac_airports": {
@@ -205,7 +205,7 @@
       "procedure": "Buscar enlace publicado del mes y confirmar año/mes dentro del PDF. source_system aicm; revisar _government_documents/_parse_aicm_pdf para nombres lógicos. Total aeroportuario, no cifra de Aeroméxico.",
       "selection_contract": {
         "source_system": "aicm",
-        "entity": "traffic",
+        "entity": "traffic_statistics",
         "relative_dir": "airports/government",
         "extension": "pdf",
         "check_table": "airport_traffic",
@@ -227,7 +227,7 @@
       "procedure": "Buscar numeralia publicada y confirmar año/mes en workbook, no solo nombre. source_system aifa; revisar _parse_aifa_xlsx. No formar nombres futuros de S3; esquema puede cambiar.",
       "selection_contract": {
         "source_system": "aifa",
-        "entity": "traffic",
+        "entity": "airport_statistics",
         "relative_dir": "airports/government",
         "extension": "xlsx",
         "check_table": "airport_traffic",
