@@ -91,6 +91,14 @@ def _publication_scope(text: str) -> str:
         ]
         for first, last in spans:
             characters[first:last] = " " * (last - first)
+    # An airport elsewhere in the question cannot turn an unrelated period
+    # into a terminal. Exempt only a T token with its own explicit context.
+    for token in re.finditer(r"\bt[1-4]\b", text):
+        before, after = text[:token.start()], text[token.end():]
+        terminal = re.search(r"\b(?:terminal(?:es)?|aicm|aifa)\s*$", before)
+        airport = re.match(r"\s+(?:de(?:l)?\s+)?(?:aicm|aifa|aeropuerto(?:s)?)\b", after)
+        if terminal or airport:
+            characters[token.start():token.end()] = " " * len(token.group())
     return "".join(characters)
 
 
@@ -118,7 +126,6 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
     ambiguous_t_period = (
         re.search(r"\b" + explicit_year + r"\b", period_text)
         and re.search(r"\b[qt](?:[1-4])?\b", period_text)
-        and not re.search(r"\b(?:terminal(?:es)?|aicm|aifa|aeropuerto(?:s)?)\b", period_text)
     )
     if ambiguous_t_period or re.search(
         r"\b(?:" + explicit_year + separator + r"[qt]\s*\d|" + prefix_period

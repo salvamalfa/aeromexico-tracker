@@ -258,3 +258,20 @@ La suite limpia926/175.86s sigue vinculada a5910b65. La huella nueva propuesta
 es `3f2ed2be9981fe34b1ee1b9abc1f771b9459c9d4a1996c771575129fef442db7`;
 la siguiente suite corre después del commit.6534/88–90 no cambian y no hay
 nueva fase canónica, aprobación o gate.
+
+## Excepción local de terminal · 19 de octubre, 00:35 UTC
+
+La revisión de4e714cd mostró que mencionar AIFA en otro lugar podía desactivar
+una guardia trimestral. Se elimina la exclusión global. Solo el token T1–T4
+con contexto local explícito de terminal/AICM/AIFA/aeropuerto queda fuera de
+la extracción temporal; el resto de la consulta conserva sus guardias. La
+misma excepción rige todos los detectores de periodo y mantiene los términos
+originales para buscar la terminal. Otro token trimestral no queda exento.
+
+Se incluyen260regresiones en719casos con matrices previas, todos PASS0.56s,
+RuffF/diff-checkPASS. Se prueban doce temas aeroportuarios que no deben eximir
+el trimestre, cuatro búsquedas válidas de terminal y dos consultas con ambos
+tokens. La suite limpia944/180.27s pertenece a4e714cd, no a la nueva huella
+`e33703ba9722e0414dee9d467379b787c26fb2539337dd9f10cabd2e71f14d7c`.
+La nueva suite se inicia tras el commit. Sin fase canónica ni gate; la
+aprobación6534/88–90 permanece intacta para la cohorte original.

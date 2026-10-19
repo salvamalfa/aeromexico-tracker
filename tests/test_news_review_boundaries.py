@@ -361,3 +361,37 @@ def test_fiscal_year_does_not_make_explicit_airport_terminal_a_quarter(year):
     result = resolve_news_query(f"noticias sobre T2 del AICM en {year}")
     assert "t2" in result["terms"]
     assert "aicm" in result["terms"]
+
+
+@pytest.mark.parametrize("year", ["2026", "FY2026", "FY26"])
+@pytest.mark.parametrize("subject", ["el AIFA", "el AICM", "la terminal T1", "el aeropuerto de Cancun"])
+def test_airport_subject_cannot_exempt_an_unrelated_publication_quarter(year, subject):
+    with pytest.raises(ValueError, match="notación trimestral"):
+        resolve_news_query(f"noticias publicadas en {year} correspondientes a T2 sobre {subject}")
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "noticias de 2026 T2 del AICM",
+        "noticias de 2026 sobre la terminal T2",
+        "noticias de la terminal T2 en 2026",
+        "noticias de la AICM T2 en 2026",
+    ],
+)
+def test_only_the_locally_attributed_terminal_token_is_exempt(question):
+    intent = resolve_news_query(question)
+    assert "t2" in intent["terms"]
+    assert (intent["start_date"], intent["end_date"]) == ("2026-01-01", "2026-12-31")
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "noticias publicadas en FY2026 correspondientes a T2 sobre terminal T1",
+        "noticias sobre terminal T1 publicadas en FY2026 correspondientes a T2",
+    ],
+)
+def test_terminal_exception_does_not_exempt_another_quarter_token(question):
+    with pytest.raises(ValueError, match="notación trimestral"):
+        resolve_news_query(question)
