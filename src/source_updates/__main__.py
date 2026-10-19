@@ -67,11 +67,11 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "recipe":
             if args.output == "selection":
                 if args.catalog_file:
-                    from src.source_updates.bmv import selection
+                    from src.source_updates.discovery import select_documents
 
-                    if args.product != "bmv_xbrl" or not args.period:
-                        raise ValueError("Catalogue-file selection requires bmv_xbrl and --period")
-                    result = selection(args.catalog_file, args.period, tuple(args.ticker or ["AERO", "VOLAR"]))
+                    if not args.period:
+                        raise ValueError("Catalogue-file selection requires --period")
+                    result = select_documents(args.product, args.catalog_file, args.period, args.ticker)
                 else:
                     result = catalog_selection(args.product)
             elif args.output == "round":

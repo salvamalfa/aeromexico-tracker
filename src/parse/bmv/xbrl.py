@@ -103,11 +103,12 @@ def _source_record(source_url: str) -> tuple[Path, dict[str, Any]]:
     return path, metadata
 
 
-def rebuild_package_index_from_bronze(*, zip_urls: tuple[str, ...] | None = None) -> pl.DataFrame:
+def rebuild_package_index_from_bronze(*, zip_urls: tuple[str, ...] | None = None, reports: list[BmvReport] | None = None) -> pl.DataFrame:
     """Reconstruct the BMV package inventory without network access."""
 
-    catalog_path, _ = _source_record(SOURCE_URLS["bmv_xbrl"])
-    reports = parse_catalog_html(catalog_path.read_bytes())
+    if reports is None:
+        catalog_path, _ = _source_record(SOURCE_URLS["bmv_xbrl"])
+        reports = parse_catalog_html(catalog_path.read_bytes())
     if zip_urls is not None:
         requested = set(zip_urls)
         if not requested or not requested <= {report.zip_url for report in reports}:

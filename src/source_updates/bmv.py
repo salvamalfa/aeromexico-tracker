@@ -9,7 +9,7 @@ import zipfile
 
 from src.config import PATHS, SOURCE_URLS
 from src.ingest.bmv.download import _validate_archive, parse_catalog_html
-from src.common.storage import find_bronze_by_source_url, save_bronze
+from src.common.storage import save_bronze
 from src.source_updates.checks import period_end, verify_bronze
 
 
@@ -47,18 +47,32 @@ def selection(catalog_file: Path, period: str, tickers: tuple[str, ...] = ("AERO
     }
 
 
+def preserved_reports(artifacts):
+    catalogues = sorted(
+        (
+            (name, row)
+            for name, row in artifacts.items()
+            if row["source_system"] == "bmv" and row["source_url"] == SOURCE_URLS["bmv_xbrl"]
+        ),
+        key=lambda item: item[1]["downloaded_at"],
+    )
+    if not catalogues:
+        raise FileNotFoundError("Preserved BMV catalogue is required")
+    reports = {}
+    for name, _ in catalogues:
+        for report in parse_catalog_html((PATHS.bronze / name).read_bytes()):
+            reports[report.zip_url] = report
+    return list(reports.values())
+
+
 def register_members() -> tuple[str, ...]:
     artifacts = verify_bronze(PATHS.root)
-    found = find_bronze_by_source_url(SOURCE_URLS["bmv_xbrl"])
-    if found is None:
-        raise FileNotFoundError("Preserved BMV catalogue is required")
-    catalog_path, _ = found
     zip_files = {
         r["source_url"]: (PATHS.bronze / name, r)
         for name, r in artifacts.items()
         if r["source_system"] == "bmv" and name.lower().endswith(".zip")
     }
-    reports = [r for r in parse_catalog_html(catalog_path.read_bytes()) if r.zip_url in zip_files]
+    reports = [r for r in preserved_reports(artifacts) if r.zip_url in zip_files]
     if not reports or len(reports) > 50:
         raise ValueError("Select 1..50 BMV packages actually present in the catalogue")
     # Preflight all archives before registration. The canonical limits cap each
@@ -96,4 +110,5 @@ def parse_selected() -> dict:
     from src.parse.bmv.pipeline import run_bmv_parse
 
     urls = register_members()
-    return {**run_bmv_parse(zip_urls=urls), "bounded_offline_member_registration": True}
+    reports = preserved_reports(verify_bronze(PATHS.root))
+    return {**run_bmv_parse(zip_urls=urls, reports=reports), "bounded_offline_member_registration": True}

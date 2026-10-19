@@ -80,3 +80,24 @@ def test_bmv_selection_uses_only_actual_catalog_period_and_requested_issuer(tmp_
     assert [i["url"] for i in chosen["items"]] == [ZIP_URL]
     with pytest.raises(ValueError, match="absent"):
         bmv.selection(path, "2026Q3", ("AERO",))
+
+
+def test_new_catalogue_cannot_discard_retained_published_packages(candidate):
+    preserve_zip(candidate, (Path(__file__).parent / "fixtures/bmv/AERO_2026Q2.zip").read_bytes())
+    newer = b"<table>" + CATALOG[CATALOG.index(b"<tr><td>VOLAR") :]
+    save_bronze(
+        newer,
+        "bmv",
+        "portal_catalog",
+        "current",
+        "html",
+        SOURCE_URLS["bmv_xbrl"],
+        "manual",
+        bronze_root=candidate.bronze,
+    )
+    reports = bmv.preserved_reports(bmv.verify_bronze(candidate.root))
+    assert ZIP_URL in {r.zip_url for r in reports}
+    with block_network():
+        selected = bmv.register_members()
+        result = xbrl.rebuild_package_index_from_bronze(zip_urls=selected, reports=reports)
+    assert result["ticker"].to_list() == ["AERO"]

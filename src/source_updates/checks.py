@@ -84,7 +84,7 @@ def check_candidate(workspace: Path, specification: dict) -> dict:
             "product": item["product"],
             "layer": item["layer"],
             "table": item["table"],
-            "expected_period": item["expected_period"],
+            "expected_period": item.get("expected_period", "reference_snapshot"),
             "latest_published_period": None,
         }
         try:
@@ -132,6 +132,12 @@ def check_candidate(workspace: Path, specification: dict) -> dict:
             selected = selected.loc[selected["source_system"].isin(aliases)]
             if selected.empty:
                 raise ValueError("No rows for the requested source/product/entity")
+            if item.get("kind") == "reference":
+                from src.source_updates.reference import check_snapshot
+
+                result.update(check_snapshot(workspace, item, selected, artifacts, cutoff))
+                results.append(result)
+                continue
             # Periods come from parsed rows, never from requested filename or mtime.
             if item.get("period_column") == "year_month":
                 periods = (
