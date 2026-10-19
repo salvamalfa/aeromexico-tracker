@@ -323,3 +323,13 @@ def test_explicit_publication_filter_after_literal_topic_matches_filter_before_i
     after = resolve_news_query(f"noticias sobre resultados en {label} publicadas {period}")
     assert (after["start_date"], after["end_date"]) == (before["start_date"], before["end_date"])
     assert (after["start_date"], after["end_date"]) == ("2026-07-01", "2026-07-31")
+
+
+@pytest.mark.parametrize("cue", ["publicadas", "publicó", "publiquen", "salieron", "difundidas", "emitidas", "divulgadas", "aparecieron"])
+@pytest.mark.parametrize("label", ["2T26", "T2 de 2026", "Q2 FY26"])
+@pytest.mark.parametrize("period", ["2026-07", "julio de 2026"])
+def test_same_bounded_publication_cues_apply_before_and_after_topic(cue, label, period):
+    before = resolve_news_query(f"noticias que {cue} en {period} sobre resultados en {label}")
+    after = resolve_news_query(f"noticias sobre resultados en {label} que {cue} en {period}")
+    assert (after["start_date"], after["end_date"]) == (before["start_date"], before["end_date"])
+    assert (after["start_date"], after["end_date"]) == ("2026-07-01", "2026-07-31")

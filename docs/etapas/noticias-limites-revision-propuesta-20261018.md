@@ -552,3 +552,19 @@ La huella propuesta es
 Los1170PASS/176.76s y UI local1440/390 de690027a/1250d99f conservan su
 procedencia, sin trasladarlos al ajuste nuevo. Se valida de nuevo el HEAD
 congelado. Aprobación6534/88–90 intacta; sin cohorte canónica/gate ni M11/Skills.
+
+## Una sola familia de señales · 19 de octubre, 03:07 UTC
+
+La revisión de34c3fef detectó una duplicación: el filtro posterior usaba
+solo publica*, mientras la frontera reconocía también salida/difusión.
+Se define una única constante PUBLICATION_CUES y se reutiliza en ambos
+lugares. No se añade ninguna familia de señales ni gramática. Cuarenta y
+ocho combinaciones de las ocho formas de señales existentes, tres etiquetas
+y dos formatos de mes comprueban ambos órdenes. Los945casos previos siguen
+pasando: **993PASS0.89s**,990matrices+3presupuestos,531regresiones incluidas.
+RuffF ydiff-check pasan. La propuesta tiene huella
+`6479b2e5e412f8a90fb118cc4d548020b03d7cab0ba357fd87bdb2483924ecb8`.
+1185PASS/178.28s y UI1440/390 pertenecen a34c3fef/558842c4; se valida aparte
+el nuevo HEAD congelado.6534/88–90 se conservan, sin fase canónica/gate ni
+M11/Skills. Las señales admitidas constituyen un contrato acotado, sin
+prometer clasificación gramatical de cualquier oración.

@@ -53,6 +53,14 @@ STOP.update(
 )
 
 
+# One bounded vocabulary is shared by topic boundaries and explicit filters.
+# It does not infer arbitrary predicates or Spanish sentence structure.
+PUBLICATION_CUES = (
+    r"\b(?:publica\w*|publico|publique\w*|sal(?:io|ieron|en|ga|gan|dran?|drian?)"
+    r"|aparec\w*|aparez\w*|difund\w*|emit\w*|divulg\w*)\b"
+)
+
+
 def norm(value: str) -> str:
     return re.sub(
         r"\s+",
@@ -80,19 +88,17 @@ def _publication_scope(text: str) -> str:
         # Only quarter labels within the subject are exempt from period
         # detection. Keep all calendar constraints visible, including an
         # additional publication clause expressed with another verb/noun.
-        publication = r"\b(?:publica\w*|publico|publique\w*)\b"
         selected_period = bool(
             re.search(r"\b\d{4}\b", text[:marker.start()])
-            or re.search(publication + r".*\b\d{4}\b", text[start:])
+            or re.search(PUBLICATION_CUES + r".*\b\d{4}\b", text[start:])
         )
         # With an explicitly selected archive period, "en 2T26" can name
         # the report's subject. Other calendar constraints remain visible;
         # a publication verb always starts a separate period clause.
-        boundary = r"\b(?:publica\w*|publico|publique\w*|desde|hasta|entre|durante" + ("" if selected_period else "|en") + r")\b"
+        boundary = PUBLICATION_CUES + r"|\b(?:desde|hasta|entre|durante" + ("" if selected_period else "|en") + r")\b"
         # A small release vocabulary marks a potentially separate publication
         # constraint. The rest of the subject is literal topic text; no
         # cognition, actor, pronoun or relative-clause grammar is inferred.
-        boundary += r"|\b(?:sal(?:io|ieron|en|ga|gan|dran?|drian?)|aparec\w*|aparez\w*|difund\w*|emit\w*|divulg\w*)\b"
         following = re.search(boundary, text[start:])
         end = start + following.start() if following else len(text)
         # Topic quarter labels use the same three orders as period guards.
