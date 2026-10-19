@@ -79,7 +79,7 @@ def test_group_product_cannot_validate_another_groups_airport_rows(actual, claim
 def test_gdelt_selection_uses_canonical_complete_query():
     selected = catalog_selection("gdelt")["items"][0]
     assert parse_qs(urlsplit(selected["url"]).query) == {
-        "query": ['(Aeromexico OR "Aeroméxico")'],
+        "query": ['(Aeromexico OR "Aeroméxico" OR "Viva Aerobus" OR Volaris)'],
         "mode": ["artlist"],
         "maxrecords": ["250"],
         "format": ["json"],

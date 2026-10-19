@@ -1,6 +1,9 @@
 """The monthly tooling keeps unknown GDELT publication separate from publisher dates."""
 
 import json
+import hashlib
+import shutil
+from uuid import uuid4
 from contextlib import nullcontext
 from urllib.parse import parse_qs, urlsplit
 
@@ -86,3 +89,83 @@ def test_legacy_collector_and_monthly_recipe_share_all_three_airline_queries(mon
             company in parse_qs(urlsplit(parser.RSS_FEEDS[feed]).query)["q"][0]
             for feed in ["google_es", "google_en"]
         )
+
+
+@pytest.fixture
+def workspace():
+    from src.source_updates.catalog import ROOT
+
+    path = ROOT / "tmp/source-updates" / ("news-tools-" + uuid4().hex)
+    yield path
+    if path.exists():
+        shutil.rmtree(path)
+
+
+def test_news_offline_parser_preserves_undated_gdelt_without_borrowing_rss_date(workspace):
+    from src.source_updates.collection import collect
+    from src.source_updates.build import build
+
+    (workspace / "imports").mkdir(parents=True)
+    rss = (
+        b"<rss><channel><item><title>Synthetic headline</title>"
+        b"<link>https://example.test/article?utm_source=google</link>"
+        b"<pubDate>Tue, 01 Sep 2026 12:00:00 GMT</pubDate><source>Fixture</source>"
+        b"</item></channel></rss>"
+    )
+    gdelt = json.dumps(
+        {
+            "articles": [
+                {
+                    "title": "Synthetic headline",
+                    "url": "https://example.test/article",
+                    "seendate": "20260901T120000Z",
+                    "language": "English",
+                }
+            ]
+        }
+    ).encode()
+    selected = {"version": 1, "items": []}
+    for name, product, source, entity, url, extension, content in [
+        ("rss", "rss", "rss", "google_en", "https://news.google.com/rss/search?q=fixture", "xml", rss),
+        (
+            "gdelt",
+            "gdelt",
+            "gdelt",
+            "aeromexico_articles",
+            "https://api.gdeltproject.org/api/v2/doc/doc?query=fixture",
+            "json",
+            gdelt,
+        ),
+    ]:
+        filename = name + "." + extension
+        (workspace / "imports" / filename).write_bytes(content)
+        selected["items"].append(
+            {
+                "id": name,
+                "product": product,
+                "source_system": source,
+                "entity": entity,
+                "period": "2026M09",
+                "purpose": "data",
+                "url": url,
+                "extension": extension,
+                "mode": "manual",
+                "local_file": filename,
+                "sha256": hashlib.sha256(content).hexdigest(),
+            }
+        )
+    assert collect(selected, workspace, execute=True)["status"] == "collected_unvalidated"
+    built = build(workspace, ["parse.news"], execute=True)
+    assert built["status"] == "completed", built
+    output = pd.read_parquet(workspace / "data/silver/news_headlines.parquet")
+    assert len(output) == 1
+    assert output.iloc[0]["language"] == "en"
+    assert len(json.loads(output.iloc[0]["provenance_json"])) == 1
+    assert output.iloc[0]["source_system"] == "rss"
+    receipt = json.loads((workspace / "data/quality/news_metadata_selection.json").read_text())
+    unknown = receipt["publication_unknown_metadata"]
+    assert len(unknown) == 1 and unknown[0]["source_system"] == "gdelt"
+    assert unknown[0]["published_at"] is None
+    assert pd.Timestamp(unknown[0]["first_seen_at"]) == pd.Timestamp("2026-09-01T12:00:00Z")
+    assert unknown[0]["first_captured_at"] != unknown[0]["first_seen_at"]
+    assert (workspace / "data/bronze" / unknown[0]["source_file"]).is_file()
