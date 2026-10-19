@@ -418,3 +418,20 @@ def test_local_terminal_prepositions_articles_and_wrappers_remain_searchable(app
     assert "t2" in intent["terms"]
     assert (intent["start_date"], intent["end_date"]) == ("2026-01-01", "2026-12-31")
     assert approved_index.search_news(question)["count"] == 0
+
+
+@pytest.mark.parametrize(
+    "description",
+    [
+        ", la terminal del AICM",
+        " (la terminal del AICM)",
+        ", el AICM",
+        " (el aeropuerto de Cancun)",
+        " de la terminal del AICM",
+        " en la terminal del AICM",
+    ],
+)
+def test_terminal_apposition_article_does_not_require_a_preposition(description):
+    intent = resolve_news_query(f"noticias de T2{description} en 2026")
+    assert "t2" in intent["terms"]
+    assert (intent["start_date"], intent["end_date"]) == ("2026-01-01", "2026-12-31")

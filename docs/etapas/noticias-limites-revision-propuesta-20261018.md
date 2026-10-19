@@ -287,3 +287,15 @@ evidencia. Se incluyen270regresiones en729casos con las matrices anteriores,
 PASS0.58s; RuffF/diff-checkPASS. La suite limpia962/177.59s corresponde a7d38fe8.
 Huella propuesta `6641af156fba7e863c59e16559cc118c7e59d8f53017151640d5a07ced337df3`;
 suite siguiente tras commit, sin aprobación/gate/fase canónica nueva.
+
+## Artículo en aposición local · 19 de octubre, 00:43 UTC
+
+La revisión de3e15f15 encontró T2, la terminal del AICM. El artículo opcional
+queda independiente de la preposición; seis casos cubren aposiciones con
+coma/paréntesis y variantes de/en con artículo. Se incluyen276regresiones
+en735casos con matrices previas, PASS0.60s; RuffF/diff-checkPASS. La suite
+limpia972/178.99s sigue siendo exclusivamente de3e15f15. Huella propuesta
+`d12d7f8ce6f9619c17a48bf40140c4e511524f8bcaee0538f220b891ebbfdfb4`.
+Se repetirá la suite completa al congelar el código después de revisión;
+no se atribuyen los resultados anteriores a este commit. Sin fase canónica,
+aprobación o gate nuevos.

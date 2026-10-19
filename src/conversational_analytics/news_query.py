@@ -96,7 +96,7 @@ def _publication_scope(text: str) -> str:
     for token in re.finditer(r"\bt[1-4]\b", text):
         before, after = text[:token.start()], text[token.end():]
         terminal = re.search(r"\b(?:terminal(?:es)?(?:\s+(?:aerea|aereas|numero|num))*|aicm|aifa)[\W_]*$", before)
-        airport = re.match(r"[\W_]*(?:(?:de|del|en)\s+(?:(?:el|la|los|las)\s+)?)?(?:aicm|aifa|aeropuerto(?:s)?|terminal(?:es)?)\b", after)
+        airport = re.match(r"[\W_]*(?:(?:de|del|en)\s+)?(?:(?:el|la|los|las)\s+)?(?:aicm|aifa|aeropuerto(?:s)?|terminal(?:es)?)\b", after)
         if terminal or airport:
             characters[token.start():token.end()] = " " * len(token.group())
     return "".join(characters)
