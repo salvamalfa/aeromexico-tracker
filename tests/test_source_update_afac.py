@@ -116,13 +116,20 @@ def test_candidate_extracts_database_offline_with_original_capture_time(tmp_path
         assert metadata["downloaded_at"] == stamp.isoformat()
         assert metadata["download_method"] == "offline_zip_member"
         assert kwargs["through_month"] == 1 and set(kwargs["documents"]) == {1}
-        pl.DataFrame({"period_id": ["2026M01"], "footnote_text": ["estimated detail"]}).write_parquet(
-            paths.silver / "afac_monthly_stats.parquet"
-        )
+        pl.DataFrame(
+            {
+                "period_id": ["2026M01", "2026M01"],
+                "source_family": ["datatur_monthly_bulletin_pdf", "datatur_long_database"],
+                "footnote_text": ["estimated detail", "charter estimate retained"],
+            }
+        ).write_parquet(paths.silver / "afac_monthly_stats.parquet")
         return {"period_max": "2026M01"}
 
     monkeypatch.setattr(legacy, "run_afac_parse", parse)
     result = afac.run()
     assert result["period_max"] == "2026M01"
     facts = pl.read_parquet(paths.silver / "afac_monthly_stats.parquet")
-    assert facts["footnote_text"].to_list() == ["estimated detail\nSource caveat retained"]
+    assert facts["footnote_text"].to_list() == [
+        "estimated detail\nSource caveat retained",
+        "charter estimate retained",
+    ]

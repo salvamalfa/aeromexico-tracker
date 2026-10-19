@@ -126,7 +126,10 @@ def run() -> dict:
     path = PATHS.silver / "afac_monthly_stats.parquet"
     facts = pl.read_parquet(path)
     facts = facts.with_columns(
-        pl.when(pl.col("period_id").is_in([f"2026M{m:02d}" for m in months]))
+        pl.when(
+            pl.col("period_id").is_in([f"2026M{m:02d}" for m in months])
+            & pl.col("source_family").eq("datatur_monthly_bulletin_pdf")
+        )
         .then(
             pl.concat_str(
                 [
