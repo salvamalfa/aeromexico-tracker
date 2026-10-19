@@ -1,0 +1,373 @@
+{
+  "version": 1,
+  "mode": "candidate_checks",
+  "as_of": "2026-10-18T20:14:33.254462-06:00",
+  "checks": [
+    {
+      "product": "equities",
+      "layer": "silver",
+      "table": "market_prices",
+      "expected_period": "2026M09",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 21,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026M09",
+      "latest_validated_period": "2026M09",
+      "release_lag_days": null,
+      "observation_age_days": 18,
+      "capture_age_days": 0,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    },
+    {
+      "product": "equities",
+      "layer": "gold",
+      "table": "fact_market_data",
+      "expected_period": "2026M09",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 21,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026M09",
+      "latest_validated_period": "2026M09",
+      "release_lag_days": null,
+      "observation_age_days": 18,
+      "capture_age_days": 0,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    },
+    {
+      "product": "equities",
+      "layer": "silver",
+      "table": "market_prices",
+      "expected_period": "2026M09",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 21,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026M09",
+      "latest_validated_period": "2026M09",
+      "release_lag_days": null,
+      "observation_age_days": 18,
+      "capture_age_days": 0,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    },
+    {
+      "product": "equities",
+      "layer": "gold",
+      "table": "fact_market_data",
+      "expected_period": "2026M09",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 21,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026M09",
+      "latest_validated_period": "2026M09",
+      "release_lag_days": null,
+      "observation_age_days": 18,
+      "capture_age_days": 0,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    },
+    {
+      "product": "equities",
+      "layer": "silver",
+      "table": "market_prices",
+      "expected_period": "2026M09",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 21,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026M09",
+      "latest_validated_period": "2026M09",
+      "release_lag_days": null,
+      "observation_age_days": 18,
+      "capture_age_days": 0,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    },
+    {
+      "product": "equities",
+      "layer": "gold",
+      "table": "fact_market_data",
+      "expected_period": "2026M09",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 21,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026M09",
+      "latest_validated_period": "2026M09",
+      "release_lag_days": null,
+      "observation_age_days": 18,
+      "capture_age_days": 0,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    },
+    {
+      "product": "equities",
+      "layer": "silver",
+      "table": "market_prices",
+      "expected_period": "2026M09",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 21,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026M09",
+      "latest_validated_period": "2026M09",
+      "release_lag_days": null,
+      "observation_age_days": 18,
+      "capture_age_days": 0,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    },
+    {
+      "product": "equities",
+      "layer": "gold",
+      "table": "fact_market_data",
+      "expected_period": "2026M09",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 21,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026M09",
+      "latest_validated_period": "2026M09",
+      "release_lag_days": null,
+      "observation_age_days": 18,
+      "capture_age_days": 0,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    },
+    {
+      "product": "equities",
+      "layer": "silver",
+      "table": "market_prices",
+      "expected_period": "2026M09",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 21,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026M09",
+      "latest_validated_period": "2026M09",
+      "release_lag_days": null,
+      "observation_age_days": 18,
+      "capture_age_days": 0,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    },
+    {
+      "product": "equities",
+      "layer": "gold",
+      "table": "fact_market_data",
+      "expected_period": "2026M09",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 21,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026M09",
+      "latest_validated_period": "2026M09",
+      "release_lag_days": null,
+      "observation_age_days": 18,
+      "capture_age_days": 0,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    },
+    {
+      "product": "afac_carriers",
+      "layer": "silver",
+      "table": "afac_monthly_stats",
+      "expected_period": "2026M08",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 75,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026M08",
+      "latest_validated_period": "2026M08",
+      "release_lag_days": null,
+      "observation_age_days": 48,
+      "capture_age_days": 0,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    },
+    {
+      "product": "afac_carriers",
+      "layer": "silver",
+      "table": "afac_monthly_stats",
+      "expected_period": "2026M08",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 37,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026M08",
+      "latest_validated_period": "2026M08",
+      "release_lag_days": null,
+      "observation_age_days": 48,
+      "capture_age_days": 0,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    },
+    {
+      "product": "afac_carriers",
+      "layer": "gold",
+      "table": "fact_carrier_metrics",
+      "expected_period": "2026M08",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 25,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026M08",
+      "latest_validated_period": "2026M08",
+      "release_lag_days": null,
+      "observation_age_days": 48,
+      "capture_age_days": 0,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    },
+    {
+      "product": "aicm_traffic",
+      "layer": "silver",
+      "table": "airport_traffic",
+      "expected_period": "2026M08",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 1,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026M08",
+      "latest_validated_period": "2026M08",
+      "release_lag_days": null,
+      "observation_age_days": 48,
+      "capture_age_days": 0,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    },
+    {
+      "product": "aicm_traffic",
+      "layer": "gold",
+      "table": "fact_airport_traffic",
+      "expected_period": "2026M08",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 1,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026M08",
+      "latest_validated_period": "2026M08",
+      "release_lag_days": null,
+      "observation_age_days": 48,
+      "capture_age_days": 0,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    },
+    {
+      "product": "aifa_traffic",
+      "layer": "silver",
+      "table": "airport_traffic",
+      "expected_period": "2026M07",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 1,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026M07",
+      "latest_validated_period": "2026M07",
+      "release_lag_days": null,
+      "observation_age_days": 79,
+      "capture_age_days": 0,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    },
+    {
+      "product": "aifa_traffic",
+      "layer": "gold",
+      "table": "fact_airport_traffic",
+      "expected_period": "2026M07",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 1,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026M07",
+      "latest_validated_period": "2026M07",
+      "release_lag_days": null,
+      "observation_age_days": 79,
+      "capture_age_days": 0,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    },
+    {
+      "product": "bmv_xbrl",
+      "layer": "gold",
+      "table": "fact_carrier_metrics",
+      "expected_period": "2026Q2",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 7,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026Q2",
+      "latest_validated_period": "2026Q2",
+      "release_lag_days": null,
+      "observation_age_days": 110,
+      "capture_age_days": 59,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    },
+    {
+      "product": "bmv_xbrl",
+      "layer": "gold",
+      "table": "fact_carrier_metrics",
+      "expected_period": "2026Q2",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 7,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026Q2",
+      "latest_validated_period": "2026Q2",
+      "release_lag_days": null,
+      "observation_age_days": 110,
+      "capture_age_days": 59,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    }
+  ],
+  "status": "checks_passed",
+  "scope": "only_explicit_checks_not_complete_round_certification",
+  "approval": "human_review_required",
+  "activation": "none",
+  "publication": "not_authorized"
+}

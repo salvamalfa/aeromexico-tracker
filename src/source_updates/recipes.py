@@ -128,6 +128,10 @@ def catalog_selection(product_id: str) -> dict:
 
 
 def macro_round(product_id: str, period: str, as_of: str) -> dict:
+    if product_id == "equities":
+        from src.source_updates.market import round_recipe
+
+        return round_recipe(period, as_of)
     from src.ingest.macro.banxico import (
         BANXICO_SERIES,
         FED_H10_SERIES_ID,

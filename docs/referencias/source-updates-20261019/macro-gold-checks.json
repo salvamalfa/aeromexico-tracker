@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "mode": "candidate_checks",
+  "as_of": "2026-10-18T20:14:08.355943-06:00",
+  "checks": [
+    {
+      "product": "fuel",
+      "layer": "gold",
+      "table": "fact_macro",
+      "expected_period": "2026M09",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 2,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026M09",
+      "latest_validated_period": "2026M09",
+      "release_lag_days": null,
+      "observation_age_days": 18,
+      "capture_age_days": 0,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    },
+    {
+      "product": "banxico",
+      "layer": "gold",
+      "table": "fact_macro",
+      "expected_period": "2026M09",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 2,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026M09",
+      "latest_validated_period": "2026M09",
+      "release_lag_days": null,
+      "observation_age_days": 18,
+      "capture_age_days": 0,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    },
+    {
+      "product": "banxico",
+      "layer": "gold",
+      "table": "fact_macro",
+      "expected_period": "2026M09",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 2,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026M09",
+      "latest_validated_period": "2026M09",
+      "release_lag_days": null,
+      "observation_age_days": 18,
+      "capture_age_days": 0,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    },
+    {
+      "product": "banxico",
+      "layer": "gold",
+      "table": "fact_macro",
+      "expected_period": "2026M09",
+      "latest_published_period": null,
+      "status": "checks_passed",
+      "rows": 2,
+      "latest_available_period": null,
+      "latest_parsed_period": "2026M09",
+      "latest_validated_period": "2026M09",
+      "release_lag_days": null,
+      "observation_age_days": 18,
+      "capture_age_days": 0,
+      "null_values": 0,
+      "revisions": {
+        "status": "not_compared_no_baseline"
+      }
+    }
+  ],
+  "status": "checks_passed",
+  "scope": "only_explicit_checks_not_complete_round_certification",
+  "approval": "human_review_required",
+  "activation": "none",
+  "publication": "not_authorized"
+}

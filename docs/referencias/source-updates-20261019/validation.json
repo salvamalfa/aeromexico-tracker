@@ -1,0 +1,187 @@
+{
+  "code_head": "2cc3ff13399c3746ae4fef30f116129849c9a3a7",
+  "checked_at": "2026-10-19T02:16:00.302611+00:00",
+  "candidate": "tmp/source-updates/full-public-20261019",
+  "public_original_manifest_sha256": "40c154959d3ef48e1611f0362a6e69c29b87368bfbb92841a2f656c3eb5598f2",
+  "normal_coordinator": {
+    "status": "completed",
+    "steps_completed": 16,
+    "offline": true,
+    "receipt_sha256": "087403bd1c9e82259388af9c54973ac5f9e737ed81f6af08c8c0d98833bfe26e"
+  },
+  "gold_stage6_acceptance": {
+    "passed": 25,
+    "total": 25,
+    "all_passed": true,
+    "failed": [],
+    "load_factor_rows": 40,
+    "annual_reconciliations": 18,
+    "quality_issues": 366,
+    "contract_rows": {
+      "dim_carrier": 182,
+      "dim_period": 200,
+      "dim_metric": 99,
+      "dim_route": 3407,
+      "dim_airport": 9069,
+      "dim_airport_group": 3,
+      "dim_events": 22,
+      "dim_fx_period": 200,
+      "dim_fuel_period": 188,
+      "fx_business_calendar": 3064,
+      "fuel_business_calendar": 3064,
+      "dim_source": 29,
+      "dim_source_priority": 9,
+      "fact_carrier_metrics": 6744,
+      "fact_route_traffic": 189809,
+      "fact_airport_traffic": 567,
+      "fact_airport_group_traffic": 47,
+      "fact_market_data": 12037,
+      "fact_macro": 1504,
+      "fact_data_quality_issues": 366
+    }
+  },
+  "gold_lineage": {
+    "scope": "Stage6 record-bearing tables; no analytics or publication",
+    "validation": {
+      "status": "passed",
+      "record_tables": {
+        "fact_airport_group_traffic": 47,
+        "fact_airport_traffic": 567,
+        "fact_carrier_metrics": 6744,
+        "fact_data_quality_issues": 366,
+        "fact_macro": 1504,
+        "fact_market_data": 12037,
+        "fact_route_traffic": 189809
+      },
+      "records_expected": 211074,
+      "records_declared": 211074,
+      "coverage_pct": 1.0,
+      "artifact_records": 209282,
+      "parent_records": 1766,
+      "declared_without_exact_link_records": 26,
+      "artifact_count": 836,
+      "unknown_parent_records": 0,
+      "unknown_artifact_records": 0
+    },
+    "catalog_sources": 29,
+    "bronze_artifacts": 836,
+    "record_tables": {
+      "fact_airport_group_traffic": {
+        "records": 47,
+        "bridge_rows": 47,
+        "records_resolved_to_artifact": 47,
+        "records_resolved_to_parent": 0,
+        "records_declared_without_artifact": 0
+      },
+      "fact_airport_traffic": {
+        "records": 567,
+        "bridge_rows": 574,
+        "records_resolved_to_artifact": 567,
+        "records_resolved_to_parent": 0,
+        "records_declared_without_artifact": 0
+      },
+      "fact_carrier_metrics": {
+        "records": 6744,
+        "bridge_rows": 9111,
+        "records_resolved_to_artifact": 4978,
+        "records_resolved_to_parent": 1766,
+        "records_declared_without_artifact": 0
+      },
+      "fact_data_quality_issues": {
+        "records": 366,
+        "bridge_rows": 366,
+        "records_resolved_to_artifact": 340,
+        "records_resolved_to_parent": 0,
+        "records_declared_without_artifact": 26
+      },
+      "fact_macro": {
+        "records": 1504,
+        "bridge_rows": 1504,
+        "records_resolved_to_artifact": 1504,
+        "records_resolved_to_parent": 0,
+        "records_declared_without_artifact": 0
+      },
+      "fact_market_data": {
+        "records": 12037,
+        "bridge_rows": 12037,
+        "records_resolved_to_artifact": 12037,
+        "records_resolved_to_parent": 0,
+        "records_declared_without_artifact": 0
+      },
+      "fact_route_traffic": {
+        "records": 189809,
+        "bridge_rows": 189809,
+        "records_resolved_to_artifact": 189809,
+        "records_resolved_to_parent": 0,
+        "records_declared_without_artifact": 0
+      }
+    },
+    "total_records": 211074,
+    "records_with_lineage_declaration": 211074,
+    "coverage_pct": 1.0
+  },
+  "product_checks": {
+    "status": "checks_passed",
+    "checks": 19,
+    "missing_september_guard": "blocked"
+  },
+  "afac_august_unmapped_retained_in_silver": {
+    "rows": 88,
+    "passenger_observations_sum": 2684826.0,
+    "scope": "Sum across separate source market/service rows; no allocation to Aeromexico"
+  },
+  "tests": {
+    "full_suite_summary": "1582 passed, 75 skipped, 29 subtests passed in 190.47s (0:03:10)",
+    "full_suite_log_sha256": "25c942b157e246a86e3cf60f097d61a7cdaacea59b2bd68158f7610adb6e6627",
+    "pin_provenance": "Existing public approval pins from d456eb8:docs/chat/fase-2-decision-dueno.md, process-local only; no new approval or external variable change",
+    "skips": {
+      "local_data": 69,
+      "pages_preview": 1,
+      "stage4_local_artifacts": 5
+    },
+    "full_suite_code_head": "2cc3ff13399c3746ae4fef30f116129849c9a3a7"
+  },
+  "review_boundary": {
+    "clean_base": "f20c244f17b69522c65dc17e0a9356b81e162c2b",
+    "base_review": "https://github.com/salvamalfa/aeromexico-tracker/pull/137#issuecomment-6254675163",
+    "new_proposal": "https://github.com/salvamalfa/aeromexico-tracker/pull/141",
+    "new_head_requires_own_review": true
+  },
+  "integration": {
+    "news_pr136_head": "2e23b0fd03fa4b5339dc776ecc01127aabb0ee7e",
+    "news_monthly_archive": "pending",
+    "market_pr135": "merged by its owner; no merge into this branch; imported helper API inspected unchanged",
+    "flights_pr134": "merged by its owner; no writes to its branch"
+  },
+  "limits": {
+    "fresh_paid_requests": 0,
+    "secrets_or_credentials_accessed": false,
+    "retained_aerodatabox_modified": false,
+    "private_repository_modified": false,
+    "automatic_executions_created": 0,
+    "theses_activated": [],
+    "candidate_news_activated": false,
+    "published": false,
+    "merged": false,
+    "optional_route_extensions": "Not certified for these new observations; Stage6 source-update scope only"
+  },
+  "post_rebuild_receipt_gate": {
+    "commit": "86a05df",
+    "change": "Reject nonzero worker exits and unfinished intermediate receipts, preserve existing failed status; no numerical parser/Gold change",
+    "focused_regressions": "184 passed, 2 local-data skips; all source-update/AFAC/BMV/period/budget tests",
+    "full_suite_evidence": "This archived full-suite receipt pins 2cc3ff1; PR141 tracks later exact-head CI and review.",
+    "offline_cli_round": "Passed at 54639ca: retained real EIA XLS import -> offline parser -> 21 September observations, completion cutoff retained, zero HTTP requests"
+  },
+  "review_correction": {
+    "initial_review_head": "decfdfddd948c02726ae62c9bc0ab150b1e8131d",
+    "source_code_fix": "d7f0f6e",
+    "finding": "P2: PDF notes were also added to charter workbook rows",
+    "affected_artifact": "afac-notes-review-fix.json",
+    "changed_column": "footnote_text",
+    "changed_rows": 296,
+    "other_columns_equal": true,
+    "gold_contracts_and_lineage_rechecked": "passed",
+    "focused_test": "4 passed; scheduled and charter attribution tested together",
+    "full_suite_evidence": "Previous green full suite belongs to 86a05df; next exact-head CI/review and local rerun are tracked by PR141"
+  }
+}

@@ -78,12 +78,13 @@ def check_candidate(workspace: Path, specification: dict) -> dict:
     if not checks:
         raise ValueError("Explicit source/product/period checks are required")
     results = []
+    gold_cache = {}
     for item in checks:
         result = {
             "product": item["product"],
             "layer": item["layer"],
             "table": item["table"],
-            "expected_period": item["expected_period"],
+            "expected_period": item.get("expected_period", "reference_snapshot"),
             "latest_published_period": None,
         }
         try:
@@ -131,6 +132,12 @@ def check_candidate(workspace: Path, specification: dict) -> dict:
             selected = selected.loc[selected["source_system"].isin(aliases)]
             if selected.empty:
                 raise ValueError("No rows for the requested source/product/entity")
+            if item.get("kind") == "reference":
+                from src.source_updates.reference import check_snapshot
+
+                result.update(check_snapshot(workspace, item, selected, artifacts, cutoff))
+                results.append(result)
+                continue
             # Periods come from parsed rows, never from requested filename or mtime.
             if item.get("period_column") == "year_month":
                 periods = (
@@ -148,12 +155,30 @@ def check_candidate(workspace: Path, specification: dict) -> dict:
             target_end = period_end(item["expected_period"])
             if target_end >= cutoff.date():
                 raise ValueError("Expected observation period must be closed before the cutoff")
-            observed = sorted(set(periods))
             expected = item["expected_period"]
+            # Compare freshness on the requested frequency; quarter/year rows
+            # must not appear newer than an actually parsed monthly observation.
+            pattern = r"\d{4}M\d{2}" if "M" in expected else r"\d{4}Q[1-4]"
+            observed = sorted(set(periods[periods.str.fullmatch(pattern)]))
+            if not observed:
+                raise ValueError("No parsed periods at the requested frequency")
             if expected not in observed:
                 raise ValueError(f"Requested period absent; actual periods end at {max(observed)}")
             selected = selected.loc[periods.eq(expected)]
+            captured_files = set(selected["source_file"])
+            inherited = item["layer"] == "gold" and "record_id" in selected and any(
+                str(row.source_file) not in artifacts
+                or artifacts[str(row.source_file)]["sha256"] != row.source_hash
+                or artifacts[str(row.source_file)]["source_system"] not in aliases
+                for row in selected[["source_file", "source_hash"]].drop_duplicates().itertuples(index=False)
+            )
+            if inherited:
+                from src.source_updates.gold import contributing_files
+
+                captured_files = contributing_files(workspace, selected, aliases, gold_cache)
             for row in selected[["source_file", "source_hash"]].drop_duplicates().itertuples(index=False):
+                if inherited:
+                    continue
                 # Aggregated hashes need the established lineage bridge; never
                 # approve them merely because a source_hash string is present.
                 artifact = artifacts.get(str(row.source_file))
@@ -202,7 +227,7 @@ def check_candidate(workspace: Path, specification: dict) -> dict:
             captured = [
                 local_time(row["downloaded_at"])
                 for row in artifacts.values()
-                if row["source_file"] in set(selected["source_file"])
+                if row["source_file"] in captured_files
             ]
             if max(captured) > cutoff:
                 raise ValueError("Source captured after the requested historical cutoff")

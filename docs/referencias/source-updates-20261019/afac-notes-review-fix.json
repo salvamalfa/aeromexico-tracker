@@ -1,0 +1,184 @@
+{
+  "code_head": "d7f0f6ef816552974d30b0998afa0d6579879507",
+  "issue": "PR141 P2 PDF notes applied to charter facts",
+  "candidate_build": {
+    "run_id": "build-c7207fc092754be9979033cf38f5bccc",
+    "root": "/workspace/airline-source-skills-gold/tmp/source-updates/full-public-20261019",
+    "offline": true,
+    "started_at": "2026-10-19T02:30:21.221825+00:00",
+    "finished_at": "2026-10-19T02:30:38.053122+00:00",
+    "status": "completed",
+    "steps": [
+      {
+        "step_id": "parse.afac",
+        "phase": "parse",
+        "requirement": "required",
+        "status": "completed",
+        "started_at": "2026-10-19T02:30:21.221873+00:00",
+        "finished_at": "2026-10-19T02:30:38.052826+00:00",
+        "duration_ms": 16830.982,
+        "reason": "completed",
+        "details": {
+          "network_used": false,
+          "silver_rows": 15218,
+          "period_min": "2015M01",
+          "period_max": "2026M08",
+          "period_count": 140,
+          "missing_periods": [],
+          "total_checks": 688,
+          "failed_total_checks": 0,
+          "datatur_duplicate_groups_2026": 0,
+          "unmapped_carrier_names": 230,
+          "unmapped_file": "data/quality/afac_unmapped_carriers.csv",
+          "inventory_file": "docs/afac-inventario.md",
+          "sec_reconciliation": {
+            "overlap_months": 14,
+            "correlation": 0.9993031958692279,
+            "mean_difference": -28895.428571428572,
+            "mean_difference_pct": -0.014497402018406205,
+            "median_difference_pct": -0.015486927959027232
+          },
+          "default_business_view": "AEROMEXICO + AEROMEXICO_CONNECT",
+          "observation_months_2026": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ],
+          "database_zip_sha256": "4c47c52a4ec05af37d8bc488fb2985f74a4fc47cbaf5a91c9b1589f0aa9425f2",
+          "bulletin_notes_preserved": true,
+          "coverage": "reported_monthly_universe_with_source_caveats",
+          "latest_published_period": null,
+          "publication_dates_verified": false
+        }
+      }
+    ],
+    "activation": "none",
+    "publication": "not_authorized",
+    "period_acceptance": "not_checked",
+    "returncode": 0
+  },
+  "changed_rows": 296,
+  "only_changed_column": "footnote_text",
+  "changed_source_family": "datatur_long_database",
+  "all_other_columns_equal": true,
+  "gold_values_rebuilt": false,
+  "gold_reason": "Gold inputs/flags/lineage unchanged outside Silver footnote_text; Gold has no footnote_text column",
+  "gold_acceptance": {
+    "passed": 25,
+    "total": 25,
+    "all_passed": true,
+    "failed": [],
+    "load_factor_rows": 40,
+    "annual_reconciliations": 18,
+    "quality_issues": 366,
+    "contract_rows": {
+      "dim_carrier": 182,
+      "dim_period": 200,
+      "dim_metric": 99,
+      "dim_route": 3407,
+      "dim_airport": 9069,
+      "dim_airport_group": 3,
+      "dim_events": 22,
+      "dim_fx_period": 200,
+      "dim_fuel_period": 188,
+      "fx_business_calendar": 3064,
+      "fuel_business_calendar": 3064,
+      "dim_source": 29,
+      "dim_source_priority": 9,
+      "fact_carrier_metrics": 6744,
+      "fact_route_traffic": 189809,
+      "fact_airport_traffic": 567,
+      "fact_airport_group_traffic": 47,
+      "fact_market_data": 12037,
+      "fact_macro": 1504,
+      "fact_data_quality_issues": 366
+    }
+  },
+  "gold_lineage": {
+    "scope": "Stage6 record-bearing tables; no analytics or publication",
+    "validation": {
+      "status": "passed",
+      "record_tables": {
+        "fact_airport_group_traffic": 47,
+        "fact_airport_traffic": 567,
+        "fact_carrier_metrics": 6744,
+        "fact_data_quality_issues": 366,
+        "fact_macro": 1504,
+        "fact_market_data": 12037,
+        "fact_route_traffic": 189809
+      },
+      "records_expected": 211074,
+      "records_declared": 211074,
+      "coverage_pct": 1.0,
+      "artifact_records": 209282,
+      "parent_records": 1766,
+      "declared_without_exact_link_records": 26,
+      "artifact_count": 836,
+      "unknown_parent_records": 0,
+      "unknown_artifact_records": 0
+    },
+    "catalog_sources": 29,
+    "bronze_artifacts": 836,
+    "record_tables": {
+      "fact_airport_group_traffic": {
+        "records": 47,
+        "bridge_rows": 47,
+        "records_resolved_to_artifact": 47,
+        "records_resolved_to_parent": 0,
+        "records_declared_without_artifact": 0
+      },
+      "fact_airport_traffic": {
+        "records": 567,
+        "bridge_rows": 574,
+        "records_resolved_to_artifact": 567,
+        "records_resolved_to_parent": 0,
+        "records_declared_without_artifact": 0
+      },
+      "fact_carrier_metrics": {
+        "records": 6744,
+        "bridge_rows": 9111,
+        "records_resolved_to_artifact": 4978,
+        "records_resolved_to_parent": 1766,
+        "records_declared_without_artifact": 0
+      },
+      "fact_data_quality_issues": {
+        "records": 366,
+        "bridge_rows": 366,
+        "records_resolved_to_artifact": 340,
+        "records_resolved_to_parent": 0,
+        "records_declared_without_artifact": 26
+      },
+      "fact_macro": {
+        "records": 1504,
+        "bridge_rows": 1504,
+        "records_resolved_to_artifact": 1504,
+        "records_resolved_to_parent": 0,
+        "records_declared_without_artifact": 0
+      },
+      "fact_market_data": {
+        "records": 12037,
+        "bridge_rows": 12037,
+        "records_resolved_to_artifact": 12037,
+        "records_resolved_to_parent": 0,
+        "records_declared_without_artifact": 0
+      },
+      "fact_route_traffic": {
+        "records": 189809,
+        "bridge_rows": 189809,
+        "records_resolved_to_artifact": 189809,
+        "records_resolved_to_parent": 0,
+        "records_declared_without_artifact": 0
+      }
+    },
+    "total_records": 211074,
+    "records_with_lineage_declaration": 211074,
+    "coverage_pct": 1.0
+  },
+  "network_requests": 0,
+  "activation": "none"
+}

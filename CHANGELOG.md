@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-10-19 · Candidato Gold y nuevas capturas públicas
+
+- Dimensión de periodos derivada de observaciones y tasa objetivo con unidad
+  `percent`, sin reescalar cifras. Regresiones de septiembre y cambio de año.
+- BMV con miembros ZIP offline acotados, historia de catálogos conservada y
+  puente Gold contrastado con Bronze. Yahoo chart público preservado y cinco
+  identidades verificadas; no se empalma AERO anterior a su IPO.
+- AFAC candidato usa meses comunes de PDF y fletamento 2026, conserva notas de
+  cobertura y elimina el corte fijo de junio. AICM admite meses nuevos contiguos.
+- Selección de documentos por enlaces reales y control de snapshot OurAirports.
+  Noticias conserva fallos HTTP-200 y ediciones anteriores en Bronze con recibo;
+  no activa el índice mensual ni declara cobertura completa.
+- `round --check-at-completion` optativo registra el corte efectivo de una
+  captura nueva y conserva el corte solicitado. Sin él se respeta el histórico.
+- Propuesta separada sobre PR137; sin merge, publicación ni automatización.
+  [Guía y evidencia por producto](docs/catalogo-fuentes-calendario.md).
+
 ## 2026-10-18 · Skills de fuentes y coordinador candidato
 
 - Ocho skills por familia y un coordinador con calendario bancario mexicano,

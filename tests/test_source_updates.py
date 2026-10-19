@@ -238,10 +238,9 @@ def test_forbidden_steps_never_execute(workspace):
             build(workspace, [name])
 
 
-def test_bmv_parser_is_not_advertised_without_offline_member_registration(workspace):
-    assert product_map()["bmv_xbrl"]["parser_step"] is None
-    with pytest.raises(ValueError, match="ZIP-member registration"):
-        build(workspace, ["parse.bmv"])
+def test_bmv_parser_advertises_bounded_offline_registration(workspace):
+    assert product_map()["bmv_xbrl"]["parser_step"] == "parse.bmv"
+    assert build(workspace, ["parse.bmv"])["network_requests"] == 0
 
 
 def test_h10_only_is_not_a_sufficient_banxico_parser_input(workspace):

@@ -58,7 +58,7 @@ PRODUCTS = (
         "parse.airports",
     ),
     ("asur_traffic", "sec_edgar", "monthly", "separate_mexico_from_other_countries", "parse.airports"),
-    ("bmv_xbrl", "bmv", "quarterly", "offline_zip_member_registration_adapter_pending", None),
+    ("bmv_xbrl", "bmv", "quarterly", "selected_catalogue_packages_with_bounded_offline_members", "parse.bmv"),
     (
         "viva_financials",
         "viva_ir",
@@ -97,7 +97,7 @@ PRODUCTS = (
         "yahoo_finance",
         "both",
         "ticker_identity_and_adjustment_revisions_no_pre_ipo_aero_splice",
-        "parse.market",
+        "parse.market_chart",
     ),
     (
         "anac",
@@ -184,6 +184,7 @@ def bronze_aliases(product_id: str) -> tuple[str, ...]:
         "delta_sec": ("sec",),
         "ryanair_sec": ("sec",),
         "afac_carriers": ("afac",),
+        "bmv_xbrl": ("bmv",),
     }
     declared = tuple(load_catalog()[product_map()[product_id]["source_key"]]["source_systems"])
     supported = legacy.get(product_id, declared)
