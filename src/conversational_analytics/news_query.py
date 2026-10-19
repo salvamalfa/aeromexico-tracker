@@ -95,9 +95,15 @@ def _publication_scope(text: str) -> str:
         modifier_word = r"(?!que\b)[^\W\d_]+"
         modifiers = r"(?:[\W_]+" + modifier_word + r"){0,16}"
         cognition = r"(?:cre|piens|pens|opin|consider|estim|supon|esper|parec)\w*"
+        post_modifier = (
+            r"(?:yo|tu|vos|el|ella|usted|ustedes|nosotros|nosotras|vosotros|vosotras|ellos|ellas"
+            r"|no|ya|aun|todavia|tambien|nunca|siempre|ahora|entonces|quizas|solo|solamente|acaso|asi"
+            r"|[^\W\d_]+mente|de[\W_]+verdad|en[\W_]+realidad|tal[\W_]+vez)"
+        )
+        post_modifiers = r"(?:[\W_]+" + post_modifier + r"){0,16}"
         interrogative = re.match(
             r"[\W_]*(?:(?:por|para|a|de|con|en)[\W_]+)?que\b"
-            + r"(?:" + modifiers + r"[\W_]+" + cognition + modifiers + r"[\W_]+que\b)*",
+            + r"(?:" + modifiers + r"[\W_]+" + cognition + post_modifiers + r"[\W_]+que\b)*",
             subject,
         )
         boundary_subject = subject

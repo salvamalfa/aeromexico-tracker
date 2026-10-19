@@ -389,3 +389,17 @@ Se incluyen343regresiones en802casos de matrices, PASS0.64s; RuffF y
 diff-checkPASS. Suite completa pendiente de congelar revisión. Huella
 `226ff9c16f03798491baeba2e600c88f2286c90883fd589851591ecf99c48dd4`.
 Sin nueva fase canónica, aprobación ni gate;6534/88–90 intactos.
+
+## Frontera nominal tras el verbo cognitivo · 19 de octubre, 01:21 UTC
+
+La revisión de638183b encontró piensan en noticias que salieron. Los
+modificadores posteriores al verbo se acotan a sujetos pronominales y
+adverbios admitidos; no consumen complementos nominales. Antes del verbo
+se mantienen sujetos/clíticos locales. Cinco tipos de complemento nominal
+se comparan con trimestre/mes y deben pedir aclaración; tres locuciones
+adverbiales admitidas conservan el tema y sus límites.
+Se incluyen356regresiones en815casos de matrices, PASS0.67s; RuffF y
+diff-checkPASS. Suite completa pendiente de congelar revisión. Huella
+`8da809570eb3d01b9d316bf5db2c55d22dfe723b25e3df1d761dce5f01c81710`.
+Sin fase canónica, aprobación o gate nuevos;6534/88–90 intactos. M11 y las
+correcciones separadas de Skills no forman parte de estos cambios.

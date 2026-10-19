@@ -601,3 +601,28 @@ def test_modified_cognitive_prelude_cannot_skip_another_relative_clause(period):
         resolve_news_query(
             f"Busca noticias publicadas en 2026-07 sobre por qué se cree que cayeron los resultados que salieron en {period}"
         )
+
+
+@pytest.mark.parametrize(
+    "clause",
+    [
+        "los analistas piensan en noticias que salieron",
+        "los analistas consideran noticias que salieron",
+        "los analistas consideran las noticias que salieron",
+        "los expertos opinan sobre notas que salieron",
+        "los analistas esperan noticias que salieron",
+    ],
+)
+@pytest.mark.parametrize("period", ["2T26", "agosto de 2026"])
+def test_cognitive_prelude_does_not_consume_a_nominal_object_relative(clause, period):
+    with pytest.raises(ValueError):
+        resolve_news_query(f"Busca noticias publicadas en 2026-07 sobre por qué {clause} en {period}")
+
+
+@pytest.mark.parametrize("modifier", ["de verdad", "en realidad", "tal vez"])
+def test_fixed_postverbal_adverbs_remain_part_of_cognitive_prelude(modifier):
+    intent = resolve_news_query(
+        f"Busca noticias publicadas en 2026-07 sobre por qué crees {modifier} que cayeron resultados en 2T26"
+    )
+    assert "2t26" in intent["terms"]
+    assert (intent["start_date"], intent["end_date"]) == ("2026-07-01", "2026-07-31")
