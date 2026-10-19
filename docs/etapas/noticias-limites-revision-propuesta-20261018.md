@@ -319,3 +319,19 @@ se ejecutó: la anterior972/178.99s es de3e15f15. La siguiente suite completa
 se inicia al congelar el código revisado. Huella propuesta actual
 `05f44ea54f55921e4c9713875b3143f91192ae9cbbae09073e07660fa89d4944`.
 Sin nueva fase canónica, aprobación ni gate;6534/88–90 siguen intactos.
+
+## Cláusula relativa y otros verbos · 19 de octubre, 00:55 UTC
+
+La revisión de77529fa encontró que salieron en2T26. Una cláusula relativa
+con que conserva visible el periodo posterior, independientemente del verbo;
+no se amplía una lista de verbos sin límite. La frontera exige una palabra
+previa dentro del tema para distinguirla de una pregunta que empieza con
+qué pasó/ocurrió. Solo las etiquetas del tema previo pueden exceptuarse.
+Diez casos comparan cinco formas verbales con trimestre/mes y dos mantienen
+la pregunta temática inicial con las fichas reales y mes exacto.
+
+Se incluyen300regresiones en759casos con matrices previas, PASS0.62s;
+RuffF/diff-checkPASS. La suite completa sigue pendiente de congelar revisión:
+la última972/178.99s corresponde a3e15f15, no a los cortes posteriores.
+Huella propuesta `ecc6b54fd6aabb4d4bd80238e3af0609a1b9f167498a2455932ca222a6bb6113`.
+6534/88–90 intactos; sin fase canónica, aprobación o gate nuevos.

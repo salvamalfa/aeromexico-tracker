@@ -478,3 +478,19 @@ def test_named_month_or_year_before_subject_also_anchors_publication(approved_in
     )
     assert [row["id"] for row in result["results"]] == ["flightglobal-aeromexico-q2-2026-07-15"]
     assert (result["filters"]["start_date"], result["filters"]["end_date"]) == bounds
+
+
+@pytest.mark.parametrize(
+    "verb", ["salieron", "aparecieron", "se difundieron", "se emitieron", "se divulgaron"]
+)
+@pytest.mark.parametrize("period", ["2T26", "agosto de 2026"])
+def test_relative_publication_clause_keeps_quarter_and_calendar_constraints_visible(verb, period):
+    with pytest.raises(ValueError):
+        resolve_news_query(f"Busca noticias publicadas en 2026-07 sobre combustible que {verb} en {period}")
+
+
+@pytest.mark.parametrize("verb", ["pasó", "ocurrió"])
+def test_interrogative_topic_at_its_start_stays_searchable(approved_index, verb):
+    result = approved_index.search_news(f"Busca noticias publicadas en 2026-07 sobre qué {verb} en 2T26")
+    assert result["count"] == 2
+    assert (result["filters"]["start_date"], result["filters"]["end_date"]) == ("2026-07-01", "2026-07-31")

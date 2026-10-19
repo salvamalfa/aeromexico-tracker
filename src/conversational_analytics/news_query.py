@@ -85,6 +85,10 @@ def _publication_scope(text: str) -> str:
         # the report's subject. Other calendar constraints remain visible;
         # a publication verb always starts a separate period clause.
         boundary = r"\b(?:publica\w*|publico|publique\w*|desde|hasta|entre|durante" + ("" if selected_period else "|en") + r")\b"
+        # A relative clause can introduce another publication constraint
+        # with verbs outside the publication vocabulary ("que salieron").
+        # A topic beginning with interrogative "que" has no prior word.
+        boundary += r"|(?<=\w)[\s,]+que\b"
         following = re.search(boundary, text[start:])
         end = start + following.start() if following else len(text)
         spans = [
