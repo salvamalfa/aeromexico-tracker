@@ -69,7 +69,10 @@ def require_flight_only_changes(repo: Path, commit: str):
         elif name == "Dockerfile.chat":
             before = subprocess.check_output(["git", "show", f"{commit}:{name}"], cwd=repo, text=True)
             digest = "15768d277f9cb31d361d2b976602e4b65e7ed20d6419a38699557b0c13aafef6"
-            copy = f"COPY contracts/web/versions/{digest}/flights.schema.json ./contracts/web/versions/{digest}/\n"
+            copy = (
+                f"COPY contracts/web/versions/{digest}/flights.schema.json "
+                f"./contracts/web/versions/{digest}/\n"
+            )
             allowed = (repo / name).read_text().replace(copy, "") == before
         elif name == ".dockerignore":
             before = subprocess.check_output(["git", "show", f"{commit}:{name}"], cwd=repo, text=True)
