@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+import xml.etree.ElementTree as ET
 from numbers import Real
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
@@ -136,7 +137,11 @@ def build_from_bronze() -> dict:
         path = PATHS.bronze / artifact["source_file"]
         if artifact["source_system"] == "rss":
             feed_key = artifact["logical_key"].split("|")[1]
-            rows.extend(_parse_rss(path, feed_key))
+            try:
+                rows.extend(_parse_rss(path, feed_key))
+            except (ET.ParseError, ValueError, OSError) as exc:
+                rejected.append({"source_file": artifact["source_file"], "reason": str(exc)})
+                continue
         else:
             # Historical HTTP-200 aggregator errors are retained in Bronze.
             # They are access evidence, never successful empty news captures.

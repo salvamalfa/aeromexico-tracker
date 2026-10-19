@@ -80,3 +80,8 @@ Silver ni su recibo aceptados; guarda el intento bloqueado en
 `data/quality/news_metadata_selection_attempt.json`. Los originales permanecen
 para revisión y los recibos usan JSON estricto, con nulos para los no finitos. La consulta
 canónica compartida cubre Aeroméxico, Viva y Volaris; no acredita cobertura total.
+
+Los RSS con XML o fecha malformados se conservan como artefactos rechazados,
+con archivo y motivo. Otras capturas válidas pueden construirse como cobertura
+parcial; si no queda ninguna, se registra un intento bloqueado y se conservan
+Silver y su recibo aceptados. Un archivo rechazado no acredita ausencia de noticias.

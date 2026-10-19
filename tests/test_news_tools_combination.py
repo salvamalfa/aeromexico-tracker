@@ -241,3 +241,64 @@ def test_failed_deduplication_preserves_the_accepted_selection_receipt(closed_ca
     )
     assert attempt["status"] == "blocked" and "Invalid article metadata URL" in attempt["reason"]
     assert attempt["publication_unknown_metadata"][0]["published_at"] is None
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        b"<rss><broken",
+        b"""<rss><channel><item><title>Broken date</title>
+<link>https://example.test/bad</link><pubDate>not-a-date</pubDate></item></channel></rss>""",
+    ],
+)
+@pytest.mark.parametrize("valid_rss", [False, True])
+def test_malformed_rss_is_preserved_as_rejected_with_valid_metadata_or_blocked_attempt(
+    closed_candidate, bad, valid_rss
+):
+    paths = closed_candidate
+    original = save_bronze(
+        bad,
+        "rss",
+        "google_es",
+        "current",
+        "xml",
+        "https://news.google.com/rss/search",
+        "manual",
+        bronze_root=paths.bronze,
+    )
+    silver = paths.silver / "news_headlines.parquet"
+    receipt = paths.quality / "news_metadata_selection.json"
+    silver.write_bytes(b"accepted-silver")
+    paths.quality.mkdir(exist_ok=True)
+    receipt.write_text('{"accepted": true}')
+    if valid_rss:
+        good = b"""<rss><channel><item><title>Valid</title><link>https://example.test/valid</link>
+        <pubDate>Tue, 01 Sep 2026 12:00:00 GMT</pubDate></item></channel></rss>"""
+        save_bronze(
+            good,
+            "rss",
+            "google_en",
+            "current",
+            "xml",
+            "https://news.google.com/rss/search",
+            "manual",
+            bronze_root=paths.bronze,
+        )
+        result = build_from_bronze()
+        assert result["source_completeness"] == "partial_invalid_captures"
+        assert result["deduplicated_rows"] == 1
+        assert pd.read_parquet(silver).url.tolist() == ["https://example.test/valid"]
+        report_path = receipt
+    else:
+        with pytest.raises(ValueError, match="No valid news metadata"):
+            build_from_bronze()
+        assert silver.read_bytes() == b"accepted-silver"
+        assert receipt.read_text() == '{"accepted": true}'
+        report_path = paths.quality / "news_metadata_selection_attempt.json"
+    report = json.loads(
+        report_path.read_text(), parse_constant=lambda value: pytest.fail("Non-finite JSON: " + value)
+    )
+    assert len(report["invalid_artifacts"]) == 1
+    assert report["invalid_artifacts"][0]["source_file"] == original.relative_to(paths.bronze).as_posix()
+    assert report["invalid_artifacts"][0]["reason"]
+    assert original.read_bytes() == bad
