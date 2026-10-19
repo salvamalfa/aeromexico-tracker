@@ -51,15 +51,23 @@ def validate_url(url: str, allowed_hosts: list[str]) -> None:
         or value.port not in {None, 443}
         or not value.hostname
         or not any(value.hostname == host or value.hostname.endswith("." + host) for host in allowed_hosts)
-        or any(
-            re.search(
-                r"(?i)(api[_-]?key|token|password|secret|signature|credential)(?:\[\])?$",
-                key.strip(),
-            )
-            for key, _ in parse_qsl(value.query, keep_blank_values=True)
-        )
+        or any(_credential_query_key(key) for key, _ in parse_qsl(value.query, keep_blank_values=True))
     ):
         raise ValueError("Only public HTTPS URLs on catalogue hosts without credentials are allowed")
+
+
+def _credential_query_key(key: str) -> bool:
+    # Bracket/dot nesting and qualifiers must not hide an inner credential.
+    key = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", key)
+    return any(
+        component.casefold() in {"key", "auth", "pwd"}
+        or re.search(
+            r"(?i)(api[_-]?key|access[_-]?key|secret[_-]?key|token|password|passwd|secret|signature|credential|authorization)(?:s|[0-9]+)?$",
+            component,
+        )
+        for component in re.split(r"[\W_]+", key)
+        if component
+    )
 
 
 def selection_plan(selection: dict, workspace: Path) -> dict:
