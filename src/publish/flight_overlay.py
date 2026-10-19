@@ -66,9 +66,21 @@ def require_flight_only_changes(repo: Path, commit: str):
             )
         elif name.startswith("config/"):
             allowed = name == "config/flights/2026Q2-accepted.json"
+        elif name == "Dockerfile.chat":
+            before = subprocess.check_output(["git", "show", f"{commit}:{name}"], cwd=repo, text=True)
+            digest = "15768d277f9cb31d361d2b976602e4b65e7ed20d6419a38699557b0c13aafef6"
+            copy = f"COPY contracts/web/versions/{digest}/flights.schema.json ./contracts/web/versions/{digest}/\n"
+            allowed = (repo / name).read_text().replace(copy, "") == before
+        elif name == ".dockerignore":
+            before = subprocess.check_output(["git", "show", f"{commit}:{name}"], cwd=repo, text=True)
+            digest = "15768d277f9cb31d361d2b976602e4b65e7ed20d6419a38699557b0c13aafef6"
+            additions = (
+                f"!contracts/web/versions/{digest}/\n!contracts/web/versions/{digest}/flights.schema.json\n"
+            )
+            allowed = (repo / name).read_text().replace(additions, "") == before
         elif (
             name.startswith("data/gold/")
-            or name in {"uv.lock", "pyproject.toml", "Dockerfile.chat", "railway.toml"}
+            or name in {"uv.lock", "pyproject.toml", "railway.toml"}
             or name.startswith(".github/")
         ):
             allowed = False

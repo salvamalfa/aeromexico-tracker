@@ -17,6 +17,8 @@ def baseline(tmp_path):
         "web/src/views/news/bootstrap.ts": "approved news",
         "src/analysis_agent/lifecycle.py": "approved lifecycle",
         "src/publish/gate.py": "def verify():\n return True\ndef main():\n return 0\n",
+        "Dockerfile.chat": "FROM python:3.13-slim AS runtime\n",
+        ".dockerignore": "**\n!contracts/\n",
         "contracts/web/flights.schema.json": json.dumps(
             {"properties": {}, "$defs": {"flight_component": {"properties": {}}}}
         ),
@@ -76,6 +78,34 @@ def test_existing_contract_fields_cannot_change(baseline):
     s["properties"]["existing_field"] = {}
     p.write_text(json.dumps(s))
     with pytest.raises(ValueError, match="existing public data contract"):
+        require_flight_only_changes(root, commit)
+
+
+def test_docker_allows_only_exact_retained_contract_copy(baseline):
+    root, commit = baseline
+    p = root / "Dockerfile.chat"
+    digest = "15768d277f9cb31d361d2b976602e4b65e7ed20d6419a38699557b0c13aafef6"
+    p.write_text(
+        p.read_text()
+        + f"COPY contracts/web/versions/{digest}/flights.schema.json ./contracts/web/versions/{digest}/\n"
+    )
+    require_flight_only_changes(root, commit)
+    p.write_text(p.read_text() + "ENV CHAT_ADMISSION_ENABLED=true\n")
+    with pytest.raises(ValueError, match="unrelated input"):
+        require_flight_only_changes(root, commit)
+
+
+def test_context_allows_only_exact_retained_public_schema(baseline):
+    root, commit = baseline
+    p = root / ".dockerignore"
+    digest = "15768d277f9cb31d361d2b976602e4b65e7ed20d6419a38699557b0c13aafef6"
+    p.write_text(
+        p.read_text()
+        + f"!contracts/web/versions/{digest}/\n!contracts/web/versions/{digest}/flights.schema.json\n"
+    )
+    require_flight_only_changes(root, commit)
+    p.write_text(p.read_text() + "!analysis_runs/**\n")
+    with pytest.raises(ValueError, match="unrelated input"):
         require_flight_only_changes(root, commit)
 
 
