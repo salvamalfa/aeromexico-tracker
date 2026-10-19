@@ -259,24 +259,30 @@ def test_report_topic_does_not_override_a_publication_period_request(question):
         resolve_news_query(question)
 
 
+def test_simple_archive_report_topic_keeps_selected_publication_month(approved_index):
+    result = approved_index.search_news("Busca noticias publicadas en 2026-07 sobre combustible 2T26.")
+    assert (result["filters"]["start_date"], result["filters"]["end_date"]) == ("2026-07-01", "2026-07-31")
+
+
 @pytest.mark.parametrize(
-    "topic",
+    "subject",
     [
-        "combustible 2T26",
         "combustible desde 2T26",
         "el reporte fechado 2026-04-30 y 2T26",
+        "lunes negro",
+        "combustible que se publicaron en agosto de 2026",
+        "combustible que se publicaron en 2T26",
+        "combustible con publicación en 2T26",
+        "combustible que se publicó en agosto de 2026",
+        "combustible que se publique en 2T26",
+        "combustible con fecha de publicación en agosto de 2026",
+        "combustible con publicación: 2T26",
+        "combustible que salieron en agosto de 2026",
     ],
 )
-def test_archive_topic_text_cannot_reopen_selected_publication_month(approved_index, topic):
-    result = approved_index.search_news(f"Busca noticias publicadas en 2026-07 sobre {topic}.")
-    assert (result["filters"]["start_date"], result["filters"]["end_date"]) == ("2026-07-01", "2026-07-31")
-    assert all(row["published_at"].startswith("2026-07-") for row in result["results"])
-
-
-def test_weekday_in_an_archive_topic_is_not_a_publication_weekday(approved_index):
-    result = approved_index.search_news("Busca noticias publicadas en 2026-07 sobre lunes negro.")
-    assert (result["filters"]["start_date"], result["filters"]["end_date"]) == ("2026-07-01", "2026-07-31")
-    assert result["count"] == 0
+def test_archive_subject_cannot_hide_ambiguous_calendar_constraints(subject):
+    with pytest.raises(ValueError):
+        resolve_news_query(f"Busca noticias publicadas en 2026-07 sobre {subject}.")
 
 
 @pytest.mark.parametrize(

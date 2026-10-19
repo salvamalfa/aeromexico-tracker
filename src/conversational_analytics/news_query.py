@@ -77,14 +77,13 @@ def _publication_scope(text: str) -> str:
     characters = list(text)
     for marker in re.finditer(r"\bsobre\b", text):
         start = marker.end()
-        explicit_period = bool(re.search(r"\b\d{4}-\d{2}(?:-\d{2})?\b", text[:marker.start()]))
-        boundary = (
-            r"\bpublicad[oa]s?\b" if explicit_period else
-            r"\b(?:publicad[oa]s?|desde|hasta|entre|durante|en)\b"
-        )
+        # Only quarter labels within the subject are exempt from period
+        # detection. Keep all calendar constraints visible, including an
+        # additional publication clause expressed with another verb/noun.
+        boundary = r"\b(?:publica\w*|publico|publique\w*|desde|hasta|entre|durante|en)\b"
         following = re.search(boundary, text[start:])
         end = start + following.start() if following else len(text)
-        spans = [(start, end)] if explicit_period else [
+        spans = [
             (start + match.start(), start + match.end())
             for match in re.finditer(
                 r"\b(?:[1-4][tq]\d{2}(?:\d{2})?|[qt][1-4](?:\d{4})?)\b", text[start:end]

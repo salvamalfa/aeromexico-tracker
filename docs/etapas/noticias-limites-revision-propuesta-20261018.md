@@ -213,3 +213,22 @@ Huella propuesta actual:
 La propuesta sigue sin auditar como nueva cohorte canónica ni aprobar; la
 autorización6534f876 de21:16:59 y sus pares88–90 permanecen vigentes e intactos.
 No se ejecuta un nuevo gate ni se integran136/139.
+
+## Calendario visible tras el tema · 19 de octubre, 00:20 UTC
+
+La revisión exacta de19267cd encontró otra forma de publicación (`publicaron`
+y `publicación`). Se retira el enmascarado amplio del tema después de un
+mes ISO: solo las etiquetas trimestrales que describen el tema quedan fuera
+de la extracción del periodo. Todos los otros días, meses y calificadores
+siguen visibles; una segunda cláusula o un calendario ambiguo pide aclaración.
+Esto reemplaza la conducta descrita en el corte anterior para `desde`, días
+semanales o fechas adicionales. La frontera también reconoce las formas de
+publicar y el sustantivo publicación. Se conservan los temas simples 2T26 y
+Q2 challenges del archivo.
+
+Pasan **191 regresiones** (0.18s) y **650 pruebas** al incluir las tres
+matrices previas (0.52s). La suite limpia anterior885/177.63s corresponde
+exclusivamente a19267cd; la siguiente se ejecuta después del nuevo commit.
+Huella propuesta `7adcf2ea8f9120571cc1ab78b3de0111c7e0bbfc1078da0f73fac039dffa0c10`.
+No se crean registros, auditorías ni aprobaciones financieras, ni otro gate.
+La autorización original6534f876/88–90 sigue vigente para sus pares exactos.
