@@ -29,6 +29,7 @@ ALLOWED = frozenset(
         "parse.h10",
         "parse.fuel",
         "parse.market",
+        "parse.market_chart",
         "parse.airports",
         "parse.airport_reference",
         "parse.news",
@@ -42,9 +43,19 @@ ALLOWED = frozenset(
     }
 )
 GRANULAR = {
-    "parse.bmv": ("src.source_updates.bmv:parse_selected", ("bmv",), ("bmv_financials", "bmv_packages_index")),
+    "parse.market_chart": (
+        "src.source_updates.market:build_from_charts",
+        ("yahoo_finance",),
+        ("market_prices",),
+    ),
+    "parse.bmv": (
+        "src.source_updates.bmv:parse_selected",
+        ("bmv",),
+        ("bmv_financials", "bmv_packages_index"),
+    ),
     "transform.gold_lineage": (
-        "src.source_updates.gold:materialize_lineage", (),
+        "src.source_updates.gold:materialize_lineage",
+        (),
         ("../gold/dim_source_artifact", "../gold/bridge_record_lineage"),
     ),
     "parse.fx": (
@@ -83,6 +94,9 @@ def required_predecessors(steps: list[str]) -> dict[str, tuple[str, ...]]:
     # This granular parser accepts preserved SEC evidence as an explicit file
     # input. If SEC is rebuilt in this run, it must precede the market parser.
     dependencies["parse.market"] = ("parse.sec",) if "parse.sec" in steps else ()
+    dependencies["parse.market_chart"] = tuple(
+        name for name in ("parse.sec", "parse.complementary") if name in steps
+    )
     seen = set()
     for name in steps:
         missing = set(dependencies[name]) - seen
@@ -111,6 +125,10 @@ def build_plan(workspace: Path, steps: list[str]) -> dict:
                 "parse.market": [
                     "Candidate data/silver/sec_report_text.parquet from preserved SEC evidence",
                     "Normalized Yahoo CSVs for AERO, VLRS, RYAAY, DAL, ICAGY",
+                ],
+                "parse.market_chart": [
+                    "Candidate verified SEC identity evidence and original SEC Bronze artifact",
+                    "All five preserved Yahoo raw JSON charts with exact ticker/USD/EQUITY identity",
                 ],
             }.items()
             if name in steps
@@ -202,14 +220,23 @@ def worker(workspace: Path, requested: list[str], report: Path) -> int:
     from src.pipeline.runner import run_pipeline
 
     registry = {step.step_id: step for step in PIPELINE_STEPS}
+    registry["parse.complementary"] = replace(
+        registry["parse.complementary"], callable_ref="src.source_updates.complementary:run"
+    )
     dependencies = required_predecessors(requested)
     for name, (action, sources, outputs) in GRANULAR.items():
         inputs = (
             [InputRequirement(name, bronze_source_systems=sources)]
             if sources
-            else [InputRequirement("Validated Gold", path_patterns=("data/gold/fact_carrier_metrics.parquet", "data/gold/fact_macro.parquet"), require_all_paths=True)]
+            else [
+                InputRequirement(
+                    "Validated Gold",
+                    path_patterns=("data/gold/fact_carrier_metrics.parquet", "data/gold/fact_macro.parquet"),
+                    require_all_paths=True,
+                )
+            ]
         )
-        if name == "parse.market":
+        if name in {"parse.market", "parse.market_chart"}:
             inputs.append(
                 InputRequirement(
                     "Candidate SEC evidence for AERO ticker identity",

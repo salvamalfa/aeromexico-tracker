@@ -256,14 +256,14 @@
     },
     "equities": {
       "entry_ref": "catalogue:yahoo_finance",
-      "state": "manual",
-      "format": "CSV normalizado de yfinance, no JSON chart directo",
-      "procedure": "TICKERS en src.ingest.market.prices: AERO, VLRS, RYAAY, DAL, ICAGY. Preservar capturas CSV con date/open/high/low/close/adj_close/volume y fuente real. No ejecutar run() porque escribe datos activos. parse.market requiere evidencia SEC local de AERO y las cinco series; primer precio AERO 2025-11-06. Adaptador de captura aislada Yahoo pendiente.",
+      "state": "conditional",
+      "format": "GET público → JSON chart preservado → Silver",
+      "procedure": "recipe --output round --period genera cinco GET públicos exactos AERO/VLRS/RYAAY/DAL/ICAGY. parse.market_chart exige SEC local verificable, identidad USD/EQUITY/ticker, primera observación AERO 2025-11-06, ajustes explícitos y valores completos; conserva linaje directo al JSON. Una serie ausente bloquea el lote; nunca empalma ticker antiguo ni rellena faltantes. parse.market admite el CSV normalizado histórico como ruta alternativa explícita. No invocar run() activo.",
       "selection_contract": {
         "source_system": "yahoo_finance",
-        "entity": "each key of src.ingest.market.prices:TICKERS",
-        "relative_dir": "market",
-        "extension": "csv",
+        "entity": "<ticker>_chart",
+        "relative_dir": "default candidate Bronze directory",
+        "extension": "json",
         "columns": [
           "date",
           "open",
@@ -328,7 +328,7 @@
       "entry_ref": "constant:src.ingest.airports.reference:OURAIRPORTS_URL",
       "state": "conditional",
       "format": "GET → CSV",
-      "procedure": "Entidad airports, source_system ourairports, periodo current. Revalidar URL y comparar crosswalk/filas no mapeadas. parse.airport_reference necesita data/reference y escribe dim_airport candidato; validación geográfica/contrato final pendiente, no observación de tráfico.",
+      "procedure": "Revalidar CSV y comparar crosswalk/filas. parse.airport_reference necesita data/reference y escribe dim_airport candidato. check kind=reference verifica SHA-256 exacto, Bronze, grano, coordenadas, códigos y país declarados; no inventa mes observado ni fecha de publicación.",
       "selection_contract": {
         "source_system": "ourairports",
         "entity": "airports",
