@@ -602,3 +602,22 @@ tres presupuestos,561regresiones incluidas. RuffF ydiff-check correctos.
 Huella propuesta `806bcf951b335eacc1ba6b1349884bfd8c2adaa310a0c207a8bbd42b70d3bafc`.
 1247PASS/178.47s y UI1440/390 pertenecen a1e18669/1c2fd61d; se valida aparte
 el nuevo HEAD congelado.6534/88–90 intactos, sin fase canónica/gate ni M11/Skills.
+
+## Acento conservado para distinguir tema y publicación
+
+La revisión de9734c56 detectó que quitar acentos confundía pública/público
+con publica/publicó. Se conserva la ú en una vista temporal de igual longitud
+hasta clasificar las señales; después se restaura la normalización habitual
+para calendario y búsqueda. Los offsets permanecen alineados. La ocurrencia
+adjetival literal se conserva frente a las stop words históricas de publica/
+publico; las ocurrencias usadas como filtro siguen excluidas por posición.
+No se incorporan actores, listas verbales cognitivas ni reglas de oración.
+
+Doce casos cubren las formas acentuadas, mayúsculas y Unicode descompuesto
+a ambos lados del filtro, conservando palabra literal,2T26 yjulio. Cuatro
+verbos de publicación mantienen visible un trimestre posterior ambiguo.
+Se mantienen los1023casos anteriores: **1039PASS0.99s**,1036matrices más tres
+presupuestos,577regresiones incluidas. RuffF/diff-check correctos. Huella
+propuesta `a77a72432efc2f793915c0871b76faa1746e6c4f2b2071abe39772c07463e9e0`.
+1263PASS/177.04s/UI1440/390 son de9734c56/806bcf95; el HEAD nuevo se valida
+por separado.6534/88–90 intactos, sin fase canónica/gate ni M11/Skills.

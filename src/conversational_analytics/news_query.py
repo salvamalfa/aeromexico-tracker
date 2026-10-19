@@ -154,7 +154,12 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
     prefix_period = r"[qt]\s*\d(?:" + separator + explicit_year + r"|" + separated_year + r")"
     # The archive's existing topic tag (e.g. "sobre 2T26") describes report
     # content. Keep it searchable without treating it as publication dates.
-    period_text = _publication_scope(text)
+    # Preserve the stressed ú through cue classification: pública/público
+    # have a different root from publica/publicó. The one-character marker
+    # keeps offsets aligned; restore normal text before calendar extraction.
+    cue_text = _news_input_text(unicodedata.normalize("NFC", question).replace("ú", "\ue000").replace("Ú", "\ue000"))
+    cue_period_text = _publication_scope(cue_text)
+    period_text = cue_period_text.replace("\ue000", "u")
     ambiguous_t_period = (
         re.search(r"\b" + explicit_year + r"\b", period_text)
         and re.search(r"\b[qt](?:[1-4])?\b", period_text)
@@ -398,13 +403,17 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
     # Set subtraction would also erase the same word in a literal topic.
     calendar_marker = r"\b(?:\d{4}|" + "|".join(MONTHS) + r")\b"
     search_characters = list(semantic_text)
-    for cue in re.finditer(PUBLICATION_CUES, period_text):
+    for cue in re.finditer(PUBLICATION_CUES, cue_period_text):
         following = period_text[cue.end():]
         calendar_match = re.search(calendar_marker, following)
-        next_cue = re.search(PUBLICATION_CUES, following)
+        next_cue = re.search(PUBLICATION_CUES, cue_period_text[cue.end():])
         if calendar_match and (next_cue is None or calendar_match.start() < next_cue.start()):
             search_characters[cue.start():cue.end()] = " " * len(cue.group())
     words = set(re.findall(r"\w+", "".join(search_characters)))
+    # Legacy stop words include publica/publico. Restore only the accented
+    # adjective's literal occurrence; actual filter occurrences are masked.
+    for literal in re.finditer(r"\bp\ue000blic[oa]s?\b", cue_period_text):
+        removed.discard(semantic_text[literal.start():literal.end()])
     removed |= set(re.findall(r"\w+", " ".join(alias for aliases in ENTITIES.values() for alias in aliases)))
     removed |= set(re.findall(r"\w+", " ".join(alias for key in topics for alias in TOPICS[key])))
     terms = sorted(word for word in words - removed if len(word) > 1 and not word.isdigit())

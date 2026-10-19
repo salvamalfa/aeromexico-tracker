@@ -1,5 +1,7 @@
 """Interrogative and relative clauses in bounded Spanish news search."""
 
+import unicodedata
+
 import pytest
 
 from src.conversational_analytics.news_query import resolve_news_query
@@ -333,3 +335,22 @@ def test_same_bounded_publication_cues_apply_before_and_after_topic(cue, label, 
     after = resolve_news_query(f"noticias sobre resultados en {label} que {cue} en {period}")
     assert (after["start_date"], after["end_date"]) == (before["start_date"], before["end_date"])
     assert (after["start_date"], after["end_date"]) == ("2026-07-01", "2026-07-31")
+
+
+@pytest.mark.parametrize("adjective", ["pública", "públicas", "público", "públicos", "PÚBLICA", "pu\u0301blica"])
+@pytest.mark.parametrize("order", ["before", "after"])
+def test_accented_public_adjective_is_literal_topic_not_publication_signal(adjective, order):
+    subject = f"sobre deuda {adjective} en 2T26"
+    query = (f"noticias publicadas en 2026-07 {subject}" if order == "before"
+             else f"noticias {subject} publicadas en 2026-07")
+    intent = resolve_news_query(query)
+    assert "2t26" in intent["terms"]
+    literal = "".join(c for c in unicodedata.normalize("NFD", adjective.lower()) if unicodedata.category(c) != "Mn")
+    assert literal in intent["terms"]
+    assert (intent["start_date"], intent["end_date"]) == ("2026-07-01", "2026-07-31")
+
+
+@pytest.mark.parametrize("verb", ["publica", "publicó", "publicaron", "publiqué"])
+def test_publication_verb_root_still_exposes_later_quarter_constraint(verb):
+    with pytest.raises(ValueError, match="notación trimestral"):
+        resolve_news_query(f"noticias publicadas en 2026-07 sobre resultados que {verb} en 2T26")
