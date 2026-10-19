@@ -418,3 +418,19 @@ a8da80957 y no se atribuye a la corrección actual, cuya huella es
 `a1aeffb58106e88162c556b476a1001669dda07d107338befa36c6c3bb6cc0c9`.
 Se cierra la revisión exacta y luego su suite final. Sin nueva fase canónica,
 aprobación ni gate;6534/88–90 intactos. M11/Skills quedan fuera del expediente.
+
+## Presupuesto de módulos de prueba · 19 de octubre, 01:49 UTC
+
+CI529 de4fcfb04 terminó con2746PASS,6SKIP,89deseleccionadas y29subpruebas
+PASS en1139.09s; el único fallo fue el presupuesto de600líneas del nuevo
+archivo de regresiones (645). Se separan las pruebas interrogativas sin
+fixtures en test_news_review_interrogatives.py. Quedan523/127líneas y pasan
+824comprobaciones (821casos más tres controles de presupuesto),0.72s.
+No se amplía la allowlist, no cambian casos ni código de producción.
+
+La huella permanece exactamentea1aeffb5. La suite completa1064/178.64s de
+4fcfb04 tiene recibos de HEAD limpio antes/después; se identifica como esa
+ejecución, sin atribuir su HEAD al siguiente commit de organización de tests.
+Se repite CI del nuevo HEAD. Codex de4fcfb04 sigue pendiente de conclusión;
+no se declara limpio ni se traslada una revisión no terminada.6534/88–90
+intactos, sin fase canónica/gate ni cambios de M11/Skills.
