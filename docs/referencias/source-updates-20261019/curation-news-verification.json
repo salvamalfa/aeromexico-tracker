@@ -1,0 +1,539 @@
+{
+  "version": 1,
+  "as_of": "2026-10-19",
+  "code_head": "b5def06b950b34aa4371e9f258acbef3d763a958",
+  "network_blocked_during_replay": true,
+  "unique_documentary_bodies_unchanged": 33,
+  "rss": {
+    "mode": "offline_rss_cut_audit",
+    "month": "2026-09",
+    "timezone": "America/Mexico_City",
+    "as_of": "2026-10-19T12:00:00-06:00",
+    "sources": [
+      {
+        "source_file": "news/rss/rss_google_es_current_20260821T001335Z.xml",
+        "source_url": "https://news.google.com/rss/search?q=Aerom%C3%A9xico+OR+Aeromexico+airline&hl=es-419&gl=MX&ceid=MX:es-419",
+        "sha256": "4c002a0d596edd9f28287aeb285003e6a91c902d06dd4a9c29da09fea9f80cdf",
+        "downloaded_at": "2026-08-21T00:13:35.011763+00:00",
+        "logical_key": "rss|google_es|current|xml"
+      },
+      {
+        "source_file": "news/rss/rss_google_en_current_20260821T001336Z.xml",
+        "source_url": "https://news.google.com/rss/search?q=Aeromexico+airline&hl=en-US&gl=US&ceid=US:en",
+        "sha256": "30a44f13dd19a7aadf9838ef73265760f0164c738af010c17191b8a23599df57",
+        "downloaded_at": "2026-08-21T00:13:36.056137+00:00",
+        "logical_key": "rss|google_en|current|xml"
+      },
+      {
+        "source_file": "news/rss/rss_google_es_current_20260821T001548Z.xml",
+        "source_url": "https://news.google.com/rss/search?q=Aerom%C3%A9xico+OR+Aeromexico+airline&hl=es-419&gl=MX&ceid=MX:es-419",
+        "sha256": "003b5544e93c92fbad6a8556d1347b1ce79c74046bcd89bc4ee02136068aaa4e",
+        "downloaded_at": "2026-08-21T00:15:48.911768+00:00",
+        "logical_key": "rss|google_es|current|xml"
+      },
+      {
+        "source_file": "news/rss/rss_google_en_current_20260821T001549Z.xml",
+        "source_url": "https://news.google.com/rss/search?q=Aeromexico+airline&hl=en-US&gl=US&ceid=US:en",
+        "sha256": "df38098708b3b71364e83bb28cd84a8b2cb54c5fb8db7b257f51e71406d61a63",
+        "downloaded_at": "2026-08-21T00:15:49.643123+00:00",
+        "logical_key": "rss|google_en|current|xml"
+      },
+      {
+        "source_file": "news/rss/rss_google_es_current_20260821T002627Z.xml",
+        "source_url": "https://news.google.com/rss/search?q=Aerom%C3%A9xico+OR+Aeromexico+airline&hl=es-419&gl=MX&ceid=MX:es-419",
+        "sha256": "37b12ebf5f1ed8e2c2688b977cbb232dd1a45e51755d359e53ef7e268975693b",
+        "downloaded_at": "2026-08-21T00:26:27.467111+00:00",
+        "logical_key": "rss|google_es|current|xml"
+      },
+      {
+        "source_file": "news/rss/rss_google_en_current_20260821T002628Z.xml",
+        "source_url": "https://news.google.com/rss/search?q=Aeromexico+airline&hl=en-US&gl=US&ceid=US:en",
+        "sha256": "d8e7a578d14a5612c881d60b44aed8d6ecff233b261753681dd37917b3789982",
+        "downloaded_at": "2026-08-21T00:26:28.433228+00:00",
+        "logical_key": "rss|google_en|current|xml"
+      },
+      {
+        "source_file": "rss/rss_google_es_current_20261019T012542Z.xml",
+        "source_url": "https://news.google.com/rss/search?q=Aerom%C3%A9xico+OR+Aeromexico+airline&hl=es-419&gl=MX&ceid=MX:es-419",
+        "sha256": "6a5ccba5f7ab386a3bec184fd825bbeb2ca53595504dfc51192dbc00e64e8d16",
+        "downloaded_at": "2026-10-19T01:25:42.515835+00:00",
+        "logical_key": "rss|google_es|current|xml"
+      }
+    ],
+    "feed_records_valid": 700,
+    "selected_contributions": 12,
+    "selected_dated_urls": 12,
+    "observed_publication_days": [
+      "2026-09-01",
+      "2026-09-02",
+      "2026-09-03",
+      "2026-09-21",
+      "2026-09-28",
+      "2026-09-30"
+    ],
+    "days_not_observed_in_selected_captures": [
+      "2026-09-04",
+      "2026-09-05",
+      "2026-09-06",
+      "2026-09-07",
+      "2026-09-08",
+      "2026-09-09",
+      "2026-09-10",
+      "2026-09-11",
+      "2026-09-12",
+      "2026-09-13",
+      "2026-09-14",
+      "2026-09-15",
+      "2026-09-16",
+      "2026-09-17",
+      "2026-09-18",
+      "2026-09-19",
+      "2026-09-20",
+      "2026-09-22",
+      "2026-09-23",
+      "2026-09-24",
+      "2026-09-25",
+      "2026-09-26",
+      "2026-09-27",
+      "2026-09-29"
+    ],
+    "records": [
+      {
+        "canonical_url": "https://news.google.com/rss/articles/CBMi0gFBVV95cUxOQU44VFRzX1lKRFB6UWtMZ2hKS2RXWTFFNVFiOWpJWnlwOVJUc0hILWVqS28xUWMySzcwTUpuZ3pFNHdrR1F4djFhQzhVdTRxWnBVSjg1a3M3MzFaaDlCNkVOMzhGUHpGcUtzXzdvYzVsdUZXd2FUWUVBeEdPMFE1NlpRWXlzd2VxYmdqckJrQXZHZkV1cHQ1dmlsZlNmU0Z3RTdyR0pfd1cwM00xMTlFY3RCY0NrbHNQM1JzVV8xdUdoSDBQNnVyUmJ6dmdzbWVTVEE?oc=5",
+        "local_publication_date": "2026-09-30",
+        "contributors": [
+          {
+            "source_file": "rss/rss_google_es_current_20261019T012542Z.xml",
+            "source_hash": "6a5ccba5f7ab386a3bec184fd825bbeb2ca53595504dfc51192dbc00e64e8d16",
+            "item_1based": 7,
+            "captured_at": "2026-10-19T01:25:42.515835+00:00",
+            "title": "Volaris suspende vuelos a Tulum; Aeroméxico confirma salida por condiciones de mercado - El Sol de México",
+            "url": "https://news.google.com/rss/articles/CBMi0gFBVV95cUxOQU44VFRzX1lKRFB6UWtMZ2hKS2RXWTFFNVFiOWpJWnlwOVJUc0hILWVqS28xUWMySzcwTUpuZ3pFNHdrR1F4djFhQzhVdTRxWnBVSjg1a3M3MzFaaDlCNkVOMzhGUHpGcUtzXzdvYzVsdUZXd2FUWUVBeEdPMFE1NlpRWXlzd2VxYmdqckJrQXZHZkV1cHQ1dmlsZlNmU0Z3RTdyR0pfd1cwM00xMTlFY3RCY0NrbHNQM1JzVV8xdUdoSDBQNnVyUmJ6dmdzbWVTVEE?oc=5",
+            "canonical_url": "https://news.google.com/rss/articles/CBMi0gFBVV95cUxOQU44VFRzX1lKRFB6UWtMZ2hKS2RXWTFFNVFiOWpJWnlwOVJUc0hILWVqS28xUWMySzcwTUpuZ3pFNHdrR1F4djFhQzhVdTRxWnBVSjg1a3M3MzFaaDlCNkVOMzhGUHpGcUtzXzdvYzVsdUZXd2FUWUVBeEdPMFE1NlpRWXlzd2VxYmdqckJrQXZHZkV1cHQ1dmlsZlNmU0Z3RTdyR0pfd1cwM00xMTlFY3RCY0NrbHNQM1JzVV8xdUdoSDBQNnVyUmJ6dmdzbWVTVEE?oc=5",
+            "published_at_as_declared": "2026-09-30T07:00:00+00:00",
+            "local_publication_date": "2026-09-30",
+            "event_date": null,
+            "first_available_at": null,
+            "publisher_document_verified": false,
+            "agent_eligible": false
+          }
+        ],
+        "agent_eligible": false
+      },
+      {
+        "canonical_url": "https://news.google.com/rss/articles/CBMi1wFBVV95cUxNOWpTSnBacXd4YjI5NkZZQW1yVFk5Y3hqbENpbjVudDM3UHpac1l2aEZLc2wtVHRSNElLYlJIU0RqZXdSTUw1RkhueFVzcE00ZDFvWXU1Mk5hODRMOFh5ajhWa19XLUhrZ0psRHdwUlZrczVDMHNCdFV4Qi1MaGF1emk5OEFsbXBYczQ4Z0tCb1VIMVJ5NGYtdVJlTmlQeEd0SWhhMlJqbExUUURFMDNGbm9xNnNYekpHSVdTcFR2REdRN2F4S1BVQThxY0ZCSTZCbjZWVFhHMNIB8gFBVV95cUxPLXZELUJBdHhDZExmalRINzVfYjdhc3V5dnNjRDFsTThoMUVmcndoajY0ZFctVXZJSkxFUlo5WUx2d1gwMjVWQnIyRDR6Mmh0ekRpVTFSWnNEMHZwUURTOGRMbFF0VnNBQWZvTTMtdlVxal9rRWtDZGxBOW5OVHB6ZXBhcDBfMFljajVzUEtXbm45aC1pUl9wYm1WWVBzZTM3ZHhQZUJ4QzhwQUVBazlCLXhTdHFub0NEUG9pQnNtQ3RXSHJXVlF0Q0tTeEZUQm9vYmRMSkN0WUxTcUM5VXoxQl9rbDRmZDRCR21Nc0lWVFdZdw?oc=5",
+        "local_publication_date": "2026-09-21",
+        "contributors": [
+          {
+            "source_file": "rss/rss_google_es_current_20261019T012542Z.xml",
+            "source_hash": "6a5ccba5f7ab386a3bec184fd825bbeb2ca53595504dfc51192dbc00e64e8d16",
+            "item_1based": 17,
+            "captured_at": "2026-10-19T01:25:42.515835+00:00",
+            "title": "Vuelos directos a Bahamas y Jamaica: la nueva apuesta de Aeroméxico en el Caribe para 2027 - El Cronista",
+            "url": "https://news.google.com/rss/articles/CBMi1wFBVV95cUxNOWpTSnBacXd4YjI5NkZZQW1yVFk5Y3hqbENpbjVudDM3UHpac1l2aEZLc2wtVHRSNElLYlJIU0RqZXdSTUw1RkhueFVzcE00ZDFvWXU1Mk5hODRMOFh5ajhWa19XLUhrZ0psRHdwUlZrczVDMHNCdFV4Qi1MaGF1emk5OEFsbXBYczQ4Z0tCb1VIMVJ5NGYtdVJlTmlQeEd0SWhhMlJqbExUUURFMDNGbm9xNnNYekpHSVdTcFR2REdRN2F4S1BVQThxY0ZCSTZCbjZWVFhHMNIB8gFBVV95cUxPLXZELUJBdHhDZExmalRINzVfYjdhc3V5dnNjRDFsTThoMUVmcndoajY0ZFctVXZJSkxFUlo5WUx2d1gwMjVWQnIyRDR6Mmh0ekRpVTFSWnNEMHZwUURTOGRMbFF0VnNBQWZvTTMtdlVxal9rRWtDZGxBOW5OVHB6ZXBhcDBfMFljajVzUEtXbm45aC1pUl9wYm1WWVBzZTM3ZHhQZUJ4QzhwQUVBazlCLXhTdHFub0NEUG9pQnNtQ3RXSHJXVlF0Q0tTeEZUQm9vYmRMSkN0WUxTcUM5VXoxQl9rbDRmZDRCR21Nc0lWVFdZdw?oc=5",
+            "canonical_url": "https://news.google.com/rss/articles/CBMi1wFBVV95cUxNOWpTSnBacXd4YjI5NkZZQW1yVFk5Y3hqbENpbjVudDM3UHpac1l2aEZLc2wtVHRSNElLYlJIU0RqZXdSTUw1RkhueFVzcE00ZDFvWXU1Mk5hODRMOFh5ajhWa19XLUhrZ0psRHdwUlZrczVDMHNCdFV4Qi1MaGF1emk5OEFsbXBYczQ4Z0tCb1VIMVJ5NGYtdVJlTmlQeEd0SWhhMlJqbExUUURFMDNGbm9xNnNYekpHSVdTcFR2REdRN2F4S1BVQThxY0ZCSTZCbjZWVFhHMNIB8gFBVV95cUxPLXZELUJBdHhDZExmalRINzVfYjdhc3V5dnNjRDFsTThoMUVmcndoajY0ZFctVXZJSkxFUlo5WUx2d1gwMjVWQnIyRDR6Mmh0ekRpVTFSWnNEMHZwUURTOGRMbFF0VnNBQWZvTTMtdlVxal9rRWtDZGxBOW5OVHB6ZXBhcDBfMFljajVzUEtXbm45aC1pUl9wYm1WWVBzZTM3ZHhQZUJ4QzhwQUVBazlCLXhTdHFub0NEUG9pQnNtQ3RXSHJXVlF0Q0tTeEZUQm9vYmRMSkN0WUxTcUM5VXoxQl9rbDRmZDRCR21Nc0lWVFdZdw?oc=5",
+            "published_at_as_declared": "2026-09-21T07:00:00+00:00",
+            "local_publication_date": "2026-09-21",
+            "event_date": null,
+            "first_available_at": null,
+            "publisher_document_verified": false,
+            "agent_eligible": false
+          }
+        ],
+        "agent_eligible": false
+      },
+      {
+        "canonical_url": "https://news.google.com/rss/articles/CBMi2AFBVV95cUxOUlh5eTlPOVI4VWN5WmJ4UE5qWWtwcGxDdUw4VnJ2REl5WndlWGJUVDBzMUR6eGlSVDRRaEtDa3lfM3dzUll6akg3YVJzVUlDanJGV0VSLUpzWUh0YllIVDdPLW1EQWZnbDNPOEx2Rm56R2RtMEtfb0kyMGFXT00tY2RDXzFLczdOTVNWVmxKSG9TeW5IbzhTeGtTRURQRXZzS1A0Z3I0U25tYTdLOUs0ZklMVm0wV0hqUTBHT2tkNmIybEo5Nk9MQ2t1X0piTUR6UDhKNWJvc0c?oc=5",
+        "local_publication_date": "2026-09-21",
+        "contributors": [
+          {
+            "source_file": "rss/rss_google_es_current_20261019T012542Z.xml",
+            "source_hash": "6a5ccba5f7ab386a3bec184fd825bbeb2ca53595504dfc51192dbc00e64e8d16",
+            "item_1based": 13,
+            "captured_at": "2026-10-19T01:25:42.515835+00:00",
+            "title": "México identifica posible filtración de datos personales de la aerolínea Aeroméxico - www.revistaeyn.com",
+            "url": "https://news.google.com/rss/articles/CBMi2AFBVV95cUxOUlh5eTlPOVI4VWN5WmJ4UE5qWWtwcGxDdUw4VnJ2REl5WndlWGJUVDBzMUR6eGlSVDRRaEtDa3lfM3dzUll6akg3YVJzVUlDanJGV0VSLUpzWUh0YllIVDdPLW1EQWZnbDNPOEx2Rm56R2RtMEtfb0kyMGFXT00tY2RDXzFLczdOTVNWVmxKSG9TeW5IbzhTeGtTRURQRXZzS1A0Z3I0U25tYTdLOUs0ZklMVm0wV0hqUTBHT2tkNmIybEo5Nk9MQ2t1X0piTUR6UDhKNWJvc0c?oc=5",
+            "canonical_url": "https://news.google.com/rss/articles/CBMi2AFBVV95cUxOUlh5eTlPOVI4VWN5WmJ4UE5qWWtwcGxDdUw4VnJ2REl5WndlWGJUVDBzMUR6eGlSVDRRaEtDa3lfM3dzUll6akg3YVJzVUlDanJGV0VSLUpzWUh0YllIVDdPLW1EQWZnbDNPOEx2Rm56R2RtMEtfb0kyMGFXT00tY2RDXzFLczdOTVNWVmxKSG9TeW5IbzhTeGtTRURQRXZzS1A0Z3I0U25tYTdLOUs0ZklMVm0wV0hqUTBHT2tkNmIybEo5Nk9MQ2t1X0piTUR6UDhKNWJvc0c?oc=5",
+            "published_at_as_declared": "2026-09-21T07:00:00+00:00",
+            "local_publication_date": "2026-09-21",
+            "event_date": null,
+            "first_available_at": null,
+            "publisher_document_verified": false,
+            "agent_eligible": false
+          }
+        ],
+        "agent_eligible": false
+      },
+      {
+        "canonical_url": "https://news.google.com/rss/articles/CBMi4gFBVV95cUxPNU41WFJiREQ4OGxOVzlNQW40bnpmMGEzVUc2Y3lXZU5USTlNYVhuSmYwc3Z1SjlKT3FPSXdhOFRvdVdhMVU4V0ZoZHRjYW83eTVtMzFIcFZ4ZFEwVDhScVJMdkFPaV9kaFZDaDNuUWV3MTQ3SkdkbF9uY3cxWnVhcnFJS3V3X2hQT0hhMmZyQnpyVFE1V2dUWjVZc3Q1YmJhR2twUGN5Yi1nNW05VG9VemtoTktqYVlsNkh5UXUxMVlONkFweVh1OFozQWJZNnN2RlhaMUxUV01XalY4eW5NNTln0gH8AUFVX3lxTFBuUGFhcThBaGxWTHA2QnVTbktjdG1RdWJwRzdZdmRJMlhtWGlnVzBPMzNqVVlGNm51bWszS005MElsdnFnN2Faam1vMTdSWlY3aUdpaEVrRTZBX1RKZDh4dmFzdDJJWG9NSjFLSHN2aWdrWFh3ZXNlWFZCTjhneWxnV3JmQ21hMzV0REZOQ0VMRTRKMEtzWjB2ME01aWM3ZWlscnpIODNEc2lXa01mekxFbnV2bm53OFFWWFl0bGZ2SWF6TzB6QVh1UmduMlpwN3dOUzFObGdXMVJ6S1BNODI3endNUXR4ZmVxa0pFampDczNzc1RSa1R6clZTNQ?oc=5",
+        "local_publication_date": "2026-09-28",
+        "contributors": [
+          {
+            "source_file": "rss/rss_google_es_current_20261019T012542Z.xml",
+            "source_hash": "6a5ccba5f7ab386a3bec184fd825bbeb2ca53595504dfc51192dbc00e64e8d16",
+            "item_1based": 15,
+            "captured_at": "2026-10-19T01:25:42.515835+00:00",
+            "title": "Crisis en Tulum: La fecha exacta en que Aeroméxico corta sus vuelos con la CDMX tras el desplome turístico - Infobae",
+            "url": "https://news.google.com/rss/articles/CBMi4gFBVV95cUxPNU41WFJiREQ4OGxOVzlNQW40bnpmMGEzVUc2Y3lXZU5USTlNYVhuSmYwc3Z1SjlKT3FPSXdhOFRvdVdhMVU4V0ZoZHRjYW83eTVtMzFIcFZ4ZFEwVDhScVJMdkFPaV9kaFZDaDNuUWV3MTQ3SkdkbF9uY3cxWnVhcnFJS3V3X2hQT0hhMmZyQnpyVFE1V2dUWjVZc3Q1YmJhR2twUGN5Yi1nNW05VG9VemtoTktqYVlsNkh5UXUxMVlONkFweVh1OFozQWJZNnN2RlhaMUxUV01XalY4eW5NNTln0gH8AUFVX3lxTFBuUGFhcThBaGxWTHA2QnVTbktjdG1RdWJwRzdZdmRJMlhtWGlnVzBPMzNqVVlGNm51bWszS005MElsdnFnN2Faam1vMTdSWlY3aUdpaEVrRTZBX1RKZDh4dmFzdDJJWG9NSjFLSHN2aWdrWFh3ZXNlWFZCTjhneWxnV3JmQ21hMzV0REZOQ0VMRTRKMEtzWjB2ME01aWM3ZWlscnpIODNEc2lXa01mekxFbnV2bm53OFFWWFl0bGZ2SWF6TzB6QVh1UmduMlpwN3dOUzFObGdXMVJ6S1BNODI3endNUXR4ZmVxa0pFampDczNzc1RSa1R6clZTNQ?oc=5",
+            "canonical_url": "https://news.google.com/rss/articles/CBMi4gFBVV95cUxPNU41WFJiREQ4OGxOVzlNQW40bnpmMGEzVUc2Y3lXZU5USTlNYVhuSmYwc3Z1SjlKT3FPSXdhOFRvdVdhMVU4V0ZoZHRjYW83eTVtMzFIcFZ4ZFEwVDhScVJMdkFPaV9kaFZDaDNuUWV3MTQ3SkdkbF9uY3cxWnVhcnFJS3V3X2hQT0hhMmZyQnpyVFE1V2dUWjVZc3Q1YmJhR2twUGN5Yi1nNW05VG9VemtoTktqYVlsNkh5UXUxMVlONkFweVh1OFozQWJZNnN2RlhaMUxUV01XalY4eW5NNTln0gH8AUFVX3lxTFBuUGFhcThBaGxWTHA2QnVTbktjdG1RdWJwRzdZdmRJMlhtWGlnVzBPMzNqVVlGNm51bWszS005MElsdnFnN2Faam1vMTdSWlY3aUdpaEVrRTZBX1RKZDh4dmFzdDJJWG9NSjFLSHN2aWdrWFh3ZXNlWFZCTjhneWxnV3JmQ21hMzV0REZOQ0VMRTRKMEtzWjB2ME01aWM3ZWlscnpIODNEc2lXa01mekxFbnV2bm53OFFWWFl0bGZ2SWF6TzB6QVh1UmduMlpwN3dOUzFObGdXMVJ6S1BNODI3endNUXR4ZmVxa0pFampDczNzc1RSa1R6clZTNQ?oc=5",
+            "published_at_as_declared": "2026-09-28T07:00:00+00:00",
+            "local_publication_date": "2026-09-28",
+            "event_date": null,
+            "first_available_at": null,
+            "publisher_document_verified": false,
+            "agent_eligible": false
+          }
+        ],
+        "agent_eligible": false
+      },
+      {
+        "canonical_url": "https://news.google.com/rss/articles/CBMi6AFBVV95cUxPbnNaUlg1SDY5ZC1fS01zOHh2X2hid3BlOThaaXVuTk5oS3FTMHd6NWdDZ3ZEUUtQR2d0U2lWNkhqYnNqRmJIYVNvY0NaNVlnbzJOTDFFenNCMmJyR2NwcndBTGNFOTRrRmV0Y3diMmczNm9ON1JvekZQUWlQTVVqTTdHNWdxdlZyekw5Ulh0REcyQ0RBZWZDcm1DQXVvTmlyVWZSWUlNdjBUclhIZkVHOW16ZDJNZnFkU2VwQlE3LW5JM1BXcjhoOHYxcXdXQkhtN2NQZjFZRlp3cHBpalBQSzlCQ3JLd05r?oc=5",
+        "local_publication_date": "2026-09-02",
+        "contributors": [
+          {
+            "source_file": "rss/rss_google_es_current_20261019T012542Z.xml",
+            "source_hash": "6a5ccba5f7ab386a3bec184fd825bbeb2ca53595504dfc51192dbc00e64e8d16",
+            "item_1based": 22,
+            "captured_at": "2026-10-19T01:25:42.515835+00:00",
+            "title": "Batería de Litio Explota en Avión de Aeroméxico Durante Vuelo Tapachula-CDMX - N+",
+            "url": "https://news.google.com/rss/articles/CBMi6AFBVV95cUxPbnNaUlg1SDY5ZC1fS01zOHh2X2hid3BlOThaaXVuTk5oS3FTMHd6NWdDZ3ZEUUtQR2d0U2lWNkhqYnNqRmJIYVNvY0NaNVlnbzJOTDFFenNCMmJyR2NwcndBTGNFOTRrRmV0Y3diMmczNm9ON1JvekZQUWlQTVVqTTdHNWdxdlZyekw5Ulh0REcyQ0RBZWZDcm1DQXVvTmlyVWZSWUlNdjBUclhIZkVHOW16ZDJNZnFkU2VwQlE3LW5JM1BXcjhoOHYxcXdXQkhtN2NQZjFZRlp3cHBpalBQSzlCQ3JLd05r?oc=5",
+            "canonical_url": "https://news.google.com/rss/articles/CBMi6AFBVV95cUxPbnNaUlg1SDY5ZC1fS01zOHh2X2hid3BlOThaaXVuTk5oS3FTMHd6NWdDZ3ZEUUtQR2d0U2lWNkhqYnNqRmJIYVNvY0NaNVlnbzJOTDFFenNCMmJyR2NwcndBTGNFOTRrRmV0Y3diMmczNm9ON1JvekZQUWlQTVVqTTdHNWdxdlZyekw5Ulh0REcyQ0RBZWZDcm1DQXVvTmlyVWZSWUlNdjBUclhIZkVHOW16ZDJNZnFkU2VwQlE3LW5JM1BXcjhoOHYxcXdXQkhtN2NQZjFZRlp3cHBpalBQSzlCQ3JLd05r?oc=5",
+            "published_at_as_declared": "2026-09-02T07:00:00+00:00",
+            "local_publication_date": "2026-09-02",
+            "event_date": null,
+            "first_available_at": null,
+            "publisher_document_verified": false,
+            "agent_eligible": false
+          }
+        ],
+        "agent_eligible": false
+      },
+      {
+        "canonical_url": "https://news.google.com/rss/articles/CBMimwFBVV95cUxQTjVaSXk3QTVpZVlZdXl0RHZzT1d2MVRqNmFMdmZiYUh0LWZmSmVucElSSTVLXzBJSUkwSXphdzFDSERVVWwxQUd4UXo2ZmJJcThZOVktSTJULVRSVjRuQnBQSEdSZll6bnZJd3BWekp6cy1VS2YtMFpMNWJyaFdNd2lsRTV1OUNaMkNtcjllR3U4OFB0R195cDl5NNIBoAFBVV95cUxQeEVuNWNDSDZ2WjBhZWoyUWFDcFJNaHJoNlFiTHJ3SV94U2tRT1Ixd1M2aFRBNTRvNzBUUEp2eHhXMkJ0UU1Md3J1bVRpS1RVdEotUlZqZ29kRjZhdVJDZHNZMVFBbXZ5MlpNZXBYdmtZVjg5b0FNMkJmZlp5eGVaX1RtbmtfVEUtbkR5Q3VyYWNmWXg1bmlDQ0liWVBXWUMx?oc=5",
+        "local_publication_date": "2026-09-30",
+        "contributors": [
+          {
+            "source_file": "rss/rss_google_es_current_20261019T012542Z.xml",
+            "source_hash": "6a5ccba5f7ab386a3bec184fd825bbeb2ca53595504dfc51192dbc00e64e8d16",
+            "item_1based": 9,
+            "captured_at": "2026-10-19T01:25:42.515835+00:00",
+            "title": "Aeroméxico anuncia vuelo Guadalajara-París - El Informador",
+            "url": "https://news.google.com/rss/articles/CBMimwFBVV95cUxQTjVaSXk3QTVpZVlZdXl0RHZzT1d2MVRqNmFMdmZiYUh0LWZmSmVucElSSTVLXzBJSUkwSXphdzFDSERVVWwxQUd4UXo2ZmJJcThZOVktSTJULVRSVjRuQnBQSEdSZll6bnZJd3BWekp6cy1VS2YtMFpMNWJyaFdNd2lsRTV1OUNaMkNtcjllR3U4OFB0R195cDl5NNIBoAFBVV95cUxQeEVuNWNDSDZ2WjBhZWoyUWFDcFJNaHJoNlFiTHJ3SV94U2tRT1Ixd1M2aFRBNTRvNzBUUEp2eHhXMkJ0UU1Md3J1bVRpS1RVdEotUlZqZ29kRjZhdVJDZHNZMVFBbXZ5MlpNZXBYdmtZVjg5b0FNMkJmZlp5eGVaX1RtbmtfVEUtbkR5Q3VyYWNmWXg1bmlDQ0liWVBXWUMx?oc=5",
+            "canonical_url": "https://news.google.com/rss/articles/CBMimwFBVV95cUxQTjVaSXk3QTVpZVlZdXl0RHZzT1d2MVRqNmFMdmZiYUh0LWZmSmVucElSSTVLXzBJSUkwSXphdzFDSERVVWwxQUd4UXo2ZmJJcThZOVktSTJULVRSVjRuQnBQSEdSZll6bnZJd3BWekp6cy1VS2YtMFpMNWJyaFdNd2lsRTV1OUNaMkNtcjllR3U4OFB0R195cDl5NNIBoAFBVV95cUxQeEVuNWNDSDZ2WjBhZWoyUWFDcFJNaHJoNlFiTHJ3SV94U2tRT1Ixd1M2aFRBNTRvNzBUUEp2eHhXMkJ0UU1Md3J1bVRpS1RVdEotUlZqZ29kRjZhdVJDZHNZMVFBbXZ5MlpNZXBYdmtZVjg5b0FNMkJmZlp5eGVaX1RtbmtfVEUtbkR5Q3VyYWNmWXg1bmlDQ0liWVBXWUMx?oc=5",
+            "published_at_as_declared": "2026-09-30T07:00:00+00:00",
+            "local_publication_date": "2026-09-30",
+            "event_date": null,
+            "first_available_at": null,
+            "publisher_document_verified": false,
+            "agent_eligible": false
+          }
+        ],
+        "agent_eligible": false
+      },
+      {
+        "canonical_url": "https://news.google.com/rss/articles/CBMiogFBVV95cUxNNXdGMjU4Y1d5bWZ4V25vVUhOUW5GWFpQU1k1NmpyVGJiSUJaRUJKMkJRcTBBYUl3ZXUwLVJ0QjNHdWhZQnU3eGp1S1hoNjFFNEFkcElMdjhSbW4ySWh2bFRNU2VrZ3Z4QW1YWUFERHVvNnNCNDVJTmdfV3hBaGtTRWNfMVRfQnNwWnJ6SW42OHJUeFlyTmIzU09xZGZRT2RsMlE?oc=5",
+        "local_publication_date": "2026-09-28",
+        "contributors": [
+          {
+            "source_file": "rss/rss_google_es_current_20261019T012542Z.xml",
+            "source_hash": "6a5ccba5f7ab386a3bec184fd825bbeb2ca53595504dfc51192dbc00e64e8d16",
+            "item_1based": 11,
+            "captured_at": "2026-10-19T01:25:42.515835+00:00",
+            "title": "#InformaciónConfidencial: Aeroméxico deja a Tulum sin vuelos al AICM y AIFA - EL CEO",
+            "url": "https://news.google.com/rss/articles/CBMiogFBVV95cUxNNXdGMjU4Y1d5bWZ4V25vVUhOUW5GWFpQU1k1NmpyVGJiSUJaRUJKMkJRcTBBYUl3ZXUwLVJ0QjNHdWhZQnU3eGp1S1hoNjFFNEFkcElMdjhSbW4ySWh2bFRNU2VrZ3Z4QW1YWUFERHVvNnNCNDVJTmdfV3hBaGtTRWNfMVRfQnNwWnJ6SW42OHJUeFlyTmIzU09xZGZRT2RsMlE?oc=5",
+            "canonical_url": "https://news.google.com/rss/articles/CBMiogFBVV95cUxNNXdGMjU4Y1d5bWZ4V25vVUhOUW5GWFpQU1k1NmpyVGJiSUJaRUJKMkJRcTBBYUl3ZXUwLVJ0QjNHdWhZQnU3eGp1S1hoNjFFNEFkcElMdjhSbW4ySWh2bFRNU2VrZ3Z4QW1YWUFERHVvNnNCNDVJTmdfV3hBaGtTRWNfMVRfQnNwWnJ6SW42OHJUeFlyTmIzU09xZGZRT2RsMlE?oc=5",
+            "published_at_as_declared": "2026-09-28T07:00:00+00:00",
+            "local_publication_date": "2026-09-28",
+            "event_date": null,
+            "first_available_at": null,
+            "publisher_document_verified": false,
+            "agent_eligible": false
+          }
+        ],
+        "agent_eligible": false
+      },
+      {
+        "canonical_url": "https://news.google.com/rss/articles/CBMitAFBVV95cUxPcHpIbXpXSlAzRXp5eHg4c0VicDgxR0ZBNkIweUlNeGw1MDFqM3UySXFucDhBaUZGWm13ZmVTWVdVQmFmTTBUeHljZjBTX2QtU0JDRFU0Q3BiRkNtRTN5QWxVYy1mbW1oM2pmTDZnOUNmMUdja1F0YnFUQUJIblR6THcxMFhqeDZ4NDR0RVVxUl8tc1RwbWZWdDBrUnhjZnRSakNDN3VMSWlZVkh6dnZiM19GTlg?oc=5",
+        "local_publication_date": "2026-09-21",
+        "contributors": [
+          {
+            "source_file": "rss/rss_google_es_current_20261019T012542Z.xml",
+            "source_hash": "6a5ccba5f7ab386a3bec184fd825bbeb2ca53595504dfc51192dbc00e64e8d16",
+            "item_1based": 19,
+            "captured_at": "2026-10-19T01:25:42.515835+00:00",
+            "title": "Aeroméxico apuesta por destinos en el Caribe: lanza vuelos directos a Jamaica y Bahamas - EL CEO",
+            "url": "https://news.google.com/rss/articles/CBMitAFBVV95cUxPcHpIbXpXSlAzRXp5eHg4c0VicDgxR0ZBNkIweUlNeGw1MDFqM3UySXFucDhBaUZGWm13ZmVTWVdVQmFmTTBUeHljZjBTX2QtU0JDRFU0Q3BiRkNtRTN5QWxVYy1mbW1oM2pmTDZnOUNmMUdja1F0YnFUQUJIblR6THcxMFhqeDZ4NDR0RVVxUl8tc1RwbWZWdDBrUnhjZnRSakNDN3VMSWlZVkh6dnZiM19GTlg?oc=5",
+            "canonical_url": "https://news.google.com/rss/articles/CBMitAFBVV95cUxPcHpIbXpXSlAzRXp5eHg4c0VicDgxR0ZBNkIweUlNeGw1MDFqM3UySXFucDhBaUZGWm13ZmVTWVdVQmFmTTBUeHljZjBTX2QtU0JDRFU0Q3BiRkNtRTN5QWxVYy1mbW1oM2pmTDZnOUNmMUdja1F0YnFUQUJIblR6THcxMFhqeDZ4NDR0RVVxUl8tc1RwbWZWdDBrUnhjZnRSakNDN3VMSWlZVkh6dnZiM19GTlg?oc=5",
+            "published_at_as_declared": "2026-09-21T07:00:00+00:00",
+            "local_publication_date": "2026-09-21",
+            "event_date": null,
+            "first_available_at": null,
+            "publisher_document_verified": false,
+            "agent_eligible": false
+          }
+        ],
+        "agent_eligible": false
+      },
+      {
+        "canonical_url": "https://news.google.com/rss/articles/CBMitAFBVV95cUxQSEFid1ZieW9pNkFCU3BwWjgycy1ZS3lMZmxQTUVxVWNwXzN3U0VrM0k3cm9rRC1UVWZwaWRYT29GQUt0U3hTaS0yeHFpRVdFaWZwU2JzUGlIRm5BSlNGTUJPN0czN1pOLWo3M2d1aVRYNHlMYkI5X3QxZFN3OG1iSkFkVW05WWdER2lUZTlHSTcxNU9yTXlSUTl0MUFhT21KalVrWkUwVmRPZTBhdHE0bDE4Sng?oc=5",
+        "local_publication_date": "2026-09-03",
+        "contributors": [
+          {
+            "source_file": "rss/rss_google_es_current_20261019T012542Z.xml",
+            "source_hash": "6a5ccba5f7ab386a3bec184fd825bbeb2ca53595504dfc51192dbc00e64e8d16",
+            "item_1based": 30,
+            "captured_at": "2026-10-19T01:25:42.515835+00:00",
+            "title": "Explota batería de litio durante vuelo de Aeroméxico Tapachula-CDMX - El Sol de México",
+            "url": "https://news.google.com/rss/articles/CBMitAFBVV95cUxQSEFid1ZieW9pNkFCU3BwWjgycy1ZS3lMZmxQTUVxVWNwXzN3U0VrM0k3cm9rRC1UVWZwaWRYT29GQUt0U3hTaS0yeHFpRVdFaWZwU2JzUGlIRm5BSlNGTUJPN0czN1pOLWo3M2d1aVRYNHlMYkI5X3QxZFN3OG1iSkFkVW05WWdER2lUZTlHSTcxNU9yTXlSUTl0MUFhT21KalVrWkUwVmRPZTBhdHE0bDE4Sng?oc=5",
+            "canonical_url": "https://news.google.com/rss/articles/CBMitAFBVV95cUxQSEFid1ZieW9pNkFCU3BwWjgycy1ZS3lMZmxQTUVxVWNwXzN3U0VrM0k3cm9rRC1UVWZwaWRYT29GQUt0U3hTaS0yeHFpRVdFaWZwU2JzUGlIRm5BSlNGTUJPN0czN1pOLWo3M2d1aVRYNHlMYkI5X3QxZFN3OG1iSkFkVW05WWdER2lUZTlHSTcxNU9yTXlSUTl0MUFhT21KalVrWkUwVmRPZTBhdHE0bDE4Sng?oc=5",
+            "published_at_as_declared": "2026-09-03T07:00:00+00:00",
+            "local_publication_date": "2026-09-03",
+            "event_date": null,
+            "first_available_at": null,
+            "publisher_document_verified": false,
+            "agent_eligible": false
+          }
+        ],
+        "agent_eligible": false
+      },
+      {
+        "canonical_url": "https://news.google.com/rss/articles/CBMitgFBVV95cUxPSWZyN2haaFpwUTJrTTFGWWlxbm5EeHBzb0dBX2Rjdm01YmlPWkdlVXlrbFdUUWgyUzdKSW9rN1JTWEVPLXA2b0FuOFpGc1A0bWxFODJEaTNoeV9tNkdxOV9ZcUlpX1NPZG9EU0dnblZ3UndIQXAwMC1EZUZoSnFxTjk2VUpRTTdqNmhWUWpPX2pJazJWdkptWTdmTzBvUUFGNV9xck8zSm85WDBTZ3dpTWpNSzBxUdIBtgFBVV95cUxPSWZyN2haaFpwUTJrTTFGWWlxbm5EeHBzb0dBX2Rjdm01YmlPWkdlVXlrbFdUUWgyUzdKSW9rN1JTWEVPLXA2b0FuOFpGc1A0bWxFODJEaTNoeV9tNkdxOV9ZcUlpX1NPZG9EU0dnblZ3UndIQXAwMC1EZUZoSnFxTjk2VUpRTTdqNmhWUWpPX2pJazJWdkptWTdmTzBvUUFGNV9xck8zSm85WDBTZ3dpTWpNSzBxUQ?oc=5",
+        "local_publication_date": "2026-09-01",
+        "contributors": [
+          {
+            "source_file": "rss/rss_google_es_current_20261019T012542Z.xml",
+            "source_hash": "6a5ccba5f7ab386a3bec184fd825bbeb2ca53595504dfc51192dbc00e64e8d16",
+            "item_1based": 35,
+            "captured_at": "2026-10-19T01:25:42.515835+00:00",
+            "title": "Aeroméxico amplía frecuencias a La Paz: más vuelos desde CDMX - Ladevi - Noticias para Profesionales del Turismo en México",
+            "url": "https://news.google.com/rss/articles/CBMitgFBVV95cUxPSWZyN2haaFpwUTJrTTFGWWlxbm5EeHBzb0dBX2Rjdm01YmlPWkdlVXlrbFdUUWgyUzdKSW9rN1JTWEVPLXA2b0FuOFpGc1A0bWxFODJEaTNoeV9tNkdxOV9ZcUlpX1NPZG9EU0dnblZ3UndIQXAwMC1EZUZoSnFxTjk2VUpRTTdqNmhWUWpPX2pJazJWdkptWTdmTzBvUUFGNV9xck8zSm85WDBTZ3dpTWpNSzBxUdIBtgFBVV95cUxPSWZyN2haaFpwUTJrTTFGWWlxbm5EeHBzb0dBX2Rjdm01YmlPWkdlVXlrbFdUUWgyUzdKSW9rN1JTWEVPLXA2b0FuOFpGc1A0bWxFODJEaTNoeV9tNkdxOV9ZcUlpX1NPZG9EU0dnblZ3UndIQXAwMC1EZUZoSnFxTjk2VUpRTTdqNmhWUWpPX2pJazJWdkptWTdmTzBvUUFGNV9xck8zSm85WDBTZ3dpTWpNSzBxUQ?oc=5",
+            "canonical_url": "https://news.google.com/rss/articles/CBMitgFBVV95cUxPSWZyN2haaFpwUTJrTTFGWWlxbm5EeHBzb0dBX2Rjdm01YmlPWkdlVXlrbFdUUWgyUzdKSW9rN1JTWEVPLXA2b0FuOFpGc1A0bWxFODJEaTNoeV9tNkdxOV9ZcUlpX1NPZG9EU0dnblZ3UndIQXAwMC1EZUZoSnFxTjk2VUpRTTdqNmhWUWpPX2pJazJWdkptWTdmTzBvUUFGNV9xck8zSm85WDBTZ3dpTWpNSzBxUdIBtgFBVV95cUxPSWZyN2haaFpwUTJrTTFGWWlxbm5EeHBzb0dBX2Rjdm01YmlPWkdlVXlrbFdUUWgyUzdKSW9rN1JTWEVPLXA2b0FuOFpGc1A0bWxFODJEaTNoeV9tNkdxOV9ZcUlpX1NPZG9EU0dnblZ3UndIQXAwMC1EZUZoSnFxTjk2VUpRTTdqNmhWUWpPX2pJazJWdkptWTdmTzBvUUFGNV9xck8zSm85WDBTZ3dpTWpNSzBxUQ?oc=5",
+            "published_at_as_declared": "2026-09-01T07:00:00+00:00",
+            "local_publication_date": "2026-09-01",
+            "event_date": null,
+            "first_available_at": null,
+            "publisher_document_verified": false,
+            "agent_eligible": false
+          }
+        ],
+        "agent_eligible": false
+      },
+      {
+        "canonical_url": "https://news.google.com/rss/articles/CBMitwFBVV95cUxOWjVwV0I1UWI4bVJTSm1BN3BQVjNCUTFHZjZNeV8tdkxHUjhsaFdDYXRSNWIyWk9PdmFwT3hIUHJaV2RxR3plbVNOMk81aDB4QU9DMXhiN053Y1JfZkJtZWVDMXNucS1oaC1kWWkwLWoxNTlVeEZXMld2ejZ2SVlta0tPY3E3SkVWd0tiYm1FNnZ2SjhJbU9rU056VHA3LWN5dmwxancyUzI1aDVCNW5ma0tRZnZhMEnSAbwBQVVfeXFMTllRZDBtZ0tzVlY5OF9iOW5UczVoZGhjNkY3Rjcza2M0X0hObGRLX2NpWXJ3d0g0YUxXNEpVa01VbkEzbWtyay10NjFCQnMwUV9heEhLc0lFMmlBc3NXMVVFbm04eGFKeWdWV2ZuRUlZM1paajRUeDU4TGFDSXZ2Z0JMTVVveDFTdExDVThjd3phX3phZkxZekwwWkR0MUZZdGJfNk56WWtEZUJXS0hUNDdGVWpvSXhQZ2RmdGo?oc=5",
+        "local_publication_date": "2026-09-28",
+        "contributors": [
+          {
+            "source_file": "rss/rss_google_es_current_20261019T012542Z.xml",
+            "source_hash": "6a5ccba5f7ab386a3bec184fd825bbeb2ca53595504dfc51192dbc00e64e8d16",
+            "item_1based": 8,
+            "captured_at": "2026-10-19T01:25:42.515835+00:00",
+            "title": "¿Aeroméxico deja de volar a Tulum? La aerolínea niega cierre de ruta - El Economista",
+            "url": "https://news.google.com/rss/articles/CBMitwFBVV95cUxOWjVwV0I1UWI4bVJTSm1BN3BQVjNCUTFHZjZNeV8tdkxHUjhsaFdDYXRSNWIyWk9PdmFwT3hIUHJaV2RxR3plbVNOMk81aDB4QU9DMXhiN053Y1JfZkJtZWVDMXNucS1oaC1kWWkwLWoxNTlVeEZXMld2ejZ2SVlta0tPY3E3SkVWd0tiYm1FNnZ2SjhJbU9rU056VHA3LWN5dmwxancyUzI1aDVCNW5ma0tRZnZhMEnSAbwBQVVfeXFMTllRZDBtZ0tzVlY5OF9iOW5UczVoZGhjNkY3Rjcza2M0X0hObGRLX2NpWXJ3d0g0YUxXNEpVa01VbkEzbWtyay10NjFCQnMwUV9heEhLc0lFMmlBc3NXMVVFbm04eGFKeWdWV2ZuRUlZM1paajRUeDU4TGFDSXZ2Z0JMTVVveDFTdExDVThjd3phX3phZkxZekwwWkR0MUZZdGJfNk56WWtEZUJXS0hUNDdGVWpvSXhQZ2RmdGo?oc=5",
+            "canonical_url": "https://news.google.com/rss/articles/CBMitwFBVV95cUxOWjVwV0I1UWI4bVJTSm1BN3BQVjNCUTFHZjZNeV8tdkxHUjhsaFdDYXRSNWIyWk9PdmFwT3hIUHJaV2RxR3plbVNOMk81aDB4QU9DMXhiN053Y1JfZkJtZWVDMXNucS1oaC1kWWkwLWoxNTlVeEZXMld2ejZ2SVlta0tPY3E3SkVWd0tiYm1FNnZ2SjhJbU9rU056VHA3LWN5dmwxancyUzI1aDVCNW5ma0tRZnZhMEnSAbwBQVVfeXFMTllRZDBtZ0tzVlY5OF9iOW5UczVoZGhjNkY3Rjcza2M0X0hObGRLX2NpWXJ3d0g0YUxXNEpVa01VbkEzbWtyay10NjFCQnMwUV9heEhLc0lFMmlBc3NXMVVFbm04eGFKeWdWV2ZuRUlZM1paajRUeDU4TGFDSXZ2Z0JMTVVveDFTdExDVThjd3phX3phZkxZekwwWkR0MUZZdGJfNk56WWtEZUJXS0hUNDdGVWpvSXhQZ2RmdGo?oc=5",
+            "published_at_as_declared": "2026-09-28T07:00:00+00:00",
+            "local_publication_date": "2026-09-28",
+            "event_date": null,
+            "first_available_at": null,
+            "publisher_document_verified": false,
+            "agent_eligible": false
+          }
+        ],
+        "agent_eligible": false
+      },
+      {
+        "canonical_url": "https://news.google.com/rss/articles/CBMixAFBVV95cUxNY3BBbDR2d0hUTTc3emgydTZTdTRiS0hsMlplQkZodEp2WnAwSlUzdHRFcmZCZW9ucjUtaDBaanRoRW81V0ZxYWQ3RUZKR0NhNXZDR09CRm9DbTA4dWpYODliNlhMQkYyZ2xfRkVWZ1o5blRacGgtTUhVVzE3VFZYWG50dTd0YnNEVXFZZWdmRHZlaXViYmVrb09vUDhXaGdTblB1M1FZVW5qSWtNR2R3Z0pmaHg1TEdhZWdTNEp2dlp1SDN4?oc=5",
+        "local_publication_date": "2026-09-28",
+        "contributors": [
+          {
+            "source_file": "rss/rss_google_es_current_20261019T012542Z.xml",
+            "source_hash": "6a5ccba5f7ab386a3bec184fd825bbeb2ca53595504dfc51192dbc00e64e8d16",
+            "item_1based": 12,
+            "captured_at": "2026-10-19T01:25:42.515835+00:00",
+            "title": "Aeroméxico suspende vuelos a Tulum: el 30 de septiembre será su último día de operaciones - sdpnoticias",
+            "url": "https://news.google.com/rss/articles/CBMixAFBVV95cUxNY3BBbDR2d0hUTTc3emgydTZTdTRiS0hsMlplQkZodEp2WnAwSlUzdHRFcmZCZW9ucjUtaDBaanRoRW81V0ZxYWQ3RUZKR0NhNXZDR09CRm9DbTA4dWpYODliNlhMQkYyZ2xfRkVWZ1o5blRacGgtTUhVVzE3VFZYWG50dTd0YnNEVXFZZWdmRHZlaXViYmVrb09vUDhXaGdTblB1M1FZVW5qSWtNR2R3Z0pmaHg1TEdhZWdTNEp2dlp1SDN4?oc=5",
+            "canonical_url": "https://news.google.com/rss/articles/CBMixAFBVV95cUxNY3BBbDR2d0hUTTc3emgydTZTdTRiS0hsMlplQkZodEp2WnAwSlUzdHRFcmZCZW9ucjUtaDBaanRoRW81V0ZxYWQ3RUZKR0NhNXZDR09CRm9DbTA4dWpYODliNlhMQkYyZ2xfRkVWZ1o5blRacGgtTUhVVzE3VFZYWG50dTd0YnNEVXFZZWdmRHZlaXViYmVrb09vUDhXaGdTblB1M1FZVW5qSWtNR2R3Z0pmaHg1TEdhZWdTNEp2dlp1SDN4?oc=5",
+            "published_at_as_declared": "2026-09-28T07:00:00+00:00",
+            "local_publication_date": "2026-09-28",
+            "event_date": null,
+            "first_available_at": null,
+            "publisher_document_verified": false,
+            "agent_eligible": false
+          }
+        ],
+        "agent_eligible": false
+      }
+    ],
+    "rejected_items": [],
+    "coverage": "partial_metadata_in_selected_retained_feeds_not_universal_month_archive",
+    "query_scope": "exact_source_urls_and_logical_keys_listed_above",
+    "missing_days_mean": "not_observed_never_no_news",
+    "release_lag_days": null,
+    "network_requests": 0,
+    "article_requests": 0,
+    "writes": 0,
+    "activation": "none",
+    "silver_gold_certification": false
+  },
+  "peer_documentary_review": {
+    "mode": "offline_documentary_review",
+    "status": "verified_document_locations_only",
+    "sources": 10,
+    "evidence": 60,
+    "profiles": 5,
+    "attribute_assessments": 100,
+    "events": 0,
+    "findings": [
+      {
+        "id": "RY_UNIT_CONTRADICTION",
+        "severity": "material",
+        "carriers": [
+          "RYANAIR"
+        ],
+        "detail": "Existing profile/dimension metric flag conflicts with own FY2026 ASM and sector miles. No profile/Gold edits made. Any future conversion requires metric-specific units."
+      },
+      {
+        "id": "ISSUER_OPERATOR_SCOPE",
+        "severity": "material",
+        "carriers": [
+          "AEROMEXICO",
+          "VOLARIS",
+          "VIVA_AEROBUS",
+          "RYANAIR"
+        ],
+        "detail": "SEC/financial issuer identity does not establish operator IATA/ICAO mapping. Viva issuer parent differs from dimension operating subsidiary; preserve relationship."
+      },
+      {
+        "id": "BOOKED_PASSENGER_SCOPE",
+        "severity": "material",
+        "carriers": [
+          "VIVA_AEROBUS",
+          "RYANAIR"
+        ],
+        "detail": "Bookeds are not necessarily flown. Generic pasajeros transportados description would exceed source definition. No glossary/Gold edits made."
+      },
+      {
+        "id": "CURRENCY_EDITION_SCOPE",
+        "severity": "material",
+        "carriers": [
+          "VIVA_AEROBUS"
+        ],
+        "detail": "Reporting USD effectiveOct1,2022, functional USD2020. Current config must not overwrite historical source currency."
+      },
+      {
+        "id": "EXCHANGE_SECURITY_SCOPE",
+        "severity": "qualified",
+        "carriers": [
+          "AEROMEXICO",
+          "VOLARIS",
+          "RYANAIR"
+        ],
+        "detail": "AM annual supports NYSE ADS AERO and BMV common shares; VO cover differentiates VLRS NYSE and VOLAR A BMV. SEC catalogues also list OTC tickers. A single ticker plus combined exchange is a curated simplification."
+      },
+      {
+        "id": "CURATION_NOT_AUTHORIZATION",
+        "severity": "boundary",
+        "carriers": [
+          "AEROMEXICO",
+          "VOLARIS",
+          "VIVA_AEROBUS",
+          "DELTA",
+          "RYANAIR"
+        ],
+        "detail": "Primary evidence does not approve peer selection, focus flags, parent roots, business-model mapping, thesis activation, publication or automated schedule."
+      }
+    ],
+    "semantic_curation_approved": false,
+    "agent_eligible": false,
+    "network_requests": 0,
+    "writes": 0,
+    "activation": "none",
+    "layers": [
+      "original_identity",
+      "documentary_locator",
+      "reviewed_input_hash"
+    ],
+    "silver_gold_certification": false
+  },
+  "event_documentary_review": {
+    "mode": "offline_documentary_review",
+    "status": "verified_document_locations_only",
+    "sources": 24,
+    "evidence": 54,
+    "profiles": 0,
+    "attribute_assessments": 0,
+    "events": 21,
+    "findings": [],
+    "semantic_curation_approved": false,
+    "agent_eligible": false,
+    "network_requests": 0,
+    "writes": 0,
+    "activation": "none",
+    "layers": [
+      "original_identity",
+      "documentary_locator",
+      "reviewed_input_hash"
+    ],
+    "silver_gold_certification": false
+  },
+  "upstream_news_cut": {
+    "mode": "upstream_candidate_metadata_audit",
+    "records": 11,
+    "coverage": "Selección manual parcial; no exhaustiva. Publicaciones 2026-06 a 2026-10; octubre incompleto.",
+    "cut_at": "2026-10-15T04:29:56.941851Z",
+    "self_hashes_valid": true,
+    "source_bodies_reverified": false,
+    "publisher_read_claim": "upstream_metadata_only_not_new_local_body_verification",
+    "candidate_status": "candidate_unapproved",
+    "agent_eligible": false,
+    "network_requests": 0,
+    "writes": 0,
+    "activation": "none",
+    "silver_gold_certification": false,
+    "cut_file_sha256": "536952ce885ccc09d55966d05a447a81cff605416d614ad17f0d85f7f57d8c46",
+    "upstream_commit": "194ff92c47a16445a870363ce5a135011fe763e9",
+    "upstream_path": "config/chat/evidence/candidates/news/cut-20261015-v1.json"
+  },
+  "gdelt_single_attempt": {
+    "product": "gdelt",
+    "period": "2026M09",
+    "timezone": "America/Mexico_City",
+    "start_inclusive_UTC": "2026-09-01T06:00:00Z",
+    "end_inclusive_UTC": "2026-10-01T05:59:59Z",
+    "upstream_binding_commit": "194ff92c47a16445a870363ce5a135011fe763e9",
+    "source_url": "https://api.gdeltproject.org/api/v2/doc/doc?query=%28Aeromexico+OR+%22Aerom%C3%A9xico%22+OR+%22Viva+Aerobus%22+OR+Volaris%29&mode=artlist&maxrecords=250&format=json&sort=datedesc&startdatetime=20260901060000&enddatetime=20261001055959",
+    "maximum_requests": 1,
+    "follow_redirects": false,
+    "retries": 0,
+    "paid_requests": 0,
+    "activation": "none",
+    "output": "tmp/source-updates/gdelt-retry-20261019/data/bronze",
+    "attempted_at": "2026-10-19T17:18:25.062807+00:00",
+    "network_requests": 1,
+    "status": "access_or_payload_failed",
+    "http_status": 503,
+    "bytes": 91,
+    "sha256": "2f85832e31ca57711e6107af6b142363351ae516adb71c69afc643fac26be7f6",
+    "source_file": "news/errors/news_http_error_gdelt_monthly_once_2026M09_20261019T171837Z.txt",
+    "valid_articles_array": false,
+    "article_count": null
+  },
+  "activation": "none",
+  "publication": "not_authorized",
+  "scheduled_executions": 0,
+  "integration_observed": {
+    "public_pr142": {
+      "state": "MERGED",
+      "merge_sha": "194ff92c47a16445a870363ce5a135011fe763e9",
+      "merged_at": "2026-10-19T16:01:51Z"
+    },
+    "private_pr35": {
+      "mergeCommit": {
+        "oid": "bd8be3b3745fc595718c4d1ac1142b2a639be837"
+      },
+      "mergedAt": "2026-10-19T17:20:55Z",
+      "state": "MERGED",
+      "url": "https://github.com/salvamalfa/aeromexico-tracker-data/pull/35"
+    },
+    "functional_Pages_Railway_verification": false
+  }
+}

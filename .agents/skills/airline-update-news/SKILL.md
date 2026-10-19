@@ -16,8 +16,9 @@ separa ediciones de días distintos. No resuelve enlaces opacos de Google News.
 Los feeds no garantizan recuperar el mes entero: mostrar cobertura real.
 Distinguir fecha del evento, publicación y captura; noticias no sustituyen
 fuentes financieras oficiales. `news_http_error` nunca cuenta como noticia ni
-ausencia de noticias. Reutilizar el archivo mensual de PR136 tras integrarlo;
-no cambiar su rama ni activar candidatos. El contrato Silver conserva un
+ausencia de noticias. PR142 ya está integrado en `194ff92c`; conservar sus
+controles al integrar esta rama aislada anterior. No cambiar la rama de su
+responsable ni activar candidatos. El contrato Silver conserva un
 representante por noticia y `provenance_json` conserva los metadatos de cada
 fuente. `check` proyecta cada contribución, exige la misma URL canónica y fecha
 local, y verifica su propio archivo/hash Bronze. Los valores y revisiones de
@@ -69,4 +70,34 @@ que GDELT funcionó. Silver mantiene la edición fechada más reciente por URL y
 consulta para respetar su grano. Las anteriores quedan en Bronze y
 `data/quality/news_metadata_selection.json`, con fecha, archivo y hash. No
 fusionar fechas distintas bajo una procedencia prestada. El archivo mensual de
-PR136 necesita leer ese historial; esta selección no acredita un mes completo.
+PR142 conserva ese historial; esta selección no acredita un mes completo.
+
+### Auditoría del corte observado, sin escrituras
+
+```bash
+python -m src.source_updates.news_cut rss --root <bronze-publico> --month 2026-09 --as-of 2026-10-19T12:00:00-06:00
+python -m src.source_updates.news_cut candidate --file <corte-no-aprobado.json>
+```
+
+El primer comando verifica cuerpo, manifiesto y sidecar de cada RSS y deduplica
+por URL canónica y día de publicación en México. Conserva todas las
+contribuciones, consultas exactas y días no observados. No resuelve enlaces
+opacos ni visita artículos; fecha RSS declarada no es fecha de evento ni prueba
+de primera disponibilidad. El corte probado contiene 12 URLs de septiembre en
+seis días, entre siete capturas retenidas; no promete cobertura de todo el mes
+ni de todas las empresas. Una fecha ingenua o posterior a la captura se rechaza.
+
+El segundo comando comprueba identidad, hashes propios y orden de fechas del
+corte candidato upstream. No vuelve a verificar el cuerpo del emisor si no
+está disponible y no concede aprobación. Los 11 registros de PR142 siguen
+`candidate_unapproved`; su alcance es selección manual parcial junio–octubre.
+
+GDELT `seendate` es primera observación del agregador, no publicación. No
+ejecutar el parser legado de esta base sobre GDELT: al integrar, preservar la
+corrección de PR142 y cuarentena de publicación desconocida. El intento normal
+de septiembre devolvió 503; no repetirlo en esta continuación. Guardar el fallo
+y esperar una ronda posterior autorizada, sin inferir cero noticias.
+
+Los auditores no escriben Silver/Gold ni activan el índice. La
+[muestra](../../../docs/referencias/source-updates-20261019/curation-news-verification.json)
+declara sus capas y límites.

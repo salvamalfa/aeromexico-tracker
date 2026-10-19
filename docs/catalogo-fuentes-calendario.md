@@ -41,16 +41,17 @@ pasos de cada fuente. Este es el alcance comprobado por familia:
 | Macro y mercado | EIA, tres series Banxico y cinco series bursátiles verificadas hasta Gold para septiembre. H.10 tiene una cadena dedicada de certificación mensual aislada; véase su alcance y evidencia abajo. La familia completa no está certificada. |
 | Rutas | ANAC junio, CAA junio y Aena enero–julio tienen adaptadores retenidos con ámbitos separados. Cuatro documentos aportan pasajes fechados. Aerocivil conserva comprobación numérica; falta su leyenda de códigos. No representan una red mundial uniforme. |
 | Referencias y contexto | OurAirports conserva 9.051 referencias verificadas. FAA y diccionario tienen snapshots candidatos por SHA: 84 categorías y 86.553 palabras, sin inferir seguridad de aerolínea ni tono empresarial. |
-| Noticias | Captura de metadatos y parser probado con muestras. La integración del corte mensual continúa en PR142; no acredita cobertura completa ni activación. |
-| Derivados y curación | Sin descarga propia. Requieren fuentes padre y controles de linaje. |
+| Noticias | PR142 ya está integrado. Corte RSS retenido de septiembre: 12 URLs fechadas en seis días observados. Los 11 candidatos de PR142 pasan controles de metadatos; no se releen sus cuerpos aquí. GDELT devolvió 503 en un intento sin reintentos. Sin cobertura universal ni activación. |
+| Derivados y curación | Sin descarga propia. Mapas documentales ejecutables para cinco perfiles y 21 eventos; conservan discrepancias y decisiones pendientes. No aprueban perfiles, impacto ni confianza de los eventos. |
 
 El [inventario de los 42 productos](referencias/source-updates-20261019/product-coverage.json)
 separa las capas comprobadas. Hay **35 alcances acotados comprobados**:
 26 de producto/periodo o snapshot y nueve de datos históricos retenidos.
-No significa 35 fuentes actualizadas ni 35 reportes completos. Siete alcances
-quedan bloqueados por fuente, curación, cobertura o integración; no queda una
-brecha local reparable pendiente de esta ampliación. Los detalles están en el
-apéndice y en el inventario.
+No significa 35 fuentes actualizadas ni 35 reportes completos. Además hay un
+corte RSS parcial comprobado, dos revisiones documentales preparadas, tres
+condiciones de fuente o atribución y una exclusión intencional de errores.
+Las revisiones documentales no son certificación Silver/Gold. Los detalles
+están en el apéndice y en el inventario.
 
 La ronda mensual será el primer día hábil bancario mexicano en o después del
 15. Noticias se revisa en esa misma ronda. La muestra de 2026 da **15 de
@@ -523,20 +524,69 @@ reporte completo ni una captura nueva. Los 1.766 derivados Stage 6 conservan
 conservaron las fórmulas registradas y se comprobó la ascendencia; no se
 recalcularon fórmulas ni modelos.
 
-Los siete alcances pendientes son:
+Las condiciones de fuente o atribución restantes son:
 
 - **Viva tráfico:** el host S3 del PDF seleccionado no está permitido por la
   política existente; se bloqueó antes de HTTP y no se reintentó por otra ruta.
 - **Aerocivil:** las ocho filas numéricas están comprobadas, pero falta la
   leyenda primaria de códigos del mismo conjunto y la revisión de atribución.
-- **RSS:** solo hay metadatos parciales; el archivo mensual y su integración
-  dependen de PR142/privada35, sin activar noticias.
-- **GDELT:** falta una respuesta válida; el 503 y los cuerpos de error retenidos
+- **GDELT:** el intento normal de septiembre de 2026 devolvió HTTP 503, 91
+  bytes, sin reintentos. El original y el recibo están retenidos como fallo;
   no acreditan noticias ni ausencia de ellas.
-- **Evidencia de errores de noticias:** permanece deshabilitada por diseño.
-- **Perfiles curados:** falta respaldo primario por atributo para certificarlos.
-- **Contexto curado:** algunos eventos solo declaran URL; falta el original
-  primario retenido y su decisión de curación.
+
+`news_errors` es una exclusión intencional, con frecuencia `never`. Conserva
+fallos para auditoría y no necesita implementarse como fuente de noticias.
+
+El auditor RSS leyó siete capturas retenidas y verificó 700 contribuciones
+válidas. El corte de septiembre de 2026, en `America/Mexico_City`, contiene
+12 URLs fechadas en seis días: 1, 2, 3, 21, 28 y 30. Los otros 24 días no se
+observaron en esas capturas; eso no demuestra ausencia de noticias. Conserva
+las consultas exactas de las capturas, centradas en Aeroméxico; no acredita
+cobertura equivalente de Viva y Volaris. Fecha declarada en RSS, evento,
+primera disponibilidad y captura permanecen separados. No visita artículos.
+
+El corte de PR142 contiene 11 candidatos no aprobados, con publicaciones
+seleccionadas de junio a octubre y octubre incompleto. Se verificaron
+identidades, hashes del contenido candidato y orden de fechas. Sus cuerpos
+originales no están disponibles localmente para una nueva comprobación.
+La afirmación de lectura del emisor se conserva como metadato del responsable,
+sin convertirla en una verificación local nueva ni activar el índice.
+
+La revisión de perfiles abarca cinco perfiles del parser y las mismas cinco
+entradas de aerolínea: 100 evaluaciones, 60 localizadores y diez originales
+primarios retenidos. Ryanair reporta ASM y etapas en millas pese a su indicador
+global `metric`. Viva distingue matriz financiera y operadora, moneda USD desde
+octubre de 2022 y pasajeros reservados que pueden no haber volado. Los códigos
+IATA/ICAO por entidad y las decisiones de comparación siguen pendientes.
+No se corrigieron perfiles ni cifras de producción a partir de estas evidencias.
+[Mapa por atributo](referencias/source-updates-20261019/peer-primary-review.json).
+
+El mapa de los 21 eventos usa 24 originales y 54 localizadores. Hay respaldo
+acotado para 20 eventos y parcial para uno. La URL DOT de octubre respondió
+404; un documento posterior del emisor respalda fecha y acción, pero no las
+13 rutas ni su cobertura MEX/NLU. La orden DOT de julio respondió 200 y queda
+como original de revisión sin registro activo en el catálogo; no usa el alias
+FAA. Los documentos retrospectivos no prueban publicación contemporánea.
+El tráfico de febrero conserva el 5 de marzo del documento y el 6 de marzo del
+archivo del emisor; 1T26 conserva el 21 de abril del informe y el 23 de abril de
+presentación SEC. Impacto, categoría y confianza siguen siendo decisiones
+curadas sin aprobación nueva.
+[Mapa de eventos](referencias/source-updates-20261019/event-primary-review.json).
+
+Los dos auditores son de lectura y no escriben Silver ni Gold:
+
+```bash
+python -m src.source_updates.news_cut rss --root <bronze-publico> --month 2026-09 --as-of 2026-10-19T12:00:00-06:00
+python -m src.source_updates.news_cut candidate --file <corte-upstream-no-aprobado.json>
+python -m src.source_updates.primary_review --bundle docs/referencias/source-updates-20261019/peer-primary-review.json --root old_public=<bronze-publico>
+# Para eventos, añadir --root para context_primary, context_extra, am_july y dot_review.
+```
+
+Cada raíz es una carpeta local de originales seleccionados. El mapa contiene
+rutas relativas y hashes; no descarga faltantes ni acepta documentos fallidos.
+Un pasaje localizado no aprueba la interpretación del revisor. Se conservan
+`agent_eligible=false`, `silver_gold_certification=false` y `activation=none`.
+[Muestra verificable de los auditores y fallos](referencias/source-updates-20261019/curation-news-verification.json).
 
 Estas condiciones no se sustituyen por una prueba de frescura de Gold ni por
 una aprobación inventada. El calendario aprobado no aprueba tesis, datos nuevos
@@ -552,11 +602,17 @@ red o pago, ninguna escritura ni ejecución programada.
 
 PR137 y PR141 ya están integrados; la certificación local H.10 parte de
 `dfa207c` y permanece en una rama separada. Vuelos (PR134 y su contraparte
-privada33) fue integrado por sus responsables. La publicación de mercado y
-noticias continúa en PR142 y su contraparte privada35. La base local probada
+privada33) fue integrado por sus responsables. PR142 se fusionó en `194ff92c`
+el 19 de octubre de 2026, con [CI](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/39282317455)
+y [workflow Pages](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/39282317699) correctos; no se hizo una
+verificación funcional de Pages o Railway desde esta continuación. Privada35
+se fusionó a las 17:20 UTC del mismo día. La base local probada
 `03a06b8` se conserva; los adaptadores retenidos están en una rama local
 distinta, sin push, PR nuevo, merge ni activación durante esta continuación. Su integración y el
-trabajo M11 de PR140 conservan sus responsables. No se modifican esas ramas,
+trabajo M11 de PR140 conservan sus responsables. La base aislada precede a
+PR142: al integrar deberán conservarse sus correcciones de fechas GDELT y de
+noticias, sin ejecutar el parser legado sobre GDELT. No es un PR pendiente ni
+una razón para dar por exhaustivo RSS. No se modifican esas ramas,
 el sitio publicado ni el respaldo privado desde esta certificación.
 
 Viva, Volaris e Industria siguen requiriendo aprobación exacta de entidad,
@@ -845,9 +901,11 @@ implementación local descrita arriba; no son el recibo de pruebas de esta entre
   Para una edición nueva, seleccionar el documento real y revisar su formato,
   cobertura y revisiones antes de incorporarlo. Países no aporta una serie
   mensual exacta desde las gráficas del boletín; Aerocivil conserva su leyenda pendiente.
-- La publicación de Mercado y Noticias continúa en PR142 y privada35; Vuelos
-  PR134/privada33 ya fue integrado por sus responsables. M11 PR140 sigue
-  separado. Esta rama no hace esos merges ni altera sus salidas.
+- PR142/privada35 y Vuelos PR134/privada33 ya están integrados. M11 PR140
+  conserva su responsable. Integrar este cambio sobre la base vigente y
+  conservar sus controles; esta rama no hace esos merges ni altera sus salidas.
+- Resolver las decisiones curadas de perfiles y eventos descritas arriba antes
+  de cambiar su significado o elegibilidad. Las pruebas no las aprueban.
 - Verificar el calendario bancario de 2027 antes de calcular rondas de ese año.
 - Revisar y aprobar cada lote según su alcance antes de publicar o activar una
   ejecución automática. Esta continuación termina en commits locales revisables; no publica PR, merge ni ejecución automática.

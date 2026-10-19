@@ -55,3 +55,34 @@ existentes y verifica los archivos Bronze. Reportar aparte declaraciones sin
 artefacto exacto; no son trazabilidad documental. `check` no las acepta como
 respaldo de cifras solicitadas. No ejecutar Stage 7/modelos/publicación para
 superar un control de actualización por fuente.
+
+### Respaldo primario verificable por atributo o evento
+
+```bash
+python -m src.source_updates.primary_review --bundle docs/referencias/source-updates-20261019/peer-primary-review.json --root old_public=<bronze-publico>
+```
+
+Para `event-primary-review.json`, añadir raíces `context_primary`,
+`context_extra`, `am_july` y `dot_review` con `--root <id>=<carpeta>`.
+El auditor es de lectura: comprueba hash, tamaño, manifiesto, sidecar,
+localizador documental y versión del código revisado. Rechaza respuestas HTTP
+fallidas como respaldo. DOT se limita a un original de investigación sin
+registro activo, con recibo exacto; no toma prestado el alias FAA ni entra en
+Silver/Gold. Las fechas tipadas conservan mes reportado, fecha de evento,
+documento, archivo del emisor, presentación SEC y captura por separado.
+
+Un pasaje coincidente no aprueba su interpretación. Mantener
+`agent_eligible=false` y `silver_gold_certification=false`. El mapa de perfiles
+abarca cinco empresas, 100 evaluaciones y 60 evidencias; no todos los atributos
+quedan respaldados. Conservar las discrepancias Ryanair millas/indicador global
+`metric`, Viva matriz/operadora, USD por edición y pasajeros reservados frente
+a transportados. No corregir perfiles, conversiones, cohortes o Gold desde el
+auditor. Los códigos por entidad y decisiones de comparación requieren revisión.
+
+El mapa de 21 eventos contiene 54 evidencias de 24 originales; el evento DOT de
+octubre tiene respaldo parcial. No convertir un enlace 404 en hecho verificado,
+ni un documento retrospectivo en publicación contemporánea. Impacto, categoría,
+confianza y selección permanecen curados sin aprobación nueva.
+Consultar la [guía](../../../docs/catalogo-fuentes-calendario.md) y los mapas
+versionados para límites y decisiones pendientes; no inventar un endpoint para
+resolverlas.

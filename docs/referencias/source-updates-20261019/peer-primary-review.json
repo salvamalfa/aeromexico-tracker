@@ -1,0 +1,2028 @@
+{
+  "schema_version": 1,
+  "review_kind": "independent_read_only_primary_support_map",
+  "as_of": "2026-10-19",
+  "scope": [
+    "AEROMEXICO",
+    "VOLARIS",
+    "VIVA_AEROBUS",
+    "DELTA",
+    "RYANAIR"
+  ],
+  "agent_eligible": false,
+  "approval_granted": false,
+  "activation_performed": false,
+  "network_requests": 0,
+  "sources": {
+    "am_sub": {
+      "source_file": "sec/sec_submissions_current_20260820T183209Z.json",
+      "source_url": "https://data.sec.gov/submissions/CIK0001561861.json",
+      "sha256": "70f0fba78867b6a0dd070a0b8483c4c39bc53eb9e91901fa2a6bb9afa863beb0",
+      "bytes": 11107,
+      "downloaded_at": "2026-08-20T18:32:09.356570+00:00",
+      "source_system": "sec",
+      "sidecar_sha256": "324657d9790ef79c7617aaad4e5ddfcce350e416156f9be8275d453db7207e1a",
+      "body_manifest_sidecar_match": true,
+      "root_id": "old_public"
+    },
+    "vo_sub": {
+      "source_file": "sec/volaris/submissions/sec_volaris_submissions_current_20260824T031444Z.json",
+      "source_url": "https://data.sec.gov/submissions/CIK0001520504.json",
+      "sha256": "49ee2a1e1d3cee8f0cb7669e9553219362124ae32eaa9b33290ac10c274ff927",
+      "bytes": 75064,
+      "downloaded_at": "2026-08-24T03:14:44.266540+00:00",
+      "source_system": "sec",
+      "sidecar_sha256": "382eb66b193220472edafad1c3b007562cabfa28ee5bfb8eb9019dee424ba5d0",
+      "body_manifest_sidecar_match": true,
+      "root_id": "old_public"
+    },
+    "ry_sub": {
+      "source_file": "sec/ryanair/submissions/sec_ryanair_submissions_current_20260824T031455Z.json",
+      "source_url": "https://data.sec.gov/submissions/CIK0001038683.json",
+      "sha256": "38703be87d94ff2324dbf259e23880347982104c78d0723365ce249f9983d39c",
+      "bytes": 179029,
+      "downloaded_at": "2026-08-24T03:14:55.863623+00:00",
+      "source_system": "sec",
+      "sidecar_sha256": "1a0462413bcea80e0ff45a6b426d7f1aa0e8f895512d9cddf2ab23ffd512f1a9",
+      "body_manifest_sidecar_match": true,
+      "root_id": "old_public"
+    },
+    "dl_sub": {
+      "source_file": "sec/delta/submissions/sec_delta_submissions_current_20260824T031457Z.json",
+      "source_url": "https://data.sec.gov/submissions/CIK0000027904.json",
+      "sha256": "6dbf4ab0bb9b95942d0b857c24262c0c4c990cce45e937a1a71b2f74462537bc",
+      "bytes": 154623,
+      "downloaded_at": "2026-08-24T03:14:57.867518+00:00",
+      "source_system": "sec",
+      "sidecar_sha256": "5c15cabe7cd160e3df4b7b6748af5b34afaf82a2539fbb591f78ba2a18f74edb",
+      "body_manifest_sidecar_match": true,
+      "root_id": "old_public"
+    },
+    "am_annual": {
+      "source_file": "sec/filings/0001193125-26-197494/sec_0001193125-26-197494_d101275d20f_0001193125-26-197494_20260820T183709Z.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526197494/d101275d20f.htm",
+      "sha256": "6919dc4e31bb131b93aa76d777b4b508a23f7a3d5901b53cf8fc9c2553e12e93",
+      "bytes": 6601850,
+      "downloaded_at": "2026-08-20T18:37:09.297659+00:00",
+      "source_system": "sec",
+      "sidecar_sha256": "f57803ea7b138866c9381545729215ccd345d29e9d3c2a216a9ff0d0674937ef",
+      "body_manifest_sidecar_match": true,
+      "root_id": "old_public"
+    },
+    "vo_annual": {
+      "source_file": "sec/filings/volaris/0001292814-26-002559/sec_0001292814-26-002559_vlrsform20f_2025_0001292814-26-002559_20260824T031454Z.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281426002559/vlrsform20f_2025.htm",
+      "sha256": "6e1b3f8bcea449a4d611733e6c1adae0a650023b67ca8c12d74b8c40a58fff80",
+      "bytes": 5491148,
+      "downloaded_at": "2026-08-24T03:14:54.947287+00:00",
+      "source_system": "sec",
+      "sidecar_sha256": "671180d087e579ae101c308ef198696255897d43d4c107d9bdfa571f8cd27215",
+      "body_manifest_sidecar_match": true,
+      "root_id": "old_public"
+    },
+    "ry_annual": {
+      "source_file": "sec/filings/ryanair/0001104659-26-076131/sec_0001104659-26-076131_tmb-20260331x20f_0001104659-26-076131_20260824T031457Z.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1038683/000110465926076131/tmb-20260331x20f.htm",
+      "sha256": "2d82d224df2c0379dfcc69c11c1cf8828c55db57599b01fa912b70aa2e6bed5d",
+      "bytes": 6752858,
+      "downloaded_at": "2026-08-24T03:14:57.675582+00:00",
+      "source_system": "sec",
+      "sidecar_sha256": "4e42091024b6e92f3c348833ae09bb43f22147dae3ca4f17f6bb2c59e2b446d8",
+      "body_manifest_sidecar_match": true,
+      "root_id": "old_public"
+    },
+    "dl_annual": {
+      "source_file": "sec/filings/delta/0000027904-26-000013/sec_0000027904-26-000013_dal-20251231_0000027904-26-000013_20260824T031503Z.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/27904/000002790426000013/dal-20251231.htm",
+      "sha256": "d04c940b57746e25488a8dcade7e7b27639fc6f111862437ba9c06dcea461276",
+      "bytes": 2534046,
+      "downloaded_at": "2026-08-24T03:15:03.360391+00:00",
+      "source_system": "sec",
+      "sidecar_sha256": "547cae91070b48701c44f07b7ef531ef61da18f1bfa686fcaa6d551fa63f401c",
+      "body_manifest_sidecar_match": true,
+      "root_id": "old_public"
+    },
+    "viva_q2": {
+      "source_file": "peers/viva_aerobus/2026/viva_ir_viva_aerobus_earnings_2026Q2_20260824T031517Z.pdf",
+      "source_url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2026-2T26-en.pdf",
+      "sha256": "4fca922642ce3fe06743578064239107539b0546c1519a11abecb0eef098bc7f",
+      "bytes": 332739,
+      "downloaded_at": "2026-08-24T03:15:17.222032+00:00",
+      "source_system": "viva_ir",
+      "sidecar_sha256": "e48a1ed50c1a7a78354374942633b5bfc2b75e66d22d40c11bddfec2f5fdfc8c",
+      "body_manifest_sidecar_match": true,
+      "root_id": "old_public"
+    },
+    "viva_q4": {
+      "source_file": "peers/viva_aerobus/2025/viva_ir_viva_aerobus_earnings_2025Q4_20260824T031515Z.pdf",
+      "source_url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2025-4T25-en.pdf",
+      "sha256": "eec96225ac7d3c4fe270777bdb65893a0c303a1b0d7990b201a7dc9fb473d0ab",
+      "bytes": 393591,
+      "downloaded_at": "2026-08-24T03:15:15.227283+00:00",
+      "source_system": "viva_ir",
+      "sidecar_sha256": "9950e5b2dfd7d0a254a52791f859b3be999c219ef14f55dee48277c00c8ee237",
+      "body_manifest_sidecar_match": true,
+      "root_id": "old_public"
+    }
+  },
+  "evidence": {
+    "am_cik": {
+      "source_id": "am_sub",
+      "locator": {
+        "json_pointer": "/cik"
+      },
+      "value": "0001561861"
+    },
+    "am_name": {
+      "source_id": "am_sub",
+      "locator": {
+        "json_pointer": "/name"
+      },
+      "value": "Grupo Aeromexico, S.A.B. de C.V."
+    },
+    "am_fiscalYearEnd": {
+      "source_id": "am_sub",
+      "locator": {
+        "json_pointer": "/fiscalYearEnd"
+      },
+      "value": "1231"
+    },
+    "am_tickers": {
+      "source_id": "am_sub",
+      "locator": {
+        "json_pointer": "/tickers"
+      },
+      "value": [
+        "AERO"
+      ]
+    },
+    "am_exchanges": {
+      "source_id": "am_sub",
+      "locator": {
+        "json_pointer": "/exchanges"
+      },
+      "value": [
+        "NYSE"
+      ]
+    },
+    "am_stateOfIncorporationDescription": {
+      "source_id": "am_sub",
+      "locator": {
+        "json_pointer": "/stateOfIncorporationDescription"
+      },
+      "value": "Mexico"
+    },
+    "am_forms": {
+      "source_id": "am_sub",
+      "locator": {
+        "json_pointer": "/filings/recent/form"
+      },
+      "value": [
+        "20-F",
+        "3",
+        "4",
+        "424B1",
+        "6-K",
+        "8-A12B",
+        "CERT",
+        "DRS",
+        "DRS/A",
+        "F-1",
+        "F-1/A",
+        "FWP",
+        "S-8",
+        "SCHEDULE 13G",
+        "SCHEDULE 13G/A"
+      ],
+      "projection": "sorted distinct forms observed; not an exhaustive lifetime catalogue"
+    },
+    "vo_cik": {
+      "source_id": "vo_sub",
+      "locator": {
+        "json_pointer": "/cik"
+      },
+      "value": "0001520504"
+    },
+    "vo_name": {
+      "source_id": "vo_sub",
+      "locator": {
+        "json_pointer": "/name"
+      },
+      "value": "Controladora Vuela Compania de Aviacion, S.A.B. de C.V."
+    },
+    "vo_fiscalYearEnd": {
+      "source_id": "vo_sub",
+      "locator": {
+        "json_pointer": "/fiscalYearEnd"
+      },
+      "value": "1231"
+    },
+    "vo_tickers": {
+      "source_id": "vo_sub",
+      "locator": {
+        "json_pointer": "/tickers"
+      },
+      "value": [
+        "VLRS",
+        "CTTRF"
+      ]
+    },
+    "vo_exchanges": {
+      "source_id": "vo_sub",
+      "locator": {
+        "json_pointer": "/exchanges"
+      },
+      "value": [
+        "NYSE",
+        "OTC"
+      ]
+    },
+    "vo_stateOfIncorporationDescription": {
+      "source_id": "vo_sub",
+      "locator": {
+        "json_pointer": "/stateOfIncorporationDescription"
+      },
+      "value": ""
+    },
+    "vo_forms": {
+      "source_id": "vo_sub",
+      "locator": {
+        "json_pointer": "/filings/recent/form"
+      },
+      "value": [
+        "144",
+        "144/A",
+        "20-F",
+        "3",
+        "4",
+        "424B1",
+        "424B2",
+        "424B3",
+        "424B7",
+        "6-K",
+        "6-K/A",
+        "8-A12B",
+        "CERTNYS",
+        "CORRESP",
+        "CT ORDER",
+        "DEL AM",
+        "DRS",
+        "DRS/A",
+        "EFFECT",
+        "F-1",
+        "F-1/A",
+        "F-3",
+        "F-3/A",
+        "F-3ASR",
+        "F-3MEF",
+        "F-6",
+        "SC 13D",
+        "SC 13G",
+        "SC 13G/A",
+        "SCHEDULE 13D/A",
+        "SCHEDULE 13G",
+        "UPLOAD"
+      ],
+      "projection": "sorted distinct forms observed; not an exhaustive lifetime catalogue"
+    },
+    "ry_cik": {
+      "source_id": "ry_sub",
+      "locator": {
+        "json_pointer": "/cik"
+      },
+      "value": "0001038683"
+    },
+    "ry_name": {
+      "source_id": "ry_sub",
+      "locator": {
+        "json_pointer": "/name"
+      },
+      "value": "RYANAIR HOLDINGS PLC"
+    },
+    "ry_fiscalYearEnd": {
+      "source_id": "ry_sub",
+      "locator": {
+        "json_pointer": "/fiscalYearEnd"
+      },
+      "value": "0331"
+    },
+    "ry_tickers": {
+      "source_id": "ry_sub",
+      "locator": {
+        "json_pointer": "/tickers"
+      },
+      "value": [
+        "RYAAY",
+        "RYAOF"
+      ]
+    },
+    "ry_exchanges": {
+      "source_id": "ry_sub",
+      "locator": {
+        "json_pointer": "/exchanges"
+      },
+      "value": [
+        "Nasdaq",
+        "OTC"
+      ]
+    },
+    "ry_stateOfIncorporationDescription": {
+      "source_id": "ry_sub",
+      "locator": {
+        "json_pointer": "/stateOfIncorporationDescription"
+      },
+      "value": ""
+    },
+    "ry_forms": {
+      "source_id": "ry_sub",
+      "locator": {
+        "json_pointer": "/filings/recent/form"
+      },
+      "value": [
+        "20-F",
+        "3",
+        "4",
+        "424B3",
+        "6-K",
+        "CORRESP",
+        "SC 13G",
+        "SC 13G/A",
+        "SCHEDULE 13G",
+        "SCHEDULE 13G/A",
+        "UPLOAD"
+      ],
+      "projection": "sorted distinct forms observed; not an exhaustive lifetime catalogue"
+    },
+    "dl_cik": {
+      "source_id": "dl_sub",
+      "locator": {
+        "json_pointer": "/cik"
+      },
+      "value": "0000027904"
+    },
+    "dl_name": {
+      "source_id": "dl_sub",
+      "locator": {
+        "json_pointer": "/name"
+      },
+      "value": "DELTA AIR LINES, INC."
+    },
+    "dl_fiscalYearEnd": {
+      "source_id": "dl_sub",
+      "locator": {
+        "json_pointer": "/fiscalYearEnd"
+      },
+      "value": "1231"
+    },
+    "dl_tickers": {
+      "source_id": "dl_sub",
+      "locator": {
+        "json_pointer": "/tickers"
+      },
+      "value": [
+        "DAL"
+      ]
+    },
+    "dl_exchanges": {
+      "source_id": "dl_sub",
+      "locator": {
+        "json_pointer": "/exchanges"
+      },
+      "value": [
+        "NYSE"
+      ]
+    },
+    "dl_stateOfIncorporationDescription": {
+      "source_id": "dl_sub",
+      "locator": {
+        "json_pointer": "/stateOfIncorporationDescription"
+      },
+      "value": "DE"
+    },
+    "dl_forms": {
+      "source_id": "dl_sub",
+      "locator": {
+        "json_pointer": "/filings/recent/form"
+      },
+      "value": [
+        "10-K",
+        "10-K/A",
+        "10-Q",
+        "13F-HR",
+        "144",
+        "144/A",
+        "3",
+        "4",
+        "4/A",
+        "424B2",
+        "424B5",
+        "8-K",
+        "8-K/A",
+        "CB",
+        "CB/A",
+        "CORRESP",
+        "CT ORDER",
+        "DEF 14A",
+        "DEFA14A",
+        "FWP",
+        "N-PX",
+        "POSASR",
+        "PX14A6G",
+        "S-3ASR",
+        "S-8",
+        "SC 13D",
+        "SC 13D/A",
+        "SC 13G",
+        "SC 13G/A",
+        "SC TO-C",
+        "SCHEDULE 13D/A",
+        "SCHEDULE 13G",
+        "SCHEDULE 13G/A",
+        "SEC STAFF LETTER",
+        "UPLOAD"
+      ],
+      "projection": "sorted distinct forms observed; not an exhaustive lifetime catalogue"
+    },
+    "am_standard": {
+      "source_id": "am_annual",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 873141,
+        "normalized_char_end": 873541
+      },
+      "matched_phrase": "These consolidated financial statements have been prepared in accordance",
+      "excerpt": "These consolidated financial statements have been prepared in accordance with IFRS Accounting Standards (“IFRS”) as issued by the International Accounting Standards Board (“IASB”). The designation IFRS includes all standards issued by the IASB and related interpretations issued by the International Financial Reporting Interpretations Committee (“IFRIC”). On April 30, 2026, the Company’s Chief Exec"
+    },
+    "am_currency": {
+      "source_id": "am_annual",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 128863,
+        "normalized_char_end": 129263
+      },
+      "matched_phrase": "We use the dollar as the presentation currency",
+      "excerpt": "We use the dollar as the presentation currency for our audited consolidated financial statements, which is also our functional currency. We believe that the use of the dollar as our presentation currency facilitates the analysis of our results and financial condition by a wide range of users. Furthermore, we believe that the use of the dollar as our presentation currency improves the comparability"
+    },
+    "am_usd_definition": {
+      "source_id": "am_annual",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 114930,
+        "normalized_char_end": 115330
+      },
+      "matched_phrase": "all references to “U.S. dollars,”",
+      "excerpt": "all references to “U.S. dollars,” “dollars,” “U.S.$” or “$” are to U.S. dollars, the legal currency of the United States, and references to “pesos” or “Ps.” are to Mexican pesos, the legal currency of Mexico. Amounts converted to pesos are for the convenience of the reader and should not be construed as representations that the peso amounts actually represent such U.S. dollar amounts or could be c"
+    },
+    "am_units": {
+      "source_id": "am_annual",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 117633,
+        "normalized_char_end": 118033
+      },
+      "matched_phrase": "means Available Seat Mile",
+      "excerpt": "means Available Seat Mile, a unit used by airlines to measure capacity, which consists of the number of seats available for passengers, regardless of whether occupied, multiplied by the number of miles flown by the aircraft carrying those seats. 1 Table of Contents “ ASPA ” means the Aviation Pilots Union of Mexico ( Asociación Sindical de Pilotos Aviadores de México ). “ ASSA ” means the Flight A"
+    },
+    "am_model": {
+      "source_id": "am_annual",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 587715,
+        "normalized_char_end": 588115
+      },
+      "matched_phrase": "We are an FSC focused",
+      "excerpt": "We are an FSC focused primarily on business travelers and less price-sensitive leisure and VFR travelers. Our main competitors in the Mexican domestic market are ULCC carriers that primarily attract VFR and price-sensitive leisure travelers and lower income travelers, many of whom are new to air travel. While air travel continues to gain popularity in Mexico, we also compete with ground transporta"
+    },
+    "am_entities": {
+      "source_id": "am_annual",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 114421,
+        "normalized_char_end": 114821
+      },
+      "matched_phrase": "the term “Grupo Aeroméxico”",
+      "excerpt": "the term “Grupo Aeroméxico” to refer to Grupo Aeroméxico, S.A.B. de C.V., “Aeroméxico” to refer to Aerovías de México, S.A. de C.V. and “Aeroméxico Connect” to refer to Aerolitoral, S.A. de C.V. Unless otherwise indicated, or the context otherwise requires, the terms “our company,” “we,” “our,” “ours,” “us” or similar terms refer to Grupo Aeroméxico, together with Aeroméxico and Aeroméxico Connect"
+    },
+    "am_listings": {
+      "source_id": "am_annual",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 762129,
+        "normalized_char_end": 762529
+      },
+      "matched_phrase": "The ADSs are listed on the New York Stock Exchange",
+      "excerpt": "The ADSs are listed on the New York Stock Exchange under the symbol “AERO.” The common shares are listed on the Mexican Stock Exchange. 160 Table of Contents B. Plan Of Distribution Not applicable. C. Markets See “ Item 9. The Offer and Listing—A. Offer and Listing Details .” D. Selling Shareholders Not applicable. E. Dilution Not applicable. F. Expenses of the Issue Not applicable. ITEM 10. ADDIT"
+    },
+    "vo_standard": {
+      "source_id": "vo_annual",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 104725,
+        "normalized_char_end": 105125
+      },
+      "matched_phrase": "prepared in accordance with IFRS Accounting Standards",
+      "excerpt": "prepared in accordance with IFRS Accounting Standards (International Financial Reporting Standards, “IFRS”), as issued by the International Accounting Standards Board (“IASB”). These audited consolidated financial statements are included elsewhere in this annual report. Unless otherwise specified, all references to “U.S. dollars,” “dollars,” “U.S. $” or “$” are to United States dollars, the legal "
+    },
+    "vo_currency": {
+      "source_id": "vo_annual",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 821200,
+        "normalized_char_end": 821600
+      },
+      "matched_phrase": "The presentation currency of the Company",
+      "excerpt": "The presentation currency of the Company’s consolidated financial statements is the U.S. dollar. All values in the consolidated financial statements are rounded to the nearest thousand (US$000), except when otherwise indicated. The Company has consistently applied its accounting policies to all periods presented in these consolidated financial statements and provide comparative information in resp"
+    },
+    "vo_model_country": {
+      "source_id": "vo_annual",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 300784,
+        "normalized_char_end": 301184
+      },
+      "matched_phrase": "We are a ULCC incorporated under the laws of Mexico",
+      "excerpt": "We are a ULCC incorporated under the laws of Mexico. Our primary corporate offices and headquarters are located in Mexico City at Av. Antonio Dovalí Jaime No. 70, 13th Floor, Tower B, Colonia Zedec Santa Fe, Alcaldía Álvaro Obregón, Mexico City, Mexico, zip code 01210. Our authorized representative agent in the United States is Puglisi & Associates, located at 850 Library Avenue, Suite 204, Newark"
+    },
+    "vo_units": {
+      "source_id": "vo_annual",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 97550,
+        "normalized_char_end": 97950
+      },
+      "matched_phrase": "Available seat miles” or “ASMs” means",
+      "excerpt": "Available seat miles” or “ASMs” means the number of seats available for passengers multiplied by the number of miles flown. “Average daily aircraft utilization” means flight hours or block hours, as applicable, divided by number of days in the period divided by average aircraft in the period. “Average economic fuel cost per gallon” means total fuel expense net of hedging effect, divided by the tot"
+    },
+    "vo_listings": {
+      "source_id": "vo_annual",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 71637,
+        "normalized_char_end": 72037
+      },
+      "matched_phrase": "VLRS New York Stock Exchange",
+      "excerpt": "VLRS New York Stock Exchange Series A shares of common stock, no par value VOLAR A Mexican Stock Exchange Securities registered or to be registered pursuant to Section 12(g) of the Act: None Securities for which there is a reporting obligation pursuant to Section 15(d) of the Act: None Indicate the number of outstanding shares of each of the issuer’s classes of capital or common stock as of the cl"
+    },
+    "ry_standard": {
+      "source_id": "ry_annual",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 106100,
+        "normalized_char_end": 106500
+      },
+      "matched_phrase": "The Company publishes its annual and interim",
+      "excerpt": "The Company publishes its annual and interim consolidated financial statements in accordance with International Financial Reporting Standards Accounting Standards as issued by the International Accounting Standards Board (“IASB”). ​ Additionally, in accordance with its legal obligation to comply with the International Accounting Standards Regulation (EC 1606 (2002)), which applies throughout the E"
+    },
+    "ry_currency_country": {
+      "source_id": "ry_annual",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 177393,
+        "normalized_char_end": 177793
+      },
+      "matched_phrase": "The Company is headquartered in Ireland and its reporting currency",
+      "excerpt": "The Company is headquartered in Ireland and its reporting currency is the euro. Generally, fluctuations in foreign currencies, including devaluations, cannot be predicted and can significantly affect the value of the Group’s assets located (or revenues generated) outside of the Eurozone. ​ Ryanair Group airlines predominantly operate to/from countries within the Eurozone and have significant opera"
+    },
+    "ry_model": {
+      "source_id": "ry_annual",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 112053,
+        "normalized_char_end": 112453
+      },
+      "matched_phrase": "Ryanair Holdings operates a low-fare",
+      "excerpt": "Ryanair Holdings operates a low-fare, low cost scheduled airline group serving short-haul, point-to-point routes from 95 bases to airports across Europe and North Africa, which together are referred to as “Ryanair’s bases.” For a list of these bases, see “Item 4. Information on the Company—Route System, Scheduling and Fares.” Ryanair pioneered the low-fares air travel model in Europe in the early "
+    },
+    "ry_entities": {
+      "source_id": "ry_annual",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 217956,
+        "normalized_char_end": 218356
+      },
+      "matched_phrase": "Ryanair Holdings was incorporated in 1996 as a holding company",
+      "excerpt": "Ryanair Holdings was incorporated in 1996 as a holding company for Ryanair Designated Activity Company (“DAC”). The latter operates a low-fare, scheduled-passenger airline serving short-haul, point-to-point routes mainly within Europe. In FY19, the Company set up Buzz (a Polish charter and scheduled passenger airline with a Polish AOC), acquired Lauda (a Maltese wet lease provider to the Ryanair G"
+    },
+    "ry_miles": {
+      "source_id": "ry_annual",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 117900,
+        "normalized_char_end": 118300
+      },
+      "matched_phrase": "Average Sector Length (miles)",
+      "excerpt": "Average Sector Length (miles) 790 783 780 766 772 ​ Sectors Flown ('000) 1,151.8 1,109.3 1,022.4 946.6 620.5 ​ Number of Airports Served 235 228 235 222 223 ​ Average Daily Flight Hour Utilization (hours) 9.48 9.57 9.38 9.40 6.88 ​ ​ ​ 3 Table of Contents RISK FACTORS ​ Risks Related to the Company ​ The Company may not be successful in increasing fares to cover rising business costs. Ryanair oper"
+    },
+    "ry_asm": {
+      "source_id": "ry_annual",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 649636,
+        "normalized_char_end": 650036
+      },
+      "matched_phrase": "Available seat miles (ASM)",
+      "excerpt": "Available seat miles (ASM) Represents total seats available during the period multiplied by the average sector length. ​ ​ ​ ​ ​ ​ ​ Fiscal year ended March 31 2026 2025 2024 2023 2022 Seats available 220.0m 211.9m 194.3m 179.9m 117.3m Average sector length (miles) – See page 3 790 783 780 766 772 Available seat miles (ASM) 174bn 166bn 152bn 138bn 91bn ​ Average Booked Passenger Fare Represents th"
+    },
+    "ry_booked": {
+      "source_id": "ry_annual",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 117791,
+        "normalized_char_end": 118191
+      },
+      "matched_phrase": "Passengers Booked (millions)",
+      "excerpt": "Passengers Booked (millions) 208 200 184 169 97 ​ Booked Passenger Load Factor 94% ​ 94% ​ 94% ​ 93% ​ 82% ​ Average Sector Length (miles) 790 783 780 766 772 ​ Sectors Flown ('000) 1,151.8 1,109.3 1,022.4 946.6 620.5 ​ Number of Airports Served 235 228 235 222 223 ​ Average Daily Flight Hour Utilization (hours) 9.48 9.57 9.38 9.40 6.88 ​ ​ ​ 3 Table of Contents RISK FACTORS ​ Risks Related to the"
+    },
+    "dl_standard": {
+      "source_id": "dl_annual",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 239552,
+        "normalized_char_end": 239952
+      },
+      "matched_phrase": "in conformity with U.S. generally accepted accounting principles",
+      "excerpt": "in conformity with U.S. generally accepted accounting principles. We also have audited, in accordance with the standards of the Public Company Accounting Oversight Board (United States) (PCAOB), the Company's internal control over financial reporting as of December 31, 2025, based on criteria established in Internal Control-Integrated Framework issued by the Committee of Sponsoring Organizations o"
+    },
+    "dl_model_country": {
+      "source_id": "dl_annual",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 42758,
+        "normalized_char_end": 43158
+      },
+      "matched_phrase": "As a global airline based in the United States",
+      "excerpt": "As a global airline based in the United States, we connect customers across our expansive global network with a commitment to ensuring that the future of travel is connected, personalized and enjoyable. In 2025, we served over 200 million customers safely, reliably and with industry-leading customer service innovation. Competitive Advantages and Brand Strength As we celebrated our centennial year "
+    },
+    "dl_units": {
+      "source_id": "dl_annual",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 191989,
+        "normalized_char_end": 192389
+      },
+      "matched_phrase": "Revenue passenger miles (in millions)",
+      "excerpt": "Revenue passenger miles (in millions) 249,578 246,145 Available seat miles (in millions) 298,045 288,394 Passenger mile yield 20.74 ¢ 20.68 ¢ Passenger revenue per available seat mile (\"PRASM\") 17.37 ¢ 17.65 ¢ Total revenue per available seat mile (\"TRASM\") 21.26 ¢ 21.37 ¢ TRASM, adjusted (2) 19.56 ¢ 19.76 ¢ Cost per available seat mile (\"CASM\") 19.31 ¢ 19.30 ¢ CASM-Ex (2) 13.86 ¢ 13.54 ¢ Passenge"
+    },
+    "viva_entities": {
+      "source_id": "viva_q2",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 108,
+        "normalized_char_end": 488,
+        "pdf_page_1based": 1
+      },
+      "matched_phrase": "Mexico City, July",
+      "excerpt": "Mexico City, July 24th, 2026 - Grupo Viva Aerobus, S.A. de C.V. (“Viva”), the parent company of Aeroenlaces Nacionales S.A. de C.V., announced today its 2Q 2026 financial results. US$ Million1 2Q 2026 2Q 2025 % Var 6M 2026 6M 2025 % Var Financial Highlights Total Operating Revenue 609 549 10.9% 1,137 1,040 9.3% Operating Profit (Loss) (EBIT) -38 34 N/A -98 17 N/A EBIT margin -6"
+    },
+    "viva_currency": {
+      "source_id": "viva_q2",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 1190,
+        "normalized_char_end": 1590,
+        "pdf_page_1based": 1
+      },
+      "matched_phrase": "Viva’s functional and reporting currency",
+      "excerpt": "Viva’s functional and reporting currency is the U.S. Dollar. Juan Carlos Zuazua, Chief Executive Officer, commented: “The second quarter was defined by an extraordinarily elevated fuel environment, reflecting the sustained impact of geopolitical disruptions that emerged during the end of the first quarter. Consumer behavior remained cautious and selective, with demand responding to promotional act"
+    },
+    "viva_currency_change": {
+      "source_id": "viva_q2",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 1189,
+        "normalized_char_end": 1699,
+        "pdf_page_1based": 4
+      },
+      "matched_phrase": "Effective October 1 st, 2022",
+      "excerpt": "Effective October 1 st, 2022, Viva decided to change its reporting currency from Mexican Pesos (“MX$”) to U.S. Dollar (“US$”) based on International Accounting Standard 21, “The Effects of Changes in Foreign Exchange Rates ” (“IAS 21”) under International Financial Reporting Standards (“IFRS”), having the authorization of Grupo Viva Aerobus, S.A. de C.V. Board of Directors, considering the previous favorable opinion of the Audit Committee. KPMG’s auditor’s letter acknowledges Viva’s change in reporting cu"
+    },
+    "viva_model": {
+      "source_id": "viva_q2",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 1250,
+        "normalized_char_end": 1650,
+        "pdf_page_1based": 5
+      },
+      "matched_phrase": "consistent with our ultra -low-cost carrier",
+      "excerpt": "consistent with our ultra -low-cost carrier (“ULCC”) model; changes in Viva’ s fuel cost, the effectiveness of Viva’s fuel cost, hedges and Viva’s ability to hedge fuel costs through options, swaps and other financial instruments; the impact of Mexican and worldwide economic conditions on customer travel behavior; actual or threatened terrorist attacks, global instability and potential U.S. milita"
+    },
+    "viva_asm": {
+      "source_id": "viva_q2",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 11,
+        "normalized_char_end": 411,
+        "pdf_page_1based": 6
+      },
+      "matched_phrase": "ASMs: Stands for",
+      "excerpt": "ASMs: Stands for \"available seat miles\" and represents the number of seats available for passengers multiplied by the number of miles. Average operating aircraft utilization is calculated by block hours per aircraft per day , meaning the total number of block hours divided by the average operating fleet and divided by the number of days in the period. Average total aircraft utilization is calculat"
+    },
+    "viva_booked": {
+      "source_id": "viva_q2",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 2373,
+        "normalized_char_end": 2773,
+        "pdf_page_1based": 6
+      },
+      "matched_phrase": "Passengers: Customers",
+      "excerpt": "Passengers: Customers who purchased their plane ticket to fly during the month referred in the report, regardless of whether they flew or not. Yield: Defined as total operating revenues divided by revenue passenger miles (RPMs). Starting January 1, 2020, the Company determined the US Dollar (USD) as its functional currency. Starting October 1, 2022, the Company determined the US Dollar (USD) as it"
+    },
+    "viva_lf": {
+      "source_id": "viva_q2",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 1959,
+        "normalized_char_end": 2359,
+        "pdf_page_1based": 6
+      },
+      "matched_phrase": "Load Factor: Represents",
+      "excerpt": "Load Factor: Represents the number of miles flown by scheduled passengers (RPMs) divided by scheduled available seat miles (ASMs) and expressed as a percentage. TRASM: Stands for “total operating revenue per available seat mile” and represents our total operating revenue divided by our total available seat miles. RPMs: Stands for “revenue passenger miles” and represents the number of miles flown b"
+    },
+    "viva_year_end": {
+      "source_id": "viva_q4",
+      "locator": {
+        "normalization": "collapse whitespace over document itertext (HTML) or page extract_text (pypdf); preserve all other characters",
+        "normalized_char_start": 89,
+        "normalized_char_end": 489,
+        "pdf_page_1based": 8
+      },
+      "matched_phrase": "Twelve-month period ended December 31, 2025",
+      "excerpt": "Twelve-month period ended December 31, 2025 and 2024 (Financial Information in Thousands of U.S. Dollars, unless otherwise stated) Financial and Operational Indicators 12M 2025 12M 2024 % Var Total operating revenue 2,376,369 2,564,884 -7.3% EBITDAR 873,472 1,077,423 -18.9% EBITDAR margin 36.8% 42.0% -5.3pp EBITDA 701,506 957,732 -26.8% EBITDA margin 29.5% 37.3% -7.8pp Traffic Metrics ASMs (millio"
+    },
+    "dl_usd_unit": {
+      "source_id": "dl_annual",
+      "locator": {
+        "html_xpath": "/html/body/div[1]/ix:header/ix:resources/xbrli:unit[1]"
+      },
+      "attributes": {
+        "id": "usd"
+      },
+      "excerpt": "iso4217:USD"
+    },
+    "dl_usd_fact": {
+      "source_id": "dl_annual",
+      "locator": {
+        "html_xpath": "/html/body/div[1177]/table/tr[23]/td[4]/span/ix:nonfraction"
+      },
+      "attributes": {
+        "unitref": "usd",
+        "contextref": "c-4",
+        "decimals": "-6",
+        "name": "us-gaap:Assets",
+        "format": "ixt:num-dot-decimal",
+        "scale": "6",
+        "id": "f-86"
+      },
+      "excerpt": "81,317"
+    }
+  },
+  "carriers": {
+    "AEROMEXICO": {
+      "profile": {
+        "carrier_key": "AEROMEXICO",
+        "cik": "0001561861",
+        "reporting_currency": "USD",
+        "unit_system": "imperial",
+        "fiscal_year_end_month": 12,
+        "forms": [
+          "6-K",
+          "20-F"
+        ],
+        "metric_patterns": {
+          "asm_total": {
+            "patterns": [
+              "total asms",
+              "asms (itinerary + charter"
+            ],
+            "unit_raw": "ASMs (millions)",
+            "unit_normalized": "miles",
+            "scale_multiplier": 1000000,
+            "table_name": "operating"
+          },
+          "load_factor_total": {
+            "patterns": [
+              "load factor on scheduled flights",
+              "load factor"
+            ],
+            "unit_raw": "%",
+            "unit_normalized": "fraction",
+            "scale_multiplier": 0.01,
+            "table_name": "operating"
+          },
+          "total_revenue": {
+            "patterns": [
+              "total revenue"
+            ],
+            "unit_raw": "USD millions",
+            "unit_normalized": "usd",
+            "scale_multiplier": 1000000,
+            "table_name": "financial"
+          }
+        }
+      },
+      "dimension": {
+        "carrier_name": "Grupo Aeroméxico S.A.B. de C.V.",
+        "carrier_name_short": "Aeroméxico",
+        "iata_code": "AM",
+        "icao_code": "AMX",
+        "country": "Mexico",
+        "business_model": "network",
+        "is_public": true,
+        "ticker": "AERO",
+        "exchange": "NYSE + BMV",
+        "cik": "1561861",
+        "reporting_standard": "IFRS",
+        "reporting_currency": "USD",
+        "unit_system": "imperial",
+        "fiscal_year_end_month": 12,
+        "parent_carrier_key": null,
+        "is_peer": false,
+        "is_focus": true
+      },
+      "attribute_assessments": {
+        "carrier_name_short": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Project display/cohort/root-selection decision; not issuer approval or primary-source fact.",
+          "agent_eligible": false
+        },
+        "is_peer": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Project display/cohort/root-selection decision; not issuer approval or primary-source fact.",
+          "agent_eligible": false
+        },
+        "is_focus": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Project display/cohort/root-selection decision; not issuer approval or primary-source fact.",
+          "agent_eligible": false
+        },
+        "parent_carrier_key": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Project display/cohort/root-selection decision; not issuer approval or primary-source fact.",
+          "agent_eligible": false
+        },
+        "cik": {
+          "status": "supported_with_normalization",
+          "evidence_ids": [
+            "am_cik"
+          ],
+          "qualification": "CIK strips leading zeroes; fiscal month derived from MMDD; display name accent/case/punctuation is curated normalization.",
+          "agent_eligible": false
+        },
+        "carrier_name": {
+          "status": "supported_with_normalization",
+          "evidence_ids": [
+            "am_name"
+          ],
+          "qualification": "CIK strips leading zeroes; fiscal month derived from MMDD; display name accent/case/punctuation is curated normalization.",
+          "agent_eligible": false
+        },
+        "fiscal_year_end_month": {
+          "status": "supported_with_normalization",
+          "evidence_ids": [
+            "am_fiscalYearEnd"
+          ],
+          "qualification": "Source MMDD; month derived deterministically. Captured catalogue is dated, not live status.",
+          "agent_eligible": false
+        },
+        "ticker": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "am_tickers"
+          ],
+          "qualification": "Selected ADS/ticker/exchange only; source may list more securities. Exchange-to-security mapping must be retained.",
+          "agent_eligible": false
+        },
+        "exchange": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "am_exchanges",
+            "am_listings"
+          ],
+          "qualification": "Selected ADS/ticker/exchange only; source may list more securities. Exchange-to-security mapping must be retained.",
+          "agent_eligible": false
+        },
+        "is_public": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "am_tickers",
+            "am_exchanges"
+          ],
+          "qualification": "Listed securities as of retained source; equity listing flag is a project interpretation, not a timeless status.",
+          "agent_eligible": false
+        },
+        "reporting_standard": {
+          "status": "supported",
+          "evidence_ids": [
+            "am_standard"
+          ],
+          "qualification": "Current retained consolidated annual statements; no universal historical guarantee.",
+          "agent_eligible": false
+        },
+        "reporting_currency": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "am_currency"
+          ],
+          "qualification": "Current retained consolidated report currency, not every operating metric, subsidiary or historical period.",
+          "agent_eligible": false
+        },
+        "forms": {
+          "status": "curated_parser_allowlist",
+          "evidence_ids": [
+            "am_forms"
+          ],
+          "qualification": "Observed form evidence supports selected allowed forms; list is not a claim of all issuer forms. Ryanair catalogue also has 6-K.",
+          "agent_eligible": false
+        },
+        "country": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "am_stateOfIncorporationDescription"
+          ],
+          "qualification": "Source meaning differs: incorporation jurisdiction (AM/VO), based in US (Delta), headquarters Ireland (Ryanair). Do not conflate operating nationality/AOC.",
+          "agent_eligible": false
+        },
+        "business_model": {
+          "status": "curated_mapping",
+          "evidence_ids": [
+            "am_model"
+          ],
+          "qualification": "Literal issuer description retained. Mapping FSC/global network/low-cost into project network/ulcc enum requires curated decision; no inferred rating.",
+          "agent_eligible": false
+        },
+        "unit_system": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "am_units"
+          ],
+          "qualification": "Ryanair blanket metric flag conflicts with FY2026 miles/ASM source. Other imperial flags are shorthand for specified mileage metrics, not every report unit. Do not use carrier-wide flag to infer a row unit.",
+          "agent_eligible": false
+        },
+        "iata_code": {
+          "status": "unresolved_operator_mapping",
+          "evidence_ids": [],
+          "qualification": "No selected primary source directly proves holding/group-to-current airline designator mapping. AOC/operator vs issuer must remain separate; do not infer from name.",
+          "agent_eligible": false
+        },
+        "icao_code": {
+          "status": "unresolved_operator_mapping",
+          "evidence_ids": [],
+          "qualification": "No selected primary source directly proves holding/group-to-current airline designator mapping. Incidental substring/concession number is not a code registry.",
+          "agent_eligible": false
+        },
+        "carrier_key": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Internal stable project key.",
+          "agent_eligible": false
+        },
+        "metric_patterns": {
+          "status": "curated_parser_contract",
+          "evidence_ids": [
+            "am_units"
+          ],
+          "qualification": "Regexes, selected scale factors and normalized names require row/edition parser checks. Annual vs quarterly raw scales differ (e.g. Volaris annual thousands vs selected quarterly millions). Booked passengers (Viva/Ryanair) are not proof of boarded/transported passengers.",
+          "agent_eligible": false
+        }
+      }
+    },
+    "VOLARIS": {
+      "profile": {
+        "carrier_key": "VOLARIS",
+        "cik": "0001520504",
+        "reporting_currency": "USD",
+        "unit_system": "imperial",
+        "fiscal_year_end_month": 12,
+        "forms": [
+          "6-K",
+          "20-F"
+        ],
+        "metric_patterns": {
+          "asm_total": {
+            "patterns": [
+              "available seat miles \\(asms\\) \\(millions.*?\\)",
+              "^seat miles \\(asms\\) \\(millions.*?\\)"
+            ],
+            "unit_raw": "ASMs (millions)",
+            "unit_normalized": "miles",
+            "scale_multiplier": 1000000,
+            "table_name": "operating"
+          },
+          "rpm_total": {
+            "patterns": [
+              "revenue passenger miles \\(rpms\\) \\(millions.*?\\)",
+              "^passenger miles \\(rpms\\) \\(millions.*?\\)"
+            ],
+            "unit_raw": "RPMs (millions)",
+            "unit_normalized": "miles",
+            "scale_multiplier": 1000000,
+            "table_name": "operating"
+          },
+          "passengers": {
+            "patterns": [
+              "^passengers \\(thousands?, scheduled & charter\\)",
+              "^(?:booked )?passengers \\(thousands\\)"
+            ],
+            "unit_raw": "passengers (thousands)",
+            "unit_normalized": "count",
+            "scale_multiplier": 1000,
+            "table_name": "operating"
+          },
+          "load_factor_total": {
+            "patterns": [
+              "load factor(?: \\(\\d+\\))?",
+              "^factor \\(scheduled, rpms/asms\\)"
+            ],
+            "unit_raw": "%",
+            "unit_normalized": "fraction",
+            "scale_multiplier": 0.01,
+            "table_name": "operating"
+          },
+          "casm": {
+            "patterns": [
+              "operating expenses per asm \\(casm\\) \\(cents\\)(?: \\(\\d+\\))?",
+              "^expenses per asm \\(casm\\) \\(cents\\)",
+              "^casm \\(cents\\)"
+            ],
+            "unit_raw": "USD cents",
+            "unit_normalized": "usd_cents",
+            "scale_multiplier": 1,
+            "table_name": "operating"
+          },
+          "casm_ex_fuel": {
+            "patterns": [
+              "^casm ex[- ]fuel \\(cents\\)",
+              "^casm excl\\. fuel \\(cents\\)",
+              "^casm ex[- ]fuel(?= [\\d(])"
+            ],
+            "unit_raw": "USD cents",
+            "unit_normalized": "usd_cents",
+            "scale_multiplier": 1,
+            "table_name": "operating"
+          },
+          "trasm": {
+            "patterns": [
+              "total operating revenue per asm \\(trasm\\) \\(cents\\)(?: \\(\\d+\\))?",
+              "^operating revenue per asm \\(trasm\\) \\(cents\\)",
+              "trasm \\(cents\\)"
+            ],
+            "unit_raw": "USD cents",
+            "unit_normalized": "usd_cents",
+            "scale_multiplier": 1,
+            "table_name": "operating"
+          },
+          "total_revenue": {
+            "patterns": [
+              "total operating revenues \\(millions\\)"
+            ],
+            "unit_raw": "USD millions",
+            "unit_normalized": "usd",
+            "scale_multiplier": 1000000,
+            "table_name": "financial"
+          }
+        }
+      },
+      "dimension": {
+        "carrier_name": "Controladora Vuela Compañía de Aviación, S.A.B. de C.V.",
+        "carrier_name_short": "Volaris",
+        "iata_code": "Y4",
+        "icao_code": "VOI",
+        "country": "Mexico",
+        "business_model": "ulcc",
+        "is_public": true,
+        "ticker": "VLRS",
+        "exchange": "NYSE + BMV",
+        "cik": "1520504",
+        "reporting_standard": "IFRS",
+        "reporting_currency": "USD",
+        "unit_system": "imperial",
+        "fiscal_year_end_month": 12,
+        "parent_carrier_key": null,
+        "is_peer": true,
+        "is_focus": false
+      },
+      "attribute_assessments": {
+        "carrier_name_short": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Project display/cohort/root-selection decision; not issuer approval or primary-source fact.",
+          "agent_eligible": false
+        },
+        "is_peer": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Project display/cohort/root-selection decision; not issuer approval or primary-source fact.",
+          "agent_eligible": false
+        },
+        "is_focus": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Project display/cohort/root-selection decision; not issuer approval or primary-source fact.",
+          "agent_eligible": false
+        },
+        "parent_carrier_key": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Project display/cohort/root-selection decision; not issuer approval or primary-source fact.",
+          "agent_eligible": false
+        },
+        "cik": {
+          "status": "supported_with_normalization",
+          "evidence_ids": [
+            "vo_cik"
+          ],
+          "qualification": "CIK strips leading zeroes; fiscal month derived from MMDD; display name accent/case/punctuation is curated normalization.",
+          "agent_eligible": false
+        },
+        "carrier_name": {
+          "status": "supported_with_normalization",
+          "evidence_ids": [
+            "vo_name"
+          ],
+          "qualification": "CIK strips leading zeroes; fiscal month derived from MMDD; display name accent/case/punctuation is curated normalization.",
+          "agent_eligible": false
+        },
+        "fiscal_year_end_month": {
+          "status": "supported_with_normalization",
+          "evidence_ids": [
+            "vo_fiscalYearEnd"
+          ],
+          "qualification": "Source MMDD; month derived deterministically. Captured catalogue is dated, not live status.",
+          "agent_eligible": false
+        },
+        "ticker": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "vo_tickers"
+          ],
+          "qualification": "Selected ADS/ticker/exchange only; source may list more securities. Exchange-to-security mapping must be retained.",
+          "agent_eligible": false
+        },
+        "exchange": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "vo_exchanges",
+            "vo_listings"
+          ],
+          "qualification": "Selected ADS/ticker/exchange only; source may list more securities. Exchange-to-security mapping must be retained.",
+          "agent_eligible": false
+        },
+        "is_public": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "vo_tickers",
+            "vo_exchanges"
+          ],
+          "qualification": "Listed securities as of retained source; equity listing flag is a project interpretation, not a timeless status.",
+          "agent_eligible": false
+        },
+        "reporting_standard": {
+          "status": "supported",
+          "evidence_ids": [
+            "vo_standard"
+          ],
+          "qualification": "Current retained consolidated annual statements; no universal historical guarantee.",
+          "agent_eligible": false
+        },
+        "reporting_currency": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "vo_currency"
+          ],
+          "qualification": "Current retained consolidated report currency, not every operating metric, subsidiary or historical period.",
+          "agent_eligible": false
+        },
+        "forms": {
+          "status": "curated_parser_allowlist",
+          "evidence_ids": [
+            "vo_forms"
+          ],
+          "qualification": "Observed form evidence supports selected allowed forms; list is not a claim of all issuer forms. Ryanair catalogue also has 6-K.",
+          "agent_eligible": false
+        },
+        "country": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "vo_model_country"
+          ],
+          "qualification": "Source meaning differs: incorporation jurisdiction (AM/VO), based in US (Delta), headquarters Ireland (Ryanair). Do not conflate operating nationality/AOC.",
+          "agent_eligible": false
+        },
+        "business_model": {
+          "status": "curated_mapping",
+          "evidence_ids": [
+            "vo_model_country"
+          ],
+          "qualification": "Literal issuer description retained. Mapping FSC/global network/low-cost into project network/ulcc enum requires curated decision; no inferred rating.",
+          "agent_eligible": false
+        },
+        "unit_system": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "vo_units"
+          ],
+          "qualification": "Ryanair blanket metric flag conflicts with FY2026 miles/ASM source. Other imperial flags are shorthand for specified mileage metrics, not every report unit. Do not use carrier-wide flag to infer a row unit.",
+          "agent_eligible": false
+        },
+        "iata_code": {
+          "status": "unresolved_operator_mapping",
+          "evidence_ids": [],
+          "qualification": "No selected primary source directly proves holding/group-to-current airline designator mapping. AOC/operator vs issuer must remain separate; do not infer from name.",
+          "agent_eligible": false
+        },
+        "icao_code": {
+          "status": "unresolved_operator_mapping",
+          "evidence_ids": [],
+          "qualification": "No selected primary source directly proves holding/group-to-current airline designator mapping. Incidental substring/concession number is not a code registry.",
+          "agent_eligible": false
+        },
+        "carrier_key": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Internal stable project key.",
+          "agent_eligible": false
+        },
+        "metric_patterns": {
+          "status": "curated_parser_contract",
+          "evidence_ids": [
+            "vo_units"
+          ],
+          "qualification": "Regexes, selected scale factors and normalized names require row/edition parser checks. Annual vs quarterly raw scales differ (e.g. Volaris annual thousands vs selected quarterly millions). Booked passengers (Viva/Ryanair) are not proof of boarded/transported passengers.",
+          "agent_eligible": false
+        }
+      }
+    },
+    "VIVA_AEROBUS": {
+      "profile": {
+        "carrier_key": "VIVA_AEROBUS",
+        "cik": null,
+        "reporting_currency": "USD",
+        "unit_system": "imperial",
+        "fiscal_year_end_month": 12,
+        "forms": [],
+        "metric_patterns": {
+          "asm_total": {
+            "patterns": [
+              "^asms \\(millions\\)"
+            ],
+            "unit_raw": "ASMs (millions)",
+            "unit_normalized": "miles",
+            "scale_multiplier": 1000000,
+            "table_name": "operating"
+          },
+          "rpm_total": {
+            "patterns": [
+              "^rpms \\(millions\\)"
+            ],
+            "unit_raw": "RPMs (millions)",
+            "unit_normalized": "miles",
+            "scale_multiplier": 1000000,
+            "table_name": "operating"
+          },
+          "passengers": {
+            "patterns": [
+              "^booked passengers \\(thousands\\)"
+            ],
+            "unit_raw": "passengers (thousands)",
+            "unit_normalized": "count",
+            "scale_multiplier": 1000,
+            "table_name": "operating"
+          },
+          "load_factor_total": {
+            "patterns": [
+              "^load factor \\(scheduled,"
+            ],
+            "unit_raw": "%",
+            "unit_normalized": "fraction",
+            "scale_multiplier": 0.01,
+            "table_name": "operating"
+          },
+          "trasm": {
+            "patterns": [
+              "^trasm \\(us cents\\)"
+            ],
+            "unit_raw": "USD cents",
+            "unit_normalized": "usd_cents",
+            "scale_multiplier": 1,
+            "table_name": "operating"
+          },
+          "casm": {
+            "patterns": [
+              "^casm \\(us cents\\)"
+            ],
+            "unit_raw": "USD cents",
+            "unit_normalized": "usd_cents",
+            "scale_multiplier": 1,
+            "table_name": "operating"
+          },
+          "casm_ex_fuel": {
+            "patterns": [
+              "^casm ex-fuel \\(us cents\\)"
+            ],
+            "unit_raw": "USD cents",
+            "unit_normalized": "usd_cents",
+            "scale_multiplier": 1,
+            "table_name": "operating"
+          },
+          "total_revenue": {
+            "patterns": [
+              "^total operating revenue"
+            ],
+            "unit_raw": "USD millions",
+            "unit_normalized": "usd",
+            "scale_multiplier": 1000000,
+            "table_name": "financial"
+          }
+        }
+      },
+      "dimension": {
+        "carrier_name": "Aeroenlaces Nacionales, S.A. de C.V.",
+        "carrier_name_short": "Viva Aerobus",
+        "iata_code": "VB",
+        "icao_code": "VIV",
+        "country": "Mexico",
+        "business_model": "ulcc",
+        "is_public": false,
+        "ticker": null,
+        "exchange": null,
+        "cik": null,
+        "reporting_standard": "IFRS",
+        "reporting_currency": "USD",
+        "unit_system": "imperial",
+        "fiscal_year_end_month": 12,
+        "parent_carrier_key": null,
+        "is_peer": true,
+        "is_focus": false
+      },
+      "attribute_assessments": {
+        "carrier_name_short": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Project display/cohort/root-selection decision; not issuer approval or primary-source fact.",
+          "agent_eligible": false
+        },
+        "is_peer": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Project display/cohort/root-selection decision; not issuer approval or primary-source fact.",
+          "agent_eligible": false
+        },
+        "is_focus": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Project display/cohort/root-selection decision; not issuer approval or primary-source fact.",
+          "agent_eligible": false
+        },
+        "parent_carrier_key": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Project display/cohort/root-selection decision; not issuer approval or primary-source fact.",
+          "agent_eligible": false
+        },
+        "carrier_name": {
+          "status": "scope_mismatch",
+          "evidence_ids": [
+            "viva_entities"
+          ],
+          "qualification": "Dimension names operating subsidiary Aeroenlaces; quarterly financial issuer is Grupo Viva Aerobus, parent. Preserve entity relationship; do not silently substitute or merge scopes.",
+          "agent_eligible": false
+        },
+        "cik": {
+          "status": "unverified_absence",
+          "evidence_ids": [],
+          "qualification": "Null is local configuration; retained IR does not establish no SEC registration.",
+          "agent_eligible": false
+        },
+        "ticker": {
+          "status": "unverified_absence",
+          "evidence_ids": [],
+          "qualification": "Null not established by absence in IR.",
+          "agent_eligible": false
+        },
+        "exchange": {
+          "status": "unverified_absence",
+          "evidence_ids": [],
+          "qualification": "Null not established by absence in IR.",
+          "agent_eligible": false
+        },
+        "is_public": {
+          "status": "unverified_classification",
+          "evidence_ids": [],
+          "qualification": "Equity-public/private vs public debt requires explicit definition and support; earnings report does not prove false.",
+          "agent_eligible": false
+        },
+        "forms": {
+          "status": "curated_parser_allowlist",
+          "evidence_ids": [],
+          "qualification": "Empty list is parser configuration, not assertion issuer files no forms.",
+          "agent_eligible": false
+        },
+        "fiscal_year_end_month": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "viva_year_end"
+          ],
+          "qualification": "Twelve months ended Dec31,2025; supports this reporting-year month, not timeless corporate policy.",
+          "agent_eligible": false
+        },
+        "reporting_currency": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "viva_currency",
+            "viva_currency_change"
+          ],
+          "qualification": "USD since Oct1,2022 presentation change; functional USD since2020. Earlier reporting MXN cannot be relabeled.",
+          "agent_eligible": false
+        },
+        "reporting_standard": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "viva_currency_change"
+          ],
+          "qualification": "Source explicitly describes IAS21 under IFRS for currency change. This excerpt alone is narrower than full audited IFRS-compliance opinion; current quarterly release preliminary.",
+          "agent_eligible": false
+        },
+        "unit_system": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "viva_asm",
+            "viva_lf"
+          ],
+          "qualification": "ASM/RPM miles and scheduled LF definition. Unit is metric-specific, not a blanket proof for all fields.",
+          "agent_eligible": false
+        },
+        "business_model": {
+          "status": "curated_mapping",
+          "evidence_ids": [
+            "viva_model"
+          ],
+          "qualification": "Source self-describes ULCC; normalized enum ulcc is deterministic curated mapping, not approval.",
+          "agent_eligible": false
+        },
+        "country": {
+          "status": "insufficient_support",
+          "evidence_ids": [
+            "viva_entities"
+          ],
+          "qualification": "Mexico City dateline is not incorporation/AOC nationality proof. Do not infer jurisdiction from dateline.",
+          "agent_eligible": false
+        },
+        "iata_code": {
+          "status": "unresolved_operator_mapping",
+          "evidence_ids": [],
+          "qualification": "No selected primary source directly proves holding/group-to-current airline designator mapping. AOC/operator vs issuer must remain separate; do not infer from name.",
+          "agent_eligible": false
+        },
+        "icao_code": {
+          "status": "unresolved_operator_mapping",
+          "evidence_ids": [],
+          "qualification": "No selected primary source directly proves holding/group-to-current airline designator mapping. Incidental substring/concession number is not a code registry.",
+          "agent_eligible": false
+        },
+        "carrier_key": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Internal stable project key.",
+          "agent_eligible": false
+        },
+        "metric_patterns": {
+          "status": "curated_parser_contract",
+          "evidence_ids": [
+            "viva_booked",
+            "viva_lf",
+            "viva_asm"
+          ],
+          "qualification": "Regexes, selected scale factors and normalized names require row/edition parser checks. Annual vs quarterly raw scales differ (e.g. Volaris annual thousands vs selected quarterly millions). Booked passengers (Viva/Ryanair) are not proof of boarded/transported passengers.",
+          "agent_eligible": false
+        }
+      }
+    },
+    "DELTA": {
+      "profile": {
+        "carrier_key": "DELTA",
+        "cik": "0000027904",
+        "reporting_currency": "USD",
+        "unit_system": "imperial",
+        "fiscal_year_end_month": 12,
+        "forms": [
+          "10-Q",
+          "10-K"
+        ],
+        "metric_patterns": {
+          "asm_total": {
+            "patterns": [
+              "available seat miles \\(in millions\\) \\(\"asm\"\\)"
+            ],
+            "unit_raw": "ASMs (millions)",
+            "unit_normalized": "miles",
+            "scale_multiplier": 1000000,
+            "table_name": "operating"
+          },
+          "rpm_total": {
+            "patterns": [
+              "revenue passenger miles \\(in millions\\) \\(\"rpm\"\\)"
+            ],
+            "unit_raw": "RPMs (millions)",
+            "unit_normalized": "miles",
+            "scale_multiplier": 1000000,
+            "table_name": "operating"
+          },
+          "load_factor_total": {
+            "patterns": [
+              "passenger load factor"
+            ],
+            "unit_raw": "%",
+            "unit_normalized": "fraction",
+            "scale_multiplier": 0.01,
+            "table_name": "operating"
+          },
+          "total_revenue": {
+            "patterns": [
+              "operating revenue",
+              "total operating revenue"
+            ],
+            "unit_raw": "USD millions",
+            "unit_normalized": "usd",
+            "scale_multiplier": 1000000,
+            "table_name": "financial"
+          },
+          "operating_income": {
+            "patterns": [
+              "operating income"
+            ],
+            "unit_raw": "USD millions",
+            "unit_normalized": "usd",
+            "scale_multiplier": 1000000,
+            "table_name": "financial"
+          },
+          "net_income": {
+            "patterns": [
+              "net income"
+            ],
+            "unit_raw": "USD millions",
+            "unit_normalized": "usd",
+            "scale_multiplier": 1000000,
+            "table_name": "financial"
+          }
+        }
+      },
+      "dimension": {
+        "carrier_name": "Delta Air Lines, Inc.",
+        "carrier_name_short": "Delta",
+        "iata_code": "DL",
+        "icao_code": "DAL",
+        "country": "United States",
+        "business_model": "network",
+        "is_public": true,
+        "ticker": "DAL",
+        "exchange": "NYSE",
+        "cik": "27904",
+        "reporting_standard": "US-GAAP",
+        "reporting_currency": "USD",
+        "unit_system": "imperial",
+        "fiscal_year_end_month": 12,
+        "parent_carrier_key": null,
+        "is_peer": true,
+        "is_focus": false
+      },
+      "attribute_assessments": {
+        "carrier_name_short": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Project display/cohort/root-selection decision; not issuer approval or primary-source fact.",
+          "agent_eligible": false
+        },
+        "is_peer": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Project display/cohort/root-selection decision; not issuer approval or primary-source fact.",
+          "agent_eligible": false
+        },
+        "is_focus": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Project display/cohort/root-selection decision; not issuer approval or primary-source fact.",
+          "agent_eligible": false
+        },
+        "parent_carrier_key": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Project display/cohort/root-selection decision; not issuer approval or primary-source fact.",
+          "agent_eligible": false
+        },
+        "cik": {
+          "status": "supported_with_normalization",
+          "evidence_ids": [
+            "dl_cik"
+          ],
+          "qualification": "CIK strips leading zeroes; fiscal month derived from MMDD; display name accent/case/punctuation is curated normalization.",
+          "agent_eligible": false
+        },
+        "carrier_name": {
+          "status": "supported_with_normalization",
+          "evidence_ids": [
+            "dl_name"
+          ],
+          "qualification": "CIK strips leading zeroes; fiscal month derived from MMDD; display name accent/case/punctuation is curated normalization.",
+          "agent_eligible": false
+        },
+        "fiscal_year_end_month": {
+          "status": "supported_with_normalization",
+          "evidence_ids": [
+            "dl_fiscalYearEnd"
+          ],
+          "qualification": "Source MMDD; month derived deterministically. Captured catalogue is dated, not live status.",
+          "agent_eligible": false
+        },
+        "ticker": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "dl_tickers"
+          ],
+          "qualification": "Selected ADS/ticker/exchange only; source may list more securities. Exchange-to-security mapping must be retained.",
+          "agent_eligible": false
+        },
+        "exchange": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "dl_exchanges"
+          ],
+          "qualification": "Selected ADS/ticker/exchange only; source may list more securities. Exchange-to-security mapping must be retained.",
+          "agent_eligible": false
+        },
+        "is_public": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "dl_tickers",
+            "dl_exchanges"
+          ],
+          "qualification": "Listed securities as of retained source; equity listing flag is a project interpretation, not a timeless status.",
+          "agent_eligible": false
+        },
+        "reporting_standard": {
+          "status": "supported",
+          "evidence_ids": [
+            "dl_standard"
+          ],
+          "qualification": "Current retained consolidated annual statements; no universal historical guarantee.",
+          "agent_eligible": false
+        },
+        "reporting_currency": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "dl_usd_unit",
+            "dl_usd_fact"
+          ],
+          "qualification": "Current retained consolidated report currency, not every operating metric, subsidiary or historical period.",
+          "agent_eligible": false
+        },
+        "forms": {
+          "status": "curated_parser_allowlist",
+          "evidence_ids": [
+            "dl_forms"
+          ],
+          "qualification": "Observed form evidence supports selected allowed forms; list is not a claim of all issuer forms. Ryanair catalogue also has 6-K.",
+          "agent_eligible": false
+        },
+        "country": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "dl_model_country"
+          ],
+          "qualification": "Source meaning differs: incorporation jurisdiction (AM/VO), based in US (Delta), headquarters Ireland (Ryanair). Do not conflate operating nationality/AOC.",
+          "agent_eligible": false
+        },
+        "business_model": {
+          "status": "curated_mapping",
+          "evidence_ids": [
+            "dl_model_country"
+          ],
+          "qualification": "Literal issuer description retained. Mapping FSC/global network/low-cost into project network/ulcc enum requires curated decision; no inferred rating.",
+          "agent_eligible": false
+        },
+        "unit_system": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "dl_units"
+          ],
+          "qualification": "Ryanair blanket metric flag conflicts with FY2026 miles/ASM source. Other imperial flags are shorthand for specified mileage metrics, not every report unit. Do not use carrier-wide flag to infer a row unit.",
+          "agent_eligible": false
+        },
+        "iata_code": {
+          "status": "unresolved_operator_mapping",
+          "evidence_ids": [],
+          "qualification": "No selected primary source directly proves holding/group-to-current airline designator mapping. AOC/operator vs issuer must remain separate; do not infer from name.",
+          "agent_eligible": false
+        },
+        "icao_code": {
+          "status": "unresolved_operator_mapping",
+          "evidence_ids": [],
+          "qualification": "No selected primary source directly proves holding/group-to-current airline designator mapping. Incidental substring/concession number is not a code registry.",
+          "agent_eligible": false
+        },
+        "carrier_key": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Internal stable project key.",
+          "agent_eligible": false
+        },
+        "metric_patterns": {
+          "status": "curated_parser_contract",
+          "evidence_ids": [
+            "dl_units"
+          ],
+          "qualification": "Regexes, selected scale factors and normalized names require row/edition parser checks. Annual vs quarterly raw scales differ (e.g. Volaris annual thousands vs selected quarterly millions). Booked passengers (Viva/Ryanair) are not proof of boarded/transported passengers.",
+          "agent_eligible": false
+        }
+      }
+    },
+    "RYANAIR": {
+      "profile": {
+        "carrier_key": "RYANAIR",
+        "cik": "0001038683",
+        "reporting_currency": "EUR",
+        "unit_system": "metric",
+        "fiscal_year_end_month": 3,
+        "forms": [
+          "20-F"
+        ],
+        "metric_patterns": {
+          "passengers": {
+            "patterns": [
+              "passengers",
+              "customers",
+              "guests"
+            ],
+            "unit_raw": "passengers (millions)",
+            "unit_normalized": "count",
+            "scale_multiplier": 1000000,
+            "table_name": "operating"
+          },
+          "load_factor_total": {
+            "patterns": [
+              "load factor"
+            ],
+            "unit_raw": "%",
+            "unit_normalized": "fraction",
+            "scale_multiplier": 0.01,
+            "table_name": "operating"
+          },
+          "total_revenue": {
+            "patterns": [
+              "total revenue"
+            ],
+            "unit_raw": "EUR millions",
+            "unit_normalized": "eur",
+            "scale_multiplier": 1000000,
+            "table_name": "financial"
+          }
+        }
+      },
+      "dimension": {
+        "carrier_name": "Ryanair Holdings plc",
+        "carrier_name_short": "Ryanair",
+        "iata_code": "FR",
+        "icao_code": "RYR",
+        "country": "Ireland",
+        "business_model": "ulcc",
+        "is_public": true,
+        "ticker": "RYAAY",
+        "exchange": "NASDAQ",
+        "cik": "1038683",
+        "reporting_standard": "IFRS",
+        "reporting_currency": "EUR",
+        "unit_system": "metric",
+        "fiscal_year_end_month": 3,
+        "parent_carrier_key": null,
+        "is_peer": true,
+        "is_focus": false
+      },
+      "attribute_assessments": {
+        "carrier_name_short": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Project display/cohort/root-selection decision; not issuer approval or primary-source fact.",
+          "agent_eligible": false
+        },
+        "is_peer": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Project display/cohort/root-selection decision; not issuer approval or primary-source fact.",
+          "agent_eligible": false
+        },
+        "is_focus": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Project display/cohort/root-selection decision; not issuer approval or primary-source fact.",
+          "agent_eligible": false
+        },
+        "parent_carrier_key": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Project display/cohort/root-selection decision; not issuer approval or primary-source fact.",
+          "agent_eligible": false
+        },
+        "cik": {
+          "status": "supported_with_normalization",
+          "evidence_ids": [
+            "ry_cik"
+          ],
+          "qualification": "CIK strips leading zeroes; fiscal month derived from MMDD; display name accent/case/punctuation is curated normalization.",
+          "agent_eligible": false
+        },
+        "carrier_name": {
+          "status": "supported_with_normalization",
+          "evidence_ids": [
+            "ry_name"
+          ],
+          "qualification": "CIK strips leading zeroes; fiscal month derived from MMDD; display name accent/case/punctuation is curated normalization.",
+          "agent_eligible": false
+        },
+        "fiscal_year_end_month": {
+          "status": "supported_with_normalization",
+          "evidence_ids": [
+            "ry_fiscalYearEnd"
+          ],
+          "qualification": "Source MMDD; month derived deterministically. Captured catalogue is dated, not live status.",
+          "agent_eligible": false
+        },
+        "ticker": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "ry_tickers"
+          ],
+          "qualification": "Selected ADS/ticker/exchange only; source may list more securities. Exchange-to-security mapping must be retained.",
+          "agent_eligible": false
+        },
+        "exchange": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "ry_exchanges"
+          ],
+          "qualification": "Selected ADS/ticker/exchange only; source may list more securities. Exchange-to-security mapping must be retained.",
+          "agent_eligible": false
+        },
+        "is_public": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "ry_tickers",
+            "ry_exchanges"
+          ],
+          "qualification": "Listed securities as of retained source; equity listing flag is a project interpretation, not a timeless status.",
+          "agent_eligible": false
+        },
+        "reporting_standard": {
+          "status": "supported",
+          "evidence_ids": [
+            "ry_standard"
+          ],
+          "qualification": "Current retained consolidated annual statements; no universal historical guarantee.",
+          "agent_eligible": false
+        },
+        "reporting_currency": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "ry_currency_country"
+          ],
+          "qualification": "Current retained consolidated report currency, not every operating metric, subsidiary or historical period.",
+          "agent_eligible": false
+        },
+        "forms": {
+          "status": "curated_parser_allowlist",
+          "evidence_ids": [
+            "ry_forms"
+          ],
+          "qualification": "Observed form evidence supports selected allowed forms; list is not a claim of all issuer forms. Ryanair catalogue also has 6-K.",
+          "agent_eligible": false
+        },
+        "country": {
+          "status": "qualified_support",
+          "evidence_ids": [
+            "ry_currency_country"
+          ],
+          "qualification": "Source meaning differs: incorporation jurisdiction (AM/VO), based in US (Delta), headquarters Ireland (Ryanair). Do not conflate operating nationality/AOC.",
+          "agent_eligible": false
+        },
+        "business_model": {
+          "status": "curated_mapping",
+          "evidence_ids": [
+            "ry_model"
+          ],
+          "qualification": "Literal issuer description retained. Mapping FSC/global network/low-cost into project network/ulcc enum requires curated decision; no inferred rating.",
+          "agent_eligible": false
+        },
+        "unit_system": {
+          "status": "contradiction",
+          "evidence_ids": [
+            "ry_miles",
+            "ry_asm"
+          ],
+          "qualification": "Ryanair blanket metric flag conflicts with FY2026 miles/ASM source. Other imperial flags are shorthand for specified mileage metrics, not every report unit. Do not use carrier-wide flag to infer a row unit.",
+          "agent_eligible": false
+        },
+        "iata_code": {
+          "status": "unresolved_operator_mapping",
+          "evidence_ids": [],
+          "qualification": "No selected primary source directly proves holding/group-to-current airline designator mapping. AOC/operator vs issuer must remain separate; do not infer from name.",
+          "agent_eligible": false
+        },
+        "icao_code": {
+          "status": "unresolved_operator_mapping",
+          "evidence_ids": [],
+          "qualification": "No selected primary source directly proves holding/group-to-current airline designator mapping. Incidental substring/concession number is not a code registry.",
+          "agent_eligible": false
+        },
+        "carrier_key": {
+          "status": "curated_decision",
+          "evidence_ids": [],
+          "qualification": "Internal stable project key.",
+          "agent_eligible": false
+        },
+        "metric_patterns": {
+          "status": "curated_parser_contract",
+          "evidence_ids": [
+            "ry_booked",
+            "ry_asm"
+          ],
+          "qualification": "Regexes, selected scale factors and normalized names require row/edition parser checks. Annual vs quarterly raw scales differ (e.g. Volaris annual thousands vs selected quarterly millions). Booked passengers (Viva/Ryanair) are not proof of boarded/transported passengers.",
+          "agent_eligible": false
+        }
+      }
+    }
+  },
+  "findings": [
+    {
+      "id": "RY_UNIT_CONTRADICTION",
+      "severity": "material",
+      "carriers": [
+        "RYANAIR"
+      ],
+      "detail": "Existing profile/dimension metric flag conflicts with own FY2026 ASM and sector miles. No profile/Gold edits made. Any future conversion requires metric-specific units."
+    },
+    {
+      "id": "ISSUER_OPERATOR_SCOPE",
+      "severity": "material",
+      "carriers": [
+        "AEROMEXICO",
+        "VOLARIS",
+        "VIVA_AEROBUS",
+        "RYANAIR"
+      ],
+      "detail": "SEC/financial issuer identity does not establish operator IATA/ICAO mapping. Viva issuer parent differs from dimension operating subsidiary; preserve relationship."
+    },
+    {
+      "id": "BOOKED_PASSENGER_SCOPE",
+      "severity": "material",
+      "carriers": [
+        "VIVA_AEROBUS",
+        "RYANAIR"
+      ],
+      "detail": "Bookeds are not necessarily flown. Generic pasajeros transportados description would exceed source definition. No glossary/Gold edits made."
+    },
+    {
+      "id": "CURRENCY_EDITION_SCOPE",
+      "severity": "material",
+      "carriers": [
+        "VIVA_AEROBUS"
+      ],
+      "detail": "Reporting USD effectiveOct1,2022, functional USD2020. Current config must not overwrite historical source currency."
+    },
+    {
+      "id": "EXCHANGE_SECURITY_SCOPE",
+      "severity": "qualified",
+      "carriers": [
+        "AEROMEXICO",
+        "VOLARIS",
+        "RYANAIR"
+      ],
+      "detail": "AM annual supports NYSE ADS AERO and BMV common shares; VO cover differentiates VLRS NYSE and VOLAR A BMV. SEC catalogues also list OTC tickers. A single ticker plus combined exchange is a curated simplification."
+    },
+    {
+      "id": "CURATION_NOT_AUTHORIZATION",
+      "severity": "boundary",
+      "carriers": [
+        "AEROMEXICO",
+        "VOLARIS",
+        "VIVA_AEROBUS",
+        "DELTA",
+        "RYANAIR"
+      ],
+      "detail": "Primary evidence does not approve peer selection, focus flags, parent roots, business-model mapping, thesis activation, publication or automated schedule."
+    }
+  ],
+  "local_inputs": {
+    "src/transform/stage6_dimensions.py": "0d1fbddbd658568f5313d793b1c35082fff3d339e59afa177ffdf4fb9b59f59d",
+    "src/parse/profiles/aeromexico.yaml": "75e3bc7eb532c1e8deece6bde76f1f4e24b26b4bbcb626591c98742e8e638f23",
+    "src/parse/profiles/volaris.yaml": "50091f634a3222a0586b284927a3c909af02a5f5537a5ab552e1c0bda0d3cce3",
+    "src/parse/profiles/viva_aerobus.yaml": "e3be5c1b0f3632d0070672f6f55133c9efd0f68b9b656bd819fce0b3ce5aa59f",
+    "src/parse/profiles/delta.yaml": "9841893886011621ebb1b714914a9339aaaa23d6e3edd1ac818c5005906be07f",
+    "src/parse/profiles/ryanair.yaml": "3952bfccda06209975d80721993382265d05fe950874d17d98a0ff23b8300f1f"
+  },
+  "independent_original_review_sha256": "8c5312e94a8f37acc9adb976b25aed58286e771e528a22c1ce7901121c6eea5a"
+}

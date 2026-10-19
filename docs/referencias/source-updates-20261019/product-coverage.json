@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "as_of": "2026-10-19T12:00:00-06:00",
   "timezone": "America/Mexico_City",
   "products": [
@@ -1885,7 +1885,7 @@
     {
       "product": "rss",
       "family": "news",
-      "scope": "100 rows in standalone feed; 12 September rows. Metadata only, no full-month archive, no index activation",
+      "scope": "7 retained RSS captures;700 valid feed contributions;12 September2026 dated URLs on6days;24days not observed, not no-news. Exact captured query URLs only; no all-company/full-month claim.",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
@@ -1895,47 +1895,51 @@
       "latest_source_availability_verified": false,
       "publication": "not_authorized",
       "automatic_execution_active": false,
-      "category": "blocked",
-      "state": "pending_integration_and_archive_coverage",
-      "blocker": {
-        "action": "certify_complete_monthly_news_round",
-        "target": "Market/News integration PR142/private35",
-        "reason": "Retained feed is partial metadata, not a full-month archive; integration belongs to the active Market/News owner.",
-        "completed": "100 feed records parsed,12 selected September metadata records; no activation.",
-        "outcome": "pending_integration_and_archive_coverage",
-        "required_input": "Owner-integrated monthly archive with source-by-source coverage; preserve existing candidate controls."
-      },
-      "evidence": "retained-verification.json"
+      "category": "verified_partial_metadata",
+      "state": "retained_monthly_cut_verified_partial",
+      "evidence": "curation-news-verification.json",
+      "layers": [
+        "Bronze_hash_metadata",
+        "read_only_monthly_metadata_cut"
+      ],
+      "integration": {
+        "public_pr142": "merged",
+        "merge_sha": "194ff92c47a16445a870363ce5a135011fe763e9",
+        "private_pr35": "merged",
+        "local_base_predates_pr142": "Apply upstream parser/date safeguards at final integration; do not execute legacy GDELT parser.",
+        "private_merge_sha": "bd8be3b3745fc595718c4d1ac1142b2a639be837",
+        "private_merged_at": "2026-10-19T17:20:55Z"
+      }
     },
     {
       "product": "gdelt",
       "family": "news",
-      "scope": "503 on selected live request. Historical HTTP-200 error text retained and rejected as news",
+      "scope": "One approved September2026 request covering Aeromexico/Viva/Volaris, MexicoCity month boundaries, retries0;503 error retained, not news.",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
       "activation": "none",
       "prior_evidence_state": "access_failed",
-      "new_source_capture_in_this_continuation": false,
+      "new_source_capture_in_this_continuation": true,
       "latest_source_availability_verified": false,
       "publication": "not_authorized",
       "automatic_execution_active": false,
       "category": "blocked",
       "state": "pending_valid_source_response",
+      "evidence": "curation-news-verification.json",
       "blocker": {
-        "action": "certify_selected_monthly_news_response",
-        "target": "GDELT selected monthly request",
-        "reason": "Prior live request returned503; older HTTP200 error text is retained error evidence, not news. No recapture in this continuation.",
-        "completed": "Error bodies preserved and rejected as news; parser/error classification tested.",
-        "outcome": "pending_valid_source_response",
-        "required_input": "Successful, valid response in an authorized later collection round; no credentials or bypass assumed."
-      },
-      "evidence": "retained-verification.json"
+        "action": "collect_valid_monthly_metadata_response",
+        "target": "GDELT DocAPI selected September2026 query",
+        "reason": "Single normal attempt returned HTTP503;91bytes retained as news_http_error. No valid articles array.",
+        "completed": "Original error/URL/hash/capture and receipt preserved; no repeated retry.",
+        "outcome": "access_failed_503",
+        "required_input": "Successful valid response in a later authorized round; no activation inferred."
+      }
     },
     {
       "product": "news_errors",
       "family": "news",
-      "scope": "Preserve failed captures for audit; never news or proof of no news",
+      "scope": "Intentional frequency never; preserve failed bodies as audit evidence, never news or proof of no news.",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
@@ -1945,22 +1949,15 @@
       "latest_source_availability_verified": false,
       "publication": "not_authorized",
       "automatic_execution_active": false,
-      "category": "blocked",
-      "state": "blocked_by_design",
-      "blocker": {
-        "action": "use_failed_capture_as_news",
-        "target": "news_http_error retained evidence",
-        "reason": "Intentionally disabled error-evidence product; never a news source and never proof of no news.",
-        "completed": "Audit evidence preserved; failed contents excluded from news.",
-        "outcome": "blocked_by_design",
-        "required_input": "None: retain audit-only status."
-      },
-      "evidence": "retained-verification.json"
+      "category": "intentional_exclusion",
+      "state": "audit_only_never_source",
+      "evidence": "curation-news-verification.json",
+      "required_input": "None; exclusion is working as designed."
     },
     {
       "product": "peer_profiles",
       "family": "internal",
-      "scope": "Sin endpoint. Revisar perfiles y fuentes contribuyentes; conservar versión y justificación. No inventar una descarga ni una aprobación.",
+      "scope": "Exactly5 parser profiles and same5 carrier dimensions;100 attribute assessments,60 evidence locators,10 retained primary originals. Documentary support only, no Silver/Gold certification.",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
@@ -1970,42 +1967,49 @@
       "latest_source_availability_verified": false,
       "publication": "not_authorized",
       "automatic_execution_active": false,
-      "category": "blocked",
-      "state": "pending_documented_curated_parents",
-      "blocker": {
-        "action": "certify_curated_profile_parent_lineage",
-        "target": "peer_profile curated attributes",
-        "reason": "No unique download endpoint or exact per-attribute parent evidence supplied for new certification. Existing dimension schema alone is insufficient.",
-        "completed": "Retained baseline dimensions preserved; no profile or approval invented.",
-        "outcome": "pending_documented_curated_parents",
-        "required_input": "Versioned attribute-to-primary-source decisions with documented dates/lineage."
-      },
-      "evidence": "retained-verification.json"
+      "category": "review_prepared",
+      "state": "primary_support_mapped_pending_curated_decisions",
+      "evidence": "curation-news-verification.json",
+      "layers": [
+        "Bronze_hash_metadata",
+        "per_attribute_documentary_map"
+      ],
+      "primary_map": "peer-primary-review.json",
+      "remaining_decisions": [
+        "Ryanair global metric flag conflicts with own FY2026 ASM/miles; units must remain metric/period specific.",
+        "Viva financial parent vs operating subsidiary; currentUSD effective2022-10-01 and booked/not necessarily flown passengers.",
+        "IATA/ICAO holding-to-operator mapping unresolved in selected primary documents.",
+        "Peer/focus/parent/business-model enum and parser policies remain curated choices, not new approval."
+      ]
     },
     {
       "product": "curated_context",
       "family": "internal",
-      "scope": "Sin endpoint. Cada evento exige documento original/fecha/linaje. No genera activación ni causalidad automática.",
+      "scope": "Canonical21 events only;24 primary originals and54 documentary locators.20 bounded-supported,1 partial. No new confidence/impact approval, no production dim_events rewrite.",
       "published_by_tracker_inferred": false,
       "publication_date": null,
       "release_lag_days": null,
       "activation": "none",
       "prior_evidence_state": "not_newly_certified",
-      "new_source_capture_in_this_continuation": false,
+      "new_source_capture_in_this_continuation": true,
       "latest_source_availability_verified": false,
       "publication": "not_authorized",
       "automatic_execution_active": false,
-      "category": "blocked",
-      "state": "pending_primary_artifacts_and_reviewed_curation",
-      "blocker": {
-        "action": "certify_curated_event_documentary_lineage",
-        "target": "curated_primary_sources events",
-        "reason": "Some existing event rows have URL declarations without retained primary artifact/hash; declaring a URL does not certify a document.",
-        "completed": "Existing events preserved; FAA category snapshot certified separately; no new causal/activation inference.",
-        "outcome": "pending_primary_artifacts_and_reviewed_curation",
-        "required_input": "Retained primary originals for the events and explicit curated selection/lineage; no fabricated downloads."
-      },
-      "evidence": "retained-verification.json"
+      "category": "review_prepared",
+      "state": "primary_event_support_mapped_pending_curated_decisions",
+      "evidence": "curation-news-verification.json",
+      "layers": [
+        "Bronze_hash_metadata",
+        "typed_date_documentary_event_map"
+      ],
+      "primary_map": "event-primary-review.json",
+      "remaining_decisions": [
+        "DOTOctober28 URL404; later issuer filing supports action/date but not13routes/MEX/NLU; those specifics remain unverified.",
+        "DOTJuly200 research original is unregistered audit-only; no FAA alias or active catalogue change.",
+        "Historical F1/6K retrospective sources do not establish contemporary first publication.",
+        "Februarytraffic PDFMar5/archiveMar6 and Q1IRApr21/SECApr23 are distinct date kinds.",
+        "Legacy title/category/impact/confidence/cohort choices remain unapproved by this review."
+      ]
     },
     {
       "product": "derived",
@@ -2034,19 +2038,24 @@
   ],
   "counts": {
     "certified": 35,
-    "blocked": 7,
-    "pending_repairable": 0
+    "blocked": 3,
+    "verified_partial_metadata": 1,
+    "intentional_exclusion": 1,
+    "review_prepared": 2
   },
   "certification_basis_counts": {
     "retained_source_candidate": 16,
     "dedicated_selected_period_candidate": 2,
     "retained_baseline_explicit_checks": 8,
     "selected_product_period_checks": 8,
-    "blocked": 7,
+    "blocked": 3,
+    "verified_partial_metadata": 1,
+    "intentional_exclusion": 1,
+    "review_prepared": 2,
     "retained_derived_parent_ancestry": 1
   },
   "families_fully_certified": false,
-  "note": "35 limited product scopes, not35 fresh sources or35 complete reports.16 retained-source adapters +2 dedicated period candidates +8 prior selected-product checks +8 explicitly rechecked retained baseline products +1 retained derived-parent check.7 blocked scopes include intentional error evidence. No currently reachable local parser gap left pending; future source editions/manual source/curation inputs and independent integrations remain conditional.",
+  "note": "35 previously limited certified scopes retained unchanged (16retained adapters+2dedicated+8selected+8baseline+1derived). Added1partialRSSmetadata cut+2documentary review maps, not Gold certification or new approved facts;3source/attribution blockers remain;1intentional error-evidence exclusion. Nine historical checks are not new editions/captures. All new material remains ineligible and unpublished.",
   "activation": "none",
   "publication": "not_authorized",
   "scheduled_executions": 0
