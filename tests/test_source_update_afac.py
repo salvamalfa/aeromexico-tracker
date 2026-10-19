@@ -49,3 +49,19 @@ def test_pdf_period_comes_from_monthly_comparison_and_preserves_source_caveats(m
     texts[1] = "Acumulado enero-agosto 2026; Notas: missing monthly comparison. Fuente AFAC"
     with pytest.raises(ValueError, match="does not confirm"):
         bulletin_notes(b"fixture", 8)
+
+
+def test_january_bulletin_has_no_cumulative_month_or_de_before_years(monkeypatch):
+    import src.source_updates.afac as afac
+
+    text = "Pasajeros años: 2024 - 2025; y enero 2025 - 2026\nNotas: Preliminar. Fuente: AFAC"
+    monkeypatch.setattr(
+        afac,
+        "PdfReader",
+        lambda stream: SimpleNamespace(
+            pages=[SimpleNamespace(extract_text=lambda: text), SimpleNamespace(extract_text=lambda: text)]
+        ),
+    )
+    assert "Preliminar" in bulletin_notes(b"fixture", 1)
+    with pytest.raises(ValueError, match="does not confirm"):
+        bulletin_notes(b"fixture", 2)

@@ -54,7 +54,7 @@ def bulletin_notes(content: bytes, month: int) -> str:
         text = page.extract_text() or ""
         # The document explicitly names its current monthly comparison. A file
         # label or a cumulative month name alone cannot establish the period.
-        pattern = rf"\by\s+{MONTHS[month - 1]}\s+de\s+2025\s*[-–]\s*2026\b"
+        pattern = rf"\by\s+{MONTHS[month - 1]}\s+(?:de\s+)?2025\s*[-–]\s*2026\b"
         if not re.search(pattern, text, re.I):
             raise ValueError("AFAC PDF content does not confirm the requested 2026 monthly comparison")
         if "Notas:" not in text or "Fuente" not in text:
