@@ -75,9 +75,13 @@ def html_rates(content: bytes) -> tuple[dict[date, str], date]:
     if len(tables) != 1:
         raise ValueError("Ambiguous H.10 historical table")
     result = {}
-    if not tables[0].find("tr") or [
-        c.get_text(" ", strip=True) for c in tables[0].find("tr").find_all(["th", "td"])
-    ] != ["Date", "Rate"]:
+    # The official preserved page has bare <th> elements inside <thead>,
+    # whereas other verified exports wrap those same headings in a <tr>.
+    header = tables[0].find("thead") or tables[0].find("tr")
+    if header is None or [c.get_text(" ", strip=True) for c in header.find_all(["th", "td"])] != [
+        "Date",
+        "Rate",
+    ]:
         raise ValueError("H.10 historical Date/Rate header missing")
     for number, row in enumerate(tables[0].find_all("tr")):
         cells = [cell.get_text(" ", strip=True) for cell in row.find_all(["th", "td"])]

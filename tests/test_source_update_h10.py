@@ -316,6 +316,15 @@ def test_inverse_html_unit_and_unverified_calendar_year_block():
         holiday_evidence(K8, 2027)
 
 
+def test_official_bare_thead_layout_and_missing_header():
+    body = html_sample(samples()).replace(
+        b"<tr><th>Date</th><th>Rate</th></tr>", b"<thead><th>Date</th><th>Rate</th></thead>"
+    )
+    assert html_rates(body)[0] == samples()
+    with pytest.raises(ValueError, match="header missing"):
+        html_rates(body.replace(b"<thead><th>Date</th><th>Rate</th></thead>", b""))
+
+
 @pytest.mark.parametrize(
     "period,rows,observed", [("2026M02", 20, 19), ("2026M07", 23, 22), ("2026M09", 22, 21)]
 )

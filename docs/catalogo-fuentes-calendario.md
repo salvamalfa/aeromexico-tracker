@@ -208,9 +208,10 @@ mexicano a esta serie ni se exige un número fijo de 21 observaciones por mes.
 
 H.10 expresa **pesos mexicanos por un dólar estadounidense**, par `USD/MXN`.
 Es la cotización compradora de mediodía en Nueva York, distinta del FIX de
-Banxico. `rate_close` y la agregación Gold `close` conservan sus nombres de
-contrato, pero significan la última cotización H.10 observada del mes; no un
-cierre bursátil. El promedio utiliza únicamente valores observados. `ND` queda
+Banxico. En Silver, `rate_close` conserva su nombre de contrato y contiene la
+cotización diaria de mediodía. En Gold, `close` es la última cotización H.10
+observada del mes. Ninguno representa un cierre bursátil. El promedio utiliza
+únicamente valores observados. `ND` queda
 explícito, con valor numérico nulo; nunca se convierte en cero.
 [Definición oficial](https://www.federalreserve.gov/releases/h10/about.htm),
 [histórico de México](https://www.federalreserve.gov/releases/h10/hist/dat00_mx.htm).
