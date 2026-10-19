@@ -229,8 +229,8 @@ No exporta datos al dashboard, no escribe aprobaciones ni consume APIs.
 
 ## Pendientes
 
-Verificar la publicación autorizada de 2T26 con el mismo universo y las
-identidades aprobadas. No continuar la búsqueda de fuentes para alcanzar el
+Conservar en cada publicación el mismo universo y las identidades aprobadas;
+comprobar también el sitio servido. No continuar la búsqueda de fuentes para alcanzar el
 95 %. Futuras actualizaciones, periodos y calendarios requieren su alcance y
 validación propios. Conservar las bitácoras enlazadas mientras sean
 procedencia del histórico o evidencia de un esfuerzo abierto. No retirar una
