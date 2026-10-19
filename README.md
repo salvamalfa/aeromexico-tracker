@@ -138,18 +138,31 @@ auditada de 2T26 se conserva en `prototypes/etapa-17/audited_analysis.html`.
 
 Fuentes principales: SEC EDGAR, BMV XBRL, AFAC, BTS T-100, Banxico, EIA, datos públicos de mercado, reportes de aerolíneas, grupos aeroportuarios y fuentes regulatorias abiertas. Las limitaciones y bloqueos de cada fuente están documentados en los reportes de etapa.
 
-## Candidato Mercado
+## Mercado
 
-La rama de revisión incorpora Mercado; su alcance y límites están en
-[la etapa del 15 de octubre](docs/etapas/mercado-candidato-20261015.md).
+Mercado reúne participación, tamaño, crecimiento interanual, contribución por
+aerolínea y cambios de participación del universo AFAC comparable. Un trimestre
+global controla indicadores, tabla y corte de la historia mensual; segmento y
+aerolíneas conservan su selección. Fuente y salvedades están en el botón de
+información. Los datos aeroportuarios permanecen en su exportación.
+El [plan coordinado](docs/publicacion-mercado-noticias.md) documenta el gate y
+el orden de integración de Vuelos, Mercado y Noticias.
 La [auditoría Gold](docs/gold-exposure.md) distingue exposición, contexto y linaje.
-Producción conserva su estado hasta aprobación independiente.
 
 ## Actualización
 
 `.github/workflows/refresh.yml` se ejecuta trimestralmente y también de forma manual. Solo monitorea frescura y valida/confirma (commit) el gold ya reconstruido en el runner — no publica el sitio: eso es `.github/workflows/pages.yml`, sobre `site/`. Corre la suite completa y `src.dashboard.validate_stage8` (definición de terminado de Stage 8, sobre el gold público versionado); si algo falla abre un issue y no hace commit. También revisa la fecha de AFAC y abre un recordatorio cuando la fuente manual rebasa 62 días.
 
 Por la decisión explícita de **no versionar bronze**, una reconstrucción con nuevas descargas sigue ejecutándose localmente, donde existen los crudos. El workflow remoto valida y confirma (commit) el gold ya reconstruido; no finge poder recrear fuentes manuales ausentes ni publica el sitio.
+
+## Noticias y estrategia
+
+El archivo mensual presenta las tres fichas aprobadas con fuentes, resúmenes
+breves y fechas de publicación, hecho y primera captura separadas. Permite
+filtrar por mes, tema y aerolínea, y buscar desde el chat con navegación citada.
+La cobertura es parcial. Las once candidatas del [corte de investigación](docs/etapas/noticias-candidato-20261015.md)
+siguen pendientes de revisión y no amplían la evidencia del chat.
+La [auditoría Gold](docs/gold-exposure.md) conserva los datos y sus dependencias.
 
 ## Chat analítico
 

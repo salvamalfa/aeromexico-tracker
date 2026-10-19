@@ -4,12 +4,14 @@ import { renderDisplay, safeDisplays } from "./display";
 const TRUSTED_HOSTS = new Set([
   "sec.gov", "www.sec.gov", "ir.aeromexico.com", "cdn.investorcloud.net", "www.flightglobal.com",
   "www.bmv.com.mx", "gob.mx", "www.gob.mx", "github.com", "salvamalfa.github.io",
+  "investorcloud.s3.amazonaws.com", "filemanager-cdn.mziq.com", "api.mziq.com", "www.aeroroutes.com",
 ]);
 
 function trustedSourceUrl(raw: string): string | undefined {
   try {
     const url = new URL(raw);
-    if (url.protocol !== "https:" || url.username || url.password || url.search || !TRUSTED_HOSTS.has(url.hostname.toLowerCase())) return undefined;
+    const approvedQuery=url.hostname==="api.mziq.com"&&url.search==="?origin=2"&&/^\/mzfilemanager\/v2\/d\/[a-f0-9-]+\/[a-f0-9-]+$/.test(url.pathname);
+    if (url.protocol !== "https:" || url.username || url.password || (url.search&&!approvedQuery) || !TRUSTED_HOSTS.has(url.hostname.toLowerCase())) return undefined;
     return url.href;
   } catch { return undefined; }
 }
@@ -284,6 +286,7 @@ export function safeReferences(references: unknown): ChatReference[] {
 
 export function messageFromPayload(raw: Record<string, unknown>, maxLength = 20_000): Partial<ChatMessage> {
   return {
+    ...(raw.news_results ? {news_results: raw.news_results} : {}),
     ...(typeof raw.content === "string" ? { content: raw.content.slice(0, maxLength) } : {}),
     references: safeReferences(raw.references),
     ...(raw.chart ? { chart: raw.chart as ChatChart } : {}),

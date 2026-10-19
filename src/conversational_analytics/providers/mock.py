@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import calendar
 import re
 import threading
 from typing import Any
@@ -19,6 +20,33 @@ ENTITY_ALIASES = {
         "todas las aerolineas mexicanas",
     ),
 }
+
+
+def _news_arguments(text: str, context: dict[str, Any]) -> dict[str, Any]:
+    args: dict[str, Any] = {"query": text, "company": None, "start_date": None, "end_date": None, "limit": 5}
+    if context.get("tab") != "news":
+        return args
+    from ..news_query import norm, resolve_news_query
+
+    try:
+        intent = resolve_news_query(text)
+    except ValueError:
+        # The tool owns bounded-language validation and will return its precise
+        # clarification; context must not rescue an unsupported explicit date.
+        return args
+    explicit_all = re.search(r"\b(?:todas las aerolineas|todas las companias|las tres aerolineas)\b", norm(text))
+    if not intent["companies"] and not explicit_all:
+        companies = {"AEROMEXICO": "Aeroméxico", "VOLARIS": "Volaris", "VIVA_AEROBUS": "Viva"}
+        entity = context.get("entity")
+        if isinstance(entity, str):
+            args["company"] = companies.get(entity)
+    if not intent["start_date"] and not intent["end_date"]:
+        period = re.fullmatch(r"(20\d{2})M(0[1-9]|1[0-2])", str(context.get("period", "")))
+        if period:
+            year, month = map(int, period.groups())
+            args["start_date"] = f"{year:04}-{month:02}-01"
+            args["end_date"] = f"{year:04}-{month:02}-{calendar.monthrange(year, month)[1]:02}"
+    return args
 
 
 class MockProvider:
@@ -80,6 +108,13 @@ class MockProvider:
         lowered = text.casefold()
         if "get_data_catalog" not in specs:
             return None, "No hay herramientas cargadas para este snapshot."
+        if "search_news" in specs and "noticia" in lowered:
+            if len(text) > 240:
+                return None, "La simulación de noticias acepta consultas de hasta 240 caracteres."
+            return (
+                "search_news",
+                _news_arguments(text, context),
+            ), None
         if any(
             word in lowered for word in ("catálogo", "catalogo", "qué métricas", "que metricas", "disponible")
         ):
@@ -93,6 +128,13 @@ class MockProvider:
             if matches:
                 candidates.append((max(matches, key=len), metric))
         if not candidates:
+            if context.get("tab") == "news" and "search_news" in specs:
+                if len(text) > 240:
+                    return None, "La simulación de noticias acepta consultas de hasta 240 caracteres."
+                return (
+                    "search_news",
+                    _news_arguments(text, context),
+                ), None
             return (
                 None,
                 "El modo simulado solo responde métricas nombradas en el catálogo. "
@@ -165,6 +207,19 @@ class MockProvider:
         return ("query_metrics", args), None
 
     def _format_result(self, tool_name: str, result: dict[str, Any]) -> tuple[str, list[dict[str, Any]]]:
+        if tool_name == "search_news":
+            if "error" in result:
+                return str(result["error"]), []
+            rows = result.get("results", [])
+            lines = [
+                f"Modo simulado, sin respuesta generativa: {len(rows)} de {result.get('total', len(rows))} noticias del índice aprobado."
+            ]
+            if not rows:
+                lines.append(
+                    "No hay coincidencias aprobadas para estos filtros; no demuestra ausencia de noticias."
+                )
+            lines += [f"- {row['title']} ({row['published_at']}): {row['description']}" for row in rows]
+            return "\n".join(lines), [ref for row in rows for ref in row.get("references", [])]
         if tool_name == "get_data_catalog":
             return "Catálogo de consultas obtenido del snapshot público verificado.", []
         rows = result.get("rows") if isinstance(result, dict) else None

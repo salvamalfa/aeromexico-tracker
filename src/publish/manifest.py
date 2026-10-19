@@ -66,6 +66,7 @@ CONTRACT_FILES = (
     "analysis.schema.json",
     "business_metrics.schema.json",
     "business_metrics_approval.schema.json",
+    "news.schema.json",
     "publication_manifest.schema.json",
     "privacy.yaml",
 )
