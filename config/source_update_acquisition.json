@@ -25,9 +25,9 @@
     },
     "am_traffic_ir": {
       "entry_ref": "url:https://ir.aeromexico.com/news-events/traffic-reports",
-      "state": "discovery_only",
+      "state": "conditional",
       "format": "HTML → comunicado",
-      "procedure": "Encontrar el mes cerrado en el archivo Traffic Reports. El reporte de tráfico no sustituye finanzas. Falta adaptador IR mensual; usar anexos SEC preservados si existen."
+      "procedure": "recipe --output selection --catalog-file <indice.html> --period YYYYMmm selecciona un único enlace real del mes. Capturar el PDF mediante collect; después python -m src.source_updates.am_traffic_candidate --workspace <candidato> --period <mes> --as-of <corte> --collection <id> muestra la vista previa. --execute certifica offline y --check reproduce sin red. Parser candidato para tablas inglesas verificadas: cuatro métricas, tres segmentos, mes y comparativo anual; excluye acumulados. Silver conserva unidad, alcance itinerario/fletamento y no auditado. Gold candidato usa contratos y linaje exacto. No sustituye finanzas, no certifica SEC ni la familia; no incorpora esta tabla automáticamente al warehouse publicado."
     },
     "am_sec": {
       "entry_ref": "sec:AEROMEXICO",

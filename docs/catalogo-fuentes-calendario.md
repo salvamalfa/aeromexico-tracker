@@ -35,7 +35,7 @@ pasos de cada fuente. Este es el alcance comprobado por familia:
 
 | Familia | Alcance actual |
 |---|---|
-| Empresas | BMV: catálogo y ZIP oficiales capturados; parseo offline acotado implementado. SEC preservado reconstruido. Periodos nuevos IR/SEC siguen condicionados. |
+| Empresas | BMV: catálogo y ZIP oficiales capturados; parseo offline acotado implementado. SEC preservado reconstruido. Tráfico mensual IR de Aeroméxico tiene un candidato dedicado desde PDF; véase alcance abajo. Otros periodos nuevos IR/SEC siguen condicionados. |
 | Tráfico AFAC y BTS | AFAC: boletines y base de julio/agosto capturados; ampliación del parser candidato. BTS: reproducción histórica preservada; no se acredita una captura nueva. |
 | Aeropuertos | Descubrimiento por enlaces reales: AICM agosto y AIFA julio descargados. OMA septiembre enlazado pero devuelve 404. No se acredita septiembre completo. |
 | Macro y mercado | EIA, tres series Banxico y cinco series bursátiles verificadas hasta Gold para septiembre. H.10 tiene una cadena dedicada de certificación mensual aislada; véase su alcance y evidencia abajo. La familia completa no está certificada. |
@@ -285,6 +285,56 @@ La selección exige enlaces presentes y periodo no ambiguo. Una URL enlazada
 puede fallar al descargar. No se generan nombres de próximos reportes.
 
 ### Captura y comprobación
+
+El tráfico mensual IR de Aeroméxico usa una cadena dedicada. Primero se captura
+el índice y se elige un único enlace que identifica el mes. Después se captura
+el PDF; el nombre de la URL no demuestra su periodo. La extracción verifica
+título, entidad, orden de columnas y años dentro del documento. Las 12 cifras
+del mes y sus 12 comparativos del año anterior quedan separados de los
+acumulados. No se suman meses para crear un trimestre desde este comando.
+
+```bash
+uv run python -m src.source_updates recipe --product am_traffic_ir --output selection --catalog-file <indice-preservado.html> --period 2026M09 > tmp/am-seleccion.json
+uv run python -m src.source_updates collect --selection tmp/am-seleccion.json --workspace tmp/source-updates/am-septiembre --dry-run
+uv run python -m src.source_updates collect --selection tmp/am-seleccion.json --workspace tmp/source-updates/am-septiembre --execute
+uv run python -m src.source_updates.am_traffic_candidate --workspace tmp/source-updates/am-septiembre --period 2026M09 --as-of <corte-ISO-con-zona> --collection <id-del-recibo> --dry-run
+uv run python -m src.source_updates.am_traffic_candidate --workspace tmp/source-updates/am-septiembre --period 2026M09 --as-of <corte-ISO-con-zona> --collection <id-del-recibo> --execute
+uv run python -m src.source_updates.am_traffic_candidate --workspace tmp/source-updates/am-septiembre --period 2026M09 --as-of <corte-ISO-con-zona> --collection <id-del-recibo> --check
+```
+
+`collect` declara un GET público por PDF, hasta cinco solicitudes con
+redirecciones y cero pagadas. El comando dedicado solo lee originales locales;
+su vista previa no escribe y su certificación/reproducción no usa red. Preserva
+SHA-256, captura UTC, token, extracto, página y fecha de publicación del PDF.
+Un candidato aceptado no se sustituye: una nueva captura o revisión requiere
+otra carpeta. La comparación de revisiones queda sin acreditar cuando no hay
+un candidato anterior. Los hashes de archivos no prueban revisiones de cifras.
+
+Pasajeros se escala de miles a personas; ASM y RPM de millones a millas.
+Ocupación se escala de porcentaje a fracción. Pasajeros, ASM y RPM incluyen
+itinerario y fletamento; la ocupación reportada cubre itinerario. No se calcula
+esa ocupación como RPM/ASM con universos distintos. Su dimensión Gold conserva
+esa advertencia. El documento declara cifras no auditadas; eso no basta para
+llamarlas preliminares. Se admiten diferencias de suma de hasta 1,5 unidades
+publicadas por el redondeo de dos componentes y un total.
+
+El candidato Silver `aeromexico_ir_monthly_metrics` aplica el grano y linaje
+estructural existente de observaciones operativas, más reglas de dominio IR.
+No se rotula como SEC ni se registra automáticamente en el warehouse productivo.
+Gold aplica los contratos existentes, tres dimensiones y puente de linaje
+documental exacto. La cadena genérica `build/check` no adquiere este adaptador:
+se usa el comando dedicado. La certificación de un producto y mes no completa
+la familia corporativa ni autoriza publicación o calendario. No cambia tesis.
+[Índice oficial](https://ir.aeromexico.com/news-events/traffic-reports).
+
+La captura oficial del 19 de octubre conservó los PDF de julio, agosto y
+septiembre de 2026, todos con HTTP 200. Cada mes aporta 24 registros Silver y
+24 Gold: 12 actuales y 12 comparativos. Sus documentos están fechados el 3 de
+agosto, 3 de septiembre y 6 de octubre, respectivamente; el rezago desde el fin
+del mes es de 3, 3 y 6 días. La hora de publicación y la primera disponibilidad
+en el portal no se conocen y permanecen nulas. Los tres originales suman
+1.025.796 bytes. Estos candidatos no certifican finanzas, otros emisores,
+otros formatos ni cobertura de las tres aerolíneas.
 
 `collect` acepta GET público, exportación CSV pública de Banxico mediante POST,
 importación manual con SHA-256 y BTS por año

@@ -43,7 +43,7 @@ python -m src.source_updates recipe --product am_financials
 Consultar cada producto de esta familia:
 
 - `am_financials` — solo descubrimiento. Entrada canónica: `catalogue:aeromexico_ir`. Formato: HTML → PDF.
-- `am_traffic_ir` — solo descubrimiento. Entrada canónica: `url:https://ir.aeromexico.com/news-events/traffic-reports`. Formato: HTML → comunicado.
+- `am_traffic_ir` — adaptador mensual candidato dedicado. Entrada canónica: `url:https://ir.aeromexico.com/news-events/traffic-reports`. Formato: HTML → PDF inglés seleccionado por enlace real.
 - `am_sec` — selección/importación manual. Entrada canónica: `sec:AEROMEXICO`. Formato: JSON submissions/companyfacts → index.json → anexos HTML.
 - `volaris_sec` — selección/importación manual. Entrada canónica: `sec:VOLARIS`. Formato: JSON → anexos HTML.
 - `delta_sec` — selección/importación manual. Entrada canónica: `sec:DELTA`. Formato: JSON → 10-Q/10-K/anexos.
@@ -65,3 +65,11 @@ Consultar cada producto de esta familia:
 6. Acreditar éxito solo en la capa comprobada: hash Bronze, contrato/grano/linaje Silver y controles Gold/meses/días/reconciliaciones que correspondan. Si no existe adaptador, terminar en captura o descubrimiento y declarar ese límite. No llenar faltantes ni activar/publicar.
 
 Un 403, TLS, timeout o archivo inválido es un fallo de acceso/contenido; no prueba ausencia de publicación. Registrar pendiente y conservar el dato aceptado. Las fechas de publicación desconocidas siguen nulas.
+
+## Candidato mensual IR de Aeroméxico
+
+Seleccionar un mes cerrado mediante `recipe --product am_traffic_ir --output selection --catalog-file <indice-preservado.html> --period YYYYMmm`. `collect` captura el PDF seleccionado. A continuación ejecutar la vista previa de `python -m src.source_updates.am_traffic_candidate --workspace <candidato> --period <mes> --as-of <corte-con-zona> --collection <id-del-recibo>`. `--execute` certifica el original preservado sin red; `--check` reconstruye y compara las siete salidas y el hash del recibo. Usar un candidato por mes, sin otros productos ni salidas previas.
+
+Exigir título y entidad Grupo Aeroméxico, orden mes/acumulado y años actual/anterior, cuatro métricas y tres segmentos completos. No importar acumulados como mes. Conservar 12 cifras del mes y 12 comparativos del mismo mes del año anterior, con fecha de publicación dentro del documento. Pasajeros están en miles; ASM/RPM en millones de millas; ocupación en porcentaje. Los tres primeros incluyen itinerario/fletamento; ocupación es itinerario y no se calcula desde ese RPM/ASM. Conservar estado no auditado, unidad literal, token, extracto, página, captura y SHA-256. No equiparar no auditado con preliminar.
+
+El candidato aislado `aeromexico_ir_monthly_metrics` reutiliza el contrato estructural de observaciones operativas y añade su dominio explícito IR; no es una presentación SEC ni se registra automáticamente como tabla del warehouse productivo. Gold aplica su contrato existente, dimensiones y puente exacto. Esta cadena dedicada no añade `parse.am_traffic_ir` al runner genérico, no suma trimestres ni activa reportes/tesis. La certificación se limita al formato y los meses realmente comprobados. Documentar cualquier cambio de formato y mantener el fallo cerrado.
