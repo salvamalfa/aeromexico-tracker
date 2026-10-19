@@ -67,7 +67,7 @@ def bulletin_notes(content: bytes, month: int) -> str:
 def run() -> dict:
     import polars as pl
 
-    from src.ingest.stage4_common import write_parquet_atomic
+    from src.parse.sec.common import write_parquet_atomic
     from src.parse.afac.monthly_stats import run_afac_parse
 
     artifacts = verify_bronze(PATHS.root)
@@ -120,6 +120,7 @@ def run() -> dict:
         "Exact verified database ZIP member; no fragment URL request.",
         downloaded_at=datetime.fromisoformat(metadata["downloaded_at"]),
         relative_dir="afac/database/extracted",
+        bronze_root=PATHS.bronze,
     )
     result = run_afac_parse(documents=documents, database=database, through_month=max(months))
     path = PATHS.silver / "afac_monthly_stats.parquet"
