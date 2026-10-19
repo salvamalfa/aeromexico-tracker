@@ -1,0 +1,255 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Airline Monthly — candidato editorial público",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "label",
+    "title",
+    "status",
+    "cutoff",
+    "sources",
+    "traffic",
+    "sections",
+    "methodology"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$"
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "const": "borrador"
+    },
+    "cutoff": {
+      "type": "string",
+      "format": "date"
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "title",
+          "publisher",
+          "url",
+          "published",
+          "accessed",
+          "locator",
+          "sha256"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z-]+$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "publisher": {
+            "type": "string",
+            "minLength": 1
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https://"
+          },
+          "published": {
+            "type": "string",
+            "format": "date"
+          },
+          "accessed": {
+            "type": "string",
+            "format": "date"
+          },
+          "locator": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "traffic": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "airline",
+          "passengers_thousands",
+          "passengers_yoy_pct",
+          "asm_millions",
+          "asm_yoy_pct",
+          "rpm_yoy_pct",
+          "load_factor_pct",
+          "source"
+        ],
+        "properties": {
+          "airline": {
+            "enum": [
+              "Aeroméxico",
+              "Viva",
+              "Volaris"
+            ]
+          },
+          "passengers_thousands": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "passengers_yoy_pct": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": -100
+          },
+          "asm_millions": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "asm_yoy_pct": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": -100
+          },
+          "rpm_yoy_pct": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": -100
+          },
+          "load_factor_pct": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 100
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "maxItems": 3
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "title",
+          "stories"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z-]+$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "stories": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "title",
+                "claims"
+              ],
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "claims": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind",
+                      "text",
+                      "sources"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "hecho",
+                          "inferencia",
+                          "programado",
+                          "limite"
+                        ]
+                      },
+                      "text": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "sources": {
+                        "type": "array",
+                        "minItems": 0,
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "uniqueItems": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "methodology": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

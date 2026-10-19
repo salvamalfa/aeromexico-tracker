@@ -1,0 +1,339 @@
+{
+  "schema_version": 1,
+  "id": "2026-09",
+  "label": "Septiembre 2026",
+  "title": "Tres maneras de ajustar la capacidad",
+  "status": "borrador",
+  "cutoff": "2026-10-19",
+  "sources": [
+    {
+      "id": "am-traffic",
+      "publisher": "Aeroméxico",
+      "title": "Tráfico de septiembre de 2026",
+      "published": "2026-10-06",
+      "url": "https://ir.aeromexico.com/system/files-encrypted/nasdaq_kms/news/2026/10/05/19-05-12/Sep_2026_Op_Stat_ENG_V3.pdf",
+      "locator": "p. 1, tabla September; p. 2, glosario",
+      "accessed": "2026-10-19",
+      "sha256": "8bb07f1d3723961d1c8e75fb29a4232aca69e8a1b826da45d7656ac309297ec4"
+    },
+    {
+      "id": "viva-traffic",
+      "publisher": "Viva",
+      "title": "Tráfico de septiembre de 2026",
+      "published": "2026-10-09",
+      "url": "https://investorcloud.s3.amazonaws.com/VivaAerobus/InformacionFinanciera/SalaPrensa/2026-10-09-Trafico-septiembre-2026.pdf",
+      "locator": "p. 1, cifras mensuales; p. 2, glosario",
+      "accessed": "2026-10-19",
+      "sha256": "b0acad4f5131220a58c7ee41f25af581d75ff1a7ec8756d3f65869f8f1d636c2"
+    },
+    {
+      "id": "volaris-traffic",
+      "publisher": "Volaris",
+      "title": "Tráfico de septiembre de 2026",
+      "published": "2026-10-06",
+      "url": "https://filemanager-cdn.mziq.com/published/ea52c1bb-e8e2-457e-820a-98ca17753a37/e1d0223e-65bc-4686-80a0-6bc0a9a965d2",
+      "locator": "p. 1, tabla September 2026; p. 2, glosario",
+      "accessed": "2026-10-19",
+      "sha256": "64d92ceaa43475137f4df7f0831f091b15a4755bf84e16cf938e512651efde4e"
+    },
+    {
+      "id": "am-credit",
+      "publisher": "Aeroméxico",
+      "title": "Renovación y ampliación de crédito sindicado",
+      "published": "2026-09-30",
+      "url": "https://ir.aeromexico.com/static-files/b0d23afd-bf1c-446f-a4d4-bff60e7aa91c",
+      "locator": "p. 1, primer párrafo",
+      "accessed": "2026-10-19",
+      "sha256": "765e4b1fdbdeb2f8305c9c1d0b808c5b1a342fe4a4a260c81976e05ec6baf5c5"
+    },
+    {
+      "id": "am-agenda",
+      "publisher": "Aeroméxico",
+      "title": "Anuncio de resultados y conferencia 3T26",
+      "published": "2026-09-30",
+      "url": "https://ir.aeromexico.com/static-files/30ea3e8d-0097-44f2-909b-e6601f9cdd59",
+      "locator": "p. 1, fecha de resultados y Conference Call Details",
+      "accessed": "2026-10-19",
+      "sha256": "f98465519fa36f811e19a305f161b0654cc624960f3fd022395319c4fe08d93e"
+    },
+    {
+      "id": "volaris-agenda",
+      "publisher": "Volaris",
+      "title": "Anuncio de resultados y conferencia 3T26",
+      "published": "2026-10-07",
+      "accessed": "2026-10-19",
+      "url": "https://filemanager-cdn.mziq.com/published/ea52c1bb-e8e2-457e-820a-98ca17753a37/a7509bac-f05c-4f4b-906f-447a920976a2",
+      "locator": "p. 1, primer párrafo y Conference Call Details",
+      "sha256": "91572f8c6dffb41de41843e7dacdabc45caf5b4539f3dd500d3bef984acb51e6"
+    }
+  ],
+  "traffic": [
+    {
+      "airline": "Aeroméxico",
+      "passengers_thousands": 1853,
+      "passengers_yoy_pct": -2.1,
+      "asm_millions": 2892,
+      "asm_yoy_pct": 3.4,
+      "rpm_yoy_pct": 3.6,
+      "load_factor_pct": 87.1,
+      "source": "am-traffic"
+    },
+    {
+      "airline": "Viva",
+      "passengers_thousands": 2197,
+      "passengers_yoy_pct": -7.1,
+      "asm_millions": 1720,
+      "asm_yoy_pct": -11.0,
+      "rpm_yoy_pct": -7.7,
+      "load_factor_pct": 89.4,
+      "source": "viva-traffic"
+    },
+    {
+      "airline": "Volaris",
+      "passengers_thousands": 2475,
+      "passengers_yoy_pct": 4.2,
+      "asm_millions": 2814,
+      "asm_yoy_pct": 1.9,
+      "rpm_yoy_pct": 3.1,
+      "load_factor_pct": 84.4,
+      "source": "volaris-traffic"
+    }
+  ],
+  "sections": [
+    {
+      "id": "senales",
+      "title": "Señales del mes",
+      "stories": [
+        {
+          "title": "Aeroméxico: más distancia, menos pasajeros",
+          "claims": [
+            {
+              "kind": "hecho",
+              "text": "Los RPM crecieron 3.6% interanual; los pasajeros bajaron 2.1%.",
+              "sources": [
+                "am-traffic"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Viva: contracción de oferta",
+          "claims": [
+            {
+              "kind": "hecho",
+              "text": "La capacidad en ASM cayó 11.0% interanual y la ocupación llegó a 89.4%.",
+              "sources": [
+                "viva-traffic"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Volaris: crecimiento moderado",
+          "claims": [
+            {
+              "kind": "hecho",
+              "text": "Los ASM subieron 1.9% interanual y los RPM, 3.1%.",
+              "sources": [
+                "volaris-traffic"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "analisis",
+      "title": "Análisis",
+      "stories": [
+        {
+          "title": "La escala no cuenta toda la historia",
+          "claims": [
+            {
+              "kind": "inferencia",
+              "text": "En Aeroméxico, la divergencia entre pasajeros y RPM sugiere una mezcla de viajes de mayor distancia. No demuestra una mejora de tarifas ni de margen.",
+              "sources": [
+                "am-traffic"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Mayor ocupación con menor capacidad",
+          "claims": [
+            {
+              "kind": "inferencia",
+              "text": "En Viva, el recorte de ASM supera la caída de RPM y coincide con una mayor ocupación. Esa combinación describe utilización; no permite concluir rentabilidad.",
+              "sources": [
+                "viva-traffic"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "El internacional sostiene la demanda",
+          "claims": [
+            {
+              "kind": "hecho",
+              "text": "En Volaris, los RPM internacionales crecieron 14.2% interanual y los domésticos bajaron 3.8%.",
+              "sources": [
+                "volaris-traffic"
+              ]
+            },
+            {
+              "kind": "inferencia",
+              "text": "El contraste apunta a motores de demanda distintos por mercado. El agregado mensual no identifica rutas ganadoras.",
+              "sources": [
+                "volaris-traffic"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rutas",
+      "title": "Rutas y capacidad",
+      "stories": [
+        {
+          "title": "Capacidad por mercado",
+          "claims": [
+            {
+              "kind": "hecho",
+              "text": "Aeroméxico aumentó los ASM internacionales 6.3% y redujo los domésticos 3.4% interanual.",
+              "sources": [
+                "am-traffic"
+              ]
+            },
+            {
+              "kind": "hecho",
+              "text": "Viva redujo los ASM domésticos 11.2% y los internacionales 9.8% interanual.",
+              "sources": [
+                "viva-traffic"
+              ]
+            },
+            {
+              "kind": "hecho",
+              "text": "Volaris elevó los ASM internacionales 8.8% y redujo los domésticos 3.2% interanual.",
+              "sources": [
+                "volaris-traffic"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Detalle por ruta",
+          "claims": [
+            {
+              "kind": "limite",
+              "text": "Los reportes consultados son agregados: no sustentan una tabla de frecuencias o pasajeros por ruta de septiembre. Ese detalle queda pendiente.",
+              "sources": [
+                "am-traffic",
+                "viva-traffic",
+                "volaris-traffic"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "resultados",
+      "title": "Resultados",
+      "stories": [
+        {
+          "title": "Financiamiento de Aeroméxico",
+          "claims": [
+            {
+              "kind": "hecho",
+              "text": "El 30 de septiembre, Aerovías de México anunció la renovación y ampliación de su línea revolvente a US$250 millones, con plazo de tres años.",
+              "sources": [
+                "am-credit"
+              ]
+            },
+            {
+              "kind": "inferencia",
+              "text": "El monto de la línea describe financiamiento disponible bajo un contrato; no equivale a efectivo recibido ni a utilidad.",
+              "sources": [
+                "am-credit"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Tráfico y rentabilidad",
+          "claims": [
+            {
+              "kind": "limite",
+              "text": "Los resultados operativos anteriores no contienen ingresos ni costos mensuales. No se estima un margen de septiembre a partir de ocupación o tráfico.",
+              "sources": [
+                "am-traffic",
+                "viva-traffic",
+                "volaris-traffic"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "agenda",
+      "title": "Agenda",
+      "stories": [
+        {
+          "title": "19 de octubre · Aeroméxico",
+          "claims": [
+            {
+              "kind": "programado",
+              "text": "Publicación de resultados de 3T26 prevista después del cierre de mercado. No incorporada en este corte.",
+              "sources": [
+                "am-agenda"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "20 de octubre · Aeroméxico",
+          "claims": [
+            {
+              "kind": "programado",
+              "text": "Conferencia de resultados a las 08:00, hora de Ciudad de México.",
+              "sources": [
+                "am-agenda"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "26 y 27 de octubre · Volaris",
+          "claims": [
+            {
+              "kind": "programado",
+              "text": "Resultados de 3T26 previstos el 26 después del cierre de mercado; conferencia el 27 a las 09:00, hora de Ciudad de México.",
+              "sources": [
+                "volaris-agenda"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Viva",
+          "claims": [
+            {
+              "kind": "limite",
+              "text": "Fecha de resultados pendiente de verificación editorial; sin fecha asignada.",
+              "sources": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "methodology": [
+    "Periodo: septiembre de 2026. Fuentes consultadas al 19 de octubre de 2026 (UTC); los reportes de tráfico se publicaron en octubre. Las noticias corresponden al mes y la agenda mira al siguiente corte.",
+    "Cifras reportadas por las compañías, preliminares o no auditadas. Variaciones contra septiembre de 2025; ASM y RPM conservan millas. No se convierten a ASK ni se mezclan con Gold.",
+    "Pasajeros, ASM y RPM incluyen itinerario y chárter. Aeroméxico define pasajeros transportados; Viva, boletos adquiridos aunque no se vuele; Volaris, pasajeros reservados por segmento. No se suman ni se calculan cuotas de mercado.",
+    "Ocupación: se conserva el indicador publicado. Aeroméxico lo define sobre pasajeros y asientos de itinerario; Viva usa RPM/ASM de itinerario; Volaris publica RPM/ASM. No se recalcula ni se usa como clasificación homogénea entre compañías.",
+    "Hecho: declaración pública atribuida. Inferencia: lectura editorial propia. Programado: evento anunciado, sujeto a cambio. Límite: evidencia pendiente. Esta edición no utiliza estimaciones. Un faltante se muestra como «No disponible»."
+  ]
+}
