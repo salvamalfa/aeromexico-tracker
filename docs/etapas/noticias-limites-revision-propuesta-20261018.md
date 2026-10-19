@@ -376,3 +376,16 @@ Se incluyen329regresiones en788casos con matrices previas, PASS0.71s;
 RuffF/diff-checkPASS. Suite completa pendiente de congelar revisión. Huella
 `89731a4c4a9a3e70d3187e90e26ac753e00549d56f0c73d14157625d156e64e1`.
 Sin fase canónica, aprobación o gate nuevos;6534/88–90 intactos.
+
+## Modificadores del preámbulo · 19 de octubre, 01:16 UTC
+
+La revisión de03d7086 encontró se cree que y crees tú que. El preámbulo
+admite pronombres, clíticos y otros modificadores locales alrededor del
+verbo cognitivo, con un máximo de16palabras a cada lado. No atraviesa otro
+que ni etiquetas numéricas; solo afecta a detectar fronteras. Doce casos
+cubren sujetos, negación, adverbios, auxiliares y puntuación; dos aseguran
+que una relativa posterior con trimestre/mes sigue visible.
+Se incluyen343regresiones en802casos de matrices, PASS0.64s; RuffF y
+diff-checkPASS. Suite completa pendiente de congelar revisión. Huella
+`226ff9c16f03798491baeba2e600c88f2286c90883fd589851591ecf99c48dd4`.
+Sin nueva fase canónica, aprobación ni gate;6534/88–90 intactos.

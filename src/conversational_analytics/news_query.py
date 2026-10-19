@@ -90,9 +90,14 @@ def _publication_scope(text: str) -> str:
         # A topic beginning with interrogative "que" has no prior word.
         boundary += r"|(?<=\w)[\W_]+que\b"
         subject = text[start:]
+        # Allow bounded pronouns/adverbs around the cognitive verb, without
+        # crossing another "que" or a numeric calendar label.
+        modifier_word = r"(?!que\b)[^\W\d_]+"
+        modifiers = r"(?:[\W_]+" + modifier_word + r"){0,16}"
+        cognition = r"(?:cre|piens|pens|opin|consider|estim|supon|esper|parec)\w*"
         interrogative = re.match(
-            r"[\W_]*(?:(?:por|para|a|de|con|en)\s+)?que\b"
-            r"(?:\s+(?:cre|piens|pens|opin|consider|estim|supon|esper|parec)\w*\s+que\b)*",
+            r"[\W_]*(?:(?:por|para|a|de|con|en)[\W_]+)?que\b"
+            + r"(?:" + modifiers + r"[\W_]+" + cognition + modifiers + r"[\W_]+que\b)*",
             subject,
         )
         boundary_subject = subject

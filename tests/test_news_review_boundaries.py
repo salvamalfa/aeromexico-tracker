@@ -568,3 +568,36 @@ def test_cognitive_prelude_does_not_hide_a_later_publication_relative(period):
         resolve_news_query(
             f"Busca noticias publicadas en 2026-07 sobre por qué crees que cayeron los resultados que salieron en {period}"
         )
+
+
+@pytest.mark.parametrize(
+    "prelude",
+    [
+        "se cree que",
+        "crees tú que",
+        "tú crees que",
+        "no se cree que",
+        "se cree realmente que",
+        "según los analistas se cree que",
+        "crees, tú, que",
+        "ustedes consideran que",
+        "ella piensa que",
+        "ya no supones tú que",
+        "se ha creído que",
+        "los expertos, realmente, creen que",
+    ],
+)
+def test_cognitive_prelude_accepts_local_pronouns_clitics_and_modifiers(prelude):
+    intent = resolve_news_query(
+        f"Busca noticias publicadas en 2026-07 sobre por qué {prelude} cayeron los resultados en 2T26"
+    )
+    assert "2t26" in intent["terms"]
+    assert (intent["start_date"], intent["end_date"]) == ("2026-07-01", "2026-07-31")
+
+
+@pytest.mark.parametrize("period", ["2T26", "agosto de 2026"])
+def test_modified_cognitive_prelude_cannot_skip_another_relative_clause(period):
+    with pytest.raises(ValueError):
+        resolve_news_query(
+            f"Busca noticias publicadas en 2026-07 sobre por qué se cree que cayeron los resultados que salieron en {period}"
+        )
