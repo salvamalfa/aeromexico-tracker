@@ -103,3 +103,19 @@ se retiró tras la aprobación y activación de las métricas; las definiciones 
 recibos vigentes permanecen versionados.
 El [detalle técnico candidato F2.3](https://github.com/salvamalfa/aeromexico-tracker/blob/7ff22ed473d748808dde808d3dd2c63f9916b269/docs/chat/f23-metricas-detalle-tecnico.md)
 también permanece en ese commit; describía la proyección previa a la activación.
+
+
+## Retiro de instrucciones reemplazadas del chat (19 de octubre de 2026)
+
+Se retiran tres documentos de trabajo cuyo cierre ya acredita el
+[registro operativo](../etapas/chat-fase2-cierre-operativo-20261012.md).
+Los originales completos se conservan en el commit público fijo `dfa207c`:
+
+- [F2.5-F2.7-candidatos-20261011.md](https://github.com/salvamalfa/aeromexico-tracker/blob/dfa207c73d2eef4fa1b9de2bacd9da56d8586063/docs/chat/revision-fase-2/F2.5-F2.7-candidatos-20261011.md): Instrucción de revisión reemplazada por contenido aprobado y cierre operativo de fase 2.
+- [F2.9-etapa-2-revision-ciega.md](https://github.com/salvamalfa/aeromexico-tracker/blob/dfa207c73d2eef4fa1b9de2bacd9da56d8586063/docs/chat/revision-fase-2/F2.9-etapa-2-revision-ciega.md): Solicitud de calificación ya completada; se conservan resultados y presupuestos.
+- [chat-fase2-integracion-cierre-preparado-20261012.md](https://github.com/salvamalfa/aeromexico-tracker/blob/dfa207c73d2eef4fa1b9de2bacd9da56d8586063/docs/etapas/chat-fase2-integracion-cierre-preparado-20261012.md): Estado preparatorio reemplazado por entrega técnica y cierre operativo verificados.
+
+Se mantienen las decisiones y recibos de aprobación, los presupuestos de
+etapas 2/3, las entradas de generadores/pruebas y las bitácoras de entrega.
+El [índice vigente del chat](../chat/README.md#cierre-documental-del-19-de-octubre)
+explica la disposición de los siete candidatos iniciales. No se purga Git.

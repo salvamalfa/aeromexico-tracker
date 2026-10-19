@@ -42,10 +42,10 @@
     "bytes": 275688
   },
   "archive_candidates": [
-    "docs/chat/revision-fase-2/F2.5-F2.7-candidatos-20261011.md",
+    "https://github.com/salvamalfa/aeromexico-tracker/blob/dfa207c73d2eef4fa1b9de2bacd9da56d8586063/docs/chat/revision-fase-2/F2.5-F2.7-candidatos-20261011.md",
     "docs/chat/revision-fase-2/F2.9-etapa-2-presupuesto.md",
-    "docs/chat/revision-fase-2/F2.9-etapa-2-revision-ciega.md",
-    "docs/etapas/chat-fase2-integracion-cierre-preparado-20261012.md",
+    "https://github.com/salvamalfa/aeromexico-tracker/blob/dfa207c73d2eef4fa1b9de2bacd9da56d8586063/docs/chat/revision-fase-2/F2.9-etapa-2-revision-ciega.md",
+    "https://github.com/salvamalfa/aeromexico-tracker/blob/dfa207c73d2eef4fa1b9de2bacd9da56d8586063/docs/etapas/chat-fase2-integracion-cierre-preparado-20261012.md",
     "docs/etapas/chat-fase2-entrega-final-20261012.md",
     "docs/etapas/chat-f25-f27-evidencia-20261011.md",
     "docs/etapas/chat-f25-f27-evidencia-20261011-final.md"
@@ -68,5 +68,54 @@
     "exact_public_markdown_duplicates_found": 0,
     "automated_lifecycle_enforcement_in_ci": false
   },
-  "method": "git ls-files -z; byte sizes; incoming references from code/tests/skills/docs/config/workflows. Private audit reported separately; no private content copied here."
+  "method": "git ls-files -z; byte sizes; incoming references from code/tests/skills/docs/config/workflows. Private audit reported separately; no private content copied here.",
+  "followup_20261019": {
+    "mode": "local_cleanup_no_publication",
+    "scope": "Continúa este inventario; conteos y observaciones previos conservan su corte del 18.",
+    "archived": [
+      {
+        "original": "https://github.com/salvamalfa/aeromexico-tracker/blob/dfa207c73d2eef4fa1b9de2bacd9da56d8586063/docs/chat/revision-fase-2/F2.5-F2.7-candidatos-20261011.md",
+        "disposition": "archive",
+        "reason": "Instrucción de revisión reemplazada por contenido aprobado y cierre operativo de fase 2."
+      },
+      {
+        "original": "https://github.com/salvamalfa/aeromexico-tracker/blob/dfa207c73d2eef4fa1b9de2bacd9da56d8586063/docs/chat/revision-fase-2/F2.9-etapa-2-revision-ciega.md",
+        "disposition": "archive",
+        "reason": "Solicitud de calificación ya completada; se conservan resultados y presupuestos."
+      },
+      {
+        "original": "https://github.com/salvamalfa/aeromexico-tracker/blob/dfa207c73d2eef4fa1b9de2bacd9da56d8586063/docs/etapas/chat-fase2-integracion-cierre-preparado-20261012.md",
+        "disposition": "archive",
+        "reason": "Estado preparatorio reemplazado por entrega técnica y cierre operativo verificados."
+      }
+    ],
+    "kept_candidates": [
+      {
+        "path": "docs/chat/revision-fase-2/F2.9-etapa-2-presupuesto.md",
+        "disposition": "keep",
+        "reason": "Evidencia expresa de autorización y financiación; JSON presupuestal conservado."
+      },
+      {
+        "path": "docs/etapas/chat-fase2-entrega-final-20261012.md",
+        "disposition": "keep",
+        "reason": "Procedencia de despliegue PR120, snapshot y capacidades de ese corte; citado por operaciones."
+      },
+      {
+        "path": "docs/etapas/chat-f25-f27-evidencia-20261011.md",
+        "disposition": "keep",
+        "reason": "Origen de implementación y límites; bitácora histórica citada por el cierre técnico."
+      },
+      {
+        "path": "docs/etapas/chat-f25-f27-evidencia-20261011-final.md",
+        "disposition": "update",
+        "reason": "Conservar validaciones y procedencia; solo fijar enlace al brief retirado."
+      }
+    ],
+    "kept_brief": {
+      "path": "docs/chat/fase-2-decision-dueno.md",
+      "reason": "Entrada breve de cierre con referencias entrantes; historia de pins preservada en commit fijo."
+    },
+    "enforcement_now": "AGENTS.md exige cierre por tarea; scripts/check_document_lifecycle.py ya está en CI. El false anterior es observación histórica.",
+    "canonical_followup": "docs/chat/README.md#cierre-documental-del-19-de-octubre"
+  }
 }

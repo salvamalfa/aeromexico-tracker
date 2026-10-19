@@ -70,6 +70,14 @@ costo aparte, no incluido en los precios por tokens.
 
 ## Ejecución live y continuidad
 
+Las campañas descritas aquí ya terminaron. El [cierre operativo](../etapas/chat-fase2-cierre-operativo-20261012.md)
+registra la revisión del dueño y el ajuste final de R2. Los US$8 de etapa 2
+y la reserva posterior de Stage 3 son autorizaciones históricas para sus
+identidades exactas. No son fondos reutilizables ni permiso para otra campaña.
+Una evaluación nueva necesita alcance y presupuesto propios. Los comandos
+y límites siguientes se conservan para reproducir el procedimiento histórico;
+las comprobaciones offline pueden ejecutarse sin llamadas al proveedor.
+
 Para F2.9 etapa 2, el comando dedicado valida el fixture congelado, sus 15
 contextos, el snapshot, la semántica, el prompt efectivo y las cuatro
 combinaciones modelo/esfuerzo sin crear un cliente ni hacer llamadas:

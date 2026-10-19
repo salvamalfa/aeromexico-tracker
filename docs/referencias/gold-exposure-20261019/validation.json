@@ -1,0 +1,70 @@
+{
+  "public_base_commit": "dfa207c73d2eef4fa1b9de2bacd9da56d8586063",
+  "changed_documents_checked": 12,
+  "lifecycle_errors": [],
+  "public_markdown_scope": "tracked docs/**/*.md and root Markdown, after retirement; excludes skills and generated assets",
+  "public_markdown_files_checked": 111,
+  "public_markdown_categories": {
+    "canonical_or_index": 28,
+    "chat_guides_or_review": 14,
+    "decisions": 16,
+    "stage_logs": 53
+  },
+  "broken_local_destinations": [],
+  "fixed_git_links_checked": 23,
+  "protected_path_changes": [],
+  "archived_originals_match_base": true,
+  "tests": {
+    "command": "python -m pytest -q tests/test_gold_exposure_audit.py tests/test_document_lifecycle.py tests/test_document_lifecycle_parentheses.py",
+    "passed": 39,
+    "failed": 0
+  },
+  "full_pipeline_or_browser_suite": "not_run: no cambios de pipeline, contratos, interfaz ni datos; auditor offline y documentación solamente.",
+  "lint": {
+    "command": "ruff check --select F scripts/audit/gold_exposure.py scripts/check_document_lifecycle.py tests/test_gold_exposure_audit.py tests/test_document_lifecycle.py",
+    "result": "pass"
+  },
+  "independent_review": {
+    "reviewer": "independent_gold_docs_review",
+    "status": "completed_no_open_findings",
+    "corrected_findings": [
+      "Separar fecha de evaluación del pronóstico y ajuste final: 2025M06 frente a 2026M06.",
+      "Evitar aborto del control documental al leer URLs dinámicas en código; mantener errores de Markdown real."
+    ],
+    "independent_tests_passed": 36,
+    "checks": [
+      "43 SHA/tamaños públicos",
+      "4 privados contra Git",
+      "70 Markdown privados inventariados",
+      "3 originales archivados íntegros",
+      "Enlaces fijos y locales de Markdown cambiados",
+      "Sin cambios en publicación, skills, Vuelos o M11"
+    ]
+  },
+  "auditor_sha256": "86fd488a0a9f727aecec8e19d84b94a6f2516cdc54c029a92a5a00cfafb853ea",
+  "lifecycle_checker_sha256": "5830909b5ba5be75fe4c16a8972f50ca6ec6681bf9db1df02a9ee40d8ad179f1",
+  "scope_limits": [
+    "Clasificación estática revisada en código; no medición de uso, filas visibles ni prueba visual.",
+    "Snapshot privado LFS no usado, restaurado ni certificado.",
+    "Sin suite de pipeline o navegador porque no cambian pipeline, datos, contratos ni interfaz.",
+    "Resultados de otros hilos posteriores a las bases declaradas quedan fuera."
+  ],
+  "ci_followup": {
+    "previous_head": "e20b7532099e6c07f4a084b4b280fa8c0fbd327a",
+    "reported_run": 39283037188,
+    "reported_job": 118161197151,
+    "reported_failed_test": "tests/test_gold_exposure_audit.py::test_gold_audit_counts_actual_tables_and_leaves_private_unknown",
+    "local_reproduction": "Con PATH que contiene Git y no rg: exit 1, FileNotFoundError rg. Las huellas de aprobación no intervienen en este auditor.",
+    "change": "Usar git grep sobre archivos de trabajo, incluidos nuevos y skills ocultas; mantener errores inesperados como fallo. Mostrar stdout/stderr del auditor en el assert de la prueba.",
+    "regressions": {
+      "passed": 41,
+      "command": "python -m pytest -q tests/test_gold_exposure_audit.py tests/test_document_lifecycle.py tests/test_document_lifecycle_parentheses.py",
+      "no_rg_audit_exit": 0,
+      "public_inventory_unchanged_tables": 43,
+      "dependency_leads_lost": 0
+    },
+    "independent_review": "Sin hallazgos. Comparación independiente de las 43 tablas: conjuntos de referencias idénticos entre rg anterior y git grep nuevo.",
+    "auditor_sha256": "7195170ae99f2c57c3e9c0a13cdc329f056c5fcb66106c04c9104f7b48d6a374",
+    "remote_ci": "Se requiere comprobar el head corregido; no se convierte una reproducción local en resultado remoto."
+  }
+}
