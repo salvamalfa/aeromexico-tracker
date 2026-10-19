@@ -585,3 +585,20 @@ propuesta `1c2fd61dcbb99cf0856aeb3b6901499fee9d0d8f5afd2523b1ff6901fae80cb1`.
 1233PASS/178.68s/UI1440/390 pertenecen exclusivamente abac2076/6479b2e5.
 El nuevo HEAD queda congelado para sus propios checks;6534/88–90 intactos,
 sin fase canónica/gate ni cambios M11/Skills.
+
+## Exclusión por ocurrencia y conservación del tema literal
+
+La revisión de1e18669 detectó que quitar una señal del conjunto global de
+palabras borraba también su repetición literal. Se enmascara exclusivamente
+la ocurrencia que introduce el siguiente calendario; una señal intermedia
+impide atravesar otra ocurrencia. Los offsets se conservan entre texto
+semántico y clasificación temporal. Se eliminan términos únicamente después
+de esta operación por posición, sin ampliar vocabulario ni gramática.
+
+Dieciséis casos de repetición antes/después del filtro conservan la palabra
+literal, julio y cero coincidencias reales cuando el índice no contiene ese
+tema. Se mantienen los1007casos previos: **1023PASS0.96s**,1020matrices más
+tres presupuestos,561regresiones incluidas. RuffF ydiff-check correctos.
+Huella propuesta `806bcf951b335eacc1ba6b1349884bfd8c2adaa310a0c207a8bbd42b70d3bafc`.
+1247PASS/178.47s y UI1440/390 pertenecen a1e18669/1c2fd61d; se valida aparte
+el nuevo HEAD congelado.6534/88–90 intactos, sin fase canónica/gate ni M11/Skills.

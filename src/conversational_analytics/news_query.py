@@ -167,7 +167,6 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
         raise ValueError(
             "Indica inicio y fin de publicación como fechas ISO YYYY-MM-DD; la notación trimestral compacta no está admitida."
         )
-    words = set(re.findall(r"\w+", text))
     companies = [
         name
         for name, aliases in ENTITIES.items()
@@ -395,14 +394,17 @@ def resolve_news_query(question: str, start_date=None, end_date=None, company=No
         )
     ]
     removed = STOP | set(MONTHS) | set(years) | set(WEEKDAYS)
-    # A cue used with a following calendar filter is syntax, not a keyword.
-    # Keep a literal topic cue after the selected date searchable.
+    # Exclude only the occurrence introducing the next calendar filter.
+    # Set subtraction would also erase the same word in a literal topic.
     calendar_marker = r"\b(?:\d{4}|" + "|".join(MONTHS) + r")\b"
-    removed |= {
-        cue.group()
-        for cue in re.finditer(PUBLICATION_CUES, period_text)
-        if re.search(calendar_marker, period_text[cue.end():])
-    }
+    search_characters = list(semantic_text)
+    for cue in re.finditer(PUBLICATION_CUES, period_text):
+        following = period_text[cue.end():]
+        calendar_match = re.search(calendar_marker, following)
+        next_cue = re.search(PUBLICATION_CUES, following)
+        if calendar_match and (next_cue is None or calendar_match.start() < next_cue.start()):
+            search_characters[cue.start():cue.end()] = " " * len(cue.group())
+    words = set(re.findall(r"\w+", "".join(search_characters)))
     removed |= set(re.findall(r"\w+", " ".join(alias for aliases in ENTITIES.values() for alias in aliases)))
     removed |= set(re.findall(r"\w+", " ".join(alias for key in topics for alias in TOPICS[key])))
     terms = sorted(word for word in words - removed if len(word) > 1 and not word.isdigit())

@@ -536,3 +536,14 @@ def test_publication_cues_do_not_become_false_news_keywords(approved_index, cue)
 def test_literal_topic_cue_after_selected_publication_date_stays_searchable(cue):
     intent = resolve_news_query(f"noticias publicadas en julio de 2026 sobre {cue}")
     assert intent["terms"] == [cue.replace("ó", "o")]
+
+
+@pytest.mark.parametrize("cue", ["salieron", "aparecieron", "difundidas", "emitidas", "divulgadas", "salió", "apareció", "divulgación"])
+@pytest.mark.parametrize("order", ["before", "after"])
+def test_repeated_signal_retains_literal_topic_occurrence(approved_index, cue, order):
+    query = (f"noticias sobre {cue} que {cue} en julio de 2026" if order == "before"
+             else f"noticias que {cue} en julio de 2026 sobre {cue}")
+    intent = resolve_news_query(query)
+    assert intent["terms"] == [cue.replace("ó", "o")]
+    assert (intent["start_date"], intent["end_date"]) == ("2026-07-01", "2026-07-31")
+    assert approved_index.search_news(query)["count"] == 0
