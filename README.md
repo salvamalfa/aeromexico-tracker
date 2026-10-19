@@ -137,6 +137,14 @@ auditada de 2T26 se conserva en `prototypes/etapa-17/audited_analysis.html`.
 
 Fuentes principales: SEC EDGAR, BMV XBRL, AFAC, BTS T-100, Banxico, EIA, datos públicos de mercado, reportes de aerolíneas, grupos aeroportuarios y fuentes regulatorias abiertas. Las limitaciones y bloqueos de cada fuente están documentados en los reportes de etapa.
 
+## Airline Monthly para revisión
+
+**Airline Monthly (M11):** edición piloto de septiembre de 2026 y archivo
+mensual preparados para revisión, mediante una opción local explícita.
+[Módulo y HTML de revisión](docs/airline-monthly.md) ·
+[Acuerdo y calendario](docs/airline-monthly-plan-20261019.md).
+La preparación no autoriza integración ni publicación.
+
 ## Candidato Mercado
 
 La rama de revisión incorpora Mercado; su alcance y límites están en

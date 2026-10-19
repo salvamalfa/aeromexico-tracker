@@ -1,12 +1,32 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 
 // GitHub Pages serves this site from a sub-path (/aeromexico-tracker/), so
 // every asset reference must be relative — see
 // docs/arquitectura/auditoria-arquitectura-20260926.md Fase 4/5.
-export default defineConfig(({ command }) => ({
+export default defineConfig(({ command, mode }) => {
+  // Editorial candidates are opt-in: ordinary builds cannot ship a draft.
+  const monthlyPreview = loadEnv(mode, process.cwd(), "VITE_").VITE_AIRLINE_MONTHLY_PREVIEW === "true";
+  return ({
   base: "./",
+  plugins: [{
+    name: "airline-monthly-preview",
+    transformIndexHtml(html, context) {
+      if (!monthlyPreview || !context.filename.endsWith("/index.html")) return html;
+      return html.replace('<header class="hero">', '<header class="hero"><nav aria-label="Productos"><a href="monthly.html">Airline Monthly</a></nav>');
+    },
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (!monthlyPreview && req.url?.split("?")[0] === "/monthly.html") {
+          res.statusCode = 404;
+          res.end("Vista editorial no habilitada");
+          return;
+        }
+        next();
+      });
+    },
+  }],
   // plotly.js' has-hover dependency reads the Node-style `global` name. The
   // production build already rewrites it (Rollup's CommonJS plugin), but the
   // dev server's dependency pre-bundling does not, so the alias applies only
@@ -25,6 +45,7 @@ export default defineConfig(({ command }) => ({
         dashboard: resolve(fileURLToPath(new URL(".", import.meta.url)), "index.html"),
         review: resolve(fileURLToPath(new URL(".", import.meta.url)), "review.html"),
         access: resolve(fileURLToPath(new URL(".", import.meta.url)), "access.html"),
+        ...(monthlyPreview ? { monthly: resolve(fileURLToPath(new URL(".", import.meta.url)), "monthly.html") } : {}),
       },
       output: {
         entryFileNames: "assets/[name]-[hash].js",
@@ -38,4 +59,5 @@ export default defineConfig(({ command }) => ({
     // transfer for the default (reading) view stays small.
     chunkSizeWarningLimit: 900,
   },
-}));
+  });
+});

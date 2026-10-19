@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-19 · Airline Monthly: piloto para revisión
+
+- M11 se prepara como publicación mensual original: edición de septiembre de
+  2026 para Aeroméxico, Viva y Volaris, con índice, fuentes y archivo navegable.
+- Preview HTML autocontenida y módulo optativo; el build habitual excluye el
+  borrador. Sin cambios de datos aprobados ni publicación de producción.
+  [Acuerdo y límites](docs/airline-monthly-plan-20261019.md).
+
 ## 2026-10-12 · Chat: cierre operativo de fase 2 (fecha México)
 
 - PR #129 integrado; Railway `SUCCESS` y health 200 confirman R2/Sol low/medium,

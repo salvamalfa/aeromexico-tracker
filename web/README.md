@@ -1,5 +1,10 @@
 # `web/`
 
+Airline Monthly vive en `monthly.html` y `src/monthly/`, como módulo editorial
+optativo para revisión. Se habilita solo con
+`VITE_AIRLINE_MONTHLY_PREVIEW=true`; el build habitual lo excluye.
+[Fuentes, contrato y reproducción de preview](../docs/airline-monthly.md).
+
 Vite + TypeScript front-end for the whole published page — shared header,
 period stepper, and the reader-tabs shell around three views (Lectura
 ejecutiva, Economía unitaria, Vuelos) — loading the v1 payload split by

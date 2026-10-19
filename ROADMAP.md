@@ -4,6 +4,10 @@ Propuesta — el dueño decide prioridades.
 
 ## Ahora
 
+- M11 Airline Monthly: preparar y revisar el piloto mensual según el
+  [acuerdo activo](docs/airline-monthly-plan-20261019.md). Integración y
+  publicación requieren aprobación posterior.
+
 - Fase 1 de actualización por lotes: revisar el
   [catálogo de fuentes/métricas y calendario](docs/catalogo-fuentes-calendario.md).
   Una ronda mensual desde el 15 y una trimestral según publicaciones reales;
