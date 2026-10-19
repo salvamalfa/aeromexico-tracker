@@ -97,7 +97,7 @@ PRODUCTS = (
         "yahoo_finance",
         "both",
         "ticker_identity_and_adjustment_revisions_no_pre_ipo_aero_splice",
-        "parse.market",
+        "parse.market_chart",
     ),
     (
         "anac",

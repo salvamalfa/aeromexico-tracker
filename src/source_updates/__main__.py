@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import date
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 from src.source_updates import calendar
@@ -57,6 +57,12 @@ def main(argv: list[str] | None = None) -> int:
             command.add_argument("--steps", required=True)
         else:
             command.add_argument("--selection" if name == "collect" else "--recipe", type=Path, required=True)
+        if name == "round":
+            command.add_argument(
+                "--check-at-completion",
+                action="store_true",
+                help="Use the recorded completion time for checks; retain the recipe cutoff separately",
+            )
     checks = commands.add_parser("check")
     checks.add_argument("--workspace", type=Path, required=True)
     checks.add_argument("--specification", type=Path, required=True)
@@ -130,6 +136,8 @@ def main(argv: list[str] | None = None) -> int:
                 "collection": collected,
                 "activation": "none",
                 "publication": "not_authorized",
+                "requested_as_of": recipe["checks"]["as_of"],
+                "check_time_policy": "completion" if args.check_at_completion else "recipe_cutoff",
             }
             if args.execute and collected["status"] != "collected_unvalidated":
                 result["status"] = "blocked_collection"
@@ -140,7 +148,10 @@ def main(argv: list[str] | None = None) -> int:
                     if built.get("status") != "completed":
                         result["status"] = "blocked_build"
                     else:
-                        result["checks"] = check_candidate(args.workspace, recipe["checks"])
+                        specification = dict(recipe["checks"])
+                        if args.check_at_completion:
+                            specification["as_of"] = datetime.now(UTC).isoformat()
+                        result["checks"] = check_candidate(args.workspace, specification)
                         result["status"] = result["checks"]["status"]
                 else:
                     result["period_checks"] = recipe["checks"]

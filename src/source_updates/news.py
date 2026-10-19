@@ -106,7 +106,7 @@ def build_from_bronze() -> dict:
     from src.ingest.news.rss_gdelt import _parse_gdelt, _parse_rss
     from src.ingest.stage4_common import write_parquet_atomic
 
-    rows, visited = [], set()
+    rows, visited, rejected = [], set(), []
     manifest = PATHS.bronze / "_manifest.jsonl"
     for line in manifest.read_text().splitlines():
         artifact = json.loads(line)
@@ -119,6 +119,15 @@ def build_from_bronze() -> dict:
             feed_key = artifact["logical_key"].split("|")[1]
             rows.extend(_parse_rss(path, feed_key))
         else:
+            # Historical HTTP-200 aggregator errors are retained in Bronze.
+            # They are access evidence, never successful empty news captures.
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+                if not isinstance(payload, dict) or not isinstance(payload.get("articles"), list):
+                    raise ValueError("Expected a GDELT articles array")
+            except ValueError as exc:
+                rejected.append({"source_file": artifact["source_file"], "reason": str(exc)})
+                continue
             rows.extend(_parse_gdelt(path))
     if not rows:
         raise ValueError("No valid news metadata; access failure is not an empty successful month")
@@ -131,4 +140,6 @@ def build_from_bronze() -> dict:
         "article_requests": 0,
         "coverage": "selected_metadata_only_not_complete_month",
         "activation": "none",
+        "invalid_artifacts_preserved": rejected,
+        "source_completeness": "partial_invalid_captures" if rejected else "not_certified",
     }
