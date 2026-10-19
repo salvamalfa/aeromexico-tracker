@@ -395,3 +395,26 @@ def test_only_the_locally_attributed_terminal_token_is_exempt(question):
 def test_terminal_exception_does_not_exempt_another_quarter_token(question):
     with pytest.raises(ValueError, match="notación trimestral"):
         resolve_news_query(question)
+
+
+@pytest.mark.parametrize(
+    "terminal",
+    [
+        "T2 en el AICM",
+        "T2 de la terminal del AICM",
+        "T2 en el AIFA",
+        "T2 en el aeropuerto de Cancun",
+        "T2 en la terminal del AICM",
+        "terminal (T2)",
+        "terminal: T2",
+        "AICM (T2)",
+        "T2 (AICM)",
+        "terminal aerea numero T2",
+    ],
+)
+def test_local_terminal_prepositions_articles_and_wrappers_remain_searchable(approved_index, terminal):
+    question = f"noticias de {terminal} en 2026"
+    intent = resolve_news_query(question)
+    assert "t2" in intent["terms"]
+    assert (intent["start_date"], intent["end_date"]) == ("2026-01-01", "2026-12-31")
+    assert approved_index.search_news(question)["count"] == 0

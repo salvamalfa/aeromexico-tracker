@@ -275,3 +275,15 @@ tokens. La suite limpia944/180.27s pertenece a4e714cd, no a la nueva huella
 `e33703ba9722e0414dee9d467379b787c26fb2539337dd9f10cabd2e71f14d7c`.
 La nueva suite se inicia tras el commit. Sin fase canónica ni gate; la
 aprobación6534/88–90 permanece intacta para la cohorte original.
+
+## Conectores locales de terminal · 19 de octubre, 00:39 UTC
+
+La revisión de7d38fe8 pidió T2 en el AICM y T2 de la terminal del AICM.
+La atribución local admite ahora de/del/en con artículos, el sustantivo
+terminal después del identificador y envolturas de puntuación. Se mantienen
+los casos que prueban que un aeropuerto en otro tema no exime un trimestre.
+Diez búsquedas locales adicionales conservan T2, año2026 y cero noticias sin
+evidencia. Se incluyen270regresiones en729casos con las matrices anteriores,
+PASS0.58s; RuffF/diff-checkPASS. La suite limpia962/177.59s corresponde a7d38fe8.
+Huella propuesta `6641af156fba7e863c59e16559cc118c7e59d8f53017151640d5a07ced337df3`;
+suite siguiente tras commit, sin aprobación/gate/fase canónica nueva.
