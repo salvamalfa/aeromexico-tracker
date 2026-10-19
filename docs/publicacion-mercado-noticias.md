@@ -4,10 +4,10 @@
 
 La publicación final usa una sola combinación de Noticias y las herramientas
 aprobadas de actualización. El expediente privado identifica los tres pares
-exactos de Industria, Viva y Volaris para 2T26. Cada par necesita auditoría
-independiente y consentimiento del dueño para su propia huella de código.
-Aeroméxico conserva su registro histórico. El sitio publicado anterior permanece
-hasta completar el gate y las comprobaciones de esa combinación.
+exactos de Industria, Viva y Volaris para 2T26. Los tres pares tienen auditoría
+independiente favorable y consentimiento expreso del dueño para su propia huella
+de código. Aeroméxico conserva su registro histórico. La publicación utiliza el
+gate normal, CI del artefacto final y comprobaciones reales de Pages y Railway.
 
 ## Qué cambia para ti
 
@@ -28,11 +28,10 @@ publicación conocida se conservan para revisión, fuera de las ediciones fechad
 
 ## Qué necesitas hacer
 
-1. Revisa la única decisión final y sus cuatro lecturas en el expediente privado.
-2. Si aceptas el contenido, aprueba los tres pares y el hash completo indicados
-   en esa decisión. La aprobación de herramientas no sustituye este mensaje.
-3. Después del consentimiento exacto, el agente registra la aprobación con el
-   ciclo oficial, ejecuta el gate y verifica el sitio firmado antes de publicar.
+El consentimiento específico de esta combinación ya fue recibido. Revisa el
+[dashboard público](https://salvamalfa.github.io/aeromexico-tracker/) con sus
+cinco vistas. Un cambio posterior de contenido o huella requiere la decisión
+que le corresponda; no se reutiliza este mensaje para otras identidades.
 
 ## Apéndice técnico
 
@@ -40,11 +39,15 @@ publicación conocida se conservan para revisión, fuera de las ediciones fechad
 
 Vuelos #134, empaquetado #138 y Mercado #135 ya se integraron con el sitio
 anterior conservado. La propuesta final de Noticias reúne su corrección #139
-con las herramientas #137 y #141. Confirmar los merges reales de estas últimas
-y comparar la combinación efectiva antes de fijar los pares canónicos. No
+con las herramientas #137 y #141. Los merges reales de estas últimas
+son `3b7771e` y `dfa207c`; la combinación aprobada parte de `76c750a`
+y de la huella global `f54fb9f2…`. Los tres pares canónicos y sus hashes
+están en la [decisión inmutable](https://github.com/salvamalfa/aeromexico-tracker-data/blob/dfc8d88632e492191d0e1ccb4129862186d6a6f8/review/operacion/20261019/market-news-final/decision.md). No
 integrar de nuevo sus PR ni pedir al dueño elegir un orden técnico.
 
-Conservar `site/` igual al master aceptado mientras se prepara esta combinación.
+La preparación conservó `site/` igual al master aceptado. Tras el consentimiento
+del 19 de octubre de 2026 a las 14:58:36 UTC, se registran los tres eventos de
+aprobación y se genera un manifiesto propio con las identidades verificadas.
 No reutilizar un manifiesto firmado para otra huella. La preparación de código,
 la auditoría, la aprobación y la publicación son pasos distintos.
 
@@ -90,8 +93,8 @@ para los valores numéricos no finitos. Las consultas directa y mensual reutiliz
 
 ## Pendientes
 
-- Consentimiento exacto de la cohorte final; gate, integración y verificación
-  pública después de ese consentimiento.
+- Para futuras modificaciones, conservar la aprobación ligada a sus pares y
+  comprobar la huella, el gate, la CI y el despliegue real antes de publicar.
 - Skills por fuente y coordinador mensual/trimestral como herramientas, con sus
   comprobaciones y activaciones coordinadas aparte. No habilitar calendarios aquí.
 - Noticias mensual y aprobación independiente de las once candidatas.

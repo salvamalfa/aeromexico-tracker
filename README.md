@@ -6,7 +6,7 @@ El proyecto transforma fuentes regulatorias, operativas y de mercado en una lect
 
 ## Dashboard
 
-El dashboard publicado presenta tres vistas integradas: Lectura ejecutiva, Economía unitaria y Vuelos, construidas como una página real en `web/` (Vite + TypeScript) y servidas por GitHub Pages. Desde el Dashboard v2 (30 sep 2026), cada tarjeta tiene un selector de aerolínea: Industria, Aeroméxico, Volaris o Viva. Las fases están documentadas en `docs/etapas/dashboard-v2-*.md`.
+El dashboard presenta cinco vistas integradas: Lectura ejecutiva, Economía unitaria, Vuelos, Mercado y Noticias y estrategia, construidas como una página real en `web/` (Vite + TypeScript) y servidas por GitHub Pages. Desde el Dashboard v2 (30 sep 2026), cada tarjeta tiene un selector de aerolínea: Industria, Aeroméxico, Volaris o Viva. Las fases están documentadas en `docs/etapas/dashboard-v2-*.md`.
 
 [Repositorio público en GitHub](https://github.com/salvamalfa/aeromexico-tracker)
 
@@ -34,8 +34,9 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
 
 ## Estado
 
-- **Dashboard:** tres vistas publicadas en Pages (Lectura ejecutiva, Economía
-  unitaria y Vuelos), construidas solo con datos y análisis ya aprobados.
+- **Dashboard:** cinco vistas en la publicación autorizada de Pages: Lectura
+  ejecutiva, Economía unitaria, Vuelos, Mercado y Noticias y estrategia.
+  Usa datos y análisis ya aprobados; Noticias mantiene cobertura parcial.
 - **Analysis Agent:** el análisis de 2T26 está aprobado y publicado en la
   Lectura ejecutiva (`data/v1/analysis/2026Q2.json`). El siguiente ciclo es
   3T26, cuando Aeroméxico publique su reporte trimestral.
@@ -157,15 +158,17 @@ Por la decisión explícita de **no versionar bronze**, una reconstrucción con 
 
 ## Noticias y estrategia
 
-El código preparado del archivo mensual presenta las tres fichas aprobadas con fuentes, resúmenes
+El archivo mensual presenta las tres fichas aprobadas con fuentes, resúmenes
 breves y fechas de publicación, hecho y primera captura separadas. Permite
 filtrar por mes, tema y aerolínea, y buscar desde el chat con navegación citada.
 La cobertura es parcial. Las once candidatas del [corte de investigación](docs/etapas/noticias-candidato-20261015.md)
 siguen pendientes de revisión y no amplían la evidencia del chat.
 La [auditoría Gold](docs/gold-exposure.md) conserva los datos y sus dependencias.
-La combinación de Noticias y las herramientas de actualización requiere una cohorte
-técnica propia y consentimiento exacto antes del gate. La integración de herramientas
-no publica datos ni activa calendarios; el sitio anterior se conserva hasta ese paso.
+La combinación de Noticias y las herramientas de actualización usa tres pares
+técnicos de 2T26 con auditoría independiente y consentimiento específico del dueño.
+El gate revalida las cuatro lecturas antes de firmar el sitio; Aeroméxico conserva
+su registro histórico. La publicación no amplía las noticias candidatas ni activa
+calendarios, datos de Airline Monthly M11 o trabajo de fuentes de otros hilos.
 GDELT conserva primera observación y captura sin inventar publicación mensual.
 
 ## Chat analítico
