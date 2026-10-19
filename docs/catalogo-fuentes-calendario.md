@@ -84,6 +84,11 @@ supera el parser disponible, lo deja pendiente. El adaptador AFAC candidato admi
 todos los PDF y fletamento de sus meses. Otros años y formatos corporativos
 requieren revisión.
 BMV registra miembros ZIP sin red y conserva los catálogos históricos. La cadena
+de selección nueva solo admite trimestres; los años se rechazan antes de la
+captura hasta contar con comprobador anual. Los anuales retenidos se conservan.
+Las notas AFAC de cada página acompañan únicamente a las filas regulares de su
+mes y mercado; no se trasladan entre doméstico e internacional ni a fletamento.
+La cadena
 completa de parseo y validación ya permite reconstruir Gold candidato. Los
 periodos se derivan de las observaciones, sin corte fijo de agosto; la tasa
 objetivo conserva unidad `percent` y su valor original. El puente de linaje se

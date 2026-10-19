@@ -19,7 +19,7 @@ python -m src.source_updates plan --round monthly --as-of 2026-10-18T12:00:00-06
 Si la familia es trimestral, usar `--round quarterly --quarter 2026Q3`.
 La fecha del ejemplo solo reproduce el corte; cambiarla deliberadamente.
 Pasos existentes disponibles: parse.peer_discovery,parse.sec,parse.peers,parse.aeromexico_ir,parse.aeromexico_ir_financial.
-BMV: `recipe --product bmv_xbrl --output selection --catalog-file <html> --period <YYYYQn> --ticker AERO` selecciona paquetes publicados reales. `parse.bmv` verifica hashes, límites/rutas del ZIP, registra un único JSON offline y acota el índice. Une catálogos preservados para no perder paquetes anteriores. No usa fragmentos URL como descargas; la ausencia de Q3 no se sustituye por Q2.
+BMV: `recipe --product bmv_xbrl --output selection --catalog-file <html> --period <YYYYQn> --ticker AERO` selecciona paquetes publicados reales. La selección candidata admite solo trimestres; rechaza años antes de leer el catálogo o preparar una captura porque no hay comprobador anual. Los paquetes anuales retenidos se conservan y pueden reproducirse offline, sin certificar un periodo anual nuevo. `parse.bmv` verifica hashes, límites/rutas del ZIP, registra un único JSON offline y acota el índice. Une catálogos preservados para no perder paquetes anteriores. No usa fragmentos URL como descargas; la ausencia de Q3 no se sustituye por Q2.
 
 Consultar `src/source_updates/catalog.py` para subproductos y brechas.
 No confundir esos pasos disponibles con un adaptador aprobado para cualquier
