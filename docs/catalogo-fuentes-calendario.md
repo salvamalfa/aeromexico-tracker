@@ -617,6 +617,10 @@ carpetas homónimas bajo `payload/originals/`; para `dot_review`, usar
 `payload/diagnostics/dot_review/`. Los candidatos completos viven en
 `payload/candidates/` y conservan sus rutas internas y recibos. No copiar esos
 Gold a producción ni interpretar el respaldo como una aprobación nueva.
+Para reproducir un candidato con `--check`, copiar primero su carpeta completa
+a una carpeta nueva bajo `tmp/source-updates/` de este checkout. Ese límite
+de escritura y lectura de candidatos se conserva; no se amplía al respaldo
+privado ni se sustituye con enlaces simbólicos.
 Un pasaje localizado no aprueba la interpretación del revisor. Se conservan
 `agent_eligible=false`, `silver_gold_certification=false` y `activation=none`.
 [Muestra verificable de los auditores y fallos](referencias/source-updates-20261019/curation-news-verification.json).
