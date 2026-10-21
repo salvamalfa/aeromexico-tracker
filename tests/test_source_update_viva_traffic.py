@@ -39,7 +39,8 @@ RPK (Revenue Passenger Kilometers / Ingresos Pasajero Kilómetro)
 def test_historical_native_units_and_booked_scope_do_not_become_flown_or_asm():
     frame, receipt = source.texts([text()], "2021M11", ORIGINAL)
     assert len(frame) == 12 and receipt["monthly_rows"] == 4
-    assert receipt["comparison_rows"] == 8 and receipt["release_lag_days"] == 7
+    assert receipt["comparison_rows"] == 8 and receipt["reported_document_lag_days"] == 7
+    assert receipt["release_lag_days"] is None and receipt["published_date"] is None
     assert set(frame.period_id) == {"2021M11", "2020M11", "2019M11"}
     current = frame[frame.period_id.eq("2021M11")].set_index("metric_key")
     assert current.loc["passengers_booked", "value"] == 1000
@@ -168,7 +169,9 @@ def test_current_monthly_segments_units_and_preliminary_are_source_faithful():
     assert current.loc["rpm", "unit"] == "million passenger-miles"
     assert frame.is_preliminary.all() and frame.reporting_status.eq("preliminary").all()
     assert details["native_reconciliations"] == 16
-    assert details["release_lag_days"] == 9 and details["excluded_columns"] == [
+    assert details["reported_document_lag_days"] == 9
+    assert details["release_lag_days"] is None and details["published_date"] is None
+    assert details["excluded_columns"] == [
         "year_to_date",
         "reported_changes",
     ]

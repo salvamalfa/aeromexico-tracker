@@ -18,7 +18,7 @@ from src.source_updates.catalog import load_catalog
 from src.source_updates.checks import period_end
 from src.source_updates.collection import validate_url
 
-VERSION = "viva_traffic_native_monthly_v2"
+VERSION = "viva_traffic_native_monthly_v3"
 TABLE = "fact_viva_monthly_source_metrics"
 GRAIN = ["period_id", "metric_key", "segment", "definition"]
 MONTHS = "enero febrero marzo abril mayo junio julio agosto septiembre octubre noviembre diciembre".split()
@@ -176,7 +176,7 @@ def texts(pages: list[str], period: str, original: dict) -> tuple[pd.DataFrame, 
                     "source_locator": "page:1;monthly-table;" + label + ";" + observed,
                     "source_excerpt": row,
                     "source_page": 1,
-                    "published_date": published,
+                    "document_date": published,
                     "source_system": original["source_system"],
                     "source_file": original["source_file"],
                     "source_hash": original["sha256"],
@@ -195,8 +195,10 @@ def texts(pages: list[str], period: str, original: dict) -> tuple[pd.DataFrame, 
         "comparison_rows": 8,
         "observation_months": sorted(frame.period_id.unique()),
         "latest_validated_period": period,
-        "published_date": published.isoformat(),
-        "release_lag_days": (published - period_end(period)).days,
+        "document_date": published.isoformat(),
+        "published_date": None,
+        "reported_document_lag_days": (published - period_end(period)).days,
+        "release_lag_days": None,
         "first_available_at": None,
         "publication_time": None,
         "reporting_status": "not_stated_in_this_release",
@@ -281,10 +283,10 @@ def current_texts(pages: list[str], period: str, original: dict) -> tuple[pd.Dat
         )
     dates = re.findall(r"Ciudad de México, (\d{1,2}) de ([a-z]+) de (20\d{2})", first)
     if len(dates) != 1 or dates[0][1] not in MONTHS:
-        raise ValueError("Viva source publication dateline absent or ambiguous")
+        raise ValueError("Viva source document dateline absent or ambiguous")
     published = date(int(dates[0][2]), MONTHS.index(dates[0][1]) + 1, int(dates[0][0]))
     if published <= period_end(period) or pd.Timestamp(original["downloaded_at"]).date() < published:
-        raise ValueError("Viva publication must follow the month and precede its source capture")
+        raise ValueError("Viva document date must follow the month and precede its source capture")
     header = required[3]
     table = first.split(header, 1)[1].split(required[1], 1)[0].strip()
     headings = [
@@ -337,7 +339,7 @@ def current_texts(pages: list[str], period: str, original: dict) -> tuple[pd.Dat
                         "source_locator": f"page:1;monthly-table;{label};{segment};{observed}",
                         "source_excerpt": section.strip(),
                         "source_page": 1,
-                        "published_date": published,
+                        "document_date": published,
                         "reporting_status": "preliminary",
                         "is_preliminary": True,
                         "source_system": original["source_system"],
@@ -372,8 +374,10 @@ def current_texts(pages: list[str], period: str, original: dict) -> tuple[pd.Dat
         "comparison_rows": 12,
         "observation_months": sorted(frame.period_id.unique()),
         "latest_validated_period": period,
-        "published_date": published.isoformat(),
-        "release_lag_days": (published - period_end(period)).days,
+        "document_date": published.isoformat(),
+        "published_date": None,
+        "reported_document_lag_days": (published - period_end(period)).days,
+        "release_lag_days": None,
         "first_available_at": None,
         "publication_time": None,
         "reporting_status": "preliminary",
