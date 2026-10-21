@@ -90,7 +90,10 @@ queda bloqueado; no se extrapolan sus festivos.
 
 Para probarlo, ejecuta la vista previa del apéndice. El resultado muestra las
 fuentes y los pasos previstos. No hace falta aprobar otra vez el calendario.
-La siguiente revisión útil será un lote candidato con sus datos y faltantes.
+Para completar su control global falta una decisión de alcance: definir qué
+otros productos son requeridos en cada tipo de ronda. Aerocivil y GDELT
+conservan su condición requerida. Después se podrá revisar un lote candidato
+con sus datos y faltantes.
 
 ## Preparación comprobable del calendario
 
@@ -256,6 +259,18 @@ ellas. Antes de usarlo como control de aceptación del calendario se necesita
 esa política explícita y resolver ambos bloqueos. Los indicadores
 `ready_for_calendar_incorporation` y `ready_for_automatic_execution` permanecen
 falsos incluso en la receta numérica exitosa.
+
+La revisión del catálogo y la matriz no permite deducir esa lista global. Los
+42 productos tienen frecuencia, pero no una clasificación completa de
+obligatoriedad. Aena figura como opcional y las fuentes complementarias no
+bloquean automáticamente un reporte financiero. Las entradas IR, SEC y BMV
+tampoco indican si deben pasar todas o si algunas son vías alternativas para
+un mismo reporte. Por tanto, no se impone que todos los productos de una
+frecuencia sean requeridos ni se supone que el resto sea opcional. La decisión
+pendiente es la lista de productos requeridos para mensual, trimestral y
+combinada, sin rebajar Aerocivil ni GDELT. Hasta fijarla, los indicadores de
+calendario y ejecución automática siguen falsos. Los controles de releases y
+festivos del calendario siguen vigentes; no completan por sí solos esa política.
 
 La revisión final corrigió dos fallos de contrato: una certificación GDELT
 vacía ya no devuelve éxito de proceso y los replay H.10, tráfico Aeroméxico,
@@ -1153,6 +1168,10 @@ implementación local descrita arriba; no son el recibo de pruebas de esta entre
 
 ## Pendientes
 
+- Definir la lista global de productos requeridos por tipo de ronda, además de
+  Aerocivil y GDELT, que siguen requeridos. La frecuencia del catálogo y las
+  recetas de ejemplo no resuelven esa decisión. Sin esa lista no se implementa
+  una política inferida ni se declara listo el calendario.
 - Aerocivil sigue pendiente de una leyenda y atribución primarias del ID exacto.
   GDELT requiere una captura correctamente rotulada del mes que pase el control
   de fechas; el último diagnóstico terminó en 429 y este lote no vuelve a llamar.
