@@ -1,5 +1,6 @@
 """Aerocivil bounded query, source count, native grain and operations-only tests."""
 
+import hashlib
 import json
 import shutil
 from contextlib import contextmanager
@@ -281,6 +282,11 @@ def test_candidate_reconstructs_gold_and_reference_lineage_without_network(works
     assert result["status"] == "checks_passed" and result["lineage"]["artifact_count"] == 4
     assert result["lineage"]["records_expected"] == 1 and result["source_counts"] == [1, 1]
     assert result["published_at"] is None and result["release_lag_days"] is None
+    assert result["code_files"] == {
+        name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
+        for name in ("src/source_updates/aerocivil.py", "src/source_updates/aerocivil_metadata.py")
+    }
+    assert result["code_sha256"] == result["code_files"]["src/source_updates/aerocivil.py"]
     frame = pd.read_parquet(workspace / "data/gold" / (aerocivil.TABLE + ".parquet"))
     assert frame.operations.iloc[0] == 94 and frame.departures.isna().all()
     before = {str(p): p.read_bytes() for p in workspace.rglob("*") if p.is_file()}
