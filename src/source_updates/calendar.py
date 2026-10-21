@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import re
 from datetime import date, datetime, timedelta
+from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
 ZONE = ZoneInfo("America/Mexico_City")
@@ -46,6 +48,13 @@ def monthly(year: int, month: int, holidays: dict) -> date:
 def quarterly(quarter: str, releases: list[dict], as_of: str, holidays: dict) -> dict:
     """Announcements/calls do not stand in for a published central financial report."""
     cutoff = local_time(as_of)
+    if not isinstance(quarter, str) or not re.fullmatch(r"\d{4}Q[1-4]", quarter):
+        raise ValueError("Quarterly rounds need an explicit YYYYQn period")
+    last_month = date(int(quarter[:4]), int(quarter[-1]) * 3, 1)
+    next_month = (last_month.replace(day=28) + timedelta(days=4)).replace(day=1)
+    if next_month > cutoff.date():
+        raise ValueError("Cannot schedule a quarter that has not closed by the cutoff")
+    period_end = next_month - timedelta(days=1)
     latest = {}
     for release in releases:
         if (
@@ -53,11 +62,20 @@ def quarterly(quarter: str, releases: list[dict], as_of: str, holidays: dict) ->
             or release.get("entity") not in CENTRAL
             or release.get("kind") != "financial_report"
             or release.get("confirmed") is not True
-            or not release.get("document_url", "").startswith("https://")
         ):
             continue
+        # This verifies public URL syntax, not issuer authenticity or report
+        # content. `confirmed` remains an explicit evidence-review assertion.
+        # Reuse acquisition's credential/HTTPS guard without making a request.
+        from src.source_updates.collection import validate_url
+
+        try:
+            url = release.get("document_url", "")
+            validate_url(url, [urlsplit(url).hostname or ""])
+        except (TypeError, ValueError):
+            continue
         stamp = local_time(release["published_at"])
-        if stamp <= cutoff:
+        if period_end < stamp.date() and stamp <= cutoff:
             entity = release["entity"]
             latest[entity] = max(stamp, latest.get(entity, stamp))
     missing = sorted(CENTRAL - latest.keys())

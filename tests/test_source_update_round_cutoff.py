@@ -13,6 +13,9 @@ def test_round_retains_historical_cutoff_and_requires_explicit_completion_policy
     recipe.write_text(json.dumps({"selection": {}, "steps": [], "checks": {"as_of": cutoff, "checks": []}}))
     monkeypatch.setattr(cli, "collect", lambda *args, **kwargs: {"status": "collected_unvalidated"})
     monkeypatch.setattr(cli, "build", lambda *args, **kwargs: {"status": "completed"})
+    # This test isolates the cutoff policy. Structural preflight is exercised
+    # separately with real recipe validation before any client can be created.
+    monkeypatch.setattr("src.source_updates.rounds.validate_recipe", lambda *args: None)
     monkeypatch.setattr(
         cli, "check_candidate", lambda path, spec: {"status": "checks_passed", "as_of": spec["as_of"]}
     )

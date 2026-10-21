@@ -157,6 +157,9 @@ def main(argv: list[str] | None = None) -> int:
             result = check_candidate(args.workspace, read_json(args.specification))
         else:
             recipe = read_json(args.recipe)
+            from src.source_updates.rounds import validate_recipe
+
+            validate_recipe(recipe, args.workspace)
             collected = collect(recipe["selection"], args.workspace, execute=args.execute)
             result = {
                 "mode": "round" if args.execute else "dry_run",
