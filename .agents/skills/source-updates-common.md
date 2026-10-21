@@ -107,6 +107,11 @@ no cambien y escribe un recibo de ronda inmutable; **no captura fuentes**.
 los productos admitidos por sus lectores. Los demás adaptadores se rechazan y
 mantienen sus comandos específicos. Curación usa su auditor separado.
 
+Usar en cada replay el `effective_as_of` exacto del recibo aceptado, incluida
+su representación de zona. H.10, tráfico Aeroméxico, Aerocivil y los productos
+retenidos rechazan un corte distinto o ausente antes de recalcular. Un nuevo
+corte necesita una certificación nueva; no sobrescribir el recibo histórico.
+
 Una tarea requerida fallida bloquea la ronda y conserva éxitos previos; las
 opcionales pendientes se listan. `ready_for_review` solo acredita las tareas
 declaradas y sus reproducciones, no disponibilidad actual, catálogo completo ni

@@ -227,7 +227,7 @@ def test_candidate_reconstructs_monthly_only_gold_without_network(workspace, mon
     before = {
         p.relative_to(workspace).as_posix(): p.read_bytes() for p in workspace.rglob("*") if p.is_file()
     }
-    checked = candidate.run(workspace, "2026M09", cutoff(), receipt, check=True)
+    checked = candidate.run(workspace, "2026M09", accepted_cutoff(workspace), receipt, check=True)
     assert checked["output_sha256"] == result["output_sha256"]
     assert before == {
         p.relative_to(workspace).as_posix(): p.read_bytes() for p in workspace.rglob("*") if p.is_file()
@@ -245,7 +245,7 @@ def test_candidate_receipt_tamper_to_allowed_url_blocks_check(workspace, monkeyp
     altered["items"][0]["response_url"] = am_traffic.ENTRY
     path.write_text(json.dumps(altered))
     with pytest.raises(ValueError, match="collection receipt changed"):
-        candidate.run(workspace, "2026M09", cutoff(), receipt, check=True)
+        candidate.run(workspace, "2026M09", accepted_cutoff(workspace), receipt, check=True)
 
 
 def test_invalid_report_leaves_no_silver_or_gold(workspace, monkeypatch):
@@ -311,3 +311,7 @@ def test_original_hash_and_cutoff_reject_before_parsing(workspace):
     path.write_bytes(b"changed")
     with pytest.raises(ValueError, match="SHA-256 mismatch"):
         candidate.run(workspace, "2026M09", cutoff(), receipt, execute=True)
+
+
+def accepted_cutoff(workspace):
+    return json.loads((workspace / "receipts/am-traffic-2026M09.json").read_text())["effective_as_of"]

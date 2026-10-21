@@ -21,7 +21,7 @@ from src.pipeline.offline import block_network
 from src.source_updates import aerocivil_metadata
 from src.source_updates.calendar import local_time
 from src.source_updates.catalog import ROOT
-from src.source_updates.checks import period_end, row_changes, verify_bronze
+from src.source_updates.checks import period_end, require_replay_cutoff, row_changes, verify_bronze
 from src.source_updates.collection import safe_workspace, validate_url, writer
 from src.transform.international_routes import TABLE
 from src.transform.international_routes import validate as validate_routes
@@ -417,6 +417,7 @@ def run(
         }
     prior = json.loads(accepted.read_text()) if check else None
     if check:
+        require_replay_cutoff(prior, as_of)
         previous_baseline = prior.get("revisions", {}).get("baseline_file")
         if baseline is not None and baseline != previous_baseline:
             raise ValueError("Accepted baseline selection changed")

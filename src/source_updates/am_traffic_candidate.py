@@ -17,7 +17,7 @@ from src.pipeline.offline import block_network
 from src.source_updates.am_traffic import parse, pdf_text, validate
 from src.source_updates.calendar import local_time
 from src.source_updates.catalog import ROOT
-from src.source_updates.checks import period_end, verify_bronze
+from src.source_updates.checks import period_end, require_replay_cutoff, verify_bronze
 from src.source_updates.collection import safe_workspace, validate_url, writer
 from src.transform.stage6_contracts import validate_table
 from src.transform.stage6_dimensions import CURATED_CARRIERS, build_dim_metric, gregorian_easter
@@ -239,6 +239,9 @@ def run(workspace: Path, period: str, as_of: str, collection: str, *, execute=Fa
         raise ValueError("Accepted traffic candidate is immutable; use a new workspace")
     if not accepted.exists() and any(path.exists() for path in allowed):
         raise ValueError("Existing output without acceptance; use a new workspace, preserve prior files")
+    previous = json.loads(accepted.read_text()) if check else None
+    if check:
+        require_replay_cutoff(previous, as_of)
     with block_network():
         outputs, result = frames(workspace, period, as_of, collection)
     result.update(
@@ -254,7 +257,6 @@ def run(workspace: Path, period: str, as_of: str, collection: str, *, execute=Fa
         },
     )
     if check:
-        previous = json.loads(accepted.read_text())
         if (
             previous["collection_run_id"] != collection
             or previous["collection_receipt_sha256"] != result["collection_receipt_sha256"]

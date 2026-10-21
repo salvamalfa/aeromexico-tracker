@@ -3,6 +3,7 @@
 import copy
 import json
 import shutil
+from importlib import import_module
 from pathlib import Path
 from uuid import uuid4
 
@@ -10,6 +11,41 @@ import pytest
 
 from src.source_updates import readiness
 from src.source_updates.catalog import ROOT
+
+
+@pytest.mark.parametrize("adapter", ["h10", "am_traffic_candidate", "aerocivil", "retained"])
+@pytest.mark.parametrize("accepted_cutoff", [None, "2026-10-20T12:00:00-06:00", "2026-10-22T12:00:00-06:00"])
+def test_direct_replay_rejects_changed_or_missing_cutoff_before_recalculation(
+    workspace, monkeypatch, adapter, accepted_cutoff
+):
+    module = import_module(f"src.source_updates.{adapter}")
+    names = {
+        "h10": "h10-2026M09.json",
+        "am_traffic_candidate": "am-traffic-2026M09.json",
+        "aerocivil": "aerocivil-2026M09.json",
+        "retained": "certified-afac_airports-2026M09.json",
+    }
+    # Minimal synthetic receipt: this tests rejection before source/frames IO,
+    # not extraction or source acceptance. Full candidate fixtures test replay.
+    receipt = workspace / "receipts" / names[adapter]
+    receipt.parent.mkdir(parents=True)
+    receipt.write_text(json.dumps({"effective_as_of": accepted_cutoff}))
+    before = receipt.read_bytes()
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("Changed replay cutoff reached recalculation")
+
+    monkeypatch.setattr(module, "certify" if adapter == "h10" else "frames", forbidden)
+    args = [workspace]
+    if adapter == "retained":
+        args += ["afac_airports"]
+    args += ["2026M09", "2026-10-21T12:00:00-06:00"]
+    if adapter != "h10":
+        args += ["a" * 32]
+    with pytest.raises(ValueError, match="Accepted candidate cutoff changed"):
+        module.run(*args, check=True)
+    assert receipt.read_bytes() == before
+    assert list(workspace.rglob("*.*")) == [receipt]
 
 
 @pytest.fixture

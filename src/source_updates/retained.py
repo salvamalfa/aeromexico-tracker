@@ -17,7 +17,7 @@ import pandas as pd
 from src.pipeline.offline import block_network
 from src.source_updates.calendar import local_time
 from src.source_updates.catalog import ROOT, load_catalog
-from src.source_updates.checks import period_end, row_changes, verify_bronze
+from src.source_updates.checks import period_end, require_replay_cutoff, row_changes, verify_bronze
 from src.source_updates.collection import safe_workspace, validate_url, writer
 from src.transform.stage6_contracts import validate_table
 from src.transform.stage9_lineage import (
@@ -450,6 +450,7 @@ def run(
         }
     prior = json.loads(accepted.read_text()) if check else None
     if check:
+        require_replay_cutoff(prior, cutoff)
         previous_baseline = prior.get("revisions", {}).get("baseline_file")
         if baseline is not None and baseline != previous_baseline:
             raise ValueError("Accepted baseline selection changed")

@@ -290,7 +290,7 @@ def test_candidate_reconstructs_gold_and_reference_lineage_without_network(works
     frame = pd.read_parquet(workspace / "data/gold" / (aerocivil.TABLE + ".parquet"))
     assert frame.operations.iloc[0] == 94 and frame.departures.isna().all()
     before = {str(p): p.read_bytes() for p in workspace.rglob("*") if p.is_file()}
-    checked = aerocivil.run(workspace, "2026M07", cutoff(), receipt, check=True)
+    checked = aerocivil.run(workspace, "2026M07", accepted_cutoff(workspace), receipt, check=True)
     assert checked["output_sha256"] == result["output_sha256"]
     assert before == {str(p): p.read_bytes() for p in workspace.rglob("*") if p.is_file()}
     with pytest.raises(ValueError, match="immutable"):
@@ -312,7 +312,7 @@ def test_relabelled_allowed_url_receipt_is_detected(workspace):
     changed["items"][0]["response_url"] = "https://www.datos.gov.co/another"
     path.write_text(json.dumps(changed))
     with pytest.raises(ValueError, match="escaped the selected dataset/query"):
-        aerocivil.run(workspace, "2026M07", cutoff(), receipt, check=True)
+        aerocivil.run(workspace, "2026M07", accepted_cutoff(workspace), receipt, check=True)
 
 
 def test_redirect_to_different_same_host_dataset_is_not_source_evidence(workspace):
@@ -379,17 +379,24 @@ def test_revision_comparison_uses_values_not_capture_hash_and_replays_without_wr
     assert result["revisions"]["added"] == result["revisions"]["removed"] == 0
     assert not result["service_code_mapping_verified"] and not result["agent_eligible"]
     before = {str(p): p.read_bytes() for p in workspace.rglob("*") if p.is_file()}
-    checked = aerocivil.run(workspace, "2026M07", cutoff(), receipt, check=True)
+    checked = aerocivil.run(workspace, "2026M07", accepted_cutoff(workspace), receipt, check=True)
     assert checked["revisions"] == result["revisions"]
     assert before == {str(p): p.read_bytes() for p in workspace.rglob("*") if p.is_file()}
     with pytest.raises(ValueError, match="baseline selection changed"):
-        aerocivil.run(workspace, "2026M07", cutoff(), receipt, check=True, baseline="baselines/other.parquet")
+        aerocivil.run(
+            workspace,
+            "2026M07",
+            accepted_cutoff(workspace),
+            receipt,
+            check=True,
+            baseline="baselines/other.parquet",
+        )
     path = workspace / baseline
     data = pd.read_parquet(path)
     data["operations"] = 92.0
     data.to_parquet(path, index=False)
     with pytest.raises(ValueError, match="baseline or revisions changed"):
-        aerocivil.run(workspace, "2026M07", cutoff(), receipt, check=True)
+        aerocivil.run(workspace, "2026M07", accepted_cutoff(workspace), receipt, check=True)
 
 
 def test_identical_values_with_new_source_hash_are_unchanged_rows(workspace):
@@ -436,11 +443,11 @@ def test_modified_gold_and_reference_are_detected(workspace):
     frame["agent_eligible"] = True
     frame.to_parquet(path, index=False)
     with pytest.raises(ValueError, match="differs from its originals"):
-        aerocivil.run(workspace, "2026M07", cutoff(), receipt, check=True)
+        aerocivil.run(workspace, "2026M07", accepted_cutoff(workspace), receipt, check=True)
     original = next((workspace / "data/bronze/reference").glob("*.csv"))
     original.write_text("changed")
     with pytest.raises(ValueError, match="SHA-256 mismatch"):
-        aerocivil.run(workspace, "2026M07", cutoff(), receipt, check=True)
+        aerocivil.run(workspace, "2026M07", accepted_cutoff(workspace), receipt, check=True)
 
 
 def test_competing_acceptance_at_writer_entry_is_not_overwritten(workspace, monkeypatch):
@@ -458,3 +465,7 @@ def test_competing_acceptance_at_writer_entry_is_not_overwritten(workspace, monk
     with pytest.raises(ValueError, match="immutable"):
         aerocivil.run(workspace, "2026M07", cutoff(), receipt, execute=True)
     assert accepted.read_text() == "accepted by another writer" and not (workspace / "data/gold").exists()
+
+
+def accepted_cutoff(workspace):
+    return json.loads((workspace / "receipts/aerocivil-2026M07.json").read_text())["effective_as_of"]

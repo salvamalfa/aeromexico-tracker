@@ -257,6 +257,14 @@ esa política explícita y resolver ambos bloqueos. Los indicadores
 `ready_for_calendar_incorporation` y `ready_for_automatic_execution` permanecen
 falsos incluso en la receta numérica exitosa.
 
+La revisión final corrigió dos fallos de contrato: una certificación GDELT
+vacía ya no devuelve éxito de proceso y los replay H.10, tráfico Aeroméxico,
+Aerocivil y retenidos exigen el `effective_as_of` exacto del recibo. Pasaron
+204 pruebas afectadas offline, incluidas negativas antes de recalcular.
+La comprobación de originales históricos mantuvo 2.730 filas AFAC, 20 de
+finanzas Aeroméxico, 24 Viva y ocho Aerocivil con su leyenda aún pendiente;
+GDELT siguió bloqueado. No hubo captura nueva ni reescritura de sus recibos.
+
 ## Riesgos
 
 Capturar un archivo no demuestra que sus cifras se hayan incorporado. La

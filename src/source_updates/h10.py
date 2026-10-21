@@ -16,7 +16,7 @@ import pandas as pd
 from src.pipeline.offline import block_network
 from src.source_updates.calendar import local_time
 from src.source_updates.catalog import ROOT
-from src.source_updates.checks import row_changes, verify_bronze
+from src.source_updates.checks import require_replay_cutoff, row_changes, verify_bronze
 from src.source_updates.collection import collect, safe_workspace, writer, validate_url
 from src.source_updates.h10_capture import BoundedFedClient, MAX_BYTES, month_bounds, selection
 from src.source_updates.h10_parse import csv_rates, holiday_evidence, html_rates, reconcile
@@ -221,6 +221,7 @@ def run(
     isolate(workspace, period)
     if check:
         accepted = json.loads((workspace / "receipts" / f"h10-{period}.json").read_text())
+        require_replay_cutoff(accepted, as_of)
         result = certify(workspace, period, as_of, accepted["collection_run_id"])
         if result["collection_receipt_sha256"] != accepted["collection_receipt_sha256"]:
             raise ValueError("Accepted H.10 collection receipt hash changed")

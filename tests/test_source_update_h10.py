@@ -165,7 +165,7 @@ def test_h10_month_reaches_nullable_silver_monthly_gold_and_verified_lineage(wor
     assert result["first_publication_date"] is None and result["release_lag_days"] is None
     assert not result["fix"] and result["activation"] == "none"
     before = dict(result["output_sha256"])
-    checked = h10.run(workspace, "2026M09", cutoff(), check=True)
+    checked = h10.run(workspace, "2026M09", accepted_cutoff(workspace), check=True)
     assert checked["output_sha256"] == before
     with pytest.raises(ValueError, match="immutable"):
         accepted(workspace)
@@ -191,7 +191,7 @@ def test_existing_gold_cannot_be_relabelled_or_rescaled(workspace):
     frame["unit"] = "usd_per_mxn"
     frame.to_parquet(path, index=False)
     with pytest.raises(ValueError, match="differs from its verified originals"):
-        h10.run(workspace, "2026M09", cutoff(), check=True)
+        h10.run(workspace, "2026M09", accepted_cutoff(workspace), check=True)
 
 
 def test_bronze_tampering_is_detected_before_gold_use(workspace):
@@ -199,7 +199,7 @@ def test_bronze_tampering_is_detected_before_gold_use(workspace):
     path = next((workspace / "data/bronze").rglob("*.csv"))
     path.write_bytes(b"changed")
     with pytest.raises(ValueError, match="SHA-256 mismatch"):
-        h10.run(workspace, "2026M09", cutoff(), check=True)
+        h10.run(workspace, "2026M09", accepted_cutoff(workspace), check=True)
 
 
 def test_allowed_host_receipt_tampering_still_invalidates_acceptance(workspace):
@@ -209,12 +209,12 @@ def test_allowed_host_receipt_tampering_still_invalidates_acceptance(workspace):
     receipt["items"][0]["response_url"] = URLS["definition"]
     path.write_text(json.dumps(receipt))
     with pytest.raises(ValueError, match="collection receipt hash changed"):
-        h10.run(workspace, "2026M09", cutoff(), check=True)
+        h10.run(workspace, "2026M09", accepted_cutoff(workspace), check=True)
 
 
-def test_check_rejects_capture_after_cutoff(workspace):
+def test_check_rejects_a_different_cutoff_before_source_replay(workspace):
     assert accepted(workspace)["status"] == "checks_passed"
-    with pytest.raises(ValueError, match="captured after"):
+    with pytest.raises(ValueError, match="Accepted candidate cutoff changed"):
         h10.run(workspace, "2026M09", "2026-10-02T00:00:00Z", check=True)
 
 
@@ -388,3 +388,7 @@ def test_streaming_client_rejects_declared_and_decoded_oversize(monkeypatch):
         with BoundedFedClient("default", transport=transport) as client:
             with pytest.raises(ValueError, match="size limit"):
                 client.request("GET", URLS["history"], follow_redirects=False)
+
+
+def accepted_cutoff(workspace):
+    return json.loads((workspace / "receipts/h10-2026M09.json").read_text())["effective_as_of"]
