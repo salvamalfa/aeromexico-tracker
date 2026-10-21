@@ -5,6 +5,8 @@
 - Lock Python: certifi 2026.10.19, Pillow 13.0.0, Tornado 6.5.9 y urllib3 2.8.0.
   FastAPI pasa a 0.133.1 para admitir Starlette 1.3.1 sin forzar su contrato.
   Los mínimos corregidos se conservan como restricciones; OpenAI y Uvicorn no cambian.
+  El bundle certifi del proyecto se corrige; la confianza TLS que imponga cada
+  entorno requiere verificación aparte. No se alteran almacenes del sistema.
 - Lock web: Vite 7.3.7, Vitest 4.1.12, Plotly 4.1.2 y source-map-js 1.2.2.
   El teardown restaura los spies del navegador entre pruebas.
   [Alcance, fuentes y comprobaciones](web/README.md#dependencias-y-avisos-de-seguridad).
