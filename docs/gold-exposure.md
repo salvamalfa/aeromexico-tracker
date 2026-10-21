@@ -282,7 +282,7 @@ claves privadas en los archivos firmados. Es una comprobación estática acotada
 no certifica toda información privada posible ni inspecciona el volumen runtime.
 No se generó ni publicó otro sitio y no se alteraron las tesis o el calendario.
 
-Validación del cambio de cierre: 52 pruebas focalizadas y tres controles de
+Validación del cambio de cierre: 54 pruebas focalizadas y tres controles de
 presupuesto de archivos aprobados; lint, formato y diff limpios. La revisión
 independiente pasó las 50 pruebas y comprobó los conteos del informe. Encontró
 y verificó dos correcciones: consumidores nuevos sin `git add` y reconocimiento
@@ -291,6 +291,7 @@ públicos; el workflow privado se revisa con el commit público fijado.
 La revisión remota detectó una búsqueda demasiado lenta al retirar artefactos.
 Se limita el análisis a nombres candidatos, conservando referencias codificadas;
 la prueba del repositorio completo con un asset inexistente tarda 0,742 segundos.
+También se rechaza declarar «archivado» o «retirado» un original que siga presente.
 La comprobación local no equivale a CI remota ni integración.
 
 ## Pendientes

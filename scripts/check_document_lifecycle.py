@@ -315,6 +315,8 @@ def validate_dispositions(root: Path, paths: list[str], summary: str) -> list[st
         file = root / path
         if not file.exists() and disposition not in ("archive", "retire"):
             errors.append(f"Removed file requires archive/retire disposition: {path}")
+        if file.exists() and disposition in ("archive", "retire"):
+            errors.append(f"Archive/retire disposition requires an absent original path: {path}")
         if file.suffix != ".md" or not file.is_file():
             continue
         text = re.sub(r"```.*?```", "", file.read_text(encoding="utf-8"), flags=re.S)
