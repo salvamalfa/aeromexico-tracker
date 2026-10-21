@@ -234,6 +234,8 @@ def validate(frame: pd.DataFrame) -> None:
     for _, metric, unit, _ in METRICS:
         if not frame.loc[frame.metric_key.eq(metric), "unit"].eq(unit).all():
             raise ValueError("Viva source units changed; no implicit ASM/ASK conversion")
+    if not frame.loc[frame.metric_key.eq("load_factor_reserved"), "value"].le(100).all():
+        raise ValueError("Viva reserved-seat factor outside percent domain")
 
 
 def parse(inputs: dict, period: str) -> tuple[pd.DataFrame, dict]:
@@ -429,5 +431,10 @@ def validate_current(frame: pd.DataFrame) -> None:
     for _, metric, unit, _ in CURRENT_METRICS:
         if not frame.loc[frame.metric_key.eq(metric), "unit"].eq(unit).all():
             raise ValueError("Viva native units changed; never relabel ASM/RPM miles as ASK/RPK kilometers")
+    if (
+        not frame.loc[frame.metric_key.eq("load_factor_itinerary"), "value"].le(100).all()
+        or not frame.carrier_key.eq("VIVA_AEROBUS").all()
+    ):
+        raise ValueError("Viva itinerary load-factor/carrier domain changed")
     if not frame.reporting_status.eq("preliminary").all() or not frame.is_preliminary.eq(True).all():
         raise ValueError("Viva preliminary source status lost")

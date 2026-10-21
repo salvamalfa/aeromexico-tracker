@@ -236,3 +236,7 @@ def test_current_candidate_contract_rejects_unit_or_segment_tampering():
     frame.loc[0, "segment"] = "unknown"
     with pytest.raises(ValueError, match="contract changed"):
         source.validate_current(frame)
+    frame = source.current_texts(current_text(), "2026M09", ORIGINAL)[0]
+    frame.loc[frame.metric_key.eq("load_factor_itinerary"), "value"] = 101
+    with pytest.raises(ValueError, match="domain changed"):
+        source.validate_current(frame)
