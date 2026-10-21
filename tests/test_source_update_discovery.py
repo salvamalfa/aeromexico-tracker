@@ -17,13 +17,23 @@ def test_afac_selection_comes_from_present_links_not_filename_templates(tmp_path
 
 def test_unsupported_catalogue_product_requires_its_actual_procedure(tmp_path):
     with pytest.raises(ValueError, match="manual procedure"):
-        select_documents("viva_traffic", tmp_path / "missing", "2026M09")
+        select_documents("viva_financials", tmp_path / "missing", "2026M09")
+
+
+def test_viva_recipe_routes_only_actual_permitted_links(tmp_path):
+    path = tmp_path / "catalog.html"
+    url = "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/SalaPrensa/2021-12-07-Trafico-noviembre-2021.pdf"
+    path.write_text(f'<a href="{url}">November report</a>')
+    assert select_documents("viva_traffic", path, "2021M11")["items"][0]["url"] == url
+    with pytest.raises(ValueError, match="absent"):
+        select_documents("viva_traffic", path, "2026M09")
 
 
 def test_airport_latest_is_from_label_and_missing_month_is_not_invented(tmp_path):
     path = tmp_path / "catalog.html"
     path.write_text(
-        '<a href="https://ir.oma.aero/actual.pdf">OMA September 2026 Total Passenger Traffic</a><a href="https://ir.oma.aero/old.pdf">OMA August 2026 Total Passenger Traffic</a>'
+        '<a href="https://ir.oma.aero/actual.pdf">OMA September 2026 Total Passenger Traffic</a>'
+        '<a href="https://ir.oma.aero/old.pdf">OMA August 2026 Total Passenger Traffic</a>'
     )
     chosen = select_documents("oma_traffic", path, "latest")
     assert chosen["items"][0]["url"] == "https://ir.oma.aero/actual.pdf"
@@ -35,7 +45,8 @@ def test_airport_latest_is_from_label_and_missing_month_is_not_invented(tmp_path
 def test_aifa_cumulative_label_selects_end_month_and_keeps_host_guard(tmp_path):
     path = tmp_path / "catalog.html"
     path.write_text(
-        '<a href="https://aifa-repositorio.s3.us-east-1.amazonaws.com/actual.xlsx">Numeralia Aeroportuaria de Enero a Julio 2026 - Formato XLSX</a>'
+        '<a href="https://aifa-repositorio.s3.us-east-1.amazonaws.com/actual.xlsx">'
+        'Numeralia Aeroportuaria de Enero a Julio 2026 - Formato XLSX</a>'
     )
     assert select_documents("aifa_traffic", path, "latest")["items"][0]["period"] == "2026M07"
     with pytest.raises(ValueError, match="absent"):

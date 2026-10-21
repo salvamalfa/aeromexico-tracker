@@ -135,9 +135,9 @@
     },
     "viva_traffic": {
       "entry_ref": "url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD",
-      "state": "missing_adapter",
-      "format": "publicación mensual por confirmar",
-      "procedure": "Buscar producto mensual oficial distinto del reporte financiero. No hay descubridor/parser mensual certificado. El catálogo técnico de viva_ir solo admite InvestorCloud para captura: BMV es referencia de descubrimiento, no un permiso para cambiar hosts."
+      "state": "conditional",
+      "format": "HTML → PDF mensual seleccionado; lector revisado 2021M11",
+      "procedure": "recipe --output selection --catalog-file <catalogo-real.html> --period YYYYMmm selecciona un enlace mensual único y aplica viva_ir.allowed_hosts antes de HTTP. No inventa URLs ni cambia hosts. El lector retenido viva_traffic admite únicamente 2021M11: 12 filas actuales/comparativas, pasajeros reservados no necesariamente transportados, ASK/RPK kilómetros y ocupación reservada. retain --product viva_traffic --original pdf=<ruta> conserva original/SHA/fecha; certify --period 2021M11 --retention <id> --as-of <corte> permite --dry-run/--execute/--check y baseline explícito. Septiembre 2026: S3 y copia oficial BMV rechazados por política antes de HTTP; requiere decisión de host y después adaptar el original real 2026. La prueba histórica no certifica disponibilidad actual ni otro formato. Sin warehouse ni publicación."
     },
     "ryanair_ir": {
       "entry_ref": "constant:src.ingest.peers.stage5:RYANAIR_KEY_STATS_URL",
@@ -371,7 +371,7 @@
       "entry_ref": "constant:src.ingest.news.rss_gdelt:GDELT_API_URL",
       "state": "conditional",
       "format": "GET Doc API → JSON articles",
-      "procedure": "Consulta canónica de Aeroméxico, Viva y Volaris; parámetros compartidos en GDELT_QUERY_PARAMS y rss_gdelt.run(): mode artlist, maxrecords 250, format json, sort datedesc. No prometer recuperación completa ni inventar paginación/fechas. Entidad histórica aeromexico_articles; parse.news conserva primera observación y captura sin usarlas como publicación. Metadatos sin fecha quedan en quality/news_metadata_selection.json para revisión, fuera de ediciones mensuales fechadas.",
+      "procedure": "Consulta canónica de Aeroméxico, Viva y Volaris; parámetros compartidos en GDELT_QUERY_PARAMS y rss_gdelt.run(): mode artlist, maxrecords 250, format json, sort datedesc. No prometer recuperación completa ni inventar paginación/fechas. Entidad histórica aeromexico_articles; parse.news conserva primera observación y captura sin usarlas como publicación. Metadatos sin fecha quedan en quality/news_metadata_selection.json para revisión, fuera de ediciones mensuales fechadas. python -m src.source_updates.gdelt recipe --period YYYYMmm --as-of <corte> emite una consulta acotada al mes de primera observación en America/Mexico_City, máximo 250 resultados. collect preserva respuestas fallidas aparte de Bronze válido. gdelt certify --workspace <candidato> --period <mes> --as-of <corte> --collection <id> admite --dry-run/--execute/--check: verifica original/manifiesto/sidecar, contrato JSON, punteros y replay inmutable de Silver/Gold candidatos. Publicación/evento siguen nulos; no alimenta ediciones mensuales de noticias ni certifica mes completo. Dos intentos reales del 21 de octubre (septiembre y consulta canónica actual) devolvieron 503; ninguna extracción actual acreditada.",
       "selection_contract": {
         "source_system": "gdelt",
         "entity": "aeromexico_articles",

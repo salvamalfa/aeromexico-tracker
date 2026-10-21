@@ -1,13 +1,14 @@
 """Resolve selected documents from preserved institutional catalogues."""
 
-from pathlib import Path
 import hashlib
 import re
+from pathlib import Path
 from urllib.parse import urljoin
 
 
 def airport_selection(product: str, catalog_file: Path, period: str) -> dict:
     from bs4 import BeautifulSoup
+
     from src.source_updates.catalog import load_catalog, product_map
     from src.source_updates.collection import validate_url
 
@@ -69,6 +70,11 @@ def airport_selection(product: str, catalog_file: Path, period: str) -> dict:
 
 
 def select_documents(product: str, catalog_file: Path, period: str, tickers=None) -> dict:
+    if product == "viva_traffic":
+        from src.source_updates.recipes import describe
+        from src.source_updates.viva_traffic import select
+
+        return select(catalog_file, period, catalog_url=describe(product)["entry_url"])
     if product == "am_traffic_ir":
         from src.source_updates.am_traffic import select
 
