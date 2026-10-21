@@ -2,22 +2,22 @@
   "schema_version": "analysis_approval_cohorts_v1",
   "cohorts": [
     {
-      "implementation_commit": "32fc6e8baaf45e64b96c70202891d0e069181c5f",
+      "implementation_commit": "08f15d5c6c756c7342157a58923c06ede6a81857",
       "analysis_manifest": [
         {
           "period_id": "2026Q3",
-          "version": "b09bd3091ef80e6ec6f4266dd37cecef3146d0f5f690f80592c0f10a6b47c625",
-          "content_hash": "4224d6bbac60330c9900fd59a75b0d119aafb96a3244972106f207fc402ad86b",
+          "version": "e9a0e3fa55f74a40b018e3b497bbac2b6d0cfbd27e5267cbdc41432777069458",
+          "content_hash": "33ef3e2b8709d157aa6e07766a5400b97567194e4dd6a761fcf31e4a19133c84",
           "evidence_fingerprint": "8844415006f4c33c7af9c50b869aa18cbc9ef4d09dd11777208aa87e7bca2dcd",
-          "approval_event": "81714032adb70d29aa7e55e86954de741de195f8e6a1665e1a3aaf29add05200",
-          "audit_hash": "9a2bb45fd1d04e2083de4b7c3d4c734dbe62dcd32b4b751a32a92656de69fd82"
+          "approval_event": "b925d650a44ee29925d9f70e7e16f6fb2e742b07c2c56ea3214ba9d3c29cae17",
+          "audit_hash": "9d25968a8582ac2ff0eb2784b5f0a101d54ddb925de899461ba130bb7f70adc0"
         }
       ],
       "files": [
         {
           "path": "data/v1/analysis/2026Q3.json",
-          "bytes": 30573,
-          "sha256": "4d3eacb58db98267d3a084512432e1e405a236499eea46ad49ae6a9992444c3f"
+          "bytes": 30631,
+          "sha256": "3b4dd62dd83ccb4a8cf6cdf1e507b058fc2633002d165a22bbee99da9eaff933"
         }
       ]
     }
