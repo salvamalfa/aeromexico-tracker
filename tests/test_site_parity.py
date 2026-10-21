@@ -3,8 +3,9 @@ matches its own sources of truth (its inputs, not a second rendered page):
 
 - ``test_site_flights_and_executive_data_match_a_fresh_export`` (no
   browser): the Vuelos/executive data already committed under
-  ``site/data/v1/`` equals a fresh ``src.web_export`` run over the current
-  warehouse (snapshot equality).
+  ``site/data/v1/`` equals its authorized source projection. A quarterly-only
+  publication reconstructs financial data from primary evidence and preserves
+  the approved monthly projection exactly against its pinned baseline.
 - The Playwright tests below render ``site/`` alone and check what it shows
   against the real payloads directly (``executive_payload``/the local
   ledger's approved analysis), not against a second render.
@@ -17,6 +18,7 @@ owner-authorized step, see ``src/publish/README.md``).
 
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 import threading
@@ -121,14 +123,30 @@ def _export_approved_entry(entry: dict) -> dict:
 def test_site_flights_and_executive_data_match_a_fresh_export(
     request: pytest.FixtureRequest, tmp_path: Path, flight_payload: dict, published_executive: dict
 ) -> None:
-    """``site/data/v1`` is exactly what exporting the current warehouse gives."""
+    """Reconstruct financial data; preserve the separately approved monthly map."""
 
     _require_site(request)
     out_dir = tmp_path / "data" / "v1"
-    export_flights(flight_payload, out_dir, skip_input_check=True)
     export_executive(published_executive, out_dir, skip_input_check=True)
-
-    assert recombine_flights(out_dir) == recombine_flights(DATA_DIR)
+    manifest = manifest_mod.load_manifest(SITE_DIR)
+    if any(e["period_id"] == "2026Q3" and "entity_key" not in e for e in manifest["analysis_manifest"]):
+        prefix = "data/v1/flights/"
+        expected = {
+            r["path"]: r
+            for r in _baseline_json("publication_manifest.json")["files"]
+            if r["path"].startswith(prefix)
+        }
+        actual = {r["path"]: r for r in manifest["files"] if r["path"].startswith(prefix)}
+        assert actual == expected
+        assert {
+            p.relative_to(SITE_DIR).as_posix() for p in (DATA_DIR / "flights").rglob("*") if p.is_file()
+        } == set(expected)
+        for name, row in expected.items():
+            raw = (SITE_DIR / name).read_bytes()
+            assert len(raw) == row["bytes"] and hashlib.sha256(raw).hexdigest() == row["sha256"]
+    else:
+        export_flights(flight_payload, out_dir, skip_input_check=True)
+        assert recombine_flights(out_dir) == recombine_flights(DATA_DIR)
     fresh_executive = json.loads((out_dir / "executive.json").read_text(encoding="utf-8"))
     site_executive = json.loads((DATA_DIR / "executive.json").read_text(encoding="utf-8"))
     assert fresh_executive == site_executive
