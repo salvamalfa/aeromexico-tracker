@@ -2,7 +2,9 @@
 
 ## Resumen
 
-Revisión local del 19 de octubre de 2026. Se verificaron **43 tablas públicas y
+El mapa Gold conserva el corte del 19 de octubre de 2026. La auditoría de
+archivos y el cierre obligatorio se revisaron de nuevo el 21 de octubre.
+ Se verificaron **43 tablas públicas y
 4 privadas**. De las **23 tablas analíticas públicas**, **7** aportan cifras
 visibles y otras **4** sirven de contexto o control. Las **12** restantes
 conservan usos analíticos, exportaciones o controles. Carecer de una gráfica
@@ -14,11 +16,17 @@ está en [tables.csv](referencias/gold-exposure-20261019/tables.csv). El
 el corte del 15 de octubre. La clasificación de interfaz se revisó en el código;
 no mide visitas ni el porcentaje de filas o campos visibles.
 
-Se archivan instrucciones del chat que ya fueron reemplazadas. Sus originales
-siguen accesibles en un commit fijo del [índice histórico](archivo/README.md).
-Se conservan aprobaciones, presupuestos, fuentes, pruebas y registros de
-publicación. La disposición de los siete candidatos de la auditoría anterior
-queda en el [cierre del chat](chat/README.md#cierre-documental-del-19-de-octubre).
+Las tres instrucciones reemplazadas del chat ya fueron archivadas por PR144.
+Sus originales siguen en el [índice histórico](archivo/README.md). Esta pasada
+no vuelve a archivarlas y no retira otros archivos. Conserva aprobaciones,
+presupuestos, fuentes y registros de publicación. La propuesta actual prioriza
+dos imágenes sin referencias; el detalle está en el apéndice.
+
+El [Lifecycle canónico](../AGENTS.md#ciclo-de-vida-de-la-documentación) ya existía.
+Su control solo cubría parte de los documentos. Ahora exige inventario y
+clasificación de todos los archivos de la tarea, incluso código y artefactos.
+El agente ejecutor responde por el cierre. La guía y el índice existentes
+conservan las conclusiones; no se crea otro informe paralelo.
 
 ## Qué cambia para ti
 
@@ -211,14 +219,91 @@ después de corregir las fechas del pronóstico y el fallo del control documenta
 No se corrió la suite de pipeline ni navegador: no cambian datos, interfaz,
 contratos o transformaciones. El snapshot privado no se restauró ni certificó.
 
+### Nueva auditoría de archivos · 21 de octubre de 2026
+
+Corte público `cec09e625a2f49869bffb470e4eeda7d26c255de`. Se revisó el árbol
+Git vigente, no el checkout antiguo. PR145 y PR140 continúan separados.
+Las reglas del respaldo privado se enlazan desde sus dos `AGENTS.md`; sus
+inventarios y límites permanecen en su README privado.
+
+**Conservar.** Hay 238 rutas con «chat» en el nombre: incluyen
+[`config/chat/`](../config/chat/), [`contracts/chat/`](../contracts/chat/),
+[`scripts/chat/`](../scripts/chat/), [`docs/chat/`](chat/),
+[`tests/fixtures/chat/`](../tests/fixtures/chat/),
+[`web/src/views/chat/`](../web/src/views/chat/) y 79 módulos `tests/test_chat_*.py`.
+Son configuración, contratos, herramientas, guías y pruebas; no conversaciones.
+El frontend tiene 25 archivos y se compila con Vite a nombres con hash.
+El backend vive en [`src/conversational_analytics/`](../src/conversational_analytics/).
+El [Dockerfile](../Dockerfile.chat) copia solo sus entradas declaradas, incluido
+el prompt aprobado que aún vive en `config/chat/prompt_candidates/`.
+El historial del usuario se guarda en `/data/chat.sqlite3`, en el volumen privado
+del runtime; no aparece como una carpeta de conversaciones en `site/`.
+
+**Conservar el sitio publicado.** `site/` contiene 796 archivos: el manifiesto
+más 795 entradas firmadas. Todas coinciden en tamaño y SHA-256; no hay entradas
+faltantes, archivos no declarados ni blobs idénticos duplicados. Los 16 JS/CSS
+compilados son alcanzables desde `index.html`, `review.html` o `access.html`.
+Los 766 JSON de Vuelos coinciden exactamente con `available_periods` de
+`flights/quarters.json`, que consulta el frontend. No son periodos abandonados.
+La generación en [`src/publish/gate.py`](../src/publish/gate.py) ensambla un
+árbol nuevo y lo intercambia; no acumula compilaciones antiguas. Pages sirve
+`site/`, no todo el repositorio. El snapshot del chat también consume los datos
+firmados. Retirar un JSON exige cambiar consumidores, contratos y manifiesto;
+no basta con que no se vea en una gráfica.
+
+**Propuesta de archivo, sin ejecutar.**
+[`anatomia-chat.png`](assets/chat/anatomia-chat.png), 117.200 bytes, y
+[`anatomia-herramientas.png`](assets/chat/anatomia-herramientas.png),
+116.529 bytes. No se encontraron referencias literales en código, documentación,
+configuración o build. El README usa los GIF y las versiones HTML; esos sí se
+conservan. Los PNG nacieron como imágenes de esos diagramas en
+`27cd579e1d8b613e915f2f51f49918618dfe44c9`. Podrían archivarse con enlace fijo
+tras revisar si se desean como alternativa estática. Recuperación íntegra en
+ese commit; riesgo de perder ese formato de consulta, ahorro pequeño.
+
+**Temporales locales, sin borrar.** `web/dist/` (~15 MiB),
+`web/public/data/` (~13 MiB), `.pytest_cache/` y `.ruff_cache/` están ignorados.
+Se regeneran con build, exportador o pruebas. Su limpieza puede esperar a que
+termine el trabajo concurrente. `analysis_runs/`, `data/`, `models/`, los
+contratos históricos y los prototipos no se clasifican como caché: tienen
+consumidores, procedencia o función de recuperación comprobados.
+
+Se leyeron 160 Markdown públicos sin destinos locales inexistentes. Los
+53 enlaces públicos a commits fijos se comprobaron contra objetos Git; uno
+requirió recuperar el commit remoto, no cambiar el enlace. El manifiesto servido
+coincidió con Git. Se descargaron 33 recursos: las tres páginas, los 16 JS/CSS,
+el manifiesto y una muestra explícita de datos, incluidas las cuatro tesis.
+Todos devolvieron 200 y coincidieron con los hashes firmados. No se descargaron
+los 766 JSON por HTTP; sus bytes sí se comprobaron en Git.
+
+El escaneo de todos los JSON publicados no encontró campos prohibidos por
+`contracts/web/privacy.yaml`, claves de sesión/credenciales ni patrones de
+claves privadas en los archivos firmados. Es una comprobación estática acotada;
+no certifica toda información privada posible ni inspecciona el volumen runtime.
+No se generó ni publicó otro sitio y no se alteraron las tesis o el calendario.
+
+Validación del cambio de cierre: 57 pruebas focalizadas y tres controles de
+presupuesto de archivos aprobados; lint, formato y diff limpios. La revisión
+independiente ejecutó la suite focalizada y comprobó los conteos del informe. Encontró
+y verificó dos correcciones: consumidores nuevos sin `git add` y reconocimiento
+del origen SSH privado. Los resúmenes reales clasifican los ocho archivos
+públicos; el workflow privado se revisa con el commit público fijado.
+La revisión remota detectó una búsqueda demasiado lenta al retirar artefactos.
+Se limita el análisis a nombres candidatos, conservando referencias codificadas;
+la prueba del repositorio completo con un asset inexistente tarda 0,742 segundos.
+También se rechaza declarar «archivado» o «retirado» un original que siga presente.
+La comprobación local no equivale a CI remota ni integración.
+
 ## Pendientes
 
-- Revisar y priorizar las mejoras de Economía y contexto dentro de las vistas
-  actuales. Esta pasada entrega el mapa y el cierre documental; no implementa
-  propuestas de producto.
-- Reconciliar descomposición y vigencia de pronósticos/estudios antes de darles
-  nueva exposición. Las tres tablas históricamente propuestas para posible
-  archivo suman 74.703 bytes; sus dependencias impiden tratarlas como sobrantes.
-- El hilo de fuentes completa las ocho familias antes de activar el calendario.
-  El hilo de Vuelos resuelve el 95 % y su Gold. PR140/M11 y PR142/35 conservan
-  sus límites y revisiones independientes.
+- Revisar los dos PNG propuestos antes de archivarlos. No se autorizó ni ejecutó
+  su retiro. No hay otro archivo del sitio demostrado como sobrante.
+- La implementación, CI y revisión remota del cierre se siguen en el
+  [PR #148](https://github.com/salvamalfa/aeromexico-tracker/pull/148). El commit
+  del control fijado por el privado ya está disponible en GitHub. Sus estados
+  de integración y CI se comprueban en los PR, sin duplicar aquí sus bitácoras.
+- Mantener las mejoras de Gold del corte del 19 como propuestas dentro de las
+  vistas actuales. La auditoría de archivos no recalcula Gold ni publica datos.
+- Los hilos de publicación 3T26 y de fuentes conservan sus archivos y decisiones.
+  PR140/M11 sigue separado. La cobertura Q2 ya tiene su decisión posterior en el
+  plan canónico de Vuelos; esta revisión no reabre aquel objetivo.

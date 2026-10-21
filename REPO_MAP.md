@@ -165,8 +165,8 @@ resume en `docs/archivo/README.md` y no se retoma.
 ### e) Cerrar un esfuerzo y retirar su documentación
 
 Sigue el [cierre documental obligatorio](AGENTS.md#cierre-documental-obligatorio-por-tarea),
-también en una entrega local. Inventaría los documentos y salidas generadas;
-clasifica conservar, actualizar, archivar, candidato a eliminar o pendiente,
+también en una entrega local. Inventaría todos los archivos, incluidas las salidas generadas;
+clasifica conservar, actualizar, consolidar, archivar, retirar, candidato a eliminar o pendiente,
 con motivo y dependencias desde código, pruebas, skills e índices. Pasa lo
 vigente a la guía canónica antes de retirar un plan reemplazado. Conserva
 fuentes, decisiones, aprobaciones y evidencia.
@@ -175,6 +175,9 @@ Para archivar, comprueba primero que el original íntegro existe en un commit
 fijo; enlázalo desde `docs/archivo/README.md` y actualiza referencias entrantes.
 Retíralo del árbol solo si el encargo lo permite. Registra la disposición por
 archivo en el resumen existente con `document-lifecycle:v1` y valida con
-`scripts/check_document_lifecycle.py --base <base> --summary-file <resumen>`.
+`scripts/check_document_lifecycle.py --base <base> --worktree --summary-file <resumen>`
+antes del commit; después omite `--worktree`. Para el respaldo privado añade
+`--root <checkout-privado>`. El mismo control verifica código y artefactos; los
+lotes homogéneos admiten prefijo acotado y conteo exacto según la guía canónica.
 No crees otro Markdown de estado para acreditar el cierre. Un pendiente exige
 archivo y motivo; la edad o el número de documentos no justifican un retiro.
