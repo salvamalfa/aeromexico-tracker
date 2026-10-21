@@ -462,7 +462,10 @@ def run(
         "network_requests": 0,
     }
     if check:
-        if any(
+        actual = {
+            p.relative_to(workspace).as_posix() for p in workspace.rglob("*") if p.is_file()
+        }
+        if actual != set(expected) or any(
             not (workspace / name).is_file() or (workspace / name).read_bytes() != body
             for name, body in expected.items()
         ):
@@ -473,7 +476,12 @@ def run(
     with writer(workspace):
         existing = [p for p in workspace.iterdir() if p.name != ".source-update.lock"]
         if existing:
-            if all(
+            actual = {
+                p.relative_to(workspace).as_posix()
+                for p in workspace.rglob("*")
+                if p.is_file() and p != workspace / ".source-update.lock"
+            }
+            if actual == set(expected) and all(
                 (workspace / name).is_file() and (workspace / name).read_bytes() == body
                 for name, body in expected.items()
             ):

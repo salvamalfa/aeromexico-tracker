@@ -188,6 +188,21 @@ def test_invalid_source_never_writes_candidate(fixture_report, monkeypatch):
     assert not workspace.exists()
 
 
+@pytest.mark.parametrize("check", [False, True])
+def test_candidate_inventory_cannot_hide_an_unreviewed_gold_file(fixture_report, monkeypatch, check):
+    bundle, roots, repository, _, _ = fixture_report
+    workspace = repository / "candidate"
+    monkeypatch.setattr(candidate, "safe_workspace", lambda path: path)
+    monkeypatch.setattr("src.source_updates.collection.safe_workspace", lambda path: path)
+    args = (bundle, roots, repository, workspace)
+    candidate.run(*args, as_of="2026-10-21T00:00:00Z", execute=True)
+    stray = workspace / "gold/unreviewed.json"
+    stray.write_text('{"approval_granted":true}')
+    with pytest.raises(ValueError, match="artifacts"):
+        candidate.run(*args, as_of="2026-10-21T00:00:00Z", check=check, execute=not check)
+    assert stray.read_text() == '{"approval_granted":true}'
+
+
 @pytest.mark.parametrize("cutoff", ["2026-08-01T00:00:00Z", "2026-10-21T00:00:00"])
 def test_explicit_cutoff_cannot_accept_later_capture_or_naive_time(fixture_report, cutoff):
     bundle, roots, repository, _, _ = fixture_report

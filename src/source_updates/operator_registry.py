@@ -69,9 +69,10 @@ def verify(root: Path, as_of: str) -> dict:
         raise ValueError("IATA airline search callback is missing or ambiguous")
     callback = urljoin(IATA, forms[0].get("data-callback-url"))
     parsed = urlsplit(callback)
-    params = parse_qs(parsed.query)
+    params = parse_qs(parsed.query, keep_blank_values=True)
     if (
         parsed.scheme != "https"
+        or parsed.fragment
         or parsed.netloc != "www.iata.org"
         or parsed.path != "/PublicationDetails/Search/"
         or set(params) != {"currentBlock", "currentPage"}

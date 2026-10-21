@@ -92,6 +92,23 @@ def test_callback_must_be_discovered_public_iata_form(captures):
         registry.verify(root, "2026-10-21T01:00:00Z")
 
 
+@pytest.mark.parametrize("suffix", ["&currentPage=", "&unused=", "#ignored-fragment"])
+def test_callback_cannot_hide_empty_parameters_or_a_fragment(captures, suffix):
+    root, records = captures
+    path = root / "iata-code-search.html"
+    path.write_text(path.read_text().replace("currentPage=456", "currentPage=456" + suffix))
+    records[0].update(sha256=registry.sha(path), bytes=path.stat().st_size)
+    # Give the synthetic responses the exact URL the old verifier constructed.
+    # This must still fail: a fragment prevents the appended search from being
+    # part of the HTTP query and blank parameters must not disappear in parsing.
+    for row in records[1:]:
+        if "www.iata.org" in row["source_url"]:
+            row["source_url"] = row["source_url"].replace("&airline.search=", suffix + "&airline.search=")
+    (root / "capture-results.json").write_text(json.dumps(records))
+    with pytest.raises(ValueError, match="Unverified public IATA callback"):
+        registry.verify(root, "2026-10-21T01:00:00Z")
+
+
 def test_changed_entity_or_duplicate_code_requires_review(captures):
     root, records = captures
     path = root / "iata-fr.html"
