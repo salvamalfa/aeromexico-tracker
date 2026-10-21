@@ -2,6 +2,7 @@
 import copy
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -61,7 +62,7 @@ def test_quarterly_overlay_rejects_monthly_changes_and_unrelated_activation(tmp_
 
 
 def test_executive_projection_preserves_published_peers_and_history(monkeypatch):
-    baseline = json.loads(Path("site/data/v1/executive.json").read_bytes())
+    baseline = json.loads((quarter.PATHS.root / "site/data/v1/executive.json").read_bytes())
     original = copy.deepcopy(baseline)
     if "2026Q3" in baseline["views"]:
         # The committed site may already include this release. Use its retained
@@ -90,11 +91,42 @@ def test_executive_projection_preserves_published_peers_and_history(monkeypatch)
         overlay.executive_projection(result, {})
 
 
-@pytest.mark.local_data
-def test_primary_source_replay_preserves_duration_and_canonical_calculations():
-    folder = Path("/workspace/aeromexico-tracker/tmp/quarterly-2026Q3/review")
+def _quarterly_capture_folder(root: Path, require_local_data: bool) -> Path:
+    folder = root / "tmp" / "quarterly-2026Q3" / "review"
     if not (folder / "captures.json").exists():
-        pytest.skip("The authorized quarterly primary-source capture is not present")
+        message = "Restore the authorized quarterly primary-source fixture at " + str(folder)
+        if require_local_data:
+            pytest.fail(message)
+        pytest.skip(message)
+    return folder
+
+
+def test_primary_capture_fixture_follows_each_checkout_root(tmp_path):
+    for name in ("checkout-a", "different location/checkout-b"):
+        root = tmp_path / name
+        folder = root / "tmp/quarterly-2026Q3/review"
+        folder.mkdir(parents=True)
+        (folder / "captures.json").write_text("[]")
+        assert _quarterly_capture_folder(root, True) == folder
+
+
+def test_missing_primary_capture_is_a_failure_when_local_data_is_required(tmp_path, monkeypatch):
+    monkeypatch.setattr(quarter, "PATHS", SimpleNamespace(root=tmp_path))
+    request = SimpleNamespace(config=SimpleNamespace(getoption=lambda name: {"--require-local-data": True}[name]))
+    with pytest.raises(pytest.fail.Exception, match="Restore the authorized quarterly"):
+        test_primary_source_replay_preserves_duration_and_canonical_calculations(request)
+
+
+def test_missing_primary_capture_can_skip_only_without_required_local_data(tmp_path, monkeypatch):
+    monkeypatch.setattr(quarter, "PATHS", SimpleNamespace(root=tmp_path))
+    request = SimpleNamespace(config=SimpleNamespace(getoption=lambda name: {"--require-local-data": False}[name]))
+    with pytest.raises(pytest.skip.Exception, match="Restore the authorized quarterly"):
+        test_primary_source_replay_preserves_duration_and_canonical_calculations(request)
+
+
+@pytest.mark.local_data
+def test_primary_source_replay_preserves_duration_and_canonical_calculations(request):
+    folder = _quarterly_capture_folder(quarter.PATHS.root, request.config.getoption("--require-local-data"))
     package, calculations = quarter.prepare(folder)
     assert quarter.verify(package)["status"] == "passed"
     nonmonetary = {"count", "seat_miles", "passenger_miles", "fraction", "percent_change", "liters", "multiple"}
