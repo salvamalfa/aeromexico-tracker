@@ -18,6 +18,7 @@ owner-authorized step, see ``src/publish/README.md``).
 from __future__ import annotations
 
 import json
+import subprocess
 import threading
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -37,6 +38,40 @@ pytestmark = pytest.mark.local_data
 SITE_DIR = Path(__file__).resolve().parent.parent / "site"
 DATA_DIR = SITE_DIR / "data" / "v1"
 READER_KPI_KEYS = ("rask_cents_per_km", "cask_cents_per_km", "ask_km")
+QUARTERLY_BASELINE_COMMIT = "cec09e625a2f49869bffb470e4eeda7d26c255de"
+
+
+def _baseline_json(relative: str) -> dict:
+    """Read the independently pinned publication before the quarterly addition."""
+    return json.loads(
+        subprocess.check_output(
+            ["git", "show", f"{QUARTERLY_BASELINE_COMMIT}:site/{relative}"], cwd=SITE_DIR.parent
+        )
+    )
+
+
+@pytest.fixture(scope="module")
+def published_executive(executive_payload: dict) -> dict:
+    """Replay the new primary-source edition over the pinned public baseline."""
+    from src.publish.gate import verify_records
+    from src.publish.quarterly_overlay import executive_projection
+
+    entries = manifest_mod.load_manifest(SITE_DIR)["analysis_manifest"]
+    quarterly = [e for e in entries if e["period_id"] == "2026Q3" and "entity_key" not in e]
+    if not quarterly:
+        return executive_payload
+    assert len(quarterly) == 1
+    entry = quarterly[0]
+    path = SITE_DIR.parent / "analysis_runs/drafts/2026Q3" / f"{entry['version']}.json"
+    record = json.loads(path.read_bytes())
+    verified = verify_records([record])[0]
+    assert manifest_mod.analysis_identity(verified[1]) == manifest_mod.analysis_identity(entry)
+    assert verified[1]["version"] == entry["version"]
+    assert record["draft"]["source_profile"] == "quarterly_release_v1"
+    baseline = _baseline_json("data/v1/executive.json")
+    # The quarterly operation preserves the old export rather than refreshing it.
+    assert executive_payload == baseline
+    return executive_projection(baseline, verified[2])
 
 
 def _skip_or_fail(config: pytest.Config, message: str) -> None:
@@ -63,20 +98,35 @@ def _require_site(request: pytest.FixtureRequest) -> None:
 
 
 def _export_approved_entry(entry: dict) -> dict:
-    """Use the exporter's canonical legacy/entity record loader for this identity."""
+    """Replay each exact approval through its own trusted implementation."""
+    baseline = _baseline_json("publication_manifest.json")
+    if entry in baseline["analysis_manifest"]:
+        from src.publish.approval_anchor import approval_implementation
+        from src.publish.frozen_data import verify_baseline_approvals
+        from src.publish.gate import _analysis_manifest_entry
+
+        repo = SITE_DIR.parent
+        code = approval_implementation(repo, QUARTERLY_BASELINE_COMMIT, baseline)
+        relative = Path("analysis_runs/drafts")
+        if "entity_key" in entry:
+            relative /= entry["entity_key"]
+        path = repo / relative / entry["period_id"] / f"{entry['version']}.json"
+        result = verify_baseline_approvals([path], code, flow.ROOT, include_public_payloads=True)
+        assert [_analysis_manifest_entry(a) for a in result["authorized"]] == [entry]
+        return result["payloads"][0]
     entity_args = {"entity_key": entry["entity_key"]} if "entity_key" in entry else {}
     return export_period(entry["period_id"], entry["version"], root=flow.ROOT, **entity_args)
 
 
 def test_site_flights_and_executive_data_match_a_fresh_export(
-    request: pytest.FixtureRequest, tmp_path: Path, flight_payload: dict, executive_payload: dict
+    request: pytest.FixtureRequest, tmp_path: Path, flight_payload: dict, published_executive: dict
 ) -> None:
     """``site/data/v1`` is exactly what exporting the current warehouse gives."""
 
     _require_site(request)
     out_dir = tmp_path / "data" / "v1"
     export_flights(flight_payload, out_dir, skip_input_check=True)
-    export_executive(executive_payload, out_dir, skip_input_check=True)
+    export_executive(published_executive, out_dir, skip_input_check=True)
 
     assert recombine_flights(out_dir) == recombine_flights(DATA_DIR)
     fresh_executive = json.loads((out_dir / "executive.json").read_text(encoding="utf-8"))
@@ -180,7 +230,7 @@ def test_reader_tabs_switch_panels_on_the_site(site_page) -> None:
 
 @browser_test
 def test_economy_tab_kpis_match_the_underlying_payload_for_every_quarter(
-    site_page, site_server, executive_payload: dict
+    site_page, site_server, published_executive: dict
 ) -> None:
     """The economy tab's KPI cards show exactly the payload's own display
     values -- rask/cask/ask are pre-formatted server-side
@@ -194,7 +244,7 @@ def test_economy_tab_kpis_match_the_underlying_payload_for_every_quarter(
     site_page.goto(f"{site_server}?sel_kpis=AEROMEXICO")
     site_page.wait_for_function("document.getElementById('period-display').textContent !== '—'")
     try:
-        _check_economy_kpis(site_page, executive_payload)
+        _check_economy_kpis(site_page, published_executive)
     finally:
         site_page.goto(site_server)
         site_page.wait_for_function("document.getElementById('period-display').textContent !== '—'")
@@ -284,8 +334,7 @@ def test_reading_tab_narrative_matches_the_approved_analysis(
             expected[manifest_mod.analysis_identity(entry)] = _export_approved_entry(entry)
         except MissingAnalysisInput as error:
             # The site pins an exact record, including its entity namespace.
-            # Historical technical versions are deliberately not discovered:
-            # the current code/approval guards must authorize this selected one.
+            # Each exact selected identity must pass its own pinned verifier.
             _skip_or_fail(request.config, f"{entry}: {error}")
 
     checked = set()

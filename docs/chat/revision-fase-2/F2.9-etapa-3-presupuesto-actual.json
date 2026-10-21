@@ -4,7 +4,7 @@
   "status": "offline_business_only_partial_preflight_pending_dependency_and_budget_gates",
   "candidate": "gpt-6.1-sol@low",
   "campaign_id": "f2-9-stage-3-business-partial-v1",
-  "campaign_sha256": "71b88ce461046726f194e0e91c0a3e83719bf1c38e0e4d942b4c755414b5a168",
+  "campaign_sha256": "aaba1bc6af2a631ad8e9725e5cbbb39434e7a0347393b61cfcc6d4a6aeb6eb1f",
   "cohort": "business_only_partial_stage3",
   "safety_scope": "excluded_by_explicit_owner_direction; no prompt-injection cases are added or represented as validated",
   "case_count": 30,
@@ -12,15 +12,15 @@
   "repetitions": 1,
   "coverage_summary": {
     "counts": {
-      "supported": 12,
-      "coverage_missing": 12,
-      "approval_blocked": 6
+      "supported": 10,
+      "coverage_missing": 20,
+      "approval_blocked": 0
     },
     "provider_calls": 0,
     "credentials_read": false,
-    "snapshot_data_version": "d9c4e56d04ad67be5dff6d6e9f7f6615f4f4be985ec1e5ee59781a7735007037",
-    "snapshot_semantic_version": "0b8de07ff211ca1ba984bd87281a2d68950a3e36268909b2121a7ed6b35e0365",
-    "execution_commit": "5b319ef4d317c2d7bb4f8d78a18299050b2fdb68"
+    "snapshot_data_version": "e0dec6922272b91ccb7f308f733cb25701d673933191ae36b8f1653d8ef1f175",
+    "snapshot_semantic_version": "1a24af193168bcfaf8e6cca23448b7782fbd2d92b34dc935a84eb7e519fb3f19",
+    "execution_commit": "c80f382ae82414dc3b162160a0e0a1c0fa0a5db0"
   },
   "limits": {
     "max_message_chars": 8000,
@@ -36,9 +36,9 @@
     "public_stage2_closeout": "bf03c82e52fcff3b89fbcf18794218300149ae6859950199a6fd90c56fdd522d",
     "active_prompt_r1": "439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5",
     "required_prompt_r2": "68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf",
-    "tool_specs": "7a873062d16d404c89c42457c268bfc41535039b14cb25b51f1d99adc2f9c9d9",
-    "snapshot_manifest": "244cc9de0f97dea146935cfb2d277cb0b838547ce982674d074db3da78dce024",
-    "derived_coverage": "4b538c9a55dd769037adc01fbd441597657fc3570e72c9fa02752ced5b466723",
+    "tool_specs": "c9df22afe734b53c3f9dfc714d536149d97b7fb3bcbb20b7aae530a37430a20d",
+    "snapshot_manifest": "0d3dba1aef782a8055ac0dd6966f4f79d89c714dbb3c7f935575c7e7748f5114",
+    "derived_coverage": "0971c972326908b7b755159d77b22d5897b785bd602d89216dd8372254698dc4",
     "final_report": "1c547c0d5c8814e194f3da5c52bf97898a042a1e01d5dd5be80391df3f00a0bf",
     "terminal_recovery": "74709aadfb6c255726ebaa6a5f32dafd868abc9d640f489861ed672fa04bf1d6"
   },
@@ -53,27 +53,27 @@
   },
   "projection": {
     "basis": "stage2_measured_usage_scaled_to_34_messages_plus_current_prompt_and_tool_schema_context_delta",
-    "projected_input_tokens": 2103667,
+    "projected_input_tokens": 2105210,
     "projected_input_tokens_range": [
-      2055140,
-      2103667
+      2056297,
+      2105210
     ],
     "projected_output_tokens": 9423,
-    "cost_before_margin_usd": 5.353393,
+    "cost_before_margin_usd": 5.35725,
     "cost_before_margin_usd_range": [
-      5.232075,
-      5.353393
+      5.234968,
+      5.35725
     ],
     "historical_scaled_baseline_cost_before_margin_usd": 4.86812,
     "context_delta_input_cost_before_margin_usd_range": [
-      0.363955,
-      0.485272
+      0.366847,
+      0.48913
     ],
     "cost_after_margin_usd_range": [
-      7.0633,
-      7.2271
+      7.0672,
+      7.2323
     ],
-    "proposed_cost_upper_usd": 7.2271,
+    "proposed_cost_upper_usd": 7.2323,
     "proposed_reserve_usd": 8.0,
     "safety_margin_fraction": 0.35,
     "context_delta": {
@@ -85,26 +85,26 @@
       "historical_tool_schema_utf8_bytes": 3306,
       "historical_tool_schema_sha256": "1ff0d3a35647f7a0c2fc956884a4d267b0148065ccd3e2469139463f859bea19",
       "historical_execution_commit": "a3704be6ab9dacd8c481caff7caf3278fe861e90",
-      "current_tool_schema_utf8_bytes": 7620,
-      "current_tool_schema_sha256": "7a873062d16d404c89c42457c268bfc41535039b14cb25b51f1d99adc2f9c9d9",
-      "tool_schema_delta_utf8_bytes_per_request": 4314,
-      "total_delta_utf8_bytes_per_request": 6543,
+      "current_tool_schema_utf8_bytes": 7672,
+      "current_tool_schema_sha256": "c9df22afe734b53c3f9dfc714d536149d97b7fb3bcbb20b7aae530a37430a20d",
+      "tool_schema_delta_utf8_bytes_per_request": 4366,
+      "total_delta_utf8_bytes_per_request": 6595,
       "modeled_provider_requests": 89,
       "modeled_provider_request_hypothesis_range": [
         85,
         89
       ],
       "tool_calls": 55,
-      "tool_result_serialized_utf8_bytes": 91103,
+      "tool_result_serialized_utf8_bytes": 89284,
       "tool_arguments_serialized_utf8_bytes": 3831,
-      "largest_tool_result_utf8_bytes": 15652,
+      "largest_tool_result_utf8_bytes": 13387,
       "bytes_per_token_proxy_range": [
         3,
         4
       ],
       "input_token_delta_range": [
-        145582,
-        194109
+        146739,
+        195652
       ],
       "estimation_note": "3–4 UTF-8 bytes/token proxy; no tokenizer or provider usage was queried. Tool result sizes are an aggregate and are not converted into billed tokens."
     },
@@ -118,12 +118,12 @@
     "historical_sample_count": 15,
     "planned_request_count": 34,
     "planned_message_count": 34,
-    "input_tokens_per_turn": 83528,
+    "input_tokens_per_turn": 83590,
     "output_tokens_per_turn": 375,
     "safety_margin_fraction": 0.35,
-    "per_case_estimated_reservation_usd": 0.21257,
-    "planned_batch_estimated_reservation_usd": 7.22738,
-    "campaign_sha256": "71b88ce461046726f194e0e91c0a3e83719bf1c38e0e4d942b4c755414b5a168",
+    "per_case_estimated_reservation_usd": 0.212725,
+    "planned_batch_estimated_reservation_usd": 7.23265,
+    "campaign_sha256": "aaba1bc6af2a631ad8e9725e5cbbb39434e7a0347393b61cfcc6d4a6aeb6eb1f",
     "budget_guaranteed": false,
     "note": "Empirical planning allowance per user message; not a hard cap. Unknown usage stops and blocks resume."
   },

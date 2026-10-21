@@ -80,23 +80,18 @@ def test_verify_records_refuses_a_record_with_a_tampered_content_hash() -> None:
 
 @pytest.mark.local_data
 def test_current_verifier_refuses_an_approval_from_another_implementation() -> None:
-    for path in sorted(DRAFTS_ROOT.rglob("*.json")):
-        record = json.loads(path.read_bytes())
-        try:
-            status = flow.state(record)["state"]
-        except ValueError:
-            continue
-        if status not in ("approved", "published"):
-            continue
-        try:
-            flow.require_current_presentation(record)
-        except ValueError as error:
-            if "changed" not in str(error).lower():
-                continue
-            with pytest.raises(PublicationRefused):
-                verify_records([record])
-            return
-    pytest.skip("no historical approval from another implementation is retained locally")
+    # Select independently of the verifier under test: a permissive regression
+    # must fail the assertion rather than remove its own fixture and skip.
+    path = DRAFTS_ROOT / "2026Q2" / ("186ba823aea28830be12cb0293c5bb2890a433b173addc473c26aa8f89cab26f.json")
+    if not path.is_file():
+        pytest.skip("the pinned historical Aeroméxico 2T26 approval is not restored locally")
+    record = json.loads(path.read_bytes())
+    assert record["code_version"] == "6db7173fe801e9e5ccd9afc24baced556274a58eb8ea799aa9132361b1c2d5c8"
+    assert flow.state(record)["state"] in ("approved", "published")
+    with pytest.raises(ValueError, match="changed"):
+        flow.require_current_presentation(record)
+    with pytest.raises(PublicationRefused):
+        verify_records([record])
 
 
 @pytest.mark.local_data

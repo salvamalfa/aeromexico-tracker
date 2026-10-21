@@ -277,7 +277,7 @@ def render_matrix(fixture: dict[str, Any]) -> str:
             "Los paquetes F2.3–F2.8 y el contenido R2 están aprobados para esta campaña por decisión "
             "del dueño del 2026-10-12. Todo Gold dependiente debe generarse contra el snapshot y versión "
             "semántica fijados; la aprobación conserva intacto el Gold congelado. La estimación offline "
-            "vigente es US$7.06–7.23 con margen de 35%; la reserva de US$8 está financiada para esta "
+            "que respaldó esa campaña fue US$7.06–7.23 con margen de 35%; la reserva de US$8 fue financiada para esta "
             "única campaña de 30 casos/34 mensajes. El saldo total de la cuenta del proveedor es "
             "desconocido y el costo facturado final puede variar; la reserva no garantiza un hard cap. La "
             f"derivación offline actual registró {tool_calls} llamadas y {result_bytes:,} bytes "

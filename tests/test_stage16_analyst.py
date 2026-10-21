@@ -112,7 +112,18 @@ def test_frozen_inputs_replay_and_tampering_rejected(tmp_path):
     review=json.loads((root/'docs/referencias/etapa-14/2026Q2_review.json').read_bytes())
     p=tmp_path/'p.json'; p.write_text(json.dumps(review['package']))
     calc=root/'docs/referencias/etapa-15/calculations.json'
-    package, calculations=load_inputs(p,calc)
+    from src.analysis_agent.quantitative import build
+    frozen = json.loads(calc.read_bytes())
+    calculations = build(review['package'])
+    # The current implementation has a new fingerprint. Preserve the original
+    # fixture and require every value, node, bridge and limitation to be exact.
+    changed = {key for key in frozen.keys() | calculations.keys()
+               if frozen.get(key) != calculations.get(key)}
+    assert changed == {'code_fingerprint', 'calculation_fingerprint'}
+    assert frozen['code_fingerprint'] == '458c8df102303fedba87acc6ea058a6e31cb789e98903850dbc0a27b55f8e7e1'
+    with pytest.raises(ValueError,match='replay'): load_inputs(p,calc)
+    current=tmp_path/'current.json';current.write_text(json.dumps(calculations))
+    package, calculations=load_inputs(p,current)
     bad=deepcopy(calculations);bad['nodes'][0]['value']+=1
     target=tmp_path/'bad.json';target.write_text(json.dumps(bad))
     with pytest.raises(ValueError,match='replay'): load_inputs(p,target)
