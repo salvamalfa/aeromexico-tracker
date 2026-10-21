@@ -186,6 +186,24 @@ def test_economy_tab_renders_kpis_and_charts(page_with_console_capture) -> None:
         "[...document.querySelectorAll('#unit-chart, #volume-chart, #load-chart')].every("
         "chart => Math.abs(chart.clientWidth - chart.querySelector('svg.main-svg').getBoundingClientRect().width) < 2)"
     )
+    # The two axes measure different quantities. Their rendered ticks must
+    # remain independent; Plotly4's default sync aligns them on the same grid.
+    for chart_id in ("unit-chart", "volume-chart"):
+        rendered = page.evaluate("""id => {
+            const chart = document.getElementById(id);
+            const ticks = selector => [...chart.querySelectorAll(selector)]
+                .map(tick => tick.getBoundingClientRect().y);
+            return { primary: ticks('.ytick text'), secondary: ticks('.y2tick text'),
+                primaryRange: chart._fullLayout.yaxis.range,
+                secondaryRange: chart._fullLayout.yaxis2.range };
+        }""", chart_id)
+        assert len(rendered["primary"]) >= 2
+        assert len(rendered["secondary"]) >= 2
+        assert rendered["primaryRange"] != rendered["secondaryRange"]
+        assert len(rendered["primary"]) != len(rendered["secondary"]) or any(
+            abs(left - right) > 1
+            for left, right in zip(rendered["primary"], rendered["secondary"])
+        ), f"{chart_id}: unrelated units must not share a synchronized tick grid"
     assert console_errors == []
 
 

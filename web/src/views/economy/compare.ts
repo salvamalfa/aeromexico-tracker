@@ -96,7 +96,7 @@ export function renderIndustryVolume(): void {
     hovermode: "closest",
     xaxis: { categoryorder: "array", categoryarray: labels, tickangle: -45, tickfont: { size: 8 }, showgrid: false },
     yaxis: { title: { text: "Pasajeros (M)", font: { size: 10 } }, rangemode: "tozero", gridcolor: colors.grid, tickformat: ".1f" },
-    yaxis2: { title: { text: "RASK (¢ USD)", font: { size: 10 } }, overlaying: "y", side: "right", showgrid: false, tickformat: ".1f" },
+    yaxis2: { title: { text: "RASK (¢ USD)", font: { size: 10 } }, overlaying: "y", side: "right", tickmode: "auto", showgrid: false, tickformat: ".1f" },
   });
   Plotly.react("volume-chart", traces, layout, plotConfig).then(() => {
     bindDefaultHover("volume-chart");
