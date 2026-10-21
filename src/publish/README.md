@@ -42,7 +42,7 @@ as — a directory built from `web/` plus the exported v1 payloads. See
   ledger lock immediately before the atomic replacement.
 - `--preserve-published-data` prepara el mapa solo de vuelos con el histórico
   completo. Toma el `site/` firmado exacto de `origin/master`, revalida las
-  cuatro aprobaciones con su implementación original y los expedientes
+  aprobaciones por su cohorte de implementación y los expedientes
   actuales antes/después del build, y conserva **todos** los archivos de
   `data/v1/` byte por byte. Protege los renderers de análisis, fuentes y
   contratos; no reconstruye modelos, crea aprobaciones ni activa datos nuevos.
@@ -58,10 +58,20 @@ as — a directory built from `web/` plus the exported v1 payloads. See
   `code_commit` sigue identificando el código que genera la interfaz actual.
   La referencia no autoriza versiones ni contenido nuevos, no cambia huellas
   aprobadas y no evita ninguna validación de datos o de privacidad.
+- `config/publish/approval-cohorts.json` fija las ediciones posteriores por
+  cohorte: entrada completa de aprobación, commit del verificador y SHA/tamaño
+  del payload público. Conserva el ancla original sin modificarla. El gate lee
+  los pins del commit confiable, exige una partición completa sin duplicados ni
+  entradas huérfanas y reproduce autorización, fuentes y payload con cada
+  implementación. La configuración de trabajo debe coincidir con la comprometida;
+  todo se vuelve a comprobar bajo lock. Para el nuevo trimestre solo admite un
+  pin adicional comprometido y ligado al registro aprobado actual. Un pin no
+  concede aprobación. Los modos que preservan datos y el modo de vuelos reutilizan
+  esta comprobación; incorporar 3T26 no bloquea la siguiente publicación del sitio.
 - `--flights-only` proyecta las celdas aceptadas de 2T26 sobre el sitio público
   auditado, sin reconstruir el warehouse ni los otros exportadores. Exige la
   edición exacta de vuelos, el valor anterior de cada sustitución y la
-  conciliación por operador/mes/ámbito. Revalida las cuatro aprobaciones con su
+  conciliación por operador/mes/ámbito. Revalida las aprobaciones por cohorte con su
   implementación publicada y conserva el resto de payloads e identidades antes
   y después del build. La autorización específica del 19 de octubre cubre esta
   proyección y su tarjeta ponderada; no aprueba tesis nuevas, M11 ni calendarios.

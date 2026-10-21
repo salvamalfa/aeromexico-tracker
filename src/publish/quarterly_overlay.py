@@ -8,6 +8,7 @@ and exact-version authorization. Both are rechecked under lock before swap.
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import shutil
 from pathlib import Path
@@ -15,8 +16,8 @@ from pathlib import Path
 from src.config import PATHS
 from src.analysis_agent.quarterly_release import PERIOD, calculate, verify
 from . import manifest as manifests
-from .approval_anchor import approval_implementation
-from .frozen_data import data_identities, verify_baseline_approvals
+from .approval_cohorts import verify_approval_cohorts
+from .frozen_data import data_identities
 from .verify import verify_site
 
 
@@ -103,7 +104,6 @@ def publish_quarterly(record_paths: list[Path], out_dir: Path):
     manifests.refuse_if_build_inputs_dirty()
     records = gate.load_records(record_paths)
     new = [r for r in records if r["draft"].get("source_profile") == "quarterly_release_v1"]
-    old = [r for r in records if r not in new]
     if len(new) != 1 or new[0]["draft"]["period_id"] != PERIOD:
         raise gate.PublicationRefused("One approved Aeromexico 3Q26 quarterly record is required")
     baseline = PATHS.root / "site"
@@ -114,26 +114,41 @@ def publish_quarterly(record_paths: list[Path], out_dir: Path):
     if problems:
         raise gate.PublicationRefused(f"Invalid baseline: {problems[:3]}")
     expected = manifests.load_manifest(baseline)
-    approved_code = approval_implementation(PATHS.root, commit, expected)
-    old_paths = [p for p in record_paths if json.loads(Path(p).read_bytes()) in old]
     root = gate.flow.ROOT
 
     def verified():
-        prior = verify_baseline_approvals(old_paths, approved_code, root, include_public_payloads=True)
-        entries = [gate._analysis_manifest_entry(a) for a in prior["authorized"]]
-        if sorted(entries, key=manifests.analysis_sort_key) != expected["analysis_manifest"]:
-            raise ValueError("Existing thesis identities differ from the trusted publication")
-        for entry, payload in zip(entries, prior["payloads"]):
-            path = baseline / "data/v1" / manifests.analysis_relative_path(entry)
-            if json.loads(path.read_bytes()) != payload:
-                raise ValueError("Existing thesis bytes differ from their authorized payload")
         current = gate._verify_under_lock(new, root)[0]
         if current[2].get("schema_version") != "quarterly_release_v1":
             raise ValueError("Quarterly draft is not bound to the primary-source edition")
-        return prior["authorized"], current
+        payload = gate._analysis_payload(*current)
+        raw = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        current_entry = gate._analysis_manifest_entry(current[1])
+        pending = {
+            "entry": current_entry,
+            "bytes": raw,
+            "file": {
+                "path": "data/v1/" + manifests.analysis_relative_path(current_entry).as_posix(),
+                "sha256": hashlib.sha256(raw).hexdigest(),
+                "bytes": len(raw),
+            },
+        }
+        cohorts = verify_approval_cohorts(record_paths, PATHS.root, commit, expected, root, pending=pending)
+        prior = [
+            (a, p)
+            for a, p in zip(cohorts["authorized"], cohorts["payloads"])
+            if gate._analysis_manifest_entry(a) != current_entry
+        ]
+        entries = [gate._analysis_manifest_entry(a) for a, _ in prior]
+        if sorted(entries, key=manifests.analysis_sort_key) != expected["analysis_manifest"]:
+            raise ValueError("Existing thesis identities differ from the trusted publication")
+        for entry, (_, payload) in zip(entries, prior):
+            path = baseline / "data/v1" / manifests.analysis_relative_path(entry)
+            if json.loads(path.read_bytes()) != payload:
+                raise ValueError("Existing thesis bytes differ from their authorized payload")
+        return cohorts, current
 
     with gate.flow.writer(root):
-        old_authorized, entry = verified()
+        cohorts, entry = verified()
     analysis = gate._analysis_payload(*entry)
     new_entry = gate._analysis_manifest_entry(entry[1])
     analysis_path = "data/v1/" + manifests.analysis_relative_path(new_entry).as_posix()
@@ -160,11 +175,9 @@ def publish_quarterly(record_paths: list[Path], out_dir: Path):
 
     with gate.flow.writer(root):
         gate.require_trusted_site_baseline(baseline, trusted_commit=commit)
-        if approval_implementation(PATHS.root, commit, expected) != approved_code:
-            raise gate.PublicationRefused("Existing approval implementation changed during build")
-        final_old, final_entry = verified()
-        if final_old != old_authorized or final_entry != entry:
+        final_cohorts, final_entry = verified()
+        if final_cohorts != cohorts or final_entry != entry:
             raise gate.PublicationRefused("An approval or source changed during the build")
         manifest = gate.assemble_site(dist, manifest_entries, out_dir, validate_candidate=validate)
-    receipt = gate.write_receipt(manifest, [*old_authorized, entry[1]], out_dir)
+    receipt = gate.write_receipt(manifest, cohorts["authorized"], out_dir)
     return {"manifest": manifest, "receipt": receipt}
