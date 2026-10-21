@@ -17,7 +17,9 @@ no autoriza por sí sola a publicar datos nuevos.
 3. Comprueba la rama y su relación con `origin/master`. No publiques desde una
    rama divergente sin integrar primero la historia remota mediante un PR
    revisable.
-4. Busca instrucciones más específicas en el directorio de trabajo. Las
+4. Lee el [lifecycle canónico y su cierre obligatorio](#ciclo-de-vida-de-la-documentación).
+   El agente que ejecuta la tarea es responsable de cerrarlo antes de entregar.
+5. Busca instrucciones más específicas en el directorio de trabajo. Las
    instrucciones del usuario y los contratos de datos prevalecen sobre
    sugerencias de implementación.
 
@@ -237,6 +239,11 @@ aprobar datos nuevos.
 
 ## Ciclo de vida de la documentación
 
+Esta sección es el **Lifecycle canónico** de los dos repositorios. Existe desde
+el 8 de octubre de 2026; el cierre obligatorio se añadió el 18. No mantengas
+otra política paralela. Las instrucciones del respaldo privado enlazan aquí
+y precisan sus límites de conservación y restauración.
+
 ### Audiencia y documentos para revisión del dueño
 
 Convención solicitada por Salva el 18 de octubre de 2026. La documentación
@@ -296,46 +303,52 @@ del árbol, no se acumulan.
 - **Decisiones (`docs/decisiones/`):** no se borran ni se reescriben. Una
   decisión que cambia se reemplaza por una nueva y la anterior se marca
   «Reemplazada por …».
-- Un documento que ya no aplica y no aporta historia útil se borra sin más;
-  Git conserva su versión anterior.
+- Un documento sin utilidad actual puede proponerse para retiro. Comprueba sus
+  consumidores, recuperación y autorización antes de retirarlo del árbol.
+  Git conserva su versión anterior; esto no permite purgar historia ni evidencia.
 - No borres ni muevas un documento que citen el código, una prueba o un
   contrato sin actualizar esa referencia en el mismo PR.
 
 ### Cierre documental obligatorio por tarea
 
-Antes de declarar terminada una tarea, aplica las
-[reglas de lifecycle anteriores](#ciclo-de-vida-de-la-documentación) a los
-documentos que creaste o modificaste, incluidas sus salidas generadas:
+El agente ejecutor responde por el cierre, también en entregas locales. Antes de
+entregar, realiza estos pasos sobre **todos** los archivos creados, modificados,
+movidos o retirados: código, documentos, datos y salidas generadas.
 
-1. Inventaría los archivos afectados. Comprueba su utilidad actual y sus
-   dependencias desde código, pruebas, skills, README e índices.
-2. Clasifica cada documento: **conservar**, **actualizar**, **archivar**,
-   **candidato a eliminar** o **pendiente**. Justifica la disposición con su
-   utilidad o evidencia; la edad y el número de archivos no bastan para borrar.
-3. Aplica las acciones permitidas por el encargo y esta política. Conserva
-   fuentes, decisiones, aprobaciones y evidencia de auditoría necesarias.
-   Archivar sigue el procedimiento de índice y enlace a un commit fijo;
-   no exige copiar todo a otra carpeta.
-4. Actualiza índices y enlaces afectados. Comprueba que no queden referencias
-   rotas. Una entrada ejecutable requiere ajustar y verificar sus consumidores
-   antes de retirarla.
-5. Registra la disposición y los pendientes en el resumen de la tarea o del PR
-   existente. No crees otro Markdown de estado para acreditar este cierre.
-   No declares cierre completo dejando documentación obsoleta sin clasificar.
+1. Obtén el inventario del diff contra la base de tu tarea. Incluye cambios sin
+   commit y archivos nuevos con `--worktree`; lo ignorado por Git requiere
+   revisión manual. Separa tus archivos de los de otras tareas.
+2. Decide por archivo: **conservar**, **actualizar**, **consolidar**, **archivar**,
+   **retirar**, **candidato a eliminar** o **pendiente**. Explica utilidad,
+   consumidores y recuperación. La edad y el número de archivos no justifican
+   el retiro. Un nombre como «chat», «candidate» o «backup» tampoco lo justifica.
+3. Mantén un único resumen vigente por entrega cuando sirva. Actualiza la guía
+   canónica y el resumen o PR existente. Consolida informes reemplazados allí;
+   conserva aparte solo evidencia técnica, fuentes, decisiones y aprobaciones
+   necesarias. No crees otro Markdown para acreditar el cierre.
+4. Aplica solo acciones autorizadas. Para archivar, comprueba el original en
+   un commit fijo, actualiza el índice y cambia enlaces entrantes. Antes de
+   retirar una entrada ejecutable, ajusta y verifica sus consumidores.
+   Un candidato a eliminar se conserva hasta decidir su retiro.
+5. Comprueba inventario, disposiciones, enlaces e índices. Registra en el resumen
+   existente qué validaste, resultados y límites. Revisa manualmente rutas
+   calculadas, enlaces externos, restauración y necesidad de conservar evidencia.
+   Conserva los bloqueos con archivo, motivo y siguiente responsable/acción.
 
-Esta comprobación no concede permiso para purgar historia ni borrar documentos
-en bloque. Una acción destructiva o fuera de alcance queda **pendiente**, con
-archivo, motivo y autorización necesaria. Un encargo de auditoría de solo lectura
-termina con candidatos y evidencia, sin moverlos ni borrarlos.
+Una auditoría de solo lectura termina en propuesta y evidencia. No mueve ni
+borra archivos. Un pendiente clasificado puede pasar el control estático;
+**no permite declarar terminado el trabajo pendiente ni autoriza eliminarlo**.
+El agente ejecutor sigue siendo responsable aunque delegue revisión o pruebas.
 
-Los PR con documentación modificada deben incluir en su resumen un bloque
-`document-lifecycle:v1`. El check `scripts/check_document_lifecycle.py` exige
-disposición y motivo por archivo y revisa enlaces locales de los Markdown
-afectados. Ante un retiro o traslado, también busca referencias entrantes en
-archivos versionados sin modificar: guías, código, pruebas e índices. Es un
-control estático de enlaces y rutas literales; las rutas calculadas requieren
-verificar sus consumidores. El bloque no autoriza la eliminación.
-Ejemplo técnico mínimo, dentro del cuerpo del PR:
+#### Comprobación reproducible
+
+Todos los PR deben incluir un solo bloque `document-lifecycle:v1` en el cuerpo.
+El [check](scripts/check_document_lifecycle.py) inventaría todos los archivos
+del diff del PR, exige disposición y motivo, comprueba destinos locales de los
+Markdown afectados y busca referencias entrantes al retirar o trasladar archivos.
+Incluye enlaces a `master` del propio repositorio. Los enlaces externos,
+anclas, rutas calculadas y contenido LFS no materializado exigen revisión manual.
+No certifica utilidad semántica ni autorización. No instala ni elimina archivos.
 
 ```text
 <!-- document-lifecycle:v1
@@ -343,9 +356,34 @@ Ejemplo técnico mínimo, dentro del cuerpo del PR:
 -->
 ```
 
-Valores del check: `keep`, `update`, `archive`, `delete_candidate`, `pending`.
-Para enumerar los archivos del PR usa `--list --base <commit-base>`; para
-validar un resumen local, añade `--summary-file <archivo-del-resumen>`.
+Valores: `keep`, `update`, `consolidate`, `archive`, `retire`, `delete_candidate`,
+`pending`. Conserva los valores anteriores para compatibilidad. `archive` y
+`retire` describen retiros efectivos; `delete_candidate` y `pending` conservan
+el archivo. `consolidate` identifica el documento vigente que recibe el contenido;
+el original retirado necesita su propia clasificación e índice histórico.
+
+Para lotes homogéneos de artefactos, una entrada puede usar `prefix` terminado
+en `/` y `count` exacto de archivos afectados, en lugar de `path`. Ejemplo:
+`{"prefix":"site/assets/","count":16,"disposition":"keep","reason":"Compilados alcanzables desde las páginas; regenerables desde el código fijado."}`.
+Solo se admite bajo `site/`, `data/gold/`, `docs/referencias/`, `prototypes/`,
+`review/`, `derived/` o `snapshot/`. No se permiten grupos solapados, conteos
+vacíos o distintos, ni incluir Markdown, código, workflows o configuración
+YAML/TOML: clasifícalos individualmente. El diff conserva las rutas exactas.
+Revisa que el grupo comparta motivo y disposición; el check no puede decidirlo.
+
+Desde la raíz pública, antes de hacer commit:
+
+```bash
+python scripts/check_document_lifecycle.py --base <base> --worktree --list
+python scripts/check_document_lifecycle.py --base <base> --worktree --summary-file <resumen-existente>
+```
+
+Tras el commit omite `--worktree`. `--head <commit>` fija el extremo del PR;
+no se combina con `--worktree`. Para el respaldo privado usa el mismo script
+con `--root <checkout-privado>` y su propio commit base. No copies su inventario
+a un resumen público. El CI público conserva el control dentro de `test` y lo
+reevalúa al editar el cuerpo del PR. El privado fija una versión del mismo
+script; no descarga una política mutable de `master` para ejecutarla.
 
 ## Criterio de cierre
 

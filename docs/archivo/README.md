@@ -5,7 +5,7 @@ Resumen de los esfuerzos cerrados. Los documentos originales se borraron del
 [`7478082`](https://github.com/salvamalfa/aeromexico-tracker/tree/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo):
 cada sección enlaza a su carpeta en ese commit. No los restaures al árbol; si
 algo de ellos sigue vigente, pásalo a la documentación permanente (ver
-`AGENTS.md`, «Ciclo de vida de la documentación»).
+el [Lifecycle canónico](../../AGENTS.md#ciclo-de-vida-de-la-documentación)).
 
 Este archivo está excluido de las búsquedas de agentes (`.ignore`). Léelo solo
 cuando la tarea lo pida (depurar una decisión pasada o el porqué de un dato).

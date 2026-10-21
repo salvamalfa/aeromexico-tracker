@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-21 · Cierre de archivos por tarea
+
+- Lifecycle canónico en `AGENTS.md`, enlazado desde las instrucciones privadas.
+  El ejecutor inventaría y clasifica todos sus archivos, conserva un resumen
+  vigente y comprueba índices, enlaces y consumidores antes de entregar.
+- Control ampliado a código y artefactos, cambios locales y lotes generados
+  con conteo exacto. El CI se reevalúa al editar el cuerpo del PR.
+- Nueva revisión del sitio y las carpetas «chat», sin borrar archivos ni alterar
+  datos publicados. [Resultado y propuesta](docs/gold-exposure.md#nueva-auditoría-de-archivos--21-de-octubre-de-2026).
+
 ## 2026-10-19 · Publicación autorizada de Mercado y Noticias
 
 - Cinco vistas en el mismo dashboard: Mercado reúne participación y crecimiento;
