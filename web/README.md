@@ -296,6 +296,13 @@ navegador entre pruebas; el cierre de `review/bootstrap.test.ts` lo hace sin
 relajar sus comprobaciones. Se conservan las cuatro trazas de Plotly que usa
 la interfaz. Las versiones y hashes exactos están en `package-lock.json`.
 
+Plotly 4 cambia las marcas de los ejes superpuestos a una cuadrícula sincronizada.
+Se fija `tickmode: "auto"` en los tres ejes secundarios de Economía para
+conservar la escala visual anterior. La prueba de navegador observa posiciones
+reales de las marcas y rangos distintos: pasa con el build anterior de Plotly 3,
+falla con Plotly 4 sin el ajuste y pasa al conservar las marcas independientes.
+No se basa solo en inspeccionar la configuración enviada a Plotly.
+
 La consulta `npm audit --package-lock-only --json` devuelve cero avisos para
 las 392 entradas del lockfile actualizado. Es una consulta al corte, no una
 garantía de ausencia de vulnerabilidades futuras. La revisión de los módulos
@@ -308,7 +315,16 @@ Fuentes oficiales: [aviso de MapLibre](https://github.com/advisories/GHSA-jrc7-9
 [aviso de Tinypool](https://github.com/advisories/GHSA-85c8-ppgw-ccpr),
 [aviso de source-map-js](https://github.com/advisories/GHSA-68fv-2mgg-jv7q),
 [aviso de Vite](https://github.com/advisories/GHSA-587h-7wmj-h5pm)
-y [migración de Vitest 4](https://v4.vitest.dev/guide/migration.html).
+[migración de Vitest 4](https://v4.vitest.dev/guide/migration.html)
+y [migración de ejes en Plotly 4](https://plotly.com/javascript/guides/migrating-to-v4/#overlaying-axis-tickmode).
+
+Comprobación acotada de la publicación vigente: el chunk
+`assets/plotly-DRbKALdc.js` tiene 1.286.176 bytes y coincide por SHA-256 entre
+el manifiesto Git, la respuesta HTTP y un build con los módulos Plotly 3.7.0
+ya existentes, sin reinstalarlos. Su grafo incorpora CSS de MapLibre y excluye
+su JavaScript. No es una reproducción completa del sitio: solo cuatro de las
+catorce salidas de ese build coinciden con el manifiesto vigente. Esta prueba
+se limita al chunk Plotly servido y no declara actualizado todo el frontend.
 
 El build de esta rama y la publicación servida son estados distintos.
 La actualización de `site/` requiere el gate y la verificación de Pages;

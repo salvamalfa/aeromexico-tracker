@@ -10,6 +10,8 @@
 - Lock web: Vite 7.3.7, Vitest 4.1.12, Plotly 4.1.2 y source-map-js 1.2.2.
   El teardown restaura los spies del navegador entre pruebas.
   [Alcance, fuentes y comprobaciones](web/README.md#dependencias-y-avisos-de-seguridad).
+- Economía conserva los ejes secundarios con marcas independientes de Plotly 3;
+  una prueba de navegador comprueba su posición real tras actualizar Plotly.
 - No se cambian cifras, fuentes ni aprobaciones. Los perfiles de análisis, chat
   y web se validan por separado; integrar el lock no prueba su despliegue.
 
