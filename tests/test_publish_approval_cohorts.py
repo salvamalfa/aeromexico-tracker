@@ -167,6 +167,31 @@ def test_working_changes_and_unexpected_pending_pins_are_rejected(publication):
         cohorts.approval_plan(p["root"], p["trusted"], p["baseline"], pending=p["pending"])
 
 
+@pytest.mark.parametrize("merge_trusted", [False, True])
+def test_copied_trusted_site_cannot_bless_a_verifier_from_divergent_history(publication, merge_trusted):
+    p = publication
+    root = p["root"]
+    # Reuse the complete candidate tree, but put its verifier on side history
+    # descending only from the old cohort, before the trusted publication.
+    tree = git(root, "rev-parse", "HEAD^{tree}")
+    side_code = git(root, "commit-tree", tree, "-p", p["old_code"], "-m", "side verifier")
+    config = copy.deepcopy(p["config"])
+    config["cohorts"][0]["implementation_commit"] = side_code
+    (root / cohorts.CONFIG).write_text(json.dumps(config))
+    git(root, "add", cohorts.CONFIG)
+    tree = git(root, "write-tree")
+    parents = ["-p", side_code]
+    if merge_trusted:
+        parents += ["-p", p["trusted"]]
+    side_head = git(root, "commit-tree", tree, *parents, "-m", "copied trusted site")
+    # Only refs in this isolated synthetic test repository are changed.
+    git(root, "update-ref", "refs/heads/side", side_head)
+    git(root, "symbolic-ref", "HEAD", "refs/heads/side")
+    assert git(root, "show", f"HEAD:site/publication_manifest.json") == json.dumps(p["baseline"])
+    with pytest.raises(ValueError, match="trusted publication history"):
+        cohorts.approval_plan(root, p["trusted"], p["baseline"], pending=p["pending"])
+
+
 @pytest.mark.parametrize("bad", ["approval", "payload", "missing_payload", "replay_failure"])
 def test_each_selected_verifier_must_replay_the_exact_authorization_and_payload(
     publication, monkeypatch, bad

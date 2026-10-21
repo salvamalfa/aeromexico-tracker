@@ -63,7 +63,9 @@ as — a directory built from `web/` plus the exported v1 payloads. See
   del payload público. Conserva el ancla original sin modificarla. El gate lee
   los pins del commit confiable, exige una partición completa sin duplicados ni
   entradas huérfanas y reproduce autorización, fuentes y payload con cada
-  implementación. La configuración de trabajo debe coincidir con la comprometida;
+  implementación. La rama y el verificador nuevo deben descender de la publicación
+  confiable; los verificadores históricos deben estar en su historial ya publicado.
+  La configuración de trabajo debe coincidir con la comprometida;
   todo se vuelve a comprobar bajo lock. Para el nuevo trimestre solo admite un
   pin adicional comprometido y ligado al registro aprobado actual. Un pin no
   concede aprobación. Los modos que preservan datos y el modo de vuelos reutilizan

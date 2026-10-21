@@ -127,6 +127,8 @@ def approval_plan(repo: Path, trusted_commit: str, baseline: dict, *, pending=No
         expected = {"analysis_manifest": [pending["entry"]], "files": [pending["file"]]}
         if any(configured[-1][key] != value for key, value in expected.items()):
             raise ValueError("Pending cohort differs from the exact new thesis")
+        _ancestor(repo, trusted_commit, configured[-1]["implementation_commit"])
+    _ancestor(repo, trusted_commit, pin_commit)
     entries = list(baseline["analysis_manifest"])
     files = list(baseline["files"])
     if pending is not None:
@@ -161,8 +163,9 @@ def approval_plan(repo: Path, trusted_commit: str, baseline: dict, *, pending=No
         }
     )
     covered = {manifests.analysis_identity(e) for e in historical}
-    for cohort in configured:
-        _ancestor(repo, cohort["implementation_commit"], pin_commit)
+    for index, cohort in enumerate(configured):
+        history = trusted_commit if index < len(trusted_cohorts) else pin_commit
+        _ancestor(repo, cohort["implementation_commit"], history)
         for entry in cohort["analysis_manifest"]:
             identity = manifests.analysis_identity(entry)
             if identity in covered or by_identity.get(identity) != entry:
