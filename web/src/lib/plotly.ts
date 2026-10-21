@@ -5,9 +5,8 @@
 // tree-shaken import through Vite; see web/README.md "Tamaño del bundle"
 // and docs/arquitectura/auditoria-arquitectura-20260926.md Fase 4.
 //
-// Deliberately does NOT register choroplethmapbox/scattermapbox (they pull
-// in maplibre-gl, unused by this page and the source of the only known
-// vulnerabilities in the plotly.js dependency tree at this pin).
+// Deliberately excludes MapLibre map traces, which this page does not use.
+// Plotly core imports MapLibre CSS; the local build excludes its JavaScript.
 import PlotlyCore from "plotly.js/lib/core";
 import bar from "plotly.js/lib/bar";
 import scatter from "plotly.js/lib/scatter";
