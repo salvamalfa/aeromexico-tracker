@@ -1,7 +1,7 @@
 # Catálogo de fuentes, métricas y rondas de actualización
 
-Revisión: 21 de octubre de 2026 (UTC). **Calendario aprobado; skills y coordinador
-preparados para pruebas. Sin nuevas ejecuciones automáticas ni publicación.**
+Revisión: 21 de octubre de 2026 (UTC). **Skills y coordinador implementados;
+integración técnica autorizada. Calendario sin activar y sin publicación de datos.**
 
 ## Resumen
 
@@ -10,6 +10,12 @@ Incluye ocho skills por familia y un coordinador. Primero muestra qué haría.
 Después puede capturar y comprobar un lote candidato en una carpeta separada.
 La aprobación del calendario ya está recibida. La revisión del contenido y su
 publicación conservan sus permisos separados.
+
+La integración de esta infraestructura no aprueba una ronda de datos. Aerocivil
+y GDELT permanecen **requeridos y bloqueados**. Sus fallos impiden aceptar una
+ronda que los requiera; no se sustituyen por cero ni por otro producto. Ningún
+comando instala un calendario o incorpora candidatos a producción al fusionar
+el código. Los originales y candidatos conservan sus recibos y revisión propia.
 
 ## Qué cambia para ti
 
@@ -214,7 +220,8 @@ Es un control de un proceso, no una cuota distribuida: usar un solo runner
 autorizado y no lanzar capturas concurrentes. No se acredita extracción válida
 del periodo ni se afirma una interrupción general del servicio.
 Los SHA, consultas, recibos, límites y rechazos están en
-[la evidencia agregada existente](referencias/source-updates-20261021/verification.json)+y sus originales en el borrador privado #38.
+[la evidencia agregada existente](referencias/source-updates-20261021/verification.json)
+y sus originales en el borrador privado #38.
 
 El comprobador `src.source_updates.readiness` reúne candidatos ya construidos
 con adaptadores distintos, sin repetir capturas. Después de restaurar los
@@ -236,6 +243,15 @@ escrituras. El resultado lista productos no ejercitados y distingue listo para
 revisión de listo para automatizar. La muestra no es una ronda actual completa
 de los 42 productos. Curación conserva su comprobador dedicado, con emisores
 y periodos fiscales propios.
+
+Una reproducción numérica de Aerocivil puede pasar con la condición de leyenda
+pendiente; eso no acepta su significado ni su cobertura. `ready_for_review`
+no es un permiso de calendario. Cada receta define sus tareas requeridas: el
+comprobador no impone una política global que incluya Aerocivil y GDELT en todas
+ellas. Antes de usarlo como control de aceptación del calendario se necesita
+esa política explícita y resolver ambos bloqueos. Los indicadores
+`ready_for_calendar_incorporation` y `ready_for_automatic_execution` permanecen
+falsos incluso en la receta numérica exitosa.
 
 ## Riesgos
 
@@ -809,8 +825,10 @@ verificación funcional de Pages o Railway desde esta continuación. Privada35
 se fusionó a las 17:20 UTC del mismo día. La base local probada
 `03a06b8` se conserva; los adaptadores retenidos están en una rama local
 distinta, sin push, PR nuevo, merge ni activación durante la preparación local.
-La aprobación posterior permite ahora un PR borrador para revisión y CI. Su integración y el
-trabajo M11 de PR140 conservan sus responsables. La rama de revisión ya incorpora
+La autorización de preparación permitió el PR borrador y su CI. La autorización
+posterior permite integrar técnicamente las skills y su respaldo, con revisión
+y CI del head final, sin activar calendario, fuentes ni noticias. El trabajo
+M11 de PR140 y la publicación 3T26 de PR149 conservan sus responsables. La rama de revisión ya incorpora
 PR142 y conserva sus correcciones de fechas GDELT y de noticias. Los commits
 locales anteriores y sus recibos mantienen su fecha y alcance históricos.
 PR142 no es un PR pendiente ni una razón para dar por exhaustivo RSS.
@@ -1109,10 +1127,8 @@ implementación local descrita arriba; no son el recibo de pruebas de esta entre
 - Aerocivil sigue pendiente de una leyenda y atribución primarias del ID exacto.
   GDELT requiere una captura correctamente rotulada del mes que pase el control
   de fechas; el último diagnóstico terminó en 429 y este lote no vuelve a llamar.
-  Son decisiones distintas: mantener cada producto **requerido** conserva el
-  bloqueo de la ronda; declararlo **opcional por decisión expresa del dueño**
-  permite revisar los otros productos con el faltante visible, sin certificarlo.
-  No se aplicó ninguna de estas alternativas ni se rebajaron validadores.
+  Ambos permanecen **requeridos y bloqueados** por decisión del dueño. No hay
+  autorización para declararlos opcionales ni para rebajar sus validadores.
   Obtener aclaración documental del proveedor es otra vía; contactar a terceros,
   añadir hosts o contratar servicios requiere instrucción aparte.
 - Suministrar al coordinador los tres releases financieros comprobados del
@@ -1123,12 +1139,13 @@ implementación local descrita arriba; no son el recibo de pruebas de esta entre
   cobertura y revisiones antes de incorporarlo. Países no aporta una serie
   mensual exacta desde las gráficas del boletín; Aerocivil conserva su leyenda pendiente.
 - PR142/privada35, PR144/privada37 y Vuelos PR134/privada33 ya están integrados. M11 PR140
-  conserva su responsable. Integrar este cambio sobre la base vigente y
-  conservar sus controles; esta rama no hace esos merges ni altera sus salidas.
+  conserva su responsable. La integración de infraestructura conserva esas
+  salidas y el lifecycle vigente; no incorpora el trabajo 3T26 de PR149.
 - Resolver las decisiones curadas de perfiles y eventos descritas arriba antes
   de cambiar su significado o elegibilidad. Las pruebas no las aprueban.
 - Verificar el calendario bancario de 2027 antes de calcular rondas de ese año.
 - Revisar y aprobar cada lote según su alcance antes de publicar o activar una
-  ejecución automática. El dueño aprobó subir esta ampliación como PR borrador
-  para revisión y CI el 19 de octubre. Esa aprobación no autoriza merge,
-  publicación de datos, calendario ni activación de noticias o tesis.
+  ejecución automática. La integración técnica ahora autorizada no aprueba
+  datos nuevos ni activa calendario, noticias o nuevas versiones de tesis.
+  La disponibilidad y validez de cada fuente se comprueban por lote; los dos
+  productos bloqueados impiden declarar lista una ronda completa que los requiera.
