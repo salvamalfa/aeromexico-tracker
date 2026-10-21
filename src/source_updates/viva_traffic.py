@@ -208,6 +208,7 @@ def texts(pages: list[str], period: str, original: dict) -> tuple[pd.DataFrame, 
         ),
         "entity_attribution": "brand_only_no_legal_issuer_or_operator_mapping",
         "current_source_availability": "not_certified_by_historical_layout",
+        "scope": "reviewed_2021M11_snapshot_and_2019_2020_comparatives_not_current_availability",
         "agent_eligible": False,
         "activation": "none",
     }
