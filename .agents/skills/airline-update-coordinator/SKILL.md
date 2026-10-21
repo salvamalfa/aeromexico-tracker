@@ -68,3 +68,15 @@ Para un lote explícito de originales ya retenidos, aplicar
 El modo `--execute` certifica y reproduce por producto, deteniéndose ante el
 primer fallo. No sustituye colección de fuente ni comprueba última disponibilidad;
 no llama a red, no programa este calendario y no activa datos/tesis/noticias.
+
+Para aceptación global usar `python -m src.source_updates.global_readiness`
+con `config/source_update_global.example.json` primero en `--dry-run`. Aplicar
+la política aprobada de la guía: R por cadencia/periodo, C/O cuando se utilizan,
+dependencias transitivas y Aerocivil/GDELT como prerrequisitos de calendario.
+La receta vacía enumera faltantes; no es una ronda lista. No aportar resultados
+sintéticos ni reducir checks para certificar un producto entero. Adaptadores sin
+certificación completa se mantienen bloqueados (`unsupported`). Disponibilidad
+desconocida sigue bloqueando incorporación, aunque pase un replay técnico.
+`--execute` escribe solo el recibo inmutable; `--check` repite offline y rechaza
+cambios de código, contratos, catálogo, festivos o candidatos. Conservar periodo
+nativo/rezago explícito y vínculo físico de releases; nunca activar disparadores.

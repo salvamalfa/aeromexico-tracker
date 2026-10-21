@@ -181,3 +181,9 @@ def test_cli_planning_succeeds_without_reading_source_or_writing(workspace, caps
     result = json.loads(capsys.readouterr().out)
     assert result["activation"] == "none"
     assert not workspace.exists()
+
+
+def test_real_capture_after_historical_cutoff_still_rejected():
+    source = dict(SOURCE, downloaded_at="2026-10-22T00:00:00Z")
+    with pytest.raises(ValueError, match="capture is after"):
+        gdelt.normalize({"articles": [ARTICLE]}, "2026M09", source, AS_OF)
