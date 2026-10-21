@@ -49,7 +49,7 @@ from src.web_export.writer import write_json
 # The only hosts a citation's public source URL may point to (see
 # contracts/web/analysis.schema.json's citation.href pattern, which must
 # stay in sync with this list).
-ALLOWED_CITATION_HOSTS = ("www.sec.gov", "sec.gov", "ir.aeromexico.com", "cdn.investorcloud.net")
+ALLOWED_CITATION_HOSTS = ("www.sec.gov", "sec.gov", "ir.aeromexico.com", "cdn.investorcloud.net", "www.globenewswire.com")
 
 DRAFTS_ROOT = PATHS.root / "analysis_runs" / "drafts"
 
@@ -227,7 +227,7 @@ def _claim_citations(
     number, in the same summary-then-sections document order — see
     ``_citations_by_claim``)."""
 
-    if package.get("schema_version") == "entity_evidence_v1":
+    if package.get("schema_version") in ("entity_evidence_v1", "quarterly_release_v1"):
         return _entity_claim_citations(claim, package, calculations, numbers, rendered_text)
     nodes = {n["calculation_id"]: n for n in calculations["nodes"]}
     excerpts = {e["excerpt_id"]: e for e in package["excerpts"]}

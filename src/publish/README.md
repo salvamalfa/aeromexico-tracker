@@ -120,6 +120,33 @@ coincidan; la presencia de un archivo por sí sola no acredita aprobación.
 
 ## Punto de entrada
 
+Para el trimestre financiero de Aeroméxico 3T26, `--quarterly-only` agrega
+solo `analysis/2026Q3.json` y la proyección ejecutiva de Aeroméxico del
+paquete primario auditado. Conserva byte por byte los demás datasets,
+incluidos vuelos mensuales, noticias y las cuatro tesis de 2T26. Dentro del
+ejecutivo, conserva los registros y vistas previos y los tres bloques de
+entidades sin actualización. El selector financiero incorpora 3T26; el mapa
+mantiene sus cortes de cobertura propios.
+
+Se proporcionan los cuatro registros publicados exactos y el nuevo registro
+aprobado mediante cinco opciones `--record`. El gate verifica las cuatro
+aprobaciones históricas con su implementación original y la nueva con el
+runtime actual. Repite la verificación de expedientes, fuentes y baseline
+bajo lock antes del reemplazo atómico, y valida el candidato contra contratos
+y privacidad. El contrato anterior de citas queda retenido por hash para
+seguir verificando el sitio histórico; esa retención no concede aprobación.
+
+La conversión de indicadores nativos por asiento-milla a asiento-kilómetro
+usa 1.609344. No se equipara CASM publicado con el gasto total del estado de
+resultados; los comparativos calculados desde valores redondeados pueden
+diferir de los porcentajes del comunicado. No se reconstruyen meses, Gold,
+modelos, calendarios ni tesis de otras entidades.
+
+```bash
+python -m src.publish --quarterly-only --record <registro-historico> --record <otros-registros-exactos> --record <registro-3T26-aprobado> --out site/
+python -m src.publish.verify site/
+```
+
 ```
 uv run python -m src.publish --record analysis_runs/drafts/2026Q2/<hash>.json --out site/
 uv run python -m src.publish --ui-only --record analysis_runs/drafts/2026Q2/<hash>.json --out site/

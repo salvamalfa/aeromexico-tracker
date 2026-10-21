@@ -440,6 +440,10 @@ def consumer_payload(record, root=ROOT):
 
 
 def require_current_presentation(record):
+    if record["draft"].get("source_profile") == "quarterly_release_v1":
+        from .entity_adapter import require_current_presentation as require_quarterly_presentation
+
+        return require_quarterly_presentation(record)
     if is_entity_record(record):
         from .entity_adapter import require_current_presentation as require_entity_presentation
 

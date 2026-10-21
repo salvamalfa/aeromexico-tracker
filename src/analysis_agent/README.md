@@ -39,6 +39,40 @@ este módulo.
 
 ## Puntos de entrada
 
+### Aeroméxico financiero · 3T26
+
+`quarterly_release.py` incorpora exclusivamente el trimestre julio–septiembre
+de 2026. Reproduce columnas trimestrales del comunicado del emisor, montos
+narrativos de mayor precisión y páginas de la presentación. Verifica originales,
+recibos de captura, fechas, unidades y huellas antes de cada consumo. La captura
+del 21 de octubre es retrospectiva; no demuestra que esos mismos bytes fueran
+accesibles el día del reporte. No actualiza Gold ni tráfico mensual.
+
+El [comunicado no auditado del 19 de octubre](https://www.globenewswire.com/fr/news-release/2026/10/19/3383928/0/en/aerom%C3%A9xico-reports-unaudited-third-quarter-2026-results.html),
+la [presentación del 20 de octubre](https://ir.aeromexico.com/static-files/1338d53e-2740-4b3a-8d44-cac3ac17d28f)
+y el [índice primario](https://ir.aeromexico.com/financial-information/quarterly-results)
+respaldan el expediente. Los originales y la auditoría se conservan en el respaldo
+privado, separados de los borradores de fuentes de otros hilos.
+
+La redacción pasa por `analyst_v1`; `source_profile: quarterly_release_v1`
+vincula su versión a todo el runtime y contratos. Conserva las mismas puertas
+de auditoría independiente y consentimiento de la versión exacta del ledger.
+El flujo operativo acumulado conserva `period_id: 2026YTD9`; no es un trimestre.
+Deuda neta y apalancamiento comparan contra diciembre de 2025. La recuperación
+de combustible de 113% reportada incluye el ajuste de lealtad de US$48.7m.
+Las exclusiones mecánicas de ese ajuste son cálculos ilustrativos propios,
+sin presentarlos como métricas normalizadas publicadas ni como efectivo nuevo.
+Premium es participación del ingreso de pasajeros de productos y servicios
+por encima de Básica/Clásica. TRASM y CASM nativos usan asiento-milla.
+
+```bash
+python -m src.analysis_agent.quarterly_release <carpeta-de-capturas-verificada>
+```
+
+La carpeta debe contener originales y `captures.json` auténtico con URL, HTTP,
+fecha UTC, tamaño y SHA-256. Preparar el paquete no aprueba ni publica nada.
+La imagen privada de referencia editorial no se incorpora al sitio.
+
 - Etapas individuales vía `just stage12-*` … `just stage16-*` en el
   `justfile`.
 

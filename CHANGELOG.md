@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-21 · Aeroméxico 3T26 financiero
+
+- Lectura original «Ingresos récord, margen bajo presión», con fuentes primarias,
+  separación trimestral/acumulado y ajuste de lealtad identificado.
+- Publicación trimestral aditiva: conserva tesis 2T26 y datasets del mapa,
+  noticias y pares; añade exclusivamente Aeroméxico financiero de 3T26.
+- Reproducción de cifras nativas, conversión milla/kilómetro, auditoría independiente
+  y consentimiento por versión, con comprobación del candidato antes del swap.
+
 ## 2026-10-19 · Publicación autorizada de Mercado y Noticias
 
 - Cinco vistas en el mismo dashboard: Mercado reúne participación y crecimiento;

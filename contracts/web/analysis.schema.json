@@ -82,7 +82,7 @@
         "label": { "type": "string", "pattern": "^[1-9][0-9]*$" },
         "href": {
           "type": "string",
-          "pattern": "^https://(www\\.sec\\.gov|sec\\.gov|ir\\.aeromexico\\.com|cdn\\.investorcloud\\.net)/"
+          "pattern": "^https://(www\\.sec\\.gov|sec\\.gov|ir\\.aeromexico\\.com|cdn\\.investorcloud\\.net|www\\.globenewswire\\.com)/"
         },
         "title": { "type": "string" },
         "value": { "type": "string" }

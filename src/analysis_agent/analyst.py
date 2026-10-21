@@ -227,6 +227,9 @@ def save(draft, package, calculations, root=None):
     prompt_version = hashlib.sha256(SKILL.read_bytes()).hexdigest()
     code_version = digest({name: hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest()
                            for name in ("analyst.py", "stage16_html.py")})
+    if draft.get("source_profile") == "quarterly_release_v1":
+        from .entity_adapter import code_version as implementation_version
+        code_version = implementation_version()
     version = digest({"draft": draft, "prompt_version": prompt_version, "code_version": code_version})
     target = root / (version + ".json")
     if target.exists():
