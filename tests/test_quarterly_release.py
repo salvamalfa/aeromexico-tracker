@@ -1,6 +1,7 @@
 """Quarterly publication boundaries: duration, native units and frozen datasets."""
 import copy
 import json
+from contextlib import nullcontext
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -59,6 +60,60 @@ def test_quarterly_overlay_rejects_monthly_changes_and_unrelated_activation(tmp_
     write(candidate / "data/v1/analysis/VIVA_AEROBUS/2026Q3.json", {"unapproved": True})
     with pytest.raises(ValueError, match="unrelated datasets"):
         overlay.require_preserved_data(candidate, before, new_exec, new_analysis, thesis_path)
+
+
+@pytest.mark.parametrize("local_default_path", ["executive.json", "analysis/2026Q3.json"])
+def test_quarterly_payloads_remain_utf8_with_cp1252_default(tmp_path, monkeypatch, local_default_path):
+    from src.publish import gate
+
+    baseline = tmp_path / "site"
+    web = tmp_path / "web/public/data/v1"
+    old = {"prior": "México"}
+    new_exec = {"quarter": "México: presión del combustible"}
+    new_analysis = {"thesis": "Aeroméxico: lealtad y liquidez"}
+    target = baseline / "data/v1/executive.json"
+    target.parent.mkdir(parents=True)
+    target.write_bytes(json.dumps(old, ensure_ascii=False).encode("utf-8"))
+    authorized = dict(period_id="2026Q3", version="a" * 64, content_hash="b" * 64,
+                      evidence_fingerprint="c" * 64, approval_event="d" * 64, audit_hash="e" * 64)
+    record = {"draft": {"period_id": "2026Q3", "source_profile": "quarterly_release_v1"}}
+    package = {"schema_version": "quarterly_release_v1"}
+    entry = (record, authorized, package, {})
+    monkeypatch.setattr(overlay, "PATHS", SimpleNamespace(root=tmp_path))
+    monkeypatch.setattr(overlay.manifests, "refuse_if_build_inputs_dirty", lambda: None)
+    monkeypatch.setattr(overlay.manifests, "load_manifest", lambda path: {"analysis_manifest": []})
+    monkeypatch.setattr(overlay, "verify_site", lambda path: [])
+    monkeypatch.setattr(overlay, "verify_approval_cohorts", lambda *args, **kwargs: {
+        "authorized": [authorized], "payloads": [new_analysis]})
+    monkeypatch.setattr(overlay, "executive_projection", lambda old, package: new_exec)
+    monkeypatch.setattr(gate, "load_records", lambda paths: [record])
+    monkeypatch.setattr(gate, "_trusted_site_commit", lambda root: "f" * 40)
+    monkeypatch.setattr(gate, "require_trusted_site_baseline", lambda *args, **kwargs: None)
+    monkeypatch.setattr(gate, "_verify_under_lock", lambda *args: [entry])
+    monkeypatch.setattr(gate, "_analysis_payload", lambda *args: new_analysis)
+    monkeypatch.setattr(gate.flow, "writer", lambda root: nullcontext())
+    monkeypatch.setattr(gate.flow, "ROOT", tmp_path / "ledger")
+    monkeypatch.setattr(gate, "WEB_DATA_V1", web)
+    monkeypatch.setattr(gate, "WEB_DIR", tmp_path / "web")
+    monkeypatch.setattr(gate, "build_web", lambda path: tmp_path / "web/public")
+
+    def assemble(dist, entries, out_dir, *, validate_candidate):
+        validate_candidate(dist)
+        return {"analysis_manifest": entries}
+
+    monkeypatch.setattr(gate, "assemble_site", assemble)
+    monkeypatch.setattr(gate, "write_receipt", lambda *args: {})
+    original_write = Path.write_text
+
+    def local_write(path, data, encoding=None, errors=None, newline=None):
+        if path == web / local_default_path and encoding is None:
+            encoding = "cp1252"
+        return original_write(path, data, encoding=encoding, errors=errors, newline=newline)
+
+    monkeypatch.setattr(Path, "write_text", local_write)
+    overlay.publish_quarterly([tmp_path / "record.json"], baseline)
+    assert json.loads((web / "executive.json").read_bytes()) == new_exec
+    assert json.loads((web / "analysis/2026Q3.json").read_bytes()) == new_analysis
 
 
 def test_executive_projection_preserves_published_peers_and_history(monkeypatch):

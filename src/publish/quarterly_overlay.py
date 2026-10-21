@@ -159,10 +159,12 @@ def publish_quarterly(record_paths: list[Path], out_dir: Path):
     if web.exists():
         shutil.rmtree(web)
     shutil.copytree(baseline / "data/v1", web)
-    (web / "executive.json").write_text(json.dumps(executive, ensure_ascii=False, separators=(",", ":")))
+    (web / "executive.json").write_text(
+        json.dumps(executive, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
+    )
     target = web / manifests.analysis_relative_path(new_entry)
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps(analysis, ensure_ascii=False, separators=(",", ":")))
+    target.write_text(json.dumps(analysis, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     dist = gate.build_web(gate.WEB_DIR)
     require_preserved_data(dist, baseline, executive, analysis, analysis_path)
     manifest_entries = sorted([*expected["analysis_manifest"], new_entry], key=manifests.analysis_sort_key)
