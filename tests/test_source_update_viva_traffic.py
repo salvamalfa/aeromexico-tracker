@@ -1,5 +1,7 @@
 """Contract fixtures for historical Viva traffic; real extraction receipt is private."""
 
+import re
+
 import pandas as pd
 import pytest
 
@@ -240,3 +242,34 @@ def test_current_candidate_contract_rejects_unit_or_segment_tampering():
     frame.loc[frame.metric_key.eq("load_factor_itinerary"), "value"] = 101
     with pytest.raises(ValueError, match="domain changed"):
         source.validate_current(frame)
+
+
+def test_swapped_monthly_and_ytd_cells_cannot_pass_under_unchanged_headers():
+    pages = current_text()
+    rows = []
+    for line in pages[0].splitlines():
+        prefix = ""
+        if line.startswith(("Nacional ", "Internacional ")):
+            prefix, line = line.split(" ", 1)
+            prefix += " "
+        tokens = line.split()
+        if len(tokens) == 6 and re.fullmatch(source.NUMBER, tokens[0]):
+            tokens = tokens[3:] + tokens[:3]
+            line = " ".join(tokens)
+        rows.append(prefix + line)
+    pages[0] = "\n".join(rows)
+    with pytest.raises(ValueError, match="cumulative|YTD"):
+        source.current_texts(pages, "2026M09", ORIGINAL)
+
+
+@pytest.mark.parametrize("historical", [False, True])
+def test_document_date_cannot_follow_capture_date_in_mexico(historical):
+    original = dict(
+        ORIGINAL,
+        downloaded_at="2021-12-07T01:00:00Z" if historical else "2026-10-09T01:00:00Z",
+    )
+    with pytest.raises(ValueError, match="document date"):
+        if historical:
+            source.texts([text()], "2021M11", original)
+        else:
+            source.current_texts(current_text(), "2026M09", original)

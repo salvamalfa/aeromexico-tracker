@@ -14,6 +14,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from pypdf import PdfReader
 
+from src.source_updates.calendar import local_time
 from src.source_updates.catalog import load_catalog
 from src.source_updates.checks import period_end
 from src.source_updates.collection import validate_url
@@ -126,6 +127,8 @@ def texts(pages: list[str], period: str, original: dict) -> tuple[pd.DataFrame, 
             "Viva identity/month/column order/units/booked-passenger glossary not established uniquely"
         )
     published = date(2021, 12, 7)
+    if local_time(original["downloaded_at"]).date() < published:
+        raise ValueError("Viva document date must precede its source capture date in Mexico")
     grid, records = {}, []
     for pos, (label, metric, unit, definition) in enumerate(METRICS):
         start = text.index(label + " ", text.index("INFORMACIÓN MENSUAL"))
@@ -155,6 +158,10 @@ def texts(pages: list[str], period: str, original: dict) -> tuple[pd.DataFrame, 
         ):
             raise ValueError("Viva passenger counts must remain exact integers")
         grid[metric] = all_values
+        if not percent and any(
+            all_values[monthly] > all_values[ytd] for monthly, ytd in ((0, 4), (1, 5), (2, 6))
+        ):
+            raise ValueError("Viva monthly value exceeds same-year cumulative YTD in native units")
         for index, observed in [(0, "2021M11"), (1, "2020M11"), (3, "2019M11")]:
             token = tokens[index]
             records.append(
@@ -287,7 +294,7 @@ def current_texts(pages: list[str], period: str, original: dict) -> tuple[pd.Dat
     if len(dates) != 1 or dates[0][1] not in MONTHS:
         raise ValueError("Viva source document dateline absent or ambiguous")
     published = date(int(dates[0][2]), MONTHS.index(dates[0][1]) + 1, int(dates[0][0]))
-    if published <= period_end(period) or pd.Timestamp(original["downloaded_at"]).date() < published:
+    if published <= period_end(period) or local_time(original["downloaded_at"]).date() < published:
         raise ValueError("Viva document date must follow the month and precede its source capture")
     header = required[3]
     table = first.split(header, 1)[1].split(required[1], 1)[0].strip()
@@ -321,6 +328,8 @@ def current_texts(pages: list[str], period: str, original: dict) -> tuple[pd.Dat
             if not percent and any("." in tokens[index] for index in (0, 1, 3, 4)):
                 raise ValueError("Viva current table uses rounded integer thousands/millions; format changed")
             native[segment] = values
+            if not percent and (values[0] > values[2] or values[1] > values[3]):
+                raise ValueError("Viva monthly value exceeds same-year cumulative YTD in native units")
             for index, observed in [(0, period), (1, f"{year - 1}M{month:02d}")]:
                 records.append(
                     {
