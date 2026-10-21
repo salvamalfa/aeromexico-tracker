@@ -503,6 +503,13 @@ repite los verificadores reales con red bloqueada y comprueba igualdad; nunca
 recolecta ni escribe en los candidatos. Un escritor crea solo el recibo global
 en una carpeta nueva. Un cambio de esos insumos exige otro recibo.
 
+En el head de implementación `70edaeda` pasaron 172 pruebas focales, incluidas
+76 independientes de política y 32 GDELT. El replay real comprobó 2.730 filas AFAC,
+24 de Viva y ocho numéricas Aerocivil sin aceptar su semántica; el recibo GDELT
+seleccionado seguía incompleto. Los 41 archivos originales/candidatos quedaron
+idénticos, con cero red y sin declarar lista la ronda. El [seguimiento del PR151](https://github.com/salvamalfa/aeromexico-tracker/pull/151#issuecomment-6323453408)
+conserva el SHA del recibo y distingue esa evidencia de CI/revisión final.
+
 Las pruebas positivas de la decisión usan resultados internos sintéticos para
 probar el contrato; **no acreditan fuentes reales**. La extracción real sigue
 siendo la evidencia de la matriz. Los verificadores actuales conservan
@@ -1365,11 +1372,11 @@ implementación local descrita arriba; no son el recibo de pruebas de esta entre
 
 ## Pendientes
 
-- Revisar la única decisión de alcance propuesta: núcleo obligatorio con
-  complementarias pendientes cuando no se utilicen. La recomendación y sus
-  condiciones técnicas están en este documento.
-  Sin aprobación no se implementa como política global ni se declara listo el
-  calendario. Aerocivil y GDELT siguen requeridos.
+- La política está aprobada e implementada; no falta volver a aprobarla.
+  Completar la certificación íntegra por producto donde el nuevo control declara
+  `unsupported`: comprobar tablas seleccionadas no equivale a certificar todas
+  las métricas R. Esto es trabajo técnico, no una decisión de alcance del dueño.
+  Aerocivil y GDELT siguen requeridos.
 - Aerocivil sigue pendiente de una leyenda y atribución primarias del ID exacto.
   GDELT requiere una captura correctamente rotulada del mes que pase el control
   de fechas; el último diagnóstico terminó en 429 y este lote no vuelve a llamar.
