@@ -70,7 +70,7 @@ def extract(raw, pdf):
             artifact_id=next(e["artifact_id"] for e in excerpts if e["excerpt_id"] == eid),
             definition=definition,
             scope="Grupo Aeroméxico consolidated",
-            currency="USD",
+            currency="USD" if unit in {"USD", "cents_USD_per_ASM", "cents_USD_per_RPM"} else None,
         )
         item["metric_id"] = "metric_" + digest(item)
         metrics.append(item)
@@ -186,7 +186,7 @@ def extract(raw, pdf):
         float(re.search(r"reached ([\d.]+)%", value)[1]) * 0.01,
         "fraction",
         eid,
-        definition="share_of_passenger_revenue_products_above_Basic_Classic",
+        definition="quarter_share_of_passenger_revenue_products_above_Basic_Classic",
     )
     for table, label, key, unit in [
         (11, "Adjusted net debt (1)", "net_debt", "USD"),

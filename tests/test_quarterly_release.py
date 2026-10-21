@@ -97,7 +97,18 @@ def test_primary_source_replay_preserves_duration_and_canonical_calculations():
         pytest.skip("The authorized quarterly primary-source capture is not present")
     package, calculations = quarter.prepare(folder)
     assert quarter.verify(package)["status"] == "passed"
+    nonmonetary = {"count", "seat_miles", "passenger_miles", "fraction", "percent_change", "liters", "multiple"}
+    monetary = {"USD", "cents_USD_per_ASM", "cents_USD_per_RPM"}
+    assert {metric["unit"] for metric in package["metrics"]} == nonmonetary | monetary
+    for metric in package["metrics"]:
+        assert metric["currency"] == (None if metric["unit"] in nonmonetary else "USD")
     nodes = {(n["period_id"], n["key"]): n for n in calculations["nodes"]}
+    assert ("2026YTD9", "premium") not in nodes
+    assert nodes[("2026Q3", "premium")]["value"] == 0.42
+    premium = next(m for m in package["metrics"] if m["metric_key"] == "premium")
+    assert premium["definition"].startswith("quarter_")
+    source = next(e for e in package["excerpts"] if e["excerpt_id"] == premium["excerpt_id"])
+    assert "1 p.p. above 3Q25" in source["text"]
     assert ("2026Q3", "cashflow_ytd") not in nodes
     assert nodes[("2026YTD9", "cashflow_ytd")]["value"] == 541700000
     assert nodes[("2026Q3", "revenue")]["value"] == 1619000000
