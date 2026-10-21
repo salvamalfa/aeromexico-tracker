@@ -89,8 +89,12 @@ def test_stage3_derives_all_30_cases_from_real_tools_and_current_snapshot(monkey
     assert report["pins"]["semantic_version"] == current_snapshot.semantic_version
     assert report["pins"]["data_version"] == report["campaign_identity"]["snapshot_data_version"]
     assert report["pins"]["semantic_version"] == report["campaign_identity"]["snapshot_semantic_version"]
+    # The campaign's questions, gold and expected versions above stay frozen.
+    # This separate field describes the currently published dashboard, whose
+    # financial quarter can advance while market/routes keep their own cuts.
+    executive = json.loads(Path("site/data/v1/executive.json").read_text())
     assert report["current_dashboard_period"] == {
-        "economic": "2026Q2",
+        "economic": max(row["period_id"] for row in executive["records"]),
         "market": "2026Q2",
         "domestic_routes": ["2026M07"],
     }
@@ -146,20 +150,31 @@ def test_stage3_derives_all_30_cases_from_real_tools_and_current_snapshot(monkey
             assert case["tool_source_coverage_complete"] is True
             assert case["evidence_rows_complete"] is True
 
-    assert cases["N04"]["status"] == "supported"
     definition_call, financial_call = (call["result"] for call in cases["N04"]["calls"])
     assert definition_call["approval_status"] == "owner_approved_published"
     assert financial_call["approval_gate"] == "open"
     published_finance = json.loads(Path("site/data/v1/business_metrics.json").read_text())
     assert financial_call["metric_id"] == "total_revenue"
-    expected_revenue = next(
-        row["value"]
+    selected_period = report["current_dashboard_period"]["economic"]
+    revenue_rows = [
+        row
         for row in published_finance["rows"]
         if row["metric_id"] == "total_revenue"
         and row["entity_id"] == "AEROMEXICO"
-        and row["period"] == "2026Q2"
-    )
-    assert financial_call["value"] == expected_revenue
+        and row["period"] == selected_period
+    ]
+    if revenue_rows:
+        assert cases["N04"]["status"] == "supported"
+        assert financial_call["value"] == revenue_rows[0]["value"]
+    else:
+        # A new financial narrative does not approve another structured
+        # business-metrics edition. The real tool must report its missing
+        # period instead of borrowing the prior quarter's revenue.
+        assert cases["N04"]["status"] == "coverage_missing"
+        assert financial_call["availability"] == "incomplete"
+        assert financial_call["value"] is None
+        assert financial_call["missing_periods"] == [selected_period]
+        assert financial_call["source_references"] == []
     assert cases["N09"]["calls"][0]["tool"] == "query_routes"
     assert "error" not in cases["N09"]["calls"][0]
     assert cases["N10"]["calls"][0]["tool"] == "find_shared_routes"

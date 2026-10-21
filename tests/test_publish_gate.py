@@ -46,6 +46,11 @@ def _any_approved_record_path() -> Path:
             record = json.loads(record_path.read_text(encoding="utf-8"))
             try:
                 if flow.state(record)["state"] in ("approved", "published"):
+                    # Historical approvals remain valid through their pinned
+                    # verifier. This test exercises the current implementation,
+                    # and selects its own implementation. Actual input checks
+                    # stay in verify_records below, so a broken replay fails.
+                    flow.require_current_presentation(record)
                     return record_path
             except Exception:  # noqa: BLE001 - not every record need be well-formed here
                 continue
@@ -71,6 +76,27 @@ def test_verify_records_refuses_a_record_with_a_tampered_content_hash() -> None:
     tampered["content_hash"] = "0" * 64
     with pytest.raises(PublicationRefused):
         verify_records([tampered])
+
+
+@pytest.mark.local_data
+def test_current_verifier_refuses_an_approval_from_another_implementation() -> None:
+    for path in sorted(DRAFTS_ROOT.rglob("*.json")):
+        record = json.loads(path.read_bytes())
+        try:
+            status = flow.state(record)["state"]
+        except ValueError:
+            continue
+        if status not in ("approved", "published"):
+            continue
+        try:
+            flow.require_current_presentation(record)
+        except ValueError as error:
+            if "changed" not in str(error).lower():
+                continue
+            with pytest.raises(PublicationRefused):
+                verify_records([record])
+            return
+    pytest.skip("no historical approval from another implementation is retained locally")
 
 
 @pytest.mark.local_data

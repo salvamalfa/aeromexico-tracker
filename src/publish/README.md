@@ -142,6 +142,12 @@ resultados; los comparativos calculados desde valores redondeados pueden
 diferir de los porcentajes del comunicado. No se reconstruyen meses, Gold,
 modelos, calendarios ni tesis de otras entidades.
 
+La tabla financiera estructurada del chat mantiene su edición aprobada anterior.
+Una consulta de ingresos de 3T26 por esa herramienta devuelve el periodo faltante;
+no toma el ingreso de 2T26 ni transforma automáticamente la tesis en otra edición
+de métricas. La medición offline del chat distingue ese faltante del nuevo periodo
+ejecutivo y conserva el fixture histórico de campaña.
+
 ```bash
 python -m src.publish --quarterly-only --record <registro-historico> --record <otros-registros-exactos> --record <registro-3T26-aprobado> --out site/
 python -m src.publish.verify site/
