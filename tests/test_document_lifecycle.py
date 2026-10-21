@@ -50,14 +50,27 @@ def test_pending_cleanup_can_be_reported_without_deletion(tmp_path):
 
 
 @pytest.mark.parametrize("disposition", ["archive", "retire"])
-def test_effective_retirement_cannot_classify_a_present_file(tmp_path, disposition):
-    (tmp_path / "kept.py").write_text("# Still an active source file")
+@pytest.mark.parametrize("symlink", [False, True])
+def test_effective_retirement_cannot_classify_a_present_file(tmp_path, disposition, symlink):
+    if symlink:
+        (tmp_path / "kept.py").symlink_to("missing-target")
+    else:
+        (tmp_path / "kept.py").write_text("# Still an active source file")
     errors = validate_dispositions(
         tmp_path,
         ["kept.py"],
         summary({"path": "kept.py", "disposition": disposition, "reason": "Claimed removal"}),
     )
     assert any("requires an absent original path: kept.py" in error for error in errors)
+
+
+def test_broken_symlink_is_present_for_inventory(tmp_path):
+    (tmp_path / "kept.py").symlink_to("missing-target")
+    assert not validate_dispositions(
+        tmp_path,
+        ["kept.py"],
+        summary({"path": "kept.py", "disposition": "keep", "reason": "Retained link needs review"}),
+    )
 
 
 def git(root, *args):

@@ -282,9 +282,9 @@ claves privadas en los archivos firmados. Es una comprobación estática acotada
 no certifica toda información privada posible ni inspecciona el volumen runtime.
 No se generó ni publicó otro sitio y no se alteraron las tesis o el calendario.
 
-Validación del cambio de cierre: 54 pruebas focalizadas y tres controles de
+Validación del cambio de cierre: 57 pruebas focalizadas y tres controles de
 presupuesto de archivos aprobados; lint, formato y diff limpios. La revisión
-independiente pasó las 50 pruebas y comprobó los conteos del informe. Encontró
+independiente ejecutó la suite focalizada y comprobó los conteos del informe. Encontró
 y verificó dos correcciones: consumidores nuevos sin `git add` y reconocimiento
 del origen SSH privado. Los resúmenes reales clasifican los ocho archivos
 públicos; el workflow privado se revisa con el commit público fijado.

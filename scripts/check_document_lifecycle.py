@@ -162,7 +162,11 @@ def prose_targets(target: str) -> tuple[str, ...]:
 
 def inbound_references(root: Path, paths: list[str]) -> list[str]:
     """Inspect literal consumers of retired files without resolving unrelated data."""
-    removed = {(root / path).resolve(): path for path in paths if not (root / path).exists()}
+    removed = {
+        (root / path).resolve(): path
+        for path in paths
+        if not (root / path).exists() and not (root / path).is_symlink()
+    }
     if not removed:
         return []
     basenames = {Path(path).name for path in removed.values()}
@@ -313,9 +317,10 @@ def validate_dispositions(root: Path, paths: list[str], summary: str) -> list[st
         ):
             errors.append(f"Missing disposition/reason: {path}")
         file = root / path
-        if not file.exists() and disposition not in ("archive", "retire"):
+        present = file.exists() or file.is_symlink()
+        if not present and disposition not in ("archive", "retire"):
             errors.append(f"Removed file requires archive/retire disposition: {path}")
-        if file.exists() and disposition in ("archive", "retire"):
+        if present and disposition in ("archive", "retire"):
             errors.append(f"Archive/retire disposition requires an absent original path: {path}")
         if file.suffix != ".md" or not file.is_file():
             continue
