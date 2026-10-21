@@ -222,7 +222,10 @@ def test_candidate_reconstructs_monthly_only_gold_without_network(workspace, mon
     assert set(gold.period_type) == {"month"} and not gold.is_derived.any()
     assert set(gold.source_system) == {"aeromexico_ir"}
     metadata = pd.read_parquet(workspace / "data/gold/dim_metric.parquet")
-    assert "not derived" in metadata.set_index("metric_key").loc["load_factor_total", "formula"]
+    formula = metadata.set_index("metric_key").loc["load_factor_total", "formula"]
+    assert "not derived" in formula
+    assert "RPM/ASM" in formula and "RPK/ASK" in formula
+    assert "passengers / available seats" not in formula
     assert gold.loc[gold.metric_key.eq("asm_total"), "value_metric"].notna().all()
     before = {
         p.relative_to(workspace).as_posix(): p.read_bytes() for p in workspace.rglob("*") if p.is_file()

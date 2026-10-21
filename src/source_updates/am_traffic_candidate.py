@@ -152,7 +152,7 @@ def frames(workspace: Path, period: str, as_of: str, collection: str) -> tuple[d
     metrics = build_dim_metric(set(silver.metric_key))
     lf = metrics.metric_key.eq("load_factor_total")
     metrics.loc[lf, "formula"] = (
-        "Reported itinerary-only passengers / available seats; not derived from itinerary-plus-charter RPM/ASM"
+        "Reported itinerary-only RPM/ASM (equivalent to RPK/ASK); not derived from itinerary-plus-charter RPM/ASM"
     )
     metrics.loc[lf, "caveats"] = (
         "Source-reported, unaudited itinerary-only load factor. Other traffic metrics include charter; their RPM/ASM ratio is a different universe."
