@@ -3,6 +3,7 @@
 import copy
 import json
 import shutil
+from pathlib import Path
 from uuid import uuid4
 
 import pytest
@@ -182,3 +183,99 @@ def test_accepted_source_receipt_cannot_borrow_another_collection(workspace):
             readiness.check_task(item, recipe(workspace)["as_of"])
     finally:
         shutil.rmtree(candidate)
+
+
+def prepared_source(workspace):
+    item = task(workspace, product="am_financials", adapter="retained")
+    item["period"] = "2026Q2"
+    candidate = Path(item["workspace"])
+    (candidate / "receipts").mkdir(parents=True)
+    (candidate / "receipts" / ("retained-" + item["receipt_id"] + ".json")).write_text(
+        json.dumps({"status": "retained_unvalidated"})
+    )
+    accepted = {
+        "retention_run_id": item["receipt_id"],
+        "status": "checks_passed",
+        "activation": "none",
+        "publication": "not_authorized",
+        "effective_as_of": item["candidate_as_of"],
+    }
+    path = candidate / "receipts/certified-am_financials-2026Q2.json"
+    path.write_text(json.dumps(accepted))
+    return item, path, accepted
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("status", "blocked"),
+        ("activation", "enabled"),
+        ("publication", "authorized"),
+        ("effective_as_of", None),
+        ("effective_as_of", ""),
+    ],
+)
+def test_source_receipt_state_and_cutoff_are_required_before_any_checker(
+    workspace, monkeypatch, field, value
+):
+    from src.source_updates import retained
+
+    item, path, accepted = prepared_source(workspace)
+    try:
+        accepted[field] = value
+        path.write_text(json.dumps(accepted))
+        before = readiness.inventory(path.parent.parent)
+        monkeypatch.setattr(retained, "run", lambda *a, **k: pytest.fail("unaccepted source was replayed"))
+        with pytest.raises(ValueError, match="Accepted source receipt|zoned"):
+            readiness.check_task(item, item["candidate_as_of"])
+        assert readiness.inventory(path.parent.parent) == before
+    finally:
+        shutil.rmtree(path.parent.parent)
+
+
+def checker_result():
+    return {
+        "status": "checks_passed",
+        "output_sha256": {"contract_only": "a" * 64},
+        "activation": "none",
+        "publication": "not_authorized",
+        "code_files": {"src/source_updates/retained.py": "b" * 64},
+    }
+
+
+@pytest.mark.parametrize("claim", ["activation", "publication", "missing_code", "invalid_code"])
+def test_checker_cannot_smuggle_activation_or_omit_actual_code_fingerprints(workspace, monkeypatch, claim):
+    from src.source_updates import retained
+
+    item, path, _ = prepared_source(workspace)
+    result = checker_result()
+    if claim == "missing_code":
+        result.pop("code_files")
+    elif claim == "invalid_code":
+        result["code_files"] = {"src/source_updates/retained.py": "not-a-hash"}
+    else:
+        result[claim] = "enabled"
+    monkeypatch.setattr(retained, "run", lambda *a, **k: result)
+    try:
+        with pytest.raises(ValueError, match="claim|fingerprints"):
+            readiness.check_task(item, item["candidate_as_of"])
+    finally:
+        shutil.rmtree(path.parent.parent)
+
+
+def test_changed_child_checker_code_invalidates_readiness_replay(workspace, monkeypatch):
+    from src.source_updates import retained
+
+    item, path, _ = prepared_source(workspace)
+    result = checker_result()
+    monkeypatch.setattr(retained, "run", lambda *a, **k: result)
+    value = recipe(workspace)
+    value["items"] = [item]
+    try:
+        saved = readiness.execute(value, workspace, write=True)
+        assert saved["results"][0]["checker_code_files"] == result["code_files"]
+        result["code_files"] = {"src/source_updates/retained.py": "c" * 64}
+        with pytest.raises(ValueError, match="replay differs"):
+            readiness.execute(value, workspace, check=True)
+    finally:
+        shutil.rmtree(path.parent.parent)

@@ -7,6 +7,7 @@ import hashlib
 import json
 import re
 from datetime import UTC, datetime
+from importlib import import_module
 from pathlib import Path
 
 from src.pipeline.offline import block_network
@@ -155,7 +156,17 @@ def check_task(item: dict, cutoff: str) -> dict:
     key = "retention_run_id" if item["adapter"] == "retained" else "collection_run_id"
     if accepted.get(key) != item["receipt_id"]:
         raise ValueError("Accepted receipt does not match the explicitly selected acquisition")
-    if accepted.get("effective_as_of") and local_time(accepted["effective_as_of"]) != local_time(cutoff):
+    if (
+        accepted.get("status") != "checks_passed"
+        or accepted.get("activation") != "none"
+        or accepted.get("publication") != "not_authorized"
+    ):
+        raise ValueError(
+            "Accepted source receipt must record passed candidate checks without activation/publication"
+        )
+    if not isinstance(accepted.get("effective_as_of"), str) or not accepted["effective_as_of"].strip():
+        raise ValueError("Accepted source receipt requires its explicit zoned cutoff")
+    if local_time(accepted["effective_as_of"]) != local_time(cutoff):
         raise ValueError("Replay cutoff differs from accepted candidate; use its exact cutoff")
     with block_network():
         if item["adapter"] == "retained":
@@ -167,16 +178,36 @@ def check_task(item: dict, cutoff: str) -> dict:
 
             result = run(candidate, item["period"], cutoff, check=True)
         else:
-            from src.source_updates import aerocivil, am_traffic_candidate, gdelt
-
-            module = {"aerocivil": aerocivil, "am_traffic_ir": am_traffic_candidate, "gdelt": gdelt}[
+            name = {"aerocivil": "aerocivil", "am_traffic_ir": "am_traffic_candidate", "gdelt": "gdelt"}[
                 item["adapter"]
             ]
+            module = import_module(f"src.source_updates.{name}")
             result = module.run(candidate, item["period"], cutoff, item["receipt_id"], check=True)
     if inventory(candidate) != before:
         raise ValueError("Offline checker changed source candidate files")
     if result.get("status") != "checks_passed" or not result.get("output_sha256"):
         raise ValueError("Candidate did not pass its actual offline checks with output hashes")
+    if result.get("activation") != "none" or result.get("publication") != "not_authorized":
+        raise ValueError("Offline checker returned an activation/publication claim")
+    code_files, code_sha = result.get("code_files"), result.get("code_sha256")
+    if (
+        code_files is not None
+        and (
+            not isinstance(code_files, dict)
+            or not code_files
+            or any(
+                not isinstance(key, str)
+                or not isinstance(value, str)
+                or not re.fullmatch(r"[0-9a-f]{64}", value)
+                for key, value in code_files.items()
+            )
+        )
+        or code_sha is not None
+        and (not isinstance(code_sha, str) or not re.fullmatch(r"[0-9a-f]{64}", code_sha))
+        or code_files is None
+        and code_sha is None
+    ):
+        raise ValueError("Offline checker must report its actual code fingerprints")
     conditions = []
     if item["adapter"] == "retained":
         conditions.append("retained_original_does_not_verify_current_source_availability")
@@ -197,6 +228,8 @@ def check_task(item: dict, cutoff: str) -> dict:
         "accepted_receipt_sha256": sha(accepted_path),
         "acquisition_receipt_sha256": sha(acquisition),
         "output_sha256": result["output_sha256"],
+        "checker_code_files": code_files,
+        "checker_code_sha256": code_sha,
         "source_candidate_files_unchanged": len(before),
         "collection_basis": "retained" if item["adapter"] == "retained" else "previously_captured_originals",
         "source_conditions": conditions,
