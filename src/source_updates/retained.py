@@ -41,6 +41,7 @@ def spec(product: str) -> dict:
         route_documents,
         sec_fiscal,
         slots,
+        viva_traffic,
     )
 
     registry = {
@@ -123,6 +124,15 @@ def spec(product: str) -> dict:
             Path(afac_airports.__file__),
             ROOT / "src/transform/international_routes.py",
         ],
+    }
+    registry["viva_traffic"] = {
+        "roles": {"pdf": ("viva_ir",)},
+        "primary": "pdf",
+        "table": viva_traffic.TABLE,
+        "grain": viva_traffic.GRAIN,
+        "parse": viva_traffic.parse,
+        "revision_values": ["value", "unit", "entity_as_reported"],
+        "code_files": [Path(viva_traffic.__file__)],
     }
     registry["aicm_slots"] = {
         "roles": {"pdf": ("aicm",)},
