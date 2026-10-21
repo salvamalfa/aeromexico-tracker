@@ -127,6 +127,7 @@ function storedRatings(datasetId: string, datasetHash: string, ratings: unknown[
 afterEach(() => {
   document.body.replaceChildren();
   window.localStorage.clear();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
 

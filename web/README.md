@@ -74,11 +74,10 @@ them, through `npm`'s `plotly.js` package (pinned in `package.json`) and
 Vite's bundler instead of a `<script>` tag. Every view imports `Plotly`
 from `src/lib/plotly.ts`, never from a global `window.Plotly`. The
 published page never uses ECharts or any other charting library; this
-keeps the same Plotly 3.x major version so rendering stays identical (see
-"Paridad" below). Deliberately excluded: `choroplethmapbox`/
-`scattermapbox` (unused by any view here, and the only source of the
-`npm audit` findings in the `plotly.js` dependency tree at this pin, via
-`maplibre-gl` — not reachable at runtime through this partial import).
+uses Plotly 4.1.2 after the security update of 21 October 2026.
+Deliberately excluded: MapLibre map traces, which this page does not use.
+The production build includes MapLibre CSS through Plotly core, but no
+MapLibre JavaScript modules. See the security section for scope and validation.
 
 ### Estado de trimestre compartido y carga diferida de Vuelos
 
@@ -281,54 +280,56 @@ transfiriendo ≈2.49 MB en total, repartidos en el tiempo en vez de al inicio.
 
 ## Dependencias y avisos de seguridad
 
-`npm audit` en `web/` (26-sep-2026, antes de este cambio) reportaba 5
-avisos: Vite 7.1.12 (alto, servidor de desarrollo — path traversal /
-lectura arbitraria vía WebSocket / bypass de `server.fs.deny`), Vitest
-3.2.4 vía `@vitest/mocker` (moderado — path traversal en el mock
-redirect) y `maplibre-gl` (crítico, XSS en `DOM.sanitize()`) arrastrado
-por `plotly.js`.
+Actualización del 21 de octubre de 2026: el lockfile corrige las siete
+entradas señaladas por `npm audit`. Las entradas propagadas por dependencias
+no representan siete fallos distintos. No se usa `npm audit fix --force`.
 
-**Actualizado**: `vite` 7.1.12 → **7.3.6** y `vitest` 3.2.4 →
-**3.2.7** (con sus `vite-node`/`@vitest/mocker` internos), ambos parches
-dentro del mismo major (`npm install -D vite@7.3.6 vitest@3.2.7`, sin
-tocar `package.json` más allá del pin). Esto resuelve el aviso de Vite.
-`npm run check`, `npm test` (51 tests) y `npm run build` (dos veces,
-mismos hashes de archivo en `dist/assets/`) siguen en verde.
+| Dependencia | Antes | Ahora | Motivo |
+|---|---|---|---|
+| Vite | 7.3.6 | 7.3.7 | Corrige los avisos de `launch-editor`. |
+| Vitest y sus paquetes internos | 3.2.7 | 4.1.12 | Corrige `@vitest/mocker` y elimina `tinypool` del árbol. |
+| Plotly | 3.7.0 | 4.1.2 | Incluye MapLibre 6.11.2, fuera del rango vulnerable. |
+| source-map-js | 1.2.1 | 1.2.2 | Corrige el aviso de consumo de recursos al interpretar mapas. |
 
-**Pendiente, sin exposición al bundle publicado:**
+Se mantiene Node 22. Vitest 4 requiere restaurar explícitamente los spies del
+navegador entre pruebas; el cierre de `review/bootstrap.test.ts` lo hace sin
+relajar sus comprobaciones. Se conservan las cuatro trazas de Plotly que usa
+la interfaz. Las versiones y hashes exactos están en `package-lock.json`.
 
-- **`@vitest/mocker` (moderado, GHSA-82fw-gwwq-j7x9)**: el propio
-  `npm audit` solo ofrece arreglo instalando `vitest@5.0.2` (major
-  breaking); no existe una versión `3.2.x` que lo corrija. `vitest` es
-  una `devDependency` que solo corre en `vitest run`/`vitest --watch`
-  contra este repo: no se empaqueta ni se sirve en `dist/` ni en
-  `site/`, así que no llega a Pages. Reevaluar al planear una actualización
-  a Vitest 5.
-- **`maplibre-gl` (crítico, GHSA-jrc7-96c5-q579), vía `plotly.js`**:
-  `plotly.js` sigue en `3.7.0` (la última `3.x`; el arreglo del
-  advisory exige `plotly.js@4.1.1`, major breaking, según
-  `npm audit`). Sin embargo `web/src/lib/plotly.ts` solo registra
-  `plotly.js/lib/core` + `bar`/`scatter`/`scattergeo`/`choropleth` —
-  deliberadamente **no** registra `choroplethmapbox`/`scattermapbox`,
-  las únicas trazas que importan `maplibre-gl`. Verificado en
-  `dist/assets/*.js` tras `npm run build`: `grep -c maplibre
-  dist/assets/*.js` da `0` en ambos archivos — el identificador no
-  aparece en el bundle de producción. El aviso crítico está en el
-  árbol de `node_modules` pero no llega al código que se publica en
-  `site/`.
+Plotly 4 cambia las marcas de los ejes superpuestos a una cuadrícula sincronizada.
+Se fija `tickmode: "auto"` en los tres ejes secundarios de Economía para
+conservar la escala visual anterior. La prueba de navegador observa posiciones
+reales de las marcas y rangos distintos: pasa con el build anterior de Plotly 3,
+falla con Plotly 4 sin el ajuste y pasa al conservar las marcas independientes.
+No se basa solo en inspeccionar la configuración enviada a Plotly.
 
-Comparación de `dist/assets/` (con las versiones nuevas) contra
-`site/assets/` (build previo, Vite 7.1.12): `index-*.css` es
-byte-idéntico; los dos `*.js` cambian de hash porque el minificador de
-esbuild empaquetado con Vite 7.3.6 trata de forma distinta un
-comentario de licencia de una dependencia transitiva (deja de imprimir
-el banner `/*! Native Promise Only ... */`), no por un cambio de
-comportamiento — el resto del archivo, y los 51 tests unitarios más
-`npm run check`, no cambian. No se copió nada a mano en `site/`:
-Pages sigue sirviendo el `site/` ya committeado. En ese trabajo histórico no
-se pidió publicar el cambio de dependencias; para una petición futura de
-cambio rutinario visible, el agente ejecuta `src.publish`, incorpora `site/`
-al PR y comprueba Pages según `AGENTS.md`.
+La consulta `npm audit --package-lock-only --json` devuelve cero avisos para
+las 392 entradas del lockfile actualizado. Es una consulta al corte, no una
+garantía de ausencia de vulnerabilidades futuras. La revisión de los módulos
+que Rollup incorpora al build local encontró solo CSS de MapLibre; no incluyó
+su JavaScript ni módulos de Mapbox, Vitest, Tinypool o source-map-js.
+La ausencia de un nombre en texto minificado no se usa como prueba de alcance.
+
+Fuentes oficiales: [aviso de MapLibre](https://github.com/advisories/GHSA-jrc7-96c5-q579),
+[aviso de Vitest](https://github.com/advisories/GHSA-82fw-gwwq-j7x9),
+[aviso de Tinypool](https://github.com/advisories/GHSA-85c8-ppgw-ccpr),
+[aviso de source-map-js](https://github.com/advisories/GHSA-68fv-2mgg-jv7q),
+[aviso de Vite](https://github.com/advisories/GHSA-587h-7wmj-h5pm)
+[migración de Vitest 4](https://v4.vitest.dev/guide/migration.html)
+y [migración de ejes en Plotly 4](https://plotly.com/javascript/guides/migrating-to-v4/#overlaying-axis-tickmode).
+
+Comprobación acotada de la publicación vigente: el chunk
+`assets/plotly-DRbKALdc.js` tiene 1.286.176 bytes y coincide por SHA-256 entre
+el manifiesto Git, la respuesta HTTP y un build con los módulos Plotly 3.7.0
+ya existentes, sin reinstalarlos. Su grafo incorpora CSS de MapLibre y excluye
+su JavaScript. No es una reproducción completa del sitio: solo cuatro de las
+catorce salidas de ese build coinciden con el manifiesto vigente. Esta prueba
+se limita al chunk Plotly servido y no declara actualizado todo el frontend.
+
+El build de esta rama y la publicación servida son estados distintos.
+La actualización de `site/` requiere el gate y la verificación de Pages;
+no copiar compilados a mano ni afirmar que el sitio usa el lockfile nuevo
+solo porque pasen las pruebas locales.
 
 ### Mercado · candidato del PR #135
 
