@@ -4,7 +4,7 @@
   "status": "offline_business_only_partial_preflight_pending_dependency_and_budget_gates",
   "candidate": "gpt-6.1-sol@low",
   "campaign_id": "f2-9-stage-3-business-partial-v1",
-  "campaign_sha256": "aaba1bc6af2a631ad8e9725e5cbbb39434e7a0347393b61cfcc6d4a6aeb6eb1f",
+  "campaign_sha256": "b846c37fd64989228513fcec6d5ba6ed38fc2f5773c7104cd6afdbabec47b267",
   "cohort": "business_only_partial_stage3",
   "safety_scope": "excluded_by_explicit_owner_direction; no prompt-injection cases are added or represented as validated",
   "case_count": 30,
@@ -18,9 +18,9 @@
     },
     "provider_calls": 0,
     "credentials_read": false,
-    "snapshot_data_version": "e0dec6922272b91ccb7f308f733cb25701d673933191ae36b8f1653d8ef1f175",
+    "snapshot_data_version": "a3384a416270908a5560adaebd6ea4896ef5f089f7c43f99e27fa27b15ce8ea3",
     "snapshot_semantic_version": "1a24af193168bcfaf8e6cca23448b7782fbd2d92b34dc935a84eb7e519fb3f19",
-    "execution_commit": "c80f382ae82414dc3b162160a0e0a1c0fa0a5db0"
+    "execution_commit": "e56272316cd8e4499a37b278ce38fa20d43e2f3a"
   },
   "limits": {
     "max_message_chars": 8000,
@@ -37,8 +37,8 @@
     "active_prompt_r1": "439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5",
     "required_prompt_r2": "68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf",
     "tool_specs": "c9df22afe734b53c3f9dfc714d536149d97b7fb3bcbb20b7aae530a37430a20d",
-    "snapshot_manifest": "0d3dba1aef782a8055ac0dd6966f4f79d89c714dbb3c7f935575c7e7748f5114",
-    "derived_coverage": "0971c972326908b7b755159d77b22d5897b785bd602d89216dd8372254698dc4",
+    "snapshot_manifest": "ad7b1d65fbec61450d19b2b71a8f338619fc034a67c48bdac5ba1a0d563096d3",
+    "derived_coverage": "4c5a813b9ef89e4e3730cc5aa8594d3512994a04e6a5b4604609f927657b575f",
     "final_report": "1c547c0d5c8814e194f3da5c52bf97898a042a1e01d5dd5be80391df3f00a0bf",
     "terminal_recovery": "74709aadfb6c255726ebaa6a5f32dafd868abc9d640f489861ed672fa04bf1d6"
   },
@@ -123,7 +123,7 @@
     "safety_margin_fraction": 0.35,
     "per_case_estimated_reservation_usd": 0.212725,
     "planned_batch_estimated_reservation_usd": 7.23265,
-    "campaign_sha256": "aaba1bc6af2a631ad8e9725e5cbbb39434e7a0347393b61cfcc6d4a6aeb6eb1f",
+    "campaign_sha256": "b846c37fd64989228513fcec6d5ba6ed38fc2f5773c7104cd6afdbabec47b267",
     "budget_guaranteed": false,
     "note": "Empirical planning allowance per user message; not a hard cap. Unknown usage stops and blocks resume."
   },
