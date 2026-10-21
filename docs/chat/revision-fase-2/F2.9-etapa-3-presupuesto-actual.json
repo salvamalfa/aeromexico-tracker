@@ -4,7 +4,7 @@
   "status": "offline_business_only_partial_preflight_pending_dependency_and_budget_gates",
   "candidate": "gpt-6.1-sol@low",
   "campaign_id": "f2-9-stage-3-business-partial-v1",
-  "campaign_sha256": "9a80154ca4940d3ed7ae4638437654858e702fbed3d6881ed346bc9da4dc8dd6",
+  "campaign_sha256": "7e6c1f98c07b6110b95851ef9c6ab7bf7c31167f4fd06a65bea988223c8f44f2",
   "cohort": "business_only_partial_stage3",
   "safety_scope": "excluded_by_explicit_owner_direction; no prompt-injection cases are added or represented as validated",
   "case_count": 30,
@@ -20,7 +20,7 @@
     "credentials_read": false,
     "snapshot_data_version": "0acf39d79dea49b0a84a23e94335584a2cf936d57a73c3c087a4f484bf3cddad",
     "snapshot_semantic_version": "1a24af193168bcfaf8e6cca23448b7782fbd2d92b34dc935a84eb7e519fb3f19",
-    "execution_commit": "d261bc2748411128a0b790c2cf6b57d761f1abe3"
+    "execution_commit": "b6d6d73fa51f7e09c36df0440bb429881cd1754e"
   },
   "limits": {
     "max_message_chars": 8000,
@@ -37,7 +37,7 @@
     "active_prompt_r1": "439d24fd58a7b3c6c721e15a390824c1b477f52b2b568881dd68bd3655db22a5",
     "required_prompt_r2": "68961bc7a2dc7d0c79988352b56b2ded2ef7b55e515ce824dba3b2cf516a9edf",
     "tool_specs": "c9df22afe734b53c3f9dfc714d536149d97b7fb3bcbb20b7aae530a37430a20d",
-    "snapshot_manifest": "199681f09417bc4b1fdcd253515124ae3a3fde28795ae78f3082519e24cc0491",
+    "snapshot_manifest": "328af3bd99613026680ed1cb91db6dfde2f8529cbeb31b71cdea3e5ad4c04841",
     "derived_coverage": "dbd6290c057cc5e8de5fb5678683db2b9c4efc09e2c8ff4a2a4e1da03048771b",
     "final_report": "1c547c0d5c8814e194f3da5c52bf97898a042a1e01d5dd5be80391df3f00a0bf",
     "terminal_recovery": "74709aadfb6c255726ebaa6a5f32dafd868abc9d640f489861ed672fa04bf1d6"
@@ -123,7 +123,7 @@
     "safety_margin_fraction": 0.35,
     "per_case_estimated_reservation_usd": 0.212725,
     "planned_batch_estimated_reservation_usd": 7.23265,
-    "campaign_sha256": "9a80154ca4940d3ed7ae4638437654858e702fbed3d6881ed346bc9da4dc8dd6",
+    "campaign_sha256": "7e6c1f98c07b6110b95851ef9c6ab7bf7c31167f4fd06a65bea988223c8f44f2",
     "budget_guaranteed": false,
     "note": "Empirical planning allowance per user message; not a hard cap. Unknown usage stops and blocks resume."
   },
