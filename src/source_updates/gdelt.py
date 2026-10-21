@@ -172,17 +172,27 @@ def run(workspace: Path, period: str, as_of: str, collection: str, *, execute=Fa
     receipt_path = workspace / "receipts" / f"collection-{collection}.json"
     with block_network():
         receipt = json.loads(receipt_path.read_text())
-        if receipt.get("status") != "collected_unvalidated" or len(receipt.get("items", [])) != 1:
+        if (
+            receipt.get("run_id") != collection
+            or receipt.get("mode") != "collection"
+            or receipt.get("status") != "collected_unvalidated"
+            or len(receipt.get("items", [])) != 1
+            or receipt.get("paid_requests") != 0
+            or receipt.get("activation") != "none"
+            or receipt.get("publication") != "not_authorized"
+        ):
             raise ValueError("No complete successful GDELT source collection; preserve failed receipt")
         item = receipt["items"][0]
         expected = selection["items"][0]
         if (
             item.get("product") != "gdelt"
+            or item.get("id") != expected["id"]
             or item.get("requested_period") != period
             or item.get("source_url") != expected["url"]
             or item.get("status") != "collected_unvalidated"
+            or item.get("http_status") != 200
         ):
-            raise ValueError("GDELT collection query/product/period mismatch")
+            raise ValueError("GDELT collection query/product/period/HTTP identity mismatch")
         manifest = workspace / "data/bronze/_manifest.jsonl"
         records = [json.loads(line) for line in manifest.read_text().splitlines()]
         if len(records) != 1:
@@ -193,9 +203,16 @@ def run(workspace: Path, period: str, as_of: str, collection: str, *, execute=Fa
             or source.get("source_url") != expected["url"]
             or source.get("source_file") != item.get("source_file")
             or source.get("sha256") != item.get("sha256")
+            or source.get("bytes") != item.get("bytes")
+            or source.get("http_status") != 200
+            or source.get("download_method") != "httpx"
+            or source.get("logical_key") != f"gdelt|{expected['entity']}|{period}|json"
         ):
             raise ValueError("GDELT collection and original identity differ")
         path = original(workspace / "data/bronze", source)
+        sidecar = json.loads(Path(str(path) + ".meta.json").read_text())
+        if any(sidecar.get(key) != source[key] for key in ("logical_key", "download_method")):
+            raise ValueError("GDELT sidecar collection identity differs")
         output, details = normalize(json.loads(path.read_text()), period, source, as_of)
     encoded = (json.dumps(output, ensure_ascii=False, allow_nan=False, indent=2) + "\n").encode()
     hashes = {name: hashlib.sha256(encoded).hexdigest() for name in OUTPUTS}
@@ -218,15 +235,13 @@ def run(workspace: Path, period: str, as_of: str, collection: str, *, execute=Fa
     )
     if check:
         prior = json.loads(accepted.read_text())
-        for key in (
-            "collection_sha256",
-            "original_sha256",
-            "output_sha256",
-            "contract_sha256",
-            "code_sha256",
+        # Replay verifies the frozen receipt's meaning as well as its hashes.
+        # A new cutoff is a new review, not an in-place rewrite of acceptance.
+        expected_receipt = dict(result, mode="candidate")
+        if json.dumps(prior, sort_keys=True, allow_nan=False) != json.dumps(
+            expected_receipt, sort_keys=True, allow_nan=False
         ):
-            if prior.get(key) != result[key]:
-                raise ValueError("Accepted GDELT inputs/code/contract changed")
+            raise ValueError("Accepted GDELT receipt/inputs/code/contract changed")
         if any(path.read_bytes() != encoded for path in allowed):
             raise ValueError("GDELT candidate differs from source replay")
         return result
