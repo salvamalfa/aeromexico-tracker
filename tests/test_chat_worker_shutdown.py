@@ -80,11 +80,13 @@ def test_stop_drains_active_turn_without_claiming_queued_work(tmp_path):
     path = tmp_path / "chat.sqlite3"
     store = ChatStore(path)
     first = _queued(store, "first")
-    queued = _queued(store, "queued")
     provider = ShutdownProvider()
     worker = _worker(store, path, provider)
     worker.start()
     assert provider.started.wait(1)
+    # Submit while the first turn is blocked in the provider. Equal creation
+    # timestamps are ordered by random UUID, not by submission order.
+    queued = _queued(store, "queued")
 
     stopped = threading.Event()
     stopper = threading.Thread(target=lambda: (worker.stop(timeout=1), stopped.set()))
@@ -111,11 +113,11 @@ def test_stop_deadline_keeps_unknown_hold_and_books_late_usage_once(tmp_path):
     path = tmp_path / "chat.sqlite3"
     store = ChatStore(path)
     active = _queued(store, "active")
-    queued = _queued(store, "queued")
     provider = ShutdownProvider(block_cancel=True)
     worker = _worker(store, path, provider)
     worker.start()
     assert provider.started.wait(1)
+    queued = _queued(store, "queued")
 
     stopped = threading.Event()
     stopper = threading.Thread(target=lambda: (worker.stop(timeout=0.02), stopped.set()))
@@ -162,7 +164,6 @@ def test_expired_stop_between_claim_and_registration_fails_without_provider_inpu
     path = tmp_path / "chat.sqlite3"
     store = ChatStore(path)
     active = _queued(store, "active")
-    queued = _queued(store, "queued")
     provider = ShutdownProvider()
     worker = _worker(store, path, provider)
     claimed = threading.Event()
@@ -177,6 +178,7 @@ def test_expired_stop_between_claim_and_registration_fails_without_provider_inpu
     worker._execute_turn = pause_after_claim
     worker.start()
     assert claimed.wait(1)
+    queued = _queued(store, "queued")
     try:
         worker.stop(timeout=0.02)
         resume.set()
