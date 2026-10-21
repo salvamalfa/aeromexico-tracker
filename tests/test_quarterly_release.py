@@ -102,6 +102,10 @@ def test_primary_source_replay_preserves_duration_and_canonical_calculations():
     assert {metric["unit"] for metric in package["metrics"]} == nonmonetary | monetary
     for metric in package["metrics"]:
         assert metric["currency"] == (None if metric["unit"] in nonmonetary else "USD")
+        if metric["metric_key"].endswith("_yoy"):
+            assert metric["unit"] == "percent_change"
+            assert metric["period_id"] == "2026Q3"
+            assert metric["definition"] == "quarter_yoy_change"
     nodes = {(n["period_id"], n["key"]): n for n in calculations["nodes"]}
     assert ("2026YTD9", "premium") not in nodes
     assert nodes[("2026Q3", "premium")]["value"] == 0.42

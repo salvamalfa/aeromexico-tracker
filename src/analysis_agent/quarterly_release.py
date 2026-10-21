@@ -123,7 +123,7 @@ def extract(raw, pdf):
             metric(key, number(values[column]) * factor, unit, eid, period)
         # Reported percentages retain issuer precision; do not recompute from rounded columns.
         if "%" in values[3] and "p.p." not in values[3]:
-            metric(key + "_yoy", number(values[3]), "percent_change", eid)
+            metric(key + "_yoy", number(values[3]), "percent_change", eid, definition="quarter_yoy_change")
 
     paragraphs = [compact(p.get_text(" ", strip=True)) for p in soup.find_all("p")]
 
@@ -179,7 +179,13 @@ def extract(raw, pdf):
     match = re.search(r"to \$([\d.]+) million", value)
     metric("revolver", float(match[1]) * 1e6, "USD", eid, definition="available_credit_2026-09-30")
     value, eid = paragraph("Fuel cost per gallon")
-    metric("fuel_price_yoy", float(re.search(r"increased by ([\d.]+)%", value)[1]), "percent_change", eid)
+    metric(
+        "fuel_price_yoy",
+        float(re.search(r"increased by ([\d.]+)%", value)[1]),
+        "percent_change",
+        eid,
+        definition="quarter_yoy_change",
+    )
     value, eid = paragraph("Our premium revenue")
     metric(
         "premium",
