@@ -219,6 +219,10 @@ proceso** y omite nuevas peticiones a una fuente tras 429 en la misma captura.
 Es un control de un proceso, no una cuota distribuida: usar un solo runner
 autorizado y no lanzar capturas concurrentes. No se acredita extracción válida
 del periodo ni se afirma una interrupción general del servicio.
+La certificación ejecutada y su replay devuelven un código de proceso distinto
+de cero cuando no pasan las comprobaciones, incluido un resultado vacío:
+`empty_result_unproven_coverage` no acredita ausencia de noticias. Generar una
+receta o una vista previa continúa siendo una operación sin captura.
 Los SHA, consultas, recibos, límites y rechazos están en
 [la evidencia agregada existente](referencias/source-updates-20261021/verification.json)
 y sus originales en el borrador privado #38.

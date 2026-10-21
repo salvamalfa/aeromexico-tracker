@@ -286,7 +286,9 @@ def main(argv=None):
         print(json.dumps(dict(status="blocked", reason=str(exc), activation="none")))
         return 1
     print(json.dumps(result, ensure_ascii=False, allow_nan=False, indent=2))
-    return 0
+    return int(
+        args.action == "certify" and (args.execute or args.check) and result.get("status") != "checks_passed"
+    )
 
 
 if __name__ == "__main__":

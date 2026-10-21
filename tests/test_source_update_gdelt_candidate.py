@@ -76,7 +76,7 @@ def workspace():
         shutil.rmtree(path)
 
 
-def capture(workspace):
+def capture(workspace, *, articles=None):
     class Client:
         def __init__(self, *a, **kw):
             pass
@@ -89,7 +89,9 @@ def capture(workspace):
 
         def request(self, method, url, **kw):
             return httpx.Response(
-                200, content=json.dumps({"articles": [ARTICLE]}).encode(), request=httpx.Request(method, url)
+                200,
+                content=json.dumps({"articles": [ARTICLE] if articles is None else articles}).encode(),
+                request=httpx.Request(method, url),
             )
 
     return collect(gdelt.recipe("2026M09", AS_OF), workspace, execute=True, client_factory=Client)
@@ -126,3 +128,38 @@ def test_failed_collection_never_constructs_candidate(workspace):
 def test_dry_run_never_reads_missing_receipt_or_writes(workspace):
     result = gdelt.run(workspace, "2026M09", AS_OF, "a" * 32)
     assert result["mode"] == "dry_run" and not workspace.exists()
+
+
+@pytest.mark.parametrize("articles,exit_code", [([], 1), ([ARTICLE], 0)])
+def test_cli_certification_exit_tracks_real_candidate_status(workspace, capsys, articles, exit_code):
+    # Exercise the actual collector, normalizer, receipt and CLI offline.
+    # Synthetic responses test the process contract, never live source readiness.
+    receipt = capture(workspace, articles=articles)
+    args = [
+        "certify",
+        "--period",
+        "2026M09",
+        "--as-of",
+        AS_OF,
+        "--workspace",
+        str(workspace),
+        "--collection",
+        receipt["run_id"],
+    ]
+    for mode in ("--execute", "--check"):
+        assert gdelt.main([*args, mode]) == exit_code
+        result = json.loads(capsys.readouterr().out)
+        assert result["status"] == ("empty_result_unproven_coverage" if exit_code else "checks_passed")
+        assert result["activation"] == "none"
+        assert result["publication"] == "not_authorized"
+
+
+@pytest.mark.parametrize("action", ["recipe", "certify"])
+def test_cli_planning_succeeds_without_reading_source_or_writing(workspace, capsys, action):
+    args = [action, "--period", "2026M09", "--as-of", AS_OF, "--dry-run"]
+    if action == "certify":
+        args += ["--workspace", str(workspace), "--collection", "a" * 32]
+    assert gdelt.main(args) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["activation"] == "none"
+    assert not workspace.exists()
