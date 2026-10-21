@@ -42,12 +42,29 @@ as — a directory built from `web/` plus the exported v1 payloads. See
   ledger lock immediately before the atomic replacement.
 - `--preserve-published-data` prepara el mapa solo de vuelos con el histórico
   completo. Toma el `site/` firmado exacto de `origin/master`, revalida las
-  cuatro aprobaciones con la implementación de esa base y los expedientes
+  cuatro aprobaciones con su implementación original y los expedientes
   actuales antes/después del build, y conserva **todos** los archivos de
   `data/v1/` byte por byte. Protege los renderers de análisis, fuentes y
   contratos; no reconstruye modelos, crea aprobaciones ni activa datos nuevos.
   El gate normal conserva sus comprobaciones estrictas. El candidato se
-  verifica antes del reemplazo y no se despliega: #133 requiere aprobación.
+  verifica antes del reemplazo. Integrar y publicar requiere la autorización
+  aplicable al cambio y el flujo normal del repositorio.
+- `config/publish/preserved-analysis.json` conserva la referencia a la
+  implementación original de las tesis congeladas. El gate comprueba el hash
+  del manifiesto histórico, que sus commits pertenecen al historial publicado
+  confiable y que todas las identidades y bytes de tesis siguen idénticos.
+  Después revalida los cuatro registros completos con esa implementación,
+  incluyendo revocaciones y expedientes actuales, antes y después del build.
+  `code_commit` sigue identificando el código que genera la interfaz actual.
+  La referencia no autoriza versiones ni contenido nuevos, no cambia huellas
+  aprobadas y no evita ninguna validación de datos o de privacidad.
+- `--flights-only` proyecta las celdas aceptadas de 2T26 sobre el sitio público
+  auditado, sin reconstruir el warehouse ni los otros exportadores. Exige la
+  edición exacta de vuelos, el valor anterior de cada sustitución y la
+  conciliación por operador/mes/ámbito. Revalida las cuatro aprobaciones con su
+  implementación publicada y conserva el resto de payloads e identidades antes
+  y después del build. La autorización específica del 19 de octubre cubre esta
+  proyección y su tarjeta ponderada; no aprueba tesis nuevas, M11 ni calendarios.
 - `manifest.py`: builds and (de)serializes `publication_manifest.json` —
   the code commit (`git rev-parse HEAD`), each `contracts/web/*` file's own
   SHA-256 (its "version"), every other file under `site/` with its

@@ -20,7 +20,7 @@
   .period-stepper button:hover:not(:disabled) { background: var(--blue-open); }
   .period-stepper button:disabled { color: #b4bfd0; cursor: default; }
 
-  .flight-kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+  .flight-kpi-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
   .flight-kpi { --accent: var(--brand-blue); --open: var(--blue-open); position: relative; min-width: 0; padding: 16px 15px 14px; background: var(--card); border: 1px solid var(--line); border-top: 3px solid var(--accent); border-radius: 14px; box-shadow: var(--shadow); }
   .flight-kpi[data-accent="gold"] { --accent: var(--gold); --open: var(--gold-open); }
   .flight-kpi[data-accent="violet"] { --accent: var(--violet); --open: var(--violet-open); }
@@ -293,3 +293,10 @@
 }
 #map-panel .network-mini-kpi-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
 #map-panel .executive-route-value .executive-route-trend { display: block; margin-top: 2px; font-weight: 500; }
+
+.flights-view .coverage-help > summary { list-style: none; cursor: pointer; }
+.flights-view .coverage-help > summary::-webkit-details-marker { display: none; }
+.flights-view .coverage-help[open] { position: relative; z-index: 20; }
+.flights-view .coverage-help[open] > summary { top: -2px; right: -2px; }
+.flights-view .coverage-help > p { position: absolute; top: 20px; right: -4px; width: min(300px, 70vw); padding: 12px; margin: 0; color: var(--ink); background: white; border: 1px solid var(--line); border-radius: 9px; box-shadow: var(--shadow); font-size: 11px; line-height: 1.5; }
+.flights-view #flight-map-coverage { font-size: clamp(18px, 2.2vw, 28px); }

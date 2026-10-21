@@ -78,6 +78,8 @@ def split_flight_schemas(flights_schema: dict[str, Any]) -> tuple[dict[str, Any]
             },
         },
     }
+    if "map_coverage" in flights_schema["properties"]:
+        quarters["properties"]["map_coverage"] = flights_schema["properties"]["map_coverage"]
     network = {"$defs": flights_schema["$defs"], "$ref": "#/$defs/network"}
     return quarters, network
 

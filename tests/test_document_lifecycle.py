@@ -49,6 +49,30 @@ def test_pending_cleanup_can_be_reported_without_deletion(tmp_path):
     assert (tmp_path / "history.md").exists()
 
 
+@pytest.mark.parametrize("disposition", ["archive", "retire"])
+@pytest.mark.parametrize("symlink", [False, True])
+def test_effective_retirement_cannot_classify_a_present_file(tmp_path, disposition, symlink):
+    if symlink:
+        (tmp_path / "kept.py").symlink_to("missing-target")
+    else:
+        (tmp_path / "kept.py").write_text("# Still an active source file")
+    errors = validate_dispositions(
+        tmp_path,
+        ["kept.py"],
+        summary({"path": "kept.py", "disposition": disposition, "reason": "Claimed removal"}),
+    )
+    assert any("requires an absent original path: kept.py" in error for error in errors)
+
+
+def test_broken_symlink_is_present_for_inventory(tmp_path):
+    (tmp_path / "kept.py").symlink_to("missing-target")
+    assert not validate_dispositions(
+        tmp_path,
+        ["kept.py"],
+        summary({"path": "kept.py", "disposition": "keep", "reason": "Retained link needs review"}),
+    )
+
+
 def git(root, *args):
     return (
         subprocess.check_output(
@@ -243,3 +267,173 @@ def test_malformed_markdown_url_is_reported_as_a_validation_error(tmp_path):
         summary({"path": "README.md", "disposition": "update", "reason": "Updated guide"}),
     )
     assert any("Malformed Markdown target" in error for error in result)
+
+
+def test_full_inventory_includes_code_data_and_uncommitted_files(tmp_path):
+    from scripts.check_document_lifecycle import changed_files
+
+    git(tmp_path, "init", "-q")
+    (tmp_path / ".gitignore").write_text("cache/\n")
+    (tmp_path / "old.py").write_text("original")
+    baseline = commit(tmp_path)
+    (tmp_path / "old.py").unlink()
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src/new.py").write_text("source")
+    git(tmp_path, "add", "src/new.py")
+    (tmp_path / "evidence.parquet").write_bytes(b"synthetic evidence")
+    (tmp_path / "cache").mkdir()
+    (tmp_path / "cache/ignored.json").write_text("{}")
+    assert changed_files(tmp_path, baseline) == []
+    paths = changed_files(tmp_path, baseline, worktree=True)
+    assert paths == ["evidence.parquet", "old.py", "src/new.py"]
+    assert validate_dispositions(tmp_path, paths, "No inventory")
+    body = summary(
+        {"path": "old.py", "disposition": "retire", "reason": "Replaced implementation in Git"},
+        {"path": "src/new.py", "disposition": "keep", "reason": "Active replacement"},
+    )
+    assert any("evidence.parquet" in error for error in validate_dispositions(tmp_path, paths, body))
+    body = body.replace(
+        "]}", ', {"path":"evidence.parquet","disposition":"keep","reason":"Required evidence"}]}'
+    )
+    assert not validate_dispositions(tmp_path, paths, body)
+    commit(tmp_path)
+    assert changed_files(tmp_path, baseline) == paths
+    with pytest.raises(ValueError, match="requires"):
+        changed_files(tmp_path, baseline, baseline, worktree=True)
+
+
+def test_artifact_groups_are_bounded_counted_and_do_not_replace_source_entries(tmp_path):
+    paths = ["site/data/v1/a.json", "site/data/v1/b.json"]
+    for name in paths:
+        file = tmp_path / name
+        file.parent.mkdir(parents=True, exist_ok=True)
+        file.write_text("{}")
+    row = {"prefix": "site/data/v1/", "count": 2, "disposition": "keep", "reason": "Signed public data"}
+    assert not validate_dispositions(tmp_path, paths, summary(row))
+    assert validate_dispositions(tmp_path, paths, summary({**row, "count": 1}))
+    assert validate_dispositions(tmp_path, paths, summary(row, {**row, "prefix": "site/"}))
+    assert validate_dispositions(tmp_path, paths, summary({**row, "prefix": "site/data/v1"}))
+    assert validate_dispositions(tmp_path, paths, summary({**row, "prefix": "src/"}))
+    assert validate_dispositions(tmp_path, paths, summary({**row, "prefix": "site/../"}))
+    file = tmp_path / "site/data/v1/README.md"
+    file.write_text("Canonical guide")
+    assert validate_dispositions(tmp_path, paths + ["site/data/v1/README.md"], summary({**row, "count": 3}))
+    assert validate_dispositions(tmp_path, paths, summary(row) + summary(row))
+    assert validate_dispositions(tmp_path, paths, summary({**row, "reason": None}))
+
+
+def test_private_repository_identity_catches_mutable_links_and_retired_consumers(tmp_path):
+    from scripts.check_document_lifecycle import repository_name
+
+    baseline = retire_fixture(
+        tmp_path,
+        "README.md",
+        "[old](https://github.com/salvamalfa/aeromexico-tracker-data/blob/master/docs/retired.md)",
+    )
+    git(tmp_path, "remote", "add", "origin", "git@github.com:salvamalfa/aeromexico-tracker-data.git")
+    assert repository_name(tmp_path) == "salvamalfa/aeromexico-tracker-data"
+    body = summary(
+        {"path": "docs/retired.md", "disposition": "archive", "reason": "Stored in fixed Git commit"},
+        {"path": "README.md", "disposition": "update", "reason": "Canonical index"},
+    )
+    errors = validate_dispositions(tmp_path, ["docs/retired.md", "README.md"], body)
+    assert any("Broken/outside" in error for error in errors)
+    assert any("Inbound" in error for error in errors)
+    (tmp_path / "README.md").write_text(
+        f"[history](https://github.com/salvamalfa/aeromexico-tracker-data/blob/{baseline}/docs/retired.md)"
+    )
+    assert not validate_dispositions(tmp_path, ["docs/retired.md", "README.md"], body)
+    assert validate_dispositions(
+        tmp_path,
+        ["docs/retired.md"],
+        summary({"path": "docs/retired.md", "disposition": "delete_candidate", "reason": "Needs review"}),
+    )
+
+
+@pytest.mark.parametrize(
+    "name", ["source.py", "source.ts", "source.js", "workflow.yml", "guide.md", "analysis.ipynb"]
+)
+def test_evidence_groups_cannot_swallow_source_or_canonical_guides(tmp_path, name):
+    path = "review/batch/" + name
+    file = tmp_path / path
+    file.parent.mkdir(parents=True)
+    file.write_text("Synthetic source")
+    assert validate_dispositions(
+        tmp_path,
+        [path],
+        summary({"prefix": "review/batch/", "count": 1, "disposition": "keep", "reason": "Evidence"}),
+    )
+
+
+def test_worktree_retirement_checks_new_untracked_code_consumers(tmp_path):
+    from scripts.check_document_lifecycle import changed_files
+
+    git(tmp_path, "init", "-q")
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs/retired.md").write_text("Original")
+    baseline = commit(tmp_path)
+    (tmp_path / "docs/retired.md").unlink()
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src/new.py").write_text('Path("docs/retired.md").read_text()')
+    paths = changed_files(tmp_path, baseline, worktree=True)
+    errors = validate_dispositions(
+        tmp_path,
+        paths,
+        summary(
+            {"path": "docs/retired.md", "disposition": "archive", "reason": "Fixed original retained"},
+            {"path": "src/new.py", "disposition": "keep", "reason": "New consumer"},
+        ),
+    )
+    assert any("Inbound" in error and "src/new.py" in error for error in errors)
+
+
+@pytest.mark.parametrize(
+    "remote",
+    [
+        "https://github.com/salvamalfa/aeromexico-tracker-data.git",
+        "git@github.com:salvamalfa/aeromexico-tracker-data.git",
+        "ssh://git@github.com/salvamalfa/aeromexico-tracker-data.git",
+        "ssh://git@ssh.github.com:443/salvamalfa/aeromexico-tracker-data.git",
+    ],
+)
+def test_private_repository_identity_supports_clone_url_formats(tmp_path, monkeypatch, remote):
+    from scripts.check_document_lifecycle import repository_name
+
+    monkeypatch.delenv("GITHUB_REPOSITORY", raising=False)
+    git(tmp_path, "init", "-q")
+    git(tmp_path, "remote", "add", "origin", remote)
+    assert repository_name(tmp_path) == "salvamalfa/aeromexico-tracker-data"
+
+
+@pytest.mark.parametrize(
+    "retired,consumer",
+    [
+        ("map-old.json", '<a href="map%2Dold.json">map</a>'),
+        ("a_(b).md", r"[old](a_\(b\).md)"),
+    ],
+)
+def test_retirement_skips_unrelated_data_and_checks_encoded_consumer(
+    tmp_path, monkeypatch, retired, consumer
+):
+    from pathlib import Path
+
+    from scripts.check_document_lifecycle import inbound_references
+
+    git(tmp_path, "init", "-q")
+    (tmp_path / "site").mkdir()
+    (tmp_path / "site" / retired).write_text("{}")
+    (tmp_path / "site/maps.json").write_text(json.dumps({"rows": ["unrelated/value"] * 10000}))
+    (tmp_path / "site/index.html").write_text(consumer)
+    commit(tmp_path)
+    (tmp_path / "site" / retired).unlink()
+    original = Path.resolve
+    resolutions = []
+
+    def resolve(path, *args, **kwargs):
+        resolutions.append(str(path))
+        return original(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "resolve", resolve)
+    errors = inbound_references(tmp_path, ["site/" + retired])
+    assert any("site/index.html" in error for error in errors)
+    assert len(resolutions) < 50  # Work scales with candidate paths, not unrelated rows.
