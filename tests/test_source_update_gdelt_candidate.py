@@ -2,6 +2,8 @@
 
 import json
 import shutil
+from datetime import datetime
+from unittest.mock import patch
 from uuid import uuid4
 
 import httpx
@@ -94,7 +96,10 @@ def capture(workspace, *, articles=None):
                 request=httpx.Request(method, url),
             )
 
-    return collect(gdelt.recipe("2026M09", AS_OF), workspace, execute=True, client_factory=Client)
+    # Freeze only the synthetic Bronze capture clock. Wall-clock time must not
+    # eventually move this fixture past its intentionally historical cutoff.
+    with patch("src.common.storage._utc_now", return_value=datetime.fromisoformat(SOURCE["downloaded_at"])):
+        return collect(gdelt.recipe("2026M09", AS_OF), workspace, execute=True, client_factory=Client)
 
 
 def test_candidate_round_replay_immutable_and_tamper_detection(workspace):
@@ -163,3 +168,9 @@ def test_cli_planning_succeeds_without_reading_source_or_writing(workspace, caps
     result = json.loads(capsys.readouterr().out)
     assert result["activation"] == "none"
     assert not workspace.exists()
+
+
+def test_real_capture_after_historical_cutoff_still_rejected():
+    source = dict(SOURCE, downloaded_at="2026-10-22T00:00:00Z")
+    with pytest.raises(ValueError, match="capture is after"):
+        gdelt.normalize({"articles": [ARTICLE]}, "2026M09", source, AS_OF)
