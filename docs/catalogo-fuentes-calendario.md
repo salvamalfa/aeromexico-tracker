@@ -97,9 +97,10 @@ resultados.** El equipo se encarga de convertirlo en controles técnicos. Esta
 recomendación aún no está aprobada ni implementada.
 
 En la **mensual**, el núcleo cubre el tráfico de Aeroméxico, Volaris y Viva;
-pasajeros y mercado de AFAC, rutas México–Estados Unidos de BTS, tráfico de los
-grupos aeroportuarios, AICM y AIFA; contexto macroeconómico, cotizaciones y
-noticias. Se conserva el periodo propio de cada fuente: AFAC/BTS pueden tener
+pasajeros y mercado de la autoridad aeronáutica mexicana (AFAC), rutas
+México–Estados Unidos de la oficina estadística de transporte estadounidense
+(BTS), tráfico de los grupos aeroportuarios, AICM y AIFA; contexto macroeconómico,
+cotizaciones y noticias. Se conserva el periodo propio de cada fuente: AFAC/BTS pueden tener
 rezago frente al mes corporativo. No se promete información todavía no publicada.
 
 En la **trimestral**, el núcleo cubre los reportes financieros de las tres
@@ -113,8 +114,9 @@ Los comparables secundarios y el contexto adicional pueden quedar pendientes
 sin bloquear el núcleo. **Si se usa uno de sus datos para un resultado, debe
 validarse antes de incorporarlo**, aunque su frecuencia habitual sea otra.
 No se sustituye automáticamente una fuente por otra: compartir empresa,
-moneda o nombre de métrica no prueba que midan lo mismo. Aena queda opcional;
-H.10 sirve de referencia cambiaria separada cuando falta FIX, no lo reemplaza
+moneda o nombre de métrica no prueba que midan lo mismo. Aena queda opcional.
+H.10, la referencia cambiaria de la Reserva Federal estadounidense, se presenta
+por separado cuando falta el tipo de cambio FIX de Banxico. No lo reemplaza
 como dato FIX ni completa inflación o tasa de interés.
 
 **Efecto de aprobar:** autoriza implementar y probar esta regla de aceptación.
