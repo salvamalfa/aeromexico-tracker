@@ -379,3 +379,37 @@ def test_private_repository_identity_supports_clone_url_formats(tmp_path, monkey
     git(tmp_path, "init", "-q")
     git(tmp_path, "remote", "add", "origin", remote)
     assert repository_name(tmp_path) == "salvamalfa/aeromexico-tracker-data"
+
+
+@pytest.mark.parametrize(
+    "retired,consumer",
+    [
+        ("map-old.json", '<a href="map%2Dold.json">map</a>'),
+        ("a_(b).md", r"[old](a_\(b\).md)"),
+    ],
+)
+def test_retirement_skips_unrelated_data_and_checks_encoded_consumer(
+    tmp_path, monkeypatch, retired, consumer
+):
+    from pathlib import Path
+
+    from scripts.check_document_lifecycle import inbound_references
+
+    git(tmp_path, "init", "-q")
+    (tmp_path / "site").mkdir()
+    (tmp_path / "site" / retired).write_text("{}")
+    (tmp_path / "site/maps.json").write_text(json.dumps({"rows": ["unrelated/value"] * 10000}))
+    (tmp_path / "site/index.html").write_text(consumer)
+    commit(tmp_path)
+    (tmp_path / "site" / retired).unlink()
+    original = Path.resolve
+    resolutions = []
+
+    def resolve(path, *args, **kwargs):
+        resolutions.append(str(path))
+        return original(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "resolve", resolve)
+    errors = inbound_references(tmp_path, ["site/" + retired])
+    assert any("site/index.html" in error for error in errors)
+    assert len(resolutions) < 50  # Work scales with candidate paths, not unrelated rows.

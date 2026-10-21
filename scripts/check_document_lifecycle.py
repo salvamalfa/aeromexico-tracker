@@ -161,10 +161,18 @@ def prose_targets(target: str) -> tuple[str, ...]:
 
 
 def inbound_references(root: Path, paths: list[str]) -> list[str]:
-    """Inspect unchanged tracked consumers when a document was deleted or moved."""
+    """Inspect literal consumers of retired files without resolving unrelated data."""
     removed = {(root / path).resolve(): path for path in paths if not (root / path).exists()}
     if not removed:
         return []
+    basenames = {Path(path).name for path in removed.values()}
+
+    def candidate(text: str) -> bool:
+        # Every supported literal reference retains the destination's filename,
+        # including percent-encoded Markdown/URLs. Dynamic paths need manual review.
+        decoded = unquote(re.sub(r"\\([()<>])", r"\1", text))
+        return any(name in decoded for name in basenames)
+
     tracked = set(subprocess.check_output(["git", "ls-files", "-z"], cwd=root).decode().split("\0"))
     # --worktree inventories new consumers before git add as well.
     tracked.update(paths)
@@ -182,6 +190,8 @@ def inbound_references(root: Path, paths: list[str]) -> list[str]:
                 text = (prefix + stream.read()).decode("utf-8")
             except UnicodeDecodeError:
                 continue
+        if not candidate(text):
+            continue
         referenced = set()
         for target in markdown_targets(text):
             try:
@@ -225,7 +235,9 @@ def inbound_references(root: Path, paths: list[str]) -> list[str]:
         # YAML values and shell arguments need not be quoted. Resolve their
         # relative tokens from both the repository and the consumer directory.
         literals += re.findall(r"[^\s\"'`<>:=;,|()\[\]{}]+", plain)
-        for target in {value for literal in literals for value in prose_targets(literal)}:
+        for target in {
+            value for literal in literals if candidate(literal) for value in prose_targets(literal)
+        }:
             try:
                 value = urlsplit(target)
             except ValueError:
