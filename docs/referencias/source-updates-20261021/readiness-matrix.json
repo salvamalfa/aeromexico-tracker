@@ -50,10 +50,11 @@
       "current_source_revalidation": "not_repeated_in_this_continuation",
       "current_availability_verified": false,
       "latest_available_period": null,
-      "new_validated_scope": null,
+      "new_validated_scope": "2026M07/M08/M09 offline recertification from retained official PDFs;24 rows each;only load-factor formula metadata corrected to itinerary RPM/ASM;not new HTTP availability or publication",
       "calendar_condition": "select_actual_edition_and_check_requested_period_before_round",
       "activation": "none",
-      "automatic_execution_active": false
+      "automatic_execution_active": false,
+      "offline_recertification_evidence": "verification.json#/am_traffic_formula_correction"
     },
     {
       "product": "am_sec",

@@ -396,5 +396,94 @@
     ],
     "activation": "none",
     "publication": "not_authorized"
+  },
+  "am_traffic_formula_correction": {
+    "scope": "offline_recertification_from_retained_real_PDFs_not_new_source_availability",
+    "code_head": "579628baae96c2f58b43c3ae6264be64f4f0b06d",
+    "code_file": "src/source_updates/am_traffic_candidate.py",
+    "code_sha256": "dba2273a563e8aa17c184f9775c89d5ca6d14a8bd33ebc2f0d4cee813af8ca67",
+    "network_requests": 0,
+    "activation": "none",
+    "publication": "not_authorized",
+    "months": [
+      {
+        "period": "2026M07",
+        "workspace": "tmp/source-updates/am-traffic-formula-correction-20261021/2026M07",
+        "effective_as_of": "2026-10-19T15:20:37.197410+00:00",
+        "rows": 24,
+        "status": "checks_passed",
+        "tables_checked": 7,
+        "only_change": "load_factor_total.formula",
+        "old_formula": "Reported itinerary-only passengers / available seats; not derived from itinerary-plus-charter RPM/ASM",
+        "new_formula": "Reported itinerary-only RPM/ASM (equivalent to RPK/ASK); not derived from itinerary-plus-charter RPM/ASM",
+        "historical_receipt_sha256": "19910c0edcd554221237bc70377cf9c0b496e0cf76a732391c2fef1639ff9cd4",
+        "corrected_receipt_sha256": "3e009bff61b0a00ac1b0beddf2d54a82d00bb7d3a66a085097d99dd814c381e3",
+        "output_sha256": {
+          "silver/aeromexico_ir_monthly_metrics": "219f59cd8182e963b053c0840823709850e39dacdd6eab6c7ad9a9300675ced2",
+          "gold/fact_carrier_metrics": "ad3b483e67b72c9ae2b03f1f19a52ce49874390f274bdf61b04b3bf350e389f2",
+          "gold/dim_period": "07a6807210cd15e0511adc109b2633de29206af1eb5f449e3fe1907e645a441a",
+          "gold/dim_carrier": "92bd9585ffb22c98df7db7bf63ed3af9d3e1a911133bf60e6e7adc09b7ca821b",
+          "gold/dim_metric": "f74dfd65dbb3ef353f3189948059628513194fc62c4e353a438c05210fdf430f",
+          "gold/dim_source_artifact": "3a4786a195977fd6709e82accf71083dbc2df2cbb829e3db78ed82f2262e7ccc",
+          "gold/bridge_record_lineage": "792f7280748c7dc7fdcd197ba0599b10d9b7b453a6d36a034890c160e0b74fd8"
+        },
+        "historical_files_preserved": 14,
+        "local_candidate_files": 13,
+        "historical_files_unchanged": true,
+        "corrected_candidate_replay_unchanged": true
+      },
+      {
+        "period": "2026M08",
+        "workspace": "tmp/source-updates/am-traffic-formula-correction-20261021/2026M08",
+        "effective_as_of": "2026-10-19T15:20:45.287109+00:00",
+        "rows": 24,
+        "status": "checks_passed",
+        "tables_checked": 7,
+        "only_change": "load_factor_total.formula",
+        "old_formula": "Reported itinerary-only passengers / available seats; not derived from itinerary-plus-charter RPM/ASM",
+        "new_formula": "Reported itinerary-only RPM/ASM (equivalent to RPK/ASK); not derived from itinerary-plus-charter RPM/ASM",
+        "historical_receipt_sha256": "060b710a35c1b83672a6965cec4ab6b0da6e0b72894e0350b46a71dfbbba212d",
+        "corrected_receipt_sha256": "ad13899cf00f486a0a42a5c101bd9d6cb0e0236f788609ab53f757900a994124",
+        "output_sha256": {
+          "silver/aeromexico_ir_monthly_metrics": "37669e0d7cf9eff17ebbcf4e3290089acffae0548eb5f2ddf119458725ecf470",
+          "gold/fact_carrier_metrics": "1f5e36296bafc81814baa4fdfd1496bfc98fbf351582fd5bde8cc8500db7443e",
+          "gold/dim_period": "3d2a1ecd5a3c795e91175d5b5d469e839b04be328e870887acf30f81c64f186d",
+          "gold/dim_carrier": "92bd9585ffb22c98df7db7bf63ed3af9d3e1a911133bf60e6e7adc09b7ca821b",
+          "gold/dim_metric": "f74dfd65dbb3ef353f3189948059628513194fc62c4e353a438c05210fdf430f",
+          "gold/dim_source_artifact": "935338a60464fdbc14281639ac83a9ce4e0dc054fae395b846ec0457a876376b",
+          "gold/bridge_record_lineage": "a59cd057caa84c29ede064af629133f382dff15a74ab079bc440ecfb07738d12"
+        },
+        "historical_files_preserved": 14,
+        "local_candidate_files": 13,
+        "historical_files_unchanged": true,
+        "corrected_candidate_replay_unchanged": true
+      },
+      {
+        "period": "2026M09",
+        "workspace": "tmp/source-updates/am-traffic-formula-correction-20261021/2026M09",
+        "effective_as_of": "2026-10-19T15:20:53.661850+00:00",
+        "rows": 24,
+        "status": "checks_passed",
+        "tables_checked": 7,
+        "only_change": "load_factor_total.formula",
+        "old_formula": "Reported itinerary-only passengers / available seats; not derived from itinerary-plus-charter RPM/ASM",
+        "new_formula": "Reported itinerary-only RPM/ASM (equivalent to RPK/ASK); not derived from itinerary-plus-charter RPM/ASM",
+        "historical_receipt_sha256": "ab7d7856399de8bd73b83f6b82e0fb1f28fb1c06833a33f6913f91eb00c54905",
+        "corrected_receipt_sha256": "a475b59bc5fdaf8b79dc1ebd6067deaa19192e1e85384c3d65516e7909c62cfd",
+        "output_sha256": {
+          "silver/aeromexico_ir_monthly_metrics": "cfe4cdc07b690219b7dfb58223c426cf396d52bf7124bd28ac10ea460afed4e9",
+          "gold/fact_carrier_metrics": "4c12238afa7d4ad3d6cc73f2936f2671bdfb1e332b523aca2581a6dddf7d18da",
+          "gold/dim_period": "7c779066ccb0c57bbb904c7b2e69f63cc0f76065954205b6ff5f63d40588408a",
+          "gold/dim_carrier": "92bd9585ffb22c98df7db7bf63ed3af9d3e1a911133bf60e6e7adc09b7ca821b",
+          "gold/dim_metric": "f74dfd65dbb3ef353f3189948059628513194fc62c4e353a438c05210fdf430f",
+          "gold/dim_source_artifact": "ff81b00fcbfd9082aeaafe20668c89ed2d1df40356a1ce15501e172d8b54ef8e",
+          "gold/bridge_record_lineage": "0b845afbbf5bf513072cd16311d9815607349c08cc22408d9dc3fc282c2aa5d1"
+        },
+        "historical_files_preserved": 14,
+        "local_candidate_files": 13,
+        "historical_files_unchanged": true,
+        "corrected_candidate_replay_unchanged": true
+      }
+    ]
   }
 }

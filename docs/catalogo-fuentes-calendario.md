@@ -508,6 +508,23 @@ esa advertencia. El documento declara cifras no auditadas; eso no basta para
 llamarlas preliminares. Se admiten diferencias de suma de hasta 1,5 unidades
 publicadas por el redondeo de dos componentes y un total.
 
+La revisión de fórmula del 21 de octubre corrigió su definición a RPM/ASM de
+itinerario, equivalente a RPK/ASK, ponderada por distancia. Se recertificaron
+offline los PDF reales de julio, agosto y septiembre: 24 filas y siete tablas
+por mes, con replay idéntico y sin cambiar las cifras reportadas. Solo cambia
+`load_factor_total.formula`. Los candidatos históricos conservan la definición
+anterior como evidencia; no se sobrescriben ni sustituyen a los corregidos.
+La [comprobación agregada](referencias/source-updates-20261021/verification.json)
+registra el commit de código, cortes, hashes y rutas de los candidatos nuevos.
+
+Se conservan **39 archivos locales de revisión**, bajo
+`tmp/source-updates/am-traffic-formula-correction-20261021/`, para revisar esta
+corrección; no se publicaron ni se añadieron al respaldo histórico de 512
+archivos. La recuperación usa los Bronze y recibos de colección ya respaldados
+en el privado #38 y el código `579628ba`, con los cortes exactos registrados.
+La certificación en una carpeta nueva y su `--check` son los comandos descritos
+arriba. La revisión de un lote sigue siendo previa a cualquier publicación.
+
 El candidato Silver `aeromexico_ir_monthly_metrics` aplica el grano y linaje
 estructural existente de observaciones operativas, más reglas de dominio IR.
 No se rotula como SEC ni se registra automáticamente en el warehouse productivo.
