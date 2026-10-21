@@ -2,6 +2,7 @@
 
 import json
 import shutil
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 import httpx
@@ -68,6 +69,18 @@ def test_empty_result_never_certifies_absence_or_complete_month():
     assert not output["complete_month_certified"]
 
 
+@pytest.mark.parametrize("seconds", [-1, 0, 1])
+def test_source_capture_cutoff_boundary_remains_enforced(seconds):
+    captured = datetime.fromisoformat(AS_OF) + timedelta(seconds=seconds)
+    source = dict(SOURCE, downloaded_at=captured.isoformat())
+    if seconds > 0:
+        with pytest.raises(ValueError, match="Source capture is after the requested cutoff"):
+            gdelt.normalize({"articles": [ARTICLE]}, "2026M09", source, AS_OF)
+    else:
+        output, details = gdelt.normalize({"articles": [ARTICLE]}, "2026M09", source, AS_OF)
+        assert details["rows"] == 1 and output["agent_eligible"] is False
+
+
 @pytest.fixture
 def workspace():
     path = ROOT / "tmp/source-updates" / ("pytest-gdelt-" + uuid4().hex)
@@ -94,7 +107,12 @@ def capture(workspace, *, articles=None):
                 request=httpx.Request(method, url),
             )
 
-    return collect(gdelt.recipe("2026M09", AS_OF), workspace, execute=True, client_factory=Client)
+    # This synthetic response represents the historical capture above. Its
+    # availability must not move past AS_OF as the real wall clock advances.
+    # Keep the real collector and cutoff validator in the exercised path.
+    with pytest.MonkeyPatch.context() as clock:
+        clock.setattr("src.common.storage._utc_now", lambda: datetime.fromisoformat(SOURCE["downloaded_at"]))
+        return collect(gdelt.recipe("2026M09", AS_OF), workspace, execute=True, client_factory=Client)
 
 
 def test_candidate_round_replay_immutable_and_tamper_detection(workspace):
