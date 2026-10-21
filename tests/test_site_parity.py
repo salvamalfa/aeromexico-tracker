@@ -19,10 +19,14 @@ owner-authorized step, see ``src/publish/README.md``).
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import subprocess
+import sys
+import tarfile
+import tempfile
 import threading
-from functools import partial
+from functools import lru_cache, partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -31,7 +35,7 @@ import pytest
 from src.analysis_agent import lifecycle as flow
 from src.publish import manifest as manifest_mod
 from src.publish.verify import verify_site
-from src.web_export.analysis import MissingAnalysisInput, export_period
+from src.web_export.analysis import MissingAnalysisInput
 from src.web_export.executive import export_executive
 from src.web_export.flights import export_flights, recombine_flights
 
@@ -52,11 +56,27 @@ def _baseline_json(relative: str) -> dict:
     )
 
 
+@lru_cache(maxsize=1)
+def _replay_published_cohorts() -> dict:
+    """Validate every published entry using its committed verifier and full ledger."""
+    from src.publish.approval_cohorts import verify_approval_cohorts
+
+    repo = SITE_DIR.parent
+    baseline = manifest_mod.load_manifest(SITE_DIR)
+    paths = []
+    for entry in baseline["analysis_manifest"]:
+        path = repo / "analysis_runs/drafts"
+        if "entity_key" in entry:
+            path /= entry["entity_key"]
+        paths.append(path / entry["period_id"] / f"{entry['version']}.json")
+    trusted = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip()
+    return verify_approval_cohorts(paths, repo, trusted, baseline, flow.ROOT)
+
+
 @pytest.fixture(scope="module")
 def published_executive(executive_payload: dict) -> dict:
     """Replay the new primary-source edition over the pinned public baseline."""
-    from src.publish.gate import verify_records
-    from src.publish.quarterly_overlay import executive_projection
+    from src.publish.records import _analysis_manifest_entry
 
     entries = manifest_mod.load_manifest(SITE_DIR)["analysis_manifest"]
     quarterly = [e for e in entries if e["period_id"] == "2026Q3" and "entity_key" not in e]
@@ -66,14 +86,43 @@ def published_executive(executive_payload: dict) -> dict:
     entry = quarterly[0]
     path = SITE_DIR.parent / "analysis_runs/drafts/2026Q3" / f"{entry['version']}.json"
     record = json.loads(path.read_bytes())
-    verified = verify_records([record])[0]
-    assert manifest_mod.analysis_identity(verified[1]) == manifest_mod.analysis_identity(entry)
-    assert verified[1]["version"] == entry["version"]
+    replay = _replay_published_cohorts()
+    assert entry in [_analysis_manifest_entry(a) for a in replay["authorized"]]
     assert record["draft"]["source_profile"] == "quarterly_release_v1"
+    package_path = SITE_DIR.parent / "analysis_runs/evidence" / f"{record['draft']['package_id']}.json"
     baseline = _baseline_json("data/v1/executive.json")
     # The quarterly operation preserves the old export rather than refreshing it.
     assert executive_payload == baseline
-    return executive_projection(baseline, verified[2])
+    cohort = next(c for c in replay["cohorts"] if entry in c["analysis_manifest"])
+    return _quarterly_projection(cohort["implementation_commit"], baseline, package_path)
+
+
+def _quarterly_projection(commit: str, baseline: dict, package_path: Path) -> dict:
+    """Reconstruct the historical edition with its validated cohort's source code."""
+    repo = SITE_DIR.parent
+    archive = subprocess.check_output(
+        ["git", "archive", commit, "src", "contracts", "config", "web", ".agents"], cwd=repo
+    )
+    with tempfile.TemporaryDirectory(prefix="parity-quarterly-cohort-") as tmp:
+        base = Path(tmp)
+        with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
+            tar.extractall(base, filter="data")
+        (base / "data").symlink_to(repo / "data", target_is_directory=True)
+        script = """import json,sys
+from pathlib import Path
+from src.publish.quarterly_overlay import executive_projection
+print(json.dumps(executive_projection(json.loads(sys.stdin.read()),
+    json.loads(Path(sys.argv[1]).read_bytes())),ensure_ascii=False))
+"""
+        result = subprocess.run(
+            [sys.executable, "-B", "-c", script, str(package_path)],
+            cwd=base,
+            input=json.dumps(baseline),
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return json.loads(result.stdout)
 
 
 def _skip_or_fail(config: pytest.Config, message: str) -> None:
@@ -101,23 +150,69 @@ def _require_site(request: pytest.FixtureRequest) -> None:
 
 def _export_approved_entry(entry: dict) -> dict:
     """Replay each exact approval through its own trusted implementation."""
-    baseline = _baseline_json("publication_manifest.json")
-    if entry in baseline["analysis_manifest"]:
-        from src.publish.approval_anchor import approval_implementation
-        from src.publish.frozen_data import verify_baseline_approvals
-        from src.publish.gate import _analysis_manifest_entry
+    from src.publish.records import _analysis_manifest_entry
 
-        repo = SITE_DIR.parent
-        code = approval_implementation(repo, QUARTERLY_BASELINE_COMMIT, baseline)
-        relative = Path("analysis_runs/drafts")
-        if "entity_key" in entry:
-            relative /= entry["entity_key"]
-        path = repo / relative / entry["period_id"] / f"{entry['version']}.json"
-        result = verify_baseline_approvals([path], code, flow.ROOT, include_public_payloads=True)
-        assert [_analysis_manifest_entry(a) for a in result["authorized"]] == [entry]
-        return result["payloads"][0]
-    entity_args = {"entity_key": entry["entity_key"]} if "entity_key" in entry else {}
-    return export_period(entry["period_id"], entry["version"], root=flow.ROOT, **entity_args)
+    replay = _replay_published_cohorts()
+    for authorized, payload in zip(replay["authorized"], replay["payloads"]):
+        if _analysis_manifest_entry(authorized) == entry:
+            return payload
+    raise AssertionError("The requested entry was not replayed by its pinned cohort")
+
+
+def test_published_parity_survives_a_later_runtime_without_weakening_replay(
+    executive_payload: dict, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Historical approvals and projection use pinned code, including after source changes."""
+    from src.analysis_agent import quarterly_release
+    from src.publish import frozen_data, gate, quarterly_overlay
+    from src.publish.records import _analysis_manifest_entry
+
+    def later_runtime_refuses(*args, **kwargs):
+        raise ValueError("Simulated later runtime refuses historical presentation")
+
+    for module, name in (
+        (flow, "require_current_presentation"),
+        (gate, "verify_records"),
+        (quarterly_release, "verify"),
+        (quarterly_release, "calculate"),
+        (quarterly_overlay, "executive_projection"),
+    ):
+        monkeypatch.setattr(module, name, later_runtime_refuses)
+
+    replay_calls = []
+    original_replay = frozen_data.verify_baseline_approvals
+
+    def real_pinned_replay(paths, commit, ledger, **kwargs):
+        replay_calls.append(commit)
+        return original_replay(paths, commit, ledger, **kwargs)
+
+    monkeypatch.setattr(frozen_data, "verify_baseline_approvals", real_pinned_replay)
+    _replay_published_cohorts.cache_clear()
+    try:
+        replay = _replay_published_cohorts()
+        entries = manifest_mod.load_manifest(SITE_DIR)["analysis_manifest"]
+        assert len(entries) == len(replay["authorized"]) == len(replay["payloads"]) == 5
+        assert [_analysis_manifest_entry(a) for a in replay["authorized"]] == entries
+        assert replay_calls == [cohort["implementation_commit"] for cohort in replay["cohorts"]]
+        assert len(set(replay_calls)) == 2
+        for entry, payload in zip(entries, replay["payloads"]):
+            actual = json.loads((DATA_DIR / manifest_mod.analysis_relative_path(entry)).read_bytes())
+            assert _export_approved_entry(entry) == payload == actual
+        assert published_executive.__wrapped__(executive_payload) == json.loads(
+            (DATA_DIR / "executive.json").read_bytes()
+        )
+        changed = {**entries[-1], "version": "f" * 64}
+        with pytest.raises(AssertionError, match="not replayed"):
+            _export_approved_entry(changed)
+
+        # A refusal by the pinned verifier must still fail the helper. The
+        # successful historical replay above cannot become an approval bypass.
+        _replay_published_cohorts.cache_clear()
+        monkeypatch.setattr(frozen_data, "verify_baseline_approvals", later_runtime_refuses)
+        with pytest.raises(ValueError, match="Simulated later runtime"):
+            _replay_published_cohorts()
+    finally:
+        _replay_published_cohorts.cache_clear()
 
 
 def test_site_flights_and_executive_data_match_a_fresh_export(
