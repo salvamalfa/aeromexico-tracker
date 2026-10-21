@@ -107,6 +107,7 @@ def _data_schema_for(
     rel_path: str,
     quarters_schema: dict[str, Any] = QUARTERS_FILE_SCHEMA,
     network_schema: dict[str, Any] = NETWORK_FILE_SCHEMA,
+    analysis_schema: dict[str, Any] = ANALYSIS_SCHEMA,
 ) -> dict[str, Any] | None:
     """Which contracts/web sub-schema this data/v1 file must satisfy, or
     None if it is not a data file this gate validates (e.g. it is part of
@@ -135,9 +136,9 @@ def _data_schema_for(
     ):
         return network_schema
     if parts[2:3] == ["analysis"] and len(parts) == 4:
-        return ANALYSIS_SCHEMA
+        return analysis_schema
     if parts[2:3] == ["analysis"] and len(parts) == 5 and parts[3] in manifest_mod.ANALYSIS_ENTITIES:
-        return ANALYSIS_SCHEMA
+        return analysis_schema
     if parts[2:] == ["business_metrics.json"]:
         return BUSINESS_METRICS_SCHEMA
     if parts[2:] == ["news.json"]:
@@ -208,6 +209,7 @@ def verify_site(site_dir: Path) -> list[str]:
         problems.append("manifest 'analysis_manifest' is empty")
 
     quarters_schema, network_schema = QUARTERS_FILE_SCHEMA, NETWORK_FILE_SCHEMA
+    analysis_schema = ANALYSIS_SCHEMA
     try:
         expected_contracts = manifest_mod.contract_hashes(manifest_mod.CONTRACTS_DIR)
     except FileNotFoundError as error:
@@ -243,6 +245,8 @@ def verify_site(site_dir: Path) -> list[str]:
                     quarters_schema, network_schema = split_flight_schemas(
                         json.loads(resolved.read_text(encoding="utf-8"))
                     )
+                elif name == "analysis.schema.json":
+                    analysis_schema = json.loads(resolved.read_text(encoding="utf-8"))
         for name in sorted(manifest_contracts):
             if name not in expected_contracts:
                 problems.append(f"contracts[{name!r}]: not a contract file this checkout expects")
@@ -275,7 +279,7 @@ def verify_site(site_dir: Path) -> list[str]:
     for rel in sorted(actual_paths):
         parts = rel.split("/")
         is_data_file = parts[:2] == ["data", "v1"] and rel.endswith(".json")
-        schema = _data_schema_for(rel, quarters_schema, network_schema)
+        schema = _data_schema_for(rel, quarters_schema, network_schema, analysis_schema)
         if schema is None:
             if is_data_file:
                 problems.append(
@@ -318,7 +322,7 @@ def verify_site(site_dir: Path) -> list[str]:
         for carrier in carriers:
             problems.append(f"{rel}: disallowed carrier_key: {carrier}")
         if (
-            schema is ANALYSIS_SCHEMA
+            schema is analysis_schema
             and isinstance(payload, dict)
             and isinstance(payload.get("period_id"), str)
         ):
