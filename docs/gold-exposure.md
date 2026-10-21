@@ -294,9 +294,10 @@ La comprobación local no equivale a CI remota ni integración.
 
 - Revisar los dos PNG propuestos antes de archivarlos. No se autorizó ni ejecutó
   su retiro. No hay otro archivo del sitio demostrado como sobrante.
-- Integrar los cambios de cierre de esta rama mediante revisión y CI. El pin del
-  control privado necesita que su commit público esté disponible antes de correr
-  en GitHub. El cierre local no acredita esa integración.
+- La implementación, CI y revisión remota del cierre se siguen en el
+  [PR #148](https://github.com/salvamalfa/aeromexico-tracker/pull/148). El commit
+  del control fijado por el privado ya está disponible en GitHub. Sus estados
+  de integración y CI se comprueban en los PR, sin duplicar aquí sus bitácoras.
 - Mantener las mejoras de Gold del corte del 19 como propuestas dentro de las
   vistas actuales. La auditoría de archivos no recalcula Gold ni publica datos.
 - Los hilos de publicación 3T26 y de fuentes conservan sus archivos y decisiones.
