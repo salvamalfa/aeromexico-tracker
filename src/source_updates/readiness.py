@@ -281,7 +281,10 @@ def execute(recipe: dict, workspace: Path, *, write=False, check=False) -> dict:
 
     if check:
         verify_all()
-        if output["results"] != prior["results"]:
+        ignored = {"mode", "finished_at"}
+        if {k: v for k, v in output.items() if k not in ignored} != {
+            k: v for k, v in prior.items() if k not in ignored
+        }:
             raise ValueError("Readiness replay differs from recorded source checks")
         output["receipt_sha256"] = sha(accepted)
         return output

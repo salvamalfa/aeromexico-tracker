@@ -150,6 +150,20 @@ def test_checker_code_change_cannot_reuse_prior_readiness_receipt(workspace, mon
         readiness.execute(value, workspace, check=True)
 
 
+def test_receipt_cannot_gain_activation_or_full_calendar_readiness(workspace, monkeypatch):
+    monkeypatch.setattr(readiness, "check_task", passed)
+    value = recipe(workspace)
+    readiness.execute(value, workspace, write=True)
+    path = workspace / "readiness.json"
+    receipt = json.loads(path.read_text())
+    receipt["ready_for_automatic_execution"] = True
+    receipt["ready_for_calendar_incorporation"] = True
+    receipt["activation"] = "enabled"
+    path.write_text(json.dumps(receipt))
+    with pytest.raises(ValueError, match="replay differs"):
+        readiness.execute(value, workspace, check=True)
+
+
 def test_accepted_source_receipt_cannot_borrow_another_collection(workspace):
     item = task(workspace)
     candidate = ROOT / item["workspace"]
