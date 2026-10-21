@@ -1,0 +1,1877 @@
+{
+  "schema_version": 1,
+  "review_kind": "independent_offline_primary_event_map",
+  "as_of": "2026-10-19",
+  "sources": {
+    "primary_0": {
+      "root_id": "context_primary",
+      "source_file": "context/primary/aeromexico_ir_context_event_00_2020-06-30_20261019T172104Z.html",
+      "source_url": "https://ir.aeromexico.com/node/7751/html",
+      "sha256": "c39edb187a17f0fee8d0e28e5d4f898b97c4fcaed9d6c0b7b03481a7ff9e56a8",
+      "bytes": 9782911,
+      "downloaded_at": "2026-10-19T17:21:04.110451+00:00",
+      "source_system": "aeromexico_ir",
+      "sidecar_sha256": "56939c024a629be9982a632a2a654403b2db119de0dad929152402426e4cf250",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true,
+      "capture_result_captured_at": "2026-10-19T17:21:04.106158+00:00"
+    },
+    "primary_1": {
+      "root_id": "context_primary",
+      "source_file": "context/primary/faa_iasa_context_event_01_2021-05-25_20261019T172104Z.html",
+      "source_url": "https://www.faa.gov/newsroom/federal-aviation-administration-announces-results-mexicos-safety-assessment",
+      "sha256": "c798905ff83ea6d04e9a5e7eb38fd966bf5b2f3750b1b64ee13af168d26f4f46",
+      "bytes": 109569,
+      "downloaded_at": "2026-10-19T17:21:04.899585+00:00",
+      "source_system": "faa_iasa",
+      "sidecar_sha256": "6f4557efa39cb68a0d9981b0f3b5d5a654d6862c97141bc27df74d0a882ef72d",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true,
+      "capture_result_captured_at": "2026-10-19T17:21:04.899453+00:00"
+    },
+    "primary_2": {
+      "root_id": "context_primary",
+      "source_file": "context/primary/aeromexico_ir_context_event_02_2022-03-17_20261019T172105Z.pdf",
+      "source_url": "https://ir.aeromexico.com/static-files/27874233-295c-44d2-8f60-ccf676aedc9a",
+      "sha256": "29f11299c5fc2deef9a920cf20648d9175aa1fad099ecbc0d1b8a8d06e665a61",
+      "bytes": 163743,
+      "downloaded_at": "2026-10-19T17:21:05.588875+00:00",
+      "source_system": "aeromexico_ir",
+      "sidecar_sha256": "5a16479e5def9fb4f5b5911c8fb7dd41eb5518f750fbb9505b2cb86c85d49a6d",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true,
+      "capture_result_captured_at": "2026-10-19T17:21:05.588763+00:00"
+    },
+    "primary_3": {
+      "root_id": "context_primary",
+      "source_file": "context/primary/aeromexico_ir_context_event_03_2022-12-22_20261019T172106Z.pdf",
+      "source_url": "https://ir.aeromexico.com/static-files/3205ca50-9601-4285-bdc2-8b13ed830334",
+      "sha256": "ce1e2d939af1e12cf2143db7f475575707c14bde9c1a4085b4a43ac8e007861c",
+      "bytes": 83364,
+      "downloaded_at": "2026-10-19T17:21:06.095477+00:00",
+      "source_system": "aeromexico_ir",
+      "sidecar_sha256": "a9f319f73dd000bab906773f25585f82166c620f35f3edc96757ef6f6c138963",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true,
+      "capture_result_captured_at": "2026-10-19T17:21:06.095385+00:00"
+    },
+    "primary_4": {
+      "root_id": "context_primary",
+      "source_file": "context/primary/faa_iasa_context_event_04_2023-09-14_20261019T172106Z.html",
+      "source_url": "https://www.faa.gov/newsroom/federal-aviation-administration-returns-mexico-highest-aviation-safety-status",
+      "sha256": "5e29b171c18d80846f0e899b2ef27ce1418afcf0b249f45490cdf99780b09b31",
+      "bytes": 108326,
+      "downloaded_at": "2026-10-19T17:21:06.747565+00:00",
+      "source_system": "faa_iasa",
+      "sidecar_sha256": "1bff70f00deab5d7d1094d01c6de268f8f1379bf556c98897f44f5f4478f262a",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true,
+      "capture_result_captured_at": "2026-10-19T17:21:06.747467+00:00"
+    },
+    "primary_5": {
+      "root_id": "context_primary",
+      "source_file": "context/primary/aeromexico_ir_context_event_05_2024-05-13_20261019T172109Z.pdf",
+      "source_url": "https://ir.aeromexico.com/static-files/4e6ea709-46eb-4967-a867-b875adb3459e",
+      "sha256": "23ac9bb4dbc7736d0f5f203079d6295af5fc74797e188b310d740abc7d5d8a3e",
+      "bytes": 13265460,
+      "downloaded_at": "2026-10-19T17:21:09.669843+00:00",
+      "source_system": "aeromexico_ir",
+      "sidecar_sha256": "07d0d18afc938eb1da2ea8db2b06367a2dde6ac6908d9a51f33ee373be5af731",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true,
+      "capture_result_captured_at": "2026-10-19T17:21:09.669695+00:00"
+    },
+    "primary_8": {
+      "root_id": "context_primary",
+      "source_file": "context/primary/aeromexico_ir_context_event_08_2025-11-05_20261019T172110Z.html",
+      "source_url": "https://ir.aeromexico.com/node/8281/html",
+      "sha256": "1a5f4e6b3a25fb933e6296824292d9a6a7f4255c8caa27d3ec1913d95c1c280c",
+      "bytes": 682045,
+      "downloaded_at": "2026-10-19T17:21:10.565204+00:00",
+      "source_system": "aeromexico_ir",
+      "sidecar_sha256": "b9ff830f73b64a8471be7365817149fb6520677dab8ac36cecfe0a101ed4b1e9",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true,
+      "capture_result_captured_at": "2026-10-19T17:21:10.565026+00:00"
+    },
+    "primary_9": {
+      "root_id": "context_primary",
+      "source_file": "context/primary/aeromexico_ir_context_event_09_2025-11-06_20261019T172111Z.html",
+      "source_url": "https://ir.aeromexico.com/ir-resources/investor-faqs",
+      "sha256": "7f0de94e453c85c89c858c4731ff943236e1aed6843d0d2a06bd96a9a1dd5e9b",
+      "bytes": 52474,
+      "downloaded_at": "2026-10-19T17:21:11.070383+00:00",
+      "source_system": "aeromexico_ir",
+      "sidecar_sha256": "e9461766e488270de608189e44fd66391307c626929800818c3d0ab475c82312",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true,
+      "capture_result_captured_at": "2026-10-19T17:21:11.070285+00:00"
+    },
+    "extra_0": {
+      "root_id": "context_extra",
+      "source_file": "context/primary/aeromexico_ir_context_event_00_2025M11_20261019T172559Z.pdf",
+      "source_url": "https://ir.aeromexico.com/static-files/be912a63-f2d2-403c-a496-e98c94af965f",
+      "sha256": "3b43f3536e45078032f60a61637cc0ba94344feb10f6167bda158a0970b75abd",
+      "bytes": 199071,
+      "downloaded_at": "2026-10-19T17:25:59.402279+00:00",
+      "source_system": "aeromexico_ir",
+      "sidecar_sha256": "332a809318ad002c84c5c7cce1db0b705f9ff92ddf243836f0ba90ab3f646d59",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true,
+      "capture_result_captured_at": "2026-10-19T17:25:59.402144+00:00"
+    },
+    "extra_1": {
+      "root_id": "context_extra",
+      "source_file": "context/primary/aeromexico_ir_context_event_01_2025M12_20261019T172600Z.pdf",
+      "source_url": "https://ir.aeromexico.com/static-files/ced05646-a242-4417-9c38-5672564d3a66",
+      "sha256": "47261ad90f9d6f6c58fac32dae09bd0d49c38b3870cbbbfca50c406e3083990c",
+      "bytes": 249705,
+      "downloaded_at": "2026-10-19T17:26:00.547120+00:00",
+      "source_system": "aeromexico_ir",
+      "sidecar_sha256": "7592d771cfa4a4980554a3001f8e7e36e9c43477fb5345fdf7fb0d54c7dd11ef",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true,
+      "capture_result_captured_at": "2026-10-19T17:26:00.547001+00:00"
+    },
+    "extra_2": {
+      "root_id": "context_extra",
+      "source_file": "context/primary/aeromexico_ir_context_event_02_current_20261019T172601Z.html",
+      "source_url": "https://ir.aeromexico.com/news-events/traffic-reports/",
+      "sha256": "4a2dbf2a4470ac9bc2296edb8e45be81e95c43673ecffdaee15e2973ca80dabc",
+      "bytes": 61690,
+      "downloaded_at": "2026-10-19T17:26:01.669957+00:00",
+      "source_system": "aeromexico_ir",
+      "sidecar_sha256": "b60f42c9e827cc85765826f4ef65ad6552fa68695d944d2c22229991ec76eda0",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true,
+      "capture_result_captured_at": "2026-10-19T17:26:01.669716+00:00"
+    },
+    "submissions": {
+      "root_id": "old_public",
+      "source_file": "sec/sec_submissions_current_20260820T183209Z.json",
+      "source_url": "https://data.sec.gov/submissions/CIK0001561861.json",
+      "sha256": "70f0fba78867b6a0dd070a0b8483c4c39bc53eb9e91901fa2a6bb9afa863beb0",
+      "bytes": 11107,
+      "downloaded_at": "2026-08-20T18:32:09.356570+00:00",
+      "source_system": "sec",
+      "sidecar_sha256": "324657d9790ef79c7617aaad4e5ddfcce350e416156f9be8275d453db7207e1a",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true
+    },
+    "jan": {
+      "root_id": "old_public",
+      "source_file": "sec/filings/0001193125-26-171463/sec_0001193125-26-171463_d332308dex992_0001193125-26-171463_20260820T184047Z.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex992.htm",
+      "sha256": "95574c17e1e44595ac35bfddc8f0bbdc97c6ff6325461adf910fab92458d83a3",
+      "bytes": 24784,
+      "downloaded_at": "2026-08-20T18:40:47.024699+00:00",
+      "source_system": "sec",
+      "sidecar_sha256": "ac92c3bb28f44d6a28d5f253f6f580636b692ac19ffd8bb1cbc0a62447f9c059",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true
+    },
+    "feb": {
+      "root_id": "old_public",
+      "source_file": "sec/filings/0001193125-26-171463/sec_0001193125-26-171463_d332308dex993_0001193125-26-171463_20260820T184047Z.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex993.htm",
+      "sha256": "b77afeb8777a37e290b6ed2223f82dc06aeabfbd92316865fdad72de81c6183b",
+      "bytes": 33772,
+      "downloaded_at": "2026-08-20T18:40:47.235321+00:00",
+      "source_system": "sec",
+      "sidecar_sha256": "7ca2f66db54daf8e5a54e6bfaa40fa4542176dea719a1dc466fa6d4ec856ffaf",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true
+    },
+    "mar": {
+      "root_id": "old_public",
+      "source_file": "sec/filings/0001193125-26-171463/sec_0001193125-26-171463_d332308dex994_0001193125-26-171463_20260820T184047Z.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex994.htm",
+      "sha256": "628a326dd44db294f99320265d8f6d70891f11ca88f75b248b8eeb4b610e2327",
+      "bytes": 33551,
+      "downloaded_at": "2026-08-20T18:40:47.425576+00:00",
+      "source_system": "sec",
+      "sidecar_sha256": "8d455ae3dcc9aa7b593ff4efc5495c3458be1b0e4eef5a87778f200636dd2463",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true
+    },
+    "apr": {
+      "root_id": "old_public",
+      "source_file": "sec/filings/0001193125-26-302103/sec_0001193125-26-302103_d112634dex992_0001193125-26-302103_20260820T183706Z.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex992.htm",
+      "sha256": "d19b0dd3cadf8d197a2f05b27a3a518d5dcab7995d1fac8ab634d0bb8d98914a",
+      "bytes": 33745,
+      "downloaded_at": "2026-08-20T18:37:06.313820+00:00",
+      "source_system": "sec",
+      "sidecar_sha256": "4f8972bf4ef92035cee10f3333b3a374d540532f08a757c91b3c4e8409e9280e",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true
+    },
+    "may": {
+      "root_id": "old_public",
+      "source_file": "sec/filings/0001193125-26-302103/sec_0001193125-26-302103_d112634dex993_0001193125-26-302103_20260820T183706Z.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex993.htm",
+      "sha256": "84729abb1c160f7238b2ee22e52e370d46ca82d3cac526d8f318406ae880f9e6",
+      "bytes": 34538,
+      "downloaded_at": "2026-08-20T18:37:06.518188+00:00",
+      "source_system": "sec",
+      "sidecar_sha256": "c92bf4bf2bda9c573930b214fd0b54d98e723fa8b1c40cebc65fef824c5c7f3e",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true
+    },
+    "jun": {
+      "root_id": "old_public",
+      "source_file": "sec/filings/0001193125-26-302103/sec_0001193125-26-302103_d112634dex994_0001193125-26-302103_20260820T183706Z.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex994.htm",
+      "sha256": "3874b8fd4e16ab2748c0e48f3fd5dc21f92006dbb1e1d6fac7fd2e120345676a",
+      "bytes": 32341,
+      "downloaded_at": "2026-08-20T18:37:06.730283+00:00",
+      "source_system": "sec",
+      "sidecar_sha256": "f2cfb10e9978709960f5856d382635f577d2560228a16b51641e6456105c1062",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true
+    },
+    "q1_sec": {
+      "root_id": "old_public",
+      "source_file": "sec/filings/0001193125-26-171463/sec_0001193125-26-171463_d332308dex991_0001193125-26-171463_20260820T184046Z.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526171463/d332308dex991.htm",
+      "sha256": "2f56f5531fe03816495251ac6e0b8bcfecf54d872e056de9634f5fd1f15421a8",
+      "bytes": 163654,
+      "downloaded_at": "2026-08-20T18:40:46.829190+00:00",
+      "source_system": "sec",
+      "sidecar_sha256": "7032e3ce09f4ddb0e862af21acfb02c73ea28a67d73175ff7e140803242f7ce6",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true
+    },
+    "q2_sec": {
+      "root_id": "old_public",
+      "source_file": "sec/filings/0001193125-26-302103/sec_0001193125-26-302103_d112634dex991_0001193125-26-302103_20260820T183706Z.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526302103/d112634dex991.htm",
+      "sha256": "6207b9a113074f68e0d8196f9597ddf35f40a32b5f53ca97c5cd2c0a2f0ac781",
+      "bytes": 230275,
+      "downloaded_at": "2026-08-20T18:37:06.141036+00:00",
+      "source_system": "sec",
+      "sidecar_sha256": "26aa1719d26502f3a9139576a2804f1db75203777982a2413e3d85960255c71f",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true
+    },
+    "q1_ir": {
+      "root_id": "old_public",
+      "source_file": "aeromexico_ir/aeromexico_ir_quarterly_results_2026Q1_20260904T201930Z.pdf",
+      "source_url": "https://ir.aeromexico.com/static-files/7ad972df-0474-4c39-b505-e9db9e86ecbd",
+      "sha256": "89b180eb02de9fae144cbcf8d3d5b936cc304ab550b687c086ae81c6aa92a076",
+      "bytes": 443253,
+      "downloaded_at": "2026-09-04T20:19:30.971878+00:00",
+      "source_system": "aeromexico_ir",
+      "sidecar_sha256": "6d79e7e7391df85ce9bdb2e9497668c4f348a80ac73ed6da04b38823ccc14e71",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true
+    },
+    "q2_ir": {
+      "root_id": "old_public",
+      "source_file": "aeromexico_ir/aeromexico_ir_quarterly_results_2026Q2_20260904T201931Z.pdf",
+      "source_url": "https://ir.aeromexico.com/static-files/d780da89-7da6-4360-adae-7ad65f49333e",
+      "sha256": "44197a884b3e3996122d188744bd5298d30fa527412a4f996a18585e839adb9e",
+      "bytes": 524551,
+      "downloaded_at": "2026-09-04T20:19:31.054494+00:00",
+      "source_system": "aeromexico_ir",
+      "sidecar_sha256": "d6cb67a2cfbca403d07e4de1ebb8e5b8fd32819536d28d78663faa5d2b6111f3",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true
+    },
+    "july": {
+      "root_id": "am_july",
+      "source_file": "aeromexico_ir/traffic/2026M07/aeromexico_ir_am_traffic_ir_2026M07_20261019T151601Z.pdf",
+      "source_url": "https://ir.aeromexico.com/system/files-encrypted/nasdaq_kms/news/2026/08/03/16-22-29/July%202026_Op_Stat_ENG_V2.pdf",
+      "sha256": "5833902ad2d0088c6dd35764b67abf87a8edec31dc8d8d958fdf8451d590ee47",
+      "bytes": 262044,
+      "downloaded_at": "2026-10-19T15:16:01.100722+00:00",
+      "source_system": "aeromexico_ir",
+      "sidecar_sha256": "c204949cf904dd7ba856f23c37d39843979fddd51f7c0671e80e7e8b6728ffb9",
+      "http_status": 200,
+      "body_manifest_sidecar_match": true
+    },
+    "dot_order": {
+      "root_id": "dot_review",
+      "source_file": "19f785acef52f58e2ff3ad04bb7fe1abd3b4e02a6a1e4589a7abdead95fd610d.pdf",
+      "source_url": "https://www.transportation.gov/sites/dot.gov/files/2025-07/Order%202025-7-12.pdf",
+      "sha256": "19f785acef52f58e2ff3ad04bb7fe1abd3b4e02a6a1e4589a7abdead95fd610d",
+      "bytes": 739007,
+      "captured_at": "2026-10-19T17:28:25.353692+00:00",
+      "source_system": "dot_primary_review_candidate",
+      "http_status": 200,
+      "catalogue_registration": "not_active_no_alias_relabelling",
+      "capture_results_sha256": "c36675976d396f80e60e0910142d2413ee3c4ce465b645fb5a91d4392700f922",
+      "source_identity": "dot_primary_review_candidate"
+    }
+  },
+  "evidence": {
+    "chapter11_retrospective": {
+      "source_id": "primary_0",
+      "locator": {
+        "normalized_char_start": 135097,
+        "normalized_char_end": 135417,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "decision to file a voluntary request under Chapter 11 of the U.S. Bankruptcy Code on June 30, 2020. For further information about our Chapter 11 proceedings, see “Business—History—Chapter 11 Emergence.” Although we have emerged from Chapter 11 and, in May 2023, the World Health Organization, or the WHO, declared that t"
+    },
+    "chapter11_source_2024": {
+      "source_id": "primary_0",
+      "locator": {
+        "normalized_char_start": 481,
+        "normalized_char_end": 741,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "As filed with the U.S. Securities and Exchange Commission on May 13, 2024. Registration No. 333- UNITED STATES SECURITIES AND EXCHANGE COMMISSION Washington, D.C. 20549 Form F-1 REGISTRATION STATEMENT UNDER THE SECURITIES ACT OF 1933 Grupo Aeroméxico, S.A.B. d"
+    },
+    "faa_downgrade": {
+      "source_id": "primary_1",
+      "locator": {
+        "normalized_char_start": 9611,
+        "normalized_char_end": 10261,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "Tuesday, May 25, 2021 WASHINGTON – The U.S. Department of Transportation ’ s Federal Aviation Administration (FAA) today announced that the Government of Mexico does not meet International Civil Aviation Organization (ICAO) safety standards. Based on a reassessment of Mexico ’ s civil aviation authority, the FAA has downgraded Mexico ’ s rating to Category 2 from Category 1. While the new rating allows Mexican air carriers to continue existing service to the United States, it prohibits any new service and routes. U.S. airlines will no longer be able to market and sell tickets with their names and designator codes on Mexican-operated flights. "
+    },
+    "emergence": {
+      "source_id": "primary_2",
+      "locator": {
+        "pdf_page_1based": 1,
+        "excerpt": "Mexico City, Mexico, March 17, 2022. Grupo Aeroméxico, S.A.B. de C.V. ( “Aeroméxico” or the “Company”) (BMV: AEROMEX), informs that, as disclosed in our prior relevant event of this date, (i) the resolutions adopted by the Shareholders Meetings of the Company held on January 14 and February 14, 2022 are now effective (“Shareholders Meetings”), (ii) Aeroméxico has consummated its Plan of Reorganization (and ancillary documents thereto) (jointly, the “ Plan of Reorganization ”); and ( iii) it has successfully concluded its financial restructuring process and emerged from its Chapter 11. The delivery of the new listed and consolidated shares (reflecting the effects of the consolidation (reverse split) of shares), "
+      },
+      "excerpt": "Mexico City, Mexico, March 17, 2022. Grupo Aeroméxico, S.A.B. de C.V. ( “Aeroméxico” or the “Company”) (BMV: AEROMEX), informs that, as disclosed in our prior relevant event of this date, (i) the resolutions adopted by the Shareholders Meetings of the Company held on January 14 and February 14, 2022 are now effective (“Shareholders Meetings”), (ii) Aeroméxico has consummated its Plan of Reorganization (and ancillary documents thereto) (jointly, the “ Plan of Reorganization ”); and ( iii) it has successfully concluded its financial restructuring process and emerged from its Chapter 11. The delivery of the new listed and consolidated shares (reflecting the effects of the consolidation (reverse split) of shares), "
+    },
+    "closure": {
+      "source_id": "primary_3",
+      "locator": {
+        "pdf_page_1based": 1,
+        "excerpt": "Mexico City, Mexico, December 22 , 2022. Grupo Aeroméxico, S.A.B. de C.V. (“Aeroméxico” or the “Company”) (BMV: AEROMEX) informs that today, the United States Bankruptcy Court for the Southern District of New York (the “ Bankruptcy Court”) issued a final decree (the “Final Decree”) closing the chapter 11 cases of the Company, and its subsidiaries Aerovías de México, S.A. de C.V., Aerolitoral, S.A. de C.V. , and Aerovías Empresa de Cargo, S.A. de C.V. (collectively, the “Reorganized Debtors”). Considering, among other things, that the Reorganized Debtors’ plan of reorganization, which became fully effective on March 17, 2022, has been substant"
+      },
+      "excerpt": "Mexico City, Mexico, December 22 , 2022. Grupo Aeroméxico, S.A.B. de C.V. (“Aeroméxico” or the “Company”) (BMV: AEROMEX) informs that today, the United States Bankruptcy Court for the Southern District of New York (the “ Bankruptcy Court”) issued a final decree (the “Final Decree”) closing the chapter 11 cases of the Company, and its subsidiaries Aerovías de México, S.A. de C.V., Aerolitoral, S.A. de C.V. , and Aerovías Empresa de Cargo, S.A. de C.V. (collectively, the “Reorganized Debtors”). Considering, among other things, that the Reorganized Debtors’ plan of reorganization, which became fully effective on March 17, 2022, has been substant"
+    },
+    "faa_restore": {
+      "source_id": "primary_4",
+      "locator": {
+        "normalized_char_start": 9615,
+        "normalized_char_end": 10235,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "Thursday, September 14, 2023 WASHINGTON – The Federal Aviation Administration returned Mexico’s aviation safety rating to the highest level following more than two years of close work between the civil aviation authorities in both countries. With a return to Category 1 status, Mexico can add new service and routes to the U.S., and U.S. airlines can resume marketing and selling tickets with their names and designator codes on Mexican-operated flights. The FAA provided expertise and resources via technical assistance agreements to Mexico’s Agencia Federal de Aviacion Civil (AFAC) to resolve the safety issues that l"
+    },
+    "f1_filing": {
+      "source_id": "primary_5",
+      "locator": {
+        "pdf_page_1based": 1,
+        "excerpt": "As filed with the U.S. Securities and Exchange Commission on May 13, 2024. Registration No. 333- UNITED STATES SECURITIES AND EXCHANGE COMMISSION Washington, D.C. 20549 Form F-1 REGISTRATION STATEMENT UNDER THE SECURITIES ACT OF 1933 Grupo Aeroméxico, S.A.B. de C.V. (Exact name of Registra"
+      },
+      "excerpt": "As filed with the U.S. Securities and Exchange Commission on May 13, 2024. Registration No. 333- UNITED STATES SECURITIES AND EXCHANGE COMMISSION Washington, D.C. 20549 Form F-1 REGISTRATION STATEMENT UNDER THE SECURITIES ACT OF 1933 Grupo Aeroméxico, S.A.B. de C.V. (Exact name of Registra"
+    },
+    "dot_issue": {
+      "source_id": "dot_order",
+      "locator": {
+        "pdf_page_1based": 1,
+        "excerpt": "Order 2025-7-12 Issued: July 19, 2025 UNITED STATES OF AMERICA DEPARTMENT OF TRANSPORTATION OFFICE OF THE SECRETARY WASHINGTON, D.C. Issued by the Department of Transportation on the 19th day of July, 2025 Joint Application of DELTA AIR LINES, INC. AEROVIAS DE MEXICO, S.A. DE C.V. Under 49 U.S.C. §§ 41308 and 41309 for Approval of and Antitrust Immunity for Alliance Agreements Docket DOT-OST-2015-0070 SUPPLEMENTAL ORDER TO SHOW CAUSE I. SUMMARY By this Order, the U.S. Department of Transportatio"
+      },
+      "excerpt": "Order 2025-7-12 Issued: July 19, 2025 UNITED STATES OF AMERICA DEPARTMENT OF TRANSPORTATION OFFICE OF THE SECRETARY WASHINGTON, D.C. Issued by the Department of Transportation on the 19th day of July, 2025 Joint Application of DELTA AIR LINES, INC. AEROVIAS DE MEXICO, S.A. DE C.V. Under 49 U.S.C. §§ 41308 and 41309 for Approval of and Antitrust Immunity for Alliance Agreements Docket DOT-OST-2015-0070 SUPPLEMENTAL ORDER TO SHOW CAUSE I. SUMMARY By this Order, the U.S. Department of Transportatio"
+    },
+    "dot_proposal": {
+      "source_id": "dot_order",
+      "locator": {
+        "pdf_page_1based": 1,
+        "excerpt": "Pursuant to 49 U.S.C. §§ 41308-41309, the Department proposes to withdraw the approval and grant of ATI for a JV operated by Delta Air Lines, Inc. (Delta) and Aerovias de Mexico, S.A. de C.V. (Aeromexico) (collectively, the Joint Applicants). The Delta/Aeromexico JV, which is subject to conditions that the Joint Applicants accepted, was originally set to expire in 2020 and has since been extended pending review. Based on our review, the conditions required for an immunized JV do not exist and the immunized JV no longer serves the publ"
+      },
+      "excerpt": "Pursuant to 49 U.S.C. §§ 41308-41309, the Department proposes to withdraw the approval and grant of ATI for a JV operated by Delta Air Lines, Inc. (Delta) and Aerovias de Mexico, S.A. de C.V. (Aeromexico) (collectively, the Joint Applicants). The Delta/Aeromexico JV, which is subject to conditions that the Joint Applicants accepted, was originally set to expire in 2020 and has since been extended pending review. Based on our review, the conditions required for an immunized JV do not exist and the immunized JV no longer serves the publ"
+    },
+    "oct_action_retrospective": {
+      "source_id": "primary_8",
+      "locator": {
+        "normalized_char_start": 63850,
+        "normalized_char_end": 64570,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "On October 28, 2025, the DOT issued a regulatory action disapproving certain existing and proposed flight schedules of Mexican carriers, citing measures adopted by the Government of Mexico that, according to the DOT, impaired the operating rights of U.S. airlines under the 2015 U.S.–Mexico Air Transport Agreement. In a separate tentative order issued on the same date, the DOT also proposed prohibiting Mexican carriers from transporting cargo on combination services (“belly cargo”) between Mexico City International Airport (AICM) and any point in the United States. This order is tentative and would only become effective 108 business days after the issuance of a final order. 34 Table of Contents Grupo Aeroméxico,"
+    },
+    "node8281_later_6k": {
+      "source_id": "primary_8",
+      "locator": {
+        "normalized_char_start": 653,
+        "normalized_char_end": 913,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "For the month of December 2025 Commission File Number: 001-42931 Grupo Aeroméxico, S.A.B. de C.V. (Name of registrant) Aeromexico Group (Translation of registrant’s name into English) Avenida Paseo de la Reforma 243, 25th Floor Col. Renacimiento, Cuauhtémoc 06"
+    },
+    "node8281_signed_date": {
+      "source_id": "primary_8",
+      "locator": {
+        "normalized_char_start": 4897,
+        "normalized_char_end": 5107,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "Date: December 5, 2025 By: /s/ Ernesto Gómez Pombo Name: Ernesto Gómez Pombo Title: General Counsel EX-99.1 Table of Contents Exhibit 99.1 Grupo Aeroméxico, S. A. B. de C. V. and subsidiaries Condensed Consolid"
+    },
+    "pricing": {
+      "source_id": "primary_8",
+      "locator": {
+        "normalized_char_start": 64939,
+        "normalized_char_end": 65589,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "On November 5, 2025 Grupo Aeroméxico announced the pricing of its global offering of 11,727,325 American Depositary Shares (“ ADSs ”) at a price of $19.00 dollars per ADS in the United States (the “ International Offering ”) and 27,463,590 common shares at a price of Ps.35.34 per common share in Mexico (the “ Mexican Offering ”, and together with the International Offering, the “ Global Offering ”). Each ADS represents 10 common shares of Grupo Aeroméxico. The ADSs began trading on the New York Stock Exchange and the common shares on the Bolsa Mexicana de Valores (“BMV”) on November 6, 2025, under the ticker symbol “AERO”. The Global Offering"
+    },
+    "trading": {
+      "source_id": "primary_8",
+      "locator": {
+        "normalized_char_start": 65400,
+        "normalized_char_end": 65740,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "The ADSs began trading on the New York Stock Exchange and the common shares on the Bolsa Mexicana de Valores (“BMV”) on November 6, 2025, under the ticker symbol “AERO”. The Global Offering closed on November 7, 2025. The Global Offering consists of (i) a primary offering of 7,394,409 ADSs in the United States and 7,000,000 common shares "
+    },
+    "faq_ipo": {
+      "source_id": "primary_9",
+      "locator": {
+        "normalized_char_start": 2515,
+        "normalized_char_end": 2685,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "Aeromexico went public on November 6th, 2025. What are Aeromexico’s operating subsidiaries? Grupo Aeromexico, S.A.B. de C.V. is a holding company with subsidiaries engage"
+    },
+    "nov_traffic": {
+      "source_id": "extra_0",
+      "locator": {
+        "pdf_page_1based": 1,
+        "excerpt": "Mexico City, Mexico, December 8, 2025 – Grupo Aeroméxico S.A.B. de C.V. (NYSE: AERO & BMV: AERO) (“Aeroméxico”) reports its November 2025 operational results: ● Grupo Aeroméxico transported 1 million and 995 thousand passengers in November 2025, a 2.0% year-over-year decrease. International passengers decreased by 1.3%"
+      },
+      "excerpt": "Mexico City, Mexico, December 8, 2025 – Grupo Aeroméxico S.A.B. de C.V. (NYSE: AERO & BMV: AERO) (“Aeroméxico”) reports its November 2025 operational results: ● Grupo Aeroméxico transported 1 million and 995 thousand passengers in November 2025, a 2.0% year-over-year decrease. International passengers decreased by 1.3%"
+    },
+    "dec_traffic": {
+      "source_id": "extra_1",
+      "locator": {
+        "pdf_page_1based": 1,
+        "excerpt": "Mexico City, Mexico, January 6, 2026 – Grupo Aeroméxico S.A.B. de C.V. (NYSE: AERO & BMV: AERO) (“Aeroméxico”) reports its December 2025 operational results: ● Grupo Aeroméxico transported 2 million and 180 thousand passengers in December 2025, a 0.4% year-over-year increase. International passengers increased by 2.7%,"
+      },
+      "excerpt": "Mexico City, Mexico, January 6, 2026 – Grupo Aeroméxico S.A.B. de C.V. (NYSE: AERO & BMV: AERO) (“Aeroméxico”) reports its December 2025 operational results: ● Grupo Aeroméxico transported 2 million and 180 thousand passengers in December 2025, a 0.4% year-over-year increase. International passengers increased by 2.7%,"
+    },
+    "jan_traffic": {
+      "source_id": "jan",
+      "locator": {
+        "normalized_char_start": 99,
+        "normalized_char_end": 429,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "Mexico City, Mexico, February 5, 2026 – Grupo Aeroméxico S.A.B. de C.V. (NYSE: AERO & BMV: AERO) (“Aeroméxico”) reports its January 2026 operational results: • Grupo Aeroméxico transported 2 million and 53 thousand passengers in January 2026, a 1.8% year-over-year decrease. International passengers increased by 2.7%, while domes"
+    },
+    "feb_traffic": {
+      "source_id": "feb",
+      "locator": {
+        "normalized_char_start": 98,
+        "normalized_char_end": 428,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "Mexico City, Mexico, March 5, 2026 – Grupo Aeroméxico S.A.B. de C.V. (NYSE: AERO & BMV: AERO) (“Aeroméxico”) reports its February 2026 operational results: • Grupo Aeroméxico transported 1 million and 744 thousand passengers in February 2026, a 1.2% year-over-year decrease. International passengers increased by 2.7%, while domes"
+    },
+    "mar_traffic": {
+      "source_id": "mar",
+      "locator": {
+        "normalized_char_start": 95,
+        "normalized_char_end": 425,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "Mexico City, Mexico, April 8, 2026 – Grupo Aeroméxico S.A.B. de C.V. (NYSE: AERO & BMV: AERO) (“Aeroméxico”) reports its March 2026 operational results: • Grupo Aeroméxico transported 1 million and 994 thousand passengers in March 2026, a 1.4% year-over-year decrease. International passengers decreased by 0.5%, while domestic pa"
+    },
+    "apr_traffic": {
+      "source_id": "apr",
+      "locator": {
+        "normalized_char_start": 95,
+        "normalized_char_end": 425,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "Mexico City, Mexico, May 7, 2026 – Grupo Aeroméxico S.A.B. de C.V. (NYSE: AERO & BMV: AERO) (“Aeroméxico”) reports its April 2026 operational results: • Grupo Aeroméxico transported 2 million and 61 thousand passengers in April 2026, a 1.3% year-over-year decrease. International passengers decreased by 0.7%, while domestic passe"
+    },
+    "may_traffic": {
+      "source_id": "may",
+      "locator": {
+        "normalized_char_start": 93,
+        "normalized_char_end": 423,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "Mexico City, Mexico, June 4, 2026 – Grupo Aeroméxico S.A.B. de C.V. (NYSE: AERO & BMV: AERO) (“Aeroméxico”) reports its May 2026 operational results: • Grupo Aeroméxico transported 2 million and 102 thousand passengers in May 2026, a 2.1% year-over-year increase. International passengers increased by 4.6%, while domestic passeng"
+    },
+    "jun_traffic": {
+      "source_id": "jun",
+      "locator": {
+        "normalized_char_start": 94,
+        "normalized_char_end": 424,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "Mexico City, Mexico, July 2, 2026 – Grupo Aeroméxico S.A.B. de C.V. (NYSE: AERO & BMV: AERO, “Aeroméxico”) reports its June 2026 operational results: • Grupo Aeroméxico transported 1 million and 851 thousand passengers in June 2026, a 9.0% year-over-year decrease. International passengers decreased by 1.4%, while domestic passen"
+    },
+    "jan_archive": {
+      "source_id": "extra_2",
+      "locator": {
+        "normalized_char_start": 1945,
+        "normalized_char_end": 2016,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "January 2026 Traffic Results February 5, 2026 at 5:00 PM EST Aeromexico"
+    },
+    "feb_archive": {
+      "source_id": "extra_2",
+      "locator": {
+        "normalized_char_start": 1874,
+        "normalized_char_end": 1943,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "February 2026 Traffic Results March 6, 2026 at 10:49 AM EST Aeroméxic"
+    },
+    "mar_archive": {
+      "source_id": "extra_2",
+      "locator": {
+        "normalized_char_start": 1807,
+        "normalized_char_end": 1873,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "March 2026 Traffic Results April 8, 2026 at 5:00 PM EDT Aeroméxico"
+    },
+    "apr_archive": {
+      "source_id": "extra_2",
+      "locator": {
+        "normalized_char_start": 1742,
+        "normalized_char_end": 1806,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "April 2026 Traffic Results May 7, 2026 at 5:00 PM EDT Aeroméxico"
+    },
+    "may_archive": {
+      "source_id": "extra_2",
+      "locator": {
+        "normalized_char_start": 1678,
+        "normalized_char_end": 1741,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "May 2026 Traffic Results June 4, 2026 at 9:05 AM EDT Aeroméxico"
+    },
+    "jun_archive": {
+      "source_id": "extra_2",
+      "locator": {
+        "normalized_char_start": 1613,
+        "normalized_char_end": 1677,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "June 2026 Traffic Results July 2, 2026 at 5:30 PM EDT Aeroméxico"
+    },
+    "july_archive": {
+      "source_id": "extra_2",
+      "locator": {
+        "normalized_char_start": 1546,
+        "normalized_char_end": 1612,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "July 2026 Traffic Results August 3, 2026 at 5:30 PM EDT Aeroméxico"
+    },
+    "q1_ir_dateline": {
+      "source_id": "q1_ir",
+      "locator": {
+        "pdf_page_1based": 1,
+        "excerpt": "Ciudad de México , 21 de abril de 202 6 - Grupo Aeroméxico S.A.B. de C.V. (NYSE, BMV: AERO) (“Aeroméxico” o la “Compañía”) reportó sus resultados financieros no auditados para el primer trimestre de 2026 (1T26). Estos resultados se basan en la información disponible a la fecha de este comunicado y no constituyen una declaración integral de nuestros"
+      },
+      "excerpt": "Ciudad de México , 21 de abril de 202 6 - Grupo Aeroméxico S.A.B. de C.V. (NYSE, BMV: AERO) (“Aeroméxico” o la “Compañía”) reportó sus resultados financieros no auditados para el primer trimestre de 2026 (1T26). Estos resultados se basan en la información disponible a la fecha de este comunicado y no constituyen una declaración integral de nuestros"
+    },
+    "q2_ir_dateline": {
+      "source_id": "q2_ir",
+      "locator": {
+        "pdf_page_1based": 1,
+        "excerpt": "Ciudad de México , a 13 de julio de 202 6 - Grupo Aeroméxico S.A.B. de C.V. (NYSE, BMV: AERO , “Aeroméxico” o la “Compañía”) reportó hoy sus resultados financieros consolidados preliminares para el trimestre concluido el 30 de junio de 2026 (“2T26”). Estos resultados se basan en la información disponible a la fecha de este comunicado y no constituy"
+      },
+      "excerpt": "Ciudad de México , a 13 de julio de 202 6 - Grupo Aeroméxico S.A.B. de C.V. (NYSE, BMV: AERO , “Aeroméxico” o la “Compañía”) reportó hoy sus resultados financieros consolidados preliminares para el trimestre concluido el 30 de junio de 2026 (“2T26”). Estos resultados se basan en la información disponible a la fecha de este comunicado y no constituy"
+    },
+    "q1_results": {
+      "source_id": "q1_sec",
+      "locator": {
+        "normalized_char_start": 186,
+        "normalized_char_end": 746,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "Aeroméxico Reports Unaudited First Quarter 2026 Results • Total Revenue growth of 13% year-on-year • Adjusted EBITDAR Margin of 25% • Operating Margin of 11% • Liquidity to LTM Revenue ratio at 23% Grupo Aeroméxico S.A.B. de C.V. (NYSE: AERO & BMV: AERO, “Aeroméxico” or the “Company”) today reported unaudited consolidated financial results for the three months ended March 31, 2026 (“1Q26”). These results are based on information available to us as of the date of this earnings release and are not a comprehensive statement of our financial results for the "
+    },
+    "q2_results": {
+      "source_id": "q2_sec",
+      "locator": {
+        "normalized_char_start": 387,
+        "normalized_char_end": 807,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "Mexico City, Mexico, July 13, 2026 - Grupo Aeroméxico S.A.B. de C.V. (NYSE: AERO & BMV: AERO, “Aeroméxico” or the “Company”) today reported unaudited consolidated financial results for the three months ended June 30, 2026 (“2Q26”). These results are based on information available to us as of the date of this earnings release and are not a comprehensive statement of our financial results for the period presented. The "
+    },
+    "july_traffic": {
+      "source_id": "july",
+      "locator": {
+        "pdf_page_1based": 1,
+        "excerpt": "August 3, 2026 – Grupo Aeroméxico S.A.B. de C.V. (NYSE: AERO & BMV: AERO, “Aeroméxico”) reports its July 2026 operational results. Grupo Aeroméxico’s total capacity, measured in available seat miles (ASMs), decreased 1.5% year -over- year, while demand, measured in revenue passenger miles (RPMs), declined 1.9%. Aeroméxico’s July load fact"
+      },
+      "excerpt": "August 3, 2026 – Grupo Aeroméxico S.A.B. de C.V. (NYSE: AERO & BMV: AERO, “Aeroméxico”) reports its July 2026 operational results. Grupo Aeroméxico’s total capacity, measured in available seat miles (ASMs), decreased 1.5% year -over- year, while demand, measured in revenue passenger miles (RPMs), declined 1.9%. Aeroméxico’s July load fact"
+    },
+    "q1_sec_accessionNumber": {
+      "source_id": "submissions",
+      "locator": {
+        "json_pointer": "/filings/recent/accessionNumber/10"
+      },
+      "value": "0001193125-26-171463"
+    },
+    "q1_sec_filingDate": {
+      "source_id": "submissions",
+      "locator": {
+        "json_pointer": "/filings/recent/filingDate/10"
+      },
+      "value": "2026-04-23"
+    },
+    "q1_sec_acceptanceDateTime": {
+      "source_id": "submissions",
+      "locator": {
+        "json_pointer": "/filings/recent/acceptanceDateTime/10"
+      },
+      "value": "2026-04-23T01:59:02.000Z"
+    },
+    "q1_sec_reportDate": {
+      "source_id": "submissions",
+      "locator": {
+        "json_pointer": "/filings/recent/reportDate/10"
+      },
+      "value": "2026-04-23"
+    },
+    "q1_sec_form": {
+      "source_id": "submissions",
+      "locator": {
+        "json_pointer": "/filings/recent/form/10"
+      },
+      "value": "6-K"
+    },
+    "q1_sec_primaryDocument": {
+      "source_id": "submissions",
+      "locator": {
+        "json_pointer": "/filings/recent/primaryDocument/10"
+      },
+      "value": "d332308d6k.htm"
+    },
+    "q2_sec_accessionNumber": {
+      "source_id": "submissions",
+      "locator": {
+        "json_pointer": "/filings/recent/accessionNumber/4"
+      },
+      "value": "0001193125-26-302103"
+    },
+    "q2_sec_filingDate": {
+      "source_id": "submissions",
+      "locator": {
+        "json_pointer": "/filings/recent/filingDate/4"
+      },
+      "value": "2026-07-13"
+    },
+    "q2_sec_acceptanceDateTime": {
+      "source_id": "submissions",
+      "locator": {
+        "json_pointer": "/filings/recent/acceptanceDateTime/4"
+      },
+      "value": "2026-07-13T20:47:15.000Z"
+    },
+    "q2_sec_reportDate": {
+      "source_id": "submissions",
+      "locator": {
+        "json_pointer": "/filings/recent/reportDate/4"
+      },
+      "value": "2026-07-13"
+    },
+    "q2_sec_form": {
+      "source_id": "submissions",
+      "locator": {
+        "json_pointer": "/filings/recent/form/4"
+      },
+      "value": "6-K"
+    },
+    "q2_sec_primaryDocument": {
+      "source_id": "submissions",
+      "locator": {
+        "json_pointer": "/filings/recent/primaryDocument/4"
+      },
+      "value": "d112634d6k.htm"
+    },
+    "node8281_sec_accessionNumber": {
+      "source_id": "submissions",
+      "locator": {
+        "json_pointer": "/filings/recent/accessionNumber/42"
+      },
+      "value": "0001193125-25-309747"
+    },
+    "node8281_sec_filingDate": {
+      "source_id": "submissions",
+      "locator": {
+        "json_pointer": "/filings/recent/filingDate/42"
+      },
+      "value": "2025-12-05"
+    },
+    "node8281_sec_acceptanceDateTime": {
+      "source_id": "submissions",
+      "locator": {
+        "json_pointer": "/filings/recent/acceptanceDateTime/42"
+      },
+      "value": "2025-12-05T21:29:39.000Z"
+    },
+    "node8281_sec_reportDate": {
+      "source_id": "submissions",
+      "locator": {
+        "json_pointer": "/filings/recent/reportDate/42"
+      },
+      "value": "2025-12-05"
+    },
+    "node8281_sec_form": {
+      "source_id": "submissions",
+      "locator": {
+        "json_pointer": "/filings/recent/form/42"
+      },
+      "value": "6-K"
+    },
+    "node8281_sec_primaryDocument": {
+      "source_id": "submissions",
+      "locator": {
+        "json_pointer": "/filings/recent/primaryDocument/42"
+      },
+      "value": "d23130d6k.htm"
+    },
+    "chapter11_continuing_customers": {
+      "source_id": "primary_0",
+      "locator": {
+        "normalized_char_start": 374526,
+        "normalized_char_end": 374856,
+        "normalization": "collapse whitespace over lxml HTML itertext; preserve all other characters"
+      },
+      "excerpt": "On June 30, 2020, we filed a voluntary Chapter 11 request with the U.S. Bankruptcy Court in order to undergo financial restructuring while continuing to serve our customers. We obtained the U.S. Bankruptcy Court’s approval of the restructuring plan on February 4, 2022, which was approved by our shareholders at a shareholders mee"
+    }
+  },
+  "events": [
+    {
+      "index": 0,
+      "snapshot": {
+        "event_date": "2020-06-30",
+        "event_type": "corporate",
+        "event_category": "restructuring",
+        "title": "Voluntary Chapter 11 filing",
+        "description": "Aeroméxico filed for Chapter 11 protection while continuing operations.",
+        "impact_direction": "negative",
+        "source_url": "https://ir.aeromexico.com/node/7751/html",
+        "affected_carriers": "AEROMEXICO",
+        "confidence": "high"
+      },
+      "agent_eligible": false,
+      "curated_fields": [
+        "event_type",
+        "event_category",
+        "title",
+        "description",
+        "impact_direction",
+        "affected_carriers",
+        "confidence"
+      ],
+      "approval_status": "not_approved_by_this_review",
+      "status": "supported_retrospectively",
+      "evidence_ids": [
+        "chapter11_retrospective",
+        "chapter11_source_2024",
+        "chapter11_continuing_customers"
+      ],
+      "date_kinds": [
+        {
+          "kind": "event_date",
+          "value": "2020-06-30",
+          "evidence_ids": [
+            "chapter11_retrospective"
+          ]
+        },
+        {
+          "kind": "source_as_filed_date",
+          "value": "2024-05-13",
+          "evidence_ids": [
+            "chapter11_source_2024"
+          ]
+        }
+      ],
+      "qualification": "F-1 source is retrospective2024, not contemporaneous2020 publication. Literal passage reports filing June30,2020 while continuing to serve customers; no June2020 first-public availability inferred."
+    },
+    {
+      "index": 1,
+      "snapshot": {
+        "event_date": "2021-05-25",
+        "event_type": "regulatory",
+        "event_category": "regulatory",
+        "title": "FAA downgraded Mexico to Category 2",
+        "description": "FAA found that Mexico did not meet ICAO safety oversight standards.",
+        "impact_direction": "negative",
+        "source_url": "https://www.faa.gov/newsroom/federal-aviation-administration-announces-results-mexicos-safety-assessment",
+        "affected_carriers": "AEROMEXICO",
+        "confidence": "high"
+      },
+      "agent_eligible": false,
+      "curated_fields": [
+        "event_type",
+        "event_category",
+        "title",
+        "description",
+        "impact_direction",
+        "affected_carriers",
+        "confidence"
+      ],
+      "approval_status": "not_approved_by_this_review",
+      "status": "supported",
+      "evidence_ids": [
+        "faa_downgrade"
+      ],
+      "date_kinds": [
+        {
+          "kind": "agency_release_dateline",
+          "value": "2021-05-25",
+          "evidence_ids": [
+            "faa_downgrade"
+          ]
+        }
+      ],
+      "qualification": "Country safety oversight category; not airline safety rating or eligibility approval."
+    },
+    {
+      "index": 2,
+      "snapshot": {
+        "event_date": "2022-03-17",
+        "event_type": "corporate",
+        "event_category": "restructuring",
+        "title": "Aeroméxico emerged from Chapter 11",
+        "description": "The restructuring plan became effective and the company emerged from Chapter 11.",
+        "impact_direction": "positive",
+        "source_url": "https://ir.aeromexico.com/static-files/27874233-295c-44d2-8f60-ccf676aedc9a",
+        "affected_carriers": "AEROMEXICO",
+        "confidence": "high"
+      },
+      "agent_eligible": false,
+      "curated_fields": [
+        "event_type",
+        "event_category",
+        "title",
+        "description",
+        "impact_direction",
+        "affected_carriers",
+        "confidence"
+      ],
+      "approval_status": "not_approved_by_this_review",
+      "status": "supported",
+      "evidence_ids": [
+        "emergence"
+      ],
+      "date_kinds": [
+        {
+          "kind": "issuer_release_dateline_and_event_date",
+          "value": "2022-03-17",
+          "evidence_ids": [
+            "emergence"
+          ]
+        }
+      ],
+      "qualification": "Issuer contemporaneous release; exact issuance time and first availability unknown."
+    },
+    {
+      "index": 3,
+      "snapshot": {
+        "event_date": "2022-12-22",
+        "event_type": "corporate",
+        "event_category": "restructuring",
+        "title": "Chapter 11 cases formally closed",
+        "description": "The U.S. Bankruptcy Court issued the final decree closing the cases.",
+        "impact_direction": "positive",
+        "source_url": "https://ir.aeromexico.com/static-files/3205ca50-9601-4285-bdc2-8b13ed830334",
+        "affected_carriers": "AEROMEXICO",
+        "confidence": "high"
+      },
+      "agent_eligible": false,
+      "curated_fields": [
+        "event_type",
+        "event_category",
+        "title",
+        "description",
+        "impact_direction",
+        "affected_carriers",
+        "confidence"
+      ],
+      "approval_status": "not_approved_by_this_review",
+      "status": "supported",
+      "evidence_ids": [
+        "closure"
+      ],
+      "date_kinds": [
+        {
+          "kind": "issuer_release_dateline_and_event_date",
+          "value": "2022-12-22",
+          "evidence_ids": [
+            "closure"
+          ]
+        }
+      ],
+      "qualification": "Issuer reports court decree today; source is issuer report, not independent court docket."
+    },
+    {
+      "index": 4,
+      "snapshot": {
+        "event_date": "2023-09-14",
+        "event_type": "regulatory",
+        "event_category": "regulatory",
+        "title": "FAA restored Mexico to Category 1",
+        "description": "FAA restored the highest IASA safety rating after more than two years.",
+        "impact_direction": "positive",
+        "source_url": "https://www.faa.gov/newsroom/federal-aviation-administration-returns-mexico-highest-aviation-safety-status",
+        "affected_carriers": "AEROMEXICO",
+        "confidence": "high"
+      },
+      "agent_eligible": false,
+      "curated_fields": [
+        "event_type",
+        "event_category",
+        "title",
+        "description",
+        "impact_direction",
+        "affected_carriers",
+        "confidence"
+      ],
+      "approval_status": "not_approved_by_this_review",
+      "status": "supported",
+      "evidence_ids": [
+        "faa_restore"
+      ],
+      "date_kinds": [
+        {
+          "kind": "agency_release_dateline",
+          "value": "2023-09-14",
+          "evidence_ids": [
+            "faa_restore"
+          ]
+        }
+      ],
+      "qualification": "Country oversight restoration; not proof of every airline safety standard."
+    },
+    {
+      "index": 5,
+      "snapshot": {
+        "event_date": "2024-05-13",
+        "event_type": "corporate",
+        "event_category": "market",
+        "title": "Aeroméxico filed Form F-1",
+        "description": "The company filed its initial registration statement for a proposed offering.",
+        "impact_direction": "positive",
+        "source_url": "https://ir.aeromexico.com/static-files/4e6ea709-46eb-4967-a867-b875adb3459e",
+        "affected_carriers": "AEROMEXICO",
+        "confidence": "high"
+      },
+      "agent_eligible": false,
+      "curated_fields": [
+        "event_type",
+        "event_category",
+        "title",
+        "description",
+        "impact_direction",
+        "affected_carriers",
+        "confidence"
+      ],
+      "approval_status": "not_approved_by_this_review",
+      "status": "supported",
+      "evidence_ids": [
+        "f1_filing",
+        "chapter11_source_2024"
+      ],
+      "date_kinds": [
+        {
+          "kind": "SEC_as_filed_date",
+          "value": "2024-05-13",
+          "evidence_ids": [
+            "f1_filing"
+          ]
+        }
+      ],
+      "qualification": "Form F-1 registration document cover supports filing date; proposed offering is distinct from completed IPO2025."
+    },
+    {
+      "index": 6,
+      "snapshot": {
+        "event_date": "2025-07-19",
+        "event_type": "regulatory",
+        "event_category": "regulatory",
+        "title": "DOT proposed ending Delta-Aeroméxico ATI",
+        "description": "DOT issued tentative Order 2025-7-12 concerning the joint venture.",
+        "impact_direction": "negative",
+        "source_url": "https://www.transportation.gov/sites/dot.gov/files/2025-07/Order%202025-7-12.pdf",
+        "affected_carriers": "AEROMEXICO",
+        "confidence": "high"
+      },
+      "agent_eligible": false,
+      "curated_fields": [
+        "event_type",
+        "event_category",
+        "title",
+        "description",
+        "impact_direction",
+        "affected_carriers",
+        "confidence"
+      ],
+      "approval_status": "not_approved_by_this_review",
+      "status": "supported_with_catalogue_limit",
+      "evidence_ids": [
+        "dot_issue",
+        "dot_proposal"
+      ],
+      "date_kinds": [
+        {
+          "kind": "order_issue_date",
+          "value": "2025-07-19",
+          "evidence_ids": [
+            "dot_issue"
+          ]
+        }
+      ],
+      "qualification": "Official DOT order is tentative proposal, not final ATI termination. Captured for review only outside active source catalogue; no alias/activation."
+    },
+    {
+      "index": 7,
+      "snapshot": {
+        "event_date": "2025-10-28",
+        "event_type": "regulatory",
+        "event_category": "regulatory",
+        "title": "DOT cancelled 13 Mexican-carrier routes",
+        "description": "DOT cancelled current or planned routes involving MEX and NLU, including Aeroméxico services.",
+        "impact_direction": "negative",
+        "source_url": "https://www.transportation.gov/briefing-room/trumps-transportation-secretary-sean-duffy-slashes-13-mexican-carrier-routes-us",
+        "affected_carriers": "AEROMEXICO",
+        "confidence": "high"
+      },
+      "agent_eligible": false,
+      "curated_fields": [
+        "event_type",
+        "event_category",
+        "title",
+        "description",
+        "impact_direction",
+        "affected_carriers",
+        "confidence"
+      ],
+      "approval_status": "not_approved_by_this_review",
+      "status": "partially_supported_primary_gap",
+      "evidence_ids": [
+        "oct_action_retrospective",
+        "node8281_later_6k",
+        "node8281_signed_date"
+      ],
+      "date_kinds": [
+        {
+          "kind": "event_date_retrospectively_reported",
+          "value": "2025-10-28",
+          "evidence_ids": [
+            "oct_action_retrospective"
+          ]
+        },
+        {
+          "kind": "source_signature_date",
+          "value": "2025-12-05",
+          "evidence_ids": [
+            "node8281_signed_date"
+          ]
+        }
+      ],
+      "qualification": "Issuer retrospective report supports some existing/proposed schedule disapprovals. Exact13count, MEX/NLU coverage and complete carrier/routes not proved by this passage. Original DOT URL404; diagnostic response not accepted as evidence. Belly-cargo proposal is separate/tentative."
+    },
+    {
+      "index": 8,
+      "snapshot": {
+        "event_date": "2025-11-05",
+        "event_type": "market",
+        "event_category": "market",
+        "title": "Global offering priced",
+        "description": "Aeroméxico priced ADSs at USD 19 and Mexican shares at MXN 35.34.",
+        "impact_direction": "positive",
+        "source_url": "https://ir.aeromexico.com/node/8281/html",
+        "affected_carriers": "AEROMEXICO",
+        "confidence": "high"
+      },
+      "agent_eligible": false,
+      "curated_fields": [
+        "event_type",
+        "event_category",
+        "title",
+        "description",
+        "impact_direction",
+        "affected_carriers",
+        "confidence"
+      ],
+      "approval_status": "not_approved_by_this_review",
+      "status": "supported_retrospectively",
+      "evidence_ids": [
+        "pricing",
+        "node8281_later_6k",
+        "node8281_signed_date"
+      ],
+      "date_kinds": [
+        {
+          "kind": "pricing_announcement_date_retrospectively_reported",
+          "value": "2025-11-05",
+          "evidence_ids": [
+            "pricing"
+          ]
+        },
+        {
+          "kind": "source_signature_date",
+          "value": "2025-12-05",
+          "evidence_ids": [
+            "node8281_signed_date"
+          ]
+        }
+      ],
+      "qualification": "USD19/ADS and MXN35.34/common share directly stated; ADS represents10common shares. LaterDecember6-K, not Nov5 publication capture."
+    },
+    {
+      "index": 9,
+      "snapshot": {
+        "event_date": "2025-11-06",
+        "event_type": "market",
+        "event_category": "market",
+        "title": "AERO began trading on NYSE and BMV",
+        "description": "ADSs and common shares began trading under ticker AERO.",
+        "impact_direction": "positive",
+        "source_url": "https://ir.aeromexico.com/ir-resources/investor-faqs",
+        "affected_carriers": "AEROMEXICO",
+        "confidence": "high"
+      },
+      "agent_eligible": false,
+      "curated_fields": [
+        "event_type",
+        "event_category",
+        "title",
+        "description",
+        "impact_direction",
+        "affected_carriers",
+        "confidence"
+      ],
+      "approval_status": "not_approved_by_this_review",
+      "status": "supported_retrospectively",
+      "evidence_ids": [
+        "trading",
+        "faq_ipo",
+        "node8281_signed_date"
+      ],
+      "date_kinds": [
+        {
+          "kind": "first_trading_date_retrospectively_reported",
+          "value": "2025-11-06",
+          "evidence_ids": [
+            "trading",
+            "faq_ipo"
+          ]
+        },
+        {
+          "kind": "source_signature_date",
+          "value": "2025-12-05",
+          "evidence_ids": [
+            "node8281_signed_date"
+          ]
+        }
+      ],
+      "qualification": "Source explicitly differentiates NYSE ADS and BMV common shares; bothAERO. FAQ is current undated page; do not assign capture as event/publication date."
+    },
+    {
+      "index": 10,
+      "snapshot": {
+        "event_date": "2025-12-08",
+        "event_type": "operational",
+        "event_category": "operational",
+        "title": "November 2025 traffic results",
+        "description": "Aeroméxico published its November monthly traffic report.",
+        "impact_direction": "neutral",
+        "source_url": "https://ir.aeromexico.com/news-events/traffic-reports",
+        "affected_carriers": "AEROMEXICO",
+        "confidence": "high"
+      },
+      "agent_eligible": false,
+      "curated_fields": [
+        "event_type",
+        "event_category",
+        "title",
+        "description",
+        "impact_direction",
+        "affected_carriers",
+        "confidence"
+      ],
+      "approval_status": "not_approved_by_this_review",
+      "status": "supported",
+      "evidence_ids": [
+        "nov_traffic"
+      ],
+      "date_kinds": [
+        {
+          "kind": "reported_traffic_month",
+          "value": "2025-11",
+          "evidence_ids": [
+            "nov_traffic"
+          ]
+        },
+        {
+          "kind": "issuer_report_dateline",
+          "value": "2025-12-08",
+          "evidence_ids": [
+            "nov_traffic"
+          ]
+        }
+      ],
+      "qualification": "Report existence/dateline supported. Dateline is not exact first-public availability timestamp."
+    },
+    {
+      "index": 11,
+      "snapshot": {
+        "event_date": "2026-01-06",
+        "event_type": "operational",
+        "event_category": "operational",
+        "title": "December 2025 traffic results",
+        "description": "Aeroméxico published its December monthly traffic report.",
+        "impact_direction": "neutral",
+        "source_url": "https://ir.aeromexico.com/news-events/traffic-reports",
+        "affected_carriers": "AEROMEXICO",
+        "confidence": "high"
+      },
+      "agent_eligible": false,
+      "curated_fields": [
+        "event_type",
+        "event_category",
+        "title",
+        "description",
+        "impact_direction",
+        "affected_carriers",
+        "confidence"
+      ],
+      "approval_status": "not_approved_by_this_review",
+      "status": "supported",
+      "evidence_ids": [
+        "dec_traffic"
+      ],
+      "date_kinds": [
+        {
+          "kind": "reported_traffic_month",
+          "value": "2025-12",
+          "evidence_ids": [
+            "dec_traffic"
+          ]
+        },
+        {
+          "kind": "issuer_report_dateline",
+          "value": "2026-01-06",
+          "evidence_ids": [
+            "dec_traffic"
+          ]
+        }
+      ],
+      "qualification": "Report existence/dateline supported; no exact first-public timestamp inferred."
+    },
+    {
+      "index": 12,
+      "snapshot": {
+        "event_date": "2026-02-05",
+        "event_type": "operational",
+        "event_category": "operational",
+        "title": "January 2026 traffic results",
+        "description": "Aeroméxico published its January monthly traffic report.",
+        "impact_direction": "neutral",
+        "source_url": "https://ir.aeromexico.com/news-events/traffic-reports",
+        "affected_carriers": "AEROMEXICO",
+        "confidence": "high"
+      },
+      "agent_eligible": false,
+      "curated_fields": [
+        "event_type",
+        "event_category",
+        "title",
+        "description",
+        "impact_direction",
+        "affected_carriers",
+        "confidence"
+      ],
+      "approval_status": "not_approved_by_this_review",
+      "status": "supported",
+      "evidence_ids": [
+        "jan_traffic",
+        "jan_archive",
+        "q1_sec_filingDate",
+        "q1_sec_accessionNumber"
+      ],
+      "date_kinds": [
+        {
+          "kind": "reported_traffic_month",
+          "value": "2026-01",
+          "evidence_ids": [
+            "jan_traffic"
+          ]
+        },
+        {
+          "kind": "issuer_report_dateline",
+          "value": "2026-02-05",
+          "evidence_ids": [
+            "jan_traffic"
+          ]
+        },
+        {
+          "kind": "issuer_archive_display_date",
+          "value": "2026-02-05",
+          "evidence_ids": [
+            "jan_archive"
+          ]
+        },
+        {
+          "kind": "SEC_furnished_filing_date",
+          "value": "2026-04-23",
+          "evidence_ids": [
+            "q1_sec_filingDate",
+            "q1_sec_accessionNumber"
+          ]
+        }
+      ],
+      "qualification": "Archive display date and report dateline are distinct; neither is SEC furnishing date. Archive time zone stays literal EST/EDT in excerpt; not silently normalized toMexicoCity."
+    },
+    {
+      "index": 13,
+      "snapshot": {
+        "event_date": "2026-03-06",
+        "event_type": "operational",
+        "event_category": "operational",
+        "title": "February 2026 traffic results",
+        "description": "Aeroméxico published its February monthly traffic report.",
+        "impact_direction": "neutral",
+        "source_url": "https://ir.aeromexico.com/news-events/traffic-reports",
+        "affected_carriers": "AEROMEXICO",
+        "confidence": "high"
+      },
+      "agent_eligible": false,
+      "curated_fields": [
+        "event_type",
+        "event_category",
+        "title",
+        "description",
+        "impact_direction",
+        "affected_carriers",
+        "confidence"
+      ],
+      "approval_status": "not_approved_by_this_review",
+      "status": "supported_distinct_date_kinds",
+      "evidence_ids": [
+        "feb_traffic",
+        "feb_archive",
+        "q1_sec_filingDate",
+        "q1_sec_accessionNumber"
+      ],
+      "date_kinds": [
+        {
+          "kind": "reported_traffic_month",
+          "value": "2026-02",
+          "evidence_ids": [
+            "feb_traffic"
+          ]
+        },
+        {
+          "kind": "issuer_report_dateline",
+          "value": "2026-03-05",
+          "evidence_ids": [
+            "feb_traffic"
+          ]
+        },
+        {
+          "kind": "issuer_archive_display_date",
+          "value": "2026-03-06",
+          "evidence_ids": [
+            "feb_archive"
+          ]
+        },
+        {
+          "kind": "SEC_furnished_filing_date",
+          "value": "2026-04-23",
+          "evidence_ids": [
+            "q1_sec_filingDate",
+            "q1_sec_accessionNumber"
+          ]
+        }
+      ],
+      "qualification": "Archive display date and report dateline are distinct; neither is SEC furnishing date. LegacyMar6 matches archive; own exhibit datelineMar5. No automatic correction or claim same date."
+    },
+    {
+      "index": 14,
+      "snapshot": {
+        "event_date": "2026-04-08",
+        "event_type": "operational",
+        "event_category": "operational",
+        "title": "March 2026 traffic results",
+        "description": "Aeroméxico published its March monthly traffic report.",
+        "impact_direction": "neutral",
+        "source_url": "https://ir.aeromexico.com/news-events/traffic-reports",
+        "affected_carriers": "AEROMEXICO",
+        "confidence": "high"
+      },
+      "agent_eligible": false,
+      "curated_fields": [
+        "event_type",
+        "event_category",
+        "title",
+        "description",
+        "impact_direction",
+        "affected_carriers",
+        "confidence"
+      ],
+      "approval_status": "not_approved_by_this_review",
+      "status": "supported",
+      "evidence_ids": [
+        "mar_traffic",
+        "mar_archive",
+        "q1_sec_filingDate",
+        "q1_sec_accessionNumber"
+      ],
+      "date_kinds": [
+        {
+          "kind": "reported_traffic_month",
+          "value": "2026-03",
+          "evidence_ids": [
+            "mar_traffic"
+          ]
+        },
+        {
+          "kind": "issuer_report_dateline",
+          "value": "2026-04-08",
+          "evidence_ids": [
+            "mar_traffic"
+          ]
+        },
+        {
+          "kind": "issuer_archive_display_date",
+          "value": "2026-04-08",
+          "evidence_ids": [
+            "mar_archive"
+          ]
+        },
+        {
+          "kind": "SEC_furnished_filing_date",
+          "value": "2026-04-23",
+          "evidence_ids": [
+            "q1_sec_filingDate",
+            "q1_sec_accessionNumber"
+          ]
+        }
+      ],
+      "qualification": "Archive display date and report dateline are distinct; neither is SEC furnishing date. Archive time zone stays literal EST/EDT in excerpt; not silently normalized toMexicoCity."
+    },
+    {
+      "index": 15,
+      "snapshot": {
+        "event_date": "2026-04-23",
+        "event_type": "corporate",
+        "event_category": "earnings",
+        "title": "First-quarter 2026 results",
+        "description": "Aeroméxico furnished its first-quarter results.",
+        "impact_direction": "neutral",
+        "source_url": "https://ir.aeromexico.com/financial-information/quarterly-results",
+        "affected_carriers": "AEROMEXICO",
+        "confidence": "high"
+      },
+      "agent_eligible": false,
+      "curated_fields": [
+        "event_type",
+        "event_category",
+        "title",
+        "description",
+        "impact_direction",
+        "affected_carriers",
+        "confidence"
+      ],
+      "approval_status": "not_approved_by_this_review",
+      "status": "supported_distinct_date_kinds",
+      "evidence_ids": [
+        "q1_ir_dateline",
+        "q1_results",
+        "q1_sec_filingDate",
+        "q1_sec_acceptanceDateTime",
+        "q1_sec_accessionNumber"
+      ],
+      "date_kinds": [
+        {
+          "kind": "issuer_IR_report_dateline",
+          "value": "2026-04-21",
+          "evidence_ids": [
+            "q1_ir_dateline"
+          ]
+        },
+        {
+          "kind": "SEC_furnished_filing_date",
+          "value": "2026-04-23",
+          "evidence_ids": [
+            "q1_sec_filingDate",
+            "q1_sec_accessionNumber"
+          ]
+        },
+        {
+          "kind": "SEC_acceptance_timestamp",
+          "value": "2026-04-23T01:59:02.000Z",
+          "evidence_ids": [
+            "q1_sec_acceptanceDateTime"
+          ]
+        }
+      ],
+      "qualification": "Furnished event uses SEC filing date, not first issuer publication. IR Spanish release datedApr21; SEC catalog filingApr23; no contradictory same-kind claim."
+    },
+    {
+      "index": 16,
+      "snapshot": {
+        "event_date": "2026-05-07",
+        "event_type": "operational",
+        "event_category": "operational",
+        "title": "April 2026 traffic results",
+        "description": "Aeroméxico published its April monthly traffic report.",
+        "impact_direction": "neutral",
+        "source_url": "https://ir.aeromexico.com/news-events/traffic-reports",
+        "affected_carriers": "AEROMEXICO",
+        "confidence": "high"
+      },
+      "agent_eligible": false,
+      "curated_fields": [
+        "event_type",
+        "event_category",
+        "title",
+        "description",
+        "impact_direction",
+        "affected_carriers",
+        "confidence"
+      ],
+      "approval_status": "not_approved_by_this_review",
+      "status": "supported",
+      "evidence_ids": [
+        "apr_traffic",
+        "apr_archive",
+        "q2_sec_filingDate",
+        "q2_sec_accessionNumber"
+      ],
+      "date_kinds": [
+        {
+          "kind": "reported_traffic_month",
+          "value": "2026-04",
+          "evidence_ids": [
+            "apr_traffic"
+          ]
+        },
+        {
+          "kind": "issuer_report_dateline",
+          "value": "2026-05-07",
+          "evidence_ids": [
+            "apr_traffic"
+          ]
+        },
+        {
+          "kind": "issuer_archive_display_date",
+          "value": "2026-05-07",
+          "evidence_ids": [
+            "apr_archive"
+          ]
+        },
+        {
+          "kind": "SEC_furnished_filing_date",
+          "value": "2026-07-13",
+          "evidence_ids": [
+            "q2_sec_filingDate",
+            "q2_sec_accessionNumber"
+          ]
+        }
+      ],
+      "qualification": "Archive display date and report dateline are distinct; neither is SEC furnishing date. Archive time zone stays literal EST/EDT in excerpt; not silently normalized toMexicoCity."
+    },
+    {
+      "index": 17,
+      "snapshot": {
+        "event_date": "2026-06-04",
+        "event_type": "operational",
+        "event_category": "operational",
+        "title": "May 2026 traffic results",
+        "description": "Aeroméxico published its May monthly traffic report.",
+        "impact_direction": "neutral",
+        "source_url": "https://ir.aeromexico.com/news-events/traffic-reports",
+        "affected_carriers": "AEROMEXICO",
+        "confidence": "high"
+      },
+      "agent_eligible": false,
+      "curated_fields": [
+        "event_type",
+        "event_category",
+        "title",
+        "description",
+        "impact_direction",
+        "affected_carriers",
+        "confidence"
+      ],
+      "approval_status": "not_approved_by_this_review",
+      "status": "supported",
+      "evidence_ids": [
+        "may_traffic",
+        "may_archive",
+        "q2_sec_filingDate",
+        "q2_sec_accessionNumber"
+      ],
+      "date_kinds": [
+        {
+          "kind": "reported_traffic_month",
+          "value": "2026-05",
+          "evidence_ids": [
+            "may_traffic"
+          ]
+        },
+        {
+          "kind": "issuer_report_dateline",
+          "value": "2026-06-04",
+          "evidence_ids": [
+            "may_traffic"
+          ]
+        },
+        {
+          "kind": "issuer_archive_display_date",
+          "value": "2026-06-04",
+          "evidence_ids": [
+            "may_archive"
+          ]
+        },
+        {
+          "kind": "SEC_furnished_filing_date",
+          "value": "2026-07-13",
+          "evidence_ids": [
+            "q2_sec_filingDate",
+            "q2_sec_accessionNumber"
+          ]
+        }
+      ],
+      "qualification": "Archive display date and report dateline are distinct; neither is SEC furnishing date. Archive time zone stays literal EST/EDT in excerpt; not silently normalized toMexicoCity."
+    },
+    {
+      "index": 18,
+      "snapshot": {
+        "event_date": "2026-07-02",
+        "event_type": "operational",
+        "event_category": "operational",
+        "title": "June 2026 traffic results",
+        "description": "Aeroméxico published its June monthly traffic report.",
+        "impact_direction": "neutral",
+        "source_url": "https://ir.aeromexico.com/news-events/traffic-reports",
+        "affected_carriers": "AEROMEXICO",
+        "confidence": "high"
+      },
+      "agent_eligible": false,
+      "curated_fields": [
+        "event_type",
+        "event_category",
+        "title",
+        "description",
+        "impact_direction",
+        "affected_carriers",
+        "confidence"
+      ],
+      "approval_status": "not_approved_by_this_review",
+      "status": "supported",
+      "evidence_ids": [
+        "jun_traffic",
+        "jun_archive",
+        "q2_sec_filingDate",
+        "q2_sec_accessionNumber"
+      ],
+      "date_kinds": [
+        {
+          "kind": "reported_traffic_month",
+          "value": "2026-06",
+          "evidence_ids": [
+            "jun_traffic"
+          ]
+        },
+        {
+          "kind": "issuer_report_dateline",
+          "value": "2026-07-02",
+          "evidence_ids": [
+            "jun_traffic"
+          ]
+        },
+        {
+          "kind": "issuer_archive_display_date",
+          "value": "2026-07-02",
+          "evidence_ids": [
+            "jun_archive"
+          ]
+        },
+        {
+          "kind": "SEC_furnished_filing_date",
+          "value": "2026-07-13",
+          "evidence_ids": [
+            "q2_sec_filingDate",
+            "q2_sec_accessionNumber"
+          ]
+        }
+      ],
+      "qualification": "Archive display date and report dateline are distinct; neither is SEC furnishing date. Archive time zone stays literal EST/EDT in excerpt; not silently normalized toMexicoCity."
+    },
+    {
+      "index": 19,
+      "snapshot": {
+        "event_date": "2026-07-13",
+        "event_type": "corporate",
+        "event_category": "earnings",
+        "title": "Second-quarter 2026 results",
+        "description": "Aeroméxico furnished its second-quarter results.",
+        "impact_direction": "neutral",
+        "source_url": "https://ir.aeromexico.com/financial-information/quarterly-results",
+        "affected_carriers": "AEROMEXICO",
+        "confidence": "high"
+      },
+      "agent_eligible": false,
+      "curated_fields": [
+        "event_type",
+        "event_category",
+        "title",
+        "description",
+        "impact_direction",
+        "affected_carriers",
+        "confidence"
+      ],
+      "approval_status": "not_approved_by_this_review",
+      "status": "supported_distinct_date_kinds",
+      "evidence_ids": [
+        "q2_ir_dateline",
+        "q2_results",
+        "q2_sec_filingDate",
+        "q2_sec_acceptanceDateTime",
+        "q2_sec_accessionNumber"
+      ],
+      "date_kinds": [
+        {
+          "kind": "issuer_IR_report_dateline",
+          "value": "2026-07-13",
+          "evidence_ids": [
+            "q2_ir_dateline"
+          ]
+        },
+        {
+          "kind": "SEC_furnished_filing_date",
+          "value": "2026-07-13",
+          "evidence_ids": [
+            "q2_sec_filingDate",
+            "q2_sec_accessionNumber"
+          ]
+        },
+        {
+          "kind": "SEC_acceptance_timestamp",
+          "value": "2026-07-13T20:47:15.000Z",
+          "evidence_ids": [
+            "q2_sec_acceptanceDateTime"
+          ]
+        }
+      ],
+      "qualification": "Furnished event uses SEC filing date, not first issuer publication. Quarter report preliminary/unaudited. Release dateline and SEC filing date coincide; times/first IR availability still distinct."
+    },
+    {
+      "index": 20,
+      "snapshot": {
+        "event_date": "2026-08-03",
+        "event_type": "operational",
+        "event_category": "operational",
+        "title": "July 2026 traffic results",
+        "description": "Aeroméxico published its July monthly traffic report.",
+        "impact_direction": "neutral",
+        "source_url": "https://ir.aeromexico.com/news-events/traffic-reports",
+        "affected_carriers": "AEROMEXICO",
+        "confidence": "high"
+      },
+      "agent_eligible": false,
+      "curated_fields": [
+        "event_type",
+        "event_category",
+        "title",
+        "description",
+        "impact_direction",
+        "affected_carriers",
+        "confidence"
+      ],
+      "approval_status": "not_approved_by_this_review",
+      "status": "supported",
+      "evidence_ids": [
+        "july_traffic",
+        "july_archive"
+      ],
+      "date_kinds": [
+        {
+          "kind": "reported_traffic_month",
+          "value": "2026-07",
+          "evidence_ids": [
+            "july_traffic"
+          ]
+        },
+        {
+          "kind": "issuer_report_dateline",
+          "value": "2026-08-03",
+          "evidence_ids": [
+            "july_traffic"
+          ]
+        },
+        {
+          "kind": "issuer_archive_display_date",
+          "value": "2026-08-03",
+          "evidence_ids": [
+            "july_archive"
+          ]
+        }
+      ],
+      "qualification": "Dedicated July original retained/certified in isolated corporate workspace. Candidate proof is corroboration, body excerpt is primary evidence."
+    }
+  ],
+  "agent_eligible": false,
+  "approval_granted": false,
+  "activation_performed": false,
+  "network_requests_by_this_review": 0,
+  "date_policy": "Capture/download timestamps remain source metadata only; source dateline, archive display, SEC filing/acceptance and historical event dates are separately typed. No event first_available_at inferred.",
+  "failed_attempts": [
+    {
+      "root_id": "dot_review",
+      "legacy_title": "DOT cancelled 13 Mexican-carrier routes",
+      "legacy_event_date": "2025-10-28",
+      "issuer": "U.S. Department of Transportation",
+      "source_identity": "dot_primary_review_candidate",
+      "catalogue_registration": "not_active_no_alias_relabelling",
+      "source_url": "https://www.transportation.gov/briefing-room/trumps-transportation-secretary-sean-duffy-slashes-13-mexican-carrier-routes-us",
+      "network_requests": 1,
+      "retries": 0,
+      "activation": "none",
+      "agent_eligible": false,
+      "http_status": 404,
+      "source_hash": "6a6019b9e4587a8b96467aa692af2fd3d69b2ef563cf473547f96f61b6586bc1",
+      "bytes": 51024,
+      "captured_at": "2026-10-19T17:28:26.160468+00:00",
+      "source_file": "6a6019b9e4587a8b96467aa692af2fd3d69b2ef563cf473547f96f61b6586bc1.html",
+      "status": "access_failed_diagnostic_only",
+      "body_hash_verified": true,
+      "accepted_as_primary_evidence": false
+    }
+  ],
+  "local_inputs": {
+    "src/transform/stage4.py": "8288016aada08fea8eff77dd8775abed8aabc03b3dd5a00b7d7101be22ca1e8c",
+    "tmp/primary-events-result.json": "7a7851d759073cbf59920ee0ed9aee241522df84e679cc1cc526a8a562789744",
+    "tmp/primary-extra-result.json": "1889f2d9c95ff9ba2b4d19e951a464974ce7feefc15d53abb1bc2a961f97f0a7",
+    "tmp/source-updates/dot-primary-review-20261019/capture-results.json": "c36675976d396f80e60e0910142d2413ee3c4ce465b645fb5a91d4392700f922"
+  },
+  "scope_limits": [
+    "Canonical21 EVENTS only; dynamically generatedFAA verification event excluded.",
+    "Labels, category, impact_direction, affected_carriers,confidence=high are legacycuration, not independently approved or calibrated.",
+    "No legacyproductionmutation, Goldwrite, scheduleactivation or sourcecatalogueactivation."
+  ],
+  "verification": {
+    "source_body_sha_size_rechecked": 24,
+    "exact_excerpt_and_json_pointer_replay_passed": 54,
+    "event_count": 21,
+    "all_event_and_date_evidence_references_resolved": true,
+    "local_inputs_hashes_unchanged": true,
+    "tracked_data_or_code_written": false
+  },
+  "external_proof_inputs": {
+    "corporate-verification-proof.json": "98f3657ed378baf90a34d5ca635495c0503a649f1d3d7933e19c25e1b0190783"
+  },
+  "independent_original_review_sha256": "f8a45ae204726df11ff31465d673d5095c046f662d5ec30497e5b0be33d0b727"
+}

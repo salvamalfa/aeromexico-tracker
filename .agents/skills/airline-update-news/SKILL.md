@@ -16,8 +16,9 @@ separa ediciones de días distintos. No resuelve enlaces opacos de Google News.
 Los feeds no garantizan recuperar el mes entero: mostrar cobertura real.
 Distinguir fecha del evento, publicación y captura; noticias no sustituyen
 fuentes financieras oficiales. `news_http_error` nunca cuenta como noticia ni
-ausencia de noticias. Reutilizar el archivo mensual de PR136 tras integrarlo;
-no cambiar su rama ni activar candidatos. El contrato Silver conserva un
+ausencia de noticias. PR142 ya está integrado en `194ff92c`; conservar sus
+controles en esta rama reconciliada. No cambiar la rama de su responsable ni
+activar candidatos. El contrato Silver conserva un
 representante por noticia y `provenance_json` conserva los metadatos de cada
 fuente. `check` proyecta cada contribución, exige la misma URL canónica y fecha
 local, y verifica su propio archivo/hash Bronze. Los valores y revisiones de
@@ -69,7 +70,7 @@ que GDELT funcionó. Silver mantiene la edición fechada más reciente por URL y
 consulta para respetar su grano. Las anteriores quedan en Bronze y
 `data/quality/news_metadata_selection.json`, con fecha, archivo y hash. No
 fusionar fechas distintas bajo una procedencia prestada. El archivo mensual de
-PR136 necesita leer ese historial; esta selección no acredita un mes completo.
+PR142 conserva ese historial; esta selección no acredita un mes completo.
 
 GDELT aporta primera observación, no fecha de publicación verificada. La integración
 con Noticias conserva esos metadatos con publicación nula en
@@ -85,3 +86,60 @@ Los RSS con XML o fecha malformados se conservan como artefactos rechazados,
 con archivo y motivo. Otras capturas válidas pueden construirse como cobertura
 parcial; si no queda ninguna, se registra un intento bloqueado y se conservan
 Silver y su recibo aceptados. Un archivo rechazado no acredita ausencia de noticias.
+
+### Auditoría del corte observado, sin escrituras
+
+```bash
+python -m src.source_updates.news_cut rss --root <bronze-publico> --month 2026-09 --as-of 2026-10-19T12:00:00-06:00
+python -m src.source_updates.news_cut candidate --file <corte-no-aprobado.json>
+```
+
+El primer comando verifica cuerpo, manifiesto y sidecar de cada RSS y deduplica
+por URL canónica y día de publicación en México. Conserva todas las
+contribuciones, consultas exactas y días no observados. No resuelve enlaces
+opacos ni visita artículos; fecha RSS declarada no es fecha de evento ni prueba
+de primera disponibilidad. El corte probado contiene 12 URLs de septiembre en
+seis días, entre siete capturas retenidas; no promete cobertura de todo el mes
+ni de todas las empresas. Una fecha ingenua o posterior a la captura se rechaza.
+
+El segundo comando comprueba identidad, hashes propios y orden de fechas del
+corte candidato upstream. No vuelve a verificar el cuerpo del emisor si no
+está disponible y no concede aprobación. Los 11 registros de PR142 siguen
+`candidate_unapproved`; su alcance es selección manual parcial junio–octubre.
+
+GDELT `seendate` es primera observación del agregador, no publicación. Esta
+rama conserva la corrección de PR142 y la cuarentena de publicación
+desconocida. El intento normal de septiembre del 19 de octubre devolvió 503.
+La nueva continuación autorizada del 21 de octubre volvió a comprobar septiembre
+y la consulta canónica actual: ambos HTTP 503. Conservar los recibos y el cuerpo
+fallido separado de Bronze válido; ninguna prueba con fixtures acredita una
+extracción real. No continuar repitiendo esas consultas durante este lote.
+
+El adaptador `python -m src.source_updates.gdelt recipe --period YYYYMmm
+--as-of <corte>` delimita el mes de primera observación en México y máximo 250
+resultados. Después de `collect`, `gdelt certify --workspace <candidato>
+--period <mes> --as-of <corte-original> --collection <id>` permite `--dry-run`,
+`--execute` y `--check`. Es un candidato Silver/Gold JSON propio, con contrato,
+original/manifiesto/sidecar, punteros exactos, deduplicación URL/observación y
+recibo inmutable. Se rechazan errores HTTP-200, recibos alterados, fechas fuera
+de la consulta y cambios de corte. Publicación y evento siguen nulos, no se
+descargan artículos ni se alimenta el archivo mensual aprobado. Vacío o tope
+de resultados no prueba ausencia ni mes completo. El servicio sigue pendiente
+de respuesta válida del periodo; no se amplía a otro proveedor o servicio pagado.
+
+Investigación posterior del mismo 21/oct: diccionario y documentación oficiales
+conservados en el paquete de revisión. GDELT respondió 200 con 164 artículos a
+la consulta mensual, pero 14 observaciones caen en octubre de México; la
+normalización rechaza el mes completo sin filtrar filas ni escribir Silver/Gold.
+El recibo diagnóstico `current` tampoco satisface la identidad mensual de
+certificación; no editarlo. El diagnóstico reducido siguiente recibió 429 y
+terminó la investigación de red. El cuerpo oficial exige una petición cada
+cinco segundos: `collect` usa el limitador GDELT de seis segundos por proceso
+y bloquea nuevas peticiones de esa fuente tras 429 en la misma captura.
+No ejecutar varios procesos en paralelo ni reintentar este lote. HTTP 200,
+fixtures o disponibilidad del blog no certifican el periodo; conservar los
+503 históricos y consultar la guía/matriz actuales antes del próximo lote.
+
+Los auditores no escriben Silver/Gold ni activan el índice. La
+[muestra](../../../docs/referencias/source-updates-20261019/curation-news-verification.json)
+declara sus capas y límites.

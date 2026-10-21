@@ -18,7 +18,7 @@ python -m src.source_updates plan --round monthly --as-of 2026-10-18T12:00:00-06
 
 Si la familia es trimestral, usar `--round quarterly --quarter 2026Q3`.
 La fecha del ejemplo solo reproduce el corte; cambiarla deliberadamente.
-Pasos existentes disponibles: parse.airport_reference escribe dim_airport en Gold candidato; requiere data/reference. FAA y diccionario necesitan curación/adapter explícitos.
+Pasos existentes disponibles: parse.airport_reference escribe dim_airport en Gold candidato; requiere data/reference. FAA y diccionario tienen comandos dedicados de snapshot retenido, sin integración automática.
 
 Consultar `src/source_updates/catalog.py` para subproductos y brechas.
 No confundir esos pasos disponibles con un adaptador aprobado para cualquier
@@ -35,8 +35,8 @@ python -m src.source_updates recipe --product airports_reference
 Consultar cada producto de esta familia:
 
 - `airports_reference` — condicionado a insumos/formato. Entrada canónica: `constant:src.ingest.airports.reference:OURAIRPORTS_URL`. Formato: GET → CSV.
-- `iasa` — solo descubrimiento. Entrada canónica: `catalogue:faa_iasa`. Formato: PDF FAA.
-- `dictionary` — selección/importación manual. Entrada canónica: `catalogue:loughran_mcdonald`. Formato: CSV de diccionario versionado.
+- `iasa` — adaptador offline de snapshot FAA revisado. Entrada canónica: `catalogue:faa_iasa`. Formato: PDF FAA.
+- `dictionary` — adaptador offline de CSV retenido versionado por SHA. Entrada canónica: `catalogue:loughran_mcdonald`. Formato: CSV de diccionario versionado.
 
 ### Procedimiento verificable
 
@@ -55,3 +55,21 @@ Para OurAirports, `check` admite `kind=reference`, tabla Gold `dim_airport`,
 `src/source_updates/reference.py`. No asignar un mes de observación ni rezago
 de publicación a un snapshot de referencia. IASA capturado no certifica por sí
 solo una categoría de país.
+
+
+### Snapshots retenidos
+
+Aplicar el [flujo común](../source-updates-common.md#originales-retenidos-y-lote-offline).
+IASA usa rol `pdf`: 84 etiquetas de país o autoridad, documento 2025-04-18.
+La captura posterior no actualiza la fecha del documento. Conservar la autoridad
+del Caribe Oriental como una fila, sin distribuir su categoría a sus miembros.
+Una edición/cobertura o categoría de México nueva requiere revisión; no se
+infiere seguridad de una aerolínea, causalidad ni vigencia actual.
+
+Diccionario usa `csv`: 86.553 palabras de la copia retenida, con marcadores
+anuales de categoría con signo y campos originales. El parser preserva palabras
+literales como `NA` (prueba sintética; esa palabra no aparece en esta copia). La palabra es
+el grano, no `Seq_num`: 22 ceros y tres huecos se registran sin rellenarlos.
+El valor de referencia es frecuencia del corpus original, no tono de una
+empresa. La versión se identifica por SHA; no se deduce del nombre del archivo.
+No se recalculan tono, modelos ni comparaciones históricas automáticamente.

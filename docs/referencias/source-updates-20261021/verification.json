@@ -1,0 +1,489 @@
+{
+  "version": 1,
+  "revalidated_on_utc": "2026-10-21",
+  "scope": "safe_aggregate_receipts;originals_and_candidate_files_in_private_PR38;not_latest_certification_of_all_42",
+  "viva": {
+    "original_sha256": "b0acad4f5131220a58c7ee41f25af581d75ff1a7ec8756d3f65869f8f1d636c2",
+    "bytes": 86488,
+    "http_status": 200,
+    "actual_pdf_requests": 1,
+    "source_url": "https://www.bmv.com.mx/docs-pub/eventemi/eventemi_1594478_1.pdf",
+    "native_period": "2026M09",
+    "rows": 24,
+    "monthly_rows": 12,
+    "comparative_rows": 12,
+    "native_units": [
+      "thousand booked passengers",
+      "million seat-miles",
+      "million passenger-miles",
+      "percent itinerary only"
+    ],
+    "lineage_records_exact": 24,
+    "offline_replay_identical": true,
+    "baseline_kind": "same_original_regression_not_two_publication_vintages",
+    "baseline_unchanged_rows": 24,
+    "document_date": "2026-10-09",
+    "reported_document_lag_days": 9,
+    "published_date": null,
+    "release_lag_days": null,
+    "current_2026M09_source_certified_as_candidate": true,
+    "latest_source_edition_not_inferred": true,
+    "approved_policy_change": "only_bmv.com.mx_added_to_viva_ir",
+    "historical_regression": "2021M11;12rows;ASK_RPK_km_distinct",
+    "output_sha256": {
+      "silver/source_products/viva_traffic": "c1787de504eb70b4ffbe728e7aea5d77e419dc157a7f0f8b86ba61563797477d",
+      "gold/fact_viva_monthly_source_metrics": "c1787de504eb70b4ffbe728e7aea5d77e419dc157a7f0f8b86ba61563797477d",
+      "gold/dim_source_artifact": "22e5e5f0634ea9bfc94026461db0304e00ff3949f429e7fdc2cda879b61a341d",
+      "gold/bridge_record_lineage": "61f78e40a0356b5a6434792ab8e29270c4dd4bb23dbb9ffe6eb6311c58f987a8"
+    },
+    "code_files": {
+      "src/source_updates/retained.py": "42e9e4e8c3e3e993705c01f6c43ee2480c8cd4739aa830fddc84bbf2ba6360f1",
+      "src/source_updates/viva_traffic.py": "a45dab9eafe6f4e3fd0161c017a57c48c285a37cc4d7e4c6d2b52ab40343e868"
+    }
+  },
+  "aerocivil": {
+    "original_sha256": "01a12e9ee49d00a6923cc6c8ea2769444d0889add25aad136108b2cc04248dc0",
+    "raw_rows": 10,
+    "literal_S_I_rows": 8,
+    "reported_movements": 347,
+    "lineage": {
+      "status": "passed",
+      "record_tables": {
+        "fact_international_route_observations": 8
+      },
+      "records_expected": 8,
+      "records_declared": 8,
+      "coverage_pct": 1.0,
+      "artifact_records": 8,
+      "parent_records": 0,
+      "declared_without_exact_link_records": 0,
+      "artifact_count": 4,
+      "unknown_parent_records": 0,
+      "unknown_artifact_records": 0
+    },
+    "latest_available_operator_month": "2026M07",
+    "complete_month_verified": false,
+    "service_code_mapping_verified": false,
+    "revisions": {
+      "added": 0,
+      "removed": 0,
+      "changed": 0,
+      "unchanged": 8
+    },
+    "offline_replay_files_unchanged": 23,
+    "publication_date": null,
+    "release_lag_days": null
+  },
+  "gdelt": {
+    "actual_attempts": 2,
+    "queries": [
+      "explicit_2026M09_Mexico_observation_month",
+      "canonical_current_query"
+    ],
+    "http_status": [
+      503,
+      503
+    ],
+    "valid_extraction": false,
+    "second_failed_response": {
+      "file": "receipts/failures/d11194c9138f4eb1acffcd8ce60505d3/gdelt.bin",
+      "sha256": "2f85832e31ca57711e6107af6b142363351ae516adb71c69afc643fac26be7f6",
+      "bytes": 91,
+      "http_status": 503,
+      "content_type": "text/plain",
+      "eligible_as_source_data": false
+    },
+    "failure_receipt_sha256": "ff53485fcba08988efb7a9aca20195ada6ea2e9e6bc65d59ddbf2e44229deab2",
+    "candidate_build_from_failed_receipt": "blocked_before_outputs",
+    "tests_with_articles_are_contract_tests_only": true,
+    "primary_api_documentation": "https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/"
+  },
+  "curated_profiles": {
+    "native_metric_rows": 11,
+    "source_editions": [
+      "Viva_2026Q2",
+      "Ryanair_FY2026"
+    ],
+    "issuer_operator_join_performed": false,
+    "current_operator_reference_rows": 4,
+    "registry_audit_http_status": [
+      200,
+      200,
+      200,
+      200,
+      200,
+      403
+    ],
+    "new_financial_edition_availability_verified": false
+  },
+  "independent_review": {
+    "calendar_pre_fix_failing_cases": 14,
+    "gdelt_pre_fix_failing_cases": 11,
+    "replayed_real_retained_products": {
+      "afac_airports": 2730,
+      "am_financials": 20,
+      "ryanair_sec": 6
+    },
+    "source_package_345_original_files_preserved": true,
+    "curated_pre_fix_failing_cases": 5,
+    "viva_pre_fix_failing_cases": 3,
+    "readiness_source_acceptance_pre_fix_failing_cases": 4,
+    "readiness_top_level_receipt_claims_also_checked": true
+  },
+  "activation": "none",
+  "publication": "not_authorized",
+  "new_paid_requests": 0,
+  "new_aerodatabox_requests": 0,
+  "coordinator_real_e2e": {
+    "mode": "offline_replay_not_source_collection",
+    "status": "checks_passed",
+    "required_successful_tasks": [
+      {
+        "product": "afac_airports",
+        "period": "2026M07",
+        "rows": 2730,
+        "source_conditions": [
+          "retained_original_does_not_verify_current_source_availability"
+        ]
+      },
+      {
+        "product": "am_financials",
+        "period": "2026Q2",
+        "rows": 20,
+        "source_conditions": [
+          "retained_original_does_not_verify_current_source_availability"
+        ]
+      },
+      {
+        "product": "viva_traffic",
+        "period": "2026M09",
+        "rows": 24,
+        "source_conditions": [
+          "retained_original_does_not_verify_current_source_availability"
+        ]
+      },
+      {
+        "product": "aerocivil",
+        "period": "2026M07",
+        "rows": 8,
+        "source_conditions": [
+          "official_service_code_legend_pending"
+        ]
+      }
+    ],
+    "required_failed_source": {
+      "id": "gdelt",
+      "product": "gdelt",
+      "period": "2026M09",
+      "required": true,
+      "status": "blocked",
+      "error_type": "ValueError",
+      "reason": "Selected acquisition is incomplete, HTTP statuses=[503]; no valid source candidate"
+    },
+    "ready_for_calendar_incorporation": false,
+    "network_requests": 0,
+    "ready_for_review_scope": "only_explicit_verified_candidate_tasks",
+    "new_source_capture": false,
+    "original_candidate_files_unchanged": true
+  },
+  "official_followup": {
+    "as_of_utc": "2026-10-21T01:31:47.336130+00:00",
+    "scope": "bounded_official_followup;no_activation;no_source_host_policy_changes",
+    "requests": {
+      "gdelt-docs": {
+        "source_url": "https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/",
+        "http_status": 200,
+        "status": "collected_catalog",
+        "sha256": "d8a9c54e391d29722735e79524797b8a1fffdc82e219fc68ee8c140ab0cc890e",
+        "bytes": 80455,
+        "source_file": "official_research/gdelt_api_documentation_current_20261021T012806Z.html",
+        "collection_run_id": "8e32ea6a25c745b9982f81468d803c35",
+        "started_at": "2026-10-21T01:27:59.448443+00:00",
+        "finished_at": "2026-10-21T01:28:06.052078+00:00"
+      },
+      "aerocivil-columns": {
+        "source_url": "https://www.datos.gov.co/api/views/jh8x-n6h6/columns.json",
+        "http_status": 200,
+        "status": "collected_catalog",
+        "sha256": "49f54fefa6b4b6263596f0a8f701379acea2a99c19933c71f7d965bf2f47cc4b",
+        "bytes": 13702,
+        "source_file": "official_research/aerocivil_same_dataset_columns_current_20261021T012759Z.json",
+        "collection_run_id": "3df9b43ac0924b7d826af58b6f8d1967",
+        "started_at": "2026-10-21T01:27:58.565265+00:00",
+        "finished_at": "2026-10-21T01:27:59.331130+00:00"
+      },
+      "gdelt-updates": {
+        "source_url": "https://blog.gdeltproject.org/doc-2-0-updates-1-5-year-searching-and-updated-mobile-interface/",
+        "http_status": 200,
+        "status": "collected_catalog",
+        "sha256": "99425ca0c4d42669b29f678550a17a9fa30ab06960d1915f418b6d96ea292aff",
+        "bytes": 38841,
+        "source_file": "official_research/gdelt_api_documentation_update_current_20261021T012813Z.html",
+        "collection_run_id": "6dd0d0304e3c43829785f28d5fefe293",
+        "started_at": "2026-10-21T01:28:06.169349+00:00",
+        "finished_at": "2026-10-21T01:28:13.872986+00:00"
+      },
+      "gdelt-simple-diagnostic": {
+        "source_url": "https://api.gdeltproject.org/api/v2/doc/doc?query=Aeromexico&mode=artlist&format=json&maxrecords=10&sort=datedesc&timespan=1d",
+        "http_status": 429,
+        "status": "access_or_payload_failed",
+        "failed_response": {
+          "file": "receipts/failures/c4d3f72866a0453090e4055c07ea2bd2/gdelt-simple-diagnostic.bin",
+          "sha256": "44c03f8dd984184218c90dc7e64aed9e6e2d8b17426feb5aa7933b3c44df64c6",
+          "bytes": 444,
+          "http_status": 429,
+          "content_type": null,
+          "eligible_as_source_data": false
+        },
+        "collection_run_id": "c4d3f72866a0453090e4055c07ea2bd2",
+        "started_at": "2026-10-21T01:28:28.989762+00:00",
+        "finished_at": "2026-10-21T01:28:36.014215+00:00"
+      },
+      "gdelt-monthly-retry": {
+        "source_url": "https://api.gdeltproject.org/api/v2/doc/doc?query=%28Aeromexico+OR+%22Aerom%C3%A9xico%22+OR+%22Viva+Aerobus%22+OR+Volaris%29&mode=artlist&maxrecords=250&format=json&sort=datedesc&startdatetime=20260901060000&enddatetime=20261001055959",
+        "http_status": 200,
+        "status": "collected_unvalidated",
+        "sha256": "1d6cbe7f71272baff2d8977885aaf9f513df510077dc3c473800e1473aab6744",
+        "bytes": 84878,
+        "source_file": "official_research/gdelt_aeromexico_articles_current_20261021T012828Z.json",
+        "collection_run_id": "7c1c6eb46bdd4e5da6dad46c26194db8",
+        "started_at": "2026-10-21T01:28:13.994111+00:00",
+        "finished_at": "2026-10-21T01:28:28.871307+00:00"
+      },
+      "aerocivil-metadata": {
+        "source_url": "https://www.datos.gov.co/api/views/jh8x-n6h6.json",
+        "http_status": 200,
+        "status": "collected_catalog",
+        "sha256": "ed8657d4bb782e3f6fce0ebae027d9b188413f303bc041e9e312afd65f80f711",
+        "bytes": 20320,
+        "source_file": "official_research/aerocivil_same_dataset_metadata_current_20261021T012758Z.json",
+        "collection_run_id": "213c0d2d8f07465885486fa065d72ef9",
+        "started_at": "2026-10-21T01:27:57.675256+00:00",
+        "finished_at": "2026-10-21T01:27:58.445511+00:00"
+      }
+    },
+    "aerocivil": {
+      "dataset_id": "jh8x-n6h6",
+      "dataset_name": "Operaciones aéreas acumuladas en Colombia",
+      "resource_name": "operaciones-aereas-acumulado-2025",
+      "resource_name_is_not_version_or_year_coverage": true,
+      "table_id": 20263639,
+      "publication_group": 20263639,
+      "dataset_rows_updated_at_utc": "2026-08-20T21:27:45+00:00",
+      "dataset_view_last_modified_utc": "2026-08-20T21:25:26+00:00",
+      "provider_attribution": "Unidad Administrativa Especial de Aeronáutica Civil - AEROCIVIL, Bogotá D.C.",
+      "owner_id": "aba2-n32i",
+      "owner_display_name": "DATOS ABIERTOS AEROCIVIL",
+      "provenance": "official",
+      "columns_endpoint_exactly_matches_same_dataset_metadata": true,
+      "metadata_top_level_differences_from_prior": [
+        "viewCount",
+        "downloadCount"
+      ],
+      "dictionary_url": "https://www.datos.gov.co/api/views/jh8x-n6h6/columns.json",
+      "standalone_dictionary_attachment_linked_in_metadata": false,
+      "field_definitions_pass_existing_review": {
+        "dataset_id": "jh8x-n6h6",
+        "reviewed_fields": [
+          "empresa",
+          "explotador",
+          "tipo_vuelo",
+          "trafico",
+          "totaloperaciones"
+        ],
+        "description_sha256": "79bd5a4ae4e3abbfc363b3ee44b4ea26352af17484a9d195c8f1cbeafeeb1b4d",
+        "field_definitions_sha256": "dadf4e3b4f2e5b0fcba8d524c5dec684421f6f87ae071fd8985c9362d97bde9c",
+        "code_legend_status": "no_explicit_literal_mapping_in_reviewed_column_definitions",
+        "service_code_mapping_verified": false,
+        "entity_attribution": "source_derived_callsign_and_aircraft_registration_not_independently_verified",
+        "dataset_rows_updated_at_epoch": 1787261265,
+        "dataset_publication_date_epoch": 1770318718,
+        "monthly_first_publication_verified": false
+      },
+      "literal_values_not_code_legend": {
+        "tipo_vuelo": [
+          "N",
+          "G",
+          "M",
+          "S",
+          "X"
+        ],
+        "trafico": [
+          "N",
+          "I"
+        ],
+        "tipo_operacion": [
+          "LLEGADA",
+          "SALIDA",
+          "TOQUE Y DESPEGUE"
+        ]
+      },
+      "unverified_mappings": [
+        "tipo_vuelo:G,M,N,S,X",
+        "trafico:I,N",
+        "source-derived EMPRESA/EXPLOTADOR code-to-legal-operator attribution"
+      ],
+      "official_searches": [
+        "site:aerocivil.gov.co \"jh8x-n6h6\"",
+        "site:aerocivil.gov.co \"diccionario\" \"operaciones\"",
+        "site:datos.gov.co \"jh8x-n6h6\" \"diccionario\""
+      ],
+      "search_result_limit": "no citable same-dataset literal-code mapping identified;absence of result is not proof none exists",
+      "challenge_not_retried_or_bypassed": true
+    },
+    "gdelt": {
+      "validated_payload_probe": {
+        "as_of": "2026-10-21T01:29:34.571057+00:00",
+        "requested_period": "2026M09",
+        "collection_receipt": "7c1c6eb46bdd4e5da6dad46c26194db8",
+        "source_url": "https://api.gdeltproject.org/api/v2/doc/doc?query=%28Aeromexico+OR+%22Aerom%C3%A9xico%22+OR+%22Viva+Aerobus%22+OR+Volaris%29&mode=artlist&maxrecords=250&format=json&sort=datedesc&startdatetime=20260901060000&enddatetime=20261001055959",
+        "source_sha256": "1d6cbe7f71272baff2d8977885aaf9f513df510077dc3c473800e1473aab6744",
+        "http_status": 200,
+        "raw_articles": 164,
+        "requested_maxrecords": 250,
+        "cap_reached": false,
+        "first_seen_min_utc": "20260901T073000Z",
+        "first_seen_max_utc": "20261002T050000Z",
+        "utc_month_counts": {
+          "202610": 21,
+          "202609": 143
+        },
+        "errors": {
+          "normalization": "Observation escaped requested Mexico month or is after capture",
+          "certification": "GDELT collection query/product/period/HTTP identity mismatch"
+        },
+        "silver_or_gold_written": false,
+        "activation": "none",
+        "publication": "not_authorized"
+      },
+      "mexico_observation_month_counts": {
+        "2026M10": 14,
+        "2026M09": 150
+      },
+      "source_success_for_requested_month": false,
+      "http_200_is_not_semantic_validation": true,
+      "request_syntax_matches_official_docs": {
+        "endpoint": "/api/v2/doc/doc",
+        "query": "parenthesized OR and quoted phrases",
+        "mode": "artlist",
+        "format": "json",
+        "sort": "datedesc",
+        "maxrecords": 250,
+        "startdatetime": "20260901060000",
+        "enddatetime": "20261001055959"
+      },
+      "documentation_history": "2017 guide initially3months;May2018 update says fixedJan2017start but non-timeline output considers last3months of chosen window;September2026 window is one month. Historical announcements do not establish current SLA or completeness.",
+      "official_numeric_rate_limit_evidence": "actual429body:one request every5seconds",
+      "local_source_update_rate_after_fix": "one per6seconds perprocess;no distributed quota guarantee;single authorized runner required",
+      "outcome": "monthlyHTTP200 has164rawarticles, outside requested month -> normalize rejects;subsequent reduced diagnosticHTTP429 -> no further network",
+      "no_more_requests_after_429": true,
+      "articles_or_images_downloaded": 0,
+      "silver_or_gold_written": false
+    },
+    "decision_options_not_applied": [
+      {
+        "option": "keep_product_required",
+        "effect": "round remains blocked until same-dataset Aero legend/attribution and requested-period GDELT pass"
+      },
+      {
+        "option": "explicit_optional_product_scope",
+        "effect": "user decides scope;failed product remains blocked/excluded with visible missingness;does not certify it or relax validators"
+      },
+      {
+        "option": "request_primary_clarification",
+        "effect": "obtain same-dataset legend/version from provider;contacting provider or adding hosts requires separate instruction"
+      }
+    ],
+    "activation": "none",
+    "publication": "not_authorized"
+  },
+  "am_traffic_formula_correction": {
+    "scope": "offline_recertification_from_retained_real_PDFs_not_new_source_availability",
+    "code_head": "579628baae96c2f58b43c3ae6264be64f4f0b06d",
+    "code_file": "src/source_updates/am_traffic_candidate.py",
+    "code_sha256": "dba2273a563e8aa17c184f9775c89d5ca6d14a8bd33ebc2f0d4cee813af8ca67",
+    "network_requests": 0,
+    "activation": "none",
+    "publication": "not_authorized",
+    "months": [
+      {
+        "period": "2026M07",
+        "workspace": "tmp/source-updates/am-traffic-formula-correction-20261021/2026M07",
+        "effective_as_of": "2026-10-19T15:20:37.197410+00:00",
+        "rows": 24,
+        "status": "checks_passed",
+        "tables_checked": 7,
+        "only_change": "load_factor_total.formula",
+        "old_formula": "Reported itinerary-only passengers / available seats; not derived from itinerary-plus-charter RPM/ASM",
+        "new_formula": "Reported itinerary-only RPM/ASM (equivalent to RPK/ASK); not derived from itinerary-plus-charter RPM/ASM",
+        "historical_receipt_sha256": "19910c0edcd554221237bc70377cf9c0b496e0cf76a732391c2fef1639ff9cd4",
+        "corrected_receipt_sha256": "3e009bff61b0a00ac1b0beddf2d54a82d00bb7d3a66a085097d99dd814c381e3",
+        "output_sha256": {
+          "silver/aeromexico_ir_monthly_metrics": "219f59cd8182e963b053c0840823709850e39dacdd6eab6c7ad9a9300675ced2",
+          "gold/fact_carrier_metrics": "ad3b483e67b72c9ae2b03f1f19a52ce49874390f274bdf61b04b3bf350e389f2",
+          "gold/dim_period": "07a6807210cd15e0511adc109b2633de29206af1eb5f449e3fe1907e645a441a",
+          "gold/dim_carrier": "92bd9585ffb22c98df7db7bf63ed3af9d3e1a911133bf60e6e7adc09b7ca821b",
+          "gold/dim_metric": "f74dfd65dbb3ef353f3189948059628513194fc62c4e353a438c05210fdf430f",
+          "gold/dim_source_artifact": "3a4786a195977fd6709e82accf71083dbc2df2cbb829e3db78ed82f2262e7ccc",
+          "gold/bridge_record_lineage": "792f7280748c7dc7fdcd197ba0599b10d9b7b453a6d36a034890c160e0b74fd8"
+        },
+        "historical_files_preserved": 14,
+        "local_candidate_files": 13,
+        "historical_files_unchanged": true,
+        "corrected_candidate_replay_unchanged": true
+      },
+      {
+        "period": "2026M08",
+        "workspace": "tmp/source-updates/am-traffic-formula-correction-20261021/2026M08",
+        "effective_as_of": "2026-10-19T15:20:45.287109+00:00",
+        "rows": 24,
+        "status": "checks_passed",
+        "tables_checked": 7,
+        "only_change": "load_factor_total.formula",
+        "old_formula": "Reported itinerary-only passengers / available seats; not derived from itinerary-plus-charter RPM/ASM",
+        "new_formula": "Reported itinerary-only RPM/ASM (equivalent to RPK/ASK); not derived from itinerary-plus-charter RPM/ASM",
+        "historical_receipt_sha256": "060b710a35c1b83672a6965cec4ab6b0da6e0b72894e0350b46a71dfbbba212d",
+        "corrected_receipt_sha256": "ad13899cf00f486a0a42a5c101bd9d6cb0e0236f788609ab53f757900a994124",
+        "output_sha256": {
+          "silver/aeromexico_ir_monthly_metrics": "37669e0d7cf9eff17ebbcf4e3290089acffae0548eb5f2ddf119458725ecf470",
+          "gold/fact_carrier_metrics": "1f5e36296bafc81814baa4fdfd1496bfc98fbf351582fd5bde8cc8500db7443e",
+          "gold/dim_period": "3d2a1ecd5a3c795e91175d5b5d469e839b04be328e870887acf30f81c64f186d",
+          "gold/dim_carrier": "92bd9585ffb22c98df7db7bf63ed3af9d3e1a911133bf60e6e7adc09b7ca821b",
+          "gold/dim_metric": "f74dfd65dbb3ef353f3189948059628513194fc62c4e353a438c05210fdf430f",
+          "gold/dim_source_artifact": "935338a60464fdbc14281639ac83a9ce4e0dc054fae395b846ec0457a876376b",
+          "gold/bridge_record_lineage": "a59cd057caa84c29ede064af629133f382dff15a74ab079bc440ecfb07738d12"
+        },
+        "historical_files_preserved": 14,
+        "local_candidate_files": 13,
+        "historical_files_unchanged": true,
+        "corrected_candidate_replay_unchanged": true
+      },
+      {
+        "period": "2026M09",
+        "workspace": "tmp/source-updates/am-traffic-formula-correction-20261021/2026M09",
+        "effective_as_of": "2026-10-19T15:20:53.661850+00:00",
+        "rows": 24,
+        "status": "checks_passed",
+        "tables_checked": 7,
+        "only_change": "load_factor_total.formula",
+        "old_formula": "Reported itinerary-only passengers / available seats; not derived from itinerary-plus-charter RPM/ASM",
+        "new_formula": "Reported itinerary-only RPM/ASM (equivalent to RPK/ASK); not derived from itinerary-plus-charter RPM/ASM",
+        "historical_receipt_sha256": "ab7d7856399de8bd73b83f6b82e0fb1f28fb1c06833a33f6913f91eb00c54905",
+        "corrected_receipt_sha256": "a475b59bc5fdaf8b79dc1ebd6067deaa19192e1e85384c3d65516e7909c62cfd",
+        "output_sha256": {
+          "silver/aeromexico_ir_monthly_metrics": "cfe4cdc07b690219b7dfb58223c426cf396d52bf7124bd28ac10ea460afed4e9",
+          "gold/fact_carrier_metrics": "4c12238afa7d4ad3d6cc73f2936f2671bdfb1e332b523aca2581a6dddf7d18da",
+          "gold/dim_period": "7c779066ccb0c57bbb904c7b2e69f63cc0f76065954205b6ff5f63d40588408a",
+          "gold/dim_carrier": "92bd9585ffb22c98df7db7bf63ed3af9d3e1a911133bf60e6e7adc09b7ca821b",
+          "gold/dim_metric": "f74dfd65dbb3ef353f3189948059628513194fc62c4e353a438c05210fdf430f",
+          "gold/dim_source_artifact": "ff81b00fcbfd9082aeaafe20668c89ed2d1df40356a1ce15501e172d8b54ef8e",
+          "gold/bridge_record_lineage": "0b845afbbf5bf513072cd16311d9815607349c08cc22408d9dc3fc282c2aa5d1"
+        },
+        "historical_files_preserved": 14,
+        "local_candidate_files": 13,
+        "historical_files_unchanged": true,
+        "corrected_candidate_replay_unchanged": true
+      }
+    ]
+  }
+}

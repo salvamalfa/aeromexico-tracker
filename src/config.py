@@ -52,6 +52,8 @@ RATE_LIMITS: Final[dict[str, float]] = {
     "airports": 1.0,
     "reference": 1.0,
     "news": 1.0,
+    # GDELT's actual 429 response requires at least five seconds per request.
+    "gdelt": 1.0 / 6.0,
     "default": 1.0,
 }
 

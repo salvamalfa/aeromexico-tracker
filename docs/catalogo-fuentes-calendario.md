@@ -1,7 +1,7 @@
 # Catálogo de fuentes, métricas y rondas de actualización
 
-Revisión: 19 de octubre de 2026. **Calendario aprobado; skills y coordinador
-preparados para pruebas. Sin nuevas ejecuciones automáticas ni publicación.**
+Revisión: 21 de octubre de 2026 (UTC). **Skills y coordinador implementados;
+integración técnica autorizada. Calendario sin activar y sin publicación de datos.**
 
 ## Resumen
 
@@ -10,6 +10,12 @@ Incluye ocho skills por familia y un coordinador. Primero muestra qué haría.
 Después puede capturar y comprobar un lote candidato en una carpeta separada.
 La aprobación del calendario ya está recibida. La revisión del contenido y su
 publicación conservan sus permisos separados.
+
+La integración de esta infraestructura no aprueba una ronda de datos. Aerocivil
+y GDELT permanecen **requeridos y bloqueados**. Sus fallos impiden aceptar una
+ronda que los requiera; no se sustituyen por cero ni por otro producto. Ningún
+comando instala un calendario o incorpora candidatos a producción al fusionar
+el código. Los originales y candidatos conservan sus recibos y revisión propia.
 
 ## Qué cambia para ti
 
@@ -31,18 +37,28 @@ pasos permitidos. Sus comandos están en el apéndice. Tener una skill no implic
 que todos sus adaptadores estén terminados ni que la fuente esté actualizada.
 
 La receta devuelve la entrada exacta, los identificadores, el formato y los
-pasos de cada fuente. Este es el alcance comprobado por familia:
+pasos de cada fuente. Este cuadro conserva el alcance comprobado al 19 de
+octubre; la continuación del 21 y su matriz aparecen abajo:
 
 | Familia | Alcance actual |
 |---|---|
-| Empresas | BMV: catálogo y ZIP oficiales capturados; parseo offline acotado implementado. SEC preservado reconstruido. Periodos nuevos IR/SEC siguen condicionados. |
-| Tráfico AFAC y BTS | AFAC: boletines y base de julio/agosto capturados; ampliación del parser candidato. BTS: reproducción histórica preservada; no se acredita una captura nueva. |
-| Aeropuertos | Descubrimiento por enlaces reales: AICM agosto y AIFA julio descargados. OMA septiembre enlazado pero devuelve 404. No se acredita septiembre completo. |
-| Macro y mercado | EIA y tres series Banxico verificadas hasta Gold para septiembre. Cinco JSON bursátiles capturados y parser candidato implementado; comprobar el recibo del lote. H.10 respondió vacío. |
-| Rutas | Entradas identificadas; selección manual y adaptadores de novedades pendientes. |
-| Referencias y contexto | OurAirports: 9.051 referencias verificadas con 39 códigos requeridos. FAA solo captura PDF; diccionario y curación pendientes. |
-| Noticias | Captura de metadatos y parser probado con muestras. Falta conectar el corte mensual de PR136 y certificar cobertura. |
-| Derivados y curación | Sin descarga propia. Requieren fuentes padre y controles de linaje. |
+| Empresas | BMV: catálogo y ZIP oficiales capturados; parseo offline acotado implementado. SEC preservado reconstruido; Ryanair FY2026 tiene un lector XBRL retenido separado, sin convertirlo a trimestre. Tráfico mensual y finanzas 2T26 IR de Aeroméxico tienen candidatos dedicados desde PDF; véase alcance abajo. Otros periodos nuevos IR/SEC siguen condicionados. |
+| Tráfico AFAC y BTS | AFAC: aeropuertos y marginales de julio tienen adaptadores offline; países conserva cajas acumuladas exactas. Boletines/base julio–agosto y BTS conservan su evidencia previa. La retención no es una captura nueva. |
+| Aeropuertos | AICM agosto y AIFA julio conservan sus comprobaciones. OMA julio y slots AICM verano 2026 tienen adaptadores de originales retenidos. OMA septiembre enlazado falló; no se acredita septiembre completo. |
+| Macro y mercado | EIA, tres series Banxico y cinco series bursátiles verificadas hasta Gold para septiembre. H.10 tiene una cadena dedicada de certificación mensual aislada; véase su alcance y evidencia abajo. La familia completa no está certificada. |
+| Rutas | ANAC junio, CAA junio y Aena enero–julio tienen adaptadores retenidos con ámbitos separados. Cuatro documentos aportan pasajes fechados. Aerocivil conserva comprobación numérica; falta su leyenda de códigos. No representan una red mundial uniforme. |
+| Referencias y contexto | OurAirports conserva 9.051 referencias verificadas. FAA y diccionario tienen snapshots candidatos por SHA: 84 categorías y 86.553 palabras, sin inferir seguridad de aerolínea ni tono empresarial. |
+| Noticias | PR142 ya está integrado. Corte RSS retenido de septiembre: 12 URLs fechadas en seis días observados. Los 11 candidatos de PR142 pasan controles de metadatos; no se releen sus cuerpos aquí. GDELT devolvió 503 en un intento sin reintentos. Sin cobertura universal ni activación. |
+| Derivados y curación | Sin descarga propia. Mapas documentales ejecutables para cinco perfiles y 21 eventos; conservan discrepancias y decisiones pendientes. No aprueban perfiles, impacto ni confianza de los eventos. |
+
+El [inventario de los 42 productos del 19 de octubre](referencias/source-updates-20261019/product-coverage.json)
+separa las capas comprobadas de aquel corte. Registró **35 alcances acotados comprobados**:
+26 de producto/periodo o snapshot y nueve de datos históricos retenidos.
+No significa 35 fuentes actualizadas ni 35 reportes completos. Además hay un
+corte RSS parcial comprobado, dos revisiones documentales preparadas, tres
+condiciones de fuente o atribución y una exclusión intencional de errores.
+Las revisiones documentales no son certificación Silver/Gold. Los detalles
+están en el apéndice y en el inventario.
 
 La ronda mensual será el primer día hábil bancario mexicano en o después del
 15. Noticias se revisa en esa misma ronda. La muestra de 2026 da **15 de
@@ -75,6 +91,179 @@ queda bloqueado; no se extrapolan sus festivos.
 Para probarlo, ejecuta la vista previa del apéndice. El resultado muestra las
 fuentes y los pasos previstos. No hace falta aprobar otra vez el calendario.
 La siguiente revisión útil será un lote candidato con sus datos y faltantes.
+
+## Preparación comprobable del calendario
+
+La continuación del 21 de octubre distingue **herramienta probada**, **original
+real comprobado** y **fuente disponible para el siguiente lote**. La matriz de
+los 42 productos conserva el alcance histórico y la revalidación nueva por
+separado: [matriz de preparación](referencias/source-updates-20261021/readiness-matrix.json).
+No convierte la existencia de Gold ni una prueba con fixtures en captura real.
+
+| Prioridad | Evidencia real de esta continuación | Pendiente que limita el siguiente lote |
+|---|---|---|
+| Viva tráfico | Tras autorización específica del dueño, un GET al PDF oficial BMV de septiembre de 2026 respondió 200. Se extrajeron 24 observaciones: cuatro métricas, tres segmentos y año actual/comparativo; linaje completo y replay idéntico. La regresión 2021 conserva su formato distinto. | Septiembre queda comprobado como candidato, sin activar. Otros meses/ediciones requieren su documento y validación; el formato 2026 usa millas y miles de pasajeros reservados, no las unidades del original 2021. |
+| Aerocivil | Metadata y consultas oficiales HTTP 200. Diez filas crudas, ocho bajo códigos literales S/I, 347 movimientos; baseline con ocho filas iguales. Disponibilidad acotada: julio de 2026 para AMX/SLI. El diccionario de columnas oficial coincide exactamente con la metadata del mismo conjunto. | Las definiciones no incluyen equivalencias de códigos. Sin aclaración primaria de `jh8x-n6h6` no se traduce S/N/I ni se aprueba atribución. Julio presente no prueba mes completo. |
+| GDELT | Dos consultas iniciales 503. El reintento mensual posterior respondió 200 con 164 artículos, pero 14 tienen primera observación en octubre de México y el validador rechazó el lote de septiembre. Una consulta diagnóstica reducida recibió 429. Se conservan todos los cuerpos y recibos. | No hay candidato mensual válido. Se detuvieron las peticiones tras 429; no atribuir una caída general, inferir cero noticias, filtrar silenciosamente fechas o sustituir por RSS. |
+| Perfiles curados | Extracción candidata de unidades y entidades por edición desde originales primarios; el detalle y las referencias de códigos se verifican aparte. | Las decisiones de comparación y elegibilidad no se deducen de una extracción. Matriz financiera, operadora y año fiscal permanecen separados. |
+
+Para considerar un lote listo para revisión se exigen criterios medibles:
+
+1. Cada tarea tiene producto, entidad cuando corresponde, periodo, corte, adaptador,
+   insumos y condición requerida u opcional explícitos. El preflight completo
+   rechaza pasos, dependencias o controles incompatibles **antes** de capturar.
+2. Cada captura acredita URL real, HTTP válido, cuerpo, manifiesto, sidecar y SHA;
+   una retención se rotula como tal. Último disponible, validado y publicado son
+   tres campos separados. Publicación y rezago desconocidos quedan nulos.
+3. Silver y Gold candidatos pasan contrato, grano, unidades, cobertura y linaje
+   exacto del alcance solicitado. Un faltante sigue N/D; un código literal sin
+   leyenda y un mes incompleto conservan esa condición pendiente.
+4. La reproducción offline de los mismos originales es idéntica. El baseline es
+   explícito y fijado por hash; se cuentan altas, bajas, cambios y filas iguales.
+   El recibo y su corte son inmutables; un byte alterado bloquea la reproducción.
+5. Un fallo de fuente o validación conserva el último candidato aceptado y sus
+   recibos. No publica ni transforma un HTTP 200 con error en ausencia de datos.
+   Los reintentos siguen el máximo de dos reprogramaciones ya definido.
+6. El calendario usa días bancarios mexicanos verificados para el año, en
+   America/Mexico_City. La trimestral exige trimestre cerrado y tres reportes
+   realmente publicados después del cierre; una llamada o anuncio no los suple.
+   Un año sin festivos verificados bloquea el cálculo.
+7. La prueba en seco muestra los destinos y cero disparadores instalados. La
+   ejecución candidata y su revisión no activan calendarios, noticias ni nuevas
+   tesis. Las tesis 2T26 de Viva, Volaris e Industria ya aprobadas y publicadas se
+   conservan; las versiones nuevas mantienen su aprobación independiente.
+
+La muestra mensual sigue siendo 15/oct, 17/nov y 15/dic de 2026. La fecha
+trimestral nula en la muestra sin `--releases` significa **sin documentos de
+release suministrados a esa prueba**, no que los emisores no hayan publicado.
+No se fija una fecha futura con información inventada ni se extrapola 2027.
+
+### Detalle técnico de la continuación
+
+Viva se selecciona con `recipe --product viva_traffic --output selection
+--catalog-file <catalogo-real.html> --period <mes>`. El selector aplica la política
+antes de HTTP. El dueño autorizó añadir **únicamente `bmv.com.mx`** a
+`viva_ir.allowed_hosts`; no se añadió el host S3 ni se siguieron redirecciones
+fuera de la política. El lector `retained --product viva_traffic`, rol `pdf`,
+construye `fact_viva_monthly_source_metrics` candidato. La edición septiembre de
+2026 conserva pasajeros reservados en miles, ASM/RPM en millones de millas y
+ocupación de itinerario. Excluye acumulados de la salida mensual y conserva su
+comparativo de 2025. El original histórico 2021 conserva ASK/RPK en kilómetros.
+No armoniza las unidades silenciosamente ni confunde ocupación de itinerario
+con el cociente RPM/ASM total que incluye chárter. Fecha documental 9/oct y
+rezago documental nueve días; publicación inicial, hora y rezago de publicación
+siguen desconocidos. [Original oficial](https://www.bmv.com.mx/docs-pub/eventemi/eventemi_1594478_1.pdf).
+
+Aerocivil añade `recipe --availability --period 2026M07`, que consulta el máximo
+mes del año para AMX/SLI, y el modo `availability` que verifica su recibo.
+`certify --baseline baselines/<anterior.parquet>` fija la comparación de filas
+y vuelve a comprobarla en `--check`. No toma la fecha de actualización global del
+dataset como fecha de primera publicación mensual.
+
+La investigación adicional identifica **el mismo recurso**, no otro de nombre
+parecido: `jh8x-n6h6`, tabla y grupo de publicación `20263639`, propietario
+`aba2-n32i` (DATOS ABIERTOS AEROCIVIL), procedencia oficial. Sus filas llevan
+actualización global `2026-08-20T21:27:45Z`; esa fecha no es primera publicación
+de julio. `resourceName=operaciones-aereas-acumulado-2025` es una etiqueta y no
+acredita versión ni cobertura anual. La versión examinada se fija por captura
+y SHA, porque el proveedor no expone un número de edición en esos metadatos.
+El [diccionario exacto de columnas](https://www.datos.gov.co/api/views/jh8x-n6h6/columns.json)
+(HTTP 200, SHA `49f54fefa6b4b6263596f0a8f701379acea2a99c19933c71f7d965bf2f47cc4b`)
+coincide con `columns` de la
+[metadata del mismo ID](https://www.datos.gov.co/api/views/jh8x-n6h6.json).
+Describe campos, pero no desarrolla `TIPO_VUELO` G/M/N/S/X ni `TRAFICO` I/N.
+Son valores observados, no una leyenda. Tampoco enlaza un diccionario adjunto
+con esas equivalencias. Las búsquedas oficiales no localizaron una leyenda
+atribuible al ID; no prueban que no exista. No se reutiliza la de otro conjunto
+ni se elude el desafío de la portada. EMPRESA y EXPLOTADOR son derivados del
+callsign y matrícula; el nombre del campo no acredita por sí solo una unión
+jurídica independiente con la aerolínea.
+
+GDELT tiene su comando separado, porque primera observación no es publicación:
+
+```bash
+python -m src.source_updates.gdelt recipe --period 2026M09 --as-of 2026-10-21T00:35:00Z
+python -m src.source_updates.gdelt certify --workspace tmp/source-updates/<gdelt> --period 2026M09 --as-of <corte-original> --collection <id> --dry-run
+```
+
+Después de `collect`, `--execute` verifica el original y produce JSON Silver/Gold
+aislados bajo un contrato específico; `--check` repite sin red ni escrituras.
+Un recibo de captura fallido bloquea antes de crear esos outputs. Se deduplica URL
+canónica y primera observación, conservando todos los punteros y metadatos; no se
+descargan artículos ni imágenes. El tope de 250 resultados y los días observados
+se declaran; ni siquiera una respuesta vacía prueba cobertura mensual completa.
+Publicación/evento permanecen nulos y el candidato no alimenta el archivo mensual
+de noticias. Las pruebas con respuestas sintéticas son **pruebas de contrato**;
+los recibos históricos de 503 se conservan aunque cambie la disponibilidad.
+
+La comprobación posterior contrastó la
+[guía oficial DOC 2.0](https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/)
+y su [actualización de mayo de 2018](https://blog.gdeltproject.org/doc-2-0-updates-1-5-year-searching-and-updated-mobile-interface/).
+La sintaxis seleccionada coincide: OR entre paréntesis, `mode=artlist`,
+`format=json`, `sort=datedesc`, máximo 250 y límites UTC explícitos de septiembre
+de México. La guía inicial decía tres meses; la actualización amplió el
+horizonte y mantuvo una ventana de tres meses para salidas no temporales. No
+se confunde ese anuncio histórico con una garantía de disponibilidad actual.
+La ventana solicitada aquí es un mes. El límite de resultados no acredita
+cobertura completa ni paginación.
+
+El HTTP 200 posterior contiene 164 artículos, de los cuales 150 quedan en
+septiembre y **14 fuera del mes solicitado** al convertir primera observación a
+México. La normalización lo rechaza sin crear Silver/Gold. Además, la captura
+diagnóstica quedó rotulada `current`, y la certificación exige el mes exacto:
+ese segundo control también bloquea. No se cambia el recibo ni se filtran filas
+para hacerlo pasar. El diagnóstico reducido siguiente devolvió 429 con la
+instrucción explícita de una petición cada cinco segundos. No se hicieron
+más llamadas. El recolector ahora limita GDELT a una cada **seis segundos por
+proceso** y omite nuevas peticiones a una fuente tras 429 en la misma captura.
+Es un control de un proceso, no una cuota distribuida: usar un solo runner
+autorizado y no lanzar capturas concurrentes. No se acredita extracción válida
+del periodo ni se afirma una interrupción general del servicio.
+La certificación ejecutada y su replay devuelven un código de proceso distinto
+de cero cuando no pasan las comprobaciones, incluido un resultado vacío:
+`empty_result_unproven_coverage` no acredita ausencia de noticias. Generar una
+receta o una vista previa continúa siendo una operación sin captura.
+Los SHA, consultas, recibos, límites y rechazos están en
+[la evidencia agregada existente](referencias/source-updates-20261021/verification.json)
+y sus originales en el borrador privado #38.
+
+El comprobador `src.source_updates.readiness` reúne candidatos ya construidos
+con adaptadores distintos, sin repetir capturas. Después de restaurar los
+candidatos del paquete privado según el apéndice, la receta de ejemplo prueba
+AFAC julio y finanzas Aeroméxico 2T26, conservando sus cortes originales:
+
+```bash
+python -m src.source_updates.readiness --recipe config/source_update_readiness.example.json --workspace tmp/source-updates/readiness-ejemplo --dry-run
+python -m src.source_updates.readiness --recipe config/source_update_readiness.example.json --workspace tmp/source-updates/readiness-ejemplo --execute
+python -m src.source_updates.readiness --recipe config/source_update_readiness.example.json --workspace tmp/source-updates/readiness-ejemplo --check
+```
+
+`--execute` aquí significa **verificación offline y recibo de ronda**. Las tareas
+requeridas se declaran tanto en `required_items` como en cada elemento, antes
+de ejecutar. Un fallo requerido bloquea la ronda conservando los éxitos previos;
+los opcionales se enumeran. El recibo liga fuentes, salidas y código de cada
+comprobador. `--check` conserva corte, condiciones y permisos exactos, sin
+escrituras. El resultado lista productos no ejercitados y distingue listo para
+revisión de listo para automatizar. La muestra no es una ronda actual completa
+de los 42 productos. Curación conserva su comprobador dedicado, con emisores
+y periodos fiscales propios.
+
+Una reproducción numérica de Aerocivil puede pasar con la condición de leyenda
+pendiente; eso no acepta su significado ni su cobertura. `ready_for_review`
+no es un permiso de calendario. Cada receta define sus tareas requeridas: el
+comprobador no impone una política global que incluya Aerocivil y GDELT en todas
+ellas. Antes de usarlo como control de aceptación del calendario se necesita
+esa política explícita y resolver ambos bloqueos. Los indicadores
+`ready_for_calendar_incorporation` y `ready_for_automatic_execution` permanecen
+falsos incluso en la receta numérica exitosa.
+
+La revisión final corrigió dos fallos de contrato: una certificación GDELT
+vacía ya no devuelve éxito de proceso y los replay H.10, tráfico Aeroméxico,
+Aerocivil y retenidos exigen el `effective_as_of` exacto del recibo. Pasaron
+204 pruebas afectadas offline, incluidas negativas antes de recalcular.
+La comprobación de originales históricos mantuvo 2.730 filas AFAC, 20 de
+finanzas Aeroméxico, 24 Viva y ocho Aerocivil con su leyenda aún pendiente;
+GDELT siguió bloqueado. No hubo captura nueva ni reescritura de sus recibos.
 
 ## Riesgos
 
@@ -163,7 +352,8 @@ solo acredita descubrimiento, sin certificar reportes nuevos. Ese recibo inicial
 Las recetas generadas también capturaron y procesaron las tres series Banxico:
 21 filas FIX, una INPC y 30 de tasa en septiembre. El endpoint H.10 devolvió
 contenido vacío para la consulta explícita; quedó bloqueado y no produjo datos.
-Su parser solo está probado con muestras controladas. No se sustituyó FIX ni
+En ese piloto, su parser solo se había probado con muestras controladas; la
+certificación real posterior de H.10 está descrita más abajo. No se sustituyó FIX ni
 se rellenaron datos ausentes. Las demás familias conservan límites por producto; no se certifican como rondas completas.
 [Evidencia del piloto real](referencias/source-updates-20261018/real-source-pilot.json).
 
@@ -197,6 +387,75 @@ volvieron a pasar. [Evidencia de la corrección](referencias/source-updates-2026
 
 No se copiaron insumos privados ni se consultó AeroDataBox.
 
+### Certificación mensual aislada H.10
+
+El comando dedicado `h10` certifica un mes cerrado desde seis originales de la
+Reserva Federal: CSV, histórico HTML de México, calendario K.8, definición,
+release que explica `ND` y aviso de transición del portal. La prueba de septiembre
+de 2026 conserva 22 fechas hábiles: 21 cotizaciones y `ND` el 7 de septiembre.
+El 16 de septiembre sí tiene cotización. No se aplica el calendario bancario
+mexicano a esta serie ni se exige un número fijo de 21 observaciones por mes.
+
+H.10 expresa **pesos mexicanos por un dólar estadounidense**, par `USD/MXN`.
+Es la cotización compradora de mediodía en Nueva York, distinta del FIX de
+Banxico. En Silver, `rate_close` conserva su nombre de contrato y contiene la
+cotización diaria de mediodía. En Gold, `close` es la última cotización H.10
+observada del mes. Ninguno representa un cierre bursátil. El promedio utiliza
+únicamente valores observados. `ND` queda
+explícito, con valor numérico nulo; nunca se convierte en cero.
+[Definición oficial](https://www.federalreserve.gov/releases/h10/about.htm),
+[histórico de México](https://www.federalreserve.gov/releases/h10/hist/dat00_mx.htm).
+
+Se comparan todas las fechas, valores decimales y estados entre CSV y HTML.
+Son dos representaciones de la misma institución, no dos proveedores
+independientes. Fechas duplicadas, faltantes, valores invertidos, unidades o
+metadatos incompatibles bloquean la certificación antes de escribir Silver o
+Gold. Deben estar todas las fechas de lunes a viernes, incluso las que contienen
+`ND`; no se inventan filas. K.8 aporta contexto para un `ND` que ambas fuentes
+ya reportan. Distingue la observancia del Board y de los Federal Reserve Banks;
+no prueba la causa del faltante ni define un calendario universal de divisas.
+Un `ND` en otro día requiere evidencia y revisión adicionales.
+[K.8](https://www.federalreserve.gov/aboutthefed/k8.htm),
+[definición de ND](https://www.federalreserve.gov/releases/h10/current/default.htm).
+
+La captura oficial del 19 de octubre respondió HTTP 200 en los seis originales.
+El histórico HTML declara versión del 13 de octubre y observaciones hasta el
+9 de octubre; el CSV consultado termina el 30 de septiembre. Esa versión no
+demuestra la primera publicación de septiembre: su fecha y rezago permanecen
+nulos. Las revisiones futuras se capturan en otro candidato, sin sustituir los
+originales aceptados. Una diferencia entre versiones bloquea el cruce; no se
+atribuye automáticamente a un error del proveedor. Los releases archivados no
+se revisan, mientras el histórico puede incorporar revisiones.
+
+La alternativa HTML está comprobada para este cruce, con límite de 2 MB
+decodificados por respuesta. No se activa como sustitución automática. El aviso
+anuncia retirar «Build Your Package» en la semana del 9 de noviembre de 2026 y
+una transición posterior; no demuestra que este endpoint CSV deje de responder
+ese día. Debe revalidarse antes de otra captura.
+[Aviso oficial](https://www.federalreserve.gov/data/data-download-fred-information.htm).
+
+```bash
+uv run python -m src.source_updates h10 --period 2026M09 --as-of 2026-10-19T12:00:00-06:00 --workspace tmp/source-updates/h10-prueba --dry-run
+uv run python -m src.source_updates h10 --period 2026M09 --as-of 2026-10-19T12:00:00-06:00 --workspace tmp/source-updates/h10-prueba --execute --check-at-completion
+uv run python -m src.source_updates h10 --period 2026M09 --as-of 2026-10-19T12:00:00-06:00 --workspace tmp/source-updates/h10-prueba --check
+```
+
+La vista previa declara seis GET públicos, hasta 30 solicitudes contando
+redirecciones, cero pagadas y cero escrituras. `--from-collection <id>` sustituye
+`--execute` para certificar una captura local existente sin red. `--check`
+reconstruye sin red y verifica hashes de originales, recibo de captura y las seis
+tablas candidatas: dos Silver, `fact_macro`, `dim_period`,
+`dim_source_artifact` y `bridge_record_lineage`. Gold contiene solo dos registros
+mensuales, promedio y última cotización, con seis artefactos y 12 enlaces
+documentales exactos. No construye un trimestre a partir de un mes.
+
+Esta certificación corresponde únicamente al comando dedicado, al producto y
+al mes comprobados. La receta genérica `recipe --product h10` y el parser
+histórico no adquieren por ello esa certificación; tampoco queda certificada
+la familia macro ni una ronda del coordinador. Los recibos locales conservan
+commit y hashes del código, originales, corte, faltantes y salidas. La revisión
+humana sigue pendiente antes de publicar datos o activar cualquier ejecución.
+
 Para una captura nueva, `round --execute --check-at-completion` registra el
 corte de comprobación al terminar. Conserva también el corte pedido en la
 receta. Sin esa opción respeta el corte histórico: una captura posterior queda
@@ -216,6 +475,119 @@ La selección exige enlaces presentes y periodo no ambiguo. Una URL enlazada
 puede fallar al descargar. No se generan nombres de próximos reportes.
 
 ### Captura y comprobación
+
+El tráfico mensual IR de Aeroméxico usa una cadena dedicada. Primero se captura
+el índice y se elige un único enlace que identifica el mes. Después se captura
+el PDF; el nombre de la URL no demuestra su periodo. La extracción verifica
+título, entidad, orden de columnas y años dentro del documento. Las 12 cifras
+del mes y sus 12 comparativos del año anterior quedan separados de los
+acumulados. No se suman meses para crear un trimestre desde este comando.
+
+```bash
+uv run python -m src.source_updates recipe --product am_traffic_ir --output selection --catalog-file <indice-preservado.html> --period 2026M09 > tmp/am-seleccion.json
+uv run python -m src.source_updates collect --selection tmp/am-seleccion.json --workspace tmp/source-updates/am-septiembre --dry-run
+uv run python -m src.source_updates collect --selection tmp/am-seleccion.json --workspace tmp/source-updates/am-septiembre --execute
+uv run python -m src.source_updates.am_traffic_candidate --workspace tmp/source-updates/am-septiembre --period 2026M09 --as-of <corte-ISO-con-zona> --collection <id-del-recibo> --dry-run
+uv run python -m src.source_updates.am_traffic_candidate --workspace tmp/source-updates/am-septiembre --period 2026M09 --as-of <corte-ISO-con-zona> --collection <id-del-recibo> --execute
+uv run python -m src.source_updates.am_traffic_candidate --workspace tmp/source-updates/am-septiembre --period 2026M09 --as-of <corte-ISO-con-zona> --collection <id-del-recibo> --check
+```
+
+`collect` declara un GET público por PDF, hasta cinco solicitudes con
+redirecciones y cero pagadas. El comando dedicado solo lee originales locales;
+su vista previa no escribe y su certificación/reproducción no usa red. Preserva
+SHA-256, captura UTC, token, extracto, página y fecha de publicación del PDF.
+Un candidato aceptado no se sustituye: una nueva captura o revisión requiere
+otra carpeta. La comparación de revisiones queda sin acreditar cuando no hay
+un candidato anterior. Los hashes de archivos no prueban revisiones de cifras.
+
+Pasajeros se escala de miles a personas; ASM y RPM de millones a millas.
+Ocupación se escala de porcentaje a fracción. Pasajeros, ASM y RPM incluyen
+itinerario y fletamento; la ocupación reportada cubre itinerario. No se calcula
+esa ocupación como RPM/ASM con universos distintos. Su dimensión Gold conserva
+esa advertencia. El documento declara cifras no auditadas; eso no basta para
+llamarlas preliminares. Se admiten diferencias de suma de hasta 1,5 unidades
+publicadas por el redondeo de dos componentes y un total.
+
+La revisión de fórmula del 21 de octubre corrigió su definición a RPM/ASM de
+itinerario, equivalente a RPK/ASK, ponderada por distancia. Se recertificaron
+offline los PDF reales de julio, agosto y septiembre: 24 filas y siete tablas
+por mes, con replay idéntico y sin cambiar las cifras reportadas. Solo cambia
+`load_factor_total.formula`. Los candidatos históricos conservan la definición
+anterior como evidencia; no se sobrescriben ni sustituyen a los corregidos.
+La [comprobación agregada](referencias/source-updates-20261021/verification.json)
+registra el commit de código, cortes, hashes y rutas de los candidatos nuevos.
+
+Se conservan **39 archivos locales de revisión**, bajo
+`tmp/source-updates/am-traffic-formula-correction-20261021/`, para revisar esta
+corrección; no se publicaron ni se añadieron al respaldo histórico de 512
+archivos. La recuperación usa los Bronze y recibos de colección ya respaldados
+en el privado #38 y el código `579628ba`, con los cortes exactos registrados.
+La certificación en una carpeta nueva y su `--check` son los comandos descritos
+arriba. La revisión de un lote sigue siendo previa a cualquier publicación.
+
+El candidato Silver `aeromexico_ir_monthly_metrics` aplica el grano y linaje
+estructural existente de observaciones operativas, más reglas de dominio IR.
+No se rotula como SEC ni se registra automáticamente en el warehouse productivo.
+Gold aplica los contratos existentes, tres dimensiones y puente de linaje
+documental exacto. La cadena genérica `build/check` no adquiere este adaptador:
+se usa el comando dedicado. La certificación de un producto y mes no completa
+la familia corporativa ni autoriza publicación o calendario. No cambia tesis.
+[Índice oficial](https://ir.aeromexico.com/news-events/traffic-reports).
+
+La captura oficial del 19 de octubre conservó los PDF de julio, agosto y
+septiembre de 2026, todos con HTTP 200. Cada mes aporta 24 registros Silver y
+24 Gold: 12 actuales y 12 comparativos. Sus documentos están fechados el 3 de
+agosto, 3 de septiembre y 6 de octubre, respectivamente; el rezago desde el fin
+del mes es de 3, 3 y 6 días. La hora de publicación y la primera disponibilidad
+en el portal no se conocen y permanecen nulas. Los tres originales suman
+1.025.796 bytes. Estos candidatos no certifican finanzas, otros emisores,
+otros formatos ni cobertura de las tres aerolíneas.
+
+Aerocivil tiene una cadena candidata propia. `python -m
+src.source_updates.aerocivil recipe --period 2026M07` emite una selección con
+tres GET: conteo, datos y conteo posterior. El límite es 1.000 filas de un solo
+mes para los designadores de explotador AMX/SLI, hasta 15 solicitudes con
+redirecciones y cero pagadas. No usa el descargador histórico completo.
+La misma receta con `--metadata` produce la selección del diccionario oficial.
+Ambas selecciones se capturan con `collect`. Se importa por hash el original
+OurAirports retenido, para códigos y países; esa referencia no se vuelve a
+descargar en el piloto.
+
+```bash
+uv run python -m src.source_updates.aerocivil certify --workspace <candidato> --period 2026M07 --as-of <corte-ISO-con-zona> --collection <id-de-las-tres-consultas> --dry-run
+uv run python -m src.source_updates.aerocivil certify --workspace <candidato> --period 2026M07 --as-of <corte-ISO-con-zona> --collection <id-de-las-tres-consultas> --execute
+uv run python -m src.source_updates.aerocivil certify --workspace <candidato> --period 2026M07 --as-of <corte-ISO-con-zona> --collection <id-de-las-tres-consultas> --check
+```
+
+La certificación y su reproducción solo leen originales locales, sin red. El
+primer modo no escribe. Se rechazan conteos discordantes, truncación, grano
+duplicado, mes u operador distinto, aeropuerto sin referencia y dirección
+incompatible. Los candidatos aceptados son inmutables. Que ambos conteos sean
+iguales no demuestra una versión transaccional del proveedor.
+
+La consulta oficial del 19 de octubre para AMX/SLI en 2026 devolvió meses de
+enero a julio. No acredita agosto/septiembre ni demuestra ausencia global de
+otros datos. Julio devolvió diez filas; ocho cumplen los códigos literales
+S/I y suman **347 movimientos**. Otras dos filas con código N suman tres
+movimientos y se conservan como exclusiones, sin llamarlas chárter. No hay
+filas SLI en ese resultado; eso no convierte su actividad en cero.
+
+El [diccionario oficial](https://www.datos.gov.co/api/views/jh8x-n6h6.json)
+define la medida como movimientos aeroportuarios. Advierte que empresa y
+explotador se derivan del callsign y la matrícula. El candidato conserva ese
+origen y el designador comercial reportado; no afirma un comercializador
+codeshare. La leyenda de S/N/I no quedó comprobada: la aceptación de su
+interpretación sigue pendiente. Se mantienen nulos pasajeros, asientos,
+despegues y ocupación, y `agent_eligible=false`.
+
+Silver y Gold candidatos conservan ocho observaciones, cuatro artefactos y
+24 enlaces exactos. Se aplica la validación de rutas existente y se declara
+el grano local del registro al validador de linaje. La tabla heredada no forma
+parte del catálogo general de contratos Gold; este comando no cambia ese
+catálogo ni acredita su validación completa. La fecha de publicación, su
+rezago y comparación de revisiones siguen sin acreditar. La metadata declara
+actualización trimestral del proveedor; aquí no se activa ninguna ejecución.
+No se cambia Gold de Vuelos, su cohorte, M11 ni datos publicados.
 
 `collect` acepta GET público, exportación CSV pública de Banxico mediante POST,
 importación manual con SHA-256 y BTS por año
@@ -248,30 +620,269 @@ hábil tras fallo técnico, o un intento dentro de siete días/siguiente mensual
 sin fecha. Máximo dos reprogramaciones por lote; después, decisión del dueño.
 No instala ningún horario ni seguimiento automático.
 
+### Certificación de originales retenidos
+
+Los comandos nuevos trabajan con originales públicos que ya estaban guardados.
+**No son capturas nuevas ni una comprobación de la última publicación disponible.**
+Conservan SHA, alias, URL y fecha original de captura; la fecha de retención va
+en otro campo. El último disponible y el último publicado por Tracker siguen
+sin inferirse. No se consultó AeroDataBox, no se cambió una credencial y no se
+activó ningún calendario, dato, noticia o tesis.
+
+El flujo dedicado está en [`retained.py`](../src/source_updates/retained.py).
+Su [coordinador offline](../src/source_updates/retained_round.py) ejecuta
+retención → comprobación Bronze → Silver → Gold candidato/linaje → reproducción
+sin conexión. Cada producto tiene carpeta y recibo propios. Un fallo detiene
+los productos siguientes, conserva los anteriores y deja etapa, objetivo y
+error exactos. Los candidatos aceptados son inmutables. Estas tablas tienen
+contratos locales explícitos; no se registran en el warehouse publicado.
+
+| Producto | Roles exactos | Alcance del original revisado |
+|---|---|---|
+| `ryanair_sec` | `html`, `submissions`, `index` | Seis conceptos IFRS consolidados en EUR del ejercicio 2025-04-01–2026-03-31; 14 hechos inline repetidos consistentes y balance verificado. Presentación SEC 22 de junio; no cifras trimestrales. |
+| `am_financials` | `pdf` | 20 cifras preliminares/no auditadas de 2T26; unidades ASM/CASM por milla y dos identidades contables. Fecha impresa 13 de julio; primera publicación y rezago desconocidos. |
+| `afac_airports` | `workbook` | 2.730 filas enero–julio, 65 nombres de aeropuerto y 173 cruces visibles. Sin aerolínea. |
+| `afac_margins` | `routes`, `carriers` | 23.331 filas, 28 reconciliaciones entre marginales y 120 controles de totales; conserva cinco celdas estimadas por AFAC. |
+| `afac_countries` | `pdf`, `routes` | 116 cifras acumuladas actuales/comparativas, 29 países y 29 cruces de pasajeros. No mensual desde gráficas redondeadas. |
+| `anac` | `json` | 201.483 registros originales consumidos; 36 métricas seleccionadas de enero–junio. Compañía literal y México–Brasil regular. |
+| `caa` | `csv` | Seis valores en junio: cotejados, no cotejados y cancelados, por llegada/salida. No pasajeros ni cobertura mundial. |
+| `aena` | `company_operations`, `company_passengers`, `market_operations`, `market_passengers` | 54 cifras enero–julio; compañía×aeropuerto y mercado de todas las compañías separados. Dos faltantes de pasajeros BCN siguen N/D. |
+| `oma_traffic` | `pdf` | Julio: 168 cifras, 13 aeropuertos/grupo, tres mercados y 80 reconciliaciones. Mensual/acumulado y comparativos separados. |
+| `aicm_slots` | `pdf` | Verano 2026: 2.836 asignaciones únicas, 61 páginas y conteos por frecuencia verificados. UTC y designador AM; no vuelos realizados. |
+| `iasa` | `pdf` | 84 categorías literales por país o autoridad; documento 2025-04-18. Captura posterior no actualiza su fecha ni prueba vigencia actual. |
+| `dictionary` | `csv` | 86.553 palabras por SHA; años con signo, 22 secuencias cero y tres huecos. `NA` literal se comprueba con un caso sintético; no aparece en esta copia. No calcula tono. |
+| `am_routes`, `oma_routes`, `colima`, `aifa_roster` | `document` por producto | Seis pasajes fechados, oficiales o secundarios según fuente. No son filas de tráfico ni prueba de operación continuada. |
+
+La fecha de un documento se conserva como tal. El nombre del archivo y la
+captura no prueban cuándo se publicó por primera vez. Publicación y rezago
+siguen nulos cuando esa evidencia falta. El boletín de países incluye vuelos
+con un universo distinto del total O-D: solo pasajeros acumulados actuales se
+reconcilian; no se armonizan silenciosamente ambas cifras de vuelos.
+
+Los ceros numéricos reportados se conservan. No prueban ausencia operativa.
+Los ceros posteriores al mes de un XLSX acumulado son plantilla y se excluyen.
+Sin baseline se declara que no se compararon revisiones. Con uno explícito,
+se fija su SHA y se comparan claves naturales, valores y campos de significado
+como notas/marcas de estimación o categorías del diccionario. Cada replay
+vuelve a comprobarlo. Una edición nueva fuera del formato/cobertura revisado
+se bloquea para adaptar y probar; no se declara éxito por haber descargado.
+
+Ejemplo individual, usando una ruta real del manifiesto retenido:
+
+```bash
+python -m src.source_updates.retained retain --product afac_airports --source-root <ruta-Bronze-retenido> --workspace tmp/source-updates/afac-aeropuertos --original workbook=domestic_routes_research/afac_airports_2006_2026_july_2026M07_20260913T004755Z.xlsx --dry-run
+# Si el lote candidato está autorizado, repetir retain con --execute y conservar su run_id.
+python -m src.source_updates.retained certify --product afac_airports --workspace tmp/source-updates/afac-aeropuertos --period 2026M07 --as-of 2026-10-19T12:00:00-06:00 --retention <run_id> --dry-run
+# --execute construye el candidato; --check lo reproduce sin red ni escrituras.
+```
+
+Una receta del lote declara `version=1`, `source_root`, `as_of` y una lista
+`items` con `product`, `period` y `originals` (roles → rutas exactas del
+manifiesto). No debe inventar rutas ni versiones. El periodo de FAA/diccionario
+es el periodo de revisión: las filas siguen siendo snapshots. Slots conserva
+la temporada, países conserva acumulados y pasajes conserva fecha documental.
+Usar `YYYYMmm` en productos mensuales; `YYYYQn` es revisión para FAA,
+diccionario y slots, y trimestre documental para `am_financials`. Ryanair usa revisión `2026Q2`,
+pero conserva `RYANAIR_FY2026` y fechas fiscales dentro de sus filas. El lote no
+acepta baseline implícito; prepararlo con el comando individual.
+
+```bash
+python -m src.source_updates.retained_round --recipe <receta.json> --workspace tmp/source-updates/mi-lote-retenido --dry-run
+# --execute solo tras revisar la selección; nunca instala cron ni llama a red.
+```
+
+La prueba en seco del lote principal muestra `products: 14`, `network_requests: 0`,
+`paid_requests: 0`, `new_source_capture: false` y `activation: none`.
+Ese lote produjo 115.920 registros. Un lote separado de finanzas 2T26 añadió
+20, y otro de Ryanair SEC añadió seis: son **16 productos y 115.946 registros**
+de esta ampliación local. Los tres lotes se reproducen sin conexión y reciben
+revisión independiente. [Evidencia por producto](referencias/source-updates-20261019/retained-verification.json).
+El recibo de cada producto distingue sus filas comprobadas, alcance, hash de
+salidas y original, revisión del código y resultado del replay. No certifica
+un trimestre completo, una familia completa ni frescura frente al proveedor.
+
+La validación completa del código local `0096e2d` pasó **2.204 pruebas y 29
+subpruebas**, con 78 omisiones: warehouse local ausente (71), insumos Stage 4
+no versionados (5), vista previa Pages sin fijar (1) y propuesta independiente
+ausente (1). Los 16 candidatos reales pasaron reproducción offline y revisión
+independiente de originales, código y salidas. La primera ejecución de la suite
+falló en navegador por los enlaces de dependencias locales; se corrigió esa
+copia y la suite final pasó. No se cambió código de la web para resolverlo.
+
+### Alcances históricos y condiciones restantes
+
+La revisión histórica adicional copió 836 archivos públicos y sus sidecars,
+conservando los 837 registros del manifiesto: uno es un alias de contenido, no
+una descarga adicional. Dieciséis controles verificaron ocho productos en
+Silver y Gold, con periodo y entidad exactos. Por ejemplo, Viva y Volaris
+aportan una fila financiera Silver y ocho Gold cada uno; eso no certifica el
+reporte completo ni una captura nueva. Los 1.766 derivados Stage 6 conservan
+113 N/D y 3.713 enlaces a padres con 99 archivos documentales ancestrales. Se
+conservaron las fórmulas registradas y se comprobó la ascendencia; no se
+recalcularon fórmulas ni modelos.
+
+Estado de aquellas condiciones tras la continuación del 21:
+
+- **Viva tráfico:** el bloqueo inicial se conservó como evidencia. La aprobación
+  específica de BMV permitió capturar y comprobar septiembre: 24 filas nativas.
+  S3 sigue fuera de la política. El candidato nuevo no se activó.
+- **Aerocivil:** la recaptura y comparación numéricas pasaron; la leyenda
+  primaria del mismo conjunto y la atribución siguen pendientes.
+- **GDELT:** los dos intentos nuevos de septiembre y consulta actual devolvieron
+  503. Sus recibos no acreditan noticias ni ausencia; no se siguen repitiendo.
+
+`news_errors` es una exclusión intencional, con frecuencia `never`. Conserva
+fallos para auditoría y no necesita implementarse como fuente de noticias.
+
+El auditor RSS leyó siete capturas retenidas y verificó 700 contribuciones
+válidas. El corte de septiembre de 2026, en `America/Mexico_City`, contiene
+12 URLs fechadas en seis días: 1, 2, 3, 21, 28 y 30. Los otros 24 días no se
+observaron en esas capturas; eso no demuestra ausencia de noticias. Conserva
+las consultas exactas de las capturas, centradas en Aeroméxico; no acredita
+cobertura equivalente de Viva y Volaris. Fecha declarada en RSS, evento,
+primera disponibilidad y captura permanecen separados. No visita artículos.
+
+El corte de PR142 contiene 11 candidatos no aprobados, con publicaciones
+seleccionadas de junio a octubre y octubre incompleto. Se verificaron
+identidades, hashes del contenido candidato y orden de fechas. Sus cuerpos
+originales no están disponibles localmente para una nueva comprobación.
+La afirmación de lectura del emisor se conserva como metadato del responsable,
+sin convertirla en una verificación local nueva ni activar el índice.
+
+La revisión de perfiles abarca cinco perfiles del parser y las mismas cinco
+entradas de aerolínea: 100 evaluaciones, 60 localizadores y diez originales
+primarios retenidos. Ryanair reporta ASM y etapas en millas pese a su indicador
+global `metric`. Viva distingue matriz financiera y operadora, moneda USD desde
+octubre de 2022 y pasajeros reservados que pueden no haber volado. Los códigos
+IATA/ICAO por entidad y las decisiones de comparación se tratan por separado:
+la continuación verificó cuatro referencias literales IATA/FAA sin unirlas a
+los totales consolidados ni inferir la equivalencia jurídica Ryanair DAC.
+No se corrigieron perfiles ni cifras de producción a partir de estas evidencias.
+[Mapa por atributo](referencias/source-updates-20261019/peer-primary-review.json).
+
+El mapa de los 21 eventos usa 24 originales y 54 localizadores. Hay respaldo
+acotado para 20 eventos y parcial para uno. La URL DOT de octubre respondió
+404; un documento posterior del emisor respalda fecha y acción, pero no las
+13 rutas ni su cobertura MEX/NLU. La orden DOT de julio respondió 200 y queda
+como original de revisión sin registro activo en el catálogo; no usa el alias
+FAA. Los documentos retrospectivos no prueban publicación contemporánea.
+El tráfico de febrero conserva el 5 de marzo del documento y el 6 de marzo del
+archivo del emisor; 1T26 conserva el 21 de abril del informe y el 23 de abril de
+presentación SEC. Impacto, categoría y confianza siguen siendo decisiones
+curadas sin aprobación nueva.
+[Mapa de eventos](referencias/source-updates-20261019/event-primary-review.json).
+
+Los dos auditores son de lectura y no escriben Silver ni Gold:
+
+```bash
+python -m src.source_updates.news_cut rss --root <bronze-publico> --month 2026-09 --as-of 2026-10-19T12:00:00-06:00
+python -m src.source_updates.news_cut candidate --file <corte-upstream-no-aprobado.json>
+python -m src.source_updates.primary_review --bundle docs/referencias/source-updates-20261019/peer-primary-review.json --root old_public=<bronze-publico>
+# Para eventos, añadir --root para context_primary, context_extra, am_july y dot_review.
+```
+
+Cada raíz es una carpeta local de originales seleccionados. El mapa contiene
+rutas relativas y hashes; no descarga faltantes ni acepta documentos fallidos.
+El mapa de eventos exige además tres recibos bajo `tmp/`, declarados en
+`local_inputs`. El respaldo privado separado los conserva en
+`review/operacion/20261019/source-updates/payload/`. Después de materializar y
+verificar ese paquete según su README, restaurarlos en este checkout aislado:
+
+```python
+from pathlib import Path
+import hashlib, json
+
+package = Path("../aeromexico-tracker-data/review/operacion/20261019/source-updates")
+bundle = json.loads(Path("docs/referencias/source-updates-20261019/event-primary-review.json").read_text(encoding="utf-8"))
+receipts = {
+    "tmp/primary-events-result.json": "payload/proofs/primary-events-result.json",
+    "tmp/primary-extra-result.json": "payload/proofs/primary-extra-result.json",
+    "tmp/source-updates/dot-primary-review-20261019/capture-results.json": "payload/diagnostics/dot_review/capture-results.json",
+}
+for target, source in receipts.items():
+    content = (package / source).read_bytes()
+    assert hashlib.sha256(content).hexdigest() == bundle["local_inputs"][target]
+    destination = Path(target)
+    if destination.exists():
+        assert destination.read_bytes() == content, "Conservar el recibo distinto e investigar"
+    else:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        with destination.open("xb") as stream:
+            stream.write(content)
+```
+
+Para `old_public`, `context_primary`, `context_extra` y `am_july`, usar las
+carpetas homónimas bajo `payload/originals/`; para `dot_review`, usar
+`payload/diagnostics/dot_review/`. Los candidatos completos viven en
+`payload/candidates/` y conservan sus rutas internas y recibos. No copiar esos
+Gold a producción ni interpretar el respaldo como una aprobación nueva.
+Para reproducir un candidato con `--check`, copiar primero su carpeta completa
+a una carpeta nueva bajo `tmp/source-updates/` de este checkout. Ese límite
+de escritura y lectura de candidatos se conserva; no se amplía al respaldo
+privado ni se sustituye con enlaces simbólicos.
+Un pasaje localizado no aprueba la interpretación del revisor. Se conservan
+`agent_eligible=false`, `silver_gold_certification=false` y `activation=none`.
+[Muestra verificable de los auditores y fallos](referencias/source-updates-20261019/curation-news-verification.json).
+
+El código de esta continuación, `b5def06`, pasó **2.224 pruebas y 29
+subpruebas**, con las mismas 78 omisiones por insumos locales o vistas previas
+ausentes descritas arriba. La revisión independiente repitió las 20 pruebas
+focalizadas y los mapas reales con red bloqueada, sin hallazgos abiertos.
+Treinta y tres originales documentales conservaron hash, tamaño y fecha de
+modificación durante la reproducción. Estas pruebas no certifican Silver/Gold
+para los mapas ni aprueban decisiones curadas. Los commits posteriores solo
+actualizan documentación y muestras; no cambian esos insumos de código.
+
+Estas condiciones no se sustituyen por una prueba de frescura de Gold ni por
+una aprobación inventada. El calendario aprobado no aprueba tesis, datos nuevos
+o publicación.
+
+La vista previa combinada enumera 48 operaciones para 41 productos distintos.
+El producto número 42 es `news_errors`, excluido deliberadamente de ejecución
+por su frecuencia `never`; sigue en el inventario de auditoría. Siete productos
+aparecen en mensual y trimestral. La vista previa declara cero solicitudes de
+red o pago, ninguna escritura ni ejecución programada.
+
 ### Integración y permisos
 
-La rama parte de `40a63d1` y permanece aislada. Vuelos (PR134 y su contraparte
-privada33) ya está integrado por sus responsables; sus imports BTS se comprobaron
-contra `8b5dd73`. Mercado (PR135) y Noticias (PR136) siguen abiertos. Antes de
-integrar debe validar sus versiones finales y conectar el archivo mensual de
-Noticias. No se modifican esas ramas ni se abre un PR privado: no hay cambios
-necesarios en el respaldo.
+PR137 y PR141 ya están integrados; la certificación local H.10 parte de
+`dfa207c` y permanece en una rama separada. Vuelos (PR134 y su contraparte
+privada33) fue integrado por sus responsables. PR142 se fusionó en `194ff92c`
+el 19 de octubre de 2026, con [CI](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/39282317455)
+y [workflow Pages](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/39282317699) correctos; no se hizo una
+verificación funcional de Pages o Railway desde esta continuación. Privada35
+se fusionó a las 17:20 UTC del mismo día. La base local probada
+`03a06b8` se conserva; los adaptadores retenidos están en una rama local
+distinta, sin push, PR nuevo, merge ni activación durante la preparación local.
+La autorización de preparación permitió el PR borrador y su CI. La autorización
+posterior permite integrar técnicamente las skills y su respaldo, con revisión
+y CI del head final, sin activar calendario, fuentes ni noticias. El trabajo
+M11 de PR140 y la publicación 3T26 de PR149 conservan sus responsables. La rama de revisión ya incorpora
+PR142 y conserva sus correcciones de fechas GDELT y de noticias. Los commits
+locales anteriores y sus recibos mantienen su fecha y alcance históricos.
+PR142 no es un PR pendiente ni una razón para dar por exhaustivo RSS.
+PR144 y su contraparte privada37 también están integrados; se conservan sus
+cierres de documentación y su verificador de lifecycle. No se modifica el
+sitio publicado. El respaldo nuevo de candidatos se mantiene separado del
+snapshot privado y no modifica expedientes activos ni datos de producción.
 
 Viva, Volaris e Industria siguen requiriendo aprobación exacta de entidad,
-periodo y versión para sus tesis. Captura y pruebas verdes no la sustituyen.
+periodo y versión para **nuevas** tesis. Las tres tesis 2T26 ya aprobadas y
+publicadas se conservan. Captura y pruebas verdes no aprueban otra versión.
 Tampoco se activan noticias candidatas, cron, Pages, Railway o auto-merge.
 El cron trimestral antiguo de `refresh.yml` sigue siendo una comprobación de
 frescura/Gold; no implementa este calendario ni captura fuentes.
 
 ### Referencia técnica del inventario aprobado
 
-La auditoría documental inicial fue de solo lectura. Encontró 124 Markdown
-públicos, de los que 50 están relacionados con chat. La política existe y ya se
-ha aplicado; quedan cierres históricos por revisar. Algunos documentos son
-entradas de pruebas o generadores y deben conservarse. Los siete candidatos
-concretos para archivo suman 13.025 bytes: el beneficio principal sería claridad,
-no espacio. [Inventario y referencias](referencias/source-updates-20261018/lifecycle-audit.json).
-No se retiró ningún documento. La convención de audiencia vive en `AGENTS.md`.
+La auditoría inicial del 18 fue de solo lectura: registró 124 Markdown
+públicos, 50 relacionados con chat y siete candidatos a archivo (13.025 bytes).
+Esos conteos conservan su corte histórico. La continuación integrada en PR144
+archivó tres instrucciones reemplazadas con enlaces a sus originales en Git;
+conservó cuatro candidatos por su utilidad y evidencia. No se repiten esos
+retiros en este PR de fuentes. El [inventario](referencias/source-updates-20261018/lifecycle-audit.json)
+y el [cierre canónico](chat/README.md#cierre-documental-del-19-de-octubre)
+registran las disposiciones. La convención de audiencia vive en `AGENTS.md`.
 
 El resto de este documento conserva el inventario y las observaciones de la
 fase 1 del 13 de octubre. Sus fechas de disponibilidad y sus brechas son de ese
@@ -349,18 +960,22 @@ no prueba cuándo se publicó por primera vez un archivo.
 
 ## Fuentes centrales y cobertura realmente incorporada
 
+La columna «incorporado» conserva la cobertura de la base examinada. Los
+candidatos locales posteriores se distinguen expresamente: no significan
+publicación, activación ni actualización del dashboard.
+
 | Fuente / producto | Métricas y grano | Incorporado al corte | Disponibilidad oficial observada / adquisición | Dependencias y brecha |
 |---|---|---|---|---|
-| Aeroméxico IR, resultados | Pasajeros, capacidad, ocupación, ingreso/costos unitarios, finanzas, notas y expectativas; trimestre del grupo | PDFs 2021Q1–2026Q2; operación IR histórica 2021Q1–2024Q2 y finanzas IR 2021Q1–2025Q2; periodos recientes se completan por SEC | [Resultados IR](https://ir.aeromexico.com/financial-information/quarterly-results); `src/ingest/aeromexico_ir.py` usa 22 URLs registradas y descarga ausentes | Descubrir links de periodos nuevos y sus estados financieros; no revisita URLs existentes. Los límites históricos de los dos parsers son deliberados, no un parser genérico de futuros releases |
-| Aeroméxico tráfico IR / SEC 6-K | Pasajeros, ASM/RPM y ocupación total/nacional/internacional; mes del grupo | Serie mensual SEC hasta junio 2026, trimestral hasta 2T26 | [Tráfico IR](https://ir.aeromexico.com/news-events/traffic-reports) ya muestra septiembre; SEC preserva anexos y presentación regulatoria | Parser actual busca anexos HTML `ex99*.htm`; falta descubridor IR mensual que conecte novedades fuera del archivo SEC existente. No inferir finanzas de tráfico |
+| Aeroméxico IR, resultados | Pasajeros, capacidad, ocupación, ingreso/costos unitarios, finanzas, notas y expectativas; trimestre del grupo | PDFs 2021Q1–2026Q2; operación IR histórica 2021Q1–2024Q2 y finanzas IR heredadas 2021Q1–2025Q2; candidato retenido 2T26 separado con 20 cifras; otros periodos recientes por SEC | [Resultados IR](https://ir.aeromexico.com/financial-information/quarterly-results); `src/ingest/aeromexico_ir.py` usa 22 URLs registradas y descarga ausentes | Descubrir links de periodos nuevos y sus estados financieros; no revisita URLs existentes. Los límites históricos de los dos parsers son deliberados, no un parser genérico de futuros releases |
+| Aeroméxico tráfico IR / SEC 6-K | Pasajeros, ASM/RPM y ocupación total/nacional/internacional; mes del grupo | Serie mensual SEC hasta junio 2026, trimestral hasta 2T26; candidatos IR dedicados julio/agosto/septiembre | [Tráfico IR](https://ir.aeromexico.com/news-events/traffic-reports) ya muestra septiembre; SEC preserva anexos y presentación regulatoria | Parser SEC busca anexos HTML `ex99*.htm`; selección IR mensual y candidato PDF dedicados permiten comprobar un mes real por separado. No inferir finanzas de tráfico |
 | Volaris IR / SEC | Operación y estados financieros; trimestre/mes; grupo y subsidiarias según reporte | Trimestrales hasta 2T26 | [IR](https://ir.volaris.com/news-events/press-releases/), [eventos](https://ir.volaris.com/news-events/events-and-presentations/); SEC CIK 1520504, perfiles existentes | Catálogos `current` se reutilizan por URL en `ingest/peers/stage5.py`; añadir revalidación de catálogos. Pasajeros reservados/transportados y universo geográfico deben conservar definición |
 | Viva IR / BMV GVIVA | Operación, finanzas y tráfico; mes/trimestre | 2023Q1–2026Q2 financiero/operativo | [BMV GVIVA](https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD), PDFs InvestorCloud; `ingest/peers/stage5.py` | Plantilla de URLs limitada explícitamente a 2026Q2; descubrir producto mensual y futuros trimestres. Mantener preliminar/no auditado y reconciliaciones H1−Q2 |
 | SEC Aeroméxico | Formularios 6-K, 20-F, F-1 y anexos; artefacto/presentación | Índice local hasta presentación 14 agosto; financieros hasta 2T26 | [SEC](https://www.sec.gov/edgar/browse/?CIK=1561861&owner=exclude); submissions/companyfacts, `ingest/sec/discover.py` | Identificación `SEC_USER_AGENT` existente en entorno; discovery refresca catálogos, reutiliza documentos existentes. Un formulario disponible no asegura XBRL financiero |
 | BMV AERO/VOLAR | XBRL por concepto, moneda, duración/instante y periodo; respaldo/revisión contable | Paquetes hasta 2T26, con comparativos y TTM | [Catálogo XBRL](https://www.bmv.com.mx/es/emisoras/archivos-estadar-xbrl); `ingest/bmv/download.py` descubre ZIP/miembro | Catálogo se refresca; paquetes iguales por URL se cachean. Evitar sumar duración trimestral, acumulada y TTM o tratar balance como flujo |
-| AFAC, resumen por aerolínea / DATATUR | Pasajeros por operador/mercado y servicio regular/fletamento; mes | Histórico 2015–2025; canónico mensual 2026 hasta junio | [DATATUR](https://datatur.sectur.gob.mx/SitePages/afac.aspx), [PDF agosto](https://datatur.sectur.gob.mx/Documentoscompartidos/afac/AFAC_2026_08.pdf); HTTP + descarga asistida cuando gob.mx bloquea | Landing rezagada dice julio, pero PDF del reporte mensual contiene agosto. Parser PDF tiene `range(1,7)` y validación hasta junio. Fecha exacta de publicación agosto no verificada; no usar fecha de captura como publicación |
-| AFAC aeropuertos | Pasajeros/operaciones del aeropuerto completo; mes | Consultas y documentos de investigación, no nueva serie automática certificada | [Estadísticas AFAC](https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404) | Producto independiente del resumen por aerolínea; no atribuir total del aeropuerto a Aeroméxico. Disponibilidad y edición por comprobar, acceso HTTP 403 en esta revisión |
-| AFAC países | Pasajeros por país/mercado; mes | Boletín de investigación preservado de julio | Mismo catálogo AFAC; `data/bronze/afac_research/` y selección explícita | No convierte país en ruta u operador. Conservar fuente/edición propia |
-| AFAC origen–destino y marginal por aerolínea | Totales por par de ciudades y totales por empresa, granos separados | Referencias para estimación hasta julio 2026 | `ingest/afac/margins.py`, `international_margins.py`; originales `sase-*` y `resumen-*` | Usar misma edición acumulada para reconciliar; disponibilidad de edición agosto de ambos XLSX sigue sin verificar. Totales/marginales **no observan empresa×ruta** |
+| AFAC, resumen por aerolínea / DATATUR | Pasajeros por operador/mercado y servicio regular/fletamento; mes | Histórico 2015–2025; base canónica examinada hasta junio y candidato julio/agosto separado | [DATATUR](https://datatur.sectur.gob.mx/SitePages/afac.aspx), [PDF agosto](https://datatur.sectur.gob.mx/Documentoscompartidos/afac/AFAC_2026_08.pdf); HTTP + descarga asistida cuando gob.mx bloquea | Landing rezagada dice julio, pero PDF del reporte mensual contiene agosto. El parser heredado limitaba enero–junio; el adaptador candidato verifica la edición y el mes hasta agosto. Fecha exacta de publicación agosto no verificada; no usar fecha de captura como publicación |
+| AFAC aeropuertos | Pasajeros/operaciones/carga del aeropuerto completo; mes | Adaptador candidato del XLSX retenido enero–julio 2026; 173 cruces visibles | [Estadísticas AFAC](https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404) | Producto independiente del resumen por aerolínea; no atribuir total del aeropuerto a Aeroméxico. Última disponibilidad nueva no verificada; el fallo HTTP de un catálogo no invalida el original retenido comprobado |
+| AFAC países | Cajas exactas acumuladas por país; gráficas mensuales redondeadas | Adaptador candidato del boletín julio: 116 valores, 29 países; sin convertir acumulado en mes | Mismo catálogo AFAC; `data/bronze/afac_research/` y selección explícita | No convierte país en ruta u operador. Conservar fuente/edición propia |
+| AFAC origen–destino y marginal por aerolínea | Totales por par de ciudades y totales por empresa, granos separados | Referencias para estimación hasta julio 2026; candidato retenido 23.331 filas con 28 reconciliaciones | `ingest/afac/margins.py`, `international_margins.py`; originales `sase-*` y `resumen-*` | Usar misma edición acumulada para reconciliar; disponibilidad de edición agosto de ambos XLSX sigue sin verificar. Totales/marginales **no observan empresa×ruta** |
 | BTS T-100 International Segment All Carriers | Pasajeros, asientos, vuelos realizados/programados, distancia, carga/correo; operador×segmento MX↔US×mes×aeronave/clase | 2015M01–2026M05; 2T26 local tiene abril y mayo | [Descarga](https://www.transtats.bts.gov/DL_SelectFields.aspx?gnoyr_VQ=FJE&QO_fu146_anzr=Nv4%20Pn44vr45), [historial](https://www.transtats.bts.gov/ReleaseInfo.asp); GET formulario + POST México/año/todos los meses/ZIP | Historial anuncia julio añadido 9 octubre y junio 14 septiembre; **máximo mes efectivamente descargable MX-US pendiente de verificar en archivo** por contradicción con política genérica de rezago. Se omiten años anteriores al corriente en caché: perdería revisiones históricas. Segment no es Market ni destino final del boleto |
 
 El [historial BTS](https://www.transtats.bts.gov/ReleaseInfo.asp) registra además
@@ -410,6 +1025,11 @@ presente en Gold no concede publicación ni significa que el frontend la use.
 La revisión de fase 1 no cambia ninguna cifra, fórmula o aprobación.
 
 ## Evidencia de fechas: hechos frente a ventanas estimadas
+
+Esta tabla conserva los ejemplos y el corte de disponibilidad de la propuesta
+del 18 de octubre. No es una comprobación nueva del estado de 3T26 al 21 de
+octubre. La publicación de ese trimestre se trabaja por separado; este
+coordinador solo calcula una fecha con los releases reales que se le suministren.
 
 | Producto | Periodo → publicación oficial observada | Implicación |
 |---|---|---|
@@ -514,7 +1134,10 @@ comprometidos. Pages despliega `site/` revisado sin regenerarlo; Railway atiende
 el chat. La cadena futura sigue siendo detección → captura → validación → lote
 → revisión/aprobación → gate → PR → despliegue verificado.
 
-## Aceptación de fase 1 y siguiente decisión
+## Antecedente: aceptación de la propuesta de fase 1
+
+Estos criterios describían la propuesta documental aprobada antes de la
+implementación local descrita arriba; no son el recibo de pruebas de esta entrega.
 
 - Catálogo legible y anexos completos respecto de las fuentes/métricas públicas
   existentes; cada producto indica grano, cobertura, método, dependencia y brecha.
@@ -530,11 +1153,28 @@ el chat. La cadena futura sigue siendo detección → captura → validación �
 
 ## Pendientes
 
-- Confirmar los tres reportes financieros de 3T26. La fecha trimestral permanece
-  sin fijar al corte de la muestra; el 2 de noviembre no es una fecha aprobada.
-- Seleccionar documentos nuevos y probar sus formatos. Los parsers con límites
-  históricos necesitan un adaptador validado antes de incorporar esos periodos.
-- Integrar con master los cambios de Vuelos y Mercado ya recibidos por sus responsables; conectar el archivo mensual de Noticias de PR136, que sigue en borrador. Esta rama no hace esos merges.
+- Aerocivil sigue pendiente de una leyenda y atribución primarias del ID exacto.
+  GDELT requiere una captura correctamente rotulada del mes que pase el control
+  de fechas; el último diagnóstico terminó en 429 y este lote no vuelve a llamar.
+  Ambos permanecen **requeridos y bloqueados** por decisión del dueño. No hay
+  autorización para declararlos opcionales ni para rebajar sus validadores.
+  Obtener aclaración documental del proveedor es otra vía; contactar a terceros,
+  añadir hosts o contratar servicios requiere instrucción aparte.
+- Suministrar al coordinador los tres releases financieros comprobados del
+  trimestre. La muestra sin releases no fija fecha; no afirma ausencia de
+  publicaciones reales. El 2 de noviembre no es una fecha aprobada.
+- Las comprobaciones de originales retenidos no acreditan última disponibilidad.
+  Para una edición nueva, seleccionar el documento real y revisar su formato,
+  cobertura y revisiones antes de incorporarlo. Países no aporta una serie
+  mensual exacta desde las gráficas del boletín; Aerocivil conserva su leyenda pendiente.
+- PR142/privada35, PR144/privada37 y Vuelos PR134/privada33 ya están integrados. M11 PR140
+  conserva su responsable. La integración de infraestructura conserva esas
+  salidas y el lifecycle vigente; no incorpora el trabajo 3T26 de PR149.
+- Resolver las decisiones curadas de perfiles y eventos descritas arriba antes
+  de cambiar su significado o elegibilidad. Las pruebas no las aprueban.
 - Verificar el calendario bancario de 2027 antes de calcular rondas de ese año.
 - Revisar y aprobar cada lote según su alcance antes de publicar o activar una
-  ejecución automática. Esta entrega termina en un PR revisable.
+  ejecución automática. La integración técnica ahora autorizada no aprueba
+  datos nuevos ni activa calendario, noticias o nuevas versiones de tesis.
+  La disponibilidad y validez de cada fuente se comprueban por lote; los dos
+  productos bloqueados impiden declarar lista una ronda completa que los requiera.

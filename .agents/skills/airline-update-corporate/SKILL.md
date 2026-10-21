@@ -8,7 +8,7 @@ description: "Actualizar candidatos de la familia fuentes corporativas y regulat
 Leer y aplicar [el contrato común](../source-updates-common.md).
 Familia ejecutable: `corporate`. Alcance: SEC/IR/BMV: Aeroméxico, Volaris, Viva, Delta y Ryanair; GAP/ASUR se separan como tráfico aeroportuario.
 
-Revalidar catálogos current y seleccionar anexos reales. No tratar llamadas o anuncios como estados financieros. Preservar moneda, escala, trimestre/acumulado/TTM, instante/duración, preliminar/auditado e IFRS/US-GAAP. Los parsers IR de Aeroméxico son históricos; el descargador Viva termina en 2026Q2. Capturar un documento nuevo no demuestra que esos parsers lo incorporen. Para SEC usar importación manual con URL y hash. No ejecutar la ingesta heredada de peers como actualizador genérico.
+Revalidar catálogos current y seleccionar anexos reales. No tratar llamadas o anuncios como estados financieros. Preservar moneda, escala, trimestre/acumulado/TTM, instante/duración, preliminar/auditado e IFRS/US-GAAP. Los parsers IR heredados de Aeroméxico son históricos; el descargador Viva termina en 2026Q2. Capturar un documento nuevo no demuestra que esos parsers lo incorporen. Para SEC usar importación manual con URL y hash. No ejecutar la ingesta heredada de peers como actualizador genérico.
 
 ## Ejecución
 
@@ -42,17 +42,17 @@ python -m src.source_updates recipe --product am_financials
 
 Consultar cada producto de esta familia:
 
-- `am_financials` — solo descubrimiento. Entrada canónica: `catalogue:aeromexico_ir`. Formato: HTML → PDF.
-- `am_traffic_ir` — solo descubrimiento. Entrada canónica: `url:https://ir.aeromexico.com/news-events/traffic-reports`. Formato: HTML → comunicado.
+- `am_financials` — candidato offline acotado de 2026Q2; otras ediciones requieren adaptación. Entrada canónica: `catalogue:aeromexico_ir`. Formato: HTML → PDF.
+- `am_traffic_ir` — adaptador mensual candidato dedicado. Entrada canónica: `url:https://ir.aeromexico.com/news-events/traffic-reports`. Formato: HTML → PDF inglés seleccionado por enlace real.
 - `am_sec` — selección/importación manual. Entrada canónica: `sec:AEROMEXICO`. Formato: JSON submissions/companyfacts → index.json → anexos HTML.
 - `volaris_sec` — selección/importación manual. Entrada canónica: `sec:VOLARIS`. Formato: JSON → anexos HTML.
 - `delta_sec` — selección/importación manual. Entrada canónica: `sec:DELTA`. Formato: JSON → 10-Q/10-K/anexos.
-- `ryanair_sec` — selección/importación manual. Entrada canónica: `sec:RYANAIR`. Formato: JSON → 20-F/6-K/anexos.
+- `ryanair_sec` — adaptador retenido acotado de FY2026; otras ediciones con selección/importación manual. Entrada canónica: `sec:RYANAIR`. Formato: JSON → 20-F/6-K/anexos.
 - `gap_traffic` — selección/importación manual. Entrada canónica: `sec_group:GAP`. Formato: JSON SEC → anexo HTML.
 - `asur_traffic` — selección/importación manual. Entrada canónica: `sec_group:ASUR`. Formato: JSON SEC → anexo HTML.
 - `bmv_xbrl` — solo descubrimiento. Entrada canónica: `constant:src.config:SOURCE_URLS:bmv_xbrl`. Formato: HTML → visor → ZIP con JSON.
 - `viva_financials` — selección/importación manual. Entrada canónica: `url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD`. Formato: HTML → PDF InvestorCloud.
-- `viva_traffic` — adaptador pendiente. Entrada canónica: `url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD`. Formato: publicación mensual por confirmar.
+- `viva_traffic` — candidato mensual con formatos nativos separados. Entrada canónica: `url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD`. Septiembre 2026 BMV comprobado; histórico 2021 en kilómetros permanece separado.
 - `ryanair_ir` — solo descubrimiento. Entrada canónica: `constant:src.ingest.peers.stage5:RYANAIR_KEY_STATS_URL`. Formato: HTML.
 
 ### Procedimiento verificable
@@ -65,3 +65,74 @@ Consultar cada producto de esta familia:
 6. Acreditar éxito solo en la capa comprobada: hash Bronze, contrato/grano/linaje Silver y controles Gold/meses/días/reconciliaciones que correspondan. Si no existe adaptador, terminar en captura o descubrimiento y declarar ese límite. No llenar faltantes ni activar/publicar.
 
 Un 403, TLS, timeout o archivo inválido es un fallo de acceso/contenido; no prueba ausencia de publicación. Registrar pendiente y conservar el dato aceptado. Las fechas de publicación desconocidas siguen nulas.
+
+## Candidato mensual IR de Aeroméxico
+
+Seleccionar un mes cerrado mediante `recipe --product am_traffic_ir --output selection --catalog-file <indice-preservado.html> --period YYYYMmm`. `collect` captura el PDF seleccionado. A continuación ejecutar la vista previa de `python -m src.source_updates.am_traffic_candidate --workspace <candidato> --period <mes> --as-of <corte-con-zona> --collection <id-del-recibo>`. `--execute` certifica el original preservado sin red; `--check` reconstruye y compara las siete salidas y el hash del recibo. Usar un candidato por mes, sin otros productos ni salidas previas.
+
+Exigir título y entidad Grupo Aeroméxico, orden mes/acumulado y años actual/anterior, cuatro métricas y tres segmentos completos. No importar acumulados como mes. Conservar 12 cifras del mes y 12 comparativos del mismo mes del año anterior, con fecha de publicación dentro del documento. Pasajeros están en miles; ASM/RPM en millones de millas; ocupación en porcentaje. Los tres primeros incluyen itinerario/fletamento; ocupación es itinerario y no se calcula desde ese RPM/ASM. Conservar estado no auditado, unidad literal, token, extracto, página, captura y SHA-256. No equiparar no auditado con preliminar.
+
+El candidato aislado `aeromexico_ir_monthly_metrics` reutiliza el contrato estructural de observaciones operativas y añade su dominio explícito IR; no es una presentación SEC ni se registra automáticamente como tabla del warehouse productivo. Gold aplica su contrato existente, dimensiones y puente exacto. Esta cadena dedicada no añade `parse.am_traffic_ir` al runner genérico, no suma trimestres ni activa reportes/tesis. La certificación se limita al formato y los meses realmente comprobados. Documentar cualquier cambio de formato y mantener el fallo cerrado.
+
+## Finanzas IR retenidas de Aeroméxico
+
+Aplicar el [flujo común de retención](../source-updates-common.md#originales-retenidos-y-lote-offline)
+con `am_financials`, rol `pdf` y periodo `2026Q2`. El adaptador dedicado
+[`financials.py`](../../../src/source_updates/financials.py) verifica 13 páginas,
+20 cifras del trimestre, encabezados y columnas trimestral/acumulado y
+actual/comparativo, unicidad de cada fila y dos identidades contables. Cambios
+de edición o formato se bloquean para revisión; no es un parser genérico de Q3.
+
+Conservar preliminar/no auditado y la precisión redondeada de los estados.
+Importes en millones de USD, pasajeros en miles, ASM/RPM en millones de millas,
+combustible en miles de litros y CASM sin combustible en centavos USD por ASM.
+No renombrar ASM/CASM como ASK/CASK ni armonizar históricos automáticamente.
+La fecha impresa 13 de julio de 2026 no prueba primera disponibilidad:
+publicación inicial y rezago siguen nulos. El candidato conserva captura, SHA,
+página, token y extracto. No modifica M11, parsers heredados, warehouse
+productivo, elegibilidad, tesis ni aprobaciones.
+
+## Tráfico Viva: original BMV autorizado y formato nativo
+
+El dueño autorizó únicamente añadir `bmv.com.mx` a `viva_ir.allowed_hosts` y
+capturar el PDF oficial de septiembre de 2026. Se comprobó que el intento previo
+no ejecutó HTTP antes de repetirlo: un GET, HTTP 200, 86.488 bytes y SHA-256
+`b0acad4f5131220a58c7ee41f25af581d75ff1a7ec8756d3f65869f8f1d636c2`.
+No se habilitó S3 ni se amplió otra política.
+
+Para una URL oficial opaca usar `recipe --product viva_traffic --output selection
+--source-url <PDF-oficial-real> --period <mes>`, sin `--catalog-file`. El enlace
+seleccionado no demuestra el periodo: `collect` conserva el original y
+`retained retain --product viva_traffic --original pdf=<ruta>` permite preparar
+la cadena candidata, seguida de `retained certify` con `--execute` y `--check`.
+La retención conserva la fecha real de la captura anterior; no vuelve a descargar.
+
+El lector actual produce 24 filas mensuales/comparativas: cuatro métricas por
+tres segmentos (total/nacional/internacional) y septiembre 2026/2025. Pasajeros
+reservados en miles, ASM/RPM en millones de millas y ocupación solo itinerario.
+Mantener preliminar, el glosario reservado/no necesariamente transportado y
+unidades por métrica. Comprobar encabezados, orden mensual/acumulado, suma de
+segmentos con tolerancia del redondeo fuente y dominios. No recalcular ocupación
+desde totales que incluyen chárter. El formato 2021M11 mantiene ASK/RPK en km.
+Las fechas documentales y su rezago se conservan separados de publicación
+inicial y rezago de publicación, que siguen nulos. Formatos distintos y meses
+incorrectos bloquean antes de Gold; no se activa el candidato ni se publica.
+
+## 20-F retenido de Ryanair
+
+El comando `retained` admite `ryanair_sec`, roles `html`, `submissions` e
+`index`, para la presentación `0001104659-26-076131`. Usar `--period 2026Q2`
+como periodo de revisión. Las seis filas siguen siendo **FY2026, del 1 de abril
+de 2025 al 31 de marzo de 2026**, o instantes de balance de ese cierre. No son
+cifras trimestrales. El lector inline XBRL comprueba CIK, entidad, DEI, contextos
+consolidados sin dimensiones, taxonomía IFRS, EUR, escala y precisión. Comprueba
+los 14 hechos repetidos del documento y la identidad del balance; un conflicto
+se bloquea. Conserva cada identificador y la escala original.
+
+La presentación SEC fue el 22 de junio, con aceptación a las 12:47:18 UTC:
+83 días desde el cierre fiscal. Eso es rezago de presentación SEC, no primera
+publicación IR. Esta última y su rezago permanecen desconocidos. No sustituir
+un 20-F por la página IR mensual: el comprobador heredado no tiene filas SEC
+Ryanair para ese trimestre. La copia retenida de companyfacts llega a FY2025 y
+no sustituye los hechos del 20-F FY2026. No modificar el parser histórico ni
+incorporar estas filas automáticamente al warehouse o a comparaciones.

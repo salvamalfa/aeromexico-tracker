@@ -19,15 +19,15 @@
   "products": {
     "am_financials": {
       "entry_ref": "catalogue:aeromexico_ir",
-      "state": "discovery_only",
+      "state": "conditional",
       "format": "HTML → PDF",
-      "procedure": "Abrir quarterly results; identificar trimestre por encabezado y texto del reporte, no por orden del enlace. Capturar earnings release y estados financieros. Parsers IR históricos; no certifican automáticamente periodos nuevos."
+      "procedure": "Descubrir reportes realmente publicados desde el catálogo, sin inventar fechas de 3T26. El parser histórico conserva su límite previo. python -m src.source_updates.retained retain --product am_financials requiere rol pdf y original/alias/SHA/sidecar retenidos; --dry-run/--execute copian sin nueva captura. certify --period 2026Q2 --retention <id> --as-of <corte> admite --dry-run/--execute/--check. Adaptador revisado solo 2026Q2: 20 métricas de las columnas trimestrales actuales, unidades fuente USD millones/porcentajes/ASM-RPM milla, CASM sin relabeling CASK ni conversión ASK. Conserva preliminar y no auditado; dos controles contables con tolerancia de un millón reportado por redondeo. No cambia M11, no incorpora al warehouse ni acepta 3T26 sin nuevo original y revisión."
     },
     "am_traffic_ir": {
       "entry_ref": "url:https://ir.aeromexico.com/news-events/traffic-reports",
-      "state": "discovery_only",
+      "state": "conditional",
       "format": "HTML → comunicado",
-      "procedure": "Encontrar el mes cerrado en el archivo Traffic Reports. El reporte de tráfico no sustituye finanzas. Falta adaptador IR mensual; usar anexos SEC preservados si existen."
+      "procedure": "recipe --output selection --catalog-file <indice.html> --period YYYYMmm selecciona un único enlace real del mes. Capturar el PDF mediante collect; después python -m src.source_updates.am_traffic_candidate --workspace <candidato> --period <mes> --as-of <corte> --collection <id> muestra la vista previa. --execute certifica offline y --check reproduce sin red. Parser candidato para tablas inglesas verificadas: cuatro métricas, tres segmentos, mes y comparativo anual; excluye acumulados. Silver conserva unidad, alcance itinerario/fletamento y no auditado. Gold candidato usa contratos y linaje exacto. No sustituye finanzas, no certifica SEC ni la familia; no incorpora esta tabla automáticamente al warehouse publicado."
     },
     "am_sec": {
       "entry_ref": "sec:AEROMEXICO",
@@ -76,9 +76,9 @@
     },
     "ryanair_sec": {
       "entry_ref": "sec:RYANAIR",
-      "state": "manual",
+      "state": "conditional",
       "format": "JSON → 20-F/6-K/anexos",
-      "procedure": "CIK 0001038683 en CARRIERS. Confirmar periodo fiscal antes de compararlo con trimestre calendario. Preservar índices y anexos SEC; no solicitar credenciales. Bronze exige source_system=sec; sec_edgar es etiqueta Silver, no un alias de captura intercambiable. Seleccionar parse.peer_discovery antes de parse.sec/parse.peers; se exige el catálogo de identidades de comparables completo.",
+      "procedure": "CIK 0001038683 en CARRIERS. Confirmar periodo fiscal antes de compararlo con trimestre calendario. Preservar índices y anexos SEC; no solicitar credenciales. Bronze exige source_system=sec; sec_edgar es etiqueta Silver, no un alias de captura intercambiable. Seleccionar parse.peer_discovery antes de parse.sec/parse.peers; se exige el catálogo de identidades de comparables completo. Adaptador dedicado retained para 20-F FY2026: roles html/submissions/index originales, revisión 2026Q2; seis conceptos consolidados IFRS en EUR. Conserva año fiscal 2025-04-01–2026-03-31 e instantes de balance; no los llama trimestre calendario ni usa IR como SEC. Otras ediciones requieren revisión; no modifica el runner heredado.",
       "selection_contract": {
         "source_system": "sec",
         "companyfacts_relative_dir": "sec/ryanair/companyfacts",
@@ -135,9 +135,9 @@
     },
     "viva_traffic": {
       "entry_ref": "url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD",
-      "state": "missing_adapter",
-      "format": "publicación mensual por confirmar",
-      "procedure": "Buscar producto mensual oficial distinto del reporte financiero. No hay descubridor/parser mensual certificado. El catálogo técnico de viva_ir solo admite InvestorCloud para captura: BMV es referencia de descubrimiento, no un permiso para cambiar hosts."
+      "state": "conditional",
+      "format": "HTML/selección oficial explícita → PDF mensual nativo",
+      "procedure": "recipe --output selection --catalog-file <catalogo-real.html> --period YYYYMmm selecciona un enlace mensual único. Para la URL oficial opaca BMV usar --source-url <PDF-oficial-real> sin catalog-file; el periodo se debe comprobar dentro del PDF. La política aplica antes de HTTP: el dueño autorizó únicamente añadir bmv.com.mx a viva_ir, sin habilitar S3. Captura real septiembre2026 BMV:HTTP200/86488bytes; lector actual validado con24filas:4métricas×3segmentos×actual/comparativo. Pasajeros reservados en miles,ASM/RPMmillonesdemillas,ocupación soloitinerario; no inferirflown ni calcularLF desde eltotalconchárter. Lector2021M11 separado conserva kilómetros/12filas. retain --product viva_traffic --original pdf=<ruta> conserva original/SHA/fecha; certify --period <mes> --retention <id> --as-of <corte> admite --dry-run/--execute/--check y baseline explícito. Fuente/Silver/Gold candidato con linaje exacto,mesreal,grano/segmento/unidades,celdasmensuales frenteacumuladas y reconciliacionesnativas. Fecha documental/reporteddocumentlag separados de primera publicación y release_lag nulos. Formato/edición distintos se bloquean para revisión. Sin warehouse/publicación ni activación."
     },
     "ryanair_ir": {
       "entry_ref": "constant:src.ingest.peers.stage5:RYANAIR_KEY_STATS_URL",
@@ -160,21 +160,21 @@
     },
     "afac_airports": {
       "entry_ref": "url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404",
-      "state": "missing_adapter",
-      "format": "archivo independiente por edición",
-      "procedure": "Elegir producto de aeropuerto, no resumen por aerolínea. Preservar edición y fechas. Si 403/TLS, registrar fallo y usar descarga asistida autorizada con URL/hash; no omitir TLS. No hay parser candidato certificado."
+      "state": "conditional",
+      "format": "XLSX con cache AFAC y cuadros visibles",
+      "procedure": "Adaptador offline dedicado: python -m src.source_updates.retained retain --product afac_airports --source-root <Bronze-retenido> --workspace <candidato-nuevo> con roles --original workbook; primero --dry-run y después --execute. Conserva alias, hash y fecha real de captura, sin descarga nueva. certify --product afac_airports --workspace <candidato> --period <YYYYMmm-exigido-por-el-documento> --as-of <corte-con-zona> --retention <id> admite --dry-run/--execute/--check. Aeropuertos completos, tres métricas y dos mercados; enero-julio 2026. Excluir ceros de plantilla posteriores al mes, no atribuir aerolínea; 173 cruces visibles. No se integra al runner build genérico ni al warehouse publicado. El lote explícito retained_round requiere una receta local; no activa calendario, noticias o tesis."
     },
     "afac_countries": {
       "entry_ref": "url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404",
-      "state": "missing_adapter",
-      "format": "boletín/archivo de países",
-      "procedure": "Elegir producto de países y su edición. No convertir país en ruta o empresa. Captura explícita/manual; parser y reconciliación candidatos pendientes."
+      "state": "conditional",
+      "format": "PDF países y XLSX O-D de la misma edición",
+      "procedure": "Adaptador offline dedicado: python -m src.source_updates.retained retain --product afac_countries --source-root <Bronze-retenido> --workspace <candidato-nuevo> con roles --original pdf + routes; primero --dry-run y después --execute. Conserva alias, hash y fecha real de captura, sin descarga nueva. certify --product afac_countries --workspace <candidato> --period <YYYYMmm-exigido-por-el-documento> --as-of <corte-con-zona> --retention <id> admite --dry-run/--execute/--check. Solo 116 cifras exactas acumuladas actuales/comparativas de 29 países del boletín julio; 29 cruces de pasajeros actuales con O-D. No importar gráficas mensuales redondeadas ni armonizar vuelos del boletín con todos los vuelos O-D. No se integra al runner build genérico ni al warehouse publicado. El lote explícito retained_round requiere una receta local; no activa calendario, noticias o tesis."
     },
     "afac_margins": {
       "entry_ref": "url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404",
-      "state": "manual",
-      "format": "XLSX sase/resumen de la misma edición",
-      "procedure": "Seleccionar O-D y marginal por aerolínea de la misma edición acumulada. Referencias técnicas: src.ingest.afac.margins e international_margins. No inventar edición nueva; verificar ambos archivos y total compatible antes de usar. No son observaciones empresa×ruta."
+      "state": "conditional",
+      "format": "XLSX O-D y resumen por empresa, misma edición",
+      "procedure": "Adaptador offline dedicado: python -m src.source_updates.retained retain --product afac_margins --source-root <Bronze-retenido> --workspace <candidato-nuevo> con roles --original routes + carriers; primero --dry-run y después --execute. Conserva alias, hash y fecha real de captura, sin descarga nueva. certify --product afac_margins --workspace <candidato> --period <YYYYMmm-exigido-por-el-documento> --as-of <corte-con-zona> --retention <id> admite --dry-run/--execute/--check. Regular nacional/internacional, enero-julio 2026; 28 reconciliaciones exactas. Separar empresa de par de ciudades y preservar las cinco celdas estimadas de la fuente; no ejecutar estimador. No se integra al runner build genérico ni al warehouse publicado. El lote explícito retained_round requiere una receta local; no activa calendario, noticias o tesis."
     },
     "bts_segments": {
       "entry_ref": "constant:src.ingest.bts.t100:FORM_URL",
@@ -184,9 +184,9 @@
     },
     "oma_traffic": {
       "entry_ref": "constant:src.ingest.airports.groups:OMA_IR_URL",
-      "state": "discovery_only",
-      "format": "HTML → PDF",
-      "procedure": "Capturar índice, seleccionar href del mes y PDF real. Entidad/nombre esperados se consultan en _oma_documents y _parse_oma_pdf; no generar URL de PDF futura. Separar ALL_OMA de aeropuertos; parse.airports es conjunto, exigir periodo/grupo.",
+      "state": "conditional",
+      "format": "PDF tráfico OMA",
+      "procedure": "Adaptador offline dedicado: python -m src.source_updates.retained retain --product oma_traffic --source-root <Bronze-retenido> --workspace <candidato-nuevo> con roles --original pdf; primero --dry-run y después --execute. Conserva alias, hash y fecha real de captura, sin descarga nueva. certify --product oma_traffic --workspace <candidato> --period <YYYYMmm-exigido-por-el-documento> --as-of <corte-con-zona> --retention <id> admite --dry-run/--execute/--check. Julio 2026 retenido: 13 aeropuertos/grupo, tres mercados, mensual/acumulado y comparación anual separados; 80 reconciliaciones. Pasajeros terminales incluyen comercial/charter/general y excluyen tránsito. Septiembre enlazado falló; no se acredita su incorporación. No se integra al runner build genérico ni al warehouse publicado. El lote explícito retained_round requiere una receta local; no activa calendario, noticias o tesis.",
       "selection_contract": {
         "source_system": "oma_ir",
         "entity": "oma_traffic_<document>",
@@ -216,9 +216,9 @@
     },
     "aicm_slots": {
       "entry_ref": "constant:src.ingest.airports.groups:AICM_STATS_INDEX",
-      "state": "manual",
-      "format": "PDF estacional de slots",
-      "procedure": "Seleccionar horario estacional real y vigencia; el índice estadístico es punto de entrada, no prueba de enlace de slots. No hay adaptador genérico nuevo. Mantener movimientos programados separados de realizados."
+      "state": "conditional",
+      "format": "PDF asignaciones AICM AM verano 2026",
+      "procedure": "Adaptador offline dedicado: python -m src.source_updates.retained retain --product aicm_slots --source-root <Bronze-retenido> --workspace <candidato-nuevo> con roles --original pdf; primero --dry-run y después --execute. Conserva alias, hash y fecha real de captura, sin descarga nueva. certify --product aicm_slots --workspace <candidato> --period <mes-o-trimestre-de-revisión> --as-of <corte-con-zona> --retention <id> admite --dry-run/--execute/--check. Edición revisada: 61 páginas/2.836 asignaciones únicas; fechas, frecuencias y operaciones reconciliadas, horario UTC. Mantener temporada completa y AM como designador; no vuelos realizados, operador, conteos mensuales/trimestrales ni nuevos periodos/ediciones sin revisión. No se integra al runner build genérico ni al warehouse publicado. El lote explícito retained_round requiere una receta local; no activa calendario, noticias o tesis."
     },
     "aifa_traffic": {
       "entry_ref": "constant:src.ingest.airports.groups:AIFA_STATS_INDEX",
@@ -278,51 +278,51 @@
     },
     "anac": {
       "entry_ref": "constant:src.ingest.international_routes:ANAC_URL",
-      "state": "missing_adapter",
-      "format": "JSON 2021–2030 con rangos HTTP",
-      "procedure": "Archivo exacto en ANAC_URL; puede ser muy grande y devolver desafíos. Adaptador histórico anac_content usa rangos y mismo ETag/Last-Modified, pero tiene destino/selección congelados. No invocarlo sobre datos activos ni convertirlo en GET genérico sin límite. Nueva captura acotada y parser candidatos pendientes."
+      "state": "conditional",
+      "format": "JSON completo de arrays consecutivos",
+      "procedure": "Adaptador offline dedicado: python -m src.source_updates.retained retain --product anac --source-root <Bronze-retenido> --workspace <candidato-nuevo> con roles --original json; primero --dry-run y después --execute. Conserva alias, hash y fecha real de captura, sin descarga nueva. certify --product anac --workspace <candidato> --period <YYYYMmm-exigido-por-el-documento> --as-of <corte-con-zona> --retention <id> admite --dry-run/--execute/--check. Consumir todos los bytes; compañía literal revisada, servicio regular México–Brasil. Archivo retenido llega a junio 2026; ausencias de mes/operador no son cero. No se integra al runner build genérico ni al warehouse publicado. El lote explícito retained_round requiere una receta local; no activa calendario, noticias o tesis."
     },
     "aerocivil": {
       "entry_ref": "constant:src.ingest.international_routes:CO_URL",
-      "state": "missing_adapter",
+      "state": "conditional",
       "format": "Socrata JSON operaciones",
-      "procedure": "Revisar consulta en download(): $where anio 2025–2026 y explotador AMX/SLI; count(*) antes de $limit 50000 y orden explícito. Es una selección histórica, no fecha de release. Cambiar ventana exige conteo/paginación probados y adaptador candidato; no pasajeros ni red mundial."
+      "procedure": "python -m src.source_updates.aerocivil recipe --period YYYYMmm emite count-before/rows/count-after con AMX/SLI y límite1000; --metadata emite la selección del diccionario oficial requerido. collect captura cada selección. Importar por hash un original OurAirports retenido y ejecutar certify --workspace <candidato> --period <mes> --as-of <corte> --collection <id> con --dry-run/--execute/--check. Se comparan ambos conteos y se valida todo el grano nativo. Candidato de movimientos en aeropuertos colombianos bajo códigos literales S/I; la leyenda de códigos y atribución de entidad siguen pendientes. EMPRESA/EXPLOTADOR son derivados por el proveedor; no se infiere comercializador/codeshare. Sin pasajeros, asientos, despegues ni red mundial; agent_eligible=false. No añade pasos al runner genérico ni publica. Revalidación21oct:metadata/count/rows/countHTTP200,10filascrudas,8S/I,347movimientos. recipe --availability --period2026M07 selecciona máximo mesAMX/SLIdel año; availability --workspace <candidato> --period2026M07 --as-of <corte> --collection <id> verifica recibo sin escribir. Máximo observado2026M07,no completitud. certify --baseline baselines/<anterior.parquet> fija SHA y comparación de altas/bajas/cambios/iguales, reproducida en --check. La metadata verificada exige cinco definiciones y conserva categorías desconocidas; la leyenda literal sigue pendiente, no prestar otra."
     },
     "caa": {
       "entry_ref": "url:https://www.caa.co.uk/data-and-analysis/uk-aviation-market/flight-punctuality/uk-flight-punctuality-statistics/2026/",
-      "state": "discovery_only",
-      "format": "HTML → CSV Flight Punctuality",
-      "procedure": "Descubrir CSV realmente presente del mes y confirmar producto. CAA_URL del adaptador apunta a captura puntual de junio, no endpoint de próximos meses. Airport Data es otro producto. No hay parser candidato genérico de novedades."
+      "state": "conditional",
+      "format": "CSV Flight Punctuality",
+      "procedure": "Adaptador offline dedicado: python -m src.source_updates.retained retain --product caa --source-root <Bronze-retenido> --workspace <candidato-nuevo> con roles --original csv; primero --dry-run y después --execute. Conserva alias, hash y fecha real de captura, sin descarga nueva. certify --product caa --workspace <candidato> --period <YYYYMmm-exigido-por-el-documento> --as-of <corte-con-zona> --retention <id> admite --dry-run/--execute/--check. Junio 2026: Aeromexico Heathrow–Mexico City, llegadas/salidas. Conservar cotejados, no cotejados y cancelados separados; sin pasajeros/asientos ni total mundial de operaciones. No se integra al runner build genérico ni al warehouse publicado. El lote explícito retained_round requiere una receta local; no activa calendario, noticias o tesis."
     },
     "aena": {
       "entry_ref": "constant:src.ingest.international_routes:AENA_URL",
-      "state": "manual",
-      "format": "cuatro CSV UTF-16 exportados",
-      "procedure": "Exportaciones: aena_company_operations, aena_company_passengers, aena_market_operations, aena_market_passengers. Consulta personalizada mediante sesión autorizada del usuario; no login/credenciales nuevos. No hay compañía×ambos extremos. import_aena_exports escribe selección activa: no invocarlo aquí; conservar candidatos y revisar adaptador."
+      "state": "conditional",
+      "format": "cuatro CSV UTF-16",
+      "procedure": "Adaptador offline dedicado: python -m src.source_updates.retained retain --product aena --source-root <Bronze-retenido> --workspace <candidato-nuevo> con roles --original company_operations + company_passengers + market_operations + market_passengers; primero --dry-run y después --execute. Conserva alias, hash y fecha real de captura, sin descarga nueva. certify --product aena --workspace <candidato> --period <YYYYMmm-exigido-por-el-documento> --as-of <corte-con-zona> --retention <id> admite --dry-run/--execute/--check. Exportaciones retenidas enero-julio 2026. Compañía×aeropuerto y mercado de todas las compañías son ámbitos separados. Dos filas de pasajeros BCN faltantes siguen N/D; operaciones cero de otro CSV no las rellenan. Nuevas exportaciones requieren selección manual autorizada, sin login. No se integra al runner build genérico ni al warehouse publicado. El lote explícito retained_round requiere una receta local; no activa calendario, noticias o tesis."
     },
     "am_routes": {
       "entry_ref": "catalogue:aeromexico_route_press",
-      "state": "manual",
-      "format": "comunicado HTML fechado",
-      "procedure": "La URL del catálogo es evidencia histórica puntual. Buscar un comunicado real nuevo solo cuando el alcance lo requiera; no inferir actualización mensual ni vigencia actual de frecuencias antiguas. Capturar original/fecha y revisar manualmente."
+      "state": "conditional",
+      "format": "HTML comunicado Aeromexico distribuido por GlobeNewswire",
+      "procedure": "Adaptador offline dedicado: python -m src.source_updates.retained retain --product am_routes --source-root <Bronze-retenido> --workspace <candidato-nuevo> con roles --original document; primero --dry-run y después --execute. Conserva alias, hash y fecha real de captura, sin descarga nueva. certify --product am_routes --workspace <candidato> --period <YYYYMmm-exigido-por-el-documento> --as-of <corte-con-zona> --retention <id> admite --dry-run/--execute/--check. Dos pasajes fechados 2023-09-06 por el contenido, pese a URL del día siguiente; programación anunciada, no vuelos observados. No se integra al runner build genérico ni al warehouse publicado. El lote explícito retained_round requiere una receta local; no activa calendario, noticias o tesis."
     },
     "oma_routes": {
       "entry_ref": "catalogue:oma_route_newsroom",
-      "state": "discovery_only",
-      "format": "sala de prensa → PDF",
-      "procedure": "Elegir comunicado oficial por ruta, operador, fecha de inicio y frecuencia anunciada. No confundir nota con vuelos realizados. Pipeline histórico usa selección fija; nuevas notas requieren adaptador/validación manual."
+      "state": "conditional",
+      "format": "PDF comunicado OMA",
+      "procedure": "Adaptador offline dedicado: python -m src.source_updates.retained retain --product oma_routes --source-root <Bronze-retenido> --workspace <candidato-nuevo> con roles --original document; primero --dry-run y después --execute. Conserva alias, hash y fecha real de captura, sin descarga nueva. certify --product oma_routes --workspace <candidato> --period <YYYYMmm-exigido-por-el-documento> --as-of <corte-con-zona> --retention <id> admite --dry-run/--execute/--check. Dos pasajes fechados 2026-04-13; anuncio y horario semanal, sin expandir fechas ni inferir operaciones realizadas. No se integra al runner build genérico ni al warehouse publicado. El lote explícito retained_round requiere una receta local; no activa calendario, noticias o tesis."
     },
     "colima": {
       "entry_ref": "catalogue:colima_route_statement",
-      "state": "manual",
-      "format": "republicación HTML fechada",
-      "procedure": "URL puntual del catálogo. Revalidar para revisión de esa evidencia; no buscar volumen o exclusividad actual en ella. Original institucional no localizado; mantener condición de mirror/atribución."
+      "state": "conditional",
+      "format": "HTML republicación Colimapm",
+      "procedure": "Adaptador offline dedicado: python -m src.source_updates.retained retain --product colima --source-root <Bronze-retenido> --workspace <candidato-nuevo> con roles --original document; primero --dry-run y después --execute. Conserva alias, hash y fecha real de captura, sin descarga nueva. certify --product colima --workspace <candidato> --period <YYYYMmm-exigido-por-el-documento> --as-of <corte-con-zona> --retention <id> admite --dry-run/--execute/--check. Pasaje de 2026-05-28 atribuido a Subsectur; fuente secundaria. No usar reloj de la página como publicación ni tratar traslado anunciado como operación comprobada. No se integra al runner build genérico ni al warehouse publicado. El lote explícito retained_round requiere una receta local; no activa calendario, noticias o tesis."
     },
     "aifa_roster": {
       "entry_ref": "catalogue:expansion_aifa_roster",
-      "state": "manual",
-      "format": "artículo/listado secundario fechado",
-      "procedure": "URL puntual de junio 2026; guardar fuente y fecha. No expandirlo a presencia actual ni pasajeros por operador. Nueva lista requiere selección explícita y revisión de inferencia."
+      "state": "conditional",
+      "format": "HTML NewsArticle Expansión",
+      "procedure": "Adaptador offline dedicado: python -m src.source_updates.retained retain --product aifa_roster --source-root <Bronze-retenido> --workspace <candidato-nuevo> con roles --original document; primero --dry-run y después --execute. Conserva alias, hash y fecha real de captura, sin descarga nueva. certify --product aifa_roster --workspace <candidato> --period <YYYYMmm-exigido-por-el-documento> --as-of <corte-con-zona> --retention <id> admite --dry-run/--execute/--check. Pasaje del listado Aeromexico de 2026-06-08; contexto secundario fechado, no operación continuada ni conteos de vuelos. No se integra al runner build genérico ni al warehouse publicado. El lote explícito retained_round requiere una receta local; no activa calendario, noticias o tesis."
     },
     "airports_reference": {
       "entry_ref": "constant:src.ingest.airports.reference:OURAIRPORTS_URL",
@@ -338,9 +338,9 @@
     },
     "iasa": {
       "entry_ref": "catalogue:faa_iasa",
-      "state": "discovery_only",
-      "format": "PDF FAA",
-      "procedure": "Revalidar archivo conocido y comprobar edición/categoría dentro del PDF; consultar IASA oficial antes de afirmar que es último. No hay parser candidato genérico ni inferencia causal automática.",
+      "state": "conditional",
+      "format": "PDF FAA IASA",
+      "procedure": "Adaptador offline dedicado: python -m src.source_updates.retained retain --product iasa --source-root <Bronze-retenido> --workspace <candidato-nuevo> con roles --original pdf; primero --dry-run y después --execute. Conserva alias, hash y fecha real de captura, sin descarga nueva. certify --product iasa --workspace <candidato> --period <mes-o-trimestre-de-revisión> --as-of <corte-con-zona> --retention <id> admite --dry-run/--execute/--check. Snapshot por SHA: 84 países/autoridades, documento 2025-04-18. Nueva edición o cobertura requiere revisión. No calificación de aerolínea ni vigencia actual inferida. No se integra al runner build genérico ni al warehouse publicado. El lote explícito retained_round requiere una receta local; no activa calendario, noticias o tesis.",
       "selection_contract": {
         "source_system": "faa_iasa",
         "entity": "country_results",
@@ -350,15 +350,15 @@
     },
     "dictionary": {
       "entry_ref": "catalogue:loughran_mcdonald",
-      "state": "manual",
-      "format": "CSV de diccionario versionado",
-      "procedure": "Fuente de versión: LANDING_PAGE y FILE_ID en src.ingest.nlp.loughran_mcdonald. No asumir que el ID antiguo es última edición. Si Drive pide confirmación/autenticación, registrar bloqueo o importar descarga autorizada. Mantener versión; no recalcular tono/modelos."
+      "state": "conditional",
+      "format": "CSV Loughran–McDonald",
+      "procedure": "Adaptador offline dedicado: python -m src.source_updates.retained retain --product dictionary --source-root <Bronze-retenido> --workspace <candidato-nuevo> con roles --original csv; primero --dry-run y después --execute. Conserva alias, hash y fecha real de captura, sin descarga nueva. certify --product dictionary --workspace <candidato> --period <mes-o-trimestre-de-revisión> --as-of <corte-con-zona> --retention <id> admite --dry-run/--execute/--check. 86.553 palabras por snapshot SHA; preservar NA, años de categoría con signo y secuencias cero. No recalcular tono ni inferir una versión semántica del nombre del archivo. No se integra al runner build genérico ni al warehouse publicado. El lote explícito retained_round requiere una receta local; no activa calendario, noticias o tesis."
     },
     "rss": {
       "entry_ref": "mapping:src.ingest.news.rss_gdelt:RSS_FEEDS:google_es",
       "state": "conditional",
       "format": "RSS XML de metadatos",
-      "procedure": "RSS_FEEDS google_es/google_en contiene consultas exactas actuales de Aeroméxico. Guardar feed, consulta y fecha. No recupera mes completo de forma garantizada. parse.news conserva procedencias; PR136 prepara corte mensual desde metadatos revisados, sin activar índice.",
+      "procedure": "RSS_FEEDS google_es/google_en contiene consultas canónicas actuales de Aeroméxico, Viva y Volaris. Guardar el feed, su consulta exacta y fecha; las capturas históricas pueden tener un alcance distinto. No recupera el mes completo de forma garantizada. parse.news conserva procedencias; la integración PR142 prepara cortes desde metadatos revisados, sin activar candidatos. El auditor news_cut verifica sólo el corte observado y sus límites.",
       "selection_contract": {
         "source_system": "rss",
         "entity": "google_es (or google_en for that canonical feed)",
@@ -371,7 +371,7 @@
       "entry_ref": "constant:src.ingest.news.rss_gdelt:GDELT_API_URL",
       "state": "conditional",
       "format": "GET Doc API → JSON articles",
-      "procedure": "Consulta canónica de Aeroméxico, Viva y Volaris; parámetros compartidos en GDELT_QUERY_PARAMS y rss_gdelt.run(): mode artlist, maxrecords 250, format json, sort datedesc. No prometer recuperación completa ni inventar paginación/fechas. Entidad histórica aeromexico_articles; parse.news conserva primera observación y captura sin usarlas como publicación. Metadatos sin fecha quedan en quality/news_metadata_selection.json para revisión, fuera de ediciones mensuales fechadas.",
+      "procedure": "Consulta canónica de Aeroméxico, Viva y Volaris; parámetros compartidos en GDELT_QUERY_PARAMS y rss_gdelt.run(): mode artlist, maxrecords 250, format json, sort datedesc. No prometer recuperación completa ni inventar paginación/fechas. Entidad histórica aeromexico_articles; parse.news conserva primera observación y captura sin usarlas como publicación. Metadatos sin fecha quedan en quality/news_metadata_selection.json para revisión, fuera de ediciones mensuales fechadas. python -m src.source_updates.gdelt recipe --period YYYYMmm --as-of <corte> emite una consulta acotada al mes de primera observación en America/Mexico_City, máximo 250 resultados. collect preserva respuestas fallidas aparte de Bronze válido. gdelt certify --workspace <candidato> --period <mes> --as-of <corte> --collection <id> admite --dry-run/--execute/--check: verifica original/manifiesto/sidecar, contrato JSON, punteros y replay inmutable de Silver/Gold candidatos. Publicación/evento siguen nulos; no alimenta ediciones mensuales de noticias ni certifica mes completo. Dos intentos reales del 21 de octubre (septiembre y consulta canónica actual) devolvieron 503; ninguna extracción actual acreditada. Investigación adicional:HTTP200 con164artículos,14fuera de septiembreMéxico;normalización rechazada,sinSilver/Gold. Captura diagnóstica rotulada current no certifica identidad mensual. Consulta reducida posteriorHTTP429:fin de llamadas de este lote. Respuesta oficial exige1cada5segundos;recolector usa1cada6segundos porproceso y omite el resto de peticiones de esa fuente tras429. Usar un solo runner,no cuota distribuida. Conservar503 previos y todos los recibos;HTTP200 no significa periodo válido.",
       "selection_contract": {
         "source_system": "gdelt",
         "entity": "aeromexico_articles",
@@ -391,7 +391,7 @@
       "entry_ref": "catalogue:peer_profile",
       "state": "internal",
       "format": "curación con padres",
-      "procedure": "Sin endpoint. Revisar perfiles y fuentes contribuyentes; conservar versión y justificación. No inventar una descarga ni una aprobación."
+      "procedure": "Sin endpoint. Revisar perfiles y fuentes contribuyentes; conservar versión y justificación. No inventar una descarga ni una aprobación. python -m src.source_updates.curated_profiles --bundle <peer-primary-review.json> --root old_public=<originales> --workspace tmp/source-updates/<nuevo> --as-of <corte> admite --dry-run/--execute/--check:11métricas nativas desde Viva2T26/RyanairFY2026,unidades/escala/emisor/periodo explícitos, inventario exacto y hash/linaje. No sustituye perfiles aprobados ni convierteFYen trimestre. operator_registry --root <auditoria> --as-of <corte> verifica cuatro filasIATA/FAA separadas,no aliasIASA ni unión a matrices; equivalenciaRyanairDAC no inferida."
     },
     "curated_context": {
       "entry_ref": "catalogue:curated_primary_sources",

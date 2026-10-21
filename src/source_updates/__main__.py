@@ -22,6 +22,21 @@ def read_json(path: Path) -> dict:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
+    h10 = commands.add_parser("h10", help="Certify only H.10 in an isolated monthly candidate")
+    h10.add_argument("--period", required=True)
+    h10.add_argument("--as-of", required=True)
+    h10.add_argument("--workspace", type=Path, required=True)
+    h10_mode = h10.add_mutually_exclusive_group()
+    h10_mode.add_argument("--execute", action="store_true")
+    h10_mode.add_argument("--dry-run", action="store_true")
+    h10_mode.add_argument(
+        "--check", action="store_true", help="Recompute and verify existing candidate offline, without writes"
+    )
+    h10_mode.add_argument(
+        "--from-collection",
+        help="Build offline from an existing collection receipt ID, without fetching again",
+    )
+    h10.add_argument("--check-at-completion", action="store_true")
     planned = commands.add_parser("plan")
     planned.add_argument("--round", choices=["monthly", "quarterly", "combined"], required=True)
     planned.add_argument("--as-of", required=True)
@@ -33,6 +48,9 @@ def main(argv: list[str] | None = None) -> int:
     recipes.add_argument("--period")
     recipes.add_argument("--as-of")
     recipes.add_argument("--catalog-file", type=Path)
+    recipes.add_argument(
+        "--source-url", help="Explicit official Viva PDF URL; content still needs certification"
+    )
     recipes.add_argument("--ticker", action="append", choices=["AERO", "VOLAR"])
     dates = commands.add_parser("calendar")
     dates.add_argument("--start", required=True, help="YYYY-MM")
@@ -68,11 +86,33 @@ def main(argv: list[str] | None = None) -> int:
     checks.add_argument("--specification", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
-        if args.command == "plan":
+        if args.command == "h10":
+            from src.source_updates.h10 import run
+
+            result = run(
+                args.workspace,
+                args.period,
+                args.as_of,
+                execute=args.execute,
+                check=args.check,
+                from_collection=args.from_collection,
+                check_at_completion=args.check_at_completion,
+            )
+        elif args.command == "plan":
             result = plan(args.round, args.as_of, args.quarter, args.family)
         elif args.command == "recipe":
+            if args.source_url and (
+                args.product != "viva_traffic" or args.output != "selection" or args.catalog_file
+            ):
+                raise ValueError("Explicit source URL requires Viva PDF selection without catalog-file")
             if args.output == "selection":
-                if args.catalog_file:
+                if args.source_url:
+                    from src.source_updates.viva_traffic import selection_for_url
+
+                    if not args.period:
+                        raise ValueError("Explicit Viva PDF selection requires --period")
+                    result = selection_for_url(args.source_url, args.period)
+                elif args.catalog_file:
                     from src.source_updates.discovery import select_documents
 
                     if not args.period:
@@ -130,6 +170,9 @@ def main(argv: list[str] | None = None) -> int:
             result = check_candidate(args.workspace, read_json(args.specification))
         else:
             recipe = read_json(args.recipe)
+            from src.source_updates.rounds import validate_recipe
+
+            validate_recipe(recipe, args.workspace)
             collected = collect(recipe["selection"], args.workspace, execute=args.execute)
             result = {
                 "mode": "round" if args.execute else "dry_run",
