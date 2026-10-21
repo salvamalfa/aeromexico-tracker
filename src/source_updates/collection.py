@@ -208,6 +208,7 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
     }
     with writer(workspace):
         for item in planned["items"]:
+            response = None
             product = products[item["product"]]
             source = sources[product["source_key"]]
             result = {
@@ -241,6 +242,7 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
                         # Redirect targets are checked BEFORE each request. Five total
                         # calls per operation, including redirects. TLS stays enabled.
                         def request(method, target, **kwargs):
+                            nonlocal response
                             for _ in range(5):
                                 validate_url(target, source["allowed_hosts"])
                                 try:
@@ -342,6 +344,21 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
                     result["http_status"] = exc.response.status_code
                 elif isinstance(exc, ValueError):
                     result["reason"] = str(exc)
+                # Keep the public failed response apart from successful Bronze.
+                # It cannot satisfy any parser or prove that a period is empty.
+                failed = exc.response if isinstance(exc, httpx.HTTPStatusError) else response
+                if failed is not None:
+                    failure = workspace / "receipts/failures" / receipt["run_id"] / (item["id"] + ".bin")
+                    failure.parent.mkdir(parents=True, exist_ok=True)
+                    failure.write_bytes(failed.content)
+                    result["failed_response"] = {
+                        "file": failure.relative_to(workspace).as_posix(),
+                        "sha256": hashlib.sha256(failed.content).hexdigest(),
+                        "bytes": len(failed.content),
+                        "http_status": failed.status_code,
+                        "content_type": failed.headers.get("content-type"),
+                        "eligible_as_source_data": False,
+                    }
             receipt["items"].append(result)
         receipt["status"] = (
             "collected_unvalidated"
