@@ -1,8 +1,4 @@
-"""Viva historical traffic source units and policy-bound monthly PDF selection.
-
-The reviewed November 2021 layout is intentionally distinct from the unread
-2026 edition. A historical replay never certifies current source availability.
-"""
+"""Viva monthly traffic in native units, with distinct 2021 and 2026 layouts."""
 
 from __future__ import annotations
 
@@ -12,7 +8,7 @@ import re
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
 
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -22,9 +18,9 @@ from src.source_updates.catalog import load_catalog
 from src.source_updates.checks import period_end
 from src.source_updates.collection import validate_url
 
-VERSION = "viva_traffic_reviewed_2021m11_v1"
+VERSION = "viva_traffic_native_monthly_v2"
 TABLE = "fact_viva_monthly_source_metrics"
-GRAIN = ["period_id", "metric_key", "definition"]
+GRAIN = ["period_id", "metric_key", "segment", "definition"]
 MONTHS = "enero febrero marzo abril mayo junio julio agosto septiembre octubre noviembre diciembre".split()
 NUMBER = r"(?:0|[1-9]\d{0,2}(?:,\d{3})+|[1-9]\d*)(?:\.\d+)?"
 METRICS = [
@@ -33,6 +29,18 @@ METRICS = [
     ("RPK's (millones)", "rpk", "million passenger-km", "reported_revenue_passenger_kilometers"),
     ("ASK's (millones)", "ask", "million seat-km", "reported_available_seat_kilometers"),
 ]
+CURRENT_METRICS = [
+    (
+        "Pasajeros",
+        "passengers_booked",
+        "thousand booked passengers",
+        "booked_not_necessarily_flown_itinerary_and_charter",
+    ),
+    ("Factor de Ocupación", "load_factor_itinerary", "percent", "reported_itinerary_RPM_div_ASM"),
+    ("RPMs", "rpm", "million passenger-miles", "reported_itinerary_and_charter_revenue_passenger_miles"),
+    ("ASMs", "asm", "million seat-miles", "reported_itinerary_and_charter_available_seat_miles"),
+]
+ABBREVIATIONS = "Ene Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic".split()
 
 
 def select(catalog: Path, period: str, *, catalog_url: str) -> dict:
@@ -47,11 +55,28 @@ def select(catalog: Path, period: str, *, catalog_url: str) -> dict:
     }
     if len(candidates) != 1:
         raise ValueError("Viva month absent or ambiguous in the actual preserved catalogue")
-    url = candidates.pop()
+    selection = selection_for_url(candidates.pop(), period)
+    selection["discovery"] = {
+        "catalog_sha256": hashlib.sha256(catalog.read_bytes()).hexdigest(),
+        "period": period,
+    }
+    return selection
+
+
+def selection_for_url(url: str, period: str) -> dict:
+    """Explicit official PDF selection; a filename never verifies its period."""
+    if not re.fullmatch(r"20\d{2}M(?:0[1-9]|1[0-2])", period):
+        raise ValueError("Viva traffic selection requires one explicit month")
     validate_url(url, load_catalog()["viva_ir"]["allowed_hosts"])
+    if not urlsplit(url).path.lower().endswith(".pdf"):
+        raise ValueError("Select the actual official PDF URL, not a portal or invented filename")
     return {
         "version": 1,
-        "discovery": {"catalog_sha256": hashlib.sha256(catalog.read_bytes()).hexdigest(), "period": period},
+        "discovery": {
+            "mode": "explicit_official_pdf_selection",
+            "period": period,
+            "content_period_verification": "required_before_certification",
+        },
         "items": [
             {
                 "id": "viva-traffic-" + period,
@@ -136,6 +161,7 @@ def texts(pages: list[str], period: str, original: dict) -> tuple[pd.DataFrame, 
                 {
                     "period_id": observed,
                     "period_type": "month",
+                    "segment": "total",
                     "reported_in_period": period,
                     "entity_as_reported": (
                         "Viva Aerobus brand; legal issuer/operator not established by this release"
@@ -188,8 +214,11 @@ def texts(pages: list[str], period: str, original: dict) -> tuple[pd.DataFrame, 
 
 
 def validate(frame: pd.DataFrame) -> None:
+    if set(frame.reported_in_period) != {"2021M11"}:
+        validate_current(frame)
+        return
     expected = {
-        (period, metric, definition)
+        (period, metric, "total", definition)
         for period in ("2021M11", "2020M11", "2019M11")
         for _, metric, _, definition in METRICS
     }
@@ -209,6 +238,191 @@ def parse(inputs: dict, period: str) -> tuple[pd.DataFrame, dict]:
     if not content.startswith(b"%PDF-") or len(content) > 2_000_000:
         raise ValueError("Expected a bounded original Viva traffic PDF")
     pdf = PdfReader(io.BytesIO(content))
-    if pdf.is_encrypted or len(pdf.pages) != 1:
+    expected_pages = 1 if period == "2021M11" else 2
+    if pdf.is_encrypted or len(pdf.pages) != expected_pages:
         raise ValueError("Viva traffic page/encryption contract changed")
-    return texts([page.extract_text() or "" for page in pdf.pages], period, original)
+    pages = [page.extract_text() or "" for page in pdf.pages]
+    return texts(pages, period, original) if period == "2021M11" else current_texts(pages, period, original)
+
+
+def current_texts(pages: list[str], period: str, original: dict) -> tuple[pd.DataFrame, dict]:
+    """Check monthly/current-prior columns, glossary and all twelve native rows."""
+    if not re.fullmatch(r"20\d{2}M(?:0[1-9]|1[0-2])", period) or int(period[:4]) < 2022:
+        raise ValueError("Select an explicit month compatible with the current Viva traffic layout")
+    if len(pages) != 2 or original.get("source_system") != "viva_ir":
+        raise ValueError("Require the two-page Viva traffic original and its actual source alias")
+    year, month = int(period[:4]), int(period[-2:])
+    name, abbr = MONTHS[month - 1], ABBREVIATIONS[month - 1]
+    first, glossary = [" ".join(page.split()) for page in pages]
+    required = [
+        f"Viva anunció hoy sus resultados preliminares de tráfico correspondientes a {name} de {year}",
+        f"Reporte de Tráfico | {name.title()} {year}",
+        f"Cifras mensuales Cifras acumuladas (Ene-{abbr})",
+        f"{abbr} {year} {abbr} {year - 1} Var% {year} {year - 1} Var%",
+        "asientos por milla disponibles (ASMs)",
+    ]
+    required_glossary = [
+        "Glosario",
+        "Pasajeros: Clientes que adquirieron su boleto para volar en el mes del reporte "
+        "indistintamente si efectúan o no su vuelo.",
+        "ASMs (por sus siglas en inglés)",
+        "capacidad de asientos de la aeronave multiplicada por el número de millas.",
+        "se calcula dividiendo los pasajeros pago millas (RPMs) de itinerario "
+        "por asientos disponibles por millas (ASMs) de itinerario.",
+        "RPMs: “Pasajeros pago millas”",
+        "Viva es una aerolínea mexicana de ultra bajo costo",
+    ]
+    if any(first.count(value) != 1 for value in required) or any(
+        glossary.count(value) != 1 for value in required_glossary
+    ):
+        raise ValueError(
+            "Viva month/entity/preliminary/column order/mile units/glossary not established uniquely"
+        )
+    dates = re.findall(r"Ciudad de México, (\d{1,2}) de ([a-z]+) de (20\d{2})", first)
+    if len(dates) != 1 or dates[0][1] not in MONTHS:
+        raise ValueError("Viva source publication dateline absent or ambiguous")
+    published = date(int(dates[0][2]), MONTHS.index(dates[0][1]) + 1, int(dates[0][0]))
+    if published <= period_end(period) or pd.Timestamp(original["downloaded_at"]).date() < published:
+        raise ValueError("Viva publication must follow the month and precede its source capture")
+    header = required[3]
+    table = first.split(header, 1)[1].split(required[1], 1)[0].strip()
+    headings = [
+        "Pasajeros (itinerario & chárter, miles)",
+        "Factor de Ocupación (itinerario, RPM/ASM)",
+        "RPMs (itinerario & chárter, millones)",
+        "ASMs (itinerario & chárter, millones)",
+    ]
+    if any(table.count(heading) != 1 for heading in headings):
+        raise ValueError("Viva monthly metric headings changed or duplicated")
+    records, grid = [], {}
+    for position, (label, metric, unit, definition) in enumerate(CURRENT_METRICS):
+        heading = headings[position]
+        section = table.split(heading, 1)[1]
+        if position + 1 < len(headings):
+            section = section.split(headings[position + 1], 1)[0]
+        percent = metric == "load_factor_itinerary"
+        number = NUMBER + ("%" if percent else "")
+        delta = r"[+-]?\d+(?:\.\d+)?\s*pp" if percent else r"[+-]?\d+(?:\.\d+)?%"
+        six = rf"({number})\s+({number})\s+({delta})\s+({number})\s+({number})\s+({delta})"
+        match = re.fullmatch(rf"\s*{six}\s+Nacional\s+{six}\s+Internacional\s+{six}\s*", section)
+        if match is None:
+            raise ValueError("Viva requires exactly three six-cell monthly/YTD segment rows per metric")
+        native = {}
+        for segment, offset in [("total", 0), ("domestic", 6), ("international", 12)]:
+            tokens = match.groups()[offset : offset + 6]
+            values = [numeric(tokens[index].rstrip("%")) for index in (0, 1, 3, 4)]
+            if percent and any(value > 100 for value in values):
+                raise ValueError("Viva itinerary load factor outside percent domain")
+            if not percent and any("." in tokens[index] for index in (0, 1, 3, 4)):
+                raise ValueError("Viva current table uses rounded integer thousands/millions; format changed")
+            native[segment] = values
+            for index, observed in [(0, period), (1, f"{year - 1}M{month:02d}")]:
+                records.append(
+                    {
+                        "period_id": observed,
+                        "period_type": "month",
+                        "segment": segment,
+                        "reported_in_period": period,
+                        "entity_as_reported": (
+                            "Viva brand; legal issuer/operator not established by this release"
+                        ),
+                        "carrier_key": "VIVA_AEROBUS",
+                        "metric_key": metric,
+                        "value": float(numeric(tokens[index].rstrip("%"))),
+                        "unit": unit,
+                        "definition": definition,
+                        "source_value": tokens[index],
+                        "source_label": heading,
+                        "source_locator": f"page:1;monthly-table;{label};{segment};{observed}",
+                        "source_excerpt": section.strip(),
+                        "source_page": 1,
+                        "published_date": published,
+                        "reporting_status": "preliminary",
+                        "is_preliminary": True,
+                        "source_system": original["source_system"],
+                        "source_file": original["source_file"],
+                        "source_hash": original["sha256"],
+                        "ingested_at": pd.Timestamp(original["downloaded_at"]),
+                        "parser_version": VERSION,
+                    }
+                )
+        for column in range(4):
+            domestic, international, total = [
+                native[segment][column] for segment in ("domestic", "international", "total")
+            ]
+            if percent:
+                if (
+                    not min(domestic, international) - Decimal("0.1")
+                    <= total
+                    <= max(domestic, international) + Decimal("0.1")
+                ):
+                    raise ValueError("Viva total itinerary load factor outside component range")
+            elif abs(domestic + international - total) > Decimal("1.5"):
+                raise ValueError("Viva segment totals do not reconcile within native-unit rounding")
+        grid[metric] = native
+    for segment in ("total", "domestic", "international"):
+        if any(rpm > asm for rpm, asm in zip(grid["rpm"][segment], grid["asm"][segment], strict=True)):
+            raise ValueError("Viva RPM exceeds ASM in the same reported universe")
+    frame = pd.DataFrame(records).sort_values(GRAIN).reset_index(drop=True)
+    validate_current(frame)
+    return frame, {
+        "rows": len(frame),
+        "monthly_rows": 12,
+        "comparison_rows": 12,
+        "observation_months": sorted(frame.period_id.unique()),
+        "latest_validated_period": period,
+        "published_date": published.isoformat(),
+        "release_lag_days": (published - period_end(period)).days,
+        "first_available_at": None,
+        "publication_time": None,
+        "reporting_status": "preliminary",
+        "excluded_columns": ["year_to_date", "reported_changes"],
+        "native_reconciliations": 16,
+        "rounding_policy": (
+            "sum of rounded components within1.5 published thousands/millions; "
+            "load factor within component range"
+        ),
+        "passenger_definition": "booked_for_report_month_not_necessarily_flown_itinerary_and_charter",
+        "load_factor_policy": (
+            "reported itinerary-only RPM/ASM; other metrics include charter; "
+            "no recalculation from a different universe"
+        ),
+        "entity_attribution": "brand_only_no_legal_issuer_or_operator_mapping",
+        "scope": (
+            "one_verified_monthly_document_and_its_prior_year_comparative_"
+            "not_complete_family_or_latest_catalogue"
+        ),
+        "agent_eligible": False,
+        "activation": "none",
+    }
+
+
+def validate_current(frame: pd.DataFrame) -> None:
+    if frame.empty or len(set(frame.reported_in_period)) != 1:
+        raise ValueError("Viva monthly candidate requires one source report month")
+    period = frame.reported_in_period.iloc[0]
+    if not re.fullmatch(r"20\d{2}M(?:0[1-9]|1[0-2])", period):
+        raise ValueError("Viva source report month is invalid")
+    prior = f"{int(period[:4]) - 1}M{period[-2:]}"
+    expected = {
+        (month, metric, segment, definition)
+        for month in (period, prior)
+        for _, metric, _, definition in CURRENT_METRICS
+        for segment in ("total", "domestic", "international")
+    }
+    if (
+        len(frame) != 24
+        or frame[GRAIN].isna().any().any()
+        or frame.duplicated(GRAIN).any()
+        or set(frame[GRAIN].itertuples(index=False, name=None)) != expected
+        or frame.value.isna().any()
+        or not frame.value.map(lambda value: 0 <= value < 2**53).all()
+        or not frame.period_type.eq("month").all()
+        or not frame.source_system.eq("viva_ir").all()
+    ):
+        raise ValueError("Viva monthly metric/segment/definition/month/value contract changed")
+    for _, metric, unit, _ in CURRENT_METRICS:
+        if not frame.loc[frame.metric_key.eq(metric), "unit"].eq(unit).all():
+            raise ValueError("Viva native units changed; never relabel ASM/RPM miles as ASK/RPK kilometers")
+    if not frame.reporting_status.eq("preliminary").all() or not frame.is_preliminary.eq(True).all():
+        raise ValueError("Viva preliminary source status lost")
