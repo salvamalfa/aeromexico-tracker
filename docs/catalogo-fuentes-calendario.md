@@ -91,10 +91,10 @@ queda bloqueado; no se extrapolan sus festivos.
 Para probarlo, ejecuta la vista previa del apéndice. El resultado muestra las
 fuentes y los pasos previstos. No hace falta aprobar otra vez el calendario.
 
-**Decisión propuesta: aprobar el núcleo obligatorio recomendado abajo y dejar
-pendientes las fuentes complementarias que no sean necesarias para sus
-resultados.** El equipo se encarga de convertirlo en controles técnicos. Esta
-recomendación aún no está aprobada ni implementada.
+**Criterio aprobado el 21 de octubre:** exigir el núcleo obligatorio y permitir
+contexto complementario pendiente cuando no se utilice. El control global ya
+está implementado para comprobar esa selección, sus dependencias y los recibos
+reales disponibles. No declara una ronda lista cuando faltan pruebas.
 
 En la **mensual**, el núcleo cubre el tráfico de Aeroméxico, Volaris y Viva;
 pasajeros y mercado de la autoridad aeronáutica mexicana (AFAC), rutas
@@ -119,12 +119,12 @@ H.10, la referencia cambiaria de la Reserva Federal estadounidense, se presenta
 por separado cuando falta el tipo de cambio FIX de Banxico. No lo reemplaza
 como dato FIX ni completa inflación o tasa de interés.
 
-**Efecto de aprobar:** autoriza implementar y probar esta regla de aceptación.
+**Efecto de la aprobación:** autoriza implementar y probar esta regla de aceptación.
 No aprueba datos nuevos, publicaciones ni ejecuciones automáticas. La consecuencia
 de negocio es permitir un núcleo completo con contexto secundario pendiente,
-siempre visible con su fecha y alcance. Si se deja pendiente la propuesta, la
-aceptación global continúa bloqueada. La clasificación exacta está en el
-[apéndice técnico](#política-mínima-recomendada-pendiente-de-aprobación).
+siempre visible con su fecha y alcance. La aceptación de una ronda sigue bloqueada mientras falten insumos o pruebas.
+La clasificación exacta está en el
+[apéndice técnico](#política-mínima-aprobada).
 
 ## Preparación comprobable del calendario
 
@@ -291,13 +291,11 @@ esa política explícita y resolver ambos bloqueos. Los indicadores
 `ready_for_calendar_incorporation` y `ready_for_automatic_execution` permanecen
 falsos incluso en la receta numérica exitosa.
 
-El catálogo y la matriz no contienen una política global aprobada para los
-42 productos. La recomendación del apéndice completa la propuesta de alcance;
-no modifica el programa ni convierte una frecuencia en una obligación. Tampoco
-declara equivalentes IR, SEC y BMV. Hasta aprobar e implementar esa política,
-los indicadores de calendario y ejecución automática siguen falsos. Los controles
-de reportes publicados y festivos siguen vigentes; no completan por sí solos
-la política ni resuelven los bloqueos de Aerocivil/GDELT.
+La política global aprobada se implementa en `global_readiness`, separada de esa
+reproducción parcial. Impone la clasificación del apéndice y conserva pendientes
+de fuente y adaptadores completos; una tarea local exitosa no la sustituye.
+Los controles de reportes y festivos siguen vigentes. Aerocivil/GDELT continúan
+bloqueando incorporación y no se presume equivalencia entre IR, SEC y BMV.
 
 La revisión final corrigió dos fallos de contrato: una certificación GDELT
 vacía ya no devuelve éxito de proceso y los replay H.10, tráfico Aeroméxico,
@@ -347,9 +345,9 @@ y el [contrato común](../.agents/skills/source-updates-common.md). El mapa
 operativo cubre las 29 claves del catálogo en 42 productos, con brechas
 explícitas y comprobación de cambios en el catálogo. No sustituye los contratos.
 
-### Política mínima recomendada, pendiente de aprobación
+### Política mínima aprobada
 
-**Estado: propuesta documental; no implementada ni activada.** Las asignaciones
+**Estado: aprobada; control global implementado, sin activación.** Las asignaciones
 siguientes concretan el alcance ya descrito en las secciones de fuentes centrales,
 complementarias y familias de métricas. No añaden métricas, modelos o productos.
 El catálogo mantiene sus 42 productos y frecuencias. Base verificable:
@@ -368,7 +366,7 @@ sus dependencias para evitar un bloqueo.
 
 Mensual: 16 productos R y cinco C en el plan actual de 21 tareas.
 
-| Productos | Clase propuesta | Resultado existente que deben sustentar |
+| Productos | Clase aprobada | Resultado existente que deben sustentar |
 |---|---|---|
 | `am_traffic_ir`, `volaris_sec`, `viva_traffic` | R | Tráfico mensual de cada grupo, capacidad y ocupación según lo reportado. Separar pasajeros reservados/transportados, millas/kilómetros, itinerario/chárter. Un reporte de tráfico no satisface finanzas. |
 | `afac_carriers`, `afac_airports` | R | Pasajeros por empresa/mercado y estadísticas aeroportuarias, con sus granos y ediciones propios. El total del aeropuerto no se atribuye a una aerolínea. |
@@ -383,7 +381,7 @@ Mensual: 16 productos R y cinco C en el plan actual de 21 tareas.
 
 Trimestral: siete productos R, diez C y diez O en el plan actual de 27 tareas.
 
-| Productos | Clase propuesta | Resultado existente que deben sustentar |
+| Productos | Clase aprobada | Resultado existente que deben sustentar |
 |---|---|---|
 | `am_financials`, `volaris_sec`, `viva_financials` | R | Expediente financiero/operativo primario de las tres entidades para el trimestre solicitado: magnitudes ya definidas, monedas, escalas, balances y flujos separados, y notas de preliminar/no auditado. Un parser de una edición anterior no acredita otra nueva. |
 | `banxico`, `fuel`, `equities` | R | Contexto y agregados trimestrales de las mismas series mensuales, con días cubiertos. No fuerza que una serie de inflación o tasa tenga observación diaria. |
@@ -400,7 +398,7 @@ para auditoría, no cuentan como noticias. La combinada conserva la unión de
 obligaciones mensuales y trimestrales con sus periodos distintos; no omite una
 para evitar un fallo. Noticias se captura en la mensual, no abre otra ronda
 trimestral. Aerocivil/GDELT mantienen su condición requerida y sus bloqueos
-impiden aceptar el calendario; esta propuesta no los convierte en opcionales
+impiden aceptar el calendario; esta política no los convierte en opcionales
 ni cambia sus frecuencias.
 
 **Condiciones de aceptación y alternativas.**
@@ -438,16 +436,79 @@ ni cambia sus frecuencias.
 6. Se mantienen los tres reportes reales del trimestre cerrado, el calendario
    bancario verificado, el corte inmutable, los checks Bronze/Silver/Gold,
    revisiones y deduplicación, y el recibo offline reproducible. Una propuesta de
-   fecha o una receta local exitosa no acredita una ronda global. Tras aprobar
-   esta recomendación aún se debe implementar y probar ese control; las dos
-   banderas de calendario siguen falsas y ningún disparador se instala.
+   fecha o una receta local exitosa no acredita una ronda global. El comando global aplica ese control; un recibo local válido por sí solo
+   sigue sin certificar disponibilidad. La bandera automática permanece falsa
+   y ningún disparador se instala.
 
 Las condiciones anteriores se apoyan en los [checks de candidato](../src/source_updates/checks.py),
 la [precedencia existente](../src/transform/stage6_facts.py),
 el [constructor macro](../src/transform/stage6_macro.py), los
 [lectores de originales retenidos](../src/source_updates/retained.py) y la
-[reproducción de ronda](../src/source_updates/readiness.py). Ninguno de ellos
-se modifica con esta recomendación documental.
+[reproducción de ronda](../src/source_updates/readiness.py). Se reutilizan sin reinterpretar sus recibos históricos.
+
+### Control global ejecutable
+
+```bash
+uv run python -m src.source_updates.global_readiness --recipe config/source_update_global.example.json --workspace tmp/source-updates/global-preview --dry-run
+# Después de seleccionar candidatos reales y completar la receta:
+uv run python -m src.source_updates.global_readiness --recipe tmp/receta-global.json --workspace tmp/source-updates/global-review --execute
+uv run python -m src.source_updates.global_readiness --recipe tmp/receta-global.json --workspace tmp/source-updates/global-review --check
+```
+
+La receta de ejemplo deja tareas y reportes vacíos a propósito: la vista previa
+lista los 23 productos/periodos obligatorios ausentes de la combinada, conserva
+`monthly_date=2026-10-15`, `quarterly_date=null`, cero llamadas y ninguna
+activación. Es un ejemplo de bloqueo, no evidencia de extracción.
+
+`core_ready` verifica los requeridos de la cadencia y sus dependencias;
+`requested_bundle_ready` exige además todos los C/O utilizados. Un extra inválido
+no se incorpora ni hace pasar el paquete; un núcleo independiente válido conserva
+su estado. `ready_for_calendar_incorporation` exige también Aerocivil/GDELT,
+disponibilidad acreditada, festivos y reportes correspondientes. Ningún resultado
+activa ejecución o publicación. El CLI devuelve 1 en una ejecución/replay bloqueado;
+el modo seco devuelve 0 con estado `planned_not_executed` y bloqueos visibles.
+
+Cada tarea declara `id`, `product`, `cadence`, `period`, `used`, `depends_on`,
+`adapter`, `workspace`, `receipt_id` y `candidate_as_of`. Los periodos objetivo
+`monthly_period` y `quarterly_period` son contextos separados y cerrados. El
+campo opcional `source_period` conserva el mes nativo rezagado de AFAC/BTS/AICM/AIFA
+o un mes de Aerocivil dentro de su trimestre: no transforma ese mes en cobertura
+trimestral ni acredita última disponibilidad. Las tareas financieras primarias
+no aceptan otro trimestre. Una referencia usada fuera de cadencia se revalida
+sin adquirirla de nuevo. Las dependencias transitivas deben estar usadas y
+validadas; ciclos, duplicados, sustituciones de producto y reducciones de
+métricas/filtros se rechazan. No hay interfaz para aportar resultados aprobados
+por el usuario como si provinieran de un verificador.
+
+Los adaptadores completos admitidos son los mismos de `readiness`: originales
+retenidos, tráfico IR Aeroméxico, H.10, Aerocivil y GDELT. Un producto sin ese
+adaptador se declara `unsupported` y bloquea si se utiliza. Los checks genéricos
+existentes siguen sirviendo para comprobar tablas, pero no certifican todas las
+métricas obligatorias de un producto. Esto evita dar por Banxico completo una
+prueba de FIX que omita INPC/tasa, o por mercado completo una sola cotización.
+**No todos los R disponen todavía de un adaptador global completo.** La cobertura
+de herramientas de la matriz no debe confundirse con esa certificación.
+
+Los reportes centrales añaden a los campos existentes `task_id` y
+`source_sha256`; deben corresponder a la entidad/trimestre del candidato y a un
+original contribuyente de su linaje verificado, con URL y SHA idénticos. La fecha
+de publicación sigue siendo una afirmación explícita revisada contra el documento,
+no se deduce de la descarga. Anuncios y llamadas no sirven. La combinación
+rechaza fechas separadas por más de siete días naturales. El año 2027 sigue sin
+festivos acreditados y bloqueado. No se crea ninguna fecha de release.
+
+El recibo inmutable congela receta, política, código reutilizado, contratos,
+catálogo, calendario y resultados/fingerprints de los candidatos. El replay
+repite los verificadores reales con red bloqueada y comprueba igualdad; nunca
+recolecta ni escribe en los candidatos. Un escritor crea solo el recibo global
+en una carpeta nueva. Un cambio de esos insumos exige otro recibo.
+
+Las pruebas positivas de la decisión usan resultados internos sintéticos para
+probar el contrato; **no acreditan fuentes reales**. La extracción real sigue
+siendo la evidencia de la matriz. Los verificadores actuales conservan
+`latest_source_availability_verified=false`: hasta añadir prueba de descubrimiento
+oficial por producto, un original retenido no hará pasar esa puerta. Aerocivil
+permanece sin aceptación semántica y GDELT sin candidato mensual válido.
 
 ### Prueba en seco
 
