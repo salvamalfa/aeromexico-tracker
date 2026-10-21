@@ -109,9 +109,23 @@ está disponible y no concede aprobación. Los 11 registros de PR142 siguen
 
 GDELT `seendate` es primera observación del agregador, no publicación. Esta
 rama conserva la corrección de PR142 y la cuarentena de publicación
-desconocida. El intento normal
-de septiembre devolvió 503; no repetirlo en esta continuación. Guardar el fallo
-y esperar una ronda posterior autorizada, sin inferir cero noticias.
+desconocida. El intento normal de septiembre del 19 de octubre devolvió 503.
+La nueva continuación autorizada del 21 de octubre volvió a comprobar septiembre
+y la consulta canónica actual: ambos HTTP 503. Conservar los recibos y el cuerpo
+fallido separado de Bronze válido; ninguna prueba con fixtures acredita una
+extracción real. No continuar repitiendo esas consultas durante este lote.
+
+El adaptador `python -m src.source_updates.gdelt recipe --period YYYYMmm
+--as-of <corte>` delimita el mes de primera observación en México y máximo 250
+resultados. Después de `collect`, `gdelt certify --workspace <candidato>
+--period <mes> --as-of <corte-original> --collection <id>` permite `--dry-run`,
+`--execute` y `--check`. Es un candidato Silver/Gold JSON propio, con contrato,
+original/manifiesto/sidecar, punteros exactos, deduplicación URL/observación y
+recibo inmutable. Se rechazan errores HTTP-200, recibos alterados, fechas fuera
+de la consulta y cambios de corte. Publicación y evento siguen nulos, no se
+descargan artículos ni se alimenta el archivo mensual aprobado. Vacío o tope
+de resultados no prueba ausencia ni mes completo. El servicio sigue pendiente
+de respuesta válida; no se amplía a otro proveedor o servicio pagado.
 
 Los auditores no escriben Silver/Gold ni activan el índice. La
 [muestra](../../../docs/referencias/source-updates-20261019/curation-news-verification.json)

@@ -86,3 +86,28 @@ confianza y selección permanecen curados sin aprobación nueva.
 Consultar la [guía](../../../docs/catalogo-fuentes-calendario.md) y los mapas
 versionados para límites y decisiones pendientes; no inventar un endpoint para
 resolverlas.
+
+### Candidato de unidades y emisores por edición
+
+`python -m src.source_updates.curated_profiles --bundle
+docs/referencias/source-updates-20261019/peer-primary-review.json --root
+old_public=<Bronze-retenido> --workspace tmp/source-updates/<nuevo> --as-of
+<corte>` permite `--dry-run`, `--execute` y `--check`. Comprueba el mapa y sus
+originales antes de extraer 11 métricas acotadas de Ryanair FY2026 y Viva 2T26.
+Conserva escala por métrica: ASM en millas aunque el perfil global diga metric,
+USD de la edición Viva y pasajeros reservados no necesariamente transportados.
+FY2026 sigue anual, no trimestre. Emisor consolidado y subsidiaria operadora
+son entidades distintas; no se asignan sus totales a un código de operador.
+El resultado Silver/Gold JSON candidato es determinista e inmutable y exige
+inventario exacto. `--baseline` acepta un baseline explícito según su CLI;
+sin baseline la comparación se declara no realizada.
+
+`python -m src.source_updates.operator_registry --root <capturas-auditadas>
+--as-of <corte>` verifica cuatro filas IATA/FAA capturadas de sus páginas
+oficiales, separadas de la fuente activa IASA. No captura ni escribe; comprueba
+URL y callback, HTTP, SHA, tamaño, fecha y fila literal. VB/VIV se refieren a
+Aeroenlaces; FR y RYR conservan los nombres literales Ryanair Ltd./RYANAIR.
+No prueban por sí solos equivalencia jurídica con DAC ni con Holdings.
+Una referencia de código no autoriza esa unión, comparabilidad o publicación.
+Las tesis 2T26 ya publicadas se preservan; las versiones nuevas conservan sus
+puertas de aprobación.

@@ -80,12 +80,38 @@ sustituye una validación; una dependencia no disponible bloquea la construcció
   cambios de seguridad ni borrado del histórico retenido.
 - SEC se importa manualmente aquí; no leer ni configurar identidad/secretos.
   Aena solo por exportaciones manuales autorizadas, sin login automatizado.
-- No aprobar, revocar ni activar tesis Viva, Volaris o Industria. Se requiere la
+- No aprobar, revocar ni activar nuevas versiones de tesis Viva, Volaris o Industria. Se requiere la
   aprobación exacta del dueño por entidad, periodo y versión y el gate vigente.
   No simularla a partir del contenido o de pruebas verdes. La disponibilidad
   de tres reportes compatibles permite preparar Industria, no aprobarla.
+  Conservar las tesis 2T26 de las tres entidades ya aprobadas y publicadas; esta
+  restricción no exige desactivarlas ni repetir su aprobación.
 - No activar noticias candidatas/evidencia, cron, Pages, Railway o auto-merge.
   Separar captura, candidato, aprobación y publicación en cada entrega.
+
+## Reproducción de una ronda con varios adaptadores
+
+`python -m src.source_updates.readiness --recipe <receta.json> --workspace
+tmp/source-updates/<recibo-nuevo> --dry-run` valida todas las tareas antes de
+leer sus insumos. La receta declara `required_items` y por tarea `id`, `product`,
+`period`, `adapter`, `workspace`, `receipt_id`, `required` y `candidate_as_of`.
+`as_of` es el corte de revisión de la ronda; `candidate_as_of` conserva el corte
+inmutable de cada candidato histórico y no puede ser posterior al de la ronda.
+No se pueden omitir tareas declaradas requeridas, reutilizar workspace ni
+intercambiar producto/adaptador.
+
+`--execute` comprueba offline candidatos existentes, verifica que sus archivos
+no cambien y escribe un recibo de ronda inmutable; **no captura fuentes**.
+`--check` vuelve a comprobar el mismo recibo y sus flags. Soporta `retained`,
+`am_traffic_ir`, `h10`, `aerocivil` y `gdelt`; el registro de `retained` incluye
+los productos admitidos por sus lectores. Los demás adaptadores se rechazan y
+mantienen sus comandos específicos. Curación usa su auditor separado.
+
+Una tarea requerida fallida bloquea la ronda y conserva éxitos previos; las
+opcionales pendientes se listan. `ready_for_review` solo acredita las tareas
+declaradas y sus reproducciones, no disponibilidad actual, catálogo completo ni
+preparación para activar automáticamente. Los productos no ejercitados y las
+condiciones de fuente quedan explícitos; todas las activaciones siguen falsas.
 
 
 ## Originales retenidos y lote offline

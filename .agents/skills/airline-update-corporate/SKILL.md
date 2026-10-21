@@ -52,7 +52,7 @@ Consultar cada producto de esta familia:
 - `asur_traffic` — selección/importación manual. Entrada canónica: `sec_group:ASUR`. Formato: JSON SEC → anexo HTML.
 - `bmv_xbrl` — solo descubrimiento. Entrada canónica: `constant:src.config:SOURCE_URLS:bmv_xbrl`. Formato: HTML → visor → ZIP con JSON.
 - `viva_financials` — selección/importación manual. Entrada canónica: `url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD`. Formato: HTML → PDF InvestorCloud.
-- `viva_traffic` — adaptador pendiente. Entrada canónica: `url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD`. Formato: publicación mensual por confirmar.
+- `viva_traffic` — candidato mensual con formatos nativos separados. Entrada canónica: `url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD`. Septiembre 2026 BMV comprobado; histórico 2021 en kilómetros permanece separado.
 - `ryanair_ir` — solo descubrimiento. Entrada canónica: `constant:src.ingest.peers.stage5:RYANAIR_KEY_STATS_URL`. Formato: HTML.
 
 ### Procedimiento verificable
@@ -91,6 +91,32 @@ La fecha impresa 13 de julio de 2026 no prueba primera disponibilidad:
 publicación inicial y rezago siguen nulos. El candidato conserva captura, SHA,
 página, token y extracto. No modifica M11, parsers heredados, warehouse
 productivo, elegibilidad, tesis ni aprobaciones.
+
+## Tráfico Viva: original BMV autorizado y formato nativo
+
+El dueño autorizó únicamente añadir `bmv.com.mx` a `viva_ir.allowed_hosts` y
+capturar el PDF oficial de septiembre de 2026. Se comprobó que el intento previo
+no ejecutó HTTP antes de repetirlo: un GET, HTTP 200, 86.488 bytes y SHA-256
+`b0acad4f5131220a58c7ee41f25af581d75ff1a7ec8756d3f65869f8f1d636c2`.
+No se habilitó S3 ni se amplió otra política.
+
+Para una URL oficial opaca usar `recipe --product viva_traffic --output selection
+--source-url <PDF-oficial-real> --period <mes>`, sin `--catalog-file`. El enlace
+seleccionado no demuestra el periodo: `collect` conserva el original y
+`retained retain --product viva_traffic --original pdf=<ruta>` permite preparar
+la cadena candidata, seguida de `retained certify` con `--execute` y `--check`.
+La retención conserva la fecha real de la captura anterior; no vuelve a descargar.
+
+El lector actual produce 24 filas mensuales/comparativas: cuatro métricas por
+tres segmentos (total/nacional/internacional) y septiembre 2026/2025. Pasajeros
+reservados en miles, ASM/RPM en millones de millas y ocupación solo itinerario.
+Mantener preliminar, el glosario reservado/no necesariamente transportado y
+unidades por métrica. Comprobar encabezados, orden mensual/acumulado, suma de
+segmentos con tolerancia del redondeo fuente y dominios. No recalcular ocupación
+desde totales que incluyen chárter. El formato 2021M11 mantiene ASK/RPK en km.
+Las fechas documentales y su rezago se conservan separados de publicación
+inicial y rezago de publicación, que siguen nulos. Formatos distintos y meses
+incorrectos bloquean antes de Gold; no se activa el candidato ni se publica.
 
 ## 20-F retenido de Ryanair
 

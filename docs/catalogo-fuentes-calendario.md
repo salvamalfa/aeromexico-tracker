@@ -1,6 +1,6 @@
 # Catálogo de fuentes, métricas y rondas de actualización
 
-Revisión: 19 de octubre de 2026. **Calendario aprobado; skills y coordinador
+Revisión: 21 de octubre de 2026 (UTC). **Calendario aprobado; skills y coordinador
 preparados para pruebas. Sin nuevas ejecuciones automáticas ni publicación.**
 
 ## Resumen
@@ -31,7 +31,8 @@ pasos permitidos. Sus comandos están en el apéndice. Tener una skill no implic
 que todos sus adaptadores estén terminados ni que la fuente esté actualizada.
 
 La receta devuelve la entrada exacta, los identificadores, el formato y los
-pasos de cada fuente. Este es el alcance comprobado por familia:
+pasos de cada fuente. Este cuadro conserva el alcance comprobado al 19 de
+octubre; la continuación del 21 y su matriz aparecen abajo:
 
 | Familia | Alcance actual |
 |---|---|
@@ -44,8 +45,8 @@ pasos de cada fuente. Este es el alcance comprobado por familia:
 | Noticias | PR142 ya está integrado. Corte RSS retenido de septiembre: 12 URLs fechadas en seis días observados. Los 11 candidatos de PR142 pasan controles de metadatos; no se releen sus cuerpos aquí. GDELT devolvió 503 en un intento sin reintentos. Sin cobertura universal ni activación. |
 | Derivados y curación | Sin descarga propia. Mapas documentales ejecutables para cinco perfiles y 21 eventos; conservan discrepancias y decisiones pendientes. No aprueban perfiles, impacto ni confianza de los eventos. |
 
-El [inventario de los 42 productos](referencias/source-updates-20261019/product-coverage.json)
-separa las capas comprobadas. Hay **35 alcances acotados comprobados**:
+El [inventario de los 42 productos del 19 de octubre](referencias/source-updates-20261019/product-coverage.json)
+separa las capas comprobadas de aquel corte. Registró **35 alcances acotados comprobados**:
 26 de producto/periodo o snapshot y nueve de datos históricos retenidos.
 No significa 35 fuentes actualizadas ni 35 reportes completos. Además hay un
 corte RSS parcial comprobado, dos revisiones documentales preparadas, tres
@@ -84,6 +85,112 @@ queda bloqueado; no se extrapolan sus festivos.
 Para probarlo, ejecuta la vista previa del apéndice. El resultado muestra las
 fuentes y los pasos previstos. No hace falta aprobar otra vez el calendario.
 La siguiente revisión útil será un lote candidato con sus datos y faltantes.
+
+## Preparación comprobable del calendario
+
+La continuación del 21 de octubre distingue **herramienta probada**, **original
+real comprobado** y **fuente disponible para el siguiente lote**. La matriz de
+los 42 productos conserva el alcance histórico y la revalidación nueva por
+separado: [matriz de preparación](referencias/source-updates-20261021/readiness-matrix.json).
+No convierte la existencia de Gold ni una prueba con fixtures en captura real.
+
+| Prioridad | Evidencia real de esta continuación | Pendiente que limita el siguiente lote |
+|---|---|---|
+| Viva tráfico | Tras autorización específica del dueño, un GET al PDF oficial BMV de septiembre de 2026 respondió 200. Se extrajeron 24 observaciones: cuatro métricas, tres segmentos y año actual/comparativo; linaje completo y replay idéntico. La regresión 2021 conserva su formato distinto. | Septiembre queda comprobado como candidato, sin activar. Otros meses/ediciones requieren su documento y validación; el formato 2026 usa millas y miles de pasajeros reservados, no las unidades del original 2021. |
+| Aerocivil | Metadata y consultas oficiales HTTP 200. Diez filas crudas, ocho bajo códigos literales S/I, 347 movimientos; baseline con ocho filas iguales. Consulta acotada de disponibilidad: julio de 2026 para AMX/SLI. | La leyenda literal del conjunto `jh8x-n6h6` no está en su metadata; la portada devolvió un desafío rechazado. Sin esa aclaración primaria no se traduce S/N/I ni se aprueba atribución. Julio presente no prueba mes completo. |
+| GDELT | Consulta de septiembre y consulta canónica actual: HTTP 503. El segundo cuerpo de 91 bytes y su SHA se conservan fuera de Bronze válido. Adaptador y contrato independientes para primera observación, sin inventar publicación. | Servicio sin respuesta válida en estas dos consultas. Ninguna extracción real aprobada; no inferir cero noticias ni sustituirlo silenciosamente por RSS. |
+| Perfiles curados | Extracción candidata de unidades y entidades por edición desde originales primarios; el detalle y las referencias de códigos se verifican aparte. | Las decisiones de comparación y elegibilidad no se deducen de una extracción. Matriz financiera, operadora y año fiscal permanecen separados. |
+
+Para considerar un lote listo para revisión se exigen criterios medibles:
+
+1. Cada tarea tiene producto, entidad cuando corresponde, periodo, corte, adaptador,
+   insumos y condición requerida u opcional explícitos. El preflight completo
+   rechaza pasos, dependencias o controles incompatibles **antes** de capturar.
+2. Cada captura acredita URL real, HTTP válido, cuerpo, manifiesto, sidecar y SHA;
+   una retención se rotula como tal. Último disponible, validado y publicado son
+   tres campos separados. Publicación y rezago desconocidos quedan nulos.
+3. Silver y Gold candidatos pasan contrato, grano, unidades, cobertura y linaje
+   exacto del alcance solicitado. Un faltante sigue N/D; un código literal sin
+   leyenda y un mes incompleto conservan esa condición pendiente.
+4. La reproducción offline de los mismos originales es idéntica. El baseline es
+   explícito y fijado por hash; se cuentan altas, bajas, cambios y filas iguales.
+   El recibo y su corte son inmutables; un byte alterado bloquea la reproducción.
+5. Un fallo de fuente o validación conserva el último candidato aceptado y sus
+   recibos. No publica ni transforma un HTTP 200 con error en ausencia de datos.
+   Los reintentos siguen el máximo de dos reprogramaciones ya definido.
+6. El calendario usa días bancarios mexicanos verificados para el año, en
+   America/Mexico_City. La trimestral exige trimestre cerrado y tres reportes
+   realmente publicados después del cierre; una llamada o anuncio no los suple.
+   Un año sin festivos verificados bloquea el cálculo.
+7. La prueba en seco muestra los destinos y cero disparadores instalados. La
+   ejecución candidata y su revisión no activan calendarios, noticias ni nuevas
+   tesis. Las tesis 2T26 de Viva, Volaris e Industria ya aprobadas y publicadas se
+   conservan; las versiones nuevas mantienen su aprobación independiente.
+
+La muestra mensual sigue siendo 15/oct, 17/nov y 15/dic de 2026. La fecha
+trimestral nula en la muestra sin `--releases` significa **sin documentos de
+release suministrados a esa prueba**, no que los emisores no hayan publicado.
+No se fija una fecha futura con información inventada ni se extrapola 2027.
+
+### Detalle técnico de la continuación
+
+Viva se selecciona con `recipe --product viva_traffic --output selection
+--catalog-file <catalogo-real.html> --period <mes>`. El selector aplica la política
+antes de HTTP. El dueño autorizó añadir **únicamente `bmv.com.mx`** a
+`viva_ir.allowed_hosts`; no se añadió el host S3 ni se siguieron redirecciones
+fuera de la política. El lector `retained --product viva_traffic`, rol `pdf`,
+construye `fact_viva_monthly_source_metrics` candidato. La edición septiembre de
+2026 conserva pasajeros reservados en miles, ASM/RPM en millones de millas y
+ocupación de itinerario. Excluye acumulados de la salida mensual y conserva su
+comparativo de 2025. El original histórico 2021 conserva ASK/RPK en kilómetros.
+No armoniza las unidades silenciosamente ni confunde ocupación de itinerario
+con el cociente RPM/ASM total que incluye chárter. Fecha documental 9/oct y
+rezago documental nueve días; publicación inicial, hora y rezago de publicación
+siguen desconocidos. [Original oficial](https://www.bmv.com.mx/docs-pub/eventemi/eventemi_1594478_1.pdf).
+
+Aerocivil añade `recipe --availability --period 2026M07`, que consulta el máximo
+mes del año para AMX/SLI, y el modo `availability` que verifica su recibo.
+`certify --baseline baselines/<anterior.parquet>` fija la comparación de filas
+y vuelve a comprobarla en `--check`. No toma la fecha de actualización global del
+dataset como fecha de primera publicación mensual.
+
+GDELT tiene su comando separado, porque primera observación no es publicación:
+
+```bash
+python -m src.source_updates.gdelt recipe --period 2026M09 --as-of 2026-10-21T00:35:00Z
+python -m src.source_updates.gdelt certify --workspace tmp/source-updates/<gdelt> --period 2026M09 --as-of <corte-original> --collection <id> --dry-run
+```
+
+Después de `collect`, `--execute` verifica el original y produce JSON Silver/Gold
+aislados bajo un contrato específico; `--check` repite sin red ni escrituras.
+Un recibo de captura fallido bloquea antes de crear esos outputs. Se deduplica URL
+canónica y primera observación, conservando todos los punteros y metadatos; no se
+descargan artículos ni imágenes. El tope de 250 resultados y los días observados
+se declaran; ni siquiera una respuesta vacía prueba cobertura mensual completa.
+Publicación/evento permanecen nulos y el candidato no alimenta el archivo mensual
+de noticias. Las pruebas con respuestas sintéticas son **pruebas de contrato**;
+las dos consultas reales fallidas siguen siendo el estado de disponibilidad.
+
+El comprobador `src.source_updates.readiness` reúne candidatos ya construidos
+con adaptadores distintos, sin repetir capturas. Después de restaurar los
+candidatos del paquete privado según el apéndice, la receta de ejemplo prueba
+AFAC julio y finanzas Aeroméxico 2T26, conservando sus cortes originales:
+
+```bash
+python -m src.source_updates.readiness --recipe config/source_update_readiness.example.json --workspace tmp/source-updates/readiness-ejemplo --dry-run
+python -m src.source_updates.readiness --recipe config/source_update_readiness.example.json --workspace tmp/source-updates/readiness-ejemplo --execute
+python -m src.source_updates.readiness --recipe config/source_update_readiness.example.json --workspace tmp/source-updates/readiness-ejemplo --check
+```
+
+`--execute` aquí significa **verificación offline y recibo de ronda**. Las tareas
+requeridas se declaran tanto en `required_items` como en cada elemento, antes
+de ejecutar. Un fallo requerido bloquea la ronda conservando los éxitos previos;
+los opcionales se enumeran. El recibo liga fuentes, salidas y código de cada
+comprobador. `--check` conserva corte, condiciones y permisos exactos, sin
+escrituras. El resultado lista productos no ejercitados y distingue listo para
+revisión de listo para automatizar. La muestra no es una ronda actual completa
+de los 42 productos. Curación conserva su comprobador dedicado, con emisores
+y periodos fiscales propios.
 
 ## Riesgos
 
@@ -524,15 +631,15 @@ reporte completo ni una captura nueva. Los 1.766 derivados Stage 6 conservan
 conservaron las fórmulas registradas y se comprobó la ascendencia; no se
 recalcularon fórmulas ni modelos.
 
-Las condiciones de fuente o atribución restantes son:
+Estado de aquellas condiciones tras la continuación del 21:
 
-- **Viva tráfico:** el host S3 del PDF seleccionado no está permitido por la
-  política existente; se bloqueó antes de HTTP y no se reintentó por otra ruta.
-- **Aerocivil:** las ocho filas numéricas están comprobadas, pero falta la
-  leyenda primaria de códigos del mismo conjunto y la revisión de atribución.
-- **GDELT:** el intento normal de septiembre de 2026 devolvió HTTP 503, 91
-  bytes, sin reintentos. El original y el recibo están retenidos como fallo;
-  no acreditan noticias ni ausencia de ellas.
+- **Viva tráfico:** el bloqueo inicial se conservó como evidencia. La aprobación
+  específica de BMV permitió capturar y comprobar septiembre: 24 filas nativas.
+  S3 sigue fuera de la política. El candidato nuevo no se activó.
+- **Aerocivil:** la recaptura y comparación numéricas pasaron; la leyenda
+  primaria del mismo conjunto y la atribución siguen pendientes.
+- **GDELT:** los dos intentos nuevos de septiembre y consulta actual devolvieron
+  503. Sus recibos no acreditan noticias ni ausencia; no se siguen repitiendo.
 
 `news_errors` es una exclusión intencional, con frecuencia `never`. Conserva
 fallos para auditoría y no necesita implementarse como fuente de noticias.
@@ -557,7 +664,9 @@ entradas de aerolínea: 100 evaluaciones, 60 localizadores y diez originales
 primarios retenidos. Ryanair reporta ASM y etapas en millas pese a su indicador
 global `metric`. Viva distingue matriz financiera y operadora, moneda USD desde
 octubre de 2022 y pasajeros reservados que pueden no haber volado. Los códigos
-IATA/ICAO por entidad y las decisiones de comparación siguen pendientes.
+IATA/ICAO por entidad y las decisiones de comparación se tratan por separado:
+la continuación verificó cuatro referencias literales IATA/FAA sin unirlas a
+los totales consolidados ni inferir la equivalencia jurídica Ryanair DAC.
 No se corrigieron perfiles ni cifras de producción a partir de estas evidencias.
 [Mapa por atributo](referencias/source-updates-20261019/peer-primary-review.json).
 
@@ -666,7 +775,8 @@ sitio publicado. El respaldo nuevo de candidatos se mantiene separado del
 snapshot privado y no modifica expedientes activos ni datos de producción.
 
 Viva, Volaris e Industria siguen requiriendo aprobación exacta de entidad,
-periodo y versión para sus tesis. Captura y pruebas verdes no la sustituyen.
+periodo y versión para **nuevas** tesis. Las tres tesis 2T26 ya aprobadas y
+publicadas se conservan. Captura y pruebas verdes no aprueban otra versión.
 Tampoco se activan noticias candidatas, cron, Pages, Railway o auto-merge.
 El cron trimestral antiguo de `refresh.yml` sigue siendo una comprobación de
 frescura/Gold; no implementa este calendario ni captura fuentes.
@@ -824,6 +934,11 @@ La revisión de fase 1 no cambia ninguna cifra, fórmula o aprobación.
 
 ## Evidencia de fechas: hechos frente a ventanas estimadas
 
+Esta tabla conserva los ejemplos y el corte de disponibilidad de la propuesta
+del 18 de octubre. No es una comprobación nueva del estado de 3T26 al 21 de
+octubre. La publicación de ese trimestre se trabaja por separado; este
+coordinador solo calcula una fecha con los releases reales que se le suministren.
+
 | Producto | Periodo → publicación oficial observada | Implicación |
 |---|---|---|
 | Aeroméxico tráfico | Junio→2 julio; julio→3 agosto; agosto→3 septiembre; septiembre→6 octubre 2026; [archivo](https://ir.aeromexico.com/news-events/traffic-reports) | Suele llegar temprano el mes siguiente; cuatro ejemplos no fijan día universal |
@@ -946,8 +1061,9 @@ implementación local descrita arriba; no son el recibo de pruebas de esta entre
 
 ## Pendientes
 
-- Confirmar los tres reportes financieros de 3T26. La fecha trimestral permanece
-  sin fijar al corte de la muestra; el 2 de noviembre no es una fecha aprobada.
+- Suministrar al coordinador los tres releases financieros comprobados del
+  trimestre. La muestra sin releases no fija fecha; no afirma ausencia de
+  publicaciones reales. El 2 de noviembre no es una fecha aprobada.
 - Las comprobaciones de originales retenidos no acreditan última disponibilidad.
   Para una edición nueva, seleccionar el documento real y revisar su formato,
   cobertura y revisiones antes de incorporarlo. Países no aporta una serie

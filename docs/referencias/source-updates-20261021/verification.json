@@ -1,0 +1,189 @@
+{
+  "version": 1,
+  "revalidated_on_utc": "2026-10-21",
+  "scope": "safe_aggregate_receipts;originals_and_candidate_files_in_private_PR38;not_latest_certification_of_all_42",
+  "viva": {
+    "original_sha256": "b0acad4f5131220a58c7ee41f25af581d75ff1a7ec8756d3f65869f8f1d636c2",
+    "bytes": 86488,
+    "http_status": 200,
+    "actual_pdf_requests": 1,
+    "source_url": "https://www.bmv.com.mx/docs-pub/eventemi/eventemi_1594478_1.pdf",
+    "native_period": "2026M09",
+    "rows": 24,
+    "monthly_rows": 12,
+    "comparative_rows": 12,
+    "native_units": [
+      "thousand booked passengers",
+      "million seat-miles",
+      "million passenger-miles",
+      "percent itinerary only"
+    ],
+    "lineage_records_exact": 24,
+    "offline_replay_identical": true,
+    "baseline_kind": "same_original_regression_not_two_publication_vintages",
+    "baseline_unchanged_rows": 24,
+    "document_date": "2026-10-09",
+    "reported_document_lag_days": 9,
+    "published_date": null,
+    "release_lag_days": null,
+    "current_2026M09_source_certified_as_candidate": true,
+    "latest_source_edition_not_inferred": true,
+    "approved_policy_change": "only_bmv.com.mx_added_to_viva_ir",
+    "historical_regression": "2021M11;12rows;ASK_RPK_km_distinct",
+    "output_sha256": {
+      "silver/source_products/viva_traffic": "c1787de504eb70b4ffbe728e7aea5d77e419dc157a7f0f8b86ba61563797477d",
+      "gold/fact_viva_monthly_source_metrics": "c1787de504eb70b4ffbe728e7aea5d77e419dc157a7f0f8b86ba61563797477d",
+      "gold/dim_source_artifact": "22e5e5f0634ea9bfc94026461db0304e00ff3949f429e7fdc2cda879b61a341d",
+      "gold/bridge_record_lineage": "61f78e40a0356b5a6434792ab8e29270c4dd4bb23dbb9ffe6eb6311c58f987a8"
+    },
+    "code_files": {
+      "src/source_updates/retained.py": "42e9e4e8c3e3e993705c01f6c43ee2480c8cd4739aa830fddc84bbf2ba6360f1",
+      "src/source_updates/viva_traffic.py": "a45dab9eafe6f4e3fd0161c017a57c48c285a37cc4d7e4c6d2b52ab40343e868"
+    }
+  },
+  "aerocivil": {
+    "original_sha256": "01a12e9ee49d00a6923cc6c8ea2769444d0889add25aad136108b2cc04248dc0",
+    "raw_rows": 10,
+    "literal_S_I_rows": 8,
+    "reported_movements": 347,
+    "lineage": {
+      "status": "passed",
+      "record_tables": {
+        "fact_international_route_observations": 8
+      },
+      "records_expected": 8,
+      "records_declared": 8,
+      "coverage_pct": 1.0,
+      "artifact_records": 8,
+      "parent_records": 0,
+      "declared_without_exact_link_records": 0,
+      "artifact_count": 4,
+      "unknown_parent_records": 0,
+      "unknown_artifact_records": 0
+    },
+    "latest_available_operator_month": "2026M07",
+    "complete_month_verified": false,
+    "service_code_mapping_verified": false,
+    "revisions": {
+      "added": 0,
+      "removed": 0,
+      "changed": 0,
+      "unchanged": 8
+    },
+    "offline_replay_files_unchanged": 23,
+    "publication_date": null,
+    "release_lag_days": null
+  },
+  "gdelt": {
+    "actual_attempts": 2,
+    "queries": [
+      "explicit_2026M09_Mexico_observation_month",
+      "canonical_current_query"
+    ],
+    "http_status": [
+      503,
+      503
+    ],
+    "valid_extraction": false,
+    "second_failed_response": {
+      "file": "receipts/failures/d11194c9138f4eb1acffcd8ce60505d3/gdelt.bin",
+      "sha256": "2f85832e31ca57711e6107af6b142363351ae516adb71c69afc643fac26be7f6",
+      "bytes": 91,
+      "http_status": 503,
+      "content_type": "text/plain",
+      "eligible_as_source_data": false
+    },
+    "failure_receipt_sha256": "ff53485fcba08988efb7a9aca20195ada6ea2e9e6bc65d59ddbf2e44229deab2",
+    "candidate_build_from_failed_receipt": "blocked_before_outputs",
+    "tests_with_articles_are_contract_tests_only": true,
+    "primary_api_documentation": "https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/"
+  },
+  "curated_profiles": {
+    "native_metric_rows": 11,
+    "source_editions": [
+      "Viva_2026Q2",
+      "Ryanair_FY2026"
+    ],
+    "issuer_operator_join_performed": false,
+    "current_operator_reference_rows": 4,
+    "registry_audit_http_status": [
+      200,
+      200,
+      200,
+      200,
+      200,
+      403
+    ],
+    "new_financial_edition_availability_verified": false
+  },
+  "independent_review": {
+    "calendar_pre_fix_failing_cases": 14,
+    "gdelt_pre_fix_failing_cases": 11,
+    "replayed_real_retained_products": {
+      "afac_airports": 2730,
+      "am_financials": 20,
+      "ryanair_sec": 6
+    },
+    "source_package_345_original_files_preserved": true,
+    "curated_pre_fix_failing_cases": 5,
+    "viva_pre_fix_failing_cases": 3,
+    "readiness_source_acceptance_pre_fix_failing_cases": 4,
+    "readiness_top_level_receipt_claims_also_checked": true
+  },
+  "activation": "none",
+  "publication": "not_authorized",
+  "new_paid_requests": 0,
+  "new_aerodatabox_requests": 0,
+  "coordinator_real_e2e": {
+    "mode": "offline_replay_not_source_collection",
+    "status": "checks_passed",
+    "required_successful_tasks": [
+      {
+        "product": "afac_airports",
+        "period": "2026M07",
+        "rows": 2730,
+        "source_conditions": [
+          "retained_original_does_not_verify_current_source_availability"
+        ]
+      },
+      {
+        "product": "am_financials",
+        "period": "2026Q2",
+        "rows": 20,
+        "source_conditions": [
+          "retained_original_does_not_verify_current_source_availability"
+        ]
+      },
+      {
+        "product": "viva_traffic",
+        "period": "2026M09",
+        "rows": 24,
+        "source_conditions": [
+          "retained_original_does_not_verify_current_source_availability"
+        ]
+      },
+      {
+        "product": "aerocivil",
+        "period": "2026M07",
+        "rows": 8,
+        "source_conditions": [
+          "official_service_code_legend_pending"
+        ]
+      }
+    ],
+    "required_failed_source": {
+      "id": "gdelt",
+      "product": "gdelt",
+      "period": "2026M09",
+      "required": true,
+      "status": "blocked",
+      "error_type": "ValueError",
+      "reason": "Selected acquisition is incomplete, HTTP statuses=[503]; no valid source candidate"
+    },
+    "ready_for_calendar_incorporation": false,
+    "network_requests": 0,
+    "ready_for_review_scope": "only_explicit_verified_candidate_tasks",
+    "new_source_capture": false,
+    "original_candidate_files_unchanged": true
+  }
+}

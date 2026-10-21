@@ -65,6 +65,18 @@ El producto selecciona literalmente `tipo_vuelo=S` y `trafico=I`. Falta una leye
 La cifra mide movimientos aeroportuarios reportados en Colombia. Pasajeros, asientos, despegues y ocupación permanecen nulos; no son cero. Verificar aeropuerto colombiano que registra y dirección, país de ambos extremos, grano nativo, códigos IATA únicos y faltantes. Conservar exclusiones por código y ceros que sí reporta la fuente. Silver y Gold candidatos usan la validación de rutas existente y una declaración local explícita del grano de linaje. No se añade esta tabla al catálogo general ni al warehouse publicado. La comprobación numérica/linaje no cierra la interpretación de códigos, la familia, la cobertura de tres aerolíneas ni un trimestre.
 
 
+La continuación del 21 de octubre recapturó metadata y conteo/filas/conteo con
+HTTP 200: diez filas crudas, ocho bajo S/I, 347 movimientos, comparación con
+ocho filas iguales y replay sin cambios. `recipe --availability --period
+2026M07` emite la consulta acotada del máximo mes AMX/SLI del año; el modo
+`availability --workspace <candidato> --period 2026M07 --as-of <corte>
+--collection <id>` comprueba su recibo sin escribir. El máximo obtenido fue
+2026M07; no certifica completitud ni publicación inicial. `certify --baseline
+baselines/<anterior.parquet>` fija hash y grano de revisiones, repetidos en
+`--check`. La metadata del conjunto exacto sigue sin leyenda literal; la portada
+con desafío fue rechazada. No transferir una leyenda de otro conjunto ni
+contactar al proveedor sin autorización expresa.
+
 ### Autoridades y documentos retenidos
 
 Aplicar el [flujo común](../source-updates-common.md#originales-retenidos-y-lote-offline).

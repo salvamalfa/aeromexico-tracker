@@ -35,6 +35,20 @@ y su apéndice en `docs/catalogo-fuentes-calendario.md`.
 8. Entregar resumen y pendientes en español claro. Adjuntar evidencia técnica.
    Aprobación de calendario no aprueba contenido ni concede activación.
 
+Antes de adquirir, `round` valida receta, pasos y dependencias, productos y
+controles; no debe generar red ni Bronze para descubrir un error estático.
+La fecha de un reporte central debe ser posterior al cierre del trimestre y
+no posterior al corte. Una URL HTTPS válida es un control sintáctico: el campo
+`confirmed` requiere que el responsable haya comprobado el documento real.
+
+Para verificar una ronda con candidatos heterogéneos ya construidos, usar
+`python -m src.source_updates.readiness --recipe <receta.json> --workspace
+tmp/source-updates/<recibo> --dry-run`, después `--execute` y `--check` según
+el [contrato común](../source-updates-common.md#reproducción-de-una-ronda-con-varios-adaptadores).
+Declarar cada tarea requerida y conservar el corte original de su candidato.
+Es reproducción offline; no sustituye `collect`, no acredita disponibilidad
+de fuente desde Gold y no instala el calendario.
+
 ```bash
 python -m src.source_updates calendar --start 2026-10 --months 3 --quarter 2026Q3 --as-of 2026-10-18T12:00:00-06:00
 python -m src.source_updates plan --round combined --quarter 2026Q3 --as-of 2026-10-18T12:00:00-06:00
