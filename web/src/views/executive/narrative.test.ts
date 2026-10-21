@@ -94,6 +94,17 @@ describe("applyCitations", () => {
     expect(links[0]!.closest("sup")).not.toBe(links[1]!.closest("sup"));
   });
 
+  it("renders issuer-distributed quarterly sources and rejects lookalike hosts", () => {
+    const p = document.createElement("p");
+    p.textContent = "El margen fue de 12.3% en el trimestre.";
+    applyCitations(p, [
+      citation({ href: "https://www.globenewswire.com/fr/news-release/2026/10/19/report.html" }),
+      citation({ label: "2", href: "https://www.globenewswire.com.evil.example/report.html" }),
+    ]);
+    expect(p.querySelectorAll("a.source-note")).toHaveLength(1);
+    expect(p.querySelector("a.source-note")?.getAttribute("href")).toContain("www.globenewswire.com/fr/");
+  });
+
   it("leaves the text untouched when the citation's value is not present", () => {
     const p = document.createElement("p");
     p.textContent = "Sin ninguna cifra citable aquí.";

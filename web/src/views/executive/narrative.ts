@@ -72,6 +72,7 @@ function safeSourceUrl(href: string): boolean {
     const url = new URL(href);
     return url.protocol === "https:" && !url.username && !url.password && [
       "www.sec.gov", "sec.gov", "ir.aeromexico.com", "cdn.investorcloud.net", "ir.volaris.com",
+      "www.globenewswire.com",
     ].includes(url.hostname);
   } catch { return false; }
 }
