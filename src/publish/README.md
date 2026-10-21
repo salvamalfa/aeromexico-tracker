@@ -26,13 +26,16 @@ as — a directory built from `web/` plus the exported v1 payloads. See
   For a strictly interface-only change, `--ui-only` reuses the existing
   public `data/v1/` payload. It first requires the whole tracked `site/` to
   be byte-for-byte unchanged from one pinned `origin/master` commit, verifies the site manifest
-  and its exact approved analysis-manifest entries, then checks that the
+  and replays each exact approved analysis-manifest entry with its pinned
+  cohort implementation, then checks that the
   frontend build preserved every data file hash and size. It retains the
   trusted manifest's contract hashes too, so a UI release does not change the
   conversation's data version merely because this codebase added a dormant,
   optional contract. It repeats the trusted-site and approval checks
   immediately before the atomic swap, and refuses if the trusted ref moved
-  during the build. This mode cannot bless edited data by
+  during the build. Before the swap it also verifies the completed candidate
+  and compares every data hash and size again, closing changes to dist during
+  the second approval check. This mode cannot bless edited data by
   rebuilding its manifest, and it never invokes warehouse exporters.
 - `--business-metrics-only` uses the same immutable published-site baseline
   and exact current analysis approval, then adds only the separately pinned
@@ -68,7 +71,7 @@ as — a directory built from `web/` plus the exported v1 payloads. See
   La configuración de trabajo debe coincidir con la comprometida;
   todo se vuelve a comprobar bajo lock. Para el nuevo trimestre solo admite un
   pin adicional comprometido y ligado al registro aprobado actual. Un pin no
-  concede aprobación. Los modos que preservan datos y el modo de vuelos reutilizan
+  concede aprobación. Los modos que preservan datos, UI-only y el modo de vuelos reutilizan
   esta comprobación; incorporar 3T26 no bloquea la siguiente publicación del sitio.
 - `--flights-only` proyecta las celdas aceptadas de 2T26 sobre el sitio público
   auditado, sin reconstruir el warehouse ni los otros exportadores. Exige la
@@ -187,7 +190,7 @@ for the built site's visible parity against the published page, by
 `tests/test_site_parity.py` (`browser` + `local_data`).
 
 El ledger conserva aprobaciones técnicas históricas cuando cambia la huella
-de implementación. Para reproducir una publicación, selecciona sus cuatro
+de implementación. Para reproducir una publicación, selecciona todos sus
 registros exactos con `--record`; toma las identidades de
 `site/publication_manifest.json`. El descubrimiento automático rechaza
 múltiples versiones aprobadas de una misma entidad y trimestre. En un

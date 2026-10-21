@@ -443,10 +443,6 @@ def publish_ui_only(
     records = load_records(record_paths)
     if not records:
         raise PublicationRefused("no --record given; refuse to publish an empty analysis manifest")
-    entries = verify_records(records, root=root)
-    authorized = [entry[1] for entry in entries]
-    analysis_manifest = [_analysis_manifest_entry(entry) for entry in authorized]
-
     trusted_site_commit = _trusted_site_commit(PATHS.root)
     require_trusted_site_baseline(out_dir, root=PATHS.root, trusted_commit=trusted_site_commit)
 
@@ -456,6 +452,17 @@ def publish_ui_only(
     if site_problems:
         raise PublicationRefused(f"existing site is not valid for UI-only publication: {site_problems[:5]}")
     current_manifest = manifest_mod.load_manifest(out_dir)
+    from .approval_cohorts import verify_approval_cohorts
+
+    try:
+        with flow.writer(root):
+            verified = verify_approval_cohorts(
+                record_paths, PATHS.root, trusted_site_commit, current_manifest, root
+            )
+    except ValueError as error:
+        raise PublicationRefused(f"existing UI-only approval cohort failed verification: {error}") from error
+    authorized = verified["authorized"]
+    analysis_manifest = [_analysis_manifest_entry(entry) for entry in authorized]
     if current_manifest["analysis_manifest"] != sorted(analysis_manifest, key=manifest_mod.analysis_sort_key):
         raise PublicationRefused("existing site analysis manifest does not match the exact approved records")
 
@@ -481,7 +488,18 @@ def publish_ui_only(
     if built_data != source_data:
         raise PublicationRefused("UI build changed the existing public data/v1 files")
 
-    expected_analysis_manifest = sorted(analysis_manifest, key=manifest_mod.analysis_sort_key)
+    def validate_candidate(candidate: Path) -> None:
+        candidate_data = {
+            item["path"]: (item["sha256"], item["bytes"])
+            for item in manifest_mod.file_entries(candidate)
+            if item["path"].startswith("data/v1/")
+        }
+        if candidate_data != source_data:
+            raise ValueError("UI candidate changed the existing public data/v1 files")
+        problems = verify_site(candidate)
+        if problems:
+            raise ValueError(f"UI candidate failed verification: {problems[:5]}")
+
     try:
         with flow.writer(root):
             # Recheck the trusted payload at the last possible moment too;
@@ -492,14 +510,17 @@ def publish_ui_only(
                 root=PATHS.root,
                 trusted_commit=trusted_site_commit,
             )
-            current = [_analysis_manifest_entry(entry[1]) for entry in _verify_under_lock(records, root)]
-            if sorted(current, key=manifest_mod.analysis_sort_key) != expected_analysis_manifest:
+            current = verify_approval_cohorts(
+                record_paths, PATHS.root, trusted_site_commit, current_manifest, root
+            )
+            if current != verified:
                 raise ValueError("approval changed while the UI was being built; rerun the publication")
             manifest = assemble_site(
                 dist_dir,
                 analysis_manifest,
                 out_dir,
                 contracts=current_manifest["contracts"],
+                validate_candidate=validate_candidate,
             )
     except ValueError as error:
         raise PublicationRefused(
