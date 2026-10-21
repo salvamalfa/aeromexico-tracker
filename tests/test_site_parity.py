@@ -276,10 +276,17 @@ def _check_economy_kpis(site_page, executive_payload: dict) -> None:
     records = {record["period_id"]: record for record in executive_payload["records"]}
     period_ids = _period_ids(executive_payload)
     for period_id in reversed(period_ids):
-        site_page.wait_for_function(
-            "(id) => document.getElementById('narrative-copy').dataset.period === id", arg=period_id
-        )
         view = views[period_id]
+        # The narrative dataset changes before its async fetch completes.
+        # The display and stepper update only after that render has finished.
+        site_page.wait_for_function(
+            "([id, label, first, last]) => "
+            "document.getElementById('narrative-copy').dataset.period === id && "
+            "document.getElementById('period-display').textContent.trim() === label && "
+            "document.getElementById('period-prev').disabled === first && "
+            "document.getElementById('period-next').disabled === last",
+            arg=[period_id, view["period_label"], period_id == period_ids[0], period_id == period_ids[-1]],
+        )
         kpis_by_key = {item["key"]: item for item in view["kpis"]}
         observed = _kpi_values(site_page)
         for key in READER_KPI_KEYS:
@@ -287,7 +294,7 @@ def _check_economy_kpis(site_page, executive_payload: dict) -> None:
         margin = records[period_id]["unit_margin_cents_per_km"]
         expected_margin = f"{'+' if margin >= 0 else ''}{margin:.2f} ¢ USD"
         assert observed["unit_margin_cents_per_km"] == expected_margin, f"margin mismatch at {period_id}"
-        if site_page.is_enabled("#period-prev"):
+        if period_id != period_ids[0]:
             site_page.click("#period-prev")
 
 
