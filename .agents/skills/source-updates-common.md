@@ -80,9 +80,79 @@ sustituye una validación; una dependencia no disponible bloquea la construcció
   cambios de seguridad ni borrado del histórico retenido.
 - SEC se importa manualmente aquí; no leer ni configurar identidad/secretos.
   Aena solo por exportaciones manuales autorizadas, sin login automatizado.
-- No aprobar, revocar ni activar tesis Viva, Volaris o Industria. Se requiere la
+- No aprobar, revocar ni activar nuevas versiones de tesis Viva, Volaris o Industria. Se requiere la
   aprobación exacta del dueño por entidad, periodo y versión y el gate vigente.
   No simularla a partir del contenido o de pruebas verdes. La disponibilidad
   de tres reportes compatibles permite preparar Industria, no aprobarla.
+  Conservar las tesis 2T26 de las tres entidades ya aprobadas y publicadas; esta
+  restricción no exige desactivarlas ni repetir su aprobación.
 - No activar noticias candidatas/evidencia, cron, Pages, Railway o auto-merge.
   Separar captura, candidato, aprobación y publicación en cada entrega.
+
+## Reproducción de una ronda con varios adaptadores
+
+`python -m src.source_updates.readiness --recipe <receta.json> --workspace
+tmp/source-updates/<recibo-nuevo> --dry-run` valida todas las tareas antes de
+leer sus insumos. La receta declara `required_items` y por tarea `id`, `product`,
+`period`, `adapter`, `workspace`, `receipt_id`, `required` y `candidate_as_of`.
+`as_of` es el corte de revisión de la ronda; `candidate_as_of` conserva el corte
+inmutable de cada candidato histórico y no puede ser posterior al de la ronda.
+No se pueden omitir tareas declaradas requeridas, reutilizar workspace ni
+intercambiar producto/adaptador.
+
+`--execute` comprueba offline candidatos existentes, verifica que sus archivos
+no cambien y escribe un recibo de ronda inmutable; **no captura fuentes**.
+`--check` vuelve a comprobar el mismo recibo y sus flags. Soporta `retained`,
+`am_traffic_ir`, `h10`, `aerocivil` y `gdelt`; el registro de `retained` incluye
+los productos admitidos por sus lectores. Los demás adaptadores se rechazan y
+mantienen sus comandos específicos. Curación usa su auditor separado.
+
+Usar en cada replay el `effective_as_of` exacto del recibo aceptado, incluida
+su representación de zona. H.10, tráfico Aeroméxico, Aerocivil y los productos
+retenidos rechazan un corte distinto o ausente antes de recalcular. Un nuevo
+corte necesita una certificación nueva; no sobrescribir el recibo histórico.
+
+Una tarea requerida fallida bloquea la ronda y conserva éxitos previos; las
+opcionales pendientes se listan. `ready_for_review` solo acredita las tareas
+declaradas y sus reproducciones, no disponibilidad actual, catálogo completo ni
+preparación para activar automáticamente. Los productos no ejercitados y las
+condiciones de fuente quedan explícitos; todas las activaciones siguen falsas.
+
+
+## Originales retenidos y lote offline
+
+`python -m src.source_updates.retained` dispone de adaptadores dedicados para
+AFAC aeropuertos/países/marginales, ANAC, CAA, Aena, OMA, slots AICM, referencias
+IASA/diccionario y cuatro documentos de rutas. La tabla de alcances y los roles
+están en el [catálogo canónico](../../docs/catalogo-fuentes-calendario.md#certificación-de-originales-retenidos).
+Son candidatos con contratos locales y linaje comprobado; no añaden tablas al
+warehouse ni amplían los pasos del `build` genérico.
+
+1. Seleccionar rutas exactas en `_manifest.jsonl` de Bronze. `retain` exige
+   producto, roles y alias compatibles, URL pública admitida, bytes con el SHA
+   original y sidecar coincidente. No relabelar `afac_research` ni otros alias.
+2. Mostrar `retain --dry-run`; después `--execute` si el trabajo autoriza el
+   candidato. Copia los originales sin cambiar `downloaded_at`; `retained_at`
+   es otra fecha. No hace una captura, no revalida URLs ni comprueba la última
+   publicación disponible. Nunca usar AeroDataBox ni fuentes privadas/inactivas.
+3. `certify --retention <id> --period <periodo> --as-of <corte>` muestra el plan.
+   `--execute` construye Silver/Gold aislados y un recibo inmutable. `--check`
+   reconstruye en memoria y contrasta filas, hashes y linaje, sin red/escrituras.
+   Los originales, notas de la fuente y roles de soporte se vuelven a verificar.
+4. Para revisiones, seleccionar `--baseline baselines/<archivo.parquet>` en el
+   comando individual. La comparación usa claves naturales y campos de valor;
+   también las marcas y notas de estimación AFAC y todos los campos nativos del diccionario. El
+   hash y selección del baseline quedan fijados en el recibo y en cada replay.
+   Sin baseline se declara que no se compararon revisiones, aunque cambie SHA.
+5. `python -m src.source_updates.retained_round --recipe <receta.json>
+   --workspace tmp/source-updates/<lote-nuevo> --dry-run` orquesta el lote.
+   `--execute` encadena retención → Bronze → Silver → Gold/linaje → replay por
+   producto. Se detiene en el primer fallo y conserva salidas previas y recibo
+   con etapa/objetivo/error. No reusa candidatos ni instala tareas. El lote no
+   acepta baseline implícito: las comparaciones se preparan individualmente.
+
+La revisión de periodo en snapshots de referencia o programación no convierte
+su contenido en tráfico del mes/trimestre. FAA conserva la fecha de su propio
+documento; slots conserva toda la temporada; países solo cajas acumuladas
+exactas y documentos de rutas solo pasajes fechados. Un formato/edición fuera
+del alcance revisado queda bloqueado para adaptar y probar antes de ejecutar.

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "observation_period", "date_basis", "rows", "activation", "publication", "complete_month_certified", "agent_eligible"],
+  "properties": {
+    "version": {"const": "gdelt_observed_metadata_v1"},
+    "observation_period": {"type": "string", "pattern": "^20[0-9]{2}M(0[1-9]|1[0-2])$"},
+    "date_basis": {"const": "aggregator_first_seen_not_publication"},
+    "activation": {"const": "none"},
+    "publication": {"const": "not_authorized"},
+    "complete_month_certified": {"const": false},
+    "agent_eligible": {"const": false},
+    "rows": {
+      "type": "array", "maxItems": 250,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["record_id", "url", "first_seen_at", "published_at", "event_date", "source_file", "source_hash", "source_system", "parser_version", "contributors", "agent_eligible"],
+        "properties": {
+          "record_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "url": {"type": "string", "minLength": 1},
+          "first_seen_at": {"type": "string", "minLength": 20},
+          "published_at": {"type": "null"}, "event_date": {"type": "null"},
+          "source_file": {"type": "string", "minLength": 1},
+          "source_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "source_system": {"const": "gdelt"},
+          "parser_version": {"const": "gdelt_observed_metadata_v1"},
+          "agent_eligible": {"const": false},
+          "contributors": {"type": "array", "minItems": 1, "items": {
+            "type": "object", "additionalProperties": false, "required": ["source_locator", "metadata"],
+            "properties": {
+              "source_locator": {"type": "string", "pattern": "^/articles/[0-9]+$"},
+              "metadata": {"type": "object"}
+            }
+          }}
+        }
+      }
+    }
+  }
+}

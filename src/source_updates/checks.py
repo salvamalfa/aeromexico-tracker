@@ -12,6 +12,12 @@ from src.source_updates.catalog import CHECK_TABLES, load_catalog, product_map
 from src.source_updates.collection import safe_workspace
 
 
+def require_replay_cutoff(accepted: dict, requested: str) -> None:
+    """A read-only replay must preserve the exact accepted cutoff and its zone."""
+    if requested != accepted.get("effective_as_of"):
+        raise ValueError("Accepted candidate cutoff changed; use its exact effective_as_of")
+
+
 def verify_bronze(workspace: Path) -> dict[str, dict]:
     root = workspace / "data/bronze"
     manifest = root / "_manifest.jsonl"
@@ -166,11 +172,17 @@ def check_candidate(workspace: Path, specification: dict) -> dict:
                 raise ValueError(f"Requested period absent; actual periods end at {max(observed)}")
             selected = selected.loc[periods.eq(expected)]
             captured_files = set(selected["source_file"])
-            inherited = item["layer"] == "gold" and "record_id" in selected and any(
-                str(row.source_file) not in artifacts
-                or artifacts[str(row.source_file)]["sha256"] != row.source_hash
-                or artifacts[str(row.source_file)]["source_system"] not in aliases
-                for row in selected[["source_file", "source_hash"]].drop_duplicates().itertuples(index=False)
+            inherited = (
+                item["layer"] == "gold"
+                and "record_id" in selected
+                and any(
+                    str(row.source_file) not in artifacts
+                    or artifacts[str(row.source_file)]["sha256"] != row.source_hash
+                    or artifacts[str(row.source_file)]["source_system"] not in aliases
+                    for row in selected[["source_file", "source_hash"]]
+                    .drop_duplicates()
+                    .itertuples(index=False)
+                )
             )
             if inherited:
                 from src.source_updates.gold import contributing_files

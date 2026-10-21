@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "as_of": "2026-10-21T00:50:00Z",
+  "required_items": [
+    "afac_airports",
+    "am_financials"
+  ],
+  "items": [
+    {
+      "id": "afac_airports",
+      "product": "afac_airports",
+      "period": "2026M07",
+      "adapter": "retained",
+      "workspace": "tmp/source-updates/restored-review/afac_airports-2026M07",
+      "receipt_id": "b9890f0f5c4c47b289898dae5370ff96",
+      "required": true,
+      "candidate_as_of": "2026-10-19T12:00:00-06:00"
+    },
+    {
+      "id": "am_financials",
+      "product": "am_financials",
+      "period": "2026Q2",
+      "adapter": "retained",
+      "workspace": "tmp/source-updates/restored-review/am_financials-2026Q2",
+      "receipt_id": "bdc6c5823f254c5eba52af484c2868a2",
+      "required": true,
+      "candidate_as_of": "2026-10-19T12:00:00-06:00"
+    }
+  ]
+}

@@ -379,7 +379,7 @@ sources:
     update_frequency: Trimestral cuando existe publicación.
     access_method: Reportes públicos del portal de inversionistas.
     official_page_url: https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2023-1T23-en.pdf
-    allowed_hosts: [investorcloud.net]
+    allowed_hosts: [investorcloud.net, bmv.com.mx]
     artifact_link_policy: direct
     limitations: La cobertura histórica es discontinua y el emisor no cotiza públicamente.
     source_kind: public

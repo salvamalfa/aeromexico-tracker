@@ -34,9 +34,9 @@ python -m src.source_updates recipe --product oma_traffic
 
 Consultar cada producto de esta familia:
 
-- `oma_traffic` — solo descubrimiento. Entrada canónica: `constant:src.ingest.airports.groups:OMA_IR_URL`. Formato: HTML → PDF.
+- `oma_traffic` — descubrimiento nuevo y adaptador offline de reporte retenido. Entrada canónica: `constant:src.ingest.airports.groups:OMA_IR_URL`. Formato: HTML → PDF.
 - `aicm_traffic` — solo descubrimiento. Entrada canónica: `constant:src.ingest.airports.groups:AICM_STATS_INDEX`. Formato: HTML → PDF.
-- `aicm_slots` — selección/importación manual. Entrada canónica: `constant:src.ingest.airports.groups:AICM_STATS_INDEX`. Formato: PDF estacional de slots.
+- `aicm_slots` — adaptador offline de asignaciones verano 2026; nuevas ediciones requieren revisión. Entrada canónica: `constant:src.ingest.airports.groups:AICM_STATS_INDEX`. Formato: PDF estacional de slots.
 - `aifa_traffic` — solo descubrimiento. Entrada canónica: `constant:src.ingest.airports.groups:AIFA_STATS_INDEX`. Formato: HTML → XLSX.
 
 ### Procedimiento verificable
@@ -56,3 +56,20 @@ ese enlace es descubrimiento; el PDF/XLSX debe acreditar el periodo en filas.
 Un 404 en el documento enlazado es fallo de acceso. No sustituirlo por una
 URL construida. El control Stage 4 conserva el mínimo histórico de siete
 meses contiguos AICM/AIFA y admite meses posteriores realmente parseados.
+
+
+### Reportes y slots retenidos
+
+Aplicar el [flujo común](../source-updates-common.md#originales-retenidos-y-lote-offline).
+OMA exige `pdf`. El reporte julio retenido produce 168 observaciones y 80
+reconciliaciones: 13 aeropuertos/grupo, tres mercados y mensual/acumulado con
+comparativo anual. Pasajeros terminales incluyen comercial, chárter y aviación
+general; excluyen tránsito. No atribuirlos a una aerolínea ni acreditar
+septiembre desde ese original o desde el índice cuyo enlace falló.
+
+Slots AICM exige `pdf`; el formato revisado es verano 2026, 61 páginas y 2.836
+asignaciones únicas reconciliadas por fecha/frecuencia/conteo. Conservar temporada
+completa, horario UTC y designador AM sin inferir operador. La fecha interna
+05/02/2026 12:13 no prueba publicación de esa versión. No son vuelos realizados
+ni un total trimestral/mensual; tampoco se resuelven solapamientos como hechos
+operativos. Un conteo, fecha o edición distinto requiere revisión del adaptador.

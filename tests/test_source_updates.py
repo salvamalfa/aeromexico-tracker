@@ -124,6 +124,39 @@ def test_access_failure_never_becomes_empty_success(workspace, fake_client, stat
     assert result["status"] == "incomplete"
     assert result["items"][0]["status"] == "access_or_payload_failed"
     assert not (workspace / "data/bronze/_manifest.jsonl").exists()
+    failure = result["items"][0]["failed_response"]
+    retained = workspace / failure["file"]
+    assert retained.read_bytes() == body
+    assert failure["sha256"] == hashlib.sha256(body).hexdigest()
+    assert failure["http_status"] == status
+    assert failure["eligible_as_source_data"] is False
+
+
+def test_real_http_failure_is_retained_without_overwriting_valid_bronze(workspace):
+    from src.common.http import SourceHttpClient, TokenBucket
+
+    responses = iter([(200, b'{"value":1}'), (503, b"public unavailable response")])
+
+    def handler(request):
+        status, body = next(responses)
+        return httpx.Response(status, content=body)
+
+    def factory(source, **kwargs):
+        return SourceHttpClient(
+            source, transport=httpx.MockTransport(handler), limiter=TokenBucket(10000), **kwargs
+        )
+
+    collect(selection(), workspace, execute=True, client_factory=factory)
+    before = {
+        p: hashlib.sha256(p.read_bytes()).hexdigest()
+        for p in (workspace / "data/bronze").rglob("*")
+        if p.is_file()
+    }
+    failed = collect(selection(), workspace, execute=True, client_factory=factory)
+    assert failed["status"] == "incomplete"
+    assert failed["items"][0]["failed_response"]["http_status"] == 503
+    assert before == {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in before}
+    assert len(verify_bronze(workspace)) == 1
 
 
 def test_redirect_is_checked_before_following(workspace, fake_client):
