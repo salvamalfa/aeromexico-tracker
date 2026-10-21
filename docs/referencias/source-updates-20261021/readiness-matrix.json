@@ -457,7 +457,11 @@
       "calendar_condition": "pending_exact_dataset_official_code_legend_and_attribution;numeric_candidate_only",
       "activation": "none",
       "automatic_execution_active": false,
-      "evidence": "verification.json#/aerocivil"
+      "evidence": "verification.json#/aerocivil",
+      "official_followup_evidence": "verification.json#/official_followup/aerocivil",
+      "official_column_dictionary_url": "https://www.datos.gov.co/api/views/jh8x-n6h6/columns.json",
+      "dictionary_identity_verified": true,
+      "literal_code_legend_verified": false
     },
     {
       "product": "caa",
@@ -627,14 +631,18 @@
       "prior_category": "blocked",
       "verified_scope": "One approved September2026 request covering Aeromexico/Viva/Volaris, MexicoCity month boundaries, retries0;503 error retained, not news.",
       "prior_evidence": "../source-updates-20261019/product-coverage.json",
-      "current_source_revalidation": "September_and_canonical_current_queries_HTTP503;no_valid_source_capture",
+      "current_source_revalidation": "initial_two_HTTP503;later_month_query_HTTP200_164articles_14outside_Mexico_month_rejected;reduced_diagnostic_HTTP429_stop",
       "current_availability_verified": false,
       "latest_available_period": null,
       "new_validated_scope": null,
-      "calendar_condition": "external_service_valid_response_required;never_infer_zero_news",
+      "calendar_condition": "requested_period_capture_correct_identity_and_dates_required;not_only_HTTP_availability;429_stop",
       "activation": "none",
       "automatic_execution_active": false,
-      "evidence": "verification.json#/gdelt"
+      "evidence": "verification.json#/gdelt",
+      "official_followup_evidence": "verification.json#/official_followup/gdelt",
+      "raw_articles_observed": 164,
+      "outside_requested_month": 14,
+      "valid_candidate_created": false
     },
     {
       "product": "news_errors",

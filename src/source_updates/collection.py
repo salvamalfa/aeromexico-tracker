@@ -207,6 +207,7 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
         "paid_requests": 0,
     }
     with writer(workspace):
+        throttled_sources = set()
         for item in planned["items"]:
             response = None
             product = products[item["product"]]
@@ -222,6 +223,13 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
                 "latest_published_period": None,
                 "release_lag_days": None,
             }
+            if product["source_key"] in throttled_sources:
+                result.update(
+                    status="blocked_after_http_429",
+                    reason="Source throttled earlier in this collection; no request attempted",
+                )
+                receipt["items"].append(result)
+                continue
             try:
                 status, content_type = 200, "application/octet-stream"
                 url = item["url"]
@@ -237,6 +245,7 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
                         "bmv": "bmv",
                         "banxico_sie": "banxico",
                         "aeromexico_ir": "aeromexico_ir",
+                        "gdelt": "gdelt",
                     }.get(product["source_key"], "default")
                     with factory(rate, max_attempts=1) as client:
                         # Redirect targets are checked BEFORE each request. Five total
@@ -342,6 +351,8 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
                 result.update(status="access_or_payload_failed", error_type=type(exc).__name__)
                 if isinstance(exc, httpx.HTTPStatusError):
                     result["http_status"] = exc.response.status_code
+                    if exc.response.status_code == 429:
+                        throttled_sources.add(product["source_key"])
                 elif isinstance(exc, ValueError):
                     result["reason"] = str(exc)
                 # Keep the public failed response apart from successful Bronze.

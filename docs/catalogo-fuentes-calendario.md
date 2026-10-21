@@ -97,8 +97,8 @@ No convierte la existencia de Gold ni una prueba con fixtures en captura real.
 | Prioridad | Evidencia real de esta continuación | Pendiente que limita el siguiente lote |
 |---|---|---|
 | Viva tráfico | Tras autorización específica del dueño, un GET al PDF oficial BMV de septiembre de 2026 respondió 200. Se extrajeron 24 observaciones: cuatro métricas, tres segmentos y año actual/comparativo; linaje completo y replay idéntico. La regresión 2021 conserva su formato distinto. | Septiembre queda comprobado como candidato, sin activar. Otros meses/ediciones requieren su documento y validación; el formato 2026 usa millas y miles de pasajeros reservados, no las unidades del original 2021. |
-| Aerocivil | Metadata y consultas oficiales HTTP 200. Diez filas crudas, ocho bajo códigos literales S/I, 347 movimientos; baseline con ocho filas iguales. Consulta acotada de disponibilidad: julio de 2026 para AMX/SLI. | La leyenda literal del conjunto `jh8x-n6h6` no está en su metadata; la portada devolvió un desafío rechazado. Sin esa aclaración primaria no se traduce S/N/I ni se aprueba atribución. Julio presente no prueba mes completo. |
-| GDELT | Consulta de septiembre y consulta canónica actual: HTTP 503. El segundo cuerpo de 91 bytes y su SHA se conservan fuera de Bronze válido. Adaptador y contrato independientes para primera observación, sin inventar publicación. | Servicio sin respuesta válida en estas dos consultas. Ninguna extracción real aprobada; no inferir cero noticias ni sustituirlo silenciosamente por RSS. |
+| Aerocivil | Metadata y consultas oficiales HTTP 200. Diez filas crudas, ocho bajo códigos literales S/I, 347 movimientos; baseline con ocho filas iguales. Disponibilidad acotada: julio de 2026 para AMX/SLI. El diccionario de columnas oficial coincide exactamente con la metadata del mismo conjunto. | Las definiciones no incluyen equivalencias de códigos. Sin aclaración primaria de `jh8x-n6h6` no se traduce S/N/I ni se aprueba atribución. Julio presente no prueba mes completo. |
+| GDELT | Dos consultas iniciales 503. El reintento mensual posterior respondió 200 con 164 artículos, pero 14 tienen primera observación en octubre de México y el validador rechazó el lote de septiembre. Una consulta diagnóstica reducida recibió 429. Se conservan todos los cuerpos y recibos. | No hay candidato mensual válido. Se detuvieron las peticiones tras 429; no atribuir una caída general, inferir cero noticias, filtrar silenciosamente fechas o sustituir por RSS. |
 | Perfiles curados | Extracción candidata de unidades y entidades por edición desde originales primarios; el detalle y las referencias de códigos se verifican aparte. | Las decisiones de comparación y elegibilidad no se deducen de una extracción. Matriz financiera, operadora y año fiscal permanecen separados. |
 
 Para considerar un lote listo para revisión se exigen criterios medibles:
@@ -154,6 +154,25 @@ mes del año para AMX/SLI, y el modo `availability` que verifica su recibo.
 y vuelve a comprobarla en `--check`. No toma la fecha de actualización global del
 dataset como fecha de primera publicación mensual.
 
+La investigación adicional identifica **el mismo recurso**, no otro de nombre
+parecido: `jh8x-n6h6`, tabla y grupo de publicación `20263639`, propietario
+`aba2-n32i` (DATOS ABIERTOS AEROCIVIL), procedencia oficial. Sus filas llevan
+actualización global `2026-08-20T21:27:45Z`; esa fecha no es primera publicación
+de julio. `resourceName=operaciones-aereas-acumulado-2025` es una etiqueta y no
+acredita versión ni cobertura anual. La versión examinada se fija por captura
+y SHA, porque el proveedor no expone un número de edición en esos metadatos.
+El [diccionario exacto de columnas](https://www.datos.gov.co/api/views/jh8x-n6h6/columns.json)
+(HTTP 200, SHA `49f54fefa6b4b6263596f0a8f701379acea2a99c19933c71f7d965bf2f47cc4b`)
+coincide con `columns` de la
+[metadata del mismo ID](https://www.datos.gov.co/api/views/jh8x-n6h6.json).
+Describe campos, pero no desarrolla `TIPO_VUELO` G/M/N/S/X ni `TRAFICO` I/N.
+Son valores observados, no una leyenda. Tampoco enlaza un diccionario adjunto
+con esas equivalencias. Las búsquedas oficiales no localizaron una leyenda
+atribuible al ID; no prueban que no exista. No se reutiliza la de otro conjunto
+ni se elude el desafío de la portada. EMPRESA y EXPLOTADOR son derivados del
+callsign y matrícula; el nombre del campo no acredita por sí solo una unión
+jurídica independiente con la aerolínea.
+
 GDELT tiene su comando separado, porque primera observación no es publicación:
 
 ```bash
@@ -169,7 +188,33 @@ descargan artículos ni imágenes. El tope de 250 resultados y los días observa
 se declaran; ni siquiera una respuesta vacía prueba cobertura mensual completa.
 Publicación/evento permanecen nulos y el candidato no alimenta el archivo mensual
 de noticias. Las pruebas con respuestas sintéticas son **pruebas de contrato**;
-las dos consultas reales fallidas siguen siendo el estado de disponibilidad.
+los recibos históricos de 503 se conservan aunque cambie la disponibilidad.
+
+La comprobación posterior contrastó la
+[guía oficial DOC 2.0](https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/)
+y su [actualización de mayo de 2018](https://blog.gdeltproject.org/doc-2-0-updates-1-5-year-searching-and-updated-mobile-interface/).
+La sintaxis seleccionada coincide: OR entre paréntesis, `mode=artlist`,
+`format=json`, `sort=datedesc`, máximo 250 y límites UTC explícitos de septiembre
+de México. La guía inicial decía tres meses; la actualización amplió el
+horizonte y mantuvo una ventana de tres meses para salidas no temporales. No
+se confunde ese anuncio histórico con una garantía de disponibilidad actual.
+La ventana solicitada aquí es un mes. El límite de resultados no acredita
+cobertura completa ni paginación.
+
+El HTTP 200 posterior contiene 164 artículos, de los cuales 150 quedan en
+septiembre y **14 fuera del mes solicitado** al convertir primera observación a
+México. La normalización lo rechaza sin crear Silver/Gold. Además, la captura
+diagnóstica quedó rotulada `current`, y la certificación exige el mes exacto:
+ese segundo control también bloquea. No se cambia el recibo ni se filtran filas
+para hacerlo pasar. El diagnóstico reducido siguiente devolvió 429 con la
+instrucción explícita de una petición cada cinco segundos. No se hicieron
+más llamadas. El recolector ahora limita GDELT a una cada **seis segundos por
+proceso** y omite nuevas peticiones a una fuente tras 429 en la misma captura.
+Es un control de un proceso, no una cuota distribuida: usar un solo runner
+autorizado y no lanzar capturas concurrentes. No se acredita extracción válida
+del periodo ni se afirma una interrupción general del servicio.
+Los SHA, consultas, recibos, límites y rechazos están en
+[la evidencia agregada existente](referencias/source-updates-20261021/verification.json)+y sus originales en el borrador privado #38.
 
 El comprobador `src.source_updates.readiness` reúne candidatos ya construidos
 con adaptadores distintos, sin repetir capturas. Después de restaurar los
@@ -1061,6 +1106,15 @@ implementación local descrita arriba; no son el recibo de pruebas de esta entre
 
 ## Pendientes
 
+- Aerocivil sigue pendiente de una leyenda y atribución primarias del ID exacto.
+  GDELT requiere una captura correctamente rotulada del mes que pase el control
+  de fechas; el último diagnóstico terminó en 429 y este lote no vuelve a llamar.
+  Son decisiones distintas: mantener cada producto **requerido** conserva el
+  bloqueo de la ronda; declararlo **opcional por decisión expresa del dueño**
+  permite revisar los otros productos con el faltante visible, sin certificarlo.
+  No se aplicó ninguna de estas alternativas ni se rebajaron validadores.
+  Obtener aclaración documental del proveedor es otra vía; contactar a terceros,
+  añadir hosts o contratar servicios requiere instrucción aparte.
 - Suministrar al coordinador los tres releases financieros comprobados del
   trimestre. La muestra sin releases no fija fecha; no afirma ausencia de
   publicaciones reales. El 2 de noviembre no es una fecha aprobada.

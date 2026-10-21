@@ -125,7 +125,20 @@ recibo inmutable. Se rechazan errores HTTP-200, recibos alterados, fechas fuera
 de la consulta y cambios de corte. Publicación y evento siguen nulos, no se
 descargan artículos ni se alimenta el archivo mensual aprobado. Vacío o tope
 de resultados no prueba ausencia ni mes completo. El servicio sigue pendiente
-de respuesta válida; no se amplía a otro proveedor o servicio pagado.
+de respuesta válida del periodo; no se amplía a otro proveedor o servicio pagado.
+
+Investigación posterior del mismo 21/oct: diccionario y documentación oficiales
+conservados en el paquete de revisión. GDELT respondió 200 con 164 artículos a
+la consulta mensual, pero 14 observaciones caen en octubre de México; la
+normalización rechaza el mes completo sin filtrar filas ni escribir Silver/Gold.
+El recibo diagnóstico `current` tampoco satisface la identidad mensual de
+certificación; no editarlo. El diagnóstico reducido siguiente recibió 429 y
+terminó la investigación de red. El cuerpo oficial exige una petición cada
+cinco segundos: `collect` usa el limitador GDELT de seis segundos por proceso
+y bloquea nuevas peticiones de esa fuente tras 429 en la misma captura.
+No ejecutar varios procesos en paralelo ni reintentar este lote. HTTP 200,
+fixtures o disponibilidad del blog no certifican el periodo; conservar los
+503 históricos y consultar la guía/matriz actuales antes del próximo lote.
 
 Los auditores no escriben Silver/Gold ni activan el índice. La
 [muestra](../../../docs/referencias/source-updates-20261019/curation-news-verification.json)
