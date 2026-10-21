@@ -1,9 +1,10 @@
 """Aerocivil bounded query, source count, native grain and operations-only tests."""
 
-from contextlib import contextmanager
-from datetime import UTC, datetime, timedelta
 import json
 import shutil
+from contextlib import contextmanager
+from datetime import UTC, datetime, timedelta
+from urllib.parse import parse_qs, urlsplit
 from uuid import uuid4
 
 import httpx
@@ -146,6 +147,62 @@ def test_recipe_is_explicit_one_month_and_three_bounded_requests():
         aerocivil.recipe("2026Q3")
 
 
+def test_availability_recipe_selects_only_one_operator_month_in_explicit_year():
+    selection = aerocivil.availability_selection("2026")
+    assert len(selection["items"]) == 1
+    item = selection["items"][0]
+    assert item["product"] == "aerocivil" and item["entity"] == "latest_available_operator_month"
+    query = parse_qs(urlsplit(item["url"]).query)
+    assert query["$limit"] == ["1"] and query["$group"] == ["anio,mes"]
+    assert query["$where"] == ["anio = '2026' AND (explotador='AMX' OR explotador='SLI')"]
+    assert query["$select"] == ["anio,mes"]
+    with pytest.raises(ValueError, match="explicit four-digit"):
+        aerocivil.availability_selection("2026' OR true")
+
+
+@pytest.mark.parametrize(
+    "data,valid",
+    [
+        ([{"anio": "2026", "mes": "07"}], True),
+        ([], True),
+        ([{"anio": "2025", "mes": "07"}], False),
+        ([{"anio": "2026", "mes": "13"}], False),
+        ([{"anio": "2026", "mes": "7"}], False),
+        ([{"anio": "2026", "mes": "07", "extra": "field"}], False),
+        ([{"anio": "2026", "mes": "07"}, {"anio": "2026", "mes": "06"}], False),
+        ({"error": "HTTP200 is not numeric evidence"}, False),
+    ],
+)
+def test_availability_check_is_bounded_and_does_not_certify_a_complete_month(workspace, data, valid):
+    class Client:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def request(self, method, url, **kwargs):
+            return httpx.Response(200, json=data, request=httpx.Request(method, url))
+
+    receipt = collect(
+        aerocivil.availability_selection("2026"), workspace, execute=True, client_factory=Client
+    )
+    before = {str(p): p.read_bytes() for p in workspace.rglob("*") if p.is_file()}
+    if valid:
+        result = aerocivil.availability(workspace, "2026", cutoff(), receipt["run_id"])
+        assert result["latest_available_period"] == ("2026M07" if data else None)
+        assert result["latest_validated_period"] is None and result["published_at"] is None
+        assert not result["complete_month_verified"] and result["activation"] == "none"
+    else:
+        with pytest.raises(ValueError, match="maximum-month"):
+            aerocivil.availability(workspace, "2026", cutoff(), receipt["run_id"])
+    assert before == {str(p): p.read_bytes() for p in workspace.rglob("*") if p.is_file()}
+    assert not (workspace / "data/gold").exists()
+
+
 @pytest.fixture
 def workspace():
     path = ROOT / "tmp/source-updates" / ("aerocivil-test-" + uuid4().hex)
@@ -194,7 +251,10 @@ def capture(workspace, *, after_count=1, data=None):
     metadata = {
         "id": "jh8x-n6h6",
         "description": "EMPRESA y EXPLOTADOR callsign matrícula trimestralmente",
-        "columns": [{"fieldName": "totaloperaciones", "description": "Conteo volumétrico de movimientos"}],
+        "columns": [
+            {"fieldName": name, "description": description}
+            for name, description in aerocivil.METADATA_FIELDS.items()
+        ],
     }
     save_bronze(
         json.dumps(metadata).encode(),
@@ -245,8 +305,121 @@ def test_relabelled_allowed_url_receipt_is_detected(workspace):
     changed = json.loads(path.read_text())
     changed["items"][0]["response_url"] = "https://www.datos.gov.co/another"
     path.write_text(json.dumps(changed))
-    with pytest.raises(ValueError, match="collection receipt changed"):
+    with pytest.raises(ValueError, match="escaped the selected dataset/query"):
         aerocivil.run(workspace, "2026M07", cutoff(), receipt, check=True)
+
+
+def test_redirect_to_different_same_host_dataset_is_not_source_evidence(workspace):
+    receipt = capture(workspace)
+    path = workspace / "receipts" / f"collection-{receipt}.json"
+    changed = json.loads(path.read_text())
+    changed["items"][1]["response_url"] = "https://www.datos.gov.co/resource/w9ei-uhm3.json"
+    path.write_text(json.dumps(changed))
+    with pytest.raises(ValueError, match="escaped the selected dataset/query"):
+        aerocivil.run(workspace, "2026M07", cutoff(), receipt, execute=True)
+    assert not (workspace / "data/gold").exists()
+
+
+def metadata_definition():
+    return {
+        "id": "jh8x-n6h6",
+        "description": "EMPRESA y EXPLOTADOR callsign matrícula trimestralmente",
+        "columns": [
+            {"fieldName": "empresa", "description": "Designador de la aerolínea (Comercial)"},
+            {"fieldName": "explotador", "description": "Poseedor del Certificado de Operador Aéreo (AOC)"},
+            {"fieldName": "tipo_vuelo", "description": "Clasificación por propósito del vuelo"},
+            {"fieldName": "trafico", "description": "Clasificación geográfica del servicio"},
+            {"fieldName": "totaloperaciones", "description": "Conteo volumétrico de movimientos"},
+        ],
+        "publicationDate": 1770318718,
+        "rowsUpdatedAt": 1787261265,
+    }
+
+
+def test_same_dataset_metadata_does_not_invent_legend_or_monthly_publication():
+    result = aerocivil.review_metadata(metadata_definition())
+    assert not result["service_code_mapping_verified"]
+    assert not result["monthly_first_publication_verified"]
+    assert result["dataset_publication_date_epoch"] == 1770318718
+    assert result["code_legend_status"] == "no_explicit_literal_mapping_in_reviewed_column_definitions"
+
+
+@pytest.mark.parametrize("mutation", ["duplicate", "different_meaning", "different_dataset"])
+def test_ambiguous_or_changed_metadata_requires_semantic_review(mutation):
+    definition = metadata_definition()
+    if mutation == "duplicate":
+        definition["columns"].append(definition["columns"][0])
+    elif mutation == "different_meaning":
+        definition["columns"][1]["description"] = "Pasajeros por comercializador"
+    else:
+        definition["id"] = "w9ei-uhm3"
+    with pytest.raises(ValueError, match="duplicate|semantic review"):
+        aerocivil.review_metadata(definition)
+
+
+def make_baseline(workspace, **changes):
+    before, _ = aerocivil.normalize([row(**changes)], "2026M07", ORIGINAL, AIRPORTS)
+    path = workspace / "baselines/previous.parquet"
+    path.parent.mkdir(parents=True)
+    before.to_parquet(path, index=False)
+    return "baselines/previous.parquet"
+
+
+def test_revision_comparison_uses_values_not_capture_hash_and_replays_without_writing(workspace):
+    receipt = capture(workspace)
+    baseline = make_baseline(workspace, totaloperaciones="93")
+    result = aerocivil.run(workspace, "2026M07", cutoff(), receipt, execute=True, baseline=baseline)
+    assert result["revisions"]["changed"] == 1
+    assert result["revisions"]["added"] == result["revisions"]["removed"] == 0
+    assert not result["service_code_mapping_verified"] and not result["agent_eligible"]
+    before = {str(p): p.read_bytes() for p in workspace.rglob("*") if p.is_file()}
+    checked = aerocivil.run(workspace, "2026M07", cutoff(), receipt, check=True)
+    assert checked["revisions"] == result["revisions"]
+    assert before == {str(p): p.read_bytes() for p in workspace.rglob("*") if p.is_file()}
+    with pytest.raises(ValueError, match="baseline selection changed"):
+        aerocivil.run(workspace, "2026M07", cutoff(), receipt, check=True, baseline="baselines/other.parquet")
+    path = workspace / baseline
+    data = pd.read_parquet(path)
+    data["operations"] = 92.0
+    data.to_parquet(path, index=False)
+    with pytest.raises(ValueError, match="baseline or revisions changed"):
+        aerocivil.run(workspace, "2026M07", cutoff(), receipt, check=True)
+
+
+def test_identical_values_with_new_source_hash_are_unchanged_rows(workspace):
+    receipt = capture(workspace)
+    baseline = make_baseline(workspace)
+    result = aerocivil.run(workspace, "2026M07", cutoff(), receipt, execute=True, baseline=baseline)
+    assert result["revisions"]["unchanged"] == 1 and result["revisions"]["changed"] == 0
+
+
+@pytest.mark.parametrize("mutation", ["wrong_month", "wrong_metric", "duplicate", "negative", "nonfinite"])
+def test_invalid_baseline_never_writes_candidate_gold(workspace, mutation):
+    receipt = capture(workspace)
+    baseline = make_baseline(workspace)
+    path = workspace / baseline
+    data = pd.read_parquet(path)
+    if mutation == "wrong_month":
+        data["period_id"] = "2026M06"
+    elif mutation == "wrong_metric":
+        data["metric_key"] = "passengers"
+    elif mutation == "negative":
+        data["operations"] = -1.0
+    elif mutation == "nonfinite":
+        data["operations"] = float("inf")
+    else:
+        data = pd.concat([data, data])
+    data.to_parquet(path, index=False)
+    with pytest.raises(ValueError, match="same-month|Duplicate revision grain"):
+        aerocivil.run(workspace, "2026M07", cutoff(), receipt, execute=True, baseline=baseline)
+    assert not (workspace / "data/gold").exists()
+
+
+def test_baseline_cannot_escape_candidate_directory(workspace):
+    receipt = capture(workspace)
+    with pytest.raises(ValueError, match="within candidate baselines"):
+        aerocivil.run(workspace, "2026M07", cutoff(), receipt, execute=True, baseline="../previous.parquet")
+    assert not (workspace / "data/gold").exists()
 
 
 def test_modified_gold_and_reference_are_detected(workspace):
