@@ -80,3 +80,11 @@ desconocida sigue bloqueando incorporación, aunque pase un replay técnico.
 `--execute` escribe solo el recibo inmutable; `--check` repite offline y rechaza
 cambios de código, contratos, catálogo, festivos o candidatos. Conservar periodo
 nativo/rezago explícito y vínculo físico de releases; nunca activar disparadores.
+
+
+Para `banxico`, `fuel` y `equities`, el recibo integral mensual/trimestral se
+produce con `series_candidate` y se enlaza mediante `adapter=series`, no mediante
+checks parciales ni `retained`. Aplicar el [contrato de series](../../../docs/catalogo-fuentes-calendario.md#certificación-de-series-retenidas-22-de-octubre).
+Una reproducción de originales no comprueba disponibilidad actual ni calendario
+completo de observaciones; mantener esas puertas bloqueadas y los demás R
+pendientes. No omitir Aerocivil/GDELT ni cambiar sus requisitos.

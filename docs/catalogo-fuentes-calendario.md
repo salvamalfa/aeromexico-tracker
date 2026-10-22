@@ -1,6 +1,6 @@
 # Catálogo de fuentes, métricas y rondas de actualización
 
-Revisión: 21 de octubre de 2026 (UTC). **Skills y coordinador implementados;
+Revisión: 22 de octubre de 2026 (UTC). **Skills y coordinador implementados;
 integración técnica autorizada. Calendario sin activar y sin publicación de datos.**
 
 ## Resumen
@@ -10,6 +10,12 @@ Incluye ocho skills por familia y un coordinador. Primero muestra qué haría.
 Después puede capturar y comprobar un lote candidato en una carpeta separada.
 La aprobación del calendario ya está recibida. La revisión del contenido y su
 publicación conservan sus permisos separados.
+
+La continuación del 22 de octubre añade certificadores offline para las tres
+series Banxico, combustible EIA y las cinco cotizaciones. Validan el producto
+retenido mensual o trimestral y sus cálculos; no prueban disponibilidad actual
+ni completitud del calendario de observaciones. Otros certificadores integrales
+siguen pendientes, además de la evidencia externa indicada al final.
 
 La integración de esta infraestructura no aprueba una ronda de datos. Aerocivil
 y GDELT permanecen **requeridos y bloqueados**. Sus fallos impiden aceptar una
@@ -446,6 +452,55 @@ el [constructor macro](../src/transform/stage6_macro.py), los
 [lectores de originales retenidos](../src/source_updates/retained.py) y la
 [reproducción de ronda](../src/source_updates/readiness.py). Se reutilizan sin reinterpretar sus recibos históricos.
 
+### Certificación de series retenidas (22 de octubre)
+
+`series_candidate` reconstruye desde originales físicos, sin red, los tres
+productos requeridos `banxico`, `fuel` y `equities`. Exige todas sus entradas:
+tres CSV SIE; un XLS EIA; o cinco JSON Yahoo y el original SEC que prueba la
+identidad y fecha de inicio de AERO. No acepta una cotización o FIX como producto
+completo. La retención conserva fecha de captura, URL, manifiesto, sidecar y SHA.
+El descargador y sus recetas siguen separados: certificar un original retenido
+no equivale a comprobar hoy la fuente ni a recolectar una edición nueva.
+
+El lector estricto rechaza fechas repetidas, N/D sin interpretación documentada,
+valores inválidos, unidades o entidades distintas y meses ausentes. No elimina
+filas corruptas ni rellena ceros. Banxico conserva la inflación mensual y la tasa
+con su calendario nativo. EIA conserva dólares por galón; no es costo contratado.
+El trimestre exige los tres meses y calcula promedio sobre cada observación
+nativa, sin promediar los promedios mensuales. Cierre es el último valor observado,
+no una cotización inventada para el último día natural.
+
+Las cinco cotizaciones mantienen su historia desde la solicitud canónica de
+2015, o desde la salida a bolsa de AERO del 6/nov/2025. Se comprueban la primera
+observación retenida y todos los meses de contexto. Rendimientos diarios,
+rendimiento del año y volatilidad se calculan antes de recortar la ventana.
+Eso evita perder el día anterior o reiniciar el año al comienzo del trimestre.
+No se acredita por ello que el proveedor contenga cada sesión bursátil esperada.
+
+Las salidas usan contratos Silver/Gold existentes y linaje de cada registro:
+`fact_macro` con dimensión de periodo, o `fact_market_data` con emisores. AERO
+requiere también su original SEC físico en el puente. El recibo fija código,
+contratos, fuentes, corte, salidas y baseline explícito si se aporta. `--check`
+reconstruye y compara sin escribir; cualquier diferencia bloquea. Una edición
+nueva requiere una carpeta nueva. La falta de baseline se declara, no se presenta
+como ausencia de revisiones.
+
+```bash
+# Seleccionar únicamente originales ya retenidos; tres roles exactos para Banxico.
+uv run python -m src.source_updates.series_candidate retain --product banxico --workspace tmp/source-updates/banxico-sep --source-root <Bronze> --original SF43718=<CSV-FIX> --original SP1=<CSV-INPC> --original SF61745=<CSV-tasa> --dry-run
+# Tras comprobar la selección, --execute copia esos originales sin descargarlos.
+uv run python -m src.source_updates.series_candidate certify --product banxico --workspace tmp/source-updates/banxico-sep --period 2026M09 --as-of 2026-10-22T12:00:00-06:00 --retention <ID> --dry-run
+# En carpeta retenida: sustituir --dry-run por --execute y después por --check.
+# Para trimestre: --period 2026Q3 en otra carpeta; combustible usa workbook=<XLS>.
+# Equities exige AERO,VLRS,RYAAY,DAL,ICAGY e identity=<original-SEC>, sin subconjuntos.
+```
+
+En `readiness` o `global_readiness`, elegir `adapter=series`, producto exacto,
+periodo mensual/trimestral y el ID de retención. El camino antiguo `retained`
+rechaza estos tres productos y remite al certificador integral. El control global
+sigue bloqueado por productos requeridos pendientes, disponibilidad, releases y
+festivos no acreditados; no cambia ninguna clasificación R/C/O.
+
 ### Control global ejecutable
 
 ```bash
@@ -481,7 +536,7 @@ métricas/filtros se rechazan. No hay interfaz para aportar resultados aprobados
 por el usuario como si provinieran de un verificador.
 
 Los adaptadores completos admitidos son los mismos de `readiness`: originales
-retenidos, tráfico IR Aeroméxico, H.10, Aerocivil y GDELT. Un producto sin ese
+retenidos, series macro/mercado (`series`), tráfico IR Aeroméxico, H.10, Aerocivil y GDELT. Un producto sin ese
 adaptador se declara `unsupported` y bloquea si se utiliza. Los checks genéricos
 existentes siguen sirviendo para comprobar tablas, pero no certifican todas las
 métricas obligatorias de un producto. Esto evita dar por Banxico completo una
@@ -1372,11 +1427,15 @@ implementación local descrita arriba; no son el recibo de pruebas de esta entre
 
 ## Pendientes
 
-- La política está aprobada e implementada; no falta volver a aprobarla.
-  Completar la certificación íntegra por producto donde el nuevo control declara
-  `unsupported`: comprobar tablas seleccionadas no equivale a certificar todas
-  las métricas R. Esto es trabajo técnico, no una decisión de alcance del dueño.
-  Aerocivil y GDELT siguen requeridos.
+- **Implementación pendiente:** la política ya está aprobada. Los certificadores
+  nuevos cubren los tres productos macro/mercado retenidos; todavía faltan
+  certificadores integrales requeridos para `volaris_sec`, `afac_carriers`,
+  `bts_segments`, `gap_traffic`, `asur_traffic`, `aicm_traffic`, `aifa_traffic`,
+  `rss` y `viva_financials`. Sus parsers o comprobaciones de tablas existentes
+  no sustituyen ese cierre extremo a extremo. Los adaptadores retenidos de
+  otros productos conservan sus límites de edición/periodo documentados; por
+  ejemplo, finanzas IR de Aeroméxico comprueba 2T26, no aprueba una edición nueva.
+  Es trabajo técnico pendiente, no una decisión de alcance que deba diseñar el dueño.
 - Aerocivil sigue pendiente de una leyenda y atribución primarias del ID exacto.
   GDELT requiere una captura correctamente rotulada del mes que pase el control
   de fechas; el último diagnóstico terminó en 429 y este lote no vuelve a llamar.
