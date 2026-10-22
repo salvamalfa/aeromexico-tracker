@@ -30,7 +30,7 @@ def execute(recipe: dict, workspace: Path, *, write=False) -> dict:
     children = set()
     for item in recipe["items"]:
         product, period = item["product"], item["period"]
-        spec(product)
+        definition = spec(product)
         if (
             not re.fullmatch(r"20\d{2}(?:M(?:0[1-9]|1[0-2])|Q[1-4])", period)
             or period_end(period) >= local_time(cutoff).date()
@@ -47,6 +47,7 @@ def execute(recipe: dict, workspace: Path, *, write=False) -> dict:
             dict(
                 product=product,
                 period=period,
+                adapter=definition.get("certifier", "retained"),
                 workspace=str(child),
                 retention=plan,
                 stages=[
@@ -93,10 +94,14 @@ def execute(recipe: dict, workspace: Path, *, write=False) -> dict:
             try:
                 saved = retain(child, source_root, product, item["originals"], execute=True)
                 args = (child, product, period, cutoff, saved["run_id"])
+                if plan["adapter"] == "series":
+                    from src.source_updates.series_candidate import run as certify
+                else:
+                    certify = run
                 action = "certify"
-                certified = run(*args, execute=True)
+                certified = certify(*args, execute=True)
                 action = "offline_replay"
-                verified = run(*args, check=True)
+                verified = certify(*args, check=True)
                 if certified["output_sha256"] != verified["output_sha256"]:
                     raise ValueError("Offline output replay changed")
                 results.append(

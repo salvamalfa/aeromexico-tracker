@@ -517,7 +517,9 @@ de fuente actual. No se consultaron fuentes ni se procesó/publicó la edición
 financiera 3T26 de la tarea separada.
 
 En `readiness` o `global_readiness`, elegir `adapter=series`, producto exacto,
-periodo mensual/trimestral y el ID de retención. El camino antiguo `retained`
+periodo mensual/trimestral y el ID de retención. `retained_round` selecciona
+automáticamente ese certificador para los tres productos, también al mezclar
+meses y trimestres en un lote. El comando individual antiguo `retained`
 rechaza estos tres productos y remite al certificador integral. El control global
 sigue bloqueado por productos requeridos pendientes, disponibilidad, releases y
 festivos no acreditados; no cambia ninguna clasificación R/C/O.

@@ -262,3 +262,27 @@ def test_native_only_adapter_cannot_be_used_for_integral_series_recipe(product):
     recipe = {"version": 1, "as_of": CUTOFF, "required_items": ["series"], "items": [task]}
     with pytest.raises(ValueError, match="Use series adapter"):
         readiness.preflight(recipe, workspace)
+
+
+@pytest.mark.parametrize("period", ["2026M09", "2026Q3"])
+def test_retained_batch_routes_series_to_integral_certification(candidate, period):
+    from src.source_updates.retained_round import execute
+
+    workspace, source, product, selected = candidate
+    recipe = {
+        "version": 1,
+        "as_of": CUTOFF,
+        "source_root": str(source),
+        "items": [{"product": product, "period": period, "originals": selected}],
+    }
+    dry = execute(recipe, workspace)
+    assert dry["plan"][0]["adapter"] == "series" and not workspace.exists()
+    result = execute(recipe, workspace, write=True)
+    assert result["status"] == "checks_passed"
+    row = result["results"][0]
+    assert (
+        row["offline_replay_identical"]
+        and row["rows"]["gold/fact_market_data" if product == "equities" else "gold/fact_macro"] > 0
+    )
+    assert row["scope"].startswith("all_observations_in_selected_retained_originals")
+    assert result["network_requests"] == 0 and not result["new_source_capture"]

@@ -83,7 +83,8 @@ nativo/rezago explícito y vínculo físico de releases; nunca activar disparado
 
 
 Para `banxico`, `fuel` y `equities`, el recibo integral mensual/trimestral se
-produce con `series_candidate` y se enlaza mediante `adapter=series`, no mediante
+produce con `series_candidate` (o `retained_round`, que lo selecciona por producto)
+y se enlaza mediante `adapter=series`, no mediante
 checks parciales ni `retained`. Aplicar el [contrato de series](../../../docs/catalogo-fuentes-calendario.md#certificación-de-series-retenidas-22-de-octubre).
 Una reproducción de originales no comprueba disponibilidad actual ni calendario
 completo de observaciones; mantener esas puertas bloqueadas y los demás R
