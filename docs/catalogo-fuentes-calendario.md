@@ -496,9 +496,10 @@ uv run python -m src.source_updates.series_candidate certify --product banxico -
 ```
 
 Prueba real offline con los originales ya capturados el 19 de octubre (SEC de
-identidad capturado el 20 de agosto), código `e70a7989`, corte explícito
-`2026-10-22T00:00:00Z`. Los seis candidatos pasaron reconstrucción, contratos,
-linaje por registro, replay exacto y enlace documental del verificador global:
+identidad capturado el 20 de agosto), código `a83b5bd2`, corte explícito
+`2026-10-22T00:00:00Z`. El lote de seis tareas de
+`retained_round` pasó reconstrucción, contratos, linaje por registro y replay
+exacto. Después se comprobó el enlace documental del verificador global:
 
 | Producto | Septiembre 2026 | Trimestre julio–septiembre 2026 |
 |---|---|---|
@@ -508,10 +509,10 @@ linaje por registro, replay exacto y enlace documental del verificador global:
 
 La historia Silver bursátil conserva 12.037 filas para calcular los retornos.
 Los recibos están en las carpetas locales ignoradas
-`tmp/source-updates/series-proof-20261022-e70a7989-<producto>-<periodo>/receipts/`;
+`tmp/source-updates/series-batch-proof-20261022-a83b5bd2/<producto>-<periodo>/receipts/`;
 no se copian originales al repositorio público. El resumen local único
-`tmp/source-updates/series-proof-20261022-e70a7989-summary.json` tiene SHA-256
-`9bf20a477eeab3cc639e74359049b8730369b2f6774e2cd4aa4e5d18fe0e89e2`.
+`tmp/source-updates/series-batch-proof-20261022-a83b5bd2-summary.json` tiene SHA-256
+`dab1a04976469a858cb136abb1138b193deb5412b9801825c9adf6a817f2083d`.
 Estos conteos describen observaciones retenidas, no sesiones esperadas ni prueba
 de fuente actual. No se consultaron fuentes ni se procesó/publicó la edición
 financiera 3T26 de la tarea separada.
