@@ -499,7 +499,7 @@ uv run python -m src.source_updates.series_candidate certify --product banxico -
 ```
 
 Prueba real offline con los originales ya capturados el 19 de octubre (SEC de
-identidad capturado el 20 de agosto), código `a83b5bd2`, corte explícito
+identidad capturado el 20 de agosto), código `22517c4d`, corte explícito
 `2026-10-22T00:00:00Z`. El lote de seis tareas de
 `retained_round` pasó reconstrucción, contratos, linaje por registro y replay
 exacto. Después se comprobó el enlace documental del verificador global:
@@ -512,10 +512,15 @@ exacto. Después se comprobó el enlace documental del verificador global:
 
 La historia Silver bursátil conserva 12.037 filas para calcular los retornos.
 Los recibos están en las carpetas locales ignoradas
-`tmp/source-updates/series-batch-proof-20261022-a83b5bd2/<producto>-<periodo>/receipts/`;
+`tmp/source-updates/series-batch-proof-20261022-22517c4d/<producto>-<periodo>/receipts/`;
 no se copian originales al repositorio público. El resumen local único
-`tmp/source-updates/series-batch-proof-20261022-a83b5bd2-summary.json` tiene SHA-256
-`dab1a04976469a858cb136abb1138b193deb5412b9801825c9adf6a817f2083d`.
+`tmp/source-updates/series-batch-proof-20261022-22517c4d-summary.json` tiene SHA-256
+`c94bd08d3ca75850ae34c91c2c2fc7ea1736da54828c15875dcec266c353a09b`.
+Además, tres candidatos trimestrales compararon sus tablas Silver contra una
+copia de la misma edición retenida: 159 observaciones Banxico, 64 EIA y 12.037
+cotizaciones sin diferencias. Se fijaron los hashes de baseline y se reprodujo
+cada recibo. Es una prueba de comparación/replay, no evidencia de que el
+proveedor no haya publicado revisiones posteriores.
 Estos conteos describen observaciones retenidas, no sesiones esperadas ni prueba
 de fuente actual. No se consultaron fuentes ni se procesó/publicó la edición
 financiera 3T26 de la tarea separada.
