@@ -275,6 +275,8 @@ def evaluate(recipe: dict, outcomes: dict) -> dict:
             blockers.append(message)
             if (item["cadence"], item["product"]) in required:
                 core_blockers.append(message)
+        if "publication_calendar_completeness_not_verified" in result.get("source_conditions", []):
+            calendar_blockers.append(f"{item['id']}:observation_calendar_completeness_not_verified")
         if result.get("latest_source_availability_verified") is not True:
             calendar_blockers.append(f"{item['id']}:current_source_availability_not_verified")
     # A required result is invalid when any transitive used dependency fails.
