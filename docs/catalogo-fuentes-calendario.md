@@ -495,6 +495,27 @@ uv run python -m src.source_updates.series_candidate certify --product banxico -
 # Equities exige AERO,VLRS,RYAAY,DAL,ICAGY e identity=<original-SEC>, sin subconjuntos.
 ```
 
+Prueba real offline con los originales ya capturados el 19 de octubre (SEC de
+identidad capturado el 20 de agosto), código `b47a193e`, corte explícito
+`2026-10-22T00:00:00Z`. Los seis candidatos pasaron reconstrucción, contratos,
+linaje por registro, replay exacto y enlace documental del verificador global:
+
+| Producto | Septiembre 2026 | Trimestre julio–septiembre 2026 |
+|---|---|---|
+| Banxico | 21 FIX, 1 INPC y 30 tasas; 6 agregados Gold | 65 FIX, 3 INPC y 91 tasas; 24 agregados Gold, incluidos meses |
+| EIA | 21 observaciones; 2 agregados Gold | 64 observaciones; 8 agregados Gold, incluidos meses |
+| Cotizaciones | 21 fechas por cada uno de los cinco tickers; 105 registros Gold | 64 fechas por ticker; 320 registros Gold |
+
+La historia Silver bursátil conserva 12.037 filas para calcular los retornos.
+Los recibos están en las carpetas locales ignoradas
+`tmp/source-updates/series-proof-20261022-b47a193e-<producto>-<periodo>/receipts/`;
+no se copian originales al repositorio público. El resumen local único
+`tmp/source-updates/series-proof-20261022-summary.json` tiene SHA-256
+`99f47c743392c39e2bd4ab9817724fc14223646c10ee45c73ed2f67fec39b88b`.
+Estos conteos describen observaciones retenidas, no sesiones esperadas ni prueba
+de fuente actual. No se consultaron fuentes ni se procesó/publicó la edición
+financiera 3T26 de la tarea separada.
+
 En `readiness` o `global_readiness`, elegir `adapter=series`, producto exacto,
 periodo mensual/trimestral y el ID de retención. El camino antiguo `retained`
 rechaza estos tres productos y remite al certificador integral. El control global

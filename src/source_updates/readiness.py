@@ -101,7 +101,8 @@ def preflight(recipe: dict, workspace: Path) -> list[dict]:
         if adapter == "retained":
             from src.source_updates.retained import spec
 
-            spec(product)
+            if spec(product).get("certifier") == "series":
+                raise ValueError("Use series adapter for integral macro/market certification")
         elif adapter == "series":
             from src.source_updates.series_native import PRODUCTS
 
