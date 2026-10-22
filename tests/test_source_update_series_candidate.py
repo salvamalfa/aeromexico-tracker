@@ -146,11 +146,15 @@ def test_baseline_hash_and_metric_revisions(candidate):
     inputs, _ = retained.originals(workspace, product, receipt, CUTOFF)
     silver, details = series_candidate.read(product, inputs, "2026Q3")
     outputs, _ = series_candidate.frames(workspace, product, "2026Q3", silver, details)
-    name = "gold/fact_market_data" if product == "equities" else "gold/fact_macro"
+    name = {
+        "banxico": "silver/macro_indicators",
+        "fuel": "silver/fuel_prices",
+        "equities": "silver/market_prices",
+    }[product]
     baseline = workspace / "baselines/prior.parquet"
     baseline.parent.mkdir()
     frame = outputs[name].copy()
-    column = "adj_close" if product == "equities" else "value"
+    column = {"banxico": "value", "fuel": "price_usd_per_gallon", "equities": "adj_close"}[product]
     frame.loc[0, column] += 1
     frame.to_parquet(baseline)
     result = series_candidate.run(*args, execute=True, baseline="baselines/prior.parquet")
@@ -286,3 +290,27 @@ def test_retained_batch_routes_series_to_integral_certification(candidate, perio
     )
     assert row["scope"].startswith("all_observations_in_selected_retained_originals")
     assert result["network_requests"] == 0 and not result["new_source_capture"]
+
+
+def test_native_macro_revisions_cannot_hide_in_unchanged_aggregates(tmp_path):
+    from tests.test_source_update_series_independent import macro_inputs
+
+    inputs = macro_inputs("banxico")
+    silver, _ = series_candidate.read("banxico", inputs, "2026Q3")
+    baseline = tmp_path / "baselines/prior.parquet"
+    baseline.parent.mkdir()
+    before = silver["macro_indicators"].copy()
+    fix = before.index[before.series_id.eq("SF43718")]
+    # Offsetting corrections leave the quarter's mean and close unchanged.
+    before.loc[fix[0], "value"] += 1
+    before.loc[fix[1], "value"] -= 1
+    before.to_parquet(baseline)
+    comparison = series_candidate.revisions(
+        tmp_path,
+        "baselines/prior.parquet",
+        "banxico",
+        {"silver/macro_indicators": silver["macro_indicators"]},
+    )
+    assert comparison["changed"] == 2
+    assert comparison["baseline_table"] == "silver/macro_indicators"
+    assert before.loc[fix, "value"].sum() == silver["macro_indicators"].loc[fix, "value"].sum()

@@ -480,7 +480,10 @@ No se acredita por ello que el proveedor contenga cada sesión bursátil esperad
 Las salidas usan contratos Silver/Gold existentes y linaje de cada registro:
 `fact_macro` con dimensión de periodo, o `fact_market_data` con emisores. AERO
 requiere también su original SEC físico en el puente. El recibo fija código,
-contratos, fuentes, corte, salidas y baseline explícito si se aporta. `--check`
+contratos, fuentes, corte, salidas y baseline explícito si se aporta. Ese baseline
+es la tabla Silver nativa: Banxico/combustible por serie y fecha; cotizaciones
+por ticker y fecha, incluidos precios, ajustes y volumen. No se comparan solo
+promedios Gold que puedan ocultar cambios diarios compensados. `--check`
 reconstruye y compara sin escribir; cualquier diferencia bloquea. Una edición
 nueva requiere una carpeta nueva. La falta de baseline se declara, no se presenta
 como ausencia de revisiones.

@@ -60,17 +60,24 @@ def revisions(workspace: Path, baseline, product: str, outputs: dict) -> dict:
     path = (workspace / baseline).resolve()
     if not path.is_relative_to((workspace / "baselines").resolve()):
         raise ValueError("Baseline must remain within candidate baselines/")
-    name = "gold/fact_market_data" if product == "equities" else "gold/fact_macro"
-    keys = ["carrier_key", "date"] if product == "equities" else ["period_id", "indicator_key", "aggregation"]
-    values = (
-        ["close", "adj_close", "volume", "currency", "return_1d", "return_ytd", "volatility_30d"]
-        if product == "equities"
-        else ["value", "unit"]
-    )
+    name, keys, values = {
+        "banxico": ("silver/macro_indicators", ["series_id", "date"], ["value", "unit"]),
+        "fuel": ("silver/fuel_prices", ["series_id", "date"], ["price_usd_per_gallon", "unit"]),
+        "equities": (
+            "silver/market_prices",
+            ["ticker", "date"],
+            ["open", "high", "low", "close", "adj_close", "volume", "currency"],
+        ),
+    }[product]
+    before = pd.read_parquet(path)
+    if not set(keys + values) <= set(before):
+        raise ValueError("Revision baseline must contain the native Silver observation grain and values")
+
     return {
         "baseline_file": baseline,
+        "baseline_table": name,
         "baseline_sha256": digest(path),
-        **row_changes(pd.read_parquet(path), outputs[name], keys, values),
+        **row_changes(before, outputs[name], keys, values),
     }
 
 
