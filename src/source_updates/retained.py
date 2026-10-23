@@ -350,10 +350,8 @@ def originals(workspace: Path, product: str, run_id: str, cutoff: str) -> tuple[
 
 def frames(workspace: Path, product: str, period: str, cutoff: str, run_id: str) -> tuple[dict, dict]:
     definition = spec(product)
-    if definition.get("certifier") in {"government", "airport_group"}:
-        raise ValueError(
-            f"Use {definition['certifier']}_candidate for complete dedicated Silver/Gold certification"
-        )
+    if certifier := definition.get("certifier"):
+        raise ValueError(f"Use {certifier}_candidate for complete dedicated Silver/Gold certification")
     inputs, receipt_hash = originals(workspace, product, run_id, cutoff)
     frame, details = definition["parse"](inputs, period)
     if frame.empty or frame.duplicated(definition["grain"]).any() or frame.value.isna().any():
@@ -448,10 +446,8 @@ def run(
 ) -> dict:
     workspace = safe_workspace(workspace)
     definition = spec(product)
-    if definition.get("certifier") in {"government", "airport_group"}:
-        raise ValueError(
-            f"Use {definition['certifier']}_candidate for complete dedicated Silver/Gold certification"
-        )
+    if certifier := definition.get("certifier"):
+        raise ValueError(f"Use {certifier}_candidate for complete dedicated Silver/Gold certification")
     if period_end(period) >= local_time(cutoff).date():
         raise ValueError("Require a closed observation period")
     output_names = (
