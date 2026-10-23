@@ -348,3 +348,30 @@ def test_effective_carrier_crosswalk_reads_utf8_under_non_utf8_system_locale():
         errors="replace",
     )
     assert completed.returncode == 0, completed.stderr
+
+
+def test_cli_json_preserves_accents_when_stdout_encoding_is_ascii():
+    import os
+    import subprocess
+    import sys
+
+    from src.source_updates.catalog import ROOT
+
+    code = (
+        "from src.source_updates import carrier_source_candidate as cli; "
+        'cli.run=lambda *a,**k:dict(status="checks_passed",note="caf\\u00e9"); '
+        'raise SystemExit(cli.main(["certify","--product","afac_carriers",'
+        '"--workspace","unused","--period","2026M08","--as-of",'
+        '"2026-10-23T16:00:00-06:00","--retention","' + "a" * 32 + '","--execute"]))'
+    )
+    completed = subprocess.run(
+        [sys.executable, "-c", code],
+        cwd=ROOT,
+        env={**os.environ, "PYTHONIOENCODING": "ascii:strict"},
+        capture_output=True,
+        text=True,
+        encoding="ascii",
+        errors="strict",
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert json.loads(completed.stdout)["note"] == "café"

@@ -306,7 +306,7 @@ def main(argv=None) -> int:
     except Exception as exc:  # CLI reports malformed PDF/ZIP/schema failures without accepting outputs.
         print(json.dumps({"status": "blocked", "reason": str(exc), "activation": "none"}))
         return 1
-    print(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False))
+    print(json.dumps(result, ensure_ascii=True, indent=2, allow_nan=False))
     return 0
 
 
