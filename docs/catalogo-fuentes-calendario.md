@@ -1523,6 +1523,44 @@ revisado de este lote: GAP usa otra representación de fecha y ASUR otra
 cabecera. Se rechazan antes de producir Silver/Gold; no se afirma completitud
 histórica ni aceptación automática de cualquier edición.
 
+La prueba real offline quedó fijada en código `85fbbfd5`: GAP produjo
+192 observaciones nativas, 26 filas Silver, 24 hechos por aeropuerto y dos de
+grupo, con 72 reconciliaciones y 434 filas de linaje. ASUR produjo 156 nativas,
+20 Silver, 18 hechos por aeropuerto y dos de grupo, con 88 reconciliaciones y
+176 filas de linaje. Cada candidato pasó contratos, dimensiones y hashes
+físicos; el lote ejecutó y reprodujo ambos productos sin red. En julio 2026,
+México GAP suma 5.333.600 pasajeros redondeados y calculados; ASUR reporta
+3.473.501 enteros. Son totales aeroportuarios, no tráfico de una aerolínea.
+
+Una copia explícita del mismo original usada como baseline resultó en
+192/156 observaciones sin cambios; no prueba que el emisor no haya revisado
+otras versiones. Las pruebas independientes sí introducen cambios en YTD,
+país, definición y preliminar para comprobar que se detectan. El replay
+comprueba tablas, bytes, contratos, corte y huellas del código sin escribir.
+La ronda limitada a esas dos tareas pasó; la ronda global combinada siguió
+`blocked_global_policy`, con `core_ready=false` y calendario no listo. Faltan
+los demás productos requeridos, incluidos Aerocivil/GDELT y releases del
+trimestre; una prueba local de dos fuentes no levanta esos bloqueos.
+
+Pasaron 263 pruebas focales/regresión; dos verificaciones del almacén local se
+omitieron porque ese checkout no tiene `warehouse.duckdb`. No se restauró ni
+modificó el almacén público para convertirlas en aprobadas. La revisión
+adversarial independiente aprobó 43 casos y ocho controles adicionales de la
+ruta genérica cerrada. El hallazgo de YTD/enero quedó atendido. Ruff, diff y
+presupuesto de módulos pasaron. CI y revisión Codex del head final se cierran
+en el PR; los resultados de un head anterior no sustituyen los nuevos.
+
+Evidencia local regenerable, fuera del Git público:
+`tmp/source-updates/airport-group-proof-20261023-85fbbfd5-summary.json`,
+SHA-256 `87b07bb6aa2bcc2fdb1b7f9b69fb40043595cb679fb669dbc443e15dbfb51c40`.
+Los originales, candidatos, baselines, recibos de lote/ronda y fallos de
+harness previos se conservan en los workspaces `airport-group-proof-*`.
+El harness inicial invocó por error `readiness.run`, que no existe; se corrigió
+a `execute` y se retomaron los candidatos por replay, sin reconstruirlos ni
+sobrescribir. Tras acortar el guard genérico para cumplir el presupuesto de
+600 líneas se emitió la prueba final en workspaces nuevos con su nueva huella.
+No se afirma que los recibos antiguos pertenezcan al código final.
+
 ## Pendientes
 
 - La política está aprobada e implementada; no falta volver a aprobarla.
@@ -1536,7 +1574,8 @@ histórica ni aceptación automática de cualquier edición.
   No se ha integrado ni se ha relanzado la revisión.
 - Continúa la implementación integral de `volaris_sec`, `afac_carriers`,
   `bts_segments`, `rss` y `viva_financials`. GAP/ASUR tienen el lector integral
-  preparado en este lote, con su validación e integración registradas en el apéndice y PR;
+  preparado y probado con originales julio en este lote; el cierre de
+  integración queda registrado en el PR;
   su existencia no acredita ediciones nuevas ni disponibilidad reciente.
   Es trabajo técnico autorizado, no una decisión de alcance del dueño.
   Los restantes adaptadores conservan sus límites de edición y periodo.
