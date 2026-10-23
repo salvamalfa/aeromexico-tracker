@@ -275,6 +275,8 @@ def evaluate(recipe: dict, outcomes: dict) -> dict:
             blockers.append(message)
             if (item["cadence"], item["product"]) in required:
                 core_blockers.append(message)
+        if "publication_calendar_completeness_not_verified" in result.get("source_conditions", []):
+            calendar_blockers.append(f"{item['id']}:observation_calendar_completeness_not_verified")
         if result.get("latest_source_availability_verified") is not True:
             calendar_blockers.append(f"{item['id']}:current_source_availability_not_verified")
     # A required result is invalid when any transitive used dependency fails.
@@ -424,6 +426,13 @@ def verify(item: dict, workspace: Path) -> dict:
 
         artifacts = pd.read_parquet(candidate / "data/gold/dim_source_artifact.parquet")
         bridge = pd.read_parquet(candidate / "data/gold/bridge_record_lineage.parquet")
+        if item["product"] == "viva_financials":
+            # Q1 support is present in native Silver lineage, but cannot bind a Q2 release.
+            # Here contributing_artifacts means release-eligible artifacts, not all support.
+            # Only the fully checked, directly reported Q2-edition Gold facts confer that role.
+            from src.source_updates.viva_financial_spec import TABLE
+
+            bridge = bridge.loc[bridge.table_name.eq(TABLE)]
         used = artifacts.loc[artifacts.artifact_id.isin(bridge.artifact_id.dropna())]
         result["contributing_artifacts"] = sorted(
             ({"source_url": r.source_url, "sha256": r.artifact_sha256} for r in used.itertuples(index=False)),

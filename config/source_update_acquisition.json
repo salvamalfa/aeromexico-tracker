@@ -93,7 +93,7 @@
       "entry_ref": "sec_group:GAP",
       "state": "manual",
       "format": "JSON SEC → anexo HTML",
-      "procedure": "CIK desde SEC_GROUPS de airports.groups. Filtrar anexos de tráfico del mes; alias sec_edgar, grupo GAP. No mezclar aeropuertos mexicanos con Jamaica; parser conjunto requiere otros originales seleccionados.",
+      "procedure": "CIK desde SEC_GROUPS de airports.groups. Seleccionar HTML oficial de tráfico GAP, no estados financieros ni mes del formulario. Importar original retenido con airport_group_candidate retain (rol html); certify exige mes cerrado, mercados, comparativos/acumulados y linaje Silver/Gold completo. GAP: preservar cifras preliminares en miles con un decimal, CBX incluido en TIJ internacional y total mundial separado del cálculo de doce aeropuertos MX; no mezclar Jamaica.",
       "selection_contract": {
         "source_system": "sec_edgar",
         "entity": "GAP_traffic_<accession>",
@@ -109,7 +109,7 @@
       "entry_ref": "sec_group:ASUR",
       "state": "manual",
       "format": "JSON SEC → anexo HTML",
-      "procedure": "CIK desde SEC_GROUPS. Seleccionar resumen y tabla Mexico Passenger Traffic; grupo ASUR, mantener México separado de Colombia/Puerto Rico y adquisiciones.",
+      "procedure": "CIK desde SEC_GROUPS de airports.groups. Seleccionar HTML oficial de tráfico ASUR, no estados financieros ni mes del formulario. Importar original retenido con airport_group_candidate retain (rol html); certify exige mes cerrado, mercados, comparativos/acumulados y linaje Silver/Gold completo. ASUR: reconciliar exactamente resumen por país con nueve aeropuertos de México. Separar Puerto Rico/Colombia; conservar exclusión de tránsito/aviación general solo MX/CO.",
       "selection_contract": {
         "source_system": "sec_edgar",
         "entity": "ASUR_traffic_<accession>",
@@ -131,7 +131,7 @@
       "entry_ref": "url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD",
       "state": "manual",
       "format": "HTML → PDF InvestorCloud",
-      "procedure": "Localizar release real de GVIVA y enlace InvestorCloud. No sustituir números en VIVA_REPORT_URL: es plantilla histórica, no prueba de disponibilidad. Preservar trimestre, preliminar/auditado y H1−Q2. Parser peers requiere paquete de comparables completo."
+      "procedure": "Localizar release real de GVIVA y enlace InvestorCloud. No sustituir números en VIVA_REPORT_URL: es plantilla histórica, no prueba de disponibilidad. Para el 2T26 retenido usar viva_financial_candidate, roles pdf=2T26 y prior_quarter=1T26; verifica tablas completas con USD/millas/pasajeros reservados, trimestre/acumulado/instantes y preliminar/no auditado. El 1T26 es soporte diagnóstico: H1−Q2 no se publica como 1T validado ni se armonizan diferencias entre ediciones. Otra edición requiere adaptación. No ejecutar peers como certificador integral."
     },
     "viva_traffic": {
       "entry_ref": "url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD",
