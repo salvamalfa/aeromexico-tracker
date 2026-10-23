@@ -1596,7 +1596,7 @@ posición sin presumir equivalencia. Sin baseline explícito, registra ausencia
 de comparación; ninguna comparación acredita una revisión oficial.
 
 
-Prueba real en código funcional `d25f4f6d952a75c32897320e585dd4ae903c24a9`:
+Prueba real en código funcional `39b7dc0533b90b4476b42e88cb7f44fecb197544`:
 
 | Producto retenido | Resultado comprobado | Límite real |
 |---|---|---|
@@ -1611,18 +1611,18 @@ retenido el 24/ago: tabla 300, filas 2/23/26, columna 2, y gastos repetidos en
 tabla 306, fila 22. La comprobación usa estos bytes, no el estado actual de URL.
 
 Resumen/receta/plan/recibos locales:
-`tmp/source-updates/carrier-official-d25f4f6d-summary.json`, SHA-256
-`5b75dec280f16b559033963159dcce5143a2df21293c906c6dfe4b0398b33b7a`.
+`tmp/source-updates/carrier-official-39b7dc05-summary.json`, SHA-256
+`7654368a697a28b175bd6543fde7d53cf5507202c5b7a7f4fe244f5807645915`.
 Auditoría independiente sin importar módulos del producto:
-`carrier-official-d25f4f6d/afac-independent-review.json`, SHA-256
-`fab67a725a70fcba3fdbef58d444c11fe63405a7c832b09384dc9ca9d3b6b818`.
+`carrier-official-39b7dc05/afac-independent-review.json`, SHA-256
+`16a36b63cf6d7d72592e4033ecd41ad24095e60ac3d3c3c50bf619517fe3a637`.
 Reconstruyó los 36 campos nativos, 39 Gold, cada padre/artefacto/vínculo,
 las 117 huellas de código físicas/Git y las 474 conciliaciones. Los 24 ceros
 explícitos PDF sin observación DB no se imputaron a la base. `World 2 Fly`
 conserva 62 observaciones nativas y su nombre literal.
 
 El lote ejecutable terminó `blocked` por Volaris tras validar AFAC. El replay
-individual y `carrier-readiness-d25f4f6d/` pasan; `carrier-global-d25f4f6d/`
+individual y `carrier-readiness-39b7dc05/` pasan; `carrier-global-39b7dc05/`
 permanece `blocked_global_policy`, con Aerocivil/GDELT y el resto del alcance
 obligatorio ausentes/bloqueados. Ninguna ronda completa ni calendario queda
 aprobada por este resultado. Muestra literal del dry-run/resultado:
@@ -1636,40 +1636,48 @@ network_requests=0; paid_requests=0; activation=none; publication=not_authorized
 ready_for_calendar_incorporation=false
 ```
 
-Las pasadas focales/regresión cubren 305 casos comprobados. Las pruebas
+Las pasadas focales/regresión cubren 307 casos comprobados. Las pruebas
 sintéticas incluyen expediente AFAC físico PDF/ZIP de tres años,
 contrato Volaris completo, casos positivos y negativos, baselines físicos y
 rechazo de índices/portada como release. Pasan 80 pruebas independientes; la
 revisión adversarial cerró todos sus hallazgos sin modificar tolerancias de
-Volaris. La suite completa, CI/revisión del head final e integración conservan
+Volaris. El CSV de entidades y los JSON de estos módulos usan UTF-8 explícito;
+la salida CLI JSON escapa Unicode para terminales ASCII. Dos pruebas en
+subprocesos comprueban locale no UTF-8 y stdout ASCII, sin afirmar portabilidad
+integral de los helpers compartidos. La prueba física repetida conserva las
+cuatro salidas idénticas a las anteriores. La suite completa, CI/revisión del
+head final e integración conservan
 su evidencia propia en el PR de este lote. La ejecución local de la suite
 pública se detuvo en un test de chat por ausencia del pin externo aprobado
 `CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256` (208 pasaron antes). La lectura
 del valor por GitHub recibió 403; no se cambiaron variables, permisos o gates.
 CI conserva su configuración autorizada y debe validar el head final.
 
-Compatibilidad local `c378cf9da7fd3e72a3971bf8359f5af41edc159c`: integra
+Compatibilidad local final `08eb762d0244e818d6318f8862eba52b26533e9f`: integra
 el código de este lote con los cuatro lotes pendientes y RSS en una rama local,
 sin cambiar sus heads. Nueve productos reales reconstruidos conservaron las
 53 salidas idénticas a sus ramas separadas; Volaris mantuvo el mismo bloqueo
-sin Silver/Gold. Resumen `source-batches-official-c378cf9d/compatibility-summary.json`,
-SHA-256 `35c7fa3d4b6d3936b6157503b2d42a3edaa02ac4d9d92d0c9383a61b66384bf1`.
-La revisión independiente del código reconciliado y sus 53 salidas fue
-favorable. La suite conjunta de fuentes pasó **1.318 pruebas** en 462,18 s
-(sin fallos; 44 `FutureWarning` de pandas por concatenaciones vacías).
-La CI y revisión del head final mantienen su resultado propio en el PR del lote.
+sin Silver/Gold. Resumen `source-batches-official-08eb762d/compatibility-summary.json`,
+SHA-256 `60d13e81acddd7df54417f7bddb9e5f0f105157897d875e896233c9b3cdbb743`.
+La revisión independiente del código reconciliado inicial y sus 53 salidas fue
+favorable. La suite amplia en `c378cf9d` pasó **1.318 pruebas** en 462,18 s
+(sin fallos; 44 `FutureWarning` de pandas por concatenaciones vacías). El cierre
+UTF-8/ASCII del head final pasó **281 pruebas afectadas** en 97,14 s (ocho avisos
+pandas) y repitió las nueve cadenas reales con las mismas 53 salidas. CI y
+revisión del head final mantienen su resultado propio en el PR del lote.
 Son ventanas independientes (julio, agosto, septiembre y 2T26), no una ronda
 mensual/trimestral completa. La reconciliación real de las ramas pendientes
 requiere que terminen sus revisiones y vuelva a pasar CI/revisión del head
 resultante antes de integrarlo. No se han relanzado sus revisiones.
 
 Lifecycle manual: conservar originales/candidatos/recibos/resumen/auditor y
-su resultado local de `carrier-official-d25f4f6d*`, readiness/global para
-reproducir. El lote anterior `carrier-official-bc5343f4*` queda conservado como
-prueba previa a las correcciones, no evidencia final. Auxiliares bajo `/tmp`,
+su resultado local de `carrier-official-39b7dc05*`, readiness/global para
+reproducir. Los lotes anteriores `carrier-official-bc5343f4*`,
+`carrier-official-d25f4f6d*` y `carrier-official-868232fd*` se conservan como
+pruebas previas a las correcciones, no evidencia final. Auxiliares bajo `/tmp`,
 cachés y scratch de pytest son regenerables; no se suben originales, datos
 candidatos o informes paralelos al repositorio público. Inventario manual:
-52 archivos locales de este checkout y 147 de la compatibilidad, conservados
+104 archivos locales de este checkout y 294 de la compatibilidad, conservados
 fuera de Git público; los 24 archivos versionados tienen disposición en el PR.
 No hay retiros.
 
