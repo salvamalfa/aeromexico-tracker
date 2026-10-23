@@ -17,7 +17,9 @@ ronda que los requiera; no se sustituyen por cero ni por otro producto. Ningún
 comando instala un calendario o incorpora candidatos a producción al fusionar
 el código. Los originales y candidatos conservan sus recibos y revisión propia.
 
-La continuación del 23 de octubre incorpora comprobaciones integrales de AICM
+La continuación del 23 de octubre añade también el certificador GAP/ASUR de
+originales julio 2026, con países y redondeo explícitos; su prueba y estado de
+integración están en el apéndice. Incorpora comprobaciones integrales de AICM
 y un control estricto del archivo AIFA. AICM permite probar originales de julio
 y agosto; AIFA sigue bloqueado por fechas internas contradictorias. Esto no
 declara lista la ronda completa. PR152 conserva por separado sus certificadores
@@ -1467,6 +1469,47 @@ resumen final: `4d9446a4d94dab4118f8407f072d7597f5d38818c47709dc414668e15dcd5a61
 Los intentos de prueba previos se retienen como evidencia, sin confundirlos con
 esta reproducción del código final.
 
+### Certificación integral GAP y ASUR: continuación del 23 de octubre
+
+El lote añade `airport_group_candidate` para los originales SEC de tráfico
+julio 2026. Es certificación técnica de originales retenidos, no una captura
+nueva ni una comprobación de disponibilidad de septiembre/octubre. Los hechos
+Gold candidatos son de México; Jamaica, Puerto Rico, Colombia y el total
+mundial se conservan separados en la evidencia nativa. No se cambian datos
+públicos ni se activa el calendario. PR152 y su revisión pendiente permanecen
+intactos; este lote parte del master posterior a PR153.
+
+GAP publica cifras preliminares en miles con un decimal. Se conserva esa
+precisión: no son pasajeros exactos. México se calcula sumando doce aeropuertos
+redondeados; no se presenta como total mexicano reportado ni se obtiene
+restando Jamaica del total mundial. CBX ya está en internacional Tijuana.
+ASUR aporta pasajeros enteros y nueve aeropuertos mexicanos que deben
+reconciliar exactamente con el resumen México. Su nota de exclusión de tránsito
+y aviación general se aplica solo a México y Colombia. Carga y operaciones
+ausentes quedan nulas en ambas fuentes.
+
+El lector exige CIK, títulos físicos, unidad, mes completo, comparativos,
+acumulado, dominios de aeropuertos y mercados y reconciliaciones. Rechaza
+acumulados inferiores al mes fuera de su precisión; enero debe ser igual a su
+acumulado. GAP admite solo la cota matemática del redondeo, sin ajustar cifras;
+ASUR exige igualdad entera. El linaje de cada hecho conserva precisión y
+alcance; el total México calculado de GAP declara sus doce contribuyentes.
+
+Usar el [procedimiento de la skill](../.agents/skills/airline-update-airports/SKILL.md#certificación-integral-gap-asur).
+La importación selecciona rol `html`; `certify` requiere producto, mes, corte
+con zona y recibo de retención. Mostrar `--dry-run`, construir `--execute` y
+reproducir `--check` sin sobrescribir. `retained_round` despacha este lector;
+la ronda usa `adapter=airport_group`. El lector genérico se rechaza para estos
+productos. Cada candidato contiene nueve tablas verificadas: dos Silver,
+dos hechos Gold, tres dimensiones, artefactos y puente físico.
+
+La comparación de revisiones usa el grano nativo y también unidad, precisión,
+país, definición, preliminar y estado reportado/calculado. La copia previa
+debe ser explícita, del mismo grupo y bajo `baselines/`; no se puede comparar
+solo Gold y omitir cambios del acumulado o de países. Sin copia se registra
+`not_compared_no_baseline`. La fecha declarada del reporte sigue separada de
+primera publicación y retraso de publicación; estos últimos siguen nulos.
+
 ## Pendientes
 
 - La política está aprobada e implementada; no falta volver a aprobarla.
@@ -1479,7 +1522,9 @@ esta reproducción del código final.
   terminal; su CI y revisión manual previas no sustituyen ese resultado.
   No se ha integrado ni se ha relanzado la revisión.
 - Continúa la implementación integral de `volaris_sec`, `afac_carriers`,
-  `bts_segments`, `gap_traffic`, `asur_traffic`, `rss` y `viva_financials`.
+  `bts_segments`, `rss` y `viva_financials`. GAP/ASUR tienen el lector integral
+  preparado en este lote, con su validación e integración registradas abajo;
+  su existencia no acredita ediciones nuevas ni disponibilidad reciente.
   Es trabajo técnico autorizado, no una decisión de alcance del dueño.
   Los restantes adaptadores conservan sus límites de edición y periodo.
 - Aerocivil sigue pendiente de una leyenda y atribución primarias del ID exacto.

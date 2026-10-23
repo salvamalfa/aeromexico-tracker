@@ -105,3 +105,36 @@ positiva no resuelve esa contradicción de la fuente oficial.
 
 Los originales no acreditan última disponibilidad, primera publicación ni
 activación; conservar esos límites en la ronda global y en la entrega.
+
+### Certificación integral GAP/ASUR
+
+`python -m src.source_updates.airport_group_candidate` usa el mismo protocolo
+`retain`/`certify --dry-run|--execute|--check` con rol `html`. Seleccionar un
+original SEC del CIK GAP `1347557` o ASUR `1123452`; no usar el mes del formulario
+6-K como mes del tráfico. `--period YYYYMmm` identifica el mes cerrado dentro
+del contenido; se exigen sus comparativos y acumulados separados. El lector
+revisado se ha contrastado con originales julio 2026, no con toda edición futura.
+La ronda usa `adapter=airport_group`; `retained_round` lo despacha sin activar.
+
+GAP exige los tres títulos de mercados y la unidad miles con un decimal,
+catorce aeropuertos (doce mexicanos y dos jamaicanos), total mundial y nota
+CBX. CBX ya pertenece a internacional Tijuana y no se suma otra vez. Cada
+celda redondeada tiene cota de 50 pasajeros; se comprueba el límite matemático
+de redondeo de las sumas y no se ajustan cifras para forzar igualdad. México
+se calcula sumando los doce aeropuertos: cota de 600 pasajeros por mercado.
+Mantener condición preliminar. Gold conserva los números convertidos por mil;
+Silver y cada linaje aclaran precisión, cálculo y alcance. No son conteos exactos.
+
+ASUR exige el resumen por país y los nueve aeropuertos mexicanos con mercados,
+igualdad entera exacta y exclusión de tránsito/aviación general declarada solo
+para México/Colombia. Puerto Rico, Colombia y total mundial quedan en evidencia
+nativa separada; las dos tablas Gold estándar contienen únicamente México.
+Carga y operaciones ausentes siguen nulas. No atribuir tráfico a una aerolínea.
+
+El resultado incluye nueve tablas: nativa y `airport_traffic` Silver, hechos
+Gold por aeropuerto/grupo, dimensiones aeropuerto/grupo/periodo, artefactos y
+puente físico. Revisiones comparan grano nativo, unidades, precisión, país,
+definición, preliminar y estado reportado/calculado; `--baseline` exige copia
+nativa explícita del mismo grupo bajo `baselines/`. Sin ella no hay comparación.
+La fecha declarada del reporte no acredita primera publicación ni frescura
+actual. No publica, reemplaza Gold público ni habilita un calendario.

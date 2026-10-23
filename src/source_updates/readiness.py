@@ -29,6 +29,7 @@ RECEIPT_NAMES = {
     "gdelt": "gdelt-{period}.json",
     "retained": "certified-{product}-{period}.json",
     "government": "government-{product}-{period}.json",
+    "airport_group": "airport-group-{product}-{period}.json",
 }
 
 
@@ -98,12 +99,12 @@ def preflight(recipe: dict, workspace: Path) -> list[dict]:
             or period_end(period) >= candidate_cutoff.date()
         ):
             raise ValueError("Every observation/review period must be closed before cutoff")
-        if adapter in {"retained", "government"}:
+        if adapter in {"retained", "government", "airport_group"}:
             from src.source_updates.retained import spec
 
             definition = spec(product)
-            if (definition.get("certifier") == "government") != (adapter == "government"):
-                raise ValueError("Government product requires its complete dedicated adapter")
+            if definition.get("certifier", "retained") != adapter:
+                raise ValueError("Product requires its complete dedicated adapter")
         elif ADAPTER_PRODUCTS[adapter] != product:
             raise ValueError("Dedicated adapter does not support the declared product")
         if adapter != "retained" and "M" not in period:
@@ -144,7 +145,7 @@ def inventory(workspace: Path) -> dict:
 def check_task(item: dict, cutoff: str) -> dict:
     candidate = Path(item["workspace"])
     before = inventory(candidate)
-    retained = item["adapter"] in {"retained", "government"}
+    retained = item["adapter"] in {"retained", "government", "airport_group"}
     prefix = "retained" if retained else "collection"
     acquisition = candidate / "receipts" / f"{prefix}-{item['receipt_id']}.json"
     acquired = json.loads(acquisition.read_text())
@@ -175,6 +176,10 @@ def check_task(item: dict, cutoff: str) -> dict:
     with block_network():
         if item["adapter"] == "government":
             from src.source_updates.government_candidate import run
+
+            result = run(candidate, item["product"], item["period"], cutoff, item["receipt_id"], check=True)
+        elif item["adapter"] == "airport_group":
+            from src.source_updates.airport_group_candidate import run
 
             result = run(candidate, item["product"], item["period"], cutoff, item["receipt_id"], check=True)
         elif item["adapter"] == "retained":
