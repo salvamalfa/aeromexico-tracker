@@ -99,7 +99,7 @@ AIFA separa comercial/general/carga, comprueba exclusión de aerolíneas mixtas
 antes de sumar operaciones y convierte kg a toneladas solo en la proyección.
 Rechazar fechas internas anteriores al cierre del mes o posteriores a la
 captura local, datos ausentes, plantillas futuras con observaciones o cambios
-de formato. El julio AIFA retenido declara 11 Jul frente al cierre31 Jul:
+de formato. El julio AIFA retenido declara 11 Jul frente al cierre 31 Jul:
 queda bloqueado, sin Silver/Gold ni sustitución por cero. Una prueba sintética
 positiva no resuelve esa contradicción de la fuente oficial.
 

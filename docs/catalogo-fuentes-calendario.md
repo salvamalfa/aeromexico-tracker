@@ -1444,7 +1444,7 @@ Muestra de salida del lote probado:
 ```text
 AICM 2026M07: checks_passed; native=189; Gold=19; replay=identical
 AICM 2026M08: checks_passed; native=198; Gold=20; replay=identical
-AIFA 2026M07: blocked; Esquema Operativo!C4=11 Jul. 2026 < cierre31 Jul.
+AIFA 2026M07: blocked; Esquema Operativo!C4=11 Jul. 2026 < cierre 31 Jul.
 network_requests=0; paid_requests=0; activation=none; publication=not_authorized
 ```
 
@@ -1452,11 +1452,20 @@ La revisión adversarial independiente del código fijado aprobó 50 casos.
 Reprodujo y cerró fallos de unidades/etiquetas, fechas locales, inicio del
 periodo, precisión numérica e identidad del aeropuerto. Esas pruebas sintéticas
 validan contratos; no resuelven la contradicción del archivo oficial AIFA.
-El cierre final de CI y la integración se registran en el PR de esta entrega.
+Las 86 pruebas focales y de regresión pasaron, incluido el presupuesto de
+archivos y las rutas heredadas. Una ronda global real con solo AICM válido
+quedó `blocked_global_policy`: 15 productos mensuales requeridos ausentes,
+`core_ready=false` y `ready_for_calendar_incorporation=false`; su replay fue
+idéntico y conservó los candidatos. Así se comprueba que cerrar un producto
+no declara lista la ronda. El cierre final de CI y la integración se registran
+en el PR de esta entrega.
 El resumen local, recibos y hashes se conservan bajo
 `tmp/source-updates/government-proof-20261023-bb39b6c1-summary.json` y
 `government-batch-proof-20261023-bb39b6c1/`; son evidencia regenerable local,
-no copias de Bronze publicadas en Git ni aprobación de datos.
+no copias de Bronze publicadas en Git ni aprobación de datos. SHA-256 del
+resumen final: `4d9446a4d94dab4118f8407f072d7597f5d38818c47709dc414668e15dcd5a61`.
+Los intentos de prueba previos se retienen como evidencia, sin confundirlos con
+esta reproducción del código final.
 
 ## Pendientes
 
@@ -1466,7 +1475,7 @@ no copias de Bronze publicadas en Git ni aprobación de datos.
   por la contradicción de fechas. Falta material oficial coherente o aclaración
   oficial de la edición; no basta una prueba sintética o el control de Gold.
 - PR152 añade `banxico`, `fuel` y `equities` y conserva el head `3a89c6dc`.
-  La revisión adicional iniciada el 22/oct a las16:05 UTC sigue sin resultado
+  La revisión adicional iniciada el 22/oct a las 16:05 UTC sigue sin resultado
   terminal; su CI y revisión manual previas no sustituyen ese resultado.
   No se ha integrado ni se ha relanzado la revisión.
 - Continúa la implementación integral de `volaris_sec`, `afac_carriers`,
