@@ -1525,7 +1525,7 @@ revisado de este lote: GAP usa otra representación de fecha y ASUR otra
 cabecera. Se rechazan antes de producir Silver/Gold; no se afirma completitud
 histórica ni aceptación automática de cualquier edición.
 
-La prueba real offline quedó fijada en código `85fbbfd5`: GAP produjo
+La prueba real offline quedó fijada en código `24a18edb`: GAP produjo
 192 observaciones nativas, 26 filas Silver, 24 hechos por aeropuerto y dos de
 grupo, con 72 reconciliaciones y 434 filas de linaje. ASUR produjo 156 nativas,
 20 Silver, 18 hechos por aeropuerto y dos de grupo, con 88 reconciliaciones y
@@ -1548,20 +1548,38 @@ Pasaron 263 pruebas focales/regresión; dos verificaciones del almacén local se
 omitieron porque ese checkout no tiene `warehouse.duckdb`. No se restauró ni
 modificó el almacén público para convertirlas en aprobadas. La revisión
 adversarial independiente aprobó 43 casos y ocho controles adicionales de la
-ruta genérica cerrada. El hallazgo de YTD/enero quedó atendido. Ruff, diff y
+ruta genérica cerrada. Después del arreglo de selección por familia pasaron
+dos casos nuevos del plan y 128 regresiones de catálogo/política/plan; la
+revisión independiente añadió cinco pruebas, incluida la CLI sin HTTP.
+Son 56 casos independientes en total. El hallazgo de YTD/enero quedó atendido. Ruff, diff y
 presupuesto de módulos pasaron. CI y revisión Codex del head final se cierran
 en el PR; los resultados de un head anterior no sustituyen los nuevos.
 
 Evidencia local regenerable, fuera del Git público:
-`tmp/source-updates/airport-group-proof-20261023-85fbbfd5-summary.json`,
-SHA-256 `87b07bb6aa2bcc2fdb1b7f9b69fb40043595cb679fb669dbc443e15dbfb51c40`.
+`tmp/source-updates/airport-group-proof-20261023-24a18edb-summary.json`,
+SHA-256 `32d199d7ac03d5f5a08c4863584db82ea624b710097a59aebc3c2fb5ad7d5476`.
 Los originales, candidatos, baselines, recibos de lote/ronda y fallos de
 harness previos se conservan en los workspaces `airport-group-proof-*`.
 El harness inicial invocó por error `readiness.run`, que no existe; se corrigió
 a `execute` y se retomaron los candidatos por replay, sin reconstruirlos ni
 sobrescribir. Tras acortar el guard genérico para cumplir el presupuesto de
 600 líneas se emitió la prueba final en workspaces nuevos con su nueva huella.
-No se afirma que los recibos antiguos pertenezcan al código final.
+No se afirma que los recibos antiguos pertenezcan al código final. Una colisión
+de nombre en el harness de resumen se corrigió con una importación explícita;
+los recibos ya escritos se retomaron por `--check`, sin repetir escrituras.
+
+Muestra resumida del plan real al corte `2026-10-23T10:00:00-06:00`: antes
+mostraba tres productos de aeropuertos y ahora muestra cinco, todos con
+objetivo septiembre. Esta selección no certifica septiembre desde julio:
+
+```json
+{"mode":"dry_run","products":["gap_traffic","asur_traffic","oma_traffic","aicm_traffic","aifa_traffic"],"target_period":"2026M09","network_requests":0,"writes":[],"activation":"none"}
+```
+
+La salida completa vive en `family_plan` del resumen local. SEC mantiene su
+identidad institucional y sus financieros conservan familia/cadencia. La
+política global no cambia: la prueba combinada con dos fuentes conserva 21
+requisitos ausentes y fechas de releases sin verificar.
 
 ## Pendientes
 
