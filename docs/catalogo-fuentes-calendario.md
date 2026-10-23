@@ -28,7 +28,9 @@ originales julio 2026, con países y redondeo explícitos; su prueba y estado de
 integración están en el apéndice. Incorpora comprobaciones integrales de AICM
 y un control estricto del archivo AIFA. AICM permite probar originales de julio
 y agosto; AIFA sigue bloqueado por fechas internas contradictorias. Esto no
-declara lista la ronda completa. PR152 conserva por separado sus certificadores
+declara lista la ronda completa. Viva añade ahora certificación de las tablas
+2T26 retenidas, con 1T26 solo como soporte. Su integración sigue condicionada
+a CI y revisión del head final. PR152 conserva por separado sus certificadores
 macro/mercado y espera una revisión adicional; este cambio no modifica su head.
 
 La continuación BTS añade certificación mensual desde los ZIP oficiales
@@ -61,7 +63,7 @@ octubre; la continuación del 21 y su matriz aparecen abajo:
 
 | Familia | Alcance actual |
 |---|---|
-| Empresas | BMV: catálogo y ZIP oficiales capturados; parseo offline acotado implementado. SEC preservado reconstruido; Ryanair FY2026 tiene un lector XBRL retenido separado, sin convertirlo a trimestre. Tráfico mensual y finanzas 2T26 IR de Aeroméxico tienen candidatos dedicados desde PDF; véase alcance abajo. Otros periodos nuevos IR/SEC siguen condicionados. |
+| Empresas | BMV: catálogo y ZIP oficiales capturados; parseo offline acotado implementado. SEC preservado reconstruido; Ryanair FY2026 tiene un lector XBRL retenido separado, sin convertirlo a trimestre. Tráfico mensual y finanzas 2T26 IR de Aeroméxico tienen candidatos dedicados desde PDF; Viva 2T26 añade tablas financieras/operativas completas retenidas con 1T26 solo como soporte. Véase alcance abajo. Otros periodos nuevos IR/SEC siguen condicionados. |
 | Tráfico AFAC y BTS | AFAC: aeropuertos y marginales de julio tienen adaptadores offline; países conserva cajas acumuladas exactas. Boletines/base julio–agosto conservan su evidencia previa. BTS añade candidato integral offline de mayo/julio y revisiones, sin certificar cobertura completa por operador. La retención no es una captura nueva. |
 | Aeropuertos | AICM julio/agosto tienen certificador integral offline. AIFA julio falla por fechas internas anteriores al cierre del mes; sus comprobaciones históricas de tabla no acreditan el producto integral. GAP/ASUR julio tienen certificador integral preparado con países y redondeo explícitos; véase continuación abajo. OMA julio y slots AICM verano 2026 tienen adaptadores de originales retenidos. OMA septiembre enlazado falló; no se acredita septiembre completo. |
 | Macro y mercado | EIA, tres series Banxico y cinco series bursátiles verificadas hasta Gold para septiembre. H.10 tiene una cadena dedicada de certificación mensual aislada; véase su alcance y evidencia abajo. La familia completa no está certificada. |
@@ -1565,14 +1567,17 @@ esta reproducción del código final.
 
 El nuevo adaptador está preparado para comprobar el [informe 2T26 retenido](https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2026-2T26-en.pdf),
 con el [1T26](https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2026-1T26-en.pdf)
-solo como soporte de comparación. Falta terminar su validación con los dos
-originales y la revisión del head final antes de dar por comprobado este lote.
+solo como soporte de comparación. Ambos originales pasaron la certificación
+local, la reproducción sin red y un cotejo independiente de todas sus tablas.
+Faltan CI y revisión automática del head final antes de integrar el código.
 No certifica otra edición ni disponibilidad reciente.
 
 La salida separa trimestre, semestre y balances a una fecha. Mantiene USD,
 escalas, millas, pasajeros reservados y notas preliminares/no auditadas.
 Conserva el contexto macro en Silver, sin usarlo en Gold. Cada dato Gold solo
-puede tener su verdadero padre de la edición 2T26. La comparación con 1T26
+puede tener su verdadero padre de la edición 2T26. Para vincular un release
+trimestral, el coordinador admite solo el PDF que aporta esas cifras Gold:
+el soporte 1T26 no puede hacerse pasar por publicación 2T26. La comparación con 1T26
 registra diferencias, pero no las presenta como una reexpresión acreditada ni
 permite deducir un 1T26 validado restando semestre menos trimestre.
 
@@ -1582,6 +1587,56 @@ Comando: `python -m src.source_updates.viva_financial_candidate`. Los modos
 El contrato propio está en `contracts/source_updates/viva_financial_source.json`;
 estas observaciones no se incorporan al warehouse, al sitio ni a perfiles.
 No se ejecutó ingesta, calendario ni publicación.
+
+La prueba real del código funcional `1bb2359c` produjo 655 filas Silver,
+386 cifras Gold, dos artefactos y 1.427 enlaces de linaje para 1.041 registros.
+Conserva 398 observaciones de la edición 2T26 y 257 del soporte 1T26. Las doce
+filas de contexto macro de 2T26 no pasan a Gold. Se verificaron 252 identidades
+y ratios con intervalos de precisión publicada, sin recalcular la ocupación
+de itinerario desde totales distintos. La fecha impresa de 2T26 es 24/jul/2026;
+la captura retenida es 24/ago/2026. No se atribuye una primera publicación ni
+un rezago conocido. No se hace otra descarga.
+
+El examen entre ediciones conserva 42 diagnósticos. Seis exceden el redondeo,
+todos en el 1T26 implícito: H1−Q2 difiere del 1T26 publicado en gastos operativos
+(+USD1.212.000), soporte operativo (+USD1.397.000), comercialización
+(−USD185.000), costos financieros y su neto (+USD1.212.000 cada uno), y
+resultado operativo (−USD1.212.000). No existe aquí evidencia de su causa.
+Eso exige revisión antes de armonizar históricos; no bloquea las cifras
+directas 2T26 que sí pasan sus propias identidades. Ningún diagnóstico se
+publica como un 1T26 validado ni da aprobación a los datos.
+
+Los dos PDF conservan SHA-256 `4fca922642ce3fe06743578064239107539b0546c1519a11abecb0eef098bc7f`
+(2T26) y `9ff9a82afff61477908acd10018be79333210b6dcaa90cabb90bffffa04e8ab7`
+(1T26). El resumen reproducible y las recetas permanecen locales bajo
+`tmp/source-updates/viva-financial-official-1bb2359c-summary.json`, SHA-256
+`5bada1f0d620ea488e6ef42409ac99286f729719737764faa45b59688fcdb63f`.
+Los originales/candidatos y recibos están en las carpetas `viva-financial-official-1bb2359c/`,
+`viva-financial-readiness-1bb2359c/` y `viva-financial-global-1bb2359c/` del
+mismo directorio. Se conserva el intento anterior bloqueado, sin sobrescribirlo.
+La recuperación usa las dos filas Bronze retenidas, sus sidecars/manifiesto y
+el código fijado. No se añaden los PDF ni cifras candidatas al repositorio público.
+
+Muestra de ejecución real y comprobación global, sin disparadores:
+
+```text
+Viva 2026Q2: checks_passed; Silver=655; Gold=386; artifacts=2; bridge=1427
+retained_round: checks_passed; offline_replay_identical=true
+readiness: checks_passed; ready_for_calendar_incorporation=false
+global combined (junio/2T26): blocked_global_policy; 22 comprobaciones requeridas ausentes
+core_ready=false; quarterly_date=null; releases=[]
+network_requests=0; paid_requests=0; activation=none; publication=not_authorized
+```
+
+Es una muestra acotada de un producto, no una ronda completa. La matriz global
+mantiene Aerocivil/GDELT requeridos y bloqueados, disponibilidad reciente sin
+acreditar y releases sin suministrar. Las pruebas de contrato son sintéticas;
+los conteos anteriores provienen de los dos PDF retenidos reales. Un revisor
+independiente reconstruyó todas las columnas, unidades, padres y diagnósticos
+sin usar las funciones del producto: no encontró discrepancias. Los 20 casos
+adversariales independientes están incluidos en las 48 pruebas focales que
+pasaron. La compatibilidad con PR152/154/155 se comprueba en una rama local
+separada; sus heads remotos y revisiones pendientes se preservan.
 
 ### BTS: originales retenidos, candidato mensual y revisiones (23/oct)
 
@@ -1845,7 +1900,8 @@ no sustituyen esos controles.
   PR154 conserva GAP/ASUR separados en `f922d227`, con CI aprobada y revisión
   adicional aún pendiente; no se relanza ni se altera ese head.
 - Continúa la implementación integral de `volaris_sec`, `afac_carriers`,
-  `rss` y la validación final de `viva_financials`. BTS (PR155) y GAP/ASUR
+  `rss`. Viva finanzas 2T26 está probado sobre originales retenidos, con CI y
+  revisión automática del head final pendientes. BTS (PR155) y GAP/ASUR
   (PR154) están preparados y probados, con revisión exacta todavía pendiente;
   se preservan sus heads y no se relanzan revisiones.
   Es trabajo técnico autorizado, no una decisión de alcance del dueño.

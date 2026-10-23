@@ -1,5 +1,6 @@
 """Synthetic dossiers test contracts; retained-original extraction is separate evidence."""
 
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
@@ -8,7 +9,7 @@ import pandas as pd
 import pytest
 
 from src.common.storage import save_bronze
-from src.source_updates import readiness, retained
+from src.source_updates import global_readiness, readiness, retained
 from src.source_updates import viva_financial_candidate as candidate
 from src.source_updates import viva_financials as source
 from src.source_updates.viva_financial_checks import reconcile
@@ -432,3 +433,60 @@ def test_failure_validates_whole_dossier_before_any_silver_gold_write(monkeypatc
         candidate.run(child, "viva_financials", "2026Q2", CUTOFF, run_id, execute=True)
     assert not list((child / "data/silver").rglob("*.parquet"))
     assert not list((child / "data/gold").rglob("*.parquet"))
+
+
+def test_prior_quarter_support_cannot_bind_a_current_quarter_release(monkeypatch, request):
+    root, _depot, child, _files, run_id = workspace(monkeypatch, request.node.name)
+    candidate.run(child, "viva_financials", "2026Q2", CUTOFF, run_id, execute=True)
+    item = dict(
+        id="viva",
+        product="viva_financials",
+        period="2026Q2",
+        adapter="viva_financial",
+        workspace=str(child),
+        receipt_id=run_id,
+        required=True,
+        candidate_as_of=CUTOFF,
+    )
+    checked = global_readiness.verify(item, root / "global-review")
+    receipt = json.loads((child / f"receipts/retained-{run_id}.json").read_text())
+    primary = receipt["originals"]["pdf"]
+    support = receipt["originals"]["prior_quarter"]
+    assert checked["contributing_artifacts"] == [
+        dict(source_url=primary["source_url"], sha256=primary["sha256"])
+    ]
+    task = {k: v for k, v in item.items() if k != "required"}
+    task.update(cadence="quarterly", used=True, depends_on=[])
+    recipe = dict(
+        version=1,
+        round="quarterly",
+        as_of=CUTOFF,
+        monthly_period="2026M06",
+        quarterly_period="2026Q2",
+        items=[task],
+        releases=[
+            dict(
+                entity="VIVA_AEROBUS",
+                period="2026Q2",
+                kind="financial_report",
+                confirmed=True,
+                published_at="2026-07-24T12:00:00-06:00",
+                document_url=support["source_url"],
+                source_sha256=support["sha256"],
+                task_id="viva",
+            )
+        ],
+    )
+    rejected = global_readiness.evaluate(recipe, {"viva": checked})
+    assert "VIVA_AEROBUS:release_not_bound_to_verified_contributing_artifact" in rejected["calendar_blockers"]
+    assert rejected["quarterly_date"] is None
+    recipe["releases"][0].update(document_url=primary["source_url"], source_sha256=primary["sha256"])
+    accepted = global_readiness.evaluate(recipe, {"viva": checked})
+    assert (
+        "VIVA_AEROBUS:release_not_bound_to_verified_contributing_artifact"
+        not in accepted["calendar_blockers"]
+    )
+    assert not accepted["ready_for_calendar_incorporation"]
+    empty = global_readiness.evaluate(recipe, {"viva": {**checked, "contributing_artifacts": []}})
+    assert "VIVA_AEROBUS:release_not_bound_to_verified_contributing_artifact" in empty["calendar_blockers"]
+    assert empty["quarterly_date"] is None

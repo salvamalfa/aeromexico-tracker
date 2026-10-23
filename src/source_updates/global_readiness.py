@@ -421,6 +421,13 @@ def verify(item: dict, workspace: Path) -> dict:
 
         artifacts = pd.read_parquet(candidate / "data/gold/dim_source_artifact.parquet")
         bridge = pd.read_parquet(candidate / "data/gold/bridge_record_lineage.parquet")
+        if item["product"] == "viva_financials":
+            # Q1 support is present in native Silver lineage, but cannot bind a Q2 release.
+            # Here contributing_artifacts means release-eligible artifacts, not all support.
+            # Only the fully checked, directly reported Q2-edition Gold facts confer that role.
+            from src.source_updates.viva_financial_spec import TABLE
+
+            bridge = bridge.loc[bridge.table_name.eq(TABLE)]
         used = artifacts.loc[artifacts.artifact_id.isin(bridge.artifact_id.dropna())]
         result["contributing_artifacts"] = sorted(
             ({"source_url": r.source_url, "sha256": r.artifact_sha256} for r in used.itertuples(index=False)),
