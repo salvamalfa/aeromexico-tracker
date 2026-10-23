@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import argparse
-from datetime import UTC, datetime
 import json
-from pathlib import Path
 import re
+from datetime import UTC, datetime
+from pathlib import Path
 from uuid import uuid4
 
 from src.source_updates.calendar import local_time
@@ -36,7 +36,8 @@ def execute(recipe: dict, workspace: Path, *, write=False) -> dict:
             or period_end(period) >= local_time(cutoff).date()
         ):
             raise ValueError(
-                "Explicit closed review month/quarter required; reference snapshots keep native time semantics"
+                "Explicit closed review month/quarter required; "
+                "reference snapshots keep native time semantics"
             )
         child = workspace / f"{product}-{period}"
         if child in children:
@@ -93,10 +94,13 @@ def execute(recipe: dict, workspace: Path, *, write=False) -> dict:
             try:
                 saved = retain(child, source_root, product, item["originals"], execute=True)
                 args = (child, product, period, cutoff, saved["run_id"])
+                certify = run
+                if spec(product).get("certifier") == "government":
+                    from src.source_updates.government_candidate import run as certify
                 action = "certify"
-                certified = run(*args, execute=True)
+                certified = certify(*args, execute=True)
                 action = "offline_replay"
-                verified = run(*args, check=True)
+                verified = certify(*args, check=True)
                 if certified["output_sha256"] != verified["output_sha256"]:
                     raise ValueError("Offline output replay changed")
                 results.append(
