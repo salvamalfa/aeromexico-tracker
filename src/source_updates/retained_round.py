@@ -97,6 +97,8 @@ def execute(recipe: dict, workspace: Path, *, write=False) -> dict:
                 certify = run
                 if spec(product).get("certifier") == "government":
                     from src.source_updates.government_candidate import run as certify
+                if spec(product).get("certifier") == "airport_group":
+                    from src.source_updates.airport_group_candidate import run as certify
                 action = "certify"
                 certified = certify(*args, execute=True)
                 action = "offline_replay"

@@ -34,6 +34,7 @@ def spec(product: str) -> dict:
         afac_airports,
         afac_countries,
         afac_margins,
+        airport_group_native,
         authorities,
         context_snapshots,
         financials,
@@ -183,6 +184,15 @@ def spec(product: str) -> dict:
             "table": "fact_airport_traffic",
             "grain": government_traffic.GRAIN,
             "code_files": [Path(government_traffic.__file__)],
+        }
+    for name in sorted(airport_group_native.PRODUCTS):
+        registry[name] = {
+            "roles": {"html": ("sec", "sec_edgar", "sec_filing")},
+            "primary": "html",
+            "certifier": "airport_group",
+            "table": "fact_airport_traffic",
+            "grain": airport_group_native.GRAIN,
+            "code_files": [Path(airport_group_native.__file__)],
         }
     if product not in registry:
         raise ValueError("No reviewed retained-product adapter")
@@ -340,8 +350,8 @@ def originals(workspace: Path, product: str, run_id: str, cutoff: str) -> tuple[
 
 def frames(workspace: Path, product: str, period: str, cutoff: str, run_id: str) -> tuple[dict, dict]:
     definition = spec(product)
-    if definition.get("certifier") == "government":
-        raise ValueError("Use government_candidate for complete government Silver/Gold certification")
+    if certifier := definition.get("certifier"):
+        raise ValueError(f"Use {certifier}_candidate for complete dedicated Silver/Gold certification")
     inputs, receipt_hash = originals(workspace, product, run_id, cutoff)
     frame, details = definition["parse"](inputs, period)
     if frame.empty or frame.duplicated(definition["grain"]).any() or frame.value.isna().any():
@@ -436,8 +446,8 @@ def run(
 ) -> dict:
     workspace = safe_workspace(workspace)
     definition = spec(product)
-    if definition.get("certifier") == "government":
-        raise ValueError("Use government_candidate for complete government Silver/Gold certification")
+    if certifier := definition.get("certifier"):
+        raise ValueError(f"Use {certifier}_candidate for complete dedicated Silver/Gold certification")
     if period_end(period) >= local_time(cutoff).date():
         raise ValueError("Require a closed observation period")
     output_names = (

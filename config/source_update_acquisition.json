@@ -93,7 +93,7 @@
       "entry_ref": "sec_group:GAP",
       "state": "manual",
       "format": "JSON SEC → anexo HTML",
-      "procedure": "CIK desde SEC_GROUPS de airports.groups. Filtrar anexos de tráfico del mes; alias sec_edgar, grupo GAP. No mezclar aeropuertos mexicanos con Jamaica; parser conjunto requiere otros originales seleccionados.",
+      "procedure": "CIK desde SEC_GROUPS de airports.groups. Seleccionar HTML oficial de tráfico GAP, no estados financieros ni mes del formulario. Importar original retenido con airport_group_candidate retain (rol html); certify exige mes cerrado, mercados, comparativos/acumulados y linaje Silver/Gold completo. GAP: preservar cifras preliminares en miles con un decimal, CBX incluido en TIJ internacional y total mundial separado del cálculo de doce aeropuertos MX; no mezclar Jamaica.",
       "selection_contract": {
         "source_system": "sec_edgar",
         "entity": "GAP_traffic_<accession>",
@@ -109,7 +109,7 @@
       "entry_ref": "sec_group:ASUR",
       "state": "manual",
       "format": "JSON SEC → anexo HTML",
-      "procedure": "CIK desde SEC_GROUPS. Seleccionar resumen y tabla Mexico Passenger Traffic; grupo ASUR, mantener México separado de Colombia/Puerto Rico y adquisiciones.",
+      "procedure": "CIK desde SEC_GROUPS de airports.groups. Seleccionar HTML oficial de tráfico ASUR, no estados financieros ni mes del formulario. Importar original retenido con airport_group_candidate retain (rol html); certify exige mes cerrado, mercados, comparativos/acumulados y linaje Silver/Gold completo. ASUR: reconciliar exactamente resumen por país con nueve aeropuertos de México. Separar Puerto Rico/Colombia; conservar exclusión de tránsito/aviación general solo MX/CO.",
       "selection_contract": {
         "source_system": "sec_edgar",
         "entity": "ASUR_traffic_<accession>",

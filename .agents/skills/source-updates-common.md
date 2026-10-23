@@ -103,7 +103,7 @@ intercambiar producto/adaptador.
 `--execute` comprueba offline candidatos existentes, verifica que sus archivos
 no cambien y escribe un recibo de ronda inmutable; **no captura fuentes**.
 `--check` vuelve a comprobar el mismo recibo y sus flags. Soporta `retained`,
-`am_traffic_ir`, `h10`, `aerocivil`, `gdelt` y `government`; el registro de `retained` incluye
+`am_traffic_ir`, `h10`, `aerocivil`, `gdelt`, `government` y `airport_group`; el registro de `retained` incluye
 los productos admitidos por sus lectores. Los demás adaptadores se rechazan y
 mantienen sus comandos específicos. Curación usa su auditor separado.
 
@@ -161,3 +161,9 @@ Para AICM/AIFA, el adaptador `government` usa retención por alias, un
 certificador integral y el recibo `government-<producto>-<mes>.json`; no se
 admite sustituirlo por `retained` o comprobaciones genéricas de Gold. Ver la
 [skill de aeropuertos](airline-update-airports/SKILL.md#certificación-integral-aicmaifa).
+
+Para GAP/ASUR, `airport_group` exige el HTML SEC del CIK exacto y emite
+`airport-group-<producto>-<mes>.json`. La retención no consulta SEC ni configura
+su identidad de acceso. El recibo conserva redondeo/preliminar, país y linaje
+calculado; `retained` genérico no puede certificar este producto. Ver la
+[skill de aeropuertos](airline-update-airports/SKILL.md#certificación-integral-gap-asur).
