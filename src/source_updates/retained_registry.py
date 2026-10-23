@@ -10,8 +10,8 @@ def spec(product: str) -> dict:
         afac_airports,
         afac_countries,
         afac_margins,
-        authorities,
         airport_group_native,
+        authorities,
         bts_native,
         context_snapshots,
         financials,
@@ -19,6 +19,7 @@ def spec(product: str) -> dict:
         oma_traffic,
         route_documents,
         sec_fiscal,
+        series_native,
         slots,
         viva_financials,
         viva_traffic,
@@ -188,6 +189,7 @@ def spec(product: str) -> dict:
             "grain": airport_group_native.GRAIN,
             "code_files": [Path(airport_group_native.__file__)],
         }
+    registry.update(series_native.definitions())
     if product not in registry:
         raise ValueError("No reviewed retained-product adapter")
     return registry[product]

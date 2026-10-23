@@ -47,6 +47,7 @@ def execute(recipe: dict, workspace: Path, *, write=False) -> dict:
         plans.append(
             dict(
                 product=product,
+                adapter=spec(product).get("certifier", "retained"),
                 period=period,
                 workspace=str(child),
                 retention=plan,
@@ -103,6 +104,8 @@ def execute(recipe: dict, workspace: Path, *, write=False) -> dict:
                     from src.source_updates.viva_financial_candidate import run as certify
                 if spec(product).get("certifier") == "airport_group":
                     from src.source_updates.airport_group_candidate import run as certify
+                if spec(product).get("certifier") == "series":
+                    from src.source_updates.series_candidate import run as certify
                 action = "certify"
                 certified = certify(*args, execute=True)
                 action = "offline_replay"
