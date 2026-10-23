@@ -95,7 +95,9 @@ def execute(recipe: dict, workspace: Path, *, write=False) -> dict:
                 saved = retain(child, source_root, product, item["originals"], execute=True)
                 args = (child, product, period, cutoff, saved["run_id"])
                 certify = run
-                if spec(product).get("certifier") == "government":
+                if spec(product).get("certifier") == "bts":
+                    from src.source_updates.bts_candidate import run as certify
+                elif spec(product).get("certifier") == "government":
                     from src.source_updates.government_candidate import run as certify
                 action = "certify"
                 certified = certify(*args, execute=True)
