@@ -1537,7 +1537,7 @@ BTS 2026M05 / agosto: checks_passed; native=9260; Gold=1660
 BTS 2026M07 / octubre: checks_passed; native=12459; Gold=1527
 BTS 2026M05 / octubre: checks_passed; Gold=1665; historical_added=5
 BTS 2026M04 / octubre: blocked; passengers_exceed_seats; no Silver/Gold
-global combined: blocked_global_policy; 22 productos requeridos ausentes
+global combined: blocked_global_policy; 22 comprobaciones requeridas ausentes en la muestra
 core_ready=false; ready_for_calendar_incorporation=false
 network_requests=0; paid_requests=0; activation=none; publication=not_authorized
 ```
@@ -1568,6 +1568,9 @@ revisiones retrospectivas, sumas grandes sin desbordamiento, agregación de
 configuraciones, unidades, linaje completo, fechas de vigencia, alteración de
 originales/salidas/recibos y replay inmutable. Las pruebas sintéticas validan
 contratos; la tabla anterior corresponde a extracción de originales reales.
+Un revisor independiente cotejó todas las filas nativas, cada agregado de las
+tres proyecciones, conversiones, referencias, padres y hashes contra los CSV
+oficiales, sin usar las funciones del producto: no encontró discrepancias.
 La revisión independiente de código y el cierre remoto se registran en el PR;
 la CI y aprobación del head final no se sustituyen por las de otro commit.
 
