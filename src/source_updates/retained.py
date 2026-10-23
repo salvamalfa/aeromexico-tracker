@@ -35,6 +35,7 @@ def spec(product: str) -> dict:
         afac_countries,
         afac_margins,
         authorities,
+        bts_native,
         context_snapshots,
         financials,
         government_traffic,
@@ -184,6 +185,14 @@ def spec(product: str) -> dict:
             "grain": government_traffic.GRAIN,
             "code_files": [Path(government_traffic.__file__)],
         }
+    registry["bts_segments"] = {
+        "roles": {"archive": ("bts_t100",)},
+        "primary": "archive",
+        "certifier": "bts",
+        "table": "fact_route_traffic",
+        "grain": bts_native.GRAIN,
+        "code_files": [Path(bts_native.__file__)],
+    }
     if product not in registry:
         raise ValueError("No reviewed retained-product adapter")
     return registry[product]
@@ -340,8 +349,8 @@ def originals(workspace: Path, product: str, run_id: str, cutoff: str) -> tuple[
 
 def frames(workspace: Path, product: str, period: str, cutoff: str, run_id: str) -> tuple[dict, dict]:
     definition = spec(product)
-    if definition.get("certifier") == "government":
-        raise ValueError("Use government_candidate for complete government Silver/Gold certification")
+    if definition.get("certifier"):
+        raise ValueError(f"Use {definition['certifier']}_candidate for complete Silver/Gold certification")
     inputs, receipt_hash = originals(workspace, product, run_id, cutoff)
     frame, details = definition["parse"](inputs, period)
     if frame.empty or frame.duplicated(definition["grain"]).any() or frame.value.isna().any():
@@ -436,8 +445,8 @@ def run(
 ) -> dict:
     workspace = safe_workspace(workspace)
     definition = spec(product)
-    if definition.get("certifier") == "government":
-        raise ValueError("Use government_candidate for complete government Silver/Gold certification")
+    if definition.get("certifier"):
+        raise ValueError(f"Use {definition['certifier']}_candidate for complete Silver/Gold certification")
     if period_end(period) >= local_time(cutoff).date():
         raise ValueError("Require a closed observation period")
     output_names = (

@@ -38,7 +38,7 @@ Consultar cada producto de esta familia:
 - `afac_airports` — adaptador offline de original retenido revisado. Entrada canónica: `url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404`. Formato: archivo independiente por edición.
 - `afac_countries` — adaptador offline de cajas exactas acumuladas; no serie mensual desde gráficas. Entrada canónica: `url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404`. Formato: boletín/archivo de países.
 - `afac_margins` — adaptador offline de dos libros de la misma edición. Entrada canónica: `url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404`. Formato: XLSX sase/resumen de la misma edición.
-- `bts_segments` — condicionado a insumos/formato. Entrada canónica: `constant:src.ingest.bts.t100:FORM_URL`. Formato: formulario GET + POST → ZIP CSV.
+- `bts_segments` — certificador integral offline de originales retenidos T-100; mes explícito y diccionario incorporado revisado. Entrada canónica: `constant:src.ingest.bts.t100:FORM_URL`. Formato: formulario GET + POST → ZIP CSV.
 
 ### Procedimiento verificable
 
@@ -82,3 +82,42 @@ acumuladas actuales/comparativas de 29 países. Los pasajeros actuales cuadran
 con O-D; los vuelos literales del boletín no se armonizan con vuelos O-D que
 incluyen otro universo. El acumulado no se presenta como julio mensual; las
 gráficas redondeadas y los países ausentes no se rellenan.
+
+### BTS retenido: certificación mensual completa del candidato
+
+Usar `python -m src.source_updates.bts_candidate retain` con producto
+`bts_segments`, rol único `archive` y un ZIP público ya retenido. Después,
+`certify --period YYYYMmm --as-of <corte zonificado> --retention <run_id>`:
+primero `--dry-run`, luego `--execute` en un candidato nuevo, y `--check`
+para la repetición offline. `retained_round` lo dirige al adaptador `bts`;
+no usar el certificador genérico ni el parser global `build_t100`, que escribe
+el crosswalk del proyecto. El verificador de ronda requiere `adapter=bts`.
+
+El ZIP debe contener exactamente datos y `Documentation.csv` revisados.
+Comprobar 30 columnas, unidades, año/mes/trimestre, continuidad de meses,
+grano operador/entidad/dirección/aeronave/configuración/clase y cada identidad
+contra los seis campos exactos del crosswalk. Usar la dimensión de aerolíneas
+aprobada como referencia versionada, conservando sus dos huellas en el recibo;
+no modificarla ni resolver identidades por parecido del nombre.
+
+Silver conserva todo el archivo y el localizador de cada fila. Gold contiene
+solo el mes pedido, que puede ser anterior al máximo observado para revisar
+meses previos. Suma pasajeros por tramo, asientos y vuelos programados/realizados
+por separado; calcula ASM/RPM antes de agregar, ocupación como RPM/ASM, distancia
+mediana y conversiones libras→kg/millas→km. Capacidad cero conserva ocupación
+nula. Mantener todos los padres de cada agregado en el linaje. Comparar
+revisiones contra el Silver nativo completo bajo `baselines/`; distinguir
+altas retrospectivas de meses recién añadidos.
+
+No suponer realizados≤programados. Conservar literalmente F/G/L/P: el
+diccionario retenido dice «Service Class» y no acredita una leyenda de
+regularidad. Si hay pasajeros superiores a asientos en el mes pedido,
+bloquear antes de Silver/Gold; conservar el original para investigación.
+Incidencias en meses no proyectados siguen visibles en Silver y en el recibo,
+sin certificarlos como datos válidos para publicar.
+
+La certificación se limita a las observaciones retenidas MX↔US del operador.
+No prueba cobertura completa por aerolínea, itinerarios/codeshares, red mundial,
+última disponibilidad ni primera fecha de publicación. Esos límites permanecen
+en el recibo; la aprobación humana, el control global y la activación siguen
+separados. La guía canónica conserva los originales, hashes y pruebas reales.
