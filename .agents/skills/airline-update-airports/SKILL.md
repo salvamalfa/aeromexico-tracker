@@ -108,6 +108,9 @@ activación; conservar esos límites en la ronda global y en la entrega.
 
 ### Certificación integral GAP/ASUR
 
+El plan `--family airports` incluye ambos productos SEC sin trasladar los
+reportes financieros SEC a esta familia. La institución sigue siendo SEC.
+
 `python -m src.source_updates.airport_group_candidate` usa el mismo protocolo
 `retain`/`certify --dry-run|--execute|--check` con rol `html`. Seleccionar un
 original SEC del CIK GAP `1347557` o ASUR `1123452`; no usar el mes del formulario

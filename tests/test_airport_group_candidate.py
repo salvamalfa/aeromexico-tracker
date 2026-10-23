@@ -291,3 +291,20 @@ def test_rounding_bound_is_mathematical_not_fudge():
         native.reconcile(Decimal("3.2"), [Decimal("1.0"), Decimal("2.0")], "0.1")
     with pytest.raises(ValueError):
         native.reconcile(Decimal(4), [Decimal(1), Decimal(2)], "0")
+
+
+@pytest.mark.parametrize("cadence,quarter", [("monthly", None), ("combined", "2026Q3")])
+def test_airport_family_plan_includes_sec_traffic_and_keeps_financials_separate(cadence, quarter):
+    from src.source_updates.catalog import plan, product_map
+
+    airport_plan = plan(cadence, CUTOFF, quarter=quarter, family="airports")
+    products = {item["id"] for item in airport_plan["products"]}
+    assert {"gap_traffic", "asur_traffic", "oma_traffic", "aicm_traffic", "aifa_traffic"} <= products
+    assert not {"am_sec", "volaris_sec", "delta_sec", "ryanair_sec"} & products
+    registry = product_map()
+    assert registry["gap_traffic"]["source_key"] == "sec_edgar"
+    assert registry["asur_traffic"]["source_key"] == "sec_edgar"
+    for name in ["am_sec", "volaris_sec", "delta_sec", "ryanair_sec"]:
+        assert registry[name]["family"] == "corporate"
+    assert airport_plan["network_requests"] == 0 and airport_plan["writes"] == []
+    assert airport_plan["activation"] == "none"

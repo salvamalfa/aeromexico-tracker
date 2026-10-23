@@ -1499,7 +1499,9 @@ Usar el [procedimiento de la skill](../.agents/skills/airline-update-airports/SK
 La importación selecciona rol `html`; `certify` requiere producto, mes, corte
 con zona y recibo de retención. Mostrar `--dry-run`, construir `--execute` y
 reproducir `--check` sin sobrescribir. `retained_round` despacha este lector;
-la ronda usa `adapter=airport_group`. El lector genérico se rechaza para estos
+la ronda usa `adapter=airport_group`. El plan `--family airports` incluye GAP y
+ASUR por producto, aunque la institución sea SEC; los financieros SEC siguen
+en empresas. El lector genérico se rechaza para estos
 productos. Cada candidato contiene nueve tablas verificadas: dos Silver,
 dos hechos Gold, tres dimensiones, artefactos y puente físico.
 

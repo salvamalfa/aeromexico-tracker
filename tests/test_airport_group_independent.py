@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import calendar
+import json
 import shutil
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -431,3 +432,72 @@ def test_generic_path_rejects_every_dedicated_product_before_any_source_read(
     with pytest.raises(ValueError, match="candidate"):
         getattr(retained, entrypoint)(workspace, product, MONTH, CUTOFF, "a" * 32)
     assert not workspace.exists()
+
+
+@pytest.mark.parametrize("round_kind", ["monthly", "combined"])
+def test_airport_family_plan_contains_both_sec_groups_once_in_the_monthly_scope(round_kind):
+    from src.source_updates.catalog import plan
+
+    output = plan(round_kind, CUTOFF, "2026Q3" if round_kind == "combined" else None, "airports")
+    monthly = [
+        (row["id"], row["target_period"]) for row in output["products"] if row["target_cadence"] == "monthly"
+    ]
+    assert set(monthly) == {
+        (p, "2026M09") for p in ["gap_traffic", "asur_traffic", "oma_traffic", "aicm_traffic", "aifa_traffic"]
+    }
+    assert len(monthly) == 5
+    quarterly = [
+        (row["id"], row["target_period"])
+        for row in output["products"]
+        if row["target_cadence"] == "quarterly"
+    ]
+    assert quarterly == ([("aicm_slots", "2026Q3")] if round_kind == "combined" else [])
+    assert output["network_requests"] == output["paid_requests"] == 0
+    assert output["writes"] == [] and output["activation"] == "none"
+
+
+def test_only_airport_products_move_family_while_sec_financials_keep_identity_and_cadence():
+    from src.source_updates.catalog import FAMILIES, plan, product_map
+
+    products = product_map()
+    assert "sec_edgar" in FAMILIES["corporate"] and "sec_edgar" not in FAMILIES["airports"]
+    for product in ["gap_traffic", "asur_traffic"]:
+        assert products[product]["family"] == "airports"
+        assert products[product]["source_key"] == "sec_edgar" and products[product]["cadence"] == "monthly"
+        assert products[product]["parser_step"] == "parse.airports"
+    for product in [
+        "am_sec",
+        "volaris_sec",
+        "delta_sec",
+        "ryanair_sec",
+        "am_financials",
+        "bmv_xbrl",
+        "viva_financials",
+    ]:
+        assert products[product]["family"] == "corporate"
+    corporate = plan("combined", CUTOFF, "2026Q3", "corporate")["products"]
+    assert not {"gap_traffic", "asur_traffic"} & {row["id"] for row in corporate}
+    assert {
+        (row["id"], row["target_cadence"]) for row in corporate if row["id"] in {"am_sec", "volaris_sec"}
+    } == {(p, cadence) for p in ["am_sec", "volaris_sec"] for cadence in ["monthly", "quarterly"]}
+
+
+@pytest.mark.parametrize("round_kind", ["monthly", "combined"])
+def test_documented_airport_skill_cli_lists_sec_group_tasks_without_starting_http(
+    round_kind, monkeypatch, capsys
+):
+    from src.source_updates.__main__ import main
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("Planning the documented airport skill must never construct an HTTP client")
+
+    monkeypatch.setattr(httpx, "Client", forbidden)
+    args = ["plan", "--round", round_kind, "--as-of", CUTOFF, "--family", "airports"]
+    if round_kind == "combined":
+        args.extend(["--quarter", "2026Q3"])
+    assert main(args) == 0
+    output = json.loads(capsys.readouterr().out)
+    for product in ["gap_traffic", "asur_traffic"]:
+        selected = [row for row in output["products"] if row["id"] == product]
+        assert len(selected) == 1 and selected[0]["target_period"] == "2026M09"
+        assert selected[0]["target_cadence"] == "monthly" and selected[0]["family"] == "airports"
