@@ -182,7 +182,9 @@ def originals(workspace: Path, product: str, run_id: str, cutoff: str) -> tuple[
 def frames(workspace: Path, product: str, period: str, cutoff: str, run_id: str) -> tuple[dict, dict]:
     definition = spec(product)
     if definition.get("certifier"):
-        raise ValueError("Use the complete dedicated product certifier for Silver/Gold certification")
+        raise ValueError(
+            f"Use {definition['certifier']}_candidate for complete dedicated Silver/Gold certification"
+        )
     inputs, receipt_hash = originals(workspace, product, run_id, cutoff)
     frame, details = definition["parse"](inputs, period)
     if frame.empty or frame.duplicated(definition["grain"]).any() or frame.value.isna().any():
@@ -278,7 +280,9 @@ def run(
     workspace = safe_workspace(workspace)
     definition = spec(product)
     if definition.get("certifier"):
-        raise ValueError("Use the complete dedicated product certifier for Silver/Gold certification")
+        raise ValueError(
+            f"Use {definition['certifier']}_candidate for complete dedicated Silver/Gold certification"
+        )
     if period_end(period) >= local_time(cutoff).date():
         raise ValueError("Require a closed observation period")
     output_names = (
@@ -326,7 +330,12 @@ def run(
         checked_at=datetime.now(UTC).isoformat(),
         code_head=subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
         code_files={
-            p.relative_to(ROOT).as_posix(): digest(p) for p in [Path(__file__), *definition["code_files"]]
+            p.relative_to(ROOT).as_posix(): digest(p)
+            for p in [
+                Path(__file__),
+                ROOT / "src/source_updates/retained_registry.py",
+                *definition["code_files"],
+            ]
         },
     )
     result["revisions"] = {"status": "not_compared_no_baseline"}
