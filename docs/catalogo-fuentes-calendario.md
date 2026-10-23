@@ -1471,8 +1471,16 @@ esta reproducción del código final.
 
 El nuevo certificador candidato usa los XML Google News retenidos, sin visitar
 artículos ni activar noticias. Comprueba la captura física y todos sus items,
-no solo la frescura de una tabla Gold. La certificación real y los recibos se
-añaden tras fijar el código; las pruebas sintéticas no acreditan esa extracción.
+no solo la frescura de una tabla Gold. La prueba real del código
+`906a829b` verificó siete capturas con sus sidecars: 700 registros nativos,
+12 grupos Gold del mes, siete artefactos y 724 vínculos. Los 688 registros
+fuera de septiembre se conservan en Silver. Son seis días observados
+(1, 2, 3, 21, 28 y 30) y 24 sin observaciones, sin afirmar ausencia de noticias.
+Un revisor independiente reconstruyó las cuatro salidas desde los XML,
+sin importar funciones del producto: no encontró discrepancias. Las
+57 pruebas RSS incluyen 28 casos independientes; junto con regresiones de
+readiness, política global, noticias y presupuesto pasaron 202 casos.
+La suite completa y CI del head final siguen su verificación propia.
 
 `python -m src.source_updates.rss_candidate batch --recipe <receta.json>
 --workspace tmp/source-updates/<lote-nuevo> --dry-run` muestra la selección y
@@ -1510,6 +1518,30 @@ no significan ausencia de noticias. `readiness` usa `rss_retained`; la política
 global conserva GDELT requerido y la disponibilidad actual sin acreditar.
 No se modifica el archivo mensual aprobado, el warehouse ni el sitio.
 
+Evidencia local y recetas: `tmp/source-updates/rss-official-906a829b-summary.json`,
+SHA-256 `cade40a032b637cd5f7a5558736c381d67644f13e4bdd7e4652800c6d4a8db4c`.
+Originales/candidato y recibo de lote: `rss-official-906a829b/`; reproducción
+de ronda: `rss-readiness-906a829b/`; control global: `rss-global-906a829b/`,
+todos bajo `tmp/source-updates/`. El verificador independiente se conserva
+junto al lote, fuera del hijo candidato. Recuperación: los siete XML originales,
+sus sidecars/manifiesto y el commit fijado. No se suben al repositorio público.
+
+```text
+RSS 2026M09: checks_passed; native=700; Gold=12; artifacts=7; links=724
+batch: checks_passed; offline_replay_identical=true; article_requests=0
+readiness: checks_passed; ready_for_calendar_incorporation=false
+global monthly: blocked_global_policy; core_ready=false
+network_requests=0; paid_requests=0; scheduled_executions=0
+activation=none; publication=not_authorized
+```
+
+Esta prueba conserva las consultas históricas exactas, distintas de las
+consultas actuales de tres aerolíneas. La captura no verifica disponibilidad
+reciente, cobertura de las otras compañías ni publicación de sus medios.
+Los candidatos y baselines no aprueban contenido ni tesis. Las compatibilidades
+con los lotes pendientes se comprueban por separado antes de integrar;
+los heads en revisión no se modifican.
+
 ## Pendientes
 
 - La política está aprobada e implementada; no falta volver a aprobarla.
@@ -1522,8 +1554,8 @@ No se modifica el archivo mensual aprobado, el warehouse ni el sitio.
   terminal; su CI y revisión manual previas no sustituyen ese resultado.
   No se ha integrado ni se ha relanzado la revisión.
 - Continúa la implementación integral de `volaris_sec` y `afac_carriers`.
-  RSS añade aquí el certificador retenido; falta cerrar extracción real,
-  revisión y CI de su head final. BTS ([PR155](https://github.com/salvamalfa/aeromexico-tracker/pull/155)),
+  RSS añade aquí el certificador retenido, probado sobre originales; falta
+  cerrar suite completa, CI y revisión automática de su head final. BTS ([PR155](https://github.com/salvamalfa/aeromexico-tracker/pull/155)),
   GAP/ASUR ([PR154](https://github.com/salvamalfa/aeromexico-tracker/pull/154)) y Viva
   ([PR156](https://github.com/salvamalfa/aeromexico-tracker/pull/156)) están preparados
   en ramas separadas y esperan sus revisiones exactas. Sus heads se preservan.
