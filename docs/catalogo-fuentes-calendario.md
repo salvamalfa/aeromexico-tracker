@@ -1554,6 +1554,37 @@ resumen final: `4d9446a4d94dab4118f8407f072d7597f5d38818c47709dc414668e15dcd5a61
 Los intentos de prueba previos se retienen como evidencia, sin confundirlos con
 esta reproducción del código final.
 
+### Compatibilidad local preparada con PR153
+
+El merge normal de PR153 fijó `master` en
+`7a1b1b1ce3d51478a40bd42b4cc72e48838f9012`. El head remoto de PR152 sigue
+`3a89c6dc`, con su revisión adicional pendiente: no se ha sustituido ni se ha
+relanzado. La nueva base produce cuatro conflictos en la guía, registro y
+despachos de adaptadores. La resolución se preparó en un checkout temporal
+sin rama y **no se publicó**: commit de código
+`33597e02bf93155a38924311de0fef8503a4fcb5`, con ambos heads como padres.
+Conserva ambos registros y recibos, rechaza adaptadores equivocados y mantiene
+los bloqueos de disponibilidad/calendario y las rutas heredadas.
+
+Validación local de esa propuesta: 355 pruebas de regresión y 41 independientes,
+Ruff y lifecycle de 15 archivos sin errores. Un lote de originales oficiales
+retenidos recorrió EIA `2026Q3` (64 observaciones, ocho hechos Gold) y AICM
+`2026M08` (198 observaciones nativas, 20 hechos Gold); comprobó los dos despachos
+y el replay conjunto sin red ni escrituras en los candidatos aceptados.
+`ready_for_review=true` solo corresponde a esas dos tareas, no a la ronda
+completa ni al calendario. Resumen local
+`tmp/source-updates/compatibility-mixed-proof-33597e02-summary.json`, SHA-256
+`7f91cbecf5205359be329d643b04a6b0eb50dc3d2d7ac3f4aac5409a487a4235`.
+El arnés inicial esperaba por error el estado textual `ready_for_review`;
+el protocolo usa `status=checks_passed` y un booleano aparte. Se corrigió esa
+aserción y pasó el replay de lectura; no hubo reconstrucción o sobrescritura.
+
+Esta evidencia no es CI ni revisión Codex de un head nuevo de PR152. Mientras
+su revisión vigente siga pendiente, la propuesta permanece local. Después de
+resolver ese proceso, cualquier actualización del PR necesita CI y revisión
+sobre su head exacto y la base entonces vigente. Las pruebas de heads anteriores
+no sustituyen esos controles.
+
 ## Pendientes
 
 - La política está aprobada e implementada; no falta volver a aprobarla.
