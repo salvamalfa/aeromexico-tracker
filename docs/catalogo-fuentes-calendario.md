@@ -1467,6 +1467,49 @@ resumen final: `4d9446a4d94dab4118f8407f072d7597f5d38818c47709dc414668e15dcd5a61
 Los intentos de prueba previos se retienen como evidencia, sin confundirlos con
 esta reproducción del código final.
 
+## Apéndice técnico: certificación integral RSS retenido
+
+El nuevo certificador candidato usa los XML Google News retenidos, sin visitar
+artículos ni activar noticias. Comprueba la captura física y todos sus items,
+no solo la frescura de una tabla Gold. La certificación real y los recibos se
+añaden tras fijar el código; las pruebas sintéticas no acreditan esa extracción.
+
+`python -m src.source_updates.rss_candidate batch --recipe <receta.json>
+--workspace tmp/source-updates/<lote-nuevo> --dry-run` muestra la selección y
+el plan sin escribir. `--execute` encadena retención, Bronze, Silver, Gold y
+reproducción. La receta declara `version: 1`, `as_of` con zona, `source_root`,
+`period` (`YYYYMmm`) y `originals` (rutas explícitas del manifiesto). El hijo
+`rss-<period>` conserva originales y recibos; un fallo deja etapa y motivo en
+el recibo del lote. Para repetir sin escrituras usar `certify --workspace
+<hijo> --period <mes> --as-of <corte-original> --retention <id> --check`.
+
+El contrato `rss-declared-metadata.schema.json` comprueba cuatro salidas JSON
+aisladamente: observaciones nativas, metadatos Gold del mes, artefactos y
+puente de trazabilidad. Silver conserva todos los items y sus posiciones,
+incluso repetidos y fuera del mes. Gold agrupa por URL canónica y día de
+México, preservando todas las contribuciones y variantes. No presta el título,
+fecha o medio de una captura a otra. Los enlaces Google opacos no se resuelven.
+
+Se exige HTTP 200, hashes/tamaños y manifiesto/sidecar coherentes, RSS 2.0,
+canal Google correspondiente a consulta/región, y fechas con zona anteriores
+a la captura. Un item inválido bloquea antes de escribir Silver/Gold. Se
+rechazan entidades/DOCTYPE, cambios de formato, omisiones, padres prestados,
+recibos alterados y cortes incompatibles. Los candidatos son inmutables.
+
+`--baseline baselines/<gold-previo.json>` compara metadatos del mismo mes y
+consultas. Una recaptura idéntica no es revisión; cambios de título u otras
+declaraciones se conservan sin acreditar una corrección del medio. El baseline
+queda fijado por SHA y su procedencia interna debe ser consistente.
+
+Las fechas son declaraciones RSS del agregador. No verifican la publicación
+del cuerpo del medio, fecha del evento ni primera disponibilidad. Estas
+últimas y el rezago permanecen nulos. No se infieren idioma ni compañía del
+artículo. Las consultas históricas seleccionadas buscan Aeroméxico: no
+acreditan cobertura de Viva/Volaris ni el mes completo. Días no observados
+no significan ausencia de noticias. `readiness` usa `rss_retained`; la política
+global conserva GDELT requerido y la disponibilidad actual sin acreditar.
+No se modifica el archivo mensual aprobado, el warehouse ni el sitio.
+
 ## Pendientes
 
 - La política está aprobada e implementada; no falta volver a aprobarla.
@@ -1478,8 +1521,12 @@ esta reproducción del código final.
   La revisión adicional iniciada el 22/oct a las 16:05 UTC sigue sin resultado
   terminal; su CI y revisión manual previas no sustituyen ese resultado.
   No se ha integrado ni se ha relanzado la revisión.
-- Continúa la implementación integral de `volaris_sec`, `afac_carriers`,
-  `bts_segments`, `gap_traffic`, `asur_traffic`, `rss` y `viva_financials`.
+- Continúa la implementación integral de `volaris_sec` y `afac_carriers`.
+  RSS añade aquí el certificador retenido; falta cerrar extracción real,
+  revisión y CI de su head final. BTS ([PR155](https://github.com/salvamalfa/aeromexico-tracker/pull/155)),
+  GAP/ASUR ([PR154](https://github.com/salvamalfa/aeromexico-tracker/pull/154)) y Viva
+  ([PR156](https://github.com/salvamalfa/aeromexico-tracker/pull/156)) están preparados
+  en ramas separadas y esperan sus revisiones exactas. Sus heads se preservan.
   Es trabajo técnico autorizado, no una decisión de alcance del dueño.
   Los restantes adaptadores conservan sus límites de edición y periodo.
 - Aerocivil sigue pendiente de una leyenda y atribución primarias del ID exacto.

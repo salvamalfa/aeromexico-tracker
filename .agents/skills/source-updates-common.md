@@ -103,7 +103,7 @@ intercambiar producto/adaptador.
 `--execute` comprueba offline candidatos existentes, verifica que sus archivos
 no cambien y escribe un recibo de ronda inmutable; **no captura fuentes**.
 `--check` vuelve a comprobar el mismo recibo y sus flags. Soporta `retained`,
-`am_traffic_ir`, `h10`, `aerocivil`, `gdelt` y `government`; el registro de `retained` incluye
+`am_traffic_ir`, `h10`, `aerocivil`, `gdelt`, `government` y `rss_retained`; el registro de `retained` incluye
 los productos admitidos por sus lectores. Los demás adaptadores se rechazan y
 mantienen sus comandos específicos. Curación usa su auditor separado.
 
@@ -161,3 +161,9 @@ Para AICM/AIFA, el adaptador `government` usa retención por alias, un
 certificador integral y el recibo `government-<producto>-<mes>.json`; no se
 admite sustituirlo por `retained` o comprobaciones genéricas de Gold. Ver la
 [skill de aeropuertos](airline-update-airports/SKILL.md#certificación-integral-aicmaifa).
+
+Para RSS usar su certificador retenido dedicado, `python -m
+src.source_updates.rss_candidate`, y el adaptador `rss_retained` en readiness.
+Su lote propio admite selección explícita de varios XML de la misma revisión
+mensual; no se añade al registro `retained` ni al build genérico. Ver la
+[skill de noticias](airline-update-news/SKILL.md#certificación-integral-de-rss-retenido).
