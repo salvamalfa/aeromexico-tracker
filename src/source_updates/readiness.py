@@ -108,7 +108,8 @@ def preflight(recipe: dict, workspace: Path) -> list[dict]:
             definition = spec(product)
             if definition.get("certifier", "retained") != adapter:
                 raise ValueError(
-                    f"Use {definition.get('certifier', 'retained')} adapter for complete product certification"
+                    f"Use {definition.get('certifier', 'retained')} adapter for complete product certification; "
+                    "product requires its complete dedicated adapter"
                 )
         elif ADAPTER_PRODUCTS[adapter] != product:
             raise ValueError("Dedicated adapter does not support the declared product")
@@ -250,6 +251,8 @@ def check_task(item: dict, cutoff: str) -> dict:
         conditions.append("retained_original_does_not_verify_current_source_availability")
     if result.get("service_code_mapping_verified") is False:
         conditions.append("official_service_code_legend_pending")
+    if result.get("calendar_completeness_certified") is False:
+        conditions.append("publication_calendar_completeness_not_verified")
     if result.get("complete_month_certified") is False:
         conditions.append("source_does_not_certify_complete_month")
     return {
