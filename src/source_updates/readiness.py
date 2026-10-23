@@ -108,7 +108,8 @@ def preflight(recipe: dict, workspace: Path) -> list[dict]:
             definition = spec(product)
             if definition.get("certifier", "retained") != adapter:
                 raise ValueError(
-                    f"Use {definition.get('certifier', 'retained')} adapter for complete product certification; "
+                    f"Use {definition.get('certifier', 'retained')} adapter "
+                    "for complete product certification; "
                     "product requires its complete dedicated adapter"
                 )
         elif ADAPTER_PRODUCTS[adapter] != product:
