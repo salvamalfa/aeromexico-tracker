@@ -1592,6 +1592,82 @@ ocultan cuando Gold mensual permanece igual. Cuenta altas/bajas por cambio de
 posición sin presumir equivalencia. Sin baseline explícito, registra ausencia
 de comparación; ninguna comparación acredita una revisión oficial.
 
+
+Prueba real en código funcional `d25f4f6d952a75c32897320e585dd4ae903c24a9`:
+
+| Producto retenido | Resultado comprobado | Límite real |
+|---|---|---|
+| AFAC por aerolínea, agosto 2026 | 4.930 nativas (498 celdas PDF + 4.432 filas DB), 112 Gold, 2 artefactos, 5.294 vínculos; 474 conciliaciones exactas. Replay idéntico | El original declara información internacional incompleta; no acredita disponibilidad actual |
+| Volaris SEC, 2T26 | Roles y original conservados; certificación bloqueada en tabla 300, fila 23, columna 2 (CASM H1 2025) antes de crear Silver/Gold o recibo aceptado | Falta aclaración/precisión oficial suficiente; tampoco se ha acreditado un original de tráfico mensual |
+
+Los originales AFAC son el [boletín agosto](https://datatur.sectur.gob.mx/Documentoscompartidos/afac/AFAC_2026_08.pdf)
+y la [base DATATUR](https://datatur.sectur.gob.mx/Documentoscompartidos/afac/DB_AFAC.zip)
+retenidos el 19/oct. No se volvieron a descargar. La contradicción Volaris está
+en el [anexo oficial](https://www.sec.gov/Archives/edgar/data/1520504/000129281426003836/ex99-1.htm)
+retenido el 24/ago: tabla 300, filas 2/23/26, columna 2, y gastos repetidos en
+tabla 306, fila 22. La comprobación usa estos bytes, no el estado actual de URL.
+
+Resumen/receta/plan/recibos locales:
+`tmp/source-updates/carrier-official-d25f4f6d-summary.json`, SHA-256
+`5b75dec280f16b559033963159dcce5143a2df21293c906c6dfe4b0398b33b7a`.
+Auditoría independiente sin importar módulos del producto:
+`carrier-official-d25f4f6d/afac-independent-review.json`, SHA-256
+`fab67a725a70fcba3fdbef58d444c11fe63405a7c832b09384dc9ca9d3b6b818`.
+Reconstruyó los 36 campos nativos, 39 Gold, cada padre/artefacto/vínculo,
+las 117 huellas de código físicas/Git y las 474 conciliaciones. Los 24 ceros
+explícitos PDF sin observación DB no se imputaron a la base. `World 2 Fly`
+conserva 62 observaciones nativas y su nombre literal.
+
+El lote ejecutable terminó `blocked` por Volaris tras validar AFAC. El replay
+individual y `carrier-readiness-d25f4f6d/` pasan; `carrier-global-d25f4f6d/`
+permanece `blocked_global_policy`, con Aerocivil/GDELT y el resto del alcance
+obligatorio ausentes/bloqueados. Ninguna ronda completa ni calendario queda
+aprobada por este resultado. Muestra literal del dry-run/resultado:
+
+```text
+AFAC 2026M08: retain → Bronze → Silver → Gold/lineage → offline_replay
+checks_passed; native=4930; Gold=112; artifacts=2; links=5294; reconciliations=474
+Volaris 2026Q2: blocked at certify; table 300 / row 23 / column 2
+Silver/Gold/accepted receipt: absent; originals retained
+network_requests=0; paid_requests=0; activation=none; publication=not_authorized
+ready_for_calendar_incorporation=false
+```
+
+Las pasadas focales/regresión cubren 305 casos comprobados. Las pruebas
+sintéticas incluyen expediente AFAC físico PDF/ZIP de tres años,
+contrato Volaris completo, casos positivos y negativos, baselines físicos y
+rechazo de índices/portada como release. Pasan 80 pruebas independientes; la
+revisión adversarial cerró todos sus hallazgos sin modificar tolerancias de
+Volaris. La suite completa, CI/revisión del head final e integración conservan
+su evidencia propia en el PR de este lote. La ejecución local de la suite
+pública se detuvo en un test de chat por ausencia del pin externo aprobado
+`CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256` (208 pasaron antes). La lectura
+del valor por GitHub recibió 403; no se cambiaron variables, permisos o gates.
+CI conserva su configuración autorizada y debe validar el head final.
+
+Compatibilidad local `c378cf9da7fd3e72a3971bf8359f5af41edc159c`: integra
+el código de este lote con los cuatro lotes pendientes y RSS en una rama local,
+sin cambiar sus heads. Nueve productos reales reconstruidos conservaron las
+53 salidas idénticas a sus ramas separadas; Volaris mantuvo el mismo bloqueo
+sin Silver/Gold. Resumen `source-batches-official-c378cf9d/compatibility-summary.json`,
+SHA-256 `35c7fa3d4b6d3936b6157503b2d42a3edaa02ac4d9d92d0c9383a61b66384bf1`.
+La revisión independiente del código reconciliado y sus 53 salidas fue
+favorable; la suite conjunta conserva su resultado propio en el PR del lote.
+Son ventanas independientes (julio, agosto, septiembre y 2T26), no una ronda
+mensual/trimestral completa. La reconciliación real de las ramas pendientes
+requiere que terminen sus revisiones y vuelva a pasar CI/revisión del head
+resultante antes de integrarlo. No se han relanzado sus revisiones.
+
+Lifecycle manual: conservar originales/candidatos/recibos/resumen/auditor y
+su resultado local de `carrier-official-d25f4f6d*`, readiness/global para
+reproducir. El lote anterior `carrier-official-bc5343f4*` queda conservado como
+prueba previa a las correcciones, no evidencia final. Auxiliares bajo `/tmp`,
+cachés y scratch de pytest son regenerables; no se suben originales, datos
+candidatos o informes paralelos al repositorio público. Inventario manual:
+52 archivos locales de este checkout y 147 de la compatibilidad, conservados
+fuera de Git público; los 24 archivos versionados tienen disposición en el PR.
+No hay retiros.
+
 ## Pendientes
 
 - La política está aprobada e implementada; no falta volver a aprobarla.
@@ -1606,7 +1682,8 @@ de comparación; ninguna comparación acredita una revisión oficial.
 - El lote Volaris/AFAC prepara la certificación técnica de sus dossiers;
   Volaris real permanece bloqueado por la discrepancia CASM documentada arriba.
   La prueba de agosto AFAC conserva la advertencia internacional de la fuente.
-  Validación integral, revisión e integración del lote se registran aquí al cerrar.
+  Las pruebas reales y revisión independiente constan arriba; CI/revisión del
+  head final e integración se registran en el PR de este lote.
   RSS añade aquí el certificador retenido, probado sobre originales;
   su suite completa, CI, revisión e integración se registran en
   [PR157](https://github.com/salvamalfa/aeromexico-tracker/pull/157). BTS ([PR155](https://github.com/salvamalfa/aeromexico-tracker/pull/155)),
