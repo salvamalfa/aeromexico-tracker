@@ -1,6 +1,6 @@
 # Catálogo de fuentes, métricas y rondas de actualización
 
-Revisión: 21 de octubre de 2026 (UTC). **Skills y coordinador implementados;
+Revisión: 23 de octubre de 2026 (UTC). **Skills y coordinador implementados;
 integración técnica autorizada. Calendario sin activar y sin publicación de datos.**
 
 ## Resumen
@@ -16,6 +16,12 @@ y GDELT permanecen **requeridos y bloqueados**. Sus fallos impiden aceptar una
 ronda que los requiera; no se sustituyen por cero ni por otro producto. Ningún
 comando instala un calendario o incorpora candidatos a producción al fusionar
 el código. Los originales y candidatos conservan sus recibos y revisión propia.
+
+La continuación del 23 de octubre incorpora comprobaciones integrales de AICM
+y un control estricto del archivo AIFA. AICM permite probar originales de julio
+y agosto; AIFA sigue bloqueado por fechas internas contradictorias. Esto no
+declara lista la ronda completa. PR152 conserva por separado sus certificadores
+macro/mercado y espera una revisión adicional; este cambio no modifica su head.
 
 ## Qué cambia para ti
 
@@ -44,7 +50,7 @@ octubre; la continuación del 21 y su matriz aparecen abajo:
 |---|---|
 | Empresas | BMV: catálogo y ZIP oficiales capturados; parseo offline acotado implementado. SEC preservado reconstruido; Ryanair FY2026 tiene un lector XBRL retenido separado, sin convertirlo a trimestre. Tráfico mensual y finanzas 2T26 IR de Aeroméxico tienen candidatos dedicados desde PDF; véase alcance abajo. Otros periodos nuevos IR/SEC siguen condicionados. |
 | Tráfico AFAC y BTS | AFAC: aeropuertos y marginales de julio tienen adaptadores offline; países conserva cajas acumuladas exactas. Boletines/base julio–agosto y BTS conservan su evidencia previa. La retención no es una captura nueva. |
-| Aeropuertos | AICM agosto y AIFA julio conservan sus comprobaciones. OMA julio y slots AICM verano 2026 tienen adaptadores de originales retenidos. OMA septiembre enlazado falló; no se acredita septiembre completo. |
+| Aeropuertos | AICM julio/agosto tienen certificador integral offline. AIFA julio falla por fechas internas anteriores al cierre del mes; sus comprobaciones históricas de tabla no acreditan el producto integral. OMA julio y slots AICM verano 2026 tienen adaptadores de originales retenidos. OMA septiembre enlazado falló; no se acredita septiembre completo. |
 | Macro y mercado | EIA, tres series Banxico y cinco series bursátiles verificadas hasta Gold para septiembre. H.10 tiene una cadena dedicada de certificación mensual aislada; véase su alcance y evidencia abajo. La familia completa no está certificada. |
 | Rutas | ANAC junio, CAA junio y Aena enero–julio tienen adaptadores retenidos con ámbitos separados. Cuatro documentos aportan pasajes fechados. Aerocivil conserva comprobación numérica; falta su leyenda de códigos. No representan una red mundial uniforme. |
 | Referencias y contexto | OurAirports conserva 9.051 referencias verificadas. FAA y diccionario tienen snapshots candidatos por SHA: 84 categorías y 86.553 palabras, sin inferir seguridad de aerolínea ni tono empresarial. |
@@ -1370,13 +1376,112 @@ implementación local descrita arriba; no son el recibo de pruebas de esta entre
   aprobaciones ni despliegues. Validación documental/consistencia de anexos;
   no ejecución de pruebas de producto por un cambio exclusivamente documental.
 
+## Apéndice técnico: certificación aeroportuaria del 23 de octubre
+
+Antes solo había parsers y comprobaciones parciales de tablas para AICM/AIFA.
+Ahora el comando `src.source_updates.government_candidate` encadena original
+retenido → observaciones nativas → Silver/Gold estándar → dimensiones/linaje
+físico → replay sin red. Su integración es independiente del PR152 y conserva
+la política global R/C/O de PR151. No cambia datos públicos ni tesis.
+
+- AICM conserva pasajeros comerciales, operaciones comerciales y generales y
+  carga en toneladas; compara nacional/internacional/total, meses y acumulados.
+  Mantiene el comparativo anual original. Cargo admite solo el margen derivado
+  del redondeo a una cifra decimal: 0,15 toneladas por suma de componentes y
+  `(meses+1)×0,05` en acumulados. Los conteos se reconcilian exactamente.
+- AIFA exige etiquetas físicas comercial/general/carga, unidad kg, meses,
+  totales, resumen del aeropuerto y la nota que excluye aerolíneas mixtas de
+  operaciones de carga antes de sumar. El archivo julio retenido indica
+  `Fecha de validación: 11 Jul. 2026` y `Fecha de actualización: 11 Jul. 2026`,
+  aunque declara cifras hasta `31 Jul. 2026`. Se rechaza el candidato y no
+  escribe Silver/Gold. No se corrige la fecha a partir del nombre o captura.
+- Ambas rutas mantienen aeropuerto, periodo, métrica, mercado, alcance y unidad;
+  no atribuyen el agregado a Aeroméxico ni suman mensual y acumulado.
+  Las revisiones se comparan en las observaciones nativas, con baseline
+  explícito del mismo aeropuerto; una tabla Gold resumida no lo reemplaza.
+  Los recibos son inmutables y fijan originales, sidecars, código, contratos,
+  corte y salidas. Un escritor activo o una alteración bloquea el replay.
+
+```bash
+uv run python -m src.source_updates.government_candidate retain --product aicm_traffic --source-root <Bronze-retenido> --original pdf=<ruta-exacta-del-manifiesto> --workspace tmp/source-updates/<candidato-nuevo> --dry-run
+uv run python -m src.source_updates.government_candidate certify --product aicm_traffic --workspace tmp/source-updates/<candidato> --period 2026M08 --as-of 2026-10-23T12:00:00-06:00 --retention <id> --dry-run
+```
+
+Usar `--execute` solo para construir y `--check` para reproducir. AIFA usa
+`--product aifa_traffic` y rol `workbook`; el original julio actual termina
+bloqueado. El lote `retained_round` elige el certificador completo y se detiene
+al primer fallo, conservando éxitos previos. El coordinador de revisión usa
+`adapter=government`. Ninguno hace una captura nueva, comprueba la publicación
+más reciente ni activa el calendario. La fecha de actualización interna no se
+convierte en primera publicación o rezago de publicación.
+
+Prueba real offline del código `bb39b6c104abc492d6e03339745d1b7f0aa0a54e`,
+confirmado en Git antes de generar candidatos. Se conservaron los originales:
+
+| Original oficial retenido | Observaciones nativas | Silver/Gold de tráfico | Reconciliaciones | Enlaces físicos |
+| --- | ---: | ---: | ---: | ---: |
+| [AICM julio](https://www.aicm.com.mx/acercadelaicm/archivos/files/Estadisticas/EstadisticasJul2026.pdf) | 189 | 19 / 19 | 90 | 208 |
+| [AICM agosto](https://www.aicm.com.mx/acercadelaicm/archivos/files/Estadisticas/EstadisticasAgo2026.pdf) | 198 | 20 / 20 | 93 | 218 |
+| [AIFA julio](https://aifa-repositorio.s3.us-east-1.amazonaws.com/PyE/Numeralia-Aeroportuaria-Jul-2026.xlsx) | Rechazado por fechas | Sin salidas | No certificado | Original retenido |
+
+Los 19/20 meses AICM incluyen los doce comparativos de 2025 y siete/ocho de
+2026; no son 19/20 meses nuevos ni cifras de una aerolínea. Los originales
+SHA-256 son `974c308d2ad975af94c13e493f13d5c87c8ac4ab6a6a961e16719a4f50402a68`
+(julio), `8ef46795b2e3b690131b2e38a629aba4271c71f974c92ca25e3201b2503a3273`
+(agosto) y `8585dc7bf86a276d3fd2e0d1d2e874dde57bd51057fcc4b8fc53af878b465243`
+(AIFA). Capturas conservadas: 21/ago para julio AICM y 19/oct para agosto/AIFA.
+No se hicieron consultas nuevas a estas fuentes ni solicitudes pagadas.
+
+El lote de tres tareas se detuvo al certificar AIFA. Conservó los dos
+candidatos AICM y su replay idéntico, comprobados además por el verificador
+real de la ronda. Una tercera certificación de agosto comparó sus observaciones
+nativas contra julio: 171 claves comunes sin cambio, 27 altas y 18 bajas por
+mes nuevo/acumulados distintos; cero revisiones de valor en las claves comunes.
+Esto compara esas dos ediciones retenidas; no verifica revisiones posteriores.
+
+Muestra de salida del lote probado:
+
+```text
+AICM 2026M07: checks_passed; native=189; Gold=19; replay=identical
+AICM 2026M08: checks_passed; native=198; Gold=20; replay=identical
+AIFA 2026M07: blocked; Esquema Operativo!C4=11 Jul. 2026 < cierre 31 Jul.
+network_requests=0; paid_requests=0; activation=none; publication=not_authorized
+```
+
+La revisión adversarial independiente del código fijado aprobó 50 casos.
+Reprodujo y cerró fallos de unidades/etiquetas, fechas locales, inicio del
+periodo, precisión numérica e identidad del aeropuerto. Esas pruebas sintéticas
+validan contratos; no resuelven la contradicción del archivo oficial AIFA.
+Las 86 pruebas focales y de regresión pasaron, incluido el presupuesto de
+archivos y las rutas heredadas. Una ronda global real con solo AICM válido
+quedó `blocked_global_policy`: 15 productos mensuales requeridos ausentes,
+`core_ready=false` y `ready_for_calendar_incorporation=false`; su replay fue
+idéntico y conservó los candidatos. Así se comprueba que cerrar un producto
+no declara lista la ronda. El cierre final de CI y la integración se registran
+en el PR de esta entrega.
+El resumen local, recibos y hashes se conservan bajo
+`tmp/source-updates/government-proof-20261023-bb39b6c1-summary.json` y
+`government-batch-proof-20261023-bb39b6c1/`; son evidencia regenerable local,
+no copias de Bronze publicadas en Git ni aprobación de datos. SHA-256 del
+resumen final: `4d9446a4d94dab4118f8407f072d7597f5d38818c47709dc414668e15dcd5a61`.
+Los intentos de prueba previos se retienen como evidencia, sin confundirlos con
+esta reproducción del código final.
+
 ## Pendientes
 
 - La política está aprobada e implementada; no falta volver a aprobarla.
-  Completar la certificación íntegra por producto donde el nuevo control declara
-  `unsupported`: comprobar tablas seleccionadas no equivale a certificar todas
-  las métricas R. Esto es trabajo técnico, no una decisión de alcance del dueño.
-  Aerocivil y GDELT siguen requeridos.
+  AICM tiene certificación integral de las ediciones retenidas de julio/agosto;
+  AIFA tiene el certificador preparado pero su archivo julio sigue rechazado
+  por la contradicción de fechas. Falta material oficial coherente o aclaración
+  oficial de la edición; no basta una prueba sintética o el control de Gold.
+- PR152 añade `banxico`, `fuel` y `equities` y conserva el head `3a89c6dc`.
+  La revisión adicional iniciada el 22/oct a las 16:05 UTC sigue sin resultado
+  terminal; su CI y revisión manual previas no sustituyen ese resultado.
+  No se ha integrado ni se ha relanzado la revisión.
+- Continúa la implementación integral de `volaris_sec`, `afac_carriers`,
+  `bts_segments`, `gap_traffic`, `asur_traffic`, `rss` y `viva_financials`.
+  Es trabajo técnico autorizado, no una decisión de alcance del dueño.
+  Los restantes adaptadores conservan sus límites de edición y periodo.
 - Aerocivil sigue pendiente de una leyenda y atribución primarias del ID exacto.
   GDELT requiere una captura correctamente rotulada del mes que pase el control
   de fechas; el último diagnóstico terminó en 429 y este lote no vuelve a llamar.
