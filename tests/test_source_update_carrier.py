@@ -323,3 +323,28 @@ def test_readiness_requires_exact_dedicated_product_adapter(product, period, ada
         with pytest.raises(ValueError):
             preflight(recipe, workspace)
     assert not workspace.exists() and not candidate.exists()
+
+
+def test_effective_carrier_crosswalk_reads_utf8_under_non_utf8_system_locale():
+    import os
+    import subprocess
+    import sys
+
+    from src.source_updates.catalog import ROOT
+
+    env = {**os.environ, "LC_ALL": "C", "PYTHONUTF8": "0", "PYTHONCOERCECLOCALE": "0"}
+    code = (
+        "from src.source_updates.afac_carrier_source import mapping; "
+        'assert mapping("Aerom\\u00e9xico (Aerov\\u00edas de M\\u00e9xico)", '
+        '"2026-08-31")[0] == "AEROMEXICO"'
+    )
+    completed = subprocess.run(
+        [sys.executable, "-c", code],
+        cwd=ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    assert completed.returncode == 0, completed.stderr

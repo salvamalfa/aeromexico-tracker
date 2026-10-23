@@ -84,7 +84,7 @@ def revisions(workspace: Path, baseline, product: str, outputs: dict, cutoff: st
     receipt_paths = list((baseline_root / "receipts").glob("retained-*.json"))
     if len(receipt_paths) != 1:
         raise ValueError("Baseline requires its unique original retention receipt")
-    acquisition = json.loads(receipt_paths[0].read_text())
+    acquisition = json.loads(receipt_paths[0].read_text(encoding="utf-8"))
     # Rebuild all native cells from baseline's physical originals, not a trusted
     # Parquet or caller-supplied digest. Current code is deliberately used.
     selected, _ = originals(baseline_root, product, acquisition["run_id"], cutoff)
@@ -199,7 +199,7 @@ def run(
     if not execute and not check:
         return {**base, "status": "planned_not_executed", "outputs": list(names)}
     accepted = workspace / "receipts" / f"carrier-source-{product}-{period}.json"
-    prior = json.loads(accepted.read_text()) if check else None
+    prior = json.loads(accepted.read_text(encoding="utf-8")) if check else None
     if check:
         require_replay_cutoff(prior, cutoff)
         recorded = prior.get("revisions", {}).get("baseline_file")
@@ -258,7 +258,9 @@ def run(
         result["code_head"] = subprocess.check_output(
             ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
         ).strip()
-        accepted.write_text(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False) + "\n")
+        accepted.write_text(
+            json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8"
+        )
     return result
 
 

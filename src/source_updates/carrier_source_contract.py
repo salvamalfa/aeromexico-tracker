@@ -134,7 +134,7 @@ def clean(row):
 def validate(frame, product, *, gold=False):
     if product not in TABLES or frame.empty or len(frame) > 30_000:
         raise ValueError("Bounded nonempty carrier source product required")
-    schema = json.loads(CONTRACT.read_text())["gold" if gold else "native"]
+    schema = json.loads(CONTRACT.read_text(encoding="utf-8"))["gold" if gold else "native"]
     validator = Draft202012Validator(schema, format_checker=FormatChecker())
     seen = set()
     for raw in frame.to_dict("records"):
