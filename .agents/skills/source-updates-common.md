@@ -103,7 +103,8 @@ intercambiar producto/adaptador.
 `--execute` comprueba offline candidatos existentes, verifica que sus archivos
 no cambien y escribe un recibo de ronda inmutable; **no captura fuentes**.
 `--check` vuelve a comprobar el mismo recibo y sus flags. Soporta `retained`,
-`am_traffic_ir`, `h10`, `aerocivil`, `gdelt`, `government` y `airport_group`; el registro de `retained` incluye
+`am_traffic_ir`, `h10`, `aerocivil`, `gdelt`, `government`, `bts`,
+`airport_group`, `series`, `viva_financial` y `rss_retained`; el registro de `retained` incluye
 los productos admitidos por sus lectores. Los demás adaptadores se rechazan y
 mantienen sus comandos específicos. Curación usa su auditor separado.
 
@@ -167,3 +168,9 @@ Para GAP/ASUR, `airport_group` exige el HTML SEC del CIK exacto y emite
 su identidad de acceso. El recibo conserva redondeo/preliminar, país y linaje
 calculado; `retained` genérico no puede certificar este producto. Ver la
 [skill de aeropuertos](airline-update-airports/SKILL.md#certificación-integral-gap-asur).
+
+Para RSS usar su certificador retenido dedicado, `python -m
+src.source_updates.rss_candidate`, y el adaptador `rss_retained` en readiness.
+Su lote propio admite selección explícita de varios XML de la misma revisión
+mensual; no se añade al registro `retained` ni al build genérico. Ver la
+[skill de noticias](airline-update-news/SKILL.md#certificación-integral-de-rss-retenido).

@@ -1885,6 +1885,82 @@ resolver ese proceso, cualquier actualización del PR necesita CI y revisión
 sobre su head exacto y la base entonces vigente. Las pruebas de heads anteriores
 no sustituyen esos controles.
 
+## Apéndice técnico: certificación integral RSS retenido
+
+El nuevo certificador candidato usa los XML Google News retenidos, sin visitar
+artículos ni activar noticias. Comprueba la captura física y todos sus items,
+no solo la frescura de una tabla Gold. La prueba real del código
+`906a829b` verificó siete capturas con sus sidecars: 700 registros nativos,
+12 grupos Gold del mes, siete artefactos y 724 vínculos. Los 688 registros
+fuera de septiembre se conservan en Silver. Son seis días observados
+(1, 2, 3, 21, 28 y 30) y 24 sin observaciones, sin afirmar ausencia de noticias.
+Un revisor independiente reconstruyó las cuatro salidas desde los XML,
+sin importar funciones del producto: no encontró discrepancias. Las
+57 pruebas RSS incluyen 28 casos independientes; junto con regresiones de
+readiness, política global, noticias y presupuesto pasaron 202 casos.
+La suite completa y CI del head final siguen su verificación propia.
+
+`python -m src.source_updates.rss_candidate batch --recipe <receta.json>
+--workspace tmp/source-updates/<lote-nuevo> --dry-run` muestra la selección y
+el plan sin escribir. `--execute` encadena retención, Bronze, Silver, Gold y
+reproducción. La receta declara `version: 1`, `as_of` con zona, `source_root`,
+`period` (`YYYYMmm`) y `originals` (rutas explícitas del manifiesto). El hijo
+`rss-<period>` conserva originales y recibos; un fallo deja etapa y motivo en
+el recibo del lote. Para repetir sin escrituras usar `certify --workspace
+<hijo> --period <mes> --as-of <corte-original> --retention <id> --check`.
+
+El contrato `rss-declared-metadata.schema.json` comprueba cuatro salidas JSON
+aisladamente: observaciones nativas, metadatos Gold del mes, artefactos y
+puente de trazabilidad. Silver conserva todos los items y sus posiciones,
+incluso repetidos y fuera del mes. Gold agrupa por URL canónica y día de
+México, preservando todas las contribuciones y variantes. No presta el título,
+fecha o medio de una captura a otra. Los enlaces Google opacos no se resuelven.
+
+Se exige HTTP 200, hashes/tamaños y manifiesto/sidecar coherentes, RSS 2.0,
+canal Google correspondiente a consulta/región, y fechas con zona anteriores
+a la captura. Un item inválido bloquea antes de escribir Silver/Gold. Se
+rechazan entidades/DOCTYPE, cambios de formato, omisiones, padres prestados,
+recibos alterados y cortes incompatibles. Los candidatos son inmutables.
+
+`--baseline baselines/<gold-previo.json>` compara metadatos del mismo mes y
+consultas. Una recaptura idéntica no es revisión; cambios de título u otras
+declaraciones se conservan sin acreditar una corrección del medio. El baseline
+queda fijado por SHA y su procedencia interna debe ser consistente.
+
+Las fechas son declaraciones RSS del agregador. No verifican la publicación
+del cuerpo del medio, fecha del evento ni primera disponibilidad. Estas
+últimas y el rezago permanecen nulos. No se infieren idioma ni compañía del
+artículo. Las consultas históricas seleccionadas buscan Aeroméxico: no
+acreditan cobertura de Viva/Volaris ni el mes completo. Días no observados
+no significan ausencia de noticias. `readiness` usa `rss_retained`; la política
+global conserva GDELT requerido y la disponibilidad actual sin acreditar.
+No se modifica el archivo mensual aprobado, el warehouse ni el sitio.
+
+Evidencia local y recetas: `tmp/source-updates/rss-official-906a829b-summary.json`,
+SHA-256 `cade40a032b637cd5f7a5558736c381d67644f13e4bdd7e4652800c6d4a8db4c`.
+Originales/candidato y recibo de lote: `rss-official-906a829b/`; reproducción
+de ronda: `rss-readiness-906a829b/`; control global: `rss-global-906a829b/`,
+todos bajo `tmp/source-updates/`. El verificador independiente se conserva
+junto al lote, fuera del hijo candidato. Recuperación: los siete XML originales,
+sus sidecars/manifiesto y el commit fijado. No se suben al repositorio público.
+
+```text
+RSS 2026M09: checks_passed; native=700; Gold=12; artifacts=7; links=724
+batch: checks_passed; offline_replay_identical=true; article_requests=0
+readiness: checks_passed; ready_for_calendar_incorporation=false
+global monthly: blocked_global_policy; core_ready=false
+network_requests=0; paid_requests=0; scheduled_executions=0
+activation=none; publication=not_authorized
+```
+
+Esta prueba conserva las consultas históricas exactas, distintas de las
+consultas actuales de tres aerolíneas. La captura no verifica disponibilidad
+reciente, cobertura de las otras compañías ni publicación de sus medios.
+Los candidatos y baselines no aprueban contenido ni tesis. Las compatibilidades
+con los lotes pendientes se comprueban por separado antes de integrar;
+los heads en revisión no se modifican.
+
+
 ## Pendientes
 
 - La política está aprobada e implementada; no falta volver a aprobarla.
@@ -1901,11 +1977,12 @@ no sustituyen esos controles.
   lote. No certifica cobertura completa por operador ni una edición reciente.
   PR154 conserva GAP/ASUR separados en `f922d227`, con CI aprobada y revisión
   adicional aún pendiente; no se relanza ni se altera ese head.
-- Continúa la implementación integral de `volaris_sec`, `afac_carriers`,
-  `rss`. Viva finanzas 2T26 está probado sobre originales retenidos; el cierre de CI y
-  revisión automática del mismo head se registra en PR156. BTS (PR155) y GAP/ASUR
-  (PR154) están preparados y probados, con revisión exacta todavía pendiente;
-  se preservan sus heads y no se relanzan revisiones.
+- Continúa la implementación integral de `volaris_sec` y `afac_carriers`.
+  RSS añade aquí el certificador retenido, probado sobre originales; falta
+  cerrar suite completa, CI y revisión automática de su head final. BTS ([PR155](https://github.com/salvamalfa/aeromexico-tracker/pull/155)),
+  GAP/ASUR ([PR154](https://github.com/salvamalfa/aeromexico-tracker/pull/154)) y Viva
+  ([PR156](https://github.com/salvamalfa/aeromexico-tracker/pull/156)) están preparados
+  en ramas separadas y esperan sus revisiones exactas. Sus heads se preservan.
   Es trabajo técnico autorizado, no una decisión de alcance del dueño.
   Los restantes adaptadores conservan sus límites de edición y periodo;
   finanzas IR de Aeroméxico comprueba 2T26, no aprueba una edición nueva.

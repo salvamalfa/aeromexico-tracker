@@ -21,12 +21,14 @@ ADAPTER_PRODUCTS = {
     "h10": "h10",
     "aerocivil": "aerocivil",
     "gdelt": "gdelt",
+    "rss_retained": "rss",
 }
 RECEIPT_NAMES = {
     "am_traffic_ir": "am-traffic-{period}.json",
     "h10": "h10-{period}.json",
     "aerocivil": "aerocivil-{period}.json",
     "gdelt": "gdelt-{period}.json",
+    "rss_retained": "rss-{period}.json",
     "retained": "certified-{product}-{period}.json",
     "government": "government-{product}-{period}.json",
     "viva_financial": "viva-financial-{product}-{period}.json",
@@ -151,6 +153,10 @@ def inventory(workspace: Path) -> dict:
 
 def check_task(item: dict, cutoff: str) -> dict:
     candidate = Path(item["workspace"])
+    if item["adapter"] == "rss_retained":
+        from src.source_updates.rss_candidate import guard
+
+        guard(candidate)
     before = inventory(candidate)
     retained = item["adapter"] in {
         "retained",
@@ -159,8 +165,9 @@ def check_task(item: dict, cutoff: str) -> dict:
         "bts",
         "airport_group",
         "series",
+        "rss_retained",
     }
-    prefix = "retained" if retained else "collection"
+    prefix = "rss-retained" if item["adapter"] == "rss_retained" else "retained" if retained else "collection"
     acquisition = candidate / "receipts" / f"{prefix}-{item['receipt_id']}.json"
     acquired = json.loads(acquisition.read_text())
     expected_status = "retained_unvalidated" if retained else "collected_unvalidated"
@@ -217,9 +224,12 @@ def check_task(item: dict, cutoff: str) -> dict:
 
             result = run(candidate, item["period"], cutoff, check=True)
         else:
-            name = {"aerocivil": "aerocivil", "am_traffic_ir": "am_traffic_candidate", "gdelt": "gdelt"}[
-                item["adapter"]
-            ]
+            name = {
+                "aerocivil": "aerocivil",
+                "am_traffic_ir": "am_traffic_candidate",
+                "gdelt": "gdelt",
+                "rss_retained": "rss_candidate",
+            }[item["adapter"]]
             module = import_module(f"src.source_updates.{name}")
             result = module.run(candidate, item["period"], cutoff, item["receipt_id"], check=True)
     if inventory(candidate) != before:

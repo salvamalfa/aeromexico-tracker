@@ -1,0 +1,418 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "rss_declared_metadata_v1"
+    },
+    "kind": {
+      "enum": [
+        "native",
+        "gold",
+        "artifacts",
+        "lineage"
+      ]
+    },
+    "period": {
+      "type": "string",
+      "pattern": "^20[0-9]{2}M(0[1-9]|1[0-2])$"
+    },
+    "timezone": {
+      "const": "America/Mexico_City"
+    },
+    "date_basis": {
+      "const": "rss_declared_publication_not_publisher_body_verification"
+    },
+    "coverage": {
+      "const": "partial_metadata_in_explicit_retained_queries"
+    },
+    "query_scope": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "agent_eligible": {
+      "const": false
+    },
+    "activation": {
+      "const": "none"
+    },
+    "publication": {
+      "const": "not_authorized"
+    },
+    "rows": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 24000,
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "version",
+    "kind",
+    "period",
+    "timezone",
+    "date_basis",
+    "coverage",
+    "query_scope",
+    "agent_eligible",
+    "activation",
+    "publication",
+    "rows"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "native": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "record_id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "source_artifact_id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "source_file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "source_system": {
+          "const": "rss"
+        },
+        "source_locator": {
+          "type": "string",
+          "pattern": "^/rss/channel/item\\[[1-9][0-9]*\\]$"
+        },
+        "item_1based": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 250
+        },
+        "captured_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "parser_version": {
+          "const": "rss_declared_metadata_v1"
+        },
+        "feed_id": {
+          "enum": [
+            "google_es",
+            "google_en"
+          ]
+        },
+        "query_term": {
+          "type": "string",
+          "minLength": 1
+        },
+        "query_url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "url_as_reported": {
+          "type": "string",
+          "minLength": 1
+        },
+        "canonical_url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "guid": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "publisher_name_as_declared": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "publisher_url_as_declared": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "pubdate_as_reported": {
+          "type": "string",
+          "minLength": 1
+        },
+        "published_at_as_declared": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "local_publication_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "selected_month": {
+          "type": "boolean"
+        },
+        "event_date": {
+          "type": "null"
+        },
+        "first_available_at": {
+          "type": "null"
+        },
+        "publisher_document_verified": {
+          "const": false
+        },
+        "agent_eligible": {
+          "const": false
+        }
+      },
+      "required": [
+        "record_id",
+        "source_artifact_id",
+        "source_file",
+        "source_hash",
+        "source_system",
+        "source_locator",
+        "item_1based",
+        "captured_at",
+        "parser_version",
+        "feed_id",
+        "query_term",
+        "query_url",
+        "title",
+        "url_as_reported",
+        "canonical_url",
+        "guid",
+        "publisher_name_as_declared",
+        "publisher_url_as_declared",
+        "pubdate_as_reported",
+        "published_at_as_declared",
+        "local_publication_date",
+        "selected_month",
+        "event_date",
+        "first_available_at",
+        "publisher_document_verified",
+        "agent_eligible"
+      ]
+    },
+    "gold": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "record_id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "canonical_url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "local_publication_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "contributors": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8000,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/native"
+          }
+        },
+        "event_date": {
+          "type": "null"
+        },
+        "first_available_at": {
+          "type": "null"
+        },
+        "publisher_document_verified": {
+          "const": false
+        },
+        "agent_eligible": {
+          "const": false
+        }
+      },
+      "required": [
+        "record_id",
+        "canonical_url",
+        "local_publication_date",
+        "contributors",
+        "event_date",
+        "first_available_at",
+        "publisher_document_verified",
+        "agent_eligible"
+      ]
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "source_file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "source_system": {
+          "const": "rss"
+        },
+        "captured_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "feed_id": {
+          "enum": [
+            "google_es",
+            "google_en"
+          ]
+        },
+        "query_term": {
+          "type": "string",
+          "minLength": 1
+        },
+        "query_url": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "artifact_id",
+        "source_file",
+        "source_hash",
+        "source_system",
+        "captured_at",
+        "feed_id",
+        "query_term",
+        "query_url"
+      ]
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "record_id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "table_name": {
+          "enum": [
+            "rss_native_metadata",
+            "fact_rss_declared_metadata"
+          ]
+        },
+        "link_type": {
+          "enum": [
+            "source_artifact",
+            "native_parent"
+          ]
+        },
+        "target_id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "record_id",
+        "table_name",
+        "link_type",
+        "target_id"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "native"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/native"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "gold"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/gold"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "artifacts"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/artifacts"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "lineage"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/lineage"
+            }
+          }
+        }
+      }
+    }
+  ]
+}
