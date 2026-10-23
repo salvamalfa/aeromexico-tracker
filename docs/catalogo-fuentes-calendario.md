@@ -1655,7 +1655,9 @@ sin cambiar sus heads. Nueve productos reales reconstruidos conservaron las
 sin Silver/Gold. Resumen `source-batches-official-c378cf9d/compatibility-summary.json`,
 SHA-256 `35c7fa3d4b6d3936b6157503b2d42a3edaa02ac4d9d92d0c9383a61b66384bf1`.
 La revisión independiente del código reconciliado y sus 53 salidas fue
-favorable; la suite conjunta conserva su resultado propio en el PR del lote.
+favorable. La suite conjunta de fuentes pasó **1.318 pruebas** en 462,18 s
+(sin fallos; 44 avisos de dependencias/precisión ya separados de los checks).
+La CI y revisión del head final mantienen su resultado propio en el PR del lote.
 Son ventanas independientes (julio, agosto, septiembre y 2T26), no una ronda
 mensual/trimestral completa. La reconciliación real de las ramas pendientes
 requiere que terminen sus revisiones y vuelva a pasar CI/revisión del head
