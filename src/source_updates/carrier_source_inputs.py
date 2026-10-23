@@ -26,7 +26,7 @@ def inspect(root, product, selected):
         raise ValueError("Explicit complete carrier input roles required")
     if len(set(selected.values())) != len(selected):
         raise ValueError("Carrier roles must identify distinct originals")
-    rows = [json.loads(s) for s in (root / "_manifest.jsonl").read_text().splitlines()]
+    rows = [json.loads(s) for s in (root / "_manifest.jsonl").read_text(encoding="utf-8").splitlines()]
     for role, name in selected.items():
         found = [r for r in rows if r.get("source_file") == name]
         if len(found) != 1 or found[0].get("source_system") not in definition["roles"][role]:
@@ -49,7 +49,7 @@ def inputs(workspace, product, run_id, cutoff):
     if not re.fullmatch(r"[a-f0-9]{32}", run_id):
         raise ValueError("An exact carrier retention receipt ID is required")
     path = workspace / "receipts" / f"retained-{run_id}.json"
-    receipt = json.loads(path.read_text())
+    receipt = json.loads(path.read_text(encoding="utf-8"))
     for key, expected in dict(
         network_requests=0,
         paid_requests=0,

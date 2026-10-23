@@ -44,7 +44,7 @@ def end(year, m):
 
 
 def mapping(name, stop):
-    with REFERENCE.open() as stream:
+    with REFERENCE.open(encoding="utf-8") as stream:
         rows = list(csv.DictReader(stream))
     matches = [
         (i + 2, r)
