@@ -176,7 +176,7 @@ PRODUCTS = (
         "retained_dictionary_snapshot_no_automatic_tone_recalculation",
         None,
     ),
-    ("rss", "google_news", "monthly", "metadata_only_dedupe_urls_no_complete_month_guarantee", "parse.news"),
+    ("rss", "google_news", "monthly", "retained_metadata_certifier_no_complete_month_guarantee", "parse.news"),
     ("gdelt", "gdelt", "monthly", "metadata_only_dedupe_urls_no_complete_month_guarantee", "parse.news"),
     ("news_errors", "news_http_error", "never", "inactive_error_evidence_never_valid_news", None),
     ("peer_profiles", "peer_profile", "quarterly", "curated_no_endpoint_require_parent_lineage", None),
