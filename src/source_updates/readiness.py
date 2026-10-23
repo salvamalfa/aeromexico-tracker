@@ -30,6 +30,7 @@ RECEIPT_NAMES = {
     "retained": "certified-{product}-{period}.json",
     "government": "government-{product}-{period}.json",
     "viva_financial": "viva-financial-{product}-{period}.json",
+    "bts": "bts-{product}-{period}.json",
 }
 
 
@@ -99,7 +100,7 @@ def preflight(recipe: dict, workspace: Path) -> list[dict]:
             or period_end(period) >= candidate_cutoff.date()
         ):
             raise ValueError("Every observation/review period must be closed before cutoff")
-        if adapter in {"retained", "government", "viva_financial"}:
+        if adapter in {"retained", "government", "viva_financial", "bts"}:
             from src.source_updates.retained import spec
 
             definition = spec(product)
@@ -145,7 +146,7 @@ def inventory(workspace: Path) -> dict:
 def check_task(item: dict, cutoff: str) -> dict:
     candidate = Path(item["workspace"])
     before = inventory(candidate)
-    retained = item["adapter"] in {"retained", "government", "viva_financial"}
+    retained = item["adapter"] in {"retained", "government", "viva_financial", "bts"}
     prefix = "retained" if retained else "collection"
     acquisition = candidate / "receipts" / f"{prefix}-{item['receipt_id']}.json"
     acquired = json.loads(acquisition.read_text())
@@ -174,7 +175,11 @@ def check_task(item: dict, cutoff: str) -> dict:
     if local_time(accepted["effective_as_of"]) != local_time(cutoff):
         raise ValueError("Replay cutoff differs from accepted candidate; use its exact cutoff")
     with block_network():
-        if item["adapter"] == "viva_financial":
+        if item["adapter"] == "bts":
+            from src.source_updates.bts_candidate import run
+
+            result = run(candidate, item["product"], item["period"], cutoff, item["receipt_id"], check=True)
+        elif item["adapter"] == "viva_financial":
             from src.source_updates.viva_financial_candidate import run
 
             result = run(candidate, item["product"], item["period"], cutoff, item["receipt_id"], check=True)

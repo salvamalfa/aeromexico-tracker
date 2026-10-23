@@ -11,6 +11,7 @@ def spec(product: str) -> dict:
         afac_countries,
         afac_margins,
         authorities,
+        bts_native,
         context_snapshots,
         financials,
         government_traffic,
@@ -168,6 +169,14 @@ def spec(product: str) -> dict:
         "table": "fact_viva_retained_financial_source_metrics",
         "grain": viva_financials.GRAIN,
         "code_files": [Path(viva_financials.__file__)],
+    }
+    registry["bts_segments"] = {
+        "roles": {"archive": ("bts_t100",)},
+        "primary": "archive",
+        "certifier": "bts",
+        "table": "fact_route_traffic",
+        "grain": bts_native.GRAIN,
+        "code_files": [Path(bts_native.__file__)],
     }
     if product not in registry:
         raise ValueError("No reviewed retained-product adapter")
