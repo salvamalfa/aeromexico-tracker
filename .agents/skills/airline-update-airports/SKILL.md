@@ -35,9 +35,9 @@ python -m src.source_updates recipe --product oma_traffic
 Consultar cada producto de esta familia:
 
 - `oma_traffic` — descubrimiento nuevo y adaptador offline de reporte retenido. Entrada canónica: `constant:src.ingest.airports.groups:OMA_IR_URL`. Formato: HTML → PDF.
-- `aicm_traffic` — solo descubrimiento. Entrada canónica: `constant:src.ingest.airports.groups:AICM_STATS_INDEX`. Formato: HTML → PDF.
+- `aicm_traffic` — descubrimiento y certificador integral offline del PDF retenido. Entrada canónica: `constant:src.ingest.airports.groups:AICM_STATS_INDEX`. Formato: HTML → PDF.
 - `aicm_slots` — adaptador offline de asignaciones verano 2026; nuevas ediciones requieren revisión. Entrada canónica: `constant:src.ingest.airports.groups:AICM_STATS_INDEX`. Formato: PDF estacional de slots.
-- `aifa_traffic` — solo descubrimiento. Entrada canónica: `constant:src.ingest.airports.groups:AIFA_STATS_INDEX`. Formato: HTML → XLSX.
+- `aifa_traffic` — descubrimiento y certificador offline con fechas, etiquetas y unidades obligatorias; el julio retenido falla el control de fechas. Entrada canónica: `constant:src.ingest.airports.groups:AIFA_STATS_INDEX`. Formato: HTML → XLSX.
 
 ### Procedimiento verificable
 
@@ -73,3 +73,35 @@ completa, horario UTC y designador AM sin inferir operador. La fecha interna
 05/02/2026 12:13 no prueba publicación de esa versión. No son vuelos realizados
 ni un total trimestral/mensual; tampoco se resuelven solapamientos como hechos
 operativos. Un conteo, fecha o edición distinto requiere revisión del adaptador.
+
+### Certificación integral AICM/AIFA
+
+`python -m src.source_updates.government_candidate` conserva el protocolo de
+originales, hashes, corte y revisión. Roles: `pdf` para `aicm_traffic` y
+`workbook` para `aifa_traffic`. `retain` exige `--source-root`, `--original
+<rol>=<ruta-exacta-en-manifiesto>` y `--workspace` nuevo. `certify` exige
+`--product`, `--workspace`, `--period YYYYMmm`, `--as-of` con zona y
+`--retention <id>`. Mostrar primero `--dry-run`, construir con `--execute`
+y reproducir con `--check`; nunca sobreescribir un candidato.
+
+El recibo `government-<producto>-<mes>.json` comprueba observaciones nativas,
+`airport_traffic`, `fact_airport_traffic`, dimensiones y puente físico. Mantiene
+mensual, comparativo y acumulado separados; revisiones usan el grano nativo
+con aeropuerto, métrica, mercado y periodo, más unidad y alcance de aviación.
+`--baseline baselines/<copia.parquet>` exige la misma identidad aeroportuaria;
+sin copia explícita no se afirma haber comparado revisiones. `retained_round`
+despacha este adaptador en ejecución y replay; la ronda usa `adapter=government`.
+
+AICM exige catorce páginas, columnas de mercado, fechas y unidades físicas,
+meses completos y reconciliación acumulada/anual. Los pasajeros son comerciales;
+las operaciones incluyen comercial y general, y la carga está en toneladas.
+AIFA separa comercial/general/carga, comprueba exclusión de aerolíneas mixtas
+antes de sumar operaciones y convierte kg a toneladas solo en la proyección.
+Rechazar fechas internas anteriores al cierre del mes o posteriores a la
+captura local, datos ausentes, plantillas futuras con observaciones o cambios
+de formato. El julio AIFA retenido declara 11 Jul frente al cierre31 Jul:
+queda bloqueado, sin Silver/Gold ni sustitución por cero. Una prueba sintética
+positiva no resuelve esa contradicción de la fuente oficial.
+
+Los originales no acreditan última disponibilidad, primera publicación ni
+activación; conservar esos límites en la ronda global y en la entrega.
