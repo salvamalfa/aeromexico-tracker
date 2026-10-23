@@ -490,3 +490,26 @@ def test_prior_quarter_support_cannot_bind_a_current_quarter_release(monkeypatch
     empty = global_readiness.evaluate(recipe, {"viva": {**checked, "contributing_artifacts": []}})
     assert "VIVA_AEROBUS:release_not_bound_to_verified_contributing_artifact" in empty["calendar_blockers"]
     assert empty["quarterly_date"] is None
+
+
+def test_revision_baseline_compares_business_grain_instead_of_capture_hash(tmp_path):
+    frame = native()
+    path = tmp_path / "baselines/previous-native.parquet"
+    path.parent.mkdir()
+    baseline = frame.copy()
+    baseline["source_hash"] = "c" * 64  # Capture identity alone is not a numeric revision.
+    baseline.to_parquet(path, index=False)
+    outputs = {"silver/viva_financial_native": frame}
+    result = candidate.revisions(tmp_path, "baselines/previous-native.parquet", "viva_financials", outputs)
+    assert result["unchanged"] == 655 and result["changed"] == result["added"] == result["removed"] == 0
+    # An explicit prior value is a revision even if totals happen to be unchanged.
+    index = baseline.index[baseline.metric_key.eq("operational_support")][0]
+    baseline.loc[index, ["source_value", "value"]] = ["49", 49.0]
+    baseline.to_parquet(path, index=False)
+    result = candidate.revisions(tmp_path, "baselines/previous-native.parquet", "viva_financials", outputs)
+    assert result["changed"] == 1 and result["unchanged"] == 654
+    baseline.iloc[1:].to_parquet(path, index=False)
+    with pytest.raises(ValueError, match="complete.*domain"):
+        candidate.revisions(tmp_path, "baselines/previous-native.parquet", "viva_financials", outputs)
+    with pytest.raises(ValueError, match="within candidate baselines"):
+        candidate.revisions(tmp_path, "../outside.parquet", "viva_financials", outputs)
