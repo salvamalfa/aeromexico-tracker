@@ -114,6 +114,21 @@ def test_fractional_aircraft_cannot_pass_as_exact_counts():
         reconcile(frame)
 
 
+def test_exact_aircraft_total_cannot_hide_one_extra_aircraft_with_adjusted_percentages():
+    frame = native()
+    mask = frame.edition.eq("2026Q2") & frame.statement.eq("fleet") & frame.period_end_date.eq("2026-06-30")
+    for metric, token, value in [
+        ("fleet_total", "5", 5.0),
+        ("a321_fraction", "40%", 40.0),
+        ("neo_fraction", "40%", 40.0),
+    ]:
+        index = frame.index[mask & frame.metric_key.eq(metric)][0]
+        frame.loc[index, ["source_value", "value"]] = [token, value]
+    # Four exact component counts remain 1+1+1+1; percentages alone cannot validate 5.
+    with pytest.raises(ValueError, match="fleet/2026-06-30/total"):
+        reconcile(frame)
+
+
 def test_cash_rounding_uses_reported_precision_and_rejects_a_larger_residual():
     frame = native()
     mask = (

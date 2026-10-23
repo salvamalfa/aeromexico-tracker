@@ -10,6 +10,8 @@ def numeric(row):
 
 
 def half_quantum(row):
+    if row.unit in {"aircraft", "sectors"}:
+        return Decimal(0)  # Reported whole counts are exact, not rounded financial amounts.
     value = Decimal(row.source_value.rstrip("%x").replace(",", ""))
     return Decimal(10) ** value.as_tuple().exponent * Decimal(str(row.scale)) / 2
 

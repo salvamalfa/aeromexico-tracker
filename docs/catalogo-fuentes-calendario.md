@@ -1499,7 +1499,8 @@ La prueba real del código funcional `287703b3` produjo 655 filas Silver,
 386 cifras Gold, dos artefactos y 1.427 enlaces de linaje para 1.041 registros.
 Conserva 398 observaciones de la edición 2T26 y 257 del soporte 1T26. Las doce
 filas de contexto macro de 2T26 no pasan a Gold. Se verificaron 252 identidades
-y ratios con intervalos de precisión publicada, sin recalcular la ocupación
+y ratios. Los importes usan intervalos de precisión publicada; los conteos
+de aviones exigen igualdad exacta, sin tolerancia de redondeo. No se recalcula la ocupación
 de itinerario desde totales distintos. La fecha impresa de 2T26 es 24/jul/2026;
 la captura retenida es 24/ago/2026. No se atribuye una primera publicación ni
 un rezago conocido. No se hace otra descarga.
@@ -1540,8 +1541,8 @@ mantiene Aerocivil/GDELT requeridos y bloqueados, disponibilidad reciente sin
 acreditar y releases sin suministrar. Las pruebas de contrato son sintéticas;
 los conteos anteriores provienen de los dos PDF retenidos reales. Un revisor
 independiente reconstruyó todas las columnas, unidades, padres y diagnósticos
-sin usar las funciones del producto: no encontró discrepancias. Los 20 casos
-adversariales independientes están incluidos en las 50 pruebas focales que
+sin usar las funciones del producto: no encontró discrepancias. Los 21 casos
+adversariales independientes están incluidos en las 51 pruebas focales que
 pasaron. La compatibilidad con PR152/154/155 se comprueba en una rama local
 separada; sus heads remotos y revisiones pendientes se preservan.
 
