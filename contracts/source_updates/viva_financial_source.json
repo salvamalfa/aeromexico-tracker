@@ -1,0 +1,307 @@
+{
+  "version": 1,
+  "native": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "edition",
+      "statement",
+      "period_type",
+      "period_end_date",
+      "metric_key",
+      "segment",
+      "entity_as_reported",
+      "carrier_key",
+      "unit",
+      "source_value",
+      "source_label",
+      "source_locator",
+      "report_date",
+      "source_system",
+      "source_file",
+      "source_hash",
+      "ingested_at",
+      "parser_version",
+      "period_start_date",
+      "value",
+      "scale",
+      "is_unaudited",
+      "is_preliminary",
+      "agent_eligible"
+    ],
+    "properties": {
+      "edition": {
+        "enum": [
+          "2026Q1",
+          "2026Q2"
+        ]
+      },
+      "statement": {
+        "enum": [
+          "indicators",
+          "income",
+          "balance",
+          "cash_flow",
+          "debt",
+          "fleet"
+        ]
+      },
+      "period_type": {
+        "enum": [
+          "quarter",
+          "half_year",
+          "instant"
+        ]
+      },
+      "period_end_date": {
+        "type": "string",
+        "pattern": "^20\\d{2}-\\d{2}-\\d{2}$"
+      },
+      "metric_key": {
+        "type": "string",
+        "minLength": 1
+      },
+      "segment": {
+        "type": "string",
+        "minLength": 1
+      },
+      "entity_as_reported": {
+        "const": "Grupo Viva Aerobus, S.A. de C.V. and Subsidiaries"
+      },
+      "carrier_key": {
+        "const": "VIVA_AEROBUS"
+      },
+      "unit": {
+        "type": "string",
+        "minLength": 1
+      },
+      "source_value": {
+        "type": "string",
+        "minLength": 1
+      },
+      "source_label": {
+        "type": "string",
+        "minLength": 1
+      },
+      "source_locator": {
+        "type": "string",
+        "minLength": 1
+      },
+      "report_date": {
+        "type": "string",
+        "minLength": 1
+      },
+      "source_system": {
+        "const": "viva_ir"
+      },
+      "source_file": {
+        "type": "string",
+        "minLength": 1
+      },
+      "source_hash": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+      },
+      "ingested_at": {
+        "type": "string",
+        "minLength": 1
+      },
+      "parser_version": {
+        "type": "string",
+        "minLength": 1
+      },
+      "period_start_date": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "pattern": "^20\\d{2}-\\d{2}-\\d{2}$"
+      },
+      "value": {
+        "type": "number"
+      },
+      "scale": {
+        "enum": [
+          0.01,
+          1.0,
+          1000.0,
+          1000000.0
+        ]
+      },
+      "is_unaudited": {
+        "enum": [
+          true,
+          null
+        ]
+      },
+      "is_preliminary": {
+        "enum": [
+          true,
+          null
+        ]
+      },
+      "agent_eligible": {
+        "const": false
+      }
+    }
+  },
+  "gold": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "edition",
+      "statement",
+      "period_type",
+      "period_end_date",
+      "metric_key",
+      "segment",
+      "entity_as_reported",
+      "carrier_key",
+      "unit",
+      "source_value",
+      "source_label",
+      "source_locator",
+      "report_date",
+      "source_system",
+      "source_file",
+      "source_hash",
+      "ingested_at",
+      "parser_version",
+      "period_start_date",
+      "value",
+      "scale",
+      "is_unaudited",
+      "is_preliminary",
+      "agent_eligible",
+      "record_id",
+      "native_parent_record_id",
+      "normalization"
+    ],
+    "properties": {
+      "edition": {
+        "enum": [
+          "2026Q1",
+          "2026Q2"
+        ]
+      },
+      "statement": {
+        "enum": [
+          "indicators",
+          "income",
+          "balance",
+          "cash_flow",
+          "debt",
+          "fleet"
+        ]
+      },
+      "period_type": {
+        "enum": [
+          "quarter",
+          "half_year",
+          "instant"
+        ]
+      },
+      "period_end_date": {
+        "type": "string",
+        "pattern": "^20\\d{2}-\\d{2}-\\d{2}$"
+      },
+      "metric_key": {
+        "type": "string",
+        "minLength": 1
+      },
+      "segment": {
+        "type": "string",
+        "minLength": 1
+      },
+      "entity_as_reported": {
+        "const": "Grupo Viva Aerobus, S.A. de C.V. and Subsidiaries"
+      },
+      "carrier_key": {
+        "const": "VIVA_AEROBUS"
+      },
+      "unit": {
+        "type": "string",
+        "minLength": 1
+      },
+      "source_value": {
+        "type": "string",
+        "minLength": 1
+      },
+      "source_label": {
+        "type": "string",
+        "minLength": 1
+      },
+      "source_locator": {
+        "type": "string",
+        "minLength": 1
+      },
+      "report_date": {
+        "type": "string",
+        "minLength": 1
+      },
+      "source_system": {
+        "const": "viva_ir"
+      },
+      "source_file": {
+        "type": "string",
+        "minLength": 1
+      },
+      "source_hash": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+      },
+      "ingested_at": {
+        "type": "string",
+        "minLength": 1
+      },
+      "parser_version": {
+        "type": "string",
+        "minLength": 1
+      },
+      "period_start_date": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "pattern": "^20\\d{2}-\\d{2}-\\d{2}$"
+      },
+      "value": {
+        "type": "number"
+      },
+      "scale": {
+        "enum": [
+          0.01,
+          1.0,
+          1000.0,
+          1000000.0
+        ]
+      },
+      "is_unaudited": {
+        "enum": [
+          true,
+          null
+        ]
+      },
+      "is_preliminary": {
+        "enum": [
+          true,
+          null
+        ]
+      },
+      "agent_eligible": {
+        "const": false
+      },
+      "record_id": {
+        "type": "string",
+        "pattern": "^rec_[0-9a-f]{64}$"
+      },
+      "native_parent_record_id": {
+        "type": "string",
+        "pattern": "^rec_[0-9a-f]{64}$"
+      },
+      "normalization": {
+        "const": "reported_value_times_explicit_scale_no_currency_or_distance_conversion"
+      }
+    }
+  }
+}

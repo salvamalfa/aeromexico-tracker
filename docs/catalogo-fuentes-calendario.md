@@ -1467,6 +1467,28 @@ resumen final: `4d9446a4d94dab4118f8407f072d7597f5d38818c47709dc414668e15dcd5a61
 Los intentos de prueba previos se retienen como evidencia, sin confundirlos con
 esta reproducción del código final.
 
+### Finanzas Viva: certificador de las tablas 2T26
+
+El nuevo adaptador está preparado para comprobar el [informe 2T26 retenido](https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2026-2T26-en.pdf),
+con el [1T26](https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2026-1T26-en.pdf)
+solo como soporte de comparación. Falta terminar su validación con los dos
+originales y la revisión del head final antes de dar por comprobado este lote.
+No certifica otra edición ni disponibilidad reciente.
+
+La salida separa trimestre, semestre y balances a una fecha. Mantiene USD,
+escalas, millas, pasajeros reservados y notas preliminares/no auditadas.
+Conserva el contexto macro en Silver, sin usarlo en Gold. Cada dato Gold solo
+puede tener su verdadero padre de la edición 2T26. La comparación con 1T26
+registra diferencias, pero no las presenta como una reexpresión acreditada ni
+permite deducir un 1T26 validado restando semestre menos trimestre.
+
+Comando: `python -m src.source_updates.viva_financial_candidate`. Los modos
+`retain` y `certify`, los dos roles y la reproducción `--check` están en la
+[skill corporativa](../.agents/skills/airline-update-corporate/SKILL.md#finanzas-viva-retenidas-tablas-y-comparación-entre-ediciones).
+El contrato propio está en `contracts/source_updates/viva_financial_source.json`;
+estas observaciones no se incorporan al warehouse, al sitio ni a perfiles.
+No se ejecutó ingesta, calendario ni publicación.
+
 ## Pendientes
 
 - La política está aprobada e implementada; no falta volver a aprobarla.
@@ -1479,7 +1501,9 @@ esta reproducción del código final.
   terminal; su CI y revisión manual previas no sustituyen ese resultado.
   No se ha integrado ni se ha relanzado la revisión.
 - Continúa la implementación integral de `volaris_sec`, `afac_carriers`,
-  `bts_segments`, `gap_traffic`, `asur_traffic`, `rss` y `viva_financials`.
+  `rss` y la validación final de `viva_financials`. BTS (PR155) y GAP/ASUR
+  (PR154) están preparados y probados, con revisión exacta todavía pendiente;
+  se preservan sus heads y no se relanzan revisiones.
   Es trabajo técnico autorizado, no una decisión de alcance del dueño.
   Los restantes adaptadores conservan sus límites de edición y periodo.
 - Aerocivil sigue pendiente de una leyenda y atribución primarias del ID exacto.
