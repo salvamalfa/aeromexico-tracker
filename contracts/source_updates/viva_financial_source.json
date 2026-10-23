@@ -142,6 +142,10 @@
       },
       "agent_eligible": {
         "const": false
+      },
+      "record_id": {
+        "type": "string",
+        "pattern": "^rec_[0-9a-f]{64}$"
       }
     }
   },

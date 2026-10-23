@@ -27,7 +27,7 @@ ENTITY = "Grupo Viva Aerobus, S.A. de C.V. and Subsidiaries"
 
 
 def norm(text):
-    return " ".join(text.split())
+    return " ".join(text.replace("“", '"').replace("”", '"').split())
 
 
 def amount(token):
@@ -97,7 +97,14 @@ def edition(pages, original, q):
     ]:
         if proof not in glossary:
             raise ValueError("Viva source definitions missing or changed")
-    if "Prior periods have not been adjusted for comparability." not in pages[2]:
+    if not all(
+        clause in pages[2]
+        for clause in (
+            "IFRS 9 amendment",
+            "cash in transit is classified within accounts receivable and other receivables.",
+            "Prior periods have not been adjusted for comparability.",
+        )
+    ):
         raise ValueError("Viva cash comparability warning missing")
     output = []
 

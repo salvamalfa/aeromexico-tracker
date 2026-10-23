@@ -207,7 +207,9 @@ def pages(q=2):
     result[2] = (
         f"US$ Million {short} 2026 Dec 2025 % Var\n"
         + table(DEBT, debt_values)
-        + "\n(1) Cash and cash equivalents Prior periods have not been adjusted for comparability.\n"
+        + "\n(1) Cash and cash equivalents IFRS 9 amendment cash in transit "
+        "is classified within accounts receivable and other receivables. "
+        "Prior periods have not been adjusted for comparability.\n"
     )
     result[2] += (
         (

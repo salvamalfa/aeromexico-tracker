@@ -124,6 +124,8 @@ def validate(frame, *, gold=False):
             raise ValueError("Viva statement and period semantics differ")
         if gold and (r.edition != "2026Q2" or r.segment == "context_not_gold"):
             raise ValueError("Viva support or unverified macro context cannot enter Gold")
+    if "record_id" in frame:
+        add_record_ids(frame, table_name=TABLE if gold else NATIVE, natural_key_columns=GRAIN)
     return frame
 
 
@@ -133,6 +135,7 @@ def frames(workspace, product, period, native, details):
     validate(native)
     details = reconcile(native)  # Never trust a caller's success flag.
     native = add_record_ids(native.copy(), table_name=NATIVE, natural_key_columns=GRAIN)
+    validate(native)
     facts = (
         native.loc[native.edition.eq(period) & native.segment.ne("context_not_gold")]
         .drop(columns="record_id")
