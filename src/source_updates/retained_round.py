@@ -101,6 +101,8 @@ def execute(recipe: dict, workspace: Path, *, write=False) -> dict:
                     from src.source_updates.government_candidate import run as certify
                 if spec(product).get("certifier") == "viva_financial":
                     from src.source_updates.viva_financial_candidate import run as certify
+                if spec(product).get("certifier") == "airport_group":
+                    from src.source_updates.airport_group_candidate import run as certify
                 action = "certify"
                 certified = certify(*args, execute=True)
                 action = "offline_replay"

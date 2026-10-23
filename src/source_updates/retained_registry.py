@@ -11,6 +11,7 @@ def spec(product: str) -> dict:
         afac_countries,
         afac_margins,
         authorities,
+        airport_group_native,
         bts_native,
         context_snapshots,
         financials,
@@ -178,6 +179,15 @@ def spec(product: str) -> dict:
         "grain": bts_native.GRAIN,
         "code_files": [Path(bts_native.__file__)],
     }
+    for name in sorted(airport_group_native.PRODUCTS):
+        registry[name] = {
+            "roles": {"html": ("sec", "sec_edgar", "sec_filing")},
+            "primary": "html",
+            "certifier": "airport_group",
+            "table": "fact_airport_traffic",
+            "grain": airport_group_native.GRAIN,
+            "code_files": [Path(airport_group_native.__file__)],
+        }
     if product not in registry:
         raise ValueError("No reviewed retained-product adapter")
     return registry[product]

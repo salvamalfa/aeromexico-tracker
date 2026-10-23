@@ -17,7 +17,9 @@ ronda que los requiera; no se sustituyen por cero ni por otro producto. Ningún
 comando instala un calendario o incorpora candidatos a producción al fusionar
 el código. Los originales y candidatos conservan sus recibos y revisión propia.
 
-La continuación del 23 de octubre incorpora comprobaciones integrales de AICM
+La continuación del 23 de octubre añade también el certificador GAP/ASUR de
+originales julio 2026, con países y redondeo explícitos; su prueba y estado de
+integración están en el apéndice. Incorpora comprobaciones integrales de AICM
 y un control estricto del archivo AIFA. AICM permite probar originales de julio
 y agosto; AIFA sigue bloqueado por fechas internas contradictorias. Esto no
 declara lista la ronda completa. PR152 conserva por separado sus certificadores
@@ -55,7 +57,7 @@ octubre; la continuación del 21 y su matriz aparecen abajo:
 |---|---|
 | Empresas | BMV: catálogo y ZIP oficiales capturados; parseo offline acotado implementado. SEC preservado reconstruido; Ryanair FY2026 tiene un lector XBRL retenido separado, sin convertirlo a trimestre. Tráfico mensual y finanzas 2T26 IR de Aeroméxico tienen candidatos dedicados desde PDF; véase alcance abajo. Otros periodos nuevos IR/SEC siguen condicionados. |
 | Tráfico AFAC y BTS | AFAC: aeropuertos y marginales de julio tienen adaptadores offline; países conserva cajas acumuladas exactas. Boletines/base julio–agosto conservan su evidencia previa. BTS añade candidato integral offline de mayo/julio y revisiones, sin certificar cobertura completa por operador. La retención no es una captura nueva. |
-| Aeropuertos | AICM julio/agosto tienen certificador integral offline. AIFA julio falla por fechas internas anteriores al cierre del mes; sus comprobaciones históricas de tabla no acreditan el producto integral. OMA julio y slots AICM verano 2026 tienen adaptadores de originales retenidos. OMA septiembre enlazado falló; no se acredita septiembre completo. |
+| Aeropuertos | AICM julio/agosto tienen certificador integral offline. AIFA julio falla por fechas internas anteriores al cierre del mes; sus comprobaciones históricas de tabla no acreditan el producto integral. GAP/ASUR julio tienen certificador integral preparado con países y redondeo explícitos; véase continuación abajo. OMA julio y slots AICM verano 2026 tienen adaptadores de originales retenidos. OMA septiembre enlazado falló; no se acredita septiembre completo. |
 | Macro y mercado | EIA, tres series Banxico y cinco series bursátiles verificadas hasta Gold para septiembre. H.10 tiene una cadena dedicada de certificación mensual aislada; véase su alcance y evidencia abajo. La familia completa no está certificada. |
 | Rutas | ANAC junio, CAA junio y Aena enero–julio tienen adaptadores retenidos con ámbitos separados. Cuatro documentos aportan pasajes fechados. Aerocivil conserva comprobación numérica; falta su leyenda de códigos. No representan una red mundial uniforme. |
 | Referencias y contexto | OurAirports conserva 9.051 referencias verificadas. FAA y diccionario tienen snapshots candidatos por SHA: 84 categorías y 86.553 palabras, sin inferir seguridad de aerolínea ni tono empresarial. |
@@ -1595,6 +1597,118 @@ tres proyecciones, conversiones, referencias, padres y hashes contra los CSV
 oficiales, sin usar las funciones del producto: no encontró discrepancias.
 La revisión independiente de código y el cierre remoto se registran en el PR;
 la CI y aprobación del head final no se sustituyen por las de otro commit.
+
+### Certificación integral GAP y ASUR: continuación del 23 de octubre
+
+El lote añade `airport_group_candidate` para los originales SEC de tráfico
+julio 2026. Es certificación técnica de originales retenidos, no una captura
+nueva ni una comprobación de disponibilidad de septiembre/octubre. Los hechos
+Gold candidatos son de México; Jamaica, Puerto Rico, Colombia y el total
+mundial se conservan separados en la evidencia nativa. No se cambian datos
+públicos ni se activa el calendario. PR152 y su revisión pendiente permanecen
+intactos; este lote parte del master posterior a PR153.
+
+GAP publica cifras preliminares en miles con un decimal. Se conserva esa
+precisión: no son pasajeros exactos. México se calcula sumando doce aeropuertos
+redondeados; no se presenta como total mexicano reportado ni se obtiene
+restando Jamaica del total mundial. CBX ya está en internacional Tijuana.
+ASUR aporta pasajeros enteros y nueve aeropuertos mexicanos que deben
+reconciliar exactamente con el resumen México. Su nota de exclusión de tránsito
+y aviación general se aplica solo a México y Colombia. Carga y operaciones
+ausentes quedan nulas en ambas fuentes.
+
+El lector exige CIK, títulos físicos, unidad, mes completo, comparativos,
+acumulado, dominios de aeropuertos y mercados y reconciliaciones. Rechaza
+acumulados inferiores al mes fuera de su precisión; enero debe ser igual a su
+acumulado. GAP admite solo la cota matemática del redondeo, sin ajustar cifras;
+ASUR exige igualdad entera. El linaje de cada hecho conserva precisión y
+alcance; el total México calculado de GAP declara sus doce contribuyentes.
+
+Usar el [procedimiento de la skill](../.agents/skills/airline-update-airports/SKILL.md#certificación-integral-gap-asur).
+La importación selecciona rol `html`; `certify` requiere producto, mes, corte
+con zona y recibo de retención. Mostrar `--dry-run`, construir `--execute` y
+reproducir `--check` sin sobrescribir. `retained_round` despacha este lector;
+la ronda usa `adapter=airport_group`. El plan `--family airports` incluye GAP y
+ASUR por producto, aunque la institución sea SEC; los financieros SEC siguen
+en empresas. El lector genérico se rechaza para estos
+productos. Cada candidato contiene nueve tablas verificadas: dos Silver,
+dos hechos Gold, tres dimensiones, artefactos y puente físico.
+
+La comparación de revisiones usa el grano nativo y también unidad, precisión,
+país, definición, preliminar y estado reportado/calculado. La copia previa
+debe ser explícita, del mismo grupo y bajo `baselines/`; no se puede comparar
+solo Gold y omitir cambios del acumulado o de países. Sin copia se registra
+`not_compared_no_baseline`. La fecha declarada del reporte sigue separada de
+primera publicación y retraso de publicación; estos últimos siguen nulos.
+
+Referencias físicas revisadas: [GAP, 6-K de agosto con tráfico julio](https://www.sec.gov/Archives/edgar/data/1347557/000117184326005269/f6k_080526.htm),
+SHA-256 `dca6191444514e1f6686e661041f4b4d85dd21f9ff9c8a341259cf64ba87207c`,
+y [ASUR, tráfico julio](https://www.sec.gov/Archives/edgar/data/1123452/000110465926091204/tm2622355d1_ex99-1.htm),
+SHA-256 `d6cbec01f6e095752d4ad5af25a4d48cdd4c3ec06179ee3caf1662f4d82e1cc5`.
+Ambos originales fueron capturados el 21 de agosto; declaran fecha del reporte
+5 de agosto. La prueba reutiliza los bytes y fechas originales. No llama a SEC
+ni configura identidad/credenciales.
+
+Los originales de junio se probaron solo en lectura y quedan fuera del formato
+revisado de este lote: GAP usa otra representación de fecha y ASUR otra
+cabecera. Se rechazan antes de producir Silver/Gold; no se afirma completitud
+histórica ni aceptación automática de cualquier edición.
+
+La prueba real offline quedó fijada en código `24a18edb`: GAP produjo
+192 observaciones nativas, 26 filas Silver, 24 hechos por aeropuerto y dos de
+grupo, con 72 reconciliaciones y 434 filas de linaje. ASUR produjo 156 nativas,
+20 Silver, 18 hechos por aeropuerto y dos de grupo, con 88 reconciliaciones y
+176 filas de linaje. Cada candidato pasó contratos, dimensiones y hashes
+físicos; el lote ejecutó y reprodujo ambos productos sin red. En julio 2026,
+México GAP suma 5.333.600 pasajeros redondeados y calculados; ASUR reporta
+3.473.501 enteros. Son totales aeroportuarios, no tráfico de una aerolínea.
+
+Una copia explícita del mismo original usada como baseline resultó en
+192/156 observaciones sin cambios; no prueba que el emisor no haya revisado
+otras versiones. Las pruebas independientes sí introducen cambios en YTD,
+país, definición y preliminar para comprobar que se detectan. El replay
+comprueba tablas, bytes, contratos, corte y huellas del código sin escribir.
+La ronda limitada a esas dos tareas pasó; la ronda global combinada siguió
+`blocked_global_policy`, con `core_ready=false` y calendario no listo. Faltan
+los demás productos requeridos, incluidos Aerocivil/GDELT y releases del
+trimestre; una prueba local de dos fuentes no levanta esos bloqueos.
+
+Pasaron 263 pruebas focales/regresión; dos verificaciones del almacén local se
+omitieron porque ese checkout no tiene `warehouse.duckdb`. No se restauró ni
+modificó el almacén público para convertirlas en aprobadas. La revisión
+adversarial independiente aprobó 43 casos y ocho controles adicionales de la
+ruta genérica cerrada. Después del arreglo de selección por familia pasaron
+dos casos nuevos del plan y 128 regresiones de catálogo/política/plan; la
+revisión independiente añadió cinco pruebas, incluida la CLI sin HTTP.
+Son 56 casos independientes en total. El hallazgo de YTD/enero quedó atendido. Ruff, diff y
+presupuesto de módulos pasaron. CI y revisión Codex del head final se cierran
+en el PR; los resultados de un head anterior no sustituyen los nuevos.
+
+Evidencia local regenerable, fuera del Git público:
+`tmp/source-updates/airport-group-proof-20261023-24a18edb-summary.json`,
+SHA-256 `32d199d7ac03d5f5a08c4863584db82ea624b710097a59aebc3c2fb5ad7d5476`.
+Los originales, candidatos, baselines, recibos de lote/ronda y fallos de
+harness previos se conservan en los workspaces `airport-group-proof-*`.
+El harness inicial invocó por error `readiness.run`, que no existe; se corrigió
+a `execute` y se retomaron los candidatos por replay, sin reconstruirlos ni
+sobrescribir. Tras acortar el guard genérico para cumplir el presupuesto de
+600 líneas se emitió la prueba final en workspaces nuevos con su nueva huella.
+No se afirma que los recibos antiguos pertenezcan al código final. Una colisión
+de nombre en el harness de resumen se corrigió con una importación explícita;
+los recibos ya escritos se retomaron por `--check`, sin repetir escrituras.
+
+Muestra resumida del plan real al corte `2026-10-23T10:00:00-06:00`: antes
+mostraba tres productos de aeropuertos y ahora muestra cinco, todos con
+objetivo septiembre. Esta selección no certifica septiembre desde julio:
+
+```json
+{"mode":"dry_run","products":["gap_traffic","asur_traffic","oma_traffic","aicm_traffic","aifa_traffic"],"target_period":"2026M09","network_requests":0,"writes":[],"activation":"none"}
+```
+
+La salida completa vive en `family_plan` del resumen local. SEC mantiene su
+identidad institucional y sus financieros conservan familia/cadencia. La
+política global no cambia: la prueba combinada con dos fuentes conserva 21
+requisitos ausentes y fechas de releases sin verificar.
 
 ## Pendientes
 

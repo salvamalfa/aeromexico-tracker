@@ -28,6 +28,10 @@ FAMILIES = {
     "internal": ("peer_profile", "curated_primary_sources", "derived_gold"),
 }
 
+# Institution and product family differ: SEC also publishes airport traffic.
+PRODUCT_FAMILIES = {"gap_traffic": "airports", "asur_traffic": "airports"}
+
+
 # id, source_key, monthly/quarterly scope, acquisition limitation, existing parser step.
 # Separate subproducts prevent SEC, AFAC, airports and route authorities from
 # being treated as one homogeneous available/validated period.
@@ -253,7 +257,9 @@ def product_map() -> dict:
             "cadence": item[2],
             "limitation": item[3],
             "parser_step": item[4],
-            "family": next(f for f, keys in FAMILIES.items() if item[1] in keys),
+            "family": PRODUCT_FAMILIES.get(
+                item[0], next(f for f, keys in FAMILIES.items() if item[1] in keys)
+            ),
         }
         for item in PRODUCTS
     }
