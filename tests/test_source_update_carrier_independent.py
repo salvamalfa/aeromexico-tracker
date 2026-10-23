@@ -550,3 +550,25 @@ def test_synthetic_afac_replay_rejects_each_output_corruption_without_writes(ret
     with pytest.raises(ValueError):
         run(*args, check=True)
     assert inventory(candidate) == before
+
+
+@pytest.mark.parametrize("table", [297, 300])
+@pytest.mark.parametrize("column", [1, 2])
+@pytest.mark.parametrize(
+    "row,token", [(10, "2"), (11, "2"), (13, "20"), (14, "20"), (16, "100000000"), (17, "100000000")]
+)
+def test_volaris_eps_ads_and_exact_shares_must_reconcile(table, column, row, token):
+    from src.source_updates.volaris_sec_source import read
+    from src.source_updates.volaris_source_checks import reconcile
+    from tests.test_source_update_carrier import synthetic_volaris
+
+    native, _ = read(synthetic_volaris(), "2026Q2")
+    index = native.index[
+        native.source_table.eq(str(table))
+        & native.source_row_number.eq(row)
+        & native.source_column.eq(column)
+    ][0]
+    native.loc[index, "source_value"] = token
+    native.loc[index, "value"] = float(token)
+    with pytest.raises(ValueError, match="IAS33 EPS|ADS=10CPO"):
+        reconcile(native)

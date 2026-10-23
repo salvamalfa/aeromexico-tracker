@@ -93,6 +93,21 @@ def reconcile(frame):
                     factor,
                     f"table {op}, row {metric}, column {col}",
                 )
+            for eps, shares, ads in [(10, 16, 13), (11, 17, 14)]:
+                ratio(
+                    (op, 7, col),
+                    (op, shares, col),
+                    (op, eps, col),
+                    1000000,
+                    f"IAS33 EPS table {op}, row {eps}, column {col}",
+                )
+                ratio(
+                    (op, 7, col),
+                    (op, shares, col),
+                    (op, ads, col),
+                    10000000,
+                    f"ADS=10CPO table {op}, row {ads}, column {col}",
+                )
             for a, b, table in [(2, 4, income), (3, 6, income), (6, 35, op), (8, 21, op)]:
                 equal((ancillary, a, col), (table, b, col), f"ancillary {ancillary}/{a}, col {col}")
             equation(ancillary, col, 4, [(2, 1), (3, 1)])

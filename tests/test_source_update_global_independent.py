@@ -363,6 +363,8 @@ def physically_bound_reports(value):
         item = selected(value, product, "quarterly")
         artifact = {"source_url": url, "sha256": "a" * 64}
         results[item["id"]]["contributing_artifacts"] = [artifact]
+        if entity == "VOLARIS":
+            results[item["id"]]["financial_report_artifacts"] = [artifact]
         value["releases"].append(
             {
                 "entity": entity,

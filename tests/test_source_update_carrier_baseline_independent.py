@@ -116,3 +116,81 @@ def test_baseline_source_captured_after_current_cutoff_is_not_historical_evidenc
     with pytest.raises(ValueError):
         run(candidate, "afac_carriers", "2026M08", CUTOFF, saved["run_id"], execute=True, baseline=BASELINE)
     assert not (candidate / "data/gold").exists()
+
+
+def test_global_release_binding_uses_financial_exhibit_only_and_keeps_support_lineage(retained_sources):
+    from src.source_updates import global_readiness
+    from tests.test_source_update_carrier import synthetic_volaris
+
+    root = retained_sources[0]
+    original = root / "volaris-original"
+    original.mkdir()
+    records = {}
+    for role, (body, source) in synthetic_volaris().items():
+        row = {
+            **source,
+            "bytes": len(body),
+            "http_status": 200,
+            "logical_version": 1,
+            "filename_version": 1,
+            "download_method": "synthetic_offline_fixture",
+            "content_type": "application/json" if role in {"index", "submissions"} else "text/html",
+            "logical_key": f"sec|synthetic_{role}|2026Q2|{Path(source['source_file']).suffix[1:]}",
+        }
+        path = original / row["source_file"]
+        path.write_bytes(body)
+        Path(str(path) + ".meta.json").write_text(json.dumps(row))
+        records[role] = row
+    (original / "_manifest.jsonl").write_text("".join(json.dumps(r) + "\n" for r in records.values()))
+    candidate = root / "volaris-candidate"
+    saved = retain(
+        candidate, original, "volaris_sec", {k: r["source_file"] for k, r in records.items()}, execute=True
+    )
+    run(candidate, "volaris_sec", "2026Q2", CUTOFF, saved["run_id"], execute=True)
+    task = dict(
+        id="volaris",
+        product="volaris_sec",
+        period="2026Q2",
+        adapter="carrier_source",
+        workspace=str(candidate),
+        receipt_id=saved["run_id"],
+        candidate_as_of=CUTOFF,
+        cadence="quarterly",
+        used=True,
+        depends_on=[],
+    )
+    result = global_readiness.verify(task, root / "global")
+
+    def identity(role):
+        return {"source_url": records[role]["source_url"], "sha256": records[role]["sha256"]}
+
+    assert result["financial_report_artifacts"] == [identity("html")]
+    assert {json.dumps(r, sort_keys=True) for r in result["contributing_artifacts"]} == {
+        json.dumps(identity(role), sort_keys=True) for role in records
+    }
+    for role in records:
+        release = dict(
+            entity="VOLARIS",
+            period="2026Q2",
+            kind="financial_report",
+            confirmed=True,
+            published_at="2026-07-21T21:30:26Z",
+            document_url=records[role]["source_url"],
+            source_sha256=records[role]["sha256"],
+            task_id="volaris",
+        )
+        recipe = dict(
+            version=1,
+            round="quarterly",
+            as_of=CUTOFF,
+            monthly_period="2026M09",
+            quarterly_period="2026Q2",
+            items=[task],
+            releases=[release],
+        )
+        checked = global_readiness.evaluate(recipe, {"volaris": result})
+        blocked = (
+            "VOLARIS:release_not_bound_to_verified_contributing_artifact" in checked["calendar_blockers"]
+        )
+        assert blocked is (role != "html")
+        assert checked["ready_for_calendar_incorporation"] is False

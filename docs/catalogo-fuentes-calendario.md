@@ -1577,7 +1577,11 @@ con gastos 1.403 millones y ASM 17.622 millones. Con ±0,5 de cada unidad impres
 el máximo es 7,964702210368…, inferior al mínimo 7,965 que redondearía a 7,97.
 La definición y la nota (2) tienen igual alcance de itinerario/chárter; no se
 halló precisión retenida ni declaración que autorice ampliar tolerancias.
-No se omite el comparativo ni se emiten Silver/Gold aceptados. Falta aclaración
+El control también concilia EPS básico/diluido con resultado neto y acciones
+promedio, y ADS con diez CPO. Para fijar el release financiero solo sirve el
+anexo financiero verificado; índices/submissions/portada 6-K apoyan la identidad
+pero no sustituyen el reporte central. No se omite el comparativo ni se emiten
+Silver/Gold aceptados. Falta aclaración
 o evidencia oficial suficiente para resolverlo. Un contrato sintético positivo
 no certifica este original ni tráfico mensual Volaris.
 
