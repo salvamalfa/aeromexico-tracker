@@ -23,6 +23,11 @@ y agosto; AIFA sigue bloqueado por fechas internas contradictorias. Esto no
 declara lista la ronda completa. PR152 conserva por separado sus certificadores
 macro/mercado y espera una revisión adicional; este cambio no modifica su head.
 
+La continuación BTS añade certificación mensual desde los ZIP oficiales
+retenidos. Comprueba mayo y julio y detecta cinco altas retrospectivas de mayo.
+Conserva una incidencia de abril y bloquea ese mes si se solicita. No acredita
+cobertura completa por operador ni disponibilidad reciente.
+
 ## Qué cambia para ti
 
 Estas son las ocho skills. Cada enlace abre instrucciones técnicas para un
@@ -49,7 +54,7 @@ octubre; la continuación del 21 y su matriz aparecen abajo:
 | Familia | Alcance actual |
 |---|---|
 | Empresas | BMV: catálogo y ZIP oficiales capturados; parseo offline acotado implementado. SEC preservado reconstruido; Ryanair FY2026 tiene un lector XBRL retenido separado, sin convertirlo a trimestre. Tráfico mensual y finanzas 2T26 IR de Aeroméxico tienen candidatos dedicados desde PDF; véase alcance abajo. Otros periodos nuevos IR/SEC siguen condicionados. |
-| Tráfico AFAC y BTS | AFAC: aeropuertos y marginales de julio tienen adaptadores offline; países conserva cajas acumuladas exactas. Boletines/base julio–agosto y BTS conservan su evidencia previa. La retención no es una captura nueva. |
+| Tráfico AFAC y BTS | AFAC: aeropuertos y marginales de julio tienen adaptadores offline; países conserva cajas acumuladas exactas. Boletines/base julio–agosto conservan su evidencia previa. BTS añade candidato integral offline de mayo/julio y revisiones, sin certificar cobertura completa por operador. La retención no es una captura nueva. |
 | Aeropuertos | AICM julio/agosto tienen certificador integral offline. AIFA julio falla por fechas internas anteriores al cierre del mes; sus comprobaciones históricas de tabla no acreditan el producto integral. OMA julio y slots AICM verano 2026 tienen adaptadores de originales retenidos. OMA septiembre enlazado falló; no se acredita septiembre completo. |
 | Macro y mercado | EIA, tres series Banxico y cinco series bursátiles verificadas hasta Gold para septiembre. H.10 tiene una cadena dedicada de certificación mensual aislada; véase su alcance y evidencia abajo. La familia completa no está certificada. |
 | Rutas | ANAC junio, CAA junio y Aena enero–julio tienen adaptadores retenidos con ámbitos separados. Cuatro documentos aportan pasajes fechados. Aerocivil conserva comprobación numérica; falta su leyenda de códigos. No representan una red mundial uniforme. |
@@ -1201,7 +1206,7 @@ publicación, activación ni actualización del dashboard.
 | AFAC aeropuertos | Pasajeros/operaciones/carga del aeropuerto completo; mes | Adaptador candidato del XLSX retenido enero–julio 2026; 173 cruces visibles | [Estadísticas AFAC](https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404) | Producto independiente del resumen por aerolínea; no atribuir total del aeropuerto a Aeroméxico. Última disponibilidad nueva no verificada; el fallo HTTP de un catálogo no invalida el original retenido comprobado |
 | AFAC países | Cajas exactas acumuladas por país; gráficas mensuales redondeadas | Adaptador candidato del boletín julio: 116 valores, 29 países; sin convertir acumulado en mes | Mismo catálogo AFAC; `data/bronze/afac_research/` y selección explícita | No convierte país en ruta u operador. Conservar fuente/edición propia |
 | AFAC origen–destino y marginal por aerolínea | Totales por par de ciudades y totales por empresa, granos separados | Referencias para estimación hasta julio 2026; candidato retenido 23.331 filas con 28 reconciliaciones | `ingest/afac/margins.py`, `international_margins.py`; originales `sase-*` y `resumen-*` | Usar misma edición acumulada para reconciliar; disponibilidad de edición agosto de ambos XLSX sigue sin verificar. Totales/marginales **no observan empresa×ruta** |
-| BTS T-100 International Segment All Carriers | Pasajeros, asientos, vuelos realizados/programados, distancia, carga/correo; operador×segmento MX↔US×mes×aeronave/clase | 2015M01–2026M05; 2T26 local tiene abril y mayo | [Descarga](https://www.transtats.bts.gov/DL_SelectFields.aspx?gnoyr_VQ=FJE&QO_fu146_anzr=Nv4%20Pn44vr45), [historial](https://www.transtats.bts.gov/ReleaseInfo.asp); GET formulario + POST México/año/todos los meses/ZIP | Historial anuncia julio añadido 9 octubre y junio 14 septiembre; **máximo mes efectivamente descargable MX-US pendiente de verificar en archivo** por contradicción con política genérica de rezago. Se omiten años anteriores al corriente en caché: perdería revisiones históricas. Segment no es Market ni destino final del boleto |
+| BTS T-100 International Segment All Carriers | Pasajeros, asientos, vuelos realizados/programados, distancia, carga/correo; operador×segmento MX↔US×mes×aeronave/clase | 2015M01–2026M05; 2T26 local tiene abril y mayo | [Descarga](https://www.transtats.bts.gov/DL_SelectFields.aspx?gnoyr_VQ=FJE&QO_fu146_anzr=Nv4%20Pn44vr45), [historial](https://www.transtats.bts.gov/ReleaseInfo.asp); GET formulario + POST México/año/todos los meses/ZIP | Historial anuncia julio añadido 9 octubre y junio 14 septiembre; el ZIP retenido capturado el 19/oct contiene enero–julio, comprobados en el lote BTS descrito abajo; esto no verifica disponibilidad actual ni cobertura completa por operador. Se omiten años anteriores al corriente en caché: perdería revisiones históricas. Segment no es Market ni destino final del boleto |
 
 El [historial BTS](https://www.transtats.bts.gov/ReleaseInfo.asp) registra además
 revisiones de diciembre 2023 en octubre y febrero 2024–mayo 2026 en septiembre.
@@ -1467,6 +1472,105 @@ resumen final: `4d9446a4d94dab4118f8407f072d7597f5d38818c47709dc414668e15dcd5a61
 Los intentos de prueba previos se retienen como evidencia, sin confundirlos con
 esta reproducción del código final.
 
+### BTS: originales retenidos, candidato mensual y revisiones (23/oct)
+
+El certificador `src.source_updates.bts_candidate` produce siete tablas en un
+candidato aislado: Silver nativo completo, hechos de tráfico del mes pedido,
+dimensiones de ruta/aerolínea/periodo, artefactos y puente de linaje. No llama
+al parser global que escribe el crosswalk. `retained_round` y `readiness`
+requieren el adaptador `bts`; el genérico se rechaza. El archivo puede cubrir
+meses posteriores al solicitado, para volver a certificar un mes revisado.
+
+Dos ZIP oficiales de [BTS T-100](https://www.transtats.bts.gov/DL_SelectFields.aspx?gnoyr_VQ=FJE&QO_fu146_anzr=Nv4%20Pn44vr45)
+retienen sus fechas reales de captura, 24/ago y 19/oct/2026. SHA-256:
+`590001141ec9907ef392d424bfae910cc7024e8bf6a32fdc5b3948878e2f64a6` y
+`99042e468c788d8b22636afba1ac8a4da806ea45f6f3b4e4745b218df6a33754`.
+El segundo se recuperó del respaldo ya autorizado, commit privado
+`84361b529e93b0e56cd91aae7e1750900c3146a8`, bajo
+`review/coverage/20261019/captures/coverage95-20261019/`: solo ZIP público,
+sidecar y su fila de manifiesto; no se restauró un snapshot ni se copiaron
+insumos privados a este PR. El primer original ya estaba retenido localmente.
+
+Ambos contienen `Documentation.csv`, que acredita pasajeros por tramo,
+asientos, libras, millas y minutos, además de identidad DOT. Su hash físico
+es `ef7475e8c29e62aba2b5c46caf24dd726019f66977b603aa6db7a1241ae5c342`.
+El lector comprueba los 30 campos y definiciones exactas; también conserva
+hash del miembro de datos, número de fila y valores literales. El diccionario
+no trae leyenda F/G/L/P: los códigos se conservan sin atribuirles regularidad.
+Todas las identidades casan con los seis campos exactos del crosswalk;
+las referencias `carrier_crosswalk.csv` y `dim_carrier.parquet` se verifican
+y sus huellas se fijan en cada recibo. No se actualizan esas referencias.
+
+La prueba real del código funcional `da3f927e` produjo:
+
+| Original / mes pedido | Filas nativas en Silver | Hechos Gold del mes | Filas del puente |
+|---|---:|---:|---:|
+| Captura agosto / mayo | 9.260 | 1.660 | 12.580 |
+| Captura octubre / julio | 12.459 | 1.527 | 15.513 |
+| Captura octubre / mayo revisado | 12.459 | 1.665 | 15.789 |
+
+Cada agregado conserva todos sus padres nativos, incluidos entidad y
+configuración que no forman parte del grano Gold. ASM/RPM se calculan por
+fila antes de sumar; ocupación es RPM/ASM y queda nula con capacidad cero.
+La distancia es mediana, nunca suma; libras y millas se convierten con factores
+explícitos. Las referencias huérfanas y las identidades ambiguas se rechazan.
+
+Las dos versiones comparten 9.260 observaciones sin cambios de valor ni bajas,
+pero octubre añade **cinco observaciones retrospectivas de mayo**, además de
+3.194 filas de junio/julio. La proyección Gold de mayo conserva esas cinco
+altas: no se declara «sin revisiones» por comparar solo la intersección.
+Silver y las revisiones retienen el año completo, separado del mes proyectado.
+
+Existe una incidencia oficial en abril: operador `27Q`, SJD→VNY, clase `L`,
+14 pasajeros y 13 asientos. Permanece literal en Silver fuera de las
+proyecciones mayo/julio, señalada en sus recibos; no se certifica abril como
+válido. Solicitar abril detiene la ejecución antes de Silver/Gold y conserva
+Bronze. Realizados superiores a programados se conservan, pues esa relación
+no acredita por sí sola un error. Tampoco se acredita cobertura completa:
+Aerovías en junio conserva 297 realizados MX→US y 982 US→MX en clase `F`.
+Esos códigos no equivalen a una etiqueta de servicio inventada por el lector.
+
+Muestra de ejecución real, con replay idéntico de candidatos y control global:
+
+```text
+BTS 2026M05 / agosto: checks_passed; native=9260; Gold=1660
+BTS 2026M07 / octubre: checks_passed; native=12459; Gold=1527
+BTS 2026M05 / octubre: checks_passed; Gold=1665; historical_added=5
+BTS 2026M04 / octubre: blocked; passengers_exceed_seats; no Silver/Gold
+global combined: blocked_global_policy; 22 productos requeridos ausentes
+core_ready=false; ready_for_calendar_incorporation=false
+network_requests=0; paid_requests=0; activation=none; publication=not_authorized
+```
+
+Para reproducir con un original explícito ya autorizado:
+
+```bash
+python -m src.source_updates.bts_candidate retain --product bts_segments --source-root <Bronze-retenido> --original archive=<ruta-relativa-ZIP> --workspace tmp/source-updates/<candidato-nuevo> --dry-run
+# Revisar la selección; repetir retain con --execute y conservar el run_id.
+python -m src.source_updates.bts_candidate certify --product bts_segments --workspace tmp/source-updates/<candidato-nuevo> --period 2026M07 --as-of 2026-10-23T12:00:00-06:00 --retention <run_id> --dry-run
+# Certificar con --execute; repetir con --check sin escribir ni usar red.
+# Para revisiones: baseline explícito bajo baselines/, --baseline baselines/previous-native.parquet.
+```
+
+El resumen final y la receta global se conservan localmente bajo
+`tmp/source-updates/bts-proof-20261023-da3f927e-summary.json` y
+`bts-proof-20261023-da3f927e/`; SHA-256 del resumen:
+`d7db69e22ab887d1404bd3130ef4a5e86982bccd3ad0b41aceb78637ac1cd35e`.
+Son evidencia regenerable y originales retenidos, fuera de Git público. Los
+intentos previos se conservan separados. La fecha de primera publicación y el
+rezago siguen nulos; retención no significa captura nueva ni disponibilidad
+reciente. El resultado global permanece bloqueado por Aerocivil/GDELT,
+productos ausentes y releases comprobados faltantes; no activa el calendario.
+
+Pasaron 302 pruebas focales y de regresión, con 17 casos adversariales
+independientes incluidos. Cubren valores/periodos/identidades inválidos,
+revisiones retrospectivas, sumas grandes sin desbordamiento, agregación de
+configuraciones, unidades, linaje completo, fechas de vigencia, alteración de
+originales/salidas/recibos y replay inmutable. Las pruebas sintéticas validan
+contratos; la tabla anterior corresponde a extracción de originales reales.
+La revisión independiente de código y el cierre remoto se registran en el PR;
+la CI y aprobación del head final no se sustituyen por las de otro commit.
+
 ## Pendientes
 
 - La política está aprobada e implementada; no falta volver a aprobarla.
@@ -1478,8 +1582,13 @@ esta reproducción del código final.
   La revisión adicional iniciada el 22/oct a las 16:05 UTC sigue sin resultado
   terminal; su CI y revisión manual previas no sustituyen ese resultado.
   No se ha integrado ni se ha relanzado la revisión.
+- BTS tiene certificador integral del candidato observado y pruebas reales de
+  mayo/julio retenidos; su integración y CI final se registran en el PR de este
+  lote. No certifica cobertura completa por operador ni una edición reciente.
+  PR154 conserva GAP/ASUR separados en `f922d227`, con CI aprobada y revisión
+  adicional aún pendiente; no se relanza ni se altera ese head.
 - Continúa la implementación integral de `volaris_sec`, `afac_carriers`,
-  `bts_segments`, `gap_traffic`, `asur_traffic`, `rss` y `viva_financials`.
+  `rss` y `viva_financials`.
   Es trabajo técnico autorizado, no una decisión de alcance del dueño.
   Los restantes adaptadores conservan sus límites de edición y periodo.
 - Aerocivil sigue pendiente de una leyenda y atribución primarias del ID exacto.
