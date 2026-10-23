@@ -1545,6 +1545,49 @@ Los candidatos y baselines no aprueban contenido ni tesis. Las compatibilidades
 con los lotes pendientes se comprueban por separado antes de integrar;
 los heads en revisión no se modifican.
 
+## Apéndice técnico: dossiers Volaris SEC y AFAC por aerolínea
+
+El lote siguiente prepara dos certificadores integrales aislados con contrato
+`carrier-source-observation.json` y tablas de observaciones propias. No cambia
+el warehouse ni datos públicos. `carrier_source_candidate retain` conserva los
+roles explícitos; `certify` valida el dossier completo antes de escribir cuatro
+salidas: nativo Silver, observaciones Gold, artefactos y puente Stage 9.
+`--check` reconstruye originales, contratos, selección y linaje y compara
+archivos/recibo sin escribir. `retained_round` encadena ambas fases; readiness
+requiere `carrier_source` y rechaza reemplazarlo por `retained` o Gold heredado.
+Los comandos y roles están en las skills corporativa y tráfico enlazadas arriba.
+
+AFAC usa el PDF mensual y `DB_AFAC.zip` de igual edición. Valida las seis
+columnas de conteos de ambas páginas y los meses/servicios de la base completa
+2024/2025/2026. Gold mensual conserva regular del PDF con soporte de todas las
+filas DB que lo justifican y cada fila charter actual única; un duplicado
+charter bloquea. Preserva nombres literales, `World 2 Fly`, desconocidos sin
+mapeo, y Aerovías/Connect separados. La declaración preliminar debe existir;
+los estimados aplican solo por nombre y periodo declarados. El boletín advierte
+información internacional incompleta; conciliar cifras reportadas no acredita
+la totalidad de operaciones. No se reparte un total entre rutas.
+
+Volaris se limita al dossier SEC `0001292814-26-003836`, sus cuatro roles y
+11 tablas revisadas. Q2, H1 y saldos se conservan separados. Pasajeros reservados
+no se renombran transportados, millas no se renombran kilómetros, y los guiones
+siguen desconocidos. Fecha impresa 21/jul y aceptación SEC no prueban primera
+publicación; el rezago de presentación SEC es 21 días, otro concepto.
+**La fuente real está bloqueada**: CASM H1 2025 de 7,97 centavos no concilia
+con gastos 1.403 millones y ASM 17.622 millones. Con ±0,5 de cada unidad impresa,
+el máximo es 7,964702210368…, inferior al mínimo 7,965 que redondearía a 7,97.
+La definición y la nota (2) tienen igual alcance de itinerario/chárter; no se
+halló precisión retenida ni declaración que autorice ampliar tolerancias.
+No se omite el comparativo ni se emiten Silver/Gold aceptados. Falta aclaración
+o evidencia oficial suficiente para resolverlo. Un contrato sintético positivo
+no certifica este original ni tráfico mensual Volaris.
+
+La comparación de revisiones exige baseline nativo completo del mismo producto
+y edición, con originales/manifiesto/sidecars/recibo bajo `baselines/`.
+Se reconstruye antes de comparar; así cambios históricos o acumulados no se
+ocultan cuando Gold mensual permanece igual. Cuenta altas/bajas por cambio de
+posición sin presumir equivalencia. Sin baseline explícito, registra ausencia
+de comparación; ninguna comparación acredita una revisión oficial.
+
 ## Pendientes
 
 - La política está aprobada e implementada; no falta volver a aprobarla.
@@ -1556,7 +1599,10 @@ los heads en revisión no se modifican.
   La revisión adicional iniciada el 22/oct a las 16:05 UTC sigue sin resultado
   terminal; su CI y revisión manual previas no sustituyen ese resultado.
   No se ha integrado ni se ha relanzado la revisión.
-- Continúa la implementación integral de `volaris_sec` y `afac_carriers`.
+- El lote Volaris/AFAC prepara la certificación técnica de sus dossiers;
+  Volaris real permanece bloqueado por la discrepancia CASM documentada arriba.
+  La prueba de agosto AFAC conserva la advertencia internacional de la fuente.
+  Validación integral, revisión e integración del lote se registran aquí al cerrar.
   RSS añade aquí el certificador retenido, probado sobre originales;
   su suite completa, CI, revisión e integración se registran en
   [PR157](https://github.com/salvamalfa/aeromexico-tracker/pull/157). BTS ([PR155](https://github.com/salvamalfa/aeromexico-tracker/pull/155)),

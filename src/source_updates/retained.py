@@ -103,6 +103,20 @@ def spec(product: str) -> dict:
             ROOT / "src/parse/aeromexico_ir.py",
         ],
     }
+    from src.source_updates.carrier_source_contract import GRAIN as CARRIER_GRAIN
+    from src.source_updates.carrier_source_contract import TABLES as CARRIER_TABLES
+
+    for name, roles, alias in [
+        ("volaris_sec", ("html", "primary", "submissions", "index"), "sec"),
+        ("afac_carriers", ("pdf", "database"), "afac"),
+    ]:
+        registry[name] = {
+            "roles": {role: (alias,) for role in roles},
+            "primary": roles[0],
+            "certifier": "carrier_source",
+            "table": CARRIER_TABLES[name],
+            "grain": CARRIER_GRAIN,
+        }
     registry["ryanair_sec"] = {
         "roles": {role: ("sec",) for role in ("html", "submissions", "index")},
         "primary": "html",
@@ -340,6 +354,8 @@ def originals(workspace: Path, product: str, run_id: str, cutoff: str) -> tuple[
 
 def frames(workspace: Path, product: str, period: str, cutoff: str, run_id: str) -> tuple[dict, dict]:
     definition = spec(product)
+    if definition.get("certifier") == "carrier_source":
+        raise ValueError("Use carrier_source_candidate for complete carrier source Silver/Gold certification")
     if definition.get("certifier") == "government":
         raise ValueError("Use government_candidate for complete government Silver/Gold certification")
     inputs, receipt_hash = originals(workspace, product, run_id, cutoff)
@@ -436,6 +452,8 @@ def run(
 ) -> dict:
     workspace = safe_workspace(workspace)
     definition = spec(product)
+    if definition.get("certifier") == "carrier_source":
+        raise ValueError("Use carrier_source_candidate for complete carrier source Silver/Gold certification")
     if definition.get("certifier") == "government":
         raise ValueError("Use government_candidate for complete government Silver/Gold certification")
     if period_end(period) >= local_time(cutoff).date():

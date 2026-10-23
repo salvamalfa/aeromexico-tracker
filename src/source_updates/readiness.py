@@ -31,6 +31,7 @@ RECEIPT_NAMES = {
     "rss_retained": "rss-{period}.json",
     "retained": "certified-{product}-{period}.json",
     "government": "government-{product}-{period}.json",
+    "carrier_source": "carrier-source-{product}-{period}.json",
 }
 
 
@@ -100,15 +101,21 @@ def preflight(recipe: dict, workspace: Path) -> list[dict]:
             or period_end(period) >= candidate_cutoff.date()
         ):
             raise ValueError("Every observation/review period must be closed before cutoff")
-        if adapter in {"retained", "government"}:
+        if adapter in {"retained", "government", "carrier_source"}:
             from src.source_updates.retained import spec
 
             definition = spec(product)
             if (definition.get("certifier") == "government") != (adapter == "government"):
                 raise ValueError("Government product requires its complete dedicated adapter")
+            if (definition.get("certifier") == "carrier_source") != (adapter == "carrier_source"):
+                raise ValueError("Carrier source product requires its complete dedicated adapter")
+            if adapter == "carrier_source":
+                from src.source_updates.carrier_source_candidate import period_check
+
+                period_check(product, period)
         elif ADAPTER_PRODUCTS[adapter] != product:
             raise ValueError("Dedicated adapter does not support the declared product")
-        if adapter != "retained" and "M" not in period:
+        if adapter not in {"retained", "carrier_source"} and "M" not in period:
             raise ValueError("Dedicated monthly adapter needs an explicit month")
         if not re.fullmatch(r"[0-9a-f]{32}", item["receipt_id"]):
             raise ValueError("Expected an exact acquisition/retention receipt ID")
@@ -150,7 +157,7 @@ def check_task(item: dict, cutoff: str) -> dict:
 
         guard(candidate)
     before = inventory(candidate)
-    retained = item["adapter"] in {"retained", "government", "rss_retained"}
+    retained = item["adapter"] in {"retained", "government", "rss_retained", "carrier_source"}
     prefix = "rss-retained" if item["adapter"] == "rss_retained" else "retained" if retained else "collection"
     acquisition = candidate / "receipts" / f"{prefix}-{item['receipt_id']}.json"
     acquired = json.loads(acquisition.read_text())
@@ -179,7 +186,11 @@ def check_task(item: dict, cutoff: str) -> dict:
     if local_time(accepted["effective_as_of"]) != local_time(cutoff):
         raise ValueError("Replay cutoff differs from accepted candidate; use its exact cutoff")
     with block_network():
-        if item["adapter"] == "government":
+        if item["adapter"] == "carrier_source":
+            from src.source_updates.carrier_source_candidate import run
+
+            result = run(candidate, item["product"], item["period"], cutoff, item["receipt_id"], check=True)
+        elif item["adapter"] == "government":
             from src.source_updates.government_candidate import run
 
             result = run(candidate, item["product"], item["period"], cutoff, item["receipt_id"], check=True)
@@ -192,9 +203,12 @@ def check_task(item: dict, cutoff: str) -> dict:
 
             result = run(candidate, item["period"], cutoff, check=True)
         else:
-            name = {"aerocivil": "aerocivil", "am_traffic_ir": "am_traffic_candidate", "gdelt": "gdelt", "rss_retained": "rss_candidate"}[
-                item["adapter"]
-            ]
+            name = {
+                "aerocivil": "aerocivil",
+                "am_traffic_ir": "am_traffic_candidate",
+                "gdelt": "gdelt",
+                "rss_retained": "rss_candidate",
+            }[item["adapter"]]
             module = import_module(f"src.source_updates.{name}")
             result = module.run(candidate, item["period"], cutoff, item["receipt_id"], check=True)
     if inventory(candidate) != before:

@@ -1,0 +1,567 @@
+{
+  "version": 1,
+  "native": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "product": {
+        "enum": [
+          "volaris_sec",
+          "afac_carriers"
+        ]
+      },
+      "edition": {
+        "type": "string",
+        "pattern": "^2026(?:Q2|M(?:0[1-9]|1[0-2]))$"
+      },
+      "entity_as_reported": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "carrier_key": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "statement": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "period_type": {
+        "enum": [
+          "quarter",
+          "half_year",
+          "instant",
+          "month",
+          "year",
+          "year_to_date"
+        ]
+      },
+      "period_id": {
+        "type": "string",
+        "pattern": "^20\\d{2}(?:Q2|H1|FY|YTD(?:0[1-9]|1[0-2])|M(?:0[1-9]|1[0-2])|-\\d{2}-\\d{2})$"
+      },
+      "period_start_date": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date"
+      },
+      "period_end_date": {
+        "type": "string",
+        "format": "date"
+      },
+      "metric_key": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "segment": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "service_type": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "value": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "minimum": -9007199254740991,
+        "maximum": 9007199254740991
+      },
+      "unit": {
+        "enum": [
+          "aircraft",
+          "block_hours_per_aircraft_day",
+          "booked_passengers",
+          "departures",
+          "hours",
+          "mxn_per_usd",
+          "passenger_miles",
+          "passengers_transported",
+          "percent",
+          "seat_miles",
+          "shares",
+          "times_ltm",
+          "us_gallons",
+          "usd",
+          "usd_cents_per_seat_mile",
+          "usd_per_ads",
+          "usd_per_booked_passenger",
+          "usd_per_share",
+          "usd_per_us_gallon"
+        ]
+      },
+      "scale": {
+        "enum": [
+          0.01,
+          1.0,
+          1000.0,
+          1000000.0
+        ]
+      },
+      "source_value": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "source_label": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "source_locator": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "source_excerpt": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "source_table": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "source_row_number": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100000
+      },
+      "source_column": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 8
+      },
+      "source_system": {
+        "enum": [
+          "sec",
+          "afac"
+        ]
+      },
+      "source_file": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 500
+      },
+      "source_hash": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "ingested_at": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "parser_version": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "is_preliminary": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "is_unaudited": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "source_estimated": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "source_notes": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "aviation_scope": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "mapping_evidence": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "source_group": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "agent_eligible": {
+        "const": false
+      },
+      "record_id": {
+        "type": "string",
+        "pattern": "^rec_[a-f0-9]{64}$"
+      }
+    },
+    "required": [
+      "product",
+      "edition",
+      "entity_as_reported",
+      "carrier_key",
+      "statement",
+      "period_type",
+      "period_id",
+      "period_start_date",
+      "period_end_date",
+      "metric_key",
+      "segment",
+      "service_type",
+      "value",
+      "unit",
+      "scale",
+      "source_value",
+      "source_label",
+      "source_locator",
+      "source_excerpt",
+      "source_table",
+      "source_row_number",
+      "source_column",
+      "source_system",
+      "source_file",
+      "source_hash",
+      "ingested_at",
+      "parser_version",
+      "is_preliminary",
+      "is_unaudited",
+      "source_estimated",
+      "source_notes",
+      "aviation_scope",
+      "mapping_evidence",
+      "source_group",
+      "agent_eligible",
+      "record_id"
+    ]
+  },
+  "gold": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "product": {
+        "enum": [
+          "volaris_sec",
+          "afac_carriers"
+        ]
+      },
+      "edition": {
+        "type": "string",
+        "pattern": "^2026(?:Q2|M(?:0[1-9]|1[0-2]))$"
+      },
+      "entity_as_reported": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "carrier_key": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "statement": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "period_type": {
+        "enum": [
+          "quarter",
+          "half_year",
+          "instant",
+          "month",
+          "year",
+          "year_to_date"
+        ]
+      },
+      "period_id": {
+        "type": "string",
+        "pattern": "^20\\d{2}(?:Q2|H1|FY|YTD(?:0[1-9]|1[0-2])|M(?:0[1-9]|1[0-2])|-\\d{2}-\\d{2})$"
+      },
+      "period_start_date": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date"
+      },
+      "period_end_date": {
+        "type": "string",
+        "format": "date"
+      },
+      "metric_key": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "segment": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "service_type": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "value": {
+        "type": "number",
+        "minimum": -9007199254740991,
+        "maximum": 9007199254740991
+      },
+      "unit": {
+        "enum": [
+          "aircraft",
+          "block_hours_per_aircraft_day",
+          "booked_passengers",
+          "departures",
+          "fraction",
+          "hours",
+          "mxn_per_usd",
+          "passenger_miles",
+          "passengers_transported",
+          "seat_miles",
+          "shares",
+          "times_ltm",
+          "us_gallons",
+          "usd",
+          "usd_cents_per_seat_mile",
+          "usd_per_ads",
+          "usd_per_booked_passenger",
+          "usd_per_share",
+          "usd_per_us_gallon"
+        ]
+      },
+      "scale": {
+        "enum": [
+          0.01,
+          1.0,
+          1000.0,
+          1000000.0
+        ]
+      },
+      "source_value": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "source_label": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "source_locator": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "source_excerpt": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "source_table": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "source_row_number": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100000
+      },
+      "source_column": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 8
+      },
+      "source_system": {
+        "enum": [
+          "sec",
+          "afac"
+        ]
+      },
+      "source_file": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 500
+      },
+      "source_hash": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "ingested_at": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "parser_version": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "is_preliminary": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "is_unaudited": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "source_estimated": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "source_notes": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "aviation_scope": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "mapping_evidence": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "source_group": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "minLength": 1,
+        "maxLength": 20000
+      },
+      "agent_eligible": {
+        "const": false
+      },
+      "record_id": {
+        "type": "string",
+        "pattern": "^rec_[a-f0-9]{64}$"
+      },
+      "native_parent_record_ids": {
+        "type": "string",
+        "minLength": 3,
+        "maxLength": 20000
+      },
+      "source_unit": {
+        "enum": [
+          "aircraft",
+          "block_hours_per_aircraft_day",
+          "booked_passengers",
+          "departures",
+          "hours",
+          "mxn_per_usd",
+          "passenger_miles",
+          "passengers_transported",
+          "percent",
+          "seat_miles",
+          "shares",
+          "times_ltm",
+          "us_gallons",
+          "usd",
+          "usd_cents_per_seat_mile",
+          "usd_per_ads",
+          "usd_per_booked_passenger",
+          "usd_per_share",
+          "usd_per_us_gallon"
+        ]
+      },
+      "normalization": {
+        "enum": [
+          "reported_value_times_explicit_scale",
+          "verified_PDF_month_value_with_database_support"
+        ]
+      }
+    },
+    "required": [
+      "product",
+      "edition",
+      "entity_as_reported",
+      "carrier_key",
+      "statement",
+      "period_type",
+      "period_id",
+      "period_start_date",
+      "period_end_date",
+      "metric_key",
+      "segment",
+      "service_type",
+      "value",
+      "unit",
+      "scale",
+      "source_value",
+      "source_label",
+      "source_locator",
+      "source_excerpt",
+      "source_table",
+      "source_row_number",
+      "source_column",
+      "source_system",
+      "source_file",
+      "source_hash",
+      "ingested_at",
+      "parser_version",
+      "is_preliminary",
+      "is_unaudited",
+      "source_estimated",
+      "source_notes",
+      "aviation_scope",
+      "mapping_evidence",
+      "source_group",
+      "agent_eligible",
+      "record_id",
+      "native_parent_record_ids",
+      "source_unit",
+      "normalization"
+    ]
+  }
+}

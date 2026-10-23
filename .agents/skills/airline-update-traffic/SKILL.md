@@ -82,3 +82,28 @@ acumuladas actuales/comparativas de 29 países. Los pasajeros actuales cuadran
 con O-D; los vuelos literales del boletín no se armonizan con vuelos O-D que
 incluyen otro universo. El acumulado no se presenta como julio mensual; las
 gráficas redondeadas y los países ausentes no se rellenan.
+
+## Dossier mensual por aerolínea
+
+El certificador aislado `python -m src.source_updates.carrier_source_candidate`
+admite `afac_carriers` con `retain --source-root <Bronze> --workspace <nuevo>`
+y roles `--original pdf=<ruta> --original database=<ruta>`. `--dry-run` revisa
+la selección; `--execute` retiene sin nuevas llamadas. `certify --product
+afac_carriers --workspace <candidato> --period 2026M08 --as-of <corte-con-zona>
+--retention <id>` admite vista previa, `--execute` y replay `--check` inmutable.
+El lote `retained_round` lo despacha; readiness requiere `carrier_source`.
+
+Se conservan seis conteos por fila PDF: anual 2024/2025, acumulados y meses
+actual/comparativo. Se concilian operadores, subtotales y totales contra las
+filas regulares de la base 2024/2025/2026. Año, servicios y último mes de la
+base deben corresponder al boletín. Silver guarda también historia/fletamento;
+Gold propio selecciona solo el mes actual: regular PDF con padres de soporte
+DB y cada fila charter única. Un duplicado charter actual bloquea. No hay
+suma tácita, reparto a rutas ni cambio del parser/estimador existente.
+
+Conservar literalmente `World 2 Fly`, nombres desconocidos sin mapeo y Aerovías
+separada de Connect. Crosswalk exacto, efectivo y por hash/fila. Exigir la
+declaración documental de preliminar y limitar estimados a nombre/periodo de
+la nota; la base no recibe flags PDF. La advertencia de información incompleta
+internacional permanece visible: filas reportadas conciliadas no acreditan
+el universo completo ni disponibilidad reciente. Sin activación/publicación.
