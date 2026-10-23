@@ -61,6 +61,8 @@ def revisions(workspace: Path, baseline, product: str, outputs: dict) -> dict:
     values = ["value", "unit", "aviation_scope"]
     if not set(GRAIN + values) <= set(before):
         raise ValueError("Revision baseline must contain the complete native observation grain and values")
+    if set(before.airport_iata) != set(outputs["silver/government_native"].airport_iata):
+        raise ValueError("Revision baseline must describe the same government airport")
     return {
         "baseline_file": baseline,
         "baseline_table": "silver/government_native",

@@ -17,7 +17,7 @@ from pypdf import PdfReader
 from src.source_updates.calendar import local_time
 
 MONTHS = "ENERO FEBRERO MARZO ABRIL MAYO JUNIO JULIO AGOSTO SEPTIEMBRE OCTUBRE NOVIEMBRE DICIEMBRE".split()
-GRAIN = ["period_id", "period_type", "metric_key", "market"]
+GRAIN = ["airport_iata", "period_id", "period_type", "metric_key", "market"]
 PRODUCTS = {"aicm_traffic", "aifa_traffic"}
 VERSION = "government_airport_native_v1"
 
@@ -366,6 +366,22 @@ def aifa(inputs, period):
             if abs(sum(v[c] for v in values_by_month.values()) - value) > Decimal("0.000001") * mass:
                 raise ValueError("AIFA monthly block/YTD mismatch")
             checks += 1
+            market = (["arrival", "departure", "total"] if mass else ["domestic", "international", "total"])[
+                c
+            ]
+            rows.append(
+                observation(
+                    original,
+                    f"{year}YTD{end:02d}",
+                    "year_to_date",
+                    metric,
+                    market,
+                    value,
+                    unit,
+                    f"{name}!{chr(68 + c)}{total}",
+                    scope,
+                )
+            )
         accumulated[metric] = [sum(v[c] for v in values_by_month.values()) for c in range(3)]
     summary = book["Esquema Operativo"]
     if (
