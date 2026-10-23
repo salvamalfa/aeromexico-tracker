@@ -103,7 +103,7 @@ intercambiar producto/adaptador.
 `--execute` comprueba offline candidatos existentes, verifica que sus archivos
 no cambien y escribe un recibo de ronda inmutable; **no captura fuentes**.
 `--check` vuelve a comprobar el mismo recibo y sus flags. Soporta `retained`,
-`am_traffic_ir`, `h10`, `aerocivil` y `gdelt`; el registro de `retained` incluye
+`am_traffic_ir`, `h10`, `aerocivil`, `gdelt`, `government` y `series`; el registro de `retained` incluye
 los productos admitidos por sus lectores. Los demás adaptadores se rechazan y
 mantienen sus comandos específicos. Curación usa su auditor separado.
 
@@ -156,3 +156,8 @@ su contenido en tráfico del mes/trimestre. FAA conserva la fecha de su propio
 documento; slots conserva toda la temporada; países solo cajas acumuladas
 exactas y documentos de rutas solo pasajes fechados. Un formato/edición fuera
 del alcance revisado queda bloqueado para adaptar y probar antes de ejecutar.
+
+Para AICM/AIFA, el adaptador `government` usa retención por alias, un
+certificador integral y el recibo `government-<producto>-<mes>.json`; no se
+admite sustituirlo por `retained` o comprobaciones genéricas de Gold. Ver la
+[skill de aeropuertos](airline-update-airports/SKILL.md#certificación-integral-aicmaifa).

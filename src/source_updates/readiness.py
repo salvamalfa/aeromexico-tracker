@@ -28,6 +28,7 @@ RECEIPT_NAMES = {
     "aerocivil": "aerocivil-{period}.json",
     "gdelt": "gdelt-{period}.json",
     "retained": "certified-{product}-{period}.json",
+    "government": "government-{product}-{period}.json",
     "series": "series-{product}-{period}.json",
 }
 
@@ -98,16 +99,13 @@ def preflight(recipe: dict, workspace: Path) -> list[dict]:
             or period_end(period) >= candidate_cutoff.date()
         ):
             raise ValueError("Every observation/review period must be closed before cutoff")
-        if adapter == "retained":
+        if adapter in {"retained", "government", "series"}:
             from src.source_updates.retained import spec
 
-            if spec(product).get("certifier") == "series":
-                raise ValueError("Use series adapter for integral macro/market certification")
-        elif adapter == "series":
-            from src.source_updates.series_native import PRODUCTS
-
-            if product not in PRODUCTS:
-                raise ValueError("Series adapter does not support the declared product")
+            definition = spec(product)
+            expected_adapter = definition.get("certifier", "retained")
+            if adapter != expected_adapter:
+                raise ValueError(f"Use {expected_adapter} adapter for complete product certification")
         elif ADAPTER_PRODUCTS[adapter] != product:
             raise ValueError("Dedicated adapter does not support the declared product")
         if adapter not in {"retained", "series"} and "M" not in period:
@@ -148,12 +146,11 @@ def inventory(workspace: Path) -> dict:
 def check_task(item: dict, cutoff: str) -> dict:
     candidate = Path(item["workspace"])
     before = inventory(candidate)
-    prefix = "retained" if item["adapter"] in {"retained", "series"} else "collection"
+    retained = item["adapter"] in {"retained", "government", "series"}
+    prefix = "retained" if retained else "collection"
     acquisition = candidate / "receipts" / f"{prefix}-{item['receipt_id']}.json"
     acquired = json.loads(acquisition.read_text())
-    expected_status = (
-        "retained_unvalidated" if item["adapter"] in {"retained", "series"} else "collected_unvalidated"
-    )
+    expected_status = "retained_unvalidated" if retained else "collected_unvalidated"
     if acquired.get("status") != expected_status:
         statuses = [row.get("http_status") for row in acquired.get("items", [])]
         raise ValueError(
@@ -162,7 +159,7 @@ def check_task(item: dict, cutoff: str) -> dict:
     name = RECEIPT_NAMES[item["adapter"]].format(product=item["product"], period=item["period"])
     accepted_path = candidate / "receipts" / name
     accepted = json.loads(accepted_path.read_text())
-    key = "retention_run_id" if item["adapter"] in {"retained", "series"} else "collection_run_id"
+    key = "retention_run_id" if retained else "collection_run_id"
     if accepted.get(key) != item["receipt_id"]:
         raise ValueError("Accepted receipt does not match the explicitly selected acquisition")
     if (
@@ -178,8 +175,8 @@ def check_task(item: dict, cutoff: str) -> dict:
     if local_time(accepted["effective_as_of"]) != local_time(cutoff):
         raise ValueError("Replay cutoff differs from accepted candidate; use its exact cutoff")
     with block_network():
-        if item["adapter"] == "series":
-            from src.source_updates.series_candidate import run
+        if item["adapter"] in {"government", "series"}:
+            run = import_module(f"src.source_updates.{item['adapter']}_candidate").run
 
             result = run(candidate, item["product"], item["period"], cutoff, item["receipt_id"], check=True)
         elif item["adapter"] == "retained":
@@ -222,7 +219,7 @@ def check_task(item: dict, cutoff: str) -> dict:
     ):
         raise ValueError("Offline checker must report its actual code fingerprints")
     conditions = []
-    if item["adapter"] in {"retained", "series"}:
+    if retained:
         conditions.append("retained_original_does_not_verify_current_source_availability")
     if result.get("calendar_completeness_certified") is False:
         conditions.append("publication_calendar_completeness_not_verified")
@@ -246,9 +243,7 @@ def check_task(item: dict, cutoff: str) -> dict:
         "checker_code_files": code_files,
         "checker_code_sha256": code_sha,
         "source_candidate_files_unchanged": len(before),
-        "collection_basis": "retained"
-        if item["adapter"] in {"retained", "series"}
-        else "previously_captured_originals",
+        "collection_basis": "retained" if retained else "previously_captured_originals",
         "source_conditions": conditions,
         "latest_source_availability_verified": False,
         "activation": "none",

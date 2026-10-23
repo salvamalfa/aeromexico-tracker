@@ -37,6 +37,7 @@ def spec(product: str) -> dict:
         authorities,
         context_snapshots,
         financials,
+        government_traffic,
         oma_traffic,
         route_documents,
         sec_fiscal,
@@ -176,6 +177,15 @@ def spec(product: str) -> dict:
     registry["afac_margins"]["revision_values"] = ["value", "unit", "source_cell_estimated", "source_notes"]
     registry["dictionary"]["revision_values"] = [*context_snapshots.FIELDS[1:], "unit"]
     registry.update(series_native.definitions())
+    for name, role, alias in [("aicm_traffic", "pdf", "aicm"), ("aifa_traffic", "workbook", "aifa")]:
+        registry[name] = {
+            "roles": {role: (alias,)},
+            "primary": role,
+            "certifier": "government",
+            "table": "fact_airport_traffic",
+            "grain": government_traffic.GRAIN,
+            "code_files": [Path(government_traffic.__file__)],
+        }
     if product not in registry:
         raise ValueError("No reviewed retained-product adapter")
     return registry[product]
@@ -334,6 +344,8 @@ def frames(workspace: Path, product: str, period: str, cutoff: str, run_id: str)
     definition = spec(product)
     if definition.get("certifier") == "series":
         raise ValueError("Use series_candidate for complete series Silver/Gold certification")
+    if definition.get("certifier") == "government":
+        raise ValueError("Use government_candidate for complete government Silver/Gold certification")
     inputs, receipt_hash = originals(workspace, product, run_id, cutoff)
     frame, details = definition["parse"](inputs, period)
     if frame.empty or frame.duplicated(definition["grain"]).any() or frame.value.isna().any():
@@ -430,6 +442,8 @@ def run(
     definition = spec(product)
     if definition.get("certifier") == "series":
         raise ValueError("Use series_candidate for complete series Silver/Gold certification")
+    if definition.get("certifier") == "government":
+        raise ValueError("Use government_candidate for complete government Silver/Gold certification")
     if period_end(period) >= local_time(cutoff).date():
         raise ValueError("Require a closed observation period")
     output_names = (

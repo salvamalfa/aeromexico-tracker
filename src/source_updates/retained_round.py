@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import argparse
-from datetime import UTC, datetime
 import json
-from pathlib import Path
 import re
+from datetime import UTC, datetime
+from pathlib import Path
 from uuid import uuid4
 
 from src.source_updates.calendar import local_time
@@ -36,7 +36,8 @@ def execute(recipe: dict, workspace: Path, *, write=False) -> dict:
             or period_end(period) >= local_time(cutoff).date()
         ):
             raise ValueError(
-                "Explicit closed review month/quarter required; reference snapshots keep native time semantics"
+                "Explicit closed review month/quarter required; "
+                "reference snapshots keep native time semantics"
             )
         child = workspace / f"{product}-{period}"
         if child in children:
@@ -94,8 +95,10 @@ def execute(recipe: dict, workspace: Path, *, write=False) -> dict:
             try:
                 saved = retain(child, source_root, product, item["originals"], execute=True)
                 args = (child, product, period, cutoff, saved["run_id"])
-                if plan["adapter"] == "series":
-                    from src.source_updates.series_candidate import run as certify
+                if plan["adapter"] in {"series", "government"}:
+                    from importlib import import_module
+
+                    certify = import_module(f"src.source_updates.{plan['adapter']}_candidate").run
                 else:
                     certify = run
                 action = "certify"
