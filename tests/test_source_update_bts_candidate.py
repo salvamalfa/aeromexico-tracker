@@ -277,3 +277,26 @@ def test_batch_routes_bts_to_dedicated_complete_adapter(stored):
         assert len(result["results"][0]["rows"]) == 7
     finally:
         shutil.rmtree(batch, ignore_errors=True)
+
+
+@pytest.mark.parametrize("adapter", ["retained", "government"])
+def test_readiness_rejects_bypassing_complete_bts_adapter(stored, adapter):
+    workspace, run_id, _, _ = stored
+    task = dict(
+        id="bts",
+        product="bts_segments",
+        period="2026M03",
+        adapter=adapter,
+        workspace=str(workspace),
+        receipt_id=run_id,
+        required=True,
+        candidate_as_of=CUTOFF,
+    )
+    recipe = dict(version=1, as_of=CUTOFF, required_items=["bts"], items=[task])
+    with pytest.raises(ValueError, match="complete dedicated adapter"):
+        readiness.preflight(recipe, workspace.parent / ("test-bts-readiness-" + uuid4().hex))
+    task["adapter"] = "bts"
+    assert (
+        readiness.preflight(recipe, workspace.parent / ("test-bts-readiness-" + uuid4().hex))[0]["adapter"]
+        == "bts"
+    )
