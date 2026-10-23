@@ -1576,7 +1576,10 @@ publicación; el rezago de presentación SEC es 21 días, otro concepto.
 con gastos 1.403 millones y ASM 17.622 millones. Con ±0,5 de cada unidad impresa,
 el máximo es 7,964702210368…, inferior al mínimo 7,965 que redondearía a 7,97.
 La definición y la nota (2) tienen igual alcance de itinerario/chárter; no se
-halló precisión retenida ni declaración que autorice ampliar tolerancias.
+halló precisión retenida del total de gastos operativos o ASM que resuelva
+la relación. El mismo anexo sí contiene precisiones parciales en miles de USD
+(depreciación, arrendamientos, pérdida neta e ingresos); no acreditan un
+numerador alternativo para CASM ni una regla para ampliar tolerancias.
 El control también concilia EPS básico/diluido con resultado neto y acciones
 promedio, y ADS con diez CPO. Para fijar el release financiero solo sirve el
 anexo financiero verificado; índices/submissions/portada 6-K apoyan la identidad
