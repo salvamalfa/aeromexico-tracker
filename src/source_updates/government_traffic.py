@@ -316,11 +316,11 @@ def aifa(inputs, period):
         )
         if [sheet.cell(start - 1, c).value for c in [4, 5, 6]] != expected_header:
             raise ValueError("AIFA native market/unit header changed")
-        if not any(
-            f"{calendar.monthrange(year, end)[1]} {MONTHS[end - 1][:3].title()}. {year}"
-            in str(sheet[f"C{r}"].value)
-            for r in range(max(1, start - 5), start)
-        ):
+        expected_window = (
+            f"Cifras del 1/o. Ene. al {calendar.monthrange(year, end)[1]} "
+            f"{MONTHS[end - 1][:3].title()}. {year}."
+        )
+        if sheet[f"C{start - 3}"].value != expected_window:
             raise ValueError("AIFA native block reporting window changed")
         if mass and sheet["D10"].value != "CARGA (KG.)":
             raise ValueError("AIFA native cargo unit changed")
