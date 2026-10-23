@@ -20,7 +20,9 @@ el código. Los originales y candidatos conservan sus recibos y revisión propia
 La continuación del 23 de octubre incorpora comprobaciones integrales de AICM
 y un control estricto del archivo AIFA. AICM permite probar originales de julio
 y agosto; AIFA sigue bloqueado por fechas internas contradictorias. Esto no
-declara lista la ronda completa. PR152 conserva por separado sus certificadores
+declara lista la ronda completa. RSS añade un certificador integral de los XML
+retenidos, con fechas declaradas y cobertura parcial explícitas. Su estado
+de pruebas e integración está en [PR157](https://github.com/salvamalfa/aeromexico-tracker/pull/157). PR152 conserva por separado sus certificadores
 macro/mercado y espera una revisión adicional; este cambio no modifica su head.
 
 ## Qué cambia para ti
@@ -1480,7 +1482,8 @@ Un revisor independiente reconstruyó las cuatro salidas desde los XML,
 sin importar funciones del producto: no encontró discrepancias. Las
 57 pruebas RSS incluyen 28 casos independientes; junto con regresiones de
 readiness, política global, noticias y presupuesto pasaron 202 casos.
-La suite completa y CI del head final siguen su verificación propia.
+La suite completa, CI y revisión del head final tienen su evidencia vigente
+en [PR157](https://github.com/salvamalfa/aeromexico-tracker/pull/157).
 
 `python -m src.source_updates.rss_candidate batch --recipe <receta.json>
 --workspace tmp/source-updates/<lote-nuevo> --dry-run` muestra la selección y
@@ -1554,8 +1557,9 @@ los heads en revisión no se modifican.
   terminal; su CI y revisión manual previas no sustituyen ese resultado.
   No se ha integrado ni se ha relanzado la revisión.
 - Continúa la implementación integral de `volaris_sec` y `afac_carriers`.
-  RSS añade aquí el certificador retenido, probado sobre originales; falta
-  cerrar suite completa, CI y revisión automática de su head final. BTS ([PR155](https://github.com/salvamalfa/aeromexico-tracker/pull/155)),
+  RSS añade aquí el certificador retenido, probado sobre originales;
+  su suite completa, CI, revisión e integración se registran en
+  [PR157](https://github.com/salvamalfa/aeromexico-tracker/pull/157). BTS ([PR155](https://github.com/salvamalfa/aeromexico-tracker/pull/155)),
   GAP/ASUR ([PR154](https://github.com/salvamalfa/aeromexico-tracker/pull/154)) y Viva
   ([PR156](https://github.com/salvamalfa/aeromexico-tracker/pull/156)) están preparados
   en ramas separadas y esperan sus revisiones exactas. Sus heads se preservan.
