@@ -1495,7 +1495,7 @@ El contrato propio está en `contracts/source_updates/viva_financial_source.json
 estas observaciones no se incorporan al warehouse, al sitio ni a perfiles.
 No se ejecutó ingesta, calendario ni publicación.
 
-La prueba real del código funcional `287703b3` produjo 655 filas Silver,
+La prueba real del código funcional `b899c3ab` produjo 655 filas Silver,
 386 cifras Gold, dos artefactos y 1.427 enlaces de linaje para 1.041 registros.
 Conserva 398 observaciones de la edición 2T26 y 257 del soporte 1T26. Las doce
 filas de contexto macro de 2T26 no pasan a Gold. Se verificaron 252 identidades
@@ -1517,10 +1517,10 @@ publica como un 1T26 validado ni da aprobación a los datos.
 Los dos PDF conservan SHA-256 `4fca922642ce3fe06743578064239107539b0546c1519a11abecb0eef098bc7f`
 (2T26) y `9ff9a82afff61477908acd10018be79333210b6dcaa90cabb90bffffa04e8ab7`
 (1T26). El resumen reproducible y las recetas permanecen locales bajo
-`tmp/source-updates/viva-financial-official-287703b3-summary.json`, SHA-256
-`bee57f51e2d09e583b8c9b6f4f1e4263da4d51fcb7d56551eb7dde63f14b342a`.
-Los originales/candidatos y recibos están en las carpetas `viva-financial-official-287703b3/`,
-`viva-financial-readiness-287703b3/` y `viva-financial-global-287703b3/` del
+`tmp/source-updates/viva-financial-official-b899c3ab-summary.json`, SHA-256
+`9c030c92bb3e6e2c5eeeeb60c16162e7b5fdcaeca85fe715d1b74104226d445d`.
+Los originales/candidatos y recibos están en las carpetas `viva-financial-official-b899c3ab/`,
+`viva-financial-readiness-b899c3ab/` y `viva-financial-global-b899c3ab/` del
 mismo directorio. Se conserva el intento anterior bloqueado, sin sobrescribirlo.
 La recuperación usa las dos filas Bronze retenidas, sus sidecars/manifiesto y
 el código fijado. No se añaden los PDF ni cifras candidatas al repositorio público.
