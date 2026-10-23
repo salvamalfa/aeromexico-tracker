@@ -375,3 +375,16 @@ def test_cli_json_preserves_accents_when_stdout_encoding_is_ascii():
     )
     assert completed.returncode == 0, completed.stderr
     assert json.loads(completed.stdout)["note"] == "café"
+
+
+def test_dry_run_does_not_claim_a_validated_period_or_create_a_candidate():
+    from src.source_updates.carrier_source_candidate import run
+    from src.source_updates.catalog import ROOT
+
+    candidate = ROOT / "tmp/source-updates/carrier-unexecuted-preview"
+    result = run(candidate, "afac_carriers", "2026M08", "2026-10-23T16:00:00-06:00", "a" * 32)
+    assert result["status"] == "planned_not_executed"
+    assert result["latest_validated_period"] is None
+    assert result["latest_available_period"] is None
+    assert result["ready_for_calendar_incorporation"] is False
+    assert not candidate.exists()
