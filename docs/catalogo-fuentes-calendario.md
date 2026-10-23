@@ -1481,7 +1481,9 @@ No certifica otra edición ni disponibilidad reciente.
 La salida separa trimestre, semestre y balances a una fecha. Mantiene USD,
 escalas, millas, pasajeros reservados y notas preliminares/no auditadas.
 Conserva el contexto macro en Silver, sin usarlo en Gold. Cada dato Gold solo
-puede tener su verdadero padre de la edición 2T26. La comparación con 1T26
+puede tener su verdadero padre de la edición 2T26. Para vincular un release
+trimestral, el coordinador admite solo el PDF que aporta esas cifras Gold:
+el soporte 1T26 no puede hacerse pasar por publicación 2T26. La comparación con 1T26
 registra diferencias, pero no las presenta como una reexpresión acreditada ni
 permite deducir un 1T26 validado restando semestre menos trimestre.
 
