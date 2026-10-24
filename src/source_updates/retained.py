@@ -103,20 +103,9 @@ def spec(product: str) -> dict:
             ROOT / "src/parse/aeromexico_ir.py",
         ],
     }
-    from src.source_updates.carrier_source_contract import GRAIN as CARRIER_GRAIN
-    from src.source_updates.carrier_source_contract import TABLES as CARRIER_TABLES
+    from src.source_updates.carrier_source_contract import retention_specs
 
-    for name, roles, alias in [
-        ("volaris_sec", ("html", "primary", "submissions", "index"), "sec"),
-        ("afac_carriers", ("pdf", "database"), "afac"),
-    ]:
-        registry[name] = {
-            "roles": {role: (alias,) for role in roles},
-            "primary": roles[0],
-            "certifier": "carrier_source",
-            "table": CARRIER_TABLES[name],
-            "grain": CARRIER_GRAIN,
-        }
+    registry.update(retention_specs())
     registry["ryanair_sec"] = {
         "roles": {role: ("sec",) for role in ("html", "submissions", "index")},
         "primary": "html",
