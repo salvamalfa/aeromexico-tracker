@@ -50,7 +50,7 @@ jobs:
         run: uv sync --locked --no-group dev
       - name: Verify site/ (no private data, no rebuild)
         run: |
-          if test -f config/publish/editorial-release.json; then
+          if test -f site/editorial-publication.json; then
             uv run python -m src.publish.editorial site/
           else
             uv run python -m src.publish.verify site/
@@ -134,7 +134,7 @@ jobs:
         working-directory: _preview
         run: |
           uv sync --locked --no-group dev
-          if test -f config/publish/editorial-release.json; then
+          if test -f site/editorial-publication.json; then
             uv run python -m src.publish.editorial site/
           else
             uv run python -m src.publish.verify site/

@@ -170,9 +170,13 @@ El recibo registra observaciones del gate; el verificador offline no autentica
 por sí mismo una observación de red ni reproduce las fuentes antiguas. Esta
 garantía se sustituye por la identidad exacta con el despliegue anterior
 verificado. El verificador general `src.publish.verify` conserva sus controles.
-Pages ejecuta el verificador editorial cuando el ancla explícita está presente;
-un recibo aislado nunca activa la modalidad. CI y revisión siguen siendo
-obligatorios y la publicación se comprueba nuevamente por HTTPS.
+Pages selecciona el verificador según el sitio que despliega: si contiene
+`editorial-publication.json`, exige el verificador editorial y su ancla exacta,
+sin fallback ante errores. Una publicación posterior de interfaz o datos sin
+ese recibo usa el verificador general, aunque el ancla histórica siga en Git.
+Un recibo aislado nunca concede autoridad. El gate de la modalidad posterior
+sigue exigiendo sus aprobaciones y fuentes; no hereda la excepción editorial.
+CI y revisión siguen siendo obligatorios y la publicación se comprueba por HTTPS.
 
 El contrato adicional `analysis_editorial.schema.json` se aplica exclusivamente
 a `data/v1/analysis/2026Q3.json`. Fija el trimestre y la entidad y admite la
