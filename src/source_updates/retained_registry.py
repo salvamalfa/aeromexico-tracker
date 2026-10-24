@@ -190,20 +190,9 @@ def spec(product: str) -> dict:
             "code_files": [Path(airport_group_native.__file__)],
         }
     registry.update(series_native.definitions())
-    from src.source_updates.carrier_source_contract import GRAIN as CARRIER_GRAIN
-    from src.source_updates.carrier_source_contract import TABLES as CARRIER_TABLES
+    from src.source_updates.carrier_source_contract import retention_specs
 
-    for name, roles, alias in [
-        ("volaris_sec", ("html", "primary", "submissions", "index"), "sec"),
-        ("afac_carriers", ("pdf", "database"), "afac"),
-    ]:
-        registry[name] = {
-            "roles": {role: (alias,) for role in roles},
-            "primary": roles[0],
-            "certifier": "carrier_source",
-            "table": CARRIER_TABLES[name],
-            "grain": CARRIER_GRAIN,
-        }
+    registry.update(retention_specs())
     if product not in registry:
         raise ValueError("No reviewed retained-product adapter")
     return registry[product]

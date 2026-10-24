@@ -26,6 +26,23 @@ FIELDS = (
 ).split()
 
 
+def retention_specs():
+    """Exact source roles for the two dossiers requiring dedicated certification."""
+    return {
+        product: {
+            "roles": {role: (alias,) for role in roles},
+            "primary": roles[0],
+            "certifier": "carrier_source",
+            "table": TABLES[product],
+            "grain": GRAIN,
+        }
+        for product, roles, alias in (
+            ("volaris_sec", ("html", "primary", "submissions", "index"), "sec"),
+            ("afac_carriers", ("pdf", "database"), "afac"),
+        )
+    }
+
+
 def amount(token):
     """A dash stays unknown, including when an identity could imply zero."""
     if token == "-":
