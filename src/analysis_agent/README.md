@@ -58,6 +58,23 @@ La redacción pasa por `analyst_v1`; `source_profile: quarterly_release_v1`
 vincula su versión a todo el runtime y contratos. Conserva las mismas puertas
 de auditoría independiente y consentimiento de la versión exacta del ledger.
 El flujo operativo acumulado conserva `period_id: 2026YTD9`; no es un trimestre.
+
+La revisión editorial del 24 de octubre conserva el texto financiero revisado
+por el dueño y necesita un expediente nuevo ligado al runtime actual. La extensión
+`quarterly_editorial.py` incorpora los originales IR y el tráfico de septiembre
+con sus recibos reales, sin actualizar tráfico ni Gold. El ingreso de nueve meses
+se extrae de la columna acumulada del comunicado; permanece separado del trimestre.
+Las páginas IR sin texto se identifican como `image_page`: su correspondencia
+con las afirmaciones exige revisión independiente de sus píxeles. No se fabrica
+una transcripción. Las cifras conservan también el linaje del HTML del emisor.
+
+`presentation.py` aplica formatos finitos y compatibles con cada unidad para
+preservar literalmente la redacción revisada. No acepta cifras literales nuevas,
+formatos arbitrarios ni conversiones entre millas y kilómetros sin cálculo.
+La sección administrativa «Pendientes» de la vista de revisión se conserva en el
+expediente como sección privada; su aviso de borrador no se publica como estado
+actual. Esta adaptación no hereda auditorías ni aprobaciones de otra versión.
+
 Deuda neta y apalancamiento comparan contra diciembre de 2025. La recuperación
 de combustible de 113% reportada incluye el ajuste de lealtad de US$48.7m.
 Las exclusiones mecánicas de ese ajuste son cálculos ilustrativos propios,

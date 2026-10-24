@@ -311,6 +311,12 @@ def _entity_claim_citations(claim, package, calculations, numbers, rendered_text
         value = claim.get("lead") or rendered_text.split(". ", 1)[0]
         if value and value in rendered_text:
             selections.append((span["excerpt_id"], value))
+    # Image-only primary pages require a visual audit; retain their source link
+    # alongside the independently replayed numeric HTML lineage.
+    visual_value = claim.get("lead") or rendered_text.split(". ", 1)[0]
+    if visual_value:
+        selections.extend((eid, visual_value) for eid in claim.get("evidence_ids", [])
+                          if excerpts[eid].get("representation") == "image_page")
     # A displayed value can depend on many rows of the same report. Group
     # those rows before constructing anchors: one marker per value/document,
     # while retaining every primary document in the verified lineage.
@@ -405,6 +411,11 @@ def _drop_private_sections(authorized: dict[str, Any], record: dict[str, Any]) -
         for draft, rendered in zip(draft_sections, authorized["sections"])
         if draft["key"] not in private_keys
     ]
+    if private_keys:
+        draft = record["draft"]
+        visible = {draft["thesis_claim_id"], *draft["summary_claim_ids"], *draft.get("context_claim_ids", [])}
+        visible.update(cid for section in authorized["sections"] for cid in section["claim_ids"])
+        authorized["claims"] = [claim for claim in authorized["claims"] if claim["claim_id"] in visible]
     return authorized
 
 

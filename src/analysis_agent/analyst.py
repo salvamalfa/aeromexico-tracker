@@ -133,7 +133,8 @@ def validate(draft, package, calculations):
             elif mode=='period_label':
                 values[alias]=f"{node['period_id'][-1]}T{node['period_id'][2:4]}"
             elif mode!='default':
-                raise ValueError('Invalid binding presentation')
+                from .presentation import reviewed_value
+                values[alias] = reviewed_value(node, mode)
             lineage(node["calculation_id"], package, calculations)
         evidence_ids = claim.get("evidence_ids", [])
         for alias,reference in reported.items():

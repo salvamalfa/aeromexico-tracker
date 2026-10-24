@@ -233,6 +233,11 @@ def extract(raw, pdf):
 
 
 def verify(package, verify_files=True):
+    if "editorial_extension" in package:
+        if not verify_files:
+            raise ValueError("Editorial sources always require original-file replay")
+        from .quarterly_editorial import verify as editorial_verify
+        return editorial_verify(package)
     payload = {k: v for k, v in package.items() if k not in ("package_id", "evidence_fingerprint")}
     if (
         package["period_id"] != PERIOD
