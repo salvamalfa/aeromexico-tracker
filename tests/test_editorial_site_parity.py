@@ -1,4 +1,5 @@
 """Editorial parity inherits published bytes and replays only the new evidence."""
+
 import json
 from pathlib import Path
 
@@ -10,10 +11,18 @@ ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "site"
 
 
+def _unavailable(request, message):
+    if request.config.getoption("--require-local-data"):
+        pytest.fail(message, pytrace=False)
+    pytest.skip(message)
+
+
 @pytest.fixture
-def editorial_site():
+def editorial_site(request):
     if not (SITE / PROOF).exists():
-        pytest.skip("Editorial candidate has not been assembled; general publication checks still apply")
+        _unavailable(
+            request, "Editorial candidate has not been assembled; general publication checks still apply"
+        )
     return anchor(ROOT)
 
 
@@ -29,14 +38,26 @@ def test_editorial_site_preserves_every_historical_file(editorial_site):
     assert all(row["period_id"] != "2026Q3" for row in document["records"])
 
 
-@pytest.mark.local_data
-def test_editorial_new_payload_matches_its_full_approved_source_replay(editorial_site):
+def _required_source_record(entry, request):
+    path = ROOT / "analysis_runs/drafts/2026Q3" / (entry["version"] + ".json")
+    if not path.is_file():
+        _unavailable(
+            request,
+            "Current editorial source record is not restored; its full source replay is required locally",
+        )
+    return path
+
+
+def test_editorial_new_payload_matches_its_full_approved_source_replay(editorial_site, request):
     from src.analysis_agent import lifecycle as flow
     from src.publish.frozen_data import verify_baseline_approvals
+
     entry = editorial_site["analysis_entry"]
+    path = _required_source_record(entry, request)
     cohorts = json.loads((ROOT / "config/publish/approval-cohorts.json").read_bytes())["cohorts"]
     cohort = next(c for c in cohorts if entry in c["analysis_manifest"])
-    path = ROOT / "analysis_runs/drafts/2026Q3" / (entry["version"] + ".json")
-    replay = verify_baseline_approvals([path], cohort["implementation_commit"], flow.ROOT, include_public_payloads=True)
+    replay = verify_baseline_approvals(
+        [path], cohort["implementation_commit"], flow.ROOT, include_public_payloads=True
+    )
     assert len(replay["payloads"]) == 1
     assert json.loads((SITE / ANALYSIS).read_bytes()) == replay["payloads"][0]

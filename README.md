@@ -37,9 +37,10 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
 - **Dashboard:** cinco vistas en la publicación autorizada de Pages: Lectura
   ejecutiva, Economía unitaria, Vuelos, Mercado y Noticias y estrategia.
   Usa datos y análisis ya aprobados; Noticias mantiene cobertura parcial.
-- **Analysis Agent:** la lectura financiera de Aeroméxico 3T26 está preparada:
-  «Ingresos récord, margen bajo presión». El dueño aprobó su contenido y publicación
-  condicionada a los controles. Se prepara la modalidad editorial acotada; todavía no está publicada.
+- **Analysis Agent:** la lectura financiera de Aeroméxico 3T26,
+  «Ingresos récord, margen bajo presión», tiene fuentes, cálculos, auditoría
+  independiente y aprobación vinculados a su versión exacta. Su publicación
+  editorial exige baseline remoto y servido, CI, revisión y verificación de Pages.
   La lectura tiene un selector independiente: los indicadores permanecen en 2T26.
   Usa cifras no auditadas, fuentes del emisor y cálculos propios identificados. Las cuatro tesis publicadas de 2T26
   conservan sus versiones y texto. Los cortes mensuales del mapa son independientes.

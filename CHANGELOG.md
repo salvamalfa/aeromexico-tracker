@@ -5,8 +5,7 @@
 - Texto financiero de la Page aprobado y vinculado a una versión nueva, con
   auditoría independiente, cifras reproducibles y corte retrospectivo explícito.
 - Contraste explícito y exclusión del estado privado de revisión de todo el
-  payload público. La versión candidata anterior se retiró; el sitio mantiene
-  exactamente el baseline publicado hasta completar los controles de entrega.
+  payload público; conservación exacta de los datos y cuatro tesis anteriores.
 - Modalidad editorial explícita: verifica el baseline remoto y cada archivo
   servido, preserva bytes históricos y valida íntegramente la lectura nueva.
   Su selector es independiente de indicadores y vuelos. Los modos generales
@@ -18,8 +17,10 @@
   publicación y espera los KPIs, sin confundirlos con el trimestre del texto.
 - La carga de catálogo y análisis ocurre en segundo plano después de preparar
   indicadores y controles; respuestas de lectura lentas no detienen otras vistas.
-- Publicación pendiente de finalizar gate, revisión y CI de esta modalidad.
-  Monthly continúa privado.
+- Paridad de narrativa con selección explícita de lectura. El replay editorial
+  exige sus fuentes y expediente y falla en modo estricto si faltan; mantiene
+  todos los controles generales y las verificaciones de datos históricos.
+- Monthly continúa privado; calendarios e ingestas no se activan.
 
 ## 2026-10-21 · Aeroméxico 3T26 financiero
 

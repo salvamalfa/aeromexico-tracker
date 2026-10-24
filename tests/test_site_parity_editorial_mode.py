@@ -53,3 +53,27 @@ def test_editorial_financial_parity_requires_verified_baseline_not_quarterly_rea
         with pytest.raises(AssertionError):
             module.published_executive.__wrapped__(baseline)
         assert calls == []
+
+
+@pytest.mark.parametrize("strict", [False, True])
+@pytest.mark.parametrize("missing", ["candidate", "source_record"])
+def test_editorial_evidence_unavailability_fails_in_strict_mode_without_a_warehouse(
+    tmp_path, strict, missing
+):
+    from types import SimpleNamespace
+
+    spec = importlib.util.spec_from_file_location(
+        "editorial_source_availability", Path(__file__).with_name("test_editorial_site_parity.py")
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    module.ROOT = tmp_path
+    module.SITE = tmp_path / "site"
+    request = SimpleNamespace(config=SimpleNamespace(getoption=lambda name: strict))
+    expected = pytest.fail.Exception if strict else pytest.skip.Exception
+    with pytest.raises(expected):
+        if missing == "candidate":
+            module.editorial_site.__wrapped__(request)
+        else:
+            module._required_source_record({"version": "a" * 64}, request)
+    assert not (tmp_path / "data/warehouse.duckdb").exists()
