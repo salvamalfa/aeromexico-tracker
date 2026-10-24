@@ -1,40 +1,13 @@
-"""The publication gate: ``analysis_runs`` records -> a verified ``site/``.
+"""Assemble approved Analysis Agent records into a verified, atomic site.
 
-The gate assembles a ``site/`` directory (the built ``web/`` plus its
-``data/v1/`` payload) and signs it with ``publication_manifest.json`` — a
-list of every file's SHA-256/size, the code commit, each contract's own
-hash, and the current analysis-manifest entries.
+The normal gate reuses lifecycle verification and schema/privacy-checked
+exporters, builds the web app, then revalidates approvals under the ledger
+writer lock immediately before swapping the candidate into place. The lock
+covers the swap to reject revocations racing the slow export and build.
 
-Every step below reuses existing functions (the Analysis Agent lifecycle and
-``src/web_export``) and never reimplements approval, verification or export logic:
-
-1. ``src.analysis_agent.lifecycle.consumer_payload``/``verified_inputs`` —
-   the fail-closed handoff — verify each
-   given record is exactly, currently approved. Anything else raises and the
-   CLI exits non-zero; nothing is written.
-2. ``src.web_export.flights.export_flights`` / ``executive.export_executive``
-   / ``analysis.export_period`` write the v1 payload into a temp directory,
-   schema- and privacy-checked exactly as ``python -m src.web_export``
-   already does. Only the given (approved) records' periods get an
-   ``analysis/<period_id>.json``.
-3. ``npm ci && npm run build`` in ``web/`` (Vite copies the temp payload
-   under ``web/public/data/v1`` into ``dist/`` — see ``web/README.md``
-   "Entradas/salidas"), producing the built site.
-4. Immediately before the swap, every record is re-verified a second time
-   under the ledger's writer lock, and the lock is held through the swap
-   itself (see ``verify_records``/``_verify_under_lock`` and ``publish()``):
-   step 1's initial check runs *outside* any lock the export/npm-build
-   steps hold, so a revocation racing those (slow, I/O-bound) steps is a
-   real possibility, not a theoretical one; this second, locked check is
-   what actually closes it, not the first.
-5. The manifest (``src/publish/manifest.py``) is written into a fresh
-   ``site.tmp-*`` directory (a unique ``tempfile.mkdtemp`` per run), which
-   then atomically swaps for ``site/`` (tempfile + rename) while the lock from step 4 is still held.
-6. An intent/published receipt, hashing the manifest, is written to
-   ``analysis_runs/publications/`` (local, gitignored).
-
-Never writes to the approval ledger, never approves/revokes/records
-anything.
+The publication manifest records every file hash/size, code commit, contracts
+and analysis identities. Local publication receipts record intent and outcome;
+this module never grants or modifies human approval.
 """
 
 from __future__ import annotations
@@ -68,17 +41,9 @@ from . import manifest as manifest_mod
 from . import receipts as receipt_mod
 from .records import (
     ANALYSIS_MANIFEST_FIELDS as ANALYSIS_MANIFEST_FIELDS,
-)
-from .records import (
     PublicationRefused as PublicationRefused,
-)
-from .records import (
     _analysis_manifest_entry as _analysis_manifest_entry,
-)
-from .records import (
     _reject_duplicate_periods as _reject_duplicate_periods,
-)
-from .records import (
     load_records as load_records,
 )
 
@@ -253,7 +218,9 @@ def export_data(entries: list[tuple[Any, Any, Any, Any]], out_dir: Path) -> None
     seen = set()
     for record, authorized, package, calculations in entries:
         period_id = authorized["period_id"]
-        validator = Draft202012Validator(analysis_schema_for(period_id, authorized.get("entity_key", "AEROMEXICO")))
+        validator = Draft202012Validator(
+            analysis_schema_for(period_id, authorized.get("entity_key", "AEROMEXICO"))
+        )
         payload = _analysis_payload(record, authorized, package, calculations)
         identity = manifest_mod.analysis_identity(payload)
         if (
@@ -534,11 +501,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, default=PATHS.root / "site")
     publish_modes = parser.add_mutually_exclusive_group()
     publish_modes.add_argument(
-        "--editorial-only", action="store_true",
+        "--editorial-only",
+        action="store_true",
         help="publish only the approved reading, inheriting remotely verified historical bytes",
     )
     publish_modes.add_argument(
-        "--quarterly-only", action="store_true",
+        "--quarterly-only",
+        action="store_true",
         help="add the audited Aeromexico 3Q26 financial release, preserving existing datasets and theses",
     )
     publish_modes.add_argument(
@@ -547,14 +516,20 @@ def main(argv: list[str] | None = None) -> int:
         help="rebuild the frontend while preserving the exact existing public data and analysis manifest",
     )
     publish_modes.add_argument(
-        "--preserve-published-data", action="store_true",
-        help=("rebuild the flight presentation while preserving every trusted public data byte "
-              "and approval identity"),
+        "--preserve-published-data",
+        action="store_true",
+        help=(
+            "rebuild the flight presentation while preserving every trusted public data byte "
+            "and approval identity"
+        ),
     )
     publish_modes.add_argument(
-        "--flights-only", action="store_true",
-        help=("publish the accepted Q2 flight projection while preserving every non-flight payload "
-              "and thesis identity"),
+        "--flights-only",
+        action="store_true",
+        help=(
+            "publish the accepted Q2 flight projection while preserving every non-flight payload "
+            "and thesis identity"
+        ),
     )
     publish_modes.add_argument(
         "--business-metrics-only",
@@ -566,12 +541,14 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.editorial_only:
             from .editorial import publish_editorial
+
             try:
                 result = publish_editorial(args.records, args.out)
             except (ValueError, OSError, subprocess.CalledProcessError) as error:
                 raise PublicationRefused(f"editorial publication rejected: {error}") from error
         elif args.quarterly_only:
             from .quarterly_overlay import publish_quarterly
+
             result = publish_quarterly(args.records, args.out)
         elif args.flights_only:
             from .flight_overlay import publish_flights_only

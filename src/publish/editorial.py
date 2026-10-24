@@ -36,7 +36,7 @@ def frontend_entries(dist: Path) -> list[dict]:
         if path in seen:
             continue
         seen.add(path)
-        text = path.read_text()
+        text = path.read_text(encoding="utf-8")
         pending.extend(p for name, p in assets.items() if name in text and p not in seen)
     return sorted(
         [
