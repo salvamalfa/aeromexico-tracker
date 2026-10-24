@@ -1,6 +1,6 @@
 # Catálogo de fuentes, métricas y rondas de actualización
 
-Revisión: 23 de octubre de 2026 (UTC). **Skills y coordinador implementados;
+Revisión: 24 de octubre de 2026 (UTC). **Skills y coordinador implementados;
 integración técnica autorizada. Calendario sin activar y sin publicación de datos.**
 
 ## Resumen
@@ -24,6 +24,12 @@ declara lista la ronda completa. RSS añade un certificador integral de los XML
 retenidos, con fechas declaradas y cobertura parcial explícitas. Su estado
 de pruebas e integración está en [PR157](https://github.com/salvamalfa/aeromexico-tracker/pull/157). PR152 conserva por separado sus certificadores
 macro/mercado y espera una revisión adicional; este cambio no modifica su head.
+
+La revisión oficial del 24 de octubre no encontró un error del parser que
+justifique aceptar los originales rechazados. Confirmó contradicciones de
+Volaris/AIFA, la leyenda pendiente de Aerocivil y un nuevo fallo de acceso a
+GDELT. Identificó los días declarados de los tres reportes 2T26; no inventó
+horas de publicación ni festivos de 2027. La evidencia está en el apéndice.
 
 ## Qué cambia para ti
 
@@ -1711,6 +1717,128 @@ candidatos o informes paralelos al repositorio público. Inventario manual:
 fuera de Git público; los 24 archivos versionados tienen disposición en el PR.
 No hay retiros.
 
+## Apéndice técnico: comprobación oficial del 24 de octubre
+
+Esta continuación investiga evidencia; no cambia parsers, contratos, tolerancias,
+calendarios configurados ni datos publicados. La infraestructura Volaris/AFAC
+se integró en [PR158](https://github.com/salvamalfa/aeromexico-tracker/pull/158),
+merge `d71b683c5c3a77a8aeb98b93657354b600faa587`, con CI antes/después y Codex
+sin hallazgos. Las nuevas comprobaciones usan ese código y preservan los heads
+pendientes. No convierten verificaciones aisladas en una ronda lista.
+
+| Producto | Evidencia comprobada | Clasificación del límite |
+|---|---|---|
+| Volaris CASM H1 2025 | El [original 2T25 SEC](https://www.sec.gov/Archives/edgar/data/1520504/000129281425002705/ex99-1.htm), tabla física 290, repite gastos 1.403 millones, ASM 17.622 millones y CASM 7,97; el anexo 2T26 los conserva como comparativo en tabla 300. Se verificaron las etiquetas y la columna H1 2025 en ambos, sin aplicar el layout 2026 al documento 2025 | Conflicto de precisión ya presente en el documento original; no es una columna comparativa mal seleccionada por el parser actual |
+| AIFA julio 2026 | El XLSX enlazado actualmente por [Normateca](https://aifa.aero/normateca) volvió a responder 200 y conserva exactamente el SHA de la captura 19/oct. Las fechas y fórmulas problemáticas están en los bytes del libro | Contradicción de metadatos del documento, sin corrección oficial acreditada |
+| Aerocivil `jh8x-n6h6` | Metadata actual del mismo ID respondió 200, mantiene definiciones y atribución de la entidad publicadora, pero no una leyenda literal para S/N/I | Publicador identificado; significado de códigos y atribución operativa no acreditados más allá de lo que declara la fuente |
+| GDELT septiembre | Una nueva captura mensual, correctamente rotulada, terminó 24/oct 01:55:53 UTC con HTTP 503 y cuerpo de timeout de conexión al upstream | Fallo de acceso/ruta de red antes de obtener artículos; no permite atribuirlo a la aplicación del proveedor ni diagnosticar un parser de artículos |
+| Releases 2T26 | Los originales de las tres empresas declaran días de emisión, pero no una hora de publicación con zona explícita para los tres | Evidencia de día del reporte disponible; todavía no una receta de releases que cumpla el contrato vigente |
+| Festivos | BMV sigue mostrando 2026; el registro oficial 5775684 corresponde a disposiciones de 2026. No se localizó calendario 2027 en las consultas oficiales realizadas | Año 2027 no verificado; no es una afirmación de que tal publicación no pueda existir en otra ubicación |
+
+**Volaris.** El original 2025 tiene SHA-256
+`cd051d052ff6a2e6e008da48b28eefe4895bdcf724f4f4bab14de6c24873cc10`.
+Su tabla 290 usa columna 1 y fila 27 para ASM; el comparativo 2026 usa columna
+2 y fila 26. Se compararon por etiqueta/periodo, no por posición supuestamente
+intercambiable. El máximo compatible sigue siendo 7,964702210368… frente a
+7,965, mínimo que redondearía a 7,97. Los índices SEC retenidos de ambos
+expedientes solo enumeran portada, anexo e índices/texto; no aportan un segundo
+anexo más preciso. La repetición histórica no resuelve la discrepancia ni
+acredita tráfico mensual. No se elimina ese comparativo ni se amplía tolerancia.
+
+**AIFA.** El libro nuevo conserva SHA
+`8585dc7bf86a276d3fd2e0d1d2e874dde57bd51057fcc4b8fc53af878b465243`.
+`Pasajeros!C4/C5` contiene literalmente las fechas 11 Jul. 2026; no es una
+fecha serial interpretada en otro idioma. En `Carga!C5` la fórmula es
+`=Pasajeros!C10` y su caché contiene el periodo hasta 31 Jul., en lugar de la
+fecha de actualización que exige el esquema. El lector actual vuelve a
+rechazarlo antes de Silver/Gold.
+
+También se conservaron el [PDF del mismo corte](https://aifa-repositorio.s3.us-east-1.amazonaws.com/PyE/Numeralia-Aeroportuaria-Jul-2026.pdf)
+(15 páginas, SHA `5da7350cf10fbc22041425cefee63fec6c7df3ae3a43047ffbbc7807ba45dcf3`),
+la [nota metodológica](https://aifa-repositorio.s3.us-east-1.amazonaws.com/PyE/Nota-metodologica-2026.pdf)
+y la [nota descriptiva](https://aifa-repositorio.s3.us-east-1.amazonaws.com/PyE/Nota-Descriptiva-2026.pdf).
+El PDF muestra cifras de julio y cobertura hasta 31 Jul.; se revisaron texto
+completo y páginas renderizadas. No se localizó en esos documentos una aclaración
+que corrija las fechas de validación/actualización del libro. La fecha técnica
+de creación de un PDF tampoco se toma como publicación. No se declara que los
+formatos sean intercambiables ni se utiliza el PDF para saltar el rechazo XLSX.
+
+**Aerocivil.** Captura 24/oct 02:00:45 UTC de
+[metadata del ID exacto](https://www.datos.gov.co/api/views/jh8x-n6h6.json), SHA
+`5511f718a55ea52792373874d8455e29bcc27017ac4dfe43f4db94a8eb080bcf`.
+Identidad declarada: `resourceName=operaciones-aereas-acumulado-2025`,
+`tableId=20263639`, `rowsUpdatedAt=1787261265` (20/ago/2026 21:27:45 UTC).
+No hay un número de versión semántica declarado: esos metadatos, captura y SHA
+identifican el original revisado. `rowsUpdatedAt` no acredita primera publicación
+de un mes ni completitud. El publicador declarado es Aerocivil y la metadata
+explica que empresa/explotador se derivan de callsign/matrícula; no son una
+confirmación independiente de comercializador, AOC o elegibilidad histórica.
+El diccionario de columnas no incluye una equivalencia literal S/N/I ni adjunta
+un diccionario separado. Descripción, definiciones revisadas, publicador y
+`rowsUpdatedAt` no cambiaron respecto al original del 21/oct; esta comparación
+no verifica nuevas cifras de movimientos. Las coincidencias con códigos de otro conjunto o una
+norma general no atribuyen por sí mismas esa leyenda a este ID.
+
+**GDELT.** La petición usa exactamente la receta mensual existente, desde
+`20260901060000` hasta `20261001055959` UTC, no el diagnóstico `timespan=1d`
+que recibió 429 el 21/oct. Se realizó después de tres días, sin reintentos y
+con el límite del cliente vigente. El cuerpo 503, 91 bytes, se conserva como
+fallo no elegible; SHA
+`2f85832e31ca57711e6107af6b142363351ae516adb71c69afc643fac26be7f6`.
+La [documentación oficial DOC 2.0](https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/)
+y su [actualización](https://blog.gdeltproject.org/doc-2-0-updates-1-5-year-searching-and-updated-mobile-interface/)
+no prueban disponibilidad de la API. La respuesta histórica 200 con fechas
+fuera del mes permanece rechazada; no se filtraron sus filas para aprobarla.
+No se harán más solicitudes de datos GDELT en esta continuación.
+
+**Releases y festivos.** Para 2T26, los documentos centrales declaran:
+[Aeroméxico, 13/jul](https://ir.aeromexico.com/static-files/d780da89-7da6-4360-adae-7ad65f49333e),
+[Volaris, 21/jul](https://www.sec.gov/Archives/edgar/data/1520504/000129281426003836/ex99-1.htm)
+y [Viva, 24/jul](https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2026-2T26-en.pdf).
+La [convocatoria Aeroméxico](https://ir.aeromexico.com/static-files/92dd5926-74d9-4c59-be1e-0110ce42bb93)
+prevé publicación el 13 y llamada el 14; ni la convocatoria ni la llamada
+sustituyen el reporte central. Se revisaron también el
+[índice trimestral Aeroméxico](https://ir.aeromexico.com/financial-information/quarterly-results)
+y los [eventos GVIVA en BMV](https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD).
+Las horas de eventos de tráfico u otros documentos no se transfieren al reporte
+financiero. El contrato ejecutable exige `published_at`
+con zona explícita y vínculo al artefacto financiero validado. Los días impresos,
+la captura, la aceptación SEC y las propiedades del archivo no se convierten
+en ese instante ni en primera disponibilidad. Se conservan las fechas declaradas
+como evidencia, sin rellenar medianoche, crear releases confirmados ni fijar
+una fecha trimestral. Esta revisión no trabaja Q3.
+
+La [página BMV](https://www.bmv.com.mx/es/grupo-bmv/calendario-de-dias-festivos)
+y la [referencia oficial 5775684](https://sidof.segob.gob.mx/notas/5775684)
+respaldan 2026. Una coincidencia «2027» en el selector de navegación del portal
+no equivale a disposiciones para ese año. La consulta DOF directa tuvo timeout;
+no se cambió su URL configurada ni se extrapolaron festivos. El guard de 2027
+continúa rechazando el año no verificado.
+
+Comprobación reproducible sin red ni escrituras Silver/Gold:
+`tmp/source-updates/evidence-20261024-audit/verify.py`, sobre los originales
+retenidos y las capturas de esta continuación. Resultado `verification.json`,
+SHA `4f52141dd44564a0e9261ef0bfcc13b98d08aeaecaf57bafd51c3d2ff9efd028`.
+Se ejecuta desde la raíz del checkout con dependencias del proyecto y esos
+insumos privados preservados. No actualiza fuentes:
+
+```bash
+python -c "import runpy; runpy.run_path('tmp/source-updates/evidence-20261024-audit/verify.py', run_name='__main__')"
+```
+
+Comprueba hashes/sidecars, etiquetas/columnas/periodos en dos anexos SEC,
+precisión con Decimal, celdas/fórmulas/caché AIFA y su rechazo real, metadata del
+mismo ID Aerocivil, recibo/cuerpo 503 y guards de fechas/2027. Las capturas AIFA
+y Aerocivil son `collected_unvalidated`; el recibo GDELT es `incomplete`. No son
+certificados de producto. Hay cero Silver/Gold nuevos y preparación global falsa.
+
+Lifecycle de esta continuación: actualizar solo esta guía; conservar los 21
+archivos privados de evidencia bajo `evidence-20261024-*` (originales, sidecars,
+recibos, inspector y comprobación). No se suben al repositorio público. Los
+PNG/logs auxiliares de `/tmp` se regeneran desde los originales. No se retiró
+ningún archivo ni se modificaron secretos, permisos, protecciones o las lecturas
+auxiliares denegadas. Los pendientes vigentes se mantienen únicamente abajo.
+
 ## Pendientes
 
 - La política está aprobada e implementada; no falta volver a aprobarla.
@@ -1722,11 +1850,12 @@ No hay retiros.
   La revisión adicional iniciada el 22/oct a las 16:05 UTC sigue sin resultado
   terminal; su CI y revisión manual previas no sustituyen ese resultado.
   No se ha integrado ni se ha relanzado la revisión.
-- El lote Volaris/AFAC prepara la certificación técnica de sus dossiers;
-  Volaris real permanece bloqueado por la discrepancia CASM documentada arriba.
+- PR158 integró la certificación técnica de los dossiers Volaris/AFAC;
+  Volaris real permanece bloqueado por la discrepancia CASM documentada arriba;
+  el original 2T25 confirma que no nace de seleccionar mal el comparativo 2026.
   La prueba de agosto AFAC conserva la advertencia internacional de la fuente.
   Las pruebas reales y revisión independiente constan arriba; CI/revisión del
-  head final e integración se registran en el PR de este lote.
+  head final e integración se registran en PR158.
   RSS añade aquí el certificador retenido, probado sobre originales;
   su suite completa, CI, revisión e integración se registran en
   [PR157](https://github.com/salvamalfa/aeromexico-tracker/pull/157). BTS ([PR155](https://github.com/salvamalfa/aeromexico-tracker/pull/155)),
@@ -1735,16 +1864,22 @@ No hay retiros.
   en ramas separadas y esperan sus revisiones exactas. Sus heads se preservan.
   Es trabajo técnico autorizado, no una decisión de alcance del dueño.
   Los restantes adaptadores conservan sus límites de edición y periodo.
-- Aerocivil sigue pendiente de una leyenda y atribución primarias del ID exacto.
-  GDELT requiere una captura correctamente rotulada del mes que pase el control
-  de fechas; el último diagnóstico terminó en 429 y este lote no vuelve a llamar.
+- Aerocivil requiere la leyenda literal aplicable al ID exacto; su entidad
+  publicadora ya está identificada, pero la atribución operativa sigue siendo
+  derivada. GDELT requiere una captura mensual válida: el intento acotado del
+  24/oct terminó en 503 de conexión al upstream y no se vuelve a solicitar en
+  esta continuación. Se conservan también el 429 y los rechazos históricos.
   Ambos permanecen **requeridos y bloqueados** por decisión del dueño. No hay
   autorización para declararlos opcionales ni para rebajar sus validadores.
   Obtener aclaración documental del proveedor es otra vía; contactar a terceros,
   añadir hosts o contratar servicios requiere instrucción aparte.
-- Suministrar al coordinador los tres releases financieros comprobados del
-  trimestre. La muestra sin releases no fija fecha; no afirma ausencia de
-  publicaciones reales. El 2 de noviembre no es una fecha aprobada.
+- Completar evidencia temporal y vínculo a payload financiero validado antes
+  de suministrar los tres releases al coordinador. Los días declarados de 2T26
+  están identificados; no se acreditaron para los tres los instantes de
+  publicación con zona que exige el contrato. La primera disponibilidad es
+  otro dato que tampoco se infiere. No se rellenan horas ni se traslada esta
+  evidencia a Q3. La muestra
+  sin releases elegibles no fija fecha; el 2 de noviembre no es una fecha aprobada.
 - Las comprobaciones de originales retenidos no acreditan última disponibilidad.
   Para una edición nueva, seleccionar el documento real y revisar su formato,
   cobertura y revisiones antes de incorporarlo. Países no aporta una serie
@@ -1758,5 +1893,5 @@ No hay retiros.
 - Revisar y aprobar cada lote según su alcance antes de publicar o activar una
   ejecución automática. La integración técnica ahora autorizada no aprueba
   datos nuevos ni activa calendario, noticias o nuevas versiones de tesis.
-  La disponibilidad y validez de cada fuente se comprueban por lote; los dos
-  productos bloqueados impiden declarar lista una ronda completa que los requiera.
+  La disponibilidad y validez de cada fuente se comprueban por lote; cualquier
+  producto obligatorio bloqueado impide declarar lista una ronda completa que lo requiera.
