@@ -1596,7 +1596,7 @@ posición sin presumir equivalencia. Sin baseline explícito, registra ausencia
 de comparación; ninguna comparación acredita una revisión oficial.
 
 
-Prueba real en código funcional `a2cfb66b766d2e198b3ea95bb57eddb284a10b24`:
+Prueba real en código funcional `b4320e882e17a2bca7b54fe245bb9044c3517f8d`:
 
 | Producto retenido | Resultado comprobado | Límite real |
 |---|---|---|
@@ -1611,18 +1611,18 @@ retenido el 24/ago: tabla 300, filas 2/23/26, columna 2, y gastos repetidos en
 tabla 306, fila 22. La comprobación usa estos bytes, no el estado actual de URL.
 
 Resumen/receta/plan/recibos locales:
-`tmp/source-updates/carrier-official-a2cfb66b-summary.json`, SHA-256
-`6029aa12a1faef6f2723df516a073f08fc063d8e19c593c253eb6265b4f8334b`.
+`tmp/source-updates/carrier-official-b4320e88-summary.json`, SHA-256
+`4fea08adce7934c601de27dbae6df9b2441903f6f5e9924baf01ec8438754d02`.
 Auditoría independiente sin importar módulos del producto:
-`carrier-official-a2cfb66b/afac-independent-review.json`, SHA-256
-`2155f4323c8664b302dfea3c9d79586da3f46d552a7394bc2c43a688e004c87c`.
+`carrier-official-b4320e88/afac-independent-review.json`, SHA-256
+`96065877268e2e61488f0d25beddfb27f40e304b570205da63587192e600869a`.
 Reconstruyó los 36 campos nativos, 39 Gold, cada padre/artefacto/vínculo,
 las 117 huellas de código físicas/Git y las 474 conciliaciones. Los 24 ceros
 explícitos PDF sin observación DB no se imputaron a la base. `World 2 Fly`
 conserva 62 observaciones nativas y su nombre literal.
 
 El lote ejecutable terminó `blocked` por Volaris tras validar AFAC. El replay
-individual y `carrier-readiness-a2cfb66b/` pasan; `carrier-global-a2cfb66b/`
+individual y `carrier-readiness-b4320e88/` pasan; `carrier-global-b4320e88/`
 permanece `blocked_global_policy`, con Aerocivil/GDELT y el resto del alcance
 obligatorio ausentes/bloqueados. Ninguna ronda completa ni calendario queda
 aprobada por este resultado. Muestra literal del dry-run/resultado:
@@ -1636,7 +1636,8 @@ network_requests=0; paid_requests=0; activation=none; publication=not_authorized
 ready_for_calendar_incorporation=false
 ```
 
-Las pasadas focales/regresión cubren 312 casos comprobados. Las pruebas
+La pasada final de toda la familia `source_update` y límites del repositorio
+pasó **950 pruebas** en 102,16 s. Las pruebas
 sintéticas incluyen expediente AFAC físico PDF/ZIP de tres años,
 contrato Volaris completo, casos positivos y negativos, baselines físicos y
 rechazo de índices/portada como release. Pasan 80 pruebas independientes; la
@@ -1652,10 +1653,19 @@ integral de los helpers compartidos. La prueba física repetida conserva las
 cuatro salidas idénticas a las anteriores. La suite completa, CI/revisión del
 head final e integración conservan
 su evidencia propia en el PR de este lote. La ejecución local de la suite
-pública se detuvo en un test de chat por ausencia del pin externo aprobado
-`CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256` (208 pasaron antes). La lectura
-del valor por GitHub recibió 403; no se cambiaron variables, permisos o gates.
-CI conserva su configuración autorizada y debe validar el head final.
+pública se detuvo por ausencia del pin externo aprobado
+`CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256`: la primera pasada llegó a 208
+pruebas aprobadas; la diagnóstica reprodujo 2 fallos y 16 errores del mismo pin
+tras 235 aprobadas. Ninguna equivale a suite pública completa aprobada.
+La lectura del valor por GitHub recibió 403; no se cambiaron variables, permisos
+o gates. La CI del head `4c24afeb` falló en el subset público; sus anotaciones
+solo informaron salida 1 y la lectura del log del job recibió `Forbidden`,
+sin reintentos. Se reprodujo una regresión concreta del lote en el test
+`test_repo_budgets.py`: `retained.py` creció a 605 líneas frente al límite 600.
+El registro de roles se trasladó al contrato y quedó en 594 líneas, sin ampliar
+excepciones. La revisión independiente verificó specs exactos y guards/transformaciones
+idénticos por AST. Las 950 pruebas anteriores incluyen los tres límites de módulos
+después del arreglo; la CI del head final aún exige su resultado propio.
 
 Compatibilidad de cadenas reales `08eb762d0244e818d6318f8862eba52b26533e9f`: integra
 el código de este lote con los cuatro lotes pendientes y RSS en una rama local,
@@ -1675,7 +1685,12 @@ planificado y validado; no modifica lectores, escalas, selección ni linaje.
 El guard de cierre mensual en compatibilidad `de4e7986b60746a8677bfd819a2971fc0d2c7c51`
 pasó **286 pruebas afectadas** en 101,49 s (ocho avisos pandas). Los cuatro
 casos adicionales cubren el límite local/UTC; no cambian las transformaciones.
-La prueba real final de AFAC y el bloqueo Volaris se repitieron en `a2cfb66b`;
+El cierre de roles en compatibilidad `963865e515c39be68c971e82ba97919d1db3173b`
+pasó **1.225 pruebas** de fuentes y límites en 381,48 s (44 avisos pandas).
+La revisión independiente comprobó specs exactos y restantes registros/despachos
+inalterados por AST. La definición se trasladó a `retention_specs()`; la rama
+combinada mantiene su registro separado, sin cambiar los heads pendientes.
+La prueba real final de AFAC y el bloqueo Volaris se repitieron en `b4320e88`;
 las cuatro salidas AFAC siguen idénticas a las del lote de nueve productos.
 Los otros ocho productos mantienen sus transformadores y originales sin cambios.
 Son ventanas independientes (julio, agosto, septiembre y 2T26), no una ronda
@@ -1684,14 +1699,15 @@ requiere que terminen sus revisiones y vuelva a pasar CI/revisión del head
 resultante antes de integrarlo. No se han relanzado sus revisiones.
 
 Lifecycle manual: conservar originales/candidatos/recibos/resumen/auditor y
-su resultado local de `carrier-official-a2cfb66b*`, readiness/global para
+su resultado local de `carrier-official-b4320e88*`, readiness/global para
 reproducir. Los lotes anteriores `carrier-official-bc5343f4*`,
 `carrier-official-d25f4f6d*`, `carrier-official-868232fd*` y
-`carrier-official-39b7dc05*` y `carrier-official-bb44fcc9*` se conservan como
+`carrier-official-39b7dc05*`, `carrier-official-bb44fcc9*` y
+`carrier-official-a2cfb66b*` se conservan como
 pruebas previas a las correcciones, no evidencia final. Auxiliares bajo `/tmp`,
 cachés y scratch de pytest son regenerables; no se suben originales, datos
 candidatos o informes paralelos al repositorio público. Inventario manual:
-158 archivos locales de este checkout y 294 de la compatibilidad, conservados
+185 archivos locales de este checkout y 294 de la compatibilidad, conservados
 fuera de Git público; los 24 archivos versionados tienen disposición en el PR.
 No hay retiros.
 
