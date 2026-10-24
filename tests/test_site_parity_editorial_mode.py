@@ -64,6 +64,68 @@ def test_editorial_financial_parity_requires_verified_baseline_not_quarterly_rea
         assert calls == []
 
 
+@pytest.mark.parametrize("case", ["normal", "invalid", "changed", "partial", "quarterly"])
+def test_reading_only_financial_parity_survives_ui_transition(tmp_path, monkeypatch, case):
+    from src.publish import records
+
+    module = parity_module()
+    module.SITE_DIR = tmp_path / "site"
+    target = module.SITE_DIR / "data/v1/executive.json"
+    target.parent.mkdir(parents=True)
+    baseline = {"records": [{"period_id": "2026Q2"}], "views": {"2026Q2": {}}}
+    published = json.loads(json.dumps(baseline))
+    if case in {"partial", "quarterly"}:
+        published["views"]["2026Q3"] = {}
+    if case == "quarterly":
+        published["records"].append({"period_id": "2026Q3"})
+    if case == "changed":
+        published["records"][0]["unauthorized"] = True
+    target.write_bytes(json.dumps(published).encode())
+    entry = {"period_id": "2026Q3", "version": "reading"}
+    monkeypatch.setattr(module.manifest_mod, "load_manifest", lambda site: {"analysis_manifest": [entry]})
+    verification = []
+
+    def verify(site):
+        verification.append(site)
+        return ["invalid publication"] if case == "invalid" else []
+
+    monkeypatch.setattr(module, "verify_site", verify)
+    monkeypatch.setattr(editorial, "anchor", lambda repo: {"baseline_commit": "a" * 40})
+    monkeypatch.setattr(module.subprocess, "check_output", lambda *a, **k: json.dumps(baseline).encode())
+    replayed = []
+
+    def replay():
+        replayed.append(True)
+        return {
+            "authorized": [entry],
+            "cohorts": [{"analysis_manifest": [entry], "implementation_commit": "b" * 40}],
+        }
+
+    monkeypatch.setattr(module, "_replay_published_cohorts", replay)
+    monkeypatch.setattr(records, "_analysis_manifest_entry", lambda value: value)
+    monkeypatch.setattr(module, "_baseline_json", lambda path: baseline)
+
+    def project(*args):
+        assert case == "quarterly", "Reading alone must not project financial Q3"
+        return published
+
+    monkeypatch.setattr(module, "_quarterly_projection", project)
+    record = tmp_path / "analysis_runs/drafts/2026Q3/reading.json"
+    record.parent.mkdir(parents=True)
+    record.write_text(
+        json.dumps({"draft": {"source_profile": "quarterly_release_v1", "package_id": "source"}})
+    )
+    if case in {"invalid", "changed", "partial"}:
+        with pytest.raises(AssertionError):
+            module.published_executive.__wrapped__(baseline)
+    else:
+        assert module.published_executive.__wrapped__(baseline) == (
+            published if case == "quarterly" else baseline
+        )
+    assert bool(replayed) == (case == "quarterly")
+    assert bool(verification) == (case not in {"partial", "quarterly"})
+
+
 @pytest.mark.parametrize("strict", [False, True])
 @pytest.mark.parametrize("missing", ["candidate", "source_record"])
 def test_editorial_evidence_unavailability_fails_in_strict_mode_without_a_warehouse(

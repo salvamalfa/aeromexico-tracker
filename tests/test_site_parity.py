@@ -133,6 +133,24 @@ def published_executive(executive_payload: dict) -> dict:
     if not quarterly:
         return executive_payload
     assert len(quarterly) == 1
+    published = json.loads((SITE_DIR / "data/v1/executive.json").read_bytes())
+    has_view = "2026Q3" in published["views"]
+    has_record = any(row["period_id"] == "2026Q3" for row in published["records"])
+    assert has_view == has_record, "Partial financial quarter is not a publication"
+    if not has_record:
+        # A later UI-only release keeps the reading but not the old editorial
+        # frontend receipt. Financial eligibility comes from the actual data;
+        # receipt absence must never invent a new quarterly projection.
+        assert verify_site(SITE_DIR) == []
+        spec = anchor(SITE_DIR.parent)
+        baseline_raw = subprocess.check_output(
+            ["git", "show", f"{spec['baseline_commit']}:site/data/v1/executive.json"],
+            cwd=SITE_DIR.parent,
+        )
+        assert (SITE_DIR / "data/v1/executive.json").read_bytes() == baseline_raw
+        baseline = json.loads(baseline_raw)
+        assert executive_payload == baseline
+        return baseline
     entry = quarterly[0]
     path = SITE_DIR.parent / "analysis_runs/drafts/2026Q3" / f"{entry['version']}.json"
     record = json.loads(path.read_bytes())
