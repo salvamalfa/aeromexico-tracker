@@ -18,6 +18,15 @@ def parity_module():
     return module
 
 
+def editorial_parity_module():
+    spec = importlib.util.spec_from_file_location(
+        "editorial_source_availability", Path(__file__).with_name("test_editorial_site_parity.py")
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 @pytest.mark.parametrize("valid", [True, False])
 def test_editorial_financial_parity_requires_verified_baseline_not_quarterly_reading(
     tmp_path, monkeypatch, valid
@@ -62,11 +71,7 @@ def test_editorial_evidence_unavailability_fails_in_strict_mode_without_a_wareho
 ):
     from types import SimpleNamespace
 
-    spec = importlib.util.spec_from_file_location(
-        "editorial_source_availability", Path(__file__).with_name("test_editorial_site_parity.py")
-    )
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    module = editorial_parity_module()
     module.ROOT = tmp_path
     module.SITE = tmp_path / "site"
     request = SimpleNamespace(config=SimpleNamespace(getoption=lambda name: strict))
@@ -77,3 +82,55 @@ def test_editorial_evidence_unavailability_fails_in_strict_mode_without_a_wareho
         else:
             module._required_source_record({"version": "a" * 64}, request)
     assert not (tmp_path / "data/warehouse.duckdb").exists()
+
+
+@pytest.mark.parametrize("strict", [False, True])
+@pytest.mark.parametrize("damage", [None, "data", "missing_receipt", "pending_reading"])
+def test_editorial_fixture_recognizes_only_a_verified_later_normal_publication(tmp_path, strict, damage):
+    import hashlib
+    import shutil
+    from types import SimpleNamespace
+
+    module = editorial_parity_module()
+    root = Path(__file__).resolve().parents[1]
+    site = tmp_path / "site"
+    shutil.copytree(root / "tests/fixtures/site/valid", site)
+    manifest_path = site / "publication_manifest.json"
+    manifest = json.loads(manifest_path.read_bytes())
+    entry = dict(editorial.anchor(root)["analysis_entry"])
+    payload = json.loads((root / "site" / editorial.ANALYSIS).read_bytes())
+    if damage == "pending_reading":
+        entry["version"] = "pending"
+        payload["version"] = "pending"
+    new_path = site / editorial.ANALYSIS
+    new_path.write_text(json.dumps(payload), encoding="utf-8")
+    manifest["analysis_manifest"].append(entry)
+    manifest["contracts"][editorial.manifests.EDITORIAL_ANALYSIS_CONTRACT] = hashlib.sha256(
+        (root / "contracts/web" / editorial.manifests.EDITORIAL_ANALYSIS_CONTRACT).read_bytes()
+    ).hexdigest()
+    manifest["files"].append(
+        {
+            "path": editorial.ANALYSIS,
+            "bytes": new_path.stat().st_size,
+            "sha256": hashlib.sha256(new_path.read_bytes()).hexdigest(),
+        }
+    )
+    if damage == "missing_receipt":
+        manifest["files"].append(
+            {"path": editorial.PROOF, "bytes": 2, "sha256": hashlib.sha256(b"{}").hexdigest()}
+        )
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    if damage == "data":
+        (site / "data/v1/executive.json").write_text("{}", encoding="utf-8")
+    module.ROOT = root
+    module.SITE = site
+    request = SimpleNamespace(config=SimpleNamespace(getoption=lambda name: strict))
+    expected = (
+        (pytest.fail.Exception if strict else pytest.skip.Exception)
+        if damage == "pending_reading"
+        else AssertionError
+        if damage
+        else pytest.skip.Exception
+    )
+    with pytest.raises(expected):
+        module.editorial_site.__wrapped__(request)

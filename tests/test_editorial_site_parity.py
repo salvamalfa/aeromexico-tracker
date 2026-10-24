@@ -20,6 +20,19 @@ def _unavailable(request, message):
 @pytest.fixture
 def editorial_site(request):
     if not (SITE / PROOF).exists():
+        manifest_path = SITE / "publication_manifest.json"
+        if manifest_path.is_file():
+            manifest = json.loads(manifest_path.read_bytes())
+            spec = anchor(ROOT)
+            # A later normal publication legitimately replaces the frontend and
+            # drops the editorial receipt. It must still contain this reading,
+            # have no missing inventoried receipt, and pass all general checks.
+            if spec["analysis_entry"] in manifest["analysis_manifest"]:
+                from src.publish.verify import verify_site
+
+                problems = verify_site(SITE)
+                assert not problems, problems
+                pytest.skip("Verified non-editorial publication; general source parity checks still apply")
         _unavailable(
             request, "Editorial candidate has not been assembled; general publication checks still apply"
         )
