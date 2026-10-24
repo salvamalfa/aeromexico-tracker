@@ -74,21 +74,27 @@ formatos arbitrarios ni conversiones entre millas y kilómetros sin cálculo.
 La sección administrativa «Pendientes» de la vista de revisión se conserva en el
 expediente como sección privada; su aviso de borrador no se publica como estado
 actual. Esta adaptación no hereda auditorías ni aprobaciones de otra versión.
-La nueva edición `2096752b` tiene auditoría independiente favorable y aprobación
+La nueva edición `1ed160bf` tiene auditoría independiente favorable y aprobación
 registrada desde el consentimiento real del dueño. Su payload reproducido conserva
 la copia pública revisada; 22 claims fueron auditados y 21 quedan en la salida,
 tras excluir el estado administrativo privado. Todavía no está publicada.
 No reutiliza el registro faltante de la edición anterior.
 La salida candidata antigua del PR se retiró: `site/` vuelve al baseline vigente
-antes de preparar otra publicación. La configuración de cohortes permanece vacía
-hasta disponer de aprobación y payload reproducidos de la nueva identidad.
+antes de preparar otra publicación. La cohorte nueva fija el payload aprobado de 46.691 bytes y el verificador
+`143fc56`, descendiente del baseline integrado. Ese pin se comprobó contra
+las dos rutas reales del exportador y del gate; no activa la publicación.
 
 El preflight del 24 de octubre sigue bloqueado: faltan registros históricos
 exactos en el checkout de publicación; el respaldo persistido necesita materializar
-objetos LFS y su autenticación no está disponible. La verificación del baseline
+objetos LFS y su autenticación no está disponible. La recuperación aislada
+conserva 43 copias LFS verificadas y tres registros históricos. Faltan 11 archivos
+de metadatos; su inventario exacto está en el expediente privado. Después se debe
+comprobar el cierre de sus originales referenciados. La verificación del baseline
 requiere además los dos pins externos ya aprobados del chat y Noticias. La lectura
 de variables del repositorio devolvió HTTP 403. No se derivan pins desde el
-candidato, se cambian permisos ni se sustituyen expedientes. El trabajo permanece
+candidato, se cambian permisos ni se sustituyen expedientes. La igualdad real
+entre gate y exportador, el contrato, la privacidad y seis renders del componente
+con el payload aprobado pasan; son comprobaciones previas al gate completo. El trabajo permanece
 en PR; no se integró ni desplegó. Los originales IR, recibos, contexto cerrado,
 versiones, informe independiente y logs se conservan localmente por su utilidad
 para reanudar los controles; los scripts privados de preparación no son otra

@@ -1,4 +1,25 @@
 {
   "schema_version": "analysis_approval_cohorts_v1",
-  "cohorts": []
+  "cohorts": [
+    {
+      "implementation_commit": "143fc56194bdb38ae15b655af4301596624e6696",
+      "analysis_manifest": [
+        {
+          "period_id": "2026Q3",
+          "version": "1ed160bf154a9ea287217471677bf7986bc362faae437222bfbe73de171e2883",
+          "content_hash": "a63dad9286d7a4762ed49a5d8b53c87ff0f5bb692d0620143cbedb84bc73d480",
+          "evidence_fingerprint": "5a4f066988fd5c7e19052957e39fa31425dcf354c96f4f0b58f06c9c8fa3e198",
+          "approval_event": "ad3cad27ff280ebef8dce973b13f7dc841b74fd4fb41436ec5eb4727347504e0",
+          "audit_hash": "7b5702828696b5fca11b808167c74978de3983bf04b29efaae095998416d4e58"
+        }
+      ],
+      "files": [
+        {
+          "path": "data/v1/analysis/2026Q3.json",
+          "sha256": "4b860ccca5bccab9ab4b687ea968152a62c458c13f6849de4c175c7de123b50d",
+          "bytes": 46691
+        }
+      ]
+    }
+  ]
 }
