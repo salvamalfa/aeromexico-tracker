@@ -415,9 +415,11 @@ def publish_ui_only(
         raise PublicationRefused(f"existing site is not valid for UI-only publication: {site_problems[:5]}")
     current_manifest = manifest_mod.load_manifest(out_dir)
     from .approval_cohorts import verify_approval_cohorts
+    from .financial_sources import verify_preserved_financial, validate_ui_financial_candidate
 
     try:
         with flow.writer(root):
+            financial = verify_preserved_financial(record_paths, out_dir, root)
             verified = verify_approval_cohorts(
                 record_paths, PATHS.root, trusted_site_commit, current_manifest, root
             )
@@ -461,12 +463,11 @@ def publish_ui_only(
         problems = verify_site(candidate)
         if problems:
             raise ValueError(f"UI candidate failed verification: {problems[:5]}")
+        validate_ui_financial_candidate(record_paths, out_dir, candidate, root, financial, source_data)
 
     try:
         with flow.writer(root):
-            # Recheck the trusted payload at the last possible moment too;
-            # the frontend build runs outside the ledger lock and the site
-            # directory is not itself protected by that lock.
+            # Recheck the tracked baseline and approvals under the shared lock.
             require_trusted_site_baseline(
                 out_dir,
                 root=PATHS.root,
@@ -477,6 +478,8 @@ def publish_ui_only(
             )
             if current != verified:
                 raise ValueError("approval changed while the UI was being built; rerun the publication")
+            if verify_preserved_financial(record_paths, out_dir, root) != financial:
+                raise ValueError("Financial exposure approval changed during the UI build")
             manifest = assemble_site(
                 dist_dir,
                 analysis_manifest,
@@ -500,6 +503,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--record", type=Path, action="append", default=[], dest="records")
     parser.add_argument("--out", type=Path, default=PATHS.root / "site")
     publish_modes = parser.add_mutually_exclusive_group()
+    publish_modes.add_argument(
+        "--financial-kpis-only",
+        action="store_true",
+        help="update only reviewed Aeromexico 3Q26 financial cards and charts",
+    )
     publish_modes.add_argument(
         "--editorial-only",
         action="store_true",
@@ -539,7 +547,14 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        if args.editorial_only:
+        if args.financial_kpis_only:
+            from .financial_update import publish_financial
+
+            try:
+                result = publish_financial(args.records, args.out)
+            except (ValueError, OSError, subprocess.CalledProcessError) as error:
+                raise PublicationRefused(f"financial publication rejected: {error}") from error
+        elif args.editorial_only:
             from .editorial import publish_editorial
 
             try:

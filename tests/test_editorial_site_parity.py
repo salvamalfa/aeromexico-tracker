@@ -20,6 +20,15 @@ def _unavailable(request, message):
 
 @pytest.fixture
 def editorial_site(request):
+    from src.publish.financial_scope import (
+        PROOF as FINANCIAL_PROOF,
+        anchor as financial_anchor,
+        verify_financial,
+    )
+
+    if (SITE / FINANCIAL_PROOF).exists():
+        assert verify_financial(SITE, ROOT) == []
+        return financial_anchor(ROOT)
     if not (SITE / PROOF).exists():
         manifest_path = SITE / "publication_manifest.json"
         if manifest_path.is_file():
@@ -44,6 +53,10 @@ def editorial_site(request):
 
 
 def test_editorial_site_preserves_every_historical_file(editorial_site):
+    from src.publish.financial_scope import PROOF as FINANCIAL_PROOF
+
+    if (SITE / FINANCIAL_PROOF).exists():
+        pytest.skip("Financial mode has its own strict historical structure/byte preservation check")
     if not (SITE / PROOF).exists():
         pytest.skip("Verified later normal publication; editorial frontend preservation does not apply")
     assert verify_editorial(SITE) == []

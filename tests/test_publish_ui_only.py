@@ -79,6 +79,8 @@ def test_manifest_can_preserve_trusted_contract_set_for_ui_only_release(tmp_path
         "baseline",
         "late_data",
         "candidate_invalid",
+        "financial_revocation_during_candidate",
+        "financial_data_during_candidate",
     ],
 )
 def test_ui_only_replays_cohorts_and_refuses_changes_before_swap(tmp_path, monkeypatch, change):
@@ -94,7 +96,7 @@ def test_ui_only_replays_cohorts_and_refuses_changes_before_swap(tmp_path, monke
     from contextlib import contextmanager
     from types import SimpleNamespace
 
-    from src.publish import approval_cohorts, gate, manifest as manifests, verify
+    from src.publish import approval_cohorts, gate, manifest as manifests, verify, financial_sources
 
     site, dist = tmp_path / "site", tmp_path / "dist"
     web_data = tmp_path / "scratch/data/v1"
@@ -175,6 +177,10 @@ def test_ui_only_replays_cohorts_and_refuses_changes_before_swap(tmp_path, monke
     def check_candidate(directory):
         if directory != site:
             assert state["locked"]
+            if change == "financial_revocation_during_candidate":
+                state["financial_changed"] = True
+            if change == "financial_data_during_candidate":
+                (directory / "data/v1/executive.json").write_text('{"tampered":true}')
             if change == "candidate_invalid":
                 return ["invalid candidate contract"]
         return []
@@ -186,6 +192,16 @@ def test_ui_only_replays_cohorts_and_refuses_changes_before_swap(tmp_path, monke
 
     def current_runtime_forbidden(*args, **kwargs):
         pytest.fail("historical approvals must replay through their pinned cohorts")
+
+    if change and change.startswith("financial_"):
+
+        def financial_guard(*args, replay=True):
+            assert state["locked"]
+            if not replay and state.get("financial_changed"):
+                raise ValueError("financial authorization revoked during slow candidate verification")
+            return {"financial-source": "stable"}
+
+        monkeypatch.setattr(financial_sources, "verify_preserved_financial", financial_guard)
 
     monkeypatch.setattr(gate, "PATHS", SimpleNamespace(root=tmp_path))
     monkeypatch.setattr(gate.manifest_mod, "refuse_if_build_inputs_dirty", lambda: None)

@@ -1,5 +1,20 @@
 # Changelog
 
+## Actualización financiera Aeroméxico 3T26
+
+- Modalidad explícita para actualizar las cuatro tarjetas existentes, series y
+  tabla de Aeroméxico; conserva las cinco lecturas, históricos, otras aerolíneas,
+  vuelos, noticias y Monthly.
+- Distingue variaciones anuales reportadas y cambios calculados con series
+  publicadas; concilia ingreso total/ASM y conversión milla-kilómetro, y conserva
+  ambas versiones de la referencia histórica de ocupación sin sobrescritura.
+- Fija autorización financiera y revisión de la salida exacta separadas de la
+  tesis; reproduce sus fuentes con implementaciones congeladas y comprueba
+  baseline Git/HTTPS, candidato y revocaciones antes del reemplazo atómico.
+- Identifica el corte real de Vuelos cuando falta el trimestre financiero y
+  mantiene los controles generales en publicaciones posteriores.
+
+
 ## 2026-10-24 · Lectura ejecutiva 3T26 revisada
 
 - Texto financiero de la Page aprobado y vinculado a una versión nueva, con

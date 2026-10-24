@@ -1,0 +1,91 @@
+{
+  "schema_version": "financial_release_v1",
+  "scope": "aeromexico_2026Q3_existing_financial_cards_v1",
+  "baseline_commit": "14cdb73adf29e1722a0ac16c1c240c68ede88621",
+  "baseline_manifest_sha256": "bcd16732a488664c8df09409399ad97534f7394c0a89cdc1a870d109221e4854",
+  "analysis_entry": {
+    "period_id": "2026Q3",
+    "version": "a470aefc8a76a547fbf1005e7ca657f03bb3cdb2b75c6f5028e81169ae2f7869",
+    "content_hash": "a63dad9286d7a4762ed49a5d8b53c87ff0f5bb692d0620143cbedb84bc73d480",
+    "evidence_fingerprint": "5a4f066988fd5c7e19052957e39fa31425dcf354c96f4f0b58f06c9c8fa3e198",
+    "approval_event": "ecc7e7fd9ee1230844540544ef7d0b6c053e6c93fb7e3d8d4028f54080f24061",
+    "audit_hash": "f478d27950dd953c2ab64aa9ba57323acccc4cd3066b1ee17f35f59786201099"
+  },
+  "analysis_sha256": "1bc02904e43827c90d9f00f5981446b1c357849430c1be88cea7a70a62b3068f",
+  "analysis_bytes": 46691,
+  "source_implementation_commit": "0f6b4dc3734ffc783ace7f0079be08921090f97f",
+  "package_id": "2026Q3_5a4f066988fd5c7e19052957e39fa31425dcf354c96f4f0b58f06c9c8fa3e198",
+  "calculation_fingerprint": "10ba541600ac344bc32629a611228d8c99d84acef848a53b8b17faef7d7bc311",
+  "producer_commit": "45c930fdb78661ec5030feb52ae71926a5a19bb0",
+  "producer_code_version": "f286de956d24bc3b68a4cf1ee73299798a325843c5f36f2e247644a373f9f9cc",
+  "executive_sha256": "cc0b39ad47ad761cda8c5339381c8552be30211d5da915bf3c25ec56f87d614b",
+  "executive_bytes": 312095,
+  "frontend_files": [
+    {
+      "path": "assets/bootstrap-Bon95OId.css",
+      "sha256": "8520629920ae52d6a96539c9edc1eef010ad7334b998fac2a985ec9050350f51",
+      "bytes": 2616
+    },
+    {
+      "path": "assets/bootstrap-CG5UWcPn.css",
+      "sha256": "4c926c7b55614a1a6c9aac6a28a70c9c8e201bc6d1b45f2a193f559b2566c183",
+      "bytes": 6649
+    },
+    {
+      "path": "assets/bootstrap-CZtsO2jL.js",
+      "sha256": "cd13e5f5ca9bef91b46038a21b2fcf63e79c5e8a78f281599b732f8b08b23101",
+      "bytes": 33336
+    },
+    {
+      "path": "assets/bootstrap-ClCqmeOy.js",
+      "sha256": "44b59d6a6ccc2c37316b8a63f30bb3e32da00bb3abcddfc9a05eda38ab72828e",
+      "bytes": 44380
+    },
+    {
+      "path": "assets/bootstrap-DWdhZXXN.js",
+      "sha256": "153b3cea971d86e120e1305006877a08ea84af0d14cda4f410e6b7f82ea7c191",
+      "bytes": 5459
+    },
+    {
+      "path": "assets/dashboard-BTy2QXf_.js",
+      "sha256": "fca924e5691826f48b09c61317f42bd1bc697eef363b0b1eb49b4269047be8b4",
+      "bytes": 39568
+    },
+    {
+      "path": "assets/dashboard-C1ii5yMB.css",
+      "sha256": "63b6f325986de738447cda3c18d1169955765ca02808f10c80215cb7087c81ae",
+      "bytes": 42033
+    },
+    {
+      "path": "assets/markdown-CX2IkwMA.js",
+      "sha256": "9eca7935cc1aaa08476adbd9fad16bb27a568cd542b983f85a3064354e9b0af1",
+      "bytes": 12698
+    },
+    {
+      "path": "assets/modulepreload-polyfill-B5Qt9EMX.js",
+      "sha256": "d2a32840421496e872ade591618d2fa5c33797605d1aec04301717e5a90757d0",
+      "bytes": 711
+    },
+    {
+      "path": "assets/plotly-DFvSk16B.css",
+      "sha256": "216055fb2084a35acbc0d20ab5d2a31b342c57dab212e7c685e87164aa69d700",
+      "bytes": 83132
+    },
+    {
+      "path": "assets/plotly-ZECNwRsR.js",
+      "sha256": "72f200ccd356fa6925abebce61e184a8d67fb09fac2095d7692abc11917bac98",
+      "bytes": 1396673
+    },
+    {
+      "path": "assets/state-B4KWg-7g.js",
+      "sha256": "cee43a66bba0242e271e3e827d721181f5713f0ee224c841f9f078112fa4b0c0",
+      "bytes": 5890
+    },
+    {
+      "path": "index.html",
+      "sha256": "eb40f943e9ab073b0ba300480cdb0b678333becb69c5fea848dfb2b3c2254904",
+      "bytes": 21510
+    }
+  ],
+  "authorization_sha256": "8e5d1542bf00f17f5f4e67ba4759780a5aa165c1fe7f2f0239824121e29dfe67"
+}

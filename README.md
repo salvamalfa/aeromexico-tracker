@@ -41,7 +41,7 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
   «Ingresos récord, margen bajo presión», tiene fuentes, cálculos, auditoría
   independiente y aprobación vinculados a su versión exacta. Su publicación
   editorial exige baseline remoto y servido, CI, revisión y verificación de Pages.
-  La lectura tiene un selector independiente: los indicadores permanecen en 2T26.
+  La lectura tiene un selector independiente. La modalidad financiera acotada añade solo los indicadores y gráficas existentes de Aeroméxico 3T26; Industria y las otras aerolíneas conservan sus cortes.
   Usa cifras no auditadas, fuentes del emisor y cálculos propios identificados. Las cuatro tesis publicadas de 2T26
   conservan sus versiones y texto. Los cortes mensuales del mapa son independientes.
 - **Chat:** fase 2 implementada; Stage 3 completó 30 casos/34 mensajes y la

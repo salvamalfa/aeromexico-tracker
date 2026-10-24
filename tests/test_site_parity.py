@@ -115,6 +115,20 @@ def _replay_published_cohorts() -> dict:
 def published_executive(executive_payload: dict) -> dict:
     """Replay the new primary-source edition over the pinned public baseline."""
     from src.publish.records import _analysis_manifest_entry
+    from src.publish.financial_scope import ANCHOR as FINANCIAL_ANCHOR, PROOF as FINANCIAL_PROOF
+
+    if (SITE_DIR / FINANCIAL_PROOF).exists() or (
+        (SITE_DIR.parent / FINANCIAL_ANCHOR).is_file()
+        and "2026Q3" in json.loads((SITE_DIR / "data/v1/executive.json").read_bytes())["views"]
+    ):
+        from src.publish.financial_sources import replay_published_projection
+        # The original warehouse projection is the frozen financial baseline;
+        # only the explicitly reviewed producer may append this quarter.
+        from src.publish.financial_scope import anchor as financial_anchor
+        financial_spec = financial_anchor(SITE_DIR.parent)
+        raw = subprocess.check_output(["git", "show", f"{financial_spec['baseline_commit']}:site/data/v1/executive.json"], cwd=SITE_DIR.parent)
+        assert executive_payload == json.loads(raw)
+        return replay_published_projection(SITE_DIR, SITE_DIR.parent)
 
     from src.publish.editorial import PROOF, anchor, verify_editorial
 

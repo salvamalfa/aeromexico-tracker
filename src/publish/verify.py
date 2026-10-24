@@ -154,7 +154,7 @@ def verify_site(site_dir: Path) -> list[str]:
 
 
 def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = frozenset()) -> list[str]:
-    """Shared structural checks; only editorial.verify_editorial may pass proven bytes.
+    """Shared structural checks; only explicit editorial/financial verifiers may pass proven bytes.
 
     The normal public entry point above never exempts semantic approvals.
     """
