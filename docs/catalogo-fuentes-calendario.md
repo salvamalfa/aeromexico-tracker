@@ -1820,12 +1820,13 @@ Comprobación reproducible sin red ni escrituras Silver/Gold:
 retenidos y las capturas de esta continuación. Resultado `verification.json`,
 SHA `4f52141dd44564a0e9261ef0bfcc13b98d08aeaecaf57bafd51c3d2ff9efd028`.
 Se ejecuta desde la raíz del checkout con dependencias del proyecto y esos
-insumos privados preservados. No actualiza fuentes:
+insumos privados preservados. El replay no actualiza fuentes ni sobrescribe el resultado preservado:
 
 ```bash
-python -c "import runpy; runpy.run_path('tmp/source-updates/evidence-20261024-audit/verify.py', run_name='__main__')"
+python -c "import runpy; runpy.run_path('tmp/source-updates/evidence-20261024-audit/verify.py', run_name='__main__')" --check
 ```
 
+El script tiene SHA `3b81b60654e96468773d235744c7f2f9ab8db507705802735ae93800c2d0fb8c`.
 Comprueba hashes/sidecars, etiquetas/columnas/periodos en dos anexos SEC,
 precisión con Decimal, celdas/fórmulas/caché AIFA y su rechazo real, metadata del
 mismo ID Aerocivil, recibo/cuerpo 503 y guards de fechas/2027. Las capturas AIFA
