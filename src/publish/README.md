@@ -102,6 +102,14 @@ as — a directory built from `web/` plus the exported v1 payloads. See
   `analysis_runs/` rule) and hashes the *manifest*, not the raw `site/`
   bytes, since the manifest already lists every file's own hash.
 
+Las pruebas de paridad usan el manifiesto firmado que existe en `site/` y la
+configuración comprometida con esa misma publicación. Leen esa configuración en
+un worktree temporal aislado; el ledger, los originales y los verificadores se
+reproducen sin sustituir sus controles. Un pin pendiente en HEAD no se trata como
+parte del sitio anterior. El sitio de cuatro tesis exige las cuatro identidades
+históricas; la quinta solo se exige cuando el manifiesto incorpora Aeroméxico
+3T26. Los artefactos del gate deben estar comprometidos antes de esa paridad.
+
 Never writes to the approval ledger, never approves/revokes/records
 anything. `web/` is the only implementation of each view, this gate its
 only publication path. `AGENTS.md` permanently authorizes agents to run this
