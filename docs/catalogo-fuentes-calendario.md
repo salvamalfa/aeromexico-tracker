@@ -1596,7 +1596,7 @@ posición sin presumir equivalencia. Sin baseline explícito, registra ausencia
 de comparación; ninguna comparación acredita una revisión oficial.
 
 
-Prueba real en código funcional `bb44fcc9794e69cd8e6ea6087343de72f5ae38ec`:
+Prueba real en código funcional `a2cfb66b766d2e198b3ea95bb57eddb284a10b24`:
 
 | Producto retenido | Resultado comprobado | Límite real |
 |---|---|---|
@@ -1611,18 +1611,18 @@ retenido el 24/ago: tabla 300, filas 2/23/26, columna 2, y gastos repetidos en
 tabla 306, fila 22. La comprobación usa estos bytes, no el estado actual de URL.
 
 Resumen/receta/plan/recibos locales:
-`tmp/source-updates/carrier-official-bb44fcc9-summary.json`, SHA-256
-`6c001abadfc91525e8e58b986917c5ca2743b0bacefddbf53dd9779938cce869`.
+`tmp/source-updates/carrier-official-a2cfb66b-summary.json`, SHA-256
+`6029aa12a1faef6f2723df516a073f08fc063d8e19c593c253eb6265b4f8334b`.
 Auditoría independiente sin importar módulos del producto:
-`carrier-official-bb44fcc9/afac-independent-review.json`, SHA-256
-`c6d99506ef52ef1706f76a46360b2c7726cedd0a9f6fb4a3be6ff7973b369022`.
+`carrier-official-a2cfb66b/afac-independent-review.json`, SHA-256
+`2155f4323c8664b302dfea3c9d79586da3f46d552a7394bc2c43a688e004c87c`.
 Reconstruyó los 36 campos nativos, 39 Gold, cada padre/artefacto/vínculo,
 las 117 huellas de código físicas/Git y las 474 conciliaciones. Los 24 ceros
 explícitos PDF sin observación DB no se imputaron a la base. `World 2 Fly`
 conserva 62 observaciones nativas y su nombre literal.
 
 El lote ejecutable terminó `blocked` por Volaris tras validar AFAC. El replay
-individual y `carrier-readiness-bb44fcc9/` pasan; `carrier-global-bb44fcc9/`
+individual y `carrier-readiness-a2cfb66b/` pasan; `carrier-global-a2cfb66b/`
 permanece `blocked_global_policy`, con Aerocivil/GDELT y el resto del alcance
 obligatorio ausentes/bloqueados. Ninguna ronda completa ni calendario queda
 aprobada por este resultado. Muestra literal del dry-run/resultado:
@@ -1636,7 +1636,7 @@ network_requests=0; paid_requests=0; activation=none; publication=not_authorized
 ready_for_calendar_incorporation=false
 ```
 
-Las pasadas focales/regresión cubren 308 casos comprobados. Las pruebas
+Las pasadas focales/regresión cubren 312 casos comprobados. Las pruebas
 sintéticas incluyen expediente AFAC físico PDF/ZIP de tres años,
 contrato Volaris completo, casos positivos y negativos, baselines físicos y
 rechazo de índices/portada como release. Pasan 80 pruebas independientes; la
@@ -1644,7 +1644,9 @@ revisión adversarial cerró todos sus hallazgos sin modificar tolerancias de
 Volaris. El CSV de entidades y los JSON de estos módulos usan UTF-8 explícito;
 la salida CLI JSON escapa Unicode para terminales ASCII. El dry-run conserva
 `latest_validated_period=null`; solo `checks_passed` informa el periodo
-realmente certificado. Dos pruebas en
+realmente certificado. Cuatro casos del límite de medianoche verifican que AFAC
+solo acepte un mes cerrado en America/Mexico_City; no basta el cierre UTC.
+Dos pruebas en
 subprocesos comprueban locale no UTF-8 y stdout ASCII, sin afirmar portabilidad
 integral de los helpers compartidos. La prueba física repetida conserva las
 cuatro salidas idénticas a las anteriores. La suite completa, CI/revisión del
@@ -1670,7 +1672,10 @@ revisión del head final mantienen su resultado propio en el PR del lote.
 El ajuste posterior de metadatos en compatibilidad `3dce54cd177093be9288ed9b589e25574e28f86b`
 pasó **282 pruebas afectadas** en 95,38 s. Solo corrige la diferencia entre
 planificado y validado; no modifica lectores, escalas, selección ni linaje.
-La prueba real final de AFAC y el bloqueo Volaris se repitieron en `bb44fcc9`;
+El guard de cierre mensual en compatibilidad `de4e7986b60746a8677bfd819a2971fc0d2c7c51`
+pasó **286 pruebas afectadas** en 101,49 s (ocho avisos pandas). Los cuatro
+casos adicionales cubren el límite local/UTC; no cambian las transformaciones.
+La prueba real final de AFAC y el bloqueo Volaris se repitieron en `a2cfb66b`;
 las cuatro salidas AFAC siguen idénticas a las del lote de nueve productos.
 Los otros ocho productos mantienen sus transformadores y originales sin cambios.
 Son ventanas independientes (julio, agosto, septiembre y 2T26), no una ronda
@@ -1679,14 +1684,14 @@ requiere que terminen sus revisiones y vuelva a pasar CI/revisión del head
 resultante antes de integrarlo. No se han relanzado sus revisiones.
 
 Lifecycle manual: conservar originales/candidatos/recibos/resumen/auditor y
-su resultado local de `carrier-official-bb44fcc9*`, readiness/global para
+su resultado local de `carrier-official-a2cfb66b*`, readiness/global para
 reproducir. Los lotes anteriores `carrier-official-bc5343f4*`,
 `carrier-official-d25f4f6d*`, `carrier-official-868232fd*` y
-`carrier-official-39b7dc05*` se conservan como
+`carrier-official-39b7dc05*` y `carrier-official-bb44fcc9*` se conservan como
 pruebas previas a las correcciones, no evidencia final. Auxiliares bajo `/tmp`,
 cachés y scratch de pytest son regenerables; no se suben originales, datos
 candidatos o informes paralelos al repositorio público. Inventario manual:
-131 archivos locales de este checkout y 294 de la compatibilidad, conservados
+158 archivos locales de este checkout y 294 de la compatibilidad, conservados
 fuera de Git público; los 24 archivos versionados tienen disposición en el PR.
 No hay retiros.
 
