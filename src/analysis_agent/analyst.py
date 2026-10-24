@@ -126,15 +126,8 @@ def validate(draft, package, calculations):
                 raise ValueError("Unknown or unavailable calculation")
             if binding["unit"] != node["unit"] or binding["period_id"] != node["period_id"]:
                 raise ValueError("Incompatible unit or period")
-            values[alias] = formatted(node, business=draft.get('summary_format')=='business_bullets_v1')
-            mode=binding.get('presentation','default')
-            if mode=='cents_short' and node['unit']=='cents_USD_per_ASK':
-                values[alias]=f"{node['value']:.2f} centavos de dólar"
-            elif mode=='period_label':
-                values[alias]=f"{node['period_id'][-1]}T{node['period_id'][2:4]}"
-            elif mode!='default':
-                from .presentation import reviewed_value
-                values[alias] = reviewed_value(node, mode)
+            from .presentation import binding_value
+            values[alias] = binding_value(node, binding, business=draft.get('summary_format')=='business_bullets_v1')
             lineage(node["calculation_id"], package, calculations)
         evidence_ids = claim.get("evidence_ids", [])
         for alias,reference in reported.items():

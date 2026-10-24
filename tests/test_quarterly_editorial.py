@@ -81,3 +81,63 @@ def test_private_review_status_absent_from_entire_public_json():
     assert secret not in json.dumps(result,ensure_ascii=False)
     assert [c['claim_id']for c in result['claims']]==['title','summary','context','public','shared']
     assert len(result['sections'])==1
+
+
+def test_binding_only_claim_keeps_the_numeric_source_for_reviewed_money():
+    from src.web_export.analysis import _claim_citations
+    package={'schema_version':'quarterly_release_v1','period_id':'2026Q3',
+        'sources':[{'artifact_id':'release','source_url':'https://ir.aeromexico.com/results'}],
+        'metrics':[{'metric_id':'m','excerpt_id':'e','artifact_id':'release'}],
+        'excerpts':[{'excerpt_id':'e','artifact_id':'release','period_id':'2026Q3','text':'Total revenue | 1,619'}]}
+    calculations={'nodes':[{'calculation_id':'c','value':1619000000,'unit':'USD','period_id':'2026Q3',
+        'formatted_value':'1,619,000,000.000 USD','input_ids':['m']}]}
+    claim={'claim_id':'sales','bindings':{'revenue':{'calculation_id':'c','presentation':'usd_millions_0'}},
+           'evidence_ids':[],'text_template':'Ventas {{revenue}}.'}
+    result=_claim_citations(claim,package,calculations,{},'Ventas US$1,619 millones.')
+    assert len(result)==1
+    assert result[0]['value']=='US$1,619 millones'
+    assert result[0]['href']=='https://ir.aeromexico.com/results'
+
+
+
+def test_real_gate_and_exporter_share_temporal_projection_and_private_filter(monkeypatch):
+    import copy,json
+    from src.publish.gate import _analysis_payload
+    from src.web_export import analysis as a
+    record={'draft':{'thesis_claim_id':'public','summary_claim_ids':['public'],
+        'reader_private_section_keys':['questions'],
+        'sections':[{'key':'financial','claim_ids':['public']},{'key':'questions','claim_ids':['private']}]}}
+    authorized={'period_id':'2026Q3','version':'fixture','claims':[
+        {'claim_id':'public','text':'Visible'},{'claim_id':'private','text':'PRIVATE STATUS'}],
+        'sections':[{'title':'Financial','paragraphs':['Visible']},{'title':'Pending','paragraphs':['PRIVATE STATUS']}]}
+    package={'editorial_extension':{'base_package':'synthetic fixture'},'period_id':'2026Q3','cutoff_date':'2026-10-24'}
+    monkeypatch.setattr(a,'_load_record',lambda *args,**kwargs:record)
+    monkeypatch.setattr(a.flow,'consumer_payload',lambda *args,**kwargs:copy.deepcopy(authorized))
+    monkeypatch.setattr(a.flow,'verified_inputs',lambda *args:(package,{},{}))
+    monkeypatch.setattr(a,'_citations_by_claim',lambda *args:{'public':[]})
+    before=copy.deepcopy(authorized)
+    exported=a.export_period('2026Q3','fixture')
+    gated=_analysis_payload(record,authorized,package,{})
+    assert exported==gated
+    assert gated['cutoff_date']=='2026-10-24' and gated['selection_mode']=='retrospective'
+    assert gated['period_label']=='3T26' and gated['guidance_as_of']=='report_date'
+    assert 'PRIVATE STATUS' not in json.dumps(gated)
+    assert authorized==before
+
+
+def test_citation_context_matches_nonbusiness_authoring_without_evidence_ids():
+    from src.web_export.analysis import _citations_by_claim
+    from src.analysis_agent.presentation import binding_value
+    package={'schema_version':'quarterly_release_v1','period_id':'2026Q3',
+        'sources':[{'artifact_id':'release','source_url':'https://ir.aeromexico.com/results'}],
+        'metrics':[{'metric_id':'m','excerpt_id':'e','artifact_id':'release'}],
+        'excerpts':[{'excerpt_id':'e','artifact_id':'release','period_id':'2026Q3','text':'Total revenue | 1,619'}]}
+    node={'calculation_id':'c','value':1619000000,'unit':'USD','period_id':'2026Q3',
+          'formatted_value':'1,619,000,000.000 USD','input_ids':['m']}
+    binding={'calculation_id':'c'}
+    text='Ventas '+binding_value(node,binding,business=False)+'.'
+    claim={'claim_id':'sales','bindings':{'revenue':binding},'evidence_ids':[],'text_template':'Ventas {{revenue}}.'}
+    record={'draft':{'claims':[claim],'summary_claim_ids':['sales'],'sections':[]}}
+    result=_citations_by_claim(record,package,{'nodes':[node]},{'claims':[{'claim_id':'sales','text':text}]})
+    assert result['sales'][0]['value']=='1,619.0 millones USD'
+    assert result['sales'][0]['href']=='https://ir.aeromexico.com/results'

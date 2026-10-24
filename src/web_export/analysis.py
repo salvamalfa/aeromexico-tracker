@@ -28,6 +28,7 @@ and ``contracts/web/privacy.yaml``.
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import shutil
 import sys
@@ -40,6 +41,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 
 from src.analysis_agent import lifecycle as flow
 from src.analysis_agent.analyst import formatted, lineage
+from src.analysis_agent.presentation import binding_value
 from src.config import PATHS
 from src.publish.manifest import analysis_identity, analysis_relative_path, analysis_sort_key
 from src.web_export.privacy import check_privacy, load_privacy_rules
@@ -217,6 +219,7 @@ def _claim_citations(
     calculations: dict[str, Any],
     numbers: dict[str, int],
     rendered_text: str | None = None,
+    *, business: bool = True,
 ) -> list[dict[str, Any]]:
     """Citation selection and href/title construction for one claim, minus
     the DOM text-splicing (the front-end
@@ -228,7 +231,7 @@ def _claim_citations(
     ``_citations_by_claim``)."""
 
     if package.get("schema_version") in ("entity_evidence_v1", "quarterly_release_v1"):
-        return _entity_claim_citations(claim, package, calculations, numbers, rendered_text)
+        return _entity_claim_citations(claim, package, calculations, numbers, rendered_text, business=business)
     nodes = {n["calculation_id"]: n for n in calculations["nodes"]}
     excerpts = {e["excerpt_id"]: e for e in package["excerpts"]}
     sources = {s["artifact_id"]: s for s in package["sources"]}
@@ -270,7 +273,7 @@ def _claim_citations(
     return citations
 
 
-def _entity_claim_citations(claim, package, calculations, numbers, rendered_text=None):
+def _entity_claim_citations(claim, package, calculations, numbers, rendered_text=None, *, business=True):
     """Public links for both observed/derived values and qualitative entity claims.
 
     Reuses the verified lineage without exporting it. A multi-carrier ratio may
@@ -284,18 +287,25 @@ def _entity_claim_citations(claim, package, calculations, numbers, rendered_text
     nodes = {node["calculation_id"]: node for node in calculations["nodes"]}
     excerpts = {excerpt["excerpt_id"]: excerpt for excerpt in package["excerpts"]}
     sources = {source["artifact_id"]: source for source in package["sources"]}
+    def displayed(binding):
+        node = nodes[binding["calculation_id"]]
+        if package.get("schema_version") == "entity_evidence_v1":
+            # Entity capsules own their audited localization and precision.
+            return node["formatted_value"]
+        return binding_value(node, binding, business=business)
+
     if rendered_text is None:
         rendered_text = claim.get("text", claim.get("text_template", ""))
         for alias, binding in claim.get("bindings", {}).items():
             rendered_text = rendered_text.replace(
-                "{{" + alias + "}}", nodes[binding["calculation_id"]]["formatted_value"]
+                "{{" + alias + "}}", displayed(binding)
             )
     selections = []
     for binding in claim.get("bindings", {}).values():
         if binding.get("presentation") == "period_label":
             continue
         node = nodes[binding["calculation_id"]]
-        value = node["formatted_value"]
+        value = displayed(binding)
         if not value or value not in rendered_text:
             continue
         for metric in lineage(node["calculation_id"], package, calculations):
@@ -391,7 +401,8 @@ def _citations_by_claim(
         if claim_id in result:
             continue
         result[claim_id] = _claim_citations(
-            claims[claim_id], package, calculations, numbers, rendered.get(claim_id)
+            claims[claim_id], package, calculations, numbers, rendered.get(claim_id),
+            business=d.get("summary_format") == "business_bullets_v1",
         )
     return result
 
@@ -442,17 +453,23 @@ def export_period(
         authorized.get("version"),
     ) != (entity_key or "AEROMEXICO", period_id, version):
         raise ValueError("Authorized analysis identity does not match requested entity/period/version")
+    return publication_payload(record, authorized, package, calculations)
+
+
+def publication_payload(record, authorized, package, calculations):
+    """Project one already verified approval identically for exporter and gate."""
+    payload = copy.deepcopy(authorized)
     if package.get("editorial_extension"):
         # These temporal labels derive from the replayed package, whose identity
         # and cutoff are part of the audited record's evidence fingerprint.
         period = package["period_id"]
-        authorized.update(period_label=f"{period[-1]}T{period[2:4]}", cutoff_date=package["cutoff_date"],
+        payload.update(period_label=f"{period[-1]}T{period[2:4]}", cutoff_date=package["cutoff_date"],
                           selection_mode="retrospective", guidance_as_of="report_date")
-    authorized = _drop_private_sections(authorized, record)
-    citations = _citations_by_claim(record, package, calculations, authorized)
-    for claim in authorized["claims"]:
+    payload = _drop_private_sections(payload, record)
+    citations = _citations_by_claim(record, package, calculations, payload)
+    for claim in payload["claims"]:
         claim["citations"] = citations.get(claim["claim_id"], [])
-    return authorized
+    return payload
 
 
 def export_analysis(

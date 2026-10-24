@@ -39,7 +39,6 @@ anything.
 
 from __future__ import annotations
 
-import copy
 import shutil
 import subprocess
 import sys
@@ -217,11 +216,7 @@ def _analysis_payload(
     the (record, authorized, package, calculations) this gate already holds
     from verify_records, instead of re-querying the ledger a second time."""
 
-    payload = analysis_export._drop_private_sections(copy.deepcopy(authorized), record)
-    citations = analysis_export._citations_by_claim(record, package, calculations, payload)
-    for claim in payload["claims"]:
-        claim["citations"] = citations.get(claim["claim_id"], [])
-    return payload
+    return analysis_export.publication_payload(record, authorized, package, calculations)
 
 
 def export_data(entries: list[tuple[Any, Any, Any, Any]], out_dir: Path) -> None:

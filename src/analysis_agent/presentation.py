@@ -18,3 +18,17 @@ def reviewed_value(node, mode):
     if mode == 'previous_period_label' and node['period_id'] == '2026Q3':
         return '2T26'
     raise ValueError('Incompatible reviewed presentation unit or value')
+
+
+def binding_value(node, binding, *, business=False):
+    """One binding renderer for authoring and public citation selection."""
+    from .analyst import formatted
+
+    mode = binding.get('presentation', 'default')
+    if mode == 'default':
+        return formatted(node, business=business)
+    if mode == 'cents_short' and node['unit'] == 'cents_USD_per_ASK':
+        return f"{node['value']:.2f} centavos de dólar"
+    if mode == 'period_label':
+        return f"{node['period_id'][-1]}T{node['period_id'][2:4]}"
+    return reviewed_value(node, mode)
