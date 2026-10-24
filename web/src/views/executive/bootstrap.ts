@@ -47,16 +47,16 @@ function renderKpisAndTable(periodId: string): void {
   if (source) source.textContent = ECONOMY_SOURCE[entity];
 }
 
-let readingCatalogReady = false;
+let readingCatalogState: "loading" | "ready" | "unavailable" = "loading";
 
 async function renderReading(): Promise<void> {
   const entity = selection("reading")[0] ?? "AEROMEXICO";
-  if (!readingCatalogReady) {
+  if (readingCatalogState !== "ready") {
     const selector = $("reading-period") as HTMLSelectElement | null;
     if (selector) { selector.replaceChildren(); selector.disabled = true; }
     const copy = $("narrative-copy");
     if (copy) {
-      copy.textContent = "No se pudo verificar el catálogo de lecturas publicadas.";
+      copy.textContent = readingCatalogState === "loading" ? "Cargando lectura…" : "No se pudo verificar el catálogo de lecturas publicadas.";
       delete copy.dataset.period;
       copy.dataset.entity = entity;
     }
@@ -138,14 +138,7 @@ function mountPickers(): void {
 
 export async function mountExecutive(dataRoot = "data/v1"): Promise<void> {
   await loadExecutive(dataRoot);
-  readingCatalogReady = false;
-  try {
-    await loadReadingPeriods(state.dataRoot);
-    readingCatalogReady = true;
-  } catch {
-    // A missing/invalid catalog closes reading availability, while exported
-    // indicators and lazy views retain their independent startup path.
-  }
+  readingCatalogState = "loading";
   await loadMarket(state.dataRoot);
   const note = $("industry-note");
   if (note && entityState.market) note.textContent = entityState.market.metadata.industry_note;
@@ -156,7 +149,7 @@ export async function mountExecutive(dataRoot = "data/v1"): Promise<void> {
     selectReadingPeriod((event.target as HTMLSelectElement).value);
     void renderReading();
   });
-  await renderReading();
+  void renderReading();
   wireStepper();
   subscribe((periodId) => void render(periodId));
   $("unit-range")!.addEventListener("change", renderUnitEconomics);
@@ -166,4 +159,13 @@ export async function mountExecutive(dataRoot = "data/v1"): Promise<void> {
   renderUnitEconomics();
   const periodId = currentPeriodId();
   if (periodId) await render(periodId);
+  // Financial controls and charts are ready before either reading request.
+  // A slow catalog or analysis must not hold up other views or their startup.
+  void loadReadingPeriods(state.dataRoot).then(async () => {
+    readingCatalogState = "ready";
+    await renderReading();
+  }).catch(() => {
+    readingCatalogState = "unavailable";
+    void renderReading();
+  });
 }

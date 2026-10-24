@@ -216,6 +216,7 @@ def test_reading_tab_renders_the_synthetic_analysis_by_default(page_with_console
     assert page.is_visible("#panel-reading")
     assert page.inner_text("#period-display") == "2T26"
     page.wait_for_function("document.getElementById('narrative-copy').dataset.period === '2026Q2'")
+    page.wait_for_selector("#analysis-open-full")
     assert "Fixture" in page.inner_text("#narrative-copy")
     assert page.is_visible("#analysis-open-full")
     assert console_errors == []
@@ -378,6 +379,9 @@ def test_missing_reading_catalog_keeps_indicators_and_lazy_views_available(web_s
             )
         page.goto(web_server)
         page.wait_for_function("document.getElementById('period-display').textContent !== '—'")
+        page.wait_for_function(
+            "document.getElementById('narrative-copy').textContent.includes('No se pudo verificar el catálogo')"
+        )
         assert page.locator("#reading-period").is_disabled()
         assert "No se pudo verificar el catálogo" in page.inner_text("#narrative-copy")
         assert page.locator("#analysis-open-full").count() == 0
@@ -428,5 +432,54 @@ def test_financial_kpi_parity_does_not_wait_for_the_independent_reading_period(w
             page.inner_text("#period-display")
             == executive["views"][executive["records"][0]["period_id"]]["period_label"]
         )
+        assert errors == []
+        browser.close()
+
+
+@pytest.mark.parametrize("stalled", ["catalog", "analysis"])
+def test_slow_reading_requests_do_not_block_financial_controls_or_lazy_views(web_server, stalled):
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(executable_path=_chromium_executable())
+        page = browser.new_page()
+        errors, held = [], []
+        page.on("pageerror", lambda error: errors.append(str(error)))
+        target = "**/publication_manifest.json" if stalled == "catalog" else "**/data/v1/analysis/*.json"
+        page.route(target, lambda route: held.append(route))
+        with page.expect_request(target):
+            page.goto(web_server, wait_until="domcontentloaded")
+        page.wait_for_function("document.getElementById('period-display').textContent === '2T26'")
+        page.evaluate(
+            "() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))"
+        )
+        assert len(held) == 1
+        assert page.locator("#analysis-open-full").count() == 0
+        if stalled == "catalog":
+            assert page.locator("#reading-period").is_disabled()
+            assert "Cargando lectura" in page.inner_text("#narrative-copy")
+        else:
+            assert not page.locator("#reading-period").is_disabled()
+            assert "Cargando análisis" in page.inner_text("#narrative-copy")
+        page.click("#tab-economy")
+        assert page.is_enabled("#period-prev")
+        page.click("#period-prev")
+        page.wait_for_function("document.getElementById('period-display').textContent === '1T26'")
+        assert page.inner_text("#kpi-rask_cents_per_km-value") not in {"", "—", "No disponible"}
+        page.click("#tab-flights")
+        page.wait_for_selector("#route-flow-map .scattergeo .js-line")
+        assert len(held) == 1
+        # Flights keeps its own available cut. Return to financial controls
+        # and select Q1 again before releasing the still-pending Q2 reading.
+        page.click("#tab-economy")
+        while page.is_enabled("#period-next"):
+            page.click("#period-next")
+        page.click("#period-prev")
+        page.wait_for_function("document.getElementById('period-display').textContent === '1T26'")
+        held[0].continue_()
+        page.wait_for_selector("#analysis-open-full", state="attached")
+        assert page.inner_text("#period-display") == "1T26"
+        page.click("#tab-reading")
+        page.wait_for_selector("#analysis-open-full")
+        assert page.locator("#narrative-copy").get_attribute("data-period") == "2026Q2"
+        assert page.inner_text("#period-display") == "1T26"
         assert errors == []
         browser.close()
