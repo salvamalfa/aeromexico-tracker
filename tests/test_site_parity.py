@@ -116,6 +116,18 @@ def published_executive(executive_payload: dict) -> dict:
     """Replay the new primary-source edition over the pinned public baseline."""
     from src.publish.records import _analysis_manifest_entry
 
+    from src.publish.editorial import PROOF, anchor, verify_editorial
+
+    if (SITE_DIR / PROOF).exists():
+        assert verify_editorial(SITE_DIR, SITE_DIR.parent) == []
+        spec = anchor(SITE_DIR.parent)
+        baseline = json.loads(subprocess.check_output(
+            ["git", "show", f"{spec['baseline_commit']}:site/data/v1/executive.json"],
+            cwd=SITE_DIR.parent,
+        ))
+        assert executive_payload == baseline
+        return baseline
+
     entries = manifest_mod.load_manifest(SITE_DIR)["analysis_manifest"]
     quarterly = [e for e in entries if e["period_id"] == "2026Q3" and "entity_key" not in e]
     if not quarterly:
@@ -414,17 +426,21 @@ def _check_economy_kpis(site_page, executive_payload: dict) -> None:
     period_ids = _period_ids(executive_payload)
     for period_id in reversed(period_ids):
         view = views[period_id]
-        # The narrative dataset changes before its async fetch completes.
-        # The display and stepper update only after that render has finished.
+        kpis_by_key = {item["key"]: item for item in view["kpis"]}
+        expected_values = {key: kpis_by_key[key]["display_value"] for key in READER_KPI_KEYS}
+        margin = records[period_id]["unit_margin_cents_per_km"]
+        expected_values["unit_margin_cents_per_km"] = f"{'+' if margin >= 0 else ''}{margin:.2f} ¢ USD"
+        # Reading and financial periods are independent. Wait for the actual
+        # financial label, stepper and rendered KPI values before comparing.
         site_page.wait_for_function(
-            "([id, label, first, last]) => "
-            "document.getElementById('narrative-copy').dataset.period === id && "
+            "([label, first, last, values]) => "
             "document.getElementById('period-display').textContent.trim() === label && "
             "document.getElementById('period-prev').disabled === first && "
-            "document.getElementById('period-next').disabled === last",
-            arg=[period_id, view["period_label"], period_id == period_ids[0], period_id == period_ids[-1]],
+            "document.getElementById('period-next').disabled === last && "
+            "Object.entries(values).every(([key, value]) => "
+            "document.getElementById('kpi-' + key + '-value').textContent.trim() === value)",
+            arg=[view["period_label"], period_id == period_ids[0], period_id == period_ids[-1], expected_values],
         )
-        kpis_by_key = {item["key"]: item for item in view["kpis"]}
         observed = _kpi_values(site_page)
         for key in READER_KPI_KEYS:
             assert observed[key] == kpis_by_key[key]["display_value"], f"{key} mismatch at {period_id}"

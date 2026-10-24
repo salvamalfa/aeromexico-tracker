@@ -47,8 +47,25 @@ function renderKpisAndTable(periodId: string): void {
   if (source) source.textContent = ECONOMY_SOURCE[entity];
 }
 
+let readingCatalogReady = false;
+
 async function renderReading(): Promise<void> {
   const entity = selection("reading")[0] ?? "AEROMEXICO";
+  if (!readingCatalogReady) {
+    const selector = $("reading-period") as HTMLSelectElement | null;
+    if (selector) { selector.replaceChildren(); selector.disabled = true; }
+    const copy = $("narrative-copy");
+    if (copy) {
+      copy.textContent = "No se pudo verificar el catálogo de lecturas publicadas.";
+      delete copy.dataset.period;
+      copy.dataset.entity = entity;
+    }
+    const period = $("narrative-period");
+    if (period) period.textContent = "—";
+    const name = $("narrative-entity");
+    if (name) name.textContent = entityLabel(entity);
+    return;
+  }
   const view = selectedReading(entity);
   if (view) await renderNarrative(view, entity, entityLabel(entity));
 }
@@ -121,7 +138,14 @@ function mountPickers(): void {
 
 export async function mountExecutive(dataRoot = "data/v1"): Promise<void> {
   await loadExecutive(dataRoot);
-  await loadReadingPeriods(state.dataRoot);
+  readingCatalogReady = false;
+  try {
+    await loadReadingPeriods(state.dataRoot);
+    readingCatalogReady = true;
+  } catch {
+    // A missing/invalid catalog closes reading availability, while exported
+    // indicators and lazy views retain their independent startup path.
+  }
   await loadMarket(state.dataRoot);
   const note = $("industry-note");
   if (note && entityState.market) note.textContent = entityState.market.metadata.industry_note;
