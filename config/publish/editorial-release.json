@@ -10,8 +10,8 @@
     "approval_event": "ecc7e7fd9ee1230844540544ef7d0b6c053e6c93fb7e3d8d4028f54080f24061",
     "audit_hash": "f478d27950dd953c2ab64aa9ba57323acccc4cd3066b1ee17f35f59786201099"
   },
-  "analysis_sha256": "18d52383a3d63445bf02269e90de39c898464462733389580a461bec8e919702",
-  "analysis_bytes": 46692,
+  "analysis_sha256": "1bc02904e43827c90d9f00f5981446b1c357849430c1be88cea7a70a62b3068f",
+  "analysis_bytes": 46691,
   "frontend_files": [
     {
       "path": "assets/bootstrap-Bon95OId.css",
