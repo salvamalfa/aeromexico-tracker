@@ -74,6 +74,23 @@ formatos arbitrarios ni conversiones entre millas y kilómetros sin cálculo.
 La sección administrativa «Pendientes» de la vista de revisión se conserva en el
 expediente como sección privada; su aviso de borrador no se publica como estado
 actual. Esta adaptación no hereda auditorías ni aprobaciones de otra versión.
+La nueva edición conserva el consentimiento real como solicitud de publicación
+pendiente de auditoría. No reutiliza el registro faltante de la edición anterior.
+La salida candidata antigua del PR se retiró: `site/` vuelve al baseline vigente
+antes de preparar otra publicación. La configuración de cohortes permanece vacía
+hasta disponer de aprobación y payload reproducidos de la nueva identidad.
+
+El preflight del 24 de octubre sigue bloqueado: faltan registros históricos
+exactos en el checkout de publicación; el respaldo persistido necesita materializar
+objetos LFS y su autenticación no está disponible. La verificación del baseline
+requiere además los dos pins externos ya aprobados del chat y Noticias. La lectura
+de variables del repositorio devolvió HTTP 403. No se derivan pins desde el
+candidato, se cambian permisos ni se sustituyen expedientes. El trabajo permanece
+en PR; no se integró ni desplegó. Los originales IR, recibos, contexto cerrado,
+versiones, informe independiente y logs se conservan localmente por su utilidad
+para reanudar los controles; los scripts privados de preparación no son otra
+fuente autoritativa ni se publican.
+
 
 Deuda neta y apalancamiento comparan contra diciembre de 2025. La recuperación
 de combustible de 113% reportada incluye el ajuste de lealtad de US$48.7m.

@@ -1,25 +1,4 @@
 {
   "schema_version": "analysis_approval_cohorts_v1",
-  "cohorts": [
-    {
-      "implementation_commit": "996c287cdd3b378404f5acb3bd23f6392344802b",
-      "analysis_manifest": [
-        {
-          "period_id": "2026Q3",
-          "version": "467aff71b0cb95ed2a55c9a25712463152f83aeabc1a3583a522930571556be3",
-          "content_hash": "33ef3e2b8709d157aa6e07766a5400b97567194e4dd6a761fcf31e4a19133c84",
-          "evidence_fingerprint": "8844415006f4c33c7af9c50b869aa18cbc9ef4d09dd11777208aa87e7bca2dcd",
-          "approval_event": "3ae8de52089478929babd7b37d8056d944246a2e16c8b3fa30443a5bae0166fb",
-          "audit_hash": "c61cec9ab0e5dc92b340b09b6a0d388eb6d55897d2ad2b608abd1c73d27d1f77"
-        }
-      ],
-      "files": [
-        {
-          "path": "data/v1/analysis/2026Q3.json",
-          "bytes": 30631,
-          "sha256": "86acc5b856105eb20b0688f0acffe3e84d10ce5290165ecf8d47493a90a4cd04"
-        }
-      ]
-    }
-  ]
+  "cohorts": []
 }
