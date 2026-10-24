@@ -150,6 +150,14 @@ def _data_schema_for(
 
 def verify_site(site_dir: Path) -> list[str]:
     """Return the list of problems found (empty means the site is valid)."""
+    return _verify_site(site_dir)
+
+
+def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = frozenset()) -> list[str]:
+    """Shared structural checks; only editorial.verify_editorial may pass proven bytes.
+
+    The normal public entry point above never exempts semantic approvals.
+    """
 
     site_dir = Path(site_dir)
     problems: list[str] = []
@@ -300,7 +308,7 @@ def verify_site(site_dir: Path) -> list[str]:
             continue
         if isinstance(payload, dict):
             data_payloads[rel] = payload
-        if rel == "data/v1/news.json":
+        if rel == "data/v1/news.json" and rel not in preserved_approval_files:
             from src.web_export.news import news_export_payload
             try:
                 if payload != news_export_payload():
@@ -344,7 +352,7 @@ def verify_site(site_dir: Path) -> list[str]:
     has_receipt = receipt_path in listed_paths
     if has_metrics != has_receipt:
         problems.append("business metrics payload and approval receipt must be published together")
-    elif has_metrics and metrics_path in data_payloads and receipt_path in data_payloads:
+    elif has_metrics and metrics_path in data_payloads and receipt_path in data_payloads and not {metrics_path, receipt_path} <= preserved_approval_files:
         try:
             expected_payload, expected_receipt = build_approved_payload(
                 PATHS.root / "config/chat/business-metrics-proposal.json",

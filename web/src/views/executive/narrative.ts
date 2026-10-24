@@ -196,7 +196,7 @@ function wireDialogButton(analysis: AnalysisDocument, periodLabel: string, entit
   };
 }
 
-export async function renderNarrative(view: ExecutiveView, entityKey = "AEROMEXICO", entityName = "Aeroméxico"): Promise<void> {
+export async function renderNarrative(view: Pick<ExecutiveView, "period_id" | "period_label">, entityKey = "AEROMEXICO", entityName = "Aeroméxico"): Promise<void> {
   const epoch = ++renderEpoch;
   $("narrative-period")!.textContent = view.period_label;
   const entityNode = $("narrative-entity");

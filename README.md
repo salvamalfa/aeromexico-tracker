@@ -39,7 +39,8 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
   Usa datos y análisis ya aprobados; Noticias mantiene cobertura parcial.
 - **Analysis Agent:** la lectura financiera de Aeroméxico 3T26 está preparada:
   «Ingresos récord, margen bajo presión». El dueño aprobó su contenido y publicación
-  condicionada a los controles. Falta completar el gate; todavía no está publicada.
+  condicionada a los controles. Se prepara la modalidad editorial acotada; todavía no está publicada.
+  La lectura tiene un selector independiente: los indicadores permanecen en 2T26.
   Usa cifras no auditadas, fuentes del emisor y cálculos propios identificados. Las cuatro tesis publicadas de 2T26
   conservan sus versiones y texto. Los cortes mensuales del mapa son independientes.
 - **Chat:** fase 2 implementada; Stage 3 completó 30 casos/34 mensajes y la

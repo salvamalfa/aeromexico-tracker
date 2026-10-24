@@ -7,8 +7,12 @@
 - Contraste explícito y exclusión del estado privado de revisión de todo el
   payload público. La versión candidata anterior se retiró; el sitio mantiene
   exactamente el baseline publicado mientras se recuperan los insumos del gate.
-- Publicación pendiente: expedientes históricos, materialización LFS y pins
-  externos del entorno. Sin integración, despliegue ni publicación de Monthly.
+- Modalidad editorial explícita: verifica el baseline remoto y cada archivo
+  servido, preserva bytes históricos y valida íntegramente la lectura nueva.
+  Su selector es independiente de indicadores y vuelos. Los modos generales
+  conservan la reproducción de expedientes históricos y pins externos.
+- Publicación pendiente de finalizar gate, revisión y CI de esta modalidad.
+  Monthly continúa privado.
 
 ## 2026-10-21 · Aeroméxico 3T26 financiero
 

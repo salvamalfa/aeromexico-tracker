@@ -70,6 +70,10 @@ def web_server(tmp_path_factory, web_dist_dir):
     for record in _load_fixture("executive_sample.json")["records"]:
         period = record["period_id"]
         write_json(out_dir / "analysis" / f"{period}.json", {**analysis, "period_id": period})
+    write_json(root / "publication_manifest.json", {"analysis_manifest": [
+        {"period_id": record["period_id"], "approval_event": "synthetic-approved"}
+        for record in _load_fixture("executive_sample.json")["records"]
+    ]})
 
     handler = partial(SimpleHTTPRequestHandler, directory=str(root))
     server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
@@ -139,6 +143,29 @@ def test_news_source_links_keep_their_own_publisher(page_with_console_capture, w
     page.wait_for_selector(".news-card")
     assert page.locator('a[href="https://example.com/second"]').text_content() == "Abrir fuente · Otro medio"
     assert page.locator('a[href="https://ri.vivaaerobus.com/doc"]').text_content() == "Abrir fuente · Viva"
+    assert errors == []
+
+
+def test_editorial_quarter_does_not_add_financial_observations(page_with_console_capture, web_server) -> None:
+    page, errors = page_with_console_capture
+    manifest = {"analysis_manifest": [
+        {"period_id": "2026Q2", "approval_event": "old"},
+        {"period_id": "2026Q3", "approval_event": "new"},
+    ]}
+    analysis = {**_load_fixture("analysis_sample.json"), "period_id": "2026Q3"}
+    page.route("**/publication_manifest.json", lambda route: route.fulfill(json=manifest))
+    page.route("**/analysis/2026Q3.json", lambda route: route.fulfill(json=analysis))
+    page.reload()
+    page.wait_for_function("document.getElementById('narrative-copy').dataset.period === '2026Q3'")
+    assert page.inner_text("#period-display") == "2T26"
+    assert page.input_value("#reading-period") == "2026Q3"
+    page.select_option("#reading-period", "2026Q2")
+    page.wait_for_function("document.getElementById('narrative-copy').dataset.period === '2026Q2'")
+    assert page.inner_text("#period-display") == "2T26"
+    page.click("#period-prev")
+    page.wait_for_function("document.getElementById('period-display').textContent === '1T26'")
+    assert page.input_value("#reading-period") == "2026Q2"
+    assert page.request.get(web_server + "data/v1/executive.json").json()["metadata"]["last_period"] == "2026Q2"
     assert errors == []
 
 

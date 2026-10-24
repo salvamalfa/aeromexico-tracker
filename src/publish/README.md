@@ -143,7 +143,50 @@ coincidan; la presencia de un archivo por sí sola no acredita aprobación.
 
 ## Punto de entrada
 
-Para el trimestre financiero de Aeroméxico 3T26, `--quarterly-only` agrega
+### Publicación editorial acotada
+
+El dueño autorizó el 24 de octubre separar la lectura de los indicadores.
+`--editorial-only` recibe únicamente el registro nuevo aprobado de Aeroméxico
+3T26. Verifica sus fuentes, cálculos, auditoría y aprobación con el lifecycle
+actual, nuevamente bajo lock antes del reemplazo atómico. No modifica
+`executive.json`, métricas del chat, noticias, vuelos ni las cuatro tesis 2T26.
+
+La autoridad del baseline es el commit remoto de `master`, fijado en
+`config/publish/editorial-release.json` y revisado en el PR. El gate exige una
+corrida Pages exitosa con exactamente ese árbol `site/` (el commit de despliegue
+puede ser anterior si el árbol permanece idéntico). Comprueba el manifiesto y
+cada archivo servido por HTTPS contra sus bytes en Git, antes y después del
+build; rechaza redirecciones y cambios remotos concurrentes. No usa un baseline
+local autofirmado. El ancla también fija los bytes aprobados de la tesis y el
+inventario exacto de recursos compilados del dashboard. Conserva los recursos
+anteriores y el HTML de las otras aplicaciones.
+
+`python -m src.publish.editorial site/` es el verificador explícito de esta
+modalidad. Contrasta el recibo editorial contra el ancla comprometida y el
+árbol Git; conserva contratos, aprobación histórica e inventario, y aplica
+todos los controles estructurales y de privacidad. Solo para los bytes
+históricos demostrados omite la reproducción semántica de noticias y métricas.
+El recibo registra observaciones del gate; el verificador offline no autentica
+por sí mismo una observación de red ni reproduce las fuentes antiguas. Esta
+garantía se sustituye por la identidad exacta con el despliegue anterior
+verificado. El verificador general `src.publish.verify` conserva sus controles.
+Pages ejecuta el verificador editorial cuando el ancla explícita está presente;
+un recibo aislado nunca activa la modalidad. CI y revisión siguen siendo
+obligatorios y la publicación se comprueba nuevamente por HTTPS.
+
+La lectura obtiene los trimestres disponibles de `analysis_manifest` y usa
+`readingPeriod` en la URL. No añade observaciones financieras ni altera el
+selector compartido de indicadores y vuelos. La herramienta financiera del
+chat mantiene su edición anterior. Monthly permanece separado y privado.
+
+```bash
+python -m src.publish --editorial-only --record <registro-3T26-aprobado> --out site/
+python -m src.publish.editorial site/
+```
+
+### Publicación financiera completa
+
+La modalidad general `--quarterly-only` agrega
 solo `analysis/2026Q3.json` y la proyección ejecutiva de Aeroméxico del
 paquete primario auditado. Conserva byte por byte los demás datasets,
 incluidos vuelos mensuales, noticias y las cuatro tesis de 2T26. Dentro del

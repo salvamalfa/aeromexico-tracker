@@ -534,6 +534,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, default=PATHS.root / "site")
     publish_modes = parser.add_mutually_exclusive_group()
     publish_modes.add_argument(
+        "--editorial-only", action="store_true",
+        help="publish only the approved reading, inheriting remotely verified historical bytes",
+    )
+    publish_modes.add_argument(
         "--quarterly-only", action="store_true",
         help="add the audited Aeromexico 3Q26 financial release, preserving existing datasets and theses",
     )
@@ -560,7 +564,13 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        if args.quarterly_only:
+        if args.editorial_only:
+            from .editorial import publish_editorial
+            try:
+                result = publish_editorial(args.records, args.out)
+            except (ValueError, OSError, subprocess.CalledProcessError) as error:
+                raise PublicationRefused(f"editorial publication rejected: {error}") from error
+        elif args.quarterly_only:
             from .quarterly_overlay import publish_quarterly
             result = publish_quarterly(args.records, args.out)
         elif args.flights_only:

@@ -30,6 +30,7 @@ import {
 } from "../economy/charts";
 import { renderQuarterTable } from "../economy/table";
 import { mountPicker, selection, type EntityKey } from "../shell/carriers";
+import { loadReadingPeriods, selectedReading, selectReadingPeriod } from "./reading-periods";
 
 const ECONOMY_SOURCE: Record<EntityKey, string> = {
   AEROMEXICO: "Fuente: v_aeromexico_quarterly",
@@ -46,11 +47,10 @@ function renderKpisAndTable(periodId: string): void {
   if (source) source.textContent = ECONOMY_SOURCE[entity];
 }
 
-async function renderReading(periodId: string): Promise<void> {
-  const view = state.views[periodId];
-  if (!view) return;
+async function renderReading(): Promise<void> {
   const entity = selection("reading")[0] ?? "AEROMEXICO";
-  await renderNarrative(view, entity, entityLabel(entity));
+  const view = selectedReading(entity);
+  if (view) await renderNarrative(view, entity, entityLabel(entity));
 }
 
 async function render(periodId: string): Promise<void> {
@@ -58,7 +58,6 @@ async function render(periodId: string): Promise<void> {
   if (!view) return;
   state.periodIndex = state.records.findIndex((record) => record.period_id === periodId);
   renderKpisAndTable(periodId);
-  await renderReading(periodId);
   if (periodId !== currentPeriodId()) return;
   renderMarket(periodId);
   const range = $("unit-range") as HTMLSelectElement;
@@ -79,7 +78,7 @@ function mountPickers(): void {
   const host = (id: string) => $(id) as HTMLElement | null;
   const periodId = () => currentPeriodId() ?? "";
   const reading = host("pick-reading");
-  if (reading) mountPicker(reading, { card: "reading", multi: false, defaults: ["AEROMEXICO"] }, () => void renderReading(periodId()));
+  if (reading) mountPicker(reading, { card: "reading", multi: false, defaults: ["AEROMEXICO"] }, () => void renderReading());
   const market = host("pick-market");
   if (market) {
     setMarketEntities(
@@ -122,12 +121,18 @@ function mountPickers(): void {
 
 export async function mountExecutive(dataRoot = "data/v1"): Promise<void> {
   await loadExecutive(dataRoot);
+  await loadReadingPeriods(state.dataRoot);
   await loadMarket(state.dataRoot);
   const note = $("industry-note");
   if (note && entityState.market) note.textContent = entityState.market.metadata.industry_note;
   // Without the v2 entity block (an older export) every picker would have
   // nothing to show: keep the v1 page as it was.
   if (state.entities) mountPickers();
+  $("reading-period")?.addEventListener("change", (event) => {
+    selectReadingPeriod((event.target as HTMLSelectElement).value);
+    void renderReading();
+  });
+  await renderReading();
   wireStepper();
   subscribe((periodId) => void render(periodId));
   $("unit-range")!.addEventListener("change", renderUnitEconomics);

@@ -1,0 +1,82 @@
+{
+  "schema_version": "editorial_release_v1",
+  "baseline_commit": "df29623daf998fd70c18d1a812d0e53b6cc15c99",
+  "baseline_manifest_sha256": "b1bac4de11b0ee0c2ebc533ce177a28b6155c2accc920db8ac9066286e077010",
+  "analysis_entry": {
+    "period_id": "2026Q3",
+    "version": "1ed160bf154a9ea287217471677bf7986bc362faae437222bfbe73de171e2883",
+    "content_hash": "a63dad9286d7a4762ed49a5d8b53c87ff0f5bb692d0620143cbedb84bc73d480",
+    "evidence_fingerprint": "5a4f066988fd5c7e19052957e39fa31425dcf354c96f4f0b58f06c9c8fa3e198",
+    "approval_event": "ad3cad27ff280ebef8dce973b13f7dc841b74fd4fb41436ec5eb4727347504e0",
+    "audit_hash": "7b5702828696b5fca11b808167c74978de3983bf04b29efaae095998416d4e58"
+  },
+  "analysis_sha256": "4b860ccca5bccab9ab4b687ea968152a62c458c13f6849de4c175c7de123b50d",
+  "analysis_bytes": 46691,
+  "frontend_files": [
+    {
+      "path": "assets/bootstrap-Bon95OId.css",
+      "sha256": "8520629920ae52d6a96539c9edc1eef010ad7334b998fac2a985ec9050350f51",
+      "bytes": 2616
+    },
+    {
+      "path": "assets/bootstrap-CG5UWcPn.css",
+      "sha256": "4c926c7b55614a1a6c9aac6a28a70c9c8e201bc6d1b45f2a193f559b2566c183",
+      "bytes": 6649
+    },
+    {
+      "path": "assets/bootstrap-DWdhZXXN.js",
+      "sha256": "153b3cea971d86e120e1305006877a08ea84af0d14cda4f410e6b7f82ea7c191",
+      "bytes": 5459
+    },
+    {
+      "path": "assets/bootstrap-NIKejj_o.js",
+      "sha256": "a250e68d1060ef24ba9b00f2b32c1d3f16a322645e1ed8580deb62ddbb4a2510",
+      "bytes": 44011
+    },
+    {
+      "path": "assets/bootstrap-zg1KvycA.js",
+      "sha256": "4741bdf0992dfc093cf76ed33d975a72b1a54025818425dc12db9d08ed4aaa0b",
+      "bytes": 33119
+    },
+    {
+      "path": "assets/dashboard-C1ii5yMB.css",
+      "sha256": "63b6f325986de738447cda3c18d1169955765ca02808f10c80215cb7087c81ae",
+      "bytes": 42033
+    },
+    {
+      "path": "assets/dashboard-CfhzjGn2.js",
+      "sha256": "8fb7a3841ca93996235bcbc1fffff494ce4d2d67f03b24bad95a00924520e046",
+      "bytes": 37853
+    },
+    {
+      "path": "assets/markdown-CX2IkwMA.js",
+      "sha256": "9eca7935cc1aaa08476adbd9fad16bb27a568cd542b983f85a3064354e9b0af1",
+      "bytes": 12698
+    },
+    {
+      "path": "assets/modulepreload-polyfill-B5Qt9EMX.js",
+      "sha256": "d2a32840421496e872ade591618d2fa5c33797605d1aec04301717e5a90757d0",
+      "bytes": 711
+    },
+    {
+      "path": "assets/plotly-DFvSk16B.css",
+      "sha256": "216055fb2084a35acbc0d20ab5d2a31b342c57dab212e7c685e87164aa69d700",
+      "bytes": 83132
+    },
+    {
+      "path": "assets/plotly-ZECNwRsR.js",
+      "sha256": "72f200ccd356fa6925abebce61e184a8d67fb09fac2095d7692abc11917bac98",
+      "bytes": 1396673
+    },
+    {
+      "path": "assets/state-Jid5-e2H.js",
+      "sha256": "7d96541d5d14647eb39063aa5942e3461181be904220ea6dd18fd55bc615e95c",
+      "bytes": 5890
+    },
+    {
+      "path": "index.html",
+      "sha256": "b46aa32fff32889d4c016f6edaf33017e48fc7fbb66332494298be750d7fe90f",
+      "bytes": 21350
+    }
+  ]
+}
