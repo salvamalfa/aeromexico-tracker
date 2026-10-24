@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import json
+import shutil
 from pathlib import Path
 
 import pytest
@@ -56,8 +57,20 @@ def test_public_verifier_accepts_all_entities_in_one_quarter(tmp_path):
 
 
 @pytest.mark.parametrize("entity", [None, "VOLARIS"])
-def test_verifier_uses_manifest_pinned_analysis_contract_even_after_a_cached_pass(tmp_path, entity):
+def test_verifier_uses_manifest_pinned_analysis_contract_even_after_a_cached_pass(
+    tmp_path, entity, monkeypatch
+):
     site = _signed_site(tmp_path, (entity,))
+    # Exercise the cache across two real schema versions in an isolated fixture.
+    # Production keeps its historical allowlist; only Q3 has an extra contract.
+    contracts = tmp_path / "contracts"
+    shutil.copytree(manifest.CONTRACTS_DIR, contracts)
+    schema_path = contracts / "analysis.schema.json"
+    widened = json.loads(schema_path.read_bytes())
+    href = widened["$defs"]["citation"]["properties"]["href"]
+    href["pattern"] = href["pattern"].replace(")/", "|www\\.globenewswire\\.com)/")
+    schema_path.write_text(json.dumps(widened), encoding="utf-8")
+    monkeypatch.setattr(manifest, "CONTRACTS_DIR", contracts)
     current = manifest.load_manifest(site)
     current["contracts"]["analysis.schema.json"] = (
         "c0e3b0fb5e3f840087bbb3bed0e222e477f90f5dc9ab9840802916f1ed5eb8c2"
@@ -74,10 +87,10 @@ def test_verifier_uses_manifest_pinned_analysis_contract_even_after_a_cached_pas
     _refresh_files(site)
     historical = manifest.load_manifest(site)
 
-    # These bytes are valid under the widened current contract. Cache that
+    # These bytes are valid under the widened fixture contract. Cache that
     # success first, then require rejection under the exact historical schema.
     current = copy.deepcopy(historical)
-    current["contracts"]["analysis.schema.json"] = manifest.contract_hashes()["analysis.schema.json"]
+    current["contracts"]["analysis.schema.json"] = manifest.contract_hashes(contracts)["analysis.schema.json"]
     manifest.write_manifest(site, current)
     assert verify_site(site) == []
     manifest.write_manifest(site, historical)
