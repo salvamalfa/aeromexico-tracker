@@ -517,7 +517,7 @@ def test_reading_tab_narrative_matches_the_approved_analysis(
 
     checked = set()
     for (entity, period_id), analysis in expected.items():
-        site_page.goto(f"{site_server}?entity={entity}&period={period_id}")
+        site_page.goto(f"{site_server}?sel_reading={entity}&readingPeriod={period_id}")
         site_page.wait_for_function(
             "([entity, period, thesis]) => { const copy = document.getElementById('narrative-copy'); "
             "return copy.dataset.entity === entity && copy.dataset.period === period && "

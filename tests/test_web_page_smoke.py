@@ -483,3 +483,83 @@ def test_slow_reading_requests_do_not_block_financial_controls_or_lazy_views(web
         assert page.inner_text("#period-display") == "1T26"
         assert errors == []
         browser.close()
+
+
+def test_narrative_parity_visits_each_reading_without_selecting_financial_quarters(web_server, monkeypatch):
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "narrative_selector_parity", Path(__file__).with_name("test_site_parity.py")
+    )
+    helper = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(helper)
+    fixture_spec = importlib.util.spec_from_file_location(
+        "narrative_entity_fixtures", Path(__file__).with_name("test_web_chat_smoke.py")
+    )
+    fixture_module = importlib.util.module_from_spec(fixture_spec)
+    fixture_spec.loader.exec_module(fixture_module)
+    executive = fixture_module._public_fixtures()["/data/v1/executive.json"]
+    identities = [
+        ("AEROMEXICO", "2026Q2"),
+        ("AEROMEXICO", "2026Q3"),
+        ("VOLARIS", "2026Q2"),
+        ("VIVA_AEROBUS", "2026Q2"),
+        ("INDUSTRY", "2026Q2"),
+    ]
+    entries, payloads = [], {}
+    for entity, period in identities:
+        payload = {
+            **_load_fixture("analysis_sample.json"),
+            "period_id": period,
+            "thesis": f"Fixture {entity} {period}",
+        }
+        if entity != "AEROMEXICO":
+            payload.update(
+                entity_key=entity,
+                period_label="2T26",
+                cutoff_date="2026-10-24",
+                selection_mode="retrospective",
+                guidance_as_of="report_date",
+            )
+        payloads[entity, period] = payload
+        entries.append(
+            {
+                "period_id": period,
+                "approval_event": "synthetic-approved",
+                **({"entity_key": entity} if entity != "AEROMEXICO" else {}),
+            }
+        )
+    monkeypatch.setattr(helper.manifest_mod, "load_manifest", lambda site: {"analysis_manifest": entries})
+    monkeypatch.setattr(
+        helper, "_export_approved_entry", lambda entry: payloads[helper.manifest_mod.analysis_identity(entry)]
+    )
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(executable_path=_chromium_executable())
+        page = browser.new_page()
+        errors, visited = [], []
+        page.on("pageerror", lambda error: errors.append(str(error)))
+        page.route("**/data/v1/executive.json", lambda route: route.fulfill(json=executive))
+        page.on(
+            "request",
+            lambda request: (
+                visited.append(request.url)
+                if request.is_navigation_request() and request.frame == page.main_frame
+                else None
+            ),
+        )
+        page.route(
+            "**/publication_manifest.json", lambda route: route.fulfill(json={"analysis_manifest": entries})
+        )
+
+        def serve_reading(route):
+            suffix = route.request.url.split("/analysis/", 1)[1].removesuffix(".json")
+            entity, period = suffix.split("/", 1) if "/" in suffix else ("AEROMEXICO", suffix)
+            route.fulfill(json=payloads[entity, period])
+
+        page.route("**/data/v1/analysis/**", serve_reading)
+        helper.test_reading_tab_narrative_matches_the_approved_analysis(None, page, web_server)
+        assert len(visited) == len(identities)
+        assert all("readingPeriod=" in url and "&period=" not in url for url in visited)
+        assert page.inner_text("#period-display") == "2T26"
+        assert errors == []
+        browser.close()
