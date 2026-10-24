@@ -16,6 +16,8 @@
 - Un catálogo de lecturas ausente o inválido cierra solo la lectura y conserva
   el arranque de indicadores y vistas. La paridad financiera usa el modo de
   publicación y espera los KPIs, sin confundirlos con el trimestre del texto.
+- La carga de catálogo y análisis ocurre en segundo plano después de preparar
+  indicadores y controles; respuestas de lectura lentas no detienen otras vistas.
 - Publicación pendiente de finalizar gate, revisión y CI de esta modalidad.
   Monthly continúa privado.
 
