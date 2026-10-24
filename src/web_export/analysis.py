@@ -442,6 +442,12 @@ def export_period(
         authorized.get("version"),
     ) != (entity_key or "AEROMEXICO", period_id, version):
         raise ValueError("Authorized analysis identity does not match requested entity/period/version")
+    if package.get("editorial_extension"):
+        # These temporal labels derive from the replayed package, whose identity
+        # and cutoff are part of the audited record's evidence fingerprint.
+        period = package["period_id"]
+        authorized.update(period_label=f"{period[-1]}T{period[2:4]}", cutoff_date=package["cutoff_date"],
+                          selection_mode="retrospective", guidance_as_of="report_date")
     authorized = _drop_private_sections(authorized, record)
     citations = _citations_by_claim(record, package, calculations, authorized)
     for claim in authorized["claims"]:
