@@ -21,6 +21,8 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import os
+from contextlib import contextmanager
 import subprocess
 import sys
 import tarfile
@@ -56,6 +58,42 @@ def _baseline_json(relative: str) -> dict:
     )
 
 
+@contextmanager
+def _published_approval_config_view(repo: Path, manifest_raw: bytes):
+    """Read the configuration committed with this site, not a later pending pin.
+
+    A detached, config-only worktree keeps every production provenance check
+    intact and never edits the caller's working configuration. Source and ledger
+    replay still use the ordinary pinned verifier and actual private inputs.
+    """
+    trusted = None
+    for ref in ("origin/master", "HEAD"):
+        candidate = subprocess.run(
+            ["git", "show", f"{ref}:site/publication_manifest.json"],
+            cwd=repo, capture_output=True,
+        )
+        if candidate.returncode == 0 and candidate.stdout == manifest_raw:
+            trusted = subprocess.check_output(["git", "rev-parse", ref], cwd=repo, text=True).strip()
+            break
+    if trusted is None:
+        raise ValueError("The signed site is not committed; commit the gate output before parity replay")
+    with tempfile.TemporaryDirectory(prefix="parity-published-config-") as folder:
+        view = Path(folder) / "checkout"
+        subprocess.run(
+            ["git", "worktree", "add", "--detach", "--no-checkout", str(view), trusted],
+            cwd=repo, env={**os.environ, "GIT_LFS_SKIP_SMUDGE": "1"},
+            capture_output=True, check=True,
+        )
+        try:
+            archive = subprocess.check_output(["git", "archive", trusted, "config/publish"], cwd=repo)
+            with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
+                tar.extractall(view, filter="data")
+            yield view, trusted
+        finally:
+            subprocess.run(["git", "worktree", "remove", "--force", str(view)],
+                           cwd=repo, capture_output=True, check=True)
+
+
 @lru_cache(maxsize=1)
 def _replay_published_cohorts() -> dict:
     """Validate every published entry using its committed verifier and full ledger."""
@@ -69,8 +107,8 @@ def _replay_published_cohorts() -> dict:
         if "entity_key" in entry:
             path /= entry["entity_key"]
         paths.append(path / entry["period_id"] / f"{entry['version']}.json")
-    trusted = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip()
-    return verify_approval_cohorts(paths, repo, trusted, baseline, flow.ROOT)
+    with _published_approval_config_view(repo, (SITE_DIR / "publication_manifest.json").read_bytes()) as (view, trusted):
+        return verify_approval_cohorts(paths, view, trusted, baseline, flow.ROOT)
 
 
 @pytest.fixture(scope="module")
@@ -191,10 +229,14 @@ def test_published_parity_survives_a_later_runtime_without_weakening_replay(
     try:
         replay = _replay_published_cohorts()
         entries = manifest_mod.load_manifest(SITE_DIR)["analysis_manifest"]
-        assert len(entries) == len(replay["authorized"]) == len(replay["payloads"]) == 5
+        historical = {(entity, "2026Q2") for entity in ("AEROMEXICO", "INDUSTRY", "VIVA_AEROBUS", "VOLARIS")}
+        identities = {manifest_mod.analysis_identity(entry) for entry in entries}
+        assert identities in (historical, historical | {("AEROMEXICO", "2026Q3")})
+        assert len(entries) == len(replay["authorized"]) == len(replay["payloads"]) == len(identities)
+        cohort_count = 2 if ("AEROMEXICO", "2026Q3") in identities else 1
         assert [_analysis_manifest_entry(a) for a in replay["authorized"]] == entries
         assert replay_calls == [cohort["implementation_commit"] for cohort in replay["cohorts"]]
-        assert len(set(replay_calls)) == 2
+        assert len(set(replay_calls)) == cohort_count
         for entry, payload in zip(entries, replay["payloads"]):
             actual = json.loads((DATA_DIR / manifest_mod.analysis_relative_path(entry)).read_bytes())
             assert _export_approved_entry(entry) == payload == actual

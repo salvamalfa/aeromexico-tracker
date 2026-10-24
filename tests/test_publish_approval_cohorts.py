@@ -257,3 +257,46 @@ def test_final_publication_can_revalidate_all_five_theses_for_the_next_gate(requ
     assert len(result["cohorts"]) == 2
     assert len(result["authorized"]) == len(result["payloads"]) == len(entries) == 5
     assert [cohorts._analysis_manifest_entry(a) for a in result["authorized"]] == entries
+
+
+def parity_config_helper():
+    """Load the local-data harness without selecting any private-data test."""
+    import importlib.util
+    from pathlib import Path
+    spec = importlib.util.spec_from_file_location('parity_config_helpers', Path(__file__).with_name('test_site_parity.py'))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module._published_approval_config_view
+
+
+def test_parity_uses_published_config_while_head_has_a_pending_cohort(publication):
+    p = publication
+    git(p['root'], 'update-ref', 'refs/remotes/origin/master', p['trusted'])
+    before = (p['root'] / cohorts.CONFIG).read_bytes()
+    with pytest.raises(ValueError, match='Unmatched or overlapping'):
+        cohorts.approval_plan(p['root'], git(p['root'], 'rev-parse', 'HEAD'), p['baseline'])
+    with parity_config_helper()(p['root'], p['manifest'].read_bytes()) as (view, trusted):
+        assert trusted == p['trusted']
+        groups, payloads = cohorts.approval_plan(view, trusted, p['baseline'])
+        assert len(groups) == len(payloads) == 1
+        assert not (view / cohorts.CONFIG).exists()
+    assert (p['root'] / cohorts.CONFIG).read_bytes() == before
+
+
+def test_parity_uses_committed_expanded_site_config_when_the_site_has_it(publication):
+    p = publication
+    git(p['root'], 'update-ref', 'refs/remotes/origin/master', p['trusted'])
+    new_head, baseline = expanded(p)
+    with parity_config_helper()(p['root'], p['manifest'].read_bytes()) as (view, trusted):
+        assert trusted == new_head
+        groups, payloads = cohorts.approval_plan(view, trusted, baseline)
+        assert len(groups) == len(payloads) == 2
+
+
+def test_parity_refuses_an_uncommitted_site_without_changing_provenance(publication):
+    p = publication
+    git(p['root'], 'update-ref', 'refs/remotes/origin/master', p['trusted'])
+    raw = json.dumps({**p['baseline'], 'code_commit': 'f' * 40}).encode()
+    with pytest.raises(ValueError, match='not committed'):
+        with parity_config_helper()(p['root'], raw):
+            pytest.fail('An unsigned/uncommitted site cannot select a verifier')
