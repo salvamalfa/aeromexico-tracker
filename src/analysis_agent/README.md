@@ -74,8 +74,11 @@ formatos arbitrarios ni conversiones entre millas y kilómetros sin cálculo.
 La sección administrativa «Pendientes» de la vista de revisión se conserva en el
 expediente como sección privada; su aviso de borrador no se publica como estado
 actual. Esta adaptación no hereda auditorías ni aprobaciones de otra versión.
-La nueva edición conserva el consentimiento real como solicitud de publicación
-pendiente de auditoría. No reutiliza el registro faltante de la edición anterior.
+La nueva edición `2096752b` tiene auditoría independiente favorable y aprobación
+registrada desde el consentimiento real del dueño. Su payload reproducido conserva
+la copia pública revisada; 22 claims fueron auditados y 21 quedan en la salida,
+tras excluir el estado administrativo privado. Todavía no está publicada.
+No reutiliza el registro faltante de la edición anterior.
 La salida candidata antigua del PR se retiró: `site/` vuelve al baseline vigente
 antes de preparar otra publicación. La configuración de cohortes permanece vacía
 hasta disponer de aprobación y payload reproducidos de la nueva identidad.

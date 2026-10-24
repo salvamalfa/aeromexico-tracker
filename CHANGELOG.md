@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-24 · Lectura ejecutiva 3T26 revisada
+
+- Texto financiero de la Page aprobado y vinculado a una versión nueva, con
+  auditoría independiente, cifras reproducibles y corte retrospectivo explícito.
+- Contraste explícito y exclusión del estado privado de revisión de todo el
+  payload público. La versión candidata anterior se retiró; el sitio mantiene
+  exactamente el baseline publicado mientras se recuperan los insumos del gate.
+- Publicación pendiente: expedientes históricos, materialización LFS y pins
+  externos del entorno. Sin integración, despliegue ni publicación de Monthly.
+
 ## 2026-10-21 · Aeroméxico 3T26 financiero
 
 - Lectura original «Ingresos récord, margen bajo presión», con fuentes primarias,
