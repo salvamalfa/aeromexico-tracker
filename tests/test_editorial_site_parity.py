@@ -1,5 +1,6 @@
 """Editorial parity inherits published bytes and replays only the new evidence."""
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -32,7 +33,10 @@ def editorial_site(request):
 
                 problems = verify_site(SITE)
                 assert not problems, problems
-                pytest.skip("Verified non-editorial publication; general source parity checks still apply")
+                payload = (SITE / ANALYSIS).read_bytes()
+                assert len(payload) == spec["analysis_bytes"]
+                assert hashlib.sha256(payload).hexdigest() == spec["analysis_sha256"]
+                return spec
         _unavailable(
             request, "Editorial candidate has not been assembled; general publication checks still apply"
         )
@@ -40,6 +44,8 @@ def editorial_site(request):
 
 
 def test_editorial_site_preserves_every_historical_file(editorial_site):
+    if not (SITE / PROOF).exists():
+        pytest.skip("Verified later normal publication; editorial frontend preservation does not apply")
     assert verify_editorial(SITE) == []
     preserved = preserved_files(SITE, ROOT, editorial_site)
     assert "data/v1/executive.json" in preserved

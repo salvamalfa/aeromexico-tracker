@@ -85,7 +85,7 @@ def test_editorial_evidence_unavailability_fails_in_strict_mode_without_a_wareho
 
 
 @pytest.mark.parametrize("strict", [False, True])
-@pytest.mark.parametrize("damage", [None, "data", "missing_receipt", "pending_reading"])
+@pytest.mark.parametrize("damage", [None, "data", "missing_receipt", "pending_reading", "unapproved_text"])
 def test_editorial_fixture_recognizes_only_a_verified_later_normal_publication(tmp_path, strict, damage):
     import hashlib
     import shutil
@@ -103,7 +103,12 @@ def test_editorial_fixture_recognizes_only_a_verified_later_normal_publication(t
         entry["version"] = "pending"
         payload["version"] = "pending"
     new_path = site / editorial.ANALYSIS
-    new_path.write_text(json.dumps(payload), encoding="utf-8")
+    if damage == "unapproved_text":
+        payload["thesis"] = "UNAPPROVED but schema-valid narrative"
+    if damage in {"unapproved_text", "pending_reading"}:
+        new_path.write_text(json.dumps(payload), encoding="utf-8")
+    else:
+        new_path.write_bytes((root / "site" / editorial.ANALYSIS).read_bytes())
     manifest["analysis_manifest"].append(entry)
     manifest["contracts"][editorial.manifests.EDITORIAL_ANALYSIS_CONTRACT] = hashlib.sha256(
         (root / "contracts/web" / editorial.manifests.EDITORIAL_ANALYSIS_CONTRACT).read_bytes()
@@ -125,12 +130,20 @@ def test_editorial_fixture_recognizes_only_a_verified_later_normal_publication(t
     module.ROOT = root
     module.SITE = site
     request = SimpleNamespace(config=SimpleNamespace(getoption=lambda name: strict))
-    expected = (
-        (pytest.fail.Exception if strict else pytest.skip.Exception)
-        if damage == "pending_reading"
-        else AssertionError
-        if damage
-        else pytest.skip.Exception
-    )
-    with pytest.raises(expected):
-        module.editorial_site.__wrapped__(request)
+    if damage is None:
+        assert module.editorial_site.__wrapped__(request)["analysis_entry"] == entry
+        with pytest.raises(pytest.skip.Exception):
+            module.test_editorial_site_preserves_every_historical_file({})
+        # Later normal publications still require the complete new-source replay.
+        module.ROOT = tmp_path
+        expected = pytest.fail.Exception if strict else pytest.skip.Exception
+        with pytest.raises(expected):
+            module._required_source_record(entry, request)
+    else:
+        expected = (
+            (pytest.fail.Exception if strict else pytest.skip.Exception)
+            if damage == "pending_reading"
+            else AssertionError
+        )
+        with pytest.raises(expected):
+            module.editorial_site.__wrapped__(request)
