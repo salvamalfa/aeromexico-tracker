@@ -27,7 +27,9 @@ def binding_value(node, binding, *, business=False):
     mode = binding.get('presentation', 'default')
     if mode == 'default':
         return formatted(node, business=business)
-    if mode == 'cents_short' and node['unit'] == 'cents_USD_per_ASK':
+    if mode == 'cents_short':
+        if node['unit'] != 'cents_USD_per_ASK':
+            raise ValueError('Invalid binding presentation')
         return f"{node['value']:.2f} centavos de dólar"
     if mode == 'period_label':
         return f"{node['period_id'][-1]}T{node['period_id'][2:4]}"
