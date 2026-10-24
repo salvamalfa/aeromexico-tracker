@@ -343,8 +343,13 @@ def evaluate(recipe: dict, outcomes: dict) -> dict:
         for release in recipe["releases"]:
             result = outcomes.get(release["task_id"], {})
             identity = {"source_url": release["document_url"], "sha256": release["source_sha256"]}
-            if result.get("status") == "checks_passed" and identity in result.get(
-                "contributing_artifacts", []
+            eligible = result.get("contributing_artifacts", [])
+            if release["entity"] == "VOLARIS":
+                eligible = result.get("financial_report_artifacts", [])
+            if (
+                result.get("status") == "checks_passed"
+                and identity in eligible
+                and identity in result.get("contributing_artifacts", [])
             ):
                 accepted_releases.append(release)
             else:
@@ -423,6 +428,16 @@ def verify(item: dict, workspace: Path) -> dict:
         result["contributing_artifacts"] = sorted(
             ({"source_url": r.source_url, "sha256": r.artifact_sha256} for r in used.itertuples(index=False)),
             key=lambda row: (row["source_url"], row["sha256"]),
+        )
+    if item["product"] == "volaris_sec":
+        # Index/submissions/cover 6-K support provenance, but only the parsed
+        # financial exhibit can bind the central report release. The strict
+        # product checker above has already verified this selected role.
+        receipt = candidate / "receipts" / f"retained-{item['receipt_id']}.json"
+        original = json.loads(receipt.read_text())["originals"]["html"]
+        identity = {"source_url": original["source_url"], "sha256": original["sha256"]}
+        result["financial_report_artifacts"] = (
+            [identity] if identity in result.get("contributing_artifacts", []) else []
         )
     if readiness.inventory(candidate) != before:
         raise ValueError("Source files changed during checker/release binding")

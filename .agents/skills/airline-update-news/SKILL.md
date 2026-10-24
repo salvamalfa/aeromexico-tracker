@@ -143,3 +143,48 @@ fixtures o disponibilidad del blog no certifican el periodo; conservar los
 Los auditores no escriben Silver/Gold ni activan el índice. La
 [muestra](../../../docs/referencias/source-updates-20261019/curation-news-verification.json)
 declara sus capas y límites.
+
+## Certificación integral de RSS retenido
+
+El certificador `python -m src.source_updates.rss_candidate` procesa solo
+metadatos Google News de originales retenidos seleccionados. No invoca
+`parse.news`, no modifica el archivo mensual aprobado y no visita artículos.
+No resuelve URLs opacas ni atribuye compañías o idioma del artículo por el feed.
+
+La receta de `batch` exige exactamente `version: 1`, `as_of` con zona,
+`source_root`, `period` (`YYYYMmm`) y `originals` (lista explícita de rutas
+Bronze). Admite 1–32 XML y 16 MB combinados, con 2 MB/250 items por captura. Primero
+usar `batch --recipe <receta.json> --workspace tmp/source-updates/<lote-nuevo>
+--dry-run`; `--execute` encadena retención, certificación y replay en el hijo
+`rss-<period>`. Conserva un recibo de lote con etapa/objetivo/motivo al fallar.
+
+Para selección individual: `retain --source-root <Bronze> --original <ruta>`
+(repetible) `--workspace <candidato-nuevo> --dry-run/--execute`. Después usar
+`certify --workspace <candidato> --period <mes> --as-of <corte> --retention <id>`
+con `--execute` o `--check`. El modo sin ejecución muestra el plan.
+
+Exigir HTTP 200 explícito, original/hash/tamaño/manifiesto/sidecar coincidentes,
+canal RSS2.0 Google correspondiente a consulta y región, generación con zona
+anterior a captura y todas las fechas declaradas de los items válidas. Un item
+inválido bloquea el producto completo antes de escribir Silver/Gold, incluso
+si estaba fuera del mes. Rechazar DOCTYPE, entidades y cambios de formato.
+
+Silver conserva todos los items, repetidos y fuera del mes, con índice físico,
+consulta exacta, título/URL/medio/guid declarados y procedencia propia. Gold
+selecciona el mes de la fecha RSS en America/Mexico_City y agrupa por URL
+canónica/día, manteniendo todos los padres/variantes. Cuatro JSON candidatos
+(native, Gold, artefactos, puente) cumplen contrato estricto y se reconstruyen
+sin red ni escrituras. No son tablas del warehouse ni contenido aprobado.
+
+`--baseline baselines/<gold-previo.json>` admite comparación del mismo mes,
+consultas y semántica; registra altas/bajas/cambios de metadatos y SHA del
+baseline. Recapturas idénticas no son revisiones. Una discrepancia no acredita
+una corrección del medio. Sin baseline, declarar comparación no realizada.
+
+La fecha es declaración del agregador: publicación del cuerpo del medio no
+verificada, evento/primera disponibilidad/rezago nulos. Días no observados no
+significan ausencia de noticias. Las consultas históricas retenidas solo
+buscan Aeroméxico: no acreditan cobertura de Viva/Volaris ni un mes completo.
+Disponibilidad actual queda sin acreditar. `readiness` usa `rss_retained`,
+recibo `rss-retained-<id>.json` y `rss-<mes>.json`; la política global conserva
+GDELT requerido y las demás condiciones. Ningún comando aprueba/activa/publica.

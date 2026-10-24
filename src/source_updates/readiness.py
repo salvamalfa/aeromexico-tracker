@@ -21,13 +21,17 @@ ADAPTER_PRODUCTS = {
     "h10": "h10",
     "aerocivil": "aerocivil",
     "gdelt": "gdelt",
+    "rss_retained": "rss",
 }
 RECEIPT_NAMES = {
     "am_traffic_ir": "am-traffic-{period}.json",
     "h10": "h10-{period}.json",
     "aerocivil": "aerocivil-{period}.json",
     "gdelt": "gdelt-{period}.json",
+    "rss_retained": "rss-{period}.json",
     "retained": "certified-{product}-{period}.json",
+    "government": "government-{product}-{period}.json",
+    "carrier_source": "carrier-source-{product}-{period}.json",
 }
 
 
@@ -97,13 +101,21 @@ def preflight(recipe: dict, workspace: Path) -> list[dict]:
             or period_end(period) >= candidate_cutoff.date()
         ):
             raise ValueError("Every observation/review period must be closed before cutoff")
-        if adapter == "retained":
+        if adapter in {"retained", "government", "carrier_source"}:
             from src.source_updates.retained import spec
 
-            spec(product)
+            definition = spec(product)
+            if (definition.get("certifier") == "government") != (adapter == "government"):
+                raise ValueError("Government product requires its complete dedicated adapter")
+            if (definition.get("certifier") == "carrier_source") != (adapter == "carrier_source"):
+                raise ValueError("Carrier source product requires its complete dedicated adapter")
+            if adapter == "carrier_source":
+                from src.source_updates.carrier_source_candidate import period_check
+
+                period_check(product, period)
         elif ADAPTER_PRODUCTS[adapter] != product:
             raise ValueError("Dedicated adapter does not support the declared product")
-        if adapter != "retained" and "M" not in period:
+        if adapter not in {"retained", "carrier_source"} and "M" not in period:
             raise ValueError("Dedicated monthly adapter needs an explicit month")
         if not re.fullmatch(r"[0-9a-f]{32}", item["receipt_id"]):
             raise ValueError("Expected an exact acquisition/retention receipt ID")
@@ -140,11 +152,16 @@ def inventory(workspace: Path) -> dict:
 
 def check_task(item: dict, cutoff: str) -> dict:
     candidate = Path(item["workspace"])
+    if item["adapter"] == "rss_retained":
+        from src.source_updates.rss_candidate import guard
+
+        guard(candidate)
     before = inventory(candidate)
-    prefix = "retained" if item["adapter"] == "retained" else "collection"
+    retained = item["adapter"] in {"retained", "government", "rss_retained", "carrier_source"}
+    prefix = "rss-retained" if item["adapter"] == "rss_retained" else "retained" if retained else "collection"
     acquisition = candidate / "receipts" / f"{prefix}-{item['receipt_id']}.json"
     acquired = json.loads(acquisition.read_text())
-    expected_status = "retained_unvalidated" if item["adapter"] == "retained" else "collected_unvalidated"
+    expected_status = "retained_unvalidated" if retained else "collected_unvalidated"
     if acquired.get("status") != expected_status:
         statuses = [row.get("http_status") for row in acquired.get("items", [])]
         raise ValueError(
@@ -153,7 +170,7 @@ def check_task(item: dict, cutoff: str) -> dict:
     name = RECEIPT_NAMES[item["adapter"]].format(product=item["product"], period=item["period"])
     accepted_path = candidate / "receipts" / name
     accepted = json.loads(accepted_path.read_text())
-    key = "retention_run_id" if item["adapter"] == "retained" else "collection_run_id"
+    key = "retention_run_id" if retained else "collection_run_id"
     if accepted.get(key) != item["receipt_id"]:
         raise ValueError("Accepted receipt does not match the explicitly selected acquisition")
     if (
@@ -169,7 +186,15 @@ def check_task(item: dict, cutoff: str) -> dict:
     if local_time(accepted["effective_as_of"]) != local_time(cutoff):
         raise ValueError("Replay cutoff differs from accepted candidate; use its exact cutoff")
     with block_network():
-        if item["adapter"] == "retained":
+        if item["adapter"] == "carrier_source":
+            from src.source_updates.carrier_source_candidate import run
+
+            result = run(candidate, item["product"], item["period"], cutoff, item["receipt_id"], check=True)
+        elif item["adapter"] == "government":
+            from src.source_updates.government_candidate import run
+
+            result = run(candidate, item["product"], item["period"], cutoff, item["receipt_id"], check=True)
+        elif item["adapter"] == "retained":
             from src.source_updates.retained import run
 
             result = run(candidate, item["product"], item["period"], cutoff, item["receipt_id"], check=True)
@@ -178,9 +203,12 @@ def check_task(item: dict, cutoff: str) -> dict:
 
             result = run(candidate, item["period"], cutoff, check=True)
         else:
-            name = {"aerocivil": "aerocivil", "am_traffic_ir": "am_traffic_candidate", "gdelt": "gdelt"}[
-                item["adapter"]
-            ]
+            name = {
+                "aerocivil": "aerocivil",
+                "am_traffic_ir": "am_traffic_candidate",
+                "gdelt": "gdelt",
+                "rss_retained": "rss_candidate",
+            }[item["adapter"]]
             module = import_module(f"src.source_updates.{name}")
             result = module.run(candidate, item["period"], cutoff, item["receipt_id"], check=True)
     if inventory(candidate) != before:
@@ -209,7 +237,7 @@ def check_task(item: dict, cutoff: str) -> dict:
     ):
         raise ValueError("Offline checker must report its actual code fingerprints")
     conditions = []
-    if item["adapter"] == "retained":
+    if retained:
         conditions.append("retained_original_does_not_verify_current_source_availability")
     if result.get("service_code_mapping_verified") is False:
         conditions.append("official_service_code_legend_pending")
@@ -231,7 +259,7 @@ def check_task(item: dict, cutoff: str) -> dict:
         "checker_code_files": code_files,
         "checker_code_sha256": code_sha,
         "source_candidate_files_unchanged": len(before),
-        "collection_basis": "retained" if item["adapter"] == "retained" else "previously_captured_originals",
+        "collection_basis": "retained" if retained else "previously_captured_originals",
         "source_conditions": conditions,
         "latest_source_availability_verified": False,
         "activation": "none",

@@ -103,7 +103,7 @@ intercambiar producto/adaptador.
 `--execute` comprueba offline candidatos existentes, verifica que sus archivos
 no cambien y escribe un recibo de ronda inmutable; **no captura fuentes**.
 `--check` vuelve a comprobar el mismo recibo y sus flags. Soporta `retained`,
-`am_traffic_ir`, `h10`, `aerocivil` y `gdelt`; el registro de `retained` incluye
+`am_traffic_ir`, `h10`, `aerocivil`, `gdelt`, `government`, `rss_retained` y `carrier_source`; el registro de `retained` incluye
 los productos admitidos por sus lectores. Los demás adaptadores se rechazan y
 mantienen sus comandos específicos. Curación usa su auditor separado.
 
@@ -156,3 +156,29 @@ su contenido en tráfico del mes/trimestre. FAA conserva la fecha de su propio
 documento; slots conserva toda la temporada; países solo cajas acumuladas
 exactas y documentos de rutas solo pasajes fechados. Un formato/edición fuera
 del alcance revisado queda bloqueado para adaptar y probar antes de ejecutar.
+
+Para AICM/AIFA, el adaptador `government` usa retención por alias, un
+certificador integral y el recibo `government-<producto>-<mes>.json`; no se
+admite sustituirlo por `retained` o comprobaciones genéricas de Gold. Ver la
+[skill de aeropuertos](airline-update-airports/SKILL.md#certificación-integral-aicmaifa).
+
+Para RSS usar su certificador retenido dedicado, `python -m
+src.source_updates.rss_candidate`, y el adaptador `rss_retained` en readiness.
+Su lote propio admite selección explícita de varios XML de la misma revisión
+mensual; no se añade al registro `retained` ni al build genérico. Ver la
+[skill de noticias](airline-update-news/SKILL.md#certificación-integral-de-rss-retenido).
+
+Para `volaris_sec` y `afac_carriers` usar el CLI dedicado
+`carrier_source_candidate` y el adaptador readiness `carrier_source`;
+`retained certify` y comprobar Gold heredado no satisfacen estos productos.
+`retained_round` encadena sus roles explícitos, parseo, contrato, Gold propio,
+linaje y replay; conserva la etapa y motivo si falla antes de escribir salidas.
+Cada producto/ventana exige candidato separado, nuevos originales no alteran
+candidatos aceptados. `--baseline` es una ruta explícita a
+`baselines/<snapshot>/data/silver/<producto>_source_native.parquet`: exige el
+dossier original, manifiesto/sidecars y recibo de retención del snapshot.
+Se reconstruye y coteja todo el nativo antes de comparar historia, columnas
+anuales/acumuladas y flags/notas. Reordenamientos quedan como altas/bajas,
+sin suponer equivalencia. No se acredita revisión oficial por comparar hashes.
+No hay baseline implícito; publicación inicial, disponibilidad y rezago no
+acreditados siguen nulos. Ver límites de cada fuente en sus skills/guía.

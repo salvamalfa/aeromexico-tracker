@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import argparse
-from datetime import UTC, datetime
 import hashlib
 import json
-from pathlib import Path
 import re
 import shutil
 import subprocess
+from datetime import UTC, datetime
+from pathlib import Path
 from uuid import uuid4
 
 import pandas as pd
@@ -37,6 +37,7 @@ def spec(product: str) -> dict:
         authorities,
         context_snapshots,
         financials,
+        government_traffic,
         oma_traffic,
         route_documents,
         sec_fiscal,
@@ -102,6 +103,9 @@ def spec(product: str) -> dict:
             ROOT / "src/parse/aeromexico_ir.py",
         ],
     }
+    from src.source_updates.carrier_source_contract import retention_specs
+
+    registry.update(retention_specs())
     registry["ryanair_sec"] = {
         "roles": {role: ("sec",) for role in ("html", "submissions", "index")},
         "primary": "html",
@@ -174,6 +178,15 @@ def spec(product: str) -> dict:
         }
     registry["afac_margins"]["revision_values"] = ["value", "unit", "source_cell_estimated", "source_notes"]
     registry["dictionary"]["revision_values"] = [*context_snapshots.FIELDS[1:], "unit"]
+    for name, role, alias in [("aicm_traffic", "pdf", "aicm"), ("aifa_traffic", "workbook", "aifa")]:
+        registry[name] = {
+            "roles": {role: (alias,)},
+            "primary": role,
+            "certifier": "government",
+            "table": "fact_airport_traffic",
+            "grain": government_traffic.GRAIN,
+            "code_files": [Path(government_traffic.__file__)],
+        }
     if product not in registry:
         raise ValueError("No reviewed retained-product adapter")
     return registry[product]
@@ -330,6 +343,10 @@ def originals(workspace: Path, product: str, run_id: str, cutoff: str) -> tuple[
 
 def frames(workspace: Path, product: str, period: str, cutoff: str, run_id: str) -> tuple[dict, dict]:
     definition = spec(product)
+    if definition.get("certifier") == "carrier_source":
+        raise ValueError("Use carrier_source_candidate for complete carrier source Silver/Gold certification")
+    if definition.get("certifier") == "government":
+        raise ValueError("Use government_candidate for complete government Silver/Gold certification")
     inputs, receipt_hash = originals(workspace, product, run_id, cutoff)
     frame, details = definition["parse"](inputs, period)
     if frame.empty or frame.duplicated(definition["grain"]).any() or frame.value.isna().any():
@@ -368,9 +385,12 @@ def frames(workspace: Path, product: str, period: str, cutoff: str, run_id: str)
                     if definition.get("support_all_originals")
                     else (by_file[row.source_file],),
                     lineage_note=(
-                        f"Direct value artifact: {row.source_file}. Other selected artifacts support reconciliation, not allocation. Retained snapshot; source locator/units/scope preserved. Not new capture or human publication approval."
+                        f"Direct value artifact: {row.source_file}. Other selected artifacts "
+                        "support reconciliation, not allocation. Retained snapshot; source "
+                        "locator/units/scope preserved. Not new capture or human publication approval."
                         if definition.get("support_all_originals")
-                        else "Retained source snapshot; source locator/units/scope preserved. Not a new capture or human publication approval."
+                        else "Retained source snapshot; source locator/units/scope preserved. "
+                        "Not a new capture or human publication approval."
                     ),
                 )
                 for row in frame.itertuples(index=False)
@@ -421,6 +441,10 @@ def run(
 ) -> dict:
     workspace = safe_workspace(workspace)
     definition = spec(product)
+    if definition.get("certifier") == "carrier_source":
+        raise ValueError("Use carrier_source_candidate for complete carrier source Silver/Gold certification")
+    if definition.get("certifier") == "government":
+        raise ValueError("Use government_candidate for complete government Silver/Gold certification")
     if period_end(period) >= local_time(cutoff).date():
         raise ValueError("Require a closed observation period")
     output_names = (

@@ -136,3 +136,30 @@ un 20-F por la página IR mensual: el comprobador heredado no tiene filas SEC
 Ryanair para ese trimestre. La copia retenida de companyfacts llega a FY2025 y
 no sustituye los hechos del 20-F FY2026. No modificar el parser histórico ni
 incorporar estas filas automáticamente al warehouse o a comparaciones.
+
+## Dossier Volaris SEC retenido
+
+Usar `python -m src.source_updates.carrier_source_candidate`, separado de
+`retained certify` y del build heredado. `retain --product volaris_sec` exige
+`--source-root <Bronze> --workspace <nuevo>` y cuatro `--original rol=ruta`:
+`html` (anexo), `primary` (6-K), `submissions` e `index`. Primero vista previa;
+`--execute` conserva hashes, sidecars y capturas. `certify --product volaris_sec
+--workspace <candidato> --period 2026Q2 --as-of <corte-con-zona> --retention <id>`
+produce la vista previa; `--execute` valida antes de escribir; `--check`
+reconstruye sin red y compara cada salida/recibo sin cambiarlos.
+
+El formato revisado es exclusivamente el accession `0001292814-26-003836`:
+11 tablas y sus comparativos completos, H1 separado de Q2, balances/aviones
+como instantes, USD con escala, pasajeros reservados y ASM/RPM en millas.
+No usarlo como tráfico mensual ni presentación de otro trimestre. Preservar
+no auditado/auditado y los guiones desconocidos; no resolverlos como cero.
+Gold propio aplica solo escala explícita, omite resúmenes duplicados y contexto
+cambiario del emisor, y conserva padres/artefactos exactos. Nada se incorpora
+al warehouse productivo.
+
+El original 2Q26 retenido permanece bloqueado por CASM H1 2025: gastos 1.403
+millones/ASM 17.622 millones no justifican 7,97 centavos bajo los intervalos de
+redondeo impresos. No eliminar ese comparativo ni ampliar tolerancias. Una
+prueba sintética positiva solo acredita el contrato, no esa fuente real.
+Fecha impresa y aceptación SEC no acreditan primera publicación o disponibilidad
+actual; esos campos siguen desconocidos. Ver evidencia en la guía canónica.

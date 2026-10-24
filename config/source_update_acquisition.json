@@ -46,9 +46,9 @@
     },
     "volaris_sec": {
       "entry_ref": "sec:VOLARIS",
-      "state": "manual",
+      "state": "conditional",
       "format": "JSON → anexos HTML",
-      "procedure": "CIK 0001520504 en CARRIERS. Revalidar submissions y companyfacts, seleccionar anexos de tráfico y resultados por publicación real. parse.peers requiere identidades SEC, Viva y Ryanair además del documento solicitado; no prometer parseo aislado. Bronze exige source_system=sec; sec_edgar es etiqueta Silver, no un alias de captura intercambiable. Seleccionar parse.peer_discovery antes de parse.sec/parse.peers; se exige el catálogo de identidades de comparables completo.",
+      "procedure": "CIK 0001520504 en CARRIERS. Revalidar submissions y companyfacts, seleccionar anexos de tráfico y resultados por publicación real. parse.peers requiere identidades SEC, Viva y Ryanair además del documento solicitado; no prometer parseo aislado. Bronze exige source_system=sec; sec_edgar es etiqueta Silver, no un alias de captura intercambiable. Seleccionar parse.peer_discovery antes de parse.sec/parse.peers; se exige el catálogo de identidades de comparables completo. Certificador aislado completo del dossier 2026Q2: python -m src.source_updates.carrier_source_candidate retain con roles html, primary, submissions e index; certify --product volaris_sec --period 2026Q2 --as-of <corte> --retention <id> admite --dry-run/--execute/--check sin red. CIK/acceso/6-K/anexo/índice y 11 tablas exactas; trimestre/H1/instantes separados, USD millones, pasajeros reservados miles, ASM/RPM millas y porcentajes con escala explícita. Dashes quedan desconocidos. Valida identidades y ratios a la precisión impresa antes de crear Silver/Gold/linaje propios. Original retenido bloqueado: CASM H1 2025 7,97 no concilia con gastos 1.403 millones y ASM 17.622 millones bajo redondeo al más cercano; no ampliar tolerancias ni omitir comparativo. No certifica tráfico mensual ni Q3 ni disponibilidad actual. Selección e importación nuevas siguen manuales; no llama parse.peers ni incorpora al warehouse.",
       "selection_contract": {
         "source_system": "sec",
         "companyfacts_relative_dir": "sec/volaris/companyfacts",
@@ -149,7 +149,7 @@
       "entry_ref": "constant:src.ingest.afac.download:DATATUR_CATALOG_URL",
       "state": "conditional",
       "format": "HTML → PDF/XLS/ZIP DATATUR",
-      "procedure": "Seleccionar boletines realmente presentes con recipe --catalog-file --period. El candidato parse.afac verifica Bronze, extrae un único miembro XLSX de DB_AFAC.zip sin red y exige meses contiguos con regular y fletamento más sus dos páginas PDF. El contenido confirma cada comparación mensual de 2026; conserva notas, preliminar y separación Aerovías/Connect. Amplía hasta el último mes común disponible, sin inferir cero ni fecha de publicación. Requiere libros anuales/crosswalk/SEC preservados; no es un parser genérico para 2027 ni para aeropuertos/rutas.",
+      "procedure": "Seleccionar boletines realmente presentes con recipe --catalog-file --period. El candidato parse.afac verifica Bronze, extrae un único miembro XLSX de DB_AFAC.zip sin red y exige meses contiguos con regular y fletamento más sus dos páginas PDF. El contenido confirma cada comparación mensual de 2026; conserva notas, preliminar y separación Aerovías/Connect. Amplía hasta el último mes común disponible, sin inferir cero ni fecha de publicación. Requiere libros anuales/crosswalk/SEC preservados; no es un parser genérico para 2027 ni para aeropuertos/rutas. Alternativa aislada por dossier mensual: python -m src.source_updates.carrier_source_candidate retain con roles pdf y database de la misma edición 2026. certify --product afac_carriers --period YYYYMmm --as-of <corte> --retention <id> admite --dry-run/--execute/--check. Contrasta las seis columnas PDF (anual 2024/2025, YTD y mes actual/comparativo) con base regular completa 2024/2025/2026. Conserva todos los conteos nativos del dossier y Gold mensual separado con soporte PDF/base regular y filas charter únicas. DB max-mes/servicios debe coincidir; duplicado charter actual bloquea, no suma implícita. Aerovías y Connect separados; nombres sin crosswalk permanecen nulos, World 2 Fly literal. Nota preliminar debe estar declarada, estimados solo por nota/periodo fuente; la base no hereda flags PDF. Conserva advertencia internacional de información incompleta: no certifica universo completo ni última disponibilidad. Lote retained_round usa este certificador dedicado; readiness adapter carrier_source, sin ingesta genérica ni publicación.",
       "selection_contract": {
         "source_system": "afac",
         "monthly_pdf_relative_dir": "afac/<year>/<month-2-digits>",
@@ -200,9 +200,9 @@
     },
     "aicm_traffic": {
       "entry_ref": "constant:src.ingest.airports.groups:AICM_STATS_INDEX",
-      "state": "discovery_only",
+      "state": "conditional",
       "format": "HTML → PDF",
-      "procedure": "Buscar enlace publicado del mes y confirmar año/mes dentro del PDF. source_system aicm; revisar _government_documents/_parse_aicm_pdf para nombres lógicos. Total aeroportuario, no cifra de Aeroméxico.",
+      "procedure": "Buscar enlace publicado del mes y confirmar año/mes dentro del PDF. source_system aicm; revisar _government_documents/_parse_aicm_pdf para nombres lógicos. Total aeroportuario, no cifra de Aeroméxico. Certificación integral offline: python -m src.source_updates.government_candidate retain --product aicm_traffic con rol --original pdf=<ruta-Bronze>, --source-root, --workspace nuevo y --dry-run/--execute; certify usa --period, --as-of, --retention y --dry-run/--execute/--check. PDF de catorce páginas; pasajeros comerciales, operaciones comerciales y generales, carga en toneladas. Julio/agosto 2026 retenidos; otro formato se bloquea. retained_round y readiness adapter=government reproducen el candidato; no verifican disponibilidad actual ni activan datos/calendario.",
       "selection_contract": {
         "source_system": "aicm",
         "entity": "traffic_statistics",
@@ -222,9 +222,9 @@
     },
     "aifa_traffic": {
       "entry_ref": "constant:src.ingest.airports.groups:AIFA_STATS_INDEX",
-      "state": "discovery_only",
+      "state": "conditional",
       "format": "HTML → XLSX",
-      "procedure": "Buscar numeralia publicada y confirmar año/mes en workbook, no solo nombre. source_system aifa; revisar _parse_aifa_xlsx. No formar nombres futuros de S3; esquema puede cambiar.",
+      "procedure": "Buscar numeralia publicada y confirmar año/mes en workbook, no solo nombre. source_system aifa; revisar _parse_aifa_xlsx. No formar nombres futuros de S3; esquema puede cambiar. Certificación integral offline: python -m src.source_updates.government_candidate retain --product aifa_traffic con rol --original workbook=<ruta-Bronze>, --source-root, --workspace nuevo y --dry-run/--execute; certify usa --period, --as-of, --retention y --dry-run/--execute/--check. Workbook 2026 con etiquetas y unidades verificadas y aviación comercial/general/carga separadas. El original julio retenido falla por fechas internas 11 Jul anteriores al cierre31 Jul; no se certifica ni se repara automáticamente. retained_round y readiness adapter=government reproducen el candidato; no verifican disponibilidad actual ni activan datos/calendario.",
       "selection_contract": {
         "source_system": "aifa",
         "entity": "airport_statistics",
@@ -358,7 +358,7 @@
       "entry_ref": "mapping:src.ingest.news.rss_gdelt:RSS_FEEDS:google_es",
       "state": "conditional",
       "format": "RSS XML de metadatos",
-      "procedure": "RSS_FEEDS google_es/google_en contiene consultas canónicas actuales de Aeroméxico, Viva y Volaris. Guardar el feed, su consulta exacta y fecha; las capturas históricas pueden tener un alcance distinto. No recupera el mes completo de forma garantizada. parse.news conserva procedencias; la integración PR142 prepara cortes desde metadatos revisados, sin activar candidatos. El auditor news_cut verifica sólo el corte observado y sus límites.",
+      "procedure": "RSS_FEEDS google_es/google_en contiene consultas canónicas actuales de Aeroméxico, Viva y Volaris. Guardar el feed, su consulta exacta y fecha; las capturas históricas pueden tener un alcance distinto. No recupera el mes completo de forma garantizada. parse.news conserva procedencias; la integración PR142 prepara cortes desde metadatos revisados, sin activar candidatos. El auditor news_cut verifica sólo el corte observado y sus límites. Certificador integral retenido: python -m src.source_updates.rss_candidate batch --recipe <receta-local> --workspace <lote-nuevo> --dry-run/--execute; encadena selección explícita de 1..32 XML Google News, Bronze/HTTP 200/canal/consulta/fechas, Silver con todos los items y Gold mensual con todas las contribuciones, artefactos/puente y replay. certify --workspace <child-rss-mes> --period YYYYMmm --as-of <corte> --retention <id> --check no escribe. Contrato propio rss-declared-metadata.schema.json; adaptador readiness rss_retained, separado de retained y de comprobar Gold heredado. No visita artículos, infiere idioma/compañía ni resuelve enlaces opacos. Publicación es declaración RSS; evento/primera disponibilidad/rezago siguen nulos. Comparación de metadatos con baseline explícito de mismo mes y consultas; no acredita revisión del medio. La retención no acredita disponibilidad actual ni cobertura completa ni activa noticias/calendario.",
       "selection_contract": {
         "source_system": "rss",
         "entity": "google_es (or google_en for that canonical feed)",
