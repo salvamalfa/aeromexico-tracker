@@ -18,7 +18,8 @@ from src.config import PATHS
 from src.web_export.flight_projection import project_flights
 
 from . import manifest as manifest_mod
-from .frozen_data import data_identities, require_type_only_domain_change, verify_baseline_approvals
+from .frozen_data import data_identities, require_type_only_domain_change
+from .approval_cohorts import verify_approval_cohorts
 from .verify import verify_site
 
 
@@ -146,11 +147,10 @@ def publish_flights_only(record_paths: list[Path], out_dir: Path):
     if problems := verify_site(baseline):
         raise gate.PublicationRefused(f"Trusted site failed verification: {problems[:3]}")
     expected = manifest_mod.load_manifest(baseline)
-    approved_code = expected["code_commit"]
-    subprocess.run(["git", "merge-base", "--is-ancestor", approved_code, commit], cwd=repo, check=True)
     root = gate.flow.ROOT
     with gate.flow.writer(root):
-        authorized = verify_baseline_approvals(record_paths, approved_code, root)
+        verified = verify_approval_cohorts(record_paths, repo, commit, expected, root)
+    authorized = verified["authorized"]
     identities = [gate._analysis_manifest_entry(a) for a in authorized]
     if sorted(identities, key=manifest_mod.analysis_sort_key) != expected["analysis_manifest"]:
         raise gate.PublicationRefused("Approved thesis identities differ from the published baseline")
@@ -182,8 +182,8 @@ def publish_flights_only(record_paths: list[Path], out_dir: Path):
     with gate.flow.writer(root):
         gate.require_trusted_site_baseline(baseline, trusted_commit=commit)
         require_flight_only_changes(repo, commit)
-        current = verify_baseline_approvals(record_paths, approved_code, root)
-        if [gate._analysis_manifest_entry(a) for a in current] != identities:
+        current = verify_approval_cohorts(record_paths, repo, commit, expected, root)
+        if current != verified:
             raise gate.PublicationRefused("An existing thesis approval changed during the flight build")
         result = gate.assemble_site(
             dist, identities, out_dir, contracts=contracts, validate_candidate=validate

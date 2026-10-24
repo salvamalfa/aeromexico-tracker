@@ -3,13 +3,34 @@ import { buildChatContext, describeChatContext } from "./context";
 import { initPeriods } from "../../state/period";
 
 describe("chat dashboard context", () => {
+  it("uses the reading quarter without moving the financial quarter", () => {
+    initPeriods(["2026Q1", "2026Q2"], "2026Q2");
+    document.body.innerHTML = '<div class="reader-tabs"><button role="tab" aria-selected="true" aria-controls="panel-reading"></button></div><select id="reading-period"><option value="2026Q3">3T26</option></select>';
+    const context = buildChatContext();
+    expect(context.period).toBe("2026Q3");
+    expect(describeChatContext(context)).toContain("3T26");
+    initPeriods(["2026Q1", "2026Q2"], "2026Q1");
+    expect(buildChatContext().period).toBe("2026Q3");
+    document.querySelector("[role=tab]")!.setAttribute("aria-controls", "panel-economy");
+    expect(buildChatContext().period).toBe("2026Q1");
+    document.querySelector("[role=tab]")!.setAttribute("aria-controls", "panel-reading");
+    (document.querySelector("#reading-period") as HTMLSelectElement).disabled = true;
+    expect(buildChatContext().period).toBe("2026Q1");
+    (document.querySelector("#reading-period") as HTMLSelectElement).disabled = false;
+    (document.querySelector("#reading-period") as HTMLSelectElement).innerHTML = '<option value="../../escape">Invalid</option>';
+    expect(buildChatContext().period).toBe("2026Q1");
+    document.querySelector("#reading-period")!.remove();
+    expect(buildChatContext().period).toBe("2026Q1");
+  });
   it("drops a card from an inactive tab instead of mixing its filters with the active tab", () => {
+    initPeriods(["2026Q2"], "2026Q2");
     document.body.innerHTML = `
       <div class="reader-tabs">
         <button role="tab" aria-selected="false" aria-controls="panel-reading"></button>
         <button role="tab" aria-selected="true" aria-controls="panel-economy"></button>
       </div>
       <section id="panel-reading" role="tabpanel" hidden>
+        <select id="reading-period"><option value="2026Q3">3T26</option></select>
         <section class="narrative-card"><div class="chart" id="reading-card"></div></section>
       </section>
       <section id="panel-economy" role="tabpanel">
@@ -20,6 +41,7 @@ describe("chat dashboard context", () => {
     const context = buildChatContext(inactiveCard);
 
     expect(context.tab).toBe("economy");
+    expect(context.period).toBe("2026Q2");
     expect(context.card_id).toBeUndefined();
     expect(context.filters).toBeUndefined();
   });

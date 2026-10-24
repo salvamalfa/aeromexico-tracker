@@ -73,3 +73,24 @@ conservan la fecha de sus informes. El panel Industria comprende los tres
 grupos, con límites de pasajeros, geografía y contabilidad declarados. El
 expediente y las advertencias de revisión permanecen privados; el consumidor
 público recibe el texto aprobado y enlaces de fuente, sin cápsulas internas.
+
+
+### Lectura editorial de Aeroméxico 3T26
+
+El perfil `quarterly_release_v1` reproduce fuentes primarias del emisor y sus
+cálculos, con unidades y duración explícitas. Distingue trimestre y acumulado,
+variaciones interanuales, cifras reportadas y cálculos propios. La revisión
+comprueba todas las afirmaciones, sus fuentes y la versión exacta aprobada.
+
+La modalidad `--editorial-only` publica únicamente la lectura aprobada y los
+recursos de interfaz necesarios. Conserva los datos financieros, vuelos,
+noticias y tesis anteriores. Su selector de lectura es independiente del
+trimestre de indicadores. Verifica los archivos del baseline remoto y servido,
+la identidad de la lectura nueva y las guardas previas al intercambio atómico.
+Los modos generales mantienen sus controles de reproducción completos.
+
+`analysis_editorial.schema.json` añade un contrato limitado a Aeroméxico 3T26
+para las citas del comunicado primario distribuido en GlobeNewswire. Los
+contratos históricos permanecen intactos. El manifiesto fija los contratos
+exactos y la aprobación correspondiente; la aprobación por sí sola no acredita
+un despliegue. El flujo y sus pruebas están en `src/publish/README.md`.

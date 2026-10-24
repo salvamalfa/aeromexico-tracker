@@ -326,6 +326,9 @@ def select_versions(candidates: list[dict]) -> tuple[list[dict], list[dict]]:
 
 
 def validate(package: dict, verify_files: bool = True) -> dict:
+    if package.get("schema_version") == "quarterly_release_v1":
+        from .quarterly_release import verify
+        return verify(package, verify_files=verify_files)
     if package.get("schema_version") != SCHEMA or not re.fullmatch(r"20\d{2}Q[1-4]", package.get("period_id", "")):
         raise ValueError("Invalid package schema or quarter")
     payload = {k: v for k, v in package.items() if k not in ("evidence_fingerprint", "package_id")}

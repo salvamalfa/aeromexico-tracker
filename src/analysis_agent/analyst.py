@@ -126,14 +126,8 @@ def validate(draft, package, calculations):
                 raise ValueError("Unknown or unavailable calculation")
             if binding["unit"] != node["unit"] or binding["period_id"] != node["period_id"]:
                 raise ValueError("Incompatible unit or period")
-            values[alias] = formatted(node, business=draft.get('summary_format')=='business_bullets_v1')
-            mode=binding.get('presentation','default')
-            if mode=='cents_short' and node['unit']=='cents_USD_per_ASK':
-                values[alias]=f"{node['value']:.2f} centavos de dólar"
-            elif mode=='period_label':
-                values[alias]=f"{node['period_id'][-1]}T{node['period_id'][2:4]}"
-            elif mode!='default':
-                raise ValueError('Invalid binding presentation')
+            from .presentation import binding_value
+            values[alias] = binding_value(node, binding, business=draft.get('summary_format')=='business_bullets_v1')
             lineage(node["calculation_id"], package, calculations)
         evidence_ids = claim.get("evidence_ids", [])
         for alias,reference in reported.items():
@@ -227,6 +221,9 @@ def save(draft, package, calculations, root=None):
     prompt_version = hashlib.sha256(SKILL.read_bytes()).hexdigest()
     code_version = digest({name: hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest()
                            for name in ("analyst.py", "stage16_html.py")})
+    if draft.get("source_profile") == "quarterly_release_v1":
+        from .entity_adapter import code_version as implementation_version
+        code_version = implementation_version()
     version = digest({"draft": draft, "prompt_version": prompt_version, "code_version": code_version})
     target = root / (version + ".json")
     if target.exists():

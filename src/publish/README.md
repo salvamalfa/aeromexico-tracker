@@ -26,13 +26,16 @@ as — a directory built from `web/` plus the exported v1 payloads. See
   For a strictly interface-only change, `--ui-only` reuses the existing
   public `data/v1/` payload. It first requires the whole tracked `site/` to
   be byte-for-byte unchanged from one pinned `origin/master` commit, verifies the site manifest
-  and its exact approved analysis-manifest entries, then checks that the
+  and replays each exact approved analysis-manifest entry with its pinned
+  cohort implementation, then checks that the
   frontend build preserved every data file hash and size. It retains the
   trusted manifest's contract hashes too, so a UI release does not change the
   conversation's data version merely because this codebase added a dormant,
   optional contract. It repeats the trusted-site and approval checks
   immediately before the atomic swap, and refuses if the trusted ref moved
-  during the build. This mode cannot bless edited data by
+  during the build. Before the swap it also verifies the completed candidate
+  and compares every data hash and size again, closing changes to dist during
+  the second approval check. This mode cannot bless edited data by
   rebuilding its manifest, and it never invokes warehouse exporters.
 - `--business-metrics-only` uses the same immutable published-site baseline
   and exact current analysis approval, then adds only the separately pinned
@@ -42,7 +45,7 @@ as — a directory built from `web/` plus the exported v1 payloads. See
   ledger lock immediately before the atomic replacement.
 - `--preserve-published-data` prepara el mapa solo de vuelos con el histórico
   completo. Toma el `site/` firmado exacto de `origin/master`, revalida las
-  cuatro aprobaciones con su implementación original y los expedientes
+  aprobaciones por su cohorte de implementación y los expedientes
   actuales antes/después del build, y conserva **todos** los archivos de
   `data/v1/` byte por byte. Protege los renderers de análisis, fuentes y
   contratos; no reconstruye modelos, crea aprobaciones ni activa datos nuevos.
@@ -58,10 +61,22 @@ as — a directory built from `web/` plus the exported v1 payloads. See
   `code_commit` sigue identificando el código que genera la interfaz actual.
   La referencia no autoriza versiones ni contenido nuevos, no cambia huellas
   aprobadas y no evita ninguna validación de datos o de privacidad.
+- `config/publish/approval-cohorts.json` fija las ediciones posteriores por
+  cohorte: entrada completa de aprobación, commit del verificador y SHA/tamaño
+  del payload público. Conserva el ancla original sin modificarla. El gate lee
+  los pins del commit confiable, exige una partición completa sin duplicados ni
+  entradas huérfanas y reproduce autorización, fuentes y payload con cada
+  implementación. La rama y el verificador nuevo deben descender de la publicación
+  confiable; los verificadores históricos deben estar en su historial ya publicado.
+  La configuración de trabajo debe coincidir con la comprometida;
+  todo se vuelve a comprobar bajo lock. Para el nuevo trimestre solo admite un
+  pin adicional comprometido y ligado al registro aprobado actual. Un pin no
+  concede aprobación. Los modos que preservan datos, UI-only y el modo de vuelos reutilizan
+  esta comprobación; incorporar 3T26 no bloquea la siguiente publicación del sitio.
 - `--flights-only` proyecta las celdas aceptadas de 2T26 sobre el sitio público
   auditado, sin reconstruir el warehouse ni los otros exportadores. Exige la
   edición exacta de vuelos, el valor anterior de cada sustitución y la
-  conciliación por operador/mes/ámbito. Revalida las cuatro aprobaciones con su
+  conciliación por operador/mes/ámbito. Revalida las aprobaciones por cohorte con su
   implementación publicada y conserva el resto de payloads e identidades antes
   y después del build. La autorización específica del 19 de octubre cubre esta
   proyección y su tarjeta ponderada; no aprueba tesis nuevas, M11 ni calendarios.
@@ -86,6 +101,14 @@ as — a directory built from `web/` plus the exported v1 payloads. See
   `analysis_runs/publications/` (local, gitignored — see `.gitignore`'s
   `analysis_runs/` rule) and hashes the *manifest*, not the raw `site/`
   bytes, since the manifest already lists every file's own hash.
+
+Las pruebas de paridad usan el manifiesto firmado que existe en `site/` y la
+configuración comprometida con esa misma publicación. Leen esa configuración en
+un worktree temporal aislado; el ledger, los originales y los verificadores se
+reproducen sin sustituir sus controles. Un pin pendiente en HEAD no se trata como
+parte del sitio anterior. El sitio de cuatro tesis exige las cuatro identidades
+históricas; la quinta solo se exige cuando el manifiesto incorpora Aeroméxico
+3T26. Los artefactos del gate deben estar comprometidos antes de esa paridad.
 
 Never writes to the approval ledger, never approves/revokes/records
 anything. `web/` is the only implementation of each view, this gate its
@@ -120,6 +143,96 @@ coincidan; la presencia de un archivo por sí sola no acredita aprobación.
 
 ## Punto de entrada
 
+### Publicación editorial acotada
+
+El dueño autorizó el 24 de octubre separar la lectura de los indicadores.
+`--editorial-only` recibe únicamente el registro nuevo aprobado de Aeroméxico
+3T26. Verifica sus fuentes, cálculos, auditoría y aprobación con el lifecycle
+actual, nuevamente bajo lock antes del reemplazo atómico. No modifica
+`executive.json`, métricas del chat, noticias, vuelos ni las cuatro tesis 2T26.
+
+La autoridad del baseline es el commit remoto de `master`, fijado en
+`config/publish/editorial-release.json` y revisado en el PR. El gate exige una
+corrida Pages exitosa con exactamente ese árbol `site/` (el commit de despliegue
+puede ser anterior si el árbol permanece idéntico). Comprueba el manifiesto y
+cada archivo servido por HTTPS contra sus bytes en Git, antes y después del
+build; rechaza redirecciones y cambios remotos concurrentes. No usa un baseline
+local autofirmado. El ancla también fija los bytes aprobados de la tesis y el
+inventario exacto de recursos compilados del dashboard. Conserva los recursos
+anteriores y el HTML de las otras aplicaciones.
+
+`python -m src.publish.editorial site/` es el verificador explícito de esta
+modalidad. Contrasta el recibo editorial contra el ancla comprometida y el
+árbol Git; conserva los contratos históricos, aprobación histórica e inventario, y aplica
+todos los controles estructurales y de privacidad. Solo para los bytes
+históricos demostrados omite la reproducción semántica de noticias y métricas.
+El recibo registra observaciones del gate; el verificador offline no autentica
+por sí mismo una observación de red ni reproduce las fuentes antiguas. Esta
+garantía se sustituye por la identidad exacta con el despliegue anterior
+verificado. El verificador general `src.publish.verify` conserva sus controles.
+Pages selecciona el verificador según el sitio que despliega: si contiene
+`editorial-publication.json`, exige el verificador editorial y su ancla exacta,
+sin fallback ante errores. Una publicación posterior de interfaz o datos sin
+ese recibo usa el verificador general, aunque el ancla histórica siga en Git.
+Un recibo aislado nunca concede autoridad. El gate de la modalidad posterior
+sigue exigiendo sus aprobaciones y fuentes; no hereda la excepción editorial.
+CI y revisión siguen siendo obligatorios y la publicación se comprueba por HTTPS.
+
+El contrato adicional `analysis_editorial.schema.json` se aplica exclusivamente
+a `data/v1/analysis/2026Q3.json`. Fija el trimestre y la entidad y admite la
+distribución primaria del comunicado en GlobeNewswire. Su hash se añade al
+manifiesto y al ancla revisada; todos los hashes de contratos previos permanecen
+intactos. No amplía los dominios permitidos para las cuatro tesis históricas.
+El verificador y el lector de snapshots resuelven ese hash exacto, sin fallback.
+Las últimas comprobaciones de código, ancla, baseline y remoto se repiten después
+de las verificaciones lentas, dentro del callback previo al intercambio; el lock
+excluye cambios del ledger, no movimientos externos de GitHub.
+
+La lectura obtiene los trimestres disponibles de `analysis_manifest` y usa
+`readingPeriod` en la URL. No añade observaciones financieras ni altera el
+selector compartido de indicadores y vuelos. La herramienta financiera del
+chat mantiene su edición anterior. Monthly permanece separado y privado.
+
+```bash
+python -m src.publish --editorial-only --record <registro-3T26-aprobado> --out site/
+python -m src.publish.editorial site/
+```
+
+### Publicación financiera completa
+
+La modalidad general `--quarterly-only` agrega
+solo `analysis/2026Q3.json` y la proyección ejecutiva de Aeroméxico del
+paquete primario auditado. Conserva byte por byte los demás datasets,
+incluidos vuelos mensuales, noticias y las cuatro tesis de 2T26. Dentro del
+ejecutivo, conserva los registros y vistas previos y los tres bloques de
+entidades sin actualización. El selector financiero incorpora 3T26; el mapa
+mantiene sus cortes de cobertura propios.
+
+Se proporcionan los cuatro registros publicados exactos y el nuevo registro
+aprobado mediante cinco opciones `--record`. El gate verifica las cuatro
+aprobaciones históricas con su implementación original y la nueva con el
+runtime actual. Repite la verificación de expedientes, fuentes y baseline
+bajo lock antes del reemplazo atómico, y valida el candidato contra contratos
+y privacidad. El contrato anterior de citas queda retenido por hash para
+seguir verificando el sitio histórico; esa retención no concede aprobación.
+
+La conversión de indicadores nativos por asiento-milla a asiento-kilómetro
+usa 1.609344. No se equipara CASM publicado con el gasto total del estado de
+resultados; los comparativos calculados desde valores redondeados pueden
+diferir de los porcentajes del comunicado. No se reconstruyen meses, Gold,
+modelos, calendarios ni tesis de otras entidades.
+
+La tabla financiera estructurada del chat mantiene su edición aprobada anterior.
+Una consulta de ingresos de 3T26 por esa herramienta devuelve el periodo faltante;
+no toma el ingreso de 2T26 ni transforma automáticamente la tesis en otra edición
+de métricas. La medición offline del chat distingue ese faltante del nuevo periodo
+ejecutivo y conserva el fixture histórico de campaña.
+
+```bash
+python -m src.publish --quarterly-only --record <registro-historico> --record <otros-registros-exactos> --record <registro-3T26-aprobado> --out site/
+python -m src.publish.verify site/
+```
+
 ```
 uv run python -m src.publish --record analysis_runs/drafts/2026Q2/<hash>.json --out site/
 uv run python -m src.publish --ui-only --record analysis_runs/drafts/2026Q2/<hash>.json --out site/
@@ -142,7 +255,7 @@ for the built site's visible parity against the published page, by
 `tests/test_site_parity.py` (`browser` + `local_data`).
 
 El ledger conserva aprobaciones técnicas históricas cuando cambia la huella
-de implementación. Para reproducir una publicación, selecciona sus cuatro
+de implementación. Para reproducir una publicación, selecciona todos sus
 registros exactos con `--record`; toma las identidades de
 `site/publication_manifest.json`. El descubrimiento automático rechaza
 múltiples versiones aprobadas de una misma entidad y trimestre. En un

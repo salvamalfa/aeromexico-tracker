@@ -95,6 +95,12 @@ happen to hold the same 22 quarters in the same order, and it meant
 `views/flights`' data (`quarters.json`, world geometry, network files)
 always loaded even for a reader who never opens the Vuelos tab.
 
+The reading card now uses its own selector, populated only by the approved
+identities in `publication_manifest.json`. `readingPeriod` selects that reading;
+it never adds observations to `executive.json` or moves financial/flight periods.
+The historical shared-store implementation below applies to indicators and
+flights; reading renders independently through `views/executive/reading-periods.ts`.
+
 That version was replaced with one shared store, `web/src/state/period.ts`: it
 owns the selected index and the *single* pair of click listeners on
 `#period-prev`/`#period-next` (`wireStepper()`, wired once by

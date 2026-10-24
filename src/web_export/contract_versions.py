@@ -1,6 +1,6 @@
 """Resolve a manifest's exact contract bytes, never the nearest schema version.
 
-Only the retained flights contract is versioned. Privacy and approval contracts
+Retained flights and analysis citation contracts are versioned. Privacy and approval contracts
 still require the current file's exact hash; an archive is not an approval.
 """
 
@@ -11,6 +11,9 @@ import re
 from pathlib import Path
 
 ARCHIVED_CONTRACTS = {
+    "analysis.schema.json": frozenset(
+        {"c0e3b0fb5e3f840087bbb3bed0e222e477f90f5dc9ab9840802916f1ed5eb8c2"}
+    ),
     "flights.schema.json": frozenset(
         {
             "17fb7e131da94435190bea925fe9733e298754d04e9b9c5e76fbbea8bef119a7",

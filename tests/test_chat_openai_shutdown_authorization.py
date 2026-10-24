@@ -198,18 +198,6 @@ def test_worker_shutdown_stays_bounded_while_post_write_cancel_is_blocked(tmp_pa
         reserved_tokens=100,
         reserved_cost_usd=0.01,
     )
-    next_conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1", provider="mock")
-    queued, _ = store.submit_turn(
-        "alice",
-        next_conversation["id"],
-        "siguiente",
-        "queued",
-        {},
-        provider="mock",
-        max_active_per_user=2,
-        reserved_tokens=100,
-        reserved_cost_usd=0.01,
-    )
     fake = FakeSessions(
         event_stream=FakeStream([]),
         prior_turns=[_turn("turn_old", status="completed")],
@@ -260,6 +248,18 @@ def test_worker_shutdown_stays_bounded_while_post_write_cancel_is_blocked(tmp_pa
     worker.start()
     try:
         assert input_started.wait(timeout=1)
+        next_conversation = store.create_conversation("alice", "snapshot-v1", "semantic-v1", provider="mock")
+        queued, _ = store.submit_turn(
+            "alice",
+            next_conversation["id"],
+            "siguiente",
+            "queued",
+            {},
+            provider="mock",
+            max_active_per_user=2,
+            reserved_tokens=100,
+            reserved_cost_usd=0.01,
+        )
         assert store.request_cancel("alice", first["id"]) == "cancelled"
         worker.cancel(first["id"])
         assert first_cancel_sent.wait(timeout=1)

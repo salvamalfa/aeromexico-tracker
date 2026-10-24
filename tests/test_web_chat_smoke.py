@@ -70,12 +70,18 @@ def _public_fixtures() -> dict[str, object]:
             ("VIVA_AEROBUS", "Viva"),
         )
     ]
+    analysis = json.loads((WEB_FIXTURES / "analysis_sample.json").read_text())
     return {
+        "/publication_manifest.json": {"analysis_manifest": [
+            {"period_id": "2026Q2", "approval_event": "synthetic-approved-reading"},
+            {"period_id": "2026Q3", "approval_event": "synthetic-approved-reading-q3"},
+        ]},
         "/data/v1/executive.json": executive,
         "/data/v1/market-demand.json": {"months":[],"airports":[],"groups":[],"quality_notes":[]},
         "/data/v1/news.json": {"mode":"candidate_preview", "coverage_note":"Fixture parcial", "months":["2026-09"], "limits":[], "records":[]},
         "/data/v1/market.json": json.loads((WEB_FIXTURES / "market_sample.json").read_text()),
-        "/data/v1/analysis/2026Q2.json": json.loads((WEB_FIXTURES / "analysis_sample.json").read_text()),
+        "/data/v1/analysis/2026Q2.json": analysis,
+        "/data/v1/analysis/2026Q3.json": {**analysis, "period_id": "2026Q3", "period_label": "3T26"},
     }
 
 
@@ -195,6 +201,7 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
 
             page.route("**/api/chat/**", fake_api)
             page.route("**/data/v1/**", fake_public_data)
+            page.route("**/publication_manifest.json", fake_public_data)
             page.goto(f"http://127.0.0.1:{port}", wait_until="domcontentloaded")
             launcher = page.get_by_role("button", name="Abrir Airline Tracker chat analítico")
             launcher.wait_for(state="visible", timeout=20_000)
@@ -214,7 +221,8 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
             page.get_by_role("button", name="Enviar").click()
             page.get_by_text("Respuesta segura.").wait_for(timeout=10_000)
             assert sent_context and sent_context[0]["tab"] == "reading"
-            assert sent_context[0]["period"]
+            assert sent_context[0]["period"] == "2026Q3"
+            assert page.inner_text("#period-display") == "2T26"
             assert (
                 page.get_by_role("link", name="Fuente", exact=True).get_attribute("rel")
                 == "noopener noreferrer"
@@ -231,6 +239,7 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
             page.get_by_text("Respuesta segura.").last.wait_for(timeout=10_000)
             assert sent_context[1]["card_id"] == "reading-card"
             assert sent_context[1]["entity"] == "VOLARIS"
+            assert sent_context[1]["period"] == "2026Q2"
             page.keyboard.press("Escape")
 
             if page.locator("#tab-market").count():

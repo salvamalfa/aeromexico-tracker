@@ -114,6 +114,9 @@ def comparison(current, base, period, key, mode):
 
 
 def build(package):
+    if package.get("schema_version") == "quarterly_release_v1":
+        from .quarterly_release import calculate as calculate_quarterly
+        return calculate_quarterly(package)
     validate(package)
     if package["readiness"] == "blocked":
         raise ValueError("Blocked evidence cannot enter the quantitative engine")

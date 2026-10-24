@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-10-24 · Lectura ejecutiva 3T26 revisada
+
+- Texto financiero de la Page aprobado y vinculado a una versión nueva, con
+  auditoría independiente, cifras reproducibles y corte retrospectivo explícito.
+- Contraste explícito y exclusión del estado privado de revisión de todo el
+  payload público; conservación exacta de los datos y cuatro tesis anteriores.
+- Modalidad editorial explícita: verifica el baseline remoto y cada archivo
+  servido, preserva bytes históricos y valida íntegramente la lectura nueva.
+  Su selector es independiente de indicadores y vuelos. Los modos generales
+  conservan la reproducción de expedientes históricos y pins externos.
+- Regresiones: contrato retenido validado por hash y fallback real, módulos de
+  pruebas separados dentro del límite y recorrido de recursos UTF-8 explícito.
+- Un catálogo de lecturas ausente o inválido cierra solo la lectura y conserva
+  el arranque de indicadores y vistas. La paridad financiera usa el modo de
+  publicación y espera los KPIs, sin confundirlos con el trimestre del texto.
+- La carga de catálogo y análisis ocurre en segundo plano después de preparar
+  indicadores y controles; respuestas de lectura lentas no detienen otras vistas.
+- Paridad de narrativa con selección explícita de lectura. El replay editorial
+  exige sus fuentes y expediente y falla en modo estricto si faltan; mantiene
+  todos los controles generales y las verificaciones de datos históricos.
+- Monthly continúa privado; calendarios e ingestas no se activan.
+
+## 2026-10-21 · Aeroméxico 3T26 financiero
+
+- Lectura original «Ingresos récord, margen bajo presión», con fuentes primarias,
+  separación trimestral/acumulado y ajuste de lealtad identificado.
+- Publicación trimestral aditiva: conserva tesis 2T26 y datasets del mapa,
+  noticias y pares; añade exclusivamente Aeroméxico financiero de 3T26.
+- Reproducción de cifras nativas, conversión milla/kilómetro, auditoría independiente
+  y consentimiento por versión, con comprobación del candidato antes del swap.
+
 ## 2026-10-21 · Dependencias con avisos corregidas
 
 - Lock Python: certifi 2026.10.19, Pillow 13.0.0, Tornado 6.5.9 y urllib3 2.8.0.

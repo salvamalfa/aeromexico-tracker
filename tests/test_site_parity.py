@@ -3,8 +3,9 @@ matches its own sources of truth (its inputs, not a second rendered page):
 
 - ``test_site_flights_and_executive_data_match_a_fresh_export`` (no
   browser): the Vuelos/executive data already committed under
-  ``site/data/v1/`` equals a fresh ``src.web_export`` run over the current
-  warehouse (snapshot equality).
+  ``site/data/v1/`` equals its authorized source projection. A quarterly-only
+  publication reconstructs financial data from primary evidence and preserves
+  the approved monthly projection exactly against its pinned baseline.
 - The Playwright tests below render ``site/`` alone and check what it shows
   against the real payloads directly (``executive_payload``/the local
   ledger's approved analysis), not against a second render.
@@ -17,9 +18,17 @@ owner-authorized step, see ``src/publish/README.md``).
 
 from __future__ import annotations
 
+import hashlib
+import io
 import json
+import os
+from contextlib import contextmanager
+import subprocess
+import sys
+import tarfile
+import tempfile
 import threading
-from functools import partial
+from functools import lru_cache, partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -28,7 +37,7 @@ import pytest
 from src.analysis_agent import lifecycle as flow
 from src.publish import manifest as manifest_mod
 from src.publish.verify import verify_site
-from src.web_export.analysis import MissingAnalysisInput, export_period
+from src.web_export.analysis import MissingAnalysisInput
 from src.web_export.executive import export_executive
 from src.web_export.flights import export_flights, recombine_flights
 
@@ -37,6 +46,151 @@ pytestmark = pytest.mark.local_data
 SITE_DIR = Path(__file__).resolve().parent.parent / "site"
 DATA_DIR = SITE_DIR / "data" / "v1"
 READER_KPI_KEYS = ("rask_cents_per_km", "cask_cents_per_km", "ask_km")
+QUARTERLY_BASELINE_COMMIT = "cec09e625a2f49869bffb470e4eeda7d26c255de"
+
+
+def _baseline_json(relative: str) -> dict:
+    """Read the independently pinned publication before the quarterly addition."""
+    return json.loads(
+        subprocess.check_output(
+            ["git", "show", f"{QUARTERLY_BASELINE_COMMIT}:site/{relative}"], cwd=SITE_DIR.parent
+        )
+    )
+
+
+@contextmanager
+def _published_approval_config_view(repo: Path, manifest_raw: bytes):
+    """Read the configuration committed with this site, not a later pending pin.
+
+    A detached, config-only worktree keeps every production provenance check
+    intact and never edits the caller's working configuration. Source and ledger
+    replay still use the ordinary pinned verifier and actual private inputs.
+    """
+    trusted = None
+    for ref in ("origin/master", "HEAD"):
+        candidate = subprocess.run(
+            ["git", "show", f"{ref}:site/publication_manifest.json"],
+            cwd=repo, capture_output=True,
+        )
+        if candidate.returncode == 0 and candidate.stdout == manifest_raw:
+            trusted = subprocess.check_output(["git", "rev-parse", ref], cwd=repo, text=True).strip()
+            break
+    if trusted is None:
+        raise ValueError("The signed site is not committed; commit the gate output before parity replay")
+    with tempfile.TemporaryDirectory(prefix="parity-published-config-") as folder:
+        view = Path(folder) / "checkout"
+        subprocess.run(
+            ["git", "worktree", "add", "--detach", "--no-checkout", str(view), trusted],
+            cwd=repo, env={**os.environ, "GIT_LFS_SKIP_SMUDGE": "1"},
+            capture_output=True, check=True,
+        )
+        try:
+            archive = subprocess.check_output(["git", "archive", trusted, "config/publish"], cwd=repo)
+            with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
+                tar.extractall(view, filter="data")
+            yield view, trusted
+        finally:
+            subprocess.run(["git", "worktree", "remove", "--force", str(view)],
+                           cwd=repo, capture_output=True, check=True)
+
+
+@lru_cache(maxsize=1)
+def _replay_published_cohorts() -> dict:
+    """Validate every published entry using its committed verifier and full ledger."""
+    from src.publish.approval_cohorts import verify_approval_cohorts
+
+    repo = SITE_DIR.parent
+    baseline = manifest_mod.load_manifest(SITE_DIR)
+    paths = []
+    for entry in baseline["analysis_manifest"]:
+        path = repo / "analysis_runs/drafts"
+        if "entity_key" in entry:
+            path /= entry["entity_key"]
+        paths.append(path / entry["period_id"] / f"{entry['version']}.json")
+    with _published_approval_config_view(repo, (SITE_DIR / "publication_manifest.json").read_bytes()) as (view, trusted):
+        return verify_approval_cohorts(paths, view, trusted, baseline, flow.ROOT)
+
+
+@pytest.fixture(scope="module")
+def published_executive(executive_payload: dict) -> dict:
+    """Replay the new primary-source edition over the pinned public baseline."""
+    from src.publish.records import _analysis_manifest_entry
+
+    from src.publish.editorial import PROOF, anchor, verify_editorial
+
+    if (SITE_DIR / PROOF).exists():
+        assert verify_editorial(SITE_DIR, SITE_DIR.parent) == []
+        spec = anchor(SITE_DIR.parent)
+        baseline = json.loads(subprocess.check_output(
+            ["git", "show", f"{spec['baseline_commit']}:site/data/v1/executive.json"],
+            cwd=SITE_DIR.parent,
+        ))
+        assert executive_payload == baseline
+        return baseline
+
+    entries = manifest_mod.load_manifest(SITE_DIR)["analysis_manifest"]
+    quarterly = [e for e in entries if e["period_id"] == "2026Q3" and "entity_key" not in e]
+    if not quarterly:
+        return executive_payload
+    assert len(quarterly) == 1
+    published = json.loads((SITE_DIR / "data/v1/executive.json").read_bytes())
+    has_view = "2026Q3" in published["views"]
+    has_record = any(row["period_id"] == "2026Q3" for row in published["records"])
+    assert has_view == has_record, "Partial financial quarter is not a publication"
+    if not has_record:
+        # A later UI-only release keeps the reading but not the old editorial
+        # frontend receipt. Financial eligibility comes from the actual data;
+        # receipt absence must never invent a new quarterly projection.
+        assert verify_site(SITE_DIR) == []
+        spec = anchor(SITE_DIR.parent)
+        baseline_raw = subprocess.check_output(
+            ["git", "show", f"{spec['baseline_commit']}:site/data/v1/executive.json"],
+            cwd=SITE_DIR.parent,
+        )
+        assert (SITE_DIR / "data/v1/executive.json").read_bytes() == baseline_raw
+        baseline = json.loads(baseline_raw)
+        assert executive_payload == baseline
+        return baseline
+    entry = quarterly[0]
+    path = SITE_DIR.parent / "analysis_runs/drafts/2026Q3" / f"{entry['version']}.json"
+    record = json.loads(path.read_bytes())
+    replay = _replay_published_cohorts()
+    assert entry in [_analysis_manifest_entry(a) for a in replay["authorized"]]
+    assert record["draft"]["source_profile"] == "quarterly_release_v1"
+    package_path = SITE_DIR.parent / "analysis_runs/evidence" / f"{record['draft']['package_id']}.json"
+    baseline = _baseline_json("data/v1/executive.json")
+    # The quarterly operation preserves the old export rather than refreshing it.
+    assert executive_payload == baseline
+    cohort = next(c for c in replay["cohorts"] if entry in c["analysis_manifest"])
+    return _quarterly_projection(cohort["implementation_commit"], baseline, package_path)
+
+
+def _quarterly_projection(commit: str, baseline: dict, package_path: Path) -> dict:
+    """Reconstruct the historical edition with its validated cohort's source code."""
+    repo = SITE_DIR.parent
+    archive = subprocess.check_output(
+        ["git", "archive", commit, "src", "contracts", "config", "web", ".agents"], cwd=repo
+    )
+    with tempfile.TemporaryDirectory(prefix="parity-quarterly-cohort-") as tmp:
+        base = Path(tmp)
+        with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
+            tar.extractall(base, filter="data")
+        (base / "data").symlink_to(repo / "data", target_is_directory=True)
+        script = """import json,sys
+from pathlib import Path
+from src.publish.quarterly_overlay import executive_projection
+print(json.dumps(executive_projection(json.loads(sys.stdin.read()),
+    json.loads(Path(sys.argv[1]).read_bytes())),ensure_ascii=False))
+"""
+        result = subprocess.run(
+            [sys.executable, "-B", "-c", script, str(package_path)],
+            cwd=base,
+            input=json.dumps(baseline),
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return json.loads(result.stdout)
 
 
 def _skip_or_fail(config: pytest.Config, message: str) -> None:
@@ -63,22 +217,103 @@ def _require_site(request: pytest.FixtureRequest) -> None:
 
 
 def _export_approved_entry(entry: dict) -> dict:
-    """Use the exporter's canonical legacy/entity record loader for this identity."""
-    entity_args = {"entity_key": entry["entity_key"]} if "entity_key" in entry else {}
-    return export_period(entry["period_id"], entry["version"], root=flow.ROOT, **entity_args)
+    """Replay each exact approval through its own trusted implementation."""
+    from src.publish.records import _analysis_manifest_entry
+
+    replay = _replay_published_cohorts()
+    for authorized, payload in zip(replay["authorized"], replay["payloads"]):
+        if _analysis_manifest_entry(authorized) == entry:
+            return payload
+    raise AssertionError("The requested entry was not replayed by its pinned cohort")
+
+
+def test_published_parity_survives_a_later_runtime_without_weakening_replay(
+    executive_payload: dict, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Historical approvals and projection use pinned code, including after source changes."""
+    from src.analysis_agent import quarterly_release
+    from src.publish import frozen_data, gate, quarterly_overlay
+    from src.publish.records import _analysis_manifest_entry
+
+    def later_runtime_refuses(*args, **kwargs):
+        raise ValueError("Simulated later runtime refuses historical presentation")
+
+    for module, name in (
+        (flow, "require_current_presentation"),
+        (gate, "verify_records"),
+        (quarterly_release, "verify"),
+        (quarterly_release, "calculate"),
+        (quarterly_overlay, "executive_projection"),
+    ):
+        monkeypatch.setattr(module, name, later_runtime_refuses)
+
+    replay_calls = []
+    original_replay = frozen_data.verify_baseline_approvals
+
+    def real_pinned_replay(paths, commit, ledger, **kwargs):
+        replay_calls.append(commit)
+        return original_replay(paths, commit, ledger, **kwargs)
+
+    monkeypatch.setattr(frozen_data, "verify_baseline_approvals", real_pinned_replay)
+    _replay_published_cohorts.cache_clear()
+    try:
+        replay = _replay_published_cohorts()
+        entries = manifest_mod.load_manifest(SITE_DIR)["analysis_manifest"]
+        historical = {(entity, "2026Q2") for entity in ("AEROMEXICO", "INDUSTRY", "VIVA_AEROBUS", "VOLARIS")}
+        identities = {manifest_mod.analysis_identity(entry) for entry in entries}
+        assert identities in (historical, historical | {("AEROMEXICO", "2026Q3")})
+        assert len(entries) == len(replay["authorized"]) == len(replay["payloads"]) == len(identities)
+        cohort_count = 2 if ("AEROMEXICO", "2026Q3") in identities else 1
+        assert [_analysis_manifest_entry(a) for a in replay["authorized"]] == entries
+        assert replay_calls == [cohort["implementation_commit"] for cohort in replay["cohorts"]]
+        assert len(set(replay_calls)) == cohort_count
+        for entry, payload in zip(entries, replay["payloads"]):
+            actual = json.loads((DATA_DIR / manifest_mod.analysis_relative_path(entry)).read_bytes())
+            assert _export_approved_entry(entry) == payload == actual
+        assert published_executive.__wrapped__(executive_payload) == json.loads(
+            (DATA_DIR / "executive.json").read_bytes()
+        )
+        changed = {**entries[-1], "version": "f" * 64}
+        with pytest.raises(AssertionError, match="not replayed"):
+            _export_approved_entry(changed)
+
+        # A refusal by the pinned verifier must still fail the helper. The
+        # successful historical replay above cannot become an approval bypass.
+        _replay_published_cohorts.cache_clear()
+        monkeypatch.setattr(frozen_data, "verify_baseline_approvals", later_runtime_refuses)
+        with pytest.raises(ValueError, match="Simulated later runtime"):
+            _replay_published_cohorts()
+    finally:
+        _replay_published_cohorts.cache_clear()
 
 
 def test_site_flights_and_executive_data_match_a_fresh_export(
-    request: pytest.FixtureRequest, tmp_path: Path, flight_payload: dict, executive_payload: dict
+    request: pytest.FixtureRequest, tmp_path: Path, flight_payload: dict, published_executive: dict
 ) -> None:
-    """``site/data/v1`` is exactly what exporting the current warehouse gives."""
+    """Reconstruct financial data; preserve the separately approved monthly map."""
 
     _require_site(request)
     out_dir = tmp_path / "data" / "v1"
-    export_flights(flight_payload, out_dir, skip_input_check=True)
-    export_executive(executive_payload, out_dir, skip_input_check=True)
-
-    assert recombine_flights(out_dir) == recombine_flights(DATA_DIR)
+    export_executive(published_executive, out_dir, skip_input_check=True)
+    manifest = manifest_mod.load_manifest(SITE_DIR)
+    if any(e["period_id"] == "2026Q3" and "entity_key" not in e for e in manifest["analysis_manifest"]):
+        prefix = "data/v1/flights/"
+        expected = {
+            r["path"]: r
+            for r in _baseline_json("publication_manifest.json")["files"]
+            if r["path"].startswith(prefix)
+        }
+        actual = {r["path"]: r for r in manifest["files"] if r["path"].startswith(prefix)}
+        assert actual == expected
+        assert {
+            p.relative_to(SITE_DIR).as_posix() for p in (DATA_DIR / "flights").rglob("*") if p.is_file()
+        } == set(expected)
+        for name, row in expected.items():
+            raw = (SITE_DIR / name).read_bytes()
+            assert len(raw) == row["bytes"] and hashlib.sha256(raw).hexdigest() == row["sha256"]
+    else:
+        export_flights(flight_payload, out_dir, skip_input_check=True)
+        assert recombine_flights(out_dir) == recombine_flights(DATA_DIR)
     fresh_executive = json.loads((out_dir / "executive.json").read_text(encoding="utf-8"))
     site_executive = json.loads((DATA_DIR / "executive.json").read_text(encoding="utf-8"))
     assert fresh_executive == site_executive
@@ -180,7 +415,7 @@ def test_reader_tabs_switch_panels_on_the_site(site_page) -> None:
 
 @browser_test
 def test_economy_tab_kpis_match_the_underlying_payload_for_every_quarter(
-    site_page, site_server, executive_payload: dict
+    site_page, site_server, published_executive: dict
 ) -> None:
     """The economy tab's KPI cards show exactly the payload's own display
     values -- rask/cask/ask are pre-formatted server-side
@@ -194,7 +429,7 @@ def test_economy_tab_kpis_match_the_underlying_payload_for_every_quarter(
     site_page.goto(f"{site_server}?sel_kpis=AEROMEXICO")
     site_page.wait_for_function("document.getElementById('period-display').textContent !== '—'")
     try:
-        _check_economy_kpis(site_page, executive_payload)
+        _check_economy_kpis(site_page, published_executive)
     finally:
         site_page.goto(site_server)
         site_page.wait_for_function("document.getElementById('period-display').textContent !== '—'")
@@ -208,18 +443,29 @@ def _check_economy_kpis(site_page, executive_payload: dict) -> None:
     records = {record["period_id"]: record for record in executive_payload["records"]}
     period_ids = _period_ids(executive_payload)
     for period_id in reversed(period_ids):
-        site_page.wait_for_function(
-            "(id) => document.getElementById('narrative-copy').dataset.period === id", arg=period_id
-        )
         view = views[period_id]
         kpis_by_key = {item["key"]: item for item in view["kpis"]}
+        expected_values = {key: kpis_by_key[key]["display_value"] for key in READER_KPI_KEYS}
+        margin = records[period_id]["unit_margin_cents_per_km"]
+        expected_values["unit_margin_cents_per_km"] = f"{'+' if margin >= 0 else ''}{margin:.2f} ¢ USD"
+        # Reading and financial periods are independent. Wait for the actual
+        # financial label, stepper and rendered KPI values before comparing.
+        site_page.wait_for_function(
+            "([label, first, last, values]) => "
+            "document.getElementById('period-display').textContent.trim() === label && "
+            "document.getElementById('period-prev').disabled === first && "
+            "document.getElementById('period-next').disabled === last && "
+            "Object.entries(values).every(([key, value]) => "
+            "document.getElementById('kpi-' + key + '-value').textContent.trim() === value)",
+            arg=[view["period_label"], period_id == period_ids[0], period_id == period_ids[-1], expected_values],
+        )
         observed = _kpi_values(site_page)
         for key in READER_KPI_KEYS:
             assert observed[key] == kpis_by_key[key]["display_value"], f"{key} mismatch at {period_id}"
         margin = records[period_id]["unit_margin_cents_per_km"]
         expected_margin = f"{'+' if margin >= 0 else ''}{margin:.2f} ¢ USD"
         assert observed["unit_margin_cents_per_km"] == expected_margin, f"margin mismatch at {period_id}"
-        if site_page.is_enabled("#period-prev"):
+        if period_id != period_ids[0]:
             site_page.click("#period-prev")
 
 
@@ -284,13 +530,12 @@ def test_reading_tab_narrative_matches_the_approved_analysis(
             expected[manifest_mod.analysis_identity(entry)] = _export_approved_entry(entry)
         except MissingAnalysisInput as error:
             # The site pins an exact record, including its entity namespace.
-            # Historical technical versions are deliberately not discovered:
-            # the current code/approval guards must authorize this selected one.
+            # Each exact selected identity must pass its own pinned verifier.
             _skip_or_fail(request.config, f"{entry}: {error}")
 
     checked = set()
     for (entity, period_id), analysis in expected.items():
-        site_page.goto(f"{site_server}?entity={entity}&period={period_id}")
+        site_page.goto(f"{site_server}?sel_reading={entity}&readingPeriod={period_id}")
         site_page.wait_for_function(
             "([entity, period, thesis]) => { const copy = document.getElementById('narrative-copy'); "
             "return copy.dataset.entity === entity && copy.dataset.period === period && "
