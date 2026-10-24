@@ -24,6 +24,8 @@ from src.web_export.writer import dumps_deterministic
 CONTRACTS_DIR = PATHS.root / "contracts" / "web"
 SCHEMA_VERSION = "publication_manifest_v1"
 MANIFEST_NAME = "publication_manifest.json"
+EDITORIAL_ANALYSIS_CONTRACT = "analysis_editorial.schema.json"
+EDITORIAL_ANALYSIS_PATH = "data/v1/analysis/2026Q3.json"
 ANALYSIS_ENTITIES = frozenset({"AEROMEXICO", "VOLARIS", "VIVA_AEROBUS", "INDUSTRY"})
 
 
@@ -64,6 +66,7 @@ CONTRACT_FILES = (
     "market.schema.json",
     "market_demand.schema.json",
     "analysis.schema.json",
+    EDITORIAL_ANALYSIS_CONTRACT,
     "business_metrics.schema.json",
     "business_metrics_approval.schema.json",
     "news.schema.json",

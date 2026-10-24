@@ -45,7 +45,7 @@ from src.analysis_agent.presentation import binding_value
 from src.config import PATHS
 from src.publish.manifest import analysis_identity, analysis_relative_path, analysis_sort_key
 from src.web_export.privacy import check_privacy, load_privacy_rules
-from src.web_export.schemas import ANALYSIS_SCHEMA
+from src.web_export.schemas import analysis_schema_for
 from src.web_export.writer import write_json
 
 # The only hosts a citation's public source URL may point to (see
@@ -498,7 +498,6 @@ def export_analysis(
     """
 
     selection = discover_approved_manifest(root) if manifest is None else validate_analysis_manifest(manifest)
-    validator = Draft202012Validator(ANALYSIS_SCHEMA)
     rules = load_privacy_rules()
     analysis_dir = out_dir / "analysis"
     analysis_dir.parent.mkdir(parents=True, exist_ok=True)
@@ -507,6 +506,7 @@ def export_analysis(
     try:
         for entry in selection:
             period_id, version = entry["period_id"], entry["version"]
+            validator = Draft202012Validator(analysis_schema_for(period_id, entry.get("entity_key", "AEROMEXICO")))
             try:
                 payload = export_period(
                     period_id,

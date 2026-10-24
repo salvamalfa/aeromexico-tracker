@@ -75,11 +75,17 @@ def anchor(repo: Path) -> dict:
             "analysis_sha256",
             "analysis_bytes",
             "frontend_files",
+            "analysis_contract_sha256",
         }
         or value["schema_version"] != "editorial_release_v1"
     ):
         raise ValueError("Invalid editorial anchor")
-    for field, size in (("baseline_commit", 40), ("baseline_manifest_sha256", 64), ("analysis_sha256", 64)):
+    for field, size in (
+        ("baseline_commit", 40),
+        ("baseline_manifest_sha256", 64),
+        ("analysis_sha256", 64),
+        ("analysis_contract_sha256", 64),
+    ):
         if not re.fullmatch(f"[a-f0-9]{{{size}}}", value[field]):
             raise ValueError("Invalid editorial anchor digest")
     if manifests.analysis_identity(value["analysis_entry"]) != ("AEROMEXICO", "2026Q3"):
@@ -100,6 +106,9 @@ def anchor(repo: Path) -> dict:
         ):
             raise ValueError("Invalid pinned frontend file")
     _git(repo, "merge-base", "--is-ancestor", value["baseline_commit"], "HEAD")
+    schema_path = repo / "contracts/web" / manifests.EDITORIAL_ANALYSIS_CONTRACT
+    if hashlib.sha256(schema_path.read_bytes()).hexdigest() != value["analysis_contract_sha256"]:
+        raise ValueError("Editorial analysis contract differs from reviewed anchor")
     return value
 
 
@@ -236,7 +245,11 @@ def preserved_files(site: Path, repo: Path, spec: dict) -> frozenset[str]:
     _git(repo, "merge-base", "--is-ancestor", witness["deployment_commit"], spec["baseline_commit"])
     if _git(repo, "diff", "--name-only", witness["deployment_commit"], spec["baseline_commit"], "--", "site"):
         raise ValueError("Witness deployment has another baseline tree")
-    if current["contracts"] != old["contracts"]:
+    expected_contracts = {
+        **old["contracts"],
+        manifests.EDITORIAL_ANALYSIS_CONTRACT: spec["analysis_contract_sha256"],
+    }
+    if current["contracts"] != expected_contracts:
         raise ValueError("Editorial publication changed contracts")
     expected_entries = sorted(
         [*old["analysis_manifest"], spec["analysis_entry"]], key=manifests.analysis_sort_key
@@ -351,12 +364,7 @@ def publish_editorial(record_paths: list[Path], out_dir: Path):
     }
     (dist / PROOF).write_text(json.dumps(proof, ensure_ascii=False, indent=2) + "\n")
 
-    def validate(candidate):
-        problems = verify_editorial(candidate, repo)
-        if problems:
-            raise ValueError(f"Editorial candidate refused: {problems[:3]}")
-
-    with gate.flow.writer(gate.flow.ROOT):
+    def final_baseline():
         manifests.refuse_if_build_inputs_dirty()
         if _git(repo, "rev-parse", "HEAD") != start_head or anchor(repo) != spec:
             raise ValueError("Editorial code or anchor changed during build")
@@ -366,14 +374,27 @@ def publish_editorial(record_paths: list[Path], out_dir: Path):
             != spec["baseline_commit"]
         ):
             raise ValueError("Remote master changed before swap")
+
+    def validate(candidate):
+        problems = verify_editorial(candidate, repo)
+        if problems:
+            raise ValueError(f"Editorial candidate refused: {problems[:3]}")
+        final_baseline()
+
+    with gate.flow.writer(gate.flow.ROOT):
+        final_baseline()
         final_entry, final_raw = approved()
         if final_entry != entry or final_raw != raw:
             raise ValueError("Approval changed during build")
+        final_baseline()
         manifest = gate.assemble_site(
             dist,
             sorted([*old["analysis_manifest"], spec["analysis_entry"]], key=manifests.analysis_sort_key),
             out_dir,
-            contracts=old["contracts"],
+            contracts={
+                **old["contracts"],
+                manifests.EDITORIAL_ANALYSIS_CONTRACT: spec["analysis_contract_sha256"],
+            },
             validate_candidate=validate,
         )
     receipt = gate.write_receipt(manifest, [entry[1]], out_dir)

@@ -61,7 +61,7 @@ from src.web_export.inputs import MissingWebInput
 from src.web_export.market import export_market
 from src.web_export.news import export_news
 from src.web_export.privacy import PrivacyViolation, check_privacy, load_privacy_rules
-from src.web_export.schemas import ANALYSIS_SCHEMA
+from src.web_export.schemas import analysis_schema_for
 from src.web_export.writer import write_json
 
 from . import manifest as manifest_mod
@@ -249,11 +249,11 @@ def export_data(entries: list[tuple[Any, Any, Any, Any]], out_dir: Path) -> None
         except (OSError, ValueError) as error:
             raise PublicationRefused(f"business metric approval rejected: {error}") from error
 
-    validator = Draft202012Validator(ANALYSIS_SCHEMA)
     rules = load_privacy_rules()
     seen = set()
     for record, authorized, package, calculations in entries:
         period_id = authorized["period_id"]
+        validator = Draft202012Validator(analysis_schema_for(period_id, authorized.get("entity_key", "AEROMEXICO")))
         payload = _analysis_payload(record, authorized, package, calculations)
         identity = manifest_mod.analysis_identity(payload)
         if (

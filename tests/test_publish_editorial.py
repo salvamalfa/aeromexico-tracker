@@ -59,6 +59,9 @@ def release(tmp_path):
     git(repo, "commit", "-qm", "baseline")
     commit = git(repo, "rev-parse", "HEAD")
     newraw = b'{"period_id":"2026Q3","version":"new"}'
+    contract = (e.PATHS.root / "contracts/web" / e.manifests.EDITORIAL_ANALYSIS_CONTRACT).read_bytes()
+    contract_sha = hashlib.sha256(contract).hexdigest()
+    put(repo / "contracts/web" / e.manifests.EDITORIAL_ANALYSIS_CONTRACT, contract)
     spec = {
         "schema_version": "editorial_release_v1",
         "baseline_commit": commit,
@@ -71,6 +74,7 @@ def release(tmp_path):
             }
         ],
         "analysis_entry": {"period_id": "2026Q3", "version": "new"},
+        "analysis_contract_sha256": contract_sha,
         "analysis_sha256": hashlib.sha256(newraw).hexdigest(),
         "analysis_bytes": len(newraw),
     }
@@ -101,6 +105,7 @@ def release(tmp_path):
     }
     put(site / e.PROOF, encoded(proof))
     current = copy.deepcopy(old)
+    current["contracts"][e.manifests.EDITORIAL_ANALYSIS_CONTRACT] = contract_sha
     current["analysis_manifest"].append(spec["analysis_entry"])
     put(site / "publication_manifest.json", encoded(current))
     return {
@@ -318,7 +323,20 @@ def test_frontend_index_cannot_differ_from_reviewed_build_pin(release):
 
 @pytest.mark.parametrize(
     "failure",
-    ["revocation", "remote_change", "baseline_change", "source_dirty", "head_change", "anchor_change"],
+    [
+        "revocation",
+        "remote_change",
+        "baseline_change",
+        "source_dirty",
+        "head_change",
+        "anchor_change",
+        "during_approval_baseline",
+        "during_approval_head",
+        "during_approval_remote",
+        "during_candidate_baseline",
+        "during_candidate_head",
+        "during_candidate_remote",
+    ],
 )
 def test_publish_rechecks_before_swap_without_writing_output(monkeypatch, release, failure):
     """Exercise publication control flow; lifecycle rejection itself stays authoritative."""
@@ -367,7 +385,7 @@ def test_publish_rechecks_before_swap_without_writing_output(monkeypatch, releas
 
     monkeypatch.setattr(gate.manifest_mod, "refuse_if_build_inputs_dirty", check_source)
     monkeypatch.setattr(gate, "_trusted_site_commit", lambda root: spec["baseline_commit"])
-    if failure == "baseline_change":
+    if failure in ("baseline_change", "during_approval_baseline", "during_candidate_baseline"):
         git(repo, "update-ref", "refs/remotes/origin/master", spec["baseline_commit"])
         original_baseline = gate.require_trusted_site_baseline
 
@@ -391,11 +409,16 @@ def test_publish_rechecks_before_swap_without_writing_output(monkeypatch, releas
     monkeypatch.setattr(gate, "_analysis_payload", lambda *args: payload)
     monkeypatch.setattr(gate, "_analysis_manifest_entry", lambda authorized: spec["analysis_entry"])
     calls = []
+    changed_during_approval = []
 
     def recheck(*args):
         calls.append("verify")
         if len(calls) == 2 and failure == "revocation":
             raise ValueError("Exact approval revoked during build")
+        if len(calls) == 2 and failure.startswith("during_approval_"):
+            changed_during_approval.append(True)
+            if failure == "during_approval_baseline":
+                put(repo / "site/data/v1/news.json", b"edit during slow source verification")
         return [("record", "authorized", "package", "calculations")]
 
     monkeypatch.setattr(gate, "_verify_under_lock", recheck)
@@ -406,21 +429,47 @@ def test_publish_rechecks_before_swap_without_writing_output(monkeypatch, releas
     def git_read(root, *args):
         if args == ("rev-parse", "HEAD"):
             head_reads.append(True)
-            if failure == "head_change" and len(head_reads) > 1:
+            if (failure == "head_change" and len(head_reads) > 1) or (
+                failure in ("during_approval_head", "during_candidate_head") and changed_during_approval
+            ):
                 return b"f" * 40 + b"\n"
         if args[0] == "ls-remote":
             return (
-                ("f" * 40 if failure == "remote_change" else spec["baseline_commit"])
+                (
+                    "f" * 40
+                    if failure == "remote_change"
+                    or (
+                        failure in ("during_approval_remote", "during_candidate_remote")
+                        and changed_during_approval
+                    )
+                    else spec["baseline_commit"]
+                )
                 + "\trefs/heads/master\n"
             ).encode()
         return original(root, *args)
 
     monkeypatch.setattr(e, "_git", git_read)
-    monkeypatch.setattr(
-        gate,
-        "assemble_site",
-        lambda *args, **kwargs: pytest.fail("Swap must not run after concurrent change"),
-    )
+    if failure.startswith("during_"):
+        # Structural scope has independent adversarial tests above. Here isolate
+        # the last slow-source-check -> candidate validation -> swap ordering.
+        def candidate_verification(*args):
+            if failure.startswith("during_candidate_"):
+                changed_during_approval.append(True)
+                if failure == "during_candidate_baseline":
+                    put(repo / "site/data/v1/news.json", b"edit during candidate verification")
+            return []
+
+        monkeypatch.setattr(e, "verify_editorial", candidate_verification)
+
+        def assemble(*args, **kwargs):
+            kwargs["validate_candidate"](r["site"])
+            pytest.fail("Swap must not run after concurrent change")
+    else:
+
+        def assemble(*args, **kwargs):
+            pytest.fail("Swap must not run after concurrent change")
+
+    monkeypatch.setattr(gate, "assemble_site", assemble)
     monkeypatch.setattr(
         gate, "write_receipt", lambda *args: pytest.fail("No successful publication receipt allowed")
     )
@@ -431,7 +480,7 @@ def test_publish_rechecks_before_swap_without_writing_output(monkeypatch, releas
         e.publish_editorial([repo / "synthetic-record.json"], repo / "output")
     assert not (repo / "output").exists()
     assert not (repo / "isolated-ledger/writer.lock").exists()
-    assert len(calls) == (2 if failure == "revocation" else 1)
+    assert len(calls) == (2 if failure == "revocation" or failure.startswith("during_") else 1)
     if failure == "source_dirty":
         assert len(source_checks) == 2
 
@@ -469,3 +518,141 @@ def test_baseline_manifest_digest_is_checked_against_git(release):
     spec["baseline_manifest_sha256"] = "f" * 64
     with pytest.raises(ValueError, match="Baseline manifest differs"):
         e.baseline(release["repo"], spec)
+
+
+@pytest.mark.parametrize("mutation", ["missing", "wrong_hash", "extra_contract"])
+def test_contract_addition_is_exactly_the_reviewed_one(release, mutation):
+    r = release
+    path = r["site"] / "publication_manifest.json"
+    current = json.loads(path.read_bytes())
+    name = e.manifests.EDITORIAL_ANALYSIS_CONTRACT
+    if mutation == "missing":
+        del current["contracts"][name]
+    elif mutation == "wrong_hash":
+        current["contracts"][name] = "f" * 64
+    else:
+        current["contracts"]["unreviewed.schema.json"] = "f" * 64
+    put(path, encoded(current))
+    with pytest.raises(ValueError, match="changed contracts"):
+        e.preserved_files(r["site"], r["repo"], r["spec"])
+
+
+def test_anchor_rejects_unreviewed_editorial_contract_bytes(release):
+    r = release
+    put(r["repo"] / "contracts/web" / e.manifests.EDITORIAL_ANALYSIS_CONTRACT, b'{"type":"object"}')
+    with pytest.raises(ValueError, match="contract"):
+        e.anchor(r["repo"])
+
+
+@pytest.fixture
+def editorial_schema_site(tmp_path):
+    from pathlib import Path
+
+    source = Path(__file__).parent / "fixtures/site/valid"
+    site = tmp_path / "public-schema-site"
+    shutil.copytree(source, site)
+    payload = json.loads((site / "data/v1/analysis/2026Q2.json").read_bytes())
+    payload.update(period_id="2026Q3", version="fixture-editorial-version")
+    payload["claims"][0]["citations"][0]["href"] = "https://www.globenewswire.com/issuer-original"
+    put(site / e.ANALYSIS, encoded(payload))
+    manifest_path = site / "publication_manifest.json"
+    manifest = json.loads(manifest_path.read_bytes())
+    entry = {**manifest["analysis_manifest"][0], "period_id": "2026Q3", "version": payload["version"]}
+    manifest["analysis_manifest"].append(entry)
+    contract = (e.PATHS.root / "contracts/web" / e.manifests.EDITORIAL_ANALYSIS_CONTRACT).read_bytes()
+    manifest["contracts"][e.manifests.EDITORIAL_ANALYSIS_CONTRACT] = hashlib.sha256(contract).hexdigest()
+    put(manifest_path, encoded(manifest))
+    resign_site(site)
+    return site
+
+
+def test_new_primary_domain_is_valid_only_with_scoped_editorial_contract(editorial_schema_site):
+    from src.publish.verify import verify_site
+
+    assert verify_site(editorial_schema_site) == []
+
+
+def test_normal_verifier_requires_editorial_contract_for_new_endpoint(editorial_schema_site):
+    from src.publish.verify import verify_site
+
+    path = editorial_schema_site / "publication_manifest.json"
+    manifest = json.loads(path.read_bytes())
+    del manifest["contracts"][e.manifests.EDITORIAL_ANALYSIS_CONTRACT]
+    put(path, encoded(manifest))
+    assert any(
+        e.manifests.EDITORIAL_ANALYSIS_CONTRACT in issue for issue in verify_site(editorial_schema_site)
+    )
+
+
+def test_new_contract_does_not_change_retained_historical_schema(editorial_schema_site):
+    from src.publish.verify import verify_site
+
+    path = editorial_schema_site / "data/v1/analysis/2026Q2.json"
+    payload = json.loads(path.read_bytes())
+    payload["claims"][0]["citations"][0]["href"] = "https://www.globenewswire.com/issuer-original"
+    put(path, encoded(payload))
+    resign_site(editorial_schema_site)
+    assert any("2026Q2.json" in issue for issue in verify_site(editorial_schema_site))
+
+
+def test_snapshot_requires_editorial_contract_for_new_endpoint(editorial_schema_site):
+    from src.conversational_analytics.data.snapshot import Snapshot, SnapshotError
+
+    payload_path = editorial_schema_site / e.ANALYSIS
+    payload = json.loads(payload_path.read_bytes())
+    payload["claims"][0]["citations"][0]["href"] = "https://www.sec.gov/example"
+    put(payload_path, encoded(payload))
+    resign_site(editorial_schema_site)
+    path = editorial_schema_site / "publication_manifest.json"
+    manifest = json.loads(path.read_bytes())
+    del manifest["contracts"][e.manifests.EDITORIAL_ANALYSIS_CONTRACT]
+    put(path, encoded(manifest))
+    with pytest.raises(SnapshotError, match="editorial|Editorial|analysis_editorial"):
+        Snapshot(editorial_schema_site)
+
+
+def test_snapshot_accepts_scoped_schema_and_rejects_wrong_pinned_hash(editorial_schema_site):
+    from src.conversational_analytics.data.snapshot import Snapshot, SnapshotError
+
+    Snapshot(editorial_schema_site)
+    path = editorial_schema_site / "publication_manifest.json"
+    manifest = json.loads(path.read_bytes())
+    manifest["contracts"][e.manifests.EDITORIAL_ANALYSIS_CONTRACT] = "f" * 64
+    put(path, encoded(manifest))
+    with pytest.raises(SnapshotError, match="Hash de contrato"):
+        Snapshot(editorial_schema_site)
+
+
+@pytest.mark.parametrize("field,value", [("period_id", "2026Q2"), ("entity_key", "VOLARIS")])
+def test_editorial_contract_cannot_authorize_another_identity(editorial_schema_site, field, value):
+    from jsonschema import Draft202012Validator
+
+    schema = json.loads(
+        (e.PATHS.root / "contracts/web" / e.manifests.EDITORIAL_ANALYSIS_CONTRACT).read_bytes()
+    )
+    payload = json.loads((editorial_schema_site / e.ANALYSIS).read_bytes())
+    payload[field] = value
+    assert list(Draft202012Validator(schema).iter_errors(payload))
+
+
+def test_optional_editorial_contract_is_not_applied_to_another_entity_endpoint(editorial_schema_site):
+    from src.publish.verify import verify_site
+
+    site = editorial_schema_site
+    payload = json.loads((site / e.ANALYSIS).read_bytes())
+    payload.update(
+        entity_key="VOLARIS",
+        period_label="3T26",
+        cutoff_date="2026-10-24",
+        selection_mode="retrospective",
+        guidance_as_of="report_date",
+    )
+    (site / e.ANALYSIS).unlink()
+    other = "data/v1/analysis/VOLARIS/2026Q3.json"
+    put(site / other, encoded(payload))
+    path = site / "publication_manifest.json"
+    manifest = json.loads(path.read_bytes())
+    manifest["analysis_manifest"][-1]["entity_key"] = "VOLARIS"
+    put(path, encoded(manifest))
+    resign_site(site)
+    assert any(other in issue and "href" in issue for issue in verify_site(site))

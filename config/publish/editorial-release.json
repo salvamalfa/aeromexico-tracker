@@ -78,5 +78,6 @@
       "sha256": "b46aa32fff32889d4c016f6edaf33017e48fc7fbb66332494298be750d7fe90f",
       "bytes": 21350
     }
-  ]
+  ],
+  "analysis_contract_sha256": "8e082232e85c9f28e2231279dbb42ec15be356ce2ee89a987b9d4f5abc56e95a"
 }

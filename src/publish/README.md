@@ -163,7 +163,7 @@ anteriores y el HTML de las otras aplicaciones.
 
 `python -m src.publish.editorial site/` es el verificador explícito de esta
 modalidad. Contrasta el recibo editorial contra el ancla comprometida y el
-árbol Git; conserva contratos, aprobación histórica e inventario, y aplica
+árbol Git; conserva los contratos históricos, aprobación histórica e inventario, y aplica
 todos los controles estructurales y de privacidad. Solo para los bytes
 históricos demostrados omite la reproducción semántica de noticias y métricas.
 El recibo registra observaciones del gate; el verificador offline no autentica
@@ -173,6 +173,16 @@ verificado. El verificador general `src.publish.verify` conserva sus controles.
 Pages ejecuta el verificador editorial cuando el ancla explícita está presente;
 un recibo aislado nunca activa la modalidad. CI y revisión siguen siendo
 obligatorios y la publicación se comprueba nuevamente por HTTPS.
+
+El contrato adicional `analysis_editorial.schema.json` se aplica exclusivamente
+a `data/v1/analysis/2026Q3.json`. Fija el trimestre y la entidad y admite la
+distribución primaria del comunicado en GlobeNewswire. Su hash se añade al
+manifiesto y al ancla revisada; todos los hashes de contratos previos permanecen
+intactos. No amplía los dominios permitidos para las cuatro tesis históricas.
+El verificador y el lector de snapshots resuelven ese hash exacto, sin fallback.
+Las últimas comprobaciones de código, ancla, baseline y remoto se repiten después
+de las verificaciones lentas, dentro del callback previo al intercambio; el lock
+excluye cambios del ledger, no movimientos externos de GitHub.
 
 La lectura obtiene los trimestres disponibles de `analysis_manifest` y usa
 `readingPeriod` en la URL. No añade observaciones financieras ni altera el

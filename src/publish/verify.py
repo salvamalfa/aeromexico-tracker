@@ -218,6 +218,7 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
 
     quarters_schema, network_schema = QUARTERS_FILE_SCHEMA, NETWORK_FILE_SCHEMA
     analysis_schema = ANALYSIS_SCHEMA
+    editorial_schema = None
     try:
         expected_contracts = manifest_mod.contract_hashes(manifest_mod.CONTRACTS_DIR)
     except FileNotFoundError as error:
@@ -228,6 +229,7 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
         has_business_metrics = "data/v1/business_metrics.json" in listed_paths
         business_contracts = {"business_metrics.schema.json", "business_metrics_approval.schema.json"}
         optional_payload_contracts = {
+            manifest_mod.EDITORIAL_ANALYSIS_CONTRACT: manifest_mod.EDITORIAL_ANALYSIS_PATH,
             "market_demand.schema.json": "data/v1/market-demand.json",
             "news.schema.json": "data/v1/news.json",
         }
@@ -255,6 +257,8 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
                     )
                 elif name == "analysis.schema.json":
                     analysis_schema = json.loads(resolved.read_text(encoding="utf-8"))
+                elif name == manifest_mod.EDITORIAL_ANALYSIS_CONTRACT:
+                    editorial_schema = json.loads(resolved.read_text(encoding="utf-8"))
         for name in sorted(manifest_contracts):
             if name not in expected_contracts:
                 problems.append(f"contracts[{name!r}]: not a contract file this checkout expects")
@@ -288,6 +292,8 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
         parts = rel.split("/")
         is_data_file = parts[:2] == ["data", "v1"] and rel.endswith(".json")
         schema = _data_schema_for(rel, quarters_schema, network_schema, analysis_schema)
+        if rel == manifest_mod.EDITORIAL_ANALYSIS_PATH and editorial_schema is not None:
+            schema = editorial_schema
         if schema is None:
             if is_data_file:
                 problems.append(
@@ -330,7 +336,7 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
         for carrier in carriers:
             problems.append(f"{rel}: disallowed carrier_key: {carrier}")
         if (
-            schema is analysis_schema
+            (schema is analysis_schema or schema is editorial_schema)
             and isinstance(payload, dict)
             and isinstance(payload.get("period_id"), str)
         ):

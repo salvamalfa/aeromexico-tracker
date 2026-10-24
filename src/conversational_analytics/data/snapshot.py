@@ -12,7 +12,7 @@ from typing import Any
 import yaml
 from jsonschema import Draft202012Validator
 
-from src.publish.manifest import CONTRACT_FILES
+from src.publish.manifest import CONTRACT_FILES, EDITORIAL_ANALYSIS_CONTRACT, EDITORIAL_ANALYSIS_PATH
 from src.web_export.contract_versions import resolve_contract
 from src.web_export.privacy import check_file_size, check_privacy, load_privacy_rules
 from src.web_export.schemas import (
@@ -94,6 +94,8 @@ class Snapshot:
             if rel in paths:
                 raise SnapshotError(f"Ruta duplicada en manifiesto: {rel}")
             paths[rel] = entry
+        if EDITORIAL_ANALYSIS_PATH in paths and EDITORIAL_ANALYSIS_CONTRACT not in manifest["contracts"]:
+            raise SnapshotError("Editorial endpoint requires its exact additional analysis contract")
         contracts_dir = self.project_root / "contracts/web"
         resolved_contracts: dict[str, Path] = {}
         for name, expected in manifest["contracts"].items():
@@ -154,7 +156,12 @@ class Snapshot:
                 self._validate_payload(paths[rel]["sha256"], schema, payloads[rel])
         for rel, payload in payloads.items():
             if rel.startswith("data/v1/analysis/"):
-                self._validate_payload(paths[rel]["sha256"], ANALYSIS_SCHEMA, payload)
+                schema = ANALYSIS_SCHEMA
+                if rel == EDITORIAL_ANALYSIS_PATH and EDITORIAL_ANALYSIS_CONTRACT in resolved_contracts:
+                    schema = json.loads(
+                        resolved_contracts[EDITORIAL_ANALYSIS_CONTRACT].read_text(encoding="utf-8")
+                    )
+                self._validate_payload(paths[rel]["sha256"], schema, payload)
             if rel.startswith("data/v1/flights/") and rel != "data/v1/flights/quarters.json":
                 self._validate_payload(paths[rel]["sha256"], network_schema, payload)
         metrics_path = "data/v1/business_metrics.json"

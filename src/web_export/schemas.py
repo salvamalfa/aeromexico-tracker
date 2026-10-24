@@ -24,6 +24,16 @@ def _load(name: str) -> dict[str, Any]:
 FLIGHTS_SCHEMA = _load("flights.schema.json")
 EXECUTIVE_SCHEMA = _load("executive.schema.json")
 ANALYSIS_SCHEMA = _load("analysis.schema.json")
+EDITORIAL_ANALYSIS_SCHEMA = _load("analysis_editorial.schema.json")
+
+
+def analysis_schema_for(period_id: str, entity_key: str = "AEROMEXICO") -> dict[str, Any]:
+    """The additional citation contract is confined to the approved Q3 slot."""
+    return (
+        EDITORIAL_ANALYSIS_SCHEMA if (entity_key, period_id) == ("AEROMEXICO", "2026Q3") else ANALYSIS_SCHEMA
+    )
+
+
 MARKET_SCHEMA = _load("market.schema.json")
 BUSINESS_METRICS_SCHEMA = _load("business_metrics.schema.json")
 BUSINESS_METRICS_APPROVAL_SCHEMA = _load("business_metrics_approval.schema.json")
