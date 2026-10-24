@@ -72,7 +72,11 @@ export function buildChatContext(cardElement?: Element | null): ChatContext {
   const newsCompany = document.querySelector<HTMLSelectElement>("#news-company")?.value;
   const newsEntities: Record<string,string> = { "Aeroméxico":"AEROMEXICO", "Volaris":"VOLARIS", "Viva":"VIVA_AEROBUS" };
   const newsMonth = document.querySelector<HTMLSelectElement>("#news-month")?.value;
-  const period = tab === "flights" && flightState.quarters[flightState.periodIndex]
+  const readingSelect = document.querySelector<HTMLSelectElement>("#reading-period");
+  const readingPeriod = readingSelect && !readingSelect.disabled ? readingSelect.value : undefined;
+  const period = tab === "reading" && readingPeriod && /^\d{4}Q[1-4]$/.test(readingPeriod)
+    ? readingPeriod
+    : tab === "flights" && flightState.quarters[flightState.periodIndex]
     ? flightState.quarters[flightState.periodIndex]!.period_id
     : tab === "news" ? newsMonth?.replace("-","M") ?? "" : currentPeriodId() ?? "";
   const picked = tab === "news" ? newsCompany ? newsEntities[newsCompany] : "INDUSTRY" : selectedEntities(cardId);
@@ -122,7 +126,9 @@ export function describeChatContext(context: ChatContext): string {
     "unit-chart": "Economía unitaria", "volume-chart": "Pasajeros y RASK", "load-chart": "Ocupación y RASK",
     "route-flow-map": "Mapa de rutas", "flow-map": "Mapa de rutas", "mix-chart": "Mezcla por segmento",
   };
-  const period = executiveState.records.find((record) => record.period_id === context.period)?.period_label ??
+  const period = context.tab === "reading" && /^\d{4}Q[1-4]$/.test(context.period)
+    ? `${context.period.slice(-1)}T${context.period.slice(2, 4)}`
+    : executiveState.records.find((record) => record.period_id === context.period)?.period_label ??
     flightState.byPeriod.get(context.period)?.period_label ?? context.period;
   const entities = (Array.isArray(context.entity) ? context.entity : context.entity ? [context.entity] : []).map((entity) =>
     ["INDUSTRY", "AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"].includes(entity)
