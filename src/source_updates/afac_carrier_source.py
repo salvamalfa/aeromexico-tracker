@@ -17,6 +17,7 @@ import openpyxl
 import pandas as pd
 from pypdf import PdfReader
 
+from src.source_updates.calendar import local_time
 from src.source_updates.carrier_source_contract import clean, record
 from src.source_updates.catalog import ROOT
 
@@ -465,7 +466,7 @@ def read(inputs, period):
         if (
             source["source_system"] != "afac"
             or source["source_url"] != urls[role]
-            or pd.Timestamp(source["downloaded_at"]).date().isoformat() <= end(2026, m)
+            or local_time(source["downloaded_at"]).date().isoformat() <= end(2026, m)
         ):
             raise ValueError("AFAC original URL/alias/capture does not identify a closed monthly dossier")
     a, notes = bulletin(*inputs["pdf"], period)

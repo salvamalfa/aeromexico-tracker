@@ -388,3 +388,37 @@ def test_dry_run_does_not_claim_a_validated_period_or_create_a_candidate():
     assert result["latest_available_period"] is None
     assert result["ready_for_calendar_incorporation"] is False
     assert not candidate.exists()
+
+
+@pytest.mark.parametrize(
+    "captured,closed",
+    [
+        ("2026-09-01T05:59:59Z", False),
+        ("2026-09-01T06:00:00Z", True),
+        ("2026-09-01T00:00:00-06:00", True),
+        ("2026-08-31T23:59:59-06:00", False),
+    ],
+)
+def test_afac_capture_month_closes_at_mexico_city_midnight(monkeypatch, captured, closed):
+    from src.source_updates import afac_carrier_source as afac
+
+    class ParsingReached(Exception):
+        pass
+
+    def stop(*args):
+        raise ParsingReached
+
+    monkeypatch.setattr(afac, "bulletin", stop)
+    inputs = {
+        role: (
+            b"synthetic bytes; this test stops before parsing",
+            dict(
+                source_system="afac",
+                downloaded_at=captured,
+                source_url=("https://datatur.sectur.gob.mx/Documentoscompartidos/afac/" + filename),
+            ),
+        )
+        for role, filename in [("pdf", "AFAC_2026_08.pdf"), ("database", "DB_AFAC.zip")]
+    }
+    with pytest.raises(ParsingReached if closed else ValueError):
+        afac.read(inputs, "2026M08")
