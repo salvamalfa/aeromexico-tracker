@@ -6,11 +6,13 @@
   auditoría independiente, cifras reproducibles y corte retrospectivo explícito.
 - Contraste explícito y exclusión del estado privado de revisión de todo el
   payload público. La versión candidata anterior se retiró; el sitio mantiene
-  exactamente el baseline publicado mientras se recuperan los insumos del gate.
+  exactamente el baseline publicado hasta completar los controles de entrega.
 - Modalidad editorial explícita: verifica el baseline remoto y cada archivo
   servido, preserva bytes históricos y valida íntegramente la lectura nueva.
   Su selector es independiente de indicadores y vuelos. Los modos generales
   conservan la reproducción de expedientes históricos y pins externos.
+- Regresiones: contrato retenido validado por hash y fallback real, módulos de
+  pruebas separados dentro del límite y recorrido de recursos UTF-8 explícito.
 - Publicación pendiente de finalizar gate, revisión y CI de esta modalidad.
   Monthly continúa privado.
 
