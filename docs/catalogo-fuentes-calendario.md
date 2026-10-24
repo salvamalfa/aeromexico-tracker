@@ -1545,6 +1545,172 @@ Los candidatos y baselines no aprueban contenido ni tesis. Las compatibilidades
 con los lotes pendientes se comprueban por separado antes de integrar;
 los heads en revisión no se modifican.
 
+## Apéndice técnico: dossiers Volaris SEC y AFAC por aerolínea
+
+El lote siguiente prepara dos certificadores integrales aislados con contrato
+`carrier-source-observation.json` y tablas de observaciones propias. No cambia
+el warehouse ni datos públicos. `carrier_source_candidate retain` conserva los
+roles explícitos; `certify` valida el dossier completo antes de escribir cuatro
+salidas: nativo Silver, observaciones Gold, artefactos y puente Stage 9.
+`--check` reconstruye originales, contratos, selección y linaje y compara
+archivos/recibo sin escribir. `retained_round` encadena ambas fases; readiness
+requiere `carrier_source` y rechaza reemplazarlo por `retained` o Gold heredado.
+Los comandos y roles están en las skills corporativa y tráfico enlazadas arriba.
+
+AFAC usa el PDF mensual y `DB_AFAC.zip` de igual edición. Valida las seis
+columnas de conteos de ambas páginas y los meses/servicios de la base completa
+2024/2025/2026. Gold mensual conserva regular del PDF con soporte de todas las
+filas DB que lo justifican y cada fila charter actual única; un duplicado
+charter bloquea. Preserva nombres literales, `World 2 Fly`, desconocidos sin
+mapeo, y Aerovías/Connect separados. La declaración preliminar debe existir;
+los estimados aplican solo por nombre y periodo declarados. El boletín advierte
+información internacional incompleta; conciliar cifras reportadas no acredita
+la totalidad de operaciones. No se reparte un total entre rutas.
+
+Volaris se limita al dossier SEC `0001292814-26-003836`, sus cuatro roles y
+11 tablas revisadas. Q2, H1 y saldos se conservan separados. Pasajeros reservados
+no se renombran transportados, millas no se renombran kilómetros, y los guiones
+siguen desconocidos. Fecha impresa 21/jul y aceptación SEC no prueban primera
+publicación; el rezago de presentación SEC es 21 días, otro concepto.
+**La fuente real está bloqueada**: CASM H1 2025 de 7,97 centavos no concilia
+con gastos 1.403 millones y ASM 17.622 millones. Con ±0,5 de cada unidad impresa,
+el máximo es 7,964702210368…, inferior al mínimo 7,965 que redondearía a 7,97.
+La definición y la nota (2) tienen igual alcance de itinerario/chárter; no se
+halló precisión retenida del total de gastos operativos o ASM que resuelva
+la relación. El mismo anexo sí contiene precisiones parciales en miles de USD
+(depreciación, arrendamientos, pérdida neta e ingresos); no acreditan un
+numerador alternativo para CASM ni una regla para ampliar tolerancias.
+El control también concilia EPS básico/diluido con resultado neto y acciones
+promedio, y ADS con diez CPO. Para fijar el release financiero solo sirve el
+anexo financiero verificado; índices/submissions/portada 6-K apoyan la identidad
+pero no sustituyen el reporte central. No se omite el comparativo ni se emiten
+Silver/Gold aceptados. Falta aclaración
+o evidencia oficial suficiente para resolverlo. Un contrato sintético positivo
+no certifica este original ni tráfico mensual Volaris.
+
+La comparación de revisiones exige baseline nativo completo del mismo producto
+y edición, con originales/manifiesto/sidecars/recibo bajo `baselines/`.
+Se reconstruye antes de comparar; así cambios históricos o acumulados no se
+ocultan cuando Gold mensual permanece igual. Cuenta altas/bajas por cambio de
+posición sin presumir equivalencia. Sin baseline explícito, registra ausencia
+de comparación; ninguna comparación acredita una revisión oficial.
+
+
+Prueba real en código funcional `b4320e882e17a2bca7b54fe245bb9044c3517f8d`:
+
+| Producto retenido | Resultado comprobado | Límite real |
+|---|---|---|
+| AFAC por aerolínea, agosto 2026 | 4.930 nativas (498 celdas PDF + 4.432 filas DB), 112 Gold, 2 artefactos, 5.294 vínculos; 474 conciliaciones exactas. Replay idéntico | El original declara información internacional incompleta; no acredita disponibilidad actual |
+| Volaris SEC, 2T26 | Roles y original conservados; certificación bloqueada en tabla 300, fila 23, columna 2 (CASM H1 2025) antes de crear Silver/Gold o recibo aceptado | Falta aclaración/precisión oficial suficiente; tampoco se ha acreditado un original de tráfico mensual |
+
+Los originales AFAC son el [boletín agosto](https://datatur.sectur.gob.mx/Documentoscompartidos/afac/AFAC_2026_08.pdf)
+y la [base DATATUR](https://datatur.sectur.gob.mx/Documentoscompartidos/afac/DB_AFAC.zip)
+retenidos el 19/oct. No se volvieron a descargar. La contradicción Volaris está
+en el [anexo oficial](https://www.sec.gov/Archives/edgar/data/1520504/000129281426003836/ex99-1.htm)
+retenido el 24/ago: tabla 300, filas 2/23/26, columna 2, y gastos repetidos en
+tabla 306, fila 22. La comprobación usa estos bytes, no el estado actual de URL.
+
+Resumen/receta/plan/recibos locales:
+`tmp/source-updates/carrier-official-b4320e88-summary.json`, SHA-256
+`4fea08adce7934c601de27dbae6df9b2441903f6f5e9924baf01ec8438754d02`.
+Auditoría independiente sin importar módulos del producto:
+`carrier-official-b4320e88/afac-independent-review.json`, SHA-256
+`96065877268e2e61488f0d25beddfb27f40e304b570205da63587192e600869a`.
+Reconstruyó los 36 campos nativos, 39 Gold, cada padre/artefacto/vínculo,
+las 117 huellas de código físicas/Git y las 474 conciliaciones. Los 24 ceros
+explícitos PDF sin observación DB no se imputaron a la base. `World 2 Fly`
+conserva 62 observaciones nativas y su nombre literal.
+
+El lote ejecutable terminó `blocked` por Volaris tras validar AFAC. El replay
+individual y `carrier-readiness-b4320e88/` pasan; `carrier-global-b4320e88/`
+permanece `blocked_global_policy`, con Aerocivil/GDELT y el resto del alcance
+obligatorio ausentes/bloqueados. Ninguna ronda completa ni calendario queda
+aprobada por este resultado. Muestra literal del dry-run/resultado:
+
+```text
+AFAC 2026M08: retain → Bronze → Silver → Gold/lineage → offline_replay
+checks_passed; native=4930; Gold=112; artifacts=2; links=5294; reconciliations=474
+Volaris 2026Q2: blocked at certify; table 300 / row 23 / column 2
+Silver/Gold/accepted receipt: absent; originals retained
+network_requests=0; paid_requests=0; activation=none; publication=not_authorized
+ready_for_calendar_incorporation=false
+```
+
+La pasada final de toda la familia `source_update` y límites del repositorio
+pasó **950 pruebas** en 102,16 s. Las pruebas
+sintéticas incluyen expediente AFAC físico PDF/ZIP de tres años,
+contrato Volaris completo, casos positivos y negativos, baselines físicos y
+rechazo de índices/portada como release. Pasan 80 pruebas independientes; la
+revisión adversarial cerró todos sus hallazgos sin modificar tolerancias de
+Volaris. El CSV de entidades y los JSON de estos módulos usan UTF-8 explícito;
+la salida CLI JSON escapa Unicode para terminales ASCII. El dry-run conserva
+`latest_validated_period=null`; solo `checks_passed` informa el periodo
+realmente certificado. Cuatro casos del límite de medianoche verifican que AFAC
+solo acepte un mes cerrado en America/Mexico_City; no basta el cierre UTC.
+Dos pruebas en
+subprocesos comprueban locale no UTF-8 y stdout ASCII, sin afirmar portabilidad
+integral de los helpers compartidos. La prueba física repetida conserva las
+cuatro salidas idénticas a las anteriores. La suite completa, CI/revisión del
+head final e integración conservan
+su evidencia propia en el PR de este lote. La ejecución local de la suite
+pública se detuvo por ausencia del pin externo aprobado
+`CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256`: la primera pasada llegó a 208
+pruebas aprobadas; la diagnóstica reprodujo 2 fallos y 16 errores del mismo pin
+tras 235 aprobadas. Ninguna equivale a suite pública completa aprobada.
+La lectura del valor por GitHub recibió 403; no se cambiaron variables, permisos
+o gates. La CI del head `4c24afeb` falló en el subset público; sus anotaciones
+solo informaron salida 1 y la lectura del log del job recibió `Forbidden`,
+sin reintentos. Se reprodujo una regresión concreta del lote en el test
+`test_repo_budgets.py`: `retained.py` creció a 605 líneas frente al límite 600.
+El registro de roles se trasladó al contrato y quedó en 594 líneas, sin ampliar
+excepciones. La revisión independiente verificó specs exactos y guards/transformaciones
+idénticos por AST. Las 950 pruebas anteriores incluyen los tres límites de módulos
+después del arreglo; la CI del head final aún exige su resultado propio.
+
+Compatibilidad de cadenas reales `08eb762d0244e818d6318f8862eba52b26533e9f`: integra
+el código de este lote con los cuatro lotes pendientes y RSS en una rama local,
+sin cambiar sus heads. Nueve productos reales reconstruidos conservaron las
+53 salidas idénticas a sus ramas separadas; Volaris mantuvo el mismo bloqueo
+sin Silver/Gold. Resumen `source-batches-official-08eb762d/compatibility-summary.json`,
+SHA-256 `60d13e81acddd7df54417f7bddb9e5f0f105157897d875e896233c9b3cdbb743`.
+La revisión independiente del código reconciliado inicial y sus 53 salidas fue
+favorable. La suite amplia en `c378cf9d` pasó **1.318 pruebas** en 462,18 s
+(sin fallos; 44 `FutureWarning` de pandas por concatenaciones vacías). El cierre
+UTF-8/ASCII del head final pasó **281 pruebas afectadas** en 97,14 s (ocho avisos
+pandas) y repitió las nueve cadenas reales con las mismas 53 salidas. CI y
+revisión del head final mantienen su resultado propio en el PR del lote.
+El ajuste posterior de metadatos en compatibilidad `3dce54cd177093be9288ed9b589e25574e28f86b`
+pasó **282 pruebas afectadas** en 95,38 s. Solo corrige la diferencia entre
+planificado y validado; no modifica lectores, escalas, selección ni linaje.
+El guard de cierre mensual en compatibilidad `de4e7986b60746a8677bfd819a2971fc0d2c7c51`
+pasó **286 pruebas afectadas** en 101,49 s (ocho avisos pandas). Los cuatro
+casos adicionales cubren el límite local/UTC; no cambian las transformaciones.
+El cierre de roles en compatibilidad `963865e515c39be68c971e82ba97919d1db3173b`
+pasó **1.225 pruebas** de fuentes y límites en 381,48 s (44 avisos pandas).
+La revisión independiente comprobó specs exactos y restantes registros/despachos
+inalterados por AST. La definición se trasladó a `retention_specs()`; la rama
+combinada mantiene su registro separado, sin cambiar los heads pendientes.
+La prueba real final de AFAC y el bloqueo Volaris se repitieron en `b4320e88`;
+las cuatro salidas AFAC siguen idénticas a las del lote de nueve productos.
+Los otros ocho productos mantienen sus transformadores y originales sin cambios.
+Son ventanas independientes (julio, agosto, septiembre y 2T26), no una ronda
+mensual/trimestral completa. La reconciliación real de las ramas pendientes
+requiere que terminen sus revisiones y vuelva a pasar CI/revisión del head
+resultante antes de integrarlo. No se han relanzado sus revisiones.
+
+Lifecycle manual: conservar originales/candidatos/recibos/resumen/auditor y
+su resultado local de `carrier-official-b4320e88*`, readiness/global para
+reproducir. Los lotes anteriores `carrier-official-bc5343f4*`,
+`carrier-official-d25f4f6d*`, `carrier-official-868232fd*` y
+`carrier-official-39b7dc05*`, `carrier-official-bb44fcc9*` y
+`carrier-official-a2cfb66b*` se conservan como
+pruebas previas a las correcciones, no evidencia final. Auxiliares bajo `/tmp`,
+cachés y scratch de pytest son regenerables; no se suben originales, datos
+candidatos o informes paralelos al repositorio público. Inventario manual:
+185 archivos locales de este checkout y 294 de la compatibilidad, conservados
+fuera de Git público; los 24 archivos versionados tienen disposición en el PR.
+No hay retiros.
+
 ## Pendientes
 
 - La política está aprobada e implementada; no falta volver a aprobarla.
@@ -1556,7 +1722,11 @@ los heads en revisión no se modifican.
   La revisión adicional iniciada el 22/oct a las 16:05 UTC sigue sin resultado
   terminal; su CI y revisión manual previas no sustituyen ese resultado.
   No se ha integrado ni se ha relanzado la revisión.
-- Continúa la implementación integral de `volaris_sec` y `afac_carriers`.
+- El lote Volaris/AFAC prepara la certificación técnica de sus dossiers;
+  Volaris real permanece bloqueado por la discrepancia CASM documentada arriba.
+  La prueba de agosto AFAC conserva la advertencia internacional de la fuente.
+  Las pruebas reales y revisión independiente constan arriba; CI/revisión del
+  head final e integración se registran en el PR de este lote.
   RSS añade aquí el certificador retenido, probado sobre originales;
   su suite completa, CI, revisión e integración se registran en
   [PR157](https://github.com/salvamalfa/aeromexico-tracker/pull/157). BTS ([PR155](https://github.com/salvamalfa/aeromexico-tracker/pull/155)),

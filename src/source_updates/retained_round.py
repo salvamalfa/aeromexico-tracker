@@ -30,7 +30,13 @@ def execute(recipe: dict, workspace: Path, *, write=False) -> dict:
     children = set()
     for item in recipe["items"]:
         product, period = item["product"], item["period"]
-        spec(product)
+        definition = spec(product)
+        retainer = retain
+        if definition.get("certifier") == "carrier_source":
+            from src.source_updates.carrier_source_candidate import period_check
+            from src.source_updates.carrier_source_inputs import retain as retainer
+
+            period_check(product, period)
         if (
             not re.fullmatch(r"20\d{2}(?:M(?:0[1-9]|1[0-2])|Q[1-4])", period)
             or period_end(period) >= local_time(cutoff).date()
@@ -43,7 +49,7 @@ def execute(recipe: dict, workspace: Path, *, write=False) -> dict:
         if child in children:
             raise ValueError("Duplicate retained product/review-period batch item")
         children.add(child)
-        plan = retain(child, source_root, product, item["originals"])
+        plan = retainer(child, source_root, product, item["originals"])
         plans.append(
             dict(
                 product=product,
@@ -92,11 +98,16 @@ def execute(recipe: dict, workspace: Path, *, write=False) -> dict:
             period = plan["period"]
             action = "retain"
             try:
-                saved = retain(child, source_root, product, item["originals"], execute=True)
+                retainer = retain
+                if spec(product).get("certifier") == "carrier_source":
+                    from src.source_updates.carrier_source_inputs import retain as retainer
+                saved = retainer(child, source_root, product, item["originals"], execute=True)
                 args = (child, product, period, cutoff, saved["run_id"])
                 certify = run
                 if spec(product).get("certifier") == "government":
                     from src.source_updates.government_candidate import run as certify
+                elif spec(product).get("certifier") == "carrier_source":
+                    from src.source_updates.carrier_source_candidate import run as certify
                 action = "certify"
                 certified = certify(*args, execute=True)
                 action = "offline_replay"
