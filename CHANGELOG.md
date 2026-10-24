@@ -13,6 +13,9 @@
   conservan la reproducción de expedientes históricos y pins externos.
 - Regresiones: contrato retenido validado por hash y fallback real, módulos de
   pruebas separados dentro del límite y recorrido de recursos UTF-8 explícito.
+- Un catálogo de lecturas ausente o inválido cierra solo la lectura y conserva
+  el arranque de indicadores y vistas. La paridad financiera usa el modo de
+  publicación y espera los KPIs, sin confundirlos con el trimestre del texto.
 - Publicación pendiente de finalizar gate, revisión y CI de esta modalidad.
   Monthly continúa privado.
 
