@@ -20,6 +20,7 @@ import { renderNarrative } from "./narrative";
 import { entityLabel, entityState, loadMarket } from "./entities";
 import { renderMarket, setMarketEntities, mountMarketControls } from "./market";
 import { updateKpis } from "../economy/kpis";
+import { renderFinancialNote } from "../economy/financial-note";
 import {
   renderLoadMonetization,
   renderUnitEconomics,
@@ -42,9 +43,11 @@ const ECONOMY_SOURCE: Record<EntityKey, string> = {
 function renderKpisAndTable(periodId: string): void {
   const entity = selection("kpis")[0] ?? (state.entities ? "INDUSTRY" : "AEROMEXICO");
   updateKpis(entity, periodId);
+  renderFinancialNote(entity, periodId);
   renderQuarterTable(entity);
   const source = $("economy-source-inline");
-  if (source) source.textContent = ECONOMY_SOURCE[entity];
+  if (source) source.textContent = entity === "AEROMEXICO" && periodId === "2026Q3"
+    ? "Fuente: resultados no auditados del emisor · 3T26" : ECONOMY_SOURCE[entity];
 }
 
 let readingCatalogState: "loading" | "ready" | "unavailable" = "loading";

@@ -3,7 +3,7 @@
 // src/dashboard/assets/flights.js::renderQuarter.
 
 import { $, deltaDisplay, metricDisplay, priorPeriod, setDelta } from "./dom";
-import { currentIndex, periodCount } from "../../state/period";
+import { currentIndex, currentPeriodId, periodCount } from "../../state/period";
 import { monthsInQuarter, state } from "./state";
 import { renderMix } from "./mix";
 import { renderNetworkPeriod } from "./network";
@@ -21,7 +21,12 @@ export async function renderQuarter(): Promise<void> {
     state.selectedDomesticMonths = new Set(monthsInQuarter(record.period_id));
     state.domesticMonthsQuarterId = record.period_id;
   }
-  $("period-display")!.textContent = record.period_label;
+  const selected = currentPeriodId();
+  const available = !selected || selected === record.period_id;
+  if (available) $("period-display")!.textContent = record.period_label;
+  const cut = $("flight-data-period");
+  if (cut) cut.textContent = `Corte de vuelos: ${record.period_label}. El mapa conserva sus cortes mensuales por fuente.`
+    + (available ? "" : ` No hay datos de vuelos para ${selected}; los indicadores financieros conservan su trimestre seleccionado.`);
   ($("period-prev") as HTMLButtonElement).disabled = currentIndex() === 0;
   ($("period-next") as HTMLButtonElement).disabled = currentIndex() === periodCount() - 1;
   const qoq = state.byPeriod.get(priorPeriod(record.period_id));
@@ -42,6 +47,7 @@ export async function renderQuarter(): Promise<void> {
   }
   renderMix(record);
   await renderNetworkPeriod(record.period_id);
-  $("live-status")!.textContent =
-    `Trimestre actualizado a ${record.period_label}. La red usa los meses disponibles por fuente del trimestre.`;
+  $("live-status")!.textContent = available
+    ? `Trimestre actualizado a ${record.period_label}. La red usa los meses disponibles por fuente del trimestre.`
+    : `Vuelos muestra ${record.period_label}; los indicadores financieros conservan ${selected}.`;
 }

@@ -74,7 +74,8 @@ function wireControls(): void {
   mountFlightPickers();
   mountMapPeriodControl(() => void renderNetworkPeriod(state.quarters[state.periodIndex]!.period_id));
   subscribe((periodId) => {
-    if (syncPeriodIndex(periodId)) void renderQuarter();
+    syncPeriodIndex(periodId);
+    void renderQuarter();
   });
   $("network-mode-domestic")!.addEventListener("click", async () => {
     state.networkMode = "domestic";

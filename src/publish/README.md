@@ -262,3 +262,66 @@ múltiples versiones aprobadas de una misma entidad y trimestre. En un
 export de desarrollo, pasa ese `analysis_manifest` explícitamente a
 `src.web_export.analysis.export_analysis(..., manifest=...)`; no revoques
 autorizaciones históricas ni elijas una versión por fecha para eludir el guard.
+
+### Indicadores financieros sobre una lectura ya publicada
+
+`--financial-kpis-only` añade exclusivamente los registros/vistas financieros
+Aeroméxico 3T26, con las cuatro tarjetas y gráficas existentes. La lectura 3T26,
+las cuatro lecturas históricas, contratos y todos los demás archivos de datos
+permanecen idénticos. Dentro de `executive.json` se conserva la serialización de
+los registros/vistas anteriores y los bloques de Industria, Volaris y Viva;
+solo se añade el trimestre Aeroméxico y metadatos de cobertura permitidos. El
+trimestre global inicial conserva el corte común anterior. Un enlace con
+`period=2026Q3&sel_kpis=AEROMEXICO&sel_unit=AEROMEXICO&sel_volume=AEROMEXICO&sel_load=AEROMEXICO`
+selecciona los nuevos indicadores. Un competidor sin ese trimestre muestra
+faltantes; Vuelos identifica su corte real sin reemplazar la cabecera financiera.
+
+La autoridad nueva es `config/publish/financial-release.json`, comprometida y
+revisada: fija baseline Git/manifiesto servido, aprobación original y productor
+congelado de la tesis, paquete/cálculos, productor financiero revisado,
+bytes/SHA del nuevo `executive.json`, cierre de recursos frontend y hash de la
+autorización financiera privada. Esta última conserva el consentimiento explícito
+del dueño para esta exposición, alcance, salida exacta y revisión independiente;
+no crea ni renueva una aprobación de la tesis. Una autorización revocada,
+alterada o sin revisión exacta rechaza la publicación.
+
+El gate reproduce íntegramente las fuentes y el lifecycle de a470 mediante su
+implementación original y conserva el payload público ya aprobado. Reproduce la
+proyección con el productor financiero archivado, incluidas sus dependencias.
+Comprueba todo el baseline remoto y HTTPS antes/después del build. Bajo el lock
+común repite aprobación/fuentes y verifica finalmente HEAD, baseline remoto,
+autorización, captura de fuentes y candidato después de los verificadores lentos.
+No solicita la reconstrucción de las cohortes históricas que no cambian.
+
+TRASM significa ingreso **total** por asiento-milla; el RASK de estas tarjetas
+es su conversión por 1,609344 a centavos USD por asiento-kilómetro. No se usa
+solo ingreso de pasajeros ni yield. Los ingresos/ASM publicados reproducen el
+crecimiento reportado de 12,2% a su precisión visible, mientras el cociente de
+TRASM redondeado 17,2/15,4 da 11,7%. Ambas bases quedan documentadas. CASK conserva
+CASM reportado convertido: crecimiento anual reportado 19,4%, frente a 18,9%
+calculado con 15,1/12,7. No se fuerza equivalencia con gastos del estado de
+resultados. Las comparativas anuales usan el reporte 3T26; las trimestrales y
+el margen unitario usan la serie publicada. El comparativo de ocupación 3T25
+88,2% del nuevo reporte no sustituye el 88,3% histórico. Trimestre, nueve meses
+y saldos al cierre se mantienen separados.
+
+Pages selecciona primero el verificador financiero si existe
+`financial-publication.json`, sin fallback ante errores; exige ancla, output y
+recursos exactos, preservación estructural/bytes, contratos y privacidad. El
+recibo editorial anterior se conserva como evidencia histórica. Una publicación
+UI posterior sin recibo financiero usa el verificador general y conserva todos
+sus controles; además revalida la autorización/fuentes financieras antes y
+después del build y tras el verificador lento del candidato. No permite omitir
+esa autoridad eliminando el ancla o una de las señales del trimestre.
+
+```bash
+python -m src.publish --financial-kpis-only --record <registro-a470-existente> --out site/
+python -m src.publish.financial_scope site/
+```
+
+Las pruebas financieras específicas no dependen del warehouse. Con
+`--require-local-data` fallan si falta el candidato o expediente nuevo, y
+reproducen las fuentes completas. Los verificadores generales permanecen intactos;
+las excepciones semánticas de datos antiguos solo aplican tras demostrar sus
+bytes exactos contra Git y el baseline servido. CI, revisión, merge normal,
+Pages y verificación real por HTTPS siguen siendo obligatorios.

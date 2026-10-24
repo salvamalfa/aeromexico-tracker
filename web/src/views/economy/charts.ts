@@ -39,8 +39,10 @@ export function renderUnitEconomics(): void {
   }
   const entity = unitEntities[0]!;
   setSubtitle("unit-title", entity === "AEROMEXICO" ? "RASK vs. CASK + Margen unitario" : `RASK vs. CASK + Margen unitario · ${entityLabel(entity)}`);
-  setSubtitle("unit-subtitle", UNIT_SUBTITLE);
   const visibleRecords = visibleUnitRecords(rangeValue, entityRecords(entity));
+  setSubtitle("unit-subtitle", entity === "AEROMEXICO" && visibleRecords.some(r => r.period_id === "2026Q3")
+    ? "Las líneas muestran ingreso y costo unitarios reportados; las barras, su diferencia en centavos USD por asiento-kilómetro. El margen unitario no equivale al margen operativo porcentual."
+    : UNIT_SUBTITLE);
   const visibleLabels = visibleRecords.map((record) => record.period_label);
   const tickRecords = horizontalQuarterTicks(visibleRecords);
   const marginColors = visibleRecords.map((record) =>

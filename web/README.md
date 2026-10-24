@@ -354,3 +354,18 @@ parcial se consulta con el botón de información del título. Los controles de
 aprobación pertenecen al expediente, fuera de la pestaña. La navegación desde
 el chat valida corpus y cita. Decisiones de revisión:
 `docs/etapas/noticias-ajustes-ui-20261018.md`.
+
+### Corte financiero Aeroméxico 3T26
+
+La actualización financiera conserva el trimestre inicial común de las demás
+aerolíneas. Aeroméxico dispone además de 3T26 en las tarjetas existentes y las
+tres gráficas de economía unitaria; Industria y competidores conservan sus
+series y muestran `No disponible` cuando falta ese trimestre. Las bases de
+comparación del reporte se consultan en el desplegable junto a las tarjetas.
+La lectura conserva su selector independiente y su contenido aprobado.
+
+El store de periodos financieros sigue siendo el dueño de la cabecera. Si un
+trimestre financiero no existe en Vuelos, el panel retiene su corte real y lo
+identifica explícitamente; no sobrescribe la cabecera ni cambia los archivos del
+mapa. La suscripción de Vuelos actualiza esa advertencia también cuando ya estaba
+abierto en un trimestre anterior.
