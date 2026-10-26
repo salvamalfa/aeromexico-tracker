@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 import pytest
-from src.publish.financial_scope import ANCHOR, EXECUTIVE, PROOF, anchor, sha, verify_financial
+from src.publish.financial_scope import ANCHOR, EXECUTIVE, PROOF, anchor, sha
 
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "site"
@@ -16,7 +16,7 @@ def unavailable(request, message):
 
 
 @pytest.fixture
-def financial_site(request):
+def financial_site(request, verify_financial_publication):
     if not (ROOT / ANCHOR).is_file():
         unavailable(request, "Financial release is not configured")
     doc = json.loads((SITE / EXECUTIVE).read_bytes())
@@ -26,7 +26,7 @@ def financial_site(request):
     raw = (SITE / EXECUTIVE).read_bytes()
     assert sha(raw) == spec["executive_sha256"] and len(raw) == spec["executive_bytes"]
     if (SITE / PROOF).exists():
-        assert verify_financial(SITE, ROOT) == []
+        assert verify_financial_publication(SITE, ROOT) == []
     else:
         from src.publish.verify import verify_site
 

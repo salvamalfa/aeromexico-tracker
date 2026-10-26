@@ -19,15 +19,14 @@ def _unavailable(request, message):
 
 
 @pytest.fixture
-def editorial_site(request):
+def editorial_site(request, verify_financial_publication):
     from src.publish.financial_scope import (
         PROOF as FINANCIAL_PROOF,
         anchor as financial_anchor,
-        verify_financial,
     )
 
     if (SITE / FINANCIAL_PROOF).exists():
-        assert verify_financial(SITE, ROOT) == []
+        assert verify_financial_publication(SITE, ROOT) == []
         return financial_anchor(ROOT)
     if not (SITE / PROOF).exists():
         manifest_path = SITE / "publication_manifest.json"

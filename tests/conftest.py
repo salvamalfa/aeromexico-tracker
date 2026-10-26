@@ -44,6 +44,10 @@ WEB_ROOT = PATHS.root / "web"
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
+        "--financial-continuity-local", action="store_true", default=False,
+        help="Explicitly verify local financial runtime continuity; never authorizes publication.",
+    )
+    parser.addoption(
         "--require-local-data",
         action="store_true",
         default=False,
@@ -55,6 +59,17 @@ def pytest_addoption(parser: pytest.Parser) -> None:
             "skipped."
         ),
     )
+
+
+@pytest.fixture
+def verify_financial_publication(request):
+    if request.config.getoption("--financial-continuity-local"):
+        from src.publish.financial_continuity import verify_local
+
+        return verify_local
+    from src.publish.financial_scope import verify_financial
+
+    return verify_financial
 
 
 def pytest_configure(config: pytest.Config) -> None:
