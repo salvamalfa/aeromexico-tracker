@@ -2301,8 +2301,9 @@ Validación de esta reconciliación:
   roles, alias, grano, tablas, controles, parsers y archivos de código. Los
   catorce módulos de fuentes coinciden con los heads exactos de los cuatro PR.
   Las ocho constantes de política global y los prefijos de datos/publicaciones
-  no cambiaron. Dictamen local favorable, sin hallazgos bloqueantes; no sustituye
-  Codex, CI ni el cruce Claude/dueño exigido por AGENTS cuando corresponda.
+  no cambiaron. Dictamen de contratos de fuentes favorable; la integración
+  permanece bloqueada. No sustituye Codex, CI ni el cruce Claude/dueño exigido
+  por AGENTS cuando corresponda.
 - Pyflakes y formato exigidos por CI aprobados. Un chequeo exploratorio de
   todas las reglas Ruff encontró 47 incidencias en 25 módulos idénticos a
   master; no se reformató código ajeno ni se modificaron excepciones.
@@ -2325,6 +2326,61 @@ Validación de esta reconciliación:
   `financial-runtime-integration-block.json`. Esta dependencia debe resolverse
   con revisión técnica y el procedimiento autorizado de preservación antes de
   integrar; no se cambia una huella aprobada ni se excluyen módulos del control.
+
+### Contraste controlado y procedimiento financiero
+
+Se ejecutaron en un checkout de control detached de master `dad0a39b` los
+mismos 60 nodeids fallidos del candidato, con el mismo Python y perfil público,
+sin copiar expedientes privados ni introducir pins. El control permanece limpio.
+No se ejecutó una segunda suite completa ni se presenta ese subconjunto como tal.
+
+| Grupo comprobado | Candidato | Control master | Clasificación |
+|---|---|---|---|
+| 54 casos de aprobación de métricas de negocio | Fallan/error | Mismo estado | Condición compartida del entorno; Docker se comprobó directamente en ambos, sin conservar stderr crudo ni valores de pins |
+| Dos casos de proyección aprobada de noticias | Fallan | Fallan | Fallo compartido, no una regresión nueva de las skills |
+| Cuatro casos de paridad financiera/editorial | Error por huella | Uno pasa y tres se omiten | Regresión de integración del runtime; las omisiones no prueban replay completo de fuentes |
+
+El subconjunto master terminó con 34 fallos, 22 errores, un aprobado y tres
+omitidos en 519,58 s. La comparación por nodo y sus límites están en
+`control-comparison/control-comparison-summary.json`; el addendum Docker
+se conserva aparte. Los 56 estados compartidos no se corrigieron cambiando
+configuración de aprobación. Los cuatro errores nuevos no se ocultaron ni se
+convirtieron en omisiones.
+
+La continuación local siguió el procedimiento de `src/publish/README.md` y
+`financial_sources.py`: su autoridad vincula consentimiento explícito, salida,
+fuentes, productor y revisión exactos. Pasaron 67 pruebas existentes de ese
+protocolo. El componente de preservación real verificó 803 archivos y las
+identidades/bytes publicados; es una comprobación parcial, no aceptación del
+gate financiero completo ni auditoría nueva de sus fuentes.
+
+La validación de la autorización real se detuvo por **archivo inexistente**,
+no por denegación ni rechazo del dueño. Faltan aquí el registro publicado
+`a470aefc…`, el paquete `2026Q3_5a4f0669…`, sus cálculos y la autorización
+financiera que fija el ancla. También hacen falta la revisión referenciada, el
+ledger y los originales/sidecars que indique ese paquete. La inspección del
+respaldo disponible no encontró esas identidades; una edición anterior solo
+validada no puede sustituirlas ni aportar su aprobación.
+
+Se preparó `financial-technical-rebinding-proposal.json` con la misma proyección,
+identidades y límites, cambiando solo el productor propuesto. Está marcada como
+propuesta no autorizada y no es entrada del gate. No se creó aprobación ni se
+modificó el ancla. `financial-local-procedure-progress.json` enumera los insumos
+exactos y las comprobaciones realizadas.
+
+El modo financiero existente incorpora por primera vez un trimestre y exige
+baseline igual al master confiable; no debe presentarse como una renovación
+automática de un trimestre ya publicado. El addendum
+`financial-rebinding-readiness-addendum.json` conserva esta limitación: antes de
+ejecutar una transición deben recuperarse y validarse la autoridad original y
+el procedimiento de preservación aplicable. No se usará UI/mapa como atajo ni
+se cambiarán hashes para aprobar. La revisión independiente de este diagnóstico
+está en `independent-financial-material-proposal-review.json`.
+
+No se pide una aprobación nueva hipotética: primero falta el expediente retenido
+exacto para determinar qué cubre el consentimiento existente y completar el
+vínculo legítimo. El siguiente paso operativo es recuperar ese material del
+trabajo ya realizado de PR149/160, sin nuevos servicios ni capturas de fuentes.
 
 La prueba real volvió a construir Viva 2T26; Banxico, EIA y cotizaciones de
 septiembre; GAP/ASUR de julio; BTS de julio; RSS de septiembre y AFAC de agosto.
@@ -2397,7 +2453,11 @@ pendientes; no se crea otro informe paralelo.
   revisión exactas, sin duplicar ejecuciones a ciegas. Además, el gate de la
   publicación financiera requiere una revisión técnica nueva de la huella del
   runtime. La conservación de sus bytes no sustituye ese control; falta
-  coordinar esa continuidad con el procedimiento de publicación vigente.
+  coordinar esa continuidad con el procedimiento de publicación vigente. La
+  continuación controlada confirma cuatro errores nuevos del runtime; primero
+  debe recuperarse el expediente a470 exacto, ausente en este checkout y en las
+  refs de respaldo examinadas. No se infiere otra aprobación ni se solicita al
+  dueño revisar una interfaz para suplir ese material.
   Es trabajo técnico autorizado, no una decisión de alcance del dueño.
   Los restantes adaptadores conservan sus límites de edición y periodo;
   finanzas IR retenidas de Aeroméxico certifica 2T26, sin aprobar otra edición.
