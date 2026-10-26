@@ -2383,8 +2383,9 @@ red. Coinciden los 312.095 bytes del ejecutivo publicado, SHA-256
 `cc0b39ad47ad761cda8c5339381c8552be30211d5da915bf3c25ec56f87d614b`,
 y la preservación de 803 archivos. Las ejecuciones duraron 40,79 y 42,62 s.
 Esto certifica la entrega original y su conservación; no convierte el runtime
-actual en un productor aprobado. Los cuatro tests de paridad se repitieron con
-el expediente recuperado y siguen dando cuatro errores por huella, sin omitirse.
+actual en un productor aprobado. En esa fase, los cuatro tests de paridad se
+repitieron con el expediente recuperado y dieron cuatro errores por huella,
+sin omitirse. La continuación local autorizada se describe a continuación.
 
 Se preparó `financial-technical-rebinding-proposal.json` con la misma proyección,
 identidades y límites, cambiando solo el productor propuesto. Está marcada como
@@ -2400,18 +2401,58 @@ candidato `b9cd5d2c` y su runtime `8c56fe9f…`; también se rechaza volver a a�
 el trimestre ya existente. UI/mapa no se usaron como atajo. No se cambiaron
 gates, anclas, digests, consentimiento ni eventos para obtener aceptación.
 
-**Decisión concreta que falta:** autorizar el diseño e implementación local de
-un control separado de continuidad técnica del runtime financiero. La opción
-recomendada conserva inmutables la autoridad, el productor y el replay originales;
-añade una revisión técnica independiente vinculada al nuevo head/runtime y exige
-igualdad de todos los bytes e identidades publicados. Debe rechazar atestaciones
-ausentes, de otro head, alteradas o revocadas y cualquier cambio fuera de alcance,
-antes de CI y revisiones finales. No requiere aprobar otra vez la lectura 3T26 ni
-actualizar cifras; permite verificar código nuevo conservando la publicación.
-El riesgo que exige ese control es aceptar código sin revisión por comprobar
-solo la igualdad de datos. No se implementó esa extensión bajo la restricción
-actual de conservar el gate. La propuesta anterior de sustituir solo el productor
-no es ejecutable con el protocolo existente y sigue sin ser autoridad.
+**Continuidad técnica local autorizada e implementada:** el dueño aprobó el
+procedimiento separado el 26/oct. `financial_continuity` conserva inmutables la
+autoridad, el productor y el replay originales. La política local comprometida
+vincula una revisión independiente del código `2acc2c68`, runtime `553bdace…`,
+los **811 archivos** de la publicación completa y los **177 insumos** de fuentes
+y aprobaciones. Reproduce la entrega original y verifica la conservación de
+803 archivos. La política incorpora únicamente el consentimiento del procedimiento
+local; no reemplaza consentimiento, aprobación o revisión de las cifras o tesis.
+
+El control rechaza evidencia ausente, no comprometida, de otro código, alterada
+o con hallazgos; también fuentes, ledger, sitio o runtime cambiados antes o
+durante la comprobación. Exige el mismo sitio entero que el commit publicado,
+incluidos su manifiesto y recibos. Los inventarios se leen desde los blobs de
+Git: no admiten omisiones o sustituciones por atributos de exportación. La revisión
+independiente encontró y se corrigieron dos defectos: escapes mediante `..` y
+efectos de `export-ignore`/`export-subst`. El protocolo tiene 57 pruebas propias,
+22 independientes y 67 financieras existentes aprobadas. La confianza del informe
+procede del pin Git revisado, no de una firma criptográfica de identidad. No se
+afirma conocer revocaciones externas posteriores al snapshot recuperado.
+
+La selección es explícita y solo local. El gate financiero ordinario y Pages
+conservan sus controles; no hay fallback hacia este procedimiento ni cambios en
+los workflows. La propuesta anterior de sustituir solo el productor sigue sin
+ser autoridad ni entrada ejecutable del gate. Para repetir la validación se
+requieren el expediente recuperado y el informe privado referenciado por la
+política, en un checkout del código final:
+
+```bash
+python -m src.publish.financial_continuity site/ --local-only
+python -m pytest -q tests/test_editorial_site_parity.py tests/test_financial_site_parity.py --financial-continuity-local --require-local-data
+```
+
+Los cuatro errores anteriores dejan de producirse con este procedimiento y el
+expediente real: **tres pruebas aprobadas y una omisión explícita por modo
+financiero**, en 281,49 s. La omisión conserva el test editorial antiguo porque
+la preservación financiera tiene su propio test estricto; no se debe a material
+ausente. Sin selección local, el verificador ordinario continúa rechazando la
+huella nueva: no se presenta la suite ordinaria ni CI como verdes. Se conserva
+la clasificación previa de 56 fallos/errores compartidos con master; no se
+introdujeron pins de aprobación para ocultarlos. No se repitió la suite pública
+completa como parte de esta validación focal.
+
+La batería afectada terminó con **405 pruebas aprobadas**, incluyendo las 256
+de reconciliación y los tres controles de tamaño de módulos. El primer intento
+del control de tamaño encontró copias de laboratorio anidadas dentro del árbol;
+se trasladaron a directorios hermanos del mismo entorno y se verificaron sus
+188 archivos retenidos por copia. No se modificaron el control, sus excepciones
+ni los originales para obtener ese resultado.
+
+Las nueve ventanas de fuentes se comprobaron otra vez en modo de replay: sus
+53 salidas conservan los mismos hashes. Siguen siendo ventanas separadas y no
+acreditan una ronda completa ni un calendario preparado para activación.
 
 El material de recuperación, ambos replays y los negativos están en
 `financial-library-recovery/`, dentro del directorio técnico de esta continuación.
@@ -2494,10 +2535,12 @@ pendientes; no se crea otro informe paralelo.
   continuación controlada confirma cuatro errores nuevos del runtime. El
   expediente a470 exacto ya está recuperado y su replay original pasa en ambos
   checkouts aislados; no falta conseguir fuentes del 3T26. El bloqueo restante
-  exige la decisión concreta de continuidad técnica descrita arriba: el protocolo
-  actual no admite un runtime distinto sin modificar su control. No se atribuye
-  esa facultad al consentimiento de la entrega original ni se pide otra
-  aprobación editorial. Los heads remotos siguen intactos y no se activa nada.
+  se trata ahora mediante el procedimiento local separado, aprobado por el dueño
+  e implementado con revisión y conservación exactas. Su aceptación local no
+  equivale a aceptación del gate ordinario, integración o publicación; ese flujo
+  sigue rechazando el runtime nuevo. No falta otra aprobación editorial.
+  Los heads remotos no se modifican y no se activa nada. Los resultados reales
+  y las limitaciones del procedimiento se conservan en la evidencia técnica.
   Los restantes adaptadores conservan sus límites de edición y periodo;
   finanzas IR retenidas de Aeroméxico certifica 2T26, sin aprobar otra edición.
 - Aerocivil requiere la leyenda literal aplicable al ID exacto; su entidad

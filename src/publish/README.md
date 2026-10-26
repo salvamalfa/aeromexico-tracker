@@ -319,6 +319,24 @@ python -m src.publish --financial-kpis-only --record <registro-a470-existente> -
 python -m src.publish.financial_scope site/
 ```
 
+Para verificar **solo localmente** un runtime nuevo que conserva esa publicación,
+existe `python -m src.publish.financial_continuity site/ --local-only`. Exige
+`config/publish/financial-continuity-local.json` comprometido, con consentimiento
+del procedimiento local y hash de una revisión independiente privada exacta.
+La política vincula el commit/runtime técnico, los 811 archivos publicados y la
+clausura completa de fuentes y aprobaciones. Reproduce el verificador y productor
+originales, conserva la autoridad financiera y repite las comprobaciones después
+de los verificadores lentos, bajo el lock del ledger. No escribe el sitio ni
+crea aprobaciones o recibos de publicación. La confianza procede de la política
+Git revisada y su informe verificado; el hash no autentica criptográficamente al
+revisor. La cadena recuperada acredita su snapshot, no eventos externos posteriores.
+
+Las pruebas reales seleccionan expresamente este procedimiento con
+`--financial-continuity-local --require-local-data`. Sin esa opción conservan el
+verificador ordinario. El gate financiero, Pages y `--financial-kpis-only` no
+consumen esta política local ni aceptan por ella otro runtime. Esta comprobación
+no concede integración, publicación, ingestas o activación de calendarios.
+
 Las pruebas financieras específicas no dependen del warehouse. Con
 `--require-local-data` fallan si falta el candidato o expediente nuevo, y
 reproducen las fuentes completas. Los verificadores generales permanecen intactos;
