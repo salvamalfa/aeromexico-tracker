@@ -356,3 +356,25 @@ def test_financial_publish_entry_point_cannot_consume_local_continuity(local, mo
     with pytest.raises(ValueError, match="Financial build code differs from independent review"):
         update.publish_financial([], local["repo"] / "never-created")
     assert not (local["repo"] / "never-created").exists()
+
+
+def test_git_closure_ignores_export_filters_and_keeps_original_blob_bytes(tmp_path):
+    repo = tmp_path / "git-inputs"
+    repo.mkdir()
+    git(repo, "init", "-q")
+    git(repo, "config", "user.name", "Fixture")
+    git(repo, "config", "user.email", "fixture@example.invalid")
+    put(repo / ".gitattributes", b"site/omitted export-ignore\nsite/subst export-subst\n")
+    put(repo / "site/keep", b"keep")
+    put(repo / "site/omitted", b"must still be checked")
+    put(repo / "site/subst", b"$Format:%H$")
+    head = commit(repo)
+    assert i.tree_files(repo, head, "site") == {
+        "keep": {"sha256": f.sha(b"keep"), "bytes": 4},
+        "omitted": {"sha256": f.sha(b"must still be checked"), "bytes": 21},
+        "subst": {"sha256": f.sha(b"$Format:%H$"), "bytes": 11},
+    }
+    (repo / "site/link").symlink_to(repo / "site/keep")
+    linked = commit(repo)
+    with pytest.raises(ValueError, match="non-regular"):
+        i.tree_files(repo, linked, "site")

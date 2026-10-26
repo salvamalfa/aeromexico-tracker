@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import io
 import json
 import re
 import subprocess
-import tarfile
 import tempfile
 import sys
 from pathlib import Path, PurePosixPath
@@ -78,18 +76,58 @@ def ancestor(repo: Path, before: str, after: str) -> None:
     transport._git(repo, "merge-base", "--is-ancestor", before, after)
 
 
-def tree_files(repo: Path, commit: str, prefix: str) -> dict:
-    raw = transport._git(repo, "archive", commit, prefix)
+def git_files(repo: Path, commit: str, prefixes: list[str]) -> dict[str, bytes]:
+    """Read every committed blob, independent of archive export attributes."""
+    raw = transport._git(repo, "ls-tree", "-rz", "--full-tree", commit, "--", *prefixes)
+    entries = []
+    for entry in raw.split(b"\0"):
+        if not entry:
+            continue
+        header, name = entry.split(b"\t", 1)
+        mode, kind, oid = header.split()
+        path = name.decode()
+        if (
+            mode not in (b"100644", b"100755")
+            or kind != b"blob"
+            or PurePosixPath(path).is_absolute()
+            or ".." in PurePosixPath(path).parts
+        ):
+            raise ValueError("Continuity Git tree contains a non-regular file")
+        entries.append((path, oid))
+    if not entries:
+        raise ValueError("Continuity Git tree is empty")
+    output = subprocess.run(
+        ["git", "cat-file", "--batch"],
+        input=b"\n".join(oid for _, oid in entries) + b"\n",
+        cwd=repo,
+        capture_output=True,
+        check=True,
+    ).stdout
     result = {}
-    with tarfile.open(fileobj=io.BytesIO(raw)) as archive:
-        for item in archive:
-            if item.isdir():
-                continue
-            if not item.isfile() or not item.name.startswith(prefix + "/"):
-                raise ValueError("Published continuity tree contains a non-regular file")
-            content = archive.extractfile(item).read()
-            result[item.name[len(prefix) + 1 :]] = {"sha256": sha(content), "bytes": len(content)}
+    offset = 0
+    for name, oid in entries:
+        end = output.index(b"\n", offset)
+        actual_oid, kind, length = output[offset:end].split()
+        if actual_oid != oid or kind != b"blob":
+            raise ValueError("Continuity Git blob response is invalid")
+        size = int(length)
+        content = output[end + 1 : end + 1 + size]
+        offset = end + 1 + size
+        if len(content) != size or output[offset : offset + 1] != b"\n" or name in result:
+            raise ValueError("Continuity Git blob response is incomplete")
+        offset += 1
+        result[name] = content
+    if offset != len(output):
+        raise ValueError("Continuity Git blob response has trailing bytes")
     return result
+
+
+def tree_files(repo: Path, commit: str, prefix: str) -> dict:
+    return {
+        name[len(prefix) + 1 :]: {"sha256": sha(raw), "bytes": len(raw)}
+        for name, raw in git_files(repo, commit, [prefix]).items()
+        if name.startswith(prefix + "/")
+    }
 
 
 def site_files(site: Path) -> dict:
@@ -107,13 +145,13 @@ def site_files(site: Path) -> dict:
 
 
 def runtime_at_commit(repo: Path, commit: str) -> str:
-    archive = transport._git(
-        repo, "archive", commit, "src", "contracts", "config", "web", "uv.lock", ".agents"
-    )
+    files = git_files(repo, commit, ["src", "contracts", "config", "web", "uv.lock", ".agents"])
     with tempfile.TemporaryDirectory(prefix="financial-continuity-runtime-") as folder:
         base = Path(folder)
-        with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
-            tar.extractall(base, filter="data")
+        for name, raw in files.items():
+            path = base / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(raw)
         result = subprocess.run(
             [
                 sys.executable,
