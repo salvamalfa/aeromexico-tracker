@@ -2450,6 +2450,18 @@ se trasladaron a directorios hermanos del mismo entorno y se verificaron sus
 188 archivos retenidos por copia. No se modificaron el control, sus excepciones
 ni los originales para obtener ese resultado.
 
+La verificación agregada posterior de `52912929` sí ejecutó el perfil público
+completo con selección local: 5.003 aprobadas, 46 fallos, 22 errores, siete
+omisiones y 106 casos fuera del perfil, más 29 subpruebas aprobadas. La comparación
+identificó 12 regresiones nuevas: la firma de la fixture editorial había dejado
+de admitir sus llamadas directas existentes. Se restauró la interfaz que recibe
+solo `request` y se resuelve el verificador de forma perezosa únicamente en la
+rama financiera. No se modificaron las aserciones de las pruebas de rechazo.
+Se conserva esa ejecución fallida y se repite la agregada sobre el head corregido;
+no se presenta el primer resultado como favorable. La evidencia adicional vive en
+`aggregate-final-52912929/` y `aggregate-final-fixed-20261026/`, dentro del mismo
+directorio técnico; no se crea otro informe narrativo.
+
 Las nueve ventanas de fuentes se comprobaron otra vez en modo de replay: sus
 53 salidas conservan los mismos hashes. Siguen siendo ventanas separadas y no
 acreditan una ronda completa ni un calendario preparado para activación.

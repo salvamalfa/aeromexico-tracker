@@ -19,13 +19,14 @@ def _unavailable(request, message):
 
 
 @pytest.fixture
-def editorial_site(request, verify_financial_publication):
+def editorial_site(request):
     from src.publish.financial_scope import (
         PROOF as FINANCIAL_PROOF,
         anchor as financial_anchor,
     )
 
     if (SITE / FINANCIAL_PROOF).exists():
+        verify_financial_publication = request.getfixturevalue("verify_financial_publication")
         assert verify_financial_publication(SITE, ROOT) == []
         return financial_anchor(ROOT)
     if not (SITE / PROOF).exists():

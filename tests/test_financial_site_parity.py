@@ -16,7 +16,7 @@ def unavailable(request, message):
 
 
 @pytest.fixture
-def financial_site(request, verify_financial_publication):
+def financial_site(request):
     if not (ROOT / ANCHOR).is_file():
         unavailable(request, "Financial release is not configured")
     doc = json.loads((SITE / EXECUTIVE).read_bytes())
@@ -26,6 +26,7 @@ def financial_site(request, verify_financial_publication):
     raw = (SITE / EXECUTIVE).read_bytes()
     assert sha(raw) == spec["executive_sha256"] and len(raw) == spec["executive_bytes"]
     if (SITE / PROOF).exists():
+        verify_financial_publication = request.getfixturevalue("verify_financial_publication")
         assert verify_financial_publication(SITE, ROOT) == []
     else:
         from src.publish.verify import verify_site
