@@ -54,7 +54,7 @@ def regular(path: Path, root: Path) -> bytes:
     """Reject symlink components before reading any private input."""
     path = path.absolute()
     root = root.absolute()
-    if not path.is_relative_to(root):
+    if ".." in path.parts or ".." in root.parts or not path.is_relative_to(root):
         raise ValueError("Continuity input escapes its root")
     for part in (root, *path.relative_to(root).parents):
         candidate = part if part == root else root / part

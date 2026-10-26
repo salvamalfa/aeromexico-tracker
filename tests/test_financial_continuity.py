@@ -45,7 +45,7 @@ def local(tmp_path, monkeypatch):
     report = {
         "schema_version": "financial_continuity_review_v1",
         "scope": i.SCOPE,
-        "binding": binding,
+        "binding": copy.deepcopy(binding),
         "status": "passed",
         "unresolved_findings": [],
         "reviewer_reference": "Synthetic test report, not real source review",
@@ -54,7 +54,7 @@ def local(tmp_path, monkeypatch):
     policy = {
         "schema_version": "financial_continuity_local_v1",
         "scope": i.SCOPE,
-        "binding": binding,
+        "binding": copy.deepcopy(binding),
         "review_sha256": "",
         "procedure_consent": {
             "source_reference": "Synthetic fixture",
@@ -183,6 +183,7 @@ def test_review_integrity_identity_scope_and_findings(local, kind):
 def test_even_committed_self_rehashed_binding_must_match_actual_inputs(local, field):
     r = local
     r["policy"]["binding"][field] = "f" * (40 if field.endswith("commit") else 64)
+    r["report"]["binding"] = copy.deepcopy(r["policy"]["binding"])
     write_policy(r)
     refused(r)
 
@@ -278,6 +279,8 @@ def test_regular_rejects_parent_symlink_and_escape(tmp_path):
         i.regular(root / "alias/file", root)
     with pytest.raises(ValueError, match="escapes"):
         i.regular(outer / "file", root)
+    with pytest.raises(ValueError, match="escapes"):
+        i.regular(root / ".." / "outside/file", root)
 
 
 @pytest.mark.parametrize("raw", [b"[]", b'{"scope":1,"scope":2}', b'{"binding":{"head":1,"head":2}}'])
