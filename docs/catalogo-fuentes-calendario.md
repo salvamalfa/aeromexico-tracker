@@ -1,6 +1,6 @@
 # Catálogo de fuentes, métricas y rondas de actualización
 
-Revisión: 24 de octubre de 2026 (UTC). **Skills y coordinador implementados;
+Revisión: 26 de octubre de 2026 (UTC). **Skills y coordinador implementados;
 integración técnica autorizada. Calendario sin activar y sin publicación de datos.**
 
 ## Resumen
@@ -14,8 +14,9 @@ publicación conservan sus permisos separados.
 La continuación del 22 de octubre añade certificadores offline para las tres
 series Banxico, combustible EIA y las cinco cotizaciones. Validan el producto
 retenido mensual o trimestral y sus cálculos; no prueban disponibilidad actual
-ni completitud del calendario de observaciones. Otros certificadores integrales
-siguen pendientes, además de la evidencia externa indicada al final.
+ni completitud del calendario de observaciones. La reconciliación local de los
+cuatro PR está preparada; su integración remota y la evidencia externa indicada
+al final siguen pendientes.
 
 La integración de esta infraestructura no aprueba una ronda de datos. Aerocivil
 y GDELT permanecen **requeridos y bloqueados**. Sus fallos impiden aceptar una
@@ -43,6 +44,14 @@ justifique aceptar los originales rechazados. Confirmó contradicciones de
 Volaris/AIFA, la leyenda pendiente de Aerocivil y un nuevo fallo de acceso a
 GDELT. Identificó los días declarados de los tres reportes 2T26; no inventó
 horas de publicación ni festivos de 2027. La evidencia está en el apéndice.
+
+La continuación local del 26 de octubre reúne los cuatro PR pendientes sobre
+master `dad0a39b`, conservando las publicaciones existentes. Nueve cadenas de
+originales retenidos reproducen sus 53 salidas. La revisión independiente local
+es favorable. Esto acredita la preparación técnica local: todavía faltan los
+controles del futuro head remoto, la revisión técnica del nuevo runtime que
+exige la preservación financiera y resolver el estado desconocido de las
+revisiones adicionales. La disponibilidad actual de las fuentes no se comprobó.
 
 ## Qué cambia para ti
 
@@ -2256,6 +2265,109 @@ PNG/logs auxiliares de `/tmp` se regeneran desde los originales. No se retiró
 ningún archivo ni se modificaron secretos, permisos, protecciones o las lecturas
 auxiliares denegadas. Los pendientes vigentes se mantienen únicamente abajo.
 
+## Apéndice técnico: reconciliación local del 26 de octubre
+
+La propuesta existente `963865e5` se continuó en el mismo checkout y rama
+`codex/carrier-all-source-compatibility-20261023`. Incorporó el cierre documental
+final de Viva `ce04eb2d` y master `dad0a39b37fbdfe4367396ee4a9b640f3ce857e8`
+mediante merges locales. El código funcional resultante es
+`be1ed8a663e5e4c34ef1043588b9f7da9c4af5fc`. No hubo push, actualización de los PR,
+relanzamiento de revisiones ni modificación de sus heads remotos.
+
+Los dos conflictos restantes fueron el registro de adaptadores y esta guía.
+`retained.py` usa el registro extraído, que incorpora los roles de aerolíneas
+mediante `carrier_source_contract.retention_specs()`. Se conservaron los
+controles de productos dedicados, el prefijo especial de recibos RSS, el
+retainer de aerolíneas y ambos despachos de ejecución/reproducción. No se
+cambiaron tolerancias, fuentes requeridas, calendarios, permisos o gates.
+
+La nueva búsqueda comprobó comentarios generales e inline, reviews, checks y
+artefactos de los runs existentes. No encontró un recibo terminal adicional:
+los cuatro comentarios resumen siguen marcados `running`, sin identificador
+de ejecución Codex ni un check que permita comprobar su actividad interna.
+La antigüedad no prueba que estén fallidos ni activos. PR152 conserva una
+revisión anterior sin hallazgos del mismo head; es anterior a su revisión
+adicional. PR154 conserva un recibo de otro head. Los auditores manuales
+retenidos y la búsqueda local de 626 archivos técnicos tampoco acreditan un
+resultado Codex nuevo. Estado: **desconocido**, sin denegación de lectura.
+
+Validación de esta reconciliación:
+
+- 511 pruebas focales y de regresión aprobadas; 44 avisos existentes de pandas.
+- 256 pruebas nuevas independientes aprobadas. Cubren 17 productos por once
+  adaptadores, roles/alias, rechazo de rutas parciales, prefijo RSS, retainer
+  exclusivo de aerolíneas, despacho/replay y detención al fallar.
+- Revisión independiente de 21 contratos legado frente a master: conserva
+  roles, alias, grano, tablas, controles, parsers y archivos de código. Los
+  catorce módulos de fuentes coinciden con los heads exactos de los cuatro PR.
+  Las ocho constantes de política global y los prefijos de datos/publicaciones
+  no cambiaron. Dictamen local favorable, sin hallazgos bloqueantes; no sustituye
+  Codex, CI ni el cruce Claude/dueño exigido por AGENTS cuando corresponda.
+- Pyflakes y formato exigidos por CI aprobados. Un chequeo exploratorio de
+  todas las reglas Ruff encontró 47 incidencias en 25 módulos idénticos a
+  master; no se reformató código ajeno ni se modificaron excepciones.
+- Suite pública amplia terminada: **4.933 aprobadas, 34 fallidas, 26 errores,
+  seis omitidas y 106 deseleccionadas**, 44 avisos y 29 subtests aprobados,
+  en 1.538,46 s. Ningún caso fallido es de `source_updates`. No es una suite
+  verde ni CI del nuevo head. Log completo: `public-suite.log`.
+- Las pruebas de chat/noticias reproducen la exigencia del pin externo
+  `CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256` y la discrepancia con la
+  proyección de noticias aprobada. No se consultaron variables/logs denegados
+  ni se inyectaron valores alternativos para aprobar esas puertas.
+- Cuatro errores adicionales de paridad editorial/financiera son un bloqueo
+  de integración distinto: `Financial runtime differs from reviewed producer`.
+  `entity_adapter.code_version()` liga intencionalmente todo `src/**/*.py`;
+  por diseño, código Python ajeno a las finanzas también exige revisión técnica
+  nueva. La reconstrucción por objetos Git de master coincide exactamente con
+  el productor aprobado; los veinte archivos cambiados del runtime están todos
+  en `src/source_updates/`. La huella local cambia, aunque los bytes de las
+  publicaciones, sus gates y sus anclas permanezcan intactos. Diagnóstico:
+  `financial-runtime-integration-block.json`. Esta dependencia debe resolverse
+  con revisión técnica y el procedimiento autorizado de preservación antes de
+  integrar; no se cambia una huella aprobada ni se excluyen módulos del control.
+
+La prueba real volvió a construir Viva 2T26; Banxico, EIA y cotizaciones de
+septiembre; GAP/ASUR de julio; BTS de julio; RSS de septiembre y AFAC de agosto.
+Usó los originales retenidos y el código funcional local: **nueve ventanas de
+producto separadas**, no una ronda mensual/trimestral coherente. Las 53 salidas
+coinciden por SHA con sus candidatos anteriores; las huellas nuevas de código
+se comprobaron y los 117 archivos de candidatos anteriores permanecieron
+iguales durante la reproducción final. Esta comparación usa los certificadores
+del producto; no afirma una nueva extracción independiente de cada original.
+Los contratos y el despacho tienen la revisión independiente indicada arriba.
+
+Volaris volvió a rechazarse por `table 300, row 23, column 2` antes de escribir
+Silver, Gold o recibo aceptado. El primer arnés esperaba la palabra CASM en ese
+mensaje; se conservó su intento y se corrigió solo la aserción del arnés. La
+continuación retomó los recibos ya escritos con `--check`, sin repetir ni
+sobrescribir los candidatos aceptados. La receta global vacía emitió y reprodujo
+`blocked_global_policy`: preparación del calendario y de ejecución automática
+siguen falsas, con Aerocivil/GDELT y los demás requisitos ausentes explícitos.
+No hubo consultas de fuentes, capturas nuevas, gasto o publicación.
+
+La evidencia de esta continuación vive en
+`tmp/source-updates/monday-reconciliation-20261026/`: recetas y planes en seco,
+recibos/candidatos nuevos, logs y los arneses conservados. Resultado de originales
+`official-reproduction.json`, SHA-256
+`c44a47139cc08ed5c2eb898f536e5a11c64afb913e7732b6d48138ee9652aea4`.
+Dictamen `independent-conservation-review.json`, SHA-256
+`d3716ae7dcf1c59115a537dedd8209d9d32dfc1019f0639b2ee5f111625083e1`.
+La receta `combined-replay-recipe.json` reúne las nueve ventanas con sus cortes
+originales. Su despacho conjunto y replay pasaron; resultado
+`combined-replay-result.json`, SHA-256
+`58991465baaa61289a30861d576d78e068ff50188267b9775642956f33ff9f97`.
+`ready_for_review=true` se limita a esas nueve tareas; calendario y ejecución
+automática siguen falsos. Con los candidatos conservados, se comprueba sin red:
+
+```bash
+python -m src.source_updates.readiness --recipe tmp/source-updates/monday-reconciliation-20261026/combined-replay-recipe.json --workspace tmp/source-updates/monday-reconciliation-20261026/combined-replay --check
+```
+
+Se conserva toda esa evidencia local y la anterior; no se sube Bronze ni Gold
+candidato. El inventario/disposición del diff local se comprueba contra
+`dad0a39b` con el lifecycle canónico. Esta guía consolida el resultado y sus
+pendientes; no se crea otro informe paralelo.
+
 ## Pendientes
 
 - La política está aprobada e implementada; no falta volver a aprobarla.
@@ -2265,7 +2377,8 @@ auxiliares denegadas. Los pendientes vigentes se mantienen únicamente abajo.
   oficial de la edición; no basta una prueba sintética o el control de Gold.
 - PR152 añade `banxico`, `fuel` y `equities` y conserva el head `3a89c6dc`.
   La revisión adicional iniciada el 22/oct a las 16:05 UTC sigue sin resultado
-  terminal; su CI y revisión manual previas no sustituyen ese resultado.
+  terminal verificable; su actividad interna es desconocida. Su CI y revisión
+  manual previas no sustituyen ese resultado.
   No se ha integrado ni se ha relanzado la revisión.
 - PR158 integró la certificación técnica de los dossiers Volaris/AFAC;
   Volaris real permanece bloqueado por la discrepancia CASM documentada arriba;
@@ -2278,7 +2391,13 @@ auxiliares denegadas. Los pendientes vigentes se mantienen únicamente abajo.
   [PR157](https://github.com/salvamalfa/aeromexico-tracker/pull/157). BTS ([PR155](https://github.com/salvamalfa/aeromexico-tracker/pull/155)),
   GAP/ASUR ([PR154](https://github.com/salvamalfa/aeromexico-tracker/pull/154)) y Viva
   ([PR156](https://github.com/salvamalfa/aeromexico-tracker/pull/156)) están preparados
-  en ramas separadas y esperan sus revisiones exactas. Sus heads se preservan.
+  en ramas separadas y conservan sus heads/revisiones remotos. La reconciliación
+  local de los cuatro PR ya está preparada y probada; falta resolver el estado
+  de las revisiones existentes y validar cualquier futuro head remoto con CI y
+  revisión exactas, sin duplicar ejecuciones a ciegas. Además, el gate de la
+  publicación financiera requiere una revisión técnica nueva de la huella del
+  runtime. La conservación de sus bytes no sustituye ese control; falta
+  coordinar esa continuidad con el procedimiento de publicación vigente.
   Es trabajo técnico autorizado, no una decisión de alcance del dueño.
   Los restantes adaptadores conservan sus límites de edición y periodo;
   finanzas IR retenidas de Aeroméxico certifica 2T26, sin aprobar otra edición.
@@ -2304,7 +2423,8 @@ auxiliares denegadas. Los pendientes vigentes se mantienen únicamente abajo.
   mensual exacta desde las gráficas del boletín; Aerocivil conserva su leyenda pendiente.
 - PR142/privada35, PR144/privada37 y Vuelos PR134/privada33 ya están integrados. M11 PR140
   conserva su responsable. La integración de infraestructura conserva esas
-  salidas y el lifecycle vigente; no incorpora el trabajo 3T26 de PR149.
+  salidas y el lifecycle vigente. La propuesta local parte de master `dad0a39b`
+  y conserva íntegramente las publicaciones PR149/160, sin volver a publicarlas.
 - Resolver las decisiones curadas de perfiles y eventos descritas arriba antes
   de cambiar su significado o elegibilidad. Las pruebas no las aprueban.
 - Verificar el calendario bancario de 2027 antes de calcular rondas de ese año.
