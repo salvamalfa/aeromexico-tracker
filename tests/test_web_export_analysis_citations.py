@@ -114,6 +114,7 @@ def test_claim_citations_ask_key_is_eligible_regardless_of_formula() -> None:
 def _record(private_keys: list[str] | None = None) -> dict[str, Any]:
     return {
         "draft": {
+            "thesis_claim_id": "summary_claim",
             "summary_claim_ids": ["summary_claim"],
             "reader_private_section_keys": private_keys or [],
             "sections": [
@@ -163,4 +164,4 @@ def test_export_period_attaches_citations_and_section_claim_ids(monkeypatch) -> 
     citations_by_claim = {c["claim_id"]: c["citations"] for c in result["claims"]}
     assert citations_by_claim["summary_claim"][0]["label"] == "1"
     assert citations_by_claim["public_claim"][0]["label"] == "2"
-    assert citations_by_claim["private_claim"] == []
+    assert "private_claim" not in citations_by_claim

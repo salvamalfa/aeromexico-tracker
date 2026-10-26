@@ -54,3 +54,17 @@ def test_frozen_data_gate_rejects_refreshed_sources_and_analysis_changes(tmp_pat
     (tmp_path / name).write_text("unapproved change")
     with pytest.raises(ValueError):
         require_preserved_analysis_implementation(tmp_path, commit)
+
+
+def test_frozen_publication_cannot_replace_an_approval_cohort_pin(tmp_path):
+    _baseline(tmp_path)
+    path = tmp_path / "config/publish/approval-cohorts.json"
+    path.parent.mkdir(parents=True)
+    path.write_text('{"approved":"cohort"}')
+    subprocess.run(["git", "add", "."], cwd=tmp_path, check=True)
+    subprocess.run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+                    "commit", "-qm", "trusted cohorts"], cwd=tmp_path, check=True)
+    commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=tmp_path, text=True).strip()
+    path.write_text('{"approved":"different"}')
+    with pytest.raises(ValueError, match="protected analysis input"):
+        require_preserved_analysis_implementation(tmp_path, commit)

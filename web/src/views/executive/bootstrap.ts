@@ -20,6 +20,7 @@ import { renderNarrative } from "./narrative";
 import { entityLabel, entityState, loadMarket } from "./entities";
 import { renderMarket, setMarketEntities, mountMarketControls } from "./market";
 import { updateKpis } from "../economy/kpis";
+import { renderFinancialNote } from "../economy/financial-note";
 import {
   renderLoadMonetization,
   renderUnitEconomics,
@@ -30,6 +31,7 @@ import {
 } from "../economy/charts";
 import { renderQuarterTable } from "../economy/table";
 import { mountPicker, selection, type EntityKey } from "../shell/carriers";
+import { loadReadingPeriods, selectedReading, selectReadingPeriod } from "./reading-periods";
 
 const ECONOMY_SOURCE: Record<EntityKey, string> = {
   AEROMEXICO: "Fuente: v_aeromexico_quarterly",
@@ -41,16 +43,34 @@ const ECONOMY_SOURCE: Record<EntityKey, string> = {
 function renderKpisAndTable(periodId: string): void {
   const entity = selection("kpis")[0] ?? (state.entities ? "INDUSTRY" : "AEROMEXICO");
   updateKpis(entity, periodId);
+  renderFinancialNote(entity, periodId);
   renderQuarterTable(entity);
   const source = $("economy-source-inline");
-  if (source) source.textContent = ECONOMY_SOURCE[entity];
+  if (source) source.textContent = entity === "AEROMEXICO" && periodId === "2026Q3"
+    ? "Fuente: resultados no auditados del emisor · 3T26" : ECONOMY_SOURCE[entity];
 }
 
-async function renderReading(periodId: string): Promise<void> {
-  const view = state.views[periodId];
-  if (!view) return;
+let readingCatalogState: "loading" | "ready" | "unavailable" = "loading";
+
+async function renderReading(): Promise<void> {
   const entity = selection("reading")[0] ?? "AEROMEXICO";
-  await renderNarrative(view, entity, entityLabel(entity));
+  if (readingCatalogState !== "ready") {
+    const selector = $("reading-period") as HTMLSelectElement | null;
+    if (selector) { selector.replaceChildren(); selector.disabled = true; }
+    const copy = $("narrative-copy");
+    if (copy) {
+      copy.textContent = readingCatalogState === "loading" ? "Cargando lectura…" : "No se pudo verificar el catálogo de lecturas publicadas.";
+      delete copy.dataset.period;
+      copy.dataset.entity = entity;
+    }
+    const period = $("narrative-period");
+    if (period) period.textContent = "—";
+    const name = $("narrative-entity");
+    if (name) name.textContent = entityLabel(entity);
+    return;
+  }
+  const view = selectedReading(entity);
+  if (view) await renderNarrative(view, entity, entityLabel(entity));
 }
 
 async function render(periodId: string): Promise<void> {
@@ -58,7 +78,6 @@ async function render(periodId: string): Promise<void> {
   if (!view) return;
   state.periodIndex = state.records.findIndex((record) => record.period_id === periodId);
   renderKpisAndTable(periodId);
-  await renderReading(periodId);
   if (periodId !== currentPeriodId()) return;
   renderMarket(periodId);
   const range = $("unit-range") as HTMLSelectElement;
@@ -79,7 +98,7 @@ function mountPickers(): void {
   const host = (id: string) => $(id) as HTMLElement | null;
   const periodId = () => currentPeriodId() ?? "";
   const reading = host("pick-reading");
-  if (reading) mountPicker(reading, { card: "reading", multi: false, defaults: ["AEROMEXICO"] }, () => void renderReading(periodId()));
+  if (reading) mountPicker(reading, { card: "reading", multi: false, defaults: ["AEROMEXICO"] }, () => void renderReading());
   const market = host("pick-market");
   if (market) {
     setMarketEntities(
@@ -122,12 +141,18 @@ function mountPickers(): void {
 
 export async function mountExecutive(dataRoot = "data/v1"): Promise<void> {
   await loadExecutive(dataRoot);
+  readingCatalogState = "loading";
   await loadMarket(state.dataRoot);
   const note = $("industry-note");
   if (note && entityState.market) note.textContent = entityState.market.metadata.industry_note;
   // Without the v2 entity block (an older export) every picker would have
   // nothing to show: keep the v1 page as it was.
   if (state.entities) mountPickers();
+  $("reading-period")?.addEventListener("change", (event) => {
+    selectReadingPeriod((event.target as HTMLSelectElement).value);
+    void renderReading();
+  });
+  void renderReading();
   wireStepper();
   subscribe((periodId) => void render(periodId));
   $("unit-range")!.addEventListener("change", renderUnitEconomics);
@@ -137,4 +162,13 @@ export async function mountExecutive(dataRoot = "data/v1"): Promise<void> {
   renderUnitEconomics();
   const periodId = currentPeriodId();
   if (periodId) await render(periodId);
+  // Financial controls and charts are ready before either reading request.
+  // A slow catalog or analysis must not hold up other views or their startup.
+  void loadReadingPeriods(state.dataRoot).then(async () => {
+    readingCatalogState = "ready";
+    await renderReading();
+  }).catch(() => {
+    readingCatalogState = "unavailable";
+    void renderReading();
+  });
 }

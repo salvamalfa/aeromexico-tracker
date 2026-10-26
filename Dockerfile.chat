@@ -43,6 +43,7 @@ COPY contracts/web/*.json contracts/web/privacy.yaml ./contracts/web/
 # The approved baseline still pins this exact historical flights schema.
 COPY contracts/web/versions/17fb7e131da94435190bea925fe9733e298754d04e9b9c5e76fbbea8bef119a7/flights.schema.json ./contracts/web/versions/17fb7e131da94435190bea925fe9733e298754d04e9b9c5e76fbbea8bef119a7/
 COPY contracts/web/versions/15768d277f9cb31d361d2b976602e4b65e7ed20d6419a38699557b0c13aafef6/flights.schema.json ./contracts/web/versions/15768d277f9cb31d361d2b976602e4b65e7ed20d6419a38699557b0c13aafef6/
+COPY contracts/web/versions/c0e3b0fb5e3f840087bbb3bed0e222e477f90f5dc9ab9840802916f1ed5eb8c2/analysis.schema.json ./contracts/web/versions/c0e3b0fb5e3f840087bbb3bed0e222e477f90f5dc9ab9840802916f1ed5eb8c2/
 COPY site/publication_manifest.json ./site/
 COPY site/data/v1/ ./site/data/v1/
 COPY scripts/start_chat_runtime.py ./scripts/start_chat_runtime.py

@@ -60,6 +60,11 @@ def web_server(tmp_path_factory, web_dist_dir):
     export_market(_load_fixture("market_sample.json"), out_dir, skip_input_check=True)
     analysis = _load_fixture("analysis_sample.json")
     write_json(out_dir / "analysis" / f"{analysis['period_id']}.json", analysis)
+    # Reading availability is independent of the financial/flight periods.
+    # Advertise only the synthetic analysis actually served by this fixture.
+    write_json(root / "publication_manifest.json", {"analysis_manifest": [
+        {"period_id": analysis["period_id"], "approval_event": "synthetic-approved-reading"}
+    ]})
 
     handler = partial(SimpleHTTPRequestHandler, directory=str(root))
     server = ThreadingHTTPServer(("127.0.0.1", 0), handler)

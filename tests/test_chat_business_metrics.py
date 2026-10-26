@@ -109,6 +109,17 @@ def test_load_factor_query_returns_ask_weighted_percent_from_fraction_inputs() -
     )
 
 
+def test_reading_q3_context_cannot_relabel_q2_financial_observations() -> None:
+    snapshot = Snapshot(FIXTURE)
+    q2 = deterministic_query(snapshot, "load_factor", "AEROMEXICO", "2026Q2")
+    q3 = deterministic_query(snapshot, "load_factor", "AEROMEXICO", "2026Q3")
+    assert q2["availability"] == "available"
+    assert q3["availability"] == "incomplete"
+    assert q3["value"] is None
+    assert q3["missing_periods"] == ["2026Q3"]
+    assert q3["included_periods"] == []
+
+
 def test_closed_financial_candidate_gate_never_returns_a_value() -> None:
     result = deterministic_query(Snapshot(FIXTURE), "total_revenue", "AEROMEXICO", "2025")
     candidate = next(

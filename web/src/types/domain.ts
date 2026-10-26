@@ -223,6 +223,7 @@ export interface ExecutiveView {
   margin_qoq: Comparison;
   margin_yoy: Comparison;
   margin_vs_industry?: Comparison;
+  narrative?: { headline: string; paragraphs: string[] };
 }
 
 export interface ExecutiveMetadata {

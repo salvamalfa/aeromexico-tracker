@@ -46,6 +46,11 @@ def _any_approved_record_path() -> Path:
             record = json.loads(record_path.read_text(encoding="utf-8"))
             try:
                 if flow.state(record)["state"] in ("approved", "published"):
+                    # Historical approvals remain valid through their pinned
+                    # verifier. This test exercises the current implementation,
+                    # and selects its own implementation. Actual input checks
+                    # stay in verify_records below, so a broken replay fails.
+                    flow.require_current_presentation(record)
                     return record_path
             except Exception:  # noqa: BLE001 - not every record need be well-formed here
                 continue
@@ -71,6 +76,22 @@ def test_verify_records_refuses_a_record_with_a_tampered_content_hash() -> None:
     tampered["content_hash"] = "0" * 64
     with pytest.raises(PublicationRefused):
         verify_records([tampered])
+
+
+@pytest.mark.local_data
+def test_current_verifier_refuses_an_approval_from_another_implementation() -> None:
+    # Select independently of the verifier under test: a permissive regression
+    # must fail the assertion rather than remove its own fixture and skip.
+    path = DRAFTS_ROOT / "2026Q2" / ("186ba823aea28830be12cb0293c5bb2890a433b173addc473c26aa8f89cab26f.json")
+    if not path.is_file():
+        pytest.skip("the pinned historical Aeroméxico 2T26 approval is not restored locally")
+    record = json.loads(path.read_bytes())
+    assert record["code_version"] == "6db7173fe801e9e5ccd9afc24baced556274a58eb8ea799aa9132361b1c2d5c8"
+    assert flow.state(record)["state"] in ("approved", "published")
+    with pytest.raises(ValueError, match="changed"):
+        flow.require_current_presentation(record)
+    with pytest.raises(PublicationRefused):
+        verify_records([record])
 
 
 @pytest.mark.local_data

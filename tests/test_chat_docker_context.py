@@ -1,6 +1,7 @@
 """Keep only required chat configuration in the Docker build context."""
 
 import fnmatch
+import hashlib
 import json
 import os
 import shlex
@@ -67,7 +68,19 @@ def test_runtime_image_contains_every_exact_retained_contract(tmp_path):
     for name, versions in ARCHIVED_CONTRACTS.items():
         for digest in versions:
             resolved = resolve_contract(tmp_path / "contracts/web", name, digest)
-            assert resolved == tmp_path / "contracts/web/versions" / digest / name
+            archived = tmp_path / "contracts/web/versions" / digest / name
+            assert archived.is_file()
+            assert hashlib.sha256(archived.read_bytes()).hexdigest() == digest
+            assert resolved in {tmp_path / "contracts/web" / name, archived}
+            assert hashlib.sha256(resolved.read_bytes()).hexdigest() == digest
+            # Force the archived fallback even when current bytes are identical.
+            current = tmp_path / "contracts/web" / name
+            current_bytes = current.read_bytes()
+            current.write_bytes(b"{}")
+            try:
+                assert resolve_contract(tmp_path / "contracts/web", name, digest) == archived
+            finally:
+                current.write_bytes(current_bytes)
 
 
 def test_packaged_files_load_the_public_snapshot_without_checkout_fallback(tmp_path):

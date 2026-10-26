@@ -1,0 +1,83 @@
+{
+  "schema_version": "editorial_release_v1",
+  "baseline_commit": "df29623daf998fd70c18d1a812d0e53b6cc15c99",
+  "baseline_manifest_sha256": "b1bac4de11b0ee0c2ebc533ce177a28b6155c2accc920db8ac9066286e077010",
+  "analysis_entry": {
+    "period_id": "2026Q3",
+    "version": "a470aefc8a76a547fbf1005e7ca657f03bb3cdb2b75c6f5028e81169ae2f7869",
+    "content_hash": "a63dad9286d7a4762ed49a5d8b53c87ff0f5bb692d0620143cbedb84bc73d480",
+    "evidence_fingerprint": "5a4f066988fd5c7e19052957e39fa31425dcf354c96f4f0b58f06c9c8fa3e198",
+    "approval_event": "ecc7e7fd9ee1230844540544ef7d0b6c053e6c93fb7e3d8d4028f54080f24061",
+    "audit_hash": "f478d27950dd953c2ab64aa9ba57323acccc4cd3066b1ee17f35f59786201099"
+  },
+  "analysis_sha256": "1bc02904e43827c90d9f00f5981446b1c357849430c1be88cea7a70a62b3068f",
+  "analysis_bytes": 46691,
+  "frontend_files": [
+    {
+      "path": "assets/bootstrap-Bon95OId.css",
+      "sha256": "8520629920ae52d6a96539c9edc1eef010ad7334b998fac2a985ec9050350f51",
+      "bytes": 2616
+    },
+    {
+      "path": "assets/bootstrap-CG5UWcPn.css",
+      "sha256": "4c926c7b55614a1a6c9aac6a28a70c9c8e201bc6d1b45f2a193f559b2566c183",
+      "bytes": 6649
+    },
+    {
+      "path": "assets/bootstrap-DWdhZXXN.js",
+      "sha256": "153b3cea971d86e120e1305006877a08ea84af0d14cda4f410e6b7f82ea7c191",
+      "bytes": 5459
+    },
+    {
+      "path": "assets/bootstrap-DZ1wkk-x.js",
+      "sha256": "d97067a9d09850f758dec92273c7bf7a4378309acf27667f758e92b3c03e96de",
+      "bytes": 44011
+    },
+    {
+      "path": "assets/bootstrap-Dl_wrPq5.js",
+      "sha256": "8c9de292a4e207fac7fe981c24aec4249639bc09bbe6029af4f51b0e73f15d28",
+      "bytes": 33336
+    },
+    {
+      "path": "assets/dashboard-BvhmRDIJ.js",
+      "sha256": "e011856bc7f8c72ed0876971b89bff44532f55733d7243d05241dbab87568687",
+      "bytes": 38340
+    },
+    {
+      "path": "assets/dashboard-C1ii5yMB.css",
+      "sha256": "63b6f325986de738447cda3c18d1169955765ca02808f10c80215cb7087c81ae",
+      "bytes": 42033
+    },
+    {
+      "path": "assets/markdown-CX2IkwMA.js",
+      "sha256": "9eca7935cc1aaa08476adbd9fad16bb27a568cd542b983f85a3064354e9b0af1",
+      "bytes": 12698
+    },
+    {
+      "path": "assets/modulepreload-polyfill-B5Qt9EMX.js",
+      "sha256": "d2a32840421496e872ade591618d2fa5c33797605d1aec04301717e5a90757d0",
+      "bytes": 711
+    },
+    {
+      "path": "assets/plotly-DFvSk16B.css",
+      "sha256": "216055fb2084a35acbc0d20ab5d2a31b342c57dab212e7c685e87164aa69d700",
+      "bytes": 83132
+    },
+    {
+      "path": "assets/plotly-ZECNwRsR.js",
+      "sha256": "72f200ccd356fa6925abebce61e184a8d67fb09fac2095d7692abc11917bac98",
+      "bytes": 1396673
+    },
+    {
+      "path": "assets/state-DRn_zMGU.js",
+      "sha256": "48dc744fe6fe46becf9ab93285aa9fb2c07d1f84adeb1c93125a7a3dcceb9149",
+      "bytes": 5890
+    },
+    {
+      "path": "index.html",
+      "sha256": "5a45c18e90d56aee0ba17c7e643249fa9666ffa072d75aba374acbd93422ed55",
+      "bytes": 21350
+    }
+  ],
+  "analysis_contract_sha256": "8e082232e85c9f28e2231279dbb42ec15be356ce2ee89a987b9d4f5abc56e95a"
+}

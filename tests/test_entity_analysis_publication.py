@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import json
+import shutil
 from pathlib import Path
 
 import pytest
@@ -53,6 +54,48 @@ def test_public_verifier_accepts_all_entities_in_one_quarter(tmp_path):
     site = _signed_site(tmp_path)
     assert verify_site(site) == []
     assert json.loads((site / "data/v1/analysis/2026Q2.json").read_text()) == _payload()
+
+
+@pytest.mark.parametrize("entity", [None, "VOLARIS"])
+def test_verifier_uses_manifest_pinned_analysis_contract_even_after_a_cached_pass(
+    tmp_path, entity, monkeypatch
+):
+    site = _signed_site(tmp_path, (entity,))
+    # Exercise the cache across two real schema versions in an isolated fixture.
+    # Production keeps its historical allowlist; only Q3 has an extra contract.
+    contracts = tmp_path / "contracts"
+    shutil.copytree(manifest.CONTRACTS_DIR, contracts)
+    schema_path = contracts / "analysis.schema.json"
+    widened = json.loads(schema_path.read_bytes())
+    href = widened["$defs"]["citation"]["properties"]["href"]
+    href["pattern"] = href["pattern"].replace(")/", "|www\\.globenewswire\\.com)/")
+    schema_path.write_text(json.dumps(widened), encoding="utf-8")
+    monkeypatch.setattr(manifest, "CONTRACTS_DIR", contracts)
+    current = manifest.load_manifest(site)
+    current["contracts"]["analysis.schema.json"] = (
+        "c0e3b0fb5e3f840087bbb3bed0e222e477f90f5dc9ab9840802916f1ed5eb8c2"
+    )
+    manifest.write_manifest(site, current)
+    assert verify_site(site) == []
+
+    path = site / "data/v1" / manifest.analysis_relative_path(_payload(entity))
+    payload = json.loads(path.read_bytes())
+    payload["claims"][0]["citations"][0]["href"] = (
+        "https://www.globenewswire.com/news-release/2026/10/19/issuer-results.html"
+    )
+    write_json(path, payload)
+    _refresh_files(site)
+    historical = manifest.load_manifest(site)
+
+    # These bytes are valid under the widened fixture contract. Cache that
+    # success first, then require rejection under the exact historical schema.
+    current = copy.deepcopy(historical)
+    current["contracts"]["analysis.schema.json"] = manifest.contract_hashes(contracts)["analysis.schema.json"]
+    manifest.write_manifest(site, current)
+    assert verify_site(site) == []
+    manifest.write_manifest(site, historical)
+    problems = verify_site(site)
+    assert any("citations" in p and "does not match" in p for p in problems), problems
 
 
 def test_entity_exports_leave_legacy_analysis_bytes_exactly_unchanged(tmp_path, monkeypatch):

@@ -107,6 +107,7 @@ def _data_schema_for(
     rel_path: str,
     quarters_schema: dict[str, Any] = QUARTERS_FILE_SCHEMA,
     network_schema: dict[str, Any] = NETWORK_FILE_SCHEMA,
+    analysis_schema: dict[str, Any] = ANALYSIS_SCHEMA,
 ) -> dict[str, Any] | None:
     """Which contracts/web sub-schema this data/v1 file must satisfy, or
     None if it is not a data file this gate validates (e.g. it is part of
@@ -135,9 +136,9 @@ def _data_schema_for(
     ):
         return network_schema
     if parts[2:3] == ["analysis"] and len(parts) == 4:
-        return ANALYSIS_SCHEMA
+        return analysis_schema
     if parts[2:3] == ["analysis"] and len(parts) == 5 and parts[3] in manifest_mod.ANALYSIS_ENTITIES:
-        return ANALYSIS_SCHEMA
+        return analysis_schema
     if parts[2:] == ["business_metrics.json"]:
         return BUSINESS_METRICS_SCHEMA
     if parts[2:] == ["news.json"]:
@@ -149,6 +150,14 @@ def _data_schema_for(
 
 def verify_site(site_dir: Path) -> list[str]:
     """Return the list of problems found (empty means the site is valid)."""
+    return _verify_site(site_dir)
+
+
+def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = frozenset()) -> list[str]:
+    """Shared structural checks; only explicit editorial/financial verifiers may pass proven bytes.
+
+    The normal public entry point above never exempts semantic approvals.
+    """
 
     site_dir = Path(site_dir)
     problems: list[str] = []
@@ -208,6 +217,8 @@ def verify_site(site_dir: Path) -> list[str]:
         problems.append("manifest 'analysis_manifest' is empty")
 
     quarters_schema, network_schema = QUARTERS_FILE_SCHEMA, NETWORK_FILE_SCHEMA
+    analysis_schema = ANALYSIS_SCHEMA
+    editorial_schema = None
     try:
         expected_contracts = manifest_mod.contract_hashes(manifest_mod.CONTRACTS_DIR)
     except FileNotFoundError as error:
@@ -218,6 +229,7 @@ def verify_site(site_dir: Path) -> list[str]:
         has_business_metrics = "data/v1/business_metrics.json" in listed_paths
         business_contracts = {"business_metrics.schema.json", "business_metrics_approval.schema.json"}
         optional_payload_contracts = {
+            manifest_mod.EDITORIAL_ANALYSIS_CONTRACT: manifest_mod.EDITORIAL_ANALYSIS_PATH,
             "market_demand.schema.json": "data/v1/market-demand.json",
             "news.schema.json": "data/v1/news.json",
         }
@@ -243,6 +255,10 @@ def verify_site(site_dir: Path) -> list[str]:
                     quarters_schema, network_schema = split_flight_schemas(
                         json.loads(resolved.read_text(encoding="utf-8"))
                     )
+                elif name == "analysis.schema.json":
+                    analysis_schema = json.loads(resolved.read_text(encoding="utf-8"))
+                elif name == manifest_mod.EDITORIAL_ANALYSIS_CONTRACT:
+                    editorial_schema = json.loads(resolved.read_text(encoding="utf-8"))
         for name in sorted(manifest_contracts):
             if name not in expected_contracts:
                 problems.append(f"contracts[{name!r}]: not a contract file this checkout expects")
@@ -275,7 +291,9 @@ def verify_site(site_dir: Path) -> list[str]:
     for rel in sorted(actual_paths):
         parts = rel.split("/")
         is_data_file = parts[:2] == ["data", "v1"] and rel.endswith(".json")
-        schema = _data_schema_for(rel, quarters_schema, network_schema)
+        schema = _data_schema_for(rel, quarters_schema, network_schema, analysis_schema)
+        if rel == manifest_mod.EDITORIAL_ANALYSIS_PATH and editorial_schema is not None:
+            schema = editorial_schema
         if schema is None:
             if is_data_file:
                 problems.append(
@@ -296,7 +314,7 @@ def verify_site(site_dir: Path) -> list[str]:
             continue
         if isinstance(payload, dict):
             data_payloads[rel] = payload
-        if rel == "data/v1/news.json":
+        if rel == "data/v1/news.json" and rel not in preserved_approval_files:
             from src.web_export.news import news_export_payload
             try:
                 if payload != news_export_payload():
@@ -318,7 +336,7 @@ def verify_site(site_dir: Path) -> list[str]:
         for carrier in carriers:
             problems.append(f"{rel}: disallowed carrier_key: {carrier}")
         if (
-            schema is ANALYSIS_SCHEMA
+            (schema is analysis_schema or schema is editorial_schema)
             and isinstance(payload, dict)
             and isinstance(payload.get("period_id"), str)
         ):
@@ -340,7 +358,7 @@ def verify_site(site_dir: Path) -> list[str]:
     has_receipt = receipt_path in listed_paths
     if has_metrics != has_receipt:
         problems.append("business metrics payload and approval receipt must be published together")
-    elif has_metrics and metrics_path in data_payloads and receipt_path in data_payloads:
+    elif has_metrics and metrics_path in data_payloads and receipt_path in data_payloads and not {metrics_path, receipt_path} <= preserved_approval_files:
         try:
             expected_payload, expected_receipt = build_approved_payload(
                 PATHS.root / "config/chat/business-metrics-proposal.json",
