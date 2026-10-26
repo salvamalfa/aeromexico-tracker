@@ -2354,13 +2354,37 @@ protocolo. El componente de preservación real verificó 803 archivos y las
 identidades/bytes publicados; es una comprobación parcial, no aceptación del
 gate financiero completo ni auditoría nueva de sus fuentes.
 
-La validación de la autorización real se detuvo por **archivo inexistente**,
-no por denegación ni rechazo del dueño. Faltan aquí el registro publicado
-`a470aefc…`, el paquete `2026Q3_5a4f0669…`, sus cálculos y la autorización
-financiera que fija el ancla. También hacen falta la revisión referenciada, el
-ledger y los originales/sidecars que indique ese paquete. La inspección del
-respaldo disponible no encontró esas identidades; una edición anterior solo
-validada no puede sustituirlas ni aportar su aprobación.
+La primera validación de la autorización real se detuvo por **archivo
+inexistente**, no por denegación ni rechazo del dueño. Esa ausencia se resolvió
+después mediante el respaldo financiero de Library posterior a PR160, sin
+reabrir el hilo archivado ni sustituirlo por una edición anterior solo validada.
+El ZIP recuperado tiene 5.364.970 bytes y SHA-256
+`64dbb9edb6d62c3ec9ab0c6e1b11c12b8122631c994425b08567c596f94315e3`.
+La versión de identidad devuelta sigue siendo nula; el atributo de transferencia
+indica 0, sin inferir otra versión. Incluye la cápsula editorial v7 de
+5.232.749 bytes y SHA-256
+`bc44257f0354a2e0d9b396a671eb0d8b06eda37e0ee5a0a65aab523d97ca3c83`.
+Se verificaron todos los miembros contra ambos manifiestos: 22 y 286 hashes.
+
+Se restauraron únicamente 178 archivos de `analysis_runs/` y diez originales o
+sidecars de Bronze en cada uno de dos checkouts detached aislados: master
+`dad0a39b` y candidato `b9cd5d2c`. El registro a470, paquete, cálculos, autoridad
+financiera `8e5d1542…` y revisión `b842a729…` coinciden con sus identidades exactas.
+La cadena completa recuperada tiene 161 eventos y termina en la aprobación
+`ecc7e7fd…` del 24/oct a las 09:02:12 UTC. Su verificación conserva a470 aprobado y
+no encuentra una revocación de esa versión en ese snapshot; no acredita eventos
+externos posteriores. Los 188 archivos restaurados permanecen idénticos después
+del replay en ambos checkouts. No se copió contenido del respaldo sobre código,
+configuración, Gold o sitio publicados.
+
+El verificador original `0f6b4dc…` y el productor archivado `45c930f…` reprodujeron
+fuentes, aprobación y proyección en ambos checkouts, prohibiendo conexiones de
+red. Coinciden los 312.095 bytes del ejecutivo publicado, SHA-256
+`cc0b39ad47ad761cda8c5339381c8552be30211d5da915bf3c25ec56f87d614b`,
+y la preservación de 803 archivos. Las ejecuciones duraron 40,79 y 42,62 s.
+Esto certifica la entrega original y su conservación; no convierte el runtime
+actual en un productor aprobado. Los cuatro tests de paridad se repitieron con
+el expediente recuperado y siguen dando cuatro errores por huella, sin omitirse.
 
 Se preparó `financial-technical-rebinding-proposal.json` con la misma proyección,
 identidades y límites, cambiando solo el productor propuesto. Está marcada como
@@ -2369,18 +2393,31 @@ modificó el ancla. `financial-local-procedure-progress.json` enumera los insumo
 exactos y las comprobaciones realizadas.
 
 El modo financiero existente incorpora por primera vez un trimestre y exige
-baseline igual al master confiable; no debe presentarse como una renovación
-automática de un trimestre ya publicado. El addendum
-`financial-rebinding-readiness-addendum.json` conserva esta limitación: antes de
-ejecutar una transición deben recuperarse y validarse la autoridad original y
-el procedimiento de preservación aplicable. No se usará UI/mapa como atajo ni
-se cambiarán hashes para aprobar. La revisión independiente de este diagnóstico
-está en `independent-financial-material-proposal-review.json`.
+baseline igual al master confiable; no es una renovación automática de un
+trimestre ya publicado. La autoridad recuperada y su revisión cubren exactamente
+el productor `45c930f…`, runtime `f286de95…`. Se comprobó que rechazan vincular el
+candidato `b9cd5d2c` y su runtime `8c56fe9f…`; también se rechaza volver a añadir
+el trimestre ya existente. UI/mapa no se usaron como atajo. No se cambiaron
+gates, anclas, digests, consentimiento ni eventos para obtener aceptación.
 
-No se pide una aprobación nueva hipotética: primero falta el expediente retenido
-exacto para determinar qué cubre el consentimiento existente y completar el
-vínculo legítimo. El siguiente paso operativo es recuperar ese material del
-trabajo ya realizado de PR149/160, sin nuevos servicios ni capturas de fuentes.
+**Decisión concreta que falta:** autorizar el diseño e implementación local de
+un control separado de continuidad técnica del runtime financiero. La opción
+recomendada conserva inmutables la autoridad, el productor y el replay originales;
+añade una revisión técnica independiente vinculada al nuevo head/runtime y exige
+igualdad de todos los bytes e identidades publicados. Debe rechazar atestaciones
+ausentes, de otro head, alteradas o revocadas y cualquier cambio fuera de alcance,
+antes de CI y revisiones finales. No requiere aprobar otra vez la lectura 3T26 ni
+actualizar cifras; permite verificar código nuevo conservando la publicación.
+El riesgo que exige ese control es aceptar código sin revisión por comprobar
+solo la igualdad de datos. No se implementó esa extensión bajo la restricción
+actual de conservar el gate. La propuesta anterior de sustituir solo el productor
+no es ejecutable con el protocolo existente y sigue sin ser autoridad.
+
+El material de recuperación, ambos replays y los negativos están en
+`financial-library-recovery/`, dentro del directorio técnico de esta continuación.
+`preservation-transition-diagnostic.json` documenta la transición propuesta y sus
+límites; no es entrada del gate. Se conserva la evidencia anterior para distinguir
+la ausencia inicial ya resuelta del bloqueo real de compatibilidad del protocolo.
 
 La prueba real volvió a construir Viva 2T26; Banxico, EIA y cotizaciones de
 septiembre; GAP/ASUR de julio; BTS de julio; RSS de septiembre y AFAC de agosto.
@@ -2454,11 +2491,13 @@ pendientes; no se crea otro informe paralelo.
   publicación financiera requiere una revisión técnica nueva de la huella del
   runtime. La conservación de sus bytes no sustituye ese control; falta
   coordinar esa continuidad con el procedimiento de publicación vigente. La
-  continuación controlada confirma cuatro errores nuevos del runtime; primero
-  debe recuperarse el expediente a470 exacto, ausente en este checkout y en las
-  refs de respaldo examinadas. No se infiere otra aprobación ni se solicita al
-  dueño revisar una interfaz para suplir ese material.
-  Es trabajo técnico autorizado, no una decisión de alcance del dueño.
+  continuación controlada confirma cuatro errores nuevos del runtime. El
+  expediente a470 exacto ya está recuperado y su replay original pasa en ambos
+  checkouts aislados; no falta conseguir fuentes del 3T26. El bloqueo restante
+  exige la decisión concreta de continuidad técnica descrita arriba: el protocolo
+  actual no admite un runtime distinto sin modificar su control. No se atribuye
+  esa facultad al consentimiento de la entrega original ni se pide otra
+  aprobación editorial. Los heads remotos siguen intactos y no se activa nada.
   Los restantes adaptadores conservan sus límites de edición y periodo;
   finanzas IR retenidas de Aeroméxico certifica 2T26, sin aprobar otra edición.
 - Aerocivil requiere la leyenda literal aplicable al ID exacto; su entidad
