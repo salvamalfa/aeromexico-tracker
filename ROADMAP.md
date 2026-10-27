@@ -37,7 +37,11 @@ Propuesta — el dueño decide prioridades.
   durante la integración técnica de las skills; no queda una nueva tesis
   pendiente de publicar por este encargo.
 - AFAC: conservar el original de agosto y su advertencia internacional;
-  la siguiente actualización debe comprobar disponibilidad y periodo real.
+  la colección del 27/oct confirmó índice, PDF y base ZIP con HTTP200 y los
+  mismos hashes. La continuación técnica `1c9b3392` vincula los dos originales
+  al dossier completo reproducido: 4.930 nativas, 112 Gold y 474 conciliaciones.
+  Conserva la cobertura internacional incompleta; disponibilidad documental
+  no equivale a universo completo ni activa la ronda.
 - Airline Monthly del corte 24/oct: revisión estática y funcional realizada
   por el agente de Pages: 23 afirmaciones, seis fuentes y cuatro hashes de
   originales confirmados; dos PDF de Aeroméxico devolvieron HTTP503. Falta la

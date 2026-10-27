@@ -2771,6 +2771,70 @@ Conservar aparte índices, PDF, recibos, planes y dictámenes ignorados por Git
 como evidencia técnica recuperable. No versionar originales o candidatos en
 el repositorio público; no hay archivos retirados ni informes paralelos nuevos.
 
+### Continuación AFAC: disponibilidad del expediente reportado
+
+El contrato `afac_carriers` añade un vínculo multioriginal específico. No
+cambia el significado de completitud de otros productos. El 27/oct, tres GET
+planificados devolvieron HTTP200: índice Datatur, boletín de agosto y
+`DB_AFAC.zip`. El boletín conserva SHA `750cf336…` y el ZIP `4c47c52a…`;
+su único miembro es `DB_AFAC.xlsx`. El índice sigue anunciando agosto como
+último boletín. Una URL nueva pertinente sin clasificación, formato distinto
+o edición ambigua bloquea la selección, aunque sus enlaces no tengan texto.
+
+La certificación fresca `afac-physical-current-v2` y su replay comprueban 4.930
+filas nativas, 112 hechos Gold, dos artefactos, 5.294 vínculos y 474
+reconciliaciones. Los pares archivo/hash de **ambos** originales deben aparecer
+en la tabla nativa. El recibo comprueba manifiestos, sidecars, HTTP, URLs,
+cronología, fecha local y ausencia de modificaciones concurrentes. No basta
+una captura del boletín ni un booleano escrito por el usuario.
+
+Se conserva `monthly_coverage_verified=true` para la cobertura de las tablas y
+edición comprobadas y **`complete_month_certified=false`** para la cobertura
+observacional. La fuente declara información internacional incompleta; sigue
+visible. Verificar íntegramente lo reportado no inventa pasajeros faltantes,
+un total del universo o participaciones de mercado. Esa disponibilidad
+documental acotada cabe en el alcance aprobado de pasajeros por empresa/mercado;
+no aprueba por sí sola la ronda global ni su publicación.
+
+Código de producción `1c9b3392`, revisión independiente de implementación
+`d3f6be00…`: 200 contratos aprobados y doce ataques independientes, sin
+omisiones ni hallazgos pendientes. Son pruebas de contrato, separadas de la
+extracción oficial fresca anterior. El runtime `13baa540…` tiene revisión
+financiera local independiente `f5859b95…`: productor/verificador originales
+reproducidos, 811/803 archivos publicados, 177 fuentes/aprobaciones y 188 del
+expediente exactos; 79 adversariales aprobados. No cambian las aprobaciones
+originales ni se concede autoridad de publicación.
+
+Las recetas y recibos conservados están bajo
+`tmp/source-updates/availability-followup-20261027/`. Una receta archivada
+se reproduce con el código y configuración del commit que la certificó.
+Cambiar esos insumos exige un destino nuevo y otro recibo; `--check` nunca
+actualiza una aceptación antigua. Conservar los módulos, pruebas, fuentes,
+recibos y dictámenes como evidencia; actualizar esta guía, la skill de tráfico
+y Roadmap. Sin retiro de archivos, documentos paralelos o datos candidatos
+versionados públicamente.
+
+La prueba `afac-global-current-recipe.json` usa los candidatos reales AICM y
+Viva septiembre y AFAC agosto como periodo nativo rezagado dentro de la revisión
+de septiembre. Los tres pasan extracción y disponibilidad documental. La ronda
+global sigue bloqueada por veinte tareas requeridas no incluidas en esa
+muestra y reportes centrales sin vínculo; no es una afirmación de que todas
+esas fuentes estén caídas. Conserva las condiciones AFAC y los guards
+Aerocivil/GDELT. Se creó **después** de fijar el nuevo binding local, por lo que
+su replay comprueba también esa configuración vigente.
+
+```bash
+python -m src.source_updates.readiness --recipe tmp/source-updates/availability-followup-20261027/afac-physical-v2-recipe.json --workspace tmp/source-updates/availability-followup-20261027/afac-physical-readiness-v2 --check
+python -m src.source_updates.global_readiness --recipe tmp/source-updates/availability-followup-20261027/afac-global-current-recipe.json --workspace tmp/source-updates/availability-followup-20261027/afac-global-current --check
+```
+
+La compatibilidad del nuevo código reprodujo las nueve ventanas y sus 53
+salidas, las once de AICM/Viva y las siete de AIFA sin cambiar hashes. AIFA
+conserva su ventana histórica del 26/oct local; no se presenta como captura
+del día 27. No se repite la agregada anterior de 1.791 ni se atribuyen sus
+resultados al nuevo runtime: se usa la revisión focal de 200 contratos y los
+replays oficiales afectados, sin reducir aserciones, criterios o required checks.
+
 ## Pendientes
 
 - La política de productos y el calendario están aprobados; no falta una
@@ -2815,9 +2879,9 @@ el repositorio público; no hay archivos retirados ni informes paralelos nuevos.
   HTTP404 de su PDF de septiembre y HTTP202 de su índice alternativo. No admite
   booleanos manuales ni confunde una retención o Gold con actualidad.
   La implementación siguiente debe resolver contratos físicos por producto:
-  Aeroméxico IR (índice y PDF mensual/financiero); AFAC (misma edición de boletín
-  PDF y `DB_AFAC.zip` con su miembro `DB_AFAC.xlsx`, no solo el índice Datatur
-  que llega a agosto); BTS (historial
+  Aeroméxico IR (índice y PDF mensual/financiero); otros productos AFAC de
+  aeropuertos/marginales (sus libros y ediciones propias; el dossier por empresa
+  no los sustituye); BTS (historial
   de publicación y selección real del formulario/ZIP); macro/cotizaciones
   (ventana publicada y sesiones, no confundir última observación con cierre
   civil); SEC/GAP/ASUR (dossier y mes dentro del anexo, con adquisición manual
