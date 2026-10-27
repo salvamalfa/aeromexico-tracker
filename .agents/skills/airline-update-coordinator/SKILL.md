@@ -96,3 +96,19 @@ Registrar por separado reporte detectado, fuente primaria comprobada, usuario
 avisado, datos incorporados y publicación/tesis autorizadas. No inferir un
 estado desde otro ni repetir como novedad un reporte ya avisado. El mecanismo
 de avisos existente tiene su propio responsable; este CLI no crea tareas.
+
+## Día oficial y números pendientes
+
+Un reporte confirmado puede declarar `publication_precision="day"`,
+`published_on="YYYY-MM-DD"` y `published_at=null`; nunca rellenar medianoche.
+La alternativa existente con timestamp conserva su zona y conversión a México.
+Sumar los dos hábiles estrictamente después del último día de reporte.
+
+En la receta global, `documentary_evidence` vincula el original físico y tres
+pasajes revisados —emisor, trimestre y día— mediante el lector documental
+existente. Conserva SHA, manifiesto, sidecar y captura anterior al corte. La
+interpretación de esos pasajes es una revisión explícita; ubicarlos no es una
+aprobación automática. Puede proponer fecha aunque las cifras sigan pendientes,
+pero no concede `core_ready` ni permite publicar o instalar disparadores. La
+guía canónica documenta campos y evidencia real. Si faltan reportes, conservar
+fecha nula; si falta el calendario bancario de un año, mantener el bloqueo.

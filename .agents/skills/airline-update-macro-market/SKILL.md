@@ -149,7 +149,12 @@ capturas, fechas, métodos o recibos; conservar raíces y recibos originales.
 Este vínculo acredita respuestas actuales para la ventana histórica solicitada.
 `latest_available_period` y primera publicación siguen nulos. El calendario
 de observaciones no se acredita con las respuestas por sí solas; sin evidencia
-adicional bloquea incorporación tanto mensual como trimestral. Los recuentos de datos y
+adicional conserva cobertura no certificada. En la decisión global, Banxico/EIA
+verificados calculan promedio y último valor **observados**: ese diagnóstico
+es advertencia y no bloquea por sí solo. Cotizaciones conservan el bloqueo,
+pues rendimientos diarios y volatilidad dependen de sesiones. Mes ausente,
+serie/unidad incorrecta, corrupción o disponibilidad sin probar siguen
+bloqueando. Los recuentos de datos y
 el último día observado no prueban los días en que debía existir una observación.
 No compartir calendario entre FIX, tasa, inflación, EIA y bolsas. La evidencia
 Yahoo `tradingPeriods` de AERO es solo un insumo candidato, sin prueba aún de
