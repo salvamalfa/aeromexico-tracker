@@ -2965,7 +2965,7 @@ sin informes paralelos, retiros ni cambios del dashboard o Monthly.
 
 PR165 quedó integrado normalmente en `ffe7cfa1` el 27/oct 10:32 UTC,
 con CI `40484959407` y Codex del head `baaa8bfc` favorables, sin hilos.
-La CI posterior `40489330870` sigue en curso. Es infraestructura; no publica
+La CI posterior `40489330870` terminó aprobada para el merge exacto. Es infraestructura; no publica
 el candidato mensual ni altera los cortes ya aprobados.
 
 ### RSS: disponibilidad de consultas actuales con cobertura parcial (27/oct)

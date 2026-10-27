@@ -61,7 +61,7 @@ Propuesta — el dueño decide prioridades.
 - Tráfico IR Aeroméxico: contrato de índice actual/PDF integrado en
   [PR165](https://github.com/salvamalfa/aeromexico-tracker/pull/165), merge
   `ffe7cfa1`, tras CI `40484959407` y Codex favorables de `baaa8bfc`.
-  CI posterior `40489330870` en curso. Tiene
+  CI posterior `40489330870` aprobada. Tiene
   extracción real del original de septiembre retenido desde 19/oct: 24
   observaciones y siete salidas idénticas. Pasaron 408 casos afectados y
   revisión independiente. Índice del 27/oct HTTP200; falta el PDF actual en
