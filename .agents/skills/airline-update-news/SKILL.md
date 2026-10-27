@@ -188,3 +188,26 @@ buscan Aeroméxico: no acreditan cobertura de Viva/Volaris ni un mes completo.
 Disponibilidad actual queda sin acreditar. `readiness` usa `rss_retained`,
 recibo `rss-retained-<id>.json` y `rss-<mes>.json`; la política global conserva
 GDELT requerido y las demás condiciones. Ningún comando aprueba/activa/publica.
+
+### Disponibilidad física de las consultas RSS canónicas
+
+`recipe --product rss --output selection` emite juntos `google_es` y
+`google_en` desde `RSS_FEEDS`, con sus consultas exactas: dos GET base y cero
+pagados. Aplicar `collect --selection <seleccion> --workspace <coleccion-nueva>
+--dry-run` antes de una captura autorizada. No usar la rutina de ingesta activa,
+visitar artículos ni cambiar consultas o cuotas para forzar un mes completo.
+
+Retener ambos XML explícitos desde Bronze mediante el lote dedicado de arriba;
+construir y reproducir el dossier del mes cerrado. El vínculo de readiness usa
+`availability={workspace,run_id,feed_items:{google_es:<id>,google_en:<id>}}`
+con IDs de la colección separada. Exige ambos feeds del mismo día local de la
+ronda, HTTP200, manifiesto único, sidecars, consultas/locale y artefactos nativos
+exactos. Un feed aislado o una consulta distinta no acredita esta disponibilidad.
+
+El vínculo prueba respuestas actuales a esas dos consultas. Mantiene
+`latest_available_period=null`, primera publicación desconocida, mes incompleto,
+cobertura del medio no verificada y `agent_eligible=false`. Conservar todos los
+items en Silver y el subconjunto mensual con sus contribuciones y días no
+observados. No hay noticia validada desde un titular ni un archivo completo de
+Google News. GDELT conserva su requisito y sus fallos, sin nuevas consultas o
+sustitución. No comparar como revisiones dos snapshots de consultas distintas.

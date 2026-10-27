@@ -2964,6 +2964,70 @@ Conservar evidencia técnica bajo `tmp/source-updates/availability-followup-2026
 módulos/pruebas y autoridad originales. Actualizar guía, skills y Roadmap;
 sin informes paralelos, retiros ni cambios del dashboard o Monthly.
 
+### RSS: disponibilidad de consultas actuales con cobertura parcial (27/oct)
+
+El lote `814a0caf…` capturó las dos consultas canónicas `google_es` y
+`google_en` el 27/oct a las 09:46 UTC: dos GET y HTTP200, cero pagados. Los
+XML conservan SHA `ee43d737…` y `316058db…`. El código congelado `554405f8`
+retuvo esos originales y ejecutó el certificador real: 200 entradas nativas,
+24 declaraciones de septiembre, dos artefactos y 248 vínculos, con replay
+idéntico de cuatro JSON. Se observaron 16 días; los otros 14 significan «no
+observado», nunca «sin noticias». Las consultas combinadas actuales difieren
+de snapshots históricos: no se presenta su diferencia como revisión de noticias.
+
+El contrato `availability_rss` exige ambos feeds y sus URLs/locale exactos en
+una colección separada. Coteja HTTP, manifiesto único, sidecars, captura y fecha
+local de la ronda, hashes y aporte a los artefactos realmente reproducidos.
+`recipe --product rss --output selection` produce esa selección; no inventar
+URLs o consultas. La skill de noticias conserva el procedimiento ejecutable.
+Un feed solo, producto deshabilitado, alias falso, artefacto cambiado o recibo
+alterado bloquea. No hay selector manual de una tabla que eluda el replay.
+
+La disponibilidad se limita a **respuestas actuales de consultas declaradas**,
+el alcance RSS ya aprobado. No acredita un archivo completo de Google News,
+todo septiembre, cuerpos de medios, eventos, primera publicación ni última
+fecha de publicación; `latest_available_period` sigue nulo. Completitud mensual,
+cobertura del medio y `agent_eligible` permanecen falsos. GDELT sigue requerido
+e independiente: este resultado no lo sustituye ni activa noticias.
+
+Pruebas afectadas: 240 aprobadas en 26,78 s, sin omisiones; tres pruebas
+independientes agrupadas verificaron 41 recetas restantes sin cambios, ataques
+físicos/semánticos y el plan de dos llamadas. Esas pruebas de contrato se
+separan de la extracción oficial anterior. La evidencia y recibos inmutables
+viven bajo `tmp/source-updates/availability-followup-20261027/`.
+
+El runtime `a406fbdf…` cuenta con dictamen financiero local auténtico
+`cc6a5666…`: replay original en 51,71 s y 79 ataques aprobados. Conserva
+811/803 archivos publicados, 177 fuentes/autoridad y 188 del expediente.
+Las cuatro salidas RSS y todos sus flags de elegibilidad falsos se verificaron
+por separado. El binding nuevo es solo continuidad técnica local, sin tocar
+anclas ni aprobaciones originales o conceder publicación.
+
+El ensayo `rss-global-current-recipe.json`, creado después de fijar el nuevo
+binding local, reproduce cinco productos físicos actuales: AICM y Viva
+septiembre, AFAC agosto, BTS julio y metadatos RSS de septiembre. Conserva
+periodos nativos/rezagos y límites. Los cinco pasan; 18 tareas obligatorias no
+incluidas y los reportes centrales sin vínculo bloquean la incorporación.
+La fecha trimestral sigue nula. No se afirma que 18 fuentes estén caídas ni
+que RSS complete GDELT. El replay de los otros cuatro productos conservó 22
+salidas y AIFA siete, con su fecha histórica local 26/oct. No se atribuye la
+suite completa anterior al runtime nuevo; se usan los 240 casos afectados,
+replays de originales y preservación financiera, sin cambiar required checks.
+
+Para AFAC aeropuertos se agotó una comprobación actual acotada del índice
+canónico el 27/oct 09:43 UTC: HTTP403, 429 bytes, SHA `ab98e130…`, conservados
+como fallo fuera de Bronze válido. No se repitió ni eludió el bloqueo. El libro
+julio retenido SHA `cd522d69…` sigue comprobado; el catálogo histórico de O-D
+1992–2025 no prueba la última edición del producto aeropuerto. Quedan dos
+partes distintas: acceso al índice actual con enlaces verificables y contrato
+físico de esa edición. No se inventa su diseño con mocks ni se invalida el
+original retenido. Hace falta una publicación oficial accesible o exportación
+verificable del publicador; no se contactó a nadie ni se cambió un host.
+
+Conservar módulos, pruebas, originales, dictámenes y recibos; actualizar guía,
+skills y Roadmap, sin documentos paralelos, retiros o contenido candidato en
+Git público. Sin cambios de autoridad, permisos, gastos o disparadores.
+
 ## Pendientes
 
 - La política de productos y el calendario están aprobados; no falta una
@@ -3016,8 +3080,9 @@ sin informes paralelos, retiros ni cambios del dashboard o Monthly.
   no los sustituye); macro/cotizaciones
   (ventana publicada y sesiones, no confundir última observación con cierre
   civil); SEC/GAP/ASUR (dossier y mes dentro del anexo, con adquisición manual
-  existente); RSS (cobertura real observada y semántica de noticias, separada
-  de GDELT). Es trabajo técnico pendiente, no seis fuentes declaradas caídas.
+  existente). RSS ya tiene contrato físico de sus consultas actuales arriba,
+  con cobertura parcial y GDELT separado. Los otros contratos siguen siendo
+  trabajo técnico pendiente, no fuentes declaradas caídas.
   Falta también la ruta mensual de tráfico Volaris. Su certificador actual admite solo
   el dossier financiero 2026Q2; no satisface el mes obligatorio ni puede
   sustituirse por un trimestre. No son fallos externos ni se resolverán con

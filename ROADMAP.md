@@ -62,6 +62,12 @@ Propuesta — el dueño decide prioridades.
   revisión independiente. Índice del 27/oct HTTP200; falta el PDF actual en
   colección del mismo día. No se confunde ese pendiente externo con una
   implementación ausente ni se afirma disponibilidad nueva desde el retenido.
+- RSS: dos capturas canónicas actuales HTTP200 y contrato físico preparado;
+  200 entradas nativas, 24 declaraciones de septiembre y 16 días observados.
+  Pasaron replay, 240 casos afectados y revisión independiente. Sigue siendo
+  metadatos parciales, sin noticias activadas ni sustitución de GDELT.
+  AFAC aeropuertos: el índice actual devolvió HTTP403; se conserva el libro
+  julio comprobado, con acceso y contrato de la edición actual pendientes.
 - Airline Monthly del corte 24/oct: revisión estática y funcional realizada
   por el agente de Pages: 23 afirmaciones, seis fuentes y cuatro hashes de
   originales confirmados; dos PDF de Aeroméxico devolvieron HTTP503. Falta la
