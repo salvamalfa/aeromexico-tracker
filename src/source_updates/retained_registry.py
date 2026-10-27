@@ -71,7 +71,8 @@ def spec(product: str) -> dict:
             "code_files": [Path(context_snapshots.__file__)],
         }
     registry["am_financials"] = {
-        "roles": {"pdf": ("aeromexico_ir",)},
+        "roles": {"pdf": ("aeromexico_ir",), "html": ("aeromexico_ir",)},
+        "role_sets": [{"pdf"}, {"html"}],
         "primary": "pdf",
         "table": financials.TABLE,
         "grain": financials.GRAIN,
@@ -79,6 +80,7 @@ def spec(product: str) -> dict:
         "revision_values": ["value", "unit", "is_preliminary", "is_unaudited"],
         "code_files": [
             Path(financials.__file__),
+            ROOT / "src/source_updates/financials_html.py",
             ROOT / "src/parse/aeromexico_ir_financial.py",
             ROOT / "src/parse/aeromexico_ir.py",
         ],

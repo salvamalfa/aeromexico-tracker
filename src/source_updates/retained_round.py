@@ -137,6 +137,16 @@ def execute(recipe: dict, workspace: Path, *, write=False) -> dict:
                         artifacts=certified["lineage"]["artifact_count"],
                         retention_run_id=saved["run_id"],
                         offline_replay_identical=True,
+                        **{
+                            key: certified[key]
+                            for key in (
+                                "numeric_policy_id",
+                                "numeric_check_status",
+                                "numeric_warning_count",
+                                "numeric_warnings",
+                            )
+                            if key in certified
+                        },
                     )
                 )
             except Exception as exc:

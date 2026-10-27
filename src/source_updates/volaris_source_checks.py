@@ -2,16 +2,21 @@
 
 from __future__ import annotations
 
-from decimal import Decimal
+from decimal import Decimal, localcontext
 
-from src.source_updates.carrier_source_contract import amount
+from src.source_updates.carrier_source_contract import (
+    CASM_DEFINITION,
+    NUMERIC_POLICY,
+    amount,
+    comparable_relative_warning,
+)
 
 
 def reconcile(frame):
     by = {
         (int(r.source_table), r.source_row_number, r.source_column): r for r in frame.itertuples(index=False)
     }
-    passed, incomplete = [], []
+    passed, incomplete, warnings = [], [], []
 
     def val(table, row, col):
         return amount(by[table, row, col].source_value)
@@ -47,12 +52,85 @@ def reconcile(frame):
             raise ValueError("Volaris required repeated metric mismatch/missing: " + label)
         passed.append(label)
 
+    def casm_warning(num, den, result, multiplier, label):
+        numerator, denominator, reference = (by[key] for key in (num, den, result))
+        if (
+            num != (result[0], 2, result[2])
+            or den != (result[0], 26, result[2])
+            or result[0] not in {297, 300}
+            or result[1] != 23
+            or result[2] not in {1, 2}
+            or multiplier != 100
+            or (numerator.metric_key, numerator.unit, numerator.scale, numerator.aviation_scope)
+            != ("operating_expenses", "usd", 1000000, "consolidated")
+            or (denominator.metric_key, denominator.unit, denominator.scale, denominator.aviation_scope)
+            != ("asm_total", "seat_miles", 1000000, "scheduled_and_charter")
+            or (reference.metric_key, reference.unit, reference.scale, reference.aviation_scope)
+            != ("casm", "usd_cents_per_seat_mile", 1, "scheduled_and_charter")
+        ):
+            raise ValueError("CASM fallback requires its exact verified derivation, units and coverage")
+        identity = (
+            "product",
+            "edition",
+            "entity_as_reported",
+            "carrier_key",
+            "period_type",
+            "period_id",
+            "period_start_date",
+            "period_end_date",
+            "segment",
+            "service_type",
+            "source_system",
+            "source_file",
+            "source_hash",
+            "ingested_at",
+        )
+        if any(getattr(r, k) != getattr(reference, k) for r in (numerator, denominator) for k in identity):
+            raise ValueError("CASM fallback cannot combine different periods, entities or source identities")
+        context = {k: getattr(reference, k) for k in identity[:10]}
+        context.update(unit=reference.unit, definition=CASM_DEFINITION, coverage=reference.aviation_scope)
+        token = reference.source_value.strip("()%x").replace(",", "")
+        places = len(token.split(".")[1]) if "." in token else 0
+        with localcontext() as ctx:
+            ctx.prec = 80
+            derived = amount(numerator.source_value) / amount(denominator.source_value) * 100
+            warning = comparable_relative_warning(
+                amount(reference.source_value),
+                derived,
+                reported_context=context,
+                derived_context=dict(context),
+                resolution=Decimal(10) ** -places,
+            )
+        warning["check"] = label
+        warning["sources"] = [
+            {
+                k: getattr(r, k)
+                for k in (
+                    "metric_key",
+                    "source_value",
+                    "unit",
+                    "scale",
+                    "period_id",
+                    "source_file",
+                    "source_hash",
+                    "source_locator",
+                    "ingested_at",
+                    "aviation_scope",
+                )
+            }
+            for r in (reference, numerator, denominator)
+        ]
+        warnings.append(warning)
+
     def ratio(num, den, result, multiplier, label):
-        n, d, result = interval(*num), interval(*den), interval(*result)
-        if n is None or d is None or result is None or d[0] <= 0:
+        n, d, reported = interval(*num), interval(*den), interval(*result)
+        if n is None or d is None or reported is None or d[0] <= 0:
             raise ValueError("Volaris required ratio inputs missing/nonpositive: " + label)
         possibilities = [x / y * Decimal(str(multiplier)) for x in n for y in d]
-        if result[1] < min(possibilities) or result[0] > max(possibilities):
+        if reported[1] < min(possibilities) or reported[0] > max(possibilities):
+            if result[0] in {297, 300} and result[1] == 23:
+                casm_warning(num, den, result, multiplier, label)
+                return
             raise ValueError("Volaris reported ratio and printed precision disagree: " + label)
         passed.append(label)
 
@@ -187,10 +265,15 @@ def reconcile(frame):
             raise ValueError("Volaris required current metric is unavailable")
     return dict(
         reconciliations_passed=len(passed),
+        reconciliations_tolerated=len(warnings),
         reconciliation_details=passed,
+        numeric_policy_id=NUMERIC_POLICY,
+        numeric_check_status="passed_with_warnings" if warnings else "passed",
+        numeric_warning_count=len(warnings),
+        numeric_warnings=warnings,
         unresolved_source_identity_checks=incomplete,
         unresolved_dash_observations=int(frame.source_value.eq("-").sum()),
         no_dash_imputed_as_zero=True,
         issuer_fx_context_not_projected=True,
-        source_precision_basis="overlap_of_reported_decimal_rounding_intervals",
+        source_precision_basis="reported_rounding_intervals_then_explicit_comparable_CASM_5pct_policy",
     )

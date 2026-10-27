@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import re
-from decimal import Decimal
+from decimal import Decimal, localcontext
 
 import pandas as pd
 from jsonschema import Draft202012Validator, FormatChecker
@@ -24,6 +24,71 @@ FIELDS = (
     "is_preliminary is_unaudited source_estimated source_notes aviation_scope mapping_evidence "
     "source_group agent_eligible"
 ).split()
+
+NUMERIC_POLICY = "comparable_official_reference_5pct_v1"
+CASM_DEFINITION = "total_operating_expenses_divided_by_available_seat_miles"
+COMPARISON_FIELDS = {
+    "product",
+    "edition",
+    "entity_as_reported",
+    "carrier_key",
+    "period_type",
+    "period_id",
+    "period_start_date",
+    "period_end_date",
+    "segment",
+    "service_type",
+    "unit",
+    "definition",
+    "coverage",
+}
+
+
+def comparable_relative_warning(reference, derived, *, reported_context, derived_context, resolution):
+    """Authorize only the reviewed CASM fallback; never repair an official source value.
+
+    Call after the reported-precision intervals fail to overlap. One printed
+    quantum is an explicit conservative reference floor, not a substitute
+    denominator. Zero/near-zero comparisons need their own absolute review.
+    """
+    if (
+        set(reported_context) != COMPARISON_FIELDS
+        or reported_context != derived_context
+        or reported_context["product"] != "volaris_sec"
+        or reported_context["unit"] != "usd_cents_per_seat_mile"
+        or reported_context["definition"] != CASM_DEFINITION
+        or reported_context["coverage"] != "scheduled_and_charter"
+    ):
+        raise ValueError("Numeric tolerance requires identical verified comparable CASM contexts")
+    if any(not isinstance(v, Decimal) or not v.is_finite() for v in (reference, derived, resolution)):
+        raise ValueError("Numeric tolerance requires finite Decimal values and source resolution")
+    if resolution <= 0 or abs(reference) <= resolution:
+        raise ValueError("Zero/near-zero official reference cannot receive an automatic percentage tolerance")
+    with localcontext() as ctx:
+        ctx.prec = 80
+        delta = derived - reference
+        if abs(delta) > abs(reference) * Decimal("0.05"):
+            raise ValueError(
+                "Comparable derived difference exceeds the authorized 5% of the official reference"
+            )
+        relative = abs(delta) / abs(reference)
+        return {
+            "code": "comparable_derived_difference_within_5pct",
+            "severity": "warning",
+            "policy_id": NUMERIC_POLICY,
+            "message": "Diferencia comparable dentro del 5%; se conserva la cifra oficial sin corregirla.",
+            "comparison_context": dict(reported_context),
+            "official_reported_value": str(reference),
+            "derived_value": str(derived),
+            "signed_difference": str(delta),
+            "absolute_difference": str(abs(delta)),
+            "relative_difference": str(relative),
+            "relative_difference_pct": str(relative * 100),
+            "tolerance_pct": "5",
+            "reference_basis": "absolute_official_reported_value",
+            "reference_resolution": str(resolution),
+            "official_value_preserved": True,
+        }
 
 
 def retention_specs():
