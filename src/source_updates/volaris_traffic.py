@@ -353,7 +353,8 @@ def texts(pages, period, original):
         official_values_preserved=True,
         rounding_policy=(
             "printed precision first (sums1.5 native units; ratio/change intervals), then comparable "
-            "5% of absolute official reference with visible warning; zero/near-zero excluded; figures unchanged"
+            "5% of absolute official reference with visible warning; "
+            "zero/near-zero excluded; figures unchanged"
         ),
         rounding_reconciliation_deltas=rounding_deltas,
     )
