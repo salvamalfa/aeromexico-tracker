@@ -16,7 +16,8 @@ from bs4 import BeautifulSoup
 
 from src.source_updates import availability as physical
 from src.source_updates.calendar import local_time
-from src.source_updates.oma_traffic import parse
+from src.source_updates.oma_traffic import TABLE, parse
+from src.transform.stage9_lineage import add_record_ids
 
 SCOPE = "oma_official_newsroom_v1"
 HOST = "news.oma.aero"
@@ -154,6 +155,11 @@ def verify(item, result, cutoff):
     ):
         raise ValueError("OMA newsroom must bind the latest closed month and literal paired PDF")
     frame, details = parse({"pdf": (data_path.read_bytes(), data_record)}, period)
+    frame = add_record_ids(
+        frame,
+        table_name=TABLE,
+        natural_key_columns=["source_hash", "source_locator", "parser_version", "period_id", "metric_key"],
+    )
     native = pd.read_parquet(Path(item["workspace"]) / "data/silver/source_products/oma_traffic.parquet")
     if set(native) != set(frame):
         raise ValueError("OMA newsroom native schema differs from complete source replay")

@@ -13,6 +13,7 @@ from src.common.storage import save_bronze
 from src.source_updates import availability
 from src.source_updates import availability_oma_newsroom as source
 from src.source_updates.catalog import ROOT
+from src.transform.stage9_lineage import add_record_ids
 
 NEWS = "https://news.oma.aero/news/oma-september-2026-traffic.html"
 PDF = "https://news.oma.aero/assets/oma-september-2026-traffic.html?dl=1"
@@ -131,10 +132,25 @@ def physical(monkeypatch):
     receipt_path = collection / "receipts" / f"collection-{run_id}.json"
     receipt_path.parent.mkdir()
     receipt_path.write_text(json.dumps(receipt))
-    frame = pd.DataFrame(dict(value=[1, 2], source_file=[rows[1]["source_file"]] * 2))
+    frame = pd.DataFrame(
+        dict(
+            value=[1, 2],
+            source_file=[rows[1]["source_file"]] * 2,
+            source_hash=[rows[1]["sha256"]] * 2,
+            source_locator=["row:1", "row:2"],
+            parser_version=["test"] * 2,
+            period_id=["2026M09"] * 2,
+            metric_key=["passengers"] * 2,
+        )
+    )
+    identified = add_record_ids(
+        frame,
+        table_name=source.TABLE,
+        natural_key_columns=["source_hash", "source_locator", "parser_version", "period_id", "metric_key"],
+    )
     native = candidate / "data/silver/source_products/oma_traffic.parquet"
     native.parent.mkdir(parents=True)
-    frame.to_parquet(native)
+    identified.to_parquet(native)
 
     def replay(inputs, period):
         assert inputs["pdf"][0] == b"%PDF-contract" and period == "2026M09"
@@ -162,7 +178,7 @@ def physical(monkeypatch):
         receipt=receipt,
         receipt_path=receipt_path,
         bronze=bronze,
-        frame=frame,
+        frame=identified,
     )
     shutil.rmtree(root)
 
