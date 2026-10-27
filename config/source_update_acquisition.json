@@ -26,7 +26,7 @@
     "am_traffic_ir": {
       "entry_ref": "url:https://ir.aeromexico.com/news-events/traffic-reports",
       "state": "conditional",
-      "format": "Índice HTML → PDF o 6-K HTML oficial revisado",
+      "format": "HTML (índice) → PDF o 6-K HTML oficial revisado",
       "procedure": "recipe --output selection --catalog-file <indice.html> --period YYYYMmm selecciona el enlace real del mes. El lector PDF existente conserva su alcance. Para septiembre 2026 existe además el 6-K oficial https://ir.aeromexico.com/node/9131/html, entidad de selección am_traffic_ir_2026M09_6K: solo Exhibit 99.4, atribuido por cover al comunicado del 6 de octubre, no el reporte financiero del 19 de octubre. Combinar selección del índice y ese HTML en una colección pareada del producto am_traffic_ir, dos GET base y cero pagados. python -m src.source_updates.am_traffic_candidate --workspace <candidato> --period <mes> --as-of <corte> --collection <id> permite preview, --execute y --check offline. Cuatro métricas por tres segmentos, doce cifras mensuales y doce comparativas; separa acumulados, pasajeros miles, ASM/RPM millones de millas y ocupación solo itinerario. Conserva fecha/captura, hash y locator. HTML tiene preliminar desconocido en nativo; el booleano Gold heredado indica únicamente si la fuente lo marca, no final definitivo; notas/recibo conservan not_stated. Verifica unidades/glosario, redondeo y ámbito. Disponibilidad HTML vincula índice actual y cuerpo 99.4 contemporáneos como formatos oficiales distintos, sin enlace directo índice-HTML, equivalencia de bytes PDF ni hora de primera publicación. No reintentar PDF fallido para sustituirlo silenciosamente; no incorpora warehouse, datos públicos o tesis."
     },
     "am_sec": {
