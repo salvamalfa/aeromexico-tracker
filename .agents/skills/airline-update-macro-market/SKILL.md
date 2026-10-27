@@ -121,8 +121,9 @@ son obligatorios. No usar el certificador nativo `retained` para estos productos
 Integrar el recibo con `adapter=series` y su ID de retención en `readiness` o
 `global_readiness`. No pasar una revisión local como ronda completa. Las series
 completas significan todas las observaciones de los originales seleccionados;
-la disponibilidad actual y el calendario completo de observaciones siguen sin
-acreditar. Publicación y rezago desconocidos quedan nulos. El pipeline anterior
+el calendario no se acredita por defecto. Banxico puede aportar el método
+físico adicional descrito abajo; EIA/mercado conservan su límite. Publicación
+y rezago desconocidos quedan nulos. El pipeline anterior
 conserva su utilidad para adquisición/diagnóstico, no recibe certificación por
 la existencia de este adaptador. No cambia Gold público ni activa calendario.
 
@@ -147,9 +148,40 @@ capturas, fechas, métodos o recibos; conservar raíces y recibos originales.
 
 Este vínculo acredita respuestas actuales para la ventana histórica solicitada.
 `latest_available_period` y primera publicación siguen nulos. El calendario
-completo de observaciones sigue **sin acreditar** y bloquea incorporación en
-la política global, tanto mensual como trimestral. Los recuentos de datos y
+de observaciones no se acredita con las respuestas por sí solas; sin evidencia
+adicional bloquea incorporación tanto mensual como trimestral. Los recuentos de datos y
 el último día observado no prueban los días en que debía existir una observación.
 No compartir calendario entre FIX, tasa, inflación, EIA y bolsas. La evidencia
 Yahoo `tradingPeriods` de AERO es solo un insumo candidato, sin prueba aún de
 exhaustividad ni de los cinco tickers; no se usa para cambiar esos flags.
+
+### Calendario de observaciones Banxico
+
+La retención admite exactamente tres roles, o esos tres más
+`--original fix_methodology=<ruta-Bronze-exacta>`. El cuarto es el HTML oficial
+`METHOD_URL` de `src.source_updates.banxico_calendar`, edición revisada SHA
+`f49a330d…`; conservar original, manifiesto, sidecar y captura. No representa
+una cotización ni se incorpora como padre del linaje numérico. Otra edición
+requiere revisión; no transformar una página nueva en la ya revisada.
+
+Ejecutar primero `series_candidate retain --dry-run` con los cuatro roles y
+después `--execute`. En un candidato nuevo, `certify --period 2026M09 --as-of
+<corte-posterior-a-las-capturas> --retention <id>` admite preview, ejecución y
+replay `--check`. El corte real probado fue `2026-10-27T06:30:00-06:00`.
+Usar después el binding de disponibilidad de las **tres consultas CSV**:
+la evidencia metodológica adicional se relee desde el candidato, no exige
+fingir una cuarta consulta de datos ni reescribir la colección original.
+
+FIX usa Fecha de Determinación y el conjunto exacto de hábiles bancarios
+mexicanos verificados. INPC exige una observación por mes, anclada al día 1.
+Para tasa, cubrir todas las etiquetas diarias posibles es condición suficiente;
+no se infiere el calendario esperado del proveedor desde una ausencia.
+Septiembre verificó 21/1/30. Q3 verificó 65/3/91 y queda no certificado frente
+al universo diario por el 12/julio no observado. No imputar ni reducir el
+requisito. Tres roles antiguos mantienen `false`; un booleano manual no lo cambia.
+
+El recibo liga método, cuatro originales, calendario bancario y cálculo por
+hash, con reproducción física en `check`, Gold, disponibilidad y readiness.
+2027 permanece bloqueado sin calendario oficial. Las 12 h de la metodología
+no fechan primera publicación; publicación y rezago siguen nulos. Esta prueba
+no acredita otros productos, ronda completa ni activación.

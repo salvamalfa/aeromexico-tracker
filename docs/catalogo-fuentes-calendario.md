@@ -45,13 +45,24 @@ RSS y las consultas Banxico/EIA/cotizaciones se integraron en
 La CI posterior `40496962410` está aprobada. Su ensayo real acepta
 once tareas, pero doce tareas requeridas no incluidas, seis controles de
 calendario de observaciones y los reportes centrales bloquean la ronda.
-Esos conteos pertenecen a aquel runtime; no se trasladan a código posterior
-sin repetir la validación correspondiente.
+Esos conteos pertenecen a aquel runtime. El nuevo ensayo completo del SRC
+`4b097b10`, runtime `70bff488`, vuelve a verificar once tareas y reduce los
+controles pendientes de observaciones a cinco: Banxico mensual queda
+certificado. Las doce tareas requeridas no incluidas y la ronda global siguen
+bloqueadas; no hay publicación ni activación.
+
+Avisar un reporte financiero confirmado no espera la ronda de datos. Se
+registran por separado detección, comprobación de fuente primaria, aviso al
+usuario, incorporación de cifras y autorización de publicación/tesis. Volaris
+3T26 ya fue avisado el 27/oct a las 13:09 UTC; no se repite como novedad. El
+coordinador no crea otra automatización de avisos.
 
 La integración de infraestructura no aprueba una ronda de datos. Aerocivil y
 GDELT siguen **requeridos y bloqueados**. Faltan también disponibilidad física
 para otras familias, tráfico mensual Volaris y fechas vinculadas a los reportes
-financieros. Los originales Volaris Q2 y AIFA julio mantienen sus rechazos.
+financieros. AIFA julio conserva su rechazo por fechas. La conciliación CASM Volaris Q2
+se revisa con la tolerancia numérica autorizada el 27/oct; ese cambio todavía
+no forma parte de este runtime.
 Ninguna ventana aislada ni prueba sintética declara lista la ronda completa.
 Los resultados y límites precisos están en el apéndice y en Pendientes.
 
@@ -3158,9 +3169,67 @@ listo. No se añade a las once tareas actuales de PR166 ni se trasladan a este
 runtime sus 65 salidas. No se alteran adquisición manual SEC, Gold público,
 aprobaciones, hosts, permisos, gastos o disparadores.
 
-### Cierre operativo de la ronda: doce tareas y seis controles
+### Banxico: calendario mensual comprobado, trimestre no certificado
 
-El ensayo real de PR166 verificó once tareas en su runtime `4f3bbe19`.
+El SRC `4b097b10` admite exactamente tres CSV Banxico, o esos tres más
+`fix_methodology`. Sin el cuarto original conserva el resultado anterior no
+certificado. Con él, el recibo reconstruye la prueba desde cuatro cuerpos,
+manifiesto, sidecars y el calendario bancario mexicano verificado de 2026.
+No acepta un booleano del usuario ni años sin verificar.
+
+La metodología se capturó una vez desde la URL oficial
+`https://www.banxico.org.mx/tipcamb/tipCamMIAction.do?idioma=sp`, HTTP200,
+17.379 bytes, SHA `f49a330d…`, el 27/oct 12:14:47 UTC. La Nota 2 vincula FIX
+a los hábiles bancarios y se distingue de DOF/pagos. Su hora de difusión no
+acredita primera publicación; se conserva el original como referencia revisada.
+Los tres CSV proceden de las capturas reales previas del mismo día: no se
+recapturaron ni se fabricó una colección al reunirlos offline.
+
+FIX compara el conjunto exacto de fechas de determinación con los hábiles
+bancarios verificados; no basta el recuento. INPC usa su frecuencia mensual
+y ancla nativa al día 1. Para SF61745, observar todas las etiquetas diarias
+posibles es condición suficiente: no se infiere un calendario del proveedor
+desde una ausencia. Las fechas son etiquetas civiles, sin desplazamiento UTC.
+
+| Ventana | FIX | INPC | Tasa | Resultado |
+|---|---|---|---|---|
+| Septiembre | 21/21 | 1/1 | 30/30 del universo diario | Certificado |
+| 3T26 | 65/65 | 3/3 | 91/92 del universo diario; 12/julio no observado | No certificado; no se afirma error del publicador |
+
+El CLI real hizo previews, retención, certificación, disponibilidad y dos
+replays de candidato/readiness por ventana. Las seis salidas mensuales tienen
+52/21/6/4/6/1 filas; las trimestrales 159/65/24/4/24/4. La metodología es un
+artefacto de referencia con cero padres numéricos. Publicación inicial y
+rezago siguen nulos. El resumen `banxico-final-4b097b10-20261027/summary.json`,
+SHA `a1719fcc…`, conserva las doce salidas y los comandos. El proof alterado
+en una copia se rechazó sin modificar fuentes o candidatos aceptados.
+
+Pruebas por alcance: 265 contratos/reconciliaciones/presupuestos antes de
+los ajustes independientes; 25 afectadas tras los ajustes, sin omisiones;
+revisión independiente de tres focales, con cuatro ajenas deseleccionadas.
+El grupo inicial de regresión conservó un fallo de huella por edición de
+fuente durante la ejecución; sus seis batch se repitieron con código quieto
+y pasaron. No se oculta aquel intento ni se suman grupos solapados o se
+atribuye la agregada antigua al runtime nuevo.
+
+El ensayo global del mismo runtime reconstruyó también las otras nueve
+tareas, sin red: once pasan, doce requeridas no están incluidas y los controles
+de observaciones bajan de seis a cinco. De 58 salidas, 56 conservan exactamente
+sus hashes; las otras dos solo añaden la referencia metodológica a la dimensión
+de artefactos Banxico. No cambian valores ni linaje numérico. Se conservan
+los rezagos AFAC/BTS y el alcance parcial RSS. La fecha trimestral sigue nula.
+
+El replay financiero original pasó en 46,60 s y los 79 adversariales en
+4,928 s. El dictamen local auténtico `b01de7bb…` vincula el runtime `70bff488…`;
+la CLI local devuelve `valid=true`, `publication_authorized=false`. Autoridad,
+fuentes y publicación originales permanecen exactas. Conservar módulos,
+pruebas, originales, recibos y dictámenes; actualizar esta guía y las skills,
+sin informes paralelos, datos públicos, hosts, credenciales o disparadores nuevos.
+
+### Cierre operativo de la ronda: doce tareas y cinco controles pendientes
+
+El ensayo real de PR166 verificó once tareas en su runtime `4f3bbe19`; el nuevo
+ensayo `4b097b10` las reconstruyó completas y cerró el control mensual Banxico.
 Las doce siguientes no se incluyeron como verificadas. No son doce servicios
 caídos: se separan implementación, edición requerida y acceso físico. La
 ausencia de un archivo en el expediente tampoco demuestra que no exista una
@@ -3177,21 +3246,21 @@ publicación oficial.
 | Mensual OMA | Contrato existente; PDF septiembre HTTP404 e índice alternativo HTTP202 | Documento oficial accesible o enlace corregido |
 | Mensual Volaris | Falta adaptador mensual y host de su PDF identificado | Decisión ya preparada: admitir solo `filemanager-cdn.mziq.com`; después implementar y probar |
 | Trimestral Aerocivil | Comprobación numérica; leyenda y atribución del conjunto sin acreditar | Autorizar contacto al publicador de `jh8x-n6h6`, sin inferir códigos de otro conjunto |
-| Trimestral AM finanzas | Q2 acotado a veinte métricas; PDF Q3 retenido identificado, pero solo imágenes | Adaptación Q3 desde el HTML retenido usado en la publicación; resolver su atribución formal al contrato, sin ampliar hosts implícitamente |
+| Trimestral AM finanzas | Q2 acotado a veinte métricas; PDF Q3 de imágenes y nuevo 6-K HTML oficial retenidos | Revisar Exhibit 99.1 del HTML IR y adaptar veinte métricas, sin mezclar anexos de tráfico ni ampliar hosts |
 | Trimestral Viva finanzas | Certificador Q2; falta índice que enlace sus originales y dossier Q3 | Edición financiera oficial del trimestre; tráfico y ZIP XBRL no sustituyen el PDF |
-| Trimestral Volaris | Q2 bloqueado por CASM; Q3 requiere dossier y adaptación propios | Validar Q3 por separado; no sobrescribir el comparativo histórico |
+| Trimestral Volaris | Q2 pendiente de aplicar la tolerancia autorizada a su conciliación CASM; Q3 requiere dossier propio | Conservar cifras y advertencia de Q2; adaptar Q3 por separado |
 
-Los seis controles son **tres productos por dos ventanas**, septiembre y 3T26.
-Hoy `series_candidate`, `series_native` y `series_gold` conservan
-`calendar_completeness_certified=false` de forma incondicional: queda pendiente
-implementar la aceptación de calendarios oficiales por serie, además de obtener
-su evidencia. No basta con contar filas ni con cambiar ese booleano.
+De los seis controles anteriores queda pendiente **uno Banxico trimestral,
+dos combustible y dos cotizaciones**. Banxico ya calcula y reproduce el
+resultado cuando se aporta el método físico; tres roles antiguos conservan
+`false`. Para combustible/bolsas siguen pendientes implementación y evidencia
+de su calendario específico. No basta contar filas ni cambiar el booleano.
 
-| Producto, ambas ventanas | Evidencia y trabajo que faltan |
-|---|---|
-| Banxico | Calendario de FIX, INPC y tasa por separado; el CSV SF61745 omite 12/julio. Frecuencia diaria no determina por sí sola los festivos ni autoriza imputar |
-| EIA combustible | Calendario de observaciones y excepciones atribuible a la serie exacta; no trasladar el calendario de otra publicación de EIA |
-| Cotizaciones | Implementación y calendarios de las cinco series/mercados; la muestra AERO no demuestra exhaustividad. Las páginas oficiales NYSE/Nasdaq sí muestran 2026, pero faltan inputs físicos y vínculo a cada instrumento; OTC requiere evidencia propia |
+| Producto | Ventana pendiente | Evidencia y trabajo que faltan |
+|---|---|---|
+| Banxico | 3T26 | SF61745 no observa 12/julio en el universo diario suficiente; hace falta evidencia oficial para resolverlo, sin imputar ni atribuir error al proveedor |
+| EIA combustible | Septiembre y 3T26 | Calendario de observaciones/excepciones de la serie exacta y su verificador; no trasladar el calendario de otra publicación |
+| Cotizaciones | Septiembre y 3T26 | Verificador e inputs físicos para cinco series/mercados; NYSE/Nasdaq tienen 2026 en sus páginas, pero falta vincular cada instrumento y la evidencia propia OTC |
 
 Los calendarios primarios localizados son
 [NYSE](https://www.nyse.com/markets/hours-calendars) y
@@ -3203,15 +3272,18 @@ extraíble. No se usa OTC Bulletin Board como equivalente de otro mercado OTC.
 
 La política y el calendario ya están aprobados. Las decisiones externas
 preparadas son el host mensual de Volaris y el contacto Aerocivil. AM Q3
-añade una elección concreta de fuente: el PDF IR está compuesto por imágenes;
-el HTML GlobeNewswire ya retenido y usado en la publicación contiene las veinte
-métricas. Reutilizarlo en `am_financials` requiere explicitar su atribución y
-alcance; no se presenta como el PDF ni se amplía la lista de hosts por defecto.
+ya aporta una alternativa dentro del host IR admitido: el 6-K HTML
+`https://ir.aeromexico.com/node/9131/html`, capturado HTTP200 el 27/oct
+13:20:28 UTC, SHA `d8014d7f…`, 455.619 bytes, junto con el índice financiero
+SHA `bc6d5a74…`. Falta revisar el Exhibit 99.1 y adaptar las veinte métricas;
+no se afirma equivalencia de bytes con el PDF ni hora de publicación. Esto
+puede resolver la atribución sin añadir un host financiero GlobeNewswire.
 Los demás
 puntos requieren trabajo técnico o material verificable, no otra autorización
-genérica ni una decisión para rebajar criterios. Los tres reportes financieros
-centrales aún necesitan sus vínculos físicos e instantes con zona; la fecha
-trimestral sigue nula. No hay disparadores activados.
+genérica ni una decisión para rebajar criterios. El contrato actual aún exige instantes con zona. El dueño autorizó el 27/oct
+usar el día oficial con precisión explícita cuando baste para calcular hábiles,
+sin inventar hora: su implementación y pruebas siguen pendientes. La fecha
+trimestral permanece nula mientras no estén confirmados los tres reportes. No hay disparadores activados.
 
 ## Pendientes
 
@@ -3271,7 +3343,12 @@ trimestral sigue nula. No hay disparadores activados.
   el dossier financiero 2026Q2; no satisface el mes obligatorio ni puede
   sustituirse por un trimestre. No son fallos externos ni se resolverán con
   un booleano manual o comprobando solo Gold.
-- Volaris Q2 conserva la discrepancia CASM H1 2025. El original 2T25 confirma
+- Aplicar la tolerancia inicial autorizada del 5 % a conciliaciones derivadas
+  realmente comparables, con referencia estable, misma unidad/periodo/cobertura
+  y diferencia absoluta/relativa visible. No alterar las cifras oficiales ni
+  aplicarla a ausencias, fechas, unidades, atribución o integridad. Referencias
+  cero o cercanas a cero no admiten porcentaje automático. La discrepancia
+  CASM H1 2025 de Volaris Q2 se revisará bajo ese alcance. El original 2T25 confirma
   que no nace de seleccionar mal el comparativo 2026. El reporte 3T26 nuevo
   no corrige ese histórico. AFAC agosto conserva la advertencia internacional.
   RSS, BTS, GAP/ASUR, Viva y los demás adaptadores mantienen límites de edición,
@@ -3283,13 +3360,14 @@ trimestral sigue nula. No hay disparadores activados.
   conservado separado de datos válidos. No se repite ese intento. Se conservan
   también 429, 503 y rechazos previos. Ambos productos siguen obligatorios;
   no se sustituyen silenciosamente por RSS, NGrams u otra fuente.
-- Completar instantes con zona y vínculo físico de los tres reportes centrales
-  antes de fechar una ronda trimestral. El wire primario AM2T26 aporta un lead
+- Adaptar la evidencia temporal al día oficial explícito cuando no se conozca
+  una hora y esta no cambie el cálculo de hábiles; decisión autorizada el 27/oct.
+  Mantener atribución al reporte financiero, trimestre y emisor reales. El wire primario AM2T26 aporta un lead
   de 13/jul 17:00 ET; falta verificar su vínculo al payload. La hora BMV de un
   ZIP XBRL Viva no fecha su Earnings Release PDF y carece de zona declarada.
   Volaris Q2 no tiene hora elegible verificada; no usar aceptación SEC como
-  primera publicación. Cambiar a precisión diaria sería una decisión explícita
-  de contrato, nunca rellenar horas. Viva IR todavía muestra Q2: el trío Q3 no
+  primera publicación. La precisión diaria autorizada requiere implementación y pruebas; nunca
+  rellenar horas. Viva IR todavía muestra Q2: el trío Q3 no
   está completo y su fecha sigue nula. No inventar el 2 de noviembre.
   El índice financiero AM capturado el 27/oct 11:19 UTC respondió HTTP200
   (SHA `bc6d5a74…`) y anuncia 3T26 y otra edición PDF de 2T26. Su enlace

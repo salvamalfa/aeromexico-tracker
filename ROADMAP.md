@@ -4,112 +4,55 @@ Propuesta — el dueño decide prioridades.
 
 ## Ahora
 
-- Actualización por lotes: probar el
-  [catálogo de fuentes/métricas y calendario](docs/catalogo-fuentes-calendario.md).
-  Una ronda mensual desde el 15 y una trimestral según publicaciones reales;
-  calendario aprobado y coordinador candidato con skills por familia y pruebas
-  en seco. La reconciliación de los cuatro certificadores se reúne en
-  [PR156](https://github.com/salvamalfa/aeromexico-tracker/pull/156), integrado
-  en `70fb03ec` tras CI y revisión Codex favorables del head `a10c2e69`.
-  PR152/154/155 quedaron integrados con sus heads conservados. La
-  [CI posterior del merge](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40450942960)
-  conserva su resultado verificable. La agregada
-  local previa pasó 5.129 casos; preparación optimizada de 39:47 a 36:33
-  (8,1 % observado localmente, sin prometer ahorro remoto).
-  AIFA septiembre ya tiene extracción oficial, vínculo físico de disponibilidad
-  y revisión independiente: código integrado en
-  [PR161](https://github.com/salvamalfa/aeromexico-tracker/pull/161), merge
-  `6d78cf8f`, con CI y Codex favorables y CI posterior `40455383797` aprobada.
-  Sus datos siguen siendo candidatos. Pasaron
-  1.680 casos de fuentes y 99 financieros (una omisión histórica). La captura
-  del índice del 27/oct local volvió a anunciar julio: se conserva septiembre
-  en su corte histórico del 26/oct, sin acreditar disponibilidad actual. Aerocivil,
-  GDELT, tráfico mensual Volaris y fechas verificadas siguen bloqueando la
-  ronda completa. No están activados calendario ni nuevas ingestas/noticias.
-  [PR162](https://github.com/salvamalfa/aeromexico-tracker/pull/162), integrado
-  en `53c9b2a2`, pasó CI y Codex del head `a43725af` y CI posterior
-  `40466462847`. AICM y Viva septiembre tienen colección real,
-  certificación completa y vínculo físico a los índices del día local 27/oct;
-  OMA septiembre conserva HTTP404 del PDF y HTTP202 del índice alternativo.
-  Validación: 1.791 casos de fuentes/pipeline/documentación, 142 financieros
-  y revisión independiente favorable; continuidad financiera solo local, con
-  publicación y autoridad originales exactas. Faltan los contratos físicos
-  de las otras familias descritos en la guía; no se declara lista la ronda.
-
-- Aeroméxico 3T26: lectura e indicadores publicados con evidencia y aprobación
-  vinculadas, mediante PR149/160. Conservar publicación y autoridad originales
-  durante la integración técnica de las skills; no queda una nueva tesis
-  pendiente de publicar por este encargo.
-- AFAC: conservar el original de agosto y su advertencia internacional;
-  la colección del 27/oct confirmó índice, PDF y base ZIP con HTTP200 y los
-  mismos hashes. La continuación técnica `1c9b3392` vincula los dos originales
-  al dossier completo reproducido: 4.930 nativas, 112 Gold y 474 conciliaciones.
-  Conserva la cobertura internacional incompleta; disponibilidad documental
-  no equivale a universo completo ni activa la ronda.
-- BTS: contrato físico integrado en
-  [PR164](https://github.com/salvamalfa/aeromexico-tracker/pull/164), merge
-  `e049eb00`, tras CI `40480306782` y Codex favorables del head `36862fb0`.
-  CI posterior `40484738784` aprobada. Usa la fila FJE del historial y descarga
-  México del año actual y del revisado. Extracción real: 12.459 filas en 2026
-  hasta julio; 18.081 en 2023, iguales al baseline explícito. Pasaron 236
-  contratos afectados y revisión independiente; disponibilidad de julio
-  verificada al día local 27/oct. No acredita universo completo por operador,
-  ni fechas de primera publicación, ni una ronda global lista. El ensayo
-  global real acepta los cuatro productos AICM/Viva/AFAC/BTS y rechaza
-  incorporación por las otras 19 tareas requeridas y los reportes centrales
-  sin vínculo. Son tareas no incluidas, no 19 fuentes declaradas caídas.
-- Tráfico IR Aeroméxico: contrato de índice actual/PDF integrado en
-  [PR165](https://github.com/salvamalfa/aeromexico-tracker/pull/165), merge
-  `ffe7cfa1`, tras CI `40484959407` y Codex favorables de `baaa8bfc`.
-  CI posterior `40489330870` aprobada. Tiene
-  extracción real del original de septiembre retenido desde 19/oct: 24
-  observaciones y siete salidas idénticas. Pasaron 408 casos afectados y
-  revisión independiente. Índice del 27/oct HTTP200; falta el PDF actual en
-  colección del mismo día. No se confunde ese pendiente externo con una
-  implementación ausente ni se afirma disponibilidad nueva desde el retenido.
-- RSS: dos capturas canónicas actuales HTTP200 y contrato físico integrado en
-  [PR166](https://github.com/salvamalfa/aeromexico-tracker/pull/166), merge
-  `5c24c817`, con CI `40494417732` y Codex favorables del head `dcb747f5`;
-  CI posterior `40496962410` aprobada.
-  200 entradas nativas, 24 declaraciones de septiembre y 16 días observados.
-  Pasaron replay, 240 casos afectados y revisión independiente. Sigue siendo
-  metadatos parciales, sin noticias activadas ni sustitución de GDELT.
-  AFAC aeropuertos: el índice actual devolvió HTTP403; se conserva el libro
-  julio comprobado, con acceso y contrato de la edición actual pendientes.
-- Macro y mercado: contratos físicos de tres CSV Banxico, XLS EIA y cinco
-  JSON de cotizaciones integrados en PR166 y probados con capturas actuales. Pasaron
-  seis dossiers reales: septiembre y 3T26 por producto. El ensayo combinado
-  verifica 11 tareas y mantiene bloqueada la incorporación: 12 obligatorias
-  no incluidas, seis controles de calendario y reportes centrales sin vínculo.
-  El CSV SF61745 no contiene el 12/jul; no se imputa. No se deriva cobertura
-  completa desde recuentos de datos o metadatos de sesiones de un solo ticker.
-  El [desglose operativo de doce tareas y seis controles](docs/catalogo-fuentes-calendario.md#cierre-operativo-de-la-ronda-doce-tareas-y-seis-controles)
-  distingue código pendiente, material y decisiones concretas. Los tres
-  certificadores de series aún bloquean incondicionalmente el calendario:
-  falta implementar la aceptación de evidencia oficial por serie, sin cambiar
-  los criterios. Las decisiones preparadas son el host mensual Volaris y el
-  contacto al publicador Aerocivil; no falta una aprobación genérica del calendario.
-- GAP julio: contrato de expediente histórico preparado y probado localmente
-  sobre `76e8fab1`, con cinco originales y nueve salidas, 72 reconciliaciones y
-  dos replays de candidato y ronda. Pasaron 89 casos afectados y revisión
-  independiente; continuidad financiera exacta local aprobada. Falta completar
-  su PR/CI/revisión final antes de integrarlo. Su corte es 20/ago a las 18:20
-  México: no acredita septiembre ni reduce los doce faltantes actuales.
-- Airline Monthly del corte 24/oct: revisión estática y funcional realizada
-  por el agente de Pages: 23 afirmaciones, seis fuentes y cuatro hashes de
-  originales confirmados; dos PDF de Aeroméxico devolvieron HTTP503. Falta la
-  revisión visual completa por login y la aprobación editorial final del dueño.
-  La transferencia local HTTP401 no invalida esa revisión ni autoriza modificar
-  el HTML. Sin integración de PR140, publicación ni envío por correo.
-- [Dashboard existente](https://salvamalfa.github.io/aeromexico-tracker/):
-  enlace comprobado con HTTP200 y TLS estándar el 27/oct. El navegador cloud
-  no completó la revisión interactiva por su cadena de certificados; no se
-  deshabilitó TLS ni se rediseñó la interfaz.
-- La [base BTS del 18 de octubre](docs/etapas/bts-refresco-cobertura-20261017.md)
-  incorpora los meses retenidos de 2026 y conserva estimaciones declaradas.
-  La opción adicional de estimaciones de EEUU sigue pendiente de decisión
-  independiente; no se activa con esta base. La [prueba AFAC/AICM](docs/plan-salida-aerodatabox.md)
-  documenta la viabilidad condicional de una semilla congelada y sus límites.
+- **Skills y calendario:** ocho skills por familia y coordinador ejecutable,
+  con integración técnica de PR156 y contratos de fuentes PR161–167. El último
+  [PR167](https://github.com/salvamalfa/aeromexico-tracker/pull/167) quedó integrado
+  en `f35c96b4`, con CI y Codex del head `3a48b763` favorables y CI posterior
+  `40504737268` aprobada. El calendario está aprobado y **sin activar**:
+  mensual el primer hábil bancario mexicano en/después del 15 (17/nov y 15/dic
+  de 2026); trimestral dos hábiles después del último reporte financiero real
+  de las tres aerolíneas, todavía sin fecha verificada.
+- **Preparación actual:** el ensayo combinado del SRC `4b097b10` verifica once
+  tareas del mismo runtime y mantiene doce requeridas no incluidas. Los
+  controles pendientes de observaciones bajaron de seis a **cinco**. Ver el
+  [desglose operativo](docs/catalogo-fuentes-calendario.md#cierre-operativo-de-la-ronda-doce-tareas-y-cinco-controles-pendientes):
+  separa programación, material y decisiones concretas. La ronda completa y
+  sus ejecuciones automáticas siguen bloqueadas; no son doce servicios caídos.
+- **Banxico mensual:** calendario de septiembre comprobado con tres CSV y el
+  original metodológico FIX; 21 fechas FIX, una observación INPC y treinta de
+  tasa. El trimestre sigue no certificado frente al universo diario por el
+  12/julio no observado, sin inferir error del proveedor ni imputar datos.
+  No cambian valores o linaje numérico: 56 de las 58 salidas del ensayo son
+  idénticas; las otras dos solo añaden el método como artefacto de referencia.
+  Los tres originales sin método conservan el estado no certificado.
+- **Siguientes cierres concretos:** tráfico mensual Volaris requiere el host
+  ya propuesto; Aerocivil, leyenda/atribución del conjunto exacto y decisión
+  sobre contacto al publicador; GDELT conserva HTTP503. OMA y AFAC aeropuertos
+  necesitan material oficial accesible. AIFA conserva septiembre histórico,
+  pero el índice actual anuncia julio, cuyo libro falla por fechas. Los
+  expedientes actuales y calendarios de combustible/bolsas siguen pendientes.
+  AM Q3 ya tiene PDF y veinte métricas en el HTML retenido: falta resolver su
+  atribución al contrato de fuentes y completar el adaptador, no conseguir
+  archivos al dueño. Nada de ello autoriza reducir requisitos o ampliar hosts
+  implícitamente.
+- **Eficiencia:** la agregada local previa pasó 5.129 casos. La preparación
+  optimizada redujo el tiempo comparable de 39:47 a 36:33 (8,1 % local);
+  no se promete ese ahorro remoto ni se atribuye aquella suite a otros heads.
+  Cada lote posterior conserva sus pruebas, fuentes y límites en la guía.
+- **Aeroméxico 3T26:** lectura e indicadores publicados mediante PR149/160;
+  publicación, fuentes y autoridad originales preservadas. Las tesis 2T26 ya
+  publicadas permanecen visibles; no se activan versiones nuevas.
+- **Airline Monthly, corte 24/oct:** revisión estática/funcional realizada
+  (23 afirmaciones, seis fuentes y cuatro hashes confirmados); dos PDF de
+  Aeroméxico devolvieron HTTP503. Falta revisión visual completa por login y
+  aprobación editorial final del dueño. Sigue privado, sin modificar el HTML,
+  integrar PR140, publicar o enviar correo.
+- **Acceso:** [dashboard existente](https://salvamalfa.github.io/aeromexico-tracker/)
+  comprobado con HTTP200 y TLS estándar el 27/oct. La revisión interactiva
+  cloud tuvo un límite de certificados; no se deshabilitó TLS ni se rediseñó.
+- **Datos retenidos:** preservar la advertencia internacional AFAC y el alcance
+  reportado de BTS; no inferir universo completo por operador ni red mundial.
+  Se conservan AeroDataBox y sus derivados, sin nuevas solicitudes pagadas.
 
 ## Siguiente
 
