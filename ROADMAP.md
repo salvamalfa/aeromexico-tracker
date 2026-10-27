@@ -55,6 +55,13 @@ Propuesta — el dueño decide prioridades.
   su original por la importación manual vigente. ASUR además cambia ámbito
   por la adquisición CPC: requiere adaptar la edición, no aplicar tolerancia
   numérica ni rellenar guiones con ceros. Los conteos no cambian por descubrirlos.
+- **Cotizaciones:** auditor local `ee04531a` verifica calendarios y precios
+  reales de cuatro instrumentos en ambos periodos: 187 sesiones acumuladas,
+  21 de septiembre y 64 del trimestre; incluye ancla anual e historial para
+  volatilidad. 99 pruebas y 22 ataques independientes pasan. ICAGY sigue
+  pendiente: OTC entregó página dinámica y su contenido público HTTP403.
+  Faltan fuente interpretable, lector OTC y conexión final con el flujo global.
+  Los dos controles conservan su bloqueo; no es otra ronda aceptada.
 - **Eficiencia:** la agregada local anterior aprobó 5.129 casos; el total
   comparable pasó de 39:47 a 36:33 (8,1 % local). No se promete ese ahorro
   remoto ni se atribuye aquella suite a los heads posteriores.

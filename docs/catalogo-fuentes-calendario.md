@@ -3726,15 +3726,49 @@ obtención, hace falta decidir ese método concreto; no otra aprobación del
 calendario. Los conteos siguen en **16 tareas, 84 salidas y siete pendientes**.
 
 Los **dos controles bursátiles** son de sesiones de septiembre y 3T26. Las
-cinco series están capturadas y sus cálculos/números se reproducen, pero falta
-el verificador integral del calendario y su evidencia física por instrumento:
-AERO/VLRS/DAL en NYSE, RYAAY en Nasdaq e ICAGY en OTC. Es trabajo de
-**implementación y evidencia**, no solo una caída externa. NYSE/Nasdaq tienen
-páginas oficiales 2026 identificadas; OTC devolvió una aplicación JavaScript
-sin calendario extraíble. No se ha probado que OTC y NYSE tengan las mismas
-sesiones ni que OTC Bulletin Board equivalga a ese instrumento.
+cinco series están capturadas y sus cálculos/números se reproducen. El auditor
+local `ee04531a` ya verifica **cuatro de cinco instrumentos** con originales
+oficiales: AERO/VLRS/DAL en NYSE y RYAAY en Nasdaq. Compara fechas exactas,
+no solo cantidades: 187 sesiones enero–septiembre, 21 de septiembre y 64 del
+trimestre por instrumento. Incluye ancla anual y treinta precios previos para
+los treinta retornos usados por la volatilidad. Un hueco en agosto bloquea
+aunque septiembre conserve sus 21 filas. Los cierres anticipados cuentan como
+sesiones. Los años sin edición revisada no se extrapolan.
+
+Las páginas NYSE/Nasdaq y el PDF oficial NYSE de días de negociación se
+capturaron realmente con HTTP200. El PDF dice **2026 Estimated** y distingue
+acciones de otras clases de activos; se conserva esa etiqueta. La comprobación
+independiente contrastó 12.037 precios por candidato contra los JSON originales.
+99 pruebas afectadas pasaron en 31,75 s; otras 22 comprobaciones adversariales
+cubren recibos, fechas, anclaje y límites del historial. Es evidencia local;
+no se atribuye a CI ni a una ronda global nueva.
+
+**ICAGY sigue pendiente.** OTC devolvió HTTP200 con una aplicación JavaScript
+sin tabla; su endpoint público de contenido devolvió HTTP403 sin cuerpo. Esa
+vía se detuvo. No se ha probado equivalencia con NYSE ni con OTC Bulletin Board.
+Faltan contenido oficial interpretable y el lector de esa edición OTC: el
+auditor devuelve pendiente para OTC, incluso si se le ofrece una tabla NYSE.
+Después falta acoplar la prueba completa al flujo de certificación/readiness,
+con sus revisiones y continuidad técnica. Los dos bloqueos globales permanecen;
+este auditor separado no los elimina ni recertifica los recibos congelados.
 [NYSE](https://www.nyse.com/markets/hours-calendars),
-[Nasdaq](https://www.nasdaq.com/market-activity/stock-market-holiday-schedule).
+[Nasdaq](https://www.nasdaq.com/market-activity/stock-market-holiday-schedule),
+[días NYSE](https://www.nyse.com/publicdocs/Trading_Days.pdf),
+[página OTC](https://www.otcmarkets.com/market-hours).
+
+Reproducción sin red, desde la raíz, con la receta congelada de dieciséis
+tareas y los cuatro originales/sidecars del lote retenido:
+
+```bash
+python -m src.source_updates.equity_calendar --recipe tmp/source-updates/availability-followup-20261027/combined-global-dcee6c8f-recipe.json --calendar-root tmp/source-updates/availability-followup-20261027/equity-calendars-20261027/research-originals --as-of 2026-10-27T19:31:50.034237+00:00
+# La vista previa no lee cotizaciones ni hace solicitudes. --execute comprueba offline.
+```
+
+Resultado real: `final-session-ee04531a.json`, SHA `4167969e…`, dos periodos,
+cuatro instrumentos completos en cada uno, `all_five_instruments_complete=false`,
+cero solicitudes y ninguna activación. Se conservan originales, fallos,
+atestaciones y pruebas en el mismo directorio del lote. Las 16 tareas/84
+salidas de `dcee6c8f` siguen siendo su recibo histórico, no uno del runtime nuevo.
 No hay una decisión de negocio identificada para programar ese verificador;
 si un acceso nuevo exigiera permiso, se plantearía la acción concreta. No se
 eliminan instrumentos, rendimiento diario o volatilidad para forzar el cierre.

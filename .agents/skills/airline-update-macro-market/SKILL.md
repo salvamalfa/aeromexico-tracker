@@ -160,6 +160,18 @@ No compartir calendario entre FIX, tasa, inflación, EIA y bolsas. La evidencia
 Yahoo `tradingPeriods` de AERO es solo un insumo candidato, sin prueba aún de
 exhaustividad ni de los cinco tickers; no se usa para cambiar esos flags.
 
+`python -m src.source_updates.equity_calendar --recipe <receta-global>
+--calendar-root <originales-de-referencia> --as-of <corte-con-zona>` muestra
+el plan del auditor separado; `--execute` solo lee/reconstruye offline.
+Verifica originales y sidecars exactos NYSE/Nasdaq 2026 y PDF NYSE de conteos,
+fechas YTD/periodo de las cinco series, recibos congelados y treinta precios
+previos para volatilidad. No recertifica `series_candidate` ni cambia readiness.
+El piloto real verifica cuatro instrumentos; OTC aún devuelve pendiente siempre:
+faltan contenido oficial interpretable y lector de edición, tras HTTP403 de su
+contenido público. No repetir esa solicitud ni sustituir su calendario por otra
+bolsa. No declarar cerrados los dos controles hasta comprobar los cinco y
+acoplar esa prueba al flujo vigente con sus gates.
+
 ### Calendario de observaciones Banxico
 
 La retención admite exactamente tres roles, o esos tres más
