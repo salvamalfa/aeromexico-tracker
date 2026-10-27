@@ -45,6 +45,10 @@ def public_original(row: dict) -> None:
     if len(matches) != 1 or matches[0]["source_kind"] != "public" or not matches[0]["is_active"]:
         raise ValueError("Only catalogued active public-source originals may be retained")
     validate_url(row["source_url"], matches[0]["allowed_hosts"])
+    if row["source_system"] == "volaris_ir":
+        from src.source_updates.volaris_traffic import validate_admitted_url
+
+        validate_admitted_url(row["source_url"])
 
 
 def retain(workspace: Path, source_root: Path, product: str, selected: dict, *, execute=False) -> dict:

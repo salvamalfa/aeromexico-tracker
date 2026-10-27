@@ -73,6 +73,10 @@ def describe(product_id: str) -> dict:
 
 
 def catalog_selection(product_id: str) -> dict:
+    if product_id == "volaris_traffic_ir":
+        from src.source_updates.volaris_traffic import selection
+
+        return selection()
     if product_id == "afac_airports":
         from src.source_updates.availability_afac_airports import index_selection
 

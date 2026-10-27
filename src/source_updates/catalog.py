@@ -11,7 +11,7 @@ from src.source_updates.calendar import local_time
 
 ROOT = Path(__file__).resolve().parents[2]
 FAMILIES = {
-    "corporate": ("sec_edgar", "bmv", "aeromexico_ir", "viva_ir", "ryanair_ir"),
+    "corporate": ("sec_edgar", "bmv", "aeromexico_ir", "viva_ir", "volaris_ir", "ryanair_ir"),
     "traffic": ("afac", "bts_t100"),
     "airports": ("oma_ir", "aicm", "aifa"),
     "macro_market": ("banxico_sie", "federal_reserve_h10", "eia", "yahoo_finance"),
@@ -54,10 +54,11 @@ PRODUCTS = (
     (
         "volaris_sec",
         "sec_edgar",
-        "both",
+        "quarterly",
         "reviewed_retained_Q2_dossier_comparable_CASM_warning_no_monthly_or_Q3_proof",
         "parse.peers",
     ),
+    ("volaris_traffic_ir", "volaris_ir", "monthly", "explicit_reviewed_September2026_issuer_PDF_only", None),
     ("delta_sec", "sec_edgar", "quarterly", "refresh_catalog_preserve_us_gaap", "parse.peers"),
     (
         "ryanair_sec",
@@ -218,6 +219,7 @@ CHECK_TABLES = {
     "am_financials": ("aeromexico_ir_financial_history", "fact_carrier_metrics"),
     "am_sec": ("sec_operating_metrics", "sec_financials", "fact_carrier_metrics"),
     "volaris_sec": ("peer_operating_metrics", "peer_financials", "fact_carrier_metrics"),
+    "volaris_traffic_ir": ("source_products/volaris_traffic_ir", "fact_volaris_ir_monthly_traffic"),
     "delta_sec": ("peer_operating_metrics", "peer_financials", "fact_carrier_metrics"),
     "ryanair_sec": ("peer_operating_metrics", "peer_financials", "fact_carrier_metrics"),
     "bmv_xbrl": ("bmv_financials", "fact_carrier_metrics"),

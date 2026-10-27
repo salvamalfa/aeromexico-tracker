@@ -405,6 +405,17 @@
       "state": "internal",
       "format": "transformaciones offline",
       "procedure": "Sin endpoint. Ejecutar solo pasos permitidos con padres validados; fórmulas/unidades/versiones y puente de linaje. Sin reentrenamiento, activación ni publicación."
+    },
+    "volaris_traffic_ir": {
+      "entry_ref": "constant:src.source_updates.volaris_traffic:ENTRY",
+      "state": "conditional",
+      "format": "HTML oficial → PDF exacto de septiembre2026",
+      "procedure": "Tráfico mensual IR separado de estados financieros SEC. recipe --product volaris_traffic_ir --output selection prepara únicamente página y PDF expresamente autorizados. collect --dry-run muestra dos GET y cero pagos; ejecutar solo deliberadamente. El contrato validate_product_url valida cada destino y redirección antes de llamar: hostname y documento exactos, sin subdominios, otros PDFs ni URLs inventadas. Captura no acredita parseo, frescura o publicación; validar el original real antes de producir candidato.",
+      "selection_contract": {
+        "source_system": "volaris_ir",
+        "source_scope": "volaris_authorized_September2026_IR_PDF",
+        "required_steps": []
+      }
     }
   }
 }

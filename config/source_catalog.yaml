@@ -50,6 +50,22 @@ sources:
     artifact_expected: true
     is_active: true
 
+  volaris_ir:
+    source_systems: [volaris_ir]
+    display_name: Volaris — tráfico mensual del emisor
+    institution: Controladora Vuela Compañía de Aviación, S.A.B. de C.V.
+    business_description: Reporte oficial mensual de tráfico, separado de estados financieros SEC.
+    coverage: Solo el PDF de septiembre 2026 expresamente autorizado y su índice oficial.
+    update_frequency: Selección mensual explícita; sin ejecución automática.
+    access_method: Página oficial y documento CDN exacto, con control adicional por producto.
+    official_page_url: https://ir.volaris.com/es/informacion-financiera/reportes-de-trafico/
+    allowed_hosts: [ir.volaris.com, filemanager-cdn.mziq.com]
+    artifact_link_policy: direct
+    limitations: collection.validate_product_url limita las dos URLs exactas autorizadas; allowed_hosts por sí solo permitiría subdominios y no acredita el periodo ni el contenido. Otros documentos requieren decisión explícita; no se activa ingesta ni publicación.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
   bmv:
     source_systems: [bmv, bmv_xbrl]
     display_name: Bolsa Mexicana de Valores

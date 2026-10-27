@@ -29,7 +29,7 @@ from src.source_updates.collection import safe_workspace, writer
 REQUIRED = {
     "monthly": frozenset(
         (
-            "am_traffic_ir volaris_sec viva_traffic afac_carriers afac_airports bts_segments "
+            "am_traffic_ir volaris_traffic_ir viva_traffic afac_carriers afac_airports bts_segments "
             "gap_traffic asur_traffic oma_traffic aicm_traffic aifa_traffic banxico fuel equities rss gdelt"
         ).split()
     ),
