@@ -32,7 +32,9 @@ AICM y Viva septiembre añadieron sus vínculos físicos mediante
 [PR162](https://github.com/salvamalfa/aeromexico-tracker/pull/162), y AFAC agosto
 mediante [PR163](https://github.com/salvamalfa/aeromexico-tracker/pull/163), ambos
 integrados con CI del head, Codex y CI posterior aprobadas. BTS tiene extracción
-real y comparación histórica verificadas en PR164. Tráfico IR Aeroméxico tiene
+real y comparación histórica integradas en PR164 (`e049eb00`), tras CI y
+Codex del head `36862fb0` favorables; su CI posterior sigue en curso.
+Tráfico IR Aeroméxico tiene
 contrato probado y siete salidas reales idénticas; su disponibilidad actual
 requiere todavía el PDF de la misma fecha local que el índice. Los detalles
 están en el apéndice; ninguno de estos hitos activa una ronda.
@@ -2909,6 +2911,11 @@ obligatorias no incluidas y reportes centrales sin vínculo. No significa que
 19 fuentes estén caídas. La fecha trimestral permanece nula; Aerocivil/GDELT
 siguen requeridos. Recibo creado después del nuevo binding local, con replay
 inmutable; no se reutiliza una aceptación con fingerprints viejos.
+
+PR164 se integró normalmente el 27/oct a las 09:57 UTC, merge `e049eb00`.
+CI del head `36862fb0` (`40480306782`) y Codex terminaron favorables, sin hilos
+pendientes. La CI posterior `40484738784` está en curso; no se atribuye su
+resultado antes de terminar. No hubo datos ni sitio modificados.
 
 ### Aeroméxico: contrato físico de tráfico mensual (27/oct)
 
