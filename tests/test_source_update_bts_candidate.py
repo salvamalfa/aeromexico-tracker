@@ -183,6 +183,12 @@ def test_previous_month_and_quality_issue_scope():
         {"YEAR": "2025"},
         {"CLASS": "Z"},
         {"AIRCRAFT_CONFIG": "9"},
+        {"AIRCRAFT_CONFIG": "4"},  # not in the reviewed segment configurations
+        {"AIRCRAFT_TYPE": "0094"},
+        {"AIRCRAFT_TYPE": "094.0"},
+        {"AIRCRAFT_TYPE": "+94"},
+        {"AIRCRAFT_TYPE": "000"},
+        {"AIRLINE_ID": "019393"},
         {"SEATS": ""},
         {"PASSENGERS": "-1.00"},
         {"FREIGHT": "1.50"},
@@ -196,6 +202,22 @@ def test_previous_month_and_quality_issue_scope():
 def test_native_drift_and_invalid_values_fail(changes):
     with pytest.raises(ValueError):
         native.read("bts_segments", inputs([row(**changes)]), "2026M01")
+
+
+def test_reviewed_aircraft_code_padding_and_combined_configuration_keep_original_tokens():
+    frame, details = native.read(
+        "bts_segments", inputs([row(AIRCRAFT_TYPE="094", AIRCRAFT_CONFIG="3")]), "2026M01"
+    )
+    assert frame.aircraft_type.iloc[0] == 94 and frame.aircraft_config.iloc[0] == 3
+    assert json.loads(frame.source_row_json.iloc[0])["AIRCRAFT_TYPE"] == "094"
+    assert details["zero_padded_aircraft_type_tokens"] == {"094": 1}
+    assert details["combined_aircraft_configuration_rows"] == 1
+    assert details["complete_month_certified"] is details["operator_coverage_verified"] is False
+
+
+def test_aircraft_padding_never_silently_merges_distinct_source_rows():
+    with pytest.raises(ValueError, match="Duplicate Silver grain"):
+        native.read("bts_segments", inputs([row(AIRCRAFT_TYPE="094"), row(AIRCRAFT_TYPE="94")]), "2026M01")
 
 
 def test_no_missing_month_or_duplicate_grain_or_dictionary_drift():

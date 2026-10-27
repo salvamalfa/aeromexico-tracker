@@ -208,7 +208,11 @@ def read(product, inputs, period):
             raise ValueError("BTS numeric exactness bound exceeded")
         frame[field] = values.astype("int64")
     for field in INTEGERS:
-        if not frame[field].str.fullmatch(r"(?:0|[1-9]\d*)").all():
+        # The official FJE-linked aircraft lookup uses three-digit codes, e.g.
+        # 094. Only this code field admits that source padding; the original
+        # token remains in source_row_json. Quantities and other IDs stay strict.
+        pattern = r"(?:0|[1-9]\d*|0[0-9]{2})" if field == "aircraft_type" else r"(?:0|[1-9]\d*)"
+        if not frame[field].str.fullmatch(pattern).all():
             raise ValueError("BTS native integer identifier/period changed")
         if frame[field].map(int).gt(10**9).any():
             raise ValueError("BTS identifier bound exceeded")
@@ -232,13 +236,15 @@ def read(product, inputs, period):
             raise ValueError("BTS airport code format changed")
     if (
         not frame["class"].isin(["F", "G", "L", "P"]).all()
-        or not frame.aircraft_config.isin(["1", "2"]).all()
+        or not frame.aircraft_config.isin(["1", "2", "3"]).all()
     ):
         raise ValueError("BTS reviewed class/configuration code domain changed")
     if frame.distance.le(0).any() or frame.aircraft_type.astype(int).le(0).any():
         raise ValueError("BTS nonpositive distance/aircraft code")
     if frame.duplicated(GRAIN).any():
         raise ValueError("Duplicate BTS native observation grain")
+    padded_types = frame.loc[frame.aircraft_type.str.fullmatch(r"0[0-9]{2}"), "aircraft_type"]
+    combined_configurations = int(frame.aircraft_config.eq("3").sum())
     frame = map_identities(frame)
     for field in INTEGERS:
         if field != "airline_id":
@@ -270,6 +276,19 @@ def read(product, inputs, period):
         agent_eligible=False,
     )
     validate_silver_table("bts_t100_segment", frame)
+    if not padded_types.empty:
+        details["aircraft_type_token_policy"] = (
+            "three-digit code padding retained literally in source_row_json; "
+            "existing integer storage is normalized, without aircraft-name inference"
+        )
+        details["zero_padded_aircraft_type_tokens"] = {
+            str(token): int(count) for token, count in padded_types.value_counts().items()
+        }
+    if combined_configurations:
+        # FJE's official lookup defines 3 as combined passenger/freight. Keep
+        # that literal configuration; service classes stay uninterpreted and
+        # the financial-expense-only code 9 stays outside physical segments.
+        details["combined_aircraft_configuration_rows"] = combined_configurations
     details.update(
         native_rows=len(frame),
         projected_period=period,

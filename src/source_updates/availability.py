@@ -189,6 +189,10 @@ def discovery_contract(product, adapter):
 
 def verify(item, result, cutoff):
     """Called only after complete offline candidate replay; never performs IO on the network."""
+    if item["product"] == "bts_segments" and item["adapter"] == "bts":
+        from src.source_updates.availability_bts import verify as verify_bts
+
+        return verify_bts(item, result, cutoff)
     if item["product"] == "afac_carriers" and item["adapter"] == "carrier_source":
         from src.source_updates.availability_afac import verify as verify_afac
 
