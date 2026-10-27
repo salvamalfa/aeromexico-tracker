@@ -14,10 +14,11 @@ Propuesta — el dueño decide prioridades.
   `24366ace` está en [PR171](https://github.com/salvamalfa/aeromexico-tracker/pull/171),
   head `43ae2b95`, en borrador: CI falla por la base PR170 no integrada; no se
   relanza hasta resolver esa dependencia legítima. OMA `472a0528` está local.
-- **Preparación comprobada local:** quince tareas del mismo runtime pasan;
-  las 76 salidas previas son idénticas y hay cuatro nuevas OMA. Quedan ocho
+- **Preparación comprobada local:** dieciséis tareas del mismo runtime pasan;
+  las 80 salidas previas son idénticas y hay cuatro nuevas Volaris IR. Quedan siete
   tareas requeridas y dos controles bursátiles. La [matriz operativa](docs/catalogo-fuentes-calendario.md#cierre-operativo-de-la-ronda)
-  desglosa las once del snapshot PR169: AM mensual, AIFA y OMA son cierres reales;
+  desglosa las once del snapshot PR169: AM mensual, AIFA, OMA y Volaris mensual
+  son cierres reales;
   AFAC histórico/contrato está probado, pero actualidad HTTP403 sigue abierta.
   Banxico/EIA conservan tres advertencias de cobertura observada: su
   reclasificación anterior no equivale a calendarios exhaustivos comprobados.
@@ -40,12 +41,16 @@ Propuesta — el dueño decide prioridades.
   mensual, en la fecha posterior. Día oficial explícito admite hora nula.
   AM y Volaris Q3 están detectados; falta Viva para fechar. Avisar es independiente
   de incorporar cifras/aprobar tesis; Volaris ya fue avisado el 27/oct 13:09 UTC.
-- **Pendientes concretos:** host mensual Volaris sin autorización. El hilo
-  principal ya envió la consulta Aerocivil autorizada (Gmail `SENT`), esperando
+- **Admisión Volaris autorizada:** contrato local limitado al documento exacto
+  y página oficial, sin otros documentos/subdominios. Ambos GET200; candidato
+  48 cifras/24 variaciones y cuatro salidas reproducidas; diagnóstico conjunto
+  de 16 tareas, sin activar. Las 303 pruebas afectadas y la revisión independiente
+  fueron favorables. El hilo principal ya envió la consulta Aerocivil
+  autorizada (Gmail `SENT`), esperando
   respuesta: no acredita la semántica y no se repetirá. GDELT conserva HTTP503. AFAC necesita acceso actual.
   OMA quedó comprobado con otra ruta oficial, sin repetir IR404/es202. AIFA quedó comprobado localmente tras corregir la entrada; falta
   su integración. Faltan dossiers actuales aeroportuarios y
-  financieros indicados en la matriz. No son ocho servicios caídos.
+  financieros indicados en la matriz. No son siete servicios caídos.
 - **Eficiencia:** la agregada local anterior aprobó 5.129 casos; el total
   comparable pasó de 39:47 a 36:33 (8,1 % local). No se promete ese ahorro
   remoto ni se atribuye aquella suite a los heads posteriores.
