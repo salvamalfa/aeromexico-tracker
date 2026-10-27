@@ -20,6 +20,7 @@ from src.source_updates.catalog import bronze_aliases, load_catalog, product_map
 from src.source_updates.collection import safe_workspace, validate_url
 
 FIELDS = {"workspace", "run_id", "catalog_item", "artifact_item"}
+MULTI_FIELDS = (FIELDS - {"artifact_item"}) | {"artifact_items"}
 AIFA_INDEX = "https://www.aifa.aero/legal-y-finanzas/informes"
 MONTHS = "Ene Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic".split()
 MONTH_NAMES = (
@@ -46,10 +47,20 @@ def sha(path):
 
 
 def preflight(binding, candidate):
-    if not isinstance(binding, dict) or set(binding) != FIELDS:
+    if not isinstance(binding, dict) or set(binding) not in (FIELDS, MULTI_FIELDS):
         raise ValueError("Availability requires exact physical collection binding fields")
-    if any(not isinstance(v, str) or not v for v in binding.values()):
+    identities = [binding[k] for k in ("workspace", "run_id", "catalog_item")]
+    if set(binding) == MULTI_FIELDS:
+        roles = binding["artifact_items"]
+        if not isinstance(roles, dict) or set(roles) != {"pdf", "database"}:
+            raise ValueError("Multi-original availability requires exact AFAC pdf/database roles")
+        identities += list(roles.values())
+    else:
+        identities.append(binding["artifact_item"])
+    if any(not isinstance(v, str) or not v for v in identities):
         raise ValueError("Availability binding values must be nonempty strings")
+    if set(binding) == MULTI_FIELDS and len(set(identities[2:])) != 3:
+        raise ValueError("Discovery and original collection item IDs must be distinct")
     if not re.fullmatch(r"[a-f0-9]{32}", binding["run_id"]):
         raise ValueError("Availability requires an exact collection run ID")
     root = safe_workspace(Path(binding["workspace"]))
@@ -57,6 +68,13 @@ def preflight(binding, candidate):
     if root == candidate or root.is_relative_to(candidate) or candidate.is_relative_to(root):
         raise ValueError("Discovery collection and certified candidate must be disjoint")
     return root
+
+
+def collection_inventory(root):
+    safe_workspace(root)
+    if (root / ".source-update.lock").exists():
+        raise ValueError("Availability collection has an active writer")
+    return {p.relative_to(root).as_posix(): sha(p) for p in root.rglob("*") if p.is_file()}
 
 
 def artifact(root, row, cutoff, hosts, receipt, aliases):
@@ -171,18 +189,15 @@ def discovery_contract(product, adapter):
 
 def verify(item, result, cutoff):
     """Called only after complete offline candidate replay; never performs IO on the network."""
+    if item["product"] == "afac_carriers" and item["adapter"] == "carrier_source":
+        from src.source_updates.availability_afac import verify as verify_afac
+
+        return verify_afac(item, result, cutoff)
     binding = item["availability"]
     root = preflight(binding, item["workspace"])
-    if (root / ".source-update.lock").exists():
-        raise ValueError("Availability collection has an active writer")
-
-    def inventory():
-        safe_workspace(root)
-        if (root / ".source-update.lock").exists():
-            raise ValueError("Availability collection has an active writer")
-        return {p.relative_to(root).as_posix(): sha(p) for p in root.rglob("*") if p.is_file()}
-
-    collection_before = inventory()
+    if set(binding) != FIELDS:
+        raise ValueError("This product requires its single-original availability binding")
+    collection_before = collection_inventory(root)
     entry, discover, native_table = discovery_contract(item["product"], item["adapter"])
     receipt_path = root / "receipts" / f"collection-{binding['run_id']}.json"
     before = sha(receipt_path)
@@ -234,7 +249,7 @@ def verify(item, result, cutoff):
         or sha(data_path) != data["sha256"]
         or sha(index_path) != index["sha256"]
         or sha(receipt_path) != before
-        or inventory() != collection_before
+        or collection_inventory(root) != collection_before
     ):
         raise ValueError("Discovery/capture bytes do not bind the completely verified native product")
     return {

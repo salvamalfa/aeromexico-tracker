@@ -192,10 +192,18 @@ acreditados siguen nulos. Ver límites de cada fuente en sus skills/guía.
 
 La receta de `readiness` y la global admiten el campo opcional `availability`
 por tarea con campos exactos `workspace`, `run_id`, `catalog_item` y
-`artifact_item`. Identifican una colección física separada del candidato.
-Actualmente solo AIFA tiene contrato de descubrimiento revisado: relee el
-índice oficial, determina su último XLSX, comprueba URL/manifiesto/HTTP/hash y
-que ese mismo original contribuyó al nativo completamente certificado.
+`artifact_item` para AIFA, AICM, OMA y Viva. Identifican una colección física
+separada del candidato. Se relee el índice oficial del producto, se determina
+el último documento y se comprueban URL, manifiesto, HTTP, hashes y su aporte
+al nativo completamente certificado. OMA conserva el bloqueo del PDF actual;
+un contrato implementado no acredita una descarga fallida.
+
+AFAC por aerolínea tiene su contrato propio: sustituye `artifact_item` por
+`artifact_items={"pdf": "<id-boletin>", "database": "<id-base>"}`. Exige el
+boletín y la base anunciados, capturados y realmente usados por el dossier
+reproducido. Mantiene `complete_month_certified=false` y la advertencia de
+cobertura internacional; lo reportado íntegramente no prueba un universo
+completo. No permite ese binding multioriginal en otras familias.
 La disponibilidad se limita a la fecha local de captura y corte real de la
 ronda; no acredita primera publicación, rezago ni activación. El vínculo
 inválido bloquea; no hay fallback ni booleano manual. Sin vínculo, o para una

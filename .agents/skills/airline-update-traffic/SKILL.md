@@ -24,6 +24,18 @@ Consultar `src/source_updates/catalog.py` para subproductos y brechas.
 No confundir esos pasos disponibles con un adaptador aprobado para cualquier
 formato o periodo nuevo. Entregar recibos y periodos realmente comprobados.
 
+AFAC por aerolínea puede vincular su disponibilidad documental después del
+replay integral del boletín y la base: `availability` lleva `workspace`,
+`run_id`, `catalog_item` y `artifact_items={"pdf": "<id>", "database": "<id>"}`.
+Los dos IDs son distintos y pertenecen a la misma colección oficial, posterior
+al índice y de la fecha local de la ronda. El índice debe anunciar el último
+boletín y `DB_AFAC.zip`; su miembro es `DB_AFAC.xlsx`. Se comprueban los pares
+archivo/hash de ambos originales en la tabla nativa, sin usar solo el PDF.
+Mantener `complete_month_certified=false` y la advertencia internacional.
+Verificar todo lo reportado no prueba un universo observacional completo ni
+autoriza participaciones de mercado con denominadores supuestos. La ronda
+global y la publicación conservan sus puertas independientes.
+
 ## Adquisición por producto
 
 La entrada exacta y el procedimiento están en el [catálogo operativo](../../../config/source_update_acquisition.json), enlazado al [catálogo de instituciones](../../../config/source_catalog.yaml). El comando resuelve la URL o API desde su configuración canónica; no hay que inventarla.
