@@ -24,7 +24,9 @@ Propuesta — el dueño decide prioridades.
   1.680 casos de fuentes y 99 financieros (una omisión histórica). Aerocivil,
   GDELT, tráfico mensual Volaris y fechas verificadas siguen bloqueando la
   ronda completa. No están activados calendario ni nuevas ingestas/noticias.
-  Continuación técnica `013a20d6`: AICM y Viva septiembre tienen colección real,
+  [PR162](https://github.com/salvamalfa/aeromexico-tracker/pull/162), integrado
+  en `53c9b2a2`, pasó CI y Codex del head `a43725af` y CI posterior
+  `40466462847`. AICM y Viva septiembre tienen colección real,
   certificación completa y vínculo físico a los índices del día local 27/oct;
   OMA septiembre conserva HTTP404 del PDF y HTTP202 del índice alternativo.
   Validación: 1.791 casos de fuentes/pipeline/documentación, 142 financieros
@@ -42,6 +44,15 @@ Propuesta — el dueño decide prioridades.
   al dossier completo reproducido: 4.930 nativas, 112 Gold y 474 conciliaciones.
   Conserva la cobertura internacional incompleta; disponibilidad documental
   no equivale a universo completo ni activa la ronda.
+- BTS: contrato físico preparado con la fila FJE del historial y descarga
+  México del año actual y del revisado. Extracción real: 12.459 filas en 2026
+  hasta julio; 18.081 en 2023, iguales al baseline explícito. Pasaron 236
+  contratos afectados y revisión independiente; disponibilidad de julio
+  verificada al día local 27/oct. No acredita universo completo por operador,
+  ni fechas de primera publicación, ni una ronda global lista. El ensayo
+  global real acepta los cuatro productos AICM/Viva/AFAC/BTS y rechaza
+  incorporación por las otras 19 tareas requeridas y los reportes centrales
+  sin vínculo. Son tareas no incluidas, no 19 fuentes declaradas caídas.
 - Airline Monthly del corte 24/oct: revisión estática y funcional realizada
   por el agente de Pages: 23 afirmaciones, seis fuentes y cuatro hashes de
   originales confirmados; dos PDF de Aeroméxico devolvieron HTTP503. Falta la

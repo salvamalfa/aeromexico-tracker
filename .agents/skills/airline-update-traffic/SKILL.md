@@ -50,7 +50,7 @@ Consultar cada producto de esta familia:
 - `afac_airports` — adaptador offline de original retenido revisado. Entrada canónica: `url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404`. Formato: archivo independiente por edición.
 - `afac_countries` — adaptador offline de cajas exactas acumuladas; no serie mensual desde gráficas. Entrada canónica: `url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404`. Formato: boletín/archivo de países.
 - `afac_margins` — adaptador offline de dos libros de la misma edición. Entrada canónica: `url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404`. Formato: XLSX sase/resumen de la misma edición.
-- `bts_segments` — certificador integral offline de originales retenidos T-100; mes explícito y diccionario incorporado revisado. Entrada canónica: `constant:src.ingest.bts.t100:FORM_URL`. Formato: formulario GET + POST → ZIP CSV.
+- `bts_segments` — certificador integral de originales T-100, descubrimiento FJE y vínculo físico; mes explícito y diccionario incorporado revisado. Entrada canónica: `constant:src.ingest.bts.t100:FORM_URL`. Formato: formulario GET + POST → ZIP CSV.
 
 ### Procedimiento verificable
 
@@ -158,3 +158,29 @@ No prueba cobertura completa por aerolínea, itinerarios/codeshares, red mundial
 última disponibilidad ni primera fecha de publicación. Esos límites permanecen
 en el recibo; la aprobación humana, el control global y la activación siguen
 separados. La guía canónica conserva los originales, hashes y pruebas reales.
+
+### Descubrimiento y disponibilidad física BTS
+
+```bash
+python -m src.source_updates recipe --product bts_segments --output selection > tmp/bts-index.json
+python -m src.source_updates collect --selection tmp/bts-index.json --workspace tmp/source-updates/bts-index --dry-run
+# Tras capturar el índice autorizado, usar su ruta real; no una fecha supuesta.
+python -m src.source_updates recipe --product bts_segments --output selection --catalog-file <historial-retenido.html> --period latest > tmp/bts-years.json
+python -m src.source_updates collect --selection tmp/bts-years.json --workspace tmp/source-updates/bts-years --dry-run
+```
+
+La selección revisada del 27/oct incluye historial, año 2026 con julio añadido
+y año 2023 revisado: cinco llamadas base, cero pagadas. Solo la fila exacta
+FJE «T-100 International Segment (All Carriers)» determina el descubrimiento;
+Market y US Carriers son productos distintos, aunque anuncien la misma fecha.
+No descargar toda la historia ni inventar agosto desde una fecha de anuncio.
+La fecha 9/oct del historial es una fecha declarada, sin hora ni prueba de
+primera publicación. El vínculo `availability` usa el índice, `run_id` y el
+ZIP del año actual; verifica además los años revisados de esa colección.
+
+El lexer de aeronave conserva el código crudo `094` y su entero 94 según
+el lookup oficial; las demás claves y conteos siguen estrictos. Se rechaza
+la colisión de grano tras normalizar. La configuración 3 está respaldada por
+el lookup como combinación de pasajeros/carga; 0, 4 y 9 quedan fuera del
+formato físico revisado. No inferir flota, nombres ni regularidad de estos
+códigos. Guardar lookups, fechas y hashes junto a la evidencia técnica.

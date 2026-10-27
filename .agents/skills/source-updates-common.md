@@ -192,7 +192,7 @@ acreditados siguen nulos. Ver límites de cada fuente en sus skills/guía.
 
 La receta de `readiness` y la global admiten el campo opcional `availability`
 por tarea con campos exactos `workspace`, `run_id`, `catalog_item` y
-`artifact_item` para AIFA, AICM, OMA y Viva. Identifican una colección física
+`artifact_item` para AIFA, AICM, OMA, Viva y BTS. Identifican una colección física
 separada del candidato. Se relee el índice oficial del producto, se determina
 el último documento y se comprueban URL, manifiesto, HTTP, hashes y su aporte
 al nativo completamente certificado. OMA conserva el bloqueo del PDF actual;
@@ -204,6 +204,11 @@ boletín y la base anunciados, capturados y realmente usados por el dossier
 reproducido. Mantiene `complete_month_certified=false` y la advertencia de
 cobertura internacional; lo reportado íntegramente no prueba un universo
 completo. No permite ese binding multioriginal en otras familias.
+BTS exige su historial FJE y los ZIP México de cada año añadido o revisado,
+con el formulario y POST canónicos. Comprueba el máximo mes del archivo;
+conserva `complete_month_certified=false` y la cobertura por operador sin
+acreditar. La comparación de historia necesita un baseline explícito; capturar
+un año revisado no demuestra cambios de filas ni vigencia de otro mes.
 La disponibilidad se limita a la fecha local de captura y corte real de la
 ronda; no acredita primera publicación, rezago ni activación. El vínculo
 inválido bloquea; no hay fallback ni booleano manual. Sin vínculo, o para una
