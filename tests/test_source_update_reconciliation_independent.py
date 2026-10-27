@@ -105,7 +105,10 @@ def test_every_product_keeps_its_own_complete_adapter(workspace, product, expect
     [
         ("viva_financials", {"pdf": ("viva_ir",), "prior_quarter": ("viva_ir",)}),
         ("fuel", {"workbook": ("eia",)}),
-        ("banxico", {key: ("banxico_sie",) for key in ("SF43718", "SP1", "SF61745")}),
+        (
+            "banxico",
+            {key: ("banxico_sie",) for key in ("SF43718", "SP1", "SF61745", "fix_methodology")},
+        ),
         (
             "equities",
             {

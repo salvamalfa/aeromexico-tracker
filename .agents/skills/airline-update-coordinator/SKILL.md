@@ -11,8 +11,10 @@ y su apéndice en `docs/catalogo-fuentes-calendario.md`.
 1. Cargar calendario bancario verificado, zona America/Mexico_City y corte con
    zona explícita. UTC se conserva para captura; los días se calculan en México.
    Año sin calendario verificado bloquea. No asumir solo lunes–viernes.
-2. Calcular mensual en o después del 15. Noticias van con esa ronda, nunca con
-   un barrido diario/semanal. Trimestral: dos hábiles estrictamente posteriores
+2. Calcular mensual en o después del 15. La incorporación de noticias va con
+   esa ronda, sin refresh de datos diario/semanal. Avisar un reporte financiero
+   confirmado es independiente: no esperar la ronda ni aprobar su contenido.
+   Trimestral: dos hábiles estrictamente posteriores
    al último reporte financiero central confirmado, publicado y del trimestre
    solicitado, de Aeroméxico, Volaris y Viva. Anuncio o llamada no basta.
 3. Si faltan reportes, dejar fecha trimestral nula y listar entidades disponibles
@@ -89,3 +91,8 @@ checks parciales ni `retained`. Aplicar el [contrato de series](../../../docs/ca
 Una reproducción de originales no comprueba disponibilidad actual ni calendario
 completo de observaciones; mantener esas puertas bloqueadas y los demás R
 pendientes. No omitir Aerocivil/GDELT ni cambiar sus requisitos.
+
+Registrar por separado reporte detectado, fuente primaria comprobada, usuario
+avisado, datos incorporados y publicación/tesis autorizadas. No inferir un
+estado desde otro ni repetir como novedad un reporte ya avisado. El mecanismo
+de avisos existente tiene su propio responsable; este CLI no crea tareas.

@@ -218,8 +218,13 @@ convertir este vínculo en última fecha de publicación ni sustitución de GDEL
 Las series usan `workspace`, `run_id` y `series_items` con todos los roles
 canónicos del producto: tres Banxico, un libro EIA o cinco tickers. El vínculo
 comprueba las respuestas actuales y su aporte nativo; no aporta un calendario
-esperado de observaciones. Mantener `calendar_completeness_certified=false`,
-último periodo y primera publicación desconocidos, y el bloqueo global. La
+esperado de observaciones por sí solo. Banxico admite el cuarto original
+`fix_methodology` en su retención: el resultado se calcula y reproduce desde
+los cuatro cuerpos y el calendario bancario, no desde un flag del usuario.
+Tres roles antiguos, EIA y mercado mantienen calendario no certificado.
+Banxico septiembre pasó; Q3 sigue no certificado frente al universo diario,
+sin inferir error del proveedor. Último periodo y primera publicación siguen
+desconocidos y la ronda global permanece bloqueada. La
 identidad SEC de mercado sigue siendo original retenido, sin nueva captura.
 La disponibilidad se limita a la fecha local de captura y corte real de la
 ronda; no acredita primera publicación, rezago ni activación. El vínculo
