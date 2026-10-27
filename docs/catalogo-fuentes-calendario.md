@@ -3691,14 +3691,39 @@ No son once servicios caídos ni once parsers ausentes.
 | Mensual AFAC aeropuertos | Lector julio y contrato de selección/vínculo físico implementados; replay real 2.730 filas | **Evidencia/acceso:** índice actual HTTP403; comprobar edición oficial vigente con índice y libro. No exige septiembre si existe rezago oficial. Sin decisión genérica pendiente |
 | Mensual AIFA | **Cerrada localmente:** receta corregida al índice Informes, colección actual septiembre y cadena integral verificadas | El bloqueo mezclaba Normateca con otro índice. No se relaja el contrato ni se corrige julio; entrega/CI propia pendientes |
 | Mensual AM tráfico | **Cerrada:** índice y 6-K IR capturados juntos el 27/oct; 24 filas mensuales/comparativas y siete salidas reproducidas | No queda implementación para esta edición comprobada. No acredita otros meses ni publicación |
-| Mensual ASUR | Lector julio existente | **Implementación y material:** retener dossier oficial septiembre con índices/documentos y adaptar/comprobar esa edición. No hay fallo de servicio probado |
-| Mensual GAP | Vínculo histórico julio comprobado al snapshot de agosto | **Implementación y material:** dossier septiembre, descubrimiento/vínculo y revisión de edición. Julio no demuestra actualidad de octubre |
+| Mensual ASUR | Lector julio existente; comunicado septiembre identificado en SEC | **Implementación y material:** obtener original manual y adaptar la edición que incorpora Brasil y otros países. No se ha acreditado cobertura enero–septiembre comparable para el bloque nuevo; el 5 % no resuelve diferencias de ámbito. Véase insumo exacto abajo |
+| Mensual GAP | Vínculo histórico julio comprobado; comunicado septiembre identificado en SEC | **Implementación y material:** obtener original manual y comprobar esa edición/vínculo. No falta detectar el reporte; el snapshot de agosto no acredita septiembre. Véase insumo exacto abajo |
 | Mensual GDELT | Adaptador existente; último intento acotado HTTP503, sin septiembre válido | **Disponibilidad externa:** respuesta válida del periodo. Sin nuevas consultas en esta pasada; RSS no lo sustituye. Cambiar proveedor o requisito sería otra decisión, no se ha aplicado |
 | Mensual OMA | **Cerrada localmente:** artículo y PDF oficiales septiembre HTTP200, 168 observaciones y cuatro salidas reproducidas | Vínculo newsroom `472a0528` revisado; entrega/CI propias pendientes. Se conservan los fallos IR404/es202 sin repetirlos. Disponibilidad del reporte objetivo, no censo de revisiones |
 | Mensual Volaris | **Cerrada localmente:** admisión autorizada y exacta, dos GET200, 48 cifras/24 variaciones, cuatro salidas y replay actuales comprobados | Global y continuidad comprobados; falta entrega/CI remota. Emisor IR separado de SEC financiero; sin descubrimiento dinámico desde el HTML. No falta otra autorización de ese documento ni el lector |
 | Trimestral Aerocivil | Comprobación numérica, sin leyenda/atribución acreditadas del conjunto exacto | **Evidencia oficial:** consulta autorizada y enviada desde el hilo principal; esperando respuesta sobre `jh8x-n6h6`, `TIPO_VUELO`, `TRAFICO` y operador. No repetir envío, inferir leyenda ni declarar opcional |
 | Trimestral Viva | Certificador completo Q2; Q3 no verificado | **Material y adaptación:** reporte financiero oficial Q3 y cadena de esa edición. No inventar fecha; tráfico o ZIP XBRL no equivalen al release |
 | Trimestral Volaris | Reporte Q3 primario existe y ya fue avisado; certificador retenido solo Q2 | **Implementación y material:** retener dossier Q3 admitido, adaptar y probar. No falta detectar el reporte; CASM Q2 no es el bloqueo Q3. No requiere otra autorización genérica para programar |
+
+**Insumos GAP/ASUR identificados el 27/oct, no capturados por el runner.** El
+[6-K GAP](https://www.sec.gov/Archives/edgar/data/1347557/000117184326006475/f6k_100626.htm)
+contiene tráfico septiembre y declara 6/oct. El
+[anexo ASUR](https://www.sec.gov/Archives/edgar/data/1123452/000110465926114381/tm2627227d1_99-1.htm)
+declara 7/oct e incorpora la adquisición CPC: el bloque nuevo agrupa Brasil,
+Costa Rica, Curazao y Ecuador. Sus columnas acumuladas nuevas coinciden con
+septiembre; se conservarán así, sin llamarlas nueve meses comparables ni
+repartir el agregado. También cambia la exclusión de pasajeros. El lector de
+julio exige explícitamente el ámbito anterior y debe adaptarse; los guiones
+del detalle nuevo no autorizan rellenar ceros.
+
+La consulta web permite leer ambos documentos; no entrega aquí sus bytes HTML
+originales ni un recibo de captura. El inventario del respaldo privado actual
+y las búsquedas acotadas en Library no localizaron estos originales. El
+[procedimiento común](../.agents/skills/source-updates-common.md#fallos-y-permisos)
+exige «SEC se importa manualmente aquí». Para continuar falta importar los
+HTML originales con URL y SHA reales por ese flujo, más los soportes de
+atribución que finalmente use el vínculo. No se reconstruirá HTML desde texto
+web ni se atribuirá HTTP200 o una fecha de captura a la importación. Los
+índices SEC no accesibles por la herramienta web no tienen un nuevo código
+HTTP acreditado. No se ha intentado sustituir el colector con otro cliente,
+instalar un navegador ni leer/configurar identidad. Si se desea otra forma de
+obtención, hace falta decidir ese método concreto; no otra aprobación del
+calendario. Los conteos siguen en **16 tareas, 84 salidas y siete pendientes**.
 
 Los **dos controles bursátiles** son de sesiones de septiembre y 3T26. Las
 cinco series están capturadas y sus cálculos/números se reproducen, pero falta

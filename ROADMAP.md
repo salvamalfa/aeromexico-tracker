@@ -51,6 +51,10 @@ Propuesta — el dueño decide prioridades.
   OMA quedó comprobado con otra ruta oficial, sin repetir IR404/es202. AIFA quedó comprobado localmente tras corregir la entrada; falta
   su integración. Faltan dossiers actuales aeroportuarios y
   financieros indicados en la matriz. No son siete servicios caídos.
+  GAP/ASUR septiembre ya tienen documentos SEC exactos identificados; falta
+  su original por la importación manual vigente. ASUR además cambia ámbito
+  por la adquisición CPC: requiere adaptar la edición, no aplicar tolerancia
+  numérica ni rellenar guiones con ceros. Los conteos no cambian por descubrirlos.
 - **Eficiencia:** la agregada local anterior aprobó 5.129 casos; el total
   comparable pasó de 39:47 a 36:33 (8,1 % local). No se promete ese ahorro
   remoto ni se atribuye aquella suite a los heads posteriores.
