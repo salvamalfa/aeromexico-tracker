@@ -2835,6 +2835,72 @@ del día 27. No se repite la agregada anterior de 1.791 ni se atribuyen sus
 resultados al nuevo runtime: se usa la revisión focal de 200 contratos y los
 replays oficiales afectados, sin reducir aserciones, criterios o required checks.
 
+### BTS: descubrimiento y disponibilidad física (27/oct)
+
+La adquisición ejecutable ya separa el historial de publicación del formulario
+GET/POST. `recipe --product bts_segments --output selection` resuelve el
+[historial oficial](https://www.transtats.bts.gov/ReleaseInfo.asp); tras capturarlo,
+`--catalog-file <original.html> --period latest` elige la fila exacta FJE
+«T-100 International Segment (All Carriers)». Rechaza Market, US Carriers,
+filas ambiguas y periodos no anunciados. Conserva el formulario canónico y
+no convierte una fecha de anuncio en prueba de contenido.
+
+La colección real `609f1d53…` del día local 27/oct obtuvo HTTP200 en historial
+y ZIP México de 2026 y 2023: cinco llamadas base, cero pagadas. El historial
+SHA `ad88ba7e…` anuncia julio añadido y diciembre 2023 revisado el 9/oct.
+La fecha declarada no acredita un instante de primera publicación ni rezago.
+El ZIP 2026 SHA `fdf97016…` contiene 12.459 filas enero–julio; el de 2023
+SHA `4a570891…`, 18.081 filas enero–diciembre. El ZIP de 2023 retenido desde
+24/ago SHA `b415d1db…` es el baseline explícito: cambió el contenedor, pero
+los miembros de datos y diccionario son idénticos. La comparación reproducida
+registra cero altas, bajas o cambios y 18.081 filas iguales. No sobrescribe
+historia ni cuenta esa comparación como disponibilidad reciente de diciembre.
+
+La extracción histórica descubrió dos variantes oficiales antes rechazadas.
+El campo FJE enlaza el [lookup de aeronave](https://www.transtats.bts.gov/Download_Lookup.asp?Y11x72=Y_NVePeNSg_glcR)
+SHA `4fdb4909…`: `094` es un código válido, conserva su texto crudo y usa
+94 en la clave numérica existente, sin colisiones en las 453 claves del
+lookup. El [lookup de configuración](https://www.transtats.bts.gov/Download_Lookup.asp?Y11x72=Y_NVePeNSg_PbaSVT)
+SHA `c7dce259…` acredita 3 como combinación de pasajeros y carga. Se mantiene
+el dominio revisado 1/2/3; 0/4/9, padding de aeronave no ASCII, códigos malformados y
+colisiones de grano siguen rechazados. No se amplían tolerancias ni se infieren
+nombres de flota; tampoco se interpreta F/G/L/P sin leyenda oficial vinculada.
+
+La prueba final `bts-final-round-v2` produce siete salidas por dossier: julio
+2026, baseline 2023 y comparación actual 2023. Julio contiene 1.527 hechos,
+631 rutas, 46 operadores y 15.513 vínculos. La disponibilidad comprueba
+colección separada, manifiestos, sidecars, URL exacta del POST, año solicitado,
+fecha local, hashes y aportes nativos. Conserva observaciones seleccionadas
+certificadas, `complete_month_certified=false` y cobertura por operador sin
+acreditar. No representa una red mundial, itinerarios ni un censo de mercado.
+
+Código de producción final `2da1b63d`, runtime `a6c728b8…`: 236 pruebas
+focalizadas aprobadas, sin omisiones. Revisión independiente verificó 36
+ataques de formato nativo y 14 del flujo CLI; se informan por alcance y no
+se suman a la unión de 236. El recibo financiero local `b178075c…` reproduce
+el productor/verificador originales y 79 ataques, conservando 811/803 archivos
+publicados, 177 fuentes/autoridad y 188 del expediente. No cambia anclas,
+aprobaciones ni datos publicados y no acredita una nueva publicación.
+
+Las recetas, originales, lookups, salidas y dictámenes están retenidos bajo
+`tmp/source-updates/availability-followup-20261027/`. Los replays nuevos usan
+otro destino y sus fingerprints; nunca actualizan la aceptación antigua.
+La skill de tráfico incluye los comandos de descubrimiento y `--dry-run`.
+Conservar módulos, pruebas y evidencia técnica; actualizar solo guía, skills
+y Roadmap. Sin documentos paralelos, retiros, cron o activación.
+
+La compatibilidad del runtime final reprodujo nueve ventanas y 53 salidas
+idénticas, once de AICM/Viva y siete de AIFA. AIFA conserva la fecha local
+26/oct, sin presentarla como nueva captura del día 27. AFAC vuelve a pasar
+el dossier completo y su vínculo PDF/ZIP, manteniendo la advertencia.
+`bts-global-current-recipe.json` combina cuatro productos reales: AICM/Viva
+septiembre, AFAC agosto y BTS julio con periodos nativos rezagados explícitos.
+Los cuatro pasan; la política global rechaza la incorporación por 19 tareas
+obligatorias no incluidas y reportes centrales sin vínculo. No significa que
+19 fuentes estén caídas. La fecha trimestral permanece nula; Aerocivil/GDELT
+siguen requeridos. Recibo creado después del nuevo binding local, con replay
+inmutable; no se reutiliza una aceptación con fingerprints viejos.
+
 ## Pendientes
 
 - La política de productos y el calendario están aprobados; no falta una
@@ -2874,15 +2940,16 @@ replays oficiales afectados, sin reducir aserciones, criterios o required checks
   independiente y 99 pruebas financieras, con una omisión histórica; su vínculo
   de continuidad es solo local y no aprueba publicación.
 - El vínculo físico de descubrimiento/captura está integrado para AIFA y
-  preparado en este lote para AICM, OMA y Viva. AICM/Viva tienen extracciones
+  también integrado para AICM, OMA, Viva y AFAC por aerolínea (PR162/163),
+  con CI posterior aprobada. AICM/Viva tienen extracciones
   reales y prueba de actualidad del día local 27/oct; OMA conserva el bloqueo
   HTTP404 de su PDF de septiembre y HTTP202 de su índice alternativo. No admite
   booleanos manuales ni confunde una retención o Gold con actualidad.
+  BTS tiene contrato físico y extracciones reales descritos arriba.
   La implementación siguiente debe resolver contratos físicos por producto:
   Aeroméxico IR (índice y PDF mensual/financiero); otros productos AFAC de
   aeropuertos/marginales (sus libros y ediciones propias; el dossier por empresa
-  no los sustituye); BTS (historial
-  de publicación y selección real del formulario/ZIP); macro/cotizaciones
+  no los sustituye); macro/cotizaciones
   (ventana publicada y sesiones, no confundir última observación con cierre
   civil); SEC/GAP/ASUR (dossier y mes dentro del anexo, con adquisición manual
   existente); RSS (cobertura real observada y semántica de noticias, separada
