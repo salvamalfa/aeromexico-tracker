@@ -241,7 +241,7 @@
       "entry_ref": "constant:src.ingest.macro.banxico:SIE_EXPORT_URL",
       "state": "implemented",
       "format": "POST público → CSV latino-1",
-      "procedure": "Usar sie_export_form por SF43718 (FIX), SP1 (INPC), SF61745 (tasa). Campos y ventana exactos en helper compartido; no usa token. Revalidar cada CSV en ronda, nunca diario. parse.fx requiere los tres; 403/HTML/error = acceso fallido. Fallback FX separado: receta h10, sin inventar INPC/tasa."
+      "procedure": "Usar sie_export_form por SF43718 (FIX), SP1 (INPC), SF61745 (tasa). Campos y ventana exactos en helper compartido; no usa token. Revalidar cada CSV en ronda, nunca diario. parse.fx requiere los tres; 403/HTML/error = acceso fallido. Fallback FX separado: receta h10, sin inventar INPC/tasa. Tras la certificación integral series, availability={workspace,run_id,series_items:{<rol>:<id>}} vincula la colección separada del mismo día local con todas las respuestas canónicas: tres CSV Banxico (POST/formulario exacto), XLS EIA o cinco JSON de precios. No prueba calendario completo de observaciones ni primera publicación: esos guards siguen bloqueados; no modificar flags para forzar readiness. Equities conserva la identidad SEC retenida, sin nueva consulta o cambio de identidad."
     },
     "h10": {
       "entry_ref": "constant:src.ingest.macro.banxico:H10_EXPORT_URL",
@@ -253,13 +253,13 @@
       "entry_ref": "constant:src.ingest.macro.fuel:EIA_XLS_URL",
       "state": "implemented",
       "format": "GET → XLS histórico, Data 1/header=2",
-      "procedure": "Serie EER_EPJK_PF4_RGC_DPG, entidad idéntica, periodo 2015-01-01_fin. Revalidar la misma URL; parser limita ventana al fin solicitado. parse.fuel y check por date/series_id. Última fecha del XLS original y última parseada son distintas; publicación desconocida queda nula. Piloto real documentado."
+      "procedure": "Serie EER_EPJK_PF4_RGC_DPG, entidad idéntica, periodo 2015-01-01_fin. Revalidar la misma URL; parser limita ventana al fin solicitado. parse.fuel y check por date/series_id. Última fecha del XLS original y última parseada son distintas; publicación desconocida queda nula. Piloto real documentado. Tras la certificación integral series, availability={workspace,run_id,series_items:{<rol>:<id>}} vincula la colección separada del mismo día local con todas las respuestas canónicas: tres CSV Banxico (POST/formulario exacto), XLS EIA o cinco JSON de precios. No prueba calendario completo de observaciones ni primera publicación: esos guards siguen bloqueados; no modificar flags para forzar readiness. Equities conserva la identidad SEC retenida, sin nueva consulta o cambio de identidad."
     },
     "equities": {
       "entry_ref": "catalogue:yahoo_finance",
       "state": "conditional",
       "format": "GET público → JSON chart preservado → Silver",
-      "procedure": "recipe --output round --period genera cinco GET públicos exactos AERO/VLRS/RYAAY/DAL/ICAGY. parse.market_chart exige SEC local verificable, identidad USD/EQUITY/ticker, primera observación AERO 2025-11-06, ajustes explícitos y valores completos; conserva linaje directo al JSON. Una serie ausente bloquea el lote; nunca empalma ticker antiguo ni rellena faltantes. parse.market admite el CSV normalizado histórico como ruta alternativa explícita. No invocar run() activo.",
+      "procedure": "recipe --output round --period genera cinco GET públicos exactos AERO/VLRS/RYAAY/DAL/ICAGY. parse.market_chart exige SEC local verificable, identidad USD/EQUITY/ticker, primera observación AERO 2025-11-06, ajustes explícitos y valores completos; conserva linaje directo al JSON. Una serie ausente bloquea el lote; nunca empalma ticker antiguo ni rellena faltantes. parse.market admite el CSV normalizado histórico como ruta alternativa explícita. No invocar run() activo. Tras la certificación integral series, availability={workspace,run_id,series_items:{<rol>:<id>}} vincula la colección separada del mismo día local con todas las respuestas canónicas: tres CSV Banxico (POST/formulario exacto), XLS EIA o cinco JSON de precios. No prueba calendario completo de observaciones ni primera publicación: esos guards siguen bloqueados; no modificar flags para forzar readiness. Equities conserva la identidad SEC retenida, sin nueva consulta o cambio de identidad.",
       "selection_contract": {
         "source_system": "yahoo_finance",
         "entity": "<ticker>_chart",
