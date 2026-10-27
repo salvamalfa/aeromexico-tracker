@@ -112,3 +112,10 @@ aprobación automática. Puede proponer fecha aunque las cifras sigan pendientes
 pero no concede `core_ready` ni permite publicar o instalar disparadores. La
 guía canónica documenta campos y evidencia real. Si faltan reportes, conservar
 fecha nula; si falta el calendario bancario de un año, mantener el bloqueo.
+
+Los prerrequisitos se aplican a su cadencia: GDELT a mensual, Aerocivil a
+trimestral y ambos a combinada. Una ronda mensual completa no exige el
+prerrequisito exclusivo trimestral. Todo producto realmente utilizado y sus
+dependencias transitivas siguen verificándose, incluso si son de otra cadencia;
+no se omiten por esa separación. Las pruebas de política con resultados
+sintéticos no acreditan disponibilidad de una fuente real.

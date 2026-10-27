@@ -43,7 +43,7 @@ python -m src.source_updates recipe --product am_financials
 Consultar cada producto de esta familia:
 
 - `am_financials` — candidatos retenidos Q2 PDF y Q3 HTML IR revisado; otras ediciones requieren adaptación. Entrada canónica: `catalogue:aeromexico_ir`. Formato: HTML/PDF oficiales.
-- `am_traffic_ir` — adaptador mensual candidato dedicado. Entrada canónica: `url:https://ir.aeromexico.com/news-events/traffic-reports`. Formato: HTML → PDF inglés seleccionado por enlace real.
+- `am_traffic_ir` — adaptador mensual candidato dedicado. Entrada canónica: `url:https://ir.aeromexico.com/news-events/traffic-reports`. Formato: índice HTML → PDF inglés seleccionado o 6-K HTML oficial con atribución independiente revisada.
 - `am_sec` — selección/importación manual. Entrada canónica: `sec:AEROMEXICO`. Formato: JSON submissions/companyfacts → index.json → anexos HTML.
 - `volaris_sec` — selección/importación manual. Entrada canónica: `sec:VOLARIS`. Formato: JSON → anexos HTML.
 - `delta_sec` — selección/importación manual. Entrada canónica: `sec:DELTA`. Formato: JSON → 10-Q/10-K/anexos.
@@ -68,7 +68,7 @@ Un 403, TLS, timeout o archivo inválido es un fallo de acceso/contenido; no pru
 
 ## Candidato mensual IR de Aeroméxico
 
-Seleccionar un mes cerrado mediante `recipe --product am_traffic_ir --output selection --catalog-file <indice-preservado.html> --period YYYYMmm`. `collect` captura el PDF seleccionado. A continuación ejecutar la vista previa de `python -m src.source_updates.am_traffic_candidate --workspace <candidato> --period <mes> --as-of <corte-con-zona> --collection <id-del-recibo>`. `--execute` certifica el original preservado sin red; `--check` reconstruye y compara las siete salidas y el hash del recibo. Usar un candidato por mes, sin otros productos ni salidas previas.
+Seleccionar un mes cerrado mediante `recipe --product am_traffic_ir --output selection --catalog-file <indice-preservado.html> --period YYYYMmm`. `collect` captura el PDF seleccionado, o el 6-K HTML oficial acotado que se describe abajo. A continuación ejecutar la vista previa de `python -m src.source_updates.am_traffic_candidate --workspace <candidato> --period <mes> --as-of <corte-con-zona> --collection <id-del-recibo>`. `--execute` certifica el original preservado sin red; `--check` reconstruye y compara las siete salidas y el hash del recibo. Usar un candidato por mes, sin otros productos ni salidas previas.
 
 Exigir título y entidad Grupo Aeroméxico, orden mes/acumulado y años actual/anterior, cuatro métricas y tres segmentos completos. No importar acumulados como mes. Conservar 12 cifras del mes y 12 comparativos del mismo mes del año anterior, con fecha de publicación dentro del documento. Pasajeros están en miles; ASM/RPM en millones de millas; ocupación en porcentaje. Los tres primeros incluyen itinerario/fletamento; ocupación es itinerario y no se calcula desde ese RPM/ASM. Conservar estado no auditado, unidad literal, token, extracto, página, captura y SHA-256. No equiparar no auditado con preliminar.
 
@@ -113,6 +113,27 @@ ronda. `complete_month_certified=true` cubre las doce cifras mensuales del
 reporte corporativo y sus doce comparativas; no certifica un censo de operadores,
 trimestres ni otra aerolínea. Publicación inicial y hora desconocidas siguen
 nulas. Un PDF retenido de otro día prueba historia, nunca actualidad del día.
+
+### Alternativa oficial HTML mensual, septiembre 2026
+
+El lector separado `am_traffic_html.py` admite el 6-K IR exacto
+`https://ir.aeromexico.com/node/9131/html`, con producto `am_traffic_ir` y
+entidad `am_traffic_ir_2026M09_6K`. Seleccionar ese original explícito y el
+índice de tráfico en una colección pareada, dos GET base y cero pagados.
+No reciclar la colección financiera ni reetiquetar su producto. El índice
+anuncia septiembre; el cover del 6-K atribuye el comunicado del 6/oct al
+Exhibit 99.4. Se extraen solo sus doce cifras mensuales y doce comparativas,
+no el 99.1 financiero, julio/agosto ni acumulados. No afirmar enlace directo
+desde el índice al HTML o equivalencia de bytes con el PDF.
+
+Los comandos `am_traffic_candidate` y readiness conservan preview/execute/check.
+Exigir glosario explícito de millas y ocupación itinerario. Estado preliminar
+no declarado permanece nulo en nativo y `not_stated` en notas/recibo. El booleano
+Gold existente «Fuente lo marca preliminar» es falso solo para esa pregunta;
+no clasifica el reporte como definitivo. Otro mes, URL, caption, unidad o
+flag desconocido bloquea. La prueba real del 27/oct dio 24 filas iguales en
+valor/unidad/ámbito a las del PDF retenido, sin igualar bytes ni capturas.
+Fecha documental y captura son conocidas; primera publicación/hora siguen nulas.
 
 ## Finanzas IR retenidas de Aeroméxico
 
