@@ -2542,6 +2542,40 @@ sondas adversariales independientes pasan. La medición local de esos 77 casos
 bajó de 190,52 s en la agregada de control a 50,34 s en el módulo revisado;
 no es una medición de CI remota ni una promesa de ahorro global.
 
+La siguiente pasada se concentró en la preparación repetida, con el mismo
+entorno Python 3.13.5, checkout restaurado, pins documentados y selección de
+55 casos antes y después. Todos pasaron en ambas ejecuciones: 420,21 s frente
+a 217,13 s en pytest; 421,79 s frente a 218,96 s de proceso completo. El ahorro
+observado del grupo es 48,1 %. Se conservan sus identificadores, parámetros y
+aserciones. No es una medición de GitHub CI ni acredita por sí sola ahorro total.
+
+El holdout simulado comparte solo dos textos de identidad obtenidos del snapshot
+real; cada ejecución del runner sigue construyendo y verificando otro snapshot
+real. Cada caso conserva una copia del holdout, su monkeypatch, proveedor y
+salidas independientes. Se retiran 21 construcciones repetidas de identidad.
+Para los 33 ataques sobre candidatos de AICM, AIFA, Banxico, combustible y
+cotizaciones, cada producto se certifica realmente una vez como plantilla;
+cada ataque recibe archivos copiados con hashes iguales e inodos distintos.
+No se reescriben recibos, identidades ni rutas. Las plantillas se comprueban
+inmutables al cierre. Se retiran 28 certificaciones de preparación repetidas;
+la comprobación real de replay y rechazo se conserva por ataque. La revisión
+independiente reprodujo los cinco clones y rechazó una corrupción real sin
+alterar la plantilla. Las pruebas positivas completas por producto y cadencia
+siguen construyendo sus propios candidatos desde los originales.
+
+El mínimo defendible mantiene los casos de riesgo distintos. En la agregada
+previa, 4.301 casos sumaron solo 21,47 s, menos del 1 % del tiempo; retirarlos
+por cantidad apenas afectaría el coste. Se conservan la preparación de Vuelos
+ya compartida por sesión, el replay de paridad y sus rechazos adversariales
+independientes, y el paquete financiero Q2 ya compartido por módulo. Usar una
+salida retenida como oráculo o almacenar el resultado de sus verificaciones
+ocultaría regresiones de cálculos, fuentes, fechas o autoridad. Esta pasada no
+retira casos ni cambia controles obligatorios. La comparación y el perfil bruto
+se conservan como evidencia técnica en `efficiency-focused-20261027/`, dentro
+del directorio técnico de esta continuación. La agregada final conserva todos
+los marcadores y las mismas opciones que la ejecución completa `d83adbbab`;
+su resultado y comparación total se entregan por separado de la medición focalizada.
+
 La agregada de control `fa67e88a` conserva sus resultados completos: 5.069
 aprobadas, 35 fallos, 25 errores, cuatro omisiones y 29 subpruebas, 2.354,34 s.
 Sus 60 negativos son exactamente los casos de configuración ya corregidos;
