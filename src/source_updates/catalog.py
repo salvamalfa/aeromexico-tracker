@@ -219,7 +219,7 @@ CHECK_TABLES = {
     "am_financials": ("aeromexico_ir_financial_history", "fact_carrier_metrics"),
     "am_sec": ("sec_operating_metrics", "sec_financials", "fact_carrier_metrics"),
     "volaris_sec": ("peer_operating_metrics", "peer_financials", "fact_carrier_metrics"),
-    "volaris_traffic_ir": ("source_products/volaris_traffic_ir", "fact_volaris_ir_monthly_traffic"),
+    "volaris_traffic_ir": ("fact_volaris_ir_monthly_traffic",),
     "delta_sec": ("peer_operating_metrics", "peer_financials", "fact_carrier_metrics"),
     "ryanair_sec": ("peer_operating_metrics", "peer_financials", "fact_carrier_metrics"),
     "bmv_xbrl": ("bmv_financials", "fact_carrier_metrics"),

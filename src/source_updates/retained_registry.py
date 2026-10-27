@@ -23,6 +23,7 @@ def spec(product: str) -> dict:
         slots,
         viva_financials,
         viva_traffic,
+        volaris_traffic,
     )
 
     registry = {
@@ -116,6 +117,25 @@ def spec(product: str) -> dict:
         "parse": viva_traffic.parse,
         "revision_values": ["value", "unit", "entity_as_reported"],
         "code_files": [Path(viva_traffic.__file__)],
+    }
+    registry["volaris_traffic_ir"] = {
+        "roles": {"pdf": ("volaris_ir",)},
+        "primary": "pdf",
+        "table": volaris_traffic.TABLE,
+        "grain": volaris_traffic.GRAIN,
+        "parse": volaris_traffic.parse,
+        "code_files": [Path(volaris_traffic.__file__)],
+        "revision_values": [
+            "value",
+            "unit",
+            "scale_multiplier",
+            "reported_change",
+            "reported_change_unit",
+            "flight_scope",
+            "passenger_definition",
+            "is_preliminary",
+            "is_unaudited",
+        ],
     }
     registry["aicm_slots"] = {
         "roles": {"pdf": ("aicm",)},

@@ -10,7 +10,7 @@ from src.source_updates.catalog import product_map
 MONTHLY_REQUIRED = frozenset(
     {
         "am_traffic_ir",
-        "volaris_sec",
+        "volaris_traffic_ir",
         "viva_traffic",
         "afac_carriers",
         "afac_airports",

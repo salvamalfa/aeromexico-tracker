@@ -221,6 +221,10 @@ def discovery_contract(product, adapter):
 
 def verify(item, result, cutoff):
     """Called only after complete offline candidate replay; never performs IO on the network."""
+    if item["product"] == "volaris_traffic_ir" and item["adapter"] == "retained":
+        from src.source_updates.availability_volaris_ir import verify as verify_volaris_ir
+
+        return verify_volaris_ir(item, result, cutoff)
     if (
         isinstance(item.get("availability"), dict)
         and item["availability"].get("source_scope") == "oma_official_newsroom_v1"
