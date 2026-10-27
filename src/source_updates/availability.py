@@ -217,6 +217,10 @@ def discovery_contract(product, adapter):
 
 def verify(item, result, cutoff):
     """Called only after complete offline candidate replay; never performs IO on the network."""
+    if item["product"] == "am_financials" and item["adapter"] == "retained":
+        from src.source_updates.availability_am_financials import verify as verify_am_financials
+
+        return verify_am_financials(item, result, cutoff)
     if item["product"] == "gap_traffic" and item["adapter"] == "airport_group":
         from src.source_updates.availability_gap import verify as verify_gap
 

@@ -238,3 +238,18 @@ por accession. Solo admite julio 2026 con el snapshot y corte mexicano
 ni cambiar las capturas. El corte global real también debe coincidir: un
 `candidate_as_of` antiguo no permite presentarlo como disponibilidad actual.
 El protocolo y sus límites están en la skill de aeropuertos y la guía canónica.
+
+Las conciliaciones derivadas comparables admiten la política inicial autorizada
+el 27/oct: hasta 5 % relativo a una referencia oficial explícita y estable,
+con mismo periodo, unidad, definición y cobertura. El primer uso acotado es
+CASM Volaris; conserva cifra oficial, cálculo, fuentes y advertencia visible.
+No aplicar a ausencias, citas oficiales incompatibles, unidades/periodos,
+integridad o autoridad. Cero/casi cero no admite un porcentaje automático.
+La revisión con advertencias no se convierte en aprobación de publicación.
+
+La cobertura exhaustiva conserva su diagnóstico. Para promedios/cierres
+observados de Banxico/EIA ya verificados no es un denominador necesario y queda
+como advertencia global; para retornos/volatilidad bursátiles sigue bloqueando.
+Todos los meses, entradas, fuentes, cifras y linaje requeridos siguen pasando
+sus controles. Un aviso de reporte confirmado tampoco espera esa ronda global:
+separar detección, comprobación primaria, aviso, incorporación y autorización.

@@ -14,7 +14,14 @@ from pathlib import Path
 
 from src.pipeline.offline import block_network
 from src.source_updates import readiness
-from src.source_updates.calendar import business_day, local_time, monthly, quarterly
+from src.source_updates.calendar import (
+    business_day,
+    local_time,
+    monthly,
+    quarterly,
+    report_day,
+    verify_report_evidence,
+)
 from src.source_updates.catalog import ROOT, product_map
 from src.source_updates.checks import period_end
 from src.source_updates.collection import safe_workspace, writer
@@ -60,16 +67,11 @@ ITEM_FIELDS = {
     "candidate_as_of",
 }
 RECIPE_FIELDS = {"version", "round", "as_of", "monthly_period", "quarterly_period", "items", "releases"}
-RELEASE_FIELDS = {
-    "entity",
-    "period",
-    "kind",
-    "confirmed",
-    "published_at",
-    "document_url",
-    "source_sha256",
-    "task_id",
-}
+RELEASE_FIELDS = set("entity period kind confirmed published_at document_url source_sha256 task_id".split())
+OBSERVED_SERIES_SCOPE = "all_observations_in_selected_retained_originals_not_verified_publication_calendar"
+NUMERIC_WARNING_FIELDS = (
+    "numeric_warnings numeric_warning_count numeric_check_status numeric_policy_id".split()
+)
 
 
 def policy() -> dict:
@@ -220,7 +222,10 @@ def preflight(recipe: dict) -> list[dict]:
     for key in by_id:
         visit(key)
     for release in recipe["releases"]:
-        if not isinstance(release, dict) or set(release) != RELEASE_FIELDS:
+        if not isinstance(release, dict) or set(release) - {"documentary_evidence"} not in (
+            RELEASE_FIELDS,
+            RELEASE_FIELDS | {"publication_precision", "published_on"},
+        ):
             raise ValueError("Release requires exact physical-artifact binding fields")
         if (
             release["entity"] not in FINANCIALS
@@ -240,8 +245,9 @@ def preflight(recipe: dict) -> list[dict]:
             r"[0-9a-f]{64}", release["source_sha256"]
         ):
             raise ValueError("Release requires source SHA-256")
-        stamp = local_time(release["published_at"])
-        if not period_end(release["period"]) < stamp.date() or stamp > local_time(item["candidate_as_of"]):
+        release_cutoff = recipe["as_of"] if "documentary_evidence" in release else item["candidate_as_of"]
+        day = report_day(release, release_cutoff)
+        if not period_end(release["period"]) < day:
             raise ValueError("Release timestamp outside closed-quarter/candidate cutoff")
     return recipe["items"]
 
@@ -254,7 +260,7 @@ def evaluate(recipe: dict, outcomes: dict) -> dict:
     items = preflight(recipe)
     cadences = set(REQUIRED) if recipe["round"] == "combined" else {recipe["round"]}
     indexed = {(i["cadence"], i["product"]): i for i in items}
-    blockers, core_blockers, calendar_blockers = [], [], []
+    blockers, core_blockers, calendar_blockers, coverage_warnings = [], [], [], []
     required = {(c, p) for c in cadences for p in REQUIRED[c]}
     for cadence, product in sorted(required):
         item = indexed.get((cadence, product))
@@ -280,10 +286,16 @@ def evaluate(recipe: dict, outcomes: dict) -> dict:
             if (item["cadence"], item["product"]) in required:
                 core_blockers.append(message)
         if "publication_calendar_completeness_not_verified" in result.get("source_conditions", []):
-            calendar_blockers.append(f"{item['id']}:observation_calendar_completeness_not_verified")
+            observed = (
+                item["product"] in {"banxico", "fuel"}
+                and item["adapter"] == "series"
+                and result.get("status") == "checks_passed"
+                and result.get("scope") == OBSERVED_SERIES_SCOPE
+            )
+            target = coverage_warnings if observed else calendar_blockers
+            target.append(f"{item['id']}:observation_calendar_completeness_not_verified")
         if result.get("latest_source_availability_verified") is not True:
             calendar_blockers.append(f"{item['id']}:current_source_availability_not_verified")
-    # A required result is invalid when any transitive used dependency fails.
     by_id = {i["id"]: i for i in items}
 
     dependency_cache = {}
@@ -332,7 +344,6 @@ def evaluate(recipe: dict, outcomes: dict) -> dict:
             calendar_blockers.append(f"{key[0]}:{key[1]}:required_calendar_prerequisite_not_verified")
     holidays = json.loads((ROOT / "config/source_update_holidays.json").read_text())
     try:
-        # Check year even on a weekend: business_day checks verified year first.
         business_day(local_time(recipe["as_of"]).date(), holidays)
     except ValueError as exc:
         calendar_blockers.append(str(exc))
@@ -352,8 +363,12 @@ def evaluate(recipe: dict, outcomes: dict) -> dict:
             eligible = result.get("contributing_artifacts", [])
             if release["entity"] == "VOLARIS":
                 eligible = result.get("financial_report_artifacts", [])
-            if (
-                result.get("status") == "checks_passed"
+            documented = readiness.recipe_hash(release) in [
+                proof.get("release_sha256") for proof in result.get("documentary_releases", [])
+            ]
+            if documented or (
+                "documentary_evidence" not in release
+                and result.get("status") == "checks_passed"
                 and identity in eligible
                 and identity in result.get("contributing_artifacts", [])
             ):
@@ -384,13 +399,18 @@ def evaluate(recipe: dict, outcomes: dict) -> dict:
         "ready_for_automatic_execution": False,
         "blockers": blockers,
         "calendar_blockers": sorted(set(calendar_blockers)),
+        "coverage_warnings": sorted(set(coverage_warnings)),
+        "numeric_warnings": {
+            i["id"]: {k: outcomes[i["id"]].get(k) for k in NUMERIC_WARNING_FIELDS}
+            for i in items
+            if i["used"] and outcomes.get(i["id"], {}).get("numeric_warnings")
+        },
         "activation": "none",
         "publication": "not_authorized",
     }
 
 
 def fingerprints() -> dict:
-    # Freeze complete reusable verifier/parsers/contracts, not only this wrapper.
     paths = [
         p
         for folder in ("src", "config", "contracts")
@@ -425,12 +445,7 @@ def verify(item: dict, workspace: Path, round_as_of: str | None = None) -> dict:
     )
     result.update(target_period=item["period"], source_period=task["period"])
     if item["product"] == "aerocivil":
-        # Actual adapter currently reports pending legend/attribution. Never
-        # infer semantic acceptance from its numeric checks or missing flags.
         result["semantic_acceptance_verified"] = False
-    # Only artifacts actually used by verified record lineage can bind a release.
-    # This records documentary identity; the publication timestamp is still the
-    # explicit human review assertion, never inferred from download time.
     outputs = result["output_sha256"]
     if {"gold/dim_source_artifact", "gold/bridge_record_lineage"} <= set(outputs):
         import pandas as pd
@@ -438,9 +453,7 @@ def verify(item: dict, workspace: Path, round_as_of: str | None = None) -> dict:
         artifacts = pd.read_parquet(candidate / "data/gold/dim_source_artifact.parquet")
         bridge = pd.read_parquet(candidate / "data/gold/bridge_record_lineage.parquet")
         if item["product"] == "viva_financials":
-            # Q1 support is present in native Silver lineage, but cannot bind a Q2 release.
-            # Here contributing_artifacts means release-eligible artifacts, not all support.
-            # Only the fully checked, directly reported Q2-edition Gold facts confer that role.
+            # Q1 supporting lineage cannot date the directly reported Q2 release.
             from src.source_updates.viva_financial_spec import TABLE
 
             bridge = bridge.loc[bridge.table_name.eq(TABLE)]
@@ -450,9 +463,7 @@ def verify(item: dict, workspace: Path, round_as_of: str | None = None) -> dict:
             key=lambda row: (row["source_url"], row["sha256"]),
         )
     if item["product"] == "volaris_sec":
-        # Index/submissions/cover 6-K support provenance, but only the parsed
-        # financial exhibit can bind the central report release. The strict
-        # product checker above has already verified this selected role.
+        # Only the checked financial exhibit can date Volaris' central report.
         receipt = candidate / "receipts" / f"retained-{item['receipt_id']}.json"
         original = json.loads(receipt.read_text())["originals"]["html"]
         identity = {"source_url": original["source_url"], "sha256": original["sha256"]}
@@ -469,7 +480,6 @@ def execute(recipe: dict, workspace: Path, *, write=False, check=False) -> dict:
         raise ValueError("Choose write or check")
     plans = preflight(recipe)
     workspace = safe_workspace(workspace)
-    # Check workspace disjointness before any source checker is called.
     locations = []
     for item in plans:
         if not item["used"] or item["adapter"] == "unsupported":
@@ -536,6 +546,14 @@ def execute(recipe: dict, workspace: Path, *, write=False, check=False) -> dict:
                         "reason": str(exc),
                         "error_type": type(exc).__name__,
                     }
+            for release in recipe["releases"]:
+                if "documentary_evidence" in release:
+                    result = results.setdefault(release["task_id"], {})
+                    try:
+                        proof = verify_report_evidence(release, recipe["as_of"])
+                        result.setdefault("documentary_releases", []).append(proof)
+                    except Exception as exc:
+                        result.setdefault("documentary_release_errors", []).append(str(exc))
         output.update(evaluate(recipe, results))
         output["results"] = results
         output["status"] = (

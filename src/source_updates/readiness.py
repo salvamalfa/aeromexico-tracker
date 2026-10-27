@@ -314,6 +314,16 @@ def check_task(item: dict, cutoff: str, round_as_of: str | None = None) -> dict:
         "source_candidate_files_unchanged": len(before),
         "collection_basis": "retained" if retained else "previously_captured_originals",
         "source_conditions": conditions,
+        **{
+            key: result[key]
+            for key in (
+                "numeric_policy_id",
+                "numeric_check_status",
+                "numeric_warning_count",
+                "numeric_warnings",
+            )
+            if key in result
+        },
         **(
             {"calendar_completeness_certified": result["calendar_completeness_certified"]}
             if "calendar_completeness_certified" in result

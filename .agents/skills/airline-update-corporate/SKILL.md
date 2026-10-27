@@ -42,7 +42,7 @@ python -m src.source_updates recipe --product am_financials
 
 Consultar cada producto de esta familia:
 
-- `am_financials` — candidato offline acotado de 2026Q2; otras ediciones requieren adaptación. Entrada canónica: `catalogue:aeromexico_ir`. Formato: HTML → PDF.
+- `am_financials` — candidatos retenidos Q2 PDF y Q3 HTML IR revisado; otras ediciones requieren adaptación. Entrada canónica: `catalogue:aeromexico_ir`. Formato: HTML/PDF oficiales.
 - `am_traffic_ir` — adaptador mensual candidato dedicado. Entrada canónica: `url:https://ir.aeromexico.com/news-events/traffic-reports`. Formato: HTML → PDF inglés seleccionado por enlace real.
 - `am_sec` — selección/importación manual. Entrada canónica: `sec:AEROMEXICO`. Formato: JSON submissions/companyfacts → index.json → anexos HTML.
 - `volaris_sec` — selección/importación manual. Entrada canónica: `sec:VOLARIS`. Formato: JSON → anexos HTML.
@@ -121,7 +121,7 @@ con `am_financials`, rol `pdf` y periodo `2026Q2`. El adaptador dedicado
 [`financials.py`](../../../src/source_updates/financials.py) verifica 13 páginas,
 20 cifras del trimestre, encabezados y columnas trimestral/acumulado y
 actual/comparativo, unicidad de cada fila y dos identidades contables. Cambios
-de edición o formato se bloquean para revisión; no es un parser genérico de Q3.
+de edición o formato se bloquean para revisión; Q3 usa el lector separado descrito abajo.
 
 Conservar preliminar/no auditado y la precisión redondeada de los estados.
 Importes en millones de USD, pasajeros en miles, ASM/RPM en millones de millas,
@@ -131,6 +131,25 @@ La fecha impresa 13 de julio de 2026 no prueba primera disponibilidad:
 publicación inicial y rezago siguen nulos. El candidato conserva captura, SHA,
 página, token y extracto. No modifica M11, parsers heredados, warehouse
 productivo, elegibilidad, tesis ni aprobaciones.
+
+
+Para `2026Q3` seleccionar solo rol `html` del 6-K oficial
+`https://ir.aeromexico.com/node/9131/html`, alias `aeromexico_ir`, entidad de
+selección `am_financials_2026Q3_6K`. No combinarlo con `pdf` ni usar el HTML
+GlobeNewswire como alias IR. `financials_html.py` limita el contenido financiero
+al Exhibit 99.1 atribuido por el cover; excluye tráfico 99.2–.4, nueve meses y
+comparativos. Conserva las mismas veinte métricas y unidades. No auditado es
+`true`; preliminar desconocido es nulo. No infiere hora ni primera publicación.
+
+Tras retención/certificación/replay, `availability` usa la colección física
+separada con `workspace`, `run_id`, `catalog_item` y `artifact_item`. El índice
+actual anuncia un PDF y acredita el último trimestre; el 6-K HTML acredita por
+su propio contenido emisor, trimestre y fecha. Son formatos oficiales distintos:
+no afirmar enlace directo al HTML desde el índice ni equivalencia de bytes con
+el PDF. Ambos deben estar capturados en el día local de la ronda y el HTML
+exacto debe aportar las veinte filas del candidato. Una edición pertinente
+ambigua, moneda/escala contradictoria o anexo equivocado bloquea; el 5 % no
+corrige esos errores.
 
 ## Tráfico Viva: original BMV autorizado y formato nativo
 
@@ -207,10 +226,20 @@ Gold propio aplica solo escala explícita, omite resúmenes duplicados y context
 cambiario del emisor, y conserva padres/artefactos exactos. Nada se incorpora
 al warehouse productivo.
 
-El original 2Q26 retenido permanece bloqueado por CASM H1 2025: gastos 1.403
-millones/ASM 17.622 millones no justifican 7,97 centavos bajo los intervalos de
-redondeo impresos. No eliminar ese comparativo ni ampliar tolerancias. Una
-prueba sintética positiva solo acredita el contrato, no esa fuente real.
+La política autorizada el 27/oct conserva el primer control por intervalos de
+redondeo. Si CASM derivado no solapa, admite hasta 5 % relativo a la cifra
+oficial absoluta, solo con la misma entidad, periodo, unidades, definición,
+cobertura y originales. CASM H1 2025 conserva 7,97; `1403/17622×100` deriva
+7,96163886…, diferencia relativa de 0,1049076472 %. Se muestra como advertencia,
+sin modificar la cifra oficial ni omitir el comparativo. Una referencia cero
+o menor/igual a una unidad de su resolución impresa no recibe porcentaje
+automático. Más del 5 % o entradas incompatibles bloquean.
+
+Los recibos propagan `numeric_warnings`, `numeric_warning_count`,
+`numeric_check_status=passed_with_warnings` y `numeric_policy_id`; el estado
+compatible sigue `checks_passed`. Cada advertencia conserva valores, diferencia
+absoluta/relativa, referencia, unidad, definición y fuentes/locators. No aplicar
+la tolerancia a copias de cifras oficiales, integridad, ausencias o periodos.
 Fecha impresa y aceptación SEC no acreditan primera publicación o disponibilidad
 actual; esos campos siguen desconocidos. Ver evidencia en la guía canónica.
 

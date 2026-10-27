@@ -179,6 +179,12 @@ def texts(plain, original, period):
 
 
 def parse(inputs, period):
+    if set(inputs) == {"html"} and period == "2026Q3":
+        from src.source_updates.financials_html import parse as parse_html
+
+        return parse_html(inputs, period)
+    if set(inputs) != {"pdf"} or period != "2026Q2":
+        raise ValueError("AM financial editions require Q2 PDF only or Q3 official HTML only")
     content, original = inputs["pdf"]
     if len(content) > 4_000_000 or not content.startswith(b"%PDF-"):
         raise ValueError("AM financial PDF outside reviewed bound")
