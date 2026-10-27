@@ -75,10 +75,34 @@ def describe(product_id: str) -> dict:
 def catalog_selection(product_id: str) -> dict:
     recipe = describe(product_id)
     source = load_catalog()[recipe["source_key"]]
+    if product_id == "rss":
+        if recipe["state"] in {"manual", "internal", "disabled"}:
+            raise ValueError("No generic catalog capture; follow its explicit acquisition procedure")
+        from src.ingest.news.rss_gdelt import RSS_FEEDS
+
+        for feed in ("google_es", "google_en"):
+            validate_url(RSS_FEEDS[feed], source["allowed_hosts"])
+        return {
+            "version": 1,
+            "items": [
+                dict(
+                    id="rss-" + feed,
+                    product="rss",
+                    source_system="rss",
+                    entity=feed,
+                    period="current",
+                    purpose="data",
+                    url=RSS_FEEDS[feed],
+                    extension="xml",
+                    mode="get",
+                    relative_dir="news/rss",
+                )
+                for feed in ("google_es", "google_en")
+            ],
+        }
     direct = {
         "airports_reference": ("airports", "csv"),
         "iasa": ("country_results", "pdf"),
-        "rss": ("google_es", "xml"),
         "gdelt": ("aeromexico_articles", "json"),
     }
     if product_id in direct:

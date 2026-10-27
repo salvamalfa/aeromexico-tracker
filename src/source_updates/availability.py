@@ -21,6 +21,8 @@ from src.source_updates.collection import safe_workspace, validate_url
 
 FIELDS = {"workspace", "run_id", "catalog_item", "artifact_item"}
 MULTI_FIELDS = (FIELDS - {"artifact_item"}) | {"artifact_items"}
+RSS_FIELDS = {"workspace", "run_id", "feed_items"}
+SERIES_FIELDS = {"workspace", "run_id", "series_items"}
 AIFA_INDEX = "https://www.aifa.aero/legal-y-finanzas/informes"
 MONTHS = "Ene Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic".split()
 MONTH_NAMES = (
@@ -47,18 +49,35 @@ def sha(path):
 
 
 def preflight(binding, candidate):
-    if not isinstance(binding, dict) or set(binding) not in (FIELDS, MULTI_FIELDS):
+    if not isinstance(binding, dict) or set(binding) not in (FIELDS, MULTI_FIELDS, RSS_FIELDS, SERIES_FIELDS):
         raise ValueError("Availability requires exact physical collection binding fields")
-    identities = [binding[k] for k in ("workspace", "run_id", "catalog_item")]
+    if set(binding) == RSS_FIELDS:
+        roles = binding["feed_items"]
+        if not isinstance(roles, dict) or set(roles) != {"google_es", "google_en"}:
+            raise ValueError("RSS availability requires both canonical locale feed roles")
+        identities = [binding[k] for k in ("workspace", "run_id")] + list(roles.values())
+    elif set(binding) == SERIES_FIELDS:
+        from src.source_updates.availability_series import role_sets
+
+        roles = binding["series_items"]
+        if not isinstance(roles, dict) or set(roles) not in role_sets().values():
+            raise ValueError("Series availability requires one complete canonical product role set")
+        identities = [binding[k] for k in ("workspace", "run_id")] + list(roles.values())
+    else:
+        identities = [binding[k] for k in ("workspace", "run_id", "catalog_item")]
     if set(binding) == MULTI_FIELDS:
         roles = binding["artifact_items"]
         if not isinstance(roles, dict) or set(roles) != {"pdf", "database"}:
             raise ValueError("Multi-original availability requires exact AFAC pdf/database roles")
         identities += list(roles.values())
-    else:
+    elif set(binding) == FIELDS:
         identities.append(binding["artifact_item"])
     if any(not isinstance(v, str) or not v for v in identities):
         raise ValueError("Availability binding values must be nonempty strings")
+    if set(binding) == SERIES_FIELDS and len(set(identities[2:])) != len(binding["series_items"]):
+        raise ValueError("Series collection item IDs must be distinct")
+    if set(binding) == RSS_FIELDS and len(set(identities[2:])) != 2:
+        raise ValueError("RSS collection item IDs must be distinct")
     if set(binding) == MULTI_FIELDS and len(set(identities[2:])) != 3:
         raise ValueError("Discovery and original collection item IDs must be distinct")
     if not re.fullmatch(r"[a-f0-9]{32}", binding["run_id"]):
@@ -142,7 +161,8 @@ def latest_aifa(index_path):
             url,
         )
         title = re.fullmatch(
-            r"Numeralia Aeroportuaria de Enero a ([A-Za-z]+) (20\d{2}) - Formato (PDF|XLSX) \(PDF\)", label
+            r"Numeralia Aeroportuaria de Enero a ([A-Za-z]+) (20\d{2}) - Formato (PDF|XLSX)(?: \(PDF\))?",
+            label,
         )
         if (
             not match
@@ -193,6 +213,14 @@ def discovery_contract(product, adapter):
 
 def verify(item, result, cutoff):
     """Called only after complete offline candidate replay; never performs IO on the network."""
+    if item["product"] in {"banxico", "fuel", "equities"} and item["adapter"] == "series":
+        from src.source_updates.availability_series import verify as verify_series
+
+        return verify_series(item, result, cutoff)
+    if item["product"] == "rss" and item["adapter"] == "rss_retained":
+        from src.source_updates.availability_rss import verify as verify_rss
+
+        return verify_rss(item, result, cutoff)
     if item["product"] == "bts_segments" and item["adapter"] == "bts":
         from src.source_updates.availability_bts import verify as verify_bts
 
