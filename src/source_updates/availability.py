@@ -49,6 +49,10 @@ def sha(path):
 
 
 def preflight(binding, candidate):
+    if isinstance(binding, dict) and binding.get("source_scope") == "gap_official_manual_target_v1":
+        from src.source_updates.availability_gap_manual import preflight as gap_manual_preflight
+
+        return gap_manual_preflight(binding, candidate)
     if isinstance(binding, dict) and binding.get("source_scope") == "oma_official_newsroom_v1":
         from src.source_updates.availability_oma_newsroom import preflight as oma_preflight
 
@@ -249,6 +253,10 @@ def verify(item, result, cutoff):
 
         return verify_am_financials(item, result, cutoff)
     if item["product"] == "gap_traffic" and item["adapter"] == "airport_group":
+        if item["availability"].get("source_scope") == "gap_official_manual_target_v1":
+            from src.source_updates.availability_gap_manual import verify as verify_gap_manual
+
+            return verify_gap_manual(item, result, cutoff)
         from src.source_updates.availability_gap import verify as verify_gap
 
         return verify_gap(item, result, cutoff)

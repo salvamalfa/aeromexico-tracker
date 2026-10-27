@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import calendar
+import hashlib
 import re
 from datetime import date, datetime
 from decimal import Decimal
@@ -58,6 +59,9 @@ ASUR = dict(
 )
 CBX = "Passengers in Tijuana who use CBX in both directions are classified as international."
 ASUR_SCOPE = "Transit and general aviation passengers are excluded only for Mexico and Colombia."
+GAP_SEPTEMBER_URL = "https://www.sec.gov/Archives/edgar/data/1347557/000117184326006475/f6k_100626.htm"
+GAP_SEPTEMBER_CAPTURE_SHA = "4f351f91815d35686516d948123ad202723fc9fa8ece56d01345e3eeaac24f5d"
+GAP_DELIVERY_SCRIPT_SHA = "1ef305d54ee46a3493af0ce1cb7f8a5eb85b46fe10fd4468da397f7a28877abd"
 
 
 def cells(table):
@@ -147,8 +151,14 @@ def parse_gap(soup, text, original, period):
     if (
         f"announces preliminary terminal passenger traffic figures for {full} {year}" not in text
         or "GRUPO AEROPORTUARIO DEL PACÍFICO" not in text
-        or "12 Mexican airports operated by GAP" not in text
-        or "GAP’s airports in Jamaica" not in text
+        or not (
+            "12 Mexican airports operated by GAP" in text
+            and "GAP’s airports in Jamaica" in text
+            or "GAP’s 12 Mexican airports" in text
+            and re.search(
+                r"In Jamaica, passenger traffic at Montego Bay Airport.{0,150}Kingston Airport", text
+            )
+        )
         or CBX not in text
     ):
         raise ValueError("GAP issuer, report month, preliminary or CBX scope changed")
@@ -165,31 +175,41 @@ def parse_gap(soup, text, original, period):
         f"Jan - {abbr} {str(year)[2:]}",
         "% Change",
     ]
-    rows, data, checks = [], {}, 0
+    rows, data, checks, formats = [], {}, 0, set()
     for market in ["domestic", "international", "total"]:
         title = f"{market.title()} Terminal Passengers (in thousands):"
         # Bind each table to its physical heading; never assume the first three tables are markets.
-        matches = [
-            t
-            for t in soup.find_all("table")
-            if " ".join(t.find_previous(["p", "div"]).get_text(" ", strip=True).split()) == title
-        ]
+        matches = []
+        for t in soup.find_all("table"):
+            native = cells(t)
+            titled = bool(native and native[0] and native[0][0] == title and not any(native[0][1:]))
+            previous = t.find_previous(["p", "div"])
+            external = previous is not None and " ".join(previous.get_text(" ", strip=True).split()) == title
+            if titled or external:
+                matches.append((native[1:] if titled else native, titled))
         if len(matches) != 1:
             raise ValueError("GAP market table heading/unit absent or duplicated")
-        table = cells(matches[0])
+        table, compact = matches[0]
+        formats.add(compact)
         if table[0] != header:
             raise ValueError("GAP monthly/YTD comparative headers changed")
         parsed = {}
         for index, row in enumerate(table[1:], 1):
             if not any(row):
                 continue
-            if len(row) != 9 or row[0] not in GAP.keys() | {"Total"} or row[0] in parsed:
+            if len(row) != (7 if compact else 9) or row[0] not in GAP.keys() | {"Total"} or row[0] in parsed:
                 raise ValueError("GAP airport domain, row width or duplicates changed")
-            if any(not re.fullmatch(r"\(?-?\d+\.\d", row[i]) for i in [3, 7]) or any(
-                row[i] not in {"%", "%)"} for i in [4, 8]
-            ):
+            if compact:
+                percentages_valid = all(re.fullmatch(r"(?:\d+\.\d%|\(\d+\.\d%\))", row[i]) for i in (3, 6))
+                columns = (1, 2, 4, 5)
+            else:
+                percentages_valid = all(re.fullmatch(r"\(?-?\d+\.\d", row[i]) for i in (3, 7)) and all(
+                    row[i] in {"%", "%)"} for i in (4, 8)
+                )
+                columns = (1, 2, 5, 6)
+            if not percentages_valid:
                 raise ValueError("GAP percentage columns shifted")
-            values = [number(row[i], 1) for i in [1, 2, 5, 6]]
+            values = [number(row[i], 1) for i in columns]
             parsed[row[0]] = values
             entity = GAP.get(row[0], "ALL")
             country = "JM" if entity in {"MBJ", "KIN"} else "MULTI" if entity == "ALL" else "MX"
@@ -203,7 +223,7 @@ def parse_gap(soup, text, original, period):
                 market,
                 values,
                 period,
-                f"market:{market}/row:{index}",
+                f"market:{market}/row:{index + int(compact)}",
                 scope="Preliminary terminal passengers. " + CBX,
                 decimals=1,
             )
@@ -237,6 +257,11 @@ def parse_gap(soup, text, original, period):
                 "0.1",
             )
             checks += 1
+    if len(formats) != 1:
+        raise ValueError("GAP market tables cannot mix reviewed layouts")
+    if True in formats:
+        for row in rows:
+            row["parser_version"] = "airport_group_native_gap_compact_v2"
     return rows, checks, reported
 
 
@@ -391,7 +416,27 @@ def read(product, inputs, period):
     ):
         raise ValueError("SEC artifact must belong to the exact airport group CIK")
     soup = BeautifulSoup(content, "html.parser")
-    if soup.find("html") is None or soup.find("script") is not None:
+    delivery_script = None
+    if soup.find("script") is not None:
+        scripts = soup.find_all("script")
+        raw_scripts = re.findall(rb"<script\b[^>]*>.*?</script\s*>", content, re.I | re.S)
+        if not (
+            product == "gap_traffic"
+            and period == "2026M09"
+            and original["source_url"] == GAP_SEPTEMBER_URL
+            and original["sha256"] == hashlib.sha256(content).hexdigest() == GAP_SEPTEMBER_CAPTURE_SHA
+            and len(scripts) == len(raw_scripts) == 1
+            and hashlib.sha256(raw_scripts[0]).hexdigest() == GAP_DELIVERY_SCRIPT_SHA
+        ):
+            raise ValueError("Unreviewed SEC delivery script; never execute or follow it")
+        delivery_script = dict(
+            sha256=GAP_DELIVERY_SCRIPT_SHA,
+            bytes=len(raw_scripts[0]),
+            executed=False,
+            raw_original_preserved=True,
+        )
+        scripts[0].decompose()  # Extraction DOM only; original bytes/hash remain untouched.
+    if soup.find("html") is None:
         raise ValueError("Expected reviewed static SEC HTML")
     text = " ".join(soup.get_text(" ", strip=True).split())
     rows, checks, reported = (parse_gap if product == "gap_traffic" else parse_asur)(
@@ -420,4 +465,5 @@ def read(product, inputs, period):
         mexico_group_is_calculated=product == "gap_traffic",
         CBX_international_as_reported=product == "gap_traffic",
         latest_source_availability_verified=False,
+        **({"non_executed_delivery_script": delivery_script} if delivery_script else {}),
     )
