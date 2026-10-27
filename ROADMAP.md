@@ -13,8 +13,8 @@ Propuesta — el dueño decide prioridades.
   head `a10c2e69` en ejecución y revisión remota final pendiente. La agregada
   local previa pasó 5.129 casos; preparación optimizada de 39:47 a 36:33
   (8,1 % observado localmente, sin prometer ahorro remoto).
-  AIFA septiembre ya tiene extracción oficial y revisión independiente local;
-  falta cerrar su vínculo de disponibilidad y entrega técnica. Aerocivil,
+  AIFA septiembre ya tiene extracción oficial, vínculo físico de disponibilidad
+  y revisión independiente local; falta su entrega técnica remota. Aerocivil,
   GDELT, tráfico mensual Volaris y fechas verificadas siguen bloqueando la
   ronda completa. No están activados calendario ni nuevas ingestas/noticias.
 
@@ -25,9 +25,13 @@ Propuesta — el dueño decide prioridades.
 - AFAC: conservar el original de agosto y su advertencia internacional;
   la siguiente actualización debe comprobar disponibilidad y periodo real.
 - Airline Monthly del corte 24/oct: revisión y calidad HTML del borrador
-  privado pendientes; no hay aprobación final ni envío por correo.
-- Acceso a la interfaz: comprobar y entregar un enlace utilizable al dashboard
-  existente, sin rediseñar el producto ni trasladar tareas técnicas al dueño.
+  privado pendientes: archivo identificado en Library, transferencia HTTP401
+  sin bytes recibidos. El PR140 conserva otro corte, del 19/oct. No hay
+  aprobación final ni envío por correo.
+- [Dashboard existente](https://salvamalfa.github.io/aeromexico-tracker/):
+  enlace comprobado con HTTP200 y TLS estándar el 27/oct. El navegador cloud
+  no completó la revisión interactiva por su cadena de certificados; no se
+  deshabilitó TLS ni se rediseñó la interfaz.
 - La [base BTS del 18 de octubre](docs/etapas/bts-refresco-cobertura-20261017.md)
   incorpora los meses retenidos de 2026 y conserva estimaciones declaradas.
   La opción adicional de estimaciones de EEUU sigue pendiente de decisión
