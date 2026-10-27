@@ -358,14 +358,19 @@ def test_contract_missing_index_http_failure_and_raw_tamper_are_never_empty_succ
         availability.verify(item, result, CUTOFF)
 
 
-@pytest.mark.parametrize("attack", ["sixth_coherent", "unregistered", "duplicate_manifest", "symlink"])
+@pytest.mark.parametrize(
+    "attack", ["sixth_coherent", "unregistered", "duplicate_manifest", "symlink", "manifest_directory"]
+)
 def test_contract_bronze_inventory_is_closed_to_five_originals(physical, attack):
     root, item, result = physical
     bronze = root / "dossier/data/bronze"
     manifest = bronze / "_manifest.jsonl"
     records = [json.loads(line) for line in manifest.read_text().splitlines()]
     path = bronze / "unclassified.htm"
-    if attack == "duplicate_manifest":
+    if attack == "manifest_directory":
+        manifest.unlink()
+        manifest.mkdir()
+    elif attack == "duplicate_manifest":
         records.append(dict(records[0]))
         manifest.write_text("".join(json.dumps(r) + "\n" for r in records))
     elif attack == "symlink":

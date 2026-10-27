@@ -212,7 +212,7 @@ def closed_bronze(root, binding):
     for filing in binding["filings"].values():
         expected.update([filing["index"], *filing["documents"].values()])
     manifest = bronze / "_manifest.jsonl"
-    if manifest.is_symlink():
+    if manifest.is_symlink() or not manifest.is_file():
         raise ValueError("GAP dossier manifest must be physical")
     records = [json.loads(line) for line in manifest.read_text(encoding="utf-8").splitlines()]
     if (
