@@ -2553,15 +2553,16 @@ El holdout simulado comparte solo dos textos de identidad obtenidos del snapshot
 real; cada ejecución del runner sigue construyendo y verificando otro snapshot
 real. Cada caso conserva una copia del holdout, su monkeypatch, proveedor y
 salidas independientes. Se retiran 21 construcciones repetidas de identidad.
-Para los 33 ataques sobre candidatos de AICM, AIFA, Banxico, combustible y
-cotizaciones, cada producto se certifica realmente una vez como plantilla;
+Para los 33 ataques de contrato con insumos sintéticos de AICM, AIFA, Banxico,
+combustible y cotizaciones, cada producto pasa el certificador real una vez como plantilla;
 cada ataque recibe archivos copiados con hashes iguales e inodos distintos.
 No se reescriben recibos, identidades ni rutas. Las plantillas se comprueban
 inmutables al cierre. Se retiran 28 certificaciones de preparación repetidas;
 la comprobación real de replay y rechazo se conserva por ataque. La revisión
 independiente reprodujo los cinco clones y rechazó una corrupción real sin
 alterar la plantilla. Las pruebas positivas completas por producto y cadencia
-siguen construyendo sus propios candidatos desde los originales.
+siguen construyendo sus propios candidatos desde los insumos de contrato.
+Esto no añade evidencia de extracción oficial o disponibilidad reciente.
 
 El mínimo defendible mantiene los casos de riesgo distintos. En la agregada
 previa, 4.301 casos sumaron solo 21,47 s, menos del 1 % del tiempo; retirarlos
