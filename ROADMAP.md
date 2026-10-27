@@ -53,6 +53,12 @@ Propuesta — el dueño decide prioridades.
   global real acepta los cuatro productos AICM/Viva/AFAC/BTS y rechaza
   incorporación por las otras 19 tareas requeridas y los reportes centrales
   sin vínculo. Son tareas no incluidas, no 19 fuentes declaradas caídas.
+- Tráfico IR Aeroméxico: contrato de índice actual/PDF preparado y probado;
+  extracción real del original de septiembre retenido desde 19/oct: 24
+  observaciones y siete salidas idénticas. Pasaron 408 casos afectados y
+  revisión independiente. Índice del 27/oct HTTP200; falta el PDF actual en
+  colección del mismo día. No se confunde ese pendiente externo con una
+  implementación ausente ni se afirma disponibilidad nueva desde el retenido.
 - Airline Monthly del corte 24/oct: revisión estática y funcional realizada
   por el agente de Pages: 23 afirmaciones, seis fuentes y cuatro hashes de
   originales confirmados; dos PDF de Aeroméxico devolvieron HTTP503. Falta la
