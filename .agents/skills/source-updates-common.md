@@ -189,3 +189,14 @@ anuales/acumuladas y flags/notas. Reordenamientos quedan como altas/bajas,
 sin suponer equivalencia. No se acredita revisión oficial por comparar hashes.
 No hay baseline implícito; publicación inicial, disponibilidad y rezago no
 acreditados siguen nulos. Ver límites de cada fuente en sus skills/guía.
+
+La receta de `readiness` y la global admiten el campo opcional `availability`
+por tarea con campos exactos `workspace`, `run_id`, `catalog_item` y
+`artifact_item`. Identifican una colección física separada del candidato.
+Actualmente solo AIFA tiene contrato de descubrimiento revisado: relee el
+índice oficial, determina su último XLSX, comprueba URL/manifiesto/HTTP/hash y
+que ese mismo original contribuyó al nativo completamente certificado.
+La disponibilidad se limita a la fecha local de captura y corte real de la
+ronda; no acredita primera publicación, rezago ni activación. El vínculo
+inválido bloquea; no hay fallback ni booleano manual. Sin vínculo, o para una
+familia aún sin contrato, la disponibilidad permanece sin verificar.

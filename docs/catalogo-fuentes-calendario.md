@@ -107,13 +107,11 @@ a siete días naturales o menos de una mensual, ambas se hacen en la fecha
 posterior. Los días se calculan en **America/Mexico_City**. La hora de captura
 se conserva en UTC, y cada anuncio conserva su zona original.
 
-La propuesta aprobada sí especifica días bancarios mexicanos y un lote de las
-tres entidades. El código concreta «última publicación central confirmada» como
-**los tres reportes financieros del trimestre realmente publicados**. Excluir
-anuncios y llamadas, y esperar esos tres documentos, es una interpretación
-operativa conservadora; no es una definición literal adicional aprobada por el
-dueño. Debe revisarse antes de activar el coordinador. La zona de México procede
-del encargo actual; el texto original registraba el calendario operativo en UTC.
+La política confirmada mantiene días bancarios mexicanos y un lote de las
+tres entidades: **los tres reportes financieros del trimestre realmente
+publicados**. Anuncios y llamadas no sustituyen esos documentos. Se aplica la
+zona de México indicada en el encargo; el texto original registraba el
+calendario operativo en UTC. No falta otra aprobación genérica de esa regla.
 [Propuesta aprobada, líneas 169–182](https://github.com/salvamalfa/aeromexico-tracker/blob/6d8da2c4c0b96371c26521aedb5828610451d03a/docs/catalogo-fuentes-calendario.md#L169).
 
 El **2 de noviembre de 2026 es inhábil bancario**. El 16 también lo es. Se usa
@@ -2667,8 +2665,9 @@ pendientes; no se crea otro informe paralelo.
 - PR156 reúne la reconciliación técnica de PR152/154/155/156 contra `dad0a39b`.
   Es descendiente de sus cuatro heads. Solo su rama se avanzó normalmente y
   volvió a borrador; las otras tres permanecen intactas. La CI de `7489e2a0`
-  aprobó web y falló Python. Se prepara el perfil público retrospectivo descrito
-  arriba; falta CI y revisión válidas del nuevo head antes de integrar.
+  aprobó web y falló Python. La corrección del perfil público retrospectivo fue
+  revisada y subida en `a10c2e69`; CI `40448593713` está en ejecución. Falta
+  resultado final y revisión vigente antes de integrar.
   Las revisiones adicionales antiguas sin resultado terminal no se consideran
   aprobación ni ejecución activa comprobada y no se relanzan a ciegas.
 - El procedimiento financiero local está implementado y probado con el
@@ -2680,14 +2679,19 @@ pendientes; no se crea otro informe paralelo.
 - AICM tiene certificación integral de las ediciones retenidas julio/agosto.
   AIFA julio sigue rechazado por su fecha anterior al cierre. El 27/oct se
   capturaron del índice oficial el XLSX y PDF de septiembre: la validación del
-  libro indica 16/oct, posterior al cierre de septiembre. El lector actual
-  rechaza el desplazamiento de dos filas en operaciones de carga. Falta adaptar
-  y validar esa edición, conservar notas de revisión junio/agosto y no inventar
-  una actualización propia para Carga, cuya celda C5 contiene el periodo.
-  No se escribió Silver/Gold ni se corrigió julio de forma silenciosa.
-- Faltan dos implementaciones para cerrar una ronda real: vincular evidencia
-  física de descubrimiento/captura reciente con los artefactos certificados,
-  y la ruta mensual de tráfico Volaris. Su certificador actual admite solo
+  libro indica 16/oct, posterior al cierre de septiembre. La adaptación local
+  produce 180 observaciones, 80 reconciliaciones y siete tablas candidatas,
+  con reproducción offline. Revisión independiente contrastó 162 celdas del
+  PDF y 15 acumuladas, y rechazó 13 ataques sobre originales. Se conservan las
+  notas junio/agosto y la actualización propia de Carga desconocida: C5 contiene
+  el periodo. No se corrigió julio ni se publicó el candidato. La vinculación
+  física a disponibilidad se valida aparte y requiere su revisión y head final.
+- El vínculo físico de descubrimiento/captura reciente está implementado
+  localmente para AIFA: índice oficial, manifiesto, HTTP, URL y hashes del XLSX
+  realmente usado. Rechaza otra fecha de ronda, otro mes o capturas fallidas;
+  no admite booleanos manuales. Otras familias todavía requieren su contrato
+  propio; no se acredita disponibilidad por guardar un original ni mirar Gold.
+  Falta también la ruta mensual de tráfico Volaris. Su certificador actual admite solo
   el dossier financiero 2026Q2; no satisface el mes obligatorio ni puede
   sustituirse por un trimestre. No son fallos externos ni se resolverán con
   un booleano manual o comprobando solo Gold.

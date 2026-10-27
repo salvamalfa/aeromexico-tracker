@@ -8,14 +8,26 @@ Propuesta — el dueño decide prioridades.
   [catálogo de fuentes/métricas y calendario](docs/catalogo-fuentes-calendario.md).
   Una ronda mensual desde el 15 y una trimestral según publicaciones reales;
   calendario aprobado y coordinador candidato con skills por familia y pruebas
-  en seco. Falta validar formatos nuevos e integrar dependencias; sin nuevas
-  ejecuciones automáticas ni publicación.
+  en seco. La reconciliación de los cuatro certificadores se reúne en
+  [PR156](https://github.com/salvamalfa/aeromexico-tracker/pull/156), con CI del
+  head `a10c2e69` en ejecución y revisión remota final pendiente. La agregada
+  local previa pasó 5.129 casos; preparación optimizada de 39:47 a 36:33
+  (8,1 % observado localmente, sin prometer ahorro remoto).
+  AIFA septiembre ya tiene extracción oficial y revisión independiente local;
+  falta cerrar su vínculo de disponibilidad y entrega técnica. Aerocivil,
+  GDELT, tráfico mensual Volaris y fechas verificadas siguen bloqueando la
+  ronda completa. No están activados calendario ni nuevas ingestas/noticias.
 
-- Ciclo de análisis de 3T26 con el Analysis Agent (evidencia, cálculo,
-  revisión y aprobación) una vez publicados los reportes trimestrales de
-  Aeroméxico.
-- Refresco manual de AFAC (rezago típico 27–36 días tras el cierre de mes);
-  agosto de 2026 se esperaba entre el 28 de septiembre y el 2 de octubre.
+- Aeroméxico 3T26: lectura e indicadores publicados con evidencia y aprobación
+  vinculadas, mediante PR149/160. Conservar publicación y autoridad originales
+  durante la integración técnica de las skills; no queda una nueva tesis
+  pendiente de publicar por este encargo.
+- AFAC: conservar el original de agosto y su advertencia internacional;
+  la siguiente actualización debe comprobar disponibilidad y periodo real.
+- Airline Monthly del corte 24/oct: revisión y calidad HTML del borrador
+  privado pendientes; no hay aprobación final ni envío por correo.
+- Acceso a la interfaz: comprobar y entregar un enlace utilizable al dashboard
+  existente, sin rediseñar el producto ni trasladar tareas técnicas al dueño.
 - La [base BTS del 18 de octubre](docs/etapas/bts-refresco-cobertura-20261017.md)
   incorpora los meses retenidos de 2026 y conserva estimaciones declaradas.
   La opción adicional de estimaciones de EEUU sigue pendiente de decisión
