@@ -44,7 +44,10 @@ Propuesta — el dueño decide prioridades.
   al dossier completo reproducido: 4.930 nativas, 112 Gold y 474 conciliaciones.
   Conserva la cobertura internacional incompleta; disponibilidad documental
   no equivale a universo completo ni activa la ronda.
-- BTS: contrato físico preparado con la fila FJE del historial y descarga
+- BTS: contrato físico integrado en
+  [PR164](https://github.com/salvamalfa/aeromexico-tracker/pull/164), merge
+  `e049eb00`, tras CI `40480306782` y Codex favorables del head `36862fb0`.
+  CI posterior `40484738784` en curso. Usa la fila FJE del historial y descarga
   México del año actual y del revisado. Extracción real: 12.459 filas en 2026
   hasta julio; 18.081 en 2023, iguales al baseline explícito. Pasaron 236
   contratos afectados y revisión independiente; disponibilidad de julio
@@ -53,6 +56,12 @@ Propuesta — el dueño decide prioridades.
   global real acepta los cuatro productos AICM/Viva/AFAC/BTS y rechaza
   incorporación por las otras 19 tareas requeridas y los reportes centrales
   sin vínculo. Son tareas no incluidas, no 19 fuentes declaradas caídas.
+- Tráfico IR Aeroméxico: contrato de índice actual/PDF preparado y probado;
+  extracción real del original de septiembre retenido desde 19/oct: 24
+  observaciones y siete salidas idénticas. Pasaron 408 casos afectados y
+  revisión independiente. Índice del 27/oct HTTP200; falta el PDF actual en
+  colección del mismo día. No se confunde ese pendiente externo con una
+  implementación ausente ni se afirma disponibilidad nueva desde el retenido.
 - Airline Monthly del corte 24/oct: revisión estática y funcional realizada
   por el agente de Pages: 23 afirmaciones, seis fuentes y cuatro hashes de
   originales confirmados; dos PDF de Aeroméxico devolvieron HTTP503. Falta la

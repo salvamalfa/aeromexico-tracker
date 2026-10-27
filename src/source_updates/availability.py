@@ -170,6 +170,10 @@ def latest_aifa(index_path):
 
 def discovery_contract(product, adapter):
     """Reviewed provider/product bindings; no caller-selected native table/parser."""
+    if product == "am_traffic_ir" and adapter == "am_traffic_ir":
+        from src.source_updates.am_traffic import ENTRY, latest
+
+        return ENTRY, latest, "silver/aeromexico_ir_monthly_metrics"
     if product == "aifa_traffic" and adapter == "government":
         return AIFA_INDEX, latest_aifa, "silver/government_native"
     if (product, adapter) in {("aicm_traffic", "government"), ("oma_traffic", "retained")}:

@@ -1,7 +1,7 @@
 # Catálogo de fuentes, métricas y rondas de actualización
 
 Revisión: 27 de octubre de 2026 (UTC). **Infraestructura de skills, coordinador y
-lote AIFA integrados. Calendario bloqueado, sin activar ni publicar datos nuevos.**
+contratos AIFA/AICM/Viva/AFAC integrados. Calendario bloqueado, sin activar ni publicar datos nuevos.**
 
 ## Resumen
 
@@ -27,6 +27,17 @@ Tiene extracción oficial local y revisión independiente:
 se vincula al índice y a la captura realmente usados; no se infiere de Gold ni
 de una fecha escrita a mano. El intento GDELT del 27/oct devolvió HTTP503,
 conservado como fallo; no acredita un mes vacío y no se repite en esta pasada.
+
+AICM y Viva septiembre añadieron sus vínculos físicos mediante
+[PR162](https://github.com/salvamalfa/aeromexico-tracker/pull/162), y AFAC agosto
+mediante [PR163](https://github.com/salvamalfa/aeromexico-tracker/pull/163), ambos
+integrados con CI del head, Codex y CI posterior aprobadas. BTS tiene extracción
+real y comparación histórica integradas en PR164 (`e049eb00`), tras CI y
+Codex del head `36862fb0` favorables; su CI posterior sigue en curso.
+Tráfico IR Aeroméxico tiene
+contrato probado y siete salidas reales idénticas; su disponibilidad actual
+requiere todavía el PDF de la misma fecha local que el índice. Los detalles
+están en el apéndice; ninguno de estos hitos activa una ronda.
 
 La integración de infraestructura no aprueba una ronda de datos. Aerocivil y
 GDELT siguen **requeridos y bloqueados**. Faltan también disponibilidad física
@@ -2901,6 +2912,58 @@ obligatorias no incluidas y reportes centrales sin vínculo. No significa que
 siguen requeridos. Recibo creado después del nuevo binding local, con replay
 inmutable; no se reutiliza una aceptación con fingerprints viejos.
 
+PR164 se integró normalmente el 27/oct a las 09:57 UTC, merge `e049eb00`.
+CI del head `36862fb0` (`40480306782`) y Codex terminaron favorables, sin hilos
+pendientes. La CI posterior `40484738784` está en curso; no se atribuye su
+resultado antes de terminar. No hubo datos ni sitio modificados.
+
+### Aeroméxico: contrato físico de tráfico mensual (27/oct)
+
+El índice oficial de tráfico respondió HTTP200 a las 09:21 UTC: colección
+`d9037184…`, SHA `9a0bdc78…`. Su lista actual anuncia septiembre 2026 y enlaza
+el PDF inglés V3. El selector `latest` valida la estructura y cada artículo,
+no fecha una publicación desde el directorio de subida. Rutas documentales
+falsas dentro de una consulta URL, enlaces de un diseño no revisado y ediciones
+ambiguas bloquean. No se repitieron los PDF que habían devuelto HTTP503.
+
+El original de septiembre ya estaba retenido desde 19/oct 15:07 UTC, SHA
+`8bb07f1d3723961d1c8e75fb29a4232aca69e8a1b826da45d7656ac309297ec4`.
+Se copiaron exactamente su Bronze y recibo de colección a un candidato nuevo,
+sin inventar captura ni cambiar el expediente anterior. La reproducción real
+extrajo 24 observaciones y pasó Silver, Gold, dimensiones y linaje: las siete
+salidas son idénticas a las aceptadas previamente. El corte conserva
+19/oct 15:20:53 UTC. Repetir offline no acredita disponibilidad el 27/oct.
+
+El candidato admite un PDF y opcionalmente su índice en la misma colección.
+Comprueba todos los items contra manifiesto único, sidecars y cronología; la
+fecha declarada dentro del PDF no puede ser posterior a su captura. El vínculo
+físico usa una copia de colección separada del candidato, mismo índice/PDF,
+URLs exactas y la fecha local de la ronda. La completitud se limita a las doce
+cifras mensuales corporativas y doce comparativas del reporte, sin acumulados,
+trimestre ni censo de operadores. Se conservan las diferencias de alcance de
+ocupación frente a RPM/ASM, unidades y no auditado. Primera disponibilidad y
+hora siguen desconocidas; seis días de rezago son la fecha declarada del PDF.
+
+Código de producción `e23d76bd`: 408 comprobaciones afectadas aprobadas, sin
+omisiones. Tres pruebas independientes agrupadas comprobaron los riesgos de
+URL, ambigüedad y manifiesto duplicado; sus tres hallazgos quedaron corregidos.
+Ese contrato sintético se distingue de la extracción real anterior. La skill
+corporativa incluye selección de índice/PDF, plan acotado de dos llamadas,
+copia exacta de colección y vínculo, sin programación o publicación.
+
+La revisión financiera local auténtica `313ba7fe…` corresponde al runtime
+`a576f002…`: replay original en 47,98 s y 79 ataques aprobados. Comprueba los
+811/803 archivos publicados, 177 fuentes/autoridad y 188 del expediente exactos.
+Solo renueva el vínculo de continuidad local; no cambia anclas, contenido ni
+aprobaciones originales y no concede publicación o activación.
+
+La implementación está probada; la disponibilidad actual aún necesita una
+captura válida y autorizada del PDF junto al índice del mismo día local.
+No se declara lista esta fuente ni se sustituye el original por otro medio.
+Conservar evidencia técnica bajo `tmp/source-updates/availability-followup-20261027/`,
+módulos/pruebas y autoridad originales. Actualizar guía, skills y Roadmap;
+sin informes paralelos, retiros ni cambios del dashboard o Monthly.
+
 ## Pendientes
 
 - La política de productos y el calendario están aprobados; no falta una
@@ -2947,7 +3010,8 @@ inmutable; no se reutiliza una aceptación con fingerprints viejos.
   booleanos manuales ni confunde una retención o Gold con actualidad.
   BTS tiene contrato físico y extracciones reales descritos arriba.
   La implementación siguiente debe resolver contratos físicos por producto:
-  Aeroméxico IR (índice y PDF mensual/financiero); otros productos AFAC de
+  Aeroméxico IR financiero y la evidencia mensual actual (contrato mensual
+  ya implementado arriba); otros productos AFAC de
   aeropuertos/marginales (sus libros y ediciones propias; el dossier por empresa
   no los sustituye); macro/cotizaciones
   (ventana publicada y sesiones, no confundir última observación con cierre

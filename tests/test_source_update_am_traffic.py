@@ -1,21 +1,21 @@
 """IR traffic monthly-column, service-basis, completeness and candidate regressions."""
 
-from contextlib import contextmanager
-from datetime import UTC, datetime, timedelta
 import json
 import re
 import shutil
+from contextlib import contextmanager
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import httpx
 import pandas as pd
 import pytest
 
-from src.source_updates import am_traffic, am_traffic_candidate as candidate
+from src.source_updates import am_traffic
+from src.source_updates import am_traffic_candidate as candidate
 from src.source_updates.catalog import ROOT
 from src.source_updates.collection import collect
 from src.source_updates.discovery import select_documents
-
 
 TEXT = """Aeroméxico September 2026 Traffic Results
 Mexico City, Mexico, October 6, 2026 – Grupo Aeroméxico S.A.B. de C.V.
@@ -175,7 +175,7 @@ def cutoff():
     return (datetime.now(UTC) + timedelta(minutes=1)).isoformat()
 
 
-def capture(workspace):
+def capture(workspace, *, with_index=False):
     class Client:
         def __init__(self, *args, **kwargs):
             pass
@@ -187,7 +187,8 @@ def capture(workspace):
             pass
 
         def request(self, method, url, **kwargs):
-            return httpx.Response(200, content=PDF, request=httpx.Request(method, url))
+            body = CURRENT_INDEX.encode() if url == am_traffic.ENTRY else PDF
+            return httpx.Response(200, content=body, request=httpx.Request(method, url))
 
     selection = {
         "version": 1,
@@ -205,6 +206,10 @@ def capture(workspace):
             }
         ],
     }
+    if with_index:
+        from src.source_updates.recipes import catalog_selection
+
+        selection["items"] = catalog_selection("am_traffic_ir")["items"] + selection["items"]
     return collect(selection, workspace, execute=True, client_factory=Client)["run_id"]
 
 
@@ -318,3 +323,110 @@ def test_original_hash_and_cutoff_reject_before_parsing(workspace):
 
 def accepted_cutoff(workspace):
     return json.loads((workspace / "receipts/am-traffic-2026M09.json").read_text())["effective_as_of"]
+
+
+# Contract fixtures mirror the current official IR article layout, not a live capture.
+CURRENT_INDEX = """<article class="nir-widget-article">
+<div class="nir-widget--news--headline"><a data-is-doc="1" href="/static-files/test">
+Aeroméxico September 2026 Traffic Results</a></div></article>"""
+
+
+def test_latest_discovery_uses_named_current_ir_articles_and_rejects_ambiguity(tmp_path):
+    index = tmp_path / "index.html"
+    older = CURRENT_INDEX.replace("September", "August").replace("/test", "/older")
+    index.write_text(CURRENT_INDEX + older)
+    assert am_traffic.latest(index) == ("2026M09", "https://ir.aeromexico.com/static-files/test")
+    assert select_documents("am_traffic_ir", index, "latest")["items"][0]["period"] == "2026M09"
+    for changed in (
+        '<base href="https://external.example/">' + CURRENT_INDEX,
+        CURRENT_INDEX.replace("Traffic Results", "Operational Statistics"),
+        CURRENT_INDEX.replace("September", "Septembre"),
+        CURRENT_INDEX.replace('data-is-doc="1"', 'data-is-doc="0"'),
+        CURRENT_INDEX.replace("/static-files/test", "https://external.example/report.pdf"),
+        CURRENT_INDEX.replace("/static-files/test", "/news-events/article"),
+        CURRENT_INDEX.replace("/static-files/test", "/news-events/redirect?next=/static-files/fake"),
+        CURRENT_INDEX.replace("/static-files/test", "/prefix/static-files/test"),
+        CURRENT_INDEX.replace("/static-files/test", "/static-files/test#revision"),
+        CURRENT_INDEX + CURRENT_INDEX.replace("/test", "/revision"),
+        CURRENT_INDEX + CURRENT_INDEX.replace("September", "August"),
+        CURRENT_INDEX.replace("nir-widget-article", "unknown-widget"),
+        CURRENT_INDEX + '<a data-is-doc="1" href="/static-files/newer">Unclassified October report</a>',
+        CURRENT_INDEX + '<a href="/system/files-encrypted/Oct_2026_Op_Stat.pdf">Download</a>',
+        CURRENT_INDEX
+        + CURRENT_INDEX.replace("nir-widget-article", "new-layout").replace("September", "October"),
+    ):
+        index.write_text(changed)
+        with pytest.raises(ValueError):
+            am_traffic.latest(index)
+
+
+def test_paired_current_index_and_pdf_bind_actual_candidate_without_publication(workspace, monkeypatch):
+    from copy import deepcopy
+
+    from src.source_updates import availability
+
+    capture_root, child = workspace / "collection", workspace / "candidate"
+    receipt_id = capture(capture_root, with_index=True)
+    # Exact physical collection copy; no new event or hand-edited receipt.
+    shutil.copytree(capture_root, child)
+    monkeypatch.setattr(candidate, "pdf_text", lambda _: TEXT)
+    as_of = cutoff()
+    result = candidate.run(child, "2026M09", as_of, receipt_id, execute=True)
+    assert result["complete_month_certified"] and result["rows"] == 24
+    candidate.run(child, "2026M09", as_of, receipt_id, check=True)
+    item = dict(
+        product="am_traffic_ir",
+        adapter="am_traffic_ir",
+        period="2026M09",
+        workspace=str(child),
+        availability=dict(
+            workspace=str(capture_root),
+            run_id=receipt_id,
+            catalog_item="am_traffic_ir-catalog",
+            artifact_item="am-traffic-2026M09",
+        ),
+    )
+    bound = availability.verify(item, result, as_of)
+    assert bound["latest_available_period"] == "2026M09" and bound["discovery_url"] == am_traffic.ENTRY
+    assert result["first_available_at"] is None and result["publication_time"] is None
+    assert result["activation"] == "none" and result["publication"] == "not_authorized"
+    # Each mutation has its own field/risk; none changes a retained acceptance.
+    for changes in (
+        {"period": "2026M08"},
+        {"workspace": str(capture_root)},
+        {"availability": {**item["availability"], "artifact_item": "missing"}},
+    ):
+        altered = deepcopy(item)
+        altered.update(changes)
+        with pytest.raises(ValueError):
+            availability.verify(altered, result, as_of)
+    with pytest.raises(ValueError, match="completely verified"):
+        availability.verify(item, {**result, "complete_month_certified": False}, as_of)
+    next_day = (datetime.fromisoformat(as_of) + timedelta(days=1)).isoformat()
+    with pytest.raises(ValueError, match="explicit round date"):
+        availability.verify(item, result, next_day)
+
+
+def test_report_date_must_not_postdate_actual_capture_even_before_cutoff(workspace, monkeypatch):
+    receipt = capture(workspace)
+    from src.source_updates.calendar import local_time
+
+    accepted = json.loads((workspace / "receipts" / f"collection-{receipt}.json").read_text())
+    after_capture = local_time(accepted["finished_at"]) + timedelta(days=1)
+    text = TEXT.replace("October 6, 2026", after_capture.strftime("%B %d, %Y"))
+    monkeypatch.setattr(candidate, "pdf_text", lambda _: text)
+    with pytest.raises(ValueError, match="after its capture"):
+        candidate.run(
+            workspace, "2026M09", (after_capture + timedelta(days=1)).isoformat(), receipt, execute=True
+        )
+    assert not (workspace / "data/silver").exists() and not (workspace / "data/gold").exists()
+
+
+def test_original_rejects_duplicate_manifest_records_before_any_parser(workspace):
+    receipt = capture(workspace, with_index=True)
+    manifest = workspace / "data/bronze/_manifest.jsonl"
+    before = manifest.read_bytes()
+    manifest.write_bytes(before + before.splitlines()[0] + b"\n")
+    with pytest.raises(ValueError, match="unique acquisition records"):
+        candidate.original(workspace, "2026M09", receipt, cutoff())
+    assert not (workspace / "data/silver").exists() and not (workspace / "data/gold").exists()

@@ -74,6 +74,46 @@ Exigir título y entidad Grupo Aeroméxico, orden mes/acumulado y años actual/a
 
 El candidato aislado `aeromexico_ir_monthly_metrics` reutiliza el contrato estructural de observaciones operativas y añade su dominio explícito IR; no es una presentación SEC ni se registra automáticamente como tabla del warehouse productivo. Gold aplica su contrato existente, dimensiones y puente exacto. Esta cadena dedicada no añade `parse.am_traffic_ir` al runner genérico, no suma trimestres ni activa reportes/tesis. La certificación se limita al formato y los meses realmente comprobados. Documentar cualquier cambio de formato y mantener el fallo cerrado.
 
+### Descubrimiento y vínculo físico del tráfico IR
+
+`recipe --product am_traffic_ir --output selection` emite el índice oficial.
+Después de conservarlo, `--catalog-file <ruta-real.html> --period latest`
+selecciona septiembre en la lista actual comprobada. El selector valida cada
+artículo y cada enlace pertinente, su mes, entidad y ruta documental; no toma
+la fecha del directorio de subida como publicación. Un diseño nuevo o dos
+versiones incompatibles bloquean. El mes explícito histórico sigue disponible.
+
+Para el vínculo actual, revalidar índice y PDF en **una colección**. Combinar
+las selecciones devueltas por el CLI, sin escribir URLs a mano:
+
+```python
+import json
+from pathlib import Path
+index = json.loads(Path("tmp/am-index-selection.json").read_text())
+pdf = json.loads(Path("tmp/am-pdf-selection.json").read_text())
+Path("tmp/am-paired-selection.json").write_text(
+    json.dumps({"version": 1, "items": index["items"] + pdf["items"]})
+)
+```
+
+Aplicar `collect --selection tmp/am-paired-selection.json --workspace
+<coleccion-nueva> --dry-run`; solo ejecutar con la adquisición autorizada y
+sin reintentos prohibidos. Son dos llamadas base y cero pagadas. Conservar
+originales/sidecars/manifiesto/recibo y copiar esa colección íntegra a un
+candidato nuevo antes de certificar: mismo contenido, hashes y recibo, sin
+inventar otra captura. No copiar Gold ni aceptaciones anteriores. El
+certificador permite un PDF y, opcionalmente, su índice oficial; rechaza
+productos extra, duplicados, cambios del recibo o fechas inconsistentes.
+La fecha impresa no puede ser posterior a la captura.
+
+Tras `--execute` y `--check`, `availability` de readiness identifica la colección
+separada con `workspace`, `run_id`, `catalog_item` y `artifact_item` realmente
+emitidos. Se cotejan el índice actual, el PDF nativo y la fecha local de la
+ronda. `complete_month_certified=true` cubre las doce cifras mensuales del
+reporte corporativo y sus doce comparativas; no certifica un censo de operadores,
+trimestres ni otra aerolínea. Publicación inicial y hora desconocidas siguen
+nulas. Un PDF retenido de otro día prueba historia, nunca actualidad del día.
+
 ## Finanzas IR retenidas de Aeroméxico
 
 Aplicar el [flujo común de retención](../source-updates-common.md#originales-retenidos-y-lote-offline)

@@ -192,7 +192,7 @@ acreditados siguen nulos. Ver límites de cada fuente en sus skills/guía.
 
 La receta de `readiness` y la global admiten el campo opcional `availability`
 por tarea con campos exactos `workspace`, `run_id`, `catalog_item` y
-`artifact_item` para AIFA, AICM, OMA, Viva y BTS. Identifican una colección física
+`artifact_item` para AIFA, AICM, OMA, Viva, BTS y tráfico IR de Aeroméxico. Identifican una colección física
 separada del candidato. Se relee el índice oficial del producto, se determina
 el último documento y se comprueban URL, manifiesto, HTTP, hashes y su aporte
 al nativo completamente certificado. OMA conserva el bloqueo del PDF actual;
