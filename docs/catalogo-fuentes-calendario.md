@@ -2816,7 +2816,8 @@ el repositorio público; no hay archivos retirados ni informes paralelos nuevos.
   booleanos manuales ni confunde una retención o Gold con actualidad.
   La implementación siguiente debe resolver contratos físicos por producto:
   Aeroméxico IR (índice y PDF mensual/financiero); AFAC (misma edición de boletín
-  PDF y base DBF, no solo el índice Datatur que llega a agosto); BTS (historial
+  PDF y `DB_AFAC.zip` con su miembro `DB_AFAC.xlsx`, no solo el índice Datatur
+  que llega a agosto); BTS (historial
   de publicación y selección real del formulario/ZIP); macro/cotizaciones
   (ventana publicada y sesiones, no confundir última observación con cierre
   civil); SEC/GAP/ASUR (dossier y mes dentro del anexo, con adquisición manual
