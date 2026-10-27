@@ -221,7 +221,7 @@ def assess(frame, period, calendars):
             "missing_dates": sorted(d.isoformat() for d in expected - observed),
             "unexpected_dates": sorted(d.isoformat() for d in observed - expected),
             "expected_return_YTD_anchor": min(expected).isoformat(),
-            "return_YTD_anchor_verified": min(expected) in observed,
+            "return_YTD_anchor_verified": bool(observed) and min(observed) == min(expected),
             "prior_prices_for_30_return_warmup_verified": warmup,
             "prior_year_calendar_required": not history_in_this_calendar,
             "early_closes_are_sessions": True,

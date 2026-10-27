@@ -116,6 +116,11 @@ def test_equal_counts_wrong_dates_and_hidden_history_gaps_are_rejected():
     result = subject.assess(frame, "2026M09", schedules)["series"]["AERO"]
     assert result["expected_period_count"] == result["observed_period_count"] == 21
     assert not result["complete"] and result["unexpected_dates"] == ["2026-09-07"]
+    holiday_anchor = pd.concat(
+        [prices(), pd.DataFrame([{"ticker": "AERO", "date": pd.Timestamp("2026-01-01")}])]
+    )
+    anchor = subject.assess(holiday_anchor, "2026M09", schedules)["series"]["AERO"]
+    assert not anchor["complete"] and not anchor["return_YTD_anchor_verified"]
     assert not subject.assess(prices(), "2026M01", schedules)["calendar_completeness_certified"]
 
 
