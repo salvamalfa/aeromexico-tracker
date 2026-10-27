@@ -1,57 +1,36 @@
 # Catálogo de fuentes, métricas y rondas de actualización
 
-Revisión: 26 de octubre de 2026 (UTC). **Skills y coordinador implementados;
-integración técnica autorizada. Calendario sin activar y sin publicación de datos.**
+Revisión: 27 de octubre de 2026 (UTC). **Infraestructura de skills y coordinador
+integrada; lote AIFA en revisión. Calendario bloqueado, sin activar ni publicar datos nuevos.**
 
 ## Resumen
 
-Ya hay una herramienta ejecutable para preparar las actualizaciones por fuente.
-Incluye ocho skills por familia y un coordinador. Primero muestra qué haría.
-Después puede capturar y comprobar un lote candidato en una carpeta separada.
-La aprobación del calendario ya está recibida. La revisión del contenido y su
-publicación conservan sus permisos separados.
+La herramienta prepara actualizaciones con ocho skills por familia y un
+coordinador. Muestra primero el plan y después puede capturar y certificar un
+lote candidato separado. El calendario y la política de productos ya están
+aprobados; no hace falta volver a aprobar esas reglas.
 
-La continuación del 22 de octubre añade certificadores offline para las tres
-series Banxico, combustible EIA y las cinco cotizaciones. Validan el producto
-retenido mensual o trimestral y sus cálculos; no prueban disponibilidad actual
-ni completitud del calendario de observaciones. La reconciliación local de los
-cuatro PR está preparada; su integración remota y la evidencia externa indicada
-al final siguen pendientes.
+Los cuatro certificadores quedaron integrados con PR156 en `70fb03ec`. Su head
+`a10c2e69` pasó CI y Codex sin hallazgos; PR152/154/155 conservaron sus commits y
+quedaron integrados por el mismo merge. La [CI posterior](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40450942960)
+conserva su resultado verificable. La agregada local
+anterior aprobó 5.129 casos; la optimización redujo su duración observada de
+39:47 a 36:33 (8,1 %). No se atribuye ese ahorro a CI remota ni a un head que
+no haya repetido aquella agregada. Publicación, fuentes y aprobaciones
+originales siguen intactas.
 
-La integración de esta infraestructura no aprueba una ronda de datos. Aerocivil
-y GDELT permanecen **requeridos y bloqueados**. Sus fallos impiden aceptar una
-ronda que los requiera; no se sustituyen por cero ni por otro producto. Ningún
-comando instala un calendario o incorpora candidatos a producción al fusionar
-el código. Los originales y candidatos conservan sus recibos y revisión propia.
+AIFA septiembre tiene ahora extracción oficial local y revisión independiente:
+180 observaciones, 80 reconciliaciones y reproducción offline. Su disponibilidad
+se vincula al índice y a la captura realmente usados; no se infiere de Gold ni
+de una fecha escrita a mano. El intento GDELT del 27/oct devolvió HTTP503,
+conservado como fallo; no acredita un mes vacío y no se repite en esta pasada.
 
-La continuación del 23 de octubre añade también el certificador GAP/ASUR de
-originales julio 2026, con países y redondeo explícitos; su prueba y estado de
-integración están en el apéndice. Incorpora comprobaciones integrales de AICM
-y un control estricto del archivo AIFA. AICM permite probar originales de julio
-y agosto; AIFA sigue bloqueado por fechas internas contradictorias. Esto no
-declara lista la ronda completa. RSS añade un certificador integral de los XML
-retenidos, con fechas declaradas y cobertura parcial explícitas. Su estado
-de pruebas e integración está en [PR157](https://github.com/salvamalfa/aeromexico-tracker/pull/157). Viva conserva su lote trimestral separado. PR152 conserva por separado sus certificadores
-macro/mercado y espera una revisión adicional; este cambio no modifica su head.
-
-La continuación BTS añade certificación mensual desde los ZIP oficiales
-retenidos. Comprueba mayo y julio y detecta cinco altas retrospectivas de mayo.
-Conserva una incidencia de abril y bloquea ese mes si se solicita. No acredita
-cobertura completa por operador ni disponibilidad reciente.
-
-La revisión oficial del 24 de octubre no encontró un error del parser que
-justifique aceptar los originales rechazados. Confirmó contradicciones de
-Volaris/AIFA, la leyenda pendiente de Aerocivil y un nuevo fallo de acceso a
-GDELT. Identificó los días declarados de los tres reportes 2T26; no inventó
-horas de publicación ni festivos de 2027. La evidencia está en el apéndice.
-
-La continuación local del 26 de octubre reúne los cuatro PR pendientes sobre
-master `dad0a39b`, conservando las publicaciones existentes. Nueve cadenas de
-originales retenidos reproducen sus 53 salidas. La revisión independiente local
-es favorable. Esto acredita la preparación técnica local: todavía faltan los
-controles del futuro head remoto, la revisión técnica del nuevo runtime que
-exige la preservación financiera y resolver el estado desconocido de las
-revisiones adicionales. La disponibilidad actual de las fuentes no se comprobó.
+La integración de infraestructura no aprueba una ronda de datos. Aerocivil y
+GDELT siguen **requeridos y bloqueados**. Faltan también disponibilidad física
+para otras familias, tráfico mensual Volaris y fechas vinculadas a los reportes
+financieros. Los originales Volaris Q2 y AIFA julio mantienen sus rechazos.
+Ninguna ventana aislada ni prueba sintética declara lista la ronda completa.
+Los resultados y límites precisos están en el apéndice y en Pendientes.
 
 ## Qué cambia para ti
 
@@ -107,13 +86,11 @@ a siete días naturales o menos de una mensual, ambas se hacen en la fecha
 posterior. Los días se calculan en **America/Mexico_City**. La hora de captura
 se conserva en UTC, y cada anuncio conserva su zona original.
 
-La propuesta aprobada sí especifica días bancarios mexicanos y un lote de las
-tres entidades. El código concreta «última publicación central confirmada» como
-**los tres reportes financieros del trimestre realmente publicados**. Excluir
-anuncios y llamadas, y esperar esos tres documentos, es una interpretación
-operativa conservadora; no es una definición literal adicional aprobada por el
-dueño. Debe revisarse antes de activar el coordinador. La zona de México procede
-del encargo actual; el texto original registraba el calendario operativo en UTC.
+La política confirmada mantiene días bancarios mexicanos y un lote de las
+tres entidades: **los tres reportes financieros del trimestre realmente
+publicados**. Anuncios y llamadas no sustituyen esos documentos. Se aplica la
+zona de México indicada en el encargo; el texto original registraba el
+calendario operativo en UTC. No falta otra aprobación genérica de esa regla.
 [Propuesta aprobada, líneas 169–182](https://github.com/salvamalfa/aeromexico-tracker/blob/6d8da2c4c0b96371c26521aedb5828610451d03a/docs/catalogo-fuentes-calendario.md#L169).
 
 El **2 de noviembre de 2026 es inhábil bancario**. El 16 también lo es. Se usa
@@ -1326,13 +1303,13 @@ no permite deducir automáticamente un mes disponible para este filtro.
 |---|---|---|
 | OMA (`oma_ir`), GAP/ASUR vía `sec_edgar` | Pasajeros nacionales/internacionales/total por aeropuerto/grupo; Gold hasta julio. [OMA](https://ir.oma.aero/en/traffic-reports/), [GAP](https://www.aeropuertosgap.com.mx/es/material-events.html), [ASUR](https://www.asur.com.mx/comunicados-1); `ingest/airports/groups.py` | Mensual central. Los tres publicaron septiembre en octubre; ASUR es multinacional: separar México, países y adquisiciones, no sumar todo como mercado mexicano |
 | AICM (`aicm`) | Tráfico del aeropuerto hasta julio; slots estacionales preservados. [Estadísticas](https://www.aicm.com.mx/estadisticas-del-aicm/17-09-2013), PDFs | Mensual central; índice observado ofrece agosto, sin fecha de primera publicación. Slots son programación, no vuelos realizados ni pasajeros |
-| AIFA (`aifa`) | Tráfico aeroportuario hasta julio; [numeralia/normateca](https://aifa.aero/normateca), XLSX | Mensual central; último enlace observado julio, fecha de publicación no expuesta. No usar como tráfico de una aerolínea |
+| AIFA (`aifa`) | [Índice oficial](https://www.aifa.aero/legal-y-finanzas/informes), XLSX/PDF septiembre 2026 capturados el 27/oct y certificados localmente; julio conserva su rechazo por fecha | Mensual requerido; índice y bytes usados vinculados físicamente para la fecha de la ronda. Primera publicación y rezago desconocidos. Totales del aeropuerto, no tráfico de una aerolínea |
 | Banxico (`banxico_sie`) | FIX USD/MXN, INPC y tasa objetivo en series separadas; último dato local 20 agosto. Exportación pública CSV, `ingest/macro/banxico.py`; [SIE](https://www.banxico.org.mx/SieInternet/consultarDirectorioInternetAction.do?accion=consultarSeries) | Capturar historia hasta corte en la ronda mensual/trimestral. FIX por día bancario; INPC y decisiones de tasa tienen su calendario propio. No asumir mismo ritmo para las tres series |
 | Reserva Federal H.10 (`federal_reserve_h10`) | Respaldo FX explícitamente rotulado, original preservado en agosto; [H.10](https://www.federalreserve.gov/releases/h10/) | Consulta durante la ronda si falta FIX. Observaciones diarias publicadas semanalmente lunes 16:15 ET, martes por festivo. Cambios anunciados al DDP desde noviembre requieren comprobar el endpoint; no declararlo roto sin prueba |
 | EIA (`eia`) | Combustible jet US Gulf Coast; último dato local 18 agosto; XLS histórico, `ingest/macro/fuel.py`; [serie](https://www.eia.gov/dnav/pet/hist_xls/EER_EPJK_PF4_RGC_DPGd.xls) | Mensual/trimestral con promedio y días cubiertos. Referencia de mercado, no costo contratado ni cobertura de combustible de la aerolínea |
 | Yahoo Finance (`yahoo_finance`) | Cierre/ajustado/volumen/retornos/volatilidad AERO, VLRS, DAL, RYAAY, ICAGY hasta 20 agosto; `ingest/market/prices.py` | Mensual/trimestral; proveedor secundario, no regulador. Control de identidad AERO e IPO 6 noviembre 2025; no empalmar antiguo ticker con nueva acción |
-| ANAC / Aerocivil / CAA (`international_route_authorities`) | Observaciones seleccionadas: Brasil hasta junio, Colombia hasta julio, Reino Unido junio. Aerocivil usado aporta operaciones, no pasajeros. HTTP/selección explícita en `ingest/international_routes.py` | Complementaria en ronda trimestral. [ANAC](https://www.gov.br/anac/pt-br/assuntos/dados-e-estatisticas), [Aerocivil](https://www.datos.gov.co/resource/jh8x-n6h6.json), [CAA puntualidad 2026](https://www.caa.co.uk/data-and-analysis/uk-aviation-market/flight-punctuality/uk-flight-punctuality-statistics/2026/). El adaptador usa Flight Punctuality, catálogo hasta julio sin fecha de primera publicación; Airport Data es otro producto. ANAC acceso desafiado, disponibilidad nueva no verificada. No cobertura mundial uniforme |
-| Aena (`aena_spain`) | Exportaciones seleccionadas enero–julio; compañía×aeropuerto y par de aeropuertos separados. [Consultas](https://www.aena.es/es/estadisticas/consultas-personalizadas.html); CSV autenticado mediante navegador | Trimestral opcional. Boletines públicos ya hasta septiembre; no sustituirlos por el cruce empresa×ambos aeropuertos, que no existe en las capturas seleccionadas |
+| ANAC / Aerocivil / CAA (`international_route_authorities`) | Observaciones seleccionadas: Brasil hasta junio, Colombia hasta julio, Reino Unido junio. Aerocivil usado aporta operaciones, no pasajeros. HTTP/selección explícita en `ingest/international_routes.py` | Aerocivil requerido en ronda trimestral; ANAC/CAA complementarias. [ANAC](https://www.gov.br/anac/pt-br/assuntos/dados-e-estatisticas), [Aerocivil](https://www.datos.gov.co/resource/jh8x-n6h6.json), [CAA puntualidad 2026](https://www.caa.co.uk/data-and-analysis/uk-aviation-market/flight-punctuality/uk-flight-punctuality-statistics/2026/). El adaptador usa Flight Punctuality, catálogo hasta julio sin fecha de primera publicación; Airport Data es otro producto. ANAC acceso desafiado, disponibilidad nueva no verificada. No cobertura mundial uniforme |
+| Aena (`aena_spain`) | Exportaciones seleccionadas enero–julio; compañía×aeropuerto y par de aeropuertos separados. [Consultas](https://www.aena.es/es/estadisticas/consultas-personalizadas.html); CSV autenticado mediante navegador | Trimestral condicional: obligatorio verificar si se utiliza; puede omitirse si no se utiliza. Boletines públicos ya hasta septiembre; no sustituirlos por el cruce empresa×ambos aeropuertos, que no existe en las capturas seleccionadas |
 | Ryanair (`ryanair_ir`) y Delta SEC | Comparables trimestrales hasta 2T26; Ryanair página mensual capturada en agosto; perfiles parser existentes | Ronda trimestral secundaria. Año fiscal Ryanair y US-GAAP Delta requieren comparabilidad explícita. Actualizar catálogos `current`, sin bloquear las tres entidades mexicanas |
 | OurAirports (`ourairports`) | Códigos, ubicación y país de aeropuertos; captura agosto; [catálogo](https://ourairports.com/data/) | Trimestral o cuando falla un código. Referencia comunitaria, no observación de vuelos; crosswalk versionado |
 | FAA (`faa_iasa`) | Categoría IASA y eventos; original capturado agosto; [FAA IASA](https://www.faa.gov/about/initiatives/iasa) | Trimestral o evento conocido; no inferir efecto causal en pasajeros de la categoría |
@@ -2657,6 +2634,54 @@ candidato. El inventario/disposición del diff local se comprueba contra
 `dad0a39b` con el lifecycle canónico. Esta guía consolida el resultado y sus
 pendientes; no se crea otro informe paralelo.
 
+### Verificación local del 27 de octubre
+
+El commit local `ce086002` añade AIFA septiembre y su vínculo físico de
+actualidad; es un lote posterior al merge `70fb03ec`, sin cambiar lo que ese
+merge entregó. La reconciliación de su historia no cambia esos bytes de código. En `tmp/source-updates/monday-reconciliation-20261026/calendar-source-evidence-20261027/`:
+
+- `aifa-v3-result.json`: extracción real, siete tablas candidatas, replay del
+  candidato y del recibo de revisión; disponibilidad individual verificada.
+  La misma captura solicitada para noviembre se rechaza. El recibo de una
+  tarea no certifica el catálogo completo ni activa ejecución automática.
+- `aifa-binding-stable-final.xml`: 178 casos afectados aprobados, incluidos
+  20 contratos físicos de disponibilidad, ocho del nuevo formato y políticas
+  globales. Una ejecución intermedia coincidió con cambios de código y rechazó
+  el replay por fingerprints diferentes; se conserva, y el rerun estable pasó.
+- `independent-aifa-september-review.json`: revisión de originales, PDF y 13
+  ataques reales; SHA256 `3f0646f850b9bcd09d09993ba0dabf64d3c4cb0adc2a9b1c4ffd7ceb69b16cc0`.
+- `independent-availability-component-review.json`: 20 contratos y siete
+  sondas con copias físicas; SHA256 `c08a704b54677e2853eefd9ed867456bd90a7c93ca0fcf026b7a2324a03492f6`.
+- `final-source-family.xml`: 1.680 casos de 63 módulos de familias/regresión
+  aprobados, cero fallos/errores/omisiones, 602,96 s. Las 99 pruebas financieras
+  del mismo runtime pasaron en 188,66 s, con una omisión histórica. Hay
+  solapamiento con las pruebas focales anteriores; no sumar sus conteos. La
+  agregada previa de 5.129 corresponde a su head, no se afirma repetida aquí.
+- `independent-financial-continuity-evidence-ce086002.json`: replay real del
+  productor/verificador originales y 107 pruebas independientes. Conserva
+  811/803 archivos publicados, 177 fuentes/aprobaciones y 188 del expediente.
+  Revisión local exacta `05157e87…`; no cambia la autoridad financiera original.
+- `nine-window-ce086002/official-reproduction.json`: nueve productos retenidos
+  recertificados con el código actual; las 53 salidas conservan sus hashes.
+  Son ventanas distintas. Volaris Q2 permanece bloqueado antes de Silver/Gold.
+- `calendar-current-preview.json`: mensual 17/nov y 15/dic de 2026; trimestral
+  sin fecha porque no se suministró un trío de recibos verificados. Esa lista
+  vacía no afirma que las compañías no hayan publicado; declara que el
+  coordinador no recibió evidencia elegible. Cero ejecuciones instaladas.
+
+Repetición offline del candidato y del vínculo, con la receta local conservada:
+
+```bash
+python -m src.source_updates.government_candidate certify --product aifa_traffic --period 2026M09 --as-of 2026-10-27T03:00:20.971082+00:00 --retention <id-exacto-del-recibo-v3> --workspace <candidato-v3> --check
+python -m src.source_updates.readiness --recipe tmp/source-updates/monday-reconciliation-20261026/calendar-source-evidence-20261027/aifa-v3-recipe.json --workspace tmp/source-updates/monday-reconciliation-20261026/calendar-source-evidence-20261027/aifa-readiness-v3 --check
+```
+
+La evidencia técnica se conserva localmente; no se copia Bronze, expedientes
+privados o candidatos al repositorio público. Monthly no fue reemplazado en
+Library. El dashboard respondió HTTP200 con validación TLS estándar; el
+navegador cloud encontró un error de su cadena de certificados, sin omitir TLS.
+No se afirma una revisión interactiva remota completada por ese intento.
+
 ## Pendientes
 
 - La política de productos y el calendario están aprobados; no falta una
@@ -2666,9 +2691,12 @@ pendientes; no se crea otro informe paralelo.
   exige productos obligatorios compatibles y evidencia verificada.
 - PR156 reúne la reconciliación técnica de PR152/154/155/156 contra `dad0a39b`.
   Es descendiente de sus cuatro heads. Solo su rama se avanzó normalmente y
-  volvió a borrador; las otras tres permanecen intactas. La CI de `7489e2a0`
-  aprobó web y falló Python. Se prepara el perfil público retrospectivo descrito
-  arriba; falta CI y revisión válidas del nuevo head antes de integrar.
+  volvió a borrador para revalidar. La CI inicial de `7489e2a0` aprobó web y
+  falló Python; la corrección `a10c2e69` pasó CI `40448593713`, revisión
+  independiente y Codex, sin hallazgos ni hilos. Se marcó listo una sola vez y
+  se integró normalmente en `70fb03ec`. GitHub confirmó PR152/154/155 integrados
+  con sus heads originales por ese mismo merge. Consultar también la CI posterior
+  `40450942960` al cerrar la entrega; no hay Pages ni despliegue del chat por este diff.
   Las revisiones adicionales antiguas sin resultado terminal no se consideran
   aprobación ni ejecución activa comprobada y no se relanzan a ciegas.
 - El procedimiento financiero local está implementado y probado con el
@@ -2680,14 +2708,23 @@ pendientes; no se crea otro informe paralelo.
 - AICM tiene certificación integral de las ediciones retenidas julio/agosto.
   AIFA julio sigue rechazado por su fecha anterior al cierre. El 27/oct se
   capturaron del índice oficial el XLSX y PDF de septiembre: la validación del
-  libro indica 16/oct, posterior al cierre de septiembre. El lector actual
-  rechaza el desplazamiento de dos filas en operaciones de carga. Falta adaptar
-  y validar esa edición, conservar notas de revisión junio/agosto y no inventar
-  una actualización propia para Carga, cuya celda C5 contiene el periodo.
-  No se escribió Silver/Gold ni se corrigió julio de forma silenciosa.
-- Faltan dos implementaciones para cerrar una ronda real: vincular evidencia
-  física de descubrimiento/captura reciente con los artefactos certificados,
-  y la ruta mensual de tráfico Volaris. Su certificador actual admite solo
+  libro indica 16/oct, posterior al cierre de septiembre. La adaptación local
+  produce 180 observaciones, 80 reconciliaciones y siete tablas candidatas,
+  con reproducción offline. Revisión independiente contrastó 162 celdas del
+  PDF y 15 acumuladas, y rechazó 13 ataques sobre originales. Se conservan las
+  notas junio/agosto y la actualización propia de Carga desconocida: C5 contiene
+  el periodo. No se corrigió julio ni se publicó el candidato. La vinculación
+  física a disponibilidad pasó en el candidato v3 del commit `ce086002`;
+  rechaza reutilizar esa captura como actualidad de noviembre. Falta entrega
+  remota del lote local. El mismo runtime pasó replay financiero original
+  independiente y 99 pruebas financieras, con una omisión histórica; su vínculo
+  de continuidad es solo local y no aprueba publicación.
+- El vínculo físico de descubrimiento/captura reciente está implementado
+  localmente para AIFA: índice oficial, manifiesto, HTTP, URL y hashes del XLSX
+  realmente usado. Rechaza otra fecha de ronda, otro mes o capturas fallidas;
+  no admite booleanos manuales. Otras familias todavía requieren su contrato
+  propio; no se acredita disponibilidad por guardar un original ni mirar Gold.
+  Falta también la ruta mensual de tráfico Volaris. Su certificador actual admite solo
   el dossier financiero 2026Q2; no satisface el mes obligatorio ni puede
   sustituirse por un trimestre. No son fallos externos ni se resolverán con
   un booleano manual o comprobando solo Gold.
@@ -2714,7 +2751,9 @@ pendientes; no se crea otro informe paralelo.
 - PR157/158, PR142/privada35, PR144/privada37 y Vuelos PR134/privada33 ya están
   integrados. Se conservan sus salidas y lifecycle, así como las publicaciones
   PR149/160. Monthly permanece privado para revisión/calidad HTML del corte
-  24/oct; sin aprobación final ni correo. No se amplía el producto con un rediseño.
+  24/oct; el archivo fue identificado en Library, pero su transferencia devolvió
+  HTTP401 y no entregó bytes. No se afirma revisión de ese HTML. El PR140
+  conserva un corte distinto, del 19/oct. Sin aprobación final ni correo ni rediseño.
 - Resolver decisiones curadas de perfiles y eventos antes de cambiar su
   significado o elegibilidad; las pruebas no las aprueban.
 - El calendario bancario verificado de 2026 permite calcular 17/nov y 15/dic.

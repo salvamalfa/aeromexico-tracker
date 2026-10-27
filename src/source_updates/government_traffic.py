@@ -234,6 +234,15 @@ def aifa(inputs, period):
         raise ValueError("AIFA workbook sheets changed")
     rows, checks = [], 0
     accumulated = {}
+    expected_window = (
+        f"Cifras del 1/o. Ene. al {calendar.monthrange(year, end)[1]} {MONTHS[end - 1][:3].title()}. {year}."
+    )
+    cargo_offset, edition = 0, {}
+    if book["Operaciones"]["C98"].value == "AVIACIÓN DE CARGA":
+        from src.source_updates.aifa_metadata import september_metadata
+
+        edition = september_metadata(content, book, period, expected_window)
+        cargo_offset = 2
     anchors = {
         "Pasajeros": {
             "C7": "AVIACIÓN COMERCIAL",
@@ -268,16 +277,24 @@ def aifa(inputs, period):
             "M9": "CARGA",
         },
     }
+    if cargo_offset:
+        cargo_anchors = anchors["Operaciones"]
+        for old in ("C96", "C97", "D99", "C128"):
+            cargo_anchors[f"{old[0]}{int(old[1:]) + cargo_offset}"] = cargo_anchors.pop(old)
     for name, cells in anchors.items():
         if any(book[name][cell].value != text for cell, text in cells.items()):
             raise ValueError(f"AIFA {name}: aviation scope or native unit changed")
     # Dates are source metadata, never assumed first publication or repaired from filename.
+    source_dates = {}
     for name in ["Esquema Operativo", "Pasajeros", "Operaciones", "Carga"]:
         sheet = book[name]
         if not str(sheet["C2"].value).startswith(f"NUMERALIA AEROPORTUARIA {year}"):
             raise ValueError("AIFA workbook year/header changed")
         stamps = []
         for cell, prefix in [("C4", "Fecha de validación: "), ("C5", "Fecha de actualización: ")]:
+            if cargo_offset and name == "Carga" and cell == "C5":
+                # This reviewed cell contains the reporting window, not an update date.
+                continue
             label = str(sheet[cell].value)
             match = re.fullmatch(re.escape(prefix) + r"(\d{1,2}) ([A-Z][a-z]{2})\. (20\d{2})", label)
             abbr = [m[:3].title() for m in MONTHS]
@@ -293,14 +310,26 @@ def aifa(inputs, period):
                 raise ValueError(
                     f"AIFA {name}!{cell}: {label}; internal date precedes report month end or exceeds capture"
                 )
-        if stamps[0] > stamps[1]:
+        if len(stamps) == 2 and stamps[0] > stamps[1]:
             raise ValueError("AIFA validation date exceeds its update date")
+        source_dates[name] = {
+            "validation_date": stamps[0].isoformat(),
+            "update_date": stamps[1].isoformat() if len(stamps) == 2 else None,
+            "validation_locator": f"{name}!C4",
+            "update_locator": f"{name}!C5" if len(stamps) == 2 else None,
+        }
     for name, start, metric, unit, scope in [
         ("Pasajeros", 13, "passengers_commercial", "passengers", "commercial"),
         ("Pasajeros", 74, "passengers_general", "passengers", "general"),
         ("Operaciones", 12, "operations_commercial", "operations", "commercial"),
         ("Operaciones", 72, "operations_general", "operations", "general"),
-        ("Operaciones", 101, "operations_cargo", "operations", "cargo_excludes_mixed_airlines"),
+        (
+            "Operaciones",
+            101 + cargo_offset,
+            "operations_cargo",
+            "operations",
+            "cargo_excludes_mixed_airlines",
+        ),
         ("Carga", 12, "cargo", "kg", "cargo_transported"),
     ]:
         sheet, values_by_month = book[name], {}
@@ -316,10 +345,6 @@ def aifa(inputs, period):
         )
         if [sheet.cell(start - 1, c).value for c in [4, 5, 6]] != expected_header:
             raise ValueError("AIFA native market/unit header changed")
-        expected_window = (
-            f"Cifras del 1/o. Ene. al {calendar.monthrange(year, end)[1]} "
-            f"{MONTHS[end - 1][:3].title()}. {year}."
-        )
         if sheet[f"C{start - 3}"].value != expected_window:
             raise ValueError("AIFA native block reporting window changed")
         if mass and sheet["D10"].value != "CARGA (KG.)":
@@ -418,6 +443,8 @@ def aifa(inputs, period):
         scope="AIFA_commercial_general_cargo_separated_not_airline_traffic",
         first_publication_date=None,
         release_lag_days=None,
+        source_report_dates=source_dates,
+        **edition,
     )
 
 

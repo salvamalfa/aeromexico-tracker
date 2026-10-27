@@ -329,3 +329,122 @@ def test_retained_batch_dispatches_government_checker(stored):
         assert result["results"][0]["product"] == product
     finally:
         shutil.rmtree(batch, ignore_errors=True)
+
+
+def september_workbook():
+    """Synthetic native layout; physical official extraction is tested separately."""
+    from src.source_updates.aifa_metadata import NOTES
+
+    book = workbook()
+    book["Operaciones"].move_range("C96:F128", rows=2)
+    for name, start, mass in [
+        ("Pasajeros", 13, False),
+        ("Pasajeros", 74, False),
+        ("Operaciones", 12, False),
+        ("Operaciones", 72, False),
+        ("Operaciones", 103, False),
+        ("Carga", 12, True),
+    ]:
+        sheet = book[name]
+        sheet.cell(start - 3, 3, "Cifras del 1/o. Ene. al 30 Sep. 2026.")
+        for m in range(1, 13):
+            values = ([1000, 2000, 3000] if mass else [2, 3, 5]) if m <= 9 else [None, None, 0]
+            for c, value in enumerate(values, 4):
+                sheet.cell(start + m - 1, c).value = value
+        for c, value in enumerate([1000, 2000, 3000] if mass else [2, 3, 5], 4):
+            sheet.cell(start + 12, c).value = 9 * value
+    for name in ["Esquema Operativo", "Pasajeros", "Operaciones", "Carga"]:
+        book[name]["C4"] = "Fecha de validación: 16 Oct. 2026"
+        book[name]["C5"] = "Fecha de actualización: 16 Oct. 2026"
+    book["Carga"]["C5"] = "Cifras del 1/o. Ene. al 30 Sep. 2026."
+    for text, p, o in zip(NOTES, ["C100", "C101"], ["C95", "C96"], strict=True):
+        book["Pasajeros"][p], book["Operaciones"][o] = text, text
+    for name, start in [("Pasajeros", 74), ("Operaciones", 72)]:
+        book[name].cell(start + 5, 3, "JUNIO*")
+        book[name].cell(start + 7, 3, "AGOSTO**")
+    summary = book["Esquema Operativo"]
+    summary["C28"] = "2026\n(1/o. Ene. -30 Sep.)"
+    for cell, value in {
+        "F28": 45,
+        "F29": 45,
+        "F30": 45,
+        "G28": 135,
+        "J28": 45,
+        "J29": 45,
+        "K28": 90,
+        "M28": 27,
+    }.items():
+        summary[cell] = value
+    return book
+
+
+def september_encoded(book, *, formula_change=False):
+    # OOXML formula caches are explicit: openpyxl cannot write cached results.
+    from xml.etree import ElementTree as ET
+    from zipfile import ZipFile
+
+    cache = encoded(book)
+    out = BytesIO()
+    ns = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
+    references = {
+        1: {"C4": "Pasajeros!C4", "C5": "Pasajeros!C5"},
+        3: {"C4": "Pasajeros!C4", "C5": "Pasajeros!C5"},
+        4: {"C4": "Pasajeros!C4", "C5": "Pasajeros!C10", "C9": "C5"},
+    }
+    with ZipFile(BytesIO(cache)) as source, ZipFile(out, "w") as target:
+        for item in source.infolist():
+            raw = source.read(item.filename)
+            for i, cells in references.items():
+                if item.filename != f"xl/worksheets/sheet{i}.xml":
+                    continue
+                tree = ET.fromstring(raw)
+                for cell, reference in cells.items():
+                    node = tree.find(f'.//{ns}c[@r="{cell}"]')
+                    value = "".join(node.itertext())
+                    node.clear()
+                    node.set("r", cell)
+                    node.set("t", "str")
+                    ET.SubElement(node, ns + "f").text = (
+                        "Pasajeros!C5" if formula_change and cell == "C5" and i == 4 else reference
+                    )
+                    ET.SubElement(node, ns + "v").text = value
+                raw = ET.tostring(tree)
+            target.writestr(item, raw)
+    return out.getvalue()
+
+
+@pytest.mark.parametrize("attack", [None, "formula", "note", "marker", "unit", "future", "dates", "period"])
+def test_september_layout_retains_metadata_and_rejects_unreviewed_changes(attack):
+    book = september_workbook()
+    if attack == "note":
+        book["Operaciones"]["C96"] = "Changed note"
+    elif attack == "marker":
+        book["Pasajeros"]["C81"] = "AGOSTO*"
+    elif attack == "unit":
+        book["Operaciones"]["D101"] = "THOUSANDS"
+    elif attack == "future":
+        book["Operaciones"]["D112"] = 1
+    elif attack == "dates":
+        book["Pasajeros"]["C4"] = "Fecha de validación: 11 Jul. 2026"
+    inputs = {
+        "workbook": (
+            september_encoded(book, formula_change=attack == "formula"),
+            dict(
+                source_system="aifa",
+                source_file="synthetic.xlsx",
+                sha256="a" * 64,
+                downloaded_at="2026-10-27T03:00:00+00:00",
+            ),
+        )
+    }
+    if attack:
+        with pytest.raises(ValueError):
+            native.read("aifa_traffic", inputs, "2026M08" if attack == "period" else "2026M09")
+    else:
+        frame, details = native.read("aifa_traffic", inputs, "2026M09")
+        assert len(frame) == 180 and details["reconciliations"] == 80
+        assert details["source_report_dates"]["Carga"]["update_date"] is None
+        assert details["source_report_dates"]["Pasajeros"]["update_date"] == "2026-10-16"
+        assert len(details["reported_revision_notes"]) == 2
+        assert all(x["reported_adjustment_delta"] is None for x in details["reported_revision_notes"])
+        assert details["first_publication_date"] is None and details["release_lag_days"] is None

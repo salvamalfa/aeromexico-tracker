@@ -106,6 +106,19 @@ positiva no resuelve esa contradicción de la fuente oficial.
 Los originales no acreditan última disponibilidad, primera publicación ni
 activación; conservar esos límites en la ronda global y en la entrega.
 
+La edición oficial de septiembre 2026 tiene operaciones de carga desplazadas
+dos filas y notas de revisión de junio/agosto. El lector revisado comprueba
+las fórmulas y sus valores almacenados, las notas literales y los marcadores.
+Conserva fechas internas de 16/oct y actualización propia de Carga desconocida:
+su C5 contiene el periodo, no una fecha. No interpreta las notas como deltas
+firmados ni modifica julio. Otra disposición requiere adaptación y pruebas.
+
+Para acreditar disponibilidad en una ronda, se admite el vínculo `availability`
+descrito en el protocolo común: índice oficial capturado, colección completa
+y el mismo XLSX usado por el candidato. La captura debe pertenecer a la fecha
+local de la ronda; retener ese original para otra fecha no acredita actualidad.
+La primera publicación y su rezago siguen desconocidos.
+
 ### Certificación integral GAP/ASUR
 
 El plan `--family airports` incluye ambos productos SEC sin trasladar los

@@ -70,7 +70,7 @@ def preflight(recipe: dict, workspace: Path) -> list[dict]:
     plans, ids, locations, grains = [], set(), set(), set()
     products = product_map()
     for item in items:
-        if not isinstance(item, dict) or set(item) != {
+        fields = {
             "id",
             "product",
             "period",
@@ -79,7 +79,8 @@ def preflight(recipe: dict, workspace: Path) -> list[dict]:
             "receipt_id",
             "required",
             "candidate_as_of",
-        }:
+        }
+        if not isinstance(item, dict) or set(item) not in (fields, fields | {"availability"}):
             raise ValueError("Each readiness task needs its exact fields")
         if (
             not isinstance(item["id"], str)
@@ -134,6 +135,10 @@ def preflight(recipe: dict, workspace: Path) -> list[dict]:
         if not re.fullmatch(r"[0-9a-f]{32}", item["receipt_id"]):
             raise ValueError("Expected an exact acquisition/retention receipt ID")
         candidate = safe_workspace(Path(item["workspace"]))
+        if "availability" in item:
+            from src.source_updates.availability import preflight as availability_preflight
+
+            availability_preflight(item["availability"], candidate)
         if (
             candidate == workspace
             or candidate.is_relative_to(workspace)
@@ -164,7 +169,7 @@ def inventory(workspace: Path) -> dict:
     }
 
 
-def check_task(item: dict, cutoff: str) -> dict:
+def check_task(item: dict, cutoff: str, round_as_of: str | None = None) -> dict:
     candidate = Path(item["workspace"])
     if item["adapter"] == "rss_retained":
         from src.source_updates.rss_candidate import guard
@@ -275,8 +280,15 @@ def check_task(item: dict, cutoff: str) -> dict:
         and code_sha is None
     ):
         raise ValueError("Offline checker must report its actual code fingerprints")
+    availability = None
+    if "availability" in item:
+        from src.source_updates.availability import verify as verify_availability
+
+        availability = verify_availability(item, result, round_as_of or cutoff)
+        if inventory(candidate) != before:
+            raise ValueError("Source candidate changed during availability verification")
     conditions = []
-    if retained:
+    if retained and availability is None:
         conditions.append("retained_original_does_not_verify_current_source_availability")
     if result.get("service_code_mapping_verified") is False:
         conditions.append("official_service_code_legend_pending")
@@ -302,7 +314,8 @@ def check_task(item: dict, cutoff: str) -> dict:
         "source_candidate_files_unchanged": len(before),
         "collection_basis": "retained" if retained else "previously_captured_originals",
         "source_conditions": conditions,
-        "latest_source_availability_verified": False,
+        "latest_source_availability_verified": availability is not None,
+        **({"source_availability_evidence": availability} if availability is not None else {}),
         "activation": "none",
         "publication": "not_authorized",
     }
@@ -358,7 +371,10 @@ def execute(recipe: dict, workspace: Path, *, write=False, check=False) -> dict:
                 )
                 continue
             try:
-                results.append(check_task(item, item["candidate_as_of"]))
+                args = (item, item["candidate_as_of"])
+                results.append(
+                    check_task(*args, recipe["as_of"]) if "availability" in item else check_task(*args)
+                )
             except Exception as exc:
                 results.append(
                     {

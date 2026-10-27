@@ -124,7 +124,11 @@ def preflight(recipe: dict) -> list[dict]:
         raise ValueError("Releases must be an explicit list, empty when unknown")
     ids, grains = set(), set()
     for item in recipe["items"]:
-        if not isinstance(item, dict) or set(item) not in (ITEM_FIELDS, ITEM_FIELDS | {"source_period"}):
+        if (
+            not isinstance(item, dict)
+            or not ITEM_FIELDS <= set(item)
+            or set(item) - ITEM_FIELDS - {"source_period", "availability"}
+        ):
             raise ValueError(
                 "Each global task needs exact fields, with no metric/filter/equivalence override"
             )
@@ -396,7 +400,7 @@ def fingerprints() -> dict:
     return {p.relative_to(ROOT).as_posix(): readiness.sha(p) for p in sorted(paths)}
 
 
-def verify(item: dict, workspace: Path) -> dict:
+def verify(item: dict, workspace: Path, round_as_of: str | None = None) -> dict:
     if item["adapter"] == "unsupported":
         raise ValueError("No whole-product offline adapter; subset checks cannot certify required metrics")
     task = {
@@ -404,6 +408,8 @@ def verify(item: dict, workspace: Path) -> dict:
         for k in ("id", "product", "period", "adapter", "workspace", "receipt_id", "candidate_as_of")
     }
     task["period"] = item.get("source_period", item["period"])
+    if "availability" in item:
+        task["availability"] = item["availability"]
     task["required"] = True
     readiness.preflight(
         {"version": 1, "as_of": item["candidate_as_of"], "required_items": [item["id"]], "items": [task]},
@@ -411,7 +417,12 @@ def verify(item: dict, workspace: Path) -> dict:
     )
     candidate = Path(item["workspace"])
     before = readiness.inventory(candidate)
-    result = readiness.check_task(task, item["candidate_as_of"])
+    args = (task, item["candidate_as_of"])
+    result = (
+        readiness.check_task(*args, round_as_of or item["candidate_as_of"])
+        if "availability" in item
+        else readiness.check_task(*args)
+    )
     result.update(target_period=item["period"], source_period=task["period"])
     if item["product"] == "aerocivil":
         # Actual adapter currently reports pending legend/attribution. Never
@@ -476,6 +487,8 @@ def execute(recipe: dict, workspace: Path, *, write=False, check=False) -> dict:
             for k in ("id", "product", "period", "adapter", "workspace", "receipt_id", "candidate_as_of")
         }
         task.update(period=item.get("source_period", item["period"]), required=True)
+        if "availability" in item:
+            task["availability"] = item["availability"]
         readiness.preflight(
             {"version": 1, "as_of": item["candidate_as_of"], "required_items": [item["id"]], "items": [task]},
             workspace,
@@ -516,7 +529,7 @@ def execute(recipe: dict, workspace: Path, *, write=False, check=False) -> dict:
                 if not item["used"]:
                     continue
                 try:
-                    results[item["id"]] = verify(item, workspace)
+                    results[item["id"]] = verify(item, workspace, recipe["as_of"])
                 except Exception as exc:
                     results[item["id"]] = {
                         "status": "blocked",
