@@ -219,3 +219,14 @@ def test_latest_availability_cannot_be_a_boolean_or_unsupported_family(physical)
     s["item"]["product"] = "gdelt"
     with pytest.raises(ValueError, match="not yet implemented"):
         availability.verify(s["item"], {}, CUTOFF)
+
+
+def test_source_plain_format_label_does_not_hide_an_older_current_index(physical):
+    # Both forms were observed in official captures; month/year/extension stay exact.
+    state = physical
+    index = state["bronze"] / state["receipt"]["items"][0]["source_file"]
+    body = index.read_text().replace(" (PDF)", "")
+    index.write_text(body)
+    assert availability.latest_aifa(index) == ("2026M09", URL)
+    index.write_text(body.replace("Sep-2026", "Jul-2026").replace("Septiembre 2026", "Julio 2026"))
+    assert availability.latest_aifa(index) == ("2026M07", URL.replace("Sep-2026", "Jul-2026"))

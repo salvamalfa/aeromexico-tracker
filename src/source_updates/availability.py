@@ -161,7 +161,8 @@ def latest_aifa(index_path):
             url,
         )
         title = re.fullmatch(
-            r"Numeralia Aeroportuaria de Enero a ([A-Za-z]+) (20\d{2}) - Formato (PDF|XLSX) \(PDF\)", label
+            r"Numeralia Aeroportuaria de Enero a ([A-Za-z]+) (20\d{2}) - Formato (PDF|XLSX)(?: \(PDF\))?",
+            label,
         )
         if (
             not match
