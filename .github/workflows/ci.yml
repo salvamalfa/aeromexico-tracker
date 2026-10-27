@@ -47,7 +47,17 @@ jobs:
       # reason here. `browser` (Playwright) tests are excluded too: full
       # local validation, with the data restored, stays a local/manual step
       - name: Run the public test subset
-        run: uv run pytest -m "not local_data and not browser" -q
+        env:
+          PUBLICATION_BASE_COMMIT: ${{ github.event.pull_request.base.sha || github.sha }}
+        run: |
+          # A code-only PR verifies the existing publication with its released
+          # verifier. This does not approve the PR runtime for publication.
+          # Actual publication changes still use the ordinary financial gate.
+          if git diff --quiet "$PUBLICATION_BASE_COMMIT" HEAD -- site; then
+            uv run pytest -m "not local_data and not browser" -q --financial-publication-base "$PUBLICATION_BASE_COMMIT"
+          else
+            uv run pytest -m "not local_data and not browser" -q
+          fi
 
       - name: Check task file lifecycle dispositions and documentation references
         if: github.event_name == 'pull_request'

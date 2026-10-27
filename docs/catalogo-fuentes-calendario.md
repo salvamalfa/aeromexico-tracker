@@ -2577,6 +2577,25 @@ del directorio técnico de esta continuación. La agregada final conserva todos
 los marcadores y las mismas opciones que la ejecución completa `d83adbbab`;
 su resultado y comparación total se entregan por separado de la medición focalizada.
 
+La agregada comparable final del head `7489e2a0` terminó con 5.129 pruebas
+aprobadas, cuatro omisiones existentes y 29 subpruebas, sin fallos ni errores.
+Incluyó los 75 casos locales y los 34 de navegador. El mismo perfil completo
+pasó de 2.387,04 a 2.193,92 s: 39:47 a 36:33, ahorro local observado de 8,09 %.
+La revisión independiente y la conservación posterior pasaron. La medición
+secuencial comparte caché natural del sistema; no acredita ahorro remoto.
+
+La primera CI remota del head falló en el subconjunto Python; `web` pasó.
+La verificación pública de una publicación existente es distinta de aprobar el
+runtime nuevo. Por eso el perfil retrospectivo de pruebas usa exclusivamente
+la base confiable del evento, su sitio y ancla exactos y el código publicado
+señalado por ese manifiesto. Las dependencias y la autoridad pública deben
+conservarse; cambios, extras, symlinks o rechazos bloquean, sin fallback.
+El perfil ordinario y el gate de publicación no cambian. Tampoco se usan los
+pins del procedimiento local como autoridad pública. La CI selecciona este
+perfil explícito solo cuando no cambia `site/`; conserva todas las pruebas del
+subconjunto y las omisiones existentes por falta de expediente privado.
+El nuevo head y sus revisiones/CI se comprobarán separadamente.
+
 La agregada de control `fa67e88a` conserva sus resultados completos: 5.069
 aprobadas, 35 fallos, 25 errores, cuatro omisiones y 29 subpruebas, 2.354,34 s.
 Sus 60 negativos son exactamente los casos de configuración ya corregidos;
@@ -2640,74 +2659,68 @@ pendientes; no se crea otro informe paralelo.
 
 ## Pendientes
 
-- La política está aprobada e implementada; no falta volver a aprobarla.
-  AICM tiene certificación integral de las ediciones retenidas de julio/agosto;
-  AIFA tiene el certificador preparado pero su archivo julio sigue rechazado
-  por la contradicción de fechas. Falta material oficial coherente o aclaración
-  oficial de la edición; no basta una prueba sintética o el control de Gold.
-- PR152 añade `banxico`, `fuel` y `equities` y conserva el head `3a89c6dc`.
-  La revisión adicional iniciada el 22/oct a las 16:05 UTC sigue sin resultado
-  terminal verificable; su actividad interna es desconocida. Su CI y revisión
-  manual previas no sustituyen ese resultado.
-  No se ha integrado ni se ha relanzado la revisión.
-- PR158 integró la certificación técnica de los dossiers Volaris/AFAC;
-  Volaris real permanece bloqueado por la discrepancia CASM documentada arriba;
-  el original 2T25 confirma que no nace de seleccionar mal el comparativo 2026.
-  La prueba de agosto AFAC conserva la advertencia internacional de la fuente.
-  Las pruebas reales y revisión independiente constan arriba; CI/revisión del
-  head final e integración se registran en PR158.
-  RSS añade aquí el certificador retenido, probado sobre originales;
-  su suite completa, CI, revisión e integración se registran en
-  [PR157](https://github.com/salvamalfa/aeromexico-tracker/pull/157). BTS ([PR155](https://github.com/salvamalfa/aeromexico-tracker/pull/155)),
-  GAP/ASUR ([PR154](https://github.com/salvamalfa/aeromexico-tracker/pull/154)) y Viva
-  ([PR156](https://github.com/salvamalfa/aeromexico-tracker/pull/156)) están preparados
-  en ramas separadas y conservan sus heads/revisiones remotos. La reconciliación
-  local de los cuatro PR ya está preparada y probada; falta resolver el estado
-  de las revisiones existentes y validar cualquier futuro head remoto con CI y
-  revisión exactas, sin duplicar ejecuciones a ciegas. Además, el gate de la
-  publicación financiera requiere una revisión técnica nueva de la huella del
-  runtime. La conservación de sus bytes no sustituye ese control; falta
-  coordinar esa continuidad con el procedimiento de publicación vigente. La
-  continuación controlada confirma cuatro errores nuevos del runtime. El
-  expediente a470 exacto ya está recuperado y su replay original pasa en ambos
-  checkouts aislados; no falta conseguir fuentes del 3T26. El bloqueo restante
-  se trata ahora mediante el procedimiento local separado, aprobado por el dueño
-  e implementado con revisión y conservación exactas. Su aceptación local no
-  equivale a aceptación del gate ordinario, integración o publicación; ese flujo
-  sigue rechazando el runtime nuevo. No falta otra aprobación editorial.
-  Los heads remotos no se modifican y no se activa nada. Los resultados reales
-  y las limitaciones del procedimiento se conservan en la evidencia técnica.
-  Los restantes adaptadores conservan sus límites de edición y periodo;
-  finanzas IR retenidas de Aeroméxico certifica 2T26, sin aprobar otra edición.
-- Aerocivil requiere la leyenda literal aplicable al ID exacto; su entidad
-  publicadora ya está identificada, pero la atribución operativa sigue siendo
-  derivada. GDELT requiere una captura mensual válida: el intento acotado del
-  24/oct terminó en 503 de conexión al upstream y no se vuelve a solicitar en
-  esta continuación. Se conservan también el 429 y los rechazos históricos.
-  Ambos permanecen **requeridos y bloqueados** por decisión del dueño. No hay
-  autorización para declararlos opcionales ni para rebajar sus validadores.
-  Obtener aclaración documental del proveedor es otra vía; contactar a terceros,
-  añadir hosts o contratar servicios requiere instrucción aparte.
-- Completar evidencia temporal y vínculo a payload financiero validado antes
-  de suministrar los tres releases al coordinador. Los días declarados de 2T26
-  están identificados; no se acreditaron para los tres los instantes de
-  publicación con zona que exige el contrato. La primera disponibilidad es
-  otro dato que tampoco se infiere. No se rellenan horas ni se traslada esta
-  evidencia a Q3. La muestra
-  sin releases elegibles no fija fecha; el 2 de noviembre no es una fecha aprobada.
-- Las comprobaciones de originales retenidos no acreditan última disponibilidad.
-  Para una edición nueva, seleccionar el documento real y revisar su formato,
-  cobertura y revisiones antes de incorporarlo. Países no aporta una serie
-  mensual exacta desde las gráficas del boletín; Aerocivil conserva su leyenda pendiente.
-- PR142/privada35, PR144/privada37 y Vuelos PR134/privada33 ya están integrados. M11 PR140
-  conserva su responsable. La integración de infraestructura conserva esas
-  salidas y el lifecycle vigente. La propuesta local parte de master `dad0a39b`
-  y conserva íntegramente las publicaciones PR149/160, sin volver a publicarlas.
-- Resolver las decisiones curadas de perfiles y eventos descritas arriba antes
-  de cambiar su significado o elegibilidad. Las pruebas no las aprueban.
-- Verificar el calendario bancario de 2027 antes de calcular rondas de ese año.
-- Revisar y aprobar cada lote según su alcance antes de publicar o activar una
-  ejecución automática. La integración técnica ahora autorizada no aprueba
-  datos nuevos ni activa calendario, noticias o nuevas versiones de tesis.
-  La disponibilidad y validez de cada fuente se comprueban por lote; cualquier
-  producto obligatorio bloqueado impide declarar lista una ronda completa que lo requiera.
+- La política de productos y el calendario están aprobados; no falta una
+  autorización genérica. Mensual: primer hábil bancario de México en o después
+  del 15; trimestral: dos hábiles tras el último reporte financiero real de las
+  tres aerolíneas. Mantener zona America/Mexico_City y capturas UTC. La aceptación
+  exige productos obligatorios compatibles y evidencia verificada.
+- PR156 reúne la reconciliación técnica de PR152/154/155/156 contra `dad0a39b`.
+  Es descendiente de sus cuatro heads. Solo su rama se avanzó normalmente y
+  volvió a borrador; las otras tres permanecen intactas. La CI de `7489e2a0`
+  aprobó web y falló Python. Se prepara el perfil público retrospectivo descrito
+  arriba; falta CI y revisión válidas del nuevo head antes de integrar.
+  Las revisiones adicionales antiguas sin resultado terminal no se consideran
+  aprobación ni ejecución activa comprobada y no se relanzan a ciegas.
+- El procedimiento financiero local está implementado y probado con el
+  expediente original, fuentes y autoridad exactos. No faltan archivos del 3T26
+  ni persisten los cuatro errores técnicos iniciales. El gate ordinario sigue
+  rechazando el runtime diferente: el perfil retrospectivo solo comprueba la
+  publicación existente con su código publicado, sin aprobar otro runtime.
+  No hay cambios en el sitio, datos o rutas que disparan Pages o el chat.
+- AICM tiene certificación integral de las ediciones retenidas julio/agosto.
+  AIFA julio sigue rechazado por su fecha anterior al cierre. El 27/oct se
+  capturaron del índice oficial el XLSX y PDF de septiembre: la validación del
+  libro indica 16/oct, posterior al cierre de septiembre. El lector actual
+  rechaza el desplazamiento de dos filas en operaciones de carga. Falta adaptar
+  y validar esa edición, conservar notas de revisión junio/agosto y no inventar
+  una actualización propia para Carga, cuya celda C5 contiene el periodo.
+  No se escribió Silver/Gold ni se corrigió julio de forma silenciosa.
+- Faltan dos implementaciones para cerrar una ronda real: vincular evidencia
+  física de descubrimiento/captura reciente con los artefactos certificados,
+  y la ruta mensual de tráfico Volaris. Su certificador actual admite solo
+  el dossier financiero 2026Q2; no satisface el mes obligatorio ni puede
+  sustituirse por un trimestre. No son fallos externos ni se resolverán con
+  un booleano manual o comprobando solo Gold.
+- Volaris Q2 conserva la discrepancia CASM H1 2025. El original 2T25 confirma
+  que no nace de seleccionar mal el comparativo 2026. El reporte 3T26 nuevo
+  no corrige ese histórico. AFAC agosto conserva la advertencia internacional.
+  RSS, BTS, GAP/ASUR, Viva y los demás adaptadores mantienen límites de edición,
+  periodo y disponibilidad explícitos; ventanas separadas no son una ronda completa.
+- Aerocivil sigue requiriendo la leyenda oficial vinculada a `jh8x-n6h6` y
+  atribución operativa verificable. Contactar al publicador requiere una
+  decisión externa; no se ha contactado. GDELT tuvo un intento nuevo acotado del
+  runner el 27/oct: HTTP503, cuerpo de 91 bytes con timeout de conexión upstream,
+  conservado separado de datos válidos. No se repite ese intento. Se conservan
+  también 429, 503 y rechazos previos. Ambos productos siguen obligatorios;
+  no se sustituyen silenciosamente por RSS, NGrams u otra fuente.
+- Completar instantes con zona y vínculo físico de los tres reportes centrales
+  antes de fechar una ronda trimestral. El wire primario AM2T26 aporta un lead
+  de 13/jul 17:00 ET; falta verificar su vínculo al payload. La hora BMV de un
+  ZIP XBRL Viva no fecha su Earnings Release PDF y carece de zona declarada.
+  Volaris Q2 no tiene hora elegible verificada; no usar aceptación SEC como
+  primera publicación. Cambiar a precisión diaria sería una decisión explícita
+  de contrato, nunca rellenar horas. Viva IR todavía muestra Q2: el trío Q3 no
+  está completo y su fecha sigue nula. No inventar el 2 de noviembre.
+- PR157/158, PR142/privada35, PR144/privada37 y Vuelos PR134/privada33 ya están
+  integrados. Se conservan sus salidas y lifecycle, así como las publicaciones
+  PR149/160. Monthly permanece privado para revisión/calidad HTML del corte
+  24/oct; sin aprobación final ni correo. No se amplía el producto con un rediseño.
+- Resolver decisiones curadas de perfiles y eventos antes de cambiar su
+  significado o elegibilidad; las pruebas no las aprueban.
+- El calendario bancario verificado de 2026 permite calcular 17/nov y 15/dic.
+  Verificar 2027 antes de calcular rondas de ese año, sin bloquear 2026 por ello.
+- Revisar cada lote según su alcance antes de publicar o activar. La entrega
+  técnica y su CI no aprueban datos nuevos, noticias candidatas o nuevas tesis.
+  Cada producto obligatorio bloqueado impide declarar lista la ronda que lo
+  requiere. El Roadmap se actualizará con resultados comprobados por separado
+  para integración, calendario, Monthly privado y acceso a la interfaz.

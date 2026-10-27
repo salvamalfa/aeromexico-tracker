@@ -44,6 +44,11 @@ WEB_ROOT = PATHS.root / "web"
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
+        "--financial-publication-base", default=None,
+        help=("Verify an unchanged published site against a trusted public CI base; "
+              "never authorizes the current runtime."),
+    )
+    parser.addoption(
         "--financial-continuity-local", action="store_true", default=False,
         help="Explicitly verify local financial runtime continuity; never authorizes publication.",
     )
@@ -67,12 +72,21 @@ def verify_financial_publication(request):
         from src.publish.financial_continuity import verify_local
 
         return verify_local
+    base = request.config.getoption("--financial-publication-base")
+    if base:
+        from functools import partial
+
+        from tests._financial_publication_history import verify_published
+
+        return partial(verify_published, base_commit=base)
     from src.publish.financial_scope import verify_financial
 
     return verify_financial
 
 
 def pytest_configure(config: pytest.Config) -> None:
+    if config.getoption("--financial-continuity-local") and config.getoption("--financial-publication-base"):
+        raise pytest.UsageError("Choose local continuity or historical public verification, never both")
     config.addinivalue_line(
         "markers",
         "local_data: needs locally-restored data that is gitignored and "
