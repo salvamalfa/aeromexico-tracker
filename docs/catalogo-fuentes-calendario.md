@@ -1,7 +1,7 @@
 # Catálogo de fuentes, métricas y rondas de actualización
 
 Revisión: 27 de octubre de 2026 (UTC). **Infraestructura de skills, coordinador y
-contratos AIFA/AICM/Viva/AFAC/BTS y tráfico IR Aeroméxico integrados. Calendario bloqueado, sin activar ni publicar datos nuevos.**
+contratos AIFA/AICM/Viva/AFAC/BTS, tráfico IR Aeroméxico y consultas RSS/macro integrados. Calendario bloqueado, sin activar ni publicar datos nuevos.**
 
 ## Resumen
 
@@ -38,6 +38,15 @@ Tráfico IR Aeroméxico tiene
 contrato probado y siete salidas reales idénticas; su disponibilidad actual
 requiere todavía el PDF de la misma fecha local que el índice. Los detalles
 están en el apéndice; ninguno de estos hitos activa una ronda.
+
+RSS y las consultas Banxico/EIA/cotizaciones se integraron en
+[PR166](https://github.com/salvamalfa/aeromexico-tracker/pull/166), merge
+`5c24c817`, tras CI `40494417732` y Codex favorables del head `dcb747f5`.
+La CI posterior `40496962410` está aprobada. Su ensayo real acepta
+once tareas, pero doce tareas requeridas no incluidas, seis controles de
+calendario de observaciones y los reportes centrales bloquean la ronda.
+Esos conteos pertenecen a aquel runtime; no se trasladan a código posterior
+sin repetir la validación correspondiente.
 
 La integración de infraestructura no aprueba una ronda de datos. Aerocivil y
 GDELT siguen **requeridos y bloqueados**. Faltan también disponibilidad física
@@ -3109,6 +3118,101 @@ activar una ejecución. Conservar código, pruebas, originales y recibos
 inmutables. Actualizar únicamente esta guía, skills y Roadmap; sin informes
 paralelos, datos públicos nuevos, retiro de archivos o cambios de autoridad.
 
+### GAP: expediente histórico completo, separado de la ronda actual
+
+El SRC `76e8fab1` añade descubrimiento físico para julio 2026, únicamente al
+corte `2026-08-20T18:20:00-06:00`. Se retienen sin modificar cinco originales:
+submissions SEC y los índices/primarias de `0001171843-26-005269` y
+`0001171843-26-005334`. El primer índice enlaza la primaria de tráfico; el
+segundo expediente posterior se clasifica por su cuerpo exacto, no por el
+título. Un 6-K/6-K/A nuevo, anexo, enlace o contenido dinámico desconocido bloquea.
+
+Cada índice enumera su primaria y tres contenedores generados de SEC. Solo se
+admite ese conjunto literal y el tamaño de la primaria debe coincidir. Los
+contenedores quedan **listados, no descargados**: no se afirma haberlos leído.
+La [documentación SEC](https://www.sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data)
+describe el índice JSON como vista del directorio. El dossier físico cerrado
+exige cinco originales, cinco sidecars y manifiesto único, sin extras ni
+duplicados; sus recibos técnicos fuera de Bronze se conservan.
+
+El recorrido CLI real realizó previews, retención, certificación y ronda,
+seguidos de dos replays de candidato y dos de ronda. Produce nueve salidas:
+192 observaciones nativas, 26 filas Silver, 24 hechos aeroportuarios y dos
+de grupo, dimensiones 12/1/2, un artefacto y 434 vínculos. Pasaron 72
+reconciliaciones y los 218 registros nativos/proyectados tienen linaje.
+El resumen `gap-historical-final-76e8fab1-20261027/summary.json`, SHA
+`e4664861…`, conserva los nueve hashes. Octubre, septiembre y un sexto
+artefacto coherente se rechazan sin modificar el dossier o los recibos aceptados.
+
+Validación: 89 casos afectados/presupuestos en 3,09 s, sin omisiones; revisión
+independiente focal de siete casos (quince ajenos deseleccionados), sin hallazgos
+pendientes. La reproducción financiera original pasó en 46,28 s y los 79
+adversariales en 4,598 s, separados de aquellas pruebas. El runtime `9494ccd2…`
+se vinculó al dictamen local auténtico `c4bee0ca…`; la CLI local devuelve
+`valid=true`, `publication_authorized=false`. Se conservaron autoridad,
+811/803 archivos publicados, 177 fuentes/autoridad y 188 del expediente.
+
+Conservar módulos, pruebas, originales, recibos y dictámenes. La ronda es
+histórica y parcial, no acredita septiembre, disponibilidad actual o calendario
+listo. No se añade a las once tareas actuales de PR166 ni se trasladan a este
+runtime sus 65 salidas. No se alteran adquisición manual SEC, Gold público,
+aprobaciones, hosts, permisos, gastos o disparadores.
+
+### Cierre operativo de la ronda: doce tareas y seis controles
+
+El ensayo real de PR166 verificó once tareas en su runtime `4f3bbe19`.
+Las doce siguientes no se incluyeron como verificadas. No son doce servicios
+caídos: se separan implementación, edición requerida y acceso físico. La
+ausencia de un archivo en el expediente tampoco demuestra que no exista una
+publicación oficial.
+
+| Tarea | Código comprobado y límite | Siguiente paso concreto |
+|---|---|---|
+| Mensual AFAC aeropuertos | Parser julio; contrato físico actual pendiente, índice HTTP403 | Índice y libro oficiales legibles; implementar y probar su vínculo |
+| Mensual AIFA | Septiembre histórico certificado; índice actual anuncia julio, cuyo libro falla por fechas | Evidencia oficial coherente de la edición vigente; no corregir julio |
+| Mensual AM tráfico | Contrato integrado; PDF retenido y actual índice no forman una colección del mismo día | Recuperar el PDF anunciado cuando sea accesible; no repetir el fallo en esta pasada |
+| Mensual ASUR | Parser julio; falta dossier de septiembre y descubrimiento físico completo | Importación manual del expediente SEC oficial, con índices y documentos |
+| Mensual GAP | Nuevo vínculo histórico julio, separado de la ronda actual | Dossier oficial de septiembre y revisión de esa edición; agosto no acredita octubre |
+| Mensual GDELT | Adaptador existente; HTTP503 en la consulta mensual | Respuesta válida del periodo; no sustituirlo por RSS ni declararlo opcional |
+| Mensual OMA | Contrato existente; PDF septiembre HTTP404 e índice alternativo HTTP202 | Documento oficial accesible o enlace corregido |
+| Mensual Volaris | Falta adaptador mensual y host de su PDF identificado | Decisión ya preparada: admitir solo `filemanager-cdn.mziq.com`; después implementar y probar |
+| Trimestral Aerocivil | Comprobación numérica; leyenda y atribución del conjunto sin acreditar | Autorizar contacto al publicador de `jh8x-n6h6`, sin inferir códigos de otro conjunto |
+| Trimestral AM finanzas | Q2 acotado a veinte métricas; PDF Q3 retenido identificado, pero solo imágenes | Adaptación Q3 desde el HTML retenido usado en la publicación; resolver su atribución formal al contrato, sin ampliar hosts implícitamente |
+| Trimestral Viva finanzas | Certificador Q2; falta índice que enlace sus originales y dossier Q3 | Edición financiera oficial del trimestre; tráfico y ZIP XBRL no sustituyen el PDF |
+| Trimestral Volaris | Q2 bloqueado por CASM; Q3 requiere dossier y adaptación propios | Validar Q3 por separado; no sobrescribir el comparativo histórico |
+
+Los seis controles son **tres productos por dos ventanas**, septiembre y 3T26.
+Hoy `series_candidate`, `series_native` y `series_gold` conservan
+`calendar_completeness_certified=false` de forma incondicional: queda pendiente
+implementar la aceptación de calendarios oficiales por serie, además de obtener
+su evidencia. No basta con contar filas ni con cambiar ese booleano.
+
+| Producto, ambas ventanas | Evidencia y trabajo que faltan |
+|---|---|
+| Banxico | Calendario de FIX, INPC y tasa por separado; el CSV SF61745 omite 12/julio. Frecuencia diaria no determina por sí sola los festivos ni autoriza imputar |
+| EIA combustible | Calendario de observaciones y excepciones atribuible a la serie exacta; no trasladar el calendario de otra publicación de EIA |
+| Cotizaciones | Implementación y calendarios de las cinco series/mercados; la muestra AERO no demuestra exhaustividad. Las páginas oficiales NYSE/Nasdaq sí muestran 2026, pero faltan inputs físicos y vínculo a cada instrumento; OTC requiere evidencia propia |
+
+Los calendarios primarios localizados son
+[NYSE](https://www.nyse.com/markets/hours-calendars) y
+[Nasdaq](https://www.nasdaq.com/market-activity/stock-market-holiday-schedule).
+Se consultaron como documentación; no se añadieron hosts ni capturas al
+colector. [OTC Markets](https://www.otcmarkets.com/market-hours) devolvió solo
+la aplicación que requiere JavaScript en esa lectura, sin calendario
+extraíble. No se usa OTC Bulletin Board como equivalente de otro mercado OTC.
+
+La política y el calendario ya están aprobados. Las decisiones externas
+preparadas son el host mensual de Volaris y el contacto Aerocivil. AM Q3
+añade una elección concreta de fuente: el PDF IR está compuesto por imágenes;
+el HTML GlobeNewswire ya retenido y usado en la publicación contiene las veinte
+métricas. Reutilizarlo en `am_financials` requiere explicitar su atribución y
+alcance; no se presenta como el PDF ni se amplía la lista de hosts por defecto.
+Los demás
+puntos requieren trabajo técnico o material verificable, no otra autorización
+genérica ni una decisión para rebajar criterios. Los tres reportes financieros
+centrales aún necesitan sus vínculos físicos e instantes con zona; la fecha
+trimestral sigue nula. No hay disparadores activados.
+
 ## Pendientes
 
 - La política de productos y el calendario están aprobados; no falta una
@@ -3187,6 +3291,19 @@ paralelos, datos públicos nuevos, retiro de archivos o cambios de autoridad.
   primera publicación. Cambiar a precisión diaria sería una decisión explícita
   de contrato, nunca rellenar horas. Viva IR todavía muestra Q2: el trío Q3 no
   está completo y su fecha sigue nula. No inventar el 2 de noviembre.
+  El índice financiero AM capturado el 27/oct 11:19 UTC respondió HTTP200
+  (SHA `bc6d5a74…`) y anuncia 3T26 y otra edición PDF de 2T26. Su enlace
+  `5a9eac4b…` no coincide con el original español retenido `d780da89…`.
+  El acceso al índice no verifica el PDF anunciado ni su equivalencia:
+  no se repitieron los PDF fallidos ni se amplió el parser a otras métricas.
+  El PDF Q3 `920c11b2…`, 2.620.677 bytes, retenido el 24/oct, sí coincide con
+  su enlace actual y contiene trece páginas en inglés sin texto extraíble.
+  El HTML `1b5799c4…` usado por el parser de la publicación tiene las veinte
+  métricas en las tablas 6 y 10, con identidades `1619−1429=190` y `48−7=41`.
+  El lector Q2 español no se adapta cambiando solo una fecha. Q3 declara no
+  auditado, pero no preliminar: ese último estado sigue desconocido, no se
+  hereda `true` ni se infiere `false` por ausencia. La propuesta acotada evita
+  un sistema OCR general y no cambia lo publicado ni hace actuales sus capturas.
 - PR157/158, PR142/privada35, PR144/privada37 y Vuelos PR134/privada33 ya están
   integrados. Se conservan sus salidas y lifecycle, así como las publicaciones
   PR149/160. Monthly permanece privado, con revisión estática y funcional del

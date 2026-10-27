@@ -163,3 +163,15 @@ definición, preliminar y estado reportado/calculado; `--baseline` exige copia
 nativa explícita del mismo grupo bajo `baselines/`. Sin ella no hay comparación.
 La fecha declarada del reporte no acredita primera publicación ni frescura
 actual. No publica, reemplaza Gold público ni habilita un calendario.
+
+Para GAP julio existe un vínculo de descubrimiento **histórico**, separado de
+una colección nueva: `availability` declara `source_scope=gap_sec_submissions_snapshot_v1`,
+`historical=true`, `snapshot_day=2026-08-20`, `workspace`, `submissions` y
+`filings`. Cada accession declara su `index` y mapa `documents` con las rutas
+Bronze exactas. Se requieren el 6-K utilizado y todos los posteriores del
+snapshot revisado; un anexo o edición desconocido bloquea. Se verifican los
+cinco originales, manifiestos, sidecars, orden de captura y aporte nativo.
+Los contenedores SEC listados pero no descargados permanecen explícitos; no
+se afirma haberlos leído. El corte real de readiness debe ser exactamente
+`2026-08-20T18:20:00-06:00` en México. No reutilizar ese expediente como disponibilidad de octubre o
+como tráfico de septiembre; no fabricar un `run_id` ni renovar fechas.

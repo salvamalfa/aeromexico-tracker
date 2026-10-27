@@ -225,3 +225,11 @@ La disponibilidad se limita a la fecha local de captura y corte real de la
 ronda; no acredita primera publicación, rezago ni activación. El vínculo
 inválido bloquea; no hay fallback ni booleano manual. Sin vínculo, o para una
 familia aún sin contrato, la disponibilidad permanece sin verificar.
+
+GAP tiene una forma histórica específica: `source_scope`, `historical`,
+`snapshot_day`, `workspace`, `submissions` y `filings`, con índice y documentos
+por accession. Solo admite julio 2026 con el snapshot y corte mexicano
+`2026-08-20T18:20:00-06:00`. Verifica los originales retenidos y su orden sin crear una colección
+ni cambiar las capturas. El corte global real también debe coincidir: un
+`candidate_as_of` antiguo no permite presentarlo como disponibilidad actual.
+El protocolo y sus límites están en la skill de aeropuertos y la guía canónica.

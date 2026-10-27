@@ -67,19 +67,34 @@ Propuesta — el dueño decide prioridades.
   revisión independiente. Índice del 27/oct HTTP200; falta el PDF actual en
   colección del mismo día. No se confunde ese pendiente externo con una
   implementación ausente ni se afirma disponibilidad nueva desde el retenido.
-- RSS: dos capturas canónicas actuales HTTP200 y contrato físico preparado;
+- RSS: dos capturas canónicas actuales HTTP200 y contrato físico integrado en
+  [PR166](https://github.com/salvamalfa/aeromexico-tracker/pull/166), merge
+  `5c24c817`, con CI `40494417732` y Codex favorables del head `dcb747f5`;
+  CI posterior `40496962410` aprobada.
   200 entradas nativas, 24 declaraciones de septiembre y 16 días observados.
   Pasaron replay, 240 casos afectados y revisión independiente. Sigue siendo
   metadatos parciales, sin noticias activadas ni sustitución de GDELT.
   AFAC aeropuertos: el índice actual devolvió HTTP403; se conserva el libro
   julio comprobado, con acceso y contrato de la edición actual pendientes.
 - Macro y mercado: contratos físicos de tres CSV Banxico, XLS EIA y cinco
-  JSON de cotizaciones preparados y probados con capturas actuales. Pasaron
+  JSON de cotizaciones integrados en PR166 y probados con capturas actuales. Pasaron
   seis dossiers reales: septiembre y 3T26 por producto. El ensayo combinado
   verifica 11 tareas y mantiene bloqueada la incorporación: 12 obligatorias
   no incluidas, seis controles de calendario y reportes centrales sin vínculo.
   El CSV SF61745 no contiene el 12/jul; no se imputa. No se deriva cobertura
   completa desde recuentos de datos o metadatos de sesiones de un solo ticker.
+  El [desglose operativo de doce tareas y seis controles](docs/catalogo-fuentes-calendario.md#cierre-operativo-de-la-ronda-doce-tareas-y-seis-controles)
+  distingue código pendiente, material y decisiones concretas. Los tres
+  certificadores de series aún bloquean incondicionalmente el calendario:
+  falta implementar la aceptación de evidencia oficial por serie, sin cambiar
+  los criterios. Las decisiones preparadas son el host mensual Volaris y el
+  contacto al publicador Aerocivil; no falta una aprobación genérica del calendario.
+- GAP julio: contrato de expediente histórico preparado y probado localmente
+  sobre `76e8fab1`, con cinco originales y nueve salidas, 72 reconciliaciones y
+  dos replays de candidato y ronda. Pasaron 89 casos afectados y revisión
+  independiente; continuidad financiera exacta local aprobada. Falta completar
+  su PR/CI/revisión final antes de integrarlo. Su corte es 20/ago a las 18:20
+  México: no acredita septiembre ni reduce los doce faltantes actuales.
 - Airline Monthly del corte 24/oct: revisión estática y funcional realizada
   por el agente de Pages: 23 afirmaciones, seis fuentes y cuatro hashes de
   originales confirmados; dos PDF de Aeroméxico devolvieron HTTP503. Falta la
