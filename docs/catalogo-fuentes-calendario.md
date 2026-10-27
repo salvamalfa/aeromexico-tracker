@@ -2797,7 +2797,7 @@ documental acotada cabe en el alcance aprobado de pasajeros por empresa/mercado;
 no aprueba por sí sola la ronda global ni su publicación.
 
 Código de producción `1c9b3392`, revisión independiente de implementación
-`d3f6be00…`: 200 contratos aprobados y doce ataques independientes, sin
+`d3f6be00…`: 200 comprobaciones aprobadas, incluidas doce adversariales independientes, sin
 omisiones ni hallazgos pendientes. Son pruebas de contrato, separadas de la
 extracción oficial fresca anterior. El runtime `13baa540…` tiene revisión
 financiera local independiente `f5859b95…`: productor/verificador originales
