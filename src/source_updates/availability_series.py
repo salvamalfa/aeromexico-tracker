@@ -97,9 +97,17 @@ def verify(item, result, cutoff):
             )
         )
     expected_native = {targets[k]["entity"] if product == "fuel" else k for k in targets}
+    calendar_proof = None
+    if product == "banxico" and (
+        "observation_calendar" in result or result.get("calendar_completeness_certified") is True
+    ):
+        from src.source_updates.banxico_calendar import verify_candidate
+
+        calendar_proof = verify_candidate(item, result, cutoff)
+    calendar_complete = bool(calendar_proof and calendar_proof["calendar_completeness_certified"])
     if (
         set(native[column]) != expected_native
-        or result.get("calendar_completeness_certified") is not False
+        or result.get("calendar_completeness_certified") is not calendar_complete
         or (
             result.get("scope")
             != "all_observations_in_selected_retained_originals_not_verified_publication_calendar"
@@ -117,8 +125,13 @@ def verify(item, result, cutoff):
         latest_available_period=None,
         first_publication_date=None,
         round_as_of=cutoff,
-        calendar_completeness_certified=False,
-        availability_basis="current_canonical_historical_window_responses_not_expected_calendar",
+        calendar_completeness_certified=calendar_complete,
+        **({"observation_calendar": calendar_proof} if calendar_proof else {}),
+        availability_basis="current_canonical_responses_and_verified_observation_calendars"
+        if calendar_complete
+        else "current_canonical_responses_with_observation_calendar_not_certified"
+        if calendar_proof
+        else "current_canonical_historical_window_responses_not_expected_calendar",
         identity_basis="existing_verified_SEC_original_not_a_fresh_SEC_capture"
         if product == "equities"
         else None,

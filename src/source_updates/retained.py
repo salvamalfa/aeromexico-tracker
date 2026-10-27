@@ -51,7 +51,7 @@ def retain(workspace: Path, source_root: Path, product: str, selected: dict, *, 
     workspace = safe_workspace(workspace)
     source_root = source_root.resolve()
     definition = spec(product)
-    if set(selected) != set(definition["roles"]):
+    if set(selected) not in definition.get("role_sets", [set(definition["roles"])]):
         raise ValueError("Select exactly the product's explicit input roles")
     entries = {}
     with (source_root / "_manifest.jsonl").open() as stream:
@@ -145,7 +145,7 @@ def originals(workspace: Path, product: str, run_id: str, cutoff: str) -> tuple[
     if (
         receipt.get("product") != product
         or receipt.get("status") != "retained_unvalidated"
-        or set(receipt["originals"]) != set(definition["roles"])
+        or set(receipt["originals"]) not in definition.get("role_sets", [set(definition["roles"])])
     ):
         raise ValueError("Retention receipt product/roles/status differ")
     if receipt["manifest_sha256"] != digest(workspace / "data/bronze/_manifest.jsonl"):

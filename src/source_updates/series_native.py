@@ -34,7 +34,8 @@ EXCHANGES = {"AERO": "NYQ", "VLRS": "NYQ", "RYAAY": "NMS", "DAL": "NYQ", "ICAGY"
 def definitions() -> dict:
     return {
         "banxico": {
-            "roles": {s: ("banxico_sie",) for s in BANXICO_SERIES},
+            "roles": {s: ("banxico_sie",) for s in (*BANXICO_SERIES, "fix_methodology")},
+            "role_sets": [set(BANXICO_SERIES), {*BANXICO_SERIES, "fix_methodology"}],
             "primary": "SF43718",
             "certifier": "series",
         },
@@ -212,7 +213,10 @@ def coverage(frame: pd.DataFrame, months: list[str], key: str) -> dict:
 
 
 def read(product: str, inputs: dict, period: str) -> tuple[dict, dict]:
-    if product not in PRODUCTS or set(inputs) != set(definitions()[product]["roles"]):
+    definition = definitions().get(product, {})
+    if product not in PRODUCTS or set(inputs) not in definition.get(
+        "role_sets", [set(definition.get("roles", {}))]
+    ):
         raise ValueError("Select all canonical product input roles; subsets are forbidden")
     start, end, months = window(period)
     frames, details = [], {}
@@ -274,6 +278,8 @@ def read(product: str, inputs: dict, period: str) -> tuple[dict, dict]:
             .reset_index(drop=True)
         }, {"coverage": details, "identity_source_file": inputs["identity"][1]["source_file"]}
     for role, (body, record) in inputs.items():
+        if role == "fix_methodology":
+            continue  # Calendar support only; never a numerical observation or parent.
         if product == "banxico":
             binding(record, "banxico_sie", role, start, end)
             if record["source_url"] != SIE_EXPORT_URL:
@@ -302,4 +308,15 @@ def read(product: str, inputs: dict, period: str) -> tuple[dict, dict]:
         .rename(columns={"value": "rate_close"})
         .assign(currency_pair="USD/MXN")
     )
-    return {"macro_indicators": frame, "fx_rates": fx.reset_index(drop=True)}, {"coverage": details}
+    evidence = {"coverage": details}
+    if "fix_methodology" in inputs:
+        from src.source_updates.banxico_calendar import certify
+
+        proof = certify(inputs, period)
+        evidence.update(
+            observation_calendar=proof,
+            calendar_completeness_certified=proof["calendar_completeness_certified"],
+        )
+        for series in BANXICO_SERIES:
+            details[series]["calendar_completeness_certified"] = proof["series"][series]["complete"]
+    return {"macro_indicators": frame, "fx_rates": fx.reset_index(drop=True)}, evidence

@@ -314,6 +314,11 @@ def check_task(item: dict, cutoff: str, round_as_of: str | None = None) -> dict:
         "source_candidate_files_unchanged": len(before),
         "collection_basis": "retained" if retained else "previously_captured_originals",
         "source_conditions": conditions,
+        **(
+            {"calendar_completeness_certified": result["calendar_completeness_certified"]}
+            if "calendar_completeness_certified" in result
+            else {}
+        ),
         "latest_source_availability_verified": availability is not None,
         **({"source_availability_evidence": availability} if availability is not None else {}),
         "activation": "none",

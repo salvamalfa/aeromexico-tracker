@@ -134,6 +134,12 @@ def market_facts(period: str, source: pd.DataFrame) -> pd.DataFrame:
 
 
 def frames(workspace, product: str, period: str, silver: dict, details: dict) -> tuple[dict, dict]:
+    calendar_complete = False
+    if product == "banxico" and "observation_calendar" in details:
+        from src.source_updates.banxico_calendar import verify_workspace
+
+        proof = verify_workspace(workspace, period, details["observation_calendar"])
+        calendar_complete = proof["calendar_completeness_certified"]
     for name, frame in silver.items():
         validate_silver_table(name, frame)
     if product == "equities":
@@ -217,5 +223,5 @@ def frames(workspace, product: str, period: str, silver: dict, details: dict) ->
         "lineage": lineage,
         "gold_rows": len(facts),
         "aggregation_basis": "all_native_observations_not_monthly_mean_of_means",
-        "calendar_completeness_certified": False,
+        "calendar_completeness_certified": calendar_complete,
     }
