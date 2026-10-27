@@ -181,9 +181,9 @@ como tráfico de septiembre; no fabricar un `run_id` ni renovar fechas.
 La receta AIFA resuelve `constant:src.source_updates.availability:AIFA_INDEX`:
 `https://www.aifa.aero/legal-y-finanzas/informes`. Es la misma entrada que
 exige su contrato físico. Normateca y el libro julio se conservan en las rutas
-históricas; no sustituyen este índice. `recipe --output selection` captura el
-índice correcto y `--catalog-file <HTML> --period latest` selecciona únicamente
-su XLSX real. Mantener hosts y enlace directo al original, sin generar URLs.
+históricas; no sustituyen este índice. `recipe --output selection` prepara la
+selección del índice correcto; `collect` ejecuta la captura.
+`--catalog-file <HTML> --period latest` selecciona únicamente su XLSX real. Mantener hosts y enlace directo al original, sin generar URLs.
 
 La corrección del 27/oct cerró la disponibilidad septiembre con dos originales
 HTTP200 y replay integral: 180 observaciones nativas y nueve filas Gold,
