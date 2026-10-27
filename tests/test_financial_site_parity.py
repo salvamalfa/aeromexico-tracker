@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 import pytest
-from src.publish.financial_scope import ANCHOR, EXECUTIVE, PROOF, anchor, sha, verify_financial
+from src.publish.financial_scope import ANCHOR, EXECUTIVE, PROOF, anchor, sha
 
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "site"
@@ -26,7 +26,8 @@ def financial_site(request):
     raw = (SITE / EXECUTIVE).read_bytes()
     assert sha(raw) == spec["executive_sha256"] and len(raw) == spec["executive_bytes"]
     if (SITE / PROOF).exists():
-        assert verify_financial(SITE, ROOT) == []
+        verify_financial_publication = request.getfixturevalue("verify_financial_publication")
+        assert verify_financial_publication(SITE, ROOT) == []
     else:
         from src.publish.verify import verify_site
 
@@ -34,7 +35,7 @@ def financial_site(request):
     return spec
 
 
-def test_financial_site_preserves_all_history_peers_and_five_readings(financial_site):
+def test_financial_site_preserves_all_history_peers_and_five_readings_and_replays_sources(financial_site, request):
     from src.publish.financial_scope import preserved_executive, preserved_files, transport
 
     spec = financial_site
@@ -46,9 +47,6 @@ def test_financial_site_preserves_all_history_peers_and_five_readings(financial_
     if (SITE / PROOF).exists():
         frozen = preserved_files(SITE, ROOT, spec)
         assert len([p for p in frozen if p.startswith("data/v1/analysis/")]) == 5
-
-
-def test_financial_projection_matches_complete_approved_source_replay(financial_site, request):
     from src.publish.financial_sources import replay_published_projection
 
     path = ROOT / "analysis_runs/drafts/2026Q3" / (financial_site["analysis_entry"]["version"] + ".json")

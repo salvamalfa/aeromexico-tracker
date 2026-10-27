@@ -319,6 +319,37 @@ python -m src.publish --financial-kpis-only --record <registro-a470-existente> -
 python -m src.publish.financial_scope site/
 ```
 
+Para verificar **solo localmente** un runtime nuevo que conserva esa publicación,
+existe `python -m src.publish.financial_continuity site/ --local-only`. Exige
+`config/publish/financial-continuity-local.json` comprometido, con consentimiento
+del procedimiento local y hash de una revisión independiente privada exacta.
+La política vincula el commit/runtime técnico, los 811 archivos publicados y la
+clausura completa de fuentes y aprobaciones. Reproduce el verificador y productor
+originales, conserva la autoridad financiera y repite las comprobaciones después
+de los verificadores lentos, bajo el lock del ledger. No escribe el sitio ni
+crea aprobaciones o recibos de publicación. La confianza procede de la política
+Git revisada y su informe verificado; el hash no autentica criptográficamente al
+revisor. La cadena recuperada acredita su snapshot, no eventos externos posteriores.
+
+Las pruebas reales seleccionan expresamente este procedimiento con
+`--financial-continuity-local --require-local-data`. Sin un perfil explícito
+conservan el verificador ordinario. El gate financiero, Pages y `--financial-kpis-only` no
+consumen esta política local ni aceptan por ella otro runtime. Esta comprobación
+no concede integración, publicación, ingestas o activación de calendarios.
+
+CI pública dispone de un perfil de pruebas retrospectivo separado:
+`--financial-publication-base <SHA-base-confiable>`. Solo verifica el sitio ya
+publicado, íntegramente idéntico a esa base Git, con el código señalado por el
+manifiesto de esa publicación. Exige base en la rama protegida, ancla y autoridad
+pública intactas, dependencias bloqueadas idénticas y ejecución archivada sin
+red ni imports desde HEAD. Repite la comprobación de entradas al terminar.
+No consume el consentimiento local ni aprueba el runtime de la rama para publicar.
+El perfil local y el retrospectivo son mutuamente excluyentes y no tienen fallback.
+El workflow conserva el mismo subconjunto de pruebas: selecciona retrospectiva
+solo si `site/` no cambia frente a la base del evento; una publicación cambiada
+conserva el perfil ordinario. Las omisiones por expediente privado ausente siguen
+explícitas; no sustituyen el replay completo que exige la validación local.
+
 Las pruebas financieras específicas no dependen del warehouse. Con
 `--require-local-data` fallan si falta el candidato o expediente nuevo, y
 reproducen las fuentes completas. Los verificadores generales permanecen intactos;

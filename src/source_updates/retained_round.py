@@ -53,6 +53,7 @@ def execute(recipe: dict, workspace: Path, *, write=False) -> dict:
         plans.append(
             dict(
                 product=product,
+                adapter=spec(product).get("certifier", "retained"),
                 period=period,
                 workspace=str(child),
                 retention=plan,
@@ -104,10 +105,18 @@ def execute(recipe: dict, workspace: Path, *, write=False) -> dict:
                 saved = retainer(child, source_root, product, item["originals"], execute=True)
                 args = (child, product, period, cutoff, saved["run_id"])
                 certify = run
-                if spec(product).get("certifier") == "government":
+                if spec(product).get("certifier") == "bts":
+                    from src.source_updates.bts_candidate import run as certify
+                elif spec(product).get("certifier") == "government":
                     from src.source_updates.government_candidate import run as certify
                 elif spec(product).get("certifier") == "carrier_source":
                     from src.source_updates.carrier_source_candidate import run as certify
+                if spec(product).get("certifier") == "viva_financial":
+                    from src.source_updates.viva_financial_candidate import run as certify
+                if spec(product).get("certifier") == "airport_group":
+                    from src.source_updates.airport_group_candidate import run as certify
+                if spec(product).get("certifier") == "series":
+                    from src.source_updates.series_candidate import run as certify
                 action = "certify"
                 certified = certify(*args, execute=True)
                 action = "offline_replay"

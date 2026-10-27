@@ -2,6 +2,7 @@
 
 import json
 import shutil
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from io import BytesIO
 from types import SimpleNamespace
@@ -154,9 +155,8 @@ def encoded(book):
     return stream.getvalue()
 
 
-@pytest.fixture(params=["aicm_traffic", "aifa_traffic"])
-def stored(request, tmp_path, monkeypatch):
-    product = request.param
+@contextmanager
+def _stored(product, tmp_path, monkeypatch):
     workspace = ROOT / "tmp/source-updates" / ("test-government-" + uuid4().hex)
     source = tmp_path / "bronze"
     if product == "aicm_traffic":
@@ -201,6 +201,38 @@ def stored(request, tmp_path, monkeypatch):
         shutil.rmtree(workspace, ignore_errors=True)
 
 
+@pytest.fixture(params=["aicm_traffic", "aifa_traffic"])
+def stored(request, tmp_path, monkeypatch):
+    with _stored(request.param, tmp_path, monkeypatch) as value:
+        yield value
+
+
+@pytest.fixture(scope="module", params=["aicm_traffic", "aifa_traffic"])
+def certified_template(request, tmp_path_factory):
+    # Retention and full certification are real. Only identical preparation is
+    # shared; every attack below receives ordinary copied files, never links.
+    with pytest.MonkeyPatch.context() as patch:
+        with _stored(request.param, tmp_path_factory.mktemp("government-seed"), patch) as value:
+            workspace, product, period, run_id, _, _ = value
+            candidate.run(workspace, product, period, CUTOFF, run_id, execute=True)
+            before = candidate.inventory(workspace)
+            yield value, before
+            assert candidate.inventory(workspace) == before
+
+
+@pytest.fixture
+def certified_copy(certified_template):
+    value, expected = certified_template
+    seed, product, period, run_id, source, selected = value
+    workspace = ROOT / "tmp/source-updates" / ("test-government-" + uuid4().hex)
+    shutil.copytree(seed, workspace)
+    try:
+        assert workspace != seed and candidate.inventory(workspace) == expected
+        yield workspace, product, period, run_id, source, selected
+    finally:
+        shutil.rmtree(workspace, ignore_errors=True)
+
+
 def test_full_product_and_round_replay_are_immutable(stored):
     workspace, product, period, run_id, _, _ = stored
     args = (workspace, product, period, CUTOFF, run_id)
@@ -238,10 +270,9 @@ def test_full_product_and_round_replay_are_immutable(stored):
 
 
 @pytest.mark.parametrize("kind", ["gold", "source", "receipt", "code", "cutoff", "lock"])
-def test_replay_rejects_tampering(stored, monkeypatch, kind):
-    workspace, product, period, run_id, _, _ = stored
+def test_replay_rejects_tampering(certified_copy, monkeypatch, kind):
+    workspace, product, period, run_id, _, _ = certified_copy
     args = [workspace, product, period, CUTOFF, run_id]
-    candidate.run(*args, execute=True)
     if kind == "gold":
         path = workspace / "data/gold/fact_airport_traffic.parquet"
         frame = pd.read_parquet(path)

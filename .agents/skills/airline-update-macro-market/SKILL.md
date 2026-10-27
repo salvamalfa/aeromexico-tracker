@@ -105,3 +105,23 @@ Consultar cada producto de esta familia:
 Un 403, TLS, timeout o archivo inválido es un fallo de acceso/contenido; no prueba ausencia de publicación. Registrar pendiente y conservar el dato aceptado. Las fechas de publicación desconocidas siguen nulas.
 
 Los agregados Gold usan periodo observado y puente verificado. La tasa objetivo se expresa en `percent`, FX en `mxn_per_usd`; no reescalar el valor reportado.
+
+
+## Certificador integral de originales retenidos
+
+Usar `python -m src.source_updates.series_candidate retain|certify` para
+`banxico`, `fuel` y `equities`; ver [contrato y comandos](../../../docs/catalogo-fuentes-calendario.md#certificación-de-series-retenidas-22-de-octubre).
+`retain --dry-run` muestra la selección sin escribir; `--execute` copia originales
+locales y conserva su captura, sin red. `certify --dry-run` muestra salidas;
+`--execute` reconstruye Silver/Gold candidatos; `--check` repite sin escribir.
+Banxico exige SF43718/SP1/SF61745, EIA workbook y equities los cinco tickers más
+identity SEC físico. Mes y trimestre son ventanas separadas; todos los meses
+son obligatorios. No usar el certificador nativo `retained` para estos productos.
+
+Integrar el recibo con `adapter=series` y su ID de retención en `readiness` o
+`global_readiness`. No pasar una revisión local como ronda completa. Las series
+completas significan todas las observaciones de los originales seleccionados;
+la disponibilidad actual y el calendario completo de observaciones siguen sin
+acreditar. Publicación y rezago desconocidos quedan nulos. El pipeline anterior
+conserva su utilidad para adquisición/diagnóstico, no recibe certificación por
+la existencia de este adaptador. No cambia Gold público ni activa calendario.

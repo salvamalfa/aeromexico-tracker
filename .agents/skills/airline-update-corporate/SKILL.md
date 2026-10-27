@@ -51,7 +51,7 @@ Consultar cada producto de esta familia:
 - `gap_traffic` — selección/importación manual. Entrada canónica: `sec_group:GAP`. Formato: JSON SEC → anexo HTML.
 - `asur_traffic` — selección/importación manual. Entrada canónica: `sec_group:ASUR`. Formato: JSON SEC → anexo HTML.
 - `bmv_xbrl` — solo descubrimiento. Entrada canónica: `constant:src.config:SOURCE_URLS:bmv_xbrl`. Formato: HTML → visor → ZIP con JSON.
-- `viva_financials` — selección/importación manual. Entrada canónica: `url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD`. Formato: HTML → PDF InvestorCloud.
+- `viva_financials` — certificador retenido dedicado de 2T26, con 1T26 como soporte; otras ediciones con selección/importación manual. Entrada canónica: `url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD`. Formato: HTML → PDF InvestorCloud.
 - `viva_traffic` — candidato mensual con formatos nativos separados. Entrada canónica: `url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD`. Septiembre 2026 BMV comprobado; histórico 2021 en kilómetros permanece separado.
 - `ryanair_ir` — solo descubrimiento. Entrada canónica: `constant:src.ingest.peers.stage5:RYANAIR_KEY_STATS_URL`. Formato: HTML.
 
@@ -163,3 +163,37 @@ redondeo impresos. No eliminar ese comparativo ni ampliar tolerancias. Una
 prueba sintética positiva solo acredita el contrato, no esa fuente real.
 Fecha impresa y aceptación SEC no acreditan primera publicación o disponibilidad
 actual; esos campos siguen desconocidos. Ver evidencia en la guía canónica.
+
+## Finanzas Viva retenidas: tablas y comparación entre ediciones
+
+Usar `python -m src.source_updates.viva_financial_candidate retain` con
+`--product viva_financials`, roles `--original pdf=<PDF-2T26>` y
+`--original prior_quarter=<PDF-1T26>`, `--source-root <Bronze>` y
+`--workspace tmp/source-updates/<candidato-nuevo>`. Revisar sin `--execute`
+antes de retener los originales. Luego usar `certify --product viva_financials
+--period 2026Q2 --workspace <candidato> --as-of <corte-con-zona>
+--retention <id>`: sin modo muestra el plan; `--execute` certifica sin red y
+`--check` reconstruye y compara sin modificar archivos. El lote `retained_round`
+y el verificador `readiness` usan el adaptador `viva_financial`.
+
+El contrato acota las dos ediciones revisadas. Conserva todas las filas de las
+tablas de indicadores, resultados, balances, flujos, deuda y flota, con columna,
+página, token, escala y procedencia. Gold solo proyecta lo reportado en la
+edición 2T26; separa trimestre, semestre e instantes, incluyendo comparativos.
+El 1T26 aporta exclusivamente diagnóstico. No convertir H1−Q2 en un nuevo 1T26.
+Registrar diferencias entre ediciones y exigir revisión antes de armonizar
+históricos; no inferir su causa ni sobrescribir cifras anteriores.
+
+USD en miles/millones se escala explícitamente a USD; ASM/RPM permanecen en
+millas y CASM en centavos por asiento-milla. Los pasajeros son reservados,
+independientemente de si volaron; ocupación es itinerario, con denominador
+distinto de los totales. Flota excluye ACMI. Las filas de contexto de tipo de
+cambio y jet fuel se conservan en Silver y se excluyen de Gold. No invertir la
+etiqueta cambiaria ambigua ni sustituir fuentes macro. Mantener preliminar y
+no auditado solo donde lo declara el documento; desconocido sigue nulo.
+
+Las identidades y ratios aplicables usan intervalos de precisión publicada;
+un desajuste propio bloquea antes de escribir Silver/Gold. Cada cifra Gold
+tiene un padre nativo de la edición correcta y su artefacto físico verificado.
+La retención no prueba disponibilidad reciente, fecha inicial de publicación,
+aprobación de datos ni preparación completa del calendario.

@@ -7,6 +7,7 @@ browser. It is intended to run inside an isolated `chat-runtime` environment.
 from __future__ import annotations
 
 import asyncio
+import argparse
 import hashlib
 import json
 import os
@@ -139,7 +140,7 @@ def _check_packaged_business_metrics_snapshot() -> None:
             assert approved["metadata"]["metric_ids"] == ["total_revenue"]
 
 
-async def _check() -> None:
+async def _check(*, fixture_only: bool = False) -> None:
     # The command parser and official provider adapter must import without
     # creating a client or making a provider request.
     assert OpenAIProvider and validate_ledger
@@ -152,7 +153,9 @@ async def _check() -> None:
     else:  # pragma: no cover - argparse always exits after --help.
         raise AssertionError("import-usage help did not exit successfully")
 
-    snapshot = Snapshot(ROOT / "site")
+    # Keep the real snapshot as the default. The explicit fixture mode tests
+    # runtime mechanics without asserting trust in the published snapshot.
+    snapshot = Snapshot(ROOT / ("tests/fixtures/chat/site" if fixture_only else "site"))
     assert snapshot.version != "unavailable"
     _check_packaged_business_metrics_snapshot()
     password = secrets.token_urlsafe(18)
@@ -224,6 +227,18 @@ async def _check() -> None:
     assert not any(name == "src.analytics" or name.startswith("src.analytics.") for name in sys.modules)
 
 
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--fixture-only",
+        action="store_true",
+        help="Test synthetic runtime mechanics only; does not validate the published snapshot.",
+    )
+    args = parser.parse_args(argv)
+    asyncio.run(_check(fixture_only=args.fixture_only))
+    scope = "fixture-only; published snapshot NOT checked" if args.fixture_only else "published snapshot"
+    print(f"chat runtime smoke: ok ({scope}, auth, worker, compare_metrics; no provider calls)")
+
+
 if __name__ == "__main__":
-    asyncio.run(_check())
-    print("chat runtime smoke: ok (snapshot, auth, worker, compare_metrics; no provider calls)")
+    main()

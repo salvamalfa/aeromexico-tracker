@@ -18,16 +18,16 @@ def _unavailable(request, message):
     pytest.skip(message)
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def editorial_site(request):
     from src.publish.financial_scope import (
         PROOF as FINANCIAL_PROOF,
         anchor as financial_anchor,
-        verify_financial,
     )
 
     if (SITE / FINANCIAL_PROOF).exists():
-        assert verify_financial(SITE, ROOT) == []
+        verify_financial_publication = request.getfixturevalue("verify_financial_publication")
+        assert verify_financial_publication(SITE, ROOT) == []
         return financial_anchor(ROOT)
     if not (SITE / PROOF).exists():
         manifest_path = SITE / "publication_manifest.json"

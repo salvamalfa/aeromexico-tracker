@@ -7,7 +7,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 from src.conversational_analytics.config import ChatConfig
-from src.conversational_analytics.data.snapshot import Snapshot
+from tests._news_runtime_fixtures import (
+    approved_pins as approved_pins, published_snapshot as published_snapshot,
+)
 from src.conversational_analytics.evidence_index import EvidenceIndex
 from src.conversational_analytics.news_navigation import news_navigation
 from src.conversational_analytics.providers.mock import MockProvider
@@ -16,23 +18,6 @@ from src.dashboard.news_review_search import review_search
 
 ROOT = Path(__file__).resolve().parents[1]
 CUT = ROOT / "config/chat/evidence/candidates/news/cut-20261015-v1.json"
-
-
-@pytest.fixture(autouse=True)
-def approved_pins(monkeypatch):
-    monkeypatch.setenv(
-        "CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256",
-        "644eb640124297fc63b306836607aea6e4b0be424b85e67b902cc9f5407153ae",
-    )
-    monkeypatch.setenv("CHAT_PROMPT_VERSION", "r2-proposed")
-    monkeypatch.setenv(
-        "CHAT_PROMPT_APPROVAL_RECEIPT_SHA256",
-        "0b5b87e1381decdac4289593877a59ff9e91d763e216e78b5977fe2b5fe687f9",
-    )
-    monkeypatch.setenv(
-        "CHAT_EVIDENCE_APPROVED_INDEX_SHA256",
-        "1cd0455ac1944849d567c96f7147c3f393d17333dac2c28b70459e4f7887334f",
-    )
 
 
 @pytest.mark.parametrize(
@@ -56,11 +41,12 @@ def approved_pins(monkeypatch):
     ],
 )
 def test_complete_spanish_question_runs_api_worker_tool_and_persists_card_targets(
+    published_snapshot,
     tmp_path, question, expected
 ):
     from src.conversational_analytics.api import create_app
 
-    snapshot = Snapshot(ROOT / "site")
+    snapshot = published_snapshot
     config = ChatConfig(
         state_path=tmp_path / "chat.sqlite3", prompt_version="r2-proposed", enable_evidence_tools=True
     )
@@ -160,7 +146,7 @@ def test_complete_date_range_can_navigate_more_than_five_matches_without_expandi
     assert set(row["id"] for row in result["items"]) <= set(result["matching_ids"])
 
 
-def test_untrusted_model_text_does_not_create_news_navigation(tmp_path):
+def test_untrusted_model_text_does_not_create_news_navigation(published_snapshot, tmp_path):
     from src.conversational_analytics.api import create_app
     from src.conversational_analytics.providers.base import ProviderResult
 
@@ -174,7 +160,7 @@ def test_untrusted_model_text_does_not_create_news_navigation(tmp_path):
                 usage_complete=True,
             )
 
-    snapshot = Snapshot(ROOT / "site")
+    snapshot = published_snapshot
     app = create_app(
         config=ChatConfig(
             state_path=tmp_path / "chat.sqlite3", prompt_version="r2-proposed", enable_evidence_tools=True
@@ -345,10 +331,10 @@ def test_mixed_date_precision_cannot_drop_an_explicit_year(question):
     "question",
     ["Muéstrame noticias de Aeroméxico del último mes", "noticias de hace 3 meses sobre combustible"],
 )
-def test_relative_question_reports_clarification_through_api_without_card_targets(tmp_path, question):
+def test_relative_question_reports_clarification_through_api_without_card_targets(published_snapshot, tmp_path, question):
     from src.conversational_analytics.api import create_app
 
-    snapshot = Snapshot(ROOT / "site")
+    snapshot = published_snapshot
     app = create_app(
         config=ChatConfig(
             state_path=tmp_path / "chat.sqlite3", prompt_version="r2-proposed", enable_evidence_tools=True
@@ -451,6 +437,7 @@ def test_explicit_publication_year_can_coexist_with_a_loan_term():
     ],
 )
 def test_api_worker_validates_semantics_of_provider_supplied_nullable_bounds(
+    published_snapshot,
     tmp_path, question, start, end, success
 ):
     from src.conversational_analytics.api import create_app
@@ -462,7 +449,7 @@ def test_api_worker_validates_semantics_of_provider_supplied_nullable_bounds(
                 {"query": text, "company": None, "start_date": start, "end_date": end, "limit": 5},
             ), None
 
-    snapshot = Snapshot(ROOT / "site")
+    snapshot = published_snapshot
     app = create_app(
         config=ChatConfig(
             state_path=tmp_path / "chat.sqlite3", prompt_version="r2-proposed", enable_evidence_tools=True
@@ -492,7 +479,7 @@ def test_api_worker_validates_semantics_of_provider_supplied_nullable_bounds(
             assert "fechas explícitas" in answer["content"] or "no coinciden" in answer["content"]
 
 
-def test_api_does_not_replace_explicit_user_airline_with_provider_argument(tmp_path):
+def test_api_does_not_replace_explicit_user_airline_with_provider_argument(published_snapshot, tmp_path):
     from src.conversational_analytics.api import create_app
 
     class WrongAirlineCaller(MockProvider):
@@ -502,7 +489,7 @@ def test_api_does_not_replace_explicit_user_airline_with_provider_argument(tmp_p
                 {"query": text, "company": "Volaris", "start_date": None, "end_date": None, "limit": 5},
             ), None
 
-    snapshot = Snapshot(ROOT / "site")
+    snapshot = published_snapshot
     app = create_app(
         config=ChatConfig(
             state_path=tmp_path / "chat.sqlite3", prompt_version="r2-proposed", enable_evidence_tools=True
@@ -535,11 +522,11 @@ def test_api_does_not_replace_explicit_user_airline_with_provider_argument(tmp_p
         ("Muéstrame noticias de Aeroméxico sobre resultados", "search_news"),
     ],
 )
-def test_explicit_tool_request_wins_over_news_tab_context(tmp_path, question, tool):
+def test_explicit_tool_request_wins_over_news_tab_context(published_snapshot, tmp_path, question, tool):
     from src.conversational_analytics.api import create_app
     from tests.test_chat_mock_conversation import _RecordingMockProvider, _new_turn, _completed_events
 
-    snapshot = Snapshot(ROOT / "site")
+    snapshot = published_snapshot
     provider = _RecordingMockProvider(snapshot)
     app = create_app(
         config=ChatConfig(
@@ -571,11 +558,11 @@ def test_explicit_tool_request_wins_over_news_tab_context(tmp_path, question, to
         "noticias de junio o septiembre de 2026",
     ],
 )
-def test_directional_date_question_clarifies_without_news_cards(tmp_path, question):
+def test_directional_date_question_clarifies_without_news_cards(published_snapshot, tmp_path, question):
     from src.conversational_analytics.api import create_app
     from tests.test_chat_mock_conversation import _new_turn, _completed_events
 
-    snapshot = Snapshot(ROOT / "site")
+    snapshot = published_snapshot
     app = create_app(
         config=ChatConfig(
             state_path=tmp_path / "direction.sqlite3",
