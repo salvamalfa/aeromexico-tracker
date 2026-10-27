@@ -88,9 +88,13 @@ def physical():
     )
     native = candidate / "data/silver/government_native.parquet"
     native.parent.mkdir(parents=True)
-    pd.DataFrame({"source_file": [rows[1]["source_file"]], "source_hash": [rows[1]["sha256"]]}).to_parquet(
-        native
-    )
+    pd.DataFrame(
+        {
+            "source_file": [rows[1]["source_file"]],
+            "source_hash": [rows[1]["sha256"]],
+            "source_system": ["aifa"],
+        }
+    ).to_parquet(native)
     state = dict(item=item, receipt=receipt, receipt_path=receipt_path, bronze=bronze, native=native)
     yield state
     shutil.rmtree(root)

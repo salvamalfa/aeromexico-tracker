@@ -86,7 +86,7 @@ def aicm_pages(pages, original, period):
         raise ValueError("AICM reviewed report requires fourteen pages")
     cover = " ".join(pages[0].split())
     report = re.fullmatch(
-        r"AICM en Cifras ([A-Za-z]+) (20\d{2}) Última actualización (\d{1,2}) de ([a-z]+) de (20\d{2})",
+        r"AICM en Cifras ([A-Za-z]+) (20\d{2}) Última actualización (\d{1,2}) de ([A-Za-z]+) de (20\d{2})",
         cover,
     )
     if not report or report[1].upper() != MONTHS[end - 1] or int(report[2]) != year:

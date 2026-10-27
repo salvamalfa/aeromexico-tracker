@@ -1,16 +1,19 @@
 """OMA terminal-passenger tables: airport/group, market and monthly/YTD remain distinct."""
 
 from __future__ import annotations
+
 import calendar
-from datetime import datetime
 import io
 import re
+from datetime import datetime
 
 import pandas as pd
 from pypdf import PdfReader
 
 from src.source_updates.afac_airports import folded
 from src.source_updates.authorities import count
+from src.source_updates.calendar import local_time
+from src.source_updates.checks import period_end
 
 VERSION = "retained_oma_terminal_traffic_v1"
 TABLE = "fact_oma_retained_terminal_traffic"
@@ -33,7 +36,10 @@ AIRPORTS = {
         "Zihuatanejo",
     ]
 }
-NOTE = "* Terminal passengers: includes passengers on the three types of aviation (commercial, charter, and general aviation), and excludes passengers in transit."
+NOTE = (
+    "* Terminal passengers: includes passengers on the three types of aviation "
+    "(commercial, charter, and general aviation), and excludes passengers in transit."
+)
 
 
 def source_count(token):
@@ -64,7 +70,16 @@ def parse(inputs, period):
     if len(dates) != 1:
         raise ValueError("OMA source report dateline absent or ambiguous")
     reported_date = datetime.strptime(dates[0], "%B %d, %Y").date().isoformat()
-    header = rf"{abbr}-{year - 1}\s+{abbr}-{year}\s+Change %\s+Jan-{abbr}\s+{year - 1}\s+Jan-{abbr}\s+{year}\s+Change %"
+    if (
+        not period_end(period)
+        < datetime.fromisoformat(reported_date).date()
+        <= local_time(original["downloaded_at"]).date()
+    ):
+        raise ValueError("OMA reported dateline must follow the completed month and precede capture")
+    header = (
+        rf"{abbr}-{year - 1}\s+{abbr}-{year}\s+Change %\s+Jan-{abbr}\s+{year - 1}"
+        rf"\s+Jan-{abbr}\s+{year}\s+Change %"
+    )
     parts = re.split(header, text)
     if len(parts) != 5:
         raise ValueError("OMA four monthly/YTD table headers missing or changed")
@@ -155,6 +170,7 @@ def parse(inputs, period):
     return frame, dict(
         rows=len(frame),
         report_period=period,
+        complete_month_certified=True,
         months_validated=[f"{year - 1}M{month:02d}", period],
         ytd_periods_validated=[f"{year - 1}YTD{month:02d}", f"{year}YTD{month:02d}"],
         airports=13,

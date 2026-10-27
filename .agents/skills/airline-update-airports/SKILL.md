@@ -24,6 +24,15 @@ Consultar `src/source_updates/catalog.py` para subproductos y brechas.
 No confundir esos pasos disponibles con un adaptador aprobado para cualquier
 formato o periodo nuevo. Entregar recibos y periodos realmente comprobados.
 
+La comprobación física de actualidad admite AICM y OMA mediante sus índices
+oficiales, además de AIFA. Vincular `availability` al recibo de colección que
+contiene el índice y el PDF/XLSX exacto usado por el candidato. Exige HTTP200,
+manifiesto, sidecars, hashes y captura en la misma fecha local de la ronda;
+después reproduce el producto completo sin red. Un enlace sin PDF descargable,
+un desafío HTTP202, una edición ambigua o un título nuevo bloquean el vínculo.
+El 27/oct el índice OMA anuncia septiembre pero su PDF devolvió HTTP404; el
+candidato retenido de julio no sustituye ese original ni acredita actualidad.
+
 ## Adquisición por producto
 
 La entrada exacta y el procedimiento están en el [catálogo operativo](../../../config/source_update_acquisition.json), enlazado al [catálogo de instituciones](../../../config/source_catalog.yaml). El comando resuelve la URL o API desde su configuración canónica; no hay que inventarla.

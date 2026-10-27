@@ -448,3 +448,22 @@ def test_september_layout_retains_metadata_and_rejects_unreviewed_changes(attack
         assert len(details["reported_revision_notes"]) == 2
         assert all(x["reported_adjustment_delta"] is None for x in details["reported_revision_notes"])
         assert details["first_publication_date"] is None and details["release_lag_days"] is None
+
+
+@pytest.mark.parametrize("label", ["octubre", "Octubre", "OCTUBRE", "Octoberr"])
+def test_aicm_update_month_case_preserves_date_and_native_counts(label):
+    report = pages(9)
+    report[0] = f"AICM en Cifras Septiembre 2026 Última actualización 22 de {label} de 2026"
+    original = dict(
+        source_system="aicm",
+        source_file="synthetic.pdf",
+        sha256="a" * 64,
+        downloaded_at="2026-10-27T06:00:00+00:00",
+    )
+    if label == "Octoberr":
+        with pytest.raises(ValueError, match="month unknown"):
+            native.aicm_pages(report, original, "2026M09")
+    else:
+        frame, details = native.aicm_pages(report, original, "2026M09")
+        assert len(frame) == 207 and details["reconciliations"] == 96
+        assert details["source_update_date_as_reported"] == "2026-10-22"

@@ -1,7 +1,7 @@
 # Catálogo de fuentes, métricas y rondas de actualización
 
-Revisión: 27 de octubre de 2026 (UTC). **Infraestructura de skills y coordinador
-integrada; lote AIFA en revisión. Calendario bloqueado, sin activar ni publicar datos nuevos.**
+Revisión: 27 de octubre de 2026 (UTC). **Infraestructura de skills, coordinador y
+lote AIFA integrados. Calendario bloqueado, sin activar ni publicar datos nuevos.**
 
 ## Resumen
 
@@ -19,7 +19,10 @@ anterior aprobó 5.129 casos; la optimización redujo su duración observada de
 no haya repetido aquella agregada. Publicación, fuentes y aprobaciones
 originales siguen intactas.
 
-AIFA septiembre tiene ahora extracción oficial local y revisión independiente:
+AIFA septiembre quedó integrado en [PR161](https://github.com/salvamalfa/aeromexico-tracker/pull/161),
+merge `6d78cf8f`, con CI y Codex del head exacto favorables y
+[CI posterior aprobada](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40455383797).
+Tiene extracción oficial local y revisión independiente:
 180 observaciones, 80 reconciliaciones y reproducción offline. Su disponibilidad
 se vincula al índice y a la captura realmente usados; no se infiere de Gold ni
 de una fecha escrita a mano. El intento GDELT del 27/oct devolvió HTTP503,
@@ -138,6 +141,19 @@ de negocio es permitir un núcleo completo con contexto secundario pendiente,
 siempre visible con su fecha y alcance. La aceptación de una ronda sigue bloqueada mientras falten insumos o pruebas.
 La clasificación exacta está en el
 [apéndice técnico](#política-mínima-aprobada).
+
+**Decisión preparada, todavía no aplicada:** recomiendo conservar Volaris SEC
+para estados financieros y añadir el PDF mensual oficial del emisor como
+fuente atribuida de tráfico. El original de septiembre está identificado en el
+expediente de Monthly, pero el contrato operativo actual es exclusivamente
+SEC; no autoriza llamar SEC a ese PDF ni descargarlo desde otro host. La
+decisión sería admitir específicamente `filemanager-cdn.mziq.com` para el
+tráfico oficial enlazado por Volaris, conservando métricas, validación y estado
+obligatorio. No activa datos ni sustituye el reporte financiero. Recomiendo
+también solicitar al publicador de Aerocivil la leyenda y atribución del conjunto
+exacto `jh8x-n6h6`; requiere autorización para ese contacto. No se ha enviado
+ningún mensaje ni se han cambiado esos contratos. GDELT mantiene su fallo
+conservado; no recomiendo reemplazarlo silenciosamente o hacerlo opcional.
 
 ## Preparación comprobable del calendario
 
@@ -2682,6 +2698,79 @@ Library. El dashboard respondió HTTP200 con validación TLS estándar; el
 navegador cloud encontró un error de su cadena de certificados, sin omitir TLS.
 No se afirma una revisión interactiva remota completada por ese intento.
 
+### Disponibilidad física de AICM, OMA y Viva: lote posterior a PR161
+
+El contrato de descubrimiento se amplía por producto, sin booleanos manuales
+ni elección libre de parser o tabla nativa. AICM y OMA exigen los títulos
+mensuales de sus índices oficiales; documentos pertinentes sin clasificación,
+una última edición ambigua o formatos nuevos bloquean. Un error histórico
+explícitamente fechado en otra edición no acredita ni invalida por sí solo
+el PDF actual. Viva exige identidad del emisor y la fila mensual de BMV;
+selecciona su PDF, nunca el visor ni ZIP XBRL. La hora del portal, sin zona,
+no se convierte en primera publicación.
+
+Las capturas y pruebas reales del 27/oct se conservan bajo
+`tmp/source-updates/availability-followup-20261027/`:
+
+| Producto | Original y extracción real | Actualidad comprobada |
+|---|---|---|
+| AICM septiembre | PDF oficial SHA `77a5fe8e…`, 14 páginas, actualización 22/oct; 207 filas nativas, 96 reconciliaciones y siete tablas candidatas | Índice y PDF HTTP200 en la fecha local 27/oct; candidato y recibo reproducidos sin red |
+| Viva septiembre | PDF BMV `eventemi_1594478_1.pdf`, SHA `b0acad4f…`; 24 cifras, 16 reconciliaciones y cuatro tablas candidatas | Índice BMV y PDF HTTP200 vinculados; conserva pasajeros reservados, miles/millas, ocupación de itinerario y preliminar |
+| OMA septiembre | El índice inglés anuncia septiembre; su PDF enlazado devuelve HTTP404. Índice alternativo español devuelve HTTP202 con cuerpo incompleto | Bloqueado. Sin reintento, evasión de desafío ni sustitución por julio |
+| OMA julio retenido | 168 cifras y 80 reconciliaciones; resultados idénticos al lector anterior. Fecha del 5/ago posterior al cierre y anterior a captura | Solo certificación histórica; no actualidad de septiembre |
+
+`current-pair-v3/recipe.json` conserva el flujo reproducible de AICM/Viva:
+retención exacta, plan, certificación, replay y vínculo físico de colección.
+Su recibo acepta las dos tareas para revisión y mantiene
+`ready_for_calendar_incorporation=false`: no es una ronda completa. La primera
+captura AICM pertenece al 26/oct en México; se preserva y no se relabela. La
+segunda captura acotada permite comprobar el día local 27/oct junto a Viva.
+Todas las fechas de captura son reales, sin disparadores instalados.
+
+Las revisiones independientes contrastaron AICM, Viva y OMA con Poppler,
+separado del extractor productivo. Se conservan los dictámenes JSON y sus
+ataques a fechas, unidades, definiciones y selección. Las pruebas de contrato
+sintéticas se identifican como tales; no sustituyen esas extracciones reales.
+El único cambio del lector AICM permite mayúsculas en el mes de la fecha de
+portada; no cambia tolerancias, unidades ni rechazo de fechas inválidas.
+
+El commit de producción `013a20d6` tiene revisión independiente favorable:
+`independent-discovery-review.json`, SHA256 `4336d2b3…`, con 21 pruebas y los
+índices reales. Se corrigieron antes de la entrega los rechazos ausentes de
+títulos nuevos, perfiles BMV falsos y filas con columnas desplazadas. La
+reproducción actual de nueve ventanas conserva sus 53 salidas; AIFA v4 añade
+siete salidas idénticas conservando su ventana histórica del 26/oct local.
+No se mezcla esa fecha con las capturas actuales AICM/Viva.
+
+```bash
+python -m src.source_updates.readiness --recipe tmp/source-updates/availability-followup-20261027/current-pair-v3/recipe.json --workspace tmp/source-updates/availability-followup-20261027/current-pair-v3/readiness --check
+python -m src.source_updates.global_readiness --recipe tmp/source-updates/availability-followup-20261027/global-actual-pair-recipe.json --workspace tmp/source-updates/availability-followup-20261027/global-actual-pair --check
+```
+
+La segunda prueba usa realmente las dos tareas disponibles y conserva el
+rechazo global por las tareas requeridas no incluidas y los reportes centrales
+sin evidencia vinculada. No afirma que todas las fuentes omitidas estén caídas.
+Aerocivil/GDELT permanecen requeridos; ningún resultado activa disparadores.
+
+Validación estable del lote: 1.791 pruebas de fuentes, pipeline, lifecycle y
+presupuesto de archivos aprobadas en 628,21 s, cero omisiones, 44 advertencias;
+142 pruebas financieras de contrato aprobadas en 5,72 s. No sumar a las
+ejecuciones focales o independientes solapadas ni atribuirle la agregada
+anterior de 5.129. El perfil financiero de contrato usa fixtures; por separado,
+la revisión independiente ejecutó el productor y verificador originales en
+46,26 s y conservó 811 archivos del sitio, 803 preservados, 177 fuentes y
+aprobaciones y 188 del expediente. El procedimiento local real devuelve
+`valid=true`, `publication_authorized=false`; el gate ordinario conserva el
+rechazo del runtime distinto. El binding local se renovó únicamente con esa
+revisión real `50b6bbc3…`, para el runtime `2cea125b…`; ancla, autorización y
+revisión de contenido originales no cambiaron.
+
+Lifecycle: conservar los módulos y pruebas como consumidores ejecutables;
+actualizar esta guía, las dos skills y Roadmap como documentación vigente.
+Conservar aparte índices, PDF, recibos, planes y dictámenes ignorados por Git
+como evidencia técnica recuperable. No versionar originales o candidatos en
+el repositorio público; no hay archivos retirados ni informes paralelos nuevos.
+
 ## Pendientes
 
 - La política de productos y el calendario están aprobados; no falta una
@@ -2696,7 +2785,7 @@ No se afirma una revisión interactiva remota completada por ese intento.
   independiente y Codex, sin hallazgos ni hilos. Se marcó listo una sola vez y
   se integró normalmente en `70fb03ec`. GitHub confirmó PR152/154/155 integrados
   con sus heads originales por ese mismo merge. Consultar también la CI posterior
-  `40450942960` al cerrar la entrega; no hay Pages ni despliegue del chat por este diff.
+  `40450942960`, ya aprobada; no hay Pages ni despliegue del chat por este diff.
   Las revisiones adicionales antiguas sin resultado terminal no se consideran
   aprobación ni ejecución activa comprobada y no se relanzan a ciegas.
 - El procedimiento financiero local está implementado y probado con el
@@ -2715,15 +2804,25 @@ No se afirma una revisión interactiva remota completada por ese intento.
   notas junio/agosto y la actualización propia de Carga desconocida: C5 contiene
   el periodo. No se corrigió julio ni se publicó el candidato. La vinculación
   física a disponibilidad pasó en el candidato v3 del commit `ce086002`;
-  rechaza reutilizar esa captura como actualidad de noviembre. Falta entrega
-  remota del lote local. El mismo runtime pasó replay financiero original
+  rechaza reutilizar esa captura como actualidad de noviembre. PR161 quedó
+  integrado en `6d78cf8f`, con CI del head y posterior aprobadas, Codex sin
+  hallazgos y cero hilos pendientes. El mismo runtime pasó replay financiero original
   independiente y 99 pruebas financieras, con una omisión histórica; su vínculo
   de continuidad es solo local y no aprueba publicación.
-- El vínculo físico de descubrimiento/captura reciente está implementado
-  localmente para AIFA: índice oficial, manifiesto, HTTP, URL y hashes del XLSX
-  realmente usado. Rechaza otra fecha de ronda, otro mes o capturas fallidas;
-  no admite booleanos manuales. Otras familias todavía requieren su contrato
-  propio; no se acredita disponibilidad por guardar un original ni mirar Gold.
+- El vínculo físico de descubrimiento/captura está integrado para AIFA y
+  preparado en este lote para AICM, OMA y Viva. AICM/Viva tienen extracciones
+  reales y prueba de actualidad del día local 27/oct; OMA conserva el bloqueo
+  HTTP404 de su PDF de septiembre y HTTP202 de su índice alternativo. No admite
+  booleanos manuales ni confunde una retención o Gold con actualidad.
+  La implementación siguiente debe resolver contratos físicos por producto:
+  Aeroméxico IR (índice y PDF mensual/financiero); AFAC (misma edición de boletín
+  PDF y `DB_AFAC.zip` con su miembro `DB_AFAC.xlsx`, no solo el índice Datatur
+  que llega a agosto); BTS (historial
+  de publicación y selección real del formulario/ZIP); macro/cotizaciones
+  (ventana publicada y sesiones, no confundir última observación con cierre
+  civil); SEC/GAP/ASUR (dossier y mes dentro del anexo, con adquisición manual
+  existente); RSS (cobertura real observada y semántica de noticias, separada
+  de GDELT). Es trabajo técnico pendiente, no seis fuentes declaradas caídas.
   Falta también la ruta mensual de tráfico Volaris. Su certificador actual admite solo
   el dossier financiero 2026Q2; no satisface el mes obligatorio ni puede
   sustituirse por un trimestre. No son fallos externos ni se resolverán con
@@ -2750,10 +2849,13 @@ No se afirma una revisión interactiva remota completada por ese intento.
   está completo y su fecha sigue nula. No inventar el 2 de noviembre.
 - PR157/158, PR142/privada35, PR144/privada37 y Vuelos PR134/privada33 ya están
   integrados. Se conservan sus salidas y lifecycle, así como las publicaciones
-  PR149/160. Monthly permanece privado para revisión/calidad HTML del corte
-  24/oct; el archivo fue identificado en Library, pero su transferencia devolvió
-  HTTP401 y no entregó bytes. No se afirma revisión de ese HTML. El PR140
-  conserva un corte distinto, del 19/oct. Sin aprobación final ni correo ni rediseño.
+  PR149/160. Monthly permanece privado, con revisión estática y funcional del
+  mismo HTML/corte 24/oct por el agente de Pages: 23 afirmaciones, seis fuentes
+  y cuatro hashes originales confirmados; dos PDF de Aeroméxico devolvieron
+  HTTP503. La revisión visual completa requiere superar el login. El fallo
+  HTTP401 de nuestra transferencia auxiliar no invalida esa revisión ni
+  modifica el archivo. Falta aprobación editorial final del dueño. PR140
+  conserva un corte distinto, del 19/oct. Sin envío de correo ni rediseño.
 - Resolver decisiones curadas de perfiles y eventos antes de cambiar su
   significado o elegibilidad; las pruebas no las aprueban.
 - El calendario bancario verificado de 2026 permite calcular 17/nov y 15/dic.

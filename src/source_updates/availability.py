@@ -16,7 +16,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 
 from src.source_updates.calendar import local_time
-from src.source_updates.catalog import load_catalog, product_map
+from src.source_updates.catalog import bronze_aliases, load_catalog, product_map
 from src.source_updates.collection import safe_workspace, validate_url
 
 FIELDS = {"workspace", "run_id", "catalog_item", "artifact_item"}
@@ -59,7 +59,7 @@ def preflight(binding, candidate):
     return root
 
 
-def artifact(root, row, cutoff, hosts, receipt):
+def artifact(root, row, cutoff, hosts, receipt, aliases):
     source = root / "data/bronze"
     relative = Path(row["source_file"])
     path = source / relative
@@ -77,7 +77,7 @@ def artifact(root, row, cutoff, hosts, receipt):
         row.get("http_status") != 200
         or record.get("http_status") != 200
         or record.get("download_method") != "httpx"
-        or record.get("source_system") != "aifa"
+        or record.get("source_system") not in aliases
         or record["sha256"] != row["sha256"]
         or sha(path) != row["sha256"]
         or record["source_url"] != row["source_url"]
@@ -150,6 +150,25 @@ def latest_aifa(index_path):
     return period, periods[period]
 
 
+def discovery_contract(product, adapter):
+    """Reviewed provider/product bindings; no caller-selected native table/parser."""
+    if product == "aifa_traffic" and adapter == "government":
+        return AIFA_INDEX, latest_aifa, "silver/government_native"
+    if (product, adapter) in {("aicm_traffic", "government"), ("oma_traffic", "retained")}:
+        from src.source_updates.availability_airports import latest
+        from src.source_updates.recipes import describe
+
+        table = (
+            "silver/government_native" if adapter == "government" else "silver/source_products/oma_traffic"
+        )
+        return describe(product)["entry_url"], lambda p: latest(p, product), table
+    if product == "viva_traffic" and adapter == "retained":
+        from src.source_updates.availability_viva import ENTRY, latest
+
+        return ENTRY, latest, "silver/source_products/viva_traffic"
+    raise ValueError("Latest-source discovery contract is not yet implemented for this family")
+
+
 def verify(item, result, cutoff):
     """Called only after complete offline candidate replay; never performs IO on the network."""
     binding = item["availability"]
@@ -164,8 +183,7 @@ def verify(item, result, cutoff):
         return {p.relative_to(root).as_posix(): sha(p) for p in root.rglob("*") if p.is_file()}
 
     collection_before = inventory()
-    if item["product"] != "aifa_traffic" or item["adapter"] != "government":
-        raise ValueError("Latest-source discovery contract is not yet implemented for this family")
+    entry, discover, native_table = discovery_contract(item["product"], item["adapter"])
     receipt_path = root / "receipts" / f"collection-{binding['run_id']}.json"
     before = sha(receipt_path)
     receipt = json.loads(receipt_path.read_text())
@@ -190,25 +208,29 @@ def verify(item, result, cutoff):
         chosen.append(matches[0])
     index, data = chosen
     hosts = load_catalog()[product_map()[item["product"]]["source_key"]]["allowed_hosts"]
-    index_path, index_record = artifact(root, index, cutoff, hosts, receipt)
-    data_path, data_record = artifact(root, data, cutoff, hosts, receipt)
-    if index["source_url"] != AIFA_INDEX or index["response_url"] != AIFA_INDEX:
-        raise ValueError("AIFA availability requires its reviewed official discovery URL")
-    period, url = latest_aifa(index_path)
+    aliases = bronze_aliases(item["product"])
+    index_path, index_record = artifact(root, index, cutoff, hosts, receipt, aliases)
+    data_path, data_record = artifact(root, data, cutoff, hosts, receipt, aliases)
+    if index["source_url"] != entry or index["response_url"] != entry:
+        raise ValueError("Availability requires its reviewed official discovery URL")
+    period, url = discover(index_path)
     if (
         period != item["period"]
         or data["requested_period"] != period
         or data["source_url"] != url
         or data["response_url"] != url
     ):
-        raise ValueError("Certified period/artifact is not the latest workbook in official discovery")
+        raise ValueError("Certified period/artifact is not the latest report in official discovery")
     if local_time(index_record["downloaded_at"]) > local_time(data_record["downloaded_at"]):
         raise ValueError("Latest official discovery must precede the selected capture")
-    native = pd.read_parquet(Path(item["workspace"]) / "data/silver/government_native.parquet")
+    native = pd.read_parquet(Path(item["workspace"]) / f"data/{native_table}.parquet")
+    if not {"source_file", "source_hash", "source_system"} <= set(native):
+        raise ValueError("Native product lacks physical source identity columns")
     if (
         result.get("complete_month_certified") is not True
         or set(native.source_hash) != {data["sha256"]}
         or set(native.source_file) != {data["source_file"]}
+        or not set(native.source_system) <= set(aliases)
         or sha(data_path) != data["sha256"]
         or sha(index_path) != index["sha256"]
         or sha(receipt_path) != before
@@ -222,6 +244,7 @@ def verify(item, result, cutoff):
         "latest_available_period": period,
         "source_availability_observed_at": data_record["downloaded_at"],
         "round_as_of": cutoff,
-        "discovery_url": AIFA_INDEX,
+        "discovery_url": entry,
+        "discovery_contract_product": item["product"],
         "physical_collection_files": collection_before,
     }

@@ -46,6 +46,17 @@ ABBREVIATIONS = "Ene Feb Mar Abr May Jun Jul Ago Sep Oct Nov Dic".split()
 
 def select(catalog: Path, period: str, *, catalog_url: str) -> dict:
     """Use a real unique traffic link; validate source policy before acquisition."""
+    from src.source_updates.availability_viva import ENTRY, latest
+
+    if catalog_url == ENTRY:
+        selected_period, url = latest(catalog, period)
+        selection = selection_for_url(url, selected_period)
+        selection["discovery"] = {
+            "catalog_sha256": hashlib.sha256(catalog.read_bytes()).hexdigest(),
+            "period": selected_period,
+            "basis": "official BMV issuer traffic row, distinct from XBRL/viewer links",
+        }
+        return selection
     if not re.fullmatch(r"20\d{2}M(?:0[1-9]|1[0-2])", period):
         raise ValueError("Viva traffic selection requires one explicit month")
     year, month = int(period[:4]), int(period[-2:])
@@ -382,6 +393,7 @@ def current_texts(pages: list[str], period: str, original: dict) -> tuple[pd.Dat
     return frame, {
         "rows": len(frame),
         "monthly_rows": 12,
+        "complete_month_certified": True,
         "comparison_rows": 12,
         "observation_months": sorted(frame.period_id.unique()),
         "latest_validated_period": period,

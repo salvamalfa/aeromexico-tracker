@@ -63,6 +63,7 @@ def test_reported_airport_group_and_ytd_are_separate(monkeypatch):
     assert f.carrier_key.isna().all()
     assert set(f.period_type) == {"month", "year_to_date"}
     assert r["transit_excluded"] and r["commercial_charter_general_aviation_included"]
+    assert r["complete_month_certified"] is True
 
 
 @pytest.mark.parametrize(
@@ -73,6 +74,9 @@ def test_reported_airport_group_and_ytd_are_separate(monkeypatch):
         lambda t: t.replace("Acapulco 2 2 0.0 14 14 0.0\n", "", 1),
         lambda t: t.replace("Jul-2026", "Aug-2026", 1),
         lambda t: t.replace(source.NOTE, "Transit included"),
+        lambda t: t.replace("August 5, 2026", "July 31, 2026"),
+        lambda t: t.replace("August 5, 2026", "September 1, 2026"),
+        lambda t: t.replace("August 5, 2026", "August 32, 2026"),
         lambda t: t.replace("OMA Total 26 26 0.0 182 182", "OMA Total 26 26 0.0 183 182", 1),
         lambda t: t.replace(
             "Acapulco 2 2 0.0 14 14 0.0", "Acapulco 2 2 0.0 14 14 0.0\nAcapulco 2 2 0.0 14 14 0.0", 1

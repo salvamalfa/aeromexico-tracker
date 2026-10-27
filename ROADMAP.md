@@ -17,10 +17,20 @@ Propuesta — el dueño decide prioridades.
   local previa pasó 5.129 casos; preparación optimizada de 39:47 a 36:33
   (8,1 % observado localmente, sin prometer ahorro remoto).
   AIFA septiembre ya tiene extracción oficial, vínculo físico de disponibilidad
-  y revisión independiente local; lote técnico separado en revisión. Pasaron
+  y revisión independiente: código integrado en
+  [PR161](https://github.com/salvamalfa/aeromexico-tracker/pull/161), merge
+  `6d78cf8f`, con CI y Codex favorables y CI posterior `40455383797` aprobada.
+  Sus datos siguen siendo candidatos. Pasaron
   1.680 casos de fuentes y 99 financieros (una omisión histórica). Aerocivil,
   GDELT, tráfico mensual Volaris y fechas verificadas siguen bloqueando la
   ronda completa. No están activados calendario ni nuevas ingestas/noticias.
+  Continuación técnica `013a20d6`: AICM y Viva septiembre tienen colección real,
+  certificación completa y vínculo físico a los índices del día local 27/oct;
+  OMA septiembre conserva HTTP404 del PDF y HTTP202 del índice alternativo.
+  Validación: 1.791 casos de fuentes/pipeline/documentación, 142 financieros
+  y revisión independiente favorable; continuidad financiera solo local, con
+  publicación y autoridad originales exactas. Faltan los contratos físicos
+  de las otras familias descritos en la guía; no se declara lista la ronda.
 
 - Aeroméxico 3T26: lectura e indicadores publicados con evidencia y aprobación
   vinculadas, mediante PR149/160. Conservar publicación y autoridad originales
@@ -28,10 +38,12 @@ Propuesta — el dueño decide prioridades.
   pendiente de publicar por este encargo.
 - AFAC: conservar el original de agosto y su advertencia internacional;
   la siguiente actualización debe comprobar disponibilidad y periodo real.
-- Airline Monthly del corte 24/oct: revisión y calidad HTML del borrador
-  privado pendientes: archivo identificado en Library, transferencia HTTP401
-  sin bytes recibidos. El PR140 conserva otro corte, del 19/oct. No hay
-  aprobación final ni envío por correo.
+- Airline Monthly del corte 24/oct: revisión estática y funcional realizada
+  por el agente de Pages: 23 afirmaciones, seis fuentes y cuatro hashes de
+  originales confirmados; dos PDF de Aeroméxico devolvieron HTTP503. Falta la
+  revisión visual completa por login y la aprobación editorial final del dueño.
+  La transferencia local HTTP401 no invalida esa revisión ni autoriza modificar
+  el HTML. Sin integración de PR140, publicación ni envío por correo.
 - [Dashboard existente](https://salvamalfa.github.io/aeromexico-tracker/):
   enlace comprobado con HTTP200 y TLS estándar el 27/oct. El navegador cloud
   no completó la revisión interactiva por su cadena de certificados; no se
