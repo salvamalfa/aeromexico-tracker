@@ -53,7 +53,8 @@ def bmv_row(title, url="/docs-pub/eventemi/eventemi_1594478_1.pdf"):
 
 
 @pytest.mark.parametrize(
-    "attack", [None, "identity", "profile", "layout", "title", "zip_only", "ambiguous", "unknown_month"]
+    "attack",
+    [None, "identity", "profile", "layout", "two_columns", "title", "zip_only", "ambiguous", "unknown_month"],
 )
 def test_bmv_viva_traffic_uses_issuer_month_and_pdf_never_xbrl(tmp_path, attack):
     title = "VIVA REPORTA RESULTADOS DE TRÁFICO MENSUAL DE SEPTIEMBRE 2026"
@@ -75,6 +76,8 @@ def test_bmv_viva_traffic_uses_issuer_month_and_pdf_never_xbrl(tmp_path, attack)
         text += "<aside>GRUPO VIVA AEROBUS SA DE CV</aside>"
     elif attack == "layout":
         text += f'<table><tr><td colspan="3">{title}</td></tr></table>'
+    elif attack == "two_columns":
+        text += f"<table><tr><td>{title}</td><td>PDF</td></tr></table>"
     path = tmp_path / "index.html"
     path.write_text(text)
     if attack:

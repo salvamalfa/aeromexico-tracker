@@ -28,14 +28,12 @@ def latest(index, requested="latest"):
         raise ValueError("BMV Viva issuer identity/base not established")
     periods = {}
     for row in soup.select("tr"):
+        if not re.search(r"tr[áa]fico", row.get_text(" ", strip=True), re.I):
+            continue
         cells = row.find_all("td", recursive=False)
-        if len(cells) < 2:
-            if re.search(r"tr[áa]fico", row.get_text(" ", strip=True), re.I):
-                raise ValueError("Unreviewed Viva traffic table row layout")
-            continue
+        if len(cells) != 3:
+            raise ValueError("Unreviewed Viva traffic table row layout")
         title = " ".join(cells[1].get_text(" ", strip=True).split())
-        if not re.search(r"tr[áa]fico", title, re.I):
-            continue
         match = re.fullmatch(
             r"VIVA(?: AEROBUS)? REPORTA RESULTADOS "
             r"(?:DE TR[ÁA]FICO MENSUAL(?: DE)?|MENSUALES DE TR[ÁA]FICO(?: DE| -)) "
@@ -43,7 +41,7 @@ def latest(index, requested="latest"):
             title,
             re.I,
         )
-        if not match or match[1].lower() not in MONTHS or len(cells) != 3:
+        if not match or match[1].lower() not in MONTHS:
             raise ValueError("Unreviewed Viva monthly traffic title/table")
         # Preserve the unzoned portal clock as an observation, not a publication instant.
         datetime.strptime(cells[0].get_text(" ", strip=True), "%d-%m-%Y %H:%M")
